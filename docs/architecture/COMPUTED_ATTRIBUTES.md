@@ -107,7 +107,7 @@ one than it needs.
 | **Sutra expression** (Rachana-EL in a `bind:`, `title:`, `when:`) | `size($.DEFINITION.MEMBERS)` in `config/packs/market-risk/sutras/market-risk/portfolio.v1.sutra.yaml` (panel `definition`, "Members named"); `max($.TRADES[*].NOTIONAL)` in the netting-set Sutra's slider (`netting-set.v1.sutra.yaml` controls) | In the server, as the page is built from one document | Every time the page renders | One document only | The reader's, on the document already fetched | Closed function set: `size`, `sum`, `min`, `max`, `abs`, `first`, `last`, `flatten`, `group`, `coalesce`, `nonblank`, `days`, `today`, comparisons and arithmetic; no `sqrt`, `exp`, `round` ([RACHANA_REFERENCE.md, Functions](../guides/RACHANA_REFERENCE.md)) | Negligible |
 | **Derived kind** (`plugin: derived`) | `config/packs/trading/pack.yaml` lines 191–240: `counterparty-trades` grouped by `$.COUNTERPARTY` from `trade`; also `gleif-groupings`, `us-equities-groupings`, `macro-groupings` | In the server (`drishti-engine/.../source/derived/DerivedSourcePlugin.java`), reading every member through the router | Once per business date and data version, else every `refresh` (trading: `60s`; default `30s`); a reader never waits for a rebuild (served stale, refreshed behind) | Set: one page per group key (plus `also-group-by` keys) | **Built once per date and shared by every reader** (`DerivedSourcePlugin.java` javadoc): not per-reader | `max-scan` 50,000 documents read per kind by default (`GROUPINGS_ANALYTICS_GUIDE.md` › Part VII. Groupings and analytics, computed, section 24); `max-members` caps the listed members and rows, not the aggregates (`DerivedKind.java` javadoc); aggregates `count`, `sum`, `avg`, `median`, `min`, `max`, `distinct`, `first`; `where`, `then`, `sort`, `tree`; no join to another kind | One pass over the kind per date; pages in heap or on disk |
 | **Reactive engine** (`plugin: reactive`) | `var-engine` (`config/packs/market-risk/pack.yaml` lines 345–390, Java `VarResultEngine`; the VaR what-if is the same engine's, `POST /api/v1/var/what-if`), `exposure-engine` (`config/packs/counterparty-risk/pack.yaml` lines 269–334, Java `ExposureResultEngine`), `exposure-whatif` (Python) | Java in the server or Python on the compute pools ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md)) | On request; cached (`results: 2000, ttl: 1h` for VaR); recomputed on `data-version` triggers of the listed input kinds, coalesced (`quiet: 250ms, max-wait: 2s` VaR; `1s / 10s` exposure) | Any scope in the scope grammar, any business date, parameters (`ccy`, `q`, `collateral`) | **As the requesting user** | `timeout: 60s`, `max-inflight-per-user` 4 (VaR, EXP) or 2 (what-if); exposure `max-scope-netting-sets` 20,000 (EXPOSURE_GUIDE.md section 18.1) | Memory-mapped hot files per date; milliseconds warm |
-| **Engine figures on a stored page** | `VarFigures` puts the VaR engine's answer under `$.VAR_ENGINE` on the position and portfolio pages; `ExposureFigures` puts the exposure engine's under `$.EXPOSURE_ENGINE` on the netting-set and counterparty pages (`drishti-server/.../var/VarFigures.java`, `.../exposure/ExposureFigures.java`; EXPOSURE_GUIDE.md section 22) | Server, as the page opens | As the engine's cache | The page's own entity as a scope (`POS:`, `PORT:`, `NSET:`, `CPTY:`) | As the reader | As the engine | As the engine |
+| **Engine figures on a stored page** | `VarFigures` puts the VaR engine's answer under `$.VAR_ENGINE` on the position and portfolio pages; `ExposureFigures` puts the exposure engine's under `$.EXPOSURE_ENGINE` on the netting-set and counterparty pages (`drishti-server/.../var/VarFigures.java`, `.../exposure/ExposureFigures.java`; EXP.md section 8) | Server, as the page opens | As the engine's cache | The page's own entity as a scope (`POS:`, `PORT:`, `NSET:`, `CPTY:`) | As the reader | As the engine | As the engine |
 | **BI measure** | `config/bi/models/trading-risk.model.yaml`: `MTM: sum(trades.MTM)`, `Exposure (PFE peak): sum(cpty_exposure.PEAK_PFE_95)` with a "never a sum of PFEs" description | The BI engine over datasets (`refresh: { on-load: true }`) | On load of the dataset | Any slice of a dataset, for analysis | Dataset row filters and masks (`trading-risk-trades.dataset.yaml`: `desk-head` rows, `masked: [COUNTERPARTY]`) | Additive measures only are safe; a non-additive figure must come from an engine's published result, as the exposure measures do | Columnar scan |
 
 **Where each class belongs:**
@@ -279,9 +279,9 @@ Sutra `portfolio.v1.sutra.yaml` (strip lines 42–50); contract class `input`; s
 
 | Kind | Fields | Today | Should be | Note | Pri. |
 |---|---|---|---|---|---|
-| `pnl-vector` | `PNL[]`, `PV`, `QUANTITY`, `DIRECTION` | S | F | the engine input (VAR_GUIDE.md section 15.2). `PV` equals `trade-valuation.MTM` (F13). Option PVs break the sign convention on the test data (F21) | P1 (signs) |
+| `pnl-vector` | `PNL[]`, `PV`, `QUANTITY`, `DIRECTION` | S | F | the engine input (VAR.md section 2.2). `PV` equals `trade-valuation.MTM` (F13). Option PVs break the sign convention on the test data (F21) | P1 (signs) |
 | `pnl-vector`, `scenario-pv` | `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `PORTFOLIO`, `COUNTERPARTY`, `PRODUCT_*`, `LEGAL_ENTITY`, `TRADE_STATUS`, `MATURITY_DATE` | S (denormalised) | F copies, validated | must equal the trade master on *d*; `TRADE_STATUS` already differs from `trade-valuation` in the samples (`MX-20000274`: `AMENDED` in `samples/pnl-vector.jsonl`, `VALIDATED` in `samples/trade-valuation.jsonl`) | P2 |
-| `scenario-pv` | `BASE_PV`, `SCENARIO_PV[]` (trade currency) | S | F | P&L in reporting currency *r* is computed: `P&L_r(s) = PV(s)·FX_c(s)/FX_r(s) − PV(base)·FX_c(base)/FX_r(base)` (VAR_GUIDE.md section 15.10) | — |
+| `scenario-pv` | `BASE_PV`, `SCENARIO_PV[]` (trade currency) | S | F | P&L in reporting currency *r* is computed: `P&L_r(s) = PV(s)·FX_c(s)/FX_r(s) − PV(base)·FX_c(base)/FX_r(base)` (VAR.md section 2.10) | — |
 | `fx-scenario` | `RATE`, `RATES[]` | S | F | engine input | — |
 | `scenario-set` | `SCENARIO_DATES[]` | S | F | engine input, defines vector order | — |
 
@@ -290,7 +290,7 @@ Sutra `portfolio.v1.sutra.yaml` (strip lines 42–50); contract class `input`; s
 | Field | Today | Should be | How | Pri. |
 |---|---|---|---|---|
 | `NODE_ID`, `HIERARCHY`, `LEVEL`, `PARENT_ID`, `NAME`, `REF` | S | F | — | — |
-| `CHILDREN[]` | S | Dv | `{n : PARENT_ID(n) = node}`; VAR_GUIDE.md section 15.4 already calls it informational ("the engine uses `PARENT_ID`") | P3 |
+| `CHILDREN[]` | S | Dv | `{n : PARENT_ID(n) = node}`; VAR.md section 2.4 already calls it informational ("the engine uses `PARENT_ID`") | P3 |
 | `BOOKS[]` ("every book beneath the node") | S | Dv | union of the leaf nodes' books under the node | P3 |
 | `risk-hierarchy.LIMIT_VAR` (MGMT, LEGAL) | S | F, **one home** | a limit is a fact; but it lives in three kinds (F6) | P2 |
 | `var-limit.LIMIT_VAR`, `CURRENCY` (LL) | S | F | the proposed single home for every VaR limit, with a currency | P2 |
@@ -971,7 +971,7 @@ This is open question 2. The proposal:
 | Stage | What the reader sees | Where |
 |---|---|---|
 | 1. Shadow | the derived or computed figure beside the stored one, with the difference and its cause | a "Reconciliation" panel on the stored page (8.3 expressions, a `source:` panel), shown to risk roles only |
-| 2. Report | a table per measure: per record, stored, computed, difference, relative difference, cause | in the measure's guide, as GROUPINGS_ANALYTICS_GUIDE.md, section 18 and EXPOSURE_GUIDE.md section 22.2 did |
+| 2. Report | a table per measure: per record, stored, computed, difference, relative difference, cause | in the measure's guide, as GROUPINGS_ANALYTICS_GUIDE.md, section 18 and EXP.md section 8.2 did |
 | 3. Retire | the stored figure removed, the computed one in its place, the reconciliation table kept in the guide | the release that builds the engine |
 
 Tolerance and causes, per attribute (proposal):
@@ -1082,8 +1082,8 @@ open the kind sees them. **Live** (decision 3) is one predicate in the derived k
 date not before the valuation date; a live-status trade past its maturity date is in no total and is counted and listed as a data-quality
 warning (the exposure engine flags its set `PAST_MATURITY`).
 
-**Pictures** of the new panels are in [EXPOSURE_GUIDE.md section 22](../guides/EXPOSURE_GUIDE.md#22-exposure-is-computed-not-stored)
-(netting set, counterparty, the collateral balance's and the credit limit's checks) and [VAR_GUIDE.md section 21.4](../guides/VAR_GUIDE.md)
+**Pictures** of the new panels are in [EXP.md section 8](../contracts/EXP.md#8-exposure-is-computed-not-stored)
+(netting set, counterparty, the collateral balance's and the credit limit's checks) and [VAR.md section 7.4](../guides/VAR_GUIDE.md)
 (the stress scenario), made by `tools/docs/shots/computed.py` over the packs' samples.
 
 **Sum currency** (section 3). Every derived total is made in USD and says so (`SUM_CURRENCY`). The proposed `convert:` option on derived

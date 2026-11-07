@@ -33,7 +33,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The VaR engine's figures on the pages of the position, portfolio and desk (VAR_GUIDE.md section 21.3): none of these kinds stores a VaR any
+ * The VaR engine's figures on the pages of the position, portfolio and desk (VAR.md section 7.3): none of these kinds stores a VaR any
  * more, so when the page is opened the engine computes them as the caller (their entitlements by node, their field masks) and the view
  * reads them under {@code VAR_ENGINE}: a position's VaR and ES, its component in its book and its trades' own VaR and components; a
  * portfolio's VaR, ES, limit use, positions with their components, the split by product, currency and direction, and its P&amp;L over
@@ -228,7 +228,7 @@ final class VarFigures implements ViewAugmenter {
         x.put("VAR", r.get(own));
         x.put("COMPONENT_VAR", r.get(component));
         if (r.get("tradeCurrency") != null) {
-            x.put("TRADE_CURRENCY", r.get("tradeCurrency"));        // the currency its PVs came in, else its own (VAR_GUIDE.md section 15.11)
+            x.put("TRADE_CURRENCY", r.get("tradeCurrency"));        // the currency its PVs came in, else its own (VAR.md section 2.11)
         }
         return x;
     }

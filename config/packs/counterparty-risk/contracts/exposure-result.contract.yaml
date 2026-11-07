@@ -129,7 +129,7 @@ fields:
 - name: PROFILE
   type: record list
   presence: required
-  description: Per primary date TENOR, DATE, T, EE, ENE, EEE, PFE (at CONFIDENCE), PFE_95, PFE_99, EE_UNCOLL (EXPOSURE_GUIDE.md section 19.1).
+  description: Per primary date TENOR, DATE, T, EE, ENE, EEE, PFE (at CONFIDENCE), PFE_95, PFE_99, EE_UNCOLL (EXP.md section 5.1).
 - name: BY_NETTING_SET
   type: record list
   presence: optional
@@ -145,7 +145,7 @@ fields:
 - name: PROVENANCE
   type: record
   presence: optional
-  description: The answer's provenance in UPPER_SNAKE (EXPOSURE_GUIDE.md section 19.1), with TIER saying where the matrices came from.
+  description: The answer's provenance in UPPER_SNAKE (EXP.md section 5.1), with TIER saying where the matrices came from.
 links:
 - field: RUN_ID
   kind: simulation-run

@@ -25,7 +25,7 @@ own currency with their base PV (``scenario-pv``), the others as P&L vectors in 
 system sends: one JSON object per line, exactly the contract's fields, ``RUN_KIND: FULL``; ``--date`` moves them to another business date
 (the demo lake's, today's). Files, named by the load rules (docs/architecture/DATA_LOAD_RULES.md): ``<out>/morning-<date>/
 scenario-pv.<date>.jsonl``, ``pnl-vector.<date>.jsonl``, ``fx-scenario.<date>.jsonl`` (``.jsonl.gz`` with ``--gzip``). ``--lake`` writes them into the lake (``drishti.py lake build``, replacing the date), ``--server`` then raises the data-load
-signal. Guide: docs/guides/VAR_GUIDE.md section 15.12."""
+signal. Guide: docs/contracts/VAR.md section 2.12."""
 from __future__ import annotations
 
 import argparse

@@ -162,7 +162,7 @@ final class VarPvStream {
                 reject(ErrorCode.VAR_ROW_REJECTED.code(), m.where(), "not a JSON object of the contract");
                 continue;
             }
-            // what the record is (VAR_GUIDE.md section 15.13): its own fields, against its payload, its id and its system's pin
+            // what the record is (VAR.md section 2.13): its own fields, against its payload, its id and its system's pin
             String payload = row.has("SCENARIO_PV") || row.has("BASE_PV") ? VarInputs.PV : row.has("PNL") ? VarInputs.PNL : null;
             String[] said = new VarInputs(svc.props()::input).check(payload, text(row, "VALUE_TYPE"), text(row, "GRAIN"), text(row, "TRADE_ID"),
                     text(row, "POSITION_ID"), text(row, "SOURCE_SYSTEM"), text(row, "CURRENCY"));

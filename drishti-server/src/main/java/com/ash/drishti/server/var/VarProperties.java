@@ -51,7 +51,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param positions how positions are derived from the trades when no loaded pack says (a pack's {@code positions:} section wins)
  * @param official the official end-of-day captures and their published results
  * @param tier where a loaded date's vectors are kept: the memory-mapped hot file (default) or the heap (VAR_GUIDE.md section 26)
- * @param currencies the reporting currencies built ahead (VAR_GUIDE.md section 15.11): after a date's USD book loads, each listed
+ * @param currencies the reporting currencies built ahead (VAR.md section 2.11): after a date's USD book loads, each listed
  *     currency's book is built in the background from it and kept as its own hot file, so a VaR in a listed currency never waits on its
  *     first ask; USD always first; default USD, EUR, CAD, JPY, GBP; any other currency with FX is still built on first ask
  * @param currencyRetentionDates the newest business dates whose listed currencies are built ahead and kept on disk (5, one business
@@ -60,14 +60,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *     hierarchy data's own {@code NAME}
  * @param rootNames the name of one hierarchy's root (hierarchy id to name, e.g. MGMT, LEGAL); wins over {@code rootName} for it
  * @param intraday the intraday updates' settings: the PV topic's window (VAR_GUIDE.md section 8.4, Kafka)
- * @param inputs an optional pin per source system of what its records are (VAR_GUIDE.md section 15.13): the form ({@code pv}, {@code pnl}
+ * @param inputs an optional pin per source system of what its records are (VAR.md section 2.13): the form ({@code pv}, {@code pnl}
  *     or {@code any}) and the grain ({@code trade}, {@code position} or {@code any}); {@code default} for the systems not listed. Every
  *     record says what it is ({@code VALUE_TYPE}, {@code GRAIN}); a pin is a cross-check: a record that disagrees is refused
  *     ({@code DRS-5209}). Read at start: a change applies after a restart, from the next date loaded
  * @param scenarioWindow how many scenarios the engine uses (VAR_GUIDE.md section 18.5): {@code all} (the whole scenario set, its length
  *     509 in the demo) or a number N, the newest N scenarios of each date's set (250: one year, about 500: two); at least 20; a set
  *     shorter than N is used whole, with a warning in the provenance
- * @param hierarchies the hierarchies (2.9.5, VAR_GUIDE.md section 16): id to its settings ({@code title}, {@code source:
+ * @param hierarchies the hierarchies (2.9.5, VAR.md section 3): id to its settings ({@code title}, {@code source:
  *     risk-hierarchy|columns}, {@code levels: "LIMIT_LETTER > DESK"}, {@code level-names}, {@code root}, {@code ids: path|leaf},
  *     {@code word}, {@code limits}); when set, wins over a loaded pack's {@code hierarchies:} block; neither: MGMT and LEGAL from the
  *     {@code risk-hierarchy} rows, as before 2.9.5
@@ -164,7 +164,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
     }
 
     /**
-     * What a source system sends (VAR_GUIDE.md section 15.13): the form and the grain, each {@code any} when not pinned.
+     * What a source system sends (VAR.md section 2.13): the form and the grain, each {@code any} when not pinned.
      *
      * @param form {@code pv} (scenario PVs, {@code VALUE_TYPE: PV}), {@code pnl} (P&amp;L vectors, {@code PNL}) or {@code any}
      * @param grain {@code trade} ({@code GRAIN: TRADE}), {@code position} ({@code POSITION}) or {@code any}
@@ -282,7 +282,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
     }
 
     /**
-     * The server's own position rules (VAR_GUIDE.md section 15.6), used when no loaded pack has a {@code positions:} section.
+     * The server's own position rules (VAR.md section 2.6), used when no loaded pack has a {@code positions:} section.
      *
      * @param liveStatuses the trade statuses that count on their date (default NEW, VALIDATED, AMENDED)
      * @param rules first match wins: {@code name}, {@code groups} (PRODUCT_GROUP), {@code types} (PRODUCT_TYPE), {@code key} (the fields
@@ -308,7 +308,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
     }
 
     /**
-     * The official end-of-day captures (VAR_GUIDE.md section 19).
+     * The official end-of-day captures (VAR.md section 5).
      *
      * @param enabled capture every node of every hierarchy when a date's inputs are complete (after the data-load signal)
      * @param publish also write them to {@code <root>/risk-results/var-official} for other systems
@@ -316,7 +316,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
      * @param retentionYears the years the published table keeps its log and removed files (time travel), 7 by default
      * @param onStart at start, capture the newest date when it has no official record yet (a lake built while the server was down)
      * @param currencies the reporting currencies captured officially (USD always, first and published; others kept in the content
-     *     store beside it, VAR_GUIDE.md section 19)
+     *     store beside it, VAR.md section 5)
      * @param jsonl also write each published date as JSON Lines beside the table (2.9.4, true by default)
      * @param format the published table's format, {@code delta} (the default) or {@code iceberg} (2.9.5)
      * @param storage the object store's settings for an {@code s3://} root ({@code s3.endpoint}, {@code s3.region}, {@code s3.access-key},

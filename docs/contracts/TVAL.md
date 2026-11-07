@@ -7,14 +7,14 @@
 # TVAL, trade valuation totals: the data contract
 
 *Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned, parked) · Shared rules: [README.md](README.md) · Model contract:
-[VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Roadmap: [IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)*
+[VAR.md](VAR.md#1-the-contract-at-a-glance) · Roadmap: [IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)*
 
 This is the planned data contract of **TVAL**: the valuation of any set of trades, summed and broken down when asked, from one
 valuation row per trade that an upstream engine delivers. It replaces the stored kind `trade-valuation`. Everything here is a
 **proposal**: names may still change, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
 The shared rules (the common risk lake, keys, types, dates, signs, delivery, validation, answers, entitlements, versioning, retirement)
 are in [README.md](README.md); the scope grammar, captures, baskets, official end-of-day captures and the entitlement model are VaR's
-([VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)) and are referred to, not repeated.
+([VAR.md](VAR.md#1-the-contract-at-a-glance)) and are referred to, not repeated.
 
 **Sources read for this contract (2026-10-25):** `config/packs/market-risk/contracts/trade-valuation.contract.yaml`, the pack's
 `samples/trade-valuation.jsonl` (765 records), `data/testdata/market-risk/trade-valuation/` (a snapshot of 12,076 on 2026-07-08 and
@@ -96,14 +96,14 @@ ${DRISHTI_DELTA_ROOT}/risk/
 ```
 
 Served by the common connector `risk-store` (`plugin: delta`, domain `risk`; [README.md section 2](README.md#2-the-common-risk-lake)).
-The physical layout follows VaR's ([VAR_GUIDE.md section 15.1](../guides/VAR_GUIDE.md#151-where-they-live)): `id` STRING (the key below), `doc` STRING (the
+The physical layout follows VaR's ([VAR.md section 2.1](VAR.md#21-where-they-live)): `id` STRING (the key below), `doc` STRING (the
 whole row as JSON, for audit), `business_date` DATE (the partition) and the promoted columns marked **P** below.
 
 ### 3.2 `valuation`: one row per trade per business date (PLANNED)
 
 **Grain:** one row per trade, business date and valuation run. **Key:** `VALUATION_KEY` = `<TRADE_ID>` (unique per date); the natural
 key is (`BUSINESS_DATE`, `TRADE_ID`). **Rows:** every trade alive on the date (statuses `NEW`, `VALIDATED`, `AMENDED`, maturity on or
-after the date; [VAR_GUIDE.md section 23.1, open question 1](../guides/VAR_GUIDE.md#231-open-questions-of-the-contract)), plus trades that matured or were cancelled **on** the date (so
+after the date; [VAR.md section 9.1, open question 1](VAR.md#91-open-questions-of-the-contract)), plus trades that matured or were cancelled **on** the date (so
 P&L explain sees their last value, §3.4). **Partitioning:** `business_date`; rows sorted by `TT_BOOK`, then `TRADE_ID` (proposed;
 the engine does not depend on the order). **Cadence:** once per business date after the close; intraday rows are open question 2.
 **Due:** to be agreed (open question 1). **Retention:** 7 years (product owner, 2026-10-25), Delta time travel kept for the same.
@@ -164,7 +164,7 @@ trades; the day-over-day change shows it under *gone*).
 |---|---|---|
 | `trade` (TRD; connectors `trade-endur`, `trade-calypso`, `trade-murex`) | `TRADE_ID` | live status, book (`TT_BOOK`, else `PORTFOLIO`: open question 5), counterparty, legal entity, product, currency, maturity, trader, version; the derived columns of §3.2 |
 | `netting-set` (NSET) | `TRADE_IDS` | the trade's netting set (the trade master has none; the retired record carried `NETTING_SET`) |
-| `risk-hierarchy` (HIER) | `NODE_ID`, `BOOKS` | the nodes and their books, as VaR ([VAR_GUIDE.md section 15.4](../guides/VAR_GUIDE.md#154-risk-hierarchy-the-trees-and-their-limits)) |
+| `risk-hierarchy` (HIER) | `NODE_ID`, `BOOKS` | the nodes and their books, as VaR ([VAR.md section 2.4](VAR.md#24-risk-hierarchy-the-trees-and-their-limits)) |
 | `fx-rate` (market-data pack) | currency pair, date | USD → reporting currency at the close of the date (§6.2) |
 | `counterparty` (CPTY), `lei-entity` (LEI), `legal-entity` (LE), `book`, `desk` | ids | labels and the `CPTY:`, `GROUP:`, `LE:` scopes |
 
@@ -365,7 +365,7 @@ the reactive cache holds the record. A load signal on `valuation` or `trade` dro
 ### 9.6 Official end-of-day captures and the published table
 
 When a date's `valuation` rows are complete, Drishti captures every node of both hierarchies (`MGMT`, `LEGAL`) as the official record
-(VaR's mechanism, [VAR_GUIDE.md section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results)) and publishes it to `${DRISHTI_DELTA_ROOT}/risk-results/tval-official/`
+(VaR's mechanism, [VAR.md section 5](VAR.md#5-official-end-of-day-results)) and publishes it to `${DRISHTI_DELTA_ROOT}/risk-results/tval-official/`
 ([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures), product owner 2026-10-25): one row per node
 per business date, the shared columns (`BUSINESS_DATE`, `HIERARCHY`, `NODE_ID`, `NODE_NAME`, `PARENT_ID`, `LEVEL`, `CAPTURE_ID`,
 `RESULT_VERSION`, `INPUT_VERSIONS`, `COMPUTED_AT`, `CONTRACT_VERSION`) and TVAL's figures:
@@ -429,7 +429,7 @@ Measured numbers will be recorded in this section after the build (a `TvalScaleB
 |---|---|
 | Folder | `data/testdata/market-risk/valuation/valuation.<date>.jsonl.gz`, one file per business date, listed in `data/testdata/testdata.yaml` |
 | Dates | the last **5** business dates (2026-09-24 to 2026-09-30) for the day-over-day change and P&L explain; open question 7 |
-| Trades | the full live set the VaR generator uses (about 9,572 on 2026-09-30; at most 10,000 trades in any local test data, as [VAR_GUIDE.md section 22.1](../guides/VAR_GUIDE.md#221-what-the-repository-ships-verified-2026-10-25-version-13)) |
+| Trades | the full live set the VaR generator uses (about 9,572 on 2026-09-30; at most 10,000 trades in any local test data, as [VAR.md section 8.1](VAR.md#81-what-the-repository-ships-verified-2026-10-25-version-13)) |
 | Generator | a new `tools/packgen/risk/valuations.py` (proposed), run by `tools/testdata/make_testdata.py`; deterministic (Python `Random` seeded by text, as `tools/packgen/var/factors.py`) |
 | Consistency | **MtM moves with the VaR factor model:** MTM_{t,D} = MTM_{t,D−1} + the trade's P&L under the day's own factor move (the 510th element of its VaR path, `make_var_data.py`), so `PNL_1D` = the day's MtM change for continuing trades and P&L explain reconciles (PNL.md §13) |
 | `--check` | regenerates into a temporary folder and fails when a committed file differs |

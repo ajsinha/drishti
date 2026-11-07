@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/lakes/var-official.yaml: the official results the server publishes (docs/guides/VAR_GUIDE.md section 19), read only by BI's reader. Its format, root and
+# config/lakes/var-official.yaml: the official results the server publishes (docs/contracts/VAR.md section 5), read only by BI's reader. Its format, root and
 # storage are the publisher's own settings (drishti.var.official.format, .root, .storage), so the reader follows wherever and however they are
 # published (Delta by default; Iceberg: the server makes the reader an Iceberg connector). docs/guides/LAKE_GUIDE.md.
 lake: var-official

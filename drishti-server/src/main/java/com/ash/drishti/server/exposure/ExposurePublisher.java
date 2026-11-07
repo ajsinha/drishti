@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Publishes the official end-of-day exposure results (EXPOSURE_GUIDE.md section 20, NSET.md section 9.5) for other systems, as VaR's
+ * Publishes the official end-of-day exposure results (EXP.md section 6, NSET.md section 9.5) for other systems, as VaR's
  * ({@code VarPublisher}): {@code <root>/risk-results/exposure-official/} one row per node of the MGMT and LEGAL hierarchies (figures over
  * the node's trades; no counterparty named), and {@code <root>/risk-results/exposure-official-cpty/} one row per netting set,
  * counterparty and connected group (restricted: it names counterparties). Each is appended as one Delta commit per capture by Drishti's

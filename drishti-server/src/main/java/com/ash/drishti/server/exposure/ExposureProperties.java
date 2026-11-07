@@ -99,7 +99,7 @@ public record ExposureProperties(Boolean enabled, List<Double> confidence, Doubl
     }
 
     /**
-     * The official end-of-day captures (EXPOSURE_GUIDE.md section 20).
+     * The official end-of-day captures (EXP.md section 6).
      *
      * @param enabled capture every netting set, counterparty, group and hierarchy node when a date's inputs are complete
      * @param publish also append them to {@code <root>/risk-results/exposure-official} and {@code exposure-official-cpty}

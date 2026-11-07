@@ -28,7 +28,7 @@ import java.util.TreeMap;
 import java.util.function.Function;
 
 /**
- * Per-trade-currency totals of every hierarchy node (VAR_GUIDE.md section 15.11, product owner 2026-10-27): for each currency {@code c}
+ * Per-trade-currency totals of every hierarchy node (VAR.md section 2.11, product owner 2026-10-27): for each currency {@code c}
  * the node's trades are priced in ({@code PV_CURRENCY}: a scenario-PV row's {@code CURRENCY}; USD for a P&amp;L vector), the sum of their
  * <b>native</b> PVs under each scenario {@code PVsum_c(s)} and today {@code PVbase_c}. A node's P&amp;L in any reporting currency {@code X}
  * is then exact and cheap, one pass over a handful of currencies instead of the node's trades:

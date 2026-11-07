@@ -19,9 +19,9 @@ asks the server's VaR engine (/api/v1/var) with the user's own identity, so enti
 Command words after VAR (``VAR BANK``, ``VAR LE LE-NY``, ``VAR DIV MARKETS``, ``VAR DESK RATES``, ``VAR BOOK BOOK-RATES-1``,
 ``VAR POS <position>``, ``VAR TRD <trade>``, ``VAR CPTY <counterparty>``, ``VAR PORT <portfolio>``, ``VAR SCOPE <basket or portfolio>``,
 ``VAR CAPTURE <id>``) are read here, each optionally followed by ``IN <currency>`` (``VAR DESK DESK-RATES IN EUR``: the page in that
-reporting currency, docs/guides/VAR_GUIDE.md section 15.11; the page's link carries it as ``ccy=EUR``) and by the lens (2.9.7, section
+reporting currency, docs/contracts/VAR.md section 2.11; the page's link carries it as ``ccy=EUR``) and by the lens (2.9.7, section
 18.6): a horizon ``10D`` (or ``1D``) with a method ``SUM`` or ``SQRT`` (none: the setting's), a VaR confidence ``95``, ``97.5``, ``99``,
-``99.5`` and an ES confidence ``ES 97.5``, in any order (``VAR BANK 10D SUM 97.5``; the link carries ``h=10d&m=sum&q=0.975&esq=0.975``). The stored ``var`` and ``var-node`` kinds were retired in 2.8.0 (docs/guides/VAR_GUIDE.md section 21):
+``99.5`` and an ES confidence ``ES 97.5``, in any order (``VAR BANK 10D SUM 97.5``; the link carries ``h=10d&m=sum&q=0.975&esq=0.975``). The stored ``var`` and ``var-node`` kinds were retired in 2.8.0 (docs/contracts/VAR.md section 7):
 an old id (``VAR VAR-COMM``, ``/v/var/VAR-COMM``, ``/v/var-node/VN-MGMT~DESK-RATES``) opens the explorer at the matching scope."""
 from __future__ import annotations
 

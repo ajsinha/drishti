@@ -248,7 +248,7 @@ server; busy protection.**
   collect and post, compared with the counterparty's call; **`PLAY SIMM`** with its workbook. The bank loads its licensed ISDA parameter
   file; Drishti ships none of ISDA's numbers.
 - **Position sensitivities and the risk-factor dictionary** as data kinds, with their data contracts ([FRTB](docs/contracts/FRTB.md),
-  [FRTB data structures](docs/contracts/FRTB_DATA_STRUCTURES.md), [SIMM](docs/contracts/SIMM.md)).
+  [FRTB data structures](docs/contracts/FRTB.md#17-data-structures-frtb-and-simm), [SIMM](docs/contracts/SIMM.md)).
 - **The in-memory lake** ([IN_MEMORY_LAKE_GUIDE](docs/guides/IN_MEMORY_LAKE_GUIDE.md), tutorial 31): Delta tables held only in the
   server's memory for feeds that by contract may never touch a disk, under a hard cap, refilled by server jobs, compacted automatically;
   nothing of them reaches a disk (proved by a marker scan), downloads allowed and audited. News first.
@@ -443,7 +443,7 @@ days.**
   members; the browser tests ignore a checkout's own connector and cluster files.
 - **Documents:** the ViewModel contract and its JSON Schema ([VIEWMODEL](docs/architecture/VIEWMODEL.md),
   `GET /api/v1/viewmodel/schema`); how a screen is made, generic not bespoke (ARCHITECTURE section 7a); a worked example of every data
-  type, field by field ([data samples](docs/contracts/samples/README.md)), with every input contract audited against all its rows and a
+  type, field by field (data samples (docs/contracts/samples/, since folded into the contract pages)), with every input contract audited against all its rows and a
   drift test; the computed-attributes analysis of the market-risk and counterparty-risk packs, with its decisions
   ([COMPUTED_ATTRIBUTES](docs/architecture/COMPUTED_ATTRIBUTES.md)); the documentation consolidated (178 to 152 active documents,
   obsolete designs deleted); the README rewritten as a product page.
@@ -640,7 +640,7 @@ designs kept ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#
   validation, entitlements, versioning, retirement); a machine-readable contract for every command
   (`config/packs/<pack>/contracts/<kind>.contract.yaml`, `drishti.py contract`), generated pages, and the **command catalog**
   ([COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md)): every command with what it does and an example. The detailed VaR contract is
-  [VAR_GUIDE.md Part II](docs/guides/VAR_GUIDE.md#14-the-contract-at-a-glance); the parked measures' contracts (FRTB, SIMM, SA-CCR, EXP, CVA, stress, P&L explain …) are kept as designs.
+  [VAR.md](docs/contracts/VAR.md#1-the-contract-at-a-glance); the parked measures' contracts (FRTB, SIMM, SA-CCR, EXP, CVA, stress, P&L explain …) are kept as designs.
 - **VaR, complete** ([VAR_GUIDE.md](docs/guides/VAR_GUIDE.md), tutorial 25):
   - the stored `var` and `var-node` kinds are **retired**: `VAR-*` ids and links open the explorer; positions, portfolios and desks
     carry no stored VaR figure, their pages show the engine's, computed as the reader; a guard test keeps it so;

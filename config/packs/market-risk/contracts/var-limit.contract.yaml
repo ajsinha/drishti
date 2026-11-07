@@ -56,7 +56,7 @@ fields:
   type: text
   presence: required
   description: 'The hierarchy the node is in (A-Z, digits, _): LL, MGMT, LEGAL in the demo, read for a hierarchy whose configuration names
-    this kind (limits: var-limit, VAR_GUIDE.md section 16); PORTFOLIO for a portfolio''s limit (NODE_ID its PORTFOLIO_ID). Every VaR limit
+    this kind (limits: var-limit, VAR.md section 3); PORTFOLIO for a portfolio''s limit (NODE_ID its PORTFOLIO_ID). Every VaR limit
     lives here, with its currency (decision 8): the risk-hierarchy rows and the portfolios carry none.'
   example: LL
   pattern: ^[A-Z][A-Z0-9_]*$

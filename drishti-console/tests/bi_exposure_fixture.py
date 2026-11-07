@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The published official exposure of a BI test lake (risk-results/exposure-official-cpty), as the server's ExposurePublisher writes it
-(docs/guides/EXPOSURE_GUIDE.md section 20): the BI samples' exposure measures read that table since 2.9.0, and a test lake made by
+(docs/contracts/EXP.md section 6): the BI samples' exposure measures read that table since 2.9.0, and a test lake made by
 tools/packgen/banking/make_data.py --lake has netting sets but no exposure paths for the server to compute from. Each netting set of the
 lake's last business date gets one row, and each counterparty one row of its own; the figures are illustrative (from the set's net MTM),
 deterministic, and only for tests that compare BI answers with each other.

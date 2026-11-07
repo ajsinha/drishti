@@ -40,7 +40,7 @@ Every P&L and scenario-PV row carries its LIMIT_LETTER (2.9.5, positions.limit_l
 
 No position, no VaR and no node history is written: positions are derived by the server from the trades and the pack's rules (VAR_GUIDE.md
 section 3.7), every figure is computed when asked, and a node's history is its official end-of-day captures. Every live trade is valued
-(statuses NEW, VALIDATED, AMENDED; maturity on or after the date; VAR_GUIDE.md section 23.1 question 1), about 9,600 trades. Each kind's
+(statuses NEW, VALIDATED, AMENDED; maturity on or after the date; VAR.md section 9.1 question 1), about 9,600 trades. Each kind's
 folder holds one file per business date, <kind>.<YYYY-MM-DD>.jsonl.gz, or tar archives of <kind>/<YYYY-MM-DD>/ folders where a date is
 several files or one run writes many dates (TARS: the P&L vectors and scenario PVs one archive a date, their vectors split into files of
 about 1.2 MB; the desks' 260-day P&L one archive; scenario-set and fx-scenario, whose newest date holds the stress set's file too, one
@@ -391,7 +391,7 @@ def samples(demo: Demo, docs: dict[str, list[dict]]) -> dict[Path, str]:
              # a node's history cut to its first 20 days, so the sample stays readable (the lake's rows hold every day since 2007)
              "pnl-history": [{**r, "HISTORY_DATES": r["HISTORY_DATES"][:20], "PNL": r["PNL"][:20], "DAY_COUNT": 20,
                               "LAST_DAY": r["HISTORY_DATES"][19]} for r in docs["pnl-history"] if r["NODE_ID"] == "MGMT~DESK-RATES"]}
-    # and the same data at position grain (VAR_GUIDE.md section 15.13): a position its source system sends whole, naming its trades
+    # and the same data at position grain (VAR.md section 2.13): a position its source system sends whole, naming its trades
     b = demo.batch
     for kind, key, form in (("pnl-vector", "VECTOR_ID", "PNL"), ("scenario-pv", "SCENARIO_PV_ID", "PV")):
         rows = {r["TRADE_ID"]: r for r in docs[kind] if r.get("GRAIN") == "TRADE"}
@@ -495,7 +495,7 @@ SYSTEMS = ("ENDUR", "MUREX", "CALYPSO")
 
 
 def inputs_config(pv: tuple[str, ...], by_position: tuple[str, ...]) -> str:
-    """The drishti.var.inputs pins matching the data (VAR_GUIDE.md section 15.13): optional, a cross-check of each record's own fields."""
+    """The drishti.var.inputs pins matching the data (VAR.md section 2.13): optional, a cross-check of each record's own fields."""
     lines = ["drishti:", "  var:", "    inputs:                      # optional: a record that disagrees with its system's pin is refused (DRS-5209)"]
     for s in SYSTEMS:
         form = "pv" if s in pv else "pnl"

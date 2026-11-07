@@ -97,7 +97,7 @@ def netting_sets(trades: dict) -> dict[str, list[dict]]:
 
 
 def profile(members: list[dict], collateral: float) -> list[dict]:
-    """The bucketed profile the retired stored exposure-profile kind carried (EXPOSURE_GUIDE.md section 22.2): no longer written to any document
+    """The bucketed profile the retired stored exposure-profile kind carried (EXP.md section 8.2): no longer written to any document
     (the exposure engine computes profiles from the paths, 2.9.0); kept because the stored CVA and the limits' usage (parked) are
     built on it."""
     net = amount(t["mtm"] for t in members)
@@ -252,7 +252,7 @@ def market_results(trades: dict, docs: dict) -> None:
         contrib = {b: book_var(books[b]) for b in sorted(bl)}
         var99 = round(math.sqrt(fsum(v * v for v in contrib.values())) * 0.85)
         limit = round(var99 * r.uniform(1.25, 1.8), -4)
-        # the retired stored VaR (the var kind, 2.8.0: VaR is the engine's, docs/guides/VAR_GUIDE.md section 21) drew the desk's P&L
+        # the retired stored VaR (the var kind, 2.8.0: VaR is the engine's, docs/contracts/VAR.md section 7) drew the desk's P&L
         # series from this generator: the draws stay so every other result keeps its numbers
         for _ in days:
             r.gauss(0, 1)
@@ -343,7 +343,7 @@ def reference(trades: dict, docs: dict) -> None:
         out = {"counterpartyId": f"CP-{cp}", "name": name, "lei": ids.lei(name), "rating": rating, "sector": sector, "country": country, "type": typ,
                "COUNTRY_OF_RISK": country, "UEN": f"UEN{100000 + n * 37:07d}", "economy": f"ECON-{ISO3[country]}",
                "newsId": "NEWS-" + name.replace(" ", "_"),           # its headlines, when the news-and-markets pack's connector is on
-               "netMtm": amount(s["netMtm"] for s in sets),       # no PFE peak: the exposure engine's at CPTY:<id> (EXPOSURE_GUIDE.md section 22)
+               "netMtm": amount(s["netMtm"] for s in sets),       # no PFE peak: the exposure engine's at CPTY:<id> (EXP.md section 8)
                "nettingSets": [{"id": s["nettingSetId"], "agreement": s["agreement"], "trades": s["tradeCount"], "netMtm": s["netMtm"]} for s in sets],
                "kyc": {"status": "Approved", "riskRating": "Standard" if rating[0] == "A" else "Enhanced", "lastReview": "2026-02-11",
                        "emirClassification": "FC" if typ in ("Bank", "Hedge fund", "Insurer", "Asset manager", "Pension fund") else "NFC-",

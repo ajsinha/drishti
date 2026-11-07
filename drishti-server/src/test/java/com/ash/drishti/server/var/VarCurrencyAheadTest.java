@@ -44,7 +44,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * The listed reporting currencies built ahead and the per-trade-currency totals (VAR_GUIDE.md section 15.11), over the scenario-PV
+ * The listed reporting currencies built ahead and the per-trade-currency totals (VAR.md section 2.11), over the scenario-PV
  * fixture ({@link VarPvFixture}: a EUR and a CAD trade beside USD P&amp;L vectors): after the USD book loads, EUR and CAD are built in the
  * background into their own hot files, JPY (no FX on the date) is said not built; the page's currencies list the listed ones, the
  * ready ones and every currency with FX; a node's VaR in EUR from the totals equals the book converted trade by trade; the "In other

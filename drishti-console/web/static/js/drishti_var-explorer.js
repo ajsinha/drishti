@@ -427,7 +427,7 @@
     if (chipText) c.appendChild(h("span", "vx-chip amber", chipText));
   }
 
-  /** Per source system on the date: its form and grain, its records, how decided (VAR_GUIDE.md section 15.13). */
+  /** Per source system on the date: its form and grain, its records, how decided (VAR.md section 2.13). */
   function bySystem(m) {
     var names = Object.keys(m || {}).sort();
     if (!names.length) return "one form a trade";

@@ -37,7 +37,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * A hierarchy built from the trades' columns over the API (2.9.5, VAR_GUIDE.md section 16), on {@link VarHierarchyFixture}: the limit
+ * A hierarchy built from the trades' columns over the API (2.9.5, VAR.md section 3), on {@link VarHierarchyFixture}: the limit
  * letters {@code LL} ({@code LIMIT_LETTER > DESK}, configured by {@code drishti.var.hierarchies}) beside MGMT and LEGAL from the rows. Its
  * tree and titles; a letter holding part of a book is exactly the sum of its trades ({@code LL:LL-A} is {@code TRD:T1,T3,T5}); a node
  * by its path and by {@code NODE:}; its limits from {@code var-limit} (none: blank); a position split between letters, said; a row with an

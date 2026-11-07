@@ -43,7 +43,7 @@ import java.util.TreeSet;
  * inputs are built as the person (their nodes, roles and masks, as every VaR answer) from the engine's own vectors on the date: each
  * position's scenario P&amp;L in the reporting currency as the engine holds it, its USD value today and the currency its PVs came in, and
  * the date's scenario FX; each position's scenario PVs are recovered from them ({@code PV(s) = (P&L_r(s) + p / FX_r(base)) × FX_r(s) /
- * FX_c(s)}, the same recovery as the per-currency totals, VAR_GUIDE.md section 15.11), so the workbook's chain of formulas gives back the
+ * FX_c(s)}, the same recovery as the per-currency totals, VAR.md section 2.11), so the workbook's chain of formulas gives back the
  * engine's vector. Positions beyond the count shown (the largest by |component VaR| are kept) are summed into one Rest of scope column,
  * so the sheet's portfolio is the engine's scope to the cent.
  */

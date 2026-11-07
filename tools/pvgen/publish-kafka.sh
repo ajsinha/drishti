@@ -18,7 +18,7 @@
 #   tools/pvgen/publish-kafka.sh --dry-run --seconds 5
 #   tools/pvgen/publish-kafka.sh --per-message 10 --save data/pvgen/sent.jsonl
 #   tools/pvgen/publish-kafka.sh --help
-# Uses the console's Python environment when it exists (drishti-console/.venv), else python3. Guide: docs/guides/VAR_GUIDE.md section 15.12
+# Uses the console's Python environment when it exists (drishti-console/.venv), else python3. Guide: docs/contracts/VAR.md section 2.12
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 PY=drishti-console/.venv/bin/python

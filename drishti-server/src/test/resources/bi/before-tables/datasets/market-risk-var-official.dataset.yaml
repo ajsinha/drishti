@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # STORED SAMPLE (2.9.0): the published official end-of-day VaR results, as the server appends them to risk-results/var-official
-# (docs/guides/VAR_GUIDE.md section 19), read through the market-risk pack's read-only Delta connector var-results (kind var-official).
+# (docs/contracts/VAR.md section 5), read through the market-risk pack's read-only Delta connector var-results (kind var-official).
 # Every result version of a date is a row here: the dataset market-risk-var-latest keeps the latest version of each node and date, and the
 # model market-risk-var reads that one.
 # The business date is the built-in column businessDate (the table's partition); every column below is promoted in the connector's

@@ -42,7 +42,7 @@ class PacksServedWithoutDemoTest {
     static final Path PACKS = Path.of("..", "config", "packs");
     static final Path TESTDATA = Path.of("..", "data", "testdata");
     /** price-history: internal-only prices, off as shipped. The published official results (var-official, exposure-official-cpty) are
-     *  written by the server's own official captures into risk-results, never delivered as test data (VAR_GUIDE.md section 19). */
+     *  written by the server's own official captures into risk-results, never delivered as test data (VAR.md section 5). */
     static final Set<String> EXEMPT = Set.of("us-equities/price-history", "market-risk/var-official", "counterparty-risk/exposure-official-cpty");
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
 

@@ -24,7 +24,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * The hierarchies' configuration (2.9.5, VAR_GUIDE.md section 16): read from a pack's {@code hierarchies:} block or the
+ * The hierarchies' configuration (2.9.5, VAR.md section 3): read from a pack's {@code hierarchies:} block or the
  * {@code drishti.var.hierarchies} setting; the levels written {@code "A > B"} or as a list; the defaults; and what is refused (a
  * duplicate id or word, a reserved word, a column hierarchy without levels, an unknown source or ids mode).
  */

@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The bank's desk P&amp;L (the kind {@code desk-pnl}, VAR_GUIDE.md section 15.16): each desk's actual and hypothetical P&amp;L of a business
+ * The bank's desk P&amp;L (the kind {@code desk-pnl}, VAR.md section 2.16): each desk's actual and hypothetical P&amp;L of a business
  * date, read from its connector as the server and kept a few minutes per date (a restated day is read again after that). Never an input of
  * the VaR engine: the backtest compares the official VaR of the day before with it.
  */

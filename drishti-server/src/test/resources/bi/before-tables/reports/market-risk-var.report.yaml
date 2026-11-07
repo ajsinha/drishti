@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # SAMPLE REPORT (2.9.0): "Market risk: VaR". VaR in BI from the PUBLISHED official end-of-day results (risk-results/var-official,
-# docs/guides/VAR_GUIDE.md section 19), never from a stored VaR record: the bank's VaR and ES, VaR by desk and by legal entity, the bank and
+# docs/contracts/VAR.md section 5), never from a stored VaR record: the bank's VaR and ES, VaR by desk and by legal entity, the bank and
 # a desk over time, and every node with its limit and limit use. VaR is not additive: every visual groups by the node or filters to one
 # (the model market-risk-var says why), so no bar or total is a sum of VaRs.
 # Drill: a bar's "Drill through" opens the Node page for that node; a NODE_ID cell opens the node in the terminal, and

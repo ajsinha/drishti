@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Where the official end-of-day results go (VAR_GUIDE.md section 19, EXPOSURE_GUIDE.md's official records; 2.9.5): the tables
+ * Where the official end-of-day results go (VAR.md section 5, EXPOSURE_GUIDE.md's official records; 2.9.5): the tables
  * {@code <root>/risk-results/<table>} as <b>Delta</b> (the default, {@link DeltaSink}) or <b>Iceberg</b> ({@link IcebergSink}), by
  * configuration ({@code drishti.var.official.format}, {@code drishti.ccr.exposure.official.format}), the root a local or shared folder
  * or {@code s3://bucket/prefix} (credentials from the {@code s3.*} settings, else the AWS default chain). Every write is an append:

@@ -27,7 +27,7 @@ A trade's update comes as scenario PVs when its system is in ``--pv-systems`` (d
 either. ``--seed`` makes the same batches every run. Files: ``<out>/intraday-<date>/I-<date>-<NNN>/<kind>.<date>.jsonl`` (one kind a
 file, named by the load rules, docs/architecture/DATA_LOAD_RULES.md; a batch a folder; ``.jsonl.gz`` with ``--gzip``). ``--lake`` appends each batch to the lake (``drishti.py lake build --mode append``), ``--server``
 raises its data-load signal (the VaR engine applies it without a reload), ``--every 30s`` drips them. Guide:
-docs/guides/VAR_GUIDE.md section 15.12."""
+docs/contracts/VAR.md section 2.12."""
 from __future__ import annotations
 
 import argparse

@@ -142,7 +142,7 @@ currency (**More…**, or `--ccy CHF`) is built the first time it is asked. The 
 summed per trade currency, exact to the cent. A trade page's strip now says its **Trade currency** (`EUR · as priced` for an Endur trade
 sent as scenario PVs, `USD · as booked` for one sent as a P&L vector).
 
-**Further in the guide:** [section 15.1](../guides/VAR_GUIDE.md#151-where-they-live) (the inputs), [section 2.2](../guides/VAR_GUIDE.md#22-on-the-test-data) (the bank's numbers read), [section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency) (scenario PVs and their FX), [section 15.10](../guides/VAR_GUIDE.md#1510-reporting-currency) (reporting currencies), [section 15.11](../guides/VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker) (built ahead, the totals, the picker).
+**Further in the guide:** [VAR.md section 2.1](../contracts/VAR.md#21-where-they-live) (the inputs), [section 2.2](../guides/VAR_GUIDE.md#22-on-the-test-data) (the bank's numbers read), [VAR.md section 2.9](../contracts/VAR.md#29-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency) (scenario PVs and their FX), [VAR.md section 2.10](../contracts/VAR.md#210-reporting-currency) (reporting currencies), [VAR.md section 2.11](../contracts/VAR.md#211-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker) (built ahead, the totals, the picker).
 
 ## Step 2 · Drill down from the bank to a trade
 
@@ -342,7 +342,7 @@ VAR POS:POS-BOOK-EQD-2~SEC-WARRANT-USD-01  ·  POS-BOOK-EQD-2~SEC-WARRANT-USD-01
 quantile is taken. The bond future of step 2 is in `POS-BOOK-RATES-1~XCH-BOND_FUTURE-AUD-02` (the *listed* rule); a swap is a position of
 its own (`POS-<book>~<trade>`, the *otc* rule).
 
-**Further in the guide:** [section 4](../guides/VAR_GUIDE.md#4-positions-derived-never-delivered) and [section 15.6](../guides/VAR_GUIDE.md#156-positions-derived-by-drishti) (every rule and column).
+**Further in the guide:** [section 4](../guides/VAR_GUIDE.md#4-positions-derived-never-delivered) and [VAR.md section 2.6](../contracts/VAR.md#26-positions-derived-by-drishti) (every rule and column).
 
 ## Step 7 · Save a basket, capture it, compare
 
@@ -416,7 +416,7 @@ exceptions are too many or too few, a Christoffersen p-value below 0.05 that the
 
 **You should see** green with 3 exceptions for the FX desk (2.5 expected at 99%); the bank replays amber with 5.
 
-**Further in the guide:** [section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting) (history), [section 18.4](../guides/VAR_GUIDE.md#184-history-and-backtest) (the backtest's formulas), [section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) (official records).
+**Further in the guide:** [section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting) (history), [section 18.4](../guides/VAR_GUIDE.md#184-history-and-backtest) (the backtest's formulas), [VAR.md section 5](../contracts/VAR.md#5-official-end-of-day-results) (official records).
 
 ## Step 9 · How the date sits in memory and on disk
 
@@ -566,7 +566,7 @@ entitlement)* for the bank: the bank's 9,572 trades less the rates desk's 1,487,
 ## Step 13 · Intraday: a pricing system re-sends trades
 
 During the day a pricing system sends only the trades that changed. `tools/pvgen` is a stand-in for one (pure Python, JSONL only, every
-line one row of the contract; [VAR_GUIDE.md section 15.12](../guides/VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs)).
+line one row of the contract; [VAR.md section 2.12](../contracts/VAR.md#212-producing-pl-vectors-and-scenario-pvs)).
 
 **From the command line**, with the server of step 1 running (Windows: `tools\windows\pvgen-intraday.ps1` with the same options):
 
@@ -615,7 +615,7 @@ record is still the morning run's. The same updates can come from Kafka (the `pv
 `tools/pvgen/publish-kafka.sh`): [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes).
 
 **Further in the guide:** [section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)
-(the rules: latest `COMPUTED_AT` wins, cancels, new trades), [section 15.12](../guides/VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs)
+(the rules: latest `COMPUTED_AT` wins, cancels, new trades), [VAR.md section 2.12](../contracts/VAR.md#212-producing-pl-vectors-and-scenario-pvs)
 (the scripts, both forms side by side).
 
 ## Step 14 · Limit letters: a hierarchy from the trades' own columns
@@ -691,8 +691,8 @@ whose trades sit under both letters is split in two, one part per letter: `POS:P
 skips that hierarchy alone, with a `DRS-5211` warning, and everything else answers; a configuration that is not valid refuses the
 start (`DRS-5213`).
 
-**Further in the guide:** [section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns)
-(the configuration, cells, split positions, the equality tests), [section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits)
+**Further in the guide:** [VAR.md section 2.14](../contracts/VAR.md#214-hierarchies-from-the-rows-or-from-the-trades-columns)
+(the configuration, cells, split positions, the equality tests), [VAR.md section 2.15](../contracts/VAR.md#215-var-limit-the-nodes-var-limits)
 (`var-limit`).
 
 ## Step 15 · Ten days and another confidence
@@ -905,7 +905,7 @@ maker is refused (*one person signs one step*).
 
 **Further in the guide:** [section 18.10](../guides/VAR_GUIDE.md#1810-period-statistics) (period statistics and the synthetic history),
 [section 18.11](../guides/VAR_GUIDE.md#1811-backtesting-for-regulation) (the backtest), [section 18.14](../guides/VAR_GUIDE.md#1814-regulatory-reports-definitions-runs-checks-and-sign-off)
-(definitions, runs, checks and sign-off), [section 15.16](../guides/VAR_GUIDE.md#1516-desk-pnl-the-banks-actual-and-hypothetical-pl)
+(definitions, runs, checks and sign-off), [VAR.md section 2.16](../contracts/VAR.md#216-desk-pnl-the-banks-actual-and-hypothetical-pl)
 (the desk P&L's contract).
 
 ## Step 18 · Work the VaR out by hand: the VaR Playground
@@ -973,7 +973,7 @@ and 500 positions, is tested on every build.
 - Read the same vectors through a normal distribution: [tutorial 43](43-parametric-var-beside-historical.md), parametric VaR beside historical and the fat-tail gap.
 - Read [VAR_GUIDE.md](../guides/VAR_GUIDE.md): the measures by hand on ten scenarios, the data flow and restatements, the scope grammar in full, the
   data contract (Part II), sizing for a bank of a million trades and the benchmark (Part III), troubleshooting.
-- Load your own batch: the columns are in [VAR_GUIDE.md section 15](../guides/VAR_GUIDE.md#15-inputs-from-upstream-engines); send the data-load
+- Load your own batch: the columns are in [VAR.md section 2](../contracts/VAR.md#2-inputs-from-upstream-engines); send the data-load
   signal ([tutorial 7](07-load-data-daily.md)) and the date is reloaded and captured officially.
 - Put a computed VaR on your own screen: a Sutra panel can read `var-result` like [tutorial 23](23-computed-panels.md)'s computed panels.
 
@@ -984,7 +984,7 @@ and 500 positions, is tested on every build.
 | *no P&L vectors in any connector* | build the lake (step 1); is the market-risk pack loaded? |
 | other numbers than these | you built the lake with `--as-of today`: trades matured since 2026-09-30 drop out; rebuild with `--as-of data` |
 | the bank's VaR is 112,035,906 and the provenance says only `pnl-vector` | the lake has no `scenario-pv` table (built without it, or `--only` without it): the Endur trades are missing too (8,233 trades); rebuild with the `--only` list of step 1 |
-| `--ccy` answers `422 DRS-5207` | the date has no rates for that currency: supply them in `fx-scenario`, or load enough FX history in `fx-spot` ([VAR_GUIDE.md section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) |
+| `--ccy` answers `422 DRS-5207` | the date has no rates for that currency: supply them in `fx-scenario`, or load enough FX history in `fx-spot` ([VAR.md section 2.9](../contracts/VAR.md#29-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) |
 | `PORT <id>` says *no source holds portfolio/…* | the page opens on today's date; pick **2026-09-30** in the date box (the explorer finds the newest date by itself) |
 | step 11 answers `400` *… has no P&L vector* | the copied trade or scope has no vectors on the date (matured, cancelled, typed wrong): check it with `VAR SCOPE <it>` |
 | *the vectors of … were unloaded while this answer was computed* | ask again ([VAR_GUIDE.md section 13](../guides/VAR_GUIDE.md#13-troubleshooting)) |

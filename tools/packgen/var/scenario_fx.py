@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The demo batch's scenario PVs and scenario FX (docs/guides/VAR_GUIDE.md sections 15.9 and 15.10; release 2.9.4).
+"""The demo batch's scenario PVs and scenario FX (docs/contracts/VAR.md sections 2.9 and 2.10; release 2.9.4).
 
 A bank may send a trade's scenario P&L as **scenario PVs** in the trade's own currency (the ``scenario-pv`` kind) instead of a P&L vector,
 with each currency's **scenario FX** when it has it (``fx-scenario``). The demo's Endur trades come that way (``PV_SYSTEMS``); every other

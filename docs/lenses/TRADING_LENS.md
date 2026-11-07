@@ -106,7 +106,7 @@ operations (COLL, MC) …").
 
 | Question | Drishti today | Gap |
 |---|---|---|
-| *Is my blotter complete and right?* | **Partly**: Today's blotter newest first with each trade's notional from its valuation; `TRD`, `CTRD`, `PTRD`, `LTRD`, `ITRD` | A reconciliation against the booking system or the trades valued (a trade with no valuation, a valuation of a cancelled trade): the load checks count rejected rows but completeness against trades booked is not checked ([VAR_GUIDE section 20.3](../guides/VAR_GUIDE.md#203-what-the-load-checks)) |
+| *Is my blotter complete and right?* | **Partly**: Today's blotter newest first with each trade's notional from its valuation; `TRD`, `CTRD`, `PTRD`, `LTRD`, `ITRD` | A reconciliation against the booking system or the trades valued (a trade with no valuation, a valuation of a cancelled trade): the load checks count rejected rows but completeness against trades booked is not checked ([VAR.md section 6.3](../contracts/VAR.md#63-what-the-load-checks)) |
 | *What is my flash P&L?* | **Partly**: P&L today recomputes when the date's valuations land (cached two minutes per person) | Flash P&L is the source's; Drishti shows MtM change. Not a gap Drishti should fill: Drishti does not price |
 | *Will my end-of-day VaR breach?* | **Partly**: the intraday VaR and the limit use (Trader desk) | A projected official limit use with the trades of the day (it is the intraday figure; say so on the tile) |
 
@@ -153,7 +153,7 @@ operations (COLL, MC) …").
 
 | Need | Status | Evidence or row |
 |---|---|---|
-| VaR limit use per book and desk | **Built** | `var-limit` ([VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits)); Limit use tile |
+| VaR limit use per book and desk | **Built** | `var-limit` ([VAR.md section 2.15](../contracts/VAR.md#215-var-limit-the-nodes-var-limits)); Limit use tile |
 | Limit use history by book (official) | **Built**: 5 business dates; a missing record shows "—" | Desk head |
 | Near-limit threshold | **Built**: `trading.near-limit` 0.8 | A different number from the VaR explorer's amber 75% and red 90% ([VAR_GUIDE section 3.2](../guides/VAR_GUIDE.md#32-the-screen)); section 9, decision 7 |
 | Sensitivity, stop-loss, notional limits | **Not built** | RO3 to RO6 of the oversight analysis |
@@ -415,7 +415,7 @@ scaled copy's for a linear product of the same terms.
 
 **Today** P&L today uses end-of-day valuations; intraday VaR is live from the PV topics (VAR_GUIDE section 8.4). **Design:** where the
 bank's intraday stream carries each trade's **base PV** (the `scenario-pv` contract has `BASE_PV` per row,
-[VAR_GUIDE section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)), the
+[VAR.md section 2.9](../contracts/VAR.md#29-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)), the
 intraday P&L of my books is Σ (intraday base PV − yesterday's close MtM) over the trades updated, plus the closing P&L of the others,
 labelled **intraday estimate** with the time of the latest update. Where the stream carries P&L vectors only, the tile stays end-of-day.
 **Size** M. **Data:** intraday base PVs per trade. **Tests:** a crafted intraday batch moves the tile by its base PV change; no base PV:

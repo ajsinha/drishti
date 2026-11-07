@@ -68,7 +68,7 @@ reporting and legal teams to decide. Drishti computes the figures, lays them out
 
 **What every report gets from Drishti:** the figures computed from trade-grain inputs for any node, legal entity or desk; the official
 end-of-day record of every node with its inputs' versions, membership and result versions, kept 7 years and recomputable
-([VAR_GUIDE section 19](VAR_GUIDE.md#19-official-end-of-day-results)); the published official table for downstream systems and BI; and
+([VAR.md section 5](../contracts/VAR.md#5-official-end-of-day-results)); the published official table for downstream systems and BI; and
 reporting currencies (a Canadian report needs CAD in `drishti.var.official.currencies`, whose default is USD only).
 
 ## 2. The regimes
@@ -340,7 +340,7 @@ sensitivities and inventory aging are not among the five metrics.
 | 1. Internal limits and usage | every limit of the desk (VaR at least), its upper and lower size and its daily usage | VaR limits ([VLIM](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit)); other limit types: a limit catalogue (proposed `risk-limit`, [STR.md 3.5](../contracts/STR.md#35-risk-limit-limits-by-measure-and-scope-fundamental)) | VaR limits **Built**; the catalogue **Not built (designed)** |
 | 2. VaR | daily 1-day 99% VaR per trading desk | official records | **Built** (per management desk); per regulatory desk **Not built (designed)** |
 | 3. Comprehensive P&L attribution | daily: P&L of existing positions attributed to risk factors and other factors (carry, reserves, cash flows, corrections), P&L of new positions including fees and commissions, the unexplained | desk P&L; P&L explain ([PNL.md](../contracts/PNL.md)); planned trade cash flows ([TCF](../contracts/packs/market-risk.md#tcf-trade-cash-flows-daily-trade-cash-flow)) | **Not built (designed)** |
-| 4. Positions | daily value of the desk's securities and derivatives positions, long and short | derived positions ([VAR_GUIDE 15.6](VAR_GUIDE.md#156-positions-derived-by-drishti)); planned Volcker trade attributes ([VTRD](../contracts/packs/market-risk.md#vtrd-volcker-trade-attributes-volcker-trade)) for the product split | **Not built (designed)** |
+| 4. Positions | daily value of the desk's securities and derivatives positions, long and short | derived positions ([VAR.md 2.6](../contracts/VAR.md#26-positions-derived-by-drishti)); planned Volcker trade attributes ([VTRD](../contracts/packs/market-risk.md#vtrd-volcker-trade-attributes-volcker-trade)) for the product split | **Not built (designed)** |
 | 5. Transaction volumes | value and number of transactions with customers, non-customers, and desks of the same or another banking entity | planned Volcker trade attributes (`COUNTERPARTY_CLASS`, `TRANSACTION_VALUE`) | **Not built (designed)** |
 | Desk information | desk name, covered activities, strategy, trading-day calendar | planned regulatory desks | **Not built (designed)** |
 
@@ -356,7 +356,7 @@ are counterparty measures, not VaR. They are out of this document's scope.
 
 Every regulatory figure is read from the **official end-of-day records**, never recomputed for a report: one record per node of every
 hierarchy per business date, with its result version, inputs' versions and membership, append-only, kept 7 years
-([VAR_GUIDE section 19](VAR_GUIDE.md#19-official-end-of-day-results)). A record carries `var` (1-day at `drishti.var.confidence`), `es`,
+([VAR.md section 5](../contracts/VAR.md#5-official-end-of-day-results)). A record carries `var` (1-day at `drishti.var.confidence`), `es`,
 `varAt` (the VaR at each other backtesting confidence), `svar` and `ses` (on a date with a stress set), `hypoPnl` (the risk-theoretical
 P&L), the limit and its use, the standalone sum and diversification. A restated date gets a new result version; a report reads each
 date's latest version at the time it is run and freezes what it read ([6.3](#63-runs-freezing-and-lineage)).
@@ -427,7 +427,7 @@ Two routes give a risk type's VaR; both compute it like any node (historical sim
 
 | Route | How | Exactness | Status |
 |---|---|---|---|
-| **A risk-type hierarchy** | a configured hierarchy whose nodes are the risk types, from the trades' columns ([VAR_GUIDE 15.14](VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns)) or from rows | each trade wholly in one risk type | **Built — needs the bank's data** (the columns or the rows) |
+| **A risk-type hierarchy** | a configured hierarchy whose nodes are the risk types, from the trades' columns ([VAR.md 2.14](../contracts/VAR.md#214-hierarchies-from-the-rows-or-from-the-trades-columns)) or from rows | each trade wholly in one risk type | **Built — needs the bank's data** (the columns or the rows) |
 | **The planned risk-type mapping** | node, product type or trade → IR, CS, EQ, FX, CMD; the most specific wins ([RTYP](../contracts/packs/market-risk.md#rtyp-var-risk-type-mapping-risk-type-map)) | each trade wholly in one risk type | **Not built (designed)** |
 | **Per-risk-class P&L vectors** | the pricing system sends, per trade, one vector per risk class with only that class's factors moved, adding up to the trade's P&L | exact for a trade with several risk types | **Not built (designed)** |
 

@@ -119,7 +119,7 @@ class VarTestDataPrecisionTest {
     /** The same from the normal set's files, or ({@code stress}) from the stress set's. */
     static void fill(VarBook.Builder b, Path data, PositionRules rules, double scale, boolean stress) throws IOException {
         ScenarioFx fx = fx(data, b.width(), stress);
-        b.currencyRates(c -> fx.rates(c).orElse(null));                // the per-trade-currency totals (VAR_GUIDE.md section 15.11)
+        b.currencyRates(c -> fx.rates(c).orElse(null));                // the per-trade-currency totals (VAR.md section 2.11)
         lines(data.resolve("scenario-pv"), stress, n -> {
             if (!rules.live(text(n, "TRADE_STATUS"))) {
                 return;
@@ -297,7 +297,7 @@ class VarTestDataPrecisionTest {
     }
 
     /**
-     * The bank from both forms of input (VAR_GUIDE.md section 15.9), and in each currency the batch supplies FX for (section 15.10): the
+     * The bank from both forms of input (VAR.md section 2.9), and in each currency the batch supplies FX for (section 15.10): the
      * figures the guides quote. The USD figures differ from the 2.8.0 data's (112,035,906 and 160,132,107) only by the FX translation of
      * the 250 Endur trades in EUR and CAD that came as scenario PVs; their USD trades reproduce their vectors exactly.
      */

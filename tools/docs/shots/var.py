@@ -203,7 +203,7 @@ def computed_kind(c: Ctx):
 
 
 def in_currency(c: Ctx, scope: str, ccy: str) -> None:
-    """The explorer on a scope in a reporting currency (VAR_GUIDE.md section 15.11), through the header's picker."""
+    """The explorer on a scope in a reporting currency (VAR.md section 2.11), through the header's picker."""
     open_var(c, "/var?scope=" + scope)
     painted(c, scope)
     c.until("document.querySelector('[data-var]').dataset.ccyReady === 'true'", 60)

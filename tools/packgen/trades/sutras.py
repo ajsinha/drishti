@@ -32,7 +32,7 @@ from __future__ import annotations
 import re
 import textwrap
 
-# a trade's currency in the strip (VAR_GUIDE.md section 15.11): the currency its PVs come in when the VaR engine holds the trade as scenario
+# a trade's currency in the strip (VAR.md section 2.11): the currency its PVs come in when the VaR engine holds the trade as scenario
 # PVs (RISK_LINKS, set by the engine), else its own CURRENCY; the strip says which (as priced / as booked); its source system is in the
 # deal ticket (DES)
 TRADE_CURRENCY = ("nonblank($.RISK_LINKS.TRADE_CURRENCY) ? $.RISK_LINKS.TRADE_CURRENCY + ($.RISK_LINKS.TRADE_CURRENCY_FROM == 'its scenario PVs' "

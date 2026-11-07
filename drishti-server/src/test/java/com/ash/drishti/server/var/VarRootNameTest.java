@@ -38,7 +38,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * The top of the VaR tree named by the settings (VAR_GUIDE.md section 20): {@code drishti.var.root-name} names every hierarchy's root,
+ * The top of the VaR tree named by the settings (VAR.md section 6): {@code drishti.var.root-name} names every hierarchy's root,
  * {@code drishti.var.root-names} one hierarchy's root over it; the nodes below keep the data's names; the tree, the headline and a
  * capture show the configured name; a blank setting keeps the data's {@code NAME}; the hot file's digest changes with the names.
  */

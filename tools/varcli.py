@@ -20,7 +20,7 @@ tiers (status), the shards across Drishti*net (shards: the date's shard map, own
 record (official), a reload (administrators) and a pre-deal what-if by the server's VaR engine (whatif: copies of booked trades or
 scopes with --copy, or trades priced elsewhere from a JSON file).
 Every figure in a reporting currency with --ccy (2.9.4; USD by default): the vectors converted through USD with each scenario's FX, so
-the currency move is part of the risk (VAR_GUIDE.md section 15.10). Every answer of a scope, the tree and a capture through a lens
+the currency move is part of the risk (VAR.md section 2.10). Every answer of a scope, the tree and a capture through a lens
 (2.9.7, section 18.6): --horizon 10d with --method sqrt10 or sum (none: the setting's), --confidence and --es-confidence from the
 configured lists (0.95 or 95), and --stressed (section 18.8: stressed VaR, the scope on the date's stress scenario set, in USD).
 Exit codes: 0, 1 (the server said no), 2 (usage)."""
@@ -409,7 +409,7 @@ DATED = ("BUSINESS_DATE", "VALUATION_DATE", "BASE_VALUATION_DATE", "COMPUTED_AT"
 
 def route(rows: list[dict]) -> dict[str, list[dict]]:
     """A file's records by kind, routed by each record's VALUE_TYPE (PV: scenario-pv, PNL: pnl-vector), so one file may mix both
-    (VAR_GUIDE.md section 15.13); a record without one is refused with its line (drishti.py var convert adds it)."""
+    (VAR.md section 2.13); a record without one is refused with its line (drishti.py var convert adds it)."""
     out: dict[str, list[dict]] = {}
     for n, r in enumerate(rows, 1):
         vt = str(r.get("VALUE_TYPE") or "").upper()
@@ -1003,7 +1003,7 @@ LEAD = ("VALUE_TYPE", "GRAIN", "TRADE_ID", "POSITION_ID", "CURRENCY", "SOURCE_SY
 
 
 def convert(a) -> int:
-    """``drishti.py var convert FILE --set VALUE_TYPE=PNL --set GRAIN=TRADE --set CURRENCY=USD`` (VAR_GUIDE.md section 15.13): an older
+    """``drishti.py var convert FILE --set VALUE_TYPE=PNL --set GRAIN=TRADE --set CURRENCY=USD`` (VAR.md section 2.13): an older
     PV file made to say what each record is; the fields lead each line; a record already carrying a field keeps its value. Prints what
     still lacks a required field (the engine refuses those, DRS-5208)."""
     import gzip

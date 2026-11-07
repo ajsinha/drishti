@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of a hierarchy skipped because the data lacks its level column (docs/guides/VAR_GUIDE.md section 15.14), written to
+"""Pictures of a hierarchy skipped because the data lacks its level column (docs/contracts/VAR.md section 2.14), written to
 docs/guides/img/varskip/: a VaR lake built as before 2.9.5, its P&L-vector and scenario-PV tables without LIMIT_LETTER (the market-risk pack
 copied into the scratch folder with the column taken out of its layouts), read by a server whose pack configures the limit letters (LL).
 The date loads, MGMT and LEGAL answer, LL is skipped: the explorer's select lists it *(not available)*, disabled, and Admin -> Health says

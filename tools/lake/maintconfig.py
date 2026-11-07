@@ -52,7 +52,7 @@ ORPHAN_MIN_HOURS = 72
 VACUUM_SAFE_HOURS = 168
 HISTORY_KEEP = 2000
 #: the domains whose dates and time travel are kept at least this many years, whatever a table's settings say (the risk lake's inputs
-#: and the published official results: 7 years, docs/guides/VAR_GUIDE.md section 23.1 question 10). A lake's ``retain-years:`` mapping
+#: and the published official results: 7 years, docs/contracts/VAR.md section 9.1 question 10). A lake's ``retain-years:`` mapping
 #: changes it per domain (0: no floor).
 RETAIN_YEARS = {"risk": 7, "risk-results": 7}
 BUSINESS_DAYS_A_YEAR = 261

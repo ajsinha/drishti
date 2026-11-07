@@ -157,7 +157,7 @@ def var_result(c: Ctx):
 
 @shot("12-reporting-currency.jpg")
 def reporting_currency(c: Ctx):
-    """Step 1's picker: the bank in EUR, then the tab In other currencies (VAR_GUIDE.md section 15.11)."""
+    """Step 1's picker: the bank in EUR, then the tab In other currencies (VAR.md section 2.11)."""
     open_var(c, "/var?scope=BANK")
     painted(c, "BANK")
     c.until("document.querySelector('[data-var]').dataset.ccyReady === 'true'", 60)

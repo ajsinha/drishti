@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # STORED SAMPLE (2.9.0): the published official end-of-day exposure of every netting set, counterparty and group, as the server appends it to
-# risk-results/exposure-official-cpty (docs/guides/EXPOSURE_GUIDE.md section 20), read through the counterparty-risk pack's read-only Delta connector
+# risk-results/exposure-official-cpty (docs/contracts/EXP.md section 6), read through the counterparty-risk pack's read-only Delta connector
 # exposure-results (kind exposure-official-cpty). Every result version of a date is a row here, and the three row types (HIERARCHY NSET, CPTY,
 # GROUP) sit side by side: never add them up together. The datasets counterparty-exposure-official-netting-sets and
 # counterparty-exposure-official-counterparties keep one row type each, the latest version of each scope and date; the models read those.

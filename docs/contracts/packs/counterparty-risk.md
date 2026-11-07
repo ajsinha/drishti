@@ -1040,7 +1040,7 @@ The most complete record of `data/testdata/counterparty-risk/simm/simm.2026-07-0
 
 ## XRUN: Exposure simulation run (`simulation-run`)
 
-An upstream exposure simulation of a business date: its paths, its grid of future dates (primary and look-back), its model and seed; the exposure engine reads it beside the paths (EXPOSURE_GUIDE.md section 15.2).
+An upstream exposure simulation of a business date: its paths, its grid of future dates (primary and look-back), its model and seed; the exposure engine reads it beside the paths (EXP.md section 2.2).
 
 |  |  |
 |---|---|
@@ -1172,7 +1172,7 @@ The most complete record of `data/testdata/counterparty-risk/simulation-run/simu
 
 **Notes**
 
-- An upstream exposure simulation's record (EXPOSURE_GUIDE.md section 15.2): the grid, the paths, the model; one per run and business date. Drishti reads it; nothing in it is computed by Drishti.
+- An upstream exposure simulation's record (EXP.md section 2.2): the grid, the paths, the model; one per run and business date. Drishti reads it; nothing in it is computed by Drishti.
 
 **To review (3)**
 
@@ -1182,7 +1182,7 @@ The most complete record of `data/testdata/counterparty-risk/simulation-run/simu
 
 ## XPATH: Exposure path (a trade's MtM on every path at a grid date) (`exposure-path`)
 
-One trade's mark to market on every path of a simulation run at one grid date, in USD (the vector column MTM); the grain every exposure is netted, collateralised and counted from (EXPOSURE_GUIDE.md section 15.3).
+One trade's mark to market on every path of a simulation run at one grid date, in USD (the vector column MTM); the grain every exposure is netted, collateralised and counted from (EXP.md section 2.3).
 
 |  |  |
 |---|---|
@@ -1214,7 +1214,7 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 | `LEGAL_ENTITY` | id | required |  | The bank's legal entity that booked the trade: an ENTITY_ID of the core pack's legal-entity kind (LE-…). | `LE-FRA` (pattern `^LE-`) | `legal-entity` |
 | `DESK` | id | required |  | The desk the trade is booked on: a DESK_ID of the core pack's desk kind (DESK-…). | `DESK-SFT` (pattern `^DESK-`) | `desk` |
 | `TT_BOOK` | id | required |  | The book the trade is booked in: a BOOK_ID of the core pack's book kind (BOOK-…). | `BOOK-SFT-1` (pattern `^BOOK-`) | `book` |
-| `LIMIT_LETTER` | text | optional |  | The trade's limit letter, as its VaR records carry it: the level column of the hierarchy LL (LIMIT_LETTER > DESK, VAR_GUIDE.md section 16). When a hierarchy is built from it, every row carries it (a row that leaves it empty is refused, DRS-5211; a table without the column skips that hierarchy alone, with a DRS-5211 warning). | `LL-0003` |  |
+| `LIMIT_LETTER` | text | optional |  | The trade's limit letter, as its VaR records carry it: the level column of the hierarchy LL (LIMIT_LETTER > DESK, VAR.md section 3). When a hierarchy is built from it, every row carries it (a row that leaves it empty is refused, DRS-5211; a table without the column skips that hierarchy alone, with a DRS-5211 warning). | `LL-0003` |  |
 | `ASSET_CLASS` | text | required |  | The trade's asset class, denormalised from the netting set's member row (used by the asset scope). | `Commodity`, `Credit`, `Equity`, `FX`, `Fixed income`, `Inflation`, `Money market`, `Rates`, `Securities financing`, `Structured` |  |
 | `PRODUCT` | text | required |  | The trade's product name, denormalised from the netting set's member row (e.g. Basis swap (float/float)). | `Tri-party repo` |  |
 | `NOTIONAL` | amount | required | trade currency | The trade's notional as its netting set lists it, in the trade's currency; denormalised for people and checks. | `237000000.0` |  |
@@ -1286,7 +1286,7 @@ The most complete record of `data/testdata/counterparty-risk/exposure-path/expos
 
 **Notes**
 
-- One trade's MtM on every path of the run at one grid date (EXPOSURE_GUIDE.md section 15.3), the vector column MTM; sparse by maturity (no row after maturity plus 10 business days). DESK, TT_BOOK, ASSET_CLASS, PRODUCT, NOTIONAL and MATURITY_DATE are denormalised for the scopes and checks.
+- One trade's MtM on every path of the run at one grid date (EXP.md section 2.3), the vector column MTM; sparse by maturity (no row after maturity plus 10 business days). DESK, TT_BOOK, ASSET_CLASS, PRODUCT, NOTIONAL and MATURITY_DATE are denormalised for the scopes and checks.
 - 1.1: SOURCE_SYSTEM and ASSET_CLASS list every value of the test data (ENDUR trades have paths too).
 
 **To review (6)**
@@ -1341,11 +1341,11 @@ The exposure profile (EE, ENE, EEE, PFE at 95% and 99%, EE without collateral) a
 | `HORIZON_YEARS` | rate | optional |  | T, the horizon EPE and EEPE average over. |  |  |
 | `MPOR_DAYS` | integer | optional |  | The run's look-back in business days (the margin period of risk applied). |  |  |
 | `COLLATERAL_MODEL` | text | optional |  | — | `lagged`, `current`, `none` |  |
-| `PROFILE` | record list | required |  | Per primary date TENOR, DATE, T, EE, ENE, EEE, PFE (at CONFIDENCE), PFE_95, PFE_99, EE_UNCOLL (EXPOSURE_GUIDE.md section 19.1). |  |  |
+| `PROFILE` | record list | required |  | Per primary date TENOR, DATE, T, EE, ENE, EEE, PFE (at CONFIDENCE), PFE_95, PFE_99, EE_UNCOLL (EXP.md section 5.1). |  |  |
 | `BY_NETTING_SET` | record list | optional |  | For a counterparty or larger scope, each netting set's NETTING_SET, COUNTERPARTY, LABEL, PARTIAL, EPE, PEAK_EE, PEAK_PFE and PFE_CONTRIBUTION (adding up to PEAK_PFE); none for a viewer who sees the scope in aggregate only. |  |  |
 | `FLAGS` | text list | optional |  | partial, standalone, MPOR_MISMATCH, incomplete, stale-run, no-paths. |  |  |
 | `NOTE` | text | optional |  | — |  |  |
-| `PROVENANCE` | record | optional |  | The answer's provenance in UPPER_SNAKE (EXPOSURE_GUIDE.md section 19.1), with TIER saying where the matrices came from. |  |  |
+| `PROVENANCE` | record | optional |  | The answer's provenance in UPPER_SNAKE (EXP.md section 5.1), with TIER saying where the matrices came from. |  |  |
 
 **Links:** `RUN_ID` → `simulation-run`.
 

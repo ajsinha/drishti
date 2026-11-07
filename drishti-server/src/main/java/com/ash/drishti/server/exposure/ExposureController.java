@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The exposure engine's API (EXPOSURE_GUIDE.md section 19.2). A scope is the scope grammar's text ({@code NSET:NS-ALDERSHOT-FRA},
+ * The exposure engine's API (EXP.md section 5.2). A scope is the scope grammar's text ({@code NSET:NS-ALDERSHOT-FRA},
  * {@code CPTY:CP-ALDERSHOT}, {@code GROUP:GRP-ALDERSHOT}, {@code LE:LE-NY}, {@code DESK:SFT & CPTY:CP-ALDERSHOT}, {@code TRD:<id>}); every
  * answer is computed as the caller, over the netting sets they see, on the request's business date (the newest with paths when later).
  * Parameters: {@code q} (the PFE confidence, default {@code limit-confidence}), {@code collateral} ({@code lagged}, {@code current},

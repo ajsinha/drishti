@@ -121,7 +121,7 @@ class VarDataTest(unittest.TestCase):
         self.assertEqual({v["SCENARIO_SET_ID"] for v in self.rows}, {"HS-509"})
 
     def test_every_row_carries_its_limit_letter_some_letters_hold_part_of_a_book_and_the_limits_name_nodes(self):
-        """2.9.5 (VAR_GUIDE.md sections 15.14 and 15.15): LIMIT_LETTER on every P&L and scenario-PV row, twelve letters, two books split
+        """2.9.5 (VAR.md sections 2.14 and 2.15): LIMIT_LETTER on every P&L and scenario-PV row, twelve letters, two books split
         between two letters; P&L-vector ids PNL-<trade>-<set>; var-limit rows name LL nodes (path ids), every MGMT and LEGAL node and every
         portfolio (2.9.7: the one home of every VaR limit; the nodes and portfolios carry none)."""
         letters_of_book: dict[str, set] = defaultdict(set)

@@ -98,7 +98,7 @@ settings:
 ## Step 2 · Publish the official results to Iceberg
 
 The server captures every node of every hierarchy officially when a date loads, and appends the figures to
-`<root>/risk-results/var-official` for other systems ([VAR_GUIDE.md section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results)).
+`<root>/risk-results/var-official` for other systems ([VAR.md section 5](../contracts/VAR.md#5-official-end-of-day-results)).
 Delta is the default; Iceberg is one setting. **A table keeps the format it was created in**, so give the Iceberg table a root of its
 own; the Iceberg root of step 1 is the natural one.
 
@@ -133,7 +133,7 @@ and the official format is iceberg: an official table keeps its format; give the
 With the root of the YAML above it publishes (step 3). A date already captured is not published again by a restart; the new format
 applies from the next capture.
 
-**Further:** [VAR_GUIDE.md section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results),
+**Further:** [VAR.md section 5](../contracts/VAR.md#5-official-end-of-day-results),
 [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (section 20), on S3: [CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../architecture/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws).
 
 ## Step 3 · Start the server and look at the connectors
@@ -200,7 +200,7 @@ Intraday batches on an Iceberg lake are Iceberg appends made by the pricing syst
 connector's `lake` must then name `data/iceberg`); `drishti.py var intraday --load` appends to Delta only
 ([VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)).
 
-**Further:** [VAR_GUIDE.md section 15.1](../guides/VAR_GUIDE.md#151-where-they-live) and
+**Further:** [VAR.md section 2.1](../contracts/VAR.md#21-where-they-live) and
 [section 29.3](../guides/VAR_GUIDE.md#293-how-the-lake-tools-and-the-delta-plugin-carry-a-vector).
 
 ## Step 5 · Each table's format in Admin → Lakes

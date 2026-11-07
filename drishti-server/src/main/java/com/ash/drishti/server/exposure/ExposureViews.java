@@ -31,7 +31,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * The exposure engine's answers as the API and the screens return them (EXPOSURE_GUIDE.md section 19): a scope's figures and profile with its
+ * The exposure engine's answers as the API and the screens return them (EXP.md section 5): a scope's figures and profile with its
  * provenance, the profile alone (for charts, also as CSV), the exposure distribution at a grid date, the contributions of its parts,
  * and the tree of groups, counterparties and netting sets. Amounts are whole USD; times in years.
  */
@@ -184,7 +184,7 @@ final class ExposureViews {
         return out;
     }
 
-    /** The profile as CSV: {@code tenor,date,t,ee,ene,eee,pfe,pfe_99,ee_uncoll} (EXPOSURE_GUIDE.md section 19.3). */
+    /** The profile as CSV: {@code tenor,date,t,ee,ene,eee,pfe,pfe_99,ee_uncoll} (EXP.md section 5.3). */
     String profileCsv(Principal p, String scope, LocalDate date, ExposureService.Ask ask) {
         ExposureService.Scoped s = svc.scoped(p, scope, date, ask);
         StringBuilder sb = new StringBuilder("tenor,date,t,ee,ene,eee,pfe,pfe_99,ee_uncoll\n");

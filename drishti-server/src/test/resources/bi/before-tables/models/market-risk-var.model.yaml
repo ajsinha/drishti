@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# STORED SAMPLE (2.9.0): VaR in BI, from the published official results (docs/guides/VAR_GUIDE.md section 19). One table: every node of the
+# STORED SAMPLE (2.9.0): VaR in BI, from the published official results (docs/contracts/VAR.md section 5). One table: every node of the
 # MGMT and LEGAL hierarchies (bank, legal entity, division, desk, book) on every business date, the latest result version.
 #
 # VaR and ES are NOT ADDITIVE: the bank's VaR is not the sum of its desks' (diversification), and a node's VaR on two dates is not a total.

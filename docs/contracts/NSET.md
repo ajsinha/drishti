@@ -6,7 +6,7 @@
 
 # NSET: netting sets, the data contract
 
-*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Roadmap:
+*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR.md](VAR.md#1-the-contract-at-a-glance) · Roadmap:
 [IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)*
 
 **Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
@@ -29,7 +29,7 @@ counterparty-risk contracts, in the order of the roadmap:
 | 9 | [WWR.md](WWR.md) | wrong-way risk | `credit-path` (optional) |
 
 The shared rules of every contract are in [README.md](README.md). Where a rule is the same as VaR's (scope grammar, captures,
-provenance, entitlements, the reactive connector), this page refers to [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) and states only the difference.
+provenance, entitlements, the reactive connector), this page refers to [VAR.md](VAR.md#1-the-contract-at-a-glance) and states only the difference.
 
 **Sources read for this contract (2026-10-25):** `config/packs/counterparty-risk/contracts/*.contract.yaml`, its `samples/`,
 `data/testdata/counterparty-risk/`, `config/packs/core/contracts/counterparty.contract.yaml` and `counterparty-group.contract.yaml`,
@@ -117,7 +117,7 @@ ${DRISHTI_DELTA_ROOT}/risk/
 └── ...                                               the other measures' tables (SACCR.md, COLL.md, MC.md, EXPOSURE_GUIDE.md, LIM.md, WWR.md)
 ```
 
-The physical table is the one of every kind (VAR_GUIDE.md section 15.1): `id`, `doc`, `business_date`, the promoted columns. In the column
+The physical table is the one of every kind (VAR.md section 2.1): `id`, `doc`, `business_date`, the promoted columns. In the column
 tables below **Delta** is the promoted column's type, or `doc` when the field stays in the document; **Engine** says whether the NSET
 engine reads it (**R**) or it is kept for people and links (**–**).
 
@@ -467,7 +467,7 @@ The pack routes the kind (`routes: { nset-figures: nset-engine }`) and keeps `ne
 
 Every counterparty measure publishes its official end-of-day captures to the read-only results area of the lake
 ([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures), product owner 2026-10-25; VaR's table in
-[VAR_GUIDE.md section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results)). For counterparty measures the natural rows are not only hierarchy nodes, so this contract
+[VAR.md section 5](VAR.md#5-official-end-of-day-results)). For counterparty measures the natural rows are not only hierarchy nodes, so this contract
 proposes **two tables per measure**, the same for all nine counterparty contracts:
 
 | Table | Rows per business date | Who may read the folder |
@@ -579,7 +579,7 @@ and `tools/testdata/universe.py` re-runs it over the whole cloned book (amounts 
 |---|---|---|---|
 | `NET_MTM` | Σ members' `mtm` | Σ members' `MTM` from `valuation` | none for the same members and date; the test data then **walk** it daily (`_meta.walk`), so changes files drift from the members' sum |
 | `COLLATERAL` | `NET_MTM × U(0.6, 0.95)` (or × U(0.5, 0.9) when negative), a random share | haircut value of the holdings (COLL.md) | different: the stored one ignores the CSA |
-| `EE_PEAK`, `PFE_PEAK` | max of a closed-form heuristic profile (EXPOSURE_GUIDE.md section 22) | EXPOSURE_GUIDE.md from paths | different model |
+| `EE_PEAK`, `PFE_PEAK` | max of a closed-form heuristic profile (EXP.md section 8) | EXPOSURE_GUIDE.md from paths | different model |
 | `UTILISATION` | `PFE_PEAK / LIMIT` with the set's own random `LIMIT` | LIM.md against `credit-limit` | different limit |
 | `counterparty.PFE_PEAK` | the largest netting-set `PFE_PEAK` (max, not a sum) | EXPOSURE_GUIDE.md at `CPTY:`: the peak of the summed exposure paths | the stored one understates a counterparty with several sets |
 

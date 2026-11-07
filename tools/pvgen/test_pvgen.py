@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The stand-in pricing system's scripts (tools/pvgen; docs/guides/VAR_GUIDE.md section 15.12): each with --help and a --dry-run that
+"""The stand-in pricing system's scripts (tools/pvgen; docs/contracts/VAR.md section 2.12): each with --help and a --dry-run that
 writes nothing; every file they write parses line by line as JSON objects and validates against its kind's contract (exactly its fields);
 the morning run is the engine's (its bank figures are VarTestDataPrecisionTest's, and with --all-vectors 2.9.3's); intraday batches are the
 same for a seed and different for another, marked INTRADAY with their own BATCH_ID and a COMPUTED_AT after the morning run, amended, new
@@ -93,7 +93,7 @@ class MorningTest(unittest.TestCase):
         self.assertEqual(sum(1 for k, _ in rows if k == "scenario-pv"), 1339)
 
     def test_the_checker_agrees_with_the_engine_on_the_morning_run(self):
-        """The bank of the test data's date as the engine computes it (VarTestDataPrecisionTest, VAR_GUIDE.md section 15.9)."""
+        """The bank of the test data's date as the engine computes it (VarTestDataPrecisionTest, VAR.md section 2.9)."""
         rows = check.load_morning(self.out / "morning-2026-10-27")
         var, es = C.measures(C.expected(rows, [], "2026-09-30")["BANK"])      # the trades live on the test data's date
         self.assertEqual((round(var), round(es)), (112_041_646, 160_143_809))
@@ -113,7 +113,7 @@ class MorningTest(unittest.TestCase):
 class GrainTest(unittest.TestCase):
     """Per position (--grain position, --position-systems): each record a position summed from its trades, naming them; every record
     says what it is first (VALUE_TYPE, GRAIN, its id, CURRENCY, SOURCE_SYSTEM); the bank and every desk the same as per trade, to the
-    cent (docs/guides/VAR_GUIDE.md section 15.13)."""
+    cent (docs/contracts/VAR.md section 2.13)."""
 
     def test_the_same_trades_as_their_positions_give_the_same_bank_and_desks(self):
         with tempfile.TemporaryDirectory() as t:

@@ -122,7 +122,7 @@ maturity date, left out). The bank's EE uncollateralised (6.3 billion at
 
 **Further in the guide:** [section 1](../guides/EXPOSURE_GUIDE.md#1-the-question-exposure-answers) (the question),
 [section 2](../guides/EXPOSURE_GUIDE.md#2-the-measures-with-worked-numbers) (the measures with worked numbers),
-[section 15](../guides/EXPOSURE_GUIDE.md#15-inputs-from-upstream-engines) (the inputs).
+[EXP.md section 2](../contracts/EXP.md#2-inputs-from-upstream-engines) (the inputs).
 
 ## Step 2 · A legal entity's counterparty board
 
@@ -516,7 +516,7 @@ and the 43 nodes of the limit letters, a hierarchy built from the exposure paths
 with the market-risk pack's `risk-hierarchy` in the lake too, every MGMT and LEGAL node is captured as well: 250 scopes on the test data,
 `LL:LL~LL-0011` among them). It is also appended to the tables `risk-results/exposure-official` and `risk-results/exposure-official-cpty`
 of the lake: Delta by default (`"published": "… (Delta version 0)"`), Iceberg with `drishti.ccr.exposure.official.format: iceberg`
-([EXPOSURE_GUIDE.md section 20](../guides/EXPOSURE_GUIDE.md); [tutorial 29](29-var-on-iceberg.md) for VaR's). A
+([EXP.md section 6](../guides/EXPOSURE_GUIDE.md); [tutorial 29](29-var-on-iceberg.md) for VaR's). A
 second capture of the same run is `unchanged`; a new run of the date makes `resultVersion` 2. `--capture` is for administrators.
 
 The settings (`drishti-server/src/main/resources/application.yaml`):
@@ -535,7 +535,7 @@ drishti:
 **You should see** `resultVersion` 1 for 2026-09-30, CP-ALDERSHOT's official peak PFE 401,456,810 equal to step 3's, and the two
 published tables in the lake.
 
-**Further in the guide:** [section 20](../guides/EXPOSURE_GUIDE.md#20-official-end-of-day-results) (the official results),
+**Further in the guide:** [EXP.md section 6](../contracts/EXP.md#6-official-end-of-day-results) (the official results),
 [section 27](../guides/EXPOSURE_GUIDE.md#27-sizes-performance-and-retention) (retention),
 [section 10](../guides/EXPOSURE_GUIDE.md#10-the-command-line) (every `drishti.py exposure` command).
 
@@ -544,7 +544,7 @@ published tables in the lake.
 - Read [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md): the measures by hand, the explorer screen by screen, the scope grammar, the
   API ([section 11](../guides/EXPOSURE_GUIDE.md#11-the-api)), the data contract (Part II) and how a date is held in memory and on disk
   ([section 26](../guides/EXPOSURE_GUIDE.md#26-one-date-in-memory-and-the-hot-file)).
-- Load your own simulator's run: the columns are in [EXPOSURE_GUIDE.md section 15](../guides/EXPOSURE_GUIDE.md#15-inputs-from-upstream-engines);
+- Load your own simulator's run: the columns are in [EXP.md section 2](../contracts/EXP.md#2-inputs-from-upstream-engines);
   send the data-load signal ([tutorial 7](07-load-data-daily.md)) and the date is reloaded and captured officially.
 - Compare with VaR: [tutorial 25](25-var-from-the-bank-to-a-trade.md) walks the same way from the bank to a trade for market risk.
 

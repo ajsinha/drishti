@@ -142,7 +142,7 @@ class RunTheGenerators(unittest.TestCase):
         self.assert_jsonl(out, 2)
 
     def test_the_stand_in_pricing_system(self):
-        """tools/pvgen (VAR_GUIDE.md section 15.12): the intraday batches as JSON Lines, loaded only with --lake."""
+        """tools/pvgen (VAR.md section 2.12): the intraday batches as JSON Lines, loaded only with --lake."""
         self.run_tool("tools/pvgen/intraday.py", "--batches", "2", "--trades-per-batch", "4", "--out", self.d / "pv")
         self.run_tool("tools/pvgen/intraday.py", "--batches", "1", "--trades-per-batch", "3", "--grain", "position", "--gzip",
                       "--out", self.d / "pv-positions")

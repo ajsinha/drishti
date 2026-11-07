@@ -22,7 +22,7 @@ class: input
 status: active
 title: Exposure path (a trade's MtM on every path at a grid date)
 description: One trade's mark to market on every path of a simulation run at one grid date, in USD (the vector column MTM); the grain every exposure
-  is netted, collateralised and counted from (EXPOSURE_GUIDE.md section 15.3).
+  is netted, collateralised and counted from (EXP.md section 2.3).
 source: 'the upstream exposure simulator (test data: tools/packgen/ccr/make_ccr_data.py)'
 grain: One row per trade, grid date and run per business date, keyed by PATH_ROW_ID (<run>~<trade>~<grid index>); sparse by maturity.
 key:
@@ -134,7 +134,7 @@ fields:
   type: text
   presence: optional
   description: 'The trade''s limit letter, as its VaR records carry it: the level column of the hierarchy LL (LIMIT_LETTER > DESK,
-    VAR_GUIDE.md section 16). When a hierarchy is built from it, every row carries it (a row that leaves it empty is refused, DRS-5211; a table
+    VAR.md section 3). When a hierarchy is built from it, every row carries it (a row that leaves it empty is refused, DRS-5211; a table
     without the column skips that hierarchy alone, with a DRS-5211 warning).'
   example: LL-0003
 - name: ASSET_CLASS
@@ -289,7 +289,7 @@ validation:
   field: MTM
   same: every row of one business date
 notes:
-- One trade's MtM on every path of the run at one grid date (EXPOSURE_GUIDE.md section 15.3), the vector column MTM; sparse by maturity (no row after maturity
+- One trade's MtM on every path of the run at one grid date (EXP.md section 2.3), the vector column MTM; sparse by maturity (no row after maturity
   plus 10 business days). DESK, TT_BOOK, ASSET_CLASS, PRODUCT, NOTIONAL and MATURITY_DATE are denormalised for the scopes and checks.
 - '1.1: SOURCE_SYSTEM and ASSET_CLASS list every value of the test data (ENDUR trades have paths too).'
 review:

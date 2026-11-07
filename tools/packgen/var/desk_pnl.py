@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The demo's daily desk P&L (kind ``desk-pnl``, docs/guides/VAR_GUIDE.md section 15.16): what a bank's finance and front-office
+"""The demo's daily desk P&L (kind ``desk-pnl``, docs/contracts/VAR.md section 2.16): what a bank's finance and front-office
 systems send for regulatory backtesting, one row per desk and business date, generated (the product owner's decision of
 docs/guides/REGULATORY_VAR_REPORTING.md section 7.1).
 

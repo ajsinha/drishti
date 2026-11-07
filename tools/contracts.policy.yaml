@@ -155,7 +155,7 @@ notes:
   margin-call:
     - "Actual calls and their events are kept (workflow); the expected call (MtM minus collateral minus threshold, then minimum transfer and rounding) is computed and shown beside the call. No stored field is the expected call today."
   position:
-    - "Positions are derived by Drishti when a date loads (docs/guides/VAR_GUIDE.md section 15.6), by the market-risk pack's positions: rules (securities by book and security id, listed by book and contract, OTC by book and trade), and served from the VaR engine's memory by the var-positions connector: no upstream delivers them and nothing stores them. Their VaR figures are computed as the page opens (VAR_ENGINE), never stored."
+    - "Positions are derived by Drishti when a date loads (docs/contracts/VAR.md section 2.6), by the market-risk pack's positions: rules (securities by book and security id, listed by book and contract, OTC by book and trade), and served from the VaR engine's memory by the var-positions connector: no upstream delivers them and nothing stores them. Their VaR figures are computed as the page opens (VAR_ENGINE), never stored."
   portfolio:
     - "The portfolio definitions are an engine input (IMPLEMENTATION_PLAN.md); the figures of the retired stored record (VaR, ES, positions, contributions, P&L) are computed as the page opens (VAR_ENGINE), never stored."
   desk:
@@ -163,13 +163,13 @@ notes:
   legal-entity:
     - "The legal entity's VaR and its books' are the engine's (LE:<id>, BOOK:<id>), computed as the page opens (VAR_ENGINE); BOOKS[].VAR left the record in 2.9.2."
   netting-set:
-    - "The netting set's exposure is the exposure engine's (NSET:<id>), computed as the page opens (EXPOSURE_ENGINE); EE_PEAK, PFE_PEAK, PROFILE and the EXPOSURE_PROFILE link left the record in 2.9.0 (EXPOSURE_GUIDE.md section 22). UTILISATION and CVA stay stored (LIM and CVA are parked)."
+    - "The netting set's exposure is the exposure engine's (NSET:<id>), computed as the page opens (EXPOSURE_ENGINE); EE_PEAK, PFE_PEAK, PROFILE and the EXPOSURE_PROFILE link left the record in 2.9.0 (EXP.md section 8). UTILISATION and CVA stay stored (LIM and CVA are parked)."
   counterparty:
-    - "The counterparty's peak PFE is the exposure engine's (CPTY:<id>), computed as the page opens (EXPOSURE_ENGINE); PFE_PEAK left the record in 2.9.0 (EXPOSURE_GUIDE.md section 22)."
+    - "The counterparty's peak PFE is the exposure engine's (CPTY:<id>), computed as the page opens (EXPOSURE_ENGINE); PFE_PEAK left the record in 2.9.0 (EXP.md section 8)."
   simulation-run:
-    - "An upstream exposure simulation's record (EXPOSURE_GUIDE.md section 15.2): the grid, the paths, the model; one per run and business date. Drishti reads it; nothing in it is computed by Drishti."
+    - "An upstream exposure simulation's record (EXP.md section 2.2): the grid, the paths, the model; one per run and business date. Drishti reads it; nothing in it is computed by Drishti."
   exposure-path:
-    - "One trade's MtM on every path of the run at one grid date (EXPOSURE_GUIDE.md section 15.3), the vector column MTM; sparse by maturity (no row after maturity plus 10 business days). DESK, TT_BOOK, ASSET_CLASS, PRODUCT, NOTIONAL and MATURITY_DATE are denormalised for the scopes and checks (as built, 2.9.0)."
+    - "One trade's MtM on every path of the run at one grid date (EXP.md section 2.3), the vector column MTM; sparse by maturity (no row after maturity plus 10 business days). DESK, TT_BOOK, ASSET_CLASS, PRODUCT, NOTIONAL and MATURITY_DATE are denormalised for the scopes and checks (as built, 2.9.0)."
 
 review:
   netting-set:

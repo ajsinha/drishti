@@ -46,7 +46,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Inputs in any form and any grain (VAR_GUIDE.md section 15.13). Every PV record says what it is ({@code VALUE_TYPE}, {@code GRAIN}, its
+ * Inputs in any form and any grain (VAR.md section 2.13). Every PV record says what it is ({@code VALUE_TYPE}, {@code GRAIN}, its
  * id, {@code CURRENCY}, {@code SOURCE_SYSTEM}). The same trades sent per trade on one date and as their positions on another give the
  * same node VaR and ES (P&amp;L vectors and scenario PVs, all four form and grain combinations across the two dates, a system switching
  * grain between them); a supplied position answers for itself, a trade of it degrades with words; a system sending two grains on one date,

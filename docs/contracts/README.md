@@ -45,31 +45,32 @@ This page holds the rules every contract shares. A contract states only where it
 ## 1. Status of each contract
 
 **Scope (product owner, 2026-10-25): "Just fundamentals and VaR is good for now."** The active work is the contracts of every
-command (the fundamental data, [section 16](#16-contracts-of-every-command)), VaR ([VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)) and exposure ([EXPOSURE_GUIDE.md Part II](../guides/EXPOSURE_GUIDE.md#14-the-contract-at-a-glance)). Every other computed measure is
+command (the fundamental data, [section 16](#16-contracts-of-every-command)), VaR ([VAR.md](VAR.md#1-the-contract-at-a-glance)) and exposure ([EXP.md](EXP.md#1-the-contract-at-a-glance)). Every other computed measure is
 **PARKED**: its contract stays here as a design, the stored kind it would replace stays active and unchanged, and nothing of it is built
-until the product owner brings it back.
+until the product owner brings it back. The contracts of engines not built (SA-CCR, collateral, margin calls, limit use, CVA, wrong-way
+risk, stress) are **internal**: Help shows them to administrators only, and they are not offered to banks until their engine is built.
 
 **built** describes code that exists and is tested. **PLANNED** is the contract the release will implement: column names and rules
 may still change before it ships, and the document records each change.
 
 | Contract (a name in code font is not written yet) | Commands (retired kind) | Status |
 |---|---|---|
-| [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) | VAR (`var`), VNODE (`var-node`): both retired; also PORT, POS and DESK figures | BUILT (part 1: retirement, derived positions, official captures; part 2: memory tiering, the computed kinds and the Python engine); Part II of the VaR guide since 2026-10-26 |
+| [VAR.md](VAR.md#1-the-contract-at-a-glance) | VAR (`var`), VNODE (`var-node`): both retired; also PORT, POS and DESK figures | BUILT (part 1: retirement, derived positions, official captures; part 2: memory tiering, the computed kinds and the Python engine) |
 | [TRADING_GROUPINGS.md](TRADING_GROUPINGS.md) | CTRD, PTRD, LTRD, ITRD (`counterparty-trades`, `portfolio-trades`, `legal-entity-trades`, `index-trades`) | PARKED (design kept) |
 | [TVAL.md](TVAL.md) | TVAL (`trade-valuation`) | PARKED (design kept) |
-| [STR.md](STR.md) | STR (`stress-result`); SCN stays fundamental | PARKED (design kept) |
-| [FRTB.md](FRTB.md), [FRTB_DATA_STRUCTURES.md](FRTB_DATA_STRUCTURES.md) | FRSA, computed (`frtb-sa-result`); inputs SENS (`position-sensitivity`) and RFAC (`risk-factor`); retires FRTB (`frtb-sensitivity`) | DESIGN, not built: aligned with [SENSITIVITIES_AND_FRTB_SA.md](../architecture/SENSITIVITIES_AND_FRTB_SA.md) (2026-11-02); the input contracts are `planned` with demo data; the default-risk and residual-risk inputs are drafts |
+| [STR.md](STR.md) | STR (`stress-result`); SCN stays fundamental | PARKED (design kept; **internal** until its engine is built: administrators only in Help) |
+| [FRTB.md](FRTB.md) (its data structures: [section 17](FRTB.md#17-data-structures-frtb-and-simm)) | FRSA, computed (`frtb-sa-result`); inputs SENS (`position-sensitivity`) and RFAC (`risk-factor`); retires FRTB (`frtb-sensitivity`) | DESIGN, not built: aligned with [SENSITIVITIES_AND_FRTB_SA.md](../architecture/SENSITIVITIES_AND_FRTB_SA.md) (2026-11-02); the input contracts are `planned` with demo data; the default-risk and residual-risk inputs are drafts |
 | [SIMM.md](SIMM.md) | SIMM, computed per netting set and regime (`simm-result`) from the same SENS and RFAC; replaces SIMM (`simm`) for the netting sets with sensitivities | DESIGN, not built: ISDA SIMM 2.8+2512 structure, parameters shipped empty (the bank's licensed file by version); aligned with [SENSITIVITIES_AND_FRTB_SA.md](../architecture/SENSITIVITIES_AND_FRTB_SA.md) (2026-11-02) |
 | [PNL.md](PNL.md) | PNL (`pnl-explain`) | PARKED (design kept) |
 | [NSET.md](NSET.md) | NSET (`netting-set`): terms kept, figures computed | PARKED (design kept) |
-| [SACCR.md](SACCR.md) | SACCR (`sa-ccr`) | PARKED (design kept) |
-| [COLL.md](COLL.md) | COLL (`collateral-balance`): holdings kept, values computed | PARKED (design kept) |
-| [MC.md](MC.md) | MC (`margin-call`): calls kept, expected call computed | PARKED (design kept) |
-| [EXPOSURE_GUIDE.md Part II](../guides/EXPOSURE_GUIDE.md#14-the-contract-at-a-glance) | EXP (`exposure-result`, `exposure-whatif`; the stored `exposure-profile` retired) | BUILT (part 1: engine, API, computed kind, official results; part 2: the explorer, the Python what-if and its exact `paths` method, the CLI); Part II of the exposure guide since 2026-10-26 |
-| [LIM.md](LIM.md) | LIM (`credit-limit`): limits kept, usage computed | PARKED (design kept) |
+| [SACCR.md](SACCR.md) | SACCR (`sa-ccr`) | PARKED (design kept; **internal** until its engine is built: administrators only in Help) |
+| [COLL.md](COLL.md) | COLL (`collateral-balance`): holdings kept, values computed | PARKED (design kept; **internal** until its engine is built: administrators only in Help) |
+| [MC.md](MC.md) | MC (`margin-call`): calls kept, expected call computed | PARKED (design kept; **internal** until its engine is built: administrators only in Help) |
+| [EXP.md](EXP.md#1-the-contract-at-a-glance) | EXP (`exposure-result`, `exposure-whatif`; the stored `exposure-profile` retired) | BUILT (part 1: engine, API, computed kind, official results; part 2: the explorer, the Python what-if and its exact `paths` method, the CLI) |
+| [LIM.md](LIM.md) | LIM (`credit-limit`): limits kept, usage computed | PARKED (design kept; **internal** until its engine is built: administrators only in Help) |
 | [GRP.md](GRP.md) | GRP (`counterparty-group`): members kept, usage computed | PARKED (design kept) |
-| [CVA.md](CVA.md) | CVA (`cva`) | PARKED (design kept) |
-| [WWR.md](WWR.md) | wrong-way risk (new) | PARKED (design kept) |
+| [CVA.md](CVA.md) | CVA (`cva`) | PARKED (design kept; **internal** until its engine is built: administrators only in Help) |
+| [WWR.md](WWR.md) | wrong-way risk (new) | PARKED (design kept; **internal** until its engine is built: administrators only in Help) |
 | [PACK_DEVELOPER_GUIDE.md Part II](../guides/GROUPINGS_ANALYTICS_GUIDE.md#10-the-contract-at-a-glance) | LEIG, LEIC, SIC, ECG (`lei-group`, `lei-country`, `sic-sector`, `country-group`: stored pages retired, computed under the same kinds), CORR (`correlation-result`; the sets keep their factors), USEQ ratios, PXH analytics | BUILT (2026-10-26; Track B) |
 | `CONCENTRATION.md` | large exposures (new); the OSFI report once its template is supplied | PARKED (not written) |
 | `LIQUIDITY.md` | LCR, NSFR, NCCF, cash-flow gaps (new) | PARKED (not written) |
@@ -314,7 +315,7 @@ Every command that moves to the compute model retires its stored version **in th
    `VAR DESK:COMM`).
 2. **The stored kind is removed:** its samples, test data, Sutra, connector routes, about texts and generators.
 3. **The numbers are reconciled first.** The computed figures are compared with the last stored ones on the test data, and the release
-   notes explain every difference (for example, the stored `VAR-COMM` read 446.9m while the engine computed 1.97m on a sample and 17.5m on every live trade: VAR_GUIDE.md section 21.2).
+   notes explain every difference (for example, the stored `VAR-COMM` read 446.9m while the engine computed 1.97m on a sample and 17.5m on every live trade: VAR.md section 7.2).
 4. **A guard test** (`tools/test_contracts.py`, `TheRetiredStoredVersions` for VaR) fails the build when a retired kind returns, or when an input table or a fundamental kind carries a column a compute
    engine produces (`VAR_99`, `ES_975`, `COMPONENT_VAR`, `EAD`, `PFE_PEAK`, `UTILISATION` …).
 5. **Docs and CHANGELOG** say what was retired, what replaced it, and how old links behave.

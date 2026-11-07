@@ -620,7 +620,7 @@ final class DeltaTable {
 
     /**
      * The date's rows with one vector column ({@code list<double>}, or {@code list<float>}: exposure paths may be float32,
-     * EXPOSURE_GUIDE.md section 15.3) and some text columns, streamed to {@code sink} batch by batch (VAR_GUIDE.md section 29.3): one
+     * EXP.md section 2.3) and some text columns, streamed to {@code sink} batch by batch (VAR_GUIDE.md section 29.3): one
      * buffer a file, reused for every row, so a date of millions of vectors is never held here; several files decode at once when
      * {@code sink} came from {@link com.ash.drishti.api.VectorReads#parallel}, delivered in file order. A float32 element is widened to a
      * double exactly. Read as stored (no deletion vectors: the vector tables are written without them); partition values come from the log.

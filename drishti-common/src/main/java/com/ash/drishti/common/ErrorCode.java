@@ -151,7 +151,7 @@ public enum ErrorCode {
      */
     VAR_NO_FX("DRS-5207", 422),
     /**
-     * VaR: a PV record that does not say what it is, or says it wrongly (2.9.4, VAR_GUIDE.md section 15.13): no {@code VALUE_TYPE},
+     * VaR: a PV record that does not say what it is, or says it wrongly (2.9.4, VAR.md section 2.13): no {@code VALUE_TYPE},
      * {@code GRAIN}, id, {@code CURRENCY} or {@code SOURCE_SYSTEM}; a {@code VALUE_TYPE} that is not its payload (PVs or a P&amp;L
      * vector); a {@code GRAIN} that is not its id ({@code TRADE_ID} or {@code POSITION_ID}). The record is refused, listed, never guessed.
      */

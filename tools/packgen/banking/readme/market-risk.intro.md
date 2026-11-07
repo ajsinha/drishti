@@ -36,7 +36,7 @@ fields:
     MTM_CURRENCY: Currency of the mark-to-market
     TRADE_DATE: The trade's trade date
   position:
-    _: "A position Drishti derives from the trades when it loads a date, by the pack's positions: rules (docs/guides/VAR_GUIDE.md section 15.6): served from the VaR engine by the var-positions connector, never stored"
+    _: "A position Drishti derives from the trades when it loads a date, by the pack's positions: rules (docs/contracts/VAR.md section 2.6): served from the VaR engine by the var-positions connector, never stored"
     POSITION_ID: "POS-<book>~<security> for securities and listed products (fungible: the trades net), POS-<book>~<trade> for an OTC trade"
     POSITION_RULE: "securities, listed or otc: the rule that keyed it"
     DIRECTION: "LONG, SHORT or FLAT: the sign of the net quantity"

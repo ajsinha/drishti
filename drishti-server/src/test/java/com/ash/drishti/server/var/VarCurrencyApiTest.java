@@ -43,7 +43,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * VaR from scenario PVs, in any reporting currency (VAR_GUIDE.md sections 15.9 and 15.10), over {@link VarLakeFixture}'s P&amp;L vectors
+ * VaR from scenario PVs, in any reporting currency (VAR.md sections 2.9 and 2.10), over {@link VarLakeFixture}'s P&amp;L vectors
  * and {@link VarPvFixture}'s scenario PVs on the same date: both forms load side by side; a EUR trade's USD P&amp;L comes from its PVs
  * and the supplied scenario FX, a CAD trade's from FX derived from the history; a failed scenario, a currency without FX and a
  * valuation date of another day reject their trades with their codes; every answer takes {@code ccy} and says its currency; the same

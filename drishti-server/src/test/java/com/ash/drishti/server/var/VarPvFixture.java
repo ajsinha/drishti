@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Scenario PVs beside {@link VarLakeFixture}'s P&amp;L vectors (VAR_GUIDE.md section 15.9), whose answers are known by hand, all in
+ * Scenario PVs beside {@link VarLakeFixture}'s P&amp;L vectors (VAR.md section 2.9), whose answers are known by hand, all in
  * BOOK-3 of DESK-Y (LE-B), the same run and scenario set:
  *
  * <ul>
@@ -110,7 +110,7 @@ final class VarPvFixture {
 
     static Map<String, Object> row(LocalDate day, String id, String ccy, double basePv, Object pvs, LocalDate valued) {
         Map<String, Object> d = new LinkedHashMap<>();
-        d.put("VALUE_TYPE", "PV");                                    // what the record is (VAR_GUIDE.md section 15.13)
+        d.put("VALUE_TYPE", "PV");                                    // what the record is (VAR.md section 2.13)
         d.put("GRAIN", "TRADE");
         d.put("TRADE_ID", id);
         d.put("CURRENCY", ccy);

@@ -6,7 +6,10 @@
 
 # MC: margin calls, the data contract
 
-*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · CSAs and netting sets:
+**Internal.** The design of an engine that is not built yet: shown in Help to administrators only, and not offered to banks as a
+contract until its engine is built.
+
+*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR.md](VAR.md#1-the-contract-at-a-glance) · CSAs and netting sets:
 [NSET.md](NSET.md) · Collateral values: [COLL.md](COLL.md)*
 
 **Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names

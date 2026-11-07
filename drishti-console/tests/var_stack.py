@@ -75,7 +75,7 @@ def var_lake(tmp_path_factory, only: str, as_of: str | None = None) -> Path:
 
 def var_server(tmp_path_factory, lake: Path, **env: str):
     """A real server and console over ``lake``, its VaR engine ready; ``env``: more DRISHTI_* settings. Its VaR hot folder and the root
-    it publishes the official results to (``<root>/risk-results``, VAR_GUIDE section 19) are its own: the lake is read, never written."""
+    it publishes the official results to (``<root>/risk-results``, VAR.md section 5) are its own: the lake is read, never written."""
     from test_var_explorer_browser import _engine_ready
     from wb_live import _stack
 

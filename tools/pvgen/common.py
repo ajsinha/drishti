@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""What the stand-in pricing system's scripts share (docs/guides/VAR_GUIDE.md section 15.12, "Producing P&L vectors and scenario PVs").
+"""What the stand-in pricing system's scripts share (docs/contracts/VAR.md section 2.12, "Producing P&L vectors and scenario PVs").
 
 The rows a pricing system sends are the contract: one JSON object per line (JSONL, UTF-8; ``.jsonl``, or ``.jsonl.gz`` with
 ``--gzip``), each with exactly the fields of its kind's contract (``config/packs/market-risk/contracts/{scenario-pv,pnl-vector,

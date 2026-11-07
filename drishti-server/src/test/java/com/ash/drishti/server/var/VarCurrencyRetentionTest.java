@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The retention of the currencies built ahead (VAR_GUIDE.md section 15.11, {@code drishti.var.currency-retention-dates}): the listed
+ * The retention of the currencies built ahead (VAR.md section 2.11, {@code drishti.var.currency-retention-dates}): the listed
  * currencies' hot files of dates outside the newest N are deleted; the USD books, the kept dates and the currencies not listed (built on
  * first ask) stay; the settings default to USD, EUR, CAD, JPY, GBP and 5 dates, USD always first.
  */

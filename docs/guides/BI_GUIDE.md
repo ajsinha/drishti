@@ -387,7 +387,7 @@ Drishti ships **ten models** in `models/` (`trades-basic`, `trading-risk`, `trad
 (*Admin, Packs, Hide samples from business users* or *from everyone*), exactly as a sample pack is.
 
 **VaR in BI.** The sample report **Market risk: VaR** (`config/bi/reports/market-risk-var.report.yaml`, model `market-risk-var`)
-reads the official end-of-day VaR the server publishes ([VAR_GUIDE.md section 19](VAR_GUIDE.md#19-official-end-of-day-results)), never a
+reads the official end-of-day VaR the server publishes ([VAR.md section 5](../contracts/VAR.md#5-official-end-of-day-results)), never a
 stored VaR record: the market-risk pack serves the published table as the read-only kind `var-official` (connector `var-results`). The
 dataset `market-risk-var-official` holds every result version; `market-risk-var-latest` keeps the latest version of each node and date
 (`grain: { one-row-per: NODE_ID, keep: latest by RESULT_VERSION }`), and the model reads that one. VaR is not additive, so no measure
@@ -420,7 +420,7 @@ pages: []
 
 **Exposure in BI.** The netting-set and counterparty records store no exposure (no `EE_PEAK`, `PFE_PEAK` or profile
 fields): the exposure engine computes it, and its official end-of-day results are published to `risk-results/exposure-official-cpty`
-([EXPOSURE_GUIDE.md section 20](EXPOSURE_GUIDE.md#20-official-end-of-day-results)). The counterparty-risk pack
+([EXP.md section 6](../contracts/EXP.md#6-official-end-of-day-results)). The counterparty-risk pack
 serves that table as the read-only kind `exposure-official-cpty` (command `XOFC`, connector `exposure-results`). The dataset
 `counterparty-exposure-official` holds every row (netting sets, counterparties and groups, every result version);
 `counterparty-exposure-official-netting-sets` and `counterparty-exposure-official-counterparties` keep one row type each, the latest version

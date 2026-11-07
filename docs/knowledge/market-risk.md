@@ -178,15 +178,15 @@ scenario FX leaves its trades out (`DRS-5207`). From the USD vectors Drishti ans
 `ccy=EUR`): each trade's USD value under the scenario at the scenario's rate, less today's value at today's rate. So the same bank has a
 different VaR in each currency: on 2026-09-30 112.0 million USD is 111.8 million EUR, not the 95.4 million today's rate makes, because a
 euro-based owner also carries the bank's 3.65 billion USD of value moving against the euro. Which currency is right is the owner's
-question, not the model's. The guide's [section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)
-has the contract, [section 15.10](../guides/VAR_GUIDE.md#1510-reporting-currency) the reporting currencies.
+question, not the model's. The guide's [VAR.md section 2.9](../contracts/VAR.md#29-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)
+has the contract, [VAR.md section 2.10](../contracts/VAR.md#210-reporting-currency) the reporting currencies.
 
 The currencies a bank reports in are **built ahead** (USD, EUR, CAD, JPY and GBP unless configured otherwise), and every node of the
 hierarchy keeps its trades' PVs **summed per trade currency**: its P&L in any currency `X` is then
 `Σ_c [PVsum_c(s) × FX_c→X(s) − PVbase_c × FX_c→X(base)]`, the same, to the cent, as converting every trade on its own. The VaR page's
 **Reporting currency** picker (or `VAR BANK IN EUR`) moves every figure to that currency, and its tab **In other currencies** puts them
 side by side: on the test data (2026-09-30) the bank's 112.0 million USD is 111.8 million EUR. A trade page says its **Trade currency**: the currency
-its PVs come in. The guide's [section 15.11](../guides/VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker)
+its PVs come in. The guide's [VAR.md section 2.11](../contracts/VAR.md#211-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker)
 has the details.
 
 **During the day.** A pricing system re-sends only the trades that changed: amended, new or cancelled, priced over the same
@@ -219,7 +219,7 @@ VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
 whole, placed by its book, naming its trades): every record says what it is (`VALUE_TYPE`, `GRAIN`, its id, `CURRENCY`,
 `SOURCE_SYSTEM`), one system sends one form and one grain on a date, and a system may switch between dates. The same trades sent per
 trade or as their positions give the same VaR on every node; a trade inside a supplied position has no VaR of its own (its page says so
-and links the position). `drishti.var.inputs` can pin what each system sends, as a cross-check (VAR_GUIDE.md section 15.13).
+and links the position). `drishti.var.inputs` can pin what each system sends, as a cross-check (VAR.md section 2.13).
 
 **One year or two; 99% or 95%.** `drishti.var.scenario-window` uses the newest N scenarios of each date's set (250 is one year;
 `all` is the whole set, 509 in the demo) and `drishti.var.confidence` sets VaR at 99% or 95%; every label follows the answer, and

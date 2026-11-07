@@ -435,9 +435,9 @@ class DemoLake:
 
     #: the fields of a dated dataset's documents (``dated-by``) that hold a date of the data, moved with the business dates
     DATED_FIELDS = ("BUSINESS_DATE", "COMPUTED_AT", "BATCH_ID", "SOURCE_BATCH", "WINDOW_START", "WINDOW_END",
-                    # an exposure run's and its paths' (docs/guides/EXPOSURE_GUIDE.md section 15): the run id, a row's id and grid date carry dates
+                    # an exposure run's and its paths' (docs/contracts/EXP.md section 2): the run id, a row's id and grid date carry dates
                     "RUN_ID", "PATH_ROW_ID", "GRID_DATE", "MARKET_DATA_DATE",
-                    # scenario PVs (VAR_GUIDE.md section 15.9) are valued on their business date: moved with it, or the engine rejects them
+                    # scenario PVs (VAR.md section 2.9) are valued on their business date: moved with it, or the engine rejects them
                     "VALUATION_DATE", "BASE_VALUATION_DATE")
     #: the date lists moved the same way: a scenario set's days, an exposure run's grid
     DATED_LISTS = ("SCENARIO_DATES", "GRID_DATES")

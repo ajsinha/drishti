@@ -25,7 +25,7 @@ import java.util.TreeMap;
 import java.util.function.Function;
 
 /**
- * What each PV record is, and what each source system sent on one date (VAR_GUIDE.md section 15.13, "Inputs: any form, any grain"). Every
+ * What each PV record is, and what each source system sent on one date (VAR.md section 2.13, "Inputs: any form, any grain"). Every
  * record says what it is: {@code VALUE_TYPE} ({@code PV}: scenario PVs and {@code BASE_PV}; {@code PNL}: a P&amp;L vector), {@code GRAIN}
  * ({@code TRADE} with a {@code TRADE_ID}, or {@code POSITION} with a {@code POSITION_ID}), its {@code CURRENCY} and its
  * {@code SOURCE_SYSTEM}. A record missing one, or whose fields contradict its payload or its id, is refused ({@code DRS-5208}); one that

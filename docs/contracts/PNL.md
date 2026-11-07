@@ -7,7 +7,7 @@
 # PNL, P&L explain: the data contract
 
 *Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned, parked) · Shared rules: [README.md](README.md) · Model contract:
-[VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Inputs shared with [TVAL.md](TVAL.md) (valuations) and [FRTB.md](FRTB.md) (sensitivities)*
+[VAR.md](VAR.md#1-the-contract-at-a-glance) · Inputs shared with [TVAL.md](TVAL.md) (valuations) and [FRTB.md](FRTB.md) (sensitivities)*
 
 This is the planned data contract of **PNL**, P&L explain: the day-over-day P&L of any set of trades, from the upstream engine's
 valuations, attributed to market moves through the trades' sensitivities (delta, gamma, vega), to time (theta and carry), to new,

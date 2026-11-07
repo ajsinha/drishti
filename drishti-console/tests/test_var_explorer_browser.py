@@ -167,7 +167,7 @@ def test_the_command_opens_the_desk_and_a_drill_from_bank_to_trade_stays_in_plac
 
 
 def test_the_limit_letters_tree_a_letter_its_desk_and_a_trade(stack, browser):
-    """2.9.5 (docs/guides/VAR_GUIDE.md section 15.14): the selector lists the date's hierarchies by title (the pack's MGMT, LEGAL and LL);
+    """2.9.5 (docs/contracts/VAR.md section 2.14): the selector lists the date's hierarchies by title (the pack's MGMT, LEGAL and LL);
     LL is kept in the link; a letter carries its limit bar; a drill from the letter to its desk node to a position and a trade stays in
     place; LL:<letter> in the scope box is the letter's node."""
     pg = open_var(browser, str(stack), "/var?scope=BANK")
@@ -502,7 +502,7 @@ def test_a_portfolio_page_lists_its_positions_and_opens_one_beside(stack, browse
 
 def test_the_newest_date_is_captured_officially_at_start(stack):
     """Every node of every hierarchy (MGMT and LEGAL from the rows, 88; the limit letters LL from the columns, 43, 2.9.5) captured by the
-    server for the newest date (VAR_GUIDE.md section 19)."""
+    server for the newest date (VAR.md section 5)."""
     import json
     deadline = time.monotonic() + 120
     record = None

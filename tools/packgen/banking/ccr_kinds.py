@@ -20,9 +20,9 @@ served by the pack's Delta connector exposure-store from the risk lake's domain 
 server's Java engine through the reactive connector exposure-engine, read as the viewer; exposure-whatif (XWIF <scope> <GO>) by the Python
 exposure engine in the compute pool exposure (the exact pre-deal what-if: candidates' paths added to their netting sets, from a private
 sandbox), through the reactive connector exposure-whatif; the netting-set and counterparty pages show
-the engine's figures computed as they open (EXPOSURE_ENGINE). The stored exposure-profile kind was retired in 2.9.0 (EXPOSURE_GUIDE.md section 22).
+the engine's figures computed as they open (EXPOSURE_ENGINE). The stored exposure-profile kind was retired in 2.9.0 (EXP.md section 8).
 The published official end-of-day results of every netting set, counterparty and group (risk-results/exposure-official-cpty, written by
-the server's ExposurePublisher, EXPOSURE_GUIDE.md section 20) are the read-only kind exposure-official-cpty of the Delta connector
+the server's ExposurePublisher, EXP.md section 6) are the read-only kind exposure-official-cpty of the Delta connector
 exposure-results, for BI and other readers only: no engine reads it (tools/test_contracts.py)."""
 from __future__ import annotations
 
@@ -104,7 +104,7 @@ CONNECTORS = {
         "kinds": ["nset-mtm", "cpty-mtm"],
         "settings": {"refresh": "60s", **DERIVED},
     },
-    # read only: the table the server's ExposurePublisher appends the official captures to (EXPOSURE_GUIDE.md section 20); BI reads it, no engine does
+    # read only: the table the server's ExposurePublisher appends the official captures to (EXP.md section 6); BI reads it, no engine does
     "exposure-results": {
         "plugin": "delta", "enabled": "${DRISHTI_EXPOSURE_ENABLED:true}",
         "description": "The official end-of-day exposure of every netting set, counterparty and group the server publishes "

@@ -92,7 +92,7 @@ generated-by: tools/packgen/banking/make_docs.py
 Counterparty credit risk over the trading pack's trades: master agreements and CSAs, netting sets, credit limits, CVA, SA-CCR,
 collateral balances, margin calls and SIMM initial margin, and the **exposure engine's inputs**: an upstream simulation run
 (`simulation-run`) and every trade's mark to market on every path of its grid (`exposure-path`). Exposure is never stored: `EXP
-NSET:NS-ALDERSHOT-FRA <GO>` (the computed kind `exposure-result`, [EXPOSURE_GUIDE.md Part II](../../../docs/guides/EXPOSURE_GUIDE.md#14-the-contract-at-a-glance)) nets the paths per
+NSET:NS-ALDERSHOT-FRA <GO>` (the computed kind `exposure-result`, [EXP.md](../../../docs/contracts/EXP.md#1-the-contract-at-a-glance)) nets the paths per
 netting set, applies each CSA's collateral path by path with the margin period of risk, and reads EE, ENE, EEE, PFE 95% and 99%, EPE
 and EEPE for any scope (`NSET:`, `CPTY:`, `GROUP:`, `LE:`, `DESK:`, `TRD:`); the netting-set and counterparty pages show the engine's
 figures computed as they open. There is no stored `exposure-profile` kind (`EXP-<cp>-<le>`): `EXP EXP-ALDERSHOT-FRA`
@@ -390,7 +390,7 @@ Links: `COUNTERPARTY` → `counterparty`, `NETTING_SET` → `netting-set`.
 
 **Exposure simulation run** · mnemonic `XRUN` · read through connector `exposure-store`.
 
-An upstream exposure simulation of a business date (docs/guides/EXPOSURE_GUIDE.md section 15.2): the paths, the grid of future dates, the model; an input of the exposure engine
+An upstream exposure simulation of a business date (docs/contracts/EXP.md section 2.2): the paths, the grid of future dates, the model; an input of the exposure engine
 
 **Id:** pattern `^XR-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$`.
 
@@ -429,7 +429,7 @@ Links: `NETTING_SETS` → `netting-set`, `RUN_ID` → `simulation-run`.
 
 **Exposure path (a trade's MtM on every path at a grid date)** · mnemonic `XPATH` · read through connector `exposure-store`.
 
-One trade's mark to market on every simulated path at one grid date (docs/guides/EXPOSURE_GUIDE.md section 15.3): the grain every exposure is netted, collateralised and counted from
+One trade's mark to market on every simulated path at one grid date (docs/contracts/EXP.md section 2.3): the grain every exposure is netted, collateralised and counted from
 
 **Id:** pattern `^XR-[^~]+~.+~[0-9]+$`.
 

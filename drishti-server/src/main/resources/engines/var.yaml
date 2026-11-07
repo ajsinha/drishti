@@ -104,7 +104,7 @@ drishti:
         max-trades: ${DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES:500}   # a window applied earlier once this many trades wait
     root-name: ${DRISHTI_VAR_ROOT_NAME:}   # the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy data's NAME
     # root-names: {MGMT: "Group", LEGAL: "Group legal"}   # one hierarchy's root name; wins over root-name for it
-    # hierarchies:                   # VAR_GUIDE.md section 15.14: wins over a loaded pack's hierarchies: block (the market-risk pack's:
+    # hierarchies:                   # VAR.md section 2.14: wins over a loaded pack's hierarchies: block (the market-risk pack's:
     #   LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }   # MGMT, LEGAL from the rows; LL from columns)
     sharding:                        # VaR sharding (docs/architecture/VAR_SHARDING.md): on only with the market-risk pack's sharding: block or enabled: true
       release-after-seconds: 900     # a shard book of a date nobody has open (outside the newest hot-dates), unread this long, is released
@@ -130,7 +130,7 @@ drishti:
     positions:                       # how positions are derived from the trades when no loaded pack has a positions: section (the market-risk pack's wins)
       live-statuses: [NEW, VALIDATED, AMENDED]   # trade statuses that count on their date (a row with no status counts)
       rules: []                      # first match wins: {name, groups: [PRODUCT_GROUP...], types: [PRODUCT_TYPE...], key: [SECURITY_ID, ISIN...]}; none: one position per trade
-    official:                        # the official end-of-day captures (docs/guides/VAR_GUIDE.md section 19)
+    official:                        # the official end-of-day captures (docs/contracts/VAR.md section 5)
       enabled: ${DRISHTI_VAR_OFFICIAL:true}       # capture every node of every hierarchy when a date's inputs are complete (after the data-load signal)
       publish: true                  # also append them to <root>/risk-results/var-official (append-only) for other systems
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # a folder or s3://bucket/prefix

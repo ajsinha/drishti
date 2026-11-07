@@ -88,7 +88,7 @@ final class VarTradeLinks implements ViewAugmenter {
                 links.put("VAR", "TRD:" + tid);
                 currency(d, o2, links);
             } else if (d.intake().positionOf(id) != null || positionGrain(d, doc)) {
-                // its source system sends PVs per position (VAR_GUIDE.md section 15.13): no trade-level VaR, a link to its position
+                // its source system sends PVs per position (VAR.md section 2.13): no trade-level VaR, a link to its position
                 String pos = d.intake().positionOf(id);
                 String note = "its source system sends PVs per position on " + day + (pos == null ? "" : ": the trade is in the supplied position "
                         + pos) + "; there is no trade-level P&L vector";
@@ -121,7 +121,7 @@ final class VarTradeLinks implements ViewAugmenter {
     }
 
     /**
-     * The trade's currency and its base PV in it (VAR_GUIDE.md section 15.11): a trade sent as scenario PVs is in their currency, its base
+     * The trade's currency and its base PV in it (VAR.md section 2.11): a trade sent as scenario PVs is in their currency, its base
      * PV its USD value today at today's rate (the received {@code BASE_PV}, to rounding); a P&amp;L vector's trade is in its own
      * {@code CURRENCY}, its base PV the vector's {@code PV} (USD). {@code TRADE_CURRENCY}, {@code TRADE_CURRENCY_FROM}, {@code BASE_PV}.
      */

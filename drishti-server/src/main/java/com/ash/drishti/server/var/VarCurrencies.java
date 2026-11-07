@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * A business date in another reporting currency (VAR_GUIDE.md section 15.10): built from the date's USD book the first time the currency
+ * A business date in another reporting currency (VAR.md section 2.10): built from the date's USD book the first time the currency
  * is asked, every trade's vector converted through USD with the scenario FX of the date ({@link CurrencyBook}), then kept like the USD
  * book (mapped from its own hot file under {@code <hot>/<date>-<CCY>/} with the tiered memory, on the heap otherwise). The currency move
  * is part of the risk: the same trades give a different VaR in each currency. A currency without scenario FX on the date is refused

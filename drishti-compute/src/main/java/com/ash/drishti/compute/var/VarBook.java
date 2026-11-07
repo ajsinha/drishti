@@ -62,7 +62,7 @@ public final class VarBook {
             "TAGS", "POSITION_RULE", "PV_CURRENCY");
     public static final List<String> TRADE_NUMBERS = List.of("QUANTITY", "PV");
     /**
-     * The {@code POSITION_RULE} of a supplied position: a record at position grain (VAR_GUIDE.md section 15.13), held as one row whose id
+     * The {@code POSITION_RULE} of a supplied position: a record at position grain (VAR.md section 2.13), held as one row whose id
      * is its {@code POSITION_ID}, never derived from trades; it has no trades of its own in the engine.
      */
     public static final String SUPPLIED = "supplied";
@@ -72,7 +72,7 @@ public final class VarBook {
         return ordinal >= 0 && SUPPLIED.equals(trades().text("POSITION_RULE", ordinal));
     }
     /**
-     * The positions' columns, derived from their trades when the date is built (VAR_GUIDE.md section 15.6): the first trade's instrument,
+     * The positions' columns, derived from their trades when the date is built (VAR.md section 2.6): the first trade's instrument,
      * hierarchy, product and rule; the direction of the net quantity; the counterparty when every trade has the same one; the tags of
      * every trade; and the sums (signed quantity, market value from the trades' PV, notional as the gross quantity, trade counts).
      */
@@ -86,7 +86,7 @@ public final class VarBook {
     public record Node(String id, String hierarchy, String level, String name, String parent, List<String> children, List<String> books,
             double limit, OrdinalSet members) {}
 
-    /** The same trade id twice on one date: the date is refused whole (VAR_GUIDE.md section 20.3). */
+    /** The same trade id twice on one date: the date is refused whole (VAR.md section 6.3). */
     public static final class DuplicateTrade extends IllegalStateException {
         private final String tradeId;
 
@@ -292,7 +292,7 @@ public final class VarBook {
     }
 
     /**
-     * Every node's per-trade-currency totals (VAR_GUIDE.md section 15.11): built with a USD book whose builder was given the date's FX
+     * Every node's per-trade-currency totals (VAR.md section 2.11): built with a USD book whose builder was given the date's FX
      * ({@link Builder#currencyRates}); null for a book built without (one in another reporting currency).
      */
     public CurrencyTotals currencyTotals() {
@@ -1356,7 +1356,7 @@ public final class VarBook {
         }
 
         /**
-         * A position's columns from its run of trades (VAR_GUIDE.md section 15.6: Drishti derives positions; nothing upstream sends them): the
+         * A position's columns from its run of trades (VAR.md section 2.6: Drishti derives positions; nothing upstream sends them): the
          * first trade's instrument, hierarchy, product and rule; the direction of the net quantity; the counterparty when every trade
          * has the same one (else empty); the tags of every trade; the signed and gross quantities, the market value (the trades' PV)
          * and the counts.

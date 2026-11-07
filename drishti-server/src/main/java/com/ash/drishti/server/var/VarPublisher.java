@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Publishes the official end-of-day results to {@code <root>/risk-results/var-official/} (VAR_GUIDE.md section 19, docs/contracts/README.md
+ * Publishes the official end-of-day results to {@code <root>/risk-results/var-official/} (VAR.md section 5, docs/contracts/README.md
  * section 11) for other systems: one row per node of every hierarchy per business date, appended as one commit per capture run through
  * an {@link com.ash.drishti.server.official.OfficialSink}: a Delta table (the default) or an Iceberg table
  * ({@code drishti.var.official.format: iceberg}), the root a folder or {@code s3://} (2.9.5). The table is append-only ({@code delta.appendOnly}): a restated date adds rows with the next
@@ -37,12 +37,12 @@ import java.util.Map;
  */
 final class VarPublisher {
 
-    /** The contract version the rows carry (VAR_GUIDE.md section 23.4, the change table). */
+    /** The contract version the rows carry (VAR.md section 23.4, the change table). */
     static final String CONTRACT_VERSION = "1.5";                   // 1.4: HORIZON and METHOD; 1.5: SVAR, SES and STRESS_SET_ID
     static final String FOLDER = "risk-results";
     static final String TABLE = "var-official";
 
-    /** The published columns and their types, in order (VAR_GUIDE.md section 19; BUSINESS_DATE is the partition column business_date). */
+    /** The published columns and their types, in order (VAR.md section 5; BUSINESS_DATE is the partition column business_date). */
     static final Map<String, String> COLUMNS = columns();
 
     private final com.ash.drishti.server.official.OfficialSink sink;

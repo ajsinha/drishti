@@ -194,7 +194,7 @@ Open questions for the product owner are listed at the end of each design.
 VaR is good for now."** What is active:
 - **Fundamentals:** the data contract of every command ([docs/contracts](../contracts/README.md#16-contracts-of-every-command): one
   contract per kind, the `contract` tool, the generated pages and the command catalog), kept current by tests.
-- **VaR, complete** (the 2.8.0 VaR row below; [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)): the stored `var` and `var-node` kinds retired, and the VaR
+- **VaR, complete** (the 2.8.0 VaR row below; [VAR.md](../contracts/VAR.md#1-the-contract-at-a-glance)): the stored `var` and `var-node` kinds retired, and the VaR
   figures on positions, portfolios and desks computed; positions derived on the server; the full trade set and portfolios; memory
   tiering; the load signal reloading the engine; vectors kept 7 years; the published `var-official` results; the VaR guide. **Part 1
   built** (2026-10-25): everything but memory tiering, the 1 M-trade benchmark, the Python engine and the VaR guide. **Part 2 built**
@@ -209,7 +209,7 @@ per path with the margin period of risk, EE, ENE, EEE, PFE, EPE, EEPE, contribut
 `DESK:`, `BOOK:`, `TRD:`, `BANK`, `WHERE:`), the memory-mapped hot file per date (`DRSHEXP1`), `/api/v1/exposure`, the computed kind
 `exposure-result` (`EXP <scope>`), the `addon` what-if, captures, the official results `exposure-official` and `-cpty`, retention
 settings, the netting-set and counterparty pages' computed figures, and the retirement (the reconciliation of the 76 stored sets in
-EXPOSURE_GUIDE.md section 22.2). **Part 2 built** (2026-10-26): the exposure explorer (`/exposure`, `EXP <scope> <GO>`: breadcrumb,
+EXP.md section 8.2). **Part 2 built** (2026-10-26): the exposure explorer (`/exposure`, `EXP <scope> <GO>`: breadcrumb,
 tree, tiles, the profile chart and path fan, the tabs by level, the pre-deal what-if, captures and compare), the Python what-if engine
 (`exposure-whatif`, `XWIF`, the exact `paths` method, compute pool `exposure`), `drishti.py exposure` (`tools/expcli.py`), float32
 paths in the Delta reader, `drishti.ccr.exposure.kinds.limit` (the stored credit limits read as stored), and the documentation in two
@@ -393,7 +393,7 @@ engines. Which industries, and in what order, is for the product owner to decide
 
 ## 2.9.4 (planned): VaR from scenario PVs, in any reporting currency (product owner, 2026-10-26)
 
-**Status (2026-10-27): built on a local branch for the product owner's review, not pushed or merged** (VAR_GUIDE.md sections 15.9 and
+**Status (2026-10-27): built on a local branch for the product owner's review, not pushed or merged** (VAR.md sections 2.9 and
 15.10, contract 1.5): scenario PVs (`scenario-pv`) beside P&L vectors, FX supplied (`fx-scenario`) or derived (`fx-spot`), crosses through
 USD, `DRS-5206` and `DRS-5207`, `ccy` on every answer and `--ccy` on the command line, books per currency on first ask, official records
 per `drishti.var.official.currencies`; the demo's Endur trades as scenario PVs. Open: the console's currency picker (mock-ups), the
@@ -664,7 +664,7 @@ October 31; outputs xlsx, csv and PDF, XBRL later.
 |---|---|---|
 | 1 | 10-day VaR (G1) | **moved to 2.9.7 (row 2b), built in Drill A**: √10 and the 10-day sum; full 10-day revaluation stays a slot |
 | 2 | Stressed VaR (G2) | **moved to 2.9.7 (row 2c, Drill B)**: a configured 12-month stress window (250 scenarios), 1-day and 10-day, weekly at least |
-| 3 | Actual and hypothetical P&L (G3) | **Built (2026-11-01, `wip/reg-var`)**: the kind `desk-pnl` (`DPNL`), its contract and generated demo P&L ([VAR_GUIDE 15.16](../guides/VAR_GUIDE.md#1516-desk-pnl-the-banks-actual-and-hypothetical-pl)). Planned: a data contract and connector for the bank's daily P&L per desk: actual (from finance, without fees, commissions, reserves, net interest income, intraday) and front-office hypothetical; Drishti's own risk-theoretical P&L kept and named as such |
+| 3 | Actual and hypothetical P&L (G3) | **Built (2026-11-01, `wip/reg-var`)**: the kind `desk-pnl` (`DPNL`), its contract and generated demo P&L ([VAR.md 2.16](../contracts/VAR.md#216-desk-pnl-the-banks-actual-and-hypothetical-pl)). Planned: a data contract and connector for the bank's daily P&L per desk: actual (from finance, without fees, commissions, reserves, net interest income, intraday) and front-office hypothetical; Drishti's own risk-theoretical P&L kept and named as such |
 | 4 | Backtesting engine (G4) | **Built (2026-11-01, `wip/reg-var`)**: `GET /api/v1/var/backtesting`, `VAR <scope> BACKTEST`, the screen (mock-up A) ([VAR_GUIDE 18.11](../guides/VAR_GUIDE.md#1811-backtesting-for-regulation)). Planned: VaR 99% (and 97.5%) against actual and hypothetical P&L, bank and desk; exceptions over 250 days, the traffic-light zone and the capital multiplier (US 3.00 to 4.00); computed on demand, never stored; the backtesting chart. Mock-ups: [the 2.9.8 screens](#298-mock-ups-the-screens-to-build). |
 | 5 | Period statistics (G5) | **Built (2026-11-01, `wip/reg-var`)**: `GET /api/v1/var/statistics`, `VAR <scope> STATS <period>`, a demo server's synthetic official history ([VAR_GUIDE 18.10](../guides/VAR_GUIDE.md#1810-period-statistics)). Planned: high, low, average and period-end over a quarter or a year; 60-day averages; 12-week stressed-VaR averages; over the stored official runs. Mock-ups: [the 2.9.8 screens](#298-mock-ups-the-screens-to-build). |
 | 6 | Report-definition framework | **Built (2026-11-01, `wip/reg-var`)**: `config/reports/`, frozen runs with lineage, checks, the sign-off record, xlsx, csv and PDF, the review screen (mock-up A) ([VAR_GUIDE 18.14](../guides/VAR_GUIDE.md#1814-regulatory-reports-definitions-runs-checks-and-sign-off)); the BI review report and scheduling not built. Planned: one YAML per report (lines and cells mapped to computed measures and scopes), a generator (filled template, an extract, a review report in BI), checks before review (cross-report consistency, sums to totals, movements explained, missing data), the period frozen with every figure traced to its official run and data versions, a maker-checker sign-off record; submission stays with the bank's reporting team |

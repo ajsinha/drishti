@@ -6,7 +6,10 @@
 
 # WWR: wrong-way risk, the data contract
 
-*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Exposure paths: [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) ·
+**Internal.** The design of an engine that is not built yet: shown in Help to administrators only, and not offered to banks as a
+contract until its engine is built.
+
+*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR.md](VAR.md#1-the-contract-at-a-glance) · Exposure paths: [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) ·
 CVA: [CVA.md](CVA.md) · Groups: [GRP.md](GRP.md)*
 
 **Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
@@ -79,7 +82,7 @@ and monitor specific and general wrong-way risk).
 ```
 ${DRISHTI_DELTA_ROOT}/risk/
 ├── credit-path/      business_date=YYYY-MM-DD/run_id=<RUN_ID>/   optional: one row per credit name × grid date: hazard over the P paths
-└── exposure-path/, simulation-run/                               EXPOSURE_GUIDE.md section 15 (the same run, the same path order)
+└── exposure-path/, simulation-run/                               EXP.md section 2 (the same run, the same path order)
 ```
 
 ### 3.2 `credit-path`: counterparty credit on the exposure paths (optional, shared)
@@ -101,7 +104,7 @@ the same market path as in `exposure-path`: the simulator must draw credit and m
 | `SPREAD` | vector | `list<float>` | optional | – | bp | the simulated 5-year CDS spread (for display and for flags) | `[118.0, 151.5, …]` |
 | `STATUS`, `BATCH_ID` | text, id | STRING | required | – | | | `ok`, `B-2026-09-30-01` |
 
-Vectors follow EXPOSURE_GUIDE.md section 15.3 (float32 allowed). Cadence, due time, load signal (reloads the engine automatically) and retention follow
+Vectors follow EXP.md section 2.3 (float32 allowed). Cadence, due time, load signal (reloads the engine automatically) and retention follow
 EXP; at 40 GB a date the 7-year question is the same (EXPOSURE_GUIDE.md open question 2), proposed: credit paths kept with the exposure paths' windows,
 WWR statistics every date for 7 years.
 

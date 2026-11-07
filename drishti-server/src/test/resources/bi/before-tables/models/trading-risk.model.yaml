@@ -36,7 +36,7 @@ tags: [sample, trading, counterparty-risk, cross-pack]
 datasets:                       # alias: the dataset it reads, and its role (a fact is added up; a dimension groups and filters)
   trades:         { dataset: trading-risk-trades, role: fact }
   netting_sets:   { dataset: trading-risk-netting-sets, role: fact }
-  set_exposure:   { dataset: counterparty-exposure-official-netting-sets, role: fact }      # 2.9.0: the engine's official results (EXPOSURE_GUIDE.md section 20)
+  set_exposure:   { dataset: counterparty-exposure-official-netting-sets, role: fact }      # 2.9.0: the engine's official results (EXP.md section 6)
   cpty_exposure:  { dataset: counterparty-exposure-official-counterparties, role: fact }
   counterparties: { dataset: trading-risk-counterparties, role: dimension }
   desks:          { dataset: trading-risk-desks, role: dimension }

@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * A hierarchy built from the trades' columns (2.9.5, VAR_GUIDE.md section 16): limit letters over desks, {@code LIMIT_LETTER > DESK},
+ * A hierarchy built from the trades' columns (2.9.5, VAR.md section 3): limit letters over desks, {@code LIMIT_LETTER > DESK},
  * beside the book-based MGMT tree. The derived nodes and their ids; a letter holding half of a book counts exactly its rows; every node's
  * aggregate is the sum of its members (a leaf's to the bit); the planned vector of any set equals the naive sum; a position whose trades
  * sit under two letters is split per letter; leaf ids are refused when a value has two parents; the date's hot file keeps the cells

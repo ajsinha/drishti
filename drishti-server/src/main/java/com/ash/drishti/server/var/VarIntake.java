@@ -30,7 +30,7 @@ import java.util.TreeSet;
 import java.util.function.Supplier;
 
 /**
- * One date's trade rows on their way into the {@link VarBook} (VAR_GUIDE.md sections 15.6, 15.9 and 20.3), row by row as the connector
+ * One date's trade rows on their way into the {@link VarBook} (VAR.md sections 2.6, 2.9 and 6.3), row by row as the connector
  * streams them, in two forms a bank may send (either, or both for different trades):
  *
  * <ul>
@@ -49,12 +49,12 @@ import java.util.function.Supplier;
  */
 final class VarIntake {
 
-    /** The trade columns read besides the engine's own when the table keeps them (VAR_GUIDE.md section 15.2). */
+    /** The trade columns read besides the engine's own when the table keeps them (VAR.md section 2.2). */
     static final List<String> OPTIONAL = List.of("TRADE_STATUS", "MATURITY_DATE", "BATCH_ID", "SCENARIO_SET_ID", "REPORTING_CCY", "STATUS",
             "RUN_KIND", "COMPUTED_AT", "VALUE_TYPE", "GRAIN", "POSITION_ID", "SOURCE_SYSTEM", "TRADE_IDS", "TRADE_CURRENCY");
-    /** The position rule a supplied position (a record at position grain, VAR_GUIDE.md section 15.13) carries: never derived. */
+    /** The position rule a supplied position (a record at position grain, VAR.md section 2.13) carries: never derived. */
     static final String SUPPLIED = VarBook.SUPPLIED;
-    /** The scenario-PV form's own columns (VAR_GUIDE.md section 15.9), read when the table keeps them. */
+    /** The scenario-PV form's own columns (VAR.md section 2.9), read when the table keeps them. */
     static final List<String> PV_COLUMNS = List.of("BASE_PV", "VALUATION_DATE", "BASE_VALUATION_DATE");
     /** The engine's columns the vector table must keep (the rest of the trade columns are read when kept). */
     static final List<String> REQUIRED = List.of("LEGAL_ENTITY", "DESK", "TT_BOOK");
@@ -313,7 +313,7 @@ final class VarIntake {
                 return;                                                 // reading only the intraday rows of a loaded date
             }
         }
-        // what the record is (VAR_GUIDE.md section 15.13): its own fields, checked against its payload, its id and its system's pin
+        // what the record is (VAR.md section 2.13): its own fields, checked against its payload, its id and its system's pin
         String system = text(row, "SOURCE_SYSTEM");
         String[] bad = inputs.check(fx == null ? VarInputs.PNL : VarInputs.PV, text(row, "VALUE_TYPE"), text(row, "GRAIN"), row[0], position,
                 system, text(row, "CURRENCY"));
@@ -370,7 +370,7 @@ final class VarIntake {
                         why = new String[] {ErrorCode.VAR_NO_FX.code(), "its P&L vector is in " + ccy + " and the date has no " + ccy + " scenario FX"};
                     } else {
                         // each scenario's P&L at that scenario's FX into USD: approximate, the currency move inside the trade is
-                        // already folded into the vector (tradesWithoutPv; VAR_GUIDE.md section 15.13)
+                        // already folded into the vector (tradesWithoutPv; VAR.md section 2.13)
                         for (int s = 0; s < length; s++) {
                             usdPnl[s] = values[s] * r.get().scenarios()[s];
                         }
@@ -434,7 +434,7 @@ final class VarIntake {
             texts[VarBook.TRADE_TEXTS.indexOf("INSTRUMENT_ID")] = d.instrumentId();
             texts[VarBook.TRADE_TEXTS.indexOf("SECURITY_ID")] = d.securityId();
         }
-        // the currency the trade's PVs came in (VAR_GUIDE.md section 15.11): a scenario-PV row's CURRENCY; none for a P&L vector (USD)
+        // the currency the trade's PVs came in (VAR.md section 2.11): a scenario-PV row's CURRENCY; none for a P&L vector (USD)
         texts[VarBook.TRADE_TEXTS.indexOf("PV_CURRENCY")] = fx != null ? currency(row) : null;
         if (texts[VarBook.TRADE_TEXTS.indexOf("INSTRUMENT")] == null) {
             String sec = texts[VarBook.TRADE_TEXTS.indexOf("SECURITY_ID")];
@@ -547,7 +547,7 @@ final class VarIntake {
         List<String> mixed = inputs.mixed();
         if (!mixed.isEmpty()) {
             throw new com.ash.drishti.common.DrishtiException(ErrorCode.VAR_INPUT_MIXED, "the inputs of " + date + " are not loaded: "
-                    + String.join("; ", mixed) + "; one source system sends one form and one grain on one date (VAR_GUIDE.md section 15.13)");
+                    + String.join("; ", mixed) + "; one source system sends one form and one grain on one date (VAR.md section 2.13)");
         }
         for (Map.Entry<String, List<String>> e : positionTrades.entrySet()) {
             for (String t : e.getValue()) {

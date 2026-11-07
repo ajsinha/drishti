@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Planned data contract of the default-risk input (proposed command DRCI): docs/contracts/FRTB.md section 3.3,
-# docs/contracts/FRTB_DATA_STRUCTURES.md section 6; read by the FRTB-SA engine's default risk charge (MAR22) when a connector serves it.
+# docs/contracts/FRTB.md section 17.6; read by the FRTB-SA engine's default risk charge (MAR22) when a connector serves it.
 kind: default-risk
 mnemonic: DRCI
 pack: market-risk

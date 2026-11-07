@@ -111,7 +111,7 @@ licensing shapes what they may show (section 6).
 | Task | Drishti today | Gap |
 |---|---|---|
 | IPV: marks against independent sources | **Not built** (one source) | Section 5.3 with a tolerance table and a report |
-| Proxy review: which instruments have no data of their own | **Partly**: each P&L vector and scenario-PV row says `ok`, `proxied` or `failed` ([VAR_GUIDE section 15.2](../guides/VAR_GUIDE.md#152-pnl-vector-one-pl-vector-per-trade)), but in the Risk packs, not the Market lens | A proxy list in the Market lens (section 5.9) |
+| Proxy review: which instruments have no data of their own | **Partly**: each P&L vector and scenario-PV row says `ok`, `proxied` or `failed` ([VAR.md section 2.2](../contracts/VAR.md#22-pnl-vector-one-pl-vector-per-trade)), but in the Risk packs, not the Market lens | A proxy list in the Market lens (section 5.9) |
 | Data quality statistics over the month | **Not built**: the checks run when the Quality landing opens; nothing keeps their results | Section 5.7 |
 | Market data in BI | **Not built**: the pack ships no BI dataset; BI offers its themes only (`market.yaml` `bi`) | Section 5.6 |
 | The VaR history review | **Partly**: an item's history; the moves in σ | Jumps across the whole history; the VaR at stake of a bad historical day (section 5.1) |
@@ -350,7 +350,7 @@ expectations ([DATA_GUIDE.md › Telling Drishti new data has landed, section 8]
 
 ### 5.9 ML9: the proxy list
 
-The P&L vector and scenario-PV rows say `ok`, `proxied` or `failed` per trade ([VAR_GUIDE section 15.2](../guides/VAR_GUIDE.md#152-pnl-vector-one-pl-vector-per-trade)).
+The P&L vector and scenario-PV rows say `ok`, `proxied` or `failed` per trade ([VAR.md section 2.2](../contracts/VAR.md#22-pnl-vector-one-pl-vector-per-trade)).
 With ML1's usage map, the Market lens lists the **market data behind the proxies**: which items are missing so that trades are proxied,
 the trades, their MtM and component VaR. Reading the VaR engine's status needs the market-risk pack's read access, not its commands: the
 Market lens hides VaR, so the list is a read-only card, or the item lives in the Risk lens with a link (section 9, decision 3). **Size** S.

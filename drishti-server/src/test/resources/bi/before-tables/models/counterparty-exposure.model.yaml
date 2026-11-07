@@ -37,7 +37,7 @@ tags: [sample, counterparty-risk, multi-dataset]
 datasets:                       # alias: the dataset it reads, and its role (a fact is added up; a dimension groups and filters)
   netting_sets:   { dataset: counterparty-exposure-netting-sets, role: fact }
   # since 2.9.0 the exposure figures are the exposure engine's official end-of-day results (risk-results/exposure-official-cpty), the
-  # latest result version of each scope and date: the netting-set and counterparty records no longer store them (EXPOSURE_GUIDE.md section 20)
+  # latest result version of each scope and date: the netting-set and counterparty records no longer store them (EXP.md section 6)
   set_exposure:   { dataset: counterparty-exposure-official-netting-sets, role: fact }
   cpty_exposure:  { dataset: counterparty-exposure-official-counterparties, role: fact }
   counterparties: { dataset: counterparty-exposure-counterparties, role: dimension }

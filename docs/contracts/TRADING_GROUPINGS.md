@@ -7,7 +7,7 @@
 # CTRD, PTRD, LTRD, ITRD, the trading groupings: the data contract
 
 *Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned, parked) · Shared rules: [README.md](README.md) · Model contract:
-[VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Figures from [TVAL.md](TVAL.md) and [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)*
+[VAR.md](VAR.md#1-the-contract-at-a-glance) · Figures from [TVAL.md](TVAL.md) and [VAR.md](VAR.md#1-the-contract-at-a-glance)*
 
 This is the planned data contract of the four **trading groupings**: the pages that list every trade with a counterparty (CTRD), in a
 portfolio or book (PTRD), booked by one of the bank's legal entities (LTRD), or with a leg on an index (ITRD). Today they are stored
@@ -15,7 +15,7 @@ summaries made by a `derived` connector over the trade master, capped at 1,000 m
 over the scope engine**: every trade, paged, sorted and filtered on the server, for any business date, with the scope's valuation
 (TVAL) and VaR beside it. Everything here is a **proposal**; names may change, and each change will be recorded in
 [section 16](#16-open-questions-and-the-change-table). The shared rules are in [README.md](README.md); the scope grammar, captures,
-baskets and entitlements are VaR's ([VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)).
+baskets and entitlements are VaR's ([VAR.md](VAR.md#1-the-contract-at-a-glance)).
 
 **Sources read for this contract (2026-10-25):** `config/packs/trading/pack.yaml` (the connector `trade-pages`, its four kinds'
 `group-by`, `max-members: 1000`, `fields` and `rows`), `config/packs/trading/contracts/{counterparty-trades,portfolio-trades,legal-entity-trades,index-trades,trade}.contract.yaml`,
@@ -82,7 +82,7 @@ the **live** trades of the same set.
 ## 3. Inputs from upstream engines
 
 **None of its own.** The groupings read the trade master (fundamental, through the trading pack's connectors) and, for figures, the
-TVAL and VaR engines' inputs ([TVAL.md section 3](TVAL.md#3-inputs-from-upstream-engines), [VAR_GUIDE.md section 15](../guides/VAR_GUIDE.md#15-inputs-from-upstream-engines)).
+TVAL and VaR engines' inputs ([TVAL.md section 3](TVAL.md#3-inputs-from-upstream-engines), [VAR.md section 2](VAR.md#2-inputs-from-upstream-engines)).
 The fields read from each trade:
 
 | Field (trade contract) | Type | Used for | Example |

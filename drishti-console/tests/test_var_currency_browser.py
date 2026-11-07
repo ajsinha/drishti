@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The VaR explorer in another reporting currency, in a real browser (docs/guides/VAR_GUIDE.md section 15.11; the product owner's mock-up
+"""The VaR explorer in another reporting currency, in a real browser (docs/contracts/VAR.md section 2.11; the product owner's mock-up
 A with C's table as a tab), over the market-risk pack's committed VaR data (the Endur trades as scenario PVs in their own currency) built
 into a scratch lake, the demo connector off:
 

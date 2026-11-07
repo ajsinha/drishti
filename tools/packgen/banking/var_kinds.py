@@ -45,7 +45,7 @@ KINDS = {
     # 2.9.5: a node's VaR limit by hierarchy and node id (USD), for the hierarchies whose limits name it (LL in the demo)
     "var-limit": ("VLIM", "VaR limit of a hierarchy node", "^VL-", "LIMIT_ID"),
     # a desk's daily actual and hypothetical P&L from the bank's finance and front-office systems, for regulatory backtesting
-    # (VAR_GUIDE.md section 15.16); never an input of the VaR engine itself
+    # (VAR.md section 2.16); never an input of the VaR engine itself
     "desk-pnl": ("DPNL", "Desk P&L: actual and hypothetical (daily)", "^DPNL-", "DESK_PNL_ID"),
     # the long-history P&L of today's portfolio per hierarchy node, for the stress window selection (VAR_GUIDE.md section 18.9)
     "pnl-history": ("PNLH", "Long-history P&L of a hierarchy node (stress window selection)", "^PNLH-", "HISTORY_ID"),
@@ -97,7 +97,7 @@ CONNECTORS = {
                      "BY_DESK": "group($.DESKS, 'DESK', 'PNL')"},
             "sort": {"DESKS": "PNL asc", "BY_DESK": "value asc"}}},
     },
-    # read only: the table the server's VarPublisher appends the official captures to (VAR_GUIDE.md section 19); BI reads it, no engine does
+    # read only: the table the server's VarPublisher appends the official captures to (VAR.md section 5); BI reads it, no engine does
     "var-results": {
         "plugin": "delta", "enabled": "${DRISHTI_VAR_ENABLED:true}",
         "description": "The official end-of-day VaR results the server publishes (risk-results/var-official), read only: for BI and "
@@ -138,7 +138,7 @@ FIELDS = {"POSITION_ID": ("position", "Position"), "PORTFOLIO_ID": ("portfolio",
 _HIER = ["LEGAL_ENTITY", "DIVISION", "DESK", "TT_BOOK", "LIMIT_LETTER", "PORTFOLIO"]
 #: the risk-store layout of each kind: promoted columns, and the vector columns (list<double>, out of the document)
 LAYOUT = {
-    # 2.9.4: every record says what it is first (VALUE_TYPE, GRAIN, its id, CURRENCY, SOURCE_SYSTEM: VAR_GUIDE.md section 15.13)
+    # 2.9.4: every record says what it is first (VALUE_TYPE, GRAIN, its id, CURRENCY, SOURCE_SYSTEM: VAR.md section 2.13)
     "pnl-vector": {"columns": ["VALUE_TYPE", "GRAIN", "TRADE_ID", "POSITION_ID", "CURRENCY", "SOURCE_SYSTEM", "SECURITY_ID", "INSTRUMENT",
                                *_HIER, "STRATEGY", "PRODUCT_GROUP", "PRODUCT_TYPE", "COUNTERPARTY", "DIRECTION", "QUANTITY", "PV", "TAGS",
                                "TRADE_STATUS", "MATURITY_DATE", "STATUS", "REPORTING_CCY", "SCENARIO_SET_ID", "BATCH_ID", "RUN_KIND",

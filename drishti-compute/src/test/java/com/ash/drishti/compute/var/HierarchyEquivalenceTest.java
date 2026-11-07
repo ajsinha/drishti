@@ -38,7 +38,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * The equality tests of 2.9.5 (VAR_GUIDE.md section 16) on the committed test data of 2026-09-30, read straight from
+ * The equality tests of 2.9.5 (VAR.md section 3) on the committed test data of 2026-09-30, read straight from
  * {@code data/testdata/market-risk/} as {@link VarTestDataPrecisionTest} reads it:
  *
  * <ul>

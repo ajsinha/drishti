@@ -155,7 +155,7 @@ def title(kind: str, d: dict) -> tuple[str, str]:
 
 # ---- checks ----------------------------------------------------------------------------------------------------
 PATH = re.compile(r"\$\.([A-Za-z_][A-Za-z0-9_]*)")
-#: fields a page reads that the server adds as it opens (the VaR engine's figures on a desk, docs/guides/VAR_GUIDE.md section 21.3)
+#: fields a page reads that the server adds as it opens (the VaR engine's figures on a desk, docs/contracts/VAR.md section 7.3)
 AUGMENTED = {"varEngine", "VAR_ENGINE", "exposureEngine", "EXPOSURE_ENGINE"}
 
 
@@ -286,7 +286,7 @@ def main() -> None:
     existing = {f for t in targets if t.exists() for f in t.rglob("*.json*")}    # the JSONL files, and any older <kind>/<id>.json
     # the VaR engine's reference samples are tools/packgen/var/make_var_data.py's (from the committed test data), not this generator's
     existing = {f for f in existing if not (f.parent == PACKS / "market-risk" / "samples" and f.name.split(".")[0] in VK.KINDS)}
-    # and the intraday sample of tools/pvgen (VAR_GUIDE.md section 15.12): a batch file the scripts write, not a banking document
+    # and the intraday sample of tools/pvgen (VAR.md section 2.12): a batch file the scripts write, not a banking document
     existing = {f for f in existing if f.parent != PACKS / "market-risk" / "samples" / "intraday"}
     existing = {f for f in existing if not (f.parent == PACKS / "counterparty-risk" / "samples" and f.name.split(".")[0] in XK.KINDS)}
     if "--check" in sys.argv:

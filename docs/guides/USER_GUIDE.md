@@ -281,7 +281,7 @@ that browser tab, and it goes into the page's link (`&ccy=EUR`), so a link you s
 command ends with `IN <currency>`, `VAR DESK DESK-RATES IN EUR <GO>`. The tab **In other currencies** (loaded when you open it) shows the
 scope's VaR and ES in each configured currency side by side, with each one's VaR in the page's currency at today's rate; click a row to
 move the page to it. A currency's VaR is never the USD VaR at a rate: the currency move on each scenario day is part of its risk
-([VAR_GUIDE.md section 15.11](VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker)).
+([VAR.md section 2.11](../contracts/VAR.md#211-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker)).
 
 **10-day VaR and another confidence.** Beside **Reporting currency** the VaR explorer has **Horizon** (*1-day*, *10-day (√10)*,
 *10-day (sum)*), **Confidence** (95%, 97.5%, 99%, 99.5%: the configured list, 99% the default) and **ES** (its own, 97.5% by default).
@@ -367,7 +367,7 @@ entities* and, in the demo, *Limit letters*: the letter of authority each trade'
 may hold part of a book: its VaR is exactly that of its own trades. Choose one and the tree, the breadcrumbs and the contributions
 follow it, and the link keeps it (`&hierarchy=LL`); a letter's limit bar reads its own limit (blank when it has none). Type a letter in
 the scope box (`LL:LL-0003`, `LL:LL-0003/DESK-RATES`) or search for it. Which hierarchies exist, and from which columns, is set by an
-administrator ([VAR_GUIDE.md section 15.14](VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns)).
+administrator ([VAR.md section 2.14](../contracts/VAR.md#214-hierarchies-from-the-rows-or-from-the-trades-columns)).
 
 **Any form, any grain.** *How this number was built* says, per source system, whether its figures came as scenario PVs or P&L
 vectors, per trade or per position. A position its system sends whole answers `POS:<id>`; its trades have no VaR of their own on that

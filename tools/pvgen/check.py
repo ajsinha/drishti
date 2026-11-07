@@ -25,7 +25,7 @@ sent, or its scenario PVs through the engine's own formula (``scenario_fx.engine
 supplied scenario FX); the latest intraday row per trade by ``COMPUTED_AT`` replaces it (one before the morning run ignored), a cancel
 removes it. Then VaR 99% (the 6th worst of 509) and ES 97.5% of the bank and of each desk (or the ``--scope``s), next to the server's
 ``GET /api/v1/var/scope`` for the date. Without ``--server`` it prints the expected figures only. Exit 1 when a figure differs by more
-than one unit (the engine rounds to whole units). Guide: docs/guides/VAR_GUIDE.md section 15.12."""
+than one unit (the engine rounds to whole units). Guide: docs/contracts/VAR.md section 2.12."""
 from __future__ import annotations
 
 import argparse

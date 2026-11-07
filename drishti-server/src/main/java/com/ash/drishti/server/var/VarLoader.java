@@ -36,7 +36,7 @@ import java.util.function.Supplier;
  * {@code risk-store} in the demo; the bank's lake in production) and builds the {@link VarBook}: the trades' vectors streamed from the
  * vector column straight into the store (no document is parsed for them), each row checked and given its position by the configured
  * rules ({@link VarIntake}), then the hierarchies with their limits, the scenario set, and the portfolios' definitions. Positions are
- * Drishti's: derived here, from the trades and the rules, each time the date is loaded (VAR_GUIDE.md section 15.6). A date whose inputs are
+ * Drishti's: derived here, from the trades and the rules, each time the date is loaded (VAR.md section 2.6). A date whose inputs are
  * not one run (several batch ids, another scenario set, two scenario sets) is refused ({@code DRS-5203}). Reads as the server; what a
  * viewer may see is applied per request.
  *
@@ -319,7 +319,7 @@ final class VarLoader {
         if (shard != null) {
             b.range(shard.json(digest));
         }
-        // the build sums every node's PVs per trade currency too (VAR_GUIDE.md section 15.11): the date's FX, read only when a trade needs it
+        // the build sums every node's PVs per trade currency too (VAR.md section 2.11): the date's FX, read only when a trade needs it
         b.currencyRates(c -> fx(date, scenarioDates, fxSet).rates(c).orElse(null));
         Map<String, Double> limits = limits(asOf, hs);
         // the column hierarchies' cells and nodes (2.9.5); their roots named as the risk-hierarchy roots are (drishti.var.root-name(s))
@@ -1025,7 +1025,7 @@ final class VarLoader {
     private final Map<String, com.ash.drishti.compute.var.ScenarioFx> fxCache = new java.util.concurrent.ConcurrentHashMap<>();
 
     /**
-     * The date's FX against USD for its scenarios (VAR_GUIDE.md section 15.9): per currency, the batch's supplied scenario rates (the
+     * The date's FX against USD for its scenarios (VAR.md section 2.9): per currency, the batch's supplied scenario rates (the
      * {@code fx-scenario} kind, of the date's scenario set) when it sent them, else rates derived from the FX history of the
      * {@code fx-spot} kind (today's rate moved by each scenario day's 1-day move); pairs against USD only (every cross goes through
      * USD). Kept per date and input versions.

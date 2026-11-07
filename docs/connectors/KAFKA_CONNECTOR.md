@@ -1042,7 +1042,7 @@ latest per trade, fewer rows in the lake. The window and the early flush are the
 amended, new and cancelled trades of the demo's date as such records, `--per-message` records a message (default 10), at `--rate`
 messages a second for `--seconds`, a fixed `--seed`, cancel lines for cancels, as scenario PVs or as P&L vectors (`--pv-systems`, `--pnl-systems`, `--all-vectors`, as the morning script); `--dry-run` prints
 what it would send; `--save` writes the same rows to a JSONL file for `tools/pvgen/check.sh`, which recomputes the answer and
-compares it with the server's ([VAR_GUIDE.md section 15.12](../guides/VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs)).
+compares it with the server's ([VAR.md section 2.12](../contracts/VAR.md#212-producing-pl-vectors-and-scenario-pvs)).
 
 ```bash
 DRISHTI_VAR_PV_STREAM=true DRISHTI_KAFKA_BOOTSTRAP=localhost:9092 ./drishti.sh start

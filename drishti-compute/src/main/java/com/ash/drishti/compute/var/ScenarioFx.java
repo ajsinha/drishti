@@ -26,7 +26,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 
 /**
- * The FX of one business date's scenario set (VAR_GUIDE.md section 15.9): for every currency, today's rate and its rate under each
+ * The FX of one business date's scenario set (VAR.md section 2.9): for every currency, today's rate and its rate under each
  * scenario, always as <b>USD per one unit</b> of the currency. Every cross rate goes through USD (product owner, 2026-10-27): units of
  * {@code B} per unit of {@code A} are {@code usdPer(A) / usdPer(B)}, never a direct pair.
  *

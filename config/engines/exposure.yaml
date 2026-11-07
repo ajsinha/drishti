@@ -66,7 +66,7 @@ drishti:
         hierarchy: risk-hierarchy  # the kind of the risk hierarchies (the market-risk pack's)
         limit: credit-limit          # the stored credit limits, read as stored (the explorer's limit column; LIM stays parked)
       access: {}                     # per role, per counterparty, group or legal entity: trades | aggregate | none (drishti.ccr.exposure.access.<role>[CP-ALDERSHOT]=aggregate)
-      official:                      # the official end-of-day captures (docs/guides/EXPOSURE_GUIDE.md section 20)
+      official:                      # the official end-of-day captures (docs/contracts/EXP.md section 6)
         enabled: ${DRISHTI_EXPOSURE_OFFICIAL:true}   # capture every netting set, counterparty, group and hierarchy node when a date's run is complete
         publish: true                # also append them to <root>/risk-results/exposure-official and exposure-official-cpty (append-only)
         root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # a folder or s3://bucket/prefix

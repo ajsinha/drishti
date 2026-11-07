@@ -487,7 +487,7 @@ final class VarViews {
     }
 
     /**
-     * How the date's vectors met FX (VAR_GUIDE.md sections 15.9 and 15.10): the reporting currency, and per currency converted the
+     * How the date's vectors met FX (VAR.md sections 2.9 and 2.10): the reporting currency, and per currency converted the
      * source of its scenario rates (supplied by the batch, or derived from the FX history) and today's rate in USD per unit; every
      * cross goes through USD.
      */
@@ -807,7 +807,7 @@ final class VarViews {
     }
 
     /**
-     * A trade's currency (VAR_GUIDE.md section 15.11): the currency its PVs came in (a scenario-PV row's {@code CURRENCY}), else the
+     * A trade's currency (VAR.md section 2.11): the currency its PVs came in (a scenario-PV row's {@code CURRENCY}), else the
      * trade's own {@code CURRENCY} (a P&amp;L vector, sent in USD); {@code [currency, where from]}.
      */
     static String[] tradeCurrency(Columns tc, int o) {
@@ -983,7 +983,7 @@ final class VarViews {
     // ------------------------------------------------------------------------------------------------------------------- currencies
 
     /**
-     * The scope in every listed reporting currency (VAR_GUIDE.md section 15.11, the explorer's "In other currencies" tab): each currency's
+     * The scope in every listed reporting currency (VAR.md section 2.11, the explorer's "In other currencies" tab): each currency's
      * VaR and ES computed from the scope's per-trade-currency totals with that currency's scenario FX (never the page's VaR at a rate),
      * that VaR in the page's currency {@code ccy} at today's rate, and the difference from the page's VaR. As the viewer.
      */

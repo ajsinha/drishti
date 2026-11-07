@@ -109,7 +109,7 @@ final class VarShardIntake {
                             || !String.valueOf(have.get("grain")).equals(String.valueOf(d.get("grain")))) {
                         throw new DrishtiException(ErrorCode.VAR_INPUT_MIXED, "the inputs of " + date + " are not loaded: " + sys + " sent "
                                 + have.get("form") + ", " + have.get("grain") + " and " + d.get("form") + ", " + d.get("grain")
-                                + "; one source system sends one form and one grain on one date (VAR_GUIDE.md section 15.13)");
+                                + "; one source system sends one form and one grain on one date (VAR.md section 2.13)");
                     }
                     have.put("rows", number(have.get("rows")) + number(d.get("rows")));
                     have.put("tradesWithoutPv", number(have.get("tradesWithoutPv")) + number(d.get("tradesWithoutPv")));

@@ -99,7 +99,7 @@ public final class VarService implements AutoCloseable {
     private final Map<String, Layered> layered = new ConcurrentHashMap<>();
     private final VarCurrencies currencies;
     /**
-     * The listed currencies built ahead after a date's USD book loads (VAR_GUIDE.md section 15.11): one at a time, on one low-priority
+     * The listed currencies built ahead after a date's USD book loads (VAR.md section 2.11): one at a time, on one low-priority
      * thread, so a USD answer never waits for them; a request in a currency not built yet builds it on first ask, as before.
      */
     private final java.util.concurrent.ExecutorService ahead = java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
@@ -356,7 +356,7 @@ public final class VarService implements AutoCloseable {
     }
 
     /**
-     * The date a request reads in a reporting currency (VAR_GUIDE.md section 15.10): USD is the date as loaded; another currency is built
+     * The date a request reads in a reporting currency (VAR.md section 2.10): USD is the date as loaded; another currency is built
      * from it the first time it is asked and kept with it (dropped when the date is). The answered date's warnings come with it. What is
      * kept is the currency's morning run; the USD date's intraday layer is applied on it as the USD date holds it now ({@link #layered}),
      * so the official capture (which reads the morning run) never leaves a currency without the day's updates for everyone else.
@@ -586,13 +586,13 @@ public final class VarService implements AutoCloseable {
         return f != null && f.isDone() && !f.isCompletedExceptionally();
     }
 
-    /** The date's FX against USD for its scenarios (supplied or derived, VAR_GUIDE.md section 15.9). */
+    /** The date's FX against USD for its scenarios (supplied or derived, VAR.md section 2.9). */
     ScenarioFx fx(VarDate usd) {
         return loader.fx(usd.date(), usd.book().scenarioDates());
     }
 
     /**
-     * A set's per-trade-currency totals (VAR_GUIDE.md section 15.11) on a USD date: a node's stored with the date when the set is the node
+     * A set's per-trade-currency totals (VAR.md section 2.11) on a USD date: a node's stored with the date when the set is the node
      * whole, else summed from the set's trades.
      */
     CurrencyTotals.Sums totals(VarDate usd, OrdinalSet set, String node) {

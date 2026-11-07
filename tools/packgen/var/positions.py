@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The demo risk batch: one P&L vector per live trade, and the positions Drishti derives from them (docs/guides/VAR_GUIDE.md section 15.6).
+"""The demo risk batch: one P&L vector per live trade, and the positions Drishti derives from them (docs/contracts/VAR.md section 2.6).
 
 **Positions are Drishti's**, derived by the server when it loads a date, by the rules of the market-risk pack's ``positions:`` section
 (the same rules are read here, :class:`Rules`, and applied the same way as the server's ``PositionRules``): a trade is live when its
@@ -186,7 +186,7 @@ def letter_of(letters: dict, book: str, trade_id: str) -> str:
 
 
 def lead(value_type: str, grain: str, ident: str, currency: str, system) -> dict:
-    """The fields a PV record leads with, saying what it is (VAR_GUIDE.md section 15.13): VALUE_TYPE (PV or PNL), GRAIN (TRADE or
+    """The fields a PV record leads with, saying what it is (VAR.md section 2.13): VALUE_TYPE (PV or PNL), GRAIN (TRADE or
     POSITION), its id (TRADE_ID or POSITION_ID), CURRENCY and SOURCE_SYSTEM."""
     return {"VALUE_TYPE": value_type, "GRAIN": grain, ("TRADE_ID" if grain == "TRADE" else "POSITION_ID"): ident, "CURRENCY": currency,
             "SOURCE_SYSTEM": system}
@@ -200,7 +200,7 @@ class Batch:
         self.cob, self.market, self.rules, self.fx = cob, market or F.Market(), rules, fx
         # the systems whose trades come as scenario PVs (the rest as P&L vectors); () makes every trade a P&L vector, as before 2.9.4
         self.pv_systems = tuple(SFX.PV_SYSTEMS if pv_systems is None else pv_systems)
-        # the systems whose records come per position, not per trade (GRAIN POSITION, VAR_GUIDE.md section 15.13); none by default
+        # the systems whose records come per position, not per trade (GRAIN POSITION, VAR.md section 2.13); none by default
         self.position_systems = tuple(position_systems or ())
         self.desk_of_book: dict[str, str] = {}
         self.le_of_desk: dict[str, str] = {}
@@ -356,7 +356,7 @@ class Batch:
             pv = float((self.valuations.get(f"TVAL-{t['TRADE_ID']}") or {}).get("MTM") or 0.0)
             rows.append({"TRADE_ID": str(t["TRADE_ID"]), "QUANTITY": q, "DIRECTION": "LONG" if q > 0 else "SHORT" if q < 0 else "FLAT",
                          "PV": float(round(pv)), "PRODUCT_TYPE": t.get("PRODUCT_TYPE"), "COUNTERPARTY": t.get("COUNTERPARTY") or "",
-                         "TRADE_CURRENCY": t.get("CURRENCY") or "USD"})   # the currency its PVs come in (VAR_GUIDE.md section 15.11)
+                         "TRADE_CURRENCY": t.get("CURRENCY") or "USD"})   # the currency its PVs come in (VAR.md section 2.11)
         cps = sorted({r["COUNTERPARTY"] for r in rows} - {""})
         mv = sum(r["PV"] for r in rows)
         tags = sorted({x for t in ts for x in self._tags(t)})

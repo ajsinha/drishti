@@ -205,7 +205,7 @@ Rates in full: cov(Rates, bank) = 1.3639·10¹⁵ USD², σ_bank = 54,240,760, s
 
 ## 5. Inputs and settings
 
-**Inputs:** none new. The scope's vector (from `pnl-vector` or `scenario-pv` with the scenario FX, VAR_GUIDE section 15) and the
+**Inputs:** none new. The scope's vector (from `pnl-vector` or `scenario-pv` with the scenario FX, VAR.md section 2) and the
 hierarchy, exactly as historical VaR reads them.
 
 **Settings** (`config/engines/var.yaml`, under `drishti.var`; also in CONFIGURATION.md and Help → Configuration):

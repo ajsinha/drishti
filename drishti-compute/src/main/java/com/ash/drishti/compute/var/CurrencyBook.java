@@ -19,7 +19,7 @@ import com.ash.drishti.compute.vector.ParallelSums;
 import java.util.List;
 
 /**
- * A business date's book in another reporting currency (VAR_GUIDE.md section 15.10), built from the date's USD book: every trade's
+ * A business date's book in another reporting currency (VAR.md section 2.10), built from the date's USD book: every trade's
  * vector converted by {@link ScenarioFx#convert} with its USD value today (the {@code PV} column), its {@code PV} at today's rate, the
  * nodes' VaR limits at today's rate, the failed trades counted as before. The trades, positions and nodes are the USD book's, in the same
  * order (the builder sorts them the same way), so a scope resolves to the same members in every currency.

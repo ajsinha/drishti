@@ -909,8 +909,8 @@ official tables (`risk-results.var-official`, `exposure-official`, `exposure-off
 (`IcebergAppender`): append commits only (`drishti.append-only=true`), `history.expire.max-snapshot-age-ms` of 7 years, every metadata
 file kept; under a folder or `s3://` (`….official.storage`, the `s3.*` settings). A reader is this connector over `domain:
 risk-results`: BI's `var-results` and `exposure-results` are generated as `plugin: iceberg` over the official root by themselves when
-the format is Iceberg (`OfficialReaders`; a file never edited follows a change of format). [VAR_GUIDE.md section
-19](../guides/VAR_GUIDE.md#19-official-end-of-day-results).
+the format is Iceberg (`OfficialReaders`; a file never edited follows a change of format). [VAR.md section
+19](../contracts/VAR.md#5-official-end-of-day-results).
 
 ## 19. AWS: Glue, S3 Tables and the IAM they need
 

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the var-official kind (command VOFF): docs/contracts/README.md section 16; the table is described in
-# docs/guides/VAR_GUIDE.md section 19 ("Published official results"). Drafted by `drishti.py contract bootstrap var-official`,
+# docs/contracts/VAR.md section 5 ("Published official results"). Drafted by `drishti.py contract bootstrap var-official`,
 # completed by hand.
 kind: var-official
 mnemonic: VOFF

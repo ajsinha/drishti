@@ -13,7 +13,7 @@ The plan's rows are in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#298-marke
 and its [Playgrounds](IMPLEMENTATION_PLAN.md#playgrounds-one-per-metric-in-the-metrics-release) list.
 
 Related: [VAR_GUIDE.md section 18](../guides/VAR_GUIDE.md#18-the-computation) (the formulas the engine uses, which the workbook mirrors
-cell for cell), [section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency) (P&L
+cell for cell), [VAR.md section 2.9](../contracts/VAR.md#29-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency) (P&L
 from scenario PVs and the scenario FX), [section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)
 (horizons and confidences), [COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md) (compute, never store), [CONFIGURATION.md](../admin/CONFIGURATION.md)
 (branding and every setting). The word *playground* here means a metric's worked calculation; it is not the client renderer's

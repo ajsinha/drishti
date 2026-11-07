@@ -367,7 +367,7 @@ class DemoPackWalksTest {
     }
 
     /** A netting set's net MTM walks with its trades and asset totals. Its exposure is computed by the exposure engine from the lake's
-     *  paths since 2.9.0 (EXPOSURE_GUIDE.md section 22): the record holds no exposure figure for the walker to move. */
+     *  paths since 2.9.0 (EXP.md section 8): the record holds no exposure figure for the walker to move. */
     @Test
     void nettingSetNetMtmAssetTotalsAndTradesMoveTogether() {
         eachSample("netting-set", (before, after) -> {

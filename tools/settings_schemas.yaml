@@ -370,14 +370,14 @@ schemas:
       - { key: "alerts[].when", type: string, meaning: "The condition, an expression on the document" }
       - { key: "alerts[].message", type: string, meaning: "What the alert says" }
       - { key: "alerts[].severity", type: string, default: info, meaning: "info, warning or critical" }
-      - { key: positions, type: map, default: "drishti.var.positions", meaning: "How the VaR engine derives positions from the trades of a date (VAR_GUIDE.md section 15.6)" }
+      - { key: positions, type: map, default: "drishti.var.positions", meaning: "How the VaR engine derives positions from the trades of a date (VAR.md section 2.6)" }
       - { key: positions.live-statuses, type: list, meaning: "The TRADE_STATUS values that count" }
       - { key: positions.rules, type: list, meaning: "The rules, the first that holds a trade keys its position" }
       - { key: "positions.rules[].name", type: string, meaning: "The rule's name" }
       - { key: "positions.rules[].groups", type: list, default: "[]", meaning: "PRODUCT_GROUP values it holds" }
       - { key: "positions.rules[].types", type: list, default: "[]", meaning: "PRODUCT_TYPE values it holds" }
       - { key: "positions.rules[].key", type: list, default: "none: one position per trade", meaning: "The fields keying the position, the first the trade carries" }
-      - { key: hierarchies, type: map, default: "{}", meaning: "The hierarchies the VaR and exposure engines build (VAR_GUIDE.md section 16); drishti.var.hierarchies wins" }
+      - { key: hierarchies, type: map, default: "{}", meaning: "The hierarchies the VaR and exposure engines build (VAR.md section 3); drishti.var.hierarchies wins" }
       - { key: "hierarchies.<name>", type: map, meaning: "One hierarchy" }
       - { key: "hierarchies.<name>.title", type: string, meaning: "Its name" }
       - { key: "hierarchies.<name>.source", type: string, default: "columns when levels are given", meaning: "risk-hierarchy (the stored rows) or columns (built from the trades' own columns)" }

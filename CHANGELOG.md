@@ -3479,7 +3479,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   the report `market-risk-var` (bank VaR and ES, VaR by desk and by legal entity, the bank and a desk over time, every node with its
   limit use, a drill-through to a node page). `VarOfficialBiTest` checks it over a lake the server's own publisher writes (a restated
   date, two dates). The demo has one business date of VaR inputs (2026-09-30), so its lines have one point until more dates are captured.
-  [BI_GUIDE.md](docs/guides/BI_GUIDE.md), [VAR_GUIDE.md section 19](docs/guides/VAR_GUIDE.md#19-official-end-of-day-results).
+  [BI_GUIDE.md](docs/guides/BI_GUIDE.md), [VAR.md section 5](docs/contracts/VAR.md#5-official-end-of-day-results).
 - **The landing page's headline** (product owner, 2026-10-26): "See what your data hasn't told you yet.", with the tagline "Any data. Any domain. One grammar." under it as the subtitle; both from configuration (`ui.headline`, `ui.headline_accent`, `ui.tagline`; [CONFIGURATION.md](docs/admin/CONFIGURATION.md)).
 - **Docs: VaR in two documents** (product owner, 2026-10-26). [VAR_GUIDE.md](docs/guides/VAR_GUIDE.md) is now the one VaR reference
   (Part I using VaR, the explorer, scopes, captures, what-if, CLI, API, settings; Part II the data contract, still version 1.4; Part III
@@ -3648,7 +3648,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   contracts (desk, book and trader from 2.8.0; the counterparty's net MtM and PFE peak from 2.10.0).
 
 - **Data contracts of every command** ([docs/contracts/README.md section 16](docs/contracts/README.md#16-contracts-of-every-command),
-  [docs/contracts/packs/README.md](docs/contracts/packs/README.md)): each of the 90 mnemonics of the ten packs has
+  docs/contracts/packs/README.md, since folded into the contracts index): each of the 90 mnemonics of the ten packs has
   `config/packs/<pack>/contracts/<kind>.contract.yaml`: class (fundamental, input, drishti-owned, computed), status (the kinds moving to
   the compute model are `retiring` with their release and the contract that replaces them; a split kind's computed figures are
   `derived` and `retiring-in`), source, grain, key, id pattern, dating, cadence, storage (connector, table, columns, vectors), every

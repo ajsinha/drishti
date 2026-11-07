@@ -207,7 +207,7 @@ final class VarShardBooks {
         return out;
     }
 
-    /** A reporting currency's shard book from the USD one (VAR_GUIDE.md section 15.10, per shard): each trade converted as one server does. */
+    /** A reporting currency's shard book from the USD one (VAR.md section 2.10, per shard): each trade converted as one server does. */
     private VarBook convert(VarBook usd, String ccy, VarShardScope scope) {
         LocalDate date = scope.map().date();
         ScenarioFx fx = loader.fx(date, usd.scenarioDates());

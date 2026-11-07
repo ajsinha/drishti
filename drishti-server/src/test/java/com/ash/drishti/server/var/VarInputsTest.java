@@ -22,7 +22,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * One record's fields against its payload, its id and its system's pin (VAR_GUIDE.md section 15.13): every field required; a pin is a
+ * One record's fields against its payload, its id and its system's pin (VAR.md section 2.13): every field required; a pin is a
  * cross-check (agreeing passes, disagreeing is {@code DRS-5209}); {@code default} pins the systems not listed; {@code any} accepts; a pin
  * changed (the settings of the next start) applies to what is read from then on; a bad pin is refused at start.
  */

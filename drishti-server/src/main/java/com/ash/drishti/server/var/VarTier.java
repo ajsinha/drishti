@@ -526,7 +526,7 @@ final class VarTier implements AutoCloseable {
     }
 
     /**
-     * The retention of the currencies built ahead (VAR_GUIDE.md section 15.11): the hot files of {@code currencies} (not USD) of every date
+     * The retention of the currencies built ahead (VAR.md section 2.11): the hot files of {@code currencies} (not USD) of every date
      * not in {@code keep} are deleted, unless a request has them open (then they go when retired, or at the next pass). Returns the files
      * deleted.
      */

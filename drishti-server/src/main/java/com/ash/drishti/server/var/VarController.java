@@ -69,7 +69,7 @@ import org.springframework.web.bind.annotation.RestController;
  * without one answers {@code 404} in words.
  *
  * <p>Every answer of a scope, the tree, the hints, a capture, the what-if ({@code "ccy"} in its body) and the official record take a
- * reporting currency, {@code ccy=EUR} (VAR_GUIDE.md section 15.10; none: USD), and say it in {@code currency}: the vectors are converted
+ * reporting currency, {@code ccy=EUR} (VAR.md section 2.10; none: USD), and say it in {@code currency}: the vectors are converted
  * through USD with each scenario's FX, so the currency move is part of the risk.
  */
 @RestController
@@ -262,7 +262,7 @@ public class VarController {
     }
 
     /**
-     * The same scope in every listed reporting currency (the explorer's "In other currencies" tab, VAR_GUIDE.md section 15.11): each
+     * The same scope in every listed reporting currency (the explorer's "In other currencies" tab, VAR.md section 2.11): each
      * currency's VaR and ES from the scope's per-trade-currency totals, that VaR in {@code ccy} at today's rate and the difference.
      */
     @GetMapping("/scope/currencies")

@@ -34,7 +34,7 @@ public final class VarMath {
 
     private static final double EPS = 1e-9;
 
-    /** How VaR is read from the sorted vector (open question 3 of the engine design, VAR_GUIDE.md section 23.2; {@code drishti.var.rank-rule}). */
+    /** How VaR is read from the sorted vector (open question 3 of the engine design, VAR.md section 9.2; {@code drishti.var.rank-rule}). */
     public enum RankRule { KTH_WORST, INTERPOLATED }
 
     private VarMath() {}

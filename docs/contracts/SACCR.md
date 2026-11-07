@@ -6,7 +6,10 @@
 
 # SACCR: the standardised approach for counterparty credit risk, the data contract
 
-*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting sets, CSAs and
+**Internal.** The design of an engine that is not built yet: shown in Help to administrators only, and not offered to banks as a
+contract until its engine is built.
+
+*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR.md](VAR.md#1-the-contract-at-a-glance) · Netting sets, CSAs and
 membership: [NSET.md](NSET.md) · Collateral: [COLL.md](COLL.md)*
 
 **Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
@@ -93,7 +96,7 @@ type, whether it is a basis or volatility transaction, its option terms) is **de
 derived by Drishti from the three booking systems' raw trades. Reasons:
 - the classification is a regulatory judgement each bank signs off and audits (CRE52 asks for the primary risk driver, and allows a
   complex trade to be split into several drivers); it belongs to the bank's capital or product-control process, not to a viewer;
-- the trade masters differ by system (Endur, Calypso, Murex shapes, VAR_GUIDE.md section 16) and do not carry the needed fields (no reference
+- the trade masters differ by system (Endur, Calypso, Murex shapes, VAR.md section 3) and do not carry the needed fields (no reference
   entity, no credit quality, no supervisory option terms for many products);
 - Drishti still computes **everything that is formula**: supervisory duration, maturity factor, supervisory delta, adjusted and effective
   notional, maturity buckets, every aggregation and EAD. So a what-if trade needs only its classification and terms (§6.8), and a

@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A tiny VaR lake with limit letters (2.9.5, VAR_GUIDE.md section 16), written with Drishti's lake writer through {@link VarLakeFixture}'s
+ * A tiny VaR lake with limit letters (2.9.5, VAR.md section 3), written with Drishti's lake writer through {@link VarLakeFixture}'s
  * table writer (its own rows are not changed): five live trades of {@link VarLakeFixture}'s instruments in three books of two desks, each
  * row with its {@code LIMIT_LETTER}. The letter LL-A holds T1, T3 (BOOK-1) and T5 (BOOK-3, the other desk); LL-B holds T2 (BOOK-1: the
  * book is split between the letters, and so is the position of T1 and T2) and T4 (BOOK-2). T10 leaves its letter empty: refused

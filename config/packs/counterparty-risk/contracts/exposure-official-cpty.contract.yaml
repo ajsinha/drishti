@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the exposure-official-cpty kind (command XOFC): docs/contracts/README.md section 16; the table is described in
-# docs/guides/EXPOSURE_GUIDE.md section 20 ("Published official results") and NSET.md section 9.5. Written by hand after var-official's.
+# docs/contracts/EXP.md section 6 ("Published official results") and NSET.md section 9.5. Written by hand after var-official's.
 kind: exposure-official-cpty
 mnemonic: XOFC
 pack: counterparty-risk

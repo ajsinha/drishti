@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The per-trade-currency totals of every node (VAR_GUIDE.md section 15.11): a node's P&amp;L in any reporting currency from its PVs summed
+ * The per-trade-currency totals of every node (VAR.md section 2.11): a node's P&amp;L in any reporting currency from its PVs summed
  * per trade currency equals, <b>to the cent</b>, the sum of its trades each converted on its own from the PVs as received, under every
  * scenario, and so its VaR and ES; it equals the book converted trade by trade ({@link CurrencyBook}) too. The native sums are the received
  * PVs' sums; the totals survive the hot file; any other scope's totals ({@link CurrencyTotals#of}) agree with a node's stored ones.

@@ -64,7 +64,7 @@ fields:
   type: text
   presence: required
   description: 'The reporting currency of every amount of the answer: the parameter ccy, USD by default (VRES DESK:RATES~ccy=EUR);
-    VAR_GUIDE.md section 15.10.'
+    VAR.md section 2.10.'
   example: USD
 - name: VAR
   type: amount
