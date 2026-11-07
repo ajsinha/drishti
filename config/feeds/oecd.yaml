@@ -1,0 +1,57 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The oecd feed (docs/guides/PUBLIC_SECTOR_GUIDE.md section 5): the OECD Data Explorer's SDMX REST API into worldlake, for the oecd
+# pack. Pull: tools/feeds/publicsector/oecd.py. Daily; incremental (from three periods before each measure's last; nothing newer,
+# nothing written). No key; the OECD asks for no more than about 20 requests a minute (one a measure here).
+# A measure is a dataflow (agency,id,version) and an SDMX key whose {countries} is replaced by the countries joined with +; find both
+# in the Data Explorer (https://data-explorer.oecd.org/: "Developer API" on a table).
+feed: oecd
+title: OECD Data Explorer (SDMX)
+module: publicsector
+pack: oecd
+lake: worldlake
+pull: tools/feeds/publicsector/oecd.py
+schedule: { cadence: daily, cron: "0 12 * * *", timezone: UTC }
+tables:
+  - { kind: oecd-country, connector: oecd-store, table: oecd.oecd-country, key: COUNTRY_ID }
+  - { kind: oecd-series, connector: oecd-store, table: oecd.oecd-series, key: SERIES_ID }
+keys: []
+limits: { pause-seconds: 4, timeout-seconds: 120 }
+sources:
+  - id: oecd
+    name: OECD Data Explorer SDMX API
+    title: OECD
+    url: https://sdmx.oecd.org/public/rest/
+    terms: https://www.oecd.org/en/about/terms-conditions.html
+    licence: "OECD terms and conditions: data may be extracted, copied and redistributed, also commercially, with the source acknowledged (CC BY 4.0 for OECD data since July 2024)"
+    redistributable: true
+    internal-only: false
+    attribution: "Source: OECD Data Explorer (CC BY 4.0)."
+selection:
+  start-period: "2020-01"      # the first pull's start; later pulls start from the kept history
+  history-periods: 72
+  # the 38 OECD members
+  countries: [AUS, AUT, BEL, CAN, CHL, COL, CRI, CZE, DNK, EST, FIN, FRA, DEU, GRC, HUN, ISL, IRL, ISR, ITA, JPN, KOR, LVA, LTU, LUX, MEX,
+              NLD, NZL, NOR, POL, PRT, SVK, SVN, ESP, SWE, CHE, TUR, GBR, USA]
+  # the default measures: the cycle (leading indicator), jobs, prices and growth
+  measures:
+    - { id: CLI, field: LEADING_INDICATOR, title: "Composite leading indicator", unit: "index, long-term average = 100", frequency: monthly,
+        dataflow: "OECD.SDD.STES,DSD_STES@DF_CLI,", key: "{countries}.M.LI...AA...H" }
+    - { id: UNEMPLOYMENT, field: UNEMPLOYMENT, title: "Unemployment rate, seasonally adjusted", unit: "% of labour force", frequency: monthly,
+        dataflow: "OECD.SDD.TPS,DSD_LFS@DF_IALFS_UNE_M,1.0", key: "{countries}.UNE_LF_M...Y._T.Y_GE15..M" }
+    - { id: INFLATION, field: INFLATION, title: "Consumer price inflation, year on year", unit: "% a year", frequency: monthly,
+        dataflow: "OECD.SDD.TPS,DSD_PRICES@DF_PRICES_ALL,1.0", key: "{countries}.M.N.CPI.PA._T.N.GY" }
+    - { id: GDP_GROWTH, field: GDP_GROWTH, title: "Real GDP growth, quarter on quarter", unit: "%", frequency: quarterly,
+        dataflow: "OECD.SDD.NAD,DSD_NAMAIN1@DF_QNA_EXPENDITURE_GROWTH_OECD,1.1", key: "Q..{countries}.S1..B1GQ......G1." }

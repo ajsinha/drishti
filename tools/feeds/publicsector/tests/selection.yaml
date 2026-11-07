@@ -1,0 +1,31 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The narrower selection the recorded fixtures were made with (run.py run <feed> --selection this file --record fixtures/): a few
+# countries and series, so the fixtures stay small. The tests, the packs' samples and the browser test read the same recordings.
+world-development:
+  countries: [CAN, USA, MEX, BRA, GBR, DEU, IND, CHN, JPN, NGA, ZAF, AUS]
+  years: 8
+central-banks:
+  history-days: 400
+national-statistics:
+  history-periods: 24
+oecd:
+  countries: [CAN, USA, MEX, GBR, DEU, FRA, ITA, JPN, KOR, AUS]
+  start-period: "2024-01"
+official-news:
+  keep-per-source: 12
+gdelt-events:
+  backfill-days: 2
+  rows-per-day: 4000

@@ -1,0 +1,54 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The world-development feed (docs/guides/PUBLIC_SECTOR_GUIDE.md section 5): World Bank World Development Indicators by country and
+# year into worldlake, for the world-development pack. Pull: tools/feeds/publicsector/world_development.py. Daily; incremental (the WDI
+# source's last-updated date: unchanged, nothing is written). Edit the selection below to choose the countries, years and indicators.
+feed: world-development
+title: World Bank, World Development Indicators
+module: publicsector
+pack: world-development
+lake: worldlake
+pull: tools/feeds/publicsector/world_development.py
+schedule: { cadence: daily, cron: "30 6 * * *", timezone: UTC }
+tables:
+  - { kind: development-profile, connector: development-store, table: development.development-profile, key: PROFILE_ID }
+  - { kind: development-series, connector: development-store, table: development.development-series, key: SERIES_ID }
+keys: []
+limits: { pause-seconds: 0.5, timeout-seconds: 90 }
+sources:
+  - id: wdi
+    name: World Bank World Development Indicators API (v2)
+    title: World Bank, World Development Indicators
+    url: https://api.worldbank.org/v2/
+    terms: https://www.worldbank.org/en/about/legal/terms-of-use-for-datasets
+    licence: CC BY 4.0
+    redistributable: true
+    internal-only: false
+    attribution: "The World Bank: World Development Indicators (CC BY 4.0)."
+selection:
+  countries: all             # all economies (the API's regional and income aggregates are left out), or a list of ISO3 codes
+  years: 15                  # the last 15 years, ending with the business date's year
+  # the default indicators: one headline per theme (people, output, prices, jobs, health, poverty, infrastructure, public debt)
+  indicators:
+    - { code: SP.POP.TOTL, field: POPULATION, unit: persons }
+    - { code: NY.GDP.PCAP.CD, field: GDP_PER_CAPITA, unit: current USD }
+    - { code: NY.GDP.MKTP.KD.ZG, field: GDP_GROWTH, unit: "% a year" }
+    - { code: FP.CPI.TOTL.ZG, field: INFLATION, unit: "% a year" }
+    - { code: SL.UEM.TOTL.ZS, field: UNEMPLOYMENT, unit: "% of labour force" }
+    - { code: SP.DYN.LE00.IN, field: LIFE_EXPECTANCY, unit: years }
+    - { code: SI.POV.DDAY, field: POVERTY_HEADCOUNT, unit: "% of population" }
+    - { code: EG.ELC.ACCS.ZS, field: ELECTRICITY_ACCESS, unit: "% of population" }
+    - { code: IT.NET.USER.ZS, field: INTERNET_USERS, unit: "% of population" }
+    - { code: GC.DOD.TOTL.GD.ZS, field: CENTRAL_GOVERNMENT_DEBT, unit: "% of GDP" }
