@@ -95,7 +95,7 @@ drishti.py pivot mr cell --source var --rows MGMT.DESK --cols RISK_CLASS --cell 
 drishti.py pivot mr explain --scope "(NODE:MGMT~DESK-RATES) & (WHERE:PRODUCT_GROUP in ('Rates'))"
 ```
 
-**JSON** (`POST /api/v1/pivot/mr/detail`):
+**JSON** (`POST /api/v1/risk/mr/detail`):
 
 ```json
 {"view": {"source": "var", "rows": ["MGMT.DESK"], "columns": ["RISK_CLASS"], "values": [{"measure": "var()"}]},
@@ -158,7 +158,7 @@ drishti.py pivot mr ladder --scope BANK --grid BANK-IR-TENOR
 drishti.py pivot mr whatif --source var --rows MGMT.DESK --copy <a trade id> --factor -1
 ```
 
-**JSON** (`POST /api/v1/pivot/mr/what-if`): `{"view": {...}, "items": [{"copyOf": "<a trade id>", "factor": -1}]}`.
+**JSON** (`POST /api/v1/risk/mr/what-if`): `{"view": {...}, "items": [{"copyOf": "<a trade id>", "factor": -1}]}`.
 
 ![Tab B: the components and the waterfall](img/t38/06-tab-b.jpg)
 

@@ -77,14 +77,14 @@ class FakeApi:
 
     def json(self, method, path, body=None):
         FakeApi.calls.append((method, path, body))
-        if path.startswith("/api/v1/var/scope?"):
+        if path.startswith("/api/v1/risk/var/scope?"):
             return HEAD
-        if path.startswith("/api/v1/var/scope/contributions"):
+        if path.startswith("/api/v1/risk/var/scope/contributions"):
             return {"canonical": "DESK:RATES", "by": "book", "var": 1, "es": 2, "sumComponent": 1,
                     "rows": [{"label": "BOOK-RATES-1", "standaloneVar": 5, "componentVar": 1, "pct": 1.0, "incrementalVar": 1, "componentEs": 2}]}
-        if path.startswith("/api/v1/var/matrix"):
+        if path.startswith("/api/v1/risk/var/matrix"):
             return MATRIX
-        if path.startswith("/api/v1/var/what-if"):
+        if path.startswith("/api/v1/risk/var/what-if"):
             return {"businessDate": "2026-09-30", "currency": "USD", "before": {"var": 10}, "after": {"var": 12}, "change": {"var": 2},
                     "items": [{"label": "new swap", "standaloneVar": 3, "incrementalVar": 2, "componentVar": 2}]}
         return {"ok": True}
@@ -114,13 +114,13 @@ class VarCli(unittest.TestCase):
 
     def test_each_command_reaches_its_path(self):
         run("show", "BANK - DESK:CREDIT", "--date", "2026-09-30")
-        self.assertEqual(self.query(), ("GET", "/api/v1/var/scope", {"scope": "BANK - DESK:CREDIT", "asOf": "2026-09-30"}, None))
+        self.assertEqual(self.query(), ("GET", "/api/v1/risk/var/scope", {"scope": "BANK - DESK:CREDIT", "asOf": "2026-09-30"}, None))
         run("parts", "DESK:RATES", "--by", "position", "--scenario", "2026-03-20")
         self.assertEqual(self.query()[2], {"scope": "DESK:RATES", "by": "position", "scenario": "2026-03-20"})
         run("path", "DESK:RATES", "--size", "10", "--json")
-        self.assertEqual(self.query()[1:3], ("/api/v1/var/scope/path", {"scope": "DESK:RATES", "page": "0", "size": "10"}))
+        self.assertEqual(self.query()[1:3], ("/api/v1/risk/var/scope/path", {"scope": "DESK:RATES", "page": "0", "size": "10"}))
         run("tree", "--hierarchy", "LEGAL", "--json")
-        self.assertEqual(self.query()[1:3], ("/api/v1/var/tree", {"hierarchy": "LEGAL"}))
+        self.assertEqual(self.query()[1:3], ("/api/v1/risk/var/tree", {"hierarchy": "LEGAL"}))
         run("capture", "DESK:RATES", "--note", "before")
         self.assertEqual(self.query()[0::3], ("POST", {"scope": "DESK:RATES", "note": "before"}))
         run("compare", "CAP-20260930-1")
@@ -128,31 +128,31 @@ class VarCli(unittest.TestCase):
         run("basket", "hedges", "WHERE:'hedge' in TAGS", "--share", "role:risk")
         self.assertEqual(FakeApi.calls[-1][2]["sharedWith"], ["role:risk"])
         run("official", "--capture", "--date", "2026-09-30")
-        self.assertEqual(self.query()[0:3], ("POST", "/api/v1/var/official", {"asOf": "2026-09-30"}))
+        self.assertEqual(self.query()[0:3], ("POST", "/api/v1/risk/var/official", {"asOf": "2026-09-30"}))
         run("status")
-        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/var/status")
+        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/risk/var/status")
         run("reload")
-        self.assertEqual(FakeApi.calls[-1][0:2], ("POST", "/api/v1/var/reload"))
+        self.assertEqual(FakeApi.calls[-1][0:2], ("POST", "/api/v1/risk/var/reload"))
         run("reload", "--date", "2026-09-29")                           # 2.9.7 (O3): one date only
-        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/var/reload?date=2026-09-29")
+        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/risk/var/reload?date=2026-09-29")
 
     def test_basket_delete_yours_and_an_administrators_with_owner(self):
         run("basket-delete", "rates-hedges")
-        self.assertEqual(FakeApi.calls[-1], ("DELETE", "/api/v1/var/baskets/rates-hedges", None))
+        self.assertEqual(FakeApi.calls[-1], ("DELETE", "/api/v1/risk/var/baskets/rates-hedges", None))
         run("basket-delete", "old unwind", "--owner", "asha", "--reason", "left the desk", "--version", "3")
-        self.assertEqual(self.query()[0:3], ("DELETE", "/api/v1/var/baskets/asha/old%20unwind", {"reason": "left the desk", "version": "3"}))
+        self.assertEqual(self.query()[0:3], ("DELETE", "/api/v1/risk/var/baskets/asha/old%20unwind", {"reason": "left the desk", "version": "3"}))
         run("baskets")
-        self.assertEqual(FakeApi.calls[-1][0:2], ("GET", "/api/v1/var/baskets"))
+        self.assertEqual(FakeApi.calls[-1][0:2], ("GET", "/api/v1/risk/var/baskets"))
         run("baskets", "--all")
-        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/var/admin/baskets")
+        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/risk/var/admin/baskets")
         run("baskets", "--all", "--owner", "asha")
-        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/var/admin/baskets?owner=asha")
+        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/risk/var/admin/baskets?owner=asha")
 
     def test_shards_lists_the_map_and_drains(self):
         run("shards", "--date", "2026-09-30", "--json")
-        self.assertEqual(self.query()[0:3], ("GET", "/api/v1/var/shards", {"asOf": "2026-09-30"}))
+        self.assertEqual(self.query()[0:3], ("GET", "/api/v1/risk/var/shards", {"asOf": "2026-09-30"}))
         run("shards", "--drain")
-        self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/var/shards/drain", {"on": True}))
+        self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/risk/var/shards/drain", {"on": True}))
         run("shards", "--undrain", "--json")
         self.assertEqual(FakeApi.calls[-1][2], {"on": False})
         out = []
@@ -168,15 +168,15 @@ class VarCli(unittest.TestCase):
 
     def test_every_figure_in_a_reporting_currency(self):
         run("show", "BANK", "--ccy", "EUR")
-        self.assertEqual(self.query(), ("GET", "/api/v1/var/scope", {"scope": "BANK", "ccy": "EUR"}, None))
+        self.assertEqual(self.query(), ("GET", "/api/v1/risk/var/scope", {"scope": "BANK", "ccy": "EUR"}, None))
         run("parts", "DESK:RATES", "--ccy", "CAD")
         self.assertEqual(self.query()[2]["ccy"], "CAD")
         run("tree", "--ccy", "GBP", "--json")
-        self.assertEqual(self.query()[1:3], ("/api/v1/var/tree", {"hierarchy": "MGMT", "ccy": "GBP"}))
+        self.assertEqual(self.query()[1:3], ("/api/v1/risk/var/tree", {"hierarchy": "MGMT", "ccy": "GBP"}))
         run("capture", "TRD:X-1", "--ccy", "EUR")
-        self.assertEqual(self.query()[0:3], ("POST", "/api/v1/var/captures", {"ccy": "EUR"}))
+        self.assertEqual(self.query()[0:3], ("POST", "/api/v1/risk/var/captures", {"ccy": "EUR"}))
         run("official", "--ccy", "EUR")
-        self.assertEqual(self.query()[0:3], ("GET", "/api/v1/var/official", {"ccy": "EUR"}))
+        self.assertEqual(self.query()[0:3], ("GET", "/api/v1/risk/var/official", {"ccy": "EUR"}))
         run("whatif", "DESK:RATES", "--ccy", "EUR", "--copy", "MX-1=-1")
         self.assertEqual(FakeApi.calls[-1][2], {"scope": "DESK:RATES", "items": [{"copyOf": "MX-1", "factor": -1.0}], "ccy": "EUR"})
         out = []
@@ -216,7 +216,7 @@ class VarCli(unittest.TestCase):
         self.assertTrue(any("green  1 exceptions in 250 days" in line for line in out))
         self.assertTrue(any("node aggregate (float64)" in line for line in out))
         rows = []
-        V.render_parts(FakeApi().json("GET", "/api/v1/var/scope/contributions?scope=x"), 10, rows.append)
+        V.render_parts(FakeApi().json("GET", "/api/v1/risk/var/scope/contributions?scope=x"), 10, rows.append)
         self.assertTrue(rows[1].startswith("Part"))
         self.assertIn("BOOK-RATES-1", rows[3])
         cut = []                                                          # rows limited by max-parts: said with the real numbers
@@ -226,17 +226,17 @@ class VarCli(unittest.TestCase):
 
     def test_the_stress_window_selection_asks_proposes_and_decides(self):
         run("stress-window", "DESK:DESK-RATES", "--date", "2026-09-30", "--length", "125", "--json")
-        self.assertEqual(self.query()[1:3], ("/api/v1/var/stress-window", {"scope": "DESK:DESK-RATES", "hierarchy": "MGMT", "length": "125",
+        self.assertEqual(self.query()[1:3], ("/api/v1/risk/var/stress-window", {"scope": "DESK:DESK-RATES", "hierarchy": "MGMT", "length": "125",
                                                                           "asOf": "2026-09-30"}))
         run("stress-window", "--propose", "--first", "2007-11-30", "--note", "Bear and Lehman", "--json")
-        self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/var/stress-window/proposals",
+        self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/risk/var/stress-window/proposals",
                                              {"scope": "BANK", "hierarchy": "MGMT", "note": "Bear and Lehman", "first": "2007-11-30"}))
         run("stress-window", "--decide", "SWP-000001", "--decision", "approve", "--json")
-        self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/var/stress-window/proposals/SWP-000001/decision",
+        self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/risk/var/stress-window/proposals/SWP-000001/decision",
                                              {"decision": "approve", "note": ""}))
         self.assertEqual(run("stress-window", "--decide", "SWP-000001"), 2)                       # no decision named
         run("stress-window", "--proposals", "--json")
-        self.assertEqual(FakeApi.calls[-1][0:2], ("GET", "/api/v1/var/stress-window/proposals"))
+        self.assertEqual(FakeApi.calls[-1][0:2], ("GET", "/api/v1/risk/var/stress-window/proposals"))
         out = []
         V.render_stress_window({"node": {"id": "MGMT~BANK"}, "date": "2026-09-30", "length": 250, "confidence": 0.99,
                                 "history": {"first": "2007-01-02", "last": "2026-09-29", "days": 4938, "synthetic": True},
@@ -253,7 +253,7 @@ class VarCli(unittest.TestCase):
 
     def test_the_scenario_matrix_asks_its_path_prints_gaps_as_dashes_and_writes_csv(self):
         run("matrix", "T1", "--days", "2", "--date", "2026-09-30", "--confidence", "0.95", "--json")
-        self.assertEqual(self.query()[1:3], ("/api/v1/var/matrix", {"id": "T1", "days": "2", "confidence": "0.95", "asOf": "2026-09-30"}))
+        self.assertEqual(self.query()[1:3], ("/api/v1/risk/var/matrix", {"id": "T1", "days": "2", "confidence": "0.95", "asOf": "2026-09-30"}))
         run("matrix", "POS-1", "--by", "trade", "--scenario", "2026-08-31", "--json")
         self.assertEqual(self.query()[2], {"id": "POS-1", "days": "20", "by": "trade", "scenario": "2026-08-31"})
         out = []
@@ -270,7 +270,7 @@ class VarCli(unittest.TestCase):
             f = Path(d) / "trades.json"
             f.write_text(json.dumps([{"LABEL": "new swap", "PNL": [1.0, -2.0], "FACTOR": 1}]), encoding="utf-8")
             self.assertEqual(run("whatif", "DESK:RATES", "--trades", str(f), "--copy", "BOOK:BOOK-RATES-3=-0.5", "--date", "2026-09-30"), 0)
-            self.assertEqual(self.query()[0:3], ("POST", "/api/v1/var/what-if", {"asOf": "2026-09-30"}))
+            self.assertEqual(self.query()[0:3], ("POST", "/api/v1/risk/var/what-if", {"asOf": "2026-09-30"}))
             self.assertEqual(FakeApi.calls[-1][2], {"scope": "DESK:RATES", "items": [
                 {"copyOf": "BOOK:BOOK-RATES-3", "factor": -0.5}, {"label": "new swap", "factor": 1, "pnl": [1.0, -2.0]}]})
             f.write_text(json.dumps([{"LABEL": "no vector"}]), encoding="utf-8")
@@ -284,9 +284,9 @@ class VarCli(unittest.TestCase):
 
     def test_explain_asks_its_paths_and_prints_the_waterfall_as_aligned_lines(self):
         run("explain", "DESK:RATES", "--from", "2026-09-29", "--to", "2026-09-30", "--json")
-        self.assertEqual(self.query(), ("GET", "/api/v1/var/explain", {"scope": "DESK:RATES", "from": "2026-09-29", "to": "2026-09-30"}, None))
+        self.assertEqual(self.query(), ("GET", "/api/v1/risk/var/explain", {"scope": "DESK:RATES", "from": "2026-09-29", "to": "2026-09-30"}, None))
         run("explain", "BANK", "--matrix", "--json")
-        self.assertEqual(self.query()[1:3], ("/api/v1/var/explain/matrix", {"scope": "BANK"}))
+        self.assertEqual(self.query()[1:3], ("/api/v1/risk/var/explain/matrix", {"scope": "BANK"}))
         run("explain", "BANK", "--confidence", "0.95", "--json")
         self.assertEqual(self.query()[2], {"scope": "BANK", "confidence": "0.95"})
         out = []
@@ -370,16 +370,16 @@ class RegulatoryCli(unittest.TestCase):
 
     def test_each_reaches_its_path(self):
         run("backtest", "DESK:RATES", "--date", "2026-09-30", "--json")
-        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/var/backtesting?scope=DESK%3ARATES&asOf=2026-09-30")
+        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/risk/var/backtesting?scope=DESK%3ARATES&asOf=2026-09-30")
         run("stats", "BANK", "--period", "FY2026", "--json")
-        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/var/statistics?scope=BANK&period=FY2026&measure=var")
+        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/risk/var/statistics?scope=BANK&period=FY2026&measure=var")
         run("report", "run", "annual-report-var", "FY2026", "--json")
-        self.assertEqual(FakeApi.calls[-1][:2], ("POST", "/api/v1/var/reports/annual-report-var/runs?period=FY2026"))
+        self.assertEqual(FakeApi.calls[-1][:2], ("POST", "/api/v1/risk/var/reports/annual-report-var/runs?period=FY2026"))
         run("report", "sign", "annual-report-var", "FY2026", "--step", "checker", "--comment", "ok", "--json")
-        self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/var/reports/annual-report-var/runs/FY2026/signoff",
+        self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/risk/var/reports/annual-report-var/runs/FY2026/signoff",
                                              {"action": "approve", "step": "checker", "comment": "ok"}))
         run("official", "--synthetic-history", "259")
-        self.assertEqual(FakeApi.calls[-1][:2], ("POST", "/api/v1/var/official/synthetic-history?days=259"))
+        self.assertEqual(FakeApi.calls[-1][:2], ("POST", "/api/v1/risk/var/official/synthetic-history?days=259"))
 
 
 if __name__ == "__main__":

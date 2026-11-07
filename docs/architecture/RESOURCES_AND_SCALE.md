@@ -173,7 +173,7 @@ history, the Delta memory budget and each connector, nothing else. A ⚠ marks a
 
 | Cache | Owner, where | Key | Bound | Eviction | Learns of new data | Admin today |
 |---|---|---|---|---|---|---|
-| open dates | `VarService.dates`, `server/var/VarService.java:73`; heap (skeleton) + mapped | business date | ⚠ count: `drishti.var.hot-dates` 2; a date over `memory-budget-mb` (0: a quarter of the heap) refused | newest N by date (`evictOld`, line 582) | the signal (`VarOfficial.onLoad`); otherwise **never while open** ([4.3](#43-what-happens-without-a-signal-today-read-in-the-code)) | `POST /api/v1/var/reload` (all dates), `GET /api/v1/var/status`; not in Caches |
+| open dates | `VarService.dates`, `server/var/VarService.java:73`; heap (skeleton) + mapped | business date | ⚠ count: `drishti.var.hot-dates` 2; a date over `memory-budget-mb` (0: a quarter of the heap) refused | newest N by date (`evictOld`, line 582) | the signal (`VarOfficial.onLoad`); otherwise **never while open** ([4.3](#43-what-happens-without-a-signal-today-read-in-the-code)) | `POST /api/v1/risk/var/reload` (all dates), `GET /api/v1/risk/var/status`; not in Caches |
 | answers | `VarService.cache`, line 97; heap | date, currency, version, intraday stamp, view, scope, membership (line 828) | ⚠ count: 512, hard-coded (line 64) | W-TinyLFU; by date prefix on evict or reload | key has the version | `var reload`; not in Caches |
 | currency books | `VarService.inCurrency`, `layered`, lines 75, 78; heap + mapped | `date|CCY|version` | with their date | dropped with the date (`retireCurrencies`) | key has the version | as dates |
 | build-ahead status | `VarService.aheadState`, line 92; heap | `date|CCY` | ⚠ none (only `put`) | none | — | `var status` |
@@ -181,7 +181,7 @@ history, the Delta memory budget and each connector, nothing else. A ⚠ marks a
 | official indexes | `VarOfficialStore.indexes`, line 56; heap | date, currency | ⚠ none | none | — | none |
 | position vectors (heap tier only) | `VarBook.positionCache`, `drishti-compute/.../var/VarBook.java:140`; heap | position index | ⚠ none within a date (up to positions × N × 8 bytes: 9.4 GB at 2.3M) | with the date | — | none |
 | FX for conversions | `VarLoader.fxCache`, line 763 | date, versions | count 32, then cleared | clear all | key has versions | none |
-| shard maps, assembled dates | `VarShards.maps`, `assembled`, lines 80-81 | date, digest | count 64 then cleared; per date | clear all; per date | digest | `GET /api/v1/var/shards` |
+| shard maps, assembled dates | `VarShards.maps`, `assembled`, lines 80-81 | date, digest | count 64 then cleared; per date | clear all; per date | digest | `GET /api/v1/risk/var/shards` |
 | shard books | `VarShardBooks.books`, `server/var/VarShardBooks.java:72`; mapped `<hot>/<date>-shard-<i>/` | date, ccy, map digest, shard, inputs digest | ⚠ none by date (released only on handover or supersede) | handover rule (`VarShards.release`, line 485) | digest | `var shards`; not in Caches |
 | **hot files** | `VarTier`, `server/var/VarTier.java`; `drishti.var.tier.dir` (`<data>/var/hot/<date>/inputs-<16 hex>.vhot`) | the inputs' digest | open: `hot-dates` 2; disk: ⚠ count `tier.disk-dates` 60 (counts **files**: currencies and shards included); currencies `currency-retention-dates` 5; **no bytes, no free-space check** | least recently used, never an open one (`VarTier.opened`, lines 240-273); a stale file deleted when the date's new file opens | the digest | `var status` (`tier.files`, `diskBytes`); `var reload` drops open dates, never files |
 | load spill | `RowSpill`, `D/spill-*.f64`, `D/build-*.part` | per build | one date's float64 vectors (9.37 GB at 2.3M) while it loads | deleted after the build; at start | — | none |
@@ -193,7 +193,7 @@ history, the Delta memory budget and each connector, nothing else. A ⚠ marks a
 
 | Cache | Owner, where | Key | Bound | Eviction | Learns of new data | Admin today |
 |---|---|---|---|---|---|---|
-| open dates | `ExposureService.dates`, `server/exposure/ExposureService.java:100` | date | ⚠ count: `drishti.ccr.exposure.hot-dates` 2; `memory-budget-gb` while loading | newest N | the signal; otherwise never while open | `POST /api/v1/exposure/reload`, `/status`, `/retention` |
+| open dates | `ExposureService.dates`, `server/exposure/ExposureService.java:100` | date | ⚠ count: `drishti.ccr.exposure.hot-dates` 2; `memory-budget-gb` while loading | newest N | the signal; otherwise never while open | `POST /api/v1/risk/exposure/reload`, `/status`, `/retention` |
 | answers | `ExposureService.cache`, line 102 | scope, date, run, versions, parameters, view | ⚠ count: 1,000, hard-coded (line 94) | W-TinyLFU | key | `exposure reload` |
 | trade paths | `ExposureService.paths`, line 104 | `date|version|hashCode|size` (line 290: **collision-prone**, [6.5](#65-virtual-threads-and-pinning-on-java-21-d10)) | bytes: 256 MB, hard-coded | W-TinyLFU | key | none |
 | views per role | `ExposureAccess.views`, line 68 | `date@version|levels` | ⚠ none | none | key | none |
@@ -374,7 +374,7 @@ Every answer carries `provenance` (data version, batch, scenario set, tier).
 | Delta and Iceberg connectors (id maps, columns, documents) | within **10 s**: each table's newest version is read every `refresh-seconds` (`DeltaSourcePlugin.java:270`; Iceberg `IcebergSourcePlugin.java:203`); caches are keyed by version | `refresh-seconds` (10) |
 | the document cache on disk (RocksDB) | at once for new reads (keyed by table version); old entries go by TTL | `doc-disk-cache.ttl` (12 h) limits disk, not freshness |
 | BI layers | the next query: each partition records the data version it was built from | the partition's version check |
-| **an open VaR date** | **not at all while it stays open**: `VarService.load` (lines 287-300) returns the open date without comparing `loader.version(d)` with the date's; only a date refused earlier is re-checked. It is noticed when the date is evicted (`hot-dates`, 2, by date order, `evictOld`, line 582) and asked again, on a signal, on `POST /api/v1/var/reload`, or at a restart | **no TTL** |
+| **an open VaR date** | **not at all while it stays open**: `VarService.load` (lines 287-300) returns the open date without comparing `loader.version(d)` with the date's; only a date refused earlier is re-checked. It is noticed when the date is evicted (`hot-dates`, 2, by date order, `evictOld`, line 582) and asked again, on a signal, on `POST /api/v1/risk/var/reload`, or at a restart | **no TTL** |
 | an open exposure date | the same pattern (`ExposureService`) | no TTL |
 | a VaR shard book | only when a member puts the date together again or ownership moves (VAR_SHARDING section 13) | no TTL |
 
@@ -402,7 +402,7 @@ the first answer with the new version, in the soak (O8).
 |---|---|---|
 | Purge one cache | `POST /api/v1/admin/caches/{name}/purge` (`server/api/CacheController.java:89`), `drishti.py server caches purge NAME`, Admin → Caches; names: `engine`, `history`, each connector, `all` | unchanged, plus the caches that are not listed today (VaR, exposure, BI, pack access: [section 3](#3-inventory-of-every-cache-and-memory-mapped-file-today)) |
 | Purge one date (O2) | **not possible**: a purge drops everything of a cache | `POST /api/v1/admin/caches/{name}/purge?date=D` (and `name=all`); `drishti.py server caches purge NAME --date D`; Admin → Caches "Purge a date". Each cache implements `purgeDate(LocalDate)`: connectors drop the date's id map, column set and documents (keys carry the date: `PartKey`), VaR and exposure drop the open date, its answers, views and currency books (as `evictOld` does, plus `VarAccess.views`), and delete its hot files; BI invalidates the date's layers |
-| Reload one date (O3) | VaR: `POST /api/v1/var/reload` drops **every** open date (`VarService.reload()`, line 618; `reload(LocalDate)`, line 630, exists but only the signal calls it); `drishti.py var reload`; exposure: `POST /api/v1/exposure/reload`, all dates | `POST /api/v1/var/reload?date=D` and `/exposure/reload?date=D`; `drishti.py var reload --date D`, `exposure reload --date D`; exposure gains `ExposureService.reload(LocalDate)` |
+| Reload one date (O3) | VaR: `POST /api/v1/risk/var/reload` drops **every** open date (`VarService.reload()`, line 618; `reload(LocalDate)`, line 630, exists but only the signal calls it); `drishti.py var reload`; exposure: `POST /api/v1/risk/exposure/reload`, all dates | `POST /api/v1/risk/var/reload?date=D` and `/exposure/reload?date=D`; `drishti.py var reload --date D`, `exposure reload --date D`; exposure gains `ExposureService.reload(LocalDate)` |
 | Announce a load (O4) | API and CLI only | Admin → Packs → Data loads → "Announce a load": kind (from the pack's kinds), date, status, rows, batch, note; it calls the same `POST /packs/{pack}/loads` as the administrator, audited |
 
 **Failure behaviour.** A purge of a date that a request is reading: mapped files close through their readers' guard (`MappedMatrix`), so
@@ -465,7 +465,7 @@ partial answers; it stays the next step if 10M positions on many owners still do
 
 **Configuration (proposed).** `drishti.var.tier.skeleton: mapped | heap` (default `mapped` once measured; `heap` keeps today's path and
 reads format-3 files); exposure's set index the same (`drishti.ccr.exposure.skeleton`).
-**API, CLI, UI.** `GET /api/v1/var/status` and `drishti.py var status` add `skeletonHeapBytes` and `skeletonMappedBytes` per open date;
+**API, CLI, UI.** `GET /api/v1/risk/var/status` and `drishti.py var status` add `skeletonHeapBytes` and `skeletonMappedBytes` per open date;
 Admin → Caches shows both (O1).
 **Expected gain, and the measurement that confirms it.** Heap after a full GC with two dates open at 200K positions: before about
 2 × 160 MB plus currencies, after at most 2 × 25 MB; extrapolated, at most 0.3 GB a date at 2.3M. A 50,000-id basket: p95 at most 150 ms
@@ -1335,7 +1335,7 @@ section). The Prometheus gauges per cache (8.3) are in 14.26.
 
 ### 14.13 O3: reload one date
 
-**Done.** `POST /api/v1/var/reload?date=D` and `POST /api/v1/exposure/reload?date=D` drop that date only (`VarService.reload(LocalDate)`
+**Done.** `POST /api/v1/risk/var/reload?date=D` and `POST /api/v1/risk/exposure/reload?date=D` drop that date only (`VarService.reload(LocalDate)`
 existed for the signal; `ExposureService.reload(LocalDate)` too), audited with the date; `drishti.py var reload --date D`,
 `drishti.py exposure reload --date D`. **Tests.** `test_varcli.py`, `test_expcli.py` (the paths with and without the date). **Remains:**
 nothing.

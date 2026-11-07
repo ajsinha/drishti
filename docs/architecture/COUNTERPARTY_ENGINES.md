@@ -411,7 +411,7 @@ All planned; the names follow the VaR and exposure APIs and are fixed at build.
 | A trade's SA-CCR terms | `GET /api/v1/saccr/trade/{tradeId}` | `SACCR TRD:…` | `drishti.py saccr trade` |
 | Incremental EAD | `POST /api/v1/saccr/what-if` | in the pre-deal tab (C) | `drishti.py saccr what-if` |
 | FVA of a scope | `GET /api/v1/fva/scope?scope=…` | `FVA NSET:…`, `FVA CPTY:…`, `FVA BANK` | `drishti.py fva show` |
-| The playgrounds | `/api/v1/saccr/playground`, `/api/v1/exposure/playground`, `/api/v1/fva/playground` (and `.xlsx`, `/estimate`, `/template`) | `PLAY SACCR <netting set>`, `PLAY EXP <netting set>`, `PLAY FVA <netting set>` | `drishti.py play saccr`, `play exp`, `play fva` |
+| The playgrounds | `/api/v1/saccr/playground`, `/api/v1/risk/exposure/playground`, `/api/v1/fva/playground` (and `.xlsx`, `/estimate`, `/template`) | `PLAY SACCR <netting set>`, `PLAY EXP <netting set>`, `PLAY FVA <netting set>` | `drishti.py play saccr`, `play exp`, `play fva` |
 | The CCR cube | section 6.2 | `CCUBE BANK`, `CCUBE GROUP:…`, `CCUBE NSET:…` | `drishti.py cube ccr` |
 | Official captures | `saccr-official`, `saccr-official-cpty` (SACCR.md section 9.5); `fva-official` per set and counterparty | — | `drishti.py saccr capture` |
 

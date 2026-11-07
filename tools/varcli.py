@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""`drishti.py var ...`: the VaR engine from the command line (docs/guides/VAR_GUIDE.md; the API: /api/v1/var), as the token's user sees
+"""`drishti.py var ...`: the VaR engine from the command line (docs/guides/VAR_GUIDE.md; the API: /api/v1/risk/var), as the token's user sees
 it: a scope's headline (show), its ranked P&L path (path), history and backtest (history), contributions (parts), the hierarchy
 (tree), a trade's, position's or node's scenario matrix over its last N business dates (matrix, 2.9.7), the engine's state and
 tiers (status), the shards across Drishti*net (shards: the date's shard map, owners, members; --drain), captures
@@ -544,43 +544,43 @@ def register(groups, srv, ctx: dict) -> None:
                 lensed(a, q)
             if a.no_parametric:
                 q["parametric"] = "false"
-            res = api.json("GET", "/api/v1/var/scope?" + enc(dated(a, q)))
+            res = api.json("GET", "/api/v1/risk/var/scope?" + enc(dated(a, q)))
             say_json(res) if a.json else render_headline(res, print)
         elif c == "parts":
-            res = api.json("GET", "/api/v1/var/scope/contributions?" + enc(lensed(a, dated(a, {"scope": a.scope, "by": a.by, **(
+            res = api.json("GET", "/api/v1/risk/var/scope/contributions?" + enc(lensed(a, dated(a, {"scope": a.scope, "by": a.by, **(
                 {"scenario": a.scenario} if a.scenario else {}), **({"matrix": "true"} if a.matrix else {}),
                 **({"parametric": "false"} if a.no_parametric and not a.matrix else {})}))))
             say_json(res) if a.json else render_parts(res, a.top, print)
         elif c == "path":
-            res = api.json("GET", "/api/v1/var/scope/path?" + enc(lensed(a, dated(a, {"scope": a.scope, "page": a.page, "size": a.size}))))
+            res = api.json("GET", "/api/v1/risk/var/scope/path?" + enc(lensed(a, dated(a, {"scope": a.scope, "page": a.page, "size": a.size}))))
             say_json(res) if a.json else render_path(res, print)
         elif c == "history":
-            res = api.json("GET", "/api/v1/var/scope/history?" + enc(lensed(a, dated(a, {"scope": a.scope}))))
+            res = api.json("GET", "/api/v1/risk/var/scope/history?" + enc(lensed(a, dated(a, {"scope": a.scope}))))
             say_json(res) if a.json else render_history(res, print)
         elif c == "stress-window":
             if a.decide:
                 if not a.decision:
                     print("--decide needs --decision approve or reject", file=sys.stderr)
                     return 2
-                res = api.json("POST", f"/api/v1/var/stress-window/proposals/{urllib.parse.quote(a.decide)}/decision",
+                res = api.json("POST", f"/api/v1/risk/var/stress-window/proposals/{urllib.parse.quote(a.decide)}/decision",
                                {"decision": a.decision, "note": a.note or ""})
                 say_json(res) if a.json else print(f"{res.get('id')}  {res.get('status')}  by {res.get('decidedBy')}")
             elif a.proposals:
-                res = api.json("GET", "/api/v1/var/stress-window/proposals")
+                res = api.json("GET", "/api/v1/risk/var/stress-window/proposals")
                 say_json(res) if a.json else render_proposals(res, print)
             elif a.propose:
                 body = {"scope": a.scope, "hierarchy": a.hierarchy, "note": a.note or ""}
                 for k, v in (("date", a.date), ("length", a.length), ("confidence", a.confidence), ("first", a.first)):
                     if v is not None:
                         body[k] = v
-                res = api.json("POST", "/api/v1/var/stress-window/proposals", body)
+                res = api.json("POST", "/api/v1/risk/var/stress-window/proposals", body)
                 say_json(res) if a.json else print(f"{res.get('id')}  {res.get('status')}  window {(res.get('proposed') or {}).get('first')}")
             else:
                 q = {"scope": a.scope, "hierarchy": a.hierarchy}
                 for k, v in (("length", a.length), ("confidence", a.confidence)):
                     if v is not None:
                         q[k] = v
-                res = api.json("GET", "/api/v1/var/stress-window?" + enc(dated(a, q)))
+                res = api.json("GET", "/api/v1/risk/var/stress-window?" + enc(dated(a, q)))
                 say_json(res) if a.json else render_stress_window(res, print)
         elif c == "matrix":
             q = {"id": a.id, "days": a.days}
@@ -588,7 +588,7 @@ def register(groups, srv, ctx: dict) -> None:
                          ("window", a.window)):
                 if v not in (None, "", "scenario"):
                     q[k] = v
-            res = api.json("GET", "/api/v1/var/matrix?" + enc(dated(a, q)))
+            res = api.json("GET", "/api/v1/risk/var/matrix?" + enc(dated(a, q)))
             if a.json:
                 say_json(res)
             elif a.csv:
@@ -600,17 +600,17 @@ def register(groups, srv, ctx: dict) -> None:
             if a.measure == "parametric":                             # the Parametric figures, and the workbook's Parametric tab
                 q["measure"] = "parametric"
             if a.estimate:
-                res = api.json("GET", "/api/v1/var/playground/estimate?" + enc(lensed(a, dated(a, q))))
+                res = api.json("GET", "/api/v1/risk/var/playground/estimate?" + enc(lensed(a, dated(a, q))))
                 say_json(res) if a.json else render_estimate(res, print)
             elif a.xlsx:
                 q["count"] = a.count
-                _, body = api.request("GET", "/api/v1/var/playground.xlsx?" + enc(lensed(a, dated(a, q))))
+                _, body = api.request("GET", "/api/v1/risk/var/playground.xlsx?" + enc(lensed(a, dated(a, q))))
                 with open(a.xlsx, "wb") as f:
                     f.write(body)
                 tabs = "Main, Config, Data, FX, PnL, " + ("Parametric, " if getattr(a, "measure", None) == "parametric" else "") + "Explain, Provenance"
                 print(f"wrote {a.xlsx} ({len(body):,} bytes): the VaR Playground workbook, every figure a formula ({tabs})")
             else:
-                res = api.json("GET", "/api/v1/var/playground?" + enc(lensed(a, dated(a, q))))
+                res = api.json("GET", "/api/v1/risk/var/playground?" + enc(lensed(a, dated(a, q))))
                 say_json(res) if a.json else render_playground(res, print)
         elif c == "explain":
             q = {"scope": a.scope}
@@ -618,19 +618,19 @@ def register(groups, srv, ctx: dict) -> None:
                 if v is not None:
                     q[k] = v
             if a.xlsx:
-                _, body = api.request("GET", "/api/v1/var/explain.xlsx?" + enc(q))
+                _, body = api.request("GET", "/api/v1/risk/var/explain.xlsx?" + enc(q))
                 with open(a.xlsx, "wb") as f:
                     f.write(body)
                 print(f"wrote {a.xlsx} ({len(body):,} bytes): why VaR moved, every state and step a formula (Main, Data, States, Drivers, "
                       "Explain, Provenance)")
             elif a.matrix:
-                res = api.json("GET", "/api/v1/var/explain/matrix?" + enc(q))
+                res = api.json("GET", "/api/v1/risk/var/explain/matrix?" + enc(q))
                 say_json(res) if a.json else render_explain_matrix(res, print)
             else:
-                res = api.json("GET", "/api/v1/var/explain?" + enc(q))
+                res = api.json("GET", "/api/v1/risk/var/explain?" + enc(q))
                 say_json(res) if a.json else render_explain(res, print)
         elif c == "tree":
-            res = api.json("GET", "/api/v1/var/tree?" + enc(lensed(a, dated(a, {"hierarchy": a.hierarchy}))))
+            res = api.json("GET", "/api/v1/risk/var/tree?" + enc(lensed(a, dated(a, {"hierarchy": a.hierarchy}))))
             if a.json:
                 say_json(res)
             else:
@@ -643,7 +643,7 @@ def register(groups, srv, ctx: dict) -> None:
                                  "" if n.get("limitUse") is None else f"{100 * n['limitUse']:.1f}%", str(n.get("trades"))])
                 table(rows, print)
         elif c == "status":
-            st = api.json("GET", "/api/v1/var/status")
+            st = api.json("GET", "/api/v1/risk/var/status")
             if a.json:
                 say_json(st)
             else:
@@ -654,14 +654,14 @@ def register(groups, srv, ctx: dict) -> None:
                           f"{i.get('batchCount')} batches, latest {i.get('lastAt')}" if i else "the morning run, no intraday update"))
         elif c == "shards":
             if a.drain or a.undrain:
-                res = api.json("POST", "/api/v1/var/shards/drain", {"on": bool(a.drain)})
+                res = api.json("POST", "/api/v1/risk/var/shards/drain", {"on": bool(a.drain)})
             else:
-                res = api.json("GET", "/api/v1/var/shards?" + enc(dated(a, {})))
+                res = api.json("GET", "/api/v1/risk/var/shards?" + enc(dated(a, {})))
             say_json(res) if a.json else render_shards(res, print)
         elif c == "intraday":
             if a.load:
                 return load_intraday(a.load, a.lake or _demo_root(), a.date, None if a.no_signal else api.base, api.token, a.dry_run, print)
-            st = api.json("GET", "/api/v1/var/status")
+            st = api.json("GET", "/api/v1/risk/var/status")
             rows = [d for d in st.get("loaded") or [] if not d.get("currency") and (not a.date or d.get("businessDate") == a.date)]
             if a.json:
                 say_json([{"businessDate": d.get("businessDate"), "intraday": d.get("intraday")} for d in rows])
@@ -677,48 +677,48 @@ def register(groups, srv, ctx: dict) -> None:
                 for r in i.get("rejections") or []:
                     print(f"  rejected: {r}")
         elif c == "capture":
-            say_json(api.json("POST", "/api/v1/var/captures?" + enc(dated(a, {})), lensed(a, {"scope": a.scope, "note": a.note or ""})))
+            say_json(api.json("POST", "/api/v1/risk/var/captures?" + enc(dated(a, {})), lensed(a, {"scope": a.scope, "note": a.note or ""})))
         elif c == "captures":
-            say_json(api.json("GET", "/api/v1/var/captures" + ("?" + enc({"scope": a.scope}) if a.scope else "")))
+            say_json(api.json("GET", "/api/v1/risk/var/captures" + ("?" + enc({"scope": a.scope}) if a.scope else "")))
         elif c == "compare":
-            say_json(api.json("GET", "/api/v1/var/compare?" + enc({"a": a.a, "b": a.b or "now"})))
+            say_json(api.json("GET", "/api/v1/risk/var/compare?" + enc({"a": a.a, "b": a.b or "now"})))
         elif c == "basket":
             body = {"name": a.name, "scope": a.scope, "title": a.title or a.name, "description": a.description or "",
                     "sharedWith": a.share or []}
-            say_json(api.json("POST", "/api/v1/var/baskets", body))
+            say_json(api.json("POST", "/api/v1/risk/var/baskets", body))
         elif c == "baskets":
             if a.all or a.owner:                                # every person's (administrators), optionally one owner's
-                say_json(api.json("GET", "/api/v1/var/admin/baskets" + ("?" + enc({"owner": a.owner}) if a.owner else "")))
+                say_json(api.json("GET", "/api/v1/risk/var/admin/baskets" + ("?" + enc({"owner": a.owner}) if a.owner else "")))
             else:
-                say_json(api.json("GET", "/api/v1/var/baskets"))
+                say_json(api.json("GET", "/api/v1/risk/var/baskets"))
         elif c == "basket-delete":
             q = urllib.parse.quote
             params = {k: v for k, v in (("reason", a.reason), ("version", a.version)) if v is not None and v != ""}
-            path = f"/api/v1/var/baskets/{q(a.owner, safe='')}/{q(a.name, safe='')}" if a.owner else f"/api/v1/var/baskets/{q(a.name, safe='')}"
+            path = f"/api/v1/risk/var/baskets/{q(a.owner, safe='')}/{q(a.name, safe='')}" if a.owner else f"/api/v1/risk/var/baskets/{q(a.name, safe='')}"
             api.json("DELETE", path + ("?" + enc(params) if params else ""))
             print(f"deleted the basket {(a.owner + '/') if a.owner else ''}{a.name}")
         elif c == "official":
             if a.synthetic_history:                                  # a demo server's synthetic official history (VAR_GUIDE.md 18.10)
-                say_json(api.json("POST", "/api/v1/var/official/synthetic-history?" + enc({"days": a.synthetic_history})))
+                say_json(api.json("POST", "/api/v1/risk/var/official/synthetic-history?" + enc({"days": a.synthetic_history})))
                 return 0
-            say_json(api.json("POST" if a.capture else "GET", "/api/v1/var/official?" + enc(dated(a, {}))))
+            say_json(api.json("POST" if a.capture else "GET", "/api/v1/risk/var/official?" + enc(dated(a, {}))))
         elif c == "backtest":
             q = dated(a, {"scope": a.scope})
             if a.xlsx:
-                _, raw = api.request("GET", "/api/v1/var/backtesting?" + enc({**q, "format": "xlsx"}))
+                _, raw = api.request("GET", "/api/v1/risk/var/backtesting?" + enc({**q, "format": "xlsx"}))
                 with open(a.xlsx, "wb") as f:
                     f.write(raw)
                 print(f"wrote {a.xlsx} ({len(raw):,} bytes)")
                 return 0
-            res = api.json("GET", "/api/v1/var/backtesting?" + enc(q))
+            res = api.json("GET", "/api/v1/risk/var/backtesting?" + enc(q))
             say_json(res) if a.json else render_backtest(res, print)
         elif c == "stats":
-            res = api.json("GET", "/api/v1/var/statistics?" + enc({"scope": a.scope, "period": a.period or "", "measure": a.measure}))
+            res = api.json("GET", "/api/v1/risk/var/statistics?" + enc({"scope": a.scope, "period": a.period or "", "measure": a.measure}))
             say_json(res) if a.json else render_stats(res, print)
         elif c == "report":
             return report_cmd(api, a, say_json)
         elif c == "reload":
-            say_json(api.json("POST", "/api/v1/var/reload" + ("?" + enc({"date": a.date}) if getattr(a, "date", None) else "")))
+            say_json(api.json("POST", "/api/v1/risk/var/reload" + ("?" + enc({"date": a.date}) if getattr(a, "date", None) else "")))
         elif c == "whatif":
             items = copies_of(a.copy, CliError) + (trades_of(a.trades, CliError) if a.trades else [])
             if not items:
@@ -726,7 +726,7 @@ def register(groups, srv, ctx: dict) -> None:
             body = {"scope": a.scope, "items": items}
             if a.ccy:
                 body["ccy"] = a.ccy
-            res = api.json("POST", "/api/v1/var/what-if" + ("?" + enc({"asOf": a.date}) if a.date else ""), body)
+            res = api.json("POST", "/api/v1/risk/var/what-if" + ("?" + enc({"asOf": a.date}) if a.date else ""), body)
             if a.json:
                 say_json(res)
                 return 0
@@ -964,7 +964,7 @@ def report_cmd(api, a, say_json) -> int:
     """``var report list|run|show|sign|file``: the report runs and their sign-off (VAR_GUIDE.md section 18.14)."""
     q = urllib.parse.quote
     if a.action == "list":
-        res = api.json("GET", "/api/v1/var/reports")
+        res = api.json("GET", "/api/v1/risk/var/reports")
         if a.json:
             say_json(res)
             return 0
@@ -976,7 +976,7 @@ def report_cmd(api, a, say_json) -> int:
     if not a.report:
         print("give the report's id", file=sys.stderr)
         return 2
-    base = f"/api/v1/var/reports/{q(a.report)}/runs"
+    base = f"/api/v1/risk/var/reports/{q(a.report)}/runs"
     if a.action == "run":
         res = api.json("POST", base + ("?" + enc({"period": a.period}) if a.period else ""))
     else:

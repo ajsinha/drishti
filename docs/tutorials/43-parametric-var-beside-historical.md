@@ -96,7 +96,7 @@ tile. It opens the server's own lines (a bottom sheet on a phone); the console p
 ![PVAR DESK DESK-RATES with the ? open on the Parametric VaR tile](img/t43/02-rates-describe.jpg)
 
 **The JSON.** The same lines are the headline's `parametric.describe`
-(`GET /api/v1/var/scope?scope=DESK:DESK-RATES&asOf=2026-09-30`):
+(`GET /api/v1/risk/var/scope?scope=DESK:DESK-RATES&asOf=2026-09-30`):
 
 ```text
 Parametric VaR 99% · 1 day · Rates · Swaps and options
@@ -130,7 +130,7 @@ remembered for you and in the link (`&nc=0`).
 
 ![The rates desk's P&L histogram with the normal curve, both markers and the gap bracket](img/t43/03-rates-normal-curve.jpg)
 
-**The JSON.** `GET /api/v1/var/scope/path?scope=DESK:DESK-RATES&asOf=2026-09-30` → `parametric`: the server sends every point, the
+**The JSON.** `GET /api/v1/risk/var/scope/path?scope=DESK:DESK-RATES&asOf=2026-09-30` → `parametric`: the server sends every point, the
 browser draws them.
 
 ```json
@@ -189,7 +189,7 @@ BOOK-RATES-2         -0.07          1.00         -0.04
 BOOK-RATES-3         -0.42         -0.04          1.00
 ```
 
-**The JSON.** `GET /api/v1/var/scope/contributions?scope=DESK:DESK-RATES&asOf=2026-09-30&matrix=true`: per row `pComponentVar`, `rho`,
+**The JSON.** `GET /api/v1/risk/var/scope/contributions?scope=DESK:DESK-RATES&asOf=2026-09-30&matrix=true`: per row `pComponentVar`, `rho`,
 `sigma`, `mu`; totals `pSumComponent`, `pDiversification`; and `parametric.matrix {keys, labels, correlation, covariance, truncated,
 engine}`. `matrix=true` with `parametric=false` is refused (`400`): the matrix is parametric.
 
@@ -258,8 +258,8 @@ $ drishti.py var playground DESK:DESK-RATES --date 2026-09-30 --measure parametr
 wrote rates.xlsx (2,702,682 bytes): the VaR Playground workbook, every figure a formula (Main, Config, Data, FX, PnL, Parametric, Explain, Provenance)
 ```
 
-**The JSON.** `GET /api/v1/var/playground?scope=DESK:DESK-RATES&asOf=2026-09-30&measure=parametric` carries the panel's figures and
-`parametric.steps`; the workbook is `GET /api/v1/var/playground.xlsx` with the same parameters.
+**The JSON.** `GET /api/v1/risk/var/playground?scope=DESK:DESK-RATES&asOf=2026-09-30&measure=parametric` carries the panel's figures and
+`parametric.steps`; the workbook is `GET /api/v1/risk/var/playground.xlsx` with the same parameters.
 
 **You should see** the eight steps end with the components adding up to 58,409,229, and in the workbook the Parametric tab's checks all
 true: the sheet's VaR and ES equal the engine's to the cent.

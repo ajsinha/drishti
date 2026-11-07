@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""`drishti.py exposure ...`: the exposure engine from the command line (docs/guides/EXPOSURE_GUIDE.md; the API: /api/v1/exposure), as the
+"""`drishti.py exposure ...`: the exposure engine from the command line (docs/guides/EXPOSURE_GUIDE.md; the API: /api/v1/risk/exposure), as the
 token's user sees it: a scope's figures and profile (show), its contributions (parts), the tree of legal entities, counterparties and
 netting sets (tree), the profile as CSV (profile), the exposure distribution at a date with the path fan (distribution), the engine's
 state (status), captures (capture, captures, compare), the official end-of-day record (official), the retention plan (retention), a
@@ -115,7 +115,7 @@ def like_candidate(api, trade: str, factor: float, nset: str | None) -> dict:
     """A candidate copying a booked trade, scaled by ``factor``: its paths (the ``paths`` method) and, as the explorer's pre-deal form
     sends them, its asset class, notional, maturity and MtM scaled the same way (the ``addon`` proxy needs them)."""
     scope = f"NSET:{nset}" if nset else f"TRD:{trade}"
-    rows = api.json("GET", "/api/v1/exposure/scope/contributions?" + urllib.parse.urlencode({"scope": scope, "by": "trade", "figure": "EE"})).get("rows") or []
+    rows = api.json("GET", "/api/v1/risk/exposure/scope/contributions?" + urllib.parse.urlencode({"scope": scope, "by": "trade", "figure": "EE"})).get("rows") or []
     r = next((x for x in rows if x.get("key") == trade), {})
     return {"tradeId": "CANDIDATE-1", "label": f"{factor:g} x {trade}", "nettingSet": nset or r.get("nettingSet") or "",
             "paths": {"copyOf": trade, "factor": factor}, "assetClass": r.get("assetClass"),
@@ -156,29 +156,29 @@ def register(groups, srv, ctx: dict) -> None:
         api = Api.from_args(a)
         c = a.exp_cmd
         if c == "show":
-            res = api.json("GET", "/api/v1/exposure/scope?" + enc(asked(a, {"scope": a.scope})))
+            res = api.json("GET", "/api/v1/risk/exposure/scope?" + enc(asked(a, {"scope": a.scope})))
             say_json(res) if a.json else render_headline(res, print)
         elif c == "parts":
             p = asked(a, {"scope": a.scope, "by": a.by, "figure": a.figure})
             if a.at:
                 p["date"] = a.at
-            res = api.json("GET", "/api/v1/exposure/scope/contributions?" + enc(p))
+            res = api.json("GET", "/api/v1/risk/exposure/scope/contributions?" + enc(p))
             say_json(res) if a.json else render_parts(res, a.top, print)
         elif c == "tree":
-            res = api.json("GET", "/api/v1/exposure/tree?" + enc(asked(a, {})))
+            res = api.json("GET", "/api/v1/risk/exposure/tree?" + enc(asked(a, {})))
             say_json(res) if a.json else render_tree(res, print)
         elif c == "profile":
             p = asked(a, {"scope": a.scope})
             if a.csv or a.jsonl:                          # the server's own file: CSV, or JSON Lines (a grid date a line)
                 p["format"] = "jsonl" if a.jsonl else "csv"
-                print(api.request("GET", "/api/v1/exposure/scope/profile?" + enc(p))[1].decode("utf-8"), end="")
+                print(api.request("GET", "/api/v1/risk/exposure/scope/profile?" + enc(p))[1].decode("utf-8"), end="")
             else:
-                say_json(api.json("GET", "/api/v1/exposure/scope/profile?" + enc(p)))
+                say_json(api.json("GET", "/api/v1/risk/exposure/scope/profile?" + enc(p)))
         elif c == "distribution":
             p = asked(a, {"scope": a.scope, "bands": "true"})
             if a.at:
                 p["date"] = a.at
-            res = api.json("GET", "/api/v1/exposure/scope/distribution?" + enc(p))
+            res = api.json("GET", "/api/v1/risk/exposure/scope/distribution?" + enc(p))
             if a.json:
                 say_json(res)
             else:
@@ -190,22 +190,22 @@ def register(groups, srv, ctx: dict) -> None:
                     rows.append([str(r.get("tenor"))] + [money(r.get(k)) for k in ("q5", "q25", "q50", "q75", "q95")])
                 table(rows, print)
         elif c == "status":
-            say_json(api.json("GET", "/api/v1/exposure/status"))
+            say_json(api.json("GET", "/api/v1/risk/exposure/status"))
         elif c == "capture":
             body = {"scope": a.scope, "note": a.note or ""}
             if a.q:
                 body["q"] = a.q
-            say_json(api.json("POST", "/api/v1/exposure/captures?" + enc(asked(a, {})), body))
+            say_json(api.json("POST", "/api/v1/risk/exposure/captures?" + enc(asked(a, {})), body))
         elif c == "captures":
-            say_json(api.json("GET", "/api/v1/exposure/captures" + ("?" + enc({"scope": a.scope}) if a.scope else "")))
+            say_json(api.json("GET", "/api/v1/risk/exposure/captures" + ("?" + enc({"scope": a.scope}) if a.scope else "")))
         elif c == "compare":
-            say_json(api.json("GET", "/api/v1/exposure/compare?" + enc({"a": a.a, "b": a.b or "now"})))
+            say_json(api.json("GET", "/api/v1/risk/exposure/compare?" + enc({"a": a.a, "b": a.b or "now"})))
         elif c == "official":
-            say_json(api.json("POST" if a.capture else "GET", "/api/v1/exposure/official?" + enc(asked(a, {}))))
+            say_json(api.json("POST" if a.capture else "GET", "/api/v1/risk/exposure/official?" + enc(asked(a, {}))))
         elif c == "retention":
-            say_json(api.json("GET", "/api/v1/exposure/retention"))
+            say_json(api.json("GET", "/api/v1/risk/exposure/retention"))
         elif c == "reload":
-            say_json(api.json("POST", "/api/v1/exposure/reload" + ("?" + enc({"date": a.date}) if getattr(a, "date", None) else "")))
+            say_json(api.json("POST", "/api/v1/risk/exposure/reload" + ("?" + enc({"date": a.date}) if getattr(a, "date", None) else "")))
         elif c == "whatif":
             if a.candidates:
                 cands = candidates_of(a.candidates, CliError)
@@ -218,7 +218,7 @@ def register(groups, srv, ctx: dict) -> None:
                 body["q"] = a.q
             if a.collateral:
                 body["collateral"] = a.collateral
-            res = api.json("POST", "/api/v1/exposure/what-if?" + enc(asked(a, {})), body)
+            res = api.json("POST", "/api/v1/risk/exposure/what-if?" + enc(asked(a, {})), body)
             say_json(res) if a.json else render_whatif(res, print)
         return 0
 

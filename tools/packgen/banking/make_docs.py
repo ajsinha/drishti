@@ -164,7 +164,7 @@ def overview(name: str, docs: dict) -> str:
                   "end-of-day figures are published to `risk-results/exposure-official` and `exposure-official-cpty`. The explorer opens with "
                   "`EXP <scope> <GO>` (the bank, a legal entity's counterparty board, a counterparty's netting sets, a set's collateral and "
                   "trades, a trade alone and in its set, captures and compare, the pre-deal what-if); a what-if by the exact `paths` method is "
-                  "`XWIF` (`exposure-whatif`, the Python engine, compute on). The API is `/api/v1/exposure`; from the command line: "
+                  "`XWIF` (`exposure-whatif`, the Python engine, compute on). The API is `/api/v1/risk/exposure`; from the command line: "
                   "`drishti.py exposure show CPTY:CP-ALDERSHOT`.", "",
                   "The exposure guide (`docs/guides/EXPOSURE_GUIDE.md`) explains every number with worked examples, the explorer, scopes, "
                   "collateral, captures, the what-if, entitlements, the CLI, the API and the settings; tutorial 26 "

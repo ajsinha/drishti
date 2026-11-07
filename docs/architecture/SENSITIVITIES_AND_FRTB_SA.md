@@ -515,13 +515,13 @@ Built for sensitivities and FRTB-SA (the commands `FRSA <scope>`, `PLAY FRTB <sc
 
 | What | API | Command (terminal) | CLI |
 |---|---|---|---|
-| Sensitivities of a scope, by factor, bucket or grid | `GET /api/v1/sensitivities?scope=…&by=RISK_FACTOR,TENOR&grid=…` | `SENS <scope>` | `drishti.py sens show` |
-| The factor dictionary and the mapping refusals | `GET /api/v1/risk-factors?q=…` | `RFAC <factor or name>` | `drishti.py sens factors` |
-| FRTB-SA of a scope (SBM by class and scenario, DRC, RRAO) | `GET /api/v1/frtb/sa?scope=…` | `FRSA <scope>` | `drishti.py frtb sa` |
-| Its steps (buckets, WS, K, S, scenario) | `GET /api/v1/frtb/sa/explain?scope=…&class=…` | in `FRSA` | `drishti.py frtb explain` |
-| Contributions | `GET /api/v1/frtb/sa/contributions?scope=…&by=DESK` | in `FRSA` | `drishti.py frtb contributions` |
-| SIMM of a netting set or scope | `GET /api/v1/simm?nettingSet=…` (and `/netting-sets`, `/explain`, `/against`, `/versions`) | `SIMM <netting set>` (the computed figure) | `drishti.py simm show` |
-| The playgrounds | `/api/v1/frtb/playground`, `/api/v1/simm/playground` (and `.xlsx`, `/estimate`, `/template`) | `PLAY FRTB <scope>`, `PLAY FRTB RUN <id>`; `PLAY SIMM <netting set>`, `PLAY SIMM RUN <id>` | `drishti.py play frtb`; `drishti.py play simm` |
+| Sensitivities of a scope, by factor, bucket or grid | `GET /api/v1/risk/sensitivities?scope=…&by=RISK_FACTOR,TENOR&grid=…` | `SENS <scope>` | `drishti.py sens show` |
+| The factor dictionary and the mapping refusals | `GET /api/v1/risk/risk-factors?q=…` | `RFAC <factor or name>` | `drishti.py sens factors` |
+| FRTB-SA of a scope (SBM by class and scenario, DRC, RRAO) | `GET /api/v1/risk/frtb/sa?scope=…` | `FRSA <scope>` | `drishti.py frtb sa` |
+| Its steps (buckets, WS, K, S, scenario) | `GET /api/v1/risk/frtb/sa/explain?scope=…&class=…` | in `FRSA` | `drishti.py frtb explain` |
+| Contributions | `GET /api/v1/risk/frtb/sa/contributions?scope=…&by=DESK` | in `FRSA` | `drishti.py frtb contributions` |
+| SIMM of a netting set or scope | `GET /api/v1/risk/simm?nettingSet=…` (and `/netting-sets`, `/explain`, `/against`, `/versions`) | `SIMM <netting set>` (the computed figure) | `drishti.py simm show` |
+| The playgrounds | `/api/v1/risk/frtb/playground`, `/api/v1/risk/simm/playground` (and `.xlsx`, `/estimate`, `/template`) | `PLAY FRTB <scope>`, `PLAY FRTB RUN <id>`; `PLAY SIMM <netting set>`, `PLAY SIMM RUN <id>` | `drishti.py play frtb`; `drishti.py play simm` |
 | Official captures (planned) | the official run captures FRTB-SA per filer and date, as VaR | — | `drishti.py frtb capture` (planned) |
 
 **Computed kinds:** `frtb-sa-result` (the result of a scope and date) and `simm-result` (per netting set and regime), each with a contract

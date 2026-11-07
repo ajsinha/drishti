@@ -55,7 +55,7 @@ tutorial is [tutorial 38](../tutorials/38-the-mr-cube-on-the-pivot-engine.md); t
 | What does this unwind do to every desk? | tab C: the what-if side by side, before, after and the change for every row and the total |
 
 Every figure is computed by the server in Java; the console only draws. The VaR of a cell **equals** the VaR engine's answer for the cell's
-scope (`GET /api/v1/var/scope?scope=<the cell's scope>`) to the cent; every cell carries its scope so you can check it.
+scope (`GET /api/v1/risk/var/scope?scope=<the cell's scope>`) to the cent; every cell carries its scope so you can check it.
 
 ## 2. The measures
 
@@ -196,7 +196,7 @@ a tenor in no bucket is counted aside (`withoutTenor`).
 
 ## 7. Explain the move, time travel and provenance
 
-**Explain the move** (`GET /api/v1/pivot/mr/explain?scope=…&from=…&to=…`) is the VaR engine's explanation of the cell's scope between two
+**Explain the move** (`GET /api/v1/risk/mr/explain?scope=…&from=…&to=…`) is the VaR engine's explanation of the cell's scope between two
 business dates ([VAR_GUIDE.md section 3.11](VAR_GUIDE.md#311-why-it-moved-the-var-change-explained)): the earlier date's VaR (official when
 it was captured), then each exact step with its effect, adding up to the later date's VaR. *Compare* on the slider sets the earlier date;
 none: the business date before.
@@ -206,7 +206,7 @@ versions). Choosing a date that is not open opens it. The pivot screen's **Compa
 
 **Provenance** per cell (click it, `GET /api/v1/pivot/provenance/{id}?cell=<row>|<column>`): the cell's scope, its members, how its figure
 is made; the view's shared part (the source's notes: route, scenarios, trades hidden by your role) and the work done (sets, cells from the
-cache, the batch of vector sums). The headline's provenance (`POST /api/v1/pivot/mr/headline`) adds the date's data version and input
+cache, the batch of vector sums). The headline's provenance (`POST /api/v1/risk/mr/headline`) adds the date's data version and input
 versions, batches and intraday updates, the scenario set and window, the method and lens, and the shards.
 
 ## 8. Saved views, sharing and export
@@ -233,7 +233,7 @@ The cell budget, busy protection and the cache are the pivot engine's (`drishti.
 | `drishti.cube.mr.sparkline-max-cells` | 600 | the most cells of a view that get a sparkline |
 | `drishti.cube.mr.what-if-rows` | 40 | the most rows the what-if side by side computes (the total always added) |
 
-**Switched off** (Admin → Engines, or the file), `/api/v1/pivot/mr/...` answers `404 DRS-1020`, the `MCUBE` word, the menu entry and the
+**Switched off** (Admin → Engines, or the file), `/api/v1/risk/mr/...` answers `404 DRS-1020`, the `MCUBE` word, the menu entry and the
 Help pages are gone, the VaR source of the pivot engine offers `var()`, `es()`, `pv()` and `trades()` by the positions' columns only (an MR
 measure, a hierarchy level or an option is refused in words), and the cube's kept dimension codes are released. The engine-switch framework
 is [COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md). Every setting is in [CONFIGURATION.md](../admin/CONFIGURATION.md).
@@ -245,13 +245,13 @@ lens adds:
 
 | Request | What |
 |---|---|
-| `POST /api/v1/pivot/mr/headline` | `{view}`: the headline of the view's scope: `var`, `es`, `k`, `esCount`, `scenarios`, `lens`, `limit`, `limitUse`, `stressedVar` or `stressedNote`, `dataVersion`, `batches`, `intraday`, `trades`, `positions`, `provenance` |
-| `POST /api/v1/pivot/mr/detail` | `{view, coords}`: one cell's tail: histogram `edges` and `counts`, `var`, `es`, `k`, `esCount`, the VaR scenario and its date, the ES tail, `trades`, `positions`, `scope` |
-| `POST /api/v1/pivot/mr/history` | `{view}`: the sparklines: `dates`, `series` by cell key (`<row>|<column>`) of the first measure |
-| `GET /api/v1/pivot/mr/versions` | the slider's stops |
-| `GET /api/v1/pivot/mr/explain?scope=&from=&to=&confidence=` | why a cell's VaR moved |
-| `GET /api/v1/pivot/mr/sensitivities?scope=&grid=&asOf=` · `?by=QUALIFIER,TENOR&class=GIRR&measure=DELTA` | the ladder by a grid, or the heat map by two factor parts |
-| `POST /api/v1/pivot/mr/what-if` | `{view, items: [{copyOf, factor}]}`: each row and the total, before, after and incremental |
+| `POST /api/v1/risk/mr/headline` | `{view}`: the headline of the view's scope: `var`, `es`, `k`, `esCount`, `scenarios`, `lens`, `limit`, `limitUse`, `stressedVar` or `stressedNote`, `dataVersion`, `batches`, `intraday`, `trades`, `positions`, `provenance` |
+| `POST /api/v1/risk/mr/detail` | `{view, coords}`: one cell's tail: histogram `edges` and `counts`, `var`, `es`, `k`, `esCount`, the VaR scenario and its date, the ES tail, `trades`, `positions`, `scope` |
+| `POST /api/v1/risk/mr/history` | `{view}`: the sparklines: `dates`, `series` by cell key (`<row>|<column>`) of the first measure |
+| `GET /api/v1/risk/mr/versions` | the slider's stops |
+| `GET /api/v1/risk/mr/explain?scope=&from=&to=&confidence=` | why a cell's VaR moved |
+| `GET /api/v1/risk/mr/sensitivities?scope=&grid=&asOf=` · `?by=QUALIFIER,TENOR&class=GIRR&measure=DELTA` | the ladder by a grid, or the heat map by two factor parts |
+| `POST /api/v1/risk/mr/what-if` | `{view, items: [{copyOf, factor}]}`: each row and the total, before, after and incremental |
 
 A `view` is the view itself or a saved view's id (`owner/name`). On the command line: `drishti.py pivot run --source var --rows MGMT.DESK
 --cols RISK_CLASS --values "var()" --option horizon=10d`, and `drishti.py pivot mr headline|cell|versions|explain|ladder|heat|whatif`

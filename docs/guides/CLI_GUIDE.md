@@ -2170,7 +2170,7 @@ Exit codes: 0 (`ready`, `computing` or `stale`); 1 when the answer is `failed` o
 
 ### `var`: the VaR engine
 
-VaR of any scope as you see it, from the terminal (the API `/api/v1/var`; the user guide [VAR_GUIDE.md](VAR_GUIDE.md), the reference
+VaR of any scope as you see it, from the terminal (the API `/api/v1/risk/var`; the user guide [VAR_GUIDE.md](VAR_GUIDE.md), the reference
 [TOOLS.md section 5.12](TOOLS.md#512-var)). Quote a scope for the shell; `--date` picks the business date, `--json` prints the answer:
 
 ```text
@@ -2234,7 +2234,7 @@ Exit codes: 0; 1 when the server said no (the code and its message on standard e
 
 ### `exposure`: the exposure engine
 
-Exposure of any counterparty scope as you see it, from the terminal (the API `/api/v1/exposure`; the user guide
+Exposure of any counterparty scope as you see it, from the terminal (the API `/api/v1/risk/exposure`; the user guide
 [EXPOSURE_GUIDE.md](EXPOSURE_GUIDE.md), the reference [TOOLS.md section 5.13](TOOLS.md#513-exposure)). Quote a scope for the shell;
 `--date` picks the business date, `--q` the PFE confidence, `--collateral lagged|current|none` the collateral model, `--json` prints
 the answer:

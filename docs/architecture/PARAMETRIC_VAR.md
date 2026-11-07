@@ -222,7 +222,7 @@ hierarchy, exactly as historical VaR reads them.
 | `drishti.var.parametric.matrix-max-parts` | `60` | most parts of a correlation matrix; more: the largest by \|component VaR\|, `truncated: true` |
 | `drishti.var.parametric.show-curve` | `true` | the curve's toggle starts on (each person's choice is then remembered in `varView`) |
 
-No per-request override of weighting or λ in 2.9.11.c (open question 4); `GET /api/v1/var/status` lists the effective block as `parametric`.
+No per-request override of weighting or λ in 2.9.11.c (open question 4); `GET /api/v1/risk/var/status` lists the effective block as `parametric`.
 
 ## 6. The API: the existing VaR endpoints, extended
 
