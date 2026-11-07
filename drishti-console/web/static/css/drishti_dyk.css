@@ -66,13 +66,6 @@
 .dyk-what { display: inline-flex; align-items: center; min-height: 44px; font-size: .92rem; }
 .dyk-next { margin-left: auto; }
 
-.lp-quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .75rem; margin: 2rem 0 0; text-align: left; }
-.lp-quick-card { display: flex; flex-direction: column; gap: .3rem; min-height: 44px; padding: 1rem 1.1rem; border-radius: 10px; border: 1px solid var(--d-border);
-  background: var(--d-surface); color: var(--d-ink); text-decoration: none; transition: border-color .2s; }
-.lp-quick-card:hover, .lp-quick-card:focus-visible { border-color: var(--d-accent); color: var(--d-ink); text-decoration: none; }
-.lp-quick-card .bi { color: var(--d-accent); }
-.lp-quick-card span { color: var(--d-muted); font-size: .9rem; font-family: var(--d-font-mono); }
-
 @media (max-width: 900px) {
   .lp-home.has-dyk { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
 }
@@ -82,6 +75,5 @@
   .dyk-bar-track { grid-column: 1 / -1; grid-row: 2; }
   .dyk-next { margin-left: 0; }
   .dyk-actions > * { flex: 1 1 100%; justify-content: center; }
-  .lp-quick { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) { .dyk-skel { animation: none; } }

@@ -192,6 +192,42 @@ class KeepOtherDates(unittest.TestCase):
                 os.environ.pop("DRISHTI_DATA_DIR") if old is None else os.environ.__setitem__("DRISHTI_DATA_DIR", old)
 
 
+@unittest.skipUnless(HAVE, "needs deltalake and PyYAML")
+class TheDemoLakesOwnFolder(unittest.TestCase):
+    """The demo lake is built where its lake file says, config/lakes/demo.yaml: <data>/delta/demo/<domain>/<table> (every lake in its own
+    folder, DATA_LAKE_GUIDE.md section 2), with no --lake given; nothing directly under <data>/delta but the lake's folder; and a lake still in the
+    older layout (its tables directly in <data>/delta) is not built over: it is moved first."""
+
+    def test_lake_demo_writes_under_data_delta_demo(self):
+        import demo
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            conn, data = tmp / "connectors", tmp / "data"
+            conn.mkdir()
+            saved = {k: os.environ.get(k) for k in ("DRISHTI_DATA_DIR", "DRISHTI_DELTA_ROOT")}
+            os.environ["DRISHTI_DATA_DIR"] = str(data)
+            os.environ.pop("DRISHTI_DELTA_ROOT", None)
+            try:
+                a = demo.build_parser().parse_args(["--connectors-dir", str(conn), "--only", "market-risk/scenario-set", "-q", "--no-signal",
+                                                    "--as-of", "data"])
+                with contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(demo.run(a), 0)
+                self.assertTrue(list((data / "delta" / "demo" / "risk").glob("scenario-set*/_delta_log")))
+                self.assertEqual(sorted(p.name for p in (data / "delta").iterdir()), ["demo"])
+                # the older layout in the way: refused, nothing built over it
+                old = data / "delta2"
+                (old / "risk" / "scenario-set" / "_delta_log").mkdir(parents=True)
+                import stores
+                self.assertEqual(stores.older_layout(old / "demo"), [])                  # not a <data>/delta folder: nothing to say
+                fresh = tmp / "other" / "delta"
+                (fresh / "risk").mkdir(parents=True)
+                self.assertEqual(stores.older_layout(fresh / "demo"), ["risk"])
+                self.assertIn("relocate demo", stores.older_layout_words(fresh / "demo", ["risk"]))
+            finally:
+                for k, v in saved.items():
+                    os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v)
+
+
 class ResultsReaders(unittest.TestCase):
     """2.9.5: the readers of the official results (var-results, exposure-results) are left to the server, which writes them stamped, so
     they follow the official format (OfficialReaders); a file an earlier lake demo wrote (no stamp: it counted as edited) is moved away."""
@@ -285,6 +321,7 @@ class DataFolder(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp).resolve()
             self.assertEqual(self.folder(["--lake", str(tmp / "srv" / "delta")]), tmp / "srv")
+            self.assertEqual(self.folder(["--lake", str(tmp / "srv" / "delta" / "demo")]), tmp / "srv")   # every lake's own folder
             self.assertEqual(self.folder(["--lake", str(tmp / "x"), "--data-dir", str(tmp / "d")]), tmp / "d")
             self.assertEqual(self.folder(["--lake", str(tmp / "srv" / "delta")], env=str(tmp / "e")), tmp / "e")
             self.assertEqual(self.folder(["--lake", str(tmp / "elsewhere")]), (ROOT / "data").resolve())

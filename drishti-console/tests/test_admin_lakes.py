@@ -198,6 +198,20 @@ def test_a_table_opens_its_own_page_with_dates_columns_commits_loads_and_readers
 
 def test_the_lake_root_defaults_to_the_data_folder_as_the_server():
     s = LakeSettings.from_settings({"lakes.data_dir": "/srv/drishti-data"}, REPO / "drishti-console")
-    assert s.roots == [Path("/srv/drishti-data/delta")]
+    assert s.roots == [Path("/srv/drishti-data/delta/demo")]               # every lake's own folder, the demo lake's first
+    assert s.lakes_parent == Path("/srv/drishti-data/delta")
     s = LakeSettings.from_settings({"lakes.data_dir": "/srv/drishti-data", "lakes.roots": "/a,/b"}, REPO / "drishti-console")
     assert s.roots == [Path("/a"), Path("/b")]
+    assert s.lake_roots() == [Path("/a"), Path("/b")]
+
+
+def test_the_lakes_are_found_in_their_own_folders_at_every_ask(tmp_path):
+    s = LakeSettings.from_settings({"lakes.data_dir": str(tmp_path)}, REPO / "drishti-console")
+    delta = tmp_path / "delta"
+    (delta / "demo" / "trading" / "trade_endur" / "_delta_log").mkdir(parents=True)
+    assert s.lake_roots() == [delta / "demo"]
+    (delta / "risklake" / "risk" / "scenario-pv" / "_delta_log").mkdir(parents=True)        # a lake the data inbox made later
+    (delta / "_drishti-lake").mkdir()
+    assert s.lake_roots() == [delta / "demo", delta / "risklake"]
+    (delta / "risk-results" / "var-official" / "_delta_log").mkdir(parents=True)            # tables directly in delta/: the root too
+    assert s.lake_roots() == [delta / "demo", delta, delta / "risklake"]

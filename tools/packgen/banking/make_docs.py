@@ -99,16 +99,16 @@ def overview(name: str, docs: dict) -> str:
     first = SPEC["trade"] if "trade" in kinds else SPEC[kinds[0]]
     lines += finding(first.mnemonic, first.label, shown_prefix(first), "PRODUCT_TYPE=IRS_FIXFLOAT" if first.kind == "trade" else "", name, make_packs.CODES[name])
     lines += ["## Where the data comes from", "",
-              "Each kind is read from the Delta Lake folder of its **data domain** (`data/delta/<domain>/<kind>/`, partitioned by "
+              "Each kind is read from the Delta Lake folder of its **data domain** (`data/delta/demo/<domain>/<kind>/`, partitioned by "
               "business date). Pick a date in the top bar to see that day; **Live** reads the streaming source first.", ""]
     rows = []
     for d, ks in p["kinds"].items():
         mode = "effective (a row when an entity changes)" if d in make_packs.EFFECTIVE_DOMAINS else "snapshot (every business date)"
         if name == "trading" and d == "trading":
             for cname, table_ in make_packs.TRADE_SYSTEMS.items():
-                rows.append([f"`{cname}`", f"`data/delta/trading/{table_}/`", f"Trades booked in {table_[6:].upper()}", mode + ", a union with the other two", "`trade`"])
+                rows.append([f"`{cname}`", f"`data/delta/demo/trading/{table_}/`", f"Trades booked in {table_[6:].upper()}", mode + ", a union with the other two", "`trade`"])
             continue
-        rows.append([f"`{d}-store`", f"`data/delta/{d}/`", layout.DOMAINS[d], mode, ", ".join(f"`{k}`" for k in ks)])
+        rows.append([f"`{d}-store`", f"`data/delta/demo/{d}/`", layout.DOMAINS[d], mode, ", ".join(f"`{k}`" for k in ks)])
     lines += table(["Connector", "Folder", "Domain", "Tables", "Kinds"], rows)
     if name == "trading":
         lines += ["### One trade view, three source systems", "",
@@ -116,7 +116,7 @@ def overview(name: str, docs: dict) -> str:
                   "(`union: true`): a trade opens from whichever system holds it, and a search, a type-ahead, the search form's drop-downs and a BI "
                   "table read all three, each row saying its `SOURCE_SYSTEM`. Build the three tables, with a week of business days and the "
                   "day's amendments, with `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/trades/make_trades.py "
-                  "--trades 3000 --days 7 --lake data/delta`.", "",
+                  "--trades 3000 --days 7 --lake data/delta/demo`.", "",
                   "### Live trades and pages over many trades", "",
                   "`trading-stream` (Kafka, **off by default**; switch it on with `DRISHTI_STREAM_TRADING=true`) streams the day's new trade versions, "
                   "which **Live** in the top bar reads first. `trade-pages` is a *derived* connector: from the trades of every system it computes "
@@ -178,7 +178,7 @@ def overview(name: str, docs: dict) -> str:
                                                                  for f, (sw, ks, _, what) in make_packs.FEEDS.items()])
     lines += ["Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the "
               "site configuration. For a demonstration lake built from the generated samples, run "
-              "`uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta`: it writes "
+              "`uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta/demo`: it writes "
               "the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, "
               "[Data formats](../../../../docs/guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).", ""]
     lines += ["## Kinds", ""]

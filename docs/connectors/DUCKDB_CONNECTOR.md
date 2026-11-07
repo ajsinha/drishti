@@ -73,7 +73,7 @@ columns, read without touching the documents. DuckDB adds three constraints of i
 
 `DuckDbLoader` (in the plugin) writes, and the connector reads, one DuckDB file (for example
 `data/duckdb/drishti.duckdb`) with a schema per data domain. Its input is loader rows (`{"domain", "kind", "id", "date", "doc",
-"columns"}`), filed by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)): a tar of `<kind>/<YYYY-MM-DD>/`
+"columns"}`), filed by the load rules ([DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)): a tar of `<kind>/<YYYY-MM-DD>/`
 folders (what `make_data.py --jsonl FILE.tar` and `bulk_trades.py --jsonl FILE.tar` write) files each row under its folder's date;
 a plain file (`<kind>.<YYYY-MM-DD>.jsonl`, or `-`) is one kind on one date: `--as-of`, else its `.ready` file's, else its name's,
 else the business today. A row's own `date` stays in its document; rows whose date differs are counted. A plain file of two
@@ -585,7 +585,7 @@ Loader options (`DuckDbLoader FILE|- DATABASE`, through `tools/load-duckdb.sh [d
 DuckDB can read Parquet, Delta Lake and Iceberg tables in place, which would let one connector serve the Delta Lake
 written for the `delta` connector without a load. The JDBC driver 1.5.6 bundles the `json` and `parquet` extensions;
 the `delta` and `iceberg` extensions are not bundled and DuckDB would download them on first use. The connector does
-not download extensions at run time, so a `lake` mode (`delta_scan('data/delta/trading/trade')` per day, with the same
+not download extensions at run time, so a `lake` mode (`delta_scan('data/delta/demo/trading/trade')` per day, with the same
 column sets) is left for when the extensions can be shipped with Drishti or installed from a local repository. Reading
 the lake's Parquet files directly without the Delta log is not safe (it would see removed files), so it is not offered.
 

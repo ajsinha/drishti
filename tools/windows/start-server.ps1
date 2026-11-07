@@ -44,7 +44,7 @@ param(
     # The server's port (DRISHTI_PORT).
     [int]$Port = $(if ($env:DRISHTI_PORT) { [int]$env:DRISHTI_PORT } else { 18480 }),
     # The Delta Lake root (DRISHTI_DELTA_ROOT).
-    [string]$LakeRoot = $(if ($env:DRISHTI_DELTA_ROOT) { $env:DRISHTI_DELTA_ROOT } else { '.\data\delta' }),
+    [string]$LakeRoot = $(if ($env:DRISHTI_DELTA_ROOT) { $env:DRISHTI_DELTA_ROOT } else { '.\data\delta\demo' }),
     # The Delta engine (DRISHTI_DELTA_ENGINE): native works on Windows; hadoop needs winutils.exe.
     [ValidateSet('native', 'hadoop', 'auto')]
     [string]$Engine = $(if ($env:DRISHTI_DELTA_ENGINE) { $env:DRISHTI_DELTA_ENGINE } else { 'native' }),
@@ -113,7 +113,7 @@ if ($DemoLakes) {
 if (-not $Heap) { $Heap = '2g' }
 $env:DRISHTI_DELTA_ENGINE = $Engine
 $env:DRISHTI_PORT = "$Port"
-$env:DRISHTI_DELTA_ROOT = $LakeRoot
+if ($env:DRISHTI_DELTA_ROOT -or $PSBoundParameters.ContainsKey('LakeRoot')) { $env:DRISHTI_DELTA_ROOT = $LakeRoot }   # unset: the lake files' own folders (data\delta\demo, the official results in data\delta)
 if ($Packs) { $env:DRISHTI_PACKS = $Packs }
 if ($Iceberg) {
     # Iceberg without Hadoop: the native engine (drishti-iceberg) needs no winutils.exe

@@ -685,7 +685,7 @@ Only roles with `calc: true` see Calc (here `support-lead`). More in [Calc: Pyth
 (generated, or published public data such as the us-equities and gleif packs):
 
 1. the documents as gzipped JSON Lines under `data/testdata/<pack>/<kind>/`, named by the load rules
-   ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md) section 10): `<table>.<YYYY-MM-DD>.jsonl.gz`, a file a business day (the
+   ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo) section 5.2): `<table>.<YYYY-MM-DD>.jsonl.gz`, a file a business day (the
    first the snapshot, then each day's changes), or one dated snapshot the same on every day, or a tar of `<table>/<YYYY-MM-DD>/`
    folders where a date is several files, each dataset listed in `data/testdata/testdata.yaml` with its pack,
    kind, Delta connector and key (`tools/testdata/make_testdata.py` and `tools/testdata/publicsnap.py` write it; never by hand);
@@ -1180,18 +1180,18 @@ connectors:                     # the connectors this pack reads through. Here a
     enabled: ${DRISHTI_LAKE_ENABLED:true}    # ${VAR:default} is resolved from the environment
     kinds: [agreement, csa]
     settings:                   # passed to the plugin as-is (each plugin's settings: CONNECTORS.md; credentials only as ${ENV})
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
       domain: legal             # reads <root>/legal/<kind>/
   credit-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [netting-set, credit-limit, cva, sa-ccr]
-    settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: credit }
+    settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: credit }
   collateral-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [collateral-balance, margin-call, simm]
-    settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: collateral }
+    settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: collateral }
 
 routes:                         # KIND: CONNECTOR — which connector answers each kind
   agreement: legal-store
@@ -1212,7 +1212,7 @@ and routes its kinds. The reference for the file is [CONNECTOR_FILES.md](../conn
 ```yaml
 connectors: [credit-store, collateral-store]        # the form for a pack that only names connectors
 connector-templates:                                # optional: what to suggest if the site has none yet
-  credit-store: { plugin: delta, kinds: [netting-set], settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: credit } }
+  credit-store: { plugin: delta, kinds: [netting-set], settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: credit } }
 routes: { netting-set: credit-store, margin-call: collateral-store }
 ```
 
@@ -1289,7 +1289,7 @@ connectors:
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [trade]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
       domain: trading
       table: { trade: trade_endur }    # the kind's table under <root>/trading/ (default: the kind's name)
       union: true                      # one part of a kind several connectors serve together (next section)
@@ -3136,7 +3136,7 @@ python3 tools/packgen/library/make.py --check
 DRISHTI_PACKS_OUT=/tmp/review python3 tools/packgen/library/make.py
 
 # also build ten business days of history in the Delta Lake, for the date picker
-drishti-console/.venv/bin/python tools/packgen/library/make.py --lake data/delta
+drishti-console/.venv/bin/python tools/packgen/library/make.py --lake data/delta/demo
 ```
 
 ##### Generator step 6. What you get
@@ -3154,7 +3154,7 @@ config/packs/library/
 ```
 
 The `pack.yaml` it wrote names the link field `AUTHOR`, the badge `$.ON_LOAN + ' on loan'` and one connector template,
-`library-store` (`plugin: delta`, `domain: library`, `root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}`), with
+`library-store` (`plugin: delta`, `domain: library`, `root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}`), with
 `book-title` and `author` routed to it. Never edit these files by hand: change the script and run it again (each file says so at the top).
 
 ##### Generator step 7. Open it
@@ -3645,11 +3645,11 @@ drishti-console/.venv/bin/python tools/drishti.py lake demo
   news/listed-company: … rows over 60 days
   news/news-topic: … rows over 60 days
 
-Demo lake ready: …/data/delta: 89 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
+Demo lake ready: …/data/delta/demo: 89 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
 Feeds: …/data/feeds/fixing.jsonl (the file connector's sample feed)
 Server: no server at http://127.0.0.1:19590: left …/data/bi-store/lake-rebuilt.json, so a server clears its stored BI columns and rollups at its next start
 Connector files:
-  civic-store: generated by the server at its first start (reads …/data/delta)
+  civic-store: generated by the server at its first start (reads …/data/delta/demo)
   …
 ```
 
@@ -3975,7 +3975,7 @@ From `config/packs/counterparty-risk/pack.yaml`:
 
 ```yaml
 connectors:                     # a mapping: the names this pack reads through, each with the pack's template
-  legal-store: { plugin: delta, kinds: [agreement, csa], settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: legal } }
+  legal-store: { plugin: delta, kinds: [agreement, csa], settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: legal } }
   credit-store: { plugin: delta, kinds: [netting-set, credit-limit, cva, sa-ccr], settings: { … domain: credit } }
   collateral-store: { plugin: delta, kinds: [collateral-balance, margin-call, simm], settings: { … domain: collateral } }
 routes:                         # which connector answers each kind
@@ -4373,7 +4373,7 @@ git clone https://github.com/ajsinha/drishti.git && cd drishti
 uv venv --python 3.13 drishti-console/.venv
 uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
 ./mvnw -q package -DskipTests -pl drishti-server -am                 # 1 min 12 s with ~/.m2 filled
-drishti-console/.venv/bin/python tools/drishti.py lake demo           # about 15 min (943 s): 89 Delta tables, sixty days, under data/delta
+drishti-console/.venv/bin/python tools/drishti.py lake demo           # about 15 min (943 s): 89 Delta tables, sixty days, under data/delta/demo
 ```
 
 then the server and the console as the run configurations start them ([GETTING_STARTED.md, Steps 6 and 7](GETTING_STARTED.md#step-6--start-the-server)).

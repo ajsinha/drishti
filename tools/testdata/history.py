@@ -28,7 +28,7 @@
                   fields quoted next to it move with it (BID/ASK around MID, a bond's YIELD, Z_SPREAD and MOD_DURATION against its PRICE,
                   a curve's points together), QA2-201
 
-Files (docs/architecture/DATA_LOAD_RULES.md section 10): one per business date, <folder>/<table>.<day>.jsonl.gz, named by the lake table
+Files (docs/guides/DATA_LAKE_GUIDE.md section 5.2): one per business date, <folder>/<table>.<day>.jsonl.gz, named by the lake table
 the dataset feeds (trade_endur, counterparty ...): the first day's holds the whole snapshot, each later day's only what changed that day
 (the manifest, testdata.yaml, says which: kind snapshot or changes); one document a line, sorted by key; a day with no change writes an
 empty file (a loader ignores it). Never split: a day is one file. Deterministic: the same universe writes the same bytes (gzip without a

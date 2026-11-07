@@ -21,13 +21,13 @@
 Generating and loading are separate steps (docs/guides/DATA_GUIDE.md). The generator writes one file per business day,
 <out>/<system>/trade_<system>.<date>.jsonl.gz (the load rules' name; --out, default <data>/build/bulk): one trade document a line, in id order. The loader is
 `drishti.py lake build` (tools/lake/build.py), run here on each file unless --no-lake: it replaces one source system's trade table
-of the lake (--root, default data/delta: trading/trade_murex, or with --system CALYPSO trade_calypso), partitioned by business date
+of the lake (--root, default data/delta/demo: trading/trade_murex, or with --system CALYPSO trade_calypso), partitioned by business date
 and PRODUCT_TYPE with the columns the trading pack promotes, as tools/packgen/trades/make_trades.py --lake does, and leaves every
 other table as it is; a running server picks the new trades up within a minute. For a book of all three systems at a laptop's size,
 with the day's amendments, use make_trades.py instead. To go back to the sample trades over 10 days:
-python3 tools/packgen/banking/make_data.py --lake data/delta (with uv run --with deltalake --with pyarrow --with pyyaml).
+python3 tools/packgen/banking/make_data.py --lake data/delta/demo (with uv run --with deltalake --with pyarrow --with pyyaml).
 
---jsonl FILE.tar (a tar of trade/<YYYY-MM-DD>/ folders, any --days) or FILE|- (one day: --days 1; the load rules, docs/architecture/DATA_LOAD_RULES.md)
+--jsonl FILE.tar (a tar of trade/<YYYY-MM-DD>/ folders, any --days) or FILE|- (one day: --days 1; the load rules, docs/guides/DATA_LAKE_GUIDE.md)
 writes loader rows instead ({"domain", "kind", "id", "date", "doc", "columns"}: the document and the fields the trading
 pack promotes, by path), for tools/load-aerospike.sh and the other stores' loaders.
 
@@ -199,7 +199,8 @@ def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--trades", type=int, default=500_000, help="how many trades (default 500000; the first 750 are the samples)")
     ap.add_argument("--days", type=int, default=3, help="business days of history, ending at --as-of (default 3)")
-    ap.add_argument("--root", default=os.environ.get("DRISHTI_DATA_DIR", "data") + "/delta", help="the lake whose trade table is replaced (default data/delta)")
+    ap.add_argument("--root", help="the lake whose trade table is replaced (default the demo lake's root, config/lakes/demo.yaml: "
+                    "<data>/delta/demo)")
     ap.add_argument("--as-of", default=AS_OF.isoformat(), help=f"the newest business date (default {AS_OF})")
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     ap.add_argument("--system", default="MUREX", choices=("MUREX", "CALYPSO"), help="the source system whose trades are cloned and whose table "
@@ -212,6 +213,10 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--no-lake", action="store_true", help="write the JSONL files only; load them later with drishti.py lake build")
     ap.add_argument("--engine", default="auto", choices=("auto", "drishti", "deltalake"), help="the lake writer lake build uses (default auto)")
     a = ap.parse_args(argv)
+    if not a.root:
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lake"))
+        import lakeconfig
+        a.root = lakeconfig.root("demo")
     if a.trades < 1 or a.days < 1:
         raise SystemExit("--trades and --days must be at least 1")
 
@@ -227,7 +232,7 @@ def main(argv: list[str]) -> int:
         tar = a.jsonl.endswith(".tar")
         if not tar and len(days) > 1:
             ap.error(f"--jsonl {a.jsonl}: {len(days)} business days of trades: a stream or plain file is one table and one date "
-                     "(docs/architecture/DATA_LOAD_RULES.md): write a .tar of trade/<YYYY-MM-DD>/ folders, or --days 1")
+                     "(docs/guides/DATA_LAKE_GUIDE.md): write a .tar of trade/<YYYY-MM-DD>/ folders, or --days 1")
         jobs = [(list(range(s, min(s + 5_000, a.trades))), d, len(days) - 1 - n) for n, d in enumerate(days) for s in range(0, a.trades, 5_000)]
         written = 0
         if tar:                                       # each day into its own file beside the tar, then packed (no day held in memory)

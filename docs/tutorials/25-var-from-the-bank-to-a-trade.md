@@ -571,7 +571,7 @@ line one row of the contract; [VAR_GUIDE.md section 15.12](../guides/VAR_GUIDE.m
 **From the command line**, with the server of step 1 running (Windows: `tools\windows\pvgen-intraday.ps1` with the same options):
 
 ```text
-$ tools/pvgen/intraday.sh --batches 3 --trades-per-batch 10 --lake data/delta --server http://<host>:<port>
+$ tools/pvgen/intraday.sh --batches 3 --trades-per-batch 10 --lake data/delta/demo --server http://<host>:<port>
 lake-build ok exit=0 ... kind=pnl-vector engine=drishti mode=append rows=8 rejected=0 dates=1 partitions=1 seconds=1.75
 lake-build ok exit=0 ... kind=scenario-pv engine=drishti mode=append rows=2 rejected=0 dates=1 partitions=1 seconds=1.742
 ...

@@ -17,7 +17,7 @@
   Builds the banking packs' Delta Lake on Windows (the PowerShell form of tools/load-delta.sh).
 
 .DESCRIPTION
-  Writes the sample documents as ten business days of history under -Root (default data\delta), in the layout each
+  Writes the sample documents as ten business days of history under -Root (default data\delta\demo, the demo lake), in the layout each
   pack declares; with -Trades it then replaces the trade table with a book of that many trades over -Days days.
   Generating and loading are separate steps (docs/guides/DATA_GUIDE.md): the generators write JSON Lines under the
   build folder beside the lake (lake-rows\, bulk\), then a loader puts them into the lake.
@@ -31,7 +31,7 @@
 #>
 param(
     # The lake's root folder.
-    [string]$Root = 'data\delta',
+    [string]$Root = 'data\delta\demo',
     # A trade book of this many trades a day (0: only the samples).
     [int]$Trades = 0,
     # The business days the trade book covers.

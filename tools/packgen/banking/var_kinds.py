@@ -33,6 +33,12 @@ both trades' layouts), with its limits from the new dated kind ``var-limit`` (by
 ``PNL-<trade or position>-<set>`` (``PV-`` before, still read)."""
 from __future__ import annotations
 
+import sys as _sys
+from pathlib import Path as _Path
+
+_sys.path.insert(0, str(_Path(__file__).resolve().parents[2]))
+from packlake import OFFICIAL_ROOT as _OFFICIAL_ROOT  # noqa: E402  (the publisher's root: tools/lake/lakeconfig.py)
+
 #: kind -> (mnemonic, label, id pattern, id field)
 KINDS = {
     "position": ("POS", "Position", "^POS-", "POSITION_ID"),
@@ -103,7 +109,7 @@ CONNECTORS = {
         "description": "The official end-of-day VaR results the server publishes (risk-results/var-official), read only: for BI and "
                        "other readers, never an engine's input",
         "kinds": ["var-official"],
-        "settings": {"root": "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", "domain": "risk-results",
+        "settings": {"root": _OFFICIAL_ROOT, "domain": "risk-results",
                      "layout": {"var-official": {"columns": ["HIERARCHY", "NODE_ID", "NODE_NAME", "PARENT_ID", "LEVEL", "CAPTURE_ID",
                                                              "RESULT_VERSION", "VAR", "ES", "LIMIT", "LIMIT_USE", "DIVERSIFICATION", "HYPO_PNL",
                                                              "EXCEPTIONS_250", "TRAFFIC_LIGHT", "CONFIDENCE", "ES_CONFIDENCE"]}}},
@@ -113,7 +119,7 @@ CONNECTORS = {
     # as every Kafka connector of the packs
     "pv-updates": {"plugin": "var-pv-stream", "enabled": "${DRISHTI_VAR_PV_STREAM:false}", "kinds": ["pv-update"],
                    "settings": {"bootstrap-servers": "${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}", "topic": "${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}",
-                                "lake": "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", "pack": "market-risk"}},
+                                "lake": "demo", "pack": "market-risk"}},
     "var-engine": {
         "plugin": "reactive", "mode": "reactive", "enabled": "${DRISHTI_VAR_ENABLED:true}",
         "description": "The VaR of any scope, computed when asked by the server's VaR engine (the additive aggregation over the hot store), "

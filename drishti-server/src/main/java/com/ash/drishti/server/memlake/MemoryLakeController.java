@@ -64,7 +64,7 @@ public class MemoryLakeController {
     }
 
     /**
-     * Every lake of the lake files (config/lakes/, docs/guides/LAKE_GUIDE.md) and its tables, read-only: Admin -> Lakes lists them above the
+     * Every lake of the lake files (config/lakes/, docs/guides/DATA_LAKE_GUIDE.md) and its tables, read-only: Admin -> Lakes lists them above the
      * memory stores. A lake file the reader refuses is shown as the refusal, so the page always opens. {@code check=true} adds the
      * comparison of each local table with its lake file (LAKE_CONFIG.md section 6).
      */

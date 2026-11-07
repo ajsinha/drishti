@@ -92,7 +92,7 @@ def hours_of(text) -> int | None:
 
 
 def from_lake_entry(entry: dict) -> tuple[dict, list[str]]:
-    """The maintenance settings a lake file's table entry gives (docs/guides/LAKE_GUIDE.md section 1: ``retention``, ``maintenance``,
+    """The maintenance settings a lake file's table entry gives (docs/guides/DATA_LAKE_GUIDE.md section 2: ``retention``, ``maintenance``,
     ``time-travel``), in this module's keys, and notes for what it cannot act on. ``retention``: ``260`` or ``260d`` business dates,
     ``7y`` years; ``maintenance``: ``compaction`` (true/false), ``target-file-mb``, ``vacuum`` or ``expire-snapshots`` (an age: 168h, 7d),
     ``vacuum-hours``, ``orphan-hours``, ``checkpoint`` (true/false), ``checkpoint-interval`` (the writers' table property; here a

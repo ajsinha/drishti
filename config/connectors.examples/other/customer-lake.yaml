@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 # Example: a Delta Lake on S3-compatible storage. The access keys are environment references (or file: references).
 # The lake (delta, its root or catalog, storage and tables) is config/lakes.examples/other/customer-lake.yaml: copy it to
-# config/lakes/customer-lake.yaml beside this file (docs/guides/LAKE_GUIDE.md). This file keeps only what the connector reads.
+# config/lakes/customer-lake.yaml beside this file (docs/guides/DATA_LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: delta
 kinds:
 - customer

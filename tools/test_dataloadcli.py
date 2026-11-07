@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Tests of `drishti.py dataload status|run|retry` (docs/architecture/DATALOAD_INBOX.md section 10) against an in-process stand-in for
+"""Tests of `drishti.py dataload status|run|retry` (docs/guides/DATA_LAKE_GUIDE.md section 3.1) against an in-process stand-in for
 the server: the status as text and JSON, Load now started and skipped while a run loads, Retry, a retry of an unknown file (exit 1) and
 the inbox off on every server (DRS-1020, exit 3)."""
 import json

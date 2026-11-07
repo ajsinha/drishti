@@ -30,7 +30,7 @@ import java.util.TreeMap;
 
 /**
  * Loader rows ({@code {"domain", "kind", "id", "date", "doc", "columns"}}) written as a store loader takes them by the load rules
- * (docs/architecture/DATA_LOAD_RULES.md; {@link RowFeed}), as the generators write them: a tar of {@code <kind>/<YYYY-MM-DD>/rows.jsonl}
+ * (docs/guides/DATA_LAKE_GUIDE.md; {@link RowFeed}), as the generators write them: a tar of {@code <kind>/<YYYY-MM-DD>/rows.jsonl}
  * folders, each row in its own date's folder; rows of one kind and one date as one dated file {@code <kind>.<YYYY-MM-DD>.jsonl}; lines
  * that are not rows (a test of a bad line) as one plain file {@code rows.jsonl}, under the business today.
  */
