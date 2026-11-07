@@ -45,7 +45,7 @@ public final class ModelDefParser {
         }
     }
 
-    static final Set<String> TOP = Set.of("rachana", "expressions", "model", "version", "id", "datasets", "relationships", "measures", "calc-groups", "hierarchies", "parameters",
+    static final Set<String> TOP = Set.of("rachana", "model", "version", "id", "tables", "history", "scan-warn-rows", "relationships", "measures", "calc-groups", "hierarchies", "parameters",
             "calendars", "fx", "security", "contract", "ai", "golden", "tests", "rollups", "lifecycle", "replaced-by", "layout", "title", "description", "owner", "tags",
             "endorsement", "endorsedBy", "audience", "sample", "implicit-from", "fields", "perspectives");
     private static final Set<String> MEASURE_KEYS = Set.of("id", "expr", "format", "description", "currency", "additive", "python", "inputs", "by", "via", "implicit", "title",
@@ -66,11 +66,41 @@ public final class ModelDefParser {
     }
 
     static ModelDef read(JsonNode root, LayerYaml y) {
-        y.unknownKeys(root, TOP, "DRS-9120", "");
-        DatasetDefParser.expressionsVersion(root, y);
-        if (root.path("rachana").asInt(0) != DatasetDef.RACHANA) {
-            y.error("DRS-9120", "rachana", "a data model says `rachana: 2`");
+        return read(root, y, histories(root.path("history"), y));
+    }
+
+    /** The layer's model files say {@code rachana: 3} (TABLES_GUIDE.md): tables by alias, the live history on the model. */
+    static final int LAYER = 3;
+
+    /** {@code history: { every, keep, by, measures }} (the model's live tables sampled), or one such per alias. */
+    private static Map<String, DatasetDef.History> histories(JsonNode h, LayerYaml y) {
+        Map<String, DatasetDef.History> out = new LinkedHashMap<>();
+        if (!h.isObject()) {
+            return out;
         }
+        if (h.has("every") || h.has("keep") || h.has("measures")) {
+            out.put("*", history(h, "history", y));
+        } else {
+            h.fields().forEachRemaining(e -> out.put(e.getKey(), history(e.getValue(), "history." + e.getKey(), y)));
+        }
+        return out;
+    }
+
+    private static DatasetDef.History history(JsonNode h, String path, LayerYaml y) {
+        java.time.Duration every = DatasetParser.span(LayerYaml.text(h, "every", "10s"));
+        if (every == null) {
+            y.error("DRS-9103", path + ".every", "an interval such as 10s or 1m");
+        }
+        return new DatasetDef.History(every, h.path("keep").asInt(360), y.strings(h.path("by"), path + ".by", "DRS-9103"),
+                y.strings(h.path("measures"), path + ".measures", "DRS-9103"));
+    }
+
+    private static ModelDef read(JsonNode root, LayerYaml y, Map<String, DatasetDef.History> histories) {
+        if (root.path("rachana").asInt(0) != LAYER || !root.has("tables")) {
+            y.error(DatasetParser.MIGRATE_FIRST, "rachana", "a model of the table layer says `rachana: 3` and names its tables (`tables: { <alias>: { table: <name> } }`); "
+                    + "a model in BI's old form is migrated by drishti.py tables migrate (TABLES_GUIDE.md, the migration)");
+        }
+        y.unknownKeys(root, TOP, "DRS-9120", "");
         String name = LayerYaml.text(root, "model", "");
         if (name.isBlank() || !LayerYaml.NAME.matcher(name).matches()) {
             y.error("DRS-9120", "model", "`model:` names the model (letters, digits, `.`, `_`, `-`, up to 64)" + (name.isBlank() ? "" : ", not '" + name + "'"));
@@ -79,7 +109,7 @@ public final class ModelDefParser {
         if (Semver.parse(version) == null) {
             y.error("DRS-9120", "version", "`version:` is the semver of the model's contract, such as 1.0.0, not '" + version + "'");
         }
-        Map<String, ModelDef.Use> datasets = datasets(root.path("datasets"), y);
+        Map<String, ModelDef.Use> datasets = tables(root.path("tables"), y);
         List<ModelDef.Rel> rels = relationships(root.path("relationships"), datasets, y);
         Map<String, ModelDef.Meas> measures = measures(root.path("measures"), y);
         Map<String, List<String>> hierarchies = new LinkedHashMap<>();
@@ -87,7 +117,7 @@ public final class ModelDefParser {
         ModelDef.Security security = security(root.path("security"), datasets, y);
         ModelDef.Contract contract = contract(root.path("contract"), measures, datasets, y);
         List<String> placeholders = new ArrayList<>();
-        ModelDef.Calculation calculation = CalculationParser.read(root, datasets, y);
+        ModelDef.Calculation calculation = CalculationGroups.read(root, datasets, y);
         Set<String> relIds = new java.util.LinkedHashSet<>();
         rels.forEach(r -> {
             if (r.id() != null) {
@@ -123,7 +153,7 @@ public final class ModelDefParser {
         return new ModelDef(name, version, LayerYaml.text(root, "id", ""), LayerYaml.text(root, "title", name), LayerYaml.text(root, "description", ""),
                 LayerYaml.text(root, "owner", ""), root.path("sample").asBoolean(false), LayerYaml.text(root, "endorsement", "none"), datasets, rels, measures, hierarchies,
                 security, contract, lifecycle, root.has("replaced-by") ? LayerYaml.text(root, "replaced-by", "") : null, rollups, tests, golden,
-                root.has("ai") ? root.get("ai") : null, root.has("implicit-from") ? LayerYaml.text(root, "implicit-from", "") : null, placeholders, semantics, calculation);
+                root.has("ai") ? root.get("ai") : null, root.has("implicit-from") ? LayerYaml.text(root, "implicit-from", "") : null, placeholders, semantics, calculation, histories);
     }
 
     // ---- field properties, perspectives, object-level security (docs/architecture/BI_DESIGN.md sections 2.2 and 5.1) ----------
@@ -228,23 +258,24 @@ public final class ModelDefParser {
                 v.has("hidden") ? v.path("hidden").asBoolean(false) : null, v.has("sort-by") ? LayerYaml.text(v, "sort-by", "") : null, category, summarise);
     }
 
-    private static Map<String, ModelDef.Use> datasets(JsonNode n, LayerYaml y) {
+    /** {@code tables: { <alias>: { table: <name>, role: fact | dimension } }} (or {@code <alias>: <name>}): the tables the model reads, by alias. */
+    private static Map<String, ModelDef.Use> tables(JsonNode n, LayerYaml y) {
         Map<String, ModelDef.Use> out = new LinkedHashMap<>();
         if (!n.isObject() || n.isEmpty()) {
-            y.error("DRS-9120", "datasets", "a model names its datasets: `datasets: { <alias>: { dataset: <name>@<version>, role: fact | dimension } }`");
+            y.error("DRS-9120", "tables", "a model names its tables: `tables: { <alias>: { table: <name>, role: fact | dimension } }`");
             return out;
         }
         n.fields().forEachRemaining(e -> {
             String alias = e.getKey();
-            String path = "datasets." + alias;
+            String path = "tables." + alias;
             if (!LayerYaml.ALIAS.matcher(alias).matches()) {
                 y.error("DRS-9120", path, "'" + alias + "' is not a usable alias (a letter, then letters, digits, underscore)");
             }
             JsonNode d = e.getValue();
-            String ref = d.isTextual() ? d.asText() : LayerYaml.text(d, "dataset", "");
+            String ref = d.isTextual() ? d.asText() : LayerYaml.text(d, "table", "");
             Semver.Ref r = Semver.Ref.parse(ref);
             if (ref.isBlank() || r == null) {
-                y.error("DRS-9120", path + ".dataset", "a dataset reference is name@version (pack.trading.trade@^1), not '" + ref + "'");
+                y.error("DRS-9120", path + ".table", "a table reference is its name (bi.trading_risk_trades), or name@version, not '" + ref + "'");
                 return;
             }
             String role = d.isObject() ? LayerYaml.text(d, "role", "fact") : "fact";
@@ -315,15 +346,11 @@ public final class ModelDefParser {
                 y.error("DRS-9127", path, "'" + name + "' is not a usable measure name (no brackets, up to 80 characters)");
             }
             if (m.isTextual()) {
-                DatasetDefParser.oldSyntax(m.asText(), path, y);
                 out.put(name, new ModelDef.Meas(name, "", m.asText(), null, "", null, null, null, null, null, null, false));
                 return;
             }
             y.unknownKeys(m, MEASURE_KEYS, "DRS-9127", path);
             String expr = m.has("expr") ? LayerYaml.text(m, "expr", "") : null;
-            if (expr != null && !expr.isBlank()) {
-                DatasetDefParser.oldSyntax(expr, path + ".expr", y);
-            }
             String python = m.has("python") ? LayerYaml.text(m, "python", "") : null;
             if ((expr == null) == (python == null)) {
                 y.error("DRS-9127", path, "a measure has an `expr` or names a `python` item, one of the two");

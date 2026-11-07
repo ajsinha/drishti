@@ -34,13 +34,13 @@ About 15 minutes.
 
 - how a connector reads a lake in memory (`root: mem://news`) and how a memory store and its tables are configured;
 - how the replenish jobs fill the tables (warm-up, schedule, signal, refill) and what their runs record;
-- what stays the same (pages, search, the Data view) and what is refused (`DRS-5219`);
+- what stays the same (pages, search, Export data) and what is refused (`DRS-5219`);
 - how the store's cap, eviction and compaction show on Admin → Lakes and Health;
 - how to go back to the disk lake.
 
 ## Step 1 · Point the news connector at memory
 
-**The YAML.** The store is a lake of its own (docs/guides/LAKE_GUIDE.md section 6): copy its lake file, and the example connector over
+**The YAML.** The store is a lake of its own (docs/guides/IN_MEMORY_LAKE_GUIDE.md): copy its lake file, and the example connector over
 the pack's own:
 
 ```bash
@@ -155,7 +155,7 @@ memory, how much smaller they are than their rows, the version and the next refi
 
 ## Step 4 · Read it as before
 
-**The UI.** Type `NEWS Apple`, `QUOTE AAPL`, `CO AAPL`: the pages are the same. The Data view (`DATA`) lists the four datasets and
+**The UI.** Type `NEWS Apple`, `QUOTE AAPL`, `CO AAPL`: the pages are the same. Export data (`DATA`) lists the four datasets and
 downloads a day as `.jsonl.gz`, streamed from memory with no temporary file, audited as `data.download … memory-only data`.
 
 **The command line.**
@@ -164,13 +164,13 @@ downloads a day as `.jsonl.gz`, streamed from memory with no temporary file, aud
 python3 tools/drishti.py view get listed-company/CO-AAPL
 ```
 
-**You should see** the same pages as on the disk lake, and the four datasets in the Data view.
+**You should see** the same pages as on the disk lake, and the four datasets in Export data.
 
 ![The Apple headlines (NEWS-Apple) read from memory](img/t31/03-news.jpg)
 
 ![The Apple quote (QUOTE-AAPL) read from memory](img/t31/04-quote.jpg)
 
-![The Data view: the news datasets, a day downloaded from memory](img/t31/05-data.jpg)
+![Export data: the news datasets, a day downloaded from memory](img/t31/05-data.jpg)
 
 ## Step 5 · What the guard refuses
 
@@ -231,7 +231,7 @@ Put `max-mb: 256` back.
 ## Step 8 · Go back to the disk lake
 
 ```bash
-rm config/connectors/news-store.yaml       # the pack's own connector reads data/delta/news again
+rm config/connectors/news-store.yaml       # the pack's own connector reads data/delta/demo/news again
 # and remove the drishti.lake.memory block from application.local.yaml
 ```
 

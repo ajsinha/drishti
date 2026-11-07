@@ -25,6 +25,7 @@ import com.ash.drishti.api.SourcePlugin;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.server.bi.dataset.Dataset;
+import com.ash.drishti.tables.materialize.FileSwap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

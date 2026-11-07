@@ -387,7 +387,7 @@ async def _inbox_tab(request: Request, me) -> dict:
 
 @router.get("/loads/inbox")
 async def loads_inbox(request: Request, partial: int = 0):
-    """Admin → Data loads → Inbox (DATALOAD_INBOX.md section 10, mock-up A): the status board of the data inbox, three columns that follow
+    """Admin → Data loads → Inbox (DATA_LAKE_GUIDE.md section 3.1, mock-up A): the status board of the data inbox, three columns that follow
     the folders (Waiting inbox/, Loading inprocess/<run>/, Last cycles outbox/), failures with Retry, duplicates, the rules and settings.
     Every figure is the server's (GET /api/v1/admin/dataload); ``partial=1`` is the board alone, for the page's own refresh."""
     me = ident(request)
@@ -436,7 +436,7 @@ async def dataload_retry(request: Request):
 
 @router.post("/api/dataload/undo")
 async def dataload_undo(request: Request):
-    """Undo a load by its id (DATA_LOAD_RULES.md section 6.3): without ``confirm`` what would be undone (nothing changes); with
+    """Undo a load by its id (DATA_LAKE_GUIDE.md section 5.5): without ``confirm`` what would be undone (nothing changes); with
     ``confirm`` equal to the load id, the undo itself, as the server answers it."""
     body = await json_body(request)
     me = ident(request)
@@ -448,6 +448,8 @@ async def dataload_undo(request: Request):
     data = {"loadId": load_id}
     if isinstance(body, dict) and body.get("confirm"):
         data["confirm"] = str(body["confirm"]).strip()
+    if isinstance(body, dict) and body.get("lake"):
+        data["lake"] = str(body["lake"]).strip()       # else the server finds the load's lake in the ledger
     try:
         return await request.app.state.backend.admin("POST", "/dataload/undo", me, data)
     except BackendError as e:

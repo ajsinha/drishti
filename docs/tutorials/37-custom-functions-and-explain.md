@@ -61,11 +61,11 @@ drishti.py pivot run --source trade --rows PRODUCT_TYPE --values "sum(NOTIONAL, 
 
 ![The trades by product type with the large-notional share as a value](img/t37/01-large-share.jpg)
 
-**You should see** one ratio per product type and a grand total that equals the sum of the notional of trades over 100 million divided by the sum of all notional (`DATA trade`, filter and sum).
+**You should see** one ratio per product type and a grand total that equals the sum of the notional of trades over 100 million divided by the sum of all notional (`EXPORT trade`, filter and sum).
 
 ## Step 2 · The playground: a function and its harness
 
-**UI.** Press `U` (or **Functions**). Name `wret`, language **formula (DEL)**, inputs `r, w`, code `sum(r * w) / sum(w)`; leave the sample
+**UI.** Press `U` (or **Functions**). Name `wret`, language **formula (Rachana)**, inputs `r, w`, code `sum(r * w) / sum(w)`; leave the sample
 rows and the group column `g`. Press **Check**. You see *Passes the harness*, the checks (one pass; batches of 1, 7, 1,000 and 65,536;
 2, 3 and 16 random parts merged left-deep and balanced under five seeds; an empty cell; a part of nulls; one row; equal rows; infinities;
 the state read back; the same bits twice; the cost; the state's size), the state after each part and after each merge (two sums, `[Σrw, Σw]`

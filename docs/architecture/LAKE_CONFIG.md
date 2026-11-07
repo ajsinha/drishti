@@ -99,8 +99,10 @@ pack's entry is copied into the lake file and said so; from then on the lake fil
 
 ## 5. Existing installations
 
-Connector files that carry `root`, `domain`, `table.<kind>` or `layout.<kind>.*` are migrated by a tool (`drishti.py lake migrate-config`): it writes the lake file from them and rewrites each connector to `lake: <name>`. Until the tool has run, a connector with the
-old keys still starts, with one warning naming the tool; the old keys are removed one release later. Nothing in `data/` changes: tables
+A connector names its tables by lake (`lake: <name>`) or by path (`root`, `domain`, `table.<kind>`, `layout.<kind>.*`: a folder or a URI
+such as `s3://bucket/prefix`, for tables no lake file describes); both forms are permanent, and when a connector gives both its own
+values win. `drishti.py lake migrate-config` writes lake files from path-form connectors on request; the connectors a server generated
+with the demo lake's old default root are moved to `lake: demo` at start, once the demo lake is in its own folder. Nothing in `data/` changes: tables
 keep their files and partitions, and the lake file is checked against each table's Delta log or Iceberg metadata at start (a partitioning
 that differs from the table is reported, never rewritten).
 

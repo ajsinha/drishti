@@ -490,7 +490,7 @@ public final class VisualQueries {
         if (m == null || m.expr() == null || !seen.add(name)) {
             return tables;
         }
-        Node.walk(com.ash.drishti.server.bi.expr.Expressions.parse(m.expr()), n -> {
+        Node.walk(com.ash.drishti.server.bi.expr.Expressions.node(m.expr()), n -> {
             if (n instanceof Node.Ref r && ds.tables().containsKey(r.parts().get(0))) {
                 tables.add(r.parts().get(0));
             } else if (n instanceof Node.MeasureRef mr) {

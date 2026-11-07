@@ -30,10 +30,20 @@ import sys
 import urllib.error
 import urllib.request
 
+
+def _lakeconfig():
+    """tools/lake/lakeconfig.py: where the lakes are."""
+    p = str(pathlib.Path(__file__).resolve().parent / "lake")
+    if p not in sys.path:
+        sys.path.insert(0, p)
+    import lakeconfig
+    return lakeconfig
+
+
 MIN_JAVA = 21
 LIBS = (("yaml", "pyyaml", "every command that reads YAML (pack, sutra gen)"),
         ("deltalake", "deltalake", "data ingest --store delta"), ("pyarrow", "pyarrow", "data ingest --store delta"))
-DIR_VARS = (("DRISHTI_DELTA_ROOT", "Delta lake root"), ("DRISHTI_FILES_ROOT", "files root"), ("DRISHTI_PACKS_INSTALLED", "installed packs"),
+DIR_VARS = ((_lakeconfig().DEMO_ROOT_ENV, "the demo lake's root"), ("DRISHTI_FILES_ROOT", "files root"), ("DRISHTI_PACKS_INSTALLED", "installed packs"),
             ("DRISHTI_PACKS_DIR", "packs dir"))
 PORTS = ((18480, "server"), (17480, "console"))
 if os.environ.get("DRISHTI_DOCTOR_PORTS"):            # "18971:server,17971:console": check these instead (a machine whose defaults are not yours to probe)
@@ -110,7 +120,7 @@ def dir_check(env) -> list[dict]:
         else:
             out.append(item("ok", var, f"{val} ({what}) readable and writable"))
     if not out:
-        out.append(item("ok", "configured directories", "none of DRISHTI_DELTA_ROOT, DRISHTI_FILES_ROOT, DRISHTI_PACKS_INSTALLED is set"))
+        out.append(item("ok", "configured directories", "none of " + ", ".join(v for v, _ in DIR_VARS[:3]) + " is set"))
     return out
 
 

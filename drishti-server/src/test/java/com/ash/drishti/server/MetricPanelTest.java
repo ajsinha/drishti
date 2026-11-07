@@ -66,7 +66,7 @@ class MetricPanelTest {
     private ViewModel.PanelView panel(String panel, String json, UnaryOperator<DataNode> redact, java.util.function.Predicate<String> may) {
         EntityDocument doc = new EntityDocument(EntityRef.of("trade", "MX-20000001"), codec.read(json),
                 new Provenance("test", 1, Instant.now(), false));
-        return pipeline.preview(Optional.of(sutra(panel)), doc, redact, may).panels().get(0);
+        return pipeline.preview(Optional.of(sutra(panel)), doc, com.ash.drishti.engine.ViewerContext.of(redact, may)).panels().get(0);
     }
 
     private ViewModel.PanelView panel(String json) {

@@ -99,7 +99,7 @@ public final class Planner {
                 aggregates.addAll(ContextNodes.of(ds, m, scans, in.rowConditions().stream().filter(c -> p.tables().contains(alias(c.field()))).toList(), p.fact(), fields));
             }
         }
-        for (String m : python) {                                               // wave B (R8): a Python measure is a PyAggregate on the console
+        for (String m : python) {                                               // wave B (R8): a Python measure is a PyAggregate on the python pool
             Dataset.Measure pm = ds.measures().get(m);
             java.util.Set<String> tables = new LinkedHashSet<>();
             fields.forEach(f -> tables.add(alias(f)));
@@ -207,7 +207,7 @@ public final class Planner {
             return out;
         }
         try {
-            Node.walk(Expressions.parse(m.expr()), n -> {
+            Node.walk(Expressions.node(m.expr()), n -> {
                 if (n instanceof Node.Ref r && ds.tables().containsKey(r.parts().get(0))) {
                     out.add(r.parts().get(0));
                 } else if (n instanceof Node.MeasureRef x) {
@@ -228,7 +228,7 @@ public final class Planner {
         }
         Node n;
         try {
-            n = Expressions.parse(m.expr());
+            n = Expressions.node(m.expr());
         } catch (RuntimeException e) {
             return false;
         }

@@ -51,12 +51,12 @@ import org.springframework.test.web.servlet.ResultActions;
  * Wave C (2.4.0) data prep over the whole stack, security on (docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17, docs/architecture/BI_DESIGN.md section 11.1, item P5): a Transform's input may be a pack
  * kind read straight through a connector, as the reader. The input preview the Transform editor uses ({@code POST /api/v1/bi/python/input}) answers the
  * reader's rows (a role that may not read the kind gets none of it), filtered and cut; a bad input is refused with its path; a Python dataset whose input is a kind is checked
- * and, with the console's Python environment, run as the reader; its lineage reaches the kind and the connector.
+ * and, on the server's compute pool python where it may run, run as the reader; its lineage reaches the kind and the connector.
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/tin-api-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/tin-api-overlay/added.yaml",
-        "drishti.bi.dir=${drishti.test.dir}/tin-api-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/tin-api-store/${random.uuid}",
+        "drishti.bi.dir=${drishti.test.dir}/tin-api-folder", "drishti.tables.root=${drishti.test.dir}/tin-api-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/tin-api-store/${random.uuid}",
         "drishti.sources.connectors-dir=${drishti.test.dir}/tin-api-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.tin-lake.plugin=file", "drishti.sources.connectors.tin-lake.kinds[0]=trade",
@@ -72,10 +72,12 @@ class TransformInputsApiTest {
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
+    @Autowired com.ash.drishti.server.bi.python.PythonRuns pythonRuns;
     final ObjectMapper json = new ObjectMapper();
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
+        com.ash.drishti.server.bi.python.PythonPoolForTests.register(r);   // compute on with the pool python, where an interpreter has pandas and pyarrow
         root = com.ash.drishti.server.TestRun.temp("drishti-tin-api-lake");
         List<String> lines = new ArrayList<>();
         for (int i = 0; i < 24; i++) {
@@ -134,6 +136,7 @@ class TransformInputsApiTest {
                     measures:
                       Notional: { expr: "sum(desks.notional)" }
                     """);
+            com.ash.drishti.server.bi.TablesFolder.migrate(folder);     // tables migrate: the datasets and models become the layer's, the reports rebound
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }
@@ -249,16 +252,16 @@ class TransformInputsApiTest {
 
     @Test @Order(4)
     void aPythonDatasetWithAKindInputChecksAndItsLineageReachesTheConnector() throws Exception {
-        JsonNode checked = ok(call("GET", "/api/v1/bi/layer-datasets/file:dataset:desk-notional-prep", as("rita", "bi-risk"), null));
+        JsonNode checked = ok(call("GET", "/api/v1/bi/layer-datasets/file:table:bi.desk_notional_prep", as("rita", "bi-risk"), null));
         assertThat(checked.toString()).doesNotContain("\"level\":\"error\"");
         JsonNode lineage = ok(call("GET", "/api/v1/bi/lineage/desk-notional-prep@1", as("rita", "bi-risk"), null));
-        assertThat(lineage.toString()).as(lineage.toString()).contains("pack-kind").contains("tin-lake").contains("desk-notional-prep");
+        assertThat(lineage.toString()).as(lineage.toString()).contains("pack-kind").contains("tin-lake").contains("desk_notional_prep");
     }
 
     @Test @Order(5)
     void aPythonDatasetWithAKindInputRunsAsTheReader() throws Exception {
-        org.junit.jupiter.api.Assumptions.assumeTrue(Files.isExecutable(Path.of("..", "drishti-console", ".venv", "bin", "python").toAbsolutePath()),
-                "the console's Python environment (drishti-console/.venv, with pandas and pyarrow) is needed");   // as LanguagesApiTest
+        java.util.Optional<String> why = pythonRuns.unavailable();      // the server's own answer: Linux with Landlock and the pinned interpreter (PythonPoolForTests)
+        org.junit.jupiter.api.Assumptions.assumeTrue(why.isEmpty(), () -> "Python does not run here: " + why.orElse(""));
         Map<String, Object> q = Map.of("mq", 1, "model", "desk-notional-prep@1", "select", Map.of("fields", List.of("desks.desk"), "measures", List.of("Notional")),
                 "time", Map.of("as-of", DAY));
         JsonNode rita = ok(call("POST", "/api/v1/bi/mq", as("rita", "bi-risk"), q));

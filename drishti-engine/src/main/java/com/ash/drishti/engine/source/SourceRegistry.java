@@ -432,7 +432,7 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     /**
      * The settings a connector's plugin is given: its own, secrets resolved, and for a Delta or Iceberg connector that names
      * {@code lake:} what its lake file says of its kinds (root, storage, table folders, promoted columns, vectors:
-     * docs/guides/LAKE_GUIDE.md). Every connector passes here, whichever file or template it came from, so the lake file is read in one
+     * docs/guides/DATA_LAKE_GUIDE.md). Every connector passes here, whichever file or template it came from, so the lake file is read in one
      * place. A lake that is not known, or a connector that names a lake and repeats one of its keys, fails the connector with the reason.
      */
     static Map<String, String> ownSettings(String name, SourcesProperties.ConnectorSettings c) {
@@ -652,6 +652,57 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
             SourcePlugin p = plugins.get(other);
             return c.kinds().stream().anyMatch(k -> theirs == null || theirs.isEmpty() ? p != null && p.manifest().serves(k) : theirs.contains(k));
         }).sorted().toList();
+    }
+
+    /**
+     * The lakes the switched-on Delta and Iceberg connectors read: each one's {@code lake:}, and for a connector that still names its
+     * {@code root} itself, the lake of that root (docs/guides/DATA_LAKE_GUIDE.md). The data inbox warns of a load into a lake not in it.
+     */
+    /**
+     * The lake a Delta or Iceberg connector names ({@code lake:} in its settings, switched on or off), or null: another plugin, a
+     * connector naming its {@code root} itself, or one not known. Cheap (no lake file read): the router asks it on every read.
+     */
+    public String lakeOf(String connector) {
+        SourcesProperties.ConnectorSettings c = connector == null ? null : applied.get(connector);
+        if (c == null || !com.ash.drishti.lakeconfig.ConnectorLake.PLUGINS.contains(c.plugin()) || c.settings() == null) {
+            return null;
+        }
+        String lake = c.settings().get(com.ash.drishti.lakeconfig.ConnectorLake.LAKE);
+        return lake == null || lake.isBlank() ? null : lake.strip();
+    }
+
+    public java.util.Set<String> lakesRead() {
+        java.util.Set<String> out = new java.util.TreeSet<>();
+        java.util.Map<String, String> byRoot = new java.util.HashMap<>();
+        try {
+            com.ash.drishti.lakeconfig.Lakes.current().all().values().forEach(l -> byRoot.putIfAbsent(normal(l.root()), l.name()));
+        } catch (IllegalArgumentException | java.io.UncheckedIOException e) {
+            LOG.debug("the lakes cannot be read for the connectors' lakes: {}", e.getMessage());
+        }
+        applied.forEach((name, c) -> {
+            if (c == null || !com.ash.drishti.lakeconfig.ConnectorLake.PLUGINS.contains(c.plugin()) || Boolean.FALSE.equals(c.enabled())
+                    || c.settings() == null) {
+                return;
+            }
+            String lake = c.settings().get(com.ash.drishti.lakeconfig.ConnectorLake.LAKE);
+            if (lake != null && !lake.isBlank()) {
+                out.add(lake.strip());
+            } else if (c.settings().get("root") != null && byRoot.containsKey(normal(c.settings().get("root")))) {
+                out.add(byRoot.get(normal(c.settings().get("root"))));
+            }
+        });
+        return out;
+    }
+
+    private static String normal(String root) {
+        if (root == null || root.contains("://")) {
+            return root == null ? "" : root.replaceAll("/+$", "");
+        }
+        try {
+            return java.nio.file.Path.of(root).toAbsolutePath().normalize().toString();
+        } catch (RuntimeException e) {
+            return root;
+        }
     }
 
     /** Offline mode as the server started with it. */

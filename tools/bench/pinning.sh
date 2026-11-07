@@ -44,7 +44,7 @@ cmd_data() {
       --rows "$D/build/lake-rows/banking-history.tar" --restated "$D/build/lake-rows/banking-restated.tar"
     uv run -q "${WITH[@]}" python tools/samplegen/bulk_trades.py --root "$D/lake" --out "$D/build/bulk" --trades "$TRADES" --days 3
   }
-  # loader rows by the load rules (docs/architecture/DATA_LOAD_RULES.md): tars of <kind>/<YYYY-MM-DD>/ folders
+  # loader rows by the load rules (docs/guides/DATA_LAKE_GUIDE.md): tars of <kind>/<YYYY-MM-DD>/ folders
   uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$D/build/banking.tar"
   uv run -q "${WITH[@]}" python tools/samplegen/bulk_trades.py --trades "$TRADES" --days 3 --jsonl "$D/build/bulk-trades.tar"
   local fcp dcp

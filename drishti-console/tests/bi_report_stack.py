@@ -66,7 +66,7 @@ def make_lake(target: Path, days: int = 3) -> str | None:
                           capture_output=True, text=True, timeout=600, cwd=ROOT)
     if done.returncode == 0:
         done = subprocess.run([uv, "run", "--offline", "--with", "deltalake", "--with", "pyarrow", "--with", "pyyaml", "python", str(ROOT / "tools/samplegen/load_rows.py"),
-                               "--root", str(target), "--rows", str(rows / "banking-history.jsonl"), "--restated", str(rows / "banking-restated.jsonl")],
+                               "--root", str(target), "--rows", str(rows / "banking-history.tar"), "--restated", str(rows / "banking-restated.tar")],
                               capture_output=True, text=True, timeout=600, cwd=ROOT)
     if done.returncode != 0 or not (target / "trading").exists():
         return None
@@ -190,8 +190,12 @@ class ReportStack:
             shutil.copy(ROOT / "config" / "bi" / "reports" / f"{name}.report.yaml", reports)
         shutil.copytree(ROOT / "config" / "bi" / "themes", work / "config" / "bi" / "themes")          # the shipped themes (2.4.0): Corporate and Print
         self.prepare(work)
+        from bi_samples import migrate_folder
+        migrate_folder(work / "config" / "bi", self.tmp / "migrate-tmp")       # a test's own BI files in the old forms move onto the table layer, as an installation's do
         env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_SECURITY_ENABLED="true", DRISHTI_TOKEN_SECRET=SECRET,
-                   DRISHTI_BI_DIR=str(work / "config" / "bi"), DRISHTI_DATA_DIR=str(work / "data"))
+                   DRISHTI_BI_DIR=str(work / "config" / "bi"), DRISHTI_DATA_DIR=str(work / "data"),
+                   # Python (a Python item's check, its tests, Python measures) runs on the server's compute pool, in the interpreter running this test
+                   DRISHTI_COMPUTE_ENABLED="true", DRISHTI_PYTHON=sys.executable, DRISHTI_COMPUTE_FILE=str(ROOT / "config" / "compute" / "compute.yaml"))
         if self.delta_root:
             env["DRISHTI_PACKS"] = "trading,counterparty-risk,market-risk"
             env["DRISHTI_DELTA_ROOT"] = self.delta_root

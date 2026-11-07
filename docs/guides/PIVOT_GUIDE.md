@@ -50,6 +50,7 @@ walk-through is [tutorial 33](../tutorials/33-the-pivot-engine.md); custom funct
 - [25. Live pivots](#25-live-pivots)
 - [26. Cell comments](#26-cell-comments)
 - [27. Pivot data: the sources of the examples](#27-pivot-data-the-sources-of-the-examples)
+- [28. Presets: the risk cubes](#28-presets-the-risk-cubes)
 
 ## 1. Open it
 
@@ -57,7 +58,7 @@ walk-through is [tutorial 33](../tutorials/33-the-pivot-engine.md); custom funct
 |---|---|
 | The command line | `PIVOT <GO>` (choose a source), `PIVOT trade <GO>` (a table), `PIVOT trade 2026-10-30 <GO>` (a table on a date), `PIVOT var <GO>` (VaR), `PIVOT @asha/desk-risk <GO>` (a saved view) |
 | The menu | **Views → Pivot** |
-| A table | **Pivot** in the Data view's facts of the table (`DATA trade <GO>`, then Pivot) |
+| A table | **Pivot** in Export data's facts of the table (`EXPORT trade <GO>`, then Pivot) |
 | A page's table | **Pivot** under a table or ladder whose Sutra says `pivot:` (the source `panel/<kind>/<panel>/<id>`: the panel's own rows, the Sutra's arrangement as the opening view) |
 | Search results | **Pivot** above the results of a kind whose pack says `pivot:` (the kind, the pack's arrangement as the opening view) |
 
@@ -92,9 +93,15 @@ exports. The help line under the grid shows them.
 
 | Source | What it is | Its fields | Its measures |
 |---|---|---|---|
-| A table (`trade`, `position`, any stored kind) | the Data view's table, read for you through its connector on the date | its columns, typed from the data contract (`string`, `date`, `number`) | the built-in functions over any field |
+| A table (`trade`, `position`, any stored kind) | Export data's table, read for you through its connector on the date | its columns, typed from the data contract (`string`, `date`, `number`) | the built-in functions over any field |
 | `var` | the VaR engine's book of the date | the positions' text columns (DESK, CURRENCY, PRODUCT_GROUP …) | `var()`, `es()`, `pv()`, `trades()` |
 | `panel/<kind>/<panel>/<id>` | a table's or ladder's rows on its page: the same document, Sutra and business date | the fields of its Sutra's `pivot:` (masked ones left out) | the built-in functions |
+| `table:<domain>.<name>` | a virtual table ([TABLES_GUIDE.md](TABLES_GUIDE.md)) read for you on the date: its source as you may see it, then the table's rules, masks and hidden columns | its columns, typed by the table (`integer` and `decimal` as `number`, `date` and `timestamp` as `date`); a column masked for you is left out | the built-in functions |
+
+A virtual table is read through the layer and staged in the engine's in-memory DuckDB like a panel's rows, at most
+`drishti.tables.read-max-rows` rows (more is refused, never cut short); its date picker offers its source's dates. What was staged is
+kept while nothing it was read from changed (the table's definition, the date, the source kind's data version, and who reads: user, roles,
+attributes, raw): a view opened again then reads nothing. A source that keeps no data version is read on every open.
 
 **Rows held in memory.** Two components pivot rows they already hold, and both ask the engine rather than add up a figure: a Sutra's
 `pivot` panel (its document's rows, grouped by `by` and `across` with the panel's `agg`; ChartBinder hands them to the engine's in-memory
@@ -109,7 +116,7 @@ How a table is read, chosen per table:
 | Route | When | How |
 |---|---|---|
 | **Direct lake** | the kind's one source is a Delta or Iceberg table on a local disk, a snapshot table (one partition holds the date), without deletion vectors or delete files, and every field you may use is a column it keeps | DuckDB reads the date's Parquet files itself: only the columns a statement uses (column pruning), the filters repeated on the raw columns so row groups and files are skipped by their statistics; masked columns are never named, so never read; no staging cap |
-| **Staged** | any other table (a document store, an object store, masks that also change values inside other fields, memory-only data) | read once per date, data version and mask signature through the Data view's own read and kept in the engine's in-memory DuckDB (`drishti.pivot.stage-keep` tables); over `drishti.pivot.stage-max-rows` rows refused in words, never cut short |
+| **Staged** | any other table (a document store, an object store, masks that also change values inside other fields, memory-only data) | read once per date, data version and mask signature through Export data's own read and kept in the engine's in-memory DuckDB (`drishti.pivot.stage-keep` tables); over `drishti.pivot.stage-max-rows` rows refused in words, never cut short |
 
 Memory-only data is never written: the executor has no spill folder unless `drishti.pivot.duckdb.temp-directory` names one. The estimate
 of a lake table comes from its metadata (the files' bytes, the manifests' or add-actions' row counts); nothing is read.
@@ -341,8 +348,9 @@ Rows are levels. Only level one is computed at first; opening a member computes 
 children and their columns, every other cell read from the partial-state cache. A ten-level hierarchy over a big table opens as fast as one
 level. The answer says what it did: "18 cells · 6 sets (4 from the cache) · 1 queries".
 
-- **Expand by…** (`E`): open any member by a field other than the next row field, per member: EMEA by desk, APAC by currency, in one grid.
-  The totals stay right: each node is its own cell key.
+- **+** opens a member by the next row field; a member on the last row level is a leaf and has no **+**.
+- **Expand by…** (`E`): open any member by a field other than the next row field, per member: EMEA by desk, APAC by currency, in one grid,
+  a leaf included. The totals stay right: each node is its own cell key.
 - **Open to level N** (`1`–`9`): every member down to level N.
 - The open nodes are part of the view (its `expanded` list), so a saved view and a link reopen them.
 
@@ -429,7 +437,7 @@ Comments on its cells are kept beside its versions ([section 26](#26-cell-commen
 
 ## 12. Who sees what
 
-- A table is read through the Data view's own read for you: a table you may not open is not offered; a **masked column is not read at
+- A table is read through Export data's own read for you: a table you may not open is not offered; a **masked column is not read at
   all**, so it cannot be a dimension, a measure's input or a filter (`403 DRS-5705`).
 - The VaR source applies the VaR engine's own entitlements: trades you may not see are left out of every cell; a role that sees the bank only
   in aggregate is offered no dimension unless the MR cube runs, which offers it the hierarchy levels ([MR_CUBE_GUIDE.md](MR_CUBE_GUIDE.md)).
@@ -546,7 +554,7 @@ SPI (`PivotProvider`: catalogue, estimate, evaluate a plan of declarative cell s
 (`AggFunction`: start, add a columnar batch, merge, finish; mergeable, sketch or holistic; each with its SQL state form), the built-ins,
 the `GROUP BY GROUPING SETS` compiler and the DuckDB tabular provider, the in-memory provider (`RowsProvider`: rows held in memory, the
 same states by the functions' own `add`), partial states merged in a fixed order (`OrderedMerge`), the
-partial-state cache, the split-and-merge harness and the exports. The server wires it: the Data view's tables as sources, the VaR provider,
+partial-state cache, the split-and-merge harness and the exports. The server wires it: Export data's tables as sources, the VaR provider,
 REST, busy protection, saved views and audit. The console only draws: `drishti_pivot-engine.js` asks the engine and lays its answer out,
 `drishti_pivot-grid.js` is the one grid (the Pivot screen and the nested `pivot` panel), and nothing in the browser adds up a figure.
 
@@ -566,7 +574,7 @@ error) or **holistic** (no merge: every cell gets all of its rows in one call, u
 
 | Language | Write | Runs | Kind | On as shipped |
 |---|---|---|---|---|
-| **Formula** (DEL) | `sum(r * w) / sum(w)`, `sum(PNL, where=PNL < 0) / sum(abs(PNL))`, `percentile(x, 0.99) - percentile(x, 0.01)`, `count(where=PNL < 0) / count()` | in the same `GROUPING SETS` statement as the built-ins | the kind of its parts (a ratio of sums is mergeable; a formula with a median is holistic) | yes |
+| **Formula** (Rachana) | `sum(r * w) / sum(w)`, `sum(PNL, where = PNL < 0) / sum(abs(PNL))`, `percentile(x, 0.99) - percentile(x, 0.01)`, `count(where = PNL < 0) / count()` | in the same `GROUPING SETS` statement as the built-ins | the kind of its parts (a ratio of sums is mergeable; a formula with a median is holistic) | yes |
 | **SQL macro** (DuckDB) | `CREATE MACRO wret(r, w) AS sum(r * w) / sum(w)`; `CREATE MACRO slope(y, x) AS regr_slope(y, x)` | a macro that is a formula of the built-ins is rewritten into their states (mergeable, exact); any other runs in DuckDB per grouping set (holistic) | as found | yes |
 | **Python** | a class with `start`, `add`, `merge`, `finish`, decorated `@function(name=..., kind=Mergeable, inputs={...})` | the node's sandboxed `pivot-fn` worker pool, fed Arrow batches over a pipe (never a file) | as declared, proven by the harness | no (`functions.python.enabled`) |
 | **Java plug-in** | a class implementing `AggFunction` in a jar in `functions.java.dir` | in the server; the jar pinned by its SHA-256 when an administrator approves it | any | no (`functions.java.enabled`) |
@@ -574,6 +582,12 @@ error) or **holistic** (no merge: every cell gets all of its rows in one call, u
 A view uses a function as `fn:owner/name@version(FIELD, FIELD)`: the fields are bound in order to the function's declared inputs. Without
 `@version` the latest version you may use is taken, and the column header says which (`fn:asha/wret@2 by asha`). A formula can also be
 written straight into a view's values, unnamed: `sum(PNL) / sum(abs(PNL))`.
+
+A formula is a Rachana expression ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#rachana-el-expressions)) over the cell's rows: the
+aggregates of [FUNCTIONS.md](FUNCTIONS.md) with an optional `where = <condition>`, `count()` for the rows, `&&`, `||`, `!`, `null`,
+`c ? a : b` and `power(x, n)`. A formula saved in a view, a view's version or a formula function in Python's style (`and`, `None`,
+`x if c else y`, `**`) is rewritten into Rachana once when the server starts, in place and audited (`pivot-formula-migrate`); its figures do
+not change.
 
 **The harness.** A function is saved, shared or used only after its harness passes on sample rows: one pass; batches of 1, 7, 1,000 and
 65,536 rows; the rows split into 2, 3 and 16 random parts merged left-deep and balanced under five seeds, every state serialised and read
@@ -899,7 +913,7 @@ DELETE /api/v1/pivot/views/asha/desk-risk/comments/c-91d0…
 Every dataset the pivot guide's examples reads, what it is for, whether it is required, where its sample lives, and one real record from the shipped sample
 data (`data/testdata/`), formatted, with long arrays shortened as `/* … N more … */`. The field-by-field rules of each kind are its
 **data contract** ([docs/contracts/packs/](../contracts/packs/README.md)); how files are named, dated and loaded is
-[DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md).
+[DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo).
 
 <!-- The block below is generated by tools/docs/guide_data.py from tools/docs/guide_data.yaml: edit the spec, not the block. -->
 <!-- guide-data:begin pivot -->
@@ -1010,3 +1024,27 @@ A stored position table, pivoted like any other kind. The demo derives its posit
 - **Data contract:** [`position`](../contracts/packs/market-risk.md#pos-position-position) (POS), key `POSITION_ID`; 32 fields, 30 required.
 - **Sample:** no sample in the demo data.
 <!-- guide-data:end -->
+
+## 28. Presets: the risk cubes
+
+**One grid, several doors.** A preset is this screen opened with a source, a lens and a landing view, under its own name and command word. It
+draws no grid of its own and computes nothing of its own: every cell, subtotal and total is the pivot engine's answer for the view, as the person
+asking, exactly as on `PIVOT <GO>`. The presets are defined in `drishti-console/config/pivot-presets.yaml`, and each opens at
+`/pivot?preset=<name>`:
+
+| Preset | Word | Source | Lens and landing | Doors |
+|---|---|---|---|---|
+| `mr`, the **MR cube** | `MCUBE` | `var` (the VaR engine's book of the date) | the MR lens (headline strip, time-travel slider, tabs B and C); lands on the source's default view: desks by risk class, the VaR, the bank | `MCUBE <GO>`; **VaR → MR cube**; the VaR explorer's **MR cube ›** link (its scope and date); `/mcube` |
+| `ccr`, the **CCR cube** | `CCUBE` | the CCR provider (each netting set's exposure paths, netted and collateralised first) | lands on the limit board and the netting-set drill | `CCUBE <GO>`; **Counterparties → CCR cube** |
+
+**The MR cube.** `MCUBE <scope> [BY rows[,columns]] [MEASURE m,...] [DATE d] [SORT desc] <GO>` lays what you type over the landing
+(`MCUBE DESK:RATES BY MGMT.BOOK,CURRENCY MEASURE VAR,COMP_VAR`); `MCUBE @owner/name <GO>` opens a saved view; in the VaR explorer, **MR cube ›**
+opens the scope and date you are looking at. Its measures, lens and figures are the [MR cube guide](MR_CUBE_GUIDE.md). A test records the view the
+cube asked the server for, for each form of `MCUBE`, and checks the preset asks for exactly the same (`tests/test_cube_presets.py`).
+
+**The CCR cube** is *Under construction*: the preset, its word and its door exist, and its page says so; its source, the CCR provider, comes with
+the counterparty engines ([PIVOT_ENGINE.md section 6.5](../architecture/PIVOT_ENGINE.md#65-the-ccr-provider-later),
+[UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md), `ccr-cube-preset`). Meanwhile every counterparty's computed exposure is the
+[Exposure explorer](EXPOSURE_GUIDE.md) (`EXP`).
+
+A preset whose engine runs on no server of the cluster (the MR cube needs `mr-cube`) is refused in words (`DRS-1020`), like its word.

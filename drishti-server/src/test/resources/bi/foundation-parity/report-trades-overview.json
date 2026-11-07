@@ -1,0 +1,912 @@
+{
+  "admin" : {
+    "overview/average" : {
+      "masked" : [ ],
+      "rows" : [ [ 18885.4375 ] ]
+    },
+    "overview/average | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "overview/by-date" : {
+      "masked" : [ ],
+      "rows" : [ [ "2026-01-01", 58030.0 ], [ "2026-02-08", -6002.0 ], [ "2026-03-15", 31016.5 ], [ "2026-04-22", 68035.0 ], [ "2026-05-02", 4003.0 ], [ "2026-06-09", 41021.5 ], [ "2026-07-16", -23010.5 ], [ "2026-08-23", 14008.0 ] ]
+    },
+    "overview/by-date | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ "2026-02-08", -6002.0 ], [ "2026-05-02", 4003.0 ], [ "2026-08-23", 14008.0 ] ]
+    },
+    "overview/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+    },
+    "overview/by-desk | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ] ]
+    },
+    "overview/currency" : {
+      "masked" : [ ],
+      "rows" : [ [ "EUR" ], [ "GBP" ], [ "USD" ] ]
+    },
+    "overview/mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "overview/mtm | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 150078.0 ] ]
+    },
+    "overview/notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "overview/notional | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 12009.0 ] ]
+    },
+    "overview/rows" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", 1, 41021.5, -14006.0 ], [ "DESK-1", "USD", 1, 58030.0, 3002.5 ], [ "DESK-2", "USD", 1, 68035.0, 13007.5 ], [ "DESK-3", "USD", 1, -23010.5, 23012.5 ], [ "DESK-4", "EUR", 1, -6002.0, 40021.0 ], [ "DESK-5", "EUR", 1, 4003.0, 50026.0 ], [ "DESK-6", "EUR", 1, 14008.0, 60031.0 ], [ "DESK-7", "GBP", 1, 31016.5, -24011.0 ] ]
+    },
+    "overview/rows | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-4", "EUR", 1, -6002.0, 40021.0 ], [ "DESK-5", "EUR", 1, 4003.0, 50026.0 ], [ "DESK-6", "EUR", 1, 14008.0, 60031.0 ] ]
+    },
+    "overview/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "overview/trades | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 3 ] ]
+    },
+    "products/books" : {
+      "masked" : [ ],
+      "rows" : [ [ "portfolio-0", "EUR", 4003.0 ], [ "portfolio-0", "USD", 58030.0 ], [ "portfolio-1", "EUR", -6002.0 ], [ "portfolio-1", "GBP", 41021.5 ], [ "portfolio-2", "GBP", 31016.5 ], [ "portfolio-2", "USD", -23010.5 ], [ "portfolio-3", "EUR", 14008.0 ], [ "portfolio-3", "USD", 68035.0 ] ]
+    },
+    "products/books | slicer pick-product = product_type-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "portfolio-0", "EUR", 4003.0 ], [ "portfolio-0", "USD", 58030.0 ] ]
+    },
+    "products/matrix" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", 1, -14006.0 ], [ "DESK-1", "USD", 1, 3002.5 ], [ "DESK-2", "USD", 1, 13007.5 ], [ "DESK-3", "USD", 1, 23012.5 ], [ "DESK-4", "EUR", 1, 40021.0 ], [ "DESK-5", "EUR", 1, 50026.0 ], [ "DESK-6", "EUR", 1, 60031.0 ], [ "DESK-7", "GBP", 1, -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ 8.0, 151083.5 ] ]
+      }, {
+        "by" : [ "trade.CURRENCY" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "EUR", 3.0, 150078.0 ], [ "GBP", 2.0, -38017.0 ], [ "USD", 3.0, 39022.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "DESK-0", 1.0, -14006.0 ], [ "DESK-1", 1.0, 3002.5 ], [ "DESK-2", 1.0, 13007.5 ], [ "DESK-3", 1.0, 23012.5 ], [ "DESK-4", 1.0, 40021.0 ], [ "DESK-5", 1.0, 50026.0 ], [ "DESK-6", 1.0, 60031.0 ], [ "DESK-7", 1.0, -24011.0 ] ]
+      } ]
+    },
+    "products/matrix | slicer pick-product = product_type-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-1", "USD", 1, 3002.5 ], [ "DESK-5", "EUR", 1, 50026.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ 2.0, 53028.5 ] ]
+      }, {
+        "by" : [ "trade.CURRENCY" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "EUR", 1.0, 50026.0 ], [ "USD", 1.0, 3002.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "DESK-1", 1.0, 3002.5 ], [ "DESK-5", 1.0, 50026.0 ] ]
+      } ]
+    },
+    "products/pick-currency" : {
+      "masked" : [ ],
+      "rows" : [ [ "EUR" ], [ "GBP" ], [ "USD" ] ]
+    },
+    "products/pick-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0" ], [ "DESK-1" ], [ "DESK-2" ], [ "DESK-3" ], [ "DESK-4" ], [ "DESK-5" ], [ "DESK-6" ], [ "DESK-7" ] ]
+    },
+    "products/pick-product" : {
+      "masked" : [ ],
+      "rows" : [ [ "product_type-0" ], [ "product_type-1" ], [ "product_type-2" ], [ "product_type-3" ] ]
+    },
+    "products/share" : {
+      "masked" : [ ],
+      "rows" : [ [ "product_type-0", 62033.0 ], [ "product_type-1", 35019.5 ], [ "product_type-2", 8006.0 ], [ "product_type-3", 82043.0 ] ]
+    },
+    "products/share | slicer pick-product = product_type-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "product_type-0", 62033.0 ] ]
+    }
+  },
+  "analyst" : {
+    "overview/average" : {
+      "masked" : [ ],
+      "rows" : [ [ 18885.4375 ] ]
+    },
+    "overview/average | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "overview/by-date" : {
+      "masked" : [ ],
+      "rows" : [ [ "2026-01-01", 58030.0 ], [ "2026-02-08", -6002.0 ], [ "2026-03-15", 31016.5 ], [ "2026-04-22", 68035.0 ], [ "2026-05-02", 4003.0 ], [ "2026-06-09", 41021.5 ], [ "2026-07-16", -23010.5 ], [ "2026-08-23", 14008.0 ] ]
+    },
+    "overview/by-date | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ "2026-02-08", -6002.0 ], [ "2026-05-02", 4003.0 ], [ "2026-08-23", 14008.0 ] ]
+    },
+    "overview/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+    },
+    "overview/by-desk | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ] ]
+    },
+    "overview/currency" : {
+      "masked" : [ ],
+      "rows" : [ [ "EUR" ], [ "GBP" ], [ "USD" ] ]
+    },
+    "overview/mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "overview/mtm | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 150078.0 ] ]
+    },
+    "overview/notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "overview/notional | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 12009.0 ] ]
+    },
+    "overview/rows" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", 1, 41021.5, -14006.0 ], [ "DESK-1", "USD", 1, 58030.0, 3002.5 ], [ "DESK-2", "USD", 1, 68035.0, 13007.5 ], [ "DESK-3", "USD", 1, -23010.5, 23012.5 ], [ "DESK-4", "EUR", 1, -6002.0, 40021.0 ], [ "DESK-5", "EUR", 1, 4003.0, 50026.0 ], [ "DESK-6", "EUR", 1, 14008.0, 60031.0 ], [ "DESK-7", "GBP", 1, 31016.5, -24011.0 ] ]
+    },
+    "overview/rows | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-4", "EUR", 1, -6002.0, 40021.0 ], [ "DESK-5", "EUR", 1, 4003.0, 50026.0 ], [ "DESK-6", "EUR", 1, 14008.0, 60031.0 ] ]
+    },
+    "overview/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "overview/trades | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 3 ] ]
+    },
+    "products/books" : {
+      "masked" : [ ],
+      "rows" : [ [ "portfolio-0", "EUR", 4003.0 ], [ "portfolio-0", "USD", 58030.0 ], [ "portfolio-1", "EUR", -6002.0 ], [ "portfolio-1", "GBP", 41021.5 ], [ "portfolio-2", "GBP", 31016.5 ], [ "portfolio-2", "USD", -23010.5 ], [ "portfolio-3", "EUR", 14008.0 ], [ "portfolio-3", "USD", 68035.0 ] ]
+    },
+    "products/books | slicer pick-product = product_type-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "portfolio-0", "EUR", 4003.0 ], [ "portfolio-0", "USD", 58030.0 ] ]
+    },
+    "products/matrix" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", 1, -14006.0 ], [ "DESK-1", "USD", 1, 3002.5 ], [ "DESK-2", "USD", 1, 13007.5 ], [ "DESK-3", "USD", 1, 23012.5 ], [ "DESK-4", "EUR", 1, 40021.0 ], [ "DESK-5", "EUR", 1, 50026.0 ], [ "DESK-6", "EUR", 1, 60031.0 ], [ "DESK-7", "GBP", 1, -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ 8.0, 151083.5 ] ]
+      }, {
+        "by" : [ "trade.CURRENCY" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "EUR", 3.0, 150078.0 ], [ "GBP", 2.0, -38017.0 ], [ "USD", 3.0, 39022.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "DESK-0", 1.0, -14006.0 ], [ "DESK-1", 1.0, 3002.5 ], [ "DESK-2", 1.0, 13007.5 ], [ "DESK-3", 1.0, 23012.5 ], [ "DESK-4", 1.0, 40021.0 ], [ "DESK-5", 1.0, 50026.0 ], [ "DESK-6", 1.0, 60031.0 ], [ "DESK-7", 1.0, -24011.0 ] ]
+      } ]
+    },
+    "products/matrix | slicer pick-product = product_type-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-1", "USD", 1, 3002.5 ], [ "DESK-5", "EUR", 1, 50026.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ 2.0, 53028.5 ] ]
+      }, {
+        "by" : [ "trade.CURRENCY" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "EUR", 1.0, 50026.0 ], [ "USD", 1.0, 3002.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "DESK-1", 1.0, 3002.5 ], [ "DESK-5", 1.0, 50026.0 ] ]
+      } ]
+    },
+    "products/pick-currency" : {
+      "masked" : [ ],
+      "rows" : [ [ "EUR" ], [ "GBP" ], [ "USD" ] ]
+    },
+    "products/pick-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0" ], [ "DESK-1" ], [ "DESK-2" ], [ "DESK-3" ], [ "DESK-4" ], [ "DESK-5" ], [ "DESK-6" ], [ "DESK-7" ] ]
+    },
+    "products/pick-product" : {
+      "masked" : [ ],
+      "rows" : [ [ "product_type-0" ], [ "product_type-1" ], [ "product_type-2" ], [ "product_type-3" ] ]
+    },
+    "products/share" : {
+      "masked" : [ ],
+      "rows" : [ [ "product_type-0", 62033.0 ], [ "product_type-1", 35019.5 ], [ "product_type-2", 8006.0 ], [ "product_type-3", 82043.0 ] ]
+    },
+    "products/share | slicer pick-product = product_type-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "product_type-0", 62033.0 ] ]
+    }
+  },
+  "desk-head-no-desks" : {
+    "overview/average" : {
+      "masked" : [ ],
+      "rows" : [ [ 18885.4375 ] ]
+    },
+    "overview/average | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "overview/by-date" : {
+      "masked" : [ ],
+      "rows" : [ [ "2026-01-01", 58030.0 ], [ "2026-02-08", -6002.0 ], [ "2026-03-15", 31016.5 ], [ "2026-04-22", 68035.0 ], [ "2026-05-02", 4003.0 ], [ "2026-06-09", 41021.5 ], [ "2026-07-16", -23010.5 ], [ "2026-08-23", 14008.0 ] ]
+    },
+    "overview/by-date | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ "2026-02-08", -6002.0 ], [ "2026-05-02", 4003.0 ], [ "2026-08-23", 14008.0 ] ]
+    },
+    "overview/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+    },
+    "overview/by-desk | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ] ]
+    },
+    "overview/currency" : {
+      "masked" : [ ],
+      "rows" : [ [ "EUR" ], [ "GBP" ], [ "USD" ] ]
+    },
+    "overview/mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "overview/mtm | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 150078.0 ] ]
+    },
+    "overview/notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "overview/notional | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 12009.0 ] ]
+    },
+    "overview/rows" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", 1, 41021.5, -14006.0 ], [ "DESK-1", "USD", 1, 58030.0, 3002.5 ], [ "DESK-2", "USD", 1, 68035.0, 13007.5 ], [ "DESK-3", "USD", 1, -23010.5, 23012.5 ], [ "DESK-4", "EUR", 1, -6002.0, 40021.0 ], [ "DESK-5", "EUR", 1, 4003.0, 50026.0 ], [ "DESK-6", "EUR", 1, 14008.0, 60031.0 ], [ "DESK-7", "GBP", 1, 31016.5, -24011.0 ] ]
+    },
+    "overview/rows | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-4", "EUR", 1, -6002.0, 40021.0 ], [ "DESK-5", "EUR", 1, 4003.0, 50026.0 ], [ "DESK-6", "EUR", 1, 14008.0, 60031.0 ] ]
+    },
+    "overview/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "overview/trades | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 3 ] ]
+    },
+    "products/books" : {
+      "masked" : [ ],
+      "rows" : [ [ "portfolio-0", "EUR", 4003.0 ], [ "portfolio-0", "USD", 58030.0 ], [ "portfolio-1", "EUR", -6002.0 ], [ "portfolio-1", "GBP", 41021.5 ], [ "portfolio-2", "GBP", 31016.5 ], [ "portfolio-2", "USD", -23010.5 ], [ "portfolio-3", "EUR", 14008.0 ], [ "portfolio-3", "USD", 68035.0 ] ]
+    },
+    "products/books | slicer pick-product = product_type-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "portfolio-0", "EUR", 4003.0 ], [ "portfolio-0", "USD", 58030.0 ] ]
+    },
+    "products/matrix" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", 1, -14006.0 ], [ "DESK-1", "USD", 1, 3002.5 ], [ "DESK-2", "USD", 1, 13007.5 ], [ "DESK-3", "USD", 1, 23012.5 ], [ "DESK-4", "EUR", 1, 40021.0 ], [ "DESK-5", "EUR", 1, 50026.0 ], [ "DESK-6", "EUR", 1, 60031.0 ], [ "DESK-7", "GBP", 1, -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ 8.0, 151083.5 ] ]
+      }, {
+        "by" : [ "trade.CURRENCY" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "EUR", 3.0, 150078.0 ], [ "GBP", 2.0, -38017.0 ], [ "USD", 3.0, 39022.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "DESK-0", 1.0, -14006.0 ], [ "DESK-1", 1.0, 3002.5 ], [ "DESK-2", 1.0, 13007.5 ], [ "DESK-3", 1.0, 23012.5 ], [ "DESK-4", 1.0, 40021.0 ], [ "DESK-5", 1.0, 50026.0 ], [ "DESK-6", 1.0, 60031.0 ], [ "DESK-7", 1.0, -24011.0 ] ]
+      } ]
+    },
+    "products/matrix | slicer pick-product = product_type-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-1", "USD", 1, 3002.5 ], [ "DESK-5", "EUR", 1, 50026.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ 2.0, 53028.5 ] ]
+      }, {
+        "by" : [ "trade.CURRENCY" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "EUR", 1.0, 50026.0 ], [ "USD", 1.0, 3002.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "DESK-1", 1.0, 3002.5 ], [ "DESK-5", 1.0, 50026.0 ] ]
+      } ]
+    },
+    "products/pick-currency" : {
+      "masked" : [ ],
+      "rows" : [ [ "EUR" ], [ "GBP" ], [ "USD" ] ]
+    },
+    "products/pick-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0" ], [ "DESK-1" ], [ "DESK-2" ], [ "DESK-3" ], [ "DESK-4" ], [ "DESK-5" ], [ "DESK-6" ], [ "DESK-7" ] ]
+    },
+    "products/pick-product" : {
+      "masked" : [ ],
+      "rows" : [ [ "product_type-0" ], [ "product_type-1" ], [ "product_type-2" ], [ "product_type-3" ] ]
+    },
+    "products/share" : {
+      "masked" : [ ],
+      "rows" : [ [ "product_type-0", 62033.0 ], [ "product_type-1", 35019.5 ], [ "product_type-2", 8006.0 ], [ "product_type-3", 82043.0 ] ]
+    },
+    "products/share | slicer pick-product = product_type-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "product_type-0", 62033.0 ] ]
+    }
+  },
+  "desk-head-two-desks" : {
+    "overview/average" : {
+      "masked" : [ ],
+      "rows" : [ [ 18885.4375 ] ]
+    },
+    "overview/average | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "overview/by-date" : {
+      "masked" : [ ],
+      "rows" : [ [ "2026-01-01", 58030.0 ], [ "2026-02-08", -6002.0 ], [ "2026-03-15", 31016.5 ], [ "2026-04-22", 68035.0 ], [ "2026-05-02", 4003.0 ], [ "2026-06-09", 41021.5 ], [ "2026-07-16", -23010.5 ], [ "2026-08-23", 14008.0 ] ]
+    },
+    "overview/by-date | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ "2026-02-08", -6002.0 ], [ "2026-05-02", 4003.0 ], [ "2026-08-23", 14008.0 ] ]
+    },
+    "overview/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+    },
+    "overview/by-desk | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ] ]
+    },
+    "overview/currency" : {
+      "masked" : [ ],
+      "rows" : [ [ "EUR" ], [ "GBP" ], [ "USD" ] ]
+    },
+    "overview/mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "overview/mtm | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 150078.0 ] ]
+    },
+    "overview/notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "overview/notional | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 12009.0 ] ]
+    },
+    "overview/rows" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", 1, 41021.5, -14006.0 ], [ "DESK-1", "USD", 1, 58030.0, 3002.5 ], [ "DESK-2", "USD", 1, 68035.0, 13007.5 ], [ "DESK-3", "USD", 1, -23010.5, 23012.5 ], [ "DESK-4", "EUR", 1, -6002.0, 40021.0 ], [ "DESK-5", "EUR", 1, 4003.0, 50026.0 ], [ "DESK-6", "EUR", 1, 14008.0, 60031.0 ], [ "DESK-7", "GBP", 1, 31016.5, -24011.0 ] ]
+    },
+    "overview/rows | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-4", "EUR", 1, -6002.0, 40021.0 ], [ "DESK-5", "EUR", 1, 4003.0, 50026.0 ], [ "DESK-6", "EUR", 1, 14008.0, 60031.0 ] ]
+    },
+    "overview/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "overview/trades | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 3 ] ]
+    },
+    "products/books" : {
+      "masked" : [ ],
+      "rows" : [ [ "portfolio-0", "EUR", 4003.0 ], [ "portfolio-0", "USD", 58030.0 ], [ "portfolio-1", "EUR", -6002.0 ], [ "portfolio-1", "GBP", 41021.5 ], [ "portfolio-2", "GBP", 31016.5 ], [ "portfolio-2", "USD", -23010.5 ], [ "portfolio-3", "EUR", 14008.0 ], [ "portfolio-3", "USD", 68035.0 ] ]
+    },
+    "products/books | slicer pick-product = product_type-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "portfolio-0", "EUR", 4003.0 ], [ "portfolio-0", "USD", 58030.0 ] ]
+    },
+    "products/matrix" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", 1, -14006.0 ], [ "DESK-1", "USD", 1, 3002.5 ], [ "DESK-2", "USD", 1, 13007.5 ], [ "DESK-3", "USD", 1, 23012.5 ], [ "DESK-4", "EUR", 1, 40021.0 ], [ "DESK-5", "EUR", 1, 50026.0 ], [ "DESK-6", "EUR", 1, 60031.0 ], [ "DESK-7", "GBP", 1, -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ 8.0, 151083.5 ] ]
+      }, {
+        "by" : [ "trade.CURRENCY" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "EUR", 3.0, 150078.0 ], [ "GBP", 2.0, -38017.0 ], [ "USD", 3.0, 39022.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "DESK-0", 1.0, -14006.0 ], [ "DESK-1", 1.0, 3002.5 ], [ "DESK-2", 1.0, 13007.5 ], [ "DESK-3", 1.0, 23012.5 ], [ "DESK-4", 1.0, 40021.0 ], [ "DESK-5", 1.0, 50026.0 ], [ "DESK-6", 1.0, 60031.0 ], [ "DESK-7", 1.0, -24011.0 ] ]
+      } ]
+    },
+    "products/matrix | slicer pick-product = product_type-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-1", "USD", 1, 3002.5 ], [ "DESK-5", "EUR", 1, 50026.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ 2.0, 53028.5 ] ]
+      }, {
+        "by" : [ "trade.CURRENCY" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "EUR", 1.0, 50026.0 ], [ "USD", 1.0, 3002.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "DESK-1", 1.0, 3002.5 ], [ "DESK-5", 1.0, 50026.0 ] ]
+      } ]
+    },
+    "products/pick-currency" : {
+      "masked" : [ ],
+      "rows" : [ [ "EUR" ], [ "GBP" ], [ "USD" ] ]
+    },
+    "products/pick-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0" ], [ "DESK-1" ], [ "DESK-2" ], [ "DESK-3" ], [ "DESK-4" ], [ "DESK-5" ], [ "DESK-6" ], [ "DESK-7" ] ]
+    },
+    "products/pick-product" : {
+      "masked" : [ ],
+      "rows" : [ [ "product_type-0" ], [ "product_type-1" ], [ "product_type-2" ], [ "product_type-3" ] ]
+    },
+    "products/share" : {
+      "masked" : [ ],
+      "rows" : [ [ "product_type-0", 62033.0 ], [ "product_type-1", 35019.5 ], [ "product_type-2", 8006.0 ], [ "product_type-3", 82043.0 ] ]
+    },
+    "products/share | slicer pick-product = product_type-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "product_type-0", 62033.0 ] ]
+    }
+  },
+  "no-raw-power" : {
+    "overview/average" : {
+      "masked" : [ ],
+      "rows" : [ [ 18885.4375 ] ]
+    },
+    "overview/average | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "overview/by-date" : {
+      "masked" : [ ],
+      "rows" : [ [ "2026-01-01", 58030.0 ], [ "2026-02-08", -6002.0 ], [ "2026-03-15", 31016.5 ], [ "2026-04-22", 68035.0 ], [ "2026-05-02", 4003.0 ], [ "2026-06-09", 41021.5 ], [ "2026-07-16", -23010.5 ], [ "2026-08-23", 14008.0 ] ]
+    },
+    "overview/by-date | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ "2026-02-08", -6002.0 ], [ "2026-05-02", 4003.0 ], [ "2026-08-23", 14008.0 ] ]
+    },
+    "overview/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+    },
+    "overview/by-desk | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ] ]
+    },
+    "overview/currency" : {
+      "masked" : [ ],
+      "rows" : [ [ "EUR" ], [ "GBP" ], [ "USD" ] ]
+    },
+    "overview/mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "overview/mtm | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 150078.0 ] ]
+    },
+    "overview/notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "overview/notional | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 12009.0 ] ]
+    },
+    "overview/rows" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", 1, 41021.5, -14006.0 ], [ "DESK-1", "USD", 1, 58030.0, 3002.5 ], [ "DESK-2", "USD", 1, 68035.0, 13007.5 ], [ "DESK-3", "USD", 1, -23010.5, 23012.5 ], [ "DESK-4", "EUR", 1, -6002.0, 40021.0 ], [ "DESK-5", "EUR", 1, 4003.0, 50026.0 ], [ "DESK-6", "EUR", 1, 14008.0, 60031.0 ], [ "DESK-7", "GBP", 1, 31016.5, -24011.0 ] ]
+    },
+    "overview/rows | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-4", "EUR", 1, -6002.0, 40021.0 ], [ "DESK-5", "EUR", 1, 4003.0, 50026.0 ], [ "DESK-6", "EUR", 1, 14008.0, 60031.0 ] ]
+    },
+    "overview/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "overview/trades | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 3 ] ]
+    },
+    "products/books" : {
+      "masked" : [ ],
+      "rows" : [ [ "portfolio-0", "EUR", 4003.0 ], [ "portfolio-0", "USD", 58030.0 ], [ "portfolio-1", "EUR", -6002.0 ], [ "portfolio-1", "GBP", 41021.5 ], [ "portfolio-2", "GBP", 31016.5 ], [ "portfolio-2", "USD", -23010.5 ], [ "portfolio-3", "EUR", 14008.0 ], [ "portfolio-3", "USD", 68035.0 ] ]
+    },
+    "products/books | slicer pick-product = product_type-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "portfolio-0", "EUR", 4003.0 ], [ "portfolio-0", "USD", 58030.0 ] ]
+    },
+    "products/matrix" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", 1, -14006.0 ], [ "DESK-1", "USD", 1, 3002.5 ], [ "DESK-2", "USD", 1, 13007.5 ], [ "DESK-3", "USD", 1, 23012.5 ], [ "DESK-4", "EUR", 1, 40021.0 ], [ "DESK-5", "EUR", 1, 50026.0 ], [ "DESK-6", "EUR", 1, 60031.0 ], [ "DESK-7", "GBP", 1, -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ 8.0, 151083.5 ] ]
+      }, {
+        "by" : [ "trade.CURRENCY" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "EUR", 3.0, 150078.0 ], [ "GBP", 2.0, -38017.0 ], [ "USD", 3.0, 39022.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "DESK-0", 1.0, -14006.0 ], [ "DESK-1", 1.0, 3002.5 ], [ "DESK-2", 1.0, 13007.5 ], [ "DESK-3", 1.0, 23012.5 ], [ "DESK-4", 1.0, 40021.0 ], [ "DESK-5", 1.0, 50026.0 ], [ "DESK-6", 1.0, 60031.0 ], [ "DESK-7", 1.0, -24011.0 ] ]
+      } ]
+    },
+    "products/matrix | slicer pick-product = product_type-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-1", "USD", 1, 3002.5 ], [ "DESK-5", "EUR", 1, 50026.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ 2.0, 53028.5 ] ]
+      }, {
+        "by" : [ "trade.CURRENCY" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "EUR", 1.0, 50026.0 ], [ "USD", 1.0, 3002.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "DESK-1", 1.0, 3002.5 ], [ "DESK-5", 1.0, 50026.0 ] ]
+      } ]
+    },
+    "products/pick-currency" : {
+      "masked" : [ ],
+      "rows" : [ [ "EUR" ], [ "GBP" ], [ "USD" ] ]
+    },
+    "products/pick-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0" ], [ "DESK-1" ], [ "DESK-2" ], [ "DESK-3" ], [ "DESK-4" ], [ "DESK-5" ], [ "DESK-6" ], [ "DESK-7" ] ]
+    },
+    "products/pick-product" : {
+      "masked" : [ ],
+      "rows" : [ [ "product_type-0" ], [ "product_type-1" ], [ "product_type-2" ], [ "product_type-3" ] ]
+    },
+    "products/share" : {
+      "masked" : [ ],
+      "rows" : [ [ "product_type-0", 62033.0 ], [ "product_type-1", 35019.5 ], [ "product_type-2", 8006.0 ], [ "product_type-3", 82043.0 ] ]
+    },
+    "products/share | slicer pick-product = product_type-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "product_type-0", 62033.0 ] ]
+    }
+  },
+  "risk" : {
+    "overview/average" : {
+      "masked" : [ ],
+      "rows" : [ [ 18885.4375 ] ]
+    },
+    "overview/average | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "overview/by-date" : {
+      "masked" : [ ],
+      "rows" : [ [ "2026-01-01", 58030.0 ], [ "2026-02-08", -6002.0 ], [ "2026-03-15", 31016.5 ], [ "2026-04-22", 68035.0 ], [ "2026-05-02", 4003.0 ], [ "2026-06-09", 41021.5 ], [ "2026-07-16", -23010.5 ], [ "2026-08-23", 14008.0 ] ]
+    },
+    "overview/by-date | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ "2026-02-08", -6002.0 ], [ "2026-05-02", 4003.0 ], [ "2026-08-23", 14008.0 ] ]
+    },
+    "overview/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+    },
+    "overview/by-desk | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ] ]
+    },
+    "overview/currency" : {
+      "masked" : [ ],
+      "rows" : [ [ "EUR" ], [ "GBP" ], [ "USD" ] ]
+    },
+    "overview/mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "overview/mtm | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 150078.0 ] ]
+    },
+    "overview/notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "overview/notional | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 12009.0 ] ]
+    },
+    "overview/rows" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", 1, 41021.5, -14006.0 ], [ "DESK-1", "USD", 1, 58030.0, 3002.5 ], [ "DESK-2", "USD", 1, 68035.0, 13007.5 ], [ "DESK-3", "USD", 1, -23010.5, 23012.5 ], [ "DESK-4", "EUR", 1, -6002.0, 40021.0 ], [ "DESK-5", "EUR", 1, 4003.0, 50026.0 ], [ "DESK-6", "EUR", 1, 14008.0, 60031.0 ], [ "DESK-7", "GBP", 1, 31016.5, -24011.0 ] ]
+    },
+    "overview/rows | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-4", "EUR", 1, -6002.0, 40021.0 ], [ "DESK-5", "EUR", 1, 4003.0, 50026.0 ], [ "DESK-6", "EUR", 1, 14008.0, 60031.0 ] ]
+    },
+    "overview/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "overview/trades | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 3 ] ]
+    },
+    "products/books" : {
+      "masked" : [ ],
+      "rows" : [ [ "portfolio-0", "EUR", 4003.0 ], [ "portfolio-0", "USD", 58030.0 ], [ "portfolio-1", "EUR", -6002.0 ], [ "portfolio-1", "GBP", 41021.5 ], [ "portfolio-2", "GBP", 31016.5 ], [ "portfolio-2", "USD", -23010.5 ], [ "portfolio-3", "EUR", 14008.0 ], [ "portfolio-3", "USD", 68035.0 ] ]
+    },
+    "products/books | slicer pick-product = product_type-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "portfolio-0", "EUR", 4003.0 ], [ "portfolio-0", "USD", 58030.0 ] ]
+    },
+    "products/matrix" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", 1, -14006.0 ], [ "DESK-1", "USD", 1, 3002.5 ], [ "DESK-2", "USD", 1, 13007.5 ], [ "DESK-3", "USD", 1, 23012.5 ], [ "DESK-4", "EUR", 1, 40021.0 ], [ "DESK-5", "EUR", 1, 50026.0 ], [ "DESK-6", "EUR", 1, 60031.0 ], [ "DESK-7", "GBP", 1, -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ 8.0, 151083.5 ] ]
+      }, {
+        "by" : [ "trade.CURRENCY" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "EUR", 3.0, 150078.0 ], [ "GBP", 2.0, -38017.0 ], [ "USD", 3.0, 39022.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "DESK-0", 1.0, -14006.0 ], [ "DESK-1", 1.0, 3002.5 ], [ "DESK-2", 1.0, 13007.5 ], [ "DESK-3", 1.0, 23012.5 ], [ "DESK-4", 1.0, 40021.0 ], [ "DESK-5", 1.0, 50026.0 ], [ "DESK-6", 1.0, 60031.0 ], [ "DESK-7", 1.0, -24011.0 ] ]
+      } ]
+    },
+    "products/matrix | slicer pick-product = product_type-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-1", "USD", 1, 3002.5 ], [ "DESK-5", "EUR", 1, 50026.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ 2.0, 53028.5 ] ]
+      }, {
+        "by" : [ "trade.CURRENCY" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "EUR", 1.0, 50026.0 ], [ "USD", 1.0, 3002.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "DESK-1", 1.0, 3002.5 ], [ "DESK-5", 1.0, 50026.0 ] ]
+      } ]
+    },
+    "products/pick-currency" : {
+      "masked" : [ ],
+      "rows" : [ [ "EUR" ], [ "GBP" ], [ "USD" ] ]
+    },
+    "products/pick-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0" ], [ "DESK-1" ], [ "DESK-2" ], [ "DESK-3" ], [ "DESK-4" ], [ "DESK-5" ], [ "DESK-6" ], [ "DESK-7" ] ]
+    },
+    "products/pick-product" : {
+      "masked" : [ ],
+      "rows" : [ [ "product_type-0" ], [ "product_type-1" ], [ "product_type-2" ], [ "product_type-3" ] ]
+    },
+    "products/share" : {
+      "masked" : [ ],
+      "rows" : [ [ "product_type-0", 62033.0 ], [ "product_type-1", 35019.5 ], [ "product_type-2", 8006.0 ], [ "product_type-3", 82043.0 ] ]
+    },
+    "products/share | slicer pick-product = product_type-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "product_type-0", 62033.0 ] ]
+    }
+  },
+  "unnamed-role" : {
+    "overview/average" : {
+      "masked" : [ ],
+      "rows" : [ [ 18885.4375 ] ]
+    },
+    "overview/average | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "overview/by-date" : {
+      "masked" : [ ],
+      "rows" : [ [ "2026-01-01", 58030.0 ], [ "2026-02-08", -6002.0 ], [ "2026-03-15", 31016.5 ], [ "2026-04-22", 68035.0 ], [ "2026-05-02", 4003.0 ], [ "2026-06-09", 41021.5 ], [ "2026-07-16", -23010.5 ], [ "2026-08-23", 14008.0 ] ]
+    },
+    "overview/by-date | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ "2026-02-08", -6002.0 ], [ "2026-05-02", 4003.0 ], [ "2026-08-23", 14008.0 ] ]
+    },
+    "overview/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+    },
+    "overview/by-desk | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ] ]
+    },
+    "overview/currency" : {
+      "masked" : [ ],
+      "rows" : [ [ "EUR" ], [ "GBP" ], [ "USD" ] ]
+    },
+    "overview/mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "overview/mtm | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 150078.0 ] ]
+    },
+    "overview/notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "overview/notional | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 12009.0 ] ]
+    },
+    "overview/rows" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", 1, 41021.5, -14006.0 ], [ "DESK-1", "USD", 1, 58030.0, 3002.5 ], [ "DESK-2", "USD", 1, 68035.0, 13007.5 ], [ "DESK-3", "USD", 1, -23010.5, 23012.5 ], [ "DESK-4", "EUR", 1, -6002.0, 40021.0 ], [ "DESK-5", "EUR", 1, 4003.0, 50026.0 ], [ "DESK-6", "EUR", 1, 14008.0, 60031.0 ], [ "DESK-7", "GBP", 1, 31016.5, -24011.0 ] ]
+    },
+    "overview/rows | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-4", "EUR", 1, -6002.0, 40021.0 ], [ "DESK-5", "EUR", 1, 4003.0, 50026.0 ], [ "DESK-6", "EUR", 1, 14008.0, 60031.0 ] ]
+    },
+    "overview/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "overview/trades | slicer currency = EUR" : {
+      "masked" : [ ],
+      "rows" : [ [ 3 ] ]
+    },
+    "products/books" : {
+      "masked" : [ ],
+      "rows" : [ [ "portfolio-0", "EUR", 4003.0 ], [ "portfolio-0", "USD", 58030.0 ], [ "portfolio-1", "EUR", -6002.0 ], [ "portfolio-1", "GBP", 41021.5 ], [ "portfolio-2", "GBP", 31016.5 ], [ "portfolio-2", "USD", -23010.5 ], [ "portfolio-3", "EUR", 14008.0 ], [ "portfolio-3", "USD", 68035.0 ] ]
+    },
+    "products/books | slicer pick-product = product_type-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "portfolio-0", "EUR", 4003.0 ], [ "portfolio-0", "USD", 58030.0 ] ]
+    },
+    "products/matrix" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", 1, -14006.0 ], [ "DESK-1", "USD", 1, 3002.5 ], [ "DESK-2", "USD", 1, 13007.5 ], [ "DESK-3", "USD", 1, 23012.5 ], [ "DESK-4", "EUR", 1, 40021.0 ], [ "DESK-5", "EUR", 1, 50026.0 ], [ "DESK-6", "EUR", 1, 60031.0 ], [ "DESK-7", "GBP", 1, -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ 8.0, 151083.5 ] ]
+      }, {
+        "by" : [ "trade.CURRENCY" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "EUR", 3.0, 150078.0 ], [ "GBP", 2.0, -38017.0 ], [ "USD", 3.0, 39022.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "DESK-0", 1.0, -14006.0 ], [ "DESK-1", 1.0, 3002.5 ], [ "DESK-2", 1.0, 13007.5 ], [ "DESK-3", 1.0, 23012.5 ], [ "DESK-4", 1.0, 40021.0 ], [ "DESK-5", 1.0, 50026.0 ], [ "DESK-6", 1.0, 60031.0 ], [ "DESK-7", 1.0, -24011.0 ] ]
+      } ]
+    },
+    "products/matrix | slicer pick-product = product_type-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-1", "USD", 1, 3002.5 ], [ "DESK-5", "EUR", 1, 50026.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ 2.0, 53028.5 ] ]
+      }, {
+        "by" : [ "trade.CURRENCY" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "EUR", 1.0, 50026.0 ], [ "USD", 1.0, 3002.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "masked" : [ ],
+        "measures" : [ "Trades", "MTM" ],
+        "rows" : [ [ "DESK-1", 1.0, 3002.5 ], [ "DESK-5", 1.0, 50026.0 ] ]
+      } ]
+    },
+    "products/pick-currency" : {
+      "masked" : [ ],
+      "rows" : [ [ "EUR" ], [ "GBP" ], [ "USD" ] ]
+    },
+    "products/pick-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0" ], [ "DESK-1" ], [ "DESK-2" ], [ "DESK-3" ], [ "DESK-4" ], [ "DESK-5" ], [ "DESK-6" ], [ "DESK-7" ] ]
+    },
+    "products/pick-product" : {
+      "masked" : [ ],
+      "rows" : [ [ "product_type-0" ], [ "product_type-1" ], [ "product_type-2" ], [ "product_type-3" ] ]
+    },
+    "products/share" : {
+      "masked" : [ ],
+      "rows" : [ [ "product_type-0", 62033.0 ], [ "product_type-1", 35019.5 ], [ "product_type-2", 8006.0 ], [ "product_type-3", 82043.0 ] ]
+    },
+    "products/share | slicer pick-product = product_type-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "product_type-0", 62033.0 ] ]
+    }
+  }
+}

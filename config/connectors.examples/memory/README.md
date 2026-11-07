@@ -27,7 +27,7 @@ doc: docs/guides/IN_MEMORY_LAKE_GUIDE.md
 
 A ready-made connector file for **data that may not, by contract, be saved on a disk**: the `delta` plugin with its root in a memory
 store, `mem://<store>`. The tables are ordinary Delta tables (a `_delta_log` and Parquet files) whose files live in the server's memory
-under a hard cap; the server's replenish jobs fill them; every page, search, BI dataset and the Data view read them as they read a lake
+under a hard cap; the server's replenish jobs fill them; every page, search, BI dataset and Export data read them as they read a lake
 on a disk.
 
 ## What it reads
@@ -94,4 +94,4 @@ python3 tools/drishti.py lake memory refill news
 - [The delta connector README](../../../plugins/drishti-plugin-delta/README.md) and [Connector files](../../../docs/connectors/CONNECTOR_FILES.md).
 
 The Delta and Iceberg files here name a lake (`lake:`, `lake-tables:`); the lake itself, its root or catalog, storage and tables, is the matching
-file in [config/lakes.examples/memory/](../../lakes.examples/memory/): copy both (docs/guides/LAKE_GUIDE.md).
+file in [config/lakes.examples/memory/](../../lakes.examples/memory/): copy both (docs/guides/DATA_LAKE_GUIDE.md).

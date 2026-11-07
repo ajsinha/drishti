@@ -144,7 +144,7 @@ public class ViewEventController {
         }
         String scope = kind + "\u0000" + id;
         List<ScreenWire.Selection> fired = resolve(principal, scope, click.selections());
-        ScreenWire.Result r = pipeline.event(EntityRef.of(kind, id), asOf, entitlements.redactor(principal), k -> entitlements.mayOpen(principal, k),
+        ScreenWire.Result r = pipeline.event(EntityRef.of(kind, id), asOf, entitlements.viewer(principal),
                 ControlValues.of(request.getParameterMap()), chosen(registry, designs, principal, kind, request), fired, click.panel(), click.event(),
                 click.row());
         Map<String, Object> sel = new LinkedHashMap<>();
@@ -166,7 +166,7 @@ public class ViewEventController {
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal, HttpServletRequest request) {
         entitlements.requireOpen(principal, kind);
         List<ScreenWire.Selection> fired = resolve(principal, kind + "\u0000" + id, sel);
-        return pipeline.children(EntityRef.of(kind, id), asOf, entitlements.redactor(principal), k -> entitlements.mayOpen(principal, k),
+        return pipeline.children(EntityRef.of(kind, id), asOf, entitlements.viewer(principal),
                 ControlValues.of(request.getParameterMap()), chosen(registry, designs, principal, kind, request), fired, panel).stream().map(c -> children(principal, c)).toList();
     }
 

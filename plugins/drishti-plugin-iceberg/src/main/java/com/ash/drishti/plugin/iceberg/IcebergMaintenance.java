@@ -86,7 +86,7 @@ public final class IcebergMaintenance {
     }
 
     /**
-     * Undoes load {@code id} in every Iceberg table of the lake at {@code root} (a local folder: {@code <domain>/<table>}; DATA_LOAD_RULES.md
+     * Undoes load {@code id} in every Iceberg table of the lake at {@code root} (a local folder: {@code <domain>/<table>}; DATA_LAKE_GUIDE.md
      * section 6.3): a line per table and date undone ({@code table}, {@code date}, {@code removed}, {@code restored}, {@code replaced}).
      */
     public static List<Map<String, Object>> undoLake(String root, String id, boolean dryRun, Path spillDir) throws Exception {
@@ -125,7 +125,7 @@ public final class IcebergMaintenance {
         int keepDays = 0;
         long expireHours = 168;
         boolean relayout = false;
-        String undo = null;                                     // a load id: its rows removed (DATA_LOAD_RULES.md section 6.3)
+        String undo = null;                                     // a load id: its rows removed (DATA_LAKE_GUIDE.md section 5.5)
         boolean force = false;
         boolean manifests = false;
         long budget = 1024L * 1024 * 1024;
@@ -149,7 +149,7 @@ public final class IcebergMaintenance {
                 case "--columns" -> addColumns.put(v.substring(0, v.indexOf(':')), Arrays.asList(v.substring(v.indexOf(':') + 1).split(",")));
                 case "--floor-days" -> floorDays = Integer.parseInt(v);
                 case "--older-than-hours" -> orphanHours = Long.parseLong(v);
-                case "--undo" -> undo = v;                       // a load id: its rows removed (DATA_LOAD_RULES.md section 6.3)
+                case "--undo" -> undo = v;                       // a load id: its rows removed (DATA_LAKE_GUIDE.md section 5.5)
                 case "--remove-orphans" -> {
                     orphans = true;
                     continue;

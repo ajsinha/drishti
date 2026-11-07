@@ -31,7 +31,7 @@ About 20 minutes.
   2026-09-30).
 - The server built (`./mvnw clean package -DskipTests`): `build_demo_lakes.py` writes Iceberg with the loader in the server's jar.
 - The console's Python (`drishti-console/.venv/bin/python`; Windows `drishti-console\.venv\Scripts\python.exe`): it has `deltalake`.
-- Stop the server while you build the lake; the examples use the default data folder, `data/` (`data/delta`, `data/iceberg`).
+- Stop the server while you build the lake; the examples use the default data folder, `data/` (`data/delta/demo`, `data/iceberg`).
 
 ## What you will learn
 
@@ -52,9 +52,9 @@ drishti-console/.venv/bin/python tools/build_demo_lakes.py --as-of data --store 
 ```
 
 ```text
-1/3 the demo lakes: only market-risk/pnl-vector,…,market-risk/var-limit, every business day, ending data → data/delta
+1/3 the demo lakes: only market-risk/pnl-vector,…,market-risk/var-limit, every business day, ending data → data/delta/demo
   …
-  risk/pnl-vector into Iceberg: data/delta/risk/pnl-vector -> data/iceberg/risk/pnl-vector
+  risk/pnl-vector into Iceberg: data/delta/demo/risk/pnl-vector -> data/iceberg/risk/pnl-vector
     iceberg: 8,233 rows read in 1 s; 1 business days of 1 tables to write
   risk/pnl-vector: 8,233 rows in Iceberg, newest business date 2026-09-30 (data/iceberg/risk/pnl-vector)
   …
@@ -89,7 +89,7 @@ settings:
 
 **In the UI.** Nothing to do yet; step 4 shows the tables.
 
-**You should see** `data/iceberg/risk/<kind>/metadata` and `data` folders for the seven VaR kinds, `data/delta/risk` empty, and
+**You should see** `data/iceberg/risk/<kind>/metadata` and `data` folders for the seven VaR kinds, `data/delta/demo/risk` empty, and
 `plugin: iceberg` at the top of `data/connectors/risk-store.yaml`.
 
 **Further:** [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md) (the connector, sections 18 and 19),
@@ -139,7 +139,7 @@ applies from the next capture.
 ## Step 3 · Start the server and look at the connectors
 
 Start the server and the console as in tutorial 1, with the samples off (`DRISHTI_DEMO_ENABLED=false`). For Admin → Lakes to list the
-Iceberg tables too, give the console both roots: `DRISHTI_LAKE_ROOTS=data/delta,data/iceberg`.
+Iceberg tables too, give the console both roots: `DRISHTI_LAKE_ROOTS=data/delta/demo,data/iceberg`.
 
 **In the UI.** **Admin → Connectors**, filter `market-risk`: `risk-store` on **iceberg**, `var-results` on **iceberg** (after step 6).
 

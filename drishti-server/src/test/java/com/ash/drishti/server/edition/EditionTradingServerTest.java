@@ -45,15 +45,15 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
         "drishti.packs.enabled=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds",
         "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false", "drishti.var.official.enabled=false",
         "drishti.var.official.on-start=false", "drishti.ccr.exposure.official.enabled=false", "drishti.security.enabled=true",
-        "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.bi.dir=../config/bi",
+        "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.bi.dir=../config/bi", "drishti.tables.root=../config/tables",
         "drishti.bi.query.store-dir=${drishti.test.dir}/trading-bi-store/${random.uuid}",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/trading-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class EditionTradingServerTest {
 
     static final List<String> TRADING_COMMANDS = List.of("TRD", "CTRD", "PTRD", "LTRD", "ITRD", "BOOK", "DESK", "TRDR", "POS", "VLIM",
-            "VRES", "TVAL", "PNLV", "HIER", "PORT", "CPTY", "GRP", "NSET", "NSMTM", "CPMTM", "LIM", "XWIF", "EXP", "CRV", "FX", "FXV", "EQ", "EQX",
-            "CMD", "CMDC", "BND", "CDS");
+            "VRES", "TVAL", "PNLV", "HIER", "PORT", "DPNL", "PNL", "SENS", "CPTY", "GRP", "NSET", "NSMTM", "CPMTM", "LIM", "XWIF", "EXP", "CRV",
+            "REPO", "FIX", "IRV", "CPV", "FX", "FXF", "FXV", "EQ", "EQX", "CMD", "CMDC", "BND", "CDS");
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
@@ -104,7 +104,7 @@ class EditionTradingServerTest {
         ok(get("/api/v1/functions").header("Authorization", bearer(eve)).header(EditionContext.HEADER, lens)).path("packs")
                 .forEach(p -> p.path("commands").forEach(c -> codes.add(c.path("code").asText())));
         assertThat(codes).containsAll(TRADING_COMMANDS)
-                .doesNotContain("ECON", "SCN", "STR", "SSPNL", "COLL", "MC", "FRTB", "SACCR", "CVA", "SIMM", "XRUN", "USEQ", "FUND", "IRV");
+                .doesNotContain("ECON", "SCN", "STR", "SSPNL", "COLL", "MC", "FRTB", "SACCR", "CVA", "SIMM", "XRUN", "USEQ", "FUND", "CMDV");
         List<String> suggested = new ArrayList<>();
         ok(get("/api/v1/command/suggest?q=CO").header("Authorization", bearer(eve)).header(EditionContext.HEADER, lens))
                 .forEach(s -> suggested.add(s.path("mnemonic").asText()));
@@ -130,10 +130,10 @@ class EditionTradingServerTest {
         List<String> ids = new ArrayList<>();
         ok(get("/api/v1/bi/datasets").header("Authorization", bearer(fay)).header(EditionContext.HEADER, "trading")).path("datasets")
                 .forEach(d -> ids.add(d.path("id").asText()));
-        assertThat(ids).contains("file:dataset:market-risk-var-latest", "file:dataset:trading-risk-trades")
-                .doesNotContain("file:dataset:counterparty-exposure-counterparties", "file:dataset:live-exposure",
-                        "file:dataset:world-economics-economies");
+        assertThat(ids).contains("file:table:bi.market_risk_var_latest", "file:table:bi.trading_risk_trades")
+                .doesNotContain("file:table:bi.counterparty_exposure_counterparties", "file:table:bi.live_exposure",
+                        "file:table:bi.world_economics_economies");
         assertThat(ids).allSatisfy(id -> assertThat(id.substring(id.lastIndexOf(':') + 1)).matches(
-                "trading-.*|trades-basic-trade|live-trading.*|market-risk-var-.*"));
+                "bi\\.(trading_.*|trades_basic_trade|live_trading.*|market_risk_var_.*)"));
     }
 }

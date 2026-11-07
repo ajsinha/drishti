@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# Admin → Data loads → Inbox (docs/architecture/DATALOAD_INBOX.md section 10, mock-up A, the status board). The board is _inbox_body.html,
+{# Admin → Data loads → Inbox (docs/guides/DATA_LAKE_GUIDE.md section 3.1, mock-up A, the status board). The board is _inbox_body.html,
    drawn here and redrawn by drishti_admin-inbox.js from /admin/loads/inbox?partial=1 (every 5 s while a run loads, 30 s when quiet); the answers of
    Load now and Retry stay in the line above the board. #}
 {% extends "base.html" %}
@@ -36,7 +36,8 @@
   <section class="ib-sec" data-undo aria-labelledby="ib-undo-h">
     <h2 class="ib-h2" id="ib-undo-h">Undo a load</h2>
     <p class="text-muted-d">Every row a load wrote carries its load id (a load report's <span class="mono">loads</span>, or a row's
-      <span class="mono">_load_id</span>). Undoing it removes exactly those rows from every table of the lake, one commit per table and date; a
+      <span class="mono">_load_id</span>). Undoing it removes exactly those rows from every table of the lake the load wrote into (the ledger
+      says which), one commit per table and date; a
       load that replaced a date gets the date back as it was. Check first: nothing changes until you confirm with the load id.</p>
     <div class="ib-actions">
       <label class="visually-hidden" for="ib-undo-id">Load id</label>

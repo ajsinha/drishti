@@ -288,7 +288,7 @@ How the loader works:
   FILE.tar` writes the samples and `bulk_trades.py --jsonl FILE.tar` a generated book, each a tar of `<kind>/<YYYY-MM-DD>/rows.jsonl`
   folders; `tools/load-iceberg.sh` gives the loader the folder holding both, so each business day is written once. `-` reads
   standard input: one kind on one date.
-- **Each row is filed under a business date from outside it** (the load rules, [DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md), the same as `lake build`'s): a tar of `<kind>/<YYYY-MM-DD>/` folders files each row under its folder's date, and a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-` for standard input) is one kind on one date: `--as-of`, else its `.ready` file's `business-date:`, else the date in its name, else the business today. The row's own `date` stays in the row as data; rows whose date differs are loaded under the file's date and counted (*N rows of trade.jsonl carried another date in date; loaded under 2026-09-30*). A plain file of two kinds is refused (*send a tar*), and so is `--as-of` with a tar (its folders name the dates). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and `.jsonl.gz` in it, in name order. Retention (`--keep-days`, `--ttl-days`, `--keep-months`) counts back from `--as-of`, else the business today.
+- **Each row is filed under a business date from outside it** (the load rules, [DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo), the same as `lake build`'s): a tar of `<kind>/<YYYY-MM-DD>/` folders files each row under its folder's date, and a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-` for standard input) is one kind on one date: `--as-of`, else its `.ready` file's `business-date:`, else the date in its name, else the business today. The row's own `date` stays in the row as data; rows whose date differs are loaded under the file's date and counted (*N rows of trade.jsonl carried another date in date; loaded under 2026-09-30*). A plain file of two kinds is refused (*send a tar*), and so is `--as-of` with a tar (its folders name the dates). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and `.jsonl.gz` in it, in name order. Retention (`--keep-days`, `--ttl-days`, `--keep-months`) counts back from `--as-of`, else the business today.
 - **An external sort per day.** The generator's stream interleaves days and ids (it is not sorted: workers emit slices
   of trade numbers as they finish). Each business day of each kind gets a sorter (`SortedRuns`). At most `--buffer-mb`
   (1024) of rows are held; beyond it the largest day's buffer is sorted and written to a run file in `--spill-dir`, on a
@@ -704,7 +704,7 @@ Tested in `IcebergProxyTest` (the S3 file IO through a fake proxy, plain and `CO
 ### The lake file: where the root and the layout live
 
 The lake itself (its root, storage, catalog and its settings, each table's folder, promoted columns and vectors; an Iceberg table of the layout is partitioned by business date alone) is described once, in its lake file
-`config/lakes/<lake>.yaml`, and the connector names it ([LAKE_GUIDE.md](../guides/LAKE_GUIDE.md)). The connector file then keeps only
+`config/lakes/<lake>.yaml`, and the connector names it ([DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md)). The connector file then keeps only
 reading concerns:
 
 ```yaml
@@ -716,9 +716,11 @@ settings:
   refresh-seconds: 10
 ```
 
-A connector that names a lake and also sets `root`, `domain`, `table.<kind>`, `layout.<kind>.*`, `uri` or `warehouse` fails,
-naming both. The form below, with those keys in the connector file, is the older one: it is read for one more release with one warning,
-and `drishti.py lake migrate-config` moves it into a lake file ([LAKE_GUIDE.md section 8](../guides/LAKE_GUIDE.md#8-migrating-an-older-installation)).
+Both forms are permanent. A connector that names a lake and also gives `root`, `domain`, `table.<kind>` or `layout.<kind>.*` itself
+uses its own values over the lake file's (Admin → Connectors says so on each such field). The form below, with those keys in the
+connector file and no `lake:`, names its tables by path or URI (a folder, `s3://bucket/prefix`): for tables no lake file describes, such
+as a vendor's Delta table on S3; `drishti.py lake migrate-config` moves such connectors into a lake file when you want one
+([DATA_LAKE_GUIDE.md section 12](../guides/DATA_LAKE_GUIDE.md#12-other-lakes-packs-and-older-installations)).
 
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
 

@@ -135,7 +135,7 @@ public final class RunPromotion implements ModelCatalog.Snapshots {
         int version = runs.store().promote(name, doc, settings.versionsKeep());
         String datasetTitle = title != null && !title.isBlank() ? title : RunService.title(r) + " (snapshot of run " + r.id() + (r.asOf() == null ? "" : ", as of " + r.asOf()) + ")";
         String yaml = yaml(name, version, token, datasetTitle, columns, provenance);
-        String datasetItem = d.draft(p, item, "dataset", datasetTitle, yaml);
+        String datasetItem = d.draft(p, item, "table", datasetTitle, yaml);
         if (item == null) {
             Map<String, Object> keep = new LinkedHashMap<>(runs.store().snapshot(name, String.valueOf(version)).orElse(doc));
             keep.put("item", datasetItem);
@@ -144,7 +144,7 @@ public final class RunPromotion implements ModelCatalog.Snapshots {
         Run.Builder b = r.toBuilder();
         b.promotedTo = name + "@" + version;                                   // the run object's promotedTo; its result is kept (8.4)
         runs.records().save(b.build());
-        String reportItem = "report".equals(to) ? d.draft(p, null, "report", datasetTitle + " (report)", report(name, columns)) : null;
+        String reportItem = "report".equals(to) ? d.draft(p, null, "report", datasetTitle + " (report)", report(table(name), columns)) : null;
         return new Promoted(name, version, datasetItem, reportItem, yaml);
     }
 
@@ -181,19 +181,27 @@ public final class RunPromotion implements ModelCatalog.Snapshots {
         return out;
     }
 
-    /** The draft dataset's YAML (section 9.4): its source, columns from the answer, the promoter's masks as {@code masked}, and its provenance. */
+    /** The table a snapshot is promoted to: {@code bi.<name>}, its name as the table layer writes names (lower case, underscores). */
+    public static String table(String name) {
+        String n = name.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_]+", "_").replaceAll("^_+|_+$", "");
+        return "bi." + (n.isEmpty() || !Character.isLetter(n.charAt(0)) ? "run_" + n : n);
+    }
+
+    /**
+     * The draft table's YAML (section 9.4; TABLES_GUIDE.md): {@code from: { run }} with the version and the token that binds the snapshot to it, a
+     * column per answer column (staged under the column's name), the promoter's masks as {@code masked}, and its provenance.
+     */
     static String yaml(String name, int version, String token, String title, List<Map<String, Object>> columns, Map<String, Object> provenance) {
         List<String> names = names(columns);
         StringBuilder y = new StringBuilder();
-        y.append("# A run's result promoted to a dataset snapshot (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 9.4). The rows are what the promoter could see;\n")
+        y.append("# A run's result promoted to a table (docs/architecture/BI_DESIGN.md › BI runs, section 9.4). The rows are what the promoter could see;\n")
                 .append("# columns masked for them hold the mask and stay masked for every reader. Review the provenance before publishing.\n");
-        y.append("rachana: 2\n");
-        y.append("dataset: ").append(name).append('\n');
+        y.append("rachana: 3\n");
+        y.append("table: ").append(table(name)).append('\n');
         y.append("version: 1.0.0\n");
         y.append("title: ").append(quote(title)).append('\n');
-        y.append("source: { run: ").append(name).append(", version: ").append(version).append(", token: ").append(token).append(" }\n");
+        y.append("from: { run: ").append(name).append(", params: { version: ").append(version).append(", token: ").append(token).append(" } }\n");
         List<String> keys = new ArrayList<>();
-        List<String> masked = new ArrayList<>();
         y.append("columns:\n");
         for (int i = 0; i < columns.size(); i++) {
             Map<String, Object> c = columns.get(i);
@@ -203,7 +211,10 @@ public final class RunPromotion implements ModelCatalog.Snapshots {
             if (!DatasetDef.TYPES.contains(type)) {
                 type = field ? "string" : "decimal";
             }
-            y.append("  ").append(n).append(": { type: ").append(type).append(", path: ").append(quote(String.valueOf(c.get("name"))));
+            y.append("  ").append(n).append(": { type: ").append(type).append(", title: ").append(quote(String.valueOf(c.get("name"))));
+            if (Boolean.TRUE.equals(c.get("masked"))) {
+                y.append(", masked: true");                                     // masked for the promoter: masked always
+            }
             if (field) {
                 y.append(", role: ").append("date".equals(type) ? "date" : "dimension");
                 keys.add(n);
@@ -215,14 +226,8 @@ public final class RunPromotion implements ModelCatalog.Snapshots {
                 }
             }
             y.append(" }\n");
-            if (Boolean.TRUE.equals(c.get("masked"))) {
-                masked.add(n);
-            }
         }
-        y.append("grain: { keys: [").append(String.join(", ", keys.isEmpty() ? List.of("id") : keys)).append("] }\n");
-        if (!masked.isEmpty()) {
-            y.append("security:\n  masked: [").append(String.join(", ", masked)).append("]          # masked for the promoter: masked always\n");
-        }
+        y.append("keys: [").append(String.join(", ", keys.isEmpty() ? List.of("id") : keys)).append("]\n");
         y.append("provenance:\n");
         for (Map.Entry<String, Object> e : provenance.entrySet()) {
             y.append("  ").append(e.getKey()).append(": ").append(e.getValue() == null ? "null" : quote(String.valueOf(e.getValue()))).append('\n');
@@ -257,13 +262,14 @@ public final class RunPromotion implements ModelCatalog.Snapshots {
             throw new MqException(MqException.Problem.of("DRS-9108", "source.run", "no run snapshot '" + name + "' version " + version
                     + " (it was never promoted, or was removed past promote.versions-keep): promote the run again"));
         }
-        if (!name.equals(dataset) || !String.valueOf(doc.get("token")).equals(token)) {
+        if (!table(name).equals(dataset) || !String.valueOf(doc.get("token")).equals(token)) {
             throw new MqException(MqException.Problem.of("DRS-9108", "source.run", "the run snapshot '" + name + "' belongs to the dataset it was promoted to; "
                     + "this dataset may not read it"));
         }
         @SuppressWarnings("unchecked")
         Map<String, Object> answer = doc.get("answer") instanceof Map<?, ?> m ? (Map<String, Object>) m : Map.of();
         List<Map<String, Object>> cols = columns(answer);
+        List<String> names = names(cols);                                    // staged under the table's column names
         List<?> rows = answer.get("rows") instanceof List<?> l ? l : List.of();
         List<ArrowIpcWriter.Column> out = new ArrayList<>();
         for (int c = 0; c < cols.size(); c++) {
@@ -272,7 +278,7 @@ public final class RunPromotion implements ModelCatalog.Snapshots {
                 Object v = rows.get(i) instanceof List<?> row && c < row.size() ? row.get(c) : null;
                 values[i] = v == null ? null : String.valueOf(v);                  // typed by the dataset's columns as it is staged (a mask casts to null)
             }
-            out.add(new ArrowIpcWriter.Column(String.valueOf(cols.get(c).get("name")), ArrowIpcWriter.Kind.TEXT, values));
+            out.add(new ArrowIpcWriter.Column(names.get(c), ArrowIpcWriter.Kind.TEXT, values));
         }
         java.time.LocalDate asOf = null;
         Object p = doc.get("provenance") instanceof Map<?, ?> pm ? pm.get("asOf") : null;

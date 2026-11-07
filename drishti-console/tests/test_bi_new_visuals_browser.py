@@ -35,6 +35,7 @@ from bi_report_helpers import card_value, clean, open_report, settled, sign_in  
 from bi_report_stack import CONSOLE_URL, trade  # noqa: E402
 
 DATASET = "nv-demo-trade"          # the dataset the model nv-demo reads (2.2: a dataset and a model)
+TABLE = "file:table:bi.nv_demo_trade"   # the table it is (tables migrate)
 MODEL = "nv-demo@1"
 REPORT = "file:report:nv-demo"
 DAYS = ("2026-10-07", "2026-10-08")
@@ -58,9 +59,9 @@ columns:
   notional:    { type: decimal }
   mtm:         { type: decimal }
   tradeDate:   { type: date }
-  country:     { type: string, expr: "'US' if desk == 'DESK-FX' else 'GB' if desk == 'DESK-FI' else 'JP'" }
-  lat:         { type: decimal, expr: "40.7 if desk == 'DESK-FX' else 51.5 if desk == 'DESK-FI' else 35.7" }
-  lon:         { type: decimal, expr: "-74.0 if desk == 'DESK-FX' else -0.1 if desk == 'DESK-FI' else 139.7" }
+  country:     { type: string, expr: "desk == 'DESK-FX' ? 'US' : desk == 'DESK-FI' ? 'GB' : 'JP'" }
+  lat:         { type: decimal, expr: "desk == 'DESK-FX' ? 40.7 : desk == 'DESK-FI' ? 51.5 : 35.7" }
+  lon:         { type: decimal, expr: "desk == 'DESK-FX' ? -74 : desk == 'DESK-FI' ? -0.1 : 139.7" }
 """
 
 MODEL_YAML = """rachana: 2
@@ -264,8 +265,7 @@ def test_the_year_to_date_card_is_the_time_intelligence_measure(stack, browser):
 
 def test_the_dataset_page_shows_the_refresh_schedule_and_the_state(stack, browser):
     page = sign_in(browser, "wes")
-    page.goto(CONSOLE_URL + "/bi/d/file:dataset:" + DATASET)                                       # the old link opens the dataset's page (2.2)
-    page.wait_for_url("**/bi/ds/**")
+    page.goto(CONSOLE_URL + "/bi/ds/" + TABLE)                                                     # the table the dataset became
     page.wait_for_selector("[data-refresh] tbody tr", timeout=30000)
     row = page.locator('[data-refresh] tr[data-refresh-row="dataset"]')
     expect(row).to_have_count(1)
@@ -328,7 +328,7 @@ def test_a_phone_reads_the_new_visuals_in_one_column_without_sideways_scroll(sta
     clean(page)
     page.context.close()
     ds = sign_in(browser, "wes", viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True)
-    ds.goto(CONSOLE_URL + "/bi/ds/file:dataset:" + DATASET)
+    ds.goto(CONSOLE_URL + "/bi/ds/" + TABLE)
     ds.wait_for_selector("[data-refresh] tbody tr", timeout=30000)
     assert ds.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")            # the refresh table scrolls inside its own box
     ds.context.close()

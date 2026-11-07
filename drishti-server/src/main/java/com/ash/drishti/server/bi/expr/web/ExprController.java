@@ -15,13 +15,10 @@
  */
 package com.ash.drishti.server.bi.expr.web;
 
+import com.ash.drishti.rachana.el.check.Scope;
+import com.ash.drishti.rachana.el.check.Signatures;
 import com.ash.drishti.server.bi.BiAccess;
 import com.ash.drishti.server.bi.BiService;
-import com.ash.drishti.server.bi.expr.DelException;
-import com.ash.drishti.server.bi.expr.ExpressionMigrator;
-import com.ash.drishti.server.bi.expr.Expressions;
-import com.ash.drishti.server.bi.expr.FunctionCatalog;
-import com.ash.drishti.server.bi.expr.Scope;
 import com.ash.drishti.server.bi.mq.ModelCatalog;
 import com.ash.drishti.server.bi.mq.MqException;
 import com.ash.drishti.server.security.Principal;
@@ -37,10 +34,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The Drishti expression language over HTTP (docs/guides/API_GUIDE.md "Expressions", docs/guides/BI_LANGUAGE_REFERENCE.md): the function catalogue the expression
+ * Rachana, BI's expression language, over HTTP (docs/guides/API_GUIDE.md "Expressions", docs/guides/RACHANA_REFERENCE.md): the function catalogue the expression
  * editor completes from ({@code GET /bi/expr/functions}), checking one expression in its scope against a model as the caller sees it
- * ({@code POST /bi/expr/validate}: problems with code, fix and position, the type, what it uses), and the converter from the old syntax
- * ({@code POST /bi/expr/convert}: one expression, or a whole item's YAML with comments kept). Nothing here reads data or stores anything.
+ * ({@code POST /bi/expr/validate}: problems with code, fix and position, the type, what it uses). Nothing here reads data or stores anything;
+ * a text in an older syntax is migrated by {@code drishti.py tables migrate}.
  */
 @RestController
 @RequestMapping("/api/v1/bi/expr")
@@ -59,17 +56,15 @@ public class ExprController {
     public Map<String, Object> functions(@RequestParam(required = false) String scope, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.BI);
         Scope s = Scope.of(scope);
-        FunctionCatalog cat = FunctionCatalog.get();
+        Signatures cat = Signatures.get();                                       // Rachana's one catalogue (BI_FOUNDATION_2911E.md 2.5)
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("language", "DEL");
-        m.put("version", 2);
-        m.put("legacy", Expressions.legacyMode().name().toLowerCase(java.util.Locale.ROOT));
+        m.put("language", "Rachana");
+        m.put("version", 3);
         m.put("families", cat.families());
-        m.put("functions", cat.all().stream().filter(f -> s == null || f.allowedIn(s)).map(FunctionCatalog.Fn::toMap).toList());
+        m.put("functions", cat.all().stream().filter(f -> s == null || f.allowedIn(s)).map(Signatures.Signature::toMap).toList());
         m.put("keywords", List.of("where", "by", "desc", "over", "ignore", "keep", "via", "to", "at", "unit", "period", "hierarchy"));
-        m.put("operators", List.of("+", "-", "*", "/", "//", "%", "**", "==", "!=", "<", "<=", ">", ">=", "in", "not in", "is None", "is not None", "and", "or", "not",
-                "a if c else b"));
-        m.put("literals", List.of("12", "1.5", "1e6", "1_000_000", "'text'", "\"text\"", "True", "False", "None", "[a, b]", "date('2026-10-09')", "timestamp('2026-10-09T09:30')"));
+        m.put("operators", List.of("+", "-", "*", "/", "%", "==", "!=", "<", "<=", ">", ">=", "in", "not in", "&&", "||", "!", "c ? a : b"));
+        m.put("literals", List.of("12", "1.5", "1e6", "'text'", "true", "false", "null", "[a, b]", "date('2026-10-09')", "timestamp('2026-10-09T09:30')"));
         m.put("scopes", List.of(Map.of("name", "row", "where", "derive and calculated columns, a dataset's where, MQ and DSQL row filters"),
                 Map.of("name", "rule", "where", "security.rows[].where (may use user.*)"),
                 Map.of("name", "aggregate", "where", "measures, MQ define, having, report local measures"),
@@ -99,43 +94,6 @@ public class ExprController {
             return catalog.validateExpressionDraft(p, expr, scope, draft, text(body, "alias"));       // the designer's unsaved model or dataset
         }
         return catalog.validateExpression(p, expr, scope, text(body, "model"), text(body, "alias"));
-    }
-
-    /**
-     * Body {@code {expr}}: the expression in DEL v2 ({@code changed} false when it already was); or {@code {yaml}}: the item with every expression converted
-     * and {@code expressions: 2} set, comments and layout kept, with the list of changes and of expressions that could not be converted.
-     */
-    @PostMapping("/convert")
-    public Map<String, Object> convert(@RequestBody Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        bi.requirePower(p, BiAccess.BI);
-        String yaml = text(body, "yaml");
-        Map<String, Object> m = new LinkedHashMap<>();
-        if (yaml != null) {
-            ExpressionMigrator.Result r = ExpressionMigrator.migrate(yaml);
-            m.put("yaml", r.yaml());
-            m.put("expressions", r.expressions());
-            m.put("changed", r.changed());
-            m.put("changes", r.changes().stream().map(ExpressionMigrator.Change::toMap).toList());
-            m.put("problems", r.problems().stream().map(ExpressionMigrator.Change::toMap).toList());
-            return m;
-        }
-        String expr = text(body, "expr");
-        if (expr == null) {
-            throw new MqException(MqException.Problem.of("DRS-9127", "expr", "the expression to convert (expr), or an item's YAML (yaml)"));
-        }
-        try {
-            Expressions.Converted c = Expressions.convert(expr);
-            m.put("expr", c.from());
-            m.put("converted", c.to());
-            m.put("changed", c.changed());
-            m.put("problems", List.of());
-        } catch (DelException e) {
-            m.put("expr", expr);
-            m.put("converted", null);
-            m.put("changed", false);
-            m.put("problems", List.of(e.problem().toMap()));
-        }
-        return m;
     }
 
     private static String text(Map<String, Object> body, String key) {

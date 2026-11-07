@@ -72,7 +72,7 @@ On a cluster, a connector edit made in Admin is a shared edit (Admin → Connect
 2. **Nothing inside needs unzipping.** The test data in `data\testdata` is `.jsonl.gz`; Drishti reads the `.gz` files
    directly.
 3. Create the folder `C:\Users\asinh09\drishti-private\endur\` and put your real ENDUR `.jsonl` files in it, **one file per
-   business date**, named by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)): the table, a dot, the date,
+   business date**, named by the load rules ([DATA_LOAD_RULES.md](../guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)): the table, a dot, the date,
    for example `trade_endur.2026-10-16.jsonl` (or `.jsonl.gz`, or `.jsonl.zip`; several dates may also come as one tar of
    `trade_endur\2026-10-16\` folders). A file named only by its date (`2026-10-16.jsonl`) is refused, with the name to give it.
 
@@ -139,7 +139,7 @@ You should see: the drop-down at the top right lists **Build demo lakes**, **Loa
    first, see section 4.1.) (This is Maven `package -DskipTests -pl drishti-server -am`
    on the project's `pom.xml`.)
 
-You should see: in the Run window `BUILD SUCCESS`, and the file `drishti-server\target\drishti-server-2.9.11.c-exec.jar`
+You should see: in the Run window `BUILD SUCCESS`, and the file `drishti-server\target\drishti-server-2.9.11.d-exec.jar`
 exists.
 
 ---
@@ -250,7 +250,7 @@ C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.
    the one thing that names your file — the path after `--from`; its business date comes from its name — for example:
 
    ```
-   lake build --from C:\Users\asinh09\drishti-private\endur\trade_endur.2026-10-15.jsonl --pack $PROJECT_DIR$/../config/packs/trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates --lake $PROJECT_DIR$/../data/delta
+   lake build --from C:\Users\asinh09\drishti-private\endur\trade_endur.2026-10-15.jsonl --pack $PROJECT_DIR$/../config/packs/trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates --lake $PROJECT_DIR$/../data/delta/demo
    ```
 
    → **OK** → ▶ (Run).
@@ -331,7 +331,7 @@ Good to know:
 The same lakes can keep **one source system's trades in Apache Iceberg** and the others in Delta Lake (for example your ENDUR
 trades in Delta and the synthetic CALYPSO trades in Iceberg); every page, history, search and BI report must answer exactly as with
 everything in Delta. Iceberg is written by Drishti's own engine from the server jar, so **build the jar first** (step 2.3: the file
-`drishti-server\target\drishti-server-2.9.11.c-exec.jar` must exist). Stop the server first, as for 3.0.
+`drishti-server\target\drishti-server-2.9.11.d-exec.jar` must exist). Stop the server first, as for 3.0.
 
 1. **Look first** (changes nothing, prints every step):
 
@@ -599,7 +599,7 @@ VaR in any currency and intraday, hierarchies and limit letters, Iceberg) are no
 
 ## 6c. History of a trade or an equity (2.6.5)
 
-Needs **2.6.7**: `git pull` on **main**, step 2.3 again (the jar is `drishti-server-2.9.11.c-exec.jar`), and **restart both** the server and
+Needs **2.6.7**: `git pull` on **main**, step 2.3 again (the jar is `drishti-server-2.9.11.d-exec.jar`), and **restart both** the server and
 the console. The demo lakes of step 3.0 hold **sixty business days**, enough to show it; your own ENDUR history shows as soon as **two or
 more** of your files are loaded (step 3.2, one per date). Any kind of data has a history, not only trades: a counterparty, a curve, an
 economy.
@@ -695,7 +695,7 @@ Delete `data\scratch-lake`, `data\scratch-lake2`, `data\scratch-iceberg` and `da
 | **BI → Trades overview** shows 0 trades, or a page of the demo shows nothing while Admin → Lakes has the table | Old connector files: stop the server, delete `config\connectors` (step 3.1 point 0), start the server again. |
 | `Port 18480 (or 17480) is already in use` | Another copy is running: stop it in IntelliJ / PyCharm (red square), or reboot. |
 | `lake build` says `no id (field 'id' is missing…)` | The parameters lack `--key TRADE_ID`: copy the line of step 3.2 again. |
-| `lake build` says `give --lake DIR (the Delta root the connector reads)` | The parameters lack `--lake`: copy the line of step 3.2 again (it ends with `--lake $PROJECT_DIR$/../data/delta`, or the full path in a terminal). |
+| `lake build` says `give --lake DIR (the Delta root the connector reads)` | The parameters lack `--lake`: copy the line of step 3.2 again (it ends with `--lake $PROJECT_DIR$/../data/delta/demo`, or the full path in a terminal). |
 | `lake build` says `no such file or folder` for `config\packs\trading` or writes a `data\delta` inside `drishti-console` | A relative path run from PyCharm's Terminal (it opens in `drishti-console`): use the full-path line of step 3.2. Delete a stray `drishti-console\data` folder if one was made. |
 | PowerShell says `lake` is not recognized | `lake …` is not a command of its own: run it as `C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\drishti.py lake …`, or use the PyCharm configuration (step 2.2, *What these configurations run*). |
 | The run configurations are not in the drop-down | PyCharm must open `drishti-orig\drishti-console` (its configurations are in `drishti-console\run-configs`); IntelliJ must open `drishti-orig` (`run-configs`). See step 2.2. |

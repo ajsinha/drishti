@@ -14,13 +14,14 @@
 
 """Python in a report (docs/guides/BI_GUIDE.md), in Chromium over the real server and console (tests/bi_report_stack.py on ports 18955 and 17955, security on, a small
 file lake: two business days of 60 trades). The shipped sample report "Desk P&L risk (Python)" runs a Python measure (the standard deviation of one-day P&L per desk) and a
-Python histogram on the server (sandboxed worker); a 2.2 report that asks for the browser runs them on the console too (2.3.0) with the same figures; the report page keeps the
+Python histogram on the server's compute pool python (the strict sandbox); a 2.2 report that asks for the browser runs them there too with the same figures; the report page keeps the
 strict policy (no WebAssembly, no violation) and the designer offers the python visual. Every figure is computed here from the same trades.
 
 Skipped when Playwright, Chromium, the built server jar or pandas and pyarrow are missing, or a scratch port is in use.
 Never run with pytest -n (the ports are fixed)."""
 import os
 import statistics
+import sys
 
 import pytest
 
@@ -56,6 +57,8 @@ class Stack(bi_report_stack.ReportStack):
         reports.joinpath("python-desk-risk.report.yaml").write_text(SAMPLE.read_text(encoding="utf-8"))
         for run in ("server", "browser"):
             reports.joinpath(f"py-{run}.report.yaml").write_text(variant(run))
+        # the server runs Python on its compute pool python, in the interpreter that runs this test (it carries the pinned libraries)
+        self.server_args += ["--DRISHTI_COMPUTE_ENABLED=true", f"--DRISHTI_PYTHON={sys.executable}", f"--drishti.compute.file={ROOT}/config/compute/compute.yaml"]
 
 
 @pytest.fixture(scope="module")
@@ -136,7 +139,7 @@ def test_the_sample_as_shipped_asks_the_server_first(stack, browser):
 
 
 def test_a_report_that_asks_for_the_browser_runs_on_the_console_under_the_strict_policy(stack, browser):
-    """2.3.0 (BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 6): `run: browser` of a 2.2 report is read and run by the console's runner, as `server`; the page loads no WebAssembly."""
+    """2.3.0 (BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 6): `run: browser` of a 2.2 report is read as `server` and runs on the server's compute pool; the page loads no WebAssembly."""
     page = sign_in(browser, "rita", "/bi")
     wasm = []
     page.on("request", lambda r: wasm.append(r.url) if r.url.endswith(".wasm") or "pyodide" in r.url else None)

@@ -28,7 +28,7 @@ Delta connector, and the id field from its `ingest:` block ({kind: {key: FIELD, 
 tools/packgen/pack_from_jsonl.py). Without --pack give --domain and per-kind --key (FIELD or kind=FIELD,...; dotted paths); the layout
 is then the bare id, doc, business_date columns plus --columns.
 
-The business date of a file, by the load rules (docs/architecture/DATA_LOAD_RULES.md): --as-of, else its .ready file's business-date,
+The business date of a file, by the load rules (docs/guides/DATA_LAKE_GUIDE.md): --as-of, else its .ready file's business-date,
 else the date in its name (trade.2026-11-03.jsonl), else the business today. Every row of the file goes under it. A date field
 (--date FIELD or kind=FIELD,..., or the pack's ingest date) is optional: it only names the field whose rows that say another date are
 counted, as lake build does; it never chooses the date.
@@ -149,7 +149,7 @@ def business_today() -> date:
 
 
 def collect(args, keys, dates, report: Report) -> dict[str, dict[date, list]]:
-    """kind -> business date -> [(id, doc json, doc)] for the kinds the pack knows. Each file's business date (DATA_LOAD_RULES.md): --as-of,
+    """kind -> business date -> [(id, doc json, doc)] for the kinds the pack knows. Each file's business date (DATA_LAKE_GUIDE.md): --as-of,
     else its .ready file's business-date, else its name's date, else the business today; a row's own date field never decides (rows
     that say another date are counted)."""
     out: dict[str, dict[date, list]] = {}
@@ -314,7 +314,7 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
     p.add_argument("--mode", choices=MODES, help="append (the default: the documents are added), overwrite-dates (each business date of the "
                                                  "input replaced) or replace (the whole kind rewritten)")
     p.add_argument("--as-of", help="YYYY-MM-DD: the business date of every document (over a file's .ready business-date and its name's date; "
-                                   "without any, the business today); a document's own date field never decides (docs/architecture/DATA_LOAD_RULES.md)")
+                                   "without any, the business today); a document's own date field never decides (docs/guides/DATA_LAKE_GUIDE.md)")
     p.add_argument("--date-from", choices=filedate.DATE_FROM, default="auto",
                    help="auto (default): --as-of, else the file's .ready business-date, else its name's date (trade.2026-11-03.jsonl: kind trade), "
                         "else the business today; name: a file whose name carries no date is refused")

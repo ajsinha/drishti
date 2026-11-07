@@ -115,6 +115,11 @@ public record Dataset(String name, int version, String title, String description
         return compose != null || derived != null;
     }
 
+    /** The sources of a composed or derived dataset (composed: its {@code from}; derived: its inputs), in order; none for any other. */
+    public List<Input> inputs() {
+        return compose != null ? List.copyOf(compose.from().values()) : derived != null ? List.copyOf(derived.inputs().values()) : List.of();
+    }
+
     public static final Set<String> TYPES = Set.of("string", "integer", "decimal", "boolean", "date", "timestamp");
     public static final Set<String> MODES = Set.of("live", "cached", "direct");
     /** The mode of the table the engine makes from a live table's history. */
@@ -284,7 +289,7 @@ public record Dataset(String name, int version, String title, String description
 
     /**
      * A measure: an aggregate expression, or a Python measure (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.8): {@code python} names a Python item, {@code inputs} the columns its
-     * function reads and {@code by} the columns it is grouped by (all {@code table.column}). The query engine never runs one: the console's runner does.
+     * function reads and {@code by} the columns it is grouped by (all {@code table.column}). The query engine never runs one: the compute pool python does.
      */
     public record Measure(String name, String expr, String format, String description, String python, List<String> inputs, List<String> by) {
 

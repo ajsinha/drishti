@@ -15,7 +15,7 @@
 """The renderer follow-ups of 2.9.7 (plan row 2a) on the console's side, without a browser: a view refused because the person's lens (or the
 server's edition) hides its kind says so plainly, naming the lens, on the console's page, in /api/view (the renderer's fix) and in the embed
 API v2; the playground opens on an entity the server holds and the person may open, in their lens, or says why there is none; and the
-renderer's versions (1.1.0 current, 1.0.0 and 0.1.0 still served, unchanged; Elements 2.1 beside 2.0)."""
+renderer's one version (1.2.0; 0.1.0 to 1.1.0 retired, and Elements 2.0 and 2.1 with them)."""
 import json
 
 from core import render_dist as rd
@@ -101,19 +101,20 @@ def test_the_playground_names_no_made_up_entity_and_shows_the_lens():
     assert "/render/demo/start" in js
 
 
-def test_the_versions_1_1_0_current_1_0_0_and_0_1_0_unchanged_elements_2_1_beside_2_0(backend, client):
-    assert rd.VERSION == "1.2.0" and {"0.1.0", "1.0.0", "1.1.0", "1.2.0"} <= set(rd.versions())
+def test_one_renderer_version_is_served_and_the_retired_ones_say_so(backend, client):
+    """One page renderer (Jinja); the client-side renderer draws embeds and <drishti-report>, one version of it: 0.1.0 to 1.1.0 are retired."""
+    assert rd.VERSION == "1.2.0" and rd.versions() == ["1.2.0"]
     for v in ("0.1.0", "1.0.0", "1.1.0"):
-        assert client.get(f"/static/render/{v}/drishti-render.js").status_code == 200
-        assert json.loads((rd.ROOT / v / rd.RECORD).read_text()) == rd.record(v)
-    assert "m/signin.js" in rd.record()["files"] and "m/signin.js" not in rd.record("1.0.0")["files"]
-    assert embed_v2_routes.ELEMENTS == {"2.0.0": "1.0.0", "2.1.0": "1.1.0", "2.2.0": "1.2.0"}
+        assert not (rd.ROOT / v).exists() and client.get(f"/static/render/{v}/drishti-render.js").status_code == 404
+    assert "m/signin.js" in rd.record()["files"]
+    assert embed_v2_routes.ELEMENTS == {"2.2.0": "1.2.0"} and "pivot" not in embed_v2_routes.SCRIPTS
     embed = make_client(backend)
     two = embed.get("/embed/v2/elements/2/drishti-elements.js", follow_redirects=False)
     assert two.headers["location"] == "/embed/v2/render/1.2.0/drishti-elements.js"
-    pinned = embed.get("/embed/v2/elements/2.1/drishti-elements.js", follow_redirects=False)
-    assert pinned.headers["location"] == "/embed/v2/render/1.1.0/drishti-elements.js"
-    old = embed.get("/embed/v2/elements/2.0/drishti-elements.js", follow_redirects=False)
-    assert old.headers["location"] == "/embed/v2/render/1.0.0/drishti-elements.js"
+    for old in ("2.1", "2.0.0"):
+        r = embed.get(f"/embed/v2/elements/{old}/drishti-elements.js", follow_redirects=False)
+        assert r.status_code in (404, 410) and r.json()["code"] == "DRS-8006", old
+    gone = embed.get("/embed/v2/render/1.1.0/drishti-render.js", follow_redirects=False)
+    assert gone.status_code == 410 and gone.json()["code"] == "DRS-8006" and "1.2.0" in gone.json()["detail"]
     text = (rd.FOLDER / "m" / "elements.js").read_text(encoding="utf-8")
     assert "ELEMENTS_VERSION = '2.2.0'" in text

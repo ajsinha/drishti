@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Append, the default mode (docs/architecture/DATA_LOAD_RULES.md section 6.1), on Delta and Iceberg: every row carries the load that wrote
+ * Append, the default mode (docs/guides/DATA_LAKE_GUIDE.md), on Delta and Iceberg: every row carries the load that wrote
  * it ({@code _load_id}, {@code <run>.<file>}) and its file ({@code _source_file}); a second load adds rows; an id both loads wrote is read
  * as the newest load's copy by both connectors (a document and the bulk vector read); replace-date replaces the date.
  */
@@ -121,7 +121,7 @@ class AppendNewestLoadTest {
         assertThat(Files.exists(tmp.resolve("lake-delta/risk/scenario-pv/_delta_log"))).isTrue();
     }
 
-    /** Undo by load id (DATA_LOAD_RULES.md section 6.3): an append's rows removed; a replace undone by restoring the date as it was. */
+    /** Undo by load id (DATA_LAKE_GUIDE.md section 5.5): an append's rows removed; a replace undone by restoring the date as it was. */
     @Test
     void undoRemovesALoadsRowsAndRestoresWhatAReplaceReplaced() throws Exception {
         Path first = PvData.write(tmp.resolve("u1/scenario-pv." + DAY + ".jsonl"), List.of(row("A", 1), row("B", 2)));

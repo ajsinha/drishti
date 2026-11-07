@@ -179,7 +179,7 @@ and every load is stored under the business date of the day it is loaded, so yes
 alone with no date: no dated store, the pack serves its samples.
 
 The tool is the feed's producer here. With a date field it writes the kind's documents one file per business date
-(`<kind>.<YYYY-MM-DD>.jsonl.gz`), and those files load by the [load rules](../architecture/DATA_LOAD_RULES.md), like any other feed. The
+(`<kind>.<YYYY-MM-DD>.jsonl.gz`), and those files load by the [load rules](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo), like any other feed. The
 loader takes each file's date from its name and never reads a row's date. Documents without the field go into `<kind>.jsonl.gz`, which
 loads under `--as-of` or the business today.
 
@@ -196,7 +196,7 @@ routes: {trade: desk-pack-store}         # which connector answers each kind
 connector-templates:                     # the connection settings, as the pack's suggestion
   desk-pack-store:
     plugin: delta
-    settings: {root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: desk-pack, ...}
+    settings: {root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: desk-pack, ...}
 ```
 
 At the server's first start with the pack on, it writes the suggestion to `config/connectors/desk-pack-store.yaml` once and never overwrites it; from
@@ -809,18 +809,19 @@ bottom, nothing wider than the screen.
 
 ![The deal on a phone, 390 px wide](img/deepjson/08-phone.jpg)
 
-For analysis the pack ships a **BI model** with a table for every level, each row carrying the keys above it, so a cash flow can be counted by
+For analysis the pack ships a **BI model** with a table of the table layer for every level, each row carrying the keys above it, so a cash flow can be counted by
 its deal's counterparty or its leg's index:
 
 ```yaml
 # config/bi/models/book-deals.model.yaml (shortened)
+rachana: 3
 model: book-deals
-datasets:
-  deals: {dataset: book-deals-deals, role: dimension}
-  legs: {dataset: book-deals-legs, role: fact}              # each: LEGS
-  cash_flows: {dataset: book-deals-cash-flows, role: fact}  # each: LEGS[].CASH_FLOWS, with ^.LEG_ID
-  resets: {dataset: book-deals-resets, role: fact}          # each: LEGS[].CASH_FLOWS[].RESETS, with ^.FLOW_ID and ^^.LEG_ID
-  events: {dataset: book-deals-events, role: fact}
+tables:
+  deals: {table: book.deals_deals, role: dimension}
+  legs: {table: book.deals_legs, role: fact}              # grain: $.LEGS[*]
+  cash_flows: {table: book.deals_cash_flows, role: fact}  # grain: $.LEGS[*].CASH_FLOWS[*], with ^.LEG_ID
+  resets: {table: book.deals_resets, role: fact}          # grain: $.LEGS[*].CASH_FLOWS[*].RESETS[*], with ^.FLOW_ID and ^^.LEG_ID
+  events: {table: book.deals_events, role: fact}
 relationships:
   - {from: legs.id, to: deals.id}
   - {from: cash_flows.id, to: deals.id}
@@ -828,6 +829,9 @@ measures:
   Leg notional: {expr: sum(legs.NOTIONAL), format: amount0}
   Cash flows: {expr: count(cash_flows)}
 ```
+
+Each level is a table of the table layer beside it, `config/bi/tables/<kind>_<level>.table.yaml` (`rachana: 3`, its `grain:` the list it
+walks; [TABLES_GUIDE.md](TABLES_GUIDE.md)).
 
 ```bash
 python3 tools/drishti.py bi mq --model book-deals@1 --select deals.PRODUCT_TYPE --measures "Deals documents,Cash flows,Resets" --server http://HOST:18480 --token-file my-token.txt

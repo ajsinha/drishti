@@ -43,14 +43,13 @@ features:                                # presets of existing switches (config/
   var: on
   exposure: on
   calc: off
-  pyconsole: off
   python: off
   designer: off
   build: off
   forms: off
   datamap: on
-  data: on                               # the Data view (DATA, /data): every dataset, a simple selection, a day as .jsonl.gz
-  internal-only-data: off                # the Data view refuses datasets marked internal only (IMF, Yahoo, news headlines)
+  data: on                               # Export data (EXPORT, /data): every dataset, a simple selection, a day as .jsonl.gz
+  internal-only-data: off                # Export data refuses datasets marked internal only (IMF, Yahoo, news headlines)
   layouts: on
   workspaces: on
   monitors: on
@@ -61,10 +60,10 @@ features:                                # presets of existing switches (config/
   embed: off
 
 bi:                                      # BI datasets, models, reports and boards follow these (a report or board: its dataset or model)
-  datasets: [market-risk-var-latest, market-risk-var-official, counterparty-exposure-counterparties, counterparty-exposure-netting-sets,
-             counterparty-exposure-official, counterparty-exposure-official-counterparties, counterparty-exposure-official-netting-sets,
-             live-exposure, live-exposure-netting,
-             trading-risk-*]                     # trades with their counterparties' and netting sets' exposure (the Counterparty risk report)
+  datasets: [bi.market_risk_var_latest, bi.market_risk_var_official, bi.counterparty_exposure_counterparties, bi.counterparty_exposure_netting_sets,
+             bi.counterparty_exposure_official, bi.counterparty_exposure_official_counterparties, bi.counterparty_exposure_official_netting_sets,
+             bi.live_exposure_netting,
+             bi.trading_risk_*]                     # trades with their counterparties' and netting sets' exposure (the Counterparty risk report)
   models: [market-risk-var, counterparty-exposure, live-exposure, trading-risk]
 
 phone:                                   # the phone display in this edition (docs/architecture/MOBILE_DISPLAY.md), over the site's ui.phone

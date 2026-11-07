@@ -24,47 +24,62 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** The data model: parsing and Check, one case per row of the problem table (section 2.11), the security safeguard, flattening, contracts and stable ids. */
+/**
+ * The data model of the table layer ({@code rachana: 3}, TABLES_GUIDE.md): parsing and Check, one case per row of the problem table (section
+ * 2.11), the security safeguard, flattening and contracts, over tables and a model written as the layer writes them.
+ */
 class ModelDefTest {
 
-    static final String TRADES = DatasetDefParserTest.TRADES.replace("""
-            security:
-              rows:
-                - { role: desk-head, where: "trades.desk in user.desks" }
-                - { role: [risk, analyst], where: "True" }
-              masked: [mtm]
-            """, "");
+    /** The trades with their own row rules and a masked column. */
+    static final String TRADES_RULED = """
+            rachana: 3
+            table: bi.trades
+            version: 1.0.0
+            from: { kind: trade, connector: trading-lake }
+            keys: [id]
+            columns:
+              desk:     { path: "$.desk", type: string, role: dimension, references: desk }
+              currency: { path: "$.ccy", type: string }
+              notional: { path: "$.notional", type: decimal, aggregate: sum }
+              mtm:      { path: "$.mtm", type: decimal, aggregate: sum, masked: true }
+            rules:
+              - { role: desk-head, where: "$.desk in user.desks" }
+              - { role: [risk, analyst], where: "true" }
+            """;
+
+    /** The trades as the model reads them: the rules are the model's. */
+    static final String TRADES = TRADES_RULED.substring(0, TRADES_RULED.indexOf("rules:")).replace(", masked: true", "");
 
     static final String DESKS = """
-            rachana: 2
-            dataset: desks
+            rachana: 3
+            table: bi.desks
             version: 1.2.0
-            source: { connector: desk-lake, kind: desk }
-            grain: { keys: [desk] }
+            from: { kind: desk, connector: desk-lake }
+            keys: [desk]
             columns:
-              desk:   { type: string, role: key }
-              region: { type: string }
+              desk:   { path: "$.desk", type: string, role: key, key: true }
+              region: { path: "$.region", type: string }
             """;
 
     static final String LIMITS = """
-            rachana: 2
-            dataset: limits
+            rachana: 3
+            table: bi.limits
             version: 1.0.0
-            source: { connector: limit-lake, kind: limit }
+            from: { kind: limit, connector: limit-lake }
             columns:
-              desk:   { type: string, references: desk }
-              amount: { type: decimal, aggregate: sum, additive: { over-time: last } }
+              desk:   { path: "$.desk", type: string, references: desk }
+              amount: { path: "$.amount", type: decimal, aggregate: sum }
             """;
 
     static final String MODEL = """
-            rachana: 2
+            rachana: 3
             model: desk-risk
             version: 1.0.0
             title: Desk risk
-            datasets:
-              trades: { dataset: trades@^1, role: fact }
-              limits: { dataset: limits@^1, role: fact }
-              desks:  { dataset: desks@^1, role: dimension }
+            tables:
+              trades: { table: "bi.trades@^1", role: fact }
+              limits: { table: "bi.limits@^1", role: fact }
+              desks:  { table: "bi.desks@^1", role: dimension }
             relationships:
               - { id: r_1, from: trades.desk, to: desks.desk }
               - { id: r_2, from: limits.desk, to: desks.desk }
@@ -80,7 +95,7 @@ class ModelDefTest {
               rows:
                 trades:
                   - { role: desk-head, where: "trades.desk in user.desks" }
-                  - { role: [risk, analyst], where: "True" }
+                  - { role: [risk, analyst], where: "true" }
               may-see-all: { limits: [desk-head], desks: [desk-head] }
             """;
 
@@ -188,32 +203,33 @@ class ModelDefTest {
         assertThat(open).containsExactly(new ModelChecker.Exposure("limits", "desk-head"), new ModelChecker.Exposure("desks", "desk-head"));
         assertThat(codes(noNote)).contains("w:DRS-9130");
         // a rule on the dataset (in the model) or the explicit note answers it, one dataset at a time
-        String oneRule = noNote.replace("  rows:\n", "  rows:\n    limits:\n      - { role: desk-head, where: \"limits.desk in user.desks\" }\n      - { role: [risk, analyst], where: \"True\" }\n");
+        String oneRule = noNote.replace("  rows:\n", "  rows:\n    limits:\n      - { role: desk-head, where: \"limits.desk in user.desks\" }\n      - { role: [risk, analyst], where: \"true\" }\n");
         assertThat(ModelChecker.exposures(ModelDefParser.parse(oneRule).model(), resolved())).containsExactly(new ModelChecker.Exposure("desks", "desk-head"));
         assertThat(ModelChecker.exposures(ModelDefParser.parse(MODEL).model(), resolved())).isEmpty();
         // a role that only has `true` rules is not restricted
-        String allTrue = noNote.replace("- { role: desk-head, where: \"trades.desk in user.desks\" }", "- { role: desk-head, where: \"True\" }");
+        String allTrue = noNote.replace("- { role: desk-head, where: \"trades.desk in user.desks\" }", "- { role: desk-head, where: \"true\" }");
         assertThat(ModelChecker.exposures(ModelDefParser.parse(allTrue).model(), resolved())).isEmpty();
     }
 
     @Test
     void aDatasetsOwnRuleIsBoundToItsAliasAndANarrowingKeepsTheBasesRules() {
-        DatasetDef trades = DatasetDefParser.parse(DatasetDefParserTest.TRADES).dataset();
+        DatasetDef trades = DatasetDefParser.parse(TRADES_RULED).dataset();
         DatasetDef eu = DatasetDefParser.parse("""
-                rachana: 2
-                dataset: trades-eu
+                rachana: 3
+                table: bi.trades_eu
                 version: 1.0.0
-                extends: trades@1
-                where: "currency == 'EUR'"
-                security:
-                  rows: [{ role: desk-head, where: "notional > 0" }]
-                  masked: [notional]
+                from: { table: bi.trades }
+                filter: "$.currency == 'EUR'"
+                columns:
+                  notional: { path: "$.notional", type: decimal, aggregate: sum, masked: true }
+                rules:
+                  - { role: desk-head, where: "$.notional > 0" }
                 """).dataset();
         ResolvedDataset r = ResolvedDataset.extend(eu, ResolvedDataset.of(trades));
         assertThat(r.layers()).hasSize(2);
         assertThat(r.layers().get(0).get(0).where()).isEqualTo("desk in user.desks");             // the base's own name made bare
         assertThat(r.masked()).containsExactlyInAnyOrder("mtm", "notional");
-        assertThat(r.chain()).containsExactly("trades-eu", "trades");
+        assertThat(r.chain()).containsExactly("bi.trades_eu", "bi.trades");
         ModelDef implicit = ImplicitModels.of(r, k -> java.util.Optional.empty()).model();
         Dataset ds = Flattener.flatten(implicit, Map.of("trades_eu", r)).dataset();
         Dataset.TableSecurity s = ds.security().tables().get("trades_eu");
@@ -224,10 +240,10 @@ class ModelDefTest {
 
     @Test
     void ruleTextIsRewrittenForTheAliasOnly() {
-        assertThat(RuleText.qualify("pack.trading.trade.desk in user.desks and trade.status == 'Live'", "pack.trading.trade", java.util.Set.of("desk", "status"), "t"))
-                .isEqualTo("t.desk in user.desks and t.status == 'Live'");
-        assertThat(RuleText.qualify("upper(desk) == 'desk' or year(tradeDate) > 2020", "x", java.util.Set.of("desk", "tradeDate"), "a"))
-                .isEqualTo("upper(a.desk) == 'desk' or year(a.tradeDate) > 2020");
+        assertThat(RuleText.qualify("pack.trading.trade.desk in user.desks && trade.status == 'Live'", "pack.trading.trade", java.util.Set.of("desk", "status"), "t"))
+                .isEqualTo("t.desk in user.desks && t.status == 'Live'");
+        assertThat(RuleText.qualify("upper(desk) == 'desk' || year(tradeDate) > 2020", "x", java.util.Set.of("desk", "tradeDate"), "a"))
+                .isEqualTo("upper(a.desk) == 'desk' || year(a.tradeDate) > 2020");
     }
 
     @Test
@@ -257,29 +273,14 @@ class ModelDefTest {
         assertThat(Contracts.models(was, inactive).refusal()).contains("inactive");
         assertThat(Contracts.models(was, ModelDefParser.parse(MODEL.replace("version: 1.0.0", "version: 0.9.0")).model()).refusal()).contains("goes down");
         DatasetDef d1 = DatasetDefParser.parse(DESKS).dataset();
-        DatasetDef d2 = DatasetDefParser.parse(DESKS.replace("  region: { type: string }\n", "")).dataset();
+        DatasetDef d2 = DatasetDefParser.parse(DESKS.replace("  region: { path: \"$.region\", type: string }\n", "")).dataset();
         assertThat(Contracts.datasets(d1, d2).refusal()).contains("region");
     }
 
     @Test
-    void stableIdsAreWrittenOnceAndNeverChanged() {
-        String model = MODEL.replace("{ id: m_mtm, expr: \"sum(trades.mtm)\" }", "\"sum(trades.mtm)\"   # the mark").replace("{ id: r_1, ", "{ ");
-        String once = StableIds.write(model, true);
-        assertThat(once).containsPattern("(?m)^id: md_[0-9a-f]{8}$").contains("MTM:      { expr: \"sum(trades.mtm)\", id: m_mtm }   # the mark").contains("- { id: r_3, from: trades.desk");
-        assertThat(StableIds.write(once, true)).isEqualTo(once);
-        assertThat(ModelDefParser.parse(once).ok()).isTrue();
-        String tight = StableIds.write(model.replace("- { from: trades.desk", "- {from: trades.desk"), true);
-        assertThat(tight).as("a relationship written without a space after the brace").contains("- { id: r_3, from: trades.desk").doesNotContain(",from:");
-        assertThat(ModelDefParser.parse(tight).ok()).isTrue();
-        String ds = StableIds.write(DESKS.replace("  region: { type: string }", "  region: string\n  name:\n    type: string"), false);
-        assertThat(ds).contains("region: { type: string, id: c_region }").contains("desk:   { type: string, role: key, id: c_desk }").contains("    id: c_name");
-        assertThat(DatasetDefParser.parse(ds).dataset().columns().get("name").id()).isEqualTo("c_name");
-    }
-
-    @Test
     void anImplicitModelBringsPackDimensionsOneHop() {
-        DatasetDef trade = DatasetDefParser.parse(DatasetDefParserTest.TRADES.replace("dataset: trades", "dataset: pack.trading.trade\ngenerated: { by: pack, pack: trading }")).dataset();
-        DatasetDef desk = DatasetDefParser.parse(DESKS.replace("dataset: desks", "dataset: pack.core.desk\ngenerated: { by: pack, pack: core }")).dataset();
+        DatasetDef trade = DatasetDefParser.parse(TRADES.replace("table: bi.trades", "table: pack.trading.trade").replace("{ kind: trade,", "{ pack: trading, kind: trade,")).dataset();
+        DatasetDef desk = DatasetDefParser.parse(DESKS.replace("table: bi.desks", "table: pack.core.desk").replace("{ kind: desk,", "{ pack: core, kind: desk,")).dataset();
         ImplicitModels.Implicit im = ImplicitModels.of(ResolvedDataset.of(trade), k -> "desk".equals(k) ? java.util.Optional.of(ResolvedDataset.of(desk)) : java.util.Optional.empty());
         assertThat(im.model().datasets()).containsOnlyKeys("trade", "desk");
         assertThat(im.model().datasets().get("desk").role()).isEqualTo("dimension");
@@ -288,7 +289,7 @@ class ModelDefTest {
         Dataset ds = Flattener.flatten(im.model(), im.datasets()).dataset();
         assertThat(ds.measures()).containsKeys("Count of trade", "Sum of notional");
         // an authored dataset brings no dimensions
-        assertThat(ImplicitModels.of(ResolvedDataset.of(DatasetDefParser.parse(DatasetDefParserTest.TRADES).dataset()), k -> java.util.Optional.of(ResolvedDataset.of(desk)))
+        assertThat(ImplicitModels.of(ResolvedDataset.of(DatasetDefParser.parse(TRADES).dataset()), k -> java.util.Optional.of(ResolvedDataset.of(desk)))
                 .model().datasets()).containsOnlyKeys("trades");
     }
 
@@ -328,7 +329,7 @@ class ModelDefTest {
         ModelDef retitled = ModelDefParser.parse((MODEL + listed).replace("title: Desk risk", "title: Desk risk (new title)")).model();
         assertThat(Contracts.models(listedV1, retitled, data, data).refusal()).as("one version string, one content").contains("1.0.0 is published already").contains("1.0.1");
         DatasetDef d1 = DatasetDefParser.parse(DESKS).dataset();
-        assertThat(Contracts.datasets(d1, DatasetDefParser.parse(DESKS.replace("  region: { type: string }", "  region: { type: string, description: The region }")).dataset())
+        assertThat(Contracts.datasets(d1, DatasetDefParser.parse(DESKS.replace("  region: { path: \"$.region\", type: string }", "  region: { path: \"$.region\", type: string, description: The region }")).dataset())
                 .refusal()).contains("published already");
     }
 }

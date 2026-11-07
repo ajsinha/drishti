@@ -87,7 +87,7 @@ pack.yaml contributions  <  application.yaml  <  application.local.yaml  <  envi
 The longest a source read may take is `drishti.sources.fetch-timeout`, `10s` in the bundled file: the first read of a date on a large table loads its id index first, and a panel's own source (another pack's data) is read within the same limit.
 
 1. Create `application.local.yaml` in the directory you start the server from (the repository root when
-   you run `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.c-exec.jar`):
+   you run `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.d-exec.jar`):
 
    ```yaml
    drishti:
@@ -100,7 +100,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `10s` in 
 2. Start the server with an environment variable as well:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.c-exec.jar
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.d-exec.jar
    ```
 
    The effective value is `4s`: the environment beats the local file.
@@ -108,7 +108,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `10s` in 
 3. Add an argument:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.c-exec.jar \
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.d-exec.jar \
        --drishti.sources.fetch-timeout=5s
    ```
 
@@ -264,7 +264,7 @@ Setting `java.io.tmpdir` inside a running JVM does not move `Files.createTempFil
 
 ```bash
 mkdir -p data/tmp/server        # once: the server makes it too, but the JVM warns on a first start when it does not exist yet
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.c-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.d-exec.jar
 ```
 
 or, where editing the command is awkward (a service manager, a container, a wrapper script), through the environment: `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=/opt/drishti/data/tmp/server` (Java prints `Picked up JAVA_TOOL_OPTIONS` once). With another data folder or `DRISHTI_TMP_DIR`, use that base: `<data dir>/tmp/server`. Everything Drishti ships passes it already: `tools/windows/start-server.ps1`, the IntelliJ run configurations, `deploy/docker/server.Dockerfile` (in `JAVA_TOOL_OPTIONS`), the `run-server.sh`/`.ps1` that `tools/packmake.py` writes, the loaders `tools/load-*.sh`, and every java the tests and tools start (`tools/javacmd.py`; a guard test fails on one that does not). `./mvnw` gives Maven's own JVM `<repository>/data/tmp/maven` (`DRISHTI_MAVEN_TMP` names another), and the test JVMs get `<module>/target/tmp`, which `mvn clean` removes.
@@ -303,7 +303,7 @@ One folder for your own libraries, loaded at start with no rebuild ([external_li
 | Folder | What goes in it | Loaded by |
 |---|---|---|
 | `<base>/java` | jars: JDBC drivers, connector plugins, libraries a plugin needs | the **server**: every jar joins its class path at start (the jar is launched by Spring Boot's `PropertiesLauncher`, whose `loader.properties` names this folder; `-Dloader.path=` overrides it) |
-| `<base>/python` | modules, packages, pure-Python `.whl` / `.zip` / `.egg` files | the **console**: on `sys.path` at start, after the console's own folder; sandboxed Python items see the paths but import a package only when it is on `bi.python.packages` |
+| `<base>/python` | modules, packages, pure-Python `.whl` / `.zip` / `.egg` files | the **console**: on `sys.path` at start, after the console's own folder (the console's own tools; Python items run on the server's compute pool, whose libraries are pinned in `config/compute/locks/python.lock`) |
 
 | Process | Setting | Variable | Default |
 |---|---|---|---|
@@ -381,7 +381,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_REPORTS_ENABLED` | `drishti.reports.enabled` | `true` | Run the scheduled-reports scheduler on this server. |
 | `DRISHTI_REPORTS_DIR` | `drishti.reports.folder` | `./data/reports` | Where report files are written. |
 | `DRISHTI_SUTRA_WATCH` | `drishti.rachana.watch` | `auto` | How Sutra hot reload notices edits: `auto` (file events, polling when they are unavailable) or `poll`. |
-| `DRISHTI_CALC_ENABLED` | `drishti.calc.enabled` | `true` | Allow Calc (Python in the browser). |
+| `DRISHTI_LABS_CALC` | `drishti.calc.enabled` | `false` | Labs: allow Calc (Python in the browser, a scratch pad that never publishes). |
 | `DRISHTI_VAR_ENABLED` | `drishti.var.enabled` | `true` | Run the VaR engine (`/api/v1/var`, the VaR explorer). |
 | `DRISHTI_VAR_THREADS` | `drishti.var.threads` | `0` | Cores the VaR engine's vector sums use (`0`: every core). |
 | `DRISHTI_VAR_MEMORY_MB` | `drishti.var.memory-budget-mb` | `0` | Most memory one date's P&L vectors take (`0`: a quarter of the heap). |
@@ -414,6 +414,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_EXPOSURE_TIER` | `drishti.ccr.exposure.tier` | `mapped` | Where a loaded date's matrices live: `mapped` (a memory-mapped float32 hot file per date) or `heap` (float64 on the heap). |
 | `DRISHTI_EXPOSURE_OFFICIAL` | `drishti.ccr.exposure.official.enabled` | `true` | Capture every netting set, counterparty, group and hierarchy node officially at the end of each loaded date, and publish to `risk-results/exposure-official` and `exposure-official-cpty`. |
 | `DRISHTI_COMPUTE_EXPOSURE_WORKERS` | `compute.pools.exposure.workers.max` (`config/compute/compute.yaml`) | `4` | Python workers of the compute pool `exposure` (the Python exposure engine: the exact pre-deal what-if, method `paths`) on this node; the compute workers run only with `DRISHTI_COMPUTE_ENABLED=true`, else the exact what-if answers `503 DRS-5446`. |
+| `DRISHTI_COMPUTE_PYTHON_WORKERS` | `compute.pools.python.workers.max` (`config/compute/compute.yaml`) | `4` | Python workers of the compute pool `python` on this node: every Python run of code people write (Python items and visuals, Python-driven tables, Notebook cells), in the strict sandbox ([PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)). |
 | `DRISHTI_LAYOUTS_ENABLED` | `drishti.layouts.enabled` | `true` | Allow personal layouts. |
 | `DRISHTI_PIVOT_ENABLED` | `drishti.pivot.enabled` | `true` | Allow the Pivot tab. |
 | `DRISHTI_ASK_ENABLED` | `drishti.explain.ask.enabled` | `false` | Turn on Ask about this page (also list packs in `drishti.explain.ask.packs`). |
@@ -453,13 +454,9 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_BI_STORE_LIST_TTL` | `drishti.bi.store-list-ttl` | `1s` | How old the per-node snapshot behind BI and run listings may be (a single item or run is always read fresh; this node's writes drop it at once). |
 | `DRISHTI_INDEX_DIR` | `drishti.index.dir` | empty | The multi-day type-ahead index's segment files, one folder per connector; empty means `<data dir>/index` (`./data/index`). See [`drishti.index`](#drishtiindex--the-multi-day-type-ahead-index). |
 | `DRISHTI_BI_DIR` | `drishti.bi.dir` | `./config/bi` | Where Rupaka (BI) files live: `datasets/`, `reports/`, `boards/`, `notebooks/`, `python/`. Never inside a pack. |
-| `DRISHTI_BI_TRANSFORM_PYTHON` | `drishti.bi.transform.python` | empty | The Python that runs a derived dataset's Transform: it needs `pandas` and `pyarrow`, normally the console's `drishti-console/.venv/bin/python`. Empty: that file when it exists, else `python3`. |
-| `DRISHTI_BI_TRANSFORM_RUNNER` | `drishti.bi.transform.runner` | empty | The console's `core/transform_cli.py`, which the server starts to run a Transform in the sandboxed runner. Empty: looked for in `drishti-console/core` from the working directory and its parents. |
-| `DRISHTI_BI_TRANSFORM_CONSOLE_URL` | `drishti.bi.transform.console-url` | empty | The console's Py-node endpoint base URL (`http://console:17480`): Transforms and Python measures run there (`/internal/py/*`). Empty: the server starts `transform_cli.py` itself. |
-| `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` | `drishti.bi.transform.console-token` | empty | The shared secret sent as `X-Drishti-Runner-Token` on every Py-node call; the console refuses a call without it. |
 | `DRISHTI_BI_NODE` | `drishti.bi.exec.node` | empty | This Java node's name when several Java nodes serve the site (`drishti.bi.exec.nodes` lists them); empty: one node. |
 | `DRISHTI_BI_RUNS_FILE` | `drishti.bi.runs.file` | `./config/runs/runs.yaml` | The BI runs settings file ([BI runs](#bi-runs-configrunsrunsyaml)); a missing file means the defaults. |
-| `DRISHTI_BI_MIGRATE_ON_START` | `drishti.bi.migrate.on-start` | `true` | At start, converts stored items once: old-syntax expressions to DEL v2, then `rachana: 1` datasets to datasets and models with their reports rebound (each change audited, the text before kept in the item's history). `false`: a bi-admin runs `drishti.py bi migrate` instead ([drishti.bi.migrate](#drishtibimigrate--migrations-of-stored-bi-items)). |
+| `DRISHTI_BI_MIGRATE_ON_START` | `drishti.bi.migrate.on-start` | `true` | At start, moves stored items once: every stored dataset and model into the table layer, then 2.3 boards into reports (each change audited, the text before kept in the item's history). `false`: the items stay unread until they are moved ([drishti.bi.migrate](#drishtibimigrate--migrations-of-stored-bi-items)). |
 | `DRISHTI_BI_STORE` | `drishti.bi.query.store-dir` | `./data/bi-store` | The BI store: the typed Parquet layers (columns, rollups, live snapshots) the dataset query engine writes and reads, and DuckDB's spill folder. Rebuildable from the connectors; never commit it. |
 | `DRISHTI_PACKS_DIR` | `drishti.packs.dir` | `./config/packs` | The packs directory. If it does not exist and the old `./packs` does, `./packs` is used with a warning (one release). |
 | `DRISHTI_PACKS_EXTRA_DIRS` | `drishti.packs.extra-dirs` | empty | Further pack folders, comma-separated, looked in after the packs directory (the shipped packs win a name): `examples/packs` makes the retired example packs (finance, genomics, logistics, retail-banking, climate-risk, operational-risk, liquidity-risk) loadable by name ([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#retired-example-packs-examplespacks)). |
@@ -501,8 +498,6 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_ABOUT_PREFETCH` | `ui.about_prefetch` | `true` | Fetch *About this page* when a view goes idle, so labels with a glossary entry are underlined at once; costs one explain per page view. |
 | `DRISHTI_VIEWS_REFRESH_MIN_SECONDS` | `views.refresh_min_seconds` | `5` | The fastest any panel refreshes (a Sutra's `refresh:`, [RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 9](../guides/RACHANA_REFERENCE.md#9-live-panels-refresh-control-and-freshness)), in seconds (1 to 3600): a Sutra or a reader asking for faster gets this. |
 | `DRISHTI_UI_DESIGNER` | `ui.designer` | `false` | The Sutra designer: **Customize** on every entity page, **Describe** under Build, New screen, and the **Outline** and **Grid** modes ([RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31](../guides/RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid)). Off: pages and the Build workbench are unchanged. |
-| `DRISHTI_UI_RENDER` | `ui.render.mode` | `server` | Which renderer draws the pages listed in `ui.render.pages`: `server` (the console's Jinja macros, as always) or `client` (Drishti Render draws the page in the browser from its ViewModel; [CLIENT_RENDERER.md, section 16](../architecture/CLIENT_RENDERER.md#16-phase-2-the-console-drawn-by-the-renderer)). |
-| `DRISHTI_UI_RENDER_PAGES` | `ui.render.pages` | `view,pane` | The pages `ui.render.mode` applies to, page by page: `view` (an entity page, `/v/<kind>/<id>`, and what `/go`, a shared link and a history day open), `pane` (the same page in a workspace pane). A page left out is drawn by the server. |
 | `DRISHTI_HOME_FACTS` | `ui.facts.enabled` | `true` | Home's **Did you know** tile, the fact of the day for a signed-in user ([USER_GUIDE.md](../guides/USER_GUIDE.md#home-the-fact-of-the-day)). `false`: no tile. |
 | `DRISHTI_EMBED_ENABLED` | `embed.enabled` | `false` | Serve `/embed/v1/` (Elements 1.x, HTML) and `/embed/v2/` (Elements 2.0 and the client-side renderer, the ViewModel as JSON) for host applications registered at the server (CLIENT_RENDERER.md). |
 | `DRISHTI_EMBED_SIGN_IN` | `embed.sign_in.enabled` | `true` | The sign-in window of `auth: 'popup'` (`/embed/v2/sign-in`), through `auth.oidc`. |
@@ -517,33 +512,17 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_OIDC_CLIENT_SECRET` | `auth.oidc.client_secret` | empty | The OIDC client secret; empty for a public client (PKCE alone). |
 | `DRISHTI_OIDC_REDIRECT_URI` | `auth.oidc.redirect_uri` | empty | The redirect URI; empty: `<console>/auth/oidc/callback`. |
 | `DRISHTI_LIVE_MAX_SUBSCRIPTIONS` | `live.max_subscriptions` | `32` | Live subscriptions one browser may hold. |
-| `DRISHTI_CALC_ENABLED` | `calc.enabled` | `true` | Offer Calc. |
+| `DRISHTI_LABS_CALC` | `labs.calc` | `false` | Labs: offer Calc. |
 | `DRISHTI_BI_ENABLED` | `bi.enabled` | `true` | Rupaka phase 1: the BI top-bar menu, the `/bi` pages and the `RUPAKA` keyword. The server has its own switch, `drishti.bi.enabled`. |
 | `DRISHTI_BI_LIVE_MIN_INTERVAL_MS` | `bi.live.min_interval_ms` | `250` | Rupaka phase 5: a report or board redraws its live visuals at most this often, never two rounds at once; a burst of ticks is one redraw (100 to 5000). |
 | `DRISHTI_BI_LIVE_STALE_SECONDS` | `bi.live.stale_seconds` | `30` | A live report or board that has heard nothing from the server (not even its 5-second status) for this long says **Stale** (5 to 600). |
 | `DRISHTI_BI_BOARD_ROTATE_SECONDS` | `bi.board.rotate_seconds` | `30` | A board in kiosk mode turns to its next page after this long, unless the board sets `rotate:` (3 to 3600). |
-| `DRISHTI_BI_PYTHON_ENABLED` | `bi.python.enabled` | `true` | Rupaka phase 6 ([BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python)): the console's Python runner. Off: a python visual's server target answers `DRS-9074` (the browser target still works where an item allows it). |
-| `DRISHTI_BI_PYTHON_WORKERS` | `bi.python.workers` | `2` | Worker processes at once; a call waits `bi.python.queue_seconds` (`5`) for a place, then `DRS-9074`. |
-| `DRISHTI_BI_PYTHON_QUEUE_SECONDS` | `bi.python.queue_seconds` | `5` | How long a Python call waits for a free worker. |
-| `DRISHTI_BI_PYTHON_MAX_TIMEOUT` | `bi.python.max_timeout_seconds` | `60` | The most a manifest's `timeout` may be: the CPU and wall-clock limit of one call. |
-| `DRISHTI_BI_PYTHON_MAX_MEMORY_MB` | `bi.python.max_memory_mb` | `1024` | The most a manifest's `memory` may be, on top of what the interpreter and its packages need to start. |
-| `DRISHTI_BI_PYTHON_MAX_INPUT_BYTES` | `bi.python.max_input_bytes` | `16000000` | Largest Arrow table handed to Python (`DRS-9072`). |
-| `DRISHTI_BI_PYTHON_MAX_OUTPUT_BYTES` | `bi.python.max_output_bytes` | `1000000` | Largest answer (a chart option, an image, a measure's rows) (`DRS-9072`). |
-| (no variable) | `bi.python.packages` | `[pandas, numpy, pyarrow, scipy, statsmodels]` | The allow-list of packages Python items may use; one not installed is refused when used. Equal to the server's `drishti.bi.report.python-packages`. |
-| (no variable) | `bi.python.max_groups`, `network_namespace`, `scratch_dir` | `5000`, `auto`, system temp | Most groups a measure is called for; `auto`, `require` or `off` for the no-network namespace (the audit hook is always on); where scratch folders are made. |
-| `DRISHTI_BI_PYTHON_FORK_SERVER` | `bi.python.fork_server` | `true` | Python calls run in children of one **fork-server** per console: a parent that has imported pandas, numpy and pyarrow forks one child per call (its own session, limits, audit hook and scratch folder), so a call does not pay for an interpreter's start. `false`: a new process per call. `/bi/python/status` says `forkServer: {on, running, forks, failed}`. |
-| `DRISHTI_BI_PYTHON_WARM` | `bi.python.warm` | `true` | Start the fork-server when the console starts, so the first Python call (a report, a Transform's step run) is warm too; `/bi/python/status` says `forkServer.warm` and `warmedMs`. |
-| (no variable) | `bi.python.cache_entries`, `cache_max_bytes`, `cache_seconds` | `256`, `64000000`, `600` | The **L4 result cache** of Python answers, by the item's code, its parameters and the exact input bytes (already masked for the reader): most entries, most bytes, how long one is kept. `0` entries turns it off. A cell is never cached. |
-| `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` | `bi.python.runner_token` | empty | The secret the server sends as `X-Drishti-Runner-Token` on every call of the console's **Py-node endpoint** (`/internal/py/transform`, `/measure`, `/column`; [API_GUIDE.md](../guides/API_GUIDE.md)); the same variable sets the server's `drishti.bi.transform.console-token`. Empty: the endpoint is off (`503 DRS-9074`); a wrong token is `403 DRS-9073`. |
-| `DRISHTI_BI_EXPLORE_MAX_ROWS` | `bi.explore.max_rows` | `10000` | Rupaka phase 9 ([USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python)): the most rows of an Analyse extract (the reader's rows, cut here; 10 to 100000). Without `pyarrow` on the console the server's JSON limit (`drishti.bi.query.json-max-rows`, 5000) also applies. |
-| (no variable) | `bi.explore.max_fields`, `sql_max_rows`, `sql_max_seconds`, `sql_max_chars` | `60`, `5000`, `5`, `20000` | Most columns of an extract; most rows a SQL cell returns; a SQL cell running longer is stopped; longest SQL text (`DRS-9072` for each). |
-| (no variable) | `bi.explore.max_extracts` | `6` | Most further extracts in one notebook, besides the first (`extract("name")` in a cell, a table of that name in SQL; `DRS-9072`). See [USER_GUIDE.md › Analyse: slice, SQL and Python, section 2](../guides/USER_GUIDE.md#2-the-extract). |
-| (no variable) | `bi.explore.cell_timeout_seconds`, `cell_memory_mb`, `cell_max_chars`, `max_cells` | `20`, `512`, `65536`, `60` | A Python cell's time and memory on the server (also capped by `bi.python.max_timeout_seconds` and `max_memory_mb`); longest cell; most cells in a notebook. |
-| (no variable) | `bi.explore.quant_engine` | `stand-in` | The engine behind `quant.price(...)` in a Python cell ([AI.md](AI.md#16-the-consoles-quantengine-slot-built-lean)); only `stand-in` is built in. |
+| `DRISHTI_BI_NOTEBOOK_MAX_ROWS` | `bi.notebook.max_rows` | `10000` | The Notebook ([USER_GUIDE.md › The Notebook](../guides/USER_GUIDE.md#the-notebook)): the most rows of an extract (the reader's rows, cut here; 10 to 100000). |
+| (no variable) | `bi.notebook.max_fields`, `sql_max_rows`, `sql_max_chars` | `60`, `5000`, `20000` | Most columns of an extract; most rows a SQL cell returns (run by the server); the longest SQL text. |
+| (no variable) | `bi.notebook.max_extracts` | `6` | Most further extracts in one notebook, besides the first (`extract("name")` in a Python cell; `DRS-9072`). |
+| (no variable) | `bi.notebook.cell_timeout_seconds`, `cell_memory_mb`, `cell_max_chars`, `max_cells` | `20`, `512`, `65536`, `60` | A Python cell's time and memory on the server's compute pool; the longest cell; the most cells in a notebook. |
 | `DRISHTI_BI_TRANSFORM_PREVIEW_ROWS` | `bi.transform.preview_rows` | `1000` | The Transform editor ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](../guides/BI_GUIDE.md#17-data-prep-the-transform-editor)): rows of each input its step-by-step run starts from, asked of the server as the person (10 to 50000; the server's `drishti.bi.transform.max-input-rows` also caps it). |
-| (no variable) | `bi.transform.timeout_seconds`, `memory_mb`, `snippets_file` | `20`, `512`, empty | The step run's time and memory (also capped by `bi.python.max_timeout_seconds`, `max_memory_mb`); a file of more data-prep snippets read after `drishti-console/config/prep-snippets.yaml`. |
-| `DRISHTI_BI_PYCONSOLE_ENABLED` | `bi.pyconsole.enabled` | `true` | The browser Python console at `/pyconsole` ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](../guides/USER_GUIDE.md#16-the-browser-python-console)); it also needs Calc's runtime (`tools/fetch-pyodide.sh`). |
-| `DRISHTI_BI_PYCONSOLE_MAX_ROWS` | `bi.pyconsole.max_rows` | `20000` | Most rows of an extract handed to the browser (the reader's masked rows, cut here; 10 to 100000). |
+| (no variable) | `bi.transform.timeout_seconds`, `memory_mb`, `snippets_file` | `20`, `512`, empty | The step run's time and memory (also capped by `drishti.bi.report.python-max-seconds`, `python-max-memory-mb`); a file of more data-prep snippets read after `drishti-console/config/prep-snippets.yaml`. |
 | `DRISHTI_LAYOUTS_ENABLED` | `layouts.enabled` | `true` | Offer layout mode. |
 | `DRISHTI_PACKS_DIR` | `packs.dir` | `../config/packs` | The packs directory (a relative path resolves from `drishti-console/`). |
 | `DRISHTI_PACKS_EXTRA_DIRS` | `packs.extra_dirs` | empty | Further pack folders, comma-separated, as on the server (relative paths resolve from `drishti-console/`, so `../examples/packs`). |
@@ -749,7 +728,7 @@ and [AI.md](AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy).
 ### Change the port
 
 ```bash
-DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.c-exec.jar
+DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.d-exec.jar
 ```
 
 You should see `Tomcat started on port 18490` in the log. Point the console at it with
@@ -758,7 +737,7 @@ You should see `Tomcat started on port 18490` in the log. Point the console at i
 ### Load more packs
 
 ```bash
-DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.c-exec.jar
+DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.d-exec.jar
 ```
 
 Packs a listed pack `extends:` (or the older `requires:`) are loaded too, dependencies first. Then
@@ -771,7 +750,7 @@ set `DRISHTI_PACKS_DIR` to an absolute path so both programs find the same folde
 export DRISHTI_SECURITY_ENABLED=true
 export DRISHTI_TOKEN_SECRET="$(openssl rand -base64 48)"   # at least 32 bytes; give the console the same value
 export DRISHTI_SEED_ADMIN=false
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.c-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.d-exec.jar
 ```
 
 The console needs `DRISHTI_AUTH_ENABLED=true`, the same `DRISHTI_TOKEN_SECRET`, and its own
@@ -815,7 +794,7 @@ Admin → Connectors. Defining the connector under `drishti.sources.connectors` 
 ### Use a different holiday calendar
 
 ```bash
-DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.c-exec.jar
+DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.d-exec.jar
 ```
 
 `curl -s localhost:18480/api/v1/business-date` then shows `"calendar":"USNY+GBLO"`.
@@ -1050,7 +1029,7 @@ The console's side: `editions.dir` (`DRISHTI_EDITIONS_DIR`, default `../config/e
 `application.local.yaml` overrides the edition file's keys for the console (menus, Home, help, words; an edition's Home landings are its `home.landings`, drawn by its `home.template` with its `home.titles`: Drishti Risk's `desk`, `command`, `map`, Drishti World's `desk`, `explorer`, `map`, Drishti Market's `desk`, `explorer`, `quality`, Drishti Trading's `trader`, `desk`, `explorer`; Drishti Market's `quality.stale-days`, default 2, is the Quality landing's stale threshold in business days); Drishti Trading's `trading:` block: `trading.people` (who is who: `{user: {trader: TRDR-ASHAH}}` or `{user: {desk: DESK-COMM, role: desk-head}}`; the console's own `trading.people` in its `application.local.yaml` adds to the edition file's and wins for a name in both), `trading.match-records` (true: else a matching trader record), `trading.landing-by-role` (`{desk-head: desk, trader: trader}`, below the person's own choice), `trading.near-limit` (0.8), `trading.limit-days` (5), `trading.pnl-var-days` (60), `trading.max-rows` (20000), `trading.live-statuses`; a person's View as choice is their `tradingView` setting ([EDITIONS.md section 12](EDITIONS.md#12-drishti-trading)); `lens.roles` is the hook for
 role-based access to the lens link (read, not wired). Its own feature switches, each on by default and preset by an edition through
 `config/editions/features.yaml`: `features.build` (Build: new screens, packs, designs, reviews, changes), `features.forms` (`FORM`, `/forms`),
-`features.datamap`, `features.data` (the Data view, `DATA`), `features.workspaces`, `features.monitors`, `features.alerts`, `features.lakes` (Admin → Lakes), `features.reports`,
+`features.datamap`, `features.data` (Export data, `DATA`), `features.workspaces`, `features.monitors`, `features.alerts`, `features.lakes` (Admin → Lakes), `features.reports`,
 `features.collaboration` (Admin → Collaboration). `/studio` (the Build workbench's entry) follows `features.build`. A page whose switch is off answers 404.
 
 Branding keys of the console beside `ui.product`: `ui.placeholder` (the command line's placeholder; blank: `config/menus.yaml`'s),
@@ -1329,9 +1308,9 @@ The console's `drishti-console/config/datamap.yaml` holds the map's presentation
 draw dashed beyond those whose contract says `class: computed`, and the coverage under which a join is a finding (`low-coverage`, 0.95).
 A pack it does not name is a domain of its own.
 
-### `drishti.data-view` — the Data view
+### `drishti.data-view` — Export data
 
-The Data view (`DATA <GO>`, `/api/v1/data`; [DATA_GUIDE.md](../guides/DATA_GUIDE.md#6-the-data-view-download-a-dataset)) lists every stored
+Export data (`EXPORT <GO>`, `/api/v1/data`; [DATA_GUIDE.md](../guides/DATA_GUIDE.md#6-export-data-download-a-dataset)) lists every stored
 dataset and streams a day of one as `.jsonl.gz`. `enabled` switches the API (the edition feature `data` presets it, with the console's
 `features.data`); `internal-only` names the datasets whose sources' terms restrict reuse, and `internal-only-download: false` refuses
 them (the edition feature `internal-only-data: off` presets it; the four editions ship so). `count-budget` bounds a row count,
@@ -1526,7 +1505,7 @@ decides who may use it (roles with `calc`), keeps each user's snippets, and serv
 
 | Key | Default | Meaning |
 |---|---|---|
-| `enabled` | `true` (`DRISHTI_CALC_ENABLED`) | Calc at all. Off: nobody may use it, and its endpoints refuse with `403 DRS-5002`. The console has its own switch, `calc.enabled`, read from the same variable. |
+| `enabled` | `false` (`DRISHTI_LABS_CALC`) | The Labs switch: Calc at all, off as shipped. Off: nobody may use it, and its endpoints refuse with `403 DRS-5002`. The console has its own switch, `labs.calc`, read from the same variable. |
 | `max-column-rows` | `250000` | `drishti.columns()` (`GET /api/v1/search/columns/{kind}`) returns at most this many entities, the first by id; the browser holds them all. |
 | `columns-budget` | `20s` | How long a columns read may wait for its source (the first read of a business day loads its columns). |
 | `max-snippet-chars` | `50000` | A saved snippet's code, at most (never more than 60,000: a saved document is at most 64 KB). Each user keeps at most 50 snippets. |
@@ -1690,7 +1669,7 @@ shipped, read-only files. The BI powers are granted on roles, see below.
 | Key | Default | Meaning |
 |---|---|---|
 | `enabled` | `true` | The BI endpoints answer. Off: `403 DRS-9006`, and the console (which asks the server) hides the BI menu. |
-| `dir` | `./config/bi` (`DRISHTI_BI_DIR`) | The BI folder: `datasets/<id>.dataset.yaml`, `reports/<id>.report.yaml`, `boards/<id>.board.yaml`, `notebooks/<id>.notebook.yaml`, `python/`. Shipped files appear as published, read-only items of the workspace *Shipped content*. Not inside a pack. See `config/bi/README.md` and [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase), "Where BI files live". |
+| `dir` | `./config/bi` (`DRISHTI_BI_DIR`) | The BI folder: `reports/<id>.report.yaml`, `boards/<id>.board.yaml`, `notebooks/<id>.notebook.yaml`, `python/`. Shipped files appear as published, read-only items of the workspace *Shipped content*. Not inside a pack. See `config/bi/README.md` and [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase), "Where BI files live". |
 | `watch` | `auto` | How the BI folder is watched, live, with no restart: `auto` (file events with a polling safety net), `poll`, or `off` (the folder is read on the first request after `folder-refresh`). A file added appears, a file changed becomes the next version, a file deleted goes; a bad file keeps its last good version and is listed in Admin, BI settings and on Health. |
 | `folder-refresh` | `5s` | The polling interval of the watcher (with `watch: off`, how long one read is reused). |
 | `workspace-creation` | `authors` | Who creates shared workspaces: `authors` (`bi-author`), `stewards` (`bi-steward`) or `admins` (`bi-admin` only). An administrator can change it at run time in Admin, BI settings (kept in the identity database; it then overrides this). |
@@ -1757,20 +1736,17 @@ How many rows each kind of visual asks the engine for ([BI_GUIDE.md](../guides/B
 | `totals-max-rows` | `2000` | Most rows one level of **true totals** (a matrix's subtotal level or a table's total) may return. |
 | `perspective-rows` | `20000` | Most rows a 2.1 `perspective-*` visual is sent. The page draws them in Drishti's own grid (no Perspective, no WebAssembly); until then the browser held and pivoted them (the retest, in RUPAKA_POC.md, since deleted, measured 10,000 rows at 21 MB of JS heap). |
 | `python-rows` | `10000` | Most rows a **python visual** hands the Python runner ([BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), phase 6). |
-| `python-packages` | `pandas, numpy, pyarrow, scipy, statsmodels` | The packages a Python item's manifest may list (publishing refuses another: `DRS-9070`). Keep it equal to the console's `bi.python.packages`, which is what the runner enforces. |
+| `python-packages` | `pandas, numpy, pyarrow, scipy` | The packages a Python item's manifest may list (publishing refuses another: `DRS-9070`); only those `config/compute/locks/python.lock` pins are offered (a test holds the two together). |
 | `python-max-seconds` | `60` | The largest `timeout` a Python manifest may ask for. |
 | `python-max-memory-mb` | `1024` | The largest `memory` a Python manifest may ask for, in megabytes. |
 
 ### `drishti.bi.transform` — Python Transforms and composed datasets
 
-A **Python dataset** (2.2; before it, a derived dataset) is made by a Python Transform; the server starts the console's sandboxed runner (`drishti-console/core/transform_cli.py`, which uses `core/pyrunner.py`) for each run, hands it the inputs as Arrow files and reads the frame back as Parquet ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](../guides/BI_GUIDE.md#13-transforms-a-table-in-a-table-out)). The result is kept per reader and version of the inputs. The package allow-list, `timeout` and `memory` limits are the Python items' own (`drishti.bi.report.python-*`, and the console's `bi.python.*` inside the runner). `compose-source-max-rows` also limits a **composed** dataset's sources.
+A **Python dataset** (or a Python-driven table) is made by a Python Transform, run on the server's compute pool `python` ([PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write): `compute.pools.python` in `config/compute/compute.yaml`, its strict sandbox and pinned libraries); the server reads the inputs as the reader, hands them over as Arrow files and reads the frame back as Parquet, checked against the declared columns and types ([BI_GUIDE.md › Python in BI, section 13](../guides/BI_GUIDE.md#13-transforms-a-table-in-a-table-out)). The result is kept per reader and version of the inputs. The package allow-list, `timeout` and `memory` limits are the Python items' own (`drishti.bi.report.python-*`). `compose-source-max-rows` also limits a **composed** dataset's sources.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `enabled` | `true` | `false`: a derived dataset answers `DRS-9074`. |
-| `python` (`DRISHTI_BI_TRANSFORM_PYTHON`) | empty | The Python that has `pandas` and `pyarrow`, normally the console's `.venv/bin/python`. Empty: `drishti-console/.venv/bin/python` when it exists, else `python3`. |
-| `runner` (`DRISHTI_BI_TRANSFORM_RUNNER`) | empty | The console's `core/transform_cli.py`. Empty: looked for in `drishti-console/core` from the working directory and its parents; not found is `DRS-9074`. |
-| `work-dir` | empty | Where each run's scratch folder is made (removed afterwards). Empty: `<drishti.bi.query.store-dir>/transform-tmp`. |
+| `enabled` | `true` | `false`: every Python run (Transforms, Python measures and visuals, Notebook cells, the sample run) answers `DRS-9074`. |
 | `cache-ttl` | `30m` | How long a Transform's result is served to the reader it was made for (and only while the inputs are unchanged). |
 | `cache-entries` | `20` | Results kept per derived dataset (a reader and a version of the inputs each); the oldest go first. |
 | `max-input-rows` | `50000` | Most rows of one input frame handed to a Transform (`DRS-9072`). |
@@ -1780,8 +1756,6 @@ A **Python dataset** (2.2; before it, a derived dataset) is made by a Python Tra
 | `max-concurrent` | `2` | Transforms running at once on the server. |
 | `queue-wait` | `5s` | How long a run waits for a place before `DRS-9074`. |
 | `compose-source-max-rows` | `50000` | Most rows one source of a composed dataset may answer (`DRS-9022`): group it by less or filter it in `from`. |
-| `console-url` (`DRISHTI_BI_TRANSFORM_CONSOLE_URL`) | empty | The console's Py-node endpoint: Transforms and Python measures are `POST {console-url}/internal/py/transform` and `/internal/py/measure` ([API_GUIDE.md](../guides/API_GUIDE.md)); `max-concurrent`, `queue-wait` and `timeout` apply to those calls. Empty: the process runner above. |
-| `console-token` (`DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN`) | empty | The shared secret of those calls (`X-Drishti-Runner-Token`). |
 
 ### `drishti.bi.refresh` — scheduled dataset refresh
 
@@ -1817,7 +1791,7 @@ the policy's feature names are `bi-draft`, `bi-ask`, `bi-explain`, the authoring
 ### `drishti.bi.live` — streaming BI (phase 5)
 
 Live tables kept in memory by the engine and the streams that tell browsers they changed ([BI_GUIDE.md](../guides/BI_GUIDE.md#71-live-tables-phase-5), [BI_GUIDE.md](../guides/BI_GUIDE.md#13-live-visuals), [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles),
-[BI_GUIDE.md](../guides/BI_GUIDE.md) section 18). A table starts on first use and closes when nobody has used it for `idle-close`. The console's own settings are `bi.live.min_interval_ms`, `bi.live.stale_seconds`, `bi.board.rotate_seconds` and, for the Python runner, `bi.python.*` (the environment table above; [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 9).
+[BI_GUIDE.md](../guides/BI_GUIDE.md) section 18). A table starts on first use and closes when nobody has used it for `idle-close`. The console's own settings are `bi.live.min_interval_ms`, `bi.live.stale_seconds`, `bi.board.rotate_seconds` (Python runs on the server's compute pool: [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 9).
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1931,7 +1905,7 @@ security signature and data generation (the L1 cache of §6.1: readers with iden
 
 ### `drishti.bi.sql` — Drishti SQL
 
-Read-only SQL over models ([BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models)): `POST /api/v1/bi/sql`, SQL view datasets, models' SQL tests.
+Read-only SQL over models ([API_GUIDE.md › Drishti SQL](../guides/API_GUIDE.md#drishti-sql-apiv1bisql)): `POST /api/v1/bi/sql`, SQL view datasets, models' SQL tests.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1943,7 +1917,7 @@ Read-only SQL over models ([BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFE
 
 ### `drishti.bi.expr` — the expression language
 
-The Drishti expression language (DEL v2, [BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del)): how the old expression syntax is treated, and the parse cache.
+The Drishti expression language (DEL v2, [RACHANA_REFERENCE.md › Rachana-EL expressions](../guides/RACHANA_REFERENCE.md#rachana-el-expressions)): how the old expression syntax is treated, and the parse cache.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1963,7 +1937,7 @@ item silently**: an item it cannot convert keeps its text and is listed in Admin
 
 | Key | Default | Meaning |
 |---|---|---|
-| `on-start` | `true` (`DRISHTI_BI_MIGRATE_ON_START`) | Run the migrations once at start, before the server takes requests: expressions in the old syntax become DEL v2 ([BI_LANGUAGE_REFERENCE.md › Expressions: the Drishti expression language (DEL), section 10](../guides/BI_LANGUAGE_REFERENCE.md#10-the-old-syntax-and-the-converter)), then `rachana: 1` datasets become datasets and models and their reports are rebound ([BI_DESIGN.md 8.3.1](../architecture/BI_DESIGN.md#831-implementation-task-6)): the dataset item becomes the model item (same id), each table a new dataset item of the same workspace, owner and audience; a role restricted on one table is never given rows it did not see. A published text that changes becomes the item's next published version (the old version stays in its version list); a draft stays a draft, a proposal stays proposed. `false` leaves stored items as they are: a bi-admin runs the same with `drishti.py bi migrate --expressions [--dry-run]`. |
+| `on-start` | `true` (`DRISHTI_BI_MIGRATE_ON_START`) | Run the migrations once at start, before the server takes requests: expressions in the old syntax become DEL v2 ([RACHANA_REFERENCE.md › Rachana-EL expressions](../guides/RACHANA_REFERENCE.md#rachana-el-expressions)), then `rachana: 1` datasets become datasets and models and their reports are rebound ([BI_DESIGN.md 8.3.1](../architecture/BI_DESIGN.md#831-implementation-task-6)): the dataset item becomes the model item (same id), each table a new dataset item of the same workspace, owner and audience; a role restricted on one table is never given rows it did not see. A published text that changes becomes the item's next published version (the old version stays in its version list); a draft stays a draft, a proposal stays proposed. `false` leaves stored items as they are: a bi-admin runs the same with `drishti.py bi migrate --expressions [--dry-run]`. |
 | `actor` | `system` | The name the saved states, the item's governance events and the audit log give the start-up run (a run from the API or CLI names the bi-admin who ran it). |
 
 ### `drishti.distribution`: export and subscriptions
@@ -2442,7 +2416,7 @@ Example: the trading pack with its live Kafka stream.
 
 ```bash
 DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRAP=kafka:9092 \
-  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.c-exec.jar
+  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.d-exec.jar
 ```
 
 `curl -s localhost:18480/api/v1/sources` should then list `trading-stream`.
@@ -2468,7 +2442,7 @@ the lake. The packs still decide kinds, routes and modes.
 
 ```bash
 SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti \
-  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.c-exec.jar
+  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.d-exec.jar
 ```
 
 ---
@@ -2582,8 +2556,6 @@ sign-on settings (`auth.oidc`) apply to every server; each server verifies the I
 | `user_cache_seconds` | `10` | How long a console worker reuses what the server said about a user (settings, packs, view layouts, saved pivots, BI powers) before asking again. A change made on this console is seen at once by all its workers (the user stamps, see `server.workers`); this bounds how long another console behind the same address shows the old choice. |
 | `about_prefetch` | `true` (`DRISHTI_ABOUT_PREFETCH`) | Fetch the page's *About this page* answer once the view is idle, so table headers, strip and key-value labels that have a glossary entry are underlined (with a hint) before the drawer is opened. It costs the server one explain per page view: the view is derived again for the caller and kept `drishti.explain.cache-ttl`, so opening the drawer afterwards is free. Set `false` on a busy installation; the labels are then underlined when the drawer is first opened ([PERFORMANCE.md](PERFORMANCE.md#about-this-page-and-its-cost)). |
 | `designer` | `false` (`DRISHTI_UI_DESIGNER`) | The Sutra designer ([RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31](../guides/RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid)): a **Customize** button on every entity page (move, hide and add panels, choose a table's columns, say what a click shows; kept as the user's own Design, *My page · &lt;kind&gt;*, which then draws that page for that user only) **Describe** (Build, New screen: a screen from one command-style line, read by a deterministic parser), **Outline** (the screen as a list to rearrange) and **Grid** (the screen as a spreadsheet of formulas); each person's first mode is `designerMode` in `/me/settings`. Every mode edits the same Sutra YAML; the pack's Sutra is never changed. Off: no button, `/designer/*` answers 404 (`/designer/new` goes to Build, New screen) and pages are drawn by the server. |
-| `render.mode` | `server` (`DRISHTI_UI_RENDER`) | Which renderer draws a page ([CLIENT_RENDERER.md, section 16](../architecture/CLIENT_RENDERER.md#16-phase-2-the-console-drawn-by-the-renderer)): `server`, the console's Jinja macros (the default), or `client`, Drishti Render in the browser from the page's ViewModel (embedded in the page, so first paint needs no second request), with the console's own behaviours (column funnels, Chart any table, drills and their address, the Pivot tab, Customize, layout mode, the download menu, About, live updates) unchanged. The short form `ui.render: client` is the same as `ui.render.mode: client`. `?render=server` or `?render=client` on an address overrides it for that one request (comparing the two; it changes nothing a person may see). |
-| `render.pages` | `view,pane` (`DRISHTI_UI_RENDER_PAGES`) | The pages `render.mode` applies to, a list or a comma-separated string: `view` (an entity page, `/v/<kind>/<id>`: what `/go`, a shared link and a history day open) and `pane` (the same page inside a workspace pane). A page left out is drawn by the server, so one page can be turned back without a release. The Studio and Build previews, Compare, search results and monitors are always drawn by the server (CLIENT_RENDERER.md 16.1). |
 | `clock_tz` / `clock_label` | `America/New_York` / `NY` | The top-bar clock. |
 | `landing_examples` | `4` | How many example commands the landing page plays. They are the example commands (`console.examples`) of the packs switched on, so the landing page never names an entity of a pack that is not installed; with none, it shows the form `<MNEMONIC> <ID> <GO>`. Studio's first preview is the first of these examples too. |
 | `product_native` / `product_meaning` | `दृष्टि` / `Drishti (दृष्टि) means <em>sight</em>.` | The product name in its own script (blank for none) and one line on its meaning, on the About page. |
@@ -2668,7 +2640,7 @@ Whether a design can save Sutra files is decided by the server (`drishti.rachana
 
 | Key | Default | Meaning |
 |---|---|---|
-| `calc.enabled` | `true` (`DRISHTI_CALC_ENABLED`) | Off: no view offers Calc and the console's `/api/calc/*` routes refuse, whatever packs and roles say ([USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view)). |
+| `labs.calc` | `false` (`DRISHTI_LABS_CALC`) | Labs: Calc, a scratch pad in the browser that never publishes. Off (as shipped): no view offers Calc and the console's `/api/calc/*` routes refuse, whatever packs and roles say ([USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view)). |
 
 ### `layouts`
 
@@ -2719,7 +2691,7 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS.md](OPER
 | `DRISHTI_UI_KIT_DIR`, `DRISHTI_UI_KIT_SITE_DIR` | S | `drishti.ui-kit.dir`, `drishti.ui-kit.site-dir` |
 | `DRISHTI_SUTRA_REVIEW`, `DRISHTI_SUTRA_FOUR_EYES`, `DRISHTI_GOVERNANCE_DIR` | S | `drishti.governance.*` |
 | `DRISHTI_SECURITY_ENABLED` | S | `drishti.security.enabled` |
-| `DRISHTI_CALC_ENABLED` | S, C | `drishti.calc.enabled`, `calc.enabled` |
+| `DRISHTI_LABS_CALC` | S, C | `drishti.calc.enabled`, `labs.calc` |
 | `DRISHTI_LIVE_MAX_SUBSCRIPTIONS` | C | `live.max_subscriptions` |
 | `DRISHTI_TOKEN_SECRET` | S, C | `drishti.security.secret`, `auth.token_secret` |
 | `DRISHTI_OIDC_ENABLED`, `DRISHTI_OIDC_ISSUER`, `DRISHTI_OIDC_CLIENT_ID` | S, C | `drishti.security.oidc.*`, `auth.oidc.*` |
@@ -2738,21 +2710,21 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS.md](OPER
 
 ## Every setting
 
-Every key of every kind: 2,162 settings in 18 areas, and 345 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 2,139 settings in 18 areas, and 330 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
 | Area | Settings |
 |---|---|
-| [The server: `application.yaml`](#the-server-applicationyaml) | 542 |
+| [The server: `application.yaml`](#the-server-applicationyaml) | 540 |
 | [Compute engines: `config/engines/*.yaml`](#compute-engines-configenginesyaml) | 323 |
-| [The console: `application.yaml`](#the-console-applicationyaml) | 210 |
-| [The console's other files](#the-consoles-other-files) | 93 |
+| [The console: `application.yaml`](#the-console-applicationyaml) | 187 |
+| [The console's other files](#the-consoles-other-files) | 94 |
 | [Connectors: every plugin's settings](#connectors-every-plugins-settings) | 535 |
 | [Packs: `pack.yaml`](#packs-packyaml) | 137 |
 | [Editions: `config/editions/`](#editions-configeditions) | 70 |
 | [The content store: `config/store/store.yaml`](#the-content-store-configstorestoreyaml) | 14 |
 | [BI runs: `config/runs/runs.yaml`](#bi-runs-configrunsrunsyaml) | 48 |
 | [Write-back: `config/edit/`](#write-back-configedit) | 18 |
-| [Compute workers: `config/compute/compute.yaml`](#compute-workers-configcomputecomputeyaml) | 22 |
+| [Compute workers: `config/compute/compute.yaml`](#compute-workers-configcomputecomputeyaml) | 23 |
 | [Drishti*net: `config/net/`](#drishtinet-confignet) | 27 |
 | [Platform alert rules: `config/alerts/platform-alerts.yaml`](#platform-alert-rules-configalertsplatform-alertsyaml) | 13 |
 | [Report definitions: `config/reports/`](#report-definitions-configreports) | 23 |
@@ -2760,7 +2732,7 @@ Every key of every kind: 2,162 settings in 18 areas, and 345 environment variabl
 | [The data inbox's routing rules: `config/dataload.yaml`](#the-data-inboxs-routing-rules-configdataloadyaml) | 2 |
 | [The UI kit: `config/ui-kit/brand.yaml`](#the-ui-kit-configui-kitbrandyaml) | 19 |
 | [AI providers and MCP servers: `config/ai/`, `config/mcp/`](#ai-providers-and-mcp-servers-configai-configmcp) | 37 |
-| [Environment variable index](#environment-variable-index) | 345 |
+| [Environment variable index](#environment-variable-index) | 330 |
 
 Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.governance.*` and `drishti.ui-kit.*`, the console's `views.refresh_min_seconds`) are rows of the server and console tables below; the Sutra grammar itself is [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md).
 
@@ -2869,7 +2841,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.admission.disk-refuse-gb` | integer | `10` |  | server | under this, new date loads, downloads and bulk loads wait | restart |  |
 | `drishti.admission.retry-after.sign-in` | integer | `45` |  | server | a new sign-in (DRS-9501) | restart |  |
 | `drishti.admission.retry-after.load` | integer | `30` |  | server | a new VaR or exposure date (DRS-9502) | restart |  |
-| `drishti.admission.retry-after.download` | integer | `30` |  | server | a Data view download (DRS-9503) | restart |  |
+| `drishti.admission.retry-after.download` | integer | `30` |  | server | an Export data download (DRS-9503) | restart |  |
 | `drishti.admission.retry-after.bi-run` | integer | `60` |  | server | a BI run (DRS-9504) | restart |  |
 | `drishti.admission.retry-after.bulk-load` | integer | `120` |  | server | a bulk load of a pack's data (DRS-9505) | restart |  |
 | `drishti.admission.retry-after.pivot-view` | integer | `20` |  | server | a large pivot view (DRS-9507) | restart |  |
@@ -3297,7 +3269,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.calc.enabled` | boolean | `true` | `DRISHTI_CALC_ENABLED` | server | also needs a role with calc, and a pack that enables it for the view's kind | restart |  |
+| `drishti.calc.enabled` | boolean | `false` | `DRISHTI_LABS_CALC` | server | Labs: off as shipped; on also needs a role with calc, and a pack that enables it for the view's kind | restart |  |
 | `drishti.calc.max-column-rows` | integer | `250000` |  | server | drishti.columns() returns at most this many entities (the browser holds them all) | restart |  |
 | `drishti.calc.columns-budget` | duration | `20s` |  | server | how long a columns read may wait (the first read of a day loads its columns) | restart |  |
 | `drishti.calc.max-snippet-chars` | integer | `50000` |  | server | a saved snippet's code (each user keeps at most 50 snippets) | restart |  |
@@ -3364,10 +3336,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.bi.transform.enabled` | boolean | `true` |  | server | false: a derived dataset answers DRS-9074 | restart |  |
-| `drishti.bi.transform.python` | string | empty | `DRISHTI_BI_TRANSFORM_PYTHON` | server | the Python with pandas and pyarrow (the console's environment); blank: drishti-console/.venv when it exists, else python3 | restart |  |
-| `drishti.bi.transform.runner` | string | empty | `DRISHTI_BI_TRANSFORM_RUNNER` | server | the console's core/transform\_cli.py; blank: looked for in drishti-console/core from here and its parents | restart |  |
-| `drishti.bi.transform.work-dir` | string | `""` |  | server | scratch folders of runs; blank: &lt;bi store&gt;/transform-tmp | restart |  |
+| `drishti.bi.transform.enabled` | boolean | `true` |  | server | false: every Python run (Transforms, Python measures and visuals, Notebook cells) answers DRS-9074; the code runs on the compute pool python (config/compute/compute.yaml) | restart |  |
 | `drishti.bi.transform.cache-ttl` | duration | `30m` |  | server | a Transform's result is kept for the reader it was made for this long (and until the inputs change) | restart |  |
 | `drishti.bi.transform.cache-entries` | integer | `20` |  | server | results kept per derived dataset; the oldest go first | restart |  |
 | `drishti.bi.transform.max-input-rows` | integer | `50000` |  | server | most rows of one input frame handed to a Transform | restart |  |
@@ -3377,8 +3346,6 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.bi.transform.max-concurrent` | integer | `2` |  | server | Transforms running at once | restart |  |
 | `drishti.bi.transform.queue-wait` | duration | `5s` |  | server | how long a run waits for a place before DRS-9074 | restart |  |
 | `drishti.bi.transform.compose-source-max-rows` | integer | `50000` |  | server | most rows one source of a composed dataset may answer (DRS-9022) | restart |  |
-| `drishti.bi.transform.console-url` | string | empty | `DRISHTI_BI_TRANSFORM_CONSOLE_URL` | server | the console's Py-node endpoint (http://console:17480); blank: the server runs transform\_cli.py itself | restart |  |
-| `drishti.bi.transform.console-token` | string | empty | `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` | server | the shared secret the console checks on /internal/py/\* (X-Drishti-Runner-Token) | restart |  |
 
 #### `drishti.bi.exec`
 
@@ -3433,7 +3400,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.bi.migrate.on-start` | boolean | `true` | `DRISHTI_BI_MIGRATE_ON_START` | server | at start: old-syntax expressions to DEL v2, audited, the text before kept in each item's history; idempotent | restart |  |
+| `drishti.bi.migrate.on-start` | boolean | `true` | `DRISHTI_BI_MIGRATE_ON_START` | server | at start: stored datasets and models into the table layer, 2.3 boards into reports; audited, the text before kept; idempotent | restart |  |
 | `drishti.bi.migrate.actor` | string | `system` |  | server | the name the history, the item's events and the audit log give the start-up run | restart |  |
 
 #### `drishti.layouts`
@@ -3474,6 +3441,14 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 |---|---|---|---|---|---|---|---|
 | `drishti.pivot.enabled` | boolean | `true` | `DRISHTI_PIVOT_ENABLED` | server | the old name of the pivot engine's switch (config/engines/pivot.yaml); false: no Pivot anywhere | restart |  |
 | `drishti.pivot.max-records` | integer | `50000` |  | server | the most rows of a panel a pivot of it reads (the table's limit does not apply); more is refused, never cut short | restart |  |
+
+#### `drishti.tables`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.tables.root` | string | `./config/tables` | `DRISHTI_TABLES_ROOT` | server | the definitions' folder: config/tables/&lt;domain&gt;/&lt;name&gt;.table.yaml and .model.yaml | restart |  |
+| `drishti.tables.read-max-rows` | integer | `2000000` |  | server | the most rows one read of a virtual table stages; more is refused, never cut short | restart |  |
+| `drishti.tables.scan-warn-rows` | integer | `1000000` |  | server | rows above which an unfiltered side of a model's join across connectors is warned about; a model's own scan-warn-rows wins | restart |  |
 
 #### `drishti.identity`
 
@@ -4074,7 +4049,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.lake.memory.stores` | map | `{}` |  | server (each node its own) | the old place of the memory stores, read for one more release with a warning: a store is now a lake, config/lakes/&lt;store&gt;.yaml with root: mem://&lt;store&gt; and memory: { max-mb (the hard cap), chunk-kb (1024), contract, owner (true), idle-trim-minutes (10) } (docs/guides/LAKE\_GUIDE.md section 6); the caps add to -XX:MaxDirectMemorySize | restart |  |
+| `drishti.lake.memory.stores` | map | `{}` |  | server (each node its own) | the old place of the memory stores, read for one more release with a warning: a store is now a lake, config/lakes/&lt;store&gt;.yaml with root: mem://&lt;store&gt; and memory: { max-mb (the hard cap), chunk-kb (1024), contract, owner (true), idle-trim-minutes (10) } (docs/guides/IN\_MEMORY\_LAKE\_GUIDE.md); the caps add to -XX:MaxDirectMemorySize | restart |  |
 | `drishti.lake.memory.tables` | list | `[]` |  | server (each node its own) | the tables and their replenish jobs: name, store, folder, source { connector, kind, file, url, headers, ids, ids-from }, mode (replace, append, merge), key, sort-by, business-date, columns, every or cron, signal, warm-up, pin, keep-versions (2), codec (zstd) | restart |  |
 | `drishti.lake.memory.history-keep` | integer | `50` |  | server (each node its own) | the runs kept per table for Admin -&gt; Lakes and drishti.py lake memory jobs (in memory) | restart |  |
 | `drishti.lake.memory.job-threads` | integer | `2` |  | server (each node its own) | replenish jobs that may run at once (one per table at most) | restart |  |
@@ -4109,7 +4084,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.dataload.reject-max-percent` | integer | `0` |  | server (each node its own) | the share of rows a load may reject and still commit (exit 2, rejects in the report); over it nothing is committed and the file goes to failed/ | restart |  |
 | `drishti.dataload.reload-duplicates` | boolean | `false` |  | server (each node its own) | false: a file whose SHA-256 was loaded before is not loaded again (to the outbox, "already loaded"); true: loaded again | restart |  |
 | `drishti.dataload.keep-outbox-days` | integer | `30` |  | server (each node its own) | outbox/ and failed/ day folders older than this are deleted (0: kept for ever); the ledger is kept | restart |  |
-| `drishti.dataload.lake` | string | `demo` | `DRISHTI_DATALOAD_LAKE` | server (each node its own) | the lake (config/lakes/&lt;lake&gt;.yaml, docs/guides/LAKE\_GUIDE.md) the tables are written to; a kind the lake file lacks gets its pack's recommended entry copied there first (a rule's lake: wins for its files; a folder is the old form, read with one warning) | restart |  |
+| `drishti.dataload.lake` | string | `demo` | `DRISHTI_DATALOAD_LAKE` | server (each node its own) | the lake (config/lakes/&lt;lake&gt;.yaml, docs/guides/DATA\_LAKE\_GUIDE.md) the tables are written to; a kind the lake file lacks gets its pack's recommended entry copied there first (a rule's lake: wins for its files; a folder is the old form, read with one warning) | restart |  |
 | `drishti.dataload.rules-file` | string | `./config/dataload.yaml` | `DRISHTI_DATALOAD_RULES` | server (each node its own) | the routing rules: a file-name pattern to a pack and kind, read again every cycle | restart |  |
 | `drishti.dataload.nice` | boolean | `true` |  | server (each node its own) | run the loader at a lower priority (nice 10) where the system has nice; never on Windows | restart |  |
 | `drishti.dataload.default-mode` | string | `append` |  | server (each node its own) | a file's load mode when its .ready file says none: append (the rows are added) or replace (each business date of the file replaced) | restart |  |
@@ -4332,13 +4307,6 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `ui.apple_touch_icon` | string | `""` |  | console | the home-screen icon (a URL); blank: the eye's | restart |  |
 | `ui.home_cards` | list | empty |  | console | the quick cards under Home's headline, {title, cmd, pack, icon} each; one naming a pack shows only while that pack is on (an edition's home.cards replace them) | restart |  |
 
-#### `ui.render`
-
-| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
-|---|---|---|---|---|---|---|---|
-| `ui.render.mode` | string | `server` | `DRISHTI_UI_RENDER` | console | server or client: the renderer of the pages listed in ui.render.pages | restart |  |
-| `ui.render.pages` | string | `view,pane` | `DRISHTI_UI_RENDER_PAGES` | console | the pages ui.render.mode applies to: view (an entity page) and pane (the same page in a workspace pane) | restart |  |
-
 #### `ui.phone`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
@@ -4435,7 +4403,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `features.build` | boolean | `true` |  | console | Build: new screens, new packs, designs, reviews and changes (/build, /review) | restart |  |
 | `features.forms` | boolean | `true` |  | console | query by form (FORM, /forms) | restart |  |
 | `features.datamap` | boolean | `true` |  | console | the data map (DATAMAP, /datamap) | restart |  |
-| `features.data` | boolean | `true` |  | console | the Data view (DATA, /data): every dataset, a simple selection, a day downloaded as .jsonl.gz | restart |  |
+| `features.data` | boolean | `true` |  | console | Export data (EXPORT, /data): every dataset, a simple selection, a day downloaded as .jsonl.gz | restart |  |
 | `features.workspaces` | boolean | `true` |  | console | /w | restart |  |
 | `features.monitors` | boolean | `true` |  | console | /m | restart |  |
 | `features.alerts` | boolean | `true` |  | console | /alerts | restart |  |
@@ -4496,11 +4464,11 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 |---|---|---|---|---|---|---|---|
 | `form.collapse_on_submit` | boolean | `true` |  | console | after Search the form folds to one line of its criteria so the results get the room; Show form (Alt+F) brings it back | restart |  |
 
-#### `calc`
+#### `labs`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `calc.enabled` | boolean | `true` | `DRISHTI_CALC_ENABLED` | console | false: no view offers it, whatever packs and roles say | restart |  |
+| `labs.calc` | boolean | `false` | `DRISHTI_LABS_CALC` | console | Calc (Alt+C): Python in your browser on a view's rows, a scratch pad that never publishes; on also needs a role with calc and a pack that enables it | restart |  |
 
 #### `layouts`
 
@@ -4555,59 +4523,28 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 |---|---|---|---|---|---|---|---|
 | `bi.board.rotate_seconds` | integer | `30` | `DRISHTI_BI_BOARD_ROTATE_SECONDS` | console | a board in kiosk mode turns to its next page after this long, unless the board sets rotate:; 3 to 3600 | restart |  |
 
-#### `bi.python`
+#### `bi.notebook`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `bi.python.enabled` | boolean | `true` | `DRISHTI_BI_PYTHON_ENABLED` | console | false: python visuals answer DRS-9074 (the browser target still works where a manifest allows it) | restart |  |
-| `bi.python.workers` | integer | `2` | `DRISHTI_BI_PYTHON_WORKERS` | console | worker processes at once; a call waits queue\_seconds for a place, then DRS-9074 | restart |  |
-| `bi.python.queue_seconds` | integer | `5` | `DRISHTI_BI_PYTHON_QUEUE_SECONDS` | console | how long a Python call waits for a free worker before DRS-9074 | restart |  |
-| `bi.python.packages` | list | `[pandas, numpy, pyarrow, scipy, statsmodels]` |  | console | the allow-list; a package that is not installed is refused when used. Keep the server's drishti.bi.report.python-packages equal | restart |  |
-| `bi.python.max_timeout_seconds` | integer | `60` | `DRISHTI_BI_PYTHON_MAX_TIMEOUT` | console | the most a manifest may ask for; the CPU and wall-clock limit of one call | restart |  |
-| `bi.python.max_memory_mb` | integer | `1024` | `DRISHTI_BI_PYTHON_MAX_MEMORY_MB` | console | the most memory a manifest may ask for, on top of what the interpreter and its packages need to start | restart |  |
-| `bi.python.max_input_bytes` | integer | `16000000` | `DRISHTI_BI_PYTHON_MAX_INPUT_BYTES` | console | largest Arrow table handed to Python | restart |  |
-| `bi.python.max_output_bytes` | integer | `1000000` | `DRISHTI_BI_PYTHON_MAX_OUTPUT_BYTES` | console | largest result (a chart option, an image or a measure's rows) | restart |  |
-| `bi.python.max_groups` | integer | `5000` |  | console | most groups a measure is called for | restart |  |
-| `bi.python.network_namespace` | string | `auto` |  | console | auto: also run the worker in a network namespace with no interfaces when the machine allows it (unshare); require; off | restart |  |
-| `bi.python.scratch_dir` | string | `""` |  | console | where each call's scratch folder is made; empty: the system temporary folder | restart |  |
-| `bi.python.fork_server` | boolean | `true` | `DRISHTI_BI_PYTHON_FORK_SERVER` | console | one pre-imported parent forks a child per call (no interpreter start per call); false: a new process per call | restart |  |
-| `bi.python.warm` | boolean | `true` | `DRISHTI_BI_PYTHON_WARM` | console | start the fork-server when the console starts, so the first call (a report, a Transform's step run) is warm too | restart |  |
-| `bi.python.cache_entries` | integer | `256` |  | console | the L4 result cache: answers kept by item code, parameters and the exact (masked) input bytes; 0 turns it off | restart |  |
-| `bi.python.cache_max_bytes` | integer | `64000000` |  | console | the L4 result cache's size in bytes | restart |  |
-| `bi.python.cache_seconds` | integer | `600` |  | console | how long a cached answer is kept | restart |  |
-| `bi.python.runner_token` | string | empty | `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` | console | the Py-node endpoint (/internal/py/\*) the server calls with X-Drishti-Runner-Token; empty: the endpoint is off (secret) | restart |  |
-
-#### `bi.explore`
-
-| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
-|---|---|---|---|---|---|---|---|
-| `bi.explore.max_rows` | integer | `10000` | `DRISHTI_BI_EXPLORE_MAX_ROWS` | console | most rows of an extract (the reader's rows, cut here); 10 to 100000 | restart |  |
-| `bi.explore.max_fields` | integer | `60` |  | console | most columns of an extract | restart |  |
-| `bi.explore.sql_max_rows` | integer | `5000` |  | console | most rows a SQL cell returns | restart |  |
-| `bi.explore.sql_max_seconds` | integer | `5` |  | console | a SQL cell running longer is stopped (DRS-9081) | restart |  |
-| `bi.explore.sql_max_chars` | integer | `20000` |  | console | longest SQL text | restart |  |
-| `bi.explore.cell_timeout_seconds` | integer | `20` |  | console | a Python cell's time limit on the server (also capped by bi.python.max\_timeout\_seconds) | restart |  |
-| `bi.explore.cell_memory_mb` | integer | `512` |  | console | a Python cell's memory on the server (also capped by bi.python.max\_memory\_mb) | restart |  |
-| `bi.explore.cell_max_chars` | integer | `65536` |  | console | longest Python cell | restart |  |
-| `bi.explore.max_cells` | integer | `60` |  | console | most cells in a notebook | restart |  |
-| `bi.explore.max_extracts` | integer | `6` |  | console | most further extracts in a notebook (extract("name") in a cell), besides the first | restart |  |
-| `bi.explore.quant_engine` | string | `stand-in` |  | console | the engine behind quant.price(...) in a Python cell (docs/guides/QUANT\_SERVICE.md) | restart |  |
+| `bi.notebook.max_rows` | integer | `10000` | `DRISHTI_BI_NOTEBOOK_MAX_ROWS` | console | most rows of an extract (the reader's rows, cut here); 10 to 100000 | restart |  |
+| `bi.notebook.max_fields` | integer | `60` |  | console | most columns of an extract | restart |  |
+| `bi.notebook.sql_max_rows` | integer | `5000` |  | console | most rows a SQL cell returns | restart |  |
+| `bi.notebook.sql_max_chars` | integer | `20000` |  | console | longest SQL text | restart |  |
+| `bi.notebook.cell_timeout_seconds` | integer | `20` |  | console | a Python cell's time limit on the server's compute pool (also capped by drishti.bi.report.python-max-seconds) | restart |  |
+| `bi.notebook.cell_memory_mb` | integer | `512` |  | console | a Python cell's memory on the pool (also capped by drishti.bi.report.python-max-memory-mb) | restart |  |
+| `bi.notebook.cell_max_chars` | integer | `65536` |  | console | longest Python cell | restart |  |
+| `bi.notebook.max_cells` | integer | `60` |  | console | most cells in a notebook | restart |  |
+| `bi.notebook.max_extracts` | integer | `6` |  | console | most further extracts in a notebook (extract("name") in a cell), besides the first | restart |  |
 
 #### `bi.transform`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
 | `bi.transform.preview_rows` | integer | `1000` | `DRISHTI_BI_TRANSFORM_PREVIEW_ROWS` | console | rows of each input the step-by-step run starts from (the reader's rows, asked of the server); 10 to 50000 | restart |  |
-| `bi.transform.timeout_seconds` | integer | `20` |  | console | the step-by-step run's time limit (also capped by bi.python.max\_timeout\_seconds) | restart |  |
-| `bi.transform.memory_mb` | integer | `512` |  | console | its memory (also capped by bi.python.max\_memory\_mb) | restart |  |
+| `bi.transform.timeout_seconds` | integer | `20` |  | console | the step-by-step run's time limit (also capped by drishti.bi.report.python-max-seconds) | restart |  |
+| `bi.transform.memory_mb` | integer | `512` |  | console | its memory (also capped by drishti.bi.report.python-max-memory-mb) | restart |  |
 | `bi.transform.snippets_file` | string | `""` |  | console | more data-prep snippets (a list under snippets:), read after config/prep-snippets.yaml | restart |  |
-
-#### `bi.pyconsole`
-
-| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
-|---|---|---|---|---|---|---|---|
-| `bi.pyconsole.enabled` | boolean | `true` | `DRISHTI_BI_PYCONSOLE_ENABLED` | console | false: no /pyconsole page; it also needs Calc's runtime (tools/fetch-pyodide.sh) | restart |  |
-| `bi.pyconsole.max_rows` | integer | `20000` | `DRISHTI_BI_PYCONSOLE_MAX_ROWS` | console | most rows of an extract handed to the browser (the reader's rows, masked, cut here); 10 to 100000 | restart |  |
 
 ### The console's other files
 
@@ -4622,6 +4559,7 @@ The console's content files under `drishti-console/config/`: menus, the help cen
 | `menus[].label` | string | none |  | console | Its name in the top bar | live |  |
 | `menus[].icon` | string | none |  | console | Its Bootstrap icon name | live |  |
 | `menus[].subject` | boolean | `false` |  | console | A lens's subject menu (Curves, Economies ...): drawn only where an edition's menus.top names it | live |  |
+| `menus[].gather` | list | `none` |  | console | A menu that gathers the columns of other menus by id (the Trading lens's one Markets menu gathers Curves, Volatility, FX and Credit), each drawn as its own column | live |  |
 | `menus[].engines` | boolean | `false` |  | console | The Engines menu: a column per compute engine, drawn for the engines running in the cluster that the person's role opens | live |  |
 | `menus[].search-over` | number | `4` |  | console | The Engines menu: its search box shows when more engines than this run | live |  |
 | `menus[].admin-link` | map | `none` |  | console | The Engines menu: its Admin -&gt; Engines link {href, label, requires} (administrators) | live |  |
@@ -4871,7 +4809,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `lake` | string | none |  | `delta` connectors | The lake this connector reads (config/lakes/&lt;lake&gt;.yaml, docs/guides/LAKE\_GUIDE.md): root, storage, catalog, table folders, promoted columns and vectors come from its file; with lake set, root, domain, table.&lt;kind&gt; and layout.&lt;kind&gt;.\* are refused here. Not set: the older form (those keys in this file, one warning) | live (the connector restarts) |  |
+| `lake` | string | none |  | `delta` connectors | The lake this connector reads (config/lakes/&lt;lake&gt;.yaml, docs/guides/DATA\_LAKE\_GUIDE.md): root, storage, catalog, table folders, promoted columns and vectors come from its file; with lake set, root, domain, table.&lt;kind&gt; and layout.&lt;kind&gt;.\* are refused here. Not set: the older form (those keys in this file, one warning) | live (the connector restarts) |  |
 | `lake-tables` | list | none |  | `delta` connectors | With lake: the lake file's entries this connector reads (trading.trade\_endur), where a kind has several tables; not set: the one table of each kind | live (the connector restarts) |  |
 | `root` | path | `<data dir>/delta` |  | `delta` connectors | Lake root (folder, or s3://bucket/prefix); default: the delta folder of the data directory | live (the connector restarts) |  |
 | `domain` | string | none |  | `delta` connectors | The data-domain folder under the root; may not contain `..` or start with `/` | live (the connector restarts) |  |
@@ -4999,7 +4937,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `lake` | string | none |  | `iceberg` connectors | The lake this connector reads (config/lakes/&lt;lake&gt;.yaml, docs/guides/LAKE\_GUIDE.md): root, storage, catalog, table folders, promoted columns and vectors come from its file; with lake set, root, domain, table.&lt;kind&gt; and layout.&lt;kind&gt;.\* are refused here. Not set: the older form (those keys in this file, one warning) | live (the connector restarts) |  |
+| `lake` | string | none |  | `iceberg` connectors | The lake this connector reads (config/lakes/&lt;lake&gt;.yaml, docs/guides/DATA\_LAKE\_GUIDE.md): root, storage, catalog, table folders, promoted columns and vectors come from its file; with lake set, root, domain, table.&lt;kind&gt; and layout.&lt;kind&gt;.\* are refused here. Not set: the older form (those keys in this file, one warning) | live (the connector restarts) |  |
 | `lake-tables` | list | none |  | `iceberg` connectors | With lake: the lake file's entries this connector reads (trading.trade\_endur), where a kind has several tables; not set: the one table of each kind | live (the connector restarts) |  |
 | `layout.*` | string | none |  | `iceberg` connectors | Per-kind layout: layout.&lt;kind&gt;.columns (promoted document paths), layout.&lt;kind&gt;.vectors (list&lt;double&gt; columns such as a P&amp;L vector, read in bulk and put back into documents) | live (the connector restarts) |  |
 | `doc-disk-cache.enabled` | boolean | `true` |  | `iceberg` connectors | Documents already read also kept on disk (RocksDB, one per connector), keyed by the date's files: answered without reading a data file, also after a restart | live (the connector restarts) |  |
@@ -5371,7 +5309,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `settings` | map | `{}` |  | the connector | The plugin's settings, as the tables above (every plugin, the shared tls.\* and proxy.\*, the plugin's own) | live (the connector restarts) |  |
 | `settings.*` | map | none |  | the connector | One setting of the plugin | live (the connector restarts) |  |
 
-#### A lake file: `config/lakes/<lake>.yaml` (docs/guides/LAKE_GUIDE.md)
+#### A lake file: `config/lakes/<lake>.yaml` (docs/guides/DATA_LAKE_GUIDE.md)
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
@@ -5492,7 +5430,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `routes` | map | `{}` |  | the pack | kind -&gt; the connector that answers it (drishti.sources.routes) | live |  |
 | `routes.<name>` | string | none |  | the pack | One kind's connector | live |  |
 | `ingest` | map | `{}` |  | the pack | For the tools only (drishti.py data ingest --pack, lake build --pack, pack check): each kind's id and business-date fields; ignored by the server | live |  |
-| `lake` | map | `none` |  | the pack | The tables the pack recommends (docs/guides/LAKE\_GUIDE.md section 7): lake.tables, the shape of a lake file's tables:, copied into a lake file the first time a writer meets the kind; its Delta and Iceberg templates name lake: and lake-tables: | live |  |
+| `lake` | map | `none` |  | the pack | The tables the pack recommends (docs/guides/DATA\_LAKE\_GUIDE.md section 12): lake.tables, the shape of a lake file's tables:, copied into a lake file the first time a writer meets the kind; its Delta and Iceberg templates name lake: and lake-tables: | live |  |
 | `lake.*` | map | none |  | the pack | lake.tables.&lt;domain&gt;.&lt;table&gt;: one recommended entry (kind, path, partition-by, promote, vectors, sort-by, file-rows, row-group-rows, flatten, ...) | live |  |
 | `ingest.<name>` | map | none |  | the pack | One kind | live |  |
 | `ingest.<name>.key` | string | none |  | the pack | Its id field | live |  |
@@ -5552,7 +5490,7 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | `commands.allow` | string | empty |  | an edition (server and console) | the engines still read every kind of the packs above | restart |  |
 | `commands.words` | map | `{ BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: off, DATA: on,...` |  | an edition (server and console) | left out: regulatory (FRTB, SACCR, CVA, SIMM), stress (SCN, STR, SSPNL), collateral operations (COLL, MC), the exposure engine's runs, paths and official records (XRUN, XPATH, XOFC), VaR's scenario inputs (SPV, FXS, SSET, VOFF), macro economics | restart |  |
 | `features` | map | `{…}` |  | an edition (server and console) | presets of existing switches (config/editions/features.yaml); not named: the product's default | restart |  |
-| `bi.datasets` | list | `[market-data-*]` |  | an edition (server and console) | (a dataset named market-data-... or the model market-data, when one is added), never the | restart |  |
+| `bi.datasets` | list | `[bi.market_data_*]` |  | an edition (server and console) | (a table named bi.market\_data\_... or the model market-data, when one is added), never the | restart |  |
 | `bi.models` | list | `[market-data]` |  | an edition (server and console) | VaR or exposure reports; an empty list would offer every BI item of the product | restart |  |
 | `menus.top` | list | `[views, curves, volatility, fx, credit, bi, admin, help]` |  | an edition (server and console) | the top menus by id, in order; one not named is not drawn | restart |  |
 | `menus.views` | list | `[terminal, search, functions, datamap, data, reports, workspaces, monitors, a...` |  | an edition (server and console) | the Views menu's items by id, in order (drishti-console/config/menus.yaml) | restart |  |
@@ -5577,6 +5515,7 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | `phone.rules` | list | empty |  | an edition (server and console) | tiers and caps by panel, kind, title, Sutra or entity kind (globs): a VaR contribution panel waits under More | restart |  |
 | `phone.pages` | map | `{}` |  | an edition (server and console) | the VaR and exposure pages' parts, as ui.phone.pages: { var: { hist: glance } } | restart |  |
 | `home.hierarchies` | list | `[MGMT]` |  | an edition (server and console) | the hierarchy the Risk map opens on (its switch lists every hierarchy the engine holds) | restart |  |
+| `menus.markets` | list | `[crv, repo, fix, irv, cpv, fxv, fx-spot, fxf, cds, bnd, eq, eqx, cmd, cmdc]` |  | an edition (server and console) | the one Markets menu: rates, vols, FX, credit, equities and commodities | restart |  |
 | `trading.people.drishti-dev-admin` | map | `{ trader: TRDR-ASHAH }` |  | an edition (server and console) | the demo's administrator reads A. Shah's books (the demo data's rates trader) | restart |  |
 | `trading.match-records` | boolean | `true` |  | an edition (server and console) | fall back to a matching trader record (TRADER\_ID = TRDR-&lt;USER&gt;, or the same NAME) | restart |  |
 | `trading.landing-by-role` | map | `{ desk-head: desk, trader: trader }` |  | an edition (server and console) | the same {role: landing} hook for the trading role: below the person's own choice | restart |  |
@@ -5592,7 +5531,7 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
 | `bi` | on, off or edition | none |  | server and console | The feature bi an edition file names under features: off presets false, on or edition true; presets drishti.bi.enabled on the server and bi.enabled in the console. edition: BI with the edition's datasets only (bi.datasets) | restart |  |
-| `calc` | on, off or edition | none |  | server and console | The feature calc an edition file names under features: off presets false, on or edition true; presets drishti.calc.enabled on the server and calc.enabled in the console | restart |  |
+| `calc` | on, off or edition | none |  | server and console | The feature calc an edition file names under features: off presets false, on or edition true; presets drishti.calc.enabled on the server and labs.calc in the console. Labs: Calc, Python in the browser, a scratch pad; off as shipped | restart |  |
 | `layouts` | on, off or edition | none |  | server and console | The feature layouts an edition file names under features: off presets false, on or edition true; presets drishti.layouts.enabled on the server and layouts.enabled in the console | restart |  |
 | `pivot` | on, off or edition | none |  | server and console | The feature pivot an edition file names under features: off presets false, on or edition true; presets drishti.pivot.enabled on the server | restart |  |
 | `reports` | on, off or edition | none |  | server and console | The feature reports an edition file names under features: off presets false, on or edition true; presets drishti.reports.enabled on the server and features.reports in the console | restart |  |
@@ -5605,15 +5544,14 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | `ai` | on, off or edition | none |  | server and console | The feature ai an edition file names under features: off presets false, on or edition true; presets drishti.ai.enabled on the server and ai.enabled in the console | restart |  |
 | `mcp` | on, off or edition | none |  | server and console | The feature mcp an edition file names under features: off presets false, on or edition true; presets drishti.mcp.enabled on the server and mcp.enabled in the console | restart |  |
 | `embed` | on, off or edition | none |  | server and console | The feature embed an edition file names under features: off presets false, on or edition true; presets drishti.embed.enabled on the server and embed.enabled in the console | restart |  |
-| `pyconsole` | on, off or edition | none |  | server and console | The feature pyconsole an edition file names under features: off presets false, on or edition true; presets bi.pyconsole.enabled in the console | restart |  |
-| `python` | on, off or edition | none |  | server and console | The feature python an edition file names under features: off presets false, on or edition true; presets bi.python.enabled in the console | restart |  |
+| `python` | on, off or edition | none |  | server and console | The feature python an edition file names under features: off presets false, on or edition true; presets drishti.bi.transform.enabled on the server | restart |  |
 | `designer` | on, off or edition | none |  | server and console | The feature designer an edition file names under features: off presets false, on or edition true; presets ui.designer in the console | restart |  |
 | `facts` | on, off or edition | none |  | server and console | The feature facts an edition file names under features: off presets false, on or edition true; presets ui.facts.enabled in the console | restart |  |
 | `build` | on, off or edition | none |  | server and console | The feature build an edition file names under features: off presets false, on or edition true; presets features.build in the console. Build: new screens, new packs, designs, reviews, changes | restart |  |
 | `forms` | on, off or edition | none |  | server and console | The feature forms an edition file names under features: off presets false, on or edition true; presets features.forms in the console. query by form (FORM, /forms) | restart |  |
 | `datamap` | on, off or edition | none |  | server and console | The feature datamap an edition file names under features: off presets false, on or edition true; presets features.datamap in the console. the data map (DATAMAP, /datamap) | restart |  |
-| `data` | on, off or edition | none |  | server and console | The feature data an edition file names under features: off presets false, on or edition true; presets drishti.data-view.enabled on the server and features.data in the console. the Data view (DATA, /data): every dataset, a day as .jsonl.gz | restart |  |
-| `internal-only-data` | on, off or edition | none |  | server and console | The feature internal-only-data an edition file names under features: off presets false, on or edition true; presets drishti.data-view.internal-only-download on the server. off: the Data view refuses datasets marked internal only | restart |  |
+| `data` | on, off or edition | none |  | server and console | The feature data an edition file names under features: off presets false, on or edition true; presets drishti.data-view.enabled on the server and features.data in the console. Export data (EXPORT, /data): every dataset, a day as .jsonl.gz | restart |  |
+| `internal-only-data` | on, off or edition | none |  | server and console | The feature internal-only-data an edition file names under features: off presets false, on or edition true; presets drishti.data-view.internal-only-download on the server. off: Export data refuses datasets marked internal only | restart |  |
 | `workspaces` | on, off or edition | none |  | server and console | The feature workspaces an edition file names under features: off presets false, on or edition true; presets features.workspaces in the console. /w | restart |  |
 | `monitors` | on, off or edition | none |  | server and console | The feature monitors an edition file names under features: off presets false, on or edition true; presets features.monitors in the console. /m | restart |  |
 | `alerts` | on, off or edition | none |  | server and console | The feature alerts an edition file names under features: off presets false, on or edition true; presets features.alerts in the console. /alerts | restart |  |
@@ -5848,6 +5786,7 @@ The supervisor, the Python pools and their environments ([OPERATIONS.md](OPERATI
 | `compute.pools.<pool>.idle-stop` | duration | `5m` |  | server | a worker idle this long is stopped (down to min) | restart |  |
 | `compute.pools.<pool>.timeout` | duration | `30s` |  | server | an interactive request's budget | restart |  |
 | `compute.pools.<pool>.timeout-batch` | duration | `10m` |  | server | a batch request's budget | restart |  |
+| `compute.pools.<pool>.isolation` | string | `strict` |  | server | no network (a namespace with no interface) and files held by the kernel (Landlock): Linux only; elsewhere no run | restart |  |
 
 ### Drishti*net: `config/net/`
 
@@ -5999,7 +5938,7 @@ One YAML per ISDA SIMM version (`drishti.simm.parameters-dir`, default `./config
 
 ### The data inbox's routing rules: `config/dataload.yaml`
 
-Where a file dropped in the data inbox goes: a file-name pattern to a pack and kind (`drishti.dataload.rules-file`), read again at every cycle ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load), [DATALOAD_INBOX.md](../architecture/DATALOAD_INBOX.md)). The inbox's own settings are in `config/engines/dataload.yaml`.
+Where a file dropped in the data inbox goes: a file-name pattern to a pack and kind (`drishti.dataload.rules-file`), read again at every cycle ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load), [DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md)). The inbox's own settings are in `config/engines/dataload.yaml`.
 
 #### `dataload`
 
@@ -6140,32 +6079,16 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_BI_BOARD_ROTATE_SECONDS` | `bi.board.rotate_seconds` | `30` | console | a board in kiosk mode turns to its next page after this long, unless the board sets rotate:; 3 to 3600 |
 | `DRISHTI_BI_DIR` | `drishti.bi.dir` | `./config/bi` | server | Rupaka files: datasets/, reports/, boards/, notebooks/, python/ (config/bi/README.md); never inside a pack |
 | `DRISHTI_BI_ENABLED` | `bi.enabled` | `true` | console | false: no BI top-bar menu, no /bi pages (the server's drishti.bi.enabled is separate) |
-| `DRISHTI_BI_EXPLORE_MAX_ROWS` | `bi.explore.max_rows` | `10000` | console | most rows of an extract (the reader's rows, cut here); 10 to 100000 |
 | `DRISHTI_BI_LIVE_MIN_INTERVAL_MS` | `bi.live.min_interval_ms` | `250` | console | a report redraws its live visuals at most this often (a burst of ticks becomes one redraw); 100 to 5000 |
 | `DRISHTI_BI_LIVE_STALE_SECONDS` | `bi.live.stale_seconds` | `30` | console | no tick or status from the server for this long: the report says "Stale"; 5 to 600 |
-| `DRISHTI_BI_MIGRATE_ON_START` | `drishti.bi.migrate.on-start` | `true` | server | at start: old-syntax expressions to DEL v2, audited, the text before kept in each item's history; idempotent |
+| `DRISHTI_BI_MIGRATE_ON_START` | `drishti.bi.migrate.on-start` | `true` | server | at start: stored datasets and models into the table layer, 2.3 boards into reports; audited, the text before kept; idempotent |
 | `DRISHTI_BI_NODE` | `drishti.bi.exec.node` | empty | server | this Java node's name when several serve the site (blank: one node) |
-| `DRISHTI_BI_PYCONSOLE_ENABLED` | `bi.pyconsole.enabled` | `true` | console | false: no /pyconsole page; it also needs Calc's runtime (tools/fetch-pyodide.sh) |
-| `DRISHTI_BI_PYCONSOLE_MAX_ROWS` | `bi.pyconsole.max_rows` | `20000` | console | most rows of an extract handed to the browser (the reader's rows, masked, cut here); 10 to 100000 |
-| `DRISHTI_BI_PYTHON_ENABLED` | `bi.python.enabled` | `true` | console | false: python visuals answer DRS-9074 (the browser target still works where a manifest allows it) |
-| `DRISHTI_BI_PYTHON_FORK_SERVER` | `bi.python.fork_server` | `true` | console | one pre-imported parent forks a child per call (no interpreter start per call); false: a new process per call |
-| `DRISHTI_BI_PYTHON_MAX_INPUT_BYTES` | `bi.python.max_input_bytes` | `16000000` | console | largest Arrow table handed to Python |
-| `DRISHTI_BI_PYTHON_MAX_MEMORY_MB` | `bi.python.max_memory_mb` | `1024` | console | the most memory a manifest may ask for, on top of what the interpreter and its packages need to start |
-| `DRISHTI_BI_PYTHON_MAX_OUTPUT_BYTES` | `bi.python.max_output_bytes` | `1000000` | console | largest result (a chart option, an image or a measure's rows) |
-| `DRISHTI_BI_PYTHON_MAX_TIMEOUT` | `bi.python.max_timeout_seconds` | `60` | console | the most a manifest may ask for; the CPU and wall-clock limit of one call |
-| `DRISHTI_BI_PYTHON_QUEUE_SECONDS` | `bi.python.queue_seconds` | `5` | console | how long a Python call waits for a free worker before DRS-9074 |
-| `DRISHTI_BI_PYTHON_WARM` | `bi.python.warm` | `true` | console | start the fork-server when the console starts, so the first call (a report, a Transform's step run) is warm too |
-| `DRISHTI_BI_PYTHON_WORKERS` | `bi.python.workers` | `2` | console | worker processes at once; a call waits queue\_seconds for a place, then DRS-9074 |
+| `DRISHTI_BI_NOTEBOOK_MAX_ROWS` | `bi.notebook.max_rows` | `10000` | console | most rows of an extract (the reader's rows, cut here); 10 to 100000 |
 | `DRISHTI_BI_RUNS_FILE` | `drishti.bi.runs.file` | `./config/runs/runs.yaml` | server | BI runs (docs/architecture/BI\_DESIGN.md); ready-made in config/runs.examples/ |
 | `DRISHTI_BI_STORE` | `drishti.bi.query.store-dir` | `./data/bi-store` | server | the BI store: typed Parquet layers (columns, rollups) written here; never under the repository |
-| `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` | `drishti.bi.transform.console-token`, `bi.python.runner_token` | empty | console, server | the shared secret the console checks on /internal/py/\* (X-Drishti-Runner-Token) |
-| `DRISHTI_BI_TRANSFORM_CONSOLE_URL` | `drishti.bi.transform.console-url` | empty | server | the console's Py-node endpoint (http://console:17480); blank: the server runs transform\_cli.py itself |
 | `DRISHTI_BI_TRANSFORM_PREVIEW_ROWS` | `bi.transform.preview_rows` | `1000` | console | rows of each input the step-by-step run starts from (the reader's rows, asked of the server); 10 to 50000 |
-| `DRISHTI_BI_TRANSFORM_PYTHON` | `drishti.bi.transform.python` | empty | server | the Python with pandas and pyarrow (the console's environment); blank: drishti-console/.venv when it exists, else python3 |
-| `DRISHTI_BI_TRANSFORM_RUNNER` | `drishti.bi.transform.runner` | empty | server | the console's core/transform\_cli.py; blank: looked for in drishti-console/core from here and its parents |
 | `DRISHTI_CACHE_RESET_AT` | trading-stream cache reset | `02:00` | packs | The disk cache's nightly clearing time (New York) |
 | `DRISHTI_CACHE_ROOT` | trading-stream cache root | `./data/cache` | packs | Disk cache root (one folder per connector) |
-| `DRISHTI_CALC_ENABLED` | `drishti.calc.enabled`, `calc.enabled` | `true` | console, server | also needs a role with calc, and a pack that enables it for the view's kind |
 | `DRISHTI_CALENDAR` | `drishti.business-date.calendar` | `USNY` | server | Every read is for a business date. The default is today in `zone`, rolled back to a business day of `calendar` (weekends and holidays roll to the previous business day). Users pick another date in the top bar; dated sources (Delta Lake, dated folders, databases with a date column) then read that date. USNY, GBLO, EUTA, JPTO, CATO or joint, e.g. USNY+GBLO |
 | `DRISHTI_CCR_DERIVED_ENABLED` | counterparty-risk's derived connector | `true` | packs | The counterparty-risk pack's derived kinds (netting-set and counterparty totals) on or off |
 | `DRISHTI_COLLAB_DIR` | `drishti.collab.dir` | `./data/collab` | server | the file store, and exports |
@@ -6189,14 +6112,14 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_CONSOLE_WORKERS` | `server.workers` | `4` | console | processes serving pages (one Python process uses one core: ~40 pages/s measured); 1 = one process |
 | `DRISHTI_DATALOAD_DIR` | `drishti.dataload.dir` (engine) | `./data/dataload` | engine | the inbox's folder: inbox/, inprocess/, outbox/, failed/, ledger/ and inbox.lock, all on one file system |
 | `DRISHTI_DATALOAD_ENABLED` | `drishti.engines.dataload.enabled` (engine) | `false` | engine | run the data inbox on this node: files dropped in &lt;dir&gt;/inbox with a .ready marker are loaded into the lake every interval; off as shipped |
-| `DRISHTI_DATALOAD_LAKE` | `drishti.dataload.lake` (engine), drishti.dataload.lake | `demo` | engine, server | the lake (config/lakes/&lt;lake&gt;.yaml, docs/guides/LAKE\_GUIDE.md) the tables are written to; a kind the lake file lacks gets its pack's recommended entry copied there first (a rule's lake: wins for its files; a folder is the old form, read with one warning) |
+| `DRISHTI_DATALOAD_LAKE` | `drishti.dataload.lake` (engine), drishti.dataload.lake | `demo` | engine, server | the lake (config/lakes/&lt;lake&gt;.yaml, docs/guides/DATA\_LAKE\_GUIDE.md) the tables are written to; a kind the lake file lacks gets its pack's recommended entry copied there first (a rule's lake: wins for its files; a folder is the old form, read with one warning) |
 | `DRISHTI_DATALOAD_LOADER_HEAP` | `drishti.dataload.loader-heap` (engine) | `4g` | engine | the loader's own heap (the child Java process's -Xmx): a load never uses the server's heap |
 | `DRISHTI_DATALOAD_OWNER` | `drishti.dataload.owner` (engine) | `true` | engine | this node runs the inbox's cycles; in a cluster set it true on one node only (the folder lock also keeps a second runner out) |
 | `DRISHTI_DATALOAD_RULES` | `drishti.dataload.rules-file` (engine) | `./config/dataload.yaml` | engine | the routing rules: a file-name pattern to a pack and kind, read again every cycle |
 | `DRISHTI_DATA_DIR` | `drishti.data.dir`, `lakes.data_dir` | `./data` | console, server | The umbrella folder every runtime path below defaults under (identity database, caches, loads, collab, designs, reports, the pack overlay and settings, governance, the sample feeds). Each path's own setting still overrides its default. |
 | `DRISHTI_DEFAULT_PACKS` | `drishti.packs.default-for-users` | empty | server | Packs new users get until an admin says otherwise (empty: every installed pack). |
 | `DRISHTI_DELTA_ENGINE` | `engine` (connector), delta engine | `native` | connector, packs | Reader engine: native (Delta Kernel without Hadoop; Windows), hadoop (also abfs://, gs://) or auto (native on Windows); not set: DRISHTI\_DELTA\_ENGINE, else native |
-| `DRISHTI_DELTA_ROOT` | `drishti.var.official.root` (engine), `drishti.ccr.exposure.official.root` (engine), every pack's delta connectors' root | `./data/delta` | engine, packs | a folder or s3://bucket/prefix |
+| `DRISHTI_DELTA_ROOT` | `drishti.var.official.root` (engine), `drishti.ccr.exposure.official.root` (engine), the demo lake's root (config/lakes/demo.yaml) | `./data/delta` | engine, packs | a folder or s3://bucket/prefix |
 | `DRISHTI_DEMO_ENABLED` | `drishti.sources.plugins.demo.enabled` | `true` | server | run the demo source (the packs' sample data) |
 | `DRISHTI_DOCTOR_PORTS` | drishti.py doctor | none | tools | The ports doctor checks |
 | `DRISHTI_DRAIN_TOKEN` | rolling.py, deploy/bin/drishti-node.sh | none | tools | An administrator's personal API token with the node:drain scope: the stop hooks and the rolling upgrade runner drain a server with it (secret; else DRISHTI\_DRAIN\_TOKEN\_FILE, else DRISHTI\_TOKEN) |
@@ -6270,7 +6193,9 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_JDBC_URL` | `drishti.sources.plugins.jdbc.settings.url` | empty | server | the JDBC URL of that instance |
 | `DRISHTI_JDBC_USER` | `drishti.sources.plugins.jdbc.settings.user` | empty | server | its database user |
 | `DRISHTI_KAFKA_BOOTSTRAP` | Kafka brokers | `localhost:9092` | packs | The brokers of the trading stream and the VaR PV topic |
-| `DRISHTI_LAKES_DIR` | drishti.lakes.dir | `./config/lakes` | server | The lake folder: one config/lakes/&lt;lake&gt;.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/LAKE\_GUIDE.md) |
+| `DRISHTI_LABS_CALC` | `drishti.calc.enabled`, `labs.calc` | `false` | console, server | Labs: off as shipped; on also needs a role with calc, and a pack that enables it for the view's kind |
+| `DRISHTI_LAKES_DIR` | drishti.lakes.dir | `./config/lakes` | server | The lake folder: one config/lakes/&lt;lake&gt;.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/DATA\_LAKE\_GUIDE.md) |
+| `DRISHTI_LAKES_RELOCATE_ON_START` | drishti.lakes.relocate-on-start | `true` | server | At start, move a demo lake built in the older layout (&lt;data&gt;/delta/&lt;domain&gt;) into &lt;data&gt;/delta/demo once, safely (verified, moved back on any error, never a delete); false: only by drishti.py lake relocate demo (docs/admin/OPERATIONS.md) |
 | `DRISHTI_LAKE_CLASSPATH` | lake load | none | tools | The class path of the Java lake loader |
 | `DRISHTI_LAKE_ENABLED` | the packs' data connectors | `true` | packs | false switches every pack's data connector off (the demo samples still answer) |
 | `DRISHTI_LAKE_HEAP` | lake build | none | tools | The Java lake writer's heap |
@@ -6395,6 +6320,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_T37_FN` | screenshot tools | `fn:you/wret@1` | tools | Tutorial 37's shots: the saved function shown |
 | `DRISHTI_T37_PASSWORD` | screenshot tools | none | tools | Tutorial 37's shots: that author's password |
 | `DRISHTI_T37_USER` | screenshot tools | none | tools | Tutorial 37's shots: the function's author who signs in |
+| `DRISHTI_TABLES_ROOT` | `drishti.tables.root` | `./config/tables` | server | the definitions' folder: config/tables/&lt;domain&gt;/&lt;name&gt;.table.yaml and .model.yaml |
 | `DRISHTI_TMP_DIR` | java.io.tmpdir, the console's tmp\_dir | `<data dir>/tmp` | server, console, tools | The base of every temporary folder Drishti makes |
 | `DRISHTI_TOKEN` | drishti.py | none | tools | A personal API token for the command line and tools (secret) |
 | `DRISHTI_TOKEN_SECRET` | `drishti.security.secret`, `auth.token_secret` | empty | console, server | the token signing secret (at least 32 bytes), shared with the console; from the environment only |
@@ -6404,8 +6330,6 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_UI_KIT_DIR` | `drishti.ui-kit.dir` | `./config/ui-kit` | server | The Drishti UI kit (docs/guides/RACHANA\_REFERENCE.md, "The Drishti UI kit"): platform UI vocabulary loaded whatever packs are enabled: fragments/ (used by any Sutra as { use: series-line@1 }), assets/ (icons, images, logos) and brand.yaml. |
 | `DRISHTI_UI_KIT_SITE_DIR` | `drishti.ui-kit.site-dir` | `./data/ui-kit` | server | The site's overrides: brand.yaml (its keys win over the kit's) and assets/ (a file wins over the kit's of the same path). |
 | `DRISHTI_UI_PHONE` | `ui.phone.enabled` | `true` | console | true: a phone or tablet gets the tiered page; false: every screen gets every panel, as before |
-| `DRISHTI_UI_RENDER` | `ui.render.mode` | `server` | console | server or client: the renderer of the pages listed in ui.render.pages |
-| `DRISHTI_UI_RENDER_PAGES` | `ui.render.pages` | `view,pane` | console | the pages ui.render.mode applies to: view (an entity page) and pane (the same page in a workspace pane) |
 | `DRISHTI_UNDER_CONSTRUCTION_FILE` | `drishti.under-construction.file`, `under_construction.file` | `./config/under-construction.yaml` | console, server | absent: under-construction.yaml beside the packs folder, else nothing registered; none: nothing |
 | `DRISHTI_UNINSTALLED_DIR` | `drishti.admin.uninstalled-dir` | `./data/uninstalled` | server | an uninstall MOVES the artifact here; nothing is deleted |
 | `DRISHTI_UNINSTALLED_KEEP` | `drishti.admin.uninstalled-keep` | `30d` | server | archives older than this are removed, once a day; 0 keeps them for ever |

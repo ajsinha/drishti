@@ -245,8 +245,8 @@ public final class SnapshotService {
         UnaryOperator<DataNode> redact = masked ? entitlements.redactor(maskOf) : UnaryOperator.identity();
         Predicate<String> mayOpen = k -> may.stream().allMatch(p -> entitlements.mayOpen(p, k));
         ViewState state = viewState(share);
-        ViewModel v = state.isEmpty() ? pipeline.view(EntityRef.of(share.kind(), share.entityId()), asOf(share), redact, mayOpen)
-                : pipeline.view(EntityRef.of(share.kind(), share.entityId()), asOf(share), redact, mayOpen, state.controls());
+        ViewModel v = state.isEmpty() ? pipeline.view(EntityRef.of(share.kind(), share.entityId()), asOf(share), com.ash.drishti.engine.ViewerContext.of(redact, mayOpen))
+                : pipeline.view(EntityRef.of(share.kind(), share.entityId()), asOf(share), com.ash.drishti.engine.ViewerContext.of(redact, mayOpen), state.controls());
         for (Principal p : may) {
             v = entitlements.restrict(p, v);
         }

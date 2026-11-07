@@ -101,7 +101,7 @@ public final class BiReportService {
         }
         try {
             BiStore.Item mine = bi.readableItem(p, ref);
-            if ("dataset".equals(mine.kind())) {
+            if ("dataset".equals(mine.kind()) || "table".equals(mine.kind())) {
                 return mine;
             }
         } catch (DrishtiException e) {
@@ -392,7 +392,7 @@ public final class BiReportService {
             }
         }
         String body = bi.bodyFor(p, found);
-        if (com.ash.drishti.server.bi.layer.DatasetDefParser.isVersion2(body)) {
+        if (com.ash.drishti.server.bi.layer.DatasetDefParser.isTable(body)) {
             com.ash.drishti.server.bi.layer.DatasetDef d = com.ash.drishti.server.bi.layer.DatasetDefParser.parse(body).dataset();
             if (d != null) {
                 return datasets.describeModel(p, com.ash.drishti.server.bi.layer.ImplicitModels.QUERY_PREFIX + d.name());
@@ -669,10 +669,10 @@ public final class BiReportService {
 
     /** The state of the live tables behind a report (for the indicator and for a client that keeps rows), or null when the dataset has none. */
     private Map<String, Object> liveOf(Principal p, Prepared pre) {
-        if (DatasetService.isModelRef(pre.dsItem()) || pre.dataset().tables().values().stream().noneMatch(Dataset.Table::isLive)) {
+        if (pre.dataset().tables().values().stream().noneMatch(Dataset.Table::isLive)) {
             return null;
         }
-        return datasets.liveTick(p, pre.dsItem());
+        return datasets.liveTick(p, pre.dsItem());                     // a model over live tables too (the live samples are models since the table layer)
     }
 
     /**
@@ -797,7 +797,7 @@ public final class BiReportService {
     }
 
     /**
-     * What the console's Python runner needs to run one python visual (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.8): the Python item (manifest and source, as the caller reads it),
+     * What the compute pool python needs to run one python visual (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.8): the Python item (manifest and source, as the caller reads it),
      * the Python measure it shows (its name and the columns it reads and groups by, as the table names them) or null, the visual's parameters, and where it
      * may run. The rows come from the same visual query as any other (as an Arrow stream, masked for this caller).
      */
@@ -856,8 +856,8 @@ public final class BiReportService {
         if (l.datasetItem() == null || l.dataset() == null) {
             throw new DrishtiException(ErrorCode.REPORT_DATASET, "the report's dataset cannot be found, so it has no live state");
         }
-        if (DatasetService.isModelRef(l.datasetItem()) || l.dataset().tables().values().stream().noneMatch(Dataset.Table::isLive)) {
-            return null;                                                         // a report on a model follows its live data through standing queries (W3)
+        if (l.dataset().tables().values().stream().noneMatch(Dataset.Table::isLive)) {
+            return null;
         }
         return datasets.liveWatch(p, l.datasetItem());
     }

@@ -33,7 +33,7 @@ import java.util.Set;
 /**
  * Python measures in any grouped query (wave B, R8; docs/architecture/BI_DESIGN.md section 3.5, the {@code PyAggregate} node): after the query's SQL
  * measures ran, each Python measure gets the rows of its input columns with the answer's fields, read as the reader (row rules and masks applied by the
- * engine), and the console's runner gives one value per group; the values become the measure's column of the answer, in its place. A masked input makes the
+ * engine), and the compute pool python gives one value per group; the values become the measure's column of the answer, in its place. A masked input makes the
  * column {@code None} for the reader (said in the warnings); more rows than {@code drishti.bi.mq.max-limit} is {@code DRS-9072}.
  */
 final class PythonAnswers {
@@ -43,7 +43,7 @@ final class PythonAnswers {
     static QueryService.Result add(MqService.Bound b, Dataset ds, QueryRequest main, QueryRequest sqlMain, QueryService.Result r, List<String> python,
             MqService.PythonMeasures runner, MqProperties props, List<String> warnings) {
         if (runner == null) {
-            throw new DrishtiException(ErrorCode.PYTHON_BUSY, "Python measures need the console's Python runner, which this server has none of");
+            throw new DrishtiException(ErrorCode.PYTHON_BUSY, "Python measures need the server's compute pool python (PythonRuns), which is not wired on this server");
         }
         Map<String, ArrowIpcWriter.Column> made = new LinkedHashMap<>();
         for (String name : python) {

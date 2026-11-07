@@ -114,7 +114,7 @@ public final class ModelConsumers {
                     continue;
                 }
             }
-            if (!Set.of("report", "notebook", "dataset").contains(i.kind())) {
+            if (!Set.of("report", "notebook", "dataset", "table").contains(i.kind())) {
                 continue;
             }
             String published = i.isPublished() ? bi.publishedBody(i) : null;
@@ -165,14 +165,16 @@ public final class ModelConsumers {
         if (root.path("model").isTextual()) {
             out.add(root.path("model").asText().strip());
         }
-        if (root.path("source").path("model").isTextual()) {
-            out.add(root.path("source").path("model").asText().strip());
-        }
-        root.path("source").path("inputs").forEach(x -> {
-            if (x.path("model").isTextual()) {
-                out.add(x.path("model").asText().strip());
+        for (String from : List.of("source", "from")) {                        // a dataset's source, a table's from (the layer's form)
+            if (root.path(from).path("model").isTextual()) {
+                out.add(root.path(from).path("model").asText().strip());
             }
-        });
+            root.path(from).path("inputs").forEach(x -> {
+                if (x.path("model").isTextual()) {
+                    out.add(x.path("model").asText().strip());
+                }
+            });
+        }
         if (root.path("dataset").isTextual() && root.path("dataset").asText().strip().startsWith(NOTEBOOK_MODEL)) {
             out.add(root.path("dataset").asText().strip().substring(NOTEBOOK_MODEL.length()));
         }

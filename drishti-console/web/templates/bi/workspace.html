@@ -41,11 +41,11 @@
     <button type="button" class="btn-pill btn-accent bi-danger" data-confirm-yes>Delete</button>
     <button type="button" class="btn-pill btn-ghost" data-confirm-no>Cancel</button>
   </div>
-  <p class="bi-empty" data-empty hidden>No items yet. Start a report from a dataset, a board, or a notebook in <a href="/bi/explore">Analyse</a>; or open the <a href="/bi/catalogue">catalogue</a> to see what others have published.</p>
+  <p class="bi-empty" data-empty hidden>No items yet. Start a report from a dataset, a board, or a notebook in the <a href="/bi/notebook">Notebook</a>; or open the <a href="/bi/catalogue">catalogue</a> to see what others have published.</p>
   <p class="text-muted-d" data-need-author hidden>You can add items here, but creating them needs the bi-author power. Ask an admin for it.</p>
   <form class="bi-form" data-new-item hidden aria-label="New item">
     <h3>New item</h3>
-    <label>Kind<select name="kind" class="studio-select"><option value="report">report</option><option value="dataset">dataset</option><option value="model">model</option><option value="board">board</option><option value="notebook">notebook</option><option value="python">python</option></select></label>
+    <label>Kind<select name="kind" class="studio-select"><option value="report">report</option><option value="dataset">table</option><option value="model">model</option><option value="board">board</option><option value="notebook">notebook</option><option value="python">python</option></select></label>
     <label data-dataset-row>Model or dataset<select name="dataset" class="studio-select" data-new-dataset><option value="">Choose a model or a dataset</option></select></label>
     <label data-dataset-row>Also add (optional)<select name="also" class="studio-select" data-new-also multiple size="4" aria-label="More datasets to open in the Fields pane"></select>
       <small class="text-muted-d">Hold Ctrl or Shift to choose several. They open beside the main dataset in the designer's Fields pane.</small></label>
@@ -59,7 +59,7 @@
     <p class="text-muted-d" data-kind-hint></p>
     <button type="submit" class="btn-pill btn-accent" data-create data-new-dataset-wizard>Create item</button>
     <button type="button" class="btn-pill btn-ghost" data-paste-dataset hidden><i class="bi bi-clipboard" aria-hidden="true"></i> <span data-paste-label>Paste YAML</span></button>
-    <p class="text-muted-d">An item is a YAML body that is stored, versioned and published; open a dataset to query it, a report or a board to see it drawn. A notebook opens in Analyse.</p>
+    <p class="text-muted-d">An item is a YAML body that is stored, versioned and published; open a dataset to query it, a report or a board to see it drawn. A notebook opens in the Notebook.</p>
   </form>
 </section>
 </div>

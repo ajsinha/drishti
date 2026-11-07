@@ -12,8 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Data view, DATA (docs/guides/DATA_GUIDE.md "The Data view"): the dataset list by pack with format, dates and the internal-only mark; a
-chosen dataset with its facts, dates and columns; DATA <dataset> [date] <GO>; the count and the download relayed with the selection from the
+"""Export data, EXPORT (DATA, its older word, kept as an alias; docs/guides/DATA_GUIDE.md "Export data"): the dataset list by pack with format, dates and the internal-only mark; a
+chosen dataset with its facts, dates and columns; EXPORT (or DATA) <dataset> [date] <GO>; the count and the download relayed with the selection from the
 address (every filter line), the download streamed; a refused dataset says so and offers no download; the word and the feature switch it off."""
 from __future__ import annotations
 
@@ -98,19 +98,22 @@ def test_a_chosen_dataset_shows_its_facts_dates_columns_and_the_selection_from_t
     assert 'value="TRADE_ID" data-col' in page and 'value="MTM" data-col' in page
     assert '<option value="2026-09-30" selected>' in page
     assert "DESK = DESK-COMM" in page and "MTM \\u003e 1000000" in page       # the selection rides in data-sel for the script
-    assert "DATA trade-valuation 2026-09-30" in page and "/static/js/drishti_data-view.js" in page
+    assert "EXPORT trade-valuation 2026-09-30" in page and "/static/js/drishti_data-view.js" in page
+    assert "<title>Export data" in page and "<h1 class=\"ws-h\">Export data" in page
 
 
 def test_data_and_a_dataset_and_a_date_go_to_it(client, backend, monkeypatch):
     _fake(backend, monkeypatch)
-    r = client.get("/go", params={"q": "DATA TVAL 2026-09-30 <GO>"}, follow_redirects=False)
+    r = client.get("/go", params={"q": "EXPORT TVAL 2026-09-30 <GO>"}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == "/data?q=TVAL%202026-09-30"
     r = client.get(r.headers["location"], follow_redirects=False)
     assert r.headers["location"] == "/data?kind=trade-valuation&date=2026-09-30"
     assert client.get("/data", params={"q": "nothing-like-it"}, follow_redirects=False).headers["location"] == "/data?find=nothing-like-it"
-    assert client.get("/go", params={"q": "DATA <GO>"}, follow_redirects=False).headers["location"] == "/data"
-    hints = client.get("/api/suggest", params={"q": "DATA trade"}).json()
-    assert hints and hints[0]["mnemonic"] == "DATA" and hints[0]["href"] == "/data?q=trade"
+    assert client.get("/go", params={"q": "EXPORT <GO>"}, follow_redirects=False).headers["location"] == "/data"
+    for word in ("EXPORT", "DATA"):                                                 # EXPORT is the word; DATA, the older one, is its alias
+        assert client.get("/go", params={"q": f"{word} TVAL 2026-09-30 <GO>"}, follow_redirects=False).headers["location"] == "/data?q=TVAL%202026-09-30"
+        hints = client.get("/api/suggest", params={"q": f"{word} trade"}).json()
+        assert hints and hints[0]["mnemonic"] == "EXPORT" and hints[0]["href"] == "/data?q=trade" and hints[0]["title"].startswith("Export data")
 
 
 def test_the_count_and_the_download_carry_every_filter_line_and_the_download_streams(client, backend, monkeypatch):
@@ -139,4 +142,5 @@ def test_a_refused_dataset_says_so_and_offers_no_download(client, backend, monke
 def test_the_word_switches_the_view_off(client):
     off = Edition("risk", {"commands": {"words": {"DATA": "off"}}})
     assert hidden(client.app, off, "/data") and hidden(client.app, off, "/api/data/trade/count")
+    assert off.word_on("EXPORT") is False and off.word_on("DATA") is False          # one switch for the word and its alias
     assert hidden(client.app, off, "/datamap") is None                              # DATAMAP is its own word

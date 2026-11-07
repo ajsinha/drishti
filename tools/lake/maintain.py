@@ -332,7 +332,7 @@ def _one(uri, root, lake, base, owned, want, day, dry_run, force_drop, force_for
         res["forced"] = True
         log(event="warning", table=uri, warning="maintaining a table Drishti did not build (--force-foreign): its publisher may rewrite "
                                                  "or vacuum it too, and a run here may break what it expects")
-    # the table's settings: the maintenance file's lake defaults, its own entry there, then its lake file's (LAKE_GUIDE.md: everything
+    # the table's settings: the maintenance file's lake defaults, its own entry there, then its lake file's (DATA_LAKE_GUIDE.md: everything
     # specific to a table lives in the lake file), and the domain's retention floor over all of them
     own, said = maintconfig.from_lake_entry((lake.get("_lake-file") or {}).get(name) or {})
     if own:

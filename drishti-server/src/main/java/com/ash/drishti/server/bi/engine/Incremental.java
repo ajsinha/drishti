@@ -18,7 +18,7 @@ package com.ash.drishti.server.bi.engine;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.Node;
 import com.ash.drishti.server.bi.dataset.Resolver;
-import com.ash.drishti.server.bi.expr.DelPrinter;
+import com.ash.drishti.server.bi.dataset.NodeText;
 import com.ash.drishti.server.bi.expr.Expressions;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -83,7 +83,7 @@ public final class Incremental {
         this.rule = b.rules().isEmpty() ? null : b.rules().get(0);
         this.denied = b.denied();
         for (String m : q.measures()) {
-            trees.put(m, collect(inline(Expressions.parse(ds.measures().get(m).expr()), new LinkedHashSet<>())));
+            trees.put(m, collect(inline(Expressions.node(ds.measures().get(m).expr()), new LinkedHashSet<>())));
         }
     }
 
@@ -99,7 +99,7 @@ public final class Incremental {
             if (def == null || def.expr() == null) {
                 return new Shape(Kind.TICK, "a Python measure: recomputed on the tick");
             }
-            Shape s = measureShape(ds, Expressions.parse(def.expr()), table, new LinkedHashSet<>());
+            Shape s = measureShape(ds, Expressions.node(def.expr()), table, new LinkedHashSet<>());
             if (s.kind().ordinal() > worst.ordinal()) {
                 worst = s.kind();
                 why = s.reason();
@@ -206,7 +206,7 @@ public final class Incremental {
                 if (def == null || def.expr() == null) {
                     v.visit("python", null);
                 } else if (seen.add(m.name())) {
-                    walkAggregates(Expressions.parse(def.expr()), ds, seen, v);
+                    walkAggregates(Expressions.node(def.expr()), ds, seen, v);
                 }
             }
             case Node.Call c -> {
@@ -257,10 +257,10 @@ public final class Incremental {
         asked.add(ROWS);
         for (int i = 0; i < inc.leaves.size(); i++) {
             Leaf l = inc.leaves.get(i);
-            String where = l.cond() == null ? "" : ", where=" + DelPrinter.print(l.cond());
+            String where = l.cond() == null ? "" : ", where=" + NodeText.print(l.cond());
             String s = "__inc_s" + i;
             String c = "__inc_c" + i;
-            String arg = l.rowCount() ? table : DelPrinter.print(l.arg());
+            String arg = l.rowCount() ? table : NodeText.print(l.arg());
             measures.put(c, new Dataset.Measure(c, "count(" + arg + where + ")", null, "incremental count", null));
             asked.add(c);
             if (!l.rowCount() && !"count".equals(l.fn())) {
@@ -442,7 +442,7 @@ public final class Incremental {
                 if (!seen.add(m.name())) {
                     throw new IllegalStateException("measures in a circle");
                 }
-                Node t = inline(Expressions.parse(ds.measures().get(m.name()).expr()), seen);
+                Node t = inline(Expressions.node(ds.measures().get(m.name()).expr()), seen);
                 seen.remove(m.name());
                 yield t;
             }

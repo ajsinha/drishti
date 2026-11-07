@@ -110,8 +110,7 @@ MODEL = {"rachana": 2, "model": "trading-risk", "version": "1.0.0", "title": "Tr
 
 # ---- pages and the proxy ------------------------------------------------------------------------------------------------
 
-@pytest.mark.parametrize("url,script", [("/bi/models", "drishti_bi-models.js"), ("/bi/ds/pack.trading.trade", "drishti_bi-models.js"), ("/bi/md/bi-m1", "drishti_bi-model-designer.js"),
-                                        ("/bi/datasets/new-layer", "drishti_bi-dataset-layer.js")])
+@pytest.mark.parametrize("url,script", [("/bi/models", "drishti_bi-models.js"), ("/bi/ds/pack.trading.trade", "drishti_bi-models.js")])
 def test_the_pages_are_shells_with_their_scripts_and_need_the_bi_power(url, script):
     client, _ = make()
     r = client.get(url)
@@ -119,12 +118,12 @@ def test_the_pages_are_shells_with_their_scripts_and_need_the_bi_power(url, scri
     assert make(powers=())[0].get(url).status_code == 403
 
 
-def test_the_designer_page_has_its_tabs_and_the_rail_links_to_models():
-    client, _ = make()
-    text = client.get("/bi/md/bi-m1").text
-    for tab in ("canvas", "measures", "security", "contract", "yaml"):
-        assert f'data-tab="{tab}"' in text
-    assert 'href="/bi/models"' in client.get("/bi").text
+@pytest.mark.parametrize("url,to", [("/bi/md/bi-m1", "/build/tables?kind=model&item=bi-m1"), ("/bi/datasets/new-layer", "/build/tables?new=table"),
+                                    ("/bi/datasets/new", "/build/tables?new=table"), ("/bi/datasets/new?edit=bi-d1", "/build/tables?kind=table&item=bi-d1")])
+def test_the_removed_designer_and_wizards_lead_to_build_tables_and_models(url, to):
+    """The model designer and the dataset wizards are gone (one way per job): their old addresses open Build › Tables & models."""
+    r = make()[0].get(url, follow_redirects=False)
+    assert r.status_code == 301 and r.headers["location"] == to
 
 
 def test_the_proxy_passes_the_model_query_paths_on():
@@ -149,55 +148,7 @@ def test_a_model_is_written_in_the_spec_order_one_line_per_entry_and_reads_back(
     assert yaml.safe_load(text) == doc
 
 
-def test_compose_checks_on_the_server_and_suggests_from_the_pack_references():
-    client, backend = make()
-    r = client.post("/bi/model-api/compose", json={"doc": MODEL}).json()
-    assert r["check"]["valid"] and r["check"]["echo"] == r["yaml"]
-    assert r["suggestions"] == [{"from": "trade.desk", "to": "desk.id", "cardinality": "many-to-one", "active": True, "basis": "pack-reference",
-                                 "why": "trade.desk holds desk ids (from the pack)", "reason": ""}]
-    assert set(r["datasets"]) == {"trade", "desk"} and r["datasets"]["trade"]["grain"]["keys"] == ["id"]
-    accepted = dict(MODEL, relationships=[{"from": "trade.desk", "to": "desk.id"}])
-    assert client.post("/bi/model-api/compose", json={"doc": accepted}).json()["suggestions"] == []
-
-
-def test_a_second_path_or_two_facts_are_proposed_inactive_and_dismissed_ones_stay_away():
-    infos = {"trade": ml.dataset_info(TRADE), "desk": ml.dataset_info(DESK), "trade2": ml.dataset_info(TRADE)}
-    two_facts = dict(MODEL, datasets=dict(MODEL["datasets"], desk={"dataset": "pack.core.desk@^1", "role": "fact"}))
-    assert ml.suggestions(two_facts, infos)[0]["active"] is False
-    infos["trade"] = ml.dataset_info(TRADE.replace("  currency:", "  bookingDesk: {type: string, role: dimension, references: desk}\n  currency:"))
-    s = ml.suggestions(MODEL, infos)                                   # two columns of trade hold desk ids: the second path is inactive
-    assert [x["active"] for x in s] == [True, False] and "ambiguous" in s[1]["reason"]
-    gone = dict(MODEL, layout={"dismissed": ["trade.desk->desk.id"]})
-    assert [x["from"] for x in ml.suggestions(gone, infos)] == ["trade.bookingDesk"]
-
-
-def test_a_measure_gets_its_default_from_the_column():
-    client, _ = make()
-    ask = lambda column, agg="": client.post("/bi/model-api/measure", json={"doc": MODEL, "alias": "trade", "column": column, "aggregate": agg}).json()  # noqa: E731
-    assert ask("notional") == {"name": "Sum of notional", "measure": {"expr": "sum(trade.notional)", "format": "amount0", "currency": "trade.currency"}}
-    assert ask("eePeak")["measure"]["additive"] == {"over-time": "last"}
-    assert ask("utilisation") == {"name": "Average of utilisation", "measure": {"expr": "avg(trade.utilisation)", "additive": False}}
-    assert ask("*") == {"name": "Count of trade", "measure": {"expr": "count(trade)"}}
-    assert ask("notional", "max")["measure"]["additive"] is False
-    assert client.post("/bi/model-api/measure", json={"doc": MODEL, "alias": "trade", "column": "nope"}).status_code == 422
-
-
-def test_parse_reads_the_yaml_tab_and_refuses_what_is_not_a_model():
-    client, _ = make()
-    assert client.post("/bi/model-api/parse", json={"yaml": ml.to_yaml(MODEL)}).json()["doc"] == MODEL
-    assert client.post("/bi/model-api/parse", json={"yaml": "tables: []\n"}).json()["code"] == "DRS-9120"
-    assert client.post("/bi/model-api/parse", json={"yaml": "a: [1"}).status_code == 422
-
-
 # ---- new models, reports, promotion -------------------------------------------------------------------------------------
-
-def test_a_new_model_infers_star_roles_and_never_reuses_a_name():
-    client, backend = make()
-    r = client.post("/bi/model-api/new", json={"title": "Trades and desks", "datasets": ["pack.trading.trade", "pack.core.desk"]}).json()
-    body = yaml.safe_load(backend.items[r["id"]]["body"])
-    assert r["href"] == "/bi/md/" + r["id"] and body["model"] == "trades-and-desks-2"            # trades-and-desks is taken
-    assert body["datasets"] == {"trade": {"dataset": "pack.trading.trade@^1", "role": "fact"}, "desk": {"dataset": "pack.core.desk@^1", "role": "dimension"}}
-    assert backend.items[r["id"]]["kind"] == "model"
 
 
 def test_make_it_a_model_writes_the_implicit_model_and_rebinds_the_report():
@@ -208,7 +159,7 @@ def test_make_it_a_model_writes_the_implicit_model_and_rebinds_the_report():
     assert any(c[1].endswith("/describe") for c in backend.bi_calls)                        # the person may read it, before a draft names it
     r = client.post("/bi/model-api/promote", json={"report": rep["id"]}).json()
     model = yaml.safe_load(backend.items[r["model"]]["body"])
-    assert model["implicit-from"] == "pack.trading.trade" and model["datasets"]["desk"]["role"] == "dimension"
+    assert model["implicit-from"] == "pack.trading.trade" and model["rachana"] == 3 and model["tables"]["desk"]["role"] == "dimension"
     assert model["relationships"] == [{"from": "trade.desk", "to": "desk.id", "suggested": {"from": "pack-reference"}}]
     assert {"Count of trade", "Sum of notional", "Average of utilisation"} <= set(model["measures"])
     assert f"model: {r['ref']}" in backend.items[rep["id"]]["body"] and "dataset:pack" not in backend.items[rep["id"]]["body"]
@@ -221,16 +172,6 @@ def test_the_fields_pane_reads_the_model_as_described():
                                                                                                     "description": "", "meaning": "", "role": "", "references": ""}
     assert f["measures"][0]["name"] == "Sum of notional" and f["model"]["implicit"] and f["model"]["dataset"] == "pack.trading.trade"
     assert client.get("/bi/model-api/fields").json()["code"] == "DRS-9140"
-
-
-def test_the_new_dataset_wizard_writes_a_rachana_2_dataset_and_checks_it():
-    client, _ = make()
-    doc = {"rachana": 2, "dataset": "desk-limits", "version": "1.0.0", "source": {"connector": "risk-warehouse", "query": "SELECT 1", "params": {"asOf": "as-of"}},
-           "grain": {"keys": ["desk_id"]}, "columns": {"desk_id": {"type": "string", "role": "dimension", "references": "desk"}}}
-    r = client.post("/bi/model-api/dataset-yaml", json={"doc": doc}).json()
-    assert r["yaml"].index("dataset:") < r["yaml"].index("source:") < r["yaml"].index("columns:") and yaml.safe_load(r["yaml"]) == doc
-    assert r["check"]["valid"]
-    assert ml.dataset_info(r["yaml"])["source"]["type"] == "connector"
 
 
 def test_a_dataset_page_reads_a_pack_dataset_as_facts():
@@ -260,7 +201,7 @@ def test_an_analyse_extract_of_a_model_is_one_model_query_of_rows():
         return sink.getvalue(), {"X-Bi-Masked": ""}
 
     backend.bi_arrow = arrow
-    r = client.post("/bi/explore/extract", json={"model": "dataset:pack.trading.trade", "fields": ["trade.desk", "trade.notional"]})
+    r = client.post("/bi/notebook/extract", json={"model": "dataset:pack.trading.trade", "fields": ["trade.desk", "trade.notional"]})
     assert r.status_code == 200, r.text
     assert sent[0][0] == "/mq" and sent[0][1]["shape"] == "rows" and sent[0][1]["select"] == {"fields": ["trade.desk", "trade.notional"], "measures": []}
 

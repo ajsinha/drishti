@@ -154,7 +154,7 @@ if [ -f data/identity/drishti.db ]; then
   python3 -c "import sqlite3; s = sqlite3.connect('data/identity/drishti.db'); d = sqlite3.connect('data/identity/backup.db'); s.backup(d); d.close()"
 fi
 keep=()                                    # only what exists here
-for p in data/fstore data/identity data/governance data/packs data/loads data/designs data/collab sutras config/connectors config/bi config/ai config/mcp application.local.yaml; do
+for p in data/fstore data/identity data/governance data/packs data/loads data/designs data/collab sutras config/connectors config/tables config/bi config/ai config/mcp application.local.yaml; do
   [ -e "$p" ] && keep+=("$p")
 done
 tar czf /backup/drishti/drishti-$stamp.tgz --exclude=data/identity/drishti.db* "${keep[@]}"
@@ -173,19 +173,17 @@ $ tar tzf /backup/drishti/drishti-20261013-0130.tgz | grep '^config/bi/[a-z]*/$'
 config/bi/reports/
 config/bi/python/
 config/bi/notebooks/
-config/bi/datasets/
-config/bi/boards/
-config/bi/models/
-$ tar tzf /backup/drishti/drishti-20261013-0130.tgz | grep -E '^config/bi/(models|datasets)/' | head -6
-config/bi/datasets/
-config/bi/datasets/live-trading.dataset.yaml
-config/bi/datasets/live-exposure.dataset.yaml
-config/bi/datasets/README.md
-config/bi/datasets/world-economics-economies.dataset.yaml
-config/bi/datasets/trading-risk-trades.dataset.yaml
+config/bi/themes/
+$ tar tzf /backup/drishti/drishti-20261013-0130.tgz | grep -E '^config/tables/' | head -6
+config/tables/
+config/tables/bi/
+config/tables/bi/counterparty-exposure.model.yaml
+config/tables/bi/counterparty_exposure_counterparties.table.yaml
+config/tables/bi/counterparty_exposure_netting_sets.table.yaml
+config/tables/bi/counterparty_exposure_official.table.yaml
 ```
 
-You should see `data/identity/backup.db` (the consistent copy of the live database; the live `drishti.db` and its `-wal` and `-shm` files are left out on purpose), `data/governance/`, your sutras and your BI folder with **`models/`** beside `datasets/` (a report reads a model, and a model reads datasets; back up both: a model without its datasets cannot answer). This archive, of a fresh site with the samples, is 35,918 bytes; yours grows with your data and audit log. **Restore** is the reverse, and you try it once on another machine: stop the server; move the damaged folders aside; unpack the archive; `mv data/identity/backup.db data/identity/drishti.db`; fix the owner; start; sign in as an administrator and open **Admin → Users** and **Admin → Audit log**: the users and the recent events are there.
+You should see `data/identity/backup.db` (the consistent copy of the live database; the live `drishti.db` and its `-wal` and `-shm` files are left out on purpose), `data/governance/`, your sutras and your BI folder beside the table layer's **`config/tables/`** (a report reads a model, and a model reads tables, both under `config/tables/<domain>/`; back up both folders: a report without its model cannot answer). This archive, of a fresh site with the samples, is 35,918 bytes; yours grows with your data and audit log. **Restore** is the reverse, and you try it once on another machine: stop the server; move the damaged folders aside; unpack the archive; `mv data/identity/backup.db data/identity/drishti.db`; fix the owner; start; sign in as an administrator and open **Admin → Users** and **Admin → Audit log**: the users and the recent events are there.
 The ActiveMQ and RabbitMQ connectors' state folders (`data/state/`) are the exception: copy them with the server stopped.
 
 ## Step 6 · The heap, the caches and the pools

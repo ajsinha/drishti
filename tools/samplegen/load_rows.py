@@ -16,7 +16,7 @@
 tools/samplegen/lake.py, tools/packgen/banking/make_data.py --lake and the pack generators' --lake write.
 
     uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/load_rows.py \\
-        --rows data/build/lake-rows/banking-history.tar --restated data/build/lake-rows/banking-restated.tar --root data/delta
+        --rows data/build/lake-rows/banking-history.tar --restated data/build/lake-rows/banking-restated.tar --root data/delta/demo
 
 A row (one JSON object a line, UTF-8):
 
@@ -24,7 +24,7 @@ A row (one JSON object a line, UTF-8):
 
 `table` is the table's folder under the domain (default: the kind). The row is kept as it is: its document is stored unchanged.
 
-**Its business date follows the load rules** (docs/architecture/DATA_LOAD_RULES.md), never the row's ``date``:
+**Its business date follows the load rules** (docs/guides/DATA_LAKE_GUIDE.md), never the row's ``date``:
 
 * a **tar** (.tar, .tgz, .tar.gz, .tar.zip) holds ``<table>/<YYYY-MM-DD>/<file>.jsonl[.gz]``: each file's rows go under its folder's
   date, and every row must name its folder's table (a row naming another is refused); --as-of is refused for a tar;
@@ -55,7 +55,7 @@ import feedroute  # noqa: E402  (a file's .ready file)
 import filedate  # noqa: E402  (the load rules: a name's table and date, a tar's layout)
 from samplegen.layout import Layout, layouts_for_domain, write_days, write_partition  # noqa: E402
 
-SEND_A_TAR = "a file is one table and one business date (docs/architecture/DATA_LOAD_RULES.md): send a tar of <table>/<YYYY-MM-DD>/ folders"
+SEND_A_TAR = "a file is one table and one business date (docs/guides/DATA_LAKE_GUIDE.md): send a tar of <table>/<YYYY-MM-DD>/ folders"
 
 
 def read(path: pathlib.Path, as_of: date | None = None, report: dict | None = None):
@@ -197,7 +197,7 @@ def main(argv=None) -> int:
     ap.add_argument("--rows", action="append", required=True, metavar="FILE",
                     help="a tar of <table>/<YYYY-MM-DD>/ folders of rows, or a file of one table's rows of one date (repeatable)")
     ap.add_argument("--restated", action="append", default=[], metavar="FILE", help="corrections in the same forms, a second commit (repeatable)")
-    ap.add_argument("--root", required=True, help="the Delta root (the connectors' root, data/delta)")
+    ap.add_argument("--root", required=True, help="the Delta root (the demo lake's root, data/delta/demo)")
     ap.add_argument("--as-of", metavar="YYYY-MM-DD", help="the business date of every plain file (over its .ready file's and its name's); "
                                                           "refused for a tar, whose folders name their dates")
     a = ap.parse_args(argv)

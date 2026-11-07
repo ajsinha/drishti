@@ -253,7 +253,3 @@ def test_the_query_panel_asks_sql_with_the_inline_wait_when_runs_are_on_the_page
     scripts = re.findall(r"/static/js/drishti_([a-z-]+)\.js", page)
     assert scripts.index("bi-lib") < scripts.index("bi-runs") < scripts.index("bi-query-panel") and "drishti_bi-runs.css" in page
 
-
-def test_the_model_designer_links_to_open_rollup_suggestions():
-    text = (CONSOLE / "web/static/js/drishti_bi-model-designer.js").read_text(encoding="utf-8")
-    assert "function rollupNotice(model)" in text and "'/admin/bi/runs?model=' + encodeURIComponent(model) + '#suggestions'" in text and "data-md-suggest" in text

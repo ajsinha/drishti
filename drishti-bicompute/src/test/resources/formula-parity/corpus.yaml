@@ -1,0 +1,99 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The pivot formula parity set (PIVOT_ENGINE.md section 8.2; PivotFormulaParityTest): every formula the product ships or a test writes, as
+# it was written in DEL's syntax, each field renamed onto the test fixture's columns (REGION, DESK, CCY, TRADE_DATE, NOTIONAL, PNL, CPTY,
+# SALARY, RATE_PCT), and every construct of the old grammar. The answers (answers.json) were recorded on the old parser before the fold;
+# `rachana` is the text the saved-formula migration writes (when it differs), which must give the same answer, cell for cell.
+formulas:
+# FormulaFunctionTest, CustomFunctionsTest, ConsoleFiguresTest, PivotFunctionsApiTest (fields x, w, r, X, T, H, LAST, TO, FROM renamed)
+- {formula: "sum(PNL) / sum(abs(PNL))", from: "FormulaFunctionTest"}
+- {formula: "sum(NOTIONAL, where=DESK == 'RATES') / sum(NOTIONAL)", from: "FormulaFunctionTest, PIVOT_GUIDE"}
+- {formula: "count(where=PNL < 0) / count()", from: "FormulaFunctionTest, PIVOT_GUIDE"}
+- {formula: "sum(PNL) / sum(NOTIONAL)", from: "FormulaFunctionTest, ExplainAddsUpTest"}
+- {formula: "median(PNL) - avg(PNL)", from: "FormulaFunctionTest"}
+- {formula: "sum(PNL) - sum(NOTIONAL)", from: "FormulaFunctionTest"}
+- {formula: "sum(PNL) / count()", from: "FormulaFunctionTest"}
+- {formula: "sum(PNL, where=DESK == 'FX') / sum(abs(PNL))", from: "FormulaFunctionTest"}
+- {formula: "sum(PNL) / sum(PNL, where=PNL > 100)", from: "FormulaFunctionTest"}
+- {formula: "sum(RATE_PCT * NOTIONAL) / sum(NOTIONAL)", from: "tutorial 37, CustomFunctionsTest, PivotFunctionsApiTest, pivot.html, API_GUIDE"}
+- {formula: "sum(RATE_PCT * NOTIONAL) / sum(abs(NOTIONAL))", from: "CustomFunctionsTest"}
+- {formula: "sum(PNL * NOTIONAL) / sum(NOTIONAL)", from: "FormulaFunctionTest"}
+- {formula: "stddev(PNL) / avg(NOTIONAL)", from: "FormulaFunctionTest"}
+- {formula: "sum(PNL, where=NOTIONAL > 50000) - sum(PNL, where=NOTIONAL <= 50000)", from: "FormulaFunctionTest"}
+- {formula: "median(NOTIONAL) - median(PNL)", from: "ConsoleFiguresTest"}
+- {formula: "abs(sum(NOTIONAL)) / stddev_pop(PNL)", from: "ConsoleFiguresTest"}
+# the guides and tutorials
+- {formula: "sum(NOTIONAL, where=NOTIONAL > 100000000) / sum(NOTIONAL)", from: "tutorial 37"}
+- {formula: "sum(PNL, where=PNL < 0) / sum(abs(PNL))", from: "PIVOT_GUIDE"}
+- {formula: "percentile(PNL, 0.99) - percentile(PNL, 0.01)", from: "PIVOT_GUIDE, PIVOT_ENGINE"}
+- {formula: "wavg(PNL, NOTIONAL)", from: "PIVOT_ENGINE"}
+# every construct of the formula grammar, DEL's spellings among them
+- {formula: "sum(PNL, where=DESK == 'RATES' and PNL > 0) / sum(NOTIONAL)", from: "grammar", rachana: "sum(PNL, where = DESK == 'RATES' && PNL > 0) / sum(NOTIONAL)"}
+- {formula: "sum(PNL, where=DESK == 'FX' or REGION == 'EMEA')", from: "grammar", rachana: "sum(PNL, where = DESK == 'FX' || REGION == 'EMEA')"}
+- {formula: "count(where=not (PNL < 0))", from: "grammar", rachana: "count(where = !(PNL < 0))"}
+- {formula: "count(where=not PNL < 0)", from: "grammar", rachana: "count(where = !(PNL < 0))"}
+- {formula: "sum(PNL, where=PNL != None) / count(where=PNL == None)", from: "grammar", rachana: "sum(PNL, where = PNL != null) / count(where = PNL == null)"}
+- {formula: "count(where=PNL == None)", from: "grammar", rachana: "count(where = PNL == null)"}
+- {formula: "sum(PNL) if count() > 300 else 0", from: "grammar", rachana: "count() > 300 ? sum(PNL) : 0"}
+- {formula: "sum(PNL) if count(where=DESK == 'RATES') > 200 else -1", from: "grammar", rachana: "count(where = DESK == 'RATES') > 200 ? sum(PNL) : -1"}
+- {formula: "sum(NOTIONAL) ** 0.5", from: "grammar", rachana: "power(sum(NOTIONAL), 0.5)"}
+- {formula: "sum(NOTIONAL) // 1000", from: "grammar", rachana: "floor(sum(NOTIONAL) / 1000)"}
+- {formula: "sum(NOTIONAL // 1000)", from: "grammar", rachana: "sum(floor(NOTIONAL / 1000))"}
+- {formula: "sum(RATE_PCT ** 2)", from: "grammar", rachana: "sum(power(RATE_PCT, 2))"}
+- {formula: "sum(PNL, where=DESK in ['RATES', 'FX']) / sum(NOTIONAL, where=DESK not in ['RATES'])", from: "grammar"}
+# the SQL path refused an empty list before the fold; it now answers 0 as the Java path did (product owner, 2026-11-07): its answer re-recorded
+- {formula: "count(where=CCY in [])", from: "grammar"}
+- {formula: "sum(PNL, where=True)", from: "grammar", rachana: "sum(PNL, where = true)"}
+- {formula: "sum(PNL, where=False)", from: "grammar", rachana: "sum(PNL, where = false)"}
+- {formula: "count(where=0 < PNL < 1000)", from: "grammar", rachana: "count(where = 0 < PNL && PNL < 1000)"}
+- {formula: "distinct(CPTY)", from: "grammar"}
+- {formula: "distinct(CPTY) / count()", from: "grammar"}
+- {formula: "sum_once(SALARY, CPTY) / distinct(CPTY)", from: "grammar"}
+- {formula: "count_once(SALARY, CPTY)", from: "grammar"}
+- {formula: "avg_once(SALARY, CPTY)", from: "grammar"}
+- {formula: "round(sum(PNL) / count(), 2)", from: "grammar"}
+- {formula: "round(sum(PNL))", from: "grammar"}
+- {formula: "coalesce(sum(PNL, where=PNL > 1e12), 0)", from: "grammar"}
+- {formula: "sum(coalesce(PNL, 0)) / count()", from: "grammar"}
+- {formula: "greatest(sum(PNL), 0) + least(sum(PNL), 0)", from: "grammar"}
+- {formula: "greatest(max(PNL), max(NOTIONAL), 1)", from: "grammar"}
+- {formula: "ratio(sum(PNL), sum(NOTIONAL))", from: "grammar"}
+- {formula: "sign(sum(PNL)) * sqrt(abs(sum(PNL)))", from: "grammar"}
+- {formula: "ln(sum(NOTIONAL)) + log10(sum(NOTIONAL))", from: "grammar"}
+- {formula: "exp(avg(RATE_PCT))", from: "grammar"}
+- {formula: "ceiling(sum(NOTIONAL) / 1000) - floor(sum(NOTIONAL) / 1000)", from: "grammar"}
+- {formula: "power(sum(RATE_PCT), 2)", from: "grammar"}
+- {formula: "variance(PNL) / variance_pop(PNL)", from: "grammar"}
+- {formula: "stddev(PNL) - stddev_pop(PNL)", from: "grammar"}
+- {formula: "-sum(PNL)", from: "grammar"}
+- {formula: "sum(-PNL) + sum(+PNL)", from: "grammar", rachana: "sum(-PNL) + sum(PNL)"}
+- {formula: "sum(NOTIONAL % 7)", from: "grammar"}
+- {formula: "sum(PNL % 7)", from: "grammar"}
+- {formula: "count(where=CCY != 'USD')", from: "grammar"}
+- {formula: "count(where=CCY >= 'EUR')", from: "grammar"}
+- {formula: "count(where=CCY == \"USD\")", from: "grammar"}
+- {formula: "count(PNL) / count()", from: "grammar"}
+- {formula: "min(PNL) + max(PNL)", from: "grammar"}
+- {formula: "avg(NOTIONAL, where=PNL > 0) - avg(NOTIONAL, where=PNL <= 0)", from: "grammar"}
+- {formula: "sum(NOTIONAL, where=TRADE_DATE >= '2026-06-01')", from: "grammar"}
+- {formula: "sum(1_000 * RATE_PCT) / 1e3", from: "grammar", rachana: "sum(1000 * RATE_PCT) / 1000"}
+- {formula: "sum(PNL) / sum(NOTIONAL) * 10000", from: "grammar"}
+- {formula: "(sum(PNL) - sum(NOTIONAL)) / (count() + 1)", from: "grammar"}
+- {formula: "median(PNL)", from: "grammar"}
+- {formula: "sum(PNL, where=DESK == 'RATES' and (REGION == 'EMEA' or not CCY == 'USD'))", from: "grammar", rachana: "sum(PNL, where = DESK == 'RATES' && (REGION == 'EMEA' || !(CCY == 'USD')))"}
+- {formula: "sum(PNL, where=PNL > 0 if DESK == 'FX' else PNL < 0)", from: "grammar", rachana: "sum(PNL, where = DESK == 'FX' ? PNL > 0 : PNL < 0)"}
+- {formula: "max(PNL) - min(PNL)", from: "PivotWindowsTest"}
+- {formula: "count(NOTIONAL) / sum(1.0 / NOTIONAL)", from: "PivotWindowsTest"}
+- {formula: "stddev(PNL) / sqrt(count(PNL))", from: "PivotWindowsTest"}

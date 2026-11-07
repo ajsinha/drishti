@@ -60,17 +60,16 @@ def test_search_and_missing_guides(client):
 
 
 def test_f1_and_the_short_addresses_of_the_240_and_250_pages_open_their_sections(client):
-    """BI Studio, the theme designer, Analyse, Transforms and the Python console have their own F1 target, and the new pages a short help address."""
+    """BI Studio, the theme designer, the Notebook and Transforms have their own F1 target, and the new pages a short help address."""
     for screen, page, anchor in (("bi-designer", "bi-guide", "26-bi-studio-authoring-as-one-product"),
                                  ("bi-theme-designer", "bi-guide", "52-themes"),
                                  ("bi-transform", "bi-guide", "17-data-prep-the-transform-editor"),
-                                 ("bi-pyconsole", "user-guide", "16-the-browser-python-console"),
-                                 ("bi-explore", "user-guide", "analyse-slice-sql-and-python")):
+                                 ("bi-notebook", "user-guide", "the-notebook")):
         target = client.get(f"/help/context/{screen}", follow_redirects=False).headers["location"]
         assert target == f"/help/{page}" + (f"#{anchor}" if anchor else ""), (screen, target)
         if anchor:
             assert f'id="{anchor}"' in client.get(f"/help/{page}").text, (screen, anchor)
-    for slug in ("bi-studio", "transforms", "python-console", "themes", "drishti-net"):
+    for slug in ("bi-studio", "transforms", "notebook", "themes", "drishti-net"):
         r = client.get(f"/help/{slug}", follow_redirects=False)
         assert r.status_code == 301, slug
         page, _, anchor = r.headers["location"].removeprefix("/help/").partition("#")
@@ -227,7 +226,8 @@ def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages()
     # 2.9.11.c, the same rule (a feature's guide and tutorial, two entries); Flight's reference and client pages are reached from its guide.
     # 2.9.11.b's data inbox, custom functions and MR cube tutorials raised the ceiling to 70; 2.9.11.c's lake and Flight pages to 72.
     # 73: plus Schema to pack (docs/guides/SCHEMA_TO_PACK_GUIDE.md, 2.9.11.c), split from the data guide when it passed 1,500 lines.
-    assert 30 <= total <= 73, total
+    # 75: plus virtual tables' two (the tables guide and tutorial 44, 2.9.11.d), the same rule (a feature's guide and tutorial).
+    assert 30 <= total <= 75, total
 
 
 def test_every_old_help_address_still_opens_something(client):

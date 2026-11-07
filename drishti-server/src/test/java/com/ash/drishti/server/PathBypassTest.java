@@ -40,7 +40,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.sources.plugins.demo.settings.ticking=false", "drishti.identity.iterations=1000",
         "drishti.security.metrics-token=scrape-token-for-tests",
-        "drishti.security.roles.quant.kinds[0]=*", "drishti.security.roles.quant.calc=true",
+        "drishti.security.roles.quant.kinds[0]=*", "drishti.security.roles.quant.calc=true", "drishti.calc.enabled=true",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db"})
 class PathBypassTest {
 

@@ -641,7 +641,7 @@ def refresh_controls(c: Ctx):
 @shot("layout-grid.jpg")
 def layout_grid(c: Ctx):
     c.page.goto(_book_design(c, _GRID_BOOK))
-    c.until("document.querySelector('[data-sgrid][data-sg-ready] .sg-split')")
+    c.until("document.querySelector('[data-sgrid][data-sg-ready] [data-sg-split]')")
     c.save("layout-grid.jpg")
 
 

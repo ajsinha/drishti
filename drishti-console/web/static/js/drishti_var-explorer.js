@@ -1079,7 +1079,10 @@
     var t = $("[data-vx-tree]");
     t.textContent = "";
     var hd = h("div", "vx-row hdr");
-    var pcols = PM && !!window.Drishti.VarParametric;
+    var pcols = PM && !!window.Drishti.VarParametric, lay = t.closest(".vx-layout");
+    if (lay) lay.setAttribute("data-resize-mode", pcols ? "parametric" : "historical");      // the widths a person set, kept per mode
+    hd.setAttribute("data-resize", "columns"); hd.setAttribute("data-resize-key", "var.tree");      // resizable columns (drishti_resize.js)
+    hd.setAttribute("data-resize-flex", "0"); hd.setAttribute("data-resize-scope", ".vx-tree");
     ["Scope", "VaR " + S.ccy, "ES", "Limit"].concat(pcols ? ["Parametric", "Gap"] : []).forEach(function (x, i) { hd.appendChild(h("span", i ? "num" : null, x)); });
     t.classList.toggle("vp-cols", !!pcols);
     t.appendChild(hd);
@@ -1355,6 +1358,13 @@
   if (bt) bt.addEventListener("click", function (ev) {
     ev.preventDefault();
     location.href = "/var/backtesting?scope=" + encodeURIComponent(S.scope || "BANK") + (S.asOf ? "&asOf=" + encodeURIComponent(S.asOf) : "");
+  });
+
+  // the MR cube link: the Pivot's preset mr on the scope and date in view (MCUBE <scope> [DATE d], /pivot?preset=mr)
+  var cube = document.querySelector("[data-vx-cube]");
+  if (cube) cube.addEventListener("click", function (ev) {
+    ev.preventDefault();
+    location.href = "/pivot?preset=mr&text=" + encodeURIComponent((S.scope || "BANK") + (S.asOf ? " DATE " + S.asOf : ""));
   });
 
   window.Drishti.VarExplorer = { select: select, switchTab: switchTab, setCcy: setCcy, setLens: setLens, state: S, api: api, words: words,

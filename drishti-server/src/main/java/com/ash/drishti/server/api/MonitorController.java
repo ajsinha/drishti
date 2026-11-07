@@ -130,7 +130,7 @@ public class MonitorController {
             row.put("ref", new ViewModel.Ref(r.kind(), r.id()));
             try {
                 entitlements.requireOpen(p, r.kind());
-                ViewModel v = pipeline.view(r, asOf, entitlements.redactor(p), k -> entitlements.mayOpen(p, k));
+                ViewModel v = pipeline.view(r, asOf, entitlements.viewer(p));
                 row.put("mnemonic", v.mnemonic());
                 row.put("title", v.title());
                 row.put("strip", v.strip());
@@ -201,14 +201,14 @@ public class MonitorController {
             FrameMailbox box = new FrameMailbox();
             boxes.put(r, box);
             try {
-                ViewModel first = pipeline.view(r, asOf, entitlements.redactor(p), k -> entitlements.mayOpen(p, k));
+                ViewModel first = pipeline.view(r, asOf, entitlements.viewer(p));
                 if (!first.provenance().live()) {
                     continue;
                 }
                 streams.add(new ViewStream(r, first, List.of(), hub, pipeline, executor, metrics, f -> {
                     box.offer(f);
                     signal.release();
-                }, entitlements.redactor(p), k -> entitlements.mayOpen(p, k)));
+                }, entitlements.viewer(p), com.ash.drishti.engine.control.ControlValues.NONE));
             } catch (DrishtiException ignored) {
                 // a missing entity simply does not tick
             }

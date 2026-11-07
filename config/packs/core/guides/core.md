@@ -37,13 +37,13 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 
 ## Where the data comes from
 
-Each kind is read from the Delta Lake folder of its **data domain** (`data/delta/<domain>/<kind>/`, partitioned by business date). Pick a date in the top bar to see that day; **Live** reads the streaming source first.
+Each kind is read from the Delta Lake folder of its **data domain** (`data/delta/demo/<domain>/<kind>/`, partitioned by business date). Pick a date in the top bar to see that day; **Live** reads the streaming source first.
 
 | Connector | Folder | Domain | Tables | Kinds |
 |---|---|---|---|---|
-| `reference-store` | `data/delta/reference/` | Reference data: parties, organisation, calendars | effective (a row when an entity changes) | `counterparty`, `counterparty-group`, `issuer`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `clearing-account` |
+| `reference-store` | `data/delta/demo/reference/` | Reference data: parties, organisation, calendars | effective (a row when an entity changes) | `counterparty`, `counterparty-group`, `issuer`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `clearing-account` |
 
-Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta`: it writes the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, [Data formats](../../../../docs/guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).
+Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta/demo`: it writes the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, [Data formats](../../../../docs/guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).
 
 ## Kinds
 

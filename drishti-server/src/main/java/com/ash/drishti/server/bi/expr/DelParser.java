@@ -89,14 +89,14 @@ public final class DelParser {
         this.toks = toks;
     }
 
-    /** The tree of a DEL v2 expression, or a {@link DelException} (code, message, fix, position). */
+    /** The tree of a DEL v2 expression, or a {@link ExpressionException} (code, message, fix, position). */
     public static DelAst parse(String src) {
         if (src == null || src.isBlank()) {
-            throw new DelException(CODE, "the expression is empty", null, 0, 0);
+            throw new ExpressionException(CODE, "the expression is empty", null, 0, 0);
         }
         int max = src.indexOf('\n') >= 0 ? MAX_BLOCK_LENGTH : MAX_LENGTH;
         if (src.length() > max) {
-            throw new DelException(CODE, "the expression is longer than " + max + " characters", "split it into measures that use each other with measure('name')", max, src.length());
+            throw new ExpressionException(CODE, "the expression is longer than " + max + " characters", "split it into measures that use each other with measure('name')", max, src.length());
         }
         DelParser ps = new DelParser(src, lex(src));
         DelAst n = ps.expr();
@@ -137,7 +137,7 @@ public final class DelParser {
                 }
                 String word = s.substring(i, j);
                 if (j < n && (s.charAt(j) == '\'' || s.charAt(j) == '"') && word.length() <= 2 && word.toLowerCase(Locale.ROOT).matches("[rbfu]+")) {
-                    throw new DelException(CODE, "prefixed strings (" + word + "'...') are not DEL: f-strings, bytes and raw strings are refused", "write a plain 'text'", i, j + 1);
+                    throw new ExpressionException(CODE, "prefixed strings (" + word + "'...') are not DEL: f-strings, bytes and raw strings are refused", "write a plain 'text'", i, j + 1);
                 }
                 out.add(new Tok(T.NAME, word, i, j, null));
                 i = j;
@@ -154,7 +154,7 @@ public final class DelParser {
                     out.add(new Tok(T.OP, String.valueOf(c), i, i + 1, null));
                     i++;
                 } else {
-                    throw new DelException(CODE, "unexpected character '" + c + "'", null, i, i + 1);
+                    throw new ExpressionException(CODE, "unexpected character '" + c + "'", null, i, i + 1);
                 }
             }
         }
@@ -190,17 +190,17 @@ public final class DelParser {
             }
         }
         if (j < n && (Character.isLetter(s.charAt(j)) || s.charAt(j) == '_')) {
-            throw new DelException(CODE, "'" + s.substring(i, j + 1) + "' is not a number", null, i, j + 1);
+            throw new ExpressionException(CODE, "'" + s.substring(i, j + 1) + "' is not a number", null, i, j + 1);
         }
         String text = s.substring(i, j);
         if (text.startsWith("_") || text.endsWith("_") || text.contains("__") || text.contains("_.") || text.contains("._")) {
-            throw new DelException(CODE, "'" + text + "' is not a number: underscores go between digits (1_000_000)", null, i, j);
+            throw new ExpressionException(CODE, "'" + text + "' is not a number: underscores go between digits (1_000_000)", null, i, j);
         }
         double v;
         try {
             v = Double.parseDouble(text.replace("_", ""));
         } catch (NumberFormatException e) {
-            throw new DelException(CODE, "'" + text + "' is not a number", null, i, j);
+            throw new ExpressionException(CODE, "'" + text + "' is not a number", null, i, j);
         }
         out.add(new Tok(T.NUM, text, i, j, new Object[] {v, integral}));
         return j;
@@ -210,14 +210,14 @@ public final class DelParser {
         int n = s.length();
         char q = s.charAt(i);
         if (i + 2 < n && s.charAt(i + 1) == q && s.charAt(i + 2) == q) {
-            throw new DelException(CODE, "triple-quoted strings are not DEL", "write a plain 'text' on one line", i, i + 3);
+            throw new ExpressionException(CODE, "triple-quoted strings are not DEL", "write a plain 'text' on one line", i, i + 3);
         }
         StringBuilder sb = new StringBuilder();
         int j = i + 1;
         while (j < n && s.charAt(j) != q) {
             char c = s.charAt(j);
             if (c == '\n') {
-                throw new DelException(CODE, "the text starting here is not closed on its line", "close it with " + q, i, j);
+                throw new ExpressionException(CODE, "the text starting here is not closed on its line", "close it with " + q, i, j);
             }
             if (c == '\\' && j + 1 < n) {
                 char e = s.charAt(j + 1);
@@ -234,7 +234,7 @@ public final class DelParser {
             j++;
         }
         if (j >= n) {
-            throw new DelException(CODE, "the text starting here is not closed", "close it with " + q, i, n);
+            throw new ExpressionException(CODE, "the text starting here is not closed", "close it with " + q, i, n);
         }
         out.add(new Tok(T.STR, s.substring(i, j + 1), i, j + 1, sb.toString()));
         return j + 1;
@@ -287,14 +287,14 @@ public final class DelParser {
             return t;
         }
         if (t.type() == T.EOF) {
-            throw new DelException(CODE, "expected '" + text + "' " + what + ", but the expression ends there", "add '" + text + "' at the end", t.start(), t.end());
+            throw new ExpressionException(CODE, "expected '" + text + "' " + what + ", but the expression ends there", "add '" + text + "' at the end", t.start(), t.end());
         }
-        throw new DelException(CODE, "expected '" + text + "' " + what + " but found '" + t.text() + "'", null, t.start(), t.end());
+        throw new ExpressionException(CODE, "expected '" + text + "' " + what + " but found '" + t.text() + "'", null, t.start(), t.end());
     }
 
     DelAst expr() {
         if (++depth > MAX_DEPTH) {
-            throw new DelException(CODE, "the expression nests deeper than " + MAX_DEPTH + " levels", "split it into measures that use each other", peek().start(), peek().end());
+            throw new ExpressionException(CODE, "the expression nests deeper than " + MAX_DEPTH + " levels", "split it into measures that use each other", peek().start(), peek().end());
         }
         try {
             int start = peek().start();
@@ -303,7 +303,7 @@ public final class DelParser {
                 DelAst test = or();
                 if (!word("else")) {
                     Tok t = peek();
-                    throw new DelException(CODE, "a conditional needs 'else': a if condition else b", "add else and the value when the condition is False", t.start(), t.end());
+                    throw new ExpressionException(CODE, "a conditional needs 'else': a if condition else b", "add else and the value when the condition is False", t.start(), t.end());
                 }
                 DelAst orElse = expr();
                 return new DelAst.IfExp(body, test, orElse, start, orElse.end());
@@ -312,7 +312,7 @@ public final class DelParser {
                 throw question(peek());
             }
             if (isOp(":=")) {
-                throw new DelException(CODE, "assignment (:=) is not DEL: an expression has no variables", "write the expression where its value is needed, or make it a measure", peek().start(),
+                throw new ExpressionException(CODE, "assignment (:=) is not DEL: an expression has no variables", "write the expression where its value is needed, or make it a measure", peek().start(),
                         peek().end());
             }
             if (isWord("for")) {
@@ -353,7 +353,7 @@ public final class DelParser {
     /** An operator of the old syntax: refused with the DEL word. */
     private boolean oldOp(String old, String del) {
         if (isOp(old)) {
-            throw new DelException(CODE, "'" + old + "' is the old syntax", "write '" + del + "'", peek().start(), peek().end());
+            throw new ExpressionException(CODE, "'" + old + "' is the old syntax", "write '" + del + "'", peek().start(), peek().end());
         }
         return false;
     }
@@ -365,7 +365,7 @@ public final class DelParser {
             return new DelAst.Unary("not", operand, t.start(), operand.end());
         }
         if (isOp("!")) {
-            throw new DelException(CODE, "'!' is the old syntax", "write 'not'", t.start(), t.end());
+            throw new ExpressionException(CODE, "'!' is the old syntax", "write 'not'", t.start(), t.end());
         }
         return comparison();
     }
@@ -384,7 +384,7 @@ public final class DelParser {
             rest.add(arith());
         }
         if (isOp("=")) {
-            throw new DelException(CODE, "'=' is assignment, which DEL does not have", "for equality write ==", peek().start(), peek().end());
+            throw new ExpressionException(CODE, "'=' is assignment, which DEL does not have", "for equality write ==", peek().start(), peek().end());
         }
         return ops.isEmpty() ? first : new DelAst.Compare(first, ops, rest, start, lastEnd());
     }
@@ -428,7 +428,7 @@ public final class DelParser {
             String o = op("*") ? "*" : op("//") ? "//" : op("/") ? "/" : op("%") ? "%" : null;
             if (o == null) {
                 if (isOp("@") || isOp("&") || isOp("|") || isOp("^") || isOp("<<") || isOp(">>")) {
-                    throw new DelException(CODE, "the operator '" + peek().text() + "' is not DEL", "use and / or for conditions; arithmetic is + - * / // % **", peek().start(),
+                    throw new ExpressionException(CODE, "the operator '" + peek().text() + "' is not DEL", "use and / or for conditions; arithmetic is + - * / // % **", peek().start(),
                             peek().end());
                 }
                 return l;
@@ -445,7 +445,7 @@ public final class DelParser {
             return new DelAst.Unary(t.text(), operand, t.start(), operand.end());
         }
         if (isOp("~")) {
-            throw new DelException(CODE, "the operator '~' is not DEL", "write not for a condition, - for a negative number", t.start(), t.end());
+            throw new ExpressionException(CODE, "the operator '~' is not DEL", "write not for a condition, - for a negative number", t.start(), t.end());
         }
         return power();
     }
@@ -464,18 +464,18 @@ public final class DelParser {
         while (true) {
             Tok t = peek();
             if (isOp("[")) {
-                throw new DelException(CODE, "subscripts and slices (x[...]) are not DEL", "name the column you need: alias.column", t.start(), t.end());
+                throw new ExpressionException(CODE, "subscripts and slices (x[...]) are not DEL", "name the column you need: alias.column", t.start(), t.end());
             }
             if (isOp(".")) {
                 Tok name = peek(1);
                 if (name.type() == T.NAME && peek(2).type() == T.OP && peek(2).text().equals("(")) {
-                    throw new DelException(CODE, "method calls (x." + name.text() + "(...)) are not DEL", a instanceof DelAst.Field f
+                    throw new ExpressionException(CODE, "method calls (x." + name.text() + "(...)) are not DEL", a instanceof DelAst.Field f
                             ? "call the function on it: " + name.text() + "(" + f.text() + ")" : "call the catalogue function on the value", t.start(), name.end());
                 }
-                throw new DelException(CODE, "attribute access is only alias.column[.datepart], user.x, param.x or fn.x(...)", null, t.start(), name.end());
+                throw new ExpressionException(CODE, "attribute access is only alias.column[.datepart], user.x, param.x or fn.x(...)", null, t.start(), name.end());
             }
             if (isOp("(") && !(a instanceof DelAst.Field)) {
-                throw new DelException(CODE, "only a catalogue function can be called", null, t.start(), t.end());
+                throw new ExpressionException(CODE, "only a catalogue function can be called", null, t.start(), t.end());
             }
             return a;
         }
@@ -503,13 +503,13 @@ public final class DelParser {
             case NAME -> {
                 return name(t);
             }
-            case EOF -> throw new DelException(CODE, "the expression ends early: a value is missing", null, t.start(), t.end());
+            case EOF -> throw new ExpressionException(CODE, "the expression ends early: a value is missing", null, t.start(), t.end());
             default -> { }
         }
         if (op("(")) {
             DelAst inner = expr();
             if (isOp(",")) {
-                throw new DelException(CODE, "tuples are not DEL", "a list is written [a, b]", peek().start(), peek().end());
+                throw new ExpressionException(CODE, "tuples are not DEL", "a list is written [a, b]", peek().start(), peek().end());
             }
             if (isWord("for")) {
                 throw refusedWord(peek());
@@ -521,10 +521,10 @@ public final class DelParser {
             return list();
         }
         if (isOp("{")) {
-            throw new DelException(CODE, "dict and set literals are not DEL", "a list for in is written [a, b]", t.start(), t.end());
+            throw new ExpressionException(CODE, "dict and set literals are not DEL", "a list for in is written [a, b]", t.start(), t.end());
         }
         if (isOp("*") || isOp("**")) {
-            throw new DelException(CODE, "star arguments (*args, **kwargs) are not DEL", "write each argument", t.start(), t.end());
+            throw new ExpressionException(CODE, "star arguments (*args, **kwargs) are not DEL", "write each argument", t.start(), t.end());
         }
         throw unexpected(t);
     }
@@ -543,7 +543,7 @@ public final class DelParser {
                     throw refusedWord(peek());
                 }
                 if (isOp(":")) {
-                    throw new DelException(CODE, "slices are not DEL", null, peek().start(), peek().end());
+                    throw new ExpressionException(CODE, "slices are not DEL", null, peek().start(), peek().end());
                 }
             } while (op(","));
         }
@@ -557,7 +557,7 @@ public final class DelParser {
             throw refusedWord(t);
         }
         if (OLD_WORDS.containsKey(w)) {
-            throw new DelException(CODE, "'" + w + "' is the old syntax", "write " + OLD_WORDS.get(w), t.start(), t.end());
+            throw new ExpressionException(CODE, "'" + w + "' is the old syntax", "write " + OLD_WORDS.get(w), t.start(), t.end());
         }
         switch (w) {
             case "True", "False" -> {
@@ -575,7 +575,7 @@ public final class DelParser {
             default -> { }
         }
         if (KEYWORDS.contains(w)) {
-            throw new DelException(CODE, "'" + w + "' cannot start a value", "if c then a else b is written: a if c else b", t.start(), t.end());
+            throw new ExpressionException(CODE, "'" + w + "' cannot start a value", "if c then a else b is written: a if c else b", t.start(), t.end());
         }
         p++;
         List<String> parts = new ArrayList<>(List.of(w));
@@ -595,7 +595,7 @@ public final class DelParser {
         }
         if (isOp("(")) {
             if (parts.size() > 1 && !(parts.size() == 2 && "fn".equals(parts.get(0)))) {
-                throw new DelException(CODE, "method calls (" + String.join(".", parts) + "(...)) are not DEL",
+                throw new ExpressionException(CODE, "method calls (" + String.join(".", parts) + "(...)) are not DEL",
                         "call the function on the field: " + parts.get(parts.size() - 1) + "(" + String.join(".", parts.subList(0, parts.size() - 1)) + ")", t.start(), end);
             }
             return call(String.join(".", parts), t.start());
@@ -614,13 +614,13 @@ public final class DelParser {
                 }
                 Tok t = peek();
                 if (isOp("*") || isOp("**")) {
-                    throw new DelException(CODE, "star arguments (*args, **kwargs) are not DEL", "write each argument", t.start(), t.end());
+                    throw new ExpressionException(CODE, "star arguments (*args, **kwargs) are not DEL", "write each argument", t.start(), t.end());
                 }
                 if (t.type() == T.NAME && peek(1).type() == T.OP && peek(1).text().equals("=")) {
                     p += 2;
                     DelAst value = expr();
                     if (keywords.stream().anyMatch(k -> k.name().equals(t.text()))) {
-                        throw new DelException(CODE, "the keyword " + t.text() + "= is given twice", null, t.start(), value.end());
+                        throw new ExpressionException(CODE, "the keyword " + t.text() + "= is given twice", null, t.start(), value.end());
                     }
                     keywords.add(new DelAst.Keyword(t.text(), value, t.start(), value.end()));
                 } else {
@@ -629,7 +629,7 @@ public final class DelParser {
                         throw refusedWord(peek());
                     }
                     if (!keywords.isEmpty()) {
-                        throw new DelException(CODE, "a positional argument follows a keyword argument", "put the positional arguments first", a.start(), a.end());
+                        throw new ExpressionException(CODE, "a positional argument follows a keyword argument", "put the positional arguments first", a.start(), a.end());
                     }
                     args.add(a);
                 }
@@ -639,43 +639,43 @@ public final class DelParser {
         return new DelAst.Call(name, args, keywords, start, close.end());
     }
 
-    private DelException refusedWord(Tok t) {
+    private ExpressionException refusedWord(Tok t) {
         String[] r = REFUSED_WORDS.get(t.text());
-        return new DelException(CODE, r[0], r[1], t.start(), t.end());
+        return new ExpressionException(CODE, r[0], r[1], t.start(), t.end());
     }
 
     /**
      * A '?' read as precisely as the text allows: '??' (a null fallback, coalesce in DEL), the old 'c ? a : b' only when a ':' follows it, else a plain
      * unexpected '?'.
      */
-    private DelException question(Tok t) {
+    private ExpressionException question(Tok t) {
         int at = toks.indexOf(t);
         Tok next = at >= 0 && at + 1 < toks.size() ? toks.get(at + 1) : null;
         if (next != null && next.type() == T.OP && "?".equals(next.text()) && next.start() == t.end()) {
-            return new DelException(CODE, "'??' is not DEL", "for a value when the first is empty write coalesce(a, b)", t.start(), next.end());
+            return new ExpressionException(CODE, "'??' is not DEL", "for a value when the first is empty write coalesce(a, b)", t.start(), next.end());
         }
         boolean colon = at >= 0 && toks.subList(at + 1, toks.size()).stream().anyMatch(x -> x.type() == T.OP && ":".equals(x.text()));
-        return colon ? new DelException(CODE, "'c ? a : b' is the old syntax", "write: a if c else b", t.start(), t.end())
-                : new DelException(CODE, "unexpected '?'", null, t.start(), t.end());
+        return colon ? new ExpressionException(CODE, "'c ? a : b' is the old syntax", "write: a if c else b", t.start(), t.end())
+                : new ExpressionException(CODE, "unexpected '?'", null, t.start(), t.end());
     }
 
-    private DelException unexpected(Tok t) {
+    private ExpressionException unexpected(Tok t) {
         if (t.type() == T.EOF) {
-            return new DelException(CODE, "the expression ends early: a value is missing", null, t.start(), t.end());
+            return new ExpressionException(CODE, "the expression ends early: a value is missing", null, t.start(), t.end());
         }
         if (t.type() == T.OP && "?".equals(t.text())) {
             return question(t);
         }
         if (t.type() == T.OP && ("&&".equals(t.text()) || "||".equals(t.text()))) {
-            return new DelException(CODE, "'" + t.text() + "' is the old syntax", "write '" + ("&&".equals(t.text()) ? "and" : "or") + "'", t.start(), t.end());
+            return new ExpressionException(CODE, "'" + t.text() + "' is the old syntax", "write '" + ("&&".equals(t.text()) ? "and" : "or") + "'", t.start(), t.end());
         }
         if (t.type() == T.OP && "=".equals(t.text())) {
-            return new DelException(CODE, "'=' is assignment, which DEL does not have", "for equality write ==", t.start(), t.end());
+            return new ExpressionException(CODE, "'=' is assignment, which DEL does not have", "for equality write ==", t.start(), t.end());
         }
         if (t.type() == T.OP && ",".equals(t.text())) {
-            return new DelException(CODE, "tuples are not DEL", "a list is written [a, b]", t.start(), t.end());
+            return new ExpressionException(CODE, "tuples are not DEL", "a list is written [a, b]", t.start(), t.end());
         }
-        return new DelException(CODE, "unexpected '" + t.text() + "'", null, t.start(), t.end());
+        return new ExpressionException(CODE, "unexpected '" + t.text() + "'", null, t.start(), t.end());
     }
 
     /** The text of a span of the source (for messages). */

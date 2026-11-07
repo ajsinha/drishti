@@ -174,7 +174,7 @@
       B.layer.get('datasets').then((d) => {
         const it = (d.models || []).find((x) => x.kind === 'model' && x.name === m.name);
         const a = head.querySelector('[data-open-model]');
-        if (a && it) { a.href = '/bi/md/' + B.id2path(it.id); }
+        if (a && it) { a.href = '/build/tables?kind=model&item=' + B.id2path(it.id); }
       }).catch(() => {});
     }
     if (!m.implicit) {

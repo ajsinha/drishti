@@ -197,7 +197,7 @@ a Delta lake, so a machine without them runs everything else.
 
 ```bash
 uv run --with pyyaml python tools/drishti.py --help
-uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta
+uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta/demo
 ```
 
 **With the console's environment** (what an IDE wants, see [section 14](#14-running-the-tools-from-pycharm-and-the-java-sutra-from-intellij);
@@ -1441,7 +1441,7 @@ candidate; exit 0, or 2 when nothing could be read.
 `data ingest` (`tools/ingest_jsonl.py`) writes JSON Lines documents into the dated store a pack reads. Inputs are folders of
 `*.jsonl` or single files, repeatable with `--from`. With `--pack` the domain, the columns promoted in the lake and the key field come
 from the pack's `pack.yaml` (including the `ingest:` block); without it give `--domain` (and `--key`, `--columns`). Each file goes under
-its business date by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)): `--as-of`, else its `.ready` file's
+its business date by the load rules ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)): `--as-of`, else its `.ready` file's
 `business-date:`, else the date in its name (`trade.2026-11-03.jsonl`, kind `trade`), else the business today; the run says which, in
 `lake build`'s words (*trade.2026-11-03.jsonl: business date 2026-11-03 from the file name*). `--date FIELD` (or the pack's ingest
 `date`) is optional: it names the field the documents carry their own date in, and rows that say another date are only counted.
@@ -1492,7 +1492,7 @@ options:
   --batch-rows BATCH_ROWS
 
 examples:
-  drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta
+  drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta/demo
   drishti.py data ingest --from day1.jsonl --from day2.jsonl --pack config/packs/my-bank --store files --root data/files --dry-run
 ```
 
@@ -1613,11 +1613,11 @@ expectations:
 > `data ingest`, `data ingest --watch` and `pack make` stage data for a demo, a small team or a proof of concept. They are **not** a production
 > ETL: in production your own ETL loads the store and ends by calling `data landed`.
 
-### `data get`: a dataset as `.jsonl.gz` (the Data view)
+### `data get`: a dataset as `.jsonl.gz` (Export data)
 
-The Data view (`DATA <GO>`) from a terminal: a dataset's rows on a date, the columns you choose and filter lines joined by AND, streamed to
+Export data (`EXPORT <GO>`) from a terminal: a dataset's rows on a date, the columns you choose and filter lines joined by AND, streamed to
 a `.jsonl.gz` file (never held whole), as the token's user sees them. The rules (operators, masks, internal-only datasets, pushdown, the
-audit) are in [DATA_GUIDE.md](DATA_GUIDE.md#6-the-data-view-download-a-dataset).
+audit) are in [DATA_GUIDE.md](DATA_GUIDE.md#6-export-data-download-a-dataset).
 
 ```
 drishti.py data get [--json]                                    the datasets you may download: pack, format, dates held
@@ -1721,7 +1721,7 @@ bash tools/load-files.sh data/demo-files --trades 1000 --days 2
 
 A real small run (200 trades, one day) into a scratch folder; the scripts write under the data folder (`DRISHTI_DATA_DIR`, else
 the repository's `data/`, which is not tracked) and never rewrite the shipped packs' samples. Each loader's heap is
-`DRISHTI_LOADER_HEAP` (default `4g`). Its input is loader rows by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)):
+`DRISHTI_LOADER_HEAP` (default `4g`). Its input is loader rows by the load rules ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)):
 `make_data.py` and `bulk_trades.py` write tars of `<kind>/<YYYY-MM-DD>/` folders under `data/build/loader-rows/`, removed after the
 load, and the loader files each row under its folder's date and says so:
 
@@ -1974,7 +1974,7 @@ and whether the token is accepted, with the exact id, scopes and expiry of the t
 ```
 $ python3 tools/drishti.py doctor --server http://localhost:18971
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.9.11.c-exec.jar (version 2.5.0)
+GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.9.11.d-exec.jar (version 2.5.0)
 GREEN  python                  /usr/bin/python3: Python 3.14.4
 GREEN  python pyyaml           installed
 YELLOW python deltalake        not installed (needed for data ingest --store delta)
@@ -2632,61 +2632,24 @@ $ drishti.py bi catalogue publish bi-27def70913 --note x
 drishti: the server said 403 DRS-9002: DRS-9002 cat does not hold the bi-author power (an administrator grants it on a role)
 ```
 
-`drishti.py pack check` also refuses a pack that defines a mnemonic named `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT` or `DATAMAP` (reserved command words).
+`drishti.py pack check` also refuses a pack that defines a mnemonic named `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT`, `DATAMAP`, `DATA`, `EXPORT` or `ADMIN` (reserved command words).
 
 ### `bi expr`, `bi migrate`, `bi sql`: the BI languages
 
-The Drishti expression language ([BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del)) and Drishti SQL over REST, as the token's user (the server owns the one parser of
-each; [API_GUIDE.md](API_GUIDE.md#expressions-apiv1biexpr)). Reads need no scope.
+Rachana, BI's expression language ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#rachana-el-expressions); the functions in [FUNCTIONS.md](FUNCTIONS.md)),
+and Drishti SQL over REST, as the token's user (the server owns the one parser of each; [API_GUIDE.md](API_GUIDE.md#expressions-apiv1biexpr)). Reads
+need no scope.
 
 ```
-drishti.py bi expr functions [--scope row|rule|aggregate]                 the DEL function catalogue, by family (a later wave's are marked)
+drishti.py bi expr functions [--scope row|rule|aggregate]                 the function catalogue, by family
 drishti.py bi expr validate EXPR [--scope S] [--model M] [--alias A]       check one expression as you see the model; exit 1 on an error
-drishti.py bi expr convert EXPR                                           the DEL v2 form of an old-syntax expression
-drishti.py bi migrate --expressions FILE|DIR... [--write] [--check]      convert every expression of BI item files (comments kept, expressions: 2 set)
-drishti.py bi migrate --expressions [--dry-run]                          the same for the server's STORED items (bi-admin; audited, history kept)
-drishti.py bi migrate --models DIR [--dry-run] [--out D] [--keep-old] [--report F]   rachana: 1 datasets of a BI folder to datasets and models, reports rebound
-drishti.py bi migrate --models [--dry-run] [--report F]                  the same for the server's stored items (bi-admin)
 drishti.py bi migrate --boards FILE|DIR... [--write] [--keep-old]          2.3 boards to reports with board pages: writes reports/<name>.report.yaml, removes the board file
 drishti.py bi migrate --boards [--dry-run]                              the same for the server's stored boards (bi-admin; the server does it at start too)
 drishti.py bi sql "SELECT ..." --model M [--explain] [--format table|json|csv|jsonl] [--file F]   Drishti SQL over a model
 ```
 
-`bi migrate` reads `*.dataset|model|report|board|notebook.yaml` under a folder; without `--write` it prints what would change; `--check` changes nothing and
-exits `1` while a file still has the old syntax (for CI). The converter is the server's: the old parser's tree printed as DEL v2 and checked to compile to
-the same SQL; an expression it cannot convert is listed (`DRS-9190`) and left as it was.
-
-Without FILEs, `bi migrate --expressions` works on the server's **stored** items (`POST /api/v1/bi/migrate/expressions`, bi-admin): `--dry-run` lists
-each item with old-syntax expressions (draft and published changes, and what cannot be converted) and writes nothing; without it the items are converted
-the way the server does at start (`drishti.bi.migrate.on-start`): the text before kept as a saved state, a changed published text published again as the
-next version, each change audited. It exits `1` while an item cannot be converted (it keeps its text; Admin, BI settings lists it). The captured output
-is in [BI_LANGUAGE_REFERENCE.md › Expressions: the Drishti expression language (DEL), section 10](BI_LANGUAGE_REFERENCE.md#10-the-old-syntax-and-the-converter).
-
-`bi migrate --models DIR` is the dataset-to-model converter ([BI_DESIGN.md › The model layer: the specification, section 8.3](../architecture/BI_DESIGN.md#83-the-converter)) over a
-BI folder: it sends every `datasets|models|reports|boards|notebooks|python/*.yaml` to the server's converter together (a report needs its dataset's
-plan) and writes what comes back: per `rachana: 1` dataset, one `datasets/<old>-<table>.dataset.yaml` per table and `models/<old>.model.yaml`; reports
-rebound (`model: <old>@<major>`, comments kept). In place it removes the old dataset files (`--keep-old` keeps them; a live dataset's file is always
-kept, its reports stay on it until W3); `--out D` writes under another folder and removes nothing; `--dry-run` writes nothing; `--report F` writes the
-plan (every item, every rename, every behaviour difference and manual step) as Markdown. It exits `1` when an item is refused. Captured over the shipped
-samples:
-
-```
-$ drishti.py bi migrate --models config/bi --dry-run
-datasets/desk-pnl-vs-exposure.dataset.yaml: removed -> folded into the model trading-risk@1
-datasets/counterparty-exposure.dataset.yaml: converted -> model counterparty-exposure@1 over [counterparty-exposure-netting-sets, counterparty-exposure-counterparties]
-    writes datasets/counterparty-exposure-netting-sets.dataset.yaml
-    writes datasets/counterparty-exposure-counterparties.dataset.yaml
-    writes models/counterparty-exposure.model.yaml
-...
-notebooks/pnl-vs-exposure-pandas.notebook.yaml: manual
-    manual: the notebook reads the dataset file:dataset:trading-risk, now the model trading-risk@1: rebind it to the model (`dataset: mq:trading-risk@1`, and each extract's `dataset:` the same way, its fields as alias.column), as the sample notebook pnl-vs-exposure-pandas does
-...
-26 file(s) read, 16 converted, 0 refused; would write 32 file(s)
-```
-
-Without DIR, `bi migrate --models` converts the server's **stored** datasets and rebinds their reports (`POST /api/v1/bi/migrate/models`, bi-admin), as
-the server does at start: a dataset item becomes the model item (same id), each table a new dataset item, reports are published again; restricted roles
-are never given rows they did not see ([TROUBLESHOOTING.md](TROUBLESHOOTING.md#bi-after-an-upgrade-migrations-of-stored-items)).
+BI's own dataset and model files (`rachana: 1` and `2`) and their old expression syntax are migrated into tables and models of the table layer by
+`drishti.py tables migrate` ([TABLES_GUIDE.md](TABLES_GUIDE.md), the migration); BI refuses them where it reads (`DRS-9196`).
 
 ### `bi model`, `bi mq`: models and model queries
 
@@ -2734,7 +2697,7 @@ $ python3 tools/drishti.py bi transform snippet filter-values column=TRADE_STATU
 df = df[df['TRADE_STATUS'].isin(['MATURED']) == False].reset_index(drop=True)
 ```
 
-The steps themselves run in the console's sandbox (the editor), or on the server when the dataset is read; save the drafts with `bi item new`.
+The steps themselves run on the server's compute pool (the editor's step-by-step run, and the dataset when it is read); save the drafts with `bi item new`.
 
 ### `bi item`, `bi dataset`: items from files, tests and refresh
 
@@ -2813,6 +2776,44 @@ Monthly statement: 2 pages, A4 portrait, December 9999, 3 rows
 $ python3 tools/drishti.py bi statement file bi-39eb12fe47 --date 9999-12-31 -o empty.pdf
 wrote empty.pdf (2,093 bytes)
   hint: No data is held for 9999-12-31, the date this December 9999 statement reads: every band is empty. The nearest date with data is 2026-10-20 (before). Choose a date the data covers.
+```
+
+### `tables`: virtual tables and models
+
+The table layer's definitions under `config/tables` ([TABLES_GUIDE.md](TABLES_GUIDE.md)): listed, checked, previewed over sample documents,
+traced, and BI's datasets and models migrated into them. The commands run in Java from the server's exec jar
+(`java -jar drishti-server-*-exec.jar tables ...`) without starting a server and write nothing under the data folder; paths are read from
+the folder you run them in (`--root` for another catalogue folder). Every command takes `--json`.
+
+```
+drishti.py tables list                                              every table and model: source, grain, columns, materialisation
+drishti.py tables check [--sample TABLE=FILE.jsonl]... [--stored NAME,...]   every definition and the catalogue; exit 1 on an error
+drishti.py tables preview TABLE --sample FILE.jsonl [--related TABLE=FILE.jsonl]... [--fx FILE.jsonl] [--limit N]
+                                                                    the table's first rows over sample documents (JSONL, .gz too);
+                                                                    related() reads another table's sample, fx() spot rates (PAIR_NAME, MID)
+drishti.py tables lineage NAME                                      who uses a table or a model
+drishti.py tables offer NAME --sample FILE.jsonl (--kind KIND | --lake LAKE --table TABLE) [--grain '$.LIST[*]'] [--write]
+                                                                    the flat virtual table offered for a new table, columns from a sample
+drishti.py tables migrate [--bi DIR] [--dry-run | --check] [--report FILE] [--audit FILE] [--who NAME] [--moved-to DIR]
+```
+
+`tables migrate --dry-run` prints the unified diff of every file it would write under `config/tables/bi/` and the report (every item, every
+expression before and after, every refusal); `--check` exits 1 when anything would change; without either it writes the files, one audit
+line each with `--audit`. A second run changes nothing. Captured on the shipped samples:
+
+```text
+$ drishti.py tables migrate --dry-run --report migration.txt
+--- /dev/null
++++ b/bi/counterparty_exposure_counterparties.table.yaml
+...
+items: 34 (converted 34, unchanged 0, refused 0)
+expressions: 103 (rewritten 22, refused 0)
+files to write: 32
+$ drishti.py tables migrate --audit data/audit/tables-migrate.jsonl
+...
+34 file(s) written under /path/to/drishti/config/tables
+$ drishti.py tables migrate --check
+nothing to migrate
 ```
 
 ### Shell completion
@@ -3106,7 +3107,7 @@ $ drishti-console/.venv/bin/python tools/drishti.py server packs load curves-dem
 drishti: the server said 400 DRS-5001: DRS-5001 'curves-demo' is already loaded
 ```
 
-With a **Delta lake** instead: `--lake data/delta` in step 1 (the server's `DRISHTI_DELTA_ROOT`, default `<data>/delta`).
+With a **Delta lake** instead: `--lake data/delta/demo` in step 1 (the server's `DRISHTI_DELTA_ROOT`, default `<data>/delta`).
 
 4. Open the console, type `DC CRV-USD-OIS` and press Enter (`DC` is the mnemonic `pack new` chose, the kind's initials; see the pack's
    `README.md`). Pick a business date in the top bar: each date you ingested has its documents. The same from a shell:
@@ -3272,7 +3273,7 @@ The Java `sutra` commands keep their own 0/1/2 and pass them through.
 
 | You see | Why | Do |
 |---|---|---|
-| `drishti: no drishti-server-*-exec.jar under drishti-server/target: build it ... or pass --jar / DRISHTI_JAR` | the Java commands need the exec jar | `./mvnw -q -DskipTests package`, or `export DRISHTI_JAR=/path/to/drishti-server-2.9.11.c-exec.jar` |
+| `drishti: no drishti-server-*-exec.jar under drishti-server/target: build it ... or pass --jar / DRISHTI_JAR` | the Java commands need the exec jar | `./mvnw -q -DskipTests package`, or `export DRISHTI_JAR=/path/to/drishti-server-2.9.11.d-exec.jar` |
 | `drishti: jar not found: ...` | `--jar` / `DRISHTI_JAR` names a missing file | fix the path |
 | `drishti: cannot run java: ...; pass --java or set JAVA_HOME` | no JDK found | set `JAVA_HOME` to a JDK 21+ |
 | `drishti: PyYAML is not installed: run with uv run --with pyyaml ...` | the system Python has no PyYAML | use `uv run --with pyyaml`, or a venv |
@@ -3326,7 +3327,7 @@ empty PyCharm to a run configuration for each common task.
 | **Script path** (not *Module name*; switch the toggle on the left of the field) | `<repo>/tools/drishti.py` |
 | **Python interpreter** | the `drishti-console/.venv` interpreter from 14.1 |
 | **Working directory** | **the repository root**: relative paths in *Parameters* resolve from here |
-| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-2.9.11.c-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
+| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-2.9.11.d-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
 
 Click the folder icon next to **Environment variables** to edit them as a table (one row per variable). `JAVA_HOME` and
 `DRISHTI_JAR` may be left out: the tool then looks for JDK 21 and for the newest `drishti-server/target/*-exec.jar` itself.

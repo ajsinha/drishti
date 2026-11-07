@@ -42,7 +42,7 @@
 .xx-crumb a, .xx-crumb button { color: var(--d-link); background: none; border: 0; padding: 1px 3px; cursor: pointer; text-decoration: none; font: inherit; }
 .xx-crumb a:hover, .xx-crumb button:hover { text-decoration: underline; }
 .xx-crumb .cur { color: var(--d-ink); font-weight: 600; }
-.xx-layout { display: grid; grid-template-columns: 270px minmax(0, 1fr); gap: 10px; align-items: start; }
+.xx-layout { display: grid; grid-template-columns: var(--xx-side, 270px) minmax(0, 1fr); gap: 10px; align-items: start; }
 .xx-panel { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 4px; min-width: 0; margin-bottom: 10px; }
 .xx-ph { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-bottom: 1px solid var(--d-border); background: var(--d-surface-2);
   border-radius: 4px 4px 0 0; flex-wrap: wrap; }

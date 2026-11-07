@@ -15,7 +15,7 @@
 # store; the catalog's own https connection uses the JVM's truststore. Copy to config/connectors/iceberg-rest-private-ca.yaml.
 # See docs/connectors/ICEBERG_CONNECTOR.md, section Security.
 # The lake (iceberg, its root or catalog, storage and tables) is config/lakes.examples/other/rest-catalog.yaml: copy it to
-# config/lakes/rest-catalog.yaml beside this file (docs/guides/LAKE_GUIDE.md). This file keeps only what the connector reads.
+# config/lakes/rest-catalog.yaml beside this file (docs/guides/DATA_LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: iceberg
 kinds:
 - trade

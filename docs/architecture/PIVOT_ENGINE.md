@@ -19,7 +19,7 @@
 not yet run: sketches, rollups and aggregate awareness, progressive answers, the cluster's partial states, refined estimates, the benchmark
 harness); the rest design, not built.** Built, and described for users in
 [PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md): the module `drishti-bicompute` (the core with declarative cell sets, the provider and function
-SPIs, the mergeable and exact holistic built-ins, the GROUPING SETS compiler and the DuckDB tabular provider over the Data view's tables, the
+SPIs, the mergeable and exact holistic built-ins, the GROUPING SETS compiler and the DuckDB tabular provider over Export data's tables, the
 ordered merge, the partial-state cache, the split-and-merge harness, xlsx and CSV export), the VaR provider on the new SPI, the API, the
 CLI and the screen of mock-up A. Everything the build checklist ([section 24](#24-build-checklist)) leaves unticked is not built. The plan's
 rows are in [IMPLEMENTATION_PLAN.md, 2.9.11.a](IMPLEMENTATION_PLAN.md#2911a-the-pivot-engine-then-the-mr-cube).
@@ -32,7 +32,7 @@ there" ([section 10](#10-beyond-anything-out-there)).
 
 **Read with:** [MR_CUBE_LENS.md section 4](../lenses/MR_CUBE_LENS.md#4-the-shared-cube-core-mr-and-ccr) (the shared cube core this
 engine grows from), [CCR_CUBE_LENS.md](../lenses/CCR_CUBE_LENS.md) (the second cube on it), [BI_GUIDE.md](../guides/BI_GUIDE.md) (the BI
-query engine on DuckDB, rollups, true totals, run cards, Python measures), [BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md)
+query engine on DuckDB, rollups, true totals, run cards, Python measures), [RACHANA_REFERENCE.md › Rachana-EL expressions](../guides/RACHANA_REFERENCE.md#rachana-el-expressions)
 (DEL, the expression language), [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) (the compute worker pools), [VAR_SHARDING.md](VAR_SHARDING.md)
 (scatter and gather of partial sums across Drishti\*net), [COMPUTE_ENGINES.md](COMPUTE_ENGINES.md) (one file and one switch per engine),
 [IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md) (data that may never touch a disk), [RESOURCES_AND_SCALE.md](RESOURCES_AND_SCALE.md) (memory
@@ -123,7 +123,7 @@ Read from the guides and the code on 2026-11-02. The engine reuses every row of 
 | Layers and rollups: a rollup stores the **components** of its measures (sums, counts, minimums, maximums; `avg` as sum and count) per date and group, and a query is routed to the smallest layer that covers it | [BI_GUIDE.md, modes, layers and rollups](../guides/BI_GUIDE.md#7-modes-layers-and-rollups) | yes | aggregate awareness and the rollup store, extended to sketches |
 | True totals: a total of a measure that does not add up is one more query per level, never the sum of the figures shown | [BI_GUIDE.md, true totals](../guides/BI_GUIDE.md#32-true-totals) | yes | the rule, generalised to every provider |
 | Runs and run cards: a range estimate from Delta statistics, "why it is large", confirm above a minute or 500 million rows, run in background | [BI_GUIDE.md](../guides/BI_GUIDE.md) (runs) | yes | the scan estimate and the background job |
-| The `matrix` visual (rows × columns, subtotals at every level) and Analyse's **Slice** (`POST /bi/explore/pivot`) | [BI_GUIDE.md](../guides/BI_GUIDE.md) | yes | replaced by the pivot engine's answer (they keep their YAML; [section 6.2](#62-the-tabular-provider-duckdb)) |
+| The `matrix` visual (rows × columns, subtotals at every level) | [BI_GUIDE.md](../guides/BI_GUIDE.md) | yes | replaced by the pivot engine's answer (it keeps its YAML; [section 6.2](#62-the-tabular-provider-duckdb)); the console's own slice of an extract is cut: slicing is the Pivot's, one analysis path, Pivot then Report |
 | The Pivot tab on a table or ladder (Rachana `pivot`) | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#pivot-pivot-on-a-table-or-ladder), [USER_GUIDE.md](../guides/USER_GUIDE.md#pivot-slice-a-table-your-way) | yes | becomes a pivot view over the panel's rows |
 | Python measures in BI: `compute(table, params)` per group, sandboxed (isolated process, empty environment, no network, scratch folder only, CPU, memory, output limits, package allow-list) | [BI_GUIDE.md section 34](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), [its sandbox](../guides/BI_GUIDE.md#7-the-sandbox-exactly) | yes | the sandbox's guards, unchanged; a Python measure is a holistic custom function |
 | Compute worker pools (`drishti-compute`): fork-server per worker on Linux, warm workers on Windows, Arrow IPC scratch transport, limits, fan-out over nodes | [PYTHON_COMPUTE.md section 7](PYTHON_COMPUTE.md#7-the-worker-pool) | yes (C1 to C3) | the per-node pool that runs Python custom functions |
@@ -160,8 +160,8 @@ the view's filters; it names a cell without listing its members. A **function** 
 [section 8.1](#81-the-contract-start-add-merge-finish). A **partial state** is what `add` and `merge` produce for one cell key on one
 node. A **provider** turns cell keys and functions into partial states, over the data it owns. The **core** merges, finishes, shows.
 
-**Why one engine.** The MR cube, the CCR cube, BI's matrix, the Pivot tab and Analyse's Slice each draw a pivot today or will; five
-pivots would mean five sets of totals, five budgets, five exports and five ways of being wrong. One engine means one rule for a total,
+**Why one engine.** The MR cube, the CCR cube, BI's matrix and the Pivot tab each draw a pivot; four
+pivots would mean four sets of totals, four budgets, four exports and four ways of being wrong. One engine means one rule for a total,
 one provenance, one Excel export, one test suite, one cluster merge.
 
 ## 4. The pivot model
@@ -364,7 +364,7 @@ Functions DuckDB has natively (`sum`, `count`, `min`, `max`, `avg`, `weighted_av
 forms** (sums and counts, Welford parts, sketch states) are used whenever partials must be merged across nodes or cached. A
 `direct` table (a PostgreSQL or DuckDB connector) gets the same SQL pushed to its source when every function is native to it.
 
-**What it replaces.** BI's `matrix` visual, Analyse's Slice and the Pivot tab keep their YAML and their screens, and ask the pivot engine
+**What it replaces.** BI's `matrix` visual and the Pivot tab keep their YAML and their screens, and ask the pivot engine
 instead of their own code paths (phase PB, [section 12](#12-bi-on-the-pivot-engine) and [section 22](#22-phases-and-sizes)); their totals already follow the true-totals rule, so their
 figures do not change, which a test proves on every shipped sample report.
 
@@ -879,8 +879,7 @@ chosen and said here.
 
 What stays the model's own query: a visual's grouped cells (BI's compiler already computes them in one statement, with joins across facts,
 filter contexts, time intelligence and windows), rollups and live aggregates (their state arithmetic moves with phase P3's rollups of
-partial states), standing queries' incremental maintenance, and Analyse's Slice over an extract (to be a pivot view over the model with
-P3).
+partial states), and standing queries' incremental maintenance.
 
 ### 12.2 A measure defined once
 
@@ -968,7 +967,7 @@ fails any new class outside it that implements the function SPI's steps or emits
 | `drishti-server` | wires providers, REST, entitlements, busy protection, the memory budget for the cache, the cluster transport; hosts the VaR, FRTB-SA, SIMM and (later) CCR providers, which implement the module's SPI (the vector arithmetic stays where it is) |
 | BI | matrix visuals, totals, rollups and the semantic model's measures ([section 12](#12-bi-on-the-pivot-engine)) |
 | the MR and CCR cubes | providers and landings on the core |
-| the Data view, playgrounds, reports, the CLI | pivot views, function tests, exports |
+| Export data, playgrounds, reports, the CLI | pivot views, function tests, exports |
 
 ## 14. The screens and pivot charts
 
@@ -1078,7 +1077,7 @@ per saved view returning the cells, a personal token in the header, and a genera
 ### 15.6 Who may export, and audit
 
 Masks and entitlements are applied **before** export (the file holds what the screen showed this person, no more); an export of rows
-needs the same right as drill-through; datasets marked internal only follow the Data view's rule. **Every export is audited**: who, the
+needs the same right as drill-through; datasets marked internal only follow Export data's rule. **Every export is audited**: who, the
 view, what (pivot, rows, chart, definition), format, rows and columns, size, data versions; **never the values**.
 
 ### 15.7 Phases
@@ -1276,7 +1275,7 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 - [ ] core moved from `wip/mr-cube` with the eight changes of section 7 (built: changes 1 to 8 in the module; the branch's own tests run when the MR cube resumes on the engine)
 - [ ] DEL moved from `server/bi/expr`; BI calls the module
 - [x] function SPI, kinds, codecs; built-ins of section 5.2 except `first`/`last` and the sketches (P3); exact quantile from the values (selection with P3)
-- [ ] grouping-sets compiler; DuckDB executor; tabular provider (built: the Data view's tables staged in memory, direct Delta and Iceberg lake reads of local Parquet files with pruning and skipping, a panel's rows; not yet: BI layers, object stores)
+- [ ] grouping-sets compiler; DuckDB executor; tabular provider (built: Export data's tables staged in memory, direct Delta and Iceberg lake reads of local Parquet files with pruning and skipping, a panel's rows; not yet: BI layers, object stores)
 - [ ] VaR provider (built: `VarPivotProvider`, each cell the engine's scope; `VarCubeSource`'s batching, hierarchy levels and measures with the MR cube); FRTB-SA and SIMM providers with their engines
 - [ ] partial-state cache, cell budgets, busy protection, per-person limits (built: all but the per-person limit)
 - [ ] cluster: partial codec, ordered merge, file assignment, hedging, a node down said in the cell (built: state codecs, the ordered merge of local shards; P3 on `wip/pivot-c`: the plan and partial-state codec, `/api/v1/net/pivot/partials`, files by rendezvous hashing or row shards, the gather in node order with hedging and a deadline; a node with no answer refuses the whole view (DRS-5720) rather than marking its cells)

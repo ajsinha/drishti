@@ -46,6 +46,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [Zoom a panel](#zoom-a-panel) | `Z`: one panel fills the view area; restore with `Esc`; shareable as `#zoom=<panel>` |
 | [On a phone](#on-a-phone) | What a phone shows first, *More on this page*, *On desktop*, *Show everything*, the lens menu |
 | [Pivot](#pivot-slice-a-table-your-way) | Rows, columns, values and filters over a table or a search's results, by drag or by key; totals, drill-down, chart, export |
+| [Tables and models](#tables-and-models-the-editors) | The editors of virtual tables, semantic models and Python-driven tables: live YAML, a preview as you, review before live |
 | [Keyboard](#keyboard) | Every key in one table |
 | [Live updates](#live-updates), [Business dates](#business-dates-live-or-a-day-in-the-past), [Compare](#compare-what-changed) | Ticking values, past dates, what changed |
 | [Search by value](#search-by-value) | `where` searches, sorting and limits |
@@ -58,7 +59,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [Administration](#administration) | Users, roles, packs, audit, health, caches, capacity |
 | [Query by form](#query-by-form) | `FORM <pack>`: the forms home, the inputs, the search a form writes, keeping and scheduling it, who decides what a form offers |
 | [Calc: Python on any view](#calc-python-on-any-view) | `Alt+C` in full: the `drishti` module, output and charts, packages, packs and roles, snippets, the runtime, limits, `drishti.quant`, the BI client |
-| [Analyse: slice, SQL and Python](#analyse-slice-sql-and-python) | BI's analyst bench: open a model as your masked extract, slice it, query it in SQL, script it in Python, notebooks, promote, the browser Python console |
+| [The Notebook](#the-notebook) | Code over data: open a model as your masked extract, SQL cells run by the server, Python cells on its compute pool, notebooks, promote to a report or a Python item |
 
 ## The pages at a glance
 
@@ -77,9 +78,9 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | Workspaces | `/w` | Several live views on one screen |
 | Inbox | `/inbox` | Views and comments sent to you ([Your inbox](#your-inbox)) |
 | Reports | `/reports` | Saved searches delivered as CSV on a schedule, and your subscriptions ([Scheduled reports](#scheduled-reports), [Export, and subscriptions](BI_GUIDE.md#export-and-subscriptions)) |
-| BI | `/bi`, `/bi/catalogue`, `/bi/w/me`, `/bi/r/<id>`, `/bi/models`, `/bi/datasets`, `/bi/designer`, `/bi/explore`, `/bi/transform` | Rūpaka business intelligence, for people with the `bi` power: reports (a board is a report page; `/bi/b/<id>` opens it), BI Studio's designers, Analyse and the Transform editor ([BI_GUIDE.md](BI_GUIDE.md)) |
-| Python console | `/pyconsole` | Your own Python in the browser on a masked extract of a BI model; promote it to the server (BI rail, *Python console*; [section 16](#16-the-browser-python-console)) |
+| BI | `/bi`, `/bi/catalogue`, `/bi/w/me`, `/bi/r/<id>`, `/bi/models`, `/bi/datasets`, `/bi/designer`, `/bi/notebook`, `/bi/transform` | Rūpaka business intelligence, for people with the `bi` power: reports (a board is a report page; `/bi/b/<id>` opens it), BI Studio's designers, the Notebook and the Transform editor ([BI_GUIDE.md](BI_GUIDE.md)) |
 | Build | `/build`, `/build/new`, `/build/pack/new`, `/build/reviews` | Design layouts (Sutras) in the workbench, make a pack from schemas, approve proposed Sutras |
+| Tables & models | `/build/tables` | The editors of virtual tables, semantic models and Python-driven tables, for people with the `bi` power ([Tables and models: the editors](#tables-and-models-the-editors)) |
 | My account | `/account` | Your profile, settings and password |
 | Servers | `/servers` | The Drishti servers this console may talk to ([Working with several servers](#working-with-several-servers)) |
 | Admin | `/admin/users`, `/admin/roles`, `/admin/audit`, `/admin/packs`, `/admin/connectors`, `/admin/artifacts`, `/admin/loads`, `/admin/lakes`, `/admin/collab`, `/admin/embedding`, `/admin/net`, `/admin/health`, `/admin/caches` (and `/admin/ai`, `/admin/bi`, `/admin/tokens`, `/admin/access` where those features are on) | Users, roles, audit log, packs, connectors, installed artifacts, data loads, lakes (Delta, the default; Iceberg tables where configured: a **Format** column, and Iceberg maintenance with orphan-file removal, [OPERATIONS.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](../admin/OPERATIONS.md#8-iceberg-lakes)), collaboration moderation, embedding, Drishti\*net, health and caches (admins only) |
@@ -146,7 +147,7 @@ you are on is highlighted.
 
 | Menu | Column | Entries |
 |---|---|---|
-| **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](#the-forms-home), query by form), *Functions* (`/func`, also `FUNC <GO>`: every command you can use, what it does and an example; administrators switch commands on or off there, [USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)), *Data map* (`/datamap`, also `DATAMAP <GO>`: every kind of data, how it joins and how much there is, [The data map](#the-data-map)), *Data* (`/data`, also `DATA <GO>`: every dataset and its dates, a simple selection, a day downloaded as `.jsonl.gz`, [The Data view](#the-data-view)), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
+| **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](#the-forms-home), query by form), *Functions* (`/func`, also `FUNC <GO>`: every command you can use, what it does and an example; administrators switch commands on or off there, [USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)), *Data map* (`/datamap`, also `DATAMAP <GO>`: every kind of data, how it joins and how much there is, [The data map](#the-data-map)), *Data* (`/data`, also `EXPORT <GO>`: every dataset and its dates, a simple selection, a day downloaded as `.jsonl.gz`, [Export data](#export-data)), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
 | | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`) |
 | **Engines** (a role that opens an engine) | a column per engine running, its command word in the head | **VaR** `VAR`: *VaR explorer* `VAR BANK`, *Why it moved* `VAR BANK EXPLAIN`, *VaR Playground* `PLAY VAR`, *Scenario matrix* `SMAT`, *Regulatory reports*, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *Hierarchies and limit letters* `HIER` · **Exposure** `EXP`: *Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …` (the pre-deal check `XWIF` is under **Counterparties**) · **FRTB-SA** `FRSA`: *FRTB-SA capital* `FRSA BANK`, *FRTB-SA Playground* `PLAY FRTB EXAMPLE` · **SIMM** `SIMM`: *Netting sets* `SIMM`, *SIMM Playground* `PLAY SIMM EXAMPLE`; administrators also see *Admin → Engines* and, at the foot, the engines not running on any server (greyed, never links) |
 | **BI** (people with the `bi` power) | Rupaka: business intelligence | *BI home* (`/bi`), *My workspace* (`/bi/w/me`), *Catalogue* (`/bi/catalogue`), then *Recent*: the three items you opened last. Administrators with `bi-admin` also see *BI settings* ([BI_GUIDE.md](BI_GUIDE.md)) |
@@ -159,12 +160,12 @@ you are on is highlighted.
 
 **The Engines menu.** One menu holds every compute engine's pages: a column per engine, its command word (`VAR`, `EXP`, `FRSA`, `SIMM`) in the column's head, each page with its command on the right. It shows only the engines running on a server of the cluster (an engine an administrator turns off in *Admin → Engines* leaves it, with its pages and help) and only those your role opens: a market-risk role sees VaR, FRTB-SA and SIMM, a credit-risk role Exposure and SIMM, an administrator every engine; a role that opens none has no Engines menu at all. The same rule holds on the command line: an engine's command words (`VAR`, `SMAT`, `SWIN`, `PLAY VAR`; `EXP`, `XWIF`; `FRSA`, `PLAY FRTB`; `SIMM`, `PLAY SIMM`) are not offered in the type-ahead to a role that does not open the engine, and typing one says *VaR is not opened for your role; ask an administrator.* instead of running it. Help is not gated: every running engine's guide and tutorial stay open to everyone. With more than four engines running a search box at its top finds a page by its name, description or command (Enter opens the first left). On a phone the columns fold: tap an engine to open its pages, one engine at a time. Who opens which engine is set in `drishti-console/config/menus.yaml` (`opens:` per engine).
 
-**In an edition or a lens, its own subject menus.** Drishti Trading, Market and World put their subjects in the bar between **Views** (and **Engines**) and **BI**, and leave out Build; Drishti Risk keeps Views, Engines, BI, Admin and Help:
+**In an edition or a lens, its own subject menus.** Drishti Trading, Market and World put their subjects in the bar after **Views** (and **Engines**), and leave out Build; Drishti Risk keeps Views, Engines, BI, Admin and Help. Drishti Trading's one **Markets** menu gathers every market-data screen a trader reads, a column per subject, and its bar has no BI or Admin menu (both by command):
 
 | Edition or lens | Menus |
 |---|---|
 | Drishti Risk | Views · **Engines** · BI · Admin · Help |
-| Drishti Trading | Views · Engines · **Blotter** (`TRD`, `CTRD`, `PTRD`, `LTRD`) · **Positions** (`BOOK`, `DESK`, `TRDR`, `POS`) · **Risk** (*My VaR* `VAR`, `VLIM`, `TVAL`, `PNLV`) · **Counterparties** (`CPTY`, `NSET`, `LIM`, `XWIF`, `EXP`) · BI · Admin · Help |
+| Drishti Trading | Views · Engines · **Markets** (rates `CRV`, `REPO`, `FIX`; vols `IRV`, `CPV`, `FXV`; FX `FX`, `FXF`; credit `CDS`, `BND`; equities and commodities `EQ`, `EQX`, `CMD`, `CMDC`) · **Blotter** (`TRD`, `CTRD`, `PTRD`, `LTRD`) · **Positions** (`BOOK`, `DESK`, `TRDR`, `POS`) · **Risk** (*My VaR* `VAR`, `VLIM`, `TVAL`, `PNLV`, `DPNL`, `PNL`, `SENS`) · **Counterparties** (`CPTY`, `NSET`, `LIM`, `XWIF`, `EXP`) · Help. BI and Admin by command: `BI <GO>`, `ADMIN <GO>` (administrators; `ADMIN LOADS` opens that page) |
 | Drishti Market | Views · **Curves** (`CRV`, `REPO`, `FIX`, `INF`) · **Volatility** (`IRV`, `CPV`, `FXV`, `EQV`, `CMDV`) · **FX** (`FX`, `FXF`, `FXV`) · **Credit** (`CDS`, `BND`) · BI · Admin · Help |
 | Drishti World | Views · **Economies** (*A country* `ECON …`, `MACRO`, `FCST`, `REGE`) · **Markets** (`NEWS`, `QUOTE`, `IDX`) · **Companies** (`USEQ`, `EDGAR`, `LEIC`, `FUND`) · BI · Admin · Help |
 
@@ -394,7 +395,7 @@ their name. They work in any case, and each has type-ahead.
 | `WHAT <GO>` | Knowledge, the home of the [Knowledge pages](#knowledge-what-the-words-mean): what the words of your data mean and how the data connects | `WHAT PFE <GO>`, `WHAT netting set <GO>`, `WHAT value at risk <GO>` open the term's glossary entry (its long name or a synonym works too, any case); other words (`WHAT collateral posted <GO>`) search the Knowledge pages. The type-ahead lists the terms as you type |
 | `FUNC <GO>` | Functions, `/func`: every command you can use, by pack, with what it does and an example ([USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)) | `FUNC exposure <GO>` opens it filtered (every word must appear in a command's code, title, description or its pack); `FUNC trading` lists one pack's commands. Click a command to open it with its example, a pack to open its search form |
 | `DATAMAP <GO>` | the [data map](#the-data-map), `/datamap`: every kind of data your packs hold, how much of it there is, and how the kinds join | `DATAMAP trade <GO>` opens it on one kind (its name, mnemonic or label: `DATAMAP CPTY`), `DATAMAP organisation` or `DATAMAP counterparty-risk` on one domain; other words fill its Find box |
-| `DATA <GO>` | the [Data view](#the-data-view), `/data`: every dataset you may open, its format and the dates it holds; download a day as `.jsonl.gz` | `DATA trade-valuation 2026-09-30 <GO>` opens it on a dataset (its kind or its command: `DATA TVAL`) and a date; other words fill its Filter box |
+| `EXPORT <GO>` | the [Export data](#export-data), `/data`: every dataset you may open, its format and the dates it holds; download a day as `.jsonl.gz` | `EXPORT trade-valuation 2026-09-30 <GO>` opens it on a dataset (its kind or its command: `EXPORT TVAL`) and a date; other words fill its Filter box |
 | `FORM <GO>` | the forms home, `/forms` | `FORM trading <GO>` opens the trading pack's search form, `FORM trading trade <GO>` its form for trades ([Search with a form](#search-with-a-form-form-pack)) |
 | `BI <GO>` | the BI home, `/bi` (only with the `bi` power; otherwise the terminal says what is missing) | `BI WORKSPACE`, `BI CATALOGUE`, `BI SETTINGS`, `BI <report-or-board>` ([BI_GUIDE.md](BI_GUIDE.md)) |
 | `RUPAKA <GO>` | the same as `BI`, the older name | everything that works after `BI` works after `RUPAKA` |
@@ -455,11 +456,11 @@ Domains follow `drishti-console/config/datamap.yaml`, which is presentation only
 (and, rarely, a kind to draw dashed that its contract does not mark computed). A pack the file does not name appears as a domain of its
 own under its pack title, with its kinds and joins, with no configuration at all.
 
-### The Data view
+### Export data
 
-**Views → Data** (`/data`, or `DATA <GO>`) lists every data source and its datasets, and downloads a day of one of them as JSON Lines,
-gzip-compressed (`.jsonl.gz`). It is **download only**: it never shows the rows in a grid. `DATA <dataset> [date] <GO>` opens it on
-that dataset and date (`DATA trade-valuation 2026-09-30`; the dataset's command works too: `DATA TVAL 2026-09-30`).
+**Views → Export data** (`/data`, or `EXPORT <GO>`; `DATA`, the older word, works too) lists every data source and its datasets, and downloads a day of one of them as JSON Lines,
+gzip-compressed (`.jsonl.gz`). It is **download only**: it never shows the rows in a grid. `EXPORT <dataset> [date] <GO>` opens it on
+that dataset and date (`EXPORT trade-valuation 2026-09-30`; the dataset's command works too: `EXPORT TVAL 2026-09-30`).
 
 - **The list** (left): the datasets you may open, grouped by pack, each with its **format** (Delta, Iceberg, JSON Lines, Database ...)
   and the number of **dates** it holds. *internal only* marks a dataset whose source's terms restrict reuse (the IMF figures, the Yahoo
@@ -478,7 +479,7 @@ that dataset and date (`DATA trade-valuation 2026-09-30`; the dataset's command 
   the rows are read: *pushed down* when the connector filters as it reads its columns (Delta Lake and Iceberg tables whose columns are
   promoted), else filtered on the way as the rows stream.
 - **Download**: the **row count before you download** (*412 of 12,076 on the date*) and the estimated size; **Download
-  trade-valuation_2026-09-30.jsonl.gz**; **Copy link**; and the same download as a [`drishti.py data get`](CLI_GUIDE.md#data-get-a-dataset-as-jsonlgz-the-data-view)
+  trade-valuation_2026-09-30.jsonl.gz**; **Copy link**; and the same download as a [`drishti.py data get`](CLI_GUIDE.md#data-get-a-dataset-as-jsonlgz-export-data)
   command. A selection that matches no row shows 0 and leaves Download off.
 
 The selection lives in the address (`/data?kind=trade-valuation&date=2026-09-30&columns=TRADE_ID,DESK,MTM&where=DESK+%3D+DESK-COMM`),
@@ -487,8 +488,8 @@ the connector and never held whole, on the server or in the console, so a datase
 chosen columns in order. Every download is audited (who, the dataset, the date, the selection and the rows written: Admin → Audit,
 action `data.download`). On a phone the list and the facts show; choosing and downloading are for the desk.
 
-The word and the page follow the edition (`commands.words.DATA`, `features.data`) and the site (`features.data` in the console,
-`drishti.data-view.enabled` on the server); [DATA_GUIDE.md](DATA_GUIDE.md#6-the-data-view-download-a-dataset) has the API, the rules for
+The word (`EXPORT`, and its alias `DATA`) and the page follow the edition (`commands.words.DATA` switches both, `features.data`) and the site (`features.data` in the console,
+`drishti.data-view.enabled` on the server); [DATA_GUIDE.md](DATA_GUIDE.md#6-export-data-download-a-dataset) has the API, the rules for
 masks, internal-only datasets and pushdown, and the settings.
 
 ### Suggestions as you type
@@ -1083,11 +1084,6 @@ whole. A long amount widens its own column. Either way the page never scrolls si
 
 **A candlestick's Data table** shows each price as the panel formats it (`74.00`, `120,000`), as the strip and tables do.
 
-**Drawn by your browser (when your administrator turns it on).** With `ui.render` set to `client` the entity page is drawn in
-your browser from the same data the server would have turned into HTML: it looks and works the same (links, the column funnels,
-*Chart any table*, drill-downs and Back, Pivot, *Customize*, layout mode, downloads, *About this page*, live updates). Add
-`?render=server` to a page's address to see it drawn by the server, for a comparison.
-
 ### 4 · Links
 
 Every identifier in a view is a door. Click `BOOK-RATES-3` in the strip and the book opens. The
@@ -1303,6 +1299,28 @@ removed panel); the full line diff, where a move reads as a deleted block and an
 diff**. The promote drawer shows the same before you submit ([Reviews](#reviews-approving-a-sutra)). With review switched off on the server the button
 reads **Publish** and the new version is live at once.
 
+## Resize panels and columns
+
+A side panel and the main area of a screen are divided by a thin line, and so are the columns of a table, a tree or a grid: drag
+the line to make one wider. The line shows when you point at it or move the focus to it.
+
+- **Side panels**: the VaR explorer's Scopes, the exposure explorer's Scope, Help's contents list, the Build workbench's Data and
+  Details, the pivot's Fields, the BI report designer's Filters, Visualizations and Fields panes, the BI model designer's Datasets
+  and Inspector, and the Context column of a view. A panel stays between the least and the most width its screen allows.
+- **Columns**: the VaR tree, the data tables of every view, BI grids and matrices, and the pivot grid. Drag the line at the right
+  of a column's heading; the rows follow. A column is never narrower than about 40 pixels, so it cannot vanish. Columns made wider
+  than the panel scroll sideways.
+- **Kept for you**: the widths are kept in this browser for you alone, per screen and per mode. The VaR explorer keeps one set of
+  widths with Parametric on and another with it off. Nobody else sees your widths.
+- **Reset**: double-click a line, or focus it and press `Home`, to go back to the screen's own width.
+- **The keyboard**: `Tab` to a line, then `←` and `→` move it by a small step and `Shift`+`←` or `→` by a larger one. A screen
+  reader reads the line as a separator and its width.
+- **Phones**: below 640 pixels wide there is nothing to resize; the screens keep their single column.
+
+The dividers of a [workspace](#workspaces), of a screen laid out in areas and of the designer's grid work the
+same way (drag, the arrow keys, a double-click or `Home` to reset). Their widths are kept with the workspace, the screen's layout or
+the design, not in your browser.
+
 ## Screens that respond: clicks, refresh, editing and your own page
 
 Newer screens (every pack screen is built from the same parts) can do more than show a document. What you meet:
@@ -1397,6 +1415,10 @@ view it opens with. Everything is computed by the server's pivot engine: rows, c
 the provenance of every cell and its rows, a chart of a selection, Excel with outline levels and formulas only where a figure adds up, CSV
 and Arrow.
 
+**One analysis path: the Pivot, then a report.** The Pivot is the one grid for slicing: the risk cubes are its **presets** (the MR cube,
+`MCUBE`, and the CCR cube, `CCUBE`; [PIVOT_GUIDE.md section 28](PIVOT_GUIDE.md#28-presets-the-risk-cubes)), and a figure for other people is a
+BI report. Code over a model is the [Notebook](#the-notebook).
+
 | What | How |
 |---|---|
 | Open it | **Pivot** under a table or above a search's results; or `PIVOT <table>`, `PIVOT @owner/name` |
@@ -1404,6 +1426,16 @@ and Arrow.
 | Make it everyone's opening | an author's **promotion** (`POST /api/v1/pivot/promote` with the panel's view and its Sutra): the Sutra's next version with the panel's `pivot:` arrangement, through review when review is on ([Reviews](#reviews-approving-a-sutra)) |
 | Masked fields | not read at all: they are not in the field list and cannot be grouped, summed or filtered |
 | Limits | a page's table: at most `drishti.pivot.max-records` rows (50,000), more is refused in words; every view: the cell budget of the pivot engine (`drishti.pivot.max-cells`), refused with the count, never cut short |
+
+## Tables and models: the editors
+
+**Build › Tables & models** (`/build/tables`, also on BI's rail) edits the definitions every reader shares: virtual tables, semantic models
+and Python-driven tables ([TABLES_GUIDE.md section 11](TABLES_GUIDE.md#11-the-editors)). Three panes: the objects with a search; the editor
+with its **live YAML** below it (a change on either side shows on the other, the line you edit highlighted, a problem marked at its line);
+and a **preview read as you** with its checks and totals. **Visual**, **YAML** or **Both** is remembered for you. **+ New** walks you through
+a table, a model or a Python-driven table in plain steps. **Save draft** keeps your work private to your workspace; **Propose for review**
+asks a second person to approve it before anyone else reads it. Keys: Ctrl+S saves a draft, Ctrl+Enter validates, the arrow keys move
+between a model's tabs; on a phone the panes stack.
 
 ## On a phone
 
@@ -1447,7 +1479,7 @@ quick links wait under *More*.
 
 ![The end of the same Home in the light theme: a table at a glance with Show all, the quick links under More on this page](img/phone/07-landing-more-light.png)
 
-**The lens menu.** In Drishti Trading, Market or World the subject menus (Blotter, Positions, Risk, Counterparties; Curves, Volatility;
+**The lens menu.** In Drishti Trading, Market or World the subject menus (Markets, Blotter, Positions, Risk, Counterparties; Curves, Volatility;
 ...) fold into one menu named after the edition, first in the bar. It opens as a list with a heading per subject; each entry runs its
 command as on a desktop, and an entry ending in `…` puts its words in the command line for you to finish.
 
@@ -1491,6 +1523,7 @@ wins: a site that says "never more than glance" for a heavy panel keeps it so, w
 | `Ctrl+Enter` | In Calc: run the code (`Cmd+Enter` on a Mac) |
 | `Alt+1`…`Alt+4` | In a workspace: move to pane 1 to 4, also while the focus is inside a pane |
 | `Alt+0` | In a workspace: from a pane back to the workspace's bar |
+| `←` `→` `Home` | On a panel's or a column's resize line: move it (`Shift`: further), or reset it ([Resize panels and columns](#resize-panels-and-columns)) |
 
 The keys a view offers are also buttons along the bottom of the screen, so you can click them.
 
@@ -2374,7 +2407,7 @@ between them without the menu.
 | Tokens | `/admin/tokens` | Every personal API token (never its secret): its owner, its scopes (*read only* or what it may write), when it was last used (in the console's time zone, named), and revoking any of them ([API_GUIDE.md (clients)](API_GUIDE.md#clients-scripts-notebooks-and-excel)) |
 | Access | `/admin/access` | Who read which entity, filtered by user, action, kind, id and dates ([USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)) |
 | AI | `/admin/ai` | The AI layer: off by default; providers, models, MCP servers and a test call ([AI.md](../admin/AI.md#1-model-providers)) |
-| Data loads | `/admin/loads` | What your ETL announced, what is due and what is late ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)); its **Inbox** tab (`/admin/loads/inbox`, while the data inbox runs) is the inbox's status board: files waiting, the run loading table by table, the last cycles, failures with **Retry**, and **Load now** ([DATA_GUIDE.md section 7.8](DATA_GUIDE.md#8-the-inbox-screen-admin--data-loads--inbox)) |
+| Data loads | `/admin/loads` | What your ETL announced, what is due and what is late ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)); its **Inbox** tab (`/admin/loads/inbox`, while the data inbox runs) is the inbox's status board: files waiting, the run loading table by table, the last cycles, failures with **Retry**, and **Load now** ([DATA_LAKE_GUIDE.md section 3.1](DATA_LAKE_GUIDE.md#31-the-data-inbox)) |
 | Collaboration | `/admin/collab` | Moderation of shares and threads, legal holds, export, the mail outbox and chat bridges ([COLLABORATION.md](../architecture/COLLABORATION.md)) |
 | Embedding | `/admin/embedding` | Host applications that show Drishti views in their own pages ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design)) |
 | BI | `/admin/bi` | Powers per role and who creates workspaces (needs `bi-admin`; [BI_GUIDE.md](BI_GUIDE.md)) |
@@ -2717,6 +2750,12 @@ inferred from its search columns and screen. Authors can shape a kind's form in 
 Calc puts a Python prompt beside every view, the way BQuant sits beside a Bloomberg screen. Press `Alt+C` on a
 trade, a netting set, a VaR result or a curve: a panel slides in with an editor, and the code you write there can
 read the screen you are on, search Drishti, and draw tables and charts in the terminal's own style.
+
+**Calc is a Labs feature: a scratch pad, off as shipped.** An administrator switches it on with the Labs switch
+(`labs.calc` on the console and `drishti.calc.enabled` on the server, both `DRISHTI_LABS_CALC`; [section 15](#15-configuration-and-api)).
+The drawer says *Labs · Scratch: runs in your browser*. Nothing Calc computes is published, shared, scheduled or
+promoted: what you keep is your own code snippets. A figure for other people is a Pivot view or a BI report; code
+over a model that others can run is a [notebook](#the-notebook).
 
 The code runs **in your browser**, in [Pyodide](https://pyodide.org) (CPython 3.14 compiled to WebAssembly), inside a
 Web Worker, so a long calculation never freezes the page. numpy, pandas, scipy, statsmodels and matplotlib are
@@ -3113,7 +3152,7 @@ They are kept with your other saved documents (workspaces, monitors) in the iden
 | What can it read? | Only what you can: every read is a request from your page to the console with your session (`/api/view`, `/api/raw`, `/api/series`, `/api/calc/search`, `/api/calc/columns`), and the console asks the server as you. Your roles and packs decide; fields masked for your role (`drishti.security.redact`) stay masked. The worker's own reads are not requests at all: it asks the page by message, and the page fetches only those five routes, with arguments encoded into the path. Even if Calc code tried `pyfetch` or `js.fetch` to another console route, the worker's policy (next row) lets it reach nothing but static files and the runtime. |
 | Can it reach the network? | No. The worker's Content Security Policy is `default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src <host>/static/ <host>/pyodide/` (the host the browser used): scripts and data from two paths of the console's own origin only, so Calc code cannot call any other console route, `/api` included, though the browser would send your session cookie with it. The runtime and its packages are served by the console under `/pyodide/<version>/`, and Pyodide is told every location explicitly (index, packages, lock file, standard library), so it never looks at its default CDN. Measured: no request left the origin in any test run (section 13). |
 | Can it change data? | No more than you can by clicking. The only writes Calc adds are your own snippets. |
-| What else changed in the page's security? | The page's policy adds `worker-src 'self'`; `'wasm-unsafe-eval'` (compiling WebAssembly) is granted to the Calc worker's script alone, and `'unsafe-eval'` to nothing on the page. The one exception is the Graphic Walker frame of `drishti_bi.walk` ([section 19](#19-the-bi-client-and-graphic-walker)): a sandboxed frame with a policy of its own, that cannot reach the network or the console. |
+| What else changed in the page's security? | The page's policy adds `worker-src 'self'`; `'wasm-unsafe-eval'` (compiling WebAssembly) is granted to the Calc worker's script alone, and `'unsafe-eval'` to nothing on the page. |
 | Is it recorded? | The reads are recorded as any read is ([access log](../admin/USER_MANAGEMENT.md#who-looked-at-what-the-access-log)): `view`, `raw`, `history`, and `search` for searches and for `drishti.columns()` (with the fields read). The code itself is not sent anywhere unless you save it. |
 | Who may use it? | Roles with `calc` ([section 9](#9-roles-who-may-use-calc)); the server checks it on its Calc endpoints, the console on its own. |
 | Can one user's code affect another's? | No: each tab has its own worker and memory. A loop that never ends uses one core of your machine until you press **Stop**. |
@@ -3218,11 +3257,11 @@ Speed beside native CPython 3.14 on the same machine (best of three):
 
 | Setting | Default | Meaning |
 |---|---|---|
-| Server `drishti.calc.enabled` | `true` (`DRISHTI_CALC_ENABLED`) | Calc at all; off, nobody may use it and its endpoints refuse (`DRS-5002`) |
+| Server `drishti.calc.enabled` | `false` (`DRISHTI_LABS_CALC`) | The Labs switch on the server: Calc at all; off, nobody may use it and its endpoints refuse (`DRS-5002`) |
 | Server `drishti.calc.max-column-rows` | `250000` | `drishti.columns()` returns at most this many entities |
 | Server `drishti.calc.columns-budget` | `20s` | How long a columns read may wait for its source |
 | Server `drishti.calc.max-snippet-chars` | `50000` | A saved snippet's code, at most (60,000 at most in any case) |
-| Console `calc.enabled` | `true` (`DRISHTI_CALC_ENABLED`) | Off, no view offers Calc, whatever packs and roles say |
+| Console `labs.calc` | `false` (`DRISHTI_LABS_CALC`) | The Labs switch on the console: off, no view offers Calc, whatever packs and roles say |
 
 See [CONFIGURATION.md](../admin/CONFIGURATION.md#drishticalc--python-in-the-browser).
 
@@ -3468,9 +3507,9 @@ from the screen* (`netting-set`, `NS-NORTH-01`, from `view.tables`); and eight f
 | **Curve analytics: rates, futures or FX forwards** · `g_curve_analytics.py` | `curve` | Whatever the curve holds: for a rates curve, zero rates, discount factors, 3M forwards and par swap rates with their PV01 per 10m (log-linear on discount factors); for a futures strip, contango or backwardation and the annualised roll yield month by month; for an FX forward curve, outrights and the yield differential the points imply (ln(F/S)/T). | quant: `ZeroCurve`, `annuity`, `par_swap_rate` |
 | **Credit limit: utilisation, headroom and the PFE profile** · `h_credit_limit.py` | `credit-limit` | The limit's buckets: used against limit, utilisation against the early-warning line, headroom; and the peak PFE of the counterparty's netting sets in each bucket's tenor range (their exposure profiles, read in full), set against the bucket's limit: how much a new trade could add before a bucket breaches. | quant: `tenor_years`; reads: search, get |
 
-### 19. The BI client and Graphic Walker
+### 19. The BI client
 
-Calc can ask the **BI engine** for a dataset's measures and groups and get a pandas DataFrame, then explore that frame with **Graphic Walker**. Both are modules of the worker, like `drishti`:
+Calc can ask the **BI engine** for a dataset's measures and groups and get a pandas DataFrame. `drishti_bi` is a module of the worker, like `drishti`:
 
 ```python
 import drishti_bi
@@ -3481,7 +3520,6 @@ df = await drishti_bi.query_async("file:dataset:trades-basic", measures=["MTM", 
 df = await drishti_bi.query_async("file:dataset:trades-basic", measures=["MTM"], by=["trade.desk", "trade.currency"],
                                   filters={"trade.desk": ["DESK-FX", "DESK-RATES"]}, dates=("2026-10-01", "2026-10-09"), limit=500)
 show(df, "MTM by desk")
-drishti_bi.walk(df, "MTM by desk and currency")          # Graphic Walker over the frame
 ```
 
 | Call | Returns |
@@ -3489,7 +3527,6 @@ drishti_bi.walk(df, "MTM by desk and currency")          # Graphic Walker over t
 | `datasets()` / `datasets_async()` | a DataFrame of the datasets you may open |
 | `describe(dataset)` / `describe_async` | a DataFrame: `kind` (`field` or `measure`), `name`, `type` (`python` for a Python measure), `masked`, `description` |
 | `query(dataset, measures=None, by=None, filters=None, dates=None, limit=None)` / `query_async` | the engine's answer as a DataFrame, columns named as the engine names them (`trade.desk`, `MTM`) |
-| `walk(df, title=None, limit=20000)` | draws Graphic Walker over the frame (below) |
 
 `filters` is `{"table.column": [values]}` (an `in` filter for each) or a list of `{field, op, values}` (`eq ne lt le gt ge in not-in between contains starts-with is-null not-null`); `dates` is a date or `(from, to)`, the latest business day when omitted. The plain forms need JavaScript Promise Integration, like `drishti.get`; **write `await drishti_bi.query_async(...)`** to work in every browser (the error says how when it cannot pause).
 
@@ -3499,90 +3536,57 @@ The picture is real output of that cell on the sample trades dataset: ten desks,
 
 **As you.** Each call is a message from the worker to the page, which asks the same route a report's visual does (a model query, `POST /bi/api/mq`, the console passing your session to the server): **your row rules apply, and a column masked for you comes back masked** (its name is in `df.attrs["masked"]`; the measures that read it are masked too). You need the BI power; without it the call fails with the server's code (`DRS-9002`) as any read does. The worker still holds no credential and cannot reach the network.
 
-**Graphic Walker, not PygWalker.** [PygWalker](https://github.com/Kanaries/pygwalker) is a Jupyter package: it needs a Python server beside the notebook, installs a dozen dependencies Pyodide does not ship offline, and loads its front end from the internet. What it puts over a DataFrame is **[Graphic Walker](https://github.com/Kanaries/graphic-walker)** (Apache-2.0), a drag-and-drop chart builder: so Calc vendors Graphic Walker 0.5.3 itself and `walk` gives it your frame, with PygWalker's `walk(df)` shape. Drag fields to the axes, colour, size and filters; the chart is drawn; the *Data* tab shows the frame.
+## The Notebook
 
-![Graphic Walker over the frame in Calc: the fields on the left, the shelves, and the chart builder](../tutorials/img/t14/22-calc-walker.jpg)
+The **Notebook** (`/bi/notebook`, the BI rail's *Notebook*) is the one place for code over data. You open a model as an **extract**, the rows *you* may see
+(masked columns stay masked, row rules apply), and work on it in **SQL cells**, run by the server, and **Python cells**, run on the server's compute pool.
+You save the work as a **notebook** (a BI item with versions and review like any other) and **promote** what is good: a SQL cell becomes a **visual in a
+report draft**, a Python cell a Python Measure, Visual or Transform draft.
 
-* **A frame of its own.** The walker runs in an `<iframe sandbox="allow-scripts">`: no `allow-same-origin`, so its origin is opaque (**no cookie, no storage, no way to call the console or reach the page**), no forms, no navigation. Its page (`/static/calc/drishti_walker.html`) is served with a policy of its own: `default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src data: blob:; font-src data:; worker-src blob:; connect-src 'none'; form-action 'none'; sandbox allow-scripts`. **That is the one place `unsafe-eval` and inline styles are allowed**, because Graphic Walker (through Vega) compiles chart expressions and writes its styles with JavaScript; it is why the walker is a separate, sandboxed page and not part of Calc's own. The rows go in by `postMessage` and nothing goes out: `connect-src 'none'`. Calc's own page and the Pyodide worker keep their policies.
-* **Loaded on demand.** The 4.5 MB bundle loads when the frame opens, not before. `drishti_bi.py` is fetched into the worker the first time a cell names `drishti_bi`.
-* **Vendored, offline, and patched.** The bundle is built from the npm package by `tools/vendor-js/build_walker.mjs` (pinned in [VENDOR.md](../../drishti-console/web/static/vendor/VENDOR.md)): the library's modules, its workers as inline blob workers, its Tailwind sheet as the library compiled it, and **no map**: its map chart uses `react-leaflet`, whose licence (Hippocratic-2.1) the product does not take in, so that package is replaced by an empty stand-in and the map chart draws nothing. The hosts Graphic Walker names for its own services (its AI features, sample data, an image, a map stylesheet, map tiles) point at `blocked.invalid`, so nothing is attempted; the frame's policy would refuse them anyway. Opening the frame can still log a refused stylesheet and image to the console: harmless.
-* **Limits.** `walk` hands over at most 20,000 rows (`limit=`), and the run's output budget applies (`LIMITS`, section 14). Rows are plain values; dates are ISO strings.
-* **Not built:** Graphic Walker over a **report visual** or an Analyse extract (it is a Calc cell's tool); saving a Graphic Walker chart back into a report (a vega-lite visual is the way to keep a chart: [BI_GUIDE.md](BI_GUIDE.md#35-vega-lite-visuals)); PygWalker's `to_html`, cloud sharing and `walk(...)` options.
+**One analysis path: Pivot, then Report.** To slice and total a table, use the [Pivot](#pivot-slice-a-table-your-way) (`PIVOT <GO>`, or *Pivot* in the BI
+rail); to publish, share or schedule, make a BI report. The Notebook is for what a grid cannot say. **Nothing of yours runs in the console or in your
+browser**: SQL is the server's, Python the server's compute pool's. The page asks and draws. For Python in your own browser on a view's rows there is
+[Calc](#calc-python-on-any-view), a scratch pad behind a Labs switch that never publishes.
 
-## Analyse: slice, SQL and Python
-
-**Analyse** (`/bi/explore`, the rail's *Analyse*) is the analyst's bench of Drishti BI. You open a dataset as an **extract**, the rows *you* may see (masked columns stay masked, row rules
-apply), and work on it three ways: **Slice** (a drag-and-drop pivot), **SQL** (cells over the extract) and **Python** (pandas cells, with charts). You save the work as a **notebook**
-(a BI item with versions and review like any other) and **promote** what is good: a Python cell becomes a Python Measure or Visual draft, a slice or a SQL cell becomes a **visual in a new or an existing report draft**.
-**Nothing runs in your browser**: the Slice is worked out by the console, SQL is Drishti SQL run by the server over the model, Python runs in
-the console's sandbox ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 7](BI_GUIDE.md#7-the-sandbox-exactly)). The page asks and draws. A **Profile** tab ([section 15](#15-profile)) shows
-every column of the extract; your own Python **in the browser** is the [Python console](#16-the-browser-python-console), which is not a BI page.
-
-This is the reference. A walk-through is [tutorial 14](../tutorials/14-python-and-analyse.md); the design is [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) section 20.9; the quant engine behind
-`quant.price(...)` is [AI.md](../admin/AI.md#16-the-consoles-quantengine-slot-built-lean).
+The walk-through is [tutorial 14](../tutorials/14-python-and-analyse.md); the design is [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase).
 
 ### 1. At a glance
 
 ```
- dataset ──(your identity)──▶ server: masks columns, applies your row rules ──▶ extract (at most bi.explore.max_rows rows)
+ model ──(your identity)──▶ server: masks columns, applies your row rules ──▶ extract (at most bi.notebook.max_rows rows)
                                                                                     │
-        ┌──────────────────────────────┬────────────────────────────────────────────┤
-     Slice                           SQL                                         Python
-  the console                   the server: Drishti SQL over the model    the console's sandbox
-  (POST /bi/explore/pivot)      (a cell over `extract`: the console,       (a fork-server child per call)
-                                one read-only SELECT in SQLite)
+                    ┌──────────────────────────────────────┬────────────────────────┤
+                  SQL cell                              Python cell              Profile
+   the server: Drishti SQL over the model,      the server's compute pool    every column of the extract,
+   as you (POST /bi/notebook/sql)               (POST /bi/notebook/python)   no code of yours
 ```
 
-The extract is **rebuilt for you on every run** and never kept: the console holds nothing between calls, so a mask or a row rule changed on the server applies the next time you run a cell.
-
-![The Slice tab](img/analyse/slice.png)
+The extract is **rebuilt for you on every call** and never kept: the console holds nothing between calls, so a mask or a row rule changed on the server
+applies the next time you run a cell.
 
 ### 2. The extract
 
-Choose a dataset, tick the fields (columns of its tables; `id` is added for you and dropped from the extract), and **Open the extract**. The line under the form tells you what you got:
-`60 rows, 8 columns.` and, when something is masked for you, `Masked for you: MTM.` The rows are the table's *own* rows (not grouped), cut to `bi.explore.max_rows`
-(10,000); a cut says so (`60 rows of 4,000 (cut to the row limit)`). Columns are named for the table's column (`DESK`, not `trade.DESK`); two columns of the same name keep their
-table (`trade_DESK`).
+Choose a model (or a dataset, which reads as its own small model), tick the fields, choose the time (now, as of a date, or a window) and **Open the extract**.
+The line under the form tells you what you got: `60 rows, 8 columns.` and, when something is masked for you, `Masked for you: MTM.` The rows are the table's
+*own* rows (not grouped), cut to `bi.notebook.max_rows` (10,000); a cut says so (`60 rows of 4,000 (cut to the row limit)`). Columns are named for the table's
+column (`DESK`, not `trade.DESK`); two columns of the same name keep their table (`trade_DESK`).
 
-**More than one extract.** *More extracts: join several datasets* (under the form) adds further extracts to the notebook, each a name, a dataset and fields, built for you by the server exactly as the first is (your row rules, your masks; `bi.explore.max_extracts`, 6, besides the first). A **Python** cell reads one as `extract("name")` (a pandas DataFrame; a copy, so changing it changes nothing else), or by the dataset it came from, and joins them in pandas; a **SQL** cell reads each as a table of that name. Real output of the sample notebook (below), with two extracts, the trades of `trading-risk` as `df` and the netting sets' computed exposure of `counterparty-exposure` (the official results, `set_exposure`) as `exposure`, joined in a Python cell:
+**More extracts.** *More extracts: join several models* (under the form) adds further extracts to the notebook, each a name, a model and fields, built for you
+by the server exactly as the first is (your row rules, your masks; `bi.notebook.max_extracts`, 6, besides the first). A Python cell reads one as
+`extract("name")`.
 
 ![The notebook's extracts: the first extract opened, and the second, exposure, under More extracts](../tutorials/img/t14/13-analyse-extracts.jpg)
 
-```python
-pnl = df.groupby("COUNTERPARTY", as_index=False)["PNL_1D"].sum().rename(columns={"COUNTERPARTY": "counterparty", "PNL_1D": "desk_pnl"})
-ee = extract("exposure").groupby("counterparty", as_index=False)["PEAK_EE"].sum().rename(columns={"PEAK_EE": "ee_peak"})
-joined = pnl.merge(ee, on="counterparty", how="left")
-joined["pnl_per_exposure"] = joined["desk_pnl"] / joined["ee_peak"]
-result = joined.sort_values("ee_peak", ascending=False).head(15)
-```
+Every extract is the reader's, so a join of two extracts shows **their** rows: a join key that the server masks for them arrives masked and the join finds
+nothing, which is the mask doing its job. Because the extract is cut, a cell over it gives the extract's totals, not the model's: for true totals use the
+Pivot or a report.
 
-![The join cell's result: counterparties with their P&L, computed expected exposure and P&L per exposure; the line says Python, server and the rows of the extract](../tutorials/img/t14/14-analyse-join.jpg)
+### 3. SQL cells
 
-Every extract is the reader's, so a join of two extracts shows **their** rows: the join key that the server masks for them (the counterparty id, for a reader without the raw power) arrives masked and the join finds nothing, which is the mask doing its job. Each extract counts toward the answer's `masked`, and each is cut to `bi.explore.max_rows` separately. Python in the browser cannot read further extracts (Pyodide gets the first only): a cell that calls `extract(...)` runs on the server.
-
-Because the extract is cut, **Slice and SQL give the extract's totals, not the dataset's**. For true totals use a report.
-
-An extract can also be a **report visual's data** (`POST /bi/explore/extract` with `{report, page, visual, state}`), the same rows the visual drew, masked the same way; the page's
-form opens datasets, and a link *Analyse this* from a report is not built (section 12).
-
-### 3. Slice
-
-Fields appear as chips. Add one to **Rows**, **Columns**, **Values** or **Filters** with its small buttons (`R`, `C`, `V`, `F`, which work from the keyboard and on a phone) or drag it to a zone.
-A value takes an aggregation (`sum`, `avg`, `count`, `min`, `max`; a text field starts as `count`); a filter keeps rows where the field equals one of its values. The pivot redraws at once.
-The pivot is worked out by **the console** over your extract (`POST /bi/explore/pivot`: the extract is rebuilt for you, grouped, and the table and the
-filters' values come back; at most 2,000 row or column keys, `DRS-9072` beyond). The line under the table says *Worked out by the console*. The table shows the
-first 500 pivot rows. (The browser computes nothing.)
-
-![A SQL cell on the server engine: Drishti SQL over the model, the engine select, and the line naming the model and the plan](../tutorials/img/t14/19-analyse-engines.jpg)
-
-### 4. SQL
-
-**A SQL cell runs on the server by default** ([BI_DESIGN.md §3.4](../architecture/BI_DESIGN.md#34-drishti-sql-dsql-read-only-sql-over-models)):
-the cell's engine choice says *Server: Drishti SQL over the model*, and the statement is **Drishti SQL over the model the extract reads** (a model, or a
-dataset's implicit model), not over the extract. Its tables are the model's aliases, a measure is `MEASURE('name')`, `JOIN` needs no `ON` (the model's
-relationships are used), and the server answers **as you**, with your row rules and masks, through the same plan as the model query it equals. A new
-cell starts with a statement written from the model (the first text field you ticked and the model's first measure). Captured for an extract of the
-model *SQL model* (trades and desks, one measure *Sum of MTM*):
+A SQL cell is **Drishti SQL over the model the extract reads** ([BI_DESIGN.md §3.4](../architecture/BI_DESIGN.md#34-drishti-sql-dsql-read-only-sql-over-models)),
+run by the server **as you**, with your row rules and masks, through the same plan as the model query it equals. Its tables are the model's aliases, a
+measure is `MEASURE('name')`, and `JOIN` needs no `ON` (the model's relationships are used). A new cell starts with a statement written from the model (the
+first text field you ticked and the model's first measure):
 
 ```sql
 SELECT trade.CURRENCY,
@@ -3592,67 +3596,40 @@ GROUP  BY trade.CURRENCY
 LIMIT  20
 ```
 
-The cell's footer says *3 rows in 4 ms · Drishti SQL, run by the server over sql-model@1 as you · plan p_825d3a8857*, with the masked columns when
-there are any:
+The cell's footer says *3 rows in 4 ms · Drishti SQL, run by the server over sql-model@1 as you · plan p_825d3a8857*, with the masked columns when there are any:
 
-![A SQL cell: the statement above, Run (Drishti SQL, run by the server over the model), and three currencies with their Sum of MTM: EUR -75000, GBP 425000, USD -575000](img/bi-languages/analyse-dsql-cell.jpg) The console sends the cell to
-`POST /bi/explore/dsql` (`{extract, sql}`), which asks the server's `POST /api/v1/bi/sql` with the model and the cell's row limit
-(`bi.explore.sql_max_rows`, one more to say when it was cut); it never reads the SQL itself. Every source has a model: a notebook saved
-earlier that names a 2.1 dataset (`file:dataset:trades-basic`) reads the model the converter made of it (`trades-basic@1`), and so does its extract,
-which is one model query (shape rows) like every other. **Over the extract** stays selectable in each cell, and a statement that reads the table `extract` (an older notebook)
-still runs there whatever the choice.
+![A SQL cell: the statement above, Run (Drishti SQL, run by the server over the model), and three currencies with their Sum of MTM: EUR -75000, GBP 425000, USD -575000](img/bi-languages/analyse-dsql-cell.jpg)
 
-Over the extract, a SQL cell is **one `SELECT`** (or `WITH ... SELECT`) over the table **`extract`** (and over a table for each further extract of the notebook, named as it is, so `SELECT ... FROM extract JOIN exposure ON ...`):
+The console sends the cell to `POST /bi/notebook/sql` (`{extract, sql}`), which asks the server's `POST /api/v1/bi/sql` with the model and the cell's row
+limit (`bi.notebook.sql_max_rows`, one more to say when it was cut); it never reads the SQL itself. One `SELECT` per cell; text over
+`bi.notebook.sql_max_chars` (20,000) is `DRS-9072`. *Run all* runs the cells in order. A notebook that names an older dataset (`file:dataset:trades-basic`)
+reads the model the converter made of it (`trades-basic@1`).
 
-```sql
-SELECT DESK, COUNT(*) AS trades, SUM(NOTIONAL) AS notional
-FROM extract GROUP BY DESK ORDER BY notional DESC
-```
+### 4. Python cells
 
-A cell over the model is **Drishti SQL, run by the server** as you (section 4's first half). A cell that reads the table `extract` (a notebook of 2.2) runs
-on the console in an in-memory SQLite database that is **read-only by construction**: an authorizer refuses everything but `SELECT`, reads and plain functions (so `INSERT`,
-`UPDATE`, `DELETE`, `DROP`, `CREATE`, `ATTACH`, `PRAGMA` and `load_extension` are `DRS-9073`), a second statement is `DRS-9070`, text over `bi.explore.sql_max_chars` (20,000) and a query
-running past `bi.explore.sql_max_seconds` (5) are `DRS-9072`, and at most `bi.explore.sql_max_rows` (5,000) rows come back (more are cut, and the result says so). A cell over `extract` speaks SQLite's dialect (`date()`, `strftime`, `||`, `LIMIT`); the line under the result says which ran it (*Drishti SQL, run by the
-server over …* or *over the extract, run by the console*). *Run all* runs the cells in order.
-
-![A SQL cell](img/analyse/sql.png)
-
-### 5. Python
-
-A Python cell sees three names:
-
-| Name | What |
-|---|---|
-| `df` | the extract as a pandas DataFrame |
-| `extract(name)` | any other extract of the notebook (by its name, or by the dataset it came from) as a pandas DataFrame, for the same reader; `KeyError` names the extracts there are. **Server target only** |
-| `params` | a dict (empty unless the call sends some) |
-| `quant` | `quant.price(instrument, **parameters)`, `quant.instruments()`: the console's quant engine ([AI.md](../admin/AI.md#16-the-consoles-quantengine-slot-built-lean)). **Server target only** |
-
-What the cell prints (`print`) comes back as text. What it puts in **`result`** is drawn: a DataFrame or Series as a table (the first 200 rows), a dict as an **ECharts option**
-(formatter keys are removed, as for a Python visual), SVG text or PNG bytes as an image, anything else as a value. `import` works for the packages on the allow-list
-(`bi.python.packages`) that are installed, plus the safe standard library; the cell runs in the **same sandbox as a Python visual** ([BI_GUIDE.md](BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 7: no network, a
-scratch folder, CPU, memory, time and output limits).
+A Python cell sees `df` (the extract as a pandas DataFrame), `extract(name)` (any other extract of the notebook, as a DataFrame for the same reader) and
+`params`. What it prints comes back as text; what it puts in **`result`** is drawn: a DataFrame or Series as a table, a dict as an ECharts option, SVG text or
+PNG bytes as an image, anything else as a value.
 
 ```python
 g = df.groupby("DESK", as_index=False)["NOTIONAL"].sum()
-print(round(quant.price("black_scholes", spot=100, strike=100, rate=0.05, vol=0.2, years=1), 4))   # 10.4506
 result = {"title": {"text": "Notional by desk"}, "xAxis": {"type": "category", "data": list(g["DESK"])},
           "yAxis": {"type": "value"}, "series": [{"type": "bar", "data": [float(v) for v in g["NOTIONAL"]]}]}
 ```
 
-![A Python cell with a chart](img/analyse/python.png)
+**Where it runs: the server's compute pool** `python` (`config/compute/compute.yaml`), never the console and never your browser. **Run** sends the cell
+to the server (`POST /bi/notebook/python`), which reads the extract and the other extracts **as you** and runs the cell in its strict sandbox: no network,
+files held to its own folder, the cell's time and memory limits (`bi.notebook.cell_timeout_seconds`, `cell_memory_mb`), the pinned libraries only. The line above the output says where it ran, how long it took, how many rows it read and what was masked; what the cell printed shows first, then its `result` (a table, a chart option, an SVG or PNG picture, or a value); a failure shows the error and, as an author, your own code's traceback. Where the server cannot run Python safely (compute off, a Windows server), *Run* is off and says why; you can still write, save and promote cells. Whoever opens the notebook later runs them over their own rows.
+Running Python needs the **`bi-author`** power; SQL needs only `bi`.
 
-**Where it runs:** the console's sandbox, always (the line beside **Run** says *Runs on the console (sandbox)*): a child of the console's fork-server, with no
-network, a scratch folder and CPU, memory, time and output limits. A notebook of 2.2 whose cell says `target: browser` runs there too. The Analyse page keeps
-the **strict content-security policy**, with no WebAssembly. **Running Python needs the `bi-author` power**; Slice and SQL need only `bi`.
+### 5. Notebooks
 
-### 6. Notebooks
+**Save as a notebook** stores the extract's definition and every cell as a BI item of kind **`notebook`**: in *My workspace* (or, if you opened a notebook
+you may edit, as a new version of it). It has versions, diffs, review and publishing like any item ([BI_GUIDE.md](BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments));
+*Open in the Notebook* on the item page (or `/bi/notebook?item=<id>`, or the notebook picker) reopens it: the extract is rebuilt for whoever opens it, so
+**a notebook shared with someone else shows *their* rows**. Outputs are not stored, only the code.
 
-**Save as a notebook** stores the extract's definition, the slice and every cell as a BI item of kind **`notebook`**: in *My workspace* (or, if you opened a notebook you may edit, as a new version
-of it). It has versions, diffs, review and publishing like any item ([BI_GUIDE.md](BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments)); *Open in Analyse* on the item page (or `/bi/explore?item=<id>`, or the
-notebook picker) reopens it: the extract is rebuilt for whoever opens it, so **a notebook shared with someone else shows *their* rows**. Outputs are not stored, only the code.
-
-The body is YAML, checked by `POST /bi/explore/notebook/check` (unknown keys and bad cells are `DRS-9070`, naming the cell):
+The body is YAML, checked by `POST /bi/notebook/check` (unknown keys and bad cells are `DRS-9070`, naming the cell):
 
 ```yaml
 rachana: 1
@@ -3660,158 +3637,82 @@ notebook: desk-notional-first-look
 title: Desk notional, first look
 dataset: mq:trades-basic@1       # the model it reads (mq:<model>@<major>, or dataset:<name> for a dataset's implicit model)
 fields: [trade.TRADE_ID, trade.DESK, trade.PORTFOLIO, trade.NOTIONAL, trade.MTM]
-extracts:                       # optional: further extracts, read by a cell as extract("name") and in SQL as a table of that name
-  - { name: exposure, dataset: mq:counterparty-exposure@1, fields: [set_exposure.COUNTERPARTY, set_exposure.PEAK_EE] }   # the netting sets' computed exposure
+extracts:                       # optional: further extracts, read by a Python cell as extract("name")
+  - { name: exposure, dataset: mq:counterparty-exposure@1, fields: [set_exposure.COUNTERPARTY, set_exposure.PEAK_EE] }
 cells:
-  - type: slice
-    slice: { rows: [DESK], columns: [], values: [{ field: NOTIONAL, agg: sum }], filters: [] }
   - type: sql
-    source: SELECT DESK, SUM(NOTIONAL) FROM extract GROUP BY DESK
+    source: SELECT trade.DESK, MEASURE('Sum of MTM') FROM trade GROUP BY trade.DESK
   - type: python
     source: |
       result = df.groupby("DESK", as_index=False)["NOTIONAL"].sum()
-    target: server
 ```
 
-A notebook may also carry the catalogue's keys (`sample`, `tags`, `endorsement`, `owner`, `audience`); a shipped one is `config/bi/notebooks/pnl-vs-exposure-pandas.notebook.yaml`. Notebooks are **not run by the server** and have no lineage ([BI_GUIDE.md](BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments) section 10); at most `bi.explore.max_cells` (60) cells.
+A cell is `sql` or `python`. A notebook saved with a `slice` cell opens with that cell left out and a line saying so: slicing is the Pivot's. A notebook may
+also carry the catalogue's keys (`sample`, `tags`, `endorsement`, `owner`, `audience`); a shipped one is
+`config/bi/notebooks/pnl-vs-exposure-pandas.notebook.yaml`.
 
-### 7. Promote
+### 6. Promote
 
-Every promotion answers **beside the button you pressed** (one message, with an *Open the draft* link), not at the top of the page. Pressing the same promotion again for the same cell or slice does not make a duplicate: it offers **Update that draft** (the draft is written again) or **Save another**. A SQL cell promoted to a new report is titled *<dataset title> SQL* and gets a readable lower-case id. A notebook has one title: the item's title and the `title:` of its YAML always agree, whichever you rename; opening a notebook restores the Dataset and Notebook choices and the ticked fields.
+Every promotion answers **beside the button you pressed** (one message, with an *Open the draft* link). Pressing the same promotion again for the same cell
+does not make a duplicate: it offers **Update that draft** or **Save another**. Promoting writes a **draft** item in your workspace; nothing is published.
 
-Promoting writes a **draft** item in your workspace; nothing is published.
+* **A SQL cell to a report visual.** Choose where first, in the line above the tabs: **a new report draft**, or one of the report drafts you may edit (your
+  workspace and the shared ones you contribute to), and optionally the page. The cell is read by a small reader (`core/promote_report.py`), not a SQL engine:
+  plain and `GROUP BY` columns become *rows*, `MEASURE('name')` and the aggregates `sum`, `avg`, `count`, `min`, `max` of a column become *values* when the
+  model has that measure, and simple `WHERE` conditions (`=`, `<>`, `<`, `<=`, `>`, `>=`, `IN`, `NOT IN`, `BETWEEN`, `IS [NOT] NULL`, joined by `AND`) become
+  *filters*. What a report cannot say (an expression, `LIKE`, `OR`, `HAVING`, a sub-query, `ORDER BY`, `LIMIT`) is left out and listed in the notes; nothing is
+  guessed. A new report draft is `rachana: 2` reading the extract's model; an existing one is read through the server's checker, the visual is added below
+  what the page holds, and the report is written again by the designer's writer (comments in its YAML are not kept; the note says so).
 
-* **A Python cell that joins extracts to a Transform** (*Promote to a Transform*, shown greyed with "Add a second extract first" until the notebook has further extracts): each `extract("name")` becomes a parameter of `run(...)`, a use of `df` becomes the first extract, the cell's `result` is returned, and the draft's `inputs` are its parameters' names, in order (the inputs of the Python dataset that runs it). It is a draft **Python item with `interface: transform`** ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](BI_GUIDE.md#13-transforms-a-table-in-a-table-out)); check it, publish it, then write the Python dataset that names it (`source: { python: <item>, inputs: { <name>: <a model query> } }`, [BI_DESIGN.md › The model layer: the specification, section 1.2](../architecture/BI_DESIGN.md#12-sources)): the promotion says so in its notes. `result` must be a pandas DataFrame with column names of letters, digits and underscore.
+  ![A SQL cell promoted into an existing report draft: the note says what was left out and that the report was written again](../tutorials/img/t14/20-promote-existing.jpg)
 
-![After promoting the join cell: "Python transform draft saved in your workspace: ..."](../tutorials/img/t14/15-promote-transform.jpg)
+* **A Python cell to a Measure or a Visual** (the cell's buttons): the cell's `df` becomes the function's `table`, `result` is returned, and the packages the
+  cell imports go into the manifest ([BI_GUIDE.md](BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 3). Check it on the
+  item page, then publish.
+* **A Python cell that joins extracts to a Transform** (*Promote to a Transform*, greyed with "Add a second extract first" until the notebook has one): each
+  `extract("name")` becomes a parameter of `run(...)`, a use of `df` becomes the first extract, and the cell's `result` is returned.
 
-* **A Python cell to a Measure or a Visual** (the cell's buttons): the cell's `df` becomes the function's `table`, `result` is returned, the packages the cell imports go into the manifest
-  ([BI_GUIDE.md](BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 3). Check it with *Check the Python* on the item page, edit the entry's contract (a measure returns one number per group, a visual an
-  ECharts option, SVG or PNG), then publish. A measure also needs a dataset measure `{ python, inputs, by }` that names it.
-* **A slice or a SQL cell to a report visual** (section 14): a visual, with its dataset, wells and filters, in a new report draft or added to one you already have.
+The route is the console's `POST /bi/notebook/promote` with `{to: report, name, dataset, sql, columns, qualified, target?, page?}` or
+`{to: measure | visual | transform, name, source, columns, extracts?}`.
+
+### 7. Profile
+
+The **Profile** tab shows every column of the extract: its type, what its text looks like (numbers or dates kept as text), empty values (count and %), distinct
+values, whether it could be a key, min and max (and the mean of a number), the five most common values and a histogram of a number. No code of yours runs
+(`POST /bi/notebook/profile` with `{extract}`), and it is drawn by the same panel as the [Transform editor](BI_GUIDE.md#175-profiling)'s. A column masked for
+you says so and profiles as empty.
+
+![The Notebook, Profile tab: the extract of the model prep-model as the analyst ann sees it, PRICE masked for her](img/bi-transform/07-analyse-profile.png)
 
 ### 8. Who sees what
 
-The server decides, as everywhere in BI: the extract request is a model query, `POST /api/v1/bi/mq` (or the report's query), **as you**, so the same column masks and row rules as a
-report apply, and a masked column arrives empty. SQL and Python only ever see that extract; the sandbox has no network and no way back to the server. A cell cannot widen access, and a
-saved notebook holds code, not data. Python needs `bi-author` because arbitrary code runs in the console's worker pool (`bi.python.workers`).
+The server decides, as everywhere in BI: the extract is a model query, `POST /api/v1/bi/mq`, **as you**, so the same column masks and row rules as a report
+apply, and a masked column arrives empty. A SQL cell is answered by the server as you; a Python cell will run on the pool over the extract built for you. A
+cell cannot widen access, and a saved notebook holds code, not data.
 
-### 9. Settings
+### 9. Settings, errors and routes
 
-The console's `bi.explore.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md)):
+The console's `bi.notebook.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md)):
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `max_rows` (`DRISHTI_BI_EXPLORE_MAX_ROWS`) | `10000` | most rows of an extract; 10 to 100,000 |
+| `max_rows` (`DRISHTI_BI_NOTEBOOK_MAX_ROWS`) | `10000` | most rows of an extract; 10 to 100,000 |
 | `max_fields` | `60` | most columns of an extract |
-| `sql_max_rows`, `sql_max_seconds`, `sql_max_chars` | `5000`, `5`, `20000` | the SQL cell's limits |
-| `cell_timeout_seconds`, `cell_memory_mb`, `cell_max_chars` | `20`, `512`, `65536` | a Python cell's limits (also capped by `bi.python.max_timeout_seconds`, `max_memory_mb`) |
+| `sql_max_rows`, `sql_max_chars` | `5000`, `20000` | a SQL cell's limits |
+| `cell_timeout_seconds`, `cell_memory_mb`, `cell_max_chars` | `20`, `512`, `65536` | a Python cell's limits |
 | `max_cells` | `60` | most cells in a notebook |
 | `max_extracts` | `6` | most further extracts in a notebook, besides the first (`DRS-9072`) |
-| `quant_engine` | `stand-in` | the engine behind `quant.price` |
 
-The Python runner's own `bi.python.*` settings (workers, packages, limits) apply to cells too. **The server's `drishti.bi.report.python-packages` and the console's
-`bi.python.packages` must list the same packages** (a test, `test_python_packages_agree_between_the_server_and_the_console`, fails the build otherwise).
+**The packages a Python cell may import** are the server's `drishti.bi.report.python-packages` that `config/compute/locks/python.lock` pins (a test holds the two together); a cell runs on the server's compute pool, as the person running it ([BI_GUIDE.md section 34](BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python)).
 
-### 10. Errors
-
-Analyse uses the Python items' codes ([API_GUIDE.md](API_GUIDE.md) table; [TROUBLESHOOTING.md](TROUBLESHOOTING.md)):
-
-| Code | HTTP | In Analyse |
+| Code | HTTP | In the Notebook |
 |---|---|---|
-| `DRS-9070` | 422 | the request is wrong (no fields, a bad name, a notebook that does not check, a SQL syntax error, two statements, a cell that does not parse) |
-| `DRS-9071` | 422 | the Python cell raised (the traceback is shown to `bi-author`) |
-| `DRS-9072` | 413 or 504 | a limit: SQL text, SQL time, cell size, memory, time, output, extract input |
-| `DRS-9073` | 403 | refused: SQL that is not a plain SELECT, Python that needs the network, a file or a package it did not list, or Python without `bi-author` |
-| `DRS-9074` | 503 | the runner is off, busy or lacks `pandas`/`pyarrow` |
+| `DRS-9070` | 422 | the request is wrong (no fields, a bad name, a notebook that does not check, a SQL syntax error, a slice sent to promote) |
+| `DRS-9072` | 413 | a limit: SQL text, cell size, extract fields or extracts |
+| `DRS-9073` | 403 | refused: Python without `bi-author` |
+| `DRS-9074` | 503 | the console lacks `pyarrow` |
 
-The server's own refusals (`DRS-9001` no such dataset, `DRS-9020` series, a denied dataset) come through unchanged.
-
-### 11. The routes
-
-All are the console's own, JSON from its pages only (same-origin, `application/json`, the session cookie; no personal token): `GET /bi/explore`, `GET /bi/explore/status`, `POST /bi/explore/extract`,
-`POST /bi/explore/sql`, `POST /bi/explore/python`, `POST /bi/explore/profile`, `POST /bi/explore/notebook/check`, `POST /bi/explore/promote`; and the
-Python console's `GET /pyconsole`, `POST /pyconsole/extract`, `POST /pyconsole/promote`. Tables: [API_GUIDE.md](API_GUIDE.md) (console routes of Python in BI). Saving
-uses the existing `POST /api/v1/bi/workspaces/me/items` and `PUT /api/v1/bi/items/{id}`.
-
-### 12. Built and not built
-
-**Built (phase 9, lean).** The extract, Slice, SQL cells, Python cells on the server, notebooks as items, promotion of cells and slices, the `QuantEngine` slot with a stand-in.
-
-**Built with several datasets (section 2, BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10).** Several masked extracts in one notebook, `extract("name")` in a Python cell and a table per extract in SQL, the notebook's `extracts:`, and the promotion of a join cell to a Python Transform draft.
-
-**Not built, and not faked.**
-
-* **Promoting a SQL cell the page cannot read** as a query over `extract` goes only as far as it can be read (section 14). (Every extract is the console's.)
-* **Extracts of a million rows**, Perspective in Analyse, Graphic Walker over an extract (it is in Calc: [section 19](#19-the-bi-client-and-graphic-walker)), a *Data* tab (editing the extract), *Notes* cells, outputs saved with a notebook, scheduled notebook runs, parameters
-  and widgets, sharing a notebook's outputs, a link *Analyse this* from a report visual or from a terminal view, cell tests, and an `extract(...)` of a **report visual** (further extracts are datasets).
-* **Pivot extras**: grand totals and subtotals in the Slice (use a matrix in a report for true totals), sorting by a value, number formats.
-* **Quant:** the real engine (QLRisk).
-
-### 13. Where each cell runs: no WebAssembly in BI
-
-No BI page loads WebAssembly. The servers compute every number and the browser draws ([BI_DESIGN.md](../architecture/BI_DESIGN.md) principle P3): DuckDB-Wasm
-and the browser's Python (Pyodide) are not loaded by Analyse or any BI page. The Slice is the console's, SQL the server's (or the console's
-for a cell over `extract`), Python the console's sandbox. Calc (the terminal's Python) still uses Pyodide in its own worker, and so does the
-browser Python console ([section 16](#16-the-browser-python-console)), which is not a BI page.
-
-### 14. Promote to a report visual
-
-*Promote to a report draft* on the Slice tab and *Promote to a report visual* on a SQL cell make a **visual** from what you did. Choose where first, in the line above the tabs: **a new report draft**, or one of the report drafts you may edit (your workspace and the shared ones you contribute to), and optionally the page.
-
-![A SQL cell promoted into an existing report draft: the note says what was left out and that the report was written again](../tutorials/img/t14/20-promote-existing.jpg)
-
-| From | The visual |
-|---|---|
-| a **slice** | a **matrix** (rows, one column field, values) when a value matches a measure of the model, else a **table** of the fields, else a **card**; the slice's **filters** become the visual's `filters` (`field`, `op: in`, `values`) |
-| a **SQL cell** | read by a small reader (`core/promote_report.py`), not a SQL engine: the plain columns and `GROUP BY` columns become *rows* (or the table's columns), the aggregates `sum`, `avg`, `count`, `min`, `max` of a column become *values*, and simple `WHERE` conditions (`col = 'x'`, `<>`, `<`, `<=`, `>`, `>=`, `IN (...)`, `NOT IN`, `BETWEEN a AND b`, `IS [NOT] NULL`, joined by `AND`) become *filters* |
-
-* **Values are measures.** A report shows the model's measures (`GET /models/<ref>/describe`), so an aggregate becomes a value only when the model has a measure that is exactly that (`sum(trade.MTM)`; `count(*)` is the measure `count(trade)`); the notes name each one that is missing so you add it to the model. Names are mapped from the extract's (`desk`) back to the model's (`trade.desk`).
-* **What cannot be said is said.** A join or a sub-query, an expression (`NOTIONAL * 2`), `LIKE`, `OR`, `HAVING`, `count(distinct ...)` are left out and listed in the notes; `ORDER BY` and `LIMIT` are left out too (a visual sorts and limits in its own settings). Nothing is guessed.
-* **The model.** A new report draft is `rachana: 2` with `model:` the model the extract was opened from (`trades-basic@1`). A report reads one model, so a slice of another model is not added to an existing report: `DRS-9070` says which model each reads; promote it to a new report instead.
-* **An existing report** is read through the server's checker (`POST /bi/api/reports/validate`), the visual is added **below** what the page holds with a free id (`slice`, `sql`, then `slice-2` ...), and the report is written again by the designer's writer (`/reports/format`) and saved as the item's **draft** (`PUT /bi/api/items/<id>`). Comments in the report's YAML are **not kept** (the note says so); nothing is published. The target must be a report item you may edit: a shipped one, or one that is not a report, is `DRS-9070`.
-* In both cases the draft is yours to finish in the designer, then check and publish like any report.
-
-The route is the console's `POST /bi/explore/promote` with `{to: report, name, dataset, slice, filters}` or `{to: report, name, dataset, sql}`, plus `columns` and `qualified` (the extract's names and the dataset's), and `target` and `page` for an existing report; it answers `{kind: report, title, yaml, notes, target, visual}`.
-
-### 15. Profile
-
-The **Profile** tab shows every column of the extract: its type, what its text looks like (numbers or dates kept as text), empty values (count
-and %), distinct values, whether it could be a key (every row its own value), min and max (and the mean of a number), the five most common values and a
-histogram of a number. It is worked out by the console in its sandbox over the rows you may see (`POST /bi/explore/profile` with `{extract}`; no code of
-yours runs), and drawn by the same panel as the [Transform editor](BI_GUIDE.md#175-profiling)'s. A column masked for you says so and profiles as empty.
-
-![Analyse, Profile tab: the extract of the model prep-model as the analyst ann sees it, PRICE masked for her](img/bi-transform/07-analyse-profile.png)
-
-### 16. The browser Python console
-
-**BI → Python console** (`/pyconsole`)
-is personal, just-in-time analysis: **your own Python, in your browser**, on a masked extract of a model, with nothing kept or shared until you promote a
-result. It is deliberately **not a BI page** (principle P3: no BI page computes): Analyse and every `/bi` page still load no WebAssembly; the console is to a
-model what Calc is to a terminal view, and runs your code in **Calc's Web Worker** (Pyodide, the one script allowed to compile WebAssembly; the page keeps
-the strict policy).
-
-1. **Extract.** Choose a model or a dataset, tick the fields, optionally a date, and *Open the extract*. The console asks the server for the rows **as
-   you** (a model query of rows: your row rules; a masked column arrives masked and is named), at most `bi.pyconsole.max_rows` (20,000), and hands them to
-   the page (`POST /pyconsole/extract`). The worker gets them once; it never fetches data and holds no credential.
-2. **Python.** `df` is the extract as a pandas frame (fresh on every run; `df.attrs["masked"]` names the masked columns). `show(x, title)` draws a table,
-   `chart(df, kind="bar", x=..., y=...)` a chart (line, bar, scatter, hist), `print` prints, and a value in `result` is shown when nothing else is.
-   *Run in the browser* (Ctrl+Enter); *Stop* ends the worker. numpy, pandas, scipy, statsmodels and matplotlib load on first use.
-
-   ![The browser Python console: an extract of 60 rows, a cell that totals QUANTITY by book, its table and chart, run in the browser](img/bi-transform/05-browser-console.png)
-
-3. **Promote to the server.** When a result is worth keeping, give it a title and *Promote to the server* (bi-author): the console rebuilds the extract
-   **for you** on the server side and runs the **same code on the console backend**, in the Analyse cell sandbox ([section 5](#5-python); `show()` is the
-   cell's answer when it sets no `result`, `chart()` is skipped there), then compares the two answers (*The same answer as in your browser*, or not) and
-   keeps the code as a **notebook draft** in your workspace (`POST /pyconsole/promote`). Open it in Analyse, share it, review and publish it like any
-   notebook: whoever opens it gets **their own** rows. Code that fails on the backend is not kept.
-
-   ![Promoted: run on the console backend over the 60 rows rebuilt for you, the same answer as in the browser, saved as a notebook draft](img/bi-transform/06-promoted.png)
-
-| Setting (console) | Default | Meaning |
-|---|---|---|
-| `bi.pyconsole.enabled` | `true` (`DRISHTI_BI_PYCONSOLE_ENABLED`) | false: no `/pyconsole` |
-| `bi.pyconsole.max_rows` | `20000` (`DRISHTI_BI_PYCONSOLE_MAX_ROWS`) | most rows of an extract handed to the browser (10 to 100,000) |
-
-It needs the BI power and Calc's runtime installed on the console (`tools/fetch-pyodide.sh`; no internet afterwards); promoting needs **bi-author**. What
-the browser computes stays in that tab: a number shown to someone else always comes from the server or the console backend.
+The server's own refusals (`DRS-9001` no such dataset, a denied model) come through unchanged. The routes are the console's own, JSON from its pages only
+(same-origin, the session cookie): `GET /bi/notebook`, `GET /bi/notebook/status`, `POST /bi/notebook/extract`, `POST /bi/notebook/sql`,
+`POST /bi/notebook/profile`, `POST /bi/notebook/check`, `POST /bi/notebook/promote`. The older addresses `/bi/explore` (Analyse) and `/pyconsole` open the
+Notebook.

@@ -25,10 +25,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The BI migrations of stored items (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8.3; docs/guides/TROUBLESHOOTING.md "Migration problems"): old-syntax
- * expressions to DEL v2 ({@link ExpressionUpgrade}), then {@code rachana: 1} datasets to datasets and models ({@link ModelUpgrade}). Run once at start-up ({@code drishti.bi.migrate.on-start}), and by a bi-admin from the API or
- * {@code drishti.py bi migrate --expressions [--dry-run]}. Runs are serialised; each is idempotent; what a run could not convert is listed in
- * {@link MigrationProblems}, shown in Admin, BI settings and on the item's page.
+ * The BI migrations of stored items (docs/guides/TROUBLESHOOTING.md "Migration problems"): every stored dataset and model into the table layer
+ * ({@link com.ash.drishti.server.tables.StoredTablesMigration}, BI_FOUNDATION_2911E.md 4.3), then the 2.3 boards into reports ({@link BoardUpgrade}).
+ * Run once at start-up ({@code drishti.bi.migrate.on-start}); boards also by a bi-admin from the API or {@code drishti.py bi migrate --boards [--dry-run]}.
+ * Runs are serialised; each is idempotent; what a run could not convert is listed in {@link MigrationProblems}, shown in Admin, BI settings and on
+ * the item's page.
  */
 public final class BiMigration {
 
@@ -36,9 +37,8 @@ public final class BiMigration {
 
     private final MigrateProperties props;
     private final MigrationProblems problems = new MigrationProblems();
-    private final ExpressionUpgrade expressions;
-    private final ModelUpgrade models;
     private final BoardUpgrade boards;
+    private final com.ash.drishti.server.tables.StoredTablesMigration tables;
     private final AuditLog audit;
     private final Object running = new Object();
 
@@ -46,9 +46,9 @@ public final class BiMigration {
         this.props = props;
         this.audit = audit;
         StoredRewrite rewrite = new StoredRewrite(store, audit, versionsKeep, revisionsKeep);
-        this.expressions = new ExpressionUpgrade(store, rewrite, problems);
-        this.models = new ModelUpgrade(store, rewrite, problems, audit, versionsKeep, revisionsKeep);
         this.boards = new BoardUpgrade(store, rewrite, problems);
+        this.tables = new com.ash.drishti.server.tables.StoredTablesMigration(store, audit, new com.ash.drishti.server.bi.expr.DelTablesTranslator(),
+                java.time.Clock.systemUTC());
         bi.migrationProblems(item -> item == null ? problems.view() : problems.of(item).stream().map(MigrationProblems.Problem::toMap).toList());
     }
 
@@ -59,19 +59,42 @@ public final class BiMigration {
             return;
         }
         try {
-            expressions(props.actor(), false);
+            tables(props.actor(), false);                                          // BI_FOUNDATION_2911E.md 4.3: every stored dataset and model into the layer
         } catch (RuntimeException e) {
-            LOG.error("BI expression migration at start-up failed; stored items are unchanged where it stopped: {}", e.toString(), e);
-        }
-        try {
-            models(props.actor(), false);                                          // after the expressions: the converter reads DEL v2
-        } catch (RuntimeException e) {
-            LOG.error("BI model migration at start-up failed; stored items are unchanged where it stopped: {}", e.toString(), e);
+            LOG.error("the table layer's migration of stored items at start-up failed; stored items are unchanged where it stopped: {}", e.toString(), e);
         }
         try {
             boards(props.actor(), false);                                          // 2.4.0 (R7): boards become reports with board pages
         } catch (RuntimeException e) {
             LOG.error("BI board migration at start-up failed; stored boards are unchanged where it stopped: {}", e.toString(), e);
+        }
+    }
+
+    /**
+     * Migrates (or, with {@code dryRun}, plans) every stored BI dataset and model into a table or model of the table layer, every version in place,
+     * DEL into Rachana ({@link com.ash.drishti.server.tables.StoredTablesMigration}); a refused item keeps its text and the reason on its page.
+     */
+    public Map<String, Object> tables(String actor, boolean dryRun) {
+        synchronized (running) {
+            List<com.ash.drishti.server.tables.StoredTablesMigration.Outcome> out = tables.run(actor, dryRun);
+            Map<String, Object> r = new LinkedHashMap<>();
+            r.put("scanned", out.size());
+            r.put("converted", out.stream().filter(o -> "migrated".equals(o.state()) || "would migrate".equals(o.state())).count());
+            r.put("problems", out.stream().filter(o -> "refused".equals(o.state())).count());
+            r.put("items", out.stream().map(o -> {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("item", o.item());
+                m.put("kind", o.kind());
+                m.put("state", o.state());
+                m.put("versions", o.versions());
+                m.put("reason", o.reason());
+                return m;
+            }).toList());
+            if (!dryRun) {
+                audit.record(actor, "bi-migration-run", "tables", r.get("converted") + " migrated, " + r.get("problems") + " refused, " + r.get("scanned") + " scanned");
+                out.stream().filter(o -> "refused".equals(o.state())).forEach(o -> LOG.warn("stored item {} not migrated into the table layer: {}", o.item(), o.reason()));
+            }
+            return r;
         }
     }
 
@@ -81,30 +104,6 @@ public final class BiMigration {
             Map<String, Object> r = boards.run(actor, dryRun);
             if (!dryRun) {
                 audit.record(actor, "bi-migration-run", BoardUpgrade.STEP, r.get("converted") + " converted, " + r.get("problems") + " with problems, " + r.get("scanned")
-                        + " scanned");
-            }
-            return r;
-        }
-    }
-
-    /** Converts (or, with {@code dryRun}, lists) the stored items in the old expression syntax. */
-    public Map<String, Object> expressions(String actor, boolean dryRun) {
-        synchronized (running) {
-            Map<String, Object> r = expressions.run(actor, dryRun);
-            if (!dryRun) {
-                audit.record(actor, "bi-migration-run", ExpressionUpgrade.STEP, r.get("converted") + " converted, " + r.get("problems") + " with problems, "
-                        + r.get("scanned") + " scanned");
-            }
-            return r;
-        }
-    }
-
-    /** Converts (or, with {@code dryRun}, plans) the stored {@code rachana: 1} datasets to datasets and models, and rebinds their reports. */
-    public Map<String, Object> models(String actor, boolean dryRun) {
-        synchronized (running) {
-            Map<String, Object> r = models.run(actor, dryRun);
-            if (!dryRun) {
-                audit.record(actor, "bi-migration-run", ModelUpgrade.STEP, r.get("converted") + " converted, " + r.get("problems") + " with problems, " + r.get("scanned")
                         + " scanned");
             }
             return r;

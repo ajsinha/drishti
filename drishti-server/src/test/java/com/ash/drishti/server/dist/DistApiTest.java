@@ -66,7 +66,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/dist-api-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/dist-api-overlay/added.yaml",
-        "drishti.bi.dir=${drishti.test.dir}/dist-api-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/dist-api-store/${random.uuid}",
+        "drishti.bi.dir=${drishti.test.dir}/dist-api-folder", "drishti.tables.root=${drishti.test.dir}/dist-api-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/dist-api-store/${random.uuid}",
         "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/dist-api-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.dist-lake.plugin=file", "drishti.sources.connectors.dist-lake.kinds[0]=trade",
@@ -144,6 +144,7 @@ class DistApiTest {
                     measures:
                       Notional: { expr: "sum(trades.notional)" }
                       Trades: { expr: "count(trades)" }
+                      MTM: { expr: "sum(trades.mtm)" }
                     security:
                       rows:
                         - { role: desk-head, where: "trades.desk in user.desks" }
@@ -165,10 +166,12 @@ class DistApiTest {
                           - { id: ccy, type: slicer, title: Currency, at: { x: 3, y: 0, w: 3, h: 2 }, wells: { field: [trades.currency] }, format: { mode: list } }
                           - { id: by-desk, type: bar, title: Notional by desk, at: { x: 0, y: 2, w: 6, h: 4 }, wells: { axis: [trades.desk], values: [Notional] } }
                           - { id: pnl, type: table, title: Trades with MTM, at: { x: 6, y: 2, w: 6, h: 4 }, wells: { columns: [trades.tradeId, trades.desk, trades.mtm] }, limit: 6 }
+                          - { id: mtm-by-desk, type: bar, title: MTM by desk, at: { x: 0, y: 6, w: 6, h: 4 }, wells: { axis: [trades.desk], values: [MTM] } }
                       - id: other
                         title: Other
                         visuals: []
                     """);
+            com.ash.drishti.server.bi.TablesFolder.migrate(datasets.getParent());     // tables migrate: the datasets and models become the layer's, the reports rebound
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }
@@ -266,6 +269,48 @@ class DistApiTest {
         String ritaRows = rita.get("xl/worksheets/sheet4.xml");
         assertThat(ritaRows).as("rita may see MTM").containsPattern("<c r=\"C\\d+\" s=\"3\"><v>-?\\d+(\\.\\d+)?</v></c>");
         assertThat(annRows).as("ann's MTM is masked: no number in that column").doesNotContainPattern("<c r=\"C\\d+\" s=\"[23]\">");
+    }
+
+    @Test @Order(4)
+    void aMeasureOverAMaskedColumnIsNeverChartedNorExportedForAReaderItIsMaskedFor() throws Exception {
+        String body = target("\"page\":\"main\",\"state\":{" + DATES + "}");
+        Map<String, String> rita = unzip(file("xlsx", as("rita", "bi-risk"), body));
+        Map<String, String> ann = unzip(file("xlsx", as("ann", "bi-analyst"), body));
+        long ritaCharts = rita.keySet().stream().filter(n -> n.startsWith("xl/charts/chart")).count();
+        long annCharts = ann.keySet().stream().filter(n -> n.startsWith("xl/charts/chart")).count();
+        assertThat(rita.get("xl/workbook.xml")).contains("MTM by desk");
+        assertThat(ritaCharts).as("rita may see MTM: both bar visuals are charted").isEqualTo(2);
+        assertThat(annCharts).as("MTM is masked for ann: its visual has a data sheet and no chart").isEqualTo(1);
+        assertThat(ann.entrySet().stream().filter(e -> e.getKey().startsWith("xl/charts/chart")).map(Map.Entry::getValue))
+                .noneMatch(c -> c.contains("MTM"));
+        String annMtm = ann.get("xl/worksheets/sheet5.xml");
+        assertThat(annMtm).as("the visual's sheet holds no figure for ann (a bar sorted by a masked measure says why)").doesNotContain("<v>");
+        String target = target("\"page\":\"main\",\"visual\":\"mtm-by-desk\",\"state\":{" + DATES + "}");
+        String ritaCsv = new String(file("csv", as("rita", "bi-risk"), target), StandardCharsets.UTF_8);
+        assertThat(ritaCsv.lines().filter(l -> l.startsWith("DESK-"))).hasSize(3).allMatch(l -> l.matches("DESK-[A-C],-?\\d.*"));
+        String csv = new String(file("csv", as("ann", "bi-analyst"), target), StandardCharsets.UTF_8);
+        assertThat(csv.lines()).as(csv).noneMatch(l -> l.matches("DESK-[A-C],.*\\d.*"));
+        String jsonl = new String(file("jsonl", as("ann", "bi-analyst"), target), StandardCharsets.UTF_8);
+        assertThat(jsonl.lines()).as(jsonl).noneMatch(l -> l.matches(".*\"MTM\":-?\\d.*"));
+        for (String f : List.of("pdf", "png")) {                                                  // the same masked document, drawn
+            assertThat(file(f, as("ann", "bi-analyst"), target)).isNotEmpty();
+        }
+        // the query API under the same report: the column is marked masked and carries no number
+        JsonNode q = ok(send("POST", "/api/v1/bi/mq", as("ann", "bi-analyst"), "{\"mq\":1,\"model\":\"dist-lake@1\",\"select\":{\"fields\":[\"trades.desk\"],"
+                + "\"measures\":[\"MTM\"]},\"time\":{\"as-of\":\"2026-10-08\"}}"));
+        JsonNode mtmCol = null;
+        int at = -1;
+        for (int i = 0; i < q.path("columns").size(); i++) {
+            if ("MTM".equals(q.path("columns").get(i).path("name").asText())) {
+                mtmCol = q.path("columns").get(i);
+                at = i;
+            }
+        }
+        assertThat(mtmCol).as(q.toString()).isNotNull();
+        assertThat(mtmCol.path("masked").asBoolean()).as(q.toString()).isTrue();
+        for (JsonNode row : q.path("rows")) {
+            assertThat(row.get(at).isNumber()).as("no MTM figure for ann: " + q).isFalse();
+        }
     }
 
     @Test @Order(2)

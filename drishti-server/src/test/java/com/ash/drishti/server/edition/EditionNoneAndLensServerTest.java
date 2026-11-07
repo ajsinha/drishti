@@ -41,7 +41,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
  */
 @SpringBootTest(properties = {"drishti.lenses=risk", "drishti.packs.enabled=default", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false",
         "drishti.var.official.enabled=false", "drishti.var.official.on-start=false", "drishti.ccr.exposure.official.enabled=false",
-        "drishti.bi.dir=../config/bi", "drishti.bi.query.store-dir=${drishti.test.dir}/lens-bi-store/${random.uuid}",
+        "drishti.bi.dir=../config/bi", "drishti.tables.root=../config/tables", "drishti.bi.query.store-dir=${drishti.test.dir}/lens-bi-store/${random.uuid}",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/lens-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class EditionNoneAndLensServerTest {
@@ -81,7 +81,7 @@ class EditionNoneAndLensServerTest {
         assertThat(packs).containsExactlyInAnyOrderElementsOf(Arrays.asList(PackPaths.DEFAULT_ENABLED.split(",")));
         assertThat(PackPaths.DEFAULT_ENABLED).isEqualTo("core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets");
         assertThat(functions(get("/api/v1/functions"))).contains("FRTB", "STR", "CVA", "VRES", "EXP");
-        assertThat(datasets(get("/api/v1/bi/datasets"))).contains("file:dataset:trades-basic-trade", "file:dataset:market-risk-var-latest");
+        assertThat(datasets(get("/api/v1/bi/datasets"))).contains("file:table:bi.trades_basic_trade", "file:table:bi.market_risk_var_latest");
     }
 
     @Test
@@ -91,7 +91,7 @@ class EditionNoneAndLensServerTest {
         assertThat(inLens).contains("VRES", "EXP").doesNotContain("FRTB", "STR", "CVA");
         assertThat(functions(get("/api/v1/functions"))).contains("FRTB");                // the next person, without the lens: everything
         List<String> lensDatasets = datasets(get("/api/v1/bi/datasets").header(EditionContext.HEADER, "risk"));
-        assertThat(lensDatasets).contains("file:dataset:market-risk-var-latest").doesNotContain("file:dataset:trades-basic-trade");
+        assertThat(lensDatasets).contains("file:table:bi.market_risk_var_latest").doesNotContain("file:table:bi.trades_basic_trade");
         MvcResult hidden = mvc.perform(get("/api/v1/views/frtb-sensitivity/FRTB-RATES-1").header(EditionContext.HEADER, "risk")).andReturn();
         assertThat(hidden.getResponse().getContentAsString()).contains("DRS-4023");
         // an unknown lens is no lens: the full product

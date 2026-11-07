@@ -96,7 +96,7 @@ routes:
   fund-holder: funds-store
   index-funds: funds-store
 
-# The tables this pack recommends (docs/guides/LAKE_GUIDE.md section 7): copied into a lake file the first time a writer meets
+# The tables this pack recommends (docs/guides/DATA_LAKE_GUIDE.md section 12): copied into a lake file the first time a writer meets
 # the kind; config/lakes/demo.yaml holds them for the demo lake. Its connectors above name the lake and these entries.
 lake:
   tables:

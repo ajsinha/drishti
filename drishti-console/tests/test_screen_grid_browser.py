@@ -104,7 +104,7 @@ def test_areas_split_tabs_and_arrange(browser, stack, theme):
     url = design(pg, stack, AREAS)
     pg.request.delete(stack + "/me/arrange/qa-book-grid", headers={"Origin": stack})      # each theme starts from the author's layout
     pg.goto(url)
-    wait(pg, "document.querySelector('[data-sgrid][data-sg-ready] .sg-split')")
+    wait(pg, "document.querySelector('[data-sgrid][data-sg-ready] [data-sg-split]')")
     # the picture: head across, trades left of detail; detail shows tabs
     box = {n: pg.locator(f'[data-sg-area="{n}"]').bounding_box() for n in ("head", "trades", "detail")}
     assert box["head"]["width"] > box["trades"]["width"] + box["detail"]["width"] - 40 and box["trades"]["x"] < box["detail"]["x"]

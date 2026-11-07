@@ -114,7 +114,8 @@
         return td;
       })));
     }
-    const table = h('table', { class: 'tbl bi-tbl bi-vgrid bi-vis-table' + (f.wrap ? ' bi-wrap' : ''), 'data-plain': true }, h('caption', { class: 'visually-hidden', text: spec.title || 'Table' }), h('thead', {}, head), body, foot);
+    const table = h('table', { class: 'tbl bi-tbl bi-vgrid bi-vis-table' + (f.wrap ? ' bi-wrap' : ''), 'data-plain': true,
+      'data-resize': 'columns', 'data-resize-key': 'bi.' + location.pathname + '|' + (spec.id || spec.title || 'table') }, h('caption', { class: 'visually-hidden', text: spec.title || 'Table' }), h('thead', {}, head), body, foot);
     if (typeof f.fontSize === 'number') { table.style.fontSize = f.fontSize + 'px'; }
     B.clear(host).appendChild(h('div', { class: 'tbl-wrap bi-vis-scroll' }, table));
     if (!rows.length) { host.appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text: 'No rows for this selection.' })); }
@@ -261,7 +262,7 @@
   V.entityView = function (host, spec, ctx) {
     const field = spec.wells.key && spec.wells.key[0];
     const col = field ? B.column(ctx.index, field) : null;
-    const kind = (spec.format && spec.format.kind) || (col && col.kind) || '';
+    const kind = (spec.format && spec.format.kind) || (col && (col.entity || col.kind)) || '';          // a model's table: the kind of entity its rows are
     const note = (text) => B.clear(host).appendChild(h('div', { class: 'bi-vis-note bi-entity-note', role: 'status', 'data-entity': 'none' }, h('p', { text })));
     if (!ctx.entity) { note('Shows the ' + (kind || 'entity') + ' view of the ' + (field ? B.label(field) : 'key') + ' selected in another visual, in the report viewer.'); return NONE; }
     if (!field || !kind) { note('Name the key field of an entity (a table\'s id column) in the key well.'); return NONE; }

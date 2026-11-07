@@ -55,8 +55,13 @@ public final class LayerLineage implements BiGovernance.Layered {
     }
 
     private static boolean isLayer(BiStore.Item i, String body) {
-        return "model".equals(i.kind()) || "dataset".equals(i.kind()) && DatasetDefParser.isVersion2(body)
+        return "model".equals(i.kind()) || isTable(i, body)
                 || "report".equals(i.kind()) && ReportParser.parse(body).report() != null && ReportParser.parse(body).report().model() != null;
+    }
+
+    /** A table of the layer: an item of the kind {@code table}, or a stored dataset item that holds one. */
+    private static boolean isTable(BiStore.Item i, String body) {
+        return ("table".equals(i.kind()) || "dataset".equals(i.kind())) && DatasetDefParser.isTable(body);
     }
 
     // ---- lineage -----------------------------------------------------------------------------------------------------
@@ -75,7 +80,7 @@ public final class LayerLineage implements BiGovernance.Layered {
             m.put("model", Map.of("name", v.def().name(), "version", v.def().version()));
             m.put("upstream", upstream(v, null));
             downstream(p, i, v, m);
-        } else if ("dataset".equals(i.kind())) {
+        } else if (isTable(i, body)) {
             datasetLineage(p, i, body, m);
         } else {
             Report rep = ReportParser.parse(body).report();
@@ -183,6 +188,8 @@ public final class LayerLineage implements BiGovernance.Layered {
         pool.addAll(bi.draftsOfKind(p, "model"));
         pool.addAll(bi.publishedOfKind("dataset"));
         pool.addAll(bi.draftsOfKind(p, "dataset"));
+        pool.addAll(bi.publishedOfKind("table"));
+        pool.addAll(bi.draftsOfKind(p, "table"));
         for (BiStore.Item it : pool) {
             if (!seen.add(it.id())) {
                 continue;
@@ -200,7 +207,7 @@ public final class LayerLineage implements BiGovernance.Layered {
                         out.add(new Reading(it, u.alias(), u.range().text(), r == null ? "none in range" : r.def().version()));
                     }
                 }
-            } else if (DatasetDefParser.isVersion2(text)) {
+            } else if (DatasetDefParser.isTable(text)) {
                 DatasetDef dd = DatasetDefParser.parse(text).dataset();
                 if (dd != null && dd.extendsRef() != null && com.ash.drishti.server.bi.layer.Semver.Ref.parse(dd.extendsRef()) != null
                         && name.equals(com.ash.drishti.server.bi.layer.Semver.Ref.parse(dd.extendsRef()).name())) {
@@ -216,7 +223,7 @@ public final class LayerLineage implements BiGovernance.Layered {
     @Override
     public Map<String, Object> impact(Principal p, BiStore.Item i, List<String> remove) {
         String body = bi.bodyFor(p, i);
-        if (!"model".equals(i.kind()) && !("dataset".equals(i.kind()) && DatasetDefParser.isVersion2(body))) {
+        if (!"model".equals(i.kind()) && !isTable(i, body)) {
             return null;
         }
         Map<String, Object> m = new LinkedHashMap<>();
@@ -246,7 +253,7 @@ public final class LayerLineage implements BiGovernance.Layered {
             List<String> columns = new ArrayList<>();
             if (remove != null) {
                 columns.addAll(remove);
-            } else if (published != null && DatasetDefParser.isVersion2(published) && now != null) {
+            } else if (published != null && DatasetDefParser.isTable(published) && now != null) {
                 DatasetDef was = DatasetDefParser.parse(published).dataset();
                 if (was != null) {
                     Contracts.Change c = Contracts.datasets(was, now);

@@ -134,6 +134,9 @@
   function enhance(t) {
     if (t.__paged || !t.tBodies.length || t.hasAttribute('data-plain')) { return; }
     t.__paged = true;
+    if (!t.hasAttribute('data-resize')) {                              // resizable columns, remembered per table (drishti_resize.js)
+      t.setAttribute('data-resize', 'columns'); t.setAttribute('data-resize-key', 'table.' + scope + '|' + urlKey(t));
+    }
     var body = t.tBodies[0];
     var original = Array.prototype.slice.call(body.rows);            // the server's order, restored on a third click
     var heads = t.tHead && t.tHead.rows.length ? Array.prototype.slice.call(t.tHead.rows[0].cells) : [];

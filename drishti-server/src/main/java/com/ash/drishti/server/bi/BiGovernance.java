@@ -20,7 +20,6 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.bi.BiStore;
 import com.ash.drishti.packs.Pack;
 import com.ash.drishti.packs.PackRegistry;
-import com.ash.drishti.server.bi.dataset.LegacySources;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.engine.QueryRequest;
@@ -227,7 +226,7 @@ public final class BiGovernance {
     Map<String, Object> check(BiStore.Item i) {
         List<Map<String, Object>> problems = new ArrayList<>();
         boolean ok = true;
-        if ("dataset".equals(i.kind()) && !i.body().isBlank()) {
+        if (isTable(i.kind()) && !i.body().isBlank()) {
             DatasetParser.Result r = DatasetParser.parse(i.body());
             ok = r.ok();
             r.problems().forEach(x -> problems.add(Map.of("level", x.level(), "code", x.code(), "path", x.path(), "message", x.message())));
@@ -261,7 +260,7 @@ public final class BiGovernance {
     private Map<String, Object> preview(Principal p, BiStore.Item i) {
         Map<String, Object> m = new LinkedHashMap<>();
         try {
-            if ("dataset".equals(i.kind())) {
+            if (isTable(i.kind())) {
                 Dataset ds = DatasetParser.parse(i.body()).dataset();
                 if (ds == null || ds.tables().isEmpty()) {
                     m.put("available", false);
@@ -294,6 +293,17 @@ public final class BiGovernance {
                 QueryService.Result r = datasets.ask(p, dsItem, new QueryRequest(fields, measures, List.of(), null, null, List.of(), props.previewRows(), "auto"), false);
                 return previewMap(r, "a sample of the data the report reads (dataset '" + dsItem.title() + "')");
             }
+            if ("model".equals(i.kind())) {                                   // a model: the first rows of its first fact table, as the reviewer reads it
+                com.ash.drishti.server.bi.layer.ModelDef md = com.ash.drishti.server.bi.layer.ModelDefParser.parse(i.body()).model();
+                java.util.Optional<BiStore.Item> fact = md == null ? java.util.Optional.empty() : md.datasets().values().stream()
+                        .sorted(java.util.Comparator.comparing(u -> "fact".equals(u.role()) ? 0 : 1)).map(u -> bi.datasetNamed(u.dataset()))
+                        .flatMap(java.util.Optional::stream).filter(t -> isTable(t.kind())).findFirst();
+                if (fact.isPresent()) {
+                    Map<String, Object> shown = preview(p, fact.get());
+                    shown.computeIfPresent("label", (k, v) -> v + " (a table of the model)");
+                    return shown;
+                }
+            }
             m.put("available", false);
             m.put("reason", "there is no data to preview for a " + i.kind());
         } catch (DrishtiException e) {
@@ -317,7 +327,7 @@ public final class BiGovernance {
      * the change the draft would make (draft against published).
      */
     ImpactAnalyzer.Result impactOf(BiStore.Item dataset, List<String> remove) {
-        if (!"dataset".equals(dataset.kind())) {
+        if (!isTable(dataset.kind())) {
             return new ImpactAnalyzer.Result(new Surface.Change(List.of(), List.of(), List.of(), List.of(), List.of()), List.of(), List.of());
         }
         String published = impact.publishedBody(dataset);
@@ -388,6 +398,11 @@ public final class BiGovernance {
         Map<String, Object> impact(Principal p, BiStore.Item i, List<String> remove);
     }
 
+    /** A table the governance acts read as a one-table dataset: an item of the kind {@code table}, or a stored dataset item that holds one. */
+    static boolean isTable(String kind) {
+        return "table".equals(kind) || "dataset".equals(kind);
+    }
+
     private volatile Layered layered;
 
     /** Set once by the model layer: its items' lineage and impact are computed from the items as they are now, not by the version 1 analysis. */
@@ -399,10 +414,16 @@ public final class BiGovernance {
     public Map<String, Object> impact(Principal p, String id, List<String> remove) {
         BiStore.Item i = bi.readableForGovernance(p, id);
         Map<String, Object> layer = layered == null ? null : layered.impact(p, i, remove);
+        if (layer != null && isTable(i.kind())) {
+            // a table: the models that read it (the layer's answer) and the reports that read it directly (what a publish is held by), in one answer
+            Map<String, Object> m = new LinkedHashMap<>(impactMap(p, i, impactOf(i, remove)));
+            m.putAll(layer);
+            return m;
+        }
         if (layer != null) {
             return layer;
         }
-        if (!"dataset".equals(i.kind())) {
+        if (!isTable(i.kind())) {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("applies", false);
             m.put("note", "Impact analysis answers for datasets and models (what reads them); nothing in BI is built on a " + i.kind() + ".");
@@ -422,7 +443,20 @@ public final class BiGovernance {
     public Map<String, Object> dependants(Principal p, String id) {
         BiStore.Item i = bi.readableForGovernance(p, id);
         List<BiStore.Item> found = new ArrayList<>();
-        if ("dataset".equals(i.kind())) {
+        if ("model".equals(i.kind()) && layered != null) {                    // a model: what reads it, as its lineage says (reports, notebooks, tables on it)
+            Object down = layered.lineage(p, i).get("downstream");
+            if (down instanceof List<?> l) {
+                l.forEach(x -> {
+                    if (x instanceof Map<?, ?> c && c.get("id") != null) {
+                        try {
+                            found.add(bi.readableItem(p, String.valueOf(c.get("id"))));
+                        } catch (com.ash.drishti.common.DrishtiException hidden) {
+                            // an item the caller may not read is not named (the count is of those named)
+                        }
+                    }
+                });
+            }
+        } else if (isTable(i.kind())) {
             found.addAll(impact.reportsOn(i));
             found.addAll(impact.dependentsOn(i));
         } else if ("report".equals(i.kind())) {
@@ -446,7 +480,7 @@ public final class BiGovernance {
     /** The dataset change a draft of this item would make, for the dataset's Check (the Model view): same answer as {@link #impact} for the saved draft with a given text. */
     public Map<String, Object> impactOfText(Principal p, String id, String yaml) {
         BiStore.Item i = bi.readableForGovernance(p, id);
-        if (!"dataset".equals(i.kind())) {
+        if (!isTable(i.kind())) {
             return Map.of("applies", false);
         }
         String published = impact.publishedBody(i);
@@ -481,7 +515,7 @@ public final class BiGovernance {
     /** What a composed or derived dataset is built from: its source datasets and what it takes of each. */
     private List<Map<String, Object>> sourcesOf(Principal p, Dataset ds) {
         List<Map<String, Object>> out = new ArrayList<>();
-        for (Dataset.Input in : LegacySources.sources(ds)) {
+        for (Dataset.Input in : ds.inputs()) {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("table", in.alias());
             m.put("kind", "dataset");
@@ -572,12 +606,49 @@ public final class BiGovernance {
     public Map<String, Object> lineage(Principal p, String id) {
         BiStore.Item i = bi.readableForGovernance(p, id);
         Map<String, Object> layer = layered == null ? null : layered.lineage(p, i);
+        if (layer != null && isTable(i.kind())) {
+            return withSources(p, merged(layer, readersOf(p, i)));
+        }
         if (layer != null) {
             return withSources(p, layer);
         }
+        return readersOf(p, i);
+    }
+
+    /**
+     * A table's lineage in one answer: the layer's (its chain to the source, the models that read it), each upstream entry with the pack kind and
+     * connectors it scans, and after the models the reports that read the table directly, with what they use.
+     */
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> merged(Map<String, Object> layer, Map<String, Object> direct) {
+        Map<String, Object> m = new LinkedHashMap<>(layer);
+        List<Object> up = new ArrayList<>(layer.get("upstream") instanceof List<?> l ? l : List.of());
+        List<?> directUp = direct.get("upstream") instanceof List<?> l ? l : List.of();
+        for (int k = 0; k < directUp.size(); k++) {
+            if (k < up.size() && up.get(k) instanceof Map<?, ?> a && directUp.get(k) instanceof Map<?, ?> b) {
+                Map<String, Object> both = new LinkedHashMap<>((Map<String, Object>) b);
+                both.putAll((Map<String, Object>) a);
+                up.set(k, both);
+            } else if (k >= up.size()) {
+                up.add(directUp.get(k));
+            }
+        }
+        m.put("upstream", up);
+        List<Object> down = new ArrayList<>(layer.get("downstream") instanceof List<?> l ? l : List.of());
+        if (direct.get("downstream") instanceof List<?> l) {
+            down.addAll(l);
+        }
+        m.put("downstream", down);
+        m.put("hidden", ((Number) layer.getOrDefault("hidden", 0)).intValue() + ((Number) direct.getOrDefault("hidden", 0)).intValue());
+        m.putIfAbsent("item", direct.get("item"));
+        return m;
+    }
+
+    /** The lineage BI draws from the items: a table's pack kinds and connectors and the reports that read it; a report's table, fields and measures. */
+    private Map<String, Object> readersOf(Principal p, BiStore.Item i) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("item", itemRef(p, i));
-        if ("dataset".equals(i.kind())) {
+        if (isTable(i.kind())) {
             String body = impact.publishedBody(i) != null ? impact.publishedBody(i) : i.body();
             Dataset ds = DatasetParser.parse(body).dataset();
             m.put("upstream", ds == null ? List.of() : ds.framed() ? sourcesOf(p, ds) : tables(p, ds, null));

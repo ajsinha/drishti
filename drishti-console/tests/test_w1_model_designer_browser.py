@@ -24,7 +24,6 @@ from __future__ import annotations
 import glob
 import json
 import os
-import re
 import subprocess
 import sys
 import urllib.error
@@ -244,12 +243,8 @@ def fetch(page, method, path, body=None):
                               body: b === null ? undefined : JSON.stringify(b)}).then(r => r.json().then(j => ({status: r.status, body: j})))""", [method, path, body])
 
 
-def yaml_tab(page) -> str:
-    page.click('[data-tab="yaml"]')
-    return page.evaluate("document.querySelector('.CodeMirror') ? document.querySelector('.CodeMirror').CodeMirror.getValue() : document.querySelector('[data-yaml]').value")
-
-
-def test_pack_dataset_to_model_to_report(browser):
+def test_a_pack_dataset_is_listed_read_only_and_certified_and_opens_with_its_facts(browser):
+    """A model over pack datasets is written in Build › Tables & models now (the model designer is gone); its page and the reports on it are below."""
     page = sign_in(browser, "wes")
     # 1. the pack-generated datasets are listed, read-only and certified; one opens with its grain, keys, meanings and time mode
     expect(page.locator('[data-models-root][data-ready="yes"]')).to_have_count(1, timeout=30000)
@@ -266,89 +261,6 @@ def test_pack_dataset_to_model_to_report(browser):
     expect(page.locator('[data-column="NOTIONAL"]')).to_contain_text("NOTIONAL")
     expect(page.locator("[data-yaml]")).to_contain_text("dataset: pack.trading.trade")
     clean(page)
-
-    # 2. a new model over trades and desks: the desks dataset is inferred a dimension (trades reference it)
-    page.goto(CONSOLE_URL + "/bi/models")
-    expect(page.locator('[data-models-root][data-ready="yes"]')).to_have_count(1, timeout=30000)
-    page.click("[data-new-model]")
-    page.fill("[data-nm-title]", "Trades and desks")
-    page.check('[data-nm-pick="pack.trading.trade"]')
-    page.check('[data-nm-pick="pack.core.desk"]')
-    page.click("[data-nm-go]")
-    page.wait_for_url("**/bi/md/**")
-    expect(page.locator('[data-md-root][data-ready="yes"]')).to_have_count(1, timeout=30000)
-    expect(page.locator('[data-role-of="desk"]')).to_have_value("dimension")
-    expect(page.locator('[data-role-of="trade"]')).to_have_value("fact")
-
-    # 3. the pack reference is suggested; one click accepts it
-    sugg = page.locator('[data-suggestion="trade.DESK->desk.id"]')
-    expect(sugg).to_be_visible(timeout=15000)
-    sugg.locator("[data-accept]").click()
-    expect(page.locator('[data-rel="trade.DESK → desk.id"]')).to_be_visible(timeout=15000)
-    expect(page.locator('[data-suggestion="trade.DESK->desk.id"]')).to_have_count(0)
-    page.click('[data-rel-open="0"]')
-    expect(page.locator("[data-insp-card]")).to_have_value("many-to-one")
-
-    # 4. a measure from a column gets its default (sum, additive) from the dataset
-    page.click('[data-tab="measures"]')
-    page.select_option("[data-nm-alias]", "trade")
-    page.select_option("[data-nm-column]", "MTM")
-    page.click("[data-nm-add]")
-    row = page.locator('[data-measure="Sum of MTM"]')
-    expect(row).to_be_visible(timeout=15000)
-    expect(row.locator('[data-m-expr="Sum of MTM"]')).to_have_value("sum(trade.MTM)")
-    expect(row.locator('[data-m-additive="Sum of MTM"]')).to_have_value("yes")
-
-    # 5. security: a desk-head rule on trades raises the safeguard on desks; one click resolves it
-    page.click('[data-tab="security"]')
-    page.select_option("[data-rule-alias]", "trade")
-    page.fill("[data-rule-roles]", "desk-head")
-    page.select_option("[data-rule-field]", "trade.DESK")
-    page.click("[data-rule-add]")
-    expect(page.locator('[data-exposure="desk:desk-head"]')).to_be_visible(timeout=15000)
-    expect(page.locator("[data-count-security]")).to_be_visible()
-    page.click('[data-safeguard-all="desk:desk-head"]')
-    expect(page.locator("[data-safeguard-clear]")).to_be_visible(timeout=15000)
-    expect(page.locator('[data-allowed="desk:desk-head"]')).to_be_visible()
-    page.fill("[data-rule-roles]", "bi-writer")                       # a reader with no matching rule gets no rows: the author sees every trade
-    page.select_option("[data-rule-kind]", "all")
-    page.click("[data-rule-add]")
-    expect(page.locator('[data-rule="trade:1"]')).to_contain_text("True", timeout=15000)
-    expect(page.locator("[data-safeguard-clear]")).to_be_visible(timeout=15000)
-    text = yaml_tab(page)                                             # the designer wrote the YAML; nobody typed it
-    assert "trade.DESK in user.desks" in text and "may-see-all:" in text and "suggested: {from: pack-reference}" in text, text
-
-    # 6. save (checked clean), then start a report on the model: its Fields pane reads the model, its visuals ask the model
-    page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
-    expect(page.locator("[data-valid]")).to_have_text(re.compile(r"^Valid(, \d+ warnings?)?$"))      # valid; a warning pinned on the canvas is counted
-    name = page.evaluate("window.Drishti.model.doc.model")
-    assert name.startswith("trades-and-desks"), name
-    page.click("[data-report]")
-    page.click("[data-ask-go]")
-    page.wait_for_url("**/bi/design/**", timeout=20000)
-    expect(page.locator('[data-model-header="model"]')).to_be_visible(timeout=30000)
-    expect(page.locator('[data-field="Sum of MTM"]')).to_be_visible()
-    expect(page.locator('[data-field="desk.NAME"]')).to_be_visible()
-    # the designer takes a drop once it is ready (its fields, canvas and handlers bound): a drop before that is lost (it failed one run in two)
-    expect(page.locator('[data-design-root][data-ready="yes"]')).to_be_visible(timeout=30000)
-    expect(page.locator("[data-canvas-empty]")).to_be_visible()
-    drag(page, '[data-field="Sum of MTM"]', "[data-canvas-grid]", target_position={"x": 80, "y": 40})
-    expect(page.locator(".bi-dvis").first).to_be_visible(timeout=15000)
-    drag(page, '[data-field="trade.DESK"]', ".bi-dvis")
-    page.locator(".bi-dvis").first.click()
-    expect(page.locator("[data-visual-query-text]").first).to_contain_text(f"model: {name}@1", timeout=15000)
-    expect(page.locator(".bi-dvis").first).to_contain_text("3 rows", timeout=15000)           # three desks, drawn from the model query
-
-    # 7. the model query's answer equals the shipped sample model's over the same rows; the 2.1 dataset query is gone (410, naming the model query to send)
-    new = fetch(page, "POST", "/bi/api/mq", {"mq": 1, "model": f"{name}@1", "select": {"fields": ["trade.DESK"], "measures": ["Sum of MTM"]}})
-    sample = fetch(page, "POST", "/bi/api/mq", {"mq": 1, "model": "trades-basic@1", "select": {"fields": ["trade.DESK"], "measures": ["MTM"]}})
-    assert new["status"] == 200 and sample["status"] == 200, (new, sample)
-    assert sorted(map(tuple, new["body"]["rows"])) == sorted(map(tuple, sample["body"]["rows"]))
-    old = fetch(page, "POST", "/bi/api/datasets/file:dataset:trades-basic/query", {"fields": ["trade.DESK"], "measures": ["MTM"]})
-    assert old["status"] == 410 and old["body"]["mq"]["model"] == "trades-basic@1", old
-    clean(page)
-    page.context.close()
 
 
 def test_a_report_straight_from_a_dataset_reads_its_implicit_model_in_the_designer_and_the_viewer(browser):

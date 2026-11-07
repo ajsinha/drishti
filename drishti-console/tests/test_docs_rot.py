@@ -282,6 +282,9 @@ def path_exists(token: str, rel: str) -> bool:
 
 # MCP's JSON-RPC method names look like paths.
 NOT_PATHS = {"tools/list", "tools/call", "resources/list", "resources/read", "prompts/list", "prompts/get"}
+# The table layer's folder holds the reader's own definitions (the tutorial writes them) and what `tables migrate` writes; none ships
+# until BI reads the layer.
+WRITTEN_BY_READER = ("config/tables/",)
 
 
 def path_problems() -> list[str]:
@@ -296,6 +299,8 @@ def path_problems() -> list[str]:
                 continue
             bare = token.removeprefix("./")
             if bare.split("/", 1)[0] not in top_level() or bare.startswith(RUNTIME) or bare in NOT_PATHS:
+                continue
+            if bare.startswith(WRITTEN_BY_READER):
                 continue
             if not path_exists(token, rel) and bare.rstrip("/") not in code_text():   # or a path the code uses (a default file)
                 missing.append((rel, line, token))
@@ -560,7 +565,7 @@ def code_problems() -> list[str]:
 
 # ---- 6. command words and kinds -------------------------------------------------------------------------------------
 
-RESERVED_WORDS = {"BI", "RUPAKA", "FORM", "FUNC", "VAR", "WHAT", "DATAMAP", "DATA", "SMAT", "PLAY", "FRSA", "PIVOT", "MCUBE", "PVAR"}    # routes/terminal_routes.py (PVAR: var_routes.py, an alias of the explorer with the Parametric toggle on; FRSA: frtb_routes.py, the FRTB-SA capital screen; VAR: var_routes.py, the explorer; PIVOT: pivot_routes.py, the pivot screen; MCUBE: mcube_routes.py, the pivot screen with the MR lens; SMAT: smat_routes.py, the scenario matrix; DATA: data_routes.py, the Data view): no pack may define these; PLAY: play_routes.py, the VaR Playground
+RESERVED_WORDS = {"BI", "RUPAKA", "FORM", "FUNC", "VAR", "WHAT", "DATAMAP", "DATA", "EXPORT", "ADMIN", "SMAT", "PLAY", "FRSA", "PIVOT", "MCUBE", "CCUBE", "PVAR"}    # routes/terminal_routes.py (PVAR: var_routes.py, an alias of the explorer with the Parametric toggle on; FRSA: frtb_routes.py, the FRTB-SA capital screen; VAR: var_routes.py, the explorer; PIVOT: pivot_routes.py, the pivot screen; MCUBE: mcube_routes.py, the pivot screen with the MR lens; SMAT: smat_routes.py, the scenario matrix; DATA: data_routes.py, Export data; ADMIN: terminal_routes.py, the Admin pages by command): no pack may define these; PLAY: play_routes.py, the VaR Playground
 
 
 @functools.lru_cache(maxsize=None)

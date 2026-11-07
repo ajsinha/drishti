@@ -29,8 +29,8 @@
 .bi-checkpanel { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .6rem .9rem; background: var(--d-surface); }
 .bi-checkpanel h2 { font-size: 1rem; margin: 0 0 .3rem; }
 .bi-readonly { border: 1px solid var(--d-warn); border-radius: var(--d-radius); padding: .4rem .8rem; list-style: none; color: var(--d-ink); }
-.bi-dmain { display: grid; grid-template-columns: minmax(0, 1fr) 12rem 15rem 13rem; gap: .75rem; align-items: start; }
-.bi-dmain.bi-nofilters { grid-template-columns: minmax(0, 1fr) 0 15rem 13rem; }
+.bi-dmain { display: grid; grid-template-columns: minmax(0, 1fr) var(--bi-filters, 12rem) var(--bi-vis, 15rem) var(--bi-fields, 13rem); gap: .75rem; align-items: start; }
+.bi-dmain.bi-nofilters { grid-template-columns: minmax(0, 1fr) 0 var(--bi-vis, 15rem) var(--bi-fields, 13rem); }
 .bi-dmain.bi-nofilters .bi-pane-filters { display: none; }
 .bi-pane-vis { resize: vertical; min-height: 30rem; }
 .bi-pane-head { display: flex; align-items: center; justify-content: space-between; gap: .4rem; }

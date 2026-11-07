@@ -26,7 +26,8 @@
 # An edition (or a lens) lists the items it shows per menu (menus.<menu-id>: [item ids]); a menu it does not name keeps every item its
 # requirements allow, and a menu with no item left is not drawn. {product} and {tutorials} are filled in.
 # An edition's menus.top names its top menus by id, in order (a menu it does not name is not drawn); without one, every menu below in
-# its order except the subject menus (subject: true), which only a menus.top draws.
+# its order except the subject menus (subject: true), which only a menus.top draws. A menu's gather: [ids] puts the columns of those
+# menus first in its own (the Markets menu), each item filtered as the gathering menu's (menus.<its id> in the edition).
 menus:
   - id: views
     label: Views
@@ -39,7 +40,7 @@ menus:
           - { id: forms, href: /forms, icon: card-checklist, label: Forms, desc: "Query by form: every pack with a search form, your recent forms and saved searches. Also: FORM <GO>", match: /form, requires: [feature:forms, word:FORM] }
           - { id: functions, href: /func, icon: list-ul, label: Functions, desc: "Every command you can use, what it does · also FUNC <GO>", match: /func, requires: [word:FUNC] }
           - { id: datamap, href: /datamap, icon: diagram-3, label: Data map, desc: "Every kind of data, how it joins and how much there is · also DATAMAP <GO>", match: /datamap, requires: [feature:datamap, word:DATAMAP] }
-          - { id: data, href: /data, icon: cloud-arrow-down, label: Data, desc: "Every dataset, its dates; choose columns and filters, download a day as .jsonl.gz · also DATA <GO>", match: /data/, requires: [feature:data, word:DATA] }
+          - { id: data, href: /data, icon: cloud-arrow-down, label: Export data, desc: "Every dataset, its dates; choose columns and filters, download a day as .jsonl.gz · also EXPORT <GO> (or DATA)", match: /data/, requires: [feature:data, word:DATA] }
           - { id: pivot, cmd: PIVOT, href: /pivot, icon: grid-3x3-gap, label: Pivot, desc: "Any table, any entity document or VaR as a pivot: nested rows opened lazily, right totals, provenance, charts, Excel with formulas · also PIVOT <GO>", match: /pivot, requires: [word:PIVOT, route:/pivot] }
           - { id: reports, href: /reports, icon: file-earmark-bar-graph, label: Reports, desc: "Every report you have: scheduled reports, subscriptions, alerts, and BI reports", match: /reports, requires: [feature:reports] }
       - title: Watch
@@ -76,7 +77,7 @@ menus:
           - { id: backtesting, cmd: VAR BANK BACKTEST, icon: activity, label: Backtesting, desc: "VaR against the P&L, with the traffic light", match: /var/backtesting, requires: [word:VAR, route:/var/backtesting] }
           - { id: stress-window, cmd: SWIN BANK, icon: calendar-range, label: Stress window, desc: "The most stressful year of history for stressed VaR", match: /var/stress-window, requires: [word:VAR] }
           - { id: var-results, cmd: VRES, icon: table, label: VaR results, desc: "The stored results of every hierarchy node", requires: [cmd:VRES] }
-          - { id: mcube, cmd: MCUBE, href: /mcube, icon: grid-3x3-gap, label: MR cube, desc: "Market risk on the pivot engine: desks by risk class with the right totals, the tail, why it moved, the DV01 ladder and a what-if · also MCUBE <GO>", match: /mcube, requires: [word:VAR, word:PIVOT, word:MCUBE, route:/mcube] }
+          - { id: mcube, cmd: MCUBE, href: "/pivot?preset=mr", icon: grid-3x3-gap, label: MR cube, desc: "The Pivot's market-risk preset: desks by risk class with the right totals, the tail, why it moved, the DV01 ladder and a what-if · also MCUBE <GO>", requires: [word:VAR, word:PIVOT, word:MCUBE] }
           - { id: var-official, cmd: VOFF, icon: patch-check, label: Official records, desc: "The signed-off VaR of each business date", requires: [cmd:VOFF] }
           - { id: hier, cmd: HIER, icon: diagram-3, label: Hierarchies and limit letters, desc: "The VaR hierarchies, their nodes and limits", requires: [cmd:HIER] }
       - engine: exposure
@@ -136,6 +137,9 @@ menus:
           - { id: vlim, cmd: VLIM, icon: speedometer2, label: VaR limits, desc: "Each limit and how much of it is used", requires: [cmd:VLIM] }
           - { id: tval, cmd: TVAL, icon: currency-exchange, label: Trade valuations, desc: "Each trade's value and its sensitivities", requires: [cmd:TVAL] }
           - { id: pnlv, cmd: PNLV, icon: bar-chart, label: P&L vectors, desc: "Each position's P&L under every scenario", requires: [cmd:PNLV] }
+          - { id: dpnl, cmd: DPNL, icon: cash-coin, label: Desk P&L, desc: "Each desk's actual and hypothetical P&L, day by day", requires: [cmd:DPNL] }
+          - { id: pnl, cmd: PNL, icon: bar-chart-steps, label: P&L explain, desc: "A day's P&L by risk factor, new trades and residual", requires: [cmd:PNL] }
+          - { id: sens, cmd: SENS, icon: speedometer, label: Sensitivities, desc: "Delta, vega and curvature of each position by risk factor", requires: [cmd:SENS] }
   - id: counterparties
     label: Counterparties
     icon: building
@@ -148,6 +152,7 @@ menus:
           - { id: lim, cmd: LIM, icon: speedometer2, label: Credit limits, desc: "Each credit limit and how much of it is used", requires: [cmd:LIM] }
           - { id: xwif, cmd: XWIF, icon: sliders, label: Pre-deal check, desc: "A new trade's exposure against the limit before it is done", requires: [cmd:XWIF] }
           - { id: exp, cmd: EXP, icon: graph-up, label: Exposure, desc: "EE, PFE and EPE of a counterparty or netting set", match: /exposure, requires: [word:EXP] }
+          - { id: ccr-cube, cmd: CCUBE, href: "/pivot?preset=ccr", icon: grid-3x3-gap, label: CCR cube, desc: "The Pivot's counterparty preset: exposure by counterparty and tenor against limits, with the right totals · also CCUBE <GO>", requires: [word:EXP, word:PIVOT] }
   - id: curves
     label: Curves
     icon: graph-up-arrow
@@ -200,12 +205,21 @@ menus:
           - { id: macro, cmd: MACRO, icon: graph-up, label: Indicators, desc: "Every indicator of every economy", requires: [cmd:MACRO] }
           - { id: fcst, cmd: FCST, icon: binoculars, label: IMF forecasts, desc: "The IMF's forecasts by economy", requires: [cmd:FCST] }
           - { id: rege, cmd: REGE, icon: map, label: Regions, desc: "Sub-national regions and their figures", requires: [cmd:REGE] }
+  # The one Markets menu: the market-data screens together. It gathers the columns of Curves, Volatility, FX and Credit (gather: their
+  # ids, in order; their items are not repeated here), then its own. An edition (or a lens) picks its items in menus.markets, by id.
   - id: markets
     label: Markets
-    icon: newspaper
+    icon: graph-up-arrow
     subject: true
+    gather: [curves, volatility, fx, credit]
     columns:
-      - title: Markets
+      - title: Equities and commodities
+        items:
+          - { id: eq, cmd: EQ, icon: building, label: Equities, desc: "Listed equities, their prices and dividends", requires: [cmd:EQ] }
+          - { id: eqx, cmd: EQX, icon: list-ol, label: Equity indices, desc: "Equity indices and their levels", requires: [cmd:EQX] }
+          - { id: cmd, cmd: CMD, icon: droplet, label: Commodities, desc: "Commodities and their spot prices", requires: [cmd:CMD] }
+          - { id: cmdc, cmd: CMDC, icon: graph-up, label: Commodity curves, desc: "Commodity forward curves", requires: [cmd:CMDC] }
+      - title: News and quotes
         items:
           - { id: news, cmd: NEWS, icon: newspaper, label: News, desc: "The news by topic", requires: [cmd:NEWS] }
           - { id: quote, cmd: QUOTE, icon: currency-dollar, label: Quotes, desc: "Quotes of listed companies and indices", requires: [cmd:QUOTE] }
@@ -242,6 +256,7 @@ menus:
           - { id: new-screen, href: /build/new, icon: plus-square, label: New screen, desc: "Bring JSON files, a schema or stored entities, then design", match: /build/new, requires: [feature:build] }
           - { id: new-pack, href: /build/pack/new, icon: box-seam, label: New pack, desc: "Schema files and/or a folder of JSON Lines in, a pack to download or deploy out", match: /build/pack/new, requires: [feature:build] }
           - { id: designs, href: /build, icon: collection, label: My designs, desc: "Your saved work: open, rename, duplicate, delete", match: /build/d/, requires: [feature:build] }
+          - { id: tables-models, href: /build/tables, icon: table, label: "Tables & models", desc: "Virtual tables, semantic models and Python-driven tables: one editor, live YAML, a preview as you may see it, review before live", match: /build/tables, requires: [bi, word:BI] }
           - { id: examples, href: "/build/new#examples", icon: journal-richtext, label: Examples, desc: Every example opens as your own copy, requires: [feature:build] }
       - title: Govern
         items:

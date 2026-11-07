@@ -28,7 +28,7 @@ About 30 minutes.
 
 - [Tutorial 10](10-first-bi-report.md) done (you know the report viewer). The shipped samples used here, the dataset **Live trading desk**, the reports **Live trading desk** and **Live exposure** and the boards **Desk wall** and **Python wall**, are in every server's `config/bi/`.
 - **Live and the model layer.** The two live samples are **version 1 datasets** (`rachana: 1`) that their reports read directly. The converter has made a **model** of each (`live-trading@1`, `live-exposure@1`) over the same live
-  table, so a model query, Analyse and an alert on a measure of a model read the live rows too (step 2).
+  table, so a model query, the Notebook and an alert on a measure of a model read the live rows too (step 2).
 - The personal API token of [tutorial 1, step 9](01-first-15-minutes.md#step-9--make-a-token-for-the-command-line) in `DRISHTI_TOKEN`, and
   `DRISHTI_SERVER` (default `http://localhost:18480`).
 - **A source that ticks.** The demo lakes are daily snapshots: they do not move, so on the quick-start server (**Drishti server (demo lakes)**, which sets
@@ -140,7 +140,7 @@ settings:
 ## Step 2 · A live table
 
 Open **Datasets** and **Live trading desk** (a version 1 dataset: its page is the 2.1 one, with **Layers**). Its trade table is declared with `mode: live`
-over the `market-risk` pack's **trade valuations** (`config/bi/datasets/live-trading.dataset.yaml`):
+over the `market-risk` pack's **trade valuations** (`config/tables/bi/live_trading_trade.table.yaml` and its model `config/tables/bi/live-trading.model.yaml`):
 
 ```yaml
 tables:

@@ -18,7 +18,7 @@ package com.ash.drishti.server.bi.plan;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.Node;
 import com.ash.drishti.server.bi.engine.SqlCompiler;
-import com.ash.drishti.server.bi.expr.DelPrinter;
+import com.ash.drishti.server.bi.dataset.NodeText;
 import com.ash.drishti.server.bi.expr.Expressions;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -169,7 +169,7 @@ public final class SecuritySignature {
 
     private static boolean names(String where, String table) {
         try {
-            return Node.anyMatch(Expressions.parse(where), x -> x instanceof Node.Ref r && r.parts().size() >= 2 && r.parts().get(0).equals(table));
+            return Node.anyMatch(Expressions.node(where), x -> x instanceof Node.Ref r && r.parts().size() >= 2 && r.parts().get(0).equals(table));
         } catch (RuntimeException e) {
             return false;
         }
@@ -179,12 +179,12 @@ public final class SecuritySignature {
     static String resolved(String where, Map<String, List<Object>> attributes) {
         Node n;
         try {
-            n = Expressions.parse(where);
+            n = Expressions.node(where);
         } catch (RuntimeException e) {
             return where;
         }
         try {
-            return DelPrinter.print(bind(n, attributes));
+            return NodeText.print(bind(n, attributes));
         } catch (RuntimeException e) {
             return n.toString();
         }

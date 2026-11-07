@@ -52,7 +52,7 @@ import org.springframework.test.web.servlet.MvcResult;
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/fp-api-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/fp-api-overlay/added.yaml",
-        "drishti.bi.dir=${drishti.test.dir}/fp-api-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/fp-api-store/${random.uuid}",
+        "drishti.bi.dir=${drishti.test.dir}/fp-api-folder", "drishti.tables.root=${drishti.test.dir}/fp-api-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/fp-api-store/${random.uuid}",
         "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/fp-api-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.fp-lake.plugin=file", "drishti.sources.connectors.fp-lake.kinds[0]=trade",
@@ -153,6 +153,7 @@ class FieldParamsApiTest {
                           - { id: count, type: card, title: Trades, at: { x: 8, y: 0, w: 4, h: 2 }, wells: { values: [Trades] } }
                           - { id: tbl, type: table, title: Table, at: { x: 0, y: 5, w: 8, h: 5 }, wells: { columns: [param.breakdown, param.metric] } }
                     """);
+            com.ash.drishti.server.bi.TablesFolder.migrate(folder);     // tables migrate: the datasets and models become the layer's, the reports rebound
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }
@@ -313,7 +314,7 @@ class FieldParamsApiTest {
             assertThat(v.path("valid").asBoolean()).as(c.getKey()).isFalse();
             assertThat(v.path("problems").toString()).as(c.getKey()).contains("DRS-9037").contains(c.getValue());
         }
-        JsonNode onDataset = ok(call("POST", "/api/v1/bi/reports/validate", wes, Map.of("yaml", head.replace("model: fp-model@1", "dataset: fp-trade")
+        JsonNode onDataset = ok(call("POST", "/api/v1/bi/reports/validate", wes, Map.of("yaml", head.replace("model: fp-model@1", "dataset: bi.fp_trade")
                 + "      - { id: c, type: column, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [param.breakdown], values: [NOTIONAL] } }\n")));
         assertThat(onDataset.path("problems").toString()).contains("DRS-9037").contains("belong to a model");
         // QA2-20: one problem per parameter in the wrong well (not one per choice), naming every choice that does not fit

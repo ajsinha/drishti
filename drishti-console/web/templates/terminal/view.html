@@ -18,7 +18,7 @@
 {% block title %}{{ vm.title.id }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}view{% endblock %}
 {% block body_class %}terminal{% if embed %} embed{% endif %}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_dist.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_pivot.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_drill.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_about.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_wire.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_refresh.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_compute.css?v={{ ASSET_V }}">{% if vm.panels | selectattr('form') | list %}<link rel="stylesheet" href="/static/css/drishti_record-forms.css?v={{ ASSET_V }}">{% endif %}{% if calc and calc.offered and calc.allowed %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}">{% endif %}{% if render_client and grid %}<link rel="stylesheet" href="/static/css/drishti_screen-grid.css?v={{ ASSET_V }}">{% endif %}{% if render_client %}{% for m in RENDER_MODULES %}<link rel="modulepreload" href="{{ m }}">{% endfor %}{% endif %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_dist.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_pivot.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_drill.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_about.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_wire.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_refresh.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_compute.css?v={{ ASSET_V }}">{% if vm.panels | selectattr('form') | list %}<link rel="stylesheet" href="/static/css/drishti_record-forms.css?v={{ ASSET_V }}">{% endif %}{% if calc and calc.offered and calc.allowed %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
 {% block nav %}{% if not embed %}{% with command_text=(vm.mnemonic ~ ' ' ~ vm.ref.id ~ ' <GO>') if vm.mnemonic else vm.ref.id, live=(vm.provenance.live and asof == 'live'), built_ms=vm.timings.total %}{% include "terminal/_topbar.html" %}{% endwith %}{% endif %}{% endblock %}
 {% block content %}
 <div class="view" data-view{% if embed %} data-embed{% endif %}{% if asof != 'live' %} data-static{% endif %} data-kind="{{ vm.ref.kind }}" data-id="{{ vm.ref.id }}" data-generation="{{ vm.provenance.generation }}" data-page-asof="{{ asof }}" data-known="{{ known_at or '' }}" data-label="{{ vm.title.id }}"{% if chosen_sutra %} data-chosen-sutra="{{ chosen_sutra }}"{% endif %}{% if designer and designer.design %} data-design="{{ designer.design }}"{% endif %}{% if designer and designer.customizing %} data-customizing{% endif %}
@@ -64,8 +64,8 @@
     <a href="/asof?d=live&amp;next={{ request.url.path | urlencode }}">Go live</a>
     {% if pin == 'changed' and known_text %}<a href="/compare/{{ vm.ref.kind }}/{{ vm.ref.id }}?fromKnownAt={{ known_text | replace(' ', 'T') | urlencode }}">What changed</a>{% endif %}</p>
   {% endif %}
-  {# The console's tools beside the title, captured once: the server prints them in the head; on a page the client-side renderer draws
-     (ui.render: client, CLIENT_RENDERER.md 16) drishti_view-render.js moves them there after the paint. #}
+  {# The console's tools beside the title, captured once: the server prints them in the head (the page is the server's: Jinja is the one
+     page renderer; the client-side renderer draws embeds and <drishti-report>, CLIENT_RENDERER.md). #}
   {% set head_tools %}
       {% if not embed %}<a class="tbar-link vhead-alert" href="/alerts?kind={{ vm.ref.kind }}&id={{ vm.ref.id | urlencode }}" title="Set an alert on {{ vm.title.id }}"><i class="bi bi-bell" aria-hidden="true"></i> Alert</a>
       <span class="vhead-tools">
@@ -95,13 +95,6 @@
       {% if vm.ref.kind in ['trade', 'position', 'pnl-vector', 'scenario-pv'] and smat_on is defined and smat_on() %}<a class="tbar-link vhead-alert" data-smat-link href="/smat?id={{ vm.ref.id | urlencode }}" title="Scenario matrix (SMAT {{ vm.ref.id }}): its scenario P&amp;L by scenario day across the last 20 business dates, with each date's VaR and ES tail"><i class="bi bi-grid-3x3" aria-hidden="true"></i> Scenario matrix</a>{% endif %}
       {% if vm.provenance.businessDate %}<a class="tbar-link vhead-alert" href="/compare/{{ vm.ref.kind }}/{{ vm.ref.id | urlencode }}" title="What changed since the previous business day, or between any two dates"><i class="bi bi-arrow-left-right" aria-hidden="true"></i> Compare</a>{% endif %}{% endif %}
   {% endset %}
-  {% if render_client %}
-  {# Drawn in the browser by Drishti Render from the ViewModel in data-render-boot (the same JSON /api/view answers, arranged as this page
-     arranges it: the reader's layout and grid; read as text, never markup); static/js/drishti_view-render.js draws the banners, the
-     head and the panels into this .view. #}
-  <div class="view-r" data-render-host data-render-boot="{{ render_boot | tojson | forceescape }}"></div>
-  <div hidden data-render-chrome><nav class="crumbs" aria-label="Breadcrumb" data-crumbs hidden></nav><div data-render-tools>{{ head_tools }}</div></div>
-  {% else %}
   {{ provenance_banners(vm, asof, business_date, embed, request.url.path | urlencode) }}
   {% if phone_everything %}<p class="ph-back"><button type="button" class="ph-btn" data-phone-back><i class="bi bi-phone" aria-hidden="true"></i> Phone view</button> <span>You are seeing every panel of this page.</span></p>{% endif %}
   <section class="vhead">
@@ -116,9 +109,8 @@
   {% if phone and phone.device == 'phone' %}{% include "terminal/_phone.html" %}{% else %}{% if grid %}{% include "terminal/_grid.html" %}{% else %}
   <div class="vgrid">
     <div class="vmain">{{ panels(main, false, vm.ref) }}</div>
-    <aside class="vright" aria-label="Context">{{ panels(right, false, vm.ref) }}</aside>
+    <aside class="vright" aria-label="Context">{% if right %}<div data-resize="panel" data-resize-key="view.{{ vm.ref.kind }}.context" data-resize-var="--v-right" data-resize-min="260" data-resize-max="900" data-resize-edge="left" aria-label="Resize the Context column"></div>{% endif %}{{ panels(right, false, vm.ref) }}</aside>
   </div>{% endif %}{% if phone %}{% include "terminal/_phone.html" %}{% endif %}{% endif %}
-  {% endif %}
 </div>
 {% if not embed %}{% include "terminal/_share.html" %}{% endif %}
 <aside class="about side" id="aboutDrawer" role="dialog" aria-modal="false" aria-labelledby="aboutTitle" hidden data-tab="about" data-about-url="/v/{{ vm.ref.kind | urlencode }}/{{ vm.ref.id | urlencode }}/about"{% if ABOUT_PREFETCH %} data-about-prefetch{% endif %}>
@@ -151,39 +143,35 @@
 </footer>
 {% endif %}{% endblock %}
 {% block scripts %}
-{# A page the client-side renderer draws (render_client): ECharts and the map shapes first, then drishti_view-render.js (a module: it draws the
-   view), then every other script deferred, in the same order: modules and deferred scripts run in document order once the page is parsed,
-   so each script meets the drawn view as it meets the server's HTML. #}
-{% set df = ' defer' if render_client else '' %}
 <script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/drishti_geomap.js?v={{ ASSET_V }}"></script>{% if render_client %}<script type="module" src="/static/js/drishti_view-render.js?v={{ ASSET_V }}"></script>{% if grid %}<script src="/static/js/drishti_screen-grid.js?v={{ ASSET_V }}" defer></script>{% endif %}{% endif %}<script src="/static/js/drishti_charts.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_view.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_pivot-engine.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_pivot-grid.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_tree-rows.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_drill.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_raw-viewer.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_history.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_people.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_share.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_share-reply.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_about.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_about-hints.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_about-ask.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_discussion-compose.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_discussion-view.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_discussion.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_zoom.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_sutra-wire.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_refresh.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_compute.js?v={{ ASSET_V }}"{{ df }}></script>
-{% if not embed and vm.panels | selectattr('form') | list %}<script src="/static/js/drishti_form-expr.js?v={{ ASSET_V }}"{{ df }}></script><script src="/static/js/drishti_write-back.js?v={{ ASSET_V }}"{{ df }}></script><script src="/static/js/drishti_record-forms.js?v={{ ASSET_V }}"{{ df }}></script>{% endif %}
-{% if designer and designer.on and not embed %}<link rel="stylesheet" href="/static/css/drishti_designer.css?v={{ ASSET_V }}"><script src="/static/js/drishti_designer-forms.js?v={{ ASSET_V }}"{{ df }}></script><script src="/static/js/drishti_designer-settings.js?v={{ ASSET_V }}"{{ df }}></script><script src="/static/js/drishti_designer.js?v={{ ASSET_V }}"{{ df }}></script>{% endif %}
-{% if vm.controls %}<script src="/static/js/drishti_multiselect.js?v={{ ASSET_V }}"{{ df }}></script><script src="/static/js/drishti_controls.js?v={{ ASSET_V }}"{{ df }}></script>{% endif %}
-{% if calc and calc.offered and calc.allowed %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/vendor/codemirror/mode/python/python.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/drishti_calc.js?v={{ ASSET_V }}"{{ df }}></script>{% endif %}
-{% if vm.provenance.live and asof == 'live' and not render_client %}<script src="/static/js/drishti_live.js?v={{ ASSET_V }}"></script>{% endif %}
-{% if layout and layout.offered and layout.allowed %}<script src="/static/js/drishti_layout-rules.js?v={{ ASSET_V }}"{{ df }}></script><script src="/static/js/build/drishti_grid-keys.js?v={{ ASSET_V }}"{{ df }}></script><script src="/static/js/drishti_layout.js?v={{ ASSET_V }}"{{ df }}></script>{% endif %}
+<script src="/static/js/drishti_geomap.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_charts.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_view.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_pivot-engine.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_pivot-grid.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_tree-rows.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_drill.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_raw-viewer.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_history.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_people.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_share.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_share-reply.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_about.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_about-hints.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_about-ask.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_discussion-compose.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_discussion-view.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_discussion.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_zoom.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_sutra-wire.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_refresh.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_compute.js?v={{ ASSET_V }}"></script>
+{% if not embed and vm.panels | selectattr('form') | list %}<script src="/static/js/drishti_form-expr.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_write-back.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_record-forms.js?v={{ ASSET_V }}"></script>{% endif %}
+{% if designer and designer.on and not embed %}<link rel="stylesheet" href="/static/css/drishti_designer.css?v={{ ASSET_V }}"><script src="/static/js/drishti_designer-forms.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_designer-settings.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_designer.js?v={{ ASSET_V }}"></script>{% endif %}
+{% if vm.controls %}<script src="/static/js/drishti_multiselect.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_controls.js?v={{ ASSET_V }}"></script>{% endif %}
+{% if calc and calc.offered and calc.allowed %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script>
+<script src="/static/vendor/codemirror/mode/python/python.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_calc.js?v={{ ASSET_V }}"></script>{% endif %}
+{% if vm.provenance.live and asof == 'live' %}<script src="/static/js/drishti_live.js?v={{ ASSET_V }}"></script>{% endif %}
+{% if layout and layout.offered and layout.allowed %}<script src="/static/js/drishti_layout-rules.js?v={{ ASSET_V }}"></script><script src="/static/js/build/drishti_grid-keys.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_layout.js?v={{ ASSET_V }}"></script>{% endif %}
 {% endblock %}

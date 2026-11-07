@@ -44,14 +44,13 @@ features:                                # presets of existing switches (config/
   var: off
   exposure: off
   calc: off
-  pyconsole: off
   python: off
   designer: off
   build: off
   forms: on                              # query by form: curves, surfaces and bonds by their fields
   datamap: on
-  data: on                               # the Data view (DATA, /data): every dataset, a simple selection, a day as .jsonl.gz
-  internal-only-data: off                # the Data view refuses datasets marked internal only (IMF, Yahoo, news headlines)
+  data: on                               # Export data (EXPORT, /data): every dataset, a simple selection, a day as .jsonl.gz
+  internal-only-data: off                # Export data refuses datasets marked internal only (IMF, Yahoo, news headlines)
   layouts: on
   workspaces: on
   monitors: on
@@ -62,7 +61,7 @@ features:                                # presets of existing switches (config/
   embed: off
 
 bi:                                      # the market-data pack ships no BI dataset or model yet: these names keep BI to the pack's own
-  datasets: [market-data-*]              # (a dataset named market-data-... or the model market-data, when one is added), never the
+  datasets: [bi.market_data_*]              # (a table named bi.market_data_... or the model market-data, when one is added), never the
   models: [market-data]                  # VaR or exposure reports; an empty list would offer every BI item of the product
 
 menus:                                   # by id, per menu; a menu not named shows every item its switches allow

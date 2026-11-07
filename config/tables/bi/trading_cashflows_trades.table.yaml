@@ -1,0 +1,39 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Migrated from config/bi/datasets/trading-cashflows-trades.dataset.yaml by drishti.py tables migrate (docs/architecture/BI_FOUNDATION_2911E.md section 4).
+rachana: 3
+table: bi.trading_cashflows_trades
+was: trading-cashflows-trades
+version: 1.0.0
+title: "Trade legs and cashflows: trades"
+description: The trades table of the model trading-cashflows.
+sample: true
+endorsement: promoted
+tags: [sample, trading, nested, cashflows]
+from: { kind: trade }
+columns:
+  SOURCE_SYSTEM:    { path: "$.SOURCE_SYSTEM", type: string }
+  PRODUCT_TYPE:     { path: "$.PRODUCT_TYPE", type: string }
+  PRODUCT_SUB_TYPE: { path: "$.PRODUCT_SUB_TYPE", type: string }
+  PORTFOLIO:        { path: "$.PORTFOLIO", type: string }
+  COUNTERPARTY:     { path: "$.COUNTERPARTY", type: string }
+  CURRENCY:         { path: "$.CURRENCY", type: string }
+  TRADE_STATUS:     { path: "$.TRADE_STATUS", type: string }
+  BUY_SELL_CODE:    { path: "$.BUY_SELL_CODE", type: string }
+  QUANTITY:         { path: "$.QUANTITY", type: decimal, format: amount0 }
+  NOTIONAL:         { path: "$.LEGS[0].NOTIONAL", type: decimal, format: amount0, description: "The trade's notional: its first leg's NOTIONAL, in that leg's currency (the trade's CURRENCY for single-currency trades; a cross-currency swap's first leg). A state of the trade, not a flow: over a window of dates the model takes the last date." }
+  MATURITY_DATE:    { path: "$.MATURITY_DATE", type: date }
+refresh: { on-load: true }
+materialize: on-load

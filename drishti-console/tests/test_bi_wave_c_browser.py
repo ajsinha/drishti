@@ -17,8 +17,8 @@
 * Vega-Lite: a `vega-lite` report visual and a Python visual that returns a Vega-Lite specification are drawn under the strict policy (no violation, no eval, no
   WebAssembly), with a real canvas and the expression interpreter walking `datum.MTM < 0`.
 * Boards: a board of Python tiles runs them for the person looking.
-* Analyse (wave B: nothing computes in the browser): the Slice is worked out by the console and a SQL cell over the extract runs on the console, read-only; a slice and
-  a SQL cell are promoted into a new and an existing report draft.
+* The Notebook (nothing computes in the browser or the console): a SQL cell is Drishti SQL run by the server and refuses what is not one SELECT; a SQL cell is
+  promoted into a new and an existing report draft.
 * Phone: the new controls are 44 px on touch.
 
 Skipped when Playwright, Chromium, the built server jar or pandas and pyarrow are missing, or a scratch port is in use. Never run with pytest -n (the ports are fixed)."""
@@ -169,9 +169,9 @@ STYLES = """async () => {
 }"""
 
 
-# ---- Analyse ---------------------------------------------------------------------------------------------------------------------------
+# ---- the Notebook ---------------------------------------------------------------------------------------------------------------------------
 def open_extract(page):
-    page.goto(CONSOLE_URL + "/bi/explore")
+    page.goto(CONSOLE_URL + "/bi/notebook")
     page.wait_for_function("() => document.querySelectorAll('[data-dataset] option').length > 1", timeout=30000)
     page.select_option("[data-dataset]", "mq:trades-basic@1")
     page.wait_for_selector("[data-fields] input[name=f]", timeout=30000)
@@ -183,69 +183,55 @@ def grid(page, selector):
     return page.eval_on_selector_all(selector + " tbody tr", "rows => rows.map(r => [...r.children].map(c => c.textContent))")
 
 
-def test_the_slice_and_sql_over_the_extract_run_on_the_console(stack, browser):
+def test_a_sql_cell_runs_on_the_server_and_nothing_loads_webassembly(stack, browser):
     page = sign_in(browser, "wes", "/bi")
     wasm = []
     page.on("request", lambda r: wasm.append(r.url) if r.url.endswith(".wasm") or "pyodide" in r.url or "duckdb" in r.url else None)
-    resp = page.goto(CONSOLE_URL + "/bi/explore")
+    resp = page.goto(CONSOLE_URL + "/bi/notebook")
     csp = resp.headers["content-security-policy"]
     assert "unsafe-eval" not in csp and "unsafe-inline" not in csp and "wasm" not in csp
     open_extract(page)
-    page.click('.bx-chip[data-field="DESK"] [data-to="rows"]')
-    page.click('.bx-chip[data-field="CURRENCY"] [data-to="columns"]')
-    page.click('.bx-chip[data-field="NOTIONAL"] [data-to="values"]')
-    page.wait_for_function("() => document.querySelector('[data-pivot-meta]').dataset.engine === 'console' && /rows used/.test(document.querySelector('[data-pivot-meta]').textContent)", timeout=60000)
-    assert len(grid(page, "[data-pivot]")) >= 2
-    page.click('.bx-chip[data-field="DESK"] [data-to="filters"]')
-    page.wait_for_function("() => document.querySelectorAll('[data-zone=\"filters\"] select option').length > 1", timeout=30000)
-    page.select_option('[data-zone="filters"] select', "DESK-FX")
-    page.wait_for_function("() => /rows used/.test(document.querySelector('[data-pivot-meta]').textContent)")
+    assert page.locator("[data-zone], [data-pivot], [data-tab=slice]").count() == 0                 # slicing is the Pivot's
     page.click("#bxT-sql")
-    page.fill("[data-cells=sql] textarea", "SELECT DESK, SUM(NOTIONAL) AS n FROM extract GROUP BY DESK ORDER BY DESK")
     page.click("[data-cells=sql] [data-run]")
-    page.wait_for_selector('[data-cells=sql] [data-engine="server"]', timeout=60000)
-    assert len(grid(page, "[data-cells=sql]")) >= 2
-    # a cell over the table extract runs on the console (two statements: DRS-9070); any other is Drishti SQL on the server, which refuses both (DRS-9170)
-    for bad, code in (("SELECT DESK FROM extract; SELECT 2", r"DRS-9070"), ("SELECT 1; SELECT 2", r"DRS-9170"), ("ATTACH 'x.db'", r"DRS-9170")):
+    page.wait_for_selector('[data-cells=sql] [data-engine="dsql"]', timeout=60000)
+    assert len(grid(page, "[data-cells=sql]")) >= 1
+    # Drishti SQL on the server refuses two statements and anything but a SELECT (DRS-9170); the console runs no SQL of its own
+    for bad in ("SELECT 1; SELECT 2", "ATTACH 'x.db'", "SELECT DESK FROM extract"):
         page.fill("[data-cells=sql] textarea", bad)
         page.click("[data-cells=sql] [data-run]")
         page.wait_for_selector("[data-cells=sql] .bi-bad", timeout=30000)
-        assert re.search(code, page.inner_text("[data-cells=sql] .bi-bad")), (bad, page.inner_text("[data-cells=sql] .bi-bad"))
+        assert re.search(r"DRS-91\d\d|DRS-90\d\d", page.inner_text("[data-cells=sql] .bi-bad")), (bad, page.inner_text("[data-cells=sql] .bi-bad"))
     assert wasm == [], wasm
     quiet(page)
     clean(page)
     page.close()
 
 
-def test_a_slice_and_a_sql_cell_become_visuals_in_a_new_and_an_existing_report(stack, browser):
+def test_a_sql_cell_becomes_a_visual_in_a_new_and_an_existing_report(stack, browser):
     page = sign_in(browser, "wes", "/bi")
     s, mine = api(page, "POST", "/workspaces/me/items", {"kind": "report", "title": "Mine", "body": CHART_REPORT.format(name="mine")})
     assert s in (200, 201), mine
     open_extract(page)
-    page.click('.bx-chip[data-field="DESK"] [data-to="rows"]')
-    page.click('.bx-chip[data-field="MTM"] [data-to="values"]')
-    page.click('.bx-chip[data-field="CURRENCY"] [data-to="filters"]')
-    page.select_option('[data-zone="filters"] select', "USD")
-    page.wait_for_selector("[data-pivot] table")
+    page.click("#bxT-sql")
     # a new report draft
-    page.click("[data-promote-slice]")
-    page.wait_for_selector("[data-promote-slice] + .bi-near [data-promoted-link]", timeout=30000)
-    page.wait_for_function("() => /Report draft saved/.test(document.querySelector('[data-promote-slice] + .bi-near').textContent)")
+    page.click("[data-promote-report]")
+    page.wait_for_selector("[data-promote-report] + .bi-near [data-promoted-link]", timeout=30000)
+    page.wait_for_function("() => /Report draft saved/.test(document.querySelector('[data-promote-report] + .bi-near').textContent)")
     href = page.get_attribute("[data-promoted-link]", "href")
     s, made = api(page, "GET", "/items/" + href.split("/bi/i/")[1].replace("%3A", ":"))
-    assert "type: matrix" in made["body"] and "trade.CURRENCY" in made["body"] and "USD" in made["body"] and "MTM" in made["body"]
-    # an existing one, from a SQL cell
+    assert "rachana: 2" in made["body"] and "model: trades-basic@1" in made["body"], made["body"]
+    # an existing one
     page.reload()
     open_extract(page)
     page.wait_for_function("() => document.querySelectorAll('[data-promote-target] option').length > 1", timeout=30000)
     page.select_option("[data-promote-target]", mine["id"])
     page.click("#bxT-sql")
-    page.fill("[data-cells=sql] textarea", "SELECT DESK, SUM(MTM) FROM extract WHERE CURRENCY = 'EUR' GROUP BY DESK")
     page.click("[data-promote-report]")
     page.wait_for_selector("[data-promote-report] + .bi-near", timeout=30000)
     page.wait_for_function("() => /added to the report draft/.test(document.querySelector('[data-promote-report] + .bi-near').textContent)", timeout=30000)
     s, edited = api(page, "GET", "/items/" + mine["id"])
-    assert s == 200 and edited["body"].count("- id:") >= 3 and "type: matrix" in edited["body"] and "EUR" in edited["body"] and "mtm-chart" in edited["body"], edited["body"]
+    assert s == 200 and edited["body"].count("- id:") >= 3 and "mtm-chart" in edited["body"], edited["body"]
     clean(page)
     page.close()
 
@@ -255,7 +241,7 @@ def test_the_new_controls_are_finger_sized_on_a_phone(stack, browser):
     page = sign_in(browser, "wes", "/bi", viewport={"width": 390, "height": 800}, has_touch=True, is_mobile=True)
     open_extract(page)
     page.click("#bxT-sql")
-    small = page.evaluate("""() => [...document.querySelectorAll('[data-engine-pick], [data-promote-target], [data-promote-page], [data-promote-slice], [data-promote-report], [data-run]')]
+    small = page.evaluate("""() => [...document.querySelectorAll('[data-engine-pick], [data-promote-target], [data-promote-page], [data-promote-report], [data-run]')]
       .filter(e => e.offsetParent !== null).map(e => [e.getAttribute('data-engine-pick') !== null ? 'engine' : e.className.slice(0, 20) + (e.dataset.promoteReport !== undefined ? ' promote-report' : ''), Math.round(e.getBoundingClientRect().height)]).filter(x => x[1] < 44)""")
     assert small == [], small
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")

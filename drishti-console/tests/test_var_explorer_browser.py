@@ -519,6 +519,36 @@ def test_the_newest_date_is_captured_officially_at_start(stack):
     assert {n["hierarchy"] for n in record["nodes"].values()} == {"MGMT", "LEGAL", "LL"}
 
 
+def test_the_scopes_panel_and_the_tree_columns_resize_and_are_kept(stack, browser):
+    """The Scopes panel's splitter and the tree's columns (drishti_resize.js): dragged, kept after a reload, Home resets."""
+    pg = open_var(browser, str(stack), "/var?scope=BANK")
+    painted(pg, "BANK")
+    wait(pg, "document.querySelector('.vx-tree .vx-row.hdr .rz-col') && document.querySelector('.vx-layout > [data-resize=\"panel\"]')")
+    side = lambda: pg.evaluate("document.querySelector('.vx-tree-panel').getBoundingClientRect().width")  # noqa: E731
+    var_col = lambda: pg.evaluate("document.querySelector('.vx-tree .vx-row[data-scope] > :nth-child(2)').getBoundingClientRect().width")  # noqa: E731
+    w0, c0 = side(), var_col()
+
+    def drag(sel, dx):
+        b = pg.locator(sel).first.bounding_box()
+        x, y = b["x"] + b["width"] / 2, b["y"] + min(b["height"] / 2, 40)
+        pg.mouse.move(x, y)
+        pg.mouse.down()
+        pg.mouse.move(x + dx, y, steps=6)
+        pg.mouse.up()
+    drag('.vx-layout > [data-resize="panel"]', 120)
+    assert abs(side() - (w0 + 120)) <= 3
+    drag('.vx-tree .vx-row.hdr > :nth-child(2) > .rz-col', 30)
+    assert abs(var_col() - (c0 + 30)) <= 3                                        # the rows follow the header
+    pg.reload()
+    painted(pg, "BANK")
+    wait(pg, "document.querySelector('.vx-tree .vx-row.hdr .rz-col')")
+    assert abs(side() - (w0 + 120)) <= 3 and abs(var_col() - (c0 + 30)) <= 3       # kept for this person, in this mode
+    pg.focus('.vx-layout > [data-resize="panel"]')
+    pg.keyboard.press("Home")
+    assert abs(side() - w0) <= 2
+    pg.close()
+
+
 def test_on_a_phone_the_explorer_stacks_without_scrolling_sideways(stack, browser):
     pg = open_var(browser, str(stack), "/var?scope=BANK", {"width": 390, "height": 844})
     painted(pg, "BANK")

@@ -16,7 +16,7 @@
 package com.ash.drishti.bicompute.custom;
 
 import com.ash.drishti.bicompute.formula.FormulaFunction;
-import com.ash.drishti.bicompute.formula.FormulaParser;
+import com.ash.drishti.bicompute.formula.FormulaLowering;
 import com.ash.drishti.bicompute.spi.AggFunction;
 import com.ash.drishti.bicompute.spi.Batch;
 import com.ash.drishti.bicompute.spi.Kind;
@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 
 /**
  * An SQL aggregate macro (PIVOT_ENGINE.md section 8.2): {@code CREATE MACRO wret(r, w) AS sum(r * w) / sum(w)}. The engine first rewrites
- * the macro into states: a body that is a formula of the built-ins (DEL's arithmetic over {@code sum}, {@code count}, {@code avg}, ...)
+ * the macro into states: a body that is a formula of the built-ins (arithmetic over {@code sum}, {@code count}, {@code avg}, ...)
  * becomes that {@link FormulaFunction}, mergeable, exact and fast. Any other body ({@code regr_slope(y, x)}, {@code mode(x)}) is holistic: the
  * tabular provider computes it in DuckDB for each grouping set from the set's own rows, and outside SQL (the harness, the playground) the
  * engine runs the body over the cell's rows in its own DuckDB.
@@ -114,7 +114,7 @@ public final class SqlMacroFunction {
         }
         try {
             return FormulaFunction.of(ref, m.body(), m.params());
-        } catch (FormulaParser.FormulaException notAFormula) {
+        } catch (FormulaLowering.FormulaException notAFormula) {
             boolean anyText = inputs != null && inputs.stream().anyMatch(FunctionDef.Input::text);
             return new Holistic(ref, m, !anyText, runner);
         }
@@ -122,7 +122,7 @@ public final class SqlMacroFunction {
 
     /** True when the macro's body is a formula of the built-ins (so it is mergeable). */
     public static boolean rewritesToStates(String text) {
-        return FormulaParser.isFormula(parse(text).body());
+        return FormulaLowering.isFormula(parse(text).body());
     }
 
     /** Runs a macro's body over rows in a DuckDB outside the provider (the harness, the playground, batches fed by the engine). */

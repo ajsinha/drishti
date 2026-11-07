@@ -1,0 +1,5007 @@
+{
+  "admin" : {
+    "Backtest exceptions | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 6 ] ]
+    },
+    "Backtest exceptions | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 6 ] ]
+    },
+    "Backtest exceptions | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 4 ], [ "hierarchy-1", 5 ], [ "hierarchy-2", 6 ], [ "hierarchy-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 4 ], [ "level-1", 5 ], [ "level-2", 6 ], [ "level-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 4 ], [ "node_name-1", 5 ], [ "node_name-2", 6 ], [ "node_name-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "Backtest exceptions | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 4 ], [ "hierarchy-1", "level-1", 5 ], [ "hierarchy-2", "level-2", 6 ], [ "hierarchy-3", "level-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 4.0 ], [ "hierarchy-1", 5.0 ], [ "hierarchy-2", 6.0 ], [ "hierarchy-3", 3.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 6 ] ]
+    },
+    "Bank ES | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank ES | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank ES | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank ES | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", null ], [ "level-1", null ], [ "level-2", null ], [ "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank ES | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", null ], [ "node_name-1", null ], [ "node_name-2", null ], [ "node_name-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank ES | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank ES | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", null ], [ "hierarchy-1", "level-1", null ], [ "hierarchy-2", "level-2", null ], [ "hierarchy-3", "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ]
+      } ]
+    },
+    "Bank ES | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank VaR | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", null ], [ "level-1", null ], [ "level-2", null ], [ "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank VaR | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", null ], [ "node_name-1", null ], [ "node_name-2", null ], [ "node_name-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank VaR | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", null ], [ "hierarchy-1", "level-1", null ], [ "hierarchy-2", "level-2", null ], [ "hierarchy-3", "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ]
+      } ]
+    },
+    "Bank VaR | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Diversification | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 54027.0 ] ]
+    },
+    "Diversification | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 54028.0 ] ]
+    },
+    "Diversification | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", -20009.0 ], [ "hierarchy-1", 17009.5 ], [ "hierarchy-2", 54028.0 ], [ "hierarchy-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      } ]
+    },
+    "Diversification | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", -20009.0 ], [ "level-1", 17009.5 ], [ "level-2", 54028.0 ], [ "level-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      } ]
+    },
+    "Diversification | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", -20009.0 ], [ "node_name-1", 17009.5 ], [ "node_name-2", 54028.0 ], [ "node_name-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      } ]
+    },
+    "Diversification | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -20009.0 ] ]
+    },
+    "Diversification | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", -20009.0 ], [ "hierarchy-1", "level-1", 17009.5 ], [ "hierarchy-2", "level-2", 54028.0 ], [ "hierarchy-3", "level-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", -20009.0 ], [ "hierarchy-1", 17009.5 ], [ "hierarchy-2", 54028.0 ], [ "hierarchy-3", 44023.0 ] ]
+      } ]
+    },
+    "Diversification | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 54028.0 ] ]
+    },
+    "ES 97.5% | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39019.5 ] ]
+    },
+    "ES 97.5% | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "ES 97.5% | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 39020.5 ], [ "hierarchy-1", -25011.5 ], [ "hierarchy-2", 12007.0 ], [ "hierarchy-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      } ]
+    },
+    "ES 97.5% | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 39020.5 ], [ "level-1", -25011.5 ], [ "level-2", 12007.0 ], [ "level-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      } ]
+    },
+    "ES 97.5% | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 39020.5 ], [ "node_name-1", -25011.5 ], [ "node_name-2", 12007.0 ], [ "node_name-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      } ]
+    },
+    "ES 97.5% | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "ES 97.5% | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 39020.5 ], [ "hierarchy-1", "level-1", -25011.5 ], [ "hierarchy-2", "level-2", 12007.0 ], [ "hierarchy-3", "level-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 39020.5 ], [ "hierarchy-1", -25011.5 ], [ "hierarchy-2", 12007.0 ], [ "hierarchy-3", 2002.0 ] ]
+      } ]
+    },
+    "ES 97.5% | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "ES confidence | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59029.5 ] ]
+    },
+    "ES confidence | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59030.5 ] ]
+    },
+    "ES confidence | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 59030.5 ], [ "hierarchy-1", -5001.5 ], [ "hierarchy-2", 32017.0 ], [ "hierarchy-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      } ]
+    },
+    "ES confidence | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 59030.5 ], [ "level-1", -5001.5 ], [ "level-2", 32017.0 ], [ "level-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      } ]
+    },
+    "ES confidence | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 59030.5 ], [ "node_name-1", -5001.5 ], [ "node_name-2", 32017.0 ], [ "node_name-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      } ]
+    },
+    "ES confidence | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59030.5 ] ]
+    },
+    "ES confidence | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 59030.5 ], [ "hierarchy-1", "level-1", -5001.5 ], [ "hierarchy-2", "level-2", 32017.0 ], [ "hierarchy-3", "level-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 59030.5 ], [ "hierarchy-1", -5001.5 ], [ "hierarchy-2", 32017.0 ], [ "hierarchy-3", 22012.0 ] ]
+      } ]
+    },
+    "ES confidence | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59030.5 ] ]
+    },
+    "Hypothetical P&L | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 68034.0 ] ]
+    },
+    "Hypothetical P&L | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 68035.0 ] ]
+    },
+    "Hypothetical P&L | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 4003.0 ], [ "hierarchy-1", 41021.5 ], [ "hierarchy-2", -23010.5 ], [ "hierarchy-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 4003.0 ], [ "level-1", 41021.5 ], [ "level-2", -23010.5 ], [ "level-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 4003.0 ], [ "node_name-1", 41021.5 ], [ "node_name-2", -23010.5 ], [ "node_name-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4003.0 ] ]
+    },
+    "Hypothetical P&L | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 4003.0 ], [ "hierarchy-1", "level-1", 41021.5 ], [ "hierarchy-2", "level-2", -23010.5 ], [ "hierarchy-3", "level-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 4003.0 ], [ "hierarchy-1", 41021.5 ], [ "hierarchy-2", -23010.5 ], [ "hierarchy-3", 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 68035.0 ] ]
+    },
+    "Limit use | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 52026.0 ] ]
+    },
+    "Limit use | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 52027.0 ] ]
+    },
+    "Limit use | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 15008.5 ], [ "hierarchy-1", 52027.0 ], [ "hierarchy-2", -12005.0 ], [ "hierarchy-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      } ]
+    },
+    "Limit use | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 15008.5 ], [ "level-1", 52027.0 ], [ "level-2", -12005.0 ], [ "level-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      } ]
+    },
+    "Limit use | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 15008.5 ], [ "node_name-1", 52027.0 ], [ "node_name-2", -12005.0 ], [ "node_name-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      } ]
+    },
+    "Limit use | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 15008.5 ] ]
+    },
+    "Limit use | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 15008.5 ], [ "hierarchy-1", "level-1", 52027.0 ], [ "hierarchy-2", "level-2", -12005.0 ], [ "hierarchy-3", "level-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 15008.5 ], [ "hierarchy-1", 52027.0 ], [ "hierarchy-2", -12005.0 ], [ "hierarchy-3", -22010.0 ] ]
+      } ]
+    },
+    "Limit use | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 52027.0 ] ]
+    },
+    "Nodes | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "Nodes | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "Nodes | as-of-day2 | by nodes.HIERARCHY" : {
+      "refused" : "DRS-9020"
+    },
+    "Nodes | as-of-day2 | by nodes.LEVEL" : {
+      "refused" : "DRS-9020"
+    },
+    "Nodes | as-of-day2 | by nodes.NODE_NAME" : {
+      "refused" : "DRS-9020"
+    },
+    "Nodes | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1 ] ]
+    },
+    "Nodes | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 1 ], [ "hierarchy-1", "level-1", 1 ], [ "hierarchy-2", "level-2", 1 ], [ "hierarchy-3", "level-3", 1 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 4.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 1.0 ], [ "hierarchy-1", 1.0 ], [ "hierarchy-2", 1.0 ], [ "hierarchy-3", 1.0 ] ]
+      } ]
+    },
+    "Nodes | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "VaR 99% | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50025.0 ] ]
+    },
+    "VaR 99% | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "VaR 99% | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 50026.0 ], [ "hierarchy-1", -14006.0 ], [ "hierarchy-2", 23012.5 ], [ "hierarchy-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "VaR 99% | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 50026.0 ], [ "level-1", -14006.0 ], [ "level-2", 23012.5 ], [ "level-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "VaR 99% | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 50026.0 ], [ "node_name-1", -14006.0 ], [ "node_name-2", 23012.5 ], [ "node_name-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "VaR 99% | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "VaR 99% | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 50026.0 ], [ "hierarchy-1", "level-1", -14006.0 ], [ "hierarchy-2", "level-2", 23012.5 ], [ "hierarchy-3", "level-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 50026.0 ], [ "hierarchy-1", -14006.0 ], [ "hierarchy-2", 23012.5 ], [ "hierarchy-3", 13007.5 ] ]
+      } ]
+    },
+    "VaR 99% | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "VaR confidence | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63031.5 ] ]
+    },
+    "VaR confidence | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63032.5 ] ]
+    },
+    "VaR confidence | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 26014.0 ], [ "hierarchy-1", 63032.5 ], [ "hierarchy-2", -999.5 ], [ "hierarchy-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      } ]
+    },
+    "VaR confidence | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 26014.0 ], [ "level-1", 63032.5 ], [ "level-2", -999.5 ], [ "level-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      } ]
+    },
+    "VaR confidence | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 26014.0 ], [ "node_name-1", 63032.5 ], [ "node_name-2", -999.5 ], [ "node_name-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      } ]
+    },
+    "VaR confidence | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 26014.0 ] ]
+    },
+    "VaR confidence | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 26014.0 ], [ "hierarchy-1", "level-1", 63032.5 ], [ "hierarchy-2", "level-2", -999.5 ], [ "hierarchy-3", "level-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 26014.0 ], [ "hierarchy-1", 63032.5 ], [ "hierarchy-2", -999.5 ], [ "hierarchy-3", -11004.5 ] ]
+      } ]
+    },
+    "VaR confidence | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63032.5 ] ]
+    },
+    "VaR limit | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 45022.5 ] ]
+    },
+    "VaR limit | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 45023.5 ] ]
+    },
+    "VaR limit | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", -29013.5 ], [ "hierarchy-1", 8005.0 ], [ "hierarchy-2", 45023.5 ], [ "hierarchy-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      } ]
+    },
+    "VaR limit | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", -29013.5 ], [ "level-1", 8005.0 ], [ "level-2", 45023.5 ], [ "level-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      } ]
+    },
+    "VaR limit | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", -29013.5 ], [ "node_name-1", 8005.0 ], [ "node_name-2", 45023.5 ], [ "node_name-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      } ]
+    },
+    "VaR limit | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -29013.5 ] ]
+    },
+    "VaR limit | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", -29013.5 ], [ "hierarchy-1", "level-1", 8005.0 ], [ "hierarchy-2", "level-2", 45023.5 ], [ "hierarchy-3", "level-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", -29013.5 ], [ "hierarchy-1", 8005.0 ], [ "hierarchy-2", 45023.5 ], [ "hierarchy-3", 35018.5 ] ]
+      } ]
+    },
+    "VaR limit | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 45023.5 ] ]
+    },
+    "calc VaR 99% | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 50026.0, 50026.0, 50026.0, 1.0, 50026.0 ], [ "hierarchy-1", -14006.0, 50026.0, 50026.0, -0.2799744133050814, null ], [ "hierarchy-2", 23012.5, 50026.0, 50026.0, 0.4600107943869188, null ], [ "hierarchy-3", 13007.5, 50026.0, 50026.0, 0.26001479230799984, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "calc VaR 99% | by nodes.HIERARCHY | slicer = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 50026.0, 50026.0, 50026.0, 1.0, 50026.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "rows of nodes" : {
+      "count" : 4,
+      "masked" : [ ],
+      "sha256" : "1cafe2baffd14f8cd0170af91303c3eacd386817d062b0727c4d20f3589d9301"
+    }
+  },
+  "analyst" : {
+    "Backtest exceptions | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 6 ] ]
+    },
+    "Backtest exceptions | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 6 ] ]
+    },
+    "Backtest exceptions | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 4 ], [ "hierarchy-1", 5 ], [ "hierarchy-2", 6 ], [ "hierarchy-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 4 ], [ "level-1", 5 ], [ "level-2", 6 ], [ "level-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 4 ], [ "node_name-1", 5 ], [ "node_name-2", 6 ], [ "node_name-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "Backtest exceptions | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 4 ], [ "hierarchy-1", "level-1", 5 ], [ "hierarchy-2", "level-2", 6 ], [ "hierarchy-3", "level-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 4.0 ], [ "hierarchy-1", 5.0 ], [ "hierarchy-2", 6.0 ], [ "hierarchy-3", 3.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 6 ] ]
+    },
+    "Bank ES | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank ES | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank ES | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank ES | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", null ], [ "level-1", null ], [ "level-2", null ], [ "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank ES | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", null ], [ "node_name-1", null ], [ "node_name-2", null ], [ "node_name-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank ES | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank ES | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", null ], [ "hierarchy-1", "level-1", null ], [ "hierarchy-2", "level-2", null ], [ "hierarchy-3", "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ]
+      } ]
+    },
+    "Bank ES | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank VaR | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", null ], [ "level-1", null ], [ "level-2", null ], [ "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank VaR | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", null ], [ "node_name-1", null ], [ "node_name-2", null ], [ "node_name-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank VaR | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", null ], [ "hierarchy-1", "level-1", null ], [ "hierarchy-2", "level-2", null ], [ "hierarchy-3", "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ]
+      } ]
+    },
+    "Bank VaR | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Diversification | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 54027.0 ] ]
+    },
+    "Diversification | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 54028.0 ] ]
+    },
+    "Diversification | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", -20009.0 ], [ "hierarchy-1", 17009.5 ], [ "hierarchy-2", 54028.0 ], [ "hierarchy-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      } ]
+    },
+    "Diversification | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", -20009.0 ], [ "level-1", 17009.5 ], [ "level-2", 54028.0 ], [ "level-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      } ]
+    },
+    "Diversification | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", -20009.0 ], [ "node_name-1", 17009.5 ], [ "node_name-2", 54028.0 ], [ "node_name-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      } ]
+    },
+    "Diversification | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -20009.0 ] ]
+    },
+    "Diversification | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", -20009.0 ], [ "hierarchy-1", "level-1", 17009.5 ], [ "hierarchy-2", "level-2", 54028.0 ], [ "hierarchy-3", "level-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", -20009.0 ], [ "hierarchy-1", 17009.5 ], [ "hierarchy-2", 54028.0 ], [ "hierarchy-3", 44023.0 ] ]
+      } ]
+    },
+    "Diversification | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 54028.0 ] ]
+    },
+    "ES 97.5% | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39019.5 ] ]
+    },
+    "ES 97.5% | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "ES 97.5% | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 39020.5 ], [ "hierarchy-1", -25011.5 ], [ "hierarchy-2", 12007.0 ], [ "hierarchy-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      } ]
+    },
+    "ES 97.5% | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 39020.5 ], [ "level-1", -25011.5 ], [ "level-2", 12007.0 ], [ "level-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      } ]
+    },
+    "ES 97.5% | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 39020.5 ], [ "node_name-1", -25011.5 ], [ "node_name-2", 12007.0 ], [ "node_name-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      } ]
+    },
+    "ES 97.5% | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "ES 97.5% | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 39020.5 ], [ "hierarchy-1", "level-1", -25011.5 ], [ "hierarchy-2", "level-2", 12007.0 ], [ "hierarchy-3", "level-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 39020.5 ], [ "hierarchy-1", -25011.5 ], [ "hierarchy-2", 12007.0 ], [ "hierarchy-3", 2002.0 ] ]
+      } ]
+    },
+    "ES 97.5% | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "ES confidence | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59029.5 ] ]
+    },
+    "ES confidence | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59030.5 ] ]
+    },
+    "ES confidence | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 59030.5 ], [ "hierarchy-1", -5001.5 ], [ "hierarchy-2", 32017.0 ], [ "hierarchy-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      } ]
+    },
+    "ES confidence | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 59030.5 ], [ "level-1", -5001.5 ], [ "level-2", 32017.0 ], [ "level-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      } ]
+    },
+    "ES confidence | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 59030.5 ], [ "node_name-1", -5001.5 ], [ "node_name-2", 32017.0 ], [ "node_name-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      } ]
+    },
+    "ES confidence | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59030.5 ] ]
+    },
+    "ES confidence | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 59030.5 ], [ "hierarchy-1", "level-1", -5001.5 ], [ "hierarchy-2", "level-2", 32017.0 ], [ "hierarchy-3", "level-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 59030.5 ], [ "hierarchy-1", -5001.5 ], [ "hierarchy-2", 32017.0 ], [ "hierarchy-3", 22012.0 ] ]
+      } ]
+    },
+    "ES confidence | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59030.5 ] ]
+    },
+    "Hypothetical P&L | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 68034.0 ] ]
+    },
+    "Hypothetical P&L | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 68035.0 ] ]
+    },
+    "Hypothetical P&L | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 4003.0 ], [ "hierarchy-1", 41021.5 ], [ "hierarchy-2", -23010.5 ], [ "hierarchy-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 4003.0 ], [ "level-1", 41021.5 ], [ "level-2", -23010.5 ], [ "level-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 4003.0 ], [ "node_name-1", 41021.5 ], [ "node_name-2", -23010.5 ], [ "node_name-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4003.0 ] ]
+    },
+    "Hypothetical P&L | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 4003.0 ], [ "hierarchy-1", "level-1", 41021.5 ], [ "hierarchy-2", "level-2", -23010.5 ], [ "hierarchy-3", "level-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 4003.0 ], [ "hierarchy-1", 41021.5 ], [ "hierarchy-2", -23010.5 ], [ "hierarchy-3", 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 68035.0 ] ]
+    },
+    "Limit use | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 52026.0 ] ]
+    },
+    "Limit use | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 52027.0 ] ]
+    },
+    "Limit use | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 15008.5 ], [ "hierarchy-1", 52027.0 ], [ "hierarchy-2", -12005.0 ], [ "hierarchy-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      } ]
+    },
+    "Limit use | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 15008.5 ], [ "level-1", 52027.0 ], [ "level-2", -12005.0 ], [ "level-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      } ]
+    },
+    "Limit use | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 15008.5 ], [ "node_name-1", 52027.0 ], [ "node_name-2", -12005.0 ], [ "node_name-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      } ]
+    },
+    "Limit use | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 15008.5 ] ]
+    },
+    "Limit use | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 15008.5 ], [ "hierarchy-1", "level-1", 52027.0 ], [ "hierarchy-2", "level-2", -12005.0 ], [ "hierarchy-3", "level-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 15008.5 ], [ "hierarchy-1", 52027.0 ], [ "hierarchy-2", -12005.0 ], [ "hierarchy-3", -22010.0 ] ]
+      } ]
+    },
+    "Limit use | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 52027.0 ] ]
+    },
+    "Nodes | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "Nodes | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "Nodes | as-of-day2 | by nodes.HIERARCHY" : {
+      "refused" : "DRS-9020"
+    },
+    "Nodes | as-of-day2 | by nodes.LEVEL" : {
+      "refused" : "DRS-9020"
+    },
+    "Nodes | as-of-day2 | by nodes.NODE_NAME" : {
+      "refused" : "DRS-9020"
+    },
+    "Nodes | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1 ] ]
+    },
+    "Nodes | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 1 ], [ "hierarchy-1", "level-1", 1 ], [ "hierarchy-2", "level-2", 1 ], [ "hierarchy-3", "level-3", 1 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 4.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 1.0 ], [ "hierarchy-1", 1.0 ], [ "hierarchy-2", 1.0 ], [ "hierarchy-3", 1.0 ] ]
+      } ]
+    },
+    "Nodes | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "VaR 99% | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50025.0 ] ]
+    },
+    "VaR 99% | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "VaR 99% | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 50026.0 ], [ "hierarchy-1", -14006.0 ], [ "hierarchy-2", 23012.5 ], [ "hierarchy-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "VaR 99% | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 50026.0 ], [ "level-1", -14006.0 ], [ "level-2", 23012.5 ], [ "level-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "VaR 99% | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 50026.0 ], [ "node_name-1", -14006.0 ], [ "node_name-2", 23012.5 ], [ "node_name-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "VaR 99% | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "VaR 99% | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 50026.0 ], [ "hierarchy-1", "level-1", -14006.0 ], [ "hierarchy-2", "level-2", 23012.5 ], [ "hierarchy-3", "level-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 50026.0 ], [ "hierarchy-1", -14006.0 ], [ "hierarchy-2", 23012.5 ], [ "hierarchy-3", 13007.5 ] ]
+      } ]
+    },
+    "VaR 99% | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "VaR confidence | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63031.5 ] ]
+    },
+    "VaR confidence | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63032.5 ] ]
+    },
+    "VaR confidence | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 26014.0 ], [ "hierarchy-1", 63032.5 ], [ "hierarchy-2", -999.5 ], [ "hierarchy-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      } ]
+    },
+    "VaR confidence | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 26014.0 ], [ "level-1", 63032.5 ], [ "level-2", -999.5 ], [ "level-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      } ]
+    },
+    "VaR confidence | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 26014.0 ], [ "node_name-1", 63032.5 ], [ "node_name-2", -999.5 ], [ "node_name-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      } ]
+    },
+    "VaR confidence | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 26014.0 ] ]
+    },
+    "VaR confidence | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 26014.0 ], [ "hierarchy-1", "level-1", 63032.5 ], [ "hierarchy-2", "level-2", -999.5 ], [ "hierarchy-3", "level-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 26014.0 ], [ "hierarchy-1", 63032.5 ], [ "hierarchy-2", -999.5 ], [ "hierarchy-3", -11004.5 ] ]
+      } ]
+    },
+    "VaR confidence | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63032.5 ] ]
+    },
+    "VaR limit | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 45022.5 ] ]
+    },
+    "VaR limit | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 45023.5 ] ]
+    },
+    "VaR limit | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", -29013.5 ], [ "hierarchy-1", 8005.0 ], [ "hierarchy-2", 45023.5 ], [ "hierarchy-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      } ]
+    },
+    "VaR limit | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", -29013.5 ], [ "level-1", 8005.0 ], [ "level-2", 45023.5 ], [ "level-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      } ]
+    },
+    "VaR limit | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", -29013.5 ], [ "node_name-1", 8005.0 ], [ "node_name-2", 45023.5 ], [ "node_name-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      } ]
+    },
+    "VaR limit | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -29013.5 ] ]
+    },
+    "VaR limit | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", -29013.5 ], [ "hierarchy-1", "level-1", 8005.0 ], [ "hierarchy-2", "level-2", 45023.5 ], [ "hierarchy-3", "level-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", -29013.5 ], [ "hierarchy-1", 8005.0 ], [ "hierarchy-2", 45023.5 ], [ "hierarchy-3", 35018.5 ] ]
+      } ]
+    },
+    "VaR limit | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 45023.5 ] ]
+    },
+    "calc VaR 99% | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 50026.0, 50026.0, 50026.0, 1.0, 50026.0 ], [ "hierarchy-1", -14006.0, 50026.0, 50026.0, -0.2799744133050814, null ], [ "hierarchy-2", 23012.5, 50026.0, 50026.0, 0.4600107943869188, null ], [ "hierarchy-3", 13007.5, 50026.0, 50026.0, 0.26001479230799984, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "calc VaR 99% | by nodes.HIERARCHY | slicer = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 50026.0, 50026.0, 50026.0, 1.0, 50026.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "rows of nodes" : {
+      "count" : 4,
+      "masked" : [ ],
+      "sha256" : "1cafe2baffd14f8cd0170af91303c3eacd386817d062b0727c4d20f3589d9301"
+    }
+  },
+  "desk-head-no-desks" : {
+    "Backtest exceptions | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 6 ] ]
+    },
+    "Backtest exceptions | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 6 ] ]
+    },
+    "Backtest exceptions | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 4 ], [ "hierarchy-1", 5 ], [ "hierarchy-2", 6 ], [ "hierarchy-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 4 ], [ "level-1", 5 ], [ "level-2", 6 ], [ "level-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 4 ], [ "node_name-1", 5 ], [ "node_name-2", 6 ], [ "node_name-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "Backtest exceptions | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 4 ], [ "hierarchy-1", "level-1", 5 ], [ "hierarchy-2", "level-2", 6 ], [ "hierarchy-3", "level-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 4.0 ], [ "hierarchy-1", 5.0 ], [ "hierarchy-2", 6.0 ], [ "hierarchy-3", 3.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 6 ] ]
+    },
+    "Bank ES | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank ES | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank ES | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank ES | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", null ], [ "level-1", null ], [ "level-2", null ], [ "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank ES | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", null ], [ "node_name-1", null ], [ "node_name-2", null ], [ "node_name-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank ES | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank ES | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", null ], [ "hierarchy-1", "level-1", null ], [ "hierarchy-2", "level-2", null ], [ "hierarchy-3", "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ]
+      } ]
+    },
+    "Bank ES | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank VaR | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", null ], [ "level-1", null ], [ "level-2", null ], [ "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank VaR | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", null ], [ "node_name-1", null ], [ "node_name-2", null ], [ "node_name-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank VaR | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", null ], [ "hierarchy-1", "level-1", null ], [ "hierarchy-2", "level-2", null ], [ "hierarchy-3", "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ]
+      } ]
+    },
+    "Bank VaR | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Diversification | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 54027.0 ] ]
+    },
+    "Diversification | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 54028.0 ] ]
+    },
+    "Diversification | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", -20009.0 ], [ "hierarchy-1", 17009.5 ], [ "hierarchy-2", 54028.0 ], [ "hierarchy-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      } ]
+    },
+    "Diversification | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", -20009.0 ], [ "level-1", 17009.5 ], [ "level-2", 54028.0 ], [ "level-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      } ]
+    },
+    "Diversification | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", -20009.0 ], [ "node_name-1", 17009.5 ], [ "node_name-2", 54028.0 ], [ "node_name-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      } ]
+    },
+    "Diversification | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -20009.0 ] ]
+    },
+    "Diversification | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", -20009.0 ], [ "hierarchy-1", "level-1", 17009.5 ], [ "hierarchy-2", "level-2", 54028.0 ], [ "hierarchy-3", "level-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", -20009.0 ], [ "hierarchy-1", 17009.5 ], [ "hierarchy-2", 54028.0 ], [ "hierarchy-3", 44023.0 ] ]
+      } ]
+    },
+    "Diversification | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 54028.0 ] ]
+    },
+    "ES 97.5% | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39019.5 ] ]
+    },
+    "ES 97.5% | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "ES 97.5% | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 39020.5 ], [ "hierarchy-1", -25011.5 ], [ "hierarchy-2", 12007.0 ], [ "hierarchy-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      } ]
+    },
+    "ES 97.5% | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 39020.5 ], [ "level-1", -25011.5 ], [ "level-2", 12007.0 ], [ "level-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      } ]
+    },
+    "ES 97.5% | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 39020.5 ], [ "node_name-1", -25011.5 ], [ "node_name-2", 12007.0 ], [ "node_name-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      } ]
+    },
+    "ES 97.5% | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "ES 97.5% | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 39020.5 ], [ "hierarchy-1", "level-1", -25011.5 ], [ "hierarchy-2", "level-2", 12007.0 ], [ "hierarchy-3", "level-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 39020.5 ], [ "hierarchy-1", -25011.5 ], [ "hierarchy-2", 12007.0 ], [ "hierarchy-3", 2002.0 ] ]
+      } ]
+    },
+    "ES 97.5% | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "ES confidence | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59029.5 ] ]
+    },
+    "ES confidence | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59030.5 ] ]
+    },
+    "ES confidence | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 59030.5 ], [ "hierarchy-1", -5001.5 ], [ "hierarchy-2", 32017.0 ], [ "hierarchy-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      } ]
+    },
+    "ES confidence | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 59030.5 ], [ "level-1", -5001.5 ], [ "level-2", 32017.0 ], [ "level-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      } ]
+    },
+    "ES confidence | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 59030.5 ], [ "node_name-1", -5001.5 ], [ "node_name-2", 32017.0 ], [ "node_name-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      } ]
+    },
+    "ES confidence | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59030.5 ] ]
+    },
+    "ES confidence | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 59030.5 ], [ "hierarchy-1", "level-1", -5001.5 ], [ "hierarchy-2", "level-2", 32017.0 ], [ "hierarchy-3", "level-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 59030.5 ], [ "hierarchy-1", -5001.5 ], [ "hierarchy-2", 32017.0 ], [ "hierarchy-3", 22012.0 ] ]
+      } ]
+    },
+    "ES confidence | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59030.5 ] ]
+    },
+    "Hypothetical P&L | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 68034.0 ] ]
+    },
+    "Hypothetical P&L | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 68035.0 ] ]
+    },
+    "Hypothetical P&L | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 4003.0 ], [ "hierarchy-1", 41021.5 ], [ "hierarchy-2", -23010.5 ], [ "hierarchy-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 4003.0 ], [ "level-1", 41021.5 ], [ "level-2", -23010.5 ], [ "level-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 4003.0 ], [ "node_name-1", 41021.5 ], [ "node_name-2", -23010.5 ], [ "node_name-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4003.0 ] ]
+    },
+    "Hypothetical P&L | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 4003.0 ], [ "hierarchy-1", "level-1", 41021.5 ], [ "hierarchy-2", "level-2", -23010.5 ], [ "hierarchy-3", "level-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 4003.0 ], [ "hierarchy-1", 41021.5 ], [ "hierarchy-2", -23010.5 ], [ "hierarchy-3", 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 68035.0 ] ]
+    },
+    "Limit use | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 52026.0 ] ]
+    },
+    "Limit use | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 52027.0 ] ]
+    },
+    "Limit use | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 15008.5 ], [ "hierarchy-1", 52027.0 ], [ "hierarchy-2", -12005.0 ], [ "hierarchy-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      } ]
+    },
+    "Limit use | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 15008.5 ], [ "level-1", 52027.0 ], [ "level-2", -12005.0 ], [ "level-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      } ]
+    },
+    "Limit use | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 15008.5 ], [ "node_name-1", 52027.0 ], [ "node_name-2", -12005.0 ], [ "node_name-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      } ]
+    },
+    "Limit use | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 15008.5 ] ]
+    },
+    "Limit use | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 15008.5 ], [ "hierarchy-1", "level-1", 52027.0 ], [ "hierarchy-2", "level-2", -12005.0 ], [ "hierarchy-3", "level-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 15008.5 ], [ "hierarchy-1", 52027.0 ], [ "hierarchy-2", -12005.0 ], [ "hierarchy-3", -22010.0 ] ]
+      } ]
+    },
+    "Limit use | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 52027.0 ] ]
+    },
+    "Nodes | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "Nodes | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "Nodes | as-of-day2 | by nodes.HIERARCHY" : {
+      "refused" : "DRS-9020"
+    },
+    "Nodes | as-of-day2 | by nodes.LEVEL" : {
+      "refused" : "DRS-9020"
+    },
+    "Nodes | as-of-day2 | by nodes.NODE_NAME" : {
+      "refused" : "DRS-9020"
+    },
+    "Nodes | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1 ] ]
+    },
+    "Nodes | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 1 ], [ "hierarchy-1", "level-1", 1 ], [ "hierarchy-2", "level-2", 1 ], [ "hierarchy-3", "level-3", 1 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 4.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 1.0 ], [ "hierarchy-1", 1.0 ], [ "hierarchy-2", 1.0 ], [ "hierarchy-3", 1.0 ] ]
+      } ]
+    },
+    "Nodes | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "VaR 99% | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50025.0 ] ]
+    },
+    "VaR 99% | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "VaR 99% | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 50026.0 ], [ "hierarchy-1", -14006.0 ], [ "hierarchy-2", 23012.5 ], [ "hierarchy-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "VaR 99% | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 50026.0 ], [ "level-1", -14006.0 ], [ "level-2", 23012.5 ], [ "level-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "VaR 99% | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 50026.0 ], [ "node_name-1", -14006.0 ], [ "node_name-2", 23012.5 ], [ "node_name-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "VaR 99% | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "VaR 99% | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 50026.0 ], [ "hierarchy-1", "level-1", -14006.0 ], [ "hierarchy-2", "level-2", 23012.5 ], [ "hierarchy-3", "level-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 50026.0 ], [ "hierarchy-1", -14006.0 ], [ "hierarchy-2", 23012.5 ], [ "hierarchy-3", 13007.5 ] ]
+      } ]
+    },
+    "VaR 99% | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "VaR confidence | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63031.5 ] ]
+    },
+    "VaR confidence | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63032.5 ] ]
+    },
+    "VaR confidence | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 26014.0 ], [ "hierarchy-1", 63032.5 ], [ "hierarchy-2", -999.5 ], [ "hierarchy-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      } ]
+    },
+    "VaR confidence | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 26014.0 ], [ "level-1", 63032.5 ], [ "level-2", -999.5 ], [ "level-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      } ]
+    },
+    "VaR confidence | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 26014.0 ], [ "node_name-1", 63032.5 ], [ "node_name-2", -999.5 ], [ "node_name-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      } ]
+    },
+    "VaR confidence | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 26014.0 ] ]
+    },
+    "VaR confidence | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 26014.0 ], [ "hierarchy-1", "level-1", 63032.5 ], [ "hierarchy-2", "level-2", -999.5 ], [ "hierarchy-3", "level-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 26014.0 ], [ "hierarchy-1", 63032.5 ], [ "hierarchy-2", -999.5 ], [ "hierarchy-3", -11004.5 ] ]
+      } ]
+    },
+    "VaR confidence | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63032.5 ] ]
+    },
+    "VaR limit | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 45022.5 ] ]
+    },
+    "VaR limit | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 45023.5 ] ]
+    },
+    "VaR limit | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", -29013.5 ], [ "hierarchy-1", 8005.0 ], [ "hierarchy-2", 45023.5 ], [ "hierarchy-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      } ]
+    },
+    "VaR limit | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", -29013.5 ], [ "level-1", 8005.0 ], [ "level-2", 45023.5 ], [ "level-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      } ]
+    },
+    "VaR limit | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", -29013.5 ], [ "node_name-1", 8005.0 ], [ "node_name-2", 45023.5 ], [ "node_name-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      } ]
+    },
+    "VaR limit | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -29013.5 ] ]
+    },
+    "VaR limit | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", -29013.5 ], [ "hierarchy-1", "level-1", 8005.0 ], [ "hierarchy-2", "level-2", 45023.5 ], [ "hierarchy-3", "level-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", -29013.5 ], [ "hierarchy-1", 8005.0 ], [ "hierarchy-2", 45023.5 ], [ "hierarchy-3", 35018.5 ] ]
+      } ]
+    },
+    "VaR limit | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 45023.5 ] ]
+    },
+    "calc VaR 99% | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 50026.0, 50026.0, 50026.0, 1.0, 50026.0 ], [ "hierarchy-1", -14006.0, 50026.0, 50026.0, -0.2799744133050814, null ], [ "hierarchy-2", 23012.5, 50026.0, 50026.0, 0.4600107943869188, null ], [ "hierarchy-3", 13007.5, 50026.0, 50026.0, 0.26001479230799984, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "calc VaR 99% | by nodes.HIERARCHY | slicer = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 50026.0, 50026.0, 50026.0, 1.0, 50026.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "rows of nodes" : {
+      "count" : 4,
+      "masked" : [ ],
+      "sha256" : "1cafe2baffd14f8cd0170af91303c3eacd386817d062b0727c4d20f3589d9301"
+    }
+  },
+  "desk-head-two-desks" : {
+    "Backtest exceptions | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 6 ] ]
+    },
+    "Backtest exceptions | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 6 ] ]
+    },
+    "Backtest exceptions | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 4 ], [ "hierarchy-1", 5 ], [ "hierarchy-2", 6 ], [ "hierarchy-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 4 ], [ "level-1", 5 ], [ "level-2", 6 ], [ "level-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 4 ], [ "node_name-1", 5 ], [ "node_name-2", 6 ], [ "node_name-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "Backtest exceptions | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 4 ], [ "hierarchy-1", "level-1", 5 ], [ "hierarchy-2", "level-2", 6 ], [ "hierarchy-3", "level-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 4.0 ], [ "hierarchy-1", 5.0 ], [ "hierarchy-2", 6.0 ], [ "hierarchy-3", 3.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 6 ] ]
+    },
+    "Bank ES | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank ES | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank ES | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank ES | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", null ], [ "level-1", null ], [ "level-2", null ], [ "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank ES | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", null ], [ "node_name-1", null ], [ "node_name-2", null ], [ "node_name-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank ES | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank ES | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", null ], [ "hierarchy-1", "level-1", null ], [ "hierarchy-2", "level-2", null ], [ "hierarchy-3", "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ]
+      } ]
+    },
+    "Bank ES | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank VaR | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", null ], [ "level-1", null ], [ "level-2", null ], [ "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank VaR | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", null ], [ "node_name-1", null ], [ "node_name-2", null ], [ "node_name-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank VaR | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", null ], [ "hierarchy-1", "level-1", null ], [ "hierarchy-2", "level-2", null ], [ "hierarchy-3", "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ]
+      } ]
+    },
+    "Bank VaR | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Diversification | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 54027.0 ] ]
+    },
+    "Diversification | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 54028.0 ] ]
+    },
+    "Diversification | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", -20009.0 ], [ "hierarchy-1", 17009.5 ], [ "hierarchy-2", 54028.0 ], [ "hierarchy-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      } ]
+    },
+    "Diversification | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", -20009.0 ], [ "level-1", 17009.5 ], [ "level-2", 54028.0 ], [ "level-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      } ]
+    },
+    "Diversification | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", -20009.0 ], [ "node_name-1", 17009.5 ], [ "node_name-2", 54028.0 ], [ "node_name-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      } ]
+    },
+    "Diversification | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -20009.0 ] ]
+    },
+    "Diversification | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", -20009.0 ], [ "hierarchy-1", "level-1", 17009.5 ], [ "hierarchy-2", "level-2", 54028.0 ], [ "hierarchy-3", "level-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", -20009.0 ], [ "hierarchy-1", 17009.5 ], [ "hierarchy-2", 54028.0 ], [ "hierarchy-3", 44023.0 ] ]
+      } ]
+    },
+    "Diversification | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 54028.0 ] ]
+    },
+    "ES 97.5% | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39019.5 ] ]
+    },
+    "ES 97.5% | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "ES 97.5% | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 39020.5 ], [ "hierarchy-1", -25011.5 ], [ "hierarchy-2", 12007.0 ], [ "hierarchy-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      } ]
+    },
+    "ES 97.5% | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 39020.5 ], [ "level-1", -25011.5 ], [ "level-2", 12007.0 ], [ "level-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      } ]
+    },
+    "ES 97.5% | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 39020.5 ], [ "node_name-1", -25011.5 ], [ "node_name-2", 12007.0 ], [ "node_name-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      } ]
+    },
+    "ES 97.5% | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "ES 97.5% | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 39020.5 ], [ "hierarchy-1", "level-1", -25011.5 ], [ "hierarchy-2", "level-2", 12007.0 ], [ "hierarchy-3", "level-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 39020.5 ], [ "hierarchy-1", -25011.5 ], [ "hierarchy-2", 12007.0 ], [ "hierarchy-3", 2002.0 ] ]
+      } ]
+    },
+    "ES 97.5% | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "ES confidence | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59029.5 ] ]
+    },
+    "ES confidence | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59030.5 ] ]
+    },
+    "ES confidence | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 59030.5 ], [ "hierarchy-1", -5001.5 ], [ "hierarchy-2", 32017.0 ], [ "hierarchy-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      } ]
+    },
+    "ES confidence | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 59030.5 ], [ "level-1", -5001.5 ], [ "level-2", 32017.0 ], [ "level-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      } ]
+    },
+    "ES confidence | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 59030.5 ], [ "node_name-1", -5001.5 ], [ "node_name-2", 32017.0 ], [ "node_name-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      } ]
+    },
+    "ES confidence | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59030.5 ] ]
+    },
+    "ES confidence | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 59030.5 ], [ "hierarchy-1", "level-1", -5001.5 ], [ "hierarchy-2", "level-2", 32017.0 ], [ "hierarchy-3", "level-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 59030.5 ], [ "hierarchy-1", -5001.5 ], [ "hierarchy-2", 32017.0 ], [ "hierarchy-3", 22012.0 ] ]
+      } ]
+    },
+    "ES confidence | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59030.5 ] ]
+    },
+    "Hypothetical P&L | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 68034.0 ] ]
+    },
+    "Hypothetical P&L | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 68035.0 ] ]
+    },
+    "Hypothetical P&L | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 4003.0 ], [ "hierarchy-1", 41021.5 ], [ "hierarchy-2", -23010.5 ], [ "hierarchy-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 4003.0 ], [ "level-1", 41021.5 ], [ "level-2", -23010.5 ], [ "level-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 4003.0 ], [ "node_name-1", 41021.5 ], [ "node_name-2", -23010.5 ], [ "node_name-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4003.0 ] ]
+    },
+    "Hypothetical P&L | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 4003.0 ], [ "hierarchy-1", "level-1", 41021.5 ], [ "hierarchy-2", "level-2", -23010.5 ], [ "hierarchy-3", "level-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 4003.0 ], [ "hierarchy-1", 41021.5 ], [ "hierarchy-2", -23010.5 ], [ "hierarchy-3", 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 68035.0 ] ]
+    },
+    "Limit use | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 52026.0 ] ]
+    },
+    "Limit use | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 52027.0 ] ]
+    },
+    "Limit use | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 15008.5 ], [ "hierarchy-1", 52027.0 ], [ "hierarchy-2", -12005.0 ], [ "hierarchy-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      } ]
+    },
+    "Limit use | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 15008.5 ], [ "level-1", 52027.0 ], [ "level-2", -12005.0 ], [ "level-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      } ]
+    },
+    "Limit use | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 15008.5 ], [ "node_name-1", 52027.0 ], [ "node_name-2", -12005.0 ], [ "node_name-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      } ]
+    },
+    "Limit use | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 15008.5 ] ]
+    },
+    "Limit use | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 15008.5 ], [ "hierarchy-1", "level-1", 52027.0 ], [ "hierarchy-2", "level-2", -12005.0 ], [ "hierarchy-3", "level-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 15008.5 ], [ "hierarchy-1", 52027.0 ], [ "hierarchy-2", -12005.0 ], [ "hierarchy-3", -22010.0 ] ]
+      } ]
+    },
+    "Limit use | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 52027.0 ] ]
+    },
+    "Nodes | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "Nodes | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "Nodes | as-of-day2 | by nodes.HIERARCHY" : {
+      "refused" : "DRS-9020"
+    },
+    "Nodes | as-of-day2 | by nodes.LEVEL" : {
+      "refused" : "DRS-9020"
+    },
+    "Nodes | as-of-day2 | by nodes.NODE_NAME" : {
+      "refused" : "DRS-9020"
+    },
+    "Nodes | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1 ] ]
+    },
+    "Nodes | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 1 ], [ "hierarchy-1", "level-1", 1 ], [ "hierarchy-2", "level-2", 1 ], [ "hierarchy-3", "level-3", 1 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 4.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 1.0 ], [ "hierarchy-1", 1.0 ], [ "hierarchy-2", 1.0 ], [ "hierarchy-3", 1.0 ] ]
+      } ]
+    },
+    "Nodes | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "VaR 99% | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50025.0 ] ]
+    },
+    "VaR 99% | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "VaR 99% | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 50026.0 ], [ "hierarchy-1", -14006.0 ], [ "hierarchy-2", 23012.5 ], [ "hierarchy-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "VaR 99% | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 50026.0 ], [ "level-1", -14006.0 ], [ "level-2", 23012.5 ], [ "level-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "VaR 99% | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 50026.0 ], [ "node_name-1", -14006.0 ], [ "node_name-2", 23012.5 ], [ "node_name-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "VaR 99% | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "VaR 99% | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 50026.0 ], [ "hierarchy-1", "level-1", -14006.0 ], [ "hierarchy-2", "level-2", 23012.5 ], [ "hierarchy-3", "level-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 50026.0 ], [ "hierarchy-1", -14006.0 ], [ "hierarchy-2", 23012.5 ], [ "hierarchy-3", 13007.5 ] ]
+      } ]
+    },
+    "VaR 99% | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "VaR confidence | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63031.5 ] ]
+    },
+    "VaR confidence | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63032.5 ] ]
+    },
+    "VaR confidence | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 26014.0 ], [ "hierarchy-1", 63032.5 ], [ "hierarchy-2", -999.5 ], [ "hierarchy-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      } ]
+    },
+    "VaR confidence | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 26014.0 ], [ "level-1", 63032.5 ], [ "level-2", -999.5 ], [ "level-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      } ]
+    },
+    "VaR confidence | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 26014.0 ], [ "node_name-1", 63032.5 ], [ "node_name-2", -999.5 ], [ "node_name-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      } ]
+    },
+    "VaR confidence | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 26014.0 ] ]
+    },
+    "VaR confidence | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 26014.0 ], [ "hierarchy-1", "level-1", 63032.5 ], [ "hierarchy-2", "level-2", -999.5 ], [ "hierarchy-3", "level-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 26014.0 ], [ "hierarchy-1", 63032.5 ], [ "hierarchy-2", -999.5 ], [ "hierarchy-3", -11004.5 ] ]
+      } ]
+    },
+    "VaR confidence | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63032.5 ] ]
+    },
+    "VaR limit | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 45022.5 ] ]
+    },
+    "VaR limit | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 45023.5 ] ]
+    },
+    "VaR limit | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", -29013.5 ], [ "hierarchy-1", 8005.0 ], [ "hierarchy-2", 45023.5 ], [ "hierarchy-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      } ]
+    },
+    "VaR limit | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", -29013.5 ], [ "level-1", 8005.0 ], [ "level-2", 45023.5 ], [ "level-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      } ]
+    },
+    "VaR limit | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", -29013.5 ], [ "node_name-1", 8005.0 ], [ "node_name-2", 45023.5 ], [ "node_name-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      } ]
+    },
+    "VaR limit | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -29013.5 ] ]
+    },
+    "VaR limit | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", -29013.5 ], [ "hierarchy-1", "level-1", 8005.0 ], [ "hierarchy-2", "level-2", 45023.5 ], [ "hierarchy-3", "level-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", -29013.5 ], [ "hierarchy-1", 8005.0 ], [ "hierarchy-2", 45023.5 ], [ "hierarchy-3", 35018.5 ] ]
+      } ]
+    },
+    "VaR limit | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 45023.5 ] ]
+    },
+    "calc VaR 99% | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 50026.0, 50026.0, 50026.0, 1.0, 50026.0 ], [ "hierarchy-1", -14006.0, 50026.0, 50026.0, -0.2799744133050814, null ], [ "hierarchy-2", 23012.5, 50026.0, 50026.0, 0.4600107943869188, null ], [ "hierarchy-3", 13007.5, 50026.0, 50026.0, 0.26001479230799984, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "calc VaR 99% | by nodes.HIERARCHY | slicer = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 50026.0, 50026.0, 50026.0, 1.0, 50026.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "rows of nodes" : {
+      "count" : 4,
+      "masked" : [ ],
+      "sha256" : "1cafe2baffd14f8cd0170af91303c3eacd386817d062b0727c4d20f3589d9301"
+    }
+  },
+  "no-raw-power" : {
+    "Backtest exceptions | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 6 ] ]
+    },
+    "Backtest exceptions | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 6 ] ]
+    },
+    "Backtest exceptions | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 4 ], [ "hierarchy-1", 5 ], [ "hierarchy-2", 6 ], [ "hierarchy-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 4 ], [ "level-1", 5 ], [ "level-2", 6 ], [ "level-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 4 ], [ "node_name-1", 5 ], [ "node_name-2", 6 ], [ "node_name-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "Backtest exceptions | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 4 ], [ "hierarchy-1", "level-1", 5 ], [ "hierarchy-2", "level-2", 6 ], [ "hierarchy-3", "level-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 4.0 ], [ "hierarchy-1", 5.0 ], [ "hierarchy-2", 6.0 ], [ "hierarchy-3", 3.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 6 ] ]
+    },
+    "Bank ES | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank ES | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank ES | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank ES | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", null ], [ "level-1", null ], [ "level-2", null ], [ "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank ES | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", null ], [ "node_name-1", null ], [ "node_name-2", null ], [ "node_name-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank ES | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank ES | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", null ], [ "hierarchy-1", "level-1", null ], [ "hierarchy-2", "level-2", null ], [ "hierarchy-3", "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ]
+      } ]
+    },
+    "Bank ES | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank VaR | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", null ], [ "level-1", null ], [ "level-2", null ], [ "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank VaR | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", null ], [ "node_name-1", null ], [ "node_name-2", null ], [ "node_name-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank VaR | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", null ], [ "hierarchy-1", "level-1", null ], [ "hierarchy-2", "level-2", null ], [ "hierarchy-3", "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ]
+      } ]
+    },
+    "Bank VaR | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Diversification | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 54027.0 ] ]
+    },
+    "Diversification | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 54028.0 ] ]
+    },
+    "Diversification | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", -20009.0 ], [ "hierarchy-1", 17009.5 ], [ "hierarchy-2", 54028.0 ], [ "hierarchy-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      } ]
+    },
+    "Diversification | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", -20009.0 ], [ "level-1", 17009.5 ], [ "level-2", 54028.0 ], [ "level-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      } ]
+    },
+    "Diversification | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", -20009.0 ], [ "node_name-1", 17009.5 ], [ "node_name-2", 54028.0 ], [ "node_name-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      } ]
+    },
+    "Diversification | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -20009.0 ] ]
+    },
+    "Diversification | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", -20009.0 ], [ "hierarchy-1", "level-1", 17009.5 ], [ "hierarchy-2", "level-2", 54028.0 ], [ "hierarchy-3", "level-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", -20009.0 ], [ "hierarchy-1", 17009.5 ], [ "hierarchy-2", 54028.0 ], [ "hierarchy-3", 44023.0 ] ]
+      } ]
+    },
+    "Diversification | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 54028.0 ] ]
+    },
+    "ES 97.5% | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39019.5 ] ]
+    },
+    "ES 97.5% | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "ES 97.5% | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 39020.5 ], [ "hierarchy-1", -25011.5 ], [ "hierarchy-2", 12007.0 ], [ "hierarchy-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      } ]
+    },
+    "ES 97.5% | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 39020.5 ], [ "level-1", -25011.5 ], [ "level-2", 12007.0 ], [ "level-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      } ]
+    },
+    "ES 97.5% | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 39020.5 ], [ "node_name-1", -25011.5 ], [ "node_name-2", 12007.0 ], [ "node_name-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      } ]
+    },
+    "ES 97.5% | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "ES 97.5% | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 39020.5 ], [ "hierarchy-1", "level-1", -25011.5 ], [ "hierarchy-2", "level-2", 12007.0 ], [ "hierarchy-3", "level-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 39020.5 ], [ "hierarchy-1", -25011.5 ], [ "hierarchy-2", 12007.0 ], [ "hierarchy-3", 2002.0 ] ]
+      } ]
+    },
+    "ES 97.5% | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "ES confidence | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59029.5 ] ]
+    },
+    "ES confidence | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59030.5 ] ]
+    },
+    "ES confidence | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 59030.5 ], [ "hierarchy-1", -5001.5 ], [ "hierarchy-2", 32017.0 ], [ "hierarchy-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      } ]
+    },
+    "ES confidence | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 59030.5 ], [ "level-1", -5001.5 ], [ "level-2", 32017.0 ], [ "level-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      } ]
+    },
+    "ES confidence | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 59030.5 ], [ "node_name-1", -5001.5 ], [ "node_name-2", 32017.0 ], [ "node_name-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      } ]
+    },
+    "ES confidence | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59030.5 ] ]
+    },
+    "ES confidence | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 59030.5 ], [ "hierarchy-1", "level-1", -5001.5 ], [ "hierarchy-2", "level-2", 32017.0 ], [ "hierarchy-3", "level-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 59030.5 ], [ "hierarchy-1", -5001.5 ], [ "hierarchy-2", 32017.0 ], [ "hierarchy-3", 22012.0 ] ]
+      } ]
+    },
+    "ES confidence | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59030.5 ] ]
+    },
+    "Hypothetical P&L | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 68034.0 ] ]
+    },
+    "Hypothetical P&L | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 68035.0 ] ]
+    },
+    "Hypothetical P&L | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 4003.0 ], [ "hierarchy-1", 41021.5 ], [ "hierarchy-2", -23010.5 ], [ "hierarchy-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 4003.0 ], [ "level-1", 41021.5 ], [ "level-2", -23010.5 ], [ "level-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 4003.0 ], [ "node_name-1", 41021.5 ], [ "node_name-2", -23010.5 ], [ "node_name-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4003.0 ] ]
+    },
+    "Hypothetical P&L | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 4003.0 ], [ "hierarchy-1", "level-1", 41021.5 ], [ "hierarchy-2", "level-2", -23010.5 ], [ "hierarchy-3", "level-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 4003.0 ], [ "hierarchy-1", 41021.5 ], [ "hierarchy-2", -23010.5 ], [ "hierarchy-3", 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 68035.0 ] ]
+    },
+    "Limit use | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 52026.0 ] ]
+    },
+    "Limit use | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 52027.0 ] ]
+    },
+    "Limit use | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 15008.5 ], [ "hierarchy-1", 52027.0 ], [ "hierarchy-2", -12005.0 ], [ "hierarchy-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      } ]
+    },
+    "Limit use | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 15008.5 ], [ "level-1", 52027.0 ], [ "level-2", -12005.0 ], [ "level-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      } ]
+    },
+    "Limit use | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 15008.5 ], [ "node_name-1", 52027.0 ], [ "node_name-2", -12005.0 ], [ "node_name-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      } ]
+    },
+    "Limit use | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 15008.5 ] ]
+    },
+    "Limit use | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 15008.5 ], [ "hierarchy-1", "level-1", 52027.0 ], [ "hierarchy-2", "level-2", -12005.0 ], [ "hierarchy-3", "level-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 15008.5 ], [ "hierarchy-1", 52027.0 ], [ "hierarchy-2", -12005.0 ], [ "hierarchy-3", -22010.0 ] ]
+      } ]
+    },
+    "Limit use | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 52027.0 ] ]
+    },
+    "Nodes | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "Nodes | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "Nodes | as-of-day2 | by nodes.HIERARCHY" : {
+      "refused" : "DRS-9020"
+    },
+    "Nodes | as-of-day2 | by nodes.LEVEL" : {
+      "refused" : "DRS-9020"
+    },
+    "Nodes | as-of-day2 | by nodes.NODE_NAME" : {
+      "refused" : "DRS-9020"
+    },
+    "Nodes | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1 ] ]
+    },
+    "Nodes | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 1 ], [ "hierarchy-1", "level-1", 1 ], [ "hierarchy-2", "level-2", 1 ], [ "hierarchy-3", "level-3", 1 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 4.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 1.0 ], [ "hierarchy-1", 1.0 ], [ "hierarchy-2", 1.0 ], [ "hierarchy-3", 1.0 ] ]
+      } ]
+    },
+    "Nodes | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "VaR 99% | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50025.0 ] ]
+    },
+    "VaR 99% | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "VaR 99% | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 50026.0 ], [ "hierarchy-1", -14006.0 ], [ "hierarchy-2", 23012.5 ], [ "hierarchy-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "VaR 99% | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 50026.0 ], [ "level-1", -14006.0 ], [ "level-2", 23012.5 ], [ "level-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "VaR 99% | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 50026.0 ], [ "node_name-1", -14006.0 ], [ "node_name-2", 23012.5 ], [ "node_name-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "VaR 99% | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "VaR 99% | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 50026.0 ], [ "hierarchy-1", "level-1", -14006.0 ], [ "hierarchy-2", "level-2", 23012.5 ], [ "hierarchy-3", "level-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 50026.0 ], [ "hierarchy-1", -14006.0 ], [ "hierarchy-2", 23012.5 ], [ "hierarchy-3", 13007.5 ] ]
+      } ]
+    },
+    "VaR 99% | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "VaR confidence | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63031.5 ] ]
+    },
+    "VaR confidence | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63032.5 ] ]
+    },
+    "VaR confidence | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 26014.0 ], [ "hierarchy-1", 63032.5 ], [ "hierarchy-2", -999.5 ], [ "hierarchy-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      } ]
+    },
+    "VaR confidence | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 26014.0 ], [ "level-1", 63032.5 ], [ "level-2", -999.5 ], [ "level-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      } ]
+    },
+    "VaR confidence | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 26014.0 ], [ "node_name-1", 63032.5 ], [ "node_name-2", -999.5 ], [ "node_name-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      } ]
+    },
+    "VaR confidence | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 26014.0 ] ]
+    },
+    "VaR confidence | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 26014.0 ], [ "hierarchy-1", "level-1", 63032.5 ], [ "hierarchy-2", "level-2", -999.5 ], [ "hierarchy-3", "level-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 26014.0 ], [ "hierarchy-1", 63032.5 ], [ "hierarchy-2", -999.5 ], [ "hierarchy-3", -11004.5 ] ]
+      } ]
+    },
+    "VaR confidence | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63032.5 ] ]
+    },
+    "VaR limit | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 45022.5 ] ]
+    },
+    "VaR limit | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 45023.5 ] ]
+    },
+    "VaR limit | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", -29013.5 ], [ "hierarchy-1", 8005.0 ], [ "hierarchy-2", 45023.5 ], [ "hierarchy-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      } ]
+    },
+    "VaR limit | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", -29013.5 ], [ "level-1", 8005.0 ], [ "level-2", 45023.5 ], [ "level-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      } ]
+    },
+    "VaR limit | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", -29013.5 ], [ "node_name-1", 8005.0 ], [ "node_name-2", 45023.5 ], [ "node_name-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      } ]
+    },
+    "VaR limit | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -29013.5 ] ]
+    },
+    "VaR limit | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", -29013.5 ], [ "hierarchy-1", "level-1", 8005.0 ], [ "hierarchy-2", "level-2", 45023.5 ], [ "hierarchy-3", "level-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", -29013.5 ], [ "hierarchy-1", 8005.0 ], [ "hierarchy-2", 45023.5 ], [ "hierarchy-3", 35018.5 ] ]
+      } ]
+    },
+    "VaR limit | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 45023.5 ] ]
+    },
+    "calc VaR 99% | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 50026.0, 50026.0, 50026.0, 1.0, 50026.0 ], [ "hierarchy-1", -14006.0, 50026.0, 50026.0, -0.2799744133050814, null ], [ "hierarchy-2", 23012.5, 50026.0, 50026.0, 0.4600107943869188, null ], [ "hierarchy-3", 13007.5, 50026.0, 50026.0, 0.26001479230799984, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "calc VaR 99% | by nodes.HIERARCHY | slicer = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 50026.0, 50026.0, 50026.0, 1.0, 50026.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "rows of nodes" : {
+      "count" : 4,
+      "masked" : [ ],
+      "sha256" : "1cafe2baffd14f8cd0170af91303c3eacd386817d062b0727c4d20f3589d9301"
+    }
+  },
+  "risk" : {
+    "Backtest exceptions | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 6 ] ]
+    },
+    "Backtest exceptions | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 6 ] ]
+    },
+    "Backtest exceptions | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 4 ], [ "hierarchy-1", 5 ], [ "hierarchy-2", 6 ], [ "hierarchy-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 4 ], [ "level-1", 5 ], [ "level-2", 6 ], [ "level-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 4 ], [ "node_name-1", 5 ], [ "node_name-2", 6 ], [ "node_name-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "Backtest exceptions | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 4 ], [ "hierarchy-1", "level-1", 5 ], [ "hierarchy-2", "level-2", 6 ], [ "hierarchy-3", "level-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 4.0 ], [ "hierarchy-1", 5.0 ], [ "hierarchy-2", 6.0 ], [ "hierarchy-3", 3.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 6 ] ]
+    },
+    "Bank ES | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank ES | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank ES | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank ES | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", null ], [ "level-1", null ], [ "level-2", null ], [ "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank ES | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", null ], [ "node_name-1", null ], [ "node_name-2", null ], [ "node_name-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank ES | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank ES | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", null ], [ "hierarchy-1", "level-1", null ], [ "hierarchy-2", "level-2", null ], [ "hierarchy-3", "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ]
+      } ]
+    },
+    "Bank ES | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank VaR | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", null ], [ "level-1", null ], [ "level-2", null ], [ "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank VaR | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", null ], [ "node_name-1", null ], [ "node_name-2", null ], [ "node_name-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank VaR | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", null ], [ "hierarchy-1", "level-1", null ], [ "hierarchy-2", "level-2", null ], [ "hierarchy-3", "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ]
+      } ]
+    },
+    "Bank VaR | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Diversification | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 54027.0 ] ]
+    },
+    "Diversification | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 54028.0 ] ]
+    },
+    "Diversification | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", -20009.0 ], [ "hierarchy-1", 17009.5 ], [ "hierarchy-2", 54028.0 ], [ "hierarchy-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      } ]
+    },
+    "Diversification | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", -20009.0 ], [ "level-1", 17009.5 ], [ "level-2", 54028.0 ], [ "level-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      } ]
+    },
+    "Diversification | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", -20009.0 ], [ "node_name-1", 17009.5 ], [ "node_name-2", 54028.0 ], [ "node_name-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      } ]
+    },
+    "Diversification | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -20009.0 ] ]
+    },
+    "Diversification | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", -20009.0 ], [ "hierarchy-1", "level-1", 17009.5 ], [ "hierarchy-2", "level-2", 54028.0 ], [ "hierarchy-3", "level-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", -20009.0 ], [ "hierarchy-1", 17009.5 ], [ "hierarchy-2", 54028.0 ], [ "hierarchy-3", 44023.0 ] ]
+      } ]
+    },
+    "Diversification | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 54028.0 ] ]
+    },
+    "ES 97.5% | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39019.5 ] ]
+    },
+    "ES 97.5% | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "ES 97.5% | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 39020.5 ], [ "hierarchy-1", -25011.5 ], [ "hierarchy-2", 12007.0 ], [ "hierarchy-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      } ]
+    },
+    "ES 97.5% | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 39020.5 ], [ "level-1", -25011.5 ], [ "level-2", 12007.0 ], [ "level-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      } ]
+    },
+    "ES 97.5% | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 39020.5 ], [ "node_name-1", -25011.5 ], [ "node_name-2", 12007.0 ], [ "node_name-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      } ]
+    },
+    "ES 97.5% | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "ES 97.5% | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 39020.5 ], [ "hierarchy-1", "level-1", -25011.5 ], [ "hierarchy-2", "level-2", 12007.0 ], [ "hierarchy-3", "level-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 39020.5 ], [ "hierarchy-1", -25011.5 ], [ "hierarchy-2", 12007.0 ], [ "hierarchy-3", 2002.0 ] ]
+      } ]
+    },
+    "ES 97.5% | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "ES confidence | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59029.5 ] ]
+    },
+    "ES confidence | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59030.5 ] ]
+    },
+    "ES confidence | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 59030.5 ], [ "hierarchy-1", -5001.5 ], [ "hierarchy-2", 32017.0 ], [ "hierarchy-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      } ]
+    },
+    "ES confidence | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 59030.5 ], [ "level-1", -5001.5 ], [ "level-2", 32017.0 ], [ "level-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      } ]
+    },
+    "ES confidence | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 59030.5 ], [ "node_name-1", -5001.5 ], [ "node_name-2", 32017.0 ], [ "node_name-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      } ]
+    },
+    "ES confidence | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59030.5 ] ]
+    },
+    "ES confidence | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 59030.5 ], [ "hierarchy-1", "level-1", -5001.5 ], [ "hierarchy-2", "level-2", 32017.0 ], [ "hierarchy-3", "level-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 59030.5 ], [ "hierarchy-1", -5001.5 ], [ "hierarchy-2", 32017.0 ], [ "hierarchy-3", 22012.0 ] ]
+      } ]
+    },
+    "ES confidence | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59030.5 ] ]
+    },
+    "Hypothetical P&L | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 68034.0 ] ]
+    },
+    "Hypothetical P&L | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 68035.0 ] ]
+    },
+    "Hypothetical P&L | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 4003.0 ], [ "hierarchy-1", 41021.5 ], [ "hierarchy-2", -23010.5 ], [ "hierarchy-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 4003.0 ], [ "level-1", 41021.5 ], [ "level-2", -23010.5 ], [ "level-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 4003.0 ], [ "node_name-1", 41021.5 ], [ "node_name-2", -23010.5 ], [ "node_name-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4003.0 ] ]
+    },
+    "Hypothetical P&L | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 4003.0 ], [ "hierarchy-1", "level-1", 41021.5 ], [ "hierarchy-2", "level-2", -23010.5 ], [ "hierarchy-3", "level-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 4003.0 ], [ "hierarchy-1", 41021.5 ], [ "hierarchy-2", -23010.5 ], [ "hierarchy-3", 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 68035.0 ] ]
+    },
+    "Limit use | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 52026.0 ] ]
+    },
+    "Limit use | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 52027.0 ] ]
+    },
+    "Limit use | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 15008.5 ], [ "hierarchy-1", 52027.0 ], [ "hierarchy-2", -12005.0 ], [ "hierarchy-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      } ]
+    },
+    "Limit use | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 15008.5 ], [ "level-1", 52027.0 ], [ "level-2", -12005.0 ], [ "level-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      } ]
+    },
+    "Limit use | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 15008.5 ], [ "node_name-1", 52027.0 ], [ "node_name-2", -12005.0 ], [ "node_name-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      } ]
+    },
+    "Limit use | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 15008.5 ] ]
+    },
+    "Limit use | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 15008.5 ], [ "hierarchy-1", "level-1", 52027.0 ], [ "hierarchy-2", "level-2", -12005.0 ], [ "hierarchy-3", "level-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 15008.5 ], [ "hierarchy-1", 52027.0 ], [ "hierarchy-2", -12005.0 ], [ "hierarchy-3", -22010.0 ] ]
+      } ]
+    },
+    "Limit use | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 52027.0 ] ]
+    },
+    "Nodes | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "Nodes | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "Nodes | as-of-day2 | by nodes.HIERARCHY" : {
+      "refused" : "DRS-9020"
+    },
+    "Nodes | as-of-day2 | by nodes.LEVEL" : {
+      "refused" : "DRS-9020"
+    },
+    "Nodes | as-of-day2 | by nodes.NODE_NAME" : {
+      "refused" : "DRS-9020"
+    },
+    "Nodes | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1 ] ]
+    },
+    "Nodes | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 1 ], [ "hierarchy-1", "level-1", 1 ], [ "hierarchy-2", "level-2", 1 ], [ "hierarchy-3", "level-3", 1 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 4.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 1.0 ], [ "hierarchy-1", 1.0 ], [ "hierarchy-2", 1.0 ], [ "hierarchy-3", 1.0 ] ]
+      } ]
+    },
+    "Nodes | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "VaR 99% | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50025.0 ] ]
+    },
+    "VaR 99% | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "VaR 99% | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 50026.0 ], [ "hierarchy-1", -14006.0 ], [ "hierarchy-2", 23012.5 ], [ "hierarchy-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "VaR 99% | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 50026.0 ], [ "level-1", -14006.0 ], [ "level-2", 23012.5 ], [ "level-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "VaR 99% | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 50026.0 ], [ "node_name-1", -14006.0 ], [ "node_name-2", 23012.5 ], [ "node_name-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "VaR 99% | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "VaR 99% | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 50026.0 ], [ "hierarchy-1", "level-1", -14006.0 ], [ "hierarchy-2", "level-2", 23012.5 ], [ "hierarchy-3", "level-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 50026.0 ], [ "hierarchy-1", -14006.0 ], [ "hierarchy-2", 23012.5 ], [ "hierarchy-3", 13007.5 ] ]
+      } ]
+    },
+    "VaR 99% | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "VaR confidence | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63031.5 ] ]
+    },
+    "VaR confidence | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63032.5 ] ]
+    },
+    "VaR confidence | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 26014.0 ], [ "hierarchy-1", 63032.5 ], [ "hierarchy-2", -999.5 ], [ "hierarchy-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      } ]
+    },
+    "VaR confidence | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 26014.0 ], [ "level-1", 63032.5 ], [ "level-2", -999.5 ], [ "level-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      } ]
+    },
+    "VaR confidence | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 26014.0 ], [ "node_name-1", 63032.5 ], [ "node_name-2", -999.5 ], [ "node_name-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      } ]
+    },
+    "VaR confidence | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 26014.0 ] ]
+    },
+    "VaR confidence | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 26014.0 ], [ "hierarchy-1", "level-1", 63032.5 ], [ "hierarchy-2", "level-2", -999.5 ], [ "hierarchy-3", "level-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 26014.0 ], [ "hierarchy-1", 63032.5 ], [ "hierarchy-2", -999.5 ], [ "hierarchy-3", -11004.5 ] ]
+      } ]
+    },
+    "VaR confidence | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63032.5 ] ]
+    },
+    "VaR limit | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 45022.5 ] ]
+    },
+    "VaR limit | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 45023.5 ] ]
+    },
+    "VaR limit | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", -29013.5 ], [ "hierarchy-1", 8005.0 ], [ "hierarchy-2", 45023.5 ], [ "hierarchy-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      } ]
+    },
+    "VaR limit | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", -29013.5 ], [ "level-1", 8005.0 ], [ "level-2", 45023.5 ], [ "level-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      } ]
+    },
+    "VaR limit | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", -29013.5 ], [ "node_name-1", 8005.0 ], [ "node_name-2", 45023.5 ], [ "node_name-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      } ]
+    },
+    "VaR limit | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -29013.5 ] ]
+    },
+    "VaR limit | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", -29013.5 ], [ "hierarchy-1", "level-1", 8005.0 ], [ "hierarchy-2", "level-2", 45023.5 ], [ "hierarchy-3", "level-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", -29013.5 ], [ "hierarchy-1", 8005.0 ], [ "hierarchy-2", 45023.5 ], [ "hierarchy-3", 35018.5 ] ]
+      } ]
+    },
+    "VaR limit | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 45023.5 ] ]
+    },
+    "calc VaR 99% | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 50026.0, 50026.0, 50026.0, 1.0, 50026.0 ], [ "hierarchy-1", -14006.0, 50026.0, 50026.0, -0.2799744133050814, null ], [ "hierarchy-2", 23012.5, 50026.0, 50026.0, 0.4600107943869188, null ], [ "hierarchy-3", 13007.5, 50026.0, 50026.0, 0.26001479230799984, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "calc VaR 99% | by nodes.HIERARCHY | slicer = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 50026.0, 50026.0, 50026.0, 1.0, 50026.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "rows of nodes" : {
+      "count" : 4,
+      "masked" : [ ],
+      "sha256" : "1cafe2baffd14f8cd0170af91303c3eacd386817d062b0727c4d20f3589d9301"
+    }
+  },
+  "unnamed-role" : {
+    "Backtest exceptions | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 6 ] ]
+    },
+    "Backtest exceptions | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 6 ] ]
+    },
+    "Backtest exceptions | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 4 ], [ "hierarchy-1", 5 ], [ "hierarchy-2", 6 ], [ "hierarchy-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 4 ], [ "level-1", 5 ], [ "level-2", 6 ], [ "level-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 4 ], [ "node_name-1", 5 ], [ "node_name-2", 6 ], [ "node_name-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "Backtest exceptions | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 4 ], [ "hierarchy-1", "level-1", 5 ], [ "hierarchy-2", "level-2", 6 ], [ "hierarchy-3", "level-3", 3 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 6.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 4.0 ], [ "hierarchy-1", 5.0 ], [ "hierarchy-2", 6.0 ], [ "hierarchy-3", 3.0 ] ]
+      } ]
+    },
+    "Backtest exceptions | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 6 ] ]
+    },
+    "Bank ES | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank ES | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank ES | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank ES | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", null ], [ "level-1", null ], [ "level-2", null ], [ "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank ES | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", null ], [ "node_name-1", null ], [ "node_name-2", null ], [ "node_name-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank ES | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank ES | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", null ], [ "hierarchy-1", "level-1", null ], [ "hierarchy-2", "level-2", null ], [ "hierarchy-3", "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ]
+      } ]
+    },
+    "Bank ES | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank VaR | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", null ], [ "level-1", null ], [ "level-2", null ], [ "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank VaR | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", null ], [ "node_name-1", null ], [ "node_name-2", null ], [ "node_name-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Bank VaR | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Bank VaR | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", null ], [ "hierarchy-1", "level-1", null ], [ "hierarchy-2", "level-2", null ], [ "hierarchy-3", "level-3", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", null ], [ "hierarchy-1", null ], [ "hierarchy-2", null ], [ "hierarchy-3", null ] ]
+      } ]
+    },
+    "Bank VaR | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Diversification | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 54027.0 ] ]
+    },
+    "Diversification | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 54028.0 ] ]
+    },
+    "Diversification | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", -20009.0 ], [ "hierarchy-1", 17009.5 ], [ "hierarchy-2", 54028.0 ], [ "hierarchy-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      } ]
+    },
+    "Diversification | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", -20009.0 ], [ "level-1", 17009.5 ], [ "level-2", 54028.0 ], [ "level-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      } ]
+    },
+    "Diversification | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", -20009.0 ], [ "node_name-1", 17009.5 ], [ "node_name-2", 54028.0 ], [ "node_name-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      } ]
+    },
+    "Diversification | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -20009.0 ] ]
+    },
+    "Diversification | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", -20009.0 ], [ "hierarchy-1", "level-1", 17009.5 ], [ "hierarchy-2", "level-2", 54028.0 ], [ "hierarchy-3", "level-3", 44023.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 54028.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", -20009.0 ], [ "hierarchy-1", 17009.5 ], [ "hierarchy-2", 54028.0 ], [ "hierarchy-3", 44023.0 ] ]
+      } ]
+    },
+    "Diversification | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 54028.0 ] ]
+    },
+    "ES 97.5% | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39019.5 ] ]
+    },
+    "ES 97.5% | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "ES 97.5% | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 39020.5 ], [ "hierarchy-1", -25011.5 ], [ "hierarchy-2", 12007.0 ], [ "hierarchy-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      } ]
+    },
+    "ES 97.5% | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 39020.5 ], [ "level-1", -25011.5 ], [ "level-2", 12007.0 ], [ "level-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      } ]
+    },
+    "ES 97.5% | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 39020.5 ], [ "node_name-1", -25011.5 ], [ "node_name-2", 12007.0 ], [ "node_name-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      } ]
+    },
+    "ES 97.5% | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "ES 97.5% | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 39020.5 ], [ "hierarchy-1", "level-1", -25011.5 ], [ "hierarchy-2", "level-2", 12007.0 ], [ "hierarchy-3", "level-3", 2002.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 39020.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 39020.5 ], [ "hierarchy-1", -25011.5 ], [ "hierarchy-2", 12007.0 ], [ "hierarchy-3", 2002.0 ] ]
+      } ]
+    },
+    "ES 97.5% | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "ES confidence | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59029.5 ] ]
+    },
+    "ES confidence | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59030.5 ] ]
+    },
+    "ES confidence | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 59030.5 ], [ "hierarchy-1", -5001.5 ], [ "hierarchy-2", 32017.0 ], [ "hierarchy-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      } ]
+    },
+    "ES confidence | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 59030.5 ], [ "level-1", -5001.5 ], [ "level-2", 32017.0 ], [ "level-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      } ]
+    },
+    "ES confidence | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 59030.5 ], [ "node_name-1", -5001.5 ], [ "node_name-2", 32017.0 ], [ "node_name-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      } ]
+    },
+    "ES confidence | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59030.5 ] ]
+    },
+    "ES confidence | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 59030.5 ], [ "hierarchy-1", "level-1", -5001.5 ], [ "hierarchy-2", "level-2", 32017.0 ], [ "hierarchy-3", "level-3", 22012.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 59030.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 59030.5 ], [ "hierarchy-1", -5001.5 ], [ "hierarchy-2", 32017.0 ], [ "hierarchy-3", 22012.0 ] ]
+      } ]
+    },
+    "ES confidence | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 59030.5 ] ]
+    },
+    "Hypothetical P&L | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 68034.0 ] ]
+    },
+    "Hypothetical P&L | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 68035.0 ] ]
+    },
+    "Hypothetical P&L | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 4003.0 ], [ "hierarchy-1", 41021.5 ], [ "hierarchy-2", -23010.5 ], [ "hierarchy-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 4003.0 ], [ "level-1", 41021.5 ], [ "level-2", -23010.5 ], [ "level-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 4003.0 ], [ "node_name-1", 41021.5 ], [ "node_name-2", -23010.5 ], [ "node_name-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4003.0 ] ]
+    },
+    "Hypothetical P&L | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 4003.0 ], [ "hierarchy-1", "level-1", 41021.5 ], [ "hierarchy-2", "level-2", -23010.5 ], [ "hierarchy-3", "level-3", 68035.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 68035.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 4003.0 ], [ "hierarchy-1", 41021.5 ], [ "hierarchy-2", -23010.5 ], [ "hierarchy-3", 68035.0 ] ]
+      } ]
+    },
+    "Hypothetical P&L | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 68035.0 ] ]
+    },
+    "Limit use | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 52026.0 ] ]
+    },
+    "Limit use | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 52027.0 ] ]
+    },
+    "Limit use | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 15008.5 ], [ "hierarchy-1", 52027.0 ], [ "hierarchy-2", -12005.0 ], [ "hierarchy-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      } ]
+    },
+    "Limit use | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 15008.5 ], [ "level-1", 52027.0 ], [ "level-2", -12005.0 ], [ "level-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      } ]
+    },
+    "Limit use | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 15008.5 ], [ "node_name-1", 52027.0 ], [ "node_name-2", -12005.0 ], [ "node_name-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      } ]
+    },
+    "Limit use | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 15008.5 ] ]
+    },
+    "Limit use | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 15008.5 ], [ "hierarchy-1", "level-1", 52027.0 ], [ "hierarchy-2", "level-2", -12005.0 ], [ "hierarchy-3", "level-3", -22010.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 52027.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 15008.5 ], [ "hierarchy-1", 52027.0 ], [ "hierarchy-2", -12005.0 ], [ "hierarchy-3", -22010.0 ] ]
+      } ]
+    },
+    "Limit use | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 52027.0 ] ]
+    },
+    "Nodes | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "Nodes | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "Nodes | as-of-day2 | by nodes.HIERARCHY" : {
+      "refused" : "DRS-9020"
+    },
+    "Nodes | as-of-day2 | by nodes.LEVEL" : {
+      "refused" : "DRS-9020"
+    },
+    "Nodes | as-of-day2 | by nodes.NODE_NAME" : {
+      "refused" : "DRS-9020"
+    },
+    "Nodes | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1 ] ]
+    },
+    "Nodes | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 1 ], [ "hierarchy-1", "level-1", 1 ], [ "hierarchy-2", "level-2", 1 ], [ "hierarchy-3", "level-3", 1 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 4.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 1.0 ], [ "hierarchy-1", 1.0 ], [ "hierarchy-2", 1.0 ], [ "hierarchy-3", 1.0 ] ]
+      } ]
+    },
+    "Nodes | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 4 ] ]
+    },
+    "VaR 99% | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50025.0 ] ]
+    },
+    "VaR 99% | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "VaR 99% | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 50026.0 ], [ "hierarchy-1", -14006.0 ], [ "hierarchy-2", 23012.5 ], [ "hierarchy-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "VaR 99% | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 50026.0 ], [ "level-1", -14006.0 ], [ "level-2", 23012.5 ], [ "level-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "VaR 99% | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 50026.0 ], [ "node_name-1", -14006.0 ], [ "node_name-2", 23012.5 ], [ "node_name-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "VaR 99% | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "VaR 99% | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 50026.0 ], [ "hierarchy-1", "level-1", -14006.0 ], [ "hierarchy-2", "level-2", 23012.5 ], [ "hierarchy-3", "level-3", 13007.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 50026.0 ], [ "hierarchy-1", -14006.0 ], [ "hierarchy-2", 23012.5 ], [ "hierarchy-3", 13007.5 ] ]
+      } ]
+    },
+    "VaR 99% | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "VaR confidence | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63031.5 ] ]
+    },
+    "VaR confidence | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63032.5 ] ]
+    },
+    "VaR confidence | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 26014.0 ], [ "hierarchy-1", 63032.5 ], [ "hierarchy-2", -999.5 ], [ "hierarchy-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      } ]
+    },
+    "VaR confidence | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", 26014.0 ], [ "level-1", 63032.5 ], [ "level-2", -999.5 ], [ "level-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      } ]
+    },
+    "VaR confidence | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", 26014.0 ], [ "node_name-1", 63032.5 ], [ "node_name-2", -999.5 ], [ "node_name-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      } ]
+    },
+    "VaR confidence | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 26014.0 ] ]
+    },
+    "VaR confidence | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", 26014.0 ], [ "hierarchy-1", "level-1", 63032.5 ], [ "hierarchy-2", "level-2", -999.5 ], [ "hierarchy-3", "level-3", -11004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 63032.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", 26014.0 ], [ "hierarchy-1", 63032.5 ], [ "hierarchy-2", -999.5 ], [ "hierarchy-3", -11004.5 ] ]
+      } ]
+    },
+    "VaR confidence | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63032.5 ] ]
+    },
+    "VaR limit | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 45022.5 ] ]
+    },
+    "VaR limit | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 45023.5 ] ]
+    },
+    "VaR limit | as-of-day2 | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", -29013.5 ], [ "hierarchy-1", 8005.0 ], [ "hierarchy-2", 45023.5 ], [ "hierarchy-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      } ]
+    },
+    "VaR limit | as-of-day2 | by nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "level-0", -29013.5 ], [ "level-1", 8005.0 ], [ "level-2", 45023.5 ], [ "level-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      } ]
+    },
+    "VaR limit | as-of-day2 | by nodes.NODE_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "node_name-0", -29013.5 ], [ "node_name-1", 8005.0 ], [ "node_name-2", 45023.5 ], [ "node_name-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      } ]
+    },
+    "VaR limit | slicer nodes.HIERARCHY = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -29013.5 ] ]
+    },
+    "VaR limit | subtotals | by nodes.HIERARCHY, nodes.LEVEL" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", -29013.5 ], [ "hierarchy-1", "level-1", 8005.0 ], [ "hierarchy-2", "level-2", 45023.5 ], [ "hierarchy-3", "level-3", 35018.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 45023.5 ] ]
+      }, {
+        "by" : [ "nodes.HIERARCHY" ],
+        "rows" : [ [ "hierarchy-0", -29013.5 ], [ "hierarchy-1", 8005.0 ], [ "hierarchy-2", 45023.5 ], [ "hierarchy-3", 35018.5 ] ]
+      } ]
+    },
+    "VaR limit | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 45023.5 ] ]
+    },
+    "calc VaR 99% | by nodes.HIERARCHY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 50026.0, 50026.0, 50026.0, 1.0, 50026.0 ], [ "hierarchy-1", -14006.0, 50026.0, 50026.0, -0.2799744133050814, null ], [ "hierarchy-2", 23012.5, 50026.0, 50026.0, 0.4600107943869188, null ], [ "hierarchy-3", 13007.5, 50026.0, 50026.0, 0.26001479230799984, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "calc VaR 99% | by nodes.HIERARCHY | slicer = hierarchy-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "hierarchy-0", 50026.0, 50026.0, 50026.0, 1.0, 50026.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 50026.0 ] ]
+      } ]
+    },
+    "rows of nodes" : {
+      "count" : 4,
+      "masked" : [ ],
+      "sha256" : "1cafe2baffd14f8cd0170af91303c3eacd386817d062b0727c4d20f3589d9301"
+    }
+  }
+}

@@ -21,7 +21,7 @@
   <parent>
     <groupId>com.ash.drishti</groupId>
     <artifactId>drishti-parent</artifactId>
-    <version>2.9.11.c</version>
+    <version>2.9.11.d</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <artifactId>drishti-server</artifactId>
@@ -32,6 +32,8 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-net</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-bicompute</artifactId></dependency>
+    <!-- the table layer (docs/architecture/BI_FOUNDATION_2911E.md): BI depends on it, never the reverse -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-tables</artifactId></dependency>
     <!-- the in-memory lake (mem://): the server keeps only its Spring wiring (server.memlake) -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-memlake</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-identity</artifactId></dependency>

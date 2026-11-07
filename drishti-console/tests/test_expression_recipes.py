@@ -12,10 +12,10 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Every recipe of docs/guides/BI_LANGUAGE_REFERENCE.md › Expressions: the Drishti expression language (DEL), section 11 runs on the demo lake (docs/architecture/BI_DESIGN.md section 12.2, wave A acceptance 6):
-the real server and console of tests/bi_report_stack.py on ports 18912 and 17912 with the cross-pack Delta lake (tools/packgen/banking/make_data.py
---lake, a few thousand rows) and the trading-risk sample. Each recipe's block is its expression, its ``# by:`` line the fields it is grouped by and
-``# scope:`` its scope when it is not a measure. A measure is asked as a model query with ``define`` (as the risk reader, who sees every row) and must
+"""Every expression recipe (tests/resources/expression_recipes.yaml, written in Rachana: RACHANA_REFERENCE.md) runs on the demo lake
+(docs/architecture/BI_DESIGN.md section 12.2, wave A acceptance 6): the real server and console of tests/bi_report_stack.py on ports 18912 and
+17912 with the cross-pack Delta lake (tools/packgen/banking/make_data.py --lake, a few thousand rows) and the trading-risk sample. Each recipe has
+its expression, the fields it is grouped by and its scope. A measure is asked as a model query with ``define`` (as the risk reader, who sees every row) and must
 answer rows; a row expression is checked by the server and asked inside ``distinct(...)`` (a value) or ``count(..., where=...)`` (a condition); a rule
 is checked by the server in rule scope.
 
@@ -28,6 +28,7 @@ import re
 from pathlib import Path
 
 import pytest
+import yaml
 
 os.environ.setdefault("DRISHTI_BI_REPORT_SERVER_PORT", "18912")
 os.environ.setdefault("DRISHTI_BI_REPORT_CONSOLE_PORT", "17912")
@@ -35,31 +36,24 @@ os.environ.setdefault("DRISHTI_BI_REPORT_CONSOLE_PORT", "17912")
 import bi_report_stack as rs  # noqa: E402
 from bi_stack import listening  # noqa: E402
 
-GUIDE = Path(__file__).resolve().parents[2] / "docs" / "guides" / "BI_LANGUAGE_REFERENCE.md"
+RECIPES = Path(__file__).resolve().parent / "resources" / "expression_recipes.yaml"
 MODEL = "trading-risk"
 
 
 def recipes() -> list[dict]:
-    """The recipes of section 11 of the expression language (section 1 of the language reference since 2.9.7): {id, title, expr, by, scope}."""
-    text = GUIDE.read_text()
-    part = text[text.index("### 11. Recipes"):]
-    out = []
-    for m in re.finditer(r"^##### (R\d+) · (.+?)\n\n```python\n(.*?)```", part, re.S | re.M):
-        lines = m.group(3).strip("\n").split("\n")
-        meta = {k: v.strip() for k, v in (re.match(r"#\s*(\w+):\s*(.*)", ln).groups() for ln in lines if ln.startswith("#"))}
-        expr = " ".join(ln.strip() for ln in lines if not ln.startswith("#"))
-        out.append({"id": m.group(1), "title": m.group(2), "expr": expr, "by": [f.strip() for f in meta.get("by", "").split(",") if f.strip()],
-                    "scope": meta.get("scope", "aggregate")})
-    return out
+    """The recipes: {id, title, expr, by, scope}."""
+    return [{"id": r["id"], "title": r["title"], "expr": r["expr"], "by": list(r.get("by") or []), "scope": r.get("scope", "aggregate")}
+            for r in yaml.safe_load(RECIPES.read_text(encoding="utf-8"))["recipes"]]
 
 
-def test_the_guide_has_forty_and_more_recipes_each_with_its_expression():
+def test_there_are_forty_and_more_recipes_each_with_its_expression_in_rachana():
     found = recipes()
     assert len(found) >= 40, len(found)
     assert [r["id"] for r in found] == [f"R{i}" for i in range(1, len(found) + 1)], "the recipes are numbered R1, R2, ... in order"
     for r in found:
-        plain = re.sub(r"\b(over|ignore|keep|by)=\[[^\]]*\]", "", r["expr"])                          # wave B: keyword lists of fields
-        assert r["expr"] and "[" not in plain.replace("in [", ""), r                                          # DEL v2: no old [Measure] references
+        plain = re.sub(r"\b(over|ignore|keep|by) = \[[^\]]*\]", "", r["expr"])                         # keyword lists of fields
+        assert r["expr"] and "[" not in plain.replace("in [", ""), r                                          # no old [Measure] references
+        assert not re.search(r"\b(and|or|not|None|True|False)\b| if .* else ", r["expr"].replace("'Desk and book'", "")), r     # Rachana's spelling only
         assert r["scope"] in ("aggregate", "row", "rule"), r
         assert r["by"] or r["scope"] == "rule", r
 
@@ -84,7 +78,7 @@ def stack(tmp_path_factory):
 def ask(expr: str, by: list, scope: str):
     if scope == "rule":
         return rs.api("POST", "/bi/expr/validate", "rita", ["risk"], {"expr": expr, "scope": "rule", "model": MODEL + "@1", "alias": "trades"})
-    measure = expr if scope == "aggregate" else (f"count(trades, where={expr})" if re.search(r"==|!=|<=|>=|<|>| and | or |^not ", expr.split(" if ")[0]) and " if " not in expr
+    measure = expr if scope == "aggregate" else (f"count(trades, where = {expr})" if re.search(r"==|!=|<=|>=|<|>|&&|\|\||^!", expr) and " ? " not in expr
                                                  else f"distinct({expr})")
     return rs.api("POST", "/bi/mq", "rita", ["risk"], {"mq": 1, "model": MODEL + "@1", "define": {"Recipe": measure},
                                                         "select": {"fields": by, "measures": ["Recipe"]}, "limit": 5})

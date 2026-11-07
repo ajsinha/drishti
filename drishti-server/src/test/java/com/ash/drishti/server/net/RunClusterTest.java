@@ -109,12 +109,13 @@ class RunClusterTest {
         Path root = com.ash.drishti.server.TestRun.root().resolve(Path.of("net-it", "runs-" + System.nanoTime()));
         int[] p = NetNodes.PORTS;
         bi(root.resolve("bi"), root.resolve("lake"));
+        com.ash.drishti.server.bi.TablesFolder.migrate(root.resolve("bi"));     // tables migrate: the datasets and models become the layer's
         Files.writeString(root.resolve("runs.yaml"), "enabled: true\nlease:\n  renew: 500ms\n  ttl: 2s\n");
         NetNodes.folder(root.resolve("a/net"), p[0], List.of(), List.of(), List.of());
         NetNodes.folder(root.resolve("b/net"), p[1], List.of(), List.of(), List.of(p[0]));
         cluster = new NetNodes(root);
         Path identity = root.resolve("identity");
-        List<String> common = List.of("--drishti.bi.dir=" + root.resolve("bi"), "--drishti.sources.plugins.file.enabled=false",
+        List<String> common = List.of("--drishti.bi.dir=" + root.resolve("bi"), "--drishti.tables.root=" + root.resolve("bi").resolve("tables"), "--drishti.sources.plugins.file.enabled=false",
                 "--drishti.sources.connectors.finance-lake.enabled=false", "--drishti.sources.connectors.run-lake.plugin=file",
                 "--drishti.sources.connectors.run-lake.kinds[0]=trade", "--drishti.sources.connectors.run-lake.settings.root=" + root.resolve("lake"),
                 "--drishti.sources.connectors.run-lake.settings.id-field=TRADE_ID", "--drishti.sources.connectors.run-lake.settings.rescan-seconds=3600",

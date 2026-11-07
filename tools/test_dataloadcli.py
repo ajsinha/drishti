@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Tests of `drishti.py dataload status|run|retry` (docs/architecture/DATALOAD_INBOX.md section 10) against an in-process stand-in for
+"""Tests of `drishti.py dataload status|run|retry|undo` (docs/guides/DATA_LAKE_GUIDE.md section 3.1) against an in-process stand-in for
 the server: the status as text and JSON, Load now started and skipped while a run loads, Retry, a retry of an unknown file (exit 1) and
 the inbox off on every server (DRS-1020, exit 3)."""
 import json
@@ -103,6 +103,21 @@ class Dataload(unittest.TestCase):
         code, _, err = self.go("dataload", "retry", "x.jsonl")
         self.assertEqual(1, code)
         self.assertIn("no failed file is named x.jsonl", err)
+
+    def test_undo_is_a_dry_run_unless_yes_and_names_the_loads_lake(self):
+        answer = {"loadId": "20261107T101740.754-1.1", "lake": "risklake", "lakeFrom": "ledger", "undone": False,
+                  "lines": [{"table": "risk/risk-hierarchy", "date": "2026-11-06", "removed": 26, "restored": 0, "replaced": False}],
+                  "text": "would undo in risklake: 1 table date; confirm with the load id to undo"}
+        FakeServer.routes[("POST", "/api/v1/admin/dataload/undo")] = (200, answer)
+        code, out, _ = self.go("dataload", "undo", "20261107T101740.754-1.1")
+        self.assertEqual(0, code, out)
+        self.assertIn("risk/risk-hierarchy 2026-11-06: 26 rows removed", out)
+        self.assertIn("would undo in risklake", out)
+        self.assertEqual({"loadId": "20261107T101740.754-1.1"}, json.loads(FakeServer.requests[-1][5]))
+        code, out, _ = self.go("dataload", "undo", "20261107T101740.754-1.1", "--yes", "--lake", "risklake")
+        self.assertEqual(0, code, out)
+        self.assertEqual({"loadId": "20261107T101740.754-1.1", "confirm": "20261107T101740.754-1.1", "lake": "risklake"},
+                         json.loads(FakeServer.requests[-1][5]))
 
     def test_the_inbox_off_everywhere_exits_3(self):
         FakeServer.routes[("GET", "/api/v1/admin/dataload")] = (404, {"code": "DRS-1020", "engine": "dataload",

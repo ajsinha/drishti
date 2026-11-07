@@ -46,7 +46,9 @@ PASSWORD = "long-enough-pass-1"
 FORBIDDEN = {5432, 9092, 5672, 61616, 6379, 2181, 18480, 17480}
 
 SHIPPED = {"reports/liquidity-daily.report.yaml": "title: Liquidity daily\ndescription: Shipped with the site, read-only\nowner: treasury\ntags: [liquidity, daily]\nendorsement: promoted\npages: []\n",
-           "datasets/trades.dataset.yaml": "title: Trades (shipped)\ndescription: The trades table, shipped\nowner: treasury\ntags: [trades]\ntables: []\n"}
+           # a table of the table layer, shipped with the site (the tables folder beside the BI folder)
+           "../tables/bi/trades.table.yaml": "rachana: 3\ntable: bi.trades\nversion: 1.0.0\ntitle: Trades (shipped)\ndescription: The trades table, shipped\nowner: treasury\n"
+                                              "tags: [trades]\nfrom: { kind: trade }\ncolumns:\n  TRADE_ID: { path: \"$.TRADE_ID\", type: string }\n"}
 
 
 def listening(port: int) -> bool:
@@ -119,9 +121,9 @@ def seed() -> dict:
     for key, kind, title, desc, tags, body, publish, audience in [
         ("pnl", "report", "Desk P&L", "Daily P&L by book and trader, with the day's movers", ["pnl", "daily"], "report: desk-pnl\nmodel: trades-basic@1\npages:\n  - id: overview\n    title: Overview\n    visuals: []\n", True, ["bi-reader", "bi-steward"]),
         ("exposure", "board", "Counterparty exposure", "Live exposure by counterparty against limits", ["exposure", "credit"], "board: exposure\npages:\n  - id: p\n    tiles:\n      - { report: desk-pnl, visual: v, at: { x: 0, y: 0, w: 4, h: 3 } }\n", True, ["bi-reader"]),
-        ("trades", "dataset", "Trades dataset", "The trades table with desk and book relationships", ["trades"], "dataset: rates-trades-ds\ntitle: Trades dataset\ntables:\n  trade:\n    source: { kind: trade }\n"
-         "    columns: { TRADE_ID: string, PORTFOLIO: string, COUNTERPARTY: string }\n", False, []),   # today's dataset grammar (the old
-         # `tables: [trade]` failed the check at approval, DRS-9010: the 2.9.4 screenshot run)
+        ("trades", "table", "Trades dataset", "The trades table with desk and book relationships", ["trades"], "rachana: 3\ntable: bi.rates_trades_ds\nversion: 1.0.0\n"
+         "title: Trades dataset\nfrom: { kind: trade }\ncolumns:\n  TRADE_ID:     { path: \"$.TRADE_ID\", type: string }\n  PORTFOLIO:    { path: \"$.PORTFOLIO\", type: string }\n"
+         "  COUNTERPARTY: { path: \"$.COUNTERPARTY\", type: string }\n", False, []),   # a table of the table layer
         ("risk", "report", "Risk ladder", "DV01 ladder by bucket", ["risk", "dv01"], "report: risk-ladder\nmodel: trades-basic@1\npages:\n  - id: ladder\n    title: Ladder\n    visuals: []\n", True, ["bi-steward"])]:
         s, it = ann("POST", "/bi/workspaces/rates-desk/items", {"kind": kind, "title": title, "description": desc, "tags": tags, "body": body, "audienceRoles": audience})
         assert s == 201, it

@@ -1,0 +1,1227 @@
+{
+  "admin" : {
+    "GDP (USD bn) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "GDP (USD bn) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP (USD bn) | as-of-day2 | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "GDP (USD bn) | as-of-day2 | by regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ], [ "name-1", 79041.5 ], [ "name-2", 52028.0 ], [ "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "GDP (USD bn) | slicer regions.COUNTRY_NAME = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "GDP (USD bn) | subtotals | by regions.COUNTRY_NAME, regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", "name-0", 5004.5 ], [ "country_name-1", "name-1", 79041.5 ], [ "country_name-2", "name-2", 52028.0 ], [ "country_name-3", "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      }, {
+        "by" : [ "regions.COUNTRY_NAME" ],
+        "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ]
+      } ]
+    },
+    "GDP (USD bn) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP per head (USD) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "GDP per head (USD) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "GDP per head (USD) | as-of-day2 | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 1.0E9 ], [ "country_name-1", 1.0E9 ], [ "country_name-2", 1.0E9 ], [ "country_name-3", 1.0E9 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 1.0E9 ] ]
+      } ]
+    },
+    "GDP per head (USD) | as-of-day2 | by regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 1.0E9 ], [ "name-1", 1.0E9 ], [ "name-2", 1.0E9 ], [ "name-3", 1.0E9 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 1.0E9 ] ]
+      } ]
+    },
+    "GDP per head (USD) | slicer regions.COUNTRY_NAME = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "GDP per head (USD) | subtotals | by regions.COUNTRY_NAME, regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", "name-0", 1.0E9 ], [ "country_name-1", "name-1", 1.0E9 ], [ "country_name-2", "name-2", 1.0E9 ], [ "country_name-3", "name-3", 1.0E9 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 1.0E9 ] ]
+      }, {
+        "by" : [ "regions.COUNTRY_NAME" ],
+        "rows" : [ [ "country_name-0", 1.0E9 ], [ "country_name-1", 1.0E9 ], [ "country_name-2", 1.0E9 ], [ "country_name-3", 1.0E9 ] ]
+      } ]
+    },
+    "GDP per head (USD) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "Population | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "Population | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Population | as-of-day2 | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Population | as-of-day2 | by regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ], [ "name-1", 79041.5 ], [ "name-2", 52028.0 ], [ "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Population | slicer regions.COUNTRY_NAME = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "Population | subtotals | by regions.COUNTRY_NAME, regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", "name-0", 5004.5 ], [ "country_name-1", "name-1", 79041.5 ], [ "country_name-2", "name-2", 52028.0 ], [ "country_name-3", "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      }, {
+        "by" : [ "regions.COUNTRY_NAME" ],
+        "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ]
+      } ]
+    },
+    "Population | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "calc Population | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ], [ "country_name-1", 79041.5, 161088.5, 161088.5, 0.49067127696887114, null ], [ "country_name-2", 52028.0, 161088.5, 161088.5, 0.32297774204862545, null ], [ "country_name-3", 25014.5, 161088.5, 161088.5, 0.15528420712837973, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "calc Population | by regions.COUNTRY_NAME | slicer = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 5004.5 ] ]
+      } ]
+    },
+    "rows of regions" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "145e5a544ee247a84855ced11a71285b5e5f9af5281597f47180953a588532c6"
+    }
+  },
+  "analyst" : {
+    "GDP (USD bn) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "GDP (USD bn) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP (USD bn) | as-of-day2 | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "GDP (USD bn) | as-of-day2 | by regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ], [ "name-1", 79041.5 ], [ "name-2", 52028.0 ], [ "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "GDP (USD bn) | slicer regions.COUNTRY_NAME = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "GDP (USD bn) | subtotals | by regions.COUNTRY_NAME, regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", "name-0", 5004.5 ], [ "country_name-1", "name-1", 79041.5 ], [ "country_name-2", "name-2", 52028.0 ], [ "country_name-3", "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      }, {
+        "by" : [ "regions.COUNTRY_NAME" ],
+        "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ]
+      } ]
+    },
+    "GDP (USD bn) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP per head (USD) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "GDP per head (USD) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "GDP per head (USD) | as-of-day2 | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 1.0E9 ], [ "country_name-1", 1.0E9 ], [ "country_name-2", 1.0E9 ], [ "country_name-3", 1.0E9 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 1.0E9 ] ]
+      } ]
+    },
+    "GDP per head (USD) | as-of-day2 | by regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 1.0E9 ], [ "name-1", 1.0E9 ], [ "name-2", 1.0E9 ], [ "name-3", 1.0E9 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 1.0E9 ] ]
+      } ]
+    },
+    "GDP per head (USD) | slicer regions.COUNTRY_NAME = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "GDP per head (USD) | subtotals | by regions.COUNTRY_NAME, regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", "name-0", 1.0E9 ], [ "country_name-1", "name-1", 1.0E9 ], [ "country_name-2", "name-2", 1.0E9 ], [ "country_name-3", "name-3", 1.0E9 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 1.0E9 ] ]
+      }, {
+        "by" : [ "regions.COUNTRY_NAME" ],
+        "rows" : [ [ "country_name-0", 1.0E9 ], [ "country_name-1", 1.0E9 ], [ "country_name-2", 1.0E9 ], [ "country_name-3", 1.0E9 ] ]
+      } ]
+    },
+    "GDP per head (USD) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "Population | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "Population | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Population | as-of-day2 | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Population | as-of-day2 | by regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ], [ "name-1", 79041.5 ], [ "name-2", 52028.0 ], [ "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Population | slicer regions.COUNTRY_NAME = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "Population | subtotals | by regions.COUNTRY_NAME, regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", "name-0", 5004.5 ], [ "country_name-1", "name-1", 79041.5 ], [ "country_name-2", "name-2", 52028.0 ], [ "country_name-3", "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      }, {
+        "by" : [ "regions.COUNTRY_NAME" ],
+        "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ]
+      } ]
+    },
+    "Population | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "calc Population | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ], [ "country_name-1", 79041.5, 161088.5, 161088.5, 0.49067127696887114, null ], [ "country_name-2", 52028.0, 161088.5, 161088.5, 0.32297774204862545, null ], [ "country_name-3", 25014.5, 161088.5, 161088.5, 0.15528420712837973, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "calc Population | by regions.COUNTRY_NAME | slicer = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 5004.5 ] ]
+      } ]
+    },
+    "rows of regions" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "145e5a544ee247a84855ced11a71285b5e5f9af5281597f47180953a588532c6"
+    }
+  },
+  "desk-head-no-desks" : {
+    "GDP (USD bn) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "GDP (USD bn) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP (USD bn) | as-of-day2 | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "GDP (USD bn) | as-of-day2 | by regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ], [ "name-1", 79041.5 ], [ "name-2", 52028.0 ], [ "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "GDP (USD bn) | slicer regions.COUNTRY_NAME = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "GDP (USD bn) | subtotals | by regions.COUNTRY_NAME, regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", "name-0", 5004.5 ], [ "country_name-1", "name-1", 79041.5 ], [ "country_name-2", "name-2", 52028.0 ], [ "country_name-3", "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      }, {
+        "by" : [ "regions.COUNTRY_NAME" ],
+        "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ]
+      } ]
+    },
+    "GDP (USD bn) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP per head (USD) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "GDP per head (USD) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "GDP per head (USD) | as-of-day2 | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 1.0E9 ], [ "country_name-1", 1.0E9 ], [ "country_name-2", 1.0E9 ], [ "country_name-3", 1.0E9 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 1.0E9 ] ]
+      } ]
+    },
+    "GDP per head (USD) | as-of-day2 | by regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 1.0E9 ], [ "name-1", 1.0E9 ], [ "name-2", 1.0E9 ], [ "name-3", 1.0E9 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 1.0E9 ] ]
+      } ]
+    },
+    "GDP per head (USD) | slicer regions.COUNTRY_NAME = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "GDP per head (USD) | subtotals | by regions.COUNTRY_NAME, regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", "name-0", 1.0E9 ], [ "country_name-1", "name-1", 1.0E9 ], [ "country_name-2", "name-2", 1.0E9 ], [ "country_name-3", "name-3", 1.0E9 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 1.0E9 ] ]
+      }, {
+        "by" : [ "regions.COUNTRY_NAME" ],
+        "rows" : [ [ "country_name-0", 1.0E9 ], [ "country_name-1", 1.0E9 ], [ "country_name-2", 1.0E9 ], [ "country_name-3", 1.0E9 ] ]
+      } ]
+    },
+    "GDP per head (USD) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "Population | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "Population | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Population | as-of-day2 | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Population | as-of-day2 | by regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ], [ "name-1", 79041.5 ], [ "name-2", 52028.0 ], [ "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Population | slicer regions.COUNTRY_NAME = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "Population | subtotals | by regions.COUNTRY_NAME, regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", "name-0", 5004.5 ], [ "country_name-1", "name-1", 79041.5 ], [ "country_name-2", "name-2", 52028.0 ], [ "country_name-3", "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      }, {
+        "by" : [ "regions.COUNTRY_NAME" ],
+        "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ]
+      } ]
+    },
+    "Population | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "calc Population | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ], [ "country_name-1", 79041.5, 161088.5, 161088.5, 0.49067127696887114, null ], [ "country_name-2", 52028.0, 161088.5, 161088.5, 0.32297774204862545, null ], [ "country_name-3", 25014.5, 161088.5, 161088.5, 0.15528420712837973, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "calc Population | by regions.COUNTRY_NAME | slicer = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 5004.5 ] ]
+      } ]
+    },
+    "rows of regions" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "145e5a544ee247a84855ced11a71285b5e5f9af5281597f47180953a588532c6"
+    }
+  },
+  "desk-head-two-desks" : {
+    "GDP (USD bn) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "GDP (USD bn) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP (USD bn) | as-of-day2 | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "GDP (USD bn) | as-of-day2 | by regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ], [ "name-1", 79041.5 ], [ "name-2", 52028.0 ], [ "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "GDP (USD bn) | slicer regions.COUNTRY_NAME = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "GDP (USD bn) | subtotals | by regions.COUNTRY_NAME, regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", "name-0", 5004.5 ], [ "country_name-1", "name-1", 79041.5 ], [ "country_name-2", "name-2", 52028.0 ], [ "country_name-3", "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      }, {
+        "by" : [ "regions.COUNTRY_NAME" ],
+        "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ]
+      } ]
+    },
+    "GDP (USD bn) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP per head (USD) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "GDP per head (USD) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "GDP per head (USD) | as-of-day2 | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 1.0E9 ], [ "country_name-1", 1.0E9 ], [ "country_name-2", 1.0E9 ], [ "country_name-3", 1.0E9 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 1.0E9 ] ]
+      } ]
+    },
+    "GDP per head (USD) | as-of-day2 | by regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 1.0E9 ], [ "name-1", 1.0E9 ], [ "name-2", 1.0E9 ], [ "name-3", 1.0E9 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 1.0E9 ] ]
+      } ]
+    },
+    "GDP per head (USD) | slicer regions.COUNTRY_NAME = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "GDP per head (USD) | subtotals | by regions.COUNTRY_NAME, regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", "name-0", 1.0E9 ], [ "country_name-1", "name-1", 1.0E9 ], [ "country_name-2", "name-2", 1.0E9 ], [ "country_name-3", "name-3", 1.0E9 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 1.0E9 ] ]
+      }, {
+        "by" : [ "regions.COUNTRY_NAME" ],
+        "rows" : [ [ "country_name-0", 1.0E9 ], [ "country_name-1", 1.0E9 ], [ "country_name-2", 1.0E9 ], [ "country_name-3", 1.0E9 ] ]
+      } ]
+    },
+    "GDP per head (USD) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "Population | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "Population | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Population | as-of-day2 | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Population | as-of-day2 | by regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ], [ "name-1", 79041.5 ], [ "name-2", 52028.0 ], [ "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Population | slicer regions.COUNTRY_NAME = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "Population | subtotals | by regions.COUNTRY_NAME, regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", "name-0", 5004.5 ], [ "country_name-1", "name-1", 79041.5 ], [ "country_name-2", "name-2", 52028.0 ], [ "country_name-3", "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      }, {
+        "by" : [ "regions.COUNTRY_NAME" ],
+        "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ]
+      } ]
+    },
+    "Population | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "calc Population | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ], [ "country_name-1", 79041.5, 161088.5, 161088.5, 0.49067127696887114, null ], [ "country_name-2", 52028.0, 161088.5, 161088.5, 0.32297774204862545, null ], [ "country_name-3", 25014.5, 161088.5, 161088.5, 0.15528420712837973, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "calc Population | by regions.COUNTRY_NAME | slicer = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 5004.5 ] ]
+      } ]
+    },
+    "rows of regions" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "145e5a544ee247a84855ced11a71285b5e5f9af5281597f47180953a588532c6"
+    }
+  },
+  "no-raw-power" : {
+    "GDP (USD bn) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "GDP (USD bn) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP (USD bn) | as-of-day2 | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "GDP (USD bn) | as-of-day2 | by regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ], [ "name-1", 79041.5 ], [ "name-2", 52028.0 ], [ "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "GDP (USD bn) | slicer regions.COUNTRY_NAME = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "GDP (USD bn) | subtotals | by regions.COUNTRY_NAME, regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", "name-0", 5004.5 ], [ "country_name-1", "name-1", 79041.5 ], [ "country_name-2", "name-2", 52028.0 ], [ "country_name-3", "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      }, {
+        "by" : [ "regions.COUNTRY_NAME" ],
+        "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ]
+      } ]
+    },
+    "GDP (USD bn) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP per head (USD) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "GDP per head (USD) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "GDP per head (USD) | as-of-day2 | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 1.0E9 ], [ "country_name-1", 1.0E9 ], [ "country_name-2", 1.0E9 ], [ "country_name-3", 1.0E9 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 1.0E9 ] ]
+      } ]
+    },
+    "GDP per head (USD) | as-of-day2 | by regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 1.0E9 ], [ "name-1", 1.0E9 ], [ "name-2", 1.0E9 ], [ "name-3", 1.0E9 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 1.0E9 ] ]
+      } ]
+    },
+    "GDP per head (USD) | slicer regions.COUNTRY_NAME = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "GDP per head (USD) | subtotals | by regions.COUNTRY_NAME, regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", "name-0", 1.0E9 ], [ "country_name-1", "name-1", 1.0E9 ], [ "country_name-2", "name-2", 1.0E9 ], [ "country_name-3", "name-3", 1.0E9 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 1.0E9 ] ]
+      }, {
+        "by" : [ "regions.COUNTRY_NAME" ],
+        "rows" : [ [ "country_name-0", 1.0E9 ], [ "country_name-1", 1.0E9 ], [ "country_name-2", 1.0E9 ], [ "country_name-3", 1.0E9 ] ]
+      } ]
+    },
+    "GDP per head (USD) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "Population | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "Population | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Population | as-of-day2 | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Population | as-of-day2 | by regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ], [ "name-1", 79041.5 ], [ "name-2", 52028.0 ], [ "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Population | slicer regions.COUNTRY_NAME = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "Population | subtotals | by regions.COUNTRY_NAME, regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", "name-0", 5004.5 ], [ "country_name-1", "name-1", 79041.5 ], [ "country_name-2", "name-2", 52028.0 ], [ "country_name-3", "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      }, {
+        "by" : [ "regions.COUNTRY_NAME" ],
+        "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ]
+      } ]
+    },
+    "Population | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "calc Population | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ], [ "country_name-1", 79041.5, 161088.5, 161088.5, 0.49067127696887114, null ], [ "country_name-2", 52028.0, 161088.5, 161088.5, 0.32297774204862545, null ], [ "country_name-3", 25014.5, 161088.5, 161088.5, 0.15528420712837973, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "calc Population | by regions.COUNTRY_NAME | slicer = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 5004.5 ] ]
+      } ]
+    },
+    "rows of regions" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "145e5a544ee247a84855ced11a71285b5e5f9af5281597f47180953a588532c6"
+    }
+  },
+  "risk" : {
+    "GDP (USD bn) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "GDP (USD bn) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP (USD bn) | as-of-day2 | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "GDP (USD bn) | as-of-day2 | by regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ], [ "name-1", 79041.5 ], [ "name-2", 52028.0 ], [ "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "GDP (USD bn) | slicer regions.COUNTRY_NAME = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "GDP (USD bn) | subtotals | by regions.COUNTRY_NAME, regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", "name-0", 5004.5 ], [ "country_name-1", "name-1", 79041.5 ], [ "country_name-2", "name-2", 52028.0 ], [ "country_name-3", "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      }, {
+        "by" : [ "regions.COUNTRY_NAME" ],
+        "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ]
+      } ]
+    },
+    "GDP (USD bn) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP per head (USD) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "GDP per head (USD) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "GDP per head (USD) | as-of-day2 | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 1.0E9 ], [ "country_name-1", 1.0E9 ], [ "country_name-2", 1.0E9 ], [ "country_name-3", 1.0E9 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 1.0E9 ] ]
+      } ]
+    },
+    "GDP per head (USD) | as-of-day2 | by regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 1.0E9 ], [ "name-1", 1.0E9 ], [ "name-2", 1.0E9 ], [ "name-3", 1.0E9 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 1.0E9 ] ]
+      } ]
+    },
+    "GDP per head (USD) | slicer regions.COUNTRY_NAME = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "GDP per head (USD) | subtotals | by regions.COUNTRY_NAME, regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", "name-0", 1.0E9 ], [ "country_name-1", "name-1", 1.0E9 ], [ "country_name-2", "name-2", 1.0E9 ], [ "country_name-3", "name-3", 1.0E9 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 1.0E9 ] ]
+      }, {
+        "by" : [ "regions.COUNTRY_NAME" ],
+        "rows" : [ [ "country_name-0", 1.0E9 ], [ "country_name-1", 1.0E9 ], [ "country_name-2", 1.0E9 ], [ "country_name-3", 1.0E9 ] ]
+      } ]
+    },
+    "GDP per head (USD) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "Population | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "Population | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Population | as-of-day2 | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Population | as-of-day2 | by regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ], [ "name-1", 79041.5 ], [ "name-2", 52028.0 ], [ "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Population | slicer regions.COUNTRY_NAME = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "Population | subtotals | by regions.COUNTRY_NAME, regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", "name-0", 5004.5 ], [ "country_name-1", "name-1", 79041.5 ], [ "country_name-2", "name-2", 52028.0 ], [ "country_name-3", "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      }, {
+        "by" : [ "regions.COUNTRY_NAME" ],
+        "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ]
+      } ]
+    },
+    "Population | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "calc Population | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ], [ "country_name-1", 79041.5, 161088.5, 161088.5, 0.49067127696887114, null ], [ "country_name-2", 52028.0, 161088.5, 161088.5, 0.32297774204862545, null ], [ "country_name-3", 25014.5, 161088.5, 161088.5, 0.15528420712837973, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "calc Population | by regions.COUNTRY_NAME | slicer = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 5004.5 ] ]
+      } ]
+    },
+    "rows of regions" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "145e5a544ee247a84855ced11a71285b5e5f9af5281597f47180953a588532c6"
+    }
+  },
+  "unnamed-role" : {
+    "GDP (USD bn) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "GDP (USD bn) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP (USD bn) | as-of-day2 | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "GDP (USD bn) | as-of-day2 | by regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ], [ "name-1", 79041.5 ], [ "name-2", 52028.0 ], [ "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "GDP (USD bn) | slicer regions.COUNTRY_NAME = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "GDP (USD bn) | subtotals | by regions.COUNTRY_NAME, regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", "name-0", 5004.5 ], [ "country_name-1", "name-1", 79041.5 ], [ "country_name-2", "name-2", 52028.0 ], [ "country_name-3", "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      }, {
+        "by" : [ "regions.COUNTRY_NAME" ],
+        "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ]
+      } ]
+    },
+    "GDP (USD bn) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP per head (USD) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "GDP per head (USD) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "GDP per head (USD) | as-of-day2 | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 1.0E9 ], [ "country_name-1", 1.0E9 ], [ "country_name-2", 1.0E9 ], [ "country_name-3", 1.0E9 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 1.0E9 ] ]
+      } ]
+    },
+    "GDP per head (USD) | as-of-day2 | by regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 1.0E9 ], [ "name-1", 1.0E9 ], [ "name-2", 1.0E9 ], [ "name-3", 1.0E9 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 1.0E9 ] ]
+      } ]
+    },
+    "GDP per head (USD) | slicer regions.COUNTRY_NAME = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "GDP per head (USD) | subtotals | by regions.COUNTRY_NAME, regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", "name-0", 1.0E9 ], [ "country_name-1", "name-1", 1.0E9 ], [ "country_name-2", "name-2", 1.0E9 ], [ "country_name-3", "name-3", 1.0E9 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 1.0E9 ] ]
+      }, {
+        "by" : [ "regions.COUNTRY_NAME" ],
+        "rows" : [ [ "country_name-0", 1.0E9 ], [ "country_name-1", 1.0E9 ], [ "country_name-2", 1.0E9 ], [ "country_name-3", 1.0E9 ] ]
+      } ]
+    },
+    "GDP per head (USD) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1.0E9 ] ]
+    },
+    "Population | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "Population | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Population | as-of-day2 | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Population | as-of-day2 | by regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ], [ "name-1", 79041.5 ], [ "name-2", 52028.0 ], [ "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Population | slicer regions.COUNTRY_NAME = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "Population | subtotals | by regions.COUNTRY_NAME, regions.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", "name-0", 5004.5 ], [ "country_name-1", "name-1", 79041.5 ], [ "country_name-2", "name-2", 52028.0 ], [ "country_name-3", "name-3", 25014.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      }, {
+        "by" : [ "regions.COUNTRY_NAME" ],
+        "rows" : [ [ "country_name-0", 5004.5 ], [ "country_name-1", 79041.5 ], [ "country_name-2", 52028.0 ], [ "country_name-3", 25014.5 ] ]
+      } ]
+    },
+    "Population | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "calc Population | by regions.COUNTRY_NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ], [ "country_name-1", 79041.5, 161088.5, 161088.5, 0.49067127696887114, null ], [ "country_name-2", 52028.0, 161088.5, 161088.5, 0.32297774204862545, null ], [ "country_name-3", 25014.5, 161088.5, 161088.5, 0.15528420712837973, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "calc Population | by regions.COUNTRY_NAME | slicer = country_name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "country_name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 5004.5 ] ]
+      } ]
+    },
+    "rows of regions" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "145e5a544ee247a84855ced11a71285b5e5f9af5281597f47180953a588532c6"
+    }
+  }
+}

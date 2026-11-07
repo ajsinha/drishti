@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 /**
  * The manifest of a Python item (BI_DESIGN.md › Rūpaka: the original design and every phase as built, sections 13 and 20.8): the body of a BI item of kind {@code python}. It says what the function is
  * ({@code interface}: a measure or a visual), which columns it reads, which packages it needs, where it may run, and its limits, and carries the
- * source. Parsing never runs the code: the console's runner (which has Python) checks the syntax, and checks it again before every run.
+ * source. Parsing never runs the code: the compute pool python checks the syntax (PythonRuns), and checks it again before every run.
  *
  * <pre>
  * rachana: 1

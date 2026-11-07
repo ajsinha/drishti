@@ -93,7 +93,7 @@ def health(c: Ctx):
 
 @shot("11-index-reload.jpg")
 def index_reload(c: Ctx):
-    """Needs a stack that reads the demo lake (DRISHTI_DELTA_ROOT) with `index.days: 3` on the trading-store connector and a DRISHTI_INDEX_DIR of its own;
+    """Needs a stack that reads the demo lake (config/lakes/demo.yaml) with `index.days: 3` on the trading-store connector and a DRISHTI_INDEX_DIR of its own;
     on the plain scratch stack the connector is down, so the picture is skipped and the one in the repository stays."""
     import os
     if not os.environ.get("DRISHTI_SHOTS_INDEX"):

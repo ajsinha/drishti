@@ -53,13 +53,12 @@ def shoot(page, selector, name, max_height=760):
             page.screenshot(path=os.path.join(SHOTS, name + ".jpg"), quality=86, clip={"x": bb["x"], "y": bb["y"], "width": bb["width"], "height": max_height})
 
 # a model over the sample's valuations with a field parameter of fields and one of measures (docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21)
-MODEL = """rachana: 2
-expressions: 2
+MODEL = """rachana: 3
 model: fp-desk
 version: 1.0.0
 title: Desk with field parameters
-datasets:
-  trade: { dataset: trades-basic-trade, role: fact }
+tables:
+  trade: { table: bi.trades_basic_trade, role: fact }
 measures:
   MTM:      { expr: "sum(trade.MTM)" }
   NOTIONAL: { expr: "sum(trade.NOTIONAL)" }
@@ -72,7 +71,7 @@ parameters:
 
 class WaveDStack(bi_report_stack.ReportStack):
     def prepare(self, work):
-        models = work / "config" / "bi" / "models"
+        models = work / "config" / "tables" / "bi"                              # a model of the table layer, beside the sample's table
         models.mkdir(parents=True, exist_ok=True)
         (models / "fp-desk.model.yaml").write_text(MODEL)
 

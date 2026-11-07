@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.EntityDocument;
@@ -145,9 +146,27 @@ class DatasetRefresherTest {
         service.close();
     }
 
+    /** The trades of the test lake as one table of the layer, refreshed on {@code schedule}: its own refresh is the dataset's. */
+    static String table(String schedule) {
+        String s = schedule.startsWith("\"") ? schedule.substring(1, schedule.length() - 1) : schedule;
+        return """
+                rachana: 3
+                table: bi.trades
+                version: 1.0.0
+                from: { kind: trade, connector: trading-lake }
+                columns:
+                  desk:      { path: "$.desk", type: string }
+                  currency:  { path: "$.ccy", type: string }
+                  notional:  { path: "$.notional", type: decimal }
+                  mtm:       { path: "$.mtm", type: decimal }
+                  tradeDate: { path: "$.tradeDate", type: date }
+                materialize: on-load
+                refresh: { schedule: "%s" }
+                """.formatted(s);
+    }
+
     void start(String refresh, BiRefreshProperties props) {
-        String yaml = TestLake.yaml().replace("version: 1\n", "version: 1\nrefresh: " + refresh + "\n");
-        DatasetParser.Result r = DatasetParser.parse(yaml);
+        DatasetParser.Result r = Layered.dataset(table(refresh));
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         ds = new QueryService.Loaded("file:dataset:lake-test", Layers.key("file:dataset:lake-test"), r.dataset(), "h1");
         BusinessDates dates = new BusinessDates(new BusinessDateProperties("USNY", "America/New_York", null), clock);
@@ -166,7 +185,13 @@ class DatasetRefresherTest {
 
     @SuppressWarnings("unchecked")
     Map<String, Object> dataset() {
-        return (Map<String, Object>) refresher.status(ds).get("dataset");
+        // a table of the layer is refreshed on its own schedule (its job); a refresh asked by a person is the dataset's own state
+        Map<String, Object> s = refresher.status(ds);
+        if (s.get("dataset") != null) {
+            return (Map<String, Object>) s.get("dataset");
+        }
+        List<Map<String, Object>> tables = (List<Map<String, Object>>) s.get("tables");
+        return tables == null || tables.isEmpty() ? null : tables.get(0);
     }
 
     void awaitStatus(String status) throws InterruptedException {
@@ -186,7 +211,7 @@ class DatasetRefresherTest {
         refresher.tick();
         awaitStatus("ok");
         assertThat(lake.scans.get()).isPositive();
-        assertThat(dataset().get("lastRows")).isEqualTo(43L);
+        assertThat(dataset().get("lastRows")).isEqualTo(40L);
         assertThat(dataset().get("lastDate")).isEqualTo("2026-10-09");
         assertThat(dataset().get("trigger")).isEqualTo("schedule");
         assertThat(dataset().get("nextRun")).isEqualTo(java.time.ZonedDateTime.of(2026, 10, 10, 6, 0, 0, 0, NY).toInstant().toString());
@@ -211,11 +236,11 @@ class DatasetRefresherTest {
         assertThat(after.get("status")).isEqualTo("ok");
         assertThat(after.get("lastRun")).isEqualTo(before.get("lastRun"));
         assertThat(after.get("nextRun")).isEqualTo(before.get("nextRun")).isEqualTo(java.time.ZonedDateTime.of(2026, 10, 10, 6, 0, 0, 0, NY).toInstant().toString());
-        assertThat(after.get("lastRows")).isEqualTo(43L);
+        assertThat(after.get("lastRows")).isEqualTo(40L);
         assertThat(after.get("runs")).isEqualTo(1L);
         @SuppressWarnings("unchecked") List<Map<String, Object>> history = (List<Map<String, Object>>) after.get("history");
         assertThat(history).hasSize(1);
-        assertThat(history.get(0)).containsEntry("trigger", "schedule").containsEntry("status", "ok").containsEntry("rows", 43L);
+        assertThat(history.get(0)).containsEntry("trigger", "schedule").containsEntry("status", "ok").containsEntry("rows", 40L);
         refresher.runNow(ds, "wes");                                                // the next run adds to the history, newest first
         awaitStatus("ok");
         for (int i = 0; i < 100 && ((List<?>) dataset().get("history")).size() < 2; i++) {
@@ -340,7 +365,7 @@ class DatasetRefresherTest {
         refresher.onLoad("trade", TestLake.DAY1);
         awaitStatus("ok");
         assertThat(dataset().get("lastDate")).isEqualTo("2026-10-08");
-        assertThat(dataset().get("lastRows")).isEqualTo(43L);
+        assertThat(dataset().get("lastRows")).isEqualTo(40L);
         assertThat(String.valueOf(dataset().get("trigger"))).startsWith("after-load");
         assertThat(DatasetRefresher.afterLoad(ds.dataset())).isTrue();
     }
@@ -351,11 +376,11 @@ class DatasetRefresherTest {
         assertThat(RefreshSpec.normalise("daily at 06:00")).isEqualTo("daily 06:00");
         assertThat(RefreshSpec.normalise("business days at 07:30")).isEqualTo("business-days 07:30");
         for (String ok : List.of("hourly", "weekly mon 07:00", "monthly last 18:00 business", "after-load trade", "weekdays 18:30")) {
-            assertThat(DatasetParser.parse(TestLake.yaml().replace("version: 1\n", "version: 1\nrefresh: \"" + ok + "\"\n")).problems()).as(ok).noneMatch(DatasetParser.Problem::error);
+            assertThat(Layered.dataset(table(ok)).problems()).as(ok).noneMatch(DatasetParser.Problem::error);
         }
-        DatasetParser.Result bad = DatasetParser.parse(TestLake.yaml().replace("version: 1\n", "version: 1\nrefresh: \"whenever\"\n"));
+        DatasetParser.Result bad = Layered.dataset(table("whenever"));
         assertThat(bad.problems()).anyMatch(p -> p.error() && p.path().equals("refresh") && p.message().contains("not a schedule"));
-        DatasetParser.Result table = DatasetParser.parse(TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }", "source: { connector: trading-lake, kind: trade }\n    refresh: { schedule: \"daily 06:00\" }"));
+        DatasetParser.Result table = Layered.dataset(table("daily 06:00"));
         assertThat(table.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         assertThat(table.dataset().tables().get("trades").schedule()).isEqualTo("daily 06:00");
         assertThat(Dataset.Refresh.NONE.scheduled()).isFalse();
@@ -372,13 +397,13 @@ class DatasetRefresherTest {
         assertThat((Long) dataset().get("lastRows")).isPositive();
         QueryService.Caller risk = new QueryService.Caller("rita", java.util.Set.of("risk"), true,
                 com.ash.drishti.server.bi.dataset.UserAttributes.of("rita", List.of("risk"), "", null), SqlCompiler.Masks.NONE);
-        QueryService.Result r = service.query(ds, new QueryRequest(List.of(), List.of("Trades"), List.of(), null, null, List.of(), 100, "auto"), risk, false);
+        QueryService.Result r = service.query(ds, new QueryRequest(List.of(), List.of("Count of trades"), List.of(), null, null, List.of(), 100, "auto"), risk, false);
         assertThat(((Number) r.columns().get(0).values()[0]).doubleValue()).as("the dataset answers from the latest date, not from an empty layer").isEqualTo(40.0);
         refresher.runNow(ds, "wes");                                                         // a second refresh keeps it so
         for (int i = 0; i < 200 && "running".equals(dataset().get("status")); i++) {
             Thread.sleep(25);
         }
-        QueryService.Result again = service.query(ds, new QueryRequest(List.of(), List.of("Trades"), List.of(), null, null, List.of(), 100, "auto"), risk, false);
+        QueryService.Result again = service.query(ds, new QueryRequest(List.of(), List.of("Count of trades"), List.of(), null, null, List.of(), 100, "auto"), risk, false);
         assertThat(((Number) again.columns().get(0).values()[0]).doubleValue()).isEqualTo(40.0);
     }
 }

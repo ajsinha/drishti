@@ -121,8 +121,8 @@
         <ul class="bi-warn" data-yaml-problems role="status"></ul>
       </div>
     </div>
-    <aside class="bi-pane bi-pane-filters" aria-labelledby="pfH"><div class="bi-pane-head"><h2 id="pfH">Filters</h2><button type="button" class="btn-pill btn-ghost bi-small" data-hide-filters aria-label="Hide the Filters pane">Hide</button></div><div data-filters></div></aside>
-    <aside class="bi-pane bi-pane-vis" aria-labelledby="pvH"><h2 id="pvH">Visualizations</h2>
+    <aside class="bi-pane bi-pane-filters" aria-labelledby="pfH"><div data-resize="panel" data-resize-key="bi.design.filters" data-resize-var="--bi-filters" data-resize-min="150" data-resize-max="480" data-resize-edge="left" aria-label="Resize the Filters pane"></div><div class="bi-pane-head"><h2 id="pfH">Filters</h2><button type="button" class="btn-pill btn-ghost bi-small" data-hide-filters aria-label="Hide the Filters pane">Hide</button></div><div data-filters></div></aside>
+    <aside class="bi-pane bi-pane-vis" aria-labelledby="pvH"><div data-resize="panel" data-resize-key="bi.design.visuals" data-resize-var="--bi-vis" data-resize-min="180" data-resize-max="520" data-resize-edge="left" aria-label="Resize the Visualizations pane"></div><h2 id="pvH">Visualizations</h2>
       <div data-types class="bi-types"></div>
       <div class="bi-ptabs" role="tablist" aria-label="Visual settings">
         <button type="button" class="bi-tab" role="tab" data-ptab="build" aria-selected="true">Build</button>
@@ -130,7 +130,7 @@
       <div data-pane="build"><div data-build></div></div>
       <div data-pane="format" hidden><div data-format></div><datalist id="biDatasetNames" data-dataset-names></datalist></div>
     </aside>
-    <aside class="bi-pane bi-pane-fields" aria-labelledby="pdH"><h2 id="pdH">Fields</h2>
+    <aside class="bi-pane bi-pane-fields" aria-labelledby="pdH"><div data-resize="panel" data-resize-key="bi.design.fields" data-resize-var="--bi-fields" data-resize-min="160" data-resize-max="520" data-resize-edge="left" aria-label="Resize the Fields pane"></div><h2 id="pdH">Fields</h2>
       <p class="bi-adddataset"><button type="button" class="btn-pill btn-ghost bi-small" data-add-dataset><i class="bi bi-plus-lg" aria-hidden="true"></i> Add dataset</button></p>
       <p class="bi-adddataset" data-add-dataset-form hidden><select class="studio-select" data-dataset-picker aria-label="Dataset to add"></select> <button type="button" class="btn-pill btn-accent bi-small" data-dataset-add-go>Add</button></p>
       <input type="search" class="studio-in" data-fields-search placeholder="Search fields" aria-label="Search fields">

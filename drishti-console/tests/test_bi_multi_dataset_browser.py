@@ -40,7 +40,7 @@ from bi_report_stack import CONSOLE_URL, ROOT, api  # noqa: E402
 REPORT = "file:report:pnl-vs-exposure"
 MODEL = "trading-risk@1"
 PY_MODEL = "desk-pnl-vs-exposure-py@1"
-PY_DATASET = "file:dataset:desk-pnl-vs-exposure-py-result"
+PY_DATASET = "file:table:bi.desk_pnl_vs_exposure_py_result"   # the table the Python Transform makes (the table layer's, shipped in config/tables)
 
 
 class Stack(bi_report_stack.ReportStack):
@@ -51,8 +51,8 @@ class Stack(bi_report_stack.ReportStack):
             target = work / "config/bi" / folder
             target.mkdir(parents=True, exist_ok=True)
             (target / f"{name}.{suffix}.yaml").write_text((ROOT / "config/bi" / folder / f"{name}.{suffix}.yaml").read_text(encoding="utf-8"), encoding="utf-8")
-        # the server runs Transforms in the console's sandboxed runner, started with the Python that runs this test (it has pandas and pyarrow)
-        self.server_args += [f"--drishti.bi.transform.python={sys.executable}", f"--drishti.bi.transform.runner={ROOT}/drishti-console/core/transform_cli.py"]
+        # the server runs Python on its compute pool python, in the interpreter that runs this test (it carries the pinned libraries)
+        self.server_args += ["--DRISHTI_COMPUTE_ENABLED=true", f"--DRISHTI_PYTHON={sys.executable}", f"--drishti.compute.file={ROOT}/config/compute/compute.yaml"]
 
 
 @pytest.fixture(scope="module")
@@ -195,30 +195,26 @@ def test_the_python_datasets_page_names_its_transform_and_its_inputs(stack, brow
     page.wait_for_url("**/bi/ds/**")
     page.wait_for_selector("[data-layer-dataset][data-ready=yes]", timeout=30000)
     expect(page.locator('[data-fact="source"]')).to_contain_text("the Python Transform pnl-vs-exposure")
-    expect(page.locator("[data-yaml]")).to_contain_text("model: trading-risk@1")
-    expect(page.locator("[data-yaml]")).to_contain_text("model: counterparty-exposure@1")
+    expect(page.locator("[data-yaml]")).to_contain_text('model: "trading-risk@1"')
+    expect(page.locator("[data-yaml]")).to_contain_text('model: "counterparty-exposure@1"')
     clean(page)
     page.close()
 
 
-# ---- Analyse: two extracts in one notebook, joined in pandas ----------------------------------------------------------------------------
+# ---- the Notebook: two extracts in one notebook, a join cell for the server's compute pool ------------------------------------------------
 
-def test_analyse_joins_two_extracts_of_a_notebook_in_pandas(stack, browser):
-    page = sign_in(browser, "rex", "/bi/explore")                                                          # rex reads every row and holds bi-author: Python cells run for authors
-    page.goto(f"{CONSOLE_URL}/bi/explore?item=file:notebook:pnl-vs-exposure-pandas")
+def test_the_notebook_opens_two_extracts_and_its_join_cell_runs_on_the_compute_pool(stack, browser):
+    page = sign_in(browser, "rex", "/bi/notebook")                                                         # rex reads every row and holds bi-author
+    page.goto(f"{CONSOLE_URL}/bi/notebook?item=file:notebook:pnl-vs-exposure-pandas")
     page.wait_for_selector("[data-extra='exposure']", timeout=60000)
     page.wait_for_function("() => /rows/.test(document.querySelector('[data-info]').textContent)", timeout=60000)        # the first extract is open
     page.click('[data-tab="python"]')
     page.wait_for_selector('[data-cells=python] [data-run]')
-    page.click('[data-cells=python] [data-run]')
-    page.wait_for_function("() => { const o = document.querySelector('[data-cells=python] .bx-out'); return o && o.textContent && !/Running/.test(o.textContent); }", timeout=90000)
-    out = page.locator('[data-cells=python] .bx-out').inner_text()
-    assert page.locator('[data-cells=python] .bx-out table').count() == 1, out
-    head = page.locator('[data-cells=python] .bx-out thead th').all_inner_texts()
-    assert head == ["counterparty", "desk_pnl", "ee_peak", "pnl_per_exposure"]
-    first = page.locator('[data-cells=python] .bx-out tbody tr').first.inner_text().split("\t")
-    pnl, ee = hand_join(("rex", ["risk", "bi-writer"]))
-    assert first[0] in ee and float(first[1]) == pytest.approx(pnl[first[0]], rel=1e-6) and float(first[2]) == pytest.approx(ee[first[0]], rel=1e-6)
-    assert page.locator('[data-promote="transform"]').count() == 1                                         # a cell that joins extracts can become a Transform
+    assert 'extract("exposure")' in page.locator('[data-cells=python] textarea').first.input_value()
+    page.locator('[data-cells=python] [data-run]').first.click()                                             # the join cell runs on the server's compute pool
+    expect(page.locator('[data-cells=python] [data-engine=python]').first).to_be_visible(timeout=120000)
+    assert page.locator('[data-cells=python] [data-target=server]').count() >= 1
+    expect(page.locator('[data-cells=python] [data-result] table').first).to_be_visible()
+    assert page.locator('[data-promote="transform"]').count() == 1 and page.locator('[data-promote="transform"]').is_enabled()   # a cell that joins extracts can become a Transform
     clean(page)
     page.close()

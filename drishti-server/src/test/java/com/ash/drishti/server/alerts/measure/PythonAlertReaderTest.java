@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.alerts.measure;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -28,7 +29,6 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.server.alerts.measure.AlertLogic.Reading;
 import com.ash.drishti.server.bi.DatasetService;
 import com.ash.drishti.server.bi.dataset.Dataset;
-import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.engine.QueryRequest;
 import com.ash.drishti.server.bi.engine.QueryService;
 import com.ash.drishti.server.bi.python.PythonItems;
@@ -73,7 +73,7 @@ class PythonAlertReaderTest {
         }
 
         @Override
-        public JsonNode measure(Map<String, Object> manifest, Map<String, Object> params, List<String> groupBy, List<String> columns, List<List<Object>> rows) {
+        public JsonNode measure(Principal p, Map<String, Object> manifest, Map<String, Object> params, List<String> groupBy, List<String> columns, List<List<Object>> rows) {
             calls.add(new Object[] {manifest, params, groupBy, columns, rows});
             if (rows.isEmpty()) {
                 throw new DrishtiException(ErrorCode.PYTHON_FAILED, "no rows to run on");
@@ -84,7 +84,7 @@ class PythonAlertReaderTest {
     };
 
     PythonAlertReader reader() {
-        Dataset ds = DatasetParser.parse(DATASET).dataset();
+        Dataset ds = Layered.dataset(DATASET).dataset();
         when(datasets.parsed(any(), anyString())).thenReturn(ds);
         when(datasets.ask(any(), anyString(), any(), anyBoolean())).thenReturn(mock(QueryService.Result.class));
         when(datasets.json(any())).thenAnswer(i -> answer);

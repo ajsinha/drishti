@@ -110,7 +110,7 @@ measure call). Full detail per form: [FLIGHT_REFERENCE.md](FLIGHT_REFERENCE.md).
 
 | Form | Request | Answered by | Rows |
 |---|---|---|---|
-| `kind` | `{"kind": "trade", "paths": ["TRADE_ID", "PRODUCT_TYPE"], "where": ["PRODUCT_TYPE = IRS"], "date": "2026-09-30"}` | the Data view's reader (as a download) | the kind's rows on the day, the chosen paths |
+| `kind` | `{"kind": "trade", "paths": ["TRADE_ID", "PRODUCT_TYPE"], "where": ["PRODUCT_TYPE = IRS"], "date": "2026-09-30"}` | Export data's reader (as a download) | the kind's rows on the day, the chosen paths |
 | `model` | `{"model": "trades-basic", "query": {"select": {"fields": [...], "measures": [...]}, "where": [...], "sort": [...], "limit": 50}}` | MQ, BI's model queries | the query's answer |
 | `pivot` | the view, as `POST /api/v1/pivot/query` takes it | the pivot engine | one per cell and measure |
 | `measure` | `measure('var.scenarios', 'DESK:RATES', date: 2026-09-30)` or `{"measure": "var.parts", "scope": "DESK:RATES", "by": "position"}` | the VaR engine, computed when asked | one per scenario; one per part with its vector |
@@ -159,7 +159,7 @@ pnl = f.measure("var.scenarios", "DESK:RATES").to_pandas()
  │             scope data:read[:domain] · on behalf of a person            │
  │  GetFlightInfo: the request → its plan → endpoints (real addresses)     │
  │  DoGet:  busy protection admits ─▶ the form reads as the person ─▶      │
- │            kind ─▶ Data view reader      (entitlements, masks)          │
+ │            kind ─▶ Export data reader      (entitlements, masks)          │
  │            model ─▶ MQ                    (row rules, masks)            │
  │            pivot ─▶ the pivot engine      (viewer, edition)             │
  │            measure ─▶ the VaR engine      (the person's view)           │
@@ -238,7 +238,7 @@ The rows limit stops a read after its last whole batch; a live stream has no tim
 
 Every read is audited when it ends: who, on behalf of whom, the token's id (never its secret), the form and the request's text, the
 part, rows and bytes, milliseconds, the node, and the refusal if any (`data.flight`, `data.flight-refused`). A kind's read also writes the
-Data view's own line (`data.flight` on the kind).
+Export data's own line (`data.flight` on the kind).
 
 **Admin → Data out** shows, in two views of one screen (switch with the toggle at its top):
 
@@ -295,7 +295,7 @@ action `health` answers a node's state to a probe holding a token.
 ## 12. Flight SQL: SQL over the BI models from JDBC and ODBC tools
 
 **Flight SQL** is the SQL dialect of Arrow Flight that the JDBC and ODBC drivers speak. Drishti answers it on the same port, read only, as
-SQL over the **BI models**: a statement is written in the server's own SQL (DSQL, [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md))
+SQL over the **BI models**: a statement is written in the server's own SQL (DSQL, [API_GUIDE.md › Drishti SQL](API_GUIDE.md#drishti-sql-apiv1bisql))
 and answered by the same path as `POST /api/v1/bi/sql`, never by a second SQL engine. Each statement becomes a `form: model` read
 (`{"model": …, "sql": …}`), so the token, its `data:read` scope (or `data:read:bi`), the BI power, the model's row rules and masks, busy
 protection, the limits, Admin → Data out and the audit apply exactly as for any other read.

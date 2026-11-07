@@ -53,7 +53,7 @@ items:
   - id: credit-limit-usage
     what: field
     about: "A credit limit's used amount and utilisation as stored, not measured against the exposure engine's figure"
-    release: 2.9.11.h
+    release: 2.9.11.k
     treatment: under-construction
     sutras:
       - kind: credit-limit
@@ -73,9 +73,19 @@ items:
   - id: pre-deal-limit-decision
     what: decision
     about: "The pre-deal limit decision: approve, refer or decline a candidate trade against every limit it touches (the exposure what-if itself is built)"
-    release: 2.9.11.h
+    release: 2.9.11.k
     treatment: under-construction
     contracts: ["docs/contracts/LIM.md#64-pre-deal-check"]
+
+  - id: pnl-explain-waterfall
+    what: panel
+    about: "The P&L explain's waterfall: a generator's stored steps that disagree with the Attribution bars on new trades (F19); the computed explain (by trade events, then by risk factor) is PNL.md's"
+    release: "the P&L explain (TRADING_LENS.md TL4, PNL.md)"
+    treatment: under-construction
+    sutras:
+      - kind: pnl-explain
+        panels: [explain]
+    contracts: ["docs/contracts/PNL.md#1-summary"]
 
   - id: wwr-contract
     what: contract
@@ -107,3 +117,12 @@ items:
     release: "a later heavy run (needs a three-node scratch cluster)"
     treatment: under-construction
     contracts: ["docs/guides/FLIGHT_GUIDE.md#13-testing"]
+
+  - id: ccr-cube-preset
+    what: menu item
+    about: "The CCR cube, the Pivot's preset ccr (Counterparties → CCR cube, /pivot?preset=ccr): the preset, its door and its landing are defined; its source, the CCR provider (each netting set's exposure paths netted and collateralised first, then summed per cell), comes with the counterparty engines"
+    release: 2.9.14
+    treatment: under-construction
+    menus: [ccr-cube]
+    contracts: ["docs/guides/PIVOT_GUIDE.md#28-presets-the-risk-cubes", "docs/architecture/PIVOT_ENGINE.md#65-the-ccr-provider-later"]
+

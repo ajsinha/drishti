@@ -22,7 +22,8 @@ pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install
 
 from conftest import CONSOLE, FakeBackend  # noqa: E402
 from test_live_tabs_browser import browser  # noqa: E402,F401 - the shared browser fixture
-from test_page_widths_browser import AUDIT, TARGETS  # noqa: E402
+from test_page_widths_browser import AUDIT  # noqa: E402
+from test_phone_pages_browser import TARGETS  # noqa: E402
 from scratch_ports import worker_port  # noqa: E402
 
 PORT = worker_port(17958)

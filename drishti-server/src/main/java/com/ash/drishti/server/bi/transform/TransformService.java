@@ -46,7 +46,7 @@ import java.util.function.Supplier;
 public final class TransformService implements AutoCloseable {
 
     /** What to run, built only when the result is not already kept: the manifest, the input frames, the parameters. */
-    public record Prepared(Map<String, Object> manifest, List<byte[]> frames, Map<String, Object> params) {}
+    public record Prepared(Map<String, Object> manifest, List<byte[]> frames, Map<String, Object> params, com.ash.drishti.server.security.Principal who) {}
 
     /** The result for a reader: the Parquet file, the columns typed from the frame, its rows, whether it was kept, and the time the run took (0 when kept). */
     public record Output(Path file, List<TransformRunner.Column> columns, long rows, boolean cached, long millis) {}
@@ -118,7 +118,7 @@ public final class TransformService implements AutoCloseable {
                 runs.incrementAndGet();
                 TransformRunner.Result r;
                 try {
-                    r = runner.run(new TransformRunner.Request(in.manifest(), in.frames(), in.params(), out, props.maxRows(), props.maxBytes()));
+                    r = runner.run(new TransformRunner.Request(in.manifest(), in.frames(), in.params(), out, props.maxRows(), props.maxBytes(), in.who(), expect));
                 } catch (RuntimeException x) {
                     failures.incrementAndGet();
                     Files.deleteIfExists(out);
@@ -168,6 +168,31 @@ public final class TransformService implements AutoCloseable {
             Files.deleteIfExists(out);
             throw new DrishtiException(ErrorCode.TRANSFORM_FAILED, "the Transform's frame lacks the column(s) " + missing + " that the dataset declares (it returned " + have + ")");
         }
+        List<String> wrong = new ArrayList<>();
+        for (TransformRunner.Column c : r.columns()) {
+            String want = expect.get(c.name());
+            if (want != null && !fits(c.type(), want)) {
+                wrong.add(c.name() + " is " + c.type() + ", the contract says " + want.toLowerCase(java.util.Locale.ROOT));
+            }
+        }
+        if (!wrong.isEmpty()) {
+            Files.deleteIfExists(out);
+            throw new DrishtiException(ErrorCode.TRANSFORM_FAILED, "the Transform's frame does not match its contract: " + String.join("; ", wrong));
+        }
+    }
+
+    /** Whether a column the code returned fits the type the contract declares (a whole number fits a decimal; anything fits text). */
+    public static boolean fits(String got, String declared) {
+        String w = declared == null ? "" : declared.toLowerCase(java.util.Locale.ROOT).strip();
+        String g = got == null ? "string" : got.toLowerCase(java.util.Locale.ROOT);
+        return switch (w) {
+            case "decimal", "number", "double", "float" -> g.equals("decimal") || g.equals("integer");
+            case "integer", "int", "long" -> g.equals("integer");
+            case "boolean", "bool" -> g.equals("boolean");
+            case "date" -> g.equals("date") || g.equals("timestamp");
+            case "timestamp", "datetime" -> g.equals("timestamp");
+            default -> true;
+        };
     }
 
     /** Keeps at most {@code cache-entries} results of a dataset: the oldest go, file and all. */

@@ -147,7 +147,7 @@ ports of their own, so that nothing of yours is touched: the seven shipped packs
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 DRISHTI_PORT=18996 DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,helpdesk \
-  java -jar drishti-server/target/drishti-server-2.9.11.c-exec.jar
+  java -jar drishti-server/target/drishti-server-2.9.11.d-exec.jar
 DRISHTI_BACKEND_URL=http://127.0.0.1:18996 DRISHTI_CONSOLE_PORT=17996 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
@@ -553,7 +553,7 @@ nonEmpty: [history]       # these panels must render with data on every sample
 ```
 
 ```bash
-java -jar drishti-server/target/drishti-server-2.9.11.c-exec.jar sutra test config/packs/helpdesk --junit target/sutra-tests.xml
+java -jar drishti-server/target/drishti-server-2.9.11.d-exec.jar sutra test config/packs/helpdesk --junit target/sutra-tests.xml
 ```
 
 ```text
@@ -685,7 +685,7 @@ Only roles with `calc: true` see Calc (here `support-lead`). More in [Calc: Pyth
 (generated, or published public data such as the us-equities and gleif packs):
 
 1. the documents as gzipped JSON Lines under `data/testdata/<pack>/<kind>/`, named by the load rules
-   ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md) section 10): `<table>.<YYYY-MM-DD>.jsonl.gz`, a file a business day (the
+   ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo) section 5.2): `<table>.<YYYY-MM-DD>.jsonl.gz`, a file a business day (the
    first the snapshot, then each day's changes), or one dated snapshot the same on every day, or a tar of `<table>/<YYYY-MM-DD>/`
    folders where a date is several files, each dataset listed in `data/testdata/testdata.yaml` with its pack,
    kind, Delta connector and key (`tools/testdata/make_testdata.py` and `tools/testdata/publicsnap.py` write it; never by hand);
@@ -1051,7 +1051,7 @@ fields are **document paths** (`INDEX.NAME`; `$.` may be written), never express
 the kind's `columns:` as the fields. `false` (or no entry) offers nothing. The arrangement is the view the pivot screen opens with.
 
 The pivot is computed by the server's pivot engine over every row of the kind on the business date (not only the page shown), as the
-Data view reads it: through the kind's connector, or directly from a Delta or Iceberg table's Parquet files when every field is a column
+Export data reads it: through the kind's connector, or directly from a Delta or Iceberg table's Parquet files when every field is a column
 the connector keeps ([Large kinds](#large-kinds-the-lake-layout)). So choose fields the connector's `layout.<kind>.columns` lists. Fields the
 user's role may not see are not read at all: they are not offered and cannot be grouped, summed or filtered.
 
@@ -1180,18 +1180,18 @@ connectors:                     # the connectors this pack reads through. Here a
     enabled: ${DRISHTI_LAKE_ENABLED:true}    # ${VAR:default} is resolved from the environment
     kinds: [agreement, csa]
     settings:                   # passed to the plugin as-is (each plugin's settings: CONNECTORS.md; credentials only as ${ENV})
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
       domain: legal             # reads <root>/legal/<kind>/
   credit-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [netting-set, credit-limit, cva, sa-ccr]
-    settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: credit }
+    settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: credit }
   collateral-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [collateral-balance, margin-call, simm]
-    settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: collateral }
+    settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: collateral }
 
 routes:                         # KIND: CONNECTOR — which connector answers each kind
   agreement: legal-store
@@ -1212,7 +1212,7 @@ and routes its kinds. The reference for the file is [CONNECTOR_FILES.md](../conn
 ```yaml
 connectors: [credit-store, collateral-store]        # the form for a pack that only names connectors
 connector-templates:                                # optional: what to suggest if the site has none yet
-  credit-store: { plugin: delta, kinds: [netting-set], settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: credit } }
+  credit-store: { plugin: delta, kinds: [netting-set], settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: credit } }
 routes: { netting-set: credit-store, margin-call: collateral-store }
 ```
 
@@ -1289,7 +1289,7 @@ connectors:
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [trade]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
       domain: trading
       table: { trade: trade_endur }    # the kind's table under <root>/trading/ (default: the kind's name)
       union: true                      # one part of a kind several connectors serve together (next section)
@@ -2624,7 +2624,7 @@ Four layers, from the cheapest. The first three need no server.
 | The pack's tests in the build | `./mvnw verify` | the manifest loads, every `config/packs/*/sutras/` validates, every Sutra survives imperfect data, `sutra test` runs over every pack that has tests, every shipped example loads |
 | A scratch server | the [checklist](#verifying-a-pack) | links resolve, connectors are up, commands open, the guide renders |
 
-`sutra lint` and `sutra test` are commands of the server's exec jar (`java -jar drishti-server/target/drishti-server-2.9.11.c-exec.jar sutra …`);
+`sutra lint` and `sutra test` are commands of the server's exec jar (`java -jar drishti-server/target/drishti-server-2.9.11.d-exec.jar sutra …`);
 `pack check` finds the jar itself (`--jar`, `DRISHTI_JAR`). Both read the overlay of the checkout they run in (`<data>/packs/added.yaml`), so
 run them where that overlay names only packs that exist (or set `DRISHTI_DATA_DIR` to an empty folder).
 
@@ -3136,7 +3136,7 @@ python3 tools/packgen/library/make.py --check
 DRISHTI_PACKS_OUT=/tmp/review python3 tools/packgen/library/make.py
 
 # also build ten business days of history in the Delta Lake, for the date picker
-drishti-console/.venv/bin/python tools/packgen/library/make.py --lake data/delta
+drishti-console/.venv/bin/python tools/packgen/library/make.py --lake data/delta/demo
 ```
 
 ##### Generator step 6. What you get
@@ -3154,7 +3154,7 @@ config/packs/library/
 ```
 
 The `pack.yaml` it wrote names the link field `AUTHOR`, the badge `$.ON_LOAN + ' on loan'` and one connector template,
-`library-store` (`plugin: delta`, `domain: library`, `root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}`), with
+`library-store` (`plugin: delta`, `domain: library`, `root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}`), with
 `book-title` and `author` routed to it. Never edit these files by hand: change the script and run it again (each file says so at the top).
 
 ##### Generator step 7. Open it
@@ -3645,11 +3645,11 @@ drishti-console/.venv/bin/python tools/drishti.py lake demo
   news/listed-company: … rows over 60 days
   news/news-topic: … rows over 60 days
 
-Demo lake ready: …/data/delta: 89 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
+Demo lake ready: …/data/delta/demo: 89 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
 Feeds: …/data/feeds/fixing.jsonl (the file connector's sample feed)
 Server: no server at http://127.0.0.1:19590: left …/data/bi-store/lake-rebuilt.json, so a server clears its stored BI columns and rollups at its next start
 Connector files:
-  civic-store: generated by the server at its first start (reads …/data/delta)
+  civic-store: generated by the server at its first start (reads …/data/delta/demo)
   …
 ```
 
@@ -3700,7 +3700,7 @@ server in), then in the folders of `drishti.packs.extra-dirs` (`DRISHTI_PACKS_EX
 
    ```bash
    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-   DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-2.9.11.c-exec.jar
+   DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-2.9.11.d-exec.jar
    ```
 
    (or, from the IDE, the run configuration **Drishti server** with `DRISHTI_PACKS` changed; [GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm)).
@@ -3975,7 +3975,7 @@ From `config/packs/counterparty-risk/pack.yaml`:
 
 ```yaml
 connectors:                     # a mapping: the names this pack reads through, each with the pack's template
-  legal-store: { plugin: delta, kinds: [agreement, csa], settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: legal } }
+  legal-store: { plugin: delta, kinds: [agreement, csa], settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: legal } }
   credit-store: { plugin: delta, kinds: [netting-set, credit-limit, cva, sa-ccr], settings: { … domain: credit } }
   collateral-store: { plugin: delta, kinds: [collateral-balance, margin-call, simm], settings: { … domain: collateral } }
 routes:                         # which connector answers each kind
@@ -4373,7 +4373,7 @@ git clone https://github.com/ajsinha/drishti.git && cd drishti
 uv venv --python 3.13 drishti-console/.venv
 uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
 ./mvnw -q package -DskipTests -pl drishti-server -am                 # 1 min 12 s with ~/.m2 filled
-drishti-console/.venv/bin/python tools/drishti.py lake demo           # about 15 min (943 s): 89 Delta tables, sixty days, under data/delta
+drishti-console/.venv/bin/python tools/drishti.py lake demo           # about 15 min (943 s): 89 Delta tables, sixty days, under data/delta/demo
 ```
 
 then the server and the console as the run configurations start them ([GETTING_STARTED.md, Steps 6 and 7](GETTING_STARTED.md#step-6--start-the-server)).
@@ -4479,7 +4479,7 @@ directory):
 ```bash
 ./mvnw -q package -DskipTests -pl drishti-server -am
 DRISHTI_DEMO_ENABLED=false DRISHTI_STUDIO_SAVE=true \
-  java -jar drishti-server/target/drishti-server-2.9.11.c-exec.jar
+  java -jar drishti-server/target/drishti-server-2.9.11.d-exec.jar
 ```
 
 Server settings follow the same precedence as the console: `drishti-server/src/main/resources/application.yaml`, then
@@ -4872,7 +4872,7 @@ names and values from a request never change the SQL's shape.
 #### 3.6 The front end is vendored
 
 The console uses Bootstrap, Bootstrap Icons, ECharts (and ECharts GL), CodeMirror (with its Python mode), Vega and Vega-Lite (the
-`vega-lite` visual and a Python visual's output) and Graphic Walker (Calc's `drishti_bi.walk`, in a sandboxed frame), copied under
+`vega-lite` visual and a Python visual's output), copied under
 `drishti-console/web/static/vendor/`; `vendor/VENDOR.md` lists each library with its version, licence, size and whether the repository
 holds it. No FINOS Perspective or DuckDB-Wasm: **the servers compute every number and the
 browser draws**, so no BI page loads WebAssembly (a 2.1 report's `perspective-*` visuals are drawn as Drishti's own grid of the server's
@@ -4887,8 +4887,7 @@ connect-src 'self'; frame-src 'self'; worker-src 'self'; frame-ancestors 'self'
 Two files have their own, narrower policy. Calc's worker, `/static/js/drishti_calc-worker.js`, is served with
 `default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src <host>/static/ <host>/pyodide/`, so it alone may compile
 WebAssembly (Pyodide) and it can fetch nothing but static files and the runtime (never an `/api` route, which would carry the user's
-session). Calc's Graphic Walker page, `/static/calc/drishti_walker.html`, needs `unsafe-eval` and inline styles for the library, so it is a
-sandboxed frame (`sandbox allow-scripts`, no same-origin) with `connect-src 'none'`: the rows it is given by message cannot leave it.
+session).
 For Pyodide, `tools/fetch-pyodide.sh` downloads a pinned release, checks its SHA-256 and unpacks what Calc needs into
 `drishti-console/web/static/vendor/pyodide/` (git-ignored); the console serves it at `/pyodide/<version>/`
 ([USER_GUIDE.md](USER_GUIDE.md#12-installing-the-python-runtime)).
@@ -4972,9 +4971,9 @@ and its live push.
 Rūpaka, the BI engine, lives in `drishti-server` under `server.bi` and follows the model architecture of
 [BI_DESIGN.md section 14](../architecture/BI_DESIGN.md#14-the-model-architecture-decisions-d1-to-d6): **datasets** (one governed table each, every pack kind publishing
 one automatically, `bi.layer.PackDatasets`), **data models** (datasets in a star, relationships, measures written in **DEL**, the
-Drishti Expression Language, [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del)), and **consumers** (reports, boards, notebooks, alerts, subscriptions,
+Drishti Expression Language, [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions)), and **consumers** (reports, boards, notebooks, alerts, subscriptions,
 exports, embeds, AI) each bound to one model. Every consumer asks a model the same way: a **model query** (MQ), a versioned JSON or YAML
-question ([API_GUIDE.md](API_GUIDE.md), BI_DESIGN.md › The model layer: the specification, section 5). Drishti SQL ([BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models)) is a second front end onto the same
+question ([API_GUIDE.md](API_GUIDE.md), BI_DESIGN.md › The model layer: the specification, section 5). Drishti SQL ([API_GUIDE.md › Drishti SQL](API_GUIDE.md#drishti-sql-apiv1bisql)) is a second front end onto the same
 plan. Nothing is computed in the browser.
 
 | Step | Where | What happens |
@@ -5162,7 +5161,7 @@ in §1.2 and in `README.md`.
 Adding a function changes the grammar: record it as an amendment to
 [ADR-003](../architecture/adr/003-sutra-is-yaml-with-a-closed-expression-language.md). Functions must stay pure, total (odd input gives
 `null`, never an exception) and cheap. (Rachana-EL lays out views; BI measures are written in DEL, which has its own catalogue,
-`bi.expr.FunctionCatalog`, and its own guide, [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del).)
+`bi.expr.FunctionCatalog`, and its own guide, [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions).)
 
 **1. Register it** in `drishti-rachana/src/main/java/com/ash/drishti/rachana/el/Functions.java`. `ARITY` holds `{min, max}` arguments
 (the parser checks it and says `unknown function '…'; known: …` for a name not in it), and `FUNCTIONS` holds the implementation:
@@ -5807,7 +5806,7 @@ while it was stopped (`The lake was rebuilt while the server was stopped …`), 
 level for Drishti's packages with Spring's usual environment form:
 
 ```bash
-LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-2.9.11.c-exec.jar
+LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-2.9.11.d-exec.jar
 ```
 
 The console runs Uvicorn with access logs off (`access_log=False` in `run_drishti_web.py`). The run configuration **Drishti server

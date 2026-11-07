@@ -41,7 +41,7 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 
 | Connector | Folder | Kinds |
 |---|---|---|
-| `oprisk-store` | `data/delta/oprisk/` | `loss-event`, `risk-control`, `key-risk-indicator`, `issue`, `oprisk-scenario`, `third-party`, `cyber-incident`, `oprisk-capital` |
+| `oprisk-store` | `data/delta/demo/oprisk/` | `loss-event`, `risk-control`, `key-risk-indicator`, `issue`, `oprisk-scenario`, `third-party`, `cyber-incident`, `oprisk-capital` |
 
 ## Kinds
 

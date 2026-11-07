@@ -129,6 +129,16 @@ class PivotCoreTest {
     }
 
     @Test
+    void aMemberOnTheLastRowLevelIsALeafWithNoPlusThoughExpandByStillOpensIt() {
+        PivotView v = PivotView.parse(view("rows", List.of("REGION"), "columns", List.of("CCY"), "values", List.of("sum(NOTIONAL)")));
+        Map<String, Object> a = fx.core.query(rita, v);
+        assertThat(rows(a)).filteredOn(r -> "node".equals(r.get("kind"))).isNotEmpty().allMatch(r -> Boolean.FALSE.equals(r.get("expandable")));
+        Map<String, Object> b = fx.core.expand(rita, v, "rows", List.of(List.of("REGION", "EMEA")), "DESK");
+        assertThat(rows(b)).anyMatch(r -> List.of(List.of("REGION", "EMEA"), List.of("DESK", "FX")).equals(r.get("path"))
+                && Boolean.FALSE.equals(r.get("expandable")));
+    }
+
+    @Test
     void openingANodeComputesOnlyItsChildrenTheRestComesFromTheCache() {
         PivotView v = PivotView.parse(view("rows", List.of("REGION", "DESK", "CCY"), "values", List.of("sum(NOTIONAL)", "median(PNL)")));
         fx.core.query(rita, v);

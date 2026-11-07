@@ -175,7 +175,7 @@ drishti:
     retry-after:                     # the seconds each kind of work is told to wait (Retry-After); a refusal is remembered that long
       sign-in: 45                    # a new sign-in (DRS-9501)
       load: 30                       # a new VaR or exposure date (DRS-9502)
-      download: 30                   # a Data view download (DRS-9503)
+      download: 30                   # an Export data download (DRS-9503)
       bi-run: 60                     # a BI run (DRS-9504)
       bulk-load: 120                 # a bulk load of a pack's data (DRS-9505)
       pivot-view: 20                 # a large pivot view (DRS-9507)
@@ -351,6 +351,13 @@ drishti:
       - /api/v1/pivot/rows
       - /api/v1/pivot/export
       - /api/v1/pivot/inline             # rows the caller already holds (a chart of a table's shown rows), aggregated by the engine
+      - /api/v1/tables/editor/check      # the table and model editors (TABLES_GUIDE.md section 11): checks, previews and proposals that store nothing
+      - /api/v1/tables/editor/statement
+      - /api/v1/tables/editor/preview
+      - /api/v1/tables/editor/access
+      - /api/v1/tables/editor/suggest
+      - /api/v1/tables/editor/python/notebook
+      - /api/v1/tables/editor/python/contract
       - /api/v1/pivot/live               # a live pivot: the same answer kept current for the caller (ended by DELETE, or when no stream reads it)
       - /api/v1/pivot/explain            # the difference between two cells in steps, computed as the caller, stored nowhere
       - /api/v1/pivot/whatif             # a view with an overlay beside the original, computed as the caller, stored nowhere
@@ -380,8 +387,11 @@ drishti:
       - /api/v1/bi/model/start          # a draft dataset from pack kinds: reads connectors, stores nothing
       - /api/v1/bi/model/infer          # relationships proposed by value matching: reads connectors, stores nothing
       - /api/v1/bi/reports/*/query      # Rupaka phase 3: one visual of a report under the page's state, through the dataset engine, masked and row-ruled
-      - /api/v1/bi/reports/*/python     # Rupaka phase 6: what the console's Python runner runs for one python visual (the item, its manifest and source as the caller reads it), stores nothing
+      - /api/v1/bi/reports/*/python     # Rupaka phase 6: what a python visual runs (the item, its manifest and source as the caller reads it), stores nothing
       - /api/v1/bi/python/validate      # checks a Python item's manifest without storing it
+      - /api/v1/bi/python/check         # checks a Python item and runs its own tests on the compute pool as the caller; stores nothing (the runs are audited)
+      - /api/v1/bi/python/visual        # one python visual of a report run on the compute pool over the caller's rows; stores nothing (audited)
+      - /api/v1/bi/python/profile       # the profile of rows the caller may read, worked out on the compute pool (no authored code); stores nothing
       - /api/v1/bi/reports/query        # the same for draft YAML (authors)
       - /api/v1/bi/reports/validate     # checks a report's YAML without storing it
       - /api/v1/bi/boards/validate      # checks a board's YAML without storing it
@@ -453,6 +463,8 @@ drishti:
           - POST /api/v1/bi/items/*/open
           - POST /api/v1/bi/items/*/move
           - POST /api/v1/bi/items/*/propose
+          - POST /api/v1/tables/editor/save
+          - POST /api/v1/tables/editor/propose
           - POST /api/v1/bi/items/*/withdraw
           - POST /api/v1/bi/items/*/publish
           - POST /api/v1/bi/items/*/versions/*/restore
@@ -559,6 +571,9 @@ drishti:
         allow:
           - POST /api/v1/admin/ai/test
     token-never:                       # never for a token, whatever its scopes: tokens, users, sign-in, personal and collaboration state
+      - POST /api/v1/bi/python/cell      # a Notebook cell: code a person writes, run on the compute pool from the console only
+      - POST /api/v1/bi/python/steps     # a Transform's step-by-step run: an author in the console
+      - POST /api/v1/tables/editor/python/run   # a Python-driven table's sample run: an author in the console
       - POST /api/v1/pivot/views         # a saved pivot view: a person's, in the console
       - DELETE /api/v1/pivot/views/*
       - POST /api/v1/pivot/promote       # a panel's pivot promoted to its Sutra: an author, in the console
@@ -568,6 +583,7 @@ drishti:
       - POST /api/v1/bi/migrate/expressions
       - POST /api/v1/bi/migrate/boards           # the stored 2.3 boards converted into reports: an administrator in the console
       - POST /api/v1/bi/models/*/preview-as     # previews another role's answers: audited, in the console only
+      - PUT /api/v1/tables/editor/prefs         # a person's editor view: personal, in the console
       - "* /api/v1/me/**"
       - "* /api/v1/drafts/**"                  # form drafts: personal, kept per person, saved from the console (WRITE_BACK.md)
       - POST /api/v1/admin/edits/**            # write-back's switches (a connector's writes, withdrawing an overlay): an administrator in the console
@@ -816,8 +832,8 @@ drishti:
     per-user: 20  # reports a person may keep
     tick: 30s  # how often the scheduler looks for due reports
     keep-runs: 20  # runs remembered per report (time, rows, where it went, or the error)
-  calc:                              # Calc: Python in the browser (docs/guides/USER_GUIDE.md); the server never runs the code
-    enabled: ${DRISHTI_CALC_ENABLED:true}   # also needs a role with calc, and a pack that enables it for the view's kind
+  calc:                              # Calc, a Labs feature: Python in the browser on a view's rows, a scratch pad that never publishes (USER_GUIDE.md); the server never runs the code
+    enabled: ${DRISHTI_LABS_CALC:false}   # Labs: off as shipped; on also needs a role with calc, and a pack that enables it for the view's kind
     max-column-rows: 250000          # drishti.columns() returns at most this many entities (the browser holds them all)
     columns-budget: 20s              # how long a columns read may wait (the first read of a day loads its columns)
     max-snippet-chars: 50000         # a saved snippet's code (each user keeps at most 50 snippets)
@@ -867,11 +883,8 @@ drishti:
       live-ttl: 5s                   # how long a live table's snapshot is served
       infer-sample: 5000             # values of a column the relationship finder looks at
       infer-min-match: 0.8           # the share of values found among the other table's ids for a relationship to be proposed
-    transform:                       # Python Transforms behind derived datasets, and the size of a composed dataset's sources (docs/admin/CONFIGURATION.md, drishti.bi.transform)
-      enabled: true                  # false: a derived dataset answers DRS-9074
-      python: ${DRISHTI_BI_TRANSFORM_PYTHON:}   # the Python with pandas and pyarrow (the console's environment); blank: drishti-console/.venv when it exists, else python3
-      runner: ${DRISHTI_BI_TRANSFORM_RUNNER:}   # the console's core/transform_cli.py; blank: looked for in drishti-console/core from here and its parents
-      work-dir: ""                   # scratch folders of runs; blank: <bi store>/transform-tmp
+    transform:                       # Python Transforms behind Python datasets and tables, and the size of a composed dataset's sources (docs/admin/CONFIGURATION.md, drishti.bi.transform)
+      enabled: true                  # false: every Python run (Transforms, Python measures and visuals, Notebook cells) answers DRS-9074; the code runs on the compute pool python (config/compute/compute.yaml)
       cache-ttl: 30m                 # a Transform's result is kept for the reader it was made for this long (and until the inputs change)
       cache-entries: 20              # results kept per derived dataset; the oldest go first
       max-input-rows: 50000          # most rows of one input frame handed to a Transform
@@ -881,8 +894,6 @@ drishti:
       max-concurrent: 2              # Transforms running at once
       queue-wait: 5s                 # how long a run waits for a place before DRS-9074
       compose-source-max-rows: 50000 # most rows one source of a composed dataset may answer (DRS-9022)
-      console-url: ${DRISHTI_BI_TRANSFORM_CONSOLE_URL:}       # the console's Py-node endpoint (http://console:17480); blank: the server runs transform_cli.py itself
-      console-token: ${DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN:}   # the shared secret the console checks on /internal/py/* (X-Drishti-Runner-Token)
     exec:                            # execution and scale (docs/admin/CONFIGURATION.md, drishti.bi.exec)
       per-model-share: 0.5           # the share of drishti.bi.query.max-concurrent one model may hold at once (work classes: interactive, standing, background)
       queue: 2s                      # how long a source fragment waits for its connector's pool before DRS-9025
@@ -903,17 +914,17 @@ drishti:
       cache-ttl: 15m                 # an answer for the current state is asked again after this; as-of answers have no ttl
       cache-idle: 1h                 # an answer nobody asked for this long is dropped
       guards: refuse                 # refuse (the default) or warn: sums across currencies (DRS-9158), balances added across dates (DRS-9159)
-    sql:                             # Drishti SQL over models (docs/guides/BI_LANGUAGE_REFERENCE.md; docs/admin/CONFIGURATION.md, drishti.bi.sql)
+    sql:                             # Drishti SQL over models (docs/guides/API_GUIDE.md, Drishti SQL; docs/admin/CONFIGURATION.md, drishti.bi.sql)
       enabled: true                  # false: /bi/sql answers DRS-9006 and SQL view datasets cannot be read
       max-leaves: 8                  # model queries one composite statement may ask
       composite-memory: 256MB        # memory of the in-memory engine a composite statement's outer query runs in
       composite-timeout: 30s         # longest the outer query of a composite statement may run
       max-rows: 100000               # most rows a composite statement answers
-    expr:                            # the Drishti expression language, DEL v2 (docs/guides/BI_LANGUAGE_REFERENCE.md; docs/admin/CONFIGURATION.md, drishti.bi.expr)
+    expr:                            # the Drishti expression language, DEL v2 (docs/guides/RACHANA_REFERENCE.md; docs/admin/CONFIGURATION.md, drishti.bi.expr)
       legacy: refuse                 # the old expression syntax: refuse (DRS-9100 with the DEL v2 text as the fix; the default) or warn (read with DRS-9100)
       parse-cache: 10000             # parsed expressions kept (0: off)
     migrate:                         # migrations of STORED BI items (docs/architecture/BI_DESIGN.md 8.3; docs/guides/TROUBLESHOOTING.md "Migration problems")
-      on-start: ${DRISHTI_BI_MIGRATE_ON_START:true}   # at start: old-syntax expressions to DEL v2, audited, the text before kept in each item's history; idempotent
+      on-start: ${DRISHTI_BI_MIGRATE_ON_START:true}   # at start: stored datasets and models into the table layer, 2.3 boards into reports; audited, the text before kept; idempotent
       actor: system                  # the name the history, the item's events and the audit log give the start-up run
   layouts:                           # layout mode: each user's arrangement of a Sutra's panels (USER_GUIDE.md, Layout mode)
     enabled: ${DRISHTI_LAYOUTS_ENABLED:true}   # also needs a role with layout (every role but viewer, unless configured)
@@ -938,6 +949,10 @@ drishti:
   pivot:                             # the pivot engine's reads of a panel (PIVOT_GUIDE.md); its other settings are in config/engines/pivot.yaml
     enabled: ${DRISHTI_PIVOT_ENABLED:${drishti.engines.pivot.enabled:true}}     # the old name of the pivot engine's switch (config/engines/pivot.yaml); false: no Pivot anywhere
     max-records: 50000               # the most rows of a panel a pivot of it reads (the table's limit does not apply); more is refused, never cut short
+  tables:                            # virtual tables and models (TABLES_GUIDE.md): the pivot, Sutras and Flight read them as the reader may see the source
+    root: ${DRISHTI_TABLES_ROOT:./config/tables}   # the definitions' folder: config/tables/<domain>/<name>.table.yaml and .model.yaml
+    read-max-rows: 2000000           # the most rows one read of a virtual table stages; more is refused, never cut short
+    scan-warn-rows: 1000000          # rows above which an unfiltered side of a model's join across connectors is warned about; a model's own scan-warn-rows wins
   identity:
     # Users, roles defined in Admin → Roles, saved workspaces/monitors/settings and the audit trail live in one database
     # (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL:

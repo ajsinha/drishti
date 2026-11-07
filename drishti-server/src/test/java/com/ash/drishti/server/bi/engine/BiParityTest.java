@@ -15,10 +15,10 @@
  */
 package com.ash.drishti.server.bi.engine;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.bi.dataset.Dataset;
-import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.pivot.BiAggregate;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,7 +46,7 @@ class BiParityTest {
         Map<String, Object> cases = (Map<String, Object>) BiParityCases.read().get("cases");
         TestLake lake = new TestLake(true);
         QueryProperties props = QueryProperties.defaults(store.toString());
-        Dataset dataset = DatasetParser.parse(TestLake.yaml()).dataset();
+        Dataset dataset = Layered.dataset(TestLake.yaml()).dataset();
         List<String> problems = new ArrayList<>();
         int compared = 0;
         try (QueryService service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC())) {

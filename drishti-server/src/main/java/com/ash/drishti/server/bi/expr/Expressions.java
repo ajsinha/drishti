@@ -15,34 +15,37 @@
  */
 package com.ash.drishti.server.bi.expr;
 
-import com.ash.drishti.server.bi.dataset.ExprParser;
+import com.ash.drishti.rachana.el.CheckedMode;
+import com.ash.drishti.rachana.el.ElException;
 import com.ash.drishti.server.bi.dataset.Node;
+import com.ash.drishti.server.bi.dataset.NodeLowering;
+import com.ash.drishti.server.bi.dataset.NodeText;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * The one way the server reads an expression (docs/architecture/BI_DESIGN.md section 3.3): DEL v2 first; while the old (W1, Rachana-EL-flavoured) syntax is
- * still read ({@code drishti.bi.expr.legacy: warn}, the default until the end of wave A), an expression that is not DEL v2 but parses in the old syntax is
- * read as before and marked {@link Parsed#legacy()} so Check can warn {@code DRS-9100} "old expression syntax: run the converter". With
- * {@code legacy: refuse} it is refused ({@code DRS-9100}) with the DEL v2 text in the fix. Parses are cached by text (the L0 parse cache of section 6.1,
- * bounded), so the many places that read the same measure pay once. Thread-safe.
+ * The one way BI reads an expression (BI_FOUNDATION_2911E.md section 2.6): Rachana's one parser ({@link CheckedMode#parse}), lowered to BI's
+ * compiler tree by {@link NodeLowering}. A text in DEL or the old syntax is not read: {@code drishti.py tables migrate} rewrites it. Parses are
+ * cached by text (the L0 parse cache, bounded), so the many places that read the same measure pay once. Thread-safe.
  */
 public final class Expressions {
 
-    /** How the old syntax is treated. */
+    /** The setting {@code drishti.bi.expr.legacy}: DEL and the old syntax are no longer read, whatever it says. */
     public enum Legacy {
-        /** Read with a {@code DRS-9100} warning (until the end of wave A). */
+        /** Formerly: the old syntax read with a warning. */
         WARN,
-        /** Refused with {@code DRS-9100} and the DEL v2 text as the fix. */
+        /** Refused: the only behaviour. */
         REFUSE
     }
 
     public static final String OLD_SYNTAX = "DRS-9100";
     public static final String NOT_CONVERTIBLE = "DRS-9190";
 
-    /** A parsed expression: the compiler's tree, the DEL v2 tree (null for the old syntax), and whether it was the old syntax. */
-    public record Parsed(Node node, DelAst del, boolean legacy, String text) {}
+    /** A parsed expression: the compiler's tree, Rachana's tree with where each node was written, and the text. */
+    public record Parsed(Node node, CheckedMode.Parsed rachana, String text) {}
 
     private static volatile Legacy legacy = Legacy.REFUSE;
     private static volatile int cacheSize = 10_000;
@@ -61,36 +64,24 @@ public final class Expressions {
         return legacy;
     }
 
-    /** The compiler's tree of an expression in either syntax (the old one only while it is read); a refusal is a {@link DelException}. */
-    public static Node parse(String text) {
+    /** The compiler's tree of a Rachana expression; a refusal is a {@link ExpressionException}. */
+    public static Node node(String text) {
         return read(text).node();
     }
 
-    /**
-     * A rule written as a YAML boolean ({@code where: true}, which YAML reads as the boolean and the parser hands over as {@code true}) is DEL's {@code True}
-     * (or {@code False}): the one spelling of the old syntax that stays, because YAML, not the author, chose it.
-     */
-    static String yamlBoolean(String text) {
-        if (text == null) {
-            return null;
-        }
-        String t = text.strip();
-        return t.equals("true") ? "True" : t.equals("false") ? "False" : text;
-    }
-
-    /** The expression read: DEL v2, or (while allowed) the old syntax. */
+    /** The expression read (cached by text). */
     public static Parsed read(String text) {
         Object hit = text == null ? null : CACHE.get(text);
         if (hit instanceof Parsed p) {
             return p;
         }
-        if (hit instanceof DelException e) {
+        if (hit instanceof ExpressionException e) {
             throw e;
         }
         Object r;
         try {
             r = readUncached(text);
-        } catch (DelException e) {
+        } catch (ExpressionException e) {
             r = e;
         }
         if (text != null && cacheSize > 0) {
@@ -99,107 +90,49 @@ public final class Expressions {
             }
             CACHE.put(text, r);
         }
-        if (r instanceof DelException e) {
+        if (r instanceof ExpressionException e) {
             throw e;
         }
         return (Parsed) r;
     }
 
     private static Parsed readUncached(String text) {
-        DelAst tree;
+        if (text == null || text.isBlank()) {
+            throw new ExpressionException(NodeLowering.CODE, "an expression is expected here", null, 0, 0);
+        }
+        CheckedMode.Parsed p;
         try {
-            tree = DelParser.parse(yamlBoolean(text));
-        } catch (DelException v2) {
-            return old(text, v2, false);
+            p = CheckedMode.parse(text);
+        } catch (ElException e) {
+            int at = Math.max(0, Math.min(text.length(), e.position()));
+            throw new ExpressionException(NodeLowering.CODE, e.getMessage(), null, at, Math.min(text.length(), at + 1));
         }
-        DelChecker.Checked c = DelChecker.check(tree, null, Fields.NONE);
-        java.util.Optional<DelException.Problem> bad = c.firstError();
-        if (bad.isPresent()) {
-            if (DelChecker.LATER.equals(bad.get().code())) {
-                throw new DelException(bad.get());                              // DEL v2 of a later wave: never the old syntax
-            }
-            return old(text, new DelException(bad.get()), true);
-        }
-        return new Parsed(DelLowering.lower(tree), tree, false, text);
-    }
-
-    /** The old syntax: read (with the mark) while allowed, refused with the DEL v2 text otherwise; when it is not the old syntax either, the v2 error. */
-    private static Parsed old(String text, DelException v2, boolean v2Parsed) {
-        Node n;
-        try {
-            n = ExprParser.parse(text);
-        } catch (ExprParser.ExprException e) {
-            throw v2;
-        }
-        if (legacy == Legacy.REFUSE) {
-            String converted = null;
-            try {
-                converted = DelPrinter.print(n);
-            } catch (RuntimeException ignored) {
-                // no mechanical fix
-            }
-            if (v2Parsed && (converted == null || converted.equals(text))) {
-                throw v2;                                                       // DEL v2 text with a DEL v2 mistake: that mistake, not "old syntax"
-            }
-            throw new DelException(OLD_SYNTAX, "old expression syntax (refused since wave A): run the converter, drishti.py bi migrate --expressions",
-                    converted == null ? null : "write: " + converted, 0, text.length());
-        }
-        return new Parsed(n, null, true, text);
+        return new Parsed(NodeLowering.lower(p), p, text);
     }
 
     /**
-     * The {@code DRS-9100} note for an expression in the old syntax (read while allowed): "old expression syntax: run the converter", with the DEL v2 text;
-     * null when the text is DEL v2 (or does not parse: the parse error is the caller's problem).
-     */
-    public static String oldSyntaxNote(String text) {
-        if (!isLegacy(text)) {
-            return null;
-        }
-        String to;
-        try {
-            to = convert(text).to();
-        } catch (RuntimeException e) {
-            to = null;
-        }
-        return "old expression syntax (read until the end of wave A, then refused): run the converter, drishti.py bi migrate --expressions"
-                + (to == null ? "" : "; in DEL v2: " + to);
-    }
-
-    /** True when the text is the old syntax (read while allowed, refused with {@code DRS-9100} otherwise). */
-    public static boolean isLegacy(String text) {
-        try {
-            return read(text).legacy();
-        } catch (DelException e) {
-            return OLD_SYNTAX.equals(e.code());
-        } catch (RuntimeException e) {
-            return false;
-        }
-    }
-
-    /**
-     * The text with every {@code measure('m_...')} that names a measure by its stable id written with the measure's name (section 3.3.2: a reference by id
-     * survives a rename). Unchanged when nothing names an id, or the text is not DEL v2.
+     * The text with every {@code measure('m_...')} that names a measure by its stable id written with the measure's name (a reference by id survives a
+     * rename). Unchanged when nothing names an id, or the text does not parse.
      */
     public static String withMeasureNames(String text, Map<String, String> idToName) {
         if (text == null || idToName.isEmpty() || !text.contains("measure(")) {
             return text;
         }
-        Parsed p;
+        Node n;
         try {
-            p = read(text);
+            n = node(text);
         } catch (RuntimeException e) {
             return text;
         }
-        if (p.legacy() || !com.ash.drishti.server.bi.dataset.Node.anyMatch(p.node(), n -> n instanceof Node.MeasureRef m && idToName.containsKey(m.name()))) {
+        if (!Node.anyMatch(n, x -> x instanceof Node.MeasureRef m && idToName.containsKey(m.name()))) {
             return text;
         }
-        return DelPrinter.print(renamed(p.node(), idToName));
+        return NodeText.print(renamed(n, idToName));
     }
 
     /**
      * The text with tables renamed ({@code tables}: the first part of a dotted name, {@code count(trades)}) and measures renamed ({@code measures}), printed
-     * as DEL v2: what the dataset-to-model converter (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8.3) writes when a measure moves into another model.
-     * Unchanged when nothing is renamed. A text that does not parse is returned as it is.
+     * in Rachana. Unchanged when nothing is renamed. A text that does not parse is returned as it is.
      */
     public static String withRenames(String text, Map<String, String> tables, Map<String, String> measures) {
         if (text == null || tables.isEmpty() && measures.isEmpty()) {
@@ -207,21 +140,21 @@ public final class Expressions {
         }
         Node n;
         try {
-            n = parse(text);
+            n = node(text);
         } catch (RuntimeException e) {
             return text;
         }
         Node out = renamedRefs(n, tables, measures);
-        return out.equals(n) ? text : DelPrinter.print(out);
+        return out.equals(n) ? text : NodeText.print(out);
     }
 
     private static Node renamedRefs(Node n, Map<String, String> tables, Map<String, String> measures) {
         return switch (n) {
             case Node.MeasureRef m -> new Node.MeasureRef(measures.getOrDefault(m.name(), m.name()));
             case Node.Ref r -> {
-                java.util.List<String> parts = new java.util.ArrayList<>(r.parts());
+                List<String> parts = new ArrayList<>(r.parts());
                 parts.set(0, tables.getOrDefault(parts.get(0), parts.get(0)));
-                yield new Node.Ref(java.util.List.copyOf(parts));
+                yield new Node.Ref(List.copyOf(parts));
             }
             case Node.Call c -> new Node.Call(c.function(), c.args().stream().map(a -> renamedRefs(a, tables, measures)).toList());
             case Node.Bin b -> new Node.Bin(b.op(), renamedRefs(b.left(), tables, measures), renamedRefs(b.right(), tables, measures));
@@ -240,57 +173,6 @@ public final class Expressions {
             case Node.Un u -> new Node.Un(u.op(), renamed(u.operand(), ids));
             case Node.In i -> new Node.In(renamed(i.value(), ids), i.items().stream().map(x -> renamed(x, ids)).toList(), i.negated());
             case Node.Cond c -> new Node.Cond(renamed(c.test(), ids), renamed(c.yes(), ids), renamed(c.no(), ids));
-            default -> n;
-        };
-    }
-
-    // ---- the converter -----------------------------------------------------------------------------------------------
-
-    /** What the converter made of one expression: the DEL v2 text, and whether it changed. */
-    public record Converted(String from, String to, boolean changed) {}
-
-    /**
-     * Converts an expression to DEL v2: unchanged when it already is; else the old parser's tree printed as DEL v2, re-parsed and lowered, and checked to give
-     * the same compiler tree (so the same SQL). A text that is neither is refused with the v2 problem; a conversion that would change the meaning with
-     * {@code DRS-9190}.
-     */
-    public static Converted convert(String text) {
-        try {
-            DelChecker.check(DelParser.parse(text), null, Fields.NONE).firstError().ifPresent(p -> {
-                throw new DelException(p);
-            });
-            return new Converted(text, text, false);
-        } catch (DelException v2) {
-            Node old;
-            try {
-                old = ExprParser.parse(text);
-            } catch (ExprParser.ExprException e) {
-                throw v2;
-            }
-            String printed = DelPrinter.print(old);
-            Node again;
-            try {
-                again = DelLowering.lower(DelParser.parse(printed));
-            } catch (DelException e) {
-                throw new DelException(NOT_CONVERTIBLE, "the converter wrote '" + printed + "', which does not read back: " + e.getMessage(), null, 0, text.length());
-            }
-            if (!normal(old).equals(normal(again))) {
-                throw new DelException(NOT_CONVERTIBLE, "the converter could not keep the meaning of '" + text + "' (it wrote '" + printed + "')", null, 0, text.length());
-            }
-            return new Converted(text, printed, true);
-        }
-    }
-
-    /** A compiler tree with the old spellings that compile alike made one ({@code if(c, a, b)} is a conditional, {@code 'DESC'} is {@code 'desc'}). */
-    static Node normal(Node n) {
-        return switch (n) {
-            case Node.Call c when "if".equals(c.function()) && c.args().size() == 3 -> new Node.Cond(normal(c.args().get(0)), normal(c.args().get(1)), normal(c.args().get(2)));
-            case Node.Call c -> new Node.Call(c.function(), c.args().stream().map(a -> a instanceof Node.Str s && java.util.Set.of("asc", "desc").contains(s.value().toLowerCase(
-                    java.util.Locale.ROOT)) ? new Node.Str(s.value().toLowerCase(java.util.Locale.ROOT)) : normal(a)).toList());
-            case Node.Bin b -> new Node.Bin(b.op(), normal(b.left()), normal(b.right()));
-            case Node.Un u -> new Node.Un(u.op(), normal(u.operand()));
-            case Node.In i -> new Node.In(normal(i.value()), i.items().stream().map(Expressions::normal).toList(), i.negated());
-            case Node.Cond c -> new Node.Cond(normal(c.test()), normal(c.yes()), normal(c.no()));
             default -> n;
         };
     }

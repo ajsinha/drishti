@@ -1,0 +1,90 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+#
+# The expression recipes test_expression_recipes.py runs on the demo lake against the trading-risk model, written in Rachana
+# (RACHANA_REFERENCE.md, Rachana-EL expressions; the functions in FUNCTIONS.md). Each: id, title, expr, by (the fields it is grouped by),
+# scope (aggregate, row or rule).
+recipes:
+  - { id: R1, title: "MTM by desk", expr: "sum(trades.MTM)", by: [desks.NAME], scope: aggregate }
+  - { id: R2, title: "P&L over the last day by desk", expr: "sum(trades.PNL_1D)", by: [desks.NAME], scope: aggregate }
+  - { id: R3, title: "Open MTM (live trades only)", expr: "sum(trades.MTM, where = trades.TRADE_STATUS != 'MATURED')", by: [desks.NAME], scope: aggregate }
+  - { id: R4, title: "Matured or closed MTM", expr: "sum(trades.MTM, where = trades.TRADE_STATUS == 'MATURED')", by: [desks.NAME], scope: aggregate }
+  - { id: R5, title: "Share of MTM that is still open", expr: "ratio(sum(trades.MTM, where = trades.TRADE_STATUS != 'MATURED'), sum(trades.MTM))", by: [desks.NAME], scope: aggregate }
+  - { id: R6, title: "Gross MTM", expr: "sum(abs(trades.MTM))", by: [desks.NAME], scope: aggregate }
+  - { id: R7, title: "Net to gross", expr: "ratio(sum(trades.MTM), sum(abs(trades.MTM)))", by: [desks.NAME], scope: aggregate }
+  - { id: R8, title: "Receivable MTM (positive trades)", expr: "sum(trades.MTM, where = trades.MTM > 0)", by: [counterparties.NAME], scope: aggregate }
+  - { id: R9, title: "Payable MTM (negative trades)", expr: "sum(trades.MTM, where = trades.MTM < 0)", by: [counterparties.NAME], scope: aggregate }
+  - { id: R10, title: "P&L in bps of notional", expr: "ratio(sum(trades.PNL_1D), sum(trades.NOTIONAL)) * 10000", by: [desks.NAME], scope: aggregate }
+  - { id: R11, title: "A measure from measures", expr: "measure('MTM') / measure('Notional') * 1000000", by: [desks.NAME], scope: aggregate }
+  - { id: R12, title: "Trades", expr: "count(trades)", by: [desks.NAME], scope: aggregate }
+  - { id: R13, title: "Live trades", expr: "count(trades, where = trades.TRADE_STATUS != 'MATURED')", by: [desks.NAME], scope: aggregate }
+  - { id: R14, title: "Counterparties traded with", expr: "distinct(trades.COUNTERPARTY)", by: [desks.NAME], scope: aggregate }
+  - { id: R15, title: "Average ticket", expr: "avg(trades.NOTIONAL)", by: [trades.PRODUCT_TYPE], scope: aggregate }
+  - { id: R16, title: "Notional in millions, one decimal", expr: "round(sum(trades.NOTIONAL) / 1000000, 1)", by: [trades.CURRENCY], scope: aggregate }
+  - { id: R17, title: "Largest trade", expr: "max(trades.NOTIONAL)", by: [desks.NAME], scope: aggregate }
+  - { id: R18, title: "Worst trade", expr: "min(trades.MTM)", by: [desks.NAME], scope: aggregate }
+  - { id: R19, title: "Swaps only", expr: "count(trades, where = contains(trades.PRODUCT_TYPE, 'SWAP'))", by: [desks.NAME], scope: aggregate }
+  - { id: R20, title: "One book family", expr: "sum(trades.NOTIONAL, where = starts_with(trades.PORTFOLIO, 'BOOK-FX'))", by: [desks.NAME], scope: aggregate }
+  - { id: R21, title: "DV01 by currency", expr: "sum(trades.DV01)", by: [trades.CURRENCY], scope: aggregate }
+  - { id: R22, title: "Absolute DV01", expr: "sum(abs(trades.DV01))", by: [desks.NAME], scope: aggregate }
+  - { id: R23, title: "DV01 per million notional", expr: "ratio(sum(trades.DV01), sum(trades.NOTIONAL)) * 1000000", by: [trades.CURRENCY], scope: aggregate }
+  - { id: R24, title: "Notional-weighted tenor in years (a duration proxy)", expr: "ratio(sum(trades.NOTIONAL * days_between(trades.TRADE_DATE, trades.MATURITY_DATE)), sum(trades.NOTIONAL)) / 365", by: [desks.NAME], scope: aggregate }
+  - { id: R25, title: "Average business days to maturity", expr: "avg(business_days_between(trades.TRADE_DATE, trades.MATURITY_DATE))", by: [trades.PRODUCT_TYPE], scope: aggregate }
+  - { id: R26, title: "Trades maturing within a year of their trade date", expr: "count(trades, where = days_between(trades.TRADE_DATE, trades.MATURITY_DATE) <= 365)", by: [desks.NAME], scope: aggregate }
+  - { id: R27, title: "Median trade MTM", expr: "percentile(trades.MTM, 0.5)", by: [desks.NAME], scope: aggregate }
+  - { id: R28, title: "5th percentile of one-day P&L (a VaR-style number)", expr: "percentile(trades.PNL_1D, 0.05)", by: [desks.NAME], scope: aggregate }
+  - { id: R29, title: "Expected shortfall, approximately", expr: "avg(trades.PNL_1D, where = trades.PNL_1D <= -8000)", by: [desks.NAME], scope: aggregate }
+  - { id: R30, title: "99th percentile notional", expr: "percentile(trades.NOTIONAL, 0.99)", by: [trades.PRODUCT_TYPE], scope: aggregate }
+  - { id: R31, title: "Exposure (EE peak) by counterparty", expr: "sum(set_exposure.PEAK_EE)", by: [counterparties.NAME], scope: aggregate }
+  - { id: R32, title: "Counterparty rank by PFE", expr: "rank(sum(cpty_exposure.PEAK_PFE_95))", by: [counterparties.NAME], scope: aggregate }
+  - { id: R33, title: "Dense rank of desks by P&L", expr: "dense_rank(sum(trades.PNL_1D), desc = true)", by: [desks.NAME], scope: aggregate }
+  - { id: R34, title: "Percent rank of counterparties by MTM", expr: "percent_rank(sum(trades.MTM))", by: [counterparties.NAME], scope: aggregate }
+  - { id: R35, title: "Net MTM against the limit", expr: "max(netting_sets.NET_MTM / netting_sets.LIMIT)", by: [counterparties.NAME], scope: aggregate }
+  - { id: R36, title: "Headroom under the limit", expr: "sum(netting_sets.LIMIT) - sum(netting_sets.NET_MTM)", by: [counterparties.NAME], scope: aggregate }
+  - { id: R37, title: "Net MTM above the limit", expr: "count(netting_sets, where = netting_sets.NET_MTM > netting_sets.LIMIT)", by: [counterparties.SECTOR], scope: aggregate }
+  - { id: R38, title: "Netting sets with a net MTM above 80 % of the limit", expr: "count(netting_sets, where = netting_sets.NET_MTM >= 0.8 * netting_sets.LIMIT)", by: [counterparties.SECTOR], scope: aggregate }
+  - { id: R39, title: "Average net MTM against the limit", expr: "avg(netting_sets.NET_MTM / netting_sets.LIMIT)", by: [counterparties.RATING], scope: aggregate }
+  - { id: R40, title: "Collateral cover", expr: "ratio(sum(netting_sets.COLLATERAL), sum(netting_sets.NET_MTM, where = netting_sets.NET_MTM > 0))", by: [counterparties.NAME], scope: aggregate }
+  - { id: R41, title: "Uncollateralised exposure", expr: "sum(netting_sets.NET_MTM, where = netting_sets.NET_MTM > 0) - sum(netting_sets.COLLATERAL)", by: [counterparties.NAME], scope: aggregate }
+  - { id: R42, title: "MTM year to date", expr: "ytd(sum(trades.MTM), trades.TRADE_DATE)", by: [trades.TRADE_DATE.month], scope: aggregate }
+  - { id: R43, title: "Notional month to date", expr: "mtd(sum(trades.NOTIONAL), trades.TRADE_DATE)", by: [trades.TRADE_DATE], scope: aggregate }
+  - { id: R44, title: "P&L quarter to date", expr: "qtd(sum(trades.PNL_1D), trades.TRADE_DATE)", by: [desks.NAME], scope: aggregate }
+  - { id: R45, title: "P&L of the period before", expr: "prior_period(sum(trades.PNL_1D), trades.TRADE_DATE)", by: [trades.TRADE_DATE.month], scope: aggregate }
+  - { id: R46, title: "Notional, same period last year", expr: "same_period_last_year(sum(trades.NOTIONAL), trades.TRADE_DATE)", by: [trades.TRADE_DATE.month], scope: aggregate }
+  - { id: R47, title: "Running notional", expr: "running(sum(trades.NOTIONAL), trades.TRADE_DATE)", by: [trades.TRADE_DATE], scope: aggregate }
+  - { id: R48, title: "Three-day moving average of P&L", expr: "moving_avg(sum(trades.PNL_1D), 3, trades.TRADE_DATE)", by: [trades.TRADE_DATE], scope: aggregate }
+  - { id: R49, title: "Day-on-day change in P&L", expr: "sum(trades.PNL_1D) - lag(sum(trades.PNL_1D), 1, trades.TRADE_DATE)", by: [trades.TRADE_DATE], scope: aggregate }
+  - { id: R50, title: "Day-on-day change in MTM, per cent", expr: "ratio(sum(trades.MTM) - lag(sum(trades.MTM), 1, trades.TRADE_DATE), abs(lag(sum(trades.MTM), 1, trades.TRADE_DATE))) * 100", by: [trades.TRADE_DATE], scope: aggregate }
+  - { id: R51, title: "Day-on-day change per desk", expr: "sum(trades.MTM) - lag(sum(trades.MTM), 1, trades.TRADE_DATE, by = [desks.NAME])", by: [desks.NAME, trades.TRADE_DATE], scope: aggregate }
+  - { id: R52, title: "Cumulative trade count", expr: "running(count(trades), trades.TRADE_DATE)", by: [trades.TRADE_DATE], scope: aggregate }
+  - { id: R53, title: "Tenor bucket", expr: "days_between(trades.TRADE_DATE, trades.MATURITY_DATE) <= 365 ? '0-1y' : days_between(trades.TRADE_DATE, trades.MATURITY_DATE) <= 1825 ? '1-5y' : '5y+'", by: [desks.NAME], scope: row }
+  - { id: R54, title: "Ageing bucket of a trade", expr: "days_between(trades.TRADE_DATE, date('2026-10-09')) <= 30 ? 'under 30 days' : days_between(trades.TRADE_DATE, date('2026-10-09')) <= 90 ? 'under 90 days' : 'older'", by: [desks.NAME], scope: row }
+  - { id: R55, title: "Long or short", expr: "trades.MTM >= 0 ? 'Long' : 'Short'", by: [desks.NAME], scope: row }
+  - { id: R56, title: "Rating, with a default", expr: "coalesce(counterparties.RATING, 'NR')", by: [counterparties.SECTOR], scope: row }
+  - { id: R57, title: "Big live trades (a row filter)", expr: "trades.TRADE_STATUS != 'MATURED' && trades.NOTIONAL >= 5000000", by: [desks.NAME], scope: row }
+  - { id: R58, title: "Each desk head sees their desks", expr: "trades.DESK in user.desks", by: [], scope: rule }
+  - { id: R59, title: "Everyone sees the published books, desk heads also their own", expr: "starts_with(trades.PORTFOLIO, 'BOOK-PUB') || trades.DESK in user.desks", by: [], scope: rule }
+  - { id: R60, title: "Share of the total you may see", expr: "share_of(sum(trades.MTM), over = ALL)", by: [desks.NAME], scope: aggregate }
+  - { id: R61, title: "A book's share of its desk", expr: "share_of(sum(trades.MTM), over = [books.NAME])", by: [desks.NAME, books.NAME], scope: aggregate }
+  - { id: R62, title: "Share of the parent level", expr: "parent_of(sum(trades.MTM), hierarchy = 'Desk and book')", by: [desks.NAME, books.NAME], scope: aggregate }
+  - { id: R63, title: "MTM of every desk, ignoring the desk slicer", expr: "calc(sum(trades.MTM), ignore = [desks.NAME])", by: [desks.NAME], scope: aggregate }
+  - { id: R64, title: "Everything you may see", expr: "calc(sum(trades.MTM), ignore = ALL)", by: [desks.NAME], scope: aggregate }
+  - { id: R65, title: "Live MTM whatever the slicers say about status", expr: "calc(sum(trades.MTM), where = trades.TRADE_STATUS != 'MATURED')", by: [desks.NAME], scope: aggregate }
+  - { id: R66, title: "The average desk", expr: "avg_by(sum(trades.MTM), by = [desks.NAME])", by: [counterparties.SECTOR], scope: aggregate }
+  - { id: R67, title: "Fiscal year to date", expr: "fiscal_ytd(sum(trades.PNL_1D), trades.TRADE_DATE)", by: [desks.NAME], scope: aggregate }
+  - { id: R68, title: "The last day's MTM (a balance)", expr: "latest(sum(trades.MTM), trades.TRADE_DATE)", by: [desks.NAME], scope: aggregate }
+  - { id: R69, title: "Month-end closing", expr: "closing(sum(trades.MTM), trades.TRADE_DATE)", by: [desks.NAME], scope: aggregate }
+  - { id: R70, title: "Opening balance", expr: "opening(sum(trades.MTM), trades.TRADE_DATE)", by: [desks.NAME], scope: aggregate }
+  - { id: R71, title: "Average daily balance", expr: "avg_over(sum(trades.MTM), trades.TRADE_DATE)", by: [desks.NAME], scope: aggregate }
+  - { id: R72, title: "Day on day", expr: "sum(trades.MTM) - as_of(sum(trades.MTM), shift_date(asof(), -1))", by: [desks.NAME], scope: aggregate }

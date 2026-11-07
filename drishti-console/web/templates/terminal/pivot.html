@@ -22,20 +22,23 @@
    slider and tabs A (the pivot with sparklines and a right rail of tail, explain and provenance), B (components, waterfall, histogram, heat
    map) and C (ladder, what-if, explain), drawn by drishti_mr-lens.js from /api/pivot/mr/...; one pivot engine, no second grid. #}
 {% extends "base.html" %}
-{% block title %}{% if lens == 'mr' %}MR cube{% else %}Pivot{% if source %} · {{ source }}{% endif %}{% endif %} · {{ PRODUCT }}{% endblock %}
+{% block title %}{% if cube %}{{ cube.title }}{% else %}Pivot{% if source %} · {{ source }}{% endif %}{% endif %} · {{ PRODUCT }}{% endblock %}
 {% block screen %}pivot{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/drishti_pivot-screen.css?v={{ ASSET_V }}">{% if lens == 'mr' %}<link rel="stylesheet" href="/static/css/drishti_mr-lens.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
-<div class="pv{% if lens == 'mr' %} mr{% endif %}" data-pivot-screen data-source="{{ source }}" data-view-id="{{ view_id }}" data-date="{{ date }}"{% if lens %} data-lens="{{ lens }}"{% endif %}{% if preset %} data-preset="{{ preset }}"{% endif %}>
+<div class="pv{% if lens == 'mr' %} mr{% endif %}" data-pivot-screen{% if cube %} data-preset-name="{{ cube.name }}"{% endif %} data-source="{{ source }}" data-view-id="{{ view_id }}" data-date="{{ date }}"{% if lens %} data-lens="{{ lens }}"{% endif %}{% if preset %} data-preset="{{ preset }}"{% endif %}>
   <div class="pv-head">
-    {% if lens == 'mr' %}<h1 class="pv-title"><span class="pv-word mono" title="Type MCUBE, a scope, BY rows,columns, MEASURE …, then &lt;GO&gt;">MCUBE</span>
-      <span data-pv-title>MR cube</span></h1>{% else %}<h1 class="pv-title"><span class="pv-word mono" title="Type PIVOT, a table (or var) or @owner/name, then &lt;GO&gt;">PIVOT</span>
+    {% if cube %}<h1 class="pv-title"><span class="pv-word mono" title="Type {{ cube.word }}, a scope, BY rows,columns, MEASURE …, then &lt;GO&gt;">{{ cube.word }}</span>
+      <span data-pv-title>{{ cube.title }}</span></h1>{% else %}<h1 class="pv-title"><span class="pv-word mono" title="Type PIVOT, a table (or var) or @owner/name, then &lt;GO&gt;">PIVOT</span>
       <span data-pv-title>{{ view_id or source or 'choose a table' }}</span></h1>{% endif %}
     <span class="pv-meta" data-pv-meta aria-live="polite"></span>
-    {% if lens == 'mr' %}<a class="pv-help" href="/help/context/mcube" title="Help: the MR cube (MR_CUBE_GUIDE.md)" aria-label="Help: the MR cube"><i class="bi bi-question-circle" aria-hidden="true"></i></a>{% else %}<a class="pv-help" href="/help/context/pivot" title="Help: the pivot screen (PIVOT_GUIDE.md)" aria-label="Help: the pivot screen"><i class="bi bi-question-circle" aria-hidden="true"></i></a>{% endif %}
+    {% if cube %}<a class="pv-help" href="/help/context/{{ cube.help }}" title="Help: the {{ cube.title }}" aria-label="Help: the {{ cube.title }}"><i class="bi bi-question-circle" aria-hidden="true"></i></a>{% else %}<a class="pv-help" href="/help/context/pivot" title="Help: the pivot screen (PIVOT_GUIDE.md)" aria-label="Help: the pivot screen"><i class="bi bi-question-circle" aria-hidden="true"></i></a>{% endif %}
   </div>
+  {% if cube_building %}<p class="pv-building" role="status" data-cube-building><span class="drishti_uc-chip" data-uc="{{ cube.under_construction }}" title="Depends on work not built yet (Help → Under construction)">Under construction</span>
+    The {{ cube.title }} is a preset of this Pivot: its source, the CCR provider (each netting set's exposure paths, netted and collateralised first), is not built yet.
+    Meanwhile the <a href="/exposure">Exposure explorer</a> (<span class="mono">EXP</span>) has every counterparty's computed exposure.</p>{% endif %}
   <div class="pv-bar" role="toolbar" aria-label="Pivot controls">
     <label class="pv-chip">Source <select data-pv-source aria-label="Source"></select></label>
     <label class="pv-chip">Date <select data-pv-date aria-label="Business date"></select></label>
@@ -72,6 +75,7 @@
       <div class="pv-pop" data-pv-pop role="dialog" aria-label="Cell provenance" hidden></div>
     </section>
     <aside class="pv-side">
+      <div data-resize="panel" data-resize-key="pivot.fields" data-resize-var="--pv-side" data-resize-min="220" data-resize-max="640" data-resize-edge="left" aria-label="Resize the Fields panel"></div>
       <section class="pv-card" aria-labelledby="pvFieldsTitle">
         <h2 id="pvFieldsTitle">Fields <span class="pv-sub" data-pv-fields-sub></span></h2>
         <input class="pv-input" type="search" data-pv-field-search placeholder="Search fields…" aria-label="Search fields">
@@ -134,7 +138,7 @@
     <h3>Playground</h3>
     <div class="pf-form">
       <label>Name <input class="pv-input" data-pf-name value="wret" aria-label="Function name"></label>
-      <label>Language <select data-pf-lang aria-label="Language"><option value="formula">formula (DEL)</option><option value="sql">SQL macro</option><option value="python">Python</option><option value="java">Java plug-in</option></select></label>
+      <label>Language <select data-pf-lang aria-label="Language"><option value="formula">formula (Rachana)</option><option value="sql">SQL macro</option><option value="python">Python</option><option value="java">Java plug-in</option></select></label>
       <label>Inputs <input class="pv-input" data-pf-inputs value="r, w" aria-label="Inputs, comma separated"></label>
       <label>Kind <select data-pf-kind aria-label="Kind"><option>mergeable</option><option>sketch</option><option>holistic</option></select></label>
       <label>Entry <input class="pv-input" data-pf-entry placeholder="Python: the class; Java: the jar" aria-label="Entry"></label>

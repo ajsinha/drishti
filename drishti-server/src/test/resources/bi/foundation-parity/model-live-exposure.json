@@ -1,0 +1,877 @@
+{
+  "admin" : {
+    "Collateral | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Collateral | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Collateral | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63032.5 ] ]
+    },
+    "Collateral | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Net MTM | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "Net MTM | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "Net MTM | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 30016.0 ] ]
+    },
+    "Net MTM | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "Netting sets | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1 ] ]
+    },
+    "Netting sets | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Trades | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "Trades | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "Trades | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "Trades | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "Worst net MTM | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -17007.5 ] ]
+    },
+    "Worst net MTM | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -17007.5 ] ]
+    },
+    "Worst net MTM | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 30016.0 ] ]
+    },
+    "Worst net MTM | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -17007.5 ] ]
+    },
+    "calc Net MTM | by netting.COUNTERPARTY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "COUNTERPARTY-0", 30016.0, 200108.0, 200108.0, 0.14999900053970855, 30016.0 ], [ "COUNTERPARTY-1", 47024.5, 200108.0, 200108.0, 0.23499560237471764, null ], [ "COUNTERPARTY-2", 57029.5, 200108.0, 200108.0, 0.28499360345413477, null ], [ "COUNTERPARTY-3", 67034.5, 200108.0, 200108.0, 0.33499160453355187, null ], [ "COUNTERPARTY-4", -17007.5, 200108.0, 200108.0, -0.08499160453355188, null ], [ "COUNTERPARTY-5", -7002.5, 200108.0, 200108.0, -0.03499360345413477, null ], [ "COUNTERPARTY-6", 3002.5, 200108.0, 200108.0, 0.015004397625282348, null ], [ "COUNTERPARTY-7", 20011.0, 200108.0, 200108.0, 0.10000099946029144, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 200108.0 ] ]
+      } ]
+    },
+    "calc Net MTM | by netting.COUNTERPARTY | slicer = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "COUNTERPARTY-0", 30016.0, 200108.0, 200108.0, 0.14999900053970855, 30016.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 30016.0 ] ]
+      } ]
+    },
+    "rows of netting" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "522f3b5c0a7a427eb066f81714b946e46e3afb0c0d906bbecb44ea954e48959d"
+    }
+  },
+  "analyst" : {
+    "Collateral | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Collateral | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Collateral | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63032.5 ] ]
+    },
+    "Collateral | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Net MTM | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "Net MTM | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "Net MTM | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 30016.0 ] ]
+    },
+    "Net MTM | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "Netting sets | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1 ] ]
+    },
+    "Netting sets | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Trades | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "Trades | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "Trades | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "Trades | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "Worst net MTM | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -17007.5 ] ]
+    },
+    "Worst net MTM | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -17007.5 ] ]
+    },
+    "Worst net MTM | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 30016.0 ] ]
+    },
+    "Worst net MTM | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -17007.5 ] ]
+    },
+    "calc Net MTM | by netting.COUNTERPARTY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "COUNTERPARTY-0", 30016.0, 200108.0, 200108.0, 0.14999900053970855, 30016.0 ], [ "COUNTERPARTY-1", 47024.5, 200108.0, 200108.0, 0.23499560237471764, null ], [ "COUNTERPARTY-2", 57029.5, 200108.0, 200108.0, 0.28499360345413477, null ], [ "COUNTERPARTY-3", 67034.5, 200108.0, 200108.0, 0.33499160453355187, null ], [ "COUNTERPARTY-4", -17007.5, 200108.0, 200108.0, -0.08499160453355188, null ], [ "COUNTERPARTY-5", -7002.5, 200108.0, 200108.0, -0.03499360345413477, null ], [ "COUNTERPARTY-6", 3002.5, 200108.0, 200108.0, 0.015004397625282348, null ], [ "COUNTERPARTY-7", 20011.0, 200108.0, 200108.0, 0.10000099946029144, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 200108.0 ] ]
+      } ]
+    },
+    "calc Net MTM | by netting.COUNTERPARTY | slicer = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "COUNTERPARTY-0", 30016.0, 200108.0, 200108.0, 0.14999900053970855, 30016.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 30016.0 ] ]
+      } ]
+    },
+    "rows of netting" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "522f3b5c0a7a427eb066f81714b946e46e3afb0c0d906bbecb44ea954e48959d"
+    }
+  },
+  "desk-head-no-desks" : {
+    "Collateral | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Collateral | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Collateral | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63032.5 ] ]
+    },
+    "Collateral | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Net MTM | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "Net MTM | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "Net MTM | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 30016.0 ] ]
+    },
+    "Net MTM | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "Netting sets | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1 ] ]
+    },
+    "Netting sets | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Trades | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "Trades | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "Trades | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "Trades | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "Worst net MTM | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -17007.5 ] ]
+    },
+    "Worst net MTM | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -17007.5 ] ]
+    },
+    "Worst net MTM | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 30016.0 ] ]
+    },
+    "Worst net MTM | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -17007.5 ] ]
+    },
+    "calc Net MTM | by netting.COUNTERPARTY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "COUNTERPARTY-0", 30016.0, 200108.0, 200108.0, 0.14999900053970855, 30016.0 ], [ "COUNTERPARTY-1", 47024.5, 200108.0, 200108.0, 0.23499560237471764, null ], [ "COUNTERPARTY-2", 57029.5, 200108.0, 200108.0, 0.28499360345413477, null ], [ "COUNTERPARTY-3", 67034.5, 200108.0, 200108.0, 0.33499160453355187, null ], [ "COUNTERPARTY-4", -17007.5, 200108.0, 200108.0, -0.08499160453355188, null ], [ "COUNTERPARTY-5", -7002.5, 200108.0, 200108.0, -0.03499360345413477, null ], [ "COUNTERPARTY-6", 3002.5, 200108.0, 200108.0, 0.015004397625282348, null ], [ "COUNTERPARTY-7", 20011.0, 200108.0, 200108.0, 0.10000099946029144, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 200108.0 ] ]
+      } ]
+    },
+    "calc Net MTM | by netting.COUNTERPARTY | slicer = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "COUNTERPARTY-0", 30016.0, 200108.0, 200108.0, 0.14999900053970855, 30016.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 30016.0 ] ]
+      } ]
+    },
+    "rows of netting" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "522f3b5c0a7a427eb066f81714b946e46e3afb0c0d906bbecb44ea954e48959d"
+    }
+  },
+  "desk-head-two-desks" : {
+    "Collateral | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Collateral | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Collateral | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63032.5 ] ]
+    },
+    "Collateral | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Net MTM | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "Net MTM | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "Net MTM | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 30016.0 ] ]
+    },
+    "Net MTM | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "Netting sets | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1 ] ]
+    },
+    "Netting sets | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Trades | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "Trades | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "Trades | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "Trades | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "Worst net MTM | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -17007.5 ] ]
+    },
+    "Worst net MTM | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -17007.5 ] ]
+    },
+    "Worst net MTM | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 30016.0 ] ]
+    },
+    "Worst net MTM | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -17007.5 ] ]
+    },
+    "calc Net MTM | by netting.COUNTERPARTY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "COUNTERPARTY-0", 30016.0, 200108.0, 200108.0, 0.14999900053970855, 30016.0 ], [ "COUNTERPARTY-1", 47024.5, 200108.0, 200108.0, 0.23499560237471764, null ], [ "COUNTERPARTY-2", 57029.5, 200108.0, 200108.0, 0.28499360345413477, null ], [ "COUNTERPARTY-3", 67034.5, 200108.0, 200108.0, 0.33499160453355187, null ], [ "COUNTERPARTY-4", -17007.5, 200108.0, 200108.0, -0.08499160453355188, null ], [ "COUNTERPARTY-5", -7002.5, 200108.0, 200108.0, -0.03499360345413477, null ], [ "COUNTERPARTY-6", 3002.5, 200108.0, 200108.0, 0.015004397625282348, null ], [ "COUNTERPARTY-7", 20011.0, 200108.0, 200108.0, 0.10000099946029144, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 200108.0 ] ]
+      } ]
+    },
+    "calc Net MTM | by netting.COUNTERPARTY | slicer = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "COUNTERPARTY-0", 30016.0, 200108.0, 200108.0, 0.14999900053970855, 30016.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 30016.0 ] ]
+      } ]
+    },
+    "rows of netting" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "522f3b5c0a7a427eb066f81714b946e46e3afb0c0d906bbecb44ea954e48959d"
+    }
+  },
+  "no-raw-power" : {
+    "Collateral | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Collateral | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Collateral | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63032.5 ] ]
+    },
+    "Collateral | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Net MTM | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "Net MTM | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "Net MTM | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 30016.0 ] ]
+    },
+    "Net MTM | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "Netting sets | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1 ] ]
+    },
+    "Netting sets | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Trades | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "Trades | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "Trades | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "Trades | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "Worst net MTM | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -17007.5 ] ]
+    },
+    "Worst net MTM | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -17007.5 ] ]
+    },
+    "Worst net MTM | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 30016.0 ] ]
+    },
+    "Worst net MTM | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -17007.5 ] ]
+    },
+    "calc Net MTM | by netting.COUNTERPARTY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "COUNTERPARTY-0", 30016.0, 200108.0, 200108.0, 0.14999900053970855, 30016.0 ], [ "COUNTERPARTY-1", 47024.5, 200108.0, 200108.0, 0.23499560237471764, null ], [ "COUNTERPARTY-2", 57029.5, 200108.0, 200108.0, 0.28499360345413477, null ], [ "COUNTERPARTY-3", 67034.5, 200108.0, 200108.0, 0.33499160453355187, null ], [ "COUNTERPARTY-4", -17007.5, 200108.0, 200108.0, -0.08499160453355188, null ], [ "COUNTERPARTY-5", -7002.5, 200108.0, 200108.0, -0.03499360345413477, null ], [ "COUNTERPARTY-6", 3002.5, 200108.0, 200108.0, 0.015004397625282348, null ], [ "COUNTERPARTY-7", 20011.0, 200108.0, 200108.0, 0.10000099946029144, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 200108.0 ] ]
+      } ]
+    },
+    "calc Net MTM | by netting.COUNTERPARTY | slicer = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "COUNTERPARTY-0", 30016.0, 200108.0, 200108.0, 0.14999900053970855, 30016.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 30016.0 ] ]
+      } ]
+    },
+    "rows of netting" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "522f3b5c0a7a427eb066f81714b946e46e3afb0c0d906bbecb44ea954e48959d"
+    }
+  },
+  "risk" : {
+    "Collateral | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Collateral | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Collateral | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63032.5 ] ]
+    },
+    "Collateral | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Net MTM | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "Net MTM | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "Net MTM | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 30016.0 ] ]
+    },
+    "Net MTM | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "Netting sets | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1 ] ]
+    },
+    "Netting sets | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Trades | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "Trades | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "Trades | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "Trades | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "Worst net MTM | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -17007.5 ] ]
+    },
+    "Worst net MTM | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -17007.5 ] ]
+    },
+    "Worst net MTM | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 30016.0 ] ]
+    },
+    "Worst net MTM | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -17007.5 ] ]
+    },
+    "calc Net MTM | by netting.COUNTERPARTY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "COUNTERPARTY-0", 30016.0, 200108.0, 200108.0, 0.14999900053970855, 30016.0 ], [ "COUNTERPARTY-1", 47024.5, 200108.0, 200108.0, 0.23499560237471764, null ], [ "COUNTERPARTY-2", 57029.5, 200108.0, 200108.0, 0.28499360345413477, null ], [ "COUNTERPARTY-3", 67034.5, 200108.0, 200108.0, 0.33499160453355187, null ], [ "COUNTERPARTY-4", -17007.5, 200108.0, 200108.0, -0.08499160453355188, null ], [ "COUNTERPARTY-5", -7002.5, 200108.0, 200108.0, -0.03499360345413477, null ], [ "COUNTERPARTY-6", 3002.5, 200108.0, 200108.0, 0.015004397625282348, null ], [ "COUNTERPARTY-7", 20011.0, 200108.0, 200108.0, 0.10000099946029144, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 200108.0 ] ]
+      } ]
+    },
+    "calc Net MTM | by netting.COUNTERPARTY | slicer = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "COUNTERPARTY-0", 30016.0, 200108.0, 200108.0, 0.14999900053970855, 30016.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 30016.0 ] ]
+      } ]
+    },
+    "rows of netting" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "522f3b5c0a7a427eb066f81714b946e46e3afb0c0d906bbecb44ea954e48959d"
+    }
+  },
+  "unnamed-role" : {
+    "Collateral | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Collateral | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Collateral | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 63032.5 ] ]
+    },
+    "Collateral | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Net MTM | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "Net MTM | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "Net MTM | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 30016.0 ] ]
+    },
+    "Net MTM | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "Netting sets | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1 ] ]
+    },
+    "Netting sets | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Trades | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "Trades | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "Trades | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "Trades | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "Worst net MTM | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -17007.5 ] ]
+    },
+    "Worst net MTM | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -17007.5 ] ]
+    },
+    "Worst net MTM | slicer netting.COUNTERPARTY = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 30016.0 ] ]
+    },
+    "Worst net MTM | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -17007.5 ] ]
+    },
+    "calc Net MTM | by netting.COUNTERPARTY" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "COUNTERPARTY-0", 30016.0, 200108.0, 200108.0, 0.14999900053970855, 30016.0 ], [ "COUNTERPARTY-1", 47024.5, 200108.0, 200108.0, 0.23499560237471764, null ], [ "COUNTERPARTY-2", 57029.5, 200108.0, 200108.0, 0.28499360345413477, null ], [ "COUNTERPARTY-3", 67034.5, 200108.0, 200108.0, 0.33499160453355187, null ], [ "COUNTERPARTY-4", -17007.5, 200108.0, 200108.0, -0.08499160453355188, null ], [ "COUNTERPARTY-5", -7002.5, 200108.0, 200108.0, -0.03499360345413477, null ], [ "COUNTERPARTY-6", 3002.5, 200108.0, 200108.0, 0.015004397625282348, null ], [ "COUNTERPARTY-7", 20011.0, 200108.0, 200108.0, 0.10000099946029144, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 200108.0 ] ]
+      } ]
+    },
+    "calc Net MTM | by netting.COUNTERPARTY | slicer = COUNTERPARTY-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "COUNTERPARTY-0", 30016.0, 200108.0, 200108.0, 0.14999900053970855, 30016.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 30016.0 ] ]
+      } ]
+    },
+    "rows of netting" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "522f3b5c0a7a427eb066f81714b946e46e3afb0c0d906bbecb44ea954e48959d"
+    }
+  }
+}

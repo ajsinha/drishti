@@ -233,7 +233,7 @@ export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ls drishti-server/target/*-exec.jar
 ```
 
-You should see exactly one file, for example `drishti-server/target/drishti-server-2.9.11.c-exec.jar`.
+You should see exactly one file, for example `drishti-server/target/drishti-server-2.9.11.d-exec.jar`.
 
 > Use `clean`. Without it, `target/` keeps the jars of earlier versions, and both `java -jar
 > drishti-server-*-exec.jar` and the server Dockerfile's `COPY drishti-server/target/drishti-server-*-exec.jar`
@@ -244,7 +244,7 @@ You should see exactly one file, for example `drishti-server/target/drishti-serv
 ```bash
 sudo useradd --system --home /opt/drishti drishti
 sudo mkdir -p /opt/drishti/data /opt/drishti/sutras
-sudo cp drishti-server/target/drishti-server-2.9.11.c-exec.jar /opt/drishti/drishti-server.jar
+sudo cp drishti-server/target/drishti-server-2.9.11.d-exec.jar /opt/drishti/drishti-server.jar
 sudo cp -r config drishti-console docs /opt/drishti/
 sudo cp LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/   # the help centre shows them
 sudo chown -R drishti:drishti /opt/drishti
@@ -365,7 +365,7 @@ core  counterparty-risk  market-data  market-risk  news-and-markets  trading  wo
 
 The retired example packs (`finance`, `genomics`, `logistics`, `retail-banking`, `climate-risk`, `operational-risk`,
 `liquidity-risk`) are under `examples/packs/`; `DRISHTI_PACKS_EXTRA_DIRS=examples/packs` lets you name one. What each pack contains,
-and how to write your own, is in [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which). The seven packs read Delta lakes under `./data/delta`; section 5 builds
+and how to write your own, is in [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which). The seven packs read the demo lake, `./data/delta/demo`; section 5 builds
 them.
 
 **Changing packs while the server runs.** The packs folder is watched (`DRISHTI_PACKS_WATCH`, default `auto`): copy a new pack folder in and it is
@@ -380,7 +380,7 @@ itself (see *Retries* in section 13).
 ### Taking a pack, a connector or a BI file out safely
 
 **Admin → Artifacts** (`/admin/artifacts`; [OPERATIONALISING.md section 18](../guides/OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely)) is the careful way to remove something. *Uninstall…* asks what depends on it (packs that extend it,
-connectors only it uses, BI datasets, reports and boards, saved searches, monitors, alert rules, subscriptions, shares, workspaces, embed hosts), refuses while
+connectors only it uses, BI tables, models, reports and boards, saved searches, monitors, alert rules, subscriptions, shares, workspaces, embed hosts), refuses while
 anything does (`DRS-5041`) and offers *Disable instead*, and otherwise **moves** the folder or file to `data/uninstalled/<time>-<kind>-<name>/`
 (`drishti.admin.uninstalled-dir`); the watchers then unload or stop it as if you had deleted it. Archives are kept `drishti.admin.uninstalled-keep` (30 days) and pruned
 once a day, so **back up `data/uninstalled` with `data/`** if you want longer. A pack named in `DRISHTI_PACKS` is not uninstalled here (take it out of the setting and
@@ -513,10 +513,10 @@ The compose file is a starting point. Before you rely on it, add:
          - drishti-governance:/opt/drishti/data/governance
    ```
    (and `drishti-governance: {}` under `volumes:`).
-2. **The lake.** The packs read `./data/delta` (`DRISHTI_DELTA_ROOT`). Mount your lake there, read-only, or set
+2. **The lake.** The packs read the demo lake, `./data/delta/demo` (`DRISHTI_DELTA_ROOT`). Mount your lake there, read-only, or set
    `DRISHTI_DELTA_ROOT` to an `s3a://` location (section 11):
    ```yaml
-         - /srv/lake:/opt/drishti/data/delta:ro
+         - /srv/lake:/opt/drishti/data/delta/demo:ro
    ```
    Without it, the lake connectors find no tables and their views say *No data available*.
 3. **The Kafka disk cache**, if you turn on a stream connector: a volume on `/opt/drishti/data/cache`, sized above
@@ -550,12 +550,50 @@ repository root.
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 ```
 
-It writes `data/delta/<domain>/<kind>/business_date=…/` for every dataset (the trades in `data/delta/trading/trade_endur`,
+It writes `data/delta/demo/<domain>/<kind>/business_date=…/` for every dataset (the trades in `data/delta/demo/trading/trade_endur`,
 `trade_calypso` and `trade_murex`, also partitioned by `PRODUCT_TYPE`), and tells a running server (or leaves a stamp for its next start)
 so its BI store reads the new data: [data/testdata/README.md](../../data/testdata/README.md). Your own data goes in with your ETL, or
 `drishti.py lake build` for a large JSON export ([TOOLS.md](../guides/TOOLS.md)). The retired example packs keep their generators under
-`tools/packgen/` (for instance `tools/packgen/banking/make_data.py --lake data/delta`, which writes JSON Lines rows under
+`tools/packgen/` (for instance `tools/packgen/banking/make_data.py --lake data/delta/demo`, which writes JSON Lines rows under
 `data/build/lake-rows` and then loads them; generating and loading are separate steps, [DATA_GUIDE.md](../guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).
+
+### The lakes' folders
+
+Every lake has its own folder under `<data>/delta` (DATA_LAKE_GUIDE.md section 1): the demo lake is `data/delta/demo`, a lake the data inbox
+creates for a load that names it is `data/delta/<lake>` (`data/delta/risklake`), and the official VaR and exposure results the server
+publishes stay in `data/delta/risk-results`. A lake file may name any other root; `DRISHTI_DELTA_ROOT`, when a site sets it, is the demo
+lake's root as before, and nothing below moves.
+
+**The one-time move.** A demo lake built in the older layout has its tables directly in `data/delta/<domain>/<table>`. At its first start
+the server moves them into `data/delta/demo/`, once, before any connector opens a table:
+
+- only the demo lake's own folders move (the first folder of each of its tables' paths, and `_drishti-lake`), each by a rename on the
+  same file system: 3.5 GB move in a moment, and no file is copied or rewritten;
+- every Delta table is opened and measured before and after the move: its version, its data files, its rows (from each data file's
+  Parquet footer), and that every data file it names is there; any difference, or any error, moves everything back;
+- it **refuses**, saying why in the log and moving nothing, when `data/delta/demo` exists already, when anything in `data/delta` belongs
+  to no lake file, when a folder is on another file system, when a table is Iceberg (its metadata holds absolute paths), when a table
+  does not open or names a missing file, or while a build or a load holds the lake's lock;
+- it **never deletes** a file; the empty `data/delta/demo` it made is removed again when it moves back;
+- it runs once: `data/delta/demo/_drishti-lake/relocated.json` records when, from where, and every table's version, files and rows;
+- then each connector file that still reads the demo lake by its old default root (`root: ${DRISHTI_DELTA_ROOT:./data/delta}`, as the
+  server generated them from the packs' templates before the lake form) is rewritten to `lake: demo` with `lake-tables:`, every reading
+  setting kept and the file before kept beside it (`<name>.yaml.before-lake-<time>.bak`); a connector with a root of its own (another
+  folder, `s3://...`) is left as it is.
+
+By hand (stop the server first: its connectors hold the tables open), or to see what it would do:
+
+```bash
+python3 tools/drishti.py lake relocate demo --dry-run     # the folders it would move and every table measured; nothing moves
+python3 tools/drishti.py lake relocate demo               # the move; exit 0 moved (or nothing to move), 1 refused or moved back
+```
+
+`drishti.lakes.relocate-on-start: false` (`DRISHTI_LAKES_RELOCATE_ON_START=false`) leaves it to the command. After the move, check:
+the server's log says *the one-time move into its own folder is done*; `python3 tools/drishti.py lake status --lake data/delta/demo`
+lists the tables; Admin → Lakes shows the demo lake under `data/delta/demo`; a view, a VaR and a BI page answer as before. A refusal
+leaves everything where it was and says what to do: move or describe the unknown folder, or move the tables by hand, then start again.
+A scheduled job or script that names `data/delta` for the demo lake names `data/delta/demo` from then on (`lake build --lake`, `lake
+maintain --root`, `deploy/lake-maintenance.yaml`).
 
 ### 5.2 PostgreSQL, Aerospike and Kafka in Docker
 
@@ -591,7 +629,7 @@ tools/load-aerospike.sh localhost:3000 test --trades 1000000 --days 3 --ttl-days
 ```
 
 `--trades N --days D` has `bulk_trades.py` write the book as a tar of `trade/<YYYY-MM-DD>/` folders under
-`<data folder>/build/loader-rows/` (the load rules, [DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)), loads it and removes it. `--ttl-days N` gives
+`<data folder>/build/loader-rows/` (the load rules, [DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)), loads it and removes it. `--ttl-days N` gives
 every record written a time to live of N days, so Aerospike expires old business dates by itself: there is no
 maintenance job, unlike the lake ([section 11](#11-the-lake-where-it-lives-and-keeping-it-bounded)). Without it,
 records never expire. In the generated book a day record takes about 7 KB of namespace storage and an index record
@@ -710,7 +748,7 @@ table of messages and fixes is in [CONNECTOR_FILES.md, section 12](../connectors
 | Variable | Default | Used by | What it does |
 |---|---|---|---|
 | `DRISHTI_LAKE_ENABLED` | `true` | every pack's Delta connector | `false` turns the lake connectors off (for example when a profile replaces them) |
-| `DRISHTI_DELTA_ROOT` | `./data/delta` | every pack's Delta connector | the lake root: a local directory or `s3a://bucket/path` |
+| `DRISHTI_DELTA_ROOT` | `./data/delta/demo` | every pack's Delta connector (the demo lake, `config/lakes/demo.yaml`) | the demo lake's root: a local directory or `s3a://bucket/path`; every other lake is in its own folder, `<data>/delta/<lake>` |
 | `DRISHTI_STREAM_TRADING` | `false` | `trading` pack, `trading-stream` | read live trades from Kafka |
 | `DRISHTI_KAFKA_BOOTSTRAP` | `localhost:9092` | `trading-stream` | Kafka bootstrap servers |
 | `DRISHTI_TRADING_TOPIC` | `drishti.trading.trades` | `trading-stream` | the topic |
@@ -1351,9 +1389,10 @@ working directory unless you changed them.
 | `data/net/` | `node-id` (this node's id, generated once: keep it, or the node rejoins as a new member), `peers.json` (the member table, saved every 10 minutes, on joins and leaves and at shutdown) | `node-id` yes; `peers.json` optional | copy; without `peers.json` a node rejoins from its seeds |
 | `data/connectors/generated/` | markers that say which connector files were written from a pack template and whether they were edited | no | rebuilt from the packs |
 | `data/cache/<connector>/` | the Kafka connectors' disk cache | no | rebuilt from the topic; cleared every night anyway |
-| `data/delta/` (`DRISHTI_DELTA_ROOT`) | the lake | by its owner | Drishti only reads it; back it up with your data platform's policy |
+| `data/delta/` (`DRISHTI_DELTA_ROOT`: the demo lake's own folder, `data/delta/demo`) | the lakes, each in its own folder (`demo/`, `risklake/`, ...), and the published official results (`risk-results/`) | by its owner | back each lake up with your data platform's policy; the official results are append-only records |
 | `data/feeds/` (`DRISHTI_FEEDS`) | files for the file connector | by whoever writes them | |
-| `config/bi/` (`DRISHTI_BI_DIR`) | Rūpaka datasets, reports, boards and python files; what people publish from the BI pages is saved here too, and the identity database holds drafts, workspaces and history | **yes**, preferably in version control | version control, or copy |
+| `config/tables/` (`drishti.tables.root`) | the table layer's tables and models (`<domain>/<name>.table.yaml`, `.model.yaml`), which BI's reports read | **yes**, preferably in version control | version control, or copy |
+| `config/bi/` (`DRISHTI_BI_DIR`) | Rūpaka reports, boards, notebooks and python files; what people publish from the BI pages is saved here too, and the identity database holds drafts, workspaces and history | **yes**, preferably in version control | version control, or copy |
 | `data/bi/imports/` (`drishti.bi.governance.imports-dir`) | what each BI import replaced, one JSON file per import (the newest 20), so *Roll back this import* works | **yes**, with `data/identity/` | copy the directory |
 | `data/bi-store/` (`DRISHTI_BI_STORE`) | the BI engine's Parquet layers (columns and rollups) | no | rebuilt from the sources for the business date asked for; may be deleted while the server is stopped |
 | `config/ai/`, `config/mcp/` (`DRISHTI_AI_DIR`, `DRISHTI_MCP_DIR`) | one YAML file per AI provider and per MCP server; no key is written in a file (`${ENV}` references) | yes, with the connector files | copy |
@@ -1375,7 +1414,7 @@ if [ -f data/identity/drishti.db ]; then                      # 1.10+: a consist
   sqlite3 data/identity/drishti.db ".backup 'data/identity/backup.db'"
 fi
 keep=()                                                         # only what exists here: a server that never wrote data/designs has none
-for p in data/fstore data/identity data/governance data/packs data/loads data/designs data/collab sutras config/connectors config/bi config/ai config/mcp application.local.yaml; do
+for p in data/fstore data/identity data/governance data/packs data/loads data/designs data/collab sutras config/connectors config/tables config/bi config/ai config/mcp application.local.yaml; do
   [ -e "$p" ] && keep+=("$p")
 done
 tar czf /backup/drishti/drishti-$stamp.tgz --exclude=data/identity/drishti.db* "${keep[@]}"
@@ -1474,8 +1513,8 @@ uv run --with deltalake --with pyarrow --with pyyaml python tools/lake/maintain.
 You should see one JSON line per table, and nothing is changed:
 
 ```
-{"at": "2026-09-30T20:59:08-04:00", "event": "maintained", "dry_run": true, "table": "data/delta/civic/bill", "before": {"files": 10, "mb": 0.03}, "retention": {"cutoff": "2024-10-02", "would_remove_files": 0}, "vacuum": {"files": 0, "dry_run": true}, "after": {"files": 10, "mb": 0.03}}
-{"at": "2026-09-30T20:59:08-04:00", "event": "maintained", "dry_run": true, "table": "data/delta/civic/candidate", "before": {"files": 10, "mb": 0.03}, "retention": {"cutoff": "2024-10-02", "would_remove_files": 0}, "vacuum": {"files": 0, "dry_run": true}, "after": {"files": 10, "mb": 0.03}}
+{"at": "2026-09-30T20:59:08-04:00", "event": "maintained", "dry_run": true, "table": "data/delta/demo/civic/bill", "before": {"files": 10, "mb": 0.03}, "retention": {"cutoff": "2024-10-02", "would_remove_files": 0}, "vacuum": {"files": 0, "dry_run": true}, "after": {"files": 10, "mb": 0.03}}
+{"at": "2026-09-30T20:59:08-04:00", "event": "maintained", "dry_run": true, "table": "data/delta/demo/civic/candidate", "before": {"files": 10, "mb": 0.03}, "retention": {"cutoff": "2024-10-02", "would_remove_files": 0}, "vacuum": {"files": 0, "dry_run": true}, "after": {"files": 10, "mb": 0.03}}
 ...
 ```
 
@@ -1537,8 +1576,8 @@ shipped (`config/engines/dataload.yaml`, Admin → Engines). Its folder, `drisht
 - **Stopping the server** in the middle is safe: the next cycle puts claimed files back, completes a load that committed, moves what
   was not moved and sends the signals not sent.
 - `drishti.py dataload status` (or `GET /api/v1/admin/dataload`) shows what waits, what failed and why, and the last cycles; Admin → Data
-  loads → Inbox draws the same as a board (waiting, loading table by table, last cycles, failures with Retry, Load now: [DATA_GUIDE.md
-  section 7.8](../guides/DATA_GUIDE.md#8-the-inbox-screen-admin--data-loads--inbox)).
+  loads → Inbox draws the same as a board (waiting, loading table by table, last cycles, failures with Retry, Load now: [DATA_LAKE_GUIDE.md
+  section 3.1](../guides/DATA_LAKE_GUIDE.md#31-the-data-inbox)).
 
 ## 12. Memory and caches
 
@@ -1925,7 +1964,7 @@ with gigabytes free at 85% keeps working; the same share on a 4 GB heap (about 6
 |---|---|---|---|
 | a sign-in | `503 DRS-9501` | memory after clean-up over `memory-refuse-sign-in` (92%) | 45 s |
 | opening a VaR or exposure date not yet open | `503 DRS-9502` | memory over `memory-refuse-heavy` (85%); that engine's loads full (`load-threads` running and `queued-loads` waiting); the open dates' heap over `open-heap-refuse` (1.2) times their safety net; request handlers full; disk nearly full | 30 s |
-| a Data view download | `503 DRS-9503` | memory, request handlers, disk | 30 s |
+| an Export data download | `503 DRS-9503` | memory, request handlers, disk | 30 s |
 | a BI run (and asking a run again) | `503 DRS-9504` | memory, request handlers | 60 s |
 | a bulk load of a pack's data (Admin → Packs → Data) | `503 DRS-9505` | memory, request handlers, disk | 120 s |
 
@@ -1953,7 +1992,7 @@ the same second get the same answer and the same countdown, and the server reads
 cause clears: memory back under its warn level, a load finished, disk freed, the operator's hold ended.
 
 **What people see.** The console says it in place, where the work was asked for, and nothing else on the screen changes: the sign-in form,
-the VaR or exposure panel of the new date (the date already open stays below), the Data view's Download card. A ring counts down the
+the VaR or exposure panel of the new date (the date already open stays below), Export data's Download card. A ring counts down the
 server's `Retry-After`; **Try now** and **Cancel** sit beside it; when the time is up it tries again by itself, three times at most, and
 then says so and waits for **Try now**. The console keeps no list of waiting requests: the server decides, the page only counts down.
 
@@ -2044,7 +2083,7 @@ Feeds that may not be saved on a disk are held in memory stores (`drishti.lake.m
 
 Nothing of a memory-only connector is written to the data folder (no document cache, id-map files or index segments), a scheduled report,
 a share's picture or e-mail and an Ask about its pages are refused (`DRS-5219`), a BI run's rows are not stored, DuckDB does not spill on
-a server with memory stores, and logs and audit lines carry ids and counts only. A user's download from the Data view is the one way out,
+a server with memory stores, and logs and audit lines carry ids and counts only. A user's download from Export data is the one way out,
 audited.
 
 ## 12a. Several servers as one (Drishti*net)
@@ -2144,7 +2183,7 @@ curl -s localhost:18480/api/v1/admin/health | python3 -m json.tool | head -40
 {
     "status": "OK",
     "summary": { "packsWithProblems": 0, "failedToStart": 0, "sourcesDown": 0, "sourcesDegraded": 0, "sources": 18, "packs": 12 },
-    "server": { "version": "2.9.11.c", "uptimeSeconds": 6916, "java": "21.0.12.1", "heapUsedMb": 121,
+    "server": { "version": "2.9.11.d", "uptimeSeconds": 6916, "java": "21.0.12.1", "heapUsedMb": 121,
                 "heapMaxMb": 15640, "threads": 75, "cpus": 24,
                 "directUsedBytes": 9437184, "directCapacityBytes": 9437184, "directBuffers": 71,
                 "mappedUsedBytes": 46137344, "mappedCapacityBytes": 46137344, "mappedBuffers": 12,
@@ -2577,7 +2616,7 @@ SQLite and DuckDB are embedded files and need no sizing.
 | a connector's fragments | `drishti.bi.exec.max-fragments`, `connectors.<name>.max-fragments` | 8; fewer for a small database |
 | a failing connector | `drishti.bi.exec.breaker-failures`, `breaker-open` | 5 failures, 30 s |
 | standing queries | `drishti.bi.mq.max-subscriptions`, `max-subscriptions-per-user`, `maintenance-budget`, `tick` | 500, 20, 250 ms per second per model, 5 s |
-| Python | `drishti.bi.transform.console-url`, `console-token`, `max-concurrent`, `timeout`; the console's `bi.python.workers`, `fork_server`, `cache_entries` | the console's URL and secret, 2 per console, 60 s; the fork-server on; 256 cached answers |
+| Python | the compute pool `python` (`compute.pools.python.workers.max`, `memory`, `cpu-seconds`, `timeout`); `drishti.bi.transform.max-concurrent`, `timeout` | 4 workers per node, 6 GB each, 60 s; 2 Transforms at once |
 
 **Many viewers of one report.** Readers with the same effective security share one standing-query group and one cache entry per visual: 500 viewers with 5
 distinct securities are 5 evaluations per visual. `GET /api/v1/bi/engine` and the `drishti_bi_sq_*` metrics show the groups and their modes.
@@ -2591,25 +2630,21 @@ themselves. *Implementation:* the directory, the forwarding and the failover are
 Several servers can still serve BI together through **Drishti*net**: a report's requests go to the node that holds the kinds its datasets
 read, and its answer comes back unchanged ([section 18](#18-drishtinet-running-several-servers-as-one), section 7).
 
-**The console's Python runner** (the console tier of the plan: `PyTransform`, `PyAggregate`, `PyColumn`, Analyse's cells, python visuals). Each console
-runs a **fork-server** (`bi.python.fork_server`, on by default): one parent process that has imported pandas, numpy and pyarrow, and forks one child per
-call with its own session, limits, audit hook and scratch folder, so a call costs a fork (milliseconds), not an interpreter start (about a second). The
-answers are kept in the **L4 result cache** (`bi.python.cache_entries`, `cache_max_bytes`, `cache_seconds`) by the item's code, its parameters and the
-exact input bytes (already masked for the reader). To let the server's planner run Python on the console, give both the same secret and the server the
-console's URL:
+**Python on the compute pool** (the plan's tier `python`: `PyTransform`, `PyAggregate`, `PyColumn`; Notebook cells, python visuals, Python-driven tables). Every
+Python run is the server's, on the pool `python` ([PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)): each worker has imported pandas, NumPy and pyarrow once and forks one child per
+request, held by the strict sandbox (no network, Landlock, the item's limits), so a call costs a fork (milliseconds), not an interpreter start. To run Python:
 
 ```
-# the server (application.yaml or the environment)
-DRISHTI_BI_TRANSFORM_CONSOLE_URL=http://console-1:17480
-DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN=<a long random secret>
-# the console (the same variable sets bi.python.runner_token)
-DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN=<the same secret>
+# the server's environment
+DRISHTI_COMPUTE_ENABLED=true                     # compute on (off as shipped)
+DRISHTI_PYTHON=/opt/drishti/python/bin/python3   # an interpreter carrying exactly config/compute/locks/python.lock's versions
+DRISHTI_COMPUTE_PYTHON_WORKERS=8                 # the pool's workers on this node
 ```
 
-The console answers `POST /internal/py/transform`, `/measure` and `/column` only with that token (`403 DRS-9073` without it, `503 DRS-9074` when no token
-is set). `GET /bi/python/status` on the console (signed in) and **Admin → BI → BI usage** say whether the fork-server runs, how many calls it forked, the
-cache's hits and whether the endpoint is on. Size `bi.python.workers` (calls at once per console) to the cores you give Python, and
-`drishti.bi.transform.max-concurrent` on the server to the sum over the consoles.
+Or build the pool's locked environment from the lock (`environment: { python: "3.13", lock: locks/python.lock, index: <your index> }`, Admin → Compute → Build): it installs exactly the pinned files by hash. The server checks the interpreter's versions before any run and refuses every run, naming each package, while one differs. The pool runs only on Linux (user namespaces and Landlock, kernel 5.13+); on Windows Python stays off, with that reason.
+`GET /api/v1/bi/python/runtime` and **Admin → BI → BI usage** say whether Python runs, why not, the pins and the counters; every run is in the audit log
+(`python-run`). Size the pool's `workers.max` to the cores you give Python, and
+`drishti.bi.transform.max-concurrent` to the Transforms you let run at once.
 
 **Admin → BI → BI usage** (`/admin/bi/usage`, BI administrators; the audit part for system administrators) sums the latest audit events: questions and
 SQL statements per model, the share answered from the cache, the layers that answered and the average rows, the busiest readers, the other BI actions,
@@ -3336,6 +3371,14 @@ approved. The design, with the reasons behind each choice, is [PYTHON_COMPUTE.md
 **It is off as shipped.** With `compute.enabled: false` (the default in `config/compute/compute.yaml`) no worker starts and every compute
 request is refused with `DRS-9201`. Approvals work either way, so requirements can be reviewed before compute is switched on.
 
+**Python for code people write runs here too**, on the pool `python` (Python items and visuals, Python-driven tables and models, Notebook
+cells: [PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)), so with compute off
+none of it runs and each says so. That pool is `isolation: strict`: Linux only (user namespaces and Landlock, kernel 5.13 or later; check
+with `unshare --user --map-root-user --net true`), fork mode; its interpreter must carry exactly the versions of
+`config/compute/locks/python.lock` (or build its locked environment from that lock). To change the libraries, edit `locks/python.in`, run
+`python tools/python_lock.py config/compute/locks/python.in --out config/compute/locks/python.lock` on a machine that reaches the index,
+and install or build the new versions; until then every Python run is refused, naming each package that differs. On Windows it stays off.
+
 **Built: steps C1 to C3, and the reactive connectors R1 to R4 that send work to the pools ([section 11](#11-reactive-connectors)).**
 Pools, workers, transport, limits, fan-out, environments and approval. The pricer interface, QLRisk and the QuantLib Java worker (steps
 C4 to C6) and the reactive connectors' cluster and screen-wide as-of (R5, R6) are still planned.
@@ -3716,7 +3759,7 @@ values the next time it loads:
 
 ```yaml
 lakes:
-  - root: data/delta
+  - root: data/delta/demo
     domains: ["*"]
     keep-business-days: null      # the lake's defaults ...
     vacuum-hours: 168
@@ -3761,7 +3804,7 @@ no other scheduler for this, and no crontab entry is needed. To use cron instead
 
 ```yaml
 lakes:
-  - root: data/delta
+  - root: data/delta/demo
     schedules:
       - {name: nightly, when: "30 2 * * 2,3,4,5,6", tables: [trading/trade_endur], paused: false, by: admin, roles: [admin]}
       - {name: after-load, when: after-build, tables: [trading/trade_calypso], paused: true, by: admin, roles: [admin]}

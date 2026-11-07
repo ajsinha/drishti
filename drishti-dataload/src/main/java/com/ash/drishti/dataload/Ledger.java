@@ -39,7 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The ledger (DATALOAD_INBOX.md section 2): one JSON line per step a file takes ({@code claimed}, {@code duplicate}, {@code loaded},
+ * The ledger (DATA_LAKE_GUIDE.md): one JSON line per step a file takes ({@code claimed}, {@code duplicate}, {@code loaded},
  * {@code failed}, {@code returned}, {@code locked}), in {@code ledger/ledger-<yyyy-MM>.jsonl}, appended and never rewritten. A line is
  * written and forced to disk before the step it records is acted on, so a restart reads where every file stood (section 7); the SHA-256 of
  * every loaded file finds the same file dropped again (section 4.5). Kept when the outbox is cleaned.
@@ -56,9 +56,9 @@ public final class Ledger {
     public static final String FAILED = "failed";
     public static final String RETURNED = "returned";
     public static final String LOCKED = "locked";
-    /** An empty file or archive: nothing written, no business date touched (DATA_LOAD_RULES.md section 4.3). */
+    /** An empty file or archive: nothing written, no business date touched (DATA_LAKE_GUIDE.md). */
     public static final String IGNORED = "ignored";
-    /** An archive whose load failed part-way: the tables it had committed undone (DATA_LOAD_RULES.md section 4.5). */
+    /** An archive whose load failed part-way: the tables it had committed undone (DATA_LAKE_GUIDE.md). */
     public static final String ROLLED_BACK = "rolled back";
 
     private final Path dir;
@@ -202,6 +202,43 @@ public final class Ledger {
             }
         }
         return out;
+    }
+
+    /**
+     * The {@code loaded} line of load {@code id} in the ledger in {@code dir} (DATA_LAKE_GUIDE.md section 5.5), newest first, or null: the
+     * line whose {@code loads} names the id, an archive's {@code route.loadId}, or (a line without {@code loads}) the line whose
+     * {@code loaderRun} is the id's run ({@code <run>.<n>}). Its {@code route.lake} is the lake the load wrote into.
+     */
+    public static JsonNode loadedLine(Path dir, String id) throws IOException {
+        if (id == null || id.isBlank() || !Files.isDirectory(dir)) {
+            return null;
+        }
+        int dot = id.lastIndexOf('.');
+        String run = dot > 0 ? id.substring(0, dot) : id;
+        List<Path> files = new ArrayList<>();
+        try (DirectoryStream<Path> ds = Files.newDirectoryStream(dir, "ledger-*.jsonl")) {
+            ds.forEach(files::add);
+        }
+        files.sort((a, b) -> b.compareTo(a));
+        for (Path f : files) {
+            List<String> lines = Files.readAllLines(f, StandardCharsets.UTF_8);
+            for (int i = lines.size() - 1; i >= 0; i--) {
+                if (!lines.get(i).contains(run)) {
+                    continue;                                   // cheap: only lines naming the run are parsed
+                }
+                JsonNode n;
+                try {
+                    n = JSON.readTree(lines.get(i));
+                } catch (IOException e) {
+                    continue;                                   // a line cut short: skipped, as when reading
+                }
+                if (LOADED.equals(n.path("outcome").asText()) && (n.path("loads").has(id) || id.equals(n.path("route").path("loadId").asText(null))
+                        || (!n.has("loads") && run.equals(n.path("loaderRun").asText(null))))) {
+                    return n;
+                }
+            }
+        }
+        return null;
     }
 
     /** A file's SHA-256, read as a stream (any size). */

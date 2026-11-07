@@ -41,18 +41,6 @@ def app_with(backend):
 
 
 # ---- task 3: the calculation UI ---------------------------------------------------------------------------------------------
-def test_the_model_designer_has_the_calculations_tab_and_its_script():
-    page = (CONSOLE / "web/templates/bi/model_designer.html").read_text(encoding="utf-8")
-    assert 'data-tab="calc"' in page and "data-calc-pane" in page and "/static/js/drishti_bi-model-calc.js" in page
-    calc = (JS / "drishti_bi-model-calc.js").read_text(encoding="utf-8")
-    for fn in ("share_of(", "calc(", "closing(", "opening(", "avg_over(", "fiscal_ytd(", "as_of(", "param."):
-        assert fn in calc, fn
-    for key in ("'calc-groups'", "doc.parameters", "doc.calendars", "doc.fx", "'fiscal-year-start'", "SELECTED"):
-        assert key in calc, key
-    tabs = (JS / "drishti_bi-model-tabs.js").read_text(encoding="utf-8")
-    assert "data-m-via" in tabs and "doc.measures[name].via" in tabs and "M.quickMeasure" in tabs
-    editor = (JS / "drishti_bi-expr-editor.js").read_text(encoding="utf-8")
-    assert "opts.names" in editor and "opts.keywordValues" in editor and "'ALL'" in editor
 
 
 def test_the_calculation_keys_are_written_as_the_server_reads_them():
@@ -116,8 +104,8 @@ def test_every_consumer_has_the_time_picker_the_chip_and_follows_pushed_answers(
     c = app_with(BiBackend())
     report = c.get("/bi/r/r1").text
     board = c.get("/bi/b/b1").text
-    explore = c.get("/bi/explore").text
-    for page in (report, board, explore):
+    notebook = c.get("/bi/notebook").text
+    for page in (report, board, notebook):
         assert "data-time-mode" in page and 'value="asof"' in page and 'value="window"' in page and "/static/js/drishti_bi-consume.js" in page
     assert "data-param-bar" in report
     consume = (JS / "drishti_bi-consume.js").read_text(encoding="utf-8")
@@ -161,11 +149,14 @@ def test_the_usage_page_for_a_bi_administrator():
         async def bi(self, method, path, ident, body=None, **params):
             if path == "/engine":
                 return {"engine": "duckdb", "live": {}}
+            if path == "/python/runtime":
+                return {"runs": False, "why": "compute is off", "pool": "python", "isolation": "strict", "pins": {"pandas": "3.0.6"}, "calls": 0, "failures": 0}
             return await super().bi(method, path, ident, body, **params)
 
     c = app_with(Backend())
     page = c.get("/admin/bi/usage")
-    assert page.status_code == 200 and 'data-usage-model="trades-basic@1"' in page.text and "100.0 %" in page.text and "Fork-server" in page.text
+    assert page.status_code == 200 and 'data-usage-model="trades-basic@1"' in page.text and "100.0 %" in page.text
+    assert "compute pool <b>python</b>" in page.text and "compute is off" in page.text and "pandas 3.0.6" in page.text   # Python is the server's
     assert "data-usage-link" in c.get("/admin/bi").text
     reader = app_with(BiBackend(("bi",)))
     assert reader.get("/admin/bi/usage").status_code == 403

@@ -32,10 +32,6 @@
     return B.askWorkspace(anchor, 'Start the report', 'Start the report in').then((ws) => B.busy(anchor, () => B.layer.post('report', Object.assign({ title: title, workspace: ws }, target))))
       .then((r) => { window.location.href = r.href; }).catch((e) => { if (!e.cancelled) { B.near(anchor, e.message, true); } });
   }
-  function makeModel(anchor, from, title) {
-    return B.askWorkspace(anchor, 'Make the model', 'Make the model in').then((ws) => B.busy(anchor, () => B.layer.post('new', { from: from, title: title, workspace: ws })))
-      .then((r) => { window.location.href = r.href; }).catch((e) => { if (!e.cancelled) { B.near(anchor, e.message, true); } });
-  }
 
   // ---- the start page ------------------------------------------------------------------------------------------------
   function startPage(root) {
@@ -43,7 +39,7 @@
     function card(d, kind) {
       const use = h('button', { type: 'button', class: 'btn-pill btn-accent bi-small', 'data-use': d.name, text: 'Use' });
       use.addEventListener('click', () => startReport(use, kind === 'model' ? { model: d.query || d.name + '@1' } : { dataset: d.name }, d.title + ' report'));
-      const open = kind === 'model' ? (d.kind === 'compat' ? '/bi/d/' + B.id2path(d.id) : '/bi/md/' + B.id2path(d.id)) : '/bi/ds/' + encodeURIComponent(kind === 'pack' ? d.name : d.id);
+      const open = kind === 'model' ? '/build/tables?kind=model&item=' + B.id2path(d.id) : '/bi/ds/' + encodeURIComponent(kind === 'pack' ? d.name : d.id);
       const meta = kind === 'pack' ? d.pack + ' pack · ' + (MODE[d.mode] || d.mode) + ' · ' + d.columns + ' columns' : kind === 'model' ? (d.kind === 'compat' ? 'dataset (version 1, read as a model)' : 'model ' + (d.version || '')) + ' · ' + (d.status || '') : (d.status || '');
       return h('article', { class: 'bi-card', 'data-layer-card': d.name, 'data-kind': kind, 'data-search': (d.name + ' ' + d.title + ' ' + (d.pack || '') + ' ' + (d.kind || '')).toLowerCase() },
         h('h3', {}, h('a', { href: open, text: d.title })),
@@ -78,25 +74,6 @@
     }
     q('input[data-search]').addEventListener('input', draw);
     q('[data-show-samples]').addEventListener('change', draw);
-    // New model: a title, a workspace, the datasets to start with
-    const form = q('[data-new-model-form]');
-    q('[data-new-model]').addEventListener('click', () => {
-      form.hidden = false;
-      B.fillWorkspaces(q('[data-nm-ws]')).catch(() => {});
-      const picks = B.clear(q('[data-nm-picks]'));
-      all.packs.concat(all.items).forEach((d) => picks.appendChild(h('label', { class: 'bi-checkrow', 'data-search': (d.name + ' ' + d.title).toLowerCase() },
-        h('input', { type: 'checkbox', value: d.kind && !d.pack ? d.id : d.name, 'data-nm-pick': d.name }), ' ' + d.title + ' ', h('small', { class: 'text-muted-d mono', text: d.name }))));
-      q('[data-nm-title]').focus();
-    });
-    q('[data-nm-search]').addEventListener('input', (e) => { const t = e.target.value.toLowerCase(); B.qa('[data-nm-picks] label', canvas).forEach((l) => { l.hidden = !!t && l.getAttribute('data-search').indexOf(t) < 0; }); });
-    q('[data-nm-cancel]').addEventListener('click', () => { form.hidden = true; });
-    q('[data-nm-go]').addEventListener('click', () => {
-      const go = q('[data-nm-go]');
-      const title = q('[data-nm-title]').value.trim();
-      if (!title) { B.near(go, 'Give the model a title.', true); q('[data-nm-title]').focus(); return; }
-      const datasets = B.qa('[data-nm-pick]', canvas).filter((c) => c.checked).map((c) => c.value);
-      B.busy(go, () => B.layer.post('new', { title, workspace: q('[data-nm-ws]').value || 'me', datasets })).then((r) => { window.location.href = r.href; }).catch((e) => B.near(go, e.message, true));
-    });
     B.layer.get('datasets').then((d) => {
       all = { packs: d.packs || [], items: (d.items || []).map((x) => Object.assign({ kind: 'implicit' }, x)), models: d.models || [] };
       draw();
@@ -142,9 +119,7 @@
       q('[data-yaml-note]').textContent = i.generated ? 'Written by ' + (PRODUCT || 'the server') + ' from the pack; read-only. To change it, Narrow it: a dataset of your own that extends this one.'
         : i.readOnly ? 'The dataset as stored; you may not change it here (a shipped file, or no edit right in its workspace). Narrow it to make your own.' : 'The dataset as stored.';
       if (B.layerOps && i.item) { B.layerOps(root, Object.assign({}, i, { hasTests: /^tests:/m.test(d.yaml || '') })); }
-      q('[data-narrow]').href = '/bi/datasets/new-layer?extends=' + encodeURIComponent(i.name);
       q('[data-use]').addEventListener('click', (e) => startReport(e.currentTarget, { dataset: i.name }, i.title + ' report'));
-      q('[data-make-model]').addEventListener('click', (e) => makeModel(e.currentTarget, i.item || i.name, i.title + ' model'));
       root.setAttribute('data-ready', 'yes');
     }).catch((e) => { say(e.message, true); root.setAttribute('data-ready', 'error'); });
   }

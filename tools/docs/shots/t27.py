@@ -25,12 +25,14 @@ from __future__ import annotations
 import os
 
 from _tut import OUT, go
+import lakeconfig
+from shotlib import DEMO_ROOT_ENV
 from shotlib import ROOT, Ctx, register
 
 shot = register("t27", OUT / "t27")
 # the lake `drishti.py lake demo` built (DRISHTI_SHOTS_DELTA_ROOT names another), read with the demo connector off
 SERVER_ENV = {"DRISHTI_SECURITY_ENABLED": "false", "DRISHTI_DEMO_ENABLED": "false",
-              "DRISHTI_DELTA_ROOT": os.environ.get("DRISHTI_SHOTS_DELTA_ROOT", str(ROOT / "data" / "delta")),
+              DEMO_ROOT_ENV: os.environ.get("DRISHTI_SHOTS_DELTA_ROOT") or lakeconfig.root("demo"),
               "DRISHTI_PACKS": "core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif"}
 
 

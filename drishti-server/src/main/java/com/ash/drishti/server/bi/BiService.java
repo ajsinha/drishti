@@ -58,7 +58,7 @@ import java.util.stream.Collectors;
  */
 public final class BiService {
 
-    public static final List<String> KINDS = List.of("dataset", "model", "report", "board", "notebook", "python", "theme");
+    public static final List<String> KINDS = List.of("dataset", "model", "report", "board", "notebook", "python", "theme", "table");
     public static final List<String> ENDORSEMENTS = List.of("none", "promoted", "certified");
     private static final Pattern SLUG = Pattern.compile("[a-z][a-z0-9-]{1,47}");
     private static final Pattern TAG = Pattern.compile("[A-Za-z0-9][A-Za-z0-9 ._:/-]{0,39}");
@@ -517,7 +517,7 @@ public final class BiService {
         }
         Instant now = Instant.now();
         String title = text(body, "title", 200, true);
-        String content = com.ash.drishti.server.bi.layer.LayerBodies.onSave(kind, checkedBody(body.get("body")));
+        String content = checkedBody(body.get("body"));
         String asReport = "board".equals(kind) ? BoardConverter.onCreate(content, title) : null;      // 2.4.0 (R7): a board is a report with board pages
         if (asReport != null) {
             kind = "report";
@@ -623,14 +623,14 @@ public final class BiService {
     /** The published dataset items the caller may see. */
     public List<BiStore.Item> datasetItems(Principal p) {
         open(p);
-        return catalogueItems(p).stream().filter(i -> "dataset".equals(i.kind())).toList();
+        return catalogueItems(p).stream().filter(i -> Set.of("dataset", "table").contains(i.kind())).toList();
     }
 
     /** The caller's own unpublished datasets (in their private workspace, or in a workspace they belong to): listed, greyed with the reason, never usable by a report until published. */
     public List<BiStore.Item> draftDatasets(Principal p) {
         open(p);
         Set<String> mine = myWorkspaces(p);
-        return store.items().stream().filter(i -> "dataset".equals(i.kind()) && !i.isPublished() && (i.owner().equals(p.user()) || mine.contains(i.workspace()))).toList();
+        return store.items().stream().filter(i -> Set.of("dataset", "table").contains(i.kind()) && !i.isPublished() && (i.owner().equals(p.user()) || mine.contains(i.workspace()))).toList();
     }
 
     /** The published report items the caller may see (what a board's tile can name). */
@@ -654,7 +654,7 @@ public final class BiService {
     public List<BiStore.Item> allDatasets() {
         List<BiStore.Item> all = new ArrayList<>(store.published());
         all.addAll(folder.items());
-        return all.stream().filter(i -> "dataset".equals(i.kind())).toList();
+        return all.stream().filter(i -> Set.of("dataset", "table").contains(i.kind())).toList();
     }
 
     /** The dataset item a source of a composed dataset names (catalogue id, file name, the dataset's name or title): published before draft; empty when there is none. */
@@ -677,12 +677,11 @@ public final class BiService {
 
     private volatile java.util.function.Function<String, String> pythonCheck;
     private volatile java.util.function.BiFunction<Principal, BiStore.Item, List<String>> testGate;
+    private volatile java.util.function.BiFunction<Principal, BiStore.Item, List<String>> pythonTestGate;
     private volatile java.util.function.BiFunction<Principal, BiStore.Item, List<String>> drawCheck;
 
     /** Registers the check that lists why a report cannot be drawn (its dataset, a field it names); propose, approve and publish refuse it unless a bi-admin forces. */
-    public void drawCheck(java.util.function.BiFunction<Principal, BiStore.Item, List<String>> check) {
-        this.drawCheck = check;
-    }
+    public void drawCheck(java.util.function.BiFunction<Principal, BiStore.Item, List<String>> check) { this.drawCheck = check; }
 
     private List<String> undrawable(Principal p, BiStore.Item i, boolean force, String what) {
         if (drawCheck == null || !"report".equals(i.kind()) || i.body().isBlank()) {
@@ -701,11 +700,12 @@ public final class BiService {
     }
 
     /** Set once by the expected-values runner: what publishing a report or dataset runs its tests with (a line per test that fails or cannot run; empty when all pass). */
-    public void testGate(java.util.function.BiFunction<Principal, BiStore.Item, List<String>> gate) {
-        this.testGate = gate;
-    }
+    public void testGate(java.util.function.BiFunction<Principal, BiStore.Item, List<String>> gate) { this.testGate = gate; }
+    /** Registers the run of a Python item's own tests on the compute pool (PythonTestRuns): publishing one with a failing test is refused unless a bi-admin forces. */
+    public void pythonTestGate(java.util.function.BiFunction<Principal, BiStore.Item, List<String>> gate) { this.pythonTestGate = gate; }
 
     private volatile java.util.function.BiFunction<Principal, BiStore.Item, String> layerCheck;
+    private volatile java.util.function.BiConsumer<Principal, BiStore.Item> tablesCheck; public void tablesCheck(java.util.function.BiConsumer<Principal, BiStore.Item> c) { this.tablesCheck = c; }   // the table layer's editors (EDITORS.md): its checks refuse in words
 
     /**
      * Set once by the model catalogue: what publishing a data model or a {@code rachana: 2} dataset runs (Check, the contract's versioning, the security
@@ -821,7 +821,7 @@ public final class BiService {
         if (base != null && !String.valueOf(base).isBlank() && !String.valueOf(base).equals(i.updatedAt() == null ? "" : i.updatedAt().toString())) {
             throw new DrishtiException(ErrorCode.BI_STALE, "'" + i.title() + "' was saved by " + i.updatedBy() + " since you opened it: reload it, save yours as a copy, or overwrite");
         }
-        String newBody = body.containsKey("body") ? com.ash.drishti.server.bi.layer.LayerBodies.onSave(i.kind(), checkedBody(body.get("body"))) : i.body();
+        String newBody = body.containsKey("body") ? checkedBody(body.get("body")) : i.body();
         String newTitle = body.containsKey("title") ? text(body, "title", 200, true) : i.title();
         if (BiTitles.KINDS.contains(i.kind())) {                                       // one title: the item's and the body's agree after every save
             String inBody = BiTitles.of(newBody);
@@ -1023,11 +1023,11 @@ public final class BiService {
     }
 
     private Map<String, Object> publishNow(Principal p, BiStore.Item i, String note, boolean force, boolean applyRenames) {
-        if (layerCheck != null && ("model".equals(i.kind()) || "dataset".equals(i.kind()) && com.ash.drishti.server.bi.layer.DatasetDefParser.isVersion2(i.body()))) {
+        boolean layer = tablesCheck != null && com.ash.drishti.server.bi.layer.LayerBodies.tableLayer(i.kind(), i.body());
+        if (layer) { tablesCheck.accept(p, i); }                                     // the layer's checks; a model then passes its publish gate (name, safeguard, contract)
+        if (layerCheck != null && ("model".equals(i.kind()) || !layer && "dataset".equals(i.kind()) && com.ash.drishti.server.bi.layer.DatasetDefParser.isTable(i.body()))) {
             String noted = layerCheck.apply(p, i);                                  // the model layer's checks, contract and security safeguard: refuses with its code
-            if (!noted.isEmpty()) {
-                audit.record(p.user(), "bi-model-may-see-all", i.id(), noted);
-            }
+            if (!noted.isEmpty()) { audit.record(p.user(), "bi-model-may-see-all", i.id(), noted); }
         } else if ("dataset".equals(i.kind()) && !i.body().isBlank()) {
             com.ash.drishti.server.bi.dataset.DatasetParser.Result r = com.ash.drishti.server.bi.dataset.DatasetParser.parse(i.body());
             if (!r.ok()) {
@@ -1056,8 +1056,9 @@ public final class BiService {
         List<String> undrawn = undrawable(p, i, force, "published");
         // the expected values the item declares (docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 14): a failing one stops a publish unless a bi-admin forces it
         List<String> failing = List.of();
-        if (testGate != null && gov.refuseFailingTests() && Set.of("report", "dataset", "model").contains(i.kind()) && i.body().contains("tests:")) {
-            failing = testGate.apply(p, i);
+        var gate = "python".equals(i.kind()) ? pythonTestGate : gov.refuseFailingTests() && Set.of("report", "table", "dataset", "model").contains(i.kind()) ? testGate : null;
+        if (gate != null && i.body().contains("tests:")) {
+            failing = gate.apply(p, i);
             if (!failing.isEmpty()) {
                 if (!force) {
                     throw new DrishtiException(ErrorCode.BI_TESTS, "'" + i.title() + "' cannot be published: " + failing.size() + " of its tests " + (failing.size() == 1 ? "fails" : "fail") + " ("
@@ -1070,7 +1071,7 @@ public final class BiService {
         // what this publish does to the reports that read a dataset (docs/guides/BI_GUIDE.md, Impact)
         ImpactAnalyzer.Result damage = null;
         ImpactAnalyzer.Result renaming = null;
-        if ("dataset".equals(i.kind()) && i.isPublished()) {
+        if (BiGovernance.isTable(i.kind()) && i.isPublished()) {
             damage = impact.impact(i, impact.publishedBody(i), i.body());
             if (applyRenames && !damage.change().renames().isEmpty()) {                       // the renames are applied to the reports after the checks below pass
                 renaming = damage;

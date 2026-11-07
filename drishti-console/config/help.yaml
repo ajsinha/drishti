@@ -90,7 +90,6 @@ sections:
         words: [BI]
         guides:
           - { slug: bi-guide, doc: guides/BI_GUIDE.md, title: "Business intelligence (Rupaka)", icon: bar-chart-line, summary: "BI <GO> and the BI menu, the rail (Models, Designer, Analyse, Transforms, Python console), BI Studio (Explorer, tabs, Problems and Query), the catalogue by kind (Reports, Boards, Models, Datasets, Python, All), workspaces with roles, publish and review, certify, shipped files and BI settings; what is built and what is not." }
-          - { slug: bi-language-reference, doc: guides/BI_LANGUAGE_REFERENCE.md, title: "BI languages: expressions (DEL) and {product} SQL", icon: braces, summary: "The Python-like language of measures, derived columns, filters and row rules (scopes, grammar, every function, what is refused, errors, forty recipes that run on the demo lake), and read-only SQL over one model (tables are the model's aliases, MEASURE('name'), joins along the model's relationships, how a statement compiles, limits)." }
       - title: "Pivot"
         words: [PIVOT, MCUBE]
         guides:
@@ -120,12 +119,17 @@ sections:
           - { slug: connector-tls, doc: connectors/TLS.md, title: "TLS and proxy", icon: lock, summary: "The shared tls settings (private CA, PEM, PKCS12 and JKS, mutual TLS, expiry, rotation) and the outbound HTTP proxy for connectors, AI providers and MCP servers." }
       - title: "Loads and lakes"
         guides:
-          - { slug: data-guide, pair: docs-tutorials-36-load-files-with-the-data-inbox, doc: guides/DATA_GUIDE.md, title: "Data guide: loads, formats, lakes, external data, the Data view, the inbox", icon: cloud-arrow-down, summary: "Your ETL loads the data; {product} acts on it: one call (API or drishti.py data landed) marks a batch landed, the Data loads page, expectations and late data; JSON Lines as the standard and Arrow where it pays; reading Databricks Delta tables or Apache Iceberg by configuration; every external source of every pack (World Bank, IMF, UNDP, CIA Factbook, Yahoo Finance, SEC, GLEIF ...) with its licence, the internal-only rule and one refresh script per pack, with worked examples; and a pack from JSON Schema files or a folder of JSON Lines; and taking data out: the Data view (DATA), every dataset with its dates, a simple selection (columns and filter lines, not SQL) and a day downloaded as .jsonl.gz, streamed and audited." }
+          - { slug: data-guide, pair: docs-tutorials-36-load-files-with-the-data-inbox, doc: guides/DATA_GUIDE.md, title: "Data guide: connectors, the load signal, formats, external data, Export data", icon: cloud-arrow-down, summary: "Your ETL loads the data; {product} acts on it: one call (API or drishti.py data landed) marks a batch landed, the Data loads page, expectations and late data; JSON Lines as the standard and Arrow where it pays; every external source of every pack (World Bank, IMF, UNDP, CIA Factbook, Yahoo Finance, SEC, GLEIF ...) with its licence, the internal-only rule and one refresh script per pack; a pack from JSON Schema files or a folder of JSON Lines; and taking data out: Export data (EXPORT), every dataset with its dates, a simple selection and a day downloaded as .jsonl.gz, streamed and audited. Lakes, the data inbox and loading are the Data lake and data load guide." }
           - { slug: docs-tutorials-36-load-files-with-the-data-inbox, doc: tutorials/36-load-files-with-the-data-inbox.md, title: "Data inbox tutorial: load files automatically", icon: mortarboard, kind: tutorial, summary: "Eight hands-on steps, each in the UI, on the command line (drishti.py dataload status|run|retry) and in YAML: turn the data inbox on, write a routing rule, drop a day of trades with its .ready marker, watch it load on Admin -> Data loads -> Inbox, release a batch with ready.all, a failed file fixed and retried, a duplicate skipped, the outbox reports and the ledger." }
-          - { slug: lake-guide, pair: docs-tutorials-34-one-file-per-lake, doc: guides/LAKE_GUIDE.md, title: "Lake guide: one file per lake", icon: database, summary: "config/lakes/<lake>.yaml says where a lake is and every table in it (path, partitions after business_date, promoted columns, vectors, id, date, latest-by, replace or append, layout, retention); the loader, the data inbox, lake build, the demo lakes and the Delta and Iceberg connectors all refer to it. Real examples (the demo lake, Delta on S3, Iceberg over REST, an in-memory store), append vs replace with batch ids, the checks (drishti.py lake check), Admin -> Lakes, and migrating an older installation step by step (drishti.py lake migrate-config)." }
+          - { slug: data-lake-guide, pair: docs-tutorials-45-load-your-own-data-into-a-new-lake, doc: guides/DATA_LAKE_GUIDE.md, title: "Data lake and data load guide", icon: database, summary: "One home for lakes and loading, with real examples: what a lake is (config/lakes/<lake>.yaml, each lake in its own folder data/delta/<lake>/), every key of the lake file with a worked risklake.yaml (trades, positions, scenario PVs, VaR nodes), why few partition columns (the folder-explosion arithmetic) and what to use instead, the file layout and its rules of thumb, retention and maintenance; loading three ways (the data inbox, drishti.py lake build, the parallel loader); every key of the .ready file including lake:, routing rules, business dates, replace and append, repeats and undo; pointing the connectors at a lake, the demo lake's one-time move, checking a load and troubleshooting, sizing a day of 1M trades and 50K positions x 509 scenarios; and reading a Databricks or Iceberg lakehouse (built and planned)." }
+          - { slug: docs-tutorials-45-load-your-own-data-into-a-new-lake, doc: tutorials/45-load-your-own-data-into-a-new-lake.md, title: "Tutorial: load your own data into a new lake", icon: mortarboard, kind: tutorial, summary: "Seven hands-on steps, each in the UI, on the command line and in YAML: write config/lakes/risklake.yaml, route files to it, drop a day of trades, scenario PVs and VaR nodes with full .ready files, watch them load, point the connectors at risklake and restart, check and undo a load, and go back to the demo." }
           - { slug: docs-tutorials-34-one-file-per-lake, doc: tutorials/34-one-file-per-lake.md, title: "Lake tutorial: one file per lake", icon: mortarboard, kind: tutorial, summary: "Six hands-on steps: read the demo lake's file, see a connector name it, load a day through it and watch a contradicting --partition-by refused, add an append table and load one batch twice, check the lake files against the tables, migrate an older connector file." }
           - { slug: external-data, doc: guides/EXTERNAL_DATA.md, title: "External data", icon: cloud-download, summary: "Every external source of every pack (World Bank, IMF, UNDP, CIA Factbook, Yahoo Finance, Google News, ECB, US Treasury, NY Fed, SEC EDGAR, Wikidata, Nasdaq Trader, GLEIF): where it comes from, its licence, which are internal only (IMF, Yahoo), the refresh script of each pack with worked examples of status, --dry-run and refresh on Linux and Windows, what it writes, checking and offline use." }
           - { slug: data-samples, doc: contracts/samples/README.md, title: "Test data samples, field by field", icon: filetype-json, summary: "One page per data type a bank produces (trades by system, PV and P&L vectors in every form, scenario sets and FX, hierarchies, exposure paths, reference, market and counterparty data) and each public source: a real record as folded JSON, every field explained from its data contract, the fields of other rows, and a checklist for the production query that must emit it; the kinds {product} computes are listed apart." }
+      - title: "Virtual tables"
+        guides:
+          - { slug: tables-guide, pair: docs-tutorials-44-virtual-tables-and-models, doc: guides/TABLES_GUIDE.md, title: "Virtual tables and models", icon: table, summary: "Tables defined once over any kind, lake table, query or model (grain, paths, columns, keys, rules and masks), models of them with measures, materialisation (none, on-load, live), the checks, preview and lineage, and tables migrate: BI's datasets and models into the layer, DEL into Rachana, the null rule kept." }
+          - { slug: docs-tutorials-44-virtual-tables-and-models, doc: tutorials/44-virtual-tables-and-models.md, title: "Virtual tables tutorial: trade legs as a table, a model, BI migrated", icon: mortarboard, kind: tutorial, summary: "Six steps, each with the YAML, the command line and the screen: the legs of the trades as a table, its rows over samples, a column in dollars and a looked-up desk name, rules per reader, a model over it, and BI's samples migrated with a dry run first." }
       - title: "In-memory lake"
         guides:
           - { slug: in-memory-lake-guide, engine: memory-lake, pair: docs-tutorials-31-news-in-memory-only, doc: guides/IN_MEMORY_LAKE_GUIDE.md, title: "In-memory lake: data that never touches a disk", icon: memory, summary: "Feeds that may not, by contract, be saved on a disk, held as Delta tables in the server's memory (mem://) under a hard cap: setting one up, the replenish jobs (URL, file, connector or the news connector by ids; replace, append, merge; schedule, signal, warm-up, refill), the eviction ladder, automated compaction, what the guard refuses (DRS-5219) and allows (downloads), the direct-memory limit and host checks, the owner node in a cluster, Admin -> Lakes and Health, every setting, measured memory." }
@@ -221,6 +225,10 @@ sections:
 # slug or slug#anchor. Documents that left the list (architecture, the per-plugin connector pages, the runbooks) are still in
 # the help centre at their path slug, so the old addresses keep working.
 moved:
+  lake-guide: data-lake-guide   # docs/guides/DATA_LAKE_GUIDE.md folded into DATA_LAKE_GUIDE.md (2.9.11.d)
+  docs-guides-lake-guide: data-lake-guide
+  docs-architecture-data-load-rules: data-lake-guide#5-routing-business-dates-modes-repeats-and-undo   # DATA_LAKE_GUIDE.md folded into DATA_LAKE_GUIDE.md (2.9.11.d)
+  docs-architecture-dataload-inbox: data-lake-guide#31-the-data-inbox   # DATA_LAKE_GUIDE.md folded into DATA_LAKE_GUIDE.md (2.9.11.d)
   docs-guides-public-data: external-data   # docs/guides/PUBLIC_DATA.md, now EXTERNAL_DATA.md, listed as External data (2.9.1, 2.9.7)
   fact-of-the-day: user-guide#home-the-fact-of-the-day   # Home's Did you know tile (2.9.3), a section of the user guide (the page cap stands)
   public-data: external-data
@@ -257,7 +265,7 @@ moved:
   swin: docs-guides-var-guide#189-choosing-the-stress-window
   databricks: data-guide#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg                                              # Databricks Delta Lake or Apache Iceberg
   transforms: bi-guide#17-data-prep-the-transform-editor             # BI -> Transforms, /bi/transform (2.4.0)
-  python-console: user-guide#16-the-browser-python-console                  # BI -> Python console, /pyconsole (2.4.0)
+  notebook: user-guide#the-notebook                                        # BI -> Notebook, /bi/notebook: SQL on the server, Python on its compute pool
   themes: bi-guide#52-themes                                               # report themes and the theme designer (2.4.0)
   console-themes: user-guide#themes                                       # the console's ten themes (three Terminal hues in 2.6.0)
   statements: bi-guide#24-statements-paginated-reports-page-exact-one-per-reader                                      # statement pages, paginated reports, bursting (2.6.0; docs/guides/BI_GUIDE.md)
@@ -388,7 +396,7 @@ moved:
   docs-architecture-write-back: write-back#16-the-design-and-its-reasons   # architecture/WRITE_BACK.md merged into guides/WRITE_BACK.md (2.9.7)
   docs-guides-write-back-guide: write-back   # guides/WRITE_BACK_GUIDE.md renamed guides/WRITE_BACK.md (2.9.7)
   docs-guides-write-back: write-back   # guides/WRITE_BACK.md is listed as Write-back (2.9.7)
-  analyse: user-guide#analyse-slice-sql-and-python   # guides/ANALYSE.md merged into guides/USER_GUIDE.md (2.9.7)
+  analyse: user-guide#the-notebook   # guides/ANALYSE.md, later Analyse: now the Notebook
   python-calc: user-guide#calc-python-on-any-view   # guides/PYTHON_CALC.md merged into guides/USER_GUIDE.md (2.9.7)
   query-by-form: user-guide#query-by-form   # guides/QUERY_BY_FORM.md merged into guides/USER_GUIDE.md (2.9.7)
   ai-providers: ai#1-model-providers   # architecture/AI_PROVIDERS.md merged into admin/AI.md (2.9.7)
@@ -424,8 +432,8 @@ moved:
   docs-architecture-sutra-next: rachana-reference#sutra-next-fragments-events-children-sources-layout-and-forms   # architecture/SUTRA_NEXT.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
   docs-architecture-table-charts: rachana-reference#chart-any-table-the-design   # architecture/TABLE_CHARTS.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
   screen-designer: rachana-reference#screen-designer-and-the-build-workbench   # guides/SCREEN_DESIGNER.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
-  expressions: bi-language-reference#1-expressions-the-drishti-expression-language-del   # guides/EXPRESSIONS.md merged into guides/BI_LANGUAGE_REFERENCE.md (2.9.7)
-  sql: bi-language-reference#2-drishti-sql-read-only-sql-over-models   # guides/SQL.md merged into guides/BI_LANGUAGE_REFERENCE.md (2.9.7)
+  expressions: rachana-reference#rachana-el-expressions   # guides/EXPRESSIONS.md, then RACHANA_REFERENCE.md: BI's expressions are Rachana (2.9.11.d)
+  sql: api#drishti-sql-apiv1bisql   # guides/SQL.md, then API_GUIDE.md, Drishti SQL: Drishti SQL is in the API guide (2.9.11.d)
   bi-governance: bi-guide#32-publishing-and-governance-versions-review-certification-lineage-impact-environments   # guides/BI_GOVERNANCE.md merged into guides/BI_GUIDE.md (2.9.7)
   datasets: bi-guide#30-datasets-the-yaml-the-expression-language-and-the-security-rules   # guides/DATASETS.md merged into guides/BI_GUIDE.md (2.9.7)
   distribution: bi-guide#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding   # guides/DISTRIBUTION.md merged into guides/BI_GUIDE.md (2.9.7)
@@ -458,9 +466,11 @@ knowledge:
 
 # F1 opens the guide for the current screen.
 contextual:
-  mcube: docs-guides-mr-cube-guide   # the MR cube, MCUBE (F1 and its ?): the MR cube guide
+  mcube: docs-guides-mr-cube-guide   # the MR cube, MCUBE, the Pivot's preset mr (F1 and its ?): the MR cube guide
+  ccr-cube: docs-guides-pivot-guide#28-presets-the-risk-cubes   # the CCR cube, the Pivot's preset ccr (under construction): the presets section of the pivot guide
   landing: user-guide#home-the-fact-of-the-day
   bi: bi-guide
+  tables-editor: tables-guide#11-the-editors   # Build -> Tables & models (F1): the editors section of the tables guide
   terminal: user-guide
   view: user-guide
   studio: rachana-reference#screen-designer-and-the-build-workbench
@@ -499,9 +509,8 @@ contextual:
   play-simm: docs-guides-simm-guide#8-the-simm-playground-play-simm   # the SIMM Playground, PLAY SIMM
   func: user-management#functions-func-every-command-and-turning-one-on-or-off       # Functions, FUNC (F1 and its ?): the command directory and, for administrators, the switches
   datamap: user-guide#the-data-map   # the data map, DATAMAP (F1 and its ?): kinds, counts and joins checked against the data
-  data: user-guide#the-data-view     # the Data view, DATA (F1 and its ?): every dataset, a simple selection, a day as .jsonl.gz
+  data: user-guide#export-data     # Export data, EXPORT (DATA, its older word; F1 and its ?): every dataset, a simple selection, a day as .jsonl.gz
   bi-designer: bi-guide#26-bi-studio-authoring-as-one-product
   bi-theme-designer: bi-guide#52-themes
   bi-transform: bi-guide#17-data-prep-the-transform-editor
-  bi-pyconsole: user-guide#16-the-browser-python-console
-  bi-explore: user-guide#analyse-slice-sql-and-python
+  bi-notebook: user-guide#the-notebook

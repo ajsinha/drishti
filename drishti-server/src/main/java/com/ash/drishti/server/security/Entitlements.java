@@ -134,9 +134,9 @@ public final class Entitlements {
 
     /**
      * True when the principal holds the raw power (a role with {@code raw}, not through an embedded app), whatever
-     * {@code drishti.security.redact} names. What a column a BI dataset declares masked ({@code security.masked}) is decided by: such a
-     * column is masked for everyone without the raw power, even in an installation that masks no field of its own (a declared mask never
-     * silently stops applying).
+     * {@code drishti.security.redact} names. What a column a table or a dataset declares {@code masked} is decided by: such a column is
+     * masked for everyone without the raw power, even in an installation that masks no field of its own (a declared mask never silently
+     * stops applying).
      */
     public boolean rawPower(Principal p) {
         return p.embedApp() == null && has(p, com.ash.drishti.identity.RoleDefinition::raw);
@@ -258,6 +258,27 @@ public final class Entitlements {
      */
     public boolean masksValues(Principal p) {
         return masks(p) && props.maskCopies();
+    }
+
+    /**
+     * What a row rule may know of a person ({@code user.name}, {@code user.roles}, {@code user.desk}, {@code user.desks}, {@code user.email});
+     * set once at start from the user directory (SecurityConfiguration). Until then: the name and the roles.
+     */
+    private volatile java.util.function.Function<Principal, Map<String, List<Object>>> attributes = p -> Map.of("name", List.of(p.user()),
+            "roles", List.copyOf(p.roles()));
+
+    /** Sets how a person's attributes are found (once, at start). */
+    public void attributes(java.util.function.Function<Principal, Map<String, List<Object>>> f) {
+        this.attributes = f;
+    }
+
+    /**
+     * The person as the view pipeline sees them, one per request (multi-user isolation: passed with each call, never kept shared): their
+     * id, roles, attributes, whether nothing is masked for them, their masks and the kinds they may open.
+     */
+    public com.ash.drishti.engine.ViewerContext viewer(Principal p) {
+        return new com.ash.drishti.engine.ViewerContext(p.user(), java.util.Set.copyOf(p.roles()), attributes.apply(p), rawPower(p), redactor(p),
+                k -> mayOpen(p, k));
     }
 
     public UnaryOperator<DataNode> redactor(Principal p) {

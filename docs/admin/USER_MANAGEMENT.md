@@ -315,7 +315,7 @@ What an administrator needs to know:
 - **Where:** on views of kinds whose pack enables Calc (`python.enabled` in `pack.yaml`).
 - **What is kept:** each user's own snippets (`drishti_preference`, namespace `calc-snippets`, at most 50), deleted
   with the user. Reads are in the access log like any read (`drishti.columns()` as a `search`).
-- **Switched off for everyone:** `DRISHTI_CALC_ENABLED=false` (server and console).
+- **Switched on or off for everyone:** Calc is a Labs feature, off as shipped; `DRISHTI_LABS_CALC=true` (server and console) switches it on.
 
 ## Layouts
 

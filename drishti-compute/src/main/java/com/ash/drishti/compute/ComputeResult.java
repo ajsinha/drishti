@@ -32,14 +32,16 @@ import java.util.Map;
  * @param node the node that ran it
  * @param queuedMs time waiting for a worker
  * @param runMs time in the worker, inputs written to result read
+ * @param files named files the worker wrote under {@code out/}, as they are (a Parquet result)
  */
 public record ComputeResult(String requestId, List<Map<String, Object>> rows, Map<String, ArrowTable> tables, Map<String, Object> meta,
-        String worker, String node, long queuedMs, long runMs) {
+        String worker, String node, long queuedMs, long runMs, Map<String, byte[]> files) {
 
     public ComputeResult {
         rows = rows == null ? List.of() : List.copyOf(rows);
         tables = tables == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(tables));
         meta = meta == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(meta));
+        files = files == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(files));
     }
 
     public ArrowTable table(String name) {

@@ -20,31 +20,6 @@
    total with the diversification as its own bar), the Export menu downloads what the server writes. Nothing here aggregates. */
 (function () {
   "use strict";
-  /* Renderers up to 1.1.0 (static/render/1.1.0, published bytes) still draw a Table | Pivot switch on a table whose Sutra says pivot: and
-     start this script as their "pivot" module. Its Pivot is a thin entry into this screen: the panel's rows as the source, a new window
-     (the view stays as it was). Nothing is computed here. */
-  var compat = {
-    init: function (scope, options) {
-      var on = function (e) {
-        var b = e.target.closest && e.target.closest('[data-pv-tab="pivot"]');
-        if (!b) { return; }
-        e.preventDefault();
-        var box = b.closest('.pv-box, section.pnl') || b.parentNode;
-        var host = box && box.querySelector('[data-pivot]');
-        var spec = {};
-        try { spec = host ? JSON.parse(host.getAttribute('data-pivot') || '{}') : {}; } catch (err) { spec = {}; }
-        var view = b.closest('.view[data-view]') || b.closest('[data-kind]');   // the view's own kind and id, not a panel's kind
-        var panel = host ? host.getAttribute('data-pivot-panel') : null;
-        var source = spec.source || (view && panel ? 'panel/' + view.getAttribute('data-kind') + '/' + panel + '/' + view.getAttribute('data-id') : null);
-        if (!source) { return; }
-        var url = '/pivot?source=' + encodeURIComponent(source);
-        window.open(options && options.url ? options.url(url) : url, '_blank', 'noopener');
-      };
-      scope.addEventListener('click', on);
-      return { dispose: function () { scope.removeEventListener('click', on); } };
-    }
-  };
-  (window.drishtiModules = window.drishtiModules || {}).pivot = compat;
   var root = document.querySelector("[data-pivot-screen]");
   if (!root) { return; }
   var $ = function (s) { return root.querySelector(s); };
@@ -141,7 +116,7 @@
       list.forEach(function (p) {
         h.push('<div class="pv-sugg" title="' + esc(p.promote + "; or " + p.dataset) + '"><span class="mono">' + esc(p.path) + '</span> <span class="pv-sub">' + esc(String(p.uses)) + ' uses</span> '
           + (p.connector && p.grain === "entity" ? '<a class="pv-btn" href="/admin/connectors/' + encodeURIComponent(p.connector) + '">Promote</a> ' : "")
-          + '<a class="pv-btn" href="/bi/datasets/new">Add to dataset</a></div>');
+          + '<a class="pv-btn" href="/build/tables?new=table">Add to a table</a></div>');
       });
       $("[data-pv-fields]").insertAdjacentHTML("beforeend", h.join(""));
     }, function () { /* not an administrator: no suggestions */ });
@@ -541,7 +516,7 @@
         });
       }
       if (src) { return open(src, root.getAttribute("data-date")); }
-      $("[data-pv-meta]").textContent = "choose a source: a table of the Data view, or VaR";
+      $("[data-pv-meta]").textContent = "choose a source: a table (the datasets of Export data), or VaR";
     }).catch(function (e) { notice(e.message); });
   }
 

@@ -1,0 +1,60 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Resizable panels and columns (static/js/drishti_resize.js): the one handle every screen uses. Theme tokens only, so light and dark
+   both work. A thin line shows on hover, focus and while dragging; the hit area is wider than the line. */
+
+[data-resize="panel"]:not(.rz-handle) { display: none; }     /* declared, not yet bound: takes no room in its panel */
+.rz-handle { touch-action: none; user-select: none; -webkit-user-select: none; background: transparent; border: 0; padding: 0;
+  cursor: col-resize; z-index: 6; }
+.rz-handle.rz-y { cursor: row-resize; }
+.rz-handle::after { content: ""; position: absolute; background: var(--d-border); opacity: 0; border-radius: 2px; transition: opacity .15s, background-color .15s; }
+.rz-handle:not(.rz-y)::after { top: 0; bottom: 0; left: calc(50% - 1px); width: 2px; }
+.rz-handle.rz-y::after { left: 0; right: 0; top: calc(50% - 1px); height: 2px; }
+.rz-handle:hover::after, .rz-handle:focus-visible::after, .rz-handle.rz-dragging::after { opacity: 1; background: var(--d-accent); }
+.rz-handle:focus-visible { outline: none; }
+.rz-handle:focus-visible::after { box-shadow: 0 0 0 2px var(--d-accent-tint); }
+
+/* a handle placed by its screen's script (left/top set there) */
+.rz-free { position: absolute; }
+.rz-free:not(.rz-y) { width: 12px; }
+.rz-free.rz-y { height: 12px; }
+/* a handle on the right edge of its parent (a header cell, a design grid's column head) */
+.rz-edge { position: absolute; top: 0; right: -5px; width: 10px; height: 100%; }
+.rz-col { position: absolute; top: 0; right: 0; width: 8px; height: 100%; }
+.rz-handle.rz-edge::after { opacity: 1; top: 20%; bottom: 20%; }
+
+/* splitter: in the gutter beside the panel (its left set by the script), the layout's whole height */
+.rz-host { position: relative; }
+.rz-panel { position: absolute; top: 0; bottom: 0; width: 10px; }
+
+/* column resize */
+.rz-cell { position: relative; }
+.rz-col { z-index: 3; }
+table.rz-fixed { table-layout: fixed; max-width: none; }
+table.rz-fixed > thead > tr > th, table.rz-fixed > tbody > tr > td, table.rz-fixed > tr > th, table.rz-fixed > tr > td {
+  overflow: hidden; text-overflow: ellipsis; }
+
+/* while dragging: one cursor everywhere, no text selection, frames do not take the pointer */
+html[data-rz-dragging] { user-select: none; -webkit-user-select: none; }
+html[data-rz-dragging="x"], html[data-rz-dragging="x"] * { cursor: col-resize !important; }
+html[data-rz-dragging="y"], html[data-rz-dragging="y"] * { cursor: row-resize !important; }
+html[data-rz-dragging] iframe { pointer-events: none; }
+
+/* phones: no resizing; the single-column layouts stay */
+@media (max-width: 639.98px) {
+  .rz-handle { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .rz-handle::after { transition: none; } }

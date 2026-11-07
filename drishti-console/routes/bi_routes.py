@@ -122,19 +122,15 @@ async def datasets(request: Request):
 
 @router.get("/bi/d/{item:path}")
 async def dataset(request: Request, item: str):
-    """One 2.1 dataset (a live sample until wave W3): its model (tables, relationships, measures, row rules) and a query preview, drawn by ``drishti_bi-dataset.js``.
-    A ``rachana: 2`` dataset has its own page since 2.2 (grain, keys, columns with meanings, time mode, security): an old link is sent there."""
-    import re
+    """An old dataset link: every dataset is a table of the table layer now, with its own page (grain, keys, columns with meanings, time mode,
+    security)."""
     from fastapi.responses import RedirectResponse
     try:
         got = await request.app.state.backend.bi("GET", "/layer-datasets/" + quote(item, safe=":"), ident(request))
-        text = str((got or {}).get("yaml") or "")
-        name = re.search(r"^dataset:\s*([A-Za-z0-9_.-]+)", text, flags=re.M)
-        if re.search(r"^rachana:\s*2\b", text, flags=re.M) and name:
-            return RedirectResponse("/bi/ds/" + quote(str(got.get("id") or item), safe=":"), status_code=307)
+        item = str((got or {}).get("id") or item)
     except BackendError:
-        pass                                                        # not a dataset of the model layer (or not readable): the 2.1 page says what it can
-    return _page(request, "bi/dataset.html", "datasets", item=item)
+        pass                                                        # not readable: the table's page says so
+    return RedirectResponse("/bi/ds/" + quote(item, safe=":"), status_code=307)
 
 
 @router.get("/bi/r/{item}")
@@ -183,14 +179,15 @@ async def design(request: Request, draft: str):
 
 @router.get("/bi/m/{item:path}")
 async def model_view(request: Request, item: str):
-    """The Model view of a dataset item: tables as boxes, relationships as lines, the YAML beside them (two views of one draft)."""
-    return _page(request, "bi/model.html", "datasets", item=item)
+    """The old Model view's address (a 2.1 dataset's boxes and lines): the table's page; tables and models are written in Build › Tables & models."""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse("/bi/ds/" + quote(item, safe=":"), status_code=301)
 
 
 @router.get("/admin/bi/usage")
 async def usage_page(request: Request, limit: int = 2000):
-    """Admin → BI usage (wave B): what BI is asked, by whom and how it is answered (core/bi_usage.py), from the audit log, the engine's counters and the console's
-    Python runner. BI administrators; the audit log itself is the system administrator's, so a bi-admin who is not one sees the engine and the runner only."""
+    """Admin → BI usage (wave B): what BI is asked, by whom and how it is answered (core/bi_usage.py), from the audit log, the engine's counters and the server's
+    Python runtime. BI administrators; the audit log itself is the system administrator's, so a bi-admin who is not one sees the engine and the runner only."""
     from core.bi_usage import summarise
 
     me = getattr(request.state, "bi_me", None) or {}
@@ -209,7 +206,11 @@ async def usage_page(request: Request, limit: int = 2000):
         engine = await request.app.state.backend.bi("GET", "/engine", ident(request))
     except BackendError:
         engine = None
-    return render(request, "bi/usage.html", screen="admin", usage=usage, engine=engine, why=why, runner=request.app.state.pyrunner.status())
+    try:
+        runner = await request.app.state.backend.bi("GET", "/python/runtime", ident(request))
+    except BackendError:
+        runner = None
+    return render(request, "bi/usage.html", screen="admin", usage=usage, engine=engine, why=why, runner=runner)
 
 
 @router.get("/admin/bi")
@@ -332,11 +333,6 @@ async def proxy(request: Request, path: str):
     if head not in _ALLOWED or ".." in path:
         return JSONResponse({"code": "DRS-9001", "detail": "no such BI path"}, status_code=404)
     body = None if request.method in _NO_BODY else await json_body(request)
-    if request.method == "POST" and head == "items" and path.rsplit("/", 1)[-1] in ("publish", "approve"):
-        from routes.python_routes import publish_gate
-        refused = await publish_gate(request, path, body)          # a Python item whose own tests fail is not published (a bi-admin may force it)
-        if refused is not None:
-            return refused
     params = {k: v for k, v in request.query_params.items()}
     if request.method == "POST" and head == "reports" and path.endswith("/query") and params.get("format") == "arrow":
         try:                                                  # a Perspective visual's rows: the server's Arrow bytes, passed through unchanged

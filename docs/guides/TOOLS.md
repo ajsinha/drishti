@@ -58,7 +58,7 @@ repository root. Scratch output (`lake`, `lake2`, `build/...`) goes into the clo
 | Check a pack in CI | | `drishti.py pack check --junit` |
 | Ship a pack to a server | Admin → Packs → Deploy | `drishti.py pack bundle`, `pack deploy`, `server packs deploy` |
 | Tell the server that a batch landed | the Lakes page does it after a build | `drishti.py data landed`, or `lake build --signal` |
-| Take a day of a dataset out as a file | Views → Data (`DATA <GO>`): columns, filter lines, Download | `drishti.py data get <dataset> --date D --columns ... --where ...` |
+| Take a day of a dataset out as a file | Views → Export data (`EXPORT <GO>`): columns, filter lines, Download | `drishti.py data get <dataset> --date D --columns ... --where ...` |
 | Change where a connector reads | Admin → **Connectors** | `drishti.py connector apply` |
 | Install or uninstall a pack, connector or BI file safely | Admin → **Artifacts** | `drishti.py server packs`, `connector delete` |
 | Keep a lake small and fast | | `drishti.py lake maintain` (on a timer) |
@@ -67,6 +67,7 @@ repository root. Scratch output (`lake`, `lake2`, `build/...`) goes into the clo
 | Run VaR's many-scope sums on the bundled OpenBLAS or on the pure-Java path, live | Admin → **Engines** → Linear algebra: OpenBLAS | `drishti.py server blas status`, `server blas java --reason ...`, `server blas native --reason ...` (also as `admin blas`; [OPERATIONS.md section 2.1](../admin/OPERATIONS.md#21-server-requirements-native-libraries-blas)) |
 | Make, check or remove the AWS side of the S3 Tables or Delta Lake on S3 connector (bucket, namespace or prefix, IAM policy) | | `deploy/aws/s3-tables/s3-tables.sh`, `deploy/aws/delta-s3/delta-s3.sh` (`.ps1` on Windows; section 4.14) |
 | See or check the shape of a command's data (its data contract), or draft the contract of a new kind | | `drishti.py contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` |
+| Pin the Python libraries code people write may use on the server's compute pool `python` (every file's sha256, for `pip --require-hashes`) | | `python tools/python_lock.py config/compute/locks/python.in --out config/compute/locks/python.lock` ([PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)) |
 
 Use the page for a one-off file, a first look at new data, or when you want to see each choice before it is made. Use the command
 line for anything that repeats, runs at night, or lives in a pipeline: it has exit codes, a lock, a log line and a JSON summary,
@@ -103,9 +104,9 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 |---|---|---|
 | `sutra` | `sutra shape`, `sutra design`, `sutra lint`, `sutra test`, `sutra preview`, `sutra gen` | [5.1](#51-sutra) |
 | `pack` | `pack make`, `pack new`, `pack regenerate`, `pack diff`, `pack catalogue`, `pack i18n`, `pack check`, `pack about-check`, `pack bundle`, `pack verify`, `pack deploy`, `pack rollback`, `pack publish`, `pack keygen`, `pack install` | [5.2](#52-pack) |
-| `data` | `data profile`, `data ingest`, `data load`, `data landed`, `data loads`, `data get` (a dataset as `.jsonl.gz`, the Data view) | [5.3](#53-data) |
-| `dataload` | `dataload status`, `dataload run`, `dataload retry` (the data inbox: files dropped in a folder, loaded by the server) | [5.3a](#53a-dataload) |
-| `lake` | `lake build`, `lake publish`, `lake scan`, `lake status`, `lake demo`, `lake maintain`, `lake undo` (one load's rows removed by its load id, [DATA_LOAD_RULES.md section 6.3](../architecture/DATA_LOAD_RULES.md)), `lake memory` (the in-memory lake's stores, jobs and refills, [IN_MEMORY_LAKE_GUIDE](IN_MEMORY_LAKE_GUIDE.md)) | [4](#4-lake-build-a-large-json-export-into-a-delta-lake) |
+| `data` | `data profile`, `data ingest`, `data load`, `data landed`, `data loads`, `data get` (a dataset as `.jsonl.gz`, Export data) | [5.3](#53-data) |
+| `dataload` | `dataload status`, `dataload run`, `dataload retry`, `dataload undo` (the data inbox: files dropped in a folder, loaded by the server; `undo <load id> [--lake NAME] [--yes]` removes one load's rows from the lake it went to, found in the ledger) | [5.3a](#53a-dataload) |
+| `lake` | `lake build`, `lake publish`, `lake scan`, `lake status`, `lake demo`, `lake maintain`, `lake relocate` (a lake built in the older layout moved once into its own folder, `<data>/delta/<lake>`: [DATA_LAKE_GUIDE.md section 7](DATA_LAKE_GUIDE.md#7-the-demo-lakes-one-time-move)), `lake undo` (one load's rows removed by its load id, [DATA_LAKE_GUIDE.md section 5.5](DATA_LAKE_GUIDE.md#55-undo-a-load)), `lake memory` (the in-memory lake's stores, jobs and refills, [IN_MEMORY_LAKE_GUIDE](IN_MEMORY_LAKE_GUIDE.md)) | [4](#4-lake-build-a-large-json-export-into-a-delta-lake) |
 | `server` | `server health`, `server caches`, `server packs`, `server commands`, `server smoke`, `server engines` (`admin engines` is the same: the compute engines on or off, [OPERATIONS section 21](../admin/OPERATIONS.md)) | [5.4](#54-server-and-doctor) |
 | `connector` | `connector list`, `connector get`, `connector apply`, `connector delete`, `connector test`, `connector plugins`, `connector enable`, `connector disable`, `connector reset`, `connector history` | [5.5](#55-connector) |
 | `net` | `net list`, `net check`, `net add-peer`, `net set`, `net members` | [5.9](#59-net) |
@@ -128,7 +129,7 @@ The group modules live beside it and are not run on their own: `tools/authoring.
 `tools/ingest_jsonl.py` and `tools/ingest_watch.py` (`data ingest`), `tools/packbundle.py` (`pack bundle|verify|deploy|rollback`),
 `tools/serverpacks.py`, `tools/serverconnectors.py`, `tools/servernet.py` (`net`), `tools/hostaddr.py` (this machine's real address for Drishti*net members), `tools/build_demo_lakes.py` (every demo lake start to finish: `lake demo` over all sixty days, then your own ENDUR files one per date, `--store calypso=iceberg` for a source system in Iceberg, `--dry-run` to look first; the Windows QA guide's step 3.0), `tools/smoke.py`, `tools/doctor.py`, `tools/viewcmd.py`, `tools/completion.py`,
 `tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, `tools/bistatement.py` (`bi statement preview|file`), `tools/historycmd.py` (`history`), `tools/varcli.py` (`var`), `tools/datacli.py` (`data get`), `tools/expcli.py` (`exposure`), and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
-`tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/icebergwrite.py` (`lake build --format iceberg`, §4.4b), `tools/lake/demo.py` (`lake demo`), `tools/lake/undo.py` (`lake undo`), `tools/lake/filedate.py` (a file name's table and business date, the Python half of drishti-common's `FileDates`), `tools/lake/feedroute.py` (a feed file paired with its `.ready` file and routed to a pack and kind), `tools/lake/feedfiles.py` (our own generators' dated feed files, by the load rules), `tools/lake/memory_cli.py` (`lake memory status|jobs|refill`), `tools/enginescli.py` (`server engines list|show|on|off|history`), `tools/dataloadcli.py` (`dataload status|run|retry`), `tools/lake/memory_caps.py` (the launchers' direct-memory limit from the stores' caps), `tools/lake/stores.py` (a source system's trades copied into Iceberg, its connector file switched; `build_demo_lakes.py --store`) and `tools/lake/laketables.py` (the tables `lake status` lists). `tools/connector_upgrade_fixture.py` is not a `drishti.py` group: it writes the connector files an older release's server generated, the fixture of the connector upgrade drill (`ConnectorUpgradeTest`, [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) "Upgrades").
+`tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/icebergwrite.py` (`lake build --format iceberg`, §4.4b), `tools/lake/demo.py` (`lake demo`), `tools/lake/relocate.py` (`lake relocate`), `tools/lake/undo.py` (`lake undo`), `tools/lake/filedate.py` (a file name's table and business date, the Python half of drishti-common's `FileDates`), `tools/lake/feedroute.py` (a feed file paired with its `.ready` file and routed to a pack and kind), `tools/lake/feedfiles.py` (our own generators' dated feed files, by the load rules), `tools/lake/memory_cli.py` (`lake memory status|jobs|refill`), `tools/enginescli.py` (`server engines list|show|on|off|history`), `tools/dataloadcli.py` (`dataload status|run|retry`), `tools/lake/memory_caps.py` (the launchers' direct-memory limit from the stores' caps), `tools/lake/stores.py` (a source system's trades copied into Iceberg, its connector file switched; `build_demo_lakes.py --store`) and `tools/lake/laketables.py` (the tables `lake status` lists). `tools/connector_upgrade_fixture.py` is not a `drishti.py` group: it writes the connector files an older release's server generated, the fixture of the connector upgrade drill (`ConnectorUpgradeTest`, [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) "Upgrades").
 
 ## 4. lake build: a large JSON export into a Delta lake
 
@@ -146,7 +147,7 @@ the Delta connector reads:
   document (DOUBLE when every value is a number, else STRING);
 * at `<lake>/<domain>/<kind>/`, the folder a Delta connector with `root: <lake>` and `domain: <domain>` reads for that kind.
 
-**With a lake file** (`--lake NAME`, a lake of `config/lakes/`: [LAKE_GUIDE.md](LAKE_GUIDE.md)) the table's place, partitions, promoted
+**With a lake file** (`--lake NAME`, a lake of `config/lakes/`: [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md)) the table's place, partitions, promoted
 columns, vectors, id, date, latest-by and load mode come from the file, read by the one lake reader (`tools/lake/lakeconfig.py` runs
 drishti-lakeconfig's `LakesCli`). A pack's own recommended entries (its `pack.yaml` `lake:` block) and its templates' `lake: demo` and `lake-tables:` are read and written by `tools/packlake.py`, the one module the pack generators and every tool that reads a template's layout share. A `--partition-by`, `--promote`, `--vector` or `--key` that says otherwise is refused, naming both; a kind
 the file has no entry for is refused. `--lake-root DIR` writes the same layout under another folder (a scratch or test lake). `--lake DIR`
@@ -191,7 +192,7 @@ suggested --key TRADE_ID   --partition-by: PRODUCT_TYPE, PRODUCT_SUB_TYPE, PORTF
 
 `(456)` is a blank value counted 456 times. The id is a field present in (nearly) every document with every value different;
 the rows' date field ranks names such as *business*, *cob*, *as of* and *snapshot* first, and is only reported: a load takes its
-business date from outside the rows ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)), the file's name
+business date from outside the rows ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)), the file's name
 (`trade_endur.2026-07-08`) or `--as-of`; the classifiers are text fields rarely blank with 2 to 40 values, *product* and *type* first.
 The walk-through below uses `--as-of` for another day, 2026-09-22.
 
@@ -201,7 +202,7 @@ The walk-through below uses `--as-of` for another day, 2026-09-22.
 $ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
     --kind trade --key TRADE_ID --as-of 2026-09-22 --partition-by PRODUCT_TYPE --promote COUNTERPARTY,PORTFOLIO,QUANTITY \
     --lake lake --domain trading
-engine: drishti (Drishti's Java writer in drishti-server-2.9.11.c-exec.jar)
+engine: drishti (Drishti's Java writer in drishti-server-2.9.11.d-exec.jar)
 business date  PRODUCT_TYPE           rows
 2026-09-22     CallNot                  50
 2026-09-22     Cash                    723
@@ -229,7 +230,7 @@ The next file of the book holds the day's changes (159 trades). Two bad lines ad
 $ (zcat data/testdata/trades/endur/trade_endur.2026-09-23.jsonl.gz; echo '{"PRODUCT_TYPE": "Cash"}'; echo 'not json') | gzip > day2.jsonl.gz
 $ drishti-console/.venv/bin/python tools/drishti.py lake build --from day2.jsonl.gz --kind trade --key TRADE_ID --as-of 2026-09-23 --partition-by PRODUCT_TYPE \
     --promote COUNTERPARTY,PORTFOLIO,QUANTITY --lake lake --domain trading
-engine: drishti (Drishti's Java writer in drishti-server-2.9.11.c-exec.jar)
+engine: drishti (Drishti's Java writer in drishti-server-2.9.11.d-exec.jar)
 business date  PRODUCT_TYPE           rows
 2026-09-23     Cash                     27
 2026-09-23     ComFut                   29
@@ -434,7 +435,7 @@ removed by the next run, which holds the lock. With `--lake NAME` (a lake of `co
  "sampleId": "1000029", "sampleDate": "2026-09-23",
  "timings": {"readSeconds": 0.035, "writeSeconds": 2.159, "totalSeconds": 2.201},
  "engine": "drishti",
- "engineWhy": "Drishti's Java writer in drishti-server-2.9.11.c-exec.jar",
+ "engineWhy": "Drishti's Java writer in drishti-server-2.9.11.d-exec.jar",
  "batchRows": 10565, "averageDocumentBytes": 12703,
  "commit": {"commits": 1, "version": 1, "files": 4},
  "columns": {"partition": ["PRODUCT_TYPE"], "promoted": {"COUNTERPARTY": "string", "PORTFOLIO": "string", "QUANTITY": "double"}},
@@ -476,7 +477,7 @@ connectors:
     plugin: delta
     kinds: [trade]
     settings:
-      root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
+      root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}"
       domain: trading
       table.trade: trade_endur
       layout.trade.columns: "TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,...,COUNTERPARTY,LEGAL_ENTITY,PORTFOLIO,TRADER_ID"
@@ -533,13 +534,13 @@ the page, then binds the lake to the pack's connector and sends the signal as th
 ### 4.9 The demo lakes: lake demo
 
 `drishti.py lake demo` (run configuration **Build demo lakes**) is `lake build` run for every dataset and business day of the
-committed test data, `data/testdata`: the seven packs' tables under `data/delta` in about 15 minutes (943 s measured, about 3.4 GB), the sixty days moved to end on today's
+committed test data, `data/testdata`: the seven packs' tables under `data/delta/demo` (the demo lake's own folder) in about 15 minutes (943 s measured, about 3.4 GB), the sixty days moved to end on today's
 business date (`--as-of data` keeps the files' own dates), the connector files checked, the next steps printed. `--only PREFIX` builds
 some datasets, `--keep-other-dates` keeps a dated table's other business dates (each date written is replaced) instead of
 rebuilding the table (the VaR data's three dates are 2026-09-28 to 2026-09-30; `--as-of 2026-09-25 --keep-other-dates --only market-risk/...`
 adds them again moved back, as 2026-09-23 to 2026-09-25, the scenario window moved with it: [tutorial 25, step 16](../tutorials/25-var-from-the-bank-to-a-trade.md#step-16--the-scenario-matrix-scenarios-across-the-days)), `--lake DIR` another folder (the connector files then point there), `--with-real FILE[,FILE]` adds real extracts to the
 local lake only. The sample feed the `file` connector serves (`feeds/`) and the staging go to the server's data folder: `--data-dir DIR`, else
-`DRISHTI_DATA_DIR`, else the folder holding `--lake` when that is a `delta/` folder (`--lake /srv/data/delta`: `/srv/data`), else `data/`, so a
+`DRISHTI_DATA_DIR`, else the folder holding the lakes' `delta/` folder (`--lake /srv/data/delta/demo`: `/srv/data`), else `data/`, so a
 server on another data folder finds its feeds (`make_data.py --data-dir DIR` does the same). It then tells the server the lakes changed: the data-load signal for every table and date to `--server` (default
 `DRISHTI_SERVER`, then `http://localhost:18480`; a token with `loads:write` from `--token-file` or `DRISHTI_TOKEN`), or, with no server
 there, the stamp of section 4.7; `--no-signal` does neither, and `--signal-once` tells each table once, for its newest date, instead of
@@ -721,7 +722,7 @@ location, partitions, promoted columns, vectors, id, date, latest-by, file layou
 folder: `-Ddrishti.lakes.dir` or `DRISHTI_LAKES_DIR`); a key of the load file that says otherwise is refused with both named.
 `load-mode: append` in the lake file (or `target.mode: append`) adds the rows instead of replacing the dates, and needs
 `target.batch-id`: the batch is recorded in each date's commit and a batch already committed for a date is skipped, never appended twice
-([LAKE_GUIDE.md section 4](LAKE_GUIDE.md#4-replace-and-append)). A `target.lake` that is a folder is the older form (one warning).
+([DATA_LAKE_GUIDE.md section 5.3](DATA_LAKE_GUIDE.md#53-modes-replace-and-append)). A `target.lake` that is a folder is the older form (one warning).
 
 **On its own** (a scheduler, a container, a machine without the console's Python):
 
@@ -838,7 +839,7 @@ memory: {budget-mb: 8192, spill-dir: /scratch}
 warehouse: '<account id>', catalog.rest.signing-name: glue}` (the domain is the namespace).
 
 **An archive with a folder per dataset** (`bundle.tar.gz` holding `trade/2026-10-28/…jsonl.gz` and `position/2026-10-28/…jsonl`: each
-table folder its own table, each date folder its business date ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md) section 2);
+table folder its own table, each date folder its business date ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo) section 5.2);
 every dataset read and checked before the first commit; a folder not listed under `datasets:` refuses the run):
 
 ```yaml
@@ -1067,7 +1068,7 @@ and `server smoke` (opens sample views of every kind on two dates; exit `1` on a
 ```
 $ drishti-console/.venv/bin/python tools/drishti.py doctor --server http://127.0.0.1:19590 --token-file ~/.drishti-token
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              <repo>/drishti-server/target/drishti-server-2.9.11.c-exec.jar (version 2.5.0)
+GREEN  server jar              <repo>/drishti-server/target/drishti-server-2.9.11.d-exec.jar (version 2.5.0)
 GREEN  python                  <repo>/drishti-console/.venv/bin/python: Python 3.13.15
 GREEN  python pyyaml           installed
 GREEN  python deltalake        installed
@@ -1197,8 +1198,8 @@ problems), `design propose`, `design approve` / `design reject` (an approver), `
 ### 5.7 bi
 
 Rupaka (business intelligence) as the token's user: `bi workspace list|get`, `bi catalogue list|get|publish`, `bi expr
-functions|validate|convert` (the expression language), `bi migrate --expressions|--models` (the converter of old expressions and of
-`rachana: 1` datasets to models; `--check` for CI), `bi sql` (Drishti SQL over a model), `bi model list|describe|check|consumers`,
+functions|validate` (Rachana, the expression language), `bi migrate --boards` (2.3 boards to reports; BI's old datasets and models move
+with `tables migrate`), `bi sql` (Drishti SQL over a model), `bi model list|describe|check|consumers`,
 `bi mq` (a model query), `bi item new|save|tests`, `bi dataset refresh` and `bi transform input|snippets|snippet` (Python data prep: a
 Transform's inputs as you see them, masked columns and a profile of each column, and the snippets the Transform editor offers; the commands are in
 `tools/bitransform.py`, loaded by `drishti.py`; [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](BI_GUIDE.md#17-data-prep-the-transform-editor)). A write needs the
@@ -1220,7 +1221,7 @@ drishti-console/.venv/bin/python tools/drishti.py bi runs wait r-java-2-01JA... 
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py bi expr validate "sum(trades.NOTIONAL) / count(trades)" --model trading-risk
-drishti-console/.venv/bin/python tools/drishti.py bi migrate --expressions config/bi --check          # CI: exit 1 while a file has the old syntax
+drishti-console/.venv/bin/python tools/drishti.py tables migrate --check                             # CI: exit 1 while a BI file is in the old form
 ```
 
 Captured, with a lower-case name the second time (the model's columns are the packs' UPPER_SNAKE names):
@@ -1231,7 +1232,7 @@ INVALID  (del2, aggregate scope, type any)
   error   DRS-9152  at 4-19: no field 'trades.notional'; did you mean trades.NOTIONAL?
 ```
 
-Real output: [CLI_GUIDE.md section 7](CLI_GUIDE.md) and [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del). In the console the migration's state is
+Real output: [CLI_GUIDE.md section 7](CLI_GUIDE.md) and [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions). In the console the migration's state is
 on Admin → **BI** (items that could not be converted, with why).
 
 ### 5.8 view and completion
@@ -1515,6 +1516,28 @@ drishti-console/.venv/bin/python tools/drishti.py pivot comments asha/desk-risk 
 drishti-console/.venv/bin/python tools/drishti.py pivot explain --source trade --rows productType --values "sum(notional)" --cell productType=IRS --other-cell productType=FXFWD --by counterparty
 ```
 
+### 5.17 tables
+
+The table layer's virtual tables and models under `config/tables` (`tools/tablescli.py`; [TABLES_GUIDE.md](TABLES_GUIDE.md),
+[CLI_GUIDE.md, tables](CLI_GUIDE.md#tables-virtual-tables-and-models)). The commands run in Java from the server's exec jar without
+starting a server and read definitions and sample files only, from the folder you run them in:
+
+- `tables list`: every table and model, its source, grain, columns and materialisation.
+- `tables check [--sample TABLE=FILE.jsonl]...`: every definition and the catalogue; exit 1 on an error.
+- `tables preview TABLE --sample FILE.jsonl [--limit N]`: the table's first rows over sample documents (JSONL, `.gz` too).
+- `tables lineage NAME`: who uses a table or a model.
+- `tables offer NAME --sample FILE.jsonl (--kind KIND | --lake LAKE --table TABLE) [--grain '$.LIST[*]'] [--write]`: the flat virtual
+  table offered for a new table, one typed column per scalar field of the sample; `--write` accepts it as a new file.
+- `tables check --stored NAME,...`: also refuses a virtual table named like a stored table (`DRS-9616`).
+- `tables migrate [--dry-run | --check] [--report FILE] [--audit FILE] [--moved-to DIR]`: BI's datasets and models into tables and
+  models (the unified diff and the report with `--dry-run`; exit 1 with `--check` when anything is left to migrate). A second run
+  changes nothing.
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py tables check
+drishti-console/.venv/bin/python tools/drishti.py tables migrate --dry-run
+```
+
 ## 6. Store loaders: `tools/load-*.sh`
 
 Each loader writes the banking packs' demo data (1,791 sample documents x 10 business days, and with `--trades N --days D` a
@@ -1523,7 +1546,7 @@ generated trade book) into one store, **in the layout that store's connector rea
 
 | Script | Store and layout | Retention |
 |---|---|---|
-| `tools/load-delta.sh` | Delta Lake under `data/delta`, the pack's layout (`tools/windows/load-delta.ps1` on Windows) | `drishti.py lake maintain` |
+| `tools/load-delta.sh` | Delta Lake under `data/delta/demo` (the demo lake), the pack's layout (`tools/windows/load-delta.ps1` on Windows) | `drishti.py lake maintain` |
 | `tools/load-files.sh` | the File connector's JSON Lines, `<root>/<domain>/<yyyy-MM-dd>/<kind>.jsonl`, each file replaced whole | delete old day folders |
 | `tools/load-postgres.sh` | PostgreSQL, `<domain>.entities` partitioned by month, promoted columns | `--keep-months N` |
 | `tools/load-duckdb.sh` | one DuckDB file, written beside and renamed over the old one | `--keep-days N` |
@@ -1541,7 +1564,7 @@ drishti-console/.venv/bin/python tools/drishti.py data load --store files --trad
 **Dates.** The scripts' generators write loader rows as tars of `<kind>/<YYYY-MM-DD>/` folders under `<data folder>/build/loader-rows/`
 (removed after the load), and every loader files each row under its folder's date, or a plain file's (`--as-of`, its `.ready` file,
 its name, the business today), never the row's own `date`, which it only counts when it differs: the load rules of
-[DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md), the same as `lake build`'s.
+[DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo), the same as `lake build`'s.
 
 **Scheduling.** The loaders guard dates (a tar folder dated in the future refuses the archive; a business date after tomorrow is not loaded and the run fails naming it), replace each day
 they reach in one step, and refuse to drop more than half a table (`--max-drop-share`, `--force-drop`), so a nightly cron entry
@@ -1773,7 +1796,7 @@ from its Delta log alone (no data file is opened, so it opens at once on a table
 2. **Id, business date and classifiers.** The console scans the file as a stream (the first `lakes.scan_docs`, 20,000, documents)
    and lists every field with how often it is present, how many values it has and the most frequent ones. The suggested id and first
    classifier are selected. **Business date** says the date the rows go under, by the load rules
-   ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)): the date in the file's name (`book.2026-10-16.json`), else the business
+   ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)): the date in the file's name (`book.2026-10-16.json`), else the business
    today; never a field of the rows. *Another business date for the whole file* gives one (the build's `--as-of`). Tick **Classifier**
    for the partition columns and **Promote** for the real columns.
 3. **Where it goes.** A new lake (a root from `lakes.roots`, a domain, a kind) or an existing table (its partitioning is then
@@ -1802,7 +1825,7 @@ the dependants along only when confirmed by name, and the uninstalled files kept
 ### 10.5 Admin → BI (`/admin/bi`) and the migration
 
 BI settings and governance; after an upgrade it lists the items the expression and model migration could not convert, with why
-(the terminal twin: `drishti.py bi migrate --expressions --dry-run`). Guide: [BI_GUIDE.md](BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments).
+(the terminal twin: `drishti.py tables migrate --dry-run`). Guide: [BI_GUIDE.md](BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments).
 
 ### 10.6 Admin → Health (`/admin/health`) and Admin → Packs (`/admin/packs`)
 

@@ -42,13 +42,15 @@ Mock-up: [g1-editor-shell.html](mockups/editors/g1-editor-shell.html), option **
 
 Mock-up: [g2-tables.html](mockups/editors/g2-tables.html), option **A** as the editor, option **C** as its Text toggle.
 
-- **Sources and joins as rows**; **columns as a checklist** with the name here, where it comes from, its type, and computed columns as
-  Rachana formulas. A plain table is the same editor with one source and no join.
-- **Text toggle**: the same table as one Rachana statement (`table … from … left join … on … select … where …`) with type-ahead.
-- **A join across connectors shows its cost** (rows each side, memory, time) and is refused above a limit until the reader filters.
-- Several virtual tables may share a connector, each with its own columns; names are unique across Drishti; business dates follow the
-  source.
-- The diagram (option B) is not an editing mode; it may appear later as a read-only picture of the joins.
+- **The source and its look-ups as rows**; **columns as a checklist** with the name here, where it comes from, its type, and computed
+  columns as Rachana formulas. A look-up brings one row of another table by a key (many to one: `related(table.COLUMN, on = key)`).
+  A plain table is the same editor with one source and no look-up.
+- **Tables use look-ups; models join** (product owner, 2026-11-06): a table enriches its rows with look-ups and never multiplies them;
+  combining tables row by row (one to many, several facts) is a semantic model's relationships (section 3).
+- **Text toggle**: the same table as one Rachana statement (`table … from … select … where …`, look-ups as `related(…)` columns) with
+  type-ahead.
+- **A look-up across connectors shows its cost** (rows each side, memory, time) and is refused above a limit until the reader filters.
+- The diagram (option B) is not an editing mode; it may appear later as a read-only picture of the look-ups and a model's relationships.
 
 ## 3. Semantic models
 
@@ -73,6 +75,11 @@ Mock-up: [g4-python.html](mockups/editors/g4-python.html), option **A** as the e
 - **Notebook → Turn into table**: cells explored on the server become a build function, and the contract is filled in.
 - **Templates** (join and derive, resample, statistics per group, a file or feed from an approved source) write the Python and show it.
 - A Python **model** is the same, with its measures declared in the contract.
+- **Where it runs.** The sample run, the Notebook's cells and the table's rows when read all run on the server's compute pool `python`, in
+  its strict sandbox: the inputs read as the person running it (row rules and masks), pinned libraries, the code's time and memory limits, no
+  network (an approved source is read by the server and handed in as an input), files only in its own folder, every run audited; the rows are
+  checked against the contract and a mismatch is refused in words ([PYTHON_COMPUTE.md section 19](PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)).
+  Where the server cannot run Python safely (compute off, Windows) the buttons are off and say why.
 
 ## 5. People and access
 
@@ -111,9 +118,9 @@ its help entry.
 
 | # | Editor | Built in | Done |
 |---|---|---|---|
-| 1 | The three-pane shell, the Visual / YAML / Both toggle, the header, + New steps | BI foundation | ☐ |
-| 2 | Tables and virtual tables (grid, Text toggle, cross-connector cost) | BI foundation | ☐ |
-| 3 | Semantic models (tabs, Overview, measure cards, Access matrix) | BI foundation | ☐ |
-| 4 | Python-driven tables and models (code and contract, Notebook → table, templates) | BI foundation | ☐ |
+| 1 | The three-pane shell, the Visual / YAML / Both toggle, the header, + New steps | BI foundation | ☑ |
+| 2 | Tables and virtual tables (grid, Text toggle, cross-connector cost) | BI foundation | ☑ |
+| 3 | Semantic models (tabs, Overview, measure cards, Access matrix) | BI foundation | ☑ |
+| 4 | Python-driven tables and models (code and contract, Notebook → table, templates, the sample run on the compute pool) | BI foundation | ☑ |
 | 5 | People & access (People, Roles, Check access) | Trust, RBAC and security | ☐ |
 | 6 | API keys (My keys, + New key, Admin overview) | Trust, RBAC and security | ☐ |

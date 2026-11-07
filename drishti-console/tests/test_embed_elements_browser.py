@@ -523,19 +523,19 @@ def test_browser_capabilities(host, browser):
     h = host()
     h.open()
     h.until(lambda: len(h.events("tick", "main")) >= 2, 20, "composed events (document-level listener saw the element's ticks)")
-    show(h, "pnl-explain", "PNL-COMM-1")                                    # a view with charts: the attribution bars and the waterfall
+    show(h, "counterparty", "CP-ALDERSHOT")                                # a view with an ECharts chart: the counterparty's relations graph (an xchart)
     h.until(lambda: h.js("document.querySelector('#main').shadowRoot.querySelectorAll('.xchart svg').length") > 0, 15, "the charts")
     got = h.js("""(() => { const r = document.querySelector('#main').shadowRoot;
       return { adopted: r.adoptedStyleSheets.length, token: getComputedStyle(document.querySelector('#main')).getPropertyValue('--d-ink').trim(),
         pill: getComputedStyle(r.querySelector('.pill')).borderTopWidth,
         fontLoaded: [...document.fonts].some((f) => f.family.includes('bootstrap-icons') && f.status === 'loaded'),
         iconCheck: document.fonts.check('16px bootstrap-icons'),
-        lineChart: r.querySelectorAll('.chart svg path').length, waterfall: r.querySelectorAll('.xchart svg').length,
+        chartPaths: r.querySelectorAll('.chart svg path').length, xchart: r.querySelectorAll('.xchart svg').length,
         styleEls: r.querySelectorAll('style').length, hostLeak: getComputedStyle(document.body).getPropertyValue('--d-ink').trim() }; })()""")
     assert got["adopted"] == 2 and got["token"]                           # adoptedStyleSheets under a CSP without 'unsafe-inline'
     assert got["pill"] not in ("", "0px")                                  # the console's panel styles apply in the shadow root
     assert got["fontLoaded"] and got["iconCheck"]                          # the icon font through FontFace
-    assert got["lineChart"] > 0 and got["waterfall"] > 0                  # ECharts drew inside the shadow root
+    assert got["chartPaths"] > 0 and got["xchart"] > 0                    # ECharts drew inside the shadow root
     assert got["hostLeak"] == ""                                           # the element's tokens do not leak into the host page
     assert h.js("window.__viol") == []
     assert h.page.evaluate("getComputedStyle(document.querySelector('h2')).textTransform") == "uppercase"      # and the host's styles did not enter either

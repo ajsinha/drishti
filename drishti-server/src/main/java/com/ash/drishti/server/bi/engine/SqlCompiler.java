@@ -116,6 +116,10 @@ public final class SqlCompiler {
                     if (n instanceof Node.Ref ref) {
                         Resolver.ColRef c = r.resolve(ref.parts(), null);
                         cols.add(c.table() + "." + c.column());
+                    } else if (n instanceof Node.Call c && RelatedRows.FUNCTION.equals(c.function()) && c.args().size() == 2
+                            && c.args().get(0) instanceof Node.Str self && c.args().get(1) instanceof Node.Str other && ds.tables().containsKey(self.value())
+                            && ds.tables().containsKey(other.value())) {
+                        RelatedRows.keys(ds, self.value(), other.value()).forEach(k -> cols.add(self.value() + "." + k[0]));   // the keys the rule reads
                     }
                 });
             }
@@ -184,7 +188,7 @@ public final class SqlCompiler {
                 throw invalid("no measure '" + name + "' in this dataset (measures: " + String.join(", ", ds.measures().keySet()) + ")");
             }
             if (m.expr() == null) {
-                throw new DrishtiException(ErrorCode.DATASET_NOT_BUILT, "measure '" + name + "' is a Python measure (" + m.python() + "); Python measures are run by the console's Python runner, shown by a python visual, never by a query");
+                throw new DrishtiException(ErrorCode.DATASET_NOT_BUILT, "measure '" + name + "' is a Python measure (" + m.python() + "); Python measures are run on the server's compute pool python, shown by a python visual, never by a query");
             }
             SqlEmitter probe = new SqlEmitter(ds, dialect, "", null, reader.user()).planning();
             probe.emit(new Node.MeasureRef(name), false);
@@ -225,7 +229,7 @@ public final class SqlCompiler {
         if (reader.enforceRows() && !ds.security().rows().isEmpty()) {
             for (Dataset.RowRule r : ds.security().rows()) {
                 if (reader.roles().contains(r.role())) {
-                    Node n = com.ash.drishti.server.bi.expr.Expressions.parse(r.where());
+                    Node n = com.ash.drishti.server.bi.expr.Expressions.node(r.where());
                     rules.add(n);
                     Node.walk(n, x -> {
                         if (x instanceof Node.Ref ref) {
@@ -295,7 +299,7 @@ public final class SqlCompiler {
             measureTables.remove(name);
             measureTables.putAll(leaves);
             for (String p : pure) {
-                derived.put(p, com.ash.drishti.server.bi.expr.Expressions.parse(ds.measures().get(p).expr()));
+                derived.put(p, com.ash.drishti.server.bi.expr.Expressions.node(ds.measures().get(p).expr()));
             }
         }
     }
@@ -322,7 +326,7 @@ public final class SqlCompiler {
         }
         Set<String> refs = new LinkedHashSet<>();
         boolean[] own = {false};
-        Node.walk(com.ash.drishti.server.bi.expr.Expressions.parse(m.expr()), n -> {
+        Node.walk(com.ash.drishti.server.bi.expr.Expressions.node(m.expr()), n -> {
             if (n instanceof Node.MeasureRef r) {
                 refs.add(r.name());
             } else if (n instanceof Node.Ref) {
@@ -443,7 +447,7 @@ public final class SqlCompiler {
             } else if (x instanceof Node.MeasureRef m && trail.add(m.name())) {
                 Dataset.Measure meas = ds.measures().get(m.name());
                 if (meas != null && meas.expr() != null) {
-                    collect(com.ash.drishti.server.bi.expr.Expressions.parse(meas.expr()), out, trail);
+                    collect(com.ash.drishti.server.bi.expr.Expressions.node(meas.expr()), out, trail);
                 }
             }
         });
@@ -696,6 +700,7 @@ public final class SqlCompiler {
             notes.add(shut.isEmpty() ? "no row rule of this dataset covers your roles: no rows"
                     : "you have no access to rows of " + String.join(", ", shut) + " in this model: no row rule names your roles");
         } else if (!p.rules().isEmpty()) {
+            where.relatedRows(RelatedRows.writer(ds, reader, more, q.from(), q.to()));
             List<String> ors = new ArrayList<>();
             for (Node rule : p.rules()) {
                 ors.add(where.emit(rule, false));
@@ -978,7 +983,7 @@ public final class SqlCompiler {
             return false;
         }
         boolean[] hit = {false};
-        Node.walk(com.ash.drishti.server.bi.expr.Expressions.parse(m.expr()), n -> {
+        Node.walk(com.ash.drishti.server.bi.expr.Expressions.node(m.expr()), n -> {
             if (n instanceof Node.Call c && Node.isWindow(c.function())) {
                 hit[0] = true;
             } else if (n instanceof Node.MeasureRef r && usesWindow(r.name(), seen)) {

@@ -128,6 +128,14 @@ final class SqlEmitter {
     }
 
     private boolean planning;
+    /** Writes a row rule's {@code related_rows('alias')} (set by the compiler for the query being written; null: the rule cannot be honoured here). */
+    private java.util.function.BiFunction<SqlEmitter, Node.Call, String> relatedRows;
+
+    /** How this emitter writes {@code related_rows}: the compiler's sub-query over the other table as the reader sees it ({@link RelatedRows}). */
+    SqlEmitter relatedRows(java.util.function.BiFunction<SqlEmitter, Node.Call, String> writer) {
+        this.relatedRows = writer;
+        return this;
+    }
     /** When set, a measure is read from a column of the joined parts of a several-facts query (null: not a column, so its own expression is written). */
     private java.util.function.Function<String, String> joinedColumn;
 
@@ -174,7 +182,7 @@ final class SqlEmitter {
     String calculated(Dataset.Table table, String expr) {
         current = table.name();
         try {
-            return emit(com.ash.drishti.server.bi.expr.Expressions.parse(expr), false);
+            return emit(com.ash.drishti.server.bi.expr.Expressions.node(expr), false);
         } finally {
             current = null;
         }
@@ -244,13 +252,13 @@ final class SqlEmitter {
             throw new DrishtiException(ErrorCode.QUERY_INVALID, "no measure '" + name + "' in this dataset");
         }
         if (m.expr() == null) {
-            throw new DrishtiException(ErrorCode.DATASET_NOT_BUILT, "measure '" + name + "' is a Python measure (" + m.python() + "); Python measures are run by the console's Python runner, shown by a python visual, never by a query");
+            throw new DrishtiException(ErrorCode.DATASET_NOT_BUILT, "measure '" + name + "' is a Python measure (" + m.python() + "); Python measures are run on the server's compute pool python, shown by a python visual, never by a query");
         }
         if (!trail.add(name)) {
             throw new DrishtiException(ErrorCode.DATASET_EXPRESSION, "measures refer to each other in a circle at '" + name + "'");
         }
         try {
-            return "(" + emit(com.ash.drishti.server.bi.expr.Expressions.parse(m.expr()), false) + ")";
+            return "(" + emit(com.ash.drishti.server.bi.expr.Expressions.node(m.expr()), false) + ")";
         } finally {
             trail.remove(name);
         }
@@ -259,6 +267,15 @@ final class SqlEmitter {
     private String call(Node.Call c, boolean inAgg) {
         String f = c.function();
         List<Node> a = c.args();
+        if (RelatedRows.FUNCTION.equals(f)) {
+            if (planning) {
+                return "TRUE";
+            }
+            if (relatedRows == null) {
+                throw RelatedRows.refused(c, "this question");
+            }
+            return relatedRows.apply(this, c);
+        }
         if (Node.AGGREGATES.contains(f)) {
             sawAggregate = true;
             return aggregate(c);

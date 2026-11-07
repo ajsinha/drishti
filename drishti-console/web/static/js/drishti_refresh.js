@@ -193,8 +193,7 @@
   function swap(p) {
     var old = document.getElementById('p-' + p.id), st = panels[p.id];
     if (!old || (st && st.html === p.html) || old.hasAttribute('data-editing')) { return; }   // a form being edited stays (drishti_record-forms.js)
-    // drawn by the client-side renderer from the panel's JSON when the page is (ui.render: client), else the console's HTML
-    var fresh = (p.panel && window.Drishti.panelNode ? window.Drishti.panelNode(p.panel) : null) || fragment(p.html);
+    var fresh = fragment(p.html);                                   // the page is the server's (Jinja): the panel's HTML
     if (!fresh) { return; }
     var y = window.scrollY, scrolls = [];
     old.querySelectorAll('.pnl-b, .tbl-wrap, [data-scroll]').forEach(function (n, i) { if (n.scrollTop || n.scrollLeft) { scrolls.push([i, n.scrollTop, n.scrollLeft]); } });

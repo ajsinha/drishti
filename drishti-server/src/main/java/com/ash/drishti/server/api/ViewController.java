@@ -69,7 +69,7 @@ public class ViewController {
         EntityRef ref = EntityRef.of(kind, id);
         long started = System.nanoTime();
         var chosen = ViewEventController.chosen(registry, designs, principal, kind, request);   // ?sutra=book-desk, or ?design=<id>: the reader's own
-        ViewModel v = entitlements.restrict(principal, timer.record(() -> pipeline.view(ref, asOf, entitlements.redactor(principal), k -> entitlements.mayOpen(principal, k),
+        ViewModel v = entitlements.restrict(principal, timer.record(() -> pipeline.view(ref, asOf, entitlements.viewer(principal),
                 ControlValues.of(request.getParameterMap()), chosen)));
         pageTimes.record(kind, System.nanoTime() - started);
         String subtitle = v.title().pill() == null ? kind : v.title().pill().replace("Trade · ", "")

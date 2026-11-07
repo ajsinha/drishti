@@ -356,7 +356,7 @@ stable id and the server rewrites the text.
 | types | integer with decimal gives decimal; `date - date` gives integer days; text with number is `DRS-9127` (no implicit casts); `in [...]` items must match the field's type |
 | booleans | `and`, `or`, `not` and `… if c else …` take booleans only (no truthiness of numbers or text) |
 
-#### 3.3.4 Function catalogue (summary; the full reference is BI_LANGUAGE_REFERENCE.md)
+#### 3.3.4 Function catalogue (summary; the full reference is RACHANA_REFERENCE.md)
 
 | Family | Signatures | Scope | Status |
 |---|---|---|---|
@@ -445,7 +445,7 @@ comments, sets `expressions: 2`, and is reversible from saved states. The old sy
 
 #### 3.3.8 Documentation and in-product help (a deliverable of every wave that touches DEL)
 
-* **`docs/guides/BI_LANGUAGE_REFERENCE.md`** (created in A, grown each wave): the grammar of 3.3.2; the scopes; **every
+* **`docs/guides/RACHANA_REFERENCE.md`** (created in A, grown each wave): the grammar of 3.3.2; the scopes; **every
   function** with signature, description, return type, two or more examples and its edge cases (nulls, masked values,
   currencies, empty sets, types); filter-context rules with before/after tables; every `DRS` code an expression can
   raise with cause and fix; a **cookbook of 40+ finance and risk recipes** (MTM and P&L by desk, open vs matured,
@@ -459,7 +459,7 @@ comments, sets `expressions: 2`, and is reversible from saved states. The old sy
   arguments; hovering shows the function's card; problems appear inline with the fix as a button; a *Try it* strip
   shows the value for the current selection (a server answer, as the author).
 * **One catalogue**: `bi/expr/functions.yaml` on the server (name, signature, scopes, description, examples, edge
-  cases, since-wave) feeds validation, completion, `describe` for AI and the function tables of BI_LANGUAGE_REFERENCE.md (a
+  cases, since-wave) feeds validation, completion, `describe` for AI and the function tables of RACHANA_REFERENCE.md (a
   test fails when the guide and the catalogue disagree).
 
 ### 3.4 Drishti SQL (DSQL): read-only SQL over models
@@ -541,9 +541,9 @@ do not exist and masked ones are typed as masked). Then:
    the manifest; the planner places it on the console tier; results are cached by (item version, input generations,
    security signature, params).
 3. **Sandbox** (PYTHON_BI §7, kept and hardened): isolated interpreter, empty environment, no network (namespace +
-   audit hook), scratch folder only, CPU/memory/time/output limits, package allow-list. Target change (decision 7): a
-   **fork-server** per console process (a pre-imported pandas/numpy parent that forks one child per call), keeping
-   one-process-per-call isolation while removing interpreter start-up from latency.
+   Landlock and audit hook), its own folder only, CPU/memory/time/output limits, pinned package allow-list. Every Python run is the
+   server's, on the compute pool `python`: a pre-imported pandas/NumPy worker that forks one child per call, keeping
+   one-process-per-call isolation while removing interpreter start-up from latency ([PYTHON_COMPUTE.md section 19](PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)).
 4. **No browser Python.** Report and Analyse Python run on the console backend (B). A personal browser console is
    future work and, if ever built, will receive only MQ answers like any other consumer.
 
@@ -646,7 +646,7 @@ language produce the same plan hash**, so caches and standing queries are shared
 |---|---|---|---|
 | **Source** (via the pack's connector) | `SecureScan` (+ pushed filters, projection, sometimes `Aggregate`) | the connector's SQL (DuckDB over Delta/Parquet, PostgreSQL), or the connector's fetch | the smallest result the source can give |
 | **Java server** | everything else: refresh-layer and rollup reads, `Derive`, `Dedup`, `SemiJoin`, `Aggregate`, `Meet`, `Context`, `Window`, `Totals`, `Rel`, masks, standing-query state | embedded DuckDB per query (bounded memory), live tables in memory | Arrow batches |
-| **Console backend** | `Py*` nodes; rendering exports and chart specs; formatting | pyrunner fork-server workers | Arrow in, Arrow/JSON out |
+| **Compute pool `python`** | `Py*` nodes, python visuals, Notebook cells, Python-driven tables | the server's compute workers, strict sandbox | Arrow in, Arrow/JSON/Parquet out |
 | **Browser** | none (draws) | — | — |
 
 **Refresh layers** are a physical choice for `SecureScan`, not a semantic one: read the columns layer (Parquet per
@@ -659,7 +659,7 @@ business date, disposable), the live table (in memory), or the source (`direct`)
 * Fragments run concurrently on virtual threads; source fragments use the connector's pool (6.6); each fragment has
   a deadline derived from the query's budget; cancelling the request (page left, slicer changed) cancels its
   fragments (the console sends `DELETE /mq/run/{id}` or closes the stream).
-* Arrow flows between tiers; the Java tier materialises at most `drishti.bi.query.max-memory-mb` per query (DuckDB
+* Arrow flows between tiers; the Java tier materialises within `drishti.bi.query.memory-limit` (DuckDB
   `memory_limit`, spill to the scratch dir), else `DRS-9024`.
 * **Answer** = rows + totals + meta (`generation` vector, tiers, layer, rollup, cache hit, warnings, canonical MQ, plan
   hash, security signature id *not* the predicates).
@@ -844,7 +844,7 @@ interactive question is `DRS-9025`.
 | per-query memory | `max-memory-mb` (512), DuckDB `memory_limit` + spill | `DRS-9024` past the spill budget |
 | per-query time | `max-millis` (30 s interactive, 300 s background) | cancel all fragments, `DRS-9023` |
 | rows out | `max-rows` grouped 100k, extract 1M (streamed Arrow) | `DRS-9025` or truncated with `meta.truncated` |
-| Python | workers per console (2 → cores/2 with fork-server), queue 5 s | `DRS-9074` |
+| Python | the pool `python`'s workers per node (4 as shipped) and its fair queue | `DRS-9074` |
 | standing queries | max per node, per user; maintenance budget per model | `DRS-9181/9182`, degrade to tick |
 
 **Back-pressure for live:** one coalescing mailbox per client stream (latest answer wins, as today's `FrameMailbox`);
@@ -867,7 +867,7 @@ that floods is sampled by the live table (`rows`, `age` limits).
                 ┌─────────── load balancer (no stickiness: calls relayed) ─────────────┐
                 ▼                                                                       ▼
        console #1 (FastAPI, stateless)                                        console #2 …
-       pyrunner fork-server, L4 local                                         (any console talks to any Java node)
+       no Python: the compute pool python is the server's                      (any console talks to any Java node)
                 │  REST/Arrow + SSE                                                     │
                 ▼                                                                       ▼
        Java #1 ── owns model shards {A, C}                          Java #2 ── owns model shards {B, D}
@@ -886,7 +886,7 @@ that floods is sampled by the live table (`rows`, `age` limits).
 | Standing queries and live tables | **sticky by model shard**: one node owns a model's live tables and its standing queries; others forward subscribe calls; failover replays from the connector's resync and the latest layer |
 | Generations | published on the bus; every node's L1 checks the vector before serving |
 | Console | stateless apart from SSE sessions (held by one console, the calls on them relayed to it: CLUSTER_DEPLOYMENT.md section 9.4) and the Python result cache (local, disposable) |
-| Python runner | per console, or the separate runner service (`bi.python.runner-url`) for heavy sites |
+| Python | the compute pool `python` on each Java node (`compute.pools.python`; more nodes, more workers) |
 
 Built in B (scale wave); until then a site runs one Java node and one or more consoles. The design keeps every
 wave A–C component honest about which state is shared (no static singletons holding generations or subscriptions).
@@ -915,7 +915,7 @@ background work (refresh, precompute, subscriptions), visible on the Admin BI us
 | report page of 8 visuals, cold | < 2 s |
 | live change → screen | < 250 ms charts, < 100 ms grid |
 | DSQL MQ-shaped vs the same MQ | equal latency ± 5 ms (it is the same plan) |
-| Python transform call overhead (fork-server) | < 30 ms |
+| Python transform call overhead (a fork of a warm pool worker) | < 30 ms |
 | 500 concurrent viewers, one model | no SLA breach (B load test, on a real server, never locally) |
 
 Metrics (Micrometer → Prometheus; tags `model`, `tier`, `layer`, `kind`):
@@ -1125,10 +1125,10 @@ Paths are under `drishti-server/src/main/java/com/ash/drishti/server/bi/` (serve
 | `engine/LiveTables`, `LiveAggregate`, `LiveHistory` | **keep** | the base of incremental maintenance (B) |
 | `mq/StandingQueries` (polling loop, full recompute, in-memory map) | **replace** | push on a generation bus, grouped by (plan, signature), incremental rules, shard ownership (B) |
 | `dataset/Composition`, `FrameService` composed datasets, `CompatReader`, v1 dataset files | **replace** | migrated to models and Python/SQL-view datasets; deleted (A) |
-| `transform/ProcessTransformRunner` (Java starts the console's `transform_cli.py`) | **adjust** | Py nodes are called on the console backend over HTTP, one path for every Python interface (B) |
+| `transform/TransformRunner` | **adjust** | one implementation, `bi/python/PythonRuns`: every Python interface on the compute pool `python` |
 | `engine/QueryService.stats()` AtomicLong counters | **replace** | Micrometer metrics of 6.8 (B) |
 | `poc/` (phase 0, still compiled) | **delete** | (A) |
-| console `core/pyrunner.py`, `pyrunner_worker.py` (one process per call, audit hook, rlimits, netns) | **keep** | fork-server, `column` interface, `compute_groups` (B) |
+| `drishti_compute.items` (the pool's engine: one fork child per call, Landlock, network namespace, audit hook, rlimits) | **keep** | the `column` interface, `compute_groups` (B) |
 | console Analyse SQL (SQLite on the console, DuckDB-Wasm in the browser), `web/static/js/bi-explore-duck.js`, Pyodide (`drishti_calc-worker.js`, `static/calc/bi_driver.py`) for BI | **replace** | DSQL on the server (A); browser paths deleted (B) |
 | console `routes/model_routes.py`, `core/model_layer.py`, `drishti_bi-model-designer.js`, `bi-wizard*.js` | **keep** | grow into the designers of section 8 (A, C) |
 
@@ -1192,8 +1192,8 @@ against them.
    selectable only until B).
 5. **Fields everywhere from `describe`** (`drishti_bi-design.js`, `drishti_bi-report.js`): one field list with inherited properties and
    perspective filter; YAML round trip on a concrete syntax tree (comments and order kept) in `core/model_layer.py`.
-6. **Docs** (with the server lane's input): `docs/guides/BI_LANGUAGE_REFERENCE.md` (3.3.8: grammar, every function, error codes,
-   40+ recipes, Python/DAX differences), `BI_LANGUAGE_REFERENCE.md` (DSQL reference), BI_GUIDE.md v2, MODELS.md, API guide; tutorials
+6. **Docs** (with the server lane's input): `docs/guides/RACHANA_REFERENCE.md` (3.3.8: grammar, every function, error codes,
+   40+ recipes, Python/DAX differences), `API_GUIDE.md, Drishti SQL` (DSQL reference), BI_GUIDE.md v2, MODELS.md, API guide; tutorials
    10–18 migrated (UI, CLI, YAML).
 
 **Accepted when:** (1) every shipped sample, test and tutorial 10–18 runs on datasets and models in the UI alone; the
@@ -1202,7 +1202,7 @@ same question as a visual, an MQ and a DSQL statement gives one plan hash, one a
 signature; (3) a dataset with subset, filter, explicit grain, an expression column, a Python column and grouping, and an
 SQL view dataset, are made in the wizard without typing YAML; (4) a hidden column is absent from `describe`, DSQL and
 AI; a report-only reader is refused outside the envelope; (5) the plan's security property tests pass; (6) a test
-fails if BI_LANGUAGE_REFERENCE.md and `functions.yaml` disagree, and all 40+ recipes run as tests on the demo lake; (7) the QA
+fails if RACHANA_REFERENCE.md and `functions.yaml` disagree, and all 40+ recipes run as tests on the demo lake; (7) the QA
 round's findings are fixed before the drill.
 
 #### Wave B — Calculation, live and scale
@@ -1230,14 +1230,14 @@ round's findings are fixed before the drill.
 1. **No browser compute.** Delete `bi-explore-duck.js`, the BI uses of `drishti_calc-worker.js` and `static/calc/bi_driver.py`,
    DuckDB-Wasm and Pyodide from report and Analyse pages; manifests' `target` is server only; Analyse Python cells
    run on the backend; BI pages lose `'wasm-unsafe-eval'`.
-2. **Runner.** Fork-server in `core/pyrunner.py` / `pyrunner_worker.py`; the Py-node endpoint the Java planner calls;
-   the L4 result cache; the `column` interface and `compute_groups`.
+2. **Runner.** The compute pool `python` (`drishti_compute.items`, `PythonRuns`); the plan's Python nodes on the tier `python`;
+   the `column` interface and `compute_groups`.
 3. **Calculation UI.** `calc`, `share_of`, balances in the ExpressionEditor (catalogue-driven); editors for calculation
    groups, parameters (with parameter slicers) and calendars; `via` in the measure editor.
 4. **Live everywhere.** Reports, boards and alerts use pushed `/mq/stream`; state chips (live, throttled, stale);
    a time picker (now, as of, window) in every consumer.
 5. **Explain and usage.** The explain panel under each visual; the shipped *Admin BI usage* report.
-6. **Docs:** BI_LANGUAGE_REFERENCE.md filter-context and balance chapters and recipes; a live and standing-queries guide; an
+6. **Docs:** RACHANA_REFERENCE.md filter-context and balance chapters and recipes; a live and standing-queries guide; an
    operations guide for scale settings and metrics; tutorials updated.
 
 **Accepted when:** (1) % of total, ignore-a-slicer, a YTD calculation group over ten measures and a what-if shock equal
@@ -1266,11 +1266,11 @@ D and E; Python data prep and the browser Python console moved into C).
 2. **Python data prep** (BI_PARITY_PLAN P1–P10): Transforms reading connectors directly, warm workers, a tested snippets
    library (as-of joins for prices and FX, unpivot, type fixes), profiling of a Transform's input and output, a step-by-step
    run (each step's rows and profile) for the editor. **Built:** a pack kind through a connector as an input, as the
-   reader (`POST /api/v1/bi/python/input`); the fork-server started with the console; 21 snippets each with an example run in
+   reader (`POST /api/v1/bi/python/input`); 21 snippets each with an example run in
    pandas and in the sandbox; the profile of inputs, every step and the output; the step-by-step run. Not built: P4 (now 2.9.0),
    precompute on refresh (rest of P6), P7 to P10 ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](../guides/BI_GUIDE.md#17-data-prep-the-transform-editor)).
 3. **The browser Python console's server side:** masked extracts of a model for the browser, promotion of a result to run
-   on the console backend. **Built:** `POST /pyconsole/extract` (the reader's masked rows, `bi.pyconsole.max_rows`) and
+   on the console backend. **Built:** `POST /pyconsole/extract` (the reader's masked rows, cut to a row limit) and
    `/pyconsole/promote` (the code run in the console's cell sandbox over the extract rebuilt for the reader, kept as a notebook draft).
 
 **Console lane:**
@@ -1289,7 +1289,7 @@ D and E; Python data prep and the browser Python console moved into C).
    YAML written and read back, two drafts saved); Analyse's Profile tab shares the panel.
 3. **The browser Python console:** personal, just-in-time analysis on a masked extract of a model (Pyodide); promoted
    results run on the console backend. **Built:** `/pyconsole`, outside `/bi` (not a BI page: P3 holds), Calc's worker,
-   Promote compares the browser's and the backend's answers ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](../guides/USER_GUIDE.md#16-the-browser-python-console)).
+   Promote compares the browser's and the backend's answers ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](../guides/USER_GUIDE.md#the-notebook)).
 4. **Docs and tutorials** for all of the above (UI, CLI and YAML).
 
 **Accepted when:** (1) a Power BI author does the parity task list (BI_PARITY_PLAN §4 items 6–9, 13) without YAML; (2) a
@@ -1506,7 +1506,7 @@ parameter rules moves a model and its reports from dev to test; (3) QA findings 
 | 4 | **Measure references** in DEL: `measure('name')` (3.3.2) | **Confirm `measure('name')`** (taken as final so wave A can start) |
 | 5 | **SQL wire protocol** for outside tools: PostgreSQL wire, Arrow Flight SQL, or HTTP only | **PostgreSQL wire in C** (psql, ODBC/JDBC, Excel, BI tools); HTTP DSQL from A; Flight SQL later on demand |
 | 6 | **Horizontal scale**: stateless asked queries, standing queries and live tables sticky to a model shard, result cache per node | **Yes**; no shared result cache until measurements ask for one |
-| 7 | **Python workers**: per-call process (today), warm pool, or fork-server | **Fork-server**: keeps one process per call, removes start-up latency |
+| 7 | **Python workers**: per-call process, warm pool, or fork per call | **A fork per call from a warm pool worker** (the compute pool `python`): one process per call, no start-up latency |
 | 8 | **Git**: two-way sync between a workspace and a branch | **Two-way in C**; until then export to files and bundles |
 | 9 | **No dual support**: the v1 dataset format and old expression syntax are refused at the end of A | **Yes**: converters plus saved states make it reversible |
 | 10 | **Knowledge time** ("as known at"): not built; as-of business date only, with generation vectors for reproducibility | **Not built now**; revisit with a regulator use case |
@@ -1628,7 +1628,7 @@ and one model serves live and as-of answers.
 Every number is computed by the Java server, the console backend (FastAPI, Python) or the source behind a pack's
 connector; the browser only draws the answer it receives, so every device (an iPhone's Safari, a PC's Chrome) shows the
 same answer. Today's browser paths (Python visuals, measures and Analyse cells through Pyodide, DuckDB-Wasm slicing)
-were to move to the servers in W3 (2.3.0; [section 12.2](#122-the-three-waves) says what moved); a personal Python console in the browser came ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](../guides/USER_GUIDE.md#16-the-browser-python-console)). Details: section 15, its section 12.
+were to move to the servers in W3 (2.3.0; [section 12.2](#122-the-three-waves) says what moved); a personal Python console in the browser came ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](../guides/USER_GUIDE.md#the-notebook)). Details: section 15, its section 12.
 
 ### 14.6 The experience comes first
 
@@ -1662,7 +1662,7 @@ experience rules of its section 3). It fixes the **formats** W1 introduces so th
 second breaking change: every key that a later wave fills is already named here, marked with the wave that gives it
 behaviour. The gap analysis it answers was the 2.1 study (BI_PARITY_PLAN.md, deleted: in git at tag v2.9.5; today's gap check is [section 11](#11-gap-check-against-power-bi)); the current shapes it replaces are
 [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules), [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave), [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles),
-[USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python), [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number) and
+[USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook), [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number) and
 [BI_GUIDE.md](../guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments).
 
 
@@ -2427,7 +2427,7 @@ options: { layer: auto, explain: false, format: json }   # auto | columns | roll
 | `time` | exactly one of `as-of`, `window`, `live`; absent: the model's default (today: the latest business date with rows) |
 | `totals` | `grand` (no fields), `subtotals` (every prefix of `fields`), or explicit `levels` (each a subset of `fields`). Only non-additive measures are computed per level; additive ones are summed by the client (BI_GUIDE.md 3.2, now driven by declared additivity) |
 | `drill` | a hierarchy of the model and the values clicked; the compiler replaces the hierarchy's field by the next level and adds `eq` filters |
-| `shape: rows` | no measures; **one row per row** of the fields' **one** dataset (plus many-to-one attributes), duplicates kept (never `DISTINCT`: the sums of a rows extract equal the measures), with its security; cut at `bi.explore.max_rows`; used by Analyse extracts and *Show the rows* |
+| `shape: rows` | no measures; **one row per row** of the fields' **one** dataset (plus many-to-one attributes), duplicates kept (never `DISTINCT`: the sums of a rows extract equal the measures), with its security; cut at `bi.notebook.max_rows`; used by Analyse extracts and *Show the rows* |
 | `limit` | 1 to the server maximum; default 500 grouped, 10,000 rows |
 
 #### 5.2 The answer
@@ -2670,7 +2670,9 @@ having: [{ measure: Trades, op: gt, value: 0 }]
 `P&L per exposure` is `[P&L 1d] / [Exposure (EE peak)]`, each side at its own grain, then divided. As `rita`: 18
 counterparties, P&L 2,671,113 and EE 1,447,544,943 in total (BI_GUIDE.md 11.3). The `having` keeps the old left join's
 meaning (only counterparties with trades the reader sees), so `hana` gets 17 counterparties, P&L 1,060,102 and EE
-1,356,300,321, as today. Without it she would see exposure for all 18 (8.5).
+1,356,300,321, as today. Her row rule on the trades also limits the exposure to the counterparties her desks trade with
+wherever a model gives the exposure tables `related_rows('trades')` for her role (8.5): the same 17. The shipped `trading-risk` says
+`may-see-all` for its exposure and netting-set tables, as it did before the upgrade, so there the `having` is what keeps her to 17.
 
 **9. A live desk, subscribed** (*live-trading-desk* `by-desk`).
 
@@ -2841,7 +2843,7 @@ datasets until W3, the boards are unchanged (they name reports), and the noteboo
    the bi-admin running it (audited `bi-migrated`), drafts stay drafts. Stable ids are generated and written.
 6. **Idempotent**: a `rachana: 2` item is skipped; a second run changes nothing. Comments in old YAML files are kept
    where the key survives (the converter edits a YAML tree that keeps comments), and dropped with the key otherwise.
-7. Refuses (`DRS-9190`) an item whose old form is invalid, and (`DRS-9191`) a composed join it cannot express as
+7. Refuses (`DRS-9190`) an item whose old form is invalid, and (the migration's refusal) a composed join it cannot express as
    relationships (a join on non-key columns of both sides): the report lists it with the Python-dataset alternative.
 
 ##### 8.3.1 Implementation (task 6)
@@ -2872,7 +2874,7 @@ Decisions taken while building it, against the plan above:
   measure the host lacks move into the host (renamed `<name> (<source>)` when the name means something else there); consumers bind to the host with the
   frame's names renamed (`joined.name` to `counterparties.name`, `Desk P&L` to `P&L 1d`); a visual that read another source of the composed dataset reads
   the host too, so the report's `links:` go. A `left` (or `inner`) join adds the report filter `{ field: <left count measure>, op: gt, value: 0 }`.
-  No host: `DRS-9191`.
+  No host: refused by the migration.
 * **Derived** datasets become a Python dataset `<old>-result` (`source.python`, each input a model query `{ model, select }` on the converted input's
   model) and a model of the old name over it under the alias `result`, so its measures and `result.*` fields keep their meaning. The Transform now
   receives each column named by the last part of its field or measure name (`counterparties.id` is `id`, `P&L 1d`), not the `as` names: a manual step (the shipped `pnl-vs-exposure` accepts both).
@@ -2932,7 +2934,7 @@ silently when an old file is read.
 
 | Change | Who notices | Mitigation |
 |---|---|---|
-| Security binds to the dataset: a row rule on one fact no longer refuses queries about another fact (desk-head and exposure) | a desk-head sees exposure for every counterparty where today the question was refused (`trading-risk`) or limited by a left join (composed sample) | the converter adds `having: Trades > 0` where the composed sample relied on the join; a model that must hide another fact adds its own rule on it |
+| Security binds to the table, and **nobody sees more data after the upgrade** (the owner's decision, 2026-11-07): a row rule on one fact also limits the related rows of another fact of the model (desk-head and exposure) | a desk-head whose question about another fact was refused now gets the rows related to the rows she sees: the limits of her desks, the exposure of the counterparties her desks trade with, the samples of her desks in a live history; never every row | `tables migrate` writes `related_rows('<fact>')` on each other table of a `rachana: 1` dataset for the role whose rule named that fact (a rule naming several tables gives `false`: no rows); a live table's history follows its table's rules on its group columns, and a history without groups refuses. A model that already said `may-see-all` for a role keeps it (it showed every row before the upgrade too); the guard test checks every shipped sample as `rita`, `hana` and `ann` |
 | Composed datasets are gone; `joined.*` fields are renamed | reports, alerts, bookmarks over `desk-pnl-vs-exposure` | the converter rewrites them; stable ids prevent it next time |
 | `POST /datasets/{id}/query` body | API scripts | translated until W4, then `410` with the MQ equivalent in the message |
 | visual `dataset:` and same-owner `links:` | reports over two datasets | the converter merges into one model |
@@ -3848,7 +3850,7 @@ dataset, report visual or terminal search result gives them, in one tabbed works
   appears as a table in SQL).
 - **Local and governed.** Everything runs on the data the server sent for this user: row rules and masks were applied
   before it arrived, so local analysis cannot reveal more than the user may see. Extract size is capped per dataset
-  (`bi.explore.max_rows` and `max_fields` in the console); a larger question goes back to the server as a query.
+  (`bi.notebook.max_rows` and `max_fields` in the console); a larger question goes back to the server as a query.
 - **From exploration to production.** A Slice becomes a visual in a report draft; a SQL cell becomes a dataset measure or
   table; a Python cell becomes a **Transform, Measure or Visual** draft (section 13) with its inputs captured as a test
   fixture, so notebook work turns into reviewed, tested, shared code instead of a lost notebook.
@@ -3868,7 +3870,7 @@ own records. The workbench therefore has two kinds of Python cell:
 | **in the browser** (Pyodide, Web Worker) | slicing, pandas, quick plots on the extract already received | the packages Pyodide provides |
 | **on the console** (the sandboxed Python workers of section 13.2) | quant: pricing, Greeks, scenarios, VaR/ES, exposure and XVA | the vendored wheel set plus the quant engine |
 
-**The quant engine is an interface,** `QuantEngine` in `drishti-console/core/quant/` (price, sensitivities, scenarios,
+**The quant engine is an interface** (design only: price, sensitivities, scenarios,
 VaR/ES, exposure/XVA; Drishti records in through per-pack adapters, Arrow tables out), with **QLRisk** (the owner's
 QuantLib-based risk library: pricing and sensitivities, VaR/ES/FRTB, PFE, SA-CCR, CVA/FVA, SIMM) as its first provider,
 installed from a pinned wheel, and a mock provider for tests. QuantLib is native code, so the engine runs only in the
@@ -3963,7 +3965,7 @@ class Source(Protocol):
 
 | Target | When | Isolation |
 |---|---|---|
-| **Server runner** (`drishti-pyrunner`: worker subprocesses the console starts on demand and stops when idle; nothing extra to deploy) | cached and direct datasets, scheduled refresh, anything shared by many viewers | each call in a worker process with CPU time, memory and wall-clock limits; no network unless the manifest declares hosts and an admin allows them; read-only file system except a scratch folder; an allow-list of packages; inputs and outputs are Arrow only |
+| **Server runner** (the compute pool `python`: the server's workers, a fork child per call; nothing extra to deploy) | cached and direct datasets, scheduled refresh, anything shared by many viewers | each call in a worker process with CPU time, memory and wall-clock limits; no network at all (a namespace with no interface; an approved source is read by the server and handed in); files held by Landlock to the Python installation and a scratch folder; an allow-list of packages; inputs and outputs are Arrow only |
 | **Browser** (Pyodide, the runtime Calc already bundles) | exploration and personal analysis on data the user already received | the browser sandbox, in a Web Worker; loaded on demand |
 
 The dataset or visual says `python: <name>` and, optionally, `run: server | browser | auto`; the engine picks the target
@@ -3972,8 +3974,9 @@ again on the way out of the server runner, so Python cannot reveal a masked fiel
 
 #### 13.3 Packages
 
-The server runner uses a fixed, vendored wheel set per release (pyarrow, numpy, pandas, polars where available,
-scipy, statsmodels, scikit-learn; listed and licence-checked); a workspace cannot install packages. The browser target uses
+The server runs on the compute pool `python`, whose libraries are pinned in `config/compute/locks/python.lock` (pyarrow,
+numpy, pandas, scipy; written by `tools/python_lock.py` from `python.in`); an item may list the pinned packages named in
+`drishti.bi.report.python-packages`, and a workspace cannot install packages. The browser target uses
 the packages Pyodide provides; a manifest that needs a package missing there runs on the server only.
 
 #### 13.4 PygWalker and notebooks
@@ -4036,7 +4039,7 @@ an administrator can restrict which workspaces and roles may use each hook.
 
 ### 17. Architecture
 
-**No new server processes unless they are needed.** The BI code runs inside the existing Drishti server (one package, `com.ash.drishti.server.bi`, with DuckDB embedded) and the console (its BI routes, templates and scripts); the only extra processes are the Python runner's short-lived, sandboxed worker subprocesses (one per call, at most `bi.python.workers` at once: 20.8). When measured load calls for it (section 18), two scale-out options exist, both off by default: the runner as its own service on another host (`bi.python.runner-url`), and more Drishti servers behind a load balancer (PERFORMANCE.md, "Scaling out"). The target architecture is [section 4](#4-query-architecture) and [section 3.5](#35-python-sandboxed-workers-on-the-console-backend). The 2.1 diagram (Perspective, DuckDB-Wasm, Graphic Walker, the module names `drishti-bi-core`, `-query`, `-live`, `-ai`) was replaced and deleted (RUPAKA_2_1_ENGINE.md, in git at tag v2.9.5).
+**No new server processes unless they are needed.** The BI code runs inside the existing Drishti server (one package, `com.ash.drishti.server.bi`, with DuckDB embedded) and the console (its BI routes, templates and scripts); the only extra processes are the compute pool `python`'s workers and their sandboxed fork children (one per call: [PYTHON_COMPUTE.md section 19](PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)). When measured load calls for it (section 18), the scale-out is more Drishti servers (each with its pool `python`) behind a load balancer (PERFORMANCE.md, "Scaling out"). The target architecture is [section 4](#4-query-architecture) and [section 3.5](#35-python-sandboxed-workers-on-the-console-backend). The 2.1 diagram (Perspective, DuckDB-Wasm, Graphic Walker, the module names `drishti-bi-core`, `-query`, `-live`, `-ai`) was replaced and deleted (RUPAKA_2_1_ENGINE.md, in git at tag v2.9.5).
 
 ### 18. Performance targets
 
@@ -4316,7 +4319,7 @@ References: [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-express
 #### 20.8 Python in BI (phase 6)
 
 References: [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) (the reference), [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) section 4.2, [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) section 3.3, [tutorial 14](../tutorials/14-python-and-analyse.md),
-[API_GUIDE.md](../guides/API_GUIDE.md#reports-apiv1bireports-phase-3), the settings `drishti.bi.report.python-*` and the console's `bi.python.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md); tests `PythonBiTest`, `PythonBiApiTest`, `test_pyrunner.py`,
+[API_GUIDE.md](../guides/API_GUIDE.md#reports-apiv1bireports-phase-3), the settings `drishti.bi.report.python-*` and `compute.pools.python` in [CONFIGURATION.md](../admin/CONFIGURATION.md); tests `PythonBiTest`, `PythonBiApiTest`, `PythonRunsTest`, `test_items.py`,
 `test_bi_python.py`, `test_bi_python_browser.py`.
 
 **Built.**
@@ -4329,13 +4332,13 @@ References: [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals
 * **In datasets and reports (13.2, 8).** A dataset measure `{ python, inputs, by }` (all of one table); a query that names it is `DRS-9013`, because the SQL engine cannot run Python. A new visual type `python` (catalogue group *python*, wells `columns` and `values`) asks the server for the rows of one table (the Perspective way: the table's own rows with its `id`, at most
   `drishti.bi.report.python-rows`) under the page's filters, masked and row-ruled as the caller, and shows a Python measure as bars, or what a Visual item returns; `format: { python, params, run }`. The server resolves the item for the caller (`POST /api/v1/bi/reports/{id}/python`: a viewer runs the **published** version, someone who edits the item the draft).
 * **Server runner (13.2, decision row 5).** Worker subprocesses of the console, **one per call** (not a warm pool), `python -I`, empty environment, a scratch folder, `RLIMIT_CPU` and `RLIMIT_AS` and a file-size limit, a wall-clock kill of the process group, an audit hook (no sockets, processes, loader; writes only in the scratch folder, reads only in the Python installation and the scratch folder), an import guard
-  (the manifest's packages, on the console's allow-list, and a short list of safe standard-library modules), a **network namespace** with no interfaces when the machine allows `unshare --user --net` (`bi.python.network_namespace`), a pool of `bi.python.workers` (2) with a bounded wait, input and output size limits. Failures are `DRS-9071` to `9074`; the traceback is for `bi-author` only. The output is derived from the rows the server
+  (the manifest's packages, on the pinned allow-list, and a short list of safe standard-library modules), a **network namespace** with no interface and **Landlock** for every request (the strict sandbox of the compute pool `python`: where it cannot be had, nothing runs), the pool's workers and fair queue, input and output size limits. Failures are `DRS-9071` to `9074`; the traceback is for `bi-author` only. The output is derived from the rows the server
   masked for the reader, so it cannot reveal a masked field; the "masked again on the way out" of 13.2 is therefore not needed and **not built**. The sandbox is defence in depth, not a kernel sandbox ([BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 7 lists what is enforced and what is not).
 * **Browser target (13.2).** The same item in Pyodide in **Calc's own worker** (`drishti_calc-worker.js`, the vendored runtime, loaded on the first browser run), on the JSON the viewer's own query returned; `static/calc/bi_driver.py` runs it. The report page keeps the strict policy: only the worker's response has `'wasm-unsafe-eval'`. `run: auto` asks the server first and falls back to the browser. The browser has numpy, pandas, scipy and statsmodels, not pyarrow.
 * **The sample.** *Desk P&L risk (Python)*: the Python measure **Desk P&L volatility** (in `trades-basic`) and a Python histogram of one-day P&L on the trades sample, both items in `config/bi/python/`; the designer offers the visual under *Python*, with Format for the item, *Run on* and the parameters.
 * **Measured.** A server call is about 220 to 320 ms on the development machine (a process start and the pandas import): the **< 50 ms** of section 18 is **not met**, and a warm pool is the fix; a first browser run takes about 3.3 s.
 
-**Not built, and not faked.** (Built since: the Transform, 20.10; tests shipped with an item, Vega-Lite, Python on boards and in alerts, and Calc's `drishti_bi` client with Graphic Walker, 20.13.) The Source interface; a Python measure inside a SQL query or a chart's measures; Python in subscriptions and embedded reports (an export of a python visual is its input rows); a warm worker pool and the separate runner service (`bi.python.runner-url`); a kernel-level sandbox; PygWalker itself and notebooks in Calc (13.4); scikit-learn and polars in the default allow-list; the designer's live preview of a python visual (it shows a placeholder).
+**Not built, and not faked.** (Built since: the Transform, 20.10; tests shipped with an item, Vega-Lite, Python on boards and in alerts, and Calc's `drishti_bi` client with Graphic Walker, 20.13.) The Source interface; a Python measure inside a SQL query or a chart's measures; Python in subscriptions and embedded reports (an export of a python visual is its input rows); Python on a Windows server (no strict sandbox there); PygWalker itself and notebooks in Calc (13.4); scikit-learn and polars in the default allow-list; the designer's live preview of a python visual (it shows a placeholder).
 
 #### 20.1 Three stages
 
@@ -4386,20 +4389,19 @@ Reference: [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-fro
 
 #### 20.9 Analyse (phase 9, lean)
 
-References: [USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) (the reference), [AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed) section 16 (the console's `QuantEngine`), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 21, [tutorial 14](../tutorials/14-python-and-analyse.md),
-the console's `bi.explore.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md); tests `test_bi_explore.py` and `test_bi_explore_browser.py`.
+References: [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook) (the reference), [AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed) section 16 (the console's `QuantEngine`), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 21, [tutorial 14](../tutorials/14-python-and-analyse.md),
+the console's `bi.notebook.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md); tests `test_bi_explore.py` and `test_bi_explore_browser.py`.
 
 **Built (a lean slice of the phase).**
 
 * **The page** at `/bi/explore` (the rail's *Analyse*, no longer a placeholder): open a dataset (or, over the route, one report visual's data) as a **masked extract**: the server's dataset query *as the reader* (masks, row rules), the table's own rows with
-  their `id`, cut to `bi.explore.max_rows`, rebuilt on every call and never kept. Tabs **Slice**, **SQL**, **Python**; keyboard- and phone-friendly (field chips with R, C, V, F buttons as well as drag).
+  their `id`, cut to `bi.notebook.max_rows`, rebuilt on every call and never kept. Tabs **Slice**, **SQL**, **Python**; keyboard- and phone-friendly (field chips with R, C, V, F buttons as well as drag).
 * **Slice** in plain JavaScript over the extract the page holds (rows, columns, values with `sum`, `avg`, `count`, `min`, `max`, filters).
 * **SQL** cells over the table `extract` on the **console**, read-only (an authorizer: one SELECT), with limits on text, time and rows (`DRS-9070`, `9072`, `9073`).
 * **Python** cells over `df` with `result` drawn as a table, a chart (ECharts option, SVG, PNG) or a value, plus `quant`, on the phase 6 runner (server target, `bi-author`) or in Pyodide in Calc's worker (browser target); the Analyse page keeps the strict policy.
 * **Notebooks** as a BI item kind `notebook` (the kind already existed as a placeholder), body YAML checked by the console (`POST /bi/explore/notebook/check`), saved and versioned through the item API; **Promote**: a Python cell to a Python Measure or Visual draft item, a slice to a report draft
   (matching dataset measures by expression).
-* **`QuantEngine`** (`drishti-console/core/quant/`): `price(instrument, **params)` with a stand-in (Black-Scholes, bond price, NPV) and a documented slot for QLRisk (not imported, not modified); `quant.price(...)` in a server Python cell.
-* A test that the server's `drishti.bi.report.python-packages` and the console's `bi.python.packages` list the same packages.
+* A test that every package of the server's `drishti.bi.report.python-packages` is pinned in `config/compute/locks/python.lock`.
 
 **Decisions that differ from the design above.** At first DuckDB-Wasm was not used (it was not vendored), so Slice was JavaScript and SQL ran on the console in SQLite; since 20.13 both run in the browser in vendored DuckDB-Wasm, with those two as the fallback. The
 page itself still has no WebAssembly: only DuckDB's own worker compiles it. Python cells are for `bi-author`. The codes are the Python items' (`DRS-9070` to `9074`); no new code.
@@ -4409,16 +4411,16 @@ page itself still has no WebAssembly: only DuckDB's own worker compiles it. Pyth
 
 #### 20.10 Several datasets (composed datasets, Python Transforms, reports over several datasets)
 
-References: [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) section 11 (the reference), [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 13, [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) section 16, [USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) section 2, [BI_GUIDE.md](../guides/BI_GUIDE.md) section 13,
-tutorials [10](../tutorials/10-first-bi-report.md) and [14](../tutorials/14-python-and-analyse.md), [API_GUIDE.md](../guides/API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2), the settings `drishti.bi.transform.*` and the console's `bi.explore.max_extracts` in
-[CONFIGURATION.md](../admin/CONFIGURATION.md); tests `ComposedDatasetApiTest`, `TransformServiceTest`, `SampleDatasetsTest`, `test_pyrunner_transform.py`, `test_bi_explore_multi.py`, `test_bi_multi_dataset_browser.py`.
+References: [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) section 11 (the reference), [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 13, [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) section 16, [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook) section 2, [BI_GUIDE.md](../guides/BI_GUIDE.md) section 13,
+tutorials [10](../tutorials/10-first-bi-report.md) and [14](../tutorials/14-python-and-analyse.md), [API_GUIDE.md](../guides/API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2), the settings `drishti.bi.transform.*` and the console's `bi.notebook.max_extracts` in
+[CONFIGURATION.md](../admin/CONFIGURATION.md); tests `ComposedDatasetApiTest`, `TransformServiceTest`, `SampleDatasetsTest`, `test_items.py`, `test_bi_multi_dataset_browser.py`.
 
 The question ("more than one dataset in BI, joined, even by Python") is answered at three levels, and the one rule that decides every design choice is **each source is asked as the reader, before anything is joined**.
 
 **Built.**
 
 * **Composed datasets (YAML).** `from: { alias: { dataset, by, measures | fields, key?, filters? } }` and `join: [{ left, right, on, type: inner|left|full, allow-repeat? }]`, plus the dataset's own measures over the joined columns (`[Desk P&L] / [Exposure (EE peak)]`). The checked result is an ordinary `Dataset` with one table, `joined`, whose columns are the sources' grouping columns and measures (typed from the source models; a source measure is also a measure of the dataset, a `sum` of its column). The engine asks each source through its own `QueryService` query as the reader (so the source's row rules, masks and entitlements apply inside it), stages the answers in DuckDB and compiles the dataset's query over the join (`FrameSql`, `QueryService.runFramed`); the sources run before the composed query takes a place of its own (they are queries too). Join keys must be columns of one type (`DRS-9014`); a join that repeats rows is warned about (`DRS-9015`, from each source's grouping columns or its declared `key`); a dataset that reads itself is refused (`DRS-9016`); a join on a column a source masks for the reader is refused (`403 DRS-9021`: a masked column is one constant). What a source masks is masked in the joined table, as are the measures made from it. The result cache is keyed by the version of every source (text and layer generation, recursively).
-* **Python Transform (server target).** A Python item with `interface: transform` (`inputs` are datasets; `run(*frames)` or a class `Transform`), and **derived datasets** (`derived: { transform, inputs, params }`, `columns:` declared or learned from the last good frame). `FrameService` asks the inputs as the reader and hands them as Arrow; `TransformService` runs the Transform through `ProcessTransformRunner`, which starts the console's `core/transform_cli.py`, which runs `core/pyrunner.py`'s sandboxed worker (so no new sandbox: the same process, no network, limits and audit hook) with `interface: transform`; the frame comes back as Parquet, is checked (rows, bytes, declared columns, usable names) and is **kept per reader and version of the inputs** (`cache-ttl`, `cache-entries`), with a bounded number of runs at once. `POST /datasets/{id}/transform/run` runs it for an author and remembers the columns. Refresh (`refresh:`) follows the sources' loads and drops what was kept.
+* **Python Transform (server target).** A Python item with `interface: transform` (`inputs` are datasets; `run(*frames)` or a class `Transform`), and **derived datasets** (`derived: { transform, inputs, params }`, `columns:` declared or learned from the last good frame). `FrameService` asks the inputs as the reader and hands them as Arrow; `TransformService` runs the Transform through `PythonRuns` on the compute pool `python` (the strict sandbox every Python run has) with `interface: transform`; the frame comes back as Parquet, is checked (rows, bytes, declared columns, usable names) and is **kept per reader and version of the inputs** (`cache-ttl`, `cache-entries`), with a bounded number of runs at once. `POST /datasets/{id}/transform/run` runs it for an author and remembers the columns. Refresh (`refresh:`) follows the sources' loads and drops what was kept.
 * **Reports over several datasets.** A visual's own `dataset:`; the report's `links: [{ fields: [a, b] }]`; each visual is checked and queried against its own dataset; a slicer, a selection, a carried value or a report/page filter reaches a visual of another dataset only through a link (`DatasetSet.translate`), and not at all when none connects them. The viewer indexes each visual's dataset; the designer has Dataset and Links fields.
 * **Analyse.** `extracts:` in a notebook; `extract("name")` in a Python cell (the worker reads the further extracts before the sandbox closes) and a table per extract in SQL; *Promote to a Transform* writes a transform draft from a cell that joins extracts.
 * **Governance.** Impact analysis sets a change to a source dataset against the composed and derived datasets that name what is removed, and against reports by what each visual reads of the dataset; lineage lists a composed dataset's sources upstream and the dependants below; the Model view draws sources, joins and Transform.
@@ -4463,9 +4465,9 @@ Nine items that the earlier phases listed as not built, now built; each is descr
 * **A measure that mixes grains (a correctness fix).** A measure whose expression only combines other measures (`[MTM] / [Exposure]`, `[A] / ([B] + 1)`) and whose components have different grains is no longer one aggregate of one base table (which repeated the one-side figure once per many-side row). `SqlCompiler.expandMixed` replaces it by the measures it is made of (those with aggregates of their own, found through any chain of pure combinations); each is aggregated **at its own grain at the query's grouping** by the several-facts machinery of 20.12, the parts are joined, and the expression is worked out **over the joined results** (`SqlEmitter.overJoined` writes each measure name as its part's column). Filters on such a measure and sorts work the same way; a mask on any component masks the result. A measure with aggregates of its own *and* another table's measure in one expression is not split (it has no grain to split by). `GrainTest` (a brute-force check of trades per desk by region: 1, 2 and the twice-that second-level combination) and `MultiFactTest` (the `Mixed` measure of two unrelated facts is now answered, as the two measures divided). The 20.12 "not built" note about it is removed.
 * **Vega-Lite.** `type: vega-lite` (group `chart`; wells `axis`, `legend`, `values`; `format.spec`), and a Python visual's `output: vega-lite`. Drawn with vendored Vega 6.4.0, Vega-Lite 6.5.0, vega-embed 7.3.0 and **vega-interpreter** (`ast: true`, `expr: vegaInterpreter`): the expression tree is walked, never compiled, so the page keeps the strict policy; vega-embed's own `<style>` is switched off (`defaultStyle: false`), a loader that rejects every URL, canvas, no actions, no tooltip plug-in. `data.url`, `url`, `loader` are refused at design time (`VegaSpecs`, `DRS-9032`), in the Python worker (`DRS-9073`) and in the page. `drishti_bi-vega.js`; no new server endpoint.
 * **Tests shipped with a Python item.** `tests:` in the manifest (`PythonTests`: shape checked by the server, `DRS-9070` with the path; inline `input` frames or a dataset `sample`, `params`, `by`, `expect`, `tolerance`; measures, visuals (`kind` and dotted `has` paths) and transforms). The console runs them in the sandbox (`core/pytests.py`): **Check** shows each as passed, failed or could-not-run; **publish and approve through the console** are refused with `DRS-9076` while one fails (a bi-admin may `force`). Because only the console has Python, a call straight to the server's API is not gated (said in the docs, not hidden).
-* **Python on boards and in alerts.** A board tile may be a python visual (`bi-board.js` runs it through `drishti_bi-python.js`; no tile alert of its own). An alert's measure may be a **Python measure** (`PythonAlertReader`): the server builds the person's rows (the engine applies their row rules and masks), a masked column makes the reading masked and nothing runs, and `TransformRunner.measure` (`ProcessTransformRunner`, the same process boundary a Transform uses: `transform_cli.py` in `measure` mode over `core/pyrunner.py`) answers a number for each group, reduced to one. No new endpoint and no shared secret: the server starts the console's runner itself, as for Transforms (the alternative of the server calling the console over HTTP was built first and removed: a second authenticated door for no gain).
+* **Python on boards and in alerts.** A board tile may be a python visual (`bi-board.js` runs it through `drishti_bi-python.js`; no tile alert of its own). An alert's measure may be a **Python measure** (`PythonAlertReader`): the server builds the person's rows (the engine applies their row rules and masks), a masked column makes the reading masked and nothing runs, and `TransformRunner.measure` (`PythonRuns`, on the compute pool `python` as for Transforms) answers a number for each group, reduced to one.
 * **Calc's `drishti_bi`.** `query` / `datasets` / `describe` (and `_async` forms) ask the BI engine through the page's `/bi/api/datasets/...` as the person (masks and row rules the server's), returning DataFrames. **`drishti_bi.walk(df)`** shows **Graphic Walker 0.5.3** (vendored, PygWalker's front end; **PygWalker itself cannot be vendored offline**: a Jupyter package that needs a server and the internet) in an `<iframe sandbox="allow-scripts">` whose page has its own policy (`unsafe-eval`, inline styles, `connect-src 'none'`, `sandbox`): the only place the console allows them, and a frame that has no cookie, storage or way to reach the console. The bundle is built from the npm package (`tools/vendor-js/`); its map chart's `react-leaflet` (Hippocratic-2.1) is replaced by a stand-in so none of that code is vendored; the library's service hosts are rewritten to `blocked.invalid`.
-* **DuckDB-Wasm in Analyse.** Slice (one `GROUP BY`, finished by the same code as the JavaScript pivot) and SQL cells run in the browser on the extract the page holds, with the server's SQLite and the JavaScript pivot as the fallback (this was removed with DuckDB-Wasm: not installed, `bi.explore.browser_engine: server`, a start slower than `browser_start_seconds`, further extracts). The **page keeps the strict policy**: only DuckDB's worker compiles WebAssembly, under the worker policy of that one file; after the load `enable_external_access = false` and `lock_configuration = true`, one read-only statement, a runaway query has its worker ended. `bi-explore-duck.js`; a Chromium test compares the two engines' tables and SQL results.
+* **DuckDB-Wasm in Analyse.** Slice (one `GROUP BY`, finished by the same code as the JavaScript pivot) and SQL cells run in the browser on the extract the page holds, with the server's SQLite and the JavaScript pivot as the fallback (this was removed with DuckDB-Wasm: not installed, `bi.notebook.browser_engine: server`, a start slower than `browser_start_seconds`, further extracts). The **page keeps the strict policy**: only DuckDB's worker compiles WebAssembly, under the worker policy of that one file; after the load `enable_external_access = false` and `lock_configuration = true`, one read-only statement, a runaway query has its worker ended. `bi-explore-duck.js`; a Chromium test compares the two engines' tables and SQL results.
 * **Promote to a report visual.** `core/promote_report.py`: a slice (with its filters) or a SQL cell (read for plain columns, `GROUP BY`, `sum/avg/count/min/max`, simple conditions; the rest named in the notes) becomes a `matrix`, `table` or `card` in a new report draft or **added to an existing draft** (read by the server's checker, written again by the designer's writer, saved as the draft). A value is a dataset measure only when one is exactly that aggregate.
 * **Perspective charts and the settings panel.** `perspective-chart` (the d3fc plugin; `format.plugin`) and a **Settings** button on every Perspective visual; **Save this view into the report** writes the viewer's state into the draft as `format.view` (`plugin, plugin_config, columns, group_by, split_by, aggregates, sort, filter, expressions, columns_config`; validated). A page that holds a chart gets the two more style hashes the plugin writes (`CHART_STYLE_HASHES`); the open panel sets about a dozen `style` attributes the policy refuses (`style-src-attr`), which are logged and harmless.
 * **Codes.** `DRS-9076` (a Python item's tests failed; console), `DRS-9077` (a Vega-Lite specification not drawn; in the frame).
@@ -4498,7 +4500,7 @@ This is the one summary at 2.1.0. Since then Perspective and DuckDB-Wasm were re
 | Streaming (phase 5, waves A and B) | live tables kept by key, **incremental live measures**, a **history of a live table**, Perspective grid, pivot and chart with the settings panel, boards with **tile hysteresis** and a **board designer**, kiosk | [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles) |
 | Python (phase 6, wave C) | Measure, Visual and Transform interfaces, sandboxed runner, browser target, **tests shipped with an item**, **Python on boards and in alerts**, Vega-Lite output, Calc's **`drishti_bi`** and **Graphic Walker** | [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), [USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view) |
 | Distribution (phase 7, wave D) | PDF, PNG, Excel (with **real charts**) and CSV exports, subscriptions per recipient with optional **narrative summaries**, alerts on measures with **retries**, **webhook and text** channels, `<drishti-report>`, **`<drishti-about>`**, **`<drishti-search>`**, React, Vue and Angular sample pages | [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding), [CLIENT_RENDERER.md](CLIENT_RENDERER.md#19-drishti-elements-developer-guide) |
-| Analyse (phase 9, wave C) | masked extracts, Slice and SQL in the browser (**DuckDB-Wasm**), Python cells, notebooks, **promotion to a report visual**, several extracts | [USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) |
+| Analyse (phase 9, wave C) | masked extracts, Slice and SQL in the browser (**DuckDB-Wasm**), Python cells, notebooks, **promotion to a report visual**, several extracts | [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook) |
 | Stage 2, AI | report from words, ask the data, explain a number, **designer copilot**, **dataset helper**, narrative summaries; off by default, under the AI policy | [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number) |
 | Operations | one temp folder per process; the multi-day type-ahead index with disk segments and reload | [OPERATIONS.md](../admin/OPERATIONS.md) |
 

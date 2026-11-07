@@ -45,8 +45,8 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 
 | Connector | Folder | Kinds |
 |---|---|---|
-| `macro-store` | `data/delta/macro/` | `economy`, `macro-indicator`, `economic-forecast`, `labour-market`, `fiscal-position`, `region-economy` |
-| `civic-store` | `data/delta/civic/` | `jurisdiction`, `party`, `office-holder`, `election`, `region`, `social-indicator` |
+| `macro-store` | `data/delta/demo/macro/` | `economy`, `macro-indicator`, `economic-forecast`, `labour-market`, `fiscal-position`, `region-economy` |
+| `civic-store` | `data/delta/demo/civic/` | `jurisdiction`, `party`, `office-holder`, `election`, `region`, `social-indicator` |
 | `macro-groupings` | computed when asked (plugin `derived`) | `country-group` |
 
 ## Kinds

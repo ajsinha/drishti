@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -67,7 +68,7 @@ class MultiFactTest {
                   MaxLimit: { expr: "max(limits.amount)" }
                   Mixed: { expr: "measure('MTM') / measure('LimitTotal')" }
                 """);
-        DatasetParser.Result r = DatasetParser.parse(yaml);
+        DatasetParser.Result r = Layered.dataset(yaml);
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         ds = new QueryService.Loaded("file:dataset:lake-test", Layers.key("file:dataset:lake-test"), r.dataset(), "h1");
     }
@@ -178,8 +179,17 @@ class MultiFactTest {
         Map<String, Object[]> mixed = rows(run("{\"fields\":[\"desks.desk\"],\"measures\":[\"Mixed\"]," + DAY + "}", who(true, "", "risk")));
         assertThat(mixed.keySet()).isEqualTo(both.keySet());
         both.forEach((desk, v) -> assertThat(((Number) mixed.get(desk)[0]).doubleValue()).isCloseTo(((Number) v[0]).doubleValue() / ((Number) v[1]).doubleValue(), org.assertj.core.data.Offset.offset(1e-9)));
-        // the desk-head's row rule reads trades.desk: the limits cannot honour it, so the query is refused rather than shown unrestricted
-        assertThatThrownBy(() -> run("{\"fields\":[\"desks.desk\"],\"measures\":[\"Trades\",\"LimitTotal\"]," + DAY + "}", who(true, "DESK-A", "desk-head")))
-                .isInstanceOf(DrishtiException.class);
+        // the desk-head's row rule reads trades.desk: never shown unrestricted. The migration gives the limits related_rows('trades') for her role
+        // (BI_DESIGN.md 8.5, the owner's decision of 2026-11-07), so she sees the limits of the desks of the trades she sees, and nothing more
+        Map<String, Object[]> mine = rows(run("{\"fields\":[\"desks.desk\"],\"measures\":[\"Trades\",\"LimitTotal\"]," + DAY + "}", who(true, "DESK-A", "desk-head")));
+        assertThat(mine.keySet()).containsExactly("DESK-A");
+        assertThat(((Number) mine.get("DESK-A")[0]).doubleValue()).isEqualTo(byDesk().get("DESK-A")[0]);
+        assertThat(((Number) mine.get("DESK-A")[1]).doubleValue()).isEqualTo(byDesk().get("DESK-A")[2]);
+        Map<String, Object[]> limitsOnly = rows(run("{\"fields\":[\"desks.desk\"],\"measures\":[\"LimitTotal\"]," + DAY + "}", who(true, "DESK-A", "desk-head")));
+        assertThat(limitsOnly.keySet()).containsExactly("DESK-A");
+        // a role the rule names with no desks sees no limits at all; risk still sees every desk's
+        assertThat(run("{\"fields\":[\"desks.desk\"],\"measures\":[\"LimitTotal\"]," + DAY + "}", who(true, "", "desk-head")).rows()).isZero();
+        assertThat(rows(run("{\"fields\":[\"desks.desk\"],\"measures\":[\"LimitTotal\"]," + DAY + "}", who(true, "", "risk"))).keySet())
+                .containsExactlyElementsOf(byDesk().keySet().stream().filter(d -> java.util.Arrays.asList(TestLake.LIMIT_DESKS).contains(d)).toList());
     }
 }

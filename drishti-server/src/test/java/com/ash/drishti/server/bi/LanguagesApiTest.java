@@ -55,7 +55,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/lang-api-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/lang-api-overlay/added.yaml",
-        "drishti.bi.dir=${drishti.test.dir}/lang-api-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/lang-api-store/${random.uuid}",
+        "drishti.bi.dir=${drishti.test.dir}/lang-api-folder", "drishti.tables.root=${drishti.test.dir}/lang-api-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/lang-api-store/${random.uuid}",
         "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/lang-api-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.lang-lake.plugin=file", "drishti.sources.connectors.lang-lake.kinds[0]=trade",
@@ -71,10 +71,12 @@ class LanguagesApiTest {
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
+    @Autowired com.ash.drishti.server.bi.python.PythonRuns pythonRuns;
     final ObjectMapper json = new ObjectMapper();
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
+        com.ash.drishti.server.bi.python.PythonPoolForTests.register(r);   // compute on with the pool python, where an interpreter has pandas and pyarrow
         root = com.ash.drishti.server.TestRun.temp("drishti-lang-api-lake");
         List<String> lines = new ArrayList<>();
         for (int i = 0; i < 24; i++) {
@@ -110,7 +112,7 @@ class LanguagesApiTest {
                     security:
                       rows:
                         - { role: desk-head, where: "desk in user.desks" }
-                        - { role: [bi-risk, bi-analyst, admin], where: "True" }
+                        - { role: [bi-risk, bi-analyst, admin], where: "true" }
                       masked: [mtm]
                       hidden-for: { roles: [bi-analyst], columns: [book] }
                     """);
@@ -236,6 +238,7 @@ class LanguagesApiTest {
                     measures:
                       Desk notional: { expr: "sum(desks.notional)" }
                     """);
+            com.ash.drishti.server.bi.TablesFolder.migrate(folder);     // tables migrate: the datasets and models become the layer's, the reports rebound
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }
@@ -410,8 +413,8 @@ class LanguagesApiTest {
 
     @Test @Order(22)
     void aPythonColumnIsComputedOverTheReadersRowsAndTheLineageReachesThePackKind() throws Exception {
-        org.junit.jupiter.api.Assumptions.assumeTrue(Files.isExecutable(Path.of("..", "drishti-console", ".venv", "bin", "python").toAbsolutePath()),
-                "the console's Python environment (drishti-console/.venv, with pandas and pyarrow) is needed");   // as ProcessMeasureRunnerTest
+        java.util.Optional<String> why = pythonRuns.unavailable();      // the server's own answer: Linux with Landlock and the pinned interpreter (PythonPoolForTests)
+        org.junit.jupiter.api.Assumptions.assumeTrue(why.isEmpty(), () -> "Python does not run here: " + why.orElse(""));
         Map<String, Object> q = Map.of("mq", 1, "model", "lang-bucket-view@1", "select", Map.of("fields", List.of("trades.bucket"), "measures", List.of("Trades", "K")), "time",
                 Map.of("as-of", DAY));
         JsonNode rita = ok(call("POST", "/api/v1/bi/mq", reader("rita"), q));
@@ -431,7 +434,7 @@ class LanguagesApiTest {
                 .path("meta").path("asOf").asText();
         assertThat(pyAsOf).as("the Python dataset and its base agree on the as-of date").isEqualTo(baseAsOf).isEqualTo(DAY);
         JsonNode lineage = ok(call("GET", "/api/v1/bi/lineage/lang-bucket-view@1", reader("rita"), null));
-        assertThat(lineage.path("datasets").path("trades").toString()).contains("lang-bucketed").contains("lang-trade").contains("pack-kind").contains("trade");
+        assertThat(lineage.path("datasets").path("trades").toString()).contains("lang_bucketed").contains("lang_trade").contains("pack-kind").contains("trade");
         assertThat(lineage.path("problems").size()).isZero();
         if (System.getProperty("capture") != null) {
             System.out.println("CAPTURE13 " + lineage);
@@ -489,7 +492,7 @@ class LanguagesApiTest {
         assertThat(new com.ash.drishti.server.bi.mq.MqException(com.ash.drishti.server.bi.mq.MqException.Problem.of("DRS-9163", "measures[0]", "x")).legacy().errorCode().code())
                 .isEqualTo("DRS-9163");
         // Check warns that the hidden measure is still reachable through the columns its roles see
-        JsonNode check = ok(call("POST", "/api/v1/bi/models/validate", admin(), Map.of("yaml", Files.readString(com.ash.drishti.server.TestRun.root().resolve("lang-api-folder/models/lang-model.model.yaml")))));
+        JsonNode check = ok(call("POST", "/api/v1/bi/models/validate", admin(), Map.of("yaml", Files.readString(com.ash.drishti.server.TestRun.root().resolve("lang-api-folder/tables/bi/lang-model.model.yaml")))));
         JsonNode warn = null;
         for (JsonNode pr : check.path("problems")) {
             if ("DRS-9132".equals(pr.path("code").asText())) {
@@ -553,7 +556,7 @@ class LanguagesApiTest {
     @Test @Order(1)
     void theFunctionCatalogueIsServed() throws Exception {
         JsonNode f = ok(call("GET", "/api/v1/bi/expr/functions", reader("rita"), null));
-        assertThat(f.path("language").asText()).isEqualTo("DEL");
+        assertThat(f.path("language").asText()).isEqualTo("Rachana");
         assertThat(f.path("functions").size()).isGreaterThan(50);
         JsonNode sum = null;
         for (JsonNode x : f.path("functions")) {
@@ -562,7 +565,7 @@ class LanguagesApiTest {
             }
         }
         assertThat(sum).isNotNull();
-        assertThat(sum.path("signature").asText()).isEqualTo("sum(x, where=None)");
+        assertThat(sum.path("signature").asText()).isEqualTo("sum(x, where = null)");
         assertThat(sum.path("params").get(1).path("keywordOnly").asBoolean()).isTrue();
         assertThat(sum.path("examples").size()).isGreaterThanOrEqualTo(2);
         JsonNode row = ok(call("GET", "/api/v1/bi/expr/functions?scope=row", reader("rita"), null));
@@ -580,7 +583,7 @@ class LanguagesApiTest {
             System.out.println("CAPTURE5 " + ok(call("POST", "/api/v1/bi/expr/convert", reader("rita"), Map.of("expr", "sum(trades.mtm, trades.status == 'Live')"))));
         }
         assertThat(v.path("valid").asBoolean()).as(v.toString()).isTrue();
-        assertThat(v.path("syntax").asText()).isEqualTo("del2");
+        assertThat(v.path("syntax").asText()).isEqualTo("rachana");
         assertThat(v.path("uses").path("measures").toString()).contains("Trades");
         assertThat(v.path("type").asText()).isEqualTo("decimal");
 
@@ -595,16 +598,14 @@ class LanguagesApiTest {
         assertThat(codes(validate("ann", "distinct(trades.book)", "aggregate"))).contains("DRS-9152");
         assertThat(codes(validate("rita", "distinct(trades.book)", "aggregate"))).isEmpty();
 
-        JsonNode row = ok(call("POST", "/api/v1/bi/expr/validate", reader("rita"), Map.of("expr", "notional / 1000000 if currency == 'USD' else None", "scope", "row",
+        JsonNode row = ok(call("POST", "/api/v1/bi/expr/validate", reader("rita"), Map.of("expr", "currency == 'USD' ? notional / 1000000 : null", "scope", "row",
                 "model", "lang-model@1", "alias", "trades")));
         assertThat(row.path("valid").asBoolean()).as(row.toString()).isTrue();
         assertThat(row.path("alias").asText()).isEqualTo("trades");
 
         JsonNode old = validate("rita", "[Notional] / [Trades]", "aggregate");
-        assertThat(old.path("syntax").asText()).isEqualTo("legacy");
-        assertThat(old.path("converted").asText()).isEqualTo("measure('Notional') / measure('Trades')");
-        assertThat(codes(old)).containsExactly("DRS-9100");
-        assertThat(old.path("valid").asBoolean()).as("refused since the end of wave A").isFalse();
+        assertThat(old.path("syntax").asText()).isEqualTo("rachana");
+        assertThat(old.path("valid").asBoolean()).as("another syntax is not read: tables migrate rewrites it").isFalse();
     }
 
     /** A report's own measures travel as the model query's define, and its perspective narrows its Fields pane. */
@@ -637,13 +638,12 @@ class LanguagesApiTest {
     @Test @Order(4)
     void anUnsavedDraftIsCheckedAndAggregatesAcrossUnjoinedFactsAreFlagged() throws Exception {
         String draft = """
-                rachana: 2
-                expressions: 2
+                rachana: 3
                 model: lang-draft
                 version: 1.0.0
-                datasets:
-                  trades: { dataset: lang-trade, role: fact }
-                  others: { dataset: lang-trade, role: fact }
+                tables:
+                  trades: { table: bi.lang_trade, role: fact }
+                  others: { table: bi.lang_trade, role: fact }
                 measures:
                   Notional: { expr: "sum(trades.notional)" }
                 """;
@@ -654,41 +654,14 @@ class LanguagesApiTest {
                 "yaml", draft)));
         assertThat(codes(across)).as(across.toString()).contains("DRS-9156");
         JsonNode dataset = ok(call("POST", "/api/v1/bi/expr/validate", reader("rita"), Map.of("expr", "notional * 2", "scope", "row", "yaml", """
-                rachana: 2
-                dataset: lang-unsaved
+                rachana: 3
+                table: bi.lang_unsaved
                 version: 1.0.0
-                extends: lang-trade@1
+                from: { table: bi.lang_trade }
                 """)));
         assertThat(dataset.path("valid").asBoolean()).as(dataset.toString()).isTrue();
     }
 
-    @Test @Order(3)
-    void theConverterRewritesOneExpressionOrAWholeItemKeepingComments() throws Exception {
-        JsonNode one = ok(call("POST", "/api/v1/bi/expr/convert", reader("rita"), Map.of("expr", "sum(trades.mtm, trades.status == 'Live')")));
-        assertThat(one.path("converted").asText()).isEqualTo("sum(trades.mtm, where=trades.status == 'Live')");
-        assertThat(one.path("changed").asBoolean()).isTrue();
-        String yaml = """
-                rachana: 1
-                dataset: x   # a comment that stays
-                measures:
-                  MTM: { expr: "sum(trades.mtm)" }            # unchanged
-                  Ratio: { expr: "[MTM] / [Trades]", format: signed2 }
-                  Short: "count(trades, trades.mtm < 0)"
-                security:
-                  rows:
-                    - { role: risk, where: "true" }
-                """;
-        JsonNode item = ok(call("POST", "/api/v1/bi/expr/convert", reader("rita"), Map.of("yaml", yaml)));
-        String out = item.path("yaml").asText();
-        assertThat(out).contains("# a comment that stays").contains("# unchanged").contains("expressions: 2")
-                .contains("Ratio: { expr: \"measure('MTM') / measure('Trades')\", format: signed2 }")
-                .contains("Short: \"count(trades, where=trades.mtm < 0)\"")
-                .contains("where: \"True\"");
-        assertThat(item.path("expressions").asInt()).isEqualTo(4);
-        assertThat(item.path("changes").size()).isEqualTo(3);
-    }
-
-    /** A data-load signal clears a model's layers for the date as it does a 2.1 dataset's: the next answer reads the reloaded rows (last: it rewrites the lake). */
     @Test @Order(99)
     void aDataLoadClearsAModelsLayersForTheDate() throws Exception {
         Map<String, Object> q = Map.of("mq", 1, "model", "lang-model@1", "select", Map.of("measures", List.of("Notional")), "time", Map.of("as-of", DAY));

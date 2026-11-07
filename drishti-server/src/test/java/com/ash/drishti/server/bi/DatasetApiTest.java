@@ -23,7 +23,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.ash.drishti.server.bi.engine.ArrowTestReader;
-import com.ash.drishti.server.bi.migrate.ModelConverter;
 import com.ash.drishti.server.security.TokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,7 +58,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/bi-dataset-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/bi-dataset-overlay/added.yaml",
-        "drishti.bi.dir=${drishti.test.dir}/bi-dataset-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/bi-dataset-store/${random.uuid}",
+        "drishti.bi.dir=${drishti.test.dir}/bi-dataset-folder", "drishti.tables.root=${drishti.test.dir}/bi-dataset-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/bi-dataset-store/${random.uuid}",
         "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/bi-dataset-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.test-lake.plugin=file", "drishti.sources.connectors.test-lake.kinds[0]=trade",
@@ -72,7 +71,8 @@ import org.springframework.test.web.servlet.ResultActions;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class DatasetApiTest {
 
-    static final String DS = "file:dataset:lake-test";
+    /** The trades of lake-test as tables migrate wrote them: a table of the layer (its model is lake-test). */
+    static final String DS = "file:table:bi.lake_test_trades";
     static Path root;
 
     @Autowired MockMvc mvc;
@@ -148,14 +148,10 @@ class DatasetApiTest {
                     rollups:
                       - { name: by_desk, table: trades, by: [desk, currency], measures: [Notional, MTM, Trades] }
                     """);
-            // since 2.2 a dataset is asked through its model: the converter writes lake-test's datasets and model beside it (BI_DESIGN.md 8.3)
-            Path models = Files.createDirectories(datasets.resolveSibling("models"));
-            ModelConverter.Result converted = ModelConverter.convert(List.of(new ModelConverter.Source("datasets/lake-test.dataset.yaml", "dataset",
-                    Files.readString(datasets.resolve("lake-test.dataset.yaml")))), ModelConverter.Exposure.NOTE);
-            for (Map.Entry<String, String> w : converted.writes().entrySet()) {
-                Files.writeString((w.getKey().startsWith("models/") ? models : datasets).resolve(w.getKey().substring(w.getKey().indexOf('/') + 1)), w.getValue());
-            }
-            Files.writeString(datasets.resolve("hidden-sample.dataset.yaml"), "dataset: hidden-sample\ntitle: A sample\nsample: true\ntables:\n  t:\n    source: { kind: trade }\n    columns: { desk: string }\n");
+            // a dataset is asked through its model: tables migrate writes lake-test's tables and model under tables/ (BI_FOUNDATION_2911E.md 4.3)
+            Files.writeString(datasets.resolve("hidden-sample.dataset.yaml"), "rachana: 2\ndataset: hidden-sample\nversion: 1.0.0\ntitle: A sample\nsample: true\n"
+                    + "source: { kind: trade }\ncolumns:\n  desk: { type: string }\n");
+            TablesFolder.migrate(datasets.getParent());
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }
@@ -305,8 +301,8 @@ class DatasetApiTest {
     void theCatalogueListsDatasetsWithTheirHealthAndHidesSamplesFromThoseWhoMayNotSeeThem() throws Exception {
         JsonNode list = ok(call("GET", "/api/v1/bi/datasets", rita(), null)).path("datasets");
         assertThat(list.toString()).contains(DS).contains("\"valid\":true").doesNotContain("hidden-sample");
-        assertThat(ok(call("GET", "/api/v1/bi/datasets", admin(), null)).path("datasets").toString()).contains("hidden-sample");   // developers mode: the admin sees samples
-        refused(call("GET", "/api/v1/bi/datasets/file:dataset:hidden-sample", rita(), null), 404, "DRS-9001");
+        assertThat(ok(call("GET", "/api/v1/bi/datasets", admin(), null)).path("datasets").toString()).contains("hidden_sample");   // developers mode: the admin sees samples
+        refused(call("GET", "/api/v1/bi/datasets/file:table:bi.hidden_sample", rita(), null), 404, "DRS-9001");
         refused(call("GET", "/api/v1/bi/datasets", nobi(), null), 403, "DRS-9002");
         refused(call("POST", "/api/v1/bi/mq", nobi(), mq("{\"measures\":[\"Trades\"]}")), 403, "DRS-9002");
         refused(call("GET", "/api/v1/bi/datasets/nothing", rita(), null), 404, "DRS-9001");
@@ -315,14 +311,12 @@ class DatasetApiTest {
     @Test @Order(2)
     void theModelShowsTablesRelationshipsMeasuresAndWhatIsMaskedForTheReader() throws Exception {
         JsonNode m = ok(call("GET", "/api/v1/bi/datasets/" + DS, rita(), null));
-        assertThat(m.path("valid").asBoolean()).isTrue();
-        assertThat(m.path("tables").size()).isEqualTo(2);
-        assertThat(m.path("relationships").get(0).path("from").asText()).isEqualTo("trades.book");
-        assertThat(m.path("measures").size()).isEqualTo(3);
+        assertThat(m.path("valid").asBoolean()).as(m.toString()).isTrue();
+        assertThat(m.path("tables").size()).isEqualTo(1);                                  // a table of the layer is its own one-table dataset; the joins are its model's
         assertThat(m.path("tables").get(0).path("access").asText()).isEqualTo("ok");
         assertThat(maskedColumns(m)).isEmpty();
-        assertThat(maskedColumns(ok(call("GET", "/api/v1/bi/datasets/" + DS, ann(), null)))).contains("trades.mtm");
-        assertThat(m.path("security").path("rows").toString()).contains("\"appliesToYou\":true");
+        assertThat(maskedColumns(ok(call("GET", "/api/v1/bi/datasets/" + DS, ann(), null)))).anyMatch(c -> c.endsWith(".mtm"));
+        assertThat(m.path("security").path("rows").toString()).as(m.path("security").toString()).contains("\"appliesToYou\":true");
     }
 
     List<String> maskedColumns(JsonNode model) {
@@ -337,16 +331,17 @@ class DatasetApiTest {
 
     @Test @Order(3)
     void validateFindsMistakesWithTheirCodesAndPaths() throws Exception {
-        refused(call("POST", "/api/v1/bi/datasets/validate", rita(), Map.of("yaml", "dataset: x")), 403, "DRS-9002");     // authors only
-        JsonNode good = ok(call("POST", "/api/v1/bi/datasets/validate", wes(), Map.of("yaml", "dataset: x\ntables:\n  t:\n    source: { kind: trade }\n    columns: { a: string }\nmeasures:\n  N: { expr: \"count(t)\" }\n")));
-        assertThat(good.path("valid").asBoolean()).isTrue();
-        JsonNode bad = ok(call("POST", "/api/v1/bi/datasets/validate", wes(), Map.of("yaml", "dataset: x\ntables:\n  t:\n    source: { kind: trade }\n    columns: { a: string }\nmeasures:\n  N: { expr: \"sum(t.nope)\" }\n  M: { expr: \"lag(sum(t.a))\" }\n")));
+        String table = "rachana: 3\ntable: bi.x\nversion: 1.0.0\nfrom: { kind: trade }\ncolumns:\n  a: { path: \"$.a\", type: string }\n";
+        refused(call("POST", "/api/v1/bi/datasets/validate", rita(), Map.of("yaml", table)), 403, "DRS-9002");     // authors only
+        JsonNode good = ok(call("POST", "/api/v1/bi/datasets/validate", wes(), Map.of("yaml", table)));
+        assertThat(good.path("valid").asBoolean()).as(good.toString()).isTrue();
+        JsonNode bad = ok(call("POST", "/api/v1/bi/datasets/validate", wes(), Map.of("yaml", table + "  b: { expr: \"$.nope * 2\", type: decimal }\n")));
         assertThat(bad.path("valid").asBoolean()).isFalse();
-        assertThat(bad.path("problems").toString()).contains("DRS-9011").contains("measures.N").contains("measures.M");
-        // a table over a connector nobody configured is "has errors", not a good dataset that fails at its first query
-        JsonNode ghost = ok(call("POST", "/api/v1/bi/datasets/validate", wes(), Map.of("yaml", "dataset: x\ntables:\n  t:\n    source: { connector: no-such-lake, kind: trade }\n    columns: { a: string }\nmeasures:\n  N: { expr: \"count(t)\" }\n")));
-        assertThat(ghost.path("valid").asBoolean()).isFalse();
-        assertThat(ghost.path("problems").toString()).contains("no-such-lake").contains("does not exist");
+        assertThat(bad.path("problems").toString()).contains("columns.b");
+        // BI's old dataset form is refused with the migration's command
+        JsonNode old = ok(call("POST", "/api/v1/bi/datasets/validate", wes(), Map.of("yaml", "dataset: x\ntables:\n  t:\n    source: { kind: trade }\n    columns: { a: string }\n")));
+        assertThat(old.path("valid").asBoolean()).isFalse();
+        assertThat(old.path("problems").toString()).contains("DRS-9196").contains("tables migrate");
     }
 
     @Test @Order(4)
@@ -430,11 +425,12 @@ class DatasetApiTest {
         assertThat(inj.path("meta").path("sql").asText()).contains("?").doesNotContain("OR '1'");
         refused(call("POST", "/api/v1/bi/mq?format=xml", rita(), mq("{\"measures\":[\"Trades\"]}")), 422, "DRS-9150");
         // the 2.1 route answers 410 with the model query it would have been
-        var gone = call("POST", "/api/v1/bi/datasets/" + DS + "/query", rita(), "{\"fields\":[\"trades.desk\"],\"measures\":[\"Trades\"],\"dates\":{\"from\":\"2026-10-08\"}}")
+        var gone = call("POST", "/api/v1/bi/datasets/" + DS + "/query", rita(),
+                "{\"fields\":[\"lake_test_trades.desk\"],\"measures\":[\"Count of lake_test_trades\"],\"dates\":{\"from\":\"2026-10-08\"}}")
                 .andExpect(status().isGone()).andReturn().getResponse();
         JsonNode equivalent = json.readTree(gone.getContentAsString());
-        assertThat(equivalent.path("mq").path("model").asText()).isEqualTo(MODEL);
-        assertThat(equivalent.path("mq").path("select").path("measures").toString()).contains("Trades");
+        assertThat(equivalent.path("mq").path("model").asText()).isEqualTo("dataset:bi.lake_test_trades");        // the table's implicit model
+        assertThat(equivalent.path("mq").path("select").path("measures").toString()).contains("Count of lake_test_trades");
         assertThat(equivalent.path("mq").path("time").path("as-of").asText()).isEqualTo("2026-10-08");
         assertThat(ok(call("POST", "/api/v1/bi/mq", rita(), json.writeValueAsString(equivalent.path("mq")))).path("rows").size()).as("the equivalent runs").isEqualTo(3);
     }
@@ -482,9 +478,9 @@ class DatasetApiTest {
         JsonNode kinds = ok(call("GET", "/api/v1/bi/model/kinds", rita(), null)).path("tables");
         assertThat(kinds.toString()).contains("\"kind\":\"trade\"").contains("\"kind\":\"book\"");
         JsonNode draft = ok(call("POST", "/api/v1/bi/model/start", wes(), Map.of("kinds", List.of("trade", "book"), "name", "from-packs")));
-        assertThat(draft.path("yaml").asText()).contains("dataset: from-packs").contains("kind: trade").contains("kind: book");
+        assertThat(draft.path("yaml").asText()).contains("model: from-packs").contains("table: pack.").contains(".trade").contains(".book");
         assertThat(draft.path("relationships").toString()).contains("\"fromTable\":\"trade\"").contains("\"toTable\":\"book\"");   // trade.book -> book: the finance pack's graph
-        JsonNode checked = ok(call("POST", "/api/v1/bi/datasets/validate", wes(), Map.of("yaml", draft.path("yaml").asText())));
+        JsonNode checked = ok(call("POST", "/api/v1/bi/models/validate", wes(), Map.of("yaml", draft.path("yaml").asText())));
         assertThat(checked.path("valid").asBoolean()).as(checked.toString()).isTrue();
         refused(call("POST", "/api/v1/bi/model/start", wes(), Map.of("kinds", List.of("no-such-kind"))), 422, "DRS-9020");
         ok(call("POST", "/api/v1/bi/model/infer", wes(), Map.of("kinds", List.of("trade", "book"))));
@@ -500,16 +496,13 @@ class DatasetApiTest {
     }
 
     @Test @Order(13)
-    void aCopyInMyWorkspaceIsADraftOnlyItsOwnerReadsAndItIsNoLongerAModel() throws Exception {
-        String yaml = java.nio.file.Files.readString(com.ash.drishti.server.TestRun.root().resolve("bi-dataset-folder/datasets/lake-test.dataset.yaml"))
-                .replace("Trades: { expr: \"count(trades)\" }", "Trades: { expr: \"count(trades)\" }\n  Big: { expr: \"sum(trades.notional, where=trades.notional > 10000)\" }");
-        JsonNode created = ok(call("POST", "/api/v1/bi/workspaces/me/items", wes(), Map.of("kind", "dataset", "title", "My copy", "body", yaml)));
+    void aCopyInMyWorkspaceIsADraftOnlyItsOwnerReads() throws Exception {
+        String yaml = java.nio.file.Files.readString(com.ash.drishti.server.TestRun.root().resolve("bi-dataset-folder/tables/bi/lake_test_trades.table.yaml"))
+                .replace("table: bi.lake_test_trades", "table: bi.my_trades");
+        JsonNode created = ok(call("POST", "/api/v1/bi/workspaces/me/items", wes(), Map.of("kind", "table", "title", "My copy", "body", yaml)));
         String id = created.path("id").asText();
         refused(call("GET", "/api/v1/bi/datasets/" + id, rita(), null), 404, "DRS-9001");                 // a personal draft is private
         JsonNode mine = ok(call("GET", "/api/v1/bi/datasets/" + id, wes(), null));
-        assertThat(mine.path("measures").toString()).contains("Big");
-        // a 2.1 dataset is no longer asked as a model since the compatibility reader went (2.2): the message says how to convert it
-        var refusedModel = call("POST", "/api/v1/bi/mq", wes(), "{\"mq\":1,\"model\":\"dataset:" + id + "\",\"select\":{\"measures\":[\"Big\"]}}").andReturn().getResponse();
-        assertThat(refusedModel.getContentAsString()).contains("DRS-9151").contains("drishti.py bi migrate --models");
+        assertThat(mine.path("tables").size()).isEqualTo(1);
     }
 }

@@ -60,8 +60,7 @@ public class ExplainController {
             @RequestParam(required = false) String locale, @RequestHeader(value = "Accept-Language", required = false) String acceptLanguage,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         entitlements.requireOpen(principal, kind);
-        ExplainService.Caller caller = new ExplainService.Caller(principal.user(), entitlements.redactor(principal),
-                k -> entitlements.mayOpen(principal, k), v -> entitlements.restrict(principal, v));
+        ExplainService.Caller caller = new ExplainService.Caller(principal.user(), entitlements.viewer(principal), v -> entitlements.restrict(principal, v));
         PageContext c = explain.explain(EntityRef.of(kind, id), asOf, caller, panel, generation, languages(locale, acceptLanguage));
         boolean askOn = c.about() != null && c.about().pack() != null && ask.enabledFor(c.about().pack().name());
         return c.withAsk(askOn);                       // configuration, not derived data: never part of the cached answer

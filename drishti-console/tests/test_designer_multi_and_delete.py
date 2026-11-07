@@ -63,7 +63,7 @@ def test_a_new_report_has_a_distinct_default_title_not_my_report():
 
 def test_the_new_item_form_asks_a_report_for_its_dataset_and_opens_the_designer():
     js = read(JS / "drishti_bi.js")
-    assert "'/bi/design/'" in js and "layout: board" in js and "'/bi/datasets/new-layer?workspace='" in js and "'/bi/explore'" in js
+    assert "'/bi/design/'" in js and "layout: board" in js and "'/build/tables?new=table&workspace='" in js and "'/bi/notebook'" in js
     assert "sourceLine(f.elements.dataset.value)" in js
 
 
@@ -104,6 +104,6 @@ def test_the_canvas_tags_a_visual_that_reads_another_dataset_and_fields_carry_th
 
 
 def test_the_dataset_page_offers_a_new_report_on_it_and_the_designer_start_preselects_it(client):
-    assert "data-new-report" in client.get("/bi/d/file:dataset:x").text
+    assert client.get("/bi/d/file:dataset:x", follow_redirects=False).headers["location"] == "/bi/ds/file:dataset:x"   # a table's page starts a report
     assert "data-no-datasets" in client.get("/bi/designer").text
     assert "URLSearchParams(window.location.search).get('dataset')" in read(JS / "drishti_bi-design.js")

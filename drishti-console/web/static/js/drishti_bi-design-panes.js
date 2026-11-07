@@ -96,7 +96,7 @@
         const bound = (B.modelBinding && B.modelBinding.ref) || '';
         const move = m.local && bound && bound.indexOf('dataset:') !== 0 ? h('a', { class: 'bi-small', 'data-move-measure': m.name, href: '/bi/models', text: 'Move to the model' }) : null;
         if (move) {
-          B.layer.get('datasets').then((d) => { const it = (d.models || []).find((x) => x.kind === 'model' && x.name === bound.split('@')[0]); if (it) { move.href = '/bi/md/' + B.id2path(it.id) + '?measure=' + encodeURIComponent(m.name) + '&expr=' + encodeURIComponent(m.expr || ''); } else { move.hidden = true; } }).catch(() => { move.hidden = true; });
+          B.layer.get('datasets').then((d) => { const it = (d.models || []).find((x) => x.kind === 'model' && x.name === bound.split('@')[0]); if (it) { move.href = '/build/tables?kind=model&item=' + B.id2path(it.id); } else { move.hidden = true; } }).catch(() => { move.hidden = true; });
         }
         host.setAttribute('data-search', (m.name + ' ' + (m.description || '') + ' ' + (time ? 'time ' + time : '')).toLowerCase());
         host.append(btn, move || '');

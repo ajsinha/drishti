@@ -94,13 +94,13 @@ def test_bi_settings_are_in_the_menu_only_for_bi_admin():
 
 
 @pytest.mark.parametrize("path,page", [("/bi", "home"), ("/bi/catalogue", "catalogue"), ("/bi/workspaces", "workspaces"), ("/bi/w/me", "workspace"),
-                                       ("/bi/i/bi-1", "item"), ("/bi/datasets", "datasets"), ("/bi/designer", "designer"), ("/bi/explore", "explore")])
+                                       ("/bi/i/bi-1", "item"), ("/bi/datasets", "datasets"), ("/bi/designer", "designer"), ("/bi/notebook", "notebook")])
 def test_every_page_has_the_rail_and_the_shared_top_bar(bi, path, page):
     client, _ = bi
     r = client.get(path)
     assert r.status_code == 200
     assert f'data-bi-page="{page}"' in r.text and 'class="bi-rail"' in r.text and 'class="tbar"' in r.text or 'class="tbar-row1"' in r.text
-    for label in ("Home", "Catalogue", "My workspace", "Workspaces", "Datasets", "Designer", "Analyse"):
+    for label in ("Home", "Catalogue", "My workspace", "Workspaces", "Datasets", "Designer", "Pivot", "Notebook"):
         assert label in r.text
     assert "f-keys" not in r.text and "fkeys" not in r.text.lower()                        # the terminal's F-key footer is not shown
     assert "<script>" not in r.text.replace("<script src", "") and " onclick=" not in r.text
@@ -108,10 +108,10 @@ def test_every_page_has_the_rail_and_the_shared_top_bar(bi, path, page):
 
 def test_placeholders_say_what_phase_builds_them(bi):
     client, _ = bi
-    assert "Start a model from the packs" in client.get("/bi/datasets").text                   # datasets are built (phase 2)
+    assert "/build/tables?new=table" in client.get("/bi/datasets").text                         # datasets are tables, written in Build › Tables & models
     assert "Start designing" in client.get("/bi/designer").text and "Not built yet" not in client.get("/bi/designer").text       # the designer is built (phase 3)
-    page = client.get("/bi/explore").text                                                     # Analyse is built (phase 9)
-    assert "Analyse" in page and "Not built yet" not in page and "planned" not in page
+    page = client.get("/bi/notebook").text                                                    # the Notebook is built
+    assert "Notebook" in page and "Not built yet" not in page and "planned" not in page
 
 
 def test_a_page_without_the_power_is_refused_with_the_reason():

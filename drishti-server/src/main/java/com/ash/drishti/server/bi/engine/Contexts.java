@@ -15,12 +15,14 @@
  */
 package com.ash.drishti.server.bi.engine;
 
+import com.ash.drishti.bicompute.context.FilterContext;
+import com.ash.drishti.bicompute.context.FilterContext.Kind;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.Node;
 import com.ash.drishti.server.bi.dataset.Resolver;
-import com.ash.drishti.server.bi.expr.DelPrinter;
+import com.ash.drishti.server.bi.dataset.NodeText;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -40,22 +42,10 @@ import java.util.Set;
  */
 final class Contexts {
 
-    /** The value column of every context sub-query. */
-    static final String VALUE = "__v";
+    /** The value column of every context sub-query (the engine's). */
+    static final String VALUE = FilterContext.VALUE;
     /** The measure the context sub-query computes (the edited aggregate, printed as DEL). */
-    static final String MEASURE = "__ctx";
-
-    /** What a context sub-query is for. */
-    enum Kind {
-        /** the aggregate at a coarser grain or with other filters ({@code calc}, {@code share_of}, {@code parent_of}) or along another relationship */
-        EDIT,
-        /** the aggregate per value of more fields, then their average ({@code avg_by}, {@code avg_over}) */
-        AVERAGE,
-        /** the aggregate at another business date ({@code as_of}) */
-        DATED,
-        /** the latest or earliest date of each group ({@code last}, {@code first}) */
-        EDGE
-    }
+    static final String MEASURE = FilterContext.MEASURE;
 
     /** A joined context: its alias, the SQL of the sub-query, its parameters and the main fields it is joined on. */
     record Joined(String alias, String sql, List<Object> params, List<String> on) {}
@@ -121,57 +111,41 @@ final class Contexts {
      * @param edge the date column of an {@link Kind#EDGE} context, whose {@code edgeFn} ({@code max} or {@code min}) per group it computes
      */
     String register(Kind kind, Node inner, List<Node> ignore, List<Node> keep, String via, List<Node> by, LocalDate date, Node edge, String edgeFn) {
-        if (depth >= SqlCompiler.MAX_CONTEXT_DEPTH) {
-            throw new DrishtiException(ErrorCode.MQ_CONTEXT, "filter-context functions nest more than " + SqlCompiler.MAX_CONTEXT_DEPTH + " deep (through the measures they name)");
+        try {
+            FilterContext.checkDepth(depth);                                   // the engine's rule 2 (BI_DESIGN 3.3.5)
+        } catch (IllegalArgumentException x) {
+            throw new DrishtiException(ErrorCode.MQ_CONTEXT, x.getMessage());
         }
         boolean all = ignore != null && ignore.size() == 1 && ignore.get(0) instanceof Node.Ref r && r.parts().equals(List.of("ALL"));
-        Set<String> ignored = columns(all ? List.of() : ignore);
-        Set<String> kept = keep == null ? null : columns(keep);
-        List<String> subFields = new ArrayList<>();
-        List<String> on = new ArrayList<>();
+        FilterContext.Edit edit = new FilterContext.Edit(kind, all, columns(all ? List.of() : ignore), keep == null ? null : columns(keep), via,
+                by == null ? List.of() : by.stream().map(b -> ((Node.Ref) b).text()).toList(), date);
+        List<FilterContext.Field> answer = new ArrayList<>();
         for (SqlCompiler.Field f : fields) {
-            if (f.masked()) {
-                continue;                                                      // a masked field is never a group, in the main query or in a context
-            }
-            String col = f.ref().table() + "." + f.ref().column();
-            boolean drop = kind == Kind.EDIT && (all || ignored.contains(col) || kept != null && !kept.contains(col));
-            if (!drop) {
-                subFields.add(f.text());
-                on.add(f.text());
-            }
+            answer.add(new FilterContext.Field(f.text(), f.ref().table() + "." + f.ref().column(), f.masked()));
         }
-        List<QueryRequest.Filter> filters = new ArrayList<>();
+        List<FilterContext.Filter> asked = new ArrayList<>();
         Resolver resolver = new Resolver(ds);
         for (QueryRequest.Filter f : query.filters()) {
-            if (ds.measures().containsKey(f.field()) && !f.field().contains(".")) {
-                continue;                                                      // a filter on a measure filters the answer's groups, never a context
-            }
-            String col = column(resolver, f.field());
-            boolean drop = kind == Kind.EDIT && (all || ignored.contains(col) || kept != null && !kept.contains(col));
-            if (!drop) {
-                filters.add(f);
-            }
+            boolean onMeasure = ds.measures().containsKey(f.field()) && !f.field().contains(".");
+            asked.add(new FilterContext.Filter(onMeasure ? null : column(resolver, f.field()), onMeasure));
         }
+        FilterContext.Question question = FilterContext.plan(edit, answer, asked);    // the engine decides the edited question
+        List<String> subFields = question.on();
+        List<String> on = question.on();
+        List<QueryRequest.Filter> filters = new ArrayList<>();
+        question.filters().forEach(i -> filters.add(query.filters().get(i)));
         Dataset sub = via == null ? ds : switched(via);
         Node measure = inner;
         if (kind == Kind.EDGE) {
             measure = new Node.Call(edgeFn, List.of(edge));
         }
-        List<String> grouped = new ArrayList<>(subFields);
-        if (kind == Kind.AVERAGE) {
-            for (Node b : by) {
-                String text = ((Node.Ref) b).text();
-                if (!grouped.contains(text)) {
-                    grouped.add(text);
-                }
-            }
-        }
-        String key = kind + "|" + DelPrinter.print(measure) + "|" + grouped + "|" + filters + "|" + via + "|" + date;
+        List<String> grouped = question.groups();
+        String key = FilterContext.key(edit, NodeText.print(measure), question, filters);
         String alias = byKey.get(key);
         if (alias == null) {
-            alias = "c" + depth + "_" + joined.size();
+            alias = FilterContext.alias(depth, joined.size());
             Map<String, Dataset.Measure> measures = new LinkedHashMap<>(sub.measures());
-            measures.put(MEASURE, new Dataset.Measure(MEASURE, DelPrinter.print(measure), null, "a filter context", null));
+            measures.put(MEASURE, new Dataset.Measure(MEASURE, NodeText.print(measure), null, "a filter context", null));
             sub = sub.withMeasures(measures);
             LocalDate from = date != null ? date : query.from();
             LocalDate to = date != null ? date : query.to();
@@ -195,15 +169,12 @@ final class Contexts {
             String sql = c.sql();
             List<Object> params = c.params();
             if (kind == Kind.AVERAGE) {
-                List<String> outer = subFields.stream().map(Dialect::quote).toList();
-                sql = "SELECT " + (outer.isEmpty() ? "" : String.join(", ", outer) + ", ") + "avg(" + Dialect.quote(MEASURE) + ") AS " + Dialect.quote(MEASURE) + " FROM (" + sql
-                        + ") AS " + Dialect.quote("a") + (outer.isEmpty() ? "" : " GROUP BY " + String.join(", ", outer));
+                sql = FilterContext.average(sql, subFields.stream().map(Dialect::quote).toList(), Dialect.quote(MEASURE));
             }
             joined.add(new Joined(alias, sql, params, on));
             byKey.put(key, alias);
         }
-        String column = Dialect.quote(alias) + "." + Dialect.quote(MEASURE);
-        return kind == Kind.EDGE ? column : "max(" + column + ")";
+        return FilterContext.read(kind, Dialect.quote(alias) + "." + Dialect.quote(MEASURE));
     }
 
     /** The FROM item of a table at the query's dates (the plan's, else read for this purpose): for {@code fx}'s rates table. */
@@ -222,11 +193,8 @@ final class Contexts {
     String from(List<Object> params) {
         StringBuilder b = new StringBuilder();
         for (Joined j : joined) {
-            List<String> conds = new ArrayList<>();
-            for (String f : j.on()) {
-                conds.add(fieldSql.get(f) + " IS NOT DISTINCT FROM " + Dialect.quote(j.alias()) + "." + Dialect.quote(f));
-            }
-            b.append(" LEFT JOIN (").append(j.sql()).append(") AS ").append(Dialect.quote(j.alias())).append(" ON ").append(conds.isEmpty() ? "TRUE" : String.join(" AND ", conds));
+            b.append(FilterContext.join(j.sql(), Dialect.quote(j.alias()), j.on().stream().map(fieldSql::get).toList(),
+                    j.on().stream().map(Dialect::quote).toList()));
             params.addAll(j.params());
         }
         return b.toString();
@@ -283,7 +251,7 @@ final class Contexts {
         }
         Node n;
         try {
-            n = com.ash.drishti.server.bi.expr.Expressions.parse(m.expr());
+            n = com.ash.drishti.server.bi.expr.Expressions.node(m.expr());
         } catch (RuntimeException e) {
             return false;
         }

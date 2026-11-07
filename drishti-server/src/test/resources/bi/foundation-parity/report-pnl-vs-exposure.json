@@ -1,0 +1,380 @@
+{
+  "admin" : {
+    "overview/by-counterparty" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", -9002.5, null ], [ "name-1", 18011.0, null ], [ "name-2", 38021.0, null ], [ "name-3", 65034.5, null ] ]
+    },
+    "overview/by-counterparty | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", -9002.5, null ] ]
+    },
+    "overview/ee" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/ee | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/exposure-by-sector" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0", null ], [ "sector-1", null ], [ "sector-2", null ], [ "sector-3", null ] ]
+    },
+    "overview/exposure-by-sector | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0", null ] ]
+    },
+    "overview/pnl" : {
+      "masked" : [ ],
+      "rows" : [ [ 112064.0 ] ]
+    },
+    "overview/pnl | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ -9002.5 ] ]
+    },
+    "overview/ratio" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/ratio | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/sector" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0" ], [ "sector-1" ], [ "sector-2" ], [ "sector-3" ] ]
+    },
+    "overview/table" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", "sector-0", -9002.5, null, null ], [ "name-1", "sector-1", 18011.0, null, null ], [ "name-2", "sector-2", 38021.0, null, null ], [ "name-3", "sector-3", 65034.5, null, null ] ]
+    },
+    "overview/table | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", "sector-0", -9002.5, null, null ] ]
+    }
+  },
+  "analyst" : {
+    "overview/by-counterparty" : {
+      "masked" : [ "counterparties.NAME" ],
+      "rows" : [ [ "•••", 112064.0, null ] ]
+    },
+    "overview/by-counterparty | slicer sector = sector-0" : {
+      "masked" : [ "counterparties.NAME" ],
+      "rows" : [ [ "•••", -9002.5, null ] ]
+    },
+    "overview/ee" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/ee | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/exposure-by-sector" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0", null ], [ "sector-1", null ], [ "sector-2", null ], [ "sector-3", null ] ]
+    },
+    "overview/exposure-by-sector | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0", null ] ]
+    },
+    "overview/pnl" : {
+      "masked" : [ ],
+      "rows" : [ [ 112064.0 ] ]
+    },
+    "overview/pnl | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ -9002.5 ] ]
+    },
+    "overview/ratio" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/ratio | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/sector" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0" ], [ "sector-1" ], [ "sector-2" ], [ "sector-3" ] ]
+    },
+    "overview/table" : {
+      "masked" : [ "counterparties.NAME" ],
+      "rows" : [ [ "•••", "sector-0", -9002.5, null, null ], [ "•••", "sector-1", 18011.0, null, null ], [ "•••", "sector-2", 38021.0, null, null ], [ "•••", "sector-3", 65034.5, null, null ] ]
+    },
+    "overview/table | slicer sector = sector-0" : {
+      "masked" : [ "counterparties.NAME" ],
+      "rows" : [ [ "•••", "sector-0", -9002.5, null, null ] ]
+    }
+  },
+  "desk-head-no-desks" : {
+    "overview/by-counterparty" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/by-counterparty | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/ee" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/ee | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/exposure-by-sector" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/exposure-by-sector | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/pnl" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/pnl | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/ratio" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/ratio | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/sector" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/table" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/table | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    }
+  },
+  "desk-head-two-desks" : {
+    "overview/by-counterparty" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 19010.5, null ], [ "name-1", 36019.0, null ] ]
+    },
+    "overview/by-counterparty | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 19010.5, null ] ]
+    },
+    "overview/ee" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/ee | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/exposure-by-sector" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0", null ], [ "sector-1", null ] ]
+    },
+    "overview/exposure-by-sector | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0", null ] ]
+    },
+    "overview/pnl" : {
+      "masked" : [ ],
+      "rows" : [ [ 55029.5 ] ]
+    },
+    "overview/pnl | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 19010.5 ] ]
+    },
+    "overview/ratio" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/ratio | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/sector" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0" ], [ "sector-1" ] ]
+    },
+    "overview/table" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", "sector-0", 19010.5, null, null ], [ "name-1", "sector-1", 36019.0, null, null ] ]
+    },
+    "overview/table | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", "sector-0", 19010.5, null, null ] ]
+    }
+  },
+  "no-raw-power" : {
+    "overview/by-counterparty" : {
+      "masked" : [ "counterparties.NAME" ],
+      "rows" : [ [ "•••", 112064.0, null ] ]
+    },
+    "overview/by-counterparty | slicer sector = sector-0" : {
+      "masked" : [ "counterparties.NAME" ],
+      "rows" : [ [ "•••", -9002.5, null ] ]
+    },
+    "overview/ee" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/ee | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/exposure-by-sector" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0", null ], [ "sector-1", null ], [ "sector-2", null ], [ "sector-3", null ] ]
+    },
+    "overview/exposure-by-sector | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0", null ] ]
+    },
+    "overview/pnl" : {
+      "masked" : [ ],
+      "rows" : [ [ 112064.0 ] ]
+    },
+    "overview/pnl | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ -9002.5 ] ]
+    },
+    "overview/ratio" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/ratio | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/sector" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0" ], [ "sector-1" ], [ "sector-2" ], [ "sector-3" ] ]
+    },
+    "overview/table" : {
+      "masked" : [ "counterparties.NAME" ],
+      "rows" : [ [ "•••", "sector-0", -9002.5, null, null ], [ "•••", "sector-1", 18011.0, null, null ], [ "•••", "sector-2", 38021.0, null, null ], [ "•••", "sector-3", 65034.5, null, null ] ]
+    },
+    "overview/table | slicer sector = sector-0" : {
+      "masked" : [ "counterparties.NAME" ],
+      "rows" : [ [ "•••", "sector-0", -9002.5, null, null ] ]
+    }
+  },
+  "risk" : {
+    "overview/by-counterparty" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", -9002.5, null ], [ "name-1", 18011.0, null ], [ "name-2", 38021.0, null ], [ "name-3", 65034.5, null ] ]
+    },
+    "overview/by-counterparty | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", -9002.5, null ] ]
+    },
+    "overview/ee" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/ee | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/exposure-by-sector" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0", null ], [ "sector-1", null ], [ "sector-2", null ], [ "sector-3", null ] ]
+    },
+    "overview/exposure-by-sector | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0", null ] ]
+    },
+    "overview/pnl" : {
+      "masked" : [ ],
+      "rows" : [ [ 112064.0 ] ]
+    },
+    "overview/pnl | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ -9002.5 ] ]
+    },
+    "overview/ratio" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/ratio | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/sector" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0" ], [ "sector-1" ], [ "sector-2" ], [ "sector-3" ] ]
+    },
+    "overview/table" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", "sector-0", -9002.5, null, null ], [ "name-1", "sector-1", 18011.0, null, null ], [ "name-2", "sector-2", 38021.0, null, null ], [ "name-3", "sector-3", 65034.5, null, null ] ]
+    },
+    "overview/table | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", "sector-0", -9002.5, null, null ] ]
+    }
+  },
+  "unnamed-role" : {
+    "overview/by-counterparty" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/by-counterparty | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/ee" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/ee | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/exposure-by-sector" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/exposure-by-sector | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/pnl" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/pnl | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/ratio" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/ratio | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/sector" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/table" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/table | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    }
+  }
+}

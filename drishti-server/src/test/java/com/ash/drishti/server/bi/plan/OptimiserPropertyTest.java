@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.server.bi.plan;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.engine.TestLake;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 class OptimiserPropertyTest {
 
     static final List<String> ALIASES = List.of("trades", "desks");
-    static final List<String> RULES = List.of("trades.desk in ['DESK-A']", "trades.notional > 10", "desks.region == 'EMEA'", "True", "filter trades.currency == 'EUR'");
+    static final List<String> RULES = List.of("trades.desk in ['DESK-A']", "trades.notional > 10", "desks.region == 'EMEA'", "true", "filter trades.currency == 'EUR'");
     static final List<String> FIELDS = List.of("trades.desk", "trades.currency", "trades.notional", "desks.region", "desks.desk");
 
     /** Per alias: its rules, masks and denial, in a canonical form. */
@@ -89,7 +89,7 @@ class OptimiserPropertyTest {
     @Test
     void noRuleRemovesChangesOrAddsSecurityAndNoConditionIsLost() {
         Random r = new Random(4242);
-        var flat = DatasetParser.parse(TestLake.yaml()).dataset();
+        var flat = Layered.dataset(TestLake.yaml()).dataset();
         for (int i = 0; i < 1000; i++) {
             PlanNode body = r.nextInt(3) == 0 ? new PlanNode.Meet(List.of(aggregate(r, "trades"), aggregate(r, "trades")), List.of("trades.desk")) : aggregate(r, "trades");
             if (r.nextBoolean()) {

@@ -225,7 +225,7 @@ class MqEngineTest {
         for (int i = 0; i < 12; i++) {
             int a = random.nextInt(3);
             int b = random.nextInt(4);
-            String rule = "trades.notional > " + (a * 1000) + (b == 0 ? "" : " or trades.desk == 'DESK-" + (char) ('A' + b - 1) + "'");
+            String rule = "trades.notional > " + (a * 1000) + (b == 0 ? "" : " || trades.desk == 'DESK-" + (char) ('A' + b - 1) + "'");
             ModelView tighter = MqHarness.model(MODEL.replace("- { role: [risk, analyst, emea], where: \"true\" }", "- { role: [risk, analyst, emea], where: \"" + rule + "\" }"),
                     TRADES, DESKS, LIMITS);
             Map<String, Object> got = mq.ask(h.bind(tighter, MqHarness.RITA, "t" + i), MqParser.parse("{ mq: 1, model: x, select: { measures: [Trades] } }"), false).body();

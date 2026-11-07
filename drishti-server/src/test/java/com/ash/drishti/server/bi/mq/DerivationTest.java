@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.mq;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.bi.engine.DuckDbEngine;
@@ -23,7 +24,6 @@ import com.ash.drishti.server.bi.engine.QueryService;
 import com.ash.drishti.server.bi.engine.TestLake;
 import com.ash.drishti.server.bi.layer.DatasetDef;
 import com.ash.drishti.server.bi.layer.DatasetDefParser;
-import com.ash.drishti.server.bi.layer.ResolvedDataset;
 import com.ash.drishti.server.bi.plan.LogicalPlan;
 import java.nio.file.Path;
 import java.time.Clock;
@@ -39,8 +39,9 @@ import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Dataset derivation (docs/architecture/BI_DESIGN.md section 3.1): a narrowing dataset keeps a subset of its base's columns, filters, keeps one row per key
- * (the latest by a column, never a silent distinct), derives columns in DEL and along a pack reference ({@code related}), and groups to a coarser grain it
- * declares; each answers what the same arithmetic over the base answers, and the plan shows the derivation above the dataset's scan.
+ * (the latest by a column, never a silent distinct) and derives columns along a pack reference ({@code related}); each answers what the same
+ * arithmetic over the base answers, and the plan shows the derivation above the dataset's scan. Grouping to a coarser grain is a summary table of
+ * the layer (BI_FOUNDATION_2911E.md Q13), read through its model's answer, not a derivation.
  */
 class DerivationTest {
 
@@ -73,7 +74,7 @@ class DerivationTest {
             security:
               rows:
                 - { role: desk-head, where: "desk in user.desks" }
-                - { role: [risk, analyst], where: "True" }
+                - { role: [risk, analyst], where: "true" }
             """;
 
     /** A where on a column the grouping drops: it filters the rows that are grouped, never the groups (the console's wizard found it applied after). */
@@ -124,7 +125,7 @@ class DerivationTest {
     MqService mq = new MqService(MqProperties.defaults());
 
     static Function<String, Optional<DatasetDef>> kinds() {
-        DatasetDef desks = DatasetDefParser.parse(MqEngineTest.DESKS).dataset();
+        DatasetDef desks = Layered.tableDef(MqEngineTest.DESKS).dataset();
         return k -> "desk".equals(k) ? Optional.of(desks) : Optional.empty();
     }
 
@@ -172,47 +173,17 @@ class DerivationTest {
     }
 
     @Test
-    void groupingToACoarserGrainAnswersAsTheBase() {
-        Map<String, List<Object>> grouped = ask(MqHarness.RITA, "{ mq: 1, model: derived, select: { fields: [groups.desk], measures: [Group notional, Group trades, Group rows, Group K] } }");
-        Map<String, List<Object>> base = ask(MqHarness.RITA, "{ mq: 1, model: derived, select: { fields: [trades.desk], measures: [Notional, Trades] } }");
-        assertThat(grouped.keySet()).isEqualTo(base.keySet());
-        grouped.forEach((desk, v) -> {
-            assertThat(d(v.get(0))).as(desk + " notional").isEqualTo(d(base.get(desk).get(0)));
-            assertThat(d(v.get(1))).as(desk + " trades").isEqualTo(d(base.get(desk).get(1)));
-            assertThat(d(v.get(2))).as(desk + ": one row per currency of the desk").isEqualTo(2.0);
-            assertThat(d(v.get(3))).isCloseTo(d(base.get(desk).get(0)) / 1000, org.assertj.core.data.Offset.offset(1e-9));
-        });
-        Map<String, List<Object>> hana = ask(MqHarness.deskHead("DESK-B"), "{ mq: 1, model: derived, select: { fields: [groups.desk], measures: [Group notional] } }");
-        assertThat(hana).as("the grouped dataset's own rule, on a group-by column").containsOnlyKeys("DESK-B");
-    }
-
-    @Test
-    void aWhereWithAGroupFiltersTheRowsBeforeTheyAreGrouped() {
-        Map<String, List<Object>> grouped = ask(MqHarness.RITA, "{ mq: 1, model: derived, select: { fields: [usd.desk], measures: [USD notional, USD trades] } }");
-        Map<String, List<Object>> base = ask(MqHarness.RITA, "{ mq: 1, model: derived, select: { fields: [trades.desk], measures: [Notional, Trades] }, "
-                + "where: [{ field: trades.currency, op: eq, value: USD }] }");
-        assertThat(grouped).isNotEmpty();
-        assertThat(grouped.keySet()).isEqualTo(base.keySet());
-        grouped.forEach((desk, v) -> {
-            assertThat(d(v.get(0))).as(desk + " USD notional").isEqualTo(d(base.get(desk).get(0)));
-            assertThat(d(v.get(1))).as(desk + " USD trades").isEqualTo(d(base.get(desk).get(1)));
-        });
-    }
-
-    @Test
     void thePlanShowsTheDerivationAboveTheScan() {
         MqService.Bound b = h.bind(model, MqHarness.RITA, "derived");
         LogicalPlan p = mq.plan(b, MqParser.parse("{ mq: 1, model: derived, select: { fields: [top.region], measures: [Top K] } }"));
         String tree = p.tree().toString();
         assertThat(tree).contains("op=Derive").contains("related(top__desk.region)").contains("op=Dedup").contains("keep=latest by notional");
-        LogicalPlan g = mq.plan(b, MqParser.parse("{ mq: 1, model: derived, select: { fields: [groups.currency], measures: [Group notional] } }"));
-        assertThat(g.tree().toString()).contains("op=Regroup").contains("by=[desk, currency]");
     }
 
     @Test
     void checkRefusesWhatADerivationCannotDo() {
-        DatasetDef base = DatasetDefParser.parse(MqEngineTest.TRADES).dataset();
-        assertThat(codes(TOP_PER_DESK.replace("columns: [desk, currency, notional, mtm]", "columns: [desk, nope]"), base)).contains("DRS-9105");
+        DatasetDef base = Layered.tableDef(MqEngineTest.TRADES).dataset();
+        assertThat(codes(TOP_PER_DESK.replace("columns: [desk, currency, notional, mtm]", "columns: [desk, nope]"), base)).as("a column the base lacks").isNotEmpty();
         assertThat(codes(TOP_PER_DESK.replace("keep: latest by notional", "keep: latest by ghost"), base)).contains("DRS-9104");
         assertThat(codes(TOP_PER_DESK.replace("keep: latest by notional", "keep: whichever"), base)).contains("DRS-9104");
         assertThat(codes(TOP_PER_DESK.replace("related(desk.region)", "related(currency.region)"), base)).contains("DRS-9101");
@@ -220,13 +191,13 @@ class DerivationTest {
         assertThat(codes(DESK_CCY.replace("desk in user.desks", "notional > 0"), base)).contains("DRS-9106");
         assertThat(codes(DESK_CCY.replace("trades: count", "trades: median"), base)).contains("DRS-9101");
         assertThat(codes(TOP_PER_DESK.replace("notionalK: { expr: \"notional / 1000\", type: decimal }", "notionalK: { expr: \"sum(notional)\", type: decimal }"), base))
-                .contains("DRS-9101");
-        assertThat(ResolvedDataset.extend(DatasetDefParser.parse(DESK_CCY).dataset(), ResolvedDataset.of(base)).def().columns().keySet())
+                .contains("DRS-9127");                                                         // Rachana: an aggregate in a row
+        assertThat(Layered.tableDef(DESK_CCY).dataset().columns().keySet())                       // a grouping is a summary table of its rows' model: its own columns
                 .containsExactly("desk", "currency", "notional", "notionalK", "mtm", "trades");
     }
 
     static List<String> codes(String yaml, DatasetDef base) {
-        DatasetDefParser.Result r = DatasetDefParser.parse(yaml);
+        DatasetDefParser.Result r = Layered.tableDef(yaml);
         List<String> out = new java.util.ArrayList<>(r.problems().stream().filter(com.ash.drishti.server.bi.dataset.DatasetParser.Problem::error)
                 .map(com.ash.drishti.server.bi.dataset.DatasetParser.Problem::code).toList());
         if (r.dataset() != null) {

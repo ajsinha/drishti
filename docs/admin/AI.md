@@ -18,14 +18,14 @@
 Everything about AI in Drishti, in one place: the **model providers** (section 1: one interface, one file per provider, seventeen
 vendor types beside `openai`, `anthropic`, `server` and `mock`), the **MCP client** (section 2: other servers' tools, resources and
 prompts behind Drishti's policy), the design of **AI management** (section 3: one console for every AI setting, use and review), and
-the design of **server-side pricing**, the quant service (section 4), with the console's lean `QuantEngine` slot that is built.
+the design of **server-side pricing**, the quant service (section 4).
 
 | Part | Status |
 |---|---|
 | 1. Model providers | built; **off by default** (`drishti.ai.enabled=false`) |
 | 2. The MCP client | built; **off by default** (`drishti.mcp.enabled=false`) |
 | 3. AI management | design, not built (parked) |
-| 4. The quant service | proposed, not built, except the console's `QuantEngine` slot (section 4, its section 16) |
+| 4. The quant service | proposed, not built (section 4; pricing in Python items: its section 16) |
 
 Each part keeps its own section numbers (part 1's "section 4" is *4. Policy* inside part 1). The pages that use the layer are
 [*Ask about this page*](../guides/USER_GUIDE.md#about-this-page) and BI's AI hooks ([BI_GUIDE.md](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number));
@@ -78,7 +78,7 @@ the settings are in [CONFIGURATION.md](CONFIGURATION.md).
     - [13. Testing](#13-testing)
     - [14. Phases](#14-phases)
     - [15. Risks and open questions](#15-risks-and-open-questions)
-    - [16. The console's QuantEngine slot (built, lean)](#16-the-consoles-quantengine-slot-built-lean)
+    - [16. Pricing in Python items (design only)](#16-pricing-in-python-items-design-only)
     - [17. Reconciled with the compute workers](#17-reconciled-with-the-compute-workers)
 
 ## 1. Model providers
@@ -797,7 +797,7 @@ pricing stays outside the server's JVM, the `quant` power, the packs' pricer map
 for a business date (section 7), caching by trade version and date (section 11). The QuantLib-SWIG Java option rejected in section 3
 *inside the server* is now accepted *in an isolated Java worker*. See [section 17](#17-reconciled-with-the-compute-workers).
 
-**Relation to Rūpaka (BI).** This is the server-side pricing service for the terminal and Calc. [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) section 9.2 plans a different, console-side `QuantEngine` for the analyst workbench of BI phase 9, with QLRisk as its first provider, and keeps it a design until QLRisk's API is declared stable. If both are built they should share the pricer mappings of section 6 rather than keep two. Neither is in the BI pages of 1.20 ([BI_GUIDE.md](../guides/BI_GUIDE.md) section 11 lists what BI does not have yet).
+**Relation to Rūpaka (BI).** This is the server-side pricing service for the terminal and Calc. Python in BI prices nothing of its own; QLRisk would join it as a pinned library of the compute pool `python` (section 16).
 
 Drishti shows trades, market data and risk, and Calc ([USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view)) lets a user compute
 on them in the browser with numpy, pandas and the small `drishti.quant` library. What Calc cannot do well is
@@ -1012,67 +1012,9 @@ and released on its own.
 | Batch results in the lake | to decide in phase 5: a new kind per day, written by the service's batch through the existing loaders |
 | Licensing | QuantLib is BSD-licensed, ORE uses a modified BSD licence; both suit a proprietary product, with notices in `THIRD-PARTY-NOTICES.md` |
 
-### 16. The console's QuantEngine slot (built, lean)
+### 16. Pricing in Python items (design only)
 
-This section is what is **built** of RUPAKA 9.2's `QuantEngine` for Analyse, and it is deliberately small: `price` only (no sensitivities, scenarios, VaR or XVA yet), no pack adapters, no Arrow in or out, a stand-in in place of QLRisk. A Python cell in [Analyse](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) can price things with `quant.price(instrument, **parameters)`. The console does not contain a pricing library of its own: it has a **slot**, the
-`QuantEngine` interface, and a small **stand-in** that fills it so notebooks, demos and tests run anywhere. A real library plugs into the same slot.
-
-#### 16.1 The interface
-
-`drishti-console/core/quant/engine.py`:
-
-```python
-class QuantEngine(ABC):
-    name = "engine"
-    def instruments(self) -> dict[str, list[str]]: ...      # {"npv": ["rate", "cashflows"]}
-    def price(self, instrument: str, **params) -> float: ... # raises QuantError for a call it cannot make
-    def describe(self) -> dict: ...                          # {"engine", "instruments"}
-```
-
-An engine is a **pure function of its inputs**: no network, no files, no state. It is imported by the Python worker *before* the sandbox closes and runs inside it, so it cannot reach out either.
-A `QuantError` reaches the cell as `ValueError: quant: <message>`.
-
-#### 16.2 The stand-in
-
-`core/quant/standin.py` (`math` only), engine name `stand-in`. Rates, yields and volatilities are decimals (`0.05`), times are in years.
-
-| Instrument | Parameters | Returns |
-|---|---|---|
-| `black_scholes` | `spot`, `strike`, `rate`, `vol`, `years`, `kind` (`call` or `put`, default `call`), `div` (default `0`) | European option price |
-| `bond` | `coupon`, `yield_`, `years`, `face` (default `100`), `freq` (default `2`) | price of a fixed-coupon bond; a bond whose coupon equals its yield prices at `face` |
-| `npv` | `rate`, `cashflows` (a list; the first at time 0) | net present value |
-
-```python
-quant.price("black_scholes", spot=100, strike=100, rate=0.05, vol=0.2, years=1)        # 10.4506
-quant.price("bond", coupon=0.05, yield_=0.05, years=10)                                  # 100.0
-quant.price("npv", rate=0.1, cashflows=[-100, 110])                                      # 0.0
-quant.instruments()                                                                      # what the engine prices
-```
-
-It is for teaching and tests, **not a risk system**: no curves, calendars, day counts, Greeks or calibration. Its tests (`test_the_quant_stand_in_prices`) check the Black-Scholes values,
-put-call parity, a par bond and an NPV of zero.
-
-#### 16.3 Setting
-
-`bi.explore.quant_engine` (console `application.yaml`), default `stand-in`. A name no installed engine answers to is `ValueError: no quant engine named ...` in the cell, and the Analyse page
-shows the engine in use.
-
-#### 16.4 How QLRisk plugs in (design only)
-
-QLRisk (the user's quant library, `~/PycharmProjects/qlrisk`) is **under construction; the console neither imports nor modifies it**, and nothing here is wired to it. The slot is
-shaped so that, when its API is stable, the work is small and local:
-
-1. Write an adapter, `core/quant/qlrisk.py`, a `QuantEngine` subclass whose `instruments()` lists what QLRisk prices and whose `price()` translates keyword parameters into QLRisk calls
-   and returns a float (raising `QuantError` for a bad call). The adapter is the only file that imports QLRisk.
-2. Register it in `core/quant/__init__.py: get_engine` under the name `qlrisk`.
-3. Make QLRisk importable by the worker: the worker's import guard allows only the packages a cell lists (on `bi.python.packages`), but the engine is loaded by the worker *before* its sandbox,
-   from the console's own environment, so QLRisk must be installed there (and its data files readable at load time: the sandbox forbids reads after it closes).
-4. Set `bi.explore.quant_engine: qlrisk`.
-
-Open questions for that day: whether QLRisk wants curves and market data passed in (a cell would load them from the extract and pass them as parameters) or fetches them itself (it
-cannot, in the sandbox: no network), whether it is fork- and memory-friendly under the worker's address-space limit, and how results with structure (a Greeks table) come back (the stand-in returns
-one float; `price` could return a dict, and the cell's `result` already draws tables and charts). The design for a separate quant *service* the console calls over the network is
-[BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) section 9.2 and sections 2 to 5 above; this slot is the in-process stand-in for it.
+Python items, Python-driven tables and Notebook cells run on the server's compute pool `python` ([PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)), in a strict sandbox with pinned libraries. They price nothing of their own: there is no quant engine in a cell. When QLRisk's API is stable, it joins the way any library does: pinned in `config/compute/locks/python.in` (then `tools/python_lock.py`), allowed in `drishti.bi.report.python-packages`, and imported by the item that lists it; it then runs in the same sandbox (no network: curves and market data come in as inputs the server reads as the person). Server-side pricing as a service is sections 4 to 15 above and the compute workers' pricer SPI ([PYTHON_COMPUTE.md section 9](../architecture/PYTHON_COMPUTE.md#9-pricing-one-spi-two-engines)).
 
 ### 17. Reconciled with the compute workers
 
@@ -1088,5 +1030,5 @@ Decided 2026-10-24 (product owner); the design is [PYTHON_COMPUTE.md](../archite
 | market data for a business date assembled by the server (section 7) | **kept** |
 | the `quant` power, limits, caching, audit (sections 4, 10, 11) | **kept**, joined by the `compute` power and the compute audit ([DATA_ARCHITECTURE.md › Reactive connectors, section 15](../architecture/DATA_ARCHITECTURE.md#15-observability-and-audit)) |
 
-The console's `QuantEngine` slot (section 16) is unchanged: it serves Analyse cells; when QLRisk is stable its adapter and the compute
+Python items run on the compute pool `python` too (section 16); when QLRisk is stable it is pinned there and shares the packs' pricer mappings with the compute
 pricer SPI share the packs' pricer mappings.

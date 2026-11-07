@@ -114,11 +114,11 @@ public class StudioController {
         if (pasted) {
             // designing is open to every signed-in user: the kind of a pasted document is a label, not a permission
             return entitlements.restrict(principal, pipeline.builtPreview(java.util.Optional.of(s), pasted(req.kind(), req.id(), req.document()),
-                    entitlements.redactor(principal), mayOpen, controls).view());
+                    entitlements.viewer(principal), controls).view());
         }
         entitlements.requireOpen(principal, req.kind());   // a stored entity is data, not design
         return entitlements.restrict(principal,
-                pipeline.preview(s, EntityRef.of(req.kind(), req.id()), asOf, entitlements.redactor(principal), mayOpen, controls));
+                pipeline.preview(s, EntityRef.of(req.kind(), req.id()), asOf, entitlements.viewer(principal), controls));
     }
 
     @GetMapping(path = "/studio/inferred/{kind}/{id}", produces = "text/yaml")

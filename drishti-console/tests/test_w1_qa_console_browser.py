@@ -16,7 +16,7 @@
 its jar taken from the main checkout when the worktree has none): Analyse opens a model or a pack dataset (grouped picker, rows through the model query);
 an alert watches a measure of a model through pickers; a model in a private workspace shows Publish disabled with a Move button; a model shows who uses it
 and starts reports and boards; the security rule's role picker and the roles note; the Datasets list leaves the Security tab; the Models page puts models
-and your datasets before the packs' (grouped, collapsible); the Subscribe form builds its schedule from choices; the new-dataset wizard fits 390 px.
+and your datasets before the packs' (grouped, collapsible); the Subscribe form builds its schedule from choices.
 
 Skipped when Playwright, Chromium or a built server jar is missing, or a scratch port is in use. Each pytest-xdist worker adds 100 to the ports (tests/scratch_ports.py)."""
 from __future__ import annotations
@@ -42,7 +42,7 @@ CONSOLE_URL = f"http://127.0.0.1:{PORTS[1]}"
 
 def test_analyse_opens_a_pack_dataset_through_the_grouped_picker(browser):
     page = sign_in(browser, "wes")
-    page.goto(CONSOLE_URL + "/bi/explore")
+    page.goto(CONSOLE_URL + "/bi/notebook")
     sel = page.locator("[data-dataset]")
     expect(sel.locator("optgroup")).not_to_have_count(0, timeout=20000)
     labels = page.evaluate("[...document.querySelectorAll('[data-dataset] optgroup')].map(g => g.label)")
@@ -72,26 +72,6 @@ def test_an_alert_on_a_measure_of_a_model_uses_pickers(browser):
     page.context.close()
 
 
-def test_a_private_model_cannot_dead_end_and_a_model_shows_its_users(browser):
-    page = sign_in(browser, "wes")
-    made = fetch(page, "POST", "/bi/model-api/new", {"title": "QA private model", "workspace": "me", "datasets": ["pack.trading.trade"]})
-    assert made["status"] == 200, made
-    page.goto(CONSOLE_URL + made["body"]["href"])
-    expect(page.locator('[data-md-root][data-ready="yes"]')).to_have_count(1, timeout=30000)
-    expect(page.locator("[data-publish]")).to_be_disabled()
-    expect(page.locator("[data-move]")).to_be_visible()
-    expect(page.locator("[data-report]")).to_contain_text("New report on this model")
-    expect(page.locator("[data-board]")).to_be_visible()
-    expect(page.locator("[data-used-box]")).to_be_visible()
-    page.click('[data-tab="security"]')
-    expect(page.locator(".bi-md-side")).to_be_hidden()
-    expect(page.locator("[data-roles-note]")).to_contain_text("Roles without a rule see no rows")
-    page.click('[data-tab="canvas"]')
-    expect(page.locator(".bi-md-side")).to_be_visible()
-    clean(page)
-    page.context.close()
-
-
 def test_the_models_page_lists_yours_first_and_the_packs_grouped(browser):
     page = sign_in(browser, "wes")
     expect(page.locator('[data-models-root][data-ready="yes"]')).to_have_count(1, timeout=30000)
@@ -114,11 +94,3 @@ def test_subscribe_builds_its_schedule_from_choices(browser):
     clean(page)
     page.context.close()
 
-
-def test_the_new_dataset_wizard_fits_a_phone(browser):
-    page = sign_in(browser, "wes", width=390)
-    page.goto(CONSOLE_URL + "/bi/datasets/new-layer")
-    expect(page.locator('[data-lw-root][data-ready="yes"]')).to_have_count(1, timeout=30000)
-    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), "the page scrolls sideways"
-    expect(page.locator('[data-src="extends"]')).to_be_visible()
-    page.context.close()

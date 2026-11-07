@@ -25,7 +25,7 @@ import java.util.Objects;
  * A row expression of a formula (the argument or the {@code where=} of an aggregate), two ways from one tree: evaluated over a columnar
  * batch in Java ({@link #eval}: the harness, the playground, the providers that feed batches) and written as SQL over the plan's input
  * columns ({@link #sql}: the tabular provider's {@code GROUPING SETS} statement). The two agree: a missing value, a text that is not a number,
- * a division by zero and a comparison with a missing value are all absent (DEL's "a bad value is None").
+ * a division by zero and a comparison with a missing value are all absent (a bad value is null).
  *
  * <p>Literals are written into the SQL as SQL literals (numbers as Java writes a double; texts quoted, quotes doubled): they come from a
  * function's reviewed definition, never from a reader's input; the reader's values (filters, coordinates) stay bound parameters.
@@ -136,7 +136,11 @@ final class RowExpr {
                 Boolean all = true;
                 for (int i = 0; i < c.ops().size(); i++) {
                     Object right = value(c.rest().get(i), b, r, cols);
-                    Boolean t = compare(c.ops().get(i), left, right);
+                    String op = c.ops().get(i);
+                    boolean nullTest = (op.equals("==") || op.equals("!=")) && (c.rest().get(i) instanceof FormulaAst.NoneLit
+                            || (i == 0 ? c.first() : c.rest().get(i - 1)) instanceof FormulaAst.NoneLit);
+                    // x == null tests for nothing (Rachana's one null rule, BI_FOUNDATION_2911E.md Q1); other comparisons with nothing are unknown
+                    Boolean t = nullTest ? Boolean.valueOf((left == null && right == null) == op.equals("==")) : compare(op, left, right);
                     if (t == null) {
                         all = null;
                         break;
@@ -336,7 +340,7 @@ final class RowExpr {
                     default -> "(TRY_CAST(" + col + " AS DOUBLE) <> 0)";
                 };
             }
-            case FormulaAst.ListLit l -> throw new FormulaParser.FormulaException("a list is only the right side of in", -1);
+            case FormulaAst.ListLit l -> throw new FormulaLowering.FormulaException("a list is only the right side of in", -1);
             case FormulaAst.Unary u -> u.op().equals("not") ? "(NOT " + sql(u.operand(), in, "bool") + ")"
                     : "(" + u.op() + sql(u.operand(), in, "num") + ")";
             case FormulaAst.Binary x -> {
@@ -368,12 +372,19 @@ final class RowExpr {
             FormulaAst right = c.rest().get(i);
             if (op.endsWith("in")) {
                 if (!(right instanceof FormulaAst.ListLit l)) {
-                    throw new FormulaParser.FormulaException("in takes a list: x in ['A', 'B']", -1);
+                    throw new FormulaLowering.FormulaException("in takes a list: x in ['A', 'B']", -1);
                 }
                 boolean text = l.items().stream().anyMatch(x -> x instanceof FormulaAst.Str);
                 String kind = text ? "text" : "num";
-                String items = String.join(", ", l.items().stream().map(x -> sql(x, in, kind)).toList());
-                parts.add("(" + sql(left, in, kind) + (op.equals("in") ? " IN (" : " NOT IN (") + items + "))");
+                if (l.items().isEmpty()) {                                   // an empty list matches nothing, as the Java path answers (SQL has no IN ())
+                    parts.add("(CASE WHEN " + sql(left, in, kind) + " IS NULL THEN NULL ELSE " + (op.equals("in") ? "FALSE" : "TRUE") + " END)");
+                } else {
+                    String items = String.join(", ", l.items().stream().map(x -> sql(x, in, kind)).toList());
+                    parts.add("(" + sql(left, in, kind) + (op.equals("in") ? " IN (" : " NOT IN (") + items + "))");
+                }
+            } else if ((op.equals("==") || op.equals("!=")) && (left instanceof FormulaAst.NoneLit || right instanceof FormulaAst.NoneLit)) {
+                FormulaAst other = right instanceof FormulaAst.NoneLit ? left : right;
+                parts.add("(" + sql(other, in, "text") + (op.equals("==") ? " IS NULL)" : " IS NOT NULL)"));
             } else {
                 boolean text = left instanceof FormulaAst.Str || right instanceof FormulaAst.Str;
                 String kind = text ? "text" : "num";

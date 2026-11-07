@@ -438,6 +438,20 @@ public final class DatasetRefresher implements AutoCloseable {
 
     /** Refreshes the dataset's layers for the current business date on a background thread and returns at once; the state shows how it went. */
     public Map<String, Object> runNow(QueryService.Loaded ds, String actor) {
+        List<Job> tableJobs = ds.dataset().refresh().scheduled() ? List.of() : jobs(ds).stream().filter(x -> x.table() != null).toList();
+        if (!tableJobs.isEmpty()) {                                            // tables refreshed on their own schedules: the run is theirs, in their history
+            Map<String, Object> first = null;
+            for (Job t : tableJobs) {
+                State st = states.compute(t.key(), (k, old) -> old != null ? old : new State(t.schedule(), null));
+                if (st.running.compareAndSet(false, true)) {
+                    st.status = "running";
+                    st.trigger = "manual (" + actor + ")";
+                    Thread.ofVirtual().name("drishti-bi-refresh-" + t.key()).start(() -> run(t, st, "manual (" + actor + ")", sources()));
+                }
+                first = first == null ? st.toMap() : first;
+            }
+            return first;
+        }
         Job j = new Job(ds, null, ds.dataset().refresh().scheduled() ? ds.dataset().refresh().schedule() : "on demand");
         State st = states.compute(j.key(), (k, old) -> old != null ? old : new State(j.schedule(), null));
         if (st.running.compareAndSet(false, true)) {

@@ -18,7 +18,8 @@ A snippet is one step of a Transform: a few lines of pandas over ``df`` (the fra
 ``config/prep-snippets.yaml`` (and the file ``bi.transform.snippets_file`` names, if any). :meth:`SnippetLibrary.render` writes each value into the code as a
 Python literal (``repr``), so a value is always data: a column called ``x"]; import os`` is a column of that odd name, never code. An ``input`` parameter
 must be one of the Transform's own input names (written as that name) and an ``operator`` one of its options. Nothing here runs code: the rendered step
-runs where every step runs, in the sandbox (``core/pyrunner.py``). :func:`run_example` runs a snippet's own example in plain pandas, for its tests."""
+runs where every step runs, on the server's compute pool (``POST /api/v1/bi/python/steps``); the snippets' own examples are run by
+``tests/test_transform_editor.py``."""
 from __future__ import annotations
 
 import keyword
@@ -146,42 +147,3 @@ def literal(p: dict, v, inputs: list[str]) -> str:
             raise SnippetError(f"'{label}' is one of the Transform's inputs ({', '.join(inputs) or 'none yet'})")
         return name
     raise SnippetError(f"unknown parameter kind {kind}")
-
-
-# ---- the examples: each snippet's own test -------------------------------------------------------------------------------------------
-
-def frame(spec: dict):
-    import pandas as pd
-    return pd.DataFrame([list(r) for r in spec.get("rows") or []], columns=list(spec.get("columns") or []))
-
-
-def plain(v):
-    """A cell as the examples write it: numbers, text, None for empty, dates as ISO text."""
-    if v is None:
-        return None
-    if hasattr(v, "item") and not isinstance(v, (str, bytes)):
-        try:
-            v = v.item()
-        except (ValueError, TypeError):
-            pass
-    if isinstance(v, float) and math.isnan(v):
-        return None
-    if type(v).__name__ in ("NAType", "NaTType"):
-        return None
-    if hasattr(v, "isoformat"):
-        return v.isoformat()[:10] if not getattr(v, "hour", 0) and not getattr(v, "minute", 0) else v.isoformat()
-    return v
-
-
-def run_example(library: SnippetLibrary, sid: str):
-    """Runs a snippet's example in plain pandas: the rendered step over its input frames. Returns (columns, rows) as the example's ``expect`` writes them."""
-    import numpy as np
-    import pandas as pd
-    s = library.get(sid)
-    ex = s["example"]
-    frames = {name: frame(spec) for name, spec in (ex.get("inputs") or {}).items()}
-    step = library.render(sid, ex.get("params") or {}, [n for n in frames if n != "df"])
-    ns = {"pd": pd, "np": np, "re": re, **{k: v.copy() for k, v in frames.items()}}
-    exec(compile(step["code"], f"<snippet {sid}>", "exec"), ns)   # noqa: S102 - the library's own tested code, in a test
-    out = ns["df"]
-    return [str(c) for c in out.columns], [[plain(v) for v in r] for r in out.astype(object).itertuples(index=False, name=None)]

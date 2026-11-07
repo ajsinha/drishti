@@ -23,7 +23,6 @@ import com.ash.drishti.identity.User;
 import com.ash.drishti.identity.UserService;
 import com.ash.drishti.identity.bi.BiStore;
 import com.ash.drishti.packs.PackRegistry;
-import com.ash.drishti.server.bi.dataset.LegacySources;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.dataset.UserAttributes;
@@ -170,6 +169,14 @@ public final class DatasetService {
 
         /** As {@link #detail} for a model named by reference, through a consumer when one is given. */
         QueryService.Result detailModel(Principal p, String model, String consumer, QueryRequest q);
+
+        /**
+         * The loaded form of a model named by reference as the reader asks it (its id, layers key and flattened dataset): what a report bound with
+         * {@code model:} follows when its model reads live tables (a tick, a stream). Null without the model layer.
+         */
+        default QueryService.Loaded loadedModel(Principal p, String model, String consumer) {
+            return null;
+        }
 
         /** As {@link #ask} on a model named by reference ({@code trades@1}, {@code dataset:<name>}): a report bound with {@code model:}. */
         Asked askModel(Principal p, String model, QueryRequest q, boolean explain);
@@ -600,9 +607,6 @@ public final class DatasetService {
 
     private DatasetParser.Result parse(String id, String body) {
         String h = hash(body);
-        if (LegacySources.dependsOnOthers(body)) {
-            return DatasetParser.parse(body);                      // its model depends on the datasets it is made of, which may have changed: never served from the cache
-        }
         Parsed p = parsed.get(id);
         if (p == null || !p.hash().equals(h)) {
             p = new Parsed(h, DatasetParser.parse(body));
@@ -613,7 +617,7 @@ public final class DatasetService {
 
     private BiStore.Item datasetItem(Principal p, String id) {
         BiStore.Item i = bi.readableItem(p, id);
-        if (!"dataset".equals(i.kind())) {
+        if (!"dataset".equals(i.kind()) && !"table".equals(i.kind())) {
             throw new DrishtiException(ErrorCode.BI_NOT_FOUND, "'" + id + "' is not a dataset");
         }
         return i;
@@ -720,7 +724,11 @@ public final class DatasetService {
         m.put("engine", d.engine());
         m.putAll(shape(p, d));
         Set<String> mine = Set.copyOf(p.roles());
-        m.put("security", Map.of("rows", d.security().rows().stream().map(x -> Map.of("role", x.role(), "where", x.where(), "appliesToYou", mine.contains(x.role()))).toList(),
+        List<Map<String, Object>> ruleRows = new ArrayList<>();                 // a version-1 dataset's rules, then each table's (the layer binds them per table)
+        d.security().rows().forEach(x -> ruleRows.add(Map.of("role", x.role(), "where", x.where(), "appliesToYou", mine.contains(x.role()))));
+        d.security().tables().forEach((t, s) -> s.layers().forEach(l -> l.forEach(x -> ruleRows.add(Map.of("table", t, "role", x.role(), "where", x.where(),
+                "appliesToYou", mine.contains(x.role()))))));
+        m.put("security", Map.of("rows", ruleRows,
                 "masked", d.security().masked(), "rowRulesEnforced", security.enabled()));
         m.put("rollups", d.rollups().stream().map(x -> Map.of("name", x.name(), "table", x.table(), "by", x.by(), "measures", x.measures())).toList());
         if (r.ok() && refresher != null) {
@@ -803,7 +811,7 @@ public final class DatasetService {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("kind", d.composed() ? "composed" : "derived");
         List<Map<String, Object>> sources = new ArrayList<>();
-        for (Dataset.Input in : LegacySources.sources(d)) {
+        for (Dataset.Input in : d.inputs()) {
             Map<String, Object> s = new LinkedHashMap<>();
             s.put("alias", in.alias());
             s.put("dataset", in.dataset());
@@ -878,12 +886,12 @@ public final class DatasetService {
 
     /** The state of a dataset's live tables (generation, last update, state, counters), starting them when they are not running: {@code state: none} without live tables. */
     public Map<String, Object> liveTick(Principal p, BiStore.Item item) {
-        return queries.liveTick(loaded(p, item));
+        return queries.liveTick(isModelRef(item) ? requireGateway().loadedModel(p, item.id(), consumerOf(item)) : loaded(p, item));
     }
 
     /** A reader of the dataset's live state for a stream: the dataset is resolved once; each call reads the tables' counters (and starts a table that was closed as idle). */
     public java.util.function.Supplier<Map<String, Object>> liveWatch(Principal p, BiStore.Item item) {
-        QueryService.Loaded ds = loaded(p, item);
+        QueryService.Loaded ds = isModelRef(item) ? requireGateway().loadedModel(p, item.id(), consumerOf(item)) : loaded(p, item);
         queries.liveTick(ds);
         return () -> queries.liveTick(ds);
     }
@@ -1078,7 +1086,7 @@ public final class DatasetService {
     /** The name of a {@code rachana: 2} dataset item (one of the model layer), or null for a version 1 dataset. */
     private String layerDatasetName(Principal p, BiStore.Item item) {
         String body = bi.bodyFor(p, item);
-        if (!com.ash.drishti.server.bi.layer.DatasetDefParser.isVersion2(body)) {
+        if (!com.ash.drishti.server.bi.layer.DatasetDefParser.isTable(body)) {
             return null;
         }
         com.ash.drishti.server.bi.layer.DatasetDef d = com.ash.drishti.server.bi.layer.DatasetDefParser.parse(body).dataset();

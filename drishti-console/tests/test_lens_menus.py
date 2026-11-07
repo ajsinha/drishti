@@ -18,10 +18,12 @@ order; a full Drishti keeps Views, Engines, BI, Build, Admin and Help (the Engin
 from __future__ import annotations
 
 import re
+from urllib.parse import unquote
 
 import yaml
 
 from conftest import CONSOLE
+from core.auth import Identity
 from test_edition import RISK_ABOUT, _app, _client
 
 ROOT = CONSOLE.parent
@@ -91,7 +93,7 @@ def test_a_lens_draws_its_own_subject_menus_for_that_person_only(backend, monkey
     alice, bob = _client(app), _client(app, "bob")
     expected = {"world": ["Views", "Economies", "Markets", "Companies", "Admin", "Help"],
                 "market": ["Views", "Curves", "Volatility", "FX", "Credit", "Admin", "Help"],
-                "trading": ["Views", "Engines", "Blotter", "Positions", "Risk", "Counterparties", "Admin", "Help"]}
+                "trading": ["Views", "Engines", "Markets", "Blotter", "Positions", "Risk", "Counterparties", "Help"]}   # BI and Admin by command
     for lens, menus in expected.items():
         alice.post(f"/lens/{lens}")
         page = alice.get("/t").text
@@ -106,11 +108,45 @@ def test_a_lens_draws_its_own_subject_menus_for_that_person_only(backend, monkey
     page = alice.get("/t").text
     assert _commands(_panel(page, "Economies")) == ["ECON …", "MACRO", "FCST", "REGE"]
     assert _commands(_panel(page, "Companies")) == ["USEQ", "EDGAR", "LEIC", "FUND"]
+    assert _commands(_panel(page, "Markets")) == ["NEWS", "QUOTE", "IDX"]                # World's Markets: news and quotes only
     alice.post("/lens/trading")
     page = alice.get("/t").text
     assert _commands(_panel(page, "Blotter")) == ["TRD", "CTRD", "PTRD", "LTRD"]
-    assert _commands(_panel(page, "Risk")) == ["VAR", "VLIM", "TVAL", "PNLV"]
-    assert _commands(_panel(page, "Counterparties")) == ["CPTY", "NSET", "LIM", "XWIF", "EXP"]
+    assert _commands(_panel(page, "Risk")) == ["VAR", "VLIM", "TVAL", "PNLV", "DPNL", "PNL", "SENS"]
+    assert _commands(_panel(page, "Counterparties")) == ["CPTY", "NSET", "LIM", "XWIF", "EXP", "CCUBE"]   # CCUBE: the Pivot's preset ccr, under construction
+
+
+def test_the_trading_lens_has_one_markets_menu_and_no_bi_or_admin_menu(backend, monkeypatch):
+    """Product panel A19 (2026-11-06): the Trading lens is configuration. One Markets menu gathers the market-data screens (Curves,
+    Volatility, FX and Credit's columns, then equities and commodities), PNL, DPNL, SENS, FXF, IRV, CPV, FIX and REPO are shown, and BI
+    and Admin are reached by command only."""
+    app = _app(backend, monkeypatch)
+    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["trading"]})
+    alice = _client(app)
+    alice.post("/lens/trading")
+    page = alice.get("/t").text
+    assert "BI" not in _menus(page) and "Admin" not in _menus(page)
+    markets = _panel(page, "Markets")
+    assert re.findall(r'<div class="mega-title">([^<]+)<', markets) == ["Rates", "Volatility surfaces", "Foreign exchange", "Credit",
+                                                                     "Equities and commodities"]
+    assert _commands(markets) == ["CRV", "REPO", "FIX", "IRV", "CPV", "FXV", "FX", "FXF", "CDS", "BND", "EQ", "EQX", "CMD", "CMDC"]
+    r = alice.get("/go?q=BI <GO>", follow_redirects=False)                              # BI's own answer (the stand-in holds no BI), not DRS-4023
+    assert r.status_code == 303 and "DRS-4023" not in r.headers["location"] and "Rupaka" in unquote(r.headers["location"])
+    for typed, to in (("ADMIN", "/admin/users"), ("ADMIN LOADS", "/admin/loads")):
+        r = alice.get(f"/go?q={typed} <GO>", follow_redirects=False)
+        assert r.status_code == 303 and r.headers["location"] == to, (typed, r.headers.get("location"))
+    r = alice.get("/go?q=ADMIN COMPUTE <GO>", follow_redirects=False)                   # a page the lens does not keep: said, not opened
+    assert "DRS-4023" in r.headers["location"]
+
+
+def test_admin_by_command_is_for_administrators_only(backend, monkeypatch):
+    app = _app(backend, monkeypatch)
+
+    async def trader(cookie, _backend):
+        return Identity(user="tom", display="Tom", desk="Rates", roles=("trader",))
+    monkeypatch.setattr(app.state.auth, "current", trader)
+    r = _client(app, "tom").get("/go?q=ADMIN <GO>", follow_redirects=False)
+    assert r.status_code == 303 and "ADMIN%20is%20for%20administrators" in r.headers["location"]
 
 
 def test_every_subject_item_runs_a_command_its_edition_shows():
@@ -127,8 +163,11 @@ def test_every_subject_item_runs_a_command_its_edition_shows():
             assert mid in menus, (name, mid)
             if not menus[mid].get("subject"):
                 continue
-            for col in menus[mid]["columns"]:
+            gathered = [c for g in menus[mid].get("gather") or [] for c in menus[g]["columns"]]   # the Markets menu's (core/menus.py _columns)
+            for col in gathered + menus[mid]["columns"]:
                 for it in col["items"]:
+                    if not ed.menu_shown(mid, it["id"]):                                # the edition's menus.<id> picks the items it shows
+                        continue
                     words = [str(r).split(":", 1)[1] for r in it.get("requires") or [] if str(r).startswith(("cmd:", "word:"))]
                     assert words, (name, it["id"])
                     if not any(str(r).startswith("route:") for r in it.get("requires") or []):

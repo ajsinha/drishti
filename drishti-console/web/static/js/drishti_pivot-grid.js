@@ -27,11 +27,17 @@
     return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]; });
   }
 
-  /** A figure as the grid shows it: bn and m for large money, integers for counts, percentages for show-as. */
+  /** A figure as the grid shows it, escaped HTML, by the answer's own fields (it formats, never computes): a text answer (string_agg,
+      the mode of names) as its text; percentages for a pct show-as; whole numbers for a rank, an ntile bucket and a measure whose unit
+      is count; bn and m for large figures; two decimals otherwise. */
   function fmt(v, m) {
+    if (typeof v === "string") { return esc(v); }
     if (v == null || typeof v !== "number" || !isFinite(v)) { return ""; }
-    if (m && m.showAs && String(m.showAs).indexOf("pct") === 0) { return (v * 100).toFixed(2) + "%"; }
-    if (m && (m.showAs === "rank" || /^count|^trades/.test(m.id || ""))) { return Math.round(v).toLocaleString("en-US"); }
+    var showAs = m && m.showAs ? String(m.showAs) : "";
+    if (showAs.indexOf("pct") === 0) { return (v * 100).toFixed(2) + "%"; }
+    var whole = showAs === "rank" || showAs.indexOf("ntile:") === 0
+      || (m && (m.unit === "count" || (m.unit == null && /^count|^trades/.test(m.id || ""))));   // no unit: an answer of before units
+    if (whole) { return Math.round(v).toLocaleString("en-US"); }
     var a = Math.abs(v);
     if (a >= 1e9) { return (v / 1e9).toFixed(2) + " bn"; }
     if (a >= 1e6) { return (v / 1e6).toFixed(2) + " m"; }
@@ -62,7 +68,7 @@
       if (hi >= lo) { ranges[m.label] = { lo: lo, hi: hi, style: formats[m.label].style }; }
     });
     var h = [];
-    h.push('<table class="pv-table" role="grid"><thead>');
+    h.push('<table class="pv-table" role="grid" data-resize="columns" data-resize-key="pivot.grid"><thead>');   // resizable columns (drishti_resize.js)
     if (cols.length > 1 || (cols[0] && cols[0].kind !== "grand")) {
       h.push('<tr><th class="pv-corner" rowspan="2">' + esc((a.rowDimensions || []).join(" › ")) + '</th>');
       cols.forEach(function (c) {
@@ -152,7 +158,7 @@
       var row = rows[+tr.getAttribute("data-row")];
       var idx = Array.prototype.indexOf.call(tr.children, cur);
       if (e.key === "ArrowRight" && (row.kind === "node" || row.kind === "header") && idx <= 1 && opts.onToggle) {
-        if (!row.expanded && row.expandable || e.shiftKey) { e.preventDefault(); opts.onToggle(row, false, e.shiftKey); return; }
+        if (row.expandable && (!row.expanded || e.shiftKey)) { e.preventDefault(); opts.onToggle(row, false, e.shiftKey); return; }
       }
       if (e.key === "ArrowLeft" && idx <= 1 && opts.onToggle && (row.expanded || row.kind === "header" || row.kind === "total")) {
         e.preventDefault(); opts.onToggle(row, true, e.shiftKey); return;

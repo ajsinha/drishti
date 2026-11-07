@@ -81,7 +81,7 @@ final class LakeFlightForm implements FlightForm {
         String kind = q.get("kind").asText();
         Lakes all = lakes.get();
         if (all.all().isEmpty()) {
-            throw new FlightRefusal(ErrorCode.FLIGHT_BAD_TICKET, "this server has no lake files (config/lakes/, LAKE_GUIDE.md): read the kind "
+            throw new FlightRefusal(ErrorCode.FLIGHT_BAD_TICKET, "this server has no lake files (config/lakes/, DATA_LAKE_GUIDE.md): read the kind "
                     + "with form kind");
         }
         Lake l = all.find(lake).orElseThrow(() -> new FlightRefusal(ErrorCode.FLIGHT_BAD_TICKET, "no lake '" + lake + "': the lakes are "

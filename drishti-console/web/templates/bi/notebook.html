@@ -1,0 +1,91 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The Notebook (docs/guides/USER_GUIDE.md › The Notebook): open a model or a report visual's data as the reader's masked extract, then SQL cells (run by
+   the server over the model) and Python cells (run on the server's compute pool, in its strict sandbox). Slicing is the
+   Pivot's: "Open in Pivot". Drawn by static/js/drishti_bi-notebook.js and drishti_bi-notebook-cells.js; the strict policy of every BI page applies. #}
+{% extends "bi/shell.html" %}
+{% block bi_title %}Notebook{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-expr.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-notebook.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-consume.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-transform.css?v={{ ASSET_V }}">{% endblock %}
+{% block bi_main %}
+<header class="bi-head"><h1>Notebook</h1>
+  <p class="text-muted-d">Open a model as an extract of the rows you may see (masked columns stay masked), then query it with SQL cells, run by the server as you, and Python cells, run on the server's compute pool. Save the work as a notebook; promote a cell into a Python item or a report draft.
+    To slice and total a table, use the <a href="/pivot" data-open-pivot>Pivot</a>.</p></header>
+<p class="bi-msg" data-msg role="status" aria-live="polite"></p>
+<div class="bx" id="bx" data-max-rows="{{ limits.max_rows }}" data-sql-rows="{{ limits.sql_max_rows }}" data-sql-chars="{{ limits.sql_max_chars }}" data-may-python="{{ 'true' if may_python else 'false' }}" data-python-runs="{{ 'true' if python_runs else 'false' }}" data-python-why="{{ python_why or '' }}">
+<form class="bi-form bx-open" data-open aria-label="Open an extract">
+  <h2>Extract</h2>
+  <label>Model or dataset<select name="dataset" class="studio-select" data-dataset></select></label>
+  <fieldset class="bx-fields" data-fields-box hidden><legend>Fields</legend><div data-fields></div></fieldset>
+  <span class="bi-time" data-time role="group" aria-label="Time of the extract: now, as of a date, or a window">
+    <label>Time <select class="studio-select" data-time-mode aria-label="Time"><option value="now">Now</option><option value="asof">As of a date</option><option value="window">A window</option></select></label>
+    <input type="date" class="studio-in" data-date aria-label="As of" hidden>
+    <input type="date" class="studio-in" data-date-from aria-label="From" hidden><input type="date" class="studio-in" data-date-to aria-label="To" hidden>
+  </span>
+  <div class="bi-actions">
+    <button type="submit" class="btn-pill btn-accent" data-open-go disabled><i class="bi bi-box-arrow-in-down" aria-hidden="true"></i> Open the extract</button>
+    <label class="bx-inline">Notebook<select class="studio-select" data-notebooks aria-label="Open a saved notebook"><option value="">(none)</option></select></label>
+  </div>
+</form>
+<p class="bx-info" data-info role="status" aria-live="polite"></p>
+<details class="bx-more" data-more>
+  <summary>More extracts: join several models</summary>
+  <p class="text-muted-d">Add other models as extracts of their own. A Python cell reads one as <code>extract("name")</code> (a pandas table of the rows you may see) and joins them.
+    Each is built for you by the server, with your row rules and masks, as the first one is.</p>
+  <ul class="bx-extras" data-extras role="list"></ul>
+  <form class="bi-form" data-add-extract aria-label="Add an extract">
+    <label>Name<input name="ename" class="studio-in" autocomplete="off" maxlength="64" placeholder="exposure"></label>
+    <label>Model or dataset<select name="edataset" class="studio-select" data-edataset></select></label>
+    <fieldset class="bx-fields" data-efields-box hidden><legend>Fields</legend><div data-efields></div></fieldset>
+    <div class="bi-actions"><button type="submit" class="btn-pill btn-ghost" data-eadd disabled><i class="bi bi-plus-lg" aria-hidden="true"></i> Add the extract</button></div>
+  </form>
+</details>
+<p class="bx-promote"><label>Promote a SQL cell to <select class="studio-select" data-promote-target aria-label="Report to promote into"><option value="">a new report draft</option></select></label>
+  <label class="bx-inline">on page <input class="studio-in" data-promote-page autocomplete="off" maxlength="48" placeholder="(first page)" aria-label="Page of the report"></label></p>
+<div class="bx-tabs" role="tablist" aria-label="Notebook" data-tabs>
+  <button type="button" role="tab" class="btn-pill btn-ghost" id="bxT-sql" aria-controls="bxP-sql" aria-selected="true" data-tab="sql">SQL</button>
+  <button type="button" role="tab" class="btn-pill btn-ghost" id="bxT-python" aria-controls="bxP-python" aria-selected="false" tabindex="-1" data-tab="python">Python</button>
+  <button type="button" role="tab" class="btn-pill btn-ghost" id="bxT-profile" aria-controls="bxP-profile" aria-selected="false" tabindex="-1" data-tab="profile">Profile</button>
+</div>
+<section id="bxP-sql" role="tabpanel" aria-labelledby="bxT-sql" data-pane="sql">
+  <p class="text-muted-d" data-sql-help>One read-only SELECT, at most {{ limits.sql_max_rows }} rows back: {{ PRODUCT }} SQL over the model the extract reads, run by the <strong>server</strong> as you. Its tables are the model's aliases and <code>MEASURE('name')</code> is a measure (<a href="/help/api#drishti-sql-apiv1bisql">the SQL guide</a>).</p>
+  <div data-cells="sql"></div>
+  <div class="bi-actions"><button type="button" class="btn-pill btn-ghost" data-add="sql"><i class="bi bi-plus-lg" aria-hidden="true"></i> SQL cell</button>
+    <button type="button" class="btn-pill btn-ghost" data-run-all="sql"><i class="bi bi-play-fill" aria-hidden="true"></i> Run all</button></div>
+</section>
+<section id="bxP-python" role="tabpanel" aria-labelledby="bxT-python" data-pane="python" hidden>
+  <p class="text-muted-d">Python over <code>df</code> (a pandas table of the extract) and <code>extract("name")</code> for the other extracts; put a chart option, a table or a value in <code>result</code>.
+    Cells run on the <strong>server's compute pool</strong>, never in the console or your browser.
+    {% if not python_runs %}<strong data-python-off>Python does not run on this server: {{ python_why }}.</strong> Write, save and promote cells all the same.{% endif %}
+    {% if not may_python %}<strong>Running Python needs the bi-author power.</strong>{% endif %}</p>
+  <div data-cells="python"></div>
+  <div class="bi-actions"><button type="button" class="btn-pill btn-ghost" data-add="python"><i class="bi bi-plus-lg" aria-hidden="true"></i> Python cell</button>
+    <button type="button" class="btn-pill btn-ghost" data-run-all="python"{% if not python_runs %} disabled title="Python does not run on this server: {{ python_why }}"{% endif %}><i class="bi bi-play-fill" aria-hidden="true"></i> Run all</button></div>
+</section>
+<section id="bxP-profile" role="tabpanel" aria-labelledby="bxT-profile" data-pane="profile" hidden>
+  <p class="text-muted-d">Every column of the extract: its type, what its text looks like, empty values, distinct values, whether it could be a key, the range, the most common values and a histogram.
+    Worked out over the rows you may see, with no code of yours (the same panel as the <a href="/bi/transform">Transform editor</a>'s).</p>
+  <p class="bi-result-meta" data-profile-meta role="status" aria-live="polite"></p>
+  <div class="tx-profile" data-profile-out></div>
+</section>
+<form class="bi-form bx-save" data-save aria-label="Save as a notebook">
+  <h2>Save</h2>
+  <label>Title<input name="title" class="studio-in" autocomplete="off" maxlength="120" placeholder="Desk P&amp;L, first look"></label>
+  <div class="bi-actions"><button type="submit" class="btn-pill btn-accent" data-save-go disabled><i class="bi bi-journal-code" aria-hidden="true"></i> Save as a notebook</button>
+    <a class="btn-pill btn-ghost" data-saved href="#" hidden>Open the item</a></div>
+</form>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-expr-editor.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-query-panel.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-python.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-consume.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-notebook.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-notebook-cells.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-notebook-extracts.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-transform-view.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-notebook-profile.js?v={{ ASSET_V }}"></script>{% endblock %}

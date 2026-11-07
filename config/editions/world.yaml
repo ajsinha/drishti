@@ -44,14 +44,13 @@ features:                                # presets of existing switches (config/
   var: off
   exposure: off
   calc: off
-  pyconsole: off
   python: off
   designer: off
   build: off
   forms: on                              # query by form: companies, funds and economies by their fields
   datamap: on
-  data: on                               # the Data view (DATA, /data): every dataset, a simple selection, a day as .jsonl.gz
-  internal-only-data: off                # the Data view refuses datasets marked internal only (IMF, Yahoo, news headlines)
+  data: on                               # Export data (EXPORT, /data): every dataset, a simple selection, a day as .jsonl.gz
+  internal-only-data: off                # Export data refuses datasets marked internal only (IMF, Yahoo, news headlines)
   layouts: on
   workspaces: on
   monitors: on
@@ -62,11 +61,12 @@ features:                                # presets of existing switches (config/
   embed: off
 
 bi:                                      # the public-data packs' BI datasets and models (the world-economics and region-economics reports)
-  datasets: [world-economics-economies, region-economics-regions]
+  datasets: [bi.world_economics_economies, bi.region_economics_regions]
   models: [world-economics, region-economics]
 
 menus:                                   # by id, per menu; a menu not named shows every item its switches allow
   top: [views, economies, markets, companies, bi, admin, help]  # the top menus by id, in order; one not named is not drawn
+  markets: [news, quote, idx]          # the Markets menu's news and quotes (its market-data columns are for the trading lens)
   views: [terminal, search, forms, functions, datamap, data, reports, workspaces, monitors, alerts]
   help: [help-centre, knowledge, install, about]
   footer: [help, about, release-notes]
