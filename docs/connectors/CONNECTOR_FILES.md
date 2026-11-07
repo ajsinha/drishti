@@ -572,7 +572,7 @@ An edited file stays as it is; **Template updates** lists its kinds as *obsolete
 connector takes it away. A file of a pack the server does not load, and a site's own file, are never touched.
 
 **The upgrade drill.** `ConnectorUpgradeTest` (in the drill's Java stage) starts a server on the connector files an older release's server
-generated (`drishti-server/src/test/resources/connector-upgrade/2.9.4/`, written by `tools/connector_upgrade_fixture.py --rev
+generated (`drishti-banking/src/test/resources/connector-upgrade/2.9.4/`, written by `tools/connector_upgrade_fixture.py --rev
 <release>`, with an edited risk-store and an edited var-whatif) and checks that every unedited file is the current template, the
 edited ones keep their edits and gain the rest, the edited var-whatif (retired by its pack since) stays with its kind listed as
 obsolete, and var-result and exposure-result answer.

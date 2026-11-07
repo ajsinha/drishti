@@ -64,7 +64,7 @@ def _rows(kind, items):
 
 class TradingBackend(FakeBackend):
     """The servers' answers; ``previous=False`` holds no valuations the day before; ``paths=False`` answers the exposure engine's exact
-    what-if 503 (its Python engine not running), so the check falls back to the add-on proxy; ``history='replay'`` gives no official
+    what-if 404 (the copied trade has no paths on the run), so the check falls back to the add-on proxy; ``history='replay'`` gives no official
     history."""
 
     def __init__(self, previous: bool = True, paths: bool = True, history: str = "official", carried: str | None = None):
@@ -192,9 +192,25 @@ class TradingBackend(FakeBackend):
             if scope == "CPTY:CP-NORTHPLAINS":
                 return {"scope": scope, "peakPfe": 50_000_000, "limit": None, "byNettingSet": []}
             raise BackendError(404, "DRS-5401", f"no exposure of {scope}")
+        if method == "POST" and path == "/predeal":
+            cp = body["counterparty"]
+            if body.get("like") and not self.paths:
+                raise BackendError(404, "DRS-1001", f"no trade {body['like']} on the run XR-2026-09-30-01 of 2026-09-30 to copy")
+            base = 401_500_000 if cp == "CP-ALDERSHOT" else 50_000_000
+            exact = bool(body.get("like"))
+            lim = {"id": "LIM-ALDERSHOT", "limit": 420_000_000, "confidence": 0.95, "before": base, "after": base + 7_700_000,
+                   "useBefore": base / 420_000_000, "useAfter": (base + 7_700_000) / 420_000_000} if cp == "CP-ALDERSHOT" else None
+            reasons = ([] if exact else ["a proxy answer only refers, never approves"]) + ([] if lim else ["no credit limit on record for " + cp])
+            decision = "refer" if reasons else "approve"
+            reasons = reasons or ["exact: within the limit"]
+            return {"checkId": "PDC-TEST", "command": f"PREDEAL {cp} " + (f"LIKE {body['like']}" if exact else "RATES"), "scope": f"CPTY:{cp}",
+                    "decision": decision, "reason": reasons[0], "reasons": reasons, "confidence": 0.95,
+                    "method": {"id": "paths" if exact else "addon", "exact": exact, "text": "copies"},
+                    "nettingSet": {"id": "NS-ALDERSHOT-NY" if exact else None}, "limit": lim,
+                    "exposure": {"base": {"peakPfe": base}, "with": {"peakPfe": base + 7_700_000}}, "flags": ["exact" if exact else "proxy"]}
         if method == "POST" and path == "/what-if":
             if body.get("method") == "paths" and not self.paths:
-                raise BackendError(503, "DRS-5446", "the Python exposure engine is not running")
+                raise BackendError(404, "DRS-1001", "no exposure paths for the trade MX-20000010 on 2026-09-30")
             base = 401_500_000 if scope == "CPTY:CP-ALDERSHOT" else 50_000_000
             return {"base": {"peakPfe": base}, "with": {"peakPfe": base + 7_700_000}, "incremental": {"peakPfe": 7_700_000}, "method": body.get("method"),
                     "flags": ["proxy"] if body.get("method") == "addon" else []}

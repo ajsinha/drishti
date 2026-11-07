@@ -31,6 +31,7 @@ from core.edition import ADMIN_PAGES, WORDS
 from routes.common import ident, packs, render
 from routes.var_routes import redirect_for as var_redirect
 from routes.var_routes import retired_link as var_retired_link
+from routes.exposure_routes import predeal_redirect
 from routes.exposure_routes import redirect_for as exp_redirect
 from routes.frtb_routes import redirect_for as frsa_redirect
 from routes.simm_routes import redirect_for as simm_redirect
@@ -163,6 +164,8 @@ async def go(request: Request, q: str = ""):
         return to_pivot
     if ed.word_on("SMAT") and (to_smat := smat_redirect(typed)) is not None:          # SMAT <id> [N]: the scenario matrix (smat_routes.py)
         return to_smat
+    if ed.word_on("EXP") and (to_predeal := predeal_redirect(typed)) is not None:    # PREDEAL …: the pre-deal check (exposure_routes.py)
+        return to_predeal
     if ed.word_on("EXP") and (to_exp := exp_redirect(typed)) is not None:            # EXP NSET NS-X, EXP EXP-X (retired): exposure-result (exposure_routes.py)
         return to_exp
     if _SEARCH.match(q.replace("<GO>", "")):

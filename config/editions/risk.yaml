@@ -32,8 +32,8 @@ commands:                                # what people may type and see (command
      TRD, CTRD, PTRD, LTRD, FX,
     # VaR: hierarchies, portfolios, positions, P&L vectors, scenario PVs, FX scenarios, scenario sets, limits, results, official (the what-if is the word VAR's)
      HIER, PORT, POS, PNLV, SPV, FXS, SSET, VLIM, VRES, VOFF,
-    # Exposure: agreements, CSAs, netting sets, credit limits, collateral, margin calls, runs, paths, results, what-if, official
-     AGR, CSA, NSET, LIM, COLL, MC, XRUN, XPATH, EXP, XWIF, XOFC,
+    # Exposure: agreements, CSAs, netting sets, credit limits, collateral, margin calls, runs, paths, results, official (the what-if is the word EXP's)
+     AGR, CSA, NSET, LIM, COLL, MC, XRUN, XPATH, EXP, XOFC,
     # derived from the trade valuations: netting-set and counterparty MtM totals
      NSMTM, CPMTM]                         # stress (SCN, STR, SSPNL) is left out (product owner, 2026-10-30)
   words: { BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: on, DATA: on, VAR: on, EXP: on, SMAT: on, PLAY: on }

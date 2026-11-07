@@ -62,7 +62,7 @@ The console and the browser never ask the registry directly: they ask the server
 
 | | Now (v2.9.11.g) | Later (2.9.11.i) |
 |---|---|---|
-| Store | **YAML**: `config/modules/<module>.yaml` shipped with each module; `config/access/licence.yaml`, `lenses.yaml`, `roles.yaml`, `assignments.yaml` (planned paths) | **the one database**: SQLite by default, PostgreSQL; the same tables in both complete schema files; no migrations; switched by configuration; a tool copies the YAML into it once |
+| Store | **YAML**: each module's manifest in its jar (`META-INF/drishti/module.yaml`, `lenses.yaml`), the site's switch `config/modules/<module>.yaml`; `config/access/licence.yaml`, `lenses.yaml`, `roles.yaml`, `assignments.yaml` (section 8) | **the one database**: SQLite by default, PostgreSQL; the same tables in both complete schema files; no migrations; switched by configuration; a tool copies the YAML into it once |
 | Interface | `AccessStore` (read, change, watch) → `YamlAccessStore` | the same interface → `DatabaseAccessStore` |
 | Changes | proposed and approved through the Approvals queue (four eyes), audited | the same |
 
@@ -95,8 +95,25 @@ Every answer is cacheable and invalidated on change, so asking stays cheap when 
 | v2.9.11.g (the e+f+g train, with the domain-module split) | drishti-registry with the embedded registry and the YAML store; module manifests declaring their functions; lenses declaring their modules and function bundles; the mnemonic switches folded into the registry (installation-level function on/off); the administrator's module switch; editions folded into modules and lenses; the guarantees of section 6 |
 | 2.9.11.i (after the security discussion) | the signed licence (offline verification, expiry and grace, limits, audit); permissions per lens, function (grants and denials) and action; data licensing; the database store; the standalone service when wanted |
 
-## 8. Related
+## 8. As built: the backend (phase 1 of the split)
 
-The domain boundaries and the move: `docs/architecture/DOMAIN_MODULES.md` (planned; it lands with the split). The JavaScript libraries
+What exists now, on the server; the console's part (menus, the sitemap, the command line, type-ahead, Help, assets by module) is phase 2.
+
+| Part | As built |
+|---|---|
+| **drishti-registry** | A Maven module of its own, plain Java (Jackson only). `AccessRegistry` (the questions) with `EmbeddedAccessRegistry` (one immutable snapshot of decisions, recomputed when the model changes, listeners told); `AccessStore` (read, change, stamp, watch) with `YamlAccessStore`; `AccessRegistries.embedded(settings)` makes it from the server's settings. Nothing else reads the model: an architecture test fails a class outside the registry that names `YamlAccessStore` or `AccessModel`. |
+| **Module manifests** | Each module's jar ships `META-INF/drishti/module.yaml`: id, domain, title, feature, requires, and what it contributes (Java packages, engines, packs, connectors, API prefixes, functions). Installed exactly when the manifest is on the class path. The core server's jar ships two content-only modules (packs, lenses and functions, no code): **economy** (world-economy, news-and-markets) and **capitalmarkets** (us-equities, funds, and the market data's functions). GLEIF's legal entities are core reference data. The core is always on and is not a module file. |
+| **The switch** | `config/modules/<module>.yaml` holds `enabled:` only (Admin → Modules writes it; `POST /api/v1/admin/modules` with a reason, audited); `drishti.modules.<module>.enabled` (`DRISHTI_MODULES_<MODULE>_ENABLED`) wins over the file. A module is on when installed ∧ licensed ∧ enabled ∧ every module it requires is on. A change takes effect at the next start (Admin shows *restart needed*). |
+| **Licence** | `config/access/licence.yaml` (customer, modules or `*`, limits, valid-from, valid-to) is read and decided, **unsigned**; without the file the installation runs the **development licence** (every module, no limits, no end), so nothing changes for an existing installation. Signature, grace and limits' enforcement: 2.9.11.i. |
+| **Loading** | A module's Spring auto-configuration carries `@ConditionalOnModule("<id>")`: off, none of its beans, engines, scheduled jobs or controllers exist. Its engines show *not installed: the module 'banking' is off* on Admin → Engines; its API (new and old prefixes) answers `404 DRS-1025` in words; its packs (by the manifest's list, else by the pack's `domain:`) and its connectors do not load. |
+| **Lenses** | Each jar ships `META-INF/drishti/lenses.yaml` (the banking module: risk, trading, market (it needs capitalmarkets and banking), cro, mr-cube, ccr-cube; the core: world, cio, oversight), each with the modules it needs and the functions it bundles; `config/access/lenses.yaml` adds or replaces lenses. A lens whose modules are off is not offered, and an edition opened as a lens (`drishti.lenses`) whose registry lens is not offered is dropped. |
+| **Functions** | Each manifest lists its functions (the engines' words with the APIs behind them, and every command of its packs); a word no module declares is the core's. The mnemonic switches (Admin → Commands, kept in the switches ledger and gossiped) fold in: the ledger is the store of the installation-level switch, the registry decides (`functionOn` = its module on ∧ not switched off), and `CommandSwitches` asks the registry. A function that is off answers `404 DRS-1026` on its APIs. |
+| **Per person** | `lensesFor(subject)`, `allowed(subject, lens, action)` and `functionAllowed(subject, word)` take the person already; with no `roles.yaml` every offered lens and every function that is on is open to everyone (403 `DRS-1027` is wired for 2.9.11.i's grants and denials). |
+| **API** | `GET /api/v1/admin/modules` (states, what each brings, licence, lenses, warnings), `POST /api/v1/admin/modules` (the switch), `GET /api/v1/modules` (the modules loaded and the lenses open to the caller). |
+| **Guarantee tests** | `BankingModuleOffTest` (no bean of its code, no engine, no job, no API new or old, no pack of its domain, no connector of its own, no function), `CapitalMarketsModuleOffTest` (its packs, connectors and functions gone; banking and GLEIF unaffected), `BankingModuleOnTest` (loaded, the old paths answered as the new, a function off gone from its API), `AccessRegistryTest` (the decisions), the architecture rules. |
+
+## 9. Related
+
+The domain boundaries and the move: [DOMAIN_MODULES.md](DOMAIN_MODULES.md). The JavaScript libraries
 modules contribute: `docs/architecture/ELEMENTS.md` (planned until the train merges). The one database: [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md).
 The roadmap: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).

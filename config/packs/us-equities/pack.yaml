@@ -22,6 +22,7 @@
 # connector us-equities-store below), a few reference samples and guides/us-equities.md from the cache tools/packgen/us_equities/fetch.py
 # fills. No index weights or levels, no GICS, and no prices: price-history is read live by an off-by-default connector, for internal use only.
 pack: us-equities
+domain: capitalmarkets   # the domain it serves (docs/architecture/ACCESS_MODEL.md): it loads only while a module of the domain is on
 version: 1.0.0
 code: USEQS            # typed alone, opens this pack's overview
 title: US equities

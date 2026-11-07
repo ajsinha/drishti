@@ -151,7 +151,7 @@ the mean of its exposure over the paths around the group's quantile at the group
 
 ### 6.4 Where it runs
 
-The resolver is **Java** (`com.ash.drishti.compute.ccr.GroupResolver`, planned): a graph over a few hundred thousand GLEIF relationships
+The resolver is **Java** (`com.ash.drishti.banking.compute.ccr.GroupResolver`, planned): a graph over a few hundred thousand GLEIF relationships
 and the counterparties, built once per date, answering `GROUP:` scopes in microseconds. The usage figures come from each measure's own
 engine at the group scope; group exposure matrices are summed at date load for every kept group (EXPOSURE_GUIDE.md section 26.3).
 
@@ -225,7 +225,7 @@ reads:
   - { kind: limit-usage, as: limits, id: "GROUP:{id}" }
 engine:
   type: java
-  entry: com.ash.drishti.compute.ccr.GroupEngine
+  entry: com.ash.drishti.banking.compute.ccr.GroupEngine
   version: "1.0"
 triggers:
   - { on: data-version, kinds: [counterparty-group, counterparty, lei-relationship, lei-entity], affects: all }
