@@ -486,11 +486,15 @@
         const itemOf = (t) => { const e = t.closest && t.closest('[data-dd-id]'); return e && this.els.get(e.getAttribute('data-dd-id')) === e ? e : null; };
         el.addEventListener('click', (e) => {
           const it = itemOf(e.target);
-          if (it) { this.sel.pick(it.getAttribute('data-dd-id'), e.shiftKey || e.ctrlKey || e.metaKey, 'canvas'); return; }
+          if (it) { const id = it.getAttribute('data-dd-id'); if (this.pickedOnDown !== id) { this.sel.pick(id, e.shiftKey || e.ctrlKey || e.metaKey, 'canvas'); } this.pickedOnDown = null; return; }
           if (e.target === el || e.target.classList.contains('dd-area')) { this.sel.clear(); }
         });
         el.addEventListener('dblclick', (e) => { const it = itemOf(e.target); if (it && !e.target.closest('[data-dd-edge]')) { this.events.emit('open', { id: it.getAttribute('data-dd-id') }); } });
-        el.addEventListener('focusin', (e) => { const it = itemOf(e.target); if (it && e.target === it && !this.sel.has(it.getAttribute('data-dd-id'))) { this.sel.set(it.getAttribute('data-dd-id'), 'canvas'); } });
+        el.addEventListener('pointerdown', () => { this.downAt = Date.now(); }, true);
+        el.addEventListener('focusin', (e) => {                                 // the keys brought the focus (a click selects by itself)
+          const it = itemOf(e.target);
+          if (it && e.target === it && Date.now() - (this.downAt || 0) > 600 && !this.sel.has(it.getAttribute('data-dd-id'))) { this.sel.set(it.getAttribute('data-dd-id'), 'canvas'); }
+        });
         el.addEventListener('contextmenu', (e) => {
           const it = itemOf(e.target);
           if (!it || !this.events.count('contextmenu')) { return; }
@@ -534,7 +538,8 @@
         const id = itemEl.getAttribute('data-dd-id'), edge = e.target.closest('[data-dd-edge]');
         if (!edge && (e.target.closest('button, a, input, select, textarea') || (this.o.handle && !e.target.closest(this.o.handle)))) { return; }
         if (edge) { e.preventDefault(); }
-        if (!this.sel.has(id)) { this.sel.pick(id, e.shiftKey || e.ctrlKey || e.metaKey, 'canvas'); }
+        this.pickedOnDown = null;
+        if (!this.sel.has(id)) { this.sel.pick(id, e.shiftKey || e.ctrlKey || e.metaKey, 'canvas'); this.pickedOnDown = id; }
         if (this.flow) { this.flowDrag(e, id, itemEl, edge && edge.getAttribute('data-dd-edge')); return; }
         const ids = edge ? [id] : this.model.expand(this.sel.list()), m = this.metrics();
         const start = ids.map((k) => Object.assign({}, this.model.get(k)));
@@ -1475,11 +1480,14 @@
       const versions = s.origin === 'file' ? 'from configuration' : s.origin === 'item' || s.version ? (s.version ? 'approved v' + s.version : 'never approved') + (s.status === 'draft' && s.version ? ' · a draft after it' : '') : '';
       return { word: word + (s.dirty ? ' · unsaved' : ''), versions, tone: s.status || 'draft' };
     }
+    const SHELL_LAYOUTS = Object.freeze(['studio', 'side-by-side', 'terminal']);
+    const SHELL_FKEYS = Object.freeze({ F3: 'validate', F4: 'yaml', F5: 'preview', F7: 'history', F8: 'impact', F9: 'propose' });
     class DesignerShell {
       constructor(el, o) {
         this.el = el;
         this.doc = el.ownerDocument;
-        this.o = Object.assign({ actions: SHELL_ACTIONS, modes: true, mode: 'both', preview: true, label: 'Designer', crumbs: [] }, o);
+        this.o = Object.assign({ actions: SHELL_ACTIONS, modes: true, mode: 'both', preview: true, label: 'Designer', crumbs: [], rail: [], layout: 'studio' }, o);
+        this.tabs = {};
         this.events = new EventBus();
         this.mode = this.o.mode;
         this.groups = [];
@@ -1520,12 +1528,35 @@
         head.appendChild(acts);
         this.msg = x('p', { cls: 'dd-msg', attrs: { 'data-msg': '', role: 'status', 'aria-live': 'polite' } });
         const grid = x('div', { cls: 'dd-shell-grid', attrs: { 'data-grid': '' } });
-        if (o.search) {
-          this.searchEl = x('input', { cls: 'dd-in dd-search', attrs: { type: 'search', 'data-ed-search': '', placeholder: o.search, 'aria-label': o.search } });
-          this.searchEl.addEventListener('input', () => { this.drawObjects(); this.events.emit('search', { query: this.searchEl.value }); });
-          this.objects = x('div', { attrs: { 'data-objects': '' } });
-          grid.appendChild(x('aside', { cls: 'dd-objects', attrs: { 'aria-label': 'Objects' } }, [this.searchEl, this.objects,
-            x('div', { attrs: { 'data-resize': 'panel', 'data-resize-key': 'designer.objects', 'data-resize-var': '--dd-left', 'data-resize-min': '180', 'data-resize-max': '480', 'aria-label': 'Resize the objects pane' } })]));
+        const railTabs = (o.search ? [{ id: 'objects', label: 'Objects' }] : []).concat(o.rail || []);
+        if (railTabs.length) {
+          const list = x('div', { cls: 'dd-ptabs', attrs: { role: 'tablist', 'aria-label': 'The left rail' } });
+          const rail = x('aside', { cls: 'dd-objects dd-rail', attrs: { 'aria-label': 'Objects' } }, [list]);
+          railTabs.forEach((t, i) => {
+            const tab = x('button', { cls: 'dd-ptab', text: t.label, attrs: { type: 'button', role: 'tab', id: 'dd-tab-' + t.id + '-' + this.uid(), 'aria-selected': String(i === 0), tabindex: i === 0 ? '0' : '-1', 'data-dd-tab': t.id } });
+            const panel = x('div', { cls: 'dd-rail-panel', attrs: { role: 'tabpanel', 'aria-labelledby': tab.id, 'data-dd-panel': t.id, hidden: i !== 0 } });
+            tab.addEventListener('click', () => this.showTab(t.id));
+            tab.addEventListener('keydown', (e) => {
+              const k = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+              if (!k) { return; }
+              e.preventDefault();
+              const ids = railTabs.map((r) => r.id), j = (ids.indexOf(t.id) + k + ids.length) % ids.length;
+              this.showTab(ids[j]);
+              this.tabs[ids[j]].tab.focus();
+            });
+            list.appendChild(tab);
+            rail.appendChild(panel);
+            this.tabs[t.id] = { tab, panel };
+          });
+          if (railTabs.length === 1) { list.hidden = true; }
+          if (o.search) {
+            this.searchEl = x('input', { cls: 'dd-in dd-search', attrs: { type: 'search', 'data-ed-search': '', placeholder: o.search, 'aria-label': o.search } });
+            this.searchEl.addEventListener('input', () => { this.drawObjects(); this.events.emit('search', { query: this.searchEl.value }); });
+            this.objects = x('div', { attrs: { 'data-objects': '' } });
+            this.tabs.objects.panel.append(this.searchEl, this.objects);
+          }
+          rail.appendChild(x('div', { attrs: { 'data-resize': 'panel', 'data-resize-key': 'designer.objects', 'data-resize-var': '--dd-left', 'data-resize-min': '180', 'data-resize-max': '480', 'aria-label': 'Resize the left rail' } }));
+          grid.appendChild(rail);
         } else { this.el.classList.add('dd-no-objects'); }
         this.readOnlyBar = x('div', { cls: 'dd-ro', attrs: { 'data-readonly': '', hidden: true } });
         this.visual = x('div', { cls: 'dd-visual', attrs: { 'data-visual': '' } });
@@ -1535,6 +1566,11 @@
         this.yaml = x('section', { cls: 'dd-yaml-panel', attrs: { 'data-yaml-panel': '', 'aria-label': 'The definition as YAML', hidden: true } }, [
           x('div', { cls: 'dd-yh' }, [this.yamlToggle, this.yamlState, x('span', { cls: 'dd-ynote', text: 'edits on either side show on the other' })]), this.yamlBody]);
         grid.appendChild(x('section', { cls: 'dd-main', attrs: { 'aria-label': 'Editor' } }, [this.readOnlyBar, this.visual, this.yaml]));
+        if (o.inspector) {
+          this.inspector = x('div', { cls: 'dd-inspector-pane', attrs: { 'data-dd-inspector': '' } });
+          this.inspectorBox = x('aside', { cls: 'dd-insp-side', attrs: { 'aria-label': 'Inspector' } }, [x('h3', { cls: 'dd-sec', text: 'Inspector' }), this.inspector]);
+          grid.appendChild(this.inspectorBox);
+        } else { this.el.classList.add('dd-no-inspector'); }
         if (o.preview) {
           this.preview = x('div', { cls: 'dd-preview', attrs: { 'data-preview': '', 'aria-busy': 'false' } });
           grid.appendChild(x('aside', { cls: 'dd-side', attrs: { 'aria-label': 'Preview and checks', 'data-side': '' } }, [
@@ -1544,10 +1580,77 @@
         this.dlgBody = x('div', { attrs: { 'data-dialog-body': '' } });
         this.dlg = x('dialog', { cls: 'dd-dialog', attrs: { 'data-dialog': '', 'aria-labelledby': this.dlgTitle.id } }, [this.dlgTitle, this.dlgBody,
           x('p', { cls: 'dd-dlg-actions' }, [x('button', { cls: 'dd-btn', text: 'Close', attrs: { type: 'button', 'data-dialog-close': '' }, on: { click: () => this.closeDialog() } })])]);
-        this.el.append(head, this.msg, grid, this.dlg);
+        this.cmd = x('input', { cls: 'dd-cmd', attrs: { type: 'text', 'data-dd-cmd': '', placeholder: 'Ctrl+K · add bar · select v2 · align left · validate · propose', 'aria-label': 'Command', autocomplete: 'off', spellcheck: 'false' } });
+        this.cmd.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && this.cmd.value.trim()) { e.preventDefault(); this.command(this.cmd.value.trim()); this.cmd.value = ''; } else if (e.key === 'Escape') { this.cmd.blur(); }
+        });
+        this.cmdBar = x('div', { cls: 'dd-cmdbar', attrs: { hidden: true } }, [x('span', { cls: 'dd-cmd-p', text: 'DESIGN>' }), this.cmd]);
+        this.fkeys = x('div', { cls: 'dd-fkeys', attrs: { hidden: true, 'aria-hidden': 'true' } }, Object.keys(SHELL_FKEYS).map((k) => x('span', {}, [x('b', { text: k }), ' ' + SHELL_FKEYS[k]])));
+        this.statusBar = x('div', { cls: 'dd-statusbar', attrs: { 'data-dd-statusbar': '', role: 'status' } });
+        this.layoutSel = x('select', { cls: 'dd-layout-pick', attrs: { 'data-dd-layout-pick': '', 'aria-label': 'Layout' } }, SHELL_LAYOUTS.map((l) => x('option', { text: { studio: 'Studio', 'side-by-side': 'Side by side', terminal: 'Terminal' }[l], attrs: { value: l } })));
+        this.layoutSel.addEventListener('change', () => this.setLayout(this.layoutSel.value, true));
+        head.appendChild(this.layoutSel);
+        this.el.append(head, this.cmdBar, this.msg, grid, this.fkeys, this.statusBar, this.dlg);
+        this.el.addEventListener('keydown', (e) => this.onKey(e));
+        this.previewOn = true;
+        this.setLayout(o.layout);
         this.yamlOpen = true;
         this.setCrumbs(o.crumbs);
         this.applyMode();
+      }
+      uid() { DesignerShell.seq = (DesignerShell.seq || 0) + 1; return DesignerShell.seq; }
+      rail(id) { return this.tabs[id] ? this.tabs[id].panel : null; }
+      showTab(id) {
+        if (!this.tabs[id]) { return; }
+        Object.keys(this.tabs).forEach((k) => { const on = k === id; this.tabs[k].tab.setAttribute('aria-selected', String(on)); this.tabs[k].tab.tabIndex = on ? 0 : -1; this.tabs[k].panel.hidden = !on && this.layout === 'studio'; });
+        this.events.emit('tab', { id });
+      }
+      setLayout(layout, user) {
+        this.layout = SHELL_LAYOUTS.indexOf(layout) >= 0 ? layout : 'studio';
+        SHELL_LAYOUTS.forEach((l) => this.el.classList.toggle('dd-layout-' + l, l === this.layout));
+        this.el.setAttribute('data-dd-layout', this.layout);
+        this.layoutSel.value = this.layout;
+        const term = this.layout === 'terminal';
+        this.cmdBar.hidden = !term;
+        this.fkeys.hidden = !term;
+        const stacked = this.layout !== 'studio';                                // B and C show every rail tab at once, one over the other
+        const on = Object.keys(this.tabs).find((k) => this.tabs[k].tab.getAttribute('aria-selected') === 'true');
+        Object.keys(this.tabs).forEach((k) => { this.tabs[k].panel.hidden = !stacked && k !== on; });
+        if (this.layout === 'side-by-side') { this.togglePreview(true); }
+        if (this.inspectorBox) { this.inspectorBox.classList.toggle('dd-card', this.layout === 'side-by-side'); }
+        this.events.emit('layout', { layout: this.layout, user: !!user });
+      }
+      placeInspector(anchor) {
+        const box = this.inspectorBox;
+        if (!box) { return; }
+        if (this.layout !== 'side-by-side' || !anchor) { box.style.removeProperty('--dd-card-l'); box.style.removeProperty('--dd-card-t'); box.toggleAttribute('data-dd-floating', false); return; }
+        const r = anchor.getBoundingClientRect(), win = this.doc.defaultView, w = 300;
+        const left = r.right + 8 + w > win.innerWidth ? Math.max(8, r.left - w - 8) : r.right + 8;
+        box.style.setProperty('--dd-card-l', left + 'px');
+        box.style.setProperty('--dd-card-t', Math.max(8, Math.min(r.top, win.innerHeight - 340)) + 'px');
+        box.toggleAttribute('data-dd-floating', true);
+      }
+      togglePreview(on) {
+        this.previewOn = this.layout === 'side-by-side' ? true : on === undefined ? !this.previewOn : !!on;
+        this.el.classList.toggle('dd-preview-off', !this.previewOn);
+      }
+      setStatusBar(text) { this.statusBar.textContent = text || ''; }
+      command(text) {
+        const t = text.trim(), w = t.toLowerCase().split(/\s+/);
+        if (this.buttons[w[0]] && w.length === 1) { if (!this.buttons[w[0]].disabled) { this.buttons[w[0]].click(); } else { this.say(this.buttons[w[0]].title, true); } return; }
+        if (SHELL_MODES.indexOf(w[0]) >= 0 && w.length === 1) { this.setMode(w[0], true); return; }
+        if (w[0] === 'layout' && SHELL_LAYOUTS.indexOf(w[1]) >= 0) { this.setLayout(w[1], true); return; }
+        this.events.emit('command', { text: t });
+      }
+      onKey(e) {
+        if (this.layout !== 'terminal' || e.altKey) { return; }
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); this.cmd.focus(); return; }
+        const act = !e.ctrlKey && !e.metaKey ? SHELL_FKEYS[e.key] : null;
+        if (!act) { return; }
+        e.preventDefault();
+        if (act === 'yaml') { this.setMode(this.mode === 'yaml' ? 'both' : 'yaml', true); return; }
+        const b = this.buttons[act];
+        if (b && !b.disabled) { b.click(); }
       }
       setCrumbs(crumbs) {
         const c = this.crumbEl;
@@ -1637,7 +1740,7 @@
         this.dialog('Propose ' + name + ' for review', h(doc, 'div', { cls: 'dd-form' }, [h(doc, 'p', { cls: 'dd-small', text: 'A second person approves it before it goes live; you may not approve your own proposal.' }), note, h(doc, 'p', {}, [go])]));
       }
     }
-    return { "SHELL_ACTIONS": SHELL_ACTIONS, "SHELL_MODES": SHELL_MODES, "statusWords": statusWords, "DesignerShell": DesignerShell };
+    return { "SHELL_ACTIONS": SHELL_ACTIONS, "SHELL_MODES": SHELL_MODES, "statusWords": statusWords, "SHELL_LAYOUTS": SHELL_LAYOUTS, "SHELL_FKEYS": SHELL_FKEYS, "DesignerShell": DesignerShell };
   })();
   /* ---- src/drishti_designer-element.js ---- */
   __m["src/drishti_designer-element.js"] = (function () {
@@ -2163,7 +2266,7 @@
       D.yaml = { parse, context, chain, get, plain, unquote };
       if (root.document && root.customElements) { defineDesignerElements(root.customElements, root); }
     }
-    return { "install": install, "CommandStack": __m["src/drishti_commands.js"].CommandStack, "SnapshotHistory": __m["src/drishti_commands.js"].SnapshotHistory, "Selection": __m["src/drishti_selection.js"].Selection, "GRID": __m["src/drishti_layout-rules.js"].GRID, "MAX_H": __m["src/drishti_layout-rules.js"].MAX_H, "DEFAULT_MIN_SPAN": __m["src/drishti_layout-rules.js"].DEFAULT_MIN_SPAN, "clamp": __m["src/drishti_layout-rules.js"].clamp, "clampSpan": __m["src/drishti_layout-rules.js"].clampSpan, "clampHeight": __m["src/drishti_layout-rules.js"].clampHeight, "hideRefused": __m["src/drishti_layout-rules.js"].hideRefused, "sizeText": __m["src/drishti_layout-rules.js"].sizeText, "rowsFromPixels": __m["src/drishti_layout-rules.js"].rowsFromPixels, "snap": __m["src/drishti_layout-rules.js"].snap, "clampRect": __m["src/drishti_layout-rules.js"].clampRect, "overlaps": __m["src/drishti_layout-rules.js"].overlaps, "settle": __m["src/drishti_layout-rules.js"].settle, "bounds": __m["src/drishti_layout-rules.js"].bounds, "ALIGN_EDGES": __m["src/drishti_layout-rules.js"].ALIGN_EDGES, "alignRects": __m["src/drishti_layout-rules.js"].alignRects, "distributeRects": __m["src/drishti_layout-rules.js"].distributeRects, "LayoutModel": __m["src/drishti_layout-model.js"].LayoutModel, "KEY_SCHEMES": __m["src/drishti_keymap.js"].KEY_SCHEMES, "designerBindings": __m["src/drishti_keymap.js"].designerBindings, "designerKeys": __m["src/drishti_keymap.js"].designerKeys, "keyHelp": __m["src/drishti_keymap.js"].keyHelp, "trackPointer": __m["src/drishti_pointer.js"].trackPointer, "DragHub": __m["src/drishti_pointer.js"].DragHub, "flowHit": __m["src/drishti_layout-flow.js"].flowHit, "showFlowDrop": __m["src/drishti_layout-flow.js"].showFlowDrop, "clearFlowDrop": __m["src/drishti_layout-flow.js"].clearFlowDrop, "LayoutCanvas": __m["src/drishti_layout-canvas.js"].LayoutCanvas, "searchPalette": __m["src/drishti_palette.js"].searchPalette, "paletteGroups": __m["src/drishti_palette.js"].paletteGroups, "Palette": __m["src/drishti_palette.js"].Palette, "commonValues": __m["src/drishti_inspector.js"].commonValues, "sharedSchema": __m["src/drishti_inspector.js"].sharedSchema, "Inspector": __m["src/drishti_inspector.js"].Inspector, "flattenTree": __m["src/drishti_outline.js"].flattenTree, "findNode": __m["src/drishti_outline.js"].findNode, "isWithin": __m["src/drishti_outline.js"].isWithin, "moveNode": __m["src/drishti_outline.js"].moveNode, "Outline": __m["src/drishti_outline.js"].Outline, "unquote": __m["src/drishti_yaml-read.js"].unquote, "parseYamlTree": __m["src/drishti_yaml-read.js"].parse, "yamlGet": __m["src/drishti_yaml-read.js"].get, "yamlPlain": __m["src/drishti_yaml-read.js"].plain, "yamlChain": __m["src/drishti_yaml-read.js"].chain, "yamlContext": __m["src/drishti_yaml-read.js"].context, "yamlScalar": __m["src/drishti_yaml-write.js"].yamlScalar, "dumpYaml": __m["src/drishti_yaml-write.js"].dumpYaml, "yamlRanges": __m["src/drishti_yaml-write.js"].yamlRanges, "pathAtLine": __m["src/drishti_yaml-write.js"].pathAtLine, "RACHANA_FUNCTION_ARGS": __m["src/drishti_yaml-assist.js"].RACHANA_FUNCTION_ARGS, "RACHANA_FUNCTION_HELP": __m["src/drishti_yaml-assist.js"].RACHANA_FUNCTION_HELP, "YamlSchema": __m["src/drishti_yaml-assist.js"].YamlSchema, "yamlPlace": __m["src/drishti_yaml-assist.js"].yamlPlace, "yamlCompletions": __m["src/drishti_yaml-assist.js"].yamlCompletions, "yamlCheck": __m["src/drishti_yaml-assist.js"].yamlCheck, "yamlHelp": __m["src/drishti_yaml-assist.js"].yamlHelp, "readYaml": __m["src/drishti_yaml-pane.js"].readYaml, "YamlPane": __m["src/drishti_yaml-pane.js"].YamlPane, "SHELL_ACTIONS": __m["src/drishti_shell.js"].SHELL_ACTIONS, "SHELL_MODES": __m["src/drishti_shell.js"].SHELL_MODES, "statusWords": __m["src/drishti_shell.js"].statusWords, "DesignerShell": __m["src/drishti_shell.js"].DesignerShell, "DESIGNER_ELEMENTS": __m["src/drishti_designer-element.js"].DESIGNER_ELEMENTS, "defineDesignerElements": __m["src/drishti_designer-element.js"].defineDesignerElements };
+    return { "install": install, "CommandStack": __m["src/drishti_commands.js"].CommandStack, "SnapshotHistory": __m["src/drishti_commands.js"].SnapshotHistory, "Selection": __m["src/drishti_selection.js"].Selection, "GRID": __m["src/drishti_layout-rules.js"].GRID, "MAX_H": __m["src/drishti_layout-rules.js"].MAX_H, "DEFAULT_MIN_SPAN": __m["src/drishti_layout-rules.js"].DEFAULT_MIN_SPAN, "clamp": __m["src/drishti_layout-rules.js"].clamp, "clampSpan": __m["src/drishti_layout-rules.js"].clampSpan, "clampHeight": __m["src/drishti_layout-rules.js"].clampHeight, "hideRefused": __m["src/drishti_layout-rules.js"].hideRefused, "sizeText": __m["src/drishti_layout-rules.js"].sizeText, "rowsFromPixels": __m["src/drishti_layout-rules.js"].rowsFromPixels, "snap": __m["src/drishti_layout-rules.js"].snap, "clampRect": __m["src/drishti_layout-rules.js"].clampRect, "overlaps": __m["src/drishti_layout-rules.js"].overlaps, "settle": __m["src/drishti_layout-rules.js"].settle, "bounds": __m["src/drishti_layout-rules.js"].bounds, "ALIGN_EDGES": __m["src/drishti_layout-rules.js"].ALIGN_EDGES, "alignRects": __m["src/drishti_layout-rules.js"].alignRects, "distributeRects": __m["src/drishti_layout-rules.js"].distributeRects, "LayoutModel": __m["src/drishti_layout-model.js"].LayoutModel, "KEY_SCHEMES": __m["src/drishti_keymap.js"].KEY_SCHEMES, "designerBindings": __m["src/drishti_keymap.js"].designerBindings, "designerKeys": __m["src/drishti_keymap.js"].designerKeys, "keyHelp": __m["src/drishti_keymap.js"].keyHelp, "trackPointer": __m["src/drishti_pointer.js"].trackPointer, "DragHub": __m["src/drishti_pointer.js"].DragHub, "flowHit": __m["src/drishti_layout-flow.js"].flowHit, "showFlowDrop": __m["src/drishti_layout-flow.js"].showFlowDrop, "clearFlowDrop": __m["src/drishti_layout-flow.js"].clearFlowDrop, "LayoutCanvas": __m["src/drishti_layout-canvas.js"].LayoutCanvas, "searchPalette": __m["src/drishti_palette.js"].searchPalette, "paletteGroups": __m["src/drishti_palette.js"].paletteGroups, "Palette": __m["src/drishti_palette.js"].Palette, "commonValues": __m["src/drishti_inspector.js"].commonValues, "sharedSchema": __m["src/drishti_inspector.js"].sharedSchema, "Inspector": __m["src/drishti_inspector.js"].Inspector, "flattenTree": __m["src/drishti_outline.js"].flattenTree, "findNode": __m["src/drishti_outline.js"].findNode, "isWithin": __m["src/drishti_outline.js"].isWithin, "moveNode": __m["src/drishti_outline.js"].moveNode, "Outline": __m["src/drishti_outline.js"].Outline, "unquote": __m["src/drishti_yaml-read.js"].unquote, "parseYamlTree": __m["src/drishti_yaml-read.js"].parse, "yamlGet": __m["src/drishti_yaml-read.js"].get, "yamlPlain": __m["src/drishti_yaml-read.js"].plain, "yamlChain": __m["src/drishti_yaml-read.js"].chain, "yamlContext": __m["src/drishti_yaml-read.js"].context, "yamlScalar": __m["src/drishti_yaml-write.js"].yamlScalar, "dumpYaml": __m["src/drishti_yaml-write.js"].dumpYaml, "yamlRanges": __m["src/drishti_yaml-write.js"].yamlRanges, "pathAtLine": __m["src/drishti_yaml-write.js"].pathAtLine, "RACHANA_FUNCTION_ARGS": __m["src/drishti_yaml-assist.js"].RACHANA_FUNCTION_ARGS, "RACHANA_FUNCTION_HELP": __m["src/drishti_yaml-assist.js"].RACHANA_FUNCTION_HELP, "YamlSchema": __m["src/drishti_yaml-assist.js"].YamlSchema, "yamlPlace": __m["src/drishti_yaml-assist.js"].yamlPlace, "yamlCompletions": __m["src/drishti_yaml-assist.js"].yamlCompletions, "yamlCheck": __m["src/drishti_yaml-assist.js"].yamlCheck, "yamlHelp": __m["src/drishti_yaml-assist.js"].yamlHelp, "readYaml": __m["src/drishti_yaml-pane.js"].readYaml, "YamlPane": __m["src/drishti_yaml-pane.js"].YamlPane, "SHELL_ACTIONS": __m["src/drishti_shell.js"].SHELL_ACTIONS, "SHELL_MODES": __m["src/drishti_shell.js"].SHELL_MODES, "SHELL_LAYOUTS": __m["src/drishti_shell.js"].SHELL_LAYOUTS, "SHELL_FKEYS": __m["src/drishti_shell.js"].SHELL_FKEYS, "statusWords": __m["src/drishti_shell.js"].statusWords, "DesignerShell": __m["src/drishti_shell.js"].DesignerShell, "DESIGNER_ELEMENTS": __m["src/drishti_designer-element.js"].DESIGNER_ELEMENTS, "defineDesignerElements": __m["src/drishti_designer-element.js"].defineDesignerElements };
   })();
   return Object.freeze(Object.assign({ library: "drishti-designer", version: "0.1.0" }, __m["src/drishti_index.js"]));
 });

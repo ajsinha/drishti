@@ -197,11 +197,15 @@ export class LayoutCanvas {
     const itemOf = (t) => { const e = t.closest && t.closest('[data-dd-id]'); return e && this.els.get(e.getAttribute('data-dd-id')) === e ? e : null; };
     el.addEventListener('click', (e) => {
       const it = itemOf(e.target);
-      if (it) { this.sel.pick(it.getAttribute('data-dd-id'), e.shiftKey || e.ctrlKey || e.metaKey, 'canvas'); return; }
+      if (it) { const id = it.getAttribute('data-dd-id'); if (this.pickedOnDown !== id) { this.sel.pick(id, e.shiftKey || e.ctrlKey || e.metaKey, 'canvas'); } this.pickedOnDown = null; return; }
       if (e.target === el || e.target.classList.contains('dd-area')) { this.sel.clear(); }
     });
     el.addEventListener('dblclick', (e) => { const it = itemOf(e.target); if (it && !e.target.closest('[data-dd-edge]')) { this.events.emit('open', { id: it.getAttribute('data-dd-id') }); } });
-    el.addEventListener('focusin', (e) => { const it = itemOf(e.target); if (it && e.target === it && !this.sel.has(it.getAttribute('data-dd-id'))) { this.sel.set(it.getAttribute('data-dd-id'), 'canvas'); } });
+    el.addEventListener('pointerdown', () => { this.downAt = Date.now(); }, true);
+    el.addEventListener('focusin', (e) => {                                 // the keys brought the focus (a click selects by itself)
+      const it = itemOf(e.target);
+      if (it && e.target === it && Date.now() - (this.downAt || 0) > 600 && !this.sel.has(it.getAttribute('data-dd-id'))) { this.sel.set(it.getAttribute('data-dd-id'), 'canvas'); }
+    });
     el.addEventListener('contextmenu', (e) => {
       const it = itemOf(e.target);
       if (!it || !this.events.count('contextmenu')) { return; }
@@ -253,7 +257,8 @@ export class LayoutCanvas {
     const id = itemEl.getAttribute('data-dd-id'), edge = e.target.closest('[data-dd-edge]');
     if (!edge && (e.target.closest('button, a, input, select, textarea') || (this.o.handle && !e.target.closest(this.o.handle)))) { return; }
     if (edge) { e.preventDefault(); }
-    if (!this.sel.has(id)) { this.sel.pick(id, e.shiftKey || e.ctrlKey || e.metaKey, 'canvas'); }
+    this.pickedOnDown = null;
+    if (!this.sel.has(id)) { this.sel.pick(id, e.shiftKey || e.ctrlKey || e.metaKey, 'canvas'); this.pickedOnDown = id; }
     if (this.flow) { this.flowDrag(e, id, itemEl, edge && edge.getAttribute('data-dd-edge')); return; }
     const ids = edge ? [id] : this.model.expand(this.sel.list()), m = this.metrics();
     const start = ids.map((k) => Object.assign({}, this.model.get(k)));

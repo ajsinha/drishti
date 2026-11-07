@@ -48,10 +48,11 @@
 .dd-muted { color: var(--d-muted); }
 .dd-small { font-size: 12px; }
 .dd-in { background: var(--d-bg-2, var(--d-bg)); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 4px; padding: 4px 7px; font-size: 13px; width: 100%; max-width: 100%; }
-.dd-shell-grid { display: grid; grid-template-columns: var(--dd-left, 240px) minmax(0, 1fr) var(--dd-right, 360px); gap: 10px; align-items: start; flex: 1; }
-.dd-no-objects .dd-shell-grid { grid-template-columns: minmax(0, 1fr) var(--dd-right, 360px); }
-.dd-no-preview .dd-shell-grid { grid-template-columns: var(--dd-left, 240px) minmax(0, 1fr); }
-.dd-no-objects.dd-no-preview .dd-shell-grid { grid-template-columns: minmax(0, 1fr); }
+.dd-shell-grid { display: flex; gap: 10px; align-items: flex-start; flex: 1; min-width: 0; }
+.dd-rail { flex: 0 0 var(--dd-left, 220px); }
+.dd-main { flex: 1 1 0; }
+.dd-insp-side { flex: 0 0 var(--dd-insp, 270px); }
+.dd-side { flex: 0 0 var(--dd-right, 340px); }
 .dd-objects, .dd-side { position: relative; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius, 6px); padding: 8px; min-width: 0; max-height: calc(100vh - 150px); overflow: auto; }
 .dd-main { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
 .dd-search { margin-bottom: 8px; }
@@ -71,6 +72,42 @@
 .dd-dialog { background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius, 6px); box-shadow: var(--d-shadow); max-width: min(720px, 92vw); }
 .dd-dialog h2 { font-size: 15px; margin: 0 0 8px; }
 .dd-dlg-actions { display: flex; justify-content: flex-end; margin: 10px 0 0; }
+
+/* the left rail's tabs, the inspector pane, the status bar */
+.dd-ptabs { display: flex; border-bottom: 1px solid var(--d-border); margin: -8px -8px 8px; }
+.dd-ptabs[hidden] { display: none; }
+.dd-ptab { flex: 1; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--d-muted); padding: 7px 4px; font-size: 12px; cursor: pointer; }
+.dd-ptab[aria-selected="true"] { color: var(--d-accent); border-bottom-color: var(--d-accent); }
+.dd-ptab:focus-visible { outline: 2px solid var(--d-link); outline-offset: -2px; }
+.dd-rail-panel[hidden] { display: none; }
+.dd-insp-side { position: relative; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius, 6px); padding: 8px; min-width: 0; max-height: calc(100vh - 150px); overflow: auto; }
+.dd-sec { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--d-muted); }
+.dd-statusbar { font-size: 11px; color: var(--d-muted); border-top: 1px solid var(--d-border); padding: 4px 2px 0; min-height: 1.4em; }
+.dd-layout-pick { background: var(--d-surface-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 4px; font-size: 12px; padding: 3px 6px; }
+.dd-cmdbar { display: flex; align-items: center; gap: 8px; background: var(--d-bg-2, var(--d-bg)); border: 1px solid var(--d-border); border-radius: 4px; padding: 4px 8px; font-family: var(--d-font-mono); }
+.dd-cmdbar[hidden], .dd-fkeys[hidden] { display: none; }
+.dd-cmd-p { color: var(--d-accent); font-weight: 700; }
+.dd-cmd { flex: 1; background: transparent; border: 0; color: var(--d-ink); font: inherit; outline: none; }
+.dd-fkeys { display: flex; flex-wrap: wrap; gap: 12px; font-family: var(--d-font-mono); font-size: 11px; color: var(--d-muted); }
+.dd-fkeys b { color: var(--d-ink); margin-right: 3px; }
+
+/* the layouts: studio (g7 A: rail | main with the YAML docked under it | inspector | preview), side by side (B), terminal (C) */
+.dd-preview-off .dd-side { display: none; }
+.dd-layout-side-by-side .dd-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .7fr); gap: 10px; align-items: start; }
+.dd-layout-side-by-side .dd-main > .dd-ro { grid-column: 1 / -1; }
+.dd-layout-side-by-side .dd-rail-panel + .dd-rail-panel { border-top: 1px solid var(--d-border); margin-top: 8px; padding-top: 8px; }
+.dd-layout-side-by-side .dd-ptabs { display: none; }
+.dd-insp-side.dd-card { position: fixed; z-index: 40; left: var(--dd-card-l, auto); top: var(--dd-card-t, auto); right: auto; width: 300px; max-height: 70vh; box-shadow: var(--d-shadow); display: none; }
+.dd-insp-side.dd-card[data-dd-floating] { display: block; }
+.dd-layout-terminal { font-family: var(--d-font-mono); font-size: 12px; }
+.dd-layout-terminal .dd-head, .dd-layout-terminal .dd-objects, .dd-layout-terminal .dd-side, .dd-layout-terminal .dd-insp-side, .dd-layout-terminal .dd-yaml-panel { border-radius: 0; padding: 4px 6px; }
+.dd-layout-terminal .dd-shell-grid { gap: 4px; }
+.dd-layout-terminal .dd-rail { flex-basis: var(--dd-left, 280px); }
+.dd-layout-terminal .dd-ptabs { display: none; }
+.dd-layout-terminal .dd-rail-panel + .dd-rail-panel { border-top: 1px solid var(--d-border); margin-top: 4px; padding-top: 4px; }
+.dd-layout-terminal .dd-node { display: grid; grid-template-columns: 1em minmax(0, 1fr) auto; font-size: 12px; padding-top: 1px; padding-bottom: 1px; }
+.dd-layout-terminal .dd-node-detail { font-size: 11px; text-align: right; }
+.dd-layout-terminal .dd-item-frame { border-radius: 0; }
 
 /* ---- the canvas ----------------------------------------------------------------------------------------------------------------- */
 .dd-canvas.dd-grid { display: grid; grid-template-columns: repeat(var(--dd-cols, 12), minmax(0, 1fr)); grid-auto-rows: var(--dd-row, 56px); gap: var(--dd-gap, 10px); position: relative; min-height: 240px; }
@@ -133,7 +170,9 @@ body.dd-dragging, body.dd-dragging * { cursor: grabbing; user-select: none; }
 .dd-yaml-status:empty { display: none; }
 
 @media (max-width: 640px) {
-  .dd-shell-grid, .dd-no-objects .dd-shell-grid, .dd-no-preview .dd-shell-grid { grid-template-columns: minmax(0, 1fr); }
+  .dd-shell-grid { flex-direction: column; align-items: stretch; }
+  .dd-rail, .dd-insp-side, .dd-side { flex-basis: auto; }
+  .dd-layout-side-by-side .dd-main { grid-template-columns: minmax(0, 1fr); }
   .dd-objects, .dd-side { max-height: none; }
 }
 @media (prefers-reduced-motion: reduce) { .dd-item, .dd-ghost { transition: none; } }

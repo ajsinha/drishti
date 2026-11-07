@@ -13,8 +13,13 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The designer shell (EDITORS.md section 1, the product owner's choice): one frame for every editor and designer. Three panes: the
-   objects with a search on the left; the editor in the middle with the live YAML under it; the preview with its checks on the right.
+/* The designer shell (EDITORS.md section 1; mock-up g7, every option of which the product owner took on 2026-11-07): one frame for
+   every editor and designer, in three layouts of the same panes, each person's choice remembered through the host. "studio" (g7 A, the
+   default): the left rail's tabs (the objects with a search, the palette, the outline), the canvas or the editor in the middle with the
+   live YAML docked under it, the inspector and the live preview with its checks on the right (Preview shows or hides it), a status bar.
+   "side-by-side" (B): the outline over the palette, the canvas and the YAML side by side, the preview always on, the inspector a card by
+   the selection. "terminal" (C): dense and monospace, a DESIGN> command line (Ctrl+K), the outline as a property grid, the function
+   keys F3 Validate, F4 YAML, F5 Preview, F7 History, F8 Impact, F9 Propose.
    The header says where you are, the name, the status with its versions ("Draft · approved v3"), and holds Validate, Preview,
    History, Impact, Save draft, Propose for review and + New. A Visual / YAML / Both toggle, remembered per person through a hook.
    Nothing goes live without review: Propose asks for a note and files it through the host's hook (the Approvals queue's API); a person
@@ -57,10 +62,22 @@ export function statusWords(s) {
  * @property {string} [search] the objects' search placeholder (none: no objects pane)
  * @property {boolean} [preview=true] the right pane
  * @property {string} [label='Designer']
+ * @property {Array<{id: string, label: string}>} [rail] the left rail's tabs besides the objects (palette, outline); shell.rail(id) is
+ *   each tab's element
+ * @property {boolean} [inspector=false] an inspector pane (shell.inspector)
+ * @property {('studio'|'side-by-side'|'terminal')} [layout='studio'] g7's options A, B and C
+ * @property {function(string): (true|string)} [canMode] whether a mode may be picked now, else why not in words
  */
 
+/** The layouts of the shell (mock-up g7: A the docked studio, B side by side, C the terminal). */
+export const SHELL_LAYOUTS = Object.freeze(['studio', 'side-by-side', 'terminal']);
+
+/** The terminal layout's function keys. */
+export const SHELL_FKEYS = Object.freeze({ F3: 'validate', F4: 'yaml', F5: 'preview', F7: 'history', F8: 'impact', F9: 'propose' });
+
 /**
- * The shell. Events: action {id}, mode {mode}, new {id}, open {group, item}, search {query}.
+ * The shell. Events: action {id}, mode {mode}, new {id}, open {group, item}, search {query}, tab {id}, command {text},
+ * layout {layout, user}.
  */
 export class DesignerShell {
   /**
@@ -70,7 +87,8 @@ export class DesignerShell {
   constructor(el, o) {
     this.el = el;
     this.doc = el.ownerDocument;
-    this.o = Object.assign({ actions: SHELL_ACTIONS, modes: true, mode: 'both', preview: true, label: 'Designer', crumbs: [] }, o);
+    this.o = Object.assign({ actions: SHELL_ACTIONS, modes: true, mode: 'both', preview: true, label: 'Designer', crumbs: [], rail: [], layout: 'studio' }, o);
+    this.tabs = {};
     this.events = new EventBus();
     this.mode = this.o.mode;
     this.groups = [];
@@ -119,12 +137,35 @@ export class DesignerShell {
     head.appendChild(acts);
     this.msg = x('p', { cls: 'dd-msg', attrs: { 'data-msg': '', role: 'status', 'aria-live': 'polite' } });
     const grid = x('div', { cls: 'dd-shell-grid', attrs: { 'data-grid': '' } });
-    if (o.search) {
-      this.searchEl = x('input', { cls: 'dd-in dd-search', attrs: { type: 'search', 'data-ed-search': '', placeholder: o.search, 'aria-label': o.search } });
-      this.searchEl.addEventListener('input', () => { this.drawObjects(); this.events.emit('search', { query: this.searchEl.value }); });
-      this.objects = x('div', { attrs: { 'data-objects': '' } });
-      grid.appendChild(x('aside', { cls: 'dd-objects', attrs: { 'aria-label': 'Objects' } }, [this.searchEl, this.objects,
-        x('div', { attrs: { 'data-resize': 'panel', 'data-resize-key': 'designer.objects', 'data-resize-var': '--dd-left', 'data-resize-min': '180', 'data-resize-max': '480', 'aria-label': 'Resize the objects pane' } })]));
+    const railTabs = (o.search ? [{ id: 'objects', label: 'Objects' }] : []).concat(o.rail || []);
+    if (railTabs.length) {
+      const list = x('div', { cls: 'dd-ptabs', attrs: { role: 'tablist', 'aria-label': 'The left rail' } });
+      const rail = x('aside', { cls: 'dd-objects dd-rail', attrs: { 'aria-label': 'Objects' } }, [list]);
+      railTabs.forEach((t, i) => {
+        const tab = x('button', { cls: 'dd-ptab', text: t.label, attrs: { type: 'button', role: 'tab', id: 'dd-tab-' + t.id + '-' + this.uid(), 'aria-selected': String(i === 0), tabindex: i === 0 ? '0' : '-1', 'data-dd-tab': t.id } });
+        const panel = x('div', { cls: 'dd-rail-panel', attrs: { role: 'tabpanel', 'aria-labelledby': tab.id, 'data-dd-panel': t.id, hidden: i !== 0 } });
+        tab.addEventListener('click', () => this.showTab(t.id));
+        tab.addEventListener('keydown', (e) => {
+          const k = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+          if (!k) { return; }
+          e.preventDefault();
+          const ids = railTabs.map((r) => r.id), j = (ids.indexOf(t.id) + k + ids.length) % ids.length;
+          this.showTab(ids[j]);
+          this.tabs[ids[j]].tab.focus();
+        });
+        list.appendChild(tab);
+        rail.appendChild(panel);
+        this.tabs[t.id] = { tab, panel };
+      });
+      if (railTabs.length === 1) { list.hidden = true; }
+      if (o.search) {
+        this.searchEl = x('input', { cls: 'dd-in dd-search', attrs: { type: 'search', 'data-ed-search': '', placeholder: o.search, 'aria-label': o.search } });
+        this.searchEl.addEventListener('input', () => { this.drawObjects(); this.events.emit('search', { query: this.searchEl.value }); });
+        this.objects = x('div', { attrs: { 'data-objects': '' } });
+        this.tabs.objects.panel.append(this.searchEl, this.objects);
+      }
+      rail.appendChild(x('div', { attrs: { 'data-resize': 'panel', 'data-resize-key': 'designer.objects', 'data-resize-var': '--dd-left', 'data-resize-min': '180', 'data-resize-max': '480', 'aria-label': 'Resize the left rail' } }));
+      grid.appendChild(rail);
     } else { this.el.classList.add('dd-no-objects'); }
     this.readOnlyBar = x('div', { cls: 'dd-ro', attrs: { 'data-readonly': '', hidden: true } });
     this.visual = x('div', { cls: 'dd-visual', attrs: { 'data-visual': '' } });
@@ -134,6 +175,11 @@ export class DesignerShell {
     this.yaml = x('section', { cls: 'dd-yaml-panel', attrs: { 'data-yaml-panel': '', 'aria-label': 'The definition as YAML', hidden: true } }, [
       x('div', { cls: 'dd-yh' }, [this.yamlToggle, this.yamlState, x('span', { cls: 'dd-ynote', text: 'edits on either side show on the other' })]), this.yamlBody]);
     grid.appendChild(x('section', { cls: 'dd-main', attrs: { 'aria-label': 'Editor' } }, [this.readOnlyBar, this.visual, this.yaml]));
+    if (o.inspector) {
+      this.inspector = x('div', { cls: 'dd-inspector-pane', attrs: { 'data-dd-inspector': '' } });
+      this.inspectorBox = x('aside', { cls: 'dd-insp-side', attrs: { 'aria-label': 'Inspector' } }, [x('h3', { cls: 'dd-sec', text: 'Inspector' }), this.inspector]);
+      grid.appendChild(this.inspectorBox);
+    } else { this.el.classList.add('dd-no-inspector'); }
     if (o.preview) {
       this.preview = x('div', { cls: 'dd-preview', attrs: { 'data-preview': '', 'aria-busy': 'false' } });
       grid.appendChild(x('aside', { cls: 'dd-side', attrs: { 'aria-label': 'Preview and checks', 'data-side': '' } }, [
@@ -143,10 +189,125 @@ export class DesignerShell {
     this.dlgBody = x('div', { attrs: { 'data-dialog-body': '' } });
     this.dlg = x('dialog', { cls: 'dd-dialog', attrs: { 'data-dialog': '', 'aria-labelledby': this.dlgTitle.id } }, [this.dlgTitle, this.dlgBody,
       x('p', { cls: 'dd-dlg-actions' }, [x('button', { cls: 'dd-btn', text: 'Close', attrs: { type: 'button', 'data-dialog-close': '' }, on: { click: () => this.closeDialog() } })])]);
-    this.el.append(head, this.msg, grid, this.dlg);
+    this.cmd = x('input', { cls: 'dd-cmd', attrs: { type: 'text', 'data-dd-cmd': '', placeholder: 'Ctrl+K · add bar · select v2 · align left · validate · propose', 'aria-label': 'Command', autocomplete: 'off', spellcheck: 'false' } });
+    this.cmd.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && this.cmd.value.trim()) { e.preventDefault(); this.command(this.cmd.value.trim()); this.cmd.value = ''; } else if (e.key === 'Escape') { this.cmd.blur(); }
+    });
+    this.cmdBar = x('div', { cls: 'dd-cmdbar', attrs: { hidden: true } }, [x('span', { cls: 'dd-cmd-p', text: 'DESIGN>' }), this.cmd]);
+    this.fkeys = x('div', { cls: 'dd-fkeys', attrs: { hidden: true, 'aria-hidden': 'true' } }, Object.keys(SHELL_FKEYS).map((k) => x('span', {}, [x('b', { text: k }), ' ' + SHELL_FKEYS[k]])));
+    this.statusBar = x('div', { cls: 'dd-statusbar', attrs: { 'data-dd-statusbar': '', role: 'status' } });
+    this.layoutSel = x('select', { cls: 'dd-layout-pick', attrs: { 'data-dd-layout-pick': '', 'aria-label': 'Layout' } }, SHELL_LAYOUTS.map((l) => x('option', { text: { studio: 'Studio', 'side-by-side': 'Side by side', terminal: 'Terminal' }[l], attrs: { value: l } })));
+    this.layoutSel.addEventListener('change', () => this.setLayout(this.layoutSel.value, true));
+    head.appendChild(this.layoutSel);
+    this.el.append(head, this.cmdBar, this.msg, grid, this.fkeys, this.statusBar, this.dlg);
+    this.el.addEventListener('keydown', (e) => this.onKey(e));
+    this.previewOn = true;
+    this.setLayout(o.layout);
     this.yamlOpen = true;
     this.setCrumbs(o.crumbs);
     this.applyMode();
+  }
+
+  /** @private */
+  uid() { DesignerShell.seq = (DesignerShell.seq || 0) + 1; return DesignerShell.seq; }
+
+  /**
+   * The element of a left-rail tab (objects, palette, outline).
+   * @param {string} id
+   * @returns {?HTMLElement}
+   */
+  rail(id) { return this.tabs[id] ? this.tabs[id].panel : null; }
+
+  /**
+   * Shows a left-rail tab.
+   * @param {string} id
+   * @returns {void}
+   */
+  showTab(id) {
+    if (!this.tabs[id]) { return; }
+    Object.keys(this.tabs).forEach((k) => { const on = k === id; this.tabs[k].tab.setAttribute('aria-selected', String(on)); this.tabs[k].tab.tabIndex = on ? 0 : -1; this.tabs[k].panel.hidden = !on && this.layout === 'studio'; });
+    this.events.emit('tab', { id });
+  }
+
+  /**
+   * The layout (user: the person picked it, so the "layout" event lets the host remember it).
+   * @param {string} layout 'studio' (g7 A, the default), 'side-by-side' (B), 'terminal' (C)
+   * @param {boolean} [user]
+   * @returns {void}
+   */
+  setLayout(layout, user) {
+    this.layout = SHELL_LAYOUTS.indexOf(layout) >= 0 ? layout : 'studio';
+    SHELL_LAYOUTS.forEach((l) => this.el.classList.toggle('dd-layout-' + l, l === this.layout));
+    this.el.setAttribute('data-dd-layout', this.layout);
+    this.layoutSel.value = this.layout;
+    const term = this.layout === 'terminal';
+    this.cmdBar.hidden = !term;
+    this.fkeys.hidden = !term;
+    const stacked = this.layout !== 'studio';                                // B and C show every rail tab at once, one over the other
+    const on = Object.keys(this.tabs).find((k) => this.tabs[k].tab.getAttribute('aria-selected') === 'true');
+    Object.keys(this.tabs).forEach((k) => { this.tabs[k].panel.hidden = !stacked && k !== on; });
+    if (this.layout === 'side-by-side') { this.togglePreview(true); }
+    if (this.inspectorBox) { this.inspectorBox.classList.toggle('dd-card', this.layout === 'side-by-side'); }
+    this.events.emit('layout', { layout: this.layout, user: !!user });
+  }
+
+  /**
+   * Side by side: the inspector is a card by the selection (null: back to its place).
+   * @param {?Element} anchor the selected item's element
+   * @returns {void}
+   */
+  placeInspector(anchor) {
+    const box = this.inspectorBox;
+    if (!box) { return; }
+    if (this.layout !== 'side-by-side' || !anchor) { box.style.removeProperty('--dd-card-l'); box.style.removeProperty('--dd-card-t'); box.toggleAttribute('data-dd-floating', false); return; }
+    const r = anchor.getBoundingClientRect(), win = this.doc.defaultView, w = 300;
+    const left = r.right + 8 + w > win.innerWidth ? Math.max(8, r.left - w - 8) : r.right + 8;
+    box.style.setProperty('--dd-card-l', left + 'px');
+    box.style.setProperty('--dd-card-t', Math.max(8, Math.min(r.top, win.innerHeight - 340)) + 'px');
+    box.toggleAttribute('data-dd-floating', true);
+  }
+
+  /**
+   * Shows or hides the preview pane (the Preview action's other half; side by side keeps it on).
+   * @param {boolean} [on]
+   * @returns {void}
+   */
+  togglePreview(on) {
+    this.previewOn = this.layout === 'side-by-side' ? true : on === undefined ? !this.previewOn : !!on;
+    this.el.classList.toggle('dd-preview-off', !this.previewOn);
+  }
+
+  /**
+   * The status bar's words (what is selected, where, the problems).
+   * @param {string} text
+   * @returns {void}
+   */
+  setStatusBar(text) { this.statusBar.textContent = text || ''; }
+
+  /**
+   * A command typed on the terminal's command line: the header's actions by name ("validate", "propose", "yaml", "visual", "both",
+   * "layout studio"), else the "command" event for the host (add, select, align ...).
+   * @param {string} text
+   * @returns {void}
+   */
+  command(text) {
+    const t = text.trim(), w = t.toLowerCase().split(/\s+/);
+    if (this.buttons[w[0]] && w.length === 1) { if (!this.buttons[w[0]].disabled) { this.buttons[w[0]].click(); } else { this.say(this.buttons[w[0]].title, true); } return; }
+    if (SHELL_MODES.indexOf(w[0]) >= 0 && w.length === 1) { this.setMode(w[0], true); return; }
+    if (w[0] === 'layout' && SHELL_LAYOUTS.indexOf(w[1]) >= 0) { this.setLayout(w[1], true); return; }
+    this.events.emit('command', { text: t });
+  }
+
+  /** @private the terminal's keys: Ctrl+K the command line, the function keys */
+  onKey(e) {
+    if (this.layout !== 'terminal' || e.altKey) { return; }
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); this.cmd.focus(); return; }
+    const act = !e.ctrlKey && !e.metaKey ? SHELL_FKEYS[e.key] : null;
+    if (!act) { return; }
+    e.preventDefault();
+    if (act === 'yaml') { this.setMode(this.mode === 'yaml' ? 'both' : 'yaml', true); return; }
+    const b = this.buttons[act];
+    if (b && !b.disabled) { b.click(); }
   }
 
   /**

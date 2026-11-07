@@ -36,7 +36,7 @@ export { unquote, parse as parseYamlTree, get as yamlGet, plain as yamlPlain, ch
 export { yamlScalar, dumpYaml, yamlRanges, pathAtLine } from './drishti_yaml-write.js';
 export { RACHANA_FUNCTION_ARGS, RACHANA_FUNCTION_HELP, YamlSchema, yamlPlace, yamlCompletions, yamlCheck, yamlHelp } from './drishti_yaml-assist.js';
 export { readYaml, YamlPane } from './drishti_yaml-pane.js';
-export { SHELL_ACTIONS, SHELL_MODES, statusWords, DesignerShell } from './drishti_shell.js';
+export { SHELL_ACTIONS, SHELL_MODES, SHELL_LAYOUTS, SHELL_FKEYS, statusWords, DesignerShell } from './drishti_shell.js';
 export { DESIGNER_ELEMENTS, defineDesignerElements } from './drishti_designer-element.js';
 import { defineDesignerElements } from './drishti_designer-element.js';
 import { parse, get, plain, chain, context, unquote } from './drishti_yaml-read.js';
