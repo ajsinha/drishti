@@ -102,7 +102,8 @@
   drawn wrong. Python visuals may return a drishti-chart spec (`output: drishti-chart`, the preferred form; `data.source` refused in the
   sandbox). Deleted: the vendored Vega, Vega-Lite, vega-embed and vega-interpreter, their VENDOR.md entry and notice, `drishti_bi-vega.js`
   and every Vega code path. Tests: the two shipped specifications translate to the same data and encodings, a refused feature's message,
-  a guard that no file references the Vega library (`tests/test_bi_wave_c.py`), `test_items.py` (the drishti-chart output).
+  (`tests/test_vega_translate.py`), a guard that no file references the Vega library (`tests/test_bi_wave_c.py`), `test_items.py` (the
+  drishti-chart output).
 - **The Explain page carries a pivot cell's view**: Open as a page puts the body the drawer posted (the view, the cells, the split) in
   the link as one JSON parameter (`body`), and the page asks with it (`test_explain_routes.py`, `test_pivot_functions_browser.py`).
 - **One Explain for a pivot cell**: the server's `POST /api/v1/pivot/explain` is folded into `POST /api/v1/explain` (kind `pivot`); the

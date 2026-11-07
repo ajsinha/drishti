@@ -658,7 +658,7 @@ library with its module: an unlicensed module's library is not served, its kinds
   it in a host or writes the refusal there; `chartIn(host, spec)` puts any spec in a host as a `<drishti-chart>`). The shipped Vega-Lite
   specifications are the report visual of `python-desk-risk` (a bar with a sort, a colour condition and a tooltip) and the Python sample
   `pnl-vega` (two layers: dots and median ticks over a nominal axis); both translate whole, and a test holds their data and encodings
-  equal to what Vega drew (`tests/test_bi_wave_c.py`). Coverage:
+  equal to what Vega drew (`tests/test_vega_translate.py`). Coverage:
 
   | Vega-Lite | Translated to |
   |---|---|
