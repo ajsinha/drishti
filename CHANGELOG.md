@@ -21,6 +21,14 @@
 
 ## 2.9.11.e (unreleased)
 
+- **The demo lake's layout, the owner's decision** (`config/lakes/demo.yaml` and its jar copy; DATA_LAKE_GUIDE.md section 2): `risk.scenario-pv`
+  partitioned by `SCENARIO_SET_ID, GRAIN` after the business date, sorted by `LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, TRADE_ID`, zstd
+  (vectors too), 256 MB files, 16 MB row groups, 30 days' time travel, maintenance (compaction to 256 MB, vacuum after 7 days,
+  checkpoints); `trading.trade_calypso` and `trading.trade_murex` partitioned by `PRODUCT_GROUP` instead of `PRODUCT_TYPE` (50+ product
+  types each; `PRODUCT_TYPE` stays promoted); every trade table compacted and vacuumed after 7 days. The trading pack's recommended
+  entries follow (tools/packgen/banking/make_packs.py). An existing demo lake is rebuilt with `drishti.py lake demo` to take it; a load
+  into an old-layout table is refused, naming both, until then. VaR figures are equal on either layout.
+
 - **The demo lake's move no longer changes the shipped `config/lakes/demo.yaml`** (found on the owner's stack after 2.9.11.d: at the
   first start after the move the file was re-written in block style, quotes added, and 43 tables appended, so `git status` showed it
   modified and the drill's clean-tree check would fail). Two causes: the shipped file lacked the 37 tables the example packs'
