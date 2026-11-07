@@ -75,8 +75,8 @@ def console_html(vm: dict, theme: str = "", design_on: bool = True) -> str:
             + str(parts.provenance_banners(vm, "live", {}, False, "")) + str(parts.vhead(vm)) + body + "</div>")
     links = "".join(f'<link rel="stylesheet" href="/static/{s.removeprefix("static/")}">' for s in CONSOLE_SHEETS)
     scripts = "".join(f'<script src="{s}"></script>' for s in ("/render-test/csp.js", "/static/vendor/echarts/echarts.min.js", "/static/js/drishti_geomap.js", "/static/js/drishti_charts.js", "/static/js/drishti_view.js"))
-    # the resize component in the head, as base.html has it: the grid's split is its handle (drishti_screen-grid.js)
-    resize = '<link rel="stylesheet" href="/static/css/drishti_resize.css"><script src="/static/js/drishti_resize.js"></script>'
+    # the resize component (drishti-core) in the head: the grid's split is its handle (drishti_screen-grid.js)
+    resize = '<link rel="stylesheet" href="/static/css/drishti_resize.css"><script src="/static/elements/drishti-core/drishti_core.js"></script>'
     t = f' data-theme="{theme}"' if theme else ""
     return f'<!DOCTYPE html><html lang="en"{t}><head><meta charset="utf-8"><title>console</title>{links}{resize}</head><body class="terminal">{view}{scripts}</body></html>'
 

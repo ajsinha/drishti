@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The keys that move and size a panel (build/drishti_grid-keys.js), shared by layout mode and the workbench canvas, run in Node: layout mode's
+"""The keys that move and size a panel (drishti-core's panel keys, Drishti.GridKeys), shared by layout mode and the workbench canvas, run in Node: layout mode's
 arrows move the panel; the workbench's arrows select and Alt+arrows move; Shift+arrows size in both."""
 import json
 from pathlib import Path
@@ -21,13 +21,13 @@ import subprocess
 
 import pytest
 
-JS = Path(__file__).resolve().parents[1] / "web" / "static" / "js" / "build" / "drishti_grid-keys.js"
+JS = Path(__file__).resolve().parents[1] / "web" / "static" / "elements" / "drishti-core" / "drishti_core.js"
 NODE = shutil.which("node")
 pytestmark = pytest.mark.skipif(NODE is None, reason="needs node")
 
 
 def keys(scheme, *events):
-    code = f"const G=require({json.dumps(str(JS))});const ev={json.dumps(events)};console.log(JSON.stringify(ev.map(e=>G.interpret(e,{json.dumps(scheme)}))))"
+    code = f"const G=require({json.dumps(str(JS))}).GridKeys;const ev={json.dumps(events)};console.log(JSON.stringify(ev.map(e=>G.interpret(e,{json.dumps(scheme)}))))"
     return json.loads(subprocess.run([NODE, "-e", code], capture_output=True, text=True, check=True, timeout=30).stdout)
 
 

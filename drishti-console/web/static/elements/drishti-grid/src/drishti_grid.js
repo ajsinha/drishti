@@ -42,8 +42,11 @@ export const DENSITIES = Object.freeze({ comfortable: 36, compact: 28, terminal:
  * @property {function(Object, number): string} [getRowId]
  * @property {('wells'|'panel'|'terminal')} [layout='wells']
  * @property {('comfortable'|'compact'|'terminal')} [density='compact']
- * @property {function({view: Object}, AbortSignal): Promise<Object>} [serverPivot] asks a server pivot (POST /api/pivot/query's body); needed
- *   for a pivot of server-side rows and for the non-additive totals of a local pivot
+ * @property {function({view: Object}, AbortSignal, Object[]): Promise<Object>} [serverPivot] asks a server pivot (POST /api/pivot/query's
+ *   body; the third argument: the rows in the page, for an inline pivot); needed for a pivot of server-side rows, for the non-additive
+ *   totals of a local pivot, and for every pivot when clientAggregation is false
+ * @property {boolean} [clientAggregation=true] false: the browser computes no figure (the console's policy, ELEMENTS.md section 3): group
+ *   figures and every pivot are the server's
  * @property {function(Object): Promise<*>} [explain] the Explain hook: given a cell's context, the explanation (a layout shows it)
  * @property {('single'|'multiple'|'none')} [rowSelection='multiple']
  * @property {number} [blockSize] server-side rows per request
@@ -63,7 +66,7 @@ export class GridModel {
     this.layout = LAYOUTS.indexOf(o.layout) >= 0 ? o.layout : 'wells';
     this.density = DENSITIES[o.density] ? o.density : 'compact';
     this.rowModel = o.datasource ? new ServerRowModel({ datasource: o.datasource, blockSize: o.blockSize, getRowId: o.getRowId })
-      : new ClientRowModel({ columns: this.columns, rows: o.rows || [], getRowId: o.getRowId });
+      : new ClientRowModel({ columns: this.columns, rows: o.rows || [], getRowId: o.getRowId, clientAggregation: o.clientAggregation });
     this.serverSide = !!o.datasource;
     this.viewport = new Viewport({ rowHeight: DENSITIES[this.density] });
     this.selection = new SelectionModel({ mode: o.rowSelection });
@@ -274,9 +277,9 @@ export class GridModel {
       this.events.emit('changed', { what: 'pivot' });
     };
     const fail = (e) => { if (!(ctl && ctl.signal.aborted)) { this.events.emit('pivotError', { error: e }); } };
-    if (this.serverSide) {
-      if (!this.o.serverPivot) { return Promise.reject(new Error('a pivot of server-side rows needs serverPivot')); }
-      return this.o.serverPivot(serverRequest(view), ctl && ctl.signal).then((a) => { applyValueFilters(a, view.valueFilters); done(a); }, fail);
+    if (this.serverSide || this.o.clientAggregation === false) {
+      if (!this.o.serverPivot) { return Promise.reject(new Error(this.serverSide ? 'a pivot of server-side rows needs serverPivot' : 'clientAggregation is off: a pivot needs serverPivot')); }
+      return this.o.serverPivot(serverRequest(view), ctl && ctl.signal, this.serverSide ? null : this.rowModel.filteredRows()).then((a) => { applyValueFilters(a, view.valueFilters); done(a); }, fail);
     }
     const byField = {};
     this.columns.all().forEach((c) => { byField[c.field] = c; });

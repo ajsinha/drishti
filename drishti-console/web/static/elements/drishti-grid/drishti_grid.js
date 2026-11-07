@@ -161,6 +161,7 @@
      * @property {string} [aggFunc] the aggregation of a value column (sum, count, min, max, avg, first, last, distinct, or a server measure)
      * @property {boolean} [additive] whether its figures may be summed: false for VaR, ES, ratios (a total is asked of the server);
      *   default: true for numbers
+     * @property {string} [aggregate] 'server': the same as additive false (ELEMENTS.md's name)
      * @property {string} [measure] the server's measure text when it is not func(field) (var(99, 1d))
      * @property {boolean} [enableRowGroup] may be a row group (default: text and date columns)
      * @property {boolean} [enablePivot] may be a column pivot (default: text and date columns)
@@ -185,7 +186,7 @@
         pinned: null, hidden: false, sortable: true, filterable: true, resizable: true, aggFunc: num ? 'sum' : null,
         additive: num, enableRowGroup: !num, enablePivot: !num, enableValue: num, group: null, description: '', format: null,
         valueGetter: null, comparator: null, measure: null
-      }, def, { id: id, type: type });
+      }, def, { id: id, type: type }, def.aggregate === 'server' ? { additive: false } : {});
     }
 
     /**
@@ -1079,7 +1080,7 @@
   __m["src/drishti_client-rows.js"] = (function () {
     var EventBus = __lib("drishti-core").EventBus;
     var getValue = __m["src/drishti_columns.js"].getValue;
-    var compareRows = __m["src/drishti_sort-filter.js"].compareRows, rowFilter = __m["src/drishti_sort-filter.js"].rowFilter, isBlank = __m["src/drishti_sort-filter.js"].isBlank;
+    var compareRows = __m["src/drishti_sort-filter.js"].compareRows, compareValues = __m["src/drishti_sort-filter.js"].compareValues, rowFilter = __m["src/drishti_sort-filter.js"].rowFilter, isBlank = __m["src/drishti_sort-filter.js"].isBlank;
     var aggFunc = __m["src/drishti_aggregate.js"].aggFunc;
     var memberText = __m["src/drishti_pivot.js"].memberText, SEP = __m["src/drishti_pivot.js"].SEP;
     /* The client-side row model: every row is in the page. Filtering and sorting make an index (a typed array of row numbers, so a million
@@ -1115,10 +1116,12 @@
      */
     class ClientRowModel {
       /**
-       * @param {{columns: import('./drishti_columns.js').ColumnModel, rows: Object[], getRowId: function(Object, number): string}} o
+       * @param {{columns: import('./drishti_columns.js').ColumnModel, rows: Object[], getRowId: function(Object, number): string, clientAggregation: boolean}} o
+       *   clientAggregation false: no group figure is computed here, every one is left for the server (the console's policy)
        */
       constructor(o) {
         this.columns = o.columns;
+        this.clientAggregation = o.clientAggregation !== false;
         this.getRowId = o.getRowId || ((r, i) => (r && r.id !== undefined && r.id !== null ? String(r.id) : String(i)));
         /** @type {EventBus} rowsChanged {reason} */
         this.events = new EventBus();
@@ -1168,11 +1171,11 @@
         return { added: added, updated: updated, removed: removed };
       }
 
-      /** @param {Array<{colId: string, sort: string}>} m @returns {void} */
+      /** Sorts by a sort model. @param {Array<{colId: string, sort: string}>} m @returns {void} */
       setSortModel(m) { this.sortModel = (m || []).slice(); this.refresh('sort'); }
-      /** @param {Object<string, Object>} m @returns {void} */
+      /** Filters by a filter model (column id to its filter). @param {Object<string, Object>} m @returns {void} */
       setFilterModel(m) { this.filterModel = Object.assign({}, m); this.refresh('filter'); }
-      /** @param {string} q @returns {void} */
+      /** Filters by words across the shown columns. @param {string} q @returns {void} */
       setQuickFilter(q) { this.quickFilter = q || ''; this.refresh('filter'); }
 
       /**
@@ -1232,23 +1235,38 @@
         this.events.emit('rowsChanged', { reason: reason || 'refresh' });
       }
 
-      /** @private sorts row numbers: one column of numbers through a typed key array, else the general comparator */
-      sorted(idx, sort) {
-        const rows = this.rows;
-        if (sort.length === 1) {
-          const col = this.columns.get(sort[0].colId), dir = sort[0].sort === 'desc' ? -1 : 1;
-          if (col.type === 'number' && !col.comparator) {
-            const keys = new Float64Array(rows.length);
-            for (let i = 0; i < idx.length; i++) { const v = this.value(rows[idx[i]], col); keys[idx[i]] = isBlank(v) ? NaN : +v; }
-            return idx.sort((a, b) => {
-              const x = keys[a], y = keys[b];
-              if (x !== x || y !== y) { return x !== x ? (y !== y ? a - b : 1) : -1; }
-              return (x - y) * dir || a - b;
-            });
-          }
+      /** @private one typed key per row and sort column: numbers as they are, anything else as its rank among the column's distinct values
+       *  (ranked once by the general order, so a million rows compare numbers, not text); NaN is a blank */
+      sortKeys(idx, col) {
+        const rows = this.rows, keys = new Float64Array(rows.length);
+        if (col.type === 'number') {
+          for (let i = 0; i < idx.length; i++) { const v = this.value(rows[idx[i]], col); keys[idx[i]] = isBlank(v) || typeof v === 'object' ? NaN : +v; }
+          return keys;
         }
-        const cmp = compareRows(sort, (id) => this.columns.get(id), (r, c) => this.value(r, c));
-        return idx.sort((a, b) => cmp(rows[a], rows[b]) || a - b);
+        const distinct = new Map();
+        for (let i = 0; i < idx.length; i++) { const v = this.value(rows[idx[i]], col); if (!isBlank(v) && !distinct.has(v)) { distinct.set(v, 0); } }
+        const order = Array.from(distinct.keys()).sort(compareValues);
+        for (let r = 0, k = 0; r < order.length; r++) { if (r > 0 && compareValues(order[r - 1], order[r]) !== 0) { k++; } distinct.set(order[r], k); }
+        for (let i = 0; i < idx.length; i++) { const v = this.value(rows[idx[i]], col); keys[idx[i]] = isBlank(v) ? NaN : distinct.get(v); }
+        return keys;
+      }
+
+      /** @private sorts row numbers by typed keys (blanks last either way, ties in the rows' order); a column's own comparator: the general way */
+      sorted(idx, sort) {
+        const rows = this.rows, cols = sort.map((s) => this.columns.get(s.colId));
+        if (cols.some((c) => c.comparator)) {
+          const cmp = compareRows(sort, (id) => this.columns.get(id), (r, c) => this.value(r, c));
+          return idx.sort((a, b) => cmp(rows[a], rows[b]) || a - b);
+        }
+        const keys = cols.map((c) => this.sortKeys(idx, c)), dirs = sort.map((s) => (s.sort === 'desc' ? -1 : 1)), n = keys.length;
+        return idx.sort((a, b) => {
+          for (let j = 0; j < n; j++) {
+            const x = keys[j][a], y = keys[j][b];
+            if (x !== x || y !== y) { if (x !== x && y !== y) { continue; } return x !== x ? 1 : -1; }
+            if (x !== y) { return (x - y) * dirs[j]; }
+          }
+          return a - b;
+        });
       }
 
       /** @private */
@@ -1285,7 +1303,7 @@
           g.pendingServer = [];
           valueCols.forEach((c) => {
             const f = aggFunc(c.aggFunc);
-            if (c.additive === false || !f) { g.aggregates[c.id] = null; g.pendingServer.push(c.id); return; }
+            if (c.additive === false || !f || !this.clientAggregation) { g.aggregates[c.id] = null; g.pendingServer.push(c.id); return; }
             let st = f.init();
             for (let j = 0; j < leaves.length; j++) { st = f.add(st, this.value(this.rows[leaves[j]], c)); }
             g.aggregates[c.id] = f.result(st);
@@ -1665,11 +1683,11 @@
         this.display = null;
       }
 
-      /** @param {Array} m @returns {void} */
+      /** Sorts by a sort model: what is in flight is aborted, the blocks asked again. @param {Array} m @returns {void} */
       setSortModel(m) { this.sortModel = (m || []).slice(); this.reset(); this.events.emit('rowsChanged', { reason: 'sort' }); }
-      /** @param {Object} m @returns {void} */
+      /** Filters by a filter model: what is in flight is aborted, the blocks asked again. @param {Object} m @returns {void} */
       setFilterModel(m) { this.filterModel = Object.assign({}, m); this.reset(); this.events.emit('rowsChanged', { reason: 'filter' }); }
-      /** @param {string} q @returns {void} */
+      /** Filters by words (the server decides where it looks). @param {string} q @returns {void} */
       setQuickFilter(q) { this.quickFilter = q || ''; this.reset(); this.events.emit('rowsChanged', { reason: 'filter' }); }
 
       /**
@@ -1873,7 +1891,7 @@
           return new Promise((resolve, reject) => {
             const run = () => {
               if (req.signal && req.signal.aborted) { const e = new Error('aborted'); e.aborted = true; reject(e); return; }
-              let list = rows.filter((r) => req.groupKeys.every((k, i) => String(r[req.rowGroupCols[i]]) === k));
+              let list = req.groupKeys.length ? rows.filter((r) => req.groupKeys.every((k, i) => String(r[req.rowGroupCols[i]]) === k)) : rows;
               Object.keys(req.filterModel || {}).forEach((k) => {
                 const f = req.filterModel[k];
                 if (f && f.type === 'set' && f.values) { list = list.filter((r) => f.values.map(String).indexOf(String(r[k])) >= 0); }
@@ -1963,7 +1981,7 @@
       /** The height the scroller is given (the real one, capped). @returns {number} */
       scrollHeight() { return Math.min(this.contentHeight(), this.maxScrollHeight); }
 
-      /** @returns {number} the largest scrollTop */
+      /** The largest scroll position. @returns {number} px */
       maxScrollTop() { return Math.max(0, this.scrollHeight() - this.height); }
 
       /** @private the real offset of a scroll position */
@@ -2603,8 +2621,11 @@
      * @property {function(Object, number): string} [getRowId]
      * @property {('wells'|'panel'|'terminal')} [layout='wells']
      * @property {('comfortable'|'compact'|'terminal')} [density='compact']
-     * @property {function({view: Object}, AbortSignal): Promise<Object>} [serverPivot] asks a server pivot (POST /api/pivot/query's body); needed
-     *   for a pivot of server-side rows and for the non-additive totals of a local pivot
+     * @property {function({view: Object}, AbortSignal, Object[]): Promise<Object>} [serverPivot] asks a server pivot (POST /api/pivot/query's
+     *   body; the third argument: the rows in the page, for an inline pivot); needed for a pivot of server-side rows, for the non-additive
+     *   totals of a local pivot, and for every pivot when clientAggregation is false
+     * @property {boolean} [clientAggregation=true] false: the browser computes no figure (the console's policy, ELEMENTS.md section 3): group
+     *   figures and every pivot are the server's
      * @property {function(Object): Promise<*>} [explain] the Explain hook: given a cell's context, the explanation (a layout shows it)
      * @property {('single'|'multiple'|'none')} [rowSelection='multiple']
      * @property {number} [blockSize] server-side rows per request
@@ -2624,7 +2645,7 @@
         this.layout = LAYOUTS.indexOf(o.layout) >= 0 ? o.layout : 'wells';
         this.density = DENSITIES[o.density] ? o.density : 'compact';
         this.rowModel = o.datasource ? new ServerRowModel({ datasource: o.datasource, blockSize: o.blockSize, getRowId: o.getRowId })
-          : new ClientRowModel({ columns: this.columns, rows: o.rows || [], getRowId: o.getRowId });
+          : new ClientRowModel({ columns: this.columns, rows: o.rows || [], getRowId: o.getRowId, clientAggregation: o.clientAggregation });
         this.serverSide = !!o.datasource;
         this.viewport = new Viewport({ rowHeight: DENSITIES[this.density] });
         this.selection = new SelectionModel({ mode: o.rowSelection });
@@ -2835,9 +2856,9 @@
           this.events.emit('changed', { what: 'pivot' });
         };
         const fail = (e) => { if (!(ctl && ctl.signal.aborted)) { this.events.emit('pivotError', { error: e }); } };
-        if (this.serverSide) {
-          if (!this.o.serverPivot) { return Promise.reject(new Error('a pivot of server-side rows needs serverPivot')); }
-          return this.o.serverPivot(serverRequest(view), ctl && ctl.signal).then((a) => { applyValueFilters(a, view.valueFilters); done(a); }, fail);
+        if (this.serverSide || this.o.clientAggregation === false) {
+          if (!this.o.serverPivot) { return Promise.reject(new Error(this.serverSide ? 'a pivot of server-side rows needs serverPivot' : 'clientAggregation is off: a pivot needs serverPivot')); }
+          return this.o.serverPivot(serverRequest(view), ctl && ctl.signal, this.serverSide ? null : this.rowModel.filteredRows()).then((a) => { applyValueFilters(a, view.valueFilters); done(a); }, fail);
         }
         const byField = {};
         this.columns.all().forEach((c) => { byField[c.field] = c; });

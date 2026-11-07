@@ -520,7 +520,7 @@ def test_the_newest_date_is_captured_officially_at_start(stack):
 
 
 def test_the_scopes_panel_and_the_tree_columns_resize_and_are_kept(stack, browser):
-    """The Scopes panel's splitter and the tree's columns (drishti_resize.js): dragged, kept after a reload, Home resets."""
+    """The Scopes panel's splitter and the tree's columns (drishti-core's resize): dragged, kept after a reload, Home resets."""
     pg = open_var(browser, str(stack), "/var?scope=BANK")
     painted(pg, "BANK")
     wait(pg, "document.querySelector('.vx-tree .vx-row.hdr .rz-col') && document.querySelector('.vx-layout > [data-resize=\"panel\"]')")

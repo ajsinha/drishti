@@ -20,7 +20,7 @@
    wherever sorting moves it. */
 import { EventBus } from '../../drishti-core/src/drishti_index.js';
 import { getValue } from './drishti_columns.js';
-import { compareRows, rowFilter, isBlank } from './drishti_sort-filter.js';
+import { compareRows, compareValues, rowFilter, isBlank } from './drishti_sort-filter.js';
 import { aggFunc } from './drishti_aggregate.js';
 import { memberText, SEP } from './drishti_pivot.js';
 
@@ -46,10 +46,12 @@ import { memberText, SEP } from './drishti_pivot.js';
  */
 export class ClientRowModel {
   /**
-   * @param {{columns: import('./drishti_columns.js').ColumnModel, rows: Object[], getRowId: function(Object, number): string}} o
+   * @param {{columns: import('./drishti_columns.js').ColumnModel, rows: Object[], getRowId: function(Object, number): string, clientAggregation: boolean}} o
+   *   clientAggregation false: no group figure is computed here, every one is left for the server (the console's policy)
    */
   constructor(o) {
     this.columns = o.columns;
+    this.clientAggregation = o.clientAggregation !== false;
     this.getRowId = o.getRowId || ((r, i) => (r && r.id !== undefined && r.id !== null ? String(r.id) : String(i)));
     /** @type {EventBus} rowsChanged {reason} */
     this.events = new EventBus();
@@ -99,11 +101,11 @@ export class ClientRowModel {
     return { added: added, updated: updated, removed: removed };
   }
 
-  /** @param {Array<{colId: string, sort: string}>} m @returns {void} */
+  /** Sorts by a sort model. @param {Array<{colId: string, sort: string}>} m @returns {void} */
   setSortModel(m) { this.sortModel = (m || []).slice(); this.refresh('sort'); }
-  /** @param {Object<string, Object>} m @returns {void} */
+  /** Filters by a filter model (column id to its filter). @param {Object<string, Object>} m @returns {void} */
   setFilterModel(m) { this.filterModel = Object.assign({}, m); this.refresh('filter'); }
-  /** @param {string} q @returns {void} */
+  /** Filters by words across the shown columns. @param {string} q @returns {void} */
   setQuickFilter(q) { this.quickFilter = q || ''; this.refresh('filter'); }
 
   /**
@@ -163,23 +165,38 @@ export class ClientRowModel {
     this.events.emit('rowsChanged', { reason: reason || 'refresh' });
   }
 
-  /** @private sorts row numbers: one column of numbers through a typed key array, else the general comparator */
-  sorted(idx, sort) {
-    const rows = this.rows;
-    if (sort.length === 1) {
-      const col = this.columns.get(sort[0].colId), dir = sort[0].sort === 'desc' ? -1 : 1;
-      if (col.type === 'number' && !col.comparator) {
-        const keys = new Float64Array(rows.length);
-        for (let i = 0; i < idx.length; i++) { const v = this.value(rows[idx[i]], col); keys[idx[i]] = isBlank(v) ? NaN : +v; }
-        return idx.sort((a, b) => {
-          const x = keys[a], y = keys[b];
-          if (x !== x || y !== y) { return x !== x ? (y !== y ? a - b : 1) : -1; }
-          return (x - y) * dir || a - b;
-        });
-      }
+  /** @private one typed key per row and sort column: numbers as they are, anything else as its rank among the column's distinct values
+   *  (ranked once by the general order, so a million rows compare numbers, not text); NaN is a blank */
+  sortKeys(idx, col) {
+    const rows = this.rows, keys = new Float64Array(rows.length);
+    if (col.type === 'number') {
+      for (let i = 0; i < idx.length; i++) { const v = this.value(rows[idx[i]], col); keys[idx[i]] = isBlank(v) || typeof v === 'object' ? NaN : +v; }
+      return keys;
     }
-    const cmp = compareRows(sort, (id) => this.columns.get(id), (r, c) => this.value(r, c));
-    return idx.sort((a, b) => cmp(rows[a], rows[b]) || a - b);
+    const distinct = new Map();
+    for (let i = 0; i < idx.length; i++) { const v = this.value(rows[idx[i]], col); if (!isBlank(v) && !distinct.has(v)) { distinct.set(v, 0); } }
+    const order = Array.from(distinct.keys()).sort(compareValues);
+    for (let r = 0, k = 0; r < order.length; r++) { if (r > 0 && compareValues(order[r - 1], order[r]) !== 0) { k++; } distinct.set(order[r], k); }
+    for (let i = 0; i < idx.length; i++) { const v = this.value(rows[idx[i]], col); keys[idx[i]] = isBlank(v) ? NaN : distinct.get(v); }
+    return keys;
+  }
+
+  /** @private sorts row numbers by typed keys (blanks last either way, ties in the rows' order); a column's own comparator: the general way */
+  sorted(idx, sort) {
+    const rows = this.rows, cols = sort.map((s) => this.columns.get(s.colId));
+    if (cols.some((c) => c.comparator)) {
+      const cmp = compareRows(sort, (id) => this.columns.get(id), (r, c) => this.value(r, c));
+      return idx.sort((a, b) => cmp(rows[a], rows[b]) || a - b);
+    }
+    const keys = cols.map((c) => this.sortKeys(idx, c)), dirs = sort.map((s) => (s.sort === 'desc' ? -1 : 1)), n = keys.length;
+    return idx.sort((a, b) => {
+      for (let j = 0; j < n; j++) {
+        const x = keys[j][a], y = keys[j][b];
+        if (x !== x || y !== y) { if (x !== x && y !== y) { continue; } return x !== x ? 1 : -1; }
+        if (x !== y) { return (x - y) * dirs[j]; }
+      }
+      return a - b;
+    });
   }
 
   /** @private */
@@ -216,7 +233,7 @@ export class ClientRowModel {
       g.pendingServer = [];
       valueCols.forEach((c) => {
         const f = aggFunc(c.aggFunc);
-        if (c.additive === false || !f) { g.aggregates[c.id] = null; g.pendingServer.push(c.id); return; }
+        if (c.additive === false || !f || !this.clientAggregation) { g.aggregates[c.id] = null; g.pendingServer.push(c.id); return; }
         let st = f.init();
         for (let j = 0; j < leaves.length; j++) { st = f.add(st, this.value(this.rows[leaves[j]], c)); }
         g.aggregates[c.id] = f.result(st);

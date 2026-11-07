@@ -19,16 +19,14 @@
    recipe and Export to Excel; PLAY FRTB RUN <id> replays a recipe. Every figure is the server's: this file only draws. */
 (function () {
   "use strict";
+  var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
   var root = document.querySelector("[data-frtb]");
   if (!root) { return; }
   var mode = root.dataset.mode, scope = root.dataset.scope, recipe = root.dataset.recipe;
   if (!scope && !recipe) { return; }
   function $(s) { return root.querySelector(s); }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
-  function money(v) {
-    if (v == null || isNaN(v)) { return "—"; }
-    return (v < 0 ? "−" : "") + Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
+  function money(v) { return v == null || isNaN(v) ? "—" : F.formatNumber(v, { decimals: 2 }); }
   function num(v, d) { return v == null ? "—" : Number(v).toLocaleString("en-US", { maximumFractionDigits: d == null ? 6 : d }); }
   var CLASS = { GIRR: "GIRR", CSR_NS: "CSR", EQ: "Equity", COMM: "Commodity", FX: "FX" };
   var SC = ["low", "medium", "high"];

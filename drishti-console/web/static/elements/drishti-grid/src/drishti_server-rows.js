@@ -90,11 +90,11 @@ export class ServerRowModel {
     this.display = null;
   }
 
-  /** @param {Array} m @returns {void} */
+  /** Sorts by a sort model: what is in flight is aborted, the blocks asked again. @param {Array} m @returns {void} */
   setSortModel(m) { this.sortModel = (m || []).slice(); this.reset(); this.events.emit('rowsChanged', { reason: 'sort' }); }
-  /** @param {Object} m @returns {void} */
+  /** Filters by a filter model: what is in flight is aborted, the blocks asked again. @param {Object} m @returns {void} */
   setFilterModel(m) { this.filterModel = Object.assign({}, m); this.reset(); this.events.emit('rowsChanged', { reason: 'filter' }); }
-  /** @param {string} q @returns {void} */
+  /** Filters by words (the server decides where it looks). @param {string} q @returns {void} */
   setQuickFilter(q) { this.quickFilter = q || ''; this.reset(); this.events.emit('rowsChanged', { reason: 'filter' }); }
 
   /**
@@ -298,7 +298,7 @@ export function memoryDatasource(rows, o) {
       return new Promise((resolve, reject) => {
         const run = () => {
           if (req.signal && req.signal.aborted) { const e = new Error('aborted'); e.aborted = true; reject(e); return; }
-          let list = rows.filter((r) => req.groupKeys.every((k, i) => String(r[req.rowGroupCols[i]]) === k));
+          let list = req.groupKeys.length ? rows.filter((r) => req.groupKeys.every((k, i) => String(r[req.rowGroupCols[i]]) === k)) : rows;
           Object.keys(req.filterModel || {}).forEach((k) => {
             const f = req.filterModel[k];
             if (f && f.type === 'set' && f.values) { list = list.filter((r) => f.values.map(String).indexOf(String(r[k])) >= 0); }

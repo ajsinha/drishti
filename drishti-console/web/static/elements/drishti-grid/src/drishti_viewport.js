@@ -79,7 +79,7 @@ export class Viewport {
   /** The height the scroller is given (the real one, capped). @returns {number} */
   scrollHeight() { return Math.min(this.contentHeight(), this.maxScrollHeight); }
 
-  /** @returns {number} the largest scrollTop */
+  /** The largest scroll position. @returns {number} px */
   maxScrollTop() { return Math.max(0, this.scrollHeight() - this.height); }
 
   /** @private the real offset of a scroll position */

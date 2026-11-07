@@ -431,3 +431,18 @@ test('the bundle is the modules and finds drishti-core', () => {
   const g = b.createGridModel({ columns: [{ field: 'A', type: 'number', format: 'amount2' }], rows: [{ A: -1.005 }] });
   assert.equal(g.cellText(0, 0), M + '1.01');
 });
+
+test('clientAggregation off (the console policy): no group figure in the browser, every pivot asked of the server with the rows', async () => {
+  const rows = trades(12), asked = [];
+  const g = G.createGridModel({ columns: COLS, rows: rows, clientAggregation: false, serverPivot: (b, s, inline) => { asked.push(inline.length); return Promise.resolve(G.pivotLocal(inline, b.view)); } });
+  g.setRowGroups(['DESK']);
+  const grp = g.rowAt(0);
+  assert.equal(grp.aggregates.NOTIONAL, null);
+  assert.ok(grp.pendingServer.indexOf('NOTIONAL') >= 0);
+  g.setRowGroups([]);
+  g.wells.drop('DESK', 'rows');
+  g.wells.drop('NOTIONAL', 'values');
+  await g.setPivotMode(true);
+  assert.deepEqual(asked, [12]);
+  assert.equal(new G.ColumnModel([{ field: 'X', type: 'number', aggregate: 'server' }]).get('X').additive, false);
+});

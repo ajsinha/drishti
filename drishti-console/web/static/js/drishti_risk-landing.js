@@ -21,6 +21,7 @@
    style). */
 (function () {
   "use strict";
+  var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
   var root = document.querySelector("[data-risk-landing]");
   if (!root) return;
   var landing = root.getAttribute("data-risk-landing");
@@ -35,14 +36,7 @@
       });
     });
   }
-  function money(v) {
-    if (v === null || v === undefined || isNaN(v)) return "—";
-    var a = Math.abs(v), s = v < 0 ? "−" : "";
-    if (a >= 1e9) return s + (a / 1e9).toFixed(2) + "bn";
-    if (a >= 1e6) return s + (a / 1e6).toFixed(2) + "m";
-    if (a >= 1e3) return s + (a / 1e3).toFixed(1) + "k";
-    return s + Math.round(a);
-  }
+  var money = F.formatter("compact", { decimals: function (a, u) { return u === "k" ? 1 : !u ? 0 : 2; } });
   function pct(u) { return u === null || u === undefined || isNaN(u) ? "—" : Math.round(u * 100) + "%"; }
   function tone(u) { return u === null || u === undefined || isNaN(u) ? "" : u >= 1 ? "r" : u >= 0.8 ? "w" : "ok"; }
   function text(sel, v) { $$(sel).forEach(function (el) { el.textContent = v; }); }

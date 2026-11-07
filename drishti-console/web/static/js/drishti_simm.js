@@ -20,15 +20,13 @@
    recipe and Export to Excel; PLAY SIMM RUN <id> replays a recipe. Every figure is the server's: this file only draws. */
 (function () {
   "use strict";
+  var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
   var root = document.querySelector("[data-simm]");
   if (!root) { return; }
   var mode = root.dataset.mode, ns = root.dataset.ns, cpty = root.dataset.cpty, recipe = root.dataset.recipe;
   function $(s) { return root.querySelector(s); }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
-  function money(v) {
-    if (v == null || v === "—" || isNaN(v)) { return "—"; }
-    return (v < 0 ? "−" : "") + Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-  }
+  function money(v) { return v == null || v === "—" || isNaN(v) ? "—" : F.formatNumber(v); }
   function num(v, d) { return v == null ? "—" : Number(v).toLocaleString("en-US", { maximumFractionDigits: d == null ? 6 : d }); }
   var state = { choices: {}, overrides: [], version: "", side: "collect", data: null };
 

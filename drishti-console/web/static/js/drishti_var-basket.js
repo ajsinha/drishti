@@ -29,6 +29,7 @@
    Alt+B, and survives a reload (this browser). */
 (function () {
   "use strict";
+  var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
   var KEY = (window.Drishti.key ? window.Drishti.key("drishti.varBasket2") : "drishti.varBasket2");   // per person: never the last one's
   var DEFAULT_COLS = [{ key: "TRD", title: "Trade" }, { key: "POS", title: "Position" }, { key: "PORT", title: "Portfolio" },
                       { key: "BOOK", title: "Book" }, { key: "DESK", title: "Desk" }, { key: "CPTY", title: "Counterparty" }];
@@ -53,18 +54,8 @@
     return e;
   }
   function btn(cls, text, title) { var b = h("button", "btn btn-sm vb-btn " + (cls || ""), text); b.type = "button"; if (title) b.title = title; return b; }
-  function money(v) {
-    if (v === null || v === undefined || isNaN(v)) return "—";
-    return (v < 0 ? "−" : "") + Math.round(Math.abs(v)).toLocaleString("en-US");
-  }
-  function short(v) {
-    if (v === null || v === undefined || isNaN(v)) return "—";
-    var a = Math.abs(v), s = v < 0 ? "−" : "";
-    if (a >= 1e9) return s + (a / 1e9).toFixed(2) + "bn";
-    if (a >= 1e6) return s + (a / 1e6).toFixed(a >= 1e8 ? 0 : 1) + "m";
-    if (a >= 1e3) return s + (a / 1e3).toFixed(a >= 1e5 ? 0 : 1) + "k";
-    return s + Math.round(a);
-  }
+  function money(v) { return v === null || v === undefined || isNaN(v) ? "—" : F.formatNumber(v); }
+  var short = F.formatter("compact", { decimals: function (a, u) { return u === "bn" ? 2 : u === "m" ? (a >= 1e8 ? 0 : 1) : u === "k" ? (a >= 1e5 ? 0 : 1) : 0; } });
   /** The page's business date and reporting currency (the explorer keeps ccy in its link): every answer of the sheet in it. */
   function asOf() {
     var q = new URLSearchParams(location.search), p = q.get("asOf"), c = q.get("ccy");

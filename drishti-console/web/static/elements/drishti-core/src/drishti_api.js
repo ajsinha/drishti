@@ -199,15 +199,15 @@ export class ApiClient {
       (e) => ({ ok: false, status: e.status || 0, body: e.body && typeof e.body === 'object' ? e.body : { detail: e.message }, error: e }));
   }
 
-  /** @param {string} path @param {CallOptions} [c] @returns {Promise<*>} */
+  /** A GET (retried on a network failure or a busy server). @param {string} path @param {CallOptions} [c] @returns {Promise<*>} */
   get(path, c) { return this.request('GET', path, undefined, c); }
-  /** @param {string} path @param {*} [body] @param {CallOptions} [c] @returns {Promise<*>} */
+  /** A POST (never retried unless asked). @param {string} path @param {*} [body] @param {CallOptions} [c] @returns {Promise<*>} */
   post(path, body, c) { return this.request('POST', path, body, c); }
-  /** @param {string} path @param {*} [body] @param {CallOptions} [c] @returns {Promise<*>} */
+  /** A PUT. @param {string} path @param {*} [body] @param {CallOptions} [c] @returns {Promise<*>} */
   put(path, body, c) { return this.request('PUT', path, body, c); }
-  /** @param {string} path @param {*} [body] @param {CallOptions} [c] @returns {Promise<*>} */
+  /** A PATCH. @param {string} path @param {*} [body] @param {CallOptions} [c] @returns {Promise<*>} */
   patch(path, body, c) { return this.request('PATCH', path, body, c); }
-  /** @param {string} path @param {CallOptions} [c] @returns {Promise<*>} */
+  /** A DELETE. @param {string} path @param {CallOptions} [c] @returns {Promise<*>} */
   del(path, c) { return this.request('DELETE', path, undefined, c); }
 }
 

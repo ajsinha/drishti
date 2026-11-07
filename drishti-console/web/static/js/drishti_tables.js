@@ -134,7 +134,7 @@
   function enhance(t) {
     if (t.__paged || !t.tBodies.length || t.hasAttribute('data-plain')) { return; }
     t.__paged = true;
-    if (!t.hasAttribute('data-resize')) {                              // resizable columns, remembered per table (drishti_resize.js)
+    if (!t.hasAttribute('data-resize')) {                              // resizable columns, remembered per table (drishti-core's resize)
       t.setAttribute('data-resize', 'columns'); t.setAttribute('data-resize-key', 'table.' + scope + '|' + urlKey(t));
     }
     var body = t.tBodies[0];

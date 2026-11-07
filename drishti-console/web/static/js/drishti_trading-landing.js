@@ -23,6 +23,7 @@
    engine's, shown as it comes: nothing here adds up a figure (ONE_GRAMMAR.md section 5). The chart is SVG built through the DOM (the page's policy allows no inline style). */
 (function () {
   "use strict";
+  var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
   var root = document.querySelector("[data-trading-landing]");
   if (!root) return;
   var landing = root.getAttribute("data-trading-landing");
@@ -47,13 +48,7 @@
   function num(v) { return v === null || v === undefined || v === "" || isNaN(v) ? null : Number(v); }
   /** 1,840,000 → 1.84m; −142,000 → −142k; the sign as a real minus. */
   function money(v, signed) {
-    v = num(v);
-    if (v === null) return "—";
-    var a = Math.abs(v), s = v < 0 ? "−" : signed && v > 0 ? "+" : "";
-    if (a >= 1e9) return s + (a / 1e9).toFixed(2) + "bn";
-    if (a >= 1e6) return s + (a / 1e6).toFixed(2) + "m";
-    if (a >= 1e3) return s + (a / 1e3).toFixed(0) + "k";
-    return s + a.toFixed(0);
+    return F.formatCompact(num(v), { decimals: function (a, u) { return u === "k" || !u ? 0 : 2; }, sign: signed ? "always" : "auto" });
   }
   function pct(v) { v = num(v); return v === null ? "—" : Math.round(v * 100) + "%"; }
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; }

@@ -89,7 +89,7 @@ def test_a_view_is_drawn_with_the_users_layout(client, backend, layouts_on):
     assert re.search(r'class="pnl pnl-off" id="p-curve"', html)
     assert 'data-fkey="F4" data-action="panel" aria-label="F4 USD-SOFR curve" disabled title="USD-SOFR curve: hidden in your layout' in html      # its key is greyed
     assert "data-layout-open" in html and "<b>Alt+L</b> Layout" in html and "/static/js/drishti_layout.js" in html
-    assert html.index("/static/js/drishti_layout-rules.js") < html.index("/static/js/build/drishti_grid-keys.js") < html.index("/static/js/drishti_layout.js")       # the shared keys load first
+    assert html.index("/static/elements/drishti-core/drishti_core.js") < html.index("/static/js/drishti_layout-rules.js") < html.index("/static/js/drishti_layout.js")       # the shared keys (drishti-core) load first
     assert 'data-sutra="irs-vanilla"' in html and "data-layout-mine" in html and 'id="layoutPromote"' in html
     main, right = html.split('<div class="vmain">')[1].split('<aside class="vright"')
     assert 'id="p-refs"' in main and 'id="p-refs"' not in right

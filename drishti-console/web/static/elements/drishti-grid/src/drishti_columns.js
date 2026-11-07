@@ -41,6 +41,7 @@ export const ADDITIVE_FUNCS = Object.freeze(['sum', 'count']);
  * @property {string} [aggFunc] the aggregation of a value column (sum, count, min, max, avg, first, last, distinct, or a server measure)
  * @property {boolean} [additive] whether its figures may be summed: false for VaR, ES, ratios (a total is asked of the server);
  *   default: true for numbers
+ * @property {string} [aggregate] 'server': the same as additive false (ELEMENTS.md's name)
  * @property {string} [measure] the server's measure text when it is not func(field) (var(99, 1d))
  * @property {boolean} [enableRowGroup] may be a row group (default: text and date columns)
  * @property {boolean} [enablePivot] may be a column pivot (default: text and date columns)
@@ -65,7 +66,7 @@ export function normalizeColumn(def, index) {
     pinned: null, hidden: false, sortable: true, filterable: true, resizable: true, aggFunc: num ? 'sum' : null,
     additive: num, enableRowGroup: !num, enablePivot: !num, enableValue: num, group: null, description: '', format: null,
     valueGetter: null, comparator: null, measure: null
-  }, def, { id: id, type: type });
+  }, def, { id: id, type: type }, def.aggregate === 'server' ? { additive: false } : {});
 }
 
 /**

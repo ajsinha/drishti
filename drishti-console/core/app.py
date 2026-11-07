@@ -75,8 +75,8 @@ def asset_fingerprint() -> str:
     import hashlib
 
     h = hashlib.sha1()
-    for folder in ("js", "css", "calc"):
-        for f in sorted((WEB / "static" / folder).glob("*")):
+    for folder, pattern in (("js", "*"), ("css", "*"), ("calc", "*"), ("elements", "*/drishti_*.js")):     # elements: each library's bundle
+        for f in sorted((WEB / "static" / folder).glob(pattern)):
             st = f.stat()
             h.update(f"{f.name}:{st.st_size}:{st.st_mtime_ns};".encode())
     return h.hexdigest()[:8]

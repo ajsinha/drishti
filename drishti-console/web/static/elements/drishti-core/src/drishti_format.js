@@ -82,7 +82,8 @@ export function roundHalfUp(v, decimals) {
  * @param {string} [separator=','] the group separator
  * @returns {string}
  */
-export function group(plain, separator = ',') {
+export function group(plain, separator) {
+  separator = separator === undefined ? ',' : separator;
   const dot = plain.indexOf('.');
   const whole = dot < 0 ? plain : plain.slice(0, dot);
   return whole.replace(/\B(?=(\d{3})+(?!\d))/g, separator) + (dot < 0 ? '' : plain.slice(dot));
@@ -195,7 +196,7 @@ export function formatCurrency(v, currency, o) {
 /**
  * @typedef {Object} CompactOptions
  * @property {(number|function(number, string): number)} [decimals=1] decimals, or a function of (the absolute value, the unit)
- * @property {boolean} [trim=false] drop trailing zeros (1.50m reads 1.5m)
+ * @property {(boolean|string)} [trim=false] drop trailing zeros (1.50m reads 1.5m); 'small': only below the smallest unit
  * @property {Array<Array<*>>} [units] [suffix, size, from] largest first; from (default size) is where the unit starts (the server's:
  *   bn, m, k; pass [['tn', 1e12], ...] for trillions)
  * @property {(number|null)} [smallDecimals] decimals below the smallest unit (default: decimals)
@@ -232,7 +233,8 @@ export function formatCompact(v, o) {
   const dec = o.decimals === undefined ? 1 : o.decimals;
   let places = typeof dec === 'function' ? dec(a, unit) : dec;
   if (!unit && o.smallDecimals !== undefined && o.smallDecimals !== null) { places = o.smallDecimals; }
-  const opts = { decimals: o.trim ? 0 : places, maxDecimals: o.trim ? places : undefined, grouping: unit ? true : o.smallGrouping !== false,
+  const trim = o.trim === true || (o.trim === 'small' && !unit);
+  const opts = { decimals: trim ? 0 : places, maxDecimals: trim ? places : undefined, grouping: unit ? true : o.smallGrouping !== false,
     sign: o.sign, minus: o.minus, prefix: o.prefix, suffix: unit, empty: empty };
   return formatNumber(n / size, opts);
 }
