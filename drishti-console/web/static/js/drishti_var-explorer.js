@@ -706,9 +706,9 @@
               s.appendChild(cellButton("Reopen", "vx-link", function () { reopen(c.id); }));
               s.appendChild(document.createTextNode(" "));
               s.appendChild(cellButton("Compare with now", "vx-link", function () { compare(c.id, "now"); }));
-              [["CSV", "csv"], ["JSONL", "jsonl"]].forEach(function (a) {             // 2.9.4: the same rows, one a line
+              [["CSV", "/csv"], ["JSONL", "/jsonl"]].forEach(function (a) {           // 2.9.4: the same rows, one a line
                 var l = h("a", "vx-link", a[0]);
-                l.href = "/api/var/captures/" + encodeURIComponent(c.id) + "/" + a[1];
+                l.href = "/api/var/captures/" + encodeURIComponent(c.id) + a[1];
                 s.appendChild(document.createTextNode(" "));
                 s.appendChild(l);
               });

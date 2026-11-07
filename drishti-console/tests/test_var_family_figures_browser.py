@@ -33,8 +33,9 @@ OUT = os.environ.get("DRISHTI_FIGURES_OUT")
 BASE = os.environ.get("DRISHTI_FIGURES_BASELINE")
 pytestmark = pytest.mark.skipif(not (OUT or BASE), reason="the before-and-after comparison runs when DRISHTI_FIGURES_OUT or _BASELINE is set")
 
-#: the playground's cells as drawn (both the old canvas and the grid mark each with its workbook row and column)
-CELLS = "() => Object.fromEntries([...document.querySelectorAll('[data-pg-canvas] [data-r][data-c]')].map((e) => [e.dataset.r + ',' + e.dataset.c, e.textContent.trim()]))"
+#: the playground's cells as drawn (the old canvas's and the grid's .pg-c each carry its workbook row and column; the grid's own cells
+#: carry their display row, so they are left out)
+CELLS = "() => Object.fromEntries([...document.querySelectorAll('[data-pg-canvas] .pg-c[data-r][data-c]')].map((e) => [e.dataset.r + ',' + e.dataset.c, e.textContent.trim()]))"
 
 #: (name, address, tab or by, what to wait for)
 SCREENS = [

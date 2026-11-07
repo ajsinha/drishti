@@ -88,7 +88,8 @@
   function classesGrid(a) {
     var rows = {}, out = [];
     a.classes.forEach(function (c) { (rows[c.class] = rows[c.class] || { id: c.class, cls: c.class, label: CLASS[c.class] || c.class })[c.measure] = c[a.reported]; });
-    Object.keys(rows).forEach(function (k) { var r = rows[k]; r.total = ["DELTA", "VEGA", "CURVATURE"].reduce(function (t, m) { return t + (r[m] || 0); }, 0); r.isClass = true; out.push(r); });
+    // a class's own total is not drawn: the browser sums no figure (the server sends the classes' measures and the SBM, not a class total)
+    Object.keys(rows).forEach(function (k) { var r = rows[k]; r.isClass = true; out.push(r); });
     out.push({ id: "SBM", label: "SBM", total: a.SBM, sbm: true });
     var cell = function (m) {
       return fig(m, m.charAt(0) + m.slice(1).toLowerCase(), { format: function (v, r) { return r && r.sbm ? "" : v === undefined ? "—" : money(v); },
@@ -96,7 +97,7 @@
     };
     grid("[data-fr-classes]", { title: "Charge by class and measure (" + a.reported + ")", rows: out,
       getRowClass: function (r) { return r.sbm ? "tot" : null; },
-      columns: [txt("label", "Class (" + a.reported + ")", { pinned: "left" }), cell("DELTA"), cell("VEGA"), cell("CURVATURE"), fig("total", "Total", { additive: true })],
+      columns: [txt("label", "Class (" + a.reported + ")", { pinned: "left" }), cell("DELTA"), cell("VEGA"), cell("CURVATURE"), fig("total", "SBM", { format: function (v) { return v === undefined ? "" : money(v); } })],
       onRow: function (r, e) {
         var col = e && e.detail && e.detail.columnId;
         if (r.isClass && /^(DELTA|VEGA|CURVATURE)$/.test(col || "") && r[col] !== undefined) { drill(r.cls, col); }

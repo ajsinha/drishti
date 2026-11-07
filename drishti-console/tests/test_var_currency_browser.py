@@ -88,15 +88,15 @@ def test_the_picker_moves_every_panel_and_the_tab_loads_only_when_opened(stack, 
     pg.locator('.vx-tab[data-tab="ccy"]').click()
     wait(pg, "((document.querySelector('[data-vx-ccytable] drishti-grid') || {}).grid ? document.querySelector('[data-vx-ccytable] drishti-grid').grid.model.rowCount() : 0) >= 5", 60)
     assert len(requests_to(pg, "/api/var/scope/currencies")) == 1
-    rows = pg.eval_on_selector_all("[data-vx-ccytable] tbody tr[data-ccy]", "rs => rs.map(r => [r.dataset.ccy, r.className])")
+    rows = pg.evaluate("((document.querySelector('[data-vx-ccytable] drishti-grid') || {}).grid || null).model.rowModel.rows.map((r) => [r.currency, r.shown ? 'shown' : ''])")
     assert [r[0] for r in rows] == ["USD", "EUR", "CAD", "JPY", "GBP"], rows
     assert dict(rows)["EUR"] == "shown"
-    assert "VaR in EUR at today's rate" in pg.locator("[data-vx-ccy-inpage]").inner_text()
+    assert "VaR in EUR at today's rate" in pg.evaluate("((document.querySelector('[data-vx-ccytable] drishti-grid') || {}).grid || null).model.shownColumns().map((c) => c.header)")    # the grid's heading
     shot(pg, "ccy-tab")
-    pg.locator('[data-vx-ccytable] tbody tr[data-ccy="CAD"] button').click()      # a row switches the page
+    pg.locator('[data-vx-ccytable] .dg-row[data-ccy="CAD"] button').click()      # a row switches the page
     wait(pg, "document.querySelector('.vx-tile[data-tile=\"0\"] .l').innerText.indexOf('CAD') >= 0", 60)
     assert "ccy=CAD" in pg.url and pg.input_value("[data-vx-ccy]") == "CAD"
-    wait(pg, "!!document.querySelector('[data-vx-ccytable] tbody tr.shown[data-ccy=\"CAD\"]')", 60)
+    wait(pg, "!!document.querySelector('[data-vx-ccytable] .dg-row.vx-shown[data-ccy=\"CAD\"]')", 60)
 
     # the session keeps it: another VaR page in this tab opens in CAD
     pg.goto(str(stack) + "/var?scope=BANK")
