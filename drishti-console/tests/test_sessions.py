@@ -71,7 +71,7 @@ def test_disabling_a_user_ends_their_console_session():
     assert c.get("/v/trade/IRS-48213").status_code == 200
     fake.users["qa-trader"]["enabled"] = False
     assert c.get("/v/trade/IRS-48213", follow_redirects=False).status_code == 303
-    assert c.get("/api/suggest", params={"q": "IRS"}).status_code == 401
+    assert c.get("/api/search", params={"in": "command", "q": "IRS"}).status_code == 401
     assert c.post("/api/tokens", json={"name": "after disable"}).status_code == 401      # no API token either
 
 
@@ -111,7 +111,7 @@ def test_sign_out_ends_the_session_on_the_server():
     other = TestClient(app)
     other.cookies.set(COOKIE, copied)
     assert other.get("/t", follow_redirects=False).status_code == 303
-    assert other.get("/api/suggest", params={"q": "IRS"}).status_code == 401
+    assert other.get("/api/search", params={"in": "command", "q": "IRS"}).status_code == 401
 
 
 def test_sign_out_is_a_post_and_get_only_asks():

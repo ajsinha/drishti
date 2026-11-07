@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* FRTB-SA (terminal/frtb.html; docs/guides/FRTB_SA_GUIDE.md sections 7 and 8). The capital screen (FRSA): the stack, the class × measure
    grid and the bucket drill, the three scenarios and the contributions. The playground (PLAY FRTB): the Choices panel, a switch compared
    side by side with the difference explained by step, the grid of weighted sensitivities with its formula bar and the explanation, Save

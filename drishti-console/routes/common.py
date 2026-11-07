@@ -87,17 +87,17 @@ async def packs(request: Request) -> list:
 
 async def library(request: Request):
     """The help library for the person's packs, built once per set of packs and per version of the catalogue file (a pack that is loaded,
-    unloaded or upgraded, or an edit of ``config/help.yaml``, gives a new library on the next request, no restart); built in a worker
+    unloaded or upgraded, or an edit of ``config/help.yaml`` or of the sitemap, gives a new library on the next request, no restart); built in a worker
     thread, the eight most recently used pack sets kept."""
     from core.guides import Library
 
     current = await packs(request)
     console_dir = Path(__file__).resolve().parent.parent
     catalogue = console_dir / "config" / "help.yaml"
-    try:
-        stamp = catalogue.stat().st_mtime_ns
+    try:                                                   # the pages (help.yaml) and the sections (the sitemap's help-sections:)
+        stamp = (catalogue.stat().st_mtime_ns, (console_dir / "config" / "sitemap.yaml").stat().st_mtime_ns)
     except OSError:
-        stamp = 0
+        stamp = (0, 0)
     key = (fingerprint(f"{p['name']}@{p.get('version', '')}" for p in current), stamp)
     libs = request.app.state.libraries                     # an LRU: a few pack sets kept, so people with different packs do not rebuild
     hit = libs.get(key)

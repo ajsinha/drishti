@@ -152,10 +152,10 @@ class WriteBackFlowTest {
         JsonNode sent = call("POST", "/api/v1/changes", tia, Map.of("draft", draftId, "reason", "booking typo"), 202).path("changes").get(0);
         String id = sent.path("id").asText();
         assertThat(sent.path("state").asText()).isEqualTo("awaiting");
-        assertThat(call("POST", "/api/v1/changes/" + id + "/approve", tia, Map.of(), 403).path("code").asText()).as("not an approver").isEqualTo("DRS-5002");
+        assertThat(call("POST", "/api/v1/approvals/change/" + id + "/approve", tia, Map.of(), 403).path("code").asText()).as("not an approver").isEqualTo("DRS-5002");
         JsonNode list = call("GET", "/api/v1/changes?state=awaiting", kim, null, 200);
         assertThat(list.path("changes").findValuesAsText("id")).contains(id);
-        call("POST", "/api/v1/changes/" + id + "/approve", kim, Map.of("note", "checked against the ticket"), 200);
+        call("POST", "/api/v1/approvals/change/" + id + "/approve", kim, Map.of("comment", "checked against the ticket"), 200);
         JsonNode applied = waitFor(id, "applied", tia);
         assertThat(applied.path("lane").asInt()).isBetween(0, 63);
 
@@ -190,9 +190,9 @@ class WriteBackFlowTest {
         // a change based on the value before: the field has moved since, so it is conflicted, never applied over it
         JsonNode stale = call("POST", "/api/v1/changes", kim, Map.of("kind", "trade", "entity", trade, "sutra", "book-desk", "panel", "trades",
                 "reason", "late", "items", List.of(Map.of("field", "NOTIONAL", "from", was, "to", was.add(BigDecimal.ONE)))), 202).path("changes").get(0);
-        assertThat(call("POST", "/api/v1/changes/" + stale.path("id").asText() + "/approve", kim, Map.of(), 403).path("code").asText())
+        assertThat(call("POST", "/api/v1/approvals/change/" + stale.path("id").asText() + "/approve", kim, Map.of(), 403).path("code").asText())
                 .as("four eyes: never your own").isEqualTo("DRS-9302");
-        call("POST", "/api/v1/changes/" + stale.path("id").asText() + "/approve", as("ken", "checker"), Map.of(), 200);
+        call("POST", "/api/v1/approvals/change/" + stale.path("id").asText() + "/approve", as("ken", "checker"), Map.of(), 200);
         JsonNode conflicted = waitFor(stale.path("id").asText(), "conflicted", kim);
         assertThat(conflicted.path("stateReason").asText()).contains("you saw").contains("it is now");
     }

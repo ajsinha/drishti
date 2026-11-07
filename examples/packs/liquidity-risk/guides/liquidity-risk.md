@@ -41,7 +41,7 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 
 | Connector | Folder | Kinds |
 |---|---|---|
-| `liquidity-store` | `data/delta/liquidity/` | `lcr`, `nsfr`, `maturity-ladder`, `hqla-holding`, `funding-source`, `liquidity-stress`, `intraday-liquidity` |
+| `liquidity-store` | `data/delta/demo/liquidity/` | `lcr`, `nsfr`, `maturity-ladder`, `hqla-holding`, `funding-source`, `liquidity-stress`, `intraday-liquidity` |
 
 ## Kinds
 

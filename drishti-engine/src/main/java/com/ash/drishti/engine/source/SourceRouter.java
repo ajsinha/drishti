@@ -94,7 +94,46 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
                 ordered.putIfAbsent(p.manifest().name(), p);
             }
         }
-        return adjacentUnion(new ArrayList<>(ordered.values()));
+        List<SourcePlugin> out = new ArrayList<>(ordered.values());
+        if (out.stream().anyMatch(p -> samples(p.manifest().name())) && ownLake(kind, out) != null) {
+            out.removeIf(p -> samples(p.manifest().name()));
+        }
+        return adjacentUnion(out);
+    }
+
+    /** The demo lake's name: the lake the packs' demo data is built into (docs/guides/DATA_LAKE_GUIDE.md section 6). */
+    public static final String DEMO_LAKE = "demo";
+
+    /** True for the packs' sample documents (the {@code demo} plugin): demo data, whatever lake the connectors read. */
+    boolean samples(String connector) {
+        if ("demo".equals(connector)) {
+            return true;
+        }
+        return registry.applied(connector).map(c -> "demo".equals(c.plugin())).orElse(false);
+    }
+
+    /**
+     * Demo and real data never mix (docs/guides/DATA_LAKE_GUIDE.md section 6): the lake other than the demo lake that {@code kind}'s routed
+     * connector, or a connector serving it, reads; null when every one reads the demo lake (or names no lake). When there is one, the
+     * packs' samples do not answer for the kind: no demo document is shown beside, or in place of, your data.
+     */
+    String ownLake(String kind, List<SourcePlugin> serving) {
+        String routed = registry.lakeOf(routes.get(kind));
+        if (routed != null && !DEMO_LAKE.equals(routed)) {
+            return routed;
+        }
+        for (SourcePlugin p : serving) {
+            String lake = registry.lakeOf(p.manifest().name());
+            if (lake != null && !DEMO_LAKE.equals(lake)) {
+                return lake;
+            }
+        }
+        return null;
+    }
+
+    /** As {@link #ownLake(String, List)} over the connectors that serve {@code kind}. */
+    public String ownLake(String kind) {
+        return kind == null ? null : ownLake(kind, registry.plugins().stream().filter(p -> p.manifest().serves(kind)).toList());
     }
 
     /** The union connectors of a kind moved up to sit right after the first of them, so the union is read as one store. */
@@ -703,8 +742,14 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
                 if (asked != null && !asked.contains(name)) {
                     continue;
                 }
+                boolean demo = samples(name);
+                if (demo && ownLake(kind) != null) {
+                    continue;                                   // demo and real never mix: the kind reads your lake
+                }
                 parts.add(CompletableFuture.supplyAsync(() -> {
-                    List<EntityHit> hits = dated ? p.search(kind, text, limit, asOf) : p.search(kind, text, limit);
+                    List<EntityHit> found = dated ? p.search(kind, text, limit, asOf) : p.search(kind, text, limit);
+                    List<EntityHit> hits = !demo || kind != null ? found
+                            : found.stream().filter(h -> h.ref() == null || ownLake(h.ref().kind()) == null).toList();
                     if (kind != null) {
                         p.listingProblem(kind).ifPresent(why -> failures.add(name, why));
                     }

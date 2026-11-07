@@ -81,5 +81,5 @@ def test_the_python_run_follows_the_servers_runtime_and_the_menu_and_rail_link_h
     assert "python-table-runs" not in (CONSOLE.parent / "config/under-construction.yaml").read_text(encoding="utf-8")
     run = client.post("/build/tables/api/python/run", json={"yaml": "table: a.b\n", "source": "def build(inputs, params):\n    return None\n"})
     assert run.status_code == 200 and backend.sent[-1][1] == "/tables/editor/python/run"
-    assert 'href="/build/tables"' in client.get("/bi").text
+    assert 'href="/build/tables"' in client.get("/bi/catalogue").text
     assert under_construction.Registry([{"id": "x"}]).marked("x") and not under_construction.Registry([]).marked("x")

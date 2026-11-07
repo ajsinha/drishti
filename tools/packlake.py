@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""A pack's lake block and its connector templates (docs/guides/LAKE_GUIDE.md section 7).
+"""A pack's lake block and its connector templates (docs/guides/DATA_LAKE_GUIDE.md section 12).
 
 A pack ships its recommended table entries in a ``lake:`` block of ``pack.yaml`` (the shape of a lake file's ``tables:``), and its
 Delta and Iceberg connector templates name the lake (``lake: demo``) and their entries (``lake-tables:``), nothing of the tables'
@@ -27,16 +27,23 @@ This reads ``pack.yaml`` only. A lake file (``config/lakes/*.yaml``) is read by 
 from __future__ import annotations
 
 import copy
+import pathlib
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent / "lake"))
+import lakeconfig  # noqa: E402  (where the lakes are: the one place the tools spell it)
 
 DEMO_LAKE = "demo"
-DEMO_ROOT = "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
+DEMO_ROOT = lakeconfig.DEMO_ROOT_REF            # config/lakes/demo.yaml: the demo lake's own folder
+#: the official results' lakes keep the publisher's root (config/lakes/var-official.yaml, ccr-official.yaml): <data>/delta itself
+OFFICIAL_ROOT = lakeconfig.OFFICIAL_ROOT_REF
 #: the layout keys that belong to the lake entry (the rest of a kind's layout, type-ahead, stays with the connector: a reading concern)
 ENTRY_KEYS = {"columns": "promote", "vectors": "vectors", "sort-by": "sort-by", "file-rows": "file-rows", "row-group-rows": "row-group-rows",
               "flatten": "flatten"}
 #: the official results' readers (OfficialReaders): each kind's own lake, whose root and format are its publisher's settings
 #: (config/lakes/var-official.yaml, ccr-official.yaml); the server makes the connector Iceberg when the publisher writes Iceberg
 OFFICIAL_LAKES = {"var-official": "var-official", "exposure-official": "ccr-official", "exposure-official-cpty": "ccr-official"}
-#: the lakes whose root, unless a server setting says otherwise, is the demo lake's (a tool reads their tables there)
+#: the lakes whose root a tool knows without a lake file: the demo lake's own, and the official results' (unless a server setting says otherwise)
 DEMO_ROOTED = {DEMO_LAKE, "var-official", "ccr-official"}
 
 
@@ -122,7 +129,7 @@ def settings_view(manifest: dict, connector: dict) -> dict:
     entries = ((manifest.get("lake") or {}).get("tables") or {})
     names = _list(st.get("lake-tables")) or [n for n, e in entries.items() if (e or {}).get("kind", n.split(".", 1)[1]) in (connector.get("kinds") or [])]
     out = {k: v for k, v in st.items() if k not in ("lake", "lake-tables", "layout")}
-    out["root"] = DEMO_ROOT if st["lake"] in DEMO_ROOTED else st["lake"]
+    out["root"] = DEMO_ROOT if st["lake"] == DEMO_LAKE else OFFICIAL_ROOT if st["lake"] in DEMO_ROOTED else st["lake"]
     layout: dict = {k: dict(v) for k, v in ((st.get("layout") or {}) if isinstance(st.get("layout"), dict) else {}).items()}
     table: dict = {}
     for n in names:

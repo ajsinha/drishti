@@ -33,10 +33,6 @@
 .cfg-tbl td { overflow-wrap: anywhere; vertical-align: top; }
 .cfg-tbl td:first-child code { white-space: normal; overflow-wrap: anywhere; }
 .cfg-tbl td:nth-child(6) { min-width: 18rem; }
-.cfg-eff code { color: var(--d-ink); }
-.cfg-eff.cfg-differs code { color: var(--d-accent); font-weight: 600; }
-.cfg-eff .cfg-origin { display: block; color: var(--d-muted); font-size: .78rem; }
-.cfg-eff.cfg-none { color: var(--d-faint, var(--d-muted)); font-style: italic; }
 .cfg-hit { background: var(--d-highlight, var(--d-accent-tint)); }
 
 /* A phone: a row is a card, each cell under its column's name. */

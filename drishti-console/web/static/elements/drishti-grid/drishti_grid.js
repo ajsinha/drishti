@@ -594,6 +594,71 @@
     function answerFormat(m) { return (v) => measureText(v, m); }
     return { "SEP": SEP, "BLANK": BLANK, "memberText": memberText, "valueLabel": valueLabel, "normalizeView": normalizeView, "serverRequest": serverRequest, "memberFilters": memberFilters, "PivotState": PivotState, "pivotLocal": pivotLocal, "pivotApplyUpdates": pivotApplyUpdates, "mergeAnswer": mergeAnswer, "applyValueFilters": applyValueFilters, "resultColumns": resultColumns, "cellValue": cellValue, "measureText": measureText, "answerFormat": answerFormat };
   })();
+  /* ---- src/drishti_tree-data.js ---- */
+  __m["src/drishti_tree-data.js"] = (function () {
+    var aggFunc = __m["src/drishti_aggregate.js"].aggFunc;
+    var SEP = __m["src/drishti_pivot.js"].SEP;
+    function buildTree(model, order, test) {
+      const nodes = [], byKey = new Map(), root = { id: -1, path: [], depth: -1, row: -1, children: [], keep: false };
+      const node = (path) => {
+        const key = path.join(SEP);
+        let n = byKey.get(key);
+        if (n) { return n; }
+        const parent = path.length > 1 ? node(path.slice(0, -1)) : root;
+        n = { id: nodes.length, path: path, depth: path.length - 1, row: -1, children: [], keep: false, aggregates: {}, serverCols: [], pendingServer: [] };
+        nodes.push(n);
+        byKey.set(key, n);
+        parent.children.push(n);
+        return n;
+      };
+      for (let i = 0; i < order.length; i++) {
+        const r = order[i], p = model.getDataPath(model.rows[r]);
+        if (!Array.isArray(p) || !p.length) { throw new Error('tree data: getDataPath gave no path for row ' + r); }
+        const n = node(p.map(String));
+        if (n.row >= 0) { throw new Error('tree data: two rows have the path ' + p.join(' / ')); }
+        n.row = r;
+      }
+      const keep = (n) => { let k = n.row >= 0 && (!test || test(model.rows[n.row])); n.children.forEach((c) => { if (keep(c)) { k = true; } }); n.keep = k; return k; };
+      root.children.forEach(keep);
+      const prune = (n) => { n.children = n.children.filter((c) => c.keep); n.children.forEach(prune); };
+      prune(root);
+      const view = [];
+      const walk = (n) => { if (n.row >= 0) { view.push(n.row); } n.children.forEach(walk); };
+      root.children.forEach(walk);
+      figures(model, nodes.filter((n) => n.keep));
+      return { nodes: nodes, root: root, byKey: byKey, view: Uint32Array.from(view) };
+    }
+    function figures(model, nodes) {
+      const valueCols = model.columns.all().filter((c) => c.aggFunc && c.type === 'number');
+      const rowsUnder = (n, out) => { if (n.row >= 0) { out.push(n.row); } n.children.forEach((c) => rowsUnder(c, out)); return out; };
+      nodes.forEach((n) => {
+        if (n.row >= 0 || !n.children.length) { return; }
+        const rows = [];
+        n.children.forEach((c) => rowsUnder(c, rows));
+        valueCols.forEach((c) => {
+          const f = aggFunc(c.aggFunc);
+          if (c.additive === false || !f || !model.clientAggregation) { n.aggregates[c.id] = null; n.serverCols.push(c.id); return; }
+          let st = f.init();
+          for (let j = 0; j < rows.length; j++) { st = f.add(st, model.value(model.rows[rows[j]], c)); }
+          n.aggregates[c.id] = f.result(st);
+        });
+        n.pendingServer = n.serverCols.slice();
+      });
+    }
+    function flattenTree(model) {
+      const out = [];
+      const walk = (n) => { out.push(-(n.id + 1)); if (n.children.length && model.isExpanded(n.path)) { n.children.forEach(walk); } };
+      model.tree.root.children.forEach(walk);
+      return Int32Array.from(out);
+    }
+    function treeRow(model, n) {
+      const row = n.row >= 0 ? model.rows[n.row] : null, key = n.path[n.path.length - 1];
+      if (!n.children.length) { return { kind: 'leaf', tree: true, treeKey: key, id: model.getRowId(row, n.row), depth: n.depth, row: row, index: n.row, path: n.path }; }
+      return { kind: 'group', tree: true, treeKey: key, id: row ? model.getRowId(row, n.row) : 'group:' + n.path.join(SEP), depth: n.depth, row: row, index: n.row >= 0 ? n.row : undefined,
+        field: null, value: key, path: n.path, expanded: model.isExpanded(n.path), aggregates: row ? null : n.aggregates, pendingServer: row ? [] : n.pendingServer };
+    }
+    return { "buildTree": buildTree, "flattenTree": flattenTree, "treeRow": treeRow };
+  })();
   /* ---- src/drishti_client-rows.js ---- */
   __m["src/drishti_client-rows.js"] = (function () {
     var EventBus = __lib("drishti-core").EventBus;
@@ -601,6 +666,7 @@
     var compareRows = __lib("drishti-core").compareRows, compareValues = __lib("drishti-core").compareValues, rowFilter = __lib("drishti-core").rowFilter, isBlank = __lib("drishti-core").isBlank;
     var aggFunc = __m["src/drishti_aggregate.js"].aggFunc;
     var memberText = __m["src/drishti_pivot.js"].memberText, SEP = __m["src/drishti_pivot.js"].SEP;
+    var buildTree = __m["src/drishti_tree-data.js"].buildTree, flattenTree = __m["src/drishti_tree-data.js"].flattenTree, treeRow = __m["src/drishti_tree-data.js"].treeRow;
     class ClientRowModel {
       constructor(o) {
         this.columns = o.columns;
@@ -612,7 +678,11 @@
         this.quickFilter = '';
         this.groupBy = [];
         this.expanded = new Set();
-        this.expandLevel = 0;
+        this.expandLevel = o.groupDefaultExpanded === -1 ? Infinity : (o.groupDefaultExpanded || 0);
+        this.treeData = !!o.treeData;
+        if (this.treeData && typeof o.getDataPath !== 'function') { throw new Error('tree data needs getDataPath(row), the row\'s path from the top'); }
+        this.getDataPath = o.getDataPath;
+        this.tree = null;
         this.setRows(o.rows || []);
       }
       setRows(rows) {
@@ -658,6 +728,7 @@
         return { added: added, updated: updated, removed: removed, changes: changes, staleGroups: staleGroups };
       }
       updateInPlace(touched) {
+        if (this.treeData) { this.refresh('transaction'); return this.serverGroupColumns().map((g) => g.path); }
         const changed = new Set();
         touched.forEach((x) => Object.keys(x.cells).forEach((k) => changed.add(k)));
         if (this.groupBy.some((g) => changed.has(g))) { this.refresh('transaction'); return this.groupNodes ? this.groupNodes.map((g) => g.path) : []; }
@@ -753,6 +824,7 @@
         const cols = this.columns.all();
         const test = rowFilter(this.filterModel, this.quickFilter, this.quickFilter ? this.columns.visible() : cols, (r, c) => this.value(r, c));
         const n = this.rows.length;
+        if (this.treeData) { this.refreshTree(test); this.events.emit('rowsChanged', { reason: reason || 'refresh' }); return; }
         let idx = new Uint32Array(n), k = 0;
         for (let i = 0; i < n; i++) { if (!test || test(this.rows[i])) { idx[k++] = i; } }
         if (k < n) { idx = idx.slice(0, k); }
@@ -762,6 +834,18 @@
         this.buildGroups();
         this.flatten();
         this.events.emit('rowsChanged', { reason: reason || 'refresh' });
+      }
+      refreshTree(test) {
+        let idx = new Uint32Array(this.rows.length);
+        for (let i = 0; i < idx.length; i++) { idx[i] = i; }
+        const sort = (this.sortModel || []).filter((s) => this.columns.get(s.colId));
+        if (sort.length) { idx = this.sorted(idx, sort); }
+        this.tree = buildTree(this, idx, test);
+        this.view = this.tree.view;
+        this.groupNodes = this.tree.nodes.filter((x) => x.keep && x.row < 0 && x.children.length);
+        this.groupByKey = new Map(this.groupNodes.map((x) => [x.path.join(SEP), x]));
+        this.groupRoot = null;
+        this.flatten();
       }
       sortKeys(idx, col) {
         const rows = this.rows, keys = new Float64Array(rows.length);
@@ -838,6 +922,7 @@
         this.groupRoot = root;
       }
       flatten() {
+        if (this.treeData) { this.display = this.tree ? flattenTree(this) : new Int32Array(0); return; }
         if (!this.groupRoot) { this.display = null; return; }
         const out = [];
         const walk = (g) => {
@@ -855,6 +940,7 @@
       rowAt(i) {
         if (i < 0 || i >= this.rowCount()) { return null; }
         const code = this.display ? this.display[i] : this.view[i];
+        if (this.treeData) { return treeRow(this, this.tree.nodes[-code - 1]); }
         if (code < 0) {
           const g = this.groupNodes[-code - 1];
           return { kind: 'group', id: 'group:' + g.path.join(SEP), depth: g.depth, row: null, field: g.field, value: g.value, path: g.path, count: g.count,
@@ -866,6 +952,7 @@
         const n = this.idIndex.get(id);
         if (n === undefined) { return -1; }
         const a = this.display || this.view;
+        if (this.treeData) { for (let i = 0; i < a.length; i++) { if (this.tree.nodes[-a[i] - 1].row === n) { return i; } } return -1; }
         for (let i = 0; i < a.length; i++) { if (a[i] === n) { return i; } }
         return -1;
       }
@@ -884,24 +971,322 @@
     }
     return { "ClientRowModel": ClientRowModel };
   })();
+  /* ---- src/drishti_doc-behave.js ---- */
+  __m["src/drishti_doc-behave.js"] = (function () {
+    var textSortKey = __lib("drishti-core").textSortKey, compareTextKeys = __lib("drishti-core").compareTextKeys;
+    function treeVisibility(depths, opens, matches) {
+      const n = depths.length, q = !!matches, hit = q ? matches.slice() : [];
+      if (q) {
+        for (let i = 0; i < n; i++) {
+          if (!matches[i]) { continue; }
+          for (let j = i - 1, need = depths[i] - 1; j >= 0 && need >= 0; j--) { if (depths[j] === need) { hit[j] = true; need--; } }
+        }
+      }
+      const visible = [], open = [], parentOpen = [true];
+      for (let i = 0; i < n; i++) {
+        const d = depths[i], vis = q ? !!hit[i] : (d === 0 || parentOpen[d - 1] === true);
+        let o = !!opens[i];
+        if (q) { o = false; for (let j = i + 1; j < n && depths[j] > d; j++) { if (hit[j]) { o = true; break; } } }
+        parentOpen[d] = vis && o;
+        visible.push(vis);
+        open.push(o);
+      }
+      return { visible, open };
+    }
+    function pageInfo(total, page, size) {
+      const pages = Math.max(1, Math.ceil(total / size)), p = Math.max(0, Math.min(page, pages - 1));
+      const first = p * size, last = Math.min(total, first + size);
+      return { page: p, pages, first, last, text: total ? (first + 1) + '–' + last + ' of ' + total : 'No rows match' };
+    }
+    const mark = (x) => { if (x.__dgDoc) { return false; } x.__dgDoc = true; return true; };
+    const cellText = (r, i) => (r.cells[i] ? r.cells[i].textContent.replace(/[▸▾]/g, '').replace(/\s+/g, ' ').trim() : '');
+    function make(doc, tag, cls, text) { const e = doc.createElement(tag); if (cls) { e.className = cls; } if (text !== undefined && text !== null) { e.textContent = text; } return e; }
+    function searchBox(doc, cls) {
+      const box = make(doc, 'input', cls);
+      box.type = 'search'; box.placeholder = 'Filter rows'; box.setAttribute('aria-label', 'Filter rows');
+      return box;
+    }
+    function tree(t, o) {
+      const body = t.tBodies[0];
+      if (!body || !mark(t)) { return; }
+      const doc = t.ownerDocument, rows = Array.prototype.slice.call(body.rows);
+      rows.forEach((r) => {
+        r.__depth = +r.getAttribute('data-depth');
+        const b = r.querySelector('.tr-tog');
+        r.__open = !!b && b.getAttribute('aria-expanded') === 'true';
+        r.__text = r.textContent.replace(/[▸▾]/g, '').replace(/\s+/g, ' ').toLowerCase();
+      });
+      let q = '';
+      function paint() {
+        const st = treeVisibility(rows.map((r) => r.__depth), rows.map((r) => r.__open), q ? rows.map((r) => r.__text.includes(q)) : null);
+        rows.forEach((r, i) => {
+          r.hidden = !st.visible[i];
+          const b = r.querySelector('.tr-tog'), open = st.open[i];
+          if (b) {
+            b.setAttribute('aria-expanded', open ? 'true' : 'false');
+            b.setAttribute('aria-label', (open ? 'Collapse ' : 'Expand ') + b.getAttribute('aria-label').replace(/^(Collapse|Expand) /, ''));
+            b.textContent = open ? '▾' : '▸';
+          }
+        });
+      }
+      body.addEventListener('click', (e) => {
+        const b = e.target.closest && e.target.closest('.tr-tog');
+        if (!b || q) { return; }
+        const r = b.closest('tr');
+        r.__open = !r.__open;
+        paint();
+        const again = r.querySelector('.tr-tog');
+        if (again) { again.focus(); }
+      });
+      if (o.tables !== false && !t.hasAttribute('data-no-search')) {
+        const wrap = t.closest('.tbl-wrap') || t.parentNode, bar = make(doc, 'div', 'tr-bar'), box = searchBox(doc, 'tbl-q tr-q');
+        box.addEventListener('input', () => { q = box.value.trim().toLowerCase(); paint(); });
+        bar.appendChild(box);
+        wrap.parentNode.insertBefore(bar, wrap);
+      }
+      paint();
+    }
+    function sortable(t, o) {
+      if (t.hasAttribute('data-plain') || !t.tBodies.length || !mark(t)) { return; }
+      const doc = t.ownerDocument, size = o.pageSize || 25;
+      const body = t.tBodies[0], original = Array.prototype.slice.call(body.rows), heads = t.tHead && t.tHead.rows.length ? Array.prototype.slice.call(t.tHead.rows[0].cells) : [];
+      const st = { col: -1, dir: 0, q: '', page: 0 };
+      let pager = null, info = null, prev = null, next = null;
+      function apply() {
+        const rows = original.slice();
+        if (st.col >= 0 && st.dir) { rows.sort((a, b) => compareTextKeys(textSortKey(cellText(a, st.col)), textSortKey(cellText(b, st.col))) * st.dir); }
+        rows.forEach((r) => body.appendChild(r));
+        const shown = rows.filter((r) => !st.q || r.textContent.toLowerCase().includes(st.q));
+        const pi = pageInfo(shown.length, st.page, size);
+        st.page = pi.page;
+        rows.forEach((r) => { r.hidden = true; });
+        shown.slice(pi.first, pi.first + size).forEach((r) => { r.hidden = false; });
+        heads.forEach((th, i) => { th.setAttribute('aria-sort', i === st.col && st.dir ? (st.dir > 0 ? 'ascending' : 'descending') : 'none'); });
+        if (pager) {
+          pager.hidden = shown.length <= size && !st.q;
+          info.textContent = pi.text;
+          prev.disabled = pi.page === 0;
+          next.disabled = pi.page >= pi.pages - 1;
+        }
+      }
+      heads.forEach((th, i) => {
+        const b = make(doc, 'button', 'tbl-sort');
+        b.type = 'button';
+        while (th.firstChild) { b.appendChild(th.firstChild); }
+        b.title = 'Sort by ' + b.textContent.trim();
+        th.appendChild(b);
+        b.addEventListener('click', () => {
+          if (st.col !== i) { st.col = i; st.dir = 1; } else { st.dir = st.dir === 1 ? -1 : st.dir === -1 ? 0 : 1; if (!st.dir) { st.col = -1; } }
+          apply();
+        });
+      });
+      if (original.length > size || !t.hasAttribute('data-no-search')) {
+        pager = make(doc, 'div', 'tbl-bar');
+        if (!t.hasAttribute('data-no-search')) {
+          const q = searchBox(doc, 'tbl-q');
+          q.addEventListener('input', () => { st.q = q.value.trim().toLowerCase(); st.page = 0; apply(); });
+          pager.appendChild(q);
+        }
+        prev = make(doc, 'button', 'fk tbl-pg-b', '‹'); prev.type = 'button'; prev.setAttribute('aria-label', 'Previous page');
+        next = make(doc, 'button', 'fk tbl-pg-b', '›'); next.type = 'button'; next.setAttribute('aria-label', 'Next page');
+        info = make(doc, 'span', 'tbl-pg-i mono'); info.setAttribute('aria-live', 'polite');
+        prev.addEventListener('click', () => { st.page--; apply(); });
+        next.addEventListener('click', () => { st.page++; apply(); });
+        pager.appendChild(prev); pager.appendChild(info); pager.appendChild(next);
+        const wrap = t.closest('.tbl-wrap') || t;
+        wrap.parentNode.insertBefore(pager, wrap);
+      }
+      apply();
+    }
+    function drillDown(root) {
+      if (!mark(root)) { return; }
+      const doc = root.ownerDocument, crumbs = root.querySelector('[data-dr-crumbs]'), up = root.querySelector('[data-dr-up]');
+      const levels = Array.prototype.filter.call(root.children, (x) => x.classList.contains('dr-lv'));
+      function show(path) {
+        levels.forEach((lv) => { const on = lv.getAttribute('data-dr-path') === path; lv.hidden = !on; lv.classList.toggle('on', on); });
+        while (crumbs.firstChild) { crumbs.removeChild(crumbs.firstChild); }
+        const parts = path ? path.split('.') : [];
+        const steps = [{ path: '', label: root.getAttribute('data-dr-root') }];
+        parts.forEach((_, i) => {
+          const p = parts.slice(0, i + 1).join('.'), lv = levels.find((x) => x.getAttribute('data-dr-path') === p);
+          steps.push({ path: p, label: lv ? lv.getAttribute('data-dr-crumb') : p });
+        });
+        steps.forEach((s, i) => {
+          const li = make(doc, 'li');
+          if (i === steps.length - 1) { li.setAttribute('aria-current', 'location'); li.textContent = s.label; }
+          else { const b = make(doc, 'button', 'dr-step', s.label); b.type = 'button'; b.addEventListener('click', () => show(s.path)); li.appendChild(b); }
+          crumbs.appendChild(li);
+        });
+        up.hidden = !path;
+        root.__path = path;
+      }
+      root.addEventListener('click', (e) => {
+        const a = e.target.closest && e.target.closest('[data-dr-open]');
+        if (!a || !root.contains(a)) { return; }
+        e.preventDefault();
+        e.stopPropagation();
+        show(a.getAttribute('data-dr-open'));
+      });
+      up.addEventListener('click', () => { const p = root.__path || ''; show(p.includes('.') ? p.slice(0, p.lastIndexOf('.')) : ''); });
+      root.addEventListener('keydown', (e) => {
+        if ((e.key === 'Escape' || e.key === 'Backspace') && root.__path && !/input|textarea/i.test(e.target.tagName)) { e.preventDefault(); up.click(); }
+      });
+    }
+    function enhanceDocTables(scope, o) {
+      o = o || {};
+      scope.querySelectorAll('table.tbl-tree').forEach((t) => tree(t, o));
+      scope.querySelectorAll('.drill').forEach(drillDown);
+      if (o.tables !== false && o.sort !== false) { scope.querySelectorAll('table.tbl:not(.tbl-tree):not(.dr-tbl):not(.pivot)').forEach((t) => sortable(t, o)); }
+    }
+    return { "treeVisibility": treeVisibility, "pageInfo": pageInfo, "enhanceDocTables": enhanceDocTables };
+  })();
+  /* ---- src/drishti_doc-table.js ---- */
+  __m["src/drishti_doc-table.js"] = (function () {
+    var h = __lib("drishti-core").h, roundHalfUp = __lib("drishti-core").roundHalfUp;
+    const str = (v) => (v === null || v === undefined ? '' : String(v));
+    const defTone = (c) => (c && c.tone ? ' t-' + c.tone : '');
+    function flat(out, c) {
+      if (c === null || c === undefined || c === false) { return out; }
+      if (Array.isArray(c)) { c.forEach((x) => flat(out, x)); return out; }
+      out.push(typeof c === 'object' && c.nodeType ? c : String(c));
+      return out;
+    }
+    function mk(doc) {
+      return (tag, attrs, ...children) => h(doc, tag, { attrs: attrs || null }, flat([], children));
+    }
+    function ctx(doc, hooks) {
+      const hk = hooks || {};
+      return { e: mk(doc), content: hk.content || ((c) => str(c && c.text)), tone: hk.tone || defTone, rowAttrs: hk.rowAttrs || null };
+    }
+    const num = (numeric, i) => !!(numeric || [])[i];
+    const tdCls = (k, numeric, i, c) => 'mono' + (num(numeric, i) ? ' num' : '') + k.tone(c);
+    function head(k, columns, numeric) {
+      return k.e('thead', null, k.e('tr', null, (columns || []).map((c, i) => k.e('th', { class: num(numeric, i) ? 'num' : null }, str(c)))));
+    }
+    function foot(k, d) {
+      if (!d.total && !d.more) { return null; }
+      return k.e('tfoot', null,
+        d.total ? k.e('tr', { class: 'total' }, (d.total.cells || []).map((c, i) => k.e('td', { class: tdCls(k, d.numeric, i, c) }, str(c.text)))) : null,
+        d.more ? k.e('tr', { class: 'more' }, k.e('td', { colspan: String((d.columns || []).length) }, str(d.more))) : null);
+    }
+    function treeRows(k, d, rows, depth, out) {
+      for (const r of rows || []) {
+        const kids = r.children || [], open = depth + 1 < d.expand;
+        out.push(k.e('tr', { class: 'tr-node' + (r.highlight ? ' hl' : ''), 'data-depth': String(depth), 'data-kids': kids.length ? true : null,
+          hidden: depth >= d.expand ? true : null, 'data-path': r.path || null },
+        (r.cells || []).map((c, i) => k.e('td', { class: tdCls(k, d.numeric, i, c), 'data-path': c.path || null },
+          i === 0 ? k.e('span', { class: 'tr-ind tr-d' + Math.min(depth, 24) }, kids.length
+            ? k.e('button', { type: 'button', class: 'tr-tog', 'aria-expanded': open ? 'true' : 'false', 'aria-label': (open ? 'Collapse ' : 'Expand ') + str(c.text) }, open ? '▾' : '▸')
+            : k.e('span', { class: 'tr-sp', 'aria-hidden': 'true' })) : null,
+          k.content(c)))));
+        treeRows(k, d, kids, depth + 1, out);
+      }
+      return out;
+    }
+    function docTable(doc, d, hooks) {
+      const k = ctx(doc, hooks);
+      if (d.expand) {
+        return k.e('div', { class: 'tbl-wrap' }, k.e('table', { class: 'tbl tbl-tree', 'data-plain': true, 'data-tree': true, 'data-no-search': d.search === false ? true : null },
+          head(k, d.columns, d.numeric), k.e('tbody', null, treeRows(k, d, d.rows, 0, [])), foot(k, d)));
+      }
+      return k.e('div', { class: 'tbl-wrap' }, k.e('table', { class: 'tbl', 'data-no-search': d.search === false ? true : null },
+        head(k, d.columns, d.numeric),
+        k.e('tbody', null, (d.rows || []).map((r, ri) => k.e('tr', Object.assign({ class: r.highlight ? 'hl' : null, 'data-path': r.path || null, 'data-pick': r.pick || null,
+          'data-ev': r.ev || null, tabindex: r.ev ? '0' : null, 'aria-selected': r.ev ? 'false' : null }, k.rowAttrs ? k.rowAttrs(r, ri) : null),
+        (r.cells || []).map((c, i) => k.e('td', { class: tdCls(k, d.numeric, i, c), 'data-path': c.path || null }, k.content(c)))))),
+        foot(k, d)));
+    }
+    function docPivotable(doc, panel, hooks) {
+      const src = panel.data.pivot && panel.data.pivot.source;
+      if (!src) { return docTable(doc, panel.data, hooks); }
+      const e = mk(doc), title = panel.title || panel.id;
+      return [docTable(doc, panel.data, hooks), e('p', { class: 'pv-open' }, e('a', { class: 'btn btn-sm btn-outline-secondary', href: '/pivot?source=' + encodeURIComponent(src).replace(/%2F/g, '/'),
+        title: 'Pivot ' + title + ': rows, columns, values and filters, every total from its own rows (PIVOT_GUIDE.md)' }, 'Pivot'))];
+    }
+    function drRows(k, pid, rows, numeric, prefix, deeper, noun) {
+      return k.e('tbody', null, (rows || []).map((r, ri) => {
+        const path = prefix + ri, kids = r.children || [];
+        return k.e('tr', { class: r.highlight ? 'hl' : null, 'data-path': r.path || null, 'data-dr-row': path },
+          (r.cells || []).map((c, i) => k.e('td', { class: tdCls(k, numeric, i, c) }, i === 0 && deeper
+            ? k.e('a', { class: 'dr-open', href: '?dr.' + pid + '=' + path, 'data-dr-open': path, title: 'Open ' + str(r.crumb) + ': ' + kids.length + ' ' + noun,
+              'aria-label': 'Open ' + str(r.crumb) + ': ' + kids.length + ' ' + noun }, (c.text !== null && c.text !== undefined && c.text !== '') ? str(c.text) : str(r.crumb),
+            k.e('span', { class: 'dr-n', 'aria-hidden': 'true' }, kids.length + ' ▸'))
+            : k.content(c))));
+      }));
+    }
+    function drFoot(k, total, numeric) {
+      return total ? k.e('tfoot', null, k.e('tr', { class: 'total' }, (total.cells || []).map((c, i) => k.e('td', { class: tdCls(k, numeric, i, c) }, str(c.text))))) : null;
+    }
+    function drLevels(k, pid, d, rows, prefix, depth, out) {
+      const lv = d.levels[depth], ph = depth === 0 ? d.columns : d.levels[depth - 1].columns;
+      const deeper = depth + 1 < d.levels.length, noun = deeper ? String(d.levels[depth + 1].title || 'rows').toLowerCase() : '';
+      (rows || []).forEach((r, ri) => {
+        const path = prefix + ri, kids = r.children || [];
+        out.push(k.e('div', { class: 'dr-lv', 'data-dr-path': path, 'data-dr-crumb': str(r.crumb), 'data-dr-depth': String(depth + 1), hidden: true },
+          k.e('dl', { class: 'dr-parent', 'aria-label': str(r.crumb) }, (r.cells || []).map((c, i) => (c.text === null || c.text === undefined || c.text === '') ? null
+            : k.e('div', null, k.e('dt', null, str((ph || [])[i])), k.e('dd', { class: 'mono' + k.tone(c) }, k.content(c))))),
+          kids.length
+            ? k.e('div', { class: 'tbl-wrap' }, k.e('table', { class: 'tbl dr-tbl', 'aria-label': (lv.title || 'Rows') + ' of ' + str(r.crumb) },
+              k.e('caption', { class: 'dr-cap' }, (lv.title || 'Rows') + ' ', k.e('span', { class: 'dr-count' }, String(kids.length))),
+              head(k, lv.columns, lv.numeric), drRows(k, pid, kids, lv.numeric, path + '.', deeper, noun), drFoot(k, r.kidsTotal, lv.numeric)))
+            : k.e('p', { class: 'pnl-empty', role: 'status' }, k.e('i', { class: 'bi bi-inbox', 'aria-hidden': 'true' }), ' No ' + String(lv.title || 'rows').toLowerCase())));
+        if (deeper && kids.length) { drLevels(k, pid, d, kids, path + '.', depth + 1, out); }
+      });
+      return out;
+    }
+    function docDrill(doc, panel, hooks) {
+      const k = ctx(doc, hooks), p = panel, d = p.data, noun = String(d.levels[0].title || 'rows').toLowerCase(), root = d.root || p.title || '';
+      return k.e('div', { class: 'drill', 'data-drill': p.id, 'data-dr-root': root },
+        k.e('nav', { class: 'dr-crumbs', 'aria-label': 'Where you are in ' + (p.title || p.id) },
+          k.e('ol', { 'data-dr-crumbs': true }, k.e('li', { 'aria-current': 'location' }, root)),
+          k.e('button', { type: 'button', class: 'fk dr-up', 'data-dr-up': true, hidden: true, title: 'Up one level (Esc)', 'aria-label': 'Up one level' }, k.e('b', null, 'Esc'), ' Up')),
+        k.e('div', { class: 'dr-lv on', 'data-dr-path': '', 'data-dr-depth': '0' },
+          k.e('div', { class: 'tbl-wrap' }, k.e('table', { class: 'tbl dr-tbl', 'data-no-search': d.search === false ? true : null, 'aria-label': p.title || p.id },
+            k.e('caption', { class: 'dr-cap' }, (p.title || '') + ' ', k.e('span', { class: 'dr-count' }, String((d.rows || []).length))),
+            head(k, d.columns, d.numeric), drRows(k, p.id, d.rows, d.numeric, '', true, noun), drFoot(k, d.total, d.numeric),
+            d.more ? k.e('tfoot', null, k.e('tr', { class: 'more' }, k.e('td', { colspan: String((d.columns || []).length) }, str(d.more)))) : null))),
+        drLevels(k, p.id, d, d.rows, '', 0, []));
+    }
+    function heatBucket(v, lo, hi) {
+      const span = (typeof lo === 'number' && typeof hi === 'number' && hi > lo) ? hi - lo : 0;
+      return span ? Math.trunc(Number(roundHalfUp((v - lo) / span * 9, 0))) : 5;
+    }
+    function docPivot(doc, d, hooks) {
+      const k = ctx(doc, hooks), t = pivotTable(k, d);
+      return d.levels ? k.e('div', { class: 'pv-tree-host', 'data-pv-tree': JSON.stringify(d) }, t) : t;
+    }
+    function pivotTable(k, d) {
+      const by = d.by || '', cols = d.columns || [], lo = d.min, hi = d.max;
+      return k.e('div', { class: 'tbl-wrap' }, k.e('table', { class: 'tbl pivot' + (d.heat ? ' heat' : '') },
+        k.e('thead', null, k.e('tr', null, k.e('th', { scope: 'col' }, by.slice(0, 1).toUpperCase() + by.slice(1)),
+          cols.map((c) => k.e('th', { scope: 'col', class: 'num' }, str(c))), d.totals ? k.e('th', { scope: 'col', class: 'num' }, 'Total') : null)),
+        k.e('tbody', null, (d.rows || []).map((r) => k.e('tr', null,
+          k.e('th', { scope: 'row', class: r.path ? 'pv-i' + r.path.length : null }, r.group ? k.e('b', null, str(r.label)) : str(r.label)),
+          (r.cells || []).map((c, i) => {
+            const v = (r.values || [])[i];
+            return k.e('td', { class: 'mono num' + k.tone(c) + (d.heat && typeof v === 'number' ? ' heat-' + heatBucket(v, lo, hi) : '') }, str(c.text));
+          }),
+          r.total ? k.e('td', { class: 'mono num pv-total' + k.tone(r.total) }, str(r.total.text)) : null))),
+        (d.totals || d.more) ? k.e('tfoot', null,
+          d.totals ? k.e('tr', { class: 'total' }, k.e('th', { scope: 'row' }, 'Total'), d.totals.map((c) => k.e('td', { class: 'mono num' + k.tone(c) }, str(c.text)))) : null,
+          d.more ? k.e('tr', { class: 'more' }, k.e('td', { colspan: String(cols.length + 2) }, d.more + ' more rows')) : null) : null));
+    }
+    function docPlainTable(doc, headRow, rows, o) {
+      o = o || {};
+      const e = mk(doc);
+      const head0 = (c, ri) => (o.rowHeader ? o.rowHeader(c, ri) : (c && typeof c === 'object' && c.nodeType ? c : str(c)));
+      const th = (x, i) => (x && typeof x === 'object' ? e('th', { scope: 'col', class: x.num ? 'num' : null }, str(x.text)) : e('th', { scope: 'col', class: i ? 'num' : null }, str(x)));
+      const td = (c) => (c && typeof c === 'object' && !c.nodeType && 'content' in c ? e('td', { class: c.cls === undefined ? 'mono num' : c.cls }, c.content) : e('td', { class: 'mono num' }, typeof c === 'object' && c && c.nodeType ? c : str(c)));
+      const wrap = e('div', { class: 'tbl-wrap' }, e('table', { class: 'tbl', 'data-plain': true },
+        e('thead', null, e('tr', null, headRow.map(th))),
+        e('tbody', null, rows.map((r, ri) => e('tr', null, r.map((c, i) => (i === 0 ? e('th', { scope: 'row' }, head0(c, ri)) : td(c))))))));
+      return o.details === false ? wrap : e('details', { class: 'xchart-data' }, e('summary', null, o.summary || 'Data'), wrap);
+    }
+    return { "docTable": docTable, "docPivotable": docPivotable, "docDrill": docDrill, "heatBucket": heatBucket, "docPivot": docPivot, "docPlainTable": docPlainTable };
+  })();
   /* ---- src/drishti_export.js ---- */
   __m["src/drishti_export.js"] = (function () {
-    var namedFormat = __lib("drishti-core").namedFormat, formatNamed = __lib("drishti-core").formatNamed, hasFormat = __lib("drishti-core").hasFormat, isoDate = __lib("drishti-core").isoDate;
-    function toCsv(t, o) {
-      o = o || {};
-      const sep = o.separator || ',';
-      const cell = (v, c) => {
-        let s;
-        if (v === null || v === undefined) { s = ''; }
-        else if (o.formatted && c && typeof c.format === 'string' && hasFormat(c.format)) { s = formatNamed(c.format, v); }
-        else if (v instanceof Date) { s = isoDate(v); }
-        else { s = String(v); }
-        return s.indexOf(sep) >= 0 || /["\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-      };
-      const lines = [t.columns.map((c) => cell(c.header)).join(sep)];
-      t.rows.forEach((r) => lines.push(r.map((v, i) => cell(v, t.columns[i])).join(sep)));
-      return (o.bom === false ? '' : '﻿') + lines.join('\r\n') + '\r\n';
-    }
+    var namedFormat = __lib("drishti-core").namedFormat, isoDate = __lib("drishti-core").isoDate;
     const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) { c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; } t[n] = c >>> 0; } return t; })();
     function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) { c = CRC[(c ^ b[i]) & 0xFF] ^ (c >>> 8); } return (c ^ 0xFFFFFFFF) >>> 0; }
     const utf8 = (s) => new TextEncoder().encode(s);
@@ -1027,7 +1412,7 @@
       ]);
     }
     const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-    return { "toCsv": toCsv, "crc32": crc32, "zipStore": zipStore, "excelFormat": excelFormat, "toXlsx": toXlsx, "XLSX_TYPE": XLSX_TYPE };
+    return { "crc32": crc32, "zipStore": zipStore, "excelFormat": excelFormat, "toXlsx": toXlsx, "XLSX_TYPE": XLSX_TYPE };
   })();
   /* ---- src/drishti_wells.js ---- */
   __m["src/drishti_wells.js"] = (function () {
@@ -1379,6 +1764,1482 @@
       reset() { this.last.clear(); this.flashes.clear(); this.armed = false; }
     }
     return { "VIEW_EVENTS": VIEW_EVENTS, "PHONE_WIDTH": PHONE_WIDTH, "FUNCTION_KEYS": FUNCTION_KEYS, "CF_TYPES": CF_TYPES, "headerSpans": headerSpans, "pivotColumnLabels": pivotColumnLabels, "markGroups": markGroups, "isTotalCell": isTotalCell, "nonAdditiveNote": nonAdditiveNote, "colourScaleAlpha": colourScaleAlpha, "dataBarWidth": dataBarWidth, "cfBackground": cfBackground, "figureRange": figureRange, "ruleFor": ruleFor, "phoneColumns": phoneColumns, "pivotMeasures": pivotMeasures, "columnMenuItems": columnMenuItems, "cellMenuItems": cellMenuItems, "commandText": commandText, "parseCommand": parseCommand, "parseCondition": parseCondition, "conditionText": conditionText, "statusItems": statusItems, "FlashTracker": FlashTracker };
+  })();
+  /* ---- src/drishti_grid-model-base.js ---- */
+  __m["src/drishti_grid-model-base.js"] = (function () {
+    var toCsv = __lib("drishti-core").toCsv;
+    var getValue = __m["src/drishti_columns.js"].getValue;
+    var PivotState = __m["src/drishti_pivot.js"].PivotState, pivotLocal = __m["src/drishti_pivot.js"].pivotLocal, pivotApplyUpdates = __m["src/drishti_pivot.js"].pivotApplyUpdates, serverRequest = __m["src/drishti_pivot.js"].serverRequest, mergeAnswer = __m["src/drishti_pivot.js"].mergeAnswer, applyValueFilters = __m["src/drishti_pivot.js"].applyValueFilters;
+    var toXlsx = __m["src/drishti_export.js"].toXlsx;
+    const LAYOUTS = Object.freeze(['wells', 'panel', 'terminal']);
+    const DENSITIES = Object.freeze({ comfortable: 36, compact: 28, terminal: 22 });
+    class GridModelBase {
+      setPivotMode(on) {
+        this.pivotMode = !!on;
+        this._pivotCols = null;
+        this.events.emit('changed', { what: 'pivot' });
+        return on ? this.runPivot() : Promise.resolve();
+      }
+      setPivotOptions(extra) { this.pivotExtra = Object.assign({}, this.pivotExtra, extra); return this.pivotMode ? this.runPivot() : Promise.resolve(); }
+      pivotView() {
+        const v = this.wells.toView(this.pivotExtra);
+        Object.keys(this.filterModel).forEach((k) => {
+          const f = this.filterModel[k], c = this.columns.get(k), field = c ? c.field : k;
+          if (f && f.type === 'set' && f.values) { v.filters[field] = { in: f.values.map(String), notIn: [] }; }
+          else if (f && f.type === 'set' && f.excluded) { v.filters[field] = { in: [], notIn: f.excluded.map(String) }; }
+        });
+        return Object.assign(v, this.pivotState.toView(this.answer));
+      }
+      runPivot() {
+        const view = this.pivotView();
+        this._pivotCols = null;
+        if (!view.values.length) { this.answer = null; this.viewport.setRowCount(0); this.events.emit('changed', { what: 'pivot' }); return Promise.resolve(); }
+        if (this.pivotAbort) { this.pivotAbort.abort(); }
+        const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        this.pivotAbort = ctl;
+        const done = (a) => {
+          if (ctl && ctl.signal.aborted) { return; }
+          this.answer = a;
+          this._pivotCols = null;
+          this.viewport.setRowCount(this.rowCount());
+          this.events.emit('changed', { what: 'pivot' });
+          this.live.emit('pivotChanged', { view: view, rows: a ? a.rows.length : 0 });
+        };
+        const fail = (e) => { if (!(ctl && ctl.signal.aborted)) { this.events.emit('pivotError', { error: e }); } };
+        if (this.serverSide || this.o.clientAggregation === false) {
+          if (!this.o.serverPivot) { return Promise.reject(new Error(this.serverSide ? 'a pivot of server-side rows needs serverPivot' : 'clientAggregation is off: a pivot needs serverPivot')); }
+          return this.o.serverPivot(serverRequest(view), ctl && ctl.signal, this.serverSide ? null : this.rowModel.filteredRows()).then((a) => { applyValueFilters(a, view.valueFilters); done(a); }, fail);
+        }
+        const byField = {};
+        this.columns.all().forEach((c) => { byField[c.field] = c; });
+        const rows = this.rowModel.filteredRows();
+        const a = pivotLocal(rows, view, { state: this.pivotState, column: (f) => byField[f] || null, value: (r, f) => (byField[f] ? getValue(r, byField[f]) : r[f]) });
+        done(a);
+        if (a.pending.length && this.o.serverPivot) {
+          const only = Array.from(new Set(a.pending.map((p) => p.measure)));
+          return this.o.serverPivot(serverRequest(view, { only: only }), ctl && ctl.signal, rows).then((s) => {
+            if (this.answer !== a) { return; }
+            mergeAnswer(a, s);
+            this.events.emit('changed', { what: 'pivot' });
+          }, fail);
+        }
+        return Promise.resolve();
+      }
+      showAnswer(answer, o) {
+        o = o || {};
+        if (this.pivotAbort && !o.keepAsking && !o.patched) { this.pivotAbort.abort(); this.pivotAbort = null; }
+        this.pivotMode = true;
+        this.answer = answer;
+        this._pivotCols = null;
+        this.viewport.setRowCount(this.rowCount());
+        if (o.patched) { this.live.emit('serverTotalsUpdated', { pivotCells: Object.keys(answer.cells || {}).length }); }
+        this.events.emit('changed', { what: 'pivot' });
+        if (!o.patched) { this.live.emit('pivotChanged', { view: this.pivotView(), rows: answer ? answer.rows.length : 0 }); }
+      }
+      setOpenState(view) { this.pivotState = new PivotState(view || {}); }
+      togglePivotNode(axis, path, open) { this.pivotState.toggle(axis, path, open); return this.runPivot(); }
+      expandPivotTo(axis, level) { this.pivotState.expandToLevel(axis, level); return this.runPivot(); }
+      dataChanged(notice) {
+        if (this.pivotMode && (this.serverSide || this.o.clientAggregation === false)) { this.runPivot(); return 'pivot'; }
+        if (!this.serverSide) { return 'nothing'; }
+        return this.rowModel.dataChanged(notice);
+      }
+      applyPivotUpdates(pairs) {
+        if (!this.answer) { return false; }
+        return pivotApplyUpdates(this.answer, pairs).applied;
+      }
+      refreshServerMeasures() {
+        const a = this.answer;
+        if (!a || !this.o.serverPivot) { return Promise.resolve(0); }
+        const labels = a.measures.filter((m) => m.server).map((m) => m.label);
+        if (!labels.length) { return Promise.resolve(0); }
+        const view = this.pivotView();
+        return this.o.serverPivot(serverRequest(view, { only: labels }), undefined, this.serverSide ? null : this.rowModel.filteredRows()).then((s) => {
+          if (this.answer !== a) { return 0; }
+          a.pending = [];
+          Object.keys(a.cells).forEach((k) => { const [row, column] = k.split('|'); labels.forEach((l) => a.pending.push({ row: row, column: column, coords: a.cells[k].coords, measure: l })); });
+          const n = mergeAnswer(a, s);
+          this.events.emit('changed', { what: 'pivot' });
+          return n;
+        });
+      }
+      toTable() {
+        const cols = this.shownColumns();
+        const rows = [], levels = [], bold = [];
+        const n = this.serverSide ? Math.min(this.rowCount(), 1048575) : this.rowCount();
+        for (let i = 0; i < n; i++) {
+          const x = this.rowAt(i);
+          if (!x || x.kind === 'loading') { continue; }
+          rows.push(cols.map((c, j) => {
+            const v = this.cellValue(i, j);
+            return x.kind === 'pivot' && c.rowHeader ? ' '.repeat(Math.max(0, (x.entry.depth || 1) - 1)) + v : v;
+          }));
+          levels.push(x.kind === 'pivot' ? Math.max(0, (x.entry.depth || 0) - 1) : x.depth || 0);
+          bold.push(x.kind === 'group' || (x.kind === 'pivot' && (x.entry.kind === 'total' || x.entry.kind === 'grand' || x.entry.kind === 'header')));
+        }
+        return { columns: cols.map((c) => ({ header: c.header, type: c.type, format: c.format, width: c.width })), rows: rows, levels: levels, bold: bold };
+      }
+      exportCsv(o) { return toCsv(this.toTable(), o); }
+      exportXlsx(o) { return toXlsx(this.toTable(), o); }
+      setDensity(d) {
+        if (!DENSITIES[d]) { throw new Error('no density ' + d + ' (' + Object.keys(DENSITIES).join(', ') + ')'); }
+        this.density = d;
+        this.viewport.rowHeight = DENSITIES[d];
+        this.events.emit('changed', { what: 'state' });
+      }
+      setLayout(l) {
+        if (LAYOUTS.indexOf(l) < 0) { throw new Error('no layout ' + l + ' (' + LAYOUTS.join(', ') + ')'); }
+        this.layout = l;
+        this.events.emit('changed', { what: 'state' });
+      }
+      getState() {
+        return { columns: this.columns.getState(), sort: this.sortModel.slice(), filters: JSON.parse(JSON.stringify(this.filterModel)), wells: this.wells.getState(),
+          pivot: this.pivotMode, pivotView: this.pivotMode ? this.pivotView() : null, pivotOptions: Object.assign({}, this.pivotExtra), layout: this.layout, density: this.density };
+      }
+      setState(s) {
+        if (s.columns) { this.columns.setState(s.columns); }
+        if (s.layout) { this.setLayout(s.layout); }
+        if (s.density) { this.setDensity(s.density); }
+        if (s.sort) { this.setSortModel(s.sort); }
+        if (s.filters) { this.filterModel = Object.assign({}, s.filters); this.rowModel.setFilterModel(this.filterModel); }
+        if (s.wells) { this.wells.state = JSON.parse(JSON.stringify(s.wells)); }
+        if (s.pivotOptions) { this.pivotExtra = Object.assign({}, s.pivotOptions); }
+        if (s.pivotView) { this.pivotState = new PivotState(s.pivotView); }
+        return this.setPivotMode(!!s.pivot);
+      }
+    }
+    return { "LAYOUTS": LAYOUTS, "DENSITIES": DENSITIES, "GridModelBase": GridModelBase };
+  })();
+  /* ---- src/drishti_grid-edit.js ---- */
+  __m["src/drishti_grid-edit.js"] = (function () {
+    var parseNumberText = __lib("drishti-core").parseNumberText;
+    const EDITORS = Object.freeze(['text', 'number', 'date', 'select', 'checkbox']);
+    function editorOf(col) {
+      if (col.editor && EDITORS.indexOf(col.editor) >= 0) { return col.editor; }
+      if (col.type === 'boolean') { return 'checkbox'; }
+      if (col.type === 'date') { return 'date'; }
+      if (col.options) { return 'select'; }
+      if (col.type === 'number') { return 'number'; }
+      return 'text';
+    }
+    function opt(o) { return o !== null && typeof o === 'object' ? { value: o.value, label: String(o.label !== undefined ? o.label : o.value) } : { value: o, label: String(o) }; }
+    function parseCellText(col, text, o) {
+      const t = String(text === null || text === undefined ? '' : text).trim(), ed = editorOf(col), L = col.header;
+      if (col.parse) { try { return { value: col.parse(t), error: null }; } catch (e) { return { value: undefined, error: e.message }; } }
+      if (!t) { return { value: null, error: null }; }
+      if (ed === 'number') { const v = parseNumberText(t, o && o.locale); return v === null ? { value: undefined, error: L + ': "' + t + '" is not a number (write 1,250,000, 1.25m or −5k)' } : { value: v, error: null }; }
+      if (ed === 'checkbox') {
+        if (/^(true|yes|y|1|x|✓|☑)$/i.test(t)) { return { value: true, error: null }; }
+        if (/^(false|no|n|0|☐)$/i.test(t)) { return { value: false, error: null }; }
+        return { value: undefined, error: L + ': "' + t + '" is not yes or no' };
+      }
+      if (ed === 'date') {
+        let m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(t), y, mo, d;
+        if (m) { y = +m[1]; mo = +m[2]; d = +m[3]; }
+        else if ((m = /^(\d{1,2})[/.](\d{1,2})[/.](\d{4})$/.exec(t))) { const dmy = !(o && o.locale && /^en-US/.test(o.locale)); y = +m[3]; mo = dmy ? +m[2] : +m[1]; d = dmy ? +m[1] : +m[2]; }
+        else if ((m = /^(\d{1,2})\s+([A-Za-z]{3})[a-z]*\s+(\d{4})$/.exec(t))) { y = +m[3]; mo = 'janfebmaraprmayjunjulaugsepoctnovdec'.indexOf(m[2].toLowerCase()) / 3 + 1; d = +m[1]; }
+        const ok = y && mo >= 1 && mo <= 12 && d >= 1 && d <= new Date(Date.UTC(y, mo, 0)).getUTCDate();
+        return ok ? { value: String(y).padStart(4, '0') + '-' + String(mo).padStart(2, '0') + '-' + String(d).padStart(2, '0'), error: null } : { value: undefined, error: L + ': "' + t + '" is not a date (write 2026-11-06 or 6 Nov 2026)' };
+      }
+      if (ed === 'select') {
+        const opts = (col.options || []).map(opt), hit = opts.find((x) => x.label.toLowerCase() === t.toLowerCase() || String(x.value).toLowerCase() === t.toLowerCase());
+        return hit ? { value: hit.value, error: null } : { value: undefined, error: L + ': "' + t + '" is not one of ' + opts.map((x) => x.label).slice(0, 8).join(', ') + (opts.length > 8 ? ', …' : '') };
+      }
+      return { value: t, error: null };
+    }
+    function validateCell(col, v, row) {
+      const L = col.header, blank = v === null || v === undefined || v === '';
+      if (blank) { return col.required ? L + ' is required' : null; }
+      if (typeof v === 'number') {
+        if (col.min !== undefined && v < col.min) { return L + ' must be at least ' + col.min; }
+        if (col.max !== undefined && v > col.max) { return L + ' must be at most ' + col.max; }
+      }
+      if (typeof v === 'string' && col.maxLength && v.length > col.maxLength) { return L + ' may have at most ' + col.maxLength + ' characters'; }
+      if (col.options && editorOf(col) === 'select' && !(col.options.map(opt).some((x) => x.value === v))) { return L + ' must be one of the options'; }
+      if (col.validate) {
+        const r = col.validate(v, row);
+        if (typeof r === 'string' && r) { return r; }
+        if (r === false) { return L + ' is not valid'; }
+      }
+      return null;
+    }
+    function parseTsv(text) {
+      const s = String(text || '').replace(/\r\n?/g, '\n'), rows = [];
+      let row = [], cell = '', i = 0, quoted = false, start = true;
+      while (i < s.length) {
+        const ch = s[i];
+        if (quoted) {
+          if (ch === '"' && s[i + 1] === '"') { cell += '"'; i += 2; continue; }
+          if (ch === '"') { quoted = false; i++; continue; }
+          cell += ch; i++; continue;
+        }
+        if (ch === '"' && start) { quoted = true; start = false; i++; continue; }
+        if (ch === '\t') { row.push(cell); cell = ''; start = true; i++; continue; }
+        if (ch === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; start = true; i++; continue; }
+        cell += ch; start = false; i++;
+      }
+      if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+      return rows;
+    }
+    function plain(row) { return row && typeof row.toObject === 'function' ? row.toObject() : Object.assign({}, row); }
+    class GridEditing {
+      constructor(grid, o) {
+        this.grid = grid;
+        this.o = Object.assign({ undoLimit: 100 }, o);
+        this.undoStack = [];
+        this.redoStack = [];
+        this.seq = 0;
+        this.marks = new Map();
+        this.proposals = new Map();
+      }
+      canEdit(r, c) {
+        const g = this.grid, x = g.rowAt(r), col = g.shownColumns()[c];
+        if (!x || x.kind !== 'leaf' || !col || g.pivotMode || g.serverSide || col.valueGetter || col.rowHeader) { return false; }
+        if (this.marks.get(x.id + '\u001f' + col.id) === 'proposed') { return false; }
+        return typeof col.editable === 'function' ? !!col.editable(x.row) : !!col.editable;
+      }
+      markOf(rowId, colId) { return this.marks.get(rowId + '\u001f' + colId) || null; }
+      plan(cells) {
+        const g = this.grid, edits = [], problems = [], next = new Map();
+        cells.forEach((x) => {
+          if (!this.canEdit(x.r, x.c)) { problems.push({ r: x.r, c: x.c, message: 'This cell cannot be edited' }); return; }
+          const row = g.rowAt(x.r), col = g.shownColumns()[x.c];
+          const base = next.get(row.id) || plain(row.row);
+          base[col.field] = x.value;
+          const why = validateCell(col, x.value, base);
+          if (why) { problems.push({ r: x.r, c: x.c, message: why }); return; }
+          next.set(row.id, base);
+          const old = row.row[col.field];
+          if (old === x.value || (old === undefined && x.value === null)) { return; }
+          edits.push({ rowId: row.id, colId: col.id, field: col.field, old: old === undefined ? null : old, value: x.value });
+        });
+        return { edits: edits, problems: problems };
+      }
+      commit(cells, source) {
+        const p = this.plan(cells);
+        if (p.problems.length) { const e = new Error(p.problems[0].message); e.problems = p.problems; return Promise.reject(e); }
+        return this.apply(p.edits, source || 'edit');
+      }
+      apply(edits, source) {
+        const g = this.grid;
+        if (!edits.length) { return Promise.resolve({ id: 0, source: source, edits: [], status: 'applied', proposalId: null }); }
+        const tx = { id: ++this.seq, source: source, edits: edits, status: 'pending', proposalId: null };
+        this.write(edits, 'value');
+        edits.forEach((e) => this.marks.set(e.rowId + '\u001f' + e.colId, this.o.fourEyes ? 'proposed' : 'edited'));
+        if (source !== 'undo' && source !== 'redo') { this.undoStack.push(tx); if (this.undoStack.length > this.o.undoLimit) { this.undoStack.shift(); } this.redoStack = []; }
+        edits.forEach((e) => g.live.emit('cellValueChanged', { rowId: e.rowId, colId: e.colId, old: e.old, value: e.value, source: source, transaction: tx.id }));
+        const settle = (res) => {
+          res = res || {};
+          if (res.status === 'refused') { return this.refuse(tx, res.message || 'The server refused the change'); }
+          if (res.status === 'proposed' || this.o.fourEyes) {
+            tx.status = 'proposed';
+            tx.proposalId = res.proposalId || ('P-' + tx.id);
+            this.proposals.set(tx.proposalId, tx);
+            edits.forEach((e) => this.marks.set(e.rowId + '\u001f' + e.colId, 'proposed'));
+          } else { tx.status = 'applied'; }
+          g.live.emit('editTransaction', this.describe(tx));
+          g.events.emit('changed', { what: 'edit' });
+          return tx;
+        };
+        if (!this.o.writeBack) { return Promise.resolve(settle({ status: this.o.fourEyes ? 'proposed' : 'applied' })); }
+        return Promise.resolve().then(() => this.o.writeBack(this.describe(tx))).then(settle, (err) => this.refuse(tx, err && err.message ? err.message : String(err)));
+      }
+      refuse(tx, message) {
+        this.write(tx.edits, 'old');
+        tx.edits.forEach((e) => this.marks.delete(e.rowId + '\u001f' + e.colId));
+        this.undoStack = this.undoStack.filter((t) => t !== tx);
+        tx.status = 'refused';
+        tx.message = message;
+        this.grid.live.emit('editTransaction', this.describe(tx));
+        this.grid.events.emit('changed', { what: 'edit' });
+        const e = new Error(message);
+        e.transaction = tx;
+        throw e;
+      }
+      write(edits, which) {
+        const g = this.grid, rows = new Map();
+        edits.forEach((e) => {
+          const cur = rows.get(e.rowId) || plain(g.rowModel.getRowById(e.rowId));
+          cur[e.field] = e[which];
+          rows.set(e.rowId, cur);
+        });
+        g.live.apply({ update: Array.from(rows.values()) });
+      }
+      describe(tx) { return { id: tx.id, source: tx.source, status: tx.status, proposalId: tx.proposalId, message: tx.message || null, edits: tx.edits.map((e) => Object.assign({}, e)) }; }
+      undo() {
+        const tx = this.undoStack.pop();
+        if (!tx) { return Promise.resolve(null); }
+        this.redoStack.push(tx);
+        const back = tx.edits.slice().reverse().map((e) => Object.assign({}, e, { old: e.value, value: e.old }));
+        return this.apply(back, 'undo').then((t) => { back.forEach((e) => { if (this.marks.get(e.rowId + '\u001f' + e.colId) === 'edited') { this.marks.delete(e.rowId + '\u001f' + e.colId); } }); this.grid.live.emit('editUndone', { transaction: tx.id }); return t; });
+      }
+      redo() {
+        const tx = this.redoStack.pop();
+        if (!tx) { return Promise.resolve(null); }
+        this.undoStack.push(tx);
+        return this.apply(tx.edits.map((e) => Object.assign({}, e)), 'redo').then((t) => { this.grid.live.emit('editRedone', { transaction: tx.id }); return t; });
+      }
+      history() { return { undo: this.undoStack.length, redo: this.redoStack.length }; }
+      resolveProposal(proposalId, decision) {
+        const tx = this.proposals.get(proposalId);
+        if (!tx) { return false; }
+        this.proposals.delete(proposalId);
+        if (decision === 'rejected') { this.write(tx.edits, 'old'); tx.edits.forEach((e) => this.marks.delete(e.rowId + '\u001f' + e.colId)); this.undoStack = this.undoStack.filter((t) => t !== tx); }
+        else { tx.edits.forEach((e) => this.marks.set(e.rowId + '\u001f' + e.colId, 'edited')); }
+        tx.status = decision === 'rejected' ? 'rejected' : 'applied';
+        this.grid.live.emit('proposalResolved', { proposalId: proposalId, decision: decision, transaction: this.describe(tx) });
+        this.grid.events.emit('changed', { what: 'edit' });
+        return true;
+      }
+      paste(text, at) {
+        const g = this.grid, grid = parseTsv(text), R = g.rowCount(), C = g.shownColumns().length, cells = [], problems = [];
+        if (!grid.length) { return Promise.resolve({ transaction: null, pasted: 0, skipped: 0, problems: [] }); }
+        const fill = grid.length === 1 && grid[0].length === 1 && at.r2 !== undefined && (at.r2 > at.r || at.c2 > at.c);
+        const rows = fill ? at.r2 - at.r + 1 : grid.length, cols = fill ? at.c2 - at.c + 1 : Math.max.apply(null, grid.map((x) => x.length));
+        let skipped = 0;
+        for (let i = 0; i < rows && at.r + i < R; i++) {
+          for (let j = 0; j < cols && at.c + j < C; j++) {
+            const text1 = fill ? grid[0][0] : (grid[i] || [])[j];
+            if (text1 === undefined) { continue; }
+            const r = at.r + i, c = at.c + j;
+            if (!this.canEdit(r, c)) { skipped++; continue; }
+            const p = parseCellText(g.shownColumns()[c], text1, { locale: this.o.locale });
+            if (p.error) { problems.push({ r: r, c: c, message: p.error }); continue; }
+            cells.push({ r: r, c: c, value: p.value });
+          }
+        }
+        const plan = this.plan(cells);
+        plan.problems.forEach((x) => problems.push(x));
+        return this.apply(plan.edits, 'paste').then((tx) => ({ transaction: tx.edits.length ? tx : null, pasted: plan.edits.length, skipped: skipped, problems: problems }));
+      }
+      clear(range) {
+        const cells = [];
+        for (let r = range.r1; r <= range.r2; r++) { for (let c = range.c1; c <= range.c2; c++) { if (this.canEdit(r, c)) { cells.push({ r: r, c: c, value: null }); } } }
+        const plan = this.plan(cells);
+        return this.apply(plan.edits, 'clear').then((tx) => ({ transaction: tx.edits.length ? tx : null, problems: plan.problems }));
+      }
+    }
+    return { "EDITORS": EDITORS, "editorOf": editorOf, "parseCellText": parseCellText, "validateCell": validateCell, "parseTsv": parseTsv, "GridEditing": GridEditing };
+  })();
+  /* ---- src/drishti_grid-actions.js ---- */
+  __m["src/drishti_grid-actions.js"] = (function () {
+    var memberText = __m["src/drishti_pivot.js"].memberText;
+    var getValue = __m["src/drishti_columns.js"].getValue;
+    var VALUE_FUNCS = __m["src/drishti_wells.js"].VALUE_FUNCS;
+    var aggFunc = __m["src/drishti_aggregate.js"].aggFunc;
+    var XLSX_TYPE = __m["src/drishti_export.js"].XLSX_TYPE;
+    var columnMenuItems = __m["src/drishti_grid-ui.js"].columnMenuItems, cellMenuItems = __m["src/drishti_grid-ui.js"].cellMenuItems, FUNCTION_KEYS = __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, parseCondition = __m["src/drishti_grid-ui.js"].parseCondition, pivotMeasures = __m["src/drishti_grid-ui.js"].pivotMeasures;
+    var LAYOUTS = __m["src/drishti_grid-model-base.js"].LAYOUTS, DENSITIES = __m["src/drishti_grid-model-base.js"].DENSITIES;
+    var openDialog = __lib("drishti-core").openDialog, h = __lib("drishti-core").h;
+    var editorOf = __m["src/drishti_grid-edit.js"].editorOf;
+    function onKey(v, e) {
+      const m = v.model, k = e.key, mod = e.ctrlKey || e.metaKey;
+      if (e.target !== v.body.scroller && e.target.closest && e.target.closest('.dg-editor')) { return; }
+      if (editKey(v, e)) { return; }
+      if (mod && e.shiftKey && (k === 'c' || k === 'C')) { e.preventDefault(); runAction(v, 'copy-headers'); return; }
+      if (k === 'F2') { e.preventDefault(); v.explainFocused(); return; }
+      if ((e.shiftKey && k === 'F10') || k === 'ContextMenu') {
+        e.preventDefault();
+        const f = m.navigator.focus;
+        if (!f) { return; }
+        const cell = v.doc.getElementById(v.uid + '-r' + f.row + '-c' + f.col), r = cell ? cell.getBoundingClientRect() : { left: 40, bottom: 40 };
+        v.openCellMenu(f.row, f.col, { x: r.left + 8, y: r.bottom });
+        return;
+      }
+      const fk = m.layout === 'terminal' ? FUNCTION_KEYS.find((x) => x.key === k && x.key !== 'F2') : null;
+      if (fk) { e.preventDefault(); runAction(v, fk.action); return; }
+      if (k === 'Escape' && v.exOpen) { v.closeExplain(); }
+      const res = m.key(e);
+      if (!res.handled) { return; }
+      e.preventDefault();
+      const f = m.navigator.focus;
+      switch (res.action) {
+        case 'copy': copied(v, res.copy, false); break;
+        case 'explain': v.explainFocused(); break;
+        case 'open': if (f) { m.toggleRow(f.row); v.announceRow(f.row); } break;
+        case 'expand': case 'collapse': if (f) { v.announceRow(f.row); } break;
+        case 'expand-all': runAction(v, 'expand-all'); break;
+        case 'collapse-all': runAction(v, 'collapse-all'); break;
+        default: break;
+      }
+      v.afterFocus(true);
+    }
+    function editKey(v, e) {
+      const m = v.model, k = e.key, mod = e.ctrlKey || e.metaKey, f = m.navigator.focus;
+      if (mod && !e.altKey && (k === 'z' || k === 'Z')) { e.preventDefault(); if (e.shiftKey) { v.redo(); } else { v.undo(); } return true; }
+      if (mod && !e.altKey && (k === 'y' || k === 'Y')) { e.preventDefault(); v.redo(); return true; }
+      if (!f || mod || e.altKey) { return false; }
+      if ((k === 'Delete' || k === 'Backspace') && anyEditable(v)) { e.preventDefault(); runAction(v, 'clear-cells'); return true; }
+      if (!m.editing.canEdit(f.row, f.col)) { return false; }
+      const ed = editorOf(m.shownColumns()[f.col]);
+      if ((k === 'Enter' && !e.shiftKey) || k === 'F2' || (k === ' ' && ed === 'checkbox')) { e.preventDefault(); v.startEditing(f.row, f.col); return true; }
+      if (k.length === 1 && k !== ' ' && ed !== 'checkbox') { e.preventDefault(); v.startEditing(f.row, f.col, { initial: k }); return true; }
+      return false;
+    }
+    function anyEditable(v) { return !v.model.pivotMode && v.model.shownColumns().some((c) => c.editable); }
+    function copied(v, text, headers) {
+      v.lastCopy = text;
+      const win = v.doc.defaultView;
+      try { if (win.navigator.clipboard) { win.navigator.clipboard.writeText(text).catch(() => {}); } } catch (err) { /* the text stays in lastCopy */ }
+      const lines = text ? text.split('\n').length : 0;
+      v.say('Copied ' + lines + (lines === 1 ? ' line' : ' lines') + (headers ? ' with headers' : '') + ' as tab-separated text');
+      v.emitView('copied', { text: text, headers: !!headers });
+    }
+    function download(v, name, data, type) {
+      const win = v.doc.defaultView, blob = new win.Blob([data], { type: type });
+      v.lastExport = { name: name, type: type, size: blob.size };
+      if (v.o.download) { v.o.download(name, blob); return; }
+      const a = h(v.doc, 'a', { attrs: { href: win.URL.createObjectURL(blob), download: name } });
+      v.doc.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+    function openColumnMenu(v, c, anchor) {
+      const m = v.model, col = m.shownColumns()[c];
+      if (!col) { return; }
+      const piv = m.pivotMode, vi = piv ? valueIndex(v, col.measure) : -1;
+      const aggs = piv ? (vi >= 0 ? v.activeWells().funcs() : null) : v.grouped() && col.type === 'number' ? VALUE_FUNCS.map((f) => ({ name: f, label: aggFunc(f).label })) : null;
+      const items = columnMenuItems({ header: col.headerPath ? col.headerPath.filter(Boolean).join(' · ') : col.header, pivot: piv, sort: v.sortOf({ col: col }),
+        numeric: col.type === 'number', additive: col.additive, aggs: aggs, aggFunc: piv ? (vi >= 0 ? v.activeWells().state.values[vi].aggFunc : null) : col.aggFunc,
+        pinned: col.pinned, pinTotals: v.ui.pinTotals, explain: !!v.o.explain, rowHeader: !!col.rowHeader });
+      if (piv && col.additive === false) { items.forEach((it) => { if (it.id === 'agg:server') { it.label = col.measure; } }); }
+      v.menu.open(items, { anchor: anchor, label: 'Column menu: ' + col.header, theme: v.host, run: (id, val) => columnAction(v, c, id, val, anchor) });
+      v.emitView('menuOpened', { menu: 'column', column: col.id });
+    }
+    function valueIndex(v, label) { return v.activeWells().toView().values.map((x) => x.as).indexOf(label); }
+    function columnAction(v, c, id, val, anchor) {
+      const m = v.model, col = m.shownColumns()[c], piv = m.pivotMode;
+      v.emitView('menuAction', { menu: 'column', action: id, column: col.id });
+      const dims = piv && m.answer ? m.answer.rowDimensions : [];
+      if (id === 'sort-desc' || id === 'sort-asc' || id === 'sort-clear') {
+        if (!piv) { m.setSortModel(id === 'sort-clear' ? [] : [{ colId: col.id, sort: id === 'sort-asc' ? 'asc' : 'desc' }]); return; }
+        const sort = {};
+        if (id !== 'sort-clear') { dims.forEach((d) => { sort[d] = { by: col.rowHeader ? 'label' : col.measure, desc: id === 'sort-desc' }; }); }
+        v.setPivotOptions({ sort: sort }, id === 'sort-clear' ? 'Order cleared' : 'Rows ordered by ' + (col.rowHeader ? 'name' : col.measure));
+        return;
+      }
+      if (id === 'top-5' || id === 'top-10') {
+        const n = id === 'top-5' ? 5 : 10;
+        if (piv) { const top = {}; if (dims.length) { top[dims[dims.length - 1]] = { n: n, by: col.measure }; } v.setPivotOptions({ top: top }, 'Top ' + n + ' by ' + col.measure); return; }
+        const xs = m.rowModel.filteredRows ? m.rowModel.filteredRows().map((r) => getValue(r, col)).filter((x) => typeof x === 'number').sort((a, b) => b - a) : [];
+        if (xs.length) {
+          m.setSortModel([{ colId: col.id, sort: 'desc' }]);
+          m.setFilterModel(Object.assign({}, m.filterModel, { [col.id]: { type: 'number', op: 'gte', value: xs[Math.min(n, xs.length) - 1] } }));
+          v.say('Top ' + n + ' by ' + col.header);
+        }
+        return;
+      }
+      if (id === 'value-filter') {
+        if (piv) { v.wells.valueFilterMenu(-1, anchor); return; }
+        v.menu.open([{ heading: 'Filter ' + col.header }, { id: 'cond', label: col.header, input: { placeholder: '> 400k' } }], { anchor: anchor, label: 'Value filter', theme: v.host, run: (x, text) => {
+          const cnd = parseCondition(text);
+          if (!cnd) { v.say('Write a condition such as > 400k or < 0'); return; }
+          m.setFilterModel(Object.assign({}, m.filterModel, { [col.id]: { type: 'number', op: cnd.op, value: cnd.value } }));
+        } });
+        return;
+      }
+      if (id === 'member-filter') { memberMenu(v, col, anchor); return; }
+      if (id === 'clear-filter') { if (piv) { v.setPivotOptions({ valueFilters: [], top: {} }, 'Filters cleared'); } else { m.setFilterModel({}); m.setQuickFilter(''); v.say('Filters cleared'); } return; }
+      if (id.indexOf('agg:') === 0) {
+        const f = id.slice(4);
+        if (piv) { const r = v.activeWells().setAggregation(valueIndex(v, col.measure), f); if (!r.ok) { v.say(r.why); } else { v.wellsChanged(col.measure + ': ' + v.activeWells().funcLabel(f)); } return; }
+        col.aggFunc = f;
+        m.setRowGroups(m.rowModel.groupBy ? m.rowModel.groupBy.slice() : []);
+        return;
+      }
+      if (id === 'hide') { if (piv) { v.ui.hidden.add(col.id); v.refresh(); } else { m.columns.setVisible(col.id, false); } v.say('Hidden: Show all columns brings it back'); return; }
+      if (id === 'show-all') { if (piv) { v.ui.hidden.clear(); v.refresh(); } else { m.columns.all().forEach((x) => { if (x.hidden) { m.columns.setVisible(x.id, true); } }); } return; }
+      if (id === 'autosize') { v.autosize(c); return; }
+      if (id === 'autosize-all') { v.autosize(-1); return; }
+      if (id === 'pin-left' || id === 'pin-right' || id === 'unpin') { m.columns.pin(col.id, id === 'unpin' ? null : id === 'pin-left' ? 'left' : 'right'); return; }
+      if (id === 'pin-totals') { runAction(v, 'pin-totals'); return; }
+      if (id === 'explain-column') {
+        let r = 0;
+        if (piv) { const rows = m.answer ? m.answer.rows : []; r = rows.findIndex((x) => x.kind === 'grand'); if (r < 0) { r = rows.length - 1; } }
+        else if (m.navigator.focus) { r = m.navigator.focus.row; }
+        v.focusCell(r, c);
+        v.explain(r, c);
+      }
+    }
+    function memberMenu(v, col, anchor) {
+      const m = v.model;
+      const items = () => {
+        const f = m.filterModel[col.id], ex = new Set(f && f.excluded ? f.excluded.map(String) : []);
+        return [{ heading: 'Show ' + col.header }].concat(v.membersOf(col.id).slice(0, 200).map((x) => ({ id: 'member:' + x.text, label: x.text + (x.count !== undefined ? '  (' + x.count + ')' : ''), checked: !ex.has(x.text), keep: true })),
+          [{ sep: true }, { id: 'all', label: 'Select all' }]);
+      };
+      v.menu.open(items, { anchor: anchor, label: 'Filter ' + col.header, theme: v.host, run: (id) => {
+        const fm = Object.assign({}, m.filterModel);
+        if (id === 'all') { delete fm[col.id]; m.setFilterModel(fm); return; }
+        const t = id.slice(7), f = fm[col.id], ex = new Set(f && f.excluded ? f.excluded.map(String) : []);
+        if (ex.has(t)) { ex.delete(t); } else { ex.add(t); }
+        if (ex.size) { fm[col.id] = { type: 'set', excluded: Array.from(ex) }; } else { delete fm[col.id]; }
+        m.setFilterModel(fm);
+      } });
+    }
+    function openCellMenu(v, r, c, at) {
+      const m = v.model, col = m.shownColumns()[c], x = m.rowAt(r);
+      if (!col || !x) { return; }
+      let cells = 0;
+      m.selection.ranges.forEach((g) => { cells += (g.r2 - g.r1 + 1) * (g.c2 - g.c1 + 1); });
+      const items = cellMenuItems({ explain: !!v.o.explain, pivot: m.pivotMode, cells: cells, drill: drillable(v, x), groupBy: groupField(v, col), pinned: col.pinned, pinTotals: v.ui.pinTotals });
+      if (anyEditable(v)) {
+        const hist = m.editing.history(), can = m.editing.canEdit(r, c);
+        items.push({ sep: true }, { id: 'edit', label: 'Edit the cell', key: 'F2', icon: '✎', disabled: !can, why: can ? null : 'this cell cannot be edited' },
+          { id: 'undo', label: 'Undo the last edit', key: 'Ctrl+Z', disabled: !hist.undo, why: hist.undo ? null : 'nothing to undo' },
+          { id: 'redo', label: 'Redo', key: 'Ctrl+Y', disabled: !hist.redo, why: hist.redo ? null : 'nothing to redo' },
+          { id: 'clear-cells', label: 'Clear ' + (cells > 1 ? 'the ' + cells + ' cells' : 'the cell'), key: 'Delete' });
+      }
+      v.menu.open(items, { x: at.x, y: at.y, label: 'Cell menu', theme: v.host, run: (id) => { v.emitView('menuAction', { menu: 'cell', action: id, row: r, column: col.id }); runAction(v, id, { row: r, col: c }); } });
+      v.emitView('menuOpened', { menu: 'cell', row: r, column: col.id });
+    }
+    function drillable(v, x) {
+      if (x.kind === 'pivot') { return x.entry.kind !== 'header'; }
+      return x.kind === 'group' || (!!v.o.drillThrough && x.kind === 'leaf');
+    }
+    function groupField(v, col) {
+      const m = v.model;
+      if (m.pivotMode) { const cols = v.activeWells().state.columns; return cols.length ? v.headerOf(cols[cols.length - 1]) : null; }
+      const groups = m.rowModel.groupBy || m.rowModel.rowGroupCols || [];
+      return col.enableRowGroup && groups.indexOf(col.id) < 0 ? col.header : null;
+    }
+    function localDrill(v, ctx) {
+      const m = v.model;
+      if (!m.rowModel.filteredRows) { return []; }
+      const byField = {};
+      m.columns.all().forEach((c) => { byField[c.field] = c; });
+      let want = {};
+      if (ctx.kind === 'pivot') { want = ctx.coords || {}; }
+      else if (ctx.kind === 'group') { (m.rowModel.groupBy || []).slice(0, (ctx.path || []).length).forEach((id, i) => { const c = m.columns.get(id); want[c.field] = memberText(ctx.path[i]); }); }
+      else if (ctx.kind === 'leaf') { return [ctx.data]; }
+      const keys = Object.keys(want).filter((k) => want[k] !== '*others*');
+      return m.rowModel.filteredRows().filter((row) => keys.every((k) => memberText(byField[k] ? getValue(row, byField[k]) : row[k]) === want[k]));
+    }
+    function drill(v, at) {
+      const m = v.model, f = at || m.navigator.focus;
+      if (!f) { return Promise.resolve(null); }
+      const ctx = m.cellContext(f.row, f.col);
+      if (!ctx) { return Promise.resolve(null); }
+      return Promise.resolve(v.o.drillThrough ? v.o.drillThrough(ctx) : localDrill(v, ctx)).then((rows) => {
+        rows = rows || [];
+        v.emitView('drillThrough', { context: ctx, rows: rows.length });
+        const doc = v.doc, place = h(doc, 'div', { cls: 'dg-dialog-grid' });
+        const scope = ctx.coords ? Object.keys(ctx.coords).map((k) => k + ' = ' + ctx.coords[k]).join(', ') : ctx.path ? ctx.path.join(' › ') : ctx.header;
+        const dlg = h(doc, 'dialog', { cls: 'dg-dialog', attrs: { 'aria-label': 'Rows behind ' + scope } }, [
+          h(doc, 'div', { cls: 'dg-dialog-head' }, [h(doc, 'b', { text: rows.length + (rows.length === 1 ? ' row' : ' rows') }), ' behind ' + (scope || 'the cell'),
+            h(doc, 'button', { cls: 'dg-btn dg-dialog-close', text: 'Close', attrs: { type: 'button' }, on: { click: () => dlg.close() } })]), place]);
+        doc.body.appendChild(dlg);
+        openDialog(dlg, { focus: '.dg-dialog-close' });
+        const inner = new v.constructor(place, { columns: v.o.columns, rows: rows, layout: 'wells', density: m.density, title: 'Rows', checkboxes: false, getRowId: v.o.getRowId });
+        dlg.addEventListener('close', () => { inner.destroy(); dlg.remove(); });
+        v.lastDrill = { rows: rows.length, dialog: dlg };
+        return dlg;
+      });
+    }
+    function runAction(v, id, at) {
+      const m = v.model, f = at || m.navigator.focus;
+      const col = f ? m.shownColumns()[f.col] : null;
+      switch (id) {
+        case 'explain': return f ? v.explain(f.row, f.col) : v.say('Select a figure first');
+        case 'copy': case 'copy-headers': return copied(v, m.copy({ headers: id === 'copy-headers' }), id === 'copy-headers');
+        case 'export-csv': { const t = m.exportCsv(); download(v, (v.o.fileName || 'grid') + '.csv', t, 'text/csv'); v.emitView('exported', { format: 'csv', size: t.length }); return v.say('CSV of the grid as shown'); }
+        case 'export-xlsx': { const b = m.exportXlsx({ sheetName: v.o.title || 'Grid' }); download(v, (v.o.fileName || 'grid') + '.xlsx', b, XLSX_TYPE); v.emitView('exported', { format: 'xlsx', size: b.length }); return v.say('Excel workbook of the grid as shown'); }
+        case 'chart': {
+          const ranges = m.selection.ranges.slice(), cols = m.shownColumns(), table = { columns: [], rows: [] };
+          if (ranges.length) {
+            const g = ranges[0];
+            for (let c = g.c1; c <= g.c2; c++) { table.columns.push(cols[c].header); }
+            for (let r = g.r1; r <= g.r2; r++) { const line = [m.cellText(r, 0)]; for (let c = g.c1; c <= g.c2; c++) { line.push(m.cellValue(r, c)); } table.rows.push(line); }
+          }
+          const detail = { ranges: ranges, table: table };
+          v.emitView('chartRequested', detail);
+          if (v.o.chart) { v.o.chart(detail); }
+          return v.say(ranges.length ? 'Chart of ' + table.rows.length + ' rows × ' + table.columns.length + ' columns asked' : 'Select a range to chart');
+        }
+        case 'drill': return drill(v, at);
+        case 'group': {
+          if (m.pivotMode) { const w = v.activeWells(), cs = w.state.columns; if (cs.length) { const d = cs[cs.length - 1]; w.drop(d, 'rows'); v.wellsChanged('Rows grouped by ' + v.headerOf(d)); } return null; }
+          if (col && col.enableRowGroup) { const g = (m.rowModel.groupBy || []).concat([col.id]); m.setRowGroups(g); v.say('Rows grouped by ' + col.header); }
+          return null;
+        }
+        case 'pin-totals': v.ui.pinTotals = !v.ui.pinTotals; v.refresh(); return v.say((v.ui.pinTotals ? 'Totals pinned' : 'Totals unpinned'));
+        case 'pin-left': case 'unpin': if (col && !m.pivotMode) { m.columns.pin(col.id, id === 'unpin' ? null : 'left'); } return null;
+        case 'expand-all': case 'collapse-all': {
+          const open = id === 'expand-all';
+          if (m.pivotMode) { m.pivotState.expandToLevel('rows', open ? 99 : 1); m.pivotState.expandToLevel('columns', open ? 99 : 1); m.runPivot(); }
+          else if (m.rowModel.expandToLevel) { m.rowModel.expandToLevel(open ? 99 : 0); }
+          return v.say(open ? 'Everything expanded' : 'Everything collapsed');
+        }
+        case 'toggle-pivot': {
+          const w = m.wells;
+          if (!m.pivotMode && !w.state.values.length && !w.state.rows.length) {
+            const all = m.columns.all(), dim = all.find((c) => c.enableRowGroup), val = all.find((c) => c.enableValue);
+            if (dim) { w.state.rows.push(dim.id); }
+            if (val) { w.state.values.push({ colId: val.id, aggFunc: val.aggFunc || 'sum' }); }
+          }
+          return v.setPivotMode(!m.pivotMode);
+        }
+        case 'save-view': { const st = v.getState(); v.emitView('viewSaved', { state: st }); return v.say('View saved'); }
+        case 'toggle-fields': v.ui.fieldsOpen = !v.ui.fieldsOpen; return v.renderChrome();
+        case 'edit': return f ? v.startEditing(f.row, f.col) : null;
+        case 'undo': return v.undo();
+        case 'redo': return v.redo();
+        case 'clear-cells': {
+          const g = m.selection.ranges[m.selection.ranges.length - 1];
+          const range = g ? { r1: Math.min(g.r1, g.r2), c1: Math.min(g.c1, g.c2), r2: Math.max(g.r1, g.r2), c2: Math.max(g.c1, g.c2) } : f ? { r1: f.row, c1: f.col, r2: f.row, c2: f.col } : null;
+          if (!range) { return null; }
+          return m.editing.clear(range).then((res) => { v.say(res.transaction ? 'Cleared ' + res.transaction.edits.length + (res.transaction.edits.length === 1 ? ' cell' : ' cells') : res.problems.length ? 'Not cleared: ' + res.problems[0].message : 'Nothing to clear'); return res; }, (e2) => v.say('Not cleared: ' + e2.message));
+        }
+        default: throw new Error('no grid action ' + id);
+      }
+    }
+    function toolbarAction(v, act, btn) {
+      const m = v.model;
+      if (act === 'menu-format') {
+        const items = () => {
+          const out = [{ heading: 'Conditional formatting' }];
+          targets(v).forEach((t) => {
+            const has = (type) => v.formats.some((r) => r.type === type && (r.column === t.column || (t.measure && r.measure === t.measure)));
+            out.push({ id: 'cf:colourScale:' + t.key, label: 'Colour scale on ' + t.label, checked: has('colourScale'), keep: true }, { id: 'cf:dataBar:' + t.key, label: 'Data bars on ' + t.label, checked: has('dataBar'), keep: true });
+          });
+          out.push({ sep: true }, { id: 'cf-clear', label: 'Clear all formatting' });
+          return out;
+        };
+        v.menu.open(items, { anchor: btn, label: 'Formatting', theme: v.host, run: (id) => {
+          if (id === 'cf-clear') { v.setConditionalFormats([]); return; }
+          const [, type, key] = id.split(':'), t = targets(v).find((x) => x.key === key);
+          const match = (r) => r.type === type && (r.column === t.column || (t.measure && r.measure === t.measure));
+          v.setConditionalFormats(v.formats.some(match) ? v.formats.filter((r) => !match(r)) : v.formats.concat([Object.assign({ type: type }, t.measure ? { measure: t.measure } : { column: t.column })]));
+        } });
+        return;
+      }
+      if (act === 'menu-export') {
+        v.menu.open([{ id: 'export-csv', label: 'CSV of the grid as shown', icon: '⤓' }, { id: 'export-xlsx', label: 'Excel: values and outline', key: 'F8' },
+          { sep: true }, { id: 'copy-headers', label: 'Copy the selection with headers', key: 'Ctrl+Shift+C' }, { id: 'save-view', label: 'Save the view', key: 'F10' }],
+        { anchor: btn, label: 'Export', theme: v.host, run: (id) => runAction(v, id) });
+        return;
+      }
+      if (act === 'menu-view') {
+        const items = [{ heading: 'Layout' }].concat(LAYOUTS.map((l) => ({ id: 'layout:' + l, label: { wells: 'Ribbon wells', panel: 'Tool panel', terminal: 'Terminal' }[l], checked: m.layout === l })),
+          [{ heading: 'Density' }], Object.keys(DENSITIES).map((d) => ({ id: 'density:' + d, label: d.charAt(0).toUpperCase() + d.slice(1), checked: m.density === d })),
+          [{ sep: true }, { id: 'show-all', label: 'Show all columns' }, { id: 'autosize-all', label: 'Autosize all columns' }]);
+        v.menu.open(items, { anchor: btn, label: 'View', theme: v.host, run: (id) => {
+          if (id.indexOf('layout:') === 0) { v.setLayout(id.slice(7)); }
+          else if (id.indexOf('density:') === 0) { v.setDensity(id.slice(8)); }
+          else if (id === 'autosize-all') { v.autosize(-1); }
+          else if (id === 'show-all') { v.ui.hidden.clear(); m.columns.all().forEach((x) => { if (x.hidden) { m.columns.setVisible(x.id, true); } }); v.refresh(); }
+        } });
+        return;
+      }
+      runAction(v, act);
+    }
+    function targets(v) {
+      const m = v.model;
+      if (m.pivotMode) { return pivotMeasures(m.shownColumns()).map((x, i) => ({ key: 'm' + i, label: x, measure: x })); }
+      return m.columns.visible().filter((c) => c.type === 'number').map((c) => ({ key: c.id, label: c.header, column: c.id }));
+    }
+    return { "onKey": onKey, "openColumnMenu": openColumnMenu, "openCellMenu": openCellMenu, "localDrill": localDrill, "runAction": runAction, "toolbarAction": toolbarAction };
+  })();
+  /* ---- src/drishti_grid-base.js ---- */
+  __m["src/drishti_grid-base.js"] = (function () {
+    var WellsModel = __m["src/drishti_wells.js"].WellsModel;
+    var formatValue = __m["src/drishti_columns.js"].formatValue;
+    var phoneColumns = __m["src/drishti_grid-ui.js"].phoneColumns, pivotMeasures = __m["src/drishti_grid-ui.js"].pivotMeasures, figureRange = __m["src/drishti_grid-ui.js"].figureRange;
+    class GridBase {
+      displayColumns() {
+        if (this._disp) { return this._disp; }
+        const m = this.model, piv = m.pivotMode, ui = this.ui;
+        let list = m.shownColumns().map((col, i) => ({ col: col, i: i, width: (piv ? ui.widths[col.id] : null) || col.width || 120,
+          pin: piv ? (col.rowHeader ? 'left' : col.kind === 'grand' && ui.pinTotals ? 'right' : null) : col.pinned || null }));
+        if (piv) {
+          const others = list.some((d) => !d.col.rowHeader && d.col.kind !== 'grand');
+          list = list.filter((d) => !ui.hidden.has(d.col.id) && (ui.grandColumn || !others || d.col.kind !== 'grand'));
+        }
+        if (this.phone) {
+          list = phoneColumns(list, piv, ui.phoneMeasure);
+          const room = Math.max(160, (this.host.clientWidth || 360) * 0.5);
+          list = list.map((d) => (d.pin === 'left' ? Object.assign({}, d, { width: Math.min(d.width, room) }) : d));
+        }
+        const out = { all: [], left: [], center: [], right: [], byIndex: {}, leftOffset: {}, rightOffset: {} };
+        list.forEach((d) => { d.pane = d.pin === 'left' ? 'left' : d.pin === 'right' ? 'right' : 'center'; out[d.pane].push(d); out.byIndex[d.i] = d; });
+        out.all = out.left.concat(out.center, out.right);
+        let x = 0;
+        out.left.forEach((d) => { out.leftOffset[d.i] = x; x += d.width; });
+        out.leftW = x;
+        x = 0;
+        for (let k = out.right.length - 1; k >= 0; k--) { out.rightOffset[out.right[k].i] = x; x += out.right[k].width; }
+        out.rightW = x;
+        out.offs = new Float64Array(out.center.length + 1);
+        out.center.forEach((d, k) => { out.offs[k + 1] = out.offs[k] + d.width; });
+        out.centerW = out.offs[out.center.length];
+        this._disp = out;
+        return out;
+      }
+      emptyText() {
+        const m = this.model;
+        if (m.pivotMode && !m.wells.state.values.length) { return 'Drop a measure on Values to see figures.'; }
+        if (m.pivotMode && !m.answer) { return 'Computing the pivot…'; }
+        return m.rowCount() ? null : 'No rows to show.';
+      }
+      grouped() { const r = this.model.rowModel; return !!((r.groupBy && r.groupBy.length) || (r.rowGroupCols && r.rowGroupCols.length) || r.treeData); }
+      checkboxes() { return this.o.checkboxes !== false && this.model.selection.mode !== 'none'; }
+      sortOf(d) {
+        const m = this.model, col = d.col;
+        if (!m.pivotMode) { const s = m.sortModel.find((x) => x.colId === col.id); return s ? s.sort : null; }
+        const sort = m.pivotExtra.sort || {}, dims = m.answer ? m.answer.rowDimensions : [];
+        const s = dims.length ? sort[dims[0]] : null;
+        if (!s) { return null; }
+        if (col.rowHeader) { return s.by === 'label' ? (s.desc ? 'desc' : 'asc') : null; }
+        return s.by === col.measure && col.kind === 'grand' ? (s.desc ? 'desc' : 'asc') : null;
+      }
+      sourceOf(col) {
+        if (!this.model.pivotMode || !col.measure) { return col.id; }
+        const labels = this.model.wells.toView().values.map((x) => x.as), i = labels.indexOf(col.measure);
+        return i >= 0 ? this.model.wells.state.values[i].colId : null;
+      }
+      headerOf(id) { const c = this.model.columns.get(id); return c ? c.header : id; }
+      fmtMeasure(label, v) {
+        const col = this.model.shownColumns().find((c) => c.measure === label) || { type: 'number', format: this.model.measureFormat(label) };
+        return formatValue(v, col);
+      }
+      levelFigures(dim, by) {
+        const a = this.model.answer;
+        if (!a) { return null; }
+        const grand = a.columns.find((c) => c.kind === 'grand');
+        const xs = a.rows.filter((r) => r.dim === dim).map((r) => { const c = a.cells[r.key + '|' + (grand ? grand.key : '')]; return c && c.values ? c.values[by] : null; })
+          .filter((v) => typeof v === 'number').sort((p, q) => p - q);
+        if (!xs.length || !figureRange(xs)) { return null; }
+        const q = (t) => xs[Math.min(xs.length - 1, Math.floor(t * xs.length))];
+        return { median: Math.round(q(0.5)), p75: Math.round(q(0.75)) };
+      }
+      membersOf(colId) {
+        if (this.o.members) {
+          const r = this.o.members(colId);
+          if (Array.isArray(r)) { return r; }
+          const cache = this.membersCache = this.membersCache || {};
+          if (r && r.then && !cache[colId]) { r.then((list) => { cache[colId] = list || []; if (this.menu.isOpen()) { this.menu.fill(); } }); }
+          return cache[colId] || [];
+        }
+        return this.model.rowModel.members ? this.model.rowModel.members(colId, 500) : [];
+      }
+      activeWells() { return this.draft || this.model.wells; }
+      wellsChanged(what) {
+        if (this.draft) { this.draftDirty = true; }
+        else if (!this.model.pivotMode && this.model.wells.state.values.length) { this.model.setPivotMode(true); }
+        this.ex = null;
+        this.renderChrome();
+        if (what) { this.say(what); }
+      }
+      applyDraft() {
+        if (!this.draft) { return; }
+        this.model.wells.setState(this.draft.getState());
+        this.draftDirty = false;
+        if (!this.model.pivotMode) { this.model.setPivotMode(true); }
+        this.renderChrome();
+        this.say('Pivot updated');
+      }
+      panelSwitch(id, on) {
+        const m = this.model;
+        if (id === 'pivot') { this.setPivotMode(on); return; }
+        if (id === 'grand') { this.ui.grandColumn = on; this._disp = null; this.refresh(); return; }
+        if (id === 'above') { this.setPivotOptions({ subtotals: on ? 'above' : 'below' }, 'Subtotals ' + (on ? 'above' : 'below')); return; }
+        if (id === 'defer') {
+          if (on) { this.draft = new WellsModel(m.columns, m.wells.getState()); this.draft.serverFuncs = m.wells.serverFuncs; this.draft.allowedFuncs = m.wells.allowedFuncs; this.draftDirty = false; } else { const d = this.draftDirty; if (d) { this.applyDraft(); } this.draft = null; }
+          this.renderChrome();
+        }
+      }
+      setPivotOptions(extra, what) { if (what) { this.say(what); } return this.model.setPivotOptions(extra); }
+      setValueFilters(list) { return this.setPivotOptions({ valueFilters: list }, list.length ? 'Value filter: ' + list.length : 'Value filters cleared'); }
+      sortColumn(c, multi) {
+        const m = this.model, col = m.shownColumns()[c];
+        if (!col || col.sortable === false) { return; }
+        if (!m.pivotMode) { m.toggleSort(col.id, multi); return; }
+        const dims = m.answer ? m.answer.rowDimensions : [], cur = this.sortOf({ col: col });
+        const sort = {};
+        if (col.rowHeader) { dims.forEach((d) => { sort[d] = { by: 'label', desc: cur === 'asc' }; }); }
+        else if (cur !== 'asc') { dims.forEach((d) => { sort[d] = { by: col.measure, desc: cur !== 'desc' }; }); }
+        this.setPivotOptions({ sort: sort }, Object.keys(sort).length ? 'Rows ordered by ' + (col.rowHeader ? 'name' : col.measure) : 'Order cleared');
+      }
+      setColumnWidth(d, w) {
+        if (this.model.pivotMode) { this.ui.widths[d.col.id] = Math.round(w); this._disp = null; this.body.schedule(); }
+        else { this.model.columns.setWidth(d.col.id, Math.round(w)); }
+      }
+      autosize(c) {
+        const m = this.model, disp = this.displayColumns();
+        const ctx = this.doc.createElement('canvas').getContext('2d');
+        const style = this.doc.defaultView.getComputedStyle(this.body.scroller);
+        if (ctx) { ctx.font = style.fontSize + ' ' + style.fontFamily; }
+        const measure = (t) => (ctx ? ctx.measureText(String(t)).width : String(t).length * 7);
+        const n = Math.min(m.rowCount(), 300);
+        (c < 0 ? disp.all : [disp.byIndex[c]]).forEach((d) => {
+          if (!d) { return; }
+          let w = measure(d.col.header) + 44;
+          for (let r = 0; r < n; r++) { w = Math.max(w, measure(m.cellText(r, d.i)) + (d === disp.all[0] ? 70 : 24)); }
+          this.setColumnWidth(d, Math.min(480, Math.ceil(w)));
+        });
+        this._disp = null;
+        this.body.schedule();
+        this.say(c < 0 ? 'Every column sized to its content' : 'Column sized to its content');
+      }
+      switchMeasure(label) {
+        this.ui.phoneMeasure = label;
+        this._disp = null;
+        this.emitView('measureSwitched', { measure: label });
+        this.refresh();
+      }
+      measures() { return pivotMeasures(this.model.shownColumns()); }
+    }
+    return { "GridBase": GridBase };
+  })();
+  /* ---- src/drishti_grid-body.js ---- */
+  __m["src/drishti_grid-body.js"] = (function () {
+    var h = __lib("drishti-core").h;
+    var headerSpans = __m["src/drishti_grid-ui.js"].headerSpans, pivotColumnLabels = __m["src/drishti_grid-ui.js"].pivotColumnLabels, markGroups = __m["src/drishti_grid-ui.js"].markGroups, isTotalCell = __m["src/drishti_grid-ui.js"].isTotalCell, nonAdditiveNote = __m["src/drishti_grid-ui.js"].nonAdditiveNote, cfBackground = __m["src/drishti_grid-ui.js"].cfBackground, figureRange = __m["src/drishti_grid-ui.js"].figureRange, ruleFor = __m["src/drishti_grid-ui.js"].ruleFor;
+    const CF_SCAN = 100000;
+    const DECO_STYLES = ['color', 'background-color', 'font-weight', 'font-style'];
+    function safeClasses(text) { return String(text).split(/\s+/).filter((t) => /^[A-Za-z][\w-]*$/.test(t)).join(' '); }
+    class GridBody {
+      constructor(view) {
+        this.view = view;
+        this.model = view.model;
+        const doc = this.doc = view.doc;
+        this.uid = view.uid;
+        this.scroller = h(doc, 'div', { cls: 'dg-scroll', attrs: { role: 'grid', tabindex: '0', 'aria-multiselectable': 'true', 'aria-label': view.o.label || 'Grid', id: this.uid + '-grid' } });
+        this.canvas = h(doc, 'div', { cls: 'dg-canvas', attrs: { role: 'presentation' } });
+        this.head = h(doc, 'div', { cls: 'dg-head', attrs: { role: 'rowgroup' } });
+        this.area = h(doc, 'div', { cls: 'dg-area', attrs: { role: 'presentation' } });
+        this.rows = h(doc, 'div', { cls: 'dg-rows', attrs: { role: 'rowgroup' } });
+        this.empty = h(doc, 'div', { cls: 'dg-empty', attrs: { hidden: true } });
+        this.area.appendChild(this.rows);
+        this.canvas.append(this.head, this.area);
+        this.scroller.append(this.canvas, this.empty);
+        this.cfCache = new Map();
+        this.version = 0;
+        this.drag = null;
+        this.frame = 0;
+        this.listen();
+      }
+      listen() {
+        const s = this.scroller, win = this.doc.defaultView;
+        s.addEventListener('scroll', () => this.schedule());
+        s.addEventListener('mousedown', (e) => this.down(e));
+        s.addEventListener('mouseover', (e) => this.over(e));
+        s.addEventListener('mouseleave', () => this.view.notes.hideTip());
+        s.addEventListener('click', (e) => this.click(e));
+        s.addEventListener('dblclick', (e) => this.dbl(e));
+        s.addEventListener('contextmenu', (e) => this.context(e));
+        this.onUp = () => { if (this.drag) { this.drag = null; this.view.afterRange(); } };
+        win.addEventListener('mouseup', this.onUp);
+      }
+      schedule() {
+        if (this.frame) { return; }
+        const win = this.doc.defaultView;
+        this.frame = win.requestAnimationFrame(() => { this.frame = 0; this.render(); });
+      }
+      invalidate() { this.version++; this.cfCache.clear(); this.spans = null; }
+      cellOf(e) {
+        const c = e.target.closest ? e.target.closest('.dg-cell') : null;
+        if (!c || !this.scroller.contains(c)) { return null; }
+        return { el: c, r: +c.dataset.r, c: +c.dataset.c };
+      }
+      down(e) {
+        if (e.button !== 0) { return; }
+        const t = e.target;
+        if (t.closest('.dg-tw, input, button, select, .dg-resize, .dg-hcell, .dg-editor')) { return; }
+        const x = this.cellOf(e);
+        if (!x) { return; }
+        e.preventDefault();
+        this.scroller.focus({ preventScroll: true });
+        this.model.cellClicked(x.r, x.c, { shift: e.shiftKey, ctrl: e.ctrlKey || e.metaKey });
+        this.drag = { r: x.r, c: x.c };
+        this.view.afterFocus(false);
+      }
+      over(e) {
+        const x = this.cellOf(e);
+        if (this.drag && x && (x.r !== this.drag.r || x.c !== this.drag.c)) {
+          this.drag = { r: x.r, c: x.c };
+          this.model.selection.extendRange(x.r, x.c);
+        }
+        if (x && x.el.classList.contains('dg-nadd') && !this.drag) {
+          const col = this.model.shownColumns()[x.c];
+          this.view.notes.showTip(nonAdditiveNote(col.measure || col.header, x.el.textContent), x.el);
+        } else { this.view.notes.hideTip(); }
+      }
+      click(e) {
+        const t = e.target, v = this.view, m = this.model;
+        const tw = t.closest('.dg-tw');
+        if (tw) { e.stopPropagation(); m.toggleRow(+tw.dataset.r); v.announceRow(+tw.dataset.r); return; }
+        if (t.matches('input.dg-check')) {
+          const r = +t.dataset.r;
+          if (t.dataset.all !== undefined) {
+            const ids = [];
+            if (t.checked && m.pivotMode) { for (let i = 0; i < m.rowCount(); i++) { const id = m.idAt(i); if (id !== null) { ids.push(id); } } }
+            if (t.checked && !m.pivotMode) { m.selectAll(); } else { m.selection.selectAll(ids); }
+          }
+          else { m.selection.clickRow(r, (i) => m.idAt(i), { ctrl: true }); }
+          return;
+        }
+        const ct = t.closest('.dg-ctoggle');
+        if (ct) { const sp = this.groupAt(ct); if (sp) { m.togglePivotNode('columns', sp.group.path); v.say((sp.group.open ? 'Collapsed ' : 'Expanded ') + sp.label); } return; }
+        const menu = t.closest('.dg-hmenu');
+        if (menu) { e.stopPropagation(); v.openColumnMenu(+menu.dataset.c, menu); return; }
+        if (t.closest('.dg-resize')) { return; }
+        const hc = t.closest('.dg-hcell.dg-leaf');
+        if (hc && !this.resized) { v.sortColumn(+hc.dataset.c, e.shiftKey); }
+        this.resized = false;
+      }
+      dbl(e) {
+        const rz = e.target.closest('.dg-resize');
+        if (rz) { this.view.autosize(+rz.dataset.c); return; }
+        const x = this.cellOf(e);
+        if (!x) { return; }
+        this.model.cellDoubleClicked(x.r, x.c);
+        if (this.model.editing.canEdit(x.r, x.c)) { this.view.startEditing(x.r, x.c); return; }
+        if (this.model.navigator.grid.isGroup(x.r)) { this.model.toggleRow(x.r); this.view.announceRow(x.r); }
+      }
+      context(e) {
+        const x = this.cellOf(e);
+        if (!x) { return; }
+        e.preventDefault();
+        if (!this.model.selection.inRange(x.r, x.c)) { this.model.cellClicked(x.r, x.c, {}); this.view.afterFocus(false); }
+        this.view.openCellMenu(x.r, x.c, { x: e.clientX, y: e.clientY });
+      }
+      resizeStart(e, d) {
+        e.preventDefault();
+        e.stopPropagation();
+        const x0 = e.clientX, w0 = d.width, win = this.doc.defaultView;
+        const move = (ev) => { this.view.setColumnWidth(d, Math.max(40, w0 + ev.clientX - x0)); this.resized = true; };
+        const up = () => { win.removeEventListener('pointermove', move); win.removeEventListener('pointerup', up); };
+        win.addEventListener('pointermove', move);
+        win.addEventListener('pointerup', up);
+      }
+      groupAt(btn) {
+        const lv = +btn.dataset.level, key = btn.dataset.key;
+        const row = this.spans && this.spans[lv];
+        return row ? row.find((s) => s.key === key && s.group) || null : null;
+      }
+      labels(display) {
+        const m = this.model;
+        if (m.pivotMode) {
+          const a = m.answer, L = a ? a.columnDimensions.length : 0, byKey = {};
+          (a ? a.columns : []).forEach((e) => { byKey[e.key] = e; });
+          const entries = display.map((d) => (d.col.rowHeader ? null : byKey[d.col.colKey] || null));
+          const labels = display.map((d, i) => (d.col.rowHeader ? new Array(L).fill('').concat([d.col.header]) : pivotColumnLabels(d.col, entries[i], L)));
+          return { labels: labels, entries: entries };
+        }
+        const grouped = display.some((d) => d.col.group);
+        return { labels: display.map((d) => (grouped ? [d.col.group || '', d.col.header] : [d.col.header])), entries: null };
+      }
+      paneSpans(disp) {
+        const all = disp.all, lab = this.labels(all);
+        const parts = { left: [], center: [], right: [] };
+        all.forEach((d, i) => parts[d.pane].push(i));
+        const out = { left: null, center: null, right: null };
+        Object.keys(parts).forEach((p) => {
+          const idx = parts[p];
+          const sp = headerSpans(idx.map((i) => lab.labels[i]));
+          if (lab.entries) { markGroups(sp, idx.map((i) => lab.entries[i])); }
+          out[p] = sp.map((row) => row.map((s) => Object.assign(s, { start: all[idx[s.start]].i, end: all[idx[s.end]].i })));
+        });
+        const levels = lab.labels.reduce((n, l) => Math.max(n, l.length), 1);
+        this.spans = [];
+        for (let lv = 0; lv < levels; lv++) { this.spans.push([].concat(out.left[lv] || [], out.center[lv] || [], out.right[lv] || [])); }
+        return { out: out, levels: levels };
+      }
+      render() {
+        const m = this.model, v = this.view, vp = m.viewport, doc = this.doc;
+        const disp = v.displayColumns();
+        const rh = vp.rowHeight, hrh = rh + 4;
+        const sp = this.paneSpans(disp);
+        const headH = sp.levels * hrh;
+        const W = disp.leftW + disp.centerW + disp.rightW;
+        vp.resize(Math.max(1, this.scroller.clientWidth), Math.max(rh, this.scroller.clientHeight - headH));
+        vp.setRowCount(m.rowCount());
+        vp.scrollTo(this.scroller.scrollTop, this.scroller.scrollLeft);
+        this.canvas.style.width = W + 'px';
+        this.area.style.height = vp.scrollHeight() + 'px';
+        this.head.style.height = headH + 'px';
+        const rows = vp.rows();
+        const cr = vp.columns(disp.offs, disp.leftW + disp.rightW);
+        this.window = { rows: rows, cols: cr };
+        const centerShown = disp.center.slice(Math.max(0, cr.first), cr.last + 1);
+        const lead = disp.center.length && cr.first > 0 ? disp.offs[cr.first] : 0;
+        const trail = disp.center.length ? disp.centerW - disp.offs[Math.min(disp.center.length, cr.last + 1)] : 0;
+        this.head.textContent = '';
+        for (let lv = 0; lv < sp.levels; lv++) {
+          const leaf = lv === sp.levels - 1;
+          const row = h(doc, 'div', { cls: 'dg-hrow' + (leaf ? ' dg-hleaf' : ''), attrs: { role: 'row', 'aria-rowindex': String(lv + 1) }, style: { height: hrh + 'px' } });
+          this.headPane(row, sp.out.left[lv] || [], disp, 'left', lv, leaf);
+          if (lead) { row.appendChild(h(doc, 'div', { cls: 'dg-gap', attrs: { role: 'presentation' }, style: { width: lead + 'px' } })); }
+          const firstI = centerShown.length ? centerShown[0].i : -1, lastI = centerShown.length ? centerShown[centerShown.length - 1].i : -2;
+          this.headPane(row, (sp.out.center[lv] || []).filter((s) => s.end >= firstI && s.start <= lastI).map((s) => Object.assign({}, s, { start: Math.max(s.start, firstI), end: Math.min(s.end, lastI) })), disp, 'center', lv, leaf);
+          if (trail > 0) { row.appendChild(h(doc, 'div', { cls: 'dg-gap', attrs: { role: 'presentation' }, style: { width: trail + 'px' } })); }
+          this.headPane(row, sp.out.right[lv] || [], disp, 'right', lv, leaf);
+          this.head.appendChild(row);
+        }
+        this.rows.textContent = '';
+        this.rows.style.top = rows.offset + 'px';
+        this.rows.style.width = W + 'px';
+        const focus = m.navigator.focus;
+        const flash = v.flash;
+        for (let r = rows.first; r <= rows.last; r++) {
+          const x = m.rowAt(r);
+          if (!x) { continue; }
+          this.rows.appendChild(this.rowEl(r, x, disp, centerShown, lead, trail, focus, flash, sp.levels));
+        }
+        flash.settle();
+        if (flash.active()) { this.view.doc.defaultView.setTimeout(() => this.schedule(), 120); }
+        const s = this.scroller;
+        s.setAttribute('role', m.pivotMode || (m.rowModel.groupBy && m.rowModel.groupBy.length) || m.rowModel.treeData ? 'treegrid' : 'grid');
+        s.setAttribute('aria-rowcount', String(m.rowCount() + sp.levels));
+        s.setAttribute('aria-colcount', String(m.shownColumns().length));
+        const fid = focus ? this.uid + '-r' + focus.row + '-c' + focus.col : null;
+        if (fid && doc.getElementById(fid)) { s.setAttribute('aria-activedescendant', fid); } else { s.removeAttribute('aria-activedescendant'); }
+        const why = v.emptyText();
+        this.empty.hidden = !why;
+        this.empty.textContent = why || '';
+        if (v.editor) { v.editor.place(); }
+      }
+      headPane(row, spans, disp, pane, lv, leaf) {
+        const doc = this.doc, m = this.model;
+        const all = disp.all, byIndex = disp.byIndex;
+        let edge = 0;
+        const paneCols = pane === 'left' ? disp.left : pane === 'right' ? disp.right : null;
+        const offsetOf = (i) => { let o = 0; for (const d of paneCols) { if (d.i === i) { return o; } o += d.width; } return o; };
+        const rightOf = (i) => { let o = 0; for (let k = paneCols.length - 1; k >= 0; k--) { o += paneCols[k].width; if (paneCols[k].i === i) { return o - paneCols[k].width; } } return o; };
+        spans.forEach((s) => {
+          let w = 0;
+          for (let i = s.start; i <= s.end; i++) { if (byIndex[i]) { w += byIndex[i].width; } }
+          const d = byIndex[s.start];
+          const style = { width: w + 'px' };
+          if (pane === 'left') { style.left = offsetOf(s.start) + 'px'; }
+          if (pane === 'right') { style.right = rightOf(s.end) + 'px'; }
+          const cls = 'dg-hcell dg-' + pane + (leaf ? ' dg-leaf' : ' dg-hgroup') + (d && d.col.type === 'number' ? ' dg-num' : '') + (pane === 'right' && s.start === disp.right[0].i ? ' dg-edge' : '');
+          const cell = h(doc, 'div', { cls: cls, attrs: { role: 'columnheader', 'aria-colindex': String(s.start + 1), 'aria-colspan': s.end > s.start ? String(s.end - s.start + 1) : null }, data: { c: String(s.start) }, style: style });
+          if (leaf && d) {
+            const col = d.col, sort = this.view.sortOf(d);
+            if (sort) { cell.setAttribute('aria-sort', sort === 'asc' ? 'ascending' : 'descending'); }
+            if (col.rowHeader || (!m.pivotMode && s.start === all[0].i)) { this.allCheck(cell); }
+            cell.appendChild(h(doc, 'span', { cls: 'dg-hlabel', text: s.label }));
+            if (col.additive === false && col.type === 'number') { cell.appendChild(h(doc, 'span', { cls: 'dg-na', text: '◆', attrs: { title: 'Not additive: every total is the server\'s own figure for its group', 'aria-label': 'not additive' } })); }
+            if (sort) { cell.appendChild(h(doc, 'span', { cls: 'dg-sort', text: sort === 'asc' ? '▲' : '▼', attrs: { 'aria-hidden': 'true' } })); }
+            cell.appendChild(h(doc, 'button', { cls: 'dg-hmenu', text: '☰', attrs: { type: 'button', tabindex: '-1', 'aria-label': 'Column menu: ' + s.label }, data: { c: String(s.start) } }));
+            const rz = h(doc, 'div', { cls: 'dg-resize', attrs: { role: 'presentation', title: 'Drag to resize; double-click to fit' }, data: { c: String(s.start) } });
+            rz.addEventListener('pointerdown', (e) => this.resizeStart(e, d));
+            cell.appendChild(rz);
+          } else {
+            if (s.group) {
+              cell.appendChild(h(doc, 'button', { cls: 'dg-ctoggle', text: s.group.open ? '▾' : '▸', attrs: { type: 'button', tabindex: '-1', 'aria-expanded': String(s.group.open), 'aria-label': (s.group.open ? 'Collapse ' : 'Expand ') + s.label }, data: { level: String(lv), key: s.key } }));
+            }
+            cell.appendChild(h(doc, 'span', { cls: 'dg-hlabel', text: s.label }));
+          }
+          edge += w;
+          row.appendChild(cell);
+        });
+        return edge;
+      }
+      allCheck(cell) {
+        if (!this.view.checkboxes()) { return; }
+        const m = this.model;
+        const n = m.selection.selectedIds().length;
+        const box = h(this.doc, 'input', { cls: 'dg-check', attrs: { type: 'checkbox', tabindex: '-1', 'aria-label': 'Select all rows' }, data: { all: '1', r: '-1' } });
+        let all = m.rowModel.filteredCount ? m.rowModel.filteredCount() : m.rowCount();
+        if (m.pivotMode) { all = 0; for (let i = 0; i < m.rowCount(); i++) { if (m.idAt(i) !== null) { all++; } } }
+        box.checked = n > 0 && n >= all;
+        box.indeterminate = n > 0 && n < all;
+        cell.appendChild(box);
+      }
+      rowEl(r, x, disp, centerShown, lead, trail, focus, flash, levels) {
+        const doc = this.doc, m = this.model;
+        const e = x.kind === 'pivot' ? x.entry : null;
+        const expandable = e ? !!e.expandable : x.kind === 'group';
+        const expanded = e ? !!e.expanded : !!x.expanded;
+        const kind = e ? e.kind : x.kind;
+        const id = m.idAt(r);
+        const selected = id !== null && m.selection.isSelected(id);
+        const cls = 'dg-row dg-k-' + kind + (expandable ? ' dg-parent' : '') + (selected ? ' dg-selected' : '') + (r % 2 ? ' dg-odd' : '');
+        const row = h(doc, 'div', { cls: cls, attrs: { role: 'row', 'aria-rowindex': String(r + levels + 1), 'aria-selected': id !== null ? String(selected) : null,
+          'aria-level': m.pivotMode || x.kind === 'group' || x.tree || x.depth ? String((x.depth || 0) + 1) : null, 'aria-expanded': expandable ? String(expanded) : null },
+        style: { height: m.viewport.rowHeight + 'px' } });
+        const rowKey = e ? 'p:' + e.key : x.kind === 'group' ? 'g:' + (x.path || x.keys || []).join('\u001f') : 'l:' + (x.id !== undefined ? x.id : r);
+        const first = disp.all[0];
+        const add = (d) => row.appendChild(this.cellEl(r, x, d, { kind: kind, expandable: expandable, expanded: expanded, first: d === first, focus: focus, flash: flash, rowKey: rowKey, selected: selected }, disp));
+        disp.left.forEach(add);
+        if (lead) { row.appendChild(h(doc, 'div', { cls: 'dg-gap', attrs: { role: 'presentation' }, style: { width: lead + 'px' } })); }
+        centerShown.forEach(add);
+        if (trail > 0) { row.appendChild(h(doc, 'div', { cls: 'dg-gap', attrs: { role: 'presentation' }, style: { width: trail + 'px' } })); }
+        disp.right.forEach(add);
+        return row;
+      }
+      cellEl(r, x, d, k, disp) {
+        const doc = this.doc, m = this.model, col = d.col, c = d.i;
+        const style = { width: d.width + 'px' };
+        if (d.pane === 'left') { style.left = disp.leftOffset[c] + 'px'; }
+        if (d.pane === 'right') { style.right = disp.rightOffset[c] + 'px'; }
+        const loading = x.kind === 'loading';
+        const text = loading ? '' : m.cellText(r, c);
+        const value = loading ? undefined : m.cellValue(r, c);
+        const num = col.type === 'number' && !col.rowHeader;
+        const total = num && isTotalCell(k.kind, m.pivotMode ? col.kind : null, k.expandable);
+        const pending = text === '…' && !k.first;
+        let cls = 'dg-cell dg-' + d.pane + (num ? ' dg-num' : '') + (typeof value === 'number' && value < 0 ? ' dg-neg' : '') + (total ? ' dg-total' : '');
+        if (total && col.additive === false && !pending) { cls += ' dg-nadd'; }
+        if (pending) { cls += ' dg-pending'; }
+        if (loading) { cls += ' dg-loading'; }
+        if (d.pane === 'right' && disp.right[0] === d) { cls += ' dg-edge'; }
+        if (m.selection.inRange(r, c)) { cls += ' dg-in-range'; }
+        let note = null;
+        if (x.kind === 'leaf' && col.editable) {
+          const mark = m.editing.markOf(x.id, col.id);
+          if (m.editing.canEdit(r, c)) { cls += ' dg-editable'; }
+          if (mark) { cls += ' dg-' + mark; note = mark === 'proposed' ? 'Waiting for a second person to approve' : 'Changed here'; }
+        }
+        let deco = null;
+        if (x.kind === 'pivot' && !col.rowHeader && m.answer) {
+          const pc = m.answer.cells[x.entry.key + '|' + col.colKey];
+          if (pc && pc.tones && pc.tones[col.measure]) { cls += ' ' + safeClasses(pc.tones[col.measure]); }
+          if (pc && pc.notes && pc.notes[col.measure]) { note = String(pc.notes[col.measure]); }
+        }
+        if (this.view.o.decorateCell && !loading) {
+          deco = this.view.o.decorateCell({ row: r, col: c, columnId: col.id, column: col, value: value, text: text, kind: x.kind, entry: x.kind === 'pivot' ? x.entry : null,
+            measure: col.measure || null, colKey: col.colKey || null, cell: x.kind === 'pivot' && m.answer ? m.answer.cells[x.entry.key + '|' + col.colKey] || null : null,
+            data: x.kind === 'leaf' ? x.row : null, rowHeader: !!col.rowHeader });
+          if (deco && deco.cls) { cls += ' ' + safeClasses(deco.cls); }
+          if (deco && deco.title) { note = note ? note + '\n' + deco.title : String(deco.title); }
+          if (deco && deco.style) { Object.keys(deco.style).forEach((k) => { if (DECO_STYLES.indexOf(k) >= 0 && deco.style[k]) { style[k] = String(deco.style[k]); } }); }
+        }
+        const focused = k.focus && k.focus.row === r && k.focus.col === c;
+        if (focused) { cls += ' dg-focus'; }
+        if (num && typeof value === 'number' && !total && !loading) {
+          const rule = ruleFor(this.view.formats, { id: col.id, measure: col.measure, source: this.view.sourceOf(col) });
+          if (rule) { const bg = cfBackground(rule, value, this.cfRange(d)); if (bg) { style['background-image'] = bg; cls += ' dg-cf'; } }
+        }
+        if (num && typeof value === 'number') {
+          const f = k.flash.seen(k.rowKey + '|' + col.id, value);
+          if (f) { cls += ' dg-flash-' + f.dir; style['animation-delay'] = (-f.age) + 'ms'; }
+        }
+        const cell = h(doc, 'div', { cls: cls, attrs: { role: col.rowHeader ? 'rowheader' : 'gridcell', id: this.uid + '-r' + r + '-c' + c, 'aria-colindex': String(c + 1),
+          'aria-selected': k.selected || m.selection.inRange(r, c) ? 'true' : null, 'aria-readonly': x.kind === 'leaf' && col.editable && !m.editing.canEdit(r, c) ? 'true' : null,
+          title: note }, data: x.kind === 'pivot' && !col.rowHeader ? { r: String(r), c: String(c), cell: x.entry.key + '|' + col.colKey } : { r: String(r), c: String(c) }, style: style });
+        if (k.first && !loading) {
+          const depth = x.depth || 0;
+          if (depth) { cell.style.paddingLeft = (8 + depth * 16) + 'px'; }
+          if (this.view.checkboxes() && (m.idAt(r) !== null)) {
+            const box = h(doc, 'input', { cls: 'dg-check', attrs: { type: 'checkbox', tabindex: '-1', 'aria-label': 'Select row' }, data: { r: String(r) } });
+            box.checked = !!k.selected;
+            cell.appendChild(box);
+          }
+          if (k.expandable) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw', text: k.expanded ? '−' : '+', attrs: { 'aria-hidden': 'true' }, data: { r: String(r) } })); }
+          else if (m.pivotMode || (m.rowModel.groupBy && m.rowModel.groupBy.length) || m.rowModel.treeData) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw dg-tw-none', attrs: { 'aria-hidden': 'true' } })); }
+        }
+        if (deco && deco.before && typeof deco.before === 'object' && deco.before.nodeType) { cell.appendChild(deco.before); }
+        if (deco && deco.content && typeof deco.content === 'object' && deco.content.nodeType) {
+          const box = h(doc, 'span', { cls: 'dg-text' });
+          box.appendChild(deco.content);
+          cell.appendChild(box);
+        } else { cell.appendChild(h(doc, 'span', { cls: 'dg-text', text: text })); }
+        if (deco && deco.after !== undefined && deco.after !== null && deco.after !== '') {
+          cell.appendChild(typeof deco.after === 'object' && deco.after.nodeType ? deco.after : h(doc, 'span', { cls: 'dg-after', text: String(deco.after) }));
+        }
+        return cell;
+      }
+      cfRange(d) {
+        const key = d.col.id;
+        if (this.cfCache.has(key)) { return this.cfCache.get(key); }
+        const m = this.model, n = Math.min(m.rowCount(), CF_SCAN), vals = [];
+        if (!(m.pivotMode && (d.col.kind === 'total' || d.col.kind === 'grand'))) {
+          for (let r = 0; r < n; r++) {
+            const x = m.rowAt(r);
+            if (!x || (x.kind === 'pivot' ? (x.entry.kind !== 'node' || x.entry.expandable) : x.kind !== 'leaf')) { continue; }
+            vals.push(m.cellValue(r, d.i));
+          }
+        }
+        const range = figureRange(vals);
+        this.cfCache.set(key, range);
+        return range;
+      }
+      scrollToFocus() {
+        const m = this.model, f = m.navigator.focus;
+        if (!f) { return; }
+        const vp = m.viewport, rh = vp.rowHeight;
+        const top = this.scroller.scrollTop, room = vp.height;
+        const real = f.row * rh;
+        if (vp.contentHeight() <= vp.maxScrollHeight) {
+          if (real < top) { this.scroller.scrollTop = real; } else if (real + rh > top + room) { this.scroller.scrollTop = real + rh - room; }
+        } else if (vp.scrollToRow(f.row) !== null) { this.scroller.scrollTop = vp.scrollTop; }
+        const disp = this.view.displayColumns(), d = disp.byIndex[f.col];
+        if (d && d.pane === 'center') {
+          const left = disp.offs[disp.center.indexOf(d)], vis = this.scroller.clientWidth - disp.leftW - disp.rightW, sl = this.scroller.scrollLeft;
+          if (left < sl) { this.scroller.scrollLeft = left; } else if (left + d.width > sl + vis) { this.scroller.scrollLeft = left + d.width - vis; }
+        }
+      }
+      destroy() {
+        this.doc.defaultView.removeEventListener('mouseup', this.onUp);
+        if (this.frame) { this.doc.defaultView.cancelAnimationFrame(this.frame); }
+      }
+    }
+    return { "GridBody": GridBody };
+  })();
+  /* ---- src/drishti_grid-dom.js ---- */
+  __m["src/drishti_grid-dom.js"] = (function () {
+    var h = __lib("drishti-core").h, placeAt = __lib("drishti-core").placeAt;
+    let menuSeq = 0;
+    class Menu {
+      constructor(doc, o) {
+        this.doc = doc;
+        this.o = o || {};
+        this.el = null;
+        this.before = null;
+        this.onDown = (e) => { if (this.el && !this.el.contains(e.target)) { this.close(); } };
+      }
+      isOpen() { return !!this.el; }
+      open(items, at) {
+        this.close();
+        this.before = this.doc.activeElement;
+        this.at = at;
+        this.items = items;
+        const el = this.el = h(this.doc, 'div', { cls: this.o.className || 'dg-menu', attrs: { role: 'menu', id: 'dg-menu-' + (++menuSeq), 'aria-label': at.label || 'Menu', tabindex: '-1' } });
+        if (at.theme) { ['data-density', 'data-layout'].forEach((a) => { if (at.theme.getAttribute(a)) { el.setAttribute(a, at.theme.getAttribute(a)); } }); }
+        el.addEventListener('keydown', (e) => this.key(e));
+        this.fill();
+        this.doc.body.appendChild(el);
+        const r = at.anchor ? at.anchor.getBoundingClientRect() : null;
+        placeAt(el, r ? r.left : at.x, r ? r.bottom + 4 : at.y);
+        this.doc.addEventListener('mousedown', this.onDown, true);
+        const first = this.enabled()[0];
+        (first || el).focus();
+        return el;
+      }
+      fill() {
+        const el = this.el, doc = this.doc, list = typeof this.items === 'function' ? this.items() : this.items;
+        el.textContent = '';
+        list.forEach((it) => {
+          if (it.sep) { el.appendChild(h(doc, 'div', { cls: 'dg-menu-sep', attrs: { role: 'separator' } })); return; }
+          if (it.heading) { el.appendChild(h(doc, 'div', { cls: 'dg-menu-head', text: it.heading, attrs: { role: 'presentation' } })); return; }
+          if (it.input) {
+            const field = h(doc, 'input', { cls: 'dg-menu-input', attrs: { type: 'text', placeholder: it.input.placeholder || '', 'aria-label': it.label, value: it.input.value || '' } });
+            const go = () => this.run(it, field.value);
+            field.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); go(); } });
+            el.appendChild(h(doc, 'div', { cls: 'dg-menu-form', data: { action: it.id } }, [h(doc, 'span', { text: it.label }), field,
+              h(doc, 'button', { cls: 'dg-btn', text: 'Apply', attrs: { type: 'button', 'data-apply': it.id }, on: { click: go } })]));
+            return;
+          }
+          const check = it.checked !== undefined;
+          const item = h(doc, 'div', {
+            cls: 'dg-menu-item' + (it.checked ? ' on' : '') + (it.disabled ? ' off' : ''),
+            attrs: { role: check ? 'menuitemcheckbox' : 'menuitem', tabindex: '-1', 'aria-checked': check ? String(!!it.checked) : null,
+              'aria-disabled': it.disabled ? 'true' : null, title: it.disabled && it.why ? it.why : null },
+            data: { action: it.id }
+          }, [h(doc, 'span', { cls: 'dg-menu-ic', text: it.checked ? '✓' : (it.icon || ''), attrs: { 'aria-hidden': 'true' } }), h(doc, 'span', { cls: 'dg-menu-label', text: it.label }),
+            it.key ? h(doc, 'span', { cls: 'dg-menu-key', text: it.key }) : null]);
+          item.addEventListener('click', (e) => { e.stopPropagation(); this.run(it); });
+          item.addEventListener('mousemove', () => { if (this.doc.activeElement !== item) { item.focus(); } });
+          el.appendChild(item);
+        });
+      }
+      enabled() { return this.el ? Array.from(this.el.querySelectorAll('.dg-menu-item:not(.off), .dg-menu-input')) : []; }
+      run(it, value) {
+        if (it.disabled) { return; }
+        const keep = it.keep && typeof this.items === 'function';
+        const at = this.at;
+        if (!keep) { this.close(); }
+        at.run(it.id, value);
+        if (keep && this.el) {
+          const idx = this.enabled().indexOf(this.doc.activeElement);
+          this.fill();
+          const list = this.enabled();
+          (list[Math.max(0, idx)] || this.el).focus();
+        }
+      }
+      key(e) {
+        const list = this.enabled(), i = list.indexOf(this.doc.activeElement);
+        if (e.target && e.target.tagName === 'INPUT' && e.key !== 'Escape' && e.key !== 'ArrowDown' && e.key !== 'ArrowUp') { return; }
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          const n = list.length;
+          if (n) { list[e.key === 'ArrowDown' ? (i + 1) % n : (i - 1 + n) % n].focus(); }
+        } else if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); if (list.length) { list[e.key === 'Home' ? 0 : list.length - 1].focus(); } }
+        else if (e.key === 'Escape' || e.key === 'Tab') { e.preventDefault(); e.stopPropagation(); this.close(true); }
+        else if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          const cur = this.doc.activeElement;
+          if (cur && cur.classList.contains('dg-menu-item')) { cur.click(); }
+        }
+      }
+      close(refocus) {
+        if (!this.el) { return; }
+        this.el.remove();
+        this.el = null;
+        this.doc.removeEventListener('mousedown', this.onDown, true);
+        if (refocus && this.before && this.before.focus) { this.before.focus(); }
+        if (this.o.onClose) { this.o.onClose(); }
+      }
+    }
+    class Notes {
+      constructor(host, uid) {
+        const doc = host.ownerDocument;
+        this.tip = h(doc, 'div', { cls: 'dg-tip', attrs: { role: 'tooltip', id: uid + '-tip', hidden: true } });
+        this.msg = h(doc, 'div', { cls: 'dg-toast', attrs: { role: 'status', 'aria-live': 'polite', hidden: true } });
+        doc.body.appendChild(this.tip);
+        host.appendChild(this.msg);
+        this.timer = 0;
+      }
+      showTip(text, el) {
+        const r = el.getBoundingClientRect();
+        this.tip.textContent = text;
+        this.tip.hidden = false;
+        placeAt(this.tip, r.left, r.bottom + 6);
+        el.setAttribute('aria-describedby', this.tip.id);
+      }
+      hideTip() { this.tip.hidden = true; }
+      say(text) {
+        const win = this.msg.ownerDocument.defaultView;
+        this.msg.textContent = text;
+        this.msg.hidden = false;
+        win.clearTimeout(this.timer);
+        this.timer = win.setTimeout(() => { this.msg.hidden = true; }, 2600);
+      }
+      destroy() { this.tip.remove(); this.msg.remove(); }
+    }
+    return { "Menu": Menu, "Notes": Notes };
+  })();
+  /* ---- src/drishti_grid-editors.js ---- */
+  __m["src/drishti_grid-editors.js"] = (function () {
+    var h = __lib("drishti-core").h, loaded = __lib("drishti-core").loaded, announce = __lib("drishti-core").announce, numberEditText = __lib("drishti-core").numberEditText, isoDate = __lib("drishti-core").isoDate;
+    var editorOf = __m["src/drishti_grid-edit.js"].editorOf, parseCellText = __m["src/drishti_grid-edit.js"].parseCellText;
+    class CellEditor {
+      constructor(view) {
+        this.view = view;
+        this.doc = view.doc;
+        this.at = null;
+        this.el = null;
+        this.busy = false;
+      }
+      isActive() { return !!this.at; }
+      start(r, c, o) {
+        const v = this.view, m = v.model;
+        if (this.at) { this.cancel(); }
+        if (!m.editing.canEdit(r, c)) { v.say(m.pivotMode ? 'A pivot\'s figures are computed: edit the rows behind them' : 'This cell cannot be edited'); return false; }
+        const col = m.shownColumns()[c], ed = editorOf(col), cur = m.cellValue(r, c);
+        if (ed === 'checkbox') { this.save(r, c, !cur, null); return true; }
+        v.focusCell(r, c);
+        this.at = { r: r, c: c, ed: ed, col: col, old: cur };
+        const box = this.el = h(this.doc, 'div', { cls: 'dg-editor dg-editor-' + ed, attrs: { role: 'presentation' } });
+        const msg = this.msg = h(this.doc, 'div', { cls: 'dg-editor-msg', attrs: { role: 'alert', id: v.uid + '-edit-msg', hidden: true } });
+        const label = col.header + ', row ' + (r + 1);
+        if (ed === 'select') {
+          const sel = this.input = h(this.doc, 'select', { cls: 'dg-editor-input', attrs: { 'aria-label': label, 'aria-describedby': msg.id } });
+          (col.options || []).forEach((x, i) => {
+            const val = x !== null && typeof x === 'object' ? x.value : x, lab = x !== null && typeof x === 'object' && x.label !== undefined ? x.label : String(x);
+            const op = h(this.doc, 'option', { text: lab, attrs: { value: String(i) } });
+            if (val === cur) { op.selected = true; }
+            if (o && o.initial && lab.toLowerCase().indexOf(o.initial.toLowerCase()) === 0 && !sel.dataset.typed) { op.selected = true; sel.dataset.typed = '1'; }
+            sel.appendChild(op);
+          });
+          box.appendChild(sel);
+        } else if (ed === 'date' && loaded('drishti-inputs') && loaded('drishti-inputs').DatePicker) {
+          const host = h(this.doc, 'div', { cls: 'dg-editor-picker' });
+          box.appendChild(host);
+          const picker = this.picker = new (loaded('drishti-inputs').DatePicker)(host, { value: cur || null, businessOnly: !!col.businessOnly, calendar: col.calendar, label: label, shortcuts: true });
+          this.input = picker.input;
+          this.input.setAttribute('aria-describedby', msg.id);
+          picker.on('change', () => Promise.resolve().then(() => { if (this.at && this.picker === picker) { this.commit({ dr: 0, dc: 0 }); } }));
+          if (o && o.initial) { this.input.value = o.initial; }
+        } else {
+          const inp = this.input = h(this.doc, 'input', { cls: 'dg-editor-input' + (ed === 'number' ? ' dg-num' : ''), attrs: { type: ed === 'date' ? 'date' : 'text', 'aria-label': label,
+            'aria-describedby': msg.id, inputmode: ed === 'number' ? 'decimal' : null, spellcheck: 'false', autocomplete: 'off' } });
+          inp.value = o && o.initial ? o.initial : ed === 'number' ? numberEditText(cur, m.editing.o.locale) : ed === 'date' ? isoDate(cur) : cur === null || cur === undefined ? '' : String(cur);
+          box.appendChild(inp);
+        }
+        box.appendChild(msg);
+        box.addEventListener('keydown', (e) => this.key(e), true);
+        box.addEventListener('focusout', () => this.doc.defaultView.setTimeout(() => this.left(), 0));
+        v.body.area.appendChild(box);
+        this.place();
+        this.input.focus();
+        if (this.input.select && !(o && o.initial)) { this.input.select(); }
+        if (this.picker && !(o && o.initial)) { this.picker.open(); this.input.focus(); }
+        m.live.emit('cellEditStarted', { row: r, col: c, colId: col.id, rowId: m.idAt(r), value: cur, editor: ed });
+        announce('Editing ' + label + '. Enter saves, Escape cancels');
+        return true;
+      }
+      place() {
+        if (!this.at || !this.el) { return; }
+        const v = this.view, cell = this.doc.getElementById(v.uid + '-r' + this.at.r + '-c' + this.at.c);
+        if (!cell) { this.el.style.visibility = 'hidden'; return; }
+        const a = v.body.area.getBoundingClientRect(), r = cell.getBoundingClientRect();
+        this.el.style.visibility = 'visible';
+        this.el.style.left = (r.left - a.left) + 'px';
+        this.el.style.top = (r.top - a.top) + 'px';
+        this.el.style.width = Math.max(r.width, this.at.ed === 'date' ? 150 : 60) + 'px';
+        this.el.style.height = r.height + 'px';
+      }
+      key(e) {
+        if (!this.at) { return; }
+        const k = e.key;
+        if (this.picker && this.picker.pop.isOpen() && (k === 'Escape' || k === 'ArrowDown' || k === 'ArrowUp')) { return; }   /* the calendar's own */
+        if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); this.cancel(); return; }
+        if (k === 'Enter') { e.preventDefault(); e.stopPropagation(); this.commit({ dr: e.shiftKey ? -1 : 1, dc: 0 }); return; }
+        if (k === 'Tab') { e.preventDefault(); e.stopPropagation(); this.commit({ dr: 0, dc: e.shiftKey ? -1 : 1 }); }
+      }
+      left() {
+        if (!this.at || this.busy) { return; }
+        const a = this.doc.activeElement;
+        if (this.el && this.el.contains(a)) { return; }
+        if (this.picker && this.picker.pop.el && this.picker.pop.el.contains(a)) { return; }
+        this.commit(null, true);
+      }
+      read() {
+        const at = this.at;
+        if (at.ed === 'select') { const i = this.input.value === '' ? -1 : +this.input.value, x = (at.col.options || [])[i]; return { value: x !== null && typeof x === 'object' ? x.value : x, error: null }; }
+        if (this.picker) {
+          const t = this.input.value.trim();
+          if (!t) { return { value: null, error: null }; }
+          if (!this.picker.validate()) { return { value: undefined, error: this.picker.msg.textContent || at.col.header + ': not a date' }; }
+          return { value: this.picker.getValue(), error: null };
+        }
+        return parseCellText(at.col, this.input.value, { locale: this.view.model.editing.o.locale });
+      }
+      commit(move, leaving) {
+        if (!this.at || this.busy) { return Promise.resolve(false); }
+        const at = this.at, got = this.read();
+        if (got.error) { return Promise.resolve(this.problem(got.error, leaving)); }
+        return this.save(at.r, at.c, got.value, move, leaving);
+      }
+      save(r, c, value, move, leaving) {
+        const v = this.view, m = v.model, col = m.shownColumns()[c];
+        const plan = m.editing.plan([{ r: r, c: c, value: value }]);
+        if (plan.problems.length) { return Promise.resolve(this.problem(plan.problems[0].message, leaving)); }
+        const p = m.editing.apply(plan.edits, 'edit');
+        this.close(true);
+        if (move) { m.navigator.setFocus(r + move.dr, c + move.dc); m.selection.startRange(m.navigator.focus.row, m.navigator.focus.col, {}); v.afterFocus(true); }
+        v.body.scroller.focus({ preventScroll: true });
+        return p.then((tx) => {
+          if (tx.status === 'proposed') { v.say('Sent for approval (' + tx.proposalId + '): the cell is marked until a second person decides'); }
+          else if (tx.edits.length) { v.say('Saved ' + col.header); }
+          return true;
+        }, (err) => { v.say('Not saved: ' + err.message); return false; });
+      }
+      problem(text, leaving) {
+        if (leaving || !this.el) { this.close(false); this.view.say('Not saved: ' + text); return false; }
+        this.msg.hidden = false;
+        this.msg.textContent = text;
+        this.input.setAttribute('aria-invalid', 'true');
+        this.el.classList.add('dg-editor-bad');
+        this.input.focus();
+        return false;
+      }
+      cancel() { if (this.at) { this.close(false); this.view.say('Edit cancelled'); this.view.body.scroller.focus({ preventScroll: true }); } }
+      close(saved) {
+        const at = this.at;
+        this.at = null;
+        if (this.picker) { this.picker.close(); this.picker = null; }
+        if (this.el) { this.el.remove(); this.el = null; }
+        if (at) { this.view.model.live.emit('cellEditStopped', { row: at.r, col: at.c, saved: !!saved }); }
+        this.view.body.schedule();
+      }
+    }
+    return { "CellEditor": CellEditor };
   })();
   /* ---- src/drishti_server-rows.js ---- */
   __m["src/drishti_server-rows.js"] = (function () {
@@ -1945,217 +3806,6 @@
     }
     return { "GRID_EVENTS": GRID_EVENTS, "domEventName": domEventName, "GridLive": GridLive };
   })();
-  /* ---- src/drishti_grid-edit.js ---- */
-  __m["src/drishti_grid-edit.js"] = (function () {
-    var parseNumberText = __lib("drishti-core").parseNumberText;
-    const EDITORS = Object.freeze(['text', 'number', 'date', 'select', 'checkbox']);
-    function editorOf(col) {
-      if (col.editor && EDITORS.indexOf(col.editor) >= 0) { return col.editor; }
-      if (col.type === 'boolean') { return 'checkbox'; }
-      if (col.type === 'date') { return 'date'; }
-      if (col.options) { return 'select'; }
-      if (col.type === 'number') { return 'number'; }
-      return 'text';
-    }
-    function opt(o) { return o !== null && typeof o === 'object' ? { value: o.value, label: String(o.label !== undefined ? o.label : o.value) } : { value: o, label: String(o) }; }
-    function parseCellText(col, text, o) {
-      const t = String(text === null || text === undefined ? '' : text).trim(), ed = editorOf(col), L = col.header;
-      if (col.parse) { try { return { value: col.parse(t), error: null }; } catch (e) { return { value: undefined, error: e.message }; } }
-      if (!t) { return { value: null, error: null }; }
-      if (ed === 'number') { const v = parseNumberText(t, o && o.locale); return v === null ? { value: undefined, error: L + ': "' + t + '" is not a number (write 1,250,000, 1.25m or −5k)' } : { value: v, error: null }; }
-      if (ed === 'checkbox') {
-        if (/^(true|yes|y|1|x|✓|☑)$/i.test(t)) { return { value: true, error: null }; }
-        if (/^(false|no|n|0|☐)$/i.test(t)) { return { value: false, error: null }; }
-        return { value: undefined, error: L + ': "' + t + '" is not yes or no' };
-      }
-      if (ed === 'date') {
-        let m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(t), y, mo, d;
-        if (m) { y = +m[1]; mo = +m[2]; d = +m[3]; }
-        else if ((m = /^(\d{1,2})[/.](\d{1,2})[/.](\d{4})$/.exec(t))) { const dmy = !(o && o.locale && /^en-US/.test(o.locale)); y = +m[3]; mo = dmy ? +m[2] : +m[1]; d = dmy ? +m[1] : +m[2]; }
-        else if ((m = /^(\d{1,2})\s+([A-Za-z]{3})[a-z]*\s+(\d{4})$/.exec(t))) { y = +m[3]; mo = 'janfebmaraprmayjunjulaugsepoctnovdec'.indexOf(m[2].toLowerCase()) / 3 + 1; d = +m[1]; }
-        const ok = y && mo >= 1 && mo <= 12 && d >= 1 && d <= new Date(Date.UTC(y, mo, 0)).getUTCDate();
-        return ok ? { value: String(y).padStart(4, '0') + '-' + String(mo).padStart(2, '0') + '-' + String(d).padStart(2, '0'), error: null } : { value: undefined, error: L + ': "' + t + '" is not a date (write 2026-11-06 or 6 Nov 2026)' };
-      }
-      if (ed === 'select') {
-        const opts = (col.options || []).map(opt), hit = opts.find((x) => x.label.toLowerCase() === t.toLowerCase() || String(x.value).toLowerCase() === t.toLowerCase());
-        return hit ? { value: hit.value, error: null } : { value: undefined, error: L + ': "' + t + '" is not one of ' + opts.map((x) => x.label).slice(0, 8).join(', ') + (opts.length > 8 ? ', …' : '') };
-      }
-      return { value: t, error: null };
-    }
-    function validateCell(col, v, row) {
-      const L = col.header, blank = v === null || v === undefined || v === '';
-      if (blank) { return col.required ? L + ' is required' : null; }
-      if (typeof v === 'number') {
-        if (col.min !== undefined && v < col.min) { return L + ' must be at least ' + col.min; }
-        if (col.max !== undefined && v > col.max) { return L + ' must be at most ' + col.max; }
-      }
-      if (typeof v === 'string' && col.maxLength && v.length > col.maxLength) { return L + ' may have at most ' + col.maxLength + ' characters'; }
-      if (col.options && editorOf(col) === 'select' && !(col.options.map(opt).some((x) => x.value === v))) { return L + ' must be one of the options'; }
-      if (col.validate) {
-        const r = col.validate(v, row);
-        if (typeof r === 'string' && r) { return r; }
-        if (r === false) { return L + ' is not valid'; }
-      }
-      return null;
-    }
-    function parseTsv(text) {
-      const s = String(text || '').replace(/\r\n?/g, '\n'), rows = [];
-      let row = [], cell = '', i = 0, quoted = false, start = true;
-      while (i < s.length) {
-        const ch = s[i];
-        if (quoted) {
-          if (ch === '"' && s[i + 1] === '"') { cell += '"'; i += 2; continue; }
-          if (ch === '"') { quoted = false; i++; continue; }
-          cell += ch; i++; continue;
-        }
-        if (ch === '"' && start) { quoted = true; start = false; i++; continue; }
-        if (ch === '\t') { row.push(cell); cell = ''; start = true; i++; continue; }
-        if (ch === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; start = true; i++; continue; }
-        cell += ch; start = false; i++;
-      }
-      if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
-      return rows;
-    }
-    function plain(row) { return row && typeof row.toObject === 'function' ? row.toObject() : Object.assign({}, row); }
-    class GridEditing {
-      constructor(grid, o) {
-        this.grid = grid;
-        this.o = Object.assign({ undoLimit: 100 }, o);
-        this.undoStack = [];
-        this.redoStack = [];
-        this.seq = 0;
-        this.marks = new Map();
-        this.proposals = new Map();
-      }
-      canEdit(r, c) {
-        const g = this.grid, x = g.rowAt(r), col = g.shownColumns()[c];
-        if (!x || x.kind !== 'leaf' || !col || g.pivotMode || g.serverSide || col.valueGetter || col.rowHeader) { return false; }
-        if (this.marks.get(x.id + '\u001f' + col.id) === 'proposed') { return false; }
-        return typeof col.editable === 'function' ? !!col.editable(x.row) : !!col.editable;
-      }
-      markOf(rowId, colId) { return this.marks.get(rowId + '\u001f' + colId) || null; }
-      plan(cells) {
-        const g = this.grid, edits = [], problems = [], next = new Map();
-        cells.forEach((x) => {
-          if (!this.canEdit(x.r, x.c)) { problems.push({ r: x.r, c: x.c, message: 'This cell cannot be edited' }); return; }
-          const row = g.rowAt(x.r), col = g.shownColumns()[x.c];
-          const base = next.get(row.id) || plain(row.row);
-          base[col.field] = x.value;
-          const why = validateCell(col, x.value, base);
-          if (why) { problems.push({ r: x.r, c: x.c, message: why }); return; }
-          next.set(row.id, base);
-          const old = row.row[col.field];
-          if (old === x.value || (old === undefined && x.value === null)) { return; }
-          edits.push({ rowId: row.id, colId: col.id, field: col.field, old: old === undefined ? null : old, value: x.value });
-        });
-        return { edits: edits, problems: problems };
-      }
-      commit(cells, source) {
-        const p = this.plan(cells);
-        if (p.problems.length) { const e = new Error(p.problems[0].message); e.problems = p.problems; return Promise.reject(e); }
-        return this.apply(p.edits, source || 'edit');
-      }
-      apply(edits, source) {
-        const g = this.grid;
-        if (!edits.length) { return Promise.resolve({ id: 0, source: source, edits: [], status: 'applied', proposalId: null }); }
-        const tx = { id: ++this.seq, source: source, edits: edits, status: 'pending', proposalId: null };
-        this.write(edits, 'value');
-        edits.forEach((e) => this.marks.set(e.rowId + '\u001f' + e.colId, this.o.fourEyes ? 'proposed' : 'edited'));
-        if (source !== 'undo' && source !== 'redo') { this.undoStack.push(tx); if (this.undoStack.length > this.o.undoLimit) { this.undoStack.shift(); } this.redoStack = []; }
-        edits.forEach((e) => g.live.emit('cellValueChanged', { rowId: e.rowId, colId: e.colId, old: e.old, value: e.value, source: source, transaction: tx.id }));
-        const settle = (res) => {
-          res = res || {};
-          if (res.status === 'refused') { return this.refuse(tx, res.message || 'The server refused the change'); }
-          if (res.status === 'proposed' || this.o.fourEyes) {
-            tx.status = 'proposed';
-            tx.proposalId = res.proposalId || ('P-' + tx.id);
-            this.proposals.set(tx.proposalId, tx);
-            edits.forEach((e) => this.marks.set(e.rowId + '\u001f' + e.colId, 'proposed'));
-          } else { tx.status = 'applied'; }
-          g.live.emit('editTransaction', this.describe(tx));
-          g.events.emit('changed', { what: 'edit' });
-          return tx;
-        };
-        if (!this.o.writeBack) { return Promise.resolve(settle({ status: this.o.fourEyes ? 'proposed' : 'applied' })); }
-        return Promise.resolve().then(() => this.o.writeBack(this.describe(tx))).then(settle, (err) => this.refuse(tx, err && err.message ? err.message : String(err)));
-      }
-      refuse(tx, message) {
-        this.write(tx.edits, 'old');
-        tx.edits.forEach((e) => this.marks.delete(e.rowId + '\u001f' + e.colId));
-        this.undoStack = this.undoStack.filter((t) => t !== tx);
-        tx.status = 'refused';
-        tx.message = message;
-        this.grid.live.emit('editTransaction', this.describe(tx));
-        this.grid.events.emit('changed', { what: 'edit' });
-        const e = new Error(message);
-        e.transaction = tx;
-        throw e;
-      }
-      write(edits, which) {
-        const g = this.grid, rows = new Map();
-        edits.forEach((e) => {
-          const cur = rows.get(e.rowId) || plain(g.rowModel.getRowById(e.rowId));
-          cur[e.field] = e[which];
-          rows.set(e.rowId, cur);
-        });
-        g.live.apply({ update: Array.from(rows.values()) });
-      }
-      describe(tx) { return { id: tx.id, source: tx.source, status: tx.status, proposalId: tx.proposalId, message: tx.message || null, edits: tx.edits.map((e) => Object.assign({}, e)) }; }
-      undo() {
-        const tx = this.undoStack.pop();
-        if (!tx) { return Promise.resolve(null); }
-        this.redoStack.push(tx);
-        const back = tx.edits.slice().reverse().map((e) => Object.assign({}, e, { old: e.value, value: e.old }));
-        return this.apply(back, 'undo').then((t) => { back.forEach((e) => { if (this.marks.get(e.rowId + '\u001f' + e.colId) === 'edited') { this.marks.delete(e.rowId + '\u001f' + e.colId); } }); this.grid.live.emit('editUndone', { transaction: tx.id }); return t; });
-      }
-      redo() {
-        const tx = this.redoStack.pop();
-        if (!tx) { return Promise.resolve(null); }
-        this.undoStack.push(tx);
-        return this.apply(tx.edits.map((e) => Object.assign({}, e)), 'redo').then((t) => { this.grid.live.emit('editRedone', { transaction: tx.id }); return t; });
-      }
-      history() { return { undo: this.undoStack.length, redo: this.redoStack.length }; }
-      resolveProposal(proposalId, decision) {
-        const tx = this.proposals.get(proposalId);
-        if (!tx) { return false; }
-        this.proposals.delete(proposalId);
-        if (decision === 'rejected') { this.write(tx.edits, 'old'); tx.edits.forEach((e) => this.marks.delete(e.rowId + '\u001f' + e.colId)); this.undoStack = this.undoStack.filter((t) => t !== tx); }
-        else { tx.edits.forEach((e) => this.marks.set(e.rowId + '\u001f' + e.colId, 'edited')); }
-        tx.status = decision === 'rejected' ? 'rejected' : 'applied';
-        this.grid.live.emit('proposalResolved', { proposalId: proposalId, decision: decision, transaction: this.describe(tx) });
-        this.grid.events.emit('changed', { what: 'edit' });
-        return true;
-      }
-      paste(text, at) {
-        const g = this.grid, grid = parseTsv(text), R = g.rowCount(), C = g.shownColumns().length, cells = [], problems = [];
-        if (!grid.length) { return Promise.resolve({ transaction: null, pasted: 0, skipped: 0, problems: [] }); }
-        const fill = grid.length === 1 && grid[0].length === 1 && at.r2 !== undefined && (at.r2 > at.r || at.c2 > at.c);
-        const rows = fill ? at.r2 - at.r + 1 : grid.length, cols = fill ? at.c2 - at.c + 1 : Math.max.apply(null, grid.map((x) => x.length));
-        let skipped = 0;
-        for (let i = 0; i < rows && at.r + i < R; i++) {
-          for (let j = 0; j < cols && at.c + j < C; j++) {
-            const text1 = fill ? grid[0][0] : (grid[i] || [])[j];
-            if (text1 === undefined) { continue; }
-            const r = at.r + i, c = at.c + j;
-            if (!this.canEdit(r, c)) { skipped++; continue; }
-            const p = parseCellText(g.shownColumns()[c], text1, { locale: this.o.locale });
-            if (p.error) { problems.push({ r: r, c: c, message: p.error }); continue; }
-            cells.push({ r: r, c: c, value: p.value });
-          }
-        }
-        const plan = this.plan(cells);
-        plan.problems.forEach((x) => problems.push(x));
-        return this.apply(plan.edits, 'paste').then((tx) => ({ transaction: tx.edits.length ? tx : null, pasted: plan.edits.length, skipped: skipped, problems: problems }));
-      }
-      clear(range) {
-        const cells = [];
-        for (let r = range.r1; r <= range.r2; r++) { for (let c = range.c1; c <= range.c2; c++) { if (this.canEdit(r, c)) { cells.push({ r: r, c: c, value: null }); } } }
-        const plan = this.plan(cells);
-        return this.apply(plan.edits, 'clear').then((tx) => ({ transaction: tx.edits.length ? tx : null, problems: plan.problems }));
-      }
-    }
-    return { "EDITORS": EDITORS, "editorOf": editorOf, "parseCellText": parseCellText, "validateCell": validateCell, "parseTsv": parseTsv, "GridEditing": GridEditing };
-  })();
   /* ---- src/drishti_grid.js ---- */
   __m["src/drishti_grid.js"] = (function () {
     var EventBus = __lib("drishti-core").EventBus;
@@ -2166,15 +3816,14 @@
     var SelectionModel = __m["src/drishti_selection.js"].SelectionModel, rangeStats = __m["src/drishti_selection.js"].rangeStats, toTsv = __m["src/drishti_selection.js"].toTsv, rangeCells = __m["src/drishti_selection.js"].rangeCells;
     var GridNavigator = __m["src/drishti_keyboard.js"].GridNavigator;
     var WellsModel = __m["src/drishti_wells.js"].WellsModel;
-    var PivotState = __m["src/drishti_pivot.js"].PivotState, pivotLocal = __m["src/drishti_pivot.js"].pivotLocal, pivotApplyUpdates = __m["src/drishti_pivot.js"].pivotApplyUpdates, serverRequest = __m["src/drishti_pivot.js"].serverRequest, mergeAnswer = __m["src/drishti_pivot.js"].mergeAnswer, applyValueFilters = __m["src/drishti_pivot.js"].applyValueFilters, resultColumns = __m["src/drishti_pivot.js"].resultColumns, cellValue = __m["src/drishti_pivot.js"].cellValue;
+    var PivotState = __m["src/drishti_pivot.js"].PivotState, resultColumns = __m["src/drishti_pivot.js"].resultColumns, cellValue = __m["src/drishti_pivot.js"].cellValue;
     var GridLive = __m["src/drishti_grid-live.js"].GridLive;
     var GridEditing = __m["src/drishti_grid-edit.js"].GridEditing;
-    var toCsv = __m["src/drishti_export.js"].toCsv, toXlsx = __m["src/drishti_export.js"].toXlsx;
+    var GridModelBase = __m["src/drishti_grid-model-base.js"].GridModelBase, LAYOUTS = __m["src/drishti_grid-model-base.js"].LAYOUTS, DENSITIES = __m["src/drishti_grid-model-base.js"].DENSITIES;
     var cycleSort = __lib("drishti-core").cycleSort, FILTER_CHANNEL = __lib("drishti-core").FILTER_CHANNEL;
-    const LAYOUTS = Object.freeze(['wells', 'panel', 'terminal']);
-    const DENSITIES = Object.freeze({ comfortable: 36, compact: 28, terminal: 22 });
-    class GridModel {
+    class GridModel extends GridModelBase {
       constructor(o) {
+        super();
         if (!o || !o.columns) { throw new Error('a grid needs columns'); }
         this.o = o;
         this.events = new EventBus();
@@ -2182,7 +3831,8 @@
         this.layout = LAYOUTS.indexOf(o.layout) >= 0 ? o.layout : 'wells';
         this.density = DENSITIES[o.density] ? o.density : 'compact';
         this.rowModel = o.datasource ? new ServerRowModel({ datasource: o.datasource, blockSize: o.blockSize, getRowId: o.getRowId })
-          : new ClientRowModel({ columns: this.columns, rows: o.rows || [], getRowId: o.getRowId, clientAggregation: o.clientAggregation });
+          : new ClientRowModel({ columns: this.columns, rows: o.rows || [], getRowId: o.getRowId, clientAggregation: o.clientAggregation, treeData: o.treeData,
+            getDataPath: o.getDataPath, groupDefaultExpanded: o.groupDefaultExpanded });
         this.serverSide = !!o.datasource;
         this.viewport = new Viewport({ rowHeight: DENSITIES[this.density] });
         this.selection = new SelectionModel({ mode: o.rowSelection });
@@ -2257,8 +3907,10 @@
           if (row.entry.kind === 'header') { return null; }
           return cellValue(this.answer, row.entry.key, col.colKey, col.measure).value;
         }
+        if (row.tree && c === 0) { return row.treeKey; }
         if (row.kind === 'group') {
           if (c === 0) { return row.value; }
+          if (row.tree && row.row) { return getValue(row.row, col); }
           const agg = row.aggregates || (row.row || {});
           return agg[col.id] !== undefined ? agg[col.id] : null;
         }
@@ -2312,71 +3964,6 @@
         }
         this.live.emit('groupChanged', { rowGroups: (colIds || []).slice() });
       }
-      setPivotMode(on) {
-        this.pivotMode = !!on;
-        this._pivotCols = null;
-        this.events.emit('changed', { what: 'pivot' });
-        return on ? this.runPivot() : Promise.resolve();
-      }
-      setPivotOptions(extra) { this.pivotExtra = Object.assign({}, this.pivotExtra, extra); return this.pivotMode ? this.runPivot() : Promise.resolve(); }
-      pivotView() {
-        const v = this.wells.toView(this.pivotExtra);
-        Object.keys(this.filterModel).forEach((k) => {
-          const f = this.filterModel[k], c = this.columns.get(k), field = c ? c.field : k;
-          if (f && f.type === 'set' && f.values) { v.filters[field] = { in: f.values.map(String), notIn: [] }; }
-          else if (f && f.type === 'set' && f.excluded) { v.filters[field] = { in: [], notIn: f.excluded.map(String) }; }
-        });
-        return Object.assign(v, this.pivotState.toView(this.answer));
-      }
-      runPivot() {
-        const view = this.pivotView();
-        this._pivotCols = null;
-        if (!view.values.length) { this.answer = null; this.viewport.setRowCount(0); this.events.emit('changed', { what: 'pivot' }); return Promise.resolve(); }
-        if (this.pivotAbort) { this.pivotAbort.abort(); }
-        const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-        this.pivotAbort = ctl;
-        const done = (a) => {
-          if (ctl && ctl.signal.aborted) { return; }
-          this.answer = a;
-          this._pivotCols = null;
-          this.viewport.setRowCount(this.rowCount());
-          this.events.emit('changed', { what: 'pivot' });
-          this.live.emit('pivotChanged', { view: view, rows: a ? a.rows.length : 0 });
-        };
-        const fail = (e) => { if (!(ctl && ctl.signal.aborted)) { this.events.emit('pivotError', { error: e }); } };
-        if (this.serverSide || this.o.clientAggregation === false) {
-          if (!this.o.serverPivot) { return Promise.reject(new Error(this.serverSide ? 'a pivot of server-side rows needs serverPivot' : 'clientAggregation is off: a pivot needs serverPivot')); }
-          return this.o.serverPivot(serverRequest(view), ctl && ctl.signal, this.serverSide ? null : this.rowModel.filteredRows()).then((a) => { applyValueFilters(a, view.valueFilters); done(a); }, fail);
-        }
-        const byField = {};
-        this.columns.all().forEach((c) => { byField[c.field] = c; });
-        const rows = this.rowModel.filteredRows();
-        const a = pivotLocal(rows, view, { state: this.pivotState, column: (f) => byField[f] || null, value: (r, f) => (byField[f] ? getValue(r, byField[f]) : r[f]) });
-        done(a);
-        if (a.pending.length && this.o.serverPivot) {
-          const only = Array.from(new Set(a.pending.map((p) => p.measure)));
-          return this.o.serverPivot(serverRequest(view, { only: only }), ctl && ctl.signal, rows).then((s) => {
-            if (this.answer !== a) { return; }
-            mergeAnswer(a, s);
-            this.events.emit('changed', { what: 'pivot' });
-          }, fail);
-        }
-        return Promise.resolve();
-      }
-      showAnswer(answer, o) {
-        o = o || {};
-        if (this.pivotAbort && !o.keepAsking && !o.patched) { this.pivotAbort.abort(); this.pivotAbort = null; }
-        this.pivotMode = true;
-        this.answer = answer;
-        this._pivotCols = null;
-        this.viewport.setRowCount(this.rowCount());
-        if (o.patched) { this.live.emit('serverTotalsUpdated', { pivotCells: Object.keys(answer.cells || {}).length }); }
-        this.events.emit('changed', { what: 'pivot' });
-        if (!o.patched) { this.live.emit('pivotChanged', { view: this.pivotView(), rows: answer ? answer.rows.length : 0 }); }
-      }
-      setOpenState(view) { this.pivotState = new PivotState(view || {}); }
-      togglePivotNode(axis, path, open) { this.pivotState.toggle(axis, path, open); return this.runPivot(); }
-      expandPivotTo(axis, level) { this.pivotState.expandToLevel(axis, level); return this.runPivot(); }
       toggleRow(r, open) {
         const x = this.rowAt(r);
         if (!x) { return Promise.resolve(); }
@@ -2475,1198 +4062,9 @@
       flushTransactions() { return this.live.flush(); }
       flashOf(rowId, colId) { return this.live.flashOf(rowId, colId); }
       connectLive(feed) { return this.live.connect(feed); }
-      dataChanged(notice) {
-        if (this.pivotMode && (this.serverSide || this.o.clientAggregation === false)) { this.runPivot(); return 'pivot'; }
-        if (!this.serverSide) { return 'nothing'; }
-        return this.rowModel.dataChanged(notice);
-      }
-      applyPivotUpdates(pairs) {
-        if (!this.answer) { return false; }
-        return pivotApplyUpdates(this.answer, pairs).applied;
-      }
-      refreshServerMeasures() {
-        const a = this.answer;
-        if (!a || !this.o.serverPivot) { return Promise.resolve(0); }
-        const labels = a.measures.filter((m) => m.server).map((m) => m.label);
-        if (!labels.length) { return Promise.resolve(0); }
-        const view = this.pivotView();
-        return this.o.serverPivot(serverRequest(view, { only: labels }), undefined, this.serverSide ? null : this.rowModel.filteredRows()).then((s) => {
-          if (this.answer !== a) { return 0; }
-          a.pending = [];
-          Object.keys(a.cells).forEach((k) => { const [row, column] = k.split('|'); labels.forEach((l) => a.pending.push({ row: row, column: column, coords: a.cells[k].coords, measure: l })); });
-          const n = mergeAnswer(a, s);
-          this.events.emit('changed', { what: 'pivot' });
-          return n;
-        });
-      }
-      toTable() {
-        const cols = this.shownColumns();
-        const rows = [], levels = [], bold = [];
-        const n = this.serverSide ? Math.min(this.rowCount(), 1048575) : this.rowCount();
-        for (let i = 0; i < n; i++) {
-          const x = this.rowAt(i);
-          if (!x || x.kind === 'loading') { continue; }
-          rows.push(cols.map((c, j) => {
-            const v = this.cellValue(i, j);
-            return x.kind === 'pivot' && c.rowHeader ? ' '.repeat(Math.max(0, (x.entry.depth || 1) - 1)) + v : v;
-          }));
-          levels.push(x.kind === 'pivot' ? Math.max(0, (x.entry.depth || 0) - 1) : x.depth || 0);
-          bold.push(x.kind === 'group' || (x.kind === 'pivot' && (x.entry.kind === 'total' || x.entry.kind === 'grand' || x.entry.kind === 'header')));
-        }
-        return { columns: cols.map((c) => ({ header: c.header, type: c.type, format: c.format, width: c.width })), rows: rows, levels: levels, bold: bold };
-      }
-      exportCsv(o) { return toCsv(this.toTable(), o); }
-      exportXlsx(o) { return toXlsx(this.toTable(), o); }
-      setDensity(d) {
-        if (!DENSITIES[d]) { throw new Error('no density ' + d + ' (' + Object.keys(DENSITIES).join(', ') + ')'); }
-        this.density = d;
-        this.viewport.rowHeight = DENSITIES[d];
-        this.events.emit('changed', { what: 'state' });
-      }
-      setLayout(l) {
-        if (LAYOUTS.indexOf(l) < 0) { throw new Error('no layout ' + l + ' (' + LAYOUTS.join(', ') + ')'); }
-        this.layout = l;
-        this.events.emit('changed', { what: 'state' });
-      }
-      getState() {
-        return { columns: this.columns.getState(), sort: this.sortModel.slice(), filters: JSON.parse(JSON.stringify(this.filterModel)), wells: this.wells.getState(),
-          pivot: this.pivotMode, pivotView: this.pivotMode ? this.pivotView() : null, pivotOptions: Object.assign({}, this.pivotExtra), layout: this.layout, density: this.density };
-      }
-      setState(s) {
-        if (s.columns) { this.columns.setState(s.columns); }
-        if (s.layout) { this.setLayout(s.layout); }
-        if (s.density) { this.setDensity(s.density); }
-        if (s.sort) { this.setSortModel(s.sort); }
-        if (s.filters) { this.filterModel = Object.assign({}, s.filters); this.rowModel.setFilterModel(this.filterModel); }
-        if (s.wells) { this.wells.state = JSON.parse(JSON.stringify(s.wells)); }
-        if (s.pivotOptions) { this.pivotExtra = Object.assign({}, s.pivotOptions); }
-        if (s.pivotView) { this.pivotState = new PivotState(s.pivotView); }
-        return this.setPivotMode(!!s.pivot);
-      }
     }
     function createGridModel(o) { return new GridModel(o); }
-    return { "LAYOUTS": LAYOUTS, "DENSITIES": DENSITIES, "GridModel": GridModel, "createGridModel": createGridModel };
-  })();
-  /* ---- src/drishti_grid-actions.js ---- */
-  __m["src/drishti_grid-actions.js"] = (function () {
-    var memberText = __m["src/drishti_pivot.js"].memberText;
-    var getValue = __m["src/drishti_columns.js"].getValue;
-    var VALUE_FUNCS = __m["src/drishti_wells.js"].VALUE_FUNCS;
-    var aggFunc = __m["src/drishti_aggregate.js"].aggFunc;
-    var XLSX_TYPE = __m["src/drishti_export.js"].XLSX_TYPE;
-    var columnMenuItems = __m["src/drishti_grid-ui.js"].columnMenuItems, cellMenuItems = __m["src/drishti_grid-ui.js"].cellMenuItems, FUNCTION_KEYS = __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, parseCondition = __m["src/drishti_grid-ui.js"].parseCondition, pivotMeasures = __m["src/drishti_grid-ui.js"].pivotMeasures;
-    var LAYOUTS = __m["src/drishti_grid.js"].LAYOUTS, DENSITIES = __m["src/drishti_grid.js"].DENSITIES;
-    var openDialog = __lib("drishti-core").openDialog;
-    var h = __lib("drishti-core").h;
-    var editorOf = __m["src/drishti_grid-edit.js"].editorOf;
-    function onKey(v, e) {
-      const m = v.model, k = e.key, mod = e.ctrlKey || e.metaKey;
-      if (e.target !== v.body.scroller && e.target.closest && e.target.closest('.dg-editor')) { return; }
-      if (editKey(v, e)) { return; }
-      if (mod && e.shiftKey && (k === 'c' || k === 'C')) { e.preventDefault(); runAction(v, 'copy-headers'); return; }
-      if (k === 'F2') { e.preventDefault(); v.explainFocused(); return; }
-      if ((e.shiftKey && k === 'F10') || k === 'ContextMenu') {
-        e.preventDefault();
-        const f = m.navigator.focus;
-        if (!f) { return; }
-        const cell = v.doc.getElementById(v.uid + '-r' + f.row + '-c' + f.col), r = cell ? cell.getBoundingClientRect() : { left: 40, bottom: 40 };
-        v.openCellMenu(f.row, f.col, { x: r.left + 8, y: r.bottom });
-        return;
-      }
-      const fk = m.layout === 'terminal' ? FUNCTION_KEYS.find((x) => x.key === k && x.key !== 'F2') : null;
-      if (fk) { e.preventDefault(); runAction(v, fk.action); return; }
-      if (k === 'Escape' && v.exOpen) { v.closeExplain(); }
-      const res = m.key(e);
-      if (!res.handled) { return; }
-      e.preventDefault();
-      const f = m.navigator.focus;
-      switch (res.action) {
-        case 'copy': copied(v, res.copy, false); break;
-        case 'explain': v.explainFocused(); break;
-        case 'open': if (f) { m.toggleRow(f.row); v.announceRow(f.row); } break;
-        case 'expand': case 'collapse': if (f) { v.announceRow(f.row); } break;
-        case 'expand-all': runAction(v, 'expand-all'); break;
-        case 'collapse-all': runAction(v, 'collapse-all'); break;
-        default: break;
-      }
-      v.afterFocus(true);
-    }
-    function editKey(v, e) {
-      const m = v.model, k = e.key, mod = e.ctrlKey || e.metaKey, f = m.navigator.focus;
-      if (mod && !e.altKey && (k === 'z' || k === 'Z')) { e.preventDefault(); if (e.shiftKey) { v.redo(); } else { v.undo(); } return true; }
-      if (mod && !e.altKey && (k === 'y' || k === 'Y')) { e.preventDefault(); v.redo(); return true; }
-      if (!f || mod || e.altKey) { return false; }
-      if ((k === 'Delete' || k === 'Backspace') && anyEditable(v)) { e.preventDefault(); runAction(v, 'clear-cells'); return true; }
-      if (!m.editing.canEdit(f.row, f.col)) { return false; }
-      const ed = editorOf(m.shownColumns()[f.col]);
-      if ((k === 'Enter' && !e.shiftKey) || k === 'F2' || (k === ' ' && ed === 'checkbox')) { e.preventDefault(); v.startEditing(f.row, f.col); return true; }
-      if (k.length === 1 && k !== ' ' && ed !== 'checkbox') { e.preventDefault(); v.startEditing(f.row, f.col, { initial: k }); return true; }
-      return false;
-    }
-    function anyEditable(v) { return !v.model.pivotMode && v.model.shownColumns().some((c) => c.editable); }
-    function copied(v, text, headers) {
-      v.lastCopy = text;
-      const win = v.doc.defaultView;
-      try { if (win.navigator.clipboard) { win.navigator.clipboard.writeText(text).catch(() => {}); } } catch (err) { /* the text stays in lastCopy */ }
-      const lines = text ? text.split('\n').length : 0;
-      v.say('Copied ' + lines + (lines === 1 ? ' line' : ' lines') + (headers ? ' with headers' : '') + ' as tab-separated text');
-      v.emitView('copied', { text: text, headers: !!headers });
-    }
-    function download(v, name, data, type) {
-      const win = v.doc.defaultView, blob = new win.Blob([data], { type: type });
-      v.lastExport = { name: name, type: type, size: blob.size };
-      if (v.o.download) { v.o.download(name, blob); return; }
-      const a = h(v.doc, 'a', { attrs: { href: win.URL.createObjectURL(blob), download: name } });
-      v.doc.body.appendChild(a);
-      a.click();
-      a.remove();
-    }
-    function openColumnMenu(v, c, anchor) {
-      const m = v.model, col = m.shownColumns()[c];
-      if (!col) { return; }
-      const piv = m.pivotMode, vi = piv ? valueIndex(v, col.measure) : -1;
-      const aggs = piv ? (vi >= 0 ? v.activeWells().funcs() : null) : v.grouped() && col.type === 'number' ? VALUE_FUNCS.map((f) => ({ name: f, label: aggFunc(f).label })) : null;
-      const items = columnMenuItems({ header: col.headerPath ? col.headerPath.filter(Boolean).join(' · ') : col.header, pivot: piv, sort: v.sortOf({ col: col }),
-        numeric: col.type === 'number', additive: col.additive, aggs: aggs, aggFunc: piv ? (vi >= 0 ? v.activeWells().state.values[vi].aggFunc : null) : col.aggFunc,
-        pinned: col.pinned, pinTotals: v.ui.pinTotals, explain: !!v.o.explain, rowHeader: !!col.rowHeader });
-      if (piv && col.additive === false) { items.forEach((it) => { if (it.id === 'agg:server') { it.label = col.measure; } }); }
-      v.menu.open(items, { anchor: anchor, label: 'Column menu: ' + col.header, theme: v.host, run: (id, val) => columnAction(v, c, id, val, anchor) });
-      v.emitView('menuOpened', { menu: 'column', column: col.id });
-    }
-    function valueIndex(v, label) { return v.activeWells().toView().values.map((x) => x.as).indexOf(label); }
-    function columnAction(v, c, id, val, anchor) {
-      const m = v.model, col = m.shownColumns()[c], piv = m.pivotMode;
-      v.emitView('menuAction', { menu: 'column', action: id, column: col.id });
-      const dims = piv && m.answer ? m.answer.rowDimensions : [];
-      if (id === 'sort-desc' || id === 'sort-asc' || id === 'sort-clear') {
-        if (!piv) { m.setSortModel(id === 'sort-clear' ? [] : [{ colId: col.id, sort: id === 'sort-asc' ? 'asc' : 'desc' }]); return; }
-        const sort = {};
-        if (id !== 'sort-clear') { dims.forEach((d) => { sort[d] = { by: col.rowHeader ? 'label' : col.measure, desc: id === 'sort-desc' }; }); }
-        v.setPivotOptions({ sort: sort }, id === 'sort-clear' ? 'Order cleared' : 'Rows ordered by ' + (col.rowHeader ? 'name' : col.measure));
-        return;
-      }
-      if (id === 'top-5' || id === 'top-10') {
-        const n = id === 'top-5' ? 5 : 10;
-        if (piv) { const top = {}; if (dims.length) { top[dims[dims.length - 1]] = { n: n, by: col.measure }; } v.setPivotOptions({ top: top }, 'Top ' + n + ' by ' + col.measure); return; }
-        const xs = m.rowModel.filteredRows ? m.rowModel.filteredRows().map((r) => getValue(r, col)).filter((x) => typeof x === 'number').sort((a, b) => b - a) : [];
-        if (xs.length) {
-          m.setSortModel([{ colId: col.id, sort: 'desc' }]);
-          m.setFilterModel(Object.assign({}, m.filterModel, { [col.id]: { type: 'number', op: 'gte', value: xs[Math.min(n, xs.length) - 1] } }));
-          v.say('Top ' + n + ' by ' + col.header);
-        }
-        return;
-      }
-      if (id === 'value-filter') {
-        if (piv) { v.wells.valueFilterMenu(-1, anchor); return; }
-        v.menu.open([{ heading: 'Filter ' + col.header }, { id: 'cond', label: col.header, input: { placeholder: '> 400k' } }], { anchor: anchor, label: 'Value filter', theme: v.host, run: (x, text) => {
-          const cnd = parseCondition(text);
-          if (!cnd) { v.say('Write a condition such as > 400k or < 0'); return; }
-          m.setFilterModel(Object.assign({}, m.filterModel, { [col.id]: { type: 'number', op: cnd.op, value: cnd.value } }));
-        } });
-        return;
-      }
-      if (id === 'member-filter') { memberMenu(v, col, anchor); return; }
-      if (id === 'clear-filter') { if (piv) { v.setPivotOptions({ valueFilters: [], top: {} }, 'Filters cleared'); } else { m.setFilterModel({}); m.setQuickFilter(''); v.say('Filters cleared'); } return; }
-      if (id.indexOf('agg:') === 0) {
-        const f = id.slice(4);
-        if (piv) { const r = v.activeWells().setAggregation(valueIndex(v, col.measure), f); if (!r.ok) { v.say(r.why); } else { v.wellsChanged(col.measure + ': ' + v.activeWells().funcLabel(f)); } return; }
-        col.aggFunc = f;
-        m.setRowGroups(m.rowModel.groupBy ? m.rowModel.groupBy.slice() : []);
-        return;
-      }
-      if (id === 'hide') { if (piv) { v.ui.hidden.add(col.id); v.refresh(); } else { m.columns.setVisible(col.id, false); } v.say('Hidden: Show all columns brings it back'); return; }
-      if (id === 'show-all') { if (piv) { v.ui.hidden.clear(); v.refresh(); } else { m.columns.all().forEach((x) => { if (x.hidden) { m.columns.setVisible(x.id, true); } }); } return; }
-      if (id === 'autosize') { v.autosize(c); return; }
-      if (id === 'autosize-all') { v.autosize(-1); return; }
-      if (id === 'pin-left' || id === 'pin-right' || id === 'unpin') { m.columns.pin(col.id, id === 'unpin' ? null : id === 'pin-left' ? 'left' : 'right'); return; }
-      if (id === 'pin-totals') { runAction(v, 'pin-totals'); return; }
-      if (id === 'explain-column') {
-        let r = 0;
-        if (piv) { const rows = m.answer ? m.answer.rows : []; r = rows.findIndex((x) => x.kind === 'grand'); if (r < 0) { r = rows.length - 1; } }
-        else if (m.navigator.focus) { r = m.navigator.focus.row; }
-        v.focusCell(r, c);
-        v.explain(r, c);
-      }
-    }
-    function memberMenu(v, col, anchor) {
-      const m = v.model;
-      const items = () => {
-        const f = m.filterModel[col.id], ex = new Set(f && f.excluded ? f.excluded.map(String) : []);
-        return [{ heading: 'Show ' + col.header }].concat(v.membersOf(col.id).slice(0, 200).map((x) => ({ id: 'member:' + x.text, label: x.text + (x.count !== undefined ? '  (' + x.count + ')' : ''), checked: !ex.has(x.text), keep: true })),
-          [{ sep: true }, { id: 'all', label: 'Select all' }]);
-      };
-      v.menu.open(items, { anchor: anchor, label: 'Filter ' + col.header, theme: v.host, run: (id) => {
-        const fm = Object.assign({}, m.filterModel);
-        if (id === 'all') { delete fm[col.id]; m.setFilterModel(fm); return; }
-        const t = id.slice(7), f = fm[col.id], ex = new Set(f && f.excluded ? f.excluded.map(String) : []);
-        if (ex.has(t)) { ex.delete(t); } else { ex.add(t); }
-        if (ex.size) { fm[col.id] = { type: 'set', excluded: Array.from(ex) }; } else { delete fm[col.id]; }
-        m.setFilterModel(fm);
-      } });
-    }
-    function openCellMenu(v, r, c, at) {
-      const m = v.model, col = m.shownColumns()[c], x = m.rowAt(r);
-      if (!col || !x) { return; }
-      let cells = 0;
-      m.selection.ranges.forEach((g) => { cells += (g.r2 - g.r1 + 1) * (g.c2 - g.c1 + 1); });
-      const items = cellMenuItems({ explain: !!v.o.explain, pivot: m.pivotMode, cells: cells, drill: drillable(v, x), groupBy: groupField(v, col), pinned: col.pinned, pinTotals: v.ui.pinTotals });
-      if (anyEditable(v)) {
-        const hist = m.editing.history(), can = m.editing.canEdit(r, c);
-        items.push({ sep: true }, { id: 'edit', label: 'Edit the cell', key: 'F2', icon: '✎', disabled: !can, why: can ? null : 'this cell cannot be edited' },
-          { id: 'undo', label: 'Undo the last edit', key: 'Ctrl+Z', disabled: !hist.undo, why: hist.undo ? null : 'nothing to undo' },
-          { id: 'redo', label: 'Redo', key: 'Ctrl+Y', disabled: !hist.redo, why: hist.redo ? null : 'nothing to redo' },
-          { id: 'clear-cells', label: 'Clear ' + (cells > 1 ? 'the ' + cells + ' cells' : 'the cell'), key: 'Delete' });
-      }
-      v.menu.open(items, { x: at.x, y: at.y, label: 'Cell menu', theme: v.host, run: (id) => { v.emitView('menuAction', { menu: 'cell', action: id, row: r, column: col.id }); runAction(v, id, { row: r, col: c }); } });
-      v.emitView('menuOpened', { menu: 'cell', row: r, column: col.id });
-    }
-    function drillable(v, x) {
-      if (x.kind === 'pivot') { return x.entry.kind !== 'header'; }
-      return x.kind === 'group' || (!!v.o.drillThrough && x.kind === 'leaf');
-    }
-    function groupField(v, col) {
-      const m = v.model;
-      if (m.pivotMode) { const cols = v.activeWells().state.columns; return cols.length ? v.headerOf(cols[cols.length - 1]) : null; }
-      const groups = m.rowModel.groupBy || m.rowModel.rowGroupCols || [];
-      return col.enableRowGroup && groups.indexOf(col.id) < 0 ? col.header : null;
-    }
-    function localDrill(v, ctx) {
-      const m = v.model;
-      if (!m.rowModel.filteredRows) { return []; }
-      const byField = {};
-      m.columns.all().forEach((c) => { byField[c.field] = c; });
-      let want = {};
-      if (ctx.kind === 'pivot') { want = ctx.coords || {}; }
-      else if (ctx.kind === 'group') { (m.rowModel.groupBy || []).slice(0, (ctx.path || []).length).forEach((id, i) => { const c = m.columns.get(id); want[c.field] = memberText(ctx.path[i]); }); }
-      else if (ctx.kind === 'leaf') { return [ctx.data]; }
-      const keys = Object.keys(want).filter((k) => want[k] !== '*others*');
-      return m.rowModel.filteredRows().filter((row) => keys.every((k) => memberText(byField[k] ? getValue(row, byField[k]) : row[k]) === want[k]));
-    }
-    function drill(v, at) {
-      const m = v.model, f = at || m.navigator.focus;
-      if (!f) { return Promise.resolve(null); }
-      const ctx = m.cellContext(f.row, f.col);
-      if (!ctx) { return Promise.resolve(null); }
-      return Promise.resolve(v.o.drillThrough ? v.o.drillThrough(ctx) : localDrill(v, ctx)).then((rows) => {
-        rows = rows || [];
-        v.emitView('drillThrough', { context: ctx, rows: rows.length });
-        const doc = v.doc, place = h(doc, 'div', { cls: 'dg-dialog-grid' });
-        const scope = ctx.coords ? Object.keys(ctx.coords).map((k) => k + ' = ' + ctx.coords[k]).join(', ') : ctx.path ? ctx.path.join(' › ') : ctx.header;
-        const dlg = h(doc, 'dialog', { cls: 'dg-dialog', attrs: { 'aria-label': 'Rows behind ' + scope } }, [
-          h(doc, 'div', { cls: 'dg-dialog-head' }, [h(doc, 'b', { text: rows.length + (rows.length === 1 ? ' row' : ' rows') }), ' behind ' + (scope || 'the cell'),
-            h(doc, 'button', { cls: 'dg-btn dg-dialog-close', text: 'Close', attrs: { type: 'button' }, on: { click: () => dlg.close() } })]), place]);
-        doc.body.appendChild(dlg);
-        openDialog(dlg, { focus: '.dg-dialog-close' });
-        const inner = new v.constructor(place, { columns: v.o.columns, rows: rows, layout: 'wells', density: m.density, title: 'Rows', checkboxes: false, getRowId: v.o.getRowId });
-        dlg.addEventListener('close', () => { inner.destroy(); dlg.remove(); });
-        v.lastDrill = { rows: rows.length, dialog: dlg };
-        return dlg;
-      });
-    }
-    function runAction(v, id, at) {
-      const m = v.model, f = at || m.navigator.focus;
-      const col = f ? m.shownColumns()[f.col] : null;
-      switch (id) {
-        case 'explain': return f ? v.explain(f.row, f.col) : v.say('Select a figure first');
-        case 'copy': case 'copy-headers': return copied(v, m.copy({ headers: id === 'copy-headers' }), id === 'copy-headers');
-        case 'export-csv': { const t = m.exportCsv(); download(v, (v.o.fileName || 'grid') + '.csv', t, 'text/csv'); v.emitView('exported', { format: 'csv', size: t.length }); return v.say('CSV of the grid as shown'); }
-        case 'export-xlsx': { const b = m.exportXlsx({ sheetName: v.o.title || 'Grid' }); download(v, (v.o.fileName || 'grid') + '.xlsx', b, XLSX_TYPE); v.emitView('exported', { format: 'xlsx', size: b.length }); return v.say('Excel workbook of the grid as shown'); }
-        case 'chart': {
-          const ranges = m.selection.ranges.slice(), cols = m.shownColumns(), table = { columns: [], rows: [] };
-          if (ranges.length) {
-            const g = ranges[0];
-            for (let c = g.c1; c <= g.c2; c++) { table.columns.push(cols[c].header); }
-            for (let r = g.r1; r <= g.r2; r++) { const line = [m.cellText(r, 0)]; for (let c = g.c1; c <= g.c2; c++) { line.push(m.cellValue(r, c)); } table.rows.push(line); }
-          }
-          const detail = { ranges: ranges, table: table };
-          v.emitView('chartRequested', detail);
-          if (v.o.chart) { v.o.chart(detail); }
-          return v.say(ranges.length ? 'Chart of ' + table.rows.length + ' rows × ' + table.columns.length + ' columns asked' : 'Select a range to chart');
-        }
-        case 'drill': return drill(v, at);
-        case 'group': {
-          if (m.pivotMode) { const w = v.activeWells(), cs = w.state.columns; if (cs.length) { const d = cs[cs.length - 1]; w.drop(d, 'rows'); v.wellsChanged('Rows grouped by ' + v.headerOf(d)); } return null; }
-          if (col && col.enableRowGroup) { const g = (m.rowModel.groupBy || []).concat([col.id]); m.setRowGroups(g); v.say('Rows grouped by ' + col.header); }
-          return null;
-        }
-        case 'pin-totals': v.ui.pinTotals = !v.ui.pinTotals; v.refresh(); return v.say((v.ui.pinTotals ? 'Totals pinned' : 'Totals unpinned'));
-        case 'pin-left': case 'unpin': if (col && !m.pivotMode) { m.columns.pin(col.id, id === 'unpin' ? null : 'left'); } return null;
-        case 'expand-all': case 'collapse-all': {
-          const open = id === 'expand-all';
-          if (m.pivotMode) { m.pivotState.expandToLevel('rows', open ? 99 : 1); m.pivotState.expandToLevel('columns', open ? 99 : 1); m.runPivot(); }
-          else if (m.rowModel.expandToLevel) { m.rowModel.expandToLevel(open ? 99 : 0); }
-          return v.say(open ? 'Everything expanded' : 'Everything collapsed');
-        }
-        case 'toggle-pivot': {
-          const w = m.wells;
-          if (!m.pivotMode && !w.state.values.length && !w.state.rows.length) {
-            const all = m.columns.all(), dim = all.find((c) => c.enableRowGroup), val = all.find((c) => c.enableValue);
-            if (dim) { w.state.rows.push(dim.id); }
-            if (val) { w.state.values.push({ colId: val.id, aggFunc: val.aggFunc || 'sum' }); }
-          }
-          return v.setPivotMode(!m.pivotMode);
-        }
-        case 'save-view': { const st = v.getState(); v.emitView('viewSaved', { state: st }); return v.say('View saved'); }
-        case 'toggle-fields': v.ui.fieldsOpen = !v.ui.fieldsOpen; return v.renderChrome();
-        case 'edit': return f ? v.startEditing(f.row, f.col) : null;
-        case 'undo': return v.undo();
-        case 'redo': return v.redo();
-        case 'clear-cells': {
-          const g = m.selection.ranges[m.selection.ranges.length - 1];
-          const range = g ? { r1: Math.min(g.r1, g.r2), c1: Math.min(g.c1, g.c2), r2: Math.max(g.r1, g.r2), c2: Math.max(g.c1, g.c2) } : f ? { r1: f.row, c1: f.col, r2: f.row, c2: f.col } : null;
-          if (!range) { return null; }
-          return m.editing.clear(range).then((res) => { v.say(res.transaction ? 'Cleared ' + res.transaction.edits.length + (res.transaction.edits.length === 1 ? ' cell' : ' cells') : res.problems.length ? 'Not cleared: ' + res.problems[0].message : 'Nothing to clear'); return res; }, (e2) => v.say('Not cleared: ' + e2.message));
-        }
-        default: throw new Error('no grid action ' + id);
-      }
-    }
-    function toolbarAction(v, act, btn) {
-      const m = v.model;
-      if (act === 'menu-format') {
-        const items = () => {
-          const out = [{ heading: 'Conditional formatting' }];
-          targets(v).forEach((t) => {
-            const has = (type) => v.formats.some((r) => r.type === type && (r.column === t.column || (t.measure && r.measure === t.measure)));
-            out.push({ id: 'cf:colourScale:' + t.key, label: 'Colour scale on ' + t.label, checked: has('colourScale'), keep: true }, { id: 'cf:dataBar:' + t.key, label: 'Data bars on ' + t.label, checked: has('dataBar'), keep: true });
-          });
-          out.push({ sep: true }, { id: 'cf-clear', label: 'Clear all formatting' });
-          return out;
-        };
-        v.menu.open(items, { anchor: btn, label: 'Formatting', theme: v.host, run: (id) => {
-          if (id === 'cf-clear') { v.setConditionalFormats([]); return; }
-          const [, type, key] = id.split(':'), t = targets(v).find((x) => x.key === key);
-          const match = (r) => r.type === type && (r.column === t.column || (t.measure && r.measure === t.measure));
-          v.setConditionalFormats(v.formats.some(match) ? v.formats.filter((r) => !match(r)) : v.formats.concat([Object.assign({ type: type }, t.measure ? { measure: t.measure } : { column: t.column })]));
-        } });
-        return;
-      }
-      if (act === 'menu-export') {
-        v.menu.open([{ id: 'export-csv', label: 'CSV of the grid as shown', icon: '⤓' }, { id: 'export-xlsx', label: 'Excel: values and outline', key: 'F8' },
-          { sep: true }, { id: 'copy-headers', label: 'Copy the selection with headers', key: 'Ctrl+Shift+C' }, { id: 'save-view', label: 'Save the view', key: 'F10' }],
-        { anchor: btn, label: 'Export', theme: v.host, run: (id) => runAction(v, id) });
-        return;
-      }
-      if (act === 'menu-view') {
-        const items = [{ heading: 'Layout' }].concat(LAYOUTS.map((l) => ({ id: 'layout:' + l, label: { wells: 'Ribbon wells', panel: 'Tool panel', terminal: 'Terminal' }[l], checked: m.layout === l })),
-          [{ heading: 'Density' }], Object.keys(DENSITIES).map((d) => ({ id: 'density:' + d, label: d.charAt(0).toUpperCase() + d.slice(1), checked: m.density === d })),
-          [{ sep: true }, { id: 'show-all', label: 'Show all columns' }, { id: 'autosize-all', label: 'Autosize all columns' }]);
-        v.menu.open(items, { anchor: btn, label: 'View', theme: v.host, run: (id) => {
-          if (id.indexOf('layout:') === 0) { v.setLayout(id.slice(7)); }
-          else if (id.indexOf('density:') === 0) { v.setDensity(id.slice(8)); }
-          else if (id === 'autosize-all') { v.autosize(-1); }
-          else if (id === 'show-all') { v.ui.hidden.clear(); m.columns.all().forEach((x) => { if (x.hidden) { m.columns.setVisible(x.id, true); } }); v.refresh(); }
-        } });
-        return;
-      }
-      runAction(v, act);
-    }
-    function targets(v) {
-      const m = v.model;
-      if (m.pivotMode) { return pivotMeasures(m.shownColumns()).map((x, i) => ({ key: 'm' + i, label: x, measure: x })); }
-      return m.columns.visible().filter((c) => c.type === 'number').map((c) => ({ key: c.id, label: c.header, column: c.id }));
-    }
-    return { "onKey": onKey, "openColumnMenu": openColumnMenu, "openCellMenu": openCellMenu, "localDrill": localDrill, "runAction": runAction, "toolbarAction": toolbarAction };
-  })();
-  /* ---- src/drishti_grid-base.js ---- */
-  __m["src/drishti_grid-base.js"] = (function () {
-    var WellsModel = __m["src/drishti_wells.js"].WellsModel;
-    var formatValue = __m["src/drishti_columns.js"].formatValue;
-    var phoneColumns = __m["src/drishti_grid-ui.js"].phoneColumns, pivotMeasures = __m["src/drishti_grid-ui.js"].pivotMeasures, figureRange = __m["src/drishti_grid-ui.js"].figureRange;
-    class GridBase {
-      displayColumns() {
-        if (this._disp) { return this._disp; }
-        const m = this.model, piv = m.pivotMode, ui = this.ui;
-        let list = m.shownColumns().map((col, i) => ({ col: col, i: i, width: (piv ? ui.widths[col.id] : null) || col.width || 120,
-          pin: piv ? (col.rowHeader ? 'left' : col.kind === 'grand' && ui.pinTotals ? 'right' : null) : col.pinned || null }));
-        if (piv) {
-          const others = list.some((d) => !d.col.rowHeader && d.col.kind !== 'grand');
-          list = list.filter((d) => !ui.hidden.has(d.col.id) && (ui.grandColumn || !others || d.col.kind !== 'grand'));
-        }
-        if (this.phone) {
-          list = phoneColumns(list, piv, ui.phoneMeasure);
-          const room = Math.max(160, (this.host.clientWidth || 360) * 0.5);
-          list = list.map((d) => (d.pin === 'left' ? Object.assign({}, d, { width: Math.min(d.width, room) }) : d));
-        }
-        const out = { all: [], left: [], center: [], right: [], byIndex: {}, leftOffset: {}, rightOffset: {} };
-        list.forEach((d) => { d.pane = d.pin === 'left' ? 'left' : d.pin === 'right' ? 'right' : 'center'; out[d.pane].push(d); out.byIndex[d.i] = d; });
-        out.all = out.left.concat(out.center, out.right);
-        let x = 0;
-        out.left.forEach((d) => { out.leftOffset[d.i] = x; x += d.width; });
-        out.leftW = x;
-        x = 0;
-        for (let k = out.right.length - 1; k >= 0; k--) { out.rightOffset[out.right[k].i] = x; x += out.right[k].width; }
-        out.rightW = x;
-        out.offs = new Float64Array(out.center.length + 1);
-        out.center.forEach((d, k) => { out.offs[k + 1] = out.offs[k] + d.width; });
-        out.centerW = out.offs[out.center.length];
-        this._disp = out;
-        return out;
-      }
-      emptyText() {
-        const m = this.model;
-        if (m.pivotMode && !m.wells.state.values.length) { return 'Drop a measure on Values to see figures.'; }
-        if (m.pivotMode && !m.answer) { return 'Computing the pivot…'; }
-        return m.rowCount() ? null : 'No rows to show.';
-      }
-      grouped() { const r = this.model.rowModel; return !!((r.groupBy && r.groupBy.length) || (r.rowGroupCols && r.rowGroupCols.length)); }
-      checkboxes() { return this.o.checkboxes !== false && this.model.selection.mode !== 'none'; }
-      sortOf(d) {
-        const m = this.model, col = d.col;
-        if (!m.pivotMode) { const s = m.sortModel.find((x) => x.colId === col.id); return s ? s.sort : null; }
-        const sort = m.pivotExtra.sort || {}, dims = m.answer ? m.answer.rowDimensions : [];
-        const s = dims.length ? sort[dims[0]] : null;
-        if (!s) { return null; }
-        if (col.rowHeader) { return s.by === 'label' ? (s.desc ? 'desc' : 'asc') : null; }
-        return s.by === col.measure && col.kind === 'grand' ? (s.desc ? 'desc' : 'asc') : null;
-      }
-      sourceOf(col) {
-        if (!this.model.pivotMode || !col.measure) { return col.id; }
-        const labels = this.model.wells.toView().values.map((x) => x.as), i = labels.indexOf(col.measure);
-        return i >= 0 ? this.model.wells.state.values[i].colId : null;
-      }
-      headerOf(id) { const c = this.model.columns.get(id); return c ? c.header : id; }
-      fmtMeasure(label, v) {
-        const col = this.model.shownColumns().find((c) => c.measure === label) || { type: 'number', format: this.model.measureFormat(label) };
-        return formatValue(v, col);
-      }
-      levelFigures(dim, by) {
-        const a = this.model.answer;
-        if (!a) { return null; }
-        const grand = a.columns.find((c) => c.kind === 'grand');
-        const xs = a.rows.filter((r) => r.dim === dim).map((r) => { const c = a.cells[r.key + '|' + (grand ? grand.key : '')]; return c && c.values ? c.values[by] : null; })
-          .filter((v) => typeof v === 'number').sort((p, q) => p - q);
-        if (!xs.length || !figureRange(xs)) { return null; }
-        const q = (t) => xs[Math.min(xs.length - 1, Math.floor(t * xs.length))];
-        return { median: Math.round(q(0.5)), p75: Math.round(q(0.75)) };
-      }
-      membersOf(colId) {
-        if (this.o.members) {
-          const r = this.o.members(colId);
-          if (Array.isArray(r)) { return r; }
-          const cache = this.membersCache = this.membersCache || {};
-          if (r && r.then && !cache[colId]) { r.then((list) => { cache[colId] = list || []; if (this.menu.isOpen()) { this.menu.fill(); } }); }
-          return cache[colId] || [];
-        }
-        return this.model.rowModel.members ? this.model.rowModel.members(colId, 500) : [];
-      }
-      activeWells() { return this.draft || this.model.wells; }
-      wellsChanged(what) {
-        if (this.draft) { this.draftDirty = true; }
-        else if (!this.model.pivotMode && this.model.wells.state.values.length) { this.model.setPivotMode(true); }
-        this.ex = null;
-        this.renderChrome();
-        if (what) { this.say(what); }
-      }
-      applyDraft() {
-        if (!this.draft) { return; }
-        this.model.wells.setState(this.draft.getState());
-        this.draftDirty = false;
-        if (!this.model.pivotMode) { this.model.setPivotMode(true); }
-        this.renderChrome();
-        this.say('Pivot updated');
-      }
-      panelSwitch(id, on) {
-        const m = this.model;
-        if (id === 'pivot') { this.setPivotMode(on); return; }
-        if (id === 'grand') { this.ui.grandColumn = on; this._disp = null; this.refresh(); return; }
-        if (id === 'above') { this.setPivotOptions({ subtotals: on ? 'above' : 'below' }, 'Subtotals ' + (on ? 'above' : 'below')); return; }
-        if (id === 'defer') {
-          if (on) { this.draft = new WellsModel(m.columns, m.wells.getState()); this.draft.serverFuncs = m.wells.serverFuncs; this.draft.allowedFuncs = m.wells.allowedFuncs; this.draftDirty = false; } else { const d = this.draftDirty; if (d) { this.applyDraft(); } this.draft = null; }
-          this.renderChrome();
-        }
-      }
-      setPivotOptions(extra, what) { if (what) { this.say(what); } return this.model.setPivotOptions(extra); }
-      setValueFilters(list) { return this.setPivotOptions({ valueFilters: list }, list.length ? 'Value filter: ' + list.length : 'Value filters cleared'); }
-      sortColumn(c, multi) {
-        const m = this.model, col = m.shownColumns()[c];
-        if (!col || col.sortable === false) { return; }
-        if (!m.pivotMode) { m.toggleSort(col.id, multi); return; }
-        const dims = m.answer ? m.answer.rowDimensions : [], cur = this.sortOf({ col: col });
-        const sort = {};
-        if (col.rowHeader) { dims.forEach((d) => { sort[d] = { by: 'label', desc: cur === 'asc' }; }); }
-        else if (cur !== 'asc') { dims.forEach((d) => { sort[d] = { by: col.measure, desc: cur !== 'desc' }; }); }
-        this.setPivotOptions({ sort: sort }, Object.keys(sort).length ? 'Rows ordered by ' + (col.rowHeader ? 'name' : col.measure) : 'Order cleared');
-      }
-      setColumnWidth(d, w) {
-        if (this.model.pivotMode) { this.ui.widths[d.col.id] = Math.round(w); this._disp = null; this.body.schedule(); }
-        else { this.model.columns.setWidth(d.col.id, Math.round(w)); }
-      }
-      autosize(c) {
-        const m = this.model, disp = this.displayColumns();
-        const ctx = this.doc.createElement('canvas').getContext('2d');
-        const style = this.doc.defaultView.getComputedStyle(this.body.scroller);
-        if (ctx) { ctx.font = style.fontSize + ' ' + style.fontFamily; }
-        const measure = (t) => (ctx ? ctx.measureText(String(t)).width : String(t).length * 7);
-        const n = Math.min(m.rowCount(), 300);
-        (c < 0 ? disp.all : [disp.byIndex[c]]).forEach((d) => {
-          if (!d) { return; }
-          let w = measure(d.col.header) + 44;
-          for (let r = 0; r < n; r++) { w = Math.max(w, measure(m.cellText(r, d.i)) + (d === disp.all[0] ? 70 : 24)); }
-          this.setColumnWidth(d, Math.min(480, Math.ceil(w)));
-        });
-        this._disp = null;
-        this.body.schedule();
-        this.say(c < 0 ? 'Every column sized to its content' : 'Column sized to its content');
-      }
-      switchMeasure(label) {
-        this.ui.phoneMeasure = label;
-        this._disp = null;
-        this.emitView('measureSwitched', { measure: label });
-        this.refresh();
-      }
-      measures() { return pivotMeasures(this.model.shownColumns()); }
-    }
-    return { "GridBase": GridBase };
-  })();
-  /* ---- src/drishti_grid-body.js ---- */
-  __m["src/drishti_grid-body.js"] = (function () {
-    var h = __lib("drishti-core").h;
-    var headerSpans = __m["src/drishti_grid-ui.js"].headerSpans, pivotColumnLabels = __m["src/drishti_grid-ui.js"].pivotColumnLabels, markGroups = __m["src/drishti_grid-ui.js"].markGroups, isTotalCell = __m["src/drishti_grid-ui.js"].isTotalCell, nonAdditiveNote = __m["src/drishti_grid-ui.js"].nonAdditiveNote, cfBackground = __m["src/drishti_grid-ui.js"].cfBackground, figureRange = __m["src/drishti_grid-ui.js"].figureRange, ruleFor = __m["src/drishti_grid-ui.js"].ruleFor;
-    const CF_SCAN = 100000;
-    const DECO_STYLES = ['color', 'background-color', 'font-weight', 'font-style'];
-    function safeClasses(text) { return String(text).split(/\s+/).filter((t) => /^[A-Za-z][\w-]*$/.test(t)).join(' '); }
-    class GridBody {
-      constructor(view) {
-        this.view = view;
-        this.model = view.model;
-        const doc = this.doc = view.doc;
-        this.uid = view.uid;
-        this.scroller = h(doc, 'div', { cls: 'dg-scroll', attrs: { role: 'grid', tabindex: '0', 'aria-multiselectable': 'true', 'aria-label': view.o.label || 'Grid', id: this.uid + '-grid' } });
-        this.canvas = h(doc, 'div', { cls: 'dg-canvas', attrs: { role: 'presentation' } });
-        this.head = h(doc, 'div', { cls: 'dg-head', attrs: { role: 'rowgroup' } });
-        this.area = h(doc, 'div', { cls: 'dg-area', attrs: { role: 'presentation' } });
-        this.rows = h(doc, 'div', { cls: 'dg-rows', attrs: { role: 'rowgroup' } });
-        this.empty = h(doc, 'div', { cls: 'dg-empty', attrs: { hidden: true } });
-        this.area.appendChild(this.rows);
-        this.canvas.append(this.head, this.area);
-        this.scroller.append(this.canvas, this.empty);
-        this.cfCache = new Map();
-        this.version = 0;
-        this.drag = null;
-        this.frame = 0;
-        this.listen();
-      }
-      listen() {
-        const s = this.scroller, win = this.doc.defaultView;
-        s.addEventListener('scroll', () => this.schedule());
-        s.addEventListener('mousedown', (e) => this.down(e));
-        s.addEventListener('mouseover', (e) => this.over(e));
-        s.addEventListener('mouseleave', () => this.view.notes.hideTip());
-        s.addEventListener('click', (e) => this.click(e));
-        s.addEventListener('dblclick', (e) => this.dbl(e));
-        s.addEventListener('contextmenu', (e) => this.context(e));
-        this.onUp = () => { if (this.drag) { this.drag = null; this.view.afterRange(); } };
-        win.addEventListener('mouseup', this.onUp);
-      }
-      schedule() {
-        if (this.frame) { return; }
-        const win = this.doc.defaultView;
-        this.frame = win.requestAnimationFrame(() => { this.frame = 0; this.render(); });
-      }
-      invalidate() { this.version++; this.cfCache.clear(); this.spans = null; }
-      cellOf(e) {
-        const c = e.target.closest ? e.target.closest('.dg-cell') : null;
-        if (!c || !this.scroller.contains(c)) { return null; }
-        return { el: c, r: +c.dataset.r, c: +c.dataset.c };
-      }
-      down(e) {
-        if (e.button !== 0) { return; }
-        const t = e.target;
-        if (t.closest('.dg-tw, input, button, select, .dg-resize, .dg-hcell, .dg-editor')) { return; }
-        const x = this.cellOf(e);
-        if (!x) { return; }
-        e.preventDefault();
-        this.scroller.focus({ preventScroll: true });
-        this.model.cellClicked(x.r, x.c, { shift: e.shiftKey, ctrl: e.ctrlKey || e.metaKey });
-        this.drag = { r: x.r, c: x.c };
-        this.view.afterFocus(false);
-      }
-      over(e) {
-        const x = this.cellOf(e);
-        if (this.drag && x && (x.r !== this.drag.r || x.c !== this.drag.c)) {
-          this.drag = { r: x.r, c: x.c };
-          this.model.selection.extendRange(x.r, x.c);
-        }
-        if (x && x.el.classList.contains('dg-nadd') && !this.drag) {
-          const col = this.model.shownColumns()[x.c];
-          this.view.notes.showTip(nonAdditiveNote(col.measure || col.header, x.el.textContent), x.el);
-        } else { this.view.notes.hideTip(); }
-      }
-      click(e) {
-        const t = e.target, v = this.view, m = this.model;
-        const tw = t.closest('.dg-tw');
-        if (tw) { e.stopPropagation(); m.toggleRow(+tw.dataset.r); v.announceRow(+tw.dataset.r); return; }
-        if (t.matches('input.dg-check')) {
-          const r = +t.dataset.r;
-          if (t.dataset.all !== undefined) {
-            const ids = [];
-            if (t.checked && m.pivotMode) { for (let i = 0; i < m.rowCount(); i++) { const id = m.idAt(i); if (id !== null) { ids.push(id); } } }
-            if (t.checked && !m.pivotMode) { m.selectAll(); } else { m.selection.selectAll(ids); }
-          }
-          else { m.selection.clickRow(r, (i) => m.idAt(i), { ctrl: true }); }
-          return;
-        }
-        const ct = t.closest('.dg-ctoggle');
-        if (ct) { const sp = this.groupAt(ct); if (sp) { m.togglePivotNode('columns', sp.group.path); v.say((sp.group.open ? 'Collapsed ' : 'Expanded ') + sp.label); } return; }
-        const menu = t.closest('.dg-hmenu');
-        if (menu) { e.stopPropagation(); v.openColumnMenu(+menu.dataset.c, menu); return; }
-        if (t.closest('.dg-resize')) { return; }
-        const hc = t.closest('.dg-hcell.dg-leaf');
-        if (hc && !this.resized) { v.sortColumn(+hc.dataset.c, e.shiftKey); }
-        this.resized = false;
-      }
-      dbl(e) {
-        const rz = e.target.closest('.dg-resize');
-        if (rz) { this.view.autosize(+rz.dataset.c); return; }
-        const x = this.cellOf(e);
-        if (!x) { return; }
-        this.model.cellDoubleClicked(x.r, x.c);
-        if (this.model.editing.canEdit(x.r, x.c)) { this.view.startEditing(x.r, x.c); return; }
-        if (this.model.navigator.grid.isGroup(x.r)) { this.model.toggleRow(x.r); this.view.announceRow(x.r); }
-      }
-      context(e) {
-        const x = this.cellOf(e);
-        if (!x) { return; }
-        e.preventDefault();
-        if (!this.model.selection.inRange(x.r, x.c)) { this.model.cellClicked(x.r, x.c, {}); this.view.afterFocus(false); }
-        this.view.openCellMenu(x.r, x.c, { x: e.clientX, y: e.clientY });
-      }
-      resizeStart(e, d) {
-        e.preventDefault();
-        e.stopPropagation();
-        const x0 = e.clientX, w0 = d.width, win = this.doc.defaultView;
-        const move = (ev) => { this.view.setColumnWidth(d, Math.max(40, w0 + ev.clientX - x0)); this.resized = true; };
-        const up = () => { win.removeEventListener('pointermove', move); win.removeEventListener('pointerup', up); };
-        win.addEventListener('pointermove', move);
-        win.addEventListener('pointerup', up);
-      }
-      groupAt(btn) {
-        const lv = +btn.dataset.level, key = btn.dataset.key;
-        const row = this.spans && this.spans[lv];
-        return row ? row.find((s) => s.key === key && s.group) || null : null;
-      }
-      labels(display) {
-        const m = this.model;
-        if (m.pivotMode) {
-          const a = m.answer, L = a ? a.columnDimensions.length : 0, byKey = {};
-          (a ? a.columns : []).forEach((e) => { byKey[e.key] = e; });
-          const entries = display.map((d) => (d.col.rowHeader ? null : byKey[d.col.colKey] || null));
-          const labels = display.map((d, i) => (d.col.rowHeader ? new Array(L).fill('').concat([d.col.header]) : pivotColumnLabels(d.col, entries[i], L)));
-          return { labels: labels, entries: entries };
-        }
-        const grouped = display.some((d) => d.col.group);
-        return { labels: display.map((d) => (grouped ? [d.col.group || '', d.col.header] : [d.col.header])), entries: null };
-      }
-      paneSpans(disp) {
-        const all = disp.all, lab = this.labels(all);
-        const parts = { left: [], center: [], right: [] };
-        all.forEach((d, i) => parts[d.pane].push(i));
-        const out = { left: null, center: null, right: null };
-        Object.keys(parts).forEach((p) => {
-          const idx = parts[p];
-          const sp = headerSpans(idx.map((i) => lab.labels[i]));
-          if (lab.entries) { markGroups(sp, idx.map((i) => lab.entries[i])); }
-          out[p] = sp.map((row) => row.map((s) => Object.assign(s, { start: all[idx[s.start]].i, end: all[idx[s.end]].i })));
-        });
-        const levels = lab.labels.reduce((n, l) => Math.max(n, l.length), 1);
-        this.spans = [];
-        for (let lv = 0; lv < levels; lv++) { this.spans.push([].concat(out.left[lv] || [], out.center[lv] || [], out.right[lv] || [])); }
-        return { out: out, levels: levels };
-      }
-      render() {
-        const m = this.model, v = this.view, vp = m.viewport, doc = this.doc;
-        const disp = v.displayColumns();
-        const rh = vp.rowHeight, hrh = rh + 4;
-        const sp = this.paneSpans(disp);
-        const headH = sp.levels * hrh;
-        const W = disp.leftW + disp.centerW + disp.rightW;
-        vp.resize(Math.max(1, this.scroller.clientWidth), Math.max(rh, this.scroller.clientHeight - headH));
-        vp.setRowCount(m.rowCount());
-        vp.scrollTo(this.scroller.scrollTop, this.scroller.scrollLeft);
-        this.canvas.style.width = W + 'px';
-        this.area.style.height = vp.scrollHeight() + 'px';
-        this.head.style.height = headH + 'px';
-        const rows = vp.rows();
-        const cr = vp.columns(disp.offs, disp.leftW + disp.rightW);
-        this.window = { rows: rows, cols: cr };
-        const centerShown = disp.center.slice(Math.max(0, cr.first), cr.last + 1);
-        const lead = disp.center.length && cr.first > 0 ? disp.offs[cr.first] : 0;
-        const trail = disp.center.length ? disp.centerW - disp.offs[Math.min(disp.center.length, cr.last + 1)] : 0;
-        this.head.textContent = '';
-        for (let lv = 0; lv < sp.levels; lv++) {
-          const leaf = lv === sp.levels - 1;
-          const row = h(doc, 'div', { cls: 'dg-hrow' + (leaf ? ' dg-hleaf' : ''), attrs: { role: 'row', 'aria-rowindex': String(lv + 1) }, style: { height: hrh + 'px' } });
-          this.headPane(row, sp.out.left[lv] || [], disp, 'left', lv, leaf);
-          if (lead) { row.appendChild(h(doc, 'div', { cls: 'dg-gap', attrs: { role: 'presentation' }, style: { width: lead + 'px' } })); }
-          const firstI = centerShown.length ? centerShown[0].i : -1, lastI = centerShown.length ? centerShown[centerShown.length - 1].i : -2;
-          this.headPane(row, (sp.out.center[lv] || []).filter((s) => s.end >= firstI && s.start <= lastI).map((s) => Object.assign({}, s, { start: Math.max(s.start, firstI), end: Math.min(s.end, lastI) })), disp, 'center', lv, leaf);
-          if (trail > 0) { row.appendChild(h(doc, 'div', { cls: 'dg-gap', attrs: { role: 'presentation' }, style: { width: trail + 'px' } })); }
-          this.headPane(row, sp.out.right[lv] || [], disp, 'right', lv, leaf);
-          this.head.appendChild(row);
-        }
-        this.rows.textContent = '';
-        this.rows.style.top = rows.offset + 'px';
-        this.rows.style.width = W + 'px';
-        const focus = m.navigator.focus;
-        const flash = v.flash;
-        for (let r = rows.first; r <= rows.last; r++) {
-          const x = m.rowAt(r);
-          if (!x) { continue; }
-          this.rows.appendChild(this.rowEl(r, x, disp, centerShown, lead, trail, focus, flash, sp.levels));
-        }
-        flash.settle();
-        if (flash.active()) { this.view.doc.defaultView.setTimeout(() => this.schedule(), 120); }
-        const s = this.scroller;
-        s.setAttribute('role', m.pivotMode || (m.rowModel.groupBy && m.rowModel.groupBy.length) ? 'treegrid' : 'grid');
-        s.setAttribute('aria-rowcount', String(m.rowCount() + sp.levels));
-        s.setAttribute('aria-colcount', String(m.shownColumns().length));
-        const fid = focus ? this.uid + '-r' + focus.row + '-c' + focus.col : null;
-        if (fid && doc.getElementById(fid)) { s.setAttribute('aria-activedescendant', fid); } else { s.removeAttribute('aria-activedescendant'); }
-        const why = v.emptyText();
-        this.empty.hidden = !why;
-        this.empty.textContent = why || '';
-        if (v.editor) { v.editor.place(); }
-      }
-      headPane(row, spans, disp, pane, lv, leaf) {
-        const doc = this.doc, m = this.model;
-        const all = disp.all, byIndex = disp.byIndex;
-        let edge = 0;
-        const paneCols = pane === 'left' ? disp.left : pane === 'right' ? disp.right : null;
-        const offsetOf = (i) => { let o = 0; for (const d of paneCols) { if (d.i === i) { return o; } o += d.width; } return o; };
-        const rightOf = (i) => { let o = 0; for (let k = paneCols.length - 1; k >= 0; k--) { o += paneCols[k].width; if (paneCols[k].i === i) { return o - paneCols[k].width; } } return o; };
-        spans.forEach((s) => {
-          let w = 0;
-          for (let i = s.start; i <= s.end; i++) { if (byIndex[i]) { w += byIndex[i].width; } }
-          const d = byIndex[s.start];
-          const style = { width: w + 'px' };
-          if (pane === 'left') { style.left = offsetOf(s.start) + 'px'; }
-          if (pane === 'right') { style.right = rightOf(s.end) + 'px'; }
-          const cls = 'dg-hcell dg-' + pane + (leaf ? ' dg-leaf' : ' dg-hgroup') + (d && d.col.type === 'number' ? ' dg-num' : '') + (pane === 'right' && s.start === disp.right[0].i ? ' dg-edge' : '');
-          const cell = h(doc, 'div', { cls: cls, attrs: { role: 'columnheader', 'aria-colindex': String(s.start + 1), 'aria-colspan': s.end > s.start ? String(s.end - s.start + 1) : null }, data: { c: String(s.start) }, style: style });
-          if (leaf && d) {
-            const col = d.col, sort = this.view.sortOf(d);
-            if (sort) { cell.setAttribute('aria-sort', sort === 'asc' ? 'ascending' : 'descending'); }
-            if (col.rowHeader || (!m.pivotMode && s.start === all[0].i)) { this.allCheck(cell); }
-            cell.appendChild(h(doc, 'span', { cls: 'dg-hlabel', text: s.label }));
-            if (col.additive === false && col.type === 'number') { cell.appendChild(h(doc, 'span', { cls: 'dg-na', text: '◆', attrs: { title: 'Not additive: every total is the server\'s own figure for its group', 'aria-label': 'not additive' } })); }
-            if (sort) { cell.appendChild(h(doc, 'span', { cls: 'dg-sort', text: sort === 'asc' ? '▲' : '▼', attrs: { 'aria-hidden': 'true' } })); }
-            cell.appendChild(h(doc, 'button', { cls: 'dg-hmenu', text: '☰', attrs: { type: 'button', tabindex: '-1', 'aria-label': 'Column menu: ' + s.label }, data: { c: String(s.start) } }));
-            const rz = h(doc, 'div', { cls: 'dg-resize', attrs: { role: 'presentation', title: 'Drag to resize; double-click to fit' }, data: { c: String(s.start) } });
-            rz.addEventListener('pointerdown', (e) => this.resizeStart(e, d));
-            cell.appendChild(rz);
-          } else {
-            if (s.group) {
-              cell.appendChild(h(doc, 'button', { cls: 'dg-ctoggle', text: s.group.open ? '▾' : '▸', attrs: { type: 'button', tabindex: '-1', 'aria-expanded': String(s.group.open), 'aria-label': (s.group.open ? 'Collapse ' : 'Expand ') + s.label }, data: { level: String(lv), key: s.key } }));
-            }
-            cell.appendChild(h(doc, 'span', { cls: 'dg-hlabel', text: s.label }));
-          }
-          edge += w;
-          row.appendChild(cell);
-        });
-        return edge;
-      }
-      allCheck(cell) {
-        if (!this.view.checkboxes()) { return; }
-        const m = this.model;
-        const n = m.selection.selectedIds().length;
-        const box = h(this.doc, 'input', { cls: 'dg-check', attrs: { type: 'checkbox', tabindex: '-1', 'aria-label': 'Select all rows' }, data: { all: '1', r: '-1' } });
-        let all = m.rowModel.filteredCount ? m.rowModel.filteredCount() : m.rowCount();
-        if (m.pivotMode) { all = 0; for (let i = 0; i < m.rowCount(); i++) { if (m.idAt(i) !== null) { all++; } } }
-        box.checked = n > 0 && n >= all;
-        box.indeterminate = n > 0 && n < all;
-        cell.appendChild(box);
-      }
-      rowEl(r, x, disp, centerShown, lead, trail, focus, flash, levels) {
-        const doc = this.doc, m = this.model;
-        const e = x.kind === 'pivot' ? x.entry : null;
-        const expandable = e ? !!e.expandable : x.kind === 'group';
-        const expanded = e ? !!e.expanded : !!x.expanded;
-        const kind = e ? e.kind : x.kind;
-        const id = m.idAt(r);
-        const selected = id !== null && m.selection.isSelected(id);
-        const cls = 'dg-row dg-k-' + kind + (expandable ? ' dg-parent' : '') + (selected ? ' dg-selected' : '') + (r % 2 ? ' dg-odd' : '');
-        const row = h(doc, 'div', { cls: cls, attrs: { role: 'row', 'aria-rowindex': String(r + levels + 1), 'aria-selected': id !== null ? String(selected) : null,
-          'aria-level': m.pivotMode || x.kind === 'group' || x.depth ? String((x.depth || 0) + 1) : null, 'aria-expanded': expandable ? String(expanded) : null },
-        style: { height: m.viewport.rowHeight + 'px' } });
-        const rowKey = e ? 'p:' + e.key : x.kind === 'group' ? 'g:' + (x.path || x.keys || []).join('\u001f') : 'l:' + (x.id !== undefined ? x.id : r);
-        const first = disp.all[0];
-        const add = (d) => row.appendChild(this.cellEl(r, x, d, { kind: kind, expandable: expandable, expanded: expanded, first: d === first, focus: focus, flash: flash, rowKey: rowKey, selected: selected }, disp));
-        disp.left.forEach(add);
-        if (lead) { row.appendChild(h(doc, 'div', { cls: 'dg-gap', attrs: { role: 'presentation' }, style: { width: lead + 'px' } })); }
-        centerShown.forEach(add);
-        if (trail > 0) { row.appendChild(h(doc, 'div', { cls: 'dg-gap', attrs: { role: 'presentation' }, style: { width: trail + 'px' } })); }
-        disp.right.forEach(add);
-        return row;
-      }
-      cellEl(r, x, d, k, disp) {
-        const doc = this.doc, m = this.model, col = d.col, c = d.i;
-        const style = { width: d.width + 'px' };
-        if (d.pane === 'left') { style.left = disp.leftOffset[c] + 'px'; }
-        if (d.pane === 'right') { style.right = disp.rightOffset[c] + 'px'; }
-        const loading = x.kind === 'loading';
-        const text = loading ? '' : m.cellText(r, c);
-        const value = loading ? undefined : m.cellValue(r, c);
-        const num = col.type === 'number' && !col.rowHeader;
-        const total = num && isTotalCell(k.kind, m.pivotMode ? col.kind : null, k.expandable);
-        const pending = text === '…' && !k.first;
-        let cls = 'dg-cell dg-' + d.pane + (num ? ' dg-num' : '') + (typeof value === 'number' && value < 0 ? ' dg-neg' : '') + (total ? ' dg-total' : '');
-        if (total && col.additive === false && !pending) { cls += ' dg-nadd'; }
-        if (pending) { cls += ' dg-pending'; }
-        if (loading) { cls += ' dg-loading'; }
-        if (d.pane === 'right' && disp.right[0] === d) { cls += ' dg-edge'; }
-        if (m.selection.inRange(r, c)) { cls += ' dg-in-range'; }
-        let note = null;
-        if (x.kind === 'leaf' && col.editable) {
-          const mark = m.editing.markOf(x.id, col.id);
-          if (m.editing.canEdit(r, c)) { cls += ' dg-editable'; }
-          if (mark) { cls += ' dg-' + mark; note = mark === 'proposed' ? 'Waiting for a second person to approve' : 'Changed here'; }
-        }
-        let deco = null;
-        if (x.kind === 'pivot' && !col.rowHeader && m.answer) {
-          const pc = m.answer.cells[x.entry.key + '|' + col.colKey];
-          if (pc && pc.tones && pc.tones[col.measure]) { cls += ' ' + safeClasses(pc.tones[col.measure]); }
-          if (pc && pc.notes && pc.notes[col.measure]) { note = String(pc.notes[col.measure]); }
-        }
-        if (this.view.o.decorateCell && !loading) {
-          deco = this.view.o.decorateCell({ row: r, col: c, columnId: col.id, column: col, value: value, text: text, kind: x.kind, entry: x.kind === 'pivot' ? x.entry : null,
-            measure: col.measure || null, colKey: col.colKey || null, cell: x.kind === 'pivot' && m.answer ? m.answer.cells[x.entry.key + '|' + col.colKey] || null : null,
-            data: x.kind === 'leaf' ? x.row : null, rowHeader: !!col.rowHeader });
-          if (deco && deco.cls) { cls += ' ' + safeClasses(deco.cls); }
-          if (deco && deco.title) { note = note ? note + '\n' + deco.title : String(deco.title); }
-          if (deco && deco.style) { Object.keys(deco.style).forEach((k) => { if (DECO_STYLES.indexOf(k) >= 0 && deco.style[k]) { style[k] = String(deco.style[k]); } }); }
-        }
-        const focused = k.focus && k.focus.row === r && k.focus.col === c;
-        if (focused) { cls += ' dg-focus'; }
-        if (num && typeof value === 'number' && !total && !loading) {
-          const rule = ruleFor(this.view.formats, { id: col.id, measure: col.measure, source: this.view.sourceOf(col) });
-          if (rule) { const bg = cfBackground(rule, value, this.cfRange(d)); if (bg) { style['background-image'] = bg; cls += ' dg-cf'; } }
-        }
-        if (num && typeof value === 'number') {
-          const f = k.flash.seen(k.rowKey + '|' + col.id, value);
-          if (f) { cls += ' dg-flash-' + f.dir; style['animation-delay'] = (-f.age) + 'ms'; }
-        }
-        const cell = h(doc, 'div', { cls: cls, attrs: { role: col.rowHeader ? 'rowheader' : 'gridcell', id: this.uid + '-r' + r + '-c' + c, 'aria-colindex': String(c + 1),
-          'aria-selected': k.selected || m.selection.inRange(r, c) ? 'true' : null, 'aria-readonly': x.kind === 'leaf' && col.editable && !m.editing.canEdit(r, c) ? 'true' : null,
-          title: note }, data: x.kind === 'pivot' && !col.rowHeader ? { r: String(r), c: String(c), cell: x.entry.key + '|' + col.colKey } : { r: String(r), c: String(c) }, style: style });
-        if (k.first && !loading) {
-          const depth = x.depth || 0;
-          if (depth) { cell.style.paddingLeft = (8 + depth * 16) + 'px'; }
-          if (this.view.checkboxes() && (m.idAt(r) !== null)) {
-            const box = h(doc, 'input', { cls: 'dg-check', attrs: { type: 'checkbox', tabindex: '-1', 'aria-label': 'Select row' }, data: { r: String(r) } });
-            box.checked = !!k.selected;
-            cell.appendChild(box);
-          }
-          if (k.expandable) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw', text: k.expanded ? '−' : '+', attrs: { 'aria-hidden': 'true' }, data: { r: String(r) } })); }
-          else if (m.pivotMode || (m.rowModel.groupBy && m.rowModel.groupBy.length)) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw dg-tw-none', attrs: { 'aria-hidden': 'true' } })); }
-        }
-        if (deco && deco.before && typeof deco.before === 'object' && deco.before.nodeType) { cell.appendChild(deco.before); }
-        if (deco && deco.content && typeof deco.content === 'object' && deco.content.nodeType) {
-          const box = h(doc, 'span', { cls: 'dg-text' });
-          box.appendChild(deco.content);
-          cell.appendChild(box);
-        } else { cell.appendChild(h(doc, 'span', { cls: 'dg-text', text: text })); }
-        if (deco && deco.after !== undefined && deco.after !== null && deco.after !== '') {
-          cell.appendChild(typeof deco.after === 'object' && deco.after.nodeType ? deco.after : h(doc, 'span', { cls: 'dg-after', text: String(deco.after) }));
-        }
-        return cell;
-      }
-      cfRange(d) {
-        const key = d.col.id;
-        if (this.cfCache.has(key)) { return this.cfCache.get(key); }
-        const m = this.model, n = Math.min(m.rowCount(), CF_SCAN), vals = [];
-        if (!(m.pivotMode && (d.col.kind === 'total' || d.col.kind === 'grand'))) {
-          for (let r = 0; r < n; r++) {
-            const x = m.rowAt(r);
-            if (!x || (x.kind === 'pivot' ? (x.entry.kind !== 'node' || x.entry.expandable) : x.kind !== 'leaf')) { continue; }
-            vals.push(m.cellValue(r, d.i));
-          }
-        }
-        const range = figureRange(vals);
-        this.cfCache.set(key, range);
-        return range;
-      }
-      scrollToFocus() {
-        const m = this.model, f = m.navigator.focus;
-        if (!f) { return; }
-        const vp = m.viewport, rh = vp.rowHeight;
-        const top = this.scroller.scrollTop, room = vp.height;
-        const real = f.row * rh;
-        if (vp.contentHeight() <= vp.maxScrollHeight) {
-          if (real < top) { this.scroller.scrollTop = real; } else if (real + rh > top + room) { this.scroller.scrollTop = real + rh - room; }
-        } else if (vp.scrollToRow(f.row) !== null) { this.scroller.scrollTop = vp.scrollTop; }
-        const disp = this.view.displayColumns(), d = disp.byIndex[f.col];
-        if (d && d.pane === 'center') {
-          const left = disp.offs[disp.center.indexOf(d)], vis = this.scroller.clientWidth - disp.leftW - disp.rightW, sl = this.scroller.scrollLeft;
-          if (left < sl) { this.scroller.scrollLeft = left; } else if (left + d.width > sl + vis) { this.scroller.scrollLeft = left + d.width - vis; }
-        }
-      }
-      destroy() {
-        this.doc.defaultView.removeEventListener('mouseup', this.onUp);
-        if (this.frame) { this.doc.defaultView.cancelAnimationFrame(this.frame); }
-      }
-    }
-    return { "GridBody": GridBody };
-  })();
-  /* ---- src/drishti_grid-dom.js ---- */
-  __m["src/drishti_grid-dom.js"] = (function () {
-    var h = __lib("drishti-core").h, placeAt = __lib("drishti-core").placeAt;
-    let menuSeq = 0;
-    class Menu {
-      constructor(doc, o) {
-        this.doc = doc;
-        this.o = o || {};
-        this.el = null;
-        this.before = null;
-        this.onDown = (e) => { if (this.el && !this.el.contains(e.target)) { this.close(); } };
-      }
-      isOpen() { return !!this.el; }
-      open(items, at) {
-        this.close();
-        this.before = this.doc.activeElement;
-        this.at = at;
-        this.items = items;
-        const el = this.el = h(this.doc, 'div', { cls: this.o.className || 'dg-menu', attrs: { role: 'menu', id: 'dg-menu-' + (++menuSeq), 'aria-label': at.label || 'Menu', tabindex: '-1' } });
-        if (at.theme) { ['data-density', 'data-layout'].forEach((a) => { if (at.theme.getAttribute(a)) { el.setAttribute(a, at.theme.getAttribute(a)); } }); }
-        el.addEventListener('keydown', (e) => this.key(e));
-        this.fill();
-        this.doc.body.appendChild(el);
-        const r = at.anchor ? at.anchor.getBoundingClientRect() : null;
-        placeAt(el, r ? r.left : at.x, r ? r.bottom + 4 : at.y);
-        this.doc.addEventListener('mousedown', this.onDown, true);
-        const first = this.enabled()[0];
-        (first || el).focus();
-        return el;
-      }
-      fill() {
-        const el = this.el, doc = this.doc, list = typeof this.items === 'function' ? this.items() : this.items;
-        el.textContent = '';
-        list.forEach((it) => {
-          if (it.sep) { el.appendChild(h(doc, 'div', { cls: 'dg-menu-sep', attrs: { role: 'separator' } })); return; }
-          if (it.heading) { el.appendChild(h(doc, 'div', { cls: 'dg-menu-head', text: it.heading, attrs: { role: 'presentation' } })); return; }
-          if (it.input) {
-            const field = h(doc, 'input', { cls: 'dg-menu-input', attrs: { type: 'text', placeholder: it.input.placeholder || '', 'aria-label': it.label, value: it.input.value || '' } });
-            const go = () => this.run(it, field.value);
-            field.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); go(); } });
-            el.appendChild(h(doc, 'div', { cls: 'dg-menu-form', data: { action: it.id } }, [h(doc, 'span', { text: it.label }), field,
-              h(doc, 'button', { cls: 'dg-btn', text: 'Apply', attrs: { type: 'button', 'data-apply': it.id }, on: { click: go } })]));
-            return;
-          }
-          const check = it.checked !== undefined;
-          const item = h(doc, 'div', {
-            cls: 'dg-menu-item' + (it.checked ? ' on' : '') + (it.disabled ? ' off' : ''),
-            attrs: { role: check ? 'menuitemcheckbox' : 'menuitem', tabindex: '-1', 'aria-checked': check ? String(!!it.checked) : null,
-              'aria-disabled': it.disabled ? 'true' : null, title: it.disabled && it.why ? it.why : null },
-            data: { action: it.id }
-          }, [h(doc, 'span', { cls: 'dg-menu-ic', text: it.checked ? '✓' : (it.icon || ''), attrs: { 'aria-hidden': 'true' } }), h(doc, 'span', { cls: 'dg-menu-label', text: it.label }),
-            it.key ? h(doc, 'span', { cls: 'dg-menu-key', text: it.key }) : null]);
-          item.addEventListener('click', (e) => { e.stopPropagation(); this.run(it); });
-          item.addEventListener('mousemove', () => { if (this.doc.activeElement !== item) { item.focus(); } });
-          el.appendChild(item);
-        });
-      }
-      enabled() { return this.el ? Array.from(this.el.querySelectorAll('.dg-menu-item:not(.off), .dg-menu-input')) : []; }
-      run(it, value) {
-        if (it.disabled) { return; }
-        const keep = it.keep && typeof this.items === 'function';
-        const at = this.at;
-        if (!keep) { this.close(); }
-        at.run(it.id, value);
-        if (keep && this.el) {
-          const idx = this.enabled().indexOf(this.doc.activeElement);
-          this.fill();
-          const list = this.enabled();
-          (list[Math.max(0, idx)] || this.el).focus();
-        }
-      }
-      key(e) {
-        const list = this.enabled(), i = list.indexOf(this.doc.activeElement);
-        if (e.target && e.target.tagName === 'INPUT' && e.key !== 'Escape' && e.key !== 'ArrowDown' && e.key !== 'ArrowUp') { return; }
-        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-          e.preventDefault();
-          const n = list.length;
-          if (n) { list[e.key === 'ArrowDown' ? (i + 1) % n : (i - 1 + n) % n].focus(); }
-        } else if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); if (list.length) { list[e.key === 'Home' ? 0 : list.length - 1].focus(); } }
-        else if (e.key === 'Escape' || e.key === 'Tab') { e.preventDefault(); e.stopPropagation(); this.close(true); }
-        else if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          const cur = this.doc.activeElement;
-          if (cur && cur.classList.contains('dg-menu-item')) { cur.click(); }
-        }
-      }
-      close(refocus) {
-        if (!this.el) { return; }
-        this.el.remove();
-        this.el = null;
-        this.doc.removeEventListener('mousedown', this.onDown, true);
-        if (refocus && this.before && this.before.focus) { this.before.focus(); }
-        if (this.o.onClose) { this.o.onClose(); }
-      }
-    }
-    class Notes {
-      constructor(host, uid) {
-        const doc = host.ownerDocument;
-        this.tip = h(doc, 'div', { cls: 'dg-tip', attrs: { role: 'tooltip', id: uid + '-tip', hidden: true } });
-        this.msg = h(doc, 'div', { cls: 'dg-toast', attrs: { role: 'status', 'aria-live': 'polite', hidden: true } });
-        doc.body.appendChild(this.tip);
-        host.appendChild(this.msg);
-        this.timer = 0;
-      }
-      showTip(text, el) {
-        const r = el.getBoundingClientRect();
-        this.tip.textContent = text;
-        this.tip.hidden = false;
-        placeAt(this.tip, r.left, r.bottom + 6);
-        el.setAttribute('aria-describedby', this.tip.id);
-      }
-      hideTip() { this.tip.hidden = true; }
-      say(text) {
-        const win = this.msg.ownerDocument.defaultView;
-        this.msg.textContent = text;
-        this.msg.hidden = false;
-        win.clearTimeout(this.timer);
-        this.timer = win.setTimeout(() => { this.msg.hidden = true; }, 2600);
-      }
-      destroy() { this.tip.remove(); this.msg.remove(); }
-    }
-    return { "Menu": Menu, "Notes": Notes };
-  })();
-  /* ---- src/drishti_grid-editors.js ---- */
-  __m["src/drishti_grid-editors.js"] = (function () {
-    var h = __lib("drishti-core").h, loaded = __lib("drishti-core").loaded, announce = __lib("drishti-core").announce, numberEditText = __lib("drishti-core").numberEditText, isoDate = __lib("drishti-core").isoDate;
-    var editorOf = __m["src/drishti_grid-edit.js"].editorOf, parseCellText = __m["src/drishti_grid-edit.js"].parseCellText;
-    class CellEditor {
-      constructor(view) {
-        this.view = view;
-        this.doc = view.doc;
-        this.at = null;
-        this.el = null;
-        this.busy = false;
-      }
-      isActive() { return !!this.at; }
-      start(r, c, o) {
-        const v = this.view, m = v.model;
-        if (this.at) { this.cancel(); }
-        if (!m.editing.canEdit(r, c)) { v.say(m.pivotMode ? 'A pivot\'s figures are computed: edit the rows behind them' : 'This cell cannot be edited'); return false; }
-        const col = m.shownColumns()[c], ed = editorOf(col), cur = m.cellValue(r, c);
-        if (ed === 'checkbox') { this.save(r, c, !cur, null); return true; }
-        v.focusCell(r, c);
-        this.at = { r: r, c: c, ed: ed, col: col, old: cur };
-        const box = this.el = h(this.doc, 'div', { cls: 'dg-editor dg-editor-' + ed, attrs: { role: 'presentation' } });
-        const msg = this.msg = h(this.doc, 'div', { cls: 'dg-editor-msg', attrs: { role: 'alert', id: v.uid + '-edit-msg', hidden: true } });
-        const label = col.header + ', row ' + (r + 1);
-        if (ed === 'select') {
-          const sel = this.input = h(this.doc, 'select', { cls: 'dg-editor-input', attrs: { 'aria-label': label, 'aria-describedby': msg.id } });
-          (col.options || []).forEach((x, i) => {
-            const val = x !== null && typeof x === 'object' ? x.value : x, lab = x !== null && typeof x === 'object' && x.label !== undefined ? x.label : String(x);
-            const op = h(this.doc, 'option', { text: lab, attrs: { value: String(i) } });
-            if (val === cur) { op.selected = true; }
-            if (o && o.initial && lab.toLowerCase().indexOf(o.initial.toLowerCase()) === 0 && !sel.dataset.typed) { op.selected = true; sel.dataset.typed = '1'; }
-            sel.appendChild(op);
-          });
-          box.appendChild(sel);
-        } else if (ed === 'date' && loaded('drishti-inputs') && loaded('drishti-inputs').DatePicker) {
-          const host = h(this.doc, 'div', { cls: 'dg-editor-picker' });
-          box.appendChild(host);
-          const picker = this.picker = new (loaded('drishti-inputs').DatePicker)(host, { value: cur || null, businessOnly: !!col.businessOnly, calendar: col.calendar, label: label, shortcuts: true });
-          this.input = picker.input;
-          this.input.setAttribute('aria-describedby', msg.id);
-          picker.on('change', () => Promise.resolve().then(() => { if (this.at && this.picker === picker) { this.commit({ dr: 0, dc: 0 }); } }));
-          if (o && o.initial) { this.input.value = o.initial; }
-        } else {
-          const inp = this.input = h(this.doc, 'input', { cls: 'dg-editor-input' + (ed === 'number' ? ' dg-num' : ''), attrs: { type: ed === 'date' ? 'date' : 'text', 'aria-label': label,
-            'aria-describedby': msg.id, inputmode: ed === 'number' ? 'decimal' : null, spellcheck: 'false', autocomplete: 'off' } });
-          inp.value = o && o.initial ? o.initial : ed === 'number' ? numberEditText(cur, m.editing.o.locale) : ed === 'date' ? isoDate(cur) : cur === null || cur === undefined ? '' : String(cur);
-          box.appendChild(inp);
-        }
-        box.appendChild(msg);
-        box.addEventListener('keydown', (e) => this.key(e), true);
-        box.addEventListener('focusout', () => this.doc.defaultView.setTimeout(() => this.left(), 0));
-        v.body.area.appendChild(box);
-        this.place();
-        this.input.focus();
-        if (this.input.select && !(o && o.initial)) { this.input.select(); }
-        if (this.picker && !(o && o.initial)) { this.picker.open(); this.input.focus(); }
-        m.live.emit('cellEditStarted', { row: r, col: c, colId: col.id, rowId: m.idAt(r), value: cur, editor: ed });
-        announce('Editing ' + label + '. Enter saves, Escape cancels');
-        return true;
-      }
-      place() {
-        if (!this.at || !this.el) { return; }
-        const v = this.view, cell = this.doc.getElementById(v.uid + '-r' + this.at.r + '-c' + this.at.c);
-        if (!cell) { this.el.style.visibility = 'hidden'; return; }
-        const a = v.body.area.getBoundingClientRect(), r = cell.getBoundingClientRect();
-        this.el.style.visibility = 'visible';
-        this.el.style.left = (r.left - a.left) + 'px';
-        this.el.style.top = (r.top - a.top) + 'px';
-        this.el.style.width = Math.max(r.width, this.at.ed === 'date' ? 150 : 60) + 'px';
-        this.el.style.height = r.height + 'px';
-      }
-      key(e) {
-        if (!this.at) { return; }
-        const k = e.key;
-        if (this.picker && this.picker.pop.isOpen() && (k === 'Escape' || k === 'ArrowDown' || k === 'ArrowUp')) { return; }   /* the calendar's own */
-        if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); this.cancel(); return; }
-        if (k === 'Enter') { e.preventDefault(); e.stopPropagation(); this.commit({ dr: e.shiftKey ? -1 : 1, dc: 0 }); return; }
-        if (k === 'Tab') { e.preventDefault(); e.stopPropagation(); this.commit({ dr: 0, dc: e.shiftKey ? -1 : 1 }); }
-      }
-      left() {
-        if (!this.at || this.busy) { return; }
-        const a = this.doc.activeElement;
-        if (this.el && this.el.contains(a)) { return; }
-        if (this.picker && this.picker.pop.el && this.picker.pop.el.contains(a)) { return; }
-        this.commit(null, true);
-      }
-      read() {
-        const at = this.at;
-        if (at.ed === 'select') { const i = this.input.value === '' ? -1 : +this.input.value, x = (at.col.options || [])[i]; return { value: x !== null && typeof x === 'object' ? x.value : x, error: null }; }
-        if (this.picker) {
-          const t = this.input.value.trim();
-          if (!t) { return { value: null, error: null }; }
-          if (!this.picker.validate()) { return { value: undefined, error: this.picker.msg.textContent || at.col.header + ': not a date' }; }
-          return { value: this.picker.getValue(), error: null };
-        }
-        return parseCellText(at.col, this.input.value, { locale: this.view.model.editing.o.locale });
-      }
-      commit(move, leaving) {
-        if (!this.at || this.busy) { return Promise.resolve(false); }
-        const at = this.at, got = this.read();
-        if (got.error) { return Promise.resolve(this.problem(got.error, leaving)); }
-        return this.save(at.r, at.c, got.value, move, leaving);
-      }
-      save(r, c, value, move, leaving) {
-        const v = this.view, m = v.model, col = m.shownColumns()[c];
-        const plan = m.editing.plan([{ r: r, c: c, value: value }]);
-        if (plan.problems.length) { return Promise.resolve(this.problem(plan.problems[0].message, leaving)); }
-        const p = m.editing.apply(plan.edits, 'edit');
-        this.close(true);
-        if (move) { m.navigator.setFocus(r + move.dr, c + move.dc); m.selection.startRange(m.navigator.focus.row, m.navigator.focus.col, {}); v.afterFocus(true); }
-        v.body.scroller.focus({ preventScroll: true });
-        return p.then((tx) => {
-          if (tx.status === 'proposed') { v.say('Sent for approval (' + tx.proposalId + '): the cell is marked until a second person decides'); }
-          else if (tx.edits.length) { v.say('Saved ' + col.header); }
-          return true;
-        }, (err) => { v.say('Not saved: ' + err.message); return false; });
-      }
-      problem(text, leaving) {
-        if (leaving || !this.el) { this.close(false); this.view.say('Not saved: ' + text); return false; }
-        this.msg.hidden = false;
-        this.msg.textContent = text;
-        this.input.setAttribute('aria-invalid', 'true');
-        this.el.classList.add('dg-editor-bad');
-        this.input.focus();
-        return false;
-      }
-      cancel() { if (this.at) { this.close(false); this.view.say('Edit cancelled'); this.view.body.scroller.focus({ preventScroll: true }); } }
-      close(saved) {
-        const at = this.at;
-        this.at = null;
-        if (this.picker) { this.picker.close(); this.picker = null; }
-        if (this.el) { this.el.remove(); this.el = null; }
-        if (at) { this.view.model.live.emit('cellEditStopped', { row: at.r, col: at.c, saved: !!saved }); }
-        this.view.body.schedule();
-      }
-    }
-    return { "CellEditor": CellEditor };
+    return { "GridModel": GridModel, "createGridModel": createGridModel };
   })();
   /* ---- src/drishti_grid-wells-ui.js ---- */
   __m["src/drishti_grid-wells-ui.js"] = (function () {
@@ -3967,72 +4365,10 @@
   })();
   /* ---- src/drishti_grid-explain.js ---- */
   __m["src/drishti_grid-explain.js"] = (function () {
-    var h = __lib("drishti-core").h;
-    const SVG = 'http://www.w3.org/2000/svg';
-    function sparkline(doc, values, limit) {
-      const w = 280, ht = 90, svg = doc.createElementNS(SVG, 'svg');
-      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + ht);
-      svg.setAttribute('class', 'dg-spark');
-      svg.setAttribute('role', 'img');
-      svg.setAttribute('aria-label', 'trend of ' + values.length + ' points, last ' + (values.length ? values[values.length - 1] : ''));
-      const all = values.concat(typeof limit === 'number' ? [limit] : []);
-      const lo = Math.min.apply(null, all), hi = Math.max.apply(null, all), span = hi - lo || 1;
-      const y = (v) => (ht - 8 - (ht - 16) * (v - lo) / span).toFixed(1);
-      const pts = values.map((v, i) => (values.length > 1 ? (i * (w - 4) / (values.length - 1) + 2) : w / 2).toFixed(1) + ',' + y(v)).join(' ');
-      const line = doc.createElementNS(SVG, 'polyline');
-      line.setAttribute('points', pts);
-      line.setAttribute('class', 'dg-spark-line');
-      svg.appendChild(line);
-      if (typeof limit === 'number') {
-        const l = doc.createElementNS(SVG, 'line');
-        [['x1', 0], ['x2', w], ['y1', y(limit)], ['y2', y(limit)]].forEach(([k, v]) => l.setAttribute(k, String(v)));
-        l.setAttribute('class', 'dg-spark-limit');
-        svg.appendChild(l);
-      }
-      return svg;
-    }
-    function main(doc, r) {
-      const out = h(doc, 'div', { cls: 'dg-ex-main' });
-      out.appendChild(h(doc, 'h3', { cls: 'dg-ex-title', text: 'Explain' + (r.title ? ' · ' + r.title : '') }));
-      if (r.value) { out.appendChild(h(doc, 'div', { cls: 'dg-ex-value', text: r.value })); }
-      if (r.scope) { out.appendChild(h(doc, 'div', { cls: 'dg-ex-scope', text: r.scope })); }
-      if (r.steps && r.steps.length) {
-        out.appendChild(h(doc, 'ol', { cls: 'dg-ex-steps' }, r.steps.map((s) => h(doc, 'li', {}, [h(doc, 'span', { text: s.label }), h(doc, 'span', { cls: 'dg-ex-fig', text: s.value || '' })]))));
-      }
-      if (r.parts && r.parts.length) {
-        const mx = Math.max.apply(null, r.parts.map((p) => Math.abs(p.value || 0)).concat([1e-9]));
-        out.appendChild(h(doc, 'div', { cls: 'dg-ex-sub', text: r.partsTitle || 'Made of' }));
-        out.appendChild(h(doc, 'div', { cls: 'dg-ex-bars' }, r.parts.slice(0, 8).map((p) => h(doc, 'div', { cls: 'dg-ex-bar' }, [
-          h(doc, 'span', { text: p.label }),
-          h(doc, 'span', { cls: 'dg-ex-track' }, [h(doc, 'span', { cls: 'dg-ex-fill' + ((p.value || 0) < 0 ? ' dg-neg' : ''), style: { width: Math.round(100 * Math.abs(p.value || 0) / mx) + '%' } })]),
-          h(doc, 'span', { cls: 'dg-ex-fig', text: p.text || String(p.value) })]))));
-      }
-      if (r.note) { out.appendChild(h(doc, 'p', { cls: 'dg-ex-note', text: r.note })); }
-      if (r.links && r.links.length) { out.appendChild(h(doc, 'div', { cls: 'dg-ex-links' }, r.links.map((l) => h(doc, 'a', { text: l.label, attrs: { href: l.href || '#' } })))); }
-      return out;
-    }
+    var coreSparkline = __lib("drishti-core").sparkline, coreRenderExplain = __lib("drishti-core").renderExplain;
+    function sparkline(doc, values, limit) { return coreSparkline(doc, values, limit, 'dg'); }
     function renderExplain(el, st, mode, o) {
-      const doc = el.ownerDocument;
-      o = o || {};
-      el.textContent = '';
-      if (o.onClose && st) { el.appendChild(h(doc, 'button', { cls: 'dg-ex-close', text: '×', attrs: { type: 'button', 'aria-label': 'Close Explain' }, on: { click: o.onClose } })); }
-      if (!st) {
-        el.appendChild(h(doc, 'div', { cls: 'dg-ex-main' }, [h(doc, 'h3', { cls: 'dg-ex-title', text: 'Explain' }),
-          h(doc, 'p', { cls: 'dg-ex-hint', text: o.explainable === false ? 'This grid has no Explain hook.' : 'Select a figure and press ' + (mode === 'split' ? 'F2' : 'E') + ': how it was made, its scope and what drives it.' })]));
-        return;
-      }
-      if (st.loading) { el.appendChild(h(doc, 'div', { cls: 'dg-ex-main dg-ex-loading', attrs: { 'aria-busy': 'true' } }, [h(doc, 'h3', { cls: 'dg-ex-title', text: 'Explain' }), h(doc, 'p', { text: 'Asking how this figure was made…' })])); return; }
-      if (st.error) { el.appendChild(h(doc, 'div', { cls: 'dg-ex-main' }, [h(doc, 'h3', { cls: 'dg-ex-title', text: 'Explain' }), h(doc, 'p', { cls: 'dg-ex-error', text: String(st.error.message || st.error) })])); return; }
-      const r = st.result;
-      if (r && typeof r === 'object' && typeof r.nodeType === 'number') { el.appendChild(r); return; }
-      const res = typeof r === 'string' ? { note: r } : (r || {});
-      if (mode !== 'split') { el.appendChild(main(doc, res)); return; }
-      const worst = h(doc, 'div', { cls: 'dg-ex-pane' }, [h(doc, 'h3', { cls: 'dg-ex-title', text: 'Worst scenarios' })]);
-      (res.scenarios || []).slice(0, 10).forEach((s, i) => worst.appendChild(h(doc, 'div', { cls: 'dg-ex-row' }, [h(doc, 'i', { text: String(i + 1) }), h(doc, 'span', { text: s.label }), h(doc, 'span', { cls: 'dg-ex-fig dg-neg', text: s.value })])));
-      if (!(res.scenarios || []).length) { worst.appendChild(h(doc, 'p', { cls: 'dg-ex-hint', text: 'No scenarios for this figure.' })); }
-      const trend = h(doc, 'div', { cls: 'dg-ex-pane' }, [h(doc, 'h3', { cls: 'dg-ex-title', text: 'Trend' })]);
-      if (res.trend && res.trend.length) { trend.appendChild(sparkline(doc, res.trend, res.limit)); } else { trend.appendChild(h(doc, 'p', { cls: 'dg-ex-hint', text: 'No history for this figure.' })); }
-      el.append(h(doc, 'div', { cls: 'dg-ex-pane' }, [main(doc, res)]), worst, trend);
+      coreRenderExplain(el, st, mode, Object.assign({ hint: o && o.explainable === false ? 'This grid has no Explain hook.' : undefined }, o, { prefix: 'dg' }));
     }
     return { "sparkline": sparkline, "renderExplain": renderExplain };
   })();
@@ -4192,7 +4528,8 @@
   /* ---- src/drishti_grid-view.js ---- */
   __m["src/drishti_grid-view.js"] = (function () {
     var announce = __lib("drishti-core").announce;
-    var GridModel = __m["src/drishti_grid.js"].GridModel, LAYOUTS = __m["src/drishti_grid.js"].LAYOUTS, DENSITIES = __m["src/drishti_grid.js"].DENSITIES;
+    var GridModel = __m["src/drishti_grid.js"].GridModel;
+    var LAYOUTS = __m["src/drishti_grid-model-base.js"].LAYOUTS, DENSITIES = __m["src/drishti_grid-model-base.js"].DENSITIES;
     var GridBody = __m["src/drishti_grid-body.js"].GridBody;
     var WellsView = __m["src/drishti_grid-wells-ui.js"].WellsView;
     var Menu = __m["src/drishti_grid-dom.js"].Menu, Notes = __m["src/drishti_grid-dom.js"].Notes;
@@ -4483,7 +4820,7 @@
   __m["src/drishti_index.js"] = (function () {
     var defineGridElement = __m["src/drishti_grid-element.js"].defineGridElement;
     function install(root) { if (root && root.document && root.customElements) { defineGridElement(root.customElements, root); } }
-    return { "install": install, "ADDITIVE_FUNCS": __m["src/drishti_columns.js"].ADDITIVE_FUNCS, "normalizeColumn": __m["src/drishti_columns.js"].normalizeColumn, "getValue": __m["src/drishti_columns.js"].getValue, "formatValue": __m["src/drishti_columns.js"].formatValue, "ColumnModel": __m["src/drishti_columns.js"].ColumnModel, "AGG_FUNCS": __m["src/drishti_aggregate.js"].AGG_FUNCS, "aggFunc": __m["src/drishti_aggregate.js"].aggFunc, "parseMeasure": __m["src/drishti_aggregate.js"].parseMeasure, "isServerMeasure": __m["src/drishti_aggregate.js"].isServerMeasure, "aggregate": __m["src/drishti_aggregate.js"].aggregate, "SEP": __m["src/drishti_pivot.js"].SEP, "BLANK": __m["src/drishti_pivot.js"].BLANK, "memberText": __m["src/drishti_pivot.js"].memberText, "valueLabel": __m["src/drishti_pivot.js"].valueLabel, "normalizeView": __m["src/drishti_pivot.js"].normalizeView, "serverRequest": __m["src/drishti_pivot.js"].serverRequest, "memberFilters": __m["src/drishti_pivot.js"].memberFilters, "PivotState": __m["src/drishti_pivot.js"].PivotState, "pivotLocal": __m["src/drishti_pivot.js"].pivotLocal, "pivotApplyUpdates": __m["src/drishti_pivot.js"].pivotApplyUpdates, "mergeAnswer": __m["src/drishti_pivot.js"].mergeAnswer, "applyValueFilters": __m["src/drishti_pivot.js"].applyValueFilters, "resultColumns": __m["src/drishti_pivot.js"].resultColumns, "cellValue": __m["src/drishti_pivot.js"].cellValue, "measureText": __m["src/drishti_pivot.js"].measureText, "answerFormat": __m["src/drishti_pivot.js"].answerFormat, "WELLS": __m["src/drishti_wells.js"].WELLS, "VALUE_FUNCS": __m["src/drishti_wells.js"].VALUE_FUNCS, "WellsModel": __m["src/drishti_wells.js"].WellsModel, "ClientRowModel": __m["src/drishti_client-rows.js"].ClientRowModel, "ServerRowModel": __m["src/drishti_server-rows.js"].ServerRowModel, "memoryDatasource": __m["src/drishti_server-rows.js"].memoryDatasource, "MAX_SCROLL_HEIGHT": __m["src/drishti_viewport.js"].MAX_SCROLL_HEIGHT, "columnAt": __m["src/drishti_viewport.js"].columnAt, "Viewport": __m["src/drishti_viewport.js"].Viewport, "SelectionModel": __m["src/drishti_selection.js"].SelectionModel, "rangeStats": __m["src/drishti_selection.js"].rangeStats, "toTsv": __m["src/drishti_selection.js"].toTsv, "rangeCells": __m["src/drishti_selection.js"].rangeCells, "toCsv": __m["src/drishti_export.js"].toCsv, "crc32": __m["src/drishti_export.js"].crc32, "zipStore": __m["src/drishti_export.js"].zipStore, "excelFormat": __m["src/drishti_export.js"].excelFormat, "toXlsx": __m["src/drishti_export.js"].toXlsx, "XLSX_TYPE": __m["src/drishti_export.js"].XLSX_TYPE, "GridNavigator": __m["src/drishti_keyboard.js"].GridNavigator, "keyLabel": __m["src/drishti_keyboard.js"].keyLabel, "LAYOUTS": __m["src/drishti_grid.js"].LAYOUTS, "DENSITIES": __m["src/drishti_grid.js"].DENSITIES, "GridModel": __m["src/drishti_grid.js"].GridModel, "createGridModel": __m["src/drishti_grid.js"].createGridModel, "GRID_EVENTS": __m["src/drishti_grid-live.js"].GRID_EVENTS, "domEventName": __m["src/drishti_grid-live.js"].domEventName, "GridLive": __m["src/drishti_grid-live.js"].GridLive, "EDITORS": __m["src/drishti_grid-edit.js"].EDITORS, "editorOf": __m["src/drishti_grid-edit.js"].editorOf, "parseCellText": __m["src/drishti_grid-edit.js"].parseCellText, "validateCell": __m["src/drishti_grid-edit.js"].validateCell, "parseTsv": __m["src/drishti_grid-edit.js"].parseTsv, "GridEditing": __m["src/drishti_grid-edit.js"].GridEditing, "CellEditor": __m["src/drishti_grid-editors.js"].CellEditor, "manualFeed": __m["src/drishti_live.js"].manualFeed, "renderWindow": __m["src/drishti_plain-render.js"].renderWindow, "renderText": __m["src/drishti_plain-render.js"].renderText, "renderHtml": __m["src/drishti_plain-render.js"].renderHtml, "VIEW_EVENTS": __m["src/drishti_grid-ui.js"].VIEW_EVENTS, "PHONE_WIDTH": __m["src/drishti_grid-ui.js"].PHONE_WIDTH, "FUNCTION_KEYS": __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, "CF_TYPES": __m["src/drishti_grid-ui.js"].CF_TYPES, "headerSpans": __m["src/drishti_grid-ui.js"].headerSpans, "pivotColumnLabels": __m["src/drishti_grid-ui.js"].pivotColumnLabels, "markGroups": __m["src/drishti_grid-ui.js"].markGroups, "isTotalCell": __m["src/drishti_grid-ui.js"].isTotalCell, "nonAdditiveNote": __m["src/drishti_grid-ui.js"].nonAdditiveNote, "colourScaleAlpha": __m["src/drishti_grid-ui.js"].colourScaleAlpha, "dataBarWidth": __m["src/drishti_grid-ui.js"].dataBarWidth, "cfBackground": __m["src/drishti_grid-ui.js"].cfBackground, "figureRange": __m["src/drishti_grid-ui.js"].figureRange, "ruleFor": __m["src/drishti_grid-ui.js"].ruleFor, "phoneColumns": __m["src/drishti_grid-ui.js"].phoneColumns, "pivotMeasures": __m["src/drishti_grid-ui.js"].pivotMeasures, "columnMenuItems": __m["src/drishti_grid-ui.js"].columnMenuItems, "cellMenuItems": __m["src/drishti_grid-ui.js"].cellMenuItems, "commandText": __m["src/drishti_grid-ui.js"].commandText, "parseCommand": __m["src/drishti_grid-ui.js"].parseCommand, "parseCondition": __m["src/drishti_grid-ui.js"].parseCondition, "conditionText": __m["src/drishti_grid-ui.js"].conditionText, "statusItems": __m["src/drishti_grid-ui.js"].statusItems, "FlashTracker": __m["src/drishti_grid-ui.js"].FlashTracker, "Menu": __m["src/drishti_grid-dom.js"].Menu, "Notes": __m["src/drishti_grid-dom.js"].Notes, "sparkline": __m["src/drishti_grid-explain.js"].sparkline, "renderExplain": __m["src/drishti_grid-explain.js"].renderExplain, "localDrill": __m["src/drishti_grid-actions.js"].localDrill, "GridBase": __m["src/drishti_grid-base.js"].GridBase, "Grid": __m["src/drishti_grid-view.js"].Grid, "ELEMENT_NAME": __m["src/drishti_grid-element.js"].ELEMENT_NAME, "defineGridElement": __m["src/drishti_grid-element.js"].defineGridElement };
+    return { "install": install, "ADDITIVE_FUNCS": __m["src/drishti_columns.js"].ADDITIVE_FUNCS, "normalizeColumn": __m["src/drishti_columns.js"].normalizeColumn, "getValue": __m["src/drishti_columns.js"].getValue, "formatValue": __m["src/drishti_columns.js"].formatValue, "ColumnModel": __m["src/drishti_columns.js"].ColumnModel, "AGG_FUNCS": __m["src/drishti_aggregate.js"].AGG_FUNCS, "aggFunc": __m["src/drishti_aggregate.js"].aggFunc, "parseMeasure": __m["src/drishti_aggregate.js"].parseMeasure, "isServerMeasure": __m["src/drishti_aggregate.js"].isServerMeasure, "aggregate": __m["src/drishti_aggregate.js"].aggregate, "SEP": __m["src/drishti_pivot.js"].SEP, "BLANK": __m["src/drishti_pivot.js"].BLANK, "memberText": __m["src/drishti_pivot.js"].memberText, "valueLabel": __m["src/drishti_pivot.js"].valueLabel, "normalizeView": __m["src/drishti_pivot.js"].normalizeView, "serverRequest": __m["src/drishti_pivot.js"].serverRequest, "memberFilters": __m["src/drishti_pivot.js"].memberFilters, "PivotState": __m["src/drishti_pivot.js"].PivotState, "pivotLocal": __m["src/drishti_pivot.js"].pivotLocal, "pivotApplyUpdates": __m["src/drishti_pivot.js"].pivotApplyUpdates, "mergeAnswer": __m["src/drishti_pivot.js"].mergeAnswer, "applyValueFilters": __m["src/drishti_pivot.js"].applyValueFilters, "resultColumns": __m["src/drishti_pivot.js"].resultColumns, "cellValue": __m["src/drishti_pivot.js"].cellValue, "measureText": __m["src/drishti_pivot.js"].measureText, "answerFormat": __m["src/drishti_pivot.js"].answerFormat, "WELLS": __m["src/drishti_wells.js"].WELLS, "VALUE_FUNCS": __m["src/drishti_wells.js"].VALUE_FUNCS, "WellsModel": __m["src/drishti_wells.js"].WellsModel, "ClientRowModel": __m["src/drishti_client-rows.js"].ClientRowModel, "ServerRowModel": __m["src/drishti_server-rows.js"].ServerRowModel, "memoryDatasource": __m["src/drishti_server-rows.js"].memoryDatasource, "MAX_SCROLL_HEIGHT": __m["src/drishti_viewport.js"].MAX_SCROLL_HEIGHT, "columnAt": __m["src/drishti_viewport.js"].columnAt, "Viewport": __m["src/drishti_viewport.js"].Viewport, "SelectionModel": __m["src/drishti_selection.js"].SelectionModel, "rangeStats": __m["src/drishti_selection.js"].rangeStats, "toTsv": __m["src/drishti_selection.js"].toTsv, "rangeCells": __m["src/drishti_selection.js"].rangeCells, "crc32": __m["src/drishti_export.js"].crc32, "zipStore": __m["src/drishti_export.js"].zipStore, "excelFormat": __m["src/drishti_export.js"].excelFormat, "toXlsx": __m["src/drishti_export.js"].toXlsx, "XLSX_TYPE": __m["src/drishti_export.js"].XLSX_TYPE, "GridNavigator": __m["src/drishti_keyboard.js"].GridNavigator, "keyLabel": __m["src/drishti_keyboard.js"].keyLabel, "GridModel": __m["src/drishti_grid.js"].GridModel, "createGridModel": __m["src/drishti_grid.js"].createGridModel, "LAYOUTS": __m["src/drishti_grid-model-base.js"].LAYOUTS, "DENSITIES": __m["src/drishti_grid-model-base.js"].DENSITIES, "GridModelBase": __m["src/drishti_grid-model-base.js"].GridModelBase, "GRID_EVENTS": __m["src/drishti_grid-live.js"].GRID_EVENTS, "domEventName": __m["src/drishti_grid-live.js"].domEventName, "GridLive": __m["src/drishti_grid-live.js"].GridLive, "EDITORS": __m["src/drishti_grid-edit.js"].EDITORS, "editorOf": __m["src/drishti_grid-edit.js"].editorOf, "parseCellText": __m["src/drishti_grid-edit.js"].parseCellText, "validateCell": __m["src/drishti_grid-edit.js"].validateCell, "parseTsv": __m["src/drishti_grid-edit.js"].parseTsv, "GridEditing": __m["src/drishti_grid-edit.js"].GridEditing, "CellEditor": __m["src/drishti_grid-editors.js"].CellEditor, "manualFeed": __m["src/drishti_live.js"].manualFeed, "renderWindow": __m["src/drishti_plain-render.js"].renderWindow, "renderText": __m["src/drishti_plain-render.js"].renderText, "renderHtml": __m["src/drishti_plain-render.js"].renderHtml, "docTable": __m["src/drishti_doc-table.js"].docTable, "docPivotable": __m["src/drishti_doc-table.js"].docPivotable, "docDrill": __m["src/drishti_doc-table.js"].docDrill, "heatBucket": __m["src/drishti_doc-table.js"].heatBucket, "docPivot": __m["src/drishti_doc-table.js"].docPivot, "docPlainTable": __m["src/drishti_doc-table.js"].docPlainTable, "treeVisibility": __m["src/drishti_doc-behave.js"].treeVisibility, "pageInfo": __m["src/drishti_doc-behave.js"].pageInfo, "enhanceDocTables": __m["src/drishti_doc-behave.js"].enhanceDocTables, "VIEW_EVENTS": __m["src/drishti_grid-ui.js"].VIEW_EVENTS, "PHONE_WIDTH": __m["src/drishti_grid-ui.js"].PHONE_WIDTH, "FUNCTION_KEYS": __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, "CF_TYPES": __m["src/drishti_grid-ui.js"].CF_TYPES, "headerSpans": __m["src/drishti_grid-ui.js"].headerSpans, "pivotColumnLabels": __m["src/drishti_grid-ui.js"].pivotColumnLabels, "markGroups": __m["src/drishti_grid-ui.js"].markGroups, "isTotalCell": __m["src/drishti_grid-ui.js"].isTotalCell, "nonAdditiveNote": __m["src/drishti_grid-ui.js"].nonAdditiveNote, "colourScaleAlpha": __m["src/drishti_grid-ui.js"].colourScaleAlpha, "dataBarWidth": __m["src/drishti_grid-ui.js"].dataBarWidth, "cfBackground": __m["src/drishti_grid-ui.js"].cfBackground, "figureRange": __m["src/drishti_grid-ui.js"].figureRange, "ruleFor": __m["src/drishti_grid-ui.js"].ruleFor, "phoneColumns": __m["src/drishti_grid-ui.js"].phoneColumns, "pivotMeasures": __m["src/drishti_grid-ui.js"].pivotMeasures, "columnMenuItems": __m["src/drishti_grid-ui.js"].columnMenuItems, "cellMenuItems": __m["src/drishti_grid-ui.js"].cellMenuItems, "commandText": __m["src/drishti_grid-ui.js"].commandText, "parseCommand": __m["src/drishti_grid-ui.js"].parseCommand, "parseCondition": __m["src/drishti_grid-ui.js"].parseCondition, "conditionText": __m["src/drishti_grid-ui.js"].conditionText, "statusItems": __m["src/drishti_grid-ui.js"].statusItems, "FlashTracker": __m["src/drishti_grid-ui.js"].FlashTracker, "Menu": __m["src/drishti_grid-dom.js"].Menu, "Notes": __m["src/drishti_grid-dom.js"].Notes, "sparkline": __m["src/drishti_grid-explain.js"].sparkline, "renderExplain": __m["src/drishti_grid-explain.js"].renderExplain, "localDrill": __m["src/drishti_grid-actions.js"].localDrill, "GridBase": __m["src/drishti_grid-base.js"].GridBase, "Grid": __m["src/drishti_grid-view.js"].Grid, "ELEMENT_NAME": __m["src/drishti_grid-element.js"].ELEMENT_NAME, "defineGridElement": __m["src/drishti_grid-element.js"].defineGridElement };
   })();
   return Object.freeze(Object.assign({ library: "drishti-grid", version: "0.4.0" }, __m["src/drishti_index.js"]));
 });

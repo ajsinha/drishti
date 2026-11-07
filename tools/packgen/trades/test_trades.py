@@ -133,7 +133,7 @@ class CommonSchemaTest(unittest.TestCase):
         text = (ROOT / "config" / "packs" / "trading" / "pack.yaml").read_text(encoding="utf-8")
         self.assertNotRegex(text, r"[&*]id\d")
         spec = yaml.safe_load(text)
-        conns, tables = spec["connectors"], spec["lake"]["tables"]        # the layout lives in the pack's lake: entries (LAKE_GUIDE.md)
+        conns, tables = spec["connectors"], spec["lake"]["tables"]        # the layout lives in the pack's lake: entries (DATA_LAKE_GUIDE.md)
         for name in ("trade-endur", "trade-calypso", "trade-murex"):
             entry = conns[name]["settings"]["lake-tables"]
             self.assertIn("SOURCE_SYSTEM", tables[entry]["promote"], name)

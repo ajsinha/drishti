@@ -143,19 +143,6 @@ CREATE TABLE IF NOT EXISTS drishti_switch_log (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS ux_switch_log_change ON drishti_switch_log (scope, name, grantee, stamp, node);
 
-CREATE TABLE IF NOT EXISTS drishti_alert (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    username   TEXT    NOT NULL,
-    at         TIMESTAMP NOT NULL,
-    rule       TEXT    NOT NULL,
-    kind       TEXT    NOT NULL,
-    entity_id  TEXT    NOT NULL,
-    severity   TEXT    NOT NULL,
-    message    TEXT    NOT NULL,
-    generation INTEGER NOT NULL
-);
-CREATE INDEX IF NOT EXISTS drishti_alert_user ON drishti_alert (username, id);
-
 CREATE TABLE IF NOT EXISTS drishti_api_token (
     id           TEXT PRIMARY KEY,
     username     TEXT NOT NULL,

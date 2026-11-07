@@ -155,7 +155,7 @@ def test_market_and_world_have_no_scenario_matrix(backend, monkeypatch, about):
     assert "SMAT is not part of" in c.get("/api/smat/matrix?id=T1").json()["detail"]
     r = c.get("/go", params={"q": "SMAT T1 <GO>"}, follow_redirects=False)
     assert r.status_code == 303 and "DRS-4023" in r.headers["location"]
-    assert not [s for s in c.get("/api/suggest", params={"q": "SMAT T1"}).json() if s.get("mnemonic") == "SMAT"]
+    assert not [s for s in c.get("/api/search", params={"in": "command", "q": "SMAT T1"}).json()["items"] if s.get("mnemonic") == "SMAT"]
     assert "data-smat-link" not in c.get("/v/trade/IRS-48213").text                  # no link that would only answer DRS-4023
 
 
@@ -164,7 +164,7 @@ def test_the_links_follow_the_edition_and_the_lens(backend, monkeypatch):
     view = c.get("/v/trade/IRS-48213").text
     assert 'data-smat-link href="/smat?id=IRS-48213"' in view
     assert "drishti_smat-link.js" in c.get("/var?scope=DESK:RATES").text                      # the VaR page's link, added to its header strip
-    s = [x for x in c.get("/api/suggest", params={"q": "SMAT DESK RATES 20"}).json() if x.get("mnemonic") == "SMAT"]
+    s = [x for x in c.get("/api/search", params={"in": "command", "q": "SMAT DESK RATES 20"}).json()["items"] if x.get("mnemonic") == "SMAT"]
     assert s and s[0]["href"] == "/smat?id=DESK%3ARATES&days=20"
     # the same instance with the word switched off (a site's edition.commands.words.SMAT: off): no link, no script, the word refused
     app.state.editions.instance.spec["commands"]["words"]["SMAT"] = False

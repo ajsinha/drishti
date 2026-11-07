@@ -1,7 +1,7 @@
 {
   "after": "drishti-view.css",
-  "bytes": 35816,
-  "gzip": 7276,
+  "bytes": 35439,
+  "gzip": 7206,
   "icons": [
     "arrow-down-circle-fill",
     "arrow-left",
@@ -26,12 +26,12 @@
     "x-circle",
     "x-circle-fill"
   ],
-  "sha256": "cfa1e1a5c2724ab5c61470b77842e983b5d205ac61de0bfa245a181a8dfe266d",
+  "sha256": "c00769bc94746edad562246f30da6dcd2beb0fa6d2ead2ebe6b902ecc5aa3a48",
   "sources": [
     "css/drishti_bi.css",
     "css/drishti_bi-report.css",
     "css/drishti_bi-board.css",
     "vendor/bootstrap-icons/bootstrap-icons.css"
   ],
-  "version": "c9d279225afd"
+  "version": "4b6fbc4db531"
 }

@@ -21,7 +21,7 @@
 
 One folder per dataset: trades/endur, trades/calypso, trades/murex (5,000 trades each, the common 47-attribute UPPER_SNAKE schema),
 then <pack>/<kind> for every kind of core, market-data, counterparty-risk and market-risk (universe.py). Each folder holds one file per
-business date named by the lake table it feeds, <table>.<YYYY-MM-DD>.jsonl.gz (docs/architecture/DATA_LOAD_RULES.md section 10): the
+business date named by the lake table it feeds, <table>.<YYYY-MM-DD>.jsonl.gz (docs/guides/DATA_LAKE_GUIDE.md section 5.2): the
 first day's the whole snapshot, each later day's what changed (history.py); the market-risk pack's VaR data (positions, P&L vectors, hierarchies, the
 nodes' 250-day history, portfolios) is dated by its files instead (``dated-by``: every row's date its file's; tools/packgen/var/make_var_data.py). world-economy and news-and-markets are static reference data already in the
 repository (their packs' samples), so the manifest points at them instead of copying them. The news-and-markets pack's quotes and
@@ -74,7 +74,7 @@ def delta_connectors(packs_dir: Path) -> dict[str, tuple[str, str]]:
 
 def table_of(packs_dir: Path, pack: str, connector: str, kind: str) -> str:
     """The lake table a pack's Delta connector writes a kind into: its lake entry (settings.lake-tables, <domain>.<table>, of the kind:
-    the pack's lake: block, LAKE_GUIDE.md), else its settings.table.<kind> (the older connector form), else the kind: a feed file's name."""
+    the pack's lake: block, DATA_LAKE_GUIDE.md), else its settings.table.<kind> (the older connector form), else the kind: a feed file's name."""
     import yaml
     spec = yaml.safe_load((packs_dir / pack / "pack.yaml").read_text(encoding="utf-8"))
     st = ((spec.get("connectors") or {}).get(connector) or {}).get("settings") or {}

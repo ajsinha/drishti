@@ -74,7 +74,10 @@ def test_the_picker_moves_every_panel_and_the_tab_loads_only_when_opened(stack, 
     assert "ccy=EUR" in pg.url
     assert pg.locator("[data-vx-cmd]").inner_text().endswith("IN EUR")
     assert pg.locator('.vx-tile[data-tile="0"] .v').inner_text() != usd_var
-    prov = pg.locator("[data-vx-prov]").inner_text()
+    pg.locator("[data-vx-explain]").click()                                        # how it was built: the Explain drawer's Inputs & lineage
+    pg.locator('[data-dx-tab="inputs"]').click()
+    wait(pg, "(() => { const d = document.querySelector('[data-explain-drawer]'); return d && !d.hidden && d.dataset.state === 'ready' && d.dataset.tab === 'inputs'; })()", 120)
+    prov = pg.locator("[data-explain-drawer]").inner_text()
     assert "Reporting currency" in prov and "EUR, chosen in the header" in prov, prov
     assert "scenario PVs" in prov and "supplied" in prov and "via USD" in prov, prov
     wait(pg, "document.querySelector('.vx-tree .vx-row.hdr') && document.querySelector('.vx-tree .vx-row.hdr').innerText.indexOf('EUR') >= 0", 60)

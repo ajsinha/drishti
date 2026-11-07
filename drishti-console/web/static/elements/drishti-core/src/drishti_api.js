@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* The API client: one way to call a Drishti server (or any JSON API). The session is the browser's (cookies, same origin by default); an
-   error is an ApiError in words with its DRS code ("DRS-4005 The table has no column TRADE_ID"), never a bare status; a GET that meets a
+   error is an ApiError in words with its DRS code ("DRS-1001 No trade IRS-48213 here"), never a bare status; a GET that meets a
    network failure or a busy server (502, 503, 504) is tried again with a growing pause; a call can be aborted (an AbortSignal) and has a
    time limit; the as-of date of the page goes with every call as X-Drishti-As-Of. */
 
@@ -51,7 +51,7 @@ export class ApiError extends Error {
 }
 
 /**
- * The words of an error answer: its DRS code and the server's detail ("DRS-4005 ..."), else the fallback.
+ * The words of an error answer: its DRS code and the server's detail ("DRS-1001 ..."), else the fallback.
  * @param {*} body the answer's JSON ({code, detail} or {error: {code, message}})
  * @param {number} status
  * @param {string} [fallback] words when the server gave none (default "The server answered <status>.")

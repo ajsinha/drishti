@@ -128,14 +128,14 @@ def main(out: Path, captures: Path) -> None:
 
                 # the server's own words
                 roles = ["risk"]
-                got["api_alert"] = bi_report_stack.api("GET", "/me/measure-alerts/MTM%20floor", "rita", roles)[1]
+                got["api_alert"] = bi_report_stack.api("GET", "/alerts/rules/MTM%20floor", "rita", roles)[1]
                 got["api_inbox"] = bi_report_stack.api("GET", "/me/inbox?type=alert", "rita", roles)[1]
-                got["api_preview"] = bi_report_stack.api("POST", "/me/measure-alerts/preview", "rita", roles, {
+                got["api_preview"] = bi_report_stack.api("POST", "/alerts/rules/preview", "rita", roles, {
                     "source": {"type": "visual", "report": REPORT, "page": "overview", "visual": "mtm"}, "condition": {"type": "threshold", "op": "below", "value": -300000},
                     "trigger": {"mode": "after-load"}})[1]
-                got["api_refused"] = bi_report_stack.api("PUT", "/me/measure-alerts/Bad", "rita", roles, {
+                got["api_refused"] = bi_report_stack.api("PUT", "/alerts/rules/Bad", "rita", roles, {
                     "source": {"type": "visual", "report": REPORT, "visual": "mtm"}, "condition": {"type": "threshold", "op": "over", "value": 1}, "trigger": {"mode": "schedule"}})
-                got["api_boards"] = bi_report_stack.admin("GET", "/admin/measure-alerts/boards")[1]
+                got["api_boards"] = bi_report_stack.admin("GET", "/admin/alerts")[1]
                 got["board_validate"] = bi_report_stack.api("POST", "/bi/boards/validate", "wes", ["bi-writer"], {"yaml": (
                     "board: wall\nnotifications: { email: a@b.c }\nnotify: { channels: [inbox, email], cooldown: 2h, trigger: live }\npages:\n  - id: p1\n    tiles:\n"
                     "      - { id: a, report: trades-overview, visual: mtm, at: { x: 0, y: 0, w: 4, h: 3 }, alert: { warn: { op: lt, value: 0 }, notify: true } }\n"
@@ -173,7 +173,7 @@ def main(out: Path, captures: Path) -> None:
                 time.sleep(2)
                 ann.goto(CONSOLE_URL + "/alerts/measure/MTM%20floor")
                 ann.locator("[data-history]").screenshot(path=str(out / "alert-history-masked.png"))
-                got["masked_history"] = bi_report_stack.api("GET", "/me/measure-alerts/MTM%20floor", "ann", ["analyst"])[1].get("history")
+                got["masked_history"] = bi_report_stack.api("GET", "/alerts/rules/MTM%20floor", "ann", ["analyst"])[1].get("history")
                 ann.context.close()
 
                 # a phone

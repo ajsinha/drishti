@@ -26,14 +26,17 @@ export { ClientRowModel } from './drishti_client-rows.js';
 export { ServerRowModel, memoryDatasource } from './drishti_server-rows.js';
 export { MAX_SCROLL_HEIGHT, columnAt, Viewport } from './drishti_viewport.js';
 export { SelectionModel, rangeStats, toTsv, rangeCells } from './drishti_selection.js';
-export { toCsv, crc32, zipStore, excelFormat, toXlsx, XLSX_TYPE } from './drishti_export.js';
+export { crc32, zipStore, excelFormat, toXlsx, XLSX_TYPE } from './drishti_export.js';
 export { GridNavigator, keyLabel } from './drishti_keyboard.js';
-export { LAYOUTS, DENSITIES, GridModel, createGridModel } from './drishti_grid.js';
+export { GridModel, createGridModel } from './drishti_grid.js';
+export { LAYOUTS, DENSITIES, GridModelBase } from './drishti_grid-model-base.js';
 export { GRID_EVENTS, domEventName, GridLive } from './drishti_grid-live.js';
 export { EDITORS, editorOf, parseCellText, validateCell, parseTsv, GridEditing } from './drishti_grid-edit.js';
 export { CellEditor } from './drishti_grid-editors.js';
 export { manualFeed } from './drishti_live.js';
 export { renderWindow, renderText, renderHtml } from './drishti_plain-render.js';
+export { docTable, docPivotable, docDrill, heatBucket, docPivot, docPlainTable } from './drishti_doc-table.js';
+export { treeVisibility, pageInfo, enhanceDocTables } from './drishti_doc-behave.js';
 export { VIEW_EVENTS, PHONE_WIDTH, FUNCTION_KEYS, CF_TYPES, headerSpans, pivotColumnLabels, markGroups, isTotalCell, nonAdditiveNote, colourScaleAlpha,
   dataBarWidth, cfBackground, figureRange, ruleFor, phoneColumns, pivotMeasures, columnMenuItems, cellMenuItems, commandText, parseCommand,
   parseCondition, conditionText, statusItems, FlashTracker } from './drishti_grid-ui.js';

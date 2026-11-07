@@ -40,7 +40,7 @@ About 20 minutes.
 - what a failure looks like, how Retry puts a file back, and what the outbox and the ledger keep.
 
 The reference is the [data guide, section 7](../guides/DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load); the design is
-[DATALOAD_INBOX.md](../architecture/DATALOAD_INBOX.md).
+[DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md#31-the-data-inbox).
 
 ## Step 1 · Turn the inbox on
 
@@ -386,11 +386,11 @@ off, no Inbox tab and `drishti.py dataload status` exiting 3 (`DRS-1020`).
 You turned the data inbox on, routed a file by a rule, handed it over with its `.ready` marker, watched it load on the Inbox screen,
 released a batch with `ready.all`, fixed a failure and retried it, saw a duplicate skipped, and read the reports the outbox and the ledger
 keep. The reference is the [data guide, section 7](../guides/DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load); the design is
-[DATALOAD_INBOX.md](../architecture/DATALOAD_INBOX.md).
+[DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md#31-the-data-inbox).
 
 ## Next steps
 
-- [Data guide, section 7.8](../guides/DATA_GUIDE.md#8-the-inbox-screen-admin--data-loads--inbox): every part of the Inbox screen and where each figure comes from.
+- [the data lake guide, section 3.1](../guides/DATA_LAKE_GUIDE.md#31-the-data-inbox): every part of the Inbox screen and where each figure comes from.
 - [Data guide, section 1](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed): the data-load signal each load sends, expectations and late data.
 - The parallel lake loader the inbox runs: [TOOLS.md, section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader).
 

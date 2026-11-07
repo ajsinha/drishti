@@ -131,8 +131,9 @@ each cell's figure is computed by DuckDB from its own rows) and the harness runs
 
 ## Step 4 · Save, approve, use
 
-**UI.** Back to `wret` (formula), **Save version**: `fn:you/wret@1`, private. As the second user, open **Functions**, find
-`fn:you/wret@1` and press **Approve**, giving the reason "reviewed: a weighted mean". As yourself, in Values add
+**UI.** Back to `wret` (formula), **Save version**: `fn:you/wret@1`, private. As yourself, **submit** it for sharing; as the second user, open
+**Views → Approvals**, choose `fn:you/wret@1` (or *In Approvals* beside it in **Functions**) and press **Approve**, with the comment
+"reviewed: a weighted mean". As yourself, in Values add
 `fn:you/wret@1(PRICE, NOTIONAL)` (the trades' price and notional): the column header is the call itself, `fn:ravi/wret@1(PRICE, NOTIONAL)`
 for the author `ravi`.
 
@@ -140,7 +141,7 @@ for the author `ravi`.
 
 ```
 drishti.py pivot functions save wret.yaml --sample rows.csv
-drishti.py pivot functions approve you/wret@1 --reason "reviewed: a weighted mean"      # as the approver
+drishti.py approvals approve function you:wret@1 --comment "reviewed: a weighted mean"      # as the approver
 drishti.py pivot run --source trade --rows PRODUCT_TYPE --values "fn:you/wret@1(PRICE, NOTIONAL)"
 ```
 
@@ -152,7 +153,7 @@ fn:ravi/wret@1: approved
 
 The refusal is the author's own `approve`; the approval is the second user's (`vera`, with her own token).
 
-**JSON.** `POST /api/v1/pivot/functions/you/wret@1/approve` with `{"scope": "everyone", "reason": "reviewed: a weighted mean"}`; the view's
+**JSON.** `POST /api/v1/approvals/function/you:wret@1/approve` with `{"comment": "reviewed: a weighted mean", "params": {"scope": "everyone"}}`; the view's
 value is `{"measure": "fn:you/wret@1(PRICE, NOTIONAL)"}`.
 
 ```text

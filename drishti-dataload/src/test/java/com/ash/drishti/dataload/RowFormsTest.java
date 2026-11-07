@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The self-describing row forms (DATALOAD_INBOX.md section 5): the parallel loader has no reader for loader rows or lake rows, so a file
+ * The self-describing row forms (DATA_LAKE_GUIDE.md section 5.1): the parallel loader has no reader for loader rows or lake rows, so a file
  * of them is refused with the reason and the tool that loads it; documents, in any compression, are not.
  */
 class RowFormsTest {

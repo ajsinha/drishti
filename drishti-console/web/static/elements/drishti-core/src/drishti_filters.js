@@ -220,3 +220,33 @@ export function filterRows(rows, model, o) {
   const test = rowFilter(model, o.quickFilter || '', columns, o.value || ((row, c) => row[c.field || c.id]));
   return test ? rows.filter(test) : rows.slice();
 }
+
+const TEXT_MULT = { k: 1e3, m: 1e6, mm: 1e6, b: 1e9, bn: 1e9, tn: 1e12 };
+
+/**
+ * A drawn cell's sort key, read as the console's tables read it: an amount (separators, signs with the true minus or a dash, k, m, mm,
+ * b, bn, tn, a trailing % or bp) is a number; an ISO date is its time; anything else is its lower-cased text. The document table sorts
+ * by it, as the console's server tables do.
+ * @param {string} text the cell's text as shown
+ * @returns {{n: number, s: string}} n for a number or a date, else s
+ */
+export function textSortKey(text) {
+  const t = String(text).replace(/[−–]/g, '-').replace(/,/g, '').replace(/\s/g, '');
+  const m = t.match(/^([+-]?)(\d+(?:\.\d+)?)(k|m|mm|bn|b|tn)?(%|bp)?$/i);
+  if (m) { const n = parseFloat(m[2]) * (m[3] ? TEXT_MULT[m[3].toLowerCase()] : 1); return { n: m[1] === '-' ? -n : n }; }
+  if (/^\d{4}-\d{2}-\d{2}/.test(t) && !isNaN(Date.parse(t.slice(0, 10)))) { return { n: Date.parse(t.slice(0, 10)) }; }
+  return { s: String(text).toLowerCase() };
+}
+
+/**
+ * The order of two sort keys (textSortKey): numbers and dates before text, numbers by value, text by code point.
+ * @param {{n: number, s: string}} a
+ * @param {{n: number, s: string}} b
+ * @returns {number}
+ */
+export function compareTextKeys(a, b) {
+  if (a.n != null && b.n != null) { return a.n - b.n; }
+  if (a.n != null) { return -1; }
+  if (b.n != null) { return 1; }
+  return a.s < b.s ? -1 : a.s > b.s ? 1 : 0;
+}

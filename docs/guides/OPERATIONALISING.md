@@ -390,7 +390,7 @@ environment:
   DRISHTI_PACKS: trading,my-bank
 volumes:
   - /srv/drishti/packs:/opt/drishti/data/packs/installed:ro      # filled by `pack deploy --to /srv/drishti/packs`
-  - /srv/lake:/opt/drishti/data/delta:ro
+  - /srv/lake:/opt/drishti/data/delta/demo:ro
 ```
 
 On the host, deploy as usual (`pack deploy ... --to /srv/drishti/packs`), the server (which watches the folder) checks and loads the pack by itself; `docker compose restart server` (the service name in `deploy/docker/compose.yaml`) is needed only to put it in `DRISHTI_PACKS` for every start (or use Admin → Packs → Load). A `:ro` mount is fine: the server only reads.

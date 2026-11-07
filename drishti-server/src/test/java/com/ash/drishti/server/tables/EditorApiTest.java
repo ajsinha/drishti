@@ -246,9 +246,9 @@ class EditorApiTest {
         JsonNode opened = ann(get("/api/v1/tables/editor/object").param("kind", "table").param("item", item), null);
         assertThat(opened.path("yaml").asText()).isEqualTo(yaml);
         assertThat(ann(post("/api/v1/tables/editor/propose"), Map.of("item", item, "note", "please")).path("status").asText()).isEqualTo("proposed");
-        assertThat(call("ann", "writer", post("/api/v1/bi/items/" + item + "/approve"), Map.of()).getResponse().getStatus()).isEqualTo(403);
-        JsonNode approved = ok("bob", "signoff", post("/api/v1/bi/items/" + item + "/approve"), Map.of("note", "fine"));
-        assertThat(approved.path("status").asText()).isEqualTo("published");
+        assertThat(call("ann", "writer", post("/api/v1/approvals/bi/" + item + "/approve"), Map.of()).getResponse().getStatus()).isEqualTo(403);
+        JsonNode approved = ok("bob", "signoff", post("/api/v1/approvals/bi/" + item + "/approve"), Map.of("comment", "fine"));
+        assertThat(approved.path("status").asText()).isEqualTo("approved");
         JsonNode history = ann(get("/api/v1/tables/editor/history").param("item", item), null);
         assertThat(history.path("versions").size()).isPositive();
         // a reader may look, not save
@@ -263,7 +263,7 @@ class EditorApiTest {
         String yaml = TABLE.replace("mine.trade_view", "mine.broken_view").replace("$.mtm / 1000", "$.mtm / 'x'");
         String item = ann(post("/api/v1/tables/editor/save"), Map.of("kind", "table", "yaml", yaml, "workspace", ws)).path("item").asText();
         ann(post("/api/v1/tables/editor/propose"), Map.of("item", item));
-        MvcResult r = call("bob", "signoff", post("/api/v1/bi/items/" + item + "/approve"), Map.of());
+        MvcResult r = call("bob", "signoff", post("/api/v1/approvals/bi/" + item + "/approve"), Map.of());
         assertThat(r.getResponse().getStatus()).isEqualTo(422);
         assertThat(r.getResponse().getContentAsString()).contains("cannot be published");
     }

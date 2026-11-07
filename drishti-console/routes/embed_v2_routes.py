@@ -51,7 +51,9 @@ WEB = Path(__file__).resolve().parent.parent / "web"
 STATIC = WEB / "static"
 API = "2.0"
 BASE = "/embed/v2"
-ELEMENTS = {"2.2.0": "1.2.0"}   # Elements 2.x by its own version -> the renderer version that carries its drishti-elements.js (2.0.0 and 2.1.0 retired with renderers 1.0.0 and 1.1.0)
+ELEMENTS = {"2.2.0": "1.2.0", "2.3.0": "2.0.0"}   # Elements 2.x by its own version -> the renderer version that carries its drishti-elements.js (2.0.0 and 2.1.0 retired with renderers 1.0.0 and 1.1.0)
+# The Elements libraries renderer 2.0.0 imports from beside the console's static root (/embed/v2/elements/<library>/src/<module>.js)
+LIBRARY_FILE = re.compile(r"drishti-(core|grid|chart|data|renderer)/(src/drishti_[a-z0-9-]+\.js|drishti_[a-z]+\.(css|js))")
 # What the renderer loads from beside itself (its folder is /embed/v2/render/<v>/, so /embed/v2/ stands for the console's /static/)
 SCRIPTS = {"pivot-engine", "pivot-grid", "colfilter", "tables", "tree-rows", "drill", "zoom", "multiselect", "controls", "geomap",
            "table-chart", "table-chart-engine", "table-chart-sources"}
@@ -162,13 +164,13 @@ async def elements(request: Request, version: str):
     return await cors(request, RedirectResponse(f"{BASE}/render/{ELEMENTS[exact]}/drishti-elements.js", status_code=302, headers={"Cache-Control": "public, max-age=60"}))
 
 
-@router.get("/elements/{library}/{name}")
-async def element_bundle(request: Request, library: str, name: str):
-    """Drishti Elements' bundles beside the console's scripts (/embed/v2/ stands for /static/): drishti-core and drishti-grid, which tree rows and
-    Chart any table draw with (routes/embed_routes.py ELEMENT_BUNDLES)."""
-    if name == "drishti-elements.js":
-        return await elements(request, library)
-    return await v1.element_bundle(request, library, name)
+@router.get("/elements/{library}/{rest:path}")
+async def library(request: Request, library: str, rest: str):
+    """A module of the Elements libraries renderer 2.0.0 is drawn with (revalidated: the libraries are not per-version folders yet)."""
+    rel = f"{library}/{rest}"
+    if not LIBRARY_FILE.fullmatch(rel) or not (STATIC / "elements" / rel).is_file():
+        return await refuse(request, 404, "DRS-9404", f"no such file: {rel}")
+    return await static(request, STATIC / "elements" / rel)
 
 
 @router.get("/js/{name}.js")

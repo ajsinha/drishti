@@ -79,11 +79,11 @@ def sign_in(browser, user="rita", **ctx):
     page = context.new_page()
     page.errors = []
     page.on("pageerror", lambda e: page.errors.append(str(e)))
-    page.goto(CONSOLE_URL + "/login?next=/bi")
+    page.goto(CONSOLE_URL + "/login?next=/bi/catalogue")
     page.fill("#lu", user)
     page.fill("#lp", PASSWORD)
     page.click("button[type=submit]")
-    page.wait_for_url("**/bi")
+    page.wait_for_url("**/bi/catalogue")
     return page
 
 

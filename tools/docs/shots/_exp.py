@@ -26,6 +26,7 @@ import time
 import urllib.error
 import urllib.request
 
+from shotlib import DEMO_ROOT_ENV
 from shotlib import CONSOLE_PORT, ROOT, SERVER_PORT, Ctx
 from shotlib import start_servers as _start
 
@@ -52,7 +53,7 @@ def start_servers(work) -> list:
         lake = build_lake(work)
     except RuntimeError as e:
         sys.exit(str(e))
-    procs = _start(work, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
+    procs = _start(work, {DEMO_ROOT_ENV: str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
                           "DRISHTI_SECURITY_ENABLED": "false", "DRISHTI_COMPUTE_ENABLED": "true", "DRISHTI_PYTHON": sys.executable})
     deadline = time.monotonic() + 300
     while True:

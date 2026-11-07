@@ -18,7 +18,7 @@
 # connector keeps no disk cache, no id-map files and no index segments; scheduled reports, mail and pictures of its data are refused and
 # only a user's download leaves. Guide: docs/guides/IN_MEMORY_LAKE_GUIDE.md.
 # The lake (delta, its root or catalog, storage and tables) is config/lakes.examples/memory/news.yaml: copy it to
-# config/lakes/news.yaml beside this file (docs/guides/LAKE_GUIDE.md). This file keeps only what the connector reads.
+# config/lakes/news.yaml beside this file (docs/guides/DATA_LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: delta
 kinds:
 - news-topic

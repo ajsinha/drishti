@@ -78,7 +78,7 @@ drishti:
       export-choices: [100, 500, 1000, 10000, 0]   # the export's drop-down: positions as their own columns (0: All); the rest in Rest of scope
       export-default: 500            # the choice selected first
       export-max-cells: ${DRISHTI_VAR_PLAYGROUND_EXPORT_MAX_CELLS:20000000}   # the most cells one export may hold (about 19,000 positions at 509 scenarios, some 160 MB of server memory while it is written); larger is refused in words
-    explain:                         # why VaR moved (VAR EXPLAIN, GET /api/v1/var/explain, the VaR page's Why it moved tab; docs/guides/VAR_GUIDE.md section 3.11): the change between two dates in causes that add up exactly; a GET read, never stored
+    explain:                         # why VaR moved (VAR EXPLAIN, GET /api/v1/explain?kind=var, the Explain drawer's Why it moved tab; docs/guides/VAR_GUIDE.md section 3.11): the change between two dates in causes that add up exactly; a GET read, never stored
       enabled: ${DRISHTI_VAR_EXPLAIN_ENABLED:true}   # the tab, the command, the API and the workbook
       order: [restatement, hierarchy, trades-out, window, market, trades-in]   # the causes in sequence, each a full VaR state; restatement and trades-out before market, trades-in after, window next to market
       window-lines: two              # two (oldest scenario dropped, newest added) or one (one window-roll line)

@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The loader writing through a lake file (docs/guides/LAKE_GUIDE.md): the table's place and layout from {@code config/lakes/<lake>.yaml},
+ * The loader writing through a lake file (docs/guides/DATA_LAKE_GUIDE.md): the table's place and layout from {@code config/lakes/<lake>.yaml},
  * a load key that contradicts it refused with both values named, a kind the lake has no entry for refused, and {@code load-mode: append}
  * adding rows with each batch committed once (a repeated batch skipped, the earlier files kept); the entry's mode the table's default.
  */
@@ -126,7 +126,7 @@ class LakeFileLoadTest {
     }
 
     /**
-     * The mode (DATA_LOAD_RULES.md section 3): the lake file's entry is the table's default, below an explicit target.mode and above
+     * The mode (DATA_LAKE_GUIDE.md section 5): the lake file's entry is the table's default, below an explicit target.mode and above
      * target.default-mode (the inbox's); without a batch id an append is not guarded, each run's rows carry their load id.
      */
     @Test

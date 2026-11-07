@@ -14,7 +14,36 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* The small DOM parts every drawn component uses: an element maker (no markup strings, no style attributes, so a page with a strict CSP
-   draws every component) and placements that keep a floating element (a menu, a popover, a calendar) inside the window. */
+   draws every component), placements that keep a floating element (a menu, a popover, a calendar) inside the window, and the rules for
+   drawing untrusted data (attrAllowed, safeUrl: the client renderer draws a ViewModel through them, CLIENT_RENDERER.md section 9). */
+
+/** Attribute names a drawing of untrusted data may set (with data-* and aria-*): never an event handler, a style or a script address. */
+const SAFE_ATTRS = new Set(('class id role title href target rel type name value placeholder for colspan rowspan scope tabindex hidden disabled '
+  + 'open datetime lang dir aria-label aria-hidden maxlength autocomplete').split(' '));
+/** A link a drawing may write: a path on this or the configured server, a fragment, a query, or http(s); never javascript:, data:, vbscript:. */
+const SAFE_URL = /^(?:\/(?!\/)|#|\?|\.\/|https?:\/\/)/i;
+
+/**
+ * Whether an attribute name may carry a value from data (the allow-list, data-* and aria-*; never on*, style, src, srcdoc, formaction).
+ * @param {string} name
+ * @returns {boolean}
+ */
+export function attrAllowed(name) {
+  const n = String(name).toLowerCase();
+  if (n.startsWith('on') || n === 'style' || n === 'srcdoc' || n === 'src' || n === 'formaction' || n === 'xlink:href') { return false; }
+  return SAFE_ATTRS.has(n) || /^data-[a-z0-9-]+$/.test(n) || /^aria-[a-z]+$/.test(n);
+}
+
+/**
+ * The address itself when it is safe in an href (control characters and spaces around it ignored), else null.
+ * @param {*} u
+ * @returns {?string}
+ */
+export function safeUrl(u) {
+  if (u === null || u === undefined) { return null; }
+  const s = String(u);
+  return SAFE_URL.test(s.replace(/[\u0000- ]/g, '')) ? s : null;
+}
 
 /**
  * Makes an element: classes, text, attributes, data, CSSOM styles (never a style attribute), listeners and children.

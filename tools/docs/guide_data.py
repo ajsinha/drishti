@@ -18,7 +18,7 @@
     python3 tools/docs/guide_data.py --check    fail on a stale section, or a shown field the kind's data contract does not have
 
 Per guide the spec names its file, its section number and, per dataset: the kind, the sample file glob under data/testdata (a
-.jsonl.gz, or a tar of <table>/<date>/*.jsonl.gz as DATA_LOAD_RULES.md describes), an optional record selector and field list, whether the
+.jsonl.gz, or a tar of <table>/<date>/*.jsonl.gz as DATA_LAKE_GUIDE.md describes), an optional record selector and field list, whether the
 feature needs it, what it is for (written by hand) and a link to the guide's own field table. The tool writes, between
 ``<!-- guide-data:begin <id> -->`` and ``<!-- guide-data:end -->`` in the guide, an at-a-glance table and one subsection per dataset with
 the contract's key and one real record, formatted, long arrays shortened as ``/* … N more … */``. Text outside the markers is never

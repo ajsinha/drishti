@@ -378,6 +378,14 @@ class BackendClient:
         sent as a repeated parameter (``override``). The netting-set list computes every netting set of the date: this waits up to a minute."""
         return await self._send(method, path, ident, params={k: v for k, v in params.items() if v not in (None, "", [])}, timeout=60.0)
 
+    async def explain_number(self, method: str, path: str, ident, body=None, **params) -> Any:
+        """One Explain for every number (/api/v1/explain, docs/architecture/SHARED_SCREENS.md section 3), as the user. ``path`` starts after
+        /api/v1/explain (``""`` or ``/kinds``). Why it moved reads two business dates: this waits up to two minutes."""
+        kw: dict[str, Any] = {"params": {k: v for k, v in params.items() if v not in (None, "")}, "timeout": 120.0}
+        if body is not None:
+            kw["json"] = body
+        return await self._send(method, "/explain" + path, ident, **kw)
+
     async def pivot(self, method: str, path: str, ident, body=None, raw: bool = False, **params) -> Any:
         """The pivot engine (/api/v1/pivot, docs/guides/PIVOT_GUIDE.md), as the user. ``path`` starts after /api/v1/pivot (``/query``);
         ``raw`` returns the bytes and headers of an export. A table's first pivot reads it through its connector: this waits up to two
@@ -468,15 +476,6 @@ class BackendClient:
         """Saves a Sutra; with review on, the answer is {"proposal": {...}} and the Sutra is not live yet."""
         return await self._send("POST", "/sutras", ident, content=yaml_text.encode(), headers={"Content-Type": "text/yaml"},
                                 params={"note": note} if note else None)
-
-    async def proposals(self, ident=None, status: str = "", name: str = "") -> dict:
-        return await self._get("/sutras/proposals", ident, **{k: v for k, v in {"status": status, "name": name}.items() if v})
-
-    async def proposal(self, id_: str, ident=None) -> dict:
-        return await self._get(f"/sutras/proposals/{id_}", ident)
-
-    async def decide(self, id_: str, action: str, ident=None, comment: str = "") -> dict:
-        return await self._send("POST", f"/sutras/proposals/{id_}/{action}", ident, json={"comment": comment})
 
     async def impact(self, kind: str, id_: str, ident=None) -> dict:
         where, q = entity_path(kind, id_)
@@ -672,39 +671,60 @@ class BackendClient:
     async def admin_delete_subscription(self, owner: str, name: str, ident) -> None:
         return await self._send("DELETE", f"/admin/subscriptions/{quote(owner)}/{quote(name)}", ident)
 
-    # -- alerts on measures, fields and board tiles -------------------------------------------------------------
-    async def measure_alerts(self, ident) -> list:
-        return await self._get("/me/measure-alerts", ident)
+    # -- the one alert engine: rules, the alerts raised, administrators -------------------------------------------------------------
+    async def alert_rules(self, ident) -> list:
+        return await self._get("/alerts/rules", ident)
 
-    async def measure_alert(self, name: str, ident) -> dict:
-        return await self._get(f"/me/measure-alerts/{quote(name)}", ident)
+    async def alert_rule(self, name: str, ident) -> dict:
+        return await self._get(f"/alerts/rules/{quote(name)}", ident)
 
-    async def save_measure_alert(self, name: str, body: dict, ident) -> dict:
-        return await self._send("PUT", f"/me/measure-alerts/{quote(name)}", ident, json=body)
+    async def save_alert_rule(self, name: str, body: dict, ident) -> dict:
+        return await self._send("PUT", f"/alerts/rules/{quote(name)}", ident, json=body)
 
-    async def delete_measure_alert(self, name: str, ident) -> None:
-        return await self._send("DELETE", f"/me/measure-alerts/{quote(name)}", ident)
+    async def delete_alert_rule(self, name: str, ident) -> None:
+        return await self._send("DELETE", f"/alerts/rules/{quote(name)}", ident)
 
-    async def check_measure_alert(self, name: str, ident) -> dict:
-        return await self._send("POST", f"/me/measure-alerts/{quote(name)}/check", ident, timeout=120.0)
+    async def check_alert_rule(self, name: str, ident) -> dict:
+        return await self._send("POST", f"/alerts/rules/{quote(name)}/check", ident, timeout=120.0)
 
-    async def pause_measure_alert(self, name: str, resume: bool, ident) -> dict:
-        return await self._send("POST", f"/me/measure-alerts/{quote(name)}/{'resume' if resume else 'pause'}", ident)
+    async def pause_alert_rule(self, name: str, resume: bool, ident) -> dict:
+        return await self._send("POST", f"/alerts/rules/{quote(name)}/{'resume' if resume else 'pause'}", ident)
 
-    async def preview_measure_alert(self, body: dict, ident) -> dict:
-        return await self._send("POST", "/me/measure-alerts/preview", ident, json=body, timeout=120.0)
+    async def preview_alert_rule(self, body: dict, ident) -> dict:
+        return await self._send("POST", "/alerts/rules/preview", ident, json=body, timeout=120.0)
 
-    async def all_measure_alerts(self, ident) -> list:
-        return await self._get("/admin/measure-alerts", ident)
+    # -- the one Approvals queue -------------------------------------------------------------------------------
+    async def approvals_list(self, ident, box: str = "inbox", group: str = "", kind: str = "") -> dict:
+        q = {"box": box, "limit": "300", **({"group": group} if group else {}), **({"kind": kind} if kind else {})}
+        return await self._send("GET", "/approvals?" + "&".join(f"{k}={quote(v)}" for k, v in q.items()), ident)
 
-    async def board_alerts(self, ident) -> list:
-        return await self._get("/admin/measure-alerts/boards", ident)
+    async def approvals_count(self, ident) -> dict:
+        return await self._send("GET", "/approvals/count", ident)
 
-    async def admin_pause_measure_alert(self, owner: str, name: str, resume: bool, ident) -> dict:
-        return await self._send("POST", f"/admin/measure-alerts/{quote(owner)}/{quote(name)}/{'resume' if resume else 'pause'}", ident)
+    async def approvals_item(self, kind: str, id_: str, ident) -> dict:
+        return await self._send("GET", f"/approvals/{quote(kind)}/{quote(id_, safe=':@~+')}", ident)
 
-    async def admin_delete_measure_alert(self, owner: str, name: str, ident) -> None:
-        return await self._send("DELETE", f"/admin/measure-alerts/{quote(owner)}/{quote(name)}", ident)
+    async def approvals_act(self, kind: str, id_: str, action: str, body: dict, ident):
+        """approve, reject, withdraw, or questions (ask)."""
+        return await self._send("POST", f"/approvals/{quote(kind)}/{quote(id_, safe=':@~+')}/{action}", ident, json=body)
+
+    async def admin_alerts(self, ident) -> dict:
+        """``{rules, boards, platform}``: everyone's rules, the board tiles that notify, the platform alerts (administrators)."""
+        return await self._get("/admin/alerts", ident)
+
+    async def raised_alerts(self, ident, stage: str = "open") -> list:
+        """The alerts raised for the person (and, for an administrator, the platform's), newest first."""
+        return await self._send("GET", f"/alerts?stage={quote(stage)}", ident)
+
+    async def act_on_alert(self, action: str, body: dict, ident) -> dict:
+        """acknowledge, resolve, snooze or assign one raised alert: ``{id, note, for, to}``."""
+        return await self._send("POST", f"/alerts/{action}", ident, json=body)
+
+    async def admin_pause_alert_rule(self, owner: str, name: str, resume: bool, ident) -> dict:
+        return await self._send("POST", f"/admin/alerts/rules/{quote(owner)}/{quote(name)}/{'resume' if resume else 'pause'}", ident)
+
+    async def admin_delete_alert_rule(self, owner: str, name: str, ident) -> None:
+        return await self._send("DELETE", f"/admin/alerts/rules/{quote(owner)}/{quote(name)}", ident)
 
     # -- monitors and alerts ----------------------------------------------------------------------
     async def mine(self, method: str, path: str, ident, body=None, **params):

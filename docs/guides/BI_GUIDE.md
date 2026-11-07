@@ -177,7 +177,7 @@ Everything the page does, the server decides: the page is a shell that asks the 
 
 ![The BI menu in the top bar](img/bi/02-bi-menu.jpg)
 
-- **The BI menu** is the second entry of the top bar, right after **Views** (the order is Views, BI, Forms, Reports, Build, then Admin and Help for those who have them), with the icon `bar-chart-line`. It lists *BI home*, *My workspace*,
+- **The BI menu** is the second entry of the top bar, right after **Views** (the order is Views, BI, Forms, Reports, Build, then Admin and Help for those who have them), with the icon `bar-chart-line`. It lists *My workspace*,
   *Catalogue*, and under *Recent* the three items you opened most recently. It is shown only to people who hold the `bi` power (section 3), and
   not at all when BI is switched off. Administrators with `bi-admin` also see *BI settings* (under *Administer*).
 - **The Reports menu** (the top bar's fourth entry) holds the saved and scheduled reports of the terminal and, for people with the `bi` power, *BI reports* (the catalogue filtered to reports) and the BI reports you opened last. The **Forms** menu beside it is the terminal's query by form, not BI.
@@ -185,7 +185,7 @@ Everything the page does, the server decides: the page is a shell that asks the 
 
 | Type | Opens |
 |---|---|
-| `BI <GO>` | the BI home (`/bi`) |
+| `BI <GO>` | the Build home (`/build`; BI's own home, `/bi`, is folded into it and redirects there) |
 | `BI WORKSPACE <GO>` | your personal workspace (`/bi/w/me`) |
 | `BI CATALOGUE <GO>` | the catalogue (`/bi/catalogue`) |
 | `BI <report-or-board> <GO>` | an item by its id or its title (any case); a **report opens drawn** (`/bi/r/<id>`), any other item opens its page; if the words match several items, the catalogue searched for them (a pick list) |
@@ -228,7 +228,7 @@ wide canvas. The terminal's F-key footer is not shown (F1 opens help for BI).
 
 | Rail entry | Opens | State |
 |---|---|---|
-| Home | recent, favourites, certified for you, shared with me | built |
+| Build home | the one Build home (`/build`): BI Studio's own home (`/bi`) is folded into it and redirects there | built |
 | Catalogue | search, filters and sort over what you may open | built |
 | My workspace | your personal workspace | built |
 | Workspaces | the workspaces you belong to; create one | built |
@@ -239,8 +239,9 @@ wide canvas. The terminal's F-key footer is not shown (F1 opens help for BI).
 | Notebook | open a model as your masked extract; SQL cells run by the server, Python cells on its compute pool; notebooks | `/bi/notebook` ([USER_GUIDE.md](USER_GUIDE.md#the-notebook), section 21) |
 | Transforms | prepare data in Python step by step: inputs, snippets, a preview and a profile after each step | `/bi/transform` ([section 34, its section 17](#17-data-prep-the-transform-editor)) |
 
-**Keys** (shown by `?`): `/` search the catalogue (from another BI page it takes you to the catalogue with the search focused),
-`g h` home, `g c` catalogue, `g w` my workspace, `?` the list, `Esc` closes it. Keys are ignored while you type in a field.
+**Keys** (the console's one keymap: `?` or the rail's Keys button lists them with the rest of the screen's): `/` search the catalogue
+(from another BI page it takes you to the catalogue with the search focused), `g h` the Build home, `g c` catalogue, `g w` my workspace,
+`g r` my runs. Keys are ignored while you type in a field.
 
 **On a phone** (390 px) the rail becomes a scrolling bar above the page, cards stack in one column, every control is at least
 44 px high, and fields use 16 px text so the browser does not zoom.
@@ -329,7 +330,7 @@ An **item** has a kind (`dataset`, `report`, `board`, `notebook`, `python`), a t
 - Editing a **published** item makes the item a draft again; the published version stays what viewers see, and the page shows
   "draft changes not published".
 - **Publish** (member, `bi-author`, shared workspace, no review required) writes the next version and makes the item `published`.
-- **Propose for review** (contributor) freezes the item; **Approve and publish** needs a **`bi-steward`** (in any workspace), or a workspace `member` who holds the
+- **Propose for review** (contributor) freezes the item; **Approve** (in the one Approvals queue: *Decide in Approvals*) needs a **`bi-steward`** (in any workspace), or a workspace `member` who holds the
   **`approve`** power (the same one that approves Sutras) and is not the proposer when four-eyes is on
   (`drishti.governance.four-eyes`, `DRS-9005` otherwise). **Reject** needs a reason and returns the item to draft; the proposer
   may **withdraw**.
@@ -714,7 +715,7 @@ The Model view calls the dataset checks (`POST /api/v1/bi/datasets/validate`, wh
 The reference is [section 32](#32-publishing-and-governance-versions-review-certification-lineage-impact-environments); the walk-through is [tutorial 13](../tutorials/13-govern-bi.md). On an item's page (`/bi/i/<id>`) four sections are new, and the rail has **Environments**.
 
 * **History** (people who may edit the item). Every save of the body is a saved state with who, when and the message you wrote in *What changed* in the Edit form. Pick two (or press *Compare with draft*) and *Show the differences* for the side-by-side diff; *Restore as draft* makes a state the draft again as a new state, so nothing is lost. Below the table is the review record: requests, decisions with their comments, certifications, revocations, imports.
-* **Review** (shown while an item is proposed, to the people who may decide, including any bi-steward). The request and its note, what changed, Check, what it does to reports, and a data preview answered with the reviewer's own rows and masks. Write your comment in the note box above and press *Approve and publish* or *Reject*. The author is told in the inbox; four-eyes still applies.
+* **Review** (shown while an item is proposed, to the people who may decide, including any bi-steward). The request and its note, what changed, Check, what it does to reports, and a data preview answered with the reviewer's own rows and masks. Press *Decide in Approvals*: the item opens in the one Approvals queue with the same diff, its effect and the rules; write your comment and press *Approve* or *Reject*. The author is told in the inbox; four-eyes still applies.
 * **Impact on reports** (datasets, for editors). What publishing the draft would break, and a box *What breaks if I remove ...*. A publish that breaks published reports is refused with `DRS-9040` and the callout lists the reports; a **bi-admin** sees *Publish anyway* and, after it, a *Heads up* list that includes any certification that fell.
 * **Lineage** (everyone who opens the item). Where a dataset comes from (table, kind, packs, connector) and which reports read it; a report's dataset, what it uses, and the tables behind it.
 * **Certified** and **promoted** badges are in the catalogue and search (certified first), on Home and on the item; only a bi-steward certifies, and certification falls on its own when a dataset changes incompatibly.
@@ -758,7 +759,7 @@ delivery's status, retries with the shared retry policy, an audit trail. The lis
 (`above`, `below`, `between`, `outside`), moves too far (a percentage or an amount, against the previous look or the previous business day) or does not arrive by a time. It looks on a schedule, after a data load, or when a live table changes (after a quiet time).
 **Each person is judged on their own number**: the engine applies their row rules and masks; a masked number is never judged or shown. It stays quiet after firing until the number is back inside the limit (the *hysteresis*), and not again within the *cooldown*.
 It tells you in your inbox (the *Alerts* tab, and the bell), by email to your own address and in the chat bridges (a post with no number); there is a history, an audit trail, pause and resume. A board tile whose colour turns red can tell everyone who reads the board the same way (`notify:`, [section 31, its section 23](#notifications-a-tile-tells-people-when-it-turns-red)). The page is **Alerts** (`/alerts`), linked from **Reports** in the top bar;
-the reference is [section 33, its section 4](#4-alerts-on-numbers); walk-through: [tutorial 11](../tutorials/11-bi-that-runs-itself.md); settings `drishti.alerts.measure.*`; code `DRS-9062`. Alerts also have retries of a failed delivery, webhook and text-message channels ([section 33, its section 6](#6-webhooks-and-text-messages)) and, for subscriptions, a written summary ([section 29.9](#299-a-written-summary-at-the-top-of-a-subscriptions-email)). Not built: escalation.
+the reference is [section 33, its section 4](#4-alerts-on-numbers); walk-through: [tutorial 11](../tutorials/11-bi-that-runs-itself.md); settings `drishti.alerts.*`; code `DRS-9062`. Alerts also have retries of a failed delivery, webhook and text-message channels ([section 33, its section 6](#6-webhooks-and-text-messages)) and, for subscriptions, a written summary ([section 29.9](#299-a-written-summary-at-the-top-of-a-subscriptions-email)). Not built: escalation.
 
 **Embedding.** `<drishti-report>` shows a published report, one page or one visual, in **another web application's** page (a Web Component, no iframe), masked whatever the user's roles, with slicers, cross-filter and live updates; the administrator lists the reports a host application may show (`report:<id>` or `report:*`) in Admin → Embedding. Reference: [section 33, its section 5](#5-embedding-a-report-in-another-web-application); developer guide: [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#drishti-report); walk-through: [tutorial 16](../tutorials/16-embed-drishti.md); scope `embed:report`.
 
@@ -2789,7 +2790,7 @@ drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.por
 ```
 
 Open http://localhost:17480 and sign in as `drishti-dev-admin` with `drishti-dev-admin123` (change it later; [GETTING_STARTED.md](GETTING_STARTED.md)).
-The server reads `data/delta` (the lakes `lake demo` built) and `config/bi` is the BI folder, so the samples are there already. The seven packs are
+The server reads `data/delta/demo` (the demo lake `lake demo` built) and `config/bi` is the BI folder, so the samples are there already. The seven packs are
 loaded by default (`DRISHTI_PACKS` unset).
 
 Now make four people. The role names matter: the models' row rules name them (`trading-risk`: `desk-head` sees `DESK in user.desks`; `risk`, `analyst`
@@ -4310,11 +4311,11 @@ pages:
 | `notify: true` | | take the report's `board.notify` defaults (or the built-in ones) |
 | `level` | `crit` | `crit` notifies on red; `warn` on amber or red. `crit` needs a `crit` threshold on the tile; `warn` needs a `warn` or a `crit` one |
 | `channels` | `[inbox]` | any of `inbox`, `email`, `chat` |
-| `cooldown` | the server's `drishti.alerts.measure.cooldown` (30 min) | no second notification for one person within it |
+| `cooldown` | the server's `drishti.alerts.cooldown` (30 min) | no second notification for one person within it |
 | `trigger` | `after-load` | `after-load` (shortly after a data load announced ready), `live` (when a live report changes) or a schedule (`business-days 07:30`) |
 | `severity` | `critical` for `crit`, else `warn` | `info`, `warn`, `critical` |
 
-A person is told when the tile **enters** the level, and again only after it has dropped below it and the cooldown has passed. A person whose number for the tile is masked is told nothing. The message is the tile and its colour, never a figure (`Desk wall · Mark to market — is now red`); it opens the report, where each person sees their own number. A report with more readers than `drishti.alerts.measure.max-audience` (300) tells nobody and says so in the history. `notify: false` (or no `notify`) keeps a tile silent.
+A person is told when the tile **enters** the level, and again only after it has dropped below it and the cooldown has passed. A person whose number for the tile is masked is told nothing. The message is the tile and its colour, never a figure (`Desk wall · Mark to market — is now red`); it opens the report, where each person sees their own number. A report with more readers than `drishti.alerts.max-audience` (300) tells nobody and says so in the history. `notify: false` (or no `notify`) keeps a tile silent.
 
 #### 23.5 The viewer, kiosk and rotation
 
@@ -4369,7 +4370,7 @@ The report's checks (`POST /api/v1/bi/reports/validate`, the designer's Check an
 | console `bi.board.rotate_seconds` (`DRISHTI_BI_BOARD_ROTATE_SECONDS`) | 30 | kiosk page time when the report sets no `board.rotate` (3 to 3600) |
 | console `bi.live.min_interval_ms`, `bi.live.stale_seconds` | 250, 30 | how often tiles redraw at most, and when the indicator says "Stale" |
 | server `drishti.bi.live.*` | | the live tables and streams the tiles' reports use ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibilive--streaming-bi-phase-5)) |
-| server `drishti.alerts.measure.*` | | notifications from tiles: the load delay, the live debounce, the cooldown, the audience limit, email and chat on or off ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtialertsmeasure--alerts-on-numbers-and-board-notifications)) |
+| server `drishti.alerts.*` | | notifications from tiles: the load delay, the live debounce, the cooldown, the audience limit, email and chat on or off ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtialerts--the-one-alert-engine)) |
 | server `drishti.bi.migrate.on-start` | `true` | stored 2.3 boards become reports at start (section 12) |
 
 #### 23.9 API
@@ -4749,7 +4750,7 @@ Review extends the phase 1 flow; it does not replace it. A workspace may *requir
 
 1. **Request.** The author proposes, with a note. The item is frozen (no edits until it is withdrawn). The **reviewers are told** in the inbox (the bell): every bi-steward, and every member of the workspace who holds the `approve` power, except the author.
 2. **The review page.** A reviewer opens the item and sees, under *Review*: who asked and what they wrote; **what changed** (the draft against the published version, side by side); **Check** (the dataset's or report's problems, with DRS code and path; a report is checked against its dataset); **what it does to reports** (the impact of section 6, for a dataset); and a **data preview**: for a dataset the first `drishti.bi.governance.preview-rows` (20) rows of its first table and two measures read from the **draft**, for a report a sample of the data it reads. The preview is answered as the reviewer: their row rules and masks apply, so a reviewer never sees through a mask. When the source cannot be read the preview says why instead of failing the review.
-3. **Decide.** *Approve and publish* (with a note) publishes the draft as the next version; *Reject* needs a reason and returns the item to draft. Both are recorded with the comment in the item's **review record**, shown under History, and the author is told in the inbox.
+3. **Decide**, in the one Approvals queue (*Decide in Approvals*). *Approve* (with a comment) publishes the draft as the next version; *Reject* needs a reason and returns the item to draft. Both are recorded with the comment in the item's **review record**, shown under History, and the author is told in the inbox.
 
 **Who may decide.** A **bi-steward** may, in any workspace (a steward reads what is proposed for review, in any shared workspace; what is published stays behind its audience, so to certify an item a steward must be in its audience or its workspace). A workspace **member** may if their role holds the **`approve` power**: it is a flag of the role itself, like the built-in `approver` role has, and not an entry of the role's `bi:` list (`bi: [approve]` is not valid: that list holds `bi-author`, `bi-steward` and `bi-admin`). **Four-eyes** (`drishti.governance.four-eyes`, with security on): the person who proposed may not approve or reject (`DRS-9005`); they may withdraw. An approval that would break published reports is refused like any publish (section 6), and a bi-admin may force it.
 
@@ -5416,7 +5417,7 @@ The `measure` of a dataset source may be a **Python measure** (a dataset measure
 * *Live* is as for the dataset behind it. A Python alert is not cheap (it starts a process for each person each time): prefer `schedule` or `after-load` to `live`.
 
 ```
-PUT /api/v1/me/measure-alerts/Vol
+PUT /api/v1/alerts/rules/Vol
 {"title": "Desk P&L volatility", "source": {"type": "dataset", "dataset": "file:dataset:trades-basic", "measure": "Desk P&L volatility"},
  "condition": {"type": "threshold", "op": "above", "value": 5000}, "trigger": {"mode": "after-load"}}
 ```
@@ -5457,7 +5458,7 @@ An alert is a small state machine for each person it is judged for.
 
 * **Hysteresis** (a number, default 0): once active, the alert re-arms only when the number is back inside the limit by at least this much. `above 100` with hysteresis `10` fires at 101, stays active at 95,
   and re-arms at 90. For `change` it is the same margin on the size of the change; for `between` and `outside` the range is widened or narrowed by it.
-* **Cooldown** (default `drishti.alerts.measure.cooldown`, 30 min; `0` for none): after it fires, it will not fire again for this person within the cooldown, even if it re-armed. A breach inside the cooldown is
+* **Cooldown** (default `drishti.alerts.cooldown`, 30 min; `0` for none): after it fires, it will not fire again for this person within the cooldown, even if it re-armed. A breach inside the cooldown is
   written to the history as **held** (once) and fires when the cooldown ends **if the condition still holds**.
 
 #### 4.5 Each person is judged on their own number
@@ -5473,10 +5474,10 @@ An alert is **evaluated as the person it is for**: for your own alert, you. The 
 | Channel | What | Rules |
 |---|---|---|
 | **Inbox** (always on unless you turn it off) | a row of type `alert` in your inbox (the *Alerts* tab) and a toast and a count on the bell, live. The row is the one line, cut to 100 characters (the full text is in the history), and opens what the alert is about | the same inbox as shares ([COLLABORATION.md](../architecture/COLLABORATION.md)) |
-| **Email** | one mail to **the address on your account**, `Drishti alert: <title>` | users only: an alert cannot name an address. No address, no mail (the history says `skipped: no email address on file`). **A send that fails is tried again** by the shared retry policy (`drishti.retry.alerts.*`; `drishti.alerts.measure.max-attempts`, 4 in all): the history says `retrying: attempt 1 of 4 failed (connection refused); next try in 5 s`, then `sent (attempt 3 of 4)` or `failed after 4 attempts: …` (and `emailAttempts: 3`); a refused address is `failed (permanent): … (not retried)`. A pending retry is in memory, so a restart drops it. Off for the server with `drishti.alerts.measure.email` |
+| **Email** | one mail to **the address on your account**, `Drishti alert: <title>` | users only: an alert cannot name an address. No address, no mail (the history says `skipped: no email address on file`). **A send that fails is tried again** by the shared retry policy (`drishti.retry.alerts.*`; `drishti.alerts.max-attempts`, 4 in all): the history says `retrying: attempt 1 of 4 failed (connection refused); next try in 5 s`, then `sent (attempt 3 of 4)` or `failed after 4 attempts: …` (and `emailAttempts: 3`); a refused address is `failed (permanent): … (not retried)`. A pending retry is in memory, so a restart drops it. Off for the server with `drishti.alerts.email` |
 | **Webhook** (`delivery.webhooks: [name]`) | a signed JSON post to a webhook an administrator defined | section 6. One post per alert per cooldown (a minute at least), not one per person; it names the alert, its severity, what it watches and the condition and where it opens, **never a number**. Retried like the email; `webhook:NAME` in the history |
 | **Text** (`delivery.sms: true`) | a text to **your own** number | section 6. The title, severity and a link; a figure only if the administrator set `sms.include-values`. Retried like the email; `sms` in the history |
-| **Chat bridges** | a post to every bridge whose route lists the event `alert` and covers the kind: a Sutra kind for a field alert, `bi` for everything else | the post names the alert, what it watches and the condition, the owner and a link, **never a number**, because a bridge is a room, not a person. At most one post per alert per cooldown (a minute at least), however many people it fired for. Configure with `events: [alert]` in a route ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishticollab--share-with-a-note-and-the-inbox)); off with `drishti.alerts.measure.bridges` |
+| **Chat bridges** | a post to every bridge whose route lists the event `alert` and covers the kind: a Sutra kind for a field alert, `bi` for everything else | the post names the alert, what it watches and the condition, the owner and a link, **never a number**, because a bridge is a room, not a person. At most one post per alert per cooldown (a minute at least), however many people it fired for. Configure with `events: [alert]` in a route ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishticollab--share-with-a-note-and-the-inbox)); off with `drishti.alerts.bridges` |
 
 The **history** (on the edit page; the last `keep-history`, 50) has an entry for each firing, clearing, held breach and skipped reason, with the time, what triggered it (`saved`, `schedule`, `load`, `live`, `by hand`,
 `resumed`), the number, the message, and what each channel did:
@@ -5492,7 +5493,7 @@ The audit log has `alert.save`, `alert.delete`, `alert.pause`, `alert.resume` an
 #### 4.7 Where it is kept, and limits
 
 An alert is a document in the owner's preferences (namespace `measure-alerts`, 64 KB, so the history is capped), with its state for each person and its history. `per-user` (20) caps how many one person
-keeps. Alerts are looked at by the server that runs the scheduler: with several servers, turn `drishti.alerts.measure.enabled` off on all but one. The whole list is on the **Alerts** page (`/alerts`:
+keeps. Alerts are looked at by the server that runs the scheduler: with several servers, turn `drishti.alerts.enabled` off on all but one. The whole list is on the **Alerts** page (`/alerts`:
 *Alerts on numbers*, beside the older rules on one entity, which are unchanged), linked from **Reports** in the top bar and from the inbox. The old per-entity rules ([USER_GUIDE.md](USER_GUIDE.md#alerts)) stay: they watch an
 expression on every change of one entity; an alert on a number adds the BI sources, the change and no-data conditions, hysteresis, cooldown and delivery.
 
@@ -5522,7 +5523,7 @@ pages:
 |---|---|---|
 | `level` | `crit` | the colour that notifies: `crit` (red), or `warn` (amber or red). `crit` needs a `crit` threshold on the tile, `warn` a `warn` or `crit` one |
 | `channels` | `[inbox]` | `inbox`, `email`, `chat` (the chat bridges, as in 4.6) |
-| `cooldown` | `drishti.alerts.measure.cooldown` | no second notification for the same person within it |
+| `cooldown` | `drishti.alerts.cooldown` | no second notification for the same person within it |
 | `trigger` | `after-load` | `after-load`, `live` (needs a live report; on change, after the debounce) or a schedule (`business-days 07:30`, `hourly`) |
 | `severity` | `critical` for `crit`, else `warn` | `info`, `warn`, `critical` |
 
@@ -5538,7 +5539,7 @@ definition: publish a change and the next look uses it; nothing else is stored b
 #### 4.9 Real output
 
 Rita (who sees every figure) makes the alert of the pictures: *the MTM card of Trades overview, below -300,000, after a data load, with hysteresis 25,000, by inbox and email*. *Check now* answers (the server's
-`POST /api/v1/me/measure-alerts/preview`, saving nothing):
+`POST /api/v1/alerts/rules/preview`, saving nothing):
 
 ```
 {
@@ -5694,7 +5695,7 @@ Pause or change the alert on the Alerts page.
 A bad alert is `422 DRS-9062` and names the key:
 
 ```
-422 {"type": "about:blank", "title": "alert invalid", "status": 422, "detail": "DRS-9062 condition.op is above, below, between or outside", "instance": "/api/v1/me/measure-alerts/Bad", "code": "DRS-9062"}
+422 {"type": "about:blank", "title": "alert invalid", "status": 422, "detail": "DRS-9062 condition.op is above, below, between or outside", "instance": "/api/v1/alerts/rules/Bad", "code": "DRS-9062"}
 ```
 
 #### 4.10 Phone
@@ -6230,12 +6231,12 @@ pnl-vega             2 tests: passed 2
 * a **python visual that draws a chart** has no number: such an alert reads as an error saying to watch a Python measure.
 
 ```
-PUT /api/v1/me/measure-alerts/Vol
+PUT /api/v1/alerts/rules/Vol
 {"title": "Desk P&L volatility", "source": {"type": "dataset", "dataset": "file:dataset:trades-basic", "measure": "Desk P&L volatility"},
  "condition": {"type": "threshold", "op": "above", "value": 5000}, "trigger": {"mode": "after-load"}}
 ```
 
-The reader is tested against the real pool ([PythonRunsTest](../../drishti-server/src/test/java/com/ash/drishti/server/bi/python/PythonRunsTest.java)) and with a stand-in ([PythonAlertReaderTest](../../drishti-server/src/test/java/com/ash/drishti/server/alerts/measure/PythonAlertReaderTest.java): what the runner is handed, a masked column, a failing run).
+The reader is tested against the real pool ([PythonRunsTest](../../drishti-server/src/test/java/com/ash/drishti/server/bi/python/PythonRunsTest.java)) and with a stand-in ([PythonAlertReaderTest](../../drishti-server/src/test/java/com/ash/drishti/server/alerts/PythonAlertReaderTest.java): what the runner is handed, a masked column, a failing run).
 
 ### One runtime on the server, grouped measures, columns
 

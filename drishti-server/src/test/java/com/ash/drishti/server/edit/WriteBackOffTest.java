@@ -53,6 +53,6 @@ class WriteBackOffTest {
         assertThat(s.path("enabled").asBoolean()).isFalse();
         assertThat(s.path("mayEdit").asBoolean()).isFalse();
         assertThat(runtime.lanes()).as("no lane, no worker").isNull();
-        mvc.perform(post("/api/v1/changes/chg-x/approve").contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isForbidden());
+        mvc.perform(post("/api/v1/approvals/change/chg-x/approve").contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isForbidden());
     }
 }

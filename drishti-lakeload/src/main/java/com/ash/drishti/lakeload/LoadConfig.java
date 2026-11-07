@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
  * {@code promote} is {@code layout.<kind>.columns}, {@code vectors} is {@code layout.<kind>.vectors}, {@code flatten},
  * {@code partition-by}), where the table is ({@code lake}, {@code domain}, {@code kind}, {@code table}, or {@code path}), how it is laid
  * out and how many threads do the work. When {@code target.lake} names a lake file ({@code config/lakes/<lake>.yaml},
- * docs/guides/LAKE_GUIDE.md) the table is the lake file's entry for {@code target.kind}: its location, format, partitioning, promoted
+ * docs/guides/DATA_LAKE_GUIDE.md) the table is the lake file's entry for {@code target.kind}: its location, format, partitioning, promoted
  * columns, vectors, id, date, latest-by, sort, file layout and load mode all come from there, and a key of this file that says
  * otherwise is refused with both values named. A lake that has no entry for the kind is refused: a writer never creates a table its lake
  * file does not describe. {@code --set key.path=value} overrides any key. A value may name an environment variable
@@ -352,7 +352,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
             }
         } else if (lakeRef != null && !lakeRef.isBlank()) {
             warnOnce("target.lake " + lakeRef + " is a folder: name a lake of config/lakes/ instead (drishti.py lake migrate-config; "
-                    + "docs/guides/LAKE_GUIDE.md); a folder is read this way for one more release");
+                    + "docs/guides/DATA_LAKE_GUIDE.md); a folder is read this way for one more release");
         }
         List<String> vectors = new ArrayList<>(r.list(s, "vectors"));
         vectors.addAll(r.list(s, "vector"));
@@ -392,7 +392,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         if (!tf.equals("delta") && !tf.equals("iceberg")) {
             throw new IllegalArgumentException("target.format " + tf + ": delta or iceberg");
         }
-        // the load mode (docs/architecture/DATA_LOAD_RULES.md section 3): target.mode (--mode, a .ready file's mode:), else the lake file's
+        // the load mode (docs/guides/DATA_LAKE_GUIDE.md section 5): target.mode (--mode, a .ready file's mode:), else the lake file's
         // entry (the table's default), else target.default-mode (the data inbox's default-mode), else append; replace (overwrite-dates)
         // replaces each business date
         String given = r.text(t, "mode", null);
@@ -496,7 +496,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
     static <T> T agree(LakeTable entry, String key, T mine, T lakes) {
         if (mine != null && lakes != null && !mine.equals(lakes)) {
             throw new IllegalArgumentException(key + " " + mine + " differs from " + lakes + ", the " + key + " of table " + entry.name()
-                    + " in its lake file: the lake file decides (docs/guides/LAKE_GUIDE.md); remove " + key + " from the load or correct the lake file");
+                    + " in its lake file: the lake file decides (docs/guides/DATA_LAKE_GUIDE.md); remove " + key + " from the load or correct the lake file");
         }
         return mine != null ? mine : lakes;
     }

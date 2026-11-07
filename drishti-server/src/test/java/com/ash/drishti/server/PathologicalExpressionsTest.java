@@ -127,11 +127,11 @@ class PathologicalExpressionsTest {
             mvc.perform(post("/api/v1/studio/preview").contentType(MediaType.APPLICATION_JSON)
                             .content(json.writeValueAsString(Map.of("yaml", sutra("qa-chain", chain(5000)), "kind", "trade", "id", "IRS-48213"))))
                     .andExpect(status().isUnprocessableEntity()).andExpect(jsonPath("$.problems[*].code").value(hasItem("DRS-2101")));
-            mvc.perform(put("/api/v1/me/alerts/rules/Deep").header("X-Drishti-User", "qa").contentType(MediaType.APPLICATION_JSON)
-                            .content(json.writeValueAsString(Map.of("kind", "trade", "id", "IRS-48213", "when", deep(3000) + " < 0", "severity", "warn"))))
+            mvc.perform(put("/api/v1/alerts/rules/Deep").header("X-Drishti-User", "qa").contentType(MediaType.APPLICATION_JSON)
+                            .content(json.writeValueAsString(Map.of("severity", "warn", "source", Map.of("type", "field", "kind", "trade", "id", "IRS-48213", "field", deep(3000) + " < 0"), "condition", Map.of("type", "rule"), "trigger", Map.of("mode", "after-load", "kind", "trade")))))
                     .andExpect(status().isUnprocessableEntity()).andExpect(jsonPath("$.code").value("DRS-2101"));
-            mvc.perform(put("/api/v1/me/alerts/rules/Long").header("X-Drishti-User", "qa").contentType(MediaType.APPLICATION_JSON)
-                            .content(json.writeValueAsString(Map.of("kind", "trade", "id", "IRS-48213", "when", chain(5000) + " < 0", "severity", "warn"))))
+            mvc.perform(put("/api/v1/alerts/rules/Long").header("X-Drishti-User", "qa").contentType(MediaType.APPLICATION_JSON)
+                            .content(json.writeValueAsString(Map.of("severity", "warn", "source", Map.of("type", "field", "kind", "trade", "id", "IRS-48213", "field", chain(5000) + " < 0"), "condition", Map.of("type", "rule"), "trigger", Map.of("mode", "after-load", "kind", "trade")))))
                     .andExpect(status().isUnprocessableEntity());
             mvc.perform(get("/api/v1/search").param("q", "TRD where " + "(".repeat(3000) + "mtm > 0" + ")".repeat(3000)))
                     .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("DRS-4004"));

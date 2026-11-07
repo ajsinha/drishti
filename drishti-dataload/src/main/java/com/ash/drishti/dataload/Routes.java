@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Routing a file to a table (DATALOAD_INBOX.md section 5): the {@code .ready} file's keys first, then the first rule of
+ * Routing a file to a table (DATA_LAKE_GUIDE.md section 5.1): the {@code .ready} file's keys first, then the first rule of
  * {@code config/dataload.yaml} whose glob matches the file's name. A route names a loaded pack and one of its kinds; the loader takes the
  * table from the route's lake file (config/lakes/, the pack's recommended entry copied there once), so nothing of a table is written here. A file no
  * rule matches is refused with the reason ({@code unmatched: fail}): never guessed. The rules are read again every cycle.
@@ -52,6 +52,14 @@ public final class Routes {
         default List<String> names() {
             return List.of();
         }
+
+        /**
+         * The lakes the server's Delta and Iceberg connectors read ({@code lake:} of each running connector): a load into any other lake is
+         * told that nothing reads it yet. Null: not known (no warning).
+         */
+        default java.util.Set<String> lakesRead() {
+            return null;
+        }
     }
 
     /**
@@ -61,7 +69,7 @@ public final class Routes {
      * {@code auto}, a date at the end of a file's name (an archive member's own first: {@code FileDates}) is every row's business date, or
      * {@code field}, the rows' own; {@code nameDate} the date the file's name carries (what the Admin screen shows), {@code dateBy} where the
      * date comes from in words. {@code mode} is the load mode, {@code modeGiven} whether the {@code .ready} file gave it (else it is the
-     * inbox's default-mode, which a lake file's entry for the table overrides: DATA_LOAD_RULES.md section 3).
+     * inbox's default-mode, which a lake file's entry for the table overrides: DATA_LAKE_GUIDE.md section 5).
      */
     public record Route(String pack, String kind, String connector, String table, String dateField, LocalDate asOf, String key, String lake,
             String format, String by, Path packDir, String dateFrom, LocalDate nameDate, String dateBy, String mode, String dataset, String newDomain,
@@ -240,6 +248,7 @@ public final class Routes {
             m.put("table", tableText(r.connector(), r.table()));
             m.put("date", r.dateBy());
             m.put("nameDate", r.nameDate() == null ? null : r.nameDate().toString());
+            m.put("lake", r.lake());
             m.put("text", (byNote ? "the .ready file" : "rule " + n) + " → " + r.pack() + " / " + r.kind() + " · " + m.get("table") + " · " + m.get("date"));
         } catch (Unrouted e) {
             m.put("error", e.getMessage());
@@ -259,7 +268,7 @@ public final class Routes {
     }
 
     /**
-     * Where {@code fileName} goes (docs/architecture/DATA_LOAD_RULES.md section 3): the pack and kind from its {@code .ready} file, else the
+     * Where {@code fileName} goes (docs/guides/DATA_LAKE_GUIDE.md section 5): the pack and kind from its {@code .ready} file, else the
      * first rule that matches, else the table its name carries (the pack that has a kind of that name, else a pack of that name with one
      * kind; unknown or ambiguous: refused with the candidates). The business date: the {@code .ready} file's {@code business-date}, else
      * the name's date, else the business today (the loader decides each file the same way, {@code FileDates.decide}); a rule's
@@ -342,12 +351,12 @@ public final class Routes {
         String mode = n.mode() != null ? n.mode() : defaultMode;
         return new Route(pack, kind, n.connector() != null ? n.connector() : rule == null ? null : rule.connector(),
                 rule == null ? null : rule.table(), rule == null ? null : rule.dateField(), asOf,
-                n.key() != null ? n.key() : rule == null ? null : rule.key(), rule == null || rule.lake() == null ? defaultLake : rule.lake(),
+                n.key() != null ? n.key() : rule == null ? null : rule.key(), lake(n, rule),
                 rule == null ? "delta" : rule.format(), by, info.dir(), dateFrom, nameDate, dateBy, mode, null, null, n.mode() != null);
     }
 
     /**
-     * A table no pack has, asked for ({@code new-table: true}; DATA_LOAD_RULES.md section 7): allowed only when the inbox allows new tables
+     * A table no pack has, asked for ({@code new-table: true}; DATA_LAKE_GUIDE.md section 5.6): allowed only when the inbox allows new tables
      * ({@code new-tables}); written in the pack's lake domain (the pack the {@code .ready} file or a rule names) with the generic layout,
      * its id field {@code key:} else {@code id}.
      */
@@ -373,13 +382,13 @@ public final class Routes {
         LocalDate asOf = n.businessDate();
         String dateBy = asOf != null ? asOf + " from the .ready file" : nameDate != null ? nameDate + " from the name"
                 : FileDates.businessToday() + " (today: no date in the name)";
-        return new Route(pack, table, null, table, null, asOf, n.key() != null ? n.key() : "id", rule == null || rule.lake() == null ? defaultLake : rule.lake(),
+        return new Route(pack, table, null, table, null, asOf, n.key() != null ? n.key() : "id", lake(n, rule),
                 rule == null ? "delta" : rule.format(), "a new table " + table + " (new-table: true)", info.dir(), "auto", nameDate, dateBy,
                 n.mode() != null ? n.mode() : defaultMode, null, domain, n.mode() != null);
     }
 
     /**
-     * The routes of a tar archive (DATA_LOAD_RULES.md section 3.1), one per table folder: its pack from the {@code .ready} file's
+     * The routes of a tar archive (DATA_LAKE_GUIDE.md section 4.4), one per table folder: its pack from the {@code .ready} file's
      * {@code folders:} (folder → pack), else the pack with a kind of that name, else a pack of that name with one kind; any folder that
      * resolves to none (or to two) refuses the whole archive, every one listed. {@code tables}: the archive's folders.
      */
@@ -389,7 +398,7 @@ public final class Routes {
             throw new Unrouted(fileName + ": a .tar archive names its own tables and dates (its <table>/<YYYY-MM-DD>/ folders): its .ready file's "
                     + "business-date: and table: are refused");
         }
-        ReadyNote modeOnly = new ReadyNote(null, null, null, null, null, n.mode(), n.sha256(), n.rows(), n.newTable(), n.key(), n.folders(), n.hold());
+        ReadyNote modeOnly = new ReadyNote(null, null, null, null, null, n.mode(), n.sha256(), n.rows(), n.newTable(), n.key(), n.folders(), n.hold(), n.lake());
         Route base = route(fileName, modeOnly, true);           // the rule's (or the defaults') mode, lake, format and key
         List<Route> out = new ArrayList<>();
         List<String> problems = new ArrayList<>();
@@ -413,7 +422,7 @@ public final class Routes {
     }
 
     /**
-     * The pack and kind of a table name (DATA_LOAD_RULES.md section 3): the pack given (its kind of that name, or the kind given); else the
+     * The pack and kind of a table name (DATA_LAKE_GUIDE.md section 5): the pack given (its kind of that name, or the kind given); else the
      * one pack with a kind of that name; else a pack of that name with a single kind. None or several: refused, listing them.
      */
     private String[] byTable(String table, String givenPack, String givenKind) throws Unrouted {
@@ -447,6 +456,14 @@ public final class Routes {
         }
         known.sort(String.CASE_INSENSITIVE_ORDER);
         throw new Unrouted(table + ": no pack, kind or table of that name (known: " + (known.isEmpty() ? "none" : String.join(", ", known)) + ")");
+    }
+
+    /** The lake a file goes to (DATA_LAKE_GUIDE.md section 4): the {@code .ready} file's {@code lake:}, else the rule's, else the inbox's. */
+    private String lake(ReadyNote n, Rule rule) {
+        if (n.lake() != null) {
+            return n.lake();
+        }
+        return rule == null || rule.lake() == null ? defaultLake : rule.lake();
     }
 
     private static String text(JsonNode n, String key) {

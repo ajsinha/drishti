@@ -19,7 +19,7 @@
    (Flight over HTTP where a server offers it, else Arrow over HTTP, else JSON) with rows as views over the columns. */
 export { Backoff, Heartbeat } from './drishti_backoff.js';
 export { TransactionSink, pipeToGrid } from './drishti_backpressure.js';
-export { LIVE_STATES, LiveClient } from './drishti_live-client.js';
+export { LIVE_STATES, LiveClient, parseSse } from './drishti_live-client.js';
 export { ARROW_MEDIA, ARROW_VENDOR, arrowLib, readColumn, DataFrame, fromArrow, fromArrowTable, fromJson, readResponse, fetchFrame, ArrowClient } from './drishti_arrow.js';
 export { rowRequest, memorySource, restSource, serverSideSource, arrowSource, liveSource, readAll } from './drishti_sources.js';
 

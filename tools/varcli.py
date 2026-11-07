@@ -27,8 +27,18 @@ Exit codes: 0, 1 (the server said no), 2 (usage)."""
 from __future__ import annotations
 
 import json
+import os
 import sys
 import urllib.parse
+
+
+def _demo_root() -> str:
+    """The demo lake's root (config/lakes/demo.yaml): where intraday PVs are appended unless --lake says otherwise."""
+    p = str(__import__("pathlib").Path(__file__).resolve().parent / "lake")
+    if p not in sys.path:
+        sys.path.insert(0, p)
+    import lakeconfig
+    return lakeconfig.root("demo")
 
 EPILOG = ("examples:\n  drishti.py var show 'DESK:RATES'\n  drishti.py var show 'BANK - DESK:CREDIT' --date 2026-09-30\n"
           "  drishti.py var show BANK --ccy EUR\n"
@@ -443,7 +453,7 @@ def move_dates(rows: list[dict], day: str) -> list[dict]:
 
 def load_intraday(path: str, lake: str, day: str | None, signal: str | None, token: str | None, dry_run: bool, say) -> int:
     """Appends an intraday file (JSONL, one kind) to the lake with lake build --mode append, then raises its data-load signal. Its
-    business date by the load rules (docs/architecture/DATA_LOAD_RULES.md): ``day`` (--date, the rows' own dates moved to it), else the
+    business date by the load rules (docs/guides/DATA_LAKE_GUIDE.md): ``day`` (--date, the rows' own dates moved to it), else the
     file's name (<kind>.<YYYY-MM-DD>.jsonl), else the business today; given to lake build as --as-of, never read from a row."""
     import os
     import subprocess
@@ -548,14 +558,7 @@ def register(groups, srv, ctx: dict) -> None:
             res = api.json("GET", "/api/v1/var/scope/history?" + enc(lensed(a, dated(a, {"scope": a.scope}))))
             say_json(res) if a.json else render_history(res, print)
         elif c == "stress-window":
-            if a.decide:
-                if not a.decision:
-                    print("--decide needs --decision approve or reject", file=sys.stderr)
-                    return 2
-                res = api.json("POST", f"/api/v1/var/stress-window/proposals/{urllib.parse.quote(a.decide)}/decision",
-                               {"decision": a.decision, "note": a.note or ""})
-                say_json(res) if a.json else print(f"{res.get('id')}  {res.get('status')}  by {res.get('decidedBy')}")
-            elif a.proposals:
+            if a.proposals:
                 res = api.json("GET", "/api/v1/var/stress-window/proposals")
                 say_json(res) if a.json else render_proposals(res, print)
             elif a.propose:
@@ -613,11 +616,13 @@ def register(groups, srv, ctx: dict) -> None:
                     f.write(body)
                 print(f"wrote {a.xlsx} ({len(body):,} bytes): why VaR moved, every state and step a formula (Main, Data, States, Drivers, "
                       "Explain, Provenance)")
-            elif a.matrix:
-                res = api.json("GET", "/api/v1/var/explain/matrix?" + enc(q))
+            elif a.matrix:                                # the one Explain (GET /api/v1/explain?kind=var), its Why it moved, Matrix view
+                res = api.json("GET", "/api/v1/explain?" + enc(dict(q, kind="var", part="why", view="matrix")))
+                res = (res.get("why") or {}).get("answer", {}).get("matrix", {})
                 say_json(res) if a.json else render_explain_matrix(res, print)
             else:
-                res = api.json("GET", "/api/v1/var/explain?" + enc(q))
+                res = api.json("GET", "/api/v1/explain?" + enc(dict(q, kind="var", part="why")))
+                res = (res.get("why") or {}).get("answer", {})
                 say_json(res) if a.json else render_explain(res, print)
         elif c == "tree":
             res = api.json("GET", "/api/v1/var/tree?" + enc(lensed(a, dated(a, {"hierarchy": a.hierarchy}))))
@@ -650,7 +655,7 @@ def register(groups, srv, ctx: dict) -> None:
             say_json(res) if a.json else render_shards(res, print)
         elif c == "intraday":
             if a.load:
-                return load_intraday(a.load, a.lake, a.date, None if a.no_signal else api.base, api.token, a.dry_run, print)
+                return load_intraday(a.load, a.lake or _demo_root(), a.date, None if a.no_signal else api.base, api.token, a.dry_run, print)
             st = api.json("GET", "/api/v1/var/status")
             rows = [d for d in st.get("loaded") or [] if not d.get("currency") and (not a.date or d.get("businessDate") == a.date)]
             if a.json:
@@ -799,7 +804,7 @@ def register(groups, srv, ctx: dict) -> None:
     ex.add_argument("--matrix", action="store_true", help="the scope and each child node, the steps across (the Matrix view)")
     ex.add_argument("--xlsx", metavar="FILE", help="write the explanation as a workbook of formulas to FILE")
     sw = sub.add_parser("stress-window", help="the stress window selection (SWIN): every window of a node's long-history P&L as a "
-                        "stressed VaR, the worst against the current, the candidates; --propose freezes it, --decide approves or rejects",
+                        "stressed VaR, the worst against the current, the candidates; --propose freezes it (it is decided in `approvals`)",
                         parents=[srv])
     sw.add_argument("scope", nargs="?", default="BANK", help="the node: BANK, DESK:DESK-RATES, MGMT~DESK-RATES (default BANK)")
     sw.add_argument("--hierarchy", default="MGMT")
@@ -808,10 +813,8 @@ def register(groups, srv, ctx: dict) -> None:
     sw.add_argument("--confidence", type=float, metavar="Q", help="the VaR confidence (default the engine's, 0.99)")
     sw.add_argument("--propose", action="store_true", help="freeze the analysis and propose a window (--first; default the worst)")
     sw.add_argument("--first", metavar="YYYY-MM-DD", help="with --propose: the proposed window's first day")
-    sw.add_argument("--note", help="with --propose or --decide: a note for the record")
+    sw.add_argument("--note", help="with --propose: a note for the record")
     sw.add_argument("--proposals", action="store_true", help="the proposals, newest first")
-    sw.add_argument("--decide", metavar="SWP-ID", help="approve or reject a proposal (another person than its proposer)")
-    sw.add_argument("--decision", choices=["approve", "reject"])
     t = sub.add_parser("tree", help="the hierarchy with every node's VaR, ES and limit use", parents=[srv])
     t.add_argument("--hierarchy", default="MGMT")
     t.add_argument("--date", metavar="YYYY-MM-DD")
@@ -862,15 +865,12 @@ def register(groups, srv, ctx: dict) -> None:
     st.add_argument("scope", nargs="?", default="BANK")
     st.add_argument("--period", help="FY2026 (default: the current fiscal year), FY2026Q1, or 2026-01-01..2026-03-31")
     st.add_argument("--measure", default="var", choices=["var", "es", "svar", "ses"])
-    rp = sub.add_parser("report", help="report runs: list, run, show, sign (approve, return, narrative) and file", parents=[srv])
-    rp.add_argument("action", choices=["list", "run", "show", "sign", "file"])
+    rp = sub.add_parser("report", help="report runs: list, run, show, narrative and file (each step is signed in `approvals`)", parents=[srv])
+    rp.add_argument("action", choices=["list", "run", "show", "narrative", "file"])
     rp.add_argument("report", nargs="?", help="the report's id (annual-report-var, var-backtesting-chart)")
     rp.add_argument("period", nargs="?", help="FY2026, FY2026Q1 or 2026-01-01..2026-03-31 (run: default the current fiscal year)")
     rp.add_argument("--version", type=int, help="a run's version (default the newest)")
-    rp.add_argument("--do", dest="sign_action", choices=["approve", "return", "narrative"], default="approve", help="sign: the action")
-    rp.add_argument("--step", help="sign: the step you sign (maker, checker, approver)")
-    rp.add_argument("--comment", help="sign: your comment (a note for a check that needs one; why, when sending back)")
-    rp.add_argument("--narrative", help="sign --do narrative: the maker's text")
+    rp.add_argument("--narrative", help="narrative: the maker's text, written before the maker signs")
     rp.add_argument("--format", default="xlsx", choices=["xlsx", "csv", "pdf"], help="file: the format")
     rp.add_argument("--out", metavar="FILE", help="file: where to write (default REPORT_PERIOD.FORMAT)")
     rp.add_argument("--draft", action="store_true", help="file: a draft before the last approval, marked so")
@@ -878,7 +878,7 @@ def register(groups, srv, ctx: dict) -> None:
                         "to the lake and signals it", parents=[srv])
     it.add_argument("--date", metavar="YYYY-MM-DD", help="one date; with --load, the business date the file's rows are moved to")
     it.add_argument("--load", metavar="FILE.jsonl", help="an intraday batch file (scenario PVs or P&L vectors, RUN_KIND INTRADAY)")
-    it.add_argument("--lake", default="data/delta", help="the Delta root to append to (default data/delta, the demo lake)")
+    it.add_argument("--lake", help="the Delta root to append to (default the demo lake's root, config/lakes/demo.yaml: <data>/delta/demo)")
     it.add_argument("--no-signal", action="store_true", help="append only; no data-load signal")
     it.add_argument("--dry-run", action="store_true", help="read and say what would be appended; write nothing")
     cv = sub.add_parser("convert", help="add the fields every PV record says what it is with (VALUE_TYPE, GRAIN, CURRENCY, ...) to an "
@@ -982,10 +982,9 @@ def report_cmd(api, a, say_json) -> int:
                 f.write(raw)
             print(f"wrote {out} ({len(raw):,} bytes)")
             return 0
-        if a.action == "sign":
-            body = {k: v for k, v in (("version", a.version), ("action", a.sign_action), ("step", a.step), ("comment", a.comment),
-                                      ("narrative", a.narrative)) if v is not None}
-            res = api.json("POST", base + "/signoff", body)
+        if a.action == "narrative":
+            body = {k: v for k, v in (("version", a.version), ("narrative", a.narrative)) if v is not None}
+            res = api.json("POST", base + "/narrative", body)
         else:
             res = api.json("GET", base + ("?" + enc({"version": a.version}) if a.version else ""))
     if a.json:

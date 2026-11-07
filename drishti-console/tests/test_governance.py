@@ -29,55 +29,18 @@ def test_studio_submits_for_review_when_review_is_on(client, backend):
     async def settings(ident=None):
         return {"save": True, "review": True, "approve": False}
 
-    async def proposals(ident=None, status="", name=""):
-        return {"enabled": True, "proposals": [_proposal()]}
     saved = {}
 
     async def save_sutra(text, ident=None, note=""):
         saved.update(text=text, note=note)
         return {"proposal": {"id": "P-000008", "name": "irs-vanilla", "version": 3, "status": "pending"}}
-    backend.studio_settings, backend.proposals, backend.save_sutra = settings, proposals, save_sutra
+    backend.studio_settings, backend.save_sutra = settings, save_sutra
     d = client.post("/build/designs", json={"name": "Gov", "kind": "trade", "sutra": "x"}).json()
     page = client.get(f"/build/d/{d['id']}").text
-    assert "Submit for review" in page and "data-note" in page and 'href="/build/reviews"' in page and '<span class="bell-count">1</span>' in page
+    assert "Submit for review" in page and "data-note" in page and 'href="/approvals?kind=sutra"' in page       # decided in the one Approvals queue
     r = client.post("/studio/save", json={"yaml": "x", "note": "why"})
     assert r.json()["proposal"]["id"] == "P-000008" and saved == {"text": "x", "note": "why"}
     saved.clear()
     r = client.post(f"/build/designs/{d['id']}/propose", json={"note": "from the workbench"})        # the design's own Sutra, not text sent along
     assert r.status_code == 200 and r.json()["proposal"]["id"] == "P-000008" and saved == {"text": "x", "note": "from the workbench"}
     assert "r.body.proposal" in client.get("/static/js/build/drishti_saving.js").text
-
-
-def test_reviews_list_diff_and_decisions(client, backend):
-    async def proposals(ident=None, status="", name=""):
-        return {"enabled": True, "proposals": [_proposal(), _proposal(id="P-000006", status="approved", reviewer="rui")]}
-
-    async def proposal(id_, ident=None):
-        return _proposal(id=id_)
-    decided = {}
-
-    async def decide(id_, action, ident=None, comment=""):
-        decided.update(id=id_, action=action, comment=comment)
-        return _proposal(id=id_, status="approved")
-    backend.proposals, backend.proposal, backend.decide = proposals, proposal, decide
-    page = client.get("/build/reviews").text
-    assert "P-000007" in page and "clearer title" in page and "Waiting" in page
-    review = client.get("/build/reviews/P-000007").text
-    assert '<span class="d-del">-description: old</span>' in review and '<span class="d-add">+description: new</span>' in review
-    assert "Approve and publish" in review and "Reject" in review
-    r = client.post("/build/reviews/P-000007/approve", data={"comment": "ok"}, follow_redirects=False)
-    assert r.status_code == 303 and decided == {"id": "P-000007", "action": "approve", "comment": "ok"}
-    assert client.post("/build/reviews/P-000007/delete", follow_redirects=False).headers["location"] == "/build/reviews/P-000007"
-
-
-def test_a_refused_decision_says_why(client, backend):
-    from core.backend import BackendError
-
-    async def proposal(id_, ident=None):
-        return _proposal(id=id_, stale=True, mayApprove=False)
-
-    async def decide(id_, action, ident=None, comment=""):
-        raise BackendError(409, "DRS-2006", "irs-vanilla@3 changed after P-000007 was proposed")
-    backend.proposal, backend.decide = proposal, decide
-    page = client.post("/build/reviews/P-000007/approve", data={"comment": ""}).text
-    assert "DRS-2006" in page and "changed after" in page and "cannot be approved" in page

@@ -184,7 +184,7 @@ public class NetConfiguration {
             com.ash.drishti.identity.ApiTokenStore tokens, com.ash.drishti.identity.JpaAuditLog audit, Environment env,
             com.ash.drishti.identity.PreferenceStore prefs, com.ash.drishti.server.security.PackAccess packAccess,
             ObjectProvider<com.ash.drishti.identity.SessionStore> sessions, ObjectProvider<com.ash.drishti.identity.design.DesignService> designs,
-            ObjectProvider<com.ash.drishti.identity.AlertHistory> alerts, ObjectProvider<com.ash.drishti.identity.collab.InboxStore> inbox) {
+            ObjectProvider<com.ash.drishti.identity.collab.InboxStore> inbox) {
         com.ash.drishti.identity.PreferenceStore raw = prefs instanceof ReplicatedPreferences r ? r.delegate() : prefs;
         Path state = Path.of(env.getProperty("drishti.data.dir", "./data"), "net");
         return new IdentitySync(sync, users, roles, tokens, audit, state, packAccess::forget, user -> {
@@ -193,7 +193,6 @@ public class NetConfiguration {
             tokens.forget(user);
             sessions.ifAvailable(s -> s.dropAllAdopted(user));
             designs.ifAvailable(d -> d.forget(user));
-            alerts.ifAvailable(a -> a.forget(user));
             inbox.ifAvailable(i -> i.forget(user));
         });
     }

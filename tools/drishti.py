@@ -1027,9 +1027,6 @@ def cmd_design(a, extra) -> int:
         res = api.json("GET", "/api/v1/sutras/proposals" + (f"?status={q(a.status)}" if a.status else ""))
         emit(a, res, "\n".join(f"{p['id']}  {p['name']} v{p['version']}  {p['status']}  by {p.get('author')}" for p in res.get("proposals", []))
              or ("no proposals" if res.get("enabled") else "governance is off: nothing to review"))
-    else:                                                           # approve | reject
-        res = api.json("POST", f"/api/v1/sutras/proposals/{q(a.proposal)}/{c}", {"comment": a.comment} if a.comment else None)
-        emit(a, res, f"{c}: proposal {res.get('id')}: {res.get('name')} v{res.get('version')} is {res.get('status')}")
     return 0
 
 
@@ -1319,11 +1316,11 @@ def build_parser() -> argparse.ArgumentParser:
     load_module("servernet", "servernet.py").register(sys.modules[__name__], ns, add, srv, js)
 
     # design -----------------------------------------------------------------------------------------------
-    ds = group("design", "Screen Designer designs over REST: create, edit, check, propose, approve, ship (anyone may design; approving needs an approver)")
+    ds = group("design", "Screen Designer designs over REST: create, edit, check, propose, ship (anyone may design; a proposal is decided in approvals)")
     for name, what in (("list", "your designs"), ("create", "a new design, from samples and/or a Sutra file"), ("get", "show a design (or its Sutra with --yaml / -o)"),
                        ("save", "replace the design's Sutra with a .sutra.yaml file (a new revision)"), ("check", "run the Sutra against every sample (exit 1 on problems)"),
-                       ("propose", "send the design for review (or save it, when governance is off)"), ("approve", "approve a proposal (approver role)"),
-                       ("reject", "reject a proposal (approver role)"), ("proposals", "list proposals"), ("export", "download the design as a pack-fragment zip"),
+                       ("propose", "send the design for review (or save it, when governance is off; decide it in approvals)"),
+                       ("proposals", "list proposals"), ("export", "download the design as a pack-fragment zip"),
                        ("import", "import a pack-fragment zip as designs"), ("bind", "bind to, sync with or save to a file in your development directory"),
                        ("autodesign", "draft a Sutra from the samples"), ("delete", "delete a design")):
         p = add(ds, name, cmd_design, f"design {name}: {what}", [srv])
@@ -1358,9 +1355,6 @@ def build_parser() -> argparse.ArgumentParser:
             p.add_argument("file", help="a pack-fragment zip")
         if name == "proposals":
             p.add_argument("--status", help="pending, approved, rejected or withdrawn")
-        if name in ("approve", "reject"):
-            p.add_argument("proposal", help="the proposal id (from `design proposals` or `design propose`)")
-            p.add_argument("--comment", help="the reason (a rejection needs one)")
 
     # docs -------------------------------------------------------------------------------------------------
     dc = group("docs", "Documentation tooling")
@@ -1415,7 +1409,8 @@ def build_parser() -> argparse.ArgumentParser:
     load_module("historycmd", "historycmd.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # history KIND ID (2.6.5)
     load_module("convertcmd", "convertcmd.py").register(groups, {})          # convert FILE: CSV, JSON array, .json folder -> JSONL (2.9.4)
     load_module("computecli", "computecli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # compute run|cancel|event (2.8.0)
-    load_module("changecli", "changecli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})     # change propose|submit|approve..., edits status (2.8.0)
+    load_module("changecli", "changecli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})     # change propose|submit|list..., edits status (2.8.0)
+    load_module("approvalscli", "approvalscli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # approvals list|show|approve|reject|withdraw|ask (2.9.11.e)
     play_ctx = {"Api": Api, "CliError": CliError, "say_json": say_json}
     for mod in ("varcli", "expcli", "frtbcli", "simmcli", "pivotcli"):   # var show|parts|path|whatif; exposure; sens, frtb, play frtb; simm, play simm
         load_module(mod, mod + ".py").register(groups, srv, play_ctx)

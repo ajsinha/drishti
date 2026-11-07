@@ -111,7 +111,7 @@ INK = """(sel) => { const c = document.querySelector(sel); if (!c) return -1; co
 
 
 def test_vega_lite_is_drawn_under_the_strict_policy_by_the_interpreter(stack, browser):
-    page = sign_in(browser, "wes", "/bi")
+    page = sign_in(browser, "wes", "/bi/catalogue")
     resp = page.goto(CONSOLE_URL + "/bi/r/file:report:python-desk-risk/vega")
     csp = resp.headers["content-security-policy"]
     assert "unsafe-eval" not in csp and "wasm-unsafe-eval" not in csp and "unsafe-inline" not in csp
@@ -133,7 +133,7 @@ def test_vega_lite_is_drawn_under_the_strict_policy_by_the_interpreter(stack, br
 
 
 def test_a_specification_that_loads_a_url_is_not_drawn(stack, browser):
-    page = sign_in(browser, "wes", "/bi")
+    page = sign_in(browser, "wes", "/bi/catalogue")
     body = open(ROOT / "config/bi/reports/python-desk-risk.report.yaml", encoding="utf-8").read().replace("report: python-desk-risk", "report: vega-url").replace("sample: true", "sample: false")
     body = body.replace("        wells: { axis: [trade.DESK], values: [MTM, Trades] }\n        format:\n          spec:\n", "        wells: { axis: [trade.DESK], values: [MTM, Trades] }\n        format:\n          spec:\n            data: { url: 'http://127.0.0.1:1/x.json' }\n")
     s, item = api(page, "POST", "/workspaces/me/items", {"kind": "report", "title": "Vega url", "body": body})
@@ -146,7 +146,7 @@ def test_a_specification_that_loads_a_url_is_not_drawn(stack, browser):
 
 # ---- boards ----------------------------------------------------------------------------------------------------------------------------
 def test_a_board_of_python_tiles_runs_them_for_the_person_looking(stack, browser):
-    page = sign_in(browser, "wes", "/bi")
+    page = sign_in(browser, "wes", "/bi/catalogue")
     page.goto(CONSOLE_URL + "/bi/r/file:report:python-wall")
     page.wait_for_function("() => document.querySelectorAll('[data-tile] .bi-py-foot').length === 3", timeout=120000)
     assert page.locator('[data-tile="vol"] .bi-py-chart').count() == 1 and page.locator('[data-tile="hist"] .bi-py-chart').count() == 1
@@ -185,7 +185,7 @@ def grid(page, selector):
 
 
 def test_a_sql_cell_runs_on_the_server_and_nothing_loads_webassembly(stack, browser):
-    page = sign_in(browser, "wes", "/bi")
+    page = sign_in(browser, "wes", "/bi/catalogue")
     wasm = []
     page.on("request", lambda r: wasm.append(r.url) if r.url.endswith(".wasm") or "pyodide" in r.url or "duckdb" in r.url else None)
     resp = page.goto(CONSOLE_URL + "/bi/notebook")
@@ -210,7 +210,7 @@ def test_a_sql_cell_runs_on_the_server_and_nothing_loads_webassembly(stack, brow
 
 
 def test_a_sql_cell_becomes_a_visual_in_a_new_and_an_existing_report(stack, browser):
-    page = sign_in(browser, "wes", "/bi")
+    page = sign_in(browser, "wes", "/bi/catalogue")
     s, mine = api(page, "POST", "/workspaces/me/items", {"kind": "report", "title": "Mine", "body": CHART_REPORT.format(name="mine")})
     assert s in (200, 201), mine
     open_extract(page)
@@ -239,7 +239,7 @@ def test_a_sql_cell_becomes_a_visual_in_a_new_and_an_existing_report(stack, brow
 
 # ---- phone ------------------------------------------------------------------------------------------------------------------------------
 def test_the_new_controls_are_finger_sized_on_a_phone(stack, browser):
-    page = sign_in(browser, "wes", "/bi", viewport={"width": 390, "height": 800}, has_touch=True, is_mobile=True)
+    page = sign_in(browser, "wes", "/bi/catalogue", viewport={"width": 390, "height": 800}, has_touch=True, is_mobile=True)
     open_extract(page)
     page.click("#bxT-sql")
     small = page.evaluate("""() => [...document.querySelectorAll('[data-engine-pick], [data-promote-target], [data-promote-page], [data-promote-report], [data-run]')]

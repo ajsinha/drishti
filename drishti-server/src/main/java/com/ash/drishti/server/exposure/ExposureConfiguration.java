@@ -82,6 +82,12 @@ public class ExposureConfiguration {
         return new ExposureCaches(svc);
     }
 
+    /** Explain an exposure figure (kind exposure, the one Explain of SHARED_SCREENS.md section 3). */
+    @Bean
+    com.ash.drishti.server.explain.Explainer exposureNumberExplainer(ExposureViews views) {
+        return new ExposureNumberExplainer(views);
+    }
+
     @Bean
     ExposureViews exposureViews(ExposureService svc) {
         ExposureViews v = new ExposureViews(svc);

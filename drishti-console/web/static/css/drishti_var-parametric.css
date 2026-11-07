@@ -28,16 +28,6 @@
 .vp-q { border: 1px solid var(--d-border); background: var(--d-surface); color: var(--d-link); border-radius: 50%; width: 16px; height: 16px;
   font: 600 10px/14px var(--d-font-sans); padding: 0; margin-left: 4px; cursor: pointer; flex: none; }
 .vp-q:focus-visible { outline: 2px solid var(--d-accent); }
-.vp-pop { position: absolute; z-index: 60; max-width: 520px; background: var(--d-bg); color: var(--d-ink); border: 1px solid var(--d-border);
-  border-radius: 6px; box-shadow: var(--d-shadow); padding: 10px 14px; font-size: 12px; }
-.vp-pop h4 { font-size: 13px; margin: 0 22px 6px 0; }
-.vp-pop p { margin: 3px 0; }
-.vp-pop .vp-pop-status { color: var(--d-warn); }
-.vp-pop .vp-pop-foot { border-top: 1px solid var(--d-border); padding-top: 6px; margin-top: 8px; color: var(--d-muted); }
-.vp-pop .vp-pop-foot a { color: var(--d-link); }
-.vp-pop-x { position: absolute; right: 6px; top: 4px; border: 0; background: none; color: var(--d-muted); font-size: 16px; cursor: pointer; }
-.vp-pop.sheet { position: fixed; left: 0 !important; right: 0; bottom: 0; top: auto !important; max-width: none; max-height: 70vh; overflow-y: auto;
-  border-radius: 10px 10px 0 0; }
 .vx-tree.vp-cols .vx-row { grid-template-columns: var(--rz-cols, minmax(130px, 1fr) 56px 50px 44px 62px 56px); }
 /* the two parametric columns need room: the scope names keep at least 130px (they were squeezed to nothing in a 330px panel) */
 @media (min-width: 1101px) { .vx-layout:has(.vx-tree.vp-cols) { grid-template-columns: var(--vx-side, 480px) minmax(0, 1fr); } }

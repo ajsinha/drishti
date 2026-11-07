@@ -180,15 +180,14 @@ store.state.baseMoved = init.baseMoved || null;
     });
   }
   function typing(t) { var tag = (t.tagName || '').toLowerCase(); return tag === 'input' || tag === 'textarea' || tag === 'select' || t.isContentEditable || !!(t.closest && t.closest('.CodeMirror')); }
-  document.addEventListener('keydown', function (e) {
-    var k = e.key.toLowerCase();
-    if ((e.ctrlKey || e.metaKey) && !e.altKey && (k === 'z' || k === 'y') && !typing(e.target)) {
-      e.preventDefault();
-      if (k === 'y' || e.shiftKey) { store.redo(); } else { store.undo(); }
-    } else if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && (k === 'n') && e.target.closest && e.target.closest('[data-preview]') && e.target.matches('.pnl[data-panel], [data-wb-region]')) {
-      e.preventDefault(); actions.menuAdd();
-    }
-  });
+  var K = window.Drishti.keys, notTyping = function (e) { return !typing(e.target); };
+  K.register({ id: 'build.undo', keys: ['Ctrl+Z', 'Meta+Z'], scope: 'screen', area: 'build-design', group: 'Workbench', description: 'Undo', when: notTyping,
+    run: function () { store.undo(); } });
+  K.register({ id: 'build.redo', keys: ['Ctrl+Y', 'Meta+Y', 'Ctrl+Shift+Z', 'Shift+Meta+Z', 'Ctrl+Shift+Y', 'Shift+Meta+Y'], scope: 'screen', area: 'build-design', group: 'Workbench',
+    description: 'Redo', when: notTyping, run: function () { store.redo(); } });
+  K.register({ id: 'build.add', keys: ['N'], scope: 'panel', area: 'build-canvas', group: 'Workbench', description: 'On a panel or region of the canvas: add a panel',
+    when: function (e) { return e.target.closest && e.target.closest('[data-preview]') && e.target.matches('.pnl[data-panel], [data-wb-region]'); },
+    run: function () { actions.menuAdd(); } });
   // an edit still waiting for its pause is sent before F1 or a link takes the page away (UX-22); Escape in the inspector goes back to the panel (UX-10)
   function held() {
     var p = [yaml.flush(), inspector.flush(), notes.flush(), about.flush(), form.flush(), controls.flush()];

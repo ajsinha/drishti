@@ -18,11 +18,13 @@ package com.ash.drishti.server;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.ash.drishti.server.alerts.AlertEngine;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URI;
@@ -45,32 +47,44 @@ import org.springframework.test.web.servlet.MockMvc;
 class AlertsAndMonitorsTest {
 
     @Autowired MockMvc mvc;
-    @Autowired AlertEngine engine;
     @LocalServerPort int port;
 
+    private JsonNode json(org.springframework.test.web.servlet.ResultActions r) throws Exception {
+        return new ObjectMapper().readTree(r.andReturn().getResponse().getContentAsString());
+    }
+
+    /** A rule on one entity (a Rachana-EL predicate over a field source) in the one alert engine: raised once, then acknowledged, snoozed, resolved. */
     @Test
-    void aRuleThatIsAlreadyTrueFiresOnceWhenArmedAndBadExpressionsAreRefused() throws Exception {
-        mvc.perform(put("/api/v1/me/alerts/rules/Deep MTM").header("X-Drishti-User", "ash").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"kind\":\"trade\",\"id\":\"IRS-48213\",\"when\":\"$.mtm < 0\",\"severity\":\"warn\","
-                                + "\"message\":\"${$.tradeId}: MTM ${fmt($.mtm, 'signed0')}\"}"))
-                .andExpect(status().isOk());
-        long deadline = System.currentTimeMillis() + 5000;
-        while (engine.events("ash", 10).isEmpty() && System.currentTimeMillis() < deadline) {
-            Thread.sleep(50);
-        }
-        Thread.sleep(400);
-        assertThat(engine.events("ash", 10)).hasSize(1).first().satisfies(e -> {
-            assertThat(e.message()).startsWith("IRS-48213: MTM −");
-            assertThat(e.severity()).isEqualTo("warn");
-        });
-        mvc.perform(get("/api/v1/me/alerts").header("X-Drishti-User", "ash")).andExpect(jsonPath("$[0].rule").value("Deep MTM"));
-        mvc.perform(get("/api/v1/me/alerts/rules").header("X-Drishti-User", "ash")).andExpect(jsonPath("$[0].when").value("$.mtm < 0"));
-        mvc.perform(put("/api/v1/me/alerts/rules/Bad").header("X-Drishti-User", "ash").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"kind\":\"trade\",\"id\":\"IRS-48213\",\"when\":\"$.mtm <\"}")).andExpect(status().isUnprocessableEntity());
-        mvc.perform(put("/api/v1/me/alerts/rules/Bad").header("X-Drishti-User", "ash").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"kind\":\"trade\",\"id\":\"IRS-48213\",\"when\":\"true\",\"severity\":\"panic\"}")).andExpect(status().isBadRequest());
-        mvc.perform(get("/api/v1/me/alerts/suggestions/netting-set")).andExpect(jsonPath("$[*].name").value(hasItem("PFE near limit")));
-        mvc.perform(get("/api/v1/me/alerts/suggestions/shipment")).andExpect(jsonPath("$[*].name").value(hasItem("Delayed more than 12 h")));
+    void aRuleOnAnEntityIsRaisedOnceThenAcknowledgedSnoozedAndResolved() throws Exception {
+        String rule = "{\"title\":\"Deep MTM\",\"severity\":\"warn\",\"source\":{\"type\":\"field\",\"kind\":\"trade\",\"id\":\"IRS-48213\","
+                + "\"field\":\"$.mtm < 0\"},\"condition\":{\"type\":\"rule\"},\"trigger\":{\"mode\":\"after-load\",\"kind\":\"trade\"}}";
+        mvc.perform(put("/api/v1/alerts/rules/Deep MTM").header("X-Drishti-User", "ash").contentType(MediaType.APPLICATION_JSON).content(rule))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.describe").value("holds: $.mtm < 0"));
+        mvc.perform(post("/api/v1/alerts/rules/Deep MTM/check").header("X-Drishti-User", "ash")).andExpect(status().isOk());
+        JsonNode raised = json(mvc.perform(get("/api/v1/alerts").header("X-Drishti-User", "ash")).andExpect(status().isOk()));
+        assertThat(raised).hasSize(1);
+        assertThat(raised.get(0).path("stage").asText()).isEqualTo("raised");
+        assertThat(raised.get(0).path("message").asText()).startsWith("Deep MTM").contains("holds");
+        String id = raised.get(0).path("id").asText();
+        mvc.perform(post("/api/v1/alerts/rules/Deep MTM/check").header("X-Drishti-User", "ash")).andExpect(status().isOk());
+        assertThat(json(mvc.perform(get("/api/v1/alerts").header("X-Drishti-User", "ash")))).hasSize(1);      // still true: raised once
+        mvc.perform(post("/api/v1/alerts/acknowledge").header("X-Drishti-User", "ash").contentType(MediaType.APPLICATION_JSON).content("{\"id\":\"" + id + "\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.stage").value("acknowledged")).andExpect(jsonPath("$.assignee").value("ash"));
+        mvc.perform(post("/api/v1/alerts/snooze").header("X-Drishti-User", "ash").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"id\":\"" + id + "\",\"for\":\"1h\"}")).andExpect(status().isOk()).andExpect(jsonPath("$.snoozedUntil").exists());
+        mvc.perform(post("/api/v1/alerts/acknowledge").header("X-Drishti-User", "bo").contentType(MediaType.APPLICATION_JSON).content("{\"id\":\"" + id + "\"}"))
+                .andExpect(status().isNotFound());                                                              // another person never reaches it
+        assertThat(json(mvc.perform(get("/api/v1/alerts").header("X-Drishti-User", "bo")))).isEmpty();
+        mvc.perform(post("/api/v1/alerts/resolve").header("X-Drishti-User", "ash").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"id\":\"" + id + "\",\"note\":\"booked back\"}")).andExpect(jsonPath("$.stage").value("resolved"));
+        assertThat(json(mvc.perform(get("/api/v1/alerts").header("X-Drishti-User", "ash")))).isEmpty();          // open only
+        assertThat(json(mvc.perform(get("/api/v1/alerts?stage=all").header("X-Drishti-User", "ash")))).hasSize(1);
+        mvc.perform(put("/api/v1/alerts/rules/Bad").header("X-Drishti-User", "ash").contentType(MediaType.APPLICATION_JSON)
+                .content(rule.replace("$.mtm < 0", "$.mtm <"))).andExpect(status().isUnprocessableEntity());
+        mvc.perform(put("/api/v1/alerts/rules/Bad").header("X-Drishti-User", "ash").contentType(MediaType.APPLICATION_JSON)
+                .content(rule.replace("\"warn\"", "\"panic\""))).andExpect(status().isUnprocessableEntity());
+        mvc.perform(get("/api/v1/alerts/suggestions/netting-set")).andExpect(jsonPath("$[*].name").value(hasItem("PFE near limit")));
+        mvc.perform(get("/api/v1/alerts/suggestions/shipment")).andExpect(jsonPath("$[*].name").value(hasItem("Delayed more than 12 h")));
     }
 
     @Test

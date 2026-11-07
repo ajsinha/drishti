@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* The Notebook (docs/guides/USER_GUIDE.md › The Notebook): the page. It opens a model as the reader's masked extract (POST /bi/notebook/extract), keeps the
    notebook, and saves or promotes through the BI item API. The SQL and Python cells are in drishti_bi-notebook-cells.js; slicing is the Pivot's.
    Text only, never markup. */

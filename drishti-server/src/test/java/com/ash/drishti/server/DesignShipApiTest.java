@@ -107,7 +107,7 @@ class DesignShipApiTest {
         assertThat(ev.path("matrix").path("panels").get(0).path("id").asText()).isEqualTo("terms");
         assertThat(review.toString()).doesNotContain(SECRET_VALUE);          // names and counts, never contents
 
-        ok(mvc.perform(post("/api/v1/sutras/proposals/" + pid + "/approve").header("Authorization", as("rui", "approver"))
+        ok(mvc.perform(post("/api/v1/approvals/sutra/" + pid + "/approve").header("Authorization", as("rui", "approver"))
                 .contentType(MediaType.APPLICATION_JSON).content("{}")));
         JsonNode after = ok(mvc.perform(get("/api/v1/builder/designs/" + id).header("Authorization", as("ana", "author"))));
         assertThat(after.path("status").asText()).isEqualTo("live(v1)");
@@ -119,7 +119,7 @@ class DesignShipApiTest {
         String id = design("ana", "author", "ship-b");
         String pid = ok(mvc.perform(post("/api/v1/builder/designs/" + id + "/propose").header("Authorization", as("ana", "author"))))
                 .path("proposal").path("id").asText();
-        ok(mvc.perform(post("/api/v1/sutras/proposals/" + pid + "/reject").header("Authorization", as("rui", "approver"))
+        ok(mvc.perform(post("/api/v1/approvals/sutra/" + pid + "/reject").header("Authorization", as("rui", "approver"))
                 .contentType(MediaType.APPLICATION_JSON).content("{\"comment\":\"no\"}")));
         assertThat(ok(mvc.perform(get("/api/v1/builder/designs/" + id).header("Authorization", as("ana", "author")))).path("status").asText())
                 .isEqualTo("draft");

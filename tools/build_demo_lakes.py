@@ -18,7 +18,7 @@
    (default: the date of your newest ENDUR file when ``--endur-dir`` is given, else today's business date), and the connector files
    pointed at the lake. No pack's data is served by the demo connector: start the server with it off.
 2. With ``--endur-dir``: the synthetic ENDUR trades are replaced by your files, named by the load rules
-   (docs/architecture/DATA_LOAD_RULES.md): one file per business date, ``trade_endur.YYYY-MM-DD.jsonl`` (or ``.jsonl.gz``,
+   (docs/guides/DATA_LAKE_GUIDE.md): one file per business date, ``trade_endur.YYYY-MM-DD.jsonl`` (or ``.jsonl.gz``,
    ``.jsonl.zip``: a zip of that date's JSON Lines), or a tar archive of ``trade_endur/YYYY-MM-DD/`` folders (``.tar``, ``.tgz``,
    ``.tar.gz``, ``.tar.zip``) holding any number of dates; a ``.ready`` file beside one is honoured. Each is loaded with
    ``drishti.py lake build`` (its dates from its name or folders, mode replace), exactly as the Windows QA guide's step 3.2 does.
@@ -276,7 +276,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--only", help="rebuild only these datasets of the test data (lake demo --only: folders such as trades/endur, "
                                    "trades/calypso, core/counterparty, or a pack name); the other tables stay as they are")
     ap.add_argument("--as-of", help="the last business date of the lakes (default: your newest ENDUR file's date, else today)")
-    ap.add_argument("--lake", type=Path, default=ROOT / "data" / "delta", help="the Delta root the server reads (default data/delta)")
+    ap.add_argument("--lake", type=Path, help="the demo lake's root, what the server reads "
+                    "(default data/delta/demo: config/lakes/demo.yaml; a demo lake built directly in data/delta is moved there once)")
     ap.add_argument("--connectors-dir", type=Path, help="the connector files' folder (default: as lake demo, config/connectors)")
     ap.add_argument("--keep-synthetic-endur", "--keep-synthetic", dest="keep_synthetic_endur", action="store_true",
                     help="add your files beside the system's synthetic trades instead of replacing them")
@@ -327,12 +328,16 @@ def main(argv: list[str] | None = None) -> int:
     if a.server:
         token = (a.token_file.expanduser().read_text(encoding="utf-8").strip() if a.token_file else None) or os.environ.get("DRISHTI_TOKEN")
     as_of = a.as_of or (files[-1][0] if files else "today")
-    lake = a.lake.expanduser().resolve()
-    try:
+    lake = (a.lake.expanduser() if a.lake else Path(stores.lakeconfig.root("demo"))).resolve()   # unset: config/lakes/demo.yaml's root
+    try:                                              # the arguments are checked first: a wrong --store is refused whatever the lake holds
         systems, domains = stores.split_domains(a.store)
         named = stores.parse(systems)
     except ValueError as e:
         ap.error(str(e))
+    older = stores.older_layout(lake)
+    if older:
+        print("build_demo_lakes: " + stores.older_layout_words(lake, older), file=sys.stderr)
+        return 1
     if not a.files_only and not a.only:                     # a full build: every domain in Delta unless named (as the systems)
         for d in stores.DOMAIN_STORES:
             if d not in domains and stores.current_domain(stores.connectors_dir(a.connectors_dir), d) == "iceberg":

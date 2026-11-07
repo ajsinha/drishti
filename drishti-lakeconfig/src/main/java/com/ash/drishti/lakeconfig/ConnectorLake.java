@@ -32,9 +32,11 @@ import java.util.function.Consumer;
  * the one point every connector's settings pass on their way to a plugin (the source registry), whichever file or template they came
  * from.
  *
- * <p>A connector that still carries the lake's keys itself ({@code root}, {@code domain}, {@code table.<kind>}, {@code layout.<kind>.*})
- * starts as before, with one warning (the first such connector named) naming {@code drishti.py lake migrate-config} (L4: the one configuration alias, read
- * for one release). A connector that names a lake and also carries one of those keys is refused, naming both.
+ * <p>A connector has two forms, both permanent (product owner, 2026-11-07): {@code lake: <name>}, its tables where the lake file says (the
+ * lake's {@code root:} a local folder, {@code s3://bucket/prefix} or {@code mem://<store>}); or an explicit {@code root:} (a path or URI:
+ * a folder, {@code s3://...}) with {@code domain}, {@code table.<kind>} and {@code layout.<kind>.*}, for tables no lake file describes (a
+ * vendor's Delta table on S3). When a connector names a lake and also gives one of those keys, its own explicit value wins over the lake
+ * file's ({@link #overridden}: the connector page says so).
  */
 public final class ConnectorLake {
 
@@ -45,8 +47,6 @@ public final class ConnectorLake {
     /** The plugins whose settings a lake supplies. */
     public static final Set<String> PLUGINS = Set.of("delta", "iceberg");
 
-    private static final java.util.concurrent.atomic.AtomicBoolean WARNED = new java.util.concurrent.atomic.AtomicBoolean();
-
     private ConnectorLake() {
     }
 
@@ -56,7 +56,15 @@ public final class ConnectorLake {
                 || k.equals("uri") || k.equals("warehouse") || k.startsWith("s3.") && !k.startsWith("s3.cache");
     }
 
-    /** Whether the settings carry the lake's keys the old way (the connector has not been migrated). */
+    /** The keys a connector that names a lake gives itself, over the lake file's (empty: none); the explicit value wins. */
+    public static List<String> overridden(Map<String, String> settings) {
+        if (settings == null || settings.get(LAKE) == null || settings.get(LAKE).isBlank()) {
+            return List.of();
+        }
+        return settings.keySet().stream().filter(ConnectorLake::lakeKey).sorted().toList();
+    }
+
+    /** Whether the settings describe the tables by an explicit path ({@code root:} and the rest) rather than by a lake's name. */
     public static boolean legacy(Map<String, String> settings) {
         return !settings.containsKey(LAKE) && settings.keySet().stream().anyMatch(k -> k.equals("root") || k.startsWith("table.")
                 || k.startsWith("layout.") && !k.endsWith(".type-ahead"));
@@ -80,16 +88,12 @@ public final class ConnectorLake {
         }
         String name = settings.get(LAKE);
         if (name == null || name.isBlank()) {
-            if (legacy(settings) && WARNED.compareAndSet(false, true)) {
-                warn.accept("connector " + connector + " (and any other like it) describes its lake itself (root, domain, table.<kind>, "
-                        + "layout.<kind>.*): run drishti.py lake migrate-config to move that into config/lakes/ (read this way for one more release)");
-            }
-            return settings;
+            return settings;                                   // the explicit form: root (a path or URI), domain, table.<kind>, layout
         }
-        List<String> clash = settings.keySet().stream().filter(ConnectorLake::lakeKey).sorted().toList();
-        if (!clash.isEmpty()) {
-            throw new IllegalArgumentException("connector " + connector + " names lake " + name + " and also sets " + clash + ": those are the "
-                    + "lake file's (config/lakes/" + name + ".yaml); remove them from the connector");
+        List<String> own = overridden(settings);
+        if (!own.isEmpty()) {
+            warn.accept("connector " + connector + " names lake " + name + " and gives " + own + " itself: its own values win over the lake "
+                    + "file's (config/lakes/" + name + ".yaml)");
         }
         Lake lake = lakes.get().get(name.strip());
         if (!lake.format().equals(plugin) && lake.tables().values().stream().noneMatch(t -> t.format().equals(plugin))) {
@@ -155,6 +159,7 @@ public final class ConnectorLake {
                 out.put("layout." + t.kind() + ".vectors", String.join(",", t.vectors()));
             }
         }
+        own.forEach(k -> out.put(k, settings.get(k)));         // the connector's explicit path, domain, tables or layout win
         return out;
     }
 

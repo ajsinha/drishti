@@ -30,7 +30,6 @@ import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.engine.time.BusinessDates;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.packs.PackRegistry;
-import com.ash.drishti.server.alerts.AlertEngine;
 import com.ash.drishti.server.loads.ExpectationService;
 import com.ash.drishti.server.loads.LoadNotifier;
 import com.ash.drishti.server.loads.LoadService;
@@ -62,7 +61,8 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance", "drishti.loads.scheduler=false", "drishti.loads.dir=${drishti.test.dir}/loads-${random.uuid}",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.sources.plugins.demo.settings.ticking=false", "drishti.identity.iterations=1000",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db", "drishti.alerts.load-delay=100ms",
+        "drishti.alerts.tick=100ms"})
 @AutoConfigureMockMvc
 class LoadsApiTest {
 
@@ -71,7 +71,6 @@ class LoadsApiTest {
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier signer;
-    @Autowired AlertEngine alerts;
     @Autowired PackRegistry packs;
     @Autowired LoadStore store;
     @Autowired LoadsConfig.Overrides configs;
@@ -115,7 +114,7 @@ class LoadsApiTest {
         JsonNode load = body(first);
         List<String> steps = load.path("steps").findValuesAsText("name");
         assertThat(steps).containsExactly("record", "refresh", "verify", "alerts", "smoke", "notices");
-        assertThat(load.path("summary").asText()).startsWith("trade for 2026-09-29 loaded: 48,213 rows, 12 rejected; ").endsWith(" fired");
+        assertThat(load.path("summary").asText()).startsWith("trade for 2026-09-29 loaded: 48,213 rows, 12 rejected; ").endsWith(" to look");
         assertThat(load.path("notices").asInt()).isGreaterThanOrEqualTo(1);       // the dev admin holds the default notify role
 
         // the same announcement again changes nothing: 200, the same record, no second run
@@ -187,20 +186,25 @@ class LoadsApiTest {
     }
 
     @Test
-    void aReadyLoadEvaluatesTheAlertRulesOnTheKindForTheDate() throws Exception {
+    void aReadyLoadHandsTheAlertRulesOnTheKindToTheAlertEngine() throws Exception {
         String admin = as(ADMIN, "admin");
-        mvc.perform(put("/api/v1/me/alerts/rules/Negative MTM").header("Authorization", admin).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"kind\":\"trade\",\"id\":\"IRS-48213\",\"when\":\"$.mtm < 0\",\"severity\":\"warn\"}")).andExpect(status().isOk());
-        long deadline = System.currentTimeMillis() + 5000;
-        while (alerts.events(ADMIN, 10).isEmpty() && System.currentTimeMillis() < deadline) {
-            Thread.sleep(50);
+        mvc.perform(put("/api/v1/alerts/rules/Negative MTM").header("Authorization", admin).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"severity\":\"warn\",\"source\":{\"type\":\"field\",\"kind\":\"trade\",\"id\":\"IRS-48213\",\"field\":\"$.mtm < 0\"},"
+                        + "\"condition\":{\"type\":\"rule\"},\"trigger\":{\"mode\":\"after-load\",\"kind\":\"trade\"}}")).andExpect(status().isOk());
+        try {
+            JsonNode load = body(announce(admin, "finance", batchBody("2026-09-26", "alerts-" + UUID.randomUUID())).andExpect(status().isCreated()));
+            assertThat(load.path("alerts").asInt()).isGreaterThanOrEqualTo(1);
+            assertThat(load.path("steps").findValuesAsText("detail")).anyMatch(d -> d.contains("alert") && d.contains("to look"));
+            long deadline = System.currentTimeMillis() + 10_000;                 // the engine looks after its load delay (100 ms here)
+            JsonNode raised = body(mvc.perform(get("/api/v1/alerts").header("Authorization", admin)));
+            while (raised.isEmpty() && System.currentTimeMillis() < deadline) {
+                Thread.sleep(100);
+                raised = body(mvc.perform(get("/api/v1/alerts").header("Authorization", admin)));
+            }
+            assertThat(raised).anySatisfy(c -> assertThat(c.path("rule").asText()).isEqualTo(ADMIN + "/Negative MTM"));
+        } finally {
+            mvc.perform(delete("/api/v1/alerts/rules/Negative MTM").header("Authorization", admin));
         }
-        int before = alerts.events(ADMIN, 100).size();
-        JsonNode load = body(announce(admin, "finance", batchBody("2026-09-26", "alerts-" + UUID.randomUUID())).andExpect(status().isCreated()));
-        assertThat(load.path("alerts").asInt()).isGreaterThanOrEqualTo(1);
-        assertThat(load.path("steps").findValuesAsText("detail")).anyMatch(d -> d.contains("alert") && d.contains("fired"));
-        assertThat(alerts.events(ADMIN, 100).size()).isGreaterThan(before);
-        mvc.perform(delete("/api/v1/me/alerts/rules/Negative MTM").header("Authorization", admin));
     }
 
     @Autowired LoadService loadService;
@@ -269,7 +273,7 @@ class LoadsApiTest {
                     .content("{\"expect\":{\"nope\":{\"by\":\"19:00\"}}}")).andExpect(status().isUnprocessableEntity()).andExpect(jsonPath("$.code").value("DRS-5012"));
 
             TestClock clock = new TestClock("2026-10-06T21:00:00Z");              // Tuesday 17:00 in New York
-            LoadService loads = new LoadService(packs, store, configs, props, sources, router, pipeline, alerts, notifier, dates, audit, clock);
+            LoadService loads = new LoadService(packs, store, configs, props, sources, router, pipeline, notifier, dates, audit, clock);
             ExpectationService expectations = new ExpectationService(loads, notifier, dates, clock);
             var finance = loads.pack("finance");
             assertThat(expectations.states(finance, clock.instant())).anyMatch(s -> s.businessDate().toString().equals("2026-10-06") && s.state().equals("pending"));

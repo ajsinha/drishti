@@ -665,21 +665,26 @@
     root.dispatchEvent(new CustomEvent("drishti:pivot-cell", {detail: {key: key, measure: measureOfLabel(d.measure), cell: entry, coords: coordsOf(key)}}));
     if (!mods.shift) { state.grid.explain(d.row, d.col); }
   });
-  document.addEventListener("keydown", function (e) {
-    var tag = (e.target.tagName || "").toLowerCase();
-    if (tag === "input" || tag === "select" || tag === "textarea" || e.ctrlKey || e.metaKey || e.altKey) { return; }
-    if (!state.answer) { return; }
-    var k = e.key.toLowerCase();
-    if (k === "g") { e.preventDefault(); chart(); }
-    else if (k === "x") { e.preventDefault(); $("[data-pv-export-open]").click(); }
-    else if (/^[1-9]$/.test(k) && root.contains(document.activeElement)) { e.preventDefault(); state.grid.model.expandPivotTo("rows", +k); }
-    else if (e.key === "E" && e.shiftKey && state.selection.length) {
-      e.preventDefault();
+  // the Pivot's keys (the one keymap, drishti_keys.js; ? lists them); inside the grid its own keys (arrows, + and −, E explains a figure)
+  var K = window.Drishti.keys;
+  K.register({id: "pivot.chart", keys: ["G", "Shift+G"], scope: "screen", area: "pivot", group: "Pivot", description: "Chart the answer",
+    when: function () { return !!state.answer; }, run: function () { chart(); }});
+  K.register({id: "pivot.export", keys: ["X", "Shift+X"], scope: "screen", area: "pivot", group: "Pivot", description: "Export the answer",
+    when: function () { return !!state.answer; }, run: function () { $("[data-pv-export-open]").click(); }});
+  K.register({id: "pivot.expand.to", keys: ["1", "2", "3", "4", "5", "6", "7", "8", "9"], scope: "panel", area: "pivot", group: "Pivot", label: "1 … 9",
+    description: "Open the rows to that level", within: function () { return root; }, when: function () { return !!state.answer; },
+    run: function (e) {
+      var k = e.key;
+      if (!/^[1-9]$/.test(k)) { return false; }
+      state.grid.model.expandPivotTo("rows", +k);
+    }});
+  K.register({id: "pivot.expand.by", keys: ["Shift+E"], scope: "screen", area: "pivot", group: "Pivot", description: "Expand the selected row by a field",
+    when: function () { return !!state.answer && !!state.selection.length; },
+    run: function () {
       var row = state.selection[0].entry;
       var by = window.prompt("Expand " + row.label + " by which field?", "");
       if (by) { state.grid.model.pivotState.toggle("rows", row.path, true, by.trim()); again(); }
-    }
-  });
+    }});
   // The screen's one face for the code around it, which reads the view and the answer and never computes: a lens (the MR cube,
   // drishti_mr-lens.js) changes the view's options and marks cells; the custom functions, explain and what-if cards (drishti_pivot-functions.js)
   // read the view, its answer and the selection; the switches, live pivots and comments (drishti_pivot-switches.js) send the request body

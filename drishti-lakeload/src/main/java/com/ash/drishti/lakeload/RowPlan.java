@@ -58,7 +58,7 @@ final class RowPlan {
     final String dateFrom;
     /**
      * Per split: the load id of its data file ({@code _load_id}: one per data file of the input, an archive's members sharing its id) and
-     * the file's label ({@code _source_file}), as UTF-8; set by the loader once the input is split (DATA_LOAD_RULES.md section 4).
+     * the file's label ({@code _source_file}), as UTF-8; set by the loader once the input is split (DATA_LAKE_GUIDE.md section 5).
      */
     volatile byte[][] loadIds = new byte[0][];
     volatile byte[][] sourceFiles = new byte[0][];

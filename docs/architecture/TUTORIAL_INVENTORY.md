@@ -26,8 +26,8 @@ the tutorials planned but not written.
 - **Commands**: every `drishti.py <group> <command>` in every tutorial was checked against the CLI's own parser (`drishti.py <group> --help`):
   all resolve.
 - **Command words**: every command word a tutorial types (`TRD`, `VAR`, `MCUBE`, `PVAR`, `FUND` ...) was found in a pack, the engines file,
-  `menus.yaml` or the built-in words: all resolve (`DQ`, `DQP` and `MYTRD` are made by the reader in tutorials 5 and 21).
-- **Menus**: every *Admin → X*, *Build → X*, *BI → X* and *Review → X* against `drishti-console/config/menus.yaml`, the Admin navigation
+  `sitemap.yaml` or the built-in words: all resolve (`DQ`, `DQP` and `MYTRD` are made by the reader in tutorials 5 and 21).
+- **Menus**: every *Admin → X*, *Build → X*, *BI → X* and *Review → X* against `drishti-console/config/sitemap.yaml`, the Admin navigation
   and BI's rail: all exist.
 - **Removed today**: the Studio stubs and `studio` switch, the notes API, LegacyAsk and Ask's model settings, the fva / sa-ccr / ccr-cube
   engine switches, `PLAY PVAR` and the parametric views B and C, the duplicate menu items, the pre-`drishti_` asset names: no tutorial
@@ -118,7 +118,7 @@ the tutorials planned but not written.
 - **Commands**: `bi catalogue`, `doctor`, `lake demo`, `server health`, `view get`.
 - **Command words**: `TRD`.
 - **API calls**: 1 distinct, e.g. `/api/v1/search`.
-- **Stale or changed**: 01:171 the top bar listed Views, BI, Build, Admin, Help without **Engines** (menus.yaml has it since 2.9.11.a): text fixed, picture img/t01/02-home.jpg (2026-11-01) to be re-run. 01:64-75 the `lake demo` summary predates the test data's conversion to dated files (2026-11-04): marked to be re-run. 01:99 `doctor` shows `drishti-server-2.9.11.b-exec.jar (version 2.5.0)` and 01:366 `version 2.9.2`: the jar name was edited into an older capture by the 2.9.11.b release commit (97d8b59ac): marked to be re-run. Opens with git clone and a build (UX review): a note now lets a reader with a running server start at step 3.
+- **Stale or changed**: 01:171 the top bar listed Views, BI, Build, Admin, Help without **Engines** (sitemap.yaml has it since 2.9.11.a): text fixed, picture img/t01/02-home.jpg (2026-11-01) to be re-run. 01:64-75 the `lake demo` summary predates the test data's conversion to dated files (2026-11-04): marked to be re-run. 01:99 `doctor` shows `drishti-server-2.9.11.b-exec.jar (version 2.5.0)` and 01:366 `version 2.9.2`: the jar name was edited into an older capture by the 2.9.11.b release commit (97d8b59ac): marked to be re-run. Opens with git clone and a build (UX review): a note now lets a reader with a running server start at step 3.
 - **Overlap**: step 7 is a teaser of 3; step 8 of 10.
 - **Verdict**: REWRITE-STEPS: the entry point; kept, with the install made skippable; three outputs and one picture to re-run. Splitting install (operators) from the tour (everyone) is 2.9.11.h's four role doors.
 
@@ -182,7 +182,7 @@ the tutorials planned but not written.
 - **Commands**: `data get`, `data landed`, `data loads`.
 - **Command words**: `DATA`.
 - **Menus and pages**: Admin → Audit, Admin → Health.
-- **API calls**: 4 distinct, e.g. `/api/v1/admin/loads/trading/config`, `/api/v1/me/measure-alerts/preview`, `/api/v1/me/measure-alerts/{name}`, `/api/v1/packs/trading/loads`.
+- **API calls**: 4 distinct, e.g. `/api/v1/admin/loads/trading/config`, `/api/v1/alerts/rules/preview`, `/api/v1/alerts/rules/{name}`, `/api/v1/packs/trading/loads`.
 - **Stale or changed**: none found (`--date` here is `data landed`'s own option, still valid).
 - **Overlap**: 36 (the inbox loads files itself; 7 is for an ETL that loads).
 - **Verdict**: KEEP: the other way data arrives; cross-linked with 36.
@@ -262,7 +262,7 @@ the tutorials planned but not written.
 - **Commands**: `bi catalogue`, `bi item`, `bi model`, `bi mq`, `bi sql`, `bi transform`.
 - **Command words**: `ORDER`.
 - **Menus and pages**: BI → Python, BI → Transforms.
-- **API calls**: 1 distinct, e.g. `/api/v1/me/measure-alerts/Desk`.
+- **API calls**: 1 distinct, e.g. `/api/v1/alerts/rules/Desk`.
 - **Stale or changed**: none found.
 - **Overlap**: 23 (Python compute), 37 (functions).
 - **Verdict**: KEEP (rewrite after 2.9.11.d): 70 minutes and 13 steps, the longest BI tutorial; 2.9.11.d's one Python runtime and Pivot → Report path replace much of it: split or rewrite then.
@@ -371,7 +371,7 @@ the tutorials planned but not written.
 
 - **Teaches**: editing on, a form that saves, a correction with its review sheet, four eyes in Review → Changes, a stale change conflicted, `drishti.py change`.
 - **Size**: 7 steps, 174 lines, 5 pictures. **Last produced**: text 2026-10-31, pictures (`img/t24`) 2026-10-26.
-- **Commands**: `change approve`, `change history`, `change propose`, `change show`, `edits status`.
+- **Commands**: `approvals approve`, `change history`, `change propose`, `change show`, `edits status`.
 - **Command words**: `PTRD`.
 - **Menus and pages**: Admin → Edits, Build → Govern, My → API, Review → Changes.
 - **Stale or changed**: none found.

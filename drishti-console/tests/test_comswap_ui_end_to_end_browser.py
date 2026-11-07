@@ -209,7 +209,7 @@ def test_one_large_book_from_file_to_deep_deal_pages_all_in_the_browser(browser,
     page.wait_for_url(lambda u: f"/v/deals/{tid}" in u)
 
     # ---- type-ahead finds a deal by its counterparty ----------------------------------------------------------------------------
-    hits = page.request.get(base + "/api/suggest", params={"q": swap["COUNTERPARTY"]}).json()
+    hits = page.request.get(base + "/api/search", params={"in": "command", "q": swap["COUNTERPARTY"]}).json()["items"]
     assert any(h.get("kind") == "deals" and swap["COUNTERPARTY"] in (h.get("title") or "") for h in hits), hits[:3]
 
     # ---- BI over every level of the full data ----------------------------------------------------------------------------------

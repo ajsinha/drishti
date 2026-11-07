@@ -214,16 +214,24 @@ public final class TablesMigrator {
                     if (refusal == null && produced.containsKey(rel)) {
                         refusal = "the model " + def.name() + " is also made from " + produced.get(rel) + ": rename one";
                     }
+                    String text = ModelYaml.write(def, header(headers.get(src), src));
+                    if (refusal == null) {
+                        refusal = clash(tables, Map.of(rel, def), Map.of(rel, text), src);
+                    }
                     if (refusal != null) {
                         items.add(new Item(src, "model", "refused", List.of(), notes, refusal));
                         continue;
                     }
                     produced.put(rel, src);
                     producedDefs.put(rel, def);
-                    out.put(rel, ModelYaml.write(def, header(headers.get(src), src)));
-                    outSource.put(rel, src);
-                    newModels.add(def);
-                    labels.put(def, rel);
+                    if (kept(tables, rel, def, text)) {
+                        notes.add(keptNote(rel));
+                    } else {
+                        out.put(rel, text);
+                        outSource.put(rel, src);
+                        newModels.add(def);
+                        labels.put(def, rel);
+                    }
                     items.add(new Item(src, "model", "converted", List.of(rel), notes, null));
                 }
                 continue;
@@ -260,27 +268,38 @@ public final class TablesMigrator {
                     refusal = mine.keySet().stream().filter(produced::containsKey).findFirst()
                             .map(rel -> rel + " is also made from " + produced.get(rel) + ": rename one").orElse(null);
                 }
+                List<String> header = header(headers.get(src), src);
+                Map<String, String> texts = new LinkedHashMap<>();
+                mine.forEach((rel, def) -> texts.put(rel, def instanceof TableDef t ? TableYaml.write(t, header) : ModelYaml.write((ModelDef) def, header)));
+                if (refusal == null) {
+                    refusal = clash(tables, mine, texts, src);
+                }
                 if (refusal != null) {
                     items.add(new Item(src, "dataset", "refused", List.of(), o.notes(), refusal));
                     continue;
                 }
-                List<String> header = header(headers.get(src), src);
+                List<String> notes = new ArrayList<>(o.notes());
                 for (Map.Entry<String, Object> e : mine.entrySet()) {
                     String rel = e.getKey();
                     produced.put(rel, src);
                     producedDefs.put(rel, e.getValue());
+                    if (e.getValue() instanceof TableDef t) {
+                        migrated.put(t.was() != null ? t.was() : t.name(), t);
+                    }
+                    if (kept(tables, rel, e.getValue(), texts.get(rel))) {
+                        notes.add(keptNote(rel));
+                        continue;
+                    }
                     outSource.put(rel, src);
                     labels.put(e.getValue(), rel);
+                    out.put(rel, texts.get(rel));
                     if (e.getValue() instanceof TableDef t) {
-                        out.put(rel, TableYaml.write(t, header));
                         newTables.add(t);
-                        migrated.put(t.was() != null ? t.was() : t.name(), t);
                     } else {
-                        out.put(rel, ModelYaml.write((ModelDef) e.getValue(), header));
                         newModels.add((ModelDef) e.getValue());
                     }
                 }
-                items.add(new Item(src, "dataset", "converted", new ArrayList<>(mine.keySet()), o.notes(), null));
+                items.add(new Item(src, "dataset", "converted", new ArrayList<>(mine.keySet()), notes, null));
             }
         }
         Map<String, String> before = new LinkedHashMap<>();
@@ -378,6 +397,74 @@ public final class TablesMigrator {
     }
 
     /** A version-1 original and the converted form of its name: tables with the same columns; the model holding every measure of the original. */
+    /**
+     * Why an item may not be written: one of its files already lies under {@code config/tables} with other content and another shape (other
+     * columns, or a model without all of its measures). A file already there is never replaced: it may carry row rules, masks or edits made
+     * after an earlier run, and replacing it would let people see more than they do.
+     */
+    static String clash(Path tables, Map<String, Object> defs, Map<String, String> texts, String src) throws IOException {
+        for (Map.Entry<String, Object> e : defs.entrySet()) {
+            String now = onDisk(tables, e.getKey());
+            if (now == null || now.equals(texts.get(e.getKey()))) {
+                continue;
+            }
+            Object there = parsed(now);
+            if (there == null || !sameShape(e.getValue(), there)) {
+                return e.getKey() + " already exists under config/tables and differs from what " + src
+                        + " converts to: rename one, or remove the file to have it written";
+            }
+            if (!noLooser(e.getValue(), there)) {
+                return e.getKey() + " already exists under config/tables without row rules, masks or hidden columns that " + src
+                        + " has: add them to the file, or remove the file to have it written";
+            }
+        }
+        return null;
+    }
+
+    /** True when {@code rel} already lies under {@code config/tables}, other than {@code text} but of the same shape: it is kept as it is. */
+    static boolean kept(Path tables, String rel, Object def, String text) throws IOException {
+        String now = onDisk(tables, rel);
+        if (now == null || now.equals(text)) {
+            return false;
+        }
+        Object there = parsed(now);
+        return there != null && sameShape(def, there) && noLooser(def, there);
+    }
+
+    /** True when the definition {@code there} holds at least the security of the converted {@code def}: keeping it lets nobody see more. */
+    static boolean noLooser(Object def, Object there) {
+        if (def instanceof TableDef x && there instanceof TableDef y) {
+            if (!y.rules().containsAll(x.rules()) || !y.hiddenFor().containsAll(x.hiddenFor())) {
+                return false;
+            }
+            return x.columns().values().stream().allMatch(c -> {
+                var k = y.columns().get(c.name());
+                return k != null && (!c.masked() || k.masked()) && k.hiddenFor().containsAll(c.hiddenFor());
+            });
+        }
+        if (def instanceof ModelDef x && there instanceof ModelDef y) {
+            return x.security().isEmpty() || x.security().equals(y.security());
+        }
+        return false;
+    }
+
+    static String keptNote(String rel) {
+        return rel + " is already under config/tables with the same shape: kept as it is (its row rules, masks and edits stay), not written again";
+    }
+
+    private static String onDisk(Path tables, String rel) throws IOException {
+        Path f = tables == null ? null : tables.resolve(rel);
+        return f != null && Files.isRegularFile(f) ? Files.readString(f) : null;
+    }
+
+    /** A definition of the layer as read from its file, or null when it does not read. */
+    private static Object parsed(String text) {
+        if (TableYaml.isTable(text)) {
+            return TableYaml.read(text).table();
+        }
+        return ModelYaml.read(text).model();
+    }
+
     static boolean sameShape(Object a, Object b) {
         if (a instanceof TableDef x && b instanceof TableDef y) {
             return x.columns().keySet().equals(y.columns().keySet());

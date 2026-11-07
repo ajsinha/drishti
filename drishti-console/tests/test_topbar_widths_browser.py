@@ -22,7 +22,7 @@ pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install
 from test_live_tabs_browser import browser, console_url  # noqa: E402,F401 - the shared browser fixtures
 
 WIDTHS = (1024, 1101, 1280, 1366, 1440, 1600, 1920)
-PAGES = ("/t", "/bi", "/v/trade/IRS-48213")
+PAGES = ("/t", "/bi/catalogue", "/v/trade/IRS-48213")
 
 BOXES = r"""() => {
   const sel = '.tbar-brand, .tbar .cmd, .tbar .asof, .tbar-menu-btn, .tbar-tools > *';
@@ -64,7 +64,7 @@ def test_top_bar_controls_never_overlap(browser, console_url, width):
     assert not problems, "\n".join(problems)
 
 
-@pytest.mark.parametrize("url", ["/t", "/v/trade/IRS-48213", "/bi"])
+@pytest.mark.parametrize("url", ["/t", "/v/trade/IRS-48213", "/bi/catalogue"])
 def test_a_top_bar_menu_stays_open_until_the_person_closes_it(browser, console_url, url):
     """A menu opened with a click stays open (a page's own refresh, a live tick or a stray click handler must not close it)."""
     page = browser.new_page(viewport={"width": 1366, "height": 900})

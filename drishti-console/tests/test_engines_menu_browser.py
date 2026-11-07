@@ -12,8 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Engines menu in a real browser (2.9.11.a, mock-up engines-menu/A; config/menus.yaml, terminal/_topbar.html, static/js/drishti_engines-menu.js),
-dark and light, over a console of its own whose menus.yaml shows the search box from three engines (search-over: 2):
+"""The Engines menu in a real browser (2.9.11.a, mock-up engines-menu/A; config/sitemap.yaml, terminal/_topbar.html, static/js/drishti_engines-menu.js),
+dark and light, over a console of its own whose sitemap.yaml shows the search box from three engines (search-over: 2):
 - on a desktop the menu sits after Views, opens a panel with a column per running engine (VaR, Exposure, FRTB-SA, SIMM), each with its
   command word, inside the screen, with Admin -> Engines; nothing scrolls sideways;
 - its search box filters as you type (an engine with no match folds away, the word marked), Escape clears it, Enter opens the first page;
@@ -56,7 +56,7 @@ PANEL = r"""() => {
 
 @pytest.fixture(scope="module")
 def console():
-    """A full console (the acting person is an administrator) over the stand-in server, its menus.yaml with search-over: 2."""
+    """A full console (the acting person is an administrator) over the stand-in server, its sitemap.yaml with search-over: 2."""
     import tempfile
 
     import uvicorn
@@ -65,11 +65,11 @@ def console():
     from core.app import create_app
     from core.config import load_settings
 
-    spec = yaml.safe_load((CONSOLE / "config" / "menus.yaml").read_text(encoding="utf-8"))
+    spec = yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))
     next(m for m in spec["menus"] if m.get("engines"))["search-over"] = 2
     with tempfile.TemporaryDirectory(prefix="engines-menu-") as tmp, pytest.MonkeyPatch.context() as mp:
         (Path(tmp) / "config").mkdir()
-        (Path(tmp) / "config" / "menus.yaml").write_text(yaml.safe_dump(spec, allow_unicode=True), encoding="utf-8")
+        (Path(tmp) / "config" / "sitemap.yaml").write_text(yaml.safe_dump(spec, allow_unicode=True), encoding="utf-8")
         mp.setattr(menus, "_console_dir", lambda request: Path(tmp))
         engines.reset()
         app = create_app(load_settings(CONSOLE / "config"))

@@ -20,7 +20,8 @@
    grid keeps its first column pinned and scrolls across; a pivot shows one value column with a measure switcher (O2). The chrome (toolbar,
    status bar, command line, keys) is drishti_grid-shell.js; menus, keys and actions drishti_grid-actions.js. */
 import { announce } from '../../drishti-core/src/drishti_index.js';
-import { GridModel, LAYOUTS, DENSITIES } from './drishti_grid.js';
+import { GridModel } from './drishti_grid.js';
+import { LAYOUTS, DENSITIES } from './drishti_grid-model-base.js';
 import { GridBody } from './drishti_grid-body.js';
 import { WellsView } from './drishti_grid-wells-ui.js';
 import { Menu, Notes } from './drishti_grid-dom.js';

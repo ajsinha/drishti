@@ -19,7 +19,7 @@ A lake is described once, in its own file, and everyone refers to it: the connec
 write it, `lake build` and the demo lakes. In this tutorial you read the demo lake's file, see a connector name it, load a day through
 it, watch a load that contradicts it being refused, add an append table and load the same batch twice, check the lake files against the
 tables on disk, and migrate an older connector file. Each step shows the UI, the command line and the YAML behind it. The guide is
-[LAKE_GUIDE.md](../guides/LAKE_GUIDE.md).
+[DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md).
 
 ## Time to complete
 
@@ -46,7 +46,7 @@ About 20 minutes.
 ```yaml
 lake: demo
 format: delta
-root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
 defaults: {load-mode: replace}
 tables:
   trading.trade_endur:
@@ -73,7 +73,7 @@ python3 tools/drishti.py lake show
 lakes in .../config/lakes: 3
   ccr-official: delta at .../data/delta, 1 tables
     risk-results.exposure-official-cpty      risk-results/exposure-official-cpty      partitioned by business_date; 26 promoted
-  demo: delta at .../data/delta, 89 tables
+  demo: delta at .../data/delta/demo, 89 tables
     compute-demo.path-book                   compute-demo/path-book                   partitioned by business_date; 4 promoted
     ...
     risk.pnl-vector                          risk/pnl-vector                          partitioned by business_date; 32 promoted, vectors PNL
@@ -128,8 +128,8 @@ python3 tools/drishti.py lake check
 ```
 
 ```text
-  note  demo/risk.position-sensitivity: no table yet at .../data/delta/risk/position-sensitivity (a writer creates it as the lake file says)
-  note  demo/risk.risk-factor: no table yet at .../data/delta/risk/risk-factor (a writer creates it as the lake file says)
+  note  demo/risk.position-sensitivity: no table yet at .../data/delta/demo/risk/position-sensitivity (a writer creates it as the lake file says)
+  note  demo/risk.risk-factor: no table yet at .../data/delta/demo/risk/risk-factor (a writer creates it as the lake file says)
 lake check: 3 lakes, 0 errors
 ```
 
@@ -264,7 +264,7 @@ python3 tools/drishti.py lake migrate-config --connectors-dir $SCRATCH/connector
   old-store.yaml: now lake: lake (1 tables)
 
 --- $SCRATCH/lakes/lake.yaml (would be written)
-# lake.yaml: written by drishti.py lake migrate-config from the connector files (docs/guides/LAKE_GUIDE.md); edit here from now on
+# lake.yaml: written by drishti.py lake migrate-config from the connector files (docs/guides/DATA_LAKE_GUIDE.md); edit here from now on
 lake: lake
 format: delta
 root: $SCRATCH/lake
@@ -306,5 +306,5 @@ rm -rf "$SCRATCH"
 
 ## Next steps
 
-- [LAKE_GUIDE.md](../guides/LAKE_GUIDE.md): every key, a Delta lake in S3, an Iceberg lake over REST, an in-memory store.
+- [DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md): every key, a Delta lake in S3, an Iceberg lake over REST, an in-memory store.
 - [Tutorial 31](31-news-in-memory-only.md): a lake held in memory only.

@@ -95,7 +95,7 @@ PYODIDE = "/pyodide/"
 EMBED = "/embed/"                           # embedded views for other web applications: off unless embed.enabled (routes/embed_routes.py)
 
 
-PROTECTED = ("/t", "/bi", "/v/", "/go", "/form", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports", "/build", "/share/", "/inbox", "/render/")
+PROTECTED = ("/t", "/bi", "/v/", "/go", "/form", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports", "/build", "/share/", "/inbox", "/render/", "/approvals", "/review/")
 EXACT = ("/t", "/s")                        # pages whose path is a prefix of public ones (/s of /static)
 # all a user whose password change is due may reach until it is done (besides public pages): QA 2026-10-01 SEC-06
 WHILE_MUST_CHANGE = ("/account", "/account/password", "/logout")
@@ -288,13 +288,14 @@ def create_app(settings: Settings) -> FastAPI:
 
     catalogue = Servers(settings)
     from routes import (admin_routes, alert_routes, api_routes, asof_routes, auth_routes, build_routes, pack_routes, calc_routes, export_routes, help_routes, home_routes,
-                        designer_routes, designer_grid_routes, dist_routes, layout_routes, mcube_routes, monitor_routes, pivot_routes, report_routes, review_routes, server_routes, ship_routes, studio_routes, terminal_routes,
+                        designer_routes, designer_grid_routes, dist_routes, layout_routes, mcube_routes, monitor_routes, pivot_routes, report_routes, approval_routes, server_routes, ship_routes, studio_routes, terminal_routes,
                         workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes,
                         ai_routes)
 
     from routes import edition_routes, trading_routes
     from routes import data_out_routes
-    from routes import render_routes
+    from routes import elements_routes, render_routes
+    from routes import explain_routes
     from routes import admin_commands_routes, admin_engines_routes, artifact_routes, changes_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, phone_routes, lake_maint_routes, lake_routes, net_routes, play_routes, frtb_routes, simm_routes, smat_routes, var_regulatory_routes, var_routes
 
     def _lake_schedules(app):
@@ -420,6 +421,8 @@ def create_app(settings: Settings) -> FastAPI:
         return str(text or "").replace("{product}", str(ctx.get("PRODUCT") or ""))
 
     templates.env.filters["product"] = product
+    from core import half_up
+    half_up.install(templates.env)                      # the panel macros' one rounding rule (half up, as the server and the renderer)
     app.state.settings = settings
     from core.edition import Editions
 
@@ -471,6 +474,8 @@ def create_app(settings: Settings) -> FastAPI:
 
     templates.env.globals["top_bar_menus"] = _menus.top_bar
     templates.env.globals["footer_links"] = _menus.footer
+    templates.env.globals["admin_tabs"] = _menus.admin_tabs        # the Admin pages' tab strip: the sitemap's admin menu
+    templates.env.globals["bi_rail"] = _menus.bi_rail              # the BI rail: the sitemap's bi menu
     templates.env.globals["command_placeholder"] = _menus.placeholder
     templates.env.globals["lens_links"] = _menus.lens_links
     templates.env.globals["lens_menu"] = _menus.lens_menu          # the subject menus folded into one on a phone (LX1 option C)
@@ -594,11 +599,12 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(changes_routes.router)           # write-back: /api/changes, Review -> Changes, Admin -> Edits (before the admin and API routes)
     app.include_router(api_routes.router)
     app.include_router(render_routes.router)            # the client-side renderer's playground (CLIENT_RENDERER.md section 13)
+    app.include_router(elements_routes.router)          # the Drishti Elements gallery (ELEMENTS.md section 10)
     app.include_router(auth_routes.router)
     app.include_router(studio_routes.router)
     app.include_router(build_routes.router)
     app.include_router(pack_routes.router)
-    app.include_router(review_routes.router)
+    app.include_router(approval_routes.router)          # the one Approvals queue (SHARED_SCREENS.md section 2) and the old review pages' redirects
     app.include_router(ship_routes.router)
     app.include_router(admin_routes.router)
     app.include_router(help_routes.router)
@@ -626,11 +632,14 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(data_routes.router)              # Export data: DATA, every dataset and a day as .jsonl.gz (DATA_GUIDE.md)
     app.include_router(compute_admin_routes.router)     # Admin -> Compute (docs/admin/OPERATIONS.md)
     app.include_router(admin_engines_routes.router)     # Admin -> Engines: compute engines on or off per server (COMPUTE_ENGINES.md)
+    from routes import config_editor_routes
+    app.include_router(config_editor_routes.router)     # Admin -> Configuration: every setting in three tiers, changes proposed (OPERATIONS.md)
     app.include_router(data_out_routes.router)          # Admin -> Data out: Arrow Flight, the page and the map (FLIGHT_GUIDE.md)
     app.include_router(connector_routes.router)
     app.include_router(artifact_routes.router)
     app.include_router(lake_routes.router)
     app.include_router(net_routes.router)
+    app.include_router(explain_routes.router)          # Explain: one for every number, the preview, the drawer and the page (SHARED_SCREENS.md 3)
     app.include_router(lake_maint_routes.router)
     app.include_router(form_routes.router)
     app.include_router(ai_routes.router)

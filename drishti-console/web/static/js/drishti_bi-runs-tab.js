@@ -213,9 +213,10 @@
   }
   q('[data-run-drawer-close]').addEventListener('click', closeDrawer);
   // the focus can leave the open drawer for nowhere (a button it was on became disabled while it works): Esc on the bare page still closes it
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !e.defaultPrevented && !drawer.hidden && (e.target === document.body || e.target === document.documentElement)) { e.preventDefault(); closeDrawer(); }
-  });
+  window.Drishti.keys.register({ id: 'bi.runs.drawer.close', keys: ['Escape'], scope: 'dialog', area: 'bi-run-drawer', description: "Close the run's drawer",
+    open: () => !drawer.hidden, when: (e) => e.target === document.body || e.target === document.documentElement, run: () => { closeDrawer(); } });
+  window.Drishti.keys.describe({ id: 'bi.runs.walk', keys: ['ArrowUp', 'ArrowDown'], scope: 'panel', area: 'bi-runs', group: 'Runs',
+    description: 'In Runs: the previous or next run; Enter opens it' });
   drawer.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') { e.preventDefault(); closeDrawer(); return; }
     if (e.key === 'Tab') {                                               // the focus stays in the drawer while it is open

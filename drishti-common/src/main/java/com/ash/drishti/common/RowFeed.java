@@ -34,7 +34,7 @@ import java.util.zip.GZIPInputStream;
 /**
  * The input of a store loader (PostgreSQL, DuckDB, MongoDB, Redis, Cassandra, Aerospike, Iceberg, the File connector's): loader rows
  * ({@code {"domain", "kind", "id", "date", "doc", "columns"}}), one JSON object a line, filed under the business date the load rules
- * give (docs/architecture/DATA_LOAD_RULES.md; {@link FileDates}), never a row's own {@code date}:
+ * give (docs/guides/DATA_LAKE_GUIDE.md; {@link FileDates}), never a row's own {@code date}:
  *
  * <ul>
  *   <li>a <b>tar</b> ({@code .tar}, {@code .tgz}, {@code .tar.gz}) of {@code <table>/<YYYY-MM-DD>/<file>.jsonl[.gz]}: each file's rows
@@ -281,7 +281,7 @@ public final class RowFeed implements AutoCloseable {
             String first = tables.putIfAbsent(t.label(), kind);
             if (first != null && !first.equalsIgnoreCase(kind)) {
                 throw new IOException(t.label() + ": rows of " + first + " and " + kind + ": a file is one table and one business date "
-                        + "(docs/architecture/DATA_LOAD_RULES.md): send a tar of <table>/<YYYY-MM-DD>/ folders");
+                        + "(docs/guides/DATA_LAKE_GUIDE.md): send a tar of <table>/<YYYY-MM-DD>/ folders");
             }
         } else {
             if (!t.folder().equalsIgnoreCase(kind)) {

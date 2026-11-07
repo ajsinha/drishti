@@ -27,7 +27,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** Routing (DATALOAD_INBOX.md section 5): the .ready file's keys, then the first matching rule; never guessed. And the marker's contents. */
+/** Routing (DATA_LAKE_GUIDE.md section 5.1): the .ready file's keys, then the first matching rule; never guessed. And the marker's contents. */
 class RoutesTest {
 
     @TempDir Path tmp;

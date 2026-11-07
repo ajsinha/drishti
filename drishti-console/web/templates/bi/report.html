@@ -17,13 +17,6 @@
    visual's query, so this carries no data. Pages are tabs; a visual is a frame on a 12-column grid (a single column on a phone). #}
 {% extends "bi/shell.html" %}
 {% block bi_title %}Report{% endblock %}
-{% block bi_keys %}
-    <dt><kbd>Tab</kbd></dt><dd>Next visual, in reading order</dd>
-    <dt><kbd>&larr;</kbd> <kbd>&rarr;</kbd></dt><dd>In a chart: the next mark; <kbd>Enter</kbd> selects it</dd>
-    <dt><kbd>Esc</kbd></dt><dd>Clear the selection of a visual</dd>
-    <dt><kbd>t</kbd> <kbd>r</kbd></dt><dd>In a visual: show as a table; show the rows</dd>
-    <dt><kbd>d</kbd> <kbd>u</kbd></dt><dd>In a visual: drill down; drill up</dd>
-{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-consume.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-report.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-ai.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-board.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_dist.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-runs.css?v={{ ASSET_V }}">
 {% endblock %}
 {% block bi_main %}

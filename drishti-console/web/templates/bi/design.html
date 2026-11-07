@@ -20,14 +20,6 @@
 {% extends "bi/shell.html" %}
 {% import "bi/_studio.html" as studio %}
 {% block bi_title %}Designer{% endblock %}
-{% block bi_keys %}
-    <dt><kbd>Tab</kbd></dt><dd>Walk the panes and the visuals</dd>
-    <dt><kbd>&larr;</kbd> <kbd>&rarr;</kbd> <kbd>&uarr;</kbd> <kbd>&darr;</kbd></dt><dd>On a visual: move it one cell; with <kbd>Shift</kbd> resize it</dd>
-    <dt><kbd>Del</kbd> <kbd>Ctrl</kbd>+<kbd>D</kbd></dt><dd>On a visual: delete it; duplicate it</dd>
-    <dt><kbd>Enter</kbd></dt><dd>On a visual: go to its title in Format</dd>
-    <dt><kbd>Ctrl</kbd>+<kbd>Z</kbd> <kbd>Ctrl</kbd>+<kbd>Y</kbd></dt><dd>Undo; redo</dd>
-    <dt><kbd>Ctrl</kbd>+<kbd>S</kbd></dt><dd>Save the draft</dd>
-{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-expr.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-report.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-ai.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-design.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-layer.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-board.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-studio.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-runs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-statement.css?v={{ ASSET_V }}">{% endblock %}
 {% block bi_main %}
 <div class="bi-studio" data-studio data-studio-kind="report">

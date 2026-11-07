@@ -122,7 +122,7 @@ async def export(request: Request):
 
 @router.post("/api/pivot/{action}")
 async def post(request: Request, action: str):
-    if action not in ("query", "estimate", "expand", "compare", "rows", "inline", "views", "promote", "explain", "whatif", "functions", "live"):
+    if action not in ("query", "estimate", "expand", "compare", "rows", "inline", "views", "promote", "whatif", "functions", "live"):   # Why did it move: the one Explain (/api/explain, kind pivot)
         return JSONResponse({"detail": "no such pivot action"}, status_code=404)
     return await _call(request, "POST", "/" + action, await _body(request))
 
@@ -181,7 +181,7 @@ async def function_get(request: Request, owner: str, name: str, version: str = "
 
 @router.post("/api/pivot/functions/{owner}/{ref}/{op}")
 async def function_op(request: Request, owner: str, ref: str, op: str):
-    if op not in ("submit", "approve", "revoke"):
+    if op not in ("submit", "revoke"):                  # approving is done in the one Approvals queue (/approvals/function/<owner:name@v>)
         return JSONResponse({"detail": "no such function action"}, status_code=404)
     return await _call(request, "POST", f"/functions/{owner}/{ref}/{op}", await _body(request))
 

@@ -22,6 +22,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import * as G from '../../web/static/elements/drishti-grid/src/drishti_index.js';
 import * as C from '../../web/static/elements/drishti-core/src/drishti_index.js';
+const { toCsv } = C;
 
 const require = createRequire(import.meta.url);
 const M = '−';
@@ -314,9 +315,9 @@ test('selection: rows by click, ctrl and shift; ranges; figures warn on a non-ad
 test('export: CSV quoted and with a BOM; an xlsx that is a real zip with numbers, formats, a frozen bold heading and outline levels', () => {
   const t = { columns: [{ header: 'Desk', type: 'text' }, { header: 'Notional', type: 'number', format: 'amount2' }, { header: 'Share', type: 'number', format: 'pct2' },
     { header: 'Day', type: 'date' }], rows: [['RATES, NY', 1234.5, 0.25, '2026-11-06'], ['FX "spot"', null, 0.5, '2026-11-07']], levels: [0, 1], bold: [true, false] };
-  const csv = G.toCsv(t);
+  const csv = toCsv(t);
   assert.equal(csv, '﻿Desk,Notional,Share,Day\r\n"RATES, NY",1234.5,0.25,2026-11-06\r\n"FX ""spot""",,0.5,2026-11-07\r\n');
-  assert.match(G.toCsv(t, { formatted: true }), /"1,234.50",25.00%/);
+  assert.match(toCsv(t, { formatted: true }), /"1,234.50",25.00%/);
   assert.equal(G.excelFormat({ type: 'number', format: 'pct2' }), '0.00%');
   assert.equal(G.excelFormat({ type: 'number', format: 'signed0' }), '+#,##0;-#,##0;#,##0');
   const x = G.toXlsx(t, { sheetName: 'Trades' });

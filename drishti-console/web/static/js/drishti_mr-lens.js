@@ -17,7 +17,7 @@
 /* The MR lens of the pivot screen (MCUBE; docs/guides/MR_CUBE_GUIDE.md; MR_CUBE_LENS.md section 6.7): the pivot is the pivot engine's own
    grid (drishti_pivot.js, drishti_pivot-grid.js) on source var; this file draws what the MR cube adds around it. Layout A: the headline strip, the lens
    controls (they change the view's options and the engine answers again), the time-travel slider, sparklines in the grid's cells and the
-   rail of a clicked cell's tail and explain. Tab B: components (the engine's comp_var by the first row dimension), the waterfall, the
+   rail of a clicked cell's tail and explain (the one Explain). Tab B: components (the engine's comp_var by the first row dimension), the waterfall, the
    view's histogram, the factor heat map. Tab C: the DV01 ladder, the what-if side by side, explain. Every number is the server's
    (/api/pivot/... and /api/pivot/mr/...); this file only draws. Keys: H 1D/10D, [ and ] step the date, W the what-if tray. */
 (function () {
@@ -230,23 +230,23 @@
     }).catch(function (e) { $("[data-mr-tail]").innerHTML = '<p class="pv-sub">' + esc(e.message) + "</p>"; });
     explain("[data-mr-explain]", "[data-mr-explain-dates]", cell.scope);
   }
+  /** Explain the move (A7, C4): the one Explain of the cell's VaR (drishti_explain.js; SHARED_SCREENS.md section 3) at Why it moved, the
+      compare date (or the date before) to the view's: the card names it, hover previews it, a click opens the drawer. */
   function explain(target, datesEl, scope) {
     if (!scope) { $(target).innerHTML = '<p class="pv-sub">No scope text names this cell: explain asks the engine of a scope.</p>'; return; }
-    var q = new URLSearchParams({ scope: scope });
-    if (st.compare) { q.set("from", st.compare); }
-    if (st.answer && st.answer.date) { q.set("to", st.answer.date); }
-    $(target).innerHTML = '<div class="mr-skel"></div>';
-    mr("GET", "/explain?" + q).then(function (x) {
-      $(datesEl).textContent = x.from + " → " + x.to;
-      var h = '<table class="mr-mini"><tr><td class="l">VaR ' + esc(x.from) + (x.official && x.official.captured ? " (official)" : "") + '</td><td class="mono">' + money(x.varFrom) + "</td></tr>";
-      (x.lines || []).forEach(function (l, i) {
-        h += '<tr><td class="l">' + (i + 1) + " " + esc(l.label) + '</td><td class="mono ' + (l.effect > 0 ? "up" : l.effect < 0 ? "down" : "") + '">'
-          + (l.effect > 0 ? "+" : "") + money(l.effect) + "</td></tr>";
-      });
-      h += '<tr class="tot"><td class="l">VaR ' + esc(x.to) + '</td><td class="mono">' + money(x.varTo) + "</td></tr></table>";
-      $(target).innerHTML = h + '<p class="pv-sub">' + (x.addsUp ? "The exact steps add up to the change. " : "The steps do not add up: see the engine's warnings. ")
-        + esc((x.factorOverlay && x.factorOverlay.note) || "") + "</p>";
-    }).catch(function (e) { $(target).innerHTML = '<p class="pv-sub">' + esc(e.message) + "</p>"; });
+    var req = { kind: "var", measure: "var", scope: scope };
+    if (st.compare) { req.from = st.compare; }
+    if (st.answer && st.answer.date) { req.to = st.answer.date; req.date = st.answer.date; }
+    $(datesEl).textContent = (req.from || "the date before") + " → " + (req.to || "the newest");
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "pv-btn";
+    b.textContent = "Why it moved: " + scope + " ›";
+    b.setAttribute("data-explain", JSON.stringify(req));
+    b.setAttribute("data-explain-tab", "why");
+    b.setAttribute("data-mr-explain-open", "");
+    $(target).textContent = "";
+    $(target).appendChild(b);
   }
 
   // ---- the tabs ------------------------------------------------------------------------------------------------------------------------
@@ -385,12 +385,11 @@
     whatIf();
   });
   $("[data-mr-grid-pick]").addEventListener("change", tabC);
-  document.addEventListener("keydown", function (ev) {
-    if (ev.target.closest("input, textarea, select") || ev.ctrlKey || ev.metaKey || ev.altKey || !st.answer) { return; }
-    var k = ev.key;
-    if (k === "h" || k === "H") { setLens("horizon", opts().horizon ? "1d" : "10d"); }
-    else if (k === "[") { step(-1); }
-    else if (k === "]") { step(1); }
-    else if (k === "w" || k === "W") { showTab("sensitivities"); $("[data-mr-tray] input").focus(); ev.preventDefault(); }
-  });
+  var K = window.Drishti.keys, answered = function () { return !!st.answer; };
+  K.register({ id: "mr.horizon", keys: ["H", "Shift+H"], scope: "screen", area: "mr-lens", group: "Market risk", description: "Switch the horizon: 1 day or 10 days",
+    when: answered, run: function () { setLens("horizon", opts().horizon ? "1d" : "10d"); } });
+  K.register({ id: "mr.step", keys: ["[", "]"], scope: "screen", area: "mr-lens", group: "Market risk", label: "[ ]", description: "The previous or next business date",
+    when: answered, run: function (ev) { step(ev.key === "[" ? -1 : 1); } });
+  K.register({ id: "mr.whatif", keys: ["W", "Shift+W"], scope: "screen", area: "mr-lens", group: "Market risk", description: "What if: the sensitivities tray",
+    when: answered, run: function () { showTab("sensitivities"); $("[data-mr-tray] input").focus(); } });
 })();

@@ -18,7 +18,7 @@
     python3 tools/under_construction.py --check    fail on a stale document, or a location the registry names that does not exist
 
 A location exists when: a Sutra of the kind binds each listed bind (strip or column) and has each listed panel id (the packs' Sutras); a
-menu item id is in drishti-console/config/menus.yaml; a help slug is a repository document's slug (docs/<path>.md -> docs-<path>); a
+menu item id is in drishti-console/config/sitemap.yaml; a help slug is a repository document's slug (docs/<path>.md -> docs-<path>); a
 contract's file (and its #anchor, as GitHub makes it) exists.
 """
 from __future__ import annotations
@@ -102,7 +102,7 @@ def _sutras_of(kind: str) -> list[str]:
 
 def problems(items: list[dict]) -> list[str]:
     out: list[str] = []
-    menus = (ROOT / "drishti-console" / "config" / "menus.yaml").read_text(encoding="utf-8")
+    menus = (ROOT / "drishti-console" / "config" / "sitemap.yaml").read_text(encoding="utf-8")
     ids = set(re.findall(r"\bid:\s*([\w.-]+)", menus))
     seen = set()
     for i in items:
@@ -127,7 +127,7 @@ def problems(items: list[dict]) -> list[str]:
                     out.append(f"{iid}: no {s.get('kind')} Sutra has a panel {p}")
         for m in i.get("menus") or []:
             if m not in ids:
-                out.append(f"{iid}: no menu item {m} in menus.yaml")
+                out.append(f"{iid}: no menu item {m} in sitemap.yaml")
         for h in i.get("help") or []:
             if not h.startswith("docs-") or not any(_doc_slug(p) == h for p in (ROOT / "docs").rglob("*.md")):
                 out.append(f"{iid}: no help page {h}")

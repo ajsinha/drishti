@@ -37,7 +37,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * The board the Admin screen draws (DATALOAD_INBOX.md section 10, Admin → Data loads → Inbox, mock-up A), built from the folders, the
+ * The board the Admin screen draws (DATA_LAKE_GUIDE.md section 3.1, Admin → Data loads → Inbox, mock-up A), built from the folders, the
  * lock, the run's plan ({@code inprocess/<run>/load-plan.json}), the ledger, the rules and the cycles this server ran: the one status source
  * ({@link DataInbox#status()} returns it). Every count, size, duration, total and time a person reads is written here, in words and
  * numbers, so the browser computes nothing: the waiting files with their state and the rule that will route them, the run loading table
