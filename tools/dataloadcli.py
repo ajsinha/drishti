@@ -12,17 +12,20 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""`drishti.py dataload status|run|retry`: the data inbox from the command line (docs/guides/DATA_LAKE_GUIDE.md; docs/guides/DATA_GUIDE.md,
+"""`drishti.py dataload status|run|retry|undo`: the data inbox from the command line (docs/guides/DATA_LAKE_GUIDE.md; docs/guides/DATA_GUIDE.md,
 "The data inbox"; the API: /api/v1/admin/dataload, administrators, or a token with loads:write for run and retry).
 
     status [--json]          the files waiting and why, the last cycles, the failures with their reasons, the lock, the next cycle
     run                      Load now: a cycle at once; while a run still loads, none starts and it says so
     retry <file>             a failed file and its .ready back into the inbox; the next cycle (or run) loads it
+    undo <load-id> [--yes]   what undoing a load would remove (a dry run), or with --yes the undo, in the lake the load wrote into
+                             (the server finds it in the ledger; --lake NAME to say it)
 
 Exit codes: 0 done, 1 the server said no, 2 usage, 3 the inbox is off on every server (DRS-1020)."""
 from __future__ import annotations
 
 EPILOG = ("examples:\n  drishti.py dataload status\n  drishti.py dataload run\n  drishti.py dataload retry trades-endur-2026-11-03.jsonl.gz\n"
+          "  drishti.py dataload undo 20261104T093000.123-4242.1\n  drishti.py dataload undo 20261104T093000.123-4242.1 --yes\n"
           "  drishti.py dataload status --json | jq '.failed'")
 
 
@@ -87,7 +90,7 @@ def render(st: dict) -> list[str]:
 
 
 def register(groups, srv, ctx: dict) -> None:
-    """Adds ``dataload status|run|retry``."""
+    """Adds ``dataload status|run|retry|undo``."""
     import argparse
 
     Api, CliError, ApiError, say_json = ctx["Api"], ctx["CliError"], ctx["ApiError"], ctx["say_json"]
@@ -112,6 +115,21 @@ def register(groups, srv, ctx: dict) -> None:
                 else:
                     print(f"{res.get('file')}: back in the inbox (from {res.get('from')}); {res.get('next')}.")
                 return 0
+            if act == "undo":
+                body = {"loadId": a.load_id}
+                if a.yes:
+                    body["confirm"] = a.load_id
+                if a.lake:
+                    body["lake"] = a.lake
+                res = api.json("POST", "/api/v1/admin/dataload/undo", body)
+                if a.json:
+                    say_json(res)
+                    return 0
+                for line in res.get("lines") or []:
+                    print(f"  {line.get('table')} {line.get('date')}: {line.get('removed')} rows removed"
+                          + (f", {line.get('restored')} rows of the date before restored" if line.get("replaced") else ""))
+                print(res.get("text") or "")
+                return 0
             st = api.json("GET", "/api/v1/admin/dataload")
             if a.json:
                 say_json(st)
@@ -123,12 +141,17 @@ def register(groups, srv, ctx: dict) -> None:
                 raise CliError(f"no failed file is named {a.file} (drishti.py dataload status lists them)", 1) from None
             raise
 
-    p = groups.add_parser("dataload", help="dataload status|run|retry: the data inbox (files dropped in <data>/dataload/inbox, loaded into the lake)",
+    p = groups.add_parser("dataload", help="dataload status|run|retry|undo: the data inbox (files dropped in <data>/dataload/inbox, loaded into the lake)",
                           description=__doc__.split("\n\n")[0], epilog=EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="dataload_cmd", metavar="ACTION", required=True)
     for act, what in (("status", "the files waiting, the last cycles, the failures with their reasons"), ("run", "Load now: a cycle at once"),
-                      ("retry", "a failed file and its .ready back into the inbox")):
+                      ("retry", "a failed file and its .ready back into the inbox"),
+                      ("undo", "undo a load by its id in the lake it wrote into: a dry run, or --yes")):
         c = sub.add_parser(act, parents=[srv], help=what, description=what, epilog=EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
         c.set_defaults(func=cmd)
         if act == "retry":
             c.add_argument("file", help="the failed file's name as it was dropped (trades-2026-11-03.jsonl.gz)")
+        if act == "undo":
+            c.add_argument("load_id", metavar="LOAD_ID", help="the load's id (a load report's loads, or a row's _load_id)")
+            c.add_argument("--yes", action="store_true", help="undo it (without: what would be undone, nothing changes)")
+            c.add_argument("--lake", metavar="NAME", help="the lake of config/lakes/ to undo in (default: the load's, from the ledger)")

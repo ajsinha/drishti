@@ -21,6 +21,19 @@
 
 ## 2.9.11.d (unreleased)
 
+- **Demo and real data never mix** (DATA_LAKE_GUIDE.md section 6; found on tutorial 45's real run, where the demo ComSwap `TRD 1000001`
+  still opened after `trade-endur` was pointed at risklake). The cause was the packs' sample documents: the `demo` connector serves
+  every kind and, on a live read, is asked before the (non-live) lake connectors. Now, once a kind's routed connector or any Delta or
+  Iceberg connector serving it names a lake other than `demo`, the samples no longer answer for that kind, by id or in a search
+  (`SourceRouter.ownLake`); a server whose connectors all read `demo` is unchanged, and the published results lakes (`var-official`,
+  `ccr-official`) do not count. Admin → Health marks a pack *DEGRADED* when its connectors read more than one lake
+  (`packs[].lakes`, `packs[].lakeWarning`: *trading's connectors read different lakes: demo (trade-calypso, trade-murex); risklake
+  (trade-endur)…*). Tutorial 45 keeps `union: true` in its `trade-endur.yaml` (a connector file replaces the pack's template whole).
+- **Undo a load finds the load's lake**: Admin → Inbox → Undo a load and `POST /api/v1/admin/dataload/undo` looked only in the inbox's
+  default lake (and passed its name as a folder), so a load into risklake answered *no row of load … in demo*. The server now finds the
+  load's `loaded` line in the ledger (the ledger records each load's ids, `loads`; older lines by `loaderRun`) and undoes it in the
+  route's lake; `"lake"` may name one; the answer names it (*would undo in risklake: 1 table date*). New: `drishti.py dataload undo
+  <load-id> [--yes] [--lake NAME]` through the server. Tutorial 45's undo step uses the UI and this command.
 - **The data lake and data load guide, one home for lakes and loading** ([DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md); the
   product owner, 2026-11-07: "there should be a dedicated document on Drishti data lake & data load with real examples"): what a lake is
   (one file per lake, each lake in its own folder `data/delta/<lake>/`), every key of the lake file with a worked `risklake.yaml` for

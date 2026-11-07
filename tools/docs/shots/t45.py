@@ -103,6 +103,7 @@ kinds: [trade]
 settings:
   lake: risklake                  # was: demo
   lake-tables: trading.trade_endur
+  union: true                     # as the pack's template: read with calypso and murex as one store
   source-name: trade-endur
 """
 RISK_STORE = """plugin: delta
@@ -361,7 +362,7 @@ def trade(c: Ctx):
 @shot("08-duplicate.jpg")
 def duplicate(c: Ctx):
     """Step 7: the trades dropped again with an empty .ready: a duplicate, not loaded again; then a load checked for undo with
-    lake undo --dry-run on risklake (the Inbox screen's Undo box works on the inbox's own lake, demo here, so not on risklake)."""
+    lake undo --dry-run on risklake's folder, and dataload undo through the server (the lake found in the ledger: risklake)."""
     trades = f"trade_endur.{DAY}.jsonl.gz"
     shutil.copy(work() / "data" / "tmp" / "drop" / trades, inbox() / trades)
     (inbox() / (trades + ".ready")).touch()
@@ -375,5 +376,6 @@ def duplicate(c: Ctx):
     load_id = m.group(0) if m else ""
     print("  load id:", load_id)
     cli("lake", "undo", load_id, "--lake", "data/delta/risklake", "--dry-run")
+    cli("dataload", "undo", load_id)
     page(c, "/admin/loads/inbox", 2500)
     at(c, "08-duplicate.jpg", "document.querySelector('[data-inbox-board]')", above=16)

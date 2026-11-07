@@ -297,6 +297,7 @@ kinds: [trade]
 settings:
   lake: risklake                  # was: demo
   lake-tables: trading.trade_endur
+  union: true                     # as the pack's template: read with calypso and murex as one store
   source-name: trade-endur
 ```
 
@@ -334,10 +335,13 @@ Now open a trade: `TRD 7000001 <GO>` shows the synthetic trade from risklake.
 
 ![TRD 7000001: the synthetic TRS from risklake, VALIDATED, BUY, JPY 444,000, with its desk, book, legal entity and trader linked](img/t45/07-trade.jpg)
 
-`trade-endur` now reads risklake only; a connector never reads two lakes at once. The other trade connectors still serve the demo's
-trades: `trade-calypso` and `trade-murex` still say `lake: demo`, and `trading-stream` is the Kafka feed. On the run behind these
-pictures the demo ComSwap `TRD 1000001` still opened after the restart, so do not take a demo trade's absence as the check: open one of
-your own, as above. For a server that shows only your data, point the other trade connectors at risklake too, or switch them off.
+`trade-endur` now reads risklake only; a connector never reads two lakes at once. Demo and real data never mix: once a kind's connector
+reads a lake other than `demo`, the packs' sample documents no longer answer for that kind, so the demo ComSwap `TRD 1000001` is not
+found any more (by id or in a search). `trade-calypso` and `trade-murex` still say `lake: demo`, though, so the trading pack now reads two
+lakes: Admin → Health shows the pack *DEGRADED* with *trading's connectors read different lakes: demo (trade-calypso, trade-murex);
+risklake (trade-endur)*. For a server that shows only your data, point them at risklake too (if it holds their tables), or switch them
+off. Keep `union: true` in `trade-endur.yaml` as the pack's template has it: a connector file replaces the template whole, and without it
+the derived trade pages (CTRD, PTRD) leave its trades out.
 
 **You should see** `lake check: 4 lakes, 0 errors`; after the restart, `trade-endur` *running* with `lake: risklake` in its settings;
 and `TRD 7000001` as the trade above: *Trade status VALIDATED*, *Product type TRS*, *BUY*, *JPY*, *Quantity 444,000*, *Trade date
@@ -370,9 +374,17 @@ Your id differs (it carries the time of your load). Run it again without `--dry-
 script). The hierarchy was appended (its `.ready` names no mode, and the inbox's `default-mode` is `append`), so its rows simply go; an
 undone replace restores the date as it was.
 
-**The UI.** Admin → Data loads → Inbox → **Undo a load** (paste the id, **Check**, type the id again, confirm) works on the inbox's own
-lake, `lake:` in `config/engines/dataload.yaml` (`demo` as shipped): for a load into risklake it answers *no row of load … in demo*.
-Use the command line above for risklake, or make risklake the inbox's lake (`DRISHTI_DATALOAD_LAKE=risklake`).
+**The UI.** Admin → Data loads → Inbox → **Undo a load**: paste the id, **Check** (nothing changes), then **Undo…**, type the id again,
+confirm. The server finds the load's lake in the ledger (the route's `lake`), so for this load it answers *would undo in risklake: 1
+table date* and lists *risk/risk-hierarchy 2026-11-06: 26 rows removed*. A load the inbox did not make (a `lake build`) is looked for in
+the inbox's own lake; use the command line for those.
+
+**The command line, through the server.** The same check and undo, the lake found the same way:
+
+```bash
+python3 tools/drishti.py dataload undo 20261107T101740.754-2543825.1            # a dry run: what would be undone, and in which lake
+python3 tools/drishti.py dataload undo 20261107T101740.754-2543825.1 --yes      # undo it
+```
 
 **You should see** **Duplicates today 1**: `trade_endur.2026-11-06.jsonl.gz`, *moved to the outbox, not loaded again*, *already loaded
 in run … (the same SHA-256)*, and **Last cycles** *duplicate · 1 file · already loaded*; then the dry run's one line, *26 rows … removed*.
