@@ -18,7 +18,7 @@ section 16; the format: tools/contracts.schema.json).
     python3 tools/contracts.py list                         every mnemonic, its contract, class and status
     python3 tools/contracts.py show NSET                    one contract (by mnemonic or kind)
     python3 tools/contracts.py check                        schema, one contract per mnemonic, each still matching its pack and data
-    python3 tools/contracts.py docs [--check]               write (or check) docs/contracts/packs/<pack>.md and its README.md
+    python3 tools/contracts.py docs [--check]               write (or check) docs/contracts/packs/<pack>.md and the index's A-Z block
     python3 tools/contracts.py bootstrap KIND [--write]     draft a contract from the pack and its data (--all: every missing one)
 
 The same commands are `drishti.py contract ...`. A draft is read from pack.yaml (mnemonics, graph, connectors and their layout), the
@@ -51,6 +51,9 @@ GENERATOR = "tools/contracts.py docs (drishti.py contract docs)"
 _spec = importlib.util.spec_from_file_location("drishti_pack_readme", ROOT / "tools" / "packgen" / "common" / "readme.py")
 R = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(R)
+_spec = importlib.util.spec_from_file_location("drishti_doc_examples", ROOT / "tools" / "docs" / "examples.py")
+EX = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(EX)
 
 MAX_TESTDATA = 2000       # test-data documents read per kind (the first day's files, then the last day's)
 MAX_DEPTH = 3             # nested levels described
@@ -1007,20 +1010,6 @@ def _v(x) -> str:
     return str(x)
 
 
-def sample_pages(c: dict, packs_dir: Path = PACKS, testdata: Path = TESTDATA) -> list[str]:
-    """The data-sample pages of a contract's kind (docs/contracts/samples/<name>.md, written by tools/testdata/sample_docs.py): one per
-    test-data folder of the kind, else one from the pack's samples for a kind a bank or a public source produces."""
-    folders = [d["folder"] for d in testdata_sets(c["pack"], c["kind"], testdata) if d.get("folder")]
-    if folders:
-        return folders
-    if planned_demo_data(c, testdata):
-        return [f"{c['pack']}/{c['kind']}"]
-    samples = Path(packs_dir) / c["pack"] / "samples"
-    if c.get("class") in ("input", "fundamental") and (any(samples.glob(f"{c['kind']}.jsonl")) or any(samples.glob(f"{c['kind']}.part-*.jsonl"))):
-        return [f"{c['pack']}/{c['kind']}"]
-    return []
-
-
 def planned_demo_data(c: dict, testdata: Path = TESTDATA) -> list[Path]:
     """A planned input's demo data: files a generator writes under data/testdata/<pack>/<kind>/ before the kind has a command. They are
     not in testdata.yaml (``lake demo`` leaves them out) but they give the contract its data-sample page."""
@@ -1036,7 +1025,7 @@ def _status(c: dict) -> str:
     return f"retiring in {c['retiring-in']}" if c.get("status") == "retiring" else "active"
 
 
-def _contract_md(c: dict, f: Path, pack_dir_rel: str) -> list[str]:
+def _contract_md(c: dict, f: Path, pack_dir_rel: str, packs_dir: Path = PACKS, testdata: Path = TESTDATA) -> list[str]:
     out = [f"## {c['mnemonic']}: {c['title']} (`{c['kind']}`)", "", c.get("description", ""), ""]
     st = c.get("storage") or {}
     rows = [["Contract", f"[{f.name}](../../../{pack_dir_rel}/contracts/{f.name}) · version {c['version']}"],
@@ -1052,10 +1041,6 @@ def _contract_md(c: dict, f: Path, pack_dir_rel: str) -> list[str]:
         rows.append(["Partitioned by", _v(st["partition-by"])])
     if st.get("test-data"):
         rows.append(["Test data", ", ".join(st["test-data"])])
-    worked = sample_pages(c)
-    if worked:
-        rows.append(["Worked example", " · ".join(f"[{name}](../samples/{name}.md)" for name in worked)
-                     + " (a real record, every field explained, for the production query; tools/testdata/sample_docs.py)"])
     out += R._table(["", ""], rows)
 
     def ftable(fs: list[dict]) -> list[str]:
@@ -1069,6 +1054,12 @@ def _contract_md(c: dict, f: Path, pack_dir_rel: str) -> list[str]:
     out += ["**Fields**", ""] + ftable(c.get("fields") or [])
     for path, fs in (c.get("nested") or {}).items():
         out += [f"**Nested `{path}`**", ""] + ftable(fs)
+    got = EX.example(c["pack"], c["kind"], testdata, packs_dir)
+    if got:
+        origin, rec = got
+        out += ["**Example**", "", f"The most complete record of `{origin}` (the newest business date of the committed test data, or the "
+                "pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.", "",
+                "```jsonc", EX.fmt(rec), "```", ""]
     if c.get("links"):
         out += ["**Links:** " + ", ".join(f"`{x['field']}` → `{x['kind']}`" for x in c["links"]) + ".", ""]
     if c.get("validation"):
@@ -1084,20 +1075,19 @@ def _contract_md(c: dict, f: Path, pack_dir_rel: str) -> list[str]:
     return out
 
 
-def render_pack(pack: str, items: list[tuple[dict, Path, dict | None]], plans: list[tuple[Path, dict]] = ()) -> str:
+def render_pack(pack: str, items: list[tuple[dict, Path, dict | None]], plans: list[tuple[Path, dict]] = (), packs_dir: Path = PACKS,
+                testdata: Path = TESTDATA) -> str:
     out = _md_header() + [f"# Data contracts of the {pack} pack", "",
-                          f"One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still "
-                          f"has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every "
-                          f"command is [packs/README.md](README.md). The pack's guide, "
-                          f"[config/packs/{pack}/guides/{pack}.md](../../../config/packs/{pack}/guides/{pack}.md), shows the same contracts "
-                          f"(generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each "
-                          f"kind's data comes from (*Data retrieval*).", ""]
+                          "One section per kind of the pack: what one record is, its key, how it is stored and dated, every field, one "
+                          "example record from the committed test data, the validation rules and what a person still has to confirm. "
+                          "This page is the one home of these facts: guides and tutorials link here. The rules every contract shares, "
+                          "and every kind from A to Z, are in [the contracts index](../README.md).", ""]
     out += R._table(["Command", "Kind", "Class", "Status", "Fields", "To review"], [[
         f"[{c['mnemonic']}](#{_anchor(c)})", f"`{c['kind']}`", c["class"], _status(c), str(len(c.get('fields') or [])), str(len(c.get('review') or []))]
         for _, _, c in items if c])
     for cmd, f, c in items:
         if c:
-            out += _contract_md(c, f, f"config/packs/{pack}")
+            out += _contract_md(c, f, f"config/packs/{pack}", packs_dir, testdata)
     if plans:
         out += ["## Planned inputs", "",
                 "Contracts of inputs designed before their data exists (`status: planned`): no command and no engine reads them yet, "
@@ -1107,7 +1097,7 @@ def render_pack(pack: str, items: list[tuple[dict, Path, dict | None]], plans: l
             f"[{c['mnemonic']}](#{_anchor(c)})", f"`{c['kind']}`", c["class"], _status(c), str(len(c.get('fields') or [])),
             str(len(c.get('review') or []))] for _, c in plans])
         for f, c in plans:
-            out += _contract_md(c, f, f"config/packs/{pack}")
+            out += _contract_md(c, f, f"config/packs/{pack}", packs_dir, testdata)
     return "\n".join(out).rstrip() + "\n"
 
 
@@ -1116,37 +1106,65 @@ def _anchor(c: dict) -> str:
     return re.sub(r"[^\w\- ]", "", f"{c['mnemonic']}: {c['title']} ({c['kind']})".lower()).replace(" ", "-")
 
 
+INDEX = ROOT / "docs" / "contracts" / "README.md"
+INDEX_BEGIN = "<!-- contracts-index:begin (generated by tools/contracts.py docs; edit the contracts, not this block) -->"
+INDEX_END = "<!-- contracts-index:end -->"
+GUIDE_DATA = ROOT / "tools" / "docs" / "guide_data.yaml"
+
+
+def needed_for() -> dict[str, list[str]]:
+    """kind -> the guides that read it (tools/docs/guide_data.yaml), as links from docs/contracts/."""
+    if not GUIDE_DATA.is_file():
+        return {}
+    out: dict[str, list[str]] = {}
+    for g in (_yaml(GUIDE_DATA) or {}).get("guides") or []:
+        link = f"[{g.get('name') or Path(g['file']).stem}](../{Path(g['file']).relative_to('docs').as_posix()})"
+        for ds in g.get("datasets") or []:
+            kind = ds.get("contract", ds.get("kind"))
+            if kind and link not in out.setdefault(kind, []):
+                out[kind].append(link)
+    return out
+
+
 def render_index(all_items: list[tuple[dict, Path, dict | None]], plans: list[tuple[Path, dict]] = ()) -> str:
+    """The generated block of the contracts index (docs/contracts/README.md): every kind from A to Z."""
     total = sum(len(c.get("review") or []) for _, _, c in all_items if c)
-    out = _md_header() + ["# Data contracts of every command", "",
-                          "Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack "
-                          "(`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of "
-                          "its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace "
-                          "the retiring kinds have their own contracts there.", "",
-                          f"{sum(1 for _, _, c in all_items if c)} contracts, {total} points still to review. Check them with "
-                          "`drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.", ""]
+    need = needed_for()
+    out = [f"{sum(1 for _, _, c in all_items if c)} contracts, {total} points still to review. Check them with "
+           "`drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.", ""]
     rows = []
     for cmd, f, c in all_items:
         if not c:
-            rows.append([f"`{cmd['code']}`", f"`{cmd['kind']}`", cmd["pack"], "—", "no contract", "", ""])
+            rows.append((cmd["kind"], [f"`{cmd['kind']}`", f"`{cmd['code']}`", cmd["pack"], "—", "no contract", ""]))
             continue
-        rows.append([f"`{c['mnemonic']}`", f"`{c['kind']}`", f"[{c['pack']}]({c['pack']}.md#{_anchor(c)})", c["class"], _status(c),
-                     c.get("replaced-by", "").replace("docs/contracts/", "") or "", str(len(c.get("review") or []))])
+        status = _status(c) + (f", replaced by {c['replaced-by'].replace('docs/contracts/', '')}" if c.get("replaced-by") else "")
+        rows.append((c["kind"], [f"`{c['kind']}`", f"`{c['mnemonic']}`", f"[{c['pack']}](packs/{c['pack']}.md#{_anchor(c)})", c["class"],
+                                 status, ", ".join(need.get(c["kind"], [])) or "—"]))
     for f, c in plans:
-        rows.append([f"`{c['mnemonic']}` (proposed)", f"`{c['kind']}`", f"[{c['pack']}]({c['pack']}.md#{_anchor(c)})", c["class"],
-                     _status(c), "", str(len(c.get("review") or []))])
-    out += R._table(["Command", "Kind", "Pack", "Class", "Status", "Replaced by", "To review"], rows)
+        rows.append((c["kind"], [f"`{c['kind']}`", f"`{c['mnemonic']}` (proposed)", f"[{c['pack']}](packs/{c['pack']}.md#{_anchor(c)})",
+                                 c["class"], _status(c), ", ".join(need.get(c["kind"], [])) or "—"]))
+    out += R._table(["Kind", "Command", "Pack", "Class", "Status", "Needed for"], [r for _, r in sorted(rows, key=lambda x: x[0])])
     return "\n".join(out).rstrip() + "\n"
 
 
-def render_docs(packs_dir: Path = PACKS) -> dict[Path, str]:
-    """docs/contracts/packs/<pack>.md for each pack with commands (its planned inputs after them), and the index."""
+def splice_index(text: str, block: str) -> str:
+    """The index page with its generated block replaced (appended between the markers when it has none)."""
+    if INDEX_BEGIN in text and INDEX_END in text:
+        head, rest = text.split(INDEX_BEGIN, 1)
+        return head + INDEX_BEGIN + "\n" + block + INDEX_END + rest.split(INDEX_END, 1)[1]
+    return text.rstrip() + "\n\n" + INDEX_BEGIN + "\n" + block + INDEX_END + "\n"
+
+
+def render_docs(packs_dir: Path = PACKS, testdata: Path = TESTDATA) -> dict[Path, str]:
+    """docs/contracts/packs/<pack>.md for each pack with commands (its planned inputs after them), and the index page with its
+    generated block (docs/contracts/README.md)."""
     items, plans = contracts(packs_dir), planned(packs_dir)
     out = {}
     for pack in sorted({cmd["pack"] for cmd, _, _ in items} | {c.get("pack") for _, c in plans}):
         out[DOCS / f"{pack}.md"] = render_pack(pack, [i for i in items if i[0]["pack"] == pack],
-                                               [x for x in plans if x[1].get("pack") == pack])
-    out[DOCS / "README.md"] = render_index(items, plans)
+                                               [x for x in plans if x[1].get("pack") == pack], packs_dir, testdata)
+    index = INDEX.read_text(encoding="utf-8") if INDEX.is_file() else "# Data contracts\n"
+    out[INDEX] = splice_index(index, render_index(items, plans))
     return out
 
 
@@ -1185,7 +1203,7 @@ def cmd_check(a) -> int:
 
 
 def cmd_docs(a) -> int:
-    pages = render_docs(a.packs)
+    pages = render_docs(a.packs, a.testdata)
     stale = [p for p, text in pages.items() if not p.is_file() or p.read_text(encoding="utf-8") != text]
     extra = [p for p in DOCS.glob("*.md") if p not in pages] if DOCS.is_dir() else []
     if a.check:
@@ -1238,7 +1256,7 @@ def build_parser(ap: argparse.ArgumentParser | None = None, parents=()) -> argpa
                        parents=[common, *parents])
     p.add_argument("--no-data", action="store_true", help="skip reading the samples and test data (schema and pack only)")
     p.set_defaults(run=cmd_check)
-    p = sub.add_parser("docs", help="write docs/contracts/packs/<pack>.md and its README.md (--check: fail when they are stale)", parents=[common, *parents])
+    p = sub.add_parser("docs", help="write docs/contracts/packs/<pack>.md and the A-Z block of docs/contracts/README.md (--check: fail when stale)", parents=[common, *parents])
     p.add_argument("--check", action="store_true")
     p.set_defaults(run=cmd_docs)
     p = sub.add_parser("bootstrap", help="draft a contract from the pack and its data (prints it; --write saves it)", parents=[common, *parents])
