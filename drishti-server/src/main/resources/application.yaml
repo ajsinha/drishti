@@ -351,6 +351,7 @@ drishti:
       - /api/v1/pivot/rows
       - /api/v1/pivot/export
       - /api/v1/pivot/inline             # rows the caller already holds (a chart of a table's shown rows), aggregated by the engine
+      - /api/v1/explain                  # Explain any number with a body (a pivot cell's view): computed as the caller, written nowhere
       - /api/v1/tables/editor/check      # the table and model editors (TABLES_GUIDE.md section 11): checks, previews and proposals that store nothing
       - /api/v1/tables/editor/statement
       - /api/v1/tables/editor/preview
