@@ -4,7 +4,7 @@
   PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
 -->
 
-# The access model: licence, module, lens, permission
+# The access model: licence, module, lens, function, permission
 
 *Internal design, decided with the product owner on 2026-11-07. Status: design; the mechanism is built with the domain-module split in
 the e+f+g release train (v2.9.11.g); the signed licence, the permission rules and the database store come with trust, RBAC and security
@@ -21,11 +21,12 @@ end to end: backend, data, screens, JavaScript, Help.
 | **Licence** | Which modules may this customer run, within which limits? | the customer's licence |
 | **Module** | Does this capability exist here? | installed ∧ licensed ∧ enabled by an administrator |
 | **Lens** | Which experience does a person work in? (Risk, Trading, Market, World, later Public sector, AML) | its definition; offered only when every module it needs is on |
+| **Function** | Which functions (command words such as VAR, TRD, EQV, EXP) may be used? | each belongs to one module; lenses bundle functions; roles are granted or denied single functions on top (as Bloomberg entitles functions) |
 | **Permission** | Which lenses may this person open, and what may they do inside? | their roles and attributes; row rules and masks inside |
 
 ```
-licence  →  modules on  →  lenses offered  →  lenses this person may open  →  actions, rows and columns inside
-(customer)  (installation)  (needs its modules)  (role)                          (role + row rules + masks)
+licence  →  modules on  →  lenses offered  →  functions this person may use  →  actions, rows and columns inside
+(customer)  (installation)  (needs its modules)  (lens bundles + grants/denials)  (role + row rules + masks)
 ```
 
 A module sells; a lens serves. Permissions are granted per lens and action, never per screen.
@@ -40,6 +41,7 @@ A module sells; a lens serves. Permissions are granted per lens and action, neve
 | Every API call | module on? lens open to this person? action allowed? | 404 "module not licensed" for a module that is off; 403 with the reason for a person not entitled; audited |
 | Data | which packs, connectors and lake tables to load | an off module's packs and connectors are not loaded |
 | The console | routes, menus, the sitemap, the Build home, search, commands, Help | entries absent; direct links refused |
+| The command line, type-ahead, keys, shared views | function allowed for this person? | the function is invisible; typed anyway, it answers "VRES is not available to you: ask your administrator", audited |
 | JavaScript and assets | which libraries may be served (e.g. drishti-risk) | not served to an installation or person without the module |
 | The AI assistant, exports, embeds, API tokens | the same questions | tools, exports and embeds absent; tokens never exceed their owner |
 
@@ -51,8 +53,9 @@ The console and the browser never ask the registry directly: they ask the server
 |---|---|
 | **Module** | id, domain, version, dependencies on other modules, what it contributes (compute, services, packs, screens, JavaScript libraries, Help, AI tools), the licence feature that unlocks it |
 | **Licence** | customer, modules allowed, limits (users, nodes, data volume, per module or per installation), valid from and to |
-| **Lens** | name, the modules it needs, its menus, home and Help |
-| **Role** | lenses it may open; actions inside each (view, edit, approve, see raw rows, administer) |
+| **Lens** | name, the modules it needs, the functions it bundles, its menus, home and Help |
+| **Function** | the command word (VAR, TRD, EQV ...), its module, the APIs and screens behind it, its Help page; the administrator's on/off switch (the mnemonic switch, folded in) |
+| **Role** | lenses it may open; single functions granted or denied on top of the lenses' bundles; actions inside (view, edit, approve, see raw rows, administer) |
 | **Assignment** | a person or group → roles, plus the attributes row rules use (desk, legal entity, ...) |
 
 ## 4. Two stores behind one interface
@@ -80,6 +83,7 @@ Every answer is cacheable and invalidated on change, so asking stays cheap when 
 - **Module off = gone everywhere**, per module: no bean, engine, job, API, pack, connector, route, menu entry, search hit, command, Help
   page, JavaScript asset, AI tool, export or embed (the engine switches' existing "engine off everywhere" test, generalised).
 - **A lens whose modules are off does not exist**: no menu, no home, no link.
+- **Function off = gone everywhere**, per function: command line, type-ahead, search, menus, keys, the APIs behind it, its Help page, AI tools, links, embeds and tokens.
 - **Only drishti-registry reads the access model** (an architecture test, as for the domain boundaries).
 - **Both stores answer the same** (one suite, run against each).
 - **Session isolation**: nothing per person in shared state.
@@ -88,8 +92,8 @@ Every answer is cacheable and invalidated on change, so asking stays cheap when 
 
 | Release | Built |
 |---|---|
-| v2.9.11.g (the e+f+g train, with the domain-module split) | drishti-registry with the embedded registry and the YAML store; module manifests; lenses declaring their modules; the administrator's module switch; editions folded into modules and lenses; the guarantees of section 6 |
-| 2.9.11.i (after the security discussion) | the signed licence (offline verification, expiry and grace, limits, audit); permissions per lens and action; data licensing; the database store; the standalone service when wanted |
+| v2.9.11.g (the e+f+g train, with the domain-module split) | drishti-registry with the embedded registry and the YAML store; module manifests declaring their functions; lenses declaring their modules and function bundles; the mnemonic switches folded into the registry (installation-level function on/off); the administrator's module switch; editions folded into modules and lenses; the guarantees of section 6 |
+| 2.9.11.i (after the security discussion) | the signed licence (offline verification, expiry and grace, limits, audit); permissions per lens, function (grants and denials) and action; data licensing; the database store; the standalone service when wanted |
 
 ## 8. Related
 
