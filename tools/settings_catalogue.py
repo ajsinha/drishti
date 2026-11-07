@@ -22,7 +22,7 @@ environment variable, applies to, meaning, restart or live, since):
 * the connector settings catalogue (``plugin-settings.yaml``) and the shared ``tls.*`` and ``proxy.*`` specs of drishti-api;
 * the commented files under ``config/`` (the content store, BI runs, write-back, compute, Drishti*net, the UI kit, the editions,
   the AI provider and MCP server files);
-* the files that are content rather than settings (``pack.yaml``, ``menus.yaml``, ``help.yaml``, ...), from their schemas in
+* the files that are content rather than settings (``pack.yaml``, ``sitemap.yaml``, ``help.yaml``, ...), from their schemas in
   ``tools/settings_schemas.yaml``, checked against the keys the shipped files really use;
 * the environment variable index: every ``${NAME:default}`` of every source and every variable the code reads.
 

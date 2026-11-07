@@ -471,6 +471,8 @@ def create_app(settings: Settings) -> FastAPI:
 
     templates.env.globals["top_bar_menus"] = _menus.top_bar
     templates.env.globals["footer_links"] = _menus.footer
+    templates.env.globals["admin_tabs"] = _menus.admin_tabs        # the Admin pages' tab strip: the sitemap's admin menu
+    templates.env.globals["bi_rail"] = _menus.bi_rail              # the BI rail: the sitemap's bi menu
     templates.env.globals["command_placeholder"] = _menus.placeholder
     templates.env.globals["lens_links"] = _menus.lens_links
     templates.env.globals["lens_menu"] = _menus.lens_menu          # the subject menus folded into one on a phone (LX1 option C)

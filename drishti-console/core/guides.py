@@ -125,17 +125,24 @@ class Guide:
 class Library:
     """Loads the catalogue once; renders and searches guides on demand. Thread-safe for reads.
 
-    ``categories`` are the help centre's sections (help.yaml ``sections:``), in order: ``{id, name, icon, blurb, roles, groups, guides}``,
+    ``categories`` are the help centre's sections (the sitemap's ``help-sections:``, their pages from help.yaml ``sections:``), in order: ``{id, name, icon, blurb, roles, groups, guides}``,
     each group ``{title, words, guides}`` and ``guides`` every page of the section in order; a page's ``category`` is its section's id."""
 
-    def __init__(self, console_dir: Path, catalogue: Path, docs_dir: Path, packs: list | None = None):
+    def __init__(self, console_dir: Path, catalogue: Path, docs_dir: Path, packs: list | None = None, sections: list | None = None):
+        """``sections``: the sections' heads in order ({id, name, icon, blurb, roles}; default: the sitemap's help-sections:); the
+        catalogue lists each section's groups of pages by its id."""
         self.docs_dir = docs_dir
         data = yaml.safe_load(catalogue.read_text(encoding="utf-8"))
+        if sections is None:
+            from core.menus import help_sections
+            sections = help_sections(console_dir)
+        pages = {str(sec.get("id")): sec for sec in data.get("sections") or []}
         self.categories = []
         self.guides: dict[str, Guide] = {}
         self.aliases = {str(k): str(v) for k, v in (data.get("aliases") or {}).items()}
         self.documents = {str(k): str(v) for k, v in (data.get("documents") or {}).items()}
-        for sec in data.get("sections", []):
+        for head in sections:
+            sec = {**pages.get(str(head["id"]), {}), **head}
             groups = []
             for grp in sec.get("groups", []):
                 items = []

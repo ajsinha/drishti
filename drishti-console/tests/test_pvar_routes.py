@@ -50,7 +50,7 @@ def test_the_explorer_has_a_parametric_toggle_and_no_views_of_its_own(client):
 
 
 def test_no_menu_item_names_parametric_var(client):
-    menus = (pathlib.Path(__file__).resolve().parents[1] / "config" / "menus.yaml").read_text()
+    menus = (pathlib.Path(__file__).resolve().parents[1] / "config" / "sitemap.yaml").read_text()
     assert "PVAR" not in menus and "Parametric VaR" not in menus
 
 

@@ -13,16 +13,10 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{% extends "base.html" %}
-{% block title %}My designs · {{ PRODUCT }}{% endblock %}
-{% block screen %}build{% endblock %}
-{% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_build.css?v={{ ASSET_V }}">{% endblock %}
-{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
-{% block content %}
-<div class="adm bs" data-designs>
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/help/rachana-reference#screen-designer-and-the-build-workbench">Screen designer guide</a></nav>
-  <h1>My designs</h1>
+{# The Build home's My drafts: the person's screen designs with their own actions (rename, duplicate, delete; drishti_build-home.js).
+   Context: designs, limits, design_error. #}
+<div class="bs" data-designs>
+  <h2 class="bh-sub">Screen designs</h2>
   <p class="text-muted-d">A design is your work on one screen: the data you brought, the Sutra, notes. Only you can open yours. They are kept on
     the server{% if limits %}: up to {{ limits.maxPerUser }} named designs (and {{ limits.maxScratch }} scratch ones; the oldest scratch design makes room for a new one), {{ limits.maxSamples }} samples and {{ limits.maxMb }} MB each; an unnamed design is
     forgotten after {{ limits.scratchHours }} hours, a named one after {{ limits.namedDays }} days untouched{% endif %}.</p>
@@ -30,10 +24,10 @@
     <a class="btn-pill btn-ghost" href="/build/new#examples">Examples</a>
     {% if designs | selectattr('scratch') | list %}<button type="button" class="btn-pill btn-ghost" data-delete-scratch>Delete scratch designs</button>{% endif %}</p>
   <div class="bs-status" role="status" aria-live="polite" data-status></div>
-  {% if error %}<p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> <span class="mono">{{ drs_message(error.code, error.detail) }}</span></p>
+  {% if design_error %}<p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> <span class="mono">{{ drs_message(design_error.code, design_error.detail) }}</span></p>
   {% elif not designs %}<p class="text-muted-d" data-empty>Nothing here yet. <a class="lnk" href="/build/new">Start a new screen</a>.</p>
   {% else %}
-  <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl" aria-label="My designs">
+  <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl" aria-label="Screen designs">
     <thead><tr><th>Name</th><th>Kind</th><th>Samples</th><th>Sutra</th><th>Last touched</th><th>Expires</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
     <tbody>{% for d in designs %}
       <tr data-design="{{ d.id }}" data-name="{{ d.name }}" data-scratch="{{ 1 if d.scratch else 0 }}">
@@ -57,5 +51,3 @@
     </tbody></table></div></div></section>
   {% endif %}
 </div>
-{% endblock %}
-{% block scripts %}<script src="/static/js/drishti_build-designs.js?v={{ ASSET_V }}"></script>{% endblock %}

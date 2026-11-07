@@ -87,8 +87,8 @@ def test_new_page_offers_the_five_ways_to_bring_data_and_the_start_choices(app_c
 def test_the_build_menu_has_create_my_designs_and_examples(app_client):
     page = app_client.get("/build").text
     assert 'href="/build/new"' in page and 'href="/build"' in page and 'href="/build/new#examples"' in page
-    assert "New screen" in page and "My designs" in page and "Examples" in page
-    assert 'href="/build/reviews"' in page and "Govern" in page and "Rachana reference" in page and "Screen designer guide" in page
+    assert "New screen" in page and "Build home" in page and "Examples" in page
+    assert 'href="/build/reviews"' in page and "Govern" in page and "Screen language reference" in page and "Screen designer guide" in page
     assert 'href="/studio"' not in page and "Sutra Studio" not in page                    # no separate Studio entry any more
 
 
@@ -348,7 +348,7 @@ def test_studio_and_its_examples_keep_working(app_client):
     loc, page = _land(app_client, "/studio?example=all-panels-showcase")
     assert "sutra: all-panels-showcase" in page and "all-panels-showcase.json" in page and loc.endswith("?tab=split")
     assert "all-panels-showcase" in app_client.get("/help/examples").text and 'data-example-copy="all-panels-showcase"' in app_client.get("/help/examples").text
-    assert "sutra: all-panels-showcase" in _land(app_client, "/studio")[1]            # ui.studio_example: the showcase is the default
+    assert app_client.get("/studio", follow_redirects=False).headers["location"] == "/build"   # Studio's old home is the Build home
 
 
 # ---- examples open as Design copies ----------------------------------------------------------------------------------------
@@ -396,7 +396,7 @@ def test_the_showcase_copy_previews_all_twenty_three_panels(app_client):
 def test_a_get_to_studio_creates_nothing_and_only_the_confirmed_post_does(app_client, backend):
     """S2-04: opening an address (a cross-site link, a bookmark) asks first; only the button's POST starts the design."""
     before = len(backend.design_rows)
-    for url in ("/studio", "/studio?example=tree-table", "/studio?sutra=irs-vanilla@3", "/studio?kind=curve&id=USD-SOFR"):
+    for url in ("/studio?example=tree-table", "/studio?sutra=irs-vanilla@3", "/studio?kind=curve&id=USD-SOFR"):
         r = app_client.get(url, follow_redirects=False)
         assert r.status_code == 200 and "data-start-form" in r.text and 'method="post"' in r.text, url
     assert len(backend.design_rows) == before

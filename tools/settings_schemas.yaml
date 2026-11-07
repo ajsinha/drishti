@@ -18,17 +18,21 @@
 # meaning, and where it differs from the schema's own: change (restart or live), applies. --check fails when a shipped file uses a key
 # its schema does not list. `maps` names the mappings whose keys are names (each becomes <name>).
 schemas:
-  menus:
+  sitemap:
     area: console-files
-    title: "`menus.yaml`: the top bar's menus and the footer"
-    file: drishti-console/config/menus.yaml
+    title: "`sitemap.yaml`: the one home of navigation (the top bar, the Admin tabs, the BI rail, Help's sections, the footer)"
+    file: drishti-console/config/sitemap.yaml
     applies: console
     change: live
+    maps: [in-context]
     keys:
       - { key: menus, type: list, default: shipped, meaning: "The top bar's menus, in order (core/menus.py draws them; an edition's menus.<menu-id> lists the items it keeps)" }
       - { key: "menus[].id", type: string, meaning: "The menu's id (what an edition's menus.<id> names)" }
       - { key: "menus[].label", type: string, meaning: "Its name in the top bar" }
       - { key: "menus[].icon", type: string, meaning: "Its Bootstrap icon name" }
+      - { key: "menus[].domain", type: string, default: core, meaning: "The domain module the menu belongs to (banking, economy; core when not said): the domain split moves its entries" }
+      - { key: "menus[].also", type: list, default: "[]", meaning: "Items listed in other menus that this menu's strip also draws, by id (the Admin tabs' BI settings and My account, the BI rail's Pivot and Build home), without listing them twice" }
+      - { key: "menus[].personal", type: boolean, default: "false", meaning: "The person's own menu (My account): never drawn as a top menu" }
       - { key: "menus[].subject", type: boolean, default: "false", meaning: "A lens's subject menu (Curves, Economies ...): drawn only where an edition's menus.top names it" }
       - { key: "menus[].gather", type: list, default: none, meaning: "A menu that gathers the columns of other menus by id (the Trading lens's one Markets menu gathers Curves, Volatility, FX and Credit), each drawn as its own column" }
       - { key: "menus[].engines", type: boolean, default: "false", meaning: "The Engines menu: a column per compute engine, drawn for the engines running in the cluster that the person's role opens" }
@@ -39,6 +43,7 @@ schemas:
       - { key: "menus[].admin-link.requires", type: list, default: "[]", meaning: "Conditions that must all hold for it to show (as an item's requires)" }
       - { key: "menus[].columns", type: list, meaning: "The menu's columns, each a title and its items" }
       - { key: "menus[].columns[].title", type: string, meaning: "A column's heading" }
+      - { key: "menus[].columns[].domain", type: string, default: "the menu's", meaning: "The domain module of the column's items" }
       - { key: "menus[].columns[].engine", type: string, default: none, meaning: "The Engines menu: the column's engine (its id in config/engines.yaml); drawn only while it runs on a server of the cluster" }
       - { key: "menus[].columns[].word", type: string, default: "", meaning: "The Engines menu: the engine's command word, shown in the column's head" }
       - { key: "menus[].columns[].opens", type: list, default: "[]", meaning: "The Engines menu: who opens the engine, any of role:<name> or pack:<name> (a pack assigned to the person); administrators always; none: everyone. The engine's command words follow it (left out of the type-ahead, refused when typed); Help does not" }
@@ -51,12 +56,24 @@ schemas:
       - { key: "menus[].columns[].items[].label", type: string, meaning: "Its name ({product} and {tutorials} filled in)" }
       - { key: "menus[].columns[].items[].desc", type: string, meaning: "The line under it" }
       - { key: "menus[].columns[].items[].match", type: string, default: "", meaning: "The path prefix that marks it current; blank: the href only" }
+      - { key: "menus[].columns[].items[].tab", type: string, default: "its id", meaning: "The Admin tab it marks current (the page's tab)" }
+      - { key: "menus[].columns[].items[].rail", type: boolean, default: "true", meaning: "The BI menu: false keeps the item out of the BI rail (the top bar's menu only)" }
+      - { key: "menus[].columns[].items[].domain", type: string, default: "the column's", meaning: "The domain module of the item" }
       - { key: "menus[].columns[].items[].requires", type: list, default: "[]", meaning: "Conditions that must all hold for it to show: admin, bi, bi-admin, designer, edition, feature:<name>, word:<WORD>, admin-page:<id>, pack:<name>, cmd:<WORD>, route:<path>" }
-      - { key: footer, type: list, default: shipped, meaning: "The footer's links: {id, href, icon, label} each" }
-      - { key: "footer[].id", type: string, meaning: "The link's id" }
-      - { key: "footer[].href", type: string, meaning: "Where it goes" }
-      - { key: "footer[].icon", type: string, meaning: "Its icon" }
-      - { key: "footer[].label", type: string, meaning: "Its text" }
+      - { key: footer, type: list, default: shipped, meaning: "The footer's links: {id, item, label} each, each an item of the menus" }
+      - { key: "footer[].id", type: string, meaning: "The link's id (what an edition's menus.footer names)" }
+      - { key: "footer[].item", type: string, meaning: "The menu item it links to, by id (its address and icon)" }
+      - { key: "footer[].label", type: string, default: "the item's", meaning: "Its shorter text" }
+      - { key: help-sections, type: list, default: shipped, meaning: "Help's sections, in display order: a tile each on the help centre's front door, opening /help/section/<id>; their pages are in help.yaml" }
+      - { key: "help-sections[].id", type: string, meaning: "The section's id (help.yaml's sections[].id; an edition's help.categories names it)" }
+      - { key: "help-sections[].name", type: string, meaning: "Its name" }
+      - { key: "help-sections[].icon", type: string, meaning: "Its icon" }
+      - { key: "help-sections[].blurb", type: string, meaning: "Its one line on the tile" }
+      - { key: "help-sections[].roles", type: list, default: "[]", meaning: "Who sees the section: none, everyone; else administrators and holders of these roles (Internal: administrators)" }
+      - { key: "help-sections[].domain", type: string, default: core, meaning: "The domain module the section belongs to" }
+      - { key: in-context, type: map, default: shipped, meaning: "Pages no menu lists because they open from another page: the address and where it is reached from (the sitemap guard holds each to a listed page)" }
+      - { key: "in-context.<name>", type: string, meaning: "One address and the page it is reached from" }
+      - { key: not-pages, type: list, default: shipped, meaning: "Addresses the console answers that are not pages (data for a page's script, redirects of old addresses, sign-in, health, files)" }
       - { key: placeholder, type: string, default: shipped, meaning: "The command line's placeholder (ui.placeholder or an edition's menus.placeholder wins)" }
   help:
     area: console-files
@@ -74,12 +91,8 @@ schemas:
       - { key: documents, type: map, default: shipped, meaning: "An unlisted document's section by its top folder under docs/ (\"\" the top-level *.md, default any other)" }
       - { key: "documents.<name>", type: string, meaning: "One folder and its section's id" }
       - { key: pack-group, type: string, default: "From the packs", meaning: "The group a pack's own guides join, at the end of their section" }
-      - { key: sections, type: list, default: shipped, meaning: "The help centre's sections, in display order: a tile each on the front door, opening /help/section/<id>" }
-      - { key: "sections[].id", type: string, meaning: "The section's id (an edition's help.categories names it)" }
-      - { key: "sections[].name", type: string, meaning: "Its name" }
-      - { key: "sections[].icon", type: string, meaning: "Its icon" }
-      - { key: "sections[].blurb", type: string, meaning: "Its one line on the tile" }
-      - { key: "sections[].roles", type: list, default: "[]", meaning: "Who sees the section: none, everyone; else administrators and holders of these roles (Internal: [admin])" }
+      - { key: sections, type: list, default: shipped, meaning: "The pages of the help centre's sections, by section id (the sections' order and names: sitemap.yaml help-sections:): a tile each on the front door, opening /help/section/<id>" }
+      - { key: "sections[].id", type: string, meaning: "The section's id: its name, icon, line and who sees it are the sitemap's (sitemap.yaml help-sections:)" }
       - { key: "sections[].groups", type: list, meaning: "Its groups of pages, in order" }
       - { key: "sections[].groups[].title", type: string, meaning: "A group's heading" }
       - { key: "sections[].groups[].words", type: list, default: "[]", meaning: "Command words shown beside the heading" }

@@ -14,10 +14,28 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Build workbench, My designs (/build): rename, duplicate and delete, each one request to the console, which asks the server.
- * Times are shown in the viewer's own zone. All names go in as text nodes. */
+/* The Build home (/build): every time in the viewer's own zone; + New closes on Escape or a click outside it; the search box is focused
+ * by "/"; My drafts' screen designs: rename, duplicate and delete, each one request to the console, which asks the server. All names go
+ * in as text nodes. */
 (function () {
   'use strict';
+  var home = document.querySelector('[data-build-home]');
+  if (home) {
+    home.querySelectorAll('time[data-ms]').forEach(function (t) {
+      var ms = parseInt(t.dataset.ms, 10);
+      if (ms) { var d = new Date(ms); t.dateTime = d.toISOString(); var p = function (n) { return String(n).padStart(2, '0'); }; t.textContent = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
+    });
+    var menu = home.querySelector('[data-new]');
+    if (menu) {
+      document.addEventListener('click', function (e) { if (menu.open && !menu.contains(e.target)) { menu.open = false; } });
+      menu.addEventListener('keydown', function (e) { if (e.key === 'Escape') { menu.open = false; menu.querySelector('summary').focus(); } });
+    }
+    var search = home.querySelector('[data-search]');
+    document.addEventListener('keydown', function (e) {
+      var t = e.target, typing = t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+      if (e.key === '/' && !typing && search) { e.preventDefault(); search.focus(); }
+    });
+  }
   var root = document.querySelector('[data-designs]');
   if (!root) { return; }
   var status = root.querySelector('[data-status]');
@@ -27,11 +45,6 @@
       .then(function (r) { return (r.status === 204 ? Promise.resolve({}) : r.json()).then(function (j) { return { ok: r.ok, body: j, status: r.status }; }); });
   }
   function why(r) { return window.Drishti.drsMessage({ code: r.body.code || ('HTTP ' + r.status), detail: r.body.detail }, 'The request failed'); }
-
-  root.querySelectorAll('time[data-ms]').forEach(function (t) {
-    var ms = parseInt(t.dataset.ms, 10);
-    if (ms) { var d = new Date(ms); t.dateTime = d.toISOString(); var p = function (n) { return String(n).padStart(2, '0'); }; t.textContent = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
-  });
 
   var bulk = root.querySelector('[data-delete-scratch]');
   if (bulk) {

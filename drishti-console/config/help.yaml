@@ -12,16 +12,18 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The help centre catalogue (2.9.11.a, mock-up help-hub/A): the main page is a search box, the most used pages and a tile per section;
+# The help centre's pages (2.9.11.a, mock-up help-hub/A): the main page is a search box, the most used pages and a tile per section;
 # a tile opens the section's own page (/help/section/<id>) with its pages grouped, every guide beside its tutorial and a search of that
-# section only. Every page belongs to exactly one section (tests/test_help.py). Order here is display order.
+# section only. Every page belongs to exactly one section (tests/test_help.py). The sections themselves (their order, name, icon, line,
+# roles, domain and lenses) are the sitemap's (config/sitemap.yaml help-sections:, the one home of navigation); here each section names
+# its id and its groups of pages.
 # A page is a console guide (web/guides/<slug>.md) or, with `doc:`, a repository document rendered as-is (so the in-app reference is the
 # repository's docs). Its keys: slug, doc, title, icon, kind (guide, tutorial, knowledge), summary, packs, roles, engine and pair:
 #   engine: the compute engine the page is about (config/engines.yaml): left out while the engine runs on no server (an administrator
 #           sees it greyed instead); Help is documentation, open to anyone who can open Help, whatever the Engines menu's opens: say;
 #   pair:   the tutorial drawn beside a guide on its row (the tutorial is a page of the same group);
 #   roles:  only people with one of these roles (or an administrator) see the page: hidden from the sections and search, 404 at its address.
-# A section with roles: shows only to those people (Internal: administrators). A group's words: the command words shown beside its title.
+# A group's words: the command words shown beside its title.
 # Every other document under docs/ (and the top-level *.md) is reachable unlisted at a slug made from its path
 # (docs/architecture/adr/016-one-console-many-servers.md -> /help/docs-architecture-adr-016-one-console-many-servers), in the section
 # documents: names for its top folder, so a link between documents always opens in the help centre (DOC-18; tests/test_help_links.py).
@@ -47,9 +49,6 @@ pack-group: From the packs
 
 sections:
   - id: get-started
-    name: Get started
-    icon: flag
-    blurb: "Install, the first tour, sharing, and the tutorials"
     groups:
       - title: "Begin here"
         guides:
@@ -58,9 +57,6 @@ sections:
           - { slug: sharing-and-discussion, title: Sharing and collaboration, icon: chat-square-text, summary: "Send a view with a note, read your inbox, discuss a number: what travels is your words and a link, and everyone sees the view with their own permissions." }
           - { slug: tutorials, doc: tutorials/README.md, title: Tutorials, icon: mortarboard, kind: tutorial, summary: "{tutorials} hands-on tutorials with real screenshots, one worked example each: from your first 15 minutes to BI, AI, embedding, running it in production and a cluster of three servers." }
   - id: risk
-    name: Risk measures
-    icon: shield-check
-    blurb: "VaR, regulatory VaR, exposure, FRTB-SA and SIMM: a guide and a tutorial each"
     groups:
       - title: "Value at risk"
         words: [VAR]
@@ -82,9 +78,6 @@ sections:
           - { slug: docs-guides-frtb-sa-guide, engine: frtb-sa, pair: docs-tutorials-30-frtb-sa-from-the-cases-to-a-desk, doc: guides/FRTB_SA_GUIDE.md, title: "FRTB-SA guide", icon: bank2, summary: "Market-risk capital by the FRTB standardised approach for any scope, computed from the positions' sensitivities: the sensitivities-based method (delta, vega and curvature per risk class, the three correlation scenarios, the binding one, the alternative specification), the default risk charge and the residual risk add-on with worked numbers; the capital screen (FRSA), the playground (PLAY FRTB) with every method choice a switch, comparisons explained by step, recipes replayed to the cent and the workbook of live formulas; the API, the CLI, the settings, the refusal codes and the data contract in short." }
           - { slug: docs-tutorials-30-frtb-sa-from-the-cases-to-a-desk, engine: frtb-sa, doc: tutorials/30-frtb-sa-from-the-cases-to-a-desk.md, title: "FRTB-SA tutorial: from the hand-built cases to a desk", icon: mortarboard, kind: tutorial, summary: "Six hands-on steps, each in the UI, on the command line and in YAML: the hand-built cases' capital and a bucket checked by hand, the three scenarios, a switch flipped and explained by step, the workbook recomputed with a switch flipped in Config, a recipe saved and replayed to the cent, the rates desk of the demo data with its contributions." }
   - id: analytics
-    name: Analytics and BI
-    icon: bar-chart-line
-    blurb: "Rupaka BI and its languages, groupings and analytics, funds and ETFs"
     groups:
       - title: "Business intelligence"
         words: [BI]
@@ -109,9 +102,6 @@ sections:
           - { slug: docs-guides-funds-guide, pair: docs-tutorials-28-funds-and-etfs, doc: guides/FUNDS_GUIDE.md, title: "Funds and ETFs guide", icon: briefcase, summary: "The 200 largest US mutual funds and ETFs from SEC data (Form N-PORT, Form N-CEN, the prospectus risk/return summaries): FUND, the fact sheet with its Look-through holdings and against-its-index tabs; HELD, the funds holding a company (and USEQ's Held by funds tab); TRACK, the funds tracking an index; the data contract of every kind (every column, its SEC source, an example); where the data comes from, the 200 chosen, the refresh script on Linux and Windows, the gzipped snapshot." }
           - { slug: docs-tutorials-28-funds-and-etfs, doc: tutorials/28-funds-and-etfs.md, title: "Funds and ETFs tutorial", icon: mortarboard, kind: tutorial, summary: "Nine hands-on steps on the committed SEC data, each in the UI, on the command line and in YAML: the pack, a fund's fact sheet, its look-through with derivatives and counterparties, the fund against its index, finding funds by share class and index, the funds holding Apple, the funds tracking the S&P 500, a phone, refreshing the data." }
   - id: data
-    name: Data
-    icon: plug
-    blurb: "Connectors, loads and lakes, external data, the in-memory lake"
     groups:
       - title: "Connect"
         guides:
@@ -139,9 +129,6 @@ sections:
           - { slug: flight-guide, engine: flight, pair: docs-tutorials-35-data-out-with-arrow-flight, doc: guides/FLIGHT_GUIDE.md, title: "Data out: Drishti's data to any client with Arrow Flight", icon: box-arrow-right, summary: "Kinds, BI models, pivot views, VaR's scenario P&L vectors and the in-memory lake read by any Arrow Flight client (Python, Java, JDBC tools) as Arrow record batches, as the person a token belongs to: when to use it rather than the REST API, turning it on (the engine file, the port, TLS), tokens with data:read and on behalf of a person, every request form, the request path, the cluster's endpoints and a node down, live streams and resuming, limits and refusals, audit and Admin -> Data out, operations, the ten most likely errors; the reference and a page per client." }
           - { slug: docs-tutorials-35-data-out-with-arrow-flight, engine: flight, doc: tutorials/35-data-out-with-arrow-flight.md, title: "Data out tutorial: from a token to pandas", icon: mortarboard, kind: tutorial, summary: "Eight hands-on steps, each in the UI, on the command line and in code: Flight on, a token with data:read, whoami, a desk's VaR scenario P&L in pandas and its positions' vectors, the same in Java and through JDBC, a live intraday stream resumed, Admin -> Data out with Stop." }
   - id: build
-    name: Build
-    icon: braces
-    blurb: "Packs, Sutras, write-back, connectors, views in any web page"
     groups:
       - title: "Packs and Sutras"
         guides:
@@ -155,9 +142,6 @@ sections:
           - { slug: connector-developer-guide, doc: connectors/CONNECTOR_DEVELOPER_GUIDE.md, title: Connector developer guide, icon: plug, summary: "Which connector to use, the source SPI (manifest, capabilities, fetch, search, subscribe), the shared TLS and proxy modules, testing and a worked plugin." }
           - { slug: client-renderer, doc: architecture/CLIENT_RENDERER.md, title: "Client renderer and {product} Elements: views in any web page", icon: window-stack, summary: "The one renderer in the browser (adoption in minutes, the public API, every panel kind, phones, security, live patches, parity), {product} Elements in your own web application (a five-minute start, the token exchange, versions, SRI and npm, CSP, every element, React, Angular and Vue, theming, a cookbook, troubleshooting by code), the Elements design, and GenUI (design, not built). The ViewModel contract it draws is its own page." }
   - id: operate
-    name: Operate
-    icon: hdd-stack
-    blurb: "Configuration, editions, lenses, clusters, deploy, users, AI, troubleshooting"
     groups:
       - title: "Set up"
         guides:
@@ -174,9 +158,6 @@ sections:
           - { slug: benchmark, doc: admin/BENCHMARK.md, title: "Benchmark: every measurement and how to run it", icon: speedometer2, summary: "The one home of every benchmark: what is measured and why, the harness (tools/bench, the store-only benchmarks) and the exact commands to run each again, the machine and data; VaR at 200,000 positions on one server and a three-node cluster with 50 to 200 users, Java 21 and 25, G1 and ZGC; the VaR store, first open and cost per request; exposure; the Python and Java loaders; trades at scale; every store compared; memory and heap; scaling fits and extrapolations to 2.3M and 10M positions; how to read the numbers." }
           - { slug: troubleshooting, doc: guides/TROUBLESHOOTING.md, title: Troubleshooting, icon: life-preserver, summary: "Symptoms, likely causes and fixes." }
   - id: reference
-    name: Reference
-    icon: book
-    blurb: "API, command line, tools, the Rachana and ViewModel references, release notes"
     groups:
       - title: "Programming"
         guides:
@@ -193,9 +174,6 @@ sections:
         guides:
           - { slug: release-notes, doc: ../RELEASE_NOTES.md, title: Release notes, icon: tag, summary: "What each release contains and its known limits." }
   - id: knowledge
-    name: Knowledge
-    icon: lightbulb
-    blurb: "What the words of a bank's data mean: eight domains and the glossary"
     groups:
       - title: "Start here"
         words: [WHAT]
@@ -212,10 +190,6 @@ sections:
           - { slug: knowledge-companies-funds-and-etfs, packs: [us-equities, funds, gleif], doc: knowledge/companies-funds-and-etfs.md, title: "Companies, funds and ETFs", icon: briefcase, kind: knowledge, summary: "Tickers, CIK, SIC codes and divisions, share classes (GOOG and GOOGL), EDGAR filings and XBRL facts; mutual funds, ETFs and unit investment trusts, NAV and net assets, look-through holdings, expense ratios, index funds, computed index weights and active share, fund overlap; how the us-equities, funds and gleif packs connect, on the demo data." }
           - { slug: knowledge-economies, packs: [world-economy], doc: knowledge/economies.md, title: "Economies", icon: globe, kind: knowledge, summary: "GDP, growth, inflation, unemployment, debt and the current account; IMF forecasts, country groups and governments; how a counterparty links to its economy, on the demo data." }
   - id: internal
-    name: Internal
-    icon: binoculars
-    blurb: "Administrators only: the competitive analysis"
-    roles: [admin]
     groups:
       - title: "Internal"
         guides:

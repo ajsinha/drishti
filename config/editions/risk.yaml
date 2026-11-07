@@ -73,7 +73,7 @@ phone:                                   # the phone display in this edition (do
 
 menus:                                   # by id, per menu; a menu not named shows every item its switches allow
   top: [views, engines, bi, admin, help]  # the top menus by id, in order; one not named is not drawn
-  # the Views menu's items by id, in order (drishti-console/config/menus.yaml)
+  # the Views menu's items by id, in order (drishti-console/config/sitemap.yaml)
   views: [terminal, search, functions, datamap, data, reports, workspaces, monitors, alerts]
   help: [help-centre, knowledge, install, about]  # the Help menu's items by id
   footer: [help, about, release-notes]  # the footer's links by id
