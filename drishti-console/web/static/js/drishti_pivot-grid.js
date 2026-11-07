@@ -158,7 +158,7 @@
       var row = rows[+tr.getAttribute("data-row")];
       var idx = Array.prototype.indexOf.call(tr.children, cur);
       if (e.key === "ArrowRight" && (row.kind === "node" || row.kind === "header") && idx <= 1 && opts.onToggle) {
-        if (!row.expanded && row.expandable || e.shiftKey) { e.preventDefault(); opts.onToggle(row, false, e.shiftKey); return; }
+        if (row.expandable && (!row.expanded || e.shiftKey)) { e.preventDefault(); opts.onToggle(row, false, e.shiftKey); return; }
       }
       if (e.key === "ArrowLeft" && idx <= 1 && opts.onToggle && (row.expanded || row.kind === "header" || row.kind === "total")) {
         e.preventDefault(); opts.onToggle(row, true, e.shiftKey); return;

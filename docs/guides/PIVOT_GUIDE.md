@@ -348,8 +348,9 @@ Rows are levels. Only level one is computed at first; opening a member computes 
 children and their columns, every other cell read from the partial-state cache. A ten-level hierarchy over a big table opens as fast as one
 level. The answer says what it did: "18 cells · 6 sets (4 from the cache) · 1 queries".
 
-- **Expand by…** (`E`): open any member by a field other than the next row field, per member: EMEA by desk, APAC by currency, in one grid.
-  The totals stay right: each node is its own cell key.
+- **+** opens a member by the next row field; a member on the last row level is a leaf and has no **+**.
+- **Expand by…** (`E`): open any member by a field other than the next row field, per member: EMEA by desk, APAC by currency, in one grid,
+  a leaf included. The totals stay right: each node is its own cell key.
 - **Open to level N** (`1`–`9`): every member down to level N.
 - The open nodes are part of the view (its `expanded` list), so a saved view and a link reopen them.
 
