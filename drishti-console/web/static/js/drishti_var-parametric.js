@@ -5,7 +5,7 @@
    Parametric VaR on the VaR explorer (docs/architecture/PARAMETRIC_VAR.md; VAR_GUIDE.md section 3.12): a toggle (Parametric; the link's
    pm=1, which the PVAR command opens with) that adds, beside the historical figures, the tiles (parametric VaR, parametric ES, the
    fat-tail gap), the tree's Parametric and Gap columns, and the normal curve over the P&L path's histogram with both markers, shaded
-   tails and the gap bracket (drishti_var-charts.js). The Euler components and the worked figures are in the VaR Playground's Parametric tab.
+   tails and the gap bracket (drishti-risk's P&L distribution with the server's fitted normal). The Euler components and the worked figures are in the VaR Playground's Parametric tab.
 
    Every parametric figure has a ? that is the one Explain's (drishti_explain.js; SHARED_SCREENS.md section 3): hover for the preview, click
    for the drawer, its Formula the server's own lines (describe) with the numbers. The browser computes nothing: every number, curve point and line comes from the answer (the server-computes-risk rule). The
@@ -17,7 +17,7 @@
   if (!root) return;
   var ON = root.dataset.pm === "1";
   var $ = function (sel) { return root.querySelector(sel); };
-  var C = window.Drishti.VarCharts, X = null, NC_KEY = "drishti.var.pvar.curve";
+  var R = window.Drishti.elements.risk, X = null, NC_KEY = "drishti.var.pvar.curve";
   var params = new URLSearchParams(location.search);
   var curve = params.get("nc") === "0" ? false : (function () { try { return localStorage.getItem(NC_KEY) !== "0"; } catch (e) { return true; } })();
 
@@ -27,7 +27,7 @@
     if (text !== undefined && text !== null) e.textContent = text;
     return e;
   }
-  function money(v) { return v === null || v === undefined ? "—" : C.money(v); }
+  function money(v) { return R.riskMoney(v); }
   function pct(v) { return v === null || v === undefined ? "—" : (v >= 0 ? "+" : "") + (v * 100).toFixed(1) + "%"; }
 
   // ---------------------------------------------------------------------------------------------------------------- the ?
@@ -72,17 +72,25 @@
     });
   }
 
-  /** The tree's Parametric and Gap cells, each with the node's own ?. */
-  function treeCells(row, n) {
-    var p = n.parametric;
-    var a = h("span", "num vp-blue", p ? money(p["var"]) : "");
-    var g = h("span", "num" + (p && p.gap > 0 ? " vp-warn" : ""), p ? (p.gap >= 0 ? "+" : "") + money(p.gap) : "");
-    if (p) {
-      a.appendChild(qmark("pvar", n.scope, n.name));
-      g.title = pct(p.gapPct) + " of the parametric VaR";
-    }
-    row.appendChild(a);
-    row.appendChild(g);
+  /** The tree's Parametric and Gap columns (drishti-grid columns of the explorer's tree), the Parametric figure with the node's own ?. */
+  function treeColumns() {
+    var pv = function (r) { return r.parametric ? r.parametric["var"] : null; }, gap = function (r) { return r.parametric ? r.parametric.gap : null; };
+    return [R.figureColumn("pvar", "Parametric", { valueGetter: pv, width: 104, format: function (v) { return v === null ? "" : money(v); },
+        cellClass: function () { return "vp-blue"; },
+        cellRenderer: function (c) {
+          if (!c.row.parametric) return null;
+          var s = h("span", "vp-cell", c.text);
+          s.appendChild(qmark("pvar", c.row.scope, c.row.name));
+          return s;
+        } }),
+      R.figureColumn("pgap", "Gap", { valueGetter: gap, width: 90, format: function (v) { return v === null ? "" : (v >= 0 ? "+" : "") + money(v); },
+        cellClass: function (v) { return v > 0 ? "vp-warn" : null; },
+        cellRenderer: function (c) {
+          if (!c.row.parametric) return null;
+          var s = h("span", null, c.text);
+          s.title = pct(c.row.parametric.gapPct) + " of the parametric VaR";
+          return s;
+        } })];
   }
 
   // ---------------------------------------------------------------------------------------------------------------- the frame
@@ -119,6 +127,6 @@
     });
   }
 
-  window.Drishti.VarParametric = { start: start, headline: headline, treeCells: treeCells, on: function () { return ON; },
+  window.Drishti.VarParametric = { start: start, headline: headline, treeColumns: treeColumns, on: function () { return ON; },
     curveOn: function () { return curve; } };
 })();

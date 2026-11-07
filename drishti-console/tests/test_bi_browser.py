@@ -290,9 +290,13 @@ def test_review_before_publish_needs_a_second_person(stack, browser):
 
 def test_the_keys_work_and_the_help_opens(stack, browser):
     page = sign_in(browser, "cat")
+    keys_ready = "() => !!(window.Drishti.keys && window.Drishti.keys.list().some((k) => k.id === 'bi.search'))"
+    page.wait_for_function(keys_ready)
     page.keyboard.press("g")
     page.keyboard.press("c")
     page.wait_for_url("**/bi/catalogue")
+    page.wait_for_load_state()
+    page.wait_for_function(keys_ready)                                                    # g c opened the catalogue again: its keys are there
     page.keyboard.press("/")
     expect(page.locator("input[data-search]")).to_be_focused()
     page.keyboard.press("Escape")

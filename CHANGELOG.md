@@ -116,6 +116,28 @@
 
 ## 2.9.11.e (unreleased)
 
+- **The demo lake's layout, the owner's decision** (`config/lakes/demo.yaml` and its jar copy; DATA_LAKE_GUIDE.md section 2): `risk.scenario-pv`
+  partitioned by `SCENARIO_SET_ID, GRAIN` after the business date, sorted by `LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, TRADE_ID`, zstd
+  (vectors too), 256 MB files, 16 MB row groups, 30 days' time travel, maintenance (compaction to 256 MB, vacuum after 7 days,
+  checkpoints); `trading.trade_calypso` and `trading.trade_murex` partitioned by `PRODUCT_GROUP` instead of `PRODUCT_TYPE` (50+ product
+  types each; `PRODUCT_TYPE` stays promoted); every trade table compacted and vacuumed after 7 days. The trading pack's recommended
+  entries follow (tools/packgen/banking/make_packs.py). An existing demo lake is rebuilt with `drishti.py lake demo` to take it; a load
+  into an old-layout table is refused, naming both, until then. VaR figures are equal on either layout.
+
+- **The demo lake's move no longer changes the shipped `config/lakes/demo.yaml`** (found on the owner's stack after 2.9.11.d: at the
+  first start after the move the file was re-written in block style, quotes added, and 43 tables appended, so `git status` showed it
+  modified and the drill's clean-tree check would fail). Two causes: the shipped file lacked the 37 tables the example packs'
+  connectors read from the demo lake (climate, genomics, liquidity, operational risk, retail), and the code that moves old connector
+  files to `lake: demo` (`LakeFiles.adoptDemo`) re-serialised the whole file to add any entry. Now the shipped file (and its jar copy)
+  holds every table a shipped pack's connector reads, checked by a test and filled by `LakesCli pack-tables --lake demo --packs
+  config/packs,examples/packs --write`; a lake file is written only when an entry is really missing (a site's own connector naming a
+  kind the packs no longer have, or the data inbox's first load into a table), and then only that entry is added at the end of
+  `tables:` in the file's compact style, every other line and comment kept byte for byte (`tables: {}` of an empty lake becomes the
+  block). A start that finds nothing to add writes nothing (docs/admin/OPERATIONS.md, "The lakes' folders"). Found on the way: a
+  results reader of the older form (`var-results`, `exposure-results`: `risk-results` tables, same old root) was moved to `lake: demo`
+  and its table added to the demo lake, where it would have read `data/delta/demo/risk-results`; such a connector reads another shipped
+  lake's tables and is now left as it is.
+
 - **Drishti Elements, the design, decided by the product owner** ([ELEMENTS.md](docs/architecture/ELEMENTS.md)): the console's JavaScript as eight libraries (drishti-core, -inputs, -grid, -chart, -data, -insight, -renderer, -risk; 1 to 5 without a Drishti server), the measured inventory (116 of 258 scripts and modules, about 21,000 lines, fold into them; about 10 grids and 22 chart scripts into one each), the grid's three layouts (wells, panel, terminal: VaR screens default to terminal) and its server-side pivot with non-additive totals from the server, an AG Grid-style adapter for the Enterprise pivot API from public documentation only, one chart spec over ECharts with the risk kinds and maps (world to every country's first-level regions), packaging and licensing per domain module, the documentation of every library (guide, generated API reference, tutorial, gallery, AG Grid migration guide), the guards and the migration order; the decisions (Vega retired, the grid on phones, a standalone Excel writer, the adapter's scope, both options of g2, g3 and g4 built as modes with A the default); mock-ups [g1](docs/architecture/mockups/elements/g1-pivot-grid.html), [g2](docs/architecture/mockups/elements/g2-charts.html), [g3](docs/architecture/mockups/elements/g3-maps.html) and [g4](docs/architecture/mockups/elements/g4-gallery.html).
 - **Drishti Elements, the foundation** ([ELEMENTS.md section 8.1](docs/architecture/ELEMENTS.md#81-as-built-the-foundation-drishti-core-and-the-grids-engine)):
   `static/elements/` with a manifest of the libraries and their versions, ES modules per library and one bundled file each written by
@@ -440,6 +462,23 @@
     sets the machine was shared with other runs and the sums varied by run (2,252 s before, 3,835 s after, 1,744 s in 2.9.11.d's
     drill), so they say nothing either way. The thinner screen tests the owner asked for come with the component tests (the gallery).
   - **Still to move** (ELEMENTS.md 8.6): the multi-select, the pickers, the controls, the forms and the Build and Studio editors.
+- **The VaR and exposure family on Drishti Elements** ([ELEMENTS.md section 12.2](docs/architecture/ELEMENTS.md#122-the-var-and-exposure-family-step-9-2911e-the-migration-checklist)):
+  every table of the VaR explorer (the scope tree as tree data, the path, the history, the contributions, the captures, the
+  currencies), parametric VaR, the basket's sheet (now drishti-grid's cell editing: typing, Enter, Tab, Delete, undo; the paste with
+  headings stays the sheet's) and its what-if, the VaR Playground (its six header rows pinned), backtesting, the regulatory screens, the
+  stress window, the scenario matrix, the MR lens, the risk landing, the exposure explorer and its counterparty screens, FRTB-SA and
+  SIMM is a `<drishti-grid>` in the **terminal layout** (the product owner's default for VaR screens) made by drishti-risk's preset
+  `riskGrid` (figures never summed in the browser); every chart is drishti-chart or a drishti-risk kind (`riskChart`): the P&L
+  distribution from the server's bins with VaR, ES and the fitted normal, the backtest with the server's zone, count and multiplier, the
+  exposure profile with the server's EEPE. **Deleted**: `drishti_var-charts.js` (208 lines) and `drishti_exposure-charts.js` (126), the
+  screens' hand-built tables, SVG drawing, sheet editor and playground canvas, and their CSS (2,524 lines out and 1,822 in under `web/`, libraries
+  included). Commands, addresses, keys and saved views unchanged. Market-risk code stays in drishti-risk (the owner's domain rule):
+  drishti-risk 0.2.0 gains the grid and chart presets, the figures in words (`riskMoney`, `riskSigned`, `riskInt`, `riskPct`: the texts
+  the screens printed before), `textColumn` and `moneyColumn`; the generic libraries only generic hooks: drishti-grid 0.4.0 (a column's
+  `cellClass` and `cellRenderer`, a row's `getRowClass` and `getRowData`, `fitRows`, `chrome: false`, `pinnedTopRows` with
+  `pinnedCellClicked`, a tree node's own row in its cell context), drishti-chart 0.2.0 (the histogram of a server's bins). A
+  before-and-after comparison of sixteen screens and tabs (`tests/screen_figures.py`, `tests/test_var_family_figures_browser.py`, run on
+  demand) and every family browser file on the new selectors with its assertions kept.
 
 ## 2.9.11.d (2026-11-07)
 - **Six lake folders kept in git, their content never** (DATA_LAKE_GUIDE.md section 1): `data/delta/demo`, `risklake`, `newslake` (news), `worldlake` (World Bank, IMF, UN), `regulators` (SEC, Federal Reserve, OSFI, central banks) and `capitalmarket` (prices, curves, vols, funds), each with only its README.md; the test data's `.jsonl.gz` files stay in git to build the demo lake. The five new lakes ship as lake files with no tables (`config/lakes/<lake>.yaml` and their jar copies), and **nothing shipped points at them**: every connector, rule and setting reads `demo` (guarded by `tools/test_empty_lakes.py`); a site points at them itself. The demo lake's one-time move and `build_demo_lakes` treat a folder holding only its README.md as empty.

@@ -251,3 +251,16 @@
 /* chrome: false: the grid alone (a panel inside a page that has its own toolbar) */
 .dg[data-chrome="none"] .dg-toolbar, .dg[data-chrome="none"] .dg-wells, .dg[data-chrome="none"] .dg-status, .dg[data-chrome="none"] .dg-drawer { display: none; }
 .dg[data-chrome="none"] { min-height: 0; }
+/* tones a column gives a cell (cellClass) and a host's own cell content (cellRenderer) */
+.dg-cell.dg-tone-bad { color: var(--d-neg); }
+.dg-cell.dg-tone-good { color: var(--d-pos); }
+.dg-cell.dg-tone-warn { color: var(--d-warn); }
+.dg-cell.dg-tone-muted { color: var(--d-muted); }
+.dg-cell.dg-tone-strong { font-weight: 600; }
+.dg-cell a { color: var(--d-link, var(--d-accent)); text-decoration: none; }
+.dg-cell a:hover { text-decoration: underline; }
+.dg-cell .dg-cell-btn { font: inherit; font-size: 11px; line-height: 1.4; padding: 0 6px; margin-left: 4px; border: 1px solid var(--d-border); border-radius: 5px;
+  background: var(--d-surface-2); color: var(--d-ink); cursor: pointer; }
+/* chrome: false (a small table inside a screen with its own command line and keys): the body, the status bar and Explain only */
+.dg-bare > .dg-cmd, .dg-bare > .dg-wells, .dg-bare .dg-toolbar, .dg-bare > .dg-fkeys { display: none; }
+.dg:has(> .dg-bare) { min-height: 0; }

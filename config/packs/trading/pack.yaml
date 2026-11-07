@@ -543,7 +543,7 @@ lake:
     trading.trade_calypso:
       kind: trade
       partition-by:
-      - PRODUCT_TYPE
+      - PRODUCT_GROUP
       promote:
       - TRADE_ID
       - SOURCE_SYSTEM
@@ -570,7 +570,7 @@ lake:
     trading.trade_murex:
       kind: trade
       partition-by:
-      - PRODUCT_TYPE
+      - PRODUCT_GROUP
       promote:
       - TRADE_ID
       - SOURCE_SYSTEM

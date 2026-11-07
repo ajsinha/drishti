@@ -53,6 +53,13 @@ let seq = 0;
  * @property {function(string): (Promise<Array<{text: string, count: number}>>|Array)} [members] a field's members for its filter (default:
  *   the rows in the page)
  * @property {number} [phoneWidth=640] below this width the grid is drawn for a phone
+ * @property {number} [fitRows] the host as tall as its rows, up to this many (then it scrolls): a screen's small table
+ * @property {Object[]} [pinnedTopRows] rows kept under the headings as the others scroll (a spreadsheet's header rows): drawn by the
+ *   columns' formats, classes and renderers, not sorted, filtered or counted; a click is pinnedCellClicked
+ * @property {function(Object): ?string} [getRowClass] more classes for a leaf's row from its data
+ * @property {function(Object): ?Object<string, *>} [getRowData] data-* attributes for a leaf's row ({key: 'A-1'}: data-key)
+ * @property {boolean} [chrome=true] false: the grid without its layout's chrome (no command line, toolbar, wells or function keys; the
+ *   status bar and Explain stay), for a small table inside a screen that has its own command line and keys
  * @property {GridModel} [model] draw this model rather than make one
  * @property {boolean} [chrome=true] false: the grid alone, without toolbar, wells, status bar or Explain drawer (a panel inside a page
  *   that has its own; the keys, menus and Explain hook still work)

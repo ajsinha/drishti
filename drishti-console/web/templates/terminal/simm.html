@@ -17,12 +17,12 @@
    netting set with its IM to collect and post, the selected one's breakdown by product and risk class beside) with C (the margin against
    the counterparty's call) as its second tab. mode "play", PLAY SIMM <netting set> or PLAY SIMM RUN <id>: the playground on the VaR
    Playground's frame, the Choices panel (version, concentration, HVR, side) and a comparison explained by step, Save recipe and Export to
-   Excel. A shell: drishti_simm.js fills it. #}
+   Excel. A shell: drishti_simm.js fills it, every table a drishti-grid (terminal layout). #}
 {% extends "base.html" %}
 {% block title %}{{ 'SIMM Playground' if mode == 'play' else 'SIMM' }} · {{ netting_set or counterparty or recipe or 'netting sets' }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}{{ screen }}{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_var-playground.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_frtb-sa.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_var-playground.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_frtb-sa.css?v={{ ASSET_V }}">{% include "terminal/_risk_elements_css.html" %}{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="pg fr sm" data-simm data-mode="{{ mode }}" data-ns="{{ netting_set }}" data-cpty="{{ counterparty }}" data-recipe="{{ recipe or '' }}">
@@ -47,8 +47,8 @@
   </div>
   <div class="fr-body">
     <section class="fr-main">
-      <div data-sm-pane="sets"><table class="fr-grid" data-sm-sets aria-label="Every netting set: IM to collect and post"></table></div>
-      <div data-sm-pane="against" hidden><table class="fr-grid" data-sm-against aria-label="{{ PRODUCT }}'s margin beside the counterparty's call"></table></div>
+      <div data-sm-pane="sets"><div class="fr-grid" data-sm-sets aria-label="Every netting set: IM to collect and post"></div></div>
+      <div data-sm-pane="against" hidden><div class="fr-grid" data-sm-against aria-label="{{ PRODUCT }}'s margin beside the counterparty's call"></div></div>
     </section>
     <aside class="pg-explain fr-drill" data-sm-detail aria-live="polite"><p class="muted">Select a netting set: its IM by product class and risk class, collect and post, the version and the concentration factors.</p></aside>
   </div>
@@ -65,10 +65,11 @@
   <div class="fr-compare" data-sm-diff aria-live="polite" hidden></div>
   <div class="pg-fbar" aria-label="Formula bar"><span class="pg-ref mono" data-sm-ref>—</span><span class="pg-fx mono">fx</span><code class="pg-formula" data-sm-formula>Select a row</code></div>
   <div class="pg-body">
-    <section class="pg-gridcard"><div class="pg-scroll" tabindex="0"><table class="fr-grid fr-ws" data-sm-ws aria-label="The weighted sensitivities and curvature risks, bucket by bucket"></table></div></section>
+    <section class="pg-gridcard"><div class="fr-grid fr-ws" data-sm-ws aria-label="The weighted sensitivities and curvature risks, bucket by bucket"></div><p class="muted fr-more" data-sm-more></p></section>
     <aside class="pg-explain" data-sm-explain aria-live="polite"></aside>
   </div>
   {% endif %}
 </div>
+{% include "terminal/_risk_elements.html" %}
 <script src="/static/js/drishti_simm.js?v={{ ASSET_V }}"></script>
 {% endblock %}

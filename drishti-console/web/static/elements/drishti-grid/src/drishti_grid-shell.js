@@ -37,7 +37,7 @@ import { toolbarAction } from './drishti_grid-actions.js';
 export function buildShell(v) {
   const doc = v.doc, L = v.model.layout, R = v.regions = { layout: v.model.layout };
   if (v.root) { v.root.remove(); }
-  const root = v.root = h(doc, 'div', { cls: 'dg-root dg-layout-' + L });
+  const root = v.root = h(doc, 'div', { cls: 'dg-root dg-layout-' + L + (v.o.chrome === false ? ' dg-bare' : '') });
   R.toolbar = h(doc, 'div', { cls: 'dg-toolbar', attrs: { role: 'toolbar', 'aria-label': (v.o.title || 'Grid') + ' tools' } });
   R.wells = h(doc, 'div', { cls: 'dg-wells' });
   R.status = h(doc, 'div', { cls: 'dg-status', attrs: { 'aria-label': 'Status' } });

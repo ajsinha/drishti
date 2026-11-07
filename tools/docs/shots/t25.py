@@ -256,8 +256,8 @@ def scenario_matrix(c: Ctx):
     scenario selected and charted against -VaR, its details (rank, PV, FX, days in the tail, source)."""
     _more_dates()
     open_var(c, "/go?q=" + "SMAT BOOK BOOK-RATES-1 5 <GO>".replace(" ", "+"))
-    c.until("document.querySelectorAll('[data-sm-tbody] tr[data-key]').length > 10 && document.querySelector('[data-sm-kv] dt') !== null", 600)
-    c.page.locator("[data-sm-tbody] tr[data-key]").nth(1).locator("td").nth(4).click()
+    c.until("document.querySelectorAll('[data-sm-scroll] .dg-row[data-key]').length > 10 && document.querySelector('[data-sm-kv] dt') !== null", 600)
+    c.page.locator("[data-sm-scroll] .dg-row[data-key]").nth(1).locator(".dg-cell[data-c='4']").click()
     c.page.wait_for_timeout(600)
     c.save("20-scenario-matrix.jpg")
 

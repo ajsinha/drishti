@@ -21,7 +21,7 @@
 {% block title %}Stress window selection · {{ scope }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}var-stress-window{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_stress-window.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_stress-window.css?v={{ ASSET_V }}">{% include "terminal/_risk_elements_css.html" %}{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="sw-page" data-swin data-scope="{{ scope }}" data-hierarchy="{{ hierarchy }}" data-length="{{ length or '' }}" data-user="{{ user }}">
@@ -44,26 +44,20 @@
   <section class="sw-card" aria-labelledby="swChartTitle">
     <h2 id="swChartTitle"><span data-sw-chart-title>Stressed VaR of today's portfolio for every window</span>
       <span class="sw-sub">x: the window's first day; the worst and the current marked; click to select a window</span></h2>
-    <div class="sw-chart" data-sw-chart role="img" aria-label="Stressed VaR of today's portfolio for every window start"></div>
+    <div class="sw-chart" data-sw-chart aria-label="Stressed VaR of today's portfolio for every window start"></div>
   </section>
   <section class="sw-card" aria-labelledby="swCandTitle">
     <h2 id="swCandTitle">Top candidates <span class="sw-sub">windows that do not overlap one another, by stressed VaR; the current window always shown</span></h2>
-    <table class="sw-table" data-sw-cands>
-      <thead><tr><th>#</th><th class="l">Window</th><th>Stressed VaR</th><th>Against current</th><th class="l"></th><th class="l">Worst day in it</th></tr></thead>
-      <tbody></tbody>
-    </table>
+    <div class="sw-gridhost" data-sw-cands></div>
   </section>
   <div class="sw-grid">
     <section class="sw-card" aria-labelledby="swNodesTitle">
       <h2 id="swNodesTitle">By node <span class="sw-sub">each node's own worst window; one window is approved for the bank</span></h2>
-      <table class="sw-table" data-sw-bynode>
-        <thead><tr><th class="l">Node</th><th>Current window</th><th>Its worst window</th><th class="l">Worst starts</th><th>Gap</th></tr></thead>
-        <tbody></tbody>
-      </table>
+      <div class="sw-gridhost" data-sw-bynode></div>
     </section>
     <section class="sw-card" aria-labelledby="swCmpTitle">
       <h2 id="swCmpTitle">Current against proposed</h2>
-      <table class="sw-table" data-sw-compare><thead><tr><th class="l"></th><th>Current</th><th>Proposed</th></tr></thead><tbody></tbody></table>
+      <div class="sw-gridhost" data-sw-compare></div>
       <p class="sw-note">Freezing keeps the analysis with its inputs (positions date, the history's data version, window length,
         confidence) as a proposal; another person approves or rejects it (maker-checker). An approved window is what the pricing system's
         next stress scenario set revalues; stressed VaR then uses it.</p>
@@ -71,11 +65,8 @@
   </div>
   <section class="sw-card" aria-labelledby="swPropTitle">
     <h2 id="swPropTitle">Proposals <span class="sw-sub">the frozen analyses, newest first</span></h2>
-    <table class="sw-table" data-sw-proposals>
-      <thead><tr><th class="l">Id</th><th class="l">Node</th><th class="l">Proposed window</th><th>Stressed VaR</th><th class="l">Status</th><th class="l">Proposed by</th><th class="l">Decided by</th><th class="l"></th></tr></thead>
-      <tbody></tbody>
-    </table>
+    <div class="sw-gridhost" data-sw-proposals></div>
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_stress-window.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% include "terminal/_risk_elements.html" %}<script src="/static/js/drishti_stress-window.js?v={{ ASSET_V }}"></script>{% endblock %}

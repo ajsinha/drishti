@@ -13,30 +13,22 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* FRTB-SA (terminal/frtb.html, drishti_frtb-sa.js): the capital stack of mock-up B, the scenarios of A, the playground's Choices panel and the
+/* FRTB-SA (terminal/frtb.html, drishti_frtb-sa.js; terminal/simm.html, drishti_simm.js): the capital stack of mock-up B, the scenarios of A, the playground's Choices panel and the
    comparison, on the VaR Playground's frame (drishti_var-playground.css). The theme's variables only: dark by default, light with the theme. */
 .fr-tabs { display: flex; gap: 4px; margin: 8px 0; }
 .fr-tab { padding: 5px 12px; border: 1px solid var(--line, #26345a); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
 .fr-tab[aria-selected="true"] { background: var(--panel2, #1b2744); font-weight: 600; }
 .fr-body { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 12px; align-items: start; }
 @media (max-width: 900px) { .fr-body { grid-template-columns: 1fr; } }
-.fr-stack { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
-.fr-bar { display: grid; grid-template-columns: 110px 1fr 160px; gap: 8px; align-items: center; }
-.fr-bar .fr-bt { height: 14px; background: var(--panel2, #1b2744); border-radius: 3px; overflow: hidden; }
-.fr-bar .fr-bt i { display: block; height: 100%; background: var(--link, #7fb2ff); }
-.fr-bar.total .fr-bt i { background: var(--amber, #e8a33a); }
-.fr-bar .fr-bv { text-align: right; }
-.fr-grid { border-collapse: collapse; width: 100%; font-size: 12.5px; font-variant-numeric: tabular-nums; }
-.fr-grid th, .fr-grid td { padding: 4px 8px; border-bottom: 1px solid var(--line, #26345a); text-align: right; white-space: nowrap; }
-.fr-grid .l { text-align: left; }
-.fr-grid tr.tot td { font-weight: 700; }
-.fr-grid tr.sel td { background: var(--hl, rgba(127, 178, 255, .10)); }
-.fr-grid .bind { outline: 2px solid var(--amber, #e8a33a); outline-offset: -2px; }
-.fr-cell { cursor: pointer; }
-.fr-cell:hover, .fr-cell:focus { background: var(--hl, rgba(127, 178, 255, .10)); }
-.fr-mini { width: 100%; font-size: 12px; border-collapse: collapse; }
-.fr-mini td, .fr-mini th { padding: 2px 6px; text-align: right; }
-.fr-mini .l { text-align: left; }
+.fr-stack { margin-bottom: 12px; }
+/* the tables are drishti-grid (terminal layout, drishti-risk's preset) */
+.fr-grid { margin-bottom: 8px; }
+.fr-drill-grid, .fr-diff-grid { margin: 6px 0; }
+.fr-grid .dg-row.tot .dg-cell { font-weight: 700; }
+.fr-grid .dg-row.sel .dg-cell { background: var(--hl, rgba(127, 178, 255, .10)); }
+.fr-grid .dg-cell.bind { box-shadow: inset 0 0 0 2px var(--amber, #e8a33a); }
+.fr-grid .dg-cell.fr-cell { cursor: pointer; text-decoration: underline dotted; }
+.fr-more { margin: 4px 0 0; font-size: 12px; }
 .fr-choices { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; padding: 10px; border: 1px solid var(--line, #26345a); border-radius: 8px; }
 .fr-choices h3 { margin: 0 0 4px; font-size: 13.5px; }
 .fr-choices h3 span { font-weight: 400; color: var(--muted, #93a0b8); font-size: 12px; margin-left: 6px; }

@@ -21,7 +21,7 @@
 {% block title %}Reports · {{ report or 'review and sign-off' }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}var-reports{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_var-regulatory.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_var-regulatory.css?v={{ ASSET_V }}">{% include "terminal/_risk_elements_css.html" %}{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="rg" data-reports data-report="{{ report }}" data-period="{{ period }}" data-version="{{ version }}" data-user="{{ user }}">
@@ -36,7 +36,7 @@
     <div class="rg-col">
       <section class="rg-card" aria-labelledby="rpPackTitle">
         <h2 id="rpPackTitle">Pilot pack<span class="rg-sub" data-rp-pack-sub></span></h2>
-        <table><thead><tr><th>Report</th><th>Title</th><th>Period</th><th class="num">Run</th><th>State</th><th></th></tr></thead><tbody data-rp-pack></tbody></table>
+        <div class="rg-gridhost" data-rp-pack></div>
       </section>
       <div class="rg-tiles rg-gap" data-rp-stats></div>
       <section class="rg-card rg-gap" aria-labelledby="rpTableTitle" data-rp-report hidden>
@@ -63,7 +63,7 @@
       </section>
       <section class="rg-card rg-gap" aria-labelledby="rpChecksTitle" data-rp-checks-card hidden>
         <h2 id="rpChecksTitle">Checks<span class="rg-sub" data-rp-checks-sub></span></h2>
-        <table><tbody data-rp-checks></tbody></table>
+        <div class="rg-gridhost" data-rp-checks></div>
       </section>
       <section class="rg-card rg-gap" aria-labelledby="rpLinTitle" data-rp-lin-card hidden>
         <h2 id="rpLinTitle">Lineage of the selected cell<span class="rg-sub">every cell drills here</span></h2>
@@ -74,4 +74,4 @@
   </div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-reports.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% include "terminal/_risk_elements.html" %}<script src="/static/js/drishti_var-reports.js?v={{ ASSET_V }}"></script>{% endblock %}

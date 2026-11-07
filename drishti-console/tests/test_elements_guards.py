@@ -70,7 +70,6 @@ ALLOWED = {
     "static/js/drishti_pivot-functions.js": {"numbers": BI},
     "static/js/drishti_table-chart.js": {"echarts": BI},
     # VaR, exposure and the risk screens (wip/e-migrate-var)
-    "static/js/drishti_exposure-charts.js": {"numbers": VAR},
     "static/js/drishti_exposure-explorer.js": {"numbers": VAR},
     "static/js/drishti_frtb-sa.js": {"numbers": VAR},
     "static/js/drishti_risk-landing.js": {"numbers": VAR},
@@ -78,9 +77,7 @@ ALLOWED = {
     "static/js/drishti_simm.js": {"numbers": VAR},
     "static/js/drishti_stress-window.js": {"numbers": VAR},
     "static/js/drishti_var-backtesting.js": {"numbers": VAR},
-    "static/js/drishti_var-basket-sheet.js": {"numbers": VAR},
     "static/js/drishti_var-basket.js": {"numbers": VAR},
-    "static/js/drishti_var-charts.js": {"numbers": VAR},
     "static/js/drishti_var-explorer.js": {"numbers": VAR},
     "static/js/drishti_var-parametric.js": {"numbers": VAR},
     "static/js/drishti_var-playground.js": {"numbers": VAR},

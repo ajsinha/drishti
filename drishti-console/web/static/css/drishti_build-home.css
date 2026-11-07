@@ -53,6 +53,7 @@
   .bh-rail { border-right: 0; border-bottom: 1px solid var(--d-border); padding: 0 0 8px; }
   .bh-two { grid-template-columns: 1fr; }
   .bh-search input { min-width: 0; width: 100%; }
+  .bh-kind, .bh-new summary { min-height: 44px; }                                   /* a finger-sized target on a phone */
 }
 /* For you: the person's BI items (Recent, Favourites, Certified for you, Shared with me) in four cards */
 .bh-foryou { margin-bottom: 16px; }

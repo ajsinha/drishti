@@ -128,7 +128,7 @@ def test_counterparties_ccr_cube_opens_the_pivot_preset_under_construction(brows
         page.locator(".tbar-menu-btn", has_text="Counterparties").click()
         item = page.locator("a.mega-item[href='/pivot?preset=ccr']")
         item.wait_for(state="visible")
-        assert "CCR cube" in item.inner_text() and item.locator(".drishti_uc-chip").count() == 1
+        assert "Counterparty-risk cube" in item.inner_text() and item.locator(".drishti_uc-chip").count() == 1
         item.click()
         page.wait_for_url("**/pivot?preset=ccr**")
         assert page.locator("[data-pv-title]").text_content().strip() == "CCR cube"

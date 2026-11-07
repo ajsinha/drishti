@@ -160,7 +160,7 @@ export function loadScript(src) {
   const doc = root().document;
   if (!doc) { return Promise.reject(new Error('loadScript: there is no page to load ' + src + ' into')); }
   // a script the page itself carries has run (classic scripts block); one this loader added has run once it says so
-  if (Array.prototype.some.call(doc.scripts, (s) => (s.getAttribute('src') || '').split('?')[0] === plain && (s.dataset.loaded === '1' || !s.hasAttribute('data-drishti-script')))) { return Promise.resolve(); }
+  if (Array.prototype.some.call(doc.scripts, (x) => (x.getAttribute('src') || '').split('?')[0] === plain && (x.dataset.loaded === '1' || !x.hasAttribute('data-drishti-script')))) { return (scripts[plain] = Promise.resolve()); }
   scripts[plain] = new Promise((resolve, reject) => {
     const s = doc.createElement('script');
     s.src = src;

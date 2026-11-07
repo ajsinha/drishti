@@ -609,7 +609,7 @@ def inject(h, html):
 def test_enhancers_are_registered_and_the_host_page_is_untouched(host):
     h = host()
     h.open()
-    h.until(lambda: h.js("!!(window.drishtiModules && window.drishtiModules.tables && window.drishtiModules.treeRows && window.drishtiModules.pivotGrid)"), 20, "modules registered")
+    h.until(lambda: h.js("!!(window.drishtiModules && window.drishtiModules.tables && window.drishtiModules.treeRows)"), 20, "modules registered")
     show(h, "netting-set", NETTING_SET)                                    # a live view with a table (a valuation has none)
     # one namespace and none of the globals the console's scripts publish on its own pages
     assert h.js("[window.Drishti.about, window.drishtiPivot, window.Drishti.charts, window.Drishti.view, window.Drishti.pivotEngine, window.drishtiPivotGrid]") == [None] * 6

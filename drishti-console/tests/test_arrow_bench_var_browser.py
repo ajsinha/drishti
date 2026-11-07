@@ -60,10 +60,10 @@ def contrib_ms(browser, base, scope, by, suffix, rows, runs=5):
         t0 = time.perf_counter()
         pg.locator('.vx-tab[data-tab="contrib"]').click()
         if by != "child":
-            pg.wait_for_function("() => document.querySelectorAll('[data-vx-ctable] tbody tr').length > 1")
+            pg.wait_for_function("() => (((document.querySelector('[data-vx-ctable] drishti-grid') || {}).grid || null) ? ((document.querySelector('[data-vx-ctable] drishti-grid') || {}).grid || null).model.rowCount() : 0) > 1")
             t0 = time.perf_counter()
             pg.locator(f'.vx-segb[data-by="{by}"]').click()
-        pg.wait_for_function("(n) => document.querySelectorAll('[data-vx-ctable] tbody tr').length >= n", arg=min(rows, 5000), timeout=120000)
+        pg.wait_for_function("(n) => (((document.querySelector('[data-vx-ctable] drishti-grid') || {}).grid || null) ? ((document.querySelector('[data-vx-ctable] drishti-grid') || {}).grid || null).model.rowCount() : 0) >= n", arg=min(rows, 5000), timeout=120000)
         if i:
             times.append((time.perf_counter() - t0) * 1000)
         pg.close()

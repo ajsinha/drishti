@@ -17,6 +17,18 @@
 
 *Not released yet.*
 
+## Upgrade: the demo lake's layout and the lake files
+
+- **The demo lake's new layout** (`config/lakes/demo.yaml`): scenario PVs partitioned by `SCENARIO_SET_ID, GRAIN` after the business
+  date, sorted by legal entity, division, desk, book and trade, zstd, 256 MB files, 16 MB row groups, 30 days' time travel and
+  maintenance; Calypso's and Murex's trades partitioned by `PRODUCT_GROUP` (50+ product types each) instead of `PRODUCT_TYPE`; every
+  trade table compacted and vacuumed after 7 days. **An existing demo lake keeps its old layout**: a load into one of these tables is
+  refused, naming both layouts, until the lake is rebuilt with `python3 tools/drishti.py lake demo`. VaR figures are the same on
+  either layout.
+- **The shipped lake files are never re-written at start** (CHANGELOG): after the demo lake's one-time move, a fresh checkout shows
+  nothing modified in `config/lakes`.
+
+
 ## Upgrade: one search (the console's `/api/suggest` is removed)
 
 - **BI's keys** are the keymap's: `?` (and the rail's Keys button) lists them with the rest of the screen's, and BI's own keys dialog is
