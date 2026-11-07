@@ -71,3 +71,4 @@
 .ap-dl dt { color: var(--d-muted); font-weight: 600; margin-top: var(--d-sp-4); }
 .ap-dl dd { margin: 0 0 0 var(--d-sp-12); }
 .ap-json { font-size: var(--d-fs-11_5); max-height: 220px; overflow: auto; background: var(--d-surface-2); padding: var(--d-sp-6); border-radius: var(--d-radius-4); margin: var(--d-sp-2) 0; }
+@media (max-width: 760px) { .ap-help { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; } }   /* a finger-sized target on a phone */

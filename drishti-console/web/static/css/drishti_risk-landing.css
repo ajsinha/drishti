@@ -38,11 +38,8 @@
   flex-direction: column; gap: var(--d-sp-8); min-width: 0; }
 .rl-card h2, .rl-q h2 { margin: 0; font-size: var(--d-fs-14); font-weight: 600; color: var(--d-ink); }
 .rl-card h2 small { color: var(--d-muted); font-weight: 400; font-size: var(--d-fs-12); margin-left: var(--d-sp-6); }
-.rl-table { width: 100%; border-collapse: collapse; font-size: var(--d-fs-13); }
-.rl-table th { color: var(--d-muted); font-weight: 500; text-align: left; padding: var(--d-sp-4) var(--d-sp-6); border-bottom: 1px solid var(--d-border); }
-.rl-table td { padding: var(--d-sp-5) var(--d-sp-6); border-bottom: 1px solid var(--d-border); font-variant-numeric: tabular-nums; }
-.rl-table .n { text-align: right; font-family: var(--d-font-mono); }
-.rl-use { display: flex; align-items: center; gap: var(--d-sp-6); }
+.rl-gridhost { min-width: 0; }                 /* VaR by desk, exposure by counterparty: risk grids (drishti-grid, terminal layout) */
+.rl-use { display: flex; align-items: center; gap: var(--d-sp-6); width: 100%; }
 .rl-track { flex: 1; height: 6px; background: var(--d-border); border-radius: var(--d-radius-3); overflow: hidden; min-width: 60px; display: block; }
 .rl-fill { display: block; height: 100%; background: var(--d-ok); }
 .rl-fill.w { background: var(--d-warn); }

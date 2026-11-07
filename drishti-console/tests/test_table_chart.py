@@ -91,7 +91,7 @@ def test_the_history_page_offers_the_chart_on_shift_k_in_its_bar_key_line_and_ke
     data = json.loads(unescape(re.search(r'data-hx-chart-rows="([^"]+)"', btn).group(1)))
     assert data["fields"][0]["name"] == "DATE" and data["rows"] and data["kind"] == "trade"
     assert "<kbd>Shift</kbd>+<kbd>K</kbd> chart" in page
-    assert "chart these days" in page
+    assert "Chart these days" in page                                               # the button's title; its key is the keymap's (history.chart)
     diff = client.get("/v/trade/1000015/history", params={"days": "30", "diff": "1"}).text
     assert "data-hx-chart-open" not in diff                                          # the diff log is not a table
 
@@ -117,7 +117,8 @@ def test_a_bi_table_takes_k_before_the_kiosk_and_the_kiosk_respects_it():
     report = (JS / "drishti_bi-report.js").read_text()
     board = (JS / "drishti_bi-report-board.js").read_text()
     assert "(e.key === 'k' || e.key === 'K') && chartable(spec)) { e.preventDefault();" in report
-    assert "e.defaultPrevented) { return; }" in board
+    assert "id: 'bi.kiosk', keys: ['K', 'Shift+K']" in board                         # the kiosk's K is the keymap's, which leaves a key a table took
+    assert "if (e.defaultPrevented || e.isComposing) { return; }" in (JS / "drishti_keys.js").read_text()
     assert "'data-act': 'chart'" in report
 
 

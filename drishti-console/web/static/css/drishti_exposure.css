@@ -13,11 +13,11 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The exposure explorer (terminal/exposure.html, drishti_exposure-explorer.js, drishti_exposure-charts.js), after the approved combined mock-up: the
+/* The exposure explorer (terminal/exposure.html, drishti_exposure-explorer.js), after the approved combined mock-up: the
    command line, the breadcrumb, two columns (the scope tree, the scope), tiles, the profile and tabs by level. The theme's tokens for
-   every colour (drishti_tokens.css), as the VaR explorer's, so every theme reads; the chart's series are coloured here by class. */
+   every colour (drishti_tokens.css), as the VaR explorer's, so every theme reads; the grids and the chart are Drishti Elements' with their own style sheets. */
 .xx { padding: var(--d-sp-10) var(--d-sp-14) var(--d-sp-18); color: var(--d-ink); font-size: var(--d-fs-13); }
-.xx .mono, .xx td.n, .xx th.n { font-family: var(--d-font-mono); font-variant-numeric: tabular-nums; }
+.xx .mono { font-family: var(--d-font-mono); font-variant-numeric: tabular-nums; }
 .xx .muted { color: var(--d-muted); }
 .xx .neg { color: var(--d-neg); }
 .xx-cmdline { display: flex; flex-wrap: wrap; gap: var(--d-sp-6) var(--d-sp-12); align-items: center; padding: var(--d-sp-6) var(--d-sp-10); margin-bottom: var(--d-sp-8); background: var(--d-surface);
@@ -75,31 +75,18 @@
 .xx-tile .v { font: 600 var(--d-fs-20) var(--d-font-mono); margin-top: var(--d-sp-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .xx-tile .v.ok { color: var(--d-ok); } .xx-tile .v.warn { color: var(--d-warn); } .xx-tile .v.crit { color: var(--d-bad); }
 .xx-tile .s { font-size: var(--d-fs-11); color: var(--d-muted); }
-.xx-chart { padding: var(--d-sp-6) var(--d-sp-10) var(--d-sp-4); min-height: 230px; color: var(--d-faint); font-size: var(--d-fs-11); }
-.xx-legend { display: flex; gap: var(--d-sp-12); font-size: var(--d-fs-11); color: var(--d-muted); flex-wrap: wrap; text-transform: none; }
-.xx-legend i { display: inline-block; width: 14px; height: 3px; margin-right: var(--d-sp-5); vertical-align: middle; border-radius: var(--d-radius-2); }
-.xx-legend .lg-ee { background: var(--d-link); }
-.xx-legend .lg-pfe { background: var(--d-accent); }
-.xx-legend .lg-unc { background: var(--d-muted); }
-.xx-legend .lg-fan { background: var(--d-accent-tint); height: 8px; }
+.xx-chart { padding: var(--d-sp-6) var(--d-sp-10) var(--d-sp-4); min-height: 330px; }
 .xx-nopaths { padding: var(--d-sp-14); margin-bottom: var(--d-sp-10); border: 1px dashed var(--d-border); border-radius: var(--d-radius-4); color: var(--d-muted); background: var(--d-surface); }
 .xx-nopaths b { color: var(--d-ink); }
 
-/* tabs and tables */
+/* tabs; the tables are drishti-grid (terminal layout, drishti-risk's preset), the profile drishti-chart */
 .xx-tabs { display: flex; gap: var(--d-sp-2); border-bottom: 1px solid var(--d-border); background: var(--d-surface-2); overflow-x: auto; align-items: center; }
 .xx-tab { background: none; border: 0; color: var(--d-muted); font: 500 var(--d-fs-12) var(--d-font-sans); padding: var(--d-sp-8) var(--d-sp-12); border-bottom: 2px solid transparent;
   cursor: pointer; white-space: nowrap; }
 .xx-tab[aria-selected="true"] { color: var(--d-ink); border-bottom-color: var(--d-accent); font-weight: 600; }
-.xx-scroll { overflow-x: auto; max-width: 100%; }
-.xx-table { border-collapse: collapse; width: 100%; font-size: var(--d-fs-12); }
-.xx-table th { font-weight: 500; color: var(--d-muted); text-align: left; padding: var(--d-sp-5) var(--d-sp-8); border-bottom: 1px solid var(--d-border); white-space: nowrap;
-  font-size: var(--d-fs-10_5); text-transform: uppercase; letter-spacing: .04em; }
-.xx-table td { padding: var(--d-sp-4) var(--d-sp-8); border-bottom: 1px solid var(--d-border); white-space: nowrap; }
-.xx-table td.n, .xx-table th.n { text-align: right; }
-.xx-table tr.xx-click { cursor: pointer; }
-.xx-table tbody tr.xx-click:hover td { background: var(--d-highlight); }
-.xx-table tr.xx-total td { font-weight: 600; border-top: 1px solid var(--d-muted); }
-.xx-table a { color: var(--d-link); text-decoration: none; }
+.xx-grid { margin: 0 0 var(--d-sp-4); }
+.xx-grid .dg-row.xx-click { cursor: pointer; }
+.xx-grid .dg-row.xx-total .dg-cell { font-weight: 600; border-top: 1px solid var(--d-muted); }
 .xx-bar { display: inline-block; width: 70px; height: 6px; background: var(--d-bg-2); border-radius: var(--d-radius-3); vertical-align: middle; overflow: hidden; }
 .xx-bar i { display: block; height: 100%; border-radius: var(--d-radius-3); }
 .xx-bar i.ok { background: var(--d-ok); } .xx-bar i.warn { background: var(--d-warn); } .xx-bar i.crit { background: var(--d-bad); }
@@ -115,28 +102,6 @@
 .xx-form label { color: var(--d-muted); }
 .xx-actions { display: flex; gap: var(--d-sp-6); flex-wrap: wrap; margin-top: var(--d-sp-8); }
 .xx-pager { display: flex; gap: var(--d-sp-10); align-items: center; margin-top: var(--d-sp-6); font-size: var(--d-fs-11_5); color: var(--d-muted); }
-.xx-tip { position: fixed; pointer-events: none; background: var(--d-bg); border: 1px solid var(--d-border); color: var(--d-ink);
-  font: var(--d-fs-11_5) var(--d-font-mono); padding: var(--d-sp-6) var(--d-sp-8); border-radius: var(--d-radius-3); z-index: var(--d-z-drawer); white-space: pre; box-shadow: var(--d-shadow); }
-
-/* the charts (SVG) */
-.xx-svg { display: block; }
-.xx-svg text { font: var(--d-fs-10) var(--d-font-mono); fill: var(--d-muted); }
-.xx-svg .xx-grid { stroke: var(--d-border); stroke-width: 1; }
-.xx-svg .xx-line { fill: none; stroke-width: 2; stroke-linejoin: round; }
-.xx-svg .xx-line.ee { stroke: var(--d-link); }
-.xx-svg .xx-line.pfe { stroke: var(--d-accent); }
-.xx-svg .xx-line.unc { stroke: var(--d-muted); stroke-dasharray: 4 3; stroke-width: 1.5; }
-.xx-svg .xx-line.base { stroke: var(--d-faint); stroke-dasharray: 2 3; stroke-width: 1.5; }
-.xx-svg .xx-area { fill: var(--d-link); fill-opacity: .10; }
-.xx-svg .xx-fan1 { fill: var(--d-accent); fill-opacity: .10; }
-.xx-svg .xx-fan2 { fill: var(--d-accent); fill-opacity: .20; }
-.xx-svg .xx-peak { fill: var(--d-accent); }
-.xx-svg text.xx-peak-label { fill: var(--d-accent); font-weight: 600; }
-.xx-svg .xx-hit { fill: transparent; cursor: crosshair; }
-.xx-svg .xx-cross { stroke: var(--d-muted); stroke-width: 1; }
-.xx-spark { display: block; }
-.xx-spark polyline { fill: none; stroke: var(--d-link); stroke-width: 1.5; }
-
 @media (max-width: 900px) { .xx-layout { grid-template-columns: minmax(0, 1fr); } .xx-tree { max-height: 280px; } .xx-two { grid-template-columns: minmax(0, 1fr); }
   .xx-meta { margin-left: 0; } }
 @media (max-width: 560px) { .xx { padding: var(--d-sp-10); } .xx-tile .v { font-size: var(--d-fs-17); } }

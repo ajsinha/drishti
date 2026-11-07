@@ -37,7 +37,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 import packlake  # noqa: E402  (tools/packlake.py: the templates' tables as the pack's lake: entries, docs/guides/DATA_LAKE_GUIDE.md)
 
 #: the partitions after business_date the pack recommends (the demo lake, config/lakes/demo.yaml, says the same)
-PARTITIONS = {f"trading.trade_{s}": ["PRODUCT_TYPE"] for s in ("endur", "calypso", "murex")}
+PARTITIONS = {"trading.trade_endur": ["PRODUCT_TYPE"], "trading.trade_calypso": ["PRODUCT_GROUP"], "trading.trade_murex": ["PRODUCT_GROUP"]}   # calypso, murex: 50+ product types each
 import taxonomy as T
 import var_kinds as VK  # the VaR engine's kinds in the market-risk pack (positions, portfolios, P&L vectors, hierarchies)
 import corr_kinds as CK  # CORR computed from price history in the market-data pack (since 2.9.2)

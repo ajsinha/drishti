@@ -57,27 +57,13 @@
 .vb-hint.flagged .d { color: var(--d-bad); white-space: normal; }
 .vb-hint.none { color: var(--d-muted); cursor: default; }
 
-/* the sheet: only the rows in view are drawn; each row 24 px (drishti_var-basket-sheet.js ROW_H) */
-.vbs { border: 1px solid var(--d-border); border-radius: var(--d-radius-4); max-height: 340px; min-height: 120px; overflow: auto; position: relative;
-  background: var(--d-bg); outline: none; }
-.vbs:focus-visible { box-shadow: 0 0 0 2px var(--d-accent); }
-.vbs-table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: var(--d-fs-12); table-layout: auto; }
-.vbs-table th { position: sticky; top: 0; z-index: 1; background: var(--d-surface-2); color: var(--d-muted); font-weight: 500; text-align: left;
-  padding: var(--d-sp-3) var(--d-sp-8); border-bottom: 1px solid var(--d-border); border-right: 1px solid var(--d-border); white-space: nowrap; }
-.vbs-table th .t { display: block; font: var(--d-fs-10) var(--d-font-mono); color: var(--d-muted); opacity: .8; }
-.vbs-table td { height: 24px; box-sizing: border-box; padding: 0 var(--d-sp-8); border-bottom: 1px solid var(--d-border); border-right: 1px solid var(--d-border);
-  white-space: nowrap; font-family: var(--d-font-mono); font-variant-numeric: tabular-nums; max-width: 380px; overflow: hidden; text-overflow: ellipsis;
-  cursor: cell; }
-.vbs-table td.rn, .vbs-table th.rn { width: 52px; text-align: right; color: var(--d-muted); background: var(--d-surface-2); cursor: default; }
-.vbs-table td.op, .vbs-table th.op { width: 44px; text-align: center; color: var(--d-accent); cursor: pointer; }
-.vbs-table td.okc { background: color-mix(in srgb, var(--d-ok) 14%, transparent); }
-.vbs-table td.badc { background: color-mix(in srgb, var(--d-bad) 15%, transparent); color: var(--d-bad); }
-.vbs-table td.warnc { background: color-mix(in srgb, var(--d-warn) 16%, transparent); color: var(--d-warn); }
-.vbs-table td.pending { color: var(--d-muted); }
-.vbs-table td.cur { outline: 2px solid var(--d-accent); outline-offset: -2px; }
-.vbs-table td.editing { padding: 0; }
-.vbs-table tr.vbs-spacer td { padding: 0; border: 0; background: transparent; }
-.vbs-edit { width: 100%; height: 23px; border: 0; padding: 0 var(--d-sp-7); background: var(--d-surface); color: var(--d-ink); font-size: var(--d-fs-12); outline: 2px solid var(--d-accent); }
+/* the sheet: drishti-grid with cell editing (drishti_var-basket-sheet.js); each cell coloured by the server's check of it */
+.vbs { min-width: 0; }
+.vbs .dg-cell > [data-vb-cell] { display: block; height: 100%; min-width: 100%; margin: 0 -8px; padding: 0 var(--d-sp-8); box-sizing: content-box; }
+.vbs .okc { background: color-mix(in srgb, var(--d-ok) 14%, transparent); }
+.vbs .badc { background: color-mix(in srgb, var(--d-bad) 15%, transparent); color: var(--d-bad); }
+.vbs .warnc { background: color-mix(in srgb, var(--d-warn) 16%, transparent); color: var(--d-warn); }
+.vbs .pending { color: var(--d-muted); }
 
 .vb-checks { display: flex; flex-wrap: wrap; gap: var(--d-sp-6) var(--d-sp-8); align-items: center; min-height: 0; }
 .vb-checks:empty { display: none; }
@@ -105,13 +91,8 @@
 .vb-note { color: var(--d-muted); font-size: var(--d-fs-12); margin: var(--d-sp-2) 0; }
 .vb-err { color: var(--d-bad); margin: var(--d-sp-4) 0; font-size: var(--d-fs-12); }
 .vb-msg { color: var(--d-muted); font-size: var(--d-fs-12); flex: 1 1 200px; }
-.vb-table { border-collapse: collapse; font-size: var(--d-fs-12); min-width: 320px; }
-.vb-table th, .vb-table td { padding: var(--d-sp-3) var(--d-sp-8); border-bottom: 1px solid var(--d-border); text-align: left; white-space: nowrap; }
-.vb-table th { color: var(--d-muted); font-size: var(--d-fs-10_5); text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
-.vb-table .n { text-align: right; }
-.vb-table td.up { color: var(--d-neg); }
-.vb-table td.down { color: var(--d-pos); }
-.vb-table tr.vb-sub td { color: var(--d-muted); font-size: var(--d-fs-11_5); }
+.vb-wlist, .vb-grid { min-width: 320px; margin-top: var(--d-sp-6); }
+.vb-grid .dg-row.vb-sub > .dg-cell { color: var(--d-muted); font-size: var(--d-fs-11_5); }
 .vb-shade { position: fixed; inset: 0; z-index: var(--d-z-shade); background: var(--d-scrim-ink); display: flex; align-items: flex-start; justify-content: center;
   padding: 70px var(--d-sp-16) var(--d-sp-16); overflow-y: auto; }
 .vb.popup { width: min(1200px, 100%); box-shadow: var(--d-elev-dialog); margin: 0; }
@@ -121,6 +102,5 @@
   .vb-head-r { margin-left: 0; }
   .vb-hint { flex-wrap: wrap; }
   .vb-hint .d { margin-left: 0; white-space: normal; }
-  .vb-table { min-width: 0; width: 100%; }
   .vb-kpi { min-width: 0; flex: 1 1 40%; }
 }

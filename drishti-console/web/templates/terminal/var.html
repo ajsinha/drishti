@@ -29,7 +29,7 @@
 {% block title %}VaR · {{ scope }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}var{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_var.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_var-parametric.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_var-basket.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_var-layout.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}{% include "terminal/_risk_elements_css.html" %}<link rel="stylesheet" href="/static/css/drishti_var.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_var-parametric.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_var-basket.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_var-layout.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text='VAR ' ~ (scope | replace(':', ' ')) ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 {% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'var') %}{# the phone display (MOBILE_DISPLAY.md 8) #}
@@ -112,7 +112,7 @@
       <div class="vx-ph"><h2>Scopes</h2>
         <select class="vx-select" data-vx-hierarchy aria-label="Hierarchy"><option value="{{ hierarchy or 'MGMT' }}">{{ hierarchy or 'MGMT' }}</option></select>
         <span class="vx-fresh" data-vx-fresh="tree">loading…</span></div>
-      <div class="vx-tree" role="tree" data-vx-tree></div>
+      <div class="vx-tree" data-vx-tree aria-label="Scope tree"></div>
     </aside>
 
     <section class="vx-main">
@@ -151,7 +151,7 @@
           </div>
           <div class="vx-cbox vx-gap"{{ part(PP, 'path-series') }}><h3 data-vx-series-title>P&amp;L by scenario date</h3><div class="vx-chart" data-vx-series></div></div>
           <div class="vx-drill" data-vx-drill hidden></div>
-          <div class="vx-tablebox"{{ part(PP, 'path-table') }}><table class="vx-table" data-vx-pathtable><thead><tr><th class="n">Rank</th><th>Scenario date</th><th class="n">P&amp;L</th><th>Largest loss from</th><th>Trade currency</th><th class="n">Its P&amp;L</th></tr></thead><tbody></tbody></table></div>
+          <div class="vx-tablebox vx-grid" data-vx-pathtable aria-label="Scenarios by rank"{{ part(PP, 'path-table') }}></div>
           <p class="vx-note"><span data-vx-path-note>The highlighted rank is the VaR scenario.</span> <button type="button" class="vx-link" data-vx-more>Next page</button> · <a class="vx-link" data-vx-csv-path href="#">Download the path (CSV)</a> · <a class="vx-link" data-vx-jsonl-path href="#" title="A scenario a line, the CSV's column names">JSONL</a></p>
         </div>
         <div class="vx-pb" data-pane="hist" hidden>
@@ -159,7 +159,7 @@
             <div class="vx-cbox"><h3>VaR, ES and the day's hypothetical P&amp;L; one currency axis, losses below zero</h3><div class="vx-chart" data-vx-hline></div>
               <div class="vx-legend"><span><i class="lg-var"></i>−VaR</span><span><i class="lg-es"></i>−ES</span><span><i class="lg-pnl"></i>hypothetical P&amp;L</span><span><i class="lg-exc"></i>backtest exception</span></div>
               <p class="vx-note" data-vx-hist-note></p></div>
-            <div class="vx-tablebox vx-tall"><table class="vx-table" data-vx-histtable><thead><tr><th>Date</th><th class="n">VaR</th><th class="n">ES</th><th class="n">P&amp;L</th><th></th></tr></thead><tbody></tbody></table></div>
+            <div class="vx-tablebox vx-tall vx-grid" data-vx-histtable aria-label="VaR, ES and P&amp;L by date"></div>
           </div>
         </div>
         <div class="vx-pb" data-pane="contrib" hidden>
@@ -171,19 +171,21 @@
             </span>
           </div>
           <p class="vx-note vx-shown" data-vx-ctable-shown hidden></p>
-          <div class="vx-scroll"><table class="vx-table" data-vx-ctable><thead><tr><th>Scope</th><th>Trade currency</th><th class="n">Standalone VaR</th><th class="n">Component VaR</th><th class="n">% of total</th><th class="bar"></th><th class="n">Marginal (per 1m)</th><th class="n">Incremental VaR</th></tr></thead><tbody></tbody></table></div>
+          <div class="vx-grid" data-vx-ctable aria-label="Contributions"></div>
+          <p class="vx-ctotal mono" data-vx-ctotal hidden></p>
           <p class="vx-note" data-vx-ctable-note>Component VaR adds up to the scope's VaR (Euler, on the VaR scenario's neighbourhood). Incremental VaR = the scope's VaR minus its VaR without the row. Click a row to drill in; + basket adds it to your basket.</p>
         </div>
         <div class="vx-pb" data-pane="captures" hidden>
           <div class="vx-contrib-bar"><input class="vx-input" data-vx-cap-note placeholder="A note for the capture (optional)" aria-label="Capture note">
             <button type="button" class="btn btn-sm vx-btn primary" data-vx-capture>Capture VaR</button>
             <span class="vx-note" data-vx-cap-msg aria-live="polite"></span></div>
-          <div class="vx-scroll"><table class="vx-table" data-vx-captable><thead><tr><th>Capture</th><th>Date</th><th>Captured</th><th>By</th><th class="n">VaR</th><th class="n">ES</th><th>Note</th><th></th></tr></thead><tbody></tbody></table></div>
+          <div class="vx-grid" data-vx-captable aria-label="Captured results"></div>
+          <p class="vx-note" data-vx-cap-more hidden></p>
           <div class="vx-compare" data-vx-compare hidden></div>
         </div>
         <div class="vx-pb" data-pane="ccy" hidden>
           <p class="vx-note" data-vx-ccy-note>The same scope in each reporting currency: computed from its PVs summed per trade currency, converted with that currency's scenario FX.</p>
-          <div class="vx-scroll"><table class="vx-table vx-ccytable" data-vx-ccytable><thead><tr><th>Currency</th><th class="n">VaR</th><th class="n">ES</th><th class="n" data-vx-ccy-inpage>VaR in USD at today's rate</th><th class="n">Difference</th></tr></thead><tbody></tbody></table></div>
+          <div class="vx-grid vx-ccytable" data-vx-ccytable aria-label="The scope in other currencies"></div>
           <p class="vx-note">Click a currency to show the whole page in it.</p>
         </div>
       </div>
@@ -193,4 +195,4 @@
   {{ foot(PP, request.url | string) }}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/apache-arrow/21.1.0/Arrow.es2015.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_table.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-basket-sheet.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-basket.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_scope-delete.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-charts.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-layout.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-parametric.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-explorer.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}{% include "terminal/_risk_elements.html" %}<script src="/static/vendor/apache-arrow/21.1.0/Arrow.es2015.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_table.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-basket-sheet.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-basket.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_scope-delete.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-layout.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-parametric.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-explorer.js?v={{ ASSET_V }}"></script>{% endblock %}

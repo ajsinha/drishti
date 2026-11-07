@@ -23,7 +23,7 @@
 export const GRID_EVENTS = Object.freeze(['cellClicked', 'cellDoubleClicked', 'cellValueChanged', 'focusChanged', 'selectionChanged', 'rangeChanged',
   'sortChanged', 'filterChanged', 'pivotChanged', 'groupChanged', 'rowExpanded', 'rowCollapsed', 'columnMoved', 'columnResized', 'columnPinned',
   'columnVisible', 'rowDataUpdated', 'blockLoaded', 'blockFailed', 'explainOpened', 'serverTotalsUpdated', 'serverTotalsFailed', 'cellEditStarted',
-  'cellEditStopped', 'editTransaction', 'editUndone', 'editRedone', 'proposalResolved']);
+  'cellEditStopped', 'editTransaction', 'editUndone', 'editRedone', 'proposalResolved', 'pinnedCellClicked']);
 
 /**
  * The DOM name of a grid event: "drishti:" and the name in kebab case (cellClicked: drishti:cell-clicked).

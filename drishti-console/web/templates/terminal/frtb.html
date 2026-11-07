@@ -16,12 +16,13 @@
 {# FRTB-SA (docs/guides/FRTB_SA_GUIDE.md sections 7 and 8). mode "capital", FRSA <scope>: the decided mock-up B (the capital stack, the
    class × measure grid, the bucket drill on the right) with A's three scenarios and the contributions as tabs. mode "play", PLAY FRTB
    <scope> or PLAY FRTB RUN <id>: the playground on the VaR Playground's frame (the grid with its formula bar, the explanation beside it),
-   the Choices panel with every switch and a comparison explained by step, Save recipe and Export to Excel. A shell: drishti_frtb-sa.js fills it. #}
+   the Choices panel with every switch and a comparison explained by step, Save recipe and Export to Excel. A shell: drishti_frtb-sa.js fills it with Drishti Elements (drishti-grid tables in the terminal layout, the
+   stack a drishti-chart). #}
 {% extends "base.html" %}
 {% block title %}{{ 'FRTB-SA Playground' if mode == 'play' else 'FRTB-SA capital' }} · {{ scope or recipe or 'FRTB' }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}{{ screen }}{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_var-playground.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_frtb-sa.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_var-playground.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_frtb-sa.css?v={{ ASSET_V }}">{% include "terminal/_risk_elements_css.html" %}{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="pg fr" data-frtb data-mode="{{ mode }}" data-scope="{{ scope }}" data-recipe="{{ recipe or '' }}">
@@ -50,12 +51,12 @@
     <section class="fr-main">
       <div data-fr-pane="stack">
         <div class="fr-stack" data-fr-stack aria-label="The capital stack: delta, vega, curvature, DRC, RRAO, the total"></div>
-        <table class="fr-grid" data-fr-classes aria-label="Charge by risk class and measure in the reported scenario"></table>
+        <div class="fr-grid" data-fr-classes aria-label="Charge by risk class and measure in the reported scenario"></div>
       </div>
-      <div data-fr-pane="scenarios" hidden><table class="fr-grid" data-fr-scen aria-label="The three correlation scenarios"></table></div>
+      <div data-fr-pane="scenarios" hidden><div class="fr-grid" data-fr-scen aria-label="The three correlation scenarios"></div></div>
       <div data-fr-pane="contrib" hidden>
         <label class="pg-chip">By <select data-fr-by><option>DESK</option><option>TT_BOOK</option><option>LEGAL_ENTITY</option><option>PRODUCT_TYPE</option><option>POSITION</option></select></label>
-        <table class="fr-grid" data-fr-contrib aria-label="Contributions"></table>
+        <div class="fr-grid" data-fr-contrib aria-label="Contributions"></div>
       </div>
     </section>
     <aside class="pg-explain fr-drill" data-fr-drill aria-live="polite"><p class="muted">Select a cell of the grid: its buckets, K_b and S_b per scenario, and the factors.</p></aside>
@@ -72,11 +73,12 @@
   <div class="fr-compare" data-fr-diff aria-live="polite" hidden></div>
   <div class="pg-fbar" aria-label="Formula bar"><span class="pg-ref mono" data-fr-ref>—</span><span class="pg-fx mono">fx</span><code class="pg-formula" data-fr-formula>Select a row</code></div>
   <div class="pg-body">
-    <section class="pg-gridcard"><div class="pg-scroll" tabindex="0"><table class="fr-grid fr-ws" data-fr-ws aria-label="The weighted sensitivities and curvature risks, bucket by bucket"></table></div></section>
+    <section class="pg-gridcard"><div class="fr-grid fr-ws" data-fr-ws aria-label="The weighted sensitivities and curvature risks, bucket by bucket"></div><p class="muted fr-more" data-fr-more></p></section>
     <aside class="pg-explain" data-fr-explain aria-live="polite"></aside>
   </div>
   {% endif %}
   {% endif %}
 </div>
+{% include "terminal/_risk_elements.html" %}
 <script src="/static/js/drishti_frtb-sa.js?v={{ ASSET_V }}"></script>
 {% endblock %}

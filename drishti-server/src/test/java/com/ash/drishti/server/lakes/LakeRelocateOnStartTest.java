@@ -63,8 +63,48 @@ class LakeRelocateOnStartTest {
             assertThat(s.map(p -> p.getFileName().toString()).filter(n -> n.startsWith("reference-store.yaml.before-lake-")).count()).isEqualTo(1);
         }
         assertThat(Files.readString(tmp.resolve("config/connectors/vendor-store.yaml"))).contains("root: s3://vendor-bucket/delta").doesNotContain("lake:");
+        // the lake file had the table: it is not written, byte for byte as shipped
+        assertThat(Files.readString(tmp.resolve("config/lakes/demo.yaml"))).isEqualTo("lake: demo\nformat: delta\nroot: "
+                + "${DRISHTI_DELTA_ROOT_FOR_THIS_TEST:${drishti.data.dir:./data}/delta/demo}\ntables:\n  reference.book: {id: BOOK_ID}\n");
         new LakeRelocateOnStart().postProcessEnvironment(env(true), null);          // again: done before, nothing more (the folder made again stays)
         assertThat(tmp.resolve("data/delta/demo/reference")).isDirectory();
+    }
+
+    /**
+     * The owner's case after 2.9.11.d: the shipped lake files, a demo lake in the older layout and the connector files a 2.9.4 server
+     * generated (old default root, domain, kinds, layout): after the start every shipped lake file is byte for byte as shipped.
+     */
+    @Test
+    void aStartAfterTheMoveLeavesTheShippedLakeFilesAsShipped() throws Exception {
+        Path repo = Path.of("").toAbsolutePath().getParent();
+        Path lakes = Files.createDirectories(tmp.resolve("config/lakes"));
+        java.util.Map<String, byte[]> shipped = new java.util.TreeMap<>();
+        try (var s = Files.list(repo.resolve("config/lakes"))) {
+            for (Path f : s.filter(p -> p.toString().endsWith(".yaml")).toList()) {
+                Files.copy(f, lakes.resolve(f.getFileName()));
+                shipped.put(f.getFileName().toString(), Files.readAllBytes(f));
+            }
+        }
+        Path conns = Files.createDirectories(tmp.resolve("config/connectors"));
+        try (var s = Files.list(repo.resolve("drishti-server/src/test/resources/connector-upgrade/2.9.4/connectors"))) {
+            for (Path f : s.toList()) {
+                Files.copy(f, conns.resolve(f.getFileName()));
+            }
+        }
+        for (String d : new String[] {"reference", "market", "trading", "risk", "credit", "legal", "collateral", "_drishti-lake"}) {
+            Files.createDirectories(tmp.resolve("data/delta").resolve(d));
+        }
+        MockEnvironment env = new MockEnvironment().withProperty("drishti.data.dir", tmp.resolve("data").toString())
+                .withProperty("drishti.sources.connectors-dir", conns.toString()).withProperty("drishti.lakes.dir", lakes.toString());
+        new LakeRelocateOnStart().postProcessEnvironment(env, null);
+        assertThat(tmp.resolve("data/delta/demo/reference")).isDirectory();
+        assertThat(Files.readString(conns.resolve("risk-store.yaml"))).contains("lake: demo");
+        for (var e : shipped.entrySet()) {
+            assertThat(Files.readString(lakes.resolve(e.getKey()))).as(e.getKey()).isEqualTo(new String(e.getValue(), java.nio.charset.StandardCharsets.UTF_8));
+        }
+        try (var s = Files.list(lakes)) {
+            assertThat(s.map(p -> p.getFileName().toString()).toList()).containsExactlyInAnyOrderElementsOf(shipped.keySet());
+        }
     }
 
     @Test

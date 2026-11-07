@@ -104,7 +104,7 @@
         id: id, field: def.field || id, header: def.header || def.field || id, type: type, width: 120, minWidth: 40, maxWidth: null,
         pinned: null, hidden: false, sortable: true, filterable: true, resizable: true, editable: false, aggFunc: num ? 'sum' : null,
         additive: num, enableRowGroup: !num, enablePivot: !num, enableValue: num, group: null, description: '', format: null,
-        valueGetter: null, comparator: null, measure: null, cellClass: null, cellStyle: null, system: false
+        valueGetter: null, comparator: null, measure: null, cellClass: null, cellStyle: null, cellRenderer: null, system: false
       }, def, { id: id, type: type }, def.aggregate === 'server' ? { additive: false } : {});
     }
     function getValue(row, col) {
@@ -3288,7 +3288,7 @@
     const GRID_EVENTS = Object.freeze(['cellClicked', 'cellDoubleClicked', 'cellValueChanged', 'focusChanged', 'selectionChanged', 'rangeChanged',
       'sortChanged', 'filterChanged', 'pivotChanged', 'groupChanged', 'rowExpanded', 'rowCollapsed', 'columnMoved', 'columnResized', 'columnPinned',
       'columnVisible', 'rowDataUpdated', 'blockLoaded', 'blockFailed', 'explainOpened', 'serverTotalsUpdated', 'serverTotalsFailed', 'cellEditStarted',
-      'cellEditStopped', 'editTransaction', 'editUndone', 'editRedone', 'proposalResolved']);
+      'cellEditStopped', 'editTransaction', 'editUndone', 'editRedone', 'proposalResolved', 'pinnedCellClicked']);
     function domEventName(name) { return 'drishti:' + name.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase()); }
     class GridLive {
       constructor(grid, o) {
@@ -3627,7 +3627,7 @@
         if (row.kind === 'pivot') {
           const cell = this.answer.cells[row.entry.key + '|' + col.colKey];
           Object.assign(ctx, { measure: col.measure, coords: cell ? cell.coords : row.entry.coords, members: cell ? cell.members : 0, note: cell && cell.notes ? cell.notes[col.measure] || null : null, view: this.pivotView() });
-        } else if (row.kind === 'group') { Object.assign(ctx, { path: row.path || row.keys, field: row.field }); }
+        } else if (row.kind === 'group') { Object.assign(ctx, { path: row.path || row.keys, field: row.field }, row.tree && row.row ? { rowId: row.id, data: row.row } : {}); }
         else { Object.assign(ctx, { rowId: row.id, data: row.row }); }
         return ctx;
       }
@@ -3663,61 +3663,14 @@
     function createGridModel(o) { return new GridModel(o); }
     return { "GridModel": GridModel, "createGridModel": createGridModel };
   })();
-  /* ---- src/drishti_grid-body.js ---- */
-  __m["src/drishti_grid-body.js"] = (function () {
-    var h = __lib("drishti-core").h;
-    var headerSpans = __m["src/drishti_grid-ui.js"].headerSpans, pivotColumnLabels = __m["src/drishti_grid-ui.js"].pivotColumnLabels, markGroups = __m["src/drishti_grid-ui.js"].markGroups, isTotalCell = __m["src/drishti_grid-ui.js"].isTotalCell, nonAdditiveNote = __m["src/drishti_grid-ui.js"].nonAdditiveNote, cfBackground = __m["src/drishti_grid-ui.js"].cfBackground, figureRange = __m["src/drishti_grid-ui.js"].figureRange, ruleFor = __m["src/drishti_grid-ui.js"].ruleFor, cellLook = __m["src/drishti_grid-ui.js"].cellLook;
-    const CF_SCAN = 100000;
-    const DECO_STYLES = ['color', 'background-color', 'font-weight', 'font-style'];
-    function safeClasses(text) { return String(text).split(/\s+/).filter((t) => /^[A-Za-z][\w-]*$/.test(t)).join(' '); }
-    class GridBody {
-      constructor(view) {
-        this.view = view;
-        this.model = view.model;
-        const doc = this.doc = view.doc;
-        this.uid = view.uid;
-        this.scroller = h(doc, 'div', { cls: 'dg-scroll', attrs: { role: 'grid', tabindex: '0', 'aria-multiselectable': 'true', 'aria-label': view.o.label || 'Grid', id: this.uid + '-grid' } });
-        this.canvas = h(doc, 'div', { cls: 'dg-canvas', attrs: { role: 'presentation' } });
-        this.head = h(doc, 'div', { cls: 'dg-head', attrs: { role: 'rowgroup' } });
-        this.area = h(doc, 'div', { cls: 'dg-area', attrs: { role: 'presentation' } });
-        this.rows = h(doc, 'div', { cls: 'dg-rows', attrs: { role: 'rowgroup' } });
-        this.empty = h(doc, 'div', { cls: 'dg-empty', attrs: { hidden: true } });
-        this.area.appendChild(this.rows);
-        this.canvas.append(this.head, this.area);
-        this.scroller.append(this.canvas, this.empty);
-        this.cfCache = new Map();
-        this.version = 0;
-        this.drag = null;
-        this.frame = 0;
-        this.listen();
-      }
-      listen() {
-        const s = this.scroller, win = this.doc.defaultView;
-        s.addEventListener('scroll', () => this.schedule());
-        s.addEventListener('mousedown', (e) => this.down(e));
-        s.addEventListener('mouseover', (e) => this.over(e));
-        s.addEventListener('mouseleave', () => this.view.notes.hideTip());
-        s.addEventListener('click', (e) => this.click(e));
-        s.addEventListener('dblclick', (e) => this.dbl(e));
-        s.addEventListener('contextmenu', (e) => this.context(e));
-        this.onUp = () => { if (this.drag) { this.drag = null; this.view.afterRange(); } };
-        win.addEventListener('mouseup', this.onUp);
-      }
-      schedule() {
-        if (this.frame) { return; }
-        const win = this.doc.defaultView;
-        this.frame = win.requestAnimationFrame(() => { this.frame = 0; this.render(); });
-      }
-      invalidate() { this.version++; this.cfCache.clear(); this.spans = null; }
-      cellOf(e) {
-        const c = e.target.closest ? e.target.closest('.dg-cell') : null;
-        if (!c || !this.scroller.contains(c)) { return null; }
-        return { el: c, r: +c.dataset.r, c: +c.dataset.c };
-      }
+  /* ---- src/drishti_grid-pointer.js ---- */
+  __m["src/drishti_grid-pointer.js"] = (function () {
+    var nonAdditiveNote = __m["src/drishti_grid-ui.js"].nonAdditiveNote;
+    class GridPointer {
       down(e) {
         if (e.button !== 0) { return; }
         const t = e.target;
-        if (t.closest('.dg-tw, input, button, select, .dg-resize, .dg-hcell, .dg-editor')) { return; }
+        if (t.closest('.dg-tw, input, button, select, a[href], .dg-resize, .dg-hcell, .dg-editor')) { return; }
         const x = this.cellOf(e);
         if (!x) { return; }
         e.preventDefault();
@@ -3790,6 +3743,63 @@
         const row = this.spans && this.spans[lv];
         return row ? row.find((s) => s.key === key && s.group) || null : null;
       }
+    }
+    return { "GridPointer": GridPointer };
+  })();
+  /* ---- src/drishti_grid-body.js ---- */
+  __m["src/drishti_grid-body.js"] = (function () {
+    var h = __lib("drishti-core").h;
+    var GridPointer = __m["src/drishti_grid-pointer.js"].GridPointer;
+    var getValue = __m["src/drishti_columns.js"].getValue, formatValue = __m["src/drishti_columns.js"].formatValue;
+    var headerSpans = __m["src/drishti_grid-ui.js"].headerSpans, pivotColumnLabels = __m["src/drishti_grid-ui.js"].pivotColumnLabels, markGroups = __m["src/drishti_grid-ui.js"].markGroups, isTotalCell = __m["src/drishti_grid-ui.js"].isTotalCell, nonAdditiveNote = __m["src/drishti_grid-ui.js"].nonAdditiveNote, cfBackground = __m["src/drishti_grid-ui.js"].cfBackground, figureRange = __m["src/drishti_grid-ui.js"].figureRange, ruleFor = __m["src/drishti_grid-ui.js"].ruleFor, cellLook = __m["src/drishti_grid-ui.js"].cellLook;
+    const CF_SCAN = 100000;
+    const DECO_STYLES = ['color', 'background-color', 'font-weight', 'font-style'];
+    function safeClasses(text) { return String(text).split(/\s+/).filter((t) => /^[A-Za-z][\w-]*$/.test(t)).join(' '); }
+    class GridBody extends GridPointer {
+      constructor(view) {
+        super();
+        this.view = view;
+        this.model = view.model;
+        const doc = this.doc = view.doc;
+        this.uid = view.uid;
+        this.scroller = h(doc, 'div', { cls: 'dg-scroll', attrs: { role: 'grid', tabindex: '0', 'aria-multiselectable': 'true', 'aria-label': view.o.label || 'Grid', id: this.uid + '-grid' } });
+        this.canvas = h(doc, 'div', { cls: 'dg-canvas', attrs: { role: 'presentation' } });
+        this.head = h(doc, 'div', { cls: 'dg-head', attrs: { role: 'rowgroup' } });
+        this.area = h(doc, 'div', { cls: 'dg-area', attrs: { role: 'presentation' } });
+        this.rows = h(doc, 'div', { cls: 'dg-rows', attrs: { role: 'rowgroup' } });
+        this.empty = h(doc, 'div', { cls: 'dg-empty', attrs: { hidden: true } });
+        this.area.appendChild(this.rows);
+        this.canvas.append(this.head, this.area);
+        this.scroller.append(this.canvas, this.empty);
+        this.cfCache = new Map();
+        this.version = 0;
+        this.drag = null;
+        this.frame = 0;
+        this.listen();
+      }
+      listen() {
+        const s = this.scroller, win = this.doc.defaultView;
+        s.addEventListener('scroll', () => this.schedule());
+        s.addEventListener('mousedown', (e) => this.down(e));
+        s.addEventListener('mouseover', (e) => this.over(e));
+        s.addEventListener('mouseleave', () => this.view.notes.hideTip());
+        s.addEventListener('click', (e) => this.click(e));
+        s.addEventListener('dblclick', (e) => this.dbl(e));
+        s.addEventListener('contextmenu', (e) => this.context(e));
+        this.onUp = () => { if (this.drag) { this.drag = null; this.view.afterRange(); } };
+        win.addEventListener('mouseup', this.onUp);
+      }
+      schedule() {
+        if (this.frame) { return; }
+        const win = this.doc.defaultView;
+        this.frame = win.requestAnimationFrame(() => { this.frame = 0; this.render(); });
+      }
+      invalidate() { this.version++; this.cfCache.clear(); this.spans = null; }
+      cellOf(e) {
+        const c = e.target.closest ? e.target.closest('.dg-cell') : null;
+        if (!c || c.dataset.pinned !== undefined || !this.scroller.contains(c)) { return null; }
+        return { el: c, r: +c.dataset.r, c: +c.dataset.c };
+      }
       labels(display) {
         const m = this.model;
         if (m.pivotMode) {
@@ -3818,14 +3828,23 @@
         for (let lv = 0; lv < levels; lv++) { this.spans.push([].concat(out.left[lv] || [], out.center[lv] || [], out.right[lv] || [])); }
         return { out: out, levels: levels };
       }
+      fit(headH, rh, W) {
+        const host = this.view.host, sc = this.scroller;
+        const n = Math.max(1, Math.min(this.model.rowCount(), this.view.o.fitRows));
+        const bar = W > sc.clientWidth + 1 ? sc.offsetHeight - sc.clientHeight || 12 : 0;
+        const want = Math.ceil(host.offsetHeight - sc.clientHeight + headH + n * rh + bar + 2);
+        if (want > 0 && Math.abs(host.offsetHeight - want) > 1) { host.style.height = want + 'px'; }
+      }
       render() {
         const m = this.model, v = this.view, vp = m.viewport, doc = this.doc;
         const disp = v.displayColumns();
         const win = doc.defaultView, touch = !!(win && win.matchMedia && win.matchMedia('(pointer: coarse)').matches);
         const rh = vp.rowHeight, hrh = touch ? Math.max(44, rh + 4) : rh + 4;   // a heading is a target a finger can hit on a touch screen (44 px)
         const sp = this.paneSpans(disp);
-        const headH = sp.levels * hrh;
+        const pinned = v.o.pinnedTopRows || [];
+        const headH = sp.levels * hrh + pinned.length * rh;
         const W = disp.leftW + disp.centerW + disp.rightW;
+        if (v.o.fitRows) { this.fit(headH, rh, W); }
         vp.resize(Math.max(1, this.scroller.clientWidth), Math.max(rh, this.scroller.clientHeight - headH));
         vp.setRowCount(m.rowCount());
         vp.scrollTo(this.scroller.scrollTop, this.scroller.scrollLeft);
@@ -3850,6 +3869,7 @@
           this.headPane(row, sp.out.right[lv] || [], disp, 'right', lv, leaf);
           this.head.appendChild(row);
         }
+        pinned.forEach((data, k) => this.head.appendChild(this.pinnedRowEl(data, k, disp, centerShown, lead, trail, rh)));
         this.rows.textContent = '';
         this.rows.style.top = rows.offset + 'px';
         this.rows.style.width = W + 'px';
@@ -3922,6 +3942,32 @@
         box.indeterminate = n > 0 && n < all;
         cell.appendChild(box);
       }
+      pinnedRowEl(data, k, disp, centerShown, lead, trail, rh) {
+        const doc = this.doc;
+        const row = h(doc, 'div', { cls: 'dg-row dg-pinned-top', attrs: { role: 'row' }, data: { pinned: String(k) }, style: { height: rh + 'px' } });
+        const cellOf = (d) => {
+          const col = d.col, value = getValue(data, col), text = formatValue(value, col, data);
+          const style = { width: d.width + 'px' };
+          if (d.pane === 'left') { style.left = disp.leftOffset[d.i] + 'px'; }
+          if (d.pane === 'right') { style.right = disp.rightOffset[d.i] + 'px'; }
+          const extra = col.cellClass ? col.cellClass(value, data) : null;
+          const cell = h(doc, 'div', { cls: 'dg-cell dg-' + d.pane + (col.type === 'number' ? ' dg-num' : '') + (extra ? ' ' + extra : ''),
+            attrs: { role: 'gridcell', 'aria-colindex': String(d.i + 1) }, data: { pinned: String(k), c: String(d.i) }, style: style });
+          const drawn = col.cellRenderer ? col.cellRenderer({ value: value, text: text, row: data, doc: doc, pinned: k }) : null;
+          cell.appendChild(drawn !== null && drawn !== undefined && drawn !== '' ? (typeof drawn === 'string' ? h(doc, 'span', { cls: 'dg-text', text: drawn }) : drawn) : h(doc, 'span', { cls: 'dg-text', text: text }));
+          return cell;
+        };
+        disp.left.forEach((d) => row.appendChild(cellOf(d)));
+        if (lead) { row.appendChild(h(doc, 'div', { cls: 'dg-gap', attrs: { role: 'presentation' }, style: { width: lead + 'px' } })); }
+        centerShown.forEach((d) => row.appendChild(cellOf(d)));
+        if (trail > 0) { row.appendChild(h(doc, 'div', { cls: 'dg-gap', attrs: { role: 'presentation' }, style: { width: trail + 'px' } })); }
+        disp.right.forEach((d) => row.appendChild(cellOf(d)));
+        row.addEventListener('pointerdown', (e) => {
+          const c = e.target.closest('.dg-cell');
+          if (c) { this.model.live.emit('pinnedCellClicked', { pinned: k, col: +c.dataset.c, columnId: this.model.shownColumns()[+c.dataset.c].id, data: data }); }
+        });
+        return row;
+      }
       rowEl(r, x, disp, centerShown, lead, trail, focus, flash, levels) {
         const doc = this.doc, m = this.model;
         const e = x.kind === 'pivot' ? x.entry : null;
@@ -3934,6 +3980,12 @@
         const row = h(doc, 'div', { cls: cls, attrs: { role: 'row', 'aria-rowindex': String(r + levels + 1), 'aria-selected': id !== null ? String(selected) : null,
           'aria-level': m.pivotMode || x.kind === 'group' || x.tree || x.depth ? String((x.depth || 0) + 1) : null, 'aria-expanded': expandable ? String(expanded) : null },
         style: { height: m.viewport.rowHeight + 'px' } });
+        const o = this.view.o;
+        if (x.row && (x.kind === 'leaf' || x.tree) && (o.getRowClass || o.getRowData)) {
+          const rc = o.getRowClass ? o.getRowClass(x.row) : null, rd = o.getRowData ? o.getRowData(x.row) : null;
+          if (rc) { row.className += ' ' + rc; }
+          if (rd) { Object.keys(rd).forEach((k) => { if (rd[k] !== null && rd[k] !== undefined) { row.dataset[k] = String(rd[k]); } }); }
+        }
         const rowKey = e ? 'p:' + e.key : x.kind === 'group' ? 'g:' + (x.path || x.keys || []).join('\u001f') : 'l:' + (x.id !== undefined ? x.id : r);
         const first = disp.all[0];
         const add = (d) => row.appendChild(this.cellEl(r, x, d, { kind: kind, expandable: expandable, expanded: expanded, first: d === first, focus: focus, flash: flash, rowKey: rowKey, selected: selected }, disp));
@@ -3983,7 +4035,7 @@
         }
         const focused = k.focus && k.focus.row === r && k.focus.col === c;
         if (focused) { cls += ' dg-focus'; }
-        if ((col.cellClass || col.cellStyle) && !loading && (x.kind === 'leaf' || x.kind === 'group')) {
+        if ((col.cellClass || col.cellStyle) && !loading && (x.kind === 'leaf' || x.kind === 'group' || x.tree)) {
           const look = cellLook(col, value, x.row || {});
           if (look.cls) { cls += ' ' + look.cls; }
           Object.assign(style, look.style);
@@ -4010,11 +4062,15 @@
           if (k.expandable) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw', text: k.expanded ? '−' : '+', attrs: { 'aria-hidden': 'true' }, data: { r: String(r) } })); }
           else if (m.pivotMode || (m.rowModel.groupBy && m.rowModel.groupBy.length) || m.rowModel.treeData) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw dg-tw-none', attrs: { 'aria-hidden': 'true' } })); }
         }
+        const leafRow = !loading && x.row && (x.kind === 'leaf' || x.tree) ? x.row : null;   // a leaf's row, or a tree node's own
+        const drawn = leafRow && col.cellRenderer && !(deco && deco.content) ? col.cellRenderer({ value: value, text: text, row: leafRow, doc: doc }) : null;
         if (deco && deco.before && typeof deco.before === 'object' && deco.before.nodeType) { cell.appendChild(deco.before); }
         if (deco && deco.content && typeof deco.content === 'object' && deco.content.nodeType) {
           const box = h(doc, 'span', { cls: 'dg-text' });
           box.appendChild(deco.content);
           cell.appendChild(box);
+        } else if (drawn !== null && drawn !== undefined && drawn !== '') {
+          cell.appendChild(typeof drawn === 'string' ? h(doc, 'span', { cls: 'dg-text', text: drawn }) : drawn);
         } else { cell.appendChild(h(doc, 'span', { cls: 'dg-text', text: text })); }
         if (deco && deco.after !== undefined && deco.after !== null && deco.after !== '') {
           cell.appendChild(typeof deco.after === 'object' && deco.after.nodeType ? deco.after : h(doc, 'span', { cls: 'dg-after', text: String(deco.after) }));
@@ -4649,7 +4705,7 @@
     function buildShell(v) {
       const doc = v.doc, L = v.model.layout, R = v.regions = { layout: v.model.layout };
       if (v.root) { v.root.remove(); }
-      const root = v.root = h(doc, 'div', { cls: 'dg-root dg-layout-' + L });
+      const root = v.root = h(doc, 'div', { cls: 'dg-root dg-layout-' + L + (v.o.chrome === false ? ' dg-bare' : '') });
       R.toolbar = h(doc, 'div', { cls: 'dg-toolbar', attrs: { role: 'toolbar', 'aria-label': (v.o.title || 'Grid') + ' tools' } });
       R.wells = h(doc, 'div', { cls: 'dg-wells' });
       R.status = h(doc, 'div', { cls: 'dg-status', attrs: { 'aria-label': 'Status' } });
