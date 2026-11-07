@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 2.9.11.e — release notes (draft)
+# Drishti 2.9.11.f — release notes (draft)
 
 *Not released yet.*
 

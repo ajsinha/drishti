@@ -19,6 +19,37 @@
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
 
+## 2.9.11.f (unreleased)
+
+### One storage profile: the Drishti database
+
+- **One database for every Drishti-owned table, in its own file (DATA_ARCHITECTURE.md section 6, OPERATIONS.md section 10.3).**
+  `config/db/database.yaml` (`drishti.database.kind: sqlite | postgres`, `sqlite.file`, `postgres.url`, `user`, `password` as `${ENV}`,
+  `pool.*` over the site's `drishti.db.pool`), imported by `application.yaml` (`drishti.db.file`, `DRISHTI_DATABASE_CONFIG`). The
+  `drishti.identity.database-*` keys and `DRISHTI_IDENTITY_DB_*` are gone: a server that finds one refuses to start naming the new key.
+  `DrishtiDatabase` (drishti-identity) opens the one pool; identity, collaboration, write-back, runs, approvals, switches and the content
+  store take their connections from it.
+- **The content store's `database` backend** replaces `sqlite` and `postgres`: `JdbcContentStore` uses the Drishti database's pool (no
+  pool, URL or schema step of its own); `config/store.examples/postgres.yaml` is now `database.yaml`; `DRISHTI_STORE_PASSWORD` is gone.
+- **Two complete schema files, no fix-ups.** The three `ALTER TABLE ... ADD COLUMN` statements of the PostgreSQL file and the three
+  SQLite column fix-ups in Java (`ensureHoldRange`, `ensureTokenScopes`, `ensureShareViewState`) are folded into the `CREATE TABLE`s;
+  `drishti_share.view_state` is in the SQLite file too. Both files carry `-- schema-version: 1`; the stamp table `drishti_schema` records
+  the version that built a database. At start a database stamped with another version, or lacking a declared column, is refused with
+  `drishti.py db copy` named; an unstamped one holding every column is stamped.
+- **`drishti.py db copy --from A.yaml --to B.yaml [--check] [--drop-columns] [--json]`** (`tools/dbcli.py`, `DatabaseCli`,
+  `DatabaseCopy`; in Java from the exec jar, no server): builds a fresh database from the complete schema, copies every table in schema
+  order in batches of 1,000 (columns by name; new columns take their default; dropped columns need `--drop-columns`; SQLite's 0/1 and
+  epoch-millisecond values become PostgreSQL's types and back; PostgreSQL identities set past the copied keys), verifies every row
+  count, stamps the target. It is the upgrade path and the SQLite ↔ PostgreSQL switch. OPERATIONS.md section 10.3 shows its real
+  output for a fresh server's database (53 tables, 2 rows); TOOLS.md section 5.18 lists the `db` group; the docs rot check reads
+  `config/db/database.yaml` as server settings; the database's messages name the product from `drishti.branding`
+  (`DrishtiDatabase.label()`), as the branding guard requires.
+- **Guard and tests.** `SchemaParityTest` (drishti-it): the same tables, columns, indexes and version in both files; no `ALTER`, `DROP`,
+  `UPDATE` or `INSERT` in them; no code outside them creates or alters a table except the DuckDB engines and connector loaders it lists.
+  `DatabaseCopyTest` (an older SQLite database refused at start, `--check`, `--drop-columns`, every row and value copied, the target
+  stamped and fresh-only, the command with two settings files), `PostgresDatabaseCopyTest` (SQLite → PostgreSQL → SQLite, Docker),
+  `IdentityPoolTest` (the database's own pool keys), `tools/test_dbcli.py`.
+
 ## 2.9.11.d (unreleased)
 
 - **One Python runtime: every Python run on the server's compute pools** (SYNTHESIS A11, Brief 3; PYTHON_COMPUTE.md section 19; lean & streamlined):
@@ -1225,35 +1256,6 @@
   `TableOfferTest` (the offer and its grain pass the checks and preview; name clashes; the scan warning), `TablesCliTest` (offer, `--stored`),
   `tools/test_tablescli.py`, `PivotTablesApiTest` (a table as a pivot source with its kind's counts and its masks; two tables over one
   kind read it once; stored names).
-
-### One storage profile: the Drishti database
-
-- **One database for every Drishti-owned table, in its own file (DATA_ARCHITECTURE.md section 6, OPERATIONS.md section 10.3).**
-  `config/db/database.yaml` (`drishti.database.kind: sqlite | postgres`, `sqlite.file`, `postgres.url`, `user`, `password` as `${ENV}`,
-  `pool.*` over the site's `drishti.db.pool`), imported by `application.yaml` (`drishti.db.file`, `DRISHTI_DATABASE_CONFIG`). The
-  `drishti.identity.database-*` keys and `DRISHTI_IDENTITY_DB_*` are gone: a server that finds one refuses to start naming the new key.
-  `DrishtiDatabase` (drishti-identity) opens the one pool; identity, collaboration, write-back, runs, approvals, switches and the content
-  store take their connections from it.
-- **The content store's `database` backend** replaces `sqlite` and `postgres`: `JdbcContentStore` uses the Drishti database's pool (no
-  pool, URL or schema step of its own); `config/store.examples/postgres.yaml` is now `database.yaml`; `DRISHTI_STORE_PASSWORD` is gone.
-- **Two complete schema files, no fix-ups.** The three `ALTER TABLE ... ADD COLUMN` statements of the PostgreSQL file and the three
-  SQLite column fix-ups in Java (`ensureHoldRange`, `ensureTokenScopes`, `ensureShareViewState`) are folded into the `CREATE TABLE`s;
-  `drishti_share.view_state` is in the SQLite file too. Both files carry `-- schema-version: 1`; the stamp table `drishti_schema` records
-  the version that built a database. At start a database stamped with another version, or lacking a declared column, is refused with
-  `drishti.py db copy` named; an unstamped one holding every column is stamped.
-- **`drishti.py db copy --from A.yaml --to B.yaml [--check] [--drop-columns] [--json]`** (`tools/dbcli.py`, `DatabaseCli`,
-  `DatabaseCopy`; in Java from the exec jar, no server): builds a fresh database from the complete schema, copies every table in schema
-  order in batches of 1,000 (columns by name; new columns take their default; dropped columns need `--drop-columns`; SQLite's 0/1 and
-  epoch-millisecond values become PostgreSQL's types and back; PostgreSQL identities set past the copied keys), verifies every row
-  count, stamps the target. It is the upgrade path and the SQLite ↔ PostgreSQL switch. OPERATIONS.md section 10.3 shows its real
-  output for a fresh server's database (53 tables, 2 rows); TOOLS.md section 5.18 lists the `db` group; the docs rot check reads
-  `config/db/database.yaml` as server settings; the database's messages name the product from `drishti.branding`
-  (`DrishtiDatabase.label()`), as the branding guard requires.
-- **Guard and tests.** `SchemaParityTest` (drishti-it): the same tables, columns, indexes and version in both files; no `ALTER`, `DROP`,
-  `UPDATE` or `INSERT` in them; no code outside them creates or alters a table except the DuckDB engines and connector loaders it lists.
-  `DatabaseCopyTest` (an older SQLite database refused at start, `--check`, `--drop-columns`, every row and value copied, the target
-  stamped and fresh-only, the command with two settings files), `PostgresDatabaseCopyTest` (SQLite → PostgreSQL → SQLite, Docker),
-  `IdentityPoolTest` (the database's own pool keys), `tools/test_dbcli.py`.
 
 ## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)
 
