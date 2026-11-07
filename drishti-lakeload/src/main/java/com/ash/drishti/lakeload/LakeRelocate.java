@@ -197,6 +197,9 @@ public final class LakeRelocate {
                 if (n.equals(name)) {
                     continue;                                   // the target itself: refused below when it exists
                 }
+                if (placeholderOnly(p)) {
+                    continue;                                   // another lake's folder kept in git with only its README.md (risklake)
+                }
                 boolean isMine = mine.contains(n) && Files.isDirectory(p);
                 if (isMine && others.contains(n)) {
                     shared.add(n);
@@ -214,7 +217,7 @@ public final class LakeRelocate {
         if (move.isEmpty()) {
             return new Outcome("nothing", "no table folder of lake " + name + " in " + from + ": nothing to move", name, from, to, List.of(), Map.of());
         }
-        if (Files.exists(to)) {
+        if (Files.exists(to) && !placeholderOnly(to)) {
             return refused(name, from, to, "the target " + to + " exists already, and " + from + " still holds " + move + " of lake " + name
                     + ": move them by hand, or rename the target and run drishti.py lake relocate " + name + " again");
         }
@@ -273,7 +276,9 @@ public final class LakeRelocate {
             }
             List<String> moved = new ArrayList<>();
             try {
-                Files.createDirectory(to);
+                if (!Files.isDirectory(to)) {
+                    Files.createDirectory(to);                  // a folder kept in git with only its README.md is used as it is
+                }
                 for (String n : move) {
                     Files.move(from.resolve(n), to.resolve(n), StandardCopyOption.ATOMIC_MOVE);
                     moved.add(n);
@@ -451,5 +456,24 @@ public final class LakeRelocate {
             return new Held(null, null, null);
         }
         return new Held(ch, l, null);
+    }
+
+    /**
+     * Whether a target folder holds nothing but its README.md: the lakes' folders are kept in git that way (each with only its
+     * README.md), so such a folder is as good as absent and the move goes into it.
+     *
+     * @param dir the target folder
+     * @return true when it is a folder whose one entry is README.md (an empty folder is not: it says nothing)
+     */
+    static boolean placeholderOnly(Path dir) {
+        if (!Files.isDirectory(dir)) {
+            return false;
+        }
+        try (Stream<Path> s = Files.list(dir)) {
+            List<Path> in = s.toList();
+            return in.size() == 1 && in.get(0).getFileName().toString().equals("README.md") && Files.isRegularFile(in.get(0));
+        } catch (IOException e) {
+            return false;
+        }
     }
 }

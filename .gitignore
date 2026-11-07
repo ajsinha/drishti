@@ -17,6 +17,27 @@ hs_err_pid*
 # data/testdata (tools/testdata/make_testdata.py writes it, `drishti.py lake demo` builds the demo lakes from it)
 /data/*
 !/data/testdata/
+# the lakes' folders are kept in git (each with only its README.md); what a build or a load writes there is never committed
+!/data/delta/
+/data/delta/*
+!/data/delta/demo/
+/data/delta/demo/*
+!/data/delta/demo/README.md
+!/data/delta/risklake/
+/data/delta/risklake/*
+!/data/delta/risklake/README.md
+!/data/delta/newslake/
+/data/delta/newslake/*
+!/data/delta/newslake/README.md
+!/data/delta/worldlake/
+/data/delta/worldlake/*
+!/data/delta/worldlake/README.md
+!/data/delta/regulators/
+/data/delta/regulators/*
+!/data/delta/regulators/README.md
+!/data/delta/capitalmarket/
+/data/delta/capitalmarket/*
+!/data/delta/capitalmarket/README.md
 .claude/
 # the Python runtime of Calc: installed by tools/fetch-pyodide.sh (pinned and verified), never committed
 drishti-console/web/static/vendor/pyodide/

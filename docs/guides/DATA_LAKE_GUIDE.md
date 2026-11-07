@@ -96,6 +96,8 @@ demo lake's file also ships inside the server, so a server started in another fo
 `demo.yaml` in the folder wins. Example lake files for S3, Iceberg path tables, AWS S3 Tables, a REST catalog behind a private CA and an
 in-memory store are in `config/lakes.examples/`, each beside its connectors in `config/connectors.examples/`.
 
+**The lakes Drishti ships.** `demo` (the demo data, built from the committed test data in `data/testdata/`) and five lakes that ship empty, as definitions only: `risklake` (the bank's own risk data), `newslake` (news), `worldlake` (the World Bank, the IMF, the United Nations), `regulators` (the SEC, the Federal Reserve, OSFI and other central banks) and `capitalmarket` (prices, curves, volatility surfaces, funds). Each has its lake file in `config/lakes/` with no tables and its folder `data/delta/<lake>/` holding only a README.md; what a build or a load writes there is never committed. Nothing shipped points at the five: every connector reads `demo` until you point it elsewhere (section 6).
+
 ## 2. The lake file, every key
 
 ### 2.1 A worked example: `config/lakes/risklake.yaml`
@@ -705,8 +707,15 @@ Every row carries the id of the load that wrote it (`_load_id`, `<run>.<n>`; the
 rows, in one commit per table and date, and a replace is undone by restoring the date's previous version:
 
 - Admin → Data loads → Inbox → **Undo a load**: Check, then type the load id again;
-- `POST /api/v1/admin/dataload/undo`;
-- the command line (*captured*):
+- `POST /api/v1/admin/dataload/undo` (`{"loadId": …}` a dry run; `"confirm"`: the same id, the undo; `"lake"`: a lake to undo in);
+- `python3 tools/drishti.py dataload undo <load-id>` (a dry run; `--yes` undoes it; `--lake NAME`);
+
+These three undo in **the lake the load wrote into**: the server finds the load's `loaded` line in the ledger (its `loads`, or its
+`loaderRun` for lines written before the ids were recorded) and takes the route's `lake`. The answer names it (*would undo in risklake: 1
+table date*). A load the inbox did not make, such as a `lake build`, has no ledger line: it is looked for in the inbox's own lake
+(`lake:` in `config/engines/dataload.yaml`), or give `lake`.
+
+- `drishti.py lake undo` works on a lake folder directly, without the server (*captured*):
 
 ```bash
 python3 tools/drishti.py lake undo 20261107T080233.594-1791776.1 --lake data/delta/risklake --dry-run
@@ -755,9 +764,25 @@ domain: split it otherwise. Then **restart the server** (or let it reload the co
 cycle's notices: *loaded into risklake, but no connector reads it: point market-risk's connectors at it (lake: risklake) and restart*.
 The rows are in the lake; nothing shows them until a connector names it.
 
-**Demo and real never mix.** Each lake has its own folder and its own file, and a connector reads one lake. A server reads either your
-data or the demo for a kind, never both: the moment `risk-store` says `lake: risklake`, VaR, BI and every page read your scenario PVs
-only. Keep the demo on another server (or another data folder) to compare.
+**Demo and real never mix.** Each lake has its own folder and its own file, and a connector reads one lake. Three rules keep a server
+from showing demo data beside yours:
+
+- **The packs' samples step aside.** Every pack ships sample documents (`config/packs/<pack>/samples/`), served by the `demo` connector,
+  which answers any kind and, on a live read, before the lakes. Once a kind's routed connector, or any Delta or Iceberg connector serving
+  it, names a lake other than `demo`, the samples no longer answer for that kind: not by id (`TRD 1000001`, a demo ComSwap, is not
+  found once `trade-endur` reads risklake), not in a search. A kind whose connectors all read `demo` keeps its samples, so a demo server
+  is unchanged. The server's published results lakes (`var-official`, `ccr-official`) do not count: they hold no inputs.
+- **A whole pack, one lake.** Point every Delta and Iceberg connector of a pack at the lake, not one of them: the pack's screens read
+  all its connectors (`trade-endur`, `trade-calypso` and `trade-murex` are one trade store; VaR reads scenario PVs, P&L vectors,
+  hierarchies, portfolios and limits from `risk-store` and the market data from `market-store`). A connector file replaces the pack's
+  template whole: keep its other keys (`union: true` on the trade connectors) when you change `lake:`.
+- **The warning.** A pack whose connectors read more than one lake is *DEGRADED* in Admin → Health and `GET /api/v1/health`
+  (`packs[].lakes`, each lake with its connectors, and `packs[].lakeWarning`): *trading's connectors read different lakes: demo
+  (trade-calypso, trade-murex); risklake (trade-endur). Its screens mix them: point every connector of trading at one lake (lake: in each
+  connector file) and restart*.
+
+Nothing is cached across the switch: a read goes to the connectors as they stand after the restart. Keep the demo on another server (or
+another data folder) to compare.
 
 **Going back to the demo**: set the connector files back to `lake: demo` and their pack's `lake-tables:` (or delete the file: the
 pack's template is written again at the next start), and restart. Nothing in either lake changes.

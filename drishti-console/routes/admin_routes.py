@@ -448,6 +448,8 @@ async def dataload_undo(request: Request):
     data = {"loadId": load_id}
     if isinstance(body, dict) and body.get("confirm"):
         data["confirm"] = str(body["confirm"]).strip()
+    if isinstance(body, dict) and body.get("lake"):
+        data["lake"] = str(body["lake"]).strip()       # else the server finds the load's lake in the ledger
     try:
         return await request.app.state.backend.admin("POST", "/dataload/undo", me, data)
     except BackendError as e:

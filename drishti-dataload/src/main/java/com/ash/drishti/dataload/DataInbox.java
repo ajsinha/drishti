@@ -235,6 +235,30 @@ public final class DataInbox {
         return out;
     }
 
+    /**
+     * Undo load {@code id} (DATA_LAKE_GUIDE.md section 5.5) in the lake it wrote into: {@code lake} when given, else the lake of its
+     * {@code loaded} line in the ledger (the route's {@code lake}), else the inbox's default lake (a load the inbox did not make). The answer:
+     * {@code lake}, {@code lakeFrom} ({@code given}, {@code ledger} or {@code inbox}) and a line per table and date ({@code lines}).
+     */
+    public Map<String, Object> undo(String id, String lake, boolean dryRun) throws Exception {
+        String name = lake == null || lake.isBlank() ? null : lake.trim();
+        String from = "given";
+        if (name == null) {
+            JsonNode line = Ledger.loadedLine(Path.of(settings.dir()).resolve("ledger"), id);
+            name = line == null ? null : line.path("route").path("lake").asText(null);
+            from = "ledger";
+        }
+        if (name == null || name.isBlank()) {
+            name = settings.lake();
+            from = "inbox";
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("lake", name);
+        out.put("lakeFrom", from);
+        out.put("lines", com.ash.drishti.lakeload.LakeUndo.undoAll(Cycle.lakeRoot(name), id, List.of(), dryRun));
+        return out;
+    }
+
     /** What Admin and the command line show. */
     public Map<String, Object> status() {
         Path root = Path.of(settings.dir());

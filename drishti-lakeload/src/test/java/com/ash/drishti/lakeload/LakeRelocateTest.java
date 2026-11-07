@@ -121,12 +121,25 @@ class LakeRelocateTest {
 
     @Test
     void anExistingTargetIsRefused() throws Exception {
-        Files.createDirectories(delta.resolve("demo"));
+        Files.createDirectories(delta.resolve("demo/trading"));                                   // a target that holds something
         LakeRelocate.Outcome o = LakeRelocate.relocate(lakes(), "demo", false);
         assertThat(o.state()).isEqualTo("refused");
         assertThat(o.message()).contains("exists already");
         assertThat(names(delta)).contains("risk", "trading");
-        assertThat(names(delta.resolve("demo"))).isEmpty();
+        assertThat(names(delta.resolve("demo"))).containsExactly("trading");
+    }
+
+    @Test
+    void lakeFoldersKeptInGitWithOnlyTheirReadmeAreAsGoodAsAbsent() throws Exception {
+        Files.createDirectories(delta.resolve("demo"));
+        Files.writeString(delta.resolve("demo/README.md"), "the demo lake\n");                   // as committed
+        Files.createDirectories(delta.resolve("risklake"));
+        Files.writeString(delta.resolve("risklake/README.md"), "the risklake lake\n");           // another lake's empty folder
+        LakeRelocate.Outcome o = LakeRelocate.relocate(lakes(), "demo", false);
+        assertThat(o.state()).as(o.message()).isEqualTo("moved");
+        assertThat(names(delta)).containsExactly("demo", "risk-results", "risklake");
+        assertThat(names(delta.resolve("demo"))).containsExactly("README.md", LakeState.STATE, "risk", "trading");
+        assertThat(names(delta.resolve("risklake"))).containsExactly("README.md");
     }
 
     @Test

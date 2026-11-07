@@ -596,6 +596,9 @@ public final class Cycle {
                     .put("accepted", summary.path("accepted").asLong()).put("rejected", summary.path("rejected").asLong())
                     .put("loaderRun", summary.path("run").asText());
             n.set("dates", summary.path("commit").path("dates"));
+            if (summary.path("loads").size() > 0) {
+                n.set("loads", summary.path("loads"));         // the load ids it wrote: an undo finds the load's lake by them
+            }
             if (summary.path("fileDates").size() > 0) {
                 n.set("fileDates", summary.path("fileDates"));
             }
