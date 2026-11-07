@@ -50,6 +50,28 @@
     return { el: h('span', { class: 'bi-colourpick' }, i, x), input: i };
   }
 
+  /* The small controls the rest of the BI designer still draws with (its page, tooltip, theme, tile and rule panes: they move onto the
+     designer kit's Inspector, ELEMENTS.md 12.3); the Format pane itself is a Form. */
+  P.row = (label, input, hint) => h('label', { class: 'bi-frow' }, h('span', { text: label }), input, hint ? h('small', { class: 'text-muted-d', text: hint }) : null);
+  P.checkbox = (label, value, onChange, attrs) => {
+    const c = h('input', Object.assign({ type: 'checkbox' }, attrs || {}));
+    c.checked = !!value;
+    c.addEventListener('change', () => onChange(c.checked));
+    return h('label', { class: 'bi-checkrow' }, c, ' ' + label);
+  };
+  P.select = (options, value, onChange, attrs) => {
+    const s = h('select', Object.assign({ class: 'studio-select' }, attrs || {}), options.map((o) => h('option', { value: o[0], text: o[1] })));
+    s.value = value == null ? '' : String(value);
+    s.addEventListener('change', () => onChange(s.value));
+    return s;
+  };
+  P.text = (value, onChange, attrs) => {
+    const i = h('input', Object.assign({ type: 'text', class: 'studio-in', autocomplete: 'off', value: value == null ? '' : String(value) }, attrs || {}));
+    i.addEventListener('change', () => onChange(i.value));
+    return i;
+  };
+  P.colour = (value, onChange, attrs) => colour(value, onChange, attrs).el;
+
   /** One property as a field of the section's form schema. */
   function fieldOf(prop, key, env) {
     const title = prop['x-label'] || key, hook = hookOf(prop, key), hint = prop['x-hint'];
