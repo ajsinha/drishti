@@ -30,7 +30,7 @@ import java.util.Map;
  * Deterministic: no random numbers. Each candidate is also measured alone (its peak PFE uncollateralised) and added alone (its incremental
  * peak PFE).
  *
- * <p>Computed in the Java exposure engine since 2.9.12 (the Python engine {@code exposure-whatif} it replaced gave the same answers: the parity
+ * <p>Computed in the Java exposure engine since 2.9.11.g (the Python engine {@code exposure-whatif} it replaced gave the same answers: the parity
  * test replays its recorded answers on a book of four netting sets under the three collateral models and both rank rules).
  */
 public final class ExposureWhatIfMath {

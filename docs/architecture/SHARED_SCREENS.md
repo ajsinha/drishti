@@ -71,7 +71,7 @@ click from a book.
   column (trades booked, market moves, limits approached, approvals waiting).
 - What a person sees follows their desk and role; every figure is computed on the server and ticks through the live hub, never in the
   browser; every number opens the Explain; the command line is always at the top. It is the Trading lens's home (configuration, not a
-  new product); a pre-deal *what if I add this trade* box joins it when the Java pre-deal service is built.
+  new product); a pre-deal *what if I add this trade* box joins it, drawn from the Java pre-deal service (built: `POST /api/v1/exposure/predeal`, EXPOSURE_GUIDE.md section 18.9) when its screen is built on the Elements libraries.
 
 ## 5. Build checklist
 

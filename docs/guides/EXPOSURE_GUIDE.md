@@ -451,6 +451,10 @@ collateral model), and replaces the set's E and N in the scope's: `E_scope − E
 random numbers), nothing stored. Each candidate is also measured alone (`peakPfeAlone`, uncollateralised) and added alone
 (`incrementalPeakPfe`). Details: [section 19](#19-what-drishti-answers), 19.5.
 
+**The pre-deal check** (`PREDEAL <counterparty> LIKE <trade> <notional>`) puts the what-if to the counterparty's credit limit and
+answers **approve**, **refer** or **decline**, with the method and the template shown; a proxy only refers, never approves:
+[section 18.9](#189-the-pre-deal-check).
+
 ## 8. Exposure as a kind
 
 | Kind | Command | Class | What |
@@ -527,7 +531,9 @@ All under `/api/v1/exposure`. Every `GET` takes `asOf` (the business date; defau
 | `GET /scope/distribution` | `scope`, `date` (a primary date or tenor; default the peak), `bins` (`histogram-bins`, 42), **`bands`** (`true`: also the path fan, the 5, 25, 50, 75 and 95% quantiles of the paths' exposure at every primary date) | `histogram {edges, counts}`, `quantiles`, `mean`, `zeroShare`, `bands` |
 | `GET /scope/contributions` | `scope`, `by` (`child`, `netting-set`, `counterparty`, `legal-entity`, `trade`, `asset`), `figure` (`EE`, `EPE`, `PFE`), `date` (EE), **`alone`** (`true`, by trade: each trade's peak PFE alone, uncollateralised, too), **`profile`** (`true`, by trade: each trade's EE contribution at every primary date) | rows `{key, scope, label, kind, value, pct, incremental}` (with `alone`: `peakPfeAlone`; with `profile`: `profile[]`), `total`, `date`, `parts`, `truncated` |
 | `GET /tree` | `q` | the bank, legal entities, groups, counterparties (with their stored limit and use) and netting sets with EPE and peak PFE; sets without paths `noPaths` |
-| `POST /what-if` | body `{scope, method: paths|addon, q, collateral, candidates: [{tradeId, label, nettingSet, paths: {copyOf, factor} | {runId, mtm} | {runId, arrow}, assetClass, notional, maturityDate, mtm, delta}]}` | `{base, with, incremental: {epe, peakPfe, profile[]}, method, flags, items, note}` ([section 7](#7-pre-deal-what-if)) |
+| `POST /what-if` | body `{scope, method: paths|addon, q, collateral, candidates: [{tradeId, label, nettingSet, paths: {copyOf, factor} | {runId, mtm} | {runId, arrow}, assetClass, notional, maturityDate, mtm, delta}]}` | `{base, with, incremental: {epe, peakPfe, profile[]}, method, flags, items, note}` ([section 7](#7-pre-deal-what-if)); a `copyOf` of a trade you do not see trade by trade `403` |
+| `POST /predeal` | body `{command: "PREDEAL <counterparty> LIKE <trade> <notional> …"}` or the same as fields; `asOf` | `{checkId, command, decision: approve|refer|decline, reason, reasons, method, template, nettingSet, limit {…, buckets}, exposure {base, with, incremental}, saCcr, flags}` ([section 18.9](#189-the-pre-deal-check)) |
+| `GET /predeal/grammar` | | the command's usage, words, asset classes, examples and decisions |
 | `POST /captures` | `{scope, note, q, collateral}` | the capture |
 | `GET /captures`, `GET /captures/{id}`, `GET /captures/{id}/csv`, `/jsonl` | `scope` | your captures, one, its CSV or JSON Lines (a grid date a line) |
 | `GET /compare` | `a`, `b` (an id or `now`) | both, the change, PFE per tenor, trades added and removed |
@@ -953,6 +959,73 @@ uncollateralised; a `nettingSet` the scope does not cover whole is `400 DRS-5440
 `ExposureBook`, `ExposureCalc`, `ExposureScopes`, `ExposureHotFile`), the service in `drishti-server` (`com.ash.drishti.server.exposure`).
 Other collateral models (`collateral=current|none`) are computed in Java from the value matrices. The exact what-if runs in the same
 engine (`ExposureWhatIfMath`, §19.5). Fan-out across nodes is PLANNED.
+
+### 18.9 The pre-deal check
+
+*Does this new trade fit the counterparty's credit limit?* The pre-deal check is the exposure engine's answer to that question: one
+request, the what-if of section 18.7 computed with the trade added, the counterparty's stored credit limit applied, and a decision.
+It is a service of the counterparty-risk domain (`ExposurePreDeal`, `ExposurePreDealCommand` and `ExposurePreDealController` in
+`com.ash.drishti.server.exposure`); every number in it is the server's.
+
+**The command** (Drishti's grammar: upper-case words, any order after the counterparty):
+
+```
+PREDEAL <counterparty> LIKE <trade> [<notional>] [REVERSE] [IN <netting set>]
+PREDEAL <counterparty> <RATES|FX|CREDIT|EQUITY|COMMODITY> <notional> <maturity> [MTM <amount>] [REVERSE] [IN <netting set>]
+```
+
+| Word | Meaning |
+|---|---|
+| `<counterparty>` | its id: `CP-ALDERSHOT`, `CPTY:CP-ALDERSHOT` or `CPTY CP-ALDERSHOT` |
+| `LIKE <trade>` | the **template**: a booked trade you see trade by trade whose paths on the date's run are copied, scaled to the notional; the exact method `paths` |
+| `<notional>` | `250M`, `1.5BN`, `400K`, `250,000,000`; with `LIKE` the copy's scale is notional ÷ the template's notional (left out: the template as it is) |
+| `REVERSE` | the other side of the template (the copy's paths times −1 × the scale) |
+| `IN <netting set>` | the netting set the trade goes into (one of the counterparty's that you see whole); left out: the template's own when it is the counterparty's, else the counterparty's only one |
+| `<asset class> <notional> <maturity>` | without a template: the trade described (a maturity date or a tenor such as `5Y`, `18M`); the conservative proxy `addon` |
+| `MTM <amount>` | the trade's MtM today (default: the copy's, or 0) |
+
+The same request as fields: `{"command": "PREDEAL CP-ALDERSHOT LIKE 1000001 250M"}`, or `{"counterparty", "like"` (or `"template":
+{"copyOf"}`), `"notional"`, `"side": "same"|"reverse"`, `"nettingSet"`, `"assetClass"` (also as the trades name it: *Interest Rate*,
+*Foreign Exchange* …), `"maturity"`, `"mtm"}`. Words that are not the grammar's are refused in words (`400 DRS-5440`), with the usage.
+
+**The limit.** The counterparty's `credit-limit` record of the date (`LIMIT`, `MEASURE`, `BUCKETS`). A measure on PFE (`PFE 95 peak`,
+`peak PFE`) is held against the peak PFE at its confidence (95 from the text; else `limit-confidence`); `EEPE`, `EPE` and `EE peak`
+against those figures. Each tenor bucket (`0-1Y`, `1-3Y`, `3-5Y`, `5-10Y`, `10Y+`; `3M-1Y` and the like) is held against its own limit:
+the profile's peak among the primary dates in the bucket, before and after.
+
+**The decision** (in this order):
+
+| Decision | When |
+|---|---|
+| `refer` | anything less than exact data, each reason said: the **proxy** (`addon`: *a proxy answer only refers, never approves*), no credit limit on record, a limit set on a measure the engine does not compute (or the method does not give), netting sets of the counterparty you do not see (credit, who sees them all, decides), the date's run stale (`stale-run`), the counterparty with several netting sets and none named or implied (the trade shown in one of its own), no exposure for the counterparty on the date (a new counterparty, or one the run does not cover) |
+| `decline` | exact data, and the limit or a tenor bucket over its limit after the trade |
+| `approve` | exact data, the limit and every bucket within their limits after the trade |
+
+A proxy never approves and never declines: it refers. A counterparty you see none of is refused (`403`), as a template you do not see
+trade by trade (`403`); a template not on the date's run is `404 DRS-1001`; a netting set not the counterparty's `400 DRS-5440`.
+
+**The answer**: `checkId` (`PDC-…`), `command` (as Drishti writes it back), `decision`, `reason` and `reasons`, `method` (`id`: `paths`
+or `addon`, `exact`, `name`, `text`: how it was computed), `template` (the trade copied: id, product, asset class, notional, maturity,
+counterparty, netting set, MtM, the `factor`, `side`, the candidate's notional and MtM; or the trade described), `nettingSet` (`id`,
+`how`: named, the template's, the counterparty's only, its own; `sets`), `limit` (`id`, `measure`, `confidence`, `limit`, `before`,
+`after`, `increment`, `useBefore`, `useAfter`, `headroomAfter`, `status`, `buckets[]` with `bucket`, `limit`, `before`, `after`,
+`useAfter`, `status`), `exposure` (`base`, `with`, `incremental` with the profile, as section 18.7), `saCcr` (SA-CCR's incremental EAD:
+**under construction**, release 2.9.11.k), `flags`, `businessDate`, `runId`, `confidence`, `engine`.
+
+**Entitlements and audit.** The check is computed as the person asking: the counterparty's netting sets they see (others left out and
+the answer refers), a template only of a trade they see trade by trade; nothing per person is kept between requests (two people asking
+at the same time get their own answers). Every check is audited (`ccr-predeal`: the person, the counterparty scope, the check id, the
+decision, the method, the command and the limit use), the what-if inside it is not audited twice.
+
+**Where**: `POST /api/v1/exposure/predeal` and `GET /api/v1/exposure/predeal/grammar` (section 11); `drishti.py exposure predeal
+"PREDEAL CP-ALDERSHOT LIKE 1000001 250M"`; the Trading landing's new-trade check (its exposure half is this check). The screen,
+**Counterparties → Pre-deal check**, is under construction: it is built on the Drishti Elements libraries; until then `PREDEAL` typed in
+the console says so and names the API and the command line. SA-CCR's incremental EAD and the other limits a trade touches (soft and hard
+limits, warnings, the maximum size: [LIM.md section 6.4](../contracts/LIM.md#64-pre-deal-check)) come with release 2.9.11.k.
+
+**Tests**: `ExposurePreDealApiTest` (the what-if equal to the full recompute with the trade booked, figure by figure and date by date;
+approve, decline on the limit and on a bucket, refer on a proxy, no limit, a measure not computed and no exposure; two people at once
+with their own entitlements; the grammar; the audit).
 
 ## 19. What Drishti answers
 
@@ -1402,7 +1475,7 @@ largest value). `lake demo` moves the run id, the rows' ids and the grid dates w
 | Piece | Where | What |
 |---|---|---|
 | the maths | `drishti-compute`, `com.ash.drishti.compute.ccr` | `ExposureGrid` (the grid, roles, look-back map, Δt), `CsaTerms` (thresholds, MTA, IA, rounding, called collateral), `ExposureMath` (E, N, EE, ENE, EEE, PFE, EPE, EEPE, contributions), `ExposureBook` (a date's netting sets and trades), `ExposureHotFile` (`DRSHEXP1`), `ExposureScopes` (the scope words), `ExposureCalc`; the benchmark `ExposureTierBenchmark` (drishti-server tests, §27.4) |
-| the service | `drishti-server`, `com.ash.drishti.server.exposure` | `ExposureLoader` and `ExposureIntake` (a date from the lake, checks), `ExposureTier` (the hot files, eviction), `ExposureService` (scopes as the viewer, answers, cache), `ExposureViews` and `ExposureExplorer` (profile, distribution and fan, contributions, tree, ancestors, collateral), `ExposureCaptures`, `ExposureWhatIf` (addon) and `ExposureWhatIfPaths` (the exact method, with `ExposureWhatIfMath`), `ExposureOfficial`, `ExposureOfficialStore`, `ExposurePublisher`, `ExposureRetention`, `ExposureAccess`, `ExposureResultEngine` (the kind), `ExposureFigures` (the netting-set and counterparty pages), `ExposureController` |
+| the service | `drishti-server`, `com.ash.drishti.server.exposure` | `ExposureLoader` and `ExposureIntake` (a date from the lake, checks), `ExposureTier` (the hot files, eviction), `ExposureService` (scopes as the viewer, answers, cache), `ExposureViews` and `ExposureExplorer` (profile, distribution and fan, contributions, tree, ancestors, collateral), `ExposureCaptures`, `ExposureWhatIf` (addon) and `ExposureWhatIfPaths` (the exact method, with `ExposureWhatIfMath`), `ExposurePreDeal`, `ExposurePreDealCommand` and `ExposurePreDealController` (the pre-deal check, §18.9), `ExposureOfficial`, `ExposureOfficialStore`, `ExposurePublisher`, `ExposureRetention`, `ExposureAccess`, `ExposureResultEngine` (the kind), `ExposureFigures` (the netting-set and counterparty pages), `ExposureController` |
 | the exact what-if | `drishti-compute`, `com.ash.drishti.compute.ccr` and `drishti-server`, `com.ash.drishti.server.exposure` | `ExposureWhatIfMath` (candidates added to their netting sets, by `ExposureMath`), `ExposureWhatIfPaths` (the request, the paths, the reads as the viewer); tests `ExposureWhatIfMathTest` (with `ccr/whatif-parity.json`), `ExposureApiTest` |
 | the console | `drishti-console` | `routes/exposure_routes.py` (`EXP` and `/exposure`, stored-profile ids), `web/templates/terminal/exposure.html`, `web/static/js/exposure-explorer.js`, `exposure-charts.js` (plain SVG), `web/static/css/exposure.css`; tests `tests/test_exposure_routes.py`, `tests/test_exposure_explorer_browser.py` (the explorer in a browser) |
 | the CLI | `tools/expcli.py` (`drishti.py exposure`) | tests `tools/test_expcli.py` |

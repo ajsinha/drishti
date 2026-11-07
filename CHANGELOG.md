@@ -15,6 +15,47 @@
 -->
 # Changelog
 
+## 2.9.11.g (unreleased)
+
+### The pre-deal service and the exposure what-if in Java
+
+- **The pre-deal check is a service of the exposure engine** (EXPOSURE_GUIDE.md section 18.9): `POST /api/v1/exposure/predeal` and the
+  command `PREDEAL <counterparty> LIKE <trade> [<notional>] [REVERSE] [IN <netting set>]` (or, without a template, `PREDEAL <counterparty>
+  <asset class> <notional> <maturity> [MTM <amount>]`), `GET /api/v1/exposure/predeal/grammar`, `drishti.py exposure predeal "PREDEAL …"`.
+  The what-if with the trade added is held to the counterparty's stored credit limit on its measure (`PFE 95 peak` at its confidence;
+  EEPE, EPE, peak EE) and to each tenor bucket's limit (`BUCKETS`, read from `credit-limit` now), and answers **approve** (exact data,
+  within the limit and every bucket), **decline** (exact, over the limit or a bucket) or **refer** with the reason: a proxy answer (the
+  `addon` method) only refers, never approves; so does no limit on record, a limit on a measure the engine does not compute, netting sets
+  the person does not see, a stale run, the netting set not certain, or no exposure for the counterparty. Every answer shows the method
+  and the template trade (copied: id, product, notional, the factor and side; or described), the limit before and after with the
+  headroom and the buckets, and the exposure before, with and incremental; SA-CCR's incremental EAD says **under construction**
+  (2.9.11.k). Computed as the person (a template only of a trade they see trade by trade, `403` otherwise; a counterparty they see none of
+  `403`); every check audited (`ccr-predeal`, with its check id, decision, method, command and limit use). Code: `ExposurePreDeal`,
+  `ExposurePreDealCommand`, `ExposurePreDealController` in the counterparty-risk server package `com.ash.drishti.server.exposure`.
+- **Counterparties → Pre-deal check** runs `PREDEAL` (the menu item that ran `XWIF`). Its screen is **under construction** (registry item
+  `pre-deal-screen`): it is built on the Drishti Elements libraries, which have not reached develop; until then `PREDEAL` typed in the
+  console says so and names the API and the command line. The exposure explorer's Pre-deal tab stays until that screen replaces it.
+- **The Trading landing's new-trade check** asks the pre-deal service for its exposure half: the decision, the limit use and every figure
+  are the server's (the console no longer divides by the limit or picks the netting set); when the copied trade has no paths on the run
+  the same check is asked described, and refers. Its verdict shows *Refer to credit* and *Declined: over the limit* with the reason.
+- **The exact pre-deal exposure what-if (`POST /api/v1/exposure/what-if`, method `paths`) is computed by the Java exposure engine**
+  (EXPOSURE_GUIDE.md sections 7, 18.7 and 19.5; COUNTERPARTY_ENGINES.md 6.4). `ExposureWhatIfMath` (`drishti-compute`) adds each
+  candidate's paths to its netting set's value path by path and computes the set's collateral and exposure again with `ExposureMath`, the
+  same code as every exposure figure; `ExposureWhatIfPaths` reads the scope and each joined netting set as the asker. The same request and
+  the same answer field by field (only the `engine` and `note` texts say Java); no sandbox, no reactive connector, no compute workers: it
+  answers on every server that runs exposure. Parity: the Python engine's answers on a book of four netting sets (margined with
+  thresholds, MTA, IA, rounding and IM; unmargined with IA; no CSA; collateral posted), six what-ifs over the three collateral models,
+  both rank rules, an unwind and a horizon change, recorded before it was retired (`ccr/whatif-parity.json`, `tools/ccr/`), are given
+  again to the cent (`ExposureWhatIfMathTest`). A `copyOf` is made only of a trade the asker sees trade by trade (`403` otherwise).
+- **The Python exposure engine is retired:** `drishti_compute.exposure` (`measures.py`, `whatif.py`) and its tests, the compute pool
+  `exposure` and `DRISHTI_COMPUTE_EXPOSURE_WORKERS`, the counterparty-risk pack's reactive connector `exposure-whatif` with its kind,
+  contract and command `XWIF`, the `exposure-result` parameters `detail` and `sets` (`ExposureWhatIfInputs`), and `DRS-5446`. A
+  never-edited `exposure-whatif.yaml` connector file is removed at start (kept beside it as `.retired-<time>.bak`); an edited one stays,
+  its kind listed as obsolete.
+- **Tests**: `ExposurePreDealApiTest` (the what-if equal to a full recompute with the trade booked, figure by figure and date by date;
+  approve; decline on the limit and on a bucket; refer on a proxy, no limit, a measure not computed and no exposure; two people at once
+  with their own entitlements; the grammar; the audit); the console's trading check, menus and under-construction tests; `test_expcli`.
+
 ## 2.9.11.h (unreleased)
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.

@@ -51,7 +51,7 @@ import org.springframework.web.bind.annotation.RestController;
  *   GET  /api/v1/exposure/scope/distribution?scope=&amp;date=  the exposure distribution at a primary date
  *   GET  /api/v1/exposure/scope/contributions?scope=&amp;by=&amp;figure=&amp;date=   parts' EE, EPE or PFE contributions, incremental PFE
  *   GET  /api/v1/exposure/tree                              groups, counterparties, netting sets with their EPE and peak PFE
- *   POST /api/v1/exposure/what-if                           incremental exposure before dealing (method addon; paths: the Python engine)
+ *   POST /api/v1/exposure/what-if                           incremental exposure before dealing (method addon, the proxy; paths, exact); the pre-deal check: ExposurePreDealController
  *   POST /api/v1/exposure/captures {scope, note}; GET /captures[?scope=]; GET /captures/{id}[/csv]; GET /compare?a=&amp;b=
  *   GET  /api/v1/exposure/status; POST /reload (administrators); GET /retention
  *   GET  /api/v1/exposure/official?asOf=                   a date's official record; POST runs it (administrators)

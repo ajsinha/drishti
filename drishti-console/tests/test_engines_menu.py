@@ -67,7 +67,8 @@ def test_the_menus_file_has_one_engines_menu_and_no_var_or_exposure_menu():
 
 
 def test_the_pre_deal_check_and_fx_volatility_have_one_menu_item_each():
-    """Lean (2.9.11.c): Pre-deal check (XWIF) only under Counterparties, FX volatility (FXV) only under Volatility."""
+    """Lean (2.9.11.c): Pre-deal check (PREDEAL, the server's pre-deal service since 2.9.11.g) only under Counterparties, FX volatility
+    (FXV) only under Volatility."""
     spec = yaml.safe_load((CONSOLE / "config" / "menus.yaml").read_text(encoding="utf-8"))
     where: dict[str, list[str]] = {}
     for m in spec["menus"]:
@@ -75,7 +76,7 @@ def test_the_pre_deal_check_and_fx_volatility_have_one_menu_item_each():
             for it in col.get("items") or []:
                 if it.get("cmd"):
                     where.setdefault(it["cmd"], []).append(m["id"])
-    assert where["XWIF"] == ["counterparties"] and where["FXV"] == ["volatility"]
+    assert where["PREDEAL"] == ["counterparties"] and where["FXV"] == ["volatility"] and "XWIF" not in where
 
 
 def test_an_administrator_sees_every_running_engine_with_its_word_and_admin_engines(backend, monkeypatch):

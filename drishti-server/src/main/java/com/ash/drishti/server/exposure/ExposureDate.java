@@ -40,8 +40,53 @@ record ExposureDate(LocalDate date, ExposureBook book, Map<String, Known> known,
     /** A netting set the reference data knows. */
     record Known(String id, String counterparty, String legalEntity, String csa, int members) {}
 
-    /** A counterparty's credit limit as the limits system stores it: its id, the amount (USD) and the measure it is set on. */
-    record Limit(String id, double amount, String measure) {}
+    /**
+     * A counterparty's credit limit as the limits system stores it: its id, the amount (USD), the measure it is set on ({@code PFE 95 peak})
+     * and its tenor buckets ({@code BUCKETS}: {@code 0-1Y}, {@code 1-3Y} ... {@code 10Y+}, each with its own limit), empty when it has none.
+     */
+    record Limit(String id, double amount, String measure, List<Bucket> buckets) {
+        Limit {
+            buckets = buckets == null ? List.of() : List.copyOf(buckets);
+        }
+
+        Limit(String id, double amount, String measure) {
+            this(id, amount, measure, List.of());
+        }
+    }
+
+    /** A limit's tenor bucket: its name as stored, the years it spans ({@code [from, to)}, {@code to} infinite for {@code 10Y+}) and its limit. */
+    record Bucket(String name, double from, double to, double limit) {
+
+        private static final java.util.regex.Pattern RANGE =
+                java.util.regex.Pattern.compile("(\\d+(?:\\.\\d+)?)([DWMY]?)(?:-(\\d+(?:\\.\\d+)?)([DWMY])|(\\+))");
+
+        /** {@code 0-1Y}, {@code 1-3Y}, {@code 3M-1Y}, {@code 10Y+}; null when the name is not a tenor range. */
+        static Bucket of(String name, double limit) {
+            String n = name == null ? "" : name.trim().toUpperCase(java.util.Locale.ROOT).replace(" ", "");
+            java.util.regex.Matcher m = RANGE.matcher(n);
+            if (!m.matches()) {
+                return null;
+            }
+            String u2 = m.group(4) == null ? "Y" : m.group(4);
+            double from = years(Double.parseDouble(m.group(1)), m.group(2).isEmpty() ? u2 : m.group(2));
+            double to = m.group(5) != null ? Double.POSITIVE_INFINITY : years(Double.parseDouble(m.group(3)), u2);
+            return new Bucket(name.trim(), from, to, limit);
+        }
+
+        private static double years(double n, String unit) {
+            return switch (unit) {
+                case "D" -> n / 365.0;
+                case "W" -> n * 7 / 365.0;
+                case "M" -> n / 12.0;
+                default -> n;
+            };
+        }
+
+        /** True when a primary date {@code t} years ahead falls in the bucket. */
+        boolean holds(double t) {
+            return t >= from - 1e-12 && t < to - 1e-12;
+        }
+    }
 
     ExposureDate {
         limits = limits == null ? Map.of() : Map.copyOf(limits);

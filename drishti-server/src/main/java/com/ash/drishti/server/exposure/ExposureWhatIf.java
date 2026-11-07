@@ -94,8 +94,13 @@ final class ExposureWhatIf {
      * A what-if: {@code {scope, method: addon|paths, q, candidates: [{tradeId, nettingSet, assetClass, notional, maturityDate, mtm,
      * delta, paths: {runId, ...}}]}}.
      */
-    @SuppressWarnings("unchecked")
     Map<String, Object> whatIf(Principal p, Map<String, Object> body, LocalDate date) {
+        return whatIf(p, body, date, true);
+    }
+
+    /** The same, audited as {@code ccr-whatif} or not (the pre-deal check audits its own answer, {@code ccr-predeal}). */
+    @SuppressWarnings("unchecked")
+    Map<String, Object> whatIf(Principal p, Map<String, Object> body, LocalDate date, boolean audited) {
         String scope = String.valueOf(body.getOrDefault("scope", "")).trim();
         if (scope.isEmpty()) {
             throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "a what-if names its scope: {\"scope\": \"CPTY:CP-ALDERSHOT\", ...}");
@@ -118,7 +123,7 @@ final class ExposureWhatIf {
             }
         }
         if (method.equals("paths")) {
-            return paths.whatIf(p, scope, base, ask, cands, date);
+            return paths.whatIf(p, scope, base, ask, cands, date, audited);
         }
         if (!method.equals("addon")) {
             throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "method is addon or paths, not " + method);
@@ -200,7 +205,9 @@ final class ExposureWhatIf {
         out.put("flags", List.of("proxy"));
         out.put("note", "a conservative proxy: each candidate a netting set of its own, uncollateralised, with SA-CCR's supervisory factor; the "
                 + "exact method is paths (the candidates' paths on the run added to their netting sets)");
-        svc.audit(p, "ccr-whatif", base, "method=addon candidates=" + cands.size());
+        if (audited) {
+            svc.audit(p, "ccr-whatif", base, "method=addon candidates=" + cands.size());
+        }
         return out;
     }
 

@@ -175,7 +175,7 @@ with tempfile.TemporaryDirectory() as tmp:
         sc["expected"] = run(sc, tmp)
 
 fixture = {
-    "about": "Answers of the Python exposure what-if engine (drishti_compute.exposure.whatif 1.0, retired in 2.9.12) on a synthetic book, "
+    "about": "Answers of the Python exposure what-if engine (drishti_compute.exposure.whatif 1.0, retired in 2.9.11.g) on a synthetic book, "
              "recorded on 2026-11-03 from origin/develop 2.9.11.a; the Java ExposureWhatIfMath must give them again.",
     "businessDate": BD.isoformat(), "paths": P, "runId": "XR-PARITY",
     "grid": {"days": days, "roles": roles, "lookbackOf": lbof, "tenors": [TENORS[grid.primaries.index(k)] if primary[k] else None for k in range(G)]},

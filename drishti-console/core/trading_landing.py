@@ -35,8 +35,9 @@ engine (``POST /api/v1/pivot/inline``, :func:`engine_figures`) and its cells sho
   the desk's official history (``/api/v1/var/scope/history``, mode ``official``: the hypothetical P&L against the VaR before it);
 * by trader: P&L and trades from the valuations' ``TRADER_ID`` (masked for a role without raw: then said), VaR as the sum of the trader's
   trades' component VaR in the desk (``/scope/contributions?by=trade``, which adds up to the desk's VaR);
-* the new-trade check: one VaR what-if (``POST /api/v1/var/what-if``) and one pre-deal exposure check (``POST /api/v1/exposure/what-if``),
-  each the engine's own, on a copy of a booked trade of the product, scaled to the notional (no new risk maths here).
+* the new-trade check: one VaR what-if (``POST /api/v1/var/what-if``) and one pre-deal check (``POST /api/v1/exposure/predeal``: its
+  decision approve, refer or decline, the limit use and the figures), each the engine's own, on a copy of a booked trade of the product,
+  scaled to the notional (no risk maths here).
 """
 from __future__ import annotations
 
@@ -807,7 +808,7 @@ def template(rows: dict, product: str, counterparty: str, book: str | None, live
 
 
 async def check(backend, me, scope: Scope, cfg: dict, body: dict) -> dict:
-    """Does a new trade fit? One VaR what-if on the book and one pre-deal exposure check on the counterparty, each the engine's own,
+    """Does a new trade fit? One VaR what-if on the book and one pre-deal check on the counterparty, each the engine's own,
     on a copy of a booked trade of the product scaled to the notional (factor = notional ÷ its notional, negative for the other side)."""
     product = str(body.get("product") or "").strip()
     cp = str(body.get("counterparty") or "").strip().upper()
@@ -862,43 +863,38 @@ async def _var_check(backend, me, book: str | None, tid: str, factor: float, lab
 
 async def _exposure_check(backend, me, cp: str, tid: str, t: dict, factor: float, notional: float, sign: float, label: str,
                           near: float) -> dict:
-    """The pre-deal exposure check on the counterparty (``POST /exposure/what-if``): exact (``paths``, the copy's paths into the
-    counterparty's largest netting set) when the copy has paths on the date's run, else the engine's own conservative proxy (``addon``),
-    said."""
-    scope = f"CPTY:{cp}"
-    head, why, code = await _ask(backend.exposure, "GET", "/scope", me, scope=scope)
-    if head is None:
-        return {"state": "unavailable", "scope": scope, "reason": why, "code": code}
-    lim = head.get("limit") if isinstance(head.get("limit"), dict) else None
-    sets = sorted(head.get("byNettingSet") or [], key=lambda s: -(_num(s.get("peakPfe")) or 0))
-    maturity = None
-    try:
-        doc = ((await backend.raw("trade-valuation", str(t.get("VALUATION_ID") or f"TVAL-{tid}"), me)) or {}).get("data") or {}
-        maturity = doc.get("MATURITY_DATE")
-    except BackendError:
-        pass
-    cand = {"tradeId": "CANDIDATE-1", "label": label, "counterparty": cp, "assetClass": t.get("PRODUCT_GROUP") or "", "notional": notional,
-            "maturityDate": maturity, "mtm": (_num(t.get("MTM")) or 0) * factor, "delta": sign}
-    body: dict = {"scope": scope, "method": "paths", "candidates": [cand]}
-    if lim and _num(lim.get("confidence")):
-        body["q"] = lim.get("confidence")
-    w, fell_back = None, None
-    if sets:
-        body["candidates"] = [{**cand, "nettingSet": sets[0].get("nettingSet"), "paths": {"copyOf": tid, "factor": factor}}]
-        w, fell_back, code = await _ask(backend.exposure, "POST", "/what-if", me, body=body)
-    if w is None:                                  # no netting set to deal into, or the copy has no paths on the run: the engine's own proxy
-        body = {**body, "method": "addon", "candidates": [cand]}
-        w, why, code = await _ask(backend.exposure, "POST", "/what-if", me, body=body)
-        if w is None:
-            return {"state": "unavailable", "scope": scope, "reason": why, "code": code}
-    before, after = _num((w.get("base") or {}).get("peakPfe")), _num((w.get("with") or {}).get("peakPfe"))
-    limit = _num(lim.get("limit")) if lim else None
-    ub = before / limit if limit and before is not None else None
-    ua = after / limit if limit and after is not None else None
-    return {"state": limit_state(ua, near), "scope": scope, "method": w.get("method") or body["method"], "proxy": body["method"] == "addon",
-            "fallback": fell_back if body["method"] == "addon" else None, "nettingSet": sets[0].get("nettingSet") if sets else None,
-            "before": before, "after": after, "limit": limit, "useBefore": ub, "useAfter": ua,
-            "confidence": body.get("q"), "flags": w.get("flags") or [], "note": w.get("note")}
+    """The exposure engine's pre-deal check on the counterparty (``POST /api/v1/exposure/predeal``, EXPOSURE_GUIDE.md section 18.9): the
+    copy's paths on the date's run, exact (``LIKE`` the template); when the copy has no paths on the run, the same check described (asset
+    class, notional, maturity), the engine's conservative proxy, which only refers. The decision, the limit use and every figure are the
+    server's; here only ``near`` (a display share) is applied to an approval."""
+    side = "reverse" if sign < 0 else "same"
+    body = {"counterparty": cp, "like": tid, "notional": notional, "side": side}
+    a, why, code = await _ask(backend.exposure, "POST", "/predeal", me, body=body)
+    fell_back = None
+    if a is None and code == "DRS-1001":           # the copy has no paths on the run: the check described, the proxy (it refers)
+        fell_back = why
+        maturity = None
+        try:
+            doc = ((await backend.raw("trade-valuation", str(t.get("VALUATION_ID") or f"TVAL-{tid}"), me)) or {}).get("data") or {}
+            maturity = doc.get("MATURITY_DATE")
+        except BackendError:
+            pass
+        body = {"counterparty": cp, "assetClass": t.get("PRODUCT_GROUP") or "rates", "notional": notional, "maturity": maturity or "1Y",
+                "mtm": (_num(t.get("MTM")) or 0) * factor, "side": side}
+        a, why, code = await _ask(backend.exposure, "POST", "/predeal", me, body=body)
+    if a is None:
+        return {"state": "unavailable", "scope": f"CPTY:{cp}", "reason": why, "code": code}
+    lim = a.get("limit") if isinstance(a.get("limit"), dict) else {}
+    decision = a.get("decision")
+    state = {"decline": "breach", "refer": "refer"}.get(decision) or limit_state(_num(lim.get("useAfter")), near)
+    method = a.get("method") or {}
+    base, wth = (a.get("exposure") or {}).get("base") or {}, (a.get("exposure") or {}).get("with") or {}
+    return {"state": state, "decision": decision, "reason": a.get("reason"), "reasons": a.get("reasons") or [], "checkId": a.get("checkId"),
+            "scope": a.get("scope") or f"CPTY:{cp}", "method": method.get("id"), "proxy": not method.get("exact"), "fallback": fell_back,
+            "nettingSet": (a.get("nettingSet") or {}).get("id"), "before": _num(lim.get("before", base.get("peakPfe"))),
+            "after": _num(lim.get("after", wth.get("peakPfe"))), "limit": _num(lim.get("limit")), "useBefore": _num(lim.get("useBefore")),
+            "useAfter": _num(lim.get("useAfter")), "confidence": lim.get("confidence") or a.get("confidence"), "flags": a.get("flags") or [],
+            "note": method.get("text"), "command": a.get("command")}
 
 
 def public(d: Any) -> Any:

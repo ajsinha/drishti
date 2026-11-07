@@ -48,7 +48,7 @@ share of a counterparty) and a structured measure.
 |---|---|
 | `credit-limit` moved to the risk lake, with `SCOPE`, `MEASURE` enum, numeric tenor buckets, warning level, temporary excesses | PLANNED |
 | Usage per measure (PFE peak by tenor bucket, EE peak, EEPE, SA-CCR EAD, net MtM, current exposure, notional, settlement), utilisation, status, headroom | PLANNED |
-| Pre-deal check: approve, refer or decline a candidate trade against every limit it touches | PLANNED |
+| Pre-deal check: approve, refer or decline a candidate trade against every limit it touches | BUILT for the counterparty's credit limit and its tenor buckets on the exposure measures (`PREDEAL`, [EXPOSURE_GUIDE.md section 18.9](../guides/EXPOSURE_GUIDE.md#189-the-pre-deal-check)); SA-CCR EAD, soft and hard limits, warnings and the maximum size PLANNED (2.9.11.k) |
 | Computed kind `limit-usage`, reactive connector `lim-engine` (Python, composing EXP and SACCR) | PLANNED |
 
 ## 2. The measure in one page

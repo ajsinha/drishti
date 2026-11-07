@@ -44,7 +44,7 @@ import java.util.Map;
  * <p>A candidate's paths: {@code {copyOf: <trade>, factor}} (a booked trade's paths on the run, scaled: {@code factor -1} its
  * unwind), {@code {runId, mtm}} ({@code G} lists of {@code P} numbers, or one list of {@code G x P}, grid-date-major), or
  * {@code {runId, arrow}} (base64 Arrow IPC: {@code GRID_INDEX} and {@code MTM} as a fixed-size list of P). Paths of another run, or of
- * another length, are refused (DRS-5442).
+ * another length, are refused (DRS-5442). A copy is made only of a trade the asker sees trade by trade (else 403).
  */
 final class ExposureWhatIfPaths {
 
@@ -57,14 +57,14 @@ final class ExposureWhatIfPaths {
     }
 
     Map<String, Object> whatIf(Principal p, String scope, ExposureService.Scoped base, ExposureService.Ask ask, List<Map<String, Object>> cands,
-            LocalDate date) {
+            LocalDate date, boolean audited) {
         ExposureDate d = base.date();
         ExposureBook b = d.book();
         ExposureGrid g = b.grid();
         List<ExposureWhatIfMath.Candidate> items = new ArrayList<>();
         Map<String, ExposureWhatIfMath.NettingSet> sets = new LinkedHashMap<>();
         for (Map<String, Object> cand : cands) {
-            ExposureWhatIfMath.Candidate it = item(cand, d, items.size() + 1);
+            ExposureWhatIfMath.Candidate it = item(cand, d, base.view(), items.size() + 1);
             items.add(it);
             if (!it.set().isEmpty() && !sets.containsKey(it.set())) {
                 if (sets.size() >= MAX_SETS) {
@@ -83,7 +83,9 @@ final class ExposureWhatIfPaths {
             throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, e.getMessage());
         }
         Map<String, Object> out = answer(w, base, scope, b, model);
-        svc.audit(p, "ccr-whatif", base, "method=paths candidates=" + items.size() + " sets=" + sets.keySet());
+        if (audited) {
+            svc.audit(p, "ccr-whatif", base, "method=paths candidates=" + items.size() + " sets=" + sets.keySet());
+        }
         return out;
     }
 
@@ -117,7 +119,7 @@ final class ExposureWhatIfPaths {
     }
 
     /** One candidate: its id, label, netting set (empty: a netting set of its own), paths, MtM today (NaN: the paths' mean), life. */
-    private ExposureWhatIfMath.Candidate item(Map<String, Object> cand, ExposureDate d, int n) {
+    private ExposureWhatIfMath.Candidate item(Map<String, Object> cand, ExposureDate d, ExposureAccess.View view, int n) {
         ExposureBook b = d.book();
         int len = b.grid().size() * b.paths();
         String id = cand.get("tradeId") == null ? "CANDIDATE-" + n : String.valueOf(cand.get("tradeId"));
@@ -133,6 +135,10 @@ final class ExposureWhatIfPaths {
             int t = b.tradeOrdinal(from);
             if (t < 0) {
                 throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no exposure paths for the trade " + from + " on " + d.date() + " (run " + b.runId() + ")");
+            }
+            if (!view.seesTrades(com.ash.drishti.compute.vector.OrdinalSet.of(t))) {       // a copy shows the trade's paths: only for who sees it
+                throw new DrishtiException(ErrorCode.FORBIDDEN, "the trade " + from + " is not one you see trade by trade: a copy is made of a trade "
+                        + "you see");
             }
             double f = pm.get("factor") instanceof Number x ? x.doubleValue() : 1.0;
             double[] src = svc.paths(d).read(List.of(b.trade(t).id())).get(b.trade(t).id());
