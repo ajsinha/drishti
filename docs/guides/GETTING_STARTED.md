@@ -627,7 +627,7 @@ flag and refuses to start when it is given, so leave it out there. The build sto
 Use an IntelliJ IDEA release that knows your JDK (Java 25 needs IDEA 2025.2 or newer).
 
 1. **File → Open**, choose the repository's root `pom.xml`, then **Open as Project**. IDEA imports every Maven module
-   (the server, the engine, the 19 plugins, the testkit, …). Wait for the import and indexing to finish.
+   (the server, the engine, the 21 plugins, the testkit, …). Wait for the import and indexing to finish.
 2. **File → Project Structure → Project**:
    - **SDK**: your JDK 21 or newer. If it is not listed: **Add SDK → Add JDK…** and choose its folder, for example
      `/usr/lib/jvm/java-21-openjdk-amd64` (Ubuntu OpenJDK), `/usr/lib/jvm/jdk-21-oracle-x64` (Oracle JDK on Linux),

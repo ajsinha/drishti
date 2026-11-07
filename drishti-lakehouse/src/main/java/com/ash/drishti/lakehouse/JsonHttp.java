@@ -69,7 +69,8 @@ public final class JsonHttp {
      */
     public JsonHttp(Map<String, String> settings, String target, long timeoutSeconds) {
         this.proxy = ProxySettings.resolve(settings, target);
-        this.http = proxy.apply(HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(15)).followRedirects(HttpClient.Redirect.NORMAL)).build();
+        // no redirects followed: a bearer token is never carried to a host it was not given for
+        this.http = proxy.apply(HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(15)).followRedirects(HttpClient.Redirect.NEVER)).build();
         this.timeout = Duration.ofSeconds(timeoutSeconds);
     }
 

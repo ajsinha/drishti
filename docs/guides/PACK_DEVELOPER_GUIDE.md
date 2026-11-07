@@ -4263,13 +4263,15 @@ them, so they are on its class path; each starts only when enabled or used by a 
 | `drishti-plugin-file` | `file` | JSON or JSON Lines documents in a folder, dated by folder | — |
 | `drishti-plugin-rest` | `rest` | An HTTP/JSON service | — |
 | `drishti-plugin-jdbc` | `jdbc` | A database by query, or the PostgreSQL entity-table mode | — |
-| `drishti-plugin-delta` | `delta` | Delta Lake tables through Delta Kernel (no Spark), with time travel; engine `native` (no Hadoop) or `hadoop`; the demo lakes and every shipped pack's store | `drishti-deltalake` |
+| `drishti-plugin-delta` | `delta` | Delta Lake tables through Delta Kernel (no Spark), with time travel; engine `native` (no Hadoop) or `hadoop`; the demo lakes and every shipped pack's store; tables by name in Unity Catalog (`unity.*`) | `drishti-deltalake`, `drishti-lakehouse` |
 | `drishti-plugin-aerospike` | `aerospike` | A set per data domain: a record per entity per business date with promoted bins, an index record per entity, a record per kind (`AerospikeLayout`); `AerospikeLoader` writes it | — |
 | `drishti-plugin-cassandra` | `cassandra` | Apache Cassandra, ScyllaDB, Astra: a keyspace per data domain, a partition per business day, generation and bucket keyed by id, `entity_days` and `kind_days` (`CassandraLayout`); `CassandraLoader` writes it, a day under a new generation | — |
 | `drishti-plugin-redis` | `redis` | Redis (standalone or Cluster): today and recent days in memory, with live updates | — |
 | `drishti-plugin-mongodb` | `mongodb` | A document per entity per business day, in a collection per data domain | — |
 | `drishti-plugin-iceberg` | `iceberg` | Apache Iceberg tables in Drishti's layout (path-based or a REST catalog), with time travel; engine `native` (drishti-iceberg, no Hadoop) or `library` | `drishti-iceberg` |
 | `drishti-plugin-iceberg-external` | `iceberg-external` | Iceberg tables other engines write, rows as documents, read-only, through drishti-iceberg | `drishti-iceberg` |
+| `drishti-plugin-delta-external` | `delta-external` | Plain Delta tables other engines write (by path or Unity Catalog name), rows as documents, read-only, through iceberg-external's reader ([LAKEHOUSE_CONNECTORS.md](../connectors/LAKEHOUSE_CONNECTORS.md)) | `drishti-plugin-iceberg-external`, `drishti-lakehouse` |
+| `drishti-plugin-delta-sharing` | `delta-sharing` | Tables shared through the Delta Sharing protocol (a profile, no storage keys), rows as documents, read-only | `drishti-plugin-iceberg-external`, `drishti-lakehouse` |
 | `drishti-plugin-duckdb` | `duckdb` | Every data domain in one embedded DuckDB file | — |
 | `drishti-plugin-feeds` | `feed` | Public feeds: NY Fed SOFR, ECB €STR and FX, US Treasury, FRED ([FEEDS_CONNECTOR.md](../connectors/FEEDS_CONNECTOR.md)) | — |
 | `drishti-plugin-news` | `news` | Headlines for a named entity, computed on demand from Google News RSS (code, not a store) | `drishti-common` |
@@ -4301,10 +4303,11 @@ drishti-messaging                 (api, diskcache)
 drishti-lakeio                    (api)
 drishti-deltalake                 (lakeio)
 drishti-iceberg                   (api, lakeio)
+drishti-lakehouse                 (api, lakeio, deltalake, iceberg; Delta, Unity Catalog and Delta Sharing tables seen as Iceberg)
 drishti-memlake                   (api, common, engine, lakeio, deltalake; no Spring code: ArchitectureRulesTest)
 drishti-lakeload                  (api, lakeio, deltalake, iceberg)
-plugins/*                         (api; kafka adds diskcache; activemq and rabbitmq add messaging; delta adds deltalake; iceberg and iceberg-external add iceberg)
-drishti-server                    (engine, identity, packs, ai, lakeload, memlake, and all nineteen plugins)
+plugins/*                         (api; kafka adds diskcache; activemq and rabbitmq add messaging; delta adds deltalake and lakehouse; iceberg and iceberg-external add iceberg; delta-external and delta-sharing add iceberg-external and lakehouse)
+drishti-server                    (engine, identity, packs, ai, lakeload, memlake, and all twenty-one plugins)
 drishti-it                        (server, testkit)
 drishti-benchmarks                (inference)
 ```

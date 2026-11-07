@@ -168,7 +168,7 @@ A Sutra is interpreted, never compiled, and there is no screen per product
 The server is one Spring Boot application on virtual threads, built from Maven modules that depend in one direction (the plugin SPI
 has no Spring). The console is a separate Python web application that computes nothing itself.
 
-The connector plugins, `plugins/drishti-plugin-*/`: `demo`, `file`, `rest`, `jdbc`, `delta`, `iceberg`, `iceberg-external`, `duckdb`, `mongodb`, `redis`, `aerospike`, `cassandra`, `kafka`, `activemq`, `rabbitmq`, `s3`, `feeds`, `news`, `yfinance`.
+The connector plugins, `plugins/drishti-plugin-*/`: `demo`, `file`, `rest`, `jdbc`, `delta`, `delta-external`, `delta-sharing`, `iceberg`, `iceberg-external`, `duckdb`, `mongodb`, `redis`, `aerospike`, `cassandra`, `kafka`, `activemq`, `rabbitmq`, `s3`, `feeds`, `news`, `yfinance`.
 
 ## Try it
 

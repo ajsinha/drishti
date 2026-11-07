@@ -41,6 +41,7 @@ final class UnityLake implements LakeStore {
     private final NativeEngine base;
     private final Map<String, Opened> opened = new ConcurrentHashMap<>();
     private final Map<String, String> refused = new ConcurrentHashMap<>();
+    private final Map<String, Long> askedAt = new ConcurrentHashMap<>();
 
     private UnityLake(UnityTables unity, Map<String, String> names, Map<String, String> settings) {
         this.unity = unity;
@@ -67,12 +68,17 @@ final class UnityLake implements LakeStore {
         return lake;
     }
 
-    /** The kind's table found in Unity Catalog (once; again after a refusal), or null with the reason kept for health. */
+    /** The kind's table found in Unity Catalog (once; after a refusal, again a minute later at the soonest), or null with the reason kept. */
     private Opened resolve(String kind) {
         Opened o = opened.get(kind);
         if (o != null) {
             return o;
         }
+        long now = System.currentTimeMillis();
+        if (refused.containsKey(kind) && now - askedAt.getOrDefault(kind, 0L) < 60_000) {
+            return null;                                         // refused a moment ago: Unity is not asked on every refresh
+        }
+        askedAt.put(kind, now);
         String name = names.get(kind);
         if (name == null) {
             refused.put(kind, kind + ": no table." + kind + " names its Unity Catalog table");

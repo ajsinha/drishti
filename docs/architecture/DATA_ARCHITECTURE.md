@@ -2141,6 +2141,14 @@ was 15.1 *Configuration* is its [section 2](../connectors/ICEBERG_EXTERNAL_CONNE
 [README](../../plugins/drishti-plugin-iceberg-external/README.md)); 15.5 *Tests* is its
 [section 12](../connectors/ICEBERG_EXTERNAL_CONNECTOR.md#12-how-it-is-tested).
 
+**The same reader for Delta and Delta Sharing.** `drishti-lakehouse` (generic data-platform code, no domain) shows a Delta table (by
+path, or by name in Unity Catalog with vended credentials) or a table shared through Delta Sharing as an Iceberg table: its metadata
+built in memory from the Delta schema (field ids, a name mapping to the physical columns, identity partitions), its files listed by the
+Delta log through Delta Kernel or by the sharing server (`TableOps.plan`), the log's statistics as column bounds, deletion vectors as
+position deletes (`DeletionVectors`), a share's files under a stable `delta-sharing://` name over their pre-signed URLs (a lakeio
+`StorageProvider`). The `delta-external` and `delta-sharing` connectors are `iceberg-external` with those catalogs: one reader, one
+mapping, no second engine ([LAKEHOUSE_CONNECTORS.md](../connectors/LAKEHOUSE_CONNECTORS.md)).
+
 ### 16. Vector columns and orphan files
 
 **`list<double>` columns.** The layout's vector column (`layout.<kind>.vectors`, a P&L vector of 509 values) is an optional
