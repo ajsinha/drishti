@@ -15,7 +15,8 @@
 """The browser's live hub (drishti_live-hub.js, UX-01): every tab of a browser subscribes through one hub that holds ONE channel
 to the console. These run the hub in Node with a stand-in EventSource, fetch and clock, and check the protocol: keys
 shared by tabs are subscribed once, later tabs get what a fresh stream starts with, changes go over the open channel,
-pages of another session get nothing, and dropped connections, quiet tabs and ended channels are handled."""
+pages of another session get nothing, and dropped connections, quiet tabs and ended channels are handled. The connection itself is
+drishti-data's LiveClient (Drishti Elements), on the harness's clock."""
 import json
 import shutil
 import subprocess
@@ -44,7 +45,10 @@ async function advance(ms) {
 class FakeES {
   constructor(url) { this.url = url; this.readyState = 0; this.on = {}; this.closed = false; FakeES.all.push(this); }
   addEventListener(t, fn) { (this.on[t] = this.on[t] || []).push(fn); }
-  emit(t, ch, d) { (this.on[t] || []).forEach(fn => fn({ data: JSON.stringify({ ch, d }) })); }
+  removeEventListener(t, fn) { this.on[t] = (this.on[t] || []).filter(f => f !== fn); }
+  emit(t, ch, d) { (this.on[t] || []).forEach(fn => fn({ type: t, data: JSON.stringify({ ch, d }) })); }
+  opened() { this.readyState = 1; (this.on.open || []).forEach(fn => fn({ type: 'open' })); }
+  fail(state) { this.readyState = state; (this.on.error || []).forEach(fn => fn({ type: 'error' })); }
   close() { this.closed = true; this.readyState = 2; }
 }
 FakeES.all = [];
@@ -144,13 +148,17 @@ const out = {};
     a.send({ t: 'sub', key: 'view:trade/T-1' }); b.send({ t: 'sub', key: 'view:trade/T-1' });
     await advance(100);
     const es = w.es();
+    es.opened();
     es.emit('channel', '', { id: 'c6', subs: ['view:trade/T-1'], who: 'S' });
     es.emit('view', 'view:trade/T-1', { generation: 1 });
-    es.readyState = 0; es.onerror();                          // the browser reconnects by itself
+    es.fail(0);                                               // dropped: the client opens it again after its back-off
     const errorsA = kinds(a.got).filter(t => t === 'error').length;
-    es.emit('channel', '', { id: 'c7', subs: ['view:trade/T-1'], who: 'S' });
-    es.emit('view', 'view:trade/T-1', { generation: 2 });
-    es.readyState = 2; es.onerror();                          // refused: given up by the browser
+    await advance(1000);
+    const again = w.es();
+    again.opened();
+    again.emit('channel', '', { id: 'c7', subs: ['view:trade/T-1'], who: 'S' });
+    again.emit('view', 'view:trade/T-1', { generation: 2 });
+    again.fail(2);                                            // refused
     const before = w.all().length;
     await advance(1500);
     out.reconnect = { errorsA, bViews: evs(b.got), before, after: w.all().length };

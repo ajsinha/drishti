@@ -349,7 +349,10 @@
         this.lastStatus = 0;
         this.events = new EventBus();
         this.backoff = new Backoff(this.o.backoff);
-        this.heart = new Heartbeat({ timeoutMs: this.o.heartbeatMs, onTimeout: () => this.dropped(new Error('no message or heartbeat for ' + Math.round(this.o.heartbeatMs / 1000) + ' s')) });
+        this.later = this.o.setTimeout || ((f, ms) => setTimeout(f, ms));
+        this.cancel = this.o.clearTimeout || ((t) => clearTimeout(t));
+        this.heart = new Heartbeat({ timeoutMs: this.o.heartbeatMs, setTimeout: this.later, clearTimeout: this.cancel,
+          onTimeout: () => this.dropped(new Error('no message or heartbeat for ' + Math.round(this.o.heartbeatMs / 1000) + ' s')) });
         this.subs = new Set();
         this.state = 'idle';
         this.lastEventId = null;
@@ -376,7 +379,7 @@
         return u + (u.indexOf('?') >= 0 ? '&' : '?') + encodeURIComponent(this.o.resumeParam) + '=' + encodeURIComponent(this.lastEventId);
       }
       connectNow() {
-        clearTimeout(this.retry);
+        this.cancel(this.retry);
         this.teardown();
         this.setState('connecting');
         this.stats.connects++;
@@ -467,13 +470,13 @@
         const offline = this.win && this.win.navigator && this.win.navigator.onLine === false;
         const wait = this.backoff.next();
         this.setState('reconnecting', { waitMs: offline ? null : wait, offline: !!offline, error: err.message });
-        if (!offline) { this.retry = setTimeout(() => this.connectNow(), wait); }
+        if (!offline) { this.retry = this.later(() => this.connectNow(), wait); }
       }
       teardown() { if (this.conn) { const c = this.conn; this.conn = null; c.close(); } }
       reconnect() { this.stopped = false; this.backoff.reset(); this.connectNow(); }
       close() {
         this.stopped = true;
-        clearTimeout(this.retry);
+        this.cancel(this.retry);
         this.heart.stop();
         this.teardown();
         if (this.state !== 'idle') { this.setState('closed'); }

@@ -121,21 +121,13 @@
     });
     return xsend.apply(this, arguments);
   };
-  // ... and live streams (they reconnect by themselves: the banner only says why they are quiet)
-  if (window.EventSource) {
-    var RealES = window.EventSource;
-    var ES = function (url, opts) {
-      var es = new RealES(url, opts);
-      es.addEventListener('error', function () {
-        if (!realFetch || down) { return; }
-        realFetch(PROBE, { cache: 'no-store', credentials: 'same-origin' }).then(function (r) { return r.json(); })
-          .then(function (s) { if (s && s.reachable === false) { trigger(false); } }, function () {});
-      });
-      return es;
-    };
-    ES.prototype = RealES.prototype; ES.CONNECTING = 0; ES.OPEN = 1; ES.CLOSED = 2;
-    window.EventSource = ES;
-  }
+  // ... and the live connection (drishti-data's LiveClient reconnects by itself; the channel says when it dropped: the banner only says why
+  // it is quiet)
+  window.addEventListener('drishti:live-error', function () {
+    if (!realFetch || down) { return; }
+    realFetch(PROBE, { cache: 'no-store', credentials: 'same-origin' }).then(function (r) { return r.json(); })
+      .then(function (s) { if (s && s.reachable === false) { trigger(false); } }, function () {});
+  });
   function start() {
     var nav = (window.performance && performance.getEntriesByType) ? performance.getEntriesByType('navigation')[0] : null;
     var status = nav && nav.responseStatus;
