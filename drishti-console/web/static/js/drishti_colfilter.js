@@ -29,21 +29,9 @@
   var MASK = '•••', LIST_MAX = 500;
 
   // ---- values and types ----------------------------------------------------------------------------------------
-  var MULT = { k: 1e3, m: 1e6, mm: 1e6, bn: 1e9, b: 1e9, tn: 1e12 };
-  /** A cell as a sortable value: {n} for a number (1.5m, 250k, -30,205,543, 12%) or a date, else {s} (lower-case text). */
-  function value(text) {
-    var t = text.replace(/[−–]/g, '-').replace(/,/g, '').replace(/\s/g, '');
-    var m = t.match(/^([+-]?)(\d+(?:\.\d+)?)(k|m|mm|bn|b|tn)?(%|bp)?$/i);
-    if (m) { var n = parseFloat(m[2]) * (m[3] ? MULT[m[3].toLowerCase()] : 1); return { n: m[1] === '-' ? -n : n }; }
-    if (/^\d{4}-\d{2}-\d{2}/.test(t) && !isNaN(Date.parse(t.slice(0, 10)))) { return { n: Date.parse(t.slice(0, 10)) }; }
-    return { s: text.toLowerCase() };
-  }
-  function compare(a, b) {
-    if (a.n != null && b.n != null) { return a.n - b.n; }
-    if (a.n != null) { return -1; }
-    if (b.n != null) { return 1; }
-    return a.s < b.s ? -1 : a.s > b.s ? 1 : 0;
-  }
+  /* A cell as a sortable value, {n} for a number (1.5m, 250k, -30,205,543, 12%) or a date, else {s} (lower-case text), and their order:
+     drishti-core's textSortKey and compareTextKeys, as the tables sort (drishti-grid's console tables). */
+  var value = window.Drishti.elements.core.textSortKey, compare = window.Drishti.elements.core.compareTextKeys;
   var ISO = /^\d{4}-\d{2}-\d{2}/;
   function norm(text) { return String(text == null ? '' : text).replace(/\s+/g, ' ').trim(); }
   /** 'blank', 'mask', 'date', 'num' or 'text' for one cell's text. */

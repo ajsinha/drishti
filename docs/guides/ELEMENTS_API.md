@@ -231,6 +231,40 @@ Python's str() of a float, as the server's templates print a raw number: "74.0" 
 
 Returns `string`.
 
+#### `BYTE_UNITS`
+
+The binary sizes of formatBytes, largest first: a kibibyte is 1,024 bytes, as the server and the operating system count files.
+
+#### `formatBytes(v, o)`
+
+A size in bytes in few characters: "512 bytes", "12 KB", "3.4 MB", "1.2 GB" (kilobytes whole, larger units with one decimal, half up).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` | the size in bytes |
+| `[o]` | `{decimals: (number\|function(number, string): number), small: string, empty: string}` | decimals: of MB and up (default 1; a function of the size and the unit); small: the word after a size under a kilobyte (default " bytes"); empty: for no size (default —) |
+
+Returns `string`.
+
+```js
+formatBytes(3565158)   // "3.4 MB"
+```
+
+#### `formatDuration(ms, o)`
+
+A duration in words a person reads at a glance: under a second in milliseconds ("640 ms"), else seconds with one decimal ("2.4 s"), from a minute minutes and seconds ("3 min 05 s").
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ms` | `*` | the duration in milliseconds |
+| `[o]` | `{empty: string}` |  |
+
+Returns `string`.
+
+```js
+formatDuration(2400)   // "2.4 s"
+```
+
 ### drishti_dates.js
 
 #### `parseDate(v)`
@@ -3468,6 +3502,19 @@ Enhances the document tables under a scope (a whole view, or one panel drawn aga
 
 Returns `void`.
 
+### drishti_doc-console.js
+
+#### `consoleTables(root, options)`
+
+The console's table behaviours on every table.tbl under a root (the document or a ShadowRoot), now and as panels are swapped in.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `(Document\|ShadowRoot)` |  |
+| `[options]` | `{scope: string, chart: boolean, openChart: function(HTMLTableElement, {visible: function(): HTMLTableRowElement[], filtered: boolean}, HTMLElement): void, columnFilters: Object, keys: Object, storageKey: string}` | scope: the page for remembered state (default the path); chart: offer Chart any table inside a shadow root too; openChart: opens a table as a chart (none: no chart button); columnFilters: the funnels ({attach, say, close}); keys: the page's keymap, told the tables' keys; storageKey: where the rows per page are remembered |
+
+Returns `{scan: function(Node): void, dispose: function(): void}`.
+
 ### drishti_grid-ui.js
 
 #### `VIEW_EVENTS`
@@ -6020,6 +6067,12 @@ The code editor. Events: change {value}, ready, lint {problems}, completed {entr
 | `host` | `HTMLElement` |  |
 | `[options]` | `CodeEditorOptions` |  |
 
+##### `CodeEditor.refresh()`
+
+Lays the editor out again (after it was hidden: a drawer or a tab opened).
+
+Returns `void`.
+
 ##### `CodeEditor.complete(forced)`
 
 Opens the completions at the cursor (forced: even for an empty word).
@@ -7721,6 +7774,16 @@ Replaces every row.
 
 Returns `void`.
 
+##### `Chart.pointAt(index)`
+
+Shows the crosshair and the tooltip at a row (a page's selected row followed by the chart); it comes back there after a resize.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `index` | `number` | the row's index in the chart's rows (the category's, for one series by category) |
+
+Returns `void`.
+
 ##### `Chart.setMode(mode)`
 
 Switches the mode: card (g2 A) or studio (g2 B).
@@ -7875,6 +7938,16 @@ Returns `Promise&lt;?{places: Array&lt;{name: string, link: Object, text: string
 
 The panel charts of one rendered view (a shadow root or an element): draw, redraw after a theme change, dispose.
 
+##### `static PanelCharts.state(el)`
+
+Whether a chart container is drawn, still animating, or not drawn yet (a page's settled signal asks; the engine is the page's).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `HTMLElement` |  |
+
+Returns `('drawn'\|'animating'\|'none')`.
+
 ##### `new PanelCharts(root, o)`
 
 | Parameter | Type | Meaning |
@@ -7895,6 +7968,16 @@ Returns `Promise&lt;void&gt;`.
 ##### `PanelCharts.redraw()`
 
 Draws every chart again (a theme change: the colours are read anew).
+
+Returns `Promise&lt;void&gt;`.
+
+##### `PanelCharts.update(el)`
+
+Moves a drawn chart to its container's new data without drawing it anew (a live panel's next point): the option is merged.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `HTMLElement` | a chart container of this view |
 
 Returns `Promise&lt;void&gt;`.
 

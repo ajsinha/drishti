@@ -36,6 +36,7 @@ export { manualFeed } from './drishti_live.js';
 export { renderWindow, renderText, renderHtml } from './drishti_plain-render.js';
 export { docTable, docPivotable, docDrill, heatBucket, docPivot, docPlainTable } from './drishti_doc-table.js';
 export { treeVisibility, pageInfo, enhanceDocTables } from './drishti_doc-behave.js';
+export { consoleTables } from './drishti_doc-console.js';
 export { VIEW_EVENTS, PHONE_WIDTH, FUNCTION_KEYS, CF_TYPES, headerSpans, pivotColumnLabels, markGroups, isTotalCell, nonAdditiveNote, colourScaleAlpha,
   dataBarWidth, cfBackground, figureRange, ruleFor, phoneColumns, pivotMeasures, columnMenuItems, cellMenuItems, commandText, parseCommand,
   parseCondition, conditionText, statusItems, FlashTracker } from './drishti_grid-ui.js';
