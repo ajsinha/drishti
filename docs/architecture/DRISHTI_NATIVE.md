@@ -216,8 +216,8 @@ Two drills (a large release); the benchmark with `drishti.native.mode` `off` aga
 
 *Product owner, 2026-11-04: Drishti serves more than banking, so any native library worth having is chosen by capability, not by
 industry.* Each follows the contract of section 4 (an interface, a Java fallback or an "unavailable" answer in words, bundled for Linux
-and Windows, one version), and reaches users through Rachana functions and engines, never as a new domain. Built after 2.9.11.i (the
-lean platform), with "Performance II" (2.9.11.n) or a release of its own.
+and Windows, one version), and reaches users through Rachana functions and engines, never as a new domain. Built after 2.9.11.e (the
+lean platform), with the optimisation release (2.9.11.j) or a release of its own.
 
 | # | Capability | Native | Java side | Serves | Decision |
 |---|---|---|---|---|---|

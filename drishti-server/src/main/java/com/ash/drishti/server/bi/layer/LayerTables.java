@@ -57,8 +57,13 @@ public final class LayerTables {
         if (r.table() == null) {
             return new DatasetDefParser.Result(null, problems);
         }
+        // the layer's own checks of one table (a live table over a list, live limits, built-in names ...), as the catalogue runs them
+        boolean overTable = r.table().from() != null && r.table().from().form() == TableDef.Source.Form.TABLE;      // its base's names are the catalogue's to check
+        new com.ash.drishti.tables.check.TableChecks().check(r.table(), null).stream().filter(p -> !"info".equals(p.level()))
+                .filter(p -> !(overTable && (com.ash.drishti.tables.TableCodes.UNKNOWN_NAME.equals(p.code()) || com.ash.drishti.tables.TableCodes.KEYS.equals(p.code()))))
+                .forEach(p -> problems.add(new DatasetParser.Problem(p.level(), p.code(), p.path() == null ? "" : p.path(), p.message())));
         try {
-            return new DatasetDefParser.Result(dataset(r.table(), problems), problems);
+            return new DatasetDefParser.Result(dataset(r.table(), problems, NOT_KEPT.matcher(yaml).find()), problems);
         } catch (IllegalArgumentException e) {
             problems.add(new DatasetParser.Problem("error", "DRS-9101", "", e.getMessage()));
             return new DatasetDefParser.Result(null, problems);
@@ -66,7 +71,10 @@ public final class LayerTables {
     }
 
     /** The table in BI's terms. */
-    static DatasetDef dataset(TableDef t, List<DatasetParser.Problem> problems) {
+    /** A table that says it is not kept ({@code materialize: none}, written out): read at its source on every query. Left out, it is kept as asked. */
+    private static final java.util.regex.Pattern NOT_KEPT = java.util.regex.Pattern.compile("(?m)^materialize:\\s*none\\s*(#.*)?$");
+
+    static DatasetDef dataset(TableDef t, List<DatasetParser.Problem> problems, boolean notKept) {
         Map<String, Object> about = t.about();
         int depth = t.depth();
         Map<String, String> byPath = new LinkedHashMap<>();
@@ -76,11 +84,20 @@ public final class LayerTables {
             }
         });
         Map<String, DatasetDef.Col> columns = new LinkedHashMap<>();
+        Map<String, DatasetDef.PyColumn> python = new LinkedHashMap<>();
         List<String> masked = new ArrayList<>();
         for (ColumnDef c : t.columns().values()) {
-            if (c.python() != null) {
-                problems.add(new DatasetParser.Problem("error", "DRS-9101", "columns." + c.name() + ".python",
-                        "a Python column of a table is not read by BI yet: compute it in the Transform that makes the table"));
+            if (c.python() != null) {                                         // a column a Python item computes from the row's inputs
+                Object item = c.python() instanceof Map<?, ?> pm ? pm.get("item") : c.python();
+                List<String> inputs = new ArrayList<>();
+                if (c.python() instanceof Map<?, ?> pm && pm.get("inputs") instanceof List<?> l) {
+                    l.forEach(x -> inputs.add(String.valueOf(x)));
+                }
+                if (item == null || String.valueOf(item).isBlank()) {
+                    problems.add(new DatasetParser.Problem("error", "DRS-9101", "columns." + c.name() + ".python", "a Python column names its item: python: { item, inputs }"));
+                } else {
+                    python.put(c.name(), new DatasetDef.PyColumn(String.valueOf(item), inputs, c.type() == null ? "string" : c.type()));
+                }
                 continue;
             }
             String type = c.type() == null ? "string" : c.type();
@@ -96,8 +113,10 @@ public final class LayerTables {
             String expr = c.expr() == null ? null : rowExpression(c.expr(), byPath, "columns." + c.name() + ".expr");
             Object of = c.extras().get("of");
             Object id = c.extras().get("id");
-            columns.put(c.name(), new DatasetDef.Col(c.name(), type, path, expr, role, c.meaning(), c.references(), of == null ? null : String.valueOf(of), null,
-                    c.unit(), additive, c.aggregate(), c.format(), id == null ? "" : String.valueOf(id), c.description()));
+            // the layer's unit: a currency, either a column of the table (each row's own) or an ISO code; any other word is a unit of quantity
+            boolean currency = c.unit() != null && (t.columns().containsKey(c.unit()) || c.unit().matches("[A-Z]{3}"));
+            columns.put(c.name(), new DatasetDef.Col(c.name(), type, path, expr, role, c.meaning(), c.references(), of == null ? null : String.valueOf(of),
+                    currency ? c.unit() : null, currency ? null : c.unit(), additive, c.aggregate(), c.format(), id == null ? "" : String.valueOf(id), c.description()));
             if (c.masked()) {
                 masked.add(c.name());
             }
@@ -115,37 +134,68 @@ public final class LayerTables {
                     null, null, null);
             case PYTHON -> new DatasetDef.Source(DatasetDef.Source.PYTHON, null, null, null, null, null, null, from.python(), json(from.inputs()), "server", null,
                     null, from.params());
-            case MODEL -> new DatasetDef.Source(DatasetDef.Source.MODEL, null, null, null, null, null, null, null, null, null, from.model(),
+            case MODEL -> from.modelQuery().get("sql") != null                  // a SQL view: the statement's answer over the model
+                    ? new DatasetDef.Source(DatasetDef.Source.SQL, null, null, null, null, String.valueOf(from.modelQuery().get("sql")), null, null, null, null, from.model(),
+                            null, null)
+                    : new DatasetDef.Source(DatasetDef.Source.MODEL, null, null, null, null, null, null, null, null, null, from.model(),
                     LayerYaml.YAML.valueToTree(from.modelQuery()), null);
+            case RUN -> DatasetDef.Source.ofRun(from.run(), from.params().get("version") == null ? "latest" : String.valueOf(from.params().get("version")),
+                    from.params().get("token") == null ? "" : String.valueOf(from.params().get("token")));
             case TABLE -> {
                 extendsRef = from.table();
                 yield null;
             }
-            default -> throw new IllegalArgumentException("BI reads a table from a kind, a connector query, a Python Transform, a model or another table; '" + t.name()
+            default -> throw new IllegalArgumentException("BI reads a table from a kind, a connector query, a Python Transform, a model, a promoted run or another table; '" + t.name()
                     + "' reads " + from.form().name().toLowerCase(java.util.Locale.ROOT));
         };
         String where = t.filter() == null ? null : rowExpression(t.filter(), byPath, "filter");
         DatasetDef.Keep keep = t.keepLatest() == null ? null : new DatasetDef.Keep(t.keys(), t.keepLatest(), true);
         DatasetDef.Grain grain = new DatasetDef.Grain(t.says() == null ? "" : t.says(), t.keys(), "businessDate");
-        DatasetDef.Time time = time(t);
+        DatasetDef.Time time = time(t, notKept);
         Map<String, Object> rf = t.refresh();
-        DatasetDef.Refresh refresh = rf.isEmpty() ? DatasetDef.Refresh.NONE : new DatasetDef.Refresh(rf.get("schedule") == null ? "" : String.valueOf(rf.get("schedule")),
-                Boolean.TRUE.equals(rf.get("on-load")));
-        DatasetDef.Security security = rules.isEmpty() && masked.isEmpty() && t.hiddenFor().isEmpty() ? DatasetDef.Security.NONE
-                : new DatasetDef.Security(rules, masked, t.hiddenFor(), List.of());
+        boolean onLoad = Boolean.TRUE.equals(rf.get("on-load")) || TableDef.Materialize.MODE_ON_LOAD.equals(t.materialize().mode());     // materialized on load: rebuilt on load
+        if (rf.get("schedule") != null && !String.valueOf(rf.get("schedule")).isBlank()) {
+            try {
+                com.ash.drishti.server.bi.dataset.RefreshSpec.parse(String.valueOf(rf.get("schedule")));       // the subscriptions' vocabulary
+            } catch (IllegalArgumentException e) {
+                problems.add(new DatasetParser.Problem("error", "DRS-9101", "refresh", e.getMessage()));
+            }
+        }
+        DatasetDef.Refresh refresh = rf.isEmpty() && !onLoad ? DatasetDef.Refresh.NONE
+                : new DatasetDef.Refresh(rf.get("schedule") == null ? "" : String.valueOf(rf.get("schedule")), onLoad);
+        // hidden-for: the table's roles hide it whole; a column's roles hide that column (BI says it as one set of roles over the hidden
+        // columns: their roles together, so a column is never shown to a role one of them hides it from)
+        List<String> hiddenColumns = new ArrayList<>();
+        java.util.Set<String> hiddenRoles = new java.util.LinkedHashSet<>();
+        if (t.hiddenFor().isEmpty()) {
+            t.columns().values().stream().filter(c -> !c.hiddenFor().isEmpty()).forEach(c -> {
+                hiddenColumns.add(c.name());
+                hiddenRoles.addAll(c.hiddenFor());
+            });
+        } else {
+            hiddenRoles.addAll(t.hiddenFor());
+        }
+        DatasetDef.Security security = rules.isEmpty() && masked.isEmpty() && hiddenRoles.isEmpty() ? DatasetDef.Security.NONE
+                : new DatasetDef.Security(rules, masked, List.copyOf(hiddenRoles), hiddenColumns);
         List<JsonNode> tests = new ArrayList<>();
         t.tests().forEach(x -> tests.add(LayerYaml.YAML.valueToTree(x)));
         Object ai = about.get("ai");
         return new DatasetDef(t.name(), t.version(), text(about, "id", ""), text(about, "title", t.name()), text(about, "description", ""), text(about, "owner", ""),
                 Boolean.TRUE.equals(about.get("sample")), text(about, "endorsement", "none"), null, source, grain, columns, time, refresh, security, extendsRef, where,
-                ai == null ? null : LayerYaml.YAML.valueToTree(ai), tests, List.of(), new DatasetDef.Derivation(List.of(), keep, Map.of(), null));
+                ai == null ? null : LayerYaml.YAML.valueToTree(ai), tests, List.of(), new DatasetDef.Derivation(List.of(), keep, python, null));
     }
 
-    /** {@code materialize: { live: { rows, age } }} as BI's live mode; the rest as BI's default (a snapshot), with the table's as-of and retention. */
-    private static DatasetDef.Time time(TableDef t) {
+    /**
+     * {@code materialize: { live: { rows, age } }} as BI's live mode; a table over a kind that says it is not kept ({@code materialize: none}, written out)
+     * as BI's direct reads (asked at the source on every query); the rest as BI's default (a snapshot), with the table's as-of and retention.
+     */
+    private static DatasetDef.Time time(TableDef t, boolean notKept) {
         if (t.materialize().live()) {
             Duration age = t.materialize().age() == null ? null : DatasetParser.span(t.materialize().age());
             return new DatasetDef.Time("live", t.asOf() == null ? "business-date" : t.asOf(), t.retention(), null, t.materialize().rows(), age, null);
+        }
+        if (notKept && t.from().form() == TableDef.Source.Form.KIND) {
+            return new DatasetDef.Time("snapshot", t.asOf() == null ? "business-date" : t.asOf(), t.retention(), "direct", null, null, null);
         }
         if (t.asOf() != null || t.retention() != null) {
             return new DatasetDef.Time("snapshot", t.asOf() == null ? "business-date" : t.asOf(), t.retention(), null, null, null, null);

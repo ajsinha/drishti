@@ -1198,8 +1198,8 @@ problems), `design propose`, `design approve` / `design reject` (an approver), `
 ### 5.7 bi
 
 Rupaka (business intelligence) as the token's user: `bi workspace list|get`, `bi catalogue list|get|publish`, `bi expr
-functions|validate|convert` (the expression language), `bi migrate --expressions|--models` (the converter of old expressions and of
-`rachana: 1` datasets to models; `--check` for CI), `bi sql` (Drishti SQL over a model), `bi model list|describe|check|consumers`,
+functions|validate` (Rachana, the expression language), `bi migrate --boards` (2.3 boards to reports; BI's old datasets and models move
+with `tables migrate`), `bi sql` (Drishti SQL over a model), `bi model list|describe|check|consumers`,
 `bi mq` (a model query), `bi item new|save|tests`, `bi dataset refresh` and `bi transform input|snippets|snippet` (Python data prep: a
 Transform's inputs as you see them, masked columns and a profile of each column, and the snippets the Transform editor offers; the commands are in
 `tools/bitransform.py`, loaded by `drishti.py`; [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](BI_GUIDE.md#17-data-prep-the-transform-editor)). A write needs the
@@ -1221,7 +1221,7 @@ drishti-console/.venv/bin/python tools/drishti.py bi runs wait r-java-2-01JA... 
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py bi expr validate "sum(trades.NOTIONAL) / count(trades)" --model trading-risk
-drishti-console/.venv/bin/python tools/drishti.py bi migrate --expressions config/bi --check          # CI: exit 1 while a file has the old syntax
+drishti-console/.venv/bin/python tools/drishti.py tables migrate --check                             # CI: exit 1 while a BI file is in the old form
 ```
 
 Captured, with a lower-case name the second time (the model's columns are the packs' UPPER_SNAKE names):
@@ -1232,7 +1232,7 @@ INVALID  (del2, aggregate scope, type any)
   error   DRS-9152  at 4-19: no field 'trades.notional'; did you mean trades.NOTIONAL?
 ```
 
-Real output: [CLI_GUIDE.md section 7](CLI_GUIDE.md) and [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del). In the console the migration's state is
+Real output: [CLI_GUIDE.md section 7](CLI_GUIDE.md) and [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions). In the console the migration's state is
 on Admin → **BI** (items that could not be converted, with why).
 
 ### 5.8 view and completion
@@ -1825,7 +1825,7 @@ the dependants along only when confirmed by name, and the uninstalled files kept
 ### 10.5 Admin → BI (`/admin/bi`) and the migration
 
 BI settings and governance; after an upgrade it lists the items the expression and model migration could not convert, with why
-(the terminal twin: `drishti.py bi migrate --expressions --dry-run`). Guide: [BI_GUIDE.md](BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments).
+(the terminal twin: `drishti.py tables migrate --dry-run`). Guide: [BI_GUIDE.md](BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments).
 
 ### 10.6 Admin → Health (`/admin/health`) and Admin → Packs (`/admin/packs`)
 

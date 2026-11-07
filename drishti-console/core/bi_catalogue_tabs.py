@@ -23,11 +23,11 @@ from __future__ import annotations
 
 # (tab key, label, the item kinds it holds); "all" holds every kind. A board kind or a report with board pages is under Boards, not Reports.
 TABS = (("reports", "Reports", ("report",)), ("boards", "Boards", ("board",)), ("models", "Models", ("model",)),
-        ("datasets", "Datasets", ("dataset",)), ("python", "Python", ("python", "notebook", "transform")), ("all", "All", ()))
+        ("datasets", "Datasets", ("dataset", "table")), ("python", "Python", ("python", "notebook", "transform")), ("all", "All", ()))
 DEFAULT_TAB = "reports"
 _KIND_TAB = {kind: key for key, _label, kinds in TABS for kind in kinds}
 # the singular kind names older links use (?kind=report, ?kind=python) still land on their tab
-_ALIASES = {"report": "reports", "board": "boards", "model": "models", "dataset": "datasets", "notebook": "python", "transform": "python", "transforms": "python"}
+_ALIASES = {"report": "reports", "board": "boards", "model": "models", "dataset": "datasets", "table": "datasets", "notebook": "python", "transform": "python", "transforms": "python"}
 
 
 def tab_key(asked: str | None) -> str:

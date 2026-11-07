@@ -16,7 +16,7 @@
 package com.ash.drishti.server.bi.dataset;
 
 import com.ash.drishti.server.bi.dataset.DatasetParser.Problem;
-import com.ash.drishti.server.bi.dataset.ExprParser.ExprException;
+import com.ash.drishti.server.bi.expr.ExpressionException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -523,9 +523,9 @@ final class DatasetValidator {
 
     private Node parse(String path, String text) {
         try {
-            Node n = com.ash.drishti.server.bi.expr.Expressions.parse(text);
+            Node n = com.ash.drishti.server.bi.expr.Expressions.node(text);
             return n;
-        } catch (ExprException e) {
+        } catch (ExpressionException e) {
             err(EXPRESSION, path, e.getMessage() + " (at position " + e.position() + " of: " + text + ")");
             return null;
         }
@@ -533,8 +533,8 @@ final class DatasetValidator {
 
     private static Node tryParse(String text) {
         try {
-            return com.ash.drishti.server.bi.expr.Expressions.parse(text);
-        } catch (ExprException e) {
+            return com.ash.drishti.server.bi.expr.Expressions.node(text);
+        } catch (ExpressionException e) {
             return null;
         }
     }

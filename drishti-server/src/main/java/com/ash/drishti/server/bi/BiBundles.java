@@ -429,7 +429,7 @@ public final class BiBundles {
                     blocks.add("it exists here and differs (" + String.join("; ", reasons) + "): import with overwrite to replace it");
                 }
             }
-            if ("dataset".equals(kind) && !samePub && pub != null && bundlePub != null) {
+            if (("dataset".equals(kind) || "table".equals(kind)) && !samePub && pub != null && bundlePub != null) {
                 ImpactAnalyzer.Result res = impact.impact(here, pub, bundlePub);
                 List<ImpactAnalyzer.Hit> hit = res.published().stream().filter(h -> !inBundle.contains(h.report().id())).toList();
                 if (res.change().breaking() && !hit.isEmpty() && props.refuseBreaking()) {
@@ -500,7 +500,7 @@ public final class BiBundles {
 
     private boolean datasetKnown(String ref, JsonNode all) {
         for (JsonNode n : all) {
-            if ("dataset".equals(n.path("kind").asText()) && (n.path("id").asText().equals(ref) || n.path("title").asText().equalsIgnoreCase(ref)
+            if (Set.of("dataset", "table").contains(n.path("kind").asText()) && (n.path("id").asText().equals(ref) || n.path("title").asText().equalsIgnoreCase(ref)
                     || ref.equals(ImpactAnalyzer.declaredName(n.path("body").asText())))) {
                 return true;
             }
@@ -525,7 +525,7 @@ public final class BiBundles {
         if (body.isBlank()) {
             return;
         }
-        if ("dataset".equals(kind)) {
+        if ("dataset".equals(kind) || "table".equals(kind)) {
             DatasetParser.Result r = DatasetParser.parse(body);
             if (!r.ok()) {
                 blocks.add(which + " is not a valid dataset: " + r.firstError());

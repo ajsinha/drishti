@@ -83,7 +83,7 @@ public final class Incremental {
         this.rule = b.rules().isEmpty() ? null : b.rules().get(0);
         this.denied = b.denied();
         for (String m : q.measures()) {
-            trees.put(m, collect(inline(Expressions.parse(ds.measures().get(m).expr()), new LinkedHashSet<>())));
+            trees.put(m, collect(inline(Expressions.node(ds.measures().get(m).expr()), new LinkedHashSet<>())));
         }
     }
 
@@ -99,7 +99,7 @@ public final class Incremental {
             if (def == null || def.expr() == null) {
                 return new Shape(Kind.TICK, "a Python measure: recomputed on the tick");
             }
-            Shape s = measureShape(ds, Expressions.parse(def.expr()), table, new LinkedHashSet<>());
+            Shape s = measureShape(ds, Expressions.node(def.expr()), table, new LinkedHashSet<>());
             if (s.kind().ordinal() > worst.ordinal()) {
                 worst = s.kind();
                 why = s.reason();
@@ -206,7 +206,7 @@ public final class Incremental {
                 if (def == null || def.expr() == null) {
                     v.visit("python", null);
                 } else if (seen.add(m.name())) {
-                    walkAggregates(Expressions.parse(def.expr()), ds, seen, v);
+                    walkAggregates(Expressions.node(def.expr()), ds, seen, v);
                 }
             }
             case Node.Call c -> {
@@ -442,7 +442,7 @@ public final class Incremental {
                 if (!seen.add(m.name())) {
                     throw new IllegalStateException("measures in a circle");
                 }
-                Node t = inline(Expressions.parse(ds.measures().get(m.name()).expr()), seen);
+                Node t = inline(Expressions.node(ds.measures().get(m.name()).expr()), seen);
                 seen.remove(m.name());
                 yield t;
             }

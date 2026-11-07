@@ -15,7 +15,7 @@
 -->
 # Changelog
 
-## 2.9.11.g (unreleased)
+## 2.9.11.h (unreleased)
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
 
@@ -111,6 +111,62 @@
   - Click tests for every changed button (the Notebook, Export data's menu item and both words, the VaR explorer's MR cube link, Counterparties →
     CCR cube); tutorials 10, 14 and 18 on the Notebook (tutorial 14's Python console step removed).
 
+- **The old BI code deleted; pivot formulas are Rachana** (BI_FOUNDATION_2911E.md section 11, the deletion; the product owner: no
+  critique, delete the old, fold the formulas within d). Deleted: `DatasetParser` version 1, `DatasetDefParser`'s `rachana: 2` form,
+  `ModelDefParser`'s `datasets:` form, DEL's checker, lowering, printer and catalogue (`bi/expr/functions.yaml`), `ExprParser`,
+  `LegacySources`, `StableIds`, the converters and `drishti.py bi migrate --expressions` / `--models`, and the pivot's
+  `FormulaParser` (7,873 lines removed and 1,467 added outside the docs, net 6,406 fewer; 6,000 fewer in main code). BI's folder refuses `datasets/` and `models/` in the old forms (`DRS-9196`). A pivot formula
+  is read by Rachana's one parser (`FormulaLowering`; `count()` with no argument counts the rows); saved formulas (views, their versions,
+  formula functions) are rewritten into Rachana at start, in place, once, audited (`PivotFormulaMigration`). A promoted run writes a table
+  that reads it (`from: { run }`). Build → New pack writes a deep kind's BI as tables of the table layer (`config/bi/tables/`) and a
+  `rachana: 3` model, and a pack's `config/bi/tables/` is loaded as table items. A pack's table that would break someone else's
+  published report is held, as a dataset was. `tables migrate` reads BI's first expression syntax (an item without `expressions: 2`:
+  `&&`, `||`, `!`, `c ? a : b`, `[Measure]`) with Rachana's parser, so an installation that never ran the removed `bi migrate --expressions`
+  still migrates. **Parity:** the 76 formulas recorded on the old parser
+  (1,801 SQL-path cells, 76 Java answers) give the same answers in their Rachana text (19 rewritten), but one changed by the product owner's decision (2026-11-07):
+  `count(where = CCY in [])`, refused on the old SQL path, answers 0 on both paths (an empty list matches nothing); BiFoundationParityTest (6,468
+  answers) and BiParityTest (13 cases) exact. `ModelDefTest` on `rachana: 3` tables and a model. Docs: BI_LANGUAGE_REFERENCE out of Help
+  (Q27; `/help/expressions` leads to Rachana's expressions, `/help/sql` to the API guide's Drishti SQL), RACHANA_REFERENCE (`count()`),
+  PIVOT_GUIDE (formulas in Rachana), BI_GUIDE (what BI reads; packs' BI content), CLI_GUIDE (`bi migrate`), SCHEMA_TO_PACK, tutorial 17
+  and OPERATIONS (back up `config/tables`), tutorial 37 (formula language), FUNCTIONS.md regenerated.
+- Decided (product owner, 2026-11-07, decision A, overriding BI_DESIGN 8.5's "security binds to the dataset"): **nobody sees more data
+  after the upgrade.** A row rule on one fact also limits the related rows of another fact of the model: the new rule function
+  `related_rows('alias')` (Rachana's catalogue, rule scope) keeps a table's rows that share a key (a dimension both reference, or a
+  reference between them) with the rows of that alias the reader sees, written by BI's engine as `EXISTS` over the other table at the
+  question's dates with that table's own rules; a rule it cannot honour (no such alias, no shared key) refuses the question.
+  `tables migrate` writes `related_rows('<fact>')` on each other table of a `rachana: 1` dataset for the role whose rule named that fact
+  (where it wrote `true` before; a rule naming several tables, or this table and another, gives `false`). A live table's history follows its
+  table's rules on its group columns (a history without groups refuses a limited reader). Read outside BI's engine (a table on its own
+  through the table layer) the rule lets no row through. A model that already said `may-see-all` keeps it: the shipped `trading-risk` is
+  unchanged, and BiFoundationParityTest stays exact. MultiFactTest (the desk head sees her desk's limits only) and LiveHistoryTest (her
+  desk's samples only; refused without groups) keep their limits; NoMoreRowsAfterMigrationTest migrates every shipped sample of
+  `bi/before-tables` and checks every recorded case as `rita`, `hana` and `ann`: no answer has more rows than before. BI_DESIGN 8.5 and
+  example 8 corrected; RACHANA_REFERENCE (`related_rows`), TABLES_GUIDE, RELEASE_NOTES, TROUBLESHOOTING. A per-table exposure access
+  design goes to 2.9.11.h's security discussion.
+- **Removed: BI's authoring screens of the old forms** (decided 2026-11-07: one way per job; EDITORS.md, where the model diagram is
+  a later read-only picture). The dataset wizard (`wizard_routes.py`, `drishti_bi-wizard*.js`, `drishti_bi-wizard.css`), the new-dataset
+  wizard (`drishti_bi-dataset-layer.js`, `drishti_bi-dataset-steps.js`), the model designer (`drishti_bi-model-designer.js` and its
+  `-tabs`, `-fields`, `-calc`, `-ai` scripts; `model_routes.py`'s compose, parse, measure, new, contract and dataset-yaml calls), the 2.1
+  dataset page and Model view (`dataset.html`, `model.html`, `drishti_bi-model.js`) and the Datasets page's *Start a model from the packs*:
+  they wrote `rachana: 1` and `2` files, which BI refuses (`DRS-9196`). Their addresses redirect to Build › Tables & models (`/bi/md/<item>`
+  → the model, `/bi/datasets/new[-layer]` → a new table, `?edit=<item>` → that table) or to the table's page (`/bi/d/`, `/bi/m/`). *Make it
+  a model* writes a `rachana: 3` model. The test stacks seed tables and models of the layer (`bi_samples.migrate_texts`). The tests of the
+  removed screens are deleted; the tutorials' picture scripts that drove them (`tools/docs/shots` t10, t11, t13, t15, t18, t44) go with
+  the 2.9.11.g documentation rewrite.
+- **Fixed (BI on the table layer, found by the server suite):** `tables migrate` kept a dataset's `hidden-for: { roles, columns }` as
+  those columns' `hidden-for` (it was lost), a narrowing's `columns: [a, b]` as those columns of the base (it was dropped, so every base
+  column showed), a `rachana: 1` dataset's audience on its tables (they were open to every reader), and refuses a `keep:` other than
+  `latest by <column>`, a group aggregate it does not know and a grouped dataset's rule on a column it is not grouped by, as BI did.
+  BI reads a column's `unit:` as its currency again (a column of the table or an ISO code), so the currency guard (`DRS-9158`) works; a
+  column's `hidden-for` hides it from those roles; a table over a table may only read the base's columns (`DRS-9105`). A model of the
+  layer goes through the publish gate after the layer's checks (one name in the catalogue, the safeguard, the contract against its
+  published version). A model a reader may not open is never answered by a table of that name. A table built on a model is the model's
+  consumer in lineage and impact. A refresh asked of a table refreshed on its own schedule is that table's run, in its history. The
+  dataset page lists each table's row rules. Build › Tables & models lists a file of the tables folder once (BI reads that folder too).
+  The AI's prompts call a model's table a table. `tables migrate` keeps a `rachana: 1` dataset's refresh schedule on its tables (a table's own
+  first) and its expected values of a measure that is one aggregate of a table as that table's tests (`agg: count`, `agg: sum, column: …`).
+  A model's review shows the first rows of its fact table; a model's delete confirmation counts what reads it (its lineage); an entity view
+  on a model's table opens the entity's kind (a model's describe says it: `entity`); the catalogue's Datasets tab lists tables.
 - Decided (product owner, 2026-11-06): **tables use look-ups, models join**. The table editor says *look-up* (Source and look-ups, + Look-up); combining tables row by row is a model's relationships (EDITORS.md section 2, VIRTUAL_TABLES.md V10a, TABLES_GUIDE).
 - **The switch: BI reads the table layer** (BI_FOUNDATION_2911E.md section 7.3, step 5). The shipped datasets and models were migrated
   with `drishti.py tables migrate` (dry run first: 34 items converted, 0 refused; 103 expressions, 22 rewritten DEL into Rachana) into
@@ -5797,7 +5853,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   (comments, key order and untouched entries kept). A report on a model inherits the model's field properties (display names in every label, folders,
   hidden fields) and perspectives, has its own measures (`measures:`, sent as `define`), and shows a visual's question as MQ or SQL with *Run as SQL*.
   Analyse SQL cells run Drishti SQL on the server over the extract's model by default (over the extract stays selectable until wave B). The alert cell
-  chooser sends `reduce` only when chosen. Guides: [EXPRESSIONS.md](docs/guides/BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del) section 11 (59 finance and risk recipes, each run as a
+  chooser sends `reduce` only when chosen. Guides: [EXPRESSIONS.md](docs/guides/RACHANA_REFERENCE.md) section 11 (59 finance and risk recipes, each run as a
   test on the demo lake) and 8.1 (the editor), DATASETS.md section 15, REPORTS.md section 19, BI_GUIDE.md section 24, ANALYSE.md section 4.
 - **Console: off the 2.1 dataset paths (wave A, task 6).** Every read is a model query (`/bi/mq`) or Drishti SQL (`/bi/sql`): Analyse's extracts
   (shape rows), a dataset page's preview, a filter's value list in the designer and Calc's `drishti_bi.query` (it now sends a model query; `model_ref`
@@ -5858,7 +5914,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   in-memory DuckDB that can read nothing else (a join or sort on a masked column `DRS-9161`), one time clause per statement (`AS OF DATE`, `FOR LIVE`,
   `FOR WINDOW`), `EXPLAIN`. `POST /api/v1/bi/sql` (`json`, `csv`, `arrow`), `POST /api/v1/bi/sql/validate`; SQL view datasets (`source: { sql, model }`,
   asked as each reader); a model's `tests: [{ sql, expect }]`; `drishti.py bi sql`. Codes `DRS-9170` to `DRS-9179`; settings `drishti.bi.sql.*`;
-  new guide [SQL.md](docs/guides/BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models).
+  new guide [SQL.md](docs/guides/RACHANA_REFERENCE.md).
 - **Server: the logical plan (wave A, task 2).** Every question (MQ, a report visual, an alert, an Analyse slice; Drishti SQL next) becomes one plan
   (`bi/plan`: `SecureScan`, `SemiJoin`, `Filter`, `Aggregate`, `Meet`, `Window`, `Having`, `Sort`, `Limit`, `Answer`; `Derive`, `Dedup`, `Regroup`, `Rel`
   reserved for the dataset derivation and composite SQL). The security rewriter runs before the optimiser (predicate pushdown, top-N as a grouped
@@ -5877,7 +5933,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   hidden `DRS-9152`, fixes and positions), `POST /api/v1/bi/expr/convert` (one expression, or a whole item's YAML with comments kept). The old syntax is
   read with a `DRS-9100` warning (`drishti.bi.expr.legacy: warn`; `refuse` at the end of A; `expressions: 2` on an item refuses it now); every shipped
   expression converts to identical SQL (tested). CLI: `drishti.py bi expr functions|validate|convert`, `drishti.py bi migrate --expressions`. New guide
-  [EXPRESSIONS.md](docs/guides/BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del) (its function reference is generated from the catalogue; a test keeps them equal). New codes `DRS-9127`,
+  [EXPRESSIONS.md](docs/guides/RACHANA_REFERENCE.md) (its function reference is generated from the catalogue; a test keeps them equal). New codes `DRS-9127`,
   `DRS-9129`, `DRS-9190` in `ErrorCode`.
 - **Server: the W1 QA findings.** A model **rows** extract (`shape: rows`, Analyse, *Show the rows*) keeps one row per fact row (it was `DISTINCT`: 9 rows
   for 60 trades); its sums equal the measures. **Make it a model** reads the designer's quoted `model: "dataset:..."`, reuses a model already written out

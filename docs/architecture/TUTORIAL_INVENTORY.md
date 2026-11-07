@@ -69,7 +69,7 @@ the tutorials planned but not written.
 
 | # | Title | Track | Verdict | Reason |
 |---|---|---|---|---|
-| 1 | Your first 15 minutes | Start | REWRITE-STEPS | the entry point; kept, with the install made skippable; three outputs and one picture to re-run. Splitting install (operators) from the tour (everyone) is 2.9.11.g's four role doors |
+| 1 | Your first 15 minutes | Start | REWRITE-STEPS | the entry point; kept, with the install made skippable; three outputs and one picture to re-run. Splitting install (operators) from the tour (everyone) is 2.9.11.h's four role doors |
 | 2 | Look up anything | Start | KEEP | current (text and pictures 2026-11-04); the core of the Start track |
 | 3 | Query by form | Start | KEEP | the form is its own way in; distinct from the command line; text 2026-10-17, pictures 2026-11-01 |
 | 4 | Connect your data | Data in and out | KEEP | the only tutorial on writing a connector |
@@ -93,7 +93,7 @@ the tutorials planned but not written.
 | 22 | Build a screen with the designer | (merged into 6) | MERGED INTO 6 | one job, one tutorial: now tutorial 6, part B (steps 9-15); /help/docs-tutorials-22-build-a-screen-with-the-designer redirects there |
 | 23 | Computed panels: a reactive connector | Build | KEEP (rewrite after 2.9.11.d/e) | 2.9.11.d's one Python runtime and 2.9.11.e's remaining Python compute in Java change the engine side |
 | 24 | Correct a trade and approve it: write-back | Build | KEEP | write-back is its own job; 2.9.11.e's one Approvals queue will move Review → Changes |
-| 25 | VaR from the bank to a trade | Risk engines | KEEP | the VaR tutorial (the two-docs-per-measure rule); at 993 lines and 18 steps it is the first candidate for 2.9.11.g's split into a tutorial and a guide's worked examples |
+| 25 | VaR from the bank to a trade | Risk engines | KEEP | the VaR tutorial (the two-docs-per-measure rule); at 993 lines and 18 steps it is the first candidate for 2.9.11.h's split into a tutorial and a guide's worked examples |
 | 26 | Exposure from the bank to a trade | Risk engines | KEEP | the exposure tutorial (two docs per measure) |
 | 27 | Groupings and analytics, computed | BI and analysis | KEEP | its guide's pair |
 | 28 | Funds and ETFs | BI and analysis | KEEP | its guide's pair |
@@ -107,7 +107,7 @@ the tutorials planned but not written.
 | 36 | Load files automatically with the data inbox | Data in and out | KEEP | its guide's pair; current |
 | 37 | Custom functions, "why did it move" and what-if | BI and analysis | KEEP | the pivot engine's extension; current |
 | 38 | The MR cube: desks by risk class, with the right totals | Risk engines | KEEP | its guide's pair; current |
-| 43 | Parametric VaR beside historical: the fat-tail gap | Risk engines | KEEP | freshly run; folding it into 25 belongs with 25's split in 2.9.11.g |
+| 43 | Parametric VaR beside historical: the fat-tail gap | Risk engines | KEEP | freshly run; folding it into 25 belongs with 25's split in 2.9.11.h |
 
 ### 4.1 Each tutorial in detail
 
@@ -120,7 +120,7 @@ the tutorials planned but not written.
 - **API calls**: 1 distinct, e.g. `/api/v1/search`.
 - **Stale or changed**: 01:171 the top bar listed Views, BI, Build, Admin, Help without **Engines** (menus.yaml has it since 2.9.11.a): text fixed, picture img/t01/02-home.jpg (2026-11-01) to be re-run. 01:64-75 the `lake demo` summary predates the test data's conversion to dated files (2026-11-04): marked to be re-run. 01:99 `doctor` shows `drishti-server-2.9.11.b-exec.jar (version 2.5.0)` and 01:366 `version 2.9.2`: the jar name was edited into an older capture by the 2.9.11.b release commit (97d8b59ac): marked to be re-run. Opens with git clone and a build (UX review): a note now lets a reader with a running server start at step 3.
 - **Overlap**: step 7 is a teaser of 3; step 8 of 10.
-- **Verdict**: REWRITE-STEPS: the entry point; kept, with the install made skippable; three outputs and one picture to re-run. Splitting install (operators) from the tour (everyone) is 2.9.11.g's four role doors.
+- **Verdict**: REWRITE-STEPS: the entry point; kept, with the install made skippable; three outputs and one picture to re-run. Splitting install (operators) from the tour (everyone) is 2.9.11.h's four role doors.
 
 #### 2. Look up anything
 
@@ -388,7 +388,7 @@ the tutorials planned but not written.
 - **API calls**: 3 distinct, e.g. `/api/v1/var/matrix`, `/api/v1/var/scope`, `/api/v1/var/what-if`.
 - **Stale or changed**: none found (text and pictures 2026-11-04).
 - **Overlap**: 43 (parametric is a toggle of this explorer), 38 and 33 step 6 (VaR in a pivot).
-- **Verdict**: KEEP: the VaR tutorial (the two-docs-per-measure rule); at 993 lines and 18 steps it is the first candidate for 2.9.11.g's split into a tutorial and a guide's worked examples.
+- **Verdict**: KEEP: the VaR tutorial (the two-docs-per-measure rule); at 993 lines and 18 steps it is the first candidate for 2.9.11.h's split into a tutorial and a guide's worked examples.
 
 #### 26. Exposure from the bank to a trade
 
@@ -548,7 +548,7 @@ the tutorials planned but not written.
 - **API calls**: 6 distinct, e.g. `/api/v1/pivot/query`, `/api/v1/var/playground`, `/api/v1/var/playground.xlsx`, `/api/v1/var/scope`.
 - **Stale or changed**: none (rewritten to the toggle and run for real 2026-11-04; PLAY PVAR and views B and C gone).
 - **Overlap**: 25.
-- **Verdict**: KEEP: freshly run; folding it into 25 belongs with 25's split in 2.9.11.g.
+- **Verdict**: KEEP: freshly run; folding it into 25 belongs with 25's split in 2.9.11.h.
 
 ## 5. Outputs and pictures to be re-run
 
@@ -574,6 +574,6 @@ Marked *(to be re-run)* in the text where the output is shown; none was invented
 | **Trader: your first 10 minutes** | A tutorial of its own for a trader, on one set of dates: sign in, the desk's trades, a trade's history, the desk's VaR to a trade, a what-if, a pivot. It cannot be built honestly now: the steps it would reuse were captured on different lakes and dates (tutorial 1 on the seven-day lakes of 2026-10-16, 25 on the VaR lake of 2026-09-30, 33 on the demo lake), so the figures would contradict each other. Until then the index has a path through those tutorials' steps. | with 2.9.11.e's ticking trader home, run on one lake |
 | **The BI track rewritten** | 10-14, 18 and 20 on virtual tables and Rachana expressions; 14 split (Python vs Analyse) | after 2.9.11.d |
 | **The Build track rewritten** | 6 (both parts), 24's review step, 23's engines, on the one Build home, one Approvals queue and one Python runtime | after 2.9.11.e |
-| **Role doors** | install vs first tour (tutorial 1 split), the four role doors | 2.9.11.g |
-| **25 split** | the VaR tutorial (993 lines, 18 steps) into the tutorial and the guide's worked examples; 43 folded in | 2.9.11.g |
+| **Role doors** | install vs first tour (tutorial 1 split), the four role doors | 2.9.11.h |
+| **25 split** | the VaR tutorial (993 lines, 18 steps) into the tutorial and the guide's worked examples; 43 folded in | 2.9.11.h |
 

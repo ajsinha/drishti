@@ -56,7 +56,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/tin-api-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/tin-api-overlay/added.yaml",
-        "drishti.bi.dir=${drishti.test.dir}/tin-api-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/tin-api-store/${random.uuid}",
+        "drishti.bi.dir=${drishti.test.dir}/tin-api-folder", "drishti.tables.root=${drishti.test.dir}/tin-api-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/tin-api-store/${random.uuid}",
         "drishti.sources.connectors-dir=${drishti.test.dir}/tin-api-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.tin-lake.plugin=file", "drishti.sources.connectors.tin-lake.kinds[0]=trade",
@@ -136,6 +136,7 @@ class TransformInputsApiTest {
                     measures:
                       Notional: { expr: "sum(desks.notional)" }
                     """);
+            com.ash.drishti.server.bi.TablesFolder.migrate(folder);     // tables migrate: the datasets and models become the layer's, the reports rebound
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }
@@ -251,10 +252,10 @@ class TransformInputsApiTest {
 
     @Test @Order(4)
     void aPythonDatasetWithAKindInputChecksAndItsLineageReachesTheConnector() throws Exception {
-        JsonNode checked = ok(call("GET", "/api/v1/bi/layer-datasets/file:dataset:desk-notional-prep", as("rita", "bi-risk"), null));
+        JsonNode checked = ok(call("GET", "/api/v1/bi/layer-datasets/file:table:bi.desk_notional_prep", as("rita", "bi-risk"), null));
         assertThat(checked.toString()).doesNotContain("\"level\":\"error\"");
         JsonNode lineage = ok(call("GET", "/api/v1/bi/lineage/desk-notional-prep@1", as("rita", "bi-risk"), null));
-        assertThat(lineage.toString()).as(lineage.toString()).contains("pack-kind").contains("tin-lake").contains("desk-notional-prep");
+        assertThat(lineage.toString()).as(lineage.toString()).contains("pack-kind").contains("tin-lake").contains("desk_notional_prep");
     }
 
     @Test @Order(5)

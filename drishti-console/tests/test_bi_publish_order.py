@@ -20,7 +20,6 @@ test_bi_languages_browser.py saw it whenever the read took longer than the publi
 answered after a later write's answer is dropped. Here the race is played in Node with the real drishti_bi-lib.js, and the designer is checked to route every
 write and the refresh through it, so a new write path cannot bring the race back."""
 import json
-import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -60,13 +59,3 @@ def test_a_read_answered_with_no_write_since_is_applied():
     """)
     assert shown == "published"
 
-
-def test_the_model_designer_routes_every_item_write_and_the_refresh_through_the_answers():
-    src = (JS / "drishti_bi-model-designer.js").read_text(encoding="utf-8")
-    assert "const answers = B.itemAnswers();" in src
-    writes = [line for line in src.splitlines() if re.search(r"\bM\.item = (?!fresh\b)", line)]
-    assert len(writes) >= 4, writes                                       # save, autosave, publish, move (the page's first read sets it once at open)
-    for line in writes:
-        assert "answers.wrote()" in line or "M.item = it;" == line.strip(), line
-    refresh = src[src.index("function refreshItem()"):src.index("M.refreshItem = refreshItem;")]
-    assert "answers.read(B.api('GET'" in refresh and "if (!fresh || M.dirty)" in refresh, refresh

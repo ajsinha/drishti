@@ -105,7 +105,7 @@ async def _bi_body(request: Request) -> bytes:
         raise BodyError(415, "send the file as application/octet-stream or text/plain")
     data = await limited_body(request, request.app.state.pack_upload_limit, "the BI file")
     if not data:
-        raise BodyError(400, "choose a file (<name>.dataset.yaml, .report.yaml, .board.yaml, .notebook.yaml or .python.yaml)")
+        raise BodyError(400, "choose a file (<name>.table.yaml, .model.yaml, .report.yaml, .board.yaml, .notebook.yaml or .python.yaml)")
     return data
 
 

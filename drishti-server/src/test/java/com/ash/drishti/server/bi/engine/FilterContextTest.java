@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -70,7 +71,7 @@ class FilterContextTest {
         QueryProperties props = QueryProperties.defaults(store.toString());
         service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC());
         String yaml = TestLake.yaml().replace("measures:\n", MEASURES).replace("security:\n", "hierarchies:\n  Geo: [desks.region, trades.desk]\nsecurity:\n");
-        DatasetParser.Result r = DatasetParser.parse(yaml);
+        DatasetParser.Result r = Layered.dataset(yaml);
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         ds = new QueryService.Loaded("file:dataset:lake-ctx", Layers.key("file:dataset:lake-ctx"), r.dataset(), "h1");
     }
@@ -264,7 +265,7 @@ class FilterContextTest {
     @Test
     void aNamedRelationshipThatDoesNotExistIsRefused() {
         String yaml = TestLake.yaml().replace("measures:\n", "measures:\n  Via: { expr: \"calc(measure('MTM'), via='r_9')\" }\n");
-        QueryService.Loaded other = new QueryService.Loaded("file:dataset:lake-via", Layers.key("file:dataset:lake-via"), DatasetParser.parse(yaml).dataset(), "h2");
+        QueryService.Loaded other = new QueryService.Loaded("file:dataset:lake-via", Layers.key("file:dataset:lake-via"), Layered.dataset(yaml).dataset(), "h2");
         assertThatThrownBy(() -> service.query(other, new QueryRequest(List.of("trades.desk"), List.of("Via"), List.of(), TestLake.DAY2, TestLake.DAY2, List.of(), null, "auto"),
                 risk().caller(), false)).isInstanceOf(DrishtiException.class).hasMessageContaining("via='r_9'");
     }

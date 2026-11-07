@@ -421,35 +421,21 @@ public final class PackModels {
 
     // ---- the YAML ----------------------------------------------------------------------------------------------------
 
+    /** The draft: a model of the table layer ({@code rachana: 3}) over the packs' generated tables of the chosen kinds, with starter measures. */
     private String yaml(List<TableInfo> chosen, List<Link> links, String name) {
         Map<String, Object> doc = new LinkedHashMap<>();
-        doc.put("rachana", 1);
-        doc.put("dataset", name == null || name.isBlank() ? "new-model" : name.replaceAll("[^A-Za-z0-9_.-]+", "-"));
-        doc.put("version", 1);
+        doc.put("rachana", 3);
+        String model = name == null ? "" : name.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9-]+", "-").replaceAll("^-+|-+$", "");
+        doc.put("model", model.isEmpty() ? "new-model" : model);
+        doc.put("version", "1.0.0");
         doc.put("title", "New model from " + String.join(", ", chosen.stream().map(TableInfo::kind).toList()));
-        doc.put("description", "Started from the packs' kinds. Edit the columns, relationships and measures; nothing here changes a pack.");
+        doc.put("description", "Started from the packs' kinds. Edit the relationships and measures; nothing here changes a pack.");
         Map<String, Object> tables = new LinkedHashMap<>();
         Map<String, Object> measures = new LinkedHashMap<>();
         for (TableInfo t : chosen) {
             Map<String, Object> table = new LinkedHashMap<>();
-            Map<String, Object> src = new LinkedHashMap<>();
-            if (!t.connector().isBlank()) {
-                src.put("connector", t.connector());
-            }
-            src.put("kind", t.kind());
-            table.put("source", src);
-            Map<String, Object> cols = new LinkedHashMap<>();
-            for (ColumnInfo c : t.columns()) {
-                if (c.path().equals(c.name())) {
-                    cols.put(c.name(), c.type());                                 // shorthand: just the type
-                } else {
-                    Map<String, Object> col = new LinkedHashMap<>();
-                    col.put("path", c.path());
-                    col.put("type", c.type());
-                    cols.put(c.name(), col);
-                }
-            }
-            table.put("columns", cols);
+            table.put("table", com.ash.drishti.server.bi.layer.DatasetDef.PACK_PREFIX + t.pack() + "." + t.kind());      // the pack's generated table of the kind
+            table.put("role", "fact");
             tables.put(t.table(), table);
             measures.put("Count of " + t.table(), Map.of("expr", "count(" + t.table() + ")"));
             t.columns().stream().filter(c -> "decimal".equals(c.type())).limit(2)

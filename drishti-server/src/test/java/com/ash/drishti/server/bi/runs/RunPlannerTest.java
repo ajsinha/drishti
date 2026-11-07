@@ -15,12 +15,12 @@
  */
 package com.ash.drishti.server.bi.runs;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
-import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.engine.DuckDbEngine;
 import com.ash.drishti.server.bi.engine.ExecProperties;
 import com.ash.drishti.server.bi.engine.Footprints;
@@ -67,7 +67,7 @@ class RunPlannerTest {
         service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC());
         history = new RunHistory();
         service.history(history);
-        ds = new QueryService.Loaded("file:dataset:lake-test", Layers.key("file:dataset:lake-test"), DatasetParser.parse(TestLake.yaml()).dataset(), "h1");
+        ds = new QueryService.Loaded("file:dataset:lake-test", Layers.key("file:dataset:lake-test"), Layered.dataset(TestLake.yaml()).dataset(), "h1");
     }
 
     @AfterEach

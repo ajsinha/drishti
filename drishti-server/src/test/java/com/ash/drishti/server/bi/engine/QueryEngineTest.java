@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -60,7 +61,7 @@ class QueryEngineTest {
             service.close();
         }
         service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC());
-        DatasetParser.Result r = DatasetParser.parse(TestLake.yaml());
+        DatasetParser.Result r = Layered.dataset(TestLake.yaml());
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         ds = new QueryService.Loaded("file:dataset:lake-test", Layers.key("file:dataset:lake-test"), r.dataset(), "h1");
     }
@@ -138,7 +139,7 @@ class QueryEngineTest {
         assertThat((double) r.columns().get(5).values()[0]).isEqualTo(mtm / notional, org.assertj.core.data.Offset.offset(1e-12));    // a measure of measures
     }
 
-    /** DEL round(x, n): DuckDB has round(DOUBLE, INTEGER) and no BIGINT form, so the digits are cast (recipe R16 of BI_LANGUAGE_REFERENCE.md). */
+    /** DEL round(x, n): DuckDB has round(DOUBLE, INTEGER) and no BIGINT form, so the digits are cast (recipe R16 of RACHANA_REFERENCE.md). */
     @Test
     void roundWithDigitsRuns() {
         QueryService.Result r = run("{\"fields\":[\"trades.desk\"],\"measures\":[\"NotionalM\"],\"dates\":{\"from\":\"2026-10-09\"}}", risk());
@@ -213,7 +214,7 @@ class QueryEngineTest {
 
     @Test
     void measuresFromTwoUnconnectedTablesAreAskedSeparatelyAndShownSideBySide() {
-        DatasetParser.Result two = DatasetParser.parse(TestLake.yaml().replace("relationships:", "  curves:\n    source: { connector: desk-lake, kind: desk }\n    columns: { point: string }\nrelationships:")
+        DatasetParser.Result two = Layered.dataset(TestLake.yaml().replace("relationships:", "  curves:\n    source: { connector: desk-lake, kind: desk }\n    columns: { point: string }\nrelationships:")
                 .replace("  Names:", "  RegionCount: { expr: \"count(curves)\" }\n  Names:"));
         assertThat(two.ok()).as(two.firstError()).isTrue();
         QueryService.Loaded d2 = new QueryService.Loaded("x", "x", two.dataset(), "h");
@@ -391,7 +392,7 @@ class QueryEngineTest {
                   LegNotional: { expr: "sum(legs.notional)" }
                   Legs: { expr: "count(legs)" }
                 """;
-        QueryService.Loaded legs = new QueryService.Loaded("legs", "legs", DatasetParser.parse(yaml).dataset(), "h");
+        QueryService.Loaded legs = new QueryService.Loaded("legs", "legs", Layered.dataset(yaml).dataset(), "h");
         QueryService.Result r = service.query(legs, q("{\"fields\":[\"trades.desk\",\"legs.payReceive\"],\"measures\":[\"Legs\",\"LegNotional\"],\"dates\":{\"from\":\"2026-10-09\"}}"), risk(), true);
         assertThat(r.rows()).isEqualTo(6);
         assertThat(rows(r, "trades.desk", "Legs").values()).allMatch(v -> ((Long) v) >= 13);
@@ -493,7 +494,7 @@ class QueryEngineTest {
         run(body, risk());
         assertThat(lake.scans.get()).isEqualTo(before);                       // reused from disk
         String changed = TestLake.yaml().replace("notional: decimal\n", "notional: { path: notional, type: integer }\n");
-        QueryService.Loaded d2 = new QueryService.Loaded(ds.id(), ds.key(), DatasetParser.parse(changed).dataset(), "h2");
+        QueryService.Loaded d2 = new QueryService.Loaded(ds.id(), ds.key(), Layered.dataset(changed).dataset(), "h2");
         service.query(d2, q(body), risk(), true);
         assertThat(lake.scans.get()).isGreaterThan(before);                   // a different signature: read again
     }
@@ -537,7 +538,7 @@ class QueryEngineTest {
 
     @Test
     void aLiveTableIsASnapshotOfTheCurrentStateServedForTheTtl() throws Exception {
-        DatasetParser.Result live = DatasetParser.parse(TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }", "source: { connector: trading-lake, kind: trade }\n    mode: live"));
+        DatasetParser.Result live = Layered.dataset(TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }", "source: { connector: trading-lake, kind: trade }\n    mode: live"));
         QueryService.Loaded l = new QueryService.Loaded("live", "live", live.dataset(), "h");
         QueryService.Result a = service.query(l, q("{\"measures\":[\"Trades\"]}"), risk(), true);
         assertThat(a.meta().layer()).isEqualTo("live");
@@ -593,7 +594,7 @@ class QueryEngineTest {
                 security:
                   rows: [ { role: desk-head, where: "trades.desk in user.desks" } ]
                 """;
-        QueryService.Loaded d = new QueryService.Loaded("direct", "direct", DatasetParser.parse(yaml).dataset(), "h");
+        QueryService.Loaded d = new QueryService.Loaded("direct", "direct", Layered.dataset(yaml).dataset(), "h");
         QueryService.Result r = service.query(d, q("{\"fields\":[\"trades.desk\"],\"measures\":[\"Notional\",\"MTM\"],\"filters\":[{\"field\":\"trades.currency\",\"op\":\"in\",\"values\":[\"USD\",\"EUR\"]}]}"),
                 who("hana", true, "DESK-A", "desk-head"), true);
         assertThat(r.meta().layer()).isEqualTo("direct");
@@ -602,7 +603,7 @@ class QueryEngineTest {
         assertThat(r.meta().sql()).contains("FROM entities").contains("\"kind\"".replace("\"", "")).doesNotContain("USD");
         assertThat(lake.scans.get()).isZero();                                // the source was never scanned: the store ran the query
         // a connector that is not a SQL store cannot serve a direct table
-        QueryService.Loaded bad = new QueryService.Loaded("bad", "bad", DatasetParser.parse(yaml.replace("connector: trading-lake", "connector: desk-lake").replace("kind: trade", "kind: desk")
+        QueryService.Loaded bad = new QueryService.Loaded("bad", "bad", Layered.dataset(yaml.replace("connector: trading-lake", "connector: desk-lake").replace("kind: trade", "kind: desk")
                 .replace("columns: { desk: string, currency: { path: ccy, type: string }, notional: decimal, mtm: decimal }", "columns: { desk: string }")
                 .replace("sum(trades.notional)", "count(trades)").replace("sum(trades.mtm, where=trades.currency == 'EUR')", "count(trades)")).dataset(), "h");
         assertThatThrownBy(() -> service.query(bad, q("{\"measures\":[\"Notional\"]}"), risk(), false)).isInstanceOf(DrishtiException.class).hasMessageContaining("not a SQL store");

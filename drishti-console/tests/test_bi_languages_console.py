@@ -22,7 +22,7 @@ from core import model_layer as ml
 from test_bi_model_layer import make
 
 
-@pytest.mark.parametrize("url", ["/bi/md/bi-m1", "/bi/datasets/new-layer", "/bi/datasets/new", "/bi/design/bi-r1", "/bi/notebook"])
+@pytest.mark.parametrize("url", ["/bi/design/bi-r1", "/bi/notebook"])
 def test_every_page_that_writes_an_expression_loads_the_editor(url):
     client, _ = make()
     text = client.get(url).text
@@ -59,37 +59,6 @@ WIZARD_DOC = {"rachana": 2, "dataset": "live-trades", "version": "1.0.0", "title
               "security": {"masked": ["desk"]}}
 
 
-def test_the_wizard_writes_the_derivation_keys_in_the_order_they_apply_and_reads_them_back():
-    text = ml.dataset_yaml(WIZARD_DOC)
-    keys = [line.split(":")[0] for line in text.splitlines() if line and not line.startswith(" ")]
-    assert keys == ["rachana", "dataset", "version", "title", "extends", "columns", "where", "grain", "derive", "group", "security"]
-    assert "  notionalUsd: " in text and "  tenorBucket: " in text                          # one worked-out column per line, for a review that reads well
-    import yaml
-    assert yaml.safe_load(text) == WIZARD_DOC
-    info = ml.dataset_info(text)
-    assert info["subset"][:2] == ["tradeId", "desk"] and info["where"] == "status == 'LIVE'"
-    assert info["grain"]["keys"] == ["tradeId"] and info["grain"]["keep"] == "latest by updatedAt"
-    names = [c["name"] for c in info["columns"]]
-    assert names == ["desk", "currency", "notionalUsd", "mtm", "trades"]                    # grouped: the by columns, then each grouped column
-    by_name = {c["name"]: c for c in info["columns"]}
-    assert by_name["trades"]["type"] == "integer" and by_name["notionalUsd"]["aggregate"] == "sum" and by_name["desk"]["role"] == "dimension"
-
-
-def test_an_sql_view_dataset_reads_as_its_source():
-    text = ml.dataset_yaml({"rachana": 2, "dataset": "desk-mtm", "version": "1.0.0", "title": "Desk MTM",
-                            "source": {"sql": "SELECT desk.name AS desk, MEASURE('MTM') AS mtm FROM trade JOIN desk GROUP BY desk.name", "model": "trading-risk@1"}})
-    info = ml.dataset_info(text)
-    assert info["source"]["type"] == "sql" and info["source"]["model"] == "trading-risk@1" and "MEASURE('MTM')" in info["source"]["sql"]
-
-
-def test_the_wizard_page_has_every_step_and_the_sql_view():
-    client, _ = make()
-    text = client.get("/bi/datasets/new-layer").text
-    for step in ("root", "columns", "filter", "grain", "derive", "group", "preview", "save"):
-        assert f'data-step="{step}"' in text
-    assert 'data-src="sql"' in text and "drishti_bi-dataset-steps.js" in text and "drishti_bi-query-panel.js" in text and "data-dedup=\"latest\"" in text
-
-
 PUBLISHED = {"rachana": 2, "model": "trading-risk", "version": "1.2.0", "title": "Trading risk",
              "datasets": {"trade": {"dataset": "pack.trading.trade@^1", "role": "fact"}, "desk": {"dataset": "pack.core.desk@^1", "role": "dimension"}},
              "relationships": [{"from": "trade.desk", "to": "desk.id"}],
@@ -103,42 +72,6 @@ def _with(**changes):
     for k, v in changes.items():
         d[k] = v
     return d
-
-
-def test_the_contract_diff_names_each_change_and_the_version_it_needs():
-    same = ml.contract_diff(PUBLISHED, PUBLISHED)
-    assert same["changes"] == [] and same["bump"] == "none" and same["ok"]
-    added = ml.contract_diff(PUBLISHED, _with(measures={**PUBLISHED["measures"], "Trades": {"expr": "count(trade)"}}))
-    assert added["bump"] == "minor" and added["next"] == "1.3.0" and not added["ok"] and "adds the measure Trades" in added["changes"][0]["text"]
-    patch = ml.contract_diff(PUBLISHED, _with(fields={"trade.mtm": {"description": "Mark to market, in the trade's currency", "folder": "Risk"}}))
-    assert patch["bump"] == "patch" and patch["next"] == "1.2.1"
-    broken = ml.contract_diff(PUBLISHED, _with(measures={"MTM": {"expr": "sum(trade.pnl1d)"}}, version="2.0.0"))
-    levels = {c["text"].split(" ")[0] + " " + c["what"]: c["level"] for c in broken["changes"]}
-    assert broken["bump"] == "major" and broken["next"] == "2.0.0" and broken["ok"]
-    assert levels["removes measure"] == "major" and any(c["level"] == "major" and c["text"].startswith("changes what MTM computes") for c in broken["changes"])
-    hidden = ml.contract_diff(PUBLISHED, _with(fields={"trade.mtm": {"description": "Mark to market", "hidden": True}}))
-    assert hidden["bump"] == "major" and "hides trade.mtm from consumers" in [c["text"] for c in hidden["changes"]]
-    sec = ml.contract_diff(PUBLISHED, _with(security={"hidden-for": [{"roles": ["external"], "fields": ["trade.book"]}]}))
-    assert sec["bump"] == "none" and sec["changes"][0]["what"] == "security"
-
-
-def test_the_contract_route_compares_with_the_published_version():
-    client, backend = make()
-    body = ml.to_yaml(PUBLISHED)
-    backend.items["bi-m9"] = {"id": "bi-m9", "kind": "model", "publishedVersion": 3, "body": body}
-    orig = backend.bi
-
-    async def bi(method, path, ident, body=None, **params):
-        if path == "/items/bi-m9/versions/3":
-            return {"version": 3, "body": ml.to_yaml(PUBLISHED)}
-        if path.endswith("/consumers"):
-            return {"consumers": [{"kind": "report", "id": "bi-r1", "title": "Daily risk"}]}
-        return await orig(method, path, ident, body, **params)
-    backend.bi = bi
-    r = client.post("/bi/model-api/contract", json={"id": "bi-m9", "doc": _with(measures={"MTM": PUBLISHED["measures"]["MTM"]})}).json()
-    assert r["published"] and r["bump"] == "major" and r["ref"] == "trading-risk@1" and r["consumers"][0]["title"] == "Daily risk"
-    backend.items["bi-m8"] = {"id": "bi-m8", "kind": "model", "publishedVersion": 0, "body": body}
-    assert client.post("/bi/model-api/contract", json={"id": "bi-m8", "doc": PUBLISHED}).json()["published"] is False
 
 
 def test_field_properties_and_perspectives_are_written_one_line_each():
@@ -214,15 +147,6 @@ def test_a_designer_edit_keeps_the_comments_the_order_and_the_untouched_lines():
     assert yaml.safe_load(ml.to_yaml_keeping("{model: x, version: 1.0.0}", {"model": "x", "version": "2.0.0"})) == {"model": "x", "version": "2.0.0"}
 
 
-def test_compose_patches_the_text_it_was_given():
-    import yaml
-    client, _ = make()
-    doc = yaml.safe_load(HAND_WRITTEN)
-    doc["title"] = "Trading risk (desk heads)"
-    r = client.post("/bi/model-api/compose", json={"doc": doc, "base": HAND_WRITTEN}).json()
-    assert r["yaml"].startswith("# Trading risk") and "title: Trading risk (desk heads)\n" in r["yaml"] and "# money" in r["yaml"]
-
-
 def test_the_fields_pane_inherits_the_models_field_properties_and_perspectives():
     described = {"model": {"id": "bi-m1", "name": "trading-risk", "version": "1.0.0"}, "title": "Trading risk",
                  "datasets": [{"alias": "trade", "dataset": "pack.trading.trade", "role": "fact",
@@ -242,7 +166,7 @@ def test_the_fields_pane_inherits_the_models_field_properties_and_perspectives()
     assert ml.fields_shape(described, "trading-risk@1")["perspectives"] == {"desk-view": {"title": "Desk view", "description": "For desk heads", "fields": None, "measures": None}}
 
 
-def test_the_fields_route_asks_one_perspective_and_the_contract_names_who_uses_a_breaking_change():
+def test_the_fields_route_asks_one_perspective():
     client, backend = make()
     asked = []
     orig = backend.bi
@@ -257,11 +181,6 @@ def test_the_fields_route_asks_one_perspective_and_the_contract_names_who_uses_a
     backend.bi = bi
     client.get("/bi/model-api/fields?ref=trading-risk@1&perspective=desk-view")
     assert ("/models/trading-risk%401/describe", {"perspective": "desk-view"}) in asked
-    backend.items["bi-m9"] = {"id": "bi-m9", "kind": "model", "publishedVersion": 3, "body": ml.to_yaml(PUBLISHED)}
-    r = client.post("/bi/model-api/contract", json={"id": "bi-m9", "doc": _with(measures={"MTM": PUBLISHED["measures"]["MTM"]})}).json()
-    removed = next(c for c in r["changes"] if c["text"] == "removes the measure Notional")
-    assert removed["target"] == "Notional" and removed["usedBy"] == [{"kind": "report", "id": "bi-r1", "title": "Daily risk"}]
-    assert ("/models/bi-m9/impact", {"target": "Notional"}) in asked
 
 
 DATASET_ITEM = """# the desk's trades, refreshed for the morning
@@ -303,14 +222,6 @@ def test_an_old_dataset_link_opens_the_page_of_a_model_layer_dataset():
     backend.bi = bi
     r = client.get("/bi/d/file:dataset:trades-basic-trade", follow_redirects=False)
     assert r.status_code == 307 and r.headers["location"] == "/bi/ds/file:dataset:trades-basic-trade"
-    assert client.get("/bi/d/file:dataset:live-trading", follow_redirects=False).status_code == 200      # a 2.1 (live) dataset keeps its page
+    gone = client.get("/bi/d/file:dataset:live-trading", follow_redirects=False)                      # every dataset is a table now: no 2.1 page
+    assert gone.status_code == 307 and gone.headers["location"] == "/bi/ds/file:dataset:live-trading"
 
-
-def test_a_contract_that_starts_listing_takes_out_what_it_does_not_list():
-    old = {"model": "m", "version": "1.0.0", "measures": {"A": {"expr": "sum(t.a)"}, "B": {"expr": "count(t)"}}}
-    new = dict(old, contract={"exposes": "listed", "fields": ["t.desk"], "measures": ["A"]})
-    d = ml.contract_diff(old, new, ["t.desk", "t.book"])
-    assert [c["text"] for c in d["changes"]] == ["takes t.book out of the contract", "takes the measure B out of the contract"]
-    assert d["bump"] == "major" and d["next"] == "2.0.0" and d["changes"][0]["target"] == "t.book"
-    back = ml.contract_diff(new, old, ["t.desk", "t.book"])
-    assert [c["level"] for c in back["changes"]] == ["minor"] and back["changes"][0]["text"] == "adds t.book to the contract"

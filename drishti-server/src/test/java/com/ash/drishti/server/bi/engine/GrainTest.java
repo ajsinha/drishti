@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.bi.dataset.DatasetParser;
@@ -49,7 +50,7 @@ class GrainTest {
         QueryProperties props = QueryProperties.defaults(store.toString());
         service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC());
         String yaml = TestLake.yaml().replace("measures:\n", "measures:\n  DeskCount: { expr: \"count(desks)\" }\n  PerDesk: { expr: \"measure('Trades') / measure('DeskCount')\" }\n  Twice: { expr: \"measure('PerDesk') * 2\" }\n");
-        DatasetParser.Result r = DatasetParser.parse(yaml);
+        DatasetParser.Result r = Layered.dataset(yaml);
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         ds = new QueryService.Loaded("file:dataset:lake-test", Layers.key("file:dataset:lake-test"), r.dataset(), "h1");
     }
@@ -83,7 +84,7 @@ class GrainTest {
     @Test
     void theTradingRiskSampleSplitsTradeAndNettingSetMeasuresAtTheirOwnGrain() throws Exception {
         String yaml = java.nio.file.Files.readString(Path.of("src/test/resources/bi/samples-2.1/datasets/trading-risk.dataset.yaml"));
-        com.ash.drishti.server.bi.dataset.Dataset d = DatasetParser.parse(yaml).dataset();
+        com.ash.drishti.server.bi.dataset.Dataset d = Layered.dataset(yaml).dataset();
         SqlCompiler.Reader reader = new SqlCompiler.Reader(false, Set.of("risk"), Map.of(), SqlCompiler.Masks.NONE);
         SqlCompiler c = new SqlCompiler(d, Dialect.DUCKDB);
         SqlCompiler.Plan p = c.plan(QueryRequest.of(json.readTree("{\"fields\":[\"counterparties.SECTOR\"],\"measures\":[\"MTM\",\"Exposure (EE peak)\"]}")), reader);
@@ -123,7 +124,7 @@ class GrainTest {
     void theTradingRiskSampleMixedRatioIsMultiFact() throws Exception {
         String yaml = java.nio.file.Files.readString(Path.of("src/test/resources/bi/samples-2.1/datasets/trading-risk.dataset.yaml"))
                 .replace("measures:\n", "measures:\n  MtmPerExposure: { expr: \"measure('MTM') / measure('Exposure (EE peak)')\" }\n");
-        com.ash.drishti.server.bi.dataset.Dataset d = DatasetParser.parse(yaml).dataset();
+        com.ash.drishti.server.bi.dataset.Dataset d = Layered.dataset(yaml).dataset();
         SqlCompiler.Reader reader = new SqlCompiler.Reader(false, Set.of("risk"), Map.of(), SqlCompiler.Masks.NONE);
         SqlCompiler.Plan p = new SqlCompiler(d, Dialect.DUCKDB).plan(QueryRequest.of(json.readTree("{\"fields\":[\"counterparties.SECTOR\"],\"measures\":[\"MtmPerExposure\"]}")), reader);
         assertThat(p.multiFact()).isTrue();

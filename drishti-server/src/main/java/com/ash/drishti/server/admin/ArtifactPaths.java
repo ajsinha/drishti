@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.yaml.snakeyaml.Yaml;
 
@@ -33,9 +35,17 @@ import org.yaml.snakeyaml.Yaml;
 public final class ArtifactPaths {
 
     /** BI file kinds and the folder each lives in under {@code drishti.bi.dir}. */
-    public static final Map<String, String> BI_FOLDERS = Map.of("dataset", "datasets", "report", "reports", "board", "boards", "notebook", "notebooks", "python", "python", "theme", "themes");
+    public static final Map<String, String> BI_FOLDERS = Map.of("report", "reports", "board", "boards", "notebook", "notebooks", "python", "python", "theme", "themes");
+    /** The table layer's kinds, whose files live under {@code drishti.tables.root} in a folder per domain ({@code <domain>/<name>.table.yaml}). */
+    public static final Set<String> LAYER_KINDS = Set.of("table", "model");
     /** A BI file's name: what the file name and the item's own key agree on. */
     public static final Pattern BI_NAME = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_-]{0,80}");
+    /** A table's name, {@code <domain>.<name>}. */
+    public static final Pattern TABLE_NAME = Pattern.compile("([a-z][a-z0-9_]{0,63})\\.([a-z][a-z0-9_]{0,79})");
+    /** A model's name, {@code <name>} or {@code <domain>.<name>}. */
+    public static final Pattern MODEL_NAME = Pattern.compile("(?:([a-z][a-z0-9_]{0,63})\\.)?([a-z0-9][a-z0-9-]{0,79})");
+    /** The domain folder a model without a domain in its name is written to. */
+    public static final String DEFAULT_DOMAIN = "bi";
 
     /** A pack folder: where it is, which area it is in ({@code packs} or {@code installed}) and what its {@code pack.yaml} says. */
     public record PackFolder(Path dir, String area, String name, String title, String version, String problem) {}
@@ -44,12 +54,18 @@ public final class ArtifactPaths {
     private final Path installed;
     private final Path connectors;
     private final Path bi;
+    private final Path tables;
 
-    public ArtifactPaths(Path packs, Path installed, Path connectors, Path bi) {
+    public ArtifactPaths(Path packs, Path installed, Path connectors, Path bi, Path tables) {
         this.packs = packs.toAbsolutePath().normalize();
         this.installed = installed.toAbsolutePath().normalize();
         this.connectors = connectors.toAbsolutePath().normalize();
         this.bi = bi.toAbsolutePath().normalize();
+        this.tables = tables.toAbsolutePath().normalize();
+    }
+
+    public Path tables() {
+        return tables;
     }
 
     public Path packs() {
@@ -104,11 +120,18 @@ public final class ArtifactPaths {
         }
     }
 
-    /** The path of a shipped BI file; the name and kind are checked so nothing outside the BI folder can be named. */
+    /**
+     * The path of a shipped BI file; the name and kind are checked so nothing outside the BI folder or the table layer's folder can be named.
+     * A table {@code <domain>.<name>} is {@code <domain>/<name>.table.yaml} under the table layer's folder; a model is found in any domain
+     * folder, and a new one without a domain goes to {@value #DEFAULT_DOMAIN}.
+     */
     public Path biFile(String subtype, String name) {
+        if (LAYER_KINDS.contains(subtype)) {
+            return tables.resolve(layerRel(subtype, name));
+        }
         String dir = BI_FOLDERS.get(subtype);
         if (dir == null) {
-            throw new DrishtiException(ErrorCode.ARTIFACT_INVALID, "a BI file is a dataset, report, board, notebook or python, not '" + subtype + "'");
+            throw new DrishtiException(ErrorCode.ARTIFACT_INVALID, "a BI file is a table, model, report, board, notebook or python, not '" + subtype + "'");
         }
         if (name == null || !BI_NAME.matcher(name).matches()) {
             throw new DrishtiException(ErrorCode.ARTIFACT_INVALID, "'" + name + "' is not a BI file name (letters, digits, hyphen, underscore)");
@@ -116,9 +139,49 @@ public final class ArtifactPaths {
         return bi.resolve(dir).resolve(name + "." + subtype + ".yaml");
     }
 
-    /** The BI-relative path ({@code datasets/x.dataset.yaml}) recorded in an archive. */
+    /** The path an archive records: relative to the BI folder ({@code reports/x.report.yaml}) or to the table layer's ({@code bi/x.table.yaml}). */
     public String biRel(String subtype, String name) {
-        return BI_FOLDERS.get(subtype) + "/" + name + "." + subtype + ".yaml";
+        return LAYER_KINDS.contains(subtype) ? layerRel(subtype, name) : BI_FOLDERS.get(subtype) + "/" + name + "." + subtype + ".yaml";
+    }
+
+    /** The area an archive records a BI file under: {@code tables} for the table layer's kinds, {@code bi} for the rest. */
+    public static String biArea(String subtype) {
+        return LAYER_KINDS.contains(subtype) ? "tables" : "bi";
+    }
+
+    /** The key the BI folder reads a file under ({@code reports/x.report.yaml}, {@code tables/bi/x.table.yaml}), which its problems carry. */
+    public String biKey(String subtype, String name) {
+        return LAYER_KINDS.contains(subtype) ? "tables/" + layerRel(subtype, name) : biRel(subtype, name);
+    }
+
+    private String layerRel(String subtype, String name) {
+        if ("table".equals(subtype)) {
+            Matcher m = name == null ? null : TABLE_NAME.matcher(name);
+            if (m == null || !m.matches()) {
+                throw new DrishtiException(ErrorCode.ARTIFACT_INVALID, "'" + name + "' is not a table name (<domain>.<name>: lower case, letters, digits and underscores)");
+            }
+            return m.group(1) + "/" + m.group(2) + ".table.yaml";
+        }
+        Matcher m = name == null ? null : MODEL_NAME.matcher(name);
+        if (m == null || !m.matches()) {
+            throw new DrishtiException(ErrorCode.ARTIFACT_INVALID, "'" + name + "' is not a model name (lower case, letters, digits, hyphens; a domain before a dot)");
+        }
+        String file = m.group(2) + ".model.yaml";
+        if (m.group(1) != null) {
+            return m.group(1) + "/" + file;
+        }
+        if (Files.isDirectory(tables)) {
+            try (var s = Files.list(tables)) {
+                for (Path d : s.filter(Files::isDirectory).sorted().toList()) {
+                    if (Files.isRegularFile(d.resolve(file))) {
+                        return d.getFileName() + "/" + file;
+                    }
+                }
+            } catch (IOException e) {
+                // an unreadable folder holds nothing: the default domain is used
+            }
+        }
+        return DEFAULT_DOMAIN + "/" + file;
     }
 
     /** Resolves a path recorded in an archive back under its area, refusing anything that would leave it. */
@@ -128,6 +191,7 @@ public final class ArtifactPaths {
             case "installed" -> installed;
             case "connectors" -> connectors;
             case "bi" -> bi;
+            case "tables" -> tables;
             default -> throw new DrishtiException(ErrorCode.ARTIFACT_INVALID, "unknown area '" + area + "' in the archive record");
         };
         Path p = root.resolve(rel).normalize();

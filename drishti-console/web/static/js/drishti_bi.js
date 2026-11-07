@@ -136,7 +136,7 @@
   // and is a history entry (back and forward walk the tabs); search, filters and sort work inside the tab and replace the address. The tab last used is
   // remembered per person in this browser (localStorage; Reports when there is none or storage is blocked).
   var CAT_TABS = ['reports', 'boards', 'models', 'datasets', 'python', 'all'];
-  var CAT_ALIAS = { report: 'reports', board: 'boards', model: 'models', dataset: 'datasets', notebook: 'python', transform: 'python', transforms: 'python' };
+  var CAT_ALIAS = { report: 'reports', board: 'boards', model: 'models', dataset: 'datasets', table: 'datasets', notebook: 'python', transform: 'python', transforms: 'python' };
   function catTab(k) { k = String(k || '').toLowerCase(); k = CAT_ALIAS[k] || k; return CAT_TABS.indexOf(k) >= 0 ? k : ''; }
   function catalogue() {
     var form = q('[data-catalogue-form]');
@@ -362,8 +362,8 @@
     var START = {
       report: { hint: 'A report reads one model: choose a model (or a dataset, which reads as its own small model), and the report opens in the designer.', go: 'Create and open in the designer' },
       board: { hint: 'A board is a report with board pages: tiles from other reports beside visuals of its own. It opens in the report designer, no model needed.', go: 'Create and open in the designer' },
-      dataset: { hint: 'A dataset is built in the wizard: pick a source, tick columns, add measures. It opens there, and is saved as a draft in this workspace. Or paste a dataset YAML document you already have.', go: 'New dataset', href: '/bi/datasets/new-layer?workspace=' },
-      model: { hint: 'A model puts datasets in a star with relationships, measures and security. It is made on the Models page (New model) and edited in the model designer.', go: 'Go to Models', href: '/bi/models' },
+      dataset: { hint: 'A table is written in Build › Tables & models: its source, columns, keys and row rules, with a live preview. Or paste a table YAML document (rachana: 3) you already have.', go: 'New table', href: '/build/tables?new=table&workspace=' },
+      model: { hint: 'A model puts tables in a star with relationships, measures and security. It is written in Build › Tables & models.', go: 'New model', href: '/build/tables?new=model&workspace=' },
       notebook: { hint: 'A notebook is started in the Notebook (SQL and Python cells, run on the server); it saves it here with Save as a notebook.', go: 'Go to the Notebook', href: '/bi/notebook' },
       python: { hint: 'Choose what the Python item makes. It is created with a valid, commented starter body and opens in its editor, ready to change and Check.', go: 'Create and open the editor' }
     };
@@ -381,7 +381,7 @@
       q('[data-paste-row]').hidden = true;
       f.elements.title.closest('label').hidden = !!s.href; f.elements.description.closest('label').hidden = !!s.href;
     }
-    /** A dataset can also be created from a YAML document pasted here (experts); the wizard stays the default. */
+    /** A table (or a model) can also be created from a YAML document of the table layer pasted here (experts); Build › Tables & models stays the default. */
     var pasting = false;
     q('[data-paste-dataset]').addEventListener('click', function () {
       var f = q('[data-new-item]'), go = q('[data-paste-dataset]');
@@ -394,11 +394,11 @@
         return;
       }
       var text = f.elements.yamlbody.value;
-      if (!text.trim()) { near(go, 'Paste the dataset YAML first.', true); f.elements.yamlbody.focus(); return; }
-      var inYaml = /^title:[ \t]*["']?(.+?)["']?[ \t]*$/m.exec(text), named = /^dataset:[ \t]*["']?(.+?)["']?[ \t]*$/m.exec(text);
+      if (!text.trim()) { near(go, 'Paste the table YAML first.', true); f.elements.yamlbody.focus(); return; }
+      var inYaml = /^title:[ \t]*["']?(.+?)["']?[ \t]*$/m.exec(text), named = /^(?:table|model):[ \t]*["']?(.+?)["']?[ \t]*$/m.exec(text);
       var title = f.elements.title.value.trim() || (inYaml && inYaml[1]) || (named && named[1]) || defaultTitle('dataset');
       busy(go, function () {
-        return api('POST', '/workspaces/' + encodeURIComponent(id) + '/items', { kind: 'dataset', title: title, description: f.elements.description.value, body: text })
+        return api('POST', '/workspaces/' + encodeURIComponent(id) + '/items', { kind: /^model:/m.test(text) ? 'model' : 'table', title: title, description: f.elements.description.value, body: text })
           .then(function (it) { window.location.href = '/bi/i/' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }).catch(function (err) { near(go, err.message, true); });
       });
     });
@@ -409,7 +409,7 @@
     q('[data-new-item]').addEventListener('submit', function (e) {
       e.preventDefault();
       var f = e.target, kind = f.elements.kind.value, st = START[kind];
-      if (st.href) { window.location.href = st.href + (kind === 'dataset' ? encodeURIComponent(id) : ''); return; }
+      if (st.href) { window.location.href = st.href + (kind === 'dataset' || kind === 'model' ? encodeURIComponent(id) : ''); return; }
       var title = f.elements.title.value.trim() || defaultTitle(kind), body, to, also = [];
       var name = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || kind;
       if (kind === 'report') {
@@ -491,10 +491,8 @@
       var brd = q('[data-open-board]');
       if (brd) { brd.hidden = !it.board; brd.href = '/bi/r/' + enc + '?kiosk=1'; }                 // a report with board pages (2.4.0): its kiosk
       if (des) { const designable = it.kind === 'report'; des.hidden = !(designable && it.can && it.can.edit) && !(designable && it.shipped); des.href = '/bi/design/' + enc; des.lastChild.textContent = it.shipped ? ' Open a copy in the designer' : ' Open in the designer'; }
-      var wiz = q('[data-open-wizard]');
-      if (wiz) { wiz.hidden = !(it.kind === 'dataset' && it.can && it.can.edit && it.status !== 'proposed'); wiz.href = '/bi/datasets/new?edit=' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }
-      if (mod) { mod.hidden = !(it.kind === 'dataset' && ((it.can && it.can.edit) || it.shipped)); mod.href = '/bi/m/' + enc; }
-      if (mod && it.kind === 'model') { mod.hidden = false; mod.href = '/bi/md/' + enc; mod.lastChild.textContent = ' Open in the designer'; }           // a data model opens in the model designer
+      // a table or a model is written in Build › Tables & models (EDITORS.md): one way per job
+      if (mod) { mod.hidden = !(it.kind === 'table' || it.kind === 'model'); mod.href = '/build/tables?kind=' + it.kind + '&item=' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }
       if (open && (it.kind === 'table' || it.kind === 'dataset' && /^rachana:\s*2\b/m.test(it.body || ''))) { open.href = '/bi/ds/' + enc; }   // a model-layer dataset has its own page
       document.dispatchEvent(new CustomEvent('drishti:bi-item', { detail: x }));          // drishti_bi-govern.js draws history, review, impact and lineage
     }

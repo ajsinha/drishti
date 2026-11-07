@@ -92,7 +92,7 @@ final class Conversion {
                 if (def == null || def.expr() == null) {
                     throw new DrishtiException(ErrorCode.QUERY_INVALID, "convert(): no measure '" + m.name() + "' with an expression");
                 }
-                yield converted(e, com.ash.drishti.server.bi.expr.Expressions.parse(def.expr()), to, at);
+                yield converted(e, com.ash.drishti.server.bi.expr.Expressions.node(def.expr()), to, at);
             }
             case Node.Call c -> new Node.Call(c.function(), c.args().stream().map(a -> converted(e, a, to, at)).toList());
             case Node.Bin b -> new Node.Bin(b.op(), converted(e, b.left(), to, at), converted(e, b.right(), to, at));

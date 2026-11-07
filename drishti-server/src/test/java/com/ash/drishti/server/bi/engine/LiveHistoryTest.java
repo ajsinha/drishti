@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -59,11 +60,15 @@ class LiveHistoryTest {
     }
 
     QueryService.Loaded start() {
+        return start(LIVE);
+    }
+
+    QueryService.Loaded start(String liveSettings) {
         QueryProperties props = QueryProperties.defaults(store.toString());
         BiLiveProperties live = BiLiveProperties.defaults().fast(Duration.ofMillis(20), Duration.ofHours(1));
         service = new QueryService(props, live, new DuckDbEngine(props), lake, clock);
-        String yaml = TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }", "source: { connector: trading-lake, kind: trade }\n    mode: live" + LIVE);
-        DatasetParser.Result r = DatasetParser.parse(yaml);
+        String yaml = TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }", "source: { connector: trading-lake, kind: trade }\n    mode: live" + liveSettings);
+        DatasetParser.Result r = Layered.dataset(yaml);
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         return new QueryService.Loaded("file:dataset:live-test", Layers.key("file:dataset:live-test"), r.dataset(), "h1");
     }
@@ -134,9 +139,30 @@ class LiveHistoryTest {
     }
 
     @Test
-    void aRowRuleOnTheLiveTableCannotBeHonouredByTheHistoryAndRefusesRatherThanShowingEverything() {
+    void aRowRuleOnTheLiveTableLimitsTheHistoryToTheGroupsTheReaderSeesNeverShowingEverything() throws Exception {
         QueryService.Loaded ds = start();
+        QueryService.Caller risk = who(true, "", "risk");
+        run(ds, "{\"measures\":[\"Trades\"]}", risk);
+        String byDesk = "{\"fields\":[\"history.ts\",\"history.desk\"],\"measures\":[\"Trades history\"]}";
+        LiveTablesTest.eventually(() -> {
+            clock.advance(Duration.ofSeconds(1));
+            return run(ds, byDesk, risk).rows() >= 3;
+        });
+        // the desk-head's rule on the live trades reaches its history (BI_DESIGN.md 8.5, the owner's decision of 2026-11-07): her desk's samples only
+        QueryService.Result mine = run(ds, byDesk, who(true, "DESK-A", "desk-head"));
+        assertThat(mine.rows()).isPositive();
+        assertThat(mine.columns().get(1).values()).containsOnly("DESK-A");
+        // a desk-head with no desks sees no samples; a total over the samples is hers alone, never everyone's
+        assertThat(run(ds, byDesk, who(true, "", "desk-head")).rows()).isZero();
+        assertThat(run(ds, "{\"fields\":[\"history.desk\"],\"measures\":[\"Trades history\"]}", who(true, "DESK-A", "desk-head")).columns().get(0).values())
+                .containsOnly("DESK-A");
+    }
+
+    @Test
+    void aHistoryWithNoGroupsCannotHonourTheRuleAndRefusesRatherThanShowingEverything() {
+        QueryService.Loaded ds = start(LIVE.replace("by: [desk]", "by: []"));
         run(ds, "{\"measures\":[\"Trades\"]}", who(true, "", "risk"));
-        assertThatThrownBy(() -> run(ds, "{\"fields\":[\"history.ts\"],\"measures\":[\"Trades history\"]}", who(true, "DESK-A", "desk-head"))).isInstanceOf(DrishtiException.class);
+        assertThatThrownBy(() -> run(ds, "{\"fields\":[\"history.ts\"],\"measures\":[\"Trades history\"]}", who(true, "DESK-A", "desk-head")))
+                .isInstanceOf(DrishtiException.class).hasMessageContaining("related_rows");
     }
 }

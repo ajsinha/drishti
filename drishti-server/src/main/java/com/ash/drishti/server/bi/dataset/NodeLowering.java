@@ -20,7 +20,7 @@ import com.ash.drishti.rachana.el.ElException;
 import com.ash.drishti.rachana.el.Expr;
 import com.ash.drishti.rachana.el.Functions;
 import com.ash.drishti.rachana.el.check.Signatures;
-import com.ash.drishti.server.bi.expr.DelException;
+import com.ash.drishti.server.bi.expr.ExpressionException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -51,14 +51,14 @@ public final class NodeLowering {
         this.parsed = parsed;
     }
 
-    /** The compiler's tree of a Rachana expression; a text that does not parse, or that the compiler cannot run, is a {@link DelException}. */
+    /** The compiler's tree of a Rachana expression; a text that does not parse, or that the compiler cannot run, is a {@link ExpressionException}. */
     public static Node lower(String text) {
         CheckedMode.Parsed p;
         try {
             p = CheckedMode.parse(text);
         } catch (ElException e) {
             int at = Math.max(0, e.position());
-            throw new DelException(CODE, e.getMessage(), null, at, Math.min(text.length(), at + 1));
+            throw new ExpressionException(CODE, e.getMessage(), null, at, Math.min(text.length(), at + 1));
         }
         return new NodeLowering(p).node(p.expr());
     }
@@ -68,9 +68,9 @@ public final class NodeLowering {
         return new NodeLowering(parsed).node(parsed.expr());
     }
 
-    private DelException refused(Expr e, String why) {
+    private ExpressionException refused(Expr e, String why) {
         int[] s = parsed.span(e);
-        return new DelException(CODE, why, null, s[0], s[1]);
+        return new ExpressionException(CODE, why, null, s[0], s[1]);
     }
 
     Node node(Expr e) {

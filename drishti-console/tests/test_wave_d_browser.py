@@ -312,30 +312,3 @@ def test_the_designer_copilot_suggests_checks_and_adds_on_accept(stack, browser)
     assert page.evaluate("window.__csp") == [] and page.errors == []
     page.context.close()
 
-
-def test_the_dataset_helper_items_are_accepted_one_by_one_into_the_yaml(stack, browser):
-    page = sign_in(browser, "wes", "/bi/m/file:dataset:trades-basic")
-    page.wait_for_selector("[data-model-root][data-ready=yes]", timeout=30000)
-    page.click("[data-save-copy]")                                      # the sample dataset is shipped, read-only: work on a draft copy of it
-    page.wait_for_url(lambda u: "/bi/m/" in u and "trades-basic" not in u, timeout=30000)
-    page.wait_for_selector("[data-model-root][data-ready=yes]", timeout=30000)
-    expect(page.locator("[data-ai-helper]")).to_be_visible(timeout=15000)
-    page.click("[data-ai-helper]")
-    items = page.locator("[data-ai-item]")
-    expect(items).to_have_count(3, timeout=30000)                      # the measure, two descriptions; the same-table relationship, the unknown column and the broken measure are dropped
-    kinds = [items.nth(i).get_attribute("data-ai-item") for i in range(3)]
-    assert kinds == ["measure", "column", "column"]
-    yaml_before = page.evaluate("document.querySelector('.CodeMirror') ? document.querySelector('.CodeMirror').CodeMirror.getValue() : document.querySelector('[data-yaml]').value")
-    assert "Average notional" not in yaml_before
-    page.wait_for_timeout(400)
-    shot(page, "guides/img/bi-ai", "dataset-helper.jpg", type="jpeg", quality=85)
-    page.locator('[data-ai-accept="measure:Average notional"]').click()
-    page.locator('[data-ai-accept="column:trade.PORTFOLIO"]').click()
-    got = page.evaluate("document.querySelector('.CodeMirror') ? document.querySelector('.CodeMirror').CodeMirror.getValue() : document.querySelector('[data-yaml]').value")
-    assert 'Average notional: { expr: "avg(trade.NOTIONAL)"' in got
-    assert re.search(r'PORTFOLIO:\s*\{ type: string, description: "The book the trade sits in" \}', got)
-    assert "CURRENCY" in got and 'description: "The currency the trade is in"' not in got, "an item not accepted is not written"
-    page.wait_for_timeout(1200)                                         # the draft is validated as it changes
-    expect(page.locator("[data-valid]")).to_have_text("Valid", timeout=15000)
-    assert page.errors == []
-    page.context.close()

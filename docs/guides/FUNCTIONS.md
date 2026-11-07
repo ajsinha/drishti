@@ -15,7 +15,7 @@
 -->
 # Functions
 
-*Generated from the registries (Rachana's function table and the pivot engine's functions registered into it) by `FunctionCataloguePage`; do not edit by hand. 285 functions, each under its one name. Each function's example, its Excel and SAS equivalents and its rules are in [FUNCTION_CATALOGUE.md](../architecture/FUNCTION_CATALOGUE.md); the grammar is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#functions).*
+*Generated from the registries (Rachana's function table and the pivot engine's functions registered into it) by `FunctionCataloguePage`; do not edit by hand. 286 functions, each under its one name. Each function's example, its Excel and SAS equivalents and its rules are in [FUNCTION_CATALOGUE.md](../architecture/FUNCTION_CATALOGUE.md); the grammar is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#functions).*
 
 **Runs:** **R** Rachana (a scalar, one value from values); **E** the pivot engine (`drishti-bicompute`), the same implementation a pivot cell runs. Where the engine is not on the class path an **E** function is refused with the reason, never computed another way. **Form:** *mergeable* (a total combines partial results exactly), *holistic* (it needs the values), *measure* (a figure from its own engine, never summed).
 
@@ -28,7 +28,7 @@
 | `avg_once` | list, field, parentField \| xs, parents | holistic | the mean over the parents, each once | E | the pivot engine (drishti-bicompute) |
 | `cell` | view, [field, member] ... | measure | a cell of a saved pivot view, as the view computes it | E | the pivot engine (drishti-bicompute) |
 | `corr` | list, xField, yField \| xs, ys | mergeable | Pearson's correlation over the pairs where both are numbers | E | the pivot engine (drishti-bicompute) |
-| `count` | list, [field] | mergeable | the elements (or the field's values) that are not empty | E | the pivot engine (drishti-bicompute) |
+| `count` | [list, [field]] | mergeable | the elements (or the field's values) that are not empty; count() with no argument is the rows of a pivot cell (a pivot formula) or of a measure's table | E | the pivot engine (drishti-bicompute) |
 | `count_once` | list, field, parentField \| xs, parents | holistic | the parents with a value, each once | E | the pivot engine (drishti-bicompute) |
 | `covar` | list, xField, yField \| xs, ys | mergeable | the sample covariance (Excel's COVARIANCE.S) | E | the pivot engine (drishti-bicompute) |
 | `covar_pop` | list, aField, bField \| as, bs | mergeable | the population covariance (Excel's COVARIANCE.P) | E | the pivot engine (drishti-bicompute) |
@@ -104,6 +104,7 @@
 | `rank` | agg, desc = …, by = … | measure | The position of each row of the answer by the aggregate, 1 for the highest (desc=False: 1 for the lowest); ties share a rank and leave gaps. | E | the pivot engine (drishti-bicompute) |
 | `ratio` | num, den | measure | num / den as a decimal, None when den is 0. The same as num / den in DEL, kept for readability. | E | the pivot engine (drishti-bicompute) |
 | `related` |  |  |  | E | none on the class path |
+| `related_rows` |  |  |  | E | none on the class path |
 | `running` | agg, date | measure | A running total of a sum, count, min or max along the date field of the answer (the date must be a field of the visual). | E | the pivot engine (drishti-bicompute) |
 | `same_period_last_year` | agg, date | measure | The aggregate over the query's dates moved back one year. | E | the pivot engine (drishti-bicompute) |
 | `share_of` | agg, over = … | measure | The aggregate divided by itself with the fields of over ignored (the same as agg / calc(agg, ignore=over)): over=ALL is the share of the grand total you may see, over=[books.NAME] a book's share within the rest of its group. | E | the pivot engine (drishti-bicompute) |

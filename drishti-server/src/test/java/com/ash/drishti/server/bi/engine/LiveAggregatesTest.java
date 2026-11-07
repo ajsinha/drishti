@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.EntityDocument;
@@ -66,7 +67,7 @@ class LiveAggregatesTest {
         BiLiveProperties live = BiLiveProperties.defaults().fast(Duration.ofMillis(20), Duration.ofHours(1)).withIncrementalAggregates(incremental);
         service = new QueryService(props, live, new DuckDbEngine(props), lake, new LiveTablesTest.TestClock());
         String yaml = TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }", "source: { connector: trading-lake, kind: trade }\n    mode: live" + liveBlock);
-        DatasetParser.Result r = DatasetParser.parse(yaml);
+        DatasetParser.Result r = Layered.dataset(yaml);
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         return new QueryService.Loaded("file:dataset:live-agg", Layers.key("file:dataset:live-agg"), r.dataset(), "h1");
     }

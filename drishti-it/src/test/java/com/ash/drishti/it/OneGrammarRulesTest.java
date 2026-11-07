@@ -47,17 +47,16 @@ import java.util.Map;
 class OneGrammarRulesTest {
 
     /**
-     * The expression parsers outside Rachana that are allowed, each for a stated reason and only until the release named: DEL and the
-     * BI expressions written in its syntax fold into Rachana in 2.9.11.e (ONE_GRAMMAR.md part 4), with their parity proof, and are then
-     * deleted with this list's entries.
+     * The expression parsers outside Rachana that are allowed, each for a stated reason and only until the release named. DEL, BI's dataset
+     * expressions and the pivot's formulas are Rachana since 2.9.11.d; what is left: the migration tool's reader of DEL (it reads the texts it
+     * rewrites, never evaluates them) and the VaR scope selector.
      */
     static final Map<String, String> EXPRESSION_PARSER_EXCEPTIONS = Map.of(
-            "com.ash.drishti.server.bi.expr.", "DEL, BI's expression language: its checker is Rachana's checked mode since 2.9.11.e part A; "
-                    + "deleted with the migration in part B (BI_FOUNDATION_2911E.md 2.6)",
-            "com.ash.drishti.server.bi.dataset.ExprParser", "BI dataset expressions (DEL's operators): fold with DEL in 2.9.11.e",
-            "com.ash.drishti.bicompute.formula.", "pivot formulas of built-ins in DEL's syntax (PIVOT_ENGINE.md 8.2): fold with DEL in 2.9.11.e",
+            "com.ash.drishti.server.bi.expr.DelParser", "the migration tool's reader of DEL (drishti.py tables migrate and the stored items' "
+                    + "migration at start): it reads the old texts it rewrites into Rachana, never evaluates them; deleted with the migration tool in "
+                    + "2.9.14 (BI_FOUNDATION_2911E.md Q24)",
             "com.ash.drishti.compute.var.ScopeExpr", "the VaR scope selector (VAR_GUIDE.md 5.2): moves in its own change with VaR's "
-                    + "exact-equality regression check, after 2.9.11.e (BI_FOUNDATION_2911E.md Q20)");
+                    + "exact-equality regression check (BI_FOUNDATION_2911E.md Q20)");
 
     /** A class that reads an expression language: a parser or lexer of expressions or formulas, or an expression type with a static parse. */
     static final DescribedPredicate<JavaClass> PARSES_EXPRESSIONS = DescribedPredicate.describe("parse an expression language", c -> {
@@ -99,6 +98,6 @@ class OneGrammarRulesTest {
             .that(PARSES_EXPRESSIONS).and(DescribedPredicate.not(LISTED_EXCEPTION))
             .should().resideInAPackage("com.ash.drishti.rachana..")
             .allowEmptyShould(true)
-            .because("Rachana is the one expression language (ONE_GRAMMAR.md section 5); DEL and its kin are the listed, temporary "
-                    + "exceptions until 2.9.11.e");
+            .because("Rachana is the one expression language (ONE_GRAMMAR.md section 5); the migration's DEL reader and the VaR scope "
+                    + "selector are the listed, temporary exceptions");
 }

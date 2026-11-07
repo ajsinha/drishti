@@ -283,7 +283,7 @@ public final class BiAiService {
             }
             Map<String, Object> t = new LinkedHashMap<>();
             t.put("name", s.get("alias"));
-            t.put("description", "the dataset " + s.get("dataset") + (s.get("version") == null ? "" : " " + s.get("version")) + ", a " + s.get("role"));
+            t.put("description", "the table " + s.get("dataset") + (s.get("version") == null ? "" : " " + s.get("version")) + ", a " + s.get("role"));
             t.put("columns", cols);
             tables.add(t);
         }

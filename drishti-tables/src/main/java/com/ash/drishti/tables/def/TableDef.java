@@ -106,12 +106,13 @@ public record TableDef(String name, String was, String version, Map<String, Obje
      * @param inputs the Python transform's inputs (model queries asked as the reader) as written
      * @param model a model whose answer is the rows (a summary table, Q13), or null
      * @param modelQuery the model query as written
+     * @param run a promoted run's snapshot whose rows the table is ({@code from: { run: <name>, params: { version, token } }}), or null
      */
     public record Source(String kind, String pack, String connector, String lake, String table, String query, Map<String, Object> params,
-            String python, Map<String, Object> inputs, String model, Map<String, Object> modelQuery) {
+            String python, Map<String, Object> inputs, String model, Map<String, Object> modelQuery, String run) {
 
         /** The source's form, by the keys set. */
-        public enum Form { KIND, LAKE, TABLE, SQL, PYTHON, MODEL, NONE }
+        public enum Form { KIND, LAKE, TABLE, SQL, PYTHON, MODEL, RUN, NONE }
 
         public Source {
             params = params == null ? Map.of() : params;
@@ -119,11 +120,28 @@ public record TableDef(String name, String was, String version, Map<String, Obje
             modelQuery = modelQuery == null ? Map.of() : modelQuery;
         }
 
+        /** Every form but a run's snapshot. */
+        public Source(String kind, String pack, String connector, String lake, String table, String query, Map<String, Object> params,
+                String python, Map<String, Object> inputs, String model, Map<String, Object> modelQuery) {
+            this(kind, pack, connector, lake, table, query, params, python, inputs, model, modelQuery, null);
+        }
+
+        /** A promoted run's snapshot: its name, the version promoted and the token that binds it to this table. */
+        public static Source ofRun(String name, Object version, String token) {
+            Map<String, Object> p = new java.util.LinkedHashMap<>();
+            p.put("version", version);
+            p.put("token", token);
+            return new Source(null, null, null, null, null, null, p, null, null, null, null, name);
+        }
+
         public static Source ofKind(String kind) {
             return new Source(kind, null, null, null, null, null, null, null, null, null, null);
         }
 
         public Form form() {
+            if (run != null) {
+                return Form.RUN;
+            }
             if (model != null) {
                 return Form.MODEL;
             }
