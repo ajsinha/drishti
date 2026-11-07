@@ -47,6 +47,8 @@ public final class Lakes {
     public static final String PROPERTY = "drishti.lakes.dir";
     /** The environment variable that names the lake folder. */
     public static final String ENV = "DRISHTI_LAKES_DIR";
+    /** The variable that names the demo lake's root (config/lakes/demo.yaml: {@code ${DRISHTI_DELTA_ROOT:<data>/delta/demo}}). */
+    public static final String DEMO_ROOT_ENV = "DRISHTI_DELTA_ROOT";
     /** The lake folder when neither is set. */
     public static final String DEFAULT_DIR = "./config/lakes";
     /** At most this many partition columns after {@code business_date}. */
@@ -54,7 +56,10 @@ public final class Lakes {
 
     /** A reference with no reference inside its default: resolved innermost first, so {@code ${A:${B:x}/delta}} nests. */
     private static final Pattern REF = Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_.-]*)(?::-?([^}$]*))?}");
-    private static final Pattern NAME = Pattern.compile("[a-z0-9][a-z0-9_-]*");
+    /** A lake's name: lower-case letters, digits, '-' and '_' (its file's name, and its folder under {@link #LAKES_PARENT}). */
+    public static final Pattern NAME = Pattern.compile("[a-z0-9][a-z0-9_-]*");
+    /** Where lakes are by default: each lake's own folder under it, {@code <data>/delta/<lake>} (a lake file may name another root). */
+    public static final String LAKES_PARENT = "${drishti.data.dir:./data}/delta";
     private static final Set<String> SECRETS = Set.of("access-key", "secret-key", "session-token", "credential", "token", "password",
             "client-secret", "s3.access-key", "s3.secret-key", "s3.session-token");
     private static final Set<String> TOP = Set.of("lake", "format", "root", "storage", "catalog", "defaults", "tables", "memory", "description");
@@ -70,6 +75,21 @@ public final class Lakes {
     private Lakes(Map<String, Lake> lakes, Path dir) {
         this.lakes = java.util.Collections.unmodifiableMap(new TreeMap<>(lakes));
         this.dir = dir;
+    }
+
+    /** Whether {@code name} is a lake's name ({@link #NAME}). */
+    public static boolean validName(String name) {
+        return name != null && NAME.matcher(name).matches();
+    }
+
+    /** A lake's default root, unresolved: {@code ${drishti.data.dir:./data}/delta/<name>}. */
+    public static String defaultRoot(String name) {
+        return LAKES_PARENT + "/" + name;
+    }
+
+    /** A lake's default root for its format: a Delta lake's {@link #defaultRoot(String)}; an Iceberg lake's {@code <data>/iceberg/<name>}. */
+    public static String defaultRoot(String name, String format) {
+        return "iceberg".equals(format) ? "${drishti.data.dir:./data}/iceberg/" + name : defaultRoot(name);
     }
 
     /** The lake folder: {@value #PROPERTY}, else {@value #ENV}, else {@value #DEFAULT_DIR}. */
@@ -181,7 +201,7 @@ public final class Lakes {
     }
 
     /** The lakes shipped in this module's jar ({@code drishti/lakes/<name>.yaml}, a copy of {@code config/lakes/<name>.yaml}). */
-    static final List<String> SHIPPED = List.of("demo", "var-official", "ccr-official");
+    public static final List<String> SHIPPED = List.of("demo", "var-official", "ccr-official");
 
     /** Lakes built in code (tests, a tool that was handed one lake). */
     public static Lakes of(Lake... lakes) {
@@ -245,7 +265,7 @@ public final class Lakes {
             throw new IllegalArgumentException(where + ": catalog: is Iceberg's; a Delta lake's tables are paths under its root");
         }
         if (rootPath.isBlank() && !Set.of("rest", "glue", "s3tables").contains(ctype)) {      // a catalog says where its tables are
-            throw new IllegalArgumentException(where + ": root: where the lake is (a folder, s3://bucket/prefix, or mem://<store>)");
+            rootPath = v.resolve("root", defaultRoot(name, format));     // no root: the lake's own folder, <data>/delta/<lake> (<data>/iceberg/<lake>)
         }
         Map<String, String> memory = v.map(root.path("memory"), "memory");
         unknown(where, "memory.", root.path("memory"), MEMORY);

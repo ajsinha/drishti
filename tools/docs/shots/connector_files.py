@@ -29,6 +29,7 @@ import sys
 import time
 from pathlib import Path
 
+from shotlib import DEMO_ROOT_ENV
 from shotlib import CONSOLE_PORT, ROOT, SERVER_PORT, Ctx, java_cmd, listening, register
 
 OUT = ROOT / "docs" / "connectors" / "img" / "connector_files"
@@ -76,7 +77,7 @@ def start_servers(work: Path) -> list:
                                                   "COUNTERPARTY", "LEGAL_ENTITY", "PORTFOLIO", "TRADER_ID"))
     (conns / "trade-murex.yaml").write_text(
         "# Edited by the desk: smaller files for MUREX\nplugin: delta\nenabled: ${DRISHTI_LAKE_ENABLED:true}\nkinds:\n- trade\nsettings:\n"
-        "  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}\n  domain: trading\n  layout:\n    trade:\n      columns:\n" + cols + "\n"
+        "  root: " + str(work / "delta") + "\n  domain: trading\n  layout:\n    trade:\n      columns:\n" + cols + "\n"
         "      sort-by: id\n      file-rows: 100000\n      row-group-rows: 1000\n  union: true\n  table:\n    trade: trade_murex\n  source-name: trade-murex\n",
         encoding="utf-8")
     (work / "application.local.yaml").write_text("drishti:\n  sources:\n    connectors:\n      legacy-feed:\n        plugin: file\n        settings: { root: ./data/legacy }\n", encoding="utf-8")
@@ -84,7 +85,7 @@ def start_servers(work: Path) -> list:
         (work / d).mkdir(parents=True, exist_ok=True)
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
     env = dict(os.environ, DRISHTI_PORT=str(SERVER_PORT), DRISHTI_PACKS="trading,desk-demo", DRISHTI_PACKS_DIR=str(packs), DRISHTI_CONNECTORS_DIR=str(conns),
-               DRISHTI_DEMO_ENABLED="false", DRISHTI_LAKE_ENABLED="true", DRISHTI_DELTA_ROOT=str(work / "delta"), LEDGER_DB_PASSWORD="not-a-real-password",
+               DRISHTI_DEMO_ENABLED="false", DRISHTI_LAKE_ENABLED="true", **{DEMO_ROOT_ENV: str(work / "delta")}, LEDGER_DB_PASSWORD="not-a-real-password",
                LEDGER_TRUSTSTORE_PASSWORD="changeit")
     server = subprocess.Popen(java_cmd(java, ["-jar", str(jar)], cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     py = ROOT / "drishti-console" / ".venv" / "bin" / "python"

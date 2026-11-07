@@ -35,6 +35,7 @@ def test_store_values_all_first_then_each_system():
 def test_where_the_iceberg_tables_go(tmp_path, monkeypatch):
     monkeypatch.delenv("DRISHTI_ICEBERG_ROOT", raising=False)
     assert stores.iceberg_root(tmp_path / "data" / "delta") == tmp_path / "data" / "iceberg"
+    assert stores.iceberg_root(tmp_path / "data" / "delta" / "demo") == tmp_path / "data" / "iceberg"     # every lake's own folder
     monkeypatch.setenv("DRISHTI_ICEBERG_ROOT", str(tmp_path / "ice"))
     assert stores.iceberg_root(tmp_path / "data" / "delta") == (tmp_path / "ice").resolve()
 
@@ -43,7 +44,7 @@ def test_switching_a_system_writes_its_connector_file_and_keeps_the_old_text(tmp
     monkeypatch.delenv("DRISHTI_ICEBERG_ROOT", raising=False)
     monkeypatch.delenv("DRISHTI_DELTA_ROOT", raising=False)
     folder, data = tmp_path / "connectors", tmp_path / "data"
-    lake, ice = data / "delta", data / "iceberg"
+    lake, ice = data / "delta" / "demo", data / "iceberg"
     assert stores.current(folder) == {"endur": "delta", "calypso": "delta", "murex": "delta"}     # no files: the packs' Delta templates
     assert "reads delta already" in stores.switch(folder, "calypso", "delta", lake, ice, data, dry=False)
     assert not folder.exists()                                                                     # nothing written for an unchanged store
@@ -83,7 +84,7 @@ def test_the_risk_domain_switches_its_connector_file_and_back(tmp_path, monkeypa
     with pytest.raises(ValueError, match="risk=delta or risk=iceberg"):
         stores.split_domains(["risk=parquet"])
     folder, data = tmp_path / "connectors", tmp_path / "data"
-    lake, ice = data / "delta", data / "iceberg"
+    lake, ice = data / "delta" / "demo", data / "iceberg"
     assert stores.current_domain(folder, "risk") == "delta"
     assert "now reads iceberg, was delta" in stores.switch_domain(folder, "risk", "iceberg", lake, ice, data, dry=False)
     doc = yaml.safe_load((folder / "risk-store.yaml").read_text(encoding="utf-8"))

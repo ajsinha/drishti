@@ -125,14 +125,29 @@ public final class LoaderProcess implements LoadRunner {
         Files.writeString(config, new YAMLMapper().writeValueAsString(root));
     }
 
-    /** A lake named by the route that lacks the kind gets the pack's entry, once. */
+    /**
+     * A lake named by the route that lacks the kind gets the pack's entry, once; a lake with no file yet (a {@code .ready} file's or a rule's
+     * {@code lake: risklake}) is created first: {@code config/lakes/<lake>.yaml}, a Delta lake in its own folder {@code <data>/delta/<lake>},
+     * with the pack's recommended entry for the kind (DATA_LOAD_RULES.md section 5). A lake the shipped files describe (the demo lake on a
+     * server without its file) is never shadowed by a new file.
+     */
     static void lakeEntry(Routes.Route r) throws IOException {
-        if (r.lake() == null || !r.lake().matches("[a-z0-9][a-z0-9_-]*")) {
+        if (r.lake() == null || !com.ash.drishti.lakeconfig.Lakes.validName(r.lake())) {
             return;                                         // a folder (the old form): the loader reads it with its one warning
         }
-        Path file = com.ash.drishti.lakeconfig.Lakes.dir().resolve(r.lake() + ".yaml");
+        Path dir = com.ash.drishti.lakeconfig.Lakes.dir();
+        Path file = dir.resolve(r.lake() + ".yaml");
         if (!Files.isRegularFile(file)) {
-            return;                                         // the loader refuses the unknown lake, naming the lakes there are
+            if (com.ash.drishti.lakeconfig.Lakes.SHIPPED.contains(r.lake())) {
+                return;                                     // a shipped lake (demo) read from the jar: its entries are the truth
+            }
+            List<com.ash.drishti.lakeconfig.LakeTable> tables = r.newDomain() != null ? List.of()
+                    : List.of(com.ash.drishti.lakeconfig.PackEntry.read(r.packDir(), r.kind(), r.connector()).toTable(r.kind()));
+            if (com.ash.drishti.lakeconfig.LakeFiles.create(dir, r.lake(), tables, "the data inbox for the pack " + r.pack() + "'s " + r.kind())) {
+                LOG.info("lake {} did not exist: {} was created (its tables under <data>/delta/{}/), with the pack {}'s recommended entry for {}; "
+                        + "point the pack's connectors at it (lake: {}) and restart to read it", r.lake(), file, r.lake(), r.pack(), r.kind(), r.lake());
+                return;
+            }
         }
         com.ash.drishti.lakeconfig.Lake lake = com.ash.drishti.lakeconfig.Lakes.readFile(file, System::getenv);
         if (lake.tables().values().stream().anyMatch(x -> x.kind().equals(r.kind()))) {

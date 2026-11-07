@@ -196,7 +196,7 @@ routes: {trade: desk-pack-store}         # which connector answers each kind
 connector-templates:                     # the connection settings, as the pack's suggestion
   desk-pack-store:
     plugin: delta
-    settings: {root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: desk-pack, ...}
+    settings: {root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: desk-pack, ...}
 ```
 
 At the server's first start with the pack on, it writes the suggestion to `config/connectors/desk-pack-store.yaml` once and never overwrites it; from

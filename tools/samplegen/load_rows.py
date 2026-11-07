@@ -16,7 +16,7 @@
 tools/samplegen/lake.py, tools/packgen/banking/make_data.py --lake and the pack generators' --lake write.
 
     uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/load_rows.py \\
-        --rows data/build/lake-rows/banking-history.tar --restated data/build/lake-rows/banking-restated.tar --root data/delta
+        --rows data/build/lake-rows/banking-history.tar --restated data/build/lake-rows/banking-restated.tar --root data/delta/demo
 
 A row (one JSON object a line, UTF-8):
 
@@ -197,7 +197,7 @@ def main(argv=None) -> int:
     ap.add_argument("--rows", action="append", required=True, metavar="FILE",
                     help="a tar of <table>/<YYYY-MM-DD>/ folders of rows, or a file of one table's rows of one date (repeatable)")
     ap.add_argument("--restated", action="append", default=[], metavar="FILE", help="corrections in the same forms, a second commit (repeatable)")
-    ap.add_argument("--root", required=True, help="the Delta root (the connectors' root, data/delta)")
+    ap.add_argument("--root", required=True, help="the Delta root (the demo lake's root, data/delta/demo)")
     ap.add_argument("--as-of", metavar="YYYY-MM-DD", help="the business date of every plain file (over its .ready file's and its name's); "
                                                           "refused for a tar, whose folders name their dates")
     a = ap.parse_args(argv)

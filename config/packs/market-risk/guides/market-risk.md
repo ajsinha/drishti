@@ -37,11 +37,11 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 
 ## Where the data comes from
 
-Each kind is read from the Delta Lake folder of its **data domain** (`data/delta/<domain>/<kind>/`, partitioned by business date). Pick a date in the top bar to see that day; **Live** reads the streaming source first.
+Each kind is read from the Delta Lake folder of its **data domain** (`data/delta/demo/<domain>/<kind>/`, partitioned by business date). Pick a date in the top bar to see that day; **Live** reads the streaming source first.
 
 | Connector | Folder | Domain | Tables | Kinds |
 |---|---|---|---|---|
-| `risk-store` | `data/delta/risk/` | Market-risk results: VaR, stress, FRTB, P&L explain | snapshot (every business date) | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation` |
+| `risk-store` | `data/delta/demo/risk/` | Market-risk results: VaR, stress, FRTB, P&L explain | snapshot (every business date) | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation` |
 
 ### Value at risk: the VaR engine
 
@@ -49,7 +49,7 @@ The pack's VaR is computed, never stored: the server adds up one P&L vector per 
 
 The VaR guide (`docs/guides/VAR_GUIDE.md`) explains every number with worked examples, the data flow, the scope grammar, the memory tiers and sizing, entitlements, the CLI and the API; tutorial 25 (`docs/tutorials/25-var-from-the-bank-to-a-trade.md`) walks through it on the test data; the data contract is its Part II.
 
-Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta`: it writes the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, [Data formats](../../../../docs/guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).
+Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta/demo`: it writes the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, [Data formats](../../../../docs/guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).
 
 ## Kinds
 

@@ -25,7 +25,9 @@ that process. Afterwards, as the administrator who started it, the console binds
 The business date of the rows is the load rules' (docs/architecture/DATA_LOAD_RULES.md): the date the administrator gives (as of),
 else the date in the file's name (``trades.2026-11-03.jsonl``), else the business today; never a field of the rows.
 
-Only lake roots listed in ``lakes.roots`` can be written: a lake is a folder under one of them (``<root>/<domain>/<kind>``).
+Only lake roots listed in ``lakes.roots`` can be written: a lake is a folder under one of them (``<root>/<domain>/<kind>``). Unset, the roots
+are the server's lakes: each lake's own folder under ``<data dir>/delta`` (``delta/demo``, the demo lake; ``delta/risklake``, one the data
+inbox made), found again at every ask.
 """
 from __future__ import annotations
 
@@ -73,6 +75,22 @@ class LakeSettings:
     jobs: int = 2
     data_dir: Path | None = None                 # <data>: lake maintenance keeps its YAML and history in <data>/lakes (core/lake_maint.py)
     schedules: bool = True                       # run the lake-maintenance schedules in this console
+    lakes_parent: Path | None = None             # lakes.roots unset: every lake's own folder under <data dir>/delta, found at every ask
+
+    def lake_roots(self) -> list[Path]:
+        """The roots: ``lakes.roots``; unset, the demo lake's folder and every other lake folder under <data dir>/delta (a lake the data
+        inbox made after the console started included), and <data dir>/delta itself while it holds tables directly (the official results;
+        a demo lake not yet moved into its own folder)."""
+        out = list(self.roots)
+        p = self.lakes_parent
+        if p is None or not p.is_dir():
+            return out
+        if p not in out and next(p.glob("*/*/_delta_log"), None) is not None:
+            out.append(p)
+        for d in sorted(x for x in p.iterdir() if x.is_dir() and not x.name.startswith(("_", "."))):
+            if d not in out and next(d.glob("*/*/_delta_log"), None) is not None:
+                out.append(d)
+        return out
 
     @classmethod
     def from_settings(cls, s, console_dir: Path) -> "LakeSettings":
@@ -80,10 +98,11 @@ class LakeSettings:
             d = Path(str(p)).expanduser()
             return d if d.is_absolute() else (console_dir / d).resolve()
         data_dir = path(s.get("lakes.data_dir", None) or "../data")
-        roots = s.get("lakes.roots", None) or [str(data_dir / "delta")]   # the server's default root: <data dir>/delta
-        if isinstance(roots, str):
-            roots = [r for r in roots.split(",") if r.strip()] or [str(data_dir / "delta")]
-        return cls(roots=[path(r) for r in roots], tools_dir=path(s.get("builder.tools_dir", "../tools")),
+        given = s.get("lakes.roots", None)
+        if isinstance(given, str):
+            given = [r for r in given.split(",") if r.strip()]
+        roots = given or [str(data_dir / "delta" / "demo")]                # the server's lakes: <data dir>/delta/<lake>, the demo lake first
+        return cls(roots=[path(r) for r in roots], lakes_parent=None if given else data_dir / "delta", tools_dir=path(s.get("builder.tools_dir", "../tools")),
                    max_upload_mb=int(s.get("lakes.max_upload_mb", 4096)), scan_docs=int(s.get("lakes.scan_docs", 20000)),
                    engine=str(s.get("lakes.engine", "auto") or "auto"), jar=str(s.get("lakes.jar", "") or ""),
                    python=str(s.get("lakes.python", "") or ""), keep_min=int(s.get("lakes.keep_min", 240)), jobs=int(s.get("lakes.jobs", 2)),
@@ -91,7 +110,7 @@ class LakeSettings:
                    schedules=str(s.get("lakes.maintenance_schedules", True)).lower() not in ("false", "0", "off", "no"))
 
     def as_dict(self) -> dict:
-        return {"roots": [str(r) for r in self.roots], "maxUploadMb": self.max_upload_mb, "scanDocs": self.scan_docs, "engine": self.engine}
+        return {"roots": [str(r) for r in self.lake_roots()], "maxUploadMb": self.max_upload_mb, "scanDocs": self.scan_docs, "engine": self.engine}
 
 
 def _tool(tools_dir: Path, name: str):
@@ -227,7 +246,7 @@ class Lakes:
         """The tables already under the roots: <root>/<domain>/<kind> with a _delta_log, their partitioning and the last run."""
         writers = _tool(self.cfg.tools_dir, "writers")
         out = []
-        for root in self.cfg.roots:
+        for root in self.cfg.lake_roots():
             if not root.is_dir():
                 continue
             for log in sorted(root.glob("*/*/_delta_log")):
@@ -245,7 +264,7 @@ class Lakes:
         """Every table under the roots with its rows, files, size, partitions, business dates and last build (tools/lake/laketables.py)."""
         mod = _tool(self.cfg.tools_dir, "laketables")
         out = []
-        for root in self.cfg.roots:
+        for root in self.cfg.lake_roots():
             for t in mod.tables(root):
                 t["root"] = str(root)
                 t["size"] = mod.human_bytes(t.get("bytes"))
@@ -254,7 +273,7 @@ class Lakes:
 
     def runs(self, limit: int = 20) -> list[dict]:
         out = []
-        for root in self.cfg.roots:
+        for root in self.cfg.lake_roots():
             log = root / "_drishti-lake" / "runs.log"
             if not log.is_file():
                 log = root / ".drishti-lake" / "runs.log"      # an earlier build's name
@@ -267,7 +286,7 @@ class Lakes:
 
     def check(self, p: dict) -> dict:
         root = Path(str(p.get("root") or ""))
-        if root not in self.cfg.roots:
+        if root not in self.cfg.lake_roots():
             raise LakeError(400, "choose one of the lake roots this console may write (lakes.roots)")
         for k in ("domain", "kind"):
             if not NAME.match(str(p.get(k) or "")):

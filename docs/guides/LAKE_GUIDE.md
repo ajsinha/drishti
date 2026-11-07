@@ -26,7 +26,7 @@ Nobody else holds a root, a table path, a partition column or a promoted column.
 ```yaml
 lake: main                                  # its name: the file's name; connectors and loads refer to it
 format: delta                               # delta | iceberg; a table may say otherwise
-root: s3://${DRISHTI_LAKE_BUCKET}/delta     # a local folder, s3://bucket/prefix, or mem://<store> for an in-memory store
+root: s3://${DRISHTI_LAKE_BUCKET}/delta     # a local folder, s3://bucket/prefix, or mem://<store>; none: <data>/delta/<lake>
 storage:                                    # how to reach it: the platform's role, or ${ENV} references; never a secret written here
   region: ${AWS_REGION:us-east-1}
 catalog: none                               # Iceberg: none (path tables) | rest | glue | s3tables, with its settings
@@ -71,8 +71,22 @@ secret written as a value (`secret-key: abc`), or a `lake:` that differs from th
 The lake folder is `config/lakes/` (the system property `drishti.lakes.dir` or the variable `DRISHTI_LAKES_DIR` say otherwise). A server
 may know several lakes: a shared lake, a Murex lake, an in-memory store. The demo lake's file also ships inside the server (a copy of
 `config/lakes/demo.yaml`), so a server started in another working folder, a container or a cluster node knows it; a `demo.yaml` in the lake
-folder wins. A reference may nest and may name a server setting: `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}` is the
-variable, else the data folder's `delta` (`drishti.data.dir` as a system property or as `DRISHTI_DATA_DIR`).
+folder wins. A reference may nest and may name a server setting: `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}` is the
+variable, else the data folder's `delta/demo` (`drishti.data.dir` as a system property or as `DRISHTI_DATA_DIR`).
+
+**Every lake is a folder of its own.** A lake file without `root:` (and without a catalog that says where its tables are) is at
+`<data>/delta/<lake>`, its tables at `<data>/delta/<lake>/<domain>/<table>`:
+
+```text
+data/delta/
+  demo/            the demo lake: demo/trading/trade_endur, demo/risk/scenario-pv, ... (DRISHTI_DELTA_ROOT, when a site sets it, names it instead)
+  risklake/        a lake the data inbox created for a load that named it (lake: risklake)
+  risk-results/    the official results: their own lakes' root is the publisher's setting, <data>/delta by default
+```
+
+A lake file may still name any root (another disk, `s3://...`). A demo lake built in the older layout, its tables directly in
+`<data>/delta/<domain>`, is moved into `<data>/delta/demo` once, safely, at the server's start or with `drishti.py lake relocate demo`
+([OPERATIONS.md, the lakes' folders](../admin/OPERATIONS.md#the-lakes-folders)).
 
 Example lake files for every example connector are in `config/lakes.examples/` (Delta in S3, Iceberg path tables, AWS S3 Tables, a REST
 catalog behind a private CA, an in-memory store), each beside its connectors in `config/connectors.examples/`.
@@ -84,7 +98,7 @@ catalog behind a private CA, an in-memory store), each beside its connectors in 
 | Delta and Iceberg connectors | `lake: main` in the connector's settings, and its kinds. Root, table folders, storage, catalog, promoted columns and vectors come from the lake file; the connector file keeps only reading concerns (caches, refresh, warm dates, the source name). Where a kind has several tables, `lake-tables: trading.trade_endur` names the entries |
 | The parallel loader (`LoadConfig`) | `target.lake: main` and `target.kind` (and `target.table` when a kind has several). Partitioning, promoted columns, vectors, id, date, latest-by, file layout and load mode come from the lake file. A key of the load file that says otherwise (`source.partition-by: [DESK]` against `[PRODUCT_TYPE]`) is refused with both named |
 | `drishti.py lake build` | `--lake main` (a name). `--lake-root DIR` writes the same layout under another folder (a scratch or test lake). `--partition-by`, `--promote`, `--vector` and `--key` must agree with the lake file or the run is refused |
-| The data inbox | a rule's `lake:` (or the inbox's `lake:`, `demo` as shipped) names a lake. A kind the lake file has no entry for gets its pack's recommended entry copied into the file first, said in the log; the table is then created exactly as the file says |
+| The data inbox | a `.ready` file's `lake:`, else a rule's `lake:`, else the inbox's `lake:` (`demo` as shipped) names a lake. A lake with no file yet is created (`config/lakes/<lake>.yaml`, format delta, its own folder `<data>/delta/<lake>`); a kind the lake file has no entry for gets its pack's recommended entry copied into the file first, said in the log; the table is then created exactly as the file says. A load into a lake no connector reads says so (DATA_LOAD_RULES.md section 5) |
 | The demo lakes | `config/lakes/demo.yaml` describes the demo lake like any other: `drishti.py lake demo` and `tools/build_demo_lakes.py` write through it (`--lake demo --lake-root <folder>`) |
 | The in-memory lake | a lake whose root is `mem://<store>` (section 6) |
 | Admin → Lakes | lists every lake and table from the files, read-only |
@@ -99,7 +113,7 @@ tables it has.
 ```yaml
 lake: demo
 format: delta
-root: ${DRISHTI_DELTA_ROOT:./data/delta}
+root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
 defaults: {load-mode: replace}
 tables:
   trading.trade_endur:

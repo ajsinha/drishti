@@ -55,8 +55,12 @@ public final class LakeCheck {
             String lake = c.getValue().get(ConnectorLake.LAKE);
             if (lake == null || lake.isBlank()) {
                 if (ConnectorLake.legacy(c.getValue())) {
-                    out.add(new Finding("note", "", "", "connector " + name + " still describes its lake itself: run drishti.py lake migrate-config"));
+                    out.add(new Finding("note", "", "", "connector " + name + " names its tables by path (root " + c.getValue().get("root")
+                            + "), not by a lake: fine for tables no lake file describes; lake: <name> follows a lake's folder"));
                 }
+            } else if (!ConnectorLake.overridden(c.getValue()).isEmpty()) {
+                out.add(new Finding("note", lake, "", "connector " + name + " names lake " + lake + " and gives " + ConnectorLake.overridden(c.getValue())
+                        + " itself: its own values win over the lake file's"));
             } else if (lakes.find(lake.strip()).isEmpty()) {
                 out.add(new Finding("error", lake, "", "connector " + name + " names lake " + lake + ", which has no file in " + lakes.folder()));
             }

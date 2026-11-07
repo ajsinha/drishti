@@ -38,7 +38,7 @@ partitions and versions, a database has a date column, a feed drops a folder per
 - **Delta Lake through Delta Kernel** (Java, no Spark), the `delta` plugin: `<root>/<domain>/<kind>/`, one table
   per kind, `(id, doc)` rows partitioned by `business_date`. Snapshot tables take the newest partition on or
   before the date (within a lookback), effective tables the last change on or before it. `knownAt` uses Delta
-  time travel ("as known at", before a restatement). The root is configurable (default `./data/delta`); each domain
+  time travel ("as known at", before a restatement). The root is configurable (default each lake's own folder, `./data/delta/<lake>`); each domain
   or pack keeps its own folder.
 - **Named connectors** (one file `config/connectors/<name>.yaml` with `plugin`, `settings` and `kinds`; formerly `drishti.sources.connectors.<name>`) run a plugin several times,
   such as one lake per domain.

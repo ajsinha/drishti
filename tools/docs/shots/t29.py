@@ -31,6 +31,7 @@ import urllib.request
 
 from _tut import OUT
 from _var import open_var, painted, tab
+from shotlib import DEMO_ROOT_ENV
 from shotlib import CONSOLE_PORT, ROOT, SERVER_PORT, Ctx, register
 from shotlib import start_servers as _start
 
@@ -49,7 +50,7 @@ def start_servers(work) -> list:
     if r.returncode != 0 or not (ice / "risk" / "pnl-vector" / "metadata").is_dir():
         sys.exit("could not build the Iceberg risk lake: " + (r.stderr or r.stdout)[-800:])
     (work / "application.local.yaml").write_text(f"drishti:\n  var:\n    official:\n      format: iceberg\n      root: {ice}\n", encoding="utf-8")
-    procs = _start(work, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_ICEBERG_ROOT": str(ice), "DRISHTI_CONNECTORS_DIR": str(conns),
+    procs = _start(work, {DEMO_ROOT_ENV: str(lake), "DRISHTI_ICEBERG_ROOT": str(ice), "DRISHTI_CONNECTORS_DIR": str(conns),
                           "DRISHTI_DATA_DIR": str(work / "data"), "DRISHTI_LAKE_ROOTS": f"{lake},{ice}", "DRISHTI_DEMO_ENABLED": "false",
                           "DRISHTI_OFFLINE": "true", "DRISHTI_SECURITY_ENABLED": "false"})
     deadline = time.monotonic() + 300

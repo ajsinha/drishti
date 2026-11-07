@@ -477,7 +477,7 @@ connectors:
     plugin: delta
     kinds: [trade]
     settings:
-      root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
+      root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}"
       domain: trading
       table.trade: trade_endur
       layout.trade.columns: "TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,...,COUNTERPARTY,LEGAL_ENTITY,PORTFOLIO,TRADER_ID"
@@ -534,13 +534,13 @@ the page, then binds the lake to the pack's connector and sends the signal as th
 ### 4.9 The demo lakes: lake demo
 
 `drishti.py lake demo` (run configuration **Build demo lakes**) is `lake build` run for every dataset and business day of the
-committed test data, `data/testdata`: the seven packs' tables under `data/delta` in about 15 minutes (943 s measured, about 3.4 GB), the sixty days moved to end on today's
+committed test data, `data/testdata`: the seven packs' tables under `data/delta/demo` (the demo lake's own folder) in about 15 minutes (943 s measured, about 3.4 GB), the sixty days moved to end on today's
 business date (`--as-of data` keeps the files' own dates), the connector files checked, the next steps printed. `--only PREFIX` builds
 some datasets, `--keep-other-dates` keeps a dated table's other business dates (each date written is replaced) instead of
 rebuilding the table (the VaR data's three dates are 2026-09-28 to 2026-09-30; `--as-of 2026-09-25 --keep-other-dates --only market-risk/...`
 adds them again moved back, as 2026-09-23 to 2026-09-25, the scenario window moved with it: [tutorial 25, step 16](../tutorials/25-var-from-the-bank-to-a-trade.md#step-16--the-scenario-matrix-scenarios-across-the-days)), `--lake DIR` another folder (the connector files then point there), `--with-real FILE[,FILE]` adds real extracts to the
 local lake only. The sample feed the `file` connector serves (`feeds/`) and the staging go to the server's data folder: `--data-dir DIR`, else
-`DRISHTI_DATA_DIR`, else the folder holding `--lake` when that is a `delta/` folder (`--lake /srv/data/delta`: `/srv/data`), else `data/`, so a
+`DRISHTI_DATA_DIR`, else the folder holding the lakes' `delta/` folder (`--lake /srv/data/delta/demo`: `/srv/data`), else `data/`, so a
 server on another data folder finds its feeds (`make_data.py --data-dir DIR` does the same). It then tells the server the lakes changed: the data-load signal for every table and date to `--server` (default
 `DRISHTI_SERVER`, then `http://localhost:18480`; a token with `loads:write` from `--token-file` or `DRISHTI_TOKEN`), or, with no server
 there, the stamp of section 4.7; `--no-signal` does neither, and `--signal-once` tells each table once, for its newest date, instead of
@@ -1546,7 +1546,7 @@ generated trade book) into one store, **in the layout that store's connector rea
 
 | Script | Store and layout | Retention |
 |---|---|---|
-| `tools/load-delta.sh` | Delta Lake under `data/delta`, the pack's layout (`tools/windows/load-delta.ps1` on Windows) | `drishti.py lake maintain` |
+| `tools/load-delta.sh` | Delta Lake under `data/delta/demo` (the demo lake), the pack's layout (`tools/windows/load-delta.ps1` on Windows) | `drishti.py lake maintain` |
 | `tools/load-files.sh` | the File connector's JSON Lines, `<root>/<domain>/<yyyy-MM-dd>/<kind>.jsonl`, each file replaced whole | delete old day folders |
 | `tools/load-postgres.sh` | PostgreSQL, `<domain>.entities` partitioned by month, promoted columns | `--keep-months N` |
 | `tools/load-duckdb.sh` | one DuckDB file, written beside and renamed over the old one | `--keep-days N` |

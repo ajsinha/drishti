@@ -285,6 +285,7 @@ class DataFolder(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp).resolve()
             self.assertEqual(self.folder(["--lake", str(tmp / "srv" / "delta")]), tmp / "srv")
+            self.assertEqual(self.folder(["--lake", str(tmp / "srv" / "delta" / "demo")]), tmp / "srv")   # every lake's own folder
             self.assertEqual(self.folder(["--lake", str(tmp / "x"), "--data-dir", str(tmp / "d")]), tmp / "d")
             self.assertEqual(self.folder(["--lake", str(tmp / "srv" / "delta")], env=str(tmp / "e")), tmp / "e")
             self.assertEqual(self.folder(["--lake", str(tmp / "elsewhere")]), (ROOT / "data").resolve())

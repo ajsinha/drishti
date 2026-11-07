@@ -193,10 +193,17 @@ class LakesTest {
         assertEquals("trade_endur", endur.get("table.trade"));
         assertEquals("trading", endur.get("domain"));
 
-        IllegalArgumentException both = assertThrows(IllegalArgumentException.class, () -> ConnectorLake.expand("x", "delta", List.of("pnl-vector"),
-                Map.of("lake", "main", "root", "/elsewhere"), () -> lakes, warned::add));
-        assertTrue(both.getMessage().contains("[root]"), both.getMessage());
         assertTrue(warned.isEmpty());
+        // both forms: the connector's own path wins over the lake file's root, the rest still the lake's, and it is said
+        Map<String, String> both = ConnectorLake.expand("x", "delta", List.of("pnl-vector"), Map.of("lake", "main", "root", "s3://vendor/delta"),
+                () -> lakes, warned::add);
+        assertEquals("s3://vendor/delta", both.get("root"));
+        assertEquals("risk", both.get("domain"));
+        assertEquals("PNL", both.get("layout.pnl-vector.vectors"));
+        assertEquals(List.of("root"), ConnectorLake.overridden(Map.of("lake", "main", "root", "s3://vendor/delta")));
+        assertEquals(1, warned.size());
+        assertTrue(warned.get(0).contains("its own values win"), warned.get(0));
+        warned.clear();
 
         Map<String, String> other = ConnectorLake.expand("files", "file", List.of(), Map.of("root", "/x"), () -> {
             throw new AssertionError("a connector of another plugin never reads the lakes");
@@ -205,13 +212,50 @@ class LakesTest {
     }
 
     @Test
-    void anOldConnectorStartsWithOneWarning() {
+    void aConnectorThatNamesItsTablesByPathIsAFormOfItsOwnWithoutAWarning() {
         List<String> warned = new ArrayList<>();
-        Map<String, String> old = Map.of("root", "./data/delta", "domain", "risk", "layout.pnl-vector.columns", "A");
-        assertEquals(old, ConnectorLake.expand("old-one", "delta", List.of("pnl-vector"), old, Lakes::of, warned::add));
-        ConnectorLake.expand("old-one", "delta", List.of("pnl-vector"), old, Lakes::of, warned::add);
-        assertEquals(1, warned.size());
-        assertTrue(warned.get(0).contains("drishti.py lake migrate-config"));
+        Map<String, String> path = Map.of("root", "s3://vendor-bucket/delta", "domain", "risk", "layout.pnl-vector.columns", "A");
+        assertEquals(path, ConnectorLake.expand("vendor", "delta", List.of("pnl-vector"), path, Lakes::of, warned::add));
+        assertTrue(warned.isEmpty());
+    }
+
+    @Test
+    void anS3RootResolvesThroughTheSameReader() {
+        Lake l = Lakes.parse("lake: shared\nroot: s3://${LAKE_BUCKET:acme-lake}/delta\nstorage: {region: us-east-1}\ntables:\n  risk.pnl-vector: {vectors: [PNL]}\n",
+                "shared", k -> null);
+        assertEquals("s3://acme-lake/delta", l.root());
+        assertEquals("s3://acme-lake/delta/risk/pnl-vector", l.location(l.tables().get("risk.pnl-vector")));
+        Map<String, String> s = ConnectorLake.expand("risk-store", "delta", List.of("pnl-vector"), Map.of("lake", "shared"), () -> Lakes.of(l), x -> { });
+        assertEquals("s3://acme-lake/delta", s.get("root"));
+        assertEquals("us-east-1", s.get("s3.region"));
+    }
+
+    @Test
+    void theConnectorsThatReadTheDemoLakeByItsOldRootFollowItByName() throws Exception {
+        Path conns = Files.createDirectories(tmp.resolve("demo-connectors"));
+        Files.writeString(conns.resolve("trading-store.yaml"), "# generated\nplugin: delta\nkinds: [trade]\nsettings:\n"
+                + "  root: \"${DRISHTI_DELTA_ROOT:./data/delta}\"\n  domain: trading\n  table.trade: trade_endur\n  union: true\n");
+        Files.writeString(conns.resolve("desk-store.yaml"), "plugin: delta\nkinds: [desk-quote]\nsettings:\n"
+                + "  root: \"${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}\"\n  domain: desk\n  layout.desk-quote.columns: QUOTE_ID\n");
+        Files.writeString(conns.resolve("pv-updates.yaml"), "plugin: var-pv-stream\nkinds: [pv-update]\nsettings:\n"
+                + "  lake: \"${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}\"\n  pack: market-risk\n");
+        Files.writeString(conns.resolve("vendor.yaml"), "plugin: delta\nkinds: [trade]\nsettings:\n  root: s3://vendor/delta\n  domain: trading\n");
+        Path lakesDir = Files.createDirectories(tmp.resolve("demo-lakes"));
+        Files.writeString(lakesDir.resolve("demo.yaml"), "lake: demo\nroot: /x/demo\ntables:\n  trading.trade_endur: {kind: trade}\n");
+        LakeFiles.Migration m = LakeFiles.adoptDemo(conns, lakesDir, true);
+        assertEquals(3, m.connectorFiles().size(), m.notes().toString());
+        String t = Files.readString(conns.resolve("trading-store.yaml"));
+        assertTrue(t.startsWith("# generated") && t.contains("lake: demo") && t.contains("lake-tables: trading.trade_endur") && t.contains("union: true")
+                && !t.contains("root:"), t);
+        Lake demo = Lakes.read(lakesDir, ENV).get("demo");
+        assertEquals(List.of("QUOTE_ID"), demo.entry("desk.desk-quote").orElseThrow().promote(), "a table the lake lacked, from the connector's layout");
+        assertTrue(Files.readString(conns.resolve("pv-updates.yaml")).contains("lake: demo"));
+        assertTrue(Files.readString(conns.resolve("vendor.yaml")).contains("root: s3://vendor/delta"), "a path of its own stays");
+        try (var files = Files.list(conns)) {
+            assertEquals(3, files.filter(f -> f.getFileName().toString().contains(".before-lake-")).count());
+        }
+        assertTrue(LakeFiles.adoptDemo(conns, lakesDir, true).connectorFiles().isEmpty(), "once");
+        assertTrue(LakeFiles.demoRoot("${DRISHTI_DELTA_ROOT:./data/delta}") && LakeFiles.demoRoot("./data/delta") && !LakeFiles.demoRoot("/srv/lake"));
     }
 
     @Test
@@ -310,5 +354,36 @@ class LakesTest {
         assertEquals(2, LakesCli.run(new String[] {"table", "--dir", lakes.toString(), "--lake", "nope", "--kind", "trade"},
                 new java.io.PrintStream(out, true, java.nio.charset.StandardCharsets.UTF_8)));
         assertTrue(out.toString(java.nio.charset.StandardCharsets.UTF_8).contains("no lake named nope"));
+    }
+
+    @Test
+    void aLakeWithoutARootIsInItsOwnFolderAndANewLakeFileIsWrittenOnce() throws Exception {
+        String before = System.clearProperty("drishti.data.dir");
+        try {
+            Function<String, String> env = Map.of("DRISHTI_DATA_DIR", "/srv/drishti")::get;
+            assertEquals("/srv/drishti/delta/risklake", Lakes.parse("lake: risklake\n", "risklake", env).root());
+            assertEquals("./data/iceberg/risklake", Lakes.parse("lake: risklake\nformat: iceberg\n", "risklake", k -> null).root());
+            assertEquals("${drishti.data.dir:./data}/delta/demo", Lakes.defaultRoot("demo"));
+            assertTrue(Lakes.validName("risk_lake-2"));
+            assertFalse(Lakes.validName("Risk Lake"));
+            assertFalse(Lakes.validName("../x"));
+            Path lakes = tmp.resolve("lakes");
+            LakeTable t = Lakes.parse("lake: x\nroot: /x\ntables:\n  trading.trade_endur:\n    kind: trade\n    promote: [TRADE_ID]\n", "x", k -> null)
+                    .tables().get("trading.trade_endur");
+            assertTrue(LakeFiles.create(lakes, "risklake", List.of(t), "a test"));
+            assertFalse(LakeFiles.create(lakes, "risklake", List.of(), "a test"), "a file that exists is never touched");
+            String text = Files.readString(lakes.resolve("risklake.yaml"));
+            assertTrue(text.contains("root: ${drishti.data.dir:./data}/delta/risklake"), text);
+            Lake l = Lakes.readFile(lakes.resolve("risklake.yaml"), env);
+            assertEquals("/srv/drishti/delta/risklake", l.root());
+            assertEquals("delta", l.format());
+            assertEquals("trade", l.tables().get("trading.trade_endur").kind());
+            assertEquals("/srv/drishti/delta/risklake/trading/trade_endur", l.location(l.tables().get("trading.trade_endur")));
+            assertThrows(IllegalArgumentException.class, () -> LakeFiles.create(lakes, "Risk Lake", List.of(), "a test"));
+        } finally {
+            if (before != null) {
+                System.setProperty("drishti.data.dir", before);
+            }
+        }
     }
 }

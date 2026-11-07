@@ -2789,7 +2789,7 @@ drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.por
 ```
 
 Open http://localhost:17480 and sign in as `drishti-dev-admin` with `drishti-dev-admin123` (change it later; [GETTING_STARTED.md](GETTING_STARTED.md)).
-The server reads `data/delta` (the lakes `lake demo` built) and `config/bi` is the BI folder, so the samples are there already. The seven packs are
+The server reads `data/delta/demo` (the demo lake `lake demo` built) and `config/bi` is the BI folder, so the samples are there already. The seven packs are
 loaded by default (`DRISHTI_PACKS` unset).
 
 Now make four people. The role names matter: the models' row rules name them (`trading-risk`: `desk-head` sees `DESK in user.desks`; `risk`, `analyst`

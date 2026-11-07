@@ -276,7 +276,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--only", help="rebuild only these datasets of the test data (lake demo --only: folders such as trades/endur, "
                                    "trades/calypso, core/counterparty, or a pack name); the other tables stay as they are")
     ap.add_argument("--as-of", help="the last business date of the lakes (default: your newest ENDUR file's date, else today)")
-    ap.add_argument("--lake", type=Path, default=ROOT / "data" / "delta", help="the Delta root the server reads (default data/delta)")
+    ap.add_argument("--lake", type=Path, help="the demo lake's root, what the server reads "
+                    "(default data/delta/demo: config/lakes/demo.yaml; a demo lake built directly in data/delta is moved there once)")
     ap.add_argument("--connectors-dir", type=Path, help="the connector files' folder (default: as lake demo, config/connectors)")
     ap.add_argument("--keep-synthetic-endur", "--keep-synthetic", dest="keep_synthetic_endur", action="store_true",
                     help="add your files beside the system's synthetic trades instead of replacing them")
@@ -327,7 +328,11 @@ def main(argv: list[str] | None = None) -> int:
     if a.server:
         token = (a.token_file.expanduser().read_text(encoding="utf-8").strip() if a.token_file else None) or os.environ.get("DRISHTI_TOKEN")
     as_of = a.as_of or (files[-1][0] if files else "today")
-    lake = a.lake.expanduser().resolve()
+    lake = (a.lake.expanduser() if a.lake else Path(stores.lakeconfig.root("demo"))).resolve()   # unset: config/lakes/demo.yaml's root
+    older = stores.older_layout(lake)
+    if older:
+        print("build_demo_lakes: " + stores.older_layout_words(lake, older), file=sys.stderr)
+        return 1
     try:
         systems, domains = stores.split_domains(a.store)
         named = stores.parse(systems)

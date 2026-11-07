@@ -231,7 +231,7 @@ Put `max-mb: 256` back.
 ## Step 8 · Go back to the disk lake
 
 ```bash
-rm config/connectors/news-store.yaml       # the pack's own connector reads data/delta/news again
+rm config/connectors/news-store.yaml       # the pack's own connector reads data/delta/demo/news again
 # and remove the drishti.lake.memory block from application.local.yaml
 ```
 

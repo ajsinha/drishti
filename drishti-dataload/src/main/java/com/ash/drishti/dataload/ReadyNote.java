@@ -31,15 +31,22 @@ import java.util.Map;
  * What a {@code .ready} file may say (docs/architecture/DATA_LOAD_RULES.md section 5; all optional, an empty file is fine): the overrides of
  * the name ({@code business-date}, {@code table}; refused for a tar), the pack ({@code pack}, {@code kind}, {@code connector}; a tar's
  * {@code folders}: folder → pack), {@code mode} ({@code append}, the default, or {@code replace}), {@code new-table}, {@code key}, the checks
- * made before loading ({@code sha256}, {@code rows}) and {@code hold}. An unknown key is refused.
+ * made before loading ({@code sha256}, {@code rows}), {@code hold} and {@code lake} (the lake the file goes to, over the rule's and the inbox's
+ * default; a lake with no file yet is created). An unknown key is refused.
  */
 public record ReadyNote(String pack, String kind, String connector, String table, LocalDate businessDate, String mode, String sha256, Long rows,
-        boolean newTable, String key, Map<String, String> folders, boolean hold) {
+        boolean newTable, String key, Map<String, String> folders, boolean hold, String lake) {
+
+    /** A marker that names no lake. */
+    public ReadyNote(String pack, String kind, String connector, String table, LocalDate businessDate, String mode, String sha256, Long rows,
+            boolean newTable, String key, Map<String, String> folders, boolean hold) {
+        this(pack, kind, connector, table, businessDate, mode, sha256, rows, newTable, key, folders, hold, null);
+    }
 
     private static final java.util.regex.Pattern SHA = java.util.regex.Pattern.compile("(?m)^\\s*[\"']?sha256[\"']?\\s*:\\s*[\"']?([0-9A-Fa-f]{64})[\"']?\\s*,?\\s*$");
     /** The keys, in the order the documentation lists them. */
     public static final List<String> KEYS = List.of("business-date", "table", "pack", "kind", "connector", "mode", "new-table", "key", "folders",
-            "sha256", "rows", "hold");
+            "sha256", "rows", "hold", "lake");
 
     /** An empty marker. */
     public static final ReadyNote EMPTY = new ReadyNote(null, null, null, null, null, null, null, null, false, null, Map.of(), false);
@@ -113,9 +120,14 @@ public record ReadyNote(String pack, String kind, String connector, String table
             }
             f.fields().forEachRemaining(e -> folders.put(e.getKey().toLowerCase(Locale.ROOT), e.getValue().asText()));
         }
+        String lake = text(n, "lake");
+        if (lake != null && !com.ash.drishti.lakeconfig.Lakes.validName(lake)) {
+            throw new IllegalArgumentException("the .ready file's lake " + lake + ": a lake's name, lower-case letters, digits, '-' and '_' "
+                    + "([a-z0-9][a-z0-9_-]*: risklake); its tables go to <data>/delta/<lake>/<domain>/<table>");
+        }
         String table = text(n, "table");
         return new ReadyNote(text(n, "pack"), text(n, "kind"), text(n, "connector"), table == null ? null : table.toLowerCase(Locale.ROOT), date, mode,
-                sha == null ? null : sha.toLowerCase(Locale.ROOT), rows, bool(n, "new-table"), text(n, "key"), Map.copyOf(folders), bool(n, "hold"));
+                sha == null ? null : sha.toLowerCase(Locale.ROOT), rows, bool(n, "new-table"), text(n, "key"), Map.copyOf(folders), bool(n, "hold"), lake);
     }
 
     private static boolean bool(JsonNode n, String key) {

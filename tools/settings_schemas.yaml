@@ -405,7 +405,8 @@ schemas:
 # by: server, console, packs, profile, tools.
 env:
   # the packs' connectors (config/packs/<pack>/pack.yaml)
-  - { name: DRISHTI_DELTA_ROOT, by: packs, default: "./data/delta", sets: "every pack's delta connectors' root", meaning: "Root of every pack's Delta Lake connector" }
+  - { name: DRISHTI_DELTA_ROOT, by: packs, default: "./data/delta/demo", sets: "the demo lake's root (config/lakes/demo.yaml)", meaning: "Root of the demo lake, which every pack's Delta connector reads (lake: demo); every lake's own default is <data>/delta/<lake>" }
+  - { name: DRISHTI_LAKES_RELOCATE_ON_START, by: server, default: "true", sets: "drishti.lakes.relocate-on-start", meaning: "At start, move a demo lake built in the older layout (<data>/delta/<domain>) into <data>/delta/demo once, safely (verified, moved back on any error, never a delete); false: only by drishti.py lake relocate demo (docs/admin/OPERATIONS.md)" }
   - { name: DRISHTI_LAKES_DIR, by: server, default: "./config/lakes", sets: "drishti.lakes.dir", meaning: "The lake folder: one config/lakes/<lake>.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/LAKE_GUIDE.md)" }
   - { name: DRISHTI_DATALOAD_LAKE, by: server, default: demo, sets: "drishti.dataload.lake", meaning: "The lake (config/lakes/<lake>.yaml) the data inbox writes to; a folder is the older form" }
   - { name: DRISHTI_DELTA_ENGINE, by: packs, default: native, sets: "delta engine", meaning: "native, hadoop or auto, for every Delta connector without its own engine" }

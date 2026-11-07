@@ -585,7 +585,7 @@ Loader options (`DuckDbLoader FILE|- DATABASE`, through `tools/load-duckdb.sh [d
 DuckDB can read Parquet, Delta Lake and Iceberg tables in place, which would let one connector serve the Delta Lake
 written for the `delta` connector without a load. The JDBC driver 1.5.6 bundles the `json` and `parquet` extensions;
 the `delta` and `iceberg` extensions are not bundled and DuckDB would download them on first use. The connector does
-not download extensions at run time, so a `lake` mode (`delta_scan('data/delta/trading/trade')` per day, with the same
+not download extensions at run time, so a `lake` mode (`delta_scan('data/delta/demo/trading/trade')` per day, with the same
 column sets) is left for when the extensions can be shipped with Drishti or installed from a local repository. Reading
 the lake's Parquet files directly without the Delta log is not safe (it would see removed files), so it is not offered.
 

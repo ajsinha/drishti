@@ -35,6 +35,9 @@ import pathlib
 import shutil
 import subprocess
 import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import lakeconfig  # noqa: E402
 import time
 import urllib.error
 import urllib.parse
@@ -87,7 +90,7 @@ class Server:
         d = work / name
         (d / "logs").mkdir(parents=True, exist_ok=True)
         env = {**os.environ, "DRISHTI_PORT": str(port), "DRISHTI_DATA_DIR": str(d), "DRISHTI_CONNECTORS_DIR": str(d / "connectors"),
-               "DRISHTI_DELTA_ROOT": str(d / "delta"), "DRISHTI_NET_DIR": str(d / "net"), "DRISHTI_MCP_DIR": str(d / "mcp"),
+               lakeconfig.DEMO_ROOT_ENV: str(d / "delta"), "DRISHTI_NET_DIR": str(d / "net"), "DRISHTI_MCP_DIR": str(d / "mcp"),
                "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_PACKS": "core,trading"}
         env.pop("DRISHTI_ICEBERG_ROOT", None)
         cmd = java_cmd(writers.find_java(), [f"-Xmx{heap}", "-jar", writers.find_jar()], tmp=d / "tmp" / "server")

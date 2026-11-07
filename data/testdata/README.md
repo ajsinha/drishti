@@ -66,8 +66,8 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    drishti-console/.venv/bin/python tools/drishti.py lake demo
    ```
 
-   It rebuilds the sixty daily snapshots of each dataset, writes them under `data/delta/<domain>/<kind>/` (the trades under
-   `data/delta/trading/trade_endur`, `trade_calypso` and `trade_murex`, partitioned by business date and `PRODUCT_TYPE`; every other
+   It rebuilds the sixty daily snapshots of each dataset, writes them under `data/delta/demo/<domain>/<kind>/` (the trades under
+   `data/delta/demo/trading/trade_endur`, `trade_calypso` and `trade_murex`, partitioned by business date and `PRODUCT_TYPE`; every other
    table by business date), checks the seven packs' connector files and prints what to start next. The sixty days are moved to end on
    **today's business date** (the server's current date, so every page opens on data; `--as-of data` keeps the test data's own
    2026-07-08 to 2026-09-30, `--as-of 2026-10-30` any other end); the documents' own dates of the day (`AS_OF`, `VALUATION_DATE`,
@@ -80,7 +80,7 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    country groups, SIC sectors, ownership groups and LEI countries are computed from them, not stored).
 4. **Start** the server and the console: the run configurations **Drishti server (demo lakes)** (the samples off,
    `DRISHTI_DEMO_ENABLED=false`, so every page reads the lakes; with the samples on, a sample answers before the lake for an id both
-   hold) and **Drishti console**. The server reads `data/delta` by default (`DRISHTI_DELTA_ROOT` moves it).
+   hold) and **Drishti console**. The server reads the demo lake, `data/delta/demo`, by default (`DRISHTI_DELTA_ROOT` moves it).
 
    The same run configuration sets **offline mode** (`DRISHTI_OFFLINE=true`): the server never reaches the internet, the news and
    yfinance connectors stay **off (offline mode)** in Admin → Connectors, and the news-and-markets pack's quotes and headlines come
@@ -352,12 +352,12 @@ manifest names the pack, kind, connector, key and partitions of each dataset); t
 # the first day of the ENDUR trades, into the table the trade-endur connector reads (trading/trade_endur): the table and the business
 # date (2026-07-08) come from the file's name; mode replace, so running it again replaces that day
 drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
-    --partition-by PRODUCT_TYPE --mode overwrite-dates --lake data/delta
+    --partition-by PRODUCT_TYPE --mode overwrite-dates --lake data/delta/demo
 
 # a kind of another pack (core/counterparty: the table counterparty of the core pack, connector reference-store, domain reference),
 # under another business date: --as-of wins over the name's
 drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/core/counterparty/counterparty.2026-07-08.jsonl.gz \
-    --as-of 2026-09-22 --mode overwrite-dates --lake data/delta
+    --as-of 2026-09-22 --mode overwrite-dates --lake data/delta/demo
 ```
 
 A change file holds only that day's new and changed documents, so it is not a day's state on its own: later days are the snapshot with

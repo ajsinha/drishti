@@ -731,12 +731,17 @@ def bi_store() -> pathlib.Path:
 
 
 def served_lake(lake) -> bool:
-    """Whether the lake is the one the server reads: DRISHTI_DELTA_ROOT, else <data>/delta. A scratch lake elsewhere leaves no stamp, so a
-    server's next start does not clear its BI store for data it never reads."""
+    """Whether the lake is one the server reads: DRISHTI_DELTA_ROOT, else a lake's own folder under <data>/delta (<data>/delta/demo, the
+    demo lake; <data>/delta/<lake>, any other). A scratch lake elsewhere leaves no stamp, so a server's next start does not clear its BI
+    store for data it never reads."""
     if lake is None:
         return False
-    served = pathlib.Path(os.environ.get("DRISHTI_DELTA_ROOT") or (data_dir() / "delta"))
-    return pathlib.Path(lake).resolve() == served.resolve()
+    import lakeconfig
+    given = os.environ.get(lakeconfig.DEMO_ROOT_ENV)
+    here = pathlib.Path(lake).resolve()
+    if given:
+        return here == pathlib.Path(given).resolve()
+    return here.parent == lakeconfig.lakes_parent(data_dir()).resolve()
 
 
 def leave_stamp(lake, table, summary) -> pathlib.Path:
