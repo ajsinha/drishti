@@ -31,7 +31,7 @@ module:
     packs: [trading, market-data, market-risk, counterparty-risk]
     connectors: [var-engine, var-positions, var-pv-stream, exposure-engine]
     # the API (the old prefixes beside the new: answered for one release by the module, and refused with it when the module is off)
-    api: [/api/v1/risk, /api/v1/risk/var, /api/v1/risk/exposure, /api/v1/risk/frtb, /api/v1/risk/simm, /api/v1/risk/sensitivities, /api/v1/risk/risk-factors, /api/v1/risk/mr]
+    api: [/api/v1/risk, /api/v1/var, /api/v1/exposure, /api/v1/frtb, /api/v1/simm, /api/v1/sensitivities, /api/v1/risk-factors, /api/v1/pivot/mr]
     # the functions (command words): the engines' words with the APIs behind them, then the packs' commands (their kinds' own APIs); the
     # market-data pack's commands are the capitalmarkets module's functions (the pack stays here while the engines read it)
     functions:

@@ -59,7 +59,7 @@ class BankingModuleOnTest {
 
     @Test
     void theOldPathIsTheNewOneForThisRelease() throws Exception {
-        MvcResult old = mvc.perform(get("/api/v1/risk/simm/versions").header("Authorization", auth())).andReturn();
+        MvcResult old = mvc.perform(get("/api/v1/simm/versions").header("Authorization", auth())).andReturn();
         MvcResult now = mvc.perform(get("/api/v1/risk/simm/versions").header("Authorization", auth())).andReturn();
         assertThat(old.getResponse().getStatus()).isEqualTo(200);
         assertThat(old.getResponse().getContentAsString()).isEqualTo(now.getResponse().getContentAsString());
@@ -74,7 +74,7 @@ class BankingModuleOnTest {
             MvcResult r = mvc.perform(get("/api/v1/risk/simm/versions").header("Authorization", auth())).andReturn();
             assertThat(r.getResponse().getStatus()).isEqualTo(404);
             assertThat(r.getResponse().getContentAsString()).contains("DRS-1026").contains("SIMM");
-            MvcResult old = mvc.perform(get("/api/v1/risk/simm/versions").header("Authorization", auth())).andReturn();
+            MvcResult old = mvc.perform(get("/api/v1/simm/versions").header("Authorization", auth())).andReturn();
             assertThat(old.getResponse().getStatus()).isEqualTo(404);
             assertThat(registry.functionOn("SIMM")).isFalse();
             assertThat(registry.functionOn("VAR")).isTrue();

@@ -99,9 +99,9 @@ class BankingModuleOffTest {
     @Test
     void noApiNewOrOld() throws Exception {
         String auth = "Bearer " + tokens.mint("rita", List.of("admin"), 300);
-        for (String path : List.of("/api/v1/risk/var/status", "/api/v1/risk/var/status", "/api/v1/risk/exposure/status", "/api/v1/risk/exposure/status",
-                "/api/v1/risk/frtb/sa", "/api/v1/risk/frtb/sa", "/api/v1/risk/simm/versions", "/api/v1/risk/simm/versions", "/api/v1/risk/sensitivities",
-                "/api/v1/risk/risk-factors", "/api/v1/risk/mr/versions", "/api/v1/risk/mr/versions")) {
+        for (String path : List.of("/api/v1/risk/var/status", "/api/v1/var/status", "/api/v1/risk/exposure/status", "/api/v1/exposure/status",
+                "/api/v1/risk/frtb/sa", "/api/v1/frtb/sa", "/api/v1/risk/simm/versions", "/api/v1/simm/versions", "/api/v1/risk/sensitivities",
+                "/api/v1/risk-factors", "/api/v1/pivot/mr/versions", "/api/v1/risk/mr/versions")) {
             MvcResult r = mvc.perform(get(path).header("Authorization", auth)).andReturn();
             assertThat(r.getResponse().getStatus()).as(path).isEqualTo(404);
             assertThat(r.getResponse().getContentAsString()).as(path).contains("DRS-1025").contains("banking");
