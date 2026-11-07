@@ -292,14 +292,32 @@ def test_the_period_statistics_are_the_engines(stack, people, browser):
 # ---------------------------------------------------------------------------------------------------------------------------------- reports
 
 def drawn(pg, version, label):
-    """The run of a version drawn with its approve button reading ``label`` (``Approve as Checker``; ``Signed`` once signed)."""
+    """The run of a version drawn with its sign button reading ``label`` (``Sign as Checker in Approvals``; ``Signed`` once signed)."""
     wait(pg, "document.querySelector('[data-rp-meta]').textContent.indexOf('run v%d,') === 0"
              " && document.querySelector('[data-rp-approve]').textContent === %s" % (version, json.dumps(label)))
 
 
-def approve(pg, comment=""):
-    pg.locator("[data-rp-comment]").fill(comment)
+def sign_label(step):
+    return "Sign as " + step + " in Approvals"
+
+
+def decide(pg, act, comment=""):
+    """The next step decided in the one Approvals queue: the report's sign button opens the run's item there; approve or reject (send it
+    back) with a comment; back on the report page. Returns what the queue said."""
+    back = pg.url
     pg.locator("[data-rp-approve]").click()
+    pg.wait_for_url("**/approvals/var-report/**")
+    pg.wait_for_selector("[data-ap-item]:not([hidden])")
+    pg.locator("[data-ap-comment]").fill(comment)
+    pg.locator("[data-ap-act=%s]" % act).click()
+    wait(pg, "document.querySelector('[data-ap-said]').textContent !== ''")
+    said = pg.locator("[data-ap-said]").inner_text()
+    pg.goto(back)
+    return said
+
+
+def approve(pg, comment=""):
+    return decide(pg, "approve", comment)
 
 
 def test_a_report_run_is_generated_checked_and_signed_by_three_people(stack, people, browser):
@@ -343,13 +361,12 @@ def test_a_report_run_is_generated_checked_and_signed_by_three_people(stack, peo
     assert mara.locator("[data-rp-lin-links] a").first.get_attribute("href").startswith("/var?scope=NODE%3A")
     # before the last approval the files are drafts
     assert all("(draft)" in a.inner_text() for a in mara.locator("[data-rp-files] a").all())
-    assert mara.locator("[data-rp-approve]").inner_text() == "Approve as Maker"
-    CRO = "Approve as " + ((run.get("stepTitles") or {}).get("approver") or "Approver")    # the definition names the approver's step
+    assert mara.locator("[data-rp-approve]").inner_text() == sign_label("Maker")             # each step is signed in the Approvals queue
+    CRO = sign_label((run.get("stepTitles") or {}).get("approver") or "Approver")             # the definition names the approver's step
 
     if summary["fail"]:
         # a failed check blocks every approval, said in words (the demo's data should not get here: the checks are printed above)
-        approve(mara, "reviewed")
-        wait(mara, "document.querySelector('[data-rp-notice]').textContent.indexOf('failed') >= 0")
+        assert "failed" in approve(mara, "reviewed")
         clean(mara)
         pytest.fail(f"a check of the demo's run failed, so the sign-off chain could not be walked: {run['checks']}")
 
@@ -361,14 +378,13 @@ def test_a_report_run_is_generated_checked_and_signed_by_three_people(stack, peo
     while get(mara, base, f"/api/var/reports/{REPORT}/runs/{PERIOD}?version=1")["signoff"].get("narrative") != text:
         assert time.monotonic() < deadline, "the narrative was not saved: " + mara.locator("[data-rp-notice]").inner_text()
         mara.wait_for_timeout(200)
-    approve(mara, "Movement reviewed against the desks' positions.")
-    drawn(mara, 1, "Approve as Checker")
+    assert approve(mara, "Movement reviewed against the desks' positions.") == "Approved."
+    drawn(mara, 1, sign_label("Checker"))
     assert "mara" in mara.locator("[data-rp-steps]").inner_text()
-    # four eyes: the maker may not sign the checker's step too
-    approve(mara, "")
-    wait(mara, "document.querySelector('[data-rp-notice]').textContent.indexOf('four eyes') >= 0")
-    assert "mara signed this run as maker" in mara.locator("[data-rp-notice]").inner_text()
-    assert mara.locator("[data-rp-approve]").inner_text() == "Approve as Checker"           # nothing signed
+    # four eyes: the maker may not sign the checker's step too (the queue says why; nothing is signed)
+    assert approve(mara, "") != "Approved."
+    drawn(mara, 1, sign_label("Checker"))
+    assert get(mara, base, f"/api/var/reports/{REPORT}/runs/{PERIOD}?version=1")["signoff"]["next"] == "checker"
     assert mara.locator("[data-rp-narrative]").evaluate("e => e.readOnly")    # past the maker: the narrative is closed
     clean(mara)
     f1_opens(mara, "6-controls-definitions-checks-frozen-runs-and-sign-off")
@@ -377,21 +393,19 @@ def test_a_report_run_is_generated_checked_and_signed_by_three_people(stack, peo
     # the checker sends it back (with a comment), which clears the steps; the maker signs again; the checker signs
     chen = sign_in(browser, base, "chen", PASSWORD)
     chen.goto(f"{base}/var/reports/{REPORT}?period={PERIOD}&version=1")
-    drawn(chen, 1, "Approve as Checker")
-    chen.locator("[data-rp-comment]").fill("Please name the desk in the narrative.")
-    chen.locator("[data-rp-return]").click()
-    wait(chen, "document.querySelector('[data-rp-approve]').textContent === 'Approve as Maker'")
-    assert chen.locator("[data-rp-return]").is_disabled()
+    drawn(chen, 1, sign_label("Checker"))
+    assert decide(chen, "reject", "Please name the desk in the narrative.") != ""              # sent back: the steps clear
+    drawn(chen, 1, sign_label("Maker"))
     mara = sign_in(browser, base, "mara", PASSWORD)
     mara.goto(f"{base}/var/reports/{REPORT}?period={PERIOD}&version=1")
-    drawn(mara, 1, "Approve as Maker")
-    approve(mara, "Desk named: rates.")
-    drawn(mara, 1, "Approve as Checker")
+    drawn(mara, 1, sign_label("Maker"))
+    assert approve(mara, "Desk named: rates.") == "Approved."
+    drawn(mara, 1, sign_label("Checker"))
     clean(mara)
     mara.context.close()
     chen.reload()
-    drawn(chen, 1, "Approve as Checker")
-    approve(chen, "Checked.")
+    drawn(chen, 1, sign_label("Checker"))
+    assert approve(chen, "Checked.") == "Approved."
     drawn(chen, 1, CRO)
     clean(chen)
     chen.context.close()
@@ -400,9 +414,9 @@ def test_a_report_run_is_generated_checked_and_signed_by_three_people(stack, peo
     aria = sign_in(browser, base, "aria", PASSWORD)
     aria.goto(f"{base}/var/reports/{REPORT}?period={PERIOD}&version=1")
     drawn(aria, 1, CRO)
-    approve(aria, "Approved.")
+    assert approve(aria, "Approved.") == "Approved."
     drawn(aria, 1, "Signed")
-    assert aria.locator("[data-rp-approve]").is_disabled()
+    assert aria.locator("[data-rp-approve]").get_attribute("aria-disabled") == "true"
     files = aria.locator("[data-rp-files] a")
     assert [a.inner_text() for a in files.all()] == run["outputs"]               # released: no longer drafts
     done = get(aria, base, f"/api/var/reports/{REPORT}/runs/{PERIOD}?version=1")

@@ -47,7 +47,7 @@
     id: 'render', title: 'Render a ViewModel', library: 'drishti-renderer', kind: 'function', about: 'drishti_render.js', keys: [], events: [], types: [], ag: false,
     summary: 'A Drishti screen from a static ViewModel: the strip, a key-value panel, a table (drishti-grid\'s document table) and a note, drawn with the shared libraries.',
     extra: [{ name: 'rows', control: { kind: 'select', values: ['2', '4', '6'] }, desc: 'How many lifecycle rows the table has.' },
-      { name: 'title', control: { kind: 'text' }, desc: 'The screen\'s title pill.' }],
+      { name: 'title', control: { kind: 'text', values: [] }, desc: 'The screen\'s title pill.' }],
     values: { rows: '4', title: 'US Treasury 4.25% 2038' },
     examples: [{ title: 'A bond with its lifecycle', values: {} }, { title: 'Two rows', values: { rows: '2' } }],
     sutra: () => null,

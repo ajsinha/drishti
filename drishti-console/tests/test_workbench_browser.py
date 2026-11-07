@@ -361,7 +361,7 @@ def test_layout_mode_still_moves_and_sizes_with_the_shared_grid_keys(browser):
     page = browser.new_page()
     page.set_content(LAYOUT_PAGE)
     page.add_script_tag(path=str(CONSOLE / "web" / "static" / "elements" / "drishti-core" / "drishti_core.js"))   # the shared panel keys
-    for f in ("drishti_layout-rules.js", "drishti_layout.js"):
+    for f in ("drishti_keys.js", "drishti_layout-rules.js", "drishti_layout.js"):   # the one keymap first, as base.html loads it
         page.add_script_tag(path=str(root / f))
     page.keyboard.press("Alt+l")
     assert page.evaluate("window.Drishti.layout.active()")
