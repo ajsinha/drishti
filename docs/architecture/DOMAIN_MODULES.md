@@ -207,7 +207,7 @@ folders, 8, 9 and 10 are phase 2 (section 8).
 
 ## 8. Phase 1 as built, and what phase 2 must do
 
-**Built (2.9.11.f, backend):** the modules of section 3; J1 to J6; the API under `/api/v1/risk` with the old prefixes answered; module
+**Built (2.9.11.f, backend; the CLIs, tools and documents on the new paths too):** the modules of section 3; J1 to J6; the API under `/api/v1/risk` with the old prefixes answered; module
 registration through the registry (`@ConditionalOnModule`, `404 DRS-1025` for an off module's API, its engines *not installed* with the
 reason, its packs and connectors not loaded); functions in the manifests, the mnemonic switches decided by the registry, a function off
 answering `404 DRS-1026`; packs naming their `domain:`; the rules of section 4 (Java) as `ArchitectureRulesTest`; the backend guarantee
@@ -225,8 +225,8 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
    landings moved; static assets served by module and lens; Help's `risk` section and the console's engine entries in the plugin.
 2. **The console asks the server** (`GET /api/v1/modules`): menus, the sitemap, the Build home, search, the command line and type-ahead
    follow the modules on, the lenses offered and the functions on (and, from 2.9.11.i, allowed for the person).
-3. **Clients to the new paths**: the console's client (`core/backend.py`) and routes, the CLIs (`varcli.py`, `expcli.py`, `frtbcli.py`,
-   `simmcli.py`, `pivotcli.py`), the examples and the guides' API examples; then the aliases are deleted (next release).
+3. **The console to the new paths**: its client (`core/backend.py`) and routes still call the old prefixes (answered as the new ones);
+   the CLIs, the tools, the guides, tutorials and lenses already use `/api/v1/risk`. Then the aliases are deleted (next release).
 4. **The engine catalogue by module**: the banking engines' entries (`engines/catalogue.yaml` and the console's byte-equal copy) move into
    the module; the banking token-scope entries of `application.yaml` with them (Spring lists cannot be split across files today: a
    module-contributed scope list is needed).
