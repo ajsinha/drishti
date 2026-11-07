@@ -30,6 +30,7 @@ export { DEFAULT_THEME, THEME_STORAGE_KEY, TEXT_TOKENS, GROUND_TOKENS, themes, s
   luminance, contrastRatio, readableOn, contrastProblems } from './drishti_theme.js';
 export { AS_OF_HEADER, ApiError, errorWords, ApiClient, createClient, api, call } from './drishti_api.js';
 export { EventBus, createBus, bus } from './drishti_events.js';
+export { SELECTION_EVENT, linkGrid, publishSelection } from './drishti_link.js';
 export { FOCUSABLE, focusable, trapFocus, announce, rovingIndex, rovingTabindex } from './drishti_a11y.js';
 export { installResize, scanResize, resizeHandle, resetResize } from './drishti_resize.js';
 export { WORKBENCH, LAYOUT, interpretPanelKey, GridKeys, keyName, normalizeKey, keymap } from './drishti_keys.js';
@@ -41,6 +42,7 @@ export { h, placeAt, placeUnder, attrAllowed, safeUrl } from './drishti_dom.js';
 export { parseNumberText, numberEditText } from './drishti_parse.js';
 export { toCsv, download } from './drishti_files.js';
 export { sparkline, renderExplain } from './drishti_explain.js';
+export { DENSITIES, blend, alpha, visualTheme, toneColour, rampColour, formatterFor } from './drishti_visual.js';
 
 /**
  * Starts drishti-core in a page (the bundle calls it when it loads; nothing happens without a document): the resize component, and

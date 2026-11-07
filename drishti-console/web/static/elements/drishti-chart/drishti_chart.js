@@ -254,75 +254,15 @@
   })();
   /* ---- src/drishti_chart-theme.js ---- */
   __m["src/drishti_chart-theme.js"] = (function () {
-    var token = __lib("drishti-core").token, formatCompact = __lib("drishti-core").formatCompact, formatNumber = __lib("drishti-core").formatNumber, formatPercent = __lib("drishti-core").formatPercent, formatBasisPoints = __lib("drishti-core").formatBasisPoints, formatCurrency = __lib("drishti-core").formatCurrency, formatNamed = __lib("drishti-core").formatNamed, hasFormat = __lib("drishti-core").hasFormat, formatDate = __lib("drishti-core").formatDate, parseColor = __lib("drishti-core").parseColor;
+    var visualTheme = __lib("drishti-core").visualTheme;
     const CHART_DENSITIES = Object.freeze({
       comfortable: Object.freeze({ font: 12, pad: 14, symbol: 7, line: 2, title: 14 }),
       compact: Object.freeze({ font: 11, pad: 10, symbol: 6, line: 1.6, title: 13 }),
       terminal: Object.freeze({ font: 10.5, pad: 6, symbol: 5, line: 1.4, title: 12 })
     });
-    const NAMES = ['bg', 'bg-2', 'surface', 'surface-2', 'border', 'ink', 'muted', 'faint', 'accent', 'accent-strong', 'link', 'pos', 'neg', 'ok', 'warn', 'bad', 'font-sans', 'font-mono'];
-    function blend(a, b, f) {
-      const x = parseColor(a), y = parseColor(b);
-      if (!x || !y) { return f > 0.5 ? b : a; }
-      const k = Math.max(0, Math.min(1, f)), m = (p, q) => Math.round(p + (q - p) * k);
-      return 'rgb(' + m(x.r, y.r) + ',' + m(x.g, y.g) + ',' + m(x.b, y.b) + ')';
-    }
-    function alpha(c, a) {
-      const x = parseColor(c);
-      return x ? 'rgba(' + x.r + ',' + x.g + ',' + x.b + ',' + a + ')' : c;
-    }
     function chartTheme(o) {
-      o = o || {};
-      const t = {};
-      NAMES.forEach((n) => { t[n] = (o.tokens && o.tokens['--d-' + n]) || token('--d-' + n, { element: o.element, theme: o.theme }) || ''; });
-      const dark = t.bg ? (parseColor(t.bg) ? (parseColor(t.bg).r + parseColor(t.bg).g + parseColor(t.bg).b) < 384 : true) : true;
-      const palette = [t.link, t.accent, t.ok, t.neg, blend(t.link, t.bad, 0.55), blend(t.ok, t.link, 0.5), t.warn, blend(t.accent, t.bad, 0.5), t.muted, blend(t.link, t.ink, 0.45)];
-      const density = CHART_DENSITIES[o.density] ? o.density : 'compact';
-      return {
-        dark: dark, tokens: t, palette: palette, density: density, size: CHART_DENSITIES[density],
-        ink: t.ink, muted: t.muted, faint: t.faint, border: t.border, surface: t.surface, surface2: t['surface-2'], ground: t['bg-2'],
-        grid: blend(t.surface, t.border, 0.7), axis: t.border,
-        font: density === 'terminal' ? t['font-mono'] : t['font-sans'], mono: t['font-mono'],
-        tones: { good: t.ok, ok: t.ok, bad: t.bad, warn: t.warn, accent: t.accent, link: t.link, pos: t.pos, neg: t.neg, muted: t.muted, faint: t.faint, ink: t.ink },
-        sequential: [blend(t['surface-2'], t.link, 0.12), blend(t['surface-2'], t.link, 0.35), blend(t['surface-2'], t.link, 0.58), blend(t['surface-2'], t.link, 0.8), t.link],
-        diverging: [t.neg, blend(t.neg, t['surface-2'], 0.55), t['surface-2'], blend(t.pos, t['surface-2'], 0.55), t.pos],
-        nodata: blend(t.surface, t.border, 0.55)
-      };
-    }
-    function toneColour(th, tone, i) {
-      if (typeof tone === 'number') { return th.palette[tone % th.palette.length]; }
-      if (tone && th.tones[tone]) { return th.tones[tone]; }
-      if (tone && /^(#|rgb|hsl)/.test(tone)) { return tone; }
-      return th.palette[(i || 0) % th.palette.length];
-    }
-    function rampColour(ramp, v, lo, hi) {
-      const f = hi === lo ? 1 : Math.max(0, Math.min(1, (v - lo) / (hi - lo))) * (ramp.length - 1), i = Math.min(ramp.length - 2, Math.floor(f));
-      return blend(ramp[i], ramp[i + 1], f - i);
-    }
-    function formatterFor(f) {
-      if (typeof f === 'function') { return f; }
-      if (f && typeof f === 'object') {
-        if (f.currency) { return (v) => formatCurrency(v, f.currency, f); }
-        if (f.style === 'percent') { return (v) => formatPercent(v, f); }
-        if (f.style === 'compact') { return (v) => formatCompact(v, f); }
-        return (v) => formatNumber(v, f);
-      }
-      switch (f) {
-        case 'money': return (v) => formatCompact(v, { decimals: 2 });
-        case 'compact': return (v) => formatCompact(v, { decimals: 1 });
-        case 'number': return (v) => formatNumber(v, { decimals: 0, maxDecimals: 2 });
-        case 'integer': case 'count': return (v) => formatNumber(v, { decimals: 0 });
-        case 'percent': return (v) => formatPercent(v, { decimals: 1 });
-        case 'bp': return (v) => formatBasisPoints(v);
-        case 'date': return (v) => (v === null || v === undefined ? '' : formatDate(v));
-        case 'text': return (v) => (v === null || v === undefined ? '' : String(v));
-        default:
-          if (f && hasFormat(f)) { return (v) => formatNamed(f, v); }
-          return (v) => {
-            if (typeof v !== 'number') { return v === null || v === undefined ? '' : String(v); }
-            return Math.abs(v) >= 1e5 ? formatCompact(v, { decimals: 2 }) : formatNumber(v, { decimals: 0, maxDecimals: 2 });
-          };
-      }
+      const th = visualTheme(Object.assign({}, o, { density: o && CHART_DENSITIES[o.density] ? o.density : 'compact' }));
+      return Object.assign(th, { size: CHART_DENSITIES[th.density] });
     }
     function textStyle(th, colour) { return { color: colour || th.faint, fontFamily: th.font, fontSize: th.size.font }; }
     function axisOf(th, base, fmt) {
@@ -334,7 +274,7 @@
         nameTextStyle: textStyle(th, th.muted), nameGap: 26
       }, base);
     }
-    return { "CHART_DENSITIES": CHART_DENSITIES, "blend": blend, "alpha": alpha, "chartTheme": chartTheme, "toneColour": toneColour, "rampColour": rampColour, "formatterFor": formatterFor, "textStyle": textStyle, "axisOf": axisOf };
+    return { "CHART_DENSITIES": CHART_DENSITIES, "chartTheme": chartTheme, "textStyle": textStyle, "axisOf": axisOf, "blend": __lib("drishti-core").blend, "alpha": __lib("drishti-core").alpha, "toneColour": __lib("drishti-core").toneColour, "rampColour": __lib("drishti-core").rampColour, "formatterFor": __lib("drishti-core").formatterFor };
   })();
   /* ---- src/drishti_chart-parts.js ---- */
   __m["src/drishti_chart-parts.js"] = (function () {
@@ -1478,7 +1418,7 @@
   })();
   /* ---- src/drishti_chart-view.js ---- */
   __m["src/drishti_chart-view.js"] = (function () {
-    var h = __lib("drishti-core").h, renderExplain = __lib("drishti-core").renderExplain, EventBus = __lib("drishti-core").EventBus, sharedBus = __lib("drishti-core").bus, announce = __lib("drishti-core").announce;
+    var h = __lib("drishti-core").h, renderExplain = __lib("drishti-core").renderExplain, EventBus = __lib("drishti-core").EventBus, sharedBus = __lib("drishti-core").bus, announce = __lib("drishti-core").announce, SELECTION_EVENT = __lib("drishti-core").SELECTION_EVENT;
     var normalizeSpec = __m["src/drishti_chart-spec.js"].normalizeSpec, kindOf = __m["src/drishti_chart-spec.js"].kindOf;
     var rowsOf = __m["src/drishti_chart-data.js"].rowsOf;
     var chartTheme = __m["src/drishti_chart-theme.js"].chartTheme, formatterFor = __m["src/drishti_chart-theme.js"].formatterFor;
@@ -1490,7 +1430,6 @@
       'tableToggled', 'dataUpdated', 'modeChanged', 'densityChanged', 'kindChanged', 'levelChanged', 'metricChanged', 'placeSelected', 'pointerMoved',
       'error']);
     const CHART_MODES = Object.freeze(['card', 'studio']);
-    const SELECTION_EVENT = 'drishti:selection';
     class Chart extends ChartIO {
       constructor(el, spec, o) {
         super();
@@ -1760,7 +1699,7 @@
         this.el.textContent = '';
       }
     }
-    return { "CHART_EVENTS": CHART_EVENTS, "CHART_MODES": CHART_MODES, "SELECTION_EVENT": SELECTION_EVENT, "Chart": Chart };
+    return { "CHART_EVENTS": CHART_EVENTS, "CHART_MODES": CHART_MODES, "Chart": Chart };
   })();
   /* ---- src/drishti_chart-element.js ---- */
   __m["src/drishti_chart-element.js"] = (function () {
@@ -1906,25 +1845,6 @@
       registerKind('sankey', { build: buildSankey, label: 'sankey' });
     }
     return { "buildPie": buildPie, "buildGauge": buildGauge, "buildTreemap": buildTreemap, "buildSankey": buildSankey, "registerOtherKinds": registerOtherKinds };
-  })();
-  /* ---- src/drishti_chart-link.js ---- */
-  __m["src/drishti_chart-link.js"] = (function () {
-    var sharedBus = __lib("drishti-core").bus;
-    var SELECTION_EVENT = __m["src/drishti_chart-view.js"].SELECTION_EVENT;
-    function linkGrid(grid, o) {
-      const model = grid && grid.model ? grid.model : grid, b = (o && o.bus) || sharedBus, channel = o && o.channel;
-      if (!model || !model.events || !model.selection) { throw new Error('linkGrid: give a drishti-grid (Grid, the element\'s grid, or its model)'); }
-      let applying = false;
-      const off1 = model.events.on('selectionChanged', (p) => { if (!applying) { b.emit(SELECTION_EVENT, { channel: channel, ids: (p && p.ids) || [], source: model }); } });
-      const off2 = b.on(SELECTION_EVENT, (p) => {
-        if (!p || p.channel !== channel || p.source === model) { return; }
-        applying = true;
-        try { model.selection.selectAll(p.ids || []); } finally { applying = false; }
-      });
-      return () => { off1(); off2(); };
-    }
-    function publishSelection(channel, ids, o) { ((o && o.bus) || sharedBus).emit(SELECTION_EVENT, { channel: channel, ids: ids || [], source: (o && o.source) || null }); }
-    return { "linkGrid": linkGrid, "publishSelection": publishSelection };
   })();
   /* ---- src/drishti_chart-panels.js ---- */
   __m["src/drishti_chart-panels.js"] = (function () {
@@ -2552,7 +2472,7 @@
     registerMapKind();
     registerKind('layer', { label: 'layers', cartesian: true, build: (spec, rows, env) => buildLayers(spec, rows, env, kindOf, (l) => rowsOf(l.data)) });
     function install(root) { if (root && root.document && root.customElements) { defineChartElement(root.customElements, root); } }
-    return { "install": install, "registerKind": __m["src/drishti_chart-spec.js"].registerKind, "kindOf": __m["src/drishti_chart-spec.js"].kindOf, "kindList": __m["src/drishti_chart-spec.js"].kindList, "KIND_ALIASES": __m["src/drishti_chart-spec.js"].KIND_ALIASES, "checkSpec": __m["src/drishti_chart-spec.js"].checkSpec, "normalizeSpec": __m["src/drishti_chart-spec.js"].normalizeSpec, "specText": __m["src/drishti_chart-spec.js"].specText, "rowsOf": __m["src/drishti_chart-data.js"].rowsOf, "fieldOf": __m["src/drishti_chart-data.js"].fieldOf, "num": __m["src/drishti_chart-data.js"].num, "members": __m["src/drishti_chart-data.js"].members, "sumBy": __m["src/drishti_chart-data.js"].sumBy, "bin": __m["src/drishti_chart-data.js"].bin, "quantile": __m["src/drishti_chart-data.js"].quantile, "boxStats": __m["src/drishti_chart-data.js"].boxStats, "quantileBreaks": __m["src/drishti_chart-data.js"].quantileBreaks, "classOf": __m["src/drishti_chart-data.js"].classOf, "compileCondition": __m["src/drishti_chart-data.js"].compileCondition, "conditionFields": __m["src/drishti_chart-data.js"].conditionFields, "CHART_DENSITIES": __m["src/drishti_chart-theme.js"].CHART_DENSITIES, "blend": __m["src/drishti_chart-theme.js"].blend, "alpha": __m["src/drishti_chart-theme.js"].alpha, "chartTheme": __m["src/drishti_chart-theme.js"].chartTheme, "toneColour": __m["src/drishti_chart-theme.js"].toneColour, "rampColour": __m["src/drishti_chart-theme.js"].rampColour, "formatterFor": __m["src/drishti_chart-theme.js"].formatterFor, "textStyle": __m["src/drishti_chart-theme.js"].textStyle, "axisOf": __m["src/drishti_chart-theme.js"].axisOf, "rowId": __m["src/drishti_chart-kinds.js"].rowId, "seriesDefs": __m["src/drishti_chart-kinds.js"].seriesDefs, "annotationMarks": __m["src/drishti_chart-kinds.js"].annotationMarks, "buildSeriesChart": __m["src/drishti_chart-kinds.js"].buildSeriesChart, "buildScatter": __m["src/drishti_chart-kinds.js"].buildScatter, "buildHistogram": __m["src/drishti_chart-kinds.js"].buildHistogram, "buildWaterfall": __m["src/drishti_chart-kinds.js"].buildWaterfall, "buildBoxplot": __m["src/drishti_chart-kinds.js"].buildBoxplot, "buildHeatmap": __m["src/drishti_chart-kinds.js"].buildHeatmap, "buildCandlestick": __m["src/drishti_chart-kinds.js"].buildCandlestick, "buildLayers": __m["src/drishti_chart-kinds.js"].buildLayers, "registerAxisKinds": __m["src/drishti_chart-kinds.js"].registerAxisKinds, "buildPie": __m["src/drishti_chart-kinds2.js"].buildPie, "buildGauge": __m["src/drishti_chart-kinds2.js"].buildGauge, "buildTreemap": __m["src/drishti_chart-kinds2.js"].buildTreemap, "buildSankey": __m["src/drishti_chart-kinds2.js"].buildSankey, "registerOtherKinds": __m["src/drishti_chart-kinds2.js"].registerOtherKinds, "equalEarth": __m["src/drishti_chart-geo.js"].equalEarth, "albers": __m["src/drishti_chart-geo.js"].albers, "plateCarree": __m["src/drishti_chart-geo.js"].plateCarree, "projectGeometry": __m["src/drishti_chart-geo.js"].projectGeometry, "bounds": __m["src/drishti_chart-geo.js"].bounds, "coreExtent": __m["src/drishti_chart-geo.js"].coreExtent, "countryProjection": __m["src/drishti_chart-geo.js"].countryProjection, "US_INSETS": __m["src/drishti_chart-geo.js"].US_INSETS, "prepareRegions": __m["src/drishti_chart-geo.js"].prepareRegions, "prepareWorld": __m["src/drishti_chart-geo.js"].prepareWorld, "findPlace": __m["src/drishti_chart-geo.js"].findPlace, "createGeoLoader": __m["src/drishti_chart-geo.js"].createGeoLoader, "holdAntimeridian": __m["src/drishti_chart-geo.js"].holdAntimeridian, "fitView": __m["src/drishti_chart-geo.js"].fitView, "mapMetrics": __m["src/drishti_chart-map.js"].mapMetrics, "placeValues": __m["src/drishti_chart-map.js"].placeValues, "mapScale": __m["src/drishti_chart-map.js"].mapScale, "ranking": __m["src/drishti_chart-map.js"].ranking, "buildMap": __m["src/drishti_chart-map.js"].buildMap, "registerMapKind": __m["src/drishti_chart-map.js"].registerMapKind, "colourTone": __m["src/drishti_chart-vega.js"].colourTone, "d3Format": __m["src/drishti_chart-vega.js"].d3Format, "fromVegaLite": __m["src/drishti_chart-vega.js"].fromVegaLite, "valueText": __m["src/drishti_chart-parts.js"].valueText, "tooltipElement": __m["src/drishti_chart-parts.js"].tooltipElement, "dataTable": __m["src/drishti_chart-parts.js"].dataTable, "legendElement": __m["src/drishti_chart-parts.js"].legendElement, "markSelection": __m["src/drishti_chart-parts.js"].markSelection, "addZoom": __m["src/drishti_chart-parts.js"].addZoom, "dragBrush": __m["src/drishti_chart-parts.js"].dragBrush, "svgOf": __m["src/drishti_chart-parts.js"].svgOf, "MAP_MODES": __m["src/drishti_map-view.js"].MAP_MODES, "geoLoader": __m["src/drishti_map-view.js"].geoLoader, "MapView": __m["src/drishti_map-view.js"].MapView, "Studio": __m["src/drishti_chart-studio.js"].Studio, "CHART_EVENTS": __m["src/drishti_chart-view.js"].CHART_EVENTS, "CHART_MODES": __m["src/drishti_chart-view.js"].CHART_MODES, "SELECTION_EVENT": __m["src/drishti_chart-view.js"].SELECTION_EVENT, "Chart": __m["src/drishti_chart-view.js"].Chart, "ChartIO": __m["src/drishti_chart-io.js"].ChartIO, "linkGrid": __m["src/drishti_chart-link.js"].linkGrid, "publishSelection": __m["src/drishti_chart-link.js"].publishSelection, "PANEL_KINDS": __m["src/drishti_chart-panels.js"].PANEL_KINDS, "escapeTip": __m["src/drishti_chart-panels.js"].escapeTip, "panelCompact": __m["src/drishti_chart-panels.js"].panelCompact, "panelLineCompact": __m["src/drishti_chart-panels.js"].panelLineCompact, "panelTokens": __m["src/drishti_chart-panels.js"].panelTokens, "labelFit": __m["src/drishti_chart-panels.js"].labelFit, "panelOption": __m["src/drishti_chart-panels.js"].panelOption, "drawMap": __m["src/drishti_chart-panel-draw.js"].drawMap, "PanelCharts": __m["src/drishti_chart-panel-draw.js"].PanelCharts, "CHART_ELEMENT": __m["src/drishti_chart-element.js"].CHART_ELEMENT, "defineChartElement": __m["src/drishti_chart-element.js"].defineChartElement };
+    return { "install": install, "registerKind": __m["src/drishti_chart-spec.js"].registerKind, "kindOf": __m["src/drishti_chart-spec.js"].kindOf, "kindList": __m["src/drishti_chart-spec.js"].kindList, "KIND_ALIASES": __m["src/drishti_chart-spec.js"].KIND_ALIASES, "checkSpec": __m["src/drishti_chart-spec.js"].checkSpec, "normalizeSpec": __m["src/drishti_chart-spec.js"].normalizeSpec, "specText": __m["src/drishti_chart-spec.js"].specText, "rowsOf": __m["src/drishti_chart-data.js"].rowsOf, "fieldOf": __m["src/drishti_chart-data.js"].fieldOf, "num": __m["src/drishti_chart-data.js"].num, "members": __m["src/drishti_chart-data.js"].members, "sumBy": __m["src/drishti_chart-data.js"].sumBy, "bin": __m["src/drishti_chart-data.js"].bin, "quantile": __m["src/drishti_chart-data.js"].quantile, "boxStats": __m["src/drishti_chart-data.js"].boxStats, "quantileBreaks": __m["src/drishti_chart-data.js"].quantileBreaks, "classOf": __m["src/drishti_chart-data.js"].classOf, "compileCondition": __m["src/drishti_chart-data.js"].compileCondition, "conditionFields": __m["src/drishti_chart-data.js"].conditionFields, "CHART_DENSITIES": __m["src/drishti_chart-theme.js"].CHART_DENSITIES, "blend": __m["src/drishti_chart-theme.js"].blend, "alpha": __m["src/drishti_chart-theme.js"].alpha, "chartTheme": __m["src/drishti_chart-theme.js"].chartTheme, "toneColour": __m["src/drishti_chart-theme.js"].toneColour, "rampColour": __m["src/drishti_chart-theme.js"].rampColour, "formatterFor": __m["src/drishti_chart-theme.js"].formatterFor, "textStyle": __m["src/drishti_chart-theme.js"].textStyle, "axisOf": __m["src/drishti_chart-theme.js"].axisOf, "rowId": __m["src/drishti_chart-kinds.js"].rowId, "seriesDefs": __m["src/drishti_chart-kinds.js"].seriesDefs, "annotationMarks": __m["src/drishti_chart-kinds.js"].annotationMarks, "buildSeriesChart": __m["src/drishti_chart-kinds.js"].buildSeriesChart, "buildScatter": __m["src/drishti_chart-kinds.js"].buildScatter, "buildHistogram": __m["src/drishti_chart-kinds.js"].buildHistogram, "buildWaterfall": __m["src/drishti_chart-kinds.js"].buildWaterfall, "buildBoxplot": __m["src/drishti_chart-kinds.js"].buildBoxplot, "buildHeatmap": __m["src/drishti_chart-kinds.js"].buildHeatmap, "buildCandlestick": __m["src/drishti_chart-kinds.js"].buildCandlestick, "buildLayers": __m["src/drishti_chart-kinds.js"].buildLayers, "registerAxisKinds": __m["src/drishti_chart-kinds.js"].registerAxisKinds, "buildPie": __m["src/drishti_chart-kinds2.js"].buildPie, "buildGauge": __m["src/drishti_chart-kinds2.js"].buildGauge, "buildTreemap": __m["src/drishti_chart-kinds2.js"].buildTreemap, "buildSankey": __m["src/drishti_chart-kinds2.js"].buildSankey, "registerOtherKinds": __m["src/drishti_chart-kinds2.js"].registerOtherKinds, "equalEarth": __m["src/drishti_chart-geo.js"].equalEarth, "albers": __m["src/drishti_chart-geo.js"].albers, "plateCarree": __m["src/drishti_chart-geo.js"].plateCarree, "projectGeometry": __m["src/drishti_chart-geo.js"].projectGeometry, "bounds": __m["src/drishti_chart-geo.js"].bounds, "coreExtent": __m["src/drishti_chart-geo.js"].coreExtent, "countryProjection": __m["src/drishti_chart-geo.js"].countryProjection, "US_INSETS": __m["src/drishti_chart-geo.js"].US_INSETS, "prepareRegions": __m["src/drishti_chart-geo.js"].prepareRegions, "prepareWorld": __m["src/drishti_chart-geo.js"].prepareWorld, "findPlace": __m["src/drishti_chart-geo.js"].findPlace, "createGeoLoader": __m["src/drishti_chart-geo.js"].createGeoLoader, "holdAntimeridian": __m["src/drishti_chart-geo.js"].holdAntimeridian, "fitView": __m["src/drishti_chart-geo.js"].fitView, "mapMetrics": __m["src/drishti_chart-map.js"].mapMetrics, "placeValues": __m["src/drishti_chart-map.js"].placeValues, "mapScale": __m["src/drishti_chart-map.js"].mapScale, "ranking": __m["src/drishti_chart-map.js"].ranking, "buildMap": __m["src/drishti_chart-map.js"].buildMap, "registerMapKind": __m["src/drishti_chart-map.js"].registerMapKind, "colourTone": __m["src/drishti_chart-vega.js"].colourTone, "d3Format": __m["src/drishti_chart-vega.js"].d3Format, "fromVegaLite": __m["src/drishti_chart-vega.js"].fromVegaLite, "valueText": __m["src/drishti_chart-parts.js"].valueText, "tooltipElement": __m["src/drishti_chart-parts.js"].tooltipElement, "dataTable": __m["src/drishti_chart-parts.js"].dataTable, "legendElement": __m["src/drishti_chart-parts.js"].legendElement, "markSelection": __m["src/drishti_chart-parts.js"].markSelection, "addZoom": __m["src/drishti_chart-parts.js"].addZoom, "dragBrush": __m["src/drishti_chart-parts.js"].dragBrush, "svgOf": __m["src/drishti_chart-parts.js"].svgOf, "MAP_MODES": __m["src/drishti_map-view.js"].MAP_MODES, "geoLoader": __m["src/drishti_map-view.js"].geoLoader, "MapView": __m["src/drishti_map-view.js"].MapView, "Studio": __m["src/drishti_chart-studio.js"].Studio, "CHART_EVENTS": __m["src/drishti_chart-view.js"].CHART_EVENTS, "CHART_MODES": __m["src/drishti_chart-view.js"].CHART_MODES, "Chart": __m["src/drishti_chart-view.js"].Chart, "ChartIO": __m["src/drishti_chart-io.js"].ChartIO, "SELECTION_EVENT": __lib("drishti-core").SELECTION_EVENT, "linkGrid": __lib("drishti-core").linkGrid, "publishSelection": __lib("drishti-core").publishSelection, "PANEL_KINDS": __m["src/drishti_chart-panels.js"].PANEL_KINDS, "escapeTip": __m["src/drishti_chart-panels.js"].escapeTip, "panelCompact": __m["src/drishti_chart-panels.js"].panelCompact, "panelLineCompact": __m["src/drishti_chart-panels.js"].panelLineCompact, "panelTokens": __m["src/drishti_chart-panels.js"].panelTokens, "labelFit": __m["src/drishti_chart-panels.js"].labelFit, "panelOption": __m["src/drishti_chart-panels.js"].panelOption, "drawMap": __m["src/drishti_chart-panel-draw.js"].drawMap, "PanelCharts": __m["src/drishti_chart-panel-draw.js"].PanelCharts, "CHART_ELEMENT": __m["src/drishti_chart-element.js"].CHART_ELEMENT, "defineChartElement": __m["src/drishti_chart-element.js"].defineChartElement };
   })();
   return Object.freeze(Object.assign({ library: "drishti-chart", version: "0.2.0" }, __m["src/drishti_index.js"]));
 });
