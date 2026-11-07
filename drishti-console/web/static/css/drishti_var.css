@@ -79,14 +79,6 @@
 .vx .nm .vx-add { opacity: 0; }
 .vx .dg-row:hover .nm .vx-add, .vx .dg-row:focus-within .nm .vx-add, .vx .dg-row.vx-current .nm .vx-add { opacity: 1; }
 @media (hover: none) { .vx .nm .vx-add { opacity: 1; } }
-.vx-ubar { display: inline-block; width: 46px; height: 6px; background: var(--d-bg-2); border-radius: var(--d-radius-3); vertical-align: middle; overflow: hidden; }
-.vx-ubar.wide { width: 110px; }
-.vx-ubar i { display: block; height: 100%; border-radius: var(--d-radius-3); width: 0; }
-.vx-ubar i.ok { background: var(--d-ok); }
-.vx-ubar i.warn { background: var(--d-warn); }
-.vx-ubar i.bad { background: var(--d-bad); }
-.vx-ubar i.var { background: var(--d-link); }
-.vx-ubar i.hedge { background: var(--d-ok); }
 .vx-notice { margin: var(--d-sp-4) 0 var(--d-sp-6); padding: var(--d-sp-4) var(--d-sp-8); border-left: 3px solid var(--d-link); color: var(--d-muted); font-size: var(--d-fs-12); }
 .vx-chip { display: inline-block; font: 500 var(--d-fs-10) var(--d-font-mono); padding: 0 var(--d-sp-5); border-radius: var(--d-radius-2); border: 1px solid var(--d-border); color: var(--d-muted); }
 .vx-chip.long { color: var(--d-ok); border-color: var(--d-ok); }
