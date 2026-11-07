@@ -138,7 +138,7 @@ Rules 1 to 3 are enforced on the Java side by `ArchitectureRulesTest` (drishti-i
 guard and rule 4's string check come with phase 2:
 
 1. **The core never imports a domain**: no class outside `com.ash.drishti.banking..` depends on one inside it; no console module outside
-   `plugins/banking/` imports one inside it; no core template includes a banking template.
+   `drishti-console/plugins/banking` imports one inside it; no core template includes a banking template.
 2. **Domains never import each other**: `com.ash.drishti.banking..` and `com.ash.drishti.economy..` (and later `aml`) are disjoint.
 3. **Domains reach the core only through its SPIs** (section 5) and public services; a domain may use anything public of the core.
 4. **Strings count too**: the core names no banking word, engine id, source name or path in code (a static check over the core's
@@ -163,7 +163,7 @@ are broken (phase 1)**; C1 to C7 wait for the console plugin (phase 2):
 | C4 | `routes/admin_routes.py` | `play_routes._stream` (the workbook streamer) | **built**: `core/workbook_stream.py` `stream(...)`, used by the VaR, FRTB-SA and SIMM playgrounds, why VaR moved and the capacity planner; `_stream` deleted |
 | C5 | `routes/pivot_routes.py` | `mcube_routes.parse` (a preset's word) | **built**: `plugins.preset("mr", parse)` by the MR cube's routes; the Pivot page draws the MR lens's style, script and panes from the plugin's `screens.pivot` (`screen_parts()`), naming none |
 | C6 | `routes/edition_routes.py` | `core/trading_landing`, `core/market_landing` | **built**: `plugins.landing_rule(fn)` (the trading role's landing, by `routes/trading_routes.py`); the market landing's figures (`/api/home/market/{part}`) moved to the banking routes |
-| C7 | `core/backend.py` | the VaR, FRTB, SIMM and exposure client methods | **built**: the core client's one `engine(method, path, ...)` call; the typed calls are the module's (`plugins/banking/risk_api.py`: `var`, `exposure`, `risk`, `mr`, `path`) on `/api/v1/risk`; `core/facts.py` reads an engine step's API root from the engine catalogue |
+| C7 | `core/backend.py` | the VaR, FRTB, SIMM and exposure client methods | **built**: the core client's one `engine(method, path, ...)` call; the typed calls are the module's (`drishti-console/plugins/banking/risk_api.py`: `var`, `exposure`, `risk`, `mr`, `path`) on `/api/v1/risk`; `core/facts.py` reads an engine step's API root from the engine catalogue |
 
 No banking code imports another domain (there is no other domain's code yet), and no core module imports banking code: in Java
 `ArchitectureRulesTest`, in the console `tests/test_module_boundaries.py` (no core module imports a module's code, no core template
@@ -259,14 +259,14 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
 
 **Phase 2, second half, must do:**
 
-1. **The console plugin's moves** (`drishti-console/plugins/banking/`): the routes, templates, JavaScript, CSS and landings moved into
+1. **The console plugin's moves** (`drishti-console/plugins/banking`): the routes, templates, JavaScript, CSS and landings moved into
    the folder (its plugin.yaml then names them there); Help's `risk` section and the console's engine entries in the plugin.
 2. **The engine catalogue by module**: the banking engines' entries (`engines/catalogue.yaml` and the console's byte-equal copy) move into
    the module; the banking token-scope entries of `application.yaml` with them (Spring lists cannot be split across files today: a
    module-contributed scope list is needed).
 3. **Rule 4 (strings)**: the static check over the core's sources for the banking words, with an allow list that only shrinks (today: the
    catalogue, `application.yaml`'s risk scopes, `CapacityController`'s planner rows by key, the console).
-4. **Packs by folder** (step 7): `config/packs/{core,banking,economy}/`, the pack loader reading one level of domain folders; deferred
+4. **Packs by folder** (step 7): one folder per domain under `config/packs` (core, banking, economy, capitalmarkets), the pack loader reading one level of domain folders; deferred
    because about 90 Python files (console and tools) join `config/packs/<id>` directly: a shared resolver first.
 5. **Banking configuration** (step 8): `config/lakes/{var,ccr}-official.yaml`, the banking BI reports, models, tables, fragments and
    notebooks into the banking folders.
@@ -275,7 +275,7 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
 7. **Editions folded** (and their pack lists by module: World without us-equities and funds, Market with them, once the World landing's cards and the console's tests move): the editions risk, trading, market and world are lenses now (the registry's lenses, the edition files still read
    for their home, cards and BI lists); folding the instance editions (`drishti.edition`, `var-engine`, `default-packs`, `features`) into
    modules and lenses, and removing `config/editions/`, needs the console's lens and home code (phase 2).
-8. **Python worker code** of the banking maths (`drishti-compute/src/main/python/drishti_compute/{var,exposure}`) into a banking worker
-   package; the tools' banking scripts with it.
+8. **Python worker code**: none of banking's is left in `drishti-compute/src/main/python/drishti_compute` (the exposure what-if moved
+   to Java in 2.9.11.g); the tools' banking scripts move with the module.
 9. **The drills**: one with the banking module absent (the core starts, serves BI, Pivot and the economy packs, and says *not
     installed* for a banking word).

@@ -915,6 +915,11 @@ cells, the same way before and after the move; `tests/test_var_family_figures_br
 `DRISHTI_FIGURES_BASELINE`) captures sixteen screens and tabs on the market-risk demo data and compares them with a capture of the code
 before the move.
 
+```bash
+DRISHTI_FIGURES_OUT=data/figures/before drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_var_family_figures_browser.py
+DRISHTI_FIGURES_BASELINE=data/figures/before drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_var_family_figures_browser.py
+```
+
 **Open.** The exposure scope tree is still hand-built (not tree data yet); FRTB-SA's per-class total column is still summed in the page
 (the server sends no class totals: a server field to add); the pre-deal form, the hierarchy, horizon and confidence pickers stay native
 selects (drishti-inputs has no single-choice select); the scenario matrix's date headings lose their hover note (in the column

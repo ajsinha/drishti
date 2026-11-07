@@ -152,7 +152,7 @@ headroom) = 34.8 GB, so `-Xmx36g`; the page cache `2 × HOTA + 4 × CCY + 2 × C
 scales with positions (× 23 from 100,000) and is **not divided by sharding** ([VAR_SHARDING.md section 5.1](VAR_SHARDING.md#51-the-skeleton-in-plain-words)):
 this is the case for D1.
 
-**What the 800 bytes are** (read in `drishti-compute/.../var/VarBook.java` (lines 124-195)): per trade a `String` id in `tradeIds`, an entry in
+**What the 800 bytes are** (read in `drishti-compute-banking/.../var/VarBook.java` (lines 124-195)): per trade a `String` id in `tradeIds`, an entry in
 `tradeOrdinal` (`HashMap<String, Integer>`, line 175) and in the upper-case index `tradeUpper` (line 194), 17 int32 column codes and two
 float64 numbers (`Columns`), `positionOf`; per position a `String` id, `positionIndex` (`HashMap`, line 186) and `positionUpper`, 18 int32
 and six float64 position columns, its run (`posFrom`, `posTo`). The maps' entries, boxed `Integer`s and `String` objects are about half of
@@ -179,7 +179,7 @@ history, the Delta memory budget and each connector, nothing else. A ⚠ marks a
 | build-ahead status | `VarService.aheadState`, line 92; heap | `date|CCY` | ⚠ none (only `put`) | none | — | `var status` |
 | views per role | `VarAccess.views`, `server/var/VarAccess.java:56`; heap (bitsets) | `date@version@ccy|levels` | ⚠ none | none | key has the version | none |
 | official indexes | `VarOfficialStore.indexes`, line 56; heap | date, currency | ⚠ none | none | — | none |
-| position vectors (heap tier only) | `VarBook.positionCache`, `drishti-compute/.../var/VarBook.java:140`; heap | position index | ⚠ none within a date (up to positions × N × 8 bytes: 9.4 GB at 2.3M) | with the date | — | none |
+| position vectors (heap tier only) | `VarBook.positionCache`, `drishti-compute-banking/.../var/VarBook.java:140`; heap | position index | ⚠ none within a date (up to positions × N × 8 bytes: 9.4 GB at 2.3M) | with the date | — | none |
 | FX for conversions | `VarLoader.fxCache`, line 763 | date, versions | count 32, then cleared | clear all | key has versions | none |
 | shard maps, assembled dates | `VarShards.maps`, `assembled`, lines 80-81 | date, digest | count 64 then cleared; per date | clear all; per date | digest | `GET /api/v1/risk/var/shards` |
 | shard books | `VarShardBooks.books`, `server/var/VarShardBooks.java:72`; mapped `<hot>/<date>-shard-<i>/` | date, ccy, map digest, shard, inputs digest | ⚠ none by date (released only on handover or supersede) | handover rule (`VarShards.release`, line 485) | digest | `var shards`; not in Caches |
@@ -417,7 +417,7 @@ date. **Measure:** none needed beyond correctness; the soak (O8) uses it.
 
 ### 5.1 The heap skeleton (D1)
 
-**Today.** Opening a VaR date (`VarHotFile.open`, `drishti-compute/.../var/VarHotFile.java` (lines 498-547)) reads the small sections onto the
+**Today.** Opening a VaR date (`VarHotFile.open`, `drishti-compute-banking/.../var/VarHotFile.java` (lines 498-547)) reads the small sections onto the
 heap: `TIDS` as a `String[]`, `TCOL` and `PCOL` as `Columns` (int32 codes and dictionaries), `PIDS`, `PRUN`, `BOOK`, `NODE`, `AKEY` and
 `AGGS` (float64 M × N). `VarBook`'s constructor (`VarBook.java` (lines 151-195)) then builds four hash maps from them: `tradeOrdinal`,
 `tradeUpper`, `positionIndex`, `positionUpper`. Measured: about 80 MB an open date of 100,000 trades (VAR_GUIDE 27.3), so about 1.84 GB

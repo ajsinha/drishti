@@ -414,7 +414,6 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_EXPOSURE_HOT_DIR` | `drishti.ccr.exposure.hot-folder` | `./data/ccr/hot` | The exposure hot files' folder (one folder per business date); under the data folder unless set. |
 | `DRISHTI_EXPOSURE_TIER` | `drishti.ccr.exposure.tier` | `mapped` | Where a loaded date's matrices live: `mapped` (a memory-mapped float32 hot file per date) or `heap` (float64 on the heap). |
 | `DRISHTI_EXPOSURE_OFFICIAL` | `drishti.ccr.exposure.official.enabled` | `true` | Capture every netting set, counterparty, group and hierarchy node officially at the end of each loaded date, and publish to `risk-results/exposure-official` and `exposure-official-cpty`. |
-| `DRISHTI_COMPUTE_EXPOSURE_WORKERS` | `compute.pools.exposure.workers.max` (`config/compute/compute.yaml`) | `4` | Python workers of the compute pool `exposure` (the Python exposure engine: the exact pre-deal what-if, method `paths`) on this node; the compute workers run only with `DRISHTI_COMPUTE_ENABLED=true`, else the exact what-if answers `503 DRS-5446`. |
 | `DRISHTI_COMPUTE_PYTHON_WORKERS` | `compute.pools.python.workers.max` (`config/compute/compute.yaml`) | `4` | Python workers of the compute pool `python` on this node: every Python run of code people write (Python items and visuals, Python-driven tables, Notebook cells), in the strict sandbox ([PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)). |
 | `DRISHTI_LAYOUTS_ENABLED` | `drishti.layouts.enabled` | `true` | Allow personal layouts. |
 | `DRISHTI_PIVOT_ENABLED` | `drishti.pivot.enabled` | `true` | Allow the Pivot tab. |
@@ -1614,10 +1613,8 @@ confidence, EPE, EEPE, the peaks, CE, EAD under the internal model) of any count
 per path, each CSA's collateral per path with the margin period of risk, as the caller, when asked. Nothing it answers is stored except
 captures: the ones people make, and the official end-of-day captures of every netting set, counterparty, group and hierarchy node, which
 it also publishes to `risk-results/exposure-official` and `exposure-official-cpty`. The netting-set and counterparty pages show its
-figures as they open. The exact pre-deal what-if (method `paths`) runs in the Python exposure engine, the compute pool `exposure` of
-`config/compute/compute.yaml` (`drishti_compute.exposure.whatif:ExposureWhatIfEngine`, standard library only, up to
-`DRISHTI_COMPUTE_EXPOSURE_WORKERS` workers of 2 GB, timeout 60 s), behind the reactive connector `exposure-whatif`; it needs the
-compute workers on (`DRISHTI_COMPUTE_ENABLED=true`), otherwise that method answers `503 DRS-5446` and the `addon` proxy still works.
+figures as they open. The pre-deal what-if, exact (method `paths`) or the conservative `addon` proxy, is the same engine's: no compute
+pool, no setting of its own.
 
 | Key | Default | Meaning |
 |---|---|---|
