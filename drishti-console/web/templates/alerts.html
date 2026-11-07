@@ -21,12 +21,39 @@
 {% block content %}
 <div class="adm" data-alerts>
   <h1>Alerts</h1>
-  <p class="text-muted-d">Two kinds. An <b>alert on a number</b> watches a BI visual, a measure of a model or a field and tells you in your <a href="/inbox?tab=alert">inbox</a> when it crosses a limit, moves too far or
-    does not arrive; the number is read as you, with your masks. A <b>rule</b> watches one entity: the server checks it on every change, even when nobody has {{ PRODUCT }} open, and alerts once when it
-    becomes true; it re-arms when it turns false again.</p>
+  <p class="text-muted-d">One alert engine. An <b>alert rule</b> watches a number (a BI visual, a measure of a model, a field) or a rule on one entity (a Rachana-EL
+    predicate such as <code>$.utilisation &gt; 0.8</code>), read as you with your masks, on a schedule, after a load or live. When it breaks, an <b>alert is raised</b>
+    for you and told in your <a href="/inbox?tab=alert">inbox</a> (and by mail, a chat bridge, a webhook or a text if the rule asks). Acknowledge it (it is yours),
+    snooze it, or resolve it; it resolves itself when the number comes back.</p>
   <p class="adm-msg" data-msg role="status" aria-live="polite">{{ msg }}</p>
-  <section class="pnl" id="measure" data-measure-alerts><header class="pnl-h"><h3>Alerts on numbers</h3><span class="pnl-code">{{ measure | length }}</span>
-    <a class="btn-pill btn-accent dist-act" href="/alerts/new" data-new-alert>New alert on a number</a>{% if me and me.is_admin %}<a class="lnk dist-link" href="/alerts/all">Everyone's alerts and board tiles</a>{% endif %}</header><div class="pnl-b">
+  <section class="pnl" id="raised" data-raised><header class="pnl-h"><h3>Raised for you</h3><span class="pnl-code">{{ raised | length }}</span>
+    <a class="lnk dist-link" href="/alerts?stage={{ 'all' if stage != 'all' else 'open' }}" data-raised-stage>{{ 'Show resolved too' if stage != 'all' else 'Open only' }}</a></header><div class="pnl-b">
+    {% if raised %}<div class="tbl-wrap"><table class="tbl dist-tbl" data-plain data-raised-list>
+      <thead><tr><th>Alert</th><th>Severity</th><th>Stage</th><th>What</th><th>Raised</th><th>Owner</th><th><span class="visually-hidden">Act</span></th></tr></thead>
+      <tbody>{% for c in raised %}<tr data-case="{{ c.id }}" data-case-stage="{{ c.stage }}"><td><a class="lnk dist-link" href="{{ c.link }}">{{ c.title }}</a>
+          <div class="cmp-path">{{ c.source }}</div></td>
+        <td><span class="st st-{{ {'critical': 'bad', 'warn': 'warn'}.get(c.severity, 'ok') }}">{{ c.severity }}</span></td>
+        <td><span class="st st-{{ {'raised': 'bad', 'acknowledged': 'warn'}.get(c.stage, 'ok') }}" data-stage>{{ c.stage }}</span>
+          {% if c.snoozedUntil %}<div class="cmp-path" data-snoozed>snoozed until {{ when_local(c.snoozedUntil) }}</div>{% endif %}
+          {% if c.resolvedAt %}<div class="cmp-path">{{ c.how }} {{ when_local(c.resolvedAt) }}{% if c.resolvedBy %} by {{ c.resolvedBy }}{% endif %}</div>{% endif %}</td>
+        <td>{{ c.message }}{% if c.note %}<div class="cmp-path">{{ c.note }}</div>{% endif %}</td>
+        <td class="mono">{{ when_local(c.raisedAt) }}</td>
+        <td>{{ c.assignee or '—' }}{% if c.ackBy %}<div class="cmp-path">acknowledged by {{ c.ackBy }}</div>{% endif %}</td>
+        <td class="rpt-actions">{% if c.stage != 'resolved' %}
+          {% if c.stage == 'raised' %}<form method="post" action="/alerts/raised/acknowledge"><input type="hidden" name="id" value="{{ c.id }}"><button class="fk dist-act" type="submit" data-ack>Acknowledge</button></form>{% endif %}
+          <form method="post" action="/alerts/raised/snooze"><input type="hidden" name="id" value="{{ c.id }}"><label class="visually-hidden" for="sn-{{ loop.index }}">Snooze for</label>
+            <select id="sn-{{ loop.index }}" name="for" class="studio-select">{% for v, w in [('1h', '1 hour'), ('4h', '4 hours'), ('1d', '1 day'), ('0', 'no longer')] %}<option value="{{ v }}">{{ w }}</option>{% endfor %}</select>
+            <button class="fk dist-act" type="submit" data-snooze>Snooze</button></form>
+          <form method="post" action="/alerts/raised/resolve"><input type="hidden" name="id" value="{{ c.id }}"><label class="visually-hidden" for="rs-{{ loop.index }}">Note</label>
+            <input id="rs-{{ loop.index }}" name="note" class="studio-in" placeholder="Note (optional)" maxlength="500"><button class="fk dist-act" type="submit" data-resolve>Resolve</button></form>
+          {% if c.source == 'platform' %}<form method="post" action="/alerts/raised/assign"><input type="hidden" name="id" value="{{ c.id }}"><label class="visually-hidden" for="as-{{ loop.index }}">Assign to</label>
+            <input id="as-{{ loop.index }}" name="to" class="studio-in" placeholder="user" maxlength="64" required><button class="fk dist-act" type="submit" data-assign>Assign</button></form>{% endif %}
+        {% endif %}</td></tr>
+      {% endfor %}</tbody></table></div>
+    {% else %}<p class="text-muted-d" data-raised-none>Nothing raised for you.</p>{% endif %}
+  </div></section>
+  <section class="pnl" id="measure" data-measure-alerts><header class="pnl-h"><h3>Your alert rules</h3><span class="pnl-code">{{ measure | length }}</span>
+    <a class="btn-pill btn-accent dist-act" href="/alerts/new" data-new-alert>New alert rule</a>{% if me and me.is_admin %}<a class="lnk dist-link" href="/alerts/all">Everyone's alerts and board tiles</a>{% endif %}</header><div class="pnl-b">
     {% if measure %}<div class="tbl-wrap"><table class="tbl dist-tbl" data-plain>
       <thead><tr><th>Name</th><th>Watching</th><th>Now</th><th>Tell me when</th><th>State</th><th>Last</th><th></th></tr></thead>
       <tbody>{% for a in measure %}<tr data-alert-row="{{ a.name }}"><td><a class="lnk dist-link" href="/alerts/measure/{{ a.name | urlencode }}">{{ a.name }}</a></td>
@@ -41,11 +68,10 @@
           <form method="post" action="/alerts/measure/{{ a.name | urlencode }}/delete"><button class="fk dist-act" type="submit">Delete</button></form></td></tr>
       {% endfor %}</tbody></table></div>
     {% else %}<p class="text-muted-d">None yet. Press <b>Alert me</b> on a visual of a BI report, or click a number on a view and choose <b>Alert me</b>, or <a href="/alerts/new">start here</a>.</p>{% endif %}
-    {% if recent %}<h4 class="al-sub">Recent alerts on numbers</h4><ul class="alert-log" data-measure-log>{% for e in recent %}<li class="sev-{{ e.severity }}"><span class="mono">{{ when_local(e.at) }}</span>
+    {% if recent %}<h4 class="al-sub">Recent firings</h4><ul class="alert-log" data-measure-log>{% for e in recent %}<li class="sev-{{ e.severity }}"><span class="mono">{{ when_local(e.at) }}</span>
       <span class="st st-{{ {'critical': 'bad', 'warn': 'warn'}.get(e.severity, 'ok') }}">{{ e.severity }}</span> <a class="lnk" href="/alerts/measure/{{ e.alert | urlencode }}">{{ e.message }}</a></li>{% endfor %}</ul>{% endif %}
   </div></section>
-  <h2 class="al-h2">Rules on one entity</h2>
-  <section class="pnl"><header class="pnl-h"><h3>New rule</h3><span class="pnl-code">RULE</span></header><div class="pnl-b">
+  <section class="pnl"><header class="pnl-h"><h3>New rule on one entity</h3><span class="pnl-code">RULE</span></header><div class="pnl-b">
     <form class="alert-form" data-rule-form>
       <label>Name<input name="name" class="studio-in" required></label>
       <label>Kind<input name="kind" class="studio-in mono" value="{{ kind }}" required></label>
@@ -58,17 +84,6 @@
     {% if suggestions %}<p class="text-muted-d">Suggested by the enabled packs{% if kind %} for {{ kind }}{% endif %}:</p>
     <ul class="alert-sugg">{% for s in suggestions %}<li><button type="button" class="fk" data-suggest="{{ s | tojson | forceescape }}"><b>{{ s.kind }}</b> {{ s.name }}</button> <code>{{ s.when }}</code></li>{% endfor %}</ul>{% endif %}
   </div></section>
-  <section class="pnl"><header class="pnl-h"><h3>Your rules</h3><span class="pnl-code">{{ rules | length }}</span></header><div class="pnl-b">
-    <div class="tbl-wrap"><table class="tbl" data-plain><thead><tr><th>Name</th><th>Entity</th><th>When</th><th>Severity</th><th></th></tr></thead><tbody>
-    {% for r in rules %}<tr><td>{{ r.name }}</td><td><a class="lnk mono" href="/v/{{ r.ref.kind }}/{{ r.ref.id }}">{{ r.ref.id }}</a></td>
-      <td class="mono">{{ r.when }}</td><td><span class="st st-{{ {'critical': 'bad', 'warn': 'warn'}.get(r.severity, 'ok') }}">{{ r.severity }}</span></td>
-      <td><button type="button" class="fk" data-delete-rule="{{ r.name }}">Delete</button></td></tr>
-    {% else %}<tr><td colspan="5">No rules yet.</td></tr>{% endfor %}</tbody></table></div></div></section>
-  <section class="pnl"><header class="pnl-h"><h3>Recent alerts</h3><span class="pnl-code">LOG</span></header><div class="pnl-b">
-    <ul class="alert-log" data-log>{% for e in events %}<li class="sev-{{ e.severity }}"><span class="mono">{{ e.at[11:19] }}</span>
-      <span class="st st-{{ {'critical': 'bad', 'warn': 'warn'}.get(e.severity, 'ok') }}">{{ e.severity }}</span>
-      <a class="lnk mono" href="/v/{{ e.kind }}/{{ e.id }}">{{ e.id }}</a> {{ e.message }}</li>
-    {% else %}<li class="text-muted-d" data-empty>Nothing yet.</li>{% endfor %}</ul></div></section>
 </div>
 {% endblock %}
 {% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_alerts-page.js?v={{ ASSET_V }}"></script>{% if measure %}<script src="/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-consume.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_alerts-live.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}

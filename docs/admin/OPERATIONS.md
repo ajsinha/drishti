@@ -3524,11 +3524,11 @@ with the file named. An environment is never changed in place: a new lock is a n
 |---|---|
 | Pools | per pool: workers busy, idle and starting here; the other nodes serving it and their workers; queued by class; served, crashed, recycled, failures by kind; run and queue latency (p50, p95); ready or why not; **Test** (the sample engine) and **Build** (a locked environment) |
 | Busy now | the requests running: worker, request id, user, class, kind, for how long; **Cancel** |
-| Approval requests | id, connector or pool, the items (kind, name, version, source, native code, sha256), who asked and when, the state and decision; **Approve**, **Reject**, **Revoke** (a reason each time; no buttons on your own request) |
+| Approval requests | id, connector or pool, the items (kind, name, version, source, native code, sha256), who asked and when, the state and decision; **Decide in Approvals** (approve or reject in the one Approvals queue) and **Revoke** (a reason each time; nothing to decide on your own request) |
 | Environments | id, Python and platform, packages, built when and by whom, the last failure, size |
 | Recent requests | the last 200 on this node: user, pool and kind, class, outcome, queued and run time, worker |
 
-The same data is `GET /api/v1/admin/compute`; decisions are `POST /api/v1/admin/compute/requests/{id}/approve|reject|revoke` with
+The same data is `GET /api/v1/admin/compute`; decisions are `POST /api/v1/approvals/compute/{id}/approve|reject|revoke` with
 `{"reason": "..."}`, a build `POST /api/v1/admin/compute/pools/{pool}/build`, a test `POST .../pools/{pool}/test`, a cancel
 `POST /api/v1/admin/compute/running/{id}/cancel` ([API_GUIDE.md](../guides/API_GUIDE.md)).
 

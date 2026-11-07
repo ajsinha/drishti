@@ -213,15 +213,15 @@ def project1(c: Ctx):
 
     # the approver
     login(c, "ravi")
-    c.page.goto(c.base + "/build/reviews")
+    c.page.goto(c.base + "/approvals?kind=sutra")
     c.page.wait_for_timeout(1000)
     c.save("p1-16-reviews.jpg")
-    c.page.goto(f"{c.base}/build/reviews/{pid}")
+    c.page.goto(f"{c.base}/approvals/sutra/{pid}")
     c.page.locator("[data-evidence]").wait_for()
     c.page.wait_for_timeout(600)
     c.page.locator("[data-evidence]").scroll_into_view_if_needed()
     c.save("p1-17-evidence.jpg", "[data-evidence]")
-    c.page.get_by_role("button", name="Approve and publish").click()
+    c.page.get_by_role("button", name="Approve", exact=True).click()
     c.page.wait_for_timeout(1500)
     c.save("p1-18-approved.jpg")
 
@@ -480,8 +480,8 @@ def project2(c: Ctx):
     c.page.wait_for_timeout(600)
     c.save("p2-20-proposed.jpg", clip={"x": 0, "y": 60, "width": 1440, "height": 190})
     login(c, "ravi")
-    c.page.goto(f"{c.base}/build/reviews/{pid}")
-    c.page.get_by_role("button", name="Approve and publish").click()
+    c.page.goto(f"{c.base}/approvals/sutra/{pid}")
+    c.page.get_by_role("button", name="Approve", exact=True).click()
     c.page.wait_for_timeout(1500)
     login(c, "asha")
     c.page.goto(f"{c.base}/build/d/{design}")
@@ -522,9 +522,9 @@ def submit_and_id(c: Ctx, note: str) -> str:
 
 def approve(c: Ctx, who: str, pid: str, password: str = PASSWORD):
     login(c, who, password)
-    c.page.goto(f"{c.base}/build/reviews/{pid}")
+    c.page.goto(f"{c.base}/approvals/sutra/{pid}")
     c.page.locator("[data-evidence]").wait_for()
-    c.page.get_by_role("button", name="Approve and publish").click()
+    c.page.get_by_role("button", name="Approve", exact=True).click()
     c.page.wait_for_timeout(1500)
 
 

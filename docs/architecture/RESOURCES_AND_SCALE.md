@@ -346,7 +346,7 @@ On `ready` the server records it, drops the caches of every connector serving th
 ([DATA_GUIDE.md › Telling Drishti new data has landed, section 7](../guides/DATA_GUIDE.md#7-what-happens-step-by-step)); then the engines react through `LoadService.onReady`
 listeners: VaR (`server/var/VarConfiguration.java:96`, `VarOfficial.onLoad`, line 113: a vector or scenario-PV signal applies the intraday
 batches in place, a full run reloads the date and captures it officially), exposure (`server/exposure/ExposureConfiguration.java:69`),
-measure alerts (`MeasureAlertConfiguration.java:117`) and BI (`DatasetService.onLoad`, line 1174: invalidates the date's layers whose data
+measure alerts (`AlertConfiguration.java:117`) and BI (`DatasetService.onLoad`, line 1174: invalidates the date's layers whose data
 version moved).
 
 **The signal is per server.** `LoadService` does not forward an announcement to Drishti\*net peers (no peer call in the class); each

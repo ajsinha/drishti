@@ -89,10 +89,11 @@ def test_studio_design_and_sample_open_that_design_and_the_page_selects_the_samp
     assert '"sample": "b.json"' in page and '"tab": "split"' in page
 
 
-def test_the_old_review_addresses_are_gone_and_the_reviews_live_in_the_workbench(app_client):
-    # lean (2.9.11.c): the /studio/reviews redirect stubs are deleted; the reviews are /build/reviews
+def test_the_old_review_addresses_are_gone_and_the_reviews_live_in_the_approvals_queue(app_client):
+    # lean (2.9.11.c): the /studio/reviews redirect stubs are deleted; (2.9.11.f) the reviews are the one Approvals queue
     assert app_client.get("/studio/reviews", follow_redirects=False).status_code == 404
-    assert app_client.get("/build/reviews").status_code in (200, 403)
+    r = app_client.get("/build/reviews", follow_redirects=False)
+    assert r.status_code == 301 and r.headers["location"] == "/approvals?kind=sutra"
 
 
 def test_studio_when_designs_cannot_be_made_says_why_instead_of_failing(app_client, backend, monkeypatch):
@@ -115,30 +116,14 @@ def test_the_json_routes_the_workbench_still_asks_of_the_old_prefix_work(app_cli
 
 # ---- the menu and the help guide ----------------------------------------------------------------------------------------------
 
-def test_the_build_menu_is_create_govern_learn_with_no_studio_entry(app_client):
+def test_the_build_menu_is_create_learn_with_no_studio_entry_and_approvals_is_one_place(app_client):
     page = app_client.get("/build").text
     menu = page.split('class="tbar-menus"')[1].split("</nav>")[0]
-    for text in ("Create", "New screen", "My designs", "Examples", "Govern", "Reviews", "Learn", "Screen designer guide", "Sutra developer guide", "Tutorials",
-                 "Rachana reference", "Pack developer guide"):
+    for text in ("Create", "New screen", "My designs", "Examples", "Learn", "Screen designer guide", "Sutra developer guide", "Tutorials",
+                 "Rachana reference", "Pack developer guide", "Approvals"):
         assert text in menu, text
-    assert "Sutra Studio" not in menu and 'href="/studio' not in menu and "data-review-count" in menu
+    assert "Sutra Studio" not in menu and 'href="/studio' not in menu and "data-approvals-count" in menu and "Govern" not in menu
     assert "Screen Builder guide" not in menu
-
-
-def test_the_review_count_for_the_menu(app_client, backend, monkeypatch):
-    async def settings(ident=None):
-        return {"save": True, "review": True}
-
-    async def proposals(ident=None, status="", name=""):
-        return {"proposals": [{"id": "P-1"}, {"id": "P-2"}]}
-    monkeypatch.setattr(backend, "studio_settings", settings)
-    monkeypatch.setattr(backend, "proposals", proposals, raising=False)
-    assert app_client.get("/build/review-count").json() == {"review": True, "pending": 2}
-
-    async def off(ident=None):
-        return {"save": False, "review": False}
-    monkeypatch.setattr(backend, "studio_settings", off)
-    assert app_client.get("/build/review-count").json() == {"review": False, "pending": 0}
 
 
 def test_the_studio_help_guide_moved_to_the_designer_guide(app_client):
@@ -208,7 +193,7 @@ def test_saving_rights_open_design_gated_save_and_review(app_client, backend, mo
     monkeypatch.setattr(backend, "proposals", waiting, raising=False)
     monkeypatch.setattr(backend, "save_sutra", propose, raising=False)
     page = page_for()
-    assert "Submit for review" in page and 'id="wbNote"' in page and '<span class="bell-count">1</span>' in page
+    assert "Submit for review" in page and 'id="wbNote"' in page and 'href="/approvals?kind=sutra"' in page      # decided in the Approvals queue
     assert app_client.post(f"/build/designs/{d['id']}/propose", json={"note": "please"}).json()["proposal"]["id"] == "P-9" and saved["note"] == "please"
 
 

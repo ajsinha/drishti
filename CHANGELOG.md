@@ -118,6 +118,48 @@
   removed), RELEASE_NOTES (upgrade note), Help addresses `/help/keyboard` and `/help/global-search`.
 - **Candidates to fold later:** the embed element `<drishti-search>` and the server's `/api/v1/embed/search` are untouched; they search
   for embedded hosts and could become `in=` modes of the one search.
+- **One Approvals queue** (SHARED_SCREENS.md section 2, the approved mock-up e2-approvals A with B's due-soon items; lean & streamlined):
+  every four-eyes item in one inbox, **Views → Approvals** (`/approvals`, a count on the top bar): Sutra proposals, corrections
+  (write-back), BI items, pivot functions, stress windows, regulatory report sign-offs and compute packages. **Due soon** (a report run near
+  its filing date, `drishti.approvals.due-days`) is pinned on top; filters *Data · Screens · Risk · Access*, *Mine sent*, *Done*. The item
+  shows **what changes** (a diff with the maker's reason; a Sutra's with its moved panels and the workbench's evidence), its **effect if
+  approved** (the impact service's answer for a corrected record, the published reports a BI change breaks, a node's stressed VaR under
+  each window, the files a signed run releases) and the **rules**; **Approve**, **Reject** with a reason, **Withdraw** your own, or **ask a
+  question** (a thread on the item; the maker is told without the text). The maker never approves their own; everything is audited.
+  - **One server API**, `/api/v1/approvals` (list, count, item, approve, reject, withdraw, questions): each kind is an `ApprovalSource` in its
+    own package (`SutraApprovals`, `ChangeApprovals`, `BiApprovals`, `FunctionApprovals`, `StressWindowApprovals`, `VarReportApprovals`,
+    `ComputeApprovals`) keeping its rules; the queue keeps nothing per person (session isolation) and keeps the question threads.
+  - **One CLI**, `drishti.py approvals list|show|approve|reject|withdraw|ask`; a new token scope `approve`.
+  - **Removed** (folded into the queue): the endpoints `POST /api/v1/sutras/proposals/{id}/approve|reject|withdraw`,
+    `/api/v1/changes/{id}/approve|reject|withdraw`, `/api/v1/bi/items/{id}/approve|reject`, `/api/v1/admin/compute/requests/{id}/approve|reject`,
+    `/api/v1/pivot/functions/{owner}/{ref}/approve`, `/api/v1/var/stress-window/proposals/{id}/decision`, and the sign-off actions of
+    `/api/v1/var/reports/{report}/runs/{period}/signoff` (the maker's narrative is `/narrative`); the console pages *Build → Govern →
+    Reviews* (`/build/reviews`, `/build/reviews/{id}`) and *Review → Changes* (`/review/changes`), which redirect (301) to the queue; the
+    approve and reject buttons of the BI item page, Admin → Compute, the pivot's Functions panel, the stress window screen and the report
+    sign-off screen (each now links to its item in the queue); the CLI commands `design approve|reject`, `change approve|reject|withdraw`,
+    `pivot functions approve`, `var stress-window --decide` and `var report sign`; the console's `/build/review-count`.
+  - Tests: `ApprovalQueueTest` (two people each see their own queue, due soon first, decisions audited, question threads only for who may
+    see the item), `ApprovalApiTest` (the API over real Sutra proposals, with security on), `test_approvals.py`, `test_approvals_browser.py`
+    (every button of the queue), `test_approvalscli.py`; 21 Java and 14 console test files repointed.
+- **One alert engine** (lean & streamlined): the measure-alert service is the engine (`com.ash.drishti.server.alerts.AlertService`,
+  settings `drishti.alerts.*`): rules on a visual, a dataset or model measure, an entity's field or **a Rachana-EL rule on one entity**
+  (the new condition `rule`), looked at on a schedule, after a data load or live; delivered as before (inbox, email, chat bridges, webhooks,
+  text). **One lifecycle** for every alert raised, the platform's included: **raised → acknowledged → resolved** (by itself when the number
+  comes back, or by hand with a note), **owners** (who acknowledged it; a platform alert can be assigned), **snooze** (a breach while snoozed
+  is held and raised when the snooze ends; a snoozed platform series tells nobody). The Alerts page lists *Raised for you* beside your rules.
+  - **One API**, `/api/v1/alerts` (raised, acknowledge, resolve, snooze, assign, rules, suggestions, the notification stream) and
+    `/api/v1/admin/alerts` (everyone's rules, the board tiles that notify, the platform alerts).
+  - **Folded and deleted:** the entity-rule engine (`AlertEngine`, `AlertRule`, `AlertEvent`, the identity store's `AlertHistory`, its table
+    `drishti_alert` and the setting `drishti.alerts.keep`); its rules are **converted at start, once,** into rules of the engine (a field
+    source, the condition `rule`; live when the source pushes changes, else after each load of the kind). The platform alerts keep reading the
+    server's meters (`config/alerts/platform-alerts.yaml`, unchanged) and are listed, acknowledged, snoozed and assigned by the engine; their
+    own controller is gone. A data load's *alerts* step hands the kind to the engine (`n alerts to look`). Endpoints removed:
+    `/api/v1/me/alerts`, `/api/v1/me/alerts/rules/**`, `/api/v1/me/alerts/suggestions/{kind}`, `/api/v1/me/measure-alerts/**`,
+    `/api/v1/admin/measure-alerts/**`; the stream moved from `/api/v1/me/alerts/stream` to `/api/v1/alerts/stream` (its `alert` event is
+    gone: an alert raised is a `notice` of type `alert`).
+  - Tests: `AlertServiceTest` (the lifecycle, snooze, the converter, the rule condition, the platform alerts for administrators only),
+    `AlertsAndMonitorsTest`, `FieldMaskingTest`, `LoadsApiTest`, `PlatformMetricsApiTest` repointed; console `test_alert_routes.py`,
+    `test_monitors_alerts.py`.
 
 ## 2.9.11.d (unreleased)
 

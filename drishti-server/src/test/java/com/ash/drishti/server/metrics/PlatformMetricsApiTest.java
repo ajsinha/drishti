@@ -76,11 +76,12 @@ class PlatformMetricsApiTest {
     void theAlertListIsForAdministratorsAndHealthCarriesTheOpenOnes() throws Exception {
         alerts.evaluate();
         mvc.perform(get("/api/v1/admin/alerts").header("Authorization", as("admin"))).andExpect(status().isOk())
-                .andExpect(jsonPath("$.enabled").value(true))
-                .andExpect(jsonPath("$.member").isNotEmpty())
-                .andExpect(jsonPath("$.rules").isArray())
-                .andExpect(jsonPath("$.open").isArray())
-                .andExpect(jsonPath("$.recent").isArray());
+                .andExpect(jsonPath("$.platform.enabled").value(true))
+                .andExpect(jsonPath("$.platform.member").isNotEmpty())
+                .andExpect(jsonPath("$.platform.rules").isArray())
+                .andExpect(jsonPath("$.platform.open").isArray())
+                .andExpect(jsonPath("$.platform.recent").isArray())
+                .andExpect(jsonPath("$.rules").isArray());                       // the one alert engine's overview: everyone's rules beside the platform's
         mvc.perform(get("/api/v1/admin/alerts").header("Authorization", as("trader"))).andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/admin/health").header("Authorization", as("admin"))).andExpect(status().isOk())
                 .andExpect(jsonPath("$.alerts.enabled").value(true))

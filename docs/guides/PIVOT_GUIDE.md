@@ -508,7 +508,7 @@ drishti.py pivot save desk-risk --source var --rows DESK --values "var()" --shar
 drishti.py pivot views
 drishti.py pivot functions test wret.yaml --sample rows.csv --group DESK
 drishti.py pivot functions save wret.yaml --sample rows.csv
-drishti.py pivot functions approve asha/wret@1 --reason "reviewed" --scope group:rates
+drishti.py approvals approve function asha:wret@1 --comment "reviewed" --param scope=group:rates
 drishti.py pivot explain --view asha/desk-risk --cell DESK=EMEA --from 2026-09-30 --to 2026-10-30 --by BOOK
 drishti.py pivot whatif --view asha/desk-risk --scale PRICE=1.1@DESK=RATES --exclude BOOK=B-17
 ```

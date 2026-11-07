@@ -47,7 +47,8 @@ menus:
         items:
           - { id: workspaces, href: /w, icon: grid-1x2, label: Workspaces, desc: Several live views on one screen, match: /w, requires: [feature:workspaces] }
           - { id: monitors, href: /m, icon: list-columns, label: Monitors, desc: Live watchlists of entities, match: /m, requires: [feature:monitors] }
-          - { id: alerts, href: /alerts, icon: bell, label: Alerts, desc: Rules checked on every change, match: /alerts, requires: [feature:alerts] }
+          - { id: alerts, href: /alerts, icon: bell, label: Alerts, desc: "Alerts raised for you (acknowledge, snooze, resolve) and your alert rules", match: /alerts, requires: [feature:alerts] }
+          - { id: approvals, href: /approvals, icon: patch-check, label: Approvals, desc: "Everything waiting for your four eyes, of every kind, due soon on top", match: /approvals }
   # The Engines menu (2.9.11.a, mock-up engines-menu/A): one top menu for every compute engine, a column per engine (engine: its id in
   # config/engines.yaml) with its command word, drawn only for a person whose role opens at least one engine and only with the engines
   # running in the cluster (the server's about answer). A column's opens: who opens the engine, any of: role:<name> (the person holds the
@@ -258,10 +259,6 @@ menus:
           - { id: designs, href: /build, icon: collection, label: My designs, desc: "Your saved work: open, rename, duplicate, delete", match: /build/d/, requires: [feature:build] }
           - { id: tables-models, href: /build/tables, icon: table, label: "Tables & models", desc: "Virtual tables, semantic models and Python-driven tables: one editor, live YAML, a preview as you may see it, review before live", match: /build/tables, requires: [bi, word:BI] }
           - { id: examples, href: "/build/new#examples", icon: journal-richtext, label: Examples, desc: Every example opens as your own copy, requires: [feature:build] }
-      - title: Govern
-        items:
-          - { id: reviews, href: /build/reviews, icon: patch-check, label: Reviews, desc: Proposed Sutras waiting for approval, match: /build/reviews, requires: [feature:build] }
-          - { id: changes, href: /review/changes, icon: pencil-square, label: Changes, desc: "Edits submitted from forms waiting for approval, and your own", match: /review/changes, requires: [feature:build] }
       - title: Learn
         items:
           - { id: knowledge, href: /what, icon: lightbulb, label: Knowledge, desc: "What the words of your data mean and how it connects · also WHAT <GO>", match: /help/knowledge, requires: [word:WHAT] }

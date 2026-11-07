@@ -456,7 +456,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_BI_DIR` | `drishti.bi.dir` | `./config/bi` | Where Rupaka (BI) files live: `datasets/`, `reports/`, `boards/`, `notebooks/`, `python/`. Never inside a pack. |
 | `DRISHTI_BI_NODE` | `drishti.bi.exec.node` | empty | This Java node's name when several Java nodes serve the site (`drishti.bi.exec.nodes` lists them); empty: one node. |
 | `DRISHTI_BI_RUNS_FILE` | `drishti.bi.runs.file` | `./config/runs/runs.yaml` | The BI runs settings file ([BI runs](#bi-runs-configrunsrunsyaml)); a missing file means the defaults. |
-| `DRISHTI_BI_MIGRATE_ON_START` | `drishti.bi.migrate.on-start` | `true` | At start, moves stored items once: every stored dataset and model into the table layer, then 2.3 boards into reports (each change audited, the text before kept in the item's history). `false`: the items stay unread until they are moved ([drishti.bi.migrate](#drishtibimigrate--migrations-of-stored-bi-items)). |
+| `DRISHTI_BI_MIGRATE_ON_START` | `drishti.bi.migrate.on-start` | `true` | At start, converts stored items once: old-syntax expressions to DEL v2, then `rachana: 1` datasets to datasets and models with their reports rebound (each change audited, the text before kept in the item's history). `false`: a bi-admin runs `drishti.py bi migrate` instead ([drishti.bi.migrate](#drishtibimigrate--migrations-of-stored-bi-items)). |
 | `DRISHTI_BI_STORE` | `drishti.bi.query.store-dir` | `./data/bi-store` | The BI store: the typed Parquet layers (columns, rollups, live snapshots) the dataset query engine writes and reads, and DuckDB's spill folder. Rebuildable from the connectors; never commit it. |
 | `DRISHTI_PACKS_DIR` | `drishti.packs.dir` | `./config/packs` | The packs directory. If it does not exist and the old `./packs` does, `./packs` is used with a warning (one release). |
 | `DRISHTI_PACKS_EXTRA_DIRS` | `drishti.packs.extra-dirs` | empty | Further pack folders, comma-separated, looked in after the packs directory (the shipped packs win a name): `examples/packs` makes the retired example packs (finance, genomics, logistics, retail-banking, climate-risk, operational-risk, liquidity-risk) loadable by name ([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#retired-example-packs-examplespacks)). |
@@ -571,7 +571,7 @@ area: `drishti.retry.<area>.<key>` on the server (areas `packs`, `connectors`, `
 | `drishti.retry.jitter` | `retry.jitter` | `0.2` | Each wait varies by up to this fraction either way (`0` = none), so many failing things do not retry together |
 | `drishti.retry.permanent-after` | `retry.permanent_after` | `3` | A failure waiting cannot fix (refused credentials, a setting that is wrong) seen this many times in a row is treated as permanent and retried only every `max` |
 | `drishti.retry.<area>.<key>` | `retry.<area>.<key>` | the general value | Per-area override of any key above |
-| `drishti.retry.alerts.*` | (none) | the general value | The retries of an alert's email, webhook and text; how many tries is `drishti.alerts.measure.max-attempts` (below). A pending retry is kept in memory: a restart drops it and the alert's history keeps the last text it was given |
+| `drishti.retry.alerts.*` | (none) | the general value | The retries of an alert's email, webhook and text; how many tries is `drishti.alerts.max-attempts` (below). A pending retry is kept in memory: a restart drops it and the alert's history keeps the last text it was given |
 | (none) | `ai.poll_seconds` | `5` | How often the console looks at `config/ai` and `config/mcp` for a changed file and for a retry that is due |
 
 ### `drishti.db.pool` — database connection pools
@@ -1669,7 +1669,7 @@ shipped, read-only files. The BI powers are granted on roles, see below.
 | Key | Default | Meaning |
 |---|---|---|
 | `enabled` | `true` | The BI endpoints answer. Off: `403 DRS-9006`, and the console (which asks the server) hides the BI menu. |
-| `dir` | `./config/bi` (`DRISHTI_BI_DIR`) | The BI folder: `reports/<id>.report.yaml`, `boards/<id>.board.yaml`, `notebooks/<id>.notebook.yaml`, `python/`. Shipped files appear as published, read-only items of the workspace *Shipped content*. Not inside a pack. See `config/bi/README.md` and [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase), "Where BI files live". |
+| `dir` | `./config/bi` (`DRISHTI_BI_DIR`) | The BI folder: `datasets/<id>.dataset.yaml`, `reports/<id>.report.yaml`, `boards/<id>.board.yaml`, `notebooks/<id>.notebook.yaml`, `python/`. Shipped files appear as published, read-only items of the workspace *Shipped content*. Not inside a pack. See `config/bi/README.md` and [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase), "Where BI files live". |
 | `watch` | `auto` | How the BI folder is watched, live, with no restart: `auto` (file events with a polling safety net), `poll`, or `off` (the folder is read on the first request after `folder-refresh`). A file added appears, a file changed becomes the next version, a file deleted goes; a bad file keeps its last good version and is listed in Admin, BI settings and on Health. |
 | `folder-refresh` | `5s` | The polling interval of the watcher (with `watch: off`, how long one read is reused). |
 | `workspace-creation` | `authors` | Who creates shared workspaces: `authors` (`bi-author`), `stewards` (`bi-steward`) or `admins` (`bi-admin` only). An administrator can change it at run time in Admin, BI settings (kept in the identity database; it then overrides this). |
@@ -1937,7 +1937,7 @@ item silently**: an item it cannot convert keeps its text and is listed in Admin
 
 | Key | Default | Meaning |
 |---|---|---|
-| `on-start` | `true` (`DRISHTI_BI_MIGRATE_ON_START`) | Run the migrations once at start, before the server takes requests: expressions in the old syntax become DEL v2 ([RACHANA_REFERENCE.md › Rachana-EL expressions](../guides/RACHANA_REFERENCE.md#rachana-el-expressions)), then `rachana: 1` datasets become datasets and models and their reports are rebound ([BI_DESIGN.md 8.3.1](../architecture/BI_DESIGN.md#831-implementation-task-6)): the dataset item becomes the model item (same id), each table a new dataset item of the same workspace, owner and audience; a role restricted on one table is never given rows it did not see. A published text that changes becomes the item's next published version (the old version stays in its version list); a draft stays a draft, a proposal stays proposed. `false` leaves stored items as they are: a bi-admin runs the same with `drishti.py bi migrate --expressions [--dry-run]`. |
+| `on-start` | `true` (`DRISHTI_BI_MIGRATE_ON_START`) | Run the migrations once at start, before the server takes requests: expressions in the old syntax become DEL v2 ([BI_LANGUAGE_REFERENCE.md › Expressions: the Drishti expression language (DEL), section 10](../guides/BI_LANGUAGE_REFERENCE.md#10-the-old-syntax-and-the-converter)), then `rachana: 1` datasets become datasets and models and their reports are rebound ([BI_DESIGN.md 8.3.1](../architecture/BI_DESIGN.md#831-implementation-task-6)): the dataset item becomes the model item (same id), each table a new dataset item of the same workspace, owner and audience; a role restricted on one table is never given rows it did not see. A published text that changes becomes the item's next published version (the old version stays in its version list); a draft stays a draft, a proposal stays proposed. `false` leaves stored items as they are: a bi-admin runs the same with `drishti.py bi migrate --expressions [--dry-run]`. |
 | `actor` | `system` | The name the saved states, the item's governance events and the audit log give the start-up run (a run from the API or CLI names the bi-admin who ran it). |
 
 ### `drishti.distribution`: export and subscriptions
@@ -1984,10 +1984,12 @@ Under `drishti.distribution.statements` (statement pages: [BI_GUIDE.md › Repor
 | `paper` | `A4` | The paper of a statement whose `statement:` names none (`A4`, `A3`, `A5`, `Letter`, `Legal`) |
 | `band-queries` | `2` | How many bands of one statement are asked at the same time (1 to 8), each as the reader, within the query limits |
 
-### `drishti.alerts.measure` — alerts on numbers and board notifications
+### `drishti.alerts` — the one alert engine
 
-Alerts on a visual, a dataset measure or a Sutra field, and notifications from board tiles (phase 7, part 2: [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4](../guides/BI_GUIDE.md#4-alerts-on-numbers)). Every key has a default;
-change one in `application.yaml` or with `DRISHTI_ALERTS_MEASURE_*`.
+Every alert rule (a visual, a dataset or model measure, a Sutra field, a Rachana-EL rule on one entity), the notifications from board tiles,
+and the lifecycle of every alert raised (raised, acknowledged, resolved; snooze; owners), the platform alerts included
+([USER_GUIDE.md › Alerts](../guides/USER_GUIDE.md#alerts); [BI_GUIDE.md, section 4](../guides/BI_GUIDE.md#4-alerts-on-numbers)). Every key has a
+default; change one in `application.yaml` or with `DRISHTI_ALERTS_*`.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -2146,11 +2148,10 @@ pack expects and who is told is the pack's `loads:` section and the administrato
 The token scope that opens `POST /api/v1/packs/{pack}/loads` to a personal API token is `loads:write` (`drishti.security.token-scopes`); the
 user still needs a role that opens the kind. The expectation settings (`/api/v1/admin/loads/**`) are never open to a token.
 
-### `drishti.alerts` — alert history
+### `drishti.approvals` — the one Approvals queue
 
-| Key | Default | Meaning |
-|---|---|---|
-| `keep` | `1000` | Fired alerts kept per user, in the identity database (`drishti_alert`), so they survive restarts. Older ones are pruned as new ones arrive. |
+Every four-eyes item in one inbox ([USER_GUIDE.md › Approvals](../guides/USER_GUIDE.md#approvals)): how near a due date pins an item on
+top, how long after its period a report run is due, and the size of the question threads. The keys are in the generated table below.
 
 ### `drishti.access-log` — who looked at what
 
@@ -2710,11 +2711,11 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS.md](OPER
 
 ## Every setting
 
-Every key of every kind: 2,139 settings in 18 areas, and 330 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 2,144 settings in 18 areas, and 330 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
 | Area | Settings |
 |---|---|
-| [The server: `application.yaml`](#the-server-applicationyaml) | 540 |
+| [The server: `application.yaml`](#the-server-applicationyaml) | 545 |
 | [Compute engines: `config/engines/*.yaml`](#compute-engines-configenginesyaml) | 323 |
 | [The console: `application.yaml`](#the-console-applicationyaml) | 187 |
 | [The console's other files](#the-consoles-other-files) | 94 |
@@ -2885,7 +2886,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.metrics.enabled` | boolean | `true` | `DRISHTI_METRICS_ENABLED` | server | export the platform gauges (caches, memory budget, disk, sources, feeds, loads) on /actuator/prometheus and evaluate the alert rules | restart |  |
 | `drishti.metrics.sample-interval` | duration | `15s` |  | server | how often the gauges are sampled and the alert rules evaluated | restart |  |
 | `drishti.metrics.disk-interval` | duration | `60s` |  | server | how often the disk folders are measured for the gauges (a folder's size walks its files) | restart |  |
-| `drishti.metrics.alerts.enabled` | boolean | `true` | `DRISHTI_ALERTS_ENABLED` | server | evaluate the platform alert rules (Admin -&gt; Health, Alerts; GET /api/v1/admin/alerts) | restart |  |
+| `drishti.metrics.alerts.enabled` | boolean | `true` | `DRISHTI_ALERTS_ENABLED` | server | evaluate the platform alert rules (Admin -&gt; Health; the alert engine lists them: Alerts, GET /api/v1/admin/alerts) | restart |  |
 | `drishti.metrics.alerts.file` | string | `./config/alerts/platform-alerts.yaml` | `DRISHTI_ALERTS_FILE` | server | the rules: metric, threshold, how long, severity (a missing file: no rules, and Health says so) | restart |  |
 | `drishti.metrics.alerts.notify-roles` | string | `admin` |  | server | the roles told in their inbox (and the bell) when an alert opens, comma-separated; blank: nobody | restart |  |
 | `drishti.metrics.alerts.keep` | integer | `200` |  | server | alerts opened and closed kept for the page, newest first (in memory: a restart starts afresh) | restart |  |
@@ -3105,11 +3106,21 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.mcp.tool-roles` | map | `{}` |  | server | "\[server/tool]": \[roles] | restart |  |
 | `drishti.mcp.server-features` | map | `{}` |  | server | "\[server]": \[features] | restart |  |
 
+#### `drishti.approvals`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.approvals.due-soon-days` | integer | `3` |  | server | an item due within this many days (or overdue) is pinned at the top as due soon | restart |  |
+| `drishti.approvals.due-days.var-report` | integer | `30` |  | server | a regulatory report run (VAR\_GUIDE.md section 18.14) | restart |  |
+| `drishti.approvals.per-kind` | integer | `200` |  | server | most items one kind adds to one list | restart |  |
+| `drishti.approvals.max-question` | integer | `2000` |  | server | longest question or answer on an item, in characters | restart |  |
+| `drishti.approvals.max-questions` | integer | `200` |  | server | most questions and answers kept on one item | restart |  |
+
 #### `drishti.alerts`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.alerts.keep` | integer | `1000` |  | server | fired alerts kept per user, in the identity database (they survive restarts) | restart |  |
+| `drishti.alerts.enabled` | boolean | `true` |  | server | false stops the evaluator and refuses new alert rules (stored ones are kept) | restart |  |
 
 #### `drishti.access-log`
 
@@ -6056,7 +6067,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_AI_DEFAULT_MODEL` | `drishti.ai.default-model`, `ai.default_model` | empty | console, server | provider/model, or a model name only one provider has; used when a call names none |
 | `DRISHTI_AI_DIR` | `drishti.ai.dir`, `ai.dir` | `./config/ai` | console, server | one YAML per provider: type, base-url, api-key as ${ENV}, models with logical names |
 | `DRISHTI_AI_ENABLED` | `drishti.ai.enabled`, `ai.enabled` | `false` | console, server | turn on the LLM provider layer: provider files in drishti.ai.dir are read and models become callable |
-| `DRISHTI_ALERTS_ENABLED` | `drishti.metrics.alerts.enabled` | `true` | server | evaluate the platform alert rules (Admin -&gt; Health, Alerts; GET /api/v1/admin/alerts) |
+| `DRISHTI_ALERTS_ENABLED` | `drishti.metrics.alerts.enabled` | `true` | server | evaluate the platform alert rules (Admin -&gt; Health; the alert engine lists them: Alerts, GET /api/v1/admin/alerts) |
 | `DRISHTI_ALERTS_FILE` | `drishti.metrics.alerts.file` | `./config/alerts/platform-alerts.yaml` | server | the rules: metric, threshold, how long, severity (a missing file: no rules, and Health says so) |
 | `DRISHTI_ALLOW_INSECURE_TLS` | tls.insecure-trust-all | none | server | Must be true for a connector to run with tls.insecure-trust-all: true (development only) |
 | `DRISHTI_API_DOCS` | `springdoc.api-docs.enabled`, `springdoc.swagger-ui.enabled` | `true` | server | set explicitly, so a start does not warn that they are on by default |

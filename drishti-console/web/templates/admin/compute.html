@@ -88,7 +88,7 @@
           {% if a.decidedBy %}<div class="text-muted-d">by {{ a.decidedBy }}: {{ a.reason }}</div>{% endif %}
           {% if a.revokedBy %}<div class="text-muted-d">revoked by {{ a.revokedBy }}: {{ a.revokeReason }}</div>{% endif %}</td>
         <td class="adm-actions">{% if a.state == 'pending' %}{% if a.mine %}<span class="text-muted-d" title="Four eyes: another administrator decides">you asked</span>
-            {% else %}<button type="button" class="fk" data-decide="approve">Approve</button><button type="button" class="fk cmp-danger" data-decide="reject">Reject</button>{% endif %}
+            {% else %}<a class="fk" href="/approvals/compute/{{ a.id }}" data-decide-in-approvals>Decide in Approvals</a>{% endif %}
           {% elif a.state == 'approved' %}<button type="button" class="fk cmp-danger" data-decide="revoke">Revoke</button>{% endif %}</td></tr>
     {% else %}<tr data-none><td colspan="6" class="text-muted-d">No approval request. A connector with a <span class="mono">requires:</span> block, or a pool with a locked environment, files one when it is loaded.</td></tr>{% endfor %}</tbody>
   </table></div>

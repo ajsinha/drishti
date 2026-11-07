@@ -245,15 +245,8 @@
         tr.appendChild(h("td", "l", r.decidedBy ? r.decidedBy + " · " + (r.decidedAt || "").slice(0, 10) : "—"));
         var act = h("td", "l");
         if (r.status === "PROPOSED" && r.proposedBy !== root.dataset.user) {
-          ["approve", "reject"].forEach(function (w) {
-            var bt = h("button", "sw-btn small", w === "approve" ? "Approve" : "Reject"); bt.type = "button";
-            bt.addEventListener("click", function () {
-              var note = window.prompt((w === "approve" ? "Approve " : "Reject ") + r.id + ": a note for the record", "") ;
-              if (note === null) return;
-              post("stress-window/proposals/" + r.id + "/decision", { decision: w, note: note }).then(load).catch(function (e) { notice(e.message); });
-            });
-            act.appendChild(bt);
-          });
+          var go = h("a", "sw-btn small", "Decide in Approvals"); go.href = "/approvals/stress-window/" + encodeURIComponent(r.id);
+          go.setAttribute("data-sw-approvals", r.id); act.appendChild(go);
         } else if (r.status === "PROPOSED") {
           act.textContent = "awaiting another person";
         }

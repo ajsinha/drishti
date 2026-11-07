@@ -254,9 +254,12 @@ def test_review_before_publish_needs_a_second_person(stack, browser):
     expect(bob_ws.locator('[data-members] tr[data-user="bob"]')).to_be_visible()
     bob = sign_in(browser, "bob")
     bob.goto(url)
-    bob.click('text=Approve and publish')
+    bob.click('text=Decide in Approvals')                                                 # decided in the one Approvals queue
+    bob.locator("[data-ap-item]:not([hidden])").wait_for()
+    bob.get_by_role("button", name="Approve", exact=True).click()
+    expect(bob.locator("[data-ap-said]")).to_have_text("Approved.")
+    bob.goto(url)
     expect(bob.locator("[data-meta]")).to_contain_text("published v1")
-    expect(bob.locator("[data-msg]")).to_contain_text("Approved and published")
     clean(bob)
 
 

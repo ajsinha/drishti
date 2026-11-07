@@ -225,7 +225,7 @@ You should see an answer in words that says what the alert read: here `15,000` t
 would fire. On a business day whose data has not arrived by 18:30 the same check says there is nothing to read for the day, which is exactly what *no data* means. Check now
 saves nothing and fires nothing. Press **Save alert**.
 
-**From the command line** there is no command for alerts: the form sends `PUT /api/v1/me/measure-alerts/{name}` (and Check now `POST /api/v1/me/measure-alerts/preview`)
+**From the command line** there is no command for alerts: the form sends `PUT /api/v1/alerts/rules/{name}` (and Check now `POST /api/v1/alerts/rules/preview`)
 from your signed-in session; a personal API token is refused (`DRS-5002`). This is the body the form sends, and what Check now answered:
 
 ```yaml

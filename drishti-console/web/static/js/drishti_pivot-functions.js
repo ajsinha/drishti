@@ -17,7 +17,7 @@
 /* The pivot screen's Why, What-if and Functions cards (PIVOT_GUIDE.md; mock-up A, scene 2): "why did it move" asks the server for the
    difference between two cells (or a cell on two dates) in steps that add up and draws them as a waterfall; a what-if sends an overlay and
    lists the cells it changes; the playground checks a custom function (the harness, the states after each part and merge, the cost, a
-   little pivot of the sample) and saves it as a version; the list shows the functions and lets an approver approve or withdraw one.
+   little pivot of the sample) and saves it as a version; the list shows the functions and lets an approver withdraw one (a submitted version is approved in the one Approvals queue).
    Nothing here computes a figure: every number is the drishti-bicompute engine's. */
 (function () {
   "use strict";
@@ -253,7 +253,7 @@
       var html = ["<table><thead><tr><th>function</th><th>language</th><th>kind</th><th>status</th><th></th></tr></thead><tbody>"];
       r.functions.forEach(function (f) {
         html.push("<tr><td><code>" + esc(f.ref) + "</code></td><td>" + esc(f.language) + "</td><td>" + esc(f.kind) + "</td><td>" + esc(f.status)
-          + "</td><td><button type='button' class='pv-btn' data-pf-act='approve' data-pf-ref='" + esc(f.id + "@" + f.version) + "'>Approve</button> "
+          + "</td><td>" + (f.status === "submitted" ? "<a class='pv-btn' data-pf-approvals href='/approvals/function/" + esc(encodeURIComponent(f.id.replace("/", ":") + "@" + f.version).replace(/%3A/g, ":").replace(/%40/g, "@")) + "'>In Approvals</a> " : "")
           + "<button type='button' class='pv-btn' data-pf-act='revoke' data-pf-ref='" + esc(f.id + "@" + f.version) + "'>Withdraw</button> "
           + "<button type='button' class='pv-btn' data-pf-use='" + esc(f.ref + "(" + f.inputs.map(function (i) { return i.name; }).join(", ") + ")") + "'>Use</button></td></tr>");
       });
@@ -274,7 +274,7 @@
       S.notice("Add it to Values as: " + t.getAttribute("data-pf-use") + " (put your fields in place of the inputs)");
     } else {
       var ref = t.getAttribute("data-pf-ref");
-      var reason = window.prompt((t.getAttribute("data-pf-act") === "approve" ? "Approve " : "Withdraw ") + ref + ": your reason", "");
+      var reason = window.prompt("Withdraw " + ref + ": your reason", "");
       if (reason === null) { return; }
       var slash = ref.indexOf("/");
       call("POST", "/functions/" + encodeURIComponent(ref.slice(0, slash)) + "/" + encodeURIComponent(ref.slice(slash + 1)) + "/" + t.getAttribute("data-pf-act"),

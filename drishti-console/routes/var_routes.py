@@ -339,8 +339,6 @@ LENS_PARAMS = ("horizon", "method", "confidence", "esConfidence", "set")
 ARROW_TABLES = {"scope/contributions": ("records", "rows")}
 #: an administrator's "apply now" of a PV topic's waiting window (the var-pv-stream connector, VAR_GUIDE.md section 8.4)
 APPLY_NOW = re.compile(r"^intraday/streams/[A-Za-z0-9_.-]{1,80}/apply$")
-#: a stress window proposal's decision (approve or reject: the server refuses the proposer)
-DECISION = re.compile(r"^stress-window/proposals/SWP-[0-9]{1,12}/decision$")
 PROPOSAL = re.compile(r"^stress-window/proposals/SWP-[0-9]{1,12}$")
 
 
@@ -405,7 +403,7 @@ async def api_post(request: Request, path: str):
             return await request.app.state.backend.var("POST", "/" + path, ident(request))
         except BackendError as e:
             return _problem(e)
-    if DECISION.match(path) or path == "stress-window/proposals":
+    if path == "stress-window/proposals":           # the proposal; its decision is made in the one Approvals queue
         try:
             return await request.app.state.backend.var("POST", "/" + path, ident(request), body=await json_body(request))
         except BackendError as e:

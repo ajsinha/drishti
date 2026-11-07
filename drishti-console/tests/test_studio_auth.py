@@ -266,9 +266,6 @@ def test_a_non_author_designs_freely_but_cannot_save_or_propose(client, backend,
         return {"save": False, "review": True, "approve": False}
     monkeypatch.setattr(backend, "studio_settings", settings)
 
-    async def proposals(ident=None, status="", name=""):            # with review on, Studio counts pending proposals
-        return {"proposals": []}
-    monkeypatch.setattr(backend, "proposals", proposals, raising=False)
     d = client.post("/build/designs", json={"name": "Open", "kind": "trade", "empty": True}).json()
     page = client.get(f"/build/d/{d['id']}")
     assert page.status_code == 200 and "data-workbench" in page.text and '"canSave": false' in page.text

@@ -29,7 +29,7 @@ from core.config import load_settings
 
 # today's top bar (the full product): every item the menus drew before editions, by link
 TODAY = ["/t", "/s", "/forms", "/func", "/datamap", "/reports", "/w", "/m", "/alerts", "/build/new", "/build/pack/new", "/build",
-         "/build/reviews", "/review/changes", "/what", "/help/tutorials", "/help/pack-developer-guide", "/admin/users", "/admin/roles",
+         "/approvals", "/what", "/help/tutorials", "/help/pack-developer-guide", "/admin/users", "/admin/roles",
          "/admin/audit", "/admin/packs", "/admin/connectors", "/admin/artifacts", "/admin/loads", "/admin/lakes", "/admin/collab",
          "/admin/embedding", "/admin/net", "/admin/health", "/admin/caches", "/help", "/help/install-and-run", "/about"]
 RISK_ABOUT = {"product": "Drishti Risk", "tagline": "VaR and exposure from your own pricing data", "edition": {"name": "risk", "title": "Drishti Risk"}}
@@ -103,7 +103,7 @@ def test_the_risk_edition_follows_its_file_on_every_surface(backend, monkeypatch
     t = c.get("/t").text
     links = _menu_links(t)
     assert "/var" in links and "/exposure" in links and "/func" in links and "/datamap" in links
-    for hidden in ("/forms", "/build/new", "/build/reviews", "/help/tutorials", "/admin/collab", "/admin/embedding"):
+    for hidden in ("/forms", "/build/new", "/help/tutorials", "/admin/collab", "/admin/embedding"):
         assert hidden not in links, hidden
     assert "Drishti Risk" in t and "VAR BANK, VAR DESK RATES" in t                     # branding and the placeholder
     # words and features switched off: pages answer 404, typed words are refused

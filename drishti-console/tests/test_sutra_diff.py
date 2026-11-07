@@ -127,12 +127,7 @@ def test_a_real_sutra_reordered_as_layout_mode_would_reports_its_moves():
 def test_the_review_page_lists_moves_and_keeps_the_full_diff_behind_a_toggle(client, backend, monkeypatch):
     new = _new(["cash", "legs", "built", "dv01"])
 
-    async def proposal(id_, ident=None):
-        return {"id": id_, "name": "s-test", "version": 4, "note": "", "author": "ana", "createdAt": "2026-10-01T09:00:00Z",
-                "status": "pending", "newVersion": True, "stale": False, "mayApprove": True, "mayWithdraw": False,
-                "text": new, "baseText": "", "liveText": "", "previousText": OLD}
-    monkeypatch.setattr(backend, "proposal", proposal, raising=False)
-    html = client.get("/build/reviews/P-000042").text
+    html = _sutra_view(client, backend, monkeypatch, OLD, new)
     assert '<ul class="diff-moves"' in html and "moved: Cashflows from position 2 to 1</li>" in html
     edits = html.split('aria-label="Edits besides the moves">', 1)[1].split("</pre>", 1)[0]
     assert '<span class="d-add">+version: 4</span>' in edits and "d-add\">+  - id:" not in edits and "d-del\">-  - id:" not in edits
@@ -142,11 +137,15 @@ def test_the_review_page_lists_moves_and_keeps_the_full_diff_behind_a_toggle(cli
 
 
 def test_a_review_without_moves_shows_the_plain_diff_and_no_toggle(client, backend, monkeypatch):
-    async def proposal(id_, ident=None):
-        return {"id": id_, "name": "s-test", "version": 4, "note": "", "author": "ana", "createdAt": "2026-10-01T09:00:00Z",
-                "status": "pending", "newVersion": True, "stale": False, "mayApprove": True, "mayWithdraw": False,
-                "text": OLD.replace("version: 3", "version: 4"), "baseText": "", "liveText": "", "previousText": OLD}
-    monkeypatch.setattr(backend, "proposal", proposal, raising=False)
-    html = client.get("/build/reviews/P-000042").text
+    html = _sutra_view(client, backend, monkeypatch, OLD, OLD.replace("version: 3", "version: 4"))
     assert "diff-moves" not in html.split("<main", 1)[-1].split("</main>")[0] or '<ul class="diff-moves"' not in html
     assert '<details class="diff-full">' not in html and '<span class="d-add">+version: 4</span>' in html
+
+
+def _sutra_view(client, backend, monkeypatch, before, after, evidence=None, new_version=True):
+    """The Approvals queue's Sutra view (the diff with its moves, the evidence) of a proposal whose texts the server gives as facts."""
+    async def approvals_item(kind, id_, ident=None):
+        return {"detail": {"item": {"kind": kind, "id": id_}, "facts": {"before": before, "after": after, "evidence": evidence, "newVersion": new_version}},
+                "actions": ["ask"]}
+    monkeypatch.setattr(backend, "approvals_item", approvals_item, raising=False)
+    return client.get("/approvals/api/view/sutra/P-000042").text

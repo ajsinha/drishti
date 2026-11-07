@@ -95,7 +95,7 @@ PYODIDE = "/pyodide/"
 EMBED = "/embed/"                           # embedded views for other web applications: off unless embed.enabled (routes/embed_routes.py)
 
 
-PROTECTED = ("/t", "/bi", "/v/", "/go", "/form", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports", "/build", "/share/", "/inbox", "/render/")
+PROTECTED = ("/t", "/bi", "/v/", "/go", "/form", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports", "/build", "/share/", "/inbox", "/render/", "/approvals", "/review/")
 EXACT = ("/t", "/s")                        # pages whose path is a prefix of public ones (/s of /static)
 # all a user whose password change is due may reach until it is done (besides public pages): QA 2026-10-01 SEC-06
 WHILE_MUST_CHANGE = ("/account", "/account/password", "/logout")
@@ -288,7 +288,7 @@ def create_app(settings: Settings) -> FastAPI:
 
     catalogue = Servers(settings)
     from routes import (admin_routes, alert_routes, api_routes, asof_routes, auth_routes, build_routes, pack_routes, calc_routes, export_routes, help_routes, home_routes,
-                        designer_routes, designer_grid_routes, dist_routes, layout_routes, mcube_routes, monitor_routes, pivot_routes, report_routes, review_routes, server_routes, ship_routes, studio_routes, terminal_routes,
+                        designer_routes, designer_grid_routes, dist_routes, layout_routes, mcube_routes, monitor_routes, pivot_routes, report_routes, approval_routes, server_routes, ship_routes, studio_routes, terminal_routes,
                         workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes,
                         ai_routes)
 
@@ -598,7 +598,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(studio_routes.router)
     app.include_router(build_routes.router)
     app.include_router(pack_routes.router)
-    app.include_router(review_routes.router)
+    app.include_router(approval_routes.router)          # the one Approvals queue (SHARED_SCREENS.md section 2) and the old review pages' redirects
     app.include_router(ship_routes.router)
     app.include_router(admin_routes.router)
     app.include_router(help_routes.router)
