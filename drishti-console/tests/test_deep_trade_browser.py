@@ -99,7 +99,8 @@ def test_a_floating_flow_opens_to_its_resets_and_a_fixed_leg_has_none(live_conso
 
 def test_a_phone_shows_a_deep_trade_without_sideways_scrolling_small_targets_or_clipping(live_console, browser):
     """The page-widths checks (test_page_widths_browser.py) on a deep trade at 390 px, a floating flow opened to its resets."""
-    from test_page_widths_browser import AUDIT, CLIPPED, TARGETS
+    from test_page_widths_browser import AUDIT
+    from test_phone_pages_browser import CLIPPED, TARGETS
     ctx = browser.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
     page = ctx.new_page()
     problems = []
