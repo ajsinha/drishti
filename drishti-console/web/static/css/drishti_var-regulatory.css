@@ -68,7 +68,7 @@
 .rg dl.rg-kv dd { margin: 0; overflow-wrap: anywhere; }
 .rg-spark svg { width: 170px; height: 18px; display: block; }
 .rg-ask { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
-.rg-ask input, .rg-ask select { background: var(--d-bg); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 4px; padding: 4px 8px; }
+.rg-ask input { background: var(--d-bg); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 4px; padding: 4px 8px; }
 @media (max-width: 1100px) { .rg-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 640px) {
   .rg-desk, .rg-exc, .rg-chart-card { display: none; }

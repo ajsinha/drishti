@@ -189,6 +189,72 @@ def test_the_pickers_dates_ranges_tree_multiselect_and_combobox(browsers):
     run(browsers, body)
 
 
+def test_the_single_choice_select_by_keyboard_type_ahead_search_and_aria(browsers):
+    async def body(pg):
+        ctl = "#hx-horizon .di-select-control"
+        # from markup: the <option> children became the options, `selected` the value, the disabled one kept and refused
+        assert await h(pg, "document.getElementById('hx-horizon').value") == "10d:sqrt10"
+        assert await pg.text_content(ctl) == "10-day (√10)▾"
+        assert await pg.get_attribute(ctl, "role") == "combobox" and await pg.get_attribute(ctl, "aria-expanded") == "false"
+        assert await pg.get_attribute(ctl, "aria-haspopup") == "listbox" and await pg.get_attribute(ctl, "aria-label") == "Horizon"
+        await pg.focus(ctl)
+        await pg.keyboard.press("ArrowDown")                                         # opens on the value
+        await pg.wait_for_selector(".di-select-pop [role=listbox]")
+        assert await pg.get_attribute(ctl, "aria-expanded") == "true"
+        lb = await pg.get_attribute(ctl, "aria-controls")
+        assert await h(pg, f"document.getElementById('{lb}').getAttribute('role')") == "listbox"
+        active = await pg.get_attribute(ctl, "aria-activedescendant")
+        assert await pg.text_content(f"#{active}") == "10-day (√10)"
+        assert await pg.locator(".di-select-pop .di-select-search").count() == 0       # a short list: no search field, the control keeps the focus
+        await pg.keyboard.press("End")                                               # the last: disabled, Enter refuses it
+        assert await pg.get_attribute(f"#{await pg.get_attribute(ctl, 'aria-activedescendant')}", "aria-disabled") == "true"
+        await pg.keyboard.press("Enter")
+        assert await h(pg, "document.getElementById('hx-horizon').value") == "10d:sqrt10"
+        await pg.keyboard.press("Home")
+        await pg.keyboard.press("Enter")                                             # picks 1-day, closes, focus back on the control
+        assert await h(pg, "document.getElementById('hx-horizon').value") == "1d"
+        assert await pg.get_attribute(ctl, "aria-expanded") == "false"
+        assert await h(pg, "document.activeElement === document.querySelector('#hx-horizon .di-select-control')")
+        await pg.keyboard.press("Escape")                                            # closed: nothing happens
+        await pg.keyboard.press("1")                                                 # type-ahead opens on "10-day (√10)"
+        await pg.keyboard.press("0")
+        await pg.keyboard.press("-")
+        await pg.keyboard.press("d")
+        await pg.keyboard.press("a")
+        await pg.keyboard.press("y")
+        await pg.keyboard.press(" ")                                                 # Space picks the active option
+        assert await h(pg, "document.getElementById('hx-horizon').value") == "10d:sqrt10"
+        await pg.keyboard.press("ArrowDown")
+        await pg.keyboard.press("ArrowDown")
+        await pg.keyboard.press("Escape")                                            # Escape closes without picking
+        assert await h(pg, "document.getElementById('hx-horizon').value") == "10d:sqrt10"
+        assert await h(pg, "window.__harness.selectChanges") == ["1d", "10d:sqrt10"]
+        # a long list: a search field on top holds the focus; groups shown; a disabled option refused; Page Down; the value by click
+        sel = "#hx-select .di-select-control"
+        await pg.click(sel)
+        await pg.wait_for_selector(".di-select-pop .di-select-search")
+        assert await h(pg, "document.activeElement.classList.contains('di-select-search')")
+        assert await pg.locator(".di-select-pop .di-option-group").count() == 2
+        await pg.keyboard.type("ru")
+        assert "1 match" in await pg.text_content(".di-select-pop .di-select-status")
+        await pg.keyboard.press("Enter")                                             # RUB is disabled
+        assert await h(pg, "window.__harness.select.getValue()") == "USD"
+        await pg.fill(".di-select-pop .di-select-search", "")
+        await pg.keyboard.press("PageDown")
+        await pg.keyboard.press("Enter")
+        assert await h(pg, "window.__harness.select.getValue()") == "SEK"              # USD is first; eight down
+        assert await h(pg, "document.activeElement === document.querySelector('#hx-select .di-select-control')")
+        await pg.keyboard.press("j")                                                 # typed on the control: the search opens with it
+        assert await pg.input_value(".di-select-pop .di-select-search") == "j"
+        await pg.click(".di-select-pop .di-option:has-text('JPY')")
+        assert await h(pg, "window.__harness.select.getValue()") == "JPY"
+        assert await h(pg, "window.__harness.selectChanges") == ["1d", "10d:sqrt10", "SEK", "JPY"]
+        h0 = await h(pg, "(window.__harness.select.setOptions(['EUR', 'JPY']), window.__harness.select.getValue())")
+        assert h0 == "JPY"
+        assert await h(pg, "window.__harness.selectChanges.length") == 4             # set by code: no change event
+    run(browsers, body)
+
+
 def test_a_form_from_a_schema_with_conditions_arrays_the_servers_check_and_four_eyes(browsers):
     async def body(pg):
         f = "#hx-form"

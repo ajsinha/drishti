@@ -40,6 +40,7 @@ import pytest
 
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from wb_live import _stack
+from select_helpers import choose, value, values  # <drishti-select>: drishti-inputs' Select
 
 ROOT = Path(__file__).resolve().parents[2]
 #: the kinds the exposure engine reads (as tools/docs/shots/_exp.py builds them)
@@ -208,8 +209,8 @@ def test_the_pre_deal_what_if_by_the_proxy_and_by_the_paths(stack, browser):
     pg = open_exp(browser, str(stack), "/exposure?scope=" + SET)
     painted(pg, SET)
     tab(pg, "predeal")
-    wait(pg, "document.querySelectorAll('[data-xx-candidate] option').length > 0")
-    pg.locator("[data-xx-method]").select_option("addon")
+    wait(pg, "!!document.querySelector('[data-xx-candidate]') && document.querySelector('[data-xx-candidate]').component.options.length > 0")
+    choose(pg, "[data-xx-method]", "addon")
     pg.locator("[data-xx-whatif]").click()
     wait(pg, "document.querySelector('[data-exposure]').dataset.whatif === 'addon'", PAINT_S)
     out = pg.locator("[data-xx-whatif-out]").text_content()
@@ -218,7 +219,7 @@ def test_the_pre_deal_what_if_by_the_proxy_and_by_the_paths(stack, browser):
 
     # the exact method: the candidate's paths netted and collateralised with the set by the Python exposure engine (compute is on)
     pg.evaluate("delete document.querySelector('[data-exposure]').dataset.whatif")
-    pg.locator("[data-xx-method]").select_option("paths")
+    choose(pg, "[data-xx-method]", "paths")
     pg.locator("[data-xx-factor]").fill("-1")                                # the unwind of a booked trade
     pg.locator("[data-xx-whatif]").click()
     wait(pg, "document.querySelector('[data-exposure]').dataset.whatif === 'paths'"
@@ -235,24 +236,23 @@ def test_the_pre_deal_what_if_on_a_counterparty(stack, browser):
     pg = open_exp(browser, str(stack), "/exposure?scope=" + CPTY)
     painted(pg, CPTY)
     tab(pg, "predeal")
-    wait(pg, "document.querySelectorAll('[data-xx-predeal-set] option').length > 1 && document.querySelectorAll('[data-xx-candidate] option').length > 0")
-    sets = pg.evaluate("[...document.querySelectorAll('[data-xx-predeal-set] option')].map(o => o.value)")
+    wait(pg, "!!document.querySelector('[data-xx-predeal-set]') && document.querySelector('[data-xx-predeal-set]').component.options.length > 1 && document.querySelector('[data-xx-candidate]').component.options.length > 0")
+    sets = values(pg, "[data-xx-predeal-set]")
     peaks = {r["nettingSet"]: r["peakPfe"] for r in head(pg, "byNettingSet")}
     assert sets[0] == "NSET:" + max(peaks, key=lambda k: peaks[k] or 0)          # the largest by peak PFE, picked by default
-    assert pg.locator("[data-xx-whatif-scope]").input_value() == CPTY            # the counterparty's figures by default
-    first = pg.evaluate("[...document.querySelectorAll('[data-xx-candidate] option')].map(o => o.value).join(',')")
-    pg.locator("[data-xx-predeal-set]").select_option(sets[1])
-    wait(pg, "!document.querySelector('[data-xx-candidate]').disabled && [...document.querySelectorAll('[data-xx-candidate] option')]"
-             ".map(o => o.value).join(',') !== %r" % first, PAINT_S)
+    assert value(pg, "[data-xx-whatif-scope]") == CPTY            # the counterparty's figures by default
+    first = ",".join(values(pg, "[data-xx-candidate]"))
+    choose(pg, "[data-xx-predeal-set]", sets[1])
+    wait(pg, "(c => !c.o.disabled && c.options.map(o => o.value).join(',') !== %r)(document.querySelector('[data-xx-candidate]').component)" % first, PAINT_S)
     assert "pre-deal what-if" in pg.locator("[data-xx-pane]").inner_text().lower()
-    pg.locator("[data-xx-method]").select_option("addon")
+    choose(pg, "[data-xx-method]", "addon")
     pg.locator("[data-xx-whatif]").click()
     wait(pg, "document.querySelector('[data-exposure]').dataset.whatif === 'addon'", PAINT_S)
     assert pg.get_attribute("[data-exposure]", "data-whatif-scope") == CPTY
     out = pg.locator("[data-xx-whatif-out]").text_content()
     assert "Peak PFE after" in out and "proxy" in out
     pg.evaluate("delete document.querySelector('[data-exposure]').dataset.whatif")
-    pg.locator("[data-xx-method]").select_option("paths")
+    choose(pg, "[data-xx-method]", "paths")
     pg.locator("[data-xx-factor]").fill("-1")
     pg.locator("[data-xx-whatif]").click()
     wait(pg, "document.querySelector('[data-exposure]').dataset.whatif === 'paths'"

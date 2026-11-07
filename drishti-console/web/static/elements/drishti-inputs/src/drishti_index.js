@@ -15,7 +15,7 @@
  */
 /* drishti-inputs: the inputs every screen asks for, with no server needed. Business-date pickers keyed by holiday calendars (T-1,
    month-end, typed dates), a date-range picker with presets, a tree picker for hierarchies (search, partial selection, children from a
-   server), a multi-select with search, chips and select-all, a combobox with server type-ahead, forms from a schema (validation in
+   server), a multi-select with search, chips and select-all, a combobox with server type-ahead, a single-choice select (keyboard, type-ahead, search, ARIA), forms from a schema (validation in
    words, conditional fields, arrays, a four-eyes submit), a filter bar whose filter model drishti-grid and charts follow on a bus, and
    the code editor over the vendored CodeMirror (Rachana, YAML, Python; completion from the function catalogue; lint; read-only; diff). */
 export { CALENDAR_RULES, easterSunday, ruleDate, HolidayCalendar, defineCalendar, calendar, DATE_PRESETS, resolvePreset, parseDateInput, monthGrid,
@@ -27,6 +27,7 @@ export { TreeModel } from './drishti_tree.js';
 export { TreePicker } from './drishti_tree-picker.js';
 export { MultiSelect } from './drishti_multiselect.js';
 export { TypeAhead, Combobox } from './drishti_combobox.js';
+export { Select } from './drishti_select.js';
 export { words, pathParts, getPath, setPath, conditionHolds, fieldsOf, defaults, fieldProblem, validate, visibleValue, changes,
   parseField } from './drishti_schema.js';
 export { Form } from './drishti_form.js';

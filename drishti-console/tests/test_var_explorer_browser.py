@@ -47,6 +47,7 @@ import pytest
 
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from wb_live import _stack
+from select_helpers import choose, labels  # <drishti-select>: drishti-inputs' Select
 
 ROOT = Path(__file__).resolve().parents[2]
 VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio", "var-limit")] + ["trades/murex"])
@@ -187,10 +188,10 @@ def test_the_limit_letters_tree_a_letter_its_desk_and_a_trade(stack, browser):
     place; LL:<letter> in the scope box is the letter's node."""
     pg = open_var(browser, str(stack), "/var?scope=BANK")
     painted(pg, "BANK")
-    wait(pg, "document.querySelectorAll('[data-vx-hierarchy] option').length >= 3")
-    titles = pg.locator("[data-vx-hierarchy] option").all_inner_texts()
+    wait(pg, "(document.querySelector('[data-vx-hierarchy]').component || {options: []}).options.length >= 3")
+    titles = labels(pg, "[data-vx-hierarchy]")
     assert {"Management", "Legal entities", "Limit letters"} <= set(titles)
-    pg.select_option("[data-vx-hierarchy]", "LL")
+    choose(pg, "[data-vx-hierarchy]", "LL")
     wait(pg, "document.querySelectorAll('.vx-tree .dg-row[data-scope^=\"NODE:LL~LL-\"]').length > 3")
     assert "hierarchy=LL" in pg.url
     letter = pg.locator('.vx-tree .dg-row[data-scope^="NODE:LL~LL-"]').first.get_attribute("data-scope")
