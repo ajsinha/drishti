@@ -177,6 +177,7 @@
 
   function open(req, tab, anchor) {
     ensureDrawer();
+    clearTimeout(hoverTimer);                                        // a hover that began before the click opens no preview over the drawer
     closePreview();
     if (anchor) lastAnchor = anchor;
     S.req = req;
@@ -419,7 +420,7 @@
     var el = target(ev);
     if (!el || el === popFor || !(window.matchMedia && window.matchMedia("(hover: hover)").matches)) return;
     clearTimeout(hoverTimer);
-    hoverTimer = setTimeout(function () { var req = reqOf(el); if (req && req.kind && el.matches(":hover")) { lastAnchor = el; preview(el, req); } }, 350);
+    hoverTimer = setTimeout(function () { var req = reqOf(el); if (req && req.kind && el.matches(":hover") && !(drawer && !drawer.hidden)) { lastAnchor = el; preview(el, req); } }, 350);
   });
   document.addEventListener("mouseout", function (ev) { if (target(ev)) clearTimeout(hoverTimer); });
   document.addEventListener("keydown", function (ev) {

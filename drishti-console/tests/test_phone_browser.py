@@ -237,7 +237,6 @@ def test_the_var_page_on_a_desktop_is_unchanged(browser, risk_console, theme):
         _open(page, risk_console + "/var?scope=BANK")
         assert page.locator("[data-phone-tier]").count() == 0 and page.locator(".ph-parts").count() == 0
         assert page.locator(".vx-tab[data-tab=contrib]").is_visible()
-        page.locator("[data-vx-how]").click()                                     # 2.9.11.b: What-if… sits in the How calculated drawer
-        assert page.locator("[data-vx-whatif]").is_visible()
+        assert page.locator("[data-vx-whatif]").is_visible()                       # What-if… in the toolbar
     finally:
         ctx.close()
