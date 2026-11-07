@@ -33,7 +33,7 @@ export { words, pathParts, getPath, setPath, conditionHolds, fieldsOf, defaults,
 export { Form } from './drishti_form.js';
 export { defineWidget, defaultWidget, applyHook } from './drishti_form-fields.js';
 export { FilterModelBar, FilterBar } from './drishti_filter-bar.js';
-export { upgradeDateInput, upgradeCheckboxes, upgradeFields } from './drishti_native.js';
+export { upgradeDateInput, upgradeTimeInput, upgradeDateTimeInput, upgradeCheckboxes, upgradeFields } from './drishti_native.js';
 export { rachanaMode, yamlMode, MODES, defineModes, MiniStream, tokens } from './drishti_code-modes.js';
 export { wordAt, completions, insertText, lineDiff, sideBySide, diffStats } from './drishti_code-text.js';
 export { ensureCodeMirror, CodeEditor, CodeDiff } from './drishti_code-editor.js';

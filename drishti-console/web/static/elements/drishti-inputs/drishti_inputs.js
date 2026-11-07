@@ -2642,15 +2642,31 @@
   __m["src/drishti_native.js"] = (function () {
     var HolidayCalendar = __m["src/drishti_calendar.js"].HolidayCalendar;
     var DatePicker = __m["src/drishti_date-picker.js"].DatePicker;
+    var TimePicker = __m["src/drishti_time-picker.js"].TimePicker, DateTimePicker = __m["src/drishti_time-picker.js"].DateTimePicker;
     var MultiSelect = __m["src/drishti_multiselect.js"].MultiSelect;
-    function labelOf(input) {
+    function labelOf(input, fallback) {
       const own = input.getAttribute('aria-label');
       if (own) { return own; }
       const ls = input.labels ? Array.from(input.labels) : [];
       const t = ls.map((l) => Array.from(l.childNodes).filter((n) => n.nodeType === 3 || (n.nodeType === 1 && !/^(INPUT|SELECT|TEXTAREA|SPAN)$/.test(n.tagName) && !n.classList.contains('di'))).map((n) => n.textContent).join(' ')).join(' ').replace(/\s+/g, ' ').trim();
-      return t || input.name || 'Date';
+      return t || input.name || fallback || 'Date';
     }
     function upgradeDateInput(input, options) {
+      return upgrade(input, options, (o, ds, start, cal, business) => ({ Cls: DatePicker, opts: {
+        value: start || null, calendar: cal || undefined, businessOnly: business, asOf: o.asOf || ds.current || undefined,
+        min: input.getAttribute('min') || undefined, max: input.getAttribute('max') || undefined, required: input.required,
+        shortcuts: o.shortcuts !== undefined ? o.shortcuts : business, label: o.label || labelOf(input),
+        placeholder: o.placeholder || input.getAttribute('placeholder') || undefined } }));
+    }
+    function upgradeTimeInput(input, options) {
+      return upgrade(input, options, (o, ds, start) => ({ Cls: TimePicker, opts: { value: start || null, required: input.required, label: o.label || labelOf(input, 'Time'),
+        step: o.stepMinutes || (+input.getAttribute('step') >= 60 ? +input.getAttribute('step') / 60 : 15), min: input.getAttribute('min') || undefined, max: input.getAttribute('max') || undefined } }));
+    }
+    function upgradeDateTimeInput(input, options) {
+      return upgrade(input, options, (o, ds, start, cal, business) => ({ Cls: DateTimePicker, opts: { value: start || null, required: input.required, label: o.label || labelOf(input, 'Date and time'),
+        timeZone: o.timeZone || ds.timeZone || undefined, calendar: cal || undefined, businessOnly: business, min: input.getAttribute('min') || undefined, max: input.getAttribute('max') || undefined } }));
+    }
+    function upgrade(input, options, make) {
       if (!input || !input.ownerDocument) { return null; }
       if (input.diPicker) { return input.diPicker; }
       const doc = input.ownerDocument, win = doc.defaultView, o = Object.assign({}, options);
@@ -2663,12 +2679,7 @@
       input.insertAdjacentElement('afterend', host);
       const proto = Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, 'value');
       const start = proto.get.call(input) || input.getAttribute('value') || '';
-      const picker = new DatePicker(host, {
-        value: start || null, calendar: cal || undefined, businessOnly: business, asOf: o.asOf || ds.current || undefined,
-        min: input.getAttribute('min') || undefined, max: input.getAttribute('max') || undefined, required: input.required,
-        shortcuts: o.shortcuts !== undefined ? o.shortcuts : business, label: o.label || labelOf(input),
-        placeholder: o.placeholder || input.getAttribute('placeholder') || undefined
-      });
+      const made = make(o, ds, start, cal, business), picker = new made.Cls(host, made.opts);
       input.type = 'hidden';
       proto.set.call(input, start);
       Object.defineProperty(input, 'value', {
@@ -2677,7 +2688,7 @@
         set(v) { proto.set.call(input, v == null ? '' : String(v)); picker.setValue(v ? String(v) : null); }
       });
       input.focus = () => picker.focus();
-      input.showPicker = () => picker.open();
+      input.showPicker = () => (picker.open ? picker.open() : picker.focus());
       picker.on('change', (e) => {
         proto.set.call(input, e.value || '');
         input.dispatchEvent(new win.Event('input', { bubbles: true }));
@@ -2685,7 +2696,7 @@
       });
       const follow = () => {
         host.hidden = input.hidden;
-        picker.input.disabled = input.disabled;
+        host.querySelectorAll('input, button').forEach((e) => { e.disabled = input.disabled; });
         picker.o.min = input.getAttribute('min') || undefined;
         picker.o.max = input.getAttribute('max') || undefined;
       };
@@ -2749,6 +2760,8 @@
       const out = { dates: [], checks: [] };
       if (!root || !root.querySelectorAll) { return out; }
       root.querySelectorAll('input[type=date]:not([data-native])').forEach((i) => { const p = upgradeDateInput(i, o.dates); if (p) { out.dates.push(p); } });
+      root.querySelectorAll('input[type=time]:not([data-native])').forEach((i) => { const p = upgradeTimeInput(i); if (p) { out.dates.push(p); } });
+      root.querySelectorAll('input[type=datetime-local]:not([data-native])').forEach((i) => { const p = upgradeDateTimeInput(i); if (p) { out.dates.push(p); } });
       root.querySelectorAll('[data-multiselect]').forEach((g) => {
         if (g.diUpgrade || g.querySelectorAll('input[type=checkbox]').length <= o.small) { return; }
         const u = upgradeCheckboxes(g, { offClass: o.offClass });
@@ -2756,13 +2769,13 @@
       });
       return out;
     }
-    return { "upgradeDateInput": upgradeDateInput, "upgradeCheckboxes": upgradeCheckboxes, "upgradeFields": upgradeFields };
+    return { "upgradeDateInput": upgradeDateInput, "upgradeTimeInput": upgradeTimeInput, "upgradeDateTimeInput": upgradeDateTimeInput, "upgradeCheckboxes": upgradeCheckboxes, "upgradeFields": upgradeFields };
   })();
   /* ---- src/drishti_index.js ---- */
   __m["src/drishti_index.js"] = (function () {
     var defineInputElements = __m["src/drishti_inputs-element.js"].defineInputElements;
     function install(root) { if (root && root.document && root.customElements) { defineInputElements(root.customElements, root); } }
-    return { "install": install, "CALENDAR_RULES": __m["src/drishti_calendar.js"].CALENDAR_RULES, "easterSunday": __m["src/drishti_calendar.js"].easterSunday, "ruleDate": __m["src/drishti_calendar.js"].ruleDate, "HolidayCalendar": __m["src/drishti_calendar.js"].HolidayCalendar, "defineCalendar": __m["src/drishti_calendar.js"].defineCalendar, "calendar": __m["src/drishti_calendar.js"].calendar, "DATE_PRESETS": __m["src/drishti_calendar.js"].DATE_PRESETS, "resolvePreset": __m["src/drishti_calendar.js"].resolvePreset, "parseDateInput": __m["src/drishti_calendar.js"].parseDateInput, "monthGrid": __m["src/drishti_calendar.js"].monthGrid, "shiftDate": __m["src/drishti_calendar.js"].shiftDate, "uid": __m["src/drishti_inputs-dom.js"].uid, "debounce": __m["src/drishti_inputs-dom.js"].debounce, "InputBase": __m["src/drishti_inputs-dom.js"].InputBase, "Popover": __m["src/drishti_inputs-dom.js"].Popover, "Listbox": __m["src/drishti_inputs-dom.js"].Listbox, "normalizeOptions": __m["src/drishti_inputs-dom.js"].normalizeOptions, "searchOptions": __m["src/drishti_inputs-dom.js"].searchOptions, "CalendarView": __m["src/drishti_date-picker.js"].CalendarView, "DatePicker": __m["src/drishti_date-picker.js"].DatePicker, "DateRangePicker": __m["src/drishti_date-range.js"].DateRangePicker, "parseTime": __m["src/drishti_time-picker.js"].parseTime, "parseDateTime": __m["src/drishti_time-picker.js"].parseDateTime, "timeSlots": __m["src/drishti_time-picker.js"].timeSlots, "TimePicker": __m["src/drishti_time-picker.js"].TimePicker, "DateTimePicker": __m["src/drishti_time-picker.js"].DateTimePicker, "TreeModel": __m["src/drishti_tree.js"].TreeModel, "TreePicker": __m["src/drishti_tree-picker.js"].TreePicker, "MultiSelect": __m["src/drishti_multiselect.js"].MultiSelect, "TypeAhead": __m["src/drishti_combobox.js"].TypeAhead, "Combobox": __m["src/drishti_combobox.js"].Combobox, "words": __m["src/drishti_schema.js"].words, "pathParts": __m["src/drishti_schema.js"].pathParts, "getPath": __m["src/drishti_schema.js"].getPath, "setPath": __m["src/drishti_schema.js"].setPath, "conditionHolds": __m["src/drishti_schema.js"].conditionHolds, "fieldsOf": __m["src/drishti_schema.js"].fieldsOf, "defaults": __m["src/drishti_schema.js"].defaults, "fieldProblem": __m["src/drishti_schema.js"].fieldProblem, "validate": __m["src/drishti_schema.js"].validate, "visibleValue": __m["src/drishti_schema.js"].visibleValue, "changes": __m["src/drishti_schema.js"].changes, "parseField": __m["src/drishti_schema.js"].parseField, "currencyOf": __m["src/drishti_schema.js"].currencyOf, "offeredValues": __m["src/drishti_schema.js"].offeredValues, "Form": __m["src/drishti_form.js"].Form, "defineWidget": __m["src/drishti_form-fields.js"].defineWidget, "defaultWidget": __m["src/drishti_form-fields.js"].defaultWidget, "applyHook": __m["src/drishti_form-fields.js"].applyHook, "FilterModelBar": __m["src/drishti_filter-bar.js"].FilterModelBar, "FilterBar": __m["src/drishti_filter-bar.js"].FilterBar, "upgradeDateInput": __m["src/drishti_native.js"].upgradeDateInput, "upgradeCheckboxes": __m["src/drishti_native.js"].upgradeCheckboxes, "upgradeFields": __m["src/drishti_native.js"].upgradeFields, "rachanaMode": __m["src/drishti_code-modes.js"].rachanaMode, "yamlMode": __m["src/drishti_code-modes.js"].yamlMode, "MODES": __m["src/drishti_code-modes.js"].MODES, "defineModes": __m["src/drishti_code-modes.js"].defineModes, "MiniStream": __m["src/drishti_code-modes.js"].MiniStream, "tokens": __m["src/drishti_code-modes.js"].tokens, "wordAt": __m["src/drishti_code-text.js"].wordAt, "completions": __m["src/drishti_code-text.js"].completions, "insertText": __m["src/drishti_code-text.js"].insertText, "lineDiff": __m["src/drishti_code-text.js"].lineDiff, "sideBySide": __m["src/drishti_code-text.js"].sideBySide, "diffStats": __m["src/drishti_code-text.js"].diffStats, "ensureCodeMirror": __m["src/drishti_code-editor.js"].ensureCodeMirror, "CodeEditor": __m["src/drishti_code-editor.js"].CodeEditor, "CodeDiff": __m["src/drishti_code-editor.js"].CodeDiff, "INPUT_ELEMENTS": __m["src/drishti_inputs-element.js"].INPUT_ELEMENTS, "defineInputElements": __m["src/drishti_inputs-element.js"].defineInputElements };
+    return { "install": install, "CALENDAR_RULES": __m["src/drishti_calendar.js"].CALENDAR_RULES, "easterSunday": __m["src/drishti_calendar.js"].easterSunday, "ruleDate": __m["src/drishti_calendar.js"].ruleDate, "HolidayCalendar": __m["src/drishti_calendar.js"].HolidayCalendar, "defineCalendar": __m["src/drishti_calendar.js"].defineCalendar, "calendar": __m["src/drishti_calendar.js"].calendar, "DATE_PRESETS": __m["src/drishti_calendar.js"].DATE_PRESETS, "resolvePreset": __m["src/drishti_calendar.js"].resolvePreset, "parseDateInput": __m["src/drishti_calendar.js"].parseDateInput, "monthGrid": __m["src/drishti_calendar.js"].monthGrid, "shiftDate": __m["src/drishti_calendar.js"].shiftDate, "uid": __m["src/drishti_inputs-dom.js"].uid, "debounce": __m["src/drishti_inputs-dom.js"].debounce, "InputBase": __m["src/drishti_inputs-dom.js"].InputBase, "Popover": __m["src/drishti_inputs-dom.js"].Popover, "Listbox": __m["src/drishti_inputs-dom.js"].Listbox, "normalizeOptions": __m["src/drishti_inputs-dom.js"].normalizeOptions, "searchOptions": __m["src/drishti_inputs-dom.js"].searchOptions, "CalendarView": __m["src/drishti_date-picker.js"].CalendarView, "DatePicker": __m["src/drishti_date-picker.js"].DatePicker, "DateRangePicker": __m["src/drishti_date-range.js"].DateRangePicker, "parseTime": __m["src/drishti_time-picker.js"].parseTime, "parseDateTime": __m["src/drishti_time-picker.js"].parseDateTime, "timeSlots": __m["src/drishti_time-picker.js"].timeSlots, "TimePicker": __m["src/drishti_time-picker.js"].TimePicker, "DateTimePicker": __m["src/drishti_time-picker.js"].DateTimePicker, "TreeModel": __m["src/drishti_tree.js"].TreeModel, "TreePicker": __m["src/drishti_tree-picker.js"].TreePicker, "MultiSelect": __m["src/drishti_multiselect.js"].MultiSelect, "TypeAhead": __m["src/drishti_combobox.js"].TypeAhead, "Combobox": __m["src/drishti_combobox.js"].Combobox, "words": __m["src/drishti_schema.js"].words, "pathParts": __m["src/drishti_schema.js"].pathParts, "getPath": __m["src/drishti_schema.js"].getPath, "setPath": __m["src/drishti_schema.js"].setPath, "conditionHolds": __m["src/drishti_schema.js"].conditionHolds, "fieldsOf": __m["src/drishti_schema.js"].fieldsOf, "defaults": __m["src/drishti_schema.js"].defaults, "fieldProblem": __m["src/drishti_schema.js"].fieldProblem, "validate": __m["src/drishti_schema.js"].validate, "visibleValue": __m["src/drishti_schema.js"].visibleValue, "changes": __m["src/drishti_schema.js"].changes, "parseField": __m["src/drishti_schema.js"].parseField, "currencyOf": __m["src/drishti_schema.js"].currencyOf, "offeredValues": __m["src/drishti_schema.js"].offeredValues, "Form": __m["src/drishti_form.js"].Form, "defineWidget": __m["src/drishti_form-fields.js"].defineWidget, "defaultWidget": __m["src/drishti_form-fields.js"].defaultWidget, "applyHook": __m["src/drishti_form-fields.js"].applyHook, "FilterModelBar": __m["src/drishti_filter-bar.js"].FilterModelBar, "FilterBar": __m["src/drishti_filter-bar.js"].FilterBar, "upgradeDateInput": __m["src/drishti_native.js"].upgradeDateInput, "upgradeTimeInput": __m["src/drishti_native.js"].upgradeTimeInput, "upgradeDateTimeInput": __m["src/drishti_native.js"].upgradeDateTimeInput, "upgradeCheckboxes": __m["src/drishti_native.js"].upgradeCheckboxes, "upgradeFields": __m["src/drishti_native.js"].upgradeFields, "rachanaMode": __m["src/drishti_code-modes.js"].rachanaMode, "yamlMode": __m["src/drishti_code-modes.js"].yamlMode, "MODES": __m["src/drishti_code-modes.js"].MODES, "defineModes": __m["src/drishti_code-modes.js"].defineModes, "MiniStream": __m["src/drishti_code-modes.js"].MiniStream, "tokens": __m["src/drishti_code-modes.js"].tokens, "wordAt": __m["src/drishti_code-text.js"].wordAt, "completions": __m["src/drishti_code-text.js"].completions, "insertText": __m["src/drishti_code-text.js"].insertText, "lineDiff": __m["src/drishti_code-text.js"].lineDiff, "sideBySide": __m["src/drishti_code-text.js"].sideBySide, "diffStats": __m["src/drishti_code-text.js"].diffStats, "ensureCodeMirror": __m["src/drishti_code-editor.js"].ensureCodeMirror, "CodeEditor": __m["src/drishti_code-editor.js"].CodeEditor, "CodeDiff": __m["src/drishti_code-editor.js"].CodeDiff, "INPUT_ELEMENTS": __m["src/drishti_inputs-element.js"].INPUT_ELEMENTS, "defineInputElements": __m["src/drishti_inputs-element.js"].defineInputElements };
   })();
   return Object.freeze(Object.assign({ library: "drishti-inputs", version: "0.2.0" }, __m["src/drishti_index.js"]));
 });

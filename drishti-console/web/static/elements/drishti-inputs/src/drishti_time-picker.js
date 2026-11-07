@@ -188,7 +188,10 @@ export class TimePicker extends InputBase {
    */
   focus() { this.input.focus(); }
 
-  /** @returns {void} */
+  /**
+   * Takes the picker out of its element.
+   * @returns {void}
+   */
   destroy() { this.pop.close(); super.destroy(); }
 }
 
@@ -275,6 +278,9 @@ export class DateTimePicker extends InputBase {
    */
   focus() { this.date.focus(); }
 
-  /** @returns {void} */
+  /**
+   * Takes the picker out of its element.
+   * @returns {void}
+   */
   destroy() { this.date.destroy(); this.time.destroy(); super.destroy(); }
 }
