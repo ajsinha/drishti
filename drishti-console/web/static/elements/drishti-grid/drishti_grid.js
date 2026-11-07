@@ -564,7 +564,7 @@
       (answer.measures || []).forEach((m) => { server[m.label] = !!m.server || m.kind === 'holistic' || m.kind === 'server'; });
       answer.columns.forEach((c) => {
         if (o && o.hideTotals && (c.kind === 'total' || c.kind === 'grand') && answer.columns.length > 1) { return; }
-        const path = (c.path || []).map((p) => (p[1] === null ? c.label : p[1]));
+        const path = c.path && c.path.length ? c.path.map((p) => (p[1] === null ? c.label : p[1])) : c.kind === 'grand' ? [] : [c.label];   // an answer without paths: its label
         if (c.kind === 'total') { path[path.length - 1] = path[path.length - 1] + ' total'; }
         if (c.kind === 'grand') { path.push('Grand total'); }
         (answer.measures || []).forEach((m) => {
@@ -1179,7 +1179,7 @@
     }
     function pivotColumnLabels(col, entry, levels) {
       const out = [];
-      const members = entry && entry.path ? entry.path.map((p) => (p[1] === null || p[1] === undefined ? entry.label : String(p[1]))) : [];
+      const members = entry && entry.path && entry.path.length ? entry.path.map((p) => (p[1] === null || p[1] === undefined ? entry.label : String(p[1]))) : entry && entry.kind !== 'grand' && entry.label !== undefined ? [String(entry.label)] : [];
       for (let i = 0; i < levels; i++) {
         if (col.kind === 'grand' || !entry) { out.push(i === 0 ? 'Grand total' : ''); }
         else if (i < members.length) { out.push(members[i]); }

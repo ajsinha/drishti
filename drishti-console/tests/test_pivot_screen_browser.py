@@ -64,7 +64,7 @@ def test_a_field_moved_to_columns_with_the_keyboard_asks_the_engine_again(page):
     page.click(".dg-fields .dg-chip[data-field='CURRENCY'] .dg-chip-menu")   # the field's menu: the keyboard way of dragging
     page.click(".dg-menu [data-action='to:columns']")
     page.wait_for_function(f"() => document.querySelectorAll('[data-pv-grid] .dg-hcell.dg-hgroup').length > {before}")
-    cols = page.locator("[data-pv-grid] .dg-hcell.dg-hgroup .dg-hlabel").all_text_contents()
+    cols = page.locator("[data-pv-grid] .dg-hcell.dg-hgroup.dg-num .dg-hlabel").all_text_contents()      # the column members, not the row heading's corner
     assert cols[:5] == ["CAD", "EUR", "GBP", "JPY", "USD"] and cols[-1] == "Grand total"
     assert not page.errors, page.errors
 

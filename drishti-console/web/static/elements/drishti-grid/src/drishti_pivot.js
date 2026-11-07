@@ -555,7 +555,7 @@ export function resultColumns(answer, o) {
   (answer.measures || []).forEach((m) => { server[m.label] = !!m.server || m.kind === 'holistic' || m.kind === 'server'; });
   answer.columns.forEach((c) => {
     if (o && o.hideTotals && (c.kind === 'total' || c.kind === 'grand') && answer.columns.length > 1) { return; }
-    const path = (c.path || []).map((p) => (p[1] === null ? c.label : p[1]));
+    const path = c.path && c.path.length ? c.path.map((p) => (p[1] === null ? c.label : p[1])) : c.kind === 'grand' ? [] : [c.label];   // an answer without paths: its label
     if (c.kind === 'total') { path[path.length - 1] = path[path.length - 1] + ' total'; }
     if (c.kind === 'grand') { path.push('Grand total'); }
     (answer.measures || []).forEach((m) => {
