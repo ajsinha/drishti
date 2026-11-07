@@ -404,6 +404,7 @@
   --d-frtb-bad: #ff7a7a;
   --d-statement-focus: #2f6fde;       /* a statement preview's focus ring */
   --d-calc-edge: #444444;             /* the calculation walker's frame */
+  --d-form-problem: #cc3333;          /* a record form's problem and message text */
   --d-print-ink: #111111;
   --d-print-edge: #c9ced6;
 
@@ -420,6 +421,7 @@
   --d-elev-sheet: 0 8px 28px rgba(0, 0, 0, .25);
   --d-elev-dialog: 0 10px 40px rgba(0, 0, 0, .35);
   --d-elev-drawer: -8px 0 20px rgba(0, 0, 0, .4);
+  --d-elev-side: -8px 0 24px color-mix(in srgb, #000 30%, transparent);
   --d-elev-mega: 0 24px 48px -20px rgba(0, 0, 0, .55);
 }
 
@@ -470,7 +472,7 @@
   --d-sp-11_2: .7rem; --d-sp-12: .75rem; --d-sp-12_8: .8rem; --d-sp-13_6: .85rem; --d-sp-14: .875rem;
   --d-sp-14_4: .9rem; --d-sp-16: 1rem; --d-sp-17_6: 1.1rem; --d-sp-18: 1.125rem; --d-sp-18_4: 1.15rem;
   --d-sp-19_2: 1.2rem; --d-sp-20: 1.25rem; --d-sp-20_8: 1.3rem; --d-sp-21_6: 1.35rem; --d-sp-22_4: 1.4rem;
-  --d-sp-24: 1.5rem; --d-sp-25_6: 1.6rem; --d-sp-26: 1.625rem; --d-sp-28_8: 1.8rem; --d-sp-30: 1.875rem;
+  --d-sp-22: 1.375rem; --d-sp-24: 1.5rem; --d-sp-25_6: 1.6rem; --d-sp-26: 1.625rem; --d-sp-28_8: 1.8rem; --d-sp-30: 1.875rem;
   --d-sp-32: 2rem;
 
   /* radius (--d-radius stays the cards' and panels' radius) */

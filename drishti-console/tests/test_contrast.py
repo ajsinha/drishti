@@ -128,7 +128,7 @@ def test_the_css_colours_text_only_with_checked_tokens():
 # white text and its date field, the heat map's ink, FRTB-SA's Terminal colours, print ink; and the page ground as the label on the warn
 # badge. Each is the colour its rule drew before it became a token.
 FIXED_LABELS = {"on-color", "on-band", "band-field-ink", "band-past-ink", "band-button-ink", "on-trading-green", "heat-ink",
-                "frtb-amber", "frtb-bad", "frtb-muted", "print-ink", "bg"}
+                "frtb-amber", "frtb-bad", "frtb-muted", "print-ink", "form-problem", "bg"}
 
 
 def test_the_light_fallback_is_the_light_theme():

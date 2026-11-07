@@ -55,7 +55,7 @@ export class MultiSelect extends InputBase {
     host.appendChild(this.control);
     this.head = this.el('div', { cls: 'di-ms-head' });
     this.panel = this.el('div', { cls: 'di-ms-panel' }, [this.head, this.list.el]);
-    this.control.addEventListener('mousedown', (e) => { if (e.target === this.input || e.target.closest('.di-chip-x')) { return; } e.preventDefault(); this.input.focus(); if (!this.pop.isOpen()) { this.open(); } });
+    this.control.addEventListener('mousedown', (e) => { if (e.target.closest('.di-chip-x')) { return; } if (e.target !== this.input) { e.preventDefault(); this.input.focus(); } if (!this.pop.isOpen()) { this.open(); } });   // a press anywhere on the control, the field too, opens the list
     this.control.addEventListener('click', (e) => { const x = e.target.closest('.di-chip-x'); if (x) { this.toggle(this.options.find((it) => this.key(it.value) === x.dataset.key).value); } });
     this.input.addEventListener('input', () => { if (!this.pop.isOpen()) { this.open(); } this.filter(); });
     this.input.addEventListener('keydown', (e) => this.onKey(e));

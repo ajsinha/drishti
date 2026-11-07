@@ -285,7 +285,8 @@ def test_the_paper_tab_is_readable_at_1400_px_and_pages_with_page_down(stack, br
     expect(area).to_have_attribute("data-st-at", "2")
     page.keyboard.press("PageUp")
     expect(area).to_have_attribute("data-st-at", "1")
-    page.fill("[data-st-date]", "9999-12-31")
+    page.fill("[data-st-date] + .di-upgraded input", "9999-12-31")                     # drishti-inputs' date picker
+    page.press("[data-st-date] + .di-upgraded input", "Enter")
     page.click("[data-st-preview]")
     expect(page.locator("[data-st-where]")).to_contain_text("No data is held", timeout=60000)
     assert "No data is held" in area.get_attribute("data-st-hint")

@@ -96,6 +96,22 @@
   only while its modules are on.
 ## 2.9.11.e (unreleased)
 
+- **The console's pickers on drishti-inputs** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+  the as-of date in the top bar is a business-date picker keyed by the server's holidays (T-1, month-end, a weekend or holiday refused
+  in words); every date field of the terminal, BI and Admin pages (and the ones scripts make: BI's statement, designer and slicer
+  dates, the record forms and their cells, Explain's dates) is upgraded in place to the date picker and keeps sending its ISO date;
+  the query forms' long enums, a Sutra's multi-select and BI's drop-down slicer are `MultiSelect`; a Sutra's date control is
+  `DatePicker` and its date range `DateRangePicker` with the server's presets (open-ended allowed); the history page's range is a
+  `DateRangePicker` whose presets open the server's ranges; the people picker (`Drishti.People.attach(input, opts)`, four screens),
+  the comment box's `@` and `{` lists and the record forms' entity field are drishti-inputs' combobox. Deleted: the console's
+  multi-select (`drishti_multiselect.js`, 106 lines, now a 40-line loader for the frozen renderer 1.2.0), the hand-made listboxes of
+  the people picker, the comment box and the entity field, the native date handling of the top bar, and their CSS (`.ms-*`,
+  `.ctl-pop`, `.shr-list`, `.fm-entity-list`). **drishti-inputs 0.2.0**: `upgradeDateInput`, `upgradeCheckboxes` and `upgradeFields`
+  (a page's own fields upgraded in place: the field keeps its name, id and value, its `value` setter moves the picker, the picker's
+  changes come back as `input` and `change` events, `hidden`, `disabled`, `min` and `max` followed, a required or unreadable date stops
+  the submit); `Combobox` on a page's own field and in a `suggest` mode; `DateRangePicker` with presets given whole and `openEnded`;
+  44 px targets on touch screens. The renderer 2.0.0 and the embeds load drishti-inputs for the controls (its style sheet in the view
+  sheet, raised to 29 KB gzip on purpose). A guard fails a console script that draws its own multi-select or picker list.
 - **drishti-designer 0.1.0, the designer kit** (the product owner, 2026-11-07: "duplicated code will make the system unmaintainable";
   [ELEMENTS.md section 8.8](docs/architecture/ELEMENTS.md#88-as-built-drishti-designer-the-designer-kit)): one layout canvas over a
   layout model (grid or flow; snap, settle, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys,
@@ -496,19 +512,21 @@
   fallbacks of tokens that never existed (`--d-text`, `--d-fg`, `--d-mono`, `--d-border-strong`: the value they drew is written).
   `!important` removed where specificity or order does it; the rest is on an allow-list with a reason each. The embedded view, report
   and renderer sheets write the fixed tokens into their rules, so their size is unchanged. Numbers (90 sheets): lines 9,404 → 9,256;
-  distinct hex colours outside the token file 75 → 0 and `rgb()` 15 → 0 (194 distinct hex in all the CSS; 5 and 1 remain in
-  `drishti_record-forms.css`, being rewritten by the forms work); literal font sizes 69 → 0 (12 remain in the three sheets the forms
-  work is rewriting); `!important` 149 → 98; `@media` widths 25 → 24 breakpoints.
+  distinct hex colours outside the token file 75 → 0 and `rgb()` 15 → 0 (194 distinct hex in all the CSS, every one now in the token
+  file); literal font sizes 69 → 0; `!important` 149 → 97; `@media` widths 25 → 24 breakpoints. The forms', pickers' and record forms'
+  sheets (`drishti_form.css`, `drishti_controls.css`, `drishti_record-forms.css`) are tokenised too, their rules otherwise as the inputs
+  conversion left them; the line count after the pickers' own deletions is 9,213.
   - **Proof the look did not change** (`tools/dev/css_visual_check.py`, [TEST_HARNESS.md 3.14](docs/architecture/TEST_HARNESS.md#314-the-css-visual-check)):
     landing, the VaR explorer, Pivot, a BI report, Build home, Admin and Help at 1440 px and landing, VaR and Help at 390 px, in all ten
     themes, before and after against one server, compared pixel by pixel: 100 pictures, 76 identical, 23 within the anti-aliasing
     tolerance (the VaR charts' edges, as between two runs of the same tree), 1 different (a BI report's timing footer, whose width
-    follows a measured time; identical when taken again); no picture differs because of the CSS.
+    follows a measured time; identical when taken again). Again after the inputs conversion merged and its three sheets were tokenised:
+    71 identical, 28 within tolerance, 1 different (a BI chart caught mid-redraw; identical when taken again). No picture differs
+    because of the CSS.
   - **Guards** (`test_css_tokens.py`, a quick file check): no colour literal outside the token file, font sizes only from the type scale,
     `@media` widths only from the breakpoints, no undefined `--d-*`, and `!important` only on its allow-list, which only shrinks.
-  - **Left for the forms work's merge**: `drishti_form.css`, `drishti_record-forms.css` and `drishti_controls.css` (colours, font sizes,
-    their `!important`), and the stacked-label rules repeated in eighteen forms with the seven checkbox-row classes that escape them
-    with `!important`: one form-label convention.
+  - **Left for the forms work**: the stacked-label rules repeated in eighteen forms, with the seven checkbox-row classes that escape them
+    with `!important`: one form-label convention once wip/e-forms has converted the forms.
 
 ## 2.9.11.d (2026-11-07)
 - **Six lake folders kept in git, their content never** (DATA_LAKE_GUIDE.md section 1): `data/delta/demo`, `risklake`, `newslake` (news), `worldlake` (World Bank, IMF, UN), `regulators` (SEC, Federal Reserve, OSFI, central banks) and `capitalmarket` (prices, curves, vols, funds), each with only its README.md; the test data's `.jsonl.gz` files stay in git to build the demo lake. The five new lakes ship as lake files with no tables (`config/lakes/<lake>.yaml` and their jar copies), and **nothing shipped points at them**: every connector, rule and setting reads `demo` (guarded by `tools/test_empty_lakes.py`); a site points at them itself. The demo lake's one-time move and `build_demo_lakes` treat a folder holding only its README.md as empty.

@@ -143,5 +143,5 @@ body {
 :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public .pub-user-btn:hover { background: var(--d-band-hover); }
 /* the business date on the coloured bar: a white field with dark figures, like the command line (blue, green and crimson drew it
    unreadable on the gradient) */
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .asof-date { background: var(--d-paper); color: var(--d-band-field-ink); -webkit-text-fill-color: var(--d-band-field-ink); border-color: var(--d-band-field-edge); color-scheme: light; }
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .asof-past .asof-date { background: var(--d-band-past-bg); color: var(--d-band-past-ink); -webkit-text-fill-color: var(--d-band-past-ink); border-color: var(--d-band-past-edge); }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .di-was-asof-date .di-control { background: var(--d-paper); color: var(--d-band-field-ink); -webkit-text-fill-color: var(--d-band-field-ink); border-color: var(--d-band-field-edge); color-scheme: light; }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .asof-past .di-was-asof-date .di-control { background: var(--d-band-past-bg); color: var(--d-band-past-ink); -webkit-text-fill-color: var(--d-band-past-ink); border-color: var(--d-band-past-edge); }
