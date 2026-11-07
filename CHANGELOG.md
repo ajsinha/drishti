@@ -264,6 +264,18 @@
   "+" and → does nothing on it. **Expand by…** (`E`) still opens any member by another field. Tested in Chromium over the core pack's
   issuers (no "+" on leaves, "+" opens each issuer's bonds, the Grand total right per column) and in the engine (`PivotCoreTest`).
 
+- **A masked column is never charted in exports, and row rules hold after the move to the table layer.** `drishti.py tables migrate`
+  never replaces a table or model already under `config/tables`: a file there of the same shape is kept as it is (with its row rules,
+  masks, hidden columns and edits), and one of another shape, or one that lacks security the old dataset has, is refused with the reason
+  (rename one, or remove the file to have it written): nobody sees more after the move. Tested in the migrator
+  (`TablesMigratorTest`), on the server (`DistApiTest`: a measure over a masked column has no chart, no figure in Excel, CSV or JSONL and
+  is marked masked in the query API for the reader it is masked for) and in Chromium (`test_wave_d_browser.py`: a desk head's mail holds
+  her desk only; the Excel export charts no masked measure).
+- **Admin → Health opens right after a start.** The memory gauge has no reading until the first clean-up; the page said nothing and
+  failed with an error. It now says *not measured yet* until there is one (`test_busy.py`).
+- **Home's quick cards keep their touch size on a phone** whether or not the fact of the day is shown: their styles are part of the
+  landing's, not the fact-of-the-day sheet.
+
 ### Fixes (flaky tests fixed at their cause)
 
 - **BI → Runs: "Run again as" keeps your choice when the drawer is drawn again.** The drawer is drawn from the list's row at once and again
