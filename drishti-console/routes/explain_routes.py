@@ -44,7 +44,7 @@ def _problem(e: BackendError) -> JSONResponse:
 @router.get("/api/explain/kinds")
 async def kinds(request: Request):
     try:
-        return JSONResponse(await request.app.state.backend.explain("GET", "/kinds", ident(request)), headers={"Cache-Control": "no-store"})
+        return JSONResponse(await request.app.state.backend.explain_number("GET", "/kinds", ident(request)), headers={"Cache-Control": "no-store"})
     except BackendError as e:
         return _problem(e)
 
@@ -54,7 +54,7 @@ async def explain(request: Request):
     """One number's explanation (the parts asked), as the person; every parameter is passed on."""
     params = {k: v for k, v in request.query_params.items() if k not in PAGE_ONLY}
     try:
-        return JSONResponse(await request.app.state.backend.explain("GET", "", ident(request), **params), headers={"Cache-Control": "no-store"})
+        return JSONResponse(await request.app.state.backend.explain_number("GET", "", ident(request), **params), headers={"Cache-Control": "no-store"})
     except BackendError as e:
         return _problem(e)
 
@@ -66,7 +66,7 @@ async def explain_body(request: Request):
     if not isinstance(body, dict):
         return JSONResponse({"code": "DRS-5001", "detail": "the body is a JSON object: {kind, measure, part, ...}"}, status_code=400)
     try:
-        return JSONResponse(await request.app.state.backend.explain("POST", "", ident(request), body=body), headers={"Cache-Control": "no-store"})
+        return JSONResponse(await request.app.state.backend.explain_number("POST", "", ident(request), body=body), headers={"Cache-Control": "no-store"})
     except BackendError as e:
         return _problem(e)
 

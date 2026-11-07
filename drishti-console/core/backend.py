@@ -378,7 +378,7 @@ class BackendClient:
         sent as a repeated parameter (``override``). The netting-set list computes every netting set of the date: this waits up to a minute."""
         return await self._send(method, path, ident, params={k: v for k, v in params.items() if v not in (None, "", [])}, timeout=60.0)
 
-    async def explain(self, method: str, path: str, ident, body=None, **params) -> Any:
+    async def explain_number(self, method: str, path: str, ident, body=None, **params) -> Any:
         """One Explain for every number (/api/v1/explain, docs/architecture/SHARED_SCREENS.md section 3), as the user. ``path`` starts after
         /api/v1/explain (``""`` or ``/kinds``). Why it moved reads two business dates: this waits up to two minutes."""
         kw: dict[str, Any] = {"params": {k: v for k, v in params.items() if v not in (None, "")}, "timeout": 120.0}

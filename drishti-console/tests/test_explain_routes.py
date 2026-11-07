@@ -75,7 +75,7 @@ def test_the_proxy_asks_the_server_as_the_person(client, backend, monkeypatch):
     async def explain(verb, path, ident, body=None, **params):
         seen.append((verb, path, params, body))
         return {"kind": "var", "title": "VaR 99%, 1 day", "text": "1,234"}
-    monkeypatch.setattr(backend, "explain", explain, raising=False)
+    monkeypatch.setattr(backend, "explain_number", explain, raising=False)
     r = client.get("/api/explain?kind=var&measure=es&scope=BANK&part=preview&tab=why")
     assert r.status_code == 200 and r.headers["cache-control"] == "no-store"
     assert seen[-1] == ("GET", "", {"kind": "var", "measure": "es", "scope": "BANK", "part": "preview"}, None)   # tab is the page's own
