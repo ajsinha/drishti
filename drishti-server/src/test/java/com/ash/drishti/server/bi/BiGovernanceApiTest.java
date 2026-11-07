@@ -59,8 +59,9 @@ import org.springframework.test.web.servlet.ResultActions;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class BiGovernanceApiTest {
 
-    private static final String DATASET = "dataset: gov-ds\ntitle: Governed\ntables:\n  t:\n    source: { kind: trade }\n    columns: { a: string, b: string }\n"
-            + "measures:\n  N: { expr: \"count(t)\" }\n  M: { expr: \"count(t)\" }\n";
+    /** A table of the table layer: reports name its columns as {@code t.a} and its default measure {@code Count of t}. */
+    private static final String DATASET = "rachana: 3\ntable: gov.t\nversion: 1.0.0\ntitle: Governed\nfrom: { kind: trade }\ncolumns:\n"
+            + "  a: { path: \"$.a\", type: string }\n  b: { path: \"$.b\", type: string }\n";
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
@@ -145,18 +146,18 @@ class BiGovernanceApiTest {
 
     String report(String dataset) {
         return "report: gov-rep\ndataset: " + dataset + "\npages:\n  - id: main\n    title: Main\n    visuals:\n"
-                + "      - { id: n, type: card, title: N, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [N] } }\n"
-                + "      - { id: bar, type: bar, title: By b, at: { x: 3, y: 0, w: 6, h: 4 }, wells: { axis: [t.b], values: [N] } }\n";
+                + "      - { id: n, type: card, title: N, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Count of t] } }\n"
+                + "      - { id: bar, type: bar, title: By b, at: { x: 3, y: 0, w: 6, h: 4 }, wells: { axis: [t.b], values: [Count of t] } }\n";
     }
 
     // ---- versions ---------------------------------------------------------------------------------------------------------
 
     @Test @Order(1)
     void everySaveIsAVersionWithADiffAndARestore() throws Exception {
-        ds = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", ann(), Map.of("kind", "dataset", "title", "Governed", "body", DATASET, "message", "first cut", "audienceRoles", List.of("steward", "reader")))).path("id").asText();
-        String two = DATASET.replace("count(t)\" }\n  M", "count(t)\", format: amount0 }\n  M");
+        ds = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", ann(), Map.of("kind", "table", "title", "Governed", "body", DATASET, "message", "first cut", "audienceRoles", List.of("steward", "reader")))).path("id").asText();
+        String two = DATASET.replace("  a: { path: \"$.a\", type: string }", "  a: { path: \"$.a\", type: string, title: A }");
         call("PUT", itemPath(ds), ann(), Map.of("body", two, "message", "format the count")).andExpect(status().isOk());
-        String three = two.replace("a: string, b: string", "a: string, b: string, c: string");
+        String three = two + "  c: { path: \"$.c\", type: string }\n";
         call("PUT", itemPath(ds), ann(), Map.of("body", three, "message", "add c")).andExpect(status().isOk());
         call("PUT", itemPath(ds), ann(), Map.of("description", "catalogue only")).andExpect(status().isOk());       // no new saved state: the body did not change
 
@@ -169,8 +170,8 @@ class BiGovernanceApiTest {
 
         JsonNode d = ok(call("GET", itemPath(ds) + "/diff?from=r2&to=draft", ann(), null));
         assertThat(d.path("identical").asBoolean()).isFalse();
-        assertThat(d.path("changed").asInt()).isEqualTo(1);
-        assertThat(d.toString()).contains("c: string");
+        assertThat(d.path("added").asInt()).isEqualTo(1);                                   // the column c, a line of its own
+        assertThat(d.toString()).contains("c: { path");
         assertThat(ok(call("GET", itemPath(ds) + "/diff?from=r1&to=r1", ann(), null)).path("identical").asBoolean()).isTrue();
         refused(call("GET", itemPath(ds) + "/diff?from=nonsense&to=draft", ann(), null), 422, "DRS-9003");
 
@@ -213,7 +214,7 @@ class BiGovernanceApiTest {
         // while it is proposed it cannot be published past the review: approve, reject or withdraw first
         refused(call("POST", itemPath(ds) + "/publish", ann(), Map.of("note", "skip the review")), 409, "DRS-9004");
         assertThat(ok(call("GET", itemPath(ds), ann(), null)).path("can").path("publish").asBoolean()).isFalse();
-        JsonNode other = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", bob(), Map.of("kind", "dataset", "title", "Bob's", "body", DATASET.replace("gov-ds", "bobs"))));
+        JsonNode other = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", bob(), Map.of("kind", "table", "title", "Bob's", "body", DATASET.replace("gov.t", "gov.bobs"))));
         call("POST", itemPath(other.path("id").asText()) + "/propose", bob(), Map.of()).andExpect(status().isOk());
         refused(call("POST", itemPath(other.path("id").asText()) + "/approve", bob(), Map.of()), 403, "DRS-9005");
         call("POST", itemPath(other.path("id").asText()) + "/withdraw", bob(), Map.of()).andExpect(status().isOk());
@@ -247,7 +248,7 @@ class BiGovernanceApiTest {
         assertThat(l.path("upstream").get(0).path("packs").toString()).contains("finance");
         assertThat(l.path("downstream").size()).isEqualTo(1);
         assertThat(l.path("downstream").get(0).path("uses").path("fields").toString()).contains("t.b");
-        assertThat(l.path("downstream").get(0).path("uses").path("measures").toString()).contains("N");
+        assertThat(l.path("downstream").get(0).path("uses").path("measures").toString()).contains("Count of t");
         JsonNode r = ok(call("GET", itemPath(rep) + "/lineage", ann(), null));
         assertThat(r.path("dataset").path("id").asText()).isEqualTo(ds);
         assertThat(r.path("uses").path("fields").toString()).contains("t.b");
@@ -266,9 +267,8 @@ class BiGovernanceApiTest {
         assertThat(what.path("published").get(0).path("uses").toString()).contains("t.b");
         assertThat(what.path("wouldRevokeCertification").toString()).contains("Governed report").contains("Governed");
         assertThat(ok(call("GET", itemPath(ds) + "/impact?remove=t.a", ann(), null)).path("breaksPublished").asBoolean()).isFalse();   // nothing uses a
-        assertThat(ok(call("GET", itemPath(ds) + "/impact?remove=M", ann(), null)).path("breaksPublished").asBoolean()).isFalse();      // a measure no report uses
 
-        String broken = DATASET.replace("a: string, b: string", "a: string, bee: string");           // b renamed: gone
+        String broken = DATASET.replace("  b: { path: \"$.b\", type: string }", "  bee: { path: \"$.bee\", type: string }");     // b gone (another path: not a rename)
         call("PUT", itemPath(ds), ann(), Map.of("body", broken, "message", "rename b")).andExpect(status().isOk());
         assertThat(ok(call("GET", itemPath(ds) + "/impact", ann(), null)).path("refused").asBoolean()).isTrue();
         call("POST", itemPath(ds) + "/impact", ann(), Map.of("yaml", broken)).andExpect(status().isOk()).andExpect(jsonPath("$.breaksPublished").value(true));

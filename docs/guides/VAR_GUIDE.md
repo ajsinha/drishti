@@ -1117,7 +1117,7 @@ treated like `BASKET:`: an aggregate-only viewer cannot probe a stored basket of
 ### 5.4 The position rule language (`WHERE:` and RULE portfolios)
 
 The same grammar in `PositionRule` (Java) and `tools/packgen/var/rules.py` (the generator), so a rule has the same members in both: a
-small part of DEL ([BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del)) evaluated over the positions' columns.
+small part of DEL ([RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions)) evaluated over the positions' columns.
 
 ```
 rule  := or

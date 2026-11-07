@@ -57,8 +57,13 @@ public final class LayerTables {
         if (r.table() == null) {
             return new DatasetDefParser.Result(null, problems);
         }
+        // the layer's own checks of one table (a live table over a list, live limits, built-in names ...), as the catalogue runs them
+        boolean overTable = r.table().from() != null && r.table().from().form() == TableDef.Source.Form.TABLE;      // its base's names are the catalogue's to check
+        new com.ash.drishti.tables.check.TableChecks().check(r.table(), null).stream().filter(p -> !"info".equals(p.level()))
+                .filter(p -> !(overTable && (com.ash.drishti.tables.TableCodes.UNKNOWN_NAME.equals(p.code()) || com.ash.drishti.tables.TableCodes.KEYS.equals(p.code()))))
+                .forEach(p -> problems.add(new DatasetParser.Problem(p.level(), p.code(), p.path() == null ? "" : p.path(), p.message())));
         try {
-            return new DatasetDefParser.Result(dataset(r.table(), problems), problems);
+            return new DatasetDefParser.Result(dataset(r.table(), problems, NOT_KEPT.matcher(yaml).find()), problems);
         } catch (IllegalArgumentException e) {
             problems.add(new DatasetParser.Problem("error", "DRS-9101", "", e.getMessage()));
             return new DatasetDefParser.Result(null, problems);
@@ -66,7 +71,10 @@ public final class LayerTables {
     }
 
     /** The table in BI's terms. */
-    static DatasetDef dataset(TableDef t, List<DatasetParser.Problem> problems) {
+    /** A table that says it is not kept ({@code materialize: none}, written out): read at its source on every query. Left out, it is kept as asked. */
+    private static final java.util.regex.Pattern NOT_KEPT = java.util.regex.Pattern.compile("(?m)^materialize:\\s*none\\s*(#.*)?$");
+
+    static DatasetDef dataset(TableDef t, List<DatasetParser.Problem> problems, boolean notKept) {
         Map<String, Object> about = t.about();
         int depth = t.depth();
         Map<String, String> byPath = new LinkedHashMap<>();
@@ -129,10 +137,18 @@ public final class LayerTables {
         String where = t.filter() == null ? null : rowExpression(t.filter(), byPath, "filter");
         DatasetDef.Keep keep = t.keepLatest() == null ? null : new DatasetDef.Keep(t.keys(), t.keepLatest(), true);
         DatasetDef.Grain grain = new DatasetDef.Grain(t.says() == null ? "" : t.says(), t.keys(), "businessDate");
-        DatasetDef.Time time = time(t);
+        DatasetDef.Time time = time(t, notKept);
         Map<String, Object> rf = t.refresh();
-        DatasetDef.Refresh refresh = rf.isEmpty() ? DatasetDef.Refresh.NONE : new DatasetDef.Refresh(rf.get("schedule") == null ? "" : String.valueOf(rf.get("schedule")),
-                Boolean.TRUE.equals(rf.get("on-load")));
+        boolean onLoad = Boolean.TRUE.equals(rf.get("on-load")) || TableDef.Materialize.MODE_ON_LOAD.equals(t.materialize().mode());     // materialized on load: rebuilt on load
+        if (rf.get("schedule") != null && !String.valueOf(rf.get("schedule")).isBlank()) {
+            try {
+                com.ash.drishti.server.bi.dataset.RefreshSpec.parse(String.valueOf(rf.get("schedule")));       // the subscriptions' vocabulary
+            } catch (IllegalArgumentException e) {
+                problems.add(new DatasetParser.Problem("error", "DRS-9101", "refresh", e.getMessage()));
+            }
+        }
+        DatasetDef.Refresh refresh = rf.isEmpty() && !onLoad ? DatasetDef.Refresh.NONE
+                : new DatasetDef.Refresh(rf.get("schedule") == null ? "" : String.valueOf(rf.get("schedule")), onLoad);
         DatasetDef.Security security = rules.isEmpty() && masked.isEmpty() && t.hiddenFor().isEmpty() ? DatasetDef.Security.NONE
                 : new DatasetDef.Security(rules, masked, t.hiddenFor(), List.of());
         List<JsonNode> tests = new ArrayList<>();
@@ -143,11 +159,17 @@ public final class LayerTables {
                 ai == null ? null : LayerYaml.YAML.valueToTree(ai), tests, List.of(), new DatasetDef.Derivation(List.of(), keep, Map.of(), null));
     }
 
-    /** {@code materialize: { live: { rows, age } }} as BI's live mode; the rest as BI's default (a snapshot), with the table's as-of and retention. */
-    private static DatasetDef.Time time(TableDef t) {
+    /**
+     * {@code materialize: { live: { rows, age } }} as BI's live mode; a table over a kind that says it is not kept ({@code materialize: none}, written out)
+     * as BI's direct reads (asked at the source on every query); the rest as BI's default (a snapshot), with the table's as-of and retention.
+     */
+    private static DatasetDef.Time time(TableDef t, boolean notKept) {
         if (t.materialize().live()) {
             Duration age = t.materialize().age() == null ? null : DatasetParser.span(t.materialize().age());
             return new DatasetDef.Time("live", t.asOf() == null ? "business-date" : t.asOf(), t.retention(), null, t.materialize().rows(), age, null);
+        }
+        if (notKept && t.from().form() == TableDef.Source.Form.KIND) {
+            return new DatasetDef.Time("snapshot", t.asOf() == null ? "business-date" : t.asOf(), t.retention(), "direct", null, null, null);
         }
         if (t.asOf() != null || t.retention() != null) {
             return new DatasetDef.Time("snapshot", t.asOf() == null ? "business-date" : t.asOf(), t.retention(), null, null, null, null);

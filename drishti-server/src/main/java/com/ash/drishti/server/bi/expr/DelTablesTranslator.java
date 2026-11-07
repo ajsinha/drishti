@@ -50,13 +50,16 @@ public final class DelTablesTranslator implements DelTranslator {
         }
     }
 
-    private static final Pattern MEASURE_REF = Pattern.compile("(?<![A-Za-z0-9_\\]])\\[([A-Za-z][^\\],'\"\\[]*)\\]");
+    /** {@code [Measure name]}; never a list of fields such as {@code by = [trades.desk]} (a dot) or a list of several items (a comma). */
+    private static final Pattern MEASURE_REF = Pattern.compile("(?<![A-Za-z0-9_\\]])\\[([A-Za-z][^\\],.'\"\\[]*)\\]");
     private static final Pattern IN_PARENS = Pattern.compile("\\bin\\s*\\(([^()]*)\\)");
 
     /**
      * A text in BI's first expression syntax (an item without {@code expressions: 2}: Rachana-EL's operators and literals, {@code &&},
      * {@code ||}, {@code !}, {@code c ? a : b}, {@code null}), which DEL refuses as its old syntax: read by Rachana's one parser after the
-     * first syntax's own spellings ({@code [Measure]} as {@code measure('Measure')}, {@code in (a, b)} as {@code in [a, b]}). A text Rachana's parser does not read stays refused with DEL's reason.
+     * first syntax's own spellings ({@code [Measure]} as {@code measure('Measure')}, {@code in (a, b)} as {@code in [a, b]}). A text Rachana's
+     * parser does not read stays refused with DEL's reason. Inside the migration tool only, so an installation that never ran the old
+     * converter still migrates.
      */
     private static Result firstSyntax(String del, ExpressionException old) {
         String t = MEASURE_REF.matcher(del.strip()).replaceAll(m -> java.util.regex.Matcher.quoteReplacement("measure('" + m.group(1) + "')"));

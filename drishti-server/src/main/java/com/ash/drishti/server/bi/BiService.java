@@ -1057,7 +1057,7 @@ public final class BiService {
         List<String> undrawn = undrawable(p, i, force, "published");
         // the expected values the item declares (docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 14): a failing one stops a publish unless a bi-admin forces it
         List<String> failing = List.of();
-        if (testGate != null && gov.refuseFailingTests() && Set.of("report", "dataset", "model").contains(i.kind()) && i.body().contains("tests:")) {
+        if (testGate != null && gov.refuseFailingTests() && Set.of("report", "table", "dataset", "model").contains(i.kind()) && i.body().contains("tests:")) {
             failing = testGate.apply(p, i);
             if (!failing.isEmpty()) {
                 if (!force) {
@@ -1071,7 +1071,7 @@ public final class BiService {
         // what this publish does to the reports that read a dataset (docs/guides/BI_GUIDE.md, Impact)
         ImpactAnalyzer.Result damage = null;
         ImpactAnalyzer.Result renaming = null;
-        if ("dataset".equals(i.kind()) && i.isPublished()) {
+        if (BiGovernance.isTable(i.kind()) && i.isPublished()) {
             damage = impact.impact(i, impact.publishedBody(i), i.body());
             if (applyRenames && !damage.change().renames().isEmpty()) {                       // the renames are applied to the reports after the checks below pass
                 renaming = damage;

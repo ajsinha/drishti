@@ -137,7 +137,7 @@
       if (b.problems.length) { out.appendChild(lines('t-bad', b.problems)); }
       if (b.warnings.length) { out.appendChild(lines('t-warn', b.warnings)); }
       if (b.exists) {
-        out.appendChild(A.el('p', '', 'A ' + b.subtype + ' named ' + b.name + ' is already in config/bi. Replacing it affects: ' + b.replacesImpact + '.'));
+        out.appendChild(A.el('p', '', 'A ' + b.subtype + ' named ' + b.name + ' is already there. Replacing it affects: ' + b.replacesImpact + '.'));
         repRow.hidden = false;
       }
       place.hidden = !b.valid;
@@ -150,7 +150,7 @@
     var name = picked.name.split('.')[0], replacing = rep.checked;
     function go(confirmName) {
       send('bi?file=' + encodeURIComponent(picked.name) + '&replace=' + (replacing ? 'true' : 'false') + '&confirm=' + encodeURIComponent(confirmName || ''), picked).then(function (res) {
-        if (res.ok) { A.done('Placed ' + picked.name + ' in config/bi.' + ((res.body.also || []).length ? ' ' + res.body.also.join('; ') + '.' : '')); } else { say(A.words(res.body), true); }
+        if (res.ok) { A.done('Placed ' + picked.name + (res.body.note ? ': ' + res.body.note.replace(/^placed /, '') : '') + '.' + ((res.body.also || []).length ? ' ' + res.body.also.join('; ') + '.' : '')); } else { say(A.words(res.body), true); }
       });
     }
     if (!replacing) { go(''); return; }

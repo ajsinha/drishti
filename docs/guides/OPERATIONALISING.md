@@ -687,7 +687,7 @@ The endpoints (`/api/v1/admin/packs/...` for deploy and history, `/api/v1/admin/
 ## 18. Admin → Artifacts: install and uninstall safely
 
 Everything an administrator installs on a Drishti site is a file or a folder that the server watches: **domain packs** (`config/packs`, `data/packs/installed`),
-**connector files** (`config/connectors`) and the **shipped BI files** (`config/bi`: datasets, reports, boards, notebooks, Python items). **Admin → Artifacts**
+**connector files** (`config/connectors`) and the **shipped BI files** (the table layer's tables and models in `config/tables/<domain>`; reports, boards, notebooks and Python items in `config/bi`). **Admin → Artifacts**
 (`/admin/artifacts`) lists all of them in one place, tells you what depends on each before you touch it, and gives you a way out that cannot lose anything:
 *disable* (keep it, switch it off) or *uninstall* (move it to an archive you can restore from). It is for administrators only.
 
@@ -706,7 +706,7 @@ One row per artifact:
 | Column | Meaning |
 |---|---|
 | **Name** | The artifact's name; a link to its own page (a pack's page, a connector's page, the BI item). The line under it is its title or description. |
-| **Kind** | `pack`, `connector`, or for BI the kind of file: `dataset`, `report`, `board`, `notebook`, `python`. |
+| **Kind** | `pack`, `connector`, or for BI the kind of file: `table`, `model`, `report`, `board`, `notebook`, `python`. |
 | **Status** | `on`; `disabled` (kept, switched off); `not loaded` (a pack on disk the server has not loaded); `problem` (something is wrong; see *Problems*). |
 | **Origin** | `shipped` (a pack in the packs folder, or a BI file in `config/bi`), `archive` (a pack deployed from an archive or the registry: `data/packs/installed`), `file` (a connector file, or one placed by hand), `ui` (a connector saved from the console), `template` (a connector a pack's template wrote), `application` (a connector only the server's own configuration defines; deprecated). |
 | **Version** | A pack's `version:`; `v1`, `v2`... for a BI file (counts the content changes the server has seen); empty for a connector. |
@@ -723,9 +723,9 @@ Before it offers Uninstall, the page asks the server what would stop working. Th
 
 | You ask about | It lists |
 |---|---|
-| **A pack** | Packs that extend it; connectors only it uses (no other loaded pack names them: they stop when it goes); BI datasets that read one of its kinds, and the reports, boards and composed datasets over those; **saved searches**, **monitors**, **alert rules** (on a kind of the pack), **measure alerts**, **subscriptions**, **workspaces** and saved pivots, layouts and reports that name one of its kinds; **shares** of its kinds; **embed hosts** whose kinds include one of its kinds. |
-| **A connector** | The packs that read through it and the kinds each sends to it; BI datasets that scan it, and what is over those; saved documents, shares and embed hosts on the kinds it serves; and whether a pack's **connector template** would write it back (then it can only be disabled or reset). |
-| **A BI file** | The other BI files that name it (a dataset: the reports, boards, notebooks, composed and derived datasets that use it; a report: the boards with a tile on it; a Python item: the datasets and reports that call it), and then what names *those*, down to six steps; **measure alerts**, **alert rules**, **subscriptions**, workspaces and saved views that name it; embed hosts on the kinds a dataset reads. |
+| **A pack** | Packs that extend it; connectors only it uses (no other loaded pack names them: they stop when it goes); BI tables that read one of its kinds, and the tables, models, reports and boards over those; **saved searches**, **monitors**, **alert rules** (on a kind of the pack), **measure alerts**, **subscriptions**, **workspaces** and saved pivots, layouts and reports that name one of its kinds; **shares** of its kinds; **embed hosts** whose kinds include one of its kinds. |
+| **A connector** | The packs that read through it and the kinds each sends to it; BI tables that scan it, and what is over those; saved documents, shares and embed hosts on the kinds it serves; and whether a pack's **connector template** would write it back (then it can only be disabled or reset). |
+| **A BI file** | The other BI files that name it (a table: the tables over it, the models that join it and the reports that read it; a model: the reports, boards and notebooks on it; a report: the boards with a tile on it; a Python item: the datasets and reports that call it), and then what names *those*, down to six steps; **measure alerts**, **alert rules**, **subscriptions**, workspaces and saved views that name it; embed hosts on the kinds a dataset reads. |
 
 ![The dialog for a pack with dependants: the child pack, the connector only it uses, the dataset over its kind and the report on that dataset](img/artifacts/02-refused.jpg)
 
@@ -799,15 +799,16 @@ The *Install* section of the page has three cards:
 - **A pack.** Upload an archive on **Admin → Packs → Deploy an archive** (`.tar.gz` or `.zip`): it is verified and previewed (breaking changes marked) before
   anything changes, and the version it replaces is kept for roll-back ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which)). The card links there.
 - **A connector.** **Admin → Connectors → New connector**: a form or YAML, tested before it is saved ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)).
-- **A BI file.** Choose a file named `<name>.<kind>.yaml` (`kind` is `dataset`, `report`, `board`, `notebook` or `python`). **Nothing is written yet**: the server
+- **A BI file.** Choose a file named `<name>.<kind>.yaml` (`kind` is `table`, `model`, `report`, `board`, `notebook` or `python`). A dataset file in BI's old
+  form (`<name>.dataset.yaml`) is refused with `DRS-9196`: migrate it with `drishti.py tables migrate` and upload the tables and model it writes. **Nothing is written yet**: the server
   checks it and tells you what it found.
 
 ![The BI file card after choosing lab-more.dataset.yaml: valid dataset lab-more, and the button to place it in config/bi](img/artifacts/06-bi-upload.jpg)
 
-  The checks: the file name; UTF-8 text up to `drishti.admin.bi-upload-max-bytes` (1 MiB); YAML with a mapping at the top; the file's own key (`dataset: lab-more`)
-  agrees with its name; and for datasets, reports and boards the same parser the server uses finds no error (warnings are shown and do not stop it). If a file of
+  The checks: the file name; UTF-8 text up to `drishti.admin.bi-upload-max-bytes` (1 MiB); YAML with a mapping at the top; the file's own key (`table: lab.more` for `more.table.yaml`, `model: lab-model` for
+  `lab-model.model.yaml`) agrees with its name; and for tables and models the table layer's readers, for reports and boards the server's parsers, find no error (warnings are shown and do not stop it). If a file of
   that name is already there, the card says so and lists what depends on it; placing it then needs *Replace* and the name typed, and the old file is archived first.
-  The file is placed atomically and appears in the catalogue at once. Notebooks and Python items get the structure checks; a Python item's tests and sandbox
+  The file is placed atomically (a table or model in `config/tables/<domain>/`, a model without a domain in `bi/`) and appears in the catalogue at once. Notebooks and Python items get the structure checks; a Python item's tests and sandbox
   checks run when it is published or used, as for any Python item.
 
 ### 18.7 The audit trail
@@ -825,7 +826,7 @@ Every action is an audit event (Admin → Audit log, or `GET /api/v1/admin/audit
 | `artifact-refused` | What was refused and why: the impact, the typed name that did not match, the name that already exists. |
 
 ```text
-artifact-disabled     pack:lab-base  impact: Packs that extend it (1), Connectors only it uses (1), BI datasets (1), BI reports (1); choice: with dependants; result: off, kept on disk; also off: [lab-child]
+artifact-disabled     pack:lab-base  impact: Packs that extend it (1), Connectors only it uses (1), BI tables (1), BI reports (1); choice: with dependants; result: off, kept on disk; also off: [lab-child]
 artifact-refused      pack:lab-base  uninstall with dependants refused: the name was not typed
 artifact-uninstalled  connector:scratch-conn  impact: nothing depends on it; choice: alone; result: archived as 20261012T142658-connector-scratch-conn
 artifact-restored     connector:scratch-conn  from 20261012T142658-connector-scratch-conn; choice: plain; result: back in connectors
@@ -872,9 +873,9 @@ from the scratch site of the pictures (a pack `lab-base` with a child pack, a co
 $ curl -s "localhost:18936/api/v1/admin/artifacts/impact?kind=pack&name=lab-base"   # one line per group
 {"category": "packs", "count": 1, "names": ["lab-child"]}
 {"category": "connectors", "count": 1, "names": ["lab-files"]}
-{"category": "datasets", "count": 1, "names": ["lab-items"]}
+{"category": "tables", "count": 1, "names": ["lab.items"]}
 {"category": "reports", "count": 1, "names": ["lab-overview"]}
-summary: Packs that extend it (1), Connectors only it uses (1), BI datasets (1), BI reports (1) | blocked: True
+summary: Packs that extend it (1), Connectors only it uses (1), BI tables (1), BI reports (1) | blocked: True
 ```
 
 **Uninstall is refused; disable instead; switch it back on:**
@@ -882,7 +883,7 @@ summary: Packs that extend it (1), Connectors only it uses (1), BI datasets (1),
 ```text
 $ curl -s -X POST .../uninstall -d '{"kind":"pack","name":"lab-base"}'
 { "status": 409, "code": "DRS-5041",
-  "detail": "DRS-5041 pack 'lab-base' has dependants: Packs that extend it (1), Connectors only it uses (1), BI datasets (1), BI reports (1); disable it instead, or choose to take the dependants along" }
+  "detail": "DRS-5041 pack 'lab-base' has dependants: Packs that extend it (1), Connectors only it uses (1), BI tables (1), BI reports (1); disable it instead, or choose to take the dependants along" }
 $ curl -s -X POST .../disable -d '{"kind":"pack","name":"lab-base"}'
 { "status": 409, "code": "DRS-5041",
   "detail": "DRS-5041 pack 'lab-base' is needed by enabled pack(s) [lab-child]; switch those off too (also disable dependants) or switch them off first" }
@@ -919,8 +920,8 @@ $ curl -s -X POST .../uninstalled/20261012T142658-connector-scratch-conn/restore
 
 ```text
 $ printf 'dataset: lab-more\ntitle: x\n' | curl -s -X POST --data-binary @- -H 'Content-Type: application/octet-stream' ".../bi/check?file=lab-more.dataset.yaml"
-{ "valid": false, "name": "lab-more", "subtype": "dataset",
-  "problems": ["tables: a dataset needs `tables:` (or `from:` to be composed of other datasets, or `derived:` to be made by a Python Transform)"],
+{ "valid": false, "name": "", "subtype": "",
+  "problems": ["DRS-9196: a dataset file in BI's old form is not read; run drishti.py tables migrate --dry-run, then without it, and upload the tables and model it writes (<name>.table.yaml, <name>.model.yaml)"],
   "warnings": [], "exists": false }
 ```
 

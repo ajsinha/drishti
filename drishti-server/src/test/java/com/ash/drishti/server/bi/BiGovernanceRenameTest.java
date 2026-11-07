@@ -57,8 +57,9 @@ import org.springframework.test.web.servlet.ResultActions;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class BiGovernanceRenameTest {
 
-    private static final String DATASET = "dataset: ren-ds\ntitle: Renamed\ntables:\n  t:\n    source: { kind: trade }\n    columns:\n      a: string\n      b: { path: obj.b, type: string }\n"
-            + "measures:\n  N: { expr: \"count(t)\" }\n  Size: { expr: \"count(t)\" }\n";
+    /** A table of the table layer: its columns are what reports name (as {@code t.a}); its measures are the defaults ({@code Count of t}). */
+    private static final String DATASET = "rachana: 3\ntable: gov.t\nversion: 1.0.0\ntitle: Renamed\nfrom: { kind: trade }\ncolumns:\n"
+            + "  a: { path: \"$.a\", type: string }\n  b: { path: \"$.obj.b\", type: string }\n";
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
@@ -117,8 +118,8 @@ class BiGovernanceRenameTest {
 
     String report() {
         return "report: ren-rep\ndataset: " + ds + "\npages:\n  - id: main\n    title: Main\n    visuals:\n"
-                + "      - { id: n, type: card, title: Size, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Size] } }\n"
-                + "      - { id: bar, type: bar, title: By b, at: { x: 3, y: 0, w: 6, h: 4 }, wells: { axis: [t.b], values: [N] }, filters: [{ field: t.b, op: eq, values: [x] }] }\n";
+                + "      - { id: n, type: card, title: Size, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Count of t] } }\n"
+                + "      - { id: bar, type: bar, title: By b, at: { x: 3, y: 0, w: 6, h: 4 }, wells: { axis: [t.b], values: [Count of t] }, filters: [{ field: t.b, op: eq, values: [x] }] }\n";
     }
 
     @BeforeAll
@@ -134,7 +135,7 @@ class BiGovernanceRenameTest {
         }
         ws = ok(call("POST", "/api/v1/bi/workspaces", ann(), Map.of("name", "Rename Desk"))).path("id").asText();
         call("PUT", "/api/v1/bi/workspaces/" + ws + "/members/sue", ann(), Map.of("role", "member")).andExpect(status().isOk());
-        ds = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", ann(), Map.of("kind", "dataset", "title", "Renamed", "body", DATASET, "audienceRoles", List.of("steward", "reader")))).path("id").asText();
+        ds = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", ann(), Map.of("kind", "table", "title", "Renamed", "body", DATASET, "audienceRoles", List.of("steward", "reader")))).path("id").asText();
         ok(call("POST", item(ds) + "/publish", ann(), Map.of("note", "v1")));
         rep = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", ann(), Map.of("kind", "report", "title", "Renamed report", "body", report(), "audienceRoles", List.of("steward", "reader")))).path("id").asText();
         ok(call("POST", item(rep) + "/publish", ann(), Map.of("note", "v1")));
@@ -143,24 +144,24 @@ class BiGovernanceRenameTest {
     // ---- rename ------------------------------------------------------------------------------------------------------------
 
     @Test @Order(1)
-    void aFieldAndAMeasureRenamedWithTheSamePathOrExpressionAreRecognisedAsRenames() throws Exception {
-        String renamed = DATASET.replace("      b: { path: obj.b, type: string }", "      bee: { path: obj.b, type: string }").replace("  Size: { expr: \"count(t)\" }", "  Rows: { expr: \"count(t)\" }");
-        call("PUT", item(ds), ann(), Map.of("body", renamed, "message", "rename b and Size")).andExpect(status().isOk());
+    void aColumnRenamedWithTheSamePathIsRecognisedAsARename() throws Exception {
+        String renamed = DATASET.replace("  b: { path: \"$.obj.b\", type: string }", "  bee: { path: \"$.obj.b\", type: string }");
+        call("PUT", item(ds), ann(), Map.of("body", renamed, "message", "rename b")).andExpect(status().isOk());
         JsonNode im = ok(call("GET", item(ds) + "/impact", ann(), null));
-        assertThat(im.path("renames").toString()).contains("\"from\":\"t.b\"").contains("\"to\":\"t.bee\"").contains("\"from\":\"Size\"").contains("\"to\":\"Rows\"");
+        assertThat(im.path("renames").toString()).contains("\"from\":\"t.b\"").contains("\"to\":\"t.bee\"");
         assertThat(im.path("breaksPublished").asBoolean()).isTrue();
         assertThat(im.path("renamable").asBoolean()).isTrue();
-        assertThat(im.path("published").get(0).path("uses").toString()).contains("[renamed to t.bee]").contains("[renamed to Rows]");
+        assertThat(im.path("published").get(0).path("uses").toString()).contains("[renamed to t.bee]");
         // without asking for the renames the publish is refused, as before
         call("POST", item(ds) + "/publish", ann(), Map.of("note", "rename")).andExpect(status().is(409)).andExpect(jsonPath("$.code").value("DRS-9040"));
         // with them, the reports follow in the same act
         JsonNode done = ok(call("POST", item(ds) + "/publish", ann(), Map.of("note", "rename", "applyRenames", true)));
         assertThat(done.path("publishedVersion").asInt()).isEqualTo(2);
-        assertThat(done.path("warnings").toString()).contains("Report 'Renamed report': 3 name(s) updated, published as version 2");
+        assertThat(done.path("warnings").toString()).contains("Report 'Renamed report': 2 name(s) updated, published as version 2");
         JsonNode r = ok(call("GET", item(rep), ann(), null));
         assertThat(r.path("publishedVersion").asInt()).isEqualTo(2);
         assertThat(r.path("status").asText()).isEqualTo("published");
-        assertThat(r.path("body").asText()).contains("t.bee").contains("Rows").doesNotContain("t.b,").doesNotContain("[Size]").contains("title: Size");      // the title is not a name
+        assertThat(r.path("body").asText()).contains("t.bee").doesNotContain("t.b,").doesNotContain("t.b]").contains("title: By b");      // the title is not a name
         // the reader's view of the published report works from the new names
         assertThat(ok(call("GET", item(rep) + "/impact", ann(), null)).path("applies").asBoolean()).isFalse();
         JsonNode events = ok(call("GET", item(rep) + "/history", ann(), null)).path("events");
@@ -170,17 +171,17 @@ class BiGovernanceRenameTest {
 
     @Test @Order(2)
     void aChangedTypeOrMeaningIsAnImpactNotARemoval() throws Exception {
-        String changed = ok(call("GET", item(ds), ann(), null)).path("body").asText().replace("a: string", "a: integer").replace("Rows: { expr: \"count(t)\" }", "Rows: { expr: \"count(t) * 2\" }")
-                .replace("path: obj.b", "path: obj.other");
-        // the report uses t.bee and Rows: their meaning changed; t.a is not used
+        String changed = ok(call("GET", item(ds), ann(), null)).path("body").asText().replace("a: { path: \"$.a\", type: string }", "a: { path: \"$.a\", type: integer }")
+                .replace("$.obj.b", "$.obj.other");
+        // the report uses t.bee: its meaning changed; t.a is not used
         call("PUT", item(ds), ann(), Map.of("body", changed, "message", "retype")).andExpect(status().isOk());
         JsonNode im = ok(call("GET", item(ds) + "/impact", ann(), null));
         assertThat(im.path("change").path("breaking").asBoolean()).isFalse();
-        assertThat(im.path("change").path("alters").toString()).contains("\"name\":\"t.a\"").contains("\"what\":\"type\"").contains("\"name\":\"Rows\"").contains("\"name\":\"t.bee\"");
+        assertThat(im.path("change").path("alters").toString()).contains("\"name\":\"t.a\"").contains("\"what\":\"type\"").contains("\"name\":\"t.bee\"");
         JsonNode altered = im.path("altered");
         assertThat(altered.size()).isEqualTo(1);
         assertThat(altered.get(0).path("title").asText()).isEqualTo("Renamed report");
-        assertThat(altered.get(0).path("uses").toString()).contains("meaning").contains("Rows").contains("t.bee").doesNotContain("t.a:");
+        assertThat(altered.get(0).path("uses").toString()).contains("meaning").contains("t.bee").doesNotContain("t.a:");
         assertThat(im.path("refused").asBoolean()).as("a changed meaning is shown, not refused").isFalse();
         call("PUT", item(ds), ann(), Map.of("body", ok(call("GET", item(ds) + "/history/" + (revisions(ds) - 1), ann(), null)).path("body").asText(), "message", "back")).andExpect(status().isOk());
     }
@@ -196,7 +197,7 @@ class BiGovernanceRenameTest {
         JsonNode bundle = ok(call("GET", "/api/v1/bi/bundle?items=" + rep, ann(), null));
         String before = ok(call("GET", item(rep), ann(), null)).path("body").asText();
         // change the report here, then import the older bundle over it
-        call("PUT", item(rep), ann(), Map.of("body", before + "      - { id: extra, type: card, title: Extra, at: { x: 9, y: 0, w: 3, h: 2 }, wells: { values: [Rows] } }\n", "message", "more")).andExpect(status().isOk());
+        call("PUT", item(rep), ann(), Map.of("body", before + "      - { id: extra, type: card, title: Extra, at: { x: 9, y: 0, w: 3, h: 2 }, wells: { values: [Count of t] } }\n", "message", "more")).andExpect(status().isOk());
         String edited = ok(call("GET", item(rep), ann(), null)).path("body").asText();
         JsonNode done = ok(call("POST", "/api/v1/bi/bundle/import", sue(), Map.of("bundle", bundle, "dryRun", false, "overwrite", true)));
         String importId = done.path("importId").asText();
@@ -238,8 +239,8 @@ class BiGovernanceRenameTest {
     void lineageReachesPastTheConnectorToTheTableItDeclaresMaskedForNonAdministrators() throws Exception {
         call("PUT", "/api/v1/admin/connectors/" + conn, admin(), Map.of("plugin", "file", "kinds", List.of("trade"),
                 "settings", Map.of("root", "/srv/lake/orders"))).andExpect(status().is2xxSuccessful());
-        String src = "dataset: lin-ds\ntitle: Lineage\ntables:\n  o:\n    source: { connector: " + conn + ", kind: trade }\n    columns: { code: string }\nmeasures:\n  N: { expr: \"count(o)\" }\n";
-        String id = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", ann(), Map.of("kind", "dataset", "title", "Lineage", "body", src, "audienceRoles", List.of("steward", "reader")))).path("id").asText();
+        String src = "rachana: 3\ntable: gov.o\nversion: 1.0.0\ntitle: Lineage\nfrom: { connector: " + conn + ", kind: trade }\ncolumns:\n  code: { path: \"$.code\", type: string }\n";
+        String id = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", ann(), Map.of("kind", "table", "title", "Lineage", "body", src, "audienceRoles", List.of("steward", "reader")))).path("id").asText();
         ok(call("POST", item(id) + "/publish", ann(), Map.of("note", "v1")));
         JsonNode asAdmin = ok(call("GET", item(id) + "/lineage", admin(), null)).path("upstream").get(0).path("source");
         assertThat(asAdmin.path("plugin").asText()).isEqualTo("file");

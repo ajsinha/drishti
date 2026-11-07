@@ -2259,9 +2259,9 @@ and the fix for the codes that need more than the meaning.
 | DRS-9124 | — | — | two active paths between the same two datasets: make one inactive |
 | DRS-9125 | — | — | model security that reaches across or loosens: a model rule naming another alias's column, `unmask`, a mask naming no column, rules given as a list instead of per alias |
 | DRS-9126 | 409 | Breaking change | a breaking change published without a new major version (HTTP 409): a measure, column or relationship removed (by stable id or name), a relationship made inactive, a grain key or a column type changed; or the version goes down. Publish it as the next major (consumers bound to the old major do not move) |
-| DRS-9127 | 422 | Expression | An expression that is not DEL v2 (a construct Python has and DEL refuses, the old syntax once refused), or that does not fit its scope, its types or the function catalogue; a model measure that does not compile ([BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#7-problems-and-their-fixes)) |
+| DRS-9127 | 422 | Expression | An expression that is not DEL v2 (a construct Python has and DEL refuses, the old syntax once refused), or that does not fit its scope, its types or the function catalogue; a model measure that does not compile ([RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions)) |
 | DRS-9128 | — | — | a contract naming a field or measure the model lacks |
-| DRS-9129 | 422 | Later wave | a key or function of a later wave used now: non-empty `calc-groups` or `parameters`, `via:`, a `bridge` role, `many-to-many` or `direction: both`; in an expression `calc`, `share_of`, `parent_of`, `as_of`, balances (`last`, `closing` ...), `fx`, `convert`, `param.x`, `ALL` ([BI_LANGUAGE_REFERENCE.md › Expressions: the Drishti expression language (DEL), section 6](BI_LANGUAGE_REFERENCE.md#6-functions) marks each) |
+| DRS-9129 | 422 | Later wave | a key or function of a later wave used now: non-empty `calc-groups` or `parameters`, `via:`, a `bridge` role, `many-to-many` or `direction: both`; in an expression `calc`, `share_of`, `parent_of`, `as_of`, balances (`last`, `closing` ...), `fx`, `convert`, `param.x`, `ALL` ([RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions) marks each) |
 | DRS-9132 | (warning) | Hidden measure still reachable | Check: a measure hidden for some roles reads columns they still see (a default measure or a `define` reaches the number); the message lists the columns to hide too |
 | DRS-9163 | 422 | Not available to your role | A field or measure hidden for the caller's roles (`hidden-for`), on every endpoint (a report keeps this code); its definition, columns and who may see it are never said |
 | DRS-9131 | (warning) | Roles without a rule | Check names the readers of a dataset that no row rule of the model names: they see no rows (`meta.noAccess` in their answers) |
@@ -2284,7 +2284,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-9164 | 422 | Parameter | (`mq: 2`) A `params` value the model does not take: an unknown parameter, the wrong kind, outside `min`..`max`, not one of its `values`, a field parameter's value not one of its `fields` (*metric is one of its choices [MTM, NOTIONAL], not 'PV'*), `param.x` in `select.fields` that is not a field parameter, or a field parameter in the wrong list (*'param.metric' chooses among MTM, NOTIONAL: measures, so it goes in select.measures*) |
 | DRS-9165 | 422 | Calculation group | (`mq: 2`) A `calc` group or item the model does not have (with `fix`: its groups or items), or a Python measure under a calculation group |
 | DRS-9166 | 422 | Filter context | A filter-context or time function that cannot be planned: `via=` names no relationship, `parent_of` no hierarchy, `as_of` a date that is not fixed before the query (`date('…')`, `asof()`, `shift_date(asof(), n)`), contexts nested more than three deep through the measures they name, a context where none can be (a rollup, a live aggregate) |
-| DRS-9190 | 422 | Not converted | the expression converter (`drishti.py bi migrate --expressions`, `POST /api/v1/bi/expr/convert`) could not keep an old expression's meaning, so it left it as it was: rewrite it in DEL v2 by hand ([BI_LANGUAGE_REFERENCE.md › Expressions: the Drishti expression language (DEL), section 10](BI_LANGUAGE_REFERENCE.md#10-the-old-syntax-and-the-converter)) |
+| DRS-9190 | 422 | Not converted | the expression converter (`drishti.py bi migrate --expressions`, `POST /api/v1/bi/expr/convert`) could not keep an old expression's meaning, so it left it as it was: rewrite it in DEL v2 by hand ([RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions)) |
 | DRS-9195 | — | Not migrated | `drishti.py tables migrate` could not migrate an item or an expression and wrote nothing for it: the report names the item, the key and why (a construct that waits for the DEL translator, a name two items give, a pack-generated dataset, which is regenerated) ([TABLES_GUIDE.md section 9](TABLES_GUIDE.md#9-the-migration-tables-migrate)) |
 | DRS-9196 | — | Migrate first | (planned with the switch) a server found a dataset or model file in BI's old form where the table layer reads and refused that file; run `drishti.py tables migrate --dry-run`, then without it |
 | DRS-9600 | — | Table definition unreadable | a `.table.yaml` or `.model.yaml` that is not YAML, has an unknown key, misses a required key, or a value of the wrong shape; also an expression that does not read ([TABLES_GUIDE.md section 10](TABLES_GUIDE.md#10-problem-codes)) |
@@ -2303,7 +2303,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-9614 | — | Old form | a BI dataset or model (`rachana: 2`, `dataset:`, `datasets:`) where the table layer reads: migrate it |
 | DRS-9615 | 422 | Table read | a read of a virtual table refused: a business date its source does not hold, known-at time on a source without history, more rows than `drishti.tables.read-max-rows`, a source its runner computes, a condition on a masked column, a reader no rule names |
 | DRS-9616 | 409 | Table name clash | a virtual table named like a stored table (a lake table or a kind): names are unique across both |
-| DRS-9170 | 422 | SQL syntax | a Drishti SQL statement that is not one (HTTP 422): a syntax error at the position given, two statements, or a write (`INSERT`, `DELETE`, `CREATE`, `ATTACH`, `COPY`, `PRAGMA`, `SET` ...): the dialect is one read-only `SELECT` ([BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models)) |
+| DRS-9170 | 422 | SQL syntax | a Drishti SQL statement that is not one (HTTP 422): a syntax error at the position given, two statements, or a write (`INSERT`, `DELETE`, `CREATE`, `ATTACH`, `COPY`, `PRAGMA`, `SET` ...): the dialect is one read-only `SELECT` ([API_GUIDE.md › Drishti SQL](API_GUIDE.md#drishti-sql-apiv1bisql)) |
 | DRS-9171 | 422 | SQL name | a table that is not one of the model's aliases, or a column it lacks for you (a hidden column is not found, on purpose); a bare column in two tables (say which); a column of a table the statement does not read (`JOIN` it) |
 | DRS-9172 | 422 | SQL join | A join whose `ON` is not a relationship of the model (or a comma, `RIGHT`, `FULL`, `CROSS` or `NATURAL` join): write `JOIN t` without `ON`, or ask the model owner for a relationship |
 | DRS-9173 | 422 | SQL function | a function Drishti SQL does not take (`random()`, a table function, a user function); the message lists the ones it does |
@@ -2669,7 +2669,7 @@ generation (a load, a refresh, a live batch); incremental rules are planned.
 
 ## Expressions: `/api/v1/bi/expr`
 
-See [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del) and [BI_DESIGN.md §3.3](../architecture/BI_DESIGN.md#33-del-the-drishti-expression-language-python-like). The
+See [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions) and [BI_DESIGN.md §3.3](../architecture/BI_DESIGN.md#33-del-the-drishti-expression-language-python-like). The
 Drishti expression language, DEL v2 (Python-like), has **one parser, on the server**; the console's expression editor completes from the catalogue and
 checks through `validate`, it never parses for meaning. All three need the `bi` power; none reads data or stores anything (the two POSTs are open to a
 read-only token).
@@ -2701,7 +2701,7 @@ underlines it and offers the fix as a button (captured):
 ```
 
 `syntax` is `del2` or `legacy` (the old syntax: refused with `DRS-9100` and `valid: false` by default, with `converted` holding the DEL v2 text; while a
-site sets `drishti.bi.expr.legacy: warn` it is a warning and the rest of the check runs on the converted text). The codes are in [BI_LANGUAGE_REFERENCE.md › Expressions: the Drishti expression language (DEL), section 7](BI_LANGUAGE_REFERENCE.md#7-problems-and-their-fixes). The CLI:
+site sets `drishti.bi.expr.legacy: warn` it is a warning and the rest of the check runs on the converted text). The codes are in [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions). The CLI:
 `drishti.py bi expr functions|validate|convert` and `drishti.py bi migrate --expressions FILE... [--write] [--check]`
 ([CLI_GUIDE.md](CLI_GUIDE.md)).
 
@@ -2727,7 +2727,7 @@ The problems answer (captured):
 
 ## Drishti SQL: `/api/v1/bi/sql`
 
-See [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models) and [BI_DESIGN.md §3.4](../architecture/BI_DESIGN.md#34-drishti-sql-dsql-read-only-sql-over-models): one read-only
+See [API_GUIDE.md › Drishti SQL](API_GUIDE.md#drishti-sql-apiv1bisql) and [BI_DESIGN.md §3.4](../architecture/BI_DESIGN.md#34-drishti-sql-dsql-read-only-sql-over-models): one read-only
 statement over one model, as the caller. An MQ-shaped statement is exactly one model query (same plan hash, same cache entry as the MQ); a composite one
 (`WITH`, `UNION`, a subquery, a window over the answer) runs its model queries as the caller and the rest over their answers. Both need the `bi` power and
 read on the model; neither changes anything (open to a read-only token). Every statement is audited as `bi-sql` with its text.
@@ -2745,7 +2745,7 @@ POST /api/v1/bi/sql {"model": "lang-model@1", "sql": "SELECT trades.desk FROM tr
      "detail": "DRS-9171 no table 'desks' in this model: its tables are [trades]", "problems": [...]}
 ```
 
-The answer of an MQ-shaped statement and of a composite one are shown in [BI_LANGUAGE_REFERENCE.md › Drishti SQL: read-only SQL over models, sections 3 and 4](BI_LANGUAGE_REFERENCE.md#3-how-a-statement-compiles). The CLI:
+The answer of an MQ-shaped statement and of a composite one are shown in [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions). The CLI:
 `drishti.py bi sql "SELECT ..." --model M [--explain] [--format table|json|csv]`.
 
 ## BI runs: `/api/v1/bi/runs`

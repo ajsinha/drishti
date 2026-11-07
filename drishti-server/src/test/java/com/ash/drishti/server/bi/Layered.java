@@ -47,6 +47,10 @@ public final class Layered {
             p.items().stream().filter(i -> i.refusal() != null).findFirst().ifPresent(i -> {
                 throw new IllegalStateException(i.source() + ": " + i.refusal());
             });
+            if (Boolean.getBoolean("drishti.debug.layered")) {
+                biFiles.forEach((k, v) -> System.out.println("LAYERED-IN " + k + "\n" + v));
+                p.writes().forEach((k, v) -> System.out.println("LAYERED-OUT " + k + "\n" + v));
+            }
             return p.writes();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -65,6 +69,13 @@ public final class Layered {
             return yaml;
         }
         List<String> tables = migrate(yaml).entrySet().stream().filter(e -> e.getKey().endsWith(".table.yaml")).map(Map.Entry::getValue).toList();
+        if (tables.size() > 1) {                                               // a grouping is its rows and the table of the groups (Q13): the one that was the dataset
+            String name = yaml.lines().filter(l -> l.startsWith("dataset:")).map(l -> l.substring("dataset:".length()).strip()).findFirst().orElse("");
+            List<String> was = tables.stream().filter(t -> t.lines().anyMatch(l -> l.strip().equals("was: " + name))).toList();
+            if (was.size() == 1) {
+                return was.get(0);
+            }
+        }
         if (tables.size() != 1) {
             throw new IllegalStateException("the dataset became " + tables.size() + " tables");
         }
@@ -98,7 +109,14 @@ public final class Layered {
         if (DatasetDefParser.isTable(yaml)) {
             return DatasetParser.parse(yaml);
         }
-        Map<String, String> out = migrate(yaml);
+        Map<String, String> out;
+        try {
+            out = migrate(yaml);
+        } catch (IllegalStateException refused) {                            // what the migration refuses is a problem of the text, as the layer would say it
+            String why = refused.getMessage() == null ? "" : refused.getMessage();
+            java.util.regex.Matcher code = java.util.regex.Pattern.compile("DRS-\\d{4}").matcher(why);
+            return new DatasetParser.Result(null, List.of(new DatasetParser.Problem("error", code.find() ? code.group() : "DRS-9127", "", why)));
+        }
         Map<String, String> tables = new LinkedHashMap<>();
         String model = null;
         for (Map.Entry<String, String> e : out.entrySet()) {

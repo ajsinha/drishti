@@ -295,7 +295,7 @@ action `health` answers a node's state to a probe holding a token.
 ## 12. Flight SQL: SQL over the BI models from JDBC and ODBC tools
 
 **Flight SQL** is the SQL dialect of Arrow Flight that the JDBC and ODBC drivers speak. Drishti answers it on the same port, read only, as
-SQL over the **BI models**: a statement is written in the server's own SQL (DSQL, [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md))
+SQL over the **BI models**: a statement is written in the server's own SQL (DSQL, [API_GUIDE.md › Drishti SQL](API_GUIDE.md#drishti-sql-apiv1bisql))
 and answered by the same path as `POST /api/v1/bi/sql`, never by a second SQL engine. Each statement becomes a `form: model` read
 (`{"model": …, "sql": …}`), so the token, its `data:read` scope (or `data:read:bi`), the BI power, the model's row rules and masks, busy
 protection, the limits, Admin → Data out and the audit apply exactly as for any other read.

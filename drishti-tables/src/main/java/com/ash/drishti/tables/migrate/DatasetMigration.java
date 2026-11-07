@@ -167,6 +167,10 @@ final class DatasetMigration {
             extras.put("history", history.size() == 1 ? history.values().iterator().next() : history);
             notes.add("live history: moved to the model's history: (it samples measures, which are a model's; Q14)");
         }
+        if (d.path("rollups").isArray() && !d.path("rollups").isEmpty()) {
+            extras.put("rollups", Yaml.MAPPER.convertValue(d.path("rollups"), Object.class));      // the model's rollups: its tables by alias, its measures by name
+            notes.add("rollups: the model's rollups:");
+        }
         ModelDef model = new ModelDef(name, version(d.path("version").asText("1.0.0")), about(d), uses, ModelMigration.relationships(d.path("relationships")),
                 measures, hierarchies, ModelMigration.security(withoutMasks(d.path("security")), name, columns, keys, translate, changes), extras);
         notes.add("a rachana: 1 dataset with " + tables.size() + " table(s): the tables and the model " + name + " (Q19)");
@@ -189,8 +193,15 @@ final class DatasetMigration {
             base.path("columns").properties().forEach(e -> paths.put(e.getKey(), "$." + e.getKey()));
         }
         Set<String> masked = new LinkedHashSet<>();
-        d.path("security").path("masked").forEach(x -> masked.add(x.asText()));
-        timeHolder.path("security").path("masked").forEach(x -> masked.add(x.asText()));
+        String own = item.substring(item.lastIndexOf('.') + 1);              // a rachana: 1 dataset names a masked column as <table>.<column> or bare
+        for (JsonNode m : List.of(d.path("security").path("masked"), timeHolder.path("security").path("masked"))) {
+            m.forEach(x -> {
+                masked.add(x.asText());
+                if (x.asText().startsWith(own + ".")) {
+                    masked.add(x.asText().substring(own.length() + 1));
+                }
+            });
+        }
         List<String> keys = new ArrayList<>();
         for (Map.Entry<String, JsonNode> e : columnsNode.properties()) {
             String c = e.getKey();
@@ -221,7 +232,7 @@ final class DatasetMigration {
             }
             JsonNode add = v.path("additive");
             columns.put(c, new ColumnDef(c, path, null, v.has("python") ? Yaml.MAPPER.convertValue(v.get("python"), Object.class) : null, type,
-                    text(v, "role"), text(v, "meaning"), text(v, "references"), text(v, "unit"), add.isBoolean() ? add.asBoolean() : null, text(v, "aggregate"),
+                    text(v, "role"), text(v, "meaning"), text(v, "references"), unit(v), add.isBoolean() ? add.asBoolean() : null, text(v, "aggregate"),
                     text(v, "format"), key, text(v, "description"), masked.contains(c), strings(v.path("hidden-for")), extras));
         }
         Set<String> neverMissing = new LinkedHashSet<>();
@@ -238,7 +249,7 @@ final class DatasetMigration {
             changes.add(new TablesMigrator.Change(item, "columns." + c + ".expr", del, o.text(), o.notes(), o.refusal()));
             JsonNode add = v.path("additive");
             columns.put(c, new ColumnDef(c, null, o.text() == null ? del : o.text(), null, v.path("type").asText(null), text(v, "role"), text(v, "meaning"), null,
-                    text(v, "unit"), add.isBoolean() ? add.asBoolean() : null, text(v, "aggregate"), text(v, "format"), false, text(v, "description"),
+                    unit(v), add.isBoolean() ? add.asBoolean() : null, text(v, "aggregate"), text(v, "format"), false, text(v, "description"),
                     masked.contains(c), List.of(), null));
         }
         String filter = null;
@@ -267,17 +278,27 @@ final class DatasetMigration {
         }
         List<TableDef.Rule> rules = new ArrayList<>();
         JsonNode rows = timeHolder.path("security").path("rows");
+        boolean shared = rows.isMissingNode() && timeHolder != d;            // a rachana: 1 dataset's rules, written once for all its tables
         if (rows.isMissingNode()) {
             rows = d.path("security").path("rows");
         }
         int i = 0;
         for (JsonNode r : rows) {
             String del = r.path("where").asText("True");
+            if (shared && namesAnotherTable(del, own)) {
+                // a rule about another table restricts that table (and the model's questions, its rows); here the role reads every row
+                rules.add(new TableDef.Rule(strings(r.path("role")), "true"));
+                continue;
+            }
+            del = del.replaceAll("\\b" + java.util.regex.Pattern.quote(own) + "\\.(?=[A-Za-z_])", "");     // its own columns, unqualified
             Translate.Out o = translate.table(del, ExpressionChecker.Scope.RULE, paths, neverMissing);
             changes.add(new TablesMigrator.Change(item, "rules[" + i++ + "].where", del, o.text(), o.notes(), o.refusal()));
             rules.add(new TableDef.Rule(strings(r.path("role")), o.text() == null ? del : o.text()));
         }
         TableDef.Materialize mat = materialize(timeHolder.path("time").isMissingNode() ? timeHolder : timeHolder.path("time"), from, notes);
+        if (mat.live() && keys.isEmpty()) {
+            keys.add("id");                                                   // BI kept a live table by its entities' id: the layer says so
+        }
         Map<String, Object> refresh = d.has("refresh") && timeHolder == d ? castMap(Yaml.MAPPER.convertValue(d.get("refresh"), Map.class)) : null;
         List<Map<String, Object>> tests = new ArrayList<>();
         if (timeHolder == d) {
@@ -290,6 +311,19 @@ final class DatasetMigration {
     }
 
     /** A version-1 dataset's security without its masks: those are on its tables' columns now (Q9). */
+    private static final java.util.regex.Pattern QUALIFIED = java.util.regex.Pattern.compile("\\b([A-Za-z_][A-Za-z0-9_-]*)\\.[A-Za-z_]");
+
+    /** True when a rule names a column of a table other than {@code own} ({@code user.} attributes and quoted text aside). */
+    static boolean namesAnotherTable(String where, String own) {
+        java.util.regex.Matcher m = QUALIFIED.matcher(where.replaceAll("'[^']*'|\"[^\"]*\"", "''"));
+        while (m.find()) {
+            if (!m.group(1).equals(own) && !m.group(1).equals("user")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static JsonNode withoutMasks(JsonNode security) {
         if (!(security instanceof com.fasterxml.jackson.databind.node.ObjectNode o)) {
             return security;
@@ -340,7 +374,7 @@ final class DatasetMigration {
             JsonNode live = time.path("live");
             return new TableDef.Materialize(TableDef.Materialize.MODE_LIVE, live.has("rows") ? live.get("rows").asInt() : null, live.path("age").asText(null));
         }
-        if ("direct".equals(time.path("storage").asText(null))) {
+        if ("direct".equals(mode) || "direct".equals(time.path("storage").asText(null))) {      // read at the source on every query: not materialized
             return TableDef.Materialize.NONE;
         }
         if ("history".equals(mode)) {
@@ -393,6 +427,15 @@ final class DatasetMigration {
     @SuppressWarnings("unchecked")
     private static Map<String, Object> map(JsonNode n) {
         return n == null || !n.isObject() ? null : Yaml.MAPPER.convertValue(n, LinkedHashMap.class);
+    }
+
+    /** A column's unit: BI's {@code unit: { currency: USD }} or {@code { currency: <column> }} is the layer's {@code unit: USD} or {@code unit: <column>}. */
+    private static String unit(JsonNode v) {
+        JsonNode u = v.isValueNode() ? null : v.path("unit");
+        if (u == null || u.isMissingNode() || u.isNull()) {
+            return null;
+        }
+        return u.isObject() ? u.path("currency").asText(null) : u.asText(null);
     }
 
     private static String text(JsonNode v, String k) {

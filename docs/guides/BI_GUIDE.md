@@ -510,7 +510,7 @@ and the sample *Region economics* drills from the world map to Australian and US
 
 **Governance, Python, AI and embedding.** A field renamed with the same meaning is recognised as a rename and the reports are rewritten with the dataset; a changed type or meaning is listed as an impact; every import is kept and can be **rolled back**; BI content travels **inside a pack archive**; lineage goes past the connector to the table or topic; a live table keeps a **history** of its measures; a board tile has alert **hysteresis**; boards are designed in the report designer ([section 32](#32-publishing-and-governance-versions-review-certification-lineage-impact-environments), [section 31, its section 11](#23-boards-report-pages-of-live-tiles)). **Vega-Lite** visuals, **Python** on boards and in alerts, tests shipped with a Python item, Calc's `drishti_bi`, **Perspective charts** (drawn as Drishti's grid) and the settings panel ([section 31](#31-reports-the-yaml-the-visuals-and-how-they-behave), [section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), [USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view)). The designer copilot, the dataset helper and narrative summaries ([section 29](#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number)); charts in Excel exports, retries of alert email, webhook and text channels ([section 33](#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding)); `<drishti-about>` and `<drishti-search>` with React, Vue and Angular samples ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design)). Measures that mix grains (`measure('MTM') / measure('Exposure')`) are worked out at each measure's own grain.
 
-**Models, languages, live BI and authoring.** Datasets and data models rooted in packs, the Python-like expression language (DEL) and read-only Drishti SQL in one query plan (section 24, [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del), [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models)); calculations with filter context, time and balances, standing queries pushed from the server, and the servers computing every number (section 25); **BI Studio**, report schema v2 (typed formats, conditional formatting, themes, the interactions matrix, sync groups, tooltip pages, small multiples, the matrix at every level), **boards as a report layout**, Python data prep step by step with **BI → Transforms**, and the **Notebook** (section 26, [section 34, its section 17](#17-data-prep-the-transform-editor), [USER_GUIDE.md › The Notebook](USER_GUIDE.md#the-notebook)).
+**Models, languages, live BI and authoring.** Datasets and data models rooted in packs, the Python-like expression language (DEL) and read-only Drishti SQL in one query plan (section 24, [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions), [API_GUIDE.md › Drishti SQL](API_GUIDE.md#drishti-sql-apiv1bisql)); calculations with filter context, time and balances, standing queries pushed from the server, and the servers computing every number (section 25); **BI Studio**, report schema v2 (typed formats, conditional formatting, themes, the interactions matrix, sync groups, tooltip pages, small multiples, the matrix at every level), **boards as a report layout**, Python data prep step by step with **BI → Transforms**, and the **Notebook** (section 26, [section 34, its section 17](#17-data-prep-the-transform-editor), [USER_GUIDE.md › The Notebook](USER_GUIDE.md#the-notebook)).
 
 **Not built (and not faked).** The consolidated list is [BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.15](../architecture/BI_DESIGN.md#2015-what-is-built-and-what-is-still-not-built): the Python Source interface and a pool of pre-forked Python children (the fork-server is warm: [section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 12); a Data tab, Notes and million-row extracts in the Notebook; escalation of alerts; "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses.
 
@@ -953,7 +953,7 @@ written in), and Drishti SQL over models. In the console that is five things.
 **1. One expression editor everywhere.** A model's measures, a report's own measures, the dataset wizard's filter and worked-out columns all use the
 same editor: it completes fields, measures (writing `measure('…')`) and the server's functions with their signature and an example, offers a call's
 named arguments (`where =`, `by =`), shows the server's problems as you type with the fix as a button, and **Try it** answers on the saved draft, as
-you ([BI_LANGUAGE_REFERENCE.md §8.1](BI_LANGUAGE_REFERENCE.md#81-in-the-console-the-expression-editor)).
+you ([RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions)).
 
 **2. The dataset wizard, version 2** (`/bi/datasets/new-layer`): pick the root, keep some columns, keep some rows, say what one row is and which duplicate
 wins, add columns worked out from others (a formula or a Python column item), group to a coarser grain, preview the server's answer, save. Or write an
@@ -1904,7 +1904,7 @@ measures:
 
 The expression language is **Rachana's** ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), checked mode): safe and side-effect free, with
 aggregation, `&&`, `||`, `!`, `c ? a : b`, `null`, `true`, `x == null`, lists and `in`, and named arguments (`sum(x, where = c)`). It
-compiles to SQL on the server and is never run as code. **The full reference is [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del)**: every function with its examples and edge cases,
+compiles to SQL on the server and is never run as code. **The full reference is [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions)**: every function with its examples and edge cases,
 the problems with their fixes, and fifty-odd finance and risk recipes; the expression editor completes all of it in the designers. Names: `table.column`,
 `table.column.part` (a date part), `measure('Measure name')`, `user.<attribute>` (row rules only), and in a calculated column a bare column of its own table.
 
@@ -2539,7 +2539,7 @@ draft is listed under *Your datasets* at once (`draft: true`); a model can use i
 
 A dataset that `extends` another narrows it with the derivation keys of [BI_DESIGN.md §3.1](../architecture/BI_DESIGN.md#31-yaml-the-structure-language).
 Each answers what the same arithmetic over the base answers, as the reader (the base's rules and masks first), and the plan shows each step above the
-dataset's scan (`Dedup`, `Derive`, `Regroup`; `meta.explain` with `options.explain: true`). Expressions are DEL ([BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del)).
+dataset's scan (`Dedup`, `Derive`, `Regroup`; `meta.explain` with `options.explain: true`). Expressions are DEL ([RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions)).
 
 ```yaml
 rachana: 2
@@ -2667,7 +2667,7 @@ drishti.py bi expr validate "NOTIONAL / 1000000" --scope row --model dataset:pac
 and save the YAML as a draft with the API (`POST /api/v1/bi/workspaces/<id>/items` with `{kind: table, title, body}`) or put the file under
 `config/tables/<domain>/` as a table of the layer (`drishti.py tables migrate` writes one from a dataset in the older form).
 
-**An SQL view over a model** is a reviewed Drishti SQL statement whose answer is the table ([BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models)): choose the model, write the statement
+**An SQL view over a model** is a reviewed Drishti SQL statement whose answer is the table ([API_GUIDE.md › Drishti SQL](API_GUIDE.md#drishti-sql-apiv1bisql)): choose the model, write the statement
 (in the expression editor: the model's fields, its tables and `MEASURE('…')` completed as you type, and the server's check under it),
 **Check the SQL** (the server says what it answers, or what is wrong with the fix), **Preview** (its first rows, as you), **Save**:
 
@@ -2752,7 +2752,7 @@ The tutorials teach BI in order ([tutorial 10](../tutorials/10-first-bi-report.m
 so row rules and masks can be seen at work, reading and querying the shipped models, changing a measure in a copy, seeing a wrong dataset refused, starting a model from the packs, and drawing a relationship in
 the Model view. Everything else is a tutorial: reports and the designer are [tutorial 10](../tutorials/10-first-bi-report.md), subscriptions, alerts and export
 [tutorial 11](../tutorials/11-bi-that-runs-itself.md), live BI and boards [tutorial 12](../tutorials/12-live-bi-and-boards.md), governance [tutorial 13](../tutorials/13-govern-bi.md), Python and the Notebook
-[tutorial 14](../tutorials/14-python-and-analyse.md). The references are [section 30](#30-datasets-the-yaml-the-expression-language-and-the-security-rules), [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del), [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models), [section 31](#31-reports-the-yaml-the-visuals-and-how-they-behave), [section 31, its section 23](#23-boards-report-pages-of-live-tiles) and [section 32](#32-publishing-and-governance-versions-review-certification-lineage-impact-environments).
+[tutorial 14](../tutorials/14-python-and-analyse.md). The references are [section 30](#30-datasets-the-yaml-the-expression-language-and-the-security-rules), [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions), [API_GUIDE.md › Drishti SQL](API_GUIDE.md#drishti-sql-apiv1bisql), [section 31](#31-reports-the-yaml-the-visuals-and-how-they-behave), [section 31, its section 23](#23-boards-report-pages-of-live-tiles) and [section 32](#32-publishing-and-governance-versions-review-certification-lineage-impact-environments).
 
 Every answer below was captured on a fresh clone over the **demo lakes** (`drishti.py lake demo`: sixty business days of the seven packs, 5,000 trades for
 each of ENDUR, CALYPSO and MUREX, 15,000 trade valuations a day). The demo lakes end on **today's** business date, so your dates differ from the ones
@@ -2846,7 +2846,7 @@ meta: asOf=2026-10-26, layer=columns, 10.6 ms, cached=false
 ```
 
 From a terminal: `drishti.py bi mq --model trades-basic@1 --select trade.DESK --measures Notional,MTM,Trades` (or the same in SQL,
-`drishti.py bi sql "SELECT trade.DESK, MEASURE('MTM') FROM trade GROUP BY trade.DESK" --model trades-basic@1`, [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models)).
+`drishti.py bi sql "SELECT trade.DESK, MEASURE('MTM') FROM trade GROUP BY trade.DESK" --model trades-basic@1`, [API_GUIDE.md › Drishti SQL](API_GUIDE.md#drishti-sql-apiv1bisql)).
 
 What happened: the first query **built the columns layer** for the table: the connector scanned the declared columns and the engine wrote
 `<data>/bi-store/columns/file_model_trades-basic/trade/date=2026-10-26/part-<id>.parquet`. Run it again and the answer comes from the **result cache**

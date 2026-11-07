@@ -49,22 +49,28 @@ PACKS = {
     "lab-child": "pack: lab-child\nversion: 1.0.0\ntitle: Lab child\ndescription: Parts of lab items.\nextends: [lab-base]\nkinds: [lab-part]\n",
     "lab-solo": "pack: lab-solo\nversion: 2.1.0\ntitle: Lab solo\ndescription: A pack nothing depends on.\nkinds: [lab-solo-thing]\n",
 }
-DATASET = """rachana: 1
-dataset: lab-items
+TABLE = """rachana: 3
+table: lab.items
+version: 1.0.0
+title: Lab items
+from: { connector: lab-files, kind: lab-item }
+keys: [itemId]
+columns:
+  itemId: { path: "$.itemId", type: string, key: true }
+  weight: { path: "$.weight", type: decimal }
+"""
+MODEL = """rachana: 3
+model: lab-items
+version: 1.0.0
 title: Lab items
 tables:
-  item:
-    source: { connector: lab-files, kind: lab-item }
-    mode: cached
-    columns:
-      itemId: { type: string, key: true }
-      weight: decimal
+  item: { table: lab.items, role: fact }
 measures:
   Weight: { expr: "sum(item.weight)", format: amount0 }
 """
-REPORT = """rachana: 1
+REPORT = """rachana: 2
 report: lab-overview
-dataset: lab-items
+model: lab-items@1
 title: Lab overview
 pages:
   - id: overview
@@ -94,9 +100,13 @@ def build(work: Path) -> Path:
     (conns / "lab-files.yaml").write_text(f"plugin: file\nkinds: [lab-item]\ndescription: The lab's drop folder\nsettings:\n  root: {work / 'lake'}\n", encoding="utf-8")
     (conns / "scratch-conn.yaml").write_text(f"plugin: file\nkinds: [scratch-thing]\ndescription: A scratch connector nothing uses\nsettings:\n  root: {work / 'scratch'}\n", encoding="utf-8")
     bi = work / "bi"
-    for rel, text in (("datasets/lab-items.dataset.yaml", DATASET), ("reports/lab-overview.report.yaml", REPORT), ("python/lab-spare.python.yaml", SPARE)):
+    for rel, text in (("reports/lab-overview.report.yaml", REPORT), ("python/lab-spare.python.yaml", SPARE)):
         (bi / rel).parent.mkdir(parents=True, exist_ok=True)
         (bi / rel).write_text(text, encoding="utf-8")
+    tables = work / "config" / "tables" / "lab"                        # the table layer's folder (drishti.tables.root, the server's working folder)
+    tables.mkdir(parents=True)
+    (tables / "items.table.yaml").write_text(TABLE, encoding="utf-8")
+    (tables / "lab-items.model.yaml").write_text(MODEL, encoding="utf-8")
     return packs
 
 

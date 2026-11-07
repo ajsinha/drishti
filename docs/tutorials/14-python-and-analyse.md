@@ -250,7 +250,7 @@ You should see the Pivot open with its source picker: choose the trades' table, 
 
 Open the **SQL** tab (it opens first). A SQL cell is **one read-only SELECT** in **Drishti SQL over the model**, asked of the **server** as you, so its
 answers are true totals, not the extract's. Its tables are the model's aliases and a measure is `MEASURE('name')`
-([BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models)):
+([API_GUIDE.md › Drishti SQL](../guides/API_GUIDE.md#drishti-sql-apiv1bisql)):
 
 ```sql
 SELECT trade.DESK, MEASURE('Trades') AS trades, MEASURE('Notional') AS notional

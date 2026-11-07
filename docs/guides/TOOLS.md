@@ -1231,7 +1231,7 @@ INVALID  (del2, aggregate scope, type any)
   error   DRS-9152  at 4-19: no field 'trades.notional'; did you mean trades.NOTIONAL?
 ```
 
-Real output: [CLI_GUIDE.md section 7](CLI_GUIDE.md) and [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del). In the console the migration's state is
+Real output: [CLI_GUIDE.md section 7](CLI_GUIDE.md) and [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions). In the console the migration's state is
 on Admin → **BI** (items that could not be converted, with why).
 
 ### 5.8 view and completion

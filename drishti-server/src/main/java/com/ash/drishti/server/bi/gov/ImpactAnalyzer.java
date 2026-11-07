@@ -127,7 +127,7 @@ public final class ImpactAnalyzer implements AutoCloseable {
         if (ref == null || ref.isBlank()) {
             return false;
         }
-        return dataset.id().equals(ref) || dataset.id().equals("file:dataset:" + ref) || dataset.title().equalsIgnoreCase(ref)
+        return dataset.id().equals(ref) || dataset.id().equals("file:dataset:" + ref) || dataset.id().equals("file:table:" + ref) || dataset.title().equalsIgnoreCase(ref)
                 || ref.equals(declaredName(dataset.body()));
     }
 
@@ -148,10 +148,13 @@ public final class ImpactAnalyzer implements AutoCloseable {
     }
 
     /** Every dataset item, stored and shipped. */
+    /** The item kinds a report reads as its one-table dataset: a table of the layer (and a stored dataset item holding one). */
+    private static final java.util.Set<String> TABLE_KINDS = java.util.Set.of("table", "dataset");
+
     public List<BiStore.Item> datasets() {
         List<BiStore.Item> all = new ArrayList<>();
-        store.items().stream().filter(i -> "dataset".equals(i.kind())).forEach(all::add);
-        folder.items().stream().filter(i -> "dataset".equals(i.kind())).forEach(all::add);
+        store.items().stream().filter(i -> TABLE_KINDS.contains(i.kind())).forEach(all::add);
+        folder.items().stream().filter(i -> TABLE_KINDS.contains(i.kind())).forEach(all::add);
         return all;
     }
 

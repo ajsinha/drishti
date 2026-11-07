@@ -622,7 +622,7 @@ hold lake access.
 | A **tables guide** (planned `docs/guides/TABLES_GUIDE.md`, Help → Data → Virtual tables) and its **tutorial** (two docs per feature) | new: tables, grains, paths, columns, rules, materialisation, models, the checks and preview, the migration; every example run on the demo lake with its real output, UI, command line and YAML at every step |
 | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) | checked mode, scopes, list literals, named arguments, `in`, `^`, the null rule; the filter-context section with before and after tables |
 | `docs/guides/FUNCTIONS.md` (generated, from 2.9.11.b) and [FUNCTION_CATALOGUE.md](FUNCTION_CATALOGUE.md) | the 44 functions added, `avg_by`, the renames (`latest`, `earliest`), the `share_of` and `pct_of_*` distinction |
-| [BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md) | deleted; its cookbook of finance recipes moves into the tables guide, rewritten in Rachana (Q27) |
+| BI_LANGUAGE_REFERENCE.md | deleted (Q27): the grammar is RACHANA_REFERENCE's, the functions FUNCTIONS.md's, Drishti SQL the API guide's; its recipes, in Rachana, are the test resource `drishti-console/tests/resources/expression_recipes.yaml` |
 | [BI_GUIDE.md](../guides/BI_GUIDE.md) | sections 13 to 16, 23 and 30 rewritten: BI reads the layer's tables and models; the dataset editor and the Model view are the layer's editors, reached from BI and Admin |
 | [BI_DESIGN.md](BI_DESIGN.md) | section 3.3 replaced by a pointer to Rachana; section 15's dataset and model specification moved into the tables guide's reference part (current design only) |
 | [PIVOT_ENGINE.md](PIVOT_ENGINE.md), `docs/guides/PIVOT_GUIDE.md` | the "dataset column" route becomes "a virtual table's column"; Promote offers *add as a column of a virtual table* |
@@ -855,6 +855,5 @@ and answered 0 on the Java path; an empty list now matches nothing on both (0), 
 
 **Open:** BI's execution (`Layers`, `LiveTables`, the SQL compiler over `Node`) is BI's compiler fed by the layer's definitions, not yet the
 engine's one compiler of 2.6; the built-in columns keep BI's names (`businessDate`) in reports (Q12's rename not applied); `!=` in BI's SQL
-keeps SQL's rule (the migrated texts carry Q1's rewrite, so figures are equal). BI_LANGUAGE_REFERENCE.md is out of Help (Q27; its old addresses lead to
-RACHANA_REFERENCE.md and the API guide's Drishti SQL); the file itself, with the recipes its test runs, goes with the docs rewrite, its
-recipes into the tables guide in Rachana.
+keeps SQL's rule (the migrated texts carry Q1's rewrite, so figures are equal). BI_LANGUAGE_REFERENCE.md is deleted (Q27): its old Help addresses lead to RACHANA_REFERENCE.md and
+the API guide's Drishti SQL, and its recipes, in Rachana, are the test resource that `test_expression_recipes.py` runs on the demo lake.

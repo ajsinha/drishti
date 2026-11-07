@@ -35,7 +35,8 @@ final class BiBodies {
     /** The keys under which one BI file names another of {@code targetType}. */
     static Set<String> keysFor(String targetType) {
         return switch (targetType) {
-            case "dataset" -> Set.of("dataset", "datasets", "extracts", "sources", "source");
+            case "table" -> Set.of("table", "dataset", "extracts", "source");
+            case "model" -> Set.of("model", "extracts");
             case "report" -> Set.of("report", "reports");
             case "board" -> Set.of("board", "boards");
             case "notebook" -> Set.of("notebook", "notebooks");

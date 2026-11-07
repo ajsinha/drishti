@@ -36,7 +36,7 @@ import java.util.Set;
 
 /**
  * Every installed artifact in one list: packs (the packs folder and the installed folder), connector files, and the shipped BI files
- * (datasets, reports, boards, notebooks, Python items). Each row says what it is, its state, where it came from, its version or
+ * (tables, models, reports, boards, notebooks, Python items). Each row says what it is, its state, where it came from, its version or
  * modification time, what is wrong with it, and where its own page is. Read only; the actions are {@link ArtifactService}'s.
  *
  * <p>States: {@code on}, {@code off} (disabled: kept, switched off), {@code not loaded} (a pack on disk the server did not load) and
@@ -148,7 +148,7 @@ public final class ArtifactCatalog {
         Set<String> seen = new HashSet<>();
         for (BiStore.Item i : folder.allItems()) {
             String name = i.id().substring(i.id().lastIndexOf(':') + 1);
-            String file = ArtifactPaths.BI_FOLDERS.get(i.kind()) + "/" + name + "." + i.kind() + ".yaml";
+            String file = paths.biKey(i.kind(), name);
             seen.add(file);
             List<String> problems = new ArrayList<>();
             if (problemsByFile.containsKey(file)) {

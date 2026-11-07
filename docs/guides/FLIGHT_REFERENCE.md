@@ -133,7 +133,7 @@ Per read, from the person's roles (`drishti.engines.flight.limits`): rows, bytes
 
 ## 6. Flight SQL
 
-Read-only SQL over the BI models (DSQL, [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md)) on the same port; how to use it:
+Read-only SQL over the BI models (DSQL, [API_GUIDE.md › Drishti SQL](API_GUIDE.md#drishti-sql-apiv1bisql)) on the same port; how to use it:
 [FLIGHT_GUIDE.md](FLIGHT_GUIDE.md#12-flight-sql-sql-over-the-bi-models-from-jdbc-and-odbc-tools), section 12.
 
 | Flight SQL call | Answers |

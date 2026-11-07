@@ -16,7 +16,9 @@
 package com.ash.drishti.server.admin;
 
 import com.ash.drishti.server.bi.board.BoardParser;
-import com.ash.drishti.server.bi.dataset.DatasetParser;
+import com.ash.drishti.server.bi.BiFolder;
+import com.ash.drishti.server.bi.layer.DatasetDefParser;
+import com.ash.drishti.server.bi.layer.ModelDefParser;
 import com.ash.drishti.server.bi.report.ReportParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,13 +34,16 @@ import java.util.regex.Pattern;
 
 /**
  * Checks an uploaded shipped-BI file before anything is written: the file name ({@code <name>.<kind>.yaml}), UTF-8 text, a YAML mapping
- * whose own key (for a dataset, {@code dataset: <name>}) agrees with the file name, and the parser of its kind (datasets, reports,
- * boards) finding no error. Notebooks and Python items get the structure checks only; the Python sandbox checks run when they are
- * published or used, as for any Python item.
+ * whose own key agrees with the file name, and the reader of its kind finding no error. A table ({@code <name>.table.yaml}) names itself
+ * {@code table: <domain>.<name>} and a model ({@code <name>.model.yaml}) {@code model: <name>}, both in the table layer's form
+ * ({@code rachana: 3}, read by the layer's readers); a dataset file in BI's old form is refused with the migration's command
+ * ({@code DRS-9196}), as the BI folder refuses it. Reports and boards are read by their parsers; notebooks and Python items get the structure
+ * checks only (the Python sandbox checks run when they are published or used, as for any Python item).
  */
 final class BiUploadChecks {
 
-    private static final Pattern FILE = Pattern.compile("([A-Za-z0-9][A-Za-z0-9_-]{0,80})\\.(dataset|report|board|notebook|python)\\.yaml");
+    private static final Pattern FILE = Pattern.compile("([A-Za-z0-9][A-Za-z0-9_-]{0,80})\\.(table|model|report|board|notebook|python)\\.yaml");
+    private static final Pattern OLD = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_-]{0,80}\\.dataset\\.yaml");
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
 
     /** @param problems what stops the file being placed; @param warnings what is worth reading but does not */
@@ -57,9 +62,15 @@ final class BiUploadChecks {
         List<String> warnings = new ArrayList<>();
         String base = filename == null ? "" : filename.replace('\\', '/');
         base = base.substring(base.lastIndexOf('/') + 1);
+        if (OLD.matcher(base).matches()) {
+            problems.add(BiFolder.MIGRATE_FIRST + ": a dataset file in BI's old form is not read; run drishti.py tables migrate --dry-run, then without it, "
+                    + "and upload the tables and model it writes (<name>.table.yaml, <name>.model.yaml)");
+            return new Outcome("", "", "", problems, warnings);
+        }
         Matcher m = FILE.matcher(base);
         if (!m.matches()) {
-            problems.add("the file name is <name>.<kind>.yaml with kind dataset, report, board, notebook or python (letters, digits, hyphen, underscore in the name), not '" + base + "'");
+            problems.add("the file name is <name>.<kind>.yaml with kind table, model, report, board, notebook or python (letters, digits, hyphen, underscore in the name), not '"
+                    + base + "'");
             return new Outcome("", "", "", problems, warnings);
         }
         String name = m.group(1);
@@ -92,14 +103,27 @@ final class BiUploadChecks {
             return new Outcome(name, sub, text, problems, warnings);
         }
         String own = root.path(sub).asText("");
-        if (own.isEmpty()) {
+        if ("table".equals(sub)) {
+            Matcher t = ArtifactPaths.TABLE_NAME.matcher(own);
+            if (!t.matches()) {
+                problems.add("a table names itself table: <domain>.<name> (lower case, letters, digits and underscores), not '" + own + "'");
+                return new Outcome(name, sub, text, problems, warnings);
+            }
+            if (!t.group(2).equals(name)) {
+                problems.add("the file says table: " + own + " but its name is " + name + "; the file of " + own + " is " + t.group(2) + ".table.yaml");
+            }
+            name = own;                                                     // a table is known by <domain>.<name>
+        } else if ("model".equals(sub) && own.endsWith("." + name)) {
+            name = own;                                                     // a model with its domain: <domain>.<name>, in the domain's folder
+        } else if (own.isEmpty()) {
             warnings.add("the file has no '" + sub + ": " + name + "' line; the file name is used");
         } else if (!own.equals(name)) {
             problems.add("the file says " + sub + ": " + own + " but its name is " + name + "; rename the file or the line so they agree");
         }
         try {
             switch (sub) {
-                case "dataset" -> DatasetParser.parse(text).problems().forEach(p -> (p.error() ? problems : warnings).add(p.path() + ": " + p.message()));
+                case "table" -> DatasetDefParser.parse(text).problems().forEach(p -> (p.error() ? problems : warnings).add(p.path() + ": " + p.message()));
+                case "model" -> ModelDefParser.parse(text).problems().forEach(p -> (p.error() ? problems : warnings).add(p.path() + ": " + p.message()));
                 case "report" -> ReportParser.parse(text).problems().forEach(p -> (p.error() ? problems : warnings).add(p.path() + ": " + p.message()));
                 case "board" -> BoardParser.parse(text).problems().forEach(p -> (p.error() ? problems : warnings).add(p.path() + ": " + p.message()));
                 default -> {

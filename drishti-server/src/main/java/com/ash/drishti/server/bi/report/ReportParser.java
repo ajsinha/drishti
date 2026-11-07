@@ -208,7 +208,7 @@ public final class ReportParser {
             JsonNode v = e.getValue();
             String expr = v.isTextual() ? v.asText() : v.path("expr").asText("");
             if (expr.isBlank()) {
-                out.add(error(INVALID, "measures." + e.getKey(), "a measure needs `expr:`, a DEL aggregate (docs/guides/BI_LANGUAGE_REFERENCE.md)"));
+                out.add(error(INVALID, "measures." + e.getKey(), "a measure needs `expr:`, a DEL aggregate (docs/guides/RACHANA_REFERENCE.md)"));
                 return;
             }
             m.put(e.getKey(), new Report.LocalMeasure(e.getKey(), expr, v.isObject() && v.hasNonNull("format") ? v.path("format").asText() : null,

@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Wave B, the model designer's calculations (docs/architecture/BI_DESIGN.md sections 3.3.5 and 12.2, console task 3; docs/guides/BI_LANGUAGE_REFERENCE.md, the filter
+/* Wave B, the model designer's calculations (docs/architecture/BI_DESIGN.md sections 3.3.5 and 12.2, console task 3; docs/guides/RACHANA_REFERENCE.md, the filter
    context and balance chapters), on the designer's object (window.Drishti.model, drishti_bi-model-designer.js), with no YAML typed:
 
      Quick calculation   (Measures tab) a measure from a measure and a calculation picked from a list: % of total, % of a field's total, ignoring a slicer,

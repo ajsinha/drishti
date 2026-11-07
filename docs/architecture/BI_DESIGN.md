@@ -356,7 +356,7 @@ stable id and the server rewrites the text.
 | types | integer with decimal gives decimal; `date - date` gives integer days; text with number is `DRS-9127` (no implicit casts); `in [...]` items must match the field's type |
 | booleans | `and`, `or`, `not` and `… if c else …` take booleans only (no truthiness of numbers or text) |
 
-#### 3.3.4 Function catalogue (summary; the full reference is BI_LANGUAGE_REFERENCE.md)
+#### 3.3.4 Function catalogue (summary; the full reference is RACHANA_REFERENCE.md)
 
 | Family | Signatures | Scope | Status |
 |---|---|---|---|
@@ -445,7 +445,7 @@ comments, sets `expressions: 2`, and is reversible from saved states. The old sy
 
 #### 3.3.8 Documentation and in-product help (a deliverable of every wave that touches DEL)
 
-* **`docs/guides/BI_LANGUAGE_REFERENCE.md`** (created in A, grown each wave): the grammar of 3.3.2; the scopes; **every
+* **`docs/guides/RACHANA_REFERENCE.md`** (created in A, grown each wave): the grammar of 3.3.2; the scopes; **every
   function** with signature, description, return type, two or more examples and its edge cases (nulls, masked values,
   currencies, empty sets, types); filter-context rules with before/after tables; every `DRS` code an expression can
   raise with cause and fix; a **cookbook of 40+ finance and risk recipes** (MTM and P&L by desk, open vs matured,
@@ -459,7 +459,7 @@ comments, sets `expressions: 2`, and is reversible from saved states. The old sy
   arguments; hovering shows the function's card; problems appear inline with the fix as a button; a *Try it* strip
   shows the value for the current selection (a server answer, as the author).
 * **One catalogue**: `bi/expr/functions.yaml` on the server (name, signature, scopes, description, examples, edge
-  cases, since-wave) feeds validation, completion, `describe` for AI and the function tables of BI_LANGUAGE_REFERENCE.md (a
+  cases, since-wave) feeds validation, completion, `describe` for AI and the function tables of RACHANA_REFERENCE.md (a
   test fails when the guide and the catalogue disagree).
 
 ### 3.4 Drishti SQL (DSQL): read-only SQL over models
@@ -1192,8 +1192,8 @@ against them.
    selectable only until B).
 5. **Fields everywhere from `describe`** (`drishti_bi-design.js`, `drishti_bi-report.js`): one field list with inherited properties and
    perspective filter; YAML round trip on a concrete syntax tree (comments and order kept) in `core/model_layer.py`.
-6. **Docs** (with the server lane's input): `docs/guides/BI_LANGUAGE_REFERENCE.md` (3.3.8: grammar, every function, error codes,
-   40+ recipes, Python/DAX differences), `BI_LANGUAGE_REFERENCE.md` (DSQL reference), BI_GUIDE.md v2, MODELS.md, API guide; tutorials
+6. **Docs** (with the server lane's input): `docs/guides/RACHANA_REFERENCE.md` (3.3.8: grammar, every function, error codes,
+   40+ recipes, Python/DAX differences), `API_GUIDE.md, Drishti SQL` (DSQL reference), BI_GUIDE.md v2, MODELS.md, API guide; tutorials
    10–18 migrated (UI, CLI, YAML).
 
 **Accepted when:** (1) every shipped sample, test and tutorial 10–18 runs on datasets and models in the UI alone; the
@@ -1202,7 +1202,7 @@ same question as a visual, an MQ and a DSQL statement gives one plan hash, one a
 signature; (3) a dataset with subset, filter, explicit grain, an expression column, a Python column and grouping, and an
 SQL view dataset, are made in the wizard without typing YAML; (4) a hidden column is absent from `describe`, DSQL and
 AI; a report-only reader is refused outside the envelope; (5) the plan's security property tests pass; (6) a test
-fails if BI_LANGUAGE_REFERENCE.md and `functions.yaml` disagree, and all 40+ recipes run as tests on the demo lake; (7) the QA
+fails if RACHANA_REFERENCE.md and `functions.yaml` disagree, and all 40+ recipes run as tests on the demo lake; (7) the QA
 round's findings are fixed before the drill.
 
 #### Wave B — Calculation, live and scale
@@ -1237,7 +1237,7 @@ round's findings are fixed before the drill.
 4. **Live everywhere.** Reports, boards and alerts use pushed `/mq/stream`; state chips (live, throttled, stale);
    a time picker (now, as of, window) in every consumer.
 5. **Explain and usage.** The explain panel under each visual; the shipped *Admin BI usage* report.
-6. **Docs:** BI_LANGUAGE_REFERENCE.md filter-context and balance chapters and recipes; a live and standing-queries guide; an
+6. **Docs:** RACHANA_REFERENCE.md filter-context and balance chapters and recipes; a live and standing-queries guide; an
    operations guide for scale settings and metrics; tutorials updated.
 
 **Accepted when:** (1) % of total, ignore-a-slicer, a YTD calculation group over ten measures and a what-if shock equal

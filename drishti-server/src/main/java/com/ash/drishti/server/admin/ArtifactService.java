@@ -254,9 +254,10 @@ public final class ArtifactService {
                         LOG.info("could not disable connector {}: {}", i.name(), ex.getMessage());
                     }
                 });
-                case "datasets", "reports", "boards", "notebooks", "python" -> {
+                case "tables", "models", "reports", "boards", "notebooks", "python" -> {
                     String sub = switch (g.category()) {
-                        case "datasets" -> "dataset";
+                        case "tables" -> "table";
+                        case "models" -> "model";
                         case "reports" -> "report";
                         case "boards" -> "board";
                         case "notebooks" -> "notebook";
@@ -314,7 +315,7 @@ public final class ArtifactService {
             }
             default -> {
                 Path file = paths.biFile(subtype, name);
-                ArtifactArchive.Entry e = archive.archive("bi", subtype, name, "bi", paths.biRel(subtype, name), file, actor, summary);
+                ArtifactArchive.Entry e = archive.archive("bi", subtype, name, ArtifactPaths.biArea(subtype), paths.biRel(subtype, name), file, actor, summary);
                 hide(subtype, name, false);
                 yield e;
             }
@@ -448,7 +449,7 @@ public final class ArtifactService {
             folder.reload();
             audit.record(actor, "artifact-installed", subject("bi", o.name()), o.subtype() + " file uploaded (" + body.length + " bytes); choice: " + (also.isEmpty() ? "new" : "replace")
                     + (o.warnings().isEmpty() ? "" : "; warnings: " + o.warnings()) + (also.isEmpty() ? "" : "; " + also));
-            Map<String, Object> out = result("install", "bi", o.subtype(), o.name(), null, null, also, "placed in " + paths.biRel(o.subtype(), o.name()));
+            Map<String, Object> out = result("install", "bi", o.subtype(), o.name(), null, null, also, "placed in " + paths.biKey(o.subtype(), o.name()));
             out.put("warnings", o.warnings());
             return out;
         } finally {

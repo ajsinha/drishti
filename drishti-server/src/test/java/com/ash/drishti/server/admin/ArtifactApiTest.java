@@ -53,7 +53,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 /**
  * Admin, Artifacts over HTTP on temporary folders: the list, the impact of a pack, a connector and a BI file with real dependants (a
- * child pack, datasets, reports, a board, monitors, alert rules, a subscription, an embed host), refuse-then-force, disable instead,
+ * child pack, tables, a model, reports, a board, monitors, alert rules, a subscription, an embed host), refuse-then-force, disable instead,
  * archive and restore, a name clash on restore, an upload with its dry run, and the audit trail.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=finance"})
@@ -70,15 +70,19 @@ class ArtifactApiTest {
         write("installed/artbase/pack.yaml", "pack: artbase\nversion: 1.0.0\ntitle: Art base\nkinds: [artwidget]\n");
         write("installed/artchild/pack.yaml", "pack: artchild\nversion: 1.0.0\ntitle: Art child\nextends: [artbase]\nkinds: [artgadget]\n");
         write("installed/artlone/pack.yaml", "pack: artlone\nversion: 2.1.0\ntitle: Art lone\nkinds: [artsolo]\n");
-        write("bi/datasets/art-trades.dataset.yaml", "dataset: art-trades\ntitle: Art trades\ntables:\n  w:\n    source: { connector: art-used, kind: artwidget }\n");
-        write("bi/datasets/art-composed.dataset.yaml", "dataset: art-composed\ntitle: Art composed\nsources:\n  - dataset: art-trades\n");
-        write("bi/reports/art-overview.report.yaml", "report: art-overview\ntitle: Art overview\ndataset: art-trades\n");
+        write("tables/art/trades.table.yaml", "rachana: 3\ntable: art.trades\nversion: 1.0.0\ntitle: Art trades\nfrom: { connector: art-used, kind: artwidget }\n"
+                + "columns:\n  WID: { path: \"$.WID\", type: string }\n");
+        write("tables/art/composed.table.yaml", "rachana: 3\ntable: art.composed\nversion: 1.0.0\ntitle: Art composed\nfrom: { table: art.trades }\n");
+        write("tables/art/art-model.model.yaml", "rachana: 3\nmodel: art-model\nversion: 1.0.0\ntitle: Art model\ntables:\n  trades: { table: art.trades, role: fact }\n"
+                + "measures:\n  Widgets: { expr: count(trades) }\n");
+        write("bi/reports/art-overview.report.yaml", "report: art-overview\ntitle: Art overview\nmodel: art-model@1\n");
         write("bi/boards/art-wall.board.yaml", "board: art-wall\ntitle: Art wall\ntiles:\n  - { id: t1, report: art-overview, visual: v1 }\n");
         write("connectors/art-boot.yaml", "plugin: file\nkinds: [artboot]\nsettings:\n  root: " + root.resolve("bootdata") + "\n");
         write("bi/python/art-free.python.yaml", "python: art-free\ntitle: Art free\n");
         r.add("drishti.packs.installed-dir", () -> root.resolve("installed").toString());
         r.add("drishti.packs.overlay", () -> root.resolve("added.yaml").toString());
         r.add("drishti.bi.dir", () -> root.resolve("bi").toString());
+        r.add("drishti.tables.root", () -> root.resolve("tables").toString());
         r.add("drishti.sources.connectors-dir", () -> root.resolve("connectors").toString());
         r.add("drishti.admin.uninstalled-dir", () -> root.resolve("uninstalled").toString());
         r.add("drishti.admin.hidden-bi-file", () -> root.resolve("hidden.txt").toString());
@@ -125,7 +129,7 @@ class ArtifactApiTest {
         prefs.put("tester", "monitors", "art-mon", JSON.readTree("{\"name\":\"art-mon\",\"refs\":[{\"kind\":\"artwidget\",\"id\":\"W-1\"}]}"));
         prefs.put("tester", "alerts", "art-rule", JSON.readTree("{\"name\":\"art-rule\",\"ref\":{\"kind\":\"artgadget\",\"id\":\"G-1\"},\"when\":\"x>1\"}"));
         prefs.put("tester", "subscriptions", "art-sub", JSON.readTree("{\"name\":\"art-sub\",\"target\":{\"type\":\"report\",\"id\":\"file:report:art-overview\"}}"));
-        prefs.put("tester", "measure-alerts", "art-ma", JSON.readTree("{\"name\":\"art-ma\",\"source\":{\"type\":\"measure\",\"dataset\":\"art-trades\"}}"));
+        prefs.put("tester", "measure-alerts", "art-ma", JSON.readTree("{\"name\":\"art-ma\",\"source\":{\"type\":\"measure\",\"dataset\":\"art.trades\"}}"));
         prefs.put("tester", "settings", "ui", JSON.readTree("{\"savedSearches\":[{\"name\":\"my widgets\",\"path\":\"/t?kind=artwidget&q=W\"}]}"));
         prefs.put("tester", "workspaces", "art-ws", JSON.readTree("{\"name\":\"art-ws\",\"panes\":[{\"kind\":\"artwidget\",\"entity\":\"W-2\"}]}"));
         embeds.create(new EmbedAppStore.Draft("art-host", "Art host", "ops", List.of("https://art.example"), List.of("artwidget"), List.of("embed:view"), null, null, null, true,
@@ -168,10 +172,12 @@ class ArtifactApiTest {
         assertThat(base.path("version").asText()).isEqualTo("1.0.0");
         assertThat(find(all, "pack", "finance").path("origin").asText()).isEqualTo("shipped");
         assertThat(find(all, "connector", "art-used").path("kind").asText()).isEqualTo("connector");
-        JsonNode ds = find(all, "bi", "art-trades");
-        assertThat(ds.path("subtype").asText()).isEqualTo("dataset");
+        JsonNode ds = find(all, "bi", "art.trades");
+        assertThat(ds.path("subtype").asText()).isEqualTo("table");
         assertThat(ds.path("origin").asText()).isEqualTo("shipped");
-        assertThat(ds.path("link").asText()).isEqualTo("/bi/i/file:dataset:art-trades");
+        assertThat(ds.path("link").asText()).isEqualTo("/bi/i/file:table:art.trades");
+        assertThat(ds.path("path").asText()).isEqualTo("tables/art/trades.table.yaml");
+        assertThat(find(all, "bi", "art-model").path("subtype").asText()).isEqualTo("model");
         assertThat(find(all, "bi", "art-wall").path("subtype").asText()).isEqualTo("board");
     }
 
@@ -190,7 +196,8 @@ class ArtifactApiTest {
         JsonNode im = json("/api/v1/admin/artifacts/impact?kind=pack&name=artbase");
         assertThat(im.path("blocked").asBoolean()).isTrue();
         assertThat(names(group(im, "packs"))).containsExactly("artchild");
-        assertThat(names(group(im, "datasets"))).contains("art-trades", "art-composed");
+        assertThat(names(group(im, "tables"))).contains("art.trades", "art.composed");
+        assertThat(names(group(im, "models"))).containsExactly("art-model");
         assertThat(names(group(im, "reports"))).containsExactly("art-overview");
         assertThat(names(group(im, "boards"))).containsExactly("art-wall");
         assertThat(names(group(im, "monitors"))).containsExactly("art-mon");
@@ -209,7 +216,8 @@ class ArtifactApiTest {
     @Order(3)
     void aConnectorsImpactNamesTheDatasetsThatScanItAndWhatIsOverThem() throws Exception {
         JsonNode im = json("/api/v1/admin/artifacts/impact?kind=connector&name=art-used");
-        assertThat(names(group(im, "datasets"))).contains("art-trades", "art-composed");
+        assertThat(names(group(im, "tables"))).contains("art.trades", "art.composed");
+        assertThat(names(group(im, "models"))).containsExactly("art-model");
         assertThat(names(group(im, "reports"))).containsExactly("art-overview");
         assertThat(names(group(im, "boards"))).containsExactly("art-wall");
         assertThat(names(group(im, "monitors"))).containsExactly("art-mon");     // it serves artwidget
@@ -219,8 +227,9 @@ class ArtifactApiTest {
     @Test
     @Order(4)
     void aBiFilesImpactFollowsDatasetToReportToBoardAndFindsAlertsAndSubscriptions() throws Exception {
-        JsonNode im = json("/api/v1/admin/artifacts/impact?kind=bi&subtype=dataset&name=art-trades");
-        assertThat(names(group(im, "datasets"))).containsExactly("art-composed");
+        JsonNode im = json("/api/v1/admin/artifacts/impact?kind=bi&subtype=table&name=art.trades");
+        assertThat(names(group(im, "tables"))).containsExactly("art.composed");
+        assertThat(names(group(im, "models"))).containsExactly("art-model");
         assertThat(names(group(im, "reports"))).containsExactly("art-overview");
         assertThat(names(group(im, "boards"))).containsExactly("art-wall");
         assertThat(names(group(im, "measure-alerts"))).containsExactly("art-ma");
@@ -252,10 +261,10 @@ class ArtifactApiTest {
         assertThat(root.resolve("installed/artbase")).doesNotExist();
         assertThat(root.resolve("installed/artchild")).doesNotExist();
         // taking the dependants along hid the BI files that depend on the pack's kinds (kept on disk), and left people's own documents alone
-        assertThat(Files.readString(root.resolve("hidden.txt"))).contains("file:dataset:art-trades", "file:dataset:art-composed", "file:report:art-overview", "file:board:art-wall");
+        assertThat(Files.readString(root.resolve("hidden.txt"))).contains("file:table:art.trades", "file:table:art.composed", "file:model:art-model", "file:report:art-overview", "file:board:art-wall");
         assertThat(root.resolve("bi/reports/art-overview.report.yaml")).exists();
         assertThat(prefs.get("tester", "monitors", "art-mon")).isPresent();
-        for (String[] f : new String[][] {{"dataset", "art-trades"}, {"dataset", "art-composed"}, {"report", "art-overview"}, {"board", "art-wall"}}) {
+        for (String[] f : new String[][] {{"table", "art.trades"}, {"table", "art.composed"}, {"model", "art-model"}, {"report", "art-overview"}, {"board", "art-wall"}}) {
             act("/enable", "{\"kind\":\"bi\",\"subtype\":\"" + f[0] + "\",\"name\":\"" + f[1] + "\"}");
         }
         assertThat(root.resolve("uninstalled").resolve(done.path("archive").asText()).resolve("payload/artbase/pack.yaml")).exists();
@@ -346,7 +355,7 @@ class ArtifactApiTest {
     @Order(9)
     void aConnectorDatasetsScanIsRefusedUntilDependantsAreTakenAlong() throws Exception {
         mvc.perform(post("/api/v1/admin/artifacts/uninstall").contentType(MediaType.APPLICATION_JSON).content("{\"kind\":\"connector\",\"name\":\"art-used\"}"))
-                .andExpect(status().isConflict()).andExpect(jsonPath("$.impact.groups[?(@.category=='datasets')].count").value(hasItem(2)));
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.impact.groups[?(@.category=='tables')].count").value(hasItem(2)));
         JsonNode off = JSON.readTree(act("/disable", "{\"kind\":\"connector\",\"name\":\"art-used\"}"));
         assertThat(off.path("ok").asBoolean()).isTrue();
         assertThat(find(json("/api/v1/admin/artifacts").path("artifacts"), "connector", "art-used").path("state").asText()).isEqualTo("off");
@@ -378,27 +387,41 @@ class ArtifactApiTest {
     @Test
     @Order(11)
     void uploadingABiFileIsCheckedFirstThenPlacedAndAClashNeedsReplace() throws Exception {
-        String good = "dataset: art-new\ntitle: Art new\ntables:\n  w:\n    source: { connector: art-used, kind: artwidget }\n    columns:\n      wid: { type: string, key: true }\n";
+        String good = "rachana: 3\ntable: art.new_widgets\nversion: 1.0.0\ntitle: Art new\nfrom: { connector: art-used, kind: artwidget }\n"
+                + "keys: [WID]\ncolumns:\n  WID: { path: \"$.WID\", type: string, key: true }\n";
         mvc.perform(post("/api/v1/admin/artifacts/bi/check?file=bad name.txt").contentType(MediaType.APPLICATION_OCTET_STREAM).content(good))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.valid").value(false)).andExpect(jsonPath("$.problems[0]").value(containsString("<name>.<kind>.yaml")));
-        mvc.perform(post("/api/v1/admin/artifacts/bi/check?file=art-new.dataset.yaml").contentType(MediaType.APPLICATION_OCTET_STREAM).content("dataset: other\n"))
-                .andExpect(jsonPath("$.valid").value(false)).andExpect(jsonPath("$.problems[0]").value(containsString("rename the file")));
-        mvc.perform(post("/api/v1/admin/artifacts/bi/check?file=art-new.dataset.yaml").contentType(MediaType.APPLICATION_OCTET_STREAM).content(good))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.valid").value(true)).andExpect(jsonPath("$.exists").value(false));
-        assertThat(root.resolve("bi/datasets/art-new.dataset.yaml")).doesNotExist();                // a check writes nothing
-        mvc.perform(post("/api/v1/admin/artifacts/bi?file=art-new.dataset.yaml").contentType(MediaType.APPLICATION_OCTET_STREAM).content("dataset: other\n"))
+        mvc.perform(post("/api/v1/admin/artifacts/bi/check?file=new_widgets.table.yaml").contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .content(good.replace("art.new_widgets", "art.other"))).andExpect(jsonPath("$.valid").value(false))
+                .andExpect(jsonPath("$.problems[0]").value(containsString("other.table.yaml")));
+        // BI's old dataset form is refused with the migration's command, as the BI folder refuses it
+        mvc.perform(post("/api/v1/admin/artifacts/bi/check?file=art-new.dataset.yaml").contentType(MediaType.APPLICATION_OCTET_STREAM).content("dataset: art-new\n"))
+                .andExpect(jsonPath("$.valid").value(false)).andExpect(jsonPath("$.problems[0]").value(containsString("DRS-9196")))
+                .andExpect(jsonPath("$.problems[0]").value(containsString("tables migrate")));
+        mvc.perform(post("/api/v1/admin/artifacts/bi/check?file=new_widgets.table.yaml").contentType(MediaType.APPLICATION_OCTET_STREAM).content(good))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.valid").value(true)).andExpect(jsonPath("$.name").value("art.new_widgets"))
+                .andExpect(jsonPath("$.exists").value(false));
+        assertThat(root.resolve("tables/art/new_widgets.table.yaml")).doesNotExist();                // a check writes nothing
+        mvc.perform(post("/api/v1/admin/artifacts/bi?file=art-new.dataset.yaml").contentType(MediaType.APPLICATION_OCTET_STREAM).content("dataset: art-new\n"))
                 .andExpect(status().isUnprocessableEntity()).andExpect(jsonPath("$.code").value("DRS-5044"));
-        mvc.perform(post("/api/v1/admin/artifacts/bi?file=art-new.dataset.yaml").contentType(MediaType.APPLICATION_OCTET_STREAM).content(good)).andExpect(status().isOk());
-        assertThat(root.resolve("bi/datasets/art-new.dataset.yaml")).exists();
-        assertThat(folder.item("file:dataset:art-new")).isPresent();
-        mvc.perform(post("/api/v1/admin/artifacts/bi/check?file=art-new.dataset.yaml").contentType(MediaType.APPLICATION_OCTET_STREAM).content(good))
+        mvc.perform(post("/api/v1/admin/artifacts/bi?file=new_widgets.table.yaml").contentType(MediaType.APPLICATION_OCTET_STREAM).content(good)).andExpect(status().isOk());
+        assertThat(root.resolve("tables/art/new_widgets.table.yaml")).exists();
+        assertThat(folder.item("file:table:art.new_widgets")).isPresent();
+        mvc.perform(post("/api/v1/admin/artifacts/bi/check?file=new_widgets.table.yaml").contentType(MediaType.APPLICATION_OCTET_STREAM).content(good))
                 .andExpect(jsonPath("$.exists").value(true)).andExpect(jsonPath("$.replacesImpact").value(containsString("Embed hosts (1)")));
-        mvc.perform(post("/api/v1/admin/artifacts/bi?file=art-new.dataset.yaml").contentType(MediaType.APPLICATION_OCTET_STREAM).content(good))
+        mvc.perform(post("/api/v1/admin/artifacts/bi?file=new_widgets.table.yaml").contentType(MediaType.APPLICATION_OCTET_STREAM).content(good))
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-5042"));
-        mvc.perform(post("/api/v1/admin/artifacts/bi?file=art-new.dataset.yaml&replace=true&confirm=art-new").contentType(MediaType.APPLICATION_OCTET_STREAM).content(good + "# v2\n"))
-                .andExpect(status().isOk());
-        assertThat(Files.readString(root.resolve("bi/datasets/art-new.dataset.yaml"))).endsWith("# v2\n");
-        assertThat(json("/api/v1/admin/artifacts/uninstalled").path("archives").findValuesAsText("name")).contains("art-new");
+        mvc.perform(post("/api/v1/admin/artifacts/bi?file=new_widgets.table.yaml&replace=true&confirm=art.new_widgets").contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .content(good + "# v2\n")).andExpect(status().isOk());
+        assertThat(Files.readString(root.resolve("tables/art/new_widgets.table.yaml"))).endsWith("# v2\n");
+        assertThat(json("/api/v1/admin/artifacts/uninstalled").path("archives").findValuesAsText("name")).contains("art.new_widgets");
+        // a model of the table layer is checked by the layer's reader and placed in its domain's folder
+        String model = "rachana: 3\nmodel: widgets\nversion: 1.0.0\ntables:\n  w: { table: art.new_widgets, role: fact }\nmeasures:\n  N: { expr: count(w) }\n";
+        mvc.perform(post("/api/v1/admin/artifacts/bi/check?file=widgets.model.yaml").contentType(MediaType.APPLICATION_OCTET_STREAM).content(model.replace("tables:", "datasets:")))
+                .andExpect(jsonPath("$.valid").value(false));
+        mvc.perform(post("/api/v1/admin/artifacts/bi?file=widgets.model.yaml").contentType(MediaType.APPLICATION_OCTET_STREAM).content(model)).andExpect(status().isOk());
+        assertThat(root.resolve("tables/bi/widgets.model.yaml")).exists();
+        assertThat(folder.item("file:model:widgets")).isPresent();
     }
 
     @Test

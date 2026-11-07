@@ -132,7 +132,7 @@ class RunPromotionTest {
         assertThat(d.security().masked()).containsExactly("cpty");                 // masked for the promoter: masked always
         assertThat(p.yaml()).contains("computedAs: \"ann\"");
         // read as the dataset it was promoted to: the promoter's rows, the mask where she saw the mask
-        ModelCatalog.Snapshot s = promotion.read("cpty-snapshot", "cpty-snapshot", "1", d.source().runToken());
+        ModelCatalog.Snapshot s = promotion.read(d.name(), "cpty-snapshot", "1", d.source().runToken());
         ArrowIpcWriter.Column cpty = s.result().columns().get(0);
         assertThat(s.result().rows()).isPositive();
         assertThat(cpty.values()).allSatisfy(v -> assertThat(v).isIn(DataNode.MASK, null));
@@ -145,7 +145,7 @@ class RunPromotionTest {
         RunPromotion.Promoted p = promotion.promote(r, new Principal("rita", MqHarness.RITA.roles()), "cpty-raw", "Raw", "report");
         DatasetDef d = Layered.tableDef(p.yaml()).dataset();
         assertThat(d.security().masked()).isEmpty();
-        ModelCatalog.Snapshot s = promotion.read("cpty-raw", "cpty-raw", "latest", d.source().runToken());
+        ModelCatalog.Snapshot s = promotion.read(d.name(), "cpty-raw", "latest", d.source().runToken());
         assertThat(s.result().columns().get(0).values()).noneMatch(DataNode.MASK::equals);
         assertThat(p.reportItem()).isNotNull();
         assertThat(drafts.get(drafts.size() - 1)).contains("type: table").contains("cpty_raw.cpty");

@@ -56,7 +56,7 @@ class RegionEconomicsSampleTest {
         Dataset d = dataset();
         assertThat(d.sample()).isTrue();
         assertThat(d.tables()).containsOnlyKeys("regions");
-        assertThat(d.measures().keySet()).containsExactly("Population", "GDP (USD bn)", "GDP per head (USD)");
+        assertThat(d.measures().keySet()).containsExactly("Population", "GDP (USD bn)", "GDP per head (USD)", "Count of regions");    // a fact of a model has its default count
         assertThat(d.hierarchies().get("Country and region")).containsExactly("regions.COUNTRY_NAME", "regions.NAME");
         assertThat(d.description()).contains("Illustrative, rounded from public figures, not for reporting");
         assertThat(d.tables().get("regions").columns().keySet()).contains("ISO3", "REGION_CODE", "NAME", "POPULATION", "GDP_USD_BN", "YEAR", "SOURCE");

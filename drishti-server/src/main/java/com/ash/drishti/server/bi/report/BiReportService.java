@@ -101,7 +101,7 @@ public final class BiReportService {
         }
         try {
             BiStore.Item mine = bi.readableItem(p, ref);
-            if ("dataset".equals(mine.kind())) {
+            if ("dataset".equals(mine.kind()) || "table".equals(mine.kind())) {
                 return mine;
             }
         } catch (DrishtiException e) {

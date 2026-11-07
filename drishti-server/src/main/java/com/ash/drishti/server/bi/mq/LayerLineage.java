@@ -55,8 +55,13 @@ public final class LayerLineage implements BiGovernance.Layered {
     }
 
     private static boolean isLayer(BiStore.Item i, String body) {
-        return "model".equals(i.kind()) || "dataset".equals(i.kind()) && DatasetDefParser.isTable(body)
+        return "model".equals(i.kind()) || isTable(i, body)
                 || "report".equals(i.kind()) && ReportParser.parse(body).report() != null && ReportParser.parse(body).report().model() != null;
+    }
+
+    /** A table of the layer: an item of the kind {@code table}, or a stored dataset item that holds one. */
+    private static boolean isTable(BiStore.Item i, String body) {
+        return ("table".equals(i.kind()) || "dataset".equals(i.kind())) && DatasetDefParser.isTable(body);
     }
 
     // ---- lineage -----------------------------------------------------------------------------------------------------
@@ -75,7 +80,7 @@ public final class LayerLineage implements BiGovernance.Layered {
             m.put("model", Map.of("name", v.def().name(), "version", v.def().version()));
             m.put("upstream", upstream(v, null));
             downstream(p, i, v, m);
-        } else if ("dataset".equals(i.kind())) {
+        } else if (isTable(i, body)) {
             datasetLineage(p, i, body, m);
         } else {
             Report rep = ReportParser.parse(body).report();
@@ -218,7 +223,7 @@ public final class LayerLineage implements BiGovernance.Layered {
     @Override
     public Map<String, Object> impact(Principal p, BiStore.Item i, List<String> remove) {
         String body = bi.bodyFor(p, i);
-        if (!"model".equals(i.kind()) && !("dataset".equals(i.kind()) && DatasetDefParser.isTable(body))) {
+        if (!"model".equals(i.kind()) && !isTable(i, body)) {
             return null;
         }
         Map<String, Object> m = new LinkedHashMap<>();
