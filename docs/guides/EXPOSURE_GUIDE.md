@@ -551,7 +551,7 @@ Every setting is under `drishti.ccr.exposure` in the engine's own file, `config/
 
 Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.ccr.exposure`](../admin/CONFIGURATION.md#drishticcrexposure) (also at Help → Configuration in the console).
 
-Also the token rules: `POST /api/v1/exposure/what-if` is `read`, `POST /captures` `risk:write`, `POST
+Also the token rules: `POST /api/v1/exposure/what-if` and `POST /api/v1/exposure/predeal` are `read`, `POST /captures` `risk:write`, `POST
 /reload` and `POST /official` never a token's.
 
 ## 13. Troubleshooting
