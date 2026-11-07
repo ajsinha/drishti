@@ -33,3 +33,20 @@ export { LAYOUTS, DENSITIES, GridModel, createGridModel } from './drishti_grid.j
 export { GRID_EVENTS, domEventName, GridLive } from './drishti_grid-live.js';
 export { eventSourceFeed, webSocketFeed, manualFeed } from './drishti_live.js';
 export { renderWindow, renderText, renderHtml } from './drishti_plain-render.js';
+export { VIEW_EVENTS, PHONE_WIDTH, FUNCTION_KEYS, CF_TYPES, headerSpans, pivotColumnLabels, markGroups, isTotalCell, nonAdditiveNote, colourScaleAlpha,
+  dataBarWidth, cfBackground, figureRange, ruleFor, phoneColumns, pivotMeasures, columnMenuItems, cellMenuItems, commandText, parseCommand,
+  parseCondition, conditionText, statusItems, FlashTracker } from './drishti_grid-ui.js';
+export { h, placeAt, Menu, Notes } from './drishti_grid-dom.js';
+export { sparkline, renderExplain } from './drishti_grid-explain.js';
+export { localDrill } from './drishti_grid-actions.js';
+export { GridBase } from './drishti_grid-base.js';
+export { Grid } from './drishti_grid-view.js';
+export { ELEMENT_NAME, defineGridElement } from './drishti_grid-element.js';
+import { defineGridElement } from './drishti_grid-element.js';
+
+/**
+ * Starts drishti-grid in a page (the bundle calls it when it loads; nothing happens without a document): defines <drishti-grid>.
+ * @param {Window} root
+ * @returns {void}
+ */
+export function install(root) { if (root && root.document && root.customElements) { defineGridElement(root.customElements, root); } }

@@ -34,15 +34,17 @@ export const MANIFEST = Object.freeze({
       ]
     },
     "drishti-grid": {
-      "version": "0.1.0",
-      "title": "The grid engine: columns, row models (client and server), virtual scrolling, pivot, selection, export and keyboard",
+      "version": "0.2.0",
+      "title": "The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and <drishti-grid> in three layouts and three densities)",
       "bundle": "drishti-grid/drishti_grid.js",
       "entry": "drishti-grid/src/drishti_index.js",
       "global": "grid",
       "requires": [
         "drishti-core"
       ],
-      "css": []
+      "css": [
+        "elements/drishti-grid/drishti_grid.css"
+      ]
     }
   }
 });

@@ -46,6 +46,22 @@
   WebSocket; the server-side model's invalidate, purge and data-changed notice; group and pivot totals changed by difference, and
   non-additive ones asked of the server again, debounced. 40 unit tests in Node (`tests/elements/`), and the 1,000,000-row figures in
   [BENCHMARK.md](docs/admin/BENCHMARK.md).
+- **drishti-grid 0.2.0, the visual layer** ([ELEMENTS.md section 8.1](docs/architecture/ELEMENTS.md#81-as-built-the-foundation-drishti-core-and-the-grids-engine)):
+  `new Grid(element, options)` and `<drishti-grid>` (no framework, no shadow root) draw the engine in the three layouts of g1, all
+  built: `wells` (the default: fields with search and the four wells above the grid, Explain in a drawer that follows the selection),
+  `panel` (a side tool panel with grouped fields, checkboxes, the wells two by two, pivot mode, grand total column, subtotals above and
+  deferred update) and `terminal` (a command line read both ways, one lane of wells, Explain in a split pane with the steps, the worst
+  scenarios and the trend, function keys F2 to F10); densities comfortable, compact and terminal apart from the layout; light and dark
+  from drishti-core's tokens. Drag chips between wells (or move them from a chip's menu by the keyboard), aggregation per value (the
+  server's for a non-additive one), member and value filters, top N, collapsible pivot column groups, the grand totals and any column
+  pinned, the column menu, the context menu (Explain, copy, copy with headers, CSV and Excel, chart the range, the rows behind a cell
+  in a dialog, group, pin), row checkboxes, ranges by drag or Shift+click with the status bar (count, sum, average, min, max; a sum of
+  VaR is refused with a warning), ◆ non-additive totals with a hover note, colour scales and data bars, Explain on E and F2, the full
+  keyboard with grid or treegrid roles and announcements, the flash of live changes (still under reduced motion), loading placeholders
+  for server blocks, virtual rows and columns; on a phone (O2) the first column pinned and a pivot as one value column with a measure
+  switcher. Nothing inline: it runs under a strict CSP. A static fixture harness (`drishti_harness.html`, synthetic data, no server) in
+  every layout, density and theme; 12 more Node tests and one browser test file against the harness (`test_elements_grid_browser.py`).
+  The engine's pivot header rows (an open group's label line, subtotals below) no longer repeat the subtotal's figures.
 
 ## 2.9.11.d (unreleased)
 

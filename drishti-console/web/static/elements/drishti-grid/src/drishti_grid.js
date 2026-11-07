@@ -192,6 +192,7 @@ export class GridModel {
     if (row.kind === 'group' && row.pendingServer && row.pendingServer.indexOf(col.id) >= 0) { return '…'; }
     if (row.kind === 'pivot') {
       if (col.rowHeader) { return String(v); }
+      if (row.entry.kind === 'header') { return ''; }
       const cv = cellValue(this.answer, row.entry.key, col.colKey, col.measure);
       if (cv.value === null && cv.note) { return '…'; }
       return cv.value === null || cv.value === undefined ? '' : formatValue(cv.value, col);

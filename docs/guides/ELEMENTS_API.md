@@ -23,7 +23,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 | Library | Version | What it is |
 |---|---|---|
 | [drishti-core](#drishti-core) | 1.0.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts |
-| [drishti-grid](#drishti-grid) | 0.1.0 | The grid engine: columns, row models (client and server), virtual scrolling, pivot, selection, export and keyboard |
+| [drishti-grid](#drishti-grid) | 0.2.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities) |
 
 ## drishti-core
 
@@ -1020,7 +1020,7 @@ A listener: the event's payload and its name.
 
 ## drishti-grid
 
-Version 0.1.0. Bundle `static/elements/drishti-grid/drishti_grid.js`, global `Drishti.elements.grid`; requires drishti-core.
+Version 0.2.0. Bundle `static/elements/drishti-grid/drishti_grid.js`, global `Drishti.elements.grid`; requires drishti-core.
 
 ### drishti_columns.js
 
@@ -2940,3 +2940,926 @@ The window as plain table markup (escaped), with the grid roles a screen reader 
 | `grid` | `import('./drishti_grid.js').GridModel` |  |
 
 Returns `string`.
+
+### drishti_grid-ui.js
+
+#### `VIEW_EVENTS`
+
+The view's own events (the engine's are GRID_EVENTS): dispatched on the element as drishti:&lt;kebab-name&gt; and on the grid's bus.
+
+#### `PHONE_WIDTH`
+
+Below this width (px) the grid is drawn for a phone (ELEMENTS.md O2).
+
+#### `FUNCTION_KEYS`
+
+The terminal layout's function keys, each an action of the view.
+
+#### `CF_TYPES`
+
+The conditional formats a column may take.
+
+#### `headerSpans(labels)`
+
+The heading rows of columns given their labels by level: consecutive columns with the same labels down to a level share one span at that level (a member over its children, the value's name at the foot).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `labels` | `Array&lt;string[]&gt;` | per column, its label at each level (all the same length) |
+
+Returns `Array&lt;HeaderSpan[]&gt;`: per level, the spans in order.
+
+#### `pivotColumnLabels(col, entry, levels)`
+
+A pivot result column's labels by level: its members from the top (a collapsed group "Total" below its name, an open group's total "Total" under the group), "Grand total" at the top for the grand total, the value's name at the foot.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `col` | `{kind: string, colKey: string, measure: string}` | a shown pivot column |
+| `entry` | `?Object` | its column entry of the answer (path, kind, depth) |
+| `levels` | `number` | how many column dimensions the pivot has |
+
+Returns `string[]`: levels + 1 labels.
+
+#### `markGroups(spans, entries)`
+
+Marks the spans that open and close a pivot column group: the span at a level whose members name a group that has children.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spans` | `Array&lt;HeaderSpan[]&gt;` | headerSpans of the pivot columns |
+| `entries` | `Array&lt;?Object&gt;` | per column, its column entry |
+
+Returns `Array&lt;HeaderSpan[]&gt;`: the same spans, with group set where collapsible.
+
+#### `isTotalCell(rowKind, colKind, expandable)`
+
+Whether a figure is a total: a pivot row that is a grand total, a subtotal or a group's own line, a total column, a row group.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rowKind` | `string` | the row's kind (leaf, group, pivot) or the pivot entry's |
+| `colKind` | `?string` | the pivot column's kind (node, total, grand, others) or null |
+| `[expandable]` | `boolean` | a pivot row with children |
+
+Returns `boolean`.
+
+#### `nonAdditiveNote(header, text)`
+
+The hover note of a non-additive total: the figure is the server's own for the whole group, never the sum of its parts.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `header` | `string` | the measure's name |
+| `text` | `string` | the figure as shown |
+
+Returns `string`.
+
+#### `colourScaleAlpha(v, min, max)`
+
+How strong a colour-scale cell is: 0.08 at the least figure, 0.58 at the most (a line of one figure: the middle).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `number` |  |
+| `min` | `number` |  |
+| `max` | `number` |  |
+
+Returns `number`: the share of the colour, 0 to 1.
+
+#### `dataBarWidth(v, maxAbs)`
+
+A data bar's length: the figure's share of the largest magnitude, as a percentage of the cell (at most 92, so the figure stays readable).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `number` |  |
+| `maxAbs` | `number` |  |
+
+Returns `number`: 0 to 92.
+
+#### `cfBackground(rule, v, range)`
+
+The background of a conditionally formatted cell (a CSS background-image; the colours are the theme's tokens), or null.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rule` | `ConditionalFormat` |  |
+| `v` | `*` | the figure |
+| `range` | `{min: number, max: number, maxAbs: number}` | the column's figures |
+
+Returns `?string`.
+
+#### `figureRange(values)`
+
+The least, most and largest magnitude of figures (non-numbers left out); null when there are none.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `values` | `Array&lt;*&gt;` |  |
+
+Returns `?{min: number, max: number, maxAbs: number}`.
+
+#### `ruleFor(rules, col)`
+
+The rule that formats a column, if any.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rules` | `ConditionalFormat[]` |  |
+| `col` | `{id: string, measure: string, source: string}` | a shown column (a pivot column: its value's label and source column) |
+
+Returns `?ConditionalFormat`.
+
+#### `phoneColumns(display, pivot, measure)`
+
+The columns a phone shows (ELEMENTS.md O2): a grid keeps every column with the first one pinned (it scrolls across); a pivot collapses to its row headings and one value column, the grand total of the measure picked in the switcher.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `display` | `Array&lt;{col: Object, i: number, pin: ?string}&gt;` | the shown columns with their pinning |
+| `pivot` | `boolean` |  |
+| `[measure]` | `string` | the measure picked (default: the first) |
+
+Returns `Array&lt;{col: Object, i: number, pin: ?string}&gt;`.
+
+#### `pivotMeasures(cols)`
+
+The measures of pivot columns, in order, once each.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `cols` | `Object[]` | shown pivot columns |
+
+Returns `string[]`.
+
+#### `columnMenuItems(c)`
+
+The column menu's items: sort, filter (members, top N, a value filter), aggregation, hide, autosize, pin, Explain.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `c` | `Object` | what the menu is for |
+| `c.header` | `string` | the column's heading |
+| `c.pivot` | `boolean` | a pivot column |
+| `c.sort` | `?string` | its sort now: asc, desc or null |
+| `c.numeric` | `boolean` |  |
+| `c.additive` | `boolean` |  |
+| `[c.aggs]` | `Array&lt;{name: string, label: string}&gt;` | the aggregations it may take |
+| `[c.aggFunc]` | `string` | its aggregation now |
+| `[c.pinned]` | `?string` | left, right or null |
+| `[c.pinTotals]` | `boolean` | the pivot's totals are pinned |
+| `[c.explain]` | `boolean` | the grid has an Explain hook |
+| `[c.rowHeader]` | `boolean` | the pivot's row heading column |
+
+Returns `MenuItem[]`.
+
+#### `cellMenuItems(c)`
+
+The context menu's items for a cell: Explain, copy, export, chart the range, the rows behind it, pin, group.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `c` | `Object` | what the menu is for |
+| `c.explain` | `boolean` | the grid has an Explain hook |
+| `c.pivot` | `boolean` |  |
+| `c.cells` | `number` | cells in the range |
+| `c.drill` | `boolean` | there are rows behind the cell to show |
+| `c.groupBy` | `?string` | the field rows would be grouped by (null: none) |
+| `c.pinned` | `?string` | the column's pinning (grid mode) |
+| `c.pinTotals` | `boolean` | the pivot's totals are pinned |
+
+Returns `MenuItem[]`.
+
+#### `commandText(wells)`
+
+The terminal's command line for wells: PIVOT ROWS a b BY c VALUES d:avg FILTER e.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `wells` | `{rows: string[], columns: string[], values: Array&lt;{colId: string, aggFunc: string}&gt;, filters: Array&lt;{colId: string}&gt;}` |  |
+
+Returns `string`.
+
+#### `parseCommand(text, fields)`
+
+Reads a command line back into wells: words name fields by id or heading (case ignored; "quoted words" for a heading with spaces); ROWS (or no keyword), BY (columns), VALUES (field:aggregation), FILTER; PIVOT and GO are skipped.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+| `fields` | `Array&lt;{id: string, header: string}&gt;` |  |
+
+Returns `{wells: ?Object, error: ?string}`.
+
+#### `parseCondition(text)`
+
+Reads a value filter's condition as a person types it: "&gt; 400k", "&gt;= 1.5m", "&lt; 0", "= 12"; null when it is not one.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `?{op: string, value: number}`.
+
+#### `conditionText(f, fmt)`
+
+A value filter as words: "VaR &gt; 400,000".
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `f` | `{by: string, op: string, value: *, valueTo: *}` |  |
+| `[fmt]` | `function(*): string` | the figure's format |
+
+Returns `string`.
+
+#### `statusItems(s, fmt)`
+
+The status bar's figures of a range, as words: count, sum, average, min and max (each formatted), or one cell's figure; a warning when a non-additive figure is in it (a sum of VaR is not a VaR).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `s` | `{cells: number, count: number, sum: ?number, avg: ?number, min: ?number, max: ?number, warning: ?string, nonAdditive: string[]}` |  |
+| `fmt` | `function(number): string` |  |
+
+Returns `Array&lt;{label: string, value: string, warn: boolean}&gt;`.
+
+#### class `FlashTracker`
+
+Remembers the figures drawn and tells which changed after live data came in: up or down, while the change is younger than flashMs.
+
+##### `new FlashTracker(o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `{flashMs: number, now: function(): number}` | flashMs default 1000 |
+
+##### `FlashTracker.arm()`
+
+Live data came in: the next figures drawn that differ from the last ones flash.
+
+Returns `void`.
+
+##### `FlashTracker.seen(key, value)`
+
+A figure drawn at a key (a row's identity and a column): returns its flash ({dir, age} or null).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `key` | `string` |  |
+| `value` | `*` |  |
+
+Returns `?{dir: string, age: number}`.
+
+##### `FlashTracker.settle()`
+
+The drawing is over: changes are no longer expected until arm() again.
+
+Returns `void`.
+
+##### `FlashTracker.active()`
+
+Whether some flash is still running (the view draws again when it ends).
+
+Returns `boolean`.
+
+##### `FlashTracker.reset()`
+
+Forgets every figure (a new pivot, new columns).
+
+Returns `void`.
+
+### drishti_grid-dom.js
+
+#### `h(doc, tag, p, children)`
+
+Makes an element: classes, text, attributes, data, CSSOM styles (never a style attribute), listeners and children.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `tag` | `string` |  |
+| `[p]` | `{cls: string, text: string, attrs: Object&lt;string, string&gt;, data: Object&lt;string, string&gt;, style: Object&lt;string, string&gt;, on: Object&lt;string, function(Event): void&gt;}` |  |
+| `[children]` | `Array&lt;(Node\|string\|null)&gt;` |  |
+
+Returns `HTMLElement`.
+
+#### `placeAt(el, x, y)`
+
+Keeps a floating element inside the window: at (x, y), moved left or up when it would leave it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `HTMLElement` |  |
+| `x` | `number` |  |
+| `y` | `number` |  |
+
+Returns `void`.
+
+#### class `Menu`
+
+A menu: items (drishti_grid-ui.js MenuItem) as role menu, opened at a point or under an element; the arrows move, Enter or Space runs, Escape and a click outside close; focus goes back to where it was.
+
+##### `new Menu(doc, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `[o]` | `{className: string, onClose: function(): void}` | className: the classes of the menu (default dg-menu) |
+
+##### `Menu.isOpen()`
+
+Whether the menu is open.
+
+Returns `boolean`.
+
+##### `Menu.open(items, at)`
+
+Opens the menu.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `items` | `Array&lt;Object&gt;\|function(): Array&lt;Object&gt;` | the items, or a function giving them (asked again after a kept item runs) |
+| `at` | `{x: number, y: number, anchor: Element, label: string, run: function(string, *): void, theme: Element}` | where (a point, or under an anchor), its name for a reader, and what runs an item (its id and the field's value) |
+
+Returns `HTMLElement`: the menu.
+
+##### `Menu.close(refocus)`
+
+Closes the menu (focus back where it was when asked).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[refocus]` | `boolean` |  |
+
+Returns `void`.
+
+#### class `Notes`
+
+The hover note (a tooltip: role tooltip, described by the cell) and the short message at the grid's foot (role status).
+
+##### `new Notes(host, uid)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` | the grid's element (the message goes in it) |
+| `uid` | `string` | the grid's id prefix |
+
+##### `Notes.showTip(text, el)`
+
+Shows the note under an element.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+| `el` | `Element` |  |
+
+Returns `void`.
+
+##### `Notes.hideTip()`
+
+Hides the note.
+
+Returns `void`.
+
+##### `Notes.say(text)`
+
+Says something briefly at the grid's foot.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `void`.
+
+##### `Notes.destroy()`
+
+Takes the note away from the page.
+
+Returns `void`.
+
+### drishti_grid-explain.js
+
+#### `sparkline(doc, values, limit)`
+
+A small line of figures over time, as SVG (the colours are the style sheet's: .dg-spark).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `values` | `number[]` |  |
+| `[limit]` | `number` | a dashed line at the limit |
+
+Returns `SVGElement`.
+
+#### `renderExplain(el, st, mode, o)`
+
+Draws an Explain state into its place: 'drawer' and 'card' one column, 'split' three panes (the explanation, the worst scenarios, the trend).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `HTMLElement` | the place |
+| `st` | `?ExplainState` | nothing yet: the hint of how to ask |
+| `mode` | `('drawer'\|'card'\|'split')` |  |
+| `[o]` | `{onClose: function(): void, explainable: boolean}` | onClose: a close button |
+
+Returns `void`.
+
+### drishti_grid-actions.js
+
+#### `localDrill(v, ctx)`
+
+The rows in the page behind a cell's context (a pivot cell's members, a group's path).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `Object` | the Grid |
+| `ctx` | `Object` | GridModel.cellContext |
+
+Returns `Object[]`.
+
+### drishti_grid-base.js
+
+#### class `GridBase`
+
+What a layout asks of its grid: the columns as drawn and the changes a person makes in the chrome.
+
+##### `GridBase.displayColumns()`
+
+The columns as drawn: each shown column (its index in the model's shown columns, its width, its pane), split into the pinned left, the middle (with each one's left edge) and the pinned right; a phone's subset (O2).
+
+Returns `{all: Object[], left: Object[], center: Object[], right: Object[], offs: Float64Array, leftW: number, centerW: number, rightW: number, byIndex: Object, leftOffset: Object, rightOffset: Object}`.
+
+##### `GridBase.emptyText()`
+
+Why nothing is drawn, in words (null when there are rows).
+
+Returns `?string`.
+
+##### `GridBase.grouped()`
+
+Whether rows are grouped (grid mode): the first column then holds the tree.
+
+Returns `boolean`.
+
+##### `GridBase.checkboxes()`
+
+Whether the rows carry checkboxes.
+
+Returns `boolean`.
+
+##### `GridBase.sortOf(d)`
+
+A shown column's sort as drawn: asc, desc or null (a pivot column: its measure's order of the rows).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `d` | `{col: Object}` |  |
+
+Returns `?string`.
+
+##### `GridBase.sourceOf(col)`
+
+A pivot column's source field (the value's column id), for its conditional format.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `col` | `Object` |  |
+
+Returns `?string`.
+
+##### `GridBase.headerOf(id)`
+
+A column's heading by id.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `string`.
+
+##### `GridBase.fmtMeasure(label, v)`
+
+A figure of a measure (a pivot value's label) as its column shows it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `label` | `string` |  |
+| `v` | `*` |  |
+
+Returns `string`.
+
+##### `GridBase.levelFigures(dim, by)`
+
+The middle and the top quarter of a measure's figures at one level of the pivot's rows (for a value filter's presets).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `dim` | `string` | the row field |
+| `by` | `string` | the measure's label |
+
+Returns `?{median: number, p75: number}`.
+
+##### `GridBase.membersOf(colId)`
+
+A field's members for its filter: the host's (members option) or the rows in the page.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `colId` | `string` |  |
+
+Returns `Array&lt;{text: string, count: number}&gt;`.
+
+##### `GridBase.activeWells()`
+
+The wells being edited: the live ones, or the draft while updates are deferred (panel layout).
+
+Returns `WellsModel`.
+
+##### `GridBase.wellsChanged(what)`
+
+The wells changed: the pivot is on when there is a value; the chrome is drawn again; the change is said.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `what` | `?string` | the change in words |
+
+Returns `void`.
+
+##### `GridBase.applyDraft()`
+
+Applies the deferred wells (the panel's Update).
+
+Returns `void`.
+
+##### `GridBase.panelSwitch(id, on)`
+
+A switch of the panel layout: pivot mode, the grand total column, subtotals above, deferred update.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` | pivot, grand, above or defer |
+| `on` | `boolean` |  |
+
+Returns `void`.
+
+##### `GridBase.setPivotOptions(extra, what)`
+
+Sets more of the pivot's view (sort, top N, subtotals, value filters) and computes it again.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `extra` | `Object` |  |
+| `[what]` | `string` | the change in words |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `GridBase.setValueFilters(list)`
+
+Replaces the pivot's value filters.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `list` | `Array&lt;{dim: string, by: string, op: string, value: number}&gt;` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `GridBase.sortColumn(c, multi)`
+
+Sorts by a shown column (a heading's click): grid mode none, ascending, descending (Shift adds); a pivot orders its rows by the measure (largest first, then smallest, then by name).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `c` | `number` | the shown column |
+| `[multi]` | `boolean` |  |
+
+Returns `void`.
+
+##### `GridBase.setColumnWidth(d, w)`
+
+Sets a shown column's width (grid mode: the model's column; a pivot column: kept by the view).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `d` | `{col: Object, i: number}` |  |
+| `w` | `number` | px |
+
+Returns `void`.
+
+##### `GridBase.autosize(c)`
+
+Sizes a column to its widest text among the heading and the first rows (all columns when c is -1).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `c` | `number` | the shown column, or -1 |
+
+Returns `void`.
+
+##### `GridBase.switchMeasure(label)`
+
+The phone's measure switcher: the one value column shows this measure.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `label` | `string` |  |
+
+Returns `void`.
+
+##### `GridBase.measures()`
+
+The measures a phone may switch between.
+
+Returns `string[]`.
+
+### drishti_grid-view.js
+
+#### class `Grid`
+
+The grid, drawn: a layout around the engine's model, with the plain JavaScript API every host uses (the web component wraps it).
+
+##### `new Grid(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` | the element the grid fills |
+| `options` | `GridViewOptions` |  |
+
+##### `Grid.refresh()`
+
+Draws everything again now (the chrome and the rows in view).
+
+Returns `void`.
+
+##### `Grid.renderChrome()`
+
+Draws the chrome again: toolbar, wells, command line, function keys, status bar and the Explain area.
+
+Returns `void`.
+
+##### `Grid.afterFocus(scroll)`
+
+The focus moved (a click or a key): the rows drawn again, the status bar, and Explain following the selection where it is open.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `scroll` | `boolean` | scroll the focus into view |
+
+Returns `void`.
+
+##### `Grid.afterRange()`
+
+A drag across cells ended.
+
+Returns `void`.
+
+##### `Grid.announceRow(r)`
+
+Says a row's new open state to a screen reader.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `r` | `number` |  |
+
+Returns `void`.
+
+##### `Grid.explain(r, c)`
+
+Explains a cell through the Explain hook, in the layout's place for it (drawer, card or split pane).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `r` | `number` |  |
+| `c` | `number` |  |
+
+Returns `Promise&lt;*&gt;`.
+
+##### `Grid.explainFocused()`
+
+Explains the focused cell.
+
+Returns `Promise&lt;*&gt;`.
+
+##### `Grid.closeExplain()`
+
+Closes Explain.
+
+Returns `void`.
+
+##### `Grid.say(text)`
+
+Says something at the grid's foot (a live region).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `void`.
+
+##### `Grid.openColumnMenu(c, anchor)`
+
+Opens the column menu of a shown column.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `c` | `number` |  |
+| `anchor` | `Element` |  |
+
+Returns `void`.
+
+##### `Grid.openCellMenu(r, c, at)`
+
+Opens the context menu of a cell.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `r` | `number` |  |
+| `c` | `number` |  |
+| `at` | `{x: number, y: number}` |  |
+
+Returns `void`.
+
+##### `Grid.runAction(id, arg)`
+
+Runs one of the view's actions by id (a toolbar button, a function key, a menu item): explain, copy, copy-headers, export-csv, export-xlsx, chart, drill, group, pin-totals, expand-all, collapse-all, toggle-pivot, save-view, ...
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `[arg]` | `Object` |  |
+
+Returns `*`.
+
+##### `Grid.setLayout(layout)`
+
+Changes the layout: 'wells', 'panel' or 'terminal'.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `layout` | `('wells'\|'panel'\|'terminal')` |  |
+
+Returns `void`.
+
+##### `Grid.setDensity(density)`
+
+Changes the density: 'comfortable', 'compact' or 'terminal'.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `density` | `('comfortable'\|'compact'\|'terminal')` |  |
+
+Returns `void`.
+
+##### `Grid.setPivotMode(on)`
+
+Turns the pivot on or off.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `on` | `boolean` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `Grid.setPivot(wells)`
+
+Sets the wells and turns the pivot on.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `wells` | `{rows: string[], columns: string[], values: Array&lt;{colId: string, aggFunc: string}&gt;, filters: Array}` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `Grid.setConditionalFormats(rules)`
+
+Replaces the conditional formats.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rules` | `import('./drishti_grid-ui.js').ConditionalFormat[]` |  |
+
+Returns `void`.
+
+##### `Grid.setRows(rows)`
+
+Replaces the rows (client-side).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `Object[]` |  |
+
+Returns `void`.
+
+##### `Grid.applyTransaction(tx)`
+
+Adds, updates and removes rows by id now; changed figures flash.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `tx` | `{add: Object[], update: Object[], remove: string[]}` |  |
+
+Returns `Object`.
+
+##### `Grid.applyTransactionAsync(tx)`
+
+Queues a transaction with the others of the next few milliseconds (a live feed).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `tx` | `{add: Object[], update: Object[], remove: string[]}` |  |
+
+Returns `Promise&lt;Object&gt;`.
+
+##### `Grid.connectLive(feed)`
+
+Connects a live feed (drishti_live.js).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `feed` | `{subscribe: function(function(Object): void): function(): void}` |  |
+
+Returns `function(): void`: disconnects.
+
+##### `Grid.focusCell(r, c)`
+
+Puts the focus on a cell (and the range there) and scrolls it into view.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `r` | `number` |  |
+| `c` | `number` |  |
+
+Returns `void`.
+
+##### `Grid.getState()`
+
+Everything a person set, to keep and give back: the model's state and the view's (pinned totals, hidden columns, widths, formats).
+
+Returns `Object`.
+
+##### `Grid.setState(s)`
+
+Gives back a kept state.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `s` | `Object` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `Grid.on(name, fn)`
+
+Listens to a grid event (GRID_EVENTS) or a view event (VIEW_EVENTS).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `fn` | `function(Object, string): void` |  |
+
+Returns `function(): void`: stops listening.
+
+##### `Grid.emitView(name, detail)`
+
+Emits a view event on the grid's bus and as a DOM event on the element (drishti:&lt;kebab-name&gt;).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` | one of VIEW_EVENTS |
+| `[detail]` | `Object` |  |
+
+Returns `void`.
+
+##### `Grid.destroy()`
+
+Takes the grid out of its element: listeners, menus, notes.
+
+Returns `void`.
+
+### drishti_grid-element.js
+
+#### `ELEMENT_NAME`
+
+The element's tag name.
+
+#### `defineGridElement(registry, win)`
+
+Defines &lt;drishti-grid&gt; in a registry (once; the bundle does it when it loads in a page).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[registry]` | `CustomElementRegistry` | default: the window's |
+| `[win]` | `Window` | the window whose HTMLElement the element extends (default: the page's) |
+
+Returns `boolean`: whether it was defined now (false: no registry, or defined already).
+
+### drishti_index.js
+
+#### `install(root)`
+
+Starts drishti-grid in a page (the bundle calls it when it loads; nothing happens without a document): defines &lt;drishti-grid&gt;.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `Window` |  |
+
+Returns `void`.

@@ -10,11 +10,11 @@
       "css": ["css/drishti_tokens.css", "css/drishti_resize.css"]
     },
     "drishti-grid": {
-      "version": "0.1.0",
-      "title": "The grid engine: columns, row models (client and server), virtual scrolling, pivot, selection, export and keyboard",
+      "version": "0.2.0",
+      "title": "The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and <drishti-grid> in three layouts and three densities)",
       "entry": "src/drishti_index.js",
       "requires": ["drishti-core"],
-      "css": []
+      "css": ["elements/drishti-grid/drishti_grid.css"]
     }
   }
 }

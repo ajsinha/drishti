@@ -414,10 +414,36 @@ library with its module: an unlicensed module's library is not served, its kinds
   `drishti-core/src/drishti_index.js` and `drishti-grid/src/drishti_index.js` directly (a page touches `window` only through
   `install()`, which the bundle runs). One difference to settle when the renderer moves: its `m/format.js` rounds as Python does
   (half to even, for parity with the console's Python-drawn panels), drishti-core as the server's `FormatSpec` (half up); one rule wins.
+- **The visual layer (drishti-grid 0.2.0).** `new Grid(element, options)` (`drishti_grid-view.js`) and `<drishti-grid>`
+  (`drishti_grid-element.js`: options as a property, `layout` and `density` as attributes, events as `drishti:<name>` DOM events,
+  `el.grid` the plain API; no shadow root, so the page's tokens and style sheet reach it) draw the engine's model. The modules, each
+  under 530 lines: `drishti_grid-body.js` (one scroller with role grid or treegrid; heading rows stuck to its top with a pivot's member
+  groups spanning their columns and collapsible; the rows the viewport gives, each one element with its pinned cells stuck left and
+  right inside it, so a reader reads a row as one; the middle columns windowed), `drishti_grid-shell.js` (the three layouts' chrome:
+  toolbar, ribbon, side panel, command line, function keys, status bar, the Explain drawer, card or split pane),
+  `drishti_grid-wells-ui.js` (the field list and the wells: drag and drop, the chip menus, member filters, value filters, top N, the
+  panel's switches and deferred update), `drishti_grid-actions.js` (the keys, the column, context and toolbar menus, copy, export,
+  chart the range, the rows behind a cell), `drishti_grid-explain.js` (what the Explain hook answers, drawn in the layout's place),
+  `drishti_grid-base.js` (the columns as drawn: panes, widths, a phone's subset), `drishti_grid-dom.js` (the element maker, the menu,
+  the hover note) and `drishti_grid-ui.js` (the decisions without a page, tested in Node: heading spans, conditional formats, the
+  phone's columns, menu items, the command line, value filter conditions, the status figures, the flash). The look is
+  `drishti_grid.css`, every colour a drishti-core token; the densities set the row heights the engine uses (36, 28, 22 px).
+  **Nothing inline**: elements are made with the DOM and styled through the CSSOM, so a page with a strict CSP draws the grid.
+  **Totals stay the server's**: a non-additive total is marked ◆ with a hover note, a range that holds one gets no sum (a warning
+  instead), and its aggregation in the menus is the server's, disabled with the reason. **Live**: after a transaction, a figure drawn
+  again that changed flashes up or down (the CSS animation is dropped under `prefers-reduced-motion`; a still edge marks the change);
+  pending server figures and loading blocks show placeholders. **Phone** (under 640 px): the wells behind a Fields button, Explain as a
+  sheet, the first column pinned; a pivot shows its row headings and one value column, the grand total of the measure picked in the
+  toolbar's switcher. The **fixture harness** `static/elements/drishti-grid/drishti_harness.html` (synthetic trades, a stand-in server
+  for diversified VaR and ES and for server-side rows, an Explain hook, a live tick; `?layout=…&density=…&theme=light&mode=pivot|grid|server&rows=N`,
+  `?matrix=1` for all nine) opens with no server, from the file system too; the browser test of the component runs against it.
 - **Reference and tests.** [ELEMENTS_API.md](../guides/ELEMENTS_API.md) is generated from the typed JSDoc by
   `tools/docs/elements_api.py` (`--check` refuses a public symbol without types); the unit tests run in Node (`tests/elements/`,
   `node --test`) from `tests/test_elements.py`, a quick file check of the gate; the engine at a million rows is in
-  [BENCHMARK.md](../admin/BENCHMARK.md).
+  [BENCHMARK.md](../admin/BENCHMARK.md). The drawn grid is tested once, in one browser file against the fixture harness
+  (`tests/test_elements_grid_browser.py`: every layout and density in both themes, drag between wells, every menu item, button and
+  function key, ranges and the status bar, the keys and roles, the flash, server blocks, 100,000 virtual rows, a phone); screens that
+  move onto it (section 12) test only their wiring.
 
 ## 9. The documentation of every library
 
@@ -517,11 +543,11 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [ ] drishti-core: formats with the server's rounding, tokens and densities, API client, events, keymap, dialogs, menus, resize; its gallery pages
 - [ ] drishti-data: sources (local, REST, Drishti pivot and rows), Arrow, live
 - [ ] drishti-grid: virtual rows and columns, columns and menus, ranges and the status bar, filters, tree, editing, export, conditional formats, accessibility
-- [ ] drishti-grid pivot: the three layouts `wells`, `panel` and `terminal` (VaR screens default to `terminal`, others to `wells`), aggregation pickers, value filters, collapsible pivot result columns, totals, server-side model with the request of 5.3, non-additive totals from the server
+- [x] drishti-grid pivot: the three layouts `wells`, `panel` and `terminal` (VaR screens default to `terminal`, others to `wells`), aggregation pickers, value filters, collapsible pivot result columns, totals, server-side model with the request of 5.3, non-additive totals from the server
 - [ ] The AG Grid-style adapter with the table of section 6 as code, and its unknown-option report
 - [ ] drishti-chart: the spec, the general kinds, the data-table alternative, export, Explain; the chart card's modes `card` (default) and `studio` (g2 A and B); maps with per-country loading and the modes `ranking` (default) and `table` (g3 A and B)
 - [ ] Vega retired (O1): Vega-Lite visuals translated to the spec, Python visuals return a spec, the vendored Vega deleted
-- [ ] The phone behaviour of the grid and the pivot (O2); the standalone Excel writer (O4)
+- [x] The phone behaviour of the grid and the pivot (O2); the standalone Excel writer (O4)
 - [ ] drishti-inputs, drishti-insight, drishti-renderer 2.0.0, drishti-risk (in the banking plugin, licensed)
 - [ ] The gallery in both modes, `playground` (default) and `docs` (g4 A and B), every example a test in both themes and three densities, axe clean
 - [ ] Documentation per library (section 9): guide, generated API reference with `--check`, tutorial, gallery, the AG Grid migration guide, theming and accessibility guides, changelogs, versioning policy; Help entries
