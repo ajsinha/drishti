@@ -27,6 +27,9 @@ const CF_SCAN = 100000;
 /**
  * The drawn grid: headings, rows, cells and their pointer work, for a view (drishti_grid-view.js).
  */
+/** @private the styles a host's decoration may set on a cell (a conditional format's colours), through the CSSOM */
+const DECO_STYLES = ['color', 'background-color', 'font-weight', 'font-style'];
+
 /** @private class names a host or the server gave, kept to plain words (no markup, no selectors) */
 function safeClasses(text) { return String(text).split(/\s+/).filter((t) => /^[A-Za-z][\w-]*$/.test(t)).join(' '); }
 
@@ -390,6 +393,7 @@ export class GridBody {
         data: x.kind === 'leaf' ? x.row : null, rowHeader: !!col.rowHeader });
       if (deco && deco.cls) { cls += ' ' + safeClasses(deco.cls); }
       if (deco && deco.title) { note = note ? note + '\n' + deco.title : String(deco.title); }
+      if (deco && deco.style) { Object.keys(deco.style).forEach((k) => { if (DECO_STYLES.indexOf(k) >= 0 && deco.style[k]) { style[k] = String(deco.style[k]); } }); }
     }
     const focused = k.focus && k.focus.row === r && k.focus.col === c;
     if (focused) { cls += ' dg-focus'; }
@@ -415,7 +419,12 @@ export class GridBody {
       if (k.expandable) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw', text: k.expanded ? '−' : '+', attrs: { 'aria-hidden': 'true' }, data: { r: String(r) } })); }
       else if (m.pivotMode || (m.rowModel.groupBy && m.rowModel.groupBy.length)) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw dg-tw-none', attrs: { 'aria-hidden': 'true' } })); }
     }
-    cell.appendChild(h(doc, 'span', { cls: 'dg-text', text: text }));
+    if (deco && deco.before && typeof deco.before === 'object' && deco.before.nodeType) { cell.appendChild(deco.before); }
+    if (deco && deco.content && typeof deco.content === 'object' && deco.content.nodeType) {
+      const box = h(doc, 'span', { cls: 'dg-text' });
+      box.appendChild(deco.content);
+      cell.appendChild(box);
+    } else { cell.appendChild(h(doc, 'span', { cls: 'dg-text', text: text })); }
     if (deco && deco.after !== undefined && deco.after !== null && deco.after !== '') {
       cell.appendChild(typeof deco.after === 'object' && deco.after.nodeType ? deco.after : h(doc, 'span', { cls: 'dg-after', text: String(deco.after) }));
     }

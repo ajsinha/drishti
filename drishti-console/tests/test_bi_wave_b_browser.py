@@ -131,8 +131,8 @@ def made(browser, stack):
 
 
 def rows_of(page):
-    page.wait_for_selector('[data-visual="desks"] tbody tr', timeout=30000)
-    return page.eval_on_selector_all('[data-visual="desks"] tbody tr', "rs => rs.map(r => [...r.children].map(c => c.textContent.trim()))")
+    page.wait_for_selector('[data-visual="desks"] .dg-row', timeout=30000)              # the table, drawn by drishti-grid
+    return page.eval_on_selector_all('[data-visual="desks"] .dg-row', "rs => rs.map(r => [...r.querySelectorAll('.dg-cell')].map(c => c.textContent.trim()))")
 
 
 def num(text):
@@ -178,7 +178,7 @@ def test_a_parameter_slicer_shocks_the_report(browser, made):
     expect(page.locator('[data-chip="param"]')).to_contain_text("shock: 0.5", timeout=15000)
     page.wait_for_timeout(1500)
     shoot(page, "[data-report]", "parameter-slicer")
-    page.wait_for_function("""(b) => { const r = [...document.querySelectorAll('[data-visual="desks"] tbody tr')].map(x => x.children[3].textContent.trim()); return r.length && r.join('|') !== b; }""",
+    page.wait_for_function("""(b) => { const r = [...document.querySelectorAll('[data-visual="desks"] .dg-row')].map(x => x.querySelectorAll('.dg-cell')[3].textContent.trim()); return r.length && r.join('|') !== b; }""",
                            arg="|".join(r[3] for r in before), timeout=30000)
     after = rows_of(page)
     for b, x in zip(sorted(before), sorted(after)):

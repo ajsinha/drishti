@@ -64,9 +64,10 @@ export const DENSITIES = Object.freeze({ comfortable: 36, compact: 28, terminal:
  *   pivot offers those its server knows)
  * @property {function(Object): ?(string|Object|function(*, Object): string)} [pivotFormat] a pivot measure's format, given the answer's
  *   measure ({label, id, kind, unit, showAs}); default: its value column's
- * @property {function(Object): ?{cls: string, title: string, after: (string|Node)}} [decorateCell] a host's marks on a cell, given its
- *   context (cellContext with value and text): classes (a comment, a change since a date), a hover note, and a node or words after the
- *   figure (a sparkline, a delta); it shows, it never changes a figure
+ * @property {function(Object): ?{cls: string, title: string, style: Object<string, string>, before: Node, content: Node, after: (string|Node)}} [decorateCell]
+ *   a host's marks on a cell, given its context (cellContext with value and text): classes (a comment, a change since a date), a hover
+ *   note, colours (color, background-color, font-weight, font-style: a conditional format), a node before the figure (an icon), a node
+ *   in its place (a link holding the same text), and a node or words after it (a sparkline, a delta); it shows, it never changes a figure
  */
 
 /**

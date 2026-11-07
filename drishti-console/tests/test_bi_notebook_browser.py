@@ -66,7 +66,7 @@ def browser(stack):
 
 def grid(page, selector):
     """A rendered table as rows of text."""
-    return page.eval_on_selector_all(selector + " tbody tr", "rows => rows.map(r => [...r.children].map(c => c.textContent))")
+    return page.eval_on_selector_all(selector + " .dg-row", "rows => rows.map(r => [...r.querySelectorAll('.dg-cell')].map(c => c.textContent))")
 
 
 def open_extract(page):
@@ -91,13 +91,13 @@ def test_sql_and_python_run_on_the_server_and_the_notebook_saves(stack, browser)
     sql = page.locator("[data-cells=sql] textarea").first.input_value()
     assert "MEASURE(" in sql and "extract" not in sql
     page.click("[data-cells=sql] [data-run]")
-    page.wait_for_selector("[data-cells=sql] table", timeout=60000)
+    page.wait_for_selector("[data-cells=sql] [data-grid]", timeout=60000)
     assert page.get_attribute("[data-cells=sql] [data-engine]", "data-engine") == "dsql" and "run by the server" in page.inner_text("[data-cells=sql] [data-engine]")
     assert len(grid(page, "[data-cells=sql]")) >= 1
     page.click("[data-add=sql]")                                                                       # + SQL cell, then Run all, then delete it again
     assert page.locator("[data-cells=sql] .bx-cell").count() == 2
     page.click("[data-run-all=sql]")
-    page.wait_for_function("() => document.querySelectorAll('[data-cells=sql] table').length === 2", timeout=60000)
+    page.wait_for_function("() => document.querySelectorAll('[data-cells=sql] [data-grid]').length === 2", timeout=60000)
     page.locator("[data-cells=sql] .bx-cell").nth(1).locator("button[aria-label^='Delete cell']").click()
     assert page.locator("[data-cells=sql] .bx-cell").count() == 1
     # promote the SQL cell to a new report draft: the answer is beside the button, with a link to the draft
@@ -112,7 +112,7 @@ def test_sql_and_python_run_on_the_server_and_the_notebook_saves(stack, browser)
     cell.locator("textarea").fill("print(len(df))\nresult = df.head(3)")
     cell.locator("[data-run]").click()
     expect(cell.locator("[data-engine=python]")).to_be_visible(timeout=120000)
-    assert cell.locator("[data-stdout]").inner_text().strip().isdigit() and cell.locator("[data-result] table").count() == 1
+    assert cell.locator("[data-stdout]").inner_text().strip().isdigit() and cell.locator("[data-result] [data-grid]").count() == 1
     cell.locator("textarea").fill("open('/etc/hostname').read()")                                     # the sandbox refuses in words, the cell shows it
     cell.locator("[data-run]").click()
     expect(cell.locator("[role=alert]")).to_contain_text("DRS-9073", timeout=120000)

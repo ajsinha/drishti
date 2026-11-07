@@ -180,7 +180,8 @@ def open_extract(page):
 
 
 def grid(page, selector):
-    return page.eval_on_selector_all(selector + " tbody tr", "rows => rows.map(r => [...r.children].map(c => c.textContent))")
+    """A result drawn by drishti-grid, as rows of cell texts."""
+    return page.eval_on_selector_all(selector + " .dg-row", "rows => rows.map(r => [...r.querySelectorAll('.dg-cell')].map(c => c.textContent))")
 
 
 def test_a_sql_cell_runs_on_the_server_and_nothing_loads_webassembly(stack, browser):
