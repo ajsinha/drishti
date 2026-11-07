@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Tests of tools/publicdata/funds.py on a recorded cache cut from the real SEC data sets (fixtures/funds: Invesco QQQ, the Vanguard
+"""Tests of tools/feeds/sources/funds.py on a recorded cache cut from the real SEC data sets (fixtures/funds: Invesco QQQ, the Vanguard
 500 Index Fund and the SPDR DJIA trust, 30 holdings each; their N-CEN and risk/return summary rows): the build, an offline widened
 refresh into the data folder, the dry run, the refusals, the quarters asked and the polite downloader. No network."""
 from __future__ import annotations
@@ -85,12 +85,12 @@ def test_the_build_chooses_by_net_assets_and_links_holdings_to_companies(cache):
 def test_an_offline_widened_refresh_writes_a_pack_in_the_data_folder(cache, data_dir, capsys):
     rc = FU.refresh(ns(cache, scope="FUNDS:2,HOLDINGS:20"))
     assert rc == 0, capsys.readouterr().out
-    folder = data_dir / "publicdata" / "funds" / "testdata" / "funds" / "fund"
+    folder = data_dir / "feeds" / "sources" / "funds" / "testdata" / "funds" / "fund"
     assert folder.is_dir() and any(folder.iterdir()), "the widened build's snapshot"
     docs = [json.loads(x) for _d, x in FF.lines(folder)]                 # fund.<date>.jsonl.gz, or a tar of its parts
     assert [d["TICKER"] for d in docs] == ["VOO", "QQQ"] and all(len(d["HOLDINGS"]) <= 20 for d in docs)
-    assert (data_dir / "publicdata" / "funds" / "packs" / "funds" / "pack.yaml").is_file()
-    man = json.loads((data_dir / "publicdata" / "funds" / "manifest.json").read_text(encoding="utf-8"))
+    assert (data_dir / "feeds" / "sources" / "funds" / "packs" / "funds" / "pack.yaml").is_file()
+    man = json.loads((data_dir / "feeds" / "sources" / "funds" / "manifest.json").read_text(encoding="utf-8"))
     assert set(man["sources"]) == {s.name for s in FU.SOURCES} and man["runs"][-1]["ok"] is True
 
 
@@ -98,7 +98,7 @@ def test_the_dry_run_names_the_quarters_and_writes_nothing(cache, data_dir, caps
     assert FU.refresh(ns(cache, dry_run=True, offline=False)) == 0
     out = capsys.readouterr().out
     assert "form-n-port-data-sets" in out and "form-n-cen-data-sets" in out and "return-summary-data-sets" in out
-    assert not (data_dir / "publicdata" / "funds").exists()
+    assert not (data_dir / "feeds" / "sources" / "funds").exists()
 
 
 def test_refusals(cache):
@@ -107,7 +107,7 @@ def test_refusals(cache):
     with pytest.raises(B.Refusal):
         FU.refresh(ns(cache, out=str(B.ROOT / "config" / "packs" / "funds"), scope="FUNDS:3"))
     with pytest.raises(B.Refusal):
-        FU.refresh(ns(cache, out="/tmp/elsewhere"))                  # the committed pack is written where it lives
+        FU.refresh(ns(cache, out=str(B.ROOT / "docs")))                  # a build with --out goes to the data folder, never the repository
 
 
 def test_the_quarters_asked_are_the_published_ones_newest_first():

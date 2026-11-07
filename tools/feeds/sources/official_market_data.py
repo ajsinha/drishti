@@ -15,15 +15,15 @@
 """Official public market data for the market-data pack, captured to files so it works offline: ECB euro reference FX rates,
 the US Treasury par yield curve, SOFR (New York Fed) and euro short-term rate (ECB).
 
-    python3 tools/publicdata/official_market_data.py status
-    python3 tools/publicdata/official_market_data.py refresh --dry-run
-    python3 tools/publicdata/official_market_data.py refresh                          a year of history into <data>/publicdata/market-data
-    python3 tools/publicdata/official_market_data.py refresh ecb-fx --years 5 --scope USDMXN,EURSEK
-    python3 tools/publicdata/official_market_data.py refresh us-treasury sofr --since 2020
+    python3 tools/drishti.py feed status market-data
+    python3 tools/drishti.py feed run market-data --dry-run
+    python3 tools/drishti.py feed run market-data                             a year of history, loaded into capitalmarket
+    python3 tools/drishti.py feed run market-data -- ecb-fx --years 5 --scope USDMXN,EURSEK
+    python3 tools/drishti.py feed run market-data -- us-treasury sofr --since 2020
 
 The pack reads the same sources live through its feed connectors (nyfed-sofr-feed, ecb-estr-feed, ecb-fx-feed, us-treasury-feed;
 off by default). This script writes them as documents in the pack's own shapes, one file a kind and business
-date named by the load rules (fx-spot.<AS_OF>.jsonl, ir-curve.<AS_OF>.jsonl, rate-fixing.<AS_OF>.jsonl), so tools/ingest_jsonl.py can load them into the lake. The pack's committed samples are synthetic and are
+date named by the load rules (fx-spot.<AS_OF>.jsonl, ir-curve.<AS_OF>.jsonl, rate-fixing.<AS_OF>.jsonl), so the market-data feed loads them into the lake. The pack's committed samples are synthetic and are
 never overwritten: the output always goes to the data folder (or --out outside the repository). Guide: docs/guides/EXTERNAL_DATA.md.
 """
 from __future__ import annotations
@@ -247,19 +247,6 @@ class Estr(MarketSource):
 SOURCES = [EcbFx(), UsTreasury(), Sofr(), Estr()]
 KEYS = {"fx-spot": "PAIR", "ir-curve": "CURVE_ID", "rate-fixing": "INDEX_ID"}
 
-def _demo_root() -> str:
-    """The demo lake's root (config/lakes/demo.yaml), where the load goes."""
-    p = str(Path(__file__).resolve().parents[2] / "lake")
-    if p not in sys.path:
-        sys.path.insert(0, p)
-    import lakeconfig
-    return lakeconfig.root("demo")
-
-
-LOAD = ("uv run --with deltalake --with pyarrow --with pyyaml python tools/ingest_jsonl.py --from {out} --domain market "
-        "--key fx-spot=PAIR,ir-curve=CURVE_ID,rate-fixing=INDEX_ID --lake {lake}")      # each file under its name's date
-
-
 def write(out: Path, sources: list[MarketSource]) -> list[Path]:
     """One <kind>.<YYYY-MM-DD>.jsonl a kind and business date (the load rules, docs/guides/DATA_LAKE_GUIDE.md: each document under
     its AS_OF, the day its newest observation is of), sorted by id; a kind's documents from sources not in this run are kept (re-runs
@@ -303,7 +290,7 @@ def check(files: list[Path]) -> list[str]:
 
 def refresh(a, log=print) -> int:
     selected = B.pick(SOURCES, a.sources)
-    out = Path(a.out).expanduser().resolve() if a.out else B.data_dir() / "publicdata" / PACK
+    out = Path(a.out).expanduser().resolve() if a.out else B.data_dir() / "feeds" / "sources" / PACK
     if B.is_committed(out):
         raise B.Refusal(f"refused: {out} is inside the repository. The market-data pack's committed samples are synthetic and generated; "
                         "official market data goes to the data folder (leave out --out) or a folder outside the repository.")
@@ -338,7 +325,7 @@ def refresh(a, log=print) -> int:
     for f in files:
         log(f"wrote {f}")
     if files:
-        log("load: " + LOAD.format(out=out, lake=_demo_root()))
+        log("load: python3 tools/drishti.py feed run market-data (pulls and loads into capitalmarket; docs/guides/FEEDS_GUIDE.md)")
     return 1 if not files else 2 if (problems or run.http.failed or len(done) < len(selected)) else 0
 
 
@@ -346,13 +333,27 @@ def main(argv: list[str] | None = None) -> int:
     a = B.parser("official_market_data.py", __doc__, SOURCES).parse_args(argv)
     try:
         if a.command == "status":
-            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "publicdata" / "cache" / PACK,
-                            "<data>/publicdata/market-data (fx-spot.<date>.jsonl, ir-curve.<date>.jsonl, rate-fixing.<date>.jsonl)")
+            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "feeds" / "sources" / "cache" / PACK,
+                            "<data>/feeds/sources/market-data (fx-spot.<date>.jsonl, ir-curve.<date>.jsonl, rate-fixing.<date>.jsonl)")
         return refresh(a)
     except B.Refusal as e:
         print(e, file=sys.stderr)
         return 3
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+# ---------------------------------------------------------------- the feed (config/feeds/market-data.yaml)
+
+import packscript as PS  # noqa: E402
+
+
+class MarketDataFeed(PS.PackFeed):
+    """`drishti.py feed run market-data`: ECB euro reference rates, the US Treasury par curve, SOFR and euro short-term rate, each
+    document under its own business date, loaded into capitalmarket. The pack's committed samples are synthetic: no --snapshot."""
+    module, pack, prog = sys.modules[__name__], PACK, "official_market_data.py"
+    data_subdir = None
+
+    def built(self, out):
+        return out
+
+    def snapshot(self, run):
+        raise PS.FB.FeedRefused("market-data keeps no committed snapshot (its samples are synthetic); run the feed to load the lake")

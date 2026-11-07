@@ -14,13 +14,13 @@
 
 """Refresh the gleif pack from GLEIF: the golden copy (level 2 relationships and reporting exceptions), the LEI API and the mapping files.
 
-    python3 tools/publicdata/gleif.py status
-    python3 tools/publicdata/gleif.py refresh --dry-run
-    python3 tools/publicdata/gleif.py refresh                               the committed pack (config/packs/gleif)
-    python3 tools/publicdata/gleif.py refresh --offline                     rebuild the pack from the cache only
-    python3 tools/publicdata/gleif.py refresh --scope GROUP:784F5XWPLTWKTBV3E584,CAP:600
-                                                                            a widened build in <data>/publicdata/gleif
-    python3 tools/publicdata/gleif.py refresh golden golden-lei api mapping --scope COUNTRY:LU --since 2025
+    python3 tools/drishti.py feed status gleif
+    python3 tools/drishti.py feed run gleif --dry-run
+    python3 tools/drishti.py feed run gleif --snapshot                        the committed pack (config/packs/gleif)
+    python3 tools/drishti.py feed run gleif --snapshot --offline              rebuild the pack from the cache only
+    python3 tools/drishti.py feed run gleif --snapshot -- --scope GROUP:784F5XWPLTWKTBV3E584,CAP:600
+                                                                            a widened build in <data>/feeds/sources/gleif
+    python3 tools/drishti.py feed run gleif --snapshot -- golden golden-lei api mapping --scope COUNTRY:LU --since 2025
                                                                             a full-country pull from the bulk file (data folder only)
 
 It wraps tools/packgen/gleif/fetch.py (the network) and make.py (the build), so a refresh of the committed pack writes exactly what
@@ -284,7 +284,7 @@ def tickers_file(spec: str | None) -> Path | None:
     if spec is None:
         return None
     if spec.lower() == "us-equities":
-        wide = F.newest_snapshot(B.data_dir() / "publicdata" / "us-equities" / "testdata", "us-equities", "us-company")
+        wide = F.newest_snapshot(B.data_dir() / "feeds" / "sources" / "us-equities" / "testdata", "us-equities", "us-company")
         return wide if wide.is_file() else F.US_EQUITIES
     p = Path(spec).expanduser()
     if not p.is_file():
@@ -346,7 +346,7 @@ def resolve_out(a, widened: bool) -> tuple[Path, bool]:
                             "widened build over the committed pack on purpose")
         return (out if committed else out / "packs" / PACK), committed
     if widened and not a.into_pack:
-        return B.data_dir() / "publicdata" / PACK / "packs" / PACK, False
+        return B.data_dir() / "feeds" / "sources" / PACK / "packs" / PACK, False
     return COMMITTED, True
 
 
@@ -494,16 +494,13 @@ def main(argv: list[str] | None = None) -> int:
             n = len(ents)
             when = ents[0].get("PROVENANCE", {}).get("RETRIEVED_AT", "?") if ents else "-"
             print(f"committed pack: {n} entities, golden copy of {when}")
-            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "publicdata" / "cache" / PACK,
-                            "config/packs/gleif; a widened build <data>/publicdata/gleif/packs/gleif")
+            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "feeds" / "sources" / "cache" / PACK,
+                            "config/packs/gleif; a widened build <data>/feeds/sources/gleif/packs/gleif")
         return refresh(a)
     except B.Refusal as e:
         print(e, file=sys.stderr)
         return 3
 
-
-if __name__ == "__main__":
-    sys.exit(main())
 
 
 # ---------------------------------------------------------------- the feed (config/feeds/gleif.yaml; docs/guides/FEEDS_GUIDE.md)

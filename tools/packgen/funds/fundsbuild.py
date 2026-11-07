@@ -50,6 +50,7 @@ MIC = {"ARCX": "NYSE Arca", "XNYS": "NYSE", "XNAS": "Nasdaq", "XNMS": "Nasdaq", 
 # A fund's tracked index, by its name (N-CEN says whether a fund is an index fund, not which index): the us-equities index codes.
 TRACKS = [("NDX", re.compile(r"\bQQQ\b|NASDAQ[- ]?100", re.I)),
           ("DJIA", re.compile(r"DOW JONES INDUSTRIAL", re.I)),
+          ("R2000", re.compile(r"RUSSELL 2000", re.I)),
           ("SP500", re.compile(r"S&P 500|\b500 INDEX\b|^VANGUARD INSTITUTIONAL INDEX FUND$", re.I))]
 NOT_PLAIN = re.compile(r"EQUAL|GROWTH|VALUE|DIVIDEND|ESG|LOW VOL|MOMENTUM|QUALITY|HIGH|COVERED|BUFFER|HEDGED|\bEX[- ]|LEVERAG|INVERSE|"
                        r"MID|SMALL|ENHANCED|SECTOR|EXTENDED|COMPLETION|SCREENED|SUSTAIN|CLIMATE|PREMIUM|INCOME|PROTECT", re.I)

@@ -14,11 +14,11 @@
 
 """Refresh the news-and-markets pack's offline snapshot: listed companies' quotes (Yahoo Finance) and headlines (Google News).
 
-    python3 tools/publicdata/news_and_markets.py status
-    python3 tools/publicdata/news_and_markets.py refresh --dry-run
-    python3 tools/publicdata/news_and_markets.py refresh                    a snapshot in <data>/publicdata/news-and-markets/testdata
-    python3 tools/publicdata/news_and_markets.py refresh --internal-ok      replace the committed snapshot in data/testdata
-    python3 tools/publicdata/news_and_markets.py refresh quote --years 5 --scope TSLA,NVDA,NEWS-TESLA
+    python3 tools/drishti.py feed status news-and-markets
+    python3 tools/drishti.py feed run news-and-markets --dry-run
+    python3 tools/drishti.py feed run news-and-markets --snapshot             a snapshot in <data>/feeds/sources/news-and-markets/testdata
+    python3 tools/drishti.py feed run news-and-markets --snapshot --internal-ok  replace the committed snapshot in data/testdata
+    python3 tools/drishti.py feed run news-and-markets --snapshot -- quote --years 5 --scope TSLA,NVDA,NEWS-TESLA
 
 It wraps tools/testdata/capture_market.py: the documents are fetched through Drishti's own live connectors (a scratch server
 from the built jar, or --server), so they have exactly the shape the pack's Sutras read. Both sources forbid redistribution
@@ -103,7 +103,7 @@ def refresh(a, log=print) -> int:
     if a.out:
         out = Path(a.out).expanduser().resolve()
     else:
-        out = COMMITTED if a.internal_ok else B.data_dir() / "publicdata" / PACK / "testdata"
+        out = COMMITTED if a.internal_ok else B.data_dir() / "feeds" / "sources" / PACK / "testdata"
     B.guard_out(selected, out, a.internal_ok)
     if B.is_committed(out) and out != COMMITTED.resolve():
         raise B.Refusal(f"refused: {out} is inside the repository; the committed snapshot lives in {COMMITTED} only")
@@ -149,13 +149,28 @@ def main(argv: list[str] | None = None) -> int:
         if a.command == "status":
             for kind, (f, n, _p) in snapshot_counts(COMMITTED).items():
                 print(f"committed snapshot {kind}: {f.name}, {n} documents, {B.human(f.stat().st_size)}")
-            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "publicdata" / "cache" / PACK,
-                            "data/testdata with --internal-ok; else <data>/publicdata/news-and-markets/testdata")
+            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "feeds" / "sources" / "cache" / PACK,
+                            "data/testdata with --internal-ok; else <data>/feeds/sources/news-and-markets/testdata")
         return refresh(a)
     except B.Refusal as e:
         print(e, file=sys.stderr)
         return 3
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+# ---------------------------------------------------------------- the feed (config/feeds/news-and-markets.yaml)
+
+import packscript as PS  # noqa: E402
+
+
+class NewsAndMarketsFeed(PS.PackFeed):
+    """`drishti.py feed run news-and-markets`: listed companies' quotes (Yahoo) and headlines (Google News), INTERNAL USE ONLY,
+    captured through Drishti's own live connectors (a scratch server from the built jar, or options.server) and loaded into newslake.
+    `--snapshot --internal-ok` replaces the committed offline snapshot in data/testdata."""
+    module, pack, prog = sys.modules[__name__], PACK, "news_and_markets.py"
+    data_subdir = None
+
+    def argv(self, run, out):
+        args = super().argv(run, out)
+        if run.option("server") and "--server" not in args:
+            args += ["--server", str(run.option("server"))]
+        return args

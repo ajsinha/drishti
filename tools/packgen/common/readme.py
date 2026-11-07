@@ -148,13 +148,16 @@ def problems_connector(path: Path) -> list[str]:
 # -- pack READMEs ----------------------------------------------------------------------------------------------------------
 
 def pack_feeds(pack: str) -> list[dict]:
-    """The data feeds (config/feeds/*.yaml, docs/guides/FEEDS_GUIDE.md) that load a pack's kinds: [{feed, lake, internal}]."""
+    """The data feeds (config/feeds/*.yaml, docs/guides/FEEDS_GUIDE.md) that load a pack's kinds: [{feed, lake, internal, kinds,
+    snapshot}]."""
     out = []
     for f in sorted((ROOT / "config" / "feeds").glob("*.yaml")):
         doc = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
         if any((d or {}).get("pack") == pack for d in (doc.get("datasets") or {}).values()):
             lic = doc.get("licence") or {}
-            out.append({"feed": doc.get("feed"), "lake": doc.get("lake"), "internal": bool(lic.get("internal-only"))})
+            kinds = [d.get("kind") for d in (doc.get("datasets") or {}).values() if (d or {}).get("pack") == pack]
+            out.append({"feed": doc.get("feed"), "lake": doc.get("lake"), "internal": bool(lic.get("internal-only")), "kinds": kinds,
+                        "snapshot": bool(doc.get("snapshot"))})
     return out
 
 
@@ -569,11 +572,13 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     if isec.get("Refreshing the data"):
         out += [isec["Refreshing the data"], ""]
     for fd in feeds:
-        out += [f"The data feed `{fd['feed']}` (config/feeds/{fd['feed']}.yaml) pulls it: `python3 tools/drishti.py feed run {fd['feed']}` "
-                f"fetches it daily into `data/feeds/{fd['feed']}/<date>/` and loads it into the lake `{fd['lake']}`"
+        kinds = ", ".join(f"`{k}`" for k in fd["kinds"])
+        out += [f"The data feed `{fd['feed']}` (config/feeds/{fd['feed']}.yaml) pulls {kinds}: `python3 tools/drishti.py feed run {fd['feed']}` "
+                f"fetches them daily into `data/feeds/{fd['feed']}/<date>/` and loads them into the lake `{fd['lake']}`"
                 + (" (internal use only)" if fd["internal"] else "") + "; `--dry-run` says what it would fetch, changing nothing; "
-                "`--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External "
-                "data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.", ""]
+                + ("`--snapshot` refreshes the committed snapshot in data/testdata instead; " if fd["snapshot"] else "")
+                + "`feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries "
+                "for Linux and Windows.", ""]
     out += [f"The pack's files are written by `{generator}`; its `--check` fails when the committed files differ from what it would write.", ""]
     # -- see also
     out += ["## See also", ""]

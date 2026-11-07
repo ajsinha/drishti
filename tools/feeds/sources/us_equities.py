@@ -12,16 +12,16 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Refresh the us-equities pack from its public sources: SEC EDGAR (with the index members from SPY's, QQQ's and DIA's Form N-PORT,
+"""Refresh the us-equities pack from its public sources: SEC EDGAR (with the index members from SPY's, QQQ's, DIA's and IWM's Form N-PORT,
 read from the funds pack's cache: refresh funds first), the Nasdaq Trader symbol directory, GLEIF and Wikidata.
 
-    python3 tools/publicdata/us_equities.py status
-    python3 tools/publicdata/us_equities.py refresh --dry-run
-    python3 tools/publicdata/us_equities.py refresh                         the committed pack (config/packs/us-equities)
-    python3 tools/publicdata/us_equities.py refresh sec gleif --offline     rebuild the pack from the cache only
-    python3 tools/publicdata/us_equities.py refresh --scope TSLA,CIK:1318605,FILINGS:40,YEARS:15
-                                                                            a widened build in <data>/publicdata/us-equities
-    python3 tools/publicdata/us_equities.py refresh prices --server URL     internal only: a price snapshot in the data folder
+    python3 tools/drishti.py feed status us-equities
+    python3 tools/drishti.py feed run us-equities --dry-run
+    python3 tools/drishti.py feed run us-equities --snapshot                  the committed pack (config/packs/us-equities)
+    python3 tools/drishti.py feed run us-equities --snapshot --offline -- sec gleif  rebuild the pack from the cache only
+    python3 tools/drishti.py feed run us-equities --snapshot -- --scope TSLA,CIK:1318605,FILINGS:40,YEARS:15
+                                                                            a widened build in <data>/feeds/sources/us-equities
+    python3 tools/drishti.py feed run us-equities --snapshot -- prices --server URL  internal only: a price snapshot in the data folder
 
 It wraps tools/packgen/us_equities/fetch.py (the network) and make.py (the build), so a refresh of the committed pack writes
 exactly what `make.py` writes, then runs `make.py --check`. The four company sources are openly licensed (SEC EDGAR: U.S. public
@@ -148,13 +148,13 @@ class Wikidata(_Company):
 
 
 class Trackers(_Company):
-    name, title, steps = "trackers", "SEC Form N-PORT of SPY, QQQ and DIA: the index members (from the funds cache; no download)", ("trackers",)
+    name, title, steps = "trackers", "SEC Form N-PORT of SPY, QQQ, DIA and IWM: the index members (from the funds cache; no download)", ("trackers",)
     url, licence = "https://www.sec.gov/data-research/sec-markets-data/form-n-port-data-sets", "Public domain (U.S. Government work)"
     licence_url = "https://www.sec.gov/privacy#security"
     cache_prefixes = ("trackers.json",)
 
     def plan(self, run: B.Run) -> list[str]:
-        return [f"{run.work.parent / 'funds' / 'nport'} (the newest N-PORT data set; tools/publicdata/funds.py refresh downloads it)"]
+        return [f"{run.work.parent / 'funds' / 'nport'} (the newest N-PORT data set; drishti.py feed run funds downloads it)"]
 
 
 def _trackers():
@@ -413,7 +413,7 @@ def _scope_companies(run: B.Run, scope: Scope, widened: bool) -> None:
 
 def resolve_out(a, widened: bool, prices_only: bool) -> tuple[Path, bool]:
     """(the output folder, True when it is the committed pack)."""
-    default = B.data_dir() / "publicdata" / PACK
+    default = B.data_dir() / "feeds" / "sources" / PACK
     if a.out:
         out = Path(a.out).expanduser().resolve()
         if B.is_committed(out) and not prices_only and out != COMMITTED.resolve():
@@ -442,7 +442,7 @@ def refresh(a, log=print, opener=None, price_getter=None) -> int:
     if not companies_on:
         prices_out = out if a.out else out / "prices"
     else:
-        prices_out = (out / "prices") if not committed else B.data_dir() / "publicdata" / PACK / "prices"
+        prices_out = (out / "prices") if not committed else B.data_dir() / "feeds" / "sources" / PACK / "prices"
     if prices_on:
         B.guard_out([SOURCES[-1]], prices_out, a.internal_ok)
     run = B.Run(PACK, a, out, log)
@@ -584,14 +584,43 @@ def main(argv: list[str] | None = None) -> int:
         if a.command == "status":
             cos = _companies(COMMITTED)
             print(f"committed pack: {len(cos)} companies, data retrieved {cos[0].get('PROVENANCE', {}).get('RETRIEVED_AT', '?') if cos else '-'}")
-            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "publicdata" / "cache" / PACK,
-                            "config/packs/us-equities; a widened build <data>/publicdata/us-equities/packs/us-equities; prices "
-                            "<data>/publicdata/us-equities/prices")
+            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "feeds" / "sources" / "cache" / PACK,
+                            "config/packs/us-equities; a widened build <data>/feeds/sources/us-equities/packs/us-equities; prices "
+                            "<data>/feeds/sources/us-equities/prices")
         return refresh(a)
     except B.Refusal as e:
         print(e, file=sys.stderr)
         return 3
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+# ---------------------------------------------------------------- the feeds (config/feeds/us-equities.yaml, yahoo-prices.yaml)
+
+import packscript as PS  # noqa: E402
+
+
+class UsEquitiesFeed(PS.PackFeed):
+    """`drishti.py feed run us-equities`: SEC EDGAR companies, filings and financials, index membership from the tracking ETFs' N-PORT
+    (SPY, QQQ, DIA, IWM), LEIs; built into the run's folder and loaded into capitalmarket. `--snapshot` refreshes the committed pack."""
+    module, pack, prog = sys.modules[__name__], PACK, "us_equities.py"
+
+
+class YahooPricesFeed(PS.PackFeed):
+    """`drishti.py feed run yahoo-prices`: the companies' daily prices read through a running server's us-equities-prices connector
+    (Yahoo Finance; INTERNAL USE ONLY), loaded into capitalmarket. options.server names the server (or --set server=URL)."""
+    module, pack, prog = sys.modules[__name__], PACK, "us_equities.py"
+
+    def argv(self, run, out):
+        args = ["refresh", "prices"] + [str(x) for x in (run.option("args") or [])] + list(run.extra_args)
+        if run.option("server") and "--server" not in args:
+            args += ["--server", str(run.option("server"))]
+        args += ["--out", str(out)] if out is not None else []
+        if run.offline and "--offline" not in args:
+            args.append("--offline")
+        return args
+
+    def built(self, out):
+        return out
+
+    def snapshot(self, run):
+        raise PS.FB.FeedRefused("yahoo-prices keeps no committed snapshot: Yahoo's prices may not be redistributed")
+

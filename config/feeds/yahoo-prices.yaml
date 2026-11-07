@@ -1,0 +1,46 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/feeds/yahoo-prices.yaml: daily prices of the US equities companies from Yahoo Finance. INTERNAL USE ONLY: Yahoo's terms forbid
+# redistributing its prices, so this feed is off as shipped and nothing it pulls is ever committed (docs/guides/FEEDS_GUIDE.md).
+#   python3 tools/drishti.py feed run yahoo-prices --set server=http://localhost:18480
+# The prices are read through a running server's us-equities-prices connector (DRISHTI_US_EQUITIES_PRICES_ENABLED=true).
+feed: yahoo-prices
+title: Yahoo Finance daily prices of the US equities companies (internal use only)
+description: >-
+  The daily price history of every us-equities company, read through Drishti's own us-equities-prices connector so the documents have
+  exactly the pack's shape. For internal use only.
+class: us_equities.YahooPricesFeed     # tools/feeds/sources/us_equities.py
+source:
+  provider: Yahoo Finance
+  url: https://finance.yahoo.com
+  pause: 2.0                           # at least 2 seconds between calls
+  retries: 3
+lake: capitalmarket
+load: java
+enabled: false                         # internal use only: turn on for an internal installation on purpose
+schedule: {at: "22:30", days: weekdays}
+licence:
+  name: Yahoo terms of service (personal use, no redistribution)
+  url: https://legal.yahoo.com/us/en/yahoo/terms/otos/index.html
+  redistribution: internal-only
+  internal-only: true
+  notes: Yahoo's terms forbid redistributing its prices; the owner approved internal use inside the bank only (2026-10-29)
+keys:
+  token: {env: "${DRISHTI_TOKEN}", required: false}     # the server's API token when its security is on
+datasets:
+  price-history: {pack: us-equities, kind: price-history, description: "a company's daily prices"}
+options:
+  server: http://localhost:18480       # the server whose us-equities-prices connector is on
+  args: []

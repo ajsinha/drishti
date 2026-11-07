@@ -15,17 +15,17 @@
 """Refresh the funds pack from its public sources: the SEC's Form N-PORT, Form N-CEN and prospectus risk/return summary data sets,
 the SEC and Nasdaq Trader ticker files and GLEIF's level-2 relationship records.
 
-    python3 tools/publicdata/funds.py status
-    python3 tools/publicdata/funds.py refresh --dry-run
-    python3 tools/publicdata/funds.py refresh                               the committed pack (data/testdata/funds and config/packs/funds)
-    python3 tools/publicdata/funds.py refresh --offline                     rebuild the pack from the downloads only
-    python3 tools/publicdata/funds.py refresh ncen rr --since 2025          more quarters of the census and the prospectus summaries
-    python3 tools/publicdata/funds.py refresh --scope FUNDS:300,HOLDINGS:1000
-                                                                            a widened build in <data>/publicdata/funds
+    python3 tools/drishti.py feed status funds
+    python3 tools/drishti.py feed run funds --dry-run
+    python3 tools/drishti.py feed run funds --snapshot                        the committed pack (data/testdata/funds and config/packs/funds)
+    python3 tools/drishti.py feed run funds --snapshot --offline              rebuild the pack from the downloads only
+    python3 tools/drishti.py feed run funds --snapshot -- ncen rr --since 2025  more quarters of the census and the prospectus summaries
+    python3 tools/drishti.py feed run funds --snapshot -- --scope FUNDS:300,HOLDINGS:1000
+                                                                            a widened build in <data>/feeds/sources/funds
 
 Every source is openly licensed (SEC: U.S. public domain; GLEIF: CC0 1.0; the Nasdaq Trader directory is a public file) and the
 built pack is committed. The downloads are large (an N-PORT quarter is about 450 MB, the four quarters of risk/return summaries about
-200 MB) and stay in the download cache, <data>/publicdata/cache/funds, never in git; a file younger than --max-age hours (default a
+200 MB) and stay in the download cache, <data>/feeds/sources/cache/funds, never in git; a file younger than --max-age hours (default a
 week) is reused. SEC asks for a descriptive User-Agent with a contact and under 10 requests a second: the script uses exactly the
 setting of the us-equities pack (tools/packgen/us_equities/fetch.py USER_AGENT, DRISHTI_FEEDS_USER_AGENT) and one request at a time.
 
@@ -250,7 +250,7 @@ class Gleif(B.Source):
 
     def fetch(self, run):
         dest = run.cache.folder / "gleif" / "rr.csv.zip"
-        shared = B.data_dir() / "publicdata" / "cache" / "gleif" / "golden" / "rr.csv.zip"
+        shared = B.data_dir() / "feeds" / "sources" / "cache" / "gleif" / "golden" / "rr.csv.zip"
         if shared.is_file() and (run.a.offline or time.time() - shared.stat().st_mtime < run.a.max_age * 3600) and not dest.is_file():
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(shared, dest)
@@ -298,14 +298,13 @@ def refresh(a, log=print, opener=None) -> int:
     selected = B.pick(SOURCES, a.sources)
     scope = _scope([x.strip() for x in (a.scope or "").split(",") if x.strip()])
     widened = bool(scope) and scope != {"FUNDS": 200, "HOLDINGS": 600}
-    if widened and not a.into_pack:
-        out = Path(a.out).expanduser().resolve() if a.out else B.data_dir() / "publicdata" / PACK
+    if (widened and not a.into_pack) or a.out:                  # a widened build, or any build given --out (a feed run's folder)
+        out = Path(a.out).expanduser().resolve() if a.out else B.data_dir() / "feeds" / "sources" / PACK
         if B.is_committed(out):
-            raise B.Refusal(f"refused: a widened build goes to the data folder, not {out}; pass --into-pack to write it over the pack on purpose")
+            raise B.Refusal(f"refused: a build with --out or --scope goes to the data folder, not {out}; leave out --out for the committed "
+                            "pack, or pass --into-pack to write a widened build over it on purpose")
         pack_dir, testdata = out / "packs" / PACK, out / "testdata"
     else:
-        if a.out:
-            raise B.Refusal("refused: the committed pack is written where it lives; --out is for a widened build (--scope)")
         out, pack_dir, testdata = COMMITTED, COMMITTED, B.ROOT / "data" / "testdata"
     run = B.Run(PACK, a, out, log)
     run.first_year = a.since or (datetime.now(timezone.utc).year - a.years + 1 if a.years else None)
@@ -364,13 +363,20 @@ def main(argv: list[str] | None = None) -> int:
             n = sum(1 for p in parts for _ in p.lines())
             first = json.loads(next(parts[0].lines())) if parts else {}
             print(f"committed pack: {n} funds in {len(parts)} parts, data retrieved {first.get('PROVENANCE', {}).get('RETRIEVED_AT', '-')}")
-            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "publicdata" / "cache" / PACK,
-                            "data/testdata/funds and config/packs/funds; a widened build <data>/publicdata/funds")
+            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "feeds" / "sources" / "cache" / PACK,
+                            "data/testdata/funds and config/packs/funds; a widened build <data>/feeds/sources/funds")
         return refresh(a)
     except B.Refusal as e:
         print(e, file=sys.stderr)
         return 3
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+# ---------------------------------------------------------------- the feed (config/feeds/funds.yaml)
+
+import packscript as PS  # noqa: E402
+
+
+class FundsFeed(PS.PackFeed):
+    """`drishti.py feed run funds`: SEC Form N-PORT and N-CEN, the prospectus risk/return summaries and the ticker files; the funds,
+    their holders and the index funds built into the run's folder and loaded into capitalmarket. `--snapshot`: the committed pack."""
+    module, pack, prog = sys.modules[__name__], PACK, "funds.py"

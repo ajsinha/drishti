@@ -60,7 +60,7 @@ sources:
   licence: CC0 1.0
   internal-only: false
   used-for: full-country pulls into the data folder only (golden-lei source; never committed, for its size)
-refresh: tools/publicdata/gleif.py
+refresh: tools/drishti.py feed run gleif
 generated-by: tools/packgen/gleif/make.py
 ---
 # The gleif pack
@@ -307,7 +307,7 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 
-`python3 tools/publicdata/gleif.py status` lists the external sources, their licences and when each was last refreshed (offline); `refresh --dry-run` shows what a refresh would fetch and write, changing nothing; `refresh` fetches, writes and checks. The External data help page (docs/guides/EXTERNAL_DATA.md) has worked examples for Linux and Windows.
+The data feed `gleif` (config/feeds/gleif.yaml) pulls `lei-entity`, `lei-relationship`, `lei-mapping`: `python3 tools/drishti.py feed run gleif` fetches them daily into `data/feeds/gleif/<date>/` and loads them into the lake `referencelake`; `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/gleif/make.py`; its `--check` fails when the committed files differ from what it would write.
 

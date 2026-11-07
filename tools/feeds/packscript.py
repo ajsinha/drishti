@@ -83,22 +83,36 @@ class PackFeed(FB.Feed):
         self.emit_built(run, self.built(out))
 
     def emit_built(self, run: FB.FeedRun, folder: Path) -> None:
-        """Each kind folder's dated files, emitted as the feed file's dataset of that kind (a kind the feed file does not list is
-        left out, and said)."""
+        """The build's dated files (in ``folder`` itself or one folder a kind: ``<kind>.<YYYY-MM-DD>.jsonl[.gz]`` or tars), each table's
+        rows emitted as the feed file's dataset of that kind (a kind the feed file does not list is left out, and said)."""
         if not folder.is_dir():
             raise FB.FeedError(f"the {self.pack} build wrote nothing under {folder}")
-        for kind_dir in sorted(p for p in folder.iterdir() if p.is_dir()):
-            ds = self.spec.dataset_for_kind(kind_dir.name)
+        by_table: dict[str, dict[str, list]] = {}
+        for d in [folder] + sorted(p for p in folder.iterdir() if p.is_dir()):
+            for day, parts in FF.read_table(d).items():
+                for part in parts:
+                    by_table.setdefault(part.table, {}).setdefault(day, []).append(part)
+        if not by_table:
+            raise FB.FeedError(f"the {self.pack} build wrote no dated files under {folder}")
+        for table, days in sorted(by_table.items()):
+            ds = self.spec.dataset_for_kind(table)
             if ds is None:
-                run.log(f"  {kind_dir.name}: not a dataset of feed {self.spec.name}; left out")
+                run.log(f"  {table}: not a dataset of feed {self.spec.name}; left out")
                 continue
-            table = FF.read_table(kind_dir)
-            if not table:
-                continue
-            days = sorted(table)
-            for day in (days if ds.dated == "source" else days[-1:]):          # a snapshot: its newest date, under the run's date
-                rows = (json.loads(line) for p in table[day] for line in p.lines() if line.strip())
+            dates = sorted(days)
+            for day in (dates if ds.dated == "source" else dates[-1:]):        # a snapshot: its newest date, under the run's date
+                rows = (json.loads(line) for p in days[day] for line in p.lines() if line.strip())
                 run.emit(ds.name, rows, business_date=day)
+            run.mark(ds.name, run.business_date)
+
+    def emit_undated(self, run: FB.FeedRun, folder: Path) -> None:
+        """A build that writes one undated ``<kind>.jsonl`` a kind (a pack's samples): each under the run's business date."""
+        for f in sorted(folder.glob("*.jsonl")):
+            ds = self.spec.dataset_for_kind(f.name[:-len(".jsonl")])
+            if ds is None:
+                continue
+            with open(f, encoding="utf-8") as fh:
+                run.emit(ds.name, (json.loads(x) for x in fh if x.strip()))
             run.mark(ds.name, run.business_date)
 
     def snapshot(self, run: FB.FeedRun) -> int:

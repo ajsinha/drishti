@@ -15,7 +15,7 @@
 """Download the us-equities pack's public data into a cache folder (the network; make.py then builds the pack offline).
 
 Sources, all openly licensed (docs/guides/packs/US_EQUITIES.md, Data sources and licences):
-  SEC Form N-PORT        the index members: the stocks the tracking ETFs SPY (S&P 500), QQQ (Nasdaq-100) and DIA (Dow) report
+  SEC Form N-PORT        the index members: the stocks the tracking ETFs SPY (S&P 500), QQQ (Nasdaq-100), DIA (Dow) and IWM (Russell 2000) report
   (US public domain)      holding (trackers.py, from the funds pack's cache; no download here)
   Wikidata (CC0)          CIK, ticker, LEI, headquarters, founded, website; its index members too (often out of date), whose
                           companies stay in the pack when an index has dropped them

@@ -14,12 +14,12 @@
 
 """Refresh the world-economy pack from its public sources (World Bank WDI and WGI, IMF WEO, UNDP HDI, CIA World Factbook).
 
-    python3 tools/publicdata/world_economy.py status
-    python3 tools/publicdata/world_economy.py refresh --dry-run
-    python3 tools/publicdata/world_economy.py refresh                       a full build in <data>/publicdata/world-economy
-    python3 tools/publicdata/world_economy.py refresh --internal-ok         refresh the committed dataset and pack (carries IMF data)
-    python3 tools/publicdata/world_economy.py refresh --no-imf              a build without any IMF data, in the data folder
-    python3 tools/publicdata/world_economy.py refresh worldbank --since 2000 --scope SP.DYN.LE00.IN,EN.ATM.CO2E.PC:social
+    python3 tools/drishti.py feed status world-economy
+    python3 tools/drishti.py feed run world-economy --dry-run
+    python3 tools/drishti.py feed run world-economy --snapshot                a full build in <data>/feeds/sources/world-economy
+    python3 tools/drishti.py feed run world-economy --snapshot --internal-ok  refresh the committed dataset and pack (carries IMF data)
+    python3 tools/drishti.py feed run world-economy --snapshot -- --no-imf    a build without any IMF data, in the data folder
+    python3 tools/drishti.py feed run world-economy --snapshot -- worldbank --since 2000 --scope SP.DYN.LE00.IN,EN.ATM.CO2E.PC:social
 
 It wraps tools/realdata (the fetcher's per-source downloads, the normaliser, the pack generator and its check), so a refresh
 of the committed pack writes exactly what `tools/realdata/realdata.py all` writes. The IMF's terms allow reuse with
@@ -44,9 +44,17 @@ import pullkit as B  # noqa: E402
 
 REALDATA = B.ROOT / "tools" / "realdata"
 sys.path.insert(0, str(REALDATA))
-import fetch as F  # noqa: E402
-import normalise as N  # noqa: E402
-import realdata as RD  # noqa: E402
+# tools/realdata's fetch, normalise and realdata by their own names, whatever another source of the same process (`feed run --all`)
+# left under those names (the pack generators have a fetch.py too); the names point back at what they were afterwards
+_others = {k: sys.modules.pop(k) for k in ("fetch", "normalise", "realdata") if k in sys.modules}
+try:
+    import fetch as F  # noqa: E402
+    import normalise as N  # noqa: E402
+    import realdata as RD  # noqa: E402
+finally:
+    for _k in ("fetch", "normalise", "realdata"):
+        sys.modules.pop(_k, None)
+    sys.modules.update(_others)
 
 PACK = "world-economy"
 GENERATOR = B.ROOT / "tools" / "packgen" / "world" / "make.py"
@@ -223,7 +231,7 @@ def plan_cfg(run: B.Run, selected: list[B.Source], dry: bool) -> tuple[dict, boo
 
 def resolve_out(a, no_imf: bool, widened: bool) -> tuple[Path, bool]:
     """(the output folder, True when it is the committed dataset and pack)."""
-    default = B.data_dir() / "publicdata" / PACK
+    default = B.data_dir() / "feeds" / "sources" / PACK
     if a.out:
         out = Path(a.out).expanduser().resolve()
         if B.is_committed(out):
@@ -313,7 +321,7 @@ def write_build(run: B.Run, a, cfg: dict, no_imf: bool) -> int:
     out = run.out
     (out / "dataset").mkdir(parents=True, exist_ok=True)
     head = "\n".join((REALDATA / "sources.yaml").read_text(encoding="utf-8").split("\n")[:13])
-    (out / "sources.yaml").write_text(head + "\n# written by tools/publicdata/world_economy.py for this build\n"
+    (out / "sources.yaml").write_text(head + "\n# written by tools/feeds/sources/world_economy.py for this build\n"
                                       + yaml.safe_dump(cfg, sort_keys=False, allow_unicode=True, width=200), encoding="utf-8")
     env = dict(os.environ, **{N.ENV_SOURCES: str(out / "sources.yaml"), N.ENV_DATASET: str(out / "dataset"),
                               "DRISHTI_PACKS_OUT": str(out / "packs"), "DRISHTI_ABOUT_DIR": str(out / "about")})
@@ -336,13 +344,36 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(argv)
     try:
         if a.command == "status":
-            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "publicdata" / "cache" / PACK,
-                            "the committed dataset and pack with --internal-ok; else <data>/publicdata/world-economy")
+            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "feeds" / "sources" / "cache" / PACK,
+                            "the committed dataset and pack with --internal-ok; else <data>/feeds/sources/world-economy")
         return refresh(a)
     except B.Refusal as e:
         print(e, file=sys.stderr)
         return 3
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+# ---------------------------------------------------------------- the feed (config/feeds/world-economy.yaml)
+
+import packscript as PS  # noqa: E402
+
+
+class WorldEconomyFeed(PS.PackFeed):
+    """`drishti.py feed run world-economy`: the World Bank (WDI, WGI), the IMF's WEO (INTERNAL USE ONLY), UNDP and the CIA World
+    Factbook, built into the run's folder; each kind of the built pack loaded into worldlake. `--snapshot --internal-ok` refreshes the
+    committed dataset and pack."""
+    module, pack, prog = sys.modules[__name__], PACK, "world_economy.py"
+
+    def pull(self, run):
+        out = run.work / "build"
+        rc = self.call(run, self.namespace(run, self.argv(run, out)))
+        if rc != 0:
+            raise PS.FB.FeedError(f"the {PACK} build exited {rc}")
+        samples = out / "packs" / PACK / "samples"
+        if not samples.is_dir():
+            raise PS.FB.FeedError(f"the {PACK} build wrote no pack under {out}")
+        self.emit_undated(run, samples)
+
+    def snapshot(self, run):
+        if not run.internal_ok:
+            raise PS.FB.FeedRefused("the committed world-economy pack carries IMF data (internal use only): pass --internal-ok")
+        return super().snapshot(run)
