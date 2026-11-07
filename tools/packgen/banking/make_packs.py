@@ -190,6 +190,13 @@ def forms(name: str, kinds: list[str], specs: dict) -> dict:
     return out
 
 
+def domain_line(name: str) -> str:
+    """The pack's ``domain:`` (docs/architecture/ACCESS_MODEL.md): core for the core pack, banking for the others, with what it means."""
+    if name == "core":
+        return "domain: core   # the domain it serves (docs/architecture/ACCESS_MODEL.md): the core, always loaded when enabled"
+    return "domain: banking   # the domain it serves (docs/architecture/ACCESS_MODEL.md): it loads only while a module of the domain is on"
+
+
 def manifest(name: str) -> dict:
     p = layout.PACKS[name]
     kinds = [k for ks in p["kinds"].values() for k in ks]
@@ -344,6 +351,7 @@ def files() -> dict[Path, str]:
     for name in layout.PACKS:
         body = yaml.dump(packlake.lake_form(manifest(name), partitions=PARTITIONS), Dumper=_Plain, sort_keys=False, allow_unicode=True,
                          width=140)
+        body = body.replace(f"pack: {name}\n", f"pack: {name}\n{domain_line(name)}\n", 1)
         out[PACKS / name / "pack.yaml"] = f"{HEADER}\n\n{GENERATED}\n# {layout.PACKS[name]['title']} pack for Drishti.\n{body}{kept(name)}"
         out[PACKS / name / "config" / "formats.yaml"] = (f"{HEADER}\n\n{GENERATED}\n# Number formats the banking packs share.\n"
                                                          + yaml.safe_dump({"formats": FORMATS}, sort_keys=False))

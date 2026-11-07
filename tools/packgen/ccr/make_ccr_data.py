@@ -69,7 +69,7 @@ MAX_TRADES = 10_000                       # the local limit: never more trades i
 DEMO_TRADES = 9_500                       # the demo run (lake demo): whole counterparties, smallest first, within this many trades
 PART_BYTES = 1_200_000                    # compressed bytes per file, about
 QS = [0.95, 0.99]
-REFERENCE = ROOT / "drishti-compute" / "src" / "test" / "resources" / "ccr" / "reference.json"
+REFERENCE = ROOT / "drishti-compute-banking" / "src" / "test" / "resources" / "ccr" / "reference.json"
 SYSTEMS = (("CLY-", "CALYPSO"), ("MX-", "MUREX"))
 
 
@@ -313,7 +313,7 @@ def samples(docs: dict[str, list[dict]]) -> dict[Path, str]:
 
 
 def write_side_files(docs: dict[str, list[dict]], ref: dict) -> None:
-    """The parity reference of drishti-compute's test and the pack's samples, beside the committed test data."""
+    """The parity reference of drishti-compute-banking's test and the pack's samples, beside the committed test data."""
     REFERENCE.parent.mkdir(parents=True, exist_ok=True)
     REFERENCE.write_text(reference_text(ref), encoding="utf-8")
     for f, t in samples(docs).items():

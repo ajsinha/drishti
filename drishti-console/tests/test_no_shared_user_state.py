@@ -34,6 +34,12 @@ CHANGES = {"append", "add", "update", "pop", "popitem", "clear", "setdefault", "
 
 #: module-level mutable state, each with why it holds nothing one person could read of another
 ALLOWED = {
+    "core/plugins.py:_commands": "the modules' command hooks, registered at import (code, not data: DOMAIN_MODULES.md C2)",
+    "core/plugins.py:_retired": "the modules' retired-link hooks, registered at import (code, not data)",
+    "core/plugins.py:_type_ahead": "the modules' type-ahead hooks, registered at import (code, not data: C3)",
+    "core/plugins.py:_hints": "the modules' type-ahead lines, registered at import (code, not data: C3)",
+    "core/plugins.py:_presets": "the Pivot presets' word grammars by lens, registered at import (code, not data: C5)",
+    "core/plugins.py:_landing_rules": "the modules' landing rules, registered at import (code, not data: C6)",
     "core/menus.py:_cache": "the parsed sitemap.yaml by file stamp: configuration, the same for everyone",
     "core/external_lib.py:_paths": "folders added to sys.path for the console's own libraries: configuration",
     "core/channel_relay.py:HANDLERS": "relay operation to its handler function, registered at import by the routes (code, not data); "
