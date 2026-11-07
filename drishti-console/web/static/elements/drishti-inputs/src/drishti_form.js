@@ -211,20 +211,29 @@ export class Form extends InputBase {
   change(path, value, redraw) {
     this.values = setPath(this.values, path, value);
     delete this.server[path];
-    const dependents = this.narrow(path);                   // a dependent list follows what was chosen here
-    if (redraw || dependents) { this.touched.add(path); this.render(); } else { this.refresh(); }
+    const dependents = this.narrow(path);                   // a dependent list follows what was chosen here: only it is drawn again
+    if (redraw) { this.touched.add(path); this.render(); } else { dependents.forEach((q) => this.redrawField(q)); this.refresh(); }
     this.emit('change', { path: path, value: value, values: this.getValue() });
   }
 
-  /** @private the lists that depend on a path: their values narrowed to what they offer now; whether there were any */
+  /** @private one field drawn again in its place (its widget taken out first) */
+  redrawField(path) {
+    const p = this.parts.get(path);
+    if (!p || !p.wrap.parentNode) { return; }
+    if (p.widget && p.widget.destroy) { p.widget.destroy(); }
+    if (p.custom && p.custom.destroy) { p.custom.destroy(); }
+    p.wrap.replaceWith(this.field(p.f));
+  }
+
+  /** @private the lists that depend on a path: their values narrowed to what they offer now; their paths */
   narrow(path) {
-    let any = false;
+    const any = [];
     this.parts.forEach((p, q) => {
       const fs = p.f.field;
       if (!fs.dependsOn) { return; }
       const target = fs.dependsOn.charAt(0) === '/' ? fs.dependsOn.slice(1) : q.split('.').slice(0, -1).concat([fs.dependsOn]).join('.');
       if (target !== path) { return; }
-      any = true;
+      any.push(q);
       const offered = offeredValues(fs.items && fs.items.enum ? Object.assign({}, fs.items, { dependsOn: fs.dependsOn, parents: fs.parents }) : fs, this.values, q).map(String), cur = getPath(this.values, q);
       if (Array.isArray(cur)) { this.values = setPath(this.values, q, cur.filter((x) => offered.indexOf(String(x)) >= 0)); }
       else if (cur !== undefined && offered.indexOf(String(cur)) < 0) { this.values = setPath(this.values, q, undefined); }
@@ -387,7 +396,7 @@ export class Form extends InputBase {
    * @param {*} value
    * @returns {void}
    */
-  setField(path, value) { this.values = setPath(this.values, path, value); this.narrow(path); this.render(); }
+  setField(path, value) { this.values = setPath(this.values, path, value); this.narrow(path); this.render(); }   // the focus stays where it was
 
   /**
    * A field's value.

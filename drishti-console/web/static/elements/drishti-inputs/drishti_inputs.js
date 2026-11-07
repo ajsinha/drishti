@@ -2499,18 +2499,25 @@
       change(path, value, redraw) {
         this.values = setPath(this.values, path, value);
         delete this.server[path];
-        const dependents = this.narrow(path);                   // a dependent list follows what was chosen here
-        if (redraw || dependents) { this.touched.add(path); this.render(); } else { this.refresh(); }
+        const dependents = this.narrow(path);                   // a dependent list follows what was chosen here: only it is drawn again
+        if (redraw) { this.touched.add(path); this.render(); } else { dependents.forEach((q) => this.redrawField(q)); this.refresh(); }
         this.emit('change', { path: path, value: value, values: this.getValue() });
       }
+      redrawField(path) {
+        const p = this.parts.get(path);
+        if (!p || !p.wrap.parentNode) { return; }
+        if (p.widget && p.widget.destroy) { p.widget.destroy(); }
+        if (p.custom && p.custom.destroy) { p.custom.destroy(); }
+        p.wrap.replaceWith(this.field(p.f));
+      }
       narrow(path) {
-        let any = false;
+        const any = [];
         this.parts.forEach((p, q) => {
           const fs = p.f.field;
           if (!fs.dependsOn) { return; }
           const target = fs.dependsOn.charAt(0) === '/' ? fs.dependsOn.slice(1) : q.split('.').slice(0, -1).concat([fs.dependsOn]).join('.');
           if (target !== path) { return; }
-          any = true;
+          any.push(q);
           const offered = offeredValues(fs.items && fs.items.enum ? Object.assign({}, fs.items, { dependsOn: fs.dependsOn, parents: fs.parents }) : fs, this.values, q).map(String), cur = getPath(this.values, q);
           if (Array.isArray(cur)) { this.values = setPath(this.values, q, cur.filter((x) => offered.indexOf(String(x)) >= 0)); }
           else if (cur !== undefined && offered.indexOf(String(cur)) < 0) { this.values = setPath(this.values, q, undefined); }
@@ -2629,7 +2636,7 @@
         this.say(decision === 'approved' ? 'Approved' + (note ? ': ' + note : '') : 'Rejected' + (note ? ': ' + note : '') + '; the values are back as they were', decision === 'approved' ? 'ok' : 'bad');
       }
       busy(on) { if (this.submitBtn) { this.submitBtn.disabled = on; } this.form.setAttribute('aria-busy', String(on)); }
-      setField(path, value) { this.values = setPath(this.values, path, value); this.narrow(path); this.render(); }
+      setField(path, value) { this.values = setPath(this.values, path, value); this.narrow(path); this.render(); }   // the focus stays where it was
       getField(path) { return getPath(this.values, path); }
       say(text, tone) { this.banner.hidden = !text; this.banner.textContent = text || ''; this.banner.className = 'di-form-banner di-tone-' + (tone || 'info'); announce(text); }
       getValue() { return visibleValue(this.schema, this.values); }

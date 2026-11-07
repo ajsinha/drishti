@@ -327,7 +327,6 @@ def test_endur_and_comswap_offer_only_their_sub_types_and_find_only_endur_swaps(
         product.locator("input[role=combobox]").fill("ComSwap")
         page.locator(".di-ms-pop .di-option", has_text="ComSwap").first.click()
         product.locator("input[role=combobox]").press("Escape")
-        print("DEBUG", page.eval_on_selector_all(".qf-field[data-field=PRODUCT_TYPE] .di-chip-label", "els => els.map(e => e.textContent)"), page.eval_on_selector_all(".qf-field[data-field=PRODUCT_TYPE] input[type=hidden]", "els => els.map(e => e.name + '=' + e.value + (e.disabled ? ' disabled' : ''))"), page.eval_on_selector_all("input[type=hidden]", "els => els.map(e => e.name + '=' + e.value)"))
         types.locator(".di-ms-control").click()                                            # the sub type's multi-select offers only what applies
         assert sorted(page.locator(".di-ms-pop .di-option .di-option-label").all_inner_texts()) == ["ENGY-B-SWAP", "ENGY-SWAP"]
         page.keyboard.press("Escape")
