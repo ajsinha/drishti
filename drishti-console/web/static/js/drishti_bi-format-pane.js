@@ -205,9 +205,9 @@
   }, { [hook(prop, key)]: '', placeholder: '{"bins": 24}' }), prop['x-hint']));
 
   P.control('vega-spec', (prop, key, value, env, set) => {
-    const box = h('textarea', { class: 'studio-in bi-vega-spec', rows: '10', spellcheck: 'false', 'data-format-vega-spec': '', 'aria-label': 'Vega-Lite specification (JSON)' });
+    const box = h('textarea', { class: 'studio-in bi-vegalite-spec', rows: '10', spellcheck: 'false', 'data-format-vega-spec': '', 'aria-label': 'Vega-Lite specification (JSON)' });
     box.value = value ? JSON.stringify(value, null, 2) : '';
-    const note = h('small', { class: 'text-muted-d', 'data-vega-note': '', text: 'The data is the rows of the wells: put no data in it. Refer to fields by the name after the table (desk, not trades.desk) and to measures by their name.' });
+    const note = h('small', { class: 'text-muted-d', 'data-vega-note': '', text: 'The data is the rows of the wells: put no data in it. Refer to fields by the name after the table (desk, not trades.desk) and to measures by their name. drishti-chart draws it; a feature it does not translate is refused with what to use instead.' });
     box.addEventListener('change', () => {
       if (box.value.trim() === '') { set(''); note.textContent = ''; return; }
       try {

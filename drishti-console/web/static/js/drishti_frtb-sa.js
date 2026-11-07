@@ -83,12 +83,12 @@
     R.riskChart($("[data-fr-stack]"), { kind: "bar", orient: "horizontal", title: "Capital stack", data: { rows: rows }, id: "id", x: { field: "label", order: rows.map(function (r) { return r.label; }) },
       y: { field: "value", format: "amount2" }, labels: true, legend: "none", tone: "link", colourWhen: [{ when: "total > 0", tone: "warn" }], height: 40 + rows.length * 26 }, { height: 130 + rows.length * 26 });
   }
-  /** Class × measure in the reported scenario; a measure's cell opens its buckets. The class total is the sum of its three charges
-   *  (the SBM adds them within a class); SBM itself is the server's. */
+  /** Class × measure in the reported scenario; a measure's cell opens its buckets. Each class's Total (its three charges added: the
+   *  SBM adds them within a class) and SBM itself are the server's (classTotals, SBM): the page sums no figure. */
   function classesGrid(a) {
     var rows = {}, out = [];
     a.classes.forEach(function (c) { (rows[c.class] = rows[c.class] || { id: c.class, cls: c.class, label: CLASS[c.class] || c.class })[c.measure] = c[a.reported]; });
-    // a class's own total is not drawn: the browser sums no figure (the server sends the classes' measures and the SBM, not a class total)
+    (a.classTotals || []).forEach(function (t) { if (rows[t.class]) { rows[t.class].total = t.reported; } });
     Object.keys(rows).forEach(function (k) { var r = rows[k]; r.isClass = true; out.push(r); });
     out.push({ id: "SBM", label: "SBM", total: a.SBM, sbm: true });
     var cell = function (m) {
@@ -97,7 +97,7 @@
     };
     grid("[data-fr-classes]", { title: "Charge by class and measure (" + a.reported + ")", rows: out,
       getRowClass: function (r) { return r.sbm ? "tot" : null; },
-      columns: [txt("label", "Class (" + a.reported + ")", { pinned: "left" }), cell("DELTA"), cell("VEGA"), cell("CURVATURE"), fig("total", "SBM", { format: function (v) { return v === undefined ? "" : money(v); } })],
+      columns: [txt("label", "Class (" + a.reported + ")", { pinned: "left" }), cell("DELTA"), cell("VEGA"), cell("CURVATURE"), fig("total", "Total", { format: function (v) { return v === undefined ? "—" : money(v); } })],
       onRow: function (r, e) {
         var col = e && e.detail && e.detail.columnId;
         if (r.isClass && /^(DELTA|VEGA|CURVATURE)$/.test(col || "") && r[col] !== undefined) { drill(r.cls, col); }

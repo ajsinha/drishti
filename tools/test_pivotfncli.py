@@ -77,7 +77,7 @@ class PivotFunctions(unittest.TestCase):
         self.assertEqual(2, code)                                         # it is `drishti.py approvals approve function asha:wret@1`
 
     def test_explain_prints_steps_that_add_up(self):
-        FakeServer.routes[("POST", "/api/v1/pivot/explain")] = (200, EXPLAIN)
+        FakeServer.routes[("POST", "/api/v1/explain")] = (200, {"kind": "pivot", "why": {"available": True, "answer": EXPLAIN}})
         code, out, _ = run("pivot", "explain", "--source", "trade", "--rows", "DESK", "--values", "sum(NOTIONAL)", "--cell", "DESK=RATES",
                            "--other-cell", "DESK=FX", "--by", "CURRENCY", env=self.env)
         self.assertEqual(0, code)
@@ -88,6 +88,7 @@ class PivotFunctions(unittest.TestCase):
         self.assertEqual({"DESK": "FX"}, b["to"])
         self.assertEqual("CURRENCY", b["by"])
         self.assertEqual("trade", b["view"]["source"])
+        self.assertEqual(("pivot", "cell", "why"), (b["kind"], b["measure"], b["part"]))      # the one Explain, not the old pivot/explain
 
     def test_whatif_builds_the_overlay_from_the_flags(self):
         FakeServer.routes[("POST", "/api/v1/pivot/whatif")] = (200, {"diff": {"*|*": {"delta": {"S": 5.0}}}})

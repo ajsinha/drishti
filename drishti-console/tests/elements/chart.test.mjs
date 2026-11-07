@@ -255,7 +255,8 @@ test('Vega-Lite: aggregates, bins, arcs, rects, boxplots, temporal lines with co
   assert.deepEqual(ruled.spec.annotations, [{ type: 'line', axis: 'y', value: 3, tone: 'bad' }]);
   const rest = C.fromVegaLite({ facet: { row: { field: 'd' } }, mark: 'text', encoding: { text: { field: 'd' } } }, { rows });
   assert.equal(rest.spec, null);
-  assert.deepEqual(rest.unsupported, ['$.facet', '$.facet', '$.encoding.text', '$.mark (text)']);
+  assert.deepEqual(rest.unsupported, ['$.facet', '$.encoding.text', '$.mark (text)']);
+  assert.match(rest.refused, /^Not drawn: .*\$.facet: use small multiples/);
   assert.match(C.fromVegaLite({ data: { url: 'http://x' }, mark: 'bar' }).refused, /may not load anything from a URL/);
   assert.deepEqual(['#b3261e', '#4f7cff', '#2e7d32', '#e8a33a', '#888888', 'red'].map(C.colourTone), ['bad', 'link', 'good', 'accent', 'muted', 'bad']);
   assert.deepEqual([',.0f', ',.2f', '.0%', '.2%', '~s', '$,.0f', 'x'].map(C.d3Format), ['amount0', 'amount2', 'pct0', 'pct2', 'compact', 'amount0', null]);

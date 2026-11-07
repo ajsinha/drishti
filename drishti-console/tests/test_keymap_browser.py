@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The one keymap and the one search in a real browser (2.9.11.e; drishti_keys.js, drishti_search-box.js), over a console of its own on the
+"""The one keymap and the one search in a real browser (2.9.11.e; drishti_keys.js, drishti-insight's search), over a console of its own on the
 stand-in server:
 - ? opens the keys of the screen (a dialog, focus inside, the global keys listed, no conflicts registered), Esc closes it and gives the
   focus back; the footer's Keys button opens it too; ? typed into the command line is a character, not the overlay;

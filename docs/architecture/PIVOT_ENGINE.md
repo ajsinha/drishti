@@ -1012,7 +1012,7 @@ Product owner (2026-11-02): "And pick and choose charting as well."
    so the chart shows the parts beside the total with **diversification as its own segment**, or refuses stacking in words; ≈ values are
    drawn hatched with their error bars; axes carry units and currency; mixed currencies are refused unless converted.
 5. **Several charts** from one pivot pinned beside it, saved in the view, shared with it, **embedded in BI reports and Sutra pages**
-   (they are BI visuals over the pivot's answer, drawn with the vendored ECharts and Vega-Lite libraries, nothing from a CDN), exported to
+   (they are BI visuals over the pivot's answer, drawn with drishti-chart over the vendored ECharts, nothing from a CDN), exported to
    Excel as **native charts bound to the PivotTable** (P4) and to PNG and SVG.
 6. **Keyboard**: select with `Shift` and the arrows, `G` charts, `Shift+G` cycles the suggestions, `P` pins.
 
@@ -1150,7 +1150,7 @@ a per-store allowance is a later step. Every key is in [CONFIGURATION.md](../adm
 | `GET /api/v1/pivot/cells/{ref}` | one cell by reference ([section 10](#10-beyond-anything-out-there), item 8): value, exactness, provenance id |
 | `GET /api/v1/pivot/cells/{ref}/rows` | drill-through, paged |
 | `GET /api/v1/pivot/provenance/{id}` | the provenance of an answer or a cell |
-| `POST /api/v1/pivot/explain` | the difference between two cells or two dates, as steps that add up |
+| `POST /api/v1/explain` (kind `pivot`) | the difference between two cells or two dates, as steps that add up (`/api/v1/pivot/explain`: a deprecated alias for one release) |
 | `POST /api/v1/pivot/compare` | two dates or versions, cell by cell |
 | `GET, POST, PUT, DELETE /api/v1/pivot/views[/{owner}/{name}]` | saved views, versions, share, restore |
 | `GET /api/v1/pivot/catalogue?source=` | dimensions, measures and functions a source offers this person |

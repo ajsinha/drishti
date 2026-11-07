@@ -27,10 +27,12 @@
      transform   filter (an expression or a field predicate: equal, oneOf, range, lt, lte, gt, gte), calculate
      title       text, or {text, subtitle}
    Everything else (facets, row and column, repeat, concat, selections and params, other transforms, text marks, scales' schemes,
-   projections and geoshape) is listed in the answer's unsupported paths, so a visual outside the subset is named and redrawn once.
+   projections and geoshape) is refused, never drawn wrong: the answer has no spec, its unsupported paths, and refused, a sentence that
+   names each feature with what to use instead (vegaLiteAlternative).
    Colours become tones (a red is "bad", a green "good", an orange "accent", a grey "muted", the rest "link"). d3 formats become
    drishti-core's (",.0f" is amount0, ".2%" pct2, "~s" compact). */
 import { compileCondition, rowsOf, num } from './drishti_chart-data.js';
+import { chartIn } from './drishti_chart-element.js';
 
 const AGG = { sum: (a) => a.reduce((s, x) => s + x, 0), mean: (a) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : null), count: (a) => a.length,
   min: (a) => (a.length ? Math.min.apply(null, a) : null), max: (a) => (a.length ? Math.max.apply(null, a) : null),
@@ -40,6 +42,42 @@ AGG.average = AGG.mean;
 const KNOWN_TOP = ['$schema', 'data', 'mark', 'encoding', 'layer', 'transform', 'title', 'width', 'height', 'autosize', 'config', 'description', 'name', 'background', 'padding'];
 const KNOWN_ENC = ['x', 'y', 'color', 'fill', 'stroke', 'size', 'theta', 'tooltip', 'opacity', 'x2', 'y2'];
 const MARKS = { bar: 1, line: 1, area: 1, point: 1, circle: 1, square: 1, tick: 1, rule: 1, rect: 1, arc: 1, boxplot: 1 };
+
+/** What to use instead of each Vega-Lite feature drishti-chart does not draw, by the feature's key in its path. */
+const INSTEAD = [
+  [/^(facet|row|column)$/, 'small multiples: a BI chart\'s split well, or one visual per member'],
+  [/^(repeat|concat|hconcat|vconcat|spec)$/, 'one visual per chart on the report page'],
+  [/^(params|selection)$/, 'the report\'s own cross-filtering: a click on a mark filters the page'],
+  [/^(projection|geoshape)$/, 'drishti-chart\'s map kind (kind: map), or the BI map visual'],
+  [/^resolve$/, 'one axis per chart: put a second scale in its own visual, or a combo chart\'s secondary axis'],
+  [/^transform$/, 'a calculated column or measure in the model, or compute the rows in Python'],
+  [/^(text|shape|strokeDash|href|url|key|order|detail|angle|radius|description|latitude|longitude|xOffset|yOffset)$/, 'a table or card visual for text, a series (color field) for detail; or return a drishti-chart spec from Python'],
+  [/^mark$/, 'a BI visual of that kind (table, card, map) or a mark drishti-chart draws: bar, line, area, point, circle, square, tick, rule, rect, arc, boxplot']
+];
+
+/**
+ * What to use instead of an unsupported Vega-Lite feature, from its path in the specification.
+ * @param {string} path a path fromVegaLite listed ("$.facet", "$.layer[1].encoding.text", "$.transform[0]", "$.mark (text)")
+ * @returns {string} the alternative, in words
+ */
+export function vegaLiteAlternative(path) {
+  const parts = String(path || '').replace(/\s.*$/, '').split('.').map((p) => p.replace(/\[\d+\]$/, '')).filter((p) => p && p !== '$');
+  for (let i = parts.length - 1; i >= 0; i--) {
+    for (const [re, text] of INSTEAD) { if (re.test(parts[i])) { return text; } }
+  }
+  return 'return a drishti-chart spec from Python (output: drishti-chart), which draws every kind the library has';
+}
+
+/**
+ * The sentence a refused specification shows: each unsupported feature with what to use instead.
+ * @param {string[]} unsupported the paths fromVegaLite listed
+ * @returns {string}
+ */
+export function vegaLiteRefusal(unsupported) {
+  const seen = Array.from(new Set(unsupported || []));
+  return 'Not drawn: this Vega-Lite specification uses what drishti-chart does not draw, and Drishti never draws a chart wrong. '
+    + seen.map((p) => p + ': use ' + vegaLiteAlternative(p)).join('; ') + '.';
+}
 
 /**
  * A colour as the tone people meant: red is bad, green good, orange or amber accent, grey muted, anything else link.
@@ -223,7 +261,8 @@ function view(v, rows, path, unsupported) {
  * A Vega-Lite specification as a drishti-chart spec, with every part that did not translate.
  * @param {Object} vl the Vega-Lite specification (data inline; a url is refused)
  * @param {{rows: Object[], title: string}} [o] rows: the data when the specification has none (a BI visual's own rows)
- * @returns {{spec: ?Object, unsupported: string[], refused: ?string}} refused: why nothing was drawn (a url, nothing to draw)
+ * @returns {{spec: ?Object, unsupported: string[], refused: ?string}} refused: why nothing is drawn (a url, nothing to draw, or the
+ *   features that do not translate, each with what to use instead); a spec is only given when the whole specification translated
  */
 export function fromVegaLite(vl, o) {
   o = o || {};
@@ -248,19 +287,20 @@ export function fromVegaLite(vl, o) {
       if (got.rule) { rules.push.apply(rules, got.rule); return; }
       layers.push(got);
     });
-    if (!layers.length) { return { spec: null, unsupported: unsupported, refused: 'no layer this library draws' }; }
+    if (!layers.length) { return { spec: null, unsupported: Array.from(new Set(unsupported)), refused: unsupported.length ? vegaLiteRefusal(unsupported) : 'no layer this library draws' }; }
     spec = layers.length === 1 ? layers[0] : { kind: 'layer', layers: layers };
     if (rules.length) { (spec.layers ? spec.layers[0] : spec).annotations = rules; }
   } else {
     if (!vl.mark) { return { spec: null, unsupported: unsupported, refused: 'a Vega-Lite specification needs a mark or layers' }; }
     spec = view(vl, top, '$', unsupported);
-    if (!spec) { return { spec: null, unsupported: unsupported, refused: 'the mark ' + JSON.stringify(vl.mark) + ' is not drawn by this library' }; }
+    if (!spec) { return { spec: null, unsupported: Array.from(new Set(unsupported)), refused: vegaLiteRefusal(unsupported.length ? unsupported : ['$.mark']) }; }
     if (spec.rule) { return { spec: null, unsupported: unsupported, refused: 'a lone rule has nothing to sit on' }; }
   }
+  if (unsupported.length) { return { spec: null, unsupported: Array.from(new Set(unsupported)), refused: vegaLiteRefusal(unsupported) }; }
   if (title) { spec.title = title; }
   if (subtitle) { spec.subtitle = subtitle; }
   spec.from = 'vega-lite';
-  return { spec: spec, unsupported: unsupported, refused: null };
+  return { spec: spec, unsupported: [], refused: null };
 }
 
 /** @private the path of the first url or loader that is a plain value, as the page and the server refuse it */
@@ -275,3 +315,29 @@ function urlIn(node, path) {
   }
   return null;
 }
+
+/**
+ * A Vega-Lite specification drawn in a host by drishti-chart, or refused there in words (each unsupported feature with what to use
+ * instead): never drawn wrong. The refusal is a status paragraph (class dc-refused, data-refused holding the unsupported paths).
+ * @param {HTMLElement} host
+ * @param {Object} vl the Vega-Lite specification
+ * @param {Object} [o] rows (the data when the specification has none), title, and chartIn's options
+ * @returns {{chart: ?Object, refused: ?string, unsupported: string[], spec: ?Object}}
+ */
+export function vegaLiteIn(host, vl, o) {
+  o = Object.assign({}, o);
+  const t = fromVegaLite(vl, { rows: o.rows, title: o.title });
+  delete o.rows; delete o.title;
+  if (!t.spec) {
+    const doc = host.ownerDocument, p = doc.createElement('p');
+    p.className = 'dc-refused';
+    p.setAttribute('role', 'status');
+    p.setAttribute('data-refused', t.unsupported.join(' '));
+    p.textContent = t.refused;
+    host.textContent = '';
+    host.appendChild(p);
+    return { chart: null, refused: t.refused, unsupported: t.unsupported, spec: null };
+  }
+  return { chart: chartIn(host, t.spec, o), refused: null, unsupported: [], spec: t.spec };
+}
+

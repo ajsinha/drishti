@@ -2365,6 +2365,167 @@
     function CSS_ESCAPE(s) { return String(s).replace(/([^\w-])/g, '\\$1'); }
     return { "Form": Form };
   })();
+  /* ---- src/drishti_select.js ---- */
+  __m["src/drishti_select.js"] = (function () {
+    var announce = __lib("drishti-core").announce;
+    var InputBase = __m["src/drishti_inputs-dom.js"].InputBase, Listbox = __m["src/drishti_inputs-dom.js"].Listbox, Popover = __m["src/drishti_inputs-dom.js"].Popover, normalizeOptions = __m["src/drishti_inputs-dom.js"].normalizeOptions, searchOptions = __m["src/drishti_inputs-dom.js"].searchOptions, uid = __m["src/drishti_inputs-dom.js"].uid;
+    const TYPE_AHEAD_MS = 500;
+    const same = (a, b) => a === b || (a !== null && a !== undefined && b !== null && b !== undefined && String(a) === String(b));
+    function fromMarkup(host) {
+      const out = [], picked = [];
+      const take = (o, group) => {
+        out.push({ value: o.hasAttribute('value') ? o.getAttribute('value') : o.textContent.trim(), label: o.textContent.trim(), group: group || '',
+          disabled: o.hasAttribute('disabled'), detail: o.getAttribute('title') || '' });
+        if (o.hasAttribute('selected')) { picked.push(out[out.length - 1].value); }
+      };
+      Array.prototype.slice.call(host.children).forEach((c) => {
+        const t = c.tagName.toLowerCase();
+        if (t === 'option') { take(c, ''); } else if (t === 'optgroup') { Array.prototype.forEach.call(c.querySelectorAll('option'), (o) => take(o, c.getAttribute('label'))); }
+        if (t === 'option' || t === 'optgroup') { c.remove(); }
+      });
+      return { options: out, value: picked.length ? picked[0] : undefined };
+    }
+    class Select extends InputBase {
+      constructor(host, options) {
+        super(host, options, 'di-select');
+        const o = this.o = Object.assign({ search: 'auto', searchMin: 8 }, this.o);
+        const marked = o.options === undefined ? fromMarkup(host) : null;
+        this.options = normalizeOptions(marked ? marked.options : o.options);
+        this.value = null;
+        this.typed = '';
+        this.typedAt = 0;
+        this.list = new Listbox(this.doc, { label: o.label || 'Options', render: o.renderOption, onPick: (it) => this.pick(it) });
+        this.pop = new Popover(this.doc, { cls: 'di-select-pop', role: 'presentation', theme: host, onClose: () => this.closed() });
+        this.query = this.el('input', { cls: 'di-field di-select-search', attrs: { type: 'text', role: 'combobox', 'aria-expanded': 'true', 'aria-autocomplete': 'list',
+          'aria-label': 'Search ' + (o.label || 'the options'), placeholder: 'Type to search', autocomplete: 'off', spellcheck: 'false', id: uid('sel-q') } });
+        this.query.addEventListener('input', () => this.filter(true));
+        this.query.addEventListener('keydown', (e) => this.onListKey(e, this.query));
+        this.status = this.el('div', { cls: 'di-select-status', attrs: { role: 'status', 'aria-live': 'polite' } });
+        this.panel = this.el('div', { cls: 'di-select-panel' });
+        this.text = this.el('span', { cls: 'di-select-text' });
+        this.control = this.el('div', { cls: 'di-control di-select-control', attrs: { role: 'combobox', tabindex: '0', 'aria-haspopup': 'listbox', 'aria-expanded': 'false',
+          'aria-label': o.label || null, id: uid('sel') } }, [this.text, this.el('span', { cls: 'di-caret', text: '▾', attrs: { 'aria-hidden': 'true' } })]);
+        host.appendChild(this.control);
+        if (o.name) { this.hidden = this.el('input', { attrs: { type: 'hidden', name: o.name } }); host.appendChild(this.hidden); }
+        this.control.addEventListener('mousedown', (e) => { e.preventDefault(); if (this.o.disabled) { return; } this.control.focus(); if (this.pop.isOpen()) { this.close(); } else { this.open(); } });
+        this.control.addEventListener('keydown', (e) => this.onKey(e));
+        this.control.addEventListener('blur', () => { if (this.pop.isOpen() && !this.searching()) { this.close(); } });
+        this.setDisabled(!!o.disabled);
+        const first = o.value !== undefined ? o.value : marked && marked.value !== undefined ? marked.value : undefined;
+        if (first !== undefined && first !== null) { this.setValue(first); } else if (!o.placeholder) { const f = this.options.find((x) => !x.disabled); this.setValue(f ? f.value : null); } else { this.show(); }
+      }
+      searching() { const s = this.o.search; return s === true || (s === 'auto' && this.options.length > this.o.searchMin); }
+      show() {
+        const it = this.getOption();
+        this.text.textContent = it ? it.label : this.value !== null ? String(this.value) : (this.o.placeholder || '');
+        this.control.classList.toggle('di-placeholder', this.value === null);
+        if (this.hidden) { this.hidden.value = this.value === null ? '' : String(this.value); }
+      }
+      open(at) {
+        if (this.o.disabled) { return; }
+        const search = this.searching();
+        this.query.value = '';
+        this.panel.textContent = '';
+        if (search) { this.panel.appendChild(this.query); }
+        this.panel.append(this.list.el, this.status);
+        this.filter(false);
+        this.pop.open(this.control, this.panel, { focus: false });
+        const owner = search ? this.query : this.control;
+        owner.setAttribute('aria-controls', this.list.id);
+        this.control.setAttribute('aria-controls', this.list.id);
+        this.control.setAttribute('aria-expanded', 'true');
+        const cur = this.matches.findIndex((x) => same(x.value, this.value));
+        this.list.setActive(at !== undefined ? at : cur >= 0 ? cur : 0, owner);
+        if (search) { this.query.focus(); }
+        this.emit('open');
+      }
+      close(refocus) { const had = this.doc.activeElement === this.query; this.pop.close(); if ((refocus || had) && this.control.isConnected) { this.control.focus(); } }
+      closed() {
+        this.control.setAttribute('aria-expanded', 'false');
+        this.control.removeAttribute('aria-activedescendant');
+        this.control.removeAttribute('aria-controls');
+        this.query.removeAttribute('aria-activedescendant');
+        this.emit('close');
+      }
+      filter(typed) {
+        const q = this.searching() ? this.query.value : '';
+        this.matches = searchOptions(this.options, q);
+        this.list.render(this.matches, (it) => same(it.value, this.value), { empty: q ? 'Nothing matches "' + q + '"' : 'Nothing to pick' });
+        this.status.textContent = q ? this.matches.length + (this.matches.length === 1 ? ' match' : ' matches') : '';
+        if (typed) { this.list.setActive(this.matches.length ? 0 : -1, this.query); }
+        if (this.pop.isOpen()) { this.pop.place(); }
+      }
+      onKey(e) {
+        if (this.o.disabled) { return; }
+        const k = e.key;
+        if (this.pop.isOpen()) { this.onListKey(e, this.control); return; }
+        if (k === 'ArrowDown' || k === 'ArrowUp' || k === 'Enter' || k === ' ') { e.preventDefault(); this.open(); return; }
+        if (k === 'Home' || k === 'End') { e.preventDefault(); this.open(); this.list.setActive(k === 'Home' ? 0 : this.matches.length - 1, this.control); return; }
+        if (this.printable(e)) {
+          e.preventDefault();
+          if (this.searching()) { this.open(); this.query.value = k; this.filter(true); return; }
+          this.open();
+          this.typeAhead(k);
+        }
+      }
+      printable(e) { return e.key.length === 1 && e.key !== ' ' && !e.ctrlKey && !e.metaKey && !e.altKey; }
+      onListKey(e, owner) {
+        const k = e.key;
+        if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); this.close(true); return; }
+        if (k === 'Tab') { this.close(); return; }
+        if (k === 'ArrowUp' && e.altKey) { e.preventDefault(); const it = this.matches[this.list.active]; if (it && !it.disabled) { this.pick(it); } else { this.close(true); } return; }
+        if ((k === 'Home' || k === 'End') && owner === this.control) { e.preventDefault(); this.list.setActive(k === 'Home' ? 0 : this.matches.length - 1, owner); return; }
+        if (k === ' ' && owner === this.control) { e.preventDefault(); const it = this.matches[this.list.active]; if (it && !it.disabled) { this.pick(it); } return; }
+        if (this.list.key(e, owner)) { return; }
+        if (owner === this.control && this.printable(e)) { e.preventDefault(); this.typeAhead(k); }
+      }
+      typeAhead(ch) {
+        const now = Date.now();
+        this.typed = now - this.typedAt > TYPE_AHEAD_MS ? ch : this.typed + ch;
+        this.typedAt = now;
+        const t = this.typed.toLowerCase(), n = this.matches.length;
+        const repeat = t.length > 1 && t.split('').every((c) => c === t[0]);
+        const word = repeat ? t[0] : t, start = repeat || t.length === 1 ? this.list.active + 1 : this.list.active;
+        for (let i = 0; i < n; i++) {
+          const j = (Math.max(0, start) + i) % n;
+          if (this.matches[j].label.toLowerCase().indexOf(word) === 0) { this.list.setActive(j, this.control); return; }
+        }
+      }
+      pick(it) {
+        if (!it || it.disabled) { return; }
+        this.close(true);
+        this.setValue(it.value, true);
+      }
+      getValue() { return this.value; }
+      getOption() { const v = this.value; return v === null ? null : this.options.find((x) => same(x.value, v)) || null; }
+      setValue(v, emit) {
+        const before = this.value;
+        const it = v === null || v === undefined ? null : this.options.find((x) => same(x.value, v));
+        this.value = it ? it.value : v === undefined ? null : v;
+        this.show();
+        if (emit && !same(before, this.value)) {
+          announce((it ? it.label : String(this.value)) + ' picked');
+          this.emit('change', { value: this.value, option: this.getOption() });
+        }
+      }
+      setOptions(list, value) {
+        this.options = normalizeOptions(list);
+        const want = value !== undefined ? value : this.value;
+        const keep = want !== null && this.options.some((x) => same(x.value, want));
+        if (keep || (want !== null && value !== undefined)) { this.setValue(want); } else if (this.o.placeholder) { this.setValue(null); } else { const f = this.options.find((x) => !x.disabled); this.setValue(f ? f.value : null); }
+        if (this.pop.isOpen()) { this.filter(false); }
+      }
+      setDisabled(off) {
+        this.o.disabled = !!off;
+        this.control.setAttribute('aria-disabled', off ? 'true' : 'false');
+        this.control.setAttribute('tabindex', off ? '-1' : '0');
+        this.host.classList.toggle('di-disabled', !!off);
+        if (off) { this.close(); }
+      }
+      focus() { this.control.focus(); }
+    }
+    return { "Select": Select };
+  })();
   /* ---- src/drishti_inputs-element.js ---- */
   __m["src/drishti_inputs-element.js"] = (function () {
     var DatePicker = __m["src/drishti_date-picker.js"].DatePicker;
@@ -2372,20 +2533,21 @@
     var TreePicker = __m["src/drishti_tree-picker.js"].TreePicker;
     var MultiSelect = __m["src/drishti_multiselect.js"].MultiSelect;
     var Combobox = __m["src/drishti_combobox.js"].Combobox;
+    var Select = __m["src/drishti_select.js"].Select;
     var Form = __m["src/drishti_form.js"].Form;
     var FilterBar = __m["src/drishti_filter-bar.js"].FilterBar;
     var CodeEditor = __m["src/drishti_code-editor.js"].CodeEditor, CodeDiff = __m["src/drishti_code-editor.js"].CodeDiff;
     const INPUT_ELEMENTS = Object.freeze({
       'drishti-date': DatePicker, 'drishti-date-range': DateRangePicker, 'drishti-tree-picker': TreePicker, 'drishti-multiselect': MultiSelect,
-      'drishti-combobox': Combobox, 'drishti-form': Form, 'drishti-filter-bar': FilterBar, 'drishti-code': CodeEditor, 'drishti-code-diff': CodeDiff
+      'drishti-combobox': Combobox, 'drishti-select': Select, 'drishti-form': Form, 'drishti-filter-bar': FilterBar, 'drishti-code': CodeEditor, 'drishti-code-diff': CodeDiff
     });
-    const ATTRS = ['label', 'calendar', 'mode', 'value', 'readonly', 'as-of', 'placeholder'];
+    const ATTRS = ['label', 'calendar', 'mode', 'value', 'readonly', 'as-of', 'placeholder', 'name', 'disabled'];
     function fromAttributes(el) {
       const o = {};
       ATTRS.forEach((a) => {
         if (!el.hasAttribute(a)) { return; }
         const v = el.getAttribute(a), key = a === 'readonly' ? 'readOnly' : a === 'as-of' ? 'asOf' : a;
-        o[key] = a === 'readonly' ? true : v;
+        o[key] = a === 'readonly' || a === 'disabled' ? true : v;
       });
       if (el.hasAttribute('options-json')) { Object.assign(o, JSON.parse(el.getAttribute('options-json'))); }
       return o;
@@ -2395,7 +2557,7 @@
         if (registry.get(name)) { return; }
         const Cls = INPUT_ELEMENTS[name];
         registry.define(name, class extends win.HTMLElement {
-          connectedCallback() { if (!this.component && (this.attributes.length > 1 || this.hasAttribute('options-json') || Cls === DatePicker || Cls === CodeEditor)) { this.make(fromAttributes(this)); } }
+          connectedCallback() { if (!this.component && (this.attributes.length > 1 || this.hasAttribute('options-json') || Cls === DatePicker || Cls === CodeEditor || Cls === Select)) { this.make(fromAttributes(this)); } }
           make(o) { if (this.component) { this.component.destroy(); } this.component = new Cls(this, o); }
           set options(o) { this.make(Object.assign(fromAttributes(this), o)); }
           get options() { return this.component ? this.component.o : null; }
@@ -2538,7 +2700,7 @@
       if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', go); } else { go(); }
       if (root.MutationObserver) { new root.MutationObserver(() => { if (doc.querySelector('textarea[data-di-code]:not([data-di-code-upgraded])')) { go(); } }).observe(doc.documentElement, { childList: true, subtree: true }); }
     }
-    return { "install": install, "CALENDAR_RULES": __m["src/drishti_calendar.js"].CALENDAR_RULES, "easterSunday": __m["src/drishti_calendar.js"].easterSunday, "ruleDate": __m["src/drishti_calendar.js"].ruleDate, "HolidayCalendar": __m["src/drishti_calendar.js"].HolidayCalendar, "defineCalendar": __m["src/drishti_calendar.js"].defineCalendar, "calendar": __m["src/drishti_calendar.js"].calendar, "DATE_PRESETS": __m["src/drishti_calendar.js"].DATE_PRESETS, "resolvePreset": __m["src/drishti_calendar.js"].resolvePreset, "parseDateInput": __m["src/drishti_calendar.js"].parseDateInput, "monthGrid": __m["src/drishti_calendar.js"].monthGrid, "shiftDate": __m["src/drishti_calendar.js"].shiftDate, "uid": __m["src/drishti_inputs-dom.js"].uid, "debounce": __m["src/drishti_inputs-dom.js"].debounce, "InputBase": __m["src/drishti_inputs-dom.js"].InputBase, "Popover": __m["src/drishti_inputs-dom.js"].Popover, "Listbox": __m["src/drishti_inputs-dom.js"].Listbox, "normalizeOptions": __m["src/drishti_inputs-dom.js"].normalizeOptions, "searchOptions": __m["src/drishti_inputs-dom.js"].searchOptions, "CalendarView": __m["src/drishti_date-picker.js"].CalendarView, "DatePicker": __m["src/drishti_date-picker.js"].DatePicker, "DateRangePicker": __m["src/drishti_date-range.js"].DateRangePicker, "TreeModel": __m["src/drishti_tree.js"].TreeModel, "TreePicker": __m["src/drishti_tree-picker.js"].TreePicker, "MultiSelect": __m["src/drishti_multiselect.js"].MultiSelect, "TypeAhead": __m["src/drishti_combobox.js"].TypeAhead, "Combobox": __m["src/drishti_combobox.js"].Combobox, "words": __m["src/drishti_schema.js"].words, "pathParts": __m["src/drishti_schema.js"].pathParts, "getPath": __m["src/drishti_schema.js"].getPath, "setPath": __m["src/drishti_schema.js"].setPath, "conditionHolds": __m["src/drishti_schema.js"].conditionHolds, "fieldsOf": __m["src/drishti_schema.js"].fieldsOf, "defaults": __m["src/drishti_schema.js"].defaults, "fieldProblem": __m["src/drishti_schema.js"].fieldProblem, "validate": __m["src/drishti_schema.js"].validate, "visibleValue": __m["src/drishti_schema.js"].visibleValue, "changes": __m["src/drishti_schema.js"].changes, "parseField": __m["src/drishti_schema.js"].parseField, "Form": __m["src/drishti_form.js"].Form, "FilterModelBar": __m["src/drishti_filter-bar.js"].FilterModelBar, "FilterBar": __m["src/drishti_filter-bar.js"].FilterBar, "upgradeDateInput": __m["src/drishti_native.js"].upgradeDateInput, "upgradeCheckboxes": __m["src/drishti_native.js"].upgradeCheckboxes, "upgradeFields": __m["src/drishti_native.js"].upgradeFields, "rachanaMode": __m["src/drishti_code-modes.js"].rachanaMode, "yamlMode": __m["src/drishti_code-modes.js"].yamlMode, "MODES": __m["src/drishti_code-modes.js"].MODES, "defineModes": __m["src/drishti_code-modes.js"].defineModes, "MiniStream": __m["src/drishti_code-modes.js"].MiniStream, "tokens": __m["src/drishti_code-modes.js"].tokens, "wordAt": __m["src/drishti_code-text.js"].wordAt, "completions": __m["src/drishti_code-text.js"].completions, "insertText": __m["src/drishti_code-text.js"].insertText, "lineDiff": __m["src/drishti_code-text.js"].lineDiff, "sideBySide": __m["src/drishti_code-text.js"].sideBySide, "diffStats": __m["src/drishti_code-text.js"].diffStats, "ensureCodeMirror": __m["src/drishti_code-editor.js"].ensureCodeMirror, "yamlIndentAfter": __m["src/drishti_code-editor.js"].yamlIndentAfter, "CodeEditor": __m["src/drishti_code-editor.js"].CodeEditor, "CodeDiff": __m["src/drishti_code-editor.js"].CodeDiff, "upgradeCodeArea": __m["src/drishti_code-upgrade.js"].upgradeCodeArea, "upgradeCodeAreas": __m["src/drishti_code-upgrade.js"].upgradeCodeAreas, "INPUT_ELEMENTS": __m["src/drishti_inputs-element.js"].INPUT_ELEMENTS, "defineInputElements": __m["src/drishti_inputs-element.js"].defineInputElements };
+    return { "install": install, "CALENDAR_RULES": __m["src/drishti_calendar.js"].CALENDAR_RULES, "easterSunday": __m["src/drishti_calendar.js"].easterSunday, "ruleDate": __m["src/drishti_calendar.js"].ruleDate, "HolidayCalendar": __m["src/drishti_calendar.js"].HolidayCalendar, "defineCalendar": __m["src/drishti_calendar.js"].defineCalendar, "calendar": __m["src/drishti_calendar.js"].calendar, "DATE_PRESETS": __m["src/drishti_calendar.js"].DATE_PRESETS, "resolvePreset": __m["src/drishti_calendar.js"].resolvePreset, "parseDateInput": __m["src/drishti_calendar.js"].parseDateInput, "monthGrid": __m["src/drishti_calendar.js"].monthGrid, "shiftDate": __m["src/drishti_calendar.js"].shiftDate, "uid": __m["src/drishti_inputs-dom.js"].uid, "debounce": __m["src/drishti_inputs-dom.js"].debounce, "InputBase": __m["src/drishti_inputs-dom.js"].InputBase, "Popover": __m["src/drishti_inputs-dom.js"].Popover, "Listbox": __m["src/drishti_inputs-dom.js"].Listbox, "normalizeOptions": __m["src/drishti_inputs-dom.js"].normalizeOptions, "searchOptions": __m["src/drishti_inputs-dom.js"].searchOptions, "CalendarView": __m["src/drishti_date-picker.js"].CalendarView, "DatePicker": __m["src/drishti_date-picker.js"].DatePicker, "DateRangePicker": __m["src/drishti_date-range.js"].DateRangePicker, "TreeModel": __m["src/drishti_tree.js"].TreeModel, "TreePicker": __m["src/drishti_tree-picker.js"].TreePicker, "MultiSelect": __m["src/drishti_multiselect.js"].MultiSelect, "TypeAhead": __m["src/drishti_combobox.js"].TypeAhead, "Combobox": __m["src/drishti_combobox.js"].Combobox, "Select": __m["src/drishti_select.js"].Select, "words": __m["src/drishti_schema.js"].words, "pathParts": __m["src/drishti_schema.js"].pathParts, "getPath": __m["src/drishti_schema.js"].getPath, "setPath": __m["src/drishti_schema.js"].setPath, "conditionHolds": __m["src/drishti_schema.js"].conditionHolds, "fieldsOf": __m["src/drishti_schema.js"].fieldsOf, "defaults": __m["src/drishti_schema.js"].defaults, "fieldProblem": __m["src/drishti_schema.js"].fieldProblem, "validate": __m["src/drishti_schema.js"].validate, "visibleValue": __m["src/drishti_schema.js"].visibleValue, "changes": __m["src/drishti_schema.js"].changes, "parseField": __m["src/drishti_schema.js"].parseField, "Form": __m["src/drishti_form.js"].Form, "FilterModelBar": __m["src/drishti_filter-bar.js"].FilterModelBar, "FilterBar": __m["src/drishti_filter-bar.js"].FilterBar, "upgradeDateInput": __m["src/drishti_native.js"].upgradeDateInput, "upgradeCheckboxes": __m["src/drishti_native.js"].upgradeCheckboxes, "upgradeFields": __m["src/drishti_native.js"].upgradeFields, "rachanaMode": __m["src/drishti_code-modes.js"].rachanaMode, "yamlMode": __m["src/drishti_code-modes.js"].yamlMode, "MODES": __m["src/drishti_code-modes.js"].MODES, "defineModes": __m["src/drishti_code-modes.js"].defineModes, "MiniStream": __m["src/drishti_code-modes.js"].MiniStream, "tokens": __m["src/drishti_code-modes.js"].tokens, "wordAt": __m["src/drishti_code-text.js"].wordAt, "completions": __m["src/drishti_code-text.js"].completions, "insertText": __m["src/drishti_code-text.js"].insertText, "lineDiff": __m["src/drishti_code-text.js"].lineDiff, "sideBySide": __m["src/drishti_code-text.js"].sideBySide, "diffStats": __m["src/drishti_code-text.js"].diffStats, "ensureCodeMirror": __m["src/drishti_code-editor.js"].ensureCodeMirror, "yamlIndentAfter": __m["src/drishti_code-editor.js"].yamlIndentAfter, "CodeEditor": __m["src/drishti_code-editor.js"].CodeEditor, "CodeDiff": __m["src/drishti_code-editor.js"].CodeDiff, "upgradeCodeArea": __m["src/drishti_code-upgrade.js"].upgradeCodeArea, "upgradeCodeAreas": __m["src/drishti_code-upgrade.js"].upgradeCodeAreas, "INPUT_ELEMENTS": __m["src/drishti_inputs-element.js"].INPUT_ELEMENTS, "defineInputElements": __m["src/drishti_inputs-element.js"].defineInputElements };
   })();
   return Object.freeze(Object.assign({ library: "drishti-inputs", version: "0.2.0" }, __m["src/drishti_index.js"]));
 });

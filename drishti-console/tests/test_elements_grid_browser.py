@@ -521,4 +521,18 @@ def test_the_ag_grid_adapter_draws_a_pivot_from_ag_shaped_options_only(browsers)
             assert "Organisation" in await pg.text_content(".dg-hcell >> nth=0")
             assert await pg.get_attribute(".dg-scroll", "role") == "treegrid"
             assert pg.errors == [] and await pg.evaluate("window.__csp") == []
+            # tree data on server-side rows: the top level, then each node's level asked when it opens, groupKeys its path
+            await pg.goto(ORIGIN + AG_PAGE + "?mode=server-tree")
+            await pg.wait_for_function(AG_READY)
+            assert await pg.get_attribute(".dg-scroll", "role") == "treegrid"
+            assert [r["groupKeys"] for r in await pg.evaluate("window.__ag.requests")] == [[]]
+            assert await pg.get_attribute(".dg-row >> nth=0", "aria-level") == "1" and await pg.get_attribute(".dg-row >> nth=0", "aria-expanded") == "false"
+            await pg.click(".dg-row .dg-tw >> nth=0")
+            await pg.wait_for_function("() => window.__ag.requests.some((r) => r.groupKeys.length === 1) && !document.querySelector('.dg-loading')")
+            assert await pg.get_attribute(".dg-row >> nth=0", "aria-expanded") == "true"
+            assert await pg.get_attribute(".dg-row >> nth=1", "aria-level") == "2"
+            assert "Rates" in await pg.text_content(".dg-row >> nth=1")
+            assert [r["groupKeys"] for r in await pg.evaluate("window.__ag.requests")][1] == ["Bank"]
+            assert not any(r["option"].startswith("isServerSideGroup") or "treeData" in r["option"] for r in await pg.evaluate("() => window.__ag.api.reportUnsupported()"))
+            assert pg.errors == [] and await pg.evaluate("window.__csp") == []
     browsers.run(go(), timeout=120)

@@ -122,6 +122,18 @@ def test_a_visual_returns_an_option_without_formatters_and_vega_lite_loads_nothi
     assert v["ok"] is False and v["kind"] == "sandbox" and "URL" in v["error"]
 
 
+def test_a_visual_returns_a_drishti_chart_spec_with_its_rows_inline(w):
+    a, _ = w.item("visual", "def render(table, params):\n    rows = table.groupby('desk', as_index=False)['pnl1d'].sum().to_dict('records')\n"
+                  "    return {'kind': 'bar', 'data': {'rows': rows}, 'x': {'field': 'desk'}, 'y': {'field': 'pnl1d'}, 'tooltip': {'formatter': 'x'}}\n",
+                  output="drishti-chart")
+    assert a["ok"] and a["kind"] == "drishti-chart" and a["spec"]["kind"] == "bar" and a["spec"]["data"]["rows"] == [{"desk": "A", "pnl1d": 3.0}, {"desk": "B", "pnl1d": 5.0}]
+    assert "formatter" not in a["spec"]["tooltip"]
+    no_kind, _ = w.item("visual", "def render(table, params):\n    return {'data': {'rows': []}}\n", output="drishti-chart")
+    assert no_kind["ok"] is False and "names its kind" in no_kind["error"]
+    src, _ = w.item("visual", "def render(table, params):\n    return {'kind': 'bar', 'data': {'source': '/api/x'}}\n", output="drishti-chart")
+    assert src["ok"] is False and src["kind"] == "sandbox" and "data.rows" in src["error"]
+
+
 def test_a_column_and_a_cell(w):
     c, _ = w.item("column", "def derive(rows, params):\n    return rows['pnl1d'] * 2\n", inputs=["pnl1d"])
     assert c["kind"] == "column" and c["type"] == "decimal" and c["values"] == [2.0, 4.0, 10.0]

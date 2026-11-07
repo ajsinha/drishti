@@ -248,6 +248,6 @@ test('code: the Rachana and YAML modes, completion from a catalogue, the text pu
 test('the bundle: drishti-inputs is a CommonJS module under Node, registered beside drishti-core, with every name', () => {
   const B = require('../../web/static/elements/drishti-inputs/drishti_inputs.js');
   assert.equal(B.library, 'drishti-inputs');
-  ['DatePicker', 'DateRangePicker', 'TreePicker', 'MultiSelect', 'Combobox', 'Form', 'FilterBar', 'CodeEditor', 'CodeDiff', 'HolidayCalendar', 'TypeAhead', 'defineInputElements', 'upgradeDateInput', 'upgradeCheckboxes', 'upgradeFields'].forEach((n) => assert.equal(typeof B[n], 'function', n));
+  ['DatePicker', 'DateRangePicker', 'TreePicker', 'MultiSelect', 'Combobox', 'Select', 'Form', 'FilterBar', 'CodeEditor', 'CodeDiff', 'HolidayCalendar', 'TypeAhead', 'defineInputElements', 'upgradeDateInput', 'upgradeCheckboxes', 'upgradeFields'].forEach((n) => assert.equal(typeof B[n], 'function', n));
   assert.equal(B.calendar('US').tMinus('2026-11-27', 1), '2026-11-25');
 });

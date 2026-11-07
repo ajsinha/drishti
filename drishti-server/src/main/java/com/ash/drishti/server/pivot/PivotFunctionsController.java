@@ -19,7 +19,6 @@ import com.ash.drishti.bicompute.core.PivotCore;
 import com.ash.drishti.bicompute.core.PivotView;
 import com.ash.drishti.bicompute.custom.CustomFunctions;
 import com.ash.drishti.bicompute.custom.FunctionDef;
-import com.ash.drishti.bicompute.explain.Explain;
 import com.ash.drishti.bicompute.harness.FunctionCheck;
 import com.ash.drishti.bicompute.harness.Playground;
 import com.ash.drishti.bicompute.spi.Batch;
@@ -29,10 +28,14 @@ import com.ash.drishti.bicompute.whatif.WhatIf;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
+import com.ash.drishti.server.explain.ExplainRequest;
+import com.ash.drishti.server.explain.NumberExplainService;
 import com.ash.drishti.server.security.Principal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -58,13 +61,16 @@ public class PivotFunctionsController {
     private final CustomFunctions functions;
     private final AuditLog audit;
     private final PivotViewVersions versions;
+    private final ObjectProvider<NumberExplainService> explain;
 
-    public PivotFunctionsController(PivotController pivot, PivotCore core, CustomFunctions functions, AuditLog audit, PivotViewVersions versions) {
+    public PivotFunctionsController(PivotController pivot, PivotCore core, CustomFunctions functions, AuditLog audit, PivotViewVersions versions,
+            ObjectProvider<NumberExplainService> explain) {
         this.pivot = pivot;
         this.core = core;
         this.functions = functions;
         this.audit = audit;
         this.versions = versions;
+        this.explain = explain;
     }
 
     // ---- view versions --------------------------------------------------------------------------------------------------------------
@@ -209,20 +215,26 @@ public class PivotFunctionsController {
     // ---- explain and what-if --------------------------------------------------------------------------------------------------------
 
     /**
-     * {@code {view, measure, from: {DIM: value}, fromDate, to: {DIM: value}, toDate, by, order, price, quantity}}: the difference in steps
-     * that add up (two cells, or one cell on two dates).
+     * DEPRECATED, kept for one release: the one Explain is {@code POST /api/v1/explain {kind: pivot, measure: cell, value, view, from, to,
+     * fromDate, toDate, by, order, price, quantity}} (PivotCellExplainer). This alias asks it (the old body's {@code measure} is the
+     * value's label) and answers the engine's own answer ({@code why.answer}: words, method, steps, residual, difference) as before, with
+     * the headers {@code Deprecation: true} and a {@code Link} to its successor.
      */
     @PostMapping("/explain")
-    public Map<String, Object> explain(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestBody Map<String, Object> body) {
-        Viewer v = pivot.on(p);
-        PivotView view = pivot.view(p, body);
-        Explain.Request r = new Explain.Request(view, str(body, "measure"), coords(body.get("from")), str(body, "fromDate"),
-                body.get("to") == null ? null : coords(body.get("to")), str(body, "toDate"), str(body, "by"), str(body, "order"), str(body, "price"),
-                str(body, "quantity"));
-        Map<String, Object> out = Explain.explain(core, v, r);
-        audit.record(p.user(), "pivot.explain", view.source(), "from=" + r.from() + "@" + r.fromDate() + "; to=" + r.to() + "@" + r.toDate()
-                + "; by=" + r.by());
-        return out;
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<Map<String, Object>> explainAlias(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestBody Map<String, Object> body) {
+        Map<String, Object> args = new LinkedHashMap<>(body == null ? Map.of() : body);
+        args.remove("kind");
+        args.remove("part");
+        Object value = args.remove("measure");
+        if (value != null && !args.containsKey("value")) {
+            args.put("value", value);
+        }
+        Map<String, Object> x = explain.getObject().explain(p, new ExplainRequest("pivot", "cell", "why", args));
+        Map<String, Object> why = (Map<String, Object>) x.get("why");
+        Map<String, Object> answer = why == null ? null : (Map<String, Object>) why.get("answer");
+        return ResponseEntity.ok().header("Deprecation", "true").header("Link", "</api/v1/explain>; rel=\"successor-version\"")
+                .body(answer == null ? x : answer);
     }
 
     /** {@code {view, whatIf: {exclude, changes, add}}}: the view with the overlay beside the original, cell by cell. Never written anywhere. */
@@ -234,14 +246,6 @@ public class PivotFunctionsController {
         Map<String, Object> out = WhatIf.run(core, v, view, o);
         audit.record(p.user(), "pivot.whatif", view.source(), "overlay=" + o.signature() + "; excluded=" + o.exclude().keySet() + "; changes="
                 + o.changes().size() + "; added=" + o.add().size());
-        return out;
-    }
-
-    private static Map<String, String> coords(Object o) {
-        Map<String, String> out = new LinkedHashMap<>();
-        if (o instanceof Map<?, ?> m) {
-            m.forEach((k, x) -> out.put(String.valueOf(k), String.valueOf(x)));
-        }
         return out;
     }
 }

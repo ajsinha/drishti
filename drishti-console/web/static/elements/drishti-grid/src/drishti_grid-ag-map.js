@@ -52,7 +52,7 @@ export const AG_MAPPING = Object.freeze([
   row('`refreshServerSide({ route, purge })`, `purge`', 'mapped', '`ServerRowModel.refresh({keys, purge})`; a server pivot is asked again'),
   row('`rowModelType: \'infinite\'` with `datasource.getRows`', 'partial', 'the server-side row model without groups'),
   row('`treeData`, `getDataPath`', 'mapped', '`treeData`, `getDataPath` (client-side rows)'),
-  row('`isServerSideGroup`, `getServerSideGroupKey` (server-side tree data)', 'unsupported', 'tree data on client-side rows; server-side tree data is not built yet'),
+  row('`treeData` with `rowModelType: \'serverSide\'`, `isServerSideGroup`, `getServerSideGroupKey` (server-side tree data)', 'mapped', 'tree data on the server-side row model: each node\'s level asked when it opens, `groupKeys` its path'),
   row('`rowData`, `getRowId`, `rowSelection` (`singleRow`, `multiRow`, `single`, `multiple`, `checkboxes`), `quickFilterText`', 'mapped', '`rows`, `getRowId`, `rowSelection` and `checkboxes`, the quick filter'),
   row('`rowHeight`', 'partial', 'the nearest density: up to 24 px terminal, up to 31 px compact, else comfortable'),
   row('`domLayout: \'autoHeight\'`', 'partial', 'the element\'s height follows the row count when drawn; give large data a fixed height'),
@@ -71,14 +71,14 @@ export const AG_MAPPING = Object.freeze([
 /** What version 1 leaves out, in words (ELEMENTS.md section 6, the migration guide). */
 export const AG_NOT_COVERED = 'integrated charts (use drishti-chart on a range), master-detail rows, sparkline cell renderers, row dragging between grids, ' +
   'AG Grid\'s theming API and CSS classes (Drishti\'s theme applies), the viewport row model, pagination, custom cell renderers, editors and ' +
-  'header components, server-side tree data.';
+  'header components.';
 
 /** Grid options the adapter takes (translated or carried): any other name is reported. */
 export const AG_GRID_OPTIONS = Object.freeze(['columnDefs', 'defaultColDef', 'columnTypes', 'rowData', 'getRowId', 'rowSelection', 'animateRows', 'domLayout',
   'pivotMode', 'groupDefaultExpanded', 'pivotDefaultExpanded', 'groupTotalRow', 'groupIncludeFooter', 'grandTotalRow', 'groupIncludeTotalFooter',
   'pivotRowTotals', 'pivotColumnGroupTotals', 'autoGroupColumnDef', 'groupDisplayType', 'suppressAggFuncInHeader', 'aggFuncs', 'sideBar',
   'rowGroupPanelShow', 'pivotPanelShow', 'rowModelType', 'serverSideDatasource', 'datasource', 'cacheBlockSize', 'serverSidePivotResultFieldSeparator',
-  'treeData', 'getDataPath', 'quickFilterText', 'context', 'rowHeight', 'enableCellChangeFlash', 'cellSelection', 'enableRangeSelection', 'statusBar',
+  'treeData', 'getDataPath', 'isServerSideGroup', 'getServerSideGroupKey', 'quickFilterText', 'context', 'rowHeight', 'enableCellChangeFlash', 'cellSelection', 'enableRangeSelection', 'statusBar',
   'suppressMenuHide', 'drishti']);
 
 /** Column definition keys the adapter takes. */
@@ -102,8 +102,6 @@ export const AG_UNSUPPORTED = Object.freeze({
   detailCellRendererParams: 'not covered in version 1',
   rowDragManaged: 'not covered in version 1',
   theme: 'Drishti\'s theme tokens (drishti_tokens.css) and densities',
-  isServerSideGroup: 'tree data on client-side rows (treeData, getDataPath); server-side tree data is not built yet',
-  getServerSideGroupKey: 'tree data on client-side rows (treeData, getDataPath); server-side tree data is not built yet',
   loadingOverlayComponent: 'drishti-grid\'s loading placeholders',
   noRowsOverlayComponent: 'drishti-grid\'s empty text',
   localeText: 'drishti-grid\'s words',

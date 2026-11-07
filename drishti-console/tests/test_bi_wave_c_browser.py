@@ -14,7 +14,7 @@
 
 """Wave C in Chromium over the real server and console (tests/bi_report_stack.py on ports 18948 and 17948, security on, a small file lake: two business days of 60 trades).
 
-* Vega-Lite: a `vega-lite` report visual and a Python visual that returns a Vega-Lite specification are drawn under the strict policy (no violation, no eval, no
+* Vega-Lite: a `vega-lite` report visual and a Python visual that returns a Vega-Lite specification are translated and drawn by drishti-chart under the strict policy (no violation, no eval, no
   WebAssembly), with a real canvas and the expression interpreter walking `datum.MTM < 0`.
 * Boards: a board of Python tiles runs them for the person looking.
 * The Notebook (nothing computes in the browser or the console): a SQL cell is Drishti SQL run by the server and refuses what is not one SELECT; a SQL cell is
@@ -110,22 +110,24 @@ INK = """(sel) => { const c = document.querySelector(sel); if (!c) return -1; co
   let n = 0; for (let i = 3; i < d.length; i += 4) { if (d[i] > 0) n++; } return n; }"""
 
 
-def test_vega_lite_is_drawn_under_the_strict_policy_by_the_interpreter(stack, browser):
+def test_vega_lite_is_translated_and_drawn_by_drishti_chart_under_the_strict_policy(stack, browser):
     page = sign_in(browser, "wes", "/bi/catalogue")
     resp = page.goto(CONSOLE_URL + "/bi/r/file:report:python-desk-risk/vega")
     csp = resp.headers["content-security-policy"]
     assert "unsafe-eval" not in csp and "wasm-unsafe-eval" not in csp and "unsafe-inline" not in csp
-    page.wait_for_selector('[data-visual="mtm-by-desk"] .bi-vega[data-ready="1"] canvas', timeout=60000)
+    page.wait_for_selector('[data-visual="mtm-by-desk"] [data-chart-from="vega-lite"][data-ready="1"] drishti-chart canvas', timeout=60000)
     page.wait_for_timeout(500)
-    assert page.evaluate(INK, '[data-visual="mtm-by-desk"] canvas') > 2000                      # bars were really drawn
-    assert page.evaluate("typeof window.vegaInterpreter") == "object" and page.evaluate("typeof window.vegaEmbed") == "function"
-    assert page.locator('[data-visual="mtm-by-desk"] [data-vega-error]').count() == 0
+    assert page.evaluate(INK, '[data-visual="mtm-by-desk"] drishti-chart canvas') > 2000                # bars were really drawn
+    built = page.evaluate("() => { const c = document.querySelector('[data-visual=\"mtm-by-desk\"] drishti-chart').chart; return {kind: c.spec.kind, from: c.spec.from, rows: c.rows.length}; }")
+    assert built["kind"] == "bar" and built["from"] == "vega-lite" and built["rows"] > 0
+    assert not page.evaluate("Object.keys(window).some((k) => /^vega/i.test(k))")                    # no Vega in the page
+    assert page.locator('[data-visual="mtm-by-desk"] .dc-refused').count() == 0
     quiet(page)
     assert page.errors == []
-    # the same page, a Python visual that returns a specification
+    # the same report, a Python visual that returns a specification
     page.goto(CONSOLE_URL + "/bi/r/file:report:python-desk-risk/risk")
-    page.wait_for_selector('[data-visual="strip"] .bi-vega[data-ready="1"] canvas', timeout=90000)
-    assert page.evaluate(INK, '[data-visual="strip"] canvas') > 1000
+    page.wait_for_selector('[data-visual="strip"] [data-chart-from="vega-lite"][data-ready="1"] drishti-chart canvas', timeout=90000)
+    assert page.evaluate(INK, '[data-visual="strip"] drishti-chart canvas') > 1000
     assert "Python" in page.locator('[data-visual="strip"] .bi-py-foot').inner_text() and "pnl-vega" in page.locator('[data-visual="strip"] .bi-py-foot').inner_text()
     quiet(page)
     clean(page)
@@ -150,8 +152,8 @@ def test_a_board_of_python_tiles_runs_them_for_the_person_looking(stack, browser
     page.goto(CONSOLE_URL + "/bi/r/file:report:python-wall")
     page.wait_for_function("() => document.querySelectorAll('[data-tile] .bi-py-foot').length === 3", timeout=120000)
     assert page.locator('[data-tile="vol"] .bi-py-chart').count() == 1 and page.locator('[data-tile="hist"] .bi-py-chart').count() == 1
-    page.wait_for_selector('[data-tile="strip"] .bi-vega[data-ready="1"] canvas', timeout=30000)                   # Vega-Lite draws after the footer shows: wait for its ready mark
-    assert page.locator('[data-tile="strip"] .bi-vega[data-ready="1"] canvas').count() == 1
+    page.wait_for_selector('[data-tile="strip"] [data-chart-from="vega-lite"][data-ready="1"] canvas', timeout=30000)   # drawn after the footer shows: wait for its ready mark
+    assert page.locator('[data-tile="strip"] [data-chart-from="vega-lite"][data-ready="1"] drishti-chart').count() == 1
     assert "desk-pnl-volatility" in page.locator('[data-tile="vol"] .bi-py-foot').inner_text()
     quiet(page)
     assert page.errors == []

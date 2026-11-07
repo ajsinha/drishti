@@ -537,6 +537,15 @@ public final class LakeFiles {
      * With {@code write}, each file is kept beside it first ({@code <name>.yaml.before-lake-<time>.bak}).
      */
     public static Migration adoptDemo(Path connectorsDir, Path lakesDir, boolean write) throws IOException {
+        return adoptDemo(connectorsDir, lakesDir, write, (before, after) -> after);
+    }
+
+    /**
+     * {@link #adoptDemo(Path, Path, boolean)}, each rewritten file's text passed through {@code restamp(before, after)} first: the server
+     * gives the pack templates' stamp ({@code TemplateStamp.keepPristine}), so a stamped file nobody edited is stamped again over its new
+     * text and still counts as unedited (it keeps following its pack's template at upgrades); an edited one stays edited.
+     */
+    public static Migration adoptDemo(Path connectorsDir, Path lakesDir, boolean write, java.util.function.BinaryOperator<String> restamp) throws IOException {
         Map<Path, String> lakeFiles = new LinkedHashMap<>();
         Map<Path, String> connectors = new LinkedHashMap<>();
         List<String> notes = new ArrayList<>();
@@ -572,7 +581,7 @@ public final class LakeFiles {
             ObjectNode rewritten = ((ObjectNode) c).deepCopy();
             if (plugin.equals("var-pv-stream") && demoRoot(flat.get(ConnectorLake.LAKE))) {
                 ((ObjectNode) rewritten.get("settings")).put(ConnectorLake.LAKE, "demo");
-                connectors.put(f, comments(f) + YAML.writeValueAsString(rewritten));
+                connectors.put(f, restamp.apply(Files.readString(f), comments(f) + YAML.writeValueAsString(rewritten)));
                 notes.add(f.getFileName() + ": writes into the demo lake by name now (lake: demo)");
                 continue;
             }
@@ -628,7 +637,7 @@ public final class LakeFiles {
                 }
             });
             rewritten.set("settings", ns);
-            connectors.put(f, comments(f) + YAML.writeValueAsString(rewritten));
+            connectors.put(f, restamp.apply(Files.readString(f), comments(f) + YAML.writeValueAsString(rewritten)));
             notes.add(f.getFileName() + ": reads the demo lake by name now (lake: demo, " + mine.size() + " tables), so it follows the lake's folder");
         }
         if (!added.isEmpty()) {                                    // a site's own connector read a table the file lacks: that entry only

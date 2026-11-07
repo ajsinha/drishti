@@ -56,7 +56,14 @@ SCOPES = ("dialog", "panel", "screen", "global")
 
 
 def _scripts():
-    return sorted(p for p in JS.rglob("*.js") if "vendor" not in p.parts)
+    """The console's scripts and the sources of the libraries that register keys on a page (drishti-insight: Explain and the search box)."""
+    insight = WEB / "static" / "elements" / "drishti-insight" / "src"
+    return sorted([p for p in JS.rglob("*.js") if "vendor" not in p.parts] + list(insight.glob("drishti_*.js")))
+
+
+def _rel(p):
+    """A script's name as the lists above write it: relative to static/js, a library's source by its own name."""
+    return p.relative_to(JS).as_posix() if JS in p.parents else p.name
 
 
 def _templates():
@@ -156,7 +163,7 @@ def registrations():
                 continue                                   # another register() (an editor's, a renderer's)
             rid, scope = _field(obj, "id"), _field(obj, "scope")
             area = "*" if scope == "global" else (_field(obj, "area") or "")
-            found.append((p.relative_to(JS).as_posix(), rid, _keys(obj), scope, area, m.group(1) == "describe"))
+            found.append((_rel(p), rid, _keys(obj), scope, area, m.group(1) == "describe"))
         if p.name == "drishti_history-page.js":            # its helper hx(id, keys, ...) registers screen keys in area 'history'
             for hm in re.finditer(r"""\bhx\(\s*'([^']+)'\s*,\s*\[""", src):
                 found.append((p.name, "history." + hm.group(1), _strings(_object_at(src, hm.end() - 1)), "screen", "history", False))
@@ -215,7 +222,7 @@ def test_no_stray_page_level_key_handlers():
             continue
         n = len(PAGE_LEVEL.findall(_strip_comments(p.read_text(encoding="utf-8"))))
         if n:
-            counts[p.relative_to(JS).as_posix()] = n
+            counts[_rel(p)] = n
     stray = {f: n for f, n in counts.items() if f not in ALLOWED}
     assert stray == {}, ("register page keys with Drishti.keys.register (drishti_keys.js), not on document/window: " + repr(stray))
     grown = {f: (n, ALLOWED[f][0]) for f, n in counts.items() if f in ALLOWED and n > ALLOWED[f][0]}
@@ -241,8 +248,8 @@ def test_widget_keys_are_described():
 
 def test_keymap_and_search_load_on_every_console_page():
     base = (WEB / "templates" / "base.html").read_text(encoding="utf-8")
-    keys_at, search_at = base.find("drishti_keys.js"), base.find("drishti_search-box.js")
-    assert 0 <= keys_at < search_at, "base.html loads drishti_keys.js, then drishti_search-box.js"
+    keys_at, search_at = base.find("drishti_keys.js"), base.find("drishti-insight/drishti_insight.js")
+    assert 0 <= keys_at < search_at, "base.html loads drishti_keys.js, then drishti-insight (the search box and Explain)"
     assert "drishti_keys.css" in base
 
 

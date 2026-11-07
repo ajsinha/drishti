@@ -83,3 +83,86 @@ test('transactions rebuild the tree; a path twice or none is refused in words', 
   assert.throws(() => model({ rows: ROWS().concat([{ id: 'x', path: ['BANK', 'FX', 'FXF-1'] }]) }), /two rows have the path BANK \/ FX \/ FXF-1/);
   assert.throws(() => G.createGridModel({ columns: COLS, rows: [], treeData: true }), /getDataPath/);
 });
+
+// ---- tree data on server-side rows ---------------------------------------------------------------------------------------------------
+const SROWS = () => [
+  { id: 'bank', path: ['BANK'], name: 'Bank', mtm: 61 },
+  { id: 'r', path: ['BANK', 'RATES'], name: 'Rates desk', mtm: 40 },
+  { id: 't1', path: ['BANK', 'RATES', 'IRS-1'], name: 'IRS-1', mtm: 10 },
+  { id: 't2', path: ['BANK', 'RATES', 'IRS-2'], name: 'IRS-2', mtm: 30 },
+  { id: 'fx', path: ['BANK', 'FX'], name: 'FX desk', mtm: 20 },
+  { id: 'f1', path: ['BANK', 'FX', 'FXF-1'], name: 'FXF-1', mtm: 20 }
+];
+const serverTree = (o) => {
+  const ds = G.memoryDatasource(SROWS(), { getDataPath: (r) => r.path });
+  const m = G.createGridModel(Object.assign({ columns: COLS, datasource: ds, treeData: true, isServerSideGroup: (r) => r.treeGroup, getServerSideGroupKey: (r) => r.treeKey }, o));
+  return { m: m, ds: ds };
+};
+const settle = async (m) => { for (let i = 0; i < 6; i++) { await m.rowModel.ensureRange(0, m.rowCount() + 5); } };
+
+test('server-side tree data: the top level first, each node\'s level asked when it opens with groupKeys = its path', async () => {
+  const { m, ds } = serverTree();
+  await settle(m);
+  assert.deepEqual(shown(m), ['BANK +']);
+  assert.deepEqual(ds.calls.map((q) => [q.treeData, q.groupKeys]), [[true, []]]);
+  assert.equal(m.cellText(0, 0), 'BANK');
+  assert.equal(m.cellValue(0, 1), 61);                                  // a node is a row: its figures are the server's
+  assert.equal(m.rowAt(0).id, 'bank');
+  m.toggleRow(0, true);
+  await settle(m);
+  assert.deepEqual(shown(m), ['BANK -', '  RATES +', '  FX +']);
+  assert.deepEqual(ds.calls.map((q) => q.groupKeys), [[], ['BANK']]);
+  m.toggleRow(1, true);
+  await settle(m);
+  assert.deepEqual(shown(m), ['BANK -', '  RATES -', '    IRS-1', '    IRS-2', '  FX +']);
+  assert.deepEqual(ds.calls[2].groupKeys, ['BANK', 'RATES']);
+  assert.equal(m.rowAt(2).kind, 'leaf');
+  assert.equal(m.rowAt(2).tree, true);
+  assert.equal(m.cellText(2, 0), 'IRS-1');
+  assert.equal(m.idAt(2), 't1');
+  assert.equal(m.rowModel.treeData, true);
+});
+
+test('server-side tree data: a closed node reopens from the cache; refresh asks a level again; a sort asks every open level again', async () => {
+  const { m, ds } = serverTree();
+  await settle(m);
+  m.toggleRow(0, true);
+  await settle(m);
+  m.toggleRow(1, true);
+  await settle(m);
+  const n = ds.calls.length;
+  m.toggleRow(1, false);
+  await settle(m);
+  assert.deepEqual(shown(m), ['BANK -', '  RATES +', '  FX +']);
+  m.toggleRow(1, true);
+  await settle(m);
+  assert.equal(ds.calls.length, n);                                     // reopened from the blocks held
+  assert.deepEqual(shown(m), ['BANK -', '  RATES -', '    IRS-1', '    IRS-2', '  FX +']);
+  m.rowModel.refresh({ keys: ['BANK', 'RATES'] });
+  await settle(m);
+  assert.deepEqual(ds.calls.slice(n).map((q) => q.groupKeys), [['BANK', 'RATES']]);
+  const before = ds.calls.length;
+  m.setSortModel([{ colId: 'mtm', sort: 'desc' }]);
+  await settle(m);
+  assert.deepEqual(shown(m), ['BANK -', '  RATES -', '    IRS-2', '    IRS-1', '  FX +']);
+  assert.deepEqual(ds.calls.slice(before).map((q) => q.groupKeys).sort(), [[], ['BANK'], ['BANK', 'RATES']]);
+  assert.ok(ds.calls.slice(before).every((q) => q.sortModel[0].colId === 'mtm'));
+});
+
+test('server-side tree data: nodes open by level as they load; expand all and collapse all; the callbacks are required', async () => {
+  const { m } = serverTree({ groupDefaultExpanded: -1 });
+  await settle(m);
+  assert.deepEqual(shown(m), ['BANK -', '  RATES -', '    IRS-1', '    IRS-2', '  FX -', '    FXF-1']);
+  m.toggleRow(1, false);
+  await settle(m);
+  assert.deepEqual(shown(m), ['BANK -', '  RATES +', '  FX -', '    FXF-1']);
+  m.rowModel.expandToLevel(0);
+  assert.deepEqual(shown(m), ['BANK +']);
+  m.rowModel.expandToLevel(99);
+  await settle(m);
+  assert.equal(m.rowCount(), 6);
+  const one = serverTree({ groupDefaultExpanded: 1 }).m;
+  await settle(one);
+  assert.deepEqual(shown(one), ['BANK -', '  RATES +', '  FX +']);
+  assert.throws(() => G.createGridModel({ columns: COLS, datasource: G.memoryDatasource([]), treeData: true }), /isServerSideGroup/);
+});
