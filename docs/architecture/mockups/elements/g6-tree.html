@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  Mock-up g6 of Drishti Elements: drishti-tree, the tree / hierarchy widget, three options in one page.
+  Self-contained: system fonts, SVG drawn inline, nothing from a CDN. Dark by default; the toggle (or #light) gives light;
+  #B or #C opens that option. The design: docs/architecture/ELEMENTS.md. Every name and figure is invented.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drishti Elements · g6 · the tree (options A, B, C)</title>
+<script>if(location.hash.indexOf('light')>=0)document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0b1220; --bg2:#0f1829; --panel:#131e33; --panel2:#18253f; --line:#24324f; --line2:#1c2943;
+  --ink:#e6ebf4; --muted:#93a0b8; --faint:#7d89a1; --amber:#e8a33a; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --bad:#ff6b6b; --s1:#6aa8ff; --s2:#e8a33a; --s3:#5fd39a; --s4:#c58cff; --s6:#4fd1d9;
+  --ok-t:rgba(95,211,154,.14); --bad-t:rgba(255,107,107,.15); --code:#0a101c; --cv:#0a1120;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f6f4ef; --bg2:#eeeae2; --panel:#ffffff; --panel2:#faf8f4; --line:#ddd6c9; --line2:#ebe6dc;
+  --ink:#172440; --muted:#55607a; --faint:#69728a; --amber:#985b0a; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --bad:#c42b2b; --s1:#1f5fc4; --s2:#b8700c; --s3:#1b8a57; --s4:#7a45c2; --s6:#0e8a92;
+  --ok-t:rgba(27,120,76,.10); --bad-t:rgba(196,43,43,.09); --code:#f3f0ea; --cv:#fbfaf7;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:13px}
+button,select,input{font:inherit;color:inherit}
+.top{display:flex;align-items:center;gap:12px;padding:9px 16px;border-bottom:1px solid var(--line);background:var(--bg2);position:sticky;top:0;z-index:40;flex-wrap:wrap}
+.brand{font-weight:700;letter-spacing:.14em;color:var(--amber)} .brand small{letter-spacing:.02em;color:var(--muted);font-weight:500;margin-left:8px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{background:transparent;border:0;padding:6px 11px;cursor:pointer;color:var(--muted);border-right:1px solid var(--line);white-space:nowrap}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--amber-t);color:var(--amber);font-weight:600}
+.seg.sm button{padding:3px 8px;font-size:12px}
+.sp{flex:1}
+.ghost{background:transparent;border:1px solid var(--line);border-radius:7px;padding:4px 10px;cursor:pointer;color:var(--muted);white-space:nowrap}
+.ghost:hover{color:var(--ink);border-color:var(--faint)}
+.ghost.on{background:var(--amber-t);border-color:var(--amber);color:var(--amber)}
+.ghost.pri{border-color:var(--amber);color:var(--amber)}
+.intro{padding:10px 16px 0;color:var(--muted);max-width:190ch;line-height:1.45}
+.intro b{color:var(--ink)}
+.stage{padding:10px 16px 16px}
+input.s,select.s{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:3px 7px}
+.shell{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel);display:flex;flex-direction:column}
+.tb{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--line);background:var(--panel2);flex-wrap:wrap}
+.tb .lbl{color:var(--faint);font-size:11.5px}
+.tb .div{width:1px;height:20px;background:var(--line)}
+.crumbs{display:flex;gap:4px;align-items:center;padding:6px 12px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted);flex-wrap:wrap}
+.crumbs a{cursor:pointer;color:var(--link)} .crumbs a:last-child{color:var(--ink);font-weight:600}
+.crumbs .sep{color:var(--faint)}
+.body{display:grid;min-height:0}
+.view{position:relative;overflow:hidden;background:var(--cv);min-width:0}
+.side{border-left:1px solid var(--line);background:var(--panel2);overflow:auto}
+h3.sec{margin:0;padding:10px 12px 5px;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);display:flex;gap:6px}
+h3.sec .r{margin-left:auto;text-transform:none;letter-spacing:0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;padding:4px 12px 8px;font-size:12px}
+.kv .k{color:var(--faint)} .kv .v{text-align:right;font-family:var(--mono);font-size:11.5px}
+.ttl{padding:10px 12px 2px;font-size:15px;font-weight:700}
+.sub{padding:0 12px 6px;color:var(--faint);font-size:11.5px}
+.acts{display:flex;flex-wrap:wrap;gap:5px;padding:4px 12px 10px}
+.acts .ghost{padding:3px 8px;font-size:12px}
+.explain{margin:4px 12px 10px;border:1px solid var(--amber);border-radius:8px;background:var(--amber-t);padding:8px 10px;font-size:12px;line-height:1.5}
+.explain h4{margin:0 0 4px;font-size:12px;color:var(--amber)}
+.explain ol{margin:4px 0 4px 18px;padding:0}
+.explain .f{font-family:var(--mono);font-size:11.5px}
+.explain .src{color:var(--faint);font-size:11px;margin-top:4px}
+.empty{padding:16px 12px;color:var(--faint);line-height:1.5}
+.dia{color:var(--amber);font-size:10px;margin-left:2px}
+.prop{margin:4px 12px 10px;border:1px dashed var(--link);border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.5}
+.prop h4{margin:0 0 4px;color:var(--link);font-size:12px}
+.prop li{margin:2px 0}
+.prop .who{color:var(--faint);font-size:11px}
+.status{display:flex;gap:16px;padding:5px 12px;border-top:1px solid var(--line);color:var(--faint);font-size:11.5px;background:var(--panel2);flex-wrap:wrap}
+.status b{color:var(--muted)} .status .warn{color:var(--amber)}
+.editbar{display:none;padding:6px 12px;background:rgba(127,178,255,.10);border-bottom:1px solid var(--link);color:var(--link);font-size:12px}
+.editing .editbar{display:block}
+/* A: org chart */
+svg text{font-family:var(--sans)}
+.box rect.b{fill:var(--panel);stroke:var(--line);stroke-width:1}
+.box:hover rect.b{stroke:var(--faint)}
+.box.sel rect.b{stroke:var(--amber);stroke-width:2}
+.box.hit rect.b{stroke:var(--link);stroke-width:2;stroke-dasharray:4 2}
+.box.moved rect.b{stroke:var(--link);stroke-dasharray:5 3;fill:rgba(127,178,255,.07)}
+.box.drop rect.b{fill:rgba(127,178,255,.18);stroke:var(--link);stroke-width:2}
+.box .nm{fill:var(--ink);font-size:12px;font-weight:600}
+.box .kd{fill:var(--faint);font-size:10px;letter-spacing:.06em}
+.box .mv{fill:var(--muted);font-size:11px;font-family:var(--mono)}
+.box .tg{cursor:pointer}
+.box .tg circle{fill:var(--panel2);stroke:var(--faint)}
+.box .tg text{fill:var(--ink);font-size:11px;text-anchor:middle}
+.lnk{fill:none;stroke:var(--line);stroke-width:1.4}
+.lnk.shared{stroke:var(--s4);stroke-dasharray:4 3}
+/* B: tree grid */
+table.g{border-collapse:separate;border-spacing:0;width:100%;font-variant-numeric:tabular-nums}
+.g th,.g td{padding:0 10px;height:27px;border-bottom:1px solid var(--line2);white-space:nowrap;background:var(--panel);text-align:left}
+.g th{background:var(--panel2);color:var(--muted);font-weight:600;font-size:12px;position:sticky;top:0;z-index:1}
+.g td.n,.g th.n{text-align:right}
+.g tr.sel td{background:var(--amber-t)}
+.g tr.hit td:first-child{box-shadow:inset 3px 0 var(--link)}
+.g tr.moved td{background:rgba(127,178,255,.08);font-style:italic}
+.g tr.drop td{background:rgba(127,178,255,.2)}
+.g tr:hover td{background-image:linear-gradient(var(--amber-t),var(--amber-t));cursor:pointer}
+.g tr.l0 td{font-weight:700} .g tr.l1 td:first-child{font-weight:600}
+.g .tw{display:inline-block;width:16px;color:var(--faint);cursor:pointer;text-align:center}
+.g .bar{display:inline-block;width:70px;height:7px;border-radius:4px;background:var(--line);vertical-align:middle;margin-right:6px;overflow:hidden}
+.g .bar i{display:block;height:100%}
+.g .dim{color:var(--faint)}
+.g .shared{color:var(--s4);font-size:11px;margin-left:6px}
+.g tr:focus{outline:1px solid var(--amber);outline-offset:-1px}
+body.compact .g th,body.compact .g td{height:22px;font-size:12px;padding:0 8px}
+body.terminal{font-family:var(--mono);font-size:12px} body.terminal .g th,body.terminal .g td{height:20px;padding:0 6px}
+body.terminal svg text{font-family:var(--mono)}
+/* C: sunburst */
+.arc{stroke:var(--cv);stroke-width:1;cursor:pointer}
+.arc:hover{opacity:.85}
+.arc.sel{stroke:var(--amber);stroke-width:2.5}
+.arc.hit{stroke:var(--link);stroke-width:2}
+.arcl{fill:#0b1220;font-size:10.5px;pointer-events:none;font-weight:600}
+.tip{position:absolute;pointer-events:none;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px;display:none;z-index:5;white-space:nowrap}
+.legend{padding:4px 12px 10px;font-size:11.5px;color:var(--muted)}
+.legend .grad{height:8px;border-radius:4px;margin:4px 0}
+.legend .ends{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:80;padding:8px 14px;border-radius:8px;background:var(--panel2);border:1px solid var(--amber);display:none}
+.legend2{padding:6px 16px 18px;color:var(--faint);font-size:12px;line-height:1.6;max-width:190ch}
+.legend2 b{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="top">
+  <span class="brand">DRISHTI<small>Elements · g6 · drishti-tree</small></span>
+  <div class="seg" id="opts"><button data-o="A" class="on">A · Org chart</button><button data-o="B">B · Tree grid with measures</button><button data-o="C">C · Sunburst / icicle</button></div>
+  <div class="seg sm" id="dsets"><button data-d="var" class="on">VaR hierarchy</button><button data-d="le">Legal entities</button><button data-d="lin">Lineage (DAG)</button></div>
+  <span class="sp"></span>
+  <button class="ghost" id="dense">Density: comfortable</button>
+  <button class="ghost" id="theme">Light / dark</button>
+</div>
+<div class="intro" id="intro"></div>
+<div class="stage" id="stage"></div>
+<div class="legend2"><b>Try:</b> click a node to select it and see its breadcrumbs and details · ▸/▾ (or ←/→ in B) collapse and expand · search marks the matches and opens their branches · <b>Explain</b> on any figure · VaR and ES carry <b>◆</b>: they are not additive, so a parent's figure is the server's, never the sum of its children (the gap is the diversification) · <b>Edit (propose)</b>: drag a node onto a new parent; the move becomes a proposal another person approves (four eyes); nothing changes until then · export PNG, SVG, CSV or JSON. The lineage variant is a DAG: a node with two parents is marked <b>⧉</b>. <b>All data is synthetic.</b></div>
+<div class="toast" id="toast"></div>
+<script>
+(function(){
+'use strict';
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function money(v){if(v==null||isNaN(v))return '–';var a=Math.abs(v),s=v<0?'−':'';if(a>=1e9)return s+(a/1e9).toFixed(2)+'bn';if(a>=1e6)return s+(a/1e6).toFixed(2)+'m';if(a>=1e3)return s+(a/1e3).toFixed(0)+'k';return s+a.toFixed(0);}
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function toast(t){var el=document.getElementById('toast');el.textContent=t;el.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(function(){el.style.display='none';},2000);}
+function download(name,blob){var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);}
+
+/* ================= data ================= */
+var RHO=0.35;
+function N(id,label,kind,m){return {id:id,label:label,kind:kind,m:m||{},kids:[],parents:[]};}
+function link(p,c){p.kids.push(c);c.parents.push(p);}
+function buildVar(){var r=rng(5),root=N('BANK','Northwind Bank (synthetic)','Bank'),all={};all[root.id]=root;
+  var D={'Global Markets':{Rates:['GOVT','SWAPS','INFL','XCCY','OPTS'],Credit:['IG','HY','CDX','ABS'],FX:['G10 SPOT','EM FWD','FX OPTS'],Equities:['CASH','INDEX OPTS','DELTA1','VOL ARB'],Commodities:['ENERGY','METALS','AGRI']},
+    'Treasury':{ALM:['BANKING BOOK','HQLA'],Funding:['TERM','SHORT'] ,'EM Macro':['LATAM','CEEMEA','ASIA']},'Corporate Banking':{'Loan Hedging':['CDS HEDGE','IR HEDGE'],'Client Solutions':['STRUCT','FX CLIENT']}};
+  Object.keys(D).forEach(function(dv,i){var d=N('DIV-'+(i+1),dv,'Division');link(root,d);all[d.id]=d;
+    Object.keys(D[dv]).forEach(function(dk,j){var k=N('DSK-'+(i+1)+(j+1),dk,'Desk');link(d,k);all[k.id]=k;
+      D[dv][dk].forEach(function(bk,l){var v=(0.25+r()*2.4)*1e6,b=N('BK-'+dk.slice(0,3).toUpperCase()+'-'+String(l+1).padStart(2,'0'),dk.slice(0,3).toUpperCase()+' '+bk,'Book',{var:v,es:v*(1.18+r()*0.14),positions:Math.round(80+r()*2400),notional:(0.4+r()*9)*1e9,pnl:(r()-0.45)*v*0.8});link(k,b);all[b.id]=b;});});});
+  aggVar(root);setLimits(root,r);return {root:root,all:all,name:'VaR hierarchy',measures:[['var','VaR 99% 1d',1],['es','ES 97.5%',1],['limit','Limit',0],['use','Limit use',0],['div','Diversification',0],['positions','Positions',0]],add:['positions','notional'],dag:false};}
+function aggVar(n){if(!n.kids.length)return;n.kids.forEach(aggVar);var s=0,s2=0,e=0,e2=0;n.kids.forEach(function(c){s+=c.m.var;s2+=c.m.var*c.m.var;e+=c.m.es;e2+=c.m.es*c.m.es;});
+  n.m.var=Math.sqrt((1-RHO)*s2+RHO*s*s);n.m.es=Math.sqrt((1-RHO)*e2+RHO*e*e);n.m.sumKids=s;n.m.div=s-n.m.var;
+  n.m.positions=n.kids.reduce(function(a,c){return a+c.m.positions;},0);n.m.notional=n.kids.reduce(function(a,c){return a+c.m.notional;},0);n.m.pnl=n.kids.reduce(function(a,c){return a+c.m.pnl;},0);}
+function setLimits(n,r){var f=n.kind==='Book'?1.15+r()*0.9:1.25+r()*0.6;if(n.id==='DSK-12')f=1.06;if(n.id==='BK-EQU-04'||n.id==='BK-COM-01')f=0.94;if(n.id==='DSK-11')f=1.08;n.m.limit=Math.ceil(n.m.var*f/1e5)*1e5;n.m.use=n.m.var/n.m.limit;n.kids.forEach(function(c){setLimits(c,r);});}
+function buildLE(){var r=rng(9),all={},root=N('LE-0001','Northwind Holdings plc','Ultimate parent',{own:100});all[root.id]=root;
+  var H=[['Northwind Bank NA','US',['Northwind Securities LLC','Northwind Leasing Corp','Northwind Trust Co']],['Northwind Europe SA','LU',['Northwind Bank Deutschland AG','Northwind Paris Branch','Northwind Markets BV']],['Northwind Asia Pte','SG',['Northwind Securities Japan KK','Northwind HK Ltd']],['Northwind Canada Ltd','CA',['Northwind Wealth Inc']],['Northwind Funding Ltd','IE',['NW Auto Funding 2023-1','NW Card Funding 2024-2','NW RMBS 2025-1']]],c=1;
+  H.forEach(function(h){var hn=N('LE-'+String(++c).padStart(4,'0'),h[0],'Holding',{own:h[0].indexOf('Canada')>=0?80:100,country:h[1]});link(root,hn);all[hn.id]=hn;
+    h[2].forEach(function(s){var o=N('LE-'+String(++c).padStart(4,'0'),s,s.indexOf('Branch')>=0?'Branch':s.indexOf('Funding')>=0||s.indexOf('RMBS')>=0?'SPV':'Operating',{own:s.indexOf('Japan')>=0?66:100,capital:(0.2+r()*4)*1e9,rwa:(2+r()*40)*1e9,country:h[1]});link(hn,o);all[o.id]=o;});});
+  (function agg(n){if(!n.kids.length)return;n.kids.forEach(agg);n.m.capital=n.kids.reduce(function(a,k){return a+(k.m.capital||0);},0)*1.08;n.m.rwa=n.kids.reduce(function(a,k){return a+(k.m.rwa||0);},0);})(root);
+  (function lt(n,p){n.m.look=p*n.m.own/100;n.kids.forEach(function(k){lt(k,n.m.look);});})(root,100);
+  return {root:root,all:all,name:'Legal entities',measures:[['own','Direct %',0],['look','Look-through %',0],['capital','Capital',0],['rwa','RWA',0]],add:['rwa','capital'],dag:false};}
+function buildLin(){var all={},root=N('LIN','Lineage of the VaR report','Root');all.LIN=root;
+  function n(id,l,k,m){var x=N(id,l,k,m||{});all[id]=x;return x;}
+  var s1=n('SRC-1','Trade feed (JSONL)','Source',{rows:2.3e6}),s2=n('SRC-2','Market data snapshot','Source',{rows:4.1e5}),s3=n('SRC-3','Scenario set 509d','Source',{rows:509}),s4=n('SRC-4','Reference data','Source',{rows:1.2e4});
+  [s1,s2,s3,s4].forEach(function(s){link(root,s);});
+  var t1=n('TBL-1','risk.trades','Table',{rows:2.3e6}),t2=n('TBL-2','market.curves','Table',{rows:3.8e5}),t3=n('TBL-3','risk.scenario-pv','Table',{rows:1.17e9}),t4=n('TBL-4','ref.hierarchy','Table',{rows:1.1e4});
+  link(s1,t1);link(s2,t2);link(s3,t3);link(t1,t3);link(t2,t3);link(s4,t4);
+  var m1=n('MDL-1','VaR model (historical)','Model',{rows:0}),m2=n('MDL-2','Exposure model','Model',{rows:0});link(t3,m1);link(t4,m1);link(t1,m2);link(t2,m2);link(t4,m2);
+  var r1=n('RPT-1','VaR explorer','Report'),r2=n('RPT-2','Daily risk board','Report'),r3=n('RPT-3','Regulatory VaR return','Report'),r4=n('RPT-4','Counterparty board','Report');
+  link(m1,r1);link(m1,r2);link(m1,r3);link(m2,r2);link(m2,r4);
+  return {root:root,all:all,name:'Lineage (DAG)',measures:[['rows','Rows',0]],add:['rows'],dag:true};}
+var DATA={var:buildVar(),le:buildLE(),lin:buildLin()};
+
+/* ================= state ================= */
+var S={opt:'A',ds:'var',open:{},sel:null,q:'',hits:{},explain:false,edit:false,props:[],dragId:null,focus:null,shape:'sunburst',angle:null,k:1,tx:0,ty:0,dens:0,flat:[]};
+function D(){return DATA[S.ds];}
+function resetOpen(){S.open={};var d=D();S.open[d.root.id]=1;d.root.kids.forEach(function(k){S.open[k.id]=1;});if(S.ds!=='var')Object.keys(d.all).forEach(function(id){S.open[id]=1;});S.sel=null;S.focus=d.root.id;S.angle=d.add[0];S.k=1;S.tx=0;S.ty=0;}
+function pathTo(id){var d=D(),n=d.all[id],p=[];while(n){p.unshift(n);n=n.parents[0];}return p;}
+function fmt(m,v){if(v==null)return '–';if(m==='use')return (v*100).toFixed(0)+'%';if(m==='own'||m==='look')return v.toFixed(1)+'%';if(m==='positions'||m==='rows')return Number(Math.round(v)).toLocaleString('en-US');return money(v);}
+function nonAdd(m){return m==='var'||m==='es';}
+function useCol(u){return u>=1?'var(--bad)':u>=0.9?'var(--amber)':u>=0.75?'var(--s2)':'var(--ok)';}
+function kindCol(k){return {Bank:'var(--s2)',Division:'var(--s1)',Desk:'var(--s3)',Book:'var(--s6)','Ultimate parent':'var(--s2)',Holding:'var(--s1)',Operating:'var(--s3)',Branch:'var(--s4)',SPV:'var(--s6)',Root:'var(--faint)',Source:'var(--s2)',Table:'var(--s1)',Model:'var(--s3)',Report:'var(--s4)'}[k]||'var(--muted)';}
+function search(q){S.q=q;S.hits={};if(!q)return;q=q.toLowerCase();var d=D(),cnt=0;Object.keys(d.all).forEach(function(id){var n=d.all[id];if(n.label.toLowerCase().indexOf(q)>=0||id.toLowerCase().indexOf(q)>=0){S.hits[id]=1;cnt++;n.parents.forEach(function rec(p){S.open[p.id]=1;p.parents.forEach(rec);});}});return cnt;}
+
+/* ================= Explain ================= */
+function explainHTML(n){var d=D(),m=n.m;
+  if(S.ds==='var'){if(!n.kids.length)return ex('VaR 99% 1d of '+n.label,['The book\'s scenario P&L vector: 509 historical scenarios, full revaluation of its '+fmt('positions',m.positions)+' positions','Sort the losses; the 99th percentile loss (between the 5th and 6th worst of 509) = <span class="f">'+money(m.var)+'</span>','ES 97.5%: the mean of the worst 2.5% (13 scenarios) = <span class="f">'+money(m.es)+'</span>','Limit <span class="f">'+money(m.limit)+'</span> · use <span class="f">'+fmt('use',m.use)+'</span>'],'var engine · risk.scenario-pv, business date 2026-11-06');
+    return ex('VaR 99% 1d of '+n.label+' ◆',['Add the scenario P&L vectors of everything below it ('+fmt('positions',m.positions)+' positions), scenario by scenario','The 99th percentile loss of that vector = <span class="f">'+money(m.var)+'</span>','The children\'s standalone VaRs sum to <span class="f">'+money(m.sumKids)+'</span>; that sum is <b>not</b> a VaR','Diversification = Σ children − VaR = <span class="f">'+money(m.div)+'</span> ('+(m.div/m.sumKids*100).toFixed(0)+'%)','Largest contributors: '+n.kids.slice().sort(function(a,b){return b.m.var-a.m.var;}).slice(0,3).map(function(k){return esc(k.label)+' '+money(k.m.var);}).join(', ')],'var engine · computed on the server, never summed in the browser');}
+  if(S.ds==='le')return ex('Ownership of '+n.label,pathTo(n.id).slice(1).map(function(p){return esc(p.label)+': direct <span class="f">'+p.m.own+'%</span>';}).concat(['Look-through = product of the chain = <span class="f">'+m.look.toFixed(1)+'%</span>',m.rwa?'RWA <span class="f">'+money(m.rwa)+'</span>'+(n.kids.length?' = Σ of '+n.kids.length+' entities (RWA adds within a consolidation)':''):'']).filter(Boolean),'legal-entity register (GLEIF-style, synthetic)');
+  return ex('Where '+n.label+' comes from',[n.kind+(m.rows?' · '+fmt('rows',m.rows)+' rows':''),'Inputs: '+(n.parents.filter(function(p){return p.kind!=='Root';}).map(function(p){return esc(p.label);}).join(', ')||'external'),'Feeds: '+(n.kids.map(function(k){return esc(k.label);}).join(', ')||'nothing (an end point)'),n.parents.length>1?'⧉ It has '+n.parents.length+' inputs: it appears once per input in the tree views':'One input'],'the data map · lineage from the load records and the model definitions');}
+function ex(t,steps,src){return '<div class="explain"><h4>Explain · '+esc(t)+'</h4><ol>'+steps.map(function(s){return '<li>'+s+'</li>';}).join('')+'</ol><div class="src">Source: '+esc(src)+' · drishti-insight</div></div>';}
+
+/* ================= side panel ================= */
+function sideHTML(){var d=D(),h='';
+  if(S.edit)h+=propHTML();
+  var n=S.sel&&d.all[S.sel];
+  if(!n)return h+'<div class="empty">Click a node to see its figures, its place in the tree and <b>Explain</b>.'+(S.ds==='var'?'<br><br>The desks near their limit are amber; over it, red. Try <b>Equities</b>.':'')+'</div>'+legendHTML();
+  h+='<div class="ttl">'+esc(n.label)+'</div><div class="sub">'+esc(n.kind)+' · '+esc(n.id)+(n.parents.length>1?' · ⧉ '+n.parents.length+' parents':'')+'</div><div class="kv">';
+  d.measures.forEach(function(mm){var v=n.m[mm[0]];if(v==null)return;h+='<span class="k">'+esc(mm[1])+(mm[2]?' <span class="dia">◆</span>':'')+'</span><span class="v">'+fmt(mm[0],v)+'</span>';});
+  if(n.m.sumKids)h+='<span class="k">Σ children (not a VaR)</span><span class="v" style="color:var(--faint)">'+money(n.m.sumKids)+'</span>';
+  h+='<span class="k">Children</span><span class="v">'+n.kids.length+'</span></div><div class="acts"><button class="ghost pri" data-act="explain">Explain</button>'+(n.kids.length?'<button class="ghost" data-act="toggle">'+(S.open[n.id]?'Collapse':'Expand')+'</button><button class="ghost" data-act="expandall">Expand all below</button>':'')+(S.opt==='C'&&n.kids.length?'<button class="ghost" data-act="zoomin">Zoom in</button>':'')+'</div>';
+  if(S.explain)h+=explainHTML(n);
+  if(S.edit&&n.parents.length&&S.opt==='C')h+='<h3 class="sec">Move to (proposal)</h3><div class="acts"><select class="s" data-ctl="moveto">'+'<option value="">a new parent…</option>'+Object.keys(d.all).map(function(id){var p=d.all[id];return p.kind===n.parents[0].kind&&p!==n.parents[0]?'<option value="'+id+'">'+esc(p.label)+'</option>':'';}).join('')+'</select></div>';
+  return h+legendHTML();}
+function legendHTML(){if(S.ds!=='var')return '';return '<h3 class="sec">Limit use</h3><div class="legend"><div style="display:flex;gap:10px;flex-wrap:wrap">'+[['< 75%','var(--ok)'],['75–90%','var(--s2)'],['90–100%','var(--amber)'],['≥ 100%','var(--bad)']].map(function(x){return '<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:'+x[1]+';margin-right:4px"></span>'+x[0]+'</span>';}).join('')+'</div><div style="margin-top:6px"><span class="dia">◆</span> not additive: the parent\'s figure comes from the server, never a sum.</div></div>';}
+function propHTML(){if(!S.props.length)return '<div class="prop"><h4>Edit mode: propose a change</h4>'+(S.opt==='C'?'Select a node and pick its new parent below.':'Drag a node onto its new parent.')+' Moves collect here as one proposal; another person approves it (four eyes) before anything changes.</div>';
+  var d=D();return '<div class="prop"><h4>Proposal P-0142 · '+S.props.length+' move'+(S.props.length>1?'s':'')+' · draft</h4><ol style="margin:4px 0 4px 18px;padding:0">'+S.props.map(function(p){return '<li>'+esc(d.all[p.id].label)+': '+esc(d.all[p.from].label)+' → <b>'+esc(d.all[p.to].label)+'</b></li>';}).join('')+'</ol>'+(S.ds==='var'?'<div>VaR after the moves (estimate; the server recomputes on approval): '+S.props.map(function(p){return esc(d.all[p.to].label)+' <span class="f" style="font-family:var(--mono)">'+money(d.all[p.to].m.var)+'</span>';}).join(', ')+'</div>':'')+'<div class="acts" style="padding:6px 0 0"><button class="ghost pri" data-act="submit">Submit for review</button><button class="ghost" data-act="undo">Undo last</button><button class="ghost" data-act="discard">Discard</button></div><div class="who">Proposer: A. Rao · approver: any Risk Hierarchy approver except the proposer · Impact: 3 Sutras, 2 reports, 1 limit set</div></div>';}
+function move(id,to){var d=D(),n=d.all[id],t=d.all[to];if(!n||!t||n===t||!n.parents.length)return;var p=n.parents[0];if(p===t)return;
+  var a=t;while(a){if(a===n){toast('A node cannot move under itself');return;}a=a.parents[0];}
+  p.kids.splice(p.kids.indexOf(n),1);n.parents[0]=t;t.kids.push(n);n.moved=true;S.props.push({id:id,from:p.id,to:to});S.open[to]=1;
+  if(S.ds==='var'){aggVar(d.root);(function u(x){x.m.use=x.m.var/x.m.limit;x.kids.forEach(u);})(d.root);}toast('Proposed: '+n.label+' → '+t.label);render();}
+function undo(){var d=D(),p=S.props.pop();if(!p)return;var n=d.all[p.id],t=d.all[p.to],f=d.all[p.from];t.kids.splice(t.kids.indexOf(n),1);n.parents[0]=f;f.kids.push(n);n.moved=S.props.some(function(q){return q.id===p.id;});if(S.ds==='var'){aggVar(d.root);(function u(x){x.m.use=x.m.var/x.m.limit;x.kids.forEach(u);})(d.root);}render();}
+
+/* ================= A: org chart (SVG) ================= */
+var BW=176,BH=74,GX=18,GY=46;
+function orgLayout(){var d=D(),pos={},leaf=0,edges=[],seen={};
+  if(d.dag){/* layered DAG: columns by layer */var layer={},cols={};(function L(n,l){layer[n.id]=Math.max(layer[n.id]||0,l);n.kids.forEach(function(k){L(k,l+1);});})(d.root,0);
+    Object.keys(d.all).forEach(function(id){if(id==='LIN')return;var l=layer[id];(cols[l]=cols[l]||[]).push(d.all[id]);});
+    Object.keys(cols).forEach(function(l){cols[l].forEach(function(n,i){pos[n.id]=[(l-1)*(BW+70),i*(BH+22)];});});
+    Object.keys(d.all).forEach(function(id){if(id==='LIN')return;d.all[id].kids.forEach(function(k){edges.push([id,k.id,d.all[k.id].parents.length>1]);});});
+    return {pos:pos,edges:edges,dag:true};}
+  function walk(n,dep){var k=S.open[n.id]?n.kids:[];if(!k.length){pos[n.id]=[leaf*(BW+GX),dep*(BH+GY)];leaf++;return pos[n.id][0];}
+    var xs=k.map(function(c){edges.push([n.id,c.id,false]);return walk(c,dep+1);});pos[n.id]=[(xs[0]+xs[xs.length-1])/2,dep*(BH+GY)];return pos[n.id][0];}
+  walk(d.root,0);return {pos:pos,edges:edges};}
+function boxSVG(n,p){var m=n.m,cls='box'+(S.sel===n.id?' sel':'')+(S.hits[n.id]?' hit':'')+(n.moved?' moved':''),x=p[0],y=p[1],h='<g class="'+cls+'" data-id="'+n.id+'" transform="translate('+x+','+y+')"><rect class="b" width="'+BW+'" height="'+BH+'" rx="7"/><rect width="4" height="'+BH+'" rx="2" fill="'+kindCol(n.kind)+'"/>';
+  h+='<text class="kd" x="12" y="15">'+esc(n.kind.toUpperCase())+(n.parents.length>1?' ⧉':'')+'</text><text class="nm" x="12" y="31">'+esc(n.label.length>22?n.label.slice(0,21)+'…':n.label)+'</text>';
+  if(S.ds==='var'){h+='<text class="mv" x="12" y="48">VaR '+money(m.var)+' ◆  ES '+money(m.es)+' ◆</text><rect x="12" y="56" width="'+(BW-60)+'" height="6" rx="3" fill="var(--line)"/><rect x="12" y="56" width="'+Math.min(1,m.use)*(BW-60)+'" height="6" rx="3" fill="'+useCol(m.use)+'"/><text class="mv" x="'+(BW-44)+'" y="63">'+fmt('use',m.use)+'</text>';}
+  else if(S.ds==='le')h+='<text class="mv" x="12" y="48">'+(m.country?m.country+' · ':'')+'own '+m.own+'% · LT '+m.look.toFixed(0)+'%</text>'+(m.rwa?'<text class="mv" x="12" y="63">RWA '+money(m.rwa)+'</text>':'');
+  else h+='<text class="mv" x="12" y="48">'+(m.rows?fmt('rows',m.rows)+' rows':'')+'</text>';
+  if(n.kids.length&&!D().dag)h+='<g class="tg" data-tg="'+n.id+'"><circle cx="'+(BW/2)+'" cy="'+BH+'" r="9"/><text x="'+(BW/2)+'" y="'+(BH+4)+'">'+(S.open[n.id]?'−':'+'+n.kids.length)+'</text></g>';
+  return h+'</g>';}
+function orgSVG(){var d=D(),L=orgLayout(),h='',mx=0,my=0;
+  L.edges.forEach(function(e){var a=L.pos[e[0]],b=L.pos[e[1]];if(!a||!b)return;
+    if(L.dag)h+='<path class="lnk'+(e[2]?' shared':'')+'" d="M'+(a[0]+BW)+','+(a[1]+BH/2)+' C'+(a[0]+BW+40)+','+(a[1]+BH/2)+' '+(b[0]-40)+','+(b[1]+BH/2)+' '+b[0]+','+(b[1]+BH/2)+'"/>';
+    else{var ym=a[1]+BH+GY/2;h+='<path class="lnk" d="M'+(a[0]+BW/2)+','+(a[1]+BH+9)+' V'+ym+' H'+(b[0]+BW/2)+' V'+b[1]+'"/>';}});
+  Object.keys(L.pos).forEach(function(id){var p=L.pos[id];mx=Math.max(mx,p[0]+BW);my=Math.max(my,p[1]+BH);h+=boxSVG(d.all[id],p);});
+  return {svg:h,w:mx+40,h:my+40};}
+
+/* ================= B: tree grid ================= */
+function flatten(){var d=D(),out=[];(function w(n,dep,via){out.push([n,dep,via]);if(S.open[n.id]||S.q&&n.kids.some(function(k){return S.hits[k.id];}))n.kids.forEach(function(k){w(k,dep+1,n);});})(d.root,0,null);S.flat=out;return out;}
+function gridHTML(){var d=D(),rows=flatten(),ms=d.measures.filter(function(m){return m[0]!=='use';}),h='<table class="g" role="treegrid" aria-label="'+esc(d.name)+'"><thead><tr><th style="min-width:330px">'+esc(d.name)+'</th>'+ms.map(function(m){return '<th class="n">'+esc(m[1])+(m[2]?' <span class="dia">◆</span>':'')+'</th>';}).join('')+(S.ds==='var'?'<th class="n" title="the children\'s standalone VaRs added up: not a VaR">Σ children</th><th>Limit use</th>':'')+'</tr></thead><tbody>';
+  rows.forEach(function(r,i){var n=r[0],dep=r[1],m=n.m,open=S.open[n.id];
+    h+='<tr tabindex="-1" role="row" aria-level="'+(dep+1)+'"'+(n.kids.length?' aria-expanded="'+!!open+'"':'')+' data-id="'+n.id+'" data-i="'+i+'" draggable="'+(S.edit&&dep>0)+'" class="l'+Math.min(dep,2)+(S.sel===n.id?' sel':'')+(S.hits[n.id]?' hit':'')+(n.moved?' moved':'')+'"><td style="padding-left:'+(10+dep*20)+'px"><span class="tw" data-tg="'+n.id+'">'+(n.kids.length?(open?'▾':'▸'):'')+'</span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+kindCol(n.kind)+';margin-right:7px"></span>'+esc(n.label)+(n.parents.length>1?'<span class="shared">⧉ also under '+esc(n.parents.filter(function(p){return p!==r[2];}).map(function(p){return p.label;}).join(', '))+'</span>':'')+(n.moved?' <span class="shared" style="color:var(--link)">proposed</span>':'')+'</td>';
+    ms.forEach(function(mm){var v=m[mm[0]];h+='<td class="n'+(mm[0]==='div'?' dim':'')+'">'+(mm[0]==='use'?'':fmt(mm[0],v))+(mm[0]==='use'&&v!=null?fmt('use',v):'')+'</td>';});
+    if(S.ds==='var')h+='<td class="n dim">'+(n.kids.length?money(m.sumKids):'')+'</td><td><span class="bar"><i style="width:'+Math.min(100,m.use*100)+'%;background:'+useCol(m.use)+'"></i></span>'+(m.use>=1?'<b style="color:var(--bad)">breach</b>':m.use>=.9?'<span style="color:var(--amber)">near</span>':'')+'</td>';
+    h+='</tr>';});
+  return h+'</tbody></table>';}
+
+/* ================= C: sunburst / icicle ================= */
+function partition(){var d=D(),f=d.all[S.focus]||d.root,m=S.angle,out=[];
+  function val(n){if(!n.kids.length)return Math.max(1e-9,n.m[m]||1);return n.kids.reduce(function(a,k){return a+val(k);},0);}
+  (function w(n,a0,a1,dep){out.push({n:n,a0:a0,a1:a1,d:dep});if(dep>=4)return;var tot=val(n),a=a0;n.kids.forEach(function(k){var s=(a1-a0)*val(k)/tot;w(k,a,a+s,dep+1);a+=s;});})(f,0,1,0);return out;}
+function arcPath(cx,cy,r0,r1,a0,a1){var A0=a0*2*Math.PI-Math.PI/2,A1=a1*2*Math.PI-Math.PI/2,la=a1-a0>0.5?1:0;if(a1-a0>=0.9999)A1-=0.0001;
+  function p(r,a){return (cx+r*Math.cos(a)).toFixed(1)+','+(cy+r*Math.sin(a)).toFixed(1);}
+  return r0===0?'M'+cx+','+cy+' L'+p(r1,A0)+' A'+r1+','+r1+' 0 '+la+' 1 '+p(r1,A1)+' Z':'M'+p(r0,A0)+' A'+r0+','+r0+' 0 '+la+' 1 '+p(r0,A1)+' L'+p(r1,A1)+' A'+r1+','+r1+' 0 '+la+' 0 '+p(r1,A0)+' Z';}
+function fillOf(n,d){if(S.ds==='var')return useCol(n.m.use);return kindCol(n.kind);}
+function sunSVG(W,H){var P=partition(),h='',cx=W/2,cy=H/2,R=Math.min(W,H)/2-12,ring=R/5;
+  P.forEach(function(p){if(p.a1-p.a0<0.0005)return;var r0=p.d===0?0:p.d*ring,r1=(p.d+1)*ring-1,cls='arc'+(S.sel===p.n.id?' sel':'')+(S.hits[p.n.id]?' hit':'');
+    h+='<path class="'+cls+'" data-id="'+p.n.id+'" d="'+arcPath(cx,cy,r0,r1,p.a0,p.a1)+'" fill="'+(p.d===0?'var(--panel2)':fillOf(p.n))+'" fill-opacity="'+(p.d===0?1:0.92-p.d*0.1)+'"'+(p.n.moved?' stroke-dasharray="4 3"':'')+'/>';
+    var mid=(p.a0+p.a1)/2*2*Math.PI-Math.PI/2,rr=p.d===0?0:(r0+r1)/2,arcLen=(p.a1-p.a0)*2*Math.PI*rr;
+    if(p.d===0)h+='<text class="arcl" x="'+cx+'" y="'+(cy-4)+'" text-anchor="middle" style="fill:var(--ink);font-size:11.5px">'+esc((function(t){t=t.replace(' (synthetic)','');return t.length>15?t.slice(0,14)+'…':t;})(p.n.label))+'</text><text x="'+cx+'" y="'+(cy+12)+'" text-anchor="middle" style="fill:var(--muted);font-size:11px;font-family:var(--mono)">'+(S.ds==='var'?'VaR '+money(p.n.m.var)+' ◆':fmt(S.angle,sumAdd(p.n)))+'</text>';
+    else if(arcLen>46&&ring>30){var lab=p.n.label.replace(/^[A-Z]{3} /,'');h+='<text class="arcl" text-anchor="middle" transform="translate('+(cx+rr*Math.cos(mid)).toFixed(1)+','+(cy+rr*Math.sin(mid)).toFixed(1)+') rotate('+((mid*180/Math.PI+90)%180-90).toFixed(1)+')" dy="4">'+esc(lab.length>13?lab.slice(0,12)+'…':lab)+'</text>';}});
+  return h;}
+function sumAdd(n){if(!n.kids.length)return n.m[S.angle]||0;return n.kids.reduce(function(a,k){return a+sumAdd(k);},0);}
+function icicleSVG(W,H){var P=partition(),h='',rh=H/5;
+  P.forEach(function(p){var x=p.a0*W,w=(p.a1-p.a0)*W,y=p.d*rh,cls='arc'+(S.sel===p.n.id?' sel':'')+(S.hits[p.n.id]?' hit':'');if(w<0.5)return;
+    h+='<rect class="'+cls+'" data-id="'+p.n.id+'" x="'+x.toFixed(1)+'" y="'+y+'" width="'+Math.max(0.5,w-1).toFixed(1)+'" height="'+(rh-1)+'" fill="'+fillOf(p.n)+'" fill-opacity="'+(p.d===0?0.35:0.92-p.d*0.1)+'"/>';
+    if(w>70)h+='<text class="arcl" x="'+(x+6)+'" y="'+(y+16)+'"'+(p.d===0?' style="fill:var(--ink)"':'')+'>'+esc(p.n.label.slice(0,Math.floor(w/7)))+'</text><text class="arcl" x="'+(x+6)+'" y="'+(y+31)+'" style="font-weight:400;font-family:var(--mono)'+(p.d===0?';fill:var(--muted)':'')+'">'+(S.ds==='var'?'VaR '+money(p.n.m.var)+' ◆ · '+fmt('use',p.n.m.use):fmt(S.angle,sumAdd(p.n)))+'</text>';});
+  return h;}
+
+/* ================= render ================= */
+var INTRO={A:'<b>A · Org chart.</b> Top-down boxes, each with its figures (VaR ◆, ES ◆, a limit-use bar) and a +/− to open its children; pan by dragging, zoom with the wheel; the side panel shows the selection with Explain. For the lineage variant the same component draws a layered DAG left to right (shared inputs dashed). Best for structures people present: the legal-entity chart, the desk structure.',
+ B:'<b>B · Tree grid with measures.</b> An indented, collapsible tree inside drishti-grid: every measure a column, a limit-use bar, the children\'s Σ beside the non-additive VaR (the gap is the diversification), keyboard (↑ ↓ ← → Enter), <code>role="treegrid"</code>. In the DAG a node under two parents appears under each, marked ⧉. The working view for risk managers. Recommended default.',
+ C:'<b>C · Sunburst / icicle.</b> The share of an <b>additive</b> measure (positions, notional, RWA, rows) as angle or width; colour by limit use. VaR cannot be an angle: it does not add. Click a segment to select, double-click (or Zoom in) to make it the centre; the breadcrumbs go back up. Best for "where is it concentrated" at a glance.'};
+function crumbs(){var d=D(),id=S.sel||(S.opt==='C'?S.focus:d.root.id),p=pathTo(id);return '<div class="crumbs">'+p.map(function(n,i){return (i?'<span class="sep">›</span>':'')+'<a data-crumb="'+n.id+'">'+esc(n.label)+'</a>';}).join('')+'</div>';}
+function toolbar(){var d=D();return '<div class="tb"><input class="s" data-ctl="q" placeholder="Search the tree…" value="'+esc(S.q)+'" style="width:190px"><span class="lbl" id="hitc">'+(S.q?Object.keys(S.hits).length+' found':'')+'</span><span class="div"></span><button class="ghost" data-act="openall">Expand all</button><button class="ghost" data-act="closeall">Collapse all</button>'+
+  (S.opt==='C'?'<span class="div"></span><div class="seg sm" data-seg="shape"><button data-v="sunburst" class="'+(S.shape==='sunburst'?'on':'')+'">Sunburst</button><button data-v="icicle" class="'+(S.shape==='icicle'?'on':'')+'">Icicle</button></div><span class="lbl">angle</span><select class="s" data-ctl="angle">'+d.add.map(function(a){return '<option'+(a===S.angle?' selected':'')+'>'+a+'</option>';}).join('')+'</select>':'')+
+  '<span class="sp"></span><button class="ghost'+(S.edit?' on':'')+'" data-act="edit">✎ Edit (propose)</button><span class="div"></span><button class="ghost" data-act="png">PNG</button><button class="ghost" data-act="svg">SVG</button><button class="ghost" data-act="csv">CSV</button><button class="ghost" data-act="json">JSON</button></div>';}
+function render(){var st=document.getElementById('stage'),d=D(),body='';document.getElementById('intro').innerHTML=INTRO[S.opt];
+  var editbar='<div class="editbar">Edit mode · '+(S.opt==='C'?'select a segment and choose "Move to"':'drag a '+(S.opt==='A'?'box':'row')+' onto its new parent')+' · every move becomes part of one proposal for review (four eyes); nothing changes for anyone until it is approved</div>';
+  if(S.opt==='A'){var o=orgSVG();body='<div class="view" id="view" style="height:600px"><svg id="svg" width="100%" height="100%"><g id="vp" transform="translate('+S.tx+','+S.ty+') scale('+S.k+')">'+o.svg+'</g></svg><div style="position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:4px"><button class="ghost" data-act="zin">+</button><button class="ghost" data-act="zout">−</button><button class="ghost" data-act="fit">⤢</button></div></div>';S._ow=o.w;S._oh=o.h;}
+  else if(S.opt==='B')body='<div class="view" style="height:600px;overflow:auto;background:var(--panel)" id="gridv">'+gridHTML()+'</div>';
+  else body='<div class="view" id="view" style="height:600px"><svg id="svg" width="100%" height="100%"></svg><div class="tip" id="tip"></div></div>';
+  st.innerHTML='<div class="shell'+(S.edit?' editing':'')+'">'+toolbar()+editbar+crumbs()+'<div class="body" style="grid-template-columns:minmax(0,1fr) 330px">'+body+'<div class="side" id="side" style="max-height:600px">'+sideHTML()+'</div></div><div class="status">'+statusHTML()+'</div></div>';
+  if(S.opt==='C'){var sv=document.getElementById('svg'),r=sv.getBoundingClientRect();sv.innerHTML=S.shape==='sunburst'?sunSVG(r.width,r.height):icicleSVG(r.width,r.height);}
+  if(S.opt==='A'&&!S._fitted){S._fitted=true;fit();}
+  if(S.opt==='B'){var tr=document.querySelector('tr.sel');if(tr)tr.focus({preventScroll:false});}}
+function statusHTML(){var d=D(),n=Object.keys(d.all).length,shown=S.opt==='B'?S.flat.length:'';var br=0;if(S.ds==='var')Object.keys(d.all).forEach(function(id){if(d.all[id].m.use>=1)br++;});
+  return '<span><b>drishti-tree 1.0</b> (proposed)</span><span>'+esc(d.name)+' · '+n+' nodes'+(shown?' · '+shown+' rows open':'')+'</span>'+(S.ds==='var'?'<span class="'+(br?'warn':'')+'">'+br+' over limit</span><span>business date 2026-11-06 · 509 scenarios</span>':'')+(d.dag?'<span>a DAG: '+Object.keys(d.all).filter(function(id){return d.all[id].parents.length>1;}).length+' nodes with two or more parents ⧉</span>':'')+(S.props.length?'<span class="warn">proposal: '+S.props.length+' move(s), not live</span>':'')+'<span style="margin-left:auto">◆ not additive · totals from the server</span>';}
+function fit(){var v=document.getElementById('view');if(!v)return;var r=v.getBoundingClientRect();S.k=Math.min(1.2,Math.min(r.width/S._ow,r.height/S._oh));S.tx=(r.width-S._ow*S.k)/2+20*S.k;S.ty=14;applyVp();}
+function applyVp(){var g=document.getElementById('vp');if(g)g.setAttribute('transform','translate('+S.tx+','+S.ty+') scale('+S.k+')');}
+
+/* ================= export ================= */
+function exportAs(kind){var d=D(),name='drishti-tree-'+S.ds;
+  if(kind==='json'){download(name+'.json',new Blob([JSON.stringify((function j(n){return {id:n.id,label:n.label,kind:n.kind,measures:n.m,children:n.kids.map(j)};})(d.root),null,1)],{type:'application/json'}));return;}
+  if(kind==='csv'){var rows=['path,id,kind,'+d.measures.map(function(m){return m[0];}).join(',')];Object.keys(d.all).forEach(function(id){var n=d.all[id];rows.push('"'+pathTo(id).map(function(p){return p.label;}).join(' / ')+'",'+id+','+n.kind+','+d.measures.map(function(m){return n.m[m[0]]==null?'':(+n.m[m[0]]).toFixed(2);}).join(','));});download(name+'.csv',new Blob([rows.join('\n')],{type:'text/csv'}));return;}
+  var sv=document.getElementById('svg');if(!sv){toast('PNG and SVG export the chart views (A, C); the grid exports CSV or Excel');return;}
+  var cs=getComputedStyle(document.documentElement),css='';['--panel','--panel2','--line','--ink','--muted','--faint','--amber','--link','--ok','--bad','--s1','--s2','--s3','--s4','--s6','--cv','--mono','--sans'].forEach(function(v){css+=v+':'+cs.getPropertyValue(v)+';';});
+  var r=sv.getBoundingClientRect(),src='<svg xmlns="http://www.w3.org/2000/svg" width="'+r.width+'" height="'+r.height+'"><style>svg{'+css+'}'+[].map.call(document.styleSheets[0].cssRules,function(x){return x.cssText;}).filter(function(t){return /^(\.box|\.lnk|\.arc|svg text)/.test(t);}).join('')+'</style><rect width="100%" height="100%" fill="'+cs.getPropertyValue('--cv')+'"/>'+sv.innerHTML+'</svg>';
+  if(kind==='svg'){download(name+'.svg',new Blob([src],{type:'image/svg+xml'}));return;}
+  var img=new Image();img.onload=function(){var c=document.createElement('canvas');c.width=r.width*2;c.height=r.height*2;var x=c.getContext('2d');x.scale(2,2);x.drawImage(img,0,0);c.toBlob(function(b){download(name+'.png',b);});};img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(src);}
+
+/* ================= events ================= */
+var st=document.getElementById('stage'),pan=null;
+st.addEventListener('click',function(e){var t=e.target,el,d=D();
+  if((el=t.closest('[data-tg]'))){var id=el.dataset.tg;S.open[id]=!S.open[id];render();if(S.opt==='A')fit();return;}
+  if((el=t.closest('[data-crumb]'))){S.sel=el.dataset.crumb;if(S.opt==='C')S.focus=S.sel;render();return;}
+  if((el=t.closest('[data-seg] button'))){S[el.parentNode.dataset.seg]=el.dataset.v;render();return;}
+  if((el=t.closest('[data-act]'))){var a=el.dataset.act;
+    if(a==='explain')S.explain=!S.explain;
+    else if(a==='toggle')S.open[S.sel]=!S.open[S.sel];
+    else if(a==='expandall'){(function o(n){S.open[n.id]=1;n.kids.forEach(o);})(d.all[S.sel]);}
+    else if(a==='openall')Object.keys(d.all).forEach(function(id){S.open[id]=1;});
+    else if(a==='closeall'){S.open={};S.open[d.root.id]=1;}
+    else if(a==='zoomin'){S.focus=S.sel;}
+    else if(a==='edit'){S.edit=!S.edit;}
+    else if(a==='submit'){toast('Proposal P-0142 sent to the Approvals queue (four eyes)');S.props=[];Object.keys(d.all).forEach(function(id){d.all[id].moved=false;});}
+    else if(a==='undo'){undo();return;}
+    else if(a==='discard'){while(S.props.length)undo();return;}
+    else if(a==='zin'||a==='zout'){var f=a==='zin'?1.25:0.8;S.k*=f;applyVp();return;}
+    else if(a==='fit'){fit();return;}
+    else if(/png|svg|csv|json/.test(a)){exportAs(a);return;}
+    if(S.opt==='A'&&(a==='openall'||a==='closeall')){render();fit();return;}
+    render();return;}
+  if((el=t.closest('[data-id]'))&&!pan){S.sel=el.dataset.id;S.explain=S.explain&&true;render();return;}});
+st.addEventListener('dblclick',function(e){var el=e.target.closest('[data-id]');if(!el)return;var id=el.dataset.id,n=D().all[id];if(S.opt==='C'){if(n.kids.length){S.focus=id;S.sel=id;render();}}else if(n.kids.length){S.open[id]=!S.open[id];render();}});
+st.addEventListener('input',function(e){if(e.target.dataset.ctl==='q'){var c=search(e.target.value);var pos=e.target.selectionStart;render();var q=st.querySelector('[data-ctl=q]');q.focus();q.setSelectionRange(pos,pos);}});
+st.addEventListener('change',function(e){var c=e.target.dataset.ctl;if(c==='angle'){S.angle=e.target.value;render();}if(c==='moveto'&&e.target.value){move(S.sel,e.target.value);}});
+/* pan and zoom (A), tooltip (C) */
+st.addEventListener('mousedown',function(e){if(S.opt!=='A'||!e.target.closest('#view')||e.target.closest('[data-tg],button'))return;var box=e.target.closest('.box');
+  if(S.edit&&box){dragBox={id:box.dataset.id,x:e.clientX,y:e.clientY,el:box,moved:false};e.preventDefault();return;}
+  pan={x:e.clientX,y:e.clientY,moved:false};});
+var dragBox=null;
+window.addEventListener('mousemove',function(e){
+  if(dragBox){var dx=(e.clientX-dragBox.x)/S.k,dy=(e.clientY-dragBox.y)/S.k;if(Math.abs(dx)+Math.abs(dy)>3)dragBox.moved=true;var tr=dragBox.el.getAttribute('transform').match(/translate\(([-\d.]+),([-\d.]+)\)/);if(!dragBox.o)dragBox.o=[+tr[1],+tr[2]];dragBox.el.setAttribute('transform','translate('+(dragBox.o[0]+dx)+','+(dragBox.o[1]+dy)+')');dragBox.el.style.opacity=.7;dragBox.el.parentNode.appendChild(dragBox.el);
+    [].forEach.call(document.querySelectorAll('.box.drop'),function(b){b.classList.remove('drop');});dragBox.el.style.pointerEvents='none';var under=document.elementFromPoint(e.clientX,e.clientY);dragBox.el.style.pointerEvents='';var ub=under&&under.closest('.box');if(ub&&ub!==dragBox.el){ub.classList.add('drop');dragBox.target=ub.dataset.id;}else dragBox.target=null;return;}
+  if(pan){var dx2=e.clientX-pan.x,dy2=e.clientY-pan.y;if(Math.abs(dx2)+Math.abs(dy2)>3)pan.moved=true;pan.x=e.clientX;pan.y=e.clientY;S.tx+=dx2;S.ty+=dy2;applyVp();return;}
+  if(S.opt==='C'){var tip=document.getElementById('tip'),a=e.target.closest('.arc');if(!tip)return;if(!a){tip.style.display='none';return;}var n=D().all[a.dataset.id],vr=document.getElementById('view').getBoundingClientRect();tip.style.display='block';tip.style.left=(e.clientX-vr.left+14)+'px';tip.style.top=(e.clientY-vr.top+10)+'px';
+    tip.innerHTML='<b>'+esc(n.label)+'</b><br>'+esc(S.angle)+' '+fmt(S.angle,sumAdd(n))+(S.ds==='var'?'<br>VaR '+money(n.m.var)+' ◆ · use '+fmt('use',n.m.use):'');}});
+window.addEventListener('mouseup',function(){if(dragBox){var db=dragBox;dragBox=null;if(db.target)move(db.id,db.target);else render();return;}if(pan){var p=pan;setTimeout(function(){pan=null;},0);if(!p.moved)pan=null;}});
+st.addEventListener('wheel',function(e){if(S.opt!=='A'||!e.target.closest('#view'))return;e.preventDefault();var r=document.getElementById('view').getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top,f=Math.exp(-e.deltaY*0.0015),k=Math.max(0.15,Math.min(3,S.k*f));S.tx=px-(px-S.tx)*k/S.k;S.ty=py-(py-S.ty)*k/S.k;S.k=k;applyVp();},{passive:false});
+/* B: drag rows to re-parent, keyboard */
+st.addEventListener('dragstart',function(e){var tr=e.target.closest('tr[data-id]');if(!tr||!S.edit)return;S.dragId=tr.dataset.id;e.dataTransfer.setData('text/plain',S.dragId);});
+st.addEventListener('dragover',function(e){var tr=e.target.closest('tr[data-id]');if(!tr||!S.dragId)return;e.preventDefault();[].forEach.call(st.querySelectorAll('tr.drop'),function(x){x.classList.remove('drop');});tr.classList.add('drop');});
+st.addEventListener('drop',function(e){var tr=e.target.closest('tr[data-id]');if(!tr||!S.dragId)return;e.preventDefault();var id=S.dragId;S.dragId=null;move(id,tr.dataset.id);});
+st.addEventListener('keydown',function(e){if(S.opt!=='B'||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;var d=D(),i=S.flat.findIndex(function(r){return r[0].id===S.sel;});if(i<0)i=0;var n=S.flat[i]&&S.flat[i][0];
+  if(e.key==='ArrowDown'&&i<S.flat.length-1){S.sel=S.flat[i+1][0].id;}else if(e.key==='ArrowUp'&&i>0){S.sel=S.flat[i-1][0].id;}
+  else if(e.key==='ArrowRight'&&n&&n.kids.length){if(S.open[n.id])S.sel=n.kids[0].id;else S.open[n.id]=1;}
+  else if(e.key==='ArrowLeft'&&n){if(S.open[n.id]&&n.kids.length)S.open[n.id]=0;else if(n.parents[0])S.sel=n.parents[0].id;}
+  else if(e.key==='Enter'||e.key==='e'||e.key==='F2'){S.explain=!S.explain;}else return;e.preventDefault();render();});
+function switchData(d){S.ds=d;S.props=[];S.q='';S.hits={};S.explain=false;resetOpen();S._fitted=false;[].forEach.call(document.getElementById('dsets').children,function(x){x.classList.toggle('on',x.dataset.d===d);});render();}
+document.getElementById('opts').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;S.opt=b.dataset.o;S._fitted=false;[].forEach.call(this.children,function(x){x.classList.toggle('on',x===b);});render();});
+document.getElementById('dsets').addEventListener('click',function(e){var b=e.target.closest('button');if(b)switchData(b.dataset.d);});
+document.getElementById('theme').onclick=function(){document.documentElement.classList.toggle('light');render();};
+var DL=['comfortable','compact','terminal'];document.getElementById('dense').onclick=function(){S.dens=(S.dens+1)%3;document.body.classList.remove('compact','terminal');if(S.dens)document.body.classList.add(DL[S.dens]);this.textContent='Density: '+DL[S.dens];render();};
+window.addEventListener('resize',function(){if(S.opt==='C')render();});
+var h0=(location.hash.match(/[ABC]/)||[])[0];if(h0){S.opt=h0;[].forEach.call(document.getElementById('opts').children,function(x){x.classList.toggle('on',x.dataset.o===h0);});}
+var d0=(location.hash.match(/var|le|lin/)||[])[0];if(d0){S.ds=d0;[].forEach.call(document.getElementById('dsets').children,function(x){x.classList.toggle('on',x.dataset.d===d0);});}
+resetOpen();S.sel=null;render();
+})();
+</script>
+</body>
+</html>
