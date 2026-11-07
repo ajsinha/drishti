@@ -121,7 +121,8 @@ public class DataLoadController {
     /**
      * Undo a load by its id (docs/guides/DATA_LAKE_GUIDE.md section 5.5): {@code {"loadId": "<id>"}} says what would be undone (a
      * dry run, nothing changed); {@code {"loadId": "<id>", "confirm": "<the same id>"}} undoes it: its rows removed from every Delta and
-     * Iceberg table of the inbox's lake, one commit per table and date, a replace restored. The answer lists each table and date.
+     * Iceberg table of the lake the load wrote into (the ledger's, or {@code "lake"} given; the inbox's own lake for a load it did not make),
+     * one commit per table and date, a replace restored. The answer names the lake and lists each table and date.
      */
     @PostMapping("/api/v1/admin/dataload/undo")
     public Map<String, Object> undo(@RequestBody Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
@@ -131,18 +132,26 @@ public class DataLoadController {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "give the load's id: {\"loadId\": \"20261104T093000.123-4242.1\"} (a load report's loads)");
         }
         boolean confirmed = id.equals(body.get("confirm") == null ? null : String.valueOf(body.get("confirm")).trim());
-        String lake = inbox.settings().lake();
+        String given = body.get("lake") == null ? null : String.valueOf(body.get("lake")).trim();
+        if (given != null && !given.isEmpty() && !com.ash.drishti.lakeconfig.Lakes.validName(given)) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "give a lake of config/lakes/ by its name: {\"lake\": \"risklake\"}");
+        }
         try {
-            List<Map<String, Object>> lines = com.ash.drishti.lakeload.LakeUndo.undoAll(lake, id, List.of(), !confirmed);
+            Map<String, Object> found = inbox.undo(id, given, !confirmed);
+            String lake = String.valueOf(found.get("lake"));
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> lines = (List<Map<String, Object>>) found.get("lines");
             if (confirmed) {
-                record(p, "dataload.undo", "load/" + id, lines.size() + " table dates undone");
+                record(p, "dataload.undo", "load/" + id, lines.size() + " table dates undone in " + lake);
             }
             Map<String, Object> out = new LinkedHashMap<>();
             out.put("loadId", id);
+            out.put("lake", lake);
+            out.put("lakeFrom", found.get("lakeFrom"));
             out.put("undone", confirmed);
             out.put("lines", lines);
             out.put("text", lines.isEmpty() ? "no row of load " + id + " in " + lake
-                    : (confirmed ? "undone: " : "would undo: ") + lines.size() + " table date" + (lines.size() == 1 ? "" : "s")
+                    : (confirmed ? "undone in " : "would undo in ") + lake + ": " + lines.size() + " table date" + (lines.size() == 1 ? "" : "s")
                             + (confirmed ? "" : "; confirm with the load id to undo"));
             return out;
         } catch (Exception e) {

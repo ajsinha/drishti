@@ -133,6 +133,43 @@ class LakeRoutingTest {
         assertThat(Files.readString(file)).isEqualTo(text);
     }
 
+    /** Undo finds the lake a load wrote into from the ledger (DATA_LAKE_GUIDE.md section 5.5): never only the inbox's default lake. */
+    @Test
+    void undoFindsTheLoadsLakeFromTheLedger() throws Exception {
+        Fixture f = new Fixture(tmp);
+        f.settings = f.settings.at(f.root.toString(), "booklake", f.rules.toString());
+        f.drop("trades-a.2026-11-02.jsonl", Fixture.rows("2026-11-02", "A1", "A2"), "lake: booklake\n");
+        f.drop("trades-b.2026-11-02.jsonl", Fixture.rows("2026-11-02", "B1"), "lake: risklake\n");
+        DataInbox inbox = new DataInbox(f.settings, "node-a", f.clock, Fixture.ZONE, reading(f, Set.of("booklake", "risklake")),
+                new LoaderProcess(f.settings), f.signal(), null);
+        Cycle.Report r = inbox.cycle("test");
+        assertThat(r.files()).as(r.toString()).hasSize(2).allSatisfy(o -> assertThat(o.outcome()).isEqualTo("loaded"));
+        String inBook = loadId(f, "trades-a.2026-11-02.jsonl.loaded.json");
+        String inRisk = loadId(f, "trades-b.2026-11-02.jsonl.loaded.json");
+        assertThat(Ledger.loadedLine(f.root.resolve("ledger"), inRisk).path("loads").has(inRisk)).isTrue();
+
+        java.util.Map<String, Object> dry = inbox.undo(inRisk, null, true);
+        assertThat(dry).containsEntry("lake", "risklake").containsEntry("lakeFrom", "ledger");
+        assertThat(lines(dry)).as("found in risklake, not in the inbox default booklake").containsExactly("demo/trade removed 1");
+        assertThat((List<?>) inbox.undo(inRisk, "booklake", true).get("lines")).as("the lake given wins: none of its rows in booklake").isEmpty();
+
+        java.util.Map<String, Object> done = inbox.undo(inRisk, null, false);
+        assertThat((List<?>) done.get("lines")).hasSize(1);
+        assertThat((List<?>) inbox.undo(inRisk, null, true).get("lines")).as("undone: nothing left").isEmpty();
+        assertThat(inbox.undo(inBook, null, true)).containsEntry("lake", "booklake");
+        assertThat(lines(inbox.undo(inBook, null, true))).as("the booklake load untouched").containsExactly("demo/trade removed 2");
+        assertThat(inbox.undo("20990101T000000.000-1.1", null, true)).containsEntry("lake", "booklake").containsEntry("lakeFrom", "inbox");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<String> lines(java.util.Map<String, Object> undo) {
+        return ((List<java.util.Map<String, Object>>) undo.get("lines")).stream().map(m -> m.get("table") + " removed " + m.get("removed")).toList();
+    }
+
+    private static String loadId(Fixture f, String report) throws IOException {
+        return report(f, report).path("load").path("loads").fieldNames().next();
+    }
+
     @Test
     void noWarningWhenAConnectorReadsTheLakeOrWhenTheServerCannotSay() throws Exception {
         for (Set<String> read : java.util.Arrays.asList(Set.of("demo", "risklake"), null)) {

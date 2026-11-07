@@ -658,6 +658,19 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
      * The lakes the switched-on Delta and Iceberg connectors read: each one's {@code lake:}, and for a connector that still names its
      * {@code root} itself, the lake of that root (docs/guides/DATA_LAKE_GUIDE.md). The data inbox warns of a load into a lake not in it.
      */
+    /**
+     * The lake a Delta or Iceberg connector names ({@code lake:} in its settings, switched on or off), or null: another plugin, a
+     * connector naming its {@code root} itself, or one not known. Cheap (no lake file read): the router asks it on every read.
+     */
+    public String lakeOf(String connector) {
+        SourcesProperties.ConnectorSettings c = connector == null ? null : applied.get(connector);
+        if (c == null || !com.ash.drishti.lakeconfig.ConnectorLake.PLUGINS.contains(c.plugin()) || c.settings() == null) {
+            return null;
+        }
+        String lake = c.settings().get(com.ash.drishti.lakeconfig.ConnectorLake.LAKE);
+        return lake == null || lake.isBlank() ? null : lake.strip();
+    }
+
     public java.util.Set<String> lakesRead() {
         java.util.Set<String> out = new java.util.TreeSet<>();
         java.util.Map<String, String> byRoot = new java.util.HashMap<>();

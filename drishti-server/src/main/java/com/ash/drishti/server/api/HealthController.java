@@ -323,10 +323,44 @@ public class HealthController {
             String problem = bad == null ? historyProblem : historyProblem == null ? bad : bad + "; " + historyProblem;
             row.put("problem", problem);
             row.put("sample", pack.sample());
-            row.put("status", !broken.isEmpty() || !connectorsDown.isEmpty() || !notConfigured.isEmpty() || problem != null ? "DEGRADED" : "OK");
+            Map<String, List<String>> lakes = lakesOf(refs);
+            String lakeWarning = lakeWarning(pack.name(), lakes);
+            row.put("lakes", lakes);
+            row.put("lakeWarning", lakeWarning);
+            row.put("status", !broken.isEmpty() || !connectorsDown.isEmpty() || !notConfigured.isEmpty() || problem != null || lakeWarning != null
+                    ? "DEGRADED" : "OK");
             out.add(row);
         }
         return out;
+    }
+
+    /**
+     * The lakes a pack's Delta and Iceberg connectors read, each with its connectors, sorted: the server's published results lakes
+     * ({@code var-official}, {@code ccr-official}: read-only results, never an input) left out.
+     */
+    Map<String, List<String>> lakesOf(List<String> refs) {
+        Map<String, List<String>> out = new java.util.TreeMap<>();
+        for (String c : refs) {
+            String lake = registry.lakeOf(c);
+            if (lake != null && (!com.ash.drishti.lakeconfig.Lakes.SHIPPED.contains(lake) || SourceRouter.DEMO_LAKE.equals(lake))) {
+                out.computeIfAbsent(lake, k -> new ArrayList<>()).add(c);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Demo and real data never mix (docs/guides/DATA_LAKE_GUIDE.md section 6): the warning when a pack's connectors read more than one lake,
+     * or null.
+     */
+    static String lakeWarning(String pack, Map<String, List<String>> lakes) {
+        if (lakes.size() < 2) {
+            return null;
+        }
+        List<String> parts = new ArrayList<>();
+        lakes.forEach((lake, cs) -> parts.add(lake + " (" + String.join(", ", cs) + ")"));
+        return pack + "'s connectors read different lakes: " + String.join("; ", parts) + ". Its screens mix them: point every connector of "
+                + pack + " at one lake (lake: in each connector file) and restart";
     }
 
     private static long countSutras(Path dir) {
