@@ -388,7 +388,7 @@ def test_the_market_edition_follows_its_file_on_every_surface(market, monkeypatc
         r = c.get("/go", params={"q": typed}, follow_redirects=False)
         assert r.status_code == 303 and "DRS-4023" in r.headers["location"], typed
     centre = help_pages(c)
-    for slug in ("knowledge-market-data", "knowledge-data-and-contracts", "user-guide", "data-samples"):
+    for slug in ("knowledge-market-data", "knowledge-data-and-contracts", "user-guide", "data-contracts"):
         assert f'href="/help/{slug}"' in centre, slug
     for slug in ("knowledge-market-risk", "knowledge-economies", "knowledge-counterparty-credit-risk", "pack-developer-guide"):
         assert f'href="/help/{slug}"' not in centre and c.get(f"/help/{slug}").status_code == 404, slug

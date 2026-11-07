@@ -4533,7 +4533,7 @@ long runs start; the first failure stops the other gate jobs and the drill print
 - **Static checks** (`gate-static.log`), each a separate process: `tools/license_headers.py` (every file carries the copyright
   header); `tools/settings_catalogue.py --check` (CONFIGURATION.md is current and every key has a meaning); `tools/contracts.py check`
   and `tools/contracts.py docs --check` (every command has a data contract that matches its pack and data, and the contracts' pages
-  are current); `tools/testdata/sample_docs.py --check` (the data samples' pages are current); `tools/api_docs.py check-python`
+  are current, each kind with one example record); `tools/api_docs.py check-python`
   (every public Python function, class and method of the API references has a docstring and type hints); and every pack generator
   that supports `--check` (the generated pack content is what the generator writes now).
 - **The docs and help console tests** (`gate-docs.log`, output in `console-gate.txt`): `test_docs_*.py`, `test_help.py`,

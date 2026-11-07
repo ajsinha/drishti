@@ -907,7 +907,7 @@ def drift(contract: dict, packs_dir: Path = PACKS, testdata: Path = TESTDATA) ->
                 continue
             st = seen.get(f["name"])
             if st is None:
-                if f["presence"] == "required":      # an optional field may be rare: tools/testdata/sample_docs.py audit reads every row
+                if f["presence"] == "required":      # an optional field may be rare in the rows read
                     out.append(f"{full} is in the contract but not in the data")
                 continue
             if f["presence"] == "required" and st.present < shape.items[path]:

@@ -77,7 +77,7 @@ figure can be opened in a playground that shows the same calculation as spreadsh
 ## 2. Position sensitivities: the input
 
 The contract is [`config/packs/market-risk/contracts/position-sensitivity.contract.yaml`](../../config/packs/market-risk/contracts/position-sensitivity.contract.yaml)
-(generated reference: [the market-risk contracts](../contracts/packs/market-risk.md), [a sample record explained](../contracts/samples/market-risk/position-sensitivity.md)).
+(generated reference: [the market-risk contracts](../contracts/packs/market-risk.md), each kind with one example record).
 
 ### 2.1 The record
 
@@ -165,7 +165,7 @@ other risk kinds.
 ## 3. The factor dictionary and the naming standard
 
 The contract is [`config/packs/market-risk/contracts/risk-factor.contract.yaml`](../../config/packs/market-risk/contracts/risk-factor.contract.yaml)
-([a sample record explained](../contracts/samples/market-risk/risk-factor.md)).
+([its contract, with an example record](../contracts/packs/market-risk.md)).
 
 ### 3.1 The naming standard
 

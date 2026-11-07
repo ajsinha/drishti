@@ -206,7 +206,6 @@ gate_static() {
     "python3 tools/settings_catalogue.py --check"      # CONFIGURATION.md's every setting: each key has a meaning, every variable indexed, current
     "python3 tools/contracts.py check"                 # every command has a data contract that matches its pack and data
     "python3 tools/contracts.py docs --check"          # the contracts' pages are current
-    "python3 tools/testdata/sample_docs.py --check"    # the data samples' pages are current
     "python3 tools/api_docs.py check-python")          # every public Python function, class and method has a docstring and type hints
   # (tools/test_no_hidden_names.py runs in the tool tests only: its pack-make case needs the server jar, which the gate runs before)
   local gen
