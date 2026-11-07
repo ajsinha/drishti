@@ -485,7 +485,7 @@
   function mount(view) {
     var c = state.catalogue;
     if (state.grid) { state.grid.destroy(); state.grid = null; }
-    if (!G) { notice("the grid (Drishti Elements' drishti-grid) did not load"); return; }
+    if (!G) { notice("the grid (the Elements library drishti-grid) did not load"); return; }
     var cols = columnsOf(c, view);
     var host = $("[data-pv-grid]");
     var gr = state.grid = new G.Grid(host, {

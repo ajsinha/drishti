@@ -472,7 +472,7 @@
   Dialog.prototype.drawTable = function (m) {
     var g = E().exportGrid(m, this.settings, this.src.title), PE = window.Drishti.pivotEngine || (window.drishtiModules || {}).pivotEngine, self = this;
     var EL = window.Drishti.elements;
-    if (!EL || !(EL.grid || EL.load)) { this.tableBox.textContent = 'The table needs Drishti Elements (drishti-grid), which this page did not load.'; return; }
+    if (!EL || !(EL.grid || EL.load)) { this.tableBox.textContent = 'The table needs the Elements grid (drishti-grid), which this page did not load.'; return; }
     if (!EL.grid) {
       EL.load('drishti-grid').then(function () { if (self.view === 'table' && self.last === m) { self.drawTable(m); } },
         function (err) { self.tableBox.textContent = 'The table could not be drawn: ' + (err && err.message ? err.message : err); });

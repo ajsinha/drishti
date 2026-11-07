@@ -54,7 +54,6 @@ ALLOWED = {
     # BI and the Pivot (wip/e-migrate-bi)
     "static/js/drishti_bi-ai.js": {"echarts": BI},
     "static/js/drishti_bi-govern.js": {"numbers": BI},
-    "static/js/drishti_bi-grids.js": {"grid": BI},
     "static/js/drishti_bi-layer-ops.js": {"numbers": BI},
     "static/js/drishti_bi-lib.js": {"numbers": BI},
     "static/js/drishti_bi-notebook-profile.js": {"numbers": BI},
@@ -69,8 +68,6 @@ ALLOWED = {
     "static/js/drishti_mr-lens.js": {"numbers": BI},
     "static/js/drishti_pivot-engine.js": {"numbers": BI},
     "static/js/drishti_pivot-functions.js": {"numbers": BI},
-    "static/js/drishti_pivot-grid.js": {"numbers": BI},
-    "static/js/drishti_pivot.js": {"echarts": BI},
     "static/js/drishti_table-chart.js": {"echarts": BI},
     # VaR, exposure and the risk screens (wip/e-migrate-var)
     "static/js/drishti_exposure-charts.js": {"numbers": VAR},

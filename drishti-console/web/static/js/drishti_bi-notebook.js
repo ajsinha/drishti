@@ -52,7 +52,7 @@
   X.table = function (host, columns, rows, max) {
     clear(host);
     var E = window.Drishti && window.Drishti.elements;
-    if (!E || !(E.grid || E.load)) { host.appendChild(h('p', { class: 'text-muted-d', text: 'The table needs Drishti Elements (drishti-grid), which this page did not load.' })); return; }
+    if (!E || !(E.grid || E.load)) { host.appendChild(h('p', { class: 'text-muted-d', text: 'The table needs the Elements grid (drishti-grid), which this page did not load.' })); return; }
     if (!E.grid) { E.load('drishti-grid').then(function () { X.table(host, columns, rows, max); }); return; }
     var shown = rows.slice(0, max || MAX_SHOWN);
     var cols = columns.map(function (c, i) {

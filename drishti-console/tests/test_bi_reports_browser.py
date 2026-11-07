@@ -188,7 +188,7 @@ def test_show_the_rows_and_show_as_a_table(stack, browser):
     expect(page.locator('[data-visual="by-desk"] [aria-rowcount="21"]')).to_have_count(1)                # the 20 trades of that desk (and the heading), every column of the table
     head = page.locator('[data-visual="by-desk"] .dg-hcell .dg-hlabel').all_inner_texts()
     page.eval_on_selector('[data-visual="by-desk"] .dg-scroll', "e => { e.scrollLeft = e.scrollWidth; }")    # the grid draws the columns in view
-    page.wait_for_timeout(300)
+    page.evaluate("() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))")       # its next frame, drawn after the scroll
     head += page.locator('[data-visual="by-desk"] .dg-hcell .dg-hlabel').all_inner_texts()
     assert "TRADE_ID" in " ".join(head) and "DESK" in " ".join(head) and "MTM_IN_MILLIONS" in " ".join(head)
     page.click('[data-visual="by-desk"] [data-act="rows"]')

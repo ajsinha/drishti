@@ -68,7 +68,7 @@
       B.clear(host).appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text: 'Loading the table…' }));
       return null;
     }
-    B.clear(host).appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text: 'The table needs Drishti Elements (drishti-grid), which this page did not load.' }));
+    B.clear(host).appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text: 'The table needs the Elements grid (drishti-grid), which this page did not load.' }));
     return null;
   }
 
