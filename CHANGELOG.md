@@ -19,6 +19,10 @@
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
 
+## 2.9.11.e (unreleased)
+
+- **Drishti Elements, the design for approval** ([ELEMENTS.md](docs/architecture/ELEMENTS.md)): the console's JavaScript as eight libraries (drishti-core, -inputs, -grid, -chart, -data, -insight, -renderer, -risk; 1 to 5 without a Drishti server), the measured inventory (116 of 258 scripts and modules, about 21,000 lines, fold into them; about 10 grids and 22 chart scripts into one each), the grid's three layouts (wells, panel, terminal: VaR screens default to terminal) and its server-side pivot with non-additive totals from the server, an AG Grid-style adapter for the Enterprise pivot API from public documentation only, one chart spec over ECharts with the risk kinds and maps (world to every country's first-level regions), packaging and licensing per domain module, the documentation of every library (guide, generated API reference, tutorial, gallery, AG Grid migration guide), the guards and the migration order; mock-ups [g1](docs/architecture/mockups/elements/g1-pivot-grid.html) (decided), [g2](docs/architecture/mockups/elements/g2-charts.html), [g3](docs/architecture/mockups/elements/g3-maps.html) and [g4](docs/architecture/mockups/elements/g4-gallery.html).
+
 ## 2.9.11.d (unreleased)
 
 - **One Python runtime: every Python run on the server's compute pools** (SYNTHESIS A11, Brief 3; PYTHON_COMPUTE.md section 19; lean & streamlined):
