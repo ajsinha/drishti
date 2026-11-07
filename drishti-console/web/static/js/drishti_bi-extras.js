@@ -50,9 +50,9 @@
   };
 
   // ---- known people on the workspace's "add a member" box -----------------------------------------------------------------------------------
-  const user = document.querySelector('[data-member-user]'), box = document.getElementById('wMemberList');
-  if (user && box && window.Drishti.People) {
-    window.Drishti.People.attach(user, box, {
+  const user = document.querySelector('[data-member-user]');
+  if (user && window.Drishti.People) {
+    window.Drishti.People.attach(user, {
       kind: '', minQuery: 2,
       onPick: (e) => { if (e.type === 'role') { return; } user.value = e.name; user.setAttribute('data-picked', e.name); user.focus(); }
     });

@@ -68,6 +68,12 @@ def overflow(pg):
     return pg.evaluate("document.documentElement.scrollWidth > window.innerWidth + 1")
 
 
+
+def pick_date(pg, field, day):
+    """Types a date into the drishti-inputs date picker that stands for a date field, and leaves it (the field keeps the ISO date)."""
+    pg.fill(field + " + .di-upgraded input", day)
+    pg.press(field + " + .di-upgraded input", "Tab")
+
 def test_a_form_beside_the_table_with_words_a_draft_and_resuming_it(stack, browser):
     pg = page(browser, stack, DESK)
     forget_drafts(pg, stack)
@@ -207,7 +213,7 @@ def test_new_in_a_guided_drawer_with_a_live_hint(stack, browser):
     pg.select_option("[data-fm-drawer] [data-field='product_type']", "IRS")
     pg.fill("[data-fm-drawer] [data-field='notional']", "25m")
     pg.select_option("[data-fm-drawer] [data-field='currency']", "USD")
-    pg.fill("[data-fm-drawer] [data-field='maturity_date']", "2031-06-30")
+    pick_date(pg, "[data-fm-drawer] [data-field='maturity_date']", "2031-06-30")
     hint = dr.locator("[data-fm-hint]").inner_text()
     assert "PFE limit after this trade:" in hint and " of " in hint and "%)" in hint
     assert dr.locator("[data-fm-badge]").inner_text() == "Draft · not saved"
@@ -235,7 +241,8 @@ def test_an_entity_by_search_money_a_worked_out_default_and_a_time(stack, browse
     pg.select_option("[data-fm-drawer] [data-field='counterparty']", index=1)
     ent = "[data-fm-drawer] [data-field='legal_entity']"
     pg.fill(ent, "europe")                                       # search by name: the list narrows as people type
-    opts = dr.locator(".fm-entity-list li[role='option']")
+    opts = pg.locator(".di-combo-pop [role='option']")           # drishti-inputs' combobox list, floating in the page
+    opts.first.wait_for()
     assert opts.count() >= 1 and all("europe" in t.lower() for t in opts.all_inner_texts())
     assert pg.get_attribute(ent, "aria-expanded") == "true"
     pg.keyboard.press("Enter")
@@ -259,7 +266,7 @@ def test_an_entity_by_search_money_a_worked_out_default_and_a_time(stack, browse
     assert pg.input_value(fee) == "2,500"                        # grouped once the field is left
     assert dr.locator("[data-fm-field='executed_at'] .fm-unit").inner_text() == "Europe/London"
     pg.fill("[data-fm-drawer] [data-field='executed_at']", "2026-10-23T14:05")
-    pg.fill("[data-fm-drawer] [data-field='maturity_date']", "2031-06-30")
+    pick_date(pg, "[data-fm-drawer] [data-field='maturity_date']", "2031-06-30")
     pg.select_option("[data-fm-drawer] [data-field='product_type']", "IRS")
     dr.locator(".fm-next").click()
     summary = dr.locator(".fm-summary").inner_text()
@@ -286,20 +293,20 @@ def test_an_entity_field_searches_the_server_as_people_type(stack, browser):
     assert "kind=legal-entity" in got.value.url and "q=bank" in got.value.url and got.value.ok
     results = got.value.json()["results"]
     assert results and all("bank" in (r["label"] + r["id"]).lower() for r in results)
-    wait(pg, "!document.querySelector('[data-fm-drawer] .fm-entity-status')")
-    assert dr.locator(".fm-entity-list li[role='option']").count() >= 1
+    pg.locator(".di-combo-pop [role='option']").first.wait_for()
+    assert pg.locator(".di-combo-pop [role='option']").count() >= 1
     with pg.expect_response(lambda r: "/api/forms/lookup" in r.url):
         pg.fill(ent, "zzqx-nothing")
-    wait(pg, "document.querySelector('[data-fm-drawer] .fm-entity-none')")
-    assert dr.locator(".fm-entity-none").inner_text() == "No match for “zzqx-nothing”"
+    wait(pg, "document.querySelector('.di-combo-pop .di-empty')")
+    assert pg.locator(".di-combo-pop .di-empty").inner_text() == 'Nothing matches "zzqx-nothing"'
     pg.route("**/api/forms/lookup**", lambda route: route.abort())  # offline: the choices the page brought still answer
     pg.fill(ent, "europe")
-    wait(pg, "!document.querySelector('[data-fm-drawer] .fm-entity-status')")
-    assert dr.locator(".fm-entity-list li[role='option']").count() >= 1
+    wait(pg, "document.querySelector('.di-combo-pop [role=option]') && !/Searching/.test(document.querySelector('.di-combo-pop .di-combo-status').textContent)")
+    assert pg.locator(".di-combo-pop [role='option']").count() >= 1
     pg.unroute("**/api/forms/lookup**")
     with pg.expect_response(lambda r: "/api/forms/lookup" in r.url):
         pg.fill(ent, "bank")
-    wait(pg, "!document.querySelector('[data-fm-drawer] .fm-entity-status')")
+    wait(pg, "document.querySelector('.di-combo-pop [role=option]') && !/Searching/.test(document.querySelector('.di-combo-pop .di-combo-status').textContent)")
     pg.keyboard.press("ArrowDown")
     pg.keyboard.press("ArrowUp")
     pg.keyboard.press("Enter")                                   # picked with the keys

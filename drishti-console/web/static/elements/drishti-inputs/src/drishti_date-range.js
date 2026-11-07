@@ -35,11 +35,13 @@ import { InputBase, Popover } from './drishti_inputs-dom.js';
  * @property {DateRange} [value]
  * @property {(string|Object)} [calendar='weekends']
  * @property {string} [asOf] the business date the presets count from
- * @property {(boolean|string[])} [presets=true] true: every preset; or the ids to offer
+ * @property {(boolean|Array<(string|{id: string, label: string, from: string, to: string})>)} [presets=true] true: every preset; or the
+ *   ids to offer; or ranges given whole (a server's own presets, already resolved: id, label, from, to), mixed with ids as wished
  * @property {boolean} [businessOnly=false] the ends must be business days
  * @property {string} [min]
  * @property {string} [max]
  * @property {number} [maxDays] the longest range in calendar days
+ * @property {boolean} [openEnded=false] one end may stay open (from a day on, or up to a day)
  * @property {number} [weekStart=1]
  * @property {string} [label]
  */
@@ -74,7 +76,19 @@ export class DateRangePicker extends InputBase {
   presets() {
     const p = this.o.presets;
     if (!p) { return []; }
-    return p === true ? DATE_PRESETS.slice() : DATE_PRESETS.filter((x) => p.indexOf(x.id) >= 0);
+    if (p === true) { return DATE_PRESETS.slice(); }
+    if (p.every((x) => typeof x === 'string')) { return DATE_PRESETS.filter((x) => p.indexOf(x.id) >= 0); }
+    return p.map((x) => (typeof x === 'string' ? DATE_PRESETS.find((d) => d.id === x) : x)).filter(Boolean);
+  }
+
+  /**
+   * A preset's dates: a given range as it is, a named one from the business date and the calendar.
+   * @param {string} id
+   * @returns {{from: string, to: string}}
+   */
+  presetRange(id) {
+    const given = this.presets().find((x) => x.id === id && x.from && x.to);
+    return given ? { from: isoDate(given.from), to: isoDate(given.to) } : resolvePreset(id, { asOf: this.asOf, calendar: this.cal });
   }
 
   /**
@@ -84,8 +98,8 @@ export class DateRangePicker extends InputBase {
   text() {
     const v = this.value;
     if (!v.from && !v.to) { return 'Any date'; }
-    const words = formatDateRange(v.from || v.to, v.to || v.from);
-    const p = v.preset ? DATE_PRESETS.find((x) => x.id === v.preset) : null;
+    const words = !v.to ? 'From ' + formatDate(v.from, 'd MMM yyyy') : !v.from ? 'Until ' + formatDate(v.to, 'd MMM yyyy') : formatDateRange(v.from, v.to);
+    const p = v.preset ? this.presets().concat(DATE_PRESETS).find((x) => x.id === v.preset) : null;
     return p ? words + ' · ' + p.label : words;
   }
 
@@ -99,14 +113,15 @@ export class DateRangePicker extends InputBase {
    * @returns {?string}
    */
   refusal(from, to) {
-    if (!from || !to) { return 'Pick both ends'; }
-    if (this.o.min && from < this.o.min) { return 'The start is before ' + formatDate(this.o.min, 'd MMM yyyy'); }
-    if (this.o.max && to > this.o.max) { return 'The end is after ' + formatDate(this.o.max, 'd MMM yyyy'); }
+    if (!from && !to) { return 'Pick a start or an end'; }
+    if ((!from || !to) && !this.o.openEnded) { return 'Pick both ends'; }
+    if (this.o.min && from && from < this.o.min) { return 'The start is before ' + formatDate(this.o.min, 'd MMM yyyy'); }
+    if (this.o.max && to && to > this.o.max) { return 'The end is after ' + formatDate(this.o.max, 'd MMM yyyy'); }
     if (this.o.businessOnly) {
-      if (!this.cal.isBusinessDay(from)) { return 'The start, ' + formatDate(from, 'd MMM yyyy') + ', is not a business day'; }
-      if (!this.cal.isBusinessDay(to)) { return 'The end, ' + formatDate(to, 'd MMM yyyy') + ', is not a business day'; }
+      if (from && !this.cal.isBusinessDay(from)) { return 'The start, ' + formatDate(from, 'd MMM yyyy') + ', is not a business day'; }
+      if (to && !this.cal.isBusinessDay(to)) { return 'The end, ' + formatDate(to, 'd MMM yyyy') + ', is not a business day'; }
     }
-    if (this.o.maxDays) {
+    if (this.o.maxDays && from && to) {
       const days = Math.round((Date.parse(to) - Date.parse(from)) / 864e5) + 1;
       if (days > this.o.maxDays) { return 'The range is ' + days + ' days; the most is ' + this.o.maxDays; }
     }
@@ -122,7 +137,7 @@ export class DateRangePicker extends InputBase {
     const box = this.el('div', { cls: 'di-range-box' });
     const side = this.el('div', { cls: 'di-presets', attrs: { role: 'listbox', 'aria-label': 'Presets' } });
     this.presets().forEach((p) => {
-      const r = resolvePreset(p.id, { asOf: this.asOf, calendar: this.cal });
+      const r = this.presetRange(p.id);
       side.appendChild(this.el('button', { cls: 'di-preset' + (draft.preset === p.id ? ' on' : ''), attrs: { type: 'button', role: 'option', 'aria-selected': String(draft.preset === p.id),
         title: formatDateRange(r.from, r.to) }, data: { preset: p.id }, on: { click: () => { Object.assign(draft, { from: r.from, to: r.to, preset: p.id }); this.redraw(); } } },
       [this.el('span', { text: p.label }), this.el('span', { cls: 'di-preset-dates', text: formatDateRange(r.from, r.to) })]));
@@ -222,7 +237,7 @@ export class DateRangePicker extends InputBase {
     if (typeof v === 'string') { v = { preset: v }; }
     v = v || {};
     let next;
-    if (v.preset && (!v.from || !v.to)) { const r = resolvePreset(v.preset, { asOf: this.asOf, calendar: this.cal }); next = { from: r.from, to: r.to, preset: v.preset }; }
+    if (v.preset && (!v.from || !v.to)) { const r = this.presetRange(v.preset); next = { from: r.from, to: r.to, preset: v.preset }; }
     else { next = { from: v.from ? isoDate(v.from) : null, to: v.to ? isoDate(v.to) : null, preset: v.preset || null }; }
     const changed = next.from !== this.value.from || next.to !== this.value.to || next.preset !== this.value.preset;
     this.value = next;

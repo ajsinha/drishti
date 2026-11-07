@@ -153,9 +153,8 @@
       var form = el('form', 'disc-reply'); form.setAttribute('data-reply', t.id);
       var lab = el('label', 'sr-only', 'Reply to ' + (t.label || 'this thread')); lab.setAttribute('for', 'discReply-' + t.id);
       var ta = el('textarea', 'studio-in'); ta.id = 'discReply-' + t.id; ta.rows = 2; ta.placeholder = 'Reply… @ to mention, { to quote a value'; ta.maxLength = ctx.maxText || 2000;
-      var lst = el('ul', 'shr-list disc-opts'); lst.id = 'discReplyList-' + t.id; lst.hidden = true; lst.setAttribute('role', 'listbox'); lst.setAttribute('aria-label', 'Suggestions');
       var send = el('button', 'btn-pill btn-accent btn-sm-pill', 'Reply'); send.type = 'submit';
-      var wrap = el('div', 'disc-box'); wrap.appendChild(ta); wrap.appendChild(lst);
+      var wrap = el('div', 'disc-box'); wrap.appendChild(ta);
       form.appendChild(lab); form.appendChild(wrap); form.appendChild(send);
       d.appendChild(form);
     }

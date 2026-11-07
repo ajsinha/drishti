@@ -338,6 +338,8 @@
         + '<label>To <input type="date" data-dx-to aria-label="To: the later business date"></label><button type="submit" class="dx-btn">Explain</button>';
       f.querySelector("[data-dx-from]").value = x.from || "";
       f.querySelector("[data-dx-to]").value = x.to || "";
+      var I = window.Drishti.elements && window.Drishti.elements.inputs;     // drishti-inputs' date pickers (typed T-1, ME or 6 Nov 2026, or the calendar)
+      if (I) { I.upgradeDateInput(f.querySelector("[data-dx-from]")); I.upgradeDateInput(f.querySelector("[data-dx-to]")); }
       f.addEventListener("submit", function (ev) {
         ev.preventDefault();
         S.from = f.querySelector("[data-dx-from]").value || "";
