@@ -569,8 +569,8 @@ the server moves them into `data/delta/demo/`, once, before any connector opens 
 
 - only the demo lake's own folders move (the first folder of each of its tables' paths, and `_drishti-lake`), each by a rename on the
   same file system: 3.5 GB move in a moment, and no file is copied or rewritten;
-- every Delta table is opened and measured before and after the move: its version, its data files, its rows (from the files'
-  statistics), and that every data file it names is there; any difference, or any error, moves everything back;
+- every Delta table is opened and measured before and after the move: its version, its data files, its rows (from each data file's
+  Parquet footer), and that every data file it names is there; any difference, or any error, moves everything back;
 - it **refuses**, saying why in the log and moving nothing, when `data/delta/demo` exists already, when anything in `data/delta` belongs
   to no lake file, when a folder is on another file system, when a table is Iceberg (its metadata holds absolute paths), when a table
   does not open or names a missing file, or while a build or a load holds the lake's lock;

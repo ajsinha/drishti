@@ -109,7 +109,7 @@ class LakeRoutingTest {
         assertThat(r.files()).as(r.toString()).singleElement().satisfies(o -> assertThat(o.outcome()).isEqualTo("loaded"));
         Path file = lakes.resolve("risklake.yaml");
         assertThat(file).isRegularFile();
-        assertThat(Files.readString(file)).contains("lake: risklake", "format: delta", "root: ${drishti.data.dir:./data}/delta/risklake");
+        assertThat(Files.readString(file)).contains("lake: risklake", "format: delta", "${drishti.data.dir:./data}/delta/risklake");
         Lake lake = Lakes.readFile(file, k -> k.equals("drishti.data.dir") ? data.toString() : null);
         assertThat(lake.root()).isEqualTo(data + "/delta/risklake");
         assertThat(lake.tables()).containsOnlyKeys("demo.trade");

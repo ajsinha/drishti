@@ -241,11 +241,20 @@ def _feed(a) -> str:
             raise BuildError("a .tar archive names its own tables and dates (its <table>/<YYYY-MM-DD>/ folders): --as-of, --table and a "
                              ".ready file's business-date: and table: are refused for it")
         return "tar"
-    for key, attr in (("pack", "pack"), ("kind", "kind"), ("connector", "connector"), ("table", "table"), ("mode", "mode")):
+    for key, attr in (("pack", "pack"), ("kind", "kind"), ("connector", "connector"), ("table", "table"), ("mode", "mode"), ("lake", "lake")):
         vals = {str(m[key]) for m in marked if m.get(key)}
         if len(vals) > 1:
             raise BuildError(f"the files' .ready markers name different {key}s ({', '.join(sorted(vals))}): load them one at a time")
         if vals and not getattr(a, attr, None):
+            if key == "lake":                                    # a .ready file's lake: a lake of config/lakes/ (the inbox creates one; this does not)
+                import lakeconfig
+                name = vals.pop()
+                if not lakeconfig.is_lake_name(name):
+                    raise BuildError(f"the .ready file names lake {name}, which has no file in {lakeconfig.lakes_dir()}: add "
+                                     f"config/lakes/{name}.yaml (its root defaults to <data>/delta/{name}), or load the file once through the data "
+                                     "inbox, which creates it")
+                a.lake = name
+                continue
             setattr(a, attr, vals.pop() if key != "pack" else str(_pack_dir(vals.pop())))
     a._mode_given = bool(a.mode)                         # --mode, or a .ready file's mode: (over a lake file's entry, its table's default)
     a._mode_from = "given (--mode or the .ready file)" if a.mode else "the load rules' default"

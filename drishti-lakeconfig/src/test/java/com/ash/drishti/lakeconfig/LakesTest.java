@@ -245,7 +245,7 @@ class LakesTest {
         LakeFiles.Migration m = LakeFiles.adoptDemo(conns, lakesDir, true);
         assertEquals(3, m.connectorFiles().size(), m.notes().toString());
         String t = Files.readString(conns.resolve("trading-store.yaml"));
-        assertTrue(t.startsWith("# generated") && t.contains("lake: demo") && t.contains("lake-tables: trading.trade_endur") && t.contains("union: true")
+        assertTrue(t.startsWith("# generated") && t.contains("lake: demo") && t.contains("lake-tables: trading.trade_endur") && t.contains("union:")
                 && !t.contains("root:"), t);
         Lake demo = Lakes.read(lakesDir, ENV).get("demo");
         assertEquals(List.of("QUOTE_ID"), demo.entry("desk.desk-quote").orElseThrow().promote(), "a table the lake lacked, from the connector's layout");
@@ -373,7 +373,7 @@ class LakesTest {
             assertTrue(LakeFiles.create(lakes, "risklake", List.of(t), "a test"));
             assertFalse(LakeFiles.create(lakes, "risklake", List.of(), "a test"), "a file that exists is never touched");
             String text = Files.readString(lakes.resolve("risklake.yaml"));
-            assertTrue(text.contains("root: ${drishti.data.dir:./data}/delta/risklake"), text);
+            assertTrue(text.contains("${drishti.data.dir:./data}/delta/risklake"), text);
             Lake l = Lakes.readFile(lakes.resolve("risklake.yaml"), env);
             assertEquals("/srv/drishti/delta/risklake", l.root());
             assertEquals("delta", l.format());

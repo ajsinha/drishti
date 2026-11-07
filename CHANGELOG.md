@@ -53,6 +53,9 @@
     (`root()`, `DEMO_ROOT_ENV`, `DEMO_ROOT_REF`); `lake demo`, `build_demo_lakes.py`, `bulk_trades.py`, `varcli`, `packmake`, the pack
     generators, the doc-shot and bench harnesses, `drishti-stack` and `schemakit` resolve through it. The guard `tools/test_lake_paths.py`
     fails on a lake folder or the demo root's variable spelled in code (Java, Python, JavaScript) outside the lake configuration.
+  - **The command-line loaders read `lake:` too** (`tools/lake/feedroute.py`, `lake build`): a `.ready` file's `lake:` names a lake of
+    `config/lakes/` (`--lake` on the command line wins); its keys are the inbox's, one list (`test_feedroute.py` compares them with
+    `ReadyNote.KEYS`).
   - **Fixed:** an archive's rollback undid the load in the folder named like the inbox's lake (`demo`) rather than the lake's root.
   - **Tools follow:** `build_demo_lakes.py`, `lake demo`, `load-delta.sh`/`.ps1`, `bulk_trades.py`, `varcli` and `start-server.ps1` default
     to `data/delta/demo` (and refuse to build there while the older layout still holds the demo lake: move it first); the Iceberg demo

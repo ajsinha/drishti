@@ -47,8 +47,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
@@ -60,7 +58,7 @@ import java.util.stream.Stream;
  *   <li>it refuses, saying why, when the target exists, when anything at the old place belongs to no lake, when a folder is on another file
  *       system, when a table there is Iceberg (its metadata holds absolute paths), when a table does not open, or when a build or a load holds
  *       the lake's lock;</li>
- *   <li>every Delta table is opened and measured before and after (its version, data files, rows from the files' statistics, and that every
+ *   <li>every Delta table is opened and measured before and after (its version, data files, rows from each data file's Parquet footer, and that every
  *       data file it names is there); any difference, or any error, moves everything back;</li>
  *   <li>it never deletes a file; it runs once, and the record ({@code <lake>/_drishti-lake/relocated.json}) says when and what moved.</li>
  * </ul>
@@ -72,7 +70,6 @@ public final class LakeRelocate {
     /** The record of a done move, under the lake's state folder. */
     public static final String RECORD = "relocated.json";
     private static final ObjectMapper JSON = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-    private static final Pattern NUM_RECORDS = Pattern.compile("\"numRecords\":(\\d+)");
 
     /** What happened: {@code moved}, {@code would-move} (a dry run), {@code nothing} (nothing to move), {@code done-before}, {@code refused}, {@code rolled-back}, {@code failed}. */
     public record Outcome(String state, String message, String lake, Path from, Path to, List<String> folders, Map<String, Measure> tables) {
@@ -82,7 +79,7 @@ public final class LakeRelocate {
         }
     }
 
-    /** One Delta table measured: its version, its data files, its rows (from the files' statistics; -1: none) and data files not there. */
+    /** One Delta table measured: its version, its data files, its rows (each data file's own row count, from its Parquet footer) and data files not there. */
     public record Measure(long version, long files, long rows, long missing) {}
 
     /** A test's way to fail the move after {@code n} folders were moved, or the check after the move ({@code verify}). */
@@ -164,7 +161,7 @@ public final class LakeRelocate {
         Path to = Path.of(LocalPaths.toLocal(lake.root(), LocalPaths.WINDOWS)).toAbsolutePath().normalize();
         Path from = to.getParent();
         if (from == null || !to.getFileName().toString().equals(name)) {
-            return new Outcome("nothing", "lake " + name + "'s root " + to + " is its own (set by its lake file or DRISHTI_DELTA_ROOT), not <data>/delta/"
+            return new Outcome("nothing", "lake " + name + "'s root " + to + " is its own (set by its lake file or " + Lakes.DEMO_ROOT_ENV + "), not <data>/delta/"
                     + name + ": nothing to move", name, from, to, List.of(), Map.of());
         }
         Path record = to.resolve(LakeState.STATE).resolve(RECORD);
@@ -371,14 +368,13 @@ public final class LakeRelocate {
         return out;
     }
 
-    /** One Delta table: its version, data files, rows (statistics; -1 when there are none) and data files not on the disk. */
+    /** One Delta table: its version, data files, rows (each data file's footer: the rows written) and data files not on the disk. */
     static Measure measure(Path table) throws IOException {
         Engine engine = LakeWriter.engineFor(table.toString(), Map.of());
         Snapshot s = Table.forPath(engine, table.toString()).getLatestSnapshot(engine);
         long files = 0;
         long rows = 0;
         long missing = 0;
-        boolean stats = true;
         try (CloseableIterator<FilteredColumnarBatch> it = s.getScanBuilder().build().getScanFiles(engine)) {
             while (it.hasNext()) {
                 try (CloseableIterator<Row> rs = it.next().getRows()) {
@@ -386,22 +382,27 @@ public final class LakeRelocate {
                         Row r = rs.next();
                         FileStatus fs = InternalScanFileUtils.getAddFileStatus(r);
                         files++;
-                        if (!Files.isRegularFile(Path.of(LocalPaths.toLocal(fs.getPath(), LocalPaths.WINDOWS)))) {
+                        Path data = Path.of(LocalPaths.toLocal(fs.getPath(), LocalPaths.WINDOWS));
+                        if (!Files.isRegularFile(data)) {
                             missing++;
-                        }
-                        Row add = r.getStruct(r.getSchema().indexOf("add"));
-                        int st = add.getSchema().indexOf("stats");
-                        Matcher m = st >= 0 && !add.isNullAt(st) ? NUM_RECORDS.matcher(add.getString(st)) : null;
-                        if (m != null && m.find()) {
-                            rows += Long.parseLong(m.group(1));
                         } else {
-                            stats = false;
+                            rows += footerRows(data);
                         }
                     }
                 }
             }
         }
-        return new Measure(s.getVersion(), files, stats ? rows : -1, missing);
+        return new Measure(s.getVersion(), files, rows, missing);
+    }
+
+    /** The rows a Parquet data file holds, from its footer (the sum of its row groups). */
+    static long footerRows(Path data) throws IOException {
+        org.apache.parquet.io.InputFile in = new org.apache.parquet.io.LocalInputFile(data);
+        try (org.apache.parquet.io.SeekableInputStream stream = in.newStream()) {
+            return org.apache.parquet.hadoop.ParquetFileReader.readFooter(in,
+                    org.apache.parquet.ParquetReadOptions.builder(com.ash.drishti.lakeio.ParquetFooters.PLAIN).build(), stream)
+                    .getBlocks().stream().mapToLong(b -> b.getRowCount()).sum();
+        }
     }
 
     /** The lake's lock, held exclusively while the folders move: no build or load writes meanwhile. */
