@@ -21,6 +21,28 @@
 
 ## 2.9.11.e (unreleased)
 
+- **drishti-graph and drishti-tree, two new Drishti Elements libraries** (ELEMENTS.md section 8.8; the owner's picks: g5 option A and
+  g6 option B the defaults, the other options modes of the same components). **drishti-graph**: networks cyclic or acyclic on a canvas
+  for thousands of nodes (5,000 nodes and 20,000 edges: the force layout 2.2 to 2.7 s in Node, settling on screen in 4.7 s with the
+  page responsive, a full frame 11 to 17 ms); force (seeded Barnes-Hut), layered, radial, circular, grouped and preset layouts,
+  animated unless motion is reduced; zoom, pan, minimap, fit; neighbours expanded on demand through a host's hook; the shortest path;
+  groups folded by an attribute (a non-additive measure never summed); filters by type; size and colour by a measure with the legend;
+  edge width by weight; pin, multi-select and the lasso; Explain; linked selection with drishti-grid through drishti-core's bus;
+  export PNG, SVG, CSV and JSON; the arrow keys between neighbours and the adjacency table (▦) as the text alternative; live changes
+  throttled; three modes: `inspector` (default), `table` (the Nodes, Edges and Path tables linked both ways) and `terminal` (the
+  `GRAPH>` command line with Tab completion, history and function keys); the lineage preset (sources → tables → models → reports, status
+  badges). **drishti-tree**: hierarchies as the indented tree grid on drishti-grid's tree data (default), an org chart, a sunburst and an
+  icicle (additive sizes only); search with breadcrumbs; non-additive measures (◆) asked of the server and never summed, the
+  children's sum beside; Explain; re-parenting in an edit mode that proposes the moves as one four-eyes proposal. drishti-risk's presets:
+  the counterparty structure graph and the VaR hierarchy tree. Gallery demos for both (every mode), fixture harnesses, Node and browser
+  tests.
+- **The one-off graphs moved onto drishti-graph, the old code deleted**: the view's graph panel (the counterparty hierarchy, F3 HIER;
+  the console, the client renderer and the embed draw it; drishti-chart's ECharts graph option is gone), the **data map** (DATAMAP: the
+  domains as frames of the grouped layout, **Layered** the lineage DAG of the joins, the layout in the address; the drawn SVG, its CSS
+  and the server's layout code are gone) and Build › New pack's graph of kinds and links. The same nodes and edges as before (the data
+  map's are checked against the server's model in the browser test). linkGrid, the selection event and the shared colour theme
+  (`visualTheme`) moved from drishti-chart into drishti-core, where every component uses them.
+
 - **Proposed for the owner's choice: drishti-graph, drishti-tree and the designer kit** (ELEMENTS.md section 16; mock-ups
   docs/architecture/mockups/elements/g5-graph.html, g6-tree.html and g7-designer-kit.html, three options each, synthetic data): a
   connected graph on a canvas (counterparty, ownership and AML networks; layouts, paths, grouping, Explain, a linked table), a tree
