@@ -96,6 +96,11 @@
   only while its modules are on.
 ## 2.9.11.e (unreleased)
 
+- **No bespoke UI, the second pass** ([ELEMENTS.md section 12.3](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+  `trackPointer` moved into drishti-core (with pointer capture); the Sutra designer's Customize, Grid and Outline drags, the BI designer's
+  field, visual-type and well drags, layout mode, screen arranging, workspaces and sliders on it or on drishti-designer's `DragHub` (their
+  HTML5 drags deleted); drishti-inputs makes a page's `<textarea data-di-code>` a code editor (`upgradeCodeArea`) and the connector,
+  net, theme, BI item, workspace, transform and Pivot code areas use it. The guard's allow-list went from 19 files to 3.
 - **Vega retired (the owner's decision O1): one drawing engine.** A report's `vega-lite` visual and a Python visual's `output: vega-lite`
   are translated by drishti-chart (`fromVegaLite`) and drawn by drishti-chart; a feature it does not translate is refused in words with
   what to use instead (`vegaLiteAlternative`, `vegaLiteRefusal`, `vegaLiteIn`; `chartIn(host, spec)` puts any spec in a host), never

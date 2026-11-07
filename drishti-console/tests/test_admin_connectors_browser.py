@@ -296,7 +296,7 @@ def test_create_test_save_edit_disable_and_uninstall_is_the_only_way_out(browser
     dlg.locator("[data-tab='yaml']").click()
     yaml = dlg.locator("[data-yaml]")
     assert "url: jdbc:postgresql://db.example.com:5432/orders" in yaml.input_value()
-    yaml.fill(yaml.input_value().rstrip("\n") + "\n  pool-size: 12\n")
+    yaml.evaluate("(e, t) => { e.value = t; e.dispatchEvent(new Event('input', { bubbles: true })); }", yaml.input_value().rstrip("\n") + "\n  pool-size: 12\n")   # the code area is drishti-inputs' code editor: typed through its text area
     dlg.locator("[data-tab='form']").click()
     dlg.locator("[data-setting='pool-size']").wait_for()
     page.wait_for_function("() => document.querySelector('[data-setting=\"pool-size\"]').value === '12'")   # the YAML edit reached the form
@@ -389,7 +389,7 @@ def test_the_editor_works_from_the_keyboard(browser, conn_console):
     tab.focus()
     page.keyboard.press("ArrowRight")                                                              # arrow keys move between the tabs
     page.wait_for_function("() => document.querySelector('[data-tab=\"yaml\"]').getAttribute('aria-selected') === 'true'")
-    assert dlg.locator("[data-yaml]").is_visible() and dlg.locator("[data-pane='form']").is_hidden()
+    assert dlg.locator(".di-code-host").is_visible() and dlg.locator("[data-pane='form']").is_hidden()       # the YAML's code editor
     page.keyboard.press("ArrowLeft")
     page.wait_for_function("() => document.querySelector('[data-tab=\"form\"]').getAttribute('aria-selected') === 'true'")
     page.keyboard.press("Escape")

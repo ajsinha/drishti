@@ -257,3 +257,17 @@ def test_a_phone_width(browsers):
         await pg.keyboard.press("ArrowDown")
         assert await at(pg, "v1") == [0, 1, 3, 2]
     run(browsers, body, width=390, height=844)
+
+
+def test_a_pages_code_area_becomes_a_code_editor_and_keeps_its_value(browsers):
+    async def body(pg):
+        await pg.wait_for_selector("#hx-area-form + .di-code-host .CodeMirror, #hx-area-form .CodeMirror")
+        assert await h(pg, "document.getElementById('hx-area').hidden")
+        assert await h(pg, "document.getElementById('hx-area').value") == "title: A page's own text area"
+        await pg.evaluate("() => { window.__inputs = 0; document.getElementById('hx-area').addEventListener('input', () => window.__inputs++); }")
+        await pg.evaluate("() => { const cm = document.querySelector('#hx-area-form .CodeMirror').CodeMirror; cm.replaceRange('x: 1\\n', {line: 1, ch: 0}, null, '+input'); }")
+        assert await h(pg, "window.__inputs") == 1                                        # the page's script hears the edit
+        assert "x: 1" in await h(pg, "new FormData(document.getElementById('hx-area-form')).get('body')")    # and its form submits it
+        await pg.evaluate("() => { document.getElementById('hx-area').value = 'set: by the page'; }")
+        assert await h(pg, "document.querySelector('#hx-area-form .CodeMirror').CodeMirror.getValue()") == "set: by the page"
+    run(browsers, body)

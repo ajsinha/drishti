@@ -48,13 +48,9 @@
     const search = q('[data-fields-search]');
 
     function fieldButton(name, kind, label, icon, title, masked, ref) {
-      const b = h('button', { type: 'button', class: 'bi-field', draggable: 'true', 'data-field': name, 'data-kind': kind, title: title || name, 'aria-label': 'Add ' + name + ' to the report' }, B.icon(icon), ' ', h('span', { class: 'bi-field-name', text: label }),
+      const b = h('button', { type: 'button', class: 'bi-field', 'data-field': name, 'data-kind': kind, title: title || name, 'aria-label': 'Add ' + name + ' to the report' }, B.icon(icon), ' ', h('span', { class: 'bi-field-name', text: label }),
         masked ? h('small', { class: 'bi-badge', text: 'masked' }) : null);
-      b.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData(D.MIME, JSON.stringify({ name, kind, dataset: ref || '' }));
-        e.dataTransfer.setData('text/plain', name);
-        e.dataTransfer.effectAllowed = 'copy';
-      });
+      D.hub.draggable(b, { payload: () => ({ name, kind, dataset: ref || '' }), label: () => label });      // dragged onto the canvas or a well (drishti-designer's DragHub)
       b.addEventListener('click', () => D.addField(name, kind, { useSelected: true, dataset: ref || '' }));
       return b;
     }
@@ -174,9 +170,9 @@
         types.appendChild(h('p', { class: 'bi-type-group', text: title }));
         const row = h('div', { class: 'bi-typegrid', role: 'group', 'aria-label': title });
         list.forEach((t) => {
-          const b = h('button', { type: 'button', class: 'bi-vtype', 'data-type': t, 'aria-label': t, title: t + ' (click to use it; drag onto the canvas to add one there)', 'aria-pressed': 'false', draggable: 'true' }, B.icon(ICONS[t]), h('span', { text: t }));
+          const b = h('button', { type: 'button', class: 'bi-vtype', 'data-type': t, 'aria-label': t, title: t + ' (click to use it; drag onto the canvas to add one there)', 'aria-pressed': 'false' }, B.icon(ICONS[t]), h('span', { text: t }));
           b.addEventListener('click', () => chooseType(t));
-          b.addEventListener('dragstart', (e) => { e.dataTransfer.setData(D.MIME, JSON.stringify({ vtype: t })); e.dataTransfer.effectAllowed = 'copy'; });
+          D.hub.draggable(b, { payload: () => ({ vtype: t }), label: () => t });
           row.appendChild(b);
         });
         types.appendChild(row);
@@ -293,21 +289,14 @@
           D.withIdx(D.idxOf(v), () => D.change('Add ' + B.label(name), () => { D.putInWell(v, w, name); D.auto.delete(v.id); }));
         });
         const fs = h('fieldset', { class: 'bi-well', 'data-well': w }, h('legend', {}, w, h('small', { class: 'text-muted-d', text: ' ' + (spec.kind === 'any' ? 'fields and measures' : spec.kind + 's') + (spec.required ? ', needed' : '') + (spec.max ? ', up to ' + spec.max : '') })), ul, add);
-        fs.addEventListener('dragover', (e) => { if ([...e.dataTransfer.types].indexOf(D.MIME) >= 0) { e.preventDefault(); fs.classList.add('bi-drop'); } });
-        fs.addEventListener('dragleave', () => fs.classList.remove('bi-drop'));
-        fs.addEventListener('drop', (e) => {
+        D.hub.target({ el: fs, accepts: (p) => !!p && !p.vtype, over: () => fs.classList.add('bi-drop'), leave: () => fs.classList.remove('bi-drop'), drop: (x, y, p) => {      // a field dropped on the well
           fs.classList.remove('bi-drop');
-          let p = null;
-          try { p = JSON.parse(e.dataTransfer.getData(D.MIME)); } catch (err) { p = null; }
-          if (!p || p.vtype) { return; }
-          e.preventDefault();
-          e.stopPropagation();
           const clash = D.dsConflict(v, p.dataset || '');
           if (clash) { D.say(clash, true); return; }
           D.withIdx(D.idxForRef(p.dataset || ''), () => {
             if (!D.change('Add ' + B.label(p.name), () => { D.dsClaim(v, p.dataset || ''); if (!D.putInWell(v, w, p.name)) { D.say(p.name + ' does not go in the ' + w + ' well.', true); } D.auto.delete(v.id); })) { D.say(p.name + ' does not go in the ' + w + ' well, or is already there.', true); }
           });
-        });
+        } });
         build.appendChild(fs);
       });
       const group = (D.catalogue.visuals[v.type] || {}).group;

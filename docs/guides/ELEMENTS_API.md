@@ -850,6 +850,20 @@ Forgets a remembered width set (all modes) and re-applies the defaults.
 
 Returns `void`.
 
+### drishti_pointer.js
+
+#### `trackPointer(e, h, o)`
+
+Tracks one pointer from a press until it is let go.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `e` | `PointerEvent` | the pointerdown |
+| `h` | `TrackHandlers` |  |
+| `[o]` | `{threshold: number, capture: Element}` | threshold: pixels before a press is a drag (default 5; 0: at once); capture: an element that captures the pointer (the moves over frames and outside the window still come here) |
+
+Returns `{cancel: function(): void}`.
+
 ### drishti_keys.js
 
 #### `WORKBENCH`
@@ -1496,6 +1510,14 @@ A table to export.
 | `[attrs]` | `Object&lt;string, string&gt;` | more attributes (data-toast ...) |
 | `[action]` | `{label: string, run: function(): void, className: string}` | a button in the toast; a click runs it and closes the toast |
 | `[timeout]` | `number` | ms before it goes (the tray's default; 0: it stays) |
+
+#### `TrackHandlers` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[start]` | `function(PointerEvent): (boolean\|void)` | the press became a drag; false cancels it |
+| `move` | `function(PointerEvent): void` |  |
+| `end` | `function(PointerEvent, boolean, boolean): void` | (event, committed, moved): committed is false after Escape or a cancel |
 
 ## drishti-grid
 
@@ -7939,6 +7961,29 @@ How many lines were added, removed and kept.
 
 Returns `{added: number, removed: number, same: number}`.
 
+### drishti_code-upgrade.js
+
+#### `upgradeCodeArea(ta, o)`
+
+Makes one text area a code editor (once); answers the editor.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ta` | `HTMLTextAreaElement` |  |
+| `[o]` | `{mode: string, height: number, complete: Function, lint: Function}` | beside the element's own attributes |
+
+Returns `CodeEditor`.
+
+#### `upgradeCodeAreas(root)`
+
+Upgrades every &lt;textarea data-di-code&gt; inside a root (a page, a dialog drawn later).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `ParentNode` |  |
+
+Returns `CodeEditor[]`.
+
 ### drishti_inputs-element.js
 
 #### `INPUT_ELEMENTS`
@@ -7960,7 +8005,7 @@ Returns `void`.
 
 #### `install(root)`
 
-Starts drishti-inputs in a page (the bundle calls it when it loads; nothing happens without a document): defines its elements.
+Starts drishti-inputs in a page (the bundle calls it when it loads; nothing happens without a document): defines its elements and makes the page's code areas (&lt;textarea data-di-code&gt;) code editors.
 
 | Parameter | Type | Meaning |
 |---|---|---|
@@ -9040,18 +9085,6 @@ The keys as a list for a help card: [{keys, does}].
 Returns `Array&lt;{keys: string, does: string}&gt;`.
 
 ### drishti_pointer.js
-
-#### `trackPointer(e, h, o)`
-
-Tracks one pointer from a press until it is let go.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `e` | `PointerEvent` | the pointerdown |
-| `h` | `TrackHandlers` |  |
-| `[o]` | `{threshold: number}` | pixels before a press is a drag (default 5; 0: at once) |
-
-Returns `{cancel: function(): void}`.
 
 #### class `DragHub`
 
@@ -10320,14 +10353,6 @@ An entry of the palette.
 | `[disabled]` | `boolean` |  |
 | `[why]` | `string` | why it is disabled, in words |
 | `[payload]` | `Object` | what a drag or an add carries (default: {palette: id}) |
-
-#### `TrackHandlers` : `Object`
-
-| Name | Type | Meaning |
-|---|---|---|
-| `[start]` | `function(PointerEvent): (boolean\|void)` | the press became a drag; false cancels it |
-| `move` | `function(PointerEvent): void` |  |
-| `end` | `function(PointerEvent, boolean, boolean): void` | (event, committed, moved): committed is false after Escape or a cancel |
 
 #### `DropTarget` : `Object`
 

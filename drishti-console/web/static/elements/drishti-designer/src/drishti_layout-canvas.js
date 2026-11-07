@@ -22,7 +22,7 @@
    happened. Nothing inline: positions are set through the CSSOM. */
 import { EventBus, announce, h } from '../../drishti-core/src/drishti_index.js';
 import { designerKeys } from './drishti_keymap.js';
-import { trackPointer } from './drishti_pointer.js';
+import { trackPointer } from '../../drishti-core/src/drishti_index.js';
 import { snap } from './drishti_layout-rules.js';
 import { flowHit, showFlowDrop, clearFlowDrop } from './drishti_layout-flow.js';
 
