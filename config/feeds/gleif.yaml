@@ -12,36 +12,44 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/feeds/gleif.yaml: the GLEIF feed (docs/guides/FEEDS_GUIDE.md; every key in its section "The feed file").
+# config/feeds/gleif.yaml: the GLEIF feed, and the annotated example of a feed file (docs/guides/FEEDS_GUIDE.md section 7; every key is
+# in docs/admin/CONFIGURATION.md, area feeds).
 #   python3 tools/drishti.py feed run gleif                 pull, write data/feeds/gleif/<date>/, load into referencelake
 #   python3 tools/drishti.py feed run gleif --snapshot      refresh the committed pack and data/testdata/gleif instead (no load)
 #   python3 tools/drishti.py feed run gleif -- --scope GROUP:784F5XWPLTWKTBV3E584   arguments after -- go to the source
-feed: gleif
-title: GLEIF legal entities, ownership and identifier mappings
-description: >-
+feed: gleif                            # the feed's name (lower case, digits, dashes): the file's name, and `drishti.py feed run <feed>`
+title: GLEIF legal entities, ownership and identifier mappings   # one line for feed list, Admin -> Data loads -> Feeds and the docs
+description: >-                        # what the feed holds, in a sentence or two
   The Global LEI Foundation's golden copy (level 2 relationships and reporting exceptions), the LEI records of the pack's universe from
   the LEI API, and the ISIN/BIC-to-LEI mapping files: core reference data for every counterparty.
-class: gleif.GleifFeed                 # tools/feeds/sources/gleif.py
-source:
-  provider: GLEIF
-  url: https://www.gleif.org
-  pause: 1.0                           # at most one API call a second (GLEIF asks for restraint)
-  retries: 3
-  cache-hours: 20
-lake: referencelake
-load: java
-schedule: {at: "05:30", days: daily}   # GLEIF publishes its golden copy three times a day; the 00:00 UTC file is there by then
-licence:
-  name: CC0 1.0 (attribution appreciated)
-  url: https://www.gleif.org/en/meta/lei-data-terms-of-use
-  redistribution: allowed
-  internal-only: false
-  attribution: "Contains LEI data from the Global Legal Entity Identifier Foundation (GLEIF), CC0 1.0"
-datasets:
-  lei-entity:       {pack: gleif, kind: lei-entity, key: LEI, description: "one legal entity: name, addresses, legal form, status, renewal"}
-  lei-relationship: {pack: gleif, kind: lei-relationship, key: RELATIONSHIP_ID, description: "a direct or ultimate parent relationship (level 2)"}
-  lei-mapping:      {pack: gleif, kind: lei-mapping, key: IDENTIFIER, description: "an ISIN or BIC mapped to its LEI"}
-options:
-  args: []                             # given to the source before the command line's (e.g. [--scope, "NAME:allianz,CAP:200"])
-snapshot:
-  note: refreshes config/packs/gleif (samples, guide) and data/testdata/gleif, as the pack's generator writes them
+class: gleif.GleifFeed                 # the Feed class that pulls: <module>.<Class>, the module in tools/feeds/sources/ (or beside this file)
+source:                                # the external source
+  provider: GLEIF                      # who publishes it
+  url: https://www.gleif.org           # the provider's page
+  pause: 1.0                           # seconds between requests: the rate limit (GLEIF asks for at most one API call a second)
+  retries: 3                           # retries after 2, 4, 8 s on 429, 5xx and network errors (or the server's Retry-After)
+  timeout: 90                          # seconds a request may take
+  cache-hours: 20                      # a download younger than this is reused from data/feeds/<feed>/cache (a broken run resumes)
+lake: referencelake                    # the lake the feed loads (config/lakes/<lake>.yaml); --lake on the command line overrides it
+load: java                             # the load route: java (the parallel loader), python (lake build), inbox (the data inbox) or none
+enabled: true                          # false: left out of `feed run --all` and the schedule entries (still runnable by name)
+schedule:                              # when the daily entries run it (drishti.py feed schedule --cron | --systemd | --windows)
+  at: "05:30"                          # HH:MM, the machine's local time (GLEIF publishes three times a day; the 00:00 UTC file is there)
+  days: daily                          # daily or weekdays
+licence:                               # the source's terms, copied into every manifest and ledger line
+  name: CC0 1.0 (attribution appreciated)   # the licence's name
+  url: https://www.gleif.org/en/meta/lei-data-terms-of-use   # the terms' page
+  redistribution: allowed              # allowed, attribution or internal-only
+  internal-only: false                 # true: never redistributed (written into the repository only with --snapshot --internal-ok)
+  attribution: "Contains LEI data from the Global Legal Entity Identifier Foundation (GLEIF), CC0 1.0"   # the line to show with the data
+history:                               # how far a feed with no state yet goes back
+  first-run-days: 30                   # the first run without data/feeds/<feed>/state.json pulls this many days (--since overrides)
+datasets:                              # each dataset the feed writes: its rows' pack and kind, the table, the key, how its files are dated
+  lei-entity: {pack: gleif, kind: lei-entity, key: LEI, description: "one legal entity: name, addresses, legal form, status, renewal"}   # one dataset: pack and kind (required), table (default the kind), key (the id field), dated (run or source), description
+  lei-relationship: {pack: gleif, kind: lei-relationship, key: RELATIONSHIP_ID, description: "a direct or ultimate parent relationship (level 2)"}   # a direct or ultimate parent relationship
+  lei-mapping: {pack: gleif, kind: lei-mapping, key: IDENTIFIER, description: "an ISIN or BIC mapped to its LEI"}   # an ISIN or BIC mapped to its LEI
+options:                               # free settings the feed's class reads (run.option); --set NAME=VALUE overrides one
+  args: []                             # arguments given to the source before the command line's (e.g. [--scope, "NAME:allianz,CAP:200"])
+snapshot:                              # what --snapshot does: refresh the committed demo snapshot instead of loading
+  note: refreshes config/packs/gleif (samples, guide) and data/testdata/gleif, as the pack's generator writes them   # a line for the docs
+# keys: {api_key: ${SOME_API_KEY}}     # (GLEIF needs none) API keys as environment variables only: a key written in a file is refused

@@ -14,12 +14,11 @@
 
 """Tests of tools/feeds/sources/gleif.py on a recorded cache (Apple's and Moody's ownership groups, cut from GLEIF's real golden copy,
 LEI records and mapping files): an offline build, its determinism, --scope through a fake opener, the refusals and the bulk file's
-conversion. No network, unless DRISHTI_LIVE_FETCH=1 for the live test."""
+conversion. No network, unless --live for the live test."""
 from __future__ import annotations
 
 import argparse
 import json
-import os
 import shutil
 import sys
 from pathlib import Path
@@ -167,7 +166,7 @@ def test_status_runs_offline(cache, capsys):
     assert "committed pack:" in out and "golden" in out and "CC0" in out
 
 
-@pytest.mark.skipif(os.environ.get("DRISHTI_LIVE_FETCH") != "1", reason="live: set DRISHTI_LIVE_FETCH=1")
+@pytest.mark.live
 def test_live_one_lei_record():
     import urllib.request
     req = urllib.request.Request(f"{GL.F.API}/lei-records/{APPLE}", headers={"User-Agent": GL.F.USER_AGENT, "Accept": "application/vnd.api+json"})

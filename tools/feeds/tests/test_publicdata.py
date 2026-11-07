@@ -14,7 +14,7 @@
 
 """Tests of the public-data refresh sources (tools/feeds/sources, formerly the public-data refresh scripts): the shared library (cache, HTTP, manifest, the internal-only
 guard), each source's normalise step against recorded responses, dry runs and status. No network, except the one live smoke
-test, which runs only with DRISHTI_LIVE_FETCH=1."""
+test, which runs only with --live."""
 from __future__ import annotations
 
 import argparse
@@ -22,7 +22,6 @@ import gzip
 import io
 import json
 import re
-import os
 import shutil
 import sys
 import urllib.error
@@ -326,7 +325,7 @@ def test_market_data_refresh_from_the_cache(tmp_path, data_dir, capsys):
     assert man["sources"]["sofr"]["rows"] == 3 and len(man["files"]) == len(data)
 
 
-@pytest.mark.skipif(os.environ.get("DRISHTI_LIVE_FETCH") != "1", reason="live fetch: set DRISHTI_LIVE_FETCH=1")
+@pytest.mark.live
 def test_live_smoke_estr(tmp_path):
     assert MD.main(["refresh", "estr", "--out", str(tmp_path / "out"), "--pause", "1"]) == 0
     assert (tmp_path / "out" / "rate-fixing.jsonl").read_text().count("FIX-ESTR") == 1

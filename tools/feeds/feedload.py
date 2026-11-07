@@ -41,7 +41,8 @@ DRISHTI = ROOT / "tools" / "drishti.py"
 
 
 def packs_dir() -> Path:
-    return Path(os.environ.get("DRISHTI_FEEDS_PACKS") or ROOT / "config" / "packs")
+    """The packs' folder whose pack.yaml gives a table's kind, key and recommended layout."""
+    return ROOT / "config" / "packs"
 
 
 def inbox_dir(given: str | None = None) -> Path:

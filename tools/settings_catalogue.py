@@ -134,6 +134,10 @@ AREAS = [
     Area("alerts", "Platform alert rules: `config/alerts/platform-alerts.yaml`",
          "The rules each server evaluates against its own metrics ([OPERATIONS.md](OPERATIONS.md#136-platform-metrics-and-alerts)); "
          "`drishti.metrics.alerts.file` names the file, read again when it changes. A rule's name is the site's own."),
+    Area("feeds", "Data feeds: `config/feeds/<feed>.yaml`",
+         "One file per data feed: the source, its datasets and the lake they load, the schedule, the licence and the keys "
+         "(environment variables only) ([FEEDS_GUIDE.md section 7](../guides/FEEDS_GUIDE.md#7-the-feed-file-every-key)); read by "
+         "`drishti.py feed` at every run. The keys below are those of the annotated `gleif.yaml`; `keys:` names API keys as `${ENV}`."),
     Area("reports", "Report definitions: `config/reports/`",
          "One YAML per regulatory report (`drishti.regulatory.reports-dir`), read when a run is made: its rows, columns, checks, outputs "
          "and sign-off chain ([VAR_GUIDE.md section 18.14](../guides/VAR_GUIDE.md#1814-regulatory-reports-definitions-runs-checks-and-sign-off))."),
@@ -430,6 +434,8 @@ def all_rows() -> tuple[list[Row], list[str]]:
     rows += yaml_rows("net", sorted((ROOT / "config/net.examples/peers").glob("*.yaml")), "each member", "live", "`peers/<name>.yaml`")
     rows += yaml_rows("alerts", [ROOT / "config/alerts/platform-alerts.yaml"], "server", "live", None, named={"rules": "<rule>"})
     rows += yaml_rows("dataload", [ROOT / "config/dataload.yaml"], "server (the inbox's owner)", "live", None)
+    rows += yaml_rows("feeds", [ROOT / "config/feeds/gleif.yaml"], "drishti.py feed (each run)", "live", "A feed file: `config/feeds/<feed>.yaml`",
+                      named={"datasets": "<dataset>"})
     rows += yaml_rows("ui-kit", [ROOT / "config/ui-kit/brand.yaml"], "server", "restart", None, named={"themes": "<theme>"})
     rows += yaml_rows("ai", sorted((ROOT / "config/ai").glob("*.yaml.example")), "server and console", "live", "A provider file: `config/ai/<name>.yaml`",
                       named={"deployments": "<model>"})
