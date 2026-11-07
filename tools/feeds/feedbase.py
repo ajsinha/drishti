@@ -456,7 +456,7 @@ class FeedRun:
         by_day: dict[str, list[dict]] = {}
         for (dataset, day), w in sorted(self._writers.items(), key=lambda kv: (kv[0][1], kv[0][0])):
             ds = self.spec.datasets[dataset]
-            by_day.setdefault(day, []).append({"dataset": dataset, "pack": ds.pack, "kind": ds.kind, "table": ds.table,
+            by_day.setdefault(day, []).append({"dataset": dataset, "pack": ds.pack, "kind": ds.kind, "table": ds.table, "key": ds.key,
                                                "file": w.path.name, "rows": w.rows, "bytes": w.path.stat().st_size,
                                                "sha256": K.sha256(w.path)})
         for day, entries in by_day.items():

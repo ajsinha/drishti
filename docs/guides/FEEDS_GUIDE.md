@@ -344,7 +344,7 @@ snapshot:                              # optional: what --snapshot does (args fo
 |---|---|
 | `pack`, `kind` | the pack and kind of the rows: their layout, id and contract (required) |
 | `table` | the table (and the files' name); default the kind, as the demo lake names its tables |
-| `key` | the rows' id field, for the reader of the file (the lake takes it from the pack) |
+| `key` | the rows' id field: given to the load (`--key`), so a lake entry without an id takes it; an entry with one must agree |
 | `dated` | `run` (default): every row under the run's business date (a snapshot such as GLEIF's); `source`: the date the feed gives each emit (a time series) |
 | `description` | a line for `feed list --json` and the docs |
 
