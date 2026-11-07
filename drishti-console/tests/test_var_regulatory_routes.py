@@ -56,9 +56,9 @@ def test_the_json_goes_to_the_engine_as_the_person(client, backend, monkeypatch)
     assert seen[-1][1] == "/statistics" and seen[-1][3]["period"] == "FY2026"
     client.post("/api/var/reports/annual-report-var/runs?period=FY2026", json={})
     assert seen[-1][:2] == ("POST", "/reports/annual-report-var/runs")
-    client.post("/api/var/reports/annual-report-var/runs/FY2026/signoff", json={"version": 2, "action": "approve", "step": "checker",
-                                                                                "comment": "ok", "extra": "dropped"})
-    assert seen[-1][2] == {"version": 2, "action": "approve", "step": "checker", "comment": "ok"}
+    client.post("/api/var/reports/annual-report-var/runs/FY2026/narrative", json={"version": 2, "narrative": "the year in words", "extra": "dropped"})
+    assert seen[-1][1] == "/reports/annual-report-var/runs/FY2026/narrative" and seen[-1][2] == {"version": 2, "narrative": "the year in words"}
+    assert client.post("/api/var/reports/annual-report-var/runs/FY2026/signoff", json={}).status_code in (404, 405)   # sign-offs: the one Approvals queue
     r = client.get("/api/var/reports/annual-report-var/runs/FY2026/file?format=pdf&draft=true")
     assert r.status_code == 200 and r.headers["content-type"] == "application/pdf"
     assert client.get("/api/var/reports/annual-report-var/runs/FY2026/file?format=exe").status_code == 400

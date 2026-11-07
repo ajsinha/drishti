@@ -27,7 +27,7 @@ import render_cases as cases
 import render_harness as H
 
 sync_api = pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
-M = f"/static/render/{H.render_dist.VERSION}/m/"
+E = "/static/elements/"          # drishti-renderer 2.0.0 and the libraries it draws with
 
 
 @pytest.fixture(scope="module")
@@ -81,30 +81,35 @@ NUMBERS = [74.0, 73.2, 0.1, 1e16, 1e17, 1.5e-5, 1e-4, 123456.789, -0.5, 2.0 ** 5
 HALVES = [(0.5, 0), (1.5, 0), (2.5, 0), (-2.5, 0), (2.675, 2), (0.125, 2), (36.45, 1), (33.35, 1)]
 
 
-def test_formats_follow_python_and_jinja(lab):
+def test_formats_are_the_libraries_and_round_half_up(lab):
+    """The renderer formats nothing of its own: a raw number (an older server's candles) is drishti-core's Python float text, the figures
+    the macros compute (a share, a bar's width, a heat bucket) are rounded half up by drishti-core, as the server's FormatSpec (decided),
+    and axis ticks are drishti-chart's."""
     got = lab.evaluate("""async ([nums, halves]) => {
-      const F = await import('%sformat.js');
-      return { floats: nums.map(F.pyFloat), rounds: halves.map(([x, n]) => F.pyRound(x, n)), share: [F.share(1, 3), F.share(1, 2), F.share(-2, 8)],
-        compact: [1750000, -1.2e9, 250000, 12345, 3.14159, NaN].map(F.compact), heat: [F.heat(-2, -2, 7), F.heat(7, -2, 7), F.heat(2.5, -2, 7), F.heat(1, 1, 1)],
-        tones: [F.toneClass({tone: 'neg'}), F.toneClass({}), F.knownTone('pos'), F.knownTone('sparkly')], cap: F.capitalize('not active (OFF)') };
-    }""" % M, [NUMBERS, HALVES])
+      const C = await import('%sdrishti-core/src/drishti_index.js'), G = await import('%sdrishti-grid/src/drishti_index.js');
+      const K = await import('%sdrishti-chart/src/drishti_index.js'), R = await import('%sdrishti-renderer/src/drishti_index.js');
+      return { floats: nums.map(C.formatPythonFloat), rounds: halves.map(([x, n]) => C.roundHalfUp(x, n)),
+        share: [1 / 3, 1 / 2, 2 / 8].map((x) => C.formatNumber(x * 100, { decimals: 1, grouping: false })),
+        compact: [1750000, -1.2e9, 250000, 12345, 3.14159, NaN].map(K.panelCompact), heat: [G.heatBucket(-2, -2, 7), G.heatBucket(7, -2, 7), G.heatBucket(2.5, -2, 7), G.heatBucket(1, 1, 1)],
+        tones: [R.toneClass({tone: 'neg'}), R.toneClass({})] };
+    }""" % (E, E, E, E), [NUMBERS, HALVES])
     assert got["floats"] == [repr(x) if not math.isinf(x) else "inf" for x in NUMBERS]
-    assert got["rounds"] == [round(x, n) for x, n in HALVES]
+    assert got["rounds"] == ["1", "2", "3", "3", "2.68", "0.13", "36.5", "33.4"]     # the digits, half up on the decimal value (the sign is the format's)
     assert got["share"] == ["33.3", "50.0", "25.0"]
     assert got["compact"] == ["1.75m", "−1.2bn", "250k", "12.3k", "3.14", ""]
-    assert got["heat"] == [0, 9, round(4.5 / 9 * 9), 5]
-    assert got["tones"] == [" t-neg", "", True, False]
-    assert got["cap"] == "Not active (off)"
+    assert got["heat"] == [0, 9, 5, 5]                        # 4.5 rounds up to 5 (Python's round gave 4)
+    assert got["tones"] == [" t-neg", ""]
 
 
 def test_the_dom_rules_refuse_markup_handlers_styles_and_script_urls(lab):
     got = lab.evaluate("""async () => {
-      const D = await import('%sdom.js');
+      const C = await import('%sdrishti-core/src/drishti_index.js'), R = await import('%sdrishti-renderer/src/drishti_index.js');
+      const D = { h: R.h, safeUrl: C.safeUrl, attrAllowed: C.attrAllowed };
       const urls = ['javascript:alert(1)', ' JaVaScRiPt:x', '\\u0001javascript:x', 'data:text/html,x', 'vbscript:x', '//evil.example/x', '/v/trade/X', '?dr.p=1', '#x', 'https://www.sec.gov/x', 'http://a/b'];
       const el = D.h('span', { onclick: 'alert(1)', style: 'color:red', title: 't', 'data-x': '1', 'aria-label': 'a', href: 'javascript:alert(1)', srcdoc: 'x' }, '<img src=x onerror=alert(1)>');
       return { urls: urls.map((u) => D.safeUrl(u)), names: ['onclick', 'ONLOAD', 'style', 'srcdoc', 'src', 'href', 'data-ev', 'aria-pressed', 'class', 'formaction'].map(D.attrAllowed),
         attrs: [...el.attributes].map((a) => a.name).sort(), children: el.childNodes.length, kind: el.firstChild.nodeType, imgs: el.querySelectorAll('img').length };
-    }""" % M)
+    }""" % (E, E))
     assert got["urls"] == [None, None, None, None, None, None, "/v/trade/X", "?dr.p=1", "#x", "https://www.sec.gov/x", "http://a/b"]
     assert got["names"] == [False, False, False, False, False, True, True, True, True, False]
     assert got["attrs"] == ["aria-label", "data-x", "title"]
@@ -114,9 +119,9 @@ def test_the_dom_rules_refuse_markup_handlers_styles_and_script_urls(lab):
 def test_sorting_reads_values_the_way_the_console_does(lab):
     texts = ["1.5m", "−30,205,543", "250k", "4.25%", "2026-10-02", "abc", "−1.2bn", "12bp", "", "Zed"]
     got = lab.evaluate("""async (texts) => {
-      const B = await import('%sbehave.js');
-      return texts.slice().sort((a, b) => B.compareValues(B.sortValue(a), B.sortValue(b)));
-    }""" % M, texts)
+      const C = await import('%sdrishti-core/src/drishti_index.js');
+      return texts.slice().sort((a, b) => C.compareTextKeys(C.textSortKey(a), C.textSortKey(b)));
+    }""" % E, texts)
     assert got == ["−1.2bn", "−30,205,543", "4.25%", "12bp", "250k", "1.5m", "2026-10-02", "", "abc", "zed".capitalize()]
 
 
@@ -280,7 +285,8 @@ def test_rows_and_bars_with_events_say_so(lab):
 def test_a_column_sorts_as_the_console_sorts_it(browser, site):
     vm = cases.more_shapes()
     site.add_vm("sorting", vm)
-    html = H.console_html(vm).replace("</body>", '<script src="/static/js/drishti_colfilter.js"></script><script src="/static/js/drishti_tables.js"></script></body>')
+    html = H.console_html(vm).replace("</body>", '<script src="/static/elements/drishti-grid/drishti_grid.js"></script><script src="/static/js/drishti_colfilter.js"></script>'
+                                      '<script src="/static/js/drishti_tables.js"></script></body>')
     site.add_console("sorting", html)
     orders = []
     for side in ("console", "library"):

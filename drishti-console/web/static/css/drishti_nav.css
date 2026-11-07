@@ -70,7 +70,7 @@
   background: linear-gradient(135deg, var(--d-grad-from), var(--d-grad-to)); box-shadow: 0 6px 14px -8px var(--d-grad-from); }
 .mega-label { display: block; font-weight: 650; line-height: 1.25; font-size: .9rem; }
 .mega-desc { display: block; font-size: .76rem; color: var(--d-muted); line-height: 1.35; }
-/* a subject menu's item: the command it runs, beside its label (the lens menus, config/menus.yaml subject: true) */
+/* a subject menu's item: the command it runs, beside its label (the lens menus, config/sitemap.yaml subject: true) */
 .mega-text { flex: 1 1 auto; min-width: 0; }
 .mega-cmd { float: right; margin-left: .75rem; font-size: .74rem; font-weight: 500; color: var(--d-accent); white-space: nowrap; }
 

@@ -3657,10 +3657,10 @@ With `drishti.governance.enabled: true` (the default), Save does not publish: it
 | Step | Who | What happens |
 |---|---|---|
 | Propose | an author | the Sutra is checked as it stands (it must be publishable) and stored with the live text it is based on (`202 Accepted`, `{"proposal": {"id", "name", "version", "status": "pending"}}`). Proposing exactly the live text is refused. |
-| Review | an approver | **Build → Govern → Reviews** (`/build/reviews`) lists proposals; each shows a diff against the live version (or, for a new version, the latest earlier one): panel blocks that moved are said in words (`moved: <title> from position a to b (main → side)`, positions counted within the column), the other edits as a line diff, and the full line diff behind a toggle |
-| Approve | an approver | with `drishti.governance.four-eyes: true` (default) and security on, the author cannot approve their own proposal (`DRS-2007`). If the live text changed since the proposal, approval is refused (`DRS-2006`). Otherwise the file is written and goes live. `POST /api/v1/sutras/proposals/{id}/approve` (token scope `design:approve`) |
+| Review | an approver | **Views → Approvals** (`/approvals`) lists proposals; each shows a diff against the live version (or, for a new version, the latest earlier one): panel blocks that moved are said in words (`moved: <title> from position a to b (main → side)`, positions counted within the column), the other edits as a line diff, and the full line diff behind a toggle |
+| Approve | an approver | with `drishti.governance.four-eyes: true` (default) and security on, the author cannot approve their own proposal (`DRS-2007`). If the live text changed since the proposal, approval is refused (`DRS-2006`). Otherwise the file is written and goes live. `POST /api/v1/approvals/sutra/{id}/approve` (token scope `design:approve`) |
 | Reject | an approver | needs a comment saying why (`…/reject`) |
-| Withdraw | the author or an admin | `POST /api/v1/sutras/proposals/{id}/withdraw` (`design:write`) |
+| Withdraw | the author or an admin | `POST /api/v1/approvals/sutra/{id}/withdraw` (`design:write`) |
 
 Every step is audited (`sutra-proposed`, `sutra-approved`, …). `GET /api/v1/sutras/{name}/history` lists a Sutra's proposals. With
 governance off, Save writes at once.
@@ -5483,7 +5483,7 @@ labels, links, About text and tests. The rules are in [Schema to pack](SCHEMA_TO
 
 **Start from**: *auto-design* (the default when there are samples: a first screen drafted for you, section 7), *an existing Sutra*, or *an empty Sutra* for the kind.
 
-Open the workbench with nothing at all and you get an unnamed **scratch design** on the all-panels showcase; it is forgotten after a day. Name it in **My designs** to keep it (named designs are kept 90 days after you last touch them). Every example in *Help → Examples* has an **Open in the workbench** link that makes the same kind of copy.
+Open the workbench with nothing at all and you get an unnamed **scratch design** on the all-panels showcase; it is forgotten after a day. Name it in **My drafts** on the Build home to keep it (named designs are kept 90 days after you last touch them). Every example in *Help → Examples* has an **Open in the workbench** link that makes the same kind of copy.
 
 ### 2. The workbench at a glance
 
@@ -5869,7 +5869,7 @@ Sample contents are never logged.
 | `/studio?kind=trade&id=T-1` | A new design for that kind with a starter Sutra and that **stored entity** as its sample. |
 | `/studio?design=ID&sample=NAME` | That design (if it is yours), with that sample selected. |
 | `/studio?build=1` (with any of the above) | The same, on the **Design** tab instead of the YAML. |
-| `/studio/reviews`, `/studio/reviews/P-000042` | **Build → Govern → Reviews** (`/build/reviews`). The review pages moved there, unchanged. |
+| `/studio/reviews`, `/studio/reviews/P-000042` | **Views → Approvals** (`/approvals`). The review pages moved there, unchanged. |
 
 ![Build → Create, Govern, Learn: where Studio's entries went](img/designer/25-build-menu.jpg)
 
@@ -5886,7 +5886,7 @@ What Studio had, and where it is now:
 | *Test entities* and *Run all* | The **Tests** tab checks **every sample** against the design as you type. |
 | *Start from inference* | **Auto-design** (section 7) drafts a complete Sutra from the samples. |
 | The Sutra picker (*New Sutra…*) | **Build → New screen → an existing Sutra**, or `/studio?sutra=name@version` as above. |
-| Reviews, with the pending count | **Build → Govern → Reviews** and the *Reviews* button beside *Submit for review*. |
+| Reviews, with the pending count | **Views → Approvals** and the *Reviews* button beside *Submit for review*. |
 
 ![File menu: Open a Sutra or sample documents, or an example as a new design](img/designer/21-file-menu.jpg)
 
@@ -5952,15 +5952,15 @@ Designing is open to everyone: the design is yours, kept by the server, and you 
 
 | Your situation | The button says | What it does |
 |---|---|---|
-| You may not save (no author right, or saving is off on this server) | *Save* (dimmed) | Ctrl+S and the button say *Designing is open to everyone; saving needs the author right*. Nothing is lost: the design is in *My designs*. |
+| You may not save (no author right, or saving is off on this server) | *Save* (dimmed) | Ctrl+S and the button say *Designing is open to everyone; saving needs the author right*. Nothing is lost: the design is in *My drafts* (the Build home). |
 | You may save, no review | *Save* | Writes the design's Sutra to the registry; views use it now. The message names the Sutra and its new version. |
 | You may save, review is on | *Submit for review* | Sends a **proposal** with your note (the *What changed?* box is for the reviewer); an approver makes it live, and never you alone when four eyes are on. The message links the review. |
 
-Typed YAML is sent first, so what is saved is what you see. A Sutra the server refuses (a located problem) is answered with the line, and nothing is saved. **Build → Govern → Reviews** lists what is waiting (the menu shows how many) and shows each proposal with the diff; approvers approve or reject there, and authors withdraw their own.
+Typed YAML is sent first, so what is saved is what you see. A Sutra the server refuses (a located problem) is answered with the line, and nothing is saved. **Views → Approvals** lists what is waiting (the menu shows how many) and shows each proposal with the diff; approvers approve or reject there, and authors withdraw their own.
 
 ### 23. End to end: from a folder of JSON to a live screen
 
-This is the whole road in one go. It assumes you have the author right and Studio saving is on (`DRISHTI_STUDIO_SAVE=true`); a colleague with the approve right does the last step. Without those, steps 1 to 4 still work and the design waits in *My designs*.
+This is the whole road in one go. It assumes you have the author right and Studio saving is on (`DRISHTI_STUDIO_SAVE=true`); a colleague with the approve right does the last step. Without those, steps 1 to 4 still work and the design waits in *My drafts* (the Build home).
 
 1. **Folder.** *Build → New screen → Choose a folder* (section 1). Drishti reads every `.json` and `.jsonl` in it as samples. Start from **Auto-design** and give the design a name, so it is kept for 90 days.
 2. **Design.** The workbench opens on a first screen drawn from your data (sections 2 to 8). Drag a panel from the palette, drop a field onto it, size it on the grid, fill its options in the inspector. Everything is an undoable step.
@@ -5969,13 +5969,13 @@ This is the whole road in one go. It assumes you have the author right and Studi
 
    ![After Submit for review: the message names the proposal, the status says proposed](img/designer/41-submit-for-review.jpg)
 
-5. **Review.** The approver opens **Build → Govern → Reviews**, then the proposal. Under the diff of the Sutra they see the same matrix you saw, which samples were used (and which were generated from a schema, so are not real data) and your notes. With four eyes on, you cannot approve your own proposal.
+5. **Review.** The approver opens **Views → Approvals**, then the proposal. Under the diff of the Sutra they see the same matrix you saw, which samples were used (and which were generated from a schema, so are not real data) and your notes. With four eyes on, you cannot approve your own proposal.
 
    ![The reviewer's evidence: every panel on every sample, the sample names, the author's notes](img/designer/42-review-evidence.jpg)
 
-6. **Approve.** *Approve and publish* writes the Sutra to the registry as the next version. Your design's status becomes **live v1** (the version number), on the workbench and on *My designs*. Views of that kind use it from the next request. *Reject* needs a reason, the design returns to *draft*, and the reviewer's comment is on the proposal.
+6. **Approve.** *Approve* in the Approvals queue writes the Sutra to the registry as the next version. Your design's status becomes **live v1** (the version number), on the workbench and on *My designs*. Views of that kind use it from the next request. *Reject* needs a reason, the design returns to *draft*, and the reviewer's comment is on the proposal.
 
-   ![My designs: the design is live v1](img/designer/43-live-status.jpg)
+   ![My drafts: the design is live v1](img/designer/43-live-status.jpg)
 
 7. **Change it later.** Open the live Sutra in the workbench (*Build → New screen → An existing Sutra*): the new design remembers its **base**, the *Versions* tab (section 21) shows your changes against it, and the next proposal is a new version. If someone else changed the live Sutra meanwhile, the proposal says *stale* and must be made again from the live version.
 
@@ -6053,7 +6053,7 @@ If you edit Sutras in an IDE and keep them in git, bind the design to a file so 
 
 | You see | Why | What to do |
 |---|---|---|
-| *Designing is open to everyone; saving needs the author right* | No author right, or `drishti.rachana.studio-save` is off | Ask for the author role; your design is safe in *My designs* |
+| *Designing is open to everyone; saving needs the author right* | No author right, or `drishti.rachana.studio-save` is off | Ask for the author role; your design is safe in *My drafts* (the Build home) |
 | *X is already live exactly as proposed* | The live Sutra already has this exact text | Change something, or you are done |
 | Proposal says *stale* and cannot be approved | The live Sutra changed after you proposed | Reject it (or withdraw), open the live Sutra as a new design, redo, propose again |
 | The review shows *no check was attached* | The design had no samples when it was proposed | Add samples, check, and propose again |
@@ -6069,7 +6069,7 @@ If you edit Sutras in an IDE and keep them in git, bind the design to a file so 
 
 - One proposal carries the check of the revision you submit; it holds names and counts, never sample contents. The design's notes travel in full; the reviewer note beside the button is 300 characters.
 - A fragment exports up to 20 samples as tests and 3 as samples; stored-entity samples are not exported.
-- An import takes at most 1000 files and the unpacked size is bounded by `drishti.builder.max-total-mb` (25 MB by default); the quotas of *My designs* (50 designs, 50 samples each) apply to what it creates.
+- An import takes at most 1000 files and the unpacked size is bounded by `drishti.builder.max-total-mb` (25 MB by default); the quotas of *My drafts* (50 designs, 50 samples each) apply to what it creates.
 - A share link shows one revision at a time (the current one); it does not show versions, notes or tests, and it cannot be limited to certain people: anyone signed in who has it can read it. Treat it as a secret and revoke it when the review is over.
 - File binding is for development servers: one file per design, text only, no merge (a clash is refused, never merged), and only under the configured Sutra directories.
 - The command line runs one process per command, without hot reload; Sutras that read other entities need the packs that hold them enabled for the run.
@@ -6178,7 +6178,7 @@ panels:
 A hidden panel (2) is kept in the design's notes, not in the Sutra, so *Show* restores it exactly (so is a panel moved under a
 table, so that *Stop* puts it back; so are the ids of the parts you added, which only can be removed, and the last removal, for Undo).
 A key figure added and set (*Which number? NOTIONAL*, *Label* Notional) is written
-`- { use: key-figure@1, with: { id: figure, value: $.NOTIONAL, label: Notional } }`. Your page is a design in **Build, My designs** (first called *My page · trade*); which design is
+`- { use: key-figure@1, with: { id: figure, value: $.NOTIONAL, label: Notional } }`. Your page is a design in **the Build home, My drafts** (first called *My page · trade*); which design is
 *my version of this page* is a flag of its own kept by the server for you (`/api/v1/me/pages`: `{trade: <design id>}`), so renaming
 the design keeps it your page. The server draws it with `?design=<id>` (only for you, only for its kind). Pages kept by name before
 this (2.7 previews) become flags the first time you open Drishti.
@@ -6330,7 +6330,7 @@ is not left standing as if it were the answer); fix it and the screen comes back
 
 The **live result** below draws the screen as you, with real data: click a trade and its cash flows open under the row, the
 counterparty's limits on the right. **Show the Sutra** shows the YAML read-only; **Save to my workspace** keeps it as a named design
-(*My screen · Trades of book BOOK-RATES-2*) in Build, My designs, personal until you share it.
+(*My screen · Trades of book BOOK-RATES-2*) in the Build home, My drafts, personal until you share it.
 
 ```yaml
 # My screen, written by the Sutra designer (Describe). Edit it in Build, or describe it again.
@@ -6692,20 +6692,21 @@ opens as a Design and previews with no panel errors.
 
 ```
 Build ▾
-  Create   New screen (/build/new) · My designs (/build) · Examples (/build/new#examples)
-  Govern   Reviews (/build/reviews)  [pending count]
+  Create   Build home (/build) · New screen (/build/new) · Examples (/build/new#examples)
   Learn    Screen designer guide · Sutra guide · Rachana reference · Build a pack
+Views ▾ Watch
+  Approvals (/approvals)  [count waiting]: proposed Sutras with everything else that waits for four eyes
 ```
 
 Old addresses keep working (302, query kept, covered by tests): `/studio` → a scratch Design's YAML tab;
 `/studio?example=x`, `?sutra=n@v`, `?kind=&id=` → the same, started from that example, Sutra or entity;
-`/studio/reviews[/{id}]` → `/build/reviews[/{id}]`; `/build/shape` → `/build/new#files`.
+`/build/reviews[/{id}]` → `/approvals?kind=sutra` (`/approvals/sutra/{id}`, 301); `/build/shape` → `/build/new#files`.
 
 ### Productivity multipliers, in order
 
 | # | Multiplier | Why | Cost |
 |---|---|---|---|
-| 1 | Persistent named Designs and *My designs* (resume, rename, duplicate) | No lost work; the base for the rest | M |
+| 1 | Persistent named Designs and *My drafts* (resume, rename, duplicate) | No lost work; the base for the rest | M |
 | 2 | Sample switcher and a live Problems panel (YAML, bindings, presence, conflicts; each jumps to its place) | Ends "it worked on the one file I tried" | S |
 | 3 | Tests as you type: on idle, every sample is checked, stale runs are cancelled, the matrix and status bar update | Evidence all the time, not at the end | M |
 | 4 | Visual canvas with field drops and suggestions, inspector from the Rachana schema, undo/redo | Screens without writing YAML | L |
@@ -6756,7 +6757,7 @@ them, with no logic of its own: `/api/v1/builder/designs` (list, create, read, u
   panels whose inputs did not change.
 
 **Console.** Routes in `drishti-console/routes/build_routes.py` (pages and a thin proxy). JavaScript in `static/js/build/` as plain
-modules, each under about 400 lines: `editor.js` (from Studio's), `preview.js`, `drishti_canvas.js`, `drishti_grid-keys.js` (taken out
+modules, each under about 400 lines: `editor.js` (from Studio's), `preview.js`, `drishti_canvas.js`, the panel keys (now drishti-core's `drishti_keys.js`; taken out
 of `drishti_layout.js` and shared with layout mode), `drishti_inspector.js`, `samples.js`, `drishti_problems.js`, `drishti_tests.js`, `drishti_ops.js`,
 `drishti_palette.js`, `drishti_workbench.js`. Vendored only.
 
@@ -6768,7 +6769,7 @@ the inspector), `drishti_drag.js` (one pointer-driven drag for palette kinds, sh
 (`$.`/`@.`/function completion), `drishti_actions.js` (add, move, size, remove, bind and suggest as operations; the drag and its key share
 it), `drishti_canvas.js` (decorates the real preview: selection, hover, move, resize, drop bars, keys), `drishti_inspector.js` (the form from the
 Rachana schema), `drishti_data.js` (samples and the shape tree), `drishti_yamltab.js` (Studio's CodeMirror; typing is a `text` operation),
-`drishti_problems.js`, `drishti_tests.js` (check on idle, stale runs dropped), `drishti_draft.js`, `drishti_workbench.js` (wiring, tabs, status bar) and `drishti_grid-keys.js`.
+`drishti_problems.js`, `drishti_tests.js` (check on idle, stale runs dropped), `drishti_draft.js`, `drishti_workbench.js` (wiring, tabs, status bar) and the panel keys (drishti-core's `drishti_keys.js`).
 The console adds `POST /build/designs/{id}/ops|undo|redo|check|suggest|preview-file`, `GET /build/designs/{id}` and
 `GET /build/designs/{id}/sample`; they proxy the server and render the preview model with Studio's own partial. Decisions: resizing is
 `setOption span|height` (a `move` with only a size sends the panel to the end of its column); a palette drop supplies the kind's required
@@ -6780,7 +6781,7 @@ server jar (`drishti-console/tests/wb_live.py`; skipped when the jar or a JDK 21
 **Implementation (step 8).** *Propose with evidence:* `POST /builder/designs/{id}/propose {note}` (the workbench's *Submit for review*; the console's
 `/save` route is gone) re-runs the check and calls `SutraGovernance.propose(text, note, who, evidence)`; `Proposal` has an `evidence` field
 (design id, name, owner, revision, base, notes, `sampleNames`, `syntheticSamples`, the matrix; never sample contents), shown on
-`/build/reviews/{id}` as the panel by sample table. `SutraGovernance` tells `ProposalListener`s after every decision, and `DesignShip`
+the proposal's item in the Approvals queue (`/approvals/sutra/{id}`) as the panel by sample table. `SutraGovernance` tells `ProposalListener`s after every decision, and `DesignShip`
 keeps the Design's status in step: `proposed(P-n)` when proposed, `live(vN)` on approval, `draft` on rejection or withdrawal, each only
 if the Design is still at the proposed revision (any later edit already made it `draft`). With governance off the Sutra is saved and the
 Design is `live(vN)` at once. *Pack fragments:* `PackFragment` builds and reads the zip (`GET /{id}/export`, `POST /import` with a zip or
@@ -6814,10 +6815,10 @@ Studio is folded in, because it is what users are waiting for.
 
 | Step | Delivers | Accepted when |
 |---|---|---|
-| **4. Designs** (done) | `DesignStore` (file, JPA), `/builder/designs` with samples, quotas and expiry; `/build` (My designs) and `/build/new` (files, folder, schema with synthetic samples, store references, examples, existing Sutra); the extractor becomes Export data; `/build/shape` redirects | a sample set survives a console restart; two consoles see the same Design; limits answer with DRS codes; a reference to a kind the user may no longer open previews as "no access" |
+| **4. Designs** (done) | `DesignStore` (file, JPA), `/builder/designs` with samples, quotas and expiry; `/build` (the Build home, My drafts) and `/build/new` (files, folder, schema with synthetic samples, store references, examples, existing Sutra); the extractor becomes Export data; `/build/shape` redirects | a sample set survives a console restart; two consoles see the same Design; limits answer with DRS codes; a reference to a kind the user may no longer open previews as "no access" |
 | **5. Operations and one checker** (done) | the `design.ops` package; stateless `/builder/edit` and `/builder/check`; `SampleChecker` behind Studio's test and auto-design's pruning | every operation on all 20 kinds keeps comments and order; a bad operation is a located problem; a sample set with a missing field shows the right empty and error cells |
-| **6. Workbench with the visual canvas** (done) | `/build/d/{id}`: Data, Design (canvas, palette, field drops with suggestions, inspector, undo/redo, keyboard path, `drishti_grid-keys.js` shared with layout mode), YAML, Problems, Tests as you type, sample switcher, *Preview with a file…*, phone and theme toggles; the guide `docs/guides/RACHANA_REFERENCE.md` and its help entry | the all-panels showcase is built from its samples without typing YAML, by mouse and by keyboard only; a folder → auto-design → switch samples → fix → green matrix test; layout mode's tests pass with the shared module |
-| **7. Studio folded in** (done) | all `/studio*` page addresses redirect (302) into the workbench, the review pages moved to `/build/reviews`, Studio's page, template and script are gone (its JSON routes under `/studio/` remain for the workbench and for scripts); Studio's keys (Ctrl+S, Ctrl+Enter), File menu, Summary, Save and Submit for review live in the workbench; Studio's test entities become stored-entity samples of a Design made from that Sutra; command palette (Ctrl+K); the Versions tab (`GET /builder/designs/{id}/versions[/n]`, diff against the base or any version with `sutra_diff`, restore as a `text` operation); Build menu: Create, Govern, Learn; Studio's test entities become tests on a Design; the guide grows four chapters | every old Studio address in the console tests lands on an equivalent screen; keyboard-only use across panes |
+| **6. Workbench with the visual canvas** (done) | `/build/d/{id}`: Data, Design (canvas, palette, field drops with suggestions, inspector, undo/redo, keyboard path, the panel keys (drishti-core) shared with layout mode), YAML, Problems, Tests as you type, sample switcher, *Preview with a file…*, phone and theme toggles; the guide `docs/guides/RACHANA_REFERENCE.md` and its help entry | the all-panels showcase is built from its samples without typing YAML, by mouse and by keyboard only; a folder → auto-design → switch samples → fix → green matrix test; layout mode's tests pass with the shared module |
+| **7. Studio folded in** (done) | all `/studio*` page addresses redirect (302) into the workbench, the review pages are the one Approvals queue (`/approvals`), Studio's page, template and script are gone (its JSON routes under `/studio/` remain for the workbench and for scripts); Studio's keys (Ctrl+S, Ctrl+Enter), File menu, Summary, Save and Submit for review live in the workbench; Studio's test entities become stored-entity samples of a Design made from that Sutra; command palette (Ctrl+K); the Versions tab (`GET /builder/designs/{id}/versions[/n]`, diff against the base or any version with `sutra_diff`, restore as a `text` operation); Build menu: Create, Govern, Learn; Studio's test entities become tests on a Design; the guide grows four chapters | every old Studio address in the console tests lands on an equivalent screen; keyboard-only use across panes |
 | **8. Ship and scale** (done) | propose with evidence, reviewers see the matrix, approval makes it live; pack fragment export and folder/zip import; the headless CLI with the `config/packs/<p>/tests/` convention run over every shipped pack in the build; development file binding; read-only share links; the guide's end-to-end walkthrough | folder → design → check → propose → approve → the view serves the new version; an exported fragment loads through Admin → Packs and passes `sutra test` |
 
 ### Risks
@@ -7946,7 +7947,7 @@ problem codes, `RACHANA_REFERENCE.md` entry, a **Data** table and CSV like every
 
 Endpoints: `GET/POST /api/chart/saved/panel/{sutra}/{panel}/promotion` (console) → `/api/v1/me/charts/panel/{sutra}/{panel}/promotion`
 (server), the same shapes as the pivot's (`fromVersion`, `version`, `review`, `changes`, `diff`; the POST answers a proposal with its
-`href: /build/reviews/<id>`).
+`href: /approvals/sutra/<id>`).
 
 #### 12.4 Open in BI
 

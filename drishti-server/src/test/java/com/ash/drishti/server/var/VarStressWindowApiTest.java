@@ -223,15 +223,15 @@ class VarStressWindowApiTest {
         assertThat(rec.at("/proposed/first").asText()).isEqualTo("2008-09-01");
         assertThat(rec.at("/history/dataVersion").asText()).isNotBlank();
         assertThat(rec.get("proposedBy").asText()).isEqualTo("rita");
-        String decide = "{\"decision\":\"approve\",\"note\":\"ok\"}";
-        mvc.perform(post("/api/v1/var/stress-window/proposals/" + id + "/decision").contentType(MediaType.APPLICATION_JSON).content(decide)
+        String decide = "{\"comment\":\"ok\"}";
+        mvc.perform(post("/api/v1/approvals/stress-window/" + id + "/approve").contentType(MediaType.APPLICATION_JSON).content(decide)
                 .header("Authorization", bearer("rita", "risk"))).andExpect(status().isForbidden());
-        JsonNode done = json.readTree(mvc.perform(post("/api/v1/var/stress-window/proposals/" + id + "/decision")
+        JsonNode done = json.readTree(mvc.perform(post("/api/v1/approvals/stress-window/" + id + "/approve")
                 .contentType(MediaType.APPLICATION_JSON).content(decide).header("Authorization", bearer("sam", "risk")))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
-        assertThat(done.get("status").asText()).isEqualTo("APPROVED");
+        assertThat(done.get("status").asText()).isEqualTo("approved");
         assertThat(done.get("decidedBy").asText()).isEqualTo("sam");
-        mvc.perform(post("/api/v1/var/stress-window/proposals/" + id + "/decision").contentType(MediaType.APPLICATION_JSON).content(decide)
+        mvc.perform(post("/api/v1/approvals/stress-window/" + id + "/approve").contentType(MediaType.APPLICATION_JSON).content(decide)
                 .header("Authorization", bearer("tom", "risk"))).andExpect(status().isConflict());
         assertThat(analyse("BANK").at("/approval/by").asText()).isEqualTo("sam");
         JsonNode list = json.readTree(mvc.perform(get("/api/v1/var/stress-window/proposals").header("Authorization", bearer("rita", "risk")))

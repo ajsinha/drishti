@@ -129,10 +129,10 @@ def test_the_var_page_link_func_and_the_type_ahead(backend, monkeypatch):
 
     monkeypatch.setattr(backend, "functions", functions, raising=False)
     _, viewer = _app(backend, monkeypatch, RISK_ABOUT, roles=("viewer",))                  # a role that does not open VaR (2.9.11.a)
-    assert not [x for x in viewer.get("/api/suggest", params={"q": "PLAY VAR DESK RATES"}).json() if x.get("mnemonic") == "PLAY"]
+    assert not [x for x in viewer.get("/api/search", params={"in": "command", "q": "PLAY VAR DESK RATES"}).json()["items"] if x.get("mnemonic") == "PLAY"]
     app, c = _app(backend, monkeypatch, RISK_ABOUT, roles=("market-risk",))               # a market-risk role opens VaR: offered
     assert "drishti_play-link.js" in c.get("/var?scope=DESK:RATES").text
-    s = [x for x in c.get("/api/suggest", params={"q": "PLAY VAR DESK RATES"}).json() if x.get("mnemonic") == "PLAY"]
+    s = [x for x in c.get("/api/search", params={"in": "command", "q": "PLAY VAR DESK RATES"}).json()["items"] if x.get("mnemonic") == "PLAY"]
     assert s and s[0]["href"] == "/play?scope=DESK%3ARATES"
     assert 'data-command="PLAY"' in c.get("/func").text
     app.state.editions.instance.spec["commands"]["words"]["PLAY"] = False
@@ -147,7 +147,7 @@ def test_market_has_no_playground(backend, monkeypatch):
         assert c.get(path).status_code == 404, path
     r = c.get("/go", params={"q": "PLAY VAR BANK <GO>"}, follow_redirects=False)
     assert r.status_code == 303 and "DRS-4023" in r.headers["location"]
-    assert not [s for s in c.get("/api/suggest", params={"q": "PLAY VAR BANK"}).json() if s.get("mnemonic") == "PLAY"]
+    assert not [s for s in c.get("/api/search", params={"in": "command", "q": "PLAY VAR BANK"}).json()["items"] if s.get("mnemonic") == "PLAY"]
 
 
 def test_the_var_page_link_carries_the_pages_date_and_settings():

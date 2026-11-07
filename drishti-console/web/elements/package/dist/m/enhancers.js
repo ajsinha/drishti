@@ -53,8 +53,8 @@ export function boot(host, view, server, reload, extra = {}) {
   host.absolutise(view);
   const m = {};
   const start = (name, ...args) => { try { return reg[name] && reg[name].init(...args); } catch (e) { if (window.console) { console.warn('drishti: ' + name + ' not started', e); } return null; } };
-  m.view = start('view', root, { glUrl: null });
-  m.charts = start('charts', root);        // an entity click is a hidden link click: it reaches the element's own link handler
+  m.view = start('view', root);
+  m.charts = start('charts', root, { glUrl: null });        // an entity click is a hidden link click: it reaches the element's own link handler
   m.tables = start('tables', root, { scope: server + '|' + kind + '/' + id });
   m.tree = start('treeRows', root, { scope: server + '|' + kind + '/' + id });
   m.zoom = start('zoom', root);

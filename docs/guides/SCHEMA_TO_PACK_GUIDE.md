@@ -344,7 +344,7 @@ confirmation deploys. The version it replaces is kept: **roll back** there ([OPE
 
 ### Drafts, keyboard, phone, themes
 
-**Save draft** keeps the state (the schemas, your choices, the file names and counts, not the data) as a design named `New pack: <name>` in *My designs*; it is saved when you move between steps and resumed from the
+**Save draft** keeps the state (the schemas, your choices, the file names and counts, not the data) as a design named `New pack: <name>` in *My drafts* (the Build home); it is saved when you move between steps and resumed from the
 page. Data files are chosen again after a resume. Every control is a native button, field or select: Tab through, Enter or Space to press; the Sutra list takes Up and Down, the tabs Left and Right. In the light and dark themes colours come from the console's tokens
 and every state has a word as well as a colour. At phone width the columns stack and every control is 44 px:
 

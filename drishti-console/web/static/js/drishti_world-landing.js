@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Drishti World's Home (home/world_landing.html; EDITIONS.md › The design as built, section 7): fills the landing's panels from the public-data packs' own
    answers, through the console's /api/home/search (the server's search grammar, for a command the edition shows) and /api/raw: country
    groups (ECG) and economies (ECON: growth, inflation, debt to GDP, the growth path), the IMF outlook's vintage (FCST), the quotes of the
@@ -22,6 +23,7 @@
    through the CSSOM (the page's policy allows no inline style). */
 (function () {
   "use strict";
+  var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
   var root = document.querySelector("[data-world-landing]");
   if (!root) return;
   var landing = root.getAttribute("data-world-landing");
@@ -50,23 +52,18 @@
     });
   }
   function num(v) { return v === null || v === undefined || v === "" || isNaN(v) ? null : Number(v); }
-  function pct(v, d) { v = num(v); return v === null ? "—" : v.toFixed(d === undefined ? 1 : d) + "%"; }
+  function pct(v, d) { return F.formatNumber(num(v), { decimals: d === undefined ? 1 : d, grouping: false, minus: "-", suffix: "%" }); }
   function signed(v, unit) {
     v = num(v);
     if (v === null) return "—";
-    var t = Math.abs(v).toFixed(1);
+    var t = F.formatNumber(Math.abs(v), { decimals: 1, grouping: false });
     return (Number(t) === 0 ? "" : v > 0 ? "+" : "−") + t + (unit || "");
   }
-  function money(v) {
-    v = num(v);
-    if (v === null) return "—";
-    var a = Math.abs(v);
-    if (a >= 1e12) return "$" + (a / 1e12).toFixed(2) + "tn";
-    if (a >= 1e9) return "$" + (a / 1e9).toFixed(1) + "bn";
-    if (a >= 1e6) return "$" + (a / 1e6).toFixed(1) + "m";
-    return "$" + Math.round(a);
+  function money(v) {                                                // a size, never signed: "$1.2tn" (drishti-core's compact)
+    return F.formatCompact(num(v), { units: [["tn", 1e12], ["bn", 1e9], ["m", 1e6]], decimals: function (a, u) { return u === "tn" ? 2 : u ? 1 : 0; },
+      sign: "never", prefix: "$", smallGrouping: false });
   }
-  function count(v) { v = num(v); return v === null ? "—" : Math.round(v).toLocaleString("en-US"); }
+  function count(v) { return F.formatNumber(num(v), { minus: "-" }); }
   function text(sel, v) { $$(sel).forEach(function (e) { e.textContent = v; }); }
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; }
   function go(cmd) { return "/go?q=" + encodeURIComponent(cmd + " <GO>"); }
@@ -114,7 +111,7 @@
       var v = $("[data-wl-mover]");
       v.textContent = (m.SYMBOL || m._id) + " ";
       v.appendChild(tone(el("small", "", signed(m.CHANGE_PCT, "%")), m.CHANGE_PCT));
-      text("[data-wl-mover-s]", (m.NAME || "") + " · " + (num(m.PRICE) === null ? "" : "price " + Number(m.PRICE).toFixed(2)));
+      text("[data-wl-mover-s]", (m.NAME || "") + " · " + (num(m.PRICE) === null ? "" : "price " + F.formatNumber(Number(m.PRICE), { decimals: 2, grouping: false })));
       var t = $("[data-wl-tile=mover]");
       if (t) t.href = go("QUOTE " + (m.SYMBOL || m._id));
     }).catch(function (e) { text("[data-wl-breadth]", "—"); text("[data-wl-breadth-s]", e.message); text("[data-wl-mover]", "—"); });
@@ -275,7 +272,7 @@
         var r = link(go("USEQ where SECTOR = '" + s.replace(/'/g, "") + "' order by REVENUE desc"), "", "wl-bar");
         r.appendChild(el("span", "wl-bar-l", s));
         var track = el("span", "wl-track"), fill = el("span", "wl-fill");
-        fill.style.width = (by[s] / max * 100).toFixed(1) + "%";
+        fill.style.width = Math.round(by[s] / max * 1000) / 10 + "%";
         track.appendChild(fill);
         r.appendChild(track);
         r.appendChild(el("span", "wl-bar-v mono", Math.round(by[s] / total * 100) + "%"));

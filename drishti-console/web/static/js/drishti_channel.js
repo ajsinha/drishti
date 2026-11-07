@@ -19,7 +19,7 @@
    bell, monitors and every workspace pane subscribe here (panes through their parent window); every tab's
    subscriptions go to one hub (drishti_live-hub.js) that holds the browser's single channel to the console:
 
-     1. a SharedWorker (one per origin and browser profile), when it can hold an EventSource;
+     1. a SharedWorker (one per origin and browser profile), when it can hold an EventSource (the connection is drishti-data's LiveClient);
      2. otherwise the tab holding the "drishti-live" Web Lock, relaying to the others over a BroadcastChannel (when it
         closes, the next tab takes over);
      3. otherwise (very old browsers) a hub inside this tab.
@@ -64,7 +64,7 @@
   // what the hub says to this tab
   function deliver(m) {
     if (!m) { return; }
-    if (m.t === 'ev') { clearTimeout(hiTimer); each(m.key, function (h) { if (h[m.type]) { h[m.type](m.d); } }); } else if (m.t === 'hi') { clearTimeout(hiTimer); } else if (m.t === 'error') { all('error'); } else if (m.t === 'stale') { stale = true; all('error'); } else if (m.t === 'who') { hello(); }
+    if (m.t === 'ev') { clearTimeout(hiTimer); each(m.key, function (h) { if (h[m.type]) { h[m.type](m.d); } }); } else if (m.t === 'hi') { clearTimeout(hiTimer); } else if (m.t === 'error') { all('error'); window.dispatchEvent(new CustomEvent('drishti:live-error')); } else if (m.t === 'stale') { stale = true; all('error'); } else if (m.t === 'who') { hello(); }
   }
 
   // register with the hub, with every key this tab holds; no answer in time: say the connection is not there

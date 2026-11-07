@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Admin → Data loads → Lakes: upload (streamed, with progress), the file's fields with suggestions, the target (lake, pack), the
    build job's progress and its summary. Everything goes through same-origin /admin/api/lakes/... calls; the page holds no data
    beyond the scan's field list. */
@@ -37,8 +38,8 @@
     sel.appendChild(o);
   }
   function show(step) { $('[data-step="' + step + '"]').hidden = false; }
-  function fmt(n) { return Number(n || 0).toLocaleString(); }
-  function mb(n) { return (n / 1048576).toFixed(1) + ' MB'; }
+  function fmt(n) { return window.Drishti.elements.core.formatNumber(Number(n || 0), { maxDecimals: 3 }); }
+  function mb(n) { return window.Drishti.elements.core.formatBytes(n); }
   function api(method, url, body) {
     return fetch(url, { method: method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json', 'Accept': 'application/json' } : { 'Accept': 'application/json' },
       body: body ? JSON.stringify(body) : undefined }).then(function (r) {

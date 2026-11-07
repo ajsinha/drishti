@@ -60,9 +60,10 @@ def test_the_page_and_the_api_are_read_as_the_person(backend, monkeypatch):
     r = c.get("/go", params={"q": "PIVOT trade <GO>"}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == "/pivot?source=trade"
     page = c.get("/pivot?source=trade").text
-    assert "data-pivot-screen" in page and "drishti_pivot-grid.js" in page and "/static/js/drishti_pivot.js" in page and "echarts.min.js" in page
-    for marker in ("data-pv-fields", 'data-pv-zone="rows"', 'data-pv-zone="columns"', 'data-pv-zone="values"', 'data-pv-zone="filters"',
-                   "data-pv-grid", "data-pv-estimate", "data-pv-pop", "data-pv-chartcard", 'data-pv-export="xlsx"', "data-pv-compare"):
+    assert "data-pivot-screen" in page and "/static/elements/drishti-grid/drishti_grid.js" in page and "/static/js/drishti_pivot.js" in page
+    assert "echarts.min.js" in page and "drishti_pivot-grid.js" not in page          # the grid is drishti-grid's: its wells, its cells, its Explain
+    for marker in ("data-pv-grid", "data-pv-estimate", "data-pv-slicer-add", "data-pv-path", "data-pv-chartcard", 'data-pv-export="xlsx"',
+                   "data-pv-compare", "drishti_grid.css"):
         assert marker in page, marker
     assert 'data-view-id="asha/desk-risk"' in c.get("/pivot?view=asha/desk-risk").text
     q = c.post("/api/pivot/query", json={"view": {"source": "trade"}})

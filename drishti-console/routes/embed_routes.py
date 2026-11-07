@@ -178,10 +178,26 @@ async def versioned_css(request: Request, version: str):
     return response
 
 
+# Drishti Elements' bundles that the console's scripts draw with in an embed (static/elements/; ELEMENTS.md section 8): the nested pivot of tree rows
+# and Chart any table's table draw with drishti-grid, which needs drishti-core. Each library's own bundle and style sheet, nothing else.
+ELEMENT_BUNDLES = {("drishti-core", "drishti_core.js"), ("drishti-grid", "drishti_grid.js"), ("drishti-grid", "drishti_grid.css")}
+
+
+async def element_bundle(request: Request, library: str, name: str):
+    """One allow-listed Drishti Elements bundle or style sheet (``/elements/drishti-grid/drishti_grid.js``), for the console's scripts in an embed."""
+    if (library, name) not in ELEMENT_BUNDLES:
+        return await refuse(request, 404, "DRS-9404", f"no such library file: {library}/{name}")
+    path = WEB / "static/elements" / library / name
+    return await send(request, path.read_bytes(), "text/css" if name.endswith(".css") else "text/javascript", f'"{path.stat().st_mtime_ns:x}"')
+
+
 @router.get("/elements/{version}/{rest:path}")
 async def versioned(request: Request, version: str, rest: str):
     """The library at an exact semantic version, immutable (``/elements/1.1.0/drishti-elements.js``, ``.../m/<name>.js``, ``.../integrity.json``); a partial
-    version (``1``, ``1.1``) answers ``302`` to the exact one for a host that accepts updates (SRI needs the exact version). CLIENT_RENDERER.md › Drishti Elements: the design, section 13."""
+    version (``1``, ``1.1``) answers ``302`` to the exact one for a host that accepts updates (SRI needs the exact version). CLIENT_RENDERER.md › Drishti Elements: the design, section 13.
+    A Drishti Elements library's name in place of the version is its bundle (element_bundle)."""
+    if version.startswith("drishti-"):
+        return await element_bundle(request, version, rest)
     exact = dist.resolve(version)
     if exact is None:
         if dist.SEMVER.fullmatch(version):
@@ -209,7 +225,7 @@ async def icons_font(request: Request):
 
 @router.get("/charts.js")
 async def charts_js(request: Request):
-    """drishti_charts.js (waterfall, histogram, ...), served with CORS so a module can import it; the element loads it as a script."""
+    """drishti_charts.js (the panel charts' host on drishti-chart), served with CORS so a module can import it; the element loads it as a script."""
     return await send(request, (WEB / "static/js/drishti_charts.js").read_bytes(), "text/javascript", f'"{(WEB / "static/js/drishti_charts.js").stat().st_mtime_ns:x}"')
 
 
@@ -246,7 +262,7 @@ async def echarts_js(request: Request):
 
 # The console's own enhancer scripts, root-scoped (static/js; CLIENT_RENDERER.md › Drishti Elements: the design, section 12): the element loads these, with
 # data-manual so they do not start by themselves, and calls init(shadowRoot, options) on each.
-ENHANCERS = ("view", "geomap", "charts", "colfilter", "tables", "tree-rows", "pivot-engine", "pivot-grid", "about", "about-hints", "zoom", "multiselect", "controls",
+ENHANCERS = ("view", "geomap", "charts", "colfilter", "tables", "tree-rows", "pivot-engine", "elements-core", "elements-grid", "elements-chart", "about", "about-hints", "zoom", "multiselect", "controls",
              "bi-lib", "bi-visuals", "bi-visuals-format", "bi-grids", "bi-matrix", "bi-multiples", "bi-frame", "bi-live", "bi-phone")
 
 
@@ -256,6 +272,9 @@ async def enhancer_js(request: Request, name: str):
     if name not in ENHANCERS:
         return await refuse(request, 404, "DRS-9404", f"no such script: {name}")
     path = WEB / "static/js" / f"drishti_{name}.js"
+    if name.startswith("elements-"):              # Drishti Elements' bundles (elements-core, elements-grid: the tables, elements-chart: the panel charts), loaded like the scripts
+        library = "drishti-" + name.removeprefix("elements-")
+        path = WEB / "static/elements" / library / f"drishti_{library.removeprefix('drishti-')}.js"
     return await send(request, path.read_bytes(), "text/javascript", f'"{path.stat().st_mtime_ns:x}"')
 
 

@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* The Notebook (docs/guides/USER_GUIDE.md › The Notebook): the page. It opens a model as the reader's masked extract (POST /bi/notebook/extract), keeps the
    notebook, and saves or promotes through the BI item API. The SQL and Python cells are in drishti_bi-notebook-cells.js; slicing is the Pivot's.
    Text only, never markup. */
@@ -46,13 +47,25 @@
       });
   };
 
-  /** A table of columns and rows (text only), cut to `max` rows. */
+  /** A table of columns and rows as the cell answered them, cut to `max` rows, drawn by drishti-grid (Drishti Elements: sortable, the
+      first column pinned; it sums nothing), as tall as its rows up to 15 before it scrolls. */
   X.table = function (host, columns, rows, max) {
     clear(host);
+    var E = window.Drishti && window.Drishti.elements;
+    if (!E || !(E.grid || E.load)) { host.appendChild(h('p', { class: 'text-muted-d', text: 'The table needs the Elements grid (drishti-grid), which this page did not load.' })); return; }
+    if (!E.grid) { E.load('drishti-grid').then(function () { X.table(host, columns, rows, max); }); return; }
     var shown = rows.slice(0, max || MAX_SHOWN);
-    host.appendChild(h('table', { class: 'tbl bi-tbl', 'data-plain': '' },
-      h('thead', {}, h('tr', {}, columns.map(function (c) { return h('th', { scope: 'col', text: String(c) }); }))),
-      h('tbody', {}, shown.map(function (r) { return h('tr', {}, r.map(function (v) { return h('td', { class: typeof v === 'number' ? 'num' : '', text: v == null ? '' : String(v) }); })); }))));
+    var cols = columns.map(function (c, i) {
+      var num = shown.some(function (r) { return typeof r[i] === 'number'; });
+      return { id: 'c' + i, field: 'c' + i, header: String(c), type: num ? 'number' : 'text', pinned: i === 0 ? 'left' : null, enableRowGroup: false, enablePivot: false,
+        enableValue: false, format: function (v) { return v == null ? '' : String(v); } };
+    });
+    var data = shown.map(function (r, k) { var o = { __k: String(k) }; r.forEach(function (v, i) { o['c' + i] = v; }); return o; });
+    var box = h('div', { class: 'bi-nb-grid', 'data-grid': '' });
+    box.style.height = (Math.min(Math.max(data.length, 1), 15) + 2) * 28 + 6 + 'px';
+    host.appendChild(box);
+    new E.grid.Grid(box, { columns: cols, rows: data, getRowId: function (r) { return r.__k; }, layout: 'wells', density: 'compact', chrome: false,
+      checkboxes: false, rowSelection: 'none', clientAggregation: false, label: 'The cell\u2019s result' });
     if (rows.length > shown.length) { host.appendChild(h('p', { class: 'text-muted-d', text: 'Showing the first ' + shown.length + ' of ' + rows.length + ' rows.' })); }
   };
 

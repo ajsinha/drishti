@@ -71,7 +71,7 @@ def client():
     return TestClient(app)
 
 
-@pytest.mark.parametrize("path", ["/bi", "/bi/r/r1", "/bi/b/b1", "/bi/notebook", "/bi/designer", "/bi/design/d1", "/bi/datasets", "/bi/models", "/bi/catalogue"])
+@pytest.mark.parametrize("path", ["/bi/catalogue", "/bi/r/r1", "/bi/b/b1", "/bi/notebook", "/bi/designer", "/bi/design/d1", "/bi/datasets", "/bi/models", "/bi/catalogue"])
 def test_every_bi_page_has_the_strict_policy(client, path):
     r = client.get(path)
     assert r.status_code == 200, path

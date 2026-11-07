@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Tooltip pages (R6, 2.4.0; docs/architecture/BI_DESIGN.md section 11.1, gap 13): a page with `tooltip: true` is drawn in a popover over a hovered mark of a visual that names it
    (`tooltip: <page id>`), each of its visuals asked of the server under the page's state with the mark's value carried as a filter (the same `carry` a
    drill-through uses), as the person looking. The popover opens after a short pause on a mark, stays while the pointer is over it, and closes on Escape or
@@ -22,6 +23,10 @@
   const B = window.drishtiBi;
   const h = B.h;
   const ROW = 26, WIDTH = 380, WAIT = 350;
+  // Escape closes an open tooltip page, whichever report's (the one keymap; each B.tooltips() adds its own)
+  const shown = new Set();
+  window.Drishti.keys.register({ id: 'bi.tooltip.close', keys: ['Escape'], scope: 'dialog', area: 'bi-tooltip', description: 'Close the tooltip page',
+    typing: true, keepDefault: true, open: () => Array.from(shown).some((t) => t.open()), run: () => { shown.forEach((t) => { if (t.open()) { t.close(); } }); return false; } });   // and the key goes on, as before (a visual's own Escape, the kiosk's)
 
   /**
    * @param o { reportId, page(id) (the report's page), stateFor(spec) (the state a visual is asked under), ctxFor(spec) (a drawing context), yaml() (draft YAML in the
@@ -37,7 +42,7 @@
       if (pop) { pop.remove(); pop = null; }
       shownKey = '';
     }
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && pop) { close(); } });
+    shown.add({ open: () => !!pop, close: close });
 
     function place(el, at) {
       const vw = window.innerWidth, vh = window.innerHeight;

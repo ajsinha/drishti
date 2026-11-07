@@ -13,9 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The VaR screen's layout (2.9.11.b, drishti_var-layout.js; the approved mock-up docs/lenses/mockups/var-layout/A.html and A-drawer.html):
-   the toolbar with the two basket drop-downs, + New basket and How calculated; the drawer over the right of the screen (a bottom sheet
-   on a phone). The theme's tokens for every colour (drishti_tokens.css), so the dark and the light themes both read. */
+/* The VaR screen's layout (2.9.11.b, drishti_var-layout.js; the approved mock-up docs/lenses/mockups/var-layout/A.html):
+   the toolbar with the two basket drop-downs, + New basket, Explain (the one Explain's drawer, drishti_explain.css) and What-if. The theme's tokens for every colour (drishti_tokens.css), so the dark and the light themes both read. */
 .vx-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 10px; padding: 6px 10px; background: var(--d-surface);
   border: 1px solid var(--d-border); border-radius: 4px; font-size: 12.5px; }
 .vx-pick { position: relative; }
@@ -73,22 +72,7 @@
     max-height: calc(100vh - var(--vx-header-h, 0px) - 20px); overflow-y: auto; }
 }
 
-/* How this number was built: a drawer over the right of the screen, below the console's top bar (its height measured by drishti_var-layout.js
-   into --vx-header-h; under the bar's z-index 1030, so the bar's menus open over it) */
-.vx-drawer { position: fixed; top: var(--vx-header-h, 0px); right: 0; bottom: 0; z-index: 1020; width: 440px; max-width: 100vw; border-radius: 0; border-left: 2px solid var(--d-link);
-  box-shadow: var(--d-shadow); overflow-y: auto; animation: vx-slide .16s ease-out; }
-.vx-drawer[hidden] { display: none; }
-.vx-drawer.vx-open[data-phone-tier] { display: flex !important; }     /* a phone's More part: shown while open */
-.vx-drawer .vx-ph { position: sticky; top: 0; z-index: 1; border-radius: 0; }
-.vx-drawer .vx-pb { padding: 10px 12px; }
-.vx-drawer dl { font-size: 12px; }
-.vx-x { margin-left: auto; padding: 2px 8px; border: 1px solid var(--d-border); border-radius: 4px; background: none; color: var(--d-muted);
-  font: 11px var(--d-font-sans); cursor: pointer; }
-.vx-x:hover, .vx-x:focus-visible { color: var(--d-ink); border-color: var(--d-accent); }
-@keyframes vx-slide { from { transform: translateX(24px); opacity: .4; } to { transform: none; opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .vx-drawer { animation: none; } }
-
-/* a phone: the drop-downs full width, the drawer a bottom sheet, nothing scrolls sideways */
+/* a phone: the drop-downs full width, nothing scrolls sideways */
 @media (max-width: 640px) {
   .vx-bar { padding: 6px; }
   .vx-pick, .vx-pick-btn { width: 100%; min-width: 0; max-width: none; }
@@ -98,8 +82,4 @@
   .vx-keys { display: none; }
   .vx-newb, .vx-how { min-height: 44px; display: inline-flex; align-items: center; }
   .vx-how { margin-left: auto; }
-  .vx-drawer { top: auto; left: 0; width: 100%; max-height: min(75vh, calc(100vh - var(--vx-header-h, 0px))); border-left: 0; border-top: 2px solid var(--d-link); border-radius: 12px 12px 0 0;
-    animation-name: vx-rise; }
-  .vx-x { min-height: 44px; }
-  @keyframes vx-rise { from { transform: translateY(24px); opacity: .4; } to { transform: none; opacity: 1; } }
 }

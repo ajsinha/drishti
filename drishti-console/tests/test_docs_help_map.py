@@ -36,7 +36,8 @@ def _pages(section: dict) -> list:
 def _categories() -> list:
     """help.yaml's sections with the pages everyone may see: a page with `roles:` (administrators only, such as the internal competitive
     analysis) is not in the customer-facing map, nor a section with `roles:` (Internal)."""
-    secs = yaml.safe_load(HELP.read_text(encoding="utf-8"))["sections"]
+    heads = {h["id"]: h for h in yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))["help-sections"]}
+    secs = [{**s, **heads[s["id"]]} for s in yaml.safe_load(HELP.read_text(encoding="utf-8"))["sections"]]   # names: the sitemap's
     out = [{**s, "guides": [g for g in _pages(s) if not g.get("roles")]} for s in secs if not s.get("roles")]
     return [s for s in out if s["guides"]]
 

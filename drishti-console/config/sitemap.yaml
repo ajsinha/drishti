@@ -1,0 +1,429 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The sitemap: the one home of navigation (2.9.11.e; docs/guides/USER_GUIDE.md › Finding your way). One file draws the top bar's menus,
+# the Admin pages' tab strip (the admin menu), the BI rail (the bi menu), the Build home's links (the build menu), Help's sections
+# (help-sections:) and the footer; core/menus.py draws each. tests/test_sitemap.py guards it: every page the console answers is listed
+# here once (or is in-context: below, reached from a list it names), no id is used twice and no address is listed twice.
+#
+# Each item: id, href, icon, label, desc, match (the path prefix that marks it current; blank: the href only), tab (the Admin tab it
+# marks, default its id) and requires: a list, every entry of which must hold:
+#   admin                the person is an administrator          bi        BI is on for the person (the bi power, BI switched on)
+#   bi-admin             the person holds the bi-admin power     designer  the Sutra designer is on (ui.designer)
+#   feature:<name>       a feature switch (config/editions/features.yaml; the console's features.* and the presets of an edition)
+#   word:<WORD>          a reserved or console word the edition keeps (BI, FORM, FUNC, WHAT, DATAMAP, VAR, EXP)
+#   admin-page:<id>      an Admin page the edition keeps          edition   only with an edition or a lens (a full Drishti hides it)
+#   pack:<name>          a pack that is on for the person
+#   cmd:<WORD>           a command the edition shows (its commands.allow, or a word it keeps)
+#   route:<path>         the server has a page at that path
+#   engine:<id>          the compute engine runs on a server of the cluster
+# Visibility tags, on an item, a column or a menu (the innermost wins): domain: the domain module it belongs to (core when not said;
+# banking, economy: drawn while the module is on, console setting domains.off lists the ones switched off) and lenses: the lenses it
+# shows in (none said: every lens; the full product, outside any lens, shows everything its requirements allow). What a person sees
+# follows their role (requires:) and their lens (lenses: and the lens's own menus: lists), per request: nothing is kept per person.
+# also: [ids] on a menu draws items listed elsewhere in it (the Admin strip's BI settings and Commands, the BI rail's Pivot) without
+# listing them twice. rail: false on a BI item keeps it out of the BI rail (the top bar's BI menu only).
+# An edition (or a lens) lists the items it shows per menu (menus.<menu-id>: [item ids]); a menu it does not name keeps every item its
+# requirements allow, and a menu with no item left is not drawn. {product} and {tutorials} are filled in.
+# An edition's menus.top names its top menus by id, in order (a menu it does not name is not drawn); without one, every menu below in
+# its order except the subject menus (subject: true), which only a menus.top draws. A menu's gather: [ids] puts the columns of those
+# menus first in its own (the Markets menu), each item filtered as the gathering menu's (menus.<its id> in the edition).
+menus:
+  - id: views
+    label: Views
+    icon: grid-1x2
+    columns:
+      - title: Look up
+        items:
+          - { id: terminal, href: /t, icon: terminal, label: Terminal, desc: "Type a command or an id, then <GO>", match: /t }
+          - { id: search, href: /s, icon: search, label: "Search & pick lists", desc: "TRD MX-200000, TRD PRODUCT_TYPE=FX_QUANTO, TRD where …", match: /s }
+          - { id: forms, href: /forms, icon: card-checklist, label: Forms, desc: "Query by form: every pack with a search form, your recent forms and saved searches. Also: FORM <GO>", match: /form, requires: [feature:forms, word:FORM] }
+          - { id: functions, href: /func, icon: list-ul, label: Functions, desc: "Every command you can use, what it does · also FUNC <GO>", match: /func, requires: [word:FUNC] }
+          - { id: datamap, href: /datamap, icon: diagram-3, label: Data map, desc: "Every kind of data, how it joins and how much there is · also DATAMAP <GO>", match: /datamap, requires: [feature:datamap, word:DATAMAP] }
+          - { id: data, href: /data, icon: cloud-arrow-down, label: Export data, desc: "Every dataset, its dates; choose columns and filters, download a day as .jsonl.gz · also EXPORT <GO> (or DATA)", match: /data/, requires: [feature:data, word:DATA] }
+          - { id: pivot, cmd: PIVOT, href: /pivot, icon: grid-3x3-gap, label: Pivot, desc: "Any table, any entity document or VaR as a pivot: nested rows opened lazily, right totals, provenance, charts, Excel with formulas · also PIVOT <GO>", match: /pivot, requires: [word:PIVOT, route:/pivot] }
+          - { id: reports, href: /reports, icon: file-earmark-bar-graph, label: Reports, desc: "Every report you have: scheduled reports, subscriptions, alerts, and BI reports", match: /reports, requires: [feature:reports] }
+      - title: Watch
+        items:
+          - { id: workspaces, href: /w, icon: grid-1x2, label: Workspaces, desc: Several live views on one screen, match: /w, requires: [feature:workspaces] }
+          - { id: monitors, href: /m, icon: list-columns, label: Monitors, desc: Live watchlists of entities, match: /m, requires: [feature:monitors] }
+          - { id: alerts, href: /alerts, icon: bell, label: Alerts, desc: "Alerts raised for you (acknowledge, snooze, resolve) and your alert rules", match: /alerts, requires: [feature:alerts] }
+          - { id: approvals, href: /approvals, icon: patch-check, label: Approvals, desc: "Everything waiting for your four eyes, of every kind, due soon on top", match: /approvals }
+  # The Engines menu (2.9.11.a, mock-up engines-menu/A): one top menu for every compute engine, a column per engine (engine: its id in
+  # config/engines.yaml) with its command word, drawn only for a person whose role opens at least one engine and only with the engines
+  # running in the cluster (the server's about answer). A column's opens: who opens the engine, any of: role:<name> (the person holds the
+  # role) or pack:<name> (a pack assigned to the person); an administrator opens every engine; no opens: everyone. The same rule drops the
+  # engine's command words (config/engines.yaml words:) from the type-ahead and refuses them on the command line, in words (core/menus.py
+  # engine_refused); Help is not gated by it (documentation is open to anyone who can open Help). The search box shows
+  # when more than search-over engines run; an administrator also sees Admin -> Engines (admin-link) and the engines not running.
+  # An item's cmd: is the command it runs (its link: /go?q=<cmd> <GO>, unless it has an href) and fill: the words it puts in the command
+  # line for the person to finish; either is shown beside its label. cmd:<WORD> in requires: the edition shows that command.
+  - id: engines
+    label: Engines
+    icon: cpu
+    engines: true
+    search-over: 4
+    admin-link: { href: /admin/engines, label: "Admin → Engines", requires: [admin, admin-page:engines] }
+    columns:
+      - engine: var
+        domain: banking
+        title: VaR
+        word: VAR
+        opens: [role:market-risk, pack:market-risk]
+        items:
+          - { id: var-explorer, href: /var, cmd: VAR BANK, icon: shield-check, label: VaR explorer, desc: "The bank's VaR, then any desk, book or set of trades", match: /var, requires: [word:VAR] }
+          - { id: var-explain, cmd: VAR BANK EXPLAIN, icon: arrow-left-right, label: Why it moved, desc: "Day on day: the trades, factors and scenarios that moved it", requires: [word:VAR] }
+          - { id: play-var, cmd: PLAY VAR, icon: calculator, label: VaR Playground, desc: "Every figure worked in a grid and a workbook of formulas", match: /play, requires: [word:VAR, word:PLAY, route:/play] }
+          - { id: smat, cmd: SMAT, href: /smat, icon: grid-3x3, label: Scenario matrix, desc: "Each scenario's P&L of a trade, position or scope", match: /smat, requires: [word:SMAT] }
+          - { id: var-reports, href: /var/reports, icon: bank, label: Regulatory reports, desc: "Canada and the US, to the cell, signed runs", match: /var/reports, requires: [word:VAR, route:/var/reports] }
+          - { id: backtesting, cmd: VAR BANK BACKTEST, icon: activity, label: Backtesting, desc: "VaR against the P&L, with the traffic light", match: /var/backtesting, requires: [word:VAR, route:/var/backtesting] }
+          - { id: stress-window, cmd: SWIN BANK, icon: calendar-range, label: Stress window, desc: "The most stressful year of history for stressed VaR", match: /var/stress-window, requires: [word:VAR] }
+          - { id: var-results, cmd: VRES, icon: table, label: VaR results, desc: "The stored results of every hierarchy node", requires: [cmd:VRES] }
+          - { id: mcube, cmd: MCUBE, href: "/pivot?preset=mr", icon: grid-3x3-gap, label: Market-risk cube, desc: "The Pivot's market-risk preset: desks by risk class with the right totals, the tail, why it moved, the DV01 ladder and a what-if · also MCUBE <GO>", requires: [word:VAR, word:PIVOT, word:MCUBE] }
+          - { id: var-official, cmd: VOFF, icon: patch-check, label: Official records, desc: "The signed-off VaR of each business date", requires: [cmd:VOFF] }
+          - { id: hier, cmd: HIER, icon: diagram-3, label: Hierarchies and limit letters, desc: "The VaR hierarchies, their nodes and limits", requires: [cmd:HIER] }
+      - engine: exposure
+        domain: banking
+        title: Exposure
+        word: EXP
+        opens: [role:credit-risk, pack:counterparty-risk]
+        items:
+          - { id: exp-explorer, href: /exposure, cmd: EXP, icon: graph-up, label: Exposure explorer, desc: "EE, PFE and EPE of the bank, then any counterparty", match: /exposure, requires: [word:EXP] }
+          - { id: exp-cpty, fill: EXP CPTY, icon: building, label: A counterparty, desc: "Type the counterparty's id after the words", requires: [word:EXP] }
+          - { id: exp-nset, fill: EXP NSET, icon: diagram-2, label: A netting set, desc: "Type the netting set's id after the words", requires: [word:EXP] }
+      - engine: frtb-sa
+        domain: banking
+        title: FRTB-SA
+        word: FRSA
+        opens: [role:market-risk, pack:market-risk]
+        items:
+          - { id: frsa, cmd: FRSA BANK, icon: bank2, label: FRTB-SA capital, desc: "Standardised market-risk capital for any scope", match: /frtb, requires: [word:VAR, route:/frtb] }
+          - { id: play-frtb, cmd: PLAY FRTB EXAMPLE, icon: calculator, label: FRTB-SA Playground, desc: "Every method choice a switch, compared", match: /play/frtb, requires: [word:VAR, word:PLAY, route:/play/frtb] }
+      - engine: simm
+        domain: banking
+        title: SIMM
+        word: SIMM
+        opens: [role:credit-risk, role:market-risk, pack:counterparty-risk, pack:market-risk]
+        items:
+          - { id: simm, cmd: SIMM, icon: shield-lock, label: Netting sets, desc: "Initial margin per netting set, collect and post", match: /simm, requires: [word:SIMM, route:/simm] }
+          - { id: play-simm, cmd: PLAY SIMM EXAMPLE, icon: calculator, label: SIMM Playground, desc: "Every SIMM figure worked in a grid and a workbook of formulas", match: /play/simm, requires: [word:PLAY, route:/play/simm] }
+  # The subject menus of the lenses (docs/lenses/README.md, the lens menus): drawn only where an edition (or a lens) names them in its
+  # menus.top. An item's cmd: and fill: as in the Engines menu above.
+  - id: blotter
+    domain: banking
+    label: Blotter
+    icon: journal-text
+    subject: true
+    columns:
+      - title: Trades
+        items:
+          - { id: trd, cmd: TRD, icon: journal-text, label: Trades, desc: "Every trade: pick one or filter", requires: [cmd:TRD] }
+          - { id: ctrd, cmd: CTRD, icon: building, label: By counterparty, desc: "The trades of a counterparty", requires: [cmd:CTRD] }
+          - { id: ptrd, cmd: PTRD, icon: folder2, label: By portfolio, desc: "The trades of a portfolio", requires: [cmd:PTRD] }
+          - { id: ltrd, cmd: LTRD, icon: bank, label: By legal entity, desc: "The trades of a legal entity", requires: [cmd:LTRD] }
+  - id: positions
+    domain: banking
+    label: Positions
+    icon: stack
+    subject: true
+    columns:
+      - title: Books and positions
+        items:
+          - { id: book, cmd: BOOK, icon: book, label: Books, desc: "Every book, its trades and risk", requires: [cmd:BOOK] }
+          - { id: desk, cmd: DESK, icon: people, label: Desks, desc: "Every desk and its books", requires: [cmd:DESK] }
+          - { id: trdr, cmd: TRDR, icon: person-badge, label: Traders, desc: "Every trader and their books", requires: [cmd:TRDR] }
+          - { id: pos, cmd: POS, icon: stack, label: Positions, desc: "The positions of a book", requires: [cmd:POS] }
+  - id: risk
+    domain: banking
+    label: Risk
+    icon: shield-check
+    subject: true
+    columns:
+      - title: Risk on my book
+        items:
+          - { id: my-var, cmd: VAR, icon: shield-check, label: My VaR, desc: "The VaR of the books you trade", match: /var, requires: [word:VAR] }
+          - { id: vlim, cmd: VLIM, icon: speedometer2, label: VaR limits, desc: "Each limit and how much of it is used", requires: [cmd:VLIM] }
+          - { id: tval, cmd: TVAL, icon: currency-exchange, label: Trade valuations, desc: "Each trade's value and its sensitivities", requires: [cmd:TVAL] }
+          - { id: pnlv, cmd: PNLV, icon: bar-chart, label: P&L vectors, desc: "Each position's P&L under every scenario", requires: [cmd:PNLV] }
+          - { id: dpnl, cmd: DPNL, icon: cash-coin, label: Desk P&L, desc: "Each desk's actual and hypothetical P&L, day by day", requires: [cmd:DPNL] }
+          - { id: pnl, cmd: PNL, icon: bar-chart-steps, label: P&L explain, desc: "A day's P&L by risk factor, new trades and residual", requires: [cmd:PNL] }
+          - { id: sens, cmd: SENS, icon: speedometer, label: Sensitivities, desc: "Delta, vega and curvature of each position by risk factor", requires: [cmd:SENS] }
+  - id: counterparties
+    domain: banking
+    label: Counterparties
+    icon: building
+    subject: true
+    columns:
+      - title: Counterparties
+        items:
+          - { id: cpty, cmd: CPTY, icon: building, label: Counterparties, desc: "Every counterparty, its trades and exposure", requires: [cmd:CPTY] }
+          - { id: nset, cmd: NSET, icon: diagram-2, label: Netting sets, desc: "Every netting set and its agreement", requires: [cmd:NSET] }
+          - { id: lim, cmd: LIM, icon: speedometer2, label: Credit limits, desc: "Each credit limit and how much of it is used", requires: [cmd:LIM] }
+          - { id: xwif, cmd: XWIF, icon: sliders, label: Pre-deal check, desc: "A new trade's exposure against the limit before it is done", requires: [cmd:XWIF] }
+          - { id: exp, cmd: EXP, icon: graph-up, label: Exposure, desc: "EE, PFE and EPE of a counterparty or netting set", match: /exposure, requires: [word:EXP] }
+          - { id: ccr-cube, cmd: CCUBE, href: "/pivot?preset=ccr", icon: grid-3x3-gap, label: Counterparty-risk cube, desc: "The Pivot's counterparty preset: exposure by counterparty and tenor against limits, with the right totals · also CCUBE <GO>", requires: [word:EXP, word:PIVOT] }
+  - id: curves
+    domain: banking
+    label: Curves
+    icon: graph-up-arrow
+    subject: true
+    columns:
+      - title: Rates
+        items:
+          - { id: crv, cmd: CRV, icon: graph-up-arrow, label: Curves, desc: "Yield and discount curves, point by point", requires: [cmd:CRV] }
+          - { id: repo, cmd: REPO, icon: arrow-left-right, label: Repo, desc: "Repo rates by collateral and term", requires: [cmd:REPO] }
+          - { id: fix, cmd: FIX, icon: pin-angle, label: Fixings, desc: "The published fixings of each index", requires: [cmd:FIX] }
+          - { id: inf, cmd: INF, icon: thermometer-half, label: Inflation, desc: "Inflation indexes and their curves", requires: [cmd:INF] }
+  - id: volatility
+    domain: banking
+    label: Volatility
+    icon: activity
+    subject: true
+    columns:
+      - title: Volatility surfaces
+        items:
+          - { id: irv, cmd: IRV, icon: activity, label: Swaption volatility, desc: "Swaption volatility cubes", requires: [cmd:IRV] }
+          - { id: cpv, cmd: CPV, icon: activity, label: Cap volatility, desc: "Cap and floor volatilities", requires: [cmd:CPV] }
+          - { id: fxv, cmd: FXV, icon: activity, label: FX volatility, desc: "FX volatility surfaces by pair", requires: [cmd:FXV] }
+          - { id: eqv, cmd: EQV, icon: activity, label: Equity volatility, desc: "Equity volatility surfaces", requires: [cmd:EQV] }
+          - { id: cmdv, cmd: CMDV, icon: activity, label: Commodity volatility, desc: "Commodity volatility surfaces", requires: [cmd:CMDV] }
+  - id: fx
+    domain: banking
+    label: FX
+    icon: currency-exchange
+    subject: true
+    columns:
+      - title: Foreign exchange
+        items:
+          - { id: fx-spot, cmd: FX, icon: currency-exchange, label: Spot, desc: "FX spot rates by pair", requires: [cmd:FX] }
+          - { id: fxf, cmd: FXF, icon: calendar-event, label: Forwards, desc: "FX forward points by pair and tenor", requires: [cmd:FXF] }
+  - id: credit
+    domain: banking
+    label: Credit
+    icon: bank
+    subject: true
+    columns:
+      - title: Credit
+        items:
+          - { id: cds, cmd: CDS, icon: graph-down, label: CDS curves, desc: "Credit default swap spreads by issuer and tenor", requires: [cmd:CDS] }
+          - { id: bnd, cmd: BND, icon: bank, label: Bonds, desc: "Bonds, their prices and yields", requires: [cmd:BND] }
+  - id: economies
+    domain: economy
+    label: Economies
+    icon: globe2
+    subject: true
+    columns:
+      - title: Economies
+        items:
+          - { id: econ, fill: ECON, icon: flag, label: A country, desc: "Type the country's code after the word (ECON CAN)", requires: [cmd:ECON] }
+          - { id: macro, cmd: MACRO, icon: graph-up, label: Indicators, desc: "Every indicator of every economy", requires: [cmd:MACRO] }
+          - { id: fcst, cmd: FCST, icon: binoculars, label: IMF forecasts, desc: "The IMF's forecasts by economy", requires: [cmd:FCST] }
+          - { id: rege, cmd: REGE, icon: map, label: Regions, desc: "Sub-national regions and their figures", requires: [cmd:REGE] }
+  # The one Markets menu: the market-data screens together. It gathers the columns of Curves, Volatility, FX and Credit (gather: their
+  # ids, in order; their items are not repeated here), then its own. An edition (or a lens) picks its items in menus.markets, by id.
+  - id: markets
+    domain: banking
+    label: Markets
+    icon: graph-up-arrow
+    subject: true
+    gather: [curves, volatility, fx, credit]
+    columns:
+      - title: Equities and commodities
+        items:
+          - { id: eq, cmd: EQ, icon: building, label: Equities, desc: "Listed equities, their prices and dividends", requires: [cmd:EQ] }
+          - { id: eqx, cmd: EQX, icon: list-ol, label: Equity indices, desc: "Equity indices and their levels", requires: [cmd:EQX] }
+          - { id: cmd, cmd: CMD, icon: droplet, label: Commodities, desc: "Commodities and their spot prices", requires: [cmd:CMD] }
+          - { id: cmdc, cmd: CMDC, icon: graph-up, label: Commodity curves, desc: "Commodity forward curves", requires: [cmd:CMDC] }
+      - title: News and quotes
+        items:
+          - { id: news, cmd: NEWS, icon: newspaper, label: News, desc: "The news by topic", requires: [cmd:NEWS] }
+          - { id: quote, cmd: QUOTE, icon: currency-dollar, label: Quotes, desc: "Quotes of listed companies and indices", requires: [cmd:QUOTE] }
+          - { id: idx, cmd: IDX, icon: list-ol, label: Indices, desc: "Index membership", requires: [cmd:IDX] }
+  - id: companies
+    domain: banking
+    label: Companies
+    icon: building
+    subject: true
+    columns:
+      - title: Companies
+        items:
+          - { id: useq, cmd: USEQ, icon: building, label: US equities, desc: "US listed companies, their sector and figures", requires: [cmd:USEQ] }
+          - { id: edgar, cmd: EDGAR, icon: file-earmark-text, label: Filings, desc: "The filings feed of US companies", requires: [cmd:EDGAR] }
+          - { id: leic, cmd: LEIC, icon: globe, label: Legal entities, desc: "Legal entities by country (LEI)", requires: [cmd:LEIC] }
+          - { id: fund, cmd: FUND, icon: pie-chart, label: Funds and ETFs, desc: "Funds and ETFs and what they hold", requires: [cmd:FUND] }
+  # The BI menu is also the BI rail (bi/shell.html), in this order; rail: false keeps an item to the top bar's menu; also: the rail's
+  # links to items listed in other menus (the Pivot, the Build home).
+  - id: bi
+    label: BI
+    icon: bar-chart-line
+    also: [build-home, tables-models, pivot]
+    columns:
+      - title: Business intelligence
+        items:
+          - { id: bi-catalogue, href: /bi/catalogue, icon: collection, label: Catalogue, desc: "Every published report and board you may open. Also: RUPAKA CATALOGUE", match: /bi/catalogue, requires: [bi, word:BI] }
+          - { id: bi-workspace, href: /bi/w/me, icon: person-workspace, label: My workspace, desc: "Your drafts, and the shared workspaces you belong to. Also: RUPAKA WORKSPACE", match: /bi/w/, requires: [bi, word:BI] }
+          - { id: bi-runs, href: "/bi/w/me?tab=runs", icon: activity, label: My runs, desc: "Your BI questions queued or running, and the last ones answered", requires: [bi, word:BI] }
+          - { id: bi-workspaces, href: /bi/workspaces, icon: diagram-3, label: Workspaces, desc: "Every shared workspace you belong to, and its members", match: /bi/workspaces, requires: [bi, word:BI] }
+      - title: Analyse
+        items:
+          - { id: bi-models, href: /bi/models, icon: boxes, label: Models, desc: "Semantic models: their tables, relationships and measures", match: /bi/models, requires: [bi, word:BI] }
+          - { id: bi-datasets, href: /bi/datasets, icon: hdd-stack, label: Datasets, desc: "The datasets reports read, with their refresh", match: /bi/datasets, requires: [bi, word:BI] }
+          - { id: bi-designer, href: /bi/designer, icon: bounding-box, label: Report designer, desc: "Drag fields onto a canvas: a report or a board", match: /bi/designer, requires: [bi, word:BI] }
+          - { id: bi-environments, href: /bi/environments, icon: arrow-left-right, label: "Promotion (test to live)", desc: "Move reports and models from one environment to the next", match: /bi/environments, requires: [bi, word:BI] }
+          - { id: bi-notebook, href: /bi/notebook, icon: journal-code, label: Notebook, desc: "Questions in Python over the models, step by step", match: /bi/notebook, requires: [bi, word:BI] }
+          - { id: bi-transform, href: /bi/transform, icon: funnel, label: Data prep, desc: "Python data preparation, step by step, with a snippets library", match: /bi/transform, requires: [bi, word:BI] }
+      - title: Administer
+        items:
+          - { id: bi-settings, tab: bi, href: /admin/bi, icon: sliders, label: BI settings, desc: "Powers per role, who creates workspaces", match: /admin/bi, rail: false, requires: [bi, bi-admin, admin-page:bi] }
+  # The Build menu: the one Build home (2.9.11.e, docs/architecture/SHARED_SCREENS.md section 1) and the guided starts. The home's rail
+  # (Data, Screens, Analysis, Work) is the registry of object types (core/build_registry.py), not a list here.
+  - id: build
+    label: Build
+    icon: braces
+    columns:
+      - title: Create
+        items:
+          - { id: build-home, href: /build, icon: house-gear, label: Build home, desc: "Everything you can build in one place: data, screens, analysis, your drafts and reviews", match: /build, requires: [feature:build] }
+          - { id: new-screen, href: /build/new, icon: plus-square, label: New screen, desc: "Bring JSON files, a schema or stored entities, then design", match: /build/new, requires: [feature:build] }
+          - { id: new-pack, href: /build/pack/new, icon: box-seam, label: New pack, desc: "Schema files and/or a folder of JSON Lines in, a pack to download or deploy out", match: /build/pack/new, requires: [feature:build] }
+          - { id: tables-models, href: /build/tables, icon: table, label: "Tables & models", desc: "Virtual tables, semantic models and Python-driven tables: one editor, live YAML, a preview as you may see it, review before live", match: /build/tables, requires: [bi, word:BI] }
+          - { id: examples, href: "/build/new#examples", icon: journal-richtext, label: Examples, desc: Every example opens as your own copy, requires: [feature:build] }
+      - title: Learn
+        items:
+          - { id: tutorials, href: /help/tutorials, icon: mortarboard, label: Tutorials, desc: "{tutorials} hands-on tutorials, a picture of every step", requires: [feature:build] }
+          - { id: schema-to-pack, href: /help/schema-to-pack, icon: diagram-3, label: Schema to pack, desc: "Every rule that turns a JSON Schema into a pack, with examples", requires: [feature:build] }
+          - { id: screen-designer, href: /help/rachana-reference#screen-designer-and-the-build-workbench, icon: bounding-box, label: Screen designer guide, desc: "From JSON files to a screen: the canvas, step by step", requires: [feature:build] }
+          - { id: sutra-guide, href: /help/sutra-developer-guide, icon: journal-code, label: Screen developer guide, desc: "Writing a screen (a Sutra) end to end, by example", requires: [feature:build] }
+          - { id: panels, href: /help/rachana-reference#panels-the-twenty-two-kinds-and-developing-a-new-one, icon: grid-1x2, label: Panel kinds, desc: "The 22 panel kinds, one entry each", requires: [feature:build] }
+          - { id: rachana-reference, href: /help/rachana-reference, icon: book, label: Screen language reference, desc: "Rachana, the screen language: every key, panel option, format and problem code", requires: [feature:build] }
+          - { id: pack-guide, href: /help/pack-developer-guide, icon: box-seam, label: Pack developer guide, desc: "Bring a new domain in, step by step", requires: [feature:build] }
+          - { id: elements-gallery, href: /elements, icon: puzzle, label: Elements gallery, desc: "Every {product} Elements component live: its options, code, events, API and accessibility", match: /elements, requires: [feature:build] }
+  # The Admin menu is also the tab strip of every Admin page (admin/_nav.html), in this order; tab: the page's tab when it is not the
+  # item's id; also: the strip's links to items listed in other menus.
+  - id: admin
+    label: Admin
+    icon: shield-lock
+    also: [bi-settings, functions, account]
+    columns:
+      - title: "People & access"
+        items:
+          - { id: users, href: /admin/users, icon: people, label: Users, desc: "Accounts, roles and packs per person", match: /admin/users, requires: [admin, admin-page:users] }
+          - { id: roles, href: /admin/roles, icon: shield-lock, label: Roles, desc: What each role opens and may do, match: /admin/roles, requires: [admin, admin-page:roles] }
+          - { id: tokens, href: /admin/tokens, icon: key, label: API tokens, desc: "Every person's tokens for programs and the command line; revoke", match: /admin/tokens, requires: [admin, admin-page:tokens] }
+          - { id: access, href: /admin/access, icon: eye, label: Who looked at what, desc: "Every view of sensitive data, by person and page", match: /admin/access, requires: [admin, admin-page:access] }
+          - { id: audit, href: /admin/audit, icon: journal-text, label: Audit log, desc: "Every sign-in and change, by whom", match: /admin/audit, requires: [admin, admin-page:audit] }
+          - { id: scopes, href: /admin/scopes, icon: basket, label: Saved VaR baskets, desc: "Everyone's saved VaR baskets: filter by owner, delete with a reason", match: /admin/scopes, domain: banking, requires: [admin, admin-page:scopes, word:VAR] }
+      - title: Data
+        items:
+          - { id: packs, href: /admin/packs, icon: box-seam, label: Packs, desc: "Switch domain packs on and off; deploy archives; the connectors each uses", match: /admin/packs, requires: [admin, admin-page:packs] }
+          - { id: connectors, href: /admin/connectors, icon: plug, label: Connectors, desc: "Where each pack reads its data: create, test, change, switch off", match: /admin/connectors, requires: [admin, admin-page:connectors] }
+          - { id: loads, href: /admin/loads, icon: cloud-upload, label: Data loads, desc: "What your ETL announced, what is due, what is late", match: /admin/loads, requires: [admin, admin-page:loads] }
+          - { id: lakes, href: /admin/lakes, icon: layers, label: Lakes, desc: "Delta tables: load a file, see every table, maintain them now or on a schedule", match: /admin/lakes, requires: [admin, admin-page:lakes, feature:lakes] }
+          - { id: edits, href: /admin/edits, icon: pencil-square, label: Record edits, desc: "Write-back: who may correct which records, and the approvals each change needs", match: /admin/edits, requires: [admin, admin-page:edits] }
+          - { id: data-out, href: /admin/data-out, icon: box-arrow-right, label: Data out, desc: "Arrow Flight: who reads the data from programs, live streams, limits", match: /admin/data-out, requires: [admin, admin-page:data-out, engine:flight] }
+          - { id: artifacts, href: /admin/artifacts, icon: archive, label: Installed items, desc: "Everything installed (packs, reports, models, Sutras): disable, uninstall safely, restore, install", match: /admin/artifacts, requires: [admin, admin-page:artifacts] }
+      - title: Platform
+        items:
+          - { id: configuration, href: /admin/configuration, icon: sliders2, label: Configuration, desc: "Every setting in three tiers (everyday, admin, expert): the value in effect, where it came from, and a change proposed for a second administrator to approve", match: /admin/configuration, requires: [admin, admin-page:configuration] }
+          - { id: engines, href: /admin/engines, icon: gear-wide-connected, label: Engines, desc: "Compute engines on or off on this server (VaR, exposure, FRTB-SA, SIMM, the in-memory lake), each with its own file", match: /admin/engines, requires: [admin, admin-page:engines] }
+          - { id: compute, href: /admin/compute, icon: cpu, label: Python workers, desc: "The Python worker pools, their environments and the requirements waiting for approval", match: /admin/compute, requires: [admin, admin-page:compute] }
+          - { id: net, href: /admin/net, icon: diagram-3, label: Cluster, desc: "{product}*net: the servers acting as one, their packs and data, routing, access", match: /admin/net, requires: [admin, admin-page:net] }
+          - { id: ai, href: /admin/ai, icon: stars, label: AI, desc: "Model providers, MCP servers and what the assistant may do", match: /admin/ai, requires: [admin, admin-page:ai] }
+          - { id: collab, href: /admin/collab, icon: chat-square-text, label: Collaboration, desc: "Moderation, legal holds, export, mail outbox, bridges", match: /admin/collab, requires: [admin, admin-page:collab, feature:collaboration] }
+          - { id: embedding, href: /admin/embedding, icon: window-stack, label: Embedded views, desc: Host applications that show views in their own pages, match: /admin/embedding, requires: [admin, admin-page:embedding] }
+          - { id: health, href: /admin/health, icon: heart-pulse, label: Health, desc: "Connectors, packs, live streams", match: /admin/health, requires: [admin, admin-page:health] }
+          - { id: caches, href: /admin/caches, icon: hdd-stack, label: Caches, desc: "What each cache holds; purge", match: /admin/caches, requires: [admin, admin-page:caches] }
+          - { id: capacity, href: /admin/capacity, icon: speedometer, label: Capacity, desc: "Today against the plan: headroom, what breaks first, growth; the planner", match: /admin/capacity, requires: [admin, admin-page:capacity] }
+  - id: help
+    label: Help
+    icon: question-circle
+    columns:
+      - title: Learn
+        items:
+          - { id: help-centre, href: /help, icon: question-circle, label: Help centre, desc: "Guides, concepts and reference (F1)", match: /help }
+          - { id: knowledge, href: /what, icon: lightbulb, label: Knowledge, desc: "Market risk, counterparty risk and more, in plain words · WHAT <term>", requires: [word:WHAT] }
+          - { id: install, href: /help/install-and-run, icon: flag, label: Install and run, desc: From nothing to your first view }
+          - { id: release-notes, href: /help/release-notes, icon: tag, label: "What's new", desc: "The release notes: what changed in each release" }
+          - { id: about, href: /about, icon: info-circle, label: "About {product}", desc: "Version, licence and credits", match: /about }
+          - { id: competitive-analysis, href: /help/competitive-analysis, icon: binoculars, label: Competitive analysis, desc: "Vendor by vendor: banking and risk, and data platforms · internal, administrators only", requires: [admin] }
+  # The person's own menu (the account button at the right of the top bar, not a top menu): listed here so the Admin strip can link to it.
+  - id: me
+    label: Me
+    icon: person-circle
+    personal: true
+    columns:
+      - title: Me
+        items:
+          - { id: account, href: /account, icon: person-circle, label: My account, desc: "Your password, tokens, theme and settings", match: /account }
+
+# The footer: short links to items of the menus above (item: its id; label: the footer's shorter name).
+footer:
+  - { id: help, item: help-centre, label: Help }
+  - { id: about, item: about, label: About }
+  - { id: release-notes, item: release-notes, label: Release notes }
+
+# The command line's placeholder (an edition's menus.placeholder, or ui.placeholder, wins)
+placeholder: "TRD MX-20000001, CPTY north, TRD PRODUCT_TYPE=FX_QUANTO …  then <GO>"
+
+# Help's sections, in order: a tile each on the help centre's front door, opening /help/section/<id>; their pages are listed in
+# config/help.yaml (sections[].groups, by the section's id). roles: only those people (and administrators) see the section; domain: as
+# for a menu item. An edition's (or lens's) help.categories names the sections it keeps.
+help-sections:
+  - { id: get-started, name: Get started, icon: flag, blurb: "Install, the first tour, sharing, and the tutorials" }
+  - { id: risk, name: Risk measures, icon: shield-check, domain: banking, blurb: "VaR, regulatory VaR, exposure, FRTB-SA and SIMM: a guide and a tutorial each" }
+  - { id: analytics, name: Analytics and BI, icon: bar-chart-line, blurb: "Rupaka BI and its languages, groupings and analytics, funds and ETFs" }
+  - { id: data, name: Data, icon: plug, blurb: "Connectors, loads and lakes, external data, the in-memory lake" }
+  - { id: build, name: Build, icon: braces, blurb: "Packs, Sutras, write-back, connectors, views in any web page" }
+  - { id: operate, name: Operate, icon: hdd-stack, blurb: "Configuration, editions, lenses, clusters, deploy, users, AI, troubleshooting" }
+  - { id: reference, name: Reference, icon: book, blurb: "API, command line, tools, the Rachana and ViewModel references, release notes" }
+  - { id: knowledge, name: Knowledge, icon: lightbulb, blurb: "What the words of a bank's data mean: eight domains and the glossary" }
+  - { id: internal, name: Internal, icon: binoculars, roles: [admin], blurb: "Administrators only: the competitive analysis" }
+
+# Pages the menus do not list because they open from another page (the guard, tests/test_sitemap.py, holds each to a page of a menu):
+# the address and where it is reached from.
+in-context:
+  /: "the brand at the left of the top bar (Home)"
+  /help/configuration: "Admin → Configuration (the reference) and Help → Operate"
+  /help/developer: "Help centre"
+  /help/examples: "Help centre and the terminal's examples"
+  /help/search: "Help centre (its search box)"
+  /admin/bi/runs: "BI settings"
+  /admin/bi/usage: "BI settings"
+  /admin/connectors/template-updates: "Connectors"
+  /admin/lakes/table: "Lakes"
+  /admin/loads/inbox: "Data loads"
+  /alerts/all: "Alerts"
+  /alerts/new: "Alerts"
+  /bi/datasets/new: "Datasets"
+  /bi/datasets/new-layer: "Datasets"
+  /designer/new: "New screen (the designer's Describe mode)"
+  /designer/grid: "New screen (the designer's Grid mode)"
+  /designer/outline: "New screen (the designer's Outline mode)"
+  /form: "Forms"
+  /home/trading/view-as: "Home (the Trading lens's desk)"
+  /inbox: "the inbox button of the top bar"
+  /reports/all: "Reports"
+  /reports/subscribe: "Reports"
+  /servers: "the server button of the top bar"
+  /var/statistics: "VaR explorer"
+  /w/new: "Workspaces"
+  /mcube: "Engines → VaR → Market-risk cube (MCUBE)"
+  /explain: "Explain › Open as a page, on any explained number (the one Explain's drawer)"
+
+# Addresses that are not pages: data for a page's script, redirects of old addresses, sign-in, health and files.
+not-pages: [/about/competitive, /admin/commands, /asof, /auth/oidc/callback, /auth/oidc/login, /bi, /bi/explore, /bi/model-api/consumers,
+            /bi/model-api/dataset, /bi/model-api/datasets, /bi/model-api/fields, /bi/model-api/roles, /bi/notebook/status, /bi/python/status,
+            /bi/transform/snippets, /build/binding, /build/reviews, /build/shape, /build/tables/workspaces, /datamap/data, /designer,
+            /dist/status, /favicon.ico, /go, /healthz, /healthz/backend, /lens/leave, /login, /logout, /manifest.webmanifest, /pyconsole,
+            /readyz, /render/demo, /render/demo/start, /review/changes, /studio, /studio/schema]

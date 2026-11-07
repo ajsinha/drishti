@@ -199,12 +199,7 @@
     return p;
   }
 
-  function size(n) {
-    if (n < 1024) { return "≈ " + n + " B"; }
-    if (n < 1048576) { return "≈ " + (n / 1024).toFixed(n < 10240 ? 1 : 0) + " KB"; }
-    if (n < 1073741824) { return "≈ " + (n / 1048576).toFixed(1) + " MB"; }
-    return "≈ " + (n / 1073741824).toFixed(2) + " GB";
-  }
+  function size(n) { return "≈ " + window.Drishti.elements.core.formatBytes(n, { small: " B" }); }
 
   function cli(p) {
     var out = "drishti.py data get " + kind + (p.get("date") ? " --date " + p.get("date") : "");
@@ -252,8 +247,8 @@
         $("[data-how]").textContent = "For reference only; it cannot be edited or run. " + (j.pushdown
           ? "Pushed down: the connector filters as it reads its columns."
           : "Filtered on the way as the rows stream (" + (j.read || "the source") + ").");
-        $("[data-rows]").textContent = (j.complete ? "" : "at least ") + Number(j.rows).toLocaleString();
-        $("[data-total]").textContent = "of " + (j.complete ? "" : "at least ") + Number(j.total).toLocaleString() + (j.date ? " on the date" : " rows");
+        $("[data-rows]").textContent = (j.complete ? "" : "at least ") + window.Drishti.elements.core.formatNumber(Number(j.rows));
+        $("[data-total]").textContent = "of " + (j.complete ? "" : "at least ") + window.Drishti.elements.core.formatNumber(Number(j.total)) + (j.date ? " on the date" : " rows");
         $("[data-size]").textContent = size(j.gzipBytes || 0);
         var dl = $("[data-download]");
         var none = !j.rows;

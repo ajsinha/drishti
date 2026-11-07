@@ -49,7 +49,7 @@ def _open(browser, url, width=1440, height=900):
     pg.errors = []
     pg.on("pageerror", lambda e: pg.errors.append(str(e)))
     pg.goto(url, wait_until="load")
-    pg.wait_for_selector("[data-pv-grid] table.pv-table td.pv-c")
+    pg.wait_for_selector("[data-pv-grid] .dg-cell[data-cell]")
     return pg
 
 
@@ -84,14 +84,15 @@ def test_the_switches_are_sent_as_asked_and_the_line_says_how_the_answer_was_com
 def test_live_on_with_the_keyboard_puts_a_pushed_patch_in_its_cell_only(browser, stack):
     url, backend = stack
     pg = _open(browser, url + "/pivot?source=trade")
-    before = pg.locator('[data-pv-grid] td.pv-c[data-cell^="DESK=Rates"]').first.text_content()
-    other = pg.locator('[data-pv-grid] td.pv-c[data-cell^="DESK=FX"]').first.text_content()
-    pg.locator("[data-pv-grid]").focus()
+    rates, fx = '[data-pv-grid] .dg-cell[data-cell^="DESK=Rates"] .dg-text', '[data-pv-grid] .dg-cell[data-cell^="DESK=FX"] .dg-text'
+    before = pg.locator(rates).first.text_content()
+    other = pg.locator(fx).first.text_content()
+    pg.locator("[data-pv-title]").click()                                    # the keys of the screen (not a field)
     pg.keyboard.press("l")                                                   # L: Live
-    pg.wait_for_selector('[data-pv-grid] td.pv-flash[data-cell^="DESK=Rates"]', timeout=5000)
-    after = pg.locator('[data-pv-grid] td.pv-c[data-cell^="DESK=Rates"]').first.text_content()
+    pg.wait_for_selector('[data-pv-grid] .dg-cell.dg-flash-up[data-cell^="DESK=Rates"]', timeout=5000)
+    after = pg.locator(rates).first.text_content()
     assert float(after.replace(",", "")) == 2 * float(before.replace(",", ""))   # the stand-in's patch, as pushed
-    assert pg.locator('[data-pv-grid] td.pv-c[data-cell^="DESK=FX"]').first.text_content() == other
+    assert pg.locator(fx).first.text_content() == other
     assert pg.locator("[data-pv-live]").is_checked() and "live" in pg.locator("[data-pv-computed]").text_content()
     assert any(k == "live" for k, _ in backend.asked)
     pg.uncheck("[data-pv-live]")
@@ -104,12 +105,12 @@ def test_a_comment_on_a_saved_views_cell_marks_it(browser, stack):
     url, backend = stack
     backend.comments.clear()
     pg = _open(browser, url + "/pivot?view=u/desk")
-    cell = pg.locator('[data-pv-grid] td.pv-c[data-cell^="DESK=Rates"]').first
+    cell = pg.locator('[data-pv-grid] .dg-cell[data-cell^="DESK=Rates"]').first
     cell.click()
     pg.wait_for_selector("[data-pv-pop] [data-cm-text]")
     pg.fill("[data-pv-pop] [data-cm-text]", "Rates count checked with the desk")
     pg.click("[data-pv-pop] [data-cm-add]")
-    pg.wait_for_selector('[data-pv-grid] td.pv-commented[data-cell^="DESK=Rates"]')
+    pg.wait_for_selector('[data-pv-grid] .dg-cell.pv-commented[data-cell^="DESK=Rates"]')
     assert backend.comments[-1]["text"] == "Rates count checked with the desk"
     cell.click()
     pg.wait_for_selector("[data-pv-pop] .pv-cm")

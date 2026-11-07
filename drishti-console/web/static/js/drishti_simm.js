@@ -13,22 +13,23 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* ISDA SIMM (terminal/simm.html; docs/guides/SIMM_GUIDE.md sections 7 and 8). The screen (SIMM): every netting set with IM to collect and
    post (computed, stored and labelled, or why not computed), the selected one's breakdown by product and risk class, and the margin
    against the counterparty's call. The playground (PLAY SIMM): the Choices panel (version, concentration, HVR), the side, a switch compared
    side by side with the difference explained by step, the grid of weighted sensitivities with its formula bar and the explanation, Save
-   recipe and Export to Excel; PLAY SIMM RUN <id> replays a recipe. Every figure is the server's: this file only draws. */
+   recipe and Export to Excel; PLAY SIMM RUN <id> replays a recipe. Every figure is the server's: this file only draws, every table a
+   <drishti-grid> in the terminal layout (drishti-risk's preset). */
 (function () {
   "use strict";
+  var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
+  var R = window.Drishti.elements.risk;                                       // the grid preset (drishti-risk)
   var root = document.querySelector("[data-simm]");
-  if (!root) { return; }
+  if (!root || !R) { return; }
   var mode = root.dataset.mode, ns = root.dataset.ns, cpty = root.dataset.cpty, recipe = root.dataset.recipe;
   function $(s) { return root.querySelector(s); }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
-  function money(v) {
-    if (v == null || v === "—" || isNaN(v)) { return "—"; }
-    return (v < 0 ? "−" : "") + Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-  }
+  function money(v) { return v == null || v === "—" || isNaN(v) ? "—" : F.formatNumber(v); }
   function num(v, d) { return v == null ? "—" : Number(v).toLocaleString("en-US", { maximumFractionDigits: d == null ? 6 : d }); }
   var state = { choices: {}, overrides: [], version: "", side: "collect", data: null };
 
@@ -65,26 +66,33 @@
     notice([a.notRegulatory, a.MISSING_TRADES ? a.MISSING_TRADES + " trades of the netting set have no sensitivities: incomplete" : ""].filter(Boolean).join(" · "),
       !!a.notRegulatory);
   }
+  // ---- the tables: drishti-grid through drishti-risk's preset (terminal layout); every figure the server's, as sent
+  function grid(sel, o) { return R.riskGrid(typeof sel === "string" ? $(sel) : sel, o); }
+  function fig(field, header, o) { return R.moneyColumn(field, header, money, o); }      // drishti-risk's money column, this screen's rule
+  var txt = R.textColumn;
+  function box(cls) { var d = document.createElement("div"); if (cls) { d.className = cls; } return d; }
   function breakdown(a) {
-    var h = "<h3>" + esc(a.NETTING_SET || a.SCOPE) + "</h3><p class=\"mono\">collect " + money(a.IM_COLLECT) + " (" + esc(a.COLLECT_REGIME) + ") · post "
-      + money(a.IM_POST) + " (" + esc(a.POST_REGIME) + ")</p><table class=\"fr-mini\"><tr><th class=\"l\">Product class</th><th>Collect</th><th>Post</th></tr>";
-    (a.BY_PRODUCT_CLASS || []).forEach(function (p) { h += '<tr><td class="l">' + esc(p.PRODUCT_CLASS) + '</td><td class="mono">' + money(p.COLLECT) + '</td><td class="mono">' + money(p.POST) + "</td></tr>"; });
-    h += "</table><table class=\"fr-mini\"><tr><th class=\"l\">Risk class</th><th>Delta</th><th>Vega</th><th>Curv.</th><th>IM</th></tr>";
-    (a.BY_RISK_CLASS || []).forEach(function (r) {
-      h += '<tr><td class="l">' + esc(r.PRODUCT_CLASS + " · " + r.RISK_CLASS) + '</td><td class="mono">' + money(r.DELTA) + '</td><td class="mono">' + money(r.VEGA)
-        + '</td><td class="mono">' + money(r.CURVATURE) + '</td><td class="mono">' + money(r.TOTAL) + "</td></tr>";
-    });
-    h += "</table><p class=\"muted\">add-ons " + money(a.ADDON_COLLECT) + " · " + esc(a.TRADES) + " records · parameter SHA-256 " + esc(String(a.PARAMETER_SHA256 || "").slice(0, 12))
+    var d = $("[data-sm-detail]");
+    d.innerHTML = "<h3>" + esc(a.NETTING_SET || a.SCOPE) + "</h3><p class=\"mono\">collect " + money(a.IM_COLLECT) + " (" + esc(a.COLLECT_REGIME) + ") · post "
+      + money(a.IM_POST) + " (" + esc(a.POST_REGIME) + ")</p>";
+    var b1 = box("fr-drill-grid"), b2 = box("fr-drill-grid");
+    d.appendChild(b1);
+    d.appendChild(b2);
+    grid(b1, { title: "By product class", rows: (a.BY_PRODUCT_CLASS || []).map(function (p, i) { return { id: String(i), product: p.PRODUCT_CLASS, collect: p.COLLECT, post: p.POST }; }),
+      columns: [txt("product", "Product class", { width: 130 }), fig("collect", "Collect"), fig("post", "Post")] });
+    grid(b2, { title: "By risk class", rows: (a.BY_RISK_CLASS || []).map(function (r, i) {
+      return { id: String(i), label: r.PRODUCT_CLASS + " · " + r.RISK_CLASS, delta: r.DELTA, vega: r.VEGA, curvature: r.CURVATURE, total: r.TOTAL };
+    }), columns: [txt("label", "Risk class", { width: 170 }), fig("delta", "Delta", { width: 100 }), fig("vega", "Vega", { width: 100 }), fig("curvature", "Curv.", { width: 100 }),
+      fig("total", "IM", { width: 110 })] });
+    var tail = document.createElement("div");
+    tail.innerHTML = "<p class=\"muted\">add-ons " + money(a.ADDON_COLLECT) + " · " + esc(a.TRADES) + " records · parameter SHA-256 " + esc(String(a.PARAMETER_SHA256 || "").slice(0, 12))
       + "…</p><p><a class=\"pg-link\" href=\"/play/simm?nettingSet=" + encodeURIComponent(a.NETTING_SET || a.SCOPE) + "\">Open in the playground</a></p>";
-    $("[data-sm-detail]").innerHTML = h;
+    d.appendChild(tail);
   }
 
   // ------------------------------------------------------------------------------------------------------------------ the screen
   function select(id) {
     ns = id;
-    root.querySelectorAll("[data-sm-sets] tr.sel").forEach(function (t) { t.classList.remove("sel"); });
-    var tr = root.querySelector('[data-sm-sets] tr[data-ns="' + CSS.escape(id) + '"]');
-    if (tr) { tr.classList.add("sel"); }
     $("[data-sm-detail]").innerHTML = "<p class=\"muted\">loading " + esc(id) + "…</p>";
     getJson("/api/simm?" + query().toString()).then(function (a) { meta(a); breakdown(a); }).catch(function (e) { $("[data-sm-detail]").innerHTML = "<p class=\"bad\">" + esc(e.message) + "</p>"; });
     if (!$("[data-sm-pane=against]").hidden) { against(); }
@@ -95,50 +103,44 @@
     var asOf = new URLSearchParams(window.location.search).get("asOf");   // the list follows the page's date, as the breakdown does
     if (asOf) { q.set("asOf", asOf); }
     getJson("/api/simm/netting-sets?" + q.toString()).then(function (l) {
-      var h = '<thead><tr><th class="l">Netting set</th><th class="l">Counterparty</th><th>IM collect</th><th>IM post</th><th class="l">Version</th><th class="l">Status</th><th>Their call</th></tr></thead><tbody>';
-      l.rows.forEach(function (r) {
-        h += '<tr data-ns="' + esc(r.nettingSet) + '" tabindex="0"><td class="l mono">' + esc(r.nettingSet) + '</td><td class="l">' + esc(r.counterparty) + '</td><td class="mono">' + money(r.imCollect)
-          + '</td><td class="mono">' + money(r.imPost) + '</td><td class="l">' + esc(r.version || "") + '</td><td class="l">' + esc(r.status) + '</td><td class="mono">' + money(r.theirCall) + "</td></tr>";
+      var rows = l.rows.map(function (r) {
+        return { id: r.nettingSet, ns: r.nettingSet, counterparty: r.counterparty, imCollect: r.imCollect, imPost: r.imPost, version: r.version || "", status: r.status, theirCall: r.theirCall };
       });
-      h += '<tr class="tot"><td class="l" colspan="2">Sum (' + l.computed + ' computed; SIMM does not net across netting sets)</td><td class="mono">' + money(l.sumCollect) + '</td><td class="mono">'
-        + money(l.sumPost) + "</td><td colspan=\"3\"></td></tr>";
-      $("[data-sm-sets]").innerHTML = h + "</tbody>";
+      // the server's sums (SIMM does not net across netting sets: the sum is said as one)
+      rows.push({ id: "SUM", blank: true, ns: "Sum (" + l.computed + " computed; SIMM does not net across netting sets)", counterparty: "", imCollect: l.sumCollect, imPost: l.sumPost, version: "", status: "" });
+      grid("[data-sm-sets]", { title: "Netting sets", label: "Every netting set: IM to collect and post", rows: rows,
+        getRowData: function (r) { return r.blank ? null : { ns: r.ns }; }, getRowClass: function (r) { return r.blank ? "tot" : r.ns === ns ? "sel" : null; },
+        columns: [txt("ns", "Netting set", { width: 200, pinned: "left" }), txt("counterparty", "Counterparty", { width: 150 }), fig("imCollect", "IM collect", { additive: true }),
+          fig("imPost", "IM post", { additive: true }), txt("version", "Version", { width: 90 }), txt("status", "Status", { width: 150 }), fig("theirCall", "Their call")],
+        onRow: function (r) { if (!r.blank) { select(r.ns); } } });
       $("[data-sm-meta]").textContent = l.date + " · default SIMM " + (l.defaultVersion || "none installed");
       if (l.notice) { notice(l.notice, true); }
       if (ns) { select(ns); }
     }).catch(function (e) { $("[data-sm-meta]").textContent = ""; notice(e.message, true); });
   }
   function against() {
-    if (!ns) { $("[data-sm-against]").innerHTML = "<tbody><tr><td>Select a netting set.</td></tr></tbody>"; return; }
+    if (!ns) { $("[data-sm-against]").innerHTML = "<p class=\"muted\">Select a netting set.</p>"; return; }
     getJson("/api/simm/against?" + query().toString()).then(function (c) {
-      var h = '<thead><tr><th class="l">Side</th><th class="l">Risk class</th><th>' + esc((document.body && document.body.dataset.product) || "Ours") + '</th><th>Their call</th><th>Difference</th><th class="l">Status</th></tr></thead><tbody>';
-      c.rows.forEach(function (r) {
-        h += '<tr class="tot"><td class="l">' + esc(r.direction) + '</td><td class="l">total</td><td class="mono">' + money(r.drishti) + '</td><td class="mono">' + money(r.theirs)
-          + '</td><td class="mono">' + money(r.difference) + '</td><td class="l">' + esc(r.status) + "</td></tr>";
-        r.byRiskClass.forEach(function (x) {
-          h += '<tr><td></td><td class="l">' + esc(x.riskClass) + '</td><td class="mono">' + money(x.drishti) + '</td><td class="mono">' + money(x.theirs) + '</td><td class="mono">'
-            + money(x.difference) + "</td><td></td></tr>";
-        });
+      var rows = [];
+      c.rows.forEach(function (r, i) {
+        rows.push({ id: "t" + i, side: r.direction, riskClass: "total", drishti: r.drishti, theirs: r.theirs, difference: r.difference, status: r.status, total: true });
+        r.byRiskClass.forEach(function (x, k) { rows.push({ id: "t" + i + "-" + k, side: "", riskClass: x.riskClass, drishti: x.drishti, theirs: x.theirs, difference: x.difference, status: "" }); });
       });
-      $("[data-sm-against]").innerHTML = h + "</tbody>";
+      grid("[data-sm-against]", { title: "Against the counterparty", rows: rows, getRowClass: function (r) { return r.total ? "tot" : null; },
+        columns: [txt("side", "Side", { width: 90, pinned: "left" }), txt("riskClass", "Risk class", { width: 140 }), fig("drishti", (document.body && document.body.dataset.product) || "Ours"),
+          fig("theirs", "Their call"), fig("difference", "Difference"), txt("status", "Status", { width: 150 })] });
       if (c.note) { notice(c.note); }
     }).catch(function (e) { notice(e.message, true); });
   }
   function screen() {
     sets();
     root.addEventListener("click", function (ev) {
-      var tr = ev.target.closest("[data-sm-sets] tr[data-ns]");
-      if (tr) { select(tr.dataset.ns); }
       var tab = ev.target.closest("[data-sm-tab]");
       if (tab) {
         root.querySelectorAll("[data-sm-tab]").forEach(function (t) { t.setAttribute("aria-selected", String(t === tab)); });
         root.querySelectorAll("[data-sm-pane]").forEach(function (p) { p.hidden = p.dataset.smPane !== tab.dataset.smTab; });
         if (tab.dataset.smTab === "against") { against(); }
       }
-    });
-    root.addEventListener("keydown", function (ev) {
-      var tr = ev.target.closest && ev.target.closest("[data-sm-sets] tr[data-ns]");
-      if (tr && ev.key === "Enter") { select(tr.dataset.ns); }
     });
   }
 
@@ -157,36 +159,40 @@
     cmp.value = keep;
   }
   function diff(d) {
-    var box = $("[data-sm-diff]");
-    if (!d) { box.hidden = true; return; }
-    box.hidden = false;
-    box.innerHTML = "<h3>" + esc(d.label) + "</h3><p>" + esc(d.words) + "</p><div class=\"fr-side\"><div><b>This run</b><span class=\"mono\">" + money(d.base)
+    var pane = $("[data-sm-diff]");
+    if (!d) { pane.hidden = true; return; }
+    pane.hidden = false;
+    pane.innerHTML = "<h3>" + esc(d.label) + "</h3><p>" + esc(d.words) + "</p><div class=\"fr-side\"><div><b>This run</b><span class=\"mono\">" + money(d.base)
       + "</span></div><div><b>With the switch</b><span class=\"mono\">" + money(d.alternative) + "</span></div><div><b>Difference</b><span class=\"mono\">" + money(d.difference)
-      + "</span></div></div><table class=\"fr-mini\"><tr><th class=\"l\">Class</th><th>This run</th><th>With the switch</th><th>Difference</th><th class=\"l\">Bucket</th><th class=\"l\">Where it arises</th></tr>"
-      + d.lines.map(function (l) {
-        return '<tr><td class="l">' + esc(l.productClass + " · " + l.riskClass + " " + l.measure.toLowerCase()) + '</td><td class="mono">' + money(l.base) + '</td><td class="mono">'
-          + money(l.alternative) + '</td><td class="mono">' + money(l.difference) + '</td><td class="l">' + esc(l.bucket || "") + '</td><td class="l">' + esc(l.step) + "</td></tr>";
-      }).join("") + "</table>";
+      + "</span></div></div>";
+    var lines = box("fr-diff-grid");
+    pane.appendChild(lines);
+    grid(lines, { title: "Where the difference arises", rows: d.lines.map(function (l, i) {
+      return { id: String(i), label: l.productClass + " · " + l.riskClass + " " + l.measure.toLowerCase(), base: l.base, alternative: l.alternative, difference: l.difference,
+        bucket: l.bucket || "", step: l.step };
+    }), columns: [txt("label", "Class", { width: 190, pinned: "left" }), fig("base", "This run"), fig("alternative", "With the switch", { width: 130 }), fig("difference", "Difference"),
+      txt("bucket", "Bucket", { width: 80 }), txt("step", "Where it arises", { width: 300 })] });
   }
   var STEP = { DELTA: 8, VEGA: 11, CURVATURE: 13, BASE_CORR: 14 };     // the Explain entries of steps 4, 7, 9 and 10
-  function grid(a) {
-    var rows = a.grid || [];
-    var h = '<thead><tr><th class="l">Product</th><th class="l">Risk class</th><th class="l">Measure</th><th class="l">Bucket</th><th class="l">Factor</th><th>s / VR / CVR</th><th>RW</th><th>HVR</th><th>CR</th><th>WS</th><th>K_b</th></tr></thead><tbody>';
-    rows.forEach(function (r, i) {
-      h += '<tr data-i="' + i + '" tabindex="0"><td class="l">' + esc(r.productClass) + '</td><td class="l">' + esc(r.riskClass) + '</td><td class="l">' + esc(r.measure.toLowerCase())
-        + '</td><td class="l">' + esc(r.bucket) + '</td><td class="l mono">' + esc(r.factor) + '</td><td class="mono">' + money(r.s) + '</td><td class="mono">' + num(r.rw, 6)
-        + '</td><td class="mono">' + num(r.hvr, 4) + '</td><td class="mono">' + num(r.cr, 4) + '</td><td class="mono">' + money(r.ws) + '</td><td class="mono">' + money(r.K) + "</td></tr>";
+  /** The weighted sensitivities, bucket by bucket: a row (clicked, or the focus moved by the keys) selects its formula and its step. */
+  function wsGrid(a) {
+    var rows = (a.grid || []).map(function (r, i) {
+      return { id: String(i), i: i, product: r.productClass, riskClass: r.riskClass, measure: r.measure.toLowerCase(), bucket: r.bucket, factor: r.factor, s: r.s, rw: r.rw,
+        hvr: r.hvr, cr: r.cr, ws: r.ws, K: r.K };
     });
-    if ((a.factors || 0) > rows.length) { h += '<tr><td class="l" colspan="11">' + (a.factors - rows.length) + " more factors: see the workbook</td></tr>"; }
-    $("[data-sm-ws]").innerHTML = h + "</tbody>";
+    var g = grid("[data-sm-ws]", { title: "Weighted sensitivities", rows: rows, fitRows: 30, getRowData: function (r) { return { i: r.i }; },
+      columns: [txt("product", "Product", { width: 100, pinned: "left" }), txt("riskClass", "Risk class", { width: 110 }), txt("measure", "Measure", { width: 90 }),
+        txt("bucket", "Bucket", { width: 70 }), txt("factor", "Factor", { width: 160 }), fig("s", "s / VR / CVR"),
+        R.figureColumn("rw", "RW", { width: 90, format: function (v) { return num(v, 6); } }), R.figureColumn("hvr", "HVR", { width: 70, format: function (v) { return num(v, 4); } }),
+        R.figureColumn("cr", "CR", { width: 70, format: function (v) { return num(v, 4); } }), fig("ws", "WS"), fig("K", "K_b")],
+      onRow: function (r) { pick(r.i); } });
+    if (g) { g.on("focusChanged", function (f) { var x = f && g.model.rowAt(f.row); if (x && x.kind === "leaf") { pick(x.row.i); } }); }
+    $("[data-sm-more]").textContent = (a.factors || 0) > rows.length ? (a.factors - rows.length) + " more factors: see the workbook" : "";
     $("[data-sm-explain]").innerHTML = (a.explainSteps || []).map(function (s, i) { return '<details data-step="' + i + '"><summary>' + esc(s.title) + "</summary><p>" + esc(s.text) + "</p></details>"; }).join("");
   }
   function pick(i) {
     var r = (state.data.grid || [])[i];
     if (!r) { return; }
-    root.querySelectorAll("[data-sm-ws] tr.sel").forEach(function (t) { t.classList.remove("sel"); });
-    var tr = root.querySelector('[data-sm-ws] tr[data-i="' + i + '"]');
-    if (tr) { tr.classList.add("sel"); }
     $("[data-sm-ref]").textContent = r.factor;
     $("[data-sm-formula]").textContent = r.formula;
     var steps = root.querySelectorAll("[data-sm-explain] details"), want = STEP[r.measure] || 8;
@@ -206,7 +212,7 @@
       if (recipe) { notice(a.reproduced + (a.recipe ? " (recipe " + a.recipe.id + ", saved " + a.recipe.created + ")" : ""), !/^reproduced/.test(a.reproduced)); }
       choices(a.choices || []);
       diff(a.compare);
-      grid(a);
+      wsGrid(a);
     }).catch(function (e) { $("[data-sm-meta]").textContent = ""; notice(e.message, true); });
   }
   function playground() {
@@ -221,14 +227,6 @@
       }
       if (ev.target.matches("[data-sm-compare]")) { recipe = ""; play(); }
       if (ev.target.matches("[data-sm-side]")) { state.side = ev.target.value; recipe = ""; play(); }
-    });
-    root.addEventListener("click", function (ev) {
-      var tr = ev.target.closest("[data-sm-ws] tr[data-i]");
-      if (tr) { pick(+tr.dataset.i); }
-    });
-    root.addEventListener("keydown", function (ev) {
-      var tr = ev.target.closest && ev.target.closest("[data-sm-ws] tr[data-i]");
-      if (tr && ev.key === "Enter") { pick(+tr.dataset.i); }
     });
     $("[data-sm-save]").addEventListener("click", function () {
       getJson("/api/simm/recipes?" + query().toString(), { method: "POST" }).then(function (r) {

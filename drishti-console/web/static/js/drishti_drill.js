@@ -201,7 +201,11 @@
   }
   (window.drishtiModules = window.drishtiModules || {}).drill = { init: init, show: show, up: up };
   if (!auto) { return; }
-  document.addEventListener('keydown', onKey);
+  if (window.Drishti.keys) {           // the console's keymap: a drill's keys while the focus is in it (a renderer's own root binds its own)
+    window.Drishti.keys.register({ id: 'drill.keys', keys: ['Escape', 'Backspace', 'ArrowLeft', 'ArrowRight'], scope: 'panel', area: 'drill', group: 'Drill-down',
+      label: 'Esc · Backspace · ← →', description: 'In a drill-down: up a level, or open the selected row\'s level',
+      run: function (e) { onKey(e); return e.defaultPrevented; } });
+  } else { document.addEventListener('keydown', onKey); }
 
   window.addEventListener('popstate', function () {
     Array.prototype.forEach.call(document.querySelectorAll('[data-drill]'), function (root) {

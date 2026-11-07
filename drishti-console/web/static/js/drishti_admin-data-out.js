@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Admin -> Data out (templates/admin/data_out.html; FLIGHT_GUIDE.md section 9; mock-ups A and B of docs/architecture/mockups/data-out/).
    One answer (GET /admin/api/data-out), two views switched by the toggle (the choice kept in the address, ?view=map): the page (A) and the
    map (B). The shared parts (the service bar, a node card, a read's detail with Stop) are drawn by the same functions in both views. The
@@ -29,14 +30,9 @@
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; });
   }
-  function bytes(n) {
-    n = Number(n || 0);
-    if (n >= 1 << 30) { return (n / (1 << 30)).toFixed(1) + ' GB'; }
-    if (n >= 1 << 20) { return (n / (1 << 20)).toFixed(1) + ' MB'; }
-    if (n >= 1 << 10) { return Math.round(n / (1 << 10)) + ' kB'; }
-    return n + ' B';
-  }
-  function num(n) { return Number(n || 0).toLocaleString('en-US'); }
+  var F = window.Drishti.elements.core;                                         // sizes, counts and durations by drishti-core
+  function bytes(n) { return F.formatBytes(Number(n || 0)); }
+  function num(n) { return F.formatNumber(Number(n || 0)); }
   function when(iso) {
     if (!iso) { return ''; }
     var d = new Date(iso);
@@ -113,7 +109,7 @@
       '<th>rows</th><th>bytes</th><th>time</th><th class="l">outcome</th></tr></thead><tbody>' + (recent.length ? recent.map(function (a) {
         return '<tr' + (a.refusal ? ' class="hot"' : '') + '><td class="l">' + when(a.at) + '</td><td class="l">' + esc(a.tokenId) + '<br><span class="dout-sub">' +
           who(a.person, a.onBehalfOf) + '</span></td><td class="l wr">' + esc(a.form) + '<span class="dout-req">' + esc(a.request) + '</span></td><td class="l">' +
-          esc(a.node) + '</td><td>' + num(a.rows) + '</td><td>' + bytes(a.bytes) + '</td><td>' + (Number(a.millis || 0) / 1000).toFixed(1) + ' s</td><td class="l">' +
+          esc(a.node) + '</td><td>' + num(a.rows) + '</td><td>' + bytes(a.bytes) + '</td><td>' + F.formatNumber(Number(a.millis || 0) / 1000, { decimals: 1 }) + ' s</td><td class="l">' +
           (a.refusal ? pill('r', 'refused') + ' <span class="dout-sub">' + esc(a.refusal) + '</span>' : pill('g', 'sent')) + '</td></tr>';
       }).join('') : '<tr><td class="l" colspan="8">No read in the last day.</td></tr>') + '</tbody>';
     var tokens = data.tokens || [];

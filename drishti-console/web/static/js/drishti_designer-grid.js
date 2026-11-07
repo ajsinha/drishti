@@ -195,7 +195,7 @@
     if (!ws || ws.join() === state.grid.widths.join()) { shown(state.grid.widths); return; }
     step({ op: 'widths', widths: ws });
   }
-  function edgeHandle(c) {                                               /* the shared resize handle (drishti_resize.js) on a header's edge */
+  function edgeHandle(c) {                                               /* the shared resize handle (drishti-core) on a header's edge */
     return {
       axis: 'x',
       start: function () {

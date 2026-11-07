@@ -1,0 +1,74 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* The one Approvals queue (approvals.html, drishti_approvals.js), after the approved mock-up e2-approvals A with B's due-soon items pinned:
+   the inbox on the left, the chosen item on the right. Theme colours only. */
+.ap-page { padding: 12px 16px 24px; display: flex; flex-direction: column; gap: 10px; color: var(--d-ink); }
+.ap-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.ap-title { font-size: 18px; margin: 0; }
+.ap-help { color: var(--d-muted); }
+.ap-meta { margin: 0; color: var(--d-muted); font-size: 12.5px; }
+.ap-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ap-chips { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--d-border); border-radius: 14px; overflow: hidden; }
+.ap-chip { background: none; border: 0; padding: 4px 11px; font-size: 12.5px; color: var(--d-muted); cursor: pointer; }
+.ap-chip.on, .ap-chip[aria-pressed="true"] { background: var(--d-surface-2); color: var(--d-ink); font-weight: 600; }
+.ap-n { color: var(--d-link); font-weight: 600; }
+.ap-kind { font-size: 12.5px; color: var(--d-muted); display: inline-flex; gap: 4px; align-items: center; }
+.ap-main { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(0, 2fr); gap: 12px; align-items: start; }
+@media (max-width: 900px) { .ap-main { grid-template-columns: 1fr; } }
+.ap-list, .ap-detail { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 8px; padding: 10px; min-width: 0; }
+.ap-sub { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--d-muted); margin: 12px 0 6px; }
+.ap-soon .ap-sub { color: var(--d-warn); margin-top: 0; }
+.ap-items { list-style: none; margin: 0; padding: 0; }
+.ap-row { border-bottom: 1px solid var(--d-border); }
+.ap-row.soon { border-left: 3px solid var(--d-warn); }
+.ap-row.on { background: var(--d-surface-2); }
+.ap-pick { display: flex; flex-direction: column; gap: 2px; width: 100%; text-align: left; background: none; border: 0; padding: 6px 8px; color: var(--d-ink); cursor: pointer; }
+.ap-kindtag { font-size: 11px; color: var(--d-link); text-transform: uppercase; letter-spacing: .03em; }
+.ap-row-title { font-size: 13px; }
+.ap-row-meta { font-size: 11.5px; color: var(--d-muted); }
+.ap-item-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; }
+.ap-item-title { font-size: 15px; margin: 0; }
+.ap-status { font-size: 12px; padding: 1px 8px; border-radius: 10px; border: 1px solid var(--d-border); }
+.ap-status.wait { color: var(--d-warn); border-color: var(--d-warn); }
+.ap-status.ok { color: var(--d-ok); border-color: var(--d-ok); }
+.ap-status.no { color: var(--d-bad); border-color: var(--d-bad); }
+.ap-facts { color: var(--d-muted); font-size: 12.5px; margin: 6px 0; }
+.ap-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0; }
+.ap-comment { flex: 1 1 240px; font-size: 12.5px; padding: 4px 8px; }
+.ap-param { font-size: 12.5px; color: var(--d-muted); }
+.ap-btn { font-size: 12.5px; padding: 5px 12px; border: 1px solid var(--d-border); border-radius: 6px; background: var(--d-surface-2); color: var(--d-ink); cursor: pointer; }
+.ap-btn.primary { background: var(--d-fill); border-color: var(--d-fill); color: var(--d-on-fill); font-weight: 600; }
+.ap-btn.danger { color: var(--d-bad); border-color: var(--d-bad); }
+.ap-btn[disabled] { opacity: .5; cursor: default; }
+.ap-said { font-size: 12.5px; color: var(--d-muted); }
+.ap-said.bad { color: var(--d-bad); }
+.ap-diff { max-height: 380px; overflow: auto; }
+.ap-lines-diff { font-size: 12px; line-height: 1.5; background: var(--d-surface-2); border: 1px solid var(--d-border); border-radius: 6px; padding: 8px; margin: 0; white-space: pre-wrap; }
+.ap-lines-diff .a, .ap-fields .a { color: var(--d-ok); }
+.ap-lines-diff .d, .ap-fields .d { color: var(--d-bad); }
+.ap-lines-diff .s { color: var(--d-muted); }
+.ap-lines { margin: 0; padding-left: 18px; font-size: 13px; }
+.ap-thread { margin: 0; padding-left: 18px; font-size: 13px; }
+.ap-post { margin-bottom: 4px; }
+.ap-post-by { color: var(--d-muted); font-size: 11.5px; margin-right: 8px; }
+.ap-ask { display: flex; gap: 8px; align-items: flex-start; margin-top: 6px; }
+.ap-ask textarea { flex: 1 1 auto; font-size: 12.5px; }
+.tool.approvals.due .bell-count { background: var(--d-warn); }
+.ap-more { margin-top: 10px; font-size: 12.5px; }
+.ap-dl dt { color: var(--d-muted); font-weight: 600; margin-top: 4px; }
+.ap-dl dd { margin: 0 0 0 12px; }
+.ap-json { font-size: 11.5px; max-height: 220px; overflow: auto; background: var(--d-surface-2); padding: 6px; border-radius: 4px; margin: 2px 0; }
+@media (max-width: 760px) { .ap-help { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; } }   /* a finger-sized target on a phone */

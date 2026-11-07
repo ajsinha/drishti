@@ -67,7 +67,7 @@ def test_the_page_is_the_pivot_screen_with_the_mr_lens_and_the_api_is_read_as_th
     assert "drishti_pivot.js" in page and "drishti_mr-lens.js" in page and "drishti_mr-lens.css" in page and "cube-core.js" not in page
     for marker in ("data-mr-tiles", "data-mr-seg=\"horizon\"", "data-mr-slider", 'data-mr-tab="tail"', 'data-mr-tab="sensitivities"',
                    "data-mr-tail", "data-mr-explain", "data-mr-comp", "data-mr-waterfall", "data-mr-heat", "data-mr-ladder", "data-mr-whatif",
-                   "data-pv-grid", "data-pv-fields"):
+                   "data-pv-grid", "drishti_grid.js"):
         assert marker in page, marker
     typed = c.get("/pivot", params={"preset": "mr", "text": "DESK:RATES BY MGMT.BOOK"}).text
     assert "data-preset=" in typed and "DESK:RATES" in typed
@@ -85,7 +85,7 @@ def test_the_page_is_the_pivot_screen_with_the_mr_lens_and_the_api_is_read_as_th
     assert c.post("/api/pivot/mr/nope", json={}).status_code == 404
     c.get("/api/pivot/mr/sensitivities", params={"scope": "BANK", "grid": "BANK-IR-TENOR", "class": "GIRR"})
     assert sent[-1][1] == "/mr/sensitivities" and sent[-1][4] == {"scope": "BANK", "grid": "BANK-IR-TENOR", "class": "GIRR"}
-    c.get("/api/pivot/mr/explain", params={"scope": "DESK:RATES", "from": "2026-09-29", "to": "2026-09-30"})
-    assert sent[-1][4] == {"scope": "DESK:RATES", "from": "2026-09-29", "to": "2026-09-30"}
+    n = len(sent)                                                  # a cell's move is the one Explain's (kind var): no MR explain route
+    assert c.get("/api/pivot/mr/explain", params={"scope": "DESK:RATES"}).status_code in (404, 405) and len(sent) == n
     off = c.get("/api/pivot/mr/versions")
     assert off.status_code == 404 and off.json()["code"] == "DRS-1020"

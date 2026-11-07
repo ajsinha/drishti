@@ -85,10 +85,13 @@
 .bi-vis-table { width: 100%; font-size: .8rem; }
 .bi-vis-table th.num, .bi-vis-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .bi-vis-table th { position: sticky; top: 0; background: var(--d-surface); z-index: 1; }
-.bi-sorthead { background: none; border: 0; color: inherit; font: inherit; font-weight: 600; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: .25rem; min-height: 1.6rem; }
-.bi-sorthead:focus-visible { outline: 2px solid var(--d-link); outline-offset: 1px; }
-.bi-vis-table tbody tr[tabindex="0"] { cursor: pointer; }
-.bi-vis-table tbody tr[tabindex="0"]:hover, .bi-vis-table tbody tr[tabindex="0"]:focus-visible { background: var(--d-highlight); outline: 2px solid var(--d-link); outline-offset: -2px; }
+/* a table visual: drishti-grid (its own sheet) filling the visual, the engine's totals under it */
+.bi-vis-body:has(> .bi-grid-box) { display: flex; flex-direction: column; }
+.bi-grid-box { flex: 1 1 auto; min-height: 120px; height: 100%; }
+.bi-grid-box.bi-wrap .dg-text { white-space: normal; }
+.bi-grid-box .bi-cf-mark { margin-right: .25rem; }
+.bi-grid-foot { display: flex; flex-wrap: wrap; gap: .25rem 1rem; padding: .25rem .4rem; border-top: 1px solid var(--d-border); font-size: .8rem; }
+.bi-grid-foot .bi-total-name { color: var(--d-muted); font-weight: 400; }
 .bi-barcell { position: relative; display: block; min-width: 5rem; }
 .bi-bar { position: absolute; left: 0; top: 10%; bottom: 10%; background: var(--d-accent-tint); border-right: 2px solid var(--d-accent); }
 .bi-bartext { position: relative; }
@@ -122,7 +125,7 @@ h3.bi-text { font-size: 1.1rem; }
 @media (pointer: coarse) {
   .bi-slicer .ms-sum, .bi-dropdown summary { min-height: 44px; display: flex; align-items: center; }
   .bi-vis-btn { min-width: 44px; min-height: 44px; }
-  .bi-tab, .bi-sorthead, .bi-twist { min-height: 44px; }
+  .bi-tab, .bi-twist { min-height: 44px; }
   .bi-slicer-list label { min-height: 44px; }
   .bi-report-tools .btn-pill, .bi-report-tools .studio-in, .bi-report-tools .studio-select { min-height: 44px; }
   .bi-slicer-list input[type="checkbox"] { min-width: 24px; min-height: 24px; }

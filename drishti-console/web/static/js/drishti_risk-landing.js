@@ -13,14 +13,17 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Drishti Risk's Home (home/risk_landing.html; EDITIONS.md › The design as built, section 7): fills the landing's panels from the engines' answers, through the
    console's own /api/var/... and /api/exposure/...: the BANK headline (VaR, ES), its backtest (scope/history), the exposure headline (EPE,
    peak PFE), the hierarchy tree (VaR, limit use per node), the exposure tree (EPE and credit-limit use per counterparty), the intraday streams
    and the official records. Each panel is painted when its answer arrives; one refused or empty says so in place and the others carry on.
-   Nothing is invented: a figure the engines do not serve is left out. Widths are set through the CSSOM (the page's policy allows no inline
-   style). */
+   Nothing is invented: a figure the engines do not serve is left out. VaR by desk and exposure by counterparty are risk grids (drishti-risk's
+   preset: <drishti-grid>, terminal layout). Widths are set through the CSSOM (the page's policy allows no inline style). */
 (function () {
   "use strict";
+  var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
+  var R = window.Drishti.elements.risk;                                       // the risk grid preset (drishti-risk)
   var root = document.querySelector("[data-risk-landing]");
   if (!root) return;
   var landing = root.getAttribute("data-risk-landing");
@@ -35,14 +38,7 @@
       });
     });
   }
-  function money(v) {
-    if (v === null || v === undefined || isNaN(v)) return "—";
-    var a = Math.abs(v), s = v < 0 ? "−" : "";
-    if (a >= 1e9) return s + (a / 1e9).toFixed(2) + "bn";
-    if (a >= 1e6) return s + (a / 1e6).toFixed(2) + "m";
-    if (a >= 1e3) return s + (a / 1e3).toFixed(1) + "k";
-    return s + Math.round(a);
-  }
+  var money = F.formatter("compact", { decimals: function (a, u) { return u === "k" ? 1 : !u ? 0 : 2; } });
   function pct(u) { return u === null || u === undefined || isNaN(u) ? "—" : Math.round(u * 100) + "%"; }
   function tone(u) { return u === null || u === undefined || isNaN(u) ? "" : u >= 1 ? "r" : u >= 0.8 ? "w" : "ok"; }
   function text(sel, v) { $$(sel).forEach(function (el) { el.textContent = v; }); }
@@ -50,10 +46,7 @@
   function said(target, err) {
     if (!target) return;
     target.textContent = "";
-    var p = el(target.tagName === "TBODY" ? "tr" : target.tagName === "UL" ? "li" : "p", "rl-muted");
-    if (target.tagName === "TBODY") { var td = el("td", "rl-muted", "Not available: " + err.message); td.colSpan = 3; p.appendChild(td); }
-    else p.textContent = "Not available: " + err.message;
-    target.appendChild(p);
+    target.appendChild(el(target.tagName === "UL" ? "li" : "p", "rl-muted", "Not available: " + err.message));
   }
   function useBar(u) {
     var wrap = el("span", "rl-use");
@@ -64,12 +57,16 @@
     wrap.appendChild(el("span", "rl-pill " + tone(u), pct(u)));
     return wrap;
   }
-  function row(cells) {
-    var tr = el("tr");
-    cells.forEach(function (c) { var td = el("td", c.cls || ""); if (c.node) td.appendChild(c.node); else td.textContent = c.text; tr.appendChild(td); });
-    return tr;
-  }
   function link(href, label) { var a = el("a", "", label); a.href = href; return a; }
+  /** A short ranked table (desks, counterparties): a risk grid of name (a link), the figure (the server's) and the limit use as a bar. */
+  function ranked(box, rows, o) {
+    if (!rows.length) { box.textContent = ""; box.appendChild(el("p", "rl-muted", o.empty)); return; }
+    R.riskGrid(box, { title: o.title, rows: rows, getRowId: function (r) { return r.id; }, fitRows: 8, getRowData: function (r) { return { scope: r.scope }; },
+      columns: [{ field: "name", header: o.name, width: 200, cellRenderer: function (x) { return link(x.row.href, x.value); } },
+        R.figureColumn("figure", o.figure, { format: money, width: 100 }),
+        R.figureColumn("use", "Limit use", { format: pct, width: 170, cellRenderer: function (x) {
+          return x.value === null || x.value === undefined ? el("span", "rl-muted", "no limit") : useBar(x.value); } })] });
+  }
 
   var breaches = { var: null, credit: null };
   function paintBreaches() {
@@ -129,14 +126,10 @@
     paintBreaches();
     var body = $("[data-rl-cptys]");
     if (!body) return;
-    body.textContent = "";
     var rows = c.cptys.filter(function (n) { return n.epe !== undefined; })
-      .sort(function (a, b) { return ((b.limit && b.limit.use) || 0) - ((a.limit && a.limit.use) || 0) || (b.epe || 0) - (a.epe || 0); }).slice(0, 8);
-    if (!rows.length) { body.appendChild(row([{ text: "No counterparty exposure on this date", cls: "rl-muted" }, { text: "" }, { text: "" }])); return; }
-    rows.forEach(function (n) {
-      body.appendChild(row([{ node: link("/exposure?scope=" + encodeURIComponent(n.scope), n.label || n.id) }, { text: money(n.epe), cls: "n" },
-        { node: n.limit ? useBar(n.limit.use) : el("span", "rl-muted", "no limit") }]));
-    });
+      .sort(function (a, b) { return ((b.limit && b.limit.use) || 0) - ((a.limit && a.limit.use) || 0) || (b.epe || 0) - (a.epe || 0); }).slice(0, 8)
+      .map(function (n) { return { id: n.scope, scope: n.scope, name: n.label || n.id, href: "/exposure?scope=" + encodeURIComponent(n.scope), figure: n.epe, use: n.limit ? n.limit.use : null }; });
+    ranked(body, rows, { title: "Exposure by counterparty", name: "Counterparty", figure: "EPE", empty: "No counterparty exposure on this date" });
   }).catch(function (e) { text("[data-rl-cpty]", "—"); breaches.credit = null; said($("[data-rl-cptys]"), e); });
 
   // the hierarchy tree: desks (A), the tree and the heat map (C), the VaR breaches
@@ -147,15 +140,12 @@
     paintBreaches();
     var desks = $("[data-rl-desks]");
     if (desks) {
-      desks.textContent = "";
       var leafLevel = nodes.filter(function (n) { return String(n.level || "").toUpperCase() === "DESK"; });
       var list = (leafLevel.length ? leafLevel : nodes.filter(function (n) { return n.depth === 2; }))
-        .sort(function (a, b) { return (b.limitUse || 0) - (a.limitUse || 0) || (b.var || 0) - (a.var || 0); }).slice(0, 8);
-      if (!list.length) desks.appendChild(row([{ text: "No desks in " + hierarchy, cls: "rl-muted" }, { text: "" }, { text: "" }]));
-      list.forEach(function (n) {
-        desks.appendChild(row([{ node: link("/var?scope=" + encodeURIComponent(n.scope) + "&hierarchy=" + hierarchy, n.name || n.id) }, { text: money(n.var), cls: "n" },
-          { node: n.limitUse === null || n.limitUse === undefined ? el("span", "rl-muted", "no limit") : useBar(n.limitUse) }]));
-      });
+        .sort(function (a, b) { return (b.limitUse || 0) - (a.limitUse || 0) || (b.var || 0) - (a.var || 0); }).slice(0, 8)
+        .map(function (n) { return { id: n.scope, scope: n.scope, name: n.name || n.id, href: "/var?scope=" + encodeURIComponent(n.scope) + "&hierarchy=" + hierarchy, figure: n.var,
+          use: n.limitUse === undefined ? null : n.limitUse }; });
+      ranked(desks, list, { title: "VaR by desk", name: "Desk", figure: "VaR", empty: "No desks in " + hierarchy });
     }
     var tree = $("[data-rl-tree]");
     if (tree) {

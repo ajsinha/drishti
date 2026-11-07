@@ -14,21 +14,34 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The pivot screen (terminal/pivot.html; PIVOT_GUIDE.md; mock-up A): the field list and four zones build a view; the server answers
-   it (/api/pivot/query, every figure computed by the drishti-bicompute engine); a row opens lazily (/expand: only its children are
-   computed), a cell shows its provenance, a selection is charted (a non-additive measure is never stacked: its parts stand beside the
-   total with the diversification as its own bar), the Export menu downloads what the server writes. Nothing here aggregates. */
+/* The pivot screen (terminal/pivot.html; PIVOT_GUIDE.md): drawn by drishti-grid (Drishti Elements) in its wells layout. The catalogue of
+   the source becomes the grid's fields (the entity's fields, a document's paths by their grain, the engine's measures), the wells build
+   the view, and the grid asks the server for every answer through its serverPivot hook (/api/pivot/query, every figure computed by the
+   drishti-bicompute engine; the console's policy clientAggregation: false, so VaR and ES are never summed in the browser). A cell's
+   Explain is its provenance; the screen keeps the scan estimate, compare, slicers, the chart of a selection, export, save and share, and
+   the switches (drishti_pivot-switches.js). Nothing here aggregates. */
 (function () {
   "use strict";
   var root = document.querySelector("[data-pivot-screen]");
   if (!root) { return; }
+  var G = window.Drishti.elements && window.Drishti.elements.grid;
   var $ = function (s) { return root.querySelector(s); };
-  var esc = window.Drishti.PivotCore.esc;
-  var fmt = window.Drishti.PivotCore.fmt;
   var API = "/api/pivot";
-  var state = {view: null, catalogue: null, answer: null, diff: null, grid: null, selection: [], focusField: null, chart: null, savedView: null};
-  // the screen's switches (drishti_pivot-switches.js): exact / auto / ≈, progressive, use rollups, live; each is a request option the server answers
+  // the aggregations only the engine computes, offered in the wells beside the grid's own (the grid never computes one here)
+  var SERVER_FUNCS = [{name: "median", label: "Median"}, {name: "var_samp", label: "Variance"}, {name: "stddev_samp", label: "Standard deviation"}];
+  var state = {catalogue: null, answer: null, diff: null, grid: null, selection: [], chart: null, savedView: null, slicers: [], force: false,
+    how: null, decorators: [], fields: []};
   var sw = function () { return window.Drishti.PivotSwitches || null; };
+  // the grid's figure text by the answer's own fields; a source's measure of before units that counts trades reads as a count (the
+  // providers' knowledge stays here and in their packs, never in drishti-grid)
+  var unitOf = function (m) { return m && (m.unit === null || m.unit === undefined) && /^trades/.test(m.id || "") ? Object.assign({}, m, {unit: "count"}) : m; };
+  var fmt = G ? function (v, m) { return G.measureText(v, unitOf(m)); } : function (v) { return v == null ? "" : String(v); };
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]; });
+  }
+
+  // the screen's switches (drishti_pivot-switches.js): exact / auto / ≈, progressive, use rollups, live; each is a request option the server answers
   function asked(b) {
     var o = sw() ? sw().options() : {};
     Object.keys(o).forEach(function (k) { b[k] = o[k]; });
@@ -41,8 +54,9 @@
     n.hidden = !msg;
   }
 
-  function call(method, path, body) {
+  function call(method, path, body, signal) {
     var o = {method: method, headers: {"Accept": "application/json"}, credentials: "same-origin"};
+    if (signal) { o.signal = signal; }
     if (body !== undefined) { o.headers["Content-Type"] = "application/json"; o.body = JSON.stringify(body); }
     return fetch(API + path, o).then(function (r) {
       return r.text().then(function (t) {
@@ -54,147 +68,92 @@
     });
   }
 
-  // ---- the field list and its four zones ---------------------------------------------------------------------------------------
+  // ---- the catalogue as the grid's fields, a view as its wells ---------------------------------------------------------------------
 
-  function defaultMeasure(f) {
-    if (f.native) { return f.name + "()"; }
-    return f.type === "number" ? "sum(" + f.name + ")" : "count_distinct(" + f.name + ")";
-  }
-
-  function inView(name) {
-    var v = state.view;
-    var ids = v.rows.concat(v.columns).map(function (d) { return String(d).split(":")[0]; });
-    return ids.indexOf(name) >= 0 || Object.keys(v.filters || {}).indexOf(name) >= 0
-      || v.values.some(function (x) { return x.measure.indexOf("(" + name) > 0 || x.measure === name + "()"; });
-  }
-
-  function drawFields() {
-    var c = state.catalogue;
-    var q = ($("[data-pv-field-search]").value || "").toLowerCase();
-    var h = [];
-    // the entity's fields, then a document's paths by their grain (PIVOT_GUIDE.md, documents): "Each leg (one row per leg)"; the engine's
-    // own fields (a parent key _p0, an all-elements filter ~all) are not offered
-    var plain = [], byGrain = {}, order = [];
+  /** The catalogue's fields and measures as grid columns: the entity's fields, a document's paths by their grain ("Each leg (one row per
+      leg)"), the engine's measures (never summed in the browser) and the measures the view names that are none of these (a custom
+      function, var(99, 1d)). The engine's own fields (a parent key _p0, an all-elements filter ~all) are not offered. */
+  function columnsOf(c, view) {
+    var cols = [], ids = {};
+    function add(col) { if (!ids[col.id || col.field]) { ids[col.id || col.field] = 1; cols.push(col); } }
     (c.fields || []).forEach(function (f) {
       if (/^_|~/.test(f.name)) { return; }
       var desc = f.description || f.note || "", m = /^path (\S+).*one value per ([\w ]+)/.exec(desc);
-      var item = {name: f.name, type: f.type, note: desc, label: m ? f.label : null};
-      if (!m) { plain.push(item); return; }
-      var g = m[2] === "entity" ? (c.title || c.source) + ": its document" : "Each " + m[2] + " (one row per " + m[2] + ")";
-      if (!byGrain[g]) { byGrain[g] = []; order.push(g); }
-      byGrain[g].push(item);
+      var group = !m ? "Fields" : m[2] === "entity" ? (c.title || c.source) + ": its document" : "Each " + m[2] + " (one row per " + m[2] + ")";
+      var num = f.type === "number";
+      add({field: f.name, header: (m && f.label) || f.name, type: num ? "number" : f.type === "date" ? "date" : "text", group: group, description: desc,
+        enableRowGroup: true, enablePivot: true, enableValue: true, aggFunc: num ? "sum" : "count_distinct", additive: num});
     });
-    var groups = [["Fields", plain]].concat(order.map(function (g) { return [g, byGrain[g]]; })).concat([
-      [c.provider === "var" ? "VaR engine" : "Measures", (c.measures || []).map(function (m) { return {name: m.name, type: m.kind, note: m.description, native: true, label: m.label}; })]]);
-    groups.forEach(function (g) {
-      if (!g[1].length) { return; }
-      h.push('<h3>' + esc(g[0]) + '</h3>');
-      g[1].forEach(function (f) {
-        if (q && (f.name + " " + (f.label || "")).toLowerCase().indexOf(q) < 0) { return; }
-        h.push('<div class="pv-field" draggable="true" tabindex="0" data-field="' + esc(f.name) + '" data-native="' + (f.native ? 1 : 0) + '" data-type="' + esc(f.type) + '" title="' + esc(f.note || "") + '">'
-          + '<input type="checkbox" tabindex="-1" aria-hidden="true"' + (inView(f.name) ? " checked" : "") + '> <span>' + esc(f.label || f.name) + '</span>'
-          + '<span class="pv-type' + (f.type === "holistic" ? " hol" : "") + '">' + esc(f.type) + '</span></div>');
-      });
+    var mg = c.provider === "var" ? "VaR engine" : "Measures";
+    (c.measures || []).forEach(function (m) {
+      add({id: "m:" + m.name, field: m.name, header: m.label || m.name, type: "number", group: mg, description: m.description || "", measure: m.name + "()",
+        additive: m.kind === "mergeable", enableRowGroup: false, enablePivot: false, enableValue: true});
     });
-    // a Rachana path typed in the search box is a field too ($.LEGS[0].CURRENCY, size($.LEGS)): the server reads it from the documents
-    var typed = ($("[data-pv-field-search]").value || "").trim();
-    if (/^(\$|size\()/.test(typed)) {
-      h.push('<h3>Your path</h3><div class="pv-field" draggable="true" tabindex="0" data-field="' + esc(typed) + '" data-native="0" data-type="path" title="read from each document; drag it to a zone, or select it and press R, C, V or F">'
-        + '<input type="checkbox" tabindex="-1" aria-hidden="true"> <span class="mono">' + esc(typed) + '</span><span class="pv-type">path</span></div>');
+    state.fields.forEach(add);                        // paths a person added (Path box)
+    if (view) {
+      view.rows.concat(view.columns).forEach(function (d) { if (!ids[d]) { add({field: d, header: d, group: "Your fields", enableRowGroup: true, enablePivot: true}); } });
+      Object.keys(view.filters || {}).forEach(function (d) { if (!ids[d] && d.charAt(0) !== "_") { add({field: d, header: d, group: "Your fields"}); } });
+      view.values.forEach(function (x) { if (!valueOf(x, cols)) { add(measureColumn(x)); } });
     }
-    $("[data-pv-fields]").innerHTML = h.join("") || '<p class="pv-sub">No field you may use.</p>';
-    $("[data-pv-fields-sub]").textContent = (c.title || c.source) + (c.masked ? " · " + c.masked + " masked for you" : "");
-    if (order.length) { suggestions(c.source); }
+    return cols;
   }
 
-  /** An administrator's suggestions (PIVOT_GUIDE.md, documents): the paths people typed most, with Promote and Add to dataset. */
-  function suggestions(source) {
-    call("GET", "/paths?source=" + encodeURIComponent(source)).then(function (r) {
-      var list = (r.paths || []).slice(0, 5);
-      if (!list.length) { return; }
-      var h = ['<h3>Most used paths <span class="pv-sub">(administrator)</span></h3>'];
-      list.forEach(function (p) {
-        h.push('<div class="pv-sugg" title="' + esc(p.promote + "; or " + p.dataset) + '"><span class="mono">' + esc(p.path) + '</span> <span class="pv-sub">' + esc(String(p.uses)) + ' uses</span> '
-          + (p.connector && p.grain === "entity" ? '<a class="pv-btn" href="/admin/connectors/' + encodeURIComponent(p.connector) + '">Promote</a> ' : "")
-          + '<a class="pv-btn" href="/build/tables?new=table">Add to a table</a></div>');
-      });
-      $("[data-pv-fields]").insertAdjacentHTML("beforeend", h.join(""));
-    }, function () { /* not an administrator: no suggestions */ });
+  function measureColumn(x) {
+    return {id: "x:" + x.measure, field: x.measure, header: x.as || x.measure, type: "number", group: "Your measures", measure: x.measure,
+      additive: /^(count|sum)\(/.test(x.measure), enableRowGroup: false, enablePivot: false, enableValue: true};
   }
 
-  var FUNCS = ["sum", "count", "avg", "min", "max", "median", "count_distinct", "var_samp", "stddev_samp"];
-
-  function drawZones() {
-    var v = state.view;
-    function chip(text, zone, i, extra) {
-      return '<span class="pv-zchip" draggable="true" data-zone-item="' + zone + ':' + i + '">' + extra + esc(text)
-        + ' <button type="button" class="pv-x" data-remove="' + zone + ':' + i + '" aria-label="Remove ' + esc(text) + '">×</button></span>';
-    }
-    root.querySelector('[data-pv-zone="rows"] [data-pv-zone-items]').innerHTML = v.rows.map(function (d, i) { return chip(d, "rows", i, ""); }).join("");
-    root.querySelector('[data-pv-zone="columns"] [data-pv-zone-items]').innerHTML = v.columns.map(function (d, i) { return chip(d, "columns", i, ""); }).join("");
-    root.querySelector('[data-pv-zone="filters"] [data-pv-zone-items]').innerHTML = Object.keys(v.filters).map(function (k, i) {
-      var f = v.filters[k];
-      return chip(k + ((f.in && f.in.length) ? " in " + f.in.join(", ") : " (all)"), "filters", i, "");
-    }).join("");
-    root.querySelector('[data-pv-zone="values"] [data-pv-zone-items]').innerHTML = v.values.map(function (x, i) {
-      var m = /^(\w+)\((.*)\)$/.exec(x.measure);
-      var sel = m && FUNCS.indexOf(m[1]) >= 0 && m[2] ? '<select data-func="' + i + '" aria-label="Summarise by">' + FUNCS.map(function (f) {
-        return '<option' + (f === m[1] ? " selected" : "") + '>' + f + '</option>'; }).join("") + '</select> ' : "";
-      var label = x.as || x.measure;
-      var cur = ((v.formats || {})[label] || {}).style || "";
-      var fmt = '<select data-format="' + i + '" aria-label="Format of ' + esc(label) + '"><option value=""' + (cur ? "" : " selected") + '>plain</option>'
-        + '<option value="scale"' + (cur === "scale" ? " selected" : "") + '>colour scale</option><option value="bars"' + (cur === "bars" ? " selected" : "")
-        + '>data bars</option></select> ';
-      return chip(label, "values", i, sel + fmt);
-    }).join("");
-    root.querySelector('[data-pv-zone="slicers"] [data-pv-zone-items]').innerHTML = (v.slicers || []).map(function (d, i) { return chip(d, "slicers", i, ""); }).join("");
+  /** A view's value ({measure, as}) as a well's value: func(field) over a field, a native measure, else its own measure column. The label
+      is kept as it was (as, else the measure's text), so a saved view's references, formats and comments keep their names. */
+  function valueOf(x, cols) {
+    var label = x.as || x.measure, m = /^(\w+)\(([^()]*)\)$/.exec(x.measure), show = x.showAs ? {showAs: x.showAs} : {};
+    var byId = function (id) { return cols.filter(function (c) { return (c.id || c.field) === id; })[0]; };
+    if (m && m[2] && byId(m[2]) && (G.aggFunc(m[1]) || SERVER_FUNCS.some(function (f) { return f.name === m[1]; }))) { return Object.assign({colId: m[2], aggFunc: m[1], as: label}, show); }
+    if (m && !m[2] && byId("m:" + m[1])) { return Object.assign({colId: "m:" + m[1], as: label}, show); }
+    if (byId("x:" + x.measure)) { return Object.assign({colId: "x:" + x.measure, as: label}, show); }
+    return null;
   }
 
-  function add(zone, field, isNative) {
-    var v = state.view;
-    if (zone === "values") {
-      var t = (state.catalogue.fields || []).filter(function (f) { return f.name === field; })[0];
-      var m = defaultMeasure(isNative ? {name: field, native: true} : (t || {name: field, type: "string"}));
-      if (!v.values.some(function (x) { return x.measure === m; })) { v.values.push({measure: m}); }
-    } else if (isNative) {
-      notice(field + " is a measure: drop it on Values");
-      return;
-    } else if (zone === "slicers") {
-      v.slicers = (v.slicers || []).filter(function (d) { return d !== field; }).concat([field]);
-    } else if (zone === "filters") {
-      var vals = window.prompt("Keep which values of " + field + "? (comma-separated; blank: all)", "");
-      if (vals === null) { return; }
-      v.filters[field] = {in: vals.split(",").map(function (s) { return s.trim(); }).filter(Boolean)};
-    } else {
-      v.rows = v.rows.filter(function (d) { return d !== field; });
-      v.columns = v.columns.filter(function (d) { return d !== field; });
-      v[zone].push(field);
-      v.expanded = [];
-    }
-    run();
+  function wellsOf(view, cols) {
+    var filters = [];
+    Object.keys(view.filters || {}).forEach(function (k) {
+      if (k.charAt(0) === "_") { return; }             // the engine's own filters (a document view's grain): the server adds them again
+      var f = view.filters[k] || {};
+      filters.push({colId: k, filter: f.in && f.in.length ? {type: "set", values: f.in.slice()} : f.notIn && f.notIn.length ? {type: "set", excluded: f.notIn.slice()} : null});
+    });
+    return {rows: view.rows.slice(), columns: view.columns.slice(), values: view.values.map(function (x) { return valueOf(x, cols); }).filter(Boolean), filters: filters};
   }
 
-  function remove(spec) {
-    var p = spec.split(":");
-    var v = state.view;
-    if (p[0] === "filters") { delete v.filters[Object.keys(v.filters)[+p[1]]]; }
-    else if (p[0] === "slicers") { var gone = v.slicers.splice(+p[1], 1)[0]; if (v.filters[gone]) { delete v.filters[gone]; } }
-    else { v[p[0]].splice(+p[1], 1); }
-    if (p[0] === "rows" || p[0] === "columns") { v.expanded = []; }
-    if (!v.values.length) { v.values.push({measure: state.catalogue.provider === "var" ? "var()" : "count()"}); }
-    run();
+  var WELL_KEYS = ["rows", "columns", "values", "filters", "expanded", "expandTo", "formats", "slicers", "valueFilters"];
+  function extraOf(view) {
+    var e = {};
+    Object.keys(view).forEach(function (k) { if (WELL_KEYS.indexOf(k) < 0) { e[k] = view[k]; } });
+    e.subtotals = view.subtotals || "below";
+    return e;
   }
 
-  // ---- asking the server -------------------------------------------------------------------------------------------------------
+  function rulesOf(formats) {
+    return Object.keys(formats || {}).map(function (label) { return {measure: label, type: formats[label].style === "bars" ? "dataBar" : "colourScale"}; });
+  }
 
+  /** The view now, in the server's PivotView shape: the grid's wells and open state, the screen's options, formats and slicers. */
   function viewBody() {
-    var v = JSON.parse(JSON.stringify(state.view));
+    var gr = state.grid;
+    if (!gr) { return null; }
+    var v = gr.model.pivotView();
+    delete v.valueFilters;
+    var formats = {};
+    (gr.formats || []).forEach(function (r) { if (r.measure) { formats[r.measure] = {style: r.type === "dataBar" ? "bars" : "scale"}; } });
+    if (Object.keys(formats).length) { v.formats = formats; }
+    if (state.slicers.length) { v.slicers = state.slicers.slice(); }
     v.subtotals = $("[data-pv-subtotals]").value;
     return v;
   }
 
-  function estimate() {
-    return call("POST", "/estimate", {view: viewBody()}).then(function (e) {
+  // ---- asking the server: the grid's serverPivot hook -------------------------------------------------------------------------------
+
+  function estimate(view, signal) {
+    return call("POST", "/estimate", {view: view}, signal).then(function (e) {
       var bar = $("[data-pv-estimate]");
       bar.innerHTML = '<i class="bi bi-speedometer2" aria-hidden="true"></i> ' + esc(e.words)
         + (e.confirm ? ' <button type="button" class="pv-btn primary" data-pv-run>Run</button>' : "");
@@ -204,66 +163,140 @@
     }).catch(function () { return {}; });
   }
 
-  function run(force) {
+  /** The grid asks (the wells, a + or −, a level, the screen's options all end here): the estimate first, then compare, the progressive
+      stream (≈ first, drawn as it comes, then exact) or one query. */
+  function ask(req, signal) {
     notice("");
-    drawZones();
-    if (state.catalogue) { drawFields(); }
+    var view = Object.assign({}, req.view, {formats: undefined});
+    if (state.slicers.length) { view.slicers = state.slicers.slice(); }
     $("[data-pv-meta]").textContent = "computing…";
-    estimate().then(function (e) {
-      if (e && e.confirm && !force) { $("[data-pv-meta]").textContent = "large: press Run to compute it"; return; }
+    var force = state.force;
+    state.force = false;
+    return estimate(view, signal).then(function (e) {
+      if (e && e.confirm && !force) { $("[data-pv-meta]").textContent = "large: press Run to compute it"; return state.answer; }
       var cmp = $("[data-pv-compare]").value;
       if (!cmp && sw() && sw().progressiveOn()) {
         state.diff = null;
-        return sw().progressive(asked({view: viewBody()}), show);   // ≈ first (when the view is large), then exact, each drawn as it comes
+        var last = null;
+        return sw().progressive(asked({view: view}), function (a, how) {
+          if (signal && signal.aborted) { return; }
+          last = a;
+          if (how.phase === "approximate") { show(a, how, true); } else { state.how = how; }
+        }).then(function () { return last ? settle(last, state.how || {}) : state.answer; });
       }
-      var p = cmp ? call("POST", "/compare", asked({view: viewBody(), otherDate: cmp})).then(function (c) { state.diff = c.diff; return c.answer; })
-        : call("POST", "/query", asked({view: viewBody()})).then(function (a) { state.diff = null; return a; });
-      return p.then(show);
-    }).catch(function (err) { $("[data-pv-meta]").textContent = ""; notice(err.message); });
+      var p = cmp ? call("POST", "/compare", asked({view: view, otherDate: cmp}), signal).then(function (c) { state.diff = c.diff; return c.answer; })
+        : call("POST", "/query", asked({view: view}), signal).then(function (a) { state.diff = null; return a; });
+      return p.then(function (a) { return settle(a, {}); });
+    }).catch(function (err) {
+      if (signal && signal.aborted) { throw err; }
+      $("[data-pv-meta]").textContent = "";
+      notice(err.message);
+      throw err;
+    });
   }
 
-  function show(a, how) {
+  /** The screen's bookkeeping of an answer the grid is about to draw (or drew: show). */
+  function settle(a, how) {
     a.savedView = a.savedView || state.savedView;
     state.answer = a;
-    state.view = a.view;
-    // the engine's own filters (a document view's grain) are the server's to add again; the person's zones never show them
-    Object.keys(state.view.filters || {}).forEach(function (k) { if (k.charAt(0) === "_") { delete state.view.filters[k]; } });
+    state.selection = [];
     var comp = a.computed || {};
     $("[data-pv-meta]").textContent = (a.title || a.source) + " · " + (a.date ? "business date " + a.date : "current") + " · "
       + a.cellCount + " cells · " + comp.sets + " sets (" + comp.fromCache + " from the cache) · " + comp.queries + " queries · " + comp.ms + " ms";
     $("[data-pv-grid-title]").textContent = (a.measures || []).map(function (m) { return m.label; }).join(", ") + " by " + ((a.rowDimensions || []).join(" › ") || "total");
     $("[data-pv-grid-sub]").textContent = "rows " + ((a.rowDimensions || []).join(" › ") || "—") + (a.columnDimensions && a.columnDimensions.length ? " · columns " + a.columnDimensions.join(" › ") : "")
-      + " · subtotals " + (a.view.subtotals || "below") + " · lazy: closed nodes are not computed · " + a.exactness;
-    state.grid = window.Drishti.PivotCore.render($("[data-pv-grid]"), a, {diff: state.diff, onToggle: toggle, onCell: provenance, onSelect: function (s) { state.selection = s; }, onRows: rows});
-    if (sw()) { sw().shown(a, how || {}); }      // the computed-as line, the live stream, the comment markers
-    if (how && how.patched) { return; }          // a live patch: the cells moved, nothing else did
-    drawZones();
-    drawFields();
+      + " · subtotals " + ((a.view || {}).subtotals || "below") + " · lazy: closed nodes are not computed · " + a.exactness;
+    if (sw()) { sw().shown(a, how || {}); }      // the computed-as line, the live stream, the comments
+    if (how && how.patched) { return a; }
     drawSlicers();
-    root.dispatchEvent(new CustomEvent("drishti:pivot-answer", {detail: {answer: a, view: viewBody()}}));
+    var after = function () { root.dispatchEvent(new CustomEvent("drishti:pivot-answer", {detail: {answer: a, view: viewBody()}})); };
+    window.setTimeout(after, 0);                 // once the grid holds the answer
+    return a;
+  }
+
+  /** An answer from elsewhere (the progressive stream's ≈ one, a live pivot's answer or patch): drawn by the grid, kept by the screen. */
+  function show(a, how, keepAsking) {
+    how = how || {};
+    settle(a, how);
+    if (state.grid) { state.grid.model.showAnswer(a, {patched: !!how.patched, keepAsking: !!keepAsking}); }
+  }
+
+  // ---- what a cell carries: the change since the compared date, comments, a lens's marks; a row's breakdown and its diversification ----
+
+  function cellKey(r, c) {
+    var m = state.grid.model, x = m.rowAt(r), col = m.shownColumns()[c];
+    return x && x.kind === "pivot" && col && !col.rowHeader ? x.entry.key + "|" + col.colKey : null;
+  }
+
+  function measureOfLabel(label) { return ((state.answer || {}).measures || []).filter(function (m) { return m.label === label; })[0] || {label: label}; }
+
+  function decorate(ctx) {
+    if (ctx.kind !== "pivot" || !ctx.entry) { return null; }
+    var e = ctx.entry;
+    if (ctx.rowHeader) {
+      var bits = [];
+      if ((e.kind === "header" || (e.kind === "node" && e.expanded)) && e.by && e.kind !== "others") { bits.push("by " + e.by); }
+      if (e.diversification) { bits.push("Σ−total " + Object.keys(e.diversification).map(function (k) { return k + " " + fmt(e.diversification[k], {}); }).join(", ")); }
+      return bits.length ? {after: " · " + bits.join(" · "), title: e.by ? "its children are broken down by " + e.by : null} : null;
+    }
+    var key = e.key + "|" + ctx.colKey, out = {cls: "", title: "", after: ""};
+    var d = state.diff && state.diff[key];
+    if (d && d.delta && d.delta[ctx.measure] != null && d.delta[ctx.measure] !== 0) {
+      var dv = d.delta[ctx.measure];
+      out.after = (dv > 0 ? " +" : " ") + fmt(dv, measureOfLabel(ctx.measure));
+      out.cls += " pv-delta-" + (dv > 0 ? "up" : "down");
+    }
+    if (d && d.status) { out.after += " " + d.status; }
+    state.decorators.forEach(function (fn) {
+      var x = fn(key, ctx);
+      if (!x) { return; }
+      if (x.cls) { out.cls += " " + x.cls; }
+      if (x.title) { out.title += (out.title ? "\n" : "") + x.title; }
+      if (x.after) { out.after = x.after; }
+    });
+    return out.cls || out.title || out.after ? out : null;
   }
 
   // ---- slicers: a field's members as buttons, each a filter of the view (the members are the engine's, as the person may see them) ------
+
+  function membersOf(field, others) {
+    var v = viewBody() || {};
+    var q = {source: v.source, date: v.date, rows: [field], values: [{measure: "count()"}], filters: others || {}, sort: {}};
+    q.sort[field] = {by: "label"};
+    return call("POST", "/query", {view: q}).then(function (a) {
+      return (a.rows || []).filter(function (r) { return r.kind === "node"; }).map(function (r) {
+        var c = (a.cells || {})[r.key + "|" + ((a.columns || [])[0] || {}).key];
+        return {text: r.value, count: c && c.values ? c.values[(a.measures || [{}])[0].label] : undefined};
+      });
+    });
+  }
+
+  function filtersBut(f) {
+    var v = viewBody() || {}, others = {};
+    Object.keys(v.filters || {}).forEach(function (k) { if (k !== f) { others[k] = v.filters[k]; } });
+    return others;
+  }
+
   function drawSlicers() {
-    var box = $("[data-pv-slicers]");
-    var list = state.view.slicers || [];
+    var box = $("[data-pv-slicers]"), list = state.slicers;
+    var pick = $("[data-pv-slicer-add]");
+    if (pick && state.catalogue) {
+      pick.innerHTML = '<option value="">Add a slicer…</option>' + (state.catalogue.fields || []).filter(function (f) { return f.type !== "number" && !/^_|~/.test(f.name) && list.indexOf(f.name) < 0; })
+        .map(function (f) { return '<option value="' + esc(f.name) + '">' + esc(f.label || f.name) + '</option>'; }).join("");
+    }
     box.hidden = !list.length;
     if (!list.length) { box.innerHTML = ""; return; }
     box.innerHTML = list.map(function (f, i) { return '<div class="pv-slicer" data-slicer="' + i + '"><b>' + esc(f) + '</b><span class="pv-sub">…</span></div>'; }).join("");
+    var v = viewBody() || {};
     list.forEach(function (f, i) {
-      var others = {};
-      Object.keys(state.view.filters || {}).forEach(function (k) { if (k !== f) { others[k] = state.view.filters[k]; } });
-      var q = { source: state.view.source, date: state.view.date, rows: [f], values: ["count()"], filters: others, sort: {} };
-      q.sort[f] = { by: "label" };
-      call("POST", "/query", { view: q }).then(function (a) {
-        var kept = ((state.view.filters || {})[f] || {}).in || [];
-        var members = (a.rows || []).filter(function (r) { return r.kind === "node"; });
+      membersOf(f, filtersBut(f)).then(function (members) {
+        var kept = ((v.filters || {})[f] || {}).in || [];
         var el = box.querySelector('[data-slicer="' + i + '"]');
         if (!el) { return; }
-        el.innerHTML = '<b>' + esc(f) + '</b><button type="button" class="pv-sl" data-sl-all="' + esc(f) + '" aria-pressed="' + (!kept.length) + '">All</button>'
-          + members.slice(0, 60).map(function (r) {
-            return '<button type="button" class="pv-sl" data-sl-field="' + esc(f) + '" data-sl-value="' + esc(r.value) + '" aria-pressed="' + (kept.indexOf(r.value) >= 0) + '">'
-              + esc(r.value) + '</button>';
+        el.innerHTML = '<b>' + esc(f) + '</b><button type="button" class="pv-x" data-sl-remove="' + esc(f) + '" aria-label="Remove the slicer ' + esc(f) + '">×</button>'
+          + '<button type="button" class="pv-sl" data-sl-all="' + esc(f) + '" aria-pressed="' + (!kept.length) + '">All</button>'
+          + members.slice(0, 60).map(function (m) {
+            return '<button type="button" class="pv-sl" data-sl-field="' + esc(f) + '" data-sl-value="' + esc(m.text) + '" aria-pressed="' + (kept.indexOf(m.text) >= 0) + '">' + esc(m.text) + '</button>';
           }).join("") + (members.length > 60 ? '<span class="pv-sub">' + (members.length - 60) + ' more: use a filter</span>' : "");
       }).catch(function (e) {
         var el = box.querySelector('[data-slicer="' + i + '"]');
@@ -272,35 +305,16 @@
     });
   }
 
-  function toggle(row, collapse, all) {
-    var v = state.view;
-    var path = row.path || [];
-    if (collapse) {
-      v.expanded = (v.expanded || []).filter(function (e) {
-        return e.axis !== "rows" || e.path.length < path.length || JSON.stringify(e.path.slice(0, path.length)) !== JSON.stringify(path);
-      });
-      if ((v.expandTo || {}).rows > path.length) { v.expandTo = {rows: Math.max(1, path.length), columns: (v.expandTo || {}).columns || 1}; }
-      run();
-      return;
-    }
-    if (all) {
-      v.expandTo = {rows: Math.max(v.rows.length, path.length + 1), columns: (v.expandTo || {}).columns || 1};
-      run();
-      return;
-    }
-    expandBy(row, null);
+  /** A slicer's choice is a member filter of the field: the Filters well holds it, so the grid asks again. */
+  function setMembers(field, members) {
+    var w = state.grid.model.wells;
+    if (members && members.length) { w.setFilter(field, {type: "set", values: members}); } else if (w.has("filters", field)) { w.remove("filters", field); }
   }
 
-  function expandBy(row, by) {
-    notice("");
-    $("[data-pv-meta]").textContent = "opening " + row.label + "…";
-    call("POST", "/expand", {view: viewBody(), axis: "rows", path: row.path, by: by}).then(show).catch(function (e) { notice(e.message); });
-  }
-
-  // ---- provenance, rows, references -------------------------------------------------------------------------------------------
+  // ---- provenance: a cell's Explain ----------------------------------------------------------------------------------------------
 
   function coordsOf(key) {
-    var cell = (state.answer.cells || {})[key];
+    var cell = ((state.answer || {}).cells || {})[key];
     return cell ? cell.coords : {};
   }
 
@@ -311,19 +325,23 @@
     return id ? "pivot://" + id + "/" + m.label + "[" + parts.join(", ") + "]" : "";
   }
 
-  function provenance(key, m, td) {
-    var entry = state.answer && state.answer.cells ? state.answer.cells[key] : null;
-    root.dispatchEvent(new CustomEvent("drishti:pivot-cell", {detail: {key: key, measure: m, cell: entry, coords: coordsOf(key)}}));
-    var pop = $("[data-pv-pop]");
-    call("GET", "/provenance/" + encodeURIComponent(state.answer.provenance) + "?cell=" + encodeURIComponent(key)).then(function (p) {
+  /** The grid's Explain hook: the server's provenance of the cell, with its rows, its reference and (switches) its comments. */
+  function explain(ctx) {
+    var key = cellKey(ctx.row, ctx.col);
+    if (!key || !ctx.measure) { return "Explain shows how a figure of the pivot was computed: select a figure."; }
+    var m = measureOfLabel(ctx.measure);
+    return call("GET", "/provenance/" + encodeURIComponent(state.answer.provenance) + "?cell=" + encodeURIComponent(key)).then(function (p) {
       var cell = p.cell || {};
       var v = cell.values ? cell.values[m.label] : null;
       var fn = (p.functions || []).filter(function (f) { return f.label === m.label; })[0] || {};
       var ref = reference(key, m);
       var coords = cell.coords || {};
+      var pop = document.createElement("div");
+      pop.className = "pv-pop";
+      pop.setAttribute("data-pv-pop", "");
+      pop.setAttribute("data-cell", key);
       pop.innerHTML = '<div class="pv-pop-h"><b>' + esc(m.label) + ' · ' + esc(Object.keys(coords).map(function (k) { return coords[k]; }).join(" · ") || "grand total")
-        + ' = ' + esc(fmt(v, m)) + '</b> <span class="pv-tag">' + (m.exact === false ? "≈" : "exact") + '</span> <span class="pv-tag">' + esc(fn.kind || m.kind) + '</span>'
-        + '<button type="button" class="pv-x" data-pop-close aria-label="Close">×</button></div><dl class="pv-kv">'
+        + ' = ' + esc(fmt(v, m)) + '</b> <span class="pv-tag">' + (m.exact === false ? "≈" : "exact") + '</span> <span class="pv-tag">' + esc(fn.kind || m.kind) + '</span></div><dl class="pv-kv">'
         + '<dt>How</dt><dd>' + esc(fn.function || m.id) + ': ' + esc(fn.how || "") + '</dd>'
         + '<dt>Members</dt><dd>' + esc(cell.members) + ' rows</dd>'
         + (cell.scope ? '<dt>Scope</dt><dd class="mono">' + esc(cell.scope) + '</dd>' : '<dt>Where</dt><dd class="mono">' + esc(Object.keys(coords).map(function (k) { return k + " = '" + coords[k] + "'"; }).join(" AND ") || "every row of the view") + '</dd>')
@@ -336,22 +354,20 @@
         + (cell.scope && p.provider === "var" ? ' <a class="pv-btn" href="/var?scope=' + encodeURIComponent(cell.scope) + '">Ask the VaR engine</a>' : "")
         + (ref ? ' <button type="button" class="pv-btn" data-pop-copy>Copy reference</button>' : "") + '</div><div data-pop-rowsbox></div>';
       if (sw()) { sw().popover(pop, key, m, cell); }   // the cell's comments, and how the answer was computed
-      pop.hidden = false;
-      var r = td.getBoundingClientRect();
-      var host = $(".pv-gridcard").getBoundingClientRect();
-      pop.style.top = Math.max(40, r.bottom - host.top + 4) + "px";
-      pop.style.left = Math.max(8, Math.min(r.left - host.left - 120, host.width - 440)) + "px";
-      pop.querySelector("[data-pop-close]").onclick = function () { pop.hidden = true; };
       pop.querySelector("[data-pop-rows]").onclick = function () { rows(key, pop.querySelector("[data-pop-rowsbox]")); };
       var cp = pop.querySelector("[data-pop-copy]");
-      if (cp) { cp.onclick = function () { navigator.clipboard && navigator.clipboard.writeText(ref); cp.textContent = "Copied"; }; }
-    }).catch(function (e) { notice(e.message); });
+      if (cp) { cp.onclick = function () { if (navigator.clipboard) { navigator.clipboard.writeText(ref); } cp.textContent = "Copied"; }; }
+      return pop;
+    });
+  }
+
+  function rowsOf(key, limit) {
+    return call("POST", "/rows", {view: viewBody(), coords: coordsOf(key), limit: limit || 50});
   }
 
   function rows(key, box) {
-    box = box || $("[data-pv-pop] [data-pop-rowsbox]");
-    call("POST", "/rows", {view: viewBody(), coords: coordsOf(key), limit: 50}).then(function (r) {
-      var h = ['<p class="pv-sub">' + r.rows.length + " of " + r.total + " rows" + (r.note ? " · " + esc(r.note) : "") + '</p><div class="pv-rows"><table class="pv-table"><thead><tr>'];
+    rowsOf(key).then(function (r) {
+      var h = ['<p class="pv-sub">' + r.rows.length + " of " + r.total + " rows" + (r.note ? " · " + esc(r.note) : "") + '</p><div class="pv-rows"><table class="pv-rows-t"><thead><tr>'];
       r.columns.forEach(function (c) { h.push("<th>" + esc(c) + "</th>"); });
       h.push("</tr></thead><tbody>");
       r.rows.forEach(function (row) { h.push("<tr>" + row.map(function (x) { return "<td>" + esc(x) + "</td>"; }).join("") + "</tr>"); });
@@ -360,16 +376,25 @@
     }).catch(function (e) { notice(e.message); });
   }
 
+  /** The grid's drill-through hook (the rows behind a cell, its context menu): the server's rows, as objects. */
+  function drillThrough(ctx) {
+    var key = cellKey(ctx.row, ctx.col);
+    if (!key) { return Promise.resolve([]); }
+    return rowsOf(key, 200).then(function (r) {
+      return r.rows.map(function (row) { var o = {}; r.columns.forEach(function (c, i) { o[c] = row[i]; }); return o; });
+    });
+  }
+
   // ---- the chart of a selection -------------------------------------------------------------------------------------------------
 
   function chart() {
     var a = state.answer;
     if (!a) { return; }
     var sel = state.selection.length ? state.selection : [];
-    var m = a.measures[sel.length ? sel[0].m : 0];
-    var colKey = sel.length ? a.columns[sel[0].c].key : a.columns[a.columns.length - 1].key;
+    var m = sel.length ? measureOfLabel(sel[0].measure) : a.measures[0];
+    var colKey = sel.length ? sel[0].colKey : a.columns[a.columns.length - 1].key;
     // the rows charted: the selected ones, else the top level's members
-    var picked = sel.length > 1 ? sel.map(function (s) { return a.rows[s.row]; }) : a.rows.filter(function (r) { return r.depth === 1 && r.kind !== "header"; });
+    var picked = sel.length > 1 ? sel.map(function (s) { return s.entry; }) : a.rows.filter(function (r) { return r.depth === 1 && r.kind !== "header"; });
     var holistic = m.kind === "holistic" && !m.plainSum;
     var names = [];
     var values = [];
@@ -384,39 +409,34 @@
     // the engine's own gap of this column (Σ parts − total, PivotAnswer.diversification): drawn as total − Σ parts, never added up here
     var gap = ((grandRow.diversificationByColumn || {})[colKey] || {})[m.label];
     var note;
-    var series;
-    var colors = [];
     if (holistic && total != null && gap != null && sel.length <= 1) {
       names = names.concat(["Diversification", "Total"]);
       values = values.concat([-gap, total]);
       note = m.label + " does not add up: the total is its own figure from its own members, so the parts stand beside it and the "
         + "diversification (total − Σ parts = " + fmt(-gap, m) + ", the engine's) is drawn as its own bar, never stacked.";
-      colors = values.map(function (x, i) { return i === values.length - 1 ? "#d9a441" : i === values.length - 2 ? "#c87a52" : "#6f9fd8"; });
     } else {
       note = m.label + (m.plainSum ? " adds up: the bars sum to the total." : " by member; each figure is the cell's own.");
-      colors = values.map(function () { return "#6f9fd8"; });
     }
-    series = [{type: "bar", data: values.map(function (v, i) { return {value: v, itemStyle: {color: colors[i]}}; }), label: {show: true, position: "top", formatter: function (p) { return fmt(p.value, m); }}}];
-    var card = $("[data-pv-chartcard]");
-    card.hidden = false;
+    $("[data-pv-chartcard]").hidden = false;
     $("[data-pv-chart-title]").textContent = "Chart of the selection: " + m.label + " by " + ((a.rowDimensions || [])[0] || "total");
     $("[data-pv-chart-sub]").textContent = "suggested: " + (holistic ? "bars beside the total (it does not stack)" : "bar") + " · linked to the pivot";
     $("[data-pv-chart-note]").textContent = note;
     var box = $("[data-pv-chart-box]");
-    if (!window.echarts) { box.textContent = names.map(function (n, i) { return n + ": " + fmt(values[i], m); }).join(" · "); return; }
-    var styles = getComputedStyle(document.body);
-    var ink = styles.getPropertyValue("--d-ink").trim() || "#ddd";
-    var muted = styles.getPropertyValue("--d-muted").trim() || "#999";
-    state.chart = state.chart || window.echarts.init(box, null, {renderer: "svg"});
-    state.chart.setOption({backgroundColor: "transparent", textStyle: {color: ink}, grid: {left: 70, right: 20, top: 30, bottom: 50},
-      xAxis: {type: "category", data: names, axisLabel: {color: muted, interval: 0, rotate: names.length > 6 ? 30 : 0}},
-      yAxis: {type: "value", axisLabel: {color: muted, formatter: function (v) { return fmt(v, m); }}, splitLine: {lineStyle: {color: muted, opacity: 0.2}}},
-      tooltip: {trigger: "axis", valueFormatter: function (v) { return fmt(v, m); }}, series: series}, true);
-    state.chart.off("click");
-    state.chart.on("click", function (p) {
-      var r = picked.filter(function (x) { return x.label === p.name; })[0];
-      if (r && r.expandable && !r.expanded) { expandBy(r, null); }
-    });
+    var C = window.Drishti.elements && window.Drishti.elements.chart;
+    if (!C) { box.textContent = names.map(function (n, i) { return n + ": " + fmt(values[i], m); }).join(" · "); return; }
+    // drishti-chart: one bar per figure as the engine gave it (the diversification and the total beside the parts, never stacked)
+    var roles = values.map(function (x, i) { return holistic && total != null && gap != null && sel.length <= 1 ? (i === values.length - 1 ? "total" : i === values.length - 2 ? "div" : "part") : "part"; });
+    var spec = {kind: "bar", title: m.label, id: "id", data: {rows: names.map(function (n, i) { return {id: String(i), name: n, value: values[i], role: roles[i]}; })},
+      x: "name", y: {field: "value", format: function (v) { return fmt(v, m); }, title: m.label}, series: [{field: "value", name: m.label}],
+      labels: true, legend: "none", onClick: "none", colourWhen: [{when: "role == 'total'", tone: "warn"}, {when: "role == 'div'", tone: "bad"}]};
+    if (state.chart) { state.chart.setSpec(spec); } else {
+      state.chart = new C.Chart(box, spec, {density: "compact", height: 280});
+      box.addEventListener("drishti:mark-clicked", function (e) {         // a member's bar opens its row in the pivot
+        var r = (state.charted || []).filter(function (x) { return x.label === (e.detail || {}).category; })[0];
+        if (r && r.expandable && !r.expanded) { state.grid.model.togglePivotNode("rows", r.path, true); }
+      });
+    }
+    state.charted = picked;
   }
 
   // ---- export, save, share ---------------------------------------------------------------------------------------------------
@@ -445,20 +465,63 @@
   }
 
   function save(share) {
-    var name = window.prompt("Save the view as (letters, digits, dashes)", (state.view.source || "pivot") + "-view");
+    var v = viewBody();
+    var name = window.prompt("Save the view as (letters, digits, dashes)", (v.source || "pivot") + "-view");
     if (!name) { return; }
     var with_ = share ? window.prompt("Share with (people or role:<role>, comma-separated)", "") : "";
-    call("POST", "/views", {name: name, view: viewBody(), sharedWith: (with_ || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean)})
-      .then(function (v) {
-        state.savedView = v.id;
-        state.answer.savedView = v.id;
+    call("POST", "/views", {name: name, view: v, sharedWith: (with_ || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean)})
+      .then(function (s) {
+        state.savedView = s.id;
+        state.answer.savedView = s.id;
         if (sw()) { sw().shown(state.answer, {saved: true}); }
-        $("[data-pv-title]").textContent = v.id + " @" + v.version;
-        notice("saved as " + v.id + " (version " + v.version + ")" + (v.sharedWith && v.sharedWith.length ? ", shared with " + v.sharedWith.join(", ") : "") + ": PIVOT @" + v.id);
+        $("[data-pv-title]").textContent = s.id + " @" + s.version;
+        notice("saved as " + s.id + " (version " + s.version + ")" + (s.sharedWith && s.sharedWith.length ? ", shared with " + s.sharedWith.join(", ") : "") + ": PIVOT @" + s.id);
       }).catch(function (e) { notice(e.message); });
   }
 
-  // ---- start -----------------------------------------------------------------------------------------------------------------
+  // ---- the grid ----------------------------------------------------------------------------------------------------------------
+
+  /** Draws the grid for a catalogue and a view: its fields, its wells and open state, and asks once. */
+  function mount(view) {
+    var c = state.catalogue;
+    if (state.grid) { state.grid.destroy(); state.grid = null; }
+    if (!G) { notice("the grid (the Elements library drishti-grid) did not load"); return; }
+    var cols = columnsOf(c, view);
+    var host = $("[data-pv-grid]");
+    var gr = state.grid = new G.Grid(host, {
+      columns: cols, layout: "wells", density: "compact", title: c.title || c.source, subtitle: c.masked ? c.masked + " masked for you" : "",
+      label: "The pivot: arrows move, right arrow opens a row, left closes it, Shift+right opens every level below, E explains a figure",
+      clientAggregation: false, serverPivot: ask, serverFuncs: SERVER_FUNCS, valueFuncs: ["sum", "count", "avg", "min", "max", "count_distinct"], pivotFormat: function (m) { return G.answerFormat(unitOf(m)); }, explain: explain, decorateCell: decorate,
+      drillThrough: drillThrough, members: function (colId) { return membersOf(colId, filtersBut(colId)); },
+      conditionalFormats: rulesOf(view.formats), rowSelection: "multiple"});
+    // no expandTo (a view of before): the server's default, every column level open
+    gr.model.setOpenState(view.expandTo ? view : Object.assign({}, view, {expandTo: {rows: 1, columns: Math.max(1, view.columns.length)}}));
+    gr.model.pivotExtra = extraOf(view);
+    state.slicers = (view.slicers || []).slice();
+    $("[data-pv-subtotals]").value = view.subtotals === "above" ? "above" : "below";
+    gr.setPivot(wellsOf(view, cols));
+  }
+
+  /** run(change): change the view as the server knows it (a lens's options, a test's arrangement), then ask again. */
+  function applyView(change) {
+    var v = viewBody();
+    change(v);
+    ["rows", "columns", "values", "expanded"].forEach(function (k) { v[k] = v[k] || []; });
+    v.filters = v.filters || {};
+    var gr = state.grid, cols = gr.model.columns.all();
+    var known = function (id) { return cols.some(function (c) { return c.id === id; }); };
+    var w = wellsOf(v, cols);
+    var fits = v.rows.concat(v.columns).every(known) && w.values.length === v.values.length
+      && Object.keys(v.filters).every(function (k) { return k.charAt(0) === "_" || known(k); });
+    if (!fits) { mount(v); return; }                    // a field or measure the grid does not hold yet: drawn again with it
+    // the same fields: the grid keeps its scroll and layout; its view changes and it asks once
+    gr.model.pivotExtra = extraOf(v);
+    gr.model.setOpenState(v.expandTo ? v : Object.assign({}, v, {expandTo: {rows: 1, columns: Math.max(1, v.columns.length)}}));
+    state.slicers = (v.slicers || []).slice();
+    $("[data-pv-subtotals]").value = v.subtotals === "above" ? "above" : "below";
+    gr.setConditionalFormats(rulesOf(v.formats));
+    if (JSON.stringify(gr.model.wells.getState()) !== JSON.stringify(w)) { gr.model.wells.setState(w); } else { again(); }
+  }
 
   function open(source, date, view) {
     return call("GET", "/catalogue?source=" + encodeURIComponent(source) + (date ? "&date=" + encodeURIComponent(date) : "")).then(function (c) {
@@ -476,21 +539,44 @@
         }
         view.date = view.date || c.date;
       }
-      if (view) {
-        // a saved view, a preset or the source's default: the zones the screen draws are always there
-        ["rows", "columns", "values", "expanded"].forEach(function (k) { view[k] = view[k] || []; });
-        view.filters = view.filters || {};
-        state.view = view;
-      } else {
+      if (!view) {
         var firstText = (c.fields || []).filter(function (f) { return f.type === "string"; })[0];
         var firstNum = (c.fields || []).filter(function (f) { return f.type === "number"; })[0];
         var values = c.provider === "var" ? [{measure: "var()", as: "VaR"}, {measure: "es()", as: "ES"}]
           : [{measure: "count()", as: "Rows"}].concat(firstNum ? [{measure: "sum(" + firstNum.name + ")"}] : []);
-        state.view = {source: source, date: c.date, rows: firstText ? [firstText.name] : [], columns: [], values: values, filters: {}, expanded: []};
+        view = {source: source, date: c.date, rows: firstText ? [firstText.name] : [], columns: [], values: values, filters: {}, expanded: []};
       }
+      // a saved view, a preset or the source's default: the wells are always there
+      ["rows", "columns", "values", "expanded"].forEach(function (k) { view[k] = view[k] || []; });
+      view.filters = view.filters || {};
+      view.source = view.source || source;
       $("[data-pv-title]").textContent = c.title || source;
-      run();
+      mount(view);
+      suggestions(c.source);
     });
+  }
+
+  /** An administrator's suggestions (PIVOT_GUIDE.md, documents): the paths people typed most, with Promote and Add to dataset. */
+  function suggestions(source) {
+    var box = $("[data-pv-paths]");
+    box.innerHTML = "";
+    call("GET", "/paths?source=" + encodeURIComponent(source)).then(function (r) {
+      var list = (r.paths || []).slice(0, 5);
+      if (!list.length) { return; }
+      box.innerHTML = '<span class="pv-sub">Most used paths (administrator):</span> ' + list.map(function (p) {
+        return '<span class="pv-sugg" title="' + esc(p.promote + "; or " + p.dataset) + '"><button type="button" class="pv-btn mono" data-pv-path-use="' + esc(p.path) + '">' + esc(p.path) + '</button> <span class="pv-sub">' + esc(String(p.uses)) + ' uses</span> '
+          + (p.connector && p.grain === "entity" ? '<a class="pv-btn" href="/admin/connectors/' + encodeURIComponent(p.connector) + '">Promote</a> ' : "")
+          + '<a class="pv-btn" href="/build/tables?new=table">Add to a table</a></span>';
+      }).join(" ");
+    }, function () { /* not an administrator: no suggestions */ });
+  }
+
+  /** A Rachana path ($.LEGS[0].CURRENCY, size($.LEGS)) is a field too: the server reads it from the documents; it goes to Rows. */
+  function addPath(path) {
+    path = (path || "").trim();
+    if (!/^(\$|size\()/.test(path)) { notice("a path starts with $ (or size(...)): $.LEGS[0].CURRENCY"); return; }
+    if (!state.fields.some(function (f) { return f.field === path; })) { state.fields.push({field: path, header: path, group: "Your paths", enableRowGroup: true, enablePivot: true}); }
+    applyView(function (v) { if (v.rows.indexOf(path) < 0) { v.rows.push(path); } v.expanded = []; });
   }
 
   /** A partial view the page was opened with (MCUBE <scope> BY ... : its rows, columns, values and options), laid over the landing view. */
@@ -512,7 +598,7 @@
         return call("GET", "/views/" + id).then(function (v) {
           $("[data-pv-title]").textContent = v.id + " @" + v.version;
           state.savedView = v.id;
-          return open(v.view.source, v.view.date, v.view).then(function () { if (state.answer) { state.answer.savedView = v.id; } });
+          return open(v.view.source, v.view.date, v.view).then(function () { $("[data-pv-title]").textContent = v.id + " @" + v.version; });
         });
       }
       if (src) { return open(src, root.getAttribute("data-date")); }
@@ -522,14 +608,22 @@
 
   // ---- wiring ---------------------------------------------------------------------------------------------------------------
 
-  $("[data-pv-source]").onchange = function () { if (this.value) { state.view = null; open(this.value, ""); } };
-  $("[data-pv-date]").onchange = function () { state.view.date = this.value; open(state.view.source, this.value, state.view); };
-  $("[data-pv-compare]").onchange = function () { run(); };
-  $("[data-pv-subtotals]").onchange = function () { run(); };
-  $("[data-pv-field-search]").oninput = drawFields;
+  function again() { if (state.grid) { state.grid.model.runPivot(); } }
+
+  $("[data-pv-source]").onchange = function () { if (this.value) { state.fields = []; open(this.value, ""); } };
+  $("[data-pv-date]").onchange = function () { var v = viewBody(); v.date = this.value; open(v.source, this.value, v); };
+  $("[data-pv-compare]").onchange = again;
+  $("[data-pv-subtotals]").onchange = function () { if (state.grid) { state.grid.model.setPivotOptions({subtotals: this.value}); } };
   $("[data-pv-chart]").onclick = chart;
   $("[data-pv-save]").onclick = function () { save(false); };
   $("[data-pv-share]").onclick = function () { save(true); };
+  $("[data-pv-path]").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); addPath(this.value); } });
+  $("[data-pv-path-add]").onclick = function () { addPath($("[data-pv-path]").value); };
+  $("[data-pv-slicer-add]").onchange = function () {
+    if (!this.value) { return; }
+    state.slicers = state.slicers.filter(function (d) { return d !== this.value; }, this).concat([this.value]);
+    drawSlicers();
+  };
   $("[data-pv-export-open]").onclick = function () {
     var p = $("[data-pv-export]");
     p.hidden = !p.hidden;
@@ -538,93 +632,66 @@
   root.querySelectorAll("[data-pv-export]").forEach(function (b) {
     if (b.tagName === "BUTTON") { b.onclick = function () { exportAs(b.getAttribute("data-pv-export")); }; }
   });
-  $("[data-pv-estimate]").onclick = function (e) { if (e.target.closest("[data-pv-run]")) { run(true); } };
+  $("[data-pv-estimate]").onclick = function (e) { if (e.target.closest("[data-pv-run]")) { state.force = true; again(); } };
+  $("[data-pv-paths]").onclick = function (e) { var b = e.target.closest("[data-pv-path-use]"); if (b) { addPath(b.getAttribute("data-pv-path-use")); } };
   root.addEventListener("click", function (e) {
-    var rm = e.target.closest("[data-remove]");
-    if (rm) { remove(rm.getAttribute("data-remove")); return; }
-    var f = e.target.closest(".pv-field");
-    if (f) { state.focusField = f; root.querySelectorAll(".pv-field.on").forEach(function (x) { x.classList.remove("on"); }); f.classList.add("on"); f.focus();
-      if (e.target.tagName === "INPUT" || e.detail === 2) { add(f.getAttribute("data-native") === "1" || f.getAttribute("data-type") === "number" ? "values" : "rows", f.getAttribute("data-field"), f.getAttribute("data-native") === "1"); } }
-  });
-  root.addEventListener("click", function (e) {
+    var rm = e.target.closest("[data-sl-remove]");
+    if (rm) {
+      var gone = rm.getAttribute("data-sl-remove");
+      state.slicers = state.slicers.filter(function (d) { return d !== gone; });
+      setMembers(gone, null);
+      drawSlicers();
+      return;
+    }
     var sl = e.target.closest("[data-sl-field], [data-sl-all]");
     if (!sl) { return; }
-    var v = state.view;
-    v.filters = v.filters || {};
-    if (sl.hasAttribute("data-sl-all")) {
-      delete v.filters[sl.getAttribute("data-sl-all")];
-    } else {
-      var f = sl.getAttribute("data-sl-field"), val = sl.getAttribute("data-sl-value");
-      var kept = ((v.filters[f] || {}).in || []).slice();
-      var at = kept.indexOf(val);
-      if (at >= 0) { kept.splice(at, 1); } else { kept.push(val); }
-      if (kept.length) { v.filters[f] = { in: kept }; } else { delete v.filters[f]; }
-    }
-    run();
+    if (sl.hasAttribute("data-sl-all")) { setMembers(sl.getAttribute("data-sl-all"), null); return; }
+    var f = sl.getAttribute("data-sl-field"), val = sl.getAttribute("data-sl-value");
+    var kept = (((viewBody().filters || {})[f] || {}).in || []).slice();
+    var at = kept.indexOf(val);
+    if (at >= 0) { kept.splice(at, 1); } else { kept.push(val); }
+    setMembers(f, kept);
   });
-  root.addEventListener("change", function (e) {
-    var fmt = e.target.closest("[data-format]");
-    if (fmt) {
-      var x = state.view.values[+fmt.getAttribute("data-format")];
-      var label = x.as || x.measure;
-      state.view.formats = state.view.formats || {};
-      if (fmt.value) { state.view.formats[label] = { style: fmt.value }; } else { delete state.view.formats[label]; }
-      state.grid = window.Drishti.PivotCore.render($("[data-pv-grid]"), Object.assign({}, state.answer, { view: state.view }), {
-        diff: state.diff, onToggle: toggle, onCell: provenance, onSelect: function (s) { state.selection = s; }, onRows: rows });
-      return;
-    }
-    var fs = e.target.closest("[data-func]");
-    if (fs) {
-      var i = +fs.getAttribute("data-func");
-      var x = state.view.values[i];
-      x.measure = x.measure.replace(/^\w+\(/, fs.value + "(");
-      if (fs.value === "count" && /\(\s*\)$/.test(x.measure)) { x.measure = "count()"; }
-      delete x.as;
-      run();
-    }
+  // a click on a figure: the selection the chart, the export and the cards read, and the cell's provenance (the grid's Explain)
+  root.addEventListener("drishti:cell-clicked", function (e) {
+    var d = e.detail || {};
+    if (d.kind !== "pivot" || !d.measure) { return; }
+    var key = cellKey(d.row, d.col);
+    if (!key) { return; }
+    var ref = {key: key, measure: d.measure, colKey: key.slice(key.lastIndexOf("|") + 1), entry: state.grid.model.rowAt(d.row).entry, row: d.row, col: d.col};
+    var mods = d.mods || {};
+    state.selection = mods.shift || mods.ctrl || mods.meta ? state.selection.concat([ref]) : [ref];
+    var entry = (state.answer.cells || {})[key];
+    root.dispatchEvent(new CustomEvent("drishti:pivot-cell", {detail: {key: key, measure: measureOfLabel(d.measure), cell: entry, coords: coordsOf(key)}}));
+    if (!mods.shift) { state.grid.explain(d.row, d.col); }
   });
-  root.addEventListener("dragstart", function (e) {
-    var f = e.target.closest(".pv-field");
-    if (f) { e.dataTransfer.setData("text/plain", JSON.stringify({field: f.getAttribute("data-field"), native: f.getAttribute("data-native") === "1"})); }
-  });
-  root.querySelectorAll("[data-pv-zone]").forEach(function (z) {
-    z.addEventListener("dragover", function (e) { e.preventDefault(); z.classList.add("over"); });
-    z.addEventListener("dragleave", function () { z.classList.remove("over"); });
-    z.addEventListener("drop", function (e) {
-      e.preventDefault();
-      z.classList.remove("over");
-      try { var d = JSON.parse(e.dataTransfer.getData("text/plain")); add(z.getAttribute("data-pv-zone"), d.field, d.native); } catch (err) { /* not a field */ }
-    });
-  });
-  document.addEventListener("keydown", function (e) {
-    var tag = (e.target.tagName || "").toLowerCase();
-    if (tag === "input" || tag === "select" || tag === "textarea" || e.ctrlKey || e.metaKey || e.altKey) { return; }
-    var k = e.key.toLowerCase();
-    if (state.focusField && document.activeElement === state.focusField && "rcvfs".indexOf(k) >= 0) {
-      e.preventDefault();
-      add({r: "rows", c: "columns", v: "values", f: "filters", s: "slicers"}[k], state.focusField.getAttribute("data-field"), state.focusField.getAttribute("data-native") === "1");
-      return;
-    }
-    if (!state.answer) { return; }
-    if (k === "g") { e.preventDefault(); chart(); }
-    else if (k === "x") { e.preventDefault(); $("[data-pv-export-open]").click(); }
-    else if (/^[1-9]$/.test(k) && root.contains(document.activeElement)) {
-      e.preventDefault();
-      state.view.expandTo = {rows: +k, columns: (state.view.expandTo || {}).columns || 1};
-      run();
-    } else if (k === "e" && state.selection.length) {
-      e.preventDefault();
-      var row = state.answer.rows[state.selection[0].row];
+  // the Pivot's keys (the one keymap, drishti_keys.js; ? lists them); inside the grid its own keys (arrows, + and −, E explains a figure)
+  var K = window.Drishti.keys;
+  K.register({id: "pivot.chart", keys: ["G", "Shift+G"], scope: "screen", area: "pivot", group: "Pivot", description: "Chart the answer",
+    when: function () { return !!state.answer; }, run: function () { chart(); }});
+  K.register({id: "pivot.export", keys: ["X", "Shift+X"], scope: "screen", area: "pivot", group: "Pivot", description: "Export the answer",
+    when: function () { return !!state.answer; }, run: function () { $("[data-pv-export-open]").click(); }});
+  K.register({id: "pivot.expand.to", keys: ["1", "2", "3", "4", "5", "6", "7", "8", "9"], scope: "panel", area: "pivot", group: "Pivot", label: "1 … 9",
+    description: "Open the rows to that level", within: function () { return root; }, when: function () { return !!state.answer; },
+    run: function (e) {
+      var k = e.key;
+      if (!/^[1-9]$/.test(k)) { return false; }
+      state.grid.model.expandPivotTo("rows", +k);
+    }});
+  K.register({id: "pivot.expand.by", keys: ["Shift+E"], scope: "screen", area: "pivot", group: "Pivot", description: "Expand the selected row by a field",
+    when: function () { return !!state.answer && !!state.selection.length; },
+    run: function () {
+      var row = state.selection[0].entry;
       var by = window.prompt("Expand " + row.label + " by which field?", "");
-      if (by) { expandBy(row, by.trim()); }
-    }
-  });
+      if (by) { state.grid.model.pivotState.toggle("rows", row.path, true, by.trim()); again(); }
+    }});
   // The screen's one face for the code around it, which reads the view and the answer and never computes: a lens (the MR cube,
-  // drishti_mr-lens.js) changes the view's options; the custom functions, explain and what-if cards (drishti_pivot-functions.js) read the view, its
-  // answer and the selection; the switches, live pivots and comments (drishti_pivot-switches.js) send the request body as asked, redraw, run again.
+  // drishti_mr-lens.js) changes the view's options and marks cells; the custom functions, explain and what-if cards (drishti_pivot-functions.js)
+  // read the view, its answer and the selection; the switches, live pivots and comments (drishti_pivot-switches.js) send the request body
+  // as asked, draw a pushed answer, mark the commented cells.
   window.Drishti.PivotScreen = {
     root: root,
-    view: function () { return state.view ? viewBody() : null; },
+    view: function () { return state.grid ? viewBody() : null; },
     answer: function () { return state.answer; },
     catalogue: function () { return state.catalogue; },
     selection: function () { return state.selection; },
@@ -632,14 +699,20 @@
     body: function () { return asked({view: viewBody()}); },
     call: call,
     show: show,
+    fmt: fmt,
+    esc: esc,
     // run(change): change the view (a lens's options), then ask again; run(): ask again as it is, past the estimate's confirmation
     run: function (change) {
-      if (!state.view) { return; }
-      if (typeof change === "function") { change(state.view); run(); } else { run(true); }
+      if (!state.grid) { return; }
+      if (typeof change === "function") { applyView(change); } else { state.force = true; again(); }
     },
-    reopen: function (date) { if (state.view) { state.view.date = date; open(state.view.source, date, state.view); } },
+    reopen: function (date) { var v = viewBody(); if (v) { v.date = date; open(v.source, date, v); } },
     savedView: function () { return state.savedView; },
-    grid: function () { return $("[data-pv-grid]"); }
+    grid: function () { return $("[data-pv-grid]"); },
+    gridApi: function () { return state.grid; },        // drishti-grid's Grid (its model: the rows and texts as drawn)
+    // decorate(fn): fn(cellKey, context) gives a cell's marks ({cls, title, after}); redraw() draws them again
+    decorate: function (fn) { state.decorators.push(fn); },
+    redraw: function () { if (state.grid) { state.grid.refresh(); } }
   };
   boot();
 })();

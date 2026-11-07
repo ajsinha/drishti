@@ -73,14 +73,14 @@ def test_what_other_words_search_only_the_knowledge_pages(client):
 
 
 def test_what_in_the_type_ahead_offers_the_home_then_the_terms(client):
-    s = client.get("/api/suggest", params={"q": "WHAT"}).json()
+    s = client.get("/api/search", params={"in": "command", "q": "WHAT"}).json()["items"]
     assert s[0]["mnemonic"] == "WHAT" and s[0]["href"] == "/help/knowledge" and s[0]["complete"] == "WHAT "
-    s = client.get("/api/suggest", params={"q": "what netting se"}).json()
+    s = client.get("/api/search", params={"in": "command", "q": "what netting se"}).json()["items"]
     assert s[0]["complete"] == "WHAT Netting set" and s[0]["href"] == "/help/knowledge-counterparty-credit-risk#term-netting-set"
     assert "Counterparty credit risk" in s[0]["subtitle"]
-    s = client.get("/api/suggest", params={"q": "WHAT zzz qqq"}).json()
+    s = client.get("/api/search", params={"in": "command", "q": "WHAT zzz qqq"}).json()["items"]
     assert s == [{"mnemonic": "WHAT", "title": "Search the Knowledge pages for zzz qqq", "subtitle": "No term of the glossary is called that",
-                  "complete": "WHAT zzz qqq", "href": "/what?q=zzz%20qqq", "type": "what"}]
+                  "complete": "WHAT zzz qqq", "href": "/what?q=zzz%20qqq", "type": "what", "group": "command"}]
 
 
 def test_the_glossary_matches_terms_names_and_synonyms_and_no_word_twice():
@@ -132,6 +132,6 @@ def test_a_view_of_a_kind_with_a_knowledge_page_carries_the_link(client, monkeyp
     assert 'href="/help/knowledge-trades-and-products#term-trade" data-what-link' in page and "What does this mean?" in page
 
 
-def test_knowledge_is_in_the_build_and_help_menus(client):
+def test_knowledge_is_in_the_help_menu_once(client):
     page = client.get("/t").text
-    assert page.count('href="/what"') >= 2 and "also WHAT &lt;GO&gt;" in page
+    assert page.count('href="/what"') == 1 and "WHAT &lt;term&gt;" in page                       # listed once: the sitemap (2.9.11.e)

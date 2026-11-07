@@ -20,7 +20,7 @@
  * Every change is an operation handed to WB.Actions; the page is then redrawn from the server's answer, so what you see is
  * what is saved. Panels inside a tabs body are not separate targets (the tabs panel is).
  *
- * Keyboard (drishti_grid-keys.js, shared with layout mode): arrows select, Alt+arrows move, Shift+arrows size, Enter opens the inspector,
+ * Keyboard (drishti-core's panel keys, Drishti.GridKeys, shared with layout mode): arrows select, Alt+arrows move, Shift+arrows size, Enter opens the inspector,
  * Delete removes, A natural height; a live region says what happened.
  *
  *   new WB.Canvas(frameEl, store, actions, hooks) -> {select(sel), selected(), ids(), el(id), focus()}

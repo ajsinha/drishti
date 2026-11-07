@@ -90,8 +90,8 @@ async def rupaka(request: Request, rest: str):
                if request.app.state.bi_on else "Rupaka (business intelligence) is switched off in this console (bi.enabled).")
         return RedirectResponse(f"/t?error={quote(why)}", status_code=303)
     word = rest.upper()
-    if not rest:
-        return RedirectResponse("/bi", status_code=303)
+    if not rest:                                                      # BI's own home is the one Build home
+        return RedirectResponse("/build", status_code=303)
     if word in ("WORKSPACE", "WORKSPACES"):
         return RedirectResponse("/bi/w/me", status_code=303)
     if word in ("RUNS", "RUN"):                                       # BI RUNS <GO>: my runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7.1)

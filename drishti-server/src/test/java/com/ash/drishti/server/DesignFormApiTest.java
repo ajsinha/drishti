@@ -149,7 +149,7 @@ class DesignFormApiTest {
         assertThat(review.path("evidence").path("form").path("before").asText()).isEmpty();
         assertThat(review.path("evidence").path("form").path("after").asText()).isEqualTo(FORM);
         assertThat(definitions.yamlOf("form-thing")).isEmpty();                                                      // not in force while it waits
-        ok(mvc.perform(post("/api/v1/sutras/proposals/" + pid + "/approve").header("Authorization", "Bearer " + tokens.mint("rui", List.of("approver"), 300))
+        ok(mvc.perform(post("/api/v1/approvals/sutra/" + pid + "/approve").header("Authorization", "Bearer " + tokens.mint("rui", List.of("approver"), 300))
                 .contentType(MediaType.APPLICATION_JSON).content("{}")));
         assertThat(definitions.yamlOf("form-thing")).isEqualTo(FORM);
         definitions.revert("form-thing");

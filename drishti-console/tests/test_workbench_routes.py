@@ -104,7 +104,7 @@ def test_other_peoples_designs_and_missing_ones_answer_404(app_client):
 
 def test_the_workbench_scripts_are_small_and_all_served(app_client):
     names = sorted(p.name for p in JS.glob("*.js"))
-    assert {"drishti_grid-keys.js", "drishti_canvas.js", "drishti_inspector.js", "drishti_actions.js", "drishti_workbench.js", "drishti_tests.js", "drishti_problems.js", "drishti_yamltab.js", "drishti_data.js", "drishti_palette.js"} <= set(names)
+    assert {"drishti_canvas.js", "drishti_inspector.js", "drishti_actions.js", "drishti_workbench.js", "drishti_tests.js", "drishti_problems.js", "drishti_yamltab.js", "drishti_data.js", "drishti_palette.js"} <= set(names)
     for p in JS.glob("*.js"):
         assert len(p.read_text().splitlines()) <= 420, f"{p.name} is over the module size the design allows"
         assert app_client.get(f"/static/js/build/{p.name}").status_code == 200

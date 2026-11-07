@@ -263,16 +263,16 @@ You should see `map` among the kinds with an **Add** button (or drag it onto the
 
 ## Step 8 · Save it, and how it goes live
 
-The design is yours (see **My designs** under Build). To make it live for everyone: **Submit for review**, a reviewer with the approve power reads the diff and the evidence, and approves; or export it as a pack
+The design is yours (see **My drafts** on the Build home). To make it live for everyone: **Submit for review**, a reviewer with the approve power reads the diff and the evidence, and approves; or export it as a pack
 fragment (**Ship**) and put it in a pack. [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) walks through proposing and approving as two people; from the command line,
 `drishti.py design create|save|check|propose|approve` do the same over REST ([CLI_GUIDE.md](../guides/CLI_GUIDE.md)).
 
-You should see, under **Build → My designs**, `Desk book` with the status *draft* and your edits listed.
+You should see, under **Build → Build home → My drafts**, `Desk book` with the status *draft* and your edits listed.
 
 ## Part B · On a live page: the Sutra designer
 
 When an administrator has switched the **Sutra designer** on, much of Part A is simpler on a page that already exists: open it, press **Customize** in
-the page header and change it on the real page with real data. The result is kept as a design in **My designs**, like Part A's, so the same `design`
+the page header and change it on the real page with real data. The result is kept as a design in **My drafts** on the Build home, like Part A's, so the same `design`
 commands work on it.
 
 ## Step 9 · Open the page and press Customize
@@ -440,7 +440,7 @@ Customize again to go on; **Share** makes a read-only link to your design; **Res
 
 **You should see** the page without the yellow bar, with *Your page* in its header and your changes in place.
 
-**Command line.** Your page is an ordinary design in **Build → My designs** (first called *My page · portfolio-trades*), so the
+**Command line.** Your page is an ordinary design in **Build → Build home → My drafts** (first called *My page · portfolio-trades*), so the
 `design` commands work on it, and a flag says which design is your version of each kind's page:
 
 ```bash
@@ -550,7 +550,7 @@ With Grid or Outline, Customize on a page then opens that mode with the page's d
 ## What you have, and what comes next
 
 A desk screen designed from your own documents (Part A), your own version of the book's trades page (a linked record on a click, a refresh, a form)
-and a second screen from one line (Part B), all in **Build → My designs**, seen by nobody else. To make one live for everyone, open it in the workbench
+and a second screen from one line (Part B), all in **Build → Build home → My drafts**, seen by nobody else. To make one live for everyone, open it in the workbench
 and **Submit for review** ([RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 22](../guides/RACHANA_REFERENCE.md#22-saving-and-proposing)),
 or `drishti.py design propose <id>`.
 

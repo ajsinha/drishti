@@ -227,7 +227,7 @@ the lake. A file split later asks the same lake and pays only its server's start
 
 ### 3.13 A component on a page of its own
 
-A console component that needs no data (the resize handles, `static/js/drishti_resize.js`) is tested on a page of its own markup, with
+A console component that needs no data (the resize handles, drishti-core's `static/elements/drishti-core/src/drishti_resize.js`) is tested on a page of its own markup, with
 no server: `browsers.page(width, height, route=...)` answers `http://render.test/<page>.html` with the test's HTML and a strict
 `Content-Security-Policy` header (`script-src 'self'; style-src 'self'`), and `/static/...` from the console's files. The test waits on
 the component's own condition (`wait_for_function`) and `Drishti.settled()`, and checks `window.__csp` is empty: nothing inline. Each

@@ -346,7 +346,7 @@ On `ready` the server records it, drops the caches of every connector serving th
 ([DATA_GUIDE.md › Telling Drishti new data has landed, section 7](../guides/DATA_GUIDE.md#7-what-happens-step-by-step)); then the engines react through `LoadService.onReady`
 listeners: VaR (`server/var/VarConfiguration.java:96`, `VarOfficial.onLoad`, line 113: a vector or scenario-PV signal applies the intraday
 batches in place, a full run reloads the date and captures it officially), exposure (`server/exposure/ExposureConfiguration.java:69`),
-measure alerts (`MeasureAlertConfiguration.java:117`) and BI (`DatasetService.onLoad`, line 1174: invalidates the date's layers whose data
+measure alerts (`AlertConfiguration.java:117`) and BI (`DatasetService.onLoad`, line 1174: invalidates the date's layers whose data
 version moved).
 
 **The signal is per server.** `LoadService` does not forward an announcement to Drishti\*net peers (no peer call in the class); each
@@ -626,7 +626,7 @@ small files appends leave (a rewrite saves what the extra footers and dictionari
 
 **Today.** The console (`drishti-console`, uvicorn, `server.workers` processes, default 4: `drishti-console/config/application.yaml:21`,
 `run_drishti_web.py` (lines 59-67)) turns each ViewModel into HTML with Jinja (`render(...)` in `routes/*`); charts are already drawn in the
-browser (vendored ECharts, `web/static/js/drishti_charts.js`, `drishti_var-charts.js`, `drishti_exposure-charts.js`). Python visuals return chart specifications,
+browser (vendored ECharts, `web/static/js/drishti_charts.js`, drishti-chart and drishti-risk, Drishti Elements). Python visuals return chart specifications,
 not pictures (made on the server's compute pool, `drishti_compute/items.py`). Measured: about 40 pages a second per worker process (`run_drishti_web.py:63`); one
 console of 4 workers about 69 to 70 pages a second at 50 users, against 140 to 150 requests a second for one server
 ([BENCHMARK.md section 8.4](../admin/BENCHMARK.md#84-sizing-for-millions-of-trades-a-day)). **The console

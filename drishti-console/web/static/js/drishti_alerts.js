@@ -23,12 +23,12 @@
   var bell = document.querySelector('[data-bell]');
   if (!bell || !window.Drishti.Channel || document.querySelector('[data-embed]')) { return; }
   var count = 0, badge = bell.querySelector('[data-bell-count]');
-  var tray = document.createElement('div');
-  tray.className = 'toasts'; tray.setAttribute('role', 'status'); tray.setAttribute('aria-live', 'polite');
-  document.body.appendChild(tray);
+  // the toasts: drishti-core's tray (a live region); a burst shows three toasts and one "N more on the bell"
+  var tray = new window.Drishti.elements.core.ToastTray({ className: 'toasts', max: 3, timeout: 9000,
+    more: { href: '/inbox', className: 'toast-a sev-info notice toast-more', html: function (n) { return '<b>+' + n + '</b> more on the bell'; } } });
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function show() { badge.textContent = String(count); badge.hidden = count <= 0; }
-  window.Drishti.Channel.subscribe('alerts', { hello: onHello, alert: onAlert, notice: onNotice, switches: onSwitches, edit: onEdit });   // on the tab's one live connection (drishti_channel.js)
+  window.Drishti.Channel.subscribe('alerts', { hello: onHello, notice: onNotice, switches: onSwitches, edit: onEdit });   // on the tab's one live connection (drishti_channel.js)
   // the server's first event on the feed: from here on alerts, notices and write-back edits reach this tab (the bell says so to tests and tools)
   function onHello() { bell.setAttribute('data-alerts-live', ''); }
   fetch('/api/inbox/count', { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
@@ -36,7 +36,6 @@
     .then(function (j) { count += (j && j.unread) || 0; show(); })
     .catch(function () { /* the count is a convenience */ });
   document.addEventListener('drishti:unread', function (e) { count = e.detail; });
-  var MAX_TOASTS = 3, more = null, moreCount = 0;                      // a burst shows three toasts and one "N more on the bell"
   /* Admin -> Commands changed what is on (docs/admin/USER_MANAGEMENT.md): a page of a kind now off is drawn again (the server says "not active"),
      the not-active page of a command now on too, and links to a kind now off stop being links at once. Other pages hear it as drishti:switches. */
   function onSwitches(d) {
@@ -96,26 +95,10 @@
     try { m = JSON.parse(sessionStorage.getItem('drishti-edit-mark') || 'null'); sessionStorage.removeItem('drishti-edit-mark'); } catch (e) { m = null; }
     if (page && m && m.kind === page.getAttribute('data-kind') && m.id === page.getAttribute('data-id')) { editMark(page, m.text); }
   }());
-  function toast(cls, href, html) {
-    if (tray.querySelectorAll('.toast-a:not(.toast-more)').length >= MAX_TOASTS) {
-      moreCount++;
-      if (!more) {
-        more = document.createElement('a');
-        more.className = 'toast-a sev-info notice toast-more'; more.href = '/inbox';
-        tray.appendChild(more);
-        setTimeout(function () { if (more) { more.remove(); more = null; moreCount = 0; } }, 9000);
-      }
-      more.innerHTML = '<b>+' + moreCount + '</b> more on the bell';
-      return;
-    }
-    var t = document.createElement('a');
-    t.className = cls; t.href = href; t.innerHTML = html;
-    tray.insertBefore(t, more);
-    setTimeout(function () { t.remove(); }, 9000);
-  }
+  function toast(cls, href, html) { tray.show({ className: cls, href: href, html: html }); }
   function onNotice(n) {
     count++; show();
-    var alertPath = n.type === 'alert' && typeof n.id === 'string' && n.id.charAt(0) === '/' && n.id.charAt(1) !== '/' ? n.id : '';       // an alert on a number: the path it opens
+    var alertPath = (n.type === 'alert' || n.type === 'notice') && typeof n.id === 'string' && n.id.charAt(0) === '/' && n.id.charAt(1) !== '/' ? n.id : '';       // an alert on a number: the path it opens
     var run = n.type === 'bi-run' ? String(n.entityId || n.id || '') : '';                 // a BI run finished (BI_DESIGN.md 3.5): it opens where its result is drawn
     var href = run ? '/bi/run/' + encodeURIComponent(run) : alertPath ? alertPath : n.shareId ? '/share/' + encodeURIComponent(n.shareId) : (n.access && n.kind && n.id ? '/v/' + encodeURIComponent(n.kind) + '/' + encodeURIComponent(n.id) : '/inbox');
     var label = run ? (/^Run\b/.test(n.title || '') ? '' : 'Run') : n.type || 'notice';       // "Run finished: …" needs no second "Run"
@@ -124,20 +107,8 @@
       try { new Notification((document.body.getAttribute('data-product') || document.title) + ' \u00b7 ' + (n.type || 'notice'), { body: n.title }); } catch (err) { /* not available */ }
     }
   }
-  function onAlert(a) {
-    count++; show();
-    toast('toast-a sev-' + a.severity, '/v/' + encodeURIComponent(a.kind) + '/' + encodeURIComponent(a.id),
-      '<b>' + esc(a.severity) + '</b> <span class="mono">' + esc(a.id) + '</span> ' + esc(a.message));
-    if (window.Notification && Notification.permission === 'granted') {
-      try { new Notification((document.body.getAttribute('data-product') || document.title) + ' · ' + a.severity, { body: a.id + ': ' + a.message }); } catch (err) { /* not available */ }
-    }
-  }
-  document.addEventListener('keydown', function (e) {           // Alt+I: the inbox (ignored while typing in a field)
-    var t = e.target;
-    if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && (e.code === 'KeyI' || e.key === 'i') && !(t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))) {
-      e.preventDefault(); window.location.href = '/inbox';
-    }
-  });
+  window.Drishti.keys.register({ id: 'inbox.open', keys: ['Alt+I'], scope: 'global', group: 'Go to', description: 'Your inbox: what people sent you',
+    run: function () { window.location.href = '/inbox'; } });
   bell.addEventListener('click', function () {
     if (window.Notification && Notification.permission === 'default') { Notification.requestPermission(); }
   });

@@ -30,7 +30,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from core.app import CSP
 from scratch_ports import worker_port
-from core import render_dist, screen_grid
+from core import half_up, render_dist, screen_grid
 
 CONSOLE = Path(__file__).resolve().parent.parent
 WEB = CONSOLE / "web"
@@ -51,6 +51,7 @@ def env(design_on: bool) -> Environment:
     if design_on not in _envs:
         e = Environment(loader=FileSystemLoader(str(WEB / "templates")), extensions=["jinja2.ext.do"], autoescape=True)
         e.globals.update(ASSET_V="", design_on=(lambda: design_on))
+        half_up.install(e)
         _envs[design_on] = e
     return _envs[design_on]
 
@@ -74,9 +75,10 @@ def console_html(vm: dict, theme: str = "", design_on: bool = True) -> str:
     view = (f'<div class="view" data-view data-kind="{ref.get("kind", "")}" data-id="{ref.get("id", "")}">'
             + str(parts.provenance_banners(vm, "live", {}, False, "")) + str(parts.vhead(vm)) + body + "</div>")
     links = "".join(f'<link rel="stylesheet" href="/static/{s.removeprefix("static/")}">' for s in CONSOLE_SHEETS)
-    scripts = "".join(f'<script src="{s}"></script>' for s in ("/render-test/csp.js", "/static/vendor/echarts/echarts.min.js", "/static/js/drishti_geomap.js", "/static/js/drishti_charts.js", "/static/js/drishti_view.js"))
-    # the resize component in the head, as base.html has it: the grid's split is its handle (drishti_screen-grid.js)
-    resize = '<link rel="stylesheet" href="/static/css/drishti_resize.css"><script src="/static/js/drishti_resize.js"></script>'
+    scripts = "".join(f'<script src="{s}"></script>' for s in ("/render-test/csp.js", "/static/vendor/echarts/echarts.min.js", "/static/js/drishti_geomap.js", "/static/elements/drishti-chart/drishti_chart.js",
+                                                                     "/static/js/drishti_charts.js", "/static/js/drishti_view.js"))
+    # the resize component (drishti-core) in the head: the grid's split is its handle (drishti_screen-grid.js)
+    resize = '<link rel="stylesheet" href="/static/css/drishti_resize.css"><script src="/static/elements/drishti-core/drishti_core.js"></script>'
     t = f' data-theme="{theme}"' if theme else ""
     return f'<!DOCTYPE html><html lang="en"{t}><head><meta charset="utf-8"><title>console</title>{links}{resize}</head><body class="terminal">{view}{scripts}</body></html>'
 

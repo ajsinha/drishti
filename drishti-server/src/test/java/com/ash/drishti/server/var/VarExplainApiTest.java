@@ -52,7 +52,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 /**
- * Why VaR moved through the server (VAR_GUIDE.md section 3.11) on a lake of two business dates whose differences are known by hand:
+ * Why VaR moved through the one Explain (VAR_GUIDE.md section 3.11; {@code GET /api/v1/explain?kind=var}, its Why it moved part) on a lake of two business dates whose differences are known by hand:
  * the window rolls one scenario day, the market scales every trade's P&amp;L by 1.05, T5 matures (no vector on the later date), T6 is new,
  * and BOOK-2 moves from DESK-X to DESK-Y. The states telescope to the change on every node, each step equals its hand-built VaR, the
  * drivers close their steps, the workbook recalculated by LibreOffice equals the engine to the cent.
@@ -74,6 +74,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
         "drishti.var.hot-dates=2", "drishti.var.confidence=0.95",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.risk.kinds[0]=*", "drishti.security.roles.risk.raw=true",
+        "drishti.security.roles.desk-y.kinds[0]=*", "drishti.security.roles.desk-y.raw=true",
+        "drishti.var.access.desk-y[MGMT~DESK-Y]=positions", "drishti.under-construction.file=../config/under-construction.yaml",
         "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
@@ -224,7 +226,11 @@ class VarExplainApiTest {
     Path work;
 
     private MockHttpServletRequestBuilder req(String path, String... params) {
-        var q = get(path).header("Authorization", "Bearer " + tokens.mint("rita", List.of("risk"), 300));
+        return reqAs("rita", "risk", path, params);
+    }
+
+    private MockHttpServletRequestBuilder reqAs(String user, String role, String path, String... params) {
+        var q = get(path).header("Authorization", "Bearer " + tokens.mint(user, List.of(role), 300));
         for (int i = 0; i < params.length; i += 2) {
             q = q.param(params[i], params[i + 1]);
         }
@@ -235,8 +241,10 @@ class VarExplainApiTest {
         return json.readTree(mvc.perform(req(path, params)).andExpect(expect).andReturn().getResponse().getContentAsString());
     }
 
+    /** The engine's own answer of why it moved, as the one Explain carries it (part why: the drawer's tab). */
     private JsonNode explain(String scope) throws Exception {
-        return ask("/api/v1/var/explain", status().isOk(), "scope", scope, "from", D1.toString(), "to", D2.toString());
+        return ask("/api/v1/explain", status().isOk(), "kind", "var", "part", "why", "scope", scope, "from", D1.toString(), "to", D2.toString())
+                .at("/why/answer");
     }
 
     static double[] sum(boolean later, java.util.function.Predicate<T> which) {
@@ -331,12 +339,12 @@ class VarExplainApiTest {
 
     @Test
     void theDefaultDatesTheMatrixAndTheRefusals() throws Exception {
-        JsonNode a = ask("/api/v1/var/explain", status().isOk(), "scope", "BANK");
+        JsonNode a = ask("/api/v1/explain", status().isOk(), "kind", "var", "part", "why", "scope", "BANK").at("/why/answer");
         assertThat(a.get("from").asText()).isEqualTo(D1.toString());
         assertThat(a.get("to").asText()).isEqualTo(D2.toString());
         assertThat(a.at("/official/captured").asBoolean()).isFalse();
         assertThat(a.get("order").get(0).asText()).isEqualTo("restatement");
-        JsonNode m = ask("/api/v1/var/explain/matrix", status().isOk(), "scope", "BANK");
+        JsonNode m = ask("/api/v1/explain", status().isOk(), "kind", "var", "part", "why", "view", "matrix", "scope", "BANK").at("/why/answer/matrix");
         assertThat(m.get("rows")).hasSize(3);
         for (JsonNode r : m.get("rows")) {
             double s = 0;
@@ -345,13 +353,20 @@ class VarExplainApiTest {
             }
             assertThat(s).isCloseTo(r.get("change").asDouble(), within(0.005));
         }
-        assertThat(ask("/api/v1/var/explain", status().isBadRequest(), "scope", "BANK", "from", D2.toString(), "to", D1.toString())
+        assertThat(ask("/api/v1/explain", status().isBadRequest(), "kind", "var", "scope", "BANK", "from", D2.toString(), "to", D1.toString())
                 .get("detail").asText()).contains("before");
-        assertThat(ask("/api/v1/var/explain", status().isBadRequest(), "scope", "BANK", "method", "shapley").get("detail").asText())
+        assertThat(ask("/api/v1/explain", status().isBadRequest(), "kind", "var", "scope", "BANK", "attribution", "shapley").get("detail").asText())
                 .contains("planned");
-        assertThat(ask("/api/v1/var/explain", status().isBadRequest(), "scope", "BANK", "from", "yesterday").get("detail").asText())
+        assertThat(ask("/api/v1/explain", status().isBadRequest(), "kind", "var", "scope", "BANK", "from", "yesterday").get("detail").asText())
                 .contains("yyyy-MM-dd");
-        assertThat(ask("/api/v1/var/explain", status().isBadRequest()).get("detail").asText()).contains("scope");
+        assertThat(ask("/api/v1/explain", status().isBadRequest(), "kind", "var").get("detail").asText()).contains("scope");
+        assertThat(ask("/api/v1/explain", status().isBadRequest(), "kind", "var", "scope", "BANK", "view", "pie").get("detail").asText())
+                .contains("waterfall");
+        assertThat(ask("/api/v1/explain", status().isBadRequest(), "kind", "var", "scope", "BANK", "measure", "dv01").get("detail").asText())
+                .contains("pvar");
+        // the old addresses are gone: the one Explain answers them
+        mvc.perform(req("/api/v1/var/explain", "scope", "BANK")).andExpect(status().is4xxClientError());
+        mvc.perform(req("/api/v1/var/explain/matrix", "scope", "BANK")).andExpect(status().is4xxClientError());
     }
 
     @Test
@@ -370,5 +385,173 @@ class VarExplainApiTest {
             assertThat(sheet).isCloseTo(a.get("states").get(i).get("var").asDouble(), within(0.005));
             assertThat(main.get("I" + (12 + i))).isEqualTo(a.get("states").get(i).get("varScenario").asText());
         }
+    }
+
+    // ---- the one Explain: the three VaR panels folded, the same numbers --------------------------------------------------------------
+
+    /** The How calculated box's rows, as drishti_var-explorer.js's renderProv made them from the scope answer (the old panel, in Java). */
+    static List<String[]> oldHowCalculated(JsonNode d) {
+        JsonNode p = d.get("provenance");
+        JsonNode fx = p.path("fx");
+        JsonNode in = p.path("intraday");
+        List<String[]> rows = new ArrayList<>();
+        rows.add(new String[] {"Scope", d.get("kind").asText() + " " + d.get("label").asText()});
+        rows.add(new String[] {"Reporting currency", (p.hasNonNull("currency") ? p.get("currency").asText() : "USD") + ", chosen in the header"});
+        rows.add(new String[] {"Input", p.hasNonNull("input") ? p.get("input").asText() : "P&L vectors (USD)"});
+        List<String> sys = new ArrayList<>();
+        new java.util.TreeSet<String>(fieldNames(p.path("inputsBySystem"))).forEach(k -> {
+            JsonNode x = p.path("inputsBySystem").get(k);
+            sys.add(k + ": " + ("pv".equals(x.path("form").asText()) ? "scenario PVs" : "P&L vectors") + " per " + x.path("grain").asText() + " ("
+                    + String.format(java.util.Locale.US, "%,d", x.path("rows").asLong()) + ")");
+        });
+        rows.add(new String[] {"By source system", sys.isEmpty() ? "one form a trade" : String.join("; ", sys)});
+        rows.add(new String[] {"Intraday", in.isMissingNode() || in.isNull() ? "none: the morning run" : "(intraday)"});
+        rows.add(new String[] {"Scenario FX", fx.hasNonNull("scenarioFx") ? fx.get("scenarioFx").asText() : "none needed"});
+        rows.add(new String[] {"Cross rates", "via USD"});
+        rows.add(new String[] {"Positions", String.format(java.util.Locale.US, "%,d", p.get("positions").asLong())});
+        rows.add(new String[] {"Outside your view", p.get("hidden").asInt() > 0 ? String.format(java.util.Locale.US, "%,d", p.get("hidden").asLong())
+                + " trades not included" : "none"});
+        rows.add(new String[] {"Scenario set", p.get("scenarioSet").asText()});
+        rows.add(new String[] {"Method", p.get("method").asText()});
+        rows.add(new String[] {"ES", p.get("es").asText()});
+        rows.add(new String[] {"Components", p.get("components").asText()});
+        rows.add(new String[] {"Engine", p.get("engine").asText()});
+        rows.add(new String[] {"View", p.get("view").asText()});
+        rows.add(new String[] {"Members", p.get("membershipHash").asText()});
+        return rows;
+    }
+
+    static List<String> fieldNames(JsonNode n) {
+        List<String> out = new ArrayList<>();
+        n.fieldNames().forEachRemaining(out::add);
+        return out;
+    }
+
+    static Map<String, String> rows(JsonNode x) {
+        Map<String, String> m = new LinkedHashMap<>();
+        x.at("/inputs/rows").forEach(r -> m.put(r.get("label").asText(), r.get("value").asText()));
+        return m;
+    }
+
+    @Test
+    void theOneExplainKeepsEveryNumberTheThreeVarPanelsGave() throws Exception {
+        for (String scope : List.of("BANK", "NODE:MGMT~DESK-X", "DESK:DESK-Y")) {
+            JsonNode head = ask("/api/v1/var/scope", status().isOk(), "scope", scope, "asOf", D2.toString());
+            JsonNode x = ask("/api/v1/explain", status().isOk(), "kind", "var", "scope", scope, "date", D2.toString(), "from", D1.toString(),
+                    "to", D2.toString());
+            // the head: the figure the tile shows, computed (not stored)
+            assertThat(x.get("value").asDouble()).as(scope).isEqualTo(head.get("var").asDouble());
+            assertThat(x.get("stored").asBoolean()).isFalse();
+            assertThat(x.get("asOf").asText()).isEqualTo(D2.toString());
+            // How calculated: every row the box showed, the same words and figures
+            Map<String, String> got = rows(x);
+            for (String[] r : oldHowCalculated(head)) {
+                if (!r[1].equals("(intraday)")) {
+                    assertThat(got.get(r[0])).as(scope + " " + r[0]).isEqualTo(r[1]);
+                }
+            }
+            assertThat(got).containsKeys("Resolved", "Trades", "Unknown ids", "Warnings", "Rows left out", "Vectors", "Positions by", "Computed");
+            assertThat(x.at("/inputs/lineage")).isNotEmpty();
+            // the formula: k, the rank and the VaR scenario's P&L with the figure
+            String formula = x.at("/formula/lines").toString();
+            assertThat(formula).contains("k = " + head.get("k").asInt()).contains(head.get("scenarios").asText() + " scenario P&Ls");
+            assertThat(x.at("/formula/rachana").asText()).isEqualTo("var()");
+            // Why it moved: the engine's answer, as the tab drew it (the states telescope; the waterfall's ends are the two VaRs)
+            JsonNode why = x.get("why");
+            assertThat(why.get("available").asBoolean()).isTrue();
+            assertThat(why.get("addsUp").asBoolean()).isTrue();
+            JsonNode a = why.get("answer");
+            assertThat(why.get("change").asDouble()).isEqualTo(a.get("change").asDouble());
+            JsonNode wf = null;
+            for (JsonNode pnl : why.get("panels")) {
+                if (pnl.get("id").asText().equals("waterfall")) {
+                    wf = pnl;
+                }
+            }
+            assertThat(wf).as("the waterfall panel").isNotNull();
+            JsonNode steps = wf.at("/data/steps");
+            assertThat(steps.get(0).get("value").asDouble()).isEqualTo(a.get("varFrom").asDouble());
+            assertThat(steps.get(steps.size() - 1).get("value").asDouble()).isEqualTo(a.get("varTo").asDouble());
+            assertThat(steps.size()).isEqualTo(a.get("lines").size() + 2);
+            for (int i = 0; i < a.get("lines").size(); i++) {
+                assertThat(steps.get(i + 1).get("value").asDouble()).isEqualTo(a.get("lines").get(i).get("effect").asDouble());
+            }
+            // the workbook: the explanation's .xlsx and the playground
+            assertThat(x.at("/workbook/links/0/api").asText()).startsWith("/api/v1/var/explain.xlsx?scope=");
+            assertThat(x.at("/checks/0/ok").asBoolean()).isTrue();
+            assertThat(x.at("/underConstruction/0/id").asText()).isEqualTo("explain-official-check");
+        }
+        // the ? of each parametric figure: the same server lines it showed
+        JsonNode head = ask("/api/v1/var/scope", status().isOk(), "scope", "BANK", "asOf", D2.toString());
+        JsonNode pm = head.get("parametric");
+        Assumptions.assumeTrue(pm != null && !pm.isNull(), "parametric VaR is off here");
+        List<String> describe = new ArrayList<>();
+        pm.get("describe").forEach(l -> describe.add(l.asText()));
+        for (String measure : List.of("pvar", "pes")) {
+            JsonNode x = ask("/api/v1/explain", status().isOk(), "kind", "var", "measure", measure, "scope", "BANK", "date", D2.toString());
+            List<String> lines = new ArrayList<>();
+            x.at("/formula/lines").forEach(l -> lines.add(l.asText()));
+            assertThat(lines).isEqualTo(describe);
+            assertThat(x.get("value").asDouble()).isEqualTo(pm.get("pvar".equals(measure) ? "var" : "es").asDouble());
+            assertThat(x.at("/why/underConstruction/id").asText()).isEqualTo("explain-why-es-parametric");
+        }
+        List<String> gap = new ArrayList<>();
+        gap.add(describe.get(0).replace("Parametric VaR", "Fat-tail gap"));
+        describe.stream().filter(l -> l.startsWith("Fat-tail gap")).forEach(gap::add);
+        pm.path("notes").forEach(l -> gap.add(l.asText()));
+        JsonNode g = ask("/api/v1/explain", status().isOk(), "kind", "var", "measure", "pgap", "scope", "BANK", "date", D2.toString());
+        List<String> lines = new ArrayList<>();
+        g.at("/formula/lines").forEach(l -> lines.add(l.asText()));
+        assertThat(lines).isEqualTo(gap);
+        // ES: its own formula, its figure
+        JsonNode es = ask("/api/v1/explain", status().isOk(), "kind", "var", "measure", "es", "scope", "BANK", "date", D2.toString());
+        assertThat(es.get("value").asDouble()).isEqualTo(head.get("es").asDouble());
+        assertThat(es.at("/formula/lines/0").asText()).startsWith("ES = −mean(the worst " + head.get("esCount").asInt());
+    }
+
+    @Test
+    void thePreviewIsLightAndTheKindsAreListed() throws Exception {
+        JsonNode pre = ask("/api/v1/explain", status().isOk(), "kind", "var", "part", "preview", "scope", "BANK", "date", D2.toString());
+        assertThat(pre.get("preview").asText()).contains("worst of " + N);
+        assertThat(pre.has("why")).isFalse();
+        assertThat(pre.has("inputs")).isFalse();
+        assertThat(pre.has("formula")).isFalse();
+        JsonNode inputs = ask("/api/v1/explain", status().isOk(), "kind", "var", "part", "inputs", "scope", "BANK", "date", D2.toString());
+        assertThat(inputs.has("why")).isFalse();
+        assertThat(inputs.at("/inputs/rows")).isNotEmpty();
+        JsonNode kinds = ask("/api/v1/explain/kinds", status().isOk());
+        List<String> ks = new ArrayList<>();
+        kinds.get("kinds").forEach(k -> ks.add(k.get("kind").asText()));
+        assertThat(ks).contains("var", "pivot");
+        List<String> uc = new ArrayList<>();
+        kinds.get("underConstruction").forEach(k -> uc.add(k.get("id").asText()));
+        assertThat(uc).contains("explain-more-kinds").doesNotContain("explain-pivot-screen");   // the Pivot's card is on the one Explain (2.9.11.e)
+        assertThat(ask("/api/v1/explain", status().isNotFound(), "kind", "sutra", "scope", "BANK").get("detail").asText()).contains("no explainer");
+        assertThat(ask("/api/v1/explain", status().isBadRequest(), "scope", "BANK").get("detail").asText()).contains("kind=");
+        assertThat(ask("/api/v1/explain", status().isBadRequest(), "kind", "var", "part", "everything", "scope", "BANK").get("detail").asText())
+                .contains("preview");
+    }
+
+    /** Two people, one number: the one who sees DESK-Y only is never told a DESK-X trade, in any part; only how many are outside the view. */
+    @Test
+    void twoPeopleSeeOnlyWhatTheyMay() throws Exception {
+        JsonNode rita = json.readTree(mvc.perform(req("/api/v1/explain", "kind", "var", "scope", "BANK", "from", D1.toString(), "to", D2.toString(),
+                "date", D2.toString())).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        JsonNode yan = json.readTree(mvc.perform(reqAs("yan", "desk-y", "/api/v1/explain", "kind", "var", "scope", "BANK", "from", D1.toString(),
+                "to", D2.toString(), "date", D2.toString())).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        String all = rita.toString();
+        String mine = yan.toString();
+        assertThat(all).contains("\"T6\"");                                // the full view names the new trade among the drivers
+        for (String hidden : List.of("T1", "T2", "T6")) {                      // DESK-X's trades on both dates (BOOK-1)
+            assertThat(mine).as("yan is never told " + hidden).doesNotContain("\"" + hidden + "\"");
+        }
+        assertThat(mine).doesNotContain("BOOK-1");
+        assertThat(rows(yan).get("Outside your view")).endsWith("trades not included");
+        assertThat(rows(rita).get("Outside your view")).isEqualTo("none");
+        // and yan's figure is yan's own VaR of the scope, as yan's screen shows it
+        JsonNode head = json.readTree(mvc.perform(reqAs("yan", "desk-y", "/api/v1/var/scope", "scope", "BANK", "asOf", D2.toString()))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(yan.get("value").asDouble()).isEqualTo(head.get("var").asDouble());
+        assertThat(yan.get("value").asDouble()).isNotEqualTo(rita.get("value").asDouble());
     }
 }

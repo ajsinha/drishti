@@ -34,15 +34,18 @@ from core import element_sheet as es
 WEB = Path(__file__).resolve().parent.parent / "web"
 STATIC = WEB / "static"
 ROOT = STATIC / "render"
-VERSION = "1.2.0"                   # the one renderer version served (0.1.0 to 1.1.0 were retired: one page renderer, Jinja; this library draws embeds and <drishti-report>)
+VERSION = "2.0.0"                   # the current renderer (drishti-renderer, drawn with the Elements libraries); 1.2.0 stays served, frozen, for existing embedders
+FROZEN = ("1.2.0",)                 # served unchanged; 0.1.0 to 1.1.0 were retired (one page renderer, Jinja)
+LIBRARY = STATIC / "elements" / "drishti-renderer" / "src"   # 2.0.0's modules: the version folder holds the public entries, the sheet and the types
 FOLDER = ROOT / VERSION
 SHEET = "drishti-render.css"
 ENTRY = "drishti-render.js"
 RECORD = "integrity.json"
 DEMO = ("demo.html", "demo.js", "demo.css")      # the playground: served with the library, not part of a host's integrity list
 # the console's sheets the view page loads, in its order, plus the panel sheets of terminal/view.html and the grid's
-SHEETS = es.SHEETS + ("css/drishti_drill.css", "css/drishti_wire.css", "css/drishti_refresh.css", "css/drishti_compute.css", "css/drishti_screen-grid.css")
-ICON_SOURCES = ("static/render/{v}/m/kinds.js", "static/render/{v}/m/grid.js", "static/render/{v}/m/screen.js", "static/render/{v}/m/view.js", "static/render/{v}/m/about.js", "static/render/{v}/m/signin.js")
+SHEETS = es.SHEETS + ("css/drishti_drill.css", "css/drishti_wire.css", "css/drishti_refresh.css", "css/drishti_compute.css", "css/drishti_screen-grid.css",
+                      "elements/drishti-grid/drishti_grid.css")   # 2.0.0: the nested pivot is drishti-grid's grid
+ICON_SOURCES = tuple(f"static/elements/drishti-renderer/src/drishti_{m}.js" for m in ("kinds", "layout", "screen", "view", "about", "signin"))
 
 ADDENDUM = """\
 *, ::before, ::after { box-sizing: border-box; }
@@ -86,7 +89,7 @@ th[aria-sort="descending"] .tbl-sort::after { content: " \\25BC"; font-size: .7e
 def icons_used(version: str = VERSION) -> list[str]:
     found: set[str] = set()
     for rel in ICON_SOURCES:
-        path = WEB / rel.format(v=version)
+        path = WEB / rel
         if path.exists():
             text = path.read_text(encoding="utf-8")
             found.update(re.findall(r"icon\('([a-z0-9]+(?:-[a-z0-9]+)*)'\)", text))
@@ -123,6 +126,9 @@ def files(version: str = VERSION) -> dict[str, Path]:
         rel = p.relative_to(folder).as_posix()
         if p.is_file() and rel != RECORD and rel not in DEMO:
             out[rel] = p
+    if version == VERSION and LIBRARY.is_dir():      # 2.0.0 and later: the renderer's own modules, by their path from the version folder
+        for p in sorted(LIBRARY.glob("*.js")):
+            out["../../elements/drishti-renderer/src/" + p.name] = p
     return out
 
 

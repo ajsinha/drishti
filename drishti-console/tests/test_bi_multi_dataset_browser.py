@@ -34,7 +34,7 @@ pytest.importorskip("pyarrow")
 from playwright.sync_api import expect, sync_playwright  # noqa: E402
 
 import bi_report_stack  # noqa: E402
-from bi_report_helpers import card_value, chart, clean, click_mark, open_report, settled, sign_in  # noqa: E402
+from bi_report_helpers import card_value, chart, clean, click_mark, grid_rows, open_report, settled, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, ROOT, api  # noqa: E402
 
 REPORT = "file:report:pnl-vs-exposure"
@@ -151,8 +151,8 @@ def test_the_sample_report_answers_as_the_model_and_its_slicer_filters_every_vis
     want = ask(*RISK, MODEL, {"measures": ["P&L 1d", "Exposure (EE peak)"]}, where=[{"field": "counterparties.SECTOR", "op": "in", "values": [sector]}])["rows"][0]
     assert card_value(page, "pnl") == int(want[0]) and card_value(page, "ee") == int(round(want[1]))       # one choice reached both facts, through the counterparty
     assert round(sum(chart(page, "exposure-by-sector")["series"][0]["values"])) == int(round(want[1]))
-    rows = page.locator('[data-visual="table"] tbody tr')
-    assert rows.count() > 0 and all(r.inner_text().split("\t")[1] == sector for r in rows.all())
+    rows = grid_rows(page, "table")
+    assert rows and all(row[1] == sector for row in rows)
     expect(page.locator('[data-chip="slicer"]')).to_contain_text(sector)
     clean(page)
 
@@ -214,7 +214,7 @@ def test_the_notebook_opens_two_extracts_and_its_join_cell_runs_on_the_compute_p
     page.locator('[data-cells=python] [data-run]').first.click()                                             # the join cell runs on the server's compute pool
     expect(page.locator('[data-cells=python] [data-engine=python]').first).to_be_visible(timeout=120000)
     assert page.locator('[data-cells=python] [data-target=server]').count() >= 1
-    expect(page.locator('[data-cells=python] [data-result] table').first).to_be_visible()
+    expect(page.locator('[data-cells=python] [data-result] [role=grid]').first).to_be_visible()                # the result: drishti-grid
     assert page.locator('[data-promote="transform"]').count() == 1 and page.locator('[data-promote="transform"]').is_enabled()   # a cell that joins extracts can become a Transform
     clean(page)
     page.close()

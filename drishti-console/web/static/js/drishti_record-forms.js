@@ -55,7 +55,7 @@
     if (numeric(f)) {
       var n = X.typed(f, v);
       if (isNaN(n)) { return String(v); }
-      var s = n.toLocaleString('en-US', { maximumFractionDigits: /0$/.test(f.fmt || '') ? 0 : f.type === 'money' ? 2 : 6 }), c = f.type === 'money' && vals ? ccy(f, vals) : '';
+      var s = window.Drishti.elements.core.formatNumber(n, { maxDecimals: /0$/.test(f.fmt || '') ? 0 : f.type === 'money' ? 2 : 6, minus: '-' }), c = f.type === 'money' && vals ? ccy(f, vals) : '';
       return c ? s + ' ' + c : s;
     }
     if (f.type === 'datetime') { return String(v).replace('T', ' ').slice(0, 16) + ' ' + (f.tz || 'UTC'); }
@@ -635,9 +635,9 @@
     document.body.appendChild(dlg);
     box.tabIndex = -1;
     (go.disabled ? box : go).focus();
-    function esc(e) { if (e.key === 'Escape') { e.preventDefault(); close(); } }
-    function close() { document.removeEventListener('keydown', esc, true); dlg.remove(); c.review.focus(); }
-    document.addEventListener('keydown', esc, true);
+    var off = window.Drishti.keys.register({ id: 'records.review.close', keys: ['Escape'], scope: 'dialog', area: 'records-review', capture: true, typing: true,
+      description: 'Keep editing: close the review', run: function () { close(); } });
+    function close() { off(); dlg.remove(); c.review.focus(); }
   }
 
   // ---- C: a guided drawer for New ------------------------------------------------------------------------------------------------
@@ -776,7 +776,7 @@
       sync(st);
     }
     function touched(fid) { return fid && !X.empty(values[fid]); }
-    function nf(v) { var n = X.num(v); return n === null ? String(v) : n.toLocaleString('en-US', { maximumFractionDigits: 0 }); }
+    function nf(v) { var n = X.num(v); return n === null ? String(v) : window.Drishti.elements.core.formatNumber(n, { minus: '-' }); }
     render();
   }
   function closeDrawer(st) {

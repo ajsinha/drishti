@@ -98,14 +98,14 @@ def test_a_refusal_keeps_what_was_typed_and_says_why(client, backend):
     assert "Bad" not in backend.alerts_kept and "Bad2" not in backend.alerts_kept
 
 
-def test_the_alerts_page_lists_alerts_on_numbers_beside_the_older_rules(client, backend):
+def test_the_alerts_page_lists_the_alert_rules_and_a_rule_on_one_entity(client, backend):
     backend.alerts_kept.clear()
     client.post("/alerts/new", content=_form(), headers=FORM)
     page = client.get("/alerts").text
     assert 'data-alert-row="Net"' in page and "above 1000" in page and "file:report:daily · net" in page and 'data-standing>armed<' in page
-    assert "Rules on one entity" in page and "New rule" in page and "New alert on a number" in page and 'href="/alerts/new"' in page
+    assert "New rule on one entity" in page and "New alert rule" in page and 'href="/alerts/new"' in page and "Rules on one entity" not in page
     looked = client.post("/alerts/measure/Net/check", follow_redirects=True).text
-    assert "Net: looked now. Fired:" in looked and 'data-standing>active<' in looked and "Recent alerts on numbers" in looked
+    assert "Net: looked now. Fired:" in looked and 'data-standing>active<' in looked and "Recent firings" in looked
     paused = client.post("/alerts/measure/Net/pause", follow_redirects=True).text
     assert "Paused Net" in paused and ">Resume<" in paused and 'data-standing>paused<' in paused and backend.alerts_kept["Net"]["enabled"] is False
     assert "Resumed Net" in client.post("/alerts/measure/Net/resume", follow_redirects=True).text
@@ -177,3 +177,43 @@ def test_the_reports_menu_and_the_view_page_lead_to_alerts(client):
     assert 'href="/alerts#measure"' in top and "My alerts" in top and 'href="/alerts/all"' in top
     assert "/alerts/new?source=field" in (client.get("/static/js/drishti_history.js").text.replace(" ", "") .replace("'", "")) or "alerts/new?source=field" in client.get("/static/js/drishti_history.js").text
     assert "Alert me about this visual" in client.get("/static/js/drishti_bi-report.js").text
+
+
+def test_the_alerts_raised_are_acknowledged_snoozed_resolved_and_a_platform_one_assigned(client, backend):
+    backend.raised_kept = {
+        "c1": {"id": "c1", "owner": "@nobody", "source": "alert", "rule": "ash/Net", "title": "Net", "severity": "warn", "stage": "raised",
+               "message": "Net — now 1,200 (above 1000)", "raisedAt": "2026-10-11T15:00:00Z", "link": "/alerts/measure/Net"},
+        "p1": {"id": "p1", "owner": "", "source": "platform", "rule": "disk-free|{}@x", "title": "disk-free on node-a", "severity": "critical",
+               "stage": "raised", "message": "free disk under the guard", "raisedAt": "2026-10-11T14:00:00Z", "link": "/admin/health"},
+    }
+    user = backend.raised_kept["c1"]["owner"] = _who(client, backend)
+    page = client.get("/alerts").text
+    assert 'data-case="c1"' in page and "Raised for you" in page and "Net — now 1,200" in page and "data-ack" in page and "data-snooze" in page
+    assert 'action="/alerts/raised/acknowledge"' in page and 'action="/alerts/raised/resolve"' in page
+    r = client.post("/alerts/raised/acknowledge", content="id=c1", headers=FORM, follow_redirects=False)
+    assert r.status_code == 303 and backend.raised_kept["c1"]["stage"] == "acknowledged" and backend.raised_kept["c1"]["assignee"] == user
+    client.post("/alerts/raised/snooze", content="id=c1&for=4h", headers=FORM)
+    assert backend.raised_kept["c1"]["snoozedUntil"]
+    bad = client.post("/alerts/raised/snooze", content="id=c1&for=forever", headers=FORM, follow_redirects=True).text
+    assert "snooze for a time" in bad
+    client.post("/alerts/raised/resolve", content="id=c1&note=booked+back", headers=FORM)
+    assert backend.raised_kept["c1"]["stage"] == "resolved" and backend.raised_kept["c1"]["note"] == "booked back"
+    assert 'data-case="c1"' not in client.get("/alerts").text and 'data-case="c1"' in client.get("/alerts?stage=all").text
+    assert "assign is for the platform alerts" in client.post("/alerts/raised/assign", content="id=c1&to=bob", headers=FORM, follow_redirects=True).text
+    assert client.post("/alerts/raised/explode", content="id=c1", headers=FORM, follow_redirects=False).headers["location"] == "/alerts"
+
+
+def _who(client, backend):
+    """The signed-in person the console sends (the stand-in server sees it on every call)."""
+    seen = {}
+
+    async def raised_alerts(ident, stage="open"):
+        seen["user"] = ident.user
+        return []
+    real = backend.raised_alerts
+    backend.raised_alerts = raised_alerts
+    try:
+        client.get("/alerts")
+    finally:
+        backend.raised_alerts = real
+    return seen["user"]

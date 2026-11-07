@@ -126,6 +126,11 @@ def test_create_an_alert_fire_it_with_a_load_and_see_it_in_the_inbox(stack, brow
     page.goto(CONSOLE_URL + "/alerts")
     expect(page.locator('tr[data-alert-row="MTM floor"] [data-standing]')).to_have_text("active")
     expect(page.locator("[data-measure-log]")).to_contain_text("MTM floor")
+    raised = page.locator("[data-case]", has_text="MTM floor")                # the one lifecycle: raised for her, then hers once acknowledged
+    expect(raised.locator("[data-stage]")).to_have_text("raised")
+    raised.get_by_role("button", name="Acknowledge").click()
+    expect(page.locator("[data-msg]")).to_contain_text("Acknowledged")
+    expect(page.locator("[data-case]", has_text="MTM floor").locator("[data-stage]")).to_have_text("acknowledged")
     page.locator('tr[data-alert-row="MTM floor"]').get_by_role("link", name="Edit and history").click()
     page.wait_for_url("**/alerts/measure/MTM%20floor**")
     hist = page.locator("[data-history] tbody tr").first

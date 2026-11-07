@@ -94,26 +94,6 @@ public class ComputeController {
         return m;
     }
 
-    @PostMapping("/admin/compute/requests/{id}/approve")
-    public ApprovalRequest approve(@PathVariable String id, @RequestBody Decision body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        requireApprover(p);
-        try {
-            return compute.approvals().approve(id, p.user(), body == null ? null : body.reason());
-        } catch (ComputeException e) {
-            throw notFoundOr(e);
-        }
-    }
-
-    @PostMapping("/admin/compute/requests/{id}/reject")
-    public ApprovalRequest reject(@PathVariable String id, @RequestBody Decision body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        requireApprover(p);
-        try {
-            return compute.approvals().reject(id, p.user(), body == null ? null : body.reason());
-        } catch (ComputeException e) {
-            throw notFoundOr(e);
-        }
-    }
-
     @PostMapping("/admin/compute/requests/{id}/revoke")
     public ApprovalRequest revoke(@PathVariable String id, @RequestBody Decision body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         requireApprover(p);

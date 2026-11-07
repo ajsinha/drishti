@@ -37,7 +37,7 @@
       if (btn && btn.getAttribute('data-connector') === name) { m.textContent = text; m.classList.toggle('t-bad', !!bad); }
     });
   }
-  function mb(b) { return b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : b >= 1024 ? Math.round(b / 1024) + ' KB' : b + ' B'; }
+  function mb(b) { return window.Drishti.elements.core.formatBytes(b); }
   function when(t) { return t ? new Date(t).toLocaleString() : 'not yet'; }
 
   function render(name, s) {

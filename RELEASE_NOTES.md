@@ -13,7 +13,11 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 2.9.11.e (unreleased) — upgrade notes so far
+# Drishti 2.9.11.e — release notes (draft)
+
+*Not released yet.*
+
+## Upgrade: the demo lake's layout and the lake files
 
 - **The demo lake's new layout** (`config/lakes/demo.yaml`): scenario PVs partitioned by `SCENARIO_SET_ID, GRAIN` after the business
   date, sorted by legal entity, division, desk, book and trade, zstd, 256 MB files, 16 MB row groups, 30 days' time travel and
@@ -23,6 +27,118 @@
   either layout.
 - **The shipped lake files are never re-written at start** (CHANGELOG): after the demo lake's one-time move, a fresh checkout shows
   nothing modified in `config/lakes`.
+
+
+## Upgrade: one search (the console's `/api/suggest` is removed)
+
+- **BI's keys** are the keymap's: `?` (and the rail's Keys button) lists them with the rest of the screen's, and BI's own keys dialog is
+  gone; `g h` opens the Build home. The Pivot's keys (r c v f s, g, x, 1 to 9, e, w i u, l, m) are unchanged.
+
+- **A script that called the console's `GET /api/suggest?q=...`** asks `GET /api/search?in=command&q=...` instead and reads `items`
+  (the same suggestions, in the same order, each now tagged with its `group`). `in=help` searches Help's pages and `in=all` everything
+  (entities, commands, screens, Help pages, things you can build), grouped ([API_GUIDE.md](docs/guides/API_GUIDE.md#the-consoles-own-json-routes)).
+  The server's `GET /api/v1/command/suggest` is unchanged.
+- **Keys:** `?` now lists the keys of the screen you are on (on a view it still opens About this page), and `Alt+K` opens the global
+  search. No key acts while you type in a field; the VaR screen's `B`, `M`, `H` and `N` keep their meaning.
+
+## Upgrade: one Approvals queue and one alert engine
+
+- **Approvals.** Every four-eyes decision is made in one queue: **Views → Approvals** (`/approvals`) and `/api/v1/approvals`. The old pages
+  redirect: `/build/reviews` and `/build/reviews/{id}` to `/approvals?kind=sutra` and `/approvals/sutra/{id}`, `/review/changes` to
+  `/approvals?kind=change`. **Removed endpoints** (scripts and tools that call them move to the queue's `POST /api/v1/approvals/{kind}/{id}/
+  approve|reject|withdraw` with `{comment, params}`):
+  - `POST /api/v1/sutras/proposals/{id}/approve|reject|withdraw` → kind `sutra`;
+  - `POST /api/v1/changes/{id}/approve|reject|withdraw` → kind `change` (the body's `note` or `reason` is now `comment`);
+  - `POST /api/v1/bi/items/{id}/approve|reject` → kind `bi` (`force` and `applyRenames` go in `params`);
+  - `POST /api/v1/admin/compute/requests/{id}/approve|reject` → kind `compute` (`reason` is `comment`; revoke stays on Admin → Compute);
+  - `POST /api/v1/pivot/functions/{owner}/{ref}/approve` → kind `function`, id `owner:name@version` (`scope` in `params`, `reason` is `comment`);
+  - `POST /api/v1/var/stress-window/proposals/{id}/decision` → kind `stress-window`, `/approve` or `/reject`;
+  - `POST /api/v1/var/reports/{report}/runs/{period}/signoff` → kind `var-report`, id `report:period:vN` (`step` in `params`; `return` is
+    `/reject`); the maker's narrative is `POST .../runs/{period}/narrative`.
+- **CLI.** `drishti.py approvals list|show|approve|reject|withdraw|ask` replaces `design approve|reject`, `change approve|reject|withdraw`,
+  `pivot functions approve`, `var stress-window --decide` and `var report sign` (`var report narrative` writes the maker's text).
+- **Tokens.** A token decides with the scope of the kind (`edit`, `design:approve`, `bi:approve`, `pivot:approve`) or the new scope `approve`;
+  report sign-offs, stress windows, compute packages and questions are never a token's.
+- **Alerts.** The settings `drishti.alerts.measure.*` are now `drishti.alerts.*` (`DRISHTI_ALERTS_MEASURE_*` → `DRISHTI_ALERTS_*`); remove
+  `drishti.alerts.keep`. Rules on one entity are converted into alert rules at the first start, by themselves; the alerts they fired before
+  (the identity table `drishti_alert`) are no longer read (no migration: drop the table when you like). **Removed endpoints:**
+  `/api/v1/me/alerts` and `/api/v1/me/alerts/rules/**` (use `/api/v1/alerts` and `/api/v1/alerts/rules/**`), `/api/v1/me/measure-alerts/**`
+  (→ `/api/v1/alerts/rules/**`), `/api/v1/admin/measure-alerts/**` (→ `/api/v1/admin/alerts` and `/api/v1/admin/alerts/rules/**`); the
+  platform alerts are under `platform` of `GET /api/v1/admin/alerts`. The stream is `/api/v1/alerts/stream`, and an alert raised arrives as a
+  `notice` event of type `alert` (the `alert` event is gone).
+
+## Upgrade: one Build home, one sitemap
+
+- **The Build home** (`/build`) is the one place for everything a person builds: a rail grouped *Data* (connectors, lakes, tables and
+  models, Python tables), *Screens* (Sutras, packs, the UI kit), *Analysis* (reports and boards, pivot views, functions, VaR baskets) and
+  *Work* (my drafts, waiting for review, recently changed), each with its count; each list shows what an item uses and what uses it; four
+  task tiles on a first visit; one search; *+ New* for every kind. **Removed homes:** *My designs* (its list, with Rename, Duplicate and
+  Delete, is the Build home's *My drafts*) and Studio's start page.
+- **Redirects:** `/studio` with nothing after it opens `/build` (a Studio link with a Sutra, an example or a design opens it in the
+  workbench as before). **`/bi` opens `/build`**: BI Studio's own home is folded into the Build home, whose new **For you** strip
+  shows its Recent, Favourites, Certified for you and Shared with me (a star there adds or removes a favourite); `BI <GO>` and
+  `RUPAKA <GO>` open the Build home, and the catalogue (`/bi/catalogue`, `BI CATALOGUE`) lists every published report and board. Every other address is unchanged.
+- **One sitemap.** `drishti-console/config/menus.yaml` is now **`config/sitemap.yaml`** and also draws the Admin pages' tabs (the Admin
+  menu, which gains every Admin page), the BI rail (the BI menu, which gains the rail's pages), Help's sections (their name, icon, line and
+  roles moved from `help.yaml`, which keeps each section's pages by its id) and the footer (each link names a menu item). A site that
+  changed `menus.yaml` moves its changes to `sitemap.yaml`; a site that changed a help section's name or icon in `help.yaml` moves it to
+  `sitemap.yaml`'s `help-sections:`. Admin's *Commands* is the *Functions* page (`/func`) in the Admin tabs.
+- **Help → Configuration is the reference only.** The values in effect, for administrators, moved to Admin → Configuration.
+
+## Renamed (plain words for jargon)
+
+| Before | Now |
+|---|---|
+| Build → My designs (`/build`) | Build → **Build home** (`/build`; the designs are its first list, *My drafts*) |
+| BI menu column *Rupaka: business intelligence* | *Business intelligence* |
+| BI rail *Home* (`/bi`) | the **Build home** (`/build`) |
+| BI rail *Runs* | *My runs* |
+| BI rail *Designer* | *Report designer* |
+| BI rail *Environments* | *Promotion (test to live)* |
+| BI rail *Transforms* | *Data prep* |
+| Build → Learn *Sutra developer guide* | *Screen developer guide* |
+| Build → Learn *Rachana reference* | *Screen language reference* |
+| Admin *Tokens* | *API tokens* |
+| Admin *Access* | *Who looked at what* |
+| Admin *Ad-hoc scopes* | *Saved VaR baskets* |
+| Admin *Artifacts* | *Installed items* |
+| Admin *Edits* | *Record edits* |
+| Admin *Compute* | *Python workers* |
+| Admin *Net* | *Cluster* |
+| Admin *Embedding* | *Embedded views* |
+| Engines → VaR *MR cube* | *Market-risk cube* |
+| Counterparties *CCR cube* | *Counterparty-risk cube* |
+| Admin → Configuration (was a link to Help → Configuration) | **Admin → Configuration**, the configuration editor (`/admin/configuration`) |
+
+## New
+
+- **Admin → Configuration** (`/admin/configuration`): every setting in three tiers, *everyday* (what a business lead changes: the lenses,
+  the VaR and exposure confidences, the scenario window, the feature switches), *admin* and *expert*, searchable, each with its value in
+  effect and where it came from; secrets never shown. A change is a **proposal** a second administrator approves (four eyes); an approved
+  server or engine key is written to the server's `application.local.yaml`, a console key to the console's, each read at the next start.
+  New endpoints `/api/v1/admin/settings/proposals` (list, propose, approve, reject, withdraw, applied); a new add-on admin page id
+  `configuration` (editions that list `admin.pages` name it to keep it).
+
+## Upgrade: one Explain for every number
+
+Every computed number now has one **Explain** (USER_GUIDE.md, "Explain: one for every number"): hover a figure for a preview, click it
+(or press **E**) for a drawer with **Formula · Inputs & lineage · Why it moved · Workbook**, and **Open as a page** to print. It replaces
+these, which are **removed**:
+
+| Removed | Use instead |
+|---|---|
+| The VaR page's **How calculated ›** drawer (key **H**, `&how=1` in a link) | **Explain ›** (key **E**) or a click on a tile: tab *Inputs & lineage*, the same rows |
+| The VaR page's **Why it moved** tab (`&tab=why`, `&view=`, `&efrom=`, `&eto=`) and the setting `varExplainView` | the drawer's *Why it moved* (Waterfall, Matrix, Sentences, the two dates); `VAR EXPLAIN <scope> [from] [to]` opens `/explain?kind=var&…&tab=why` |
+| The **?** pop-ups of the parametric figures | the same **?**: its Explain, the server's lines in *Formula* |
+| The MR cube's **Explain the move** tables (rail and tab C) | the card's button: the cell's Explain at *Why it moved* |
+| The exposure page's **How this number was built** box | **Explain ›** and the tiles: tab *Inputs & lineage* (CSV, JSONL and Capture exposure stay beside it) |
+| `GET /api/v1/var/explain`, `GET /api/v1/var/explain/matrix` | `GET /api/v1/explain?kind=var&part=why&scope=…&from=…&to=…` (`view=matrix`); the engine's answer is `why.answer`; `method=shapley` is now `attribution=shapley` (still refused: planned) |
+| `GET /api/v1/pivot/mr/explain` | `GET /api/v1/explain?kind=var&part=why&scope=<the cell's scope>` |
+| Console `GET /api/var/explain`, `/api/var/explain/matrix`, `/api/pivot/mr/explain` | console `GET /api/explain` (the same parameters) |
+| The Pivot's **Why did it move?** card's own waterfall (key **W**), and the console's `POST /api/pivot/explain` it called | the same card's **Explain ›**: the one Explain at *Why it moved* (kind `pivot`; `POST /api/explain` with the view); the server's `POST /api/v1/pivot/explain` is unchanged |
+
+`GET /api/v1/var/explain.xlsx` stays (the drawer's Workbook). A saved link with `how=1` or `tab=why` opens the VaR page as before
+without them. Scripts that read the removed endpoints read `why.answer` of the new one (`drishti.py var explain` does).
 
 # Drishti 2.9.11.d — release notes
 

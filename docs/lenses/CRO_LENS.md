@@ -155,7 +155,7 @@ comment, escalate), and only for people with the power to take them ([section 10
 **Verified in code (2026-10-31):** no class in `drishti-server/src/main`, `drishti-compute/src/main` or the console's `core` and
 `routes` folders names a risk appetite, an LCR, an NSFR, a CET1 ratio, financed emissions or a limit request; the only "breach" logic is
 the Trading landing's state function (`drishti-console/core/trading_landing.py`) and the alert logic of
-`drishti-server/src/main/java/com/ash/drishti/server/alerts/measure/`. The demo's connected group `GRP-NORTHBRIDGE` (Northbridge
+`drishti-server/src/main/java/com/ash/drishti/server/alerts/`. The demo's connected group `GRP-NORTHBRIDGE` (Northbridge
 Capital Holdings, `data/testdata/core/counterparty-group`) has one member, `CP-NORTHBRIDGE`, and a stored group limit; the mock-ups'
 second member and their group limit are illustrative (section 6.6).
 

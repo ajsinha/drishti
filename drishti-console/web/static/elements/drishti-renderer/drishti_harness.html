@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  drishti-renderer's fixture harness: the parity suite's ViewModels (drishti_fixtures.json, written by tools/elements/renderer_fixtures.py)
+  drawn by renderer 2.0.0 with no server (static files only). ?case=showcase|more-shapes|states|links-and-tones|grid-areas
+  &behaviours=library|console&theme=…&stream=1 (the same ViewModel streamed as a skeleton and its panels in reverse order). The browser test
+  (tests/test_elements_renderer_browser.py) drives it. Nothing inline: it runs under a strict CSP.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>drishti-renderer · fixture harness</title>
+<link rel="stylesheet" href="../../css/drishti_tokens.css">
+<link rel="stylesheet" href="drishti_harness.css">
+</head>
+<body>
+<header class="rx-top">
+  <b class="rx-brand">drishti-renderer</b>
+  <label>Case <select id="rx-case"></select></label>
+  <label>Behaviours <select id="rx-behaviours"><option>library</option><option>console</option><option>host</option></select></label>
+  <label>Theme <select id="rx-theme"><option value="inherit">inherit</option><option>light</option><option>terminal</option><option>crimson-dark</option><option>wallstreet</option></select></label>
+  <button type="button" id="rx-stream" aria-pressed="false">Stream</button>
+  <span id="rx-log" class="rx-log" aria-live="off"></span>
+</header>
+<main><div id="host" class="rx-host"></div></main>
+<script type="module" src="drishti_harness.js"></script>
+</body>
+</html>

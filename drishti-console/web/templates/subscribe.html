@@ -20,7 +20,7 @@
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm">
-  {% if form.target and form.target.type == 'report' %}<nav class="dist-binav" aria-label="Business intelligence"><a href="/bi">BI home</a> <a href="/bi/catalogue">Catalogue</a> <a href="/bi/workspaces">Workspaces</a> <a href="/bi/designer">Designer</a> <a href="/reports">All subscriptions</a></nav>{% endif %}
+  {% if form.target and form.target.type == 'report' %}<nav class="dist-binav" aria-label="Business intelligence"><a href="/build">Build home</a> <a href="/bi/catalogue">Catalogue</a> <a href="/bi/workspaces">Workspaces</a> <a href="/bi/designer">Designer</a> <a href="/reports">All subscriptions</a></nav>{% endif %}
   <h1>Subscribe</h1>
   <p class="text-muted-d">Send this by email on a schedule. <b>Each recipient gets their own render</b>: the figures are asked of the data as that person, with their
     row rules and masks, never copied from yours. Someone who may not open it is skipped and the history says why.</p>

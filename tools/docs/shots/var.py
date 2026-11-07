@@ -249,12 +249,3 @@ def baskets(c: Ctx):
     c.page.wait_for_timeout(400)
     c.save("17-baskets.jpg")
     c.page.keyboard.press("Escape")
-
-
-@shot("18-how-calculated.jpg")
-def how_calculated(c: Ctx):
-    """How calculated open on the bank: the drawer under the top bar, over the right of the screen."""
-    open_var(c, "/var?scope=BANK&how=1")
-    painted(c, "BANK")
-    c.page.wait_for_timeout(400)
-    c.save("18-how-calculated.jpg")
