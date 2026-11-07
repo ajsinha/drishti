@@ -25,7 +25,7 @@ Results (every heap, page-cache, RAM, disk and CPU figure, the settings with the
 real Excel formula over named cells), Coefficients (every constant with its unit, source and status: measured, formula, calibrated
 or estimate; Results never hard-code one) and Explain (plain words). Every input, coefficient, formula and warning comes from
 capacity/planner.yaml (PyYAML reads it); the parts are written as XML into a zip.
-The look is the VaR Playground's template (drishti-server/src/main/resources/playground/var/template/xl/styles.xml).
+The look is the VaR Playground's template (drishti-banking/src/main/resources/playground/var/template/xl/styles.xml).
 
 Every formula is also evaluated here by a small evaluator of the subset used (names, + - * / ^ &, comparisons, MAX, MIN, IF,
 CEILING, AND, OR, INT, ROUND), so each cell carries its value at the defaults and the tests can check the figures the Explain tab
@@ -46,7 +46,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "docs" / "architecture" / "Drishti-Sizing-Planner.xlsx"
-TEMPLATE = ROOT / "drishti-server" / "src" / "main" / "resources" / "playground" / "var" / "template"
+TEMPLATE = ROOT / "drishti-banking" / "src" / "main" / "resources" / "playground" / "var" / "template"
 MB = "BytesPerMB"
 
 

@@ -162,7 +162,7 @@ stamped in every tab's footer and the document properties.
   git are `template.properties` (name, version, and every cell format by name: `style.input.money=6`, `style.check=16`, the check
   colours `dxf.pass`, `dxf.fail`), `xl/styles.xml` (the look), `docProps/core.xml` and `docProps/app.xml` (with `{{PRODUCT}}`,
   `{{COPYRIGHT}}`, `{{OWNER}}`, `{{TEMPLATE_VERSION}}` filled from the branding configuration) and `explain.txt` (the Explain tab's
-  steps, `{Name}` a cell reference and `{Name:v}` its value), under `drishti-server/src/main/resources/playground/var/template/`. They
+  steps, `{Name}` a cell reference and `{Name:v}` its value), under `drishti-banking/src/main/resources/playground/var/template/`. They
   are packaged as resources and assembled into the .xlsx as each export is written (comments dropped, placeholders filled); the sheets,
   the named cells and every formula are written by the generator (`VarPlaygroundBook`) for exactly the positions chosen, so a 1-position
   workbook has no empty 500-column layout and a 10,000-position one is not limited by a template.
