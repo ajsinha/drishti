@@ -171,7 +171,7 @@ drishti-grid's way), **no-op** (nothing to set: drishti-grid does it always).
 | `refreshServerSide({ route, purge })`, `purge` | mapped | `ServerRowModel.refresh({keys, purge})`; a server pivot is asked again |
 | `rowModelType: 'infinite'` with `datasource.getRows` | partial | the server-side row model without groups |
 | `treeData`, `getDataPath` | mapped | `treeData`, `getDataPath` (client-side rows) |
-| `isServerSideGroup`, `getServerSideGroupKey` (server-side tree data) | unsupported | tree data on client-side rows; server-side tree data is not built yet |
+| `treeData` with `rowModelType: 'serverSide'`, `isServerSideGroup`, `getServerSideGroupKey` (server-side tree data) | mapped | tree data on the server-side row model: each node's level asked when it opens, `groupKeys` its path |
 | `rowData`, `getRowId`, `rowSelection` (`singleRow`, `multiRow`, `single`, `multiple`, `checkboxes`), `quickFilterText` | mapped | `rows`, `getRowId`, `rowSelection` and `checkboxes`, the quick filter |
 | `rowHeight` | partial | the nearest density: up to 24 px terminal, up to 31 px compact, else comfortable |
 | `domLayout: 'autoHeight'` | partial | the element's height follows the row count when drawn; give large data a fixed height |
@@ -186,7 +186,7 @@ drishti-grid's way), **no-op** (nothing to set: drishti-grid does it always).
 | `pagination`, `paginationPageSize` | unsupported | virtual scrolling: every row is reachable without pages |
 | `enableCharts` (integrated charts), `masterDetail`, `rowDragManaged`, `theme`, `rowModelType: 'viewport'` | unsupported | drishti-chart on a range; Drishti's theme tokens; the rest is not covered in version 1 |
 
-Not covered in version 1: integrated charts (use drishti-chart on a range), master-detail rows, sparkline cell renderers, row dragging between grids, AG Grid's theming API and CSS classes (Drishti's theme applies), the viewport row model, pagination, custom cell renderers, editors and header components, server-side tree data.
+Not covered in version 1: integrated charts (use drishti-chart on a range), master-detail rows, sparkline cell renderers, row dragging between grids, AG Grid's theming API and CSS classes (Drishti's theme applies), the viewport row model, pagination, custom cell renderers, editors and header components.
 
 <!-- /ag-mapping -->
 
