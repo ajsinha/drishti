@@ -1092,6 +1092,52 @@ Returns `void`.
 
 ### Types of drishti-core
 
+#### `ClientOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[base='']` | `string` | put before every path that does not start with http(s):// or / |
+| `[asOf]` | `(string\|function(): ?string)` | the as-of date sent with every call (a function: asked at each call) |
+| `[headers]` | `Object&lt;string, string&gt;` | sent with every call |
+| `[credentials='same-origin']` | `string` | the fetch credentials: the browser's session |
+| `[retries=2]` | `number` | how many more tries a GET gets after a network failure or 502, 503, 504 |
+| `[retryDelay=300]` | `number` | the first pause in ms (then doubled) |
+| `[timeout=0]` | `number` | ms before a call is given up (0: none) |
+| `[onUnauthorized]` | `function(ApiError): void` | told of a 401 (the session ended) |
+| `[fetch]` | `function(string, Object): Promise&lt;Response&gt;` | the fetch to use (default: globalThis.fetch) |
+| `[unreachable]` | `string` | the words when the server cannot be reached |
+
+#### `CallOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[signal]` | `AbortSignal` | aborts the call |
+| `[headers]` | `Object&lt;string, string&gt;` |  |
+| `[asOf]` | `?string` | this call's as-of date (null: none) |
+| `[retries]` | `number` | this call's retries (a POST gets none unless given) |
+| `[timeout]` | `number` |  |
+| `[fallback]` | `string` | the words of an error without the server's own |
+| `[as='json']` | `('json'\|'text'\|'blob'\|'response')` | what the call returns |
+
+#### `Envelope` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `ok` | `boolean` |  |
+| `status` | `number` | 0 when the server was not reached |
+| `body` | `*` | the JSON answer ({} when there was none); on a failure {detail} at least |
+| `error` | `?ApiError` |  |
+
+#### `BusinessDate` : `Object`
+
+A business date: year, month (1 to 12) and day.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `y` | `number` |  |
+| `m` | `number` | 1 to 12 |
+| `d` | `number` | 1 to 31 |
+
 #### `Listener`
 
 A listener: the event's payload and its name.
@@ -1100,6 +1146,84 @@ A listener: the event's payload and its name.
 |---|---|---|
 | `payload` | `*` |  |
 | `type` | `string` |  |
+
+#### `ExplainResult` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[title]` | `string` | what is explained ("VaR 99% 1d") |
+| `[value]` | `string` | the figure as shown |
+| `[scope]` | `string` | where it holds (the members, the date) |
+| `[steps]` | `Array&lt;{label: string, value: string}&gt;` | how it was made, in order |
+| `[parts]` | `Array&lt;{label: string, value: number, text: string}&gt;` | what it is made of (a bar each; a diversification part too) |
+| `[partsTitle]` | `string` | the parts' heading ("Stand-alone by Book") |
+| `[scenarios]` | `Array&lt;{label: string, value: string}&gt;` | the worst scenarios (the terminal's middle pane) |
+| `[trend]` | `number[]` | the figure over time (the terminal's right pane) |
+| `[limit]` | `number` | a limit drawn on the trend |
+| `[links]` | `Array&lt;{label: string, href: string}&gt;` | where to go next |
+| `[note]` | `string` | a last word (an approximation, a fallback) |
+
+#### `ExplainState` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `row` | `number` |  |
+| `col` | `number` |  |
+| `loading` | `boolean` |  |
+| `result` | `?(ExplainResult\|string\|Node)` |  |
+| `error` | `?Error` |  |
+
+#### `ExportTable` : `Object`
+
+A table to export.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `columns` | `Array&lt;{header: string, type: string, format: *, width: number}&gt;` |  |
+| `rows` | `Array&lt;Array&lt;*&gt;&gt;` | raw values, one array per row, in the columns' order |
+| `[levels]` | `number[]` | each row's outline level (0: none), for group rows and their members |
+| `[bold]` | `boolean[]` | rows drawn bold (group rows and totals) |
+
+#### `NumberOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[decimals=0]` | `number` | decimals shown (half up); with maxDecimals, the fewest shown |
+| `[maxDecimals]` | `number` | the most decimals shown: trailing zeros beyond decimals are dropped (1.50 reads 1.5) |
+| `[grouping=true]` | `boolean` | commas every three digits |
+| `[sign='auto']` | `('auto'\|'always'\|'never')` | auto: a minus when negative; always: "+" on a positive value too; never: no sign |
+| `[minus='−']` | `string` | the minus sign (the console's few ASCII-minus charts pass '-') |
+| `[scale=1]` | `number` | multiplied in first (100 for a percentage of a fraction) |
+| `[prefix='']` | `string` | before the digits, after the sign ("$") |
+| `[suffix='']` | `string` | after the digits ("%", " bp") |
+| `[empty='—']` | `string` | what null, undefined, NaN and the infinities read as |
+| `[locale]` | `string` | a BCP 47 locale for the group and decimal separators (default: the server's: comma and point) |
+
+#### `CompactOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[decimals=1]` | `(number\|function(number, string): number)` | decimals, or a function of (the absolute value, the unit) |
+| `[trim=false]` | `(boolean\|string)` | drop trailing zeros (1.50m reads 1.5m); 'small': only below the smallest unit |
+| `[units]` | `Array&lt;Array&lt;*&gt;&gt;` | [suffix, size, from] largest first; from (default size) is where the unit starts (the server's: bn, m, k; pass [['tn', 1e12], ...] for trillions) |
+| `[smallDecimals]` | `(number\|null)` | decimals below the smallest unit (default: decimals) |
+| `[smallGrouping=true]` | `boolean` | commas below the smallest unit |
+| `[sign='auto']` | `('auto'\|'always'\|'never')` |  |
+| `[minus='−']` | `string` |  |
+| `[prefix='']` | `string` | before the digits ("$") |
+| `[empty='—']` | `string` |  |
+
+#### `ToastOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[text]` | `string` | the message, as text |
+| `[html]` | `string` | the message as markup (escape what is not yours) |
+| `[href]` | `string` | the toast is a link |
+| `[className]` | `string` | the toast's classes |
+| `[attrs]` | `Object&lt;string, string&gt;` | more attributes (data-toast ...) |
+| `[action]` | `{label: string, run: function(): void, className: string}` | a button in the toast; a click runs it and closes the toast |
+| `[timeout]` | `number` | ms before it goes (the tray's default; 0: it stays) |
 
 ## drishti-grid
 
@@ -3911,6 +4035,284 @@ Starts drishti-grid in a page (the bundle calls it when it loads; nothing happen
 
 Returns `void`.
 
+### Types of drishti-grid
+
+#### `AggFunc` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `label` | `string` |  |
+| `init` | `function(): *` |  |
+| `add` | `function(*, *): *` | the state with one more value (returns the state) |
+| `merge` | `function(*, *): *` | two states as one |
+| `result` | `function(*): *` | the figure |
+| `numeric` | `boolean` | whether the values are numbers |
+
+#### `DisplayRow` : `Object`
+
+A row as the grid sees it at a display index.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `kind` | `('leaf'\|'group')` |  |
+| `id` | `string` | the row's id (a group's: "group:" and its path) |
+| `depth` | `number` | 0 for a row without groups; a group's level from 0; a leaf under groups: the number of groups |
+| `row` | `?Object` | the data (leaves) |
+| `[index]` | `number` | the row's number in the data |
+| `[field]` | `string` | a group's column |
+| `[value]` | `*` | a group's member |
+| `[path]` | `string[]` | a group's members from the top |
+| `[count]` | `number` | a group's rows |
+| `[expanded]` | `boolean` |  |
+| `[aggregates]` | `Object&lt;string, *&gt;` | a group's figures by column id |
+| `[pendingServer]` | `string[]` | a group's non-additive columns, left for the server |
+
+#### `ColumnDef` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[id]` | `string` | the column's id (default: field) |
+| `[field]` | `string` | the row's property |
+| `[header]` | `string` | the heading (default: the field) |
+| `[type='text']` | `('text'\|'number'\|'date'\|'boolean')` |  |
+| `[format]` | `(string\|Object\|function(*, Object): string)` | a named format (amount0, pct2, compact, dmy), number options, or a function |
+| `[valueGetter]` | `function(Object): *` | the value from the row (default: row[field]) |
+| `[comparator]` | `function(*, *): number` | the order of two values |
+| `[width=120]` | `number` |  |
+| `[minWidth=40]` | `number` |  |
+| `[maxWidth]` | `number` |  |
+| `[pinned]` | `('left'\|'right'\|null)` |  |
+| `[hidden=false]` | `boolean` |  |
+| `[sortable=true]` | `boolean` |  |
+| `[filterable=true]` | `boolean` |  |
+| `[resizable=true]` | `boolean` |  |
+| `[editable=false]` | `boolean` | a person may change its values (setCellValue) |
+| `[aggFunc]` | `string` | the aggregation of a value column (sum, count, min, max, avg, first, last, distinct, or a server measure) |
+| `[additive]` | `boolean` | whether its figures may be summed: false for VaR, ES, ratios (a total is asked of the server); default: true for numbers |
+| `[aggregate]` | `string` | 'server': the same as additive false (ELEMENTS.md's name) |
+| `[measure]` | `string` | the server's measure text when it is not func(field) (var(99, 1d)) |
+| `[enableRowGroup]` | `boolean` | may be a row group (default: text and date columns) |
+| `[enablePivot]` | `boolean` | may be a column pivot (default: text and date columns) |
+| `[enableValue]` | `boolean` | may be a value (default: numbers) |
+| `[group]` | `string` | a heading above several columns |
+| `[description]` | `string` | words for the field list |
+
+#### `ExportTable` : `import('../../drishti-core/src/drishti_files.js').ExportTable`
+
+#### `ExplainState` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `row` | `number` |  |
+| `col` | `number` |  |
+| `loading` | `boolean` |  |
+| `result` | `?(Object\|string\|Node)` | an ExplainResult (drishti-core), words or an element |
+| `error` | `?Error` |  |
+
+#### `RowChange` : `Object`
+
+A row's update as the grid tells it: the row's id and each changed cell's old and new value and direction.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `cells` | `Object&lt;string, {old: *, value: *, dir: ?string}&gt;` |  |
+
+#### `HeaderSpan` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `start` | `number` | the first column (an index into the list given) |
+| `end` | `number` | the last column (inclusive) |
+| `label` | `string` |  |
+| `group` | `?Object` | the pivot column entry it opens and closes (null: not collapsible) |
+
+#### `ConditionalFormat` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[column]` | `string` | the column's id (or a pivot value's source column) |
+| `[measure]` | `string` | a pivot value's label |
+| `type` | `('colourScale'\|'dataBar')` |  |
+| `[colour]` | `string` | a theme token for the scale or the bar (default --d-accent for scales, --d-pos and --d-neg for bars) |
+
+#### `MenuItem` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[id]` | `string` | the action (absent on headings and separators) |
+| `[label]` | `string` |  |
+| `[key]` | `string` | the shortcut, as words |
+| `[icon]` | `string` |  |
+| `[checked]` | `boolean` | a check or radio item that is on |
+| `[disabled]` | `boolean` |  |
+| `[why]` | `string` | why it is disabled, in words |
+| `[heading]` | `string` | a heading line instead of an item |
+| `[sep]` | `boolean` | a separator |
+| `[keep]` | `boolean` | the menu stays open after it runs (a member's check) |
+| `[input]` | `{placeholder: string, value: string}` | an item with a field and an Apply button |
+
+#### `GridViewOptions` : `Object`
+
+Everything GridModel takes (columns, rows or datasource, serverPivot, explain, clientAggregation, live ...), and:
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[layout='wells']` | `('wells'\|'panel'\|'terminal')` | the arrangement (VaR screens: terminal) |
+| `[density='compact']` | `('comfortable'\|'compact'\|'terminal')` |  |
+| `[title]` | `string` | the toolbar's title |
+| `[subtitle]` | `string` | words after it (the source, the date) |
+| `[label]` | `string` | the grid's name for a screen reader (default: the title) |
+| `[pivot]` | `{rows: string[], columns: string[], values: Array&lt;{colId: string, aggFunc: string}&gt;, filters: Array}` | start as a pivot of these wells |
+| `[pivotOptions]` | `Object` | the view's other parts at the start (sort, top, valueFilters, subtotals) |
+| `[pinTotals=true]` | `boolean` | the pivot's grand total columns pinned on the right |
+| `[conditionalFormats]` | `import('./drishti_grid-ui.js').ConditionalFormat[]` | colour scales and data bars |
+| `[checkboxes=true]` | `boolean` | row checkboxes (when rows may be selected) |
+| `[drillThrough]` | `function(Object): (Promise&lt;Object[]&gt;\|Object[])` | the rows behind a cell (default: the rows in the page that match the cell's members) |
+| `[members]` | `function(string): (Promise&lt;Array&lt;{text: string, count: number}&gt;&gt;\|Array)` | a field's members for its filter (default: the rows in the page) |
+| `[phoneWidth=640]` | `number` | below this width the grid is drawn for a phone |
+| `[model]` | `GridModel` | draw this model rather than make one |
+
+#### `GridOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `columns` | `import('./drishti_columns.js').ColumnDef[]` |  |
+| `[rows]` | `Object[]` | client-side rows |
+| `[datasource]` | `import('./drishti_server-rows.js').Datasource` | server-side rows (instead of rows) |
+| `[getRowId]` | `function(Object, number): string` |  |
+| `[layout='wells']` | `('wells'\|'panel'\|'terminal')` |  |
+| `[density='compact']` | `('comfortable'\|'compact'\|'terminal')` |  |
+| `[serverPivot]` | `function({view: Object}, AbortSignal, Object[]): Promise&lt;Object&gt;` | asks a server pivot (POST /api/pivot/query's body; the third argument: the rows in the page, for an inline pivot); needed for a pivot of server-side rows, for the non-additive totals of a local pivot, and for every pivot when clientAggregation is false |
+| `[clientAggregation=true]` | `boolean` | false: the browser computes no figure (the console's policy, ELEMENTS.md section 3): group figures and every pivot are the server's |
+| `[explain]` | `function(Object): Promise&lt;*&gt;` | the Explain hook: given a cell's context, the explanation (a layout shows it) |
+| `[rowSelection='multiple']` | `('single'\|'multiple'\|'none')` |  |
+| `[blockSize]` | `number` | server-side rows per request |
+| `[serverGroupTotals]` | `function({groupBy: string[], groups: Array&lt;{path: string[], columns: string[]}&gt;}): Promise&lt;Array&lt;{path: string[], values: Object}&gt;&gt;` | the server's figures of row groups for their non-additive columns (VaR, ES), asked when grouping and again after updates (debounced) |
+| `[live]` | `{asyncWaitMs: number, flashMs: number, serverDebounceMs: number}` | the live data's timings (drishti_grid-live.js) |
+
+#### `KeyResult` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `focus` | `?{row: number, col: number}` | the new focus (null: unchanged) |
+| `action` | `?string` | what the layout does: select-row, toggle-row, select-all, extend-range, copy, edit, open, expand, collapse, expand-all, collapse-all, explain, clear, null |
+| `handled` | `boolean` | whether the key was the grid's (the layout then prevents the browser's default) |
+
+#### `LiveMessage` : `Object`
+
+A feed message.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `type` | `('transaction'\|'dataChanged'\|'rows')` |  |
+| `[add]` | `Object[]` |  |
+| `[update]` | `Object[]` |  |
+| `[remove]` | `Array&lt;string&gt;` |  |
+| `[rows]` | `Object[]` |  |
+| `[purge]` | `boolean` |  |
+| `[keys]` | `string[]` |  |
+| `[blocks]` | `number[]` |  |
+
+#### `LiveFeed` : `Object`
+
+A feed: subscribe(onMessage) gives every message and returns the function that stops it.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `subscribe` | `function(function(LiveMessage): void): function(): void` |  |
+
+#### `PivotValue` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `measure` | `string` | the function's text: sum(NOTIONAL), count(), var(99, 1d) |
+| `[as]` | `string` | its label (default: the text) |
+
+#### `PivotView` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[source]` | `string` | the server's source (a local pivot does not need it) |
+| `rows` | `string[]` | row dimensions, outermost first |
+| `columns` | `string[]` | column dimensions |
+| `values` | `PivotValue[]` |  |
+| `[filters]` | `Object&lt;string, {in: string[], notIn: string[]}&gt;` | member filters |
+| `[expanded]` | `Array&lt;{axis: string, path: Array&lt;Array&lt;string&gt;&gt;, by: ?string}&gt;` | the open nodes |
+| `[expandTo]` | `{rows: number, columns: number}` | every node open down to this level (1: level one only) |
+| `[sort]` | `Object&lt;string, {by: string, desc: boolean}&gt;` | per dimension: by "label" or a measure's label |
+| `[top]` | `Object&lt;string, {n: number, by: string}&gt;` | per dimension: its top n, the rest in Others |
+| `[subtotals='below']` | `('below'\|'above')` |  |
+| `[valueFilters]` | `Array&lt;{dim: string, by: string, op: string, value: *, valueTo: *}&gt;` | keep a level's members whose figure passes |
+| `[options]` | `Object&lt;string, string&gt;` | the server provider's options |
+
+#### `CellRange` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `r1` | `number` | first display row (inclusive) |
+| `r2` | `number` | last display row (inclusive) |
+| `c1` | `number` | first shown column |
+| `c2` | `number` | last shown column |
+
+#### `BlockRequest` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `startRow` | `number` | the first row, inclusive |
+| `endRow` | `number` | the last, exclusive |
+| `sortModel` | `Array&lt;{colId: string, sort: string}&gt;` |  |
+| `filterModel` | `Object&lt;string, Object&gt;` |  |
+| `quickFilter` | `string` |  |
+| `rowGroupCols` | `string[]` | the row group columns, outermost first |
+| `groupKeys` | `string[]` | the members of the level asked for (its parents' values); [] for the top |
+| `valueCols` | `Array&lt;{colId: string, aggFunc: string}&gt;` |  |
+| `pivotCols` | `string[]` |  |
+| `pivotMode` | `boolean` |  |
+| `[signal]` | `AbortSignal` |  |
+
+#### `BlockAnswer` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `rows` | `Object[]` | the rows of the block (a group level's rows are its members: {[groupCol]: value, childCount, ...figures}) |
+| `[rowCount]` | `number` | how many rows the level has, when known (else the model grows as blocks come back short) |
+
+#### `Datasource` : `Object`
+
+A data source: the one function the model calls.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `getRows` | `function(BlockRequest): Promise&lt;BlockAnswer&gt;` |  |
+
+#### `SortItem` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `colId` | `string` |  |
+| `sort` | `('asc'\|'desc')` |  |
+
+#### `ColumnFilter` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `type` | `('text'\|'number'\|'date'\|'set'\|'blank')` |  |
+| `[op]` | `string` | text: contains, notContains, equals, notEquals, startsWith, endsWith; number and date: equals, notEquals, lt, lte, gt, gte, between; blank: blank, notBlank |
+| `[value]` | `*` |  |
+| `[valueTo]` | `*` | the upper end of between (inclusive) |
+| `[values]` | `Array&lt;*&gt;` | set: the members kept |
+| `[excluded]` | `Array&lt;*&gt;` | set: the members left out |
+
+#### `WellValue` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `colId` | `string` |  |
+| `aggFunc` | `string` |  |
+| `[as]` | `string` | its label |
+
 ## drishti-chart
 
 Version 0.1.0. Bundle `static/elements/drishti-chart/drishti_chart.js`, global `Drishti.elements.chart`; requires drishti-core.
@@ -5127,6 +5529,81 @@ Starts drishti-chart in a page (the bundle calls it when it loads; nothing happe
 | `root` | `Window` |  |
 
 Returns `void`.
+
+### Types of drishti-chart
+
+#### `RegionGeo` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `level` | `string` | 'world' or the country's ISO alpha-3 |
+| `projection` | `string` | equal-earth, albers-usa, albers-canada, albers-fitted or plate-carree |
+| `project` | `function(number, number): number[]` | (lon, lat) to the map's projected [x, y] |
+| `shapes` | `Object[]` | projected GeoJSON features named by place code |
+| `points` | `Array&lt;{code: string, name: string, xy: number[]}&gt;` | the places drawn as points |
+| `by` | `{code: Object, name: Object, short: Object}` | lookups (a country's iso3 and iso2 for the world) |
+| `list` | `Array&lt;{code: string, name: string, point: boolean}&gt;` | every place |
+| `fit` | `number[]` | [minX, minY, maxX, maxY] the view fits |
+| `all` | `number[]` | [minX, minY, maxX, maxY] of everything drawn |
+| `frames` | `Array&lt;{code: string, box: number[]}&gt;` | inset frames (Alaska, Hawaii) |
+
+#### `KindDef` : `Object`
+
+A kind: how a spec of that kind is drawn.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `build` | `function(Object, Object[], Object): BuiltChart` | the spec (normalised), its rows and the environment ({theme, fmt}) to what the engine draws |
+| `[label]` | `string` | the kind's name in the studio's rail |
+| `[family='general']` | `('general'\|'risk'\|'map'\|string)` | the rail's group (a domain library's name for its kinds) |
+| `[cartesian]` | `boolean` | x and y axes (zoom and the crosshair apply) |
+| `[sample]` | `function(): Object` | a small spec with data, for the studio and the gallery |
+
+#### `BuiltChart` : `Object`
+
+What a kind builds.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `option` | `Object` | the drawing engine's option (ECharts) |
+| `table` | `{columns: Array&lt;{header: string, format: *}&gt;, rows: Array&lt;Array&lt;*&gt;&gt;}` | the data table and the CSV |
+| `legend` | `Array&lt;{name: string, colour: string, style: string}&gt;` | the entries (style: line, dash, box, dot) |
+| `summary` | `string` | one line a screen reader reads ("Line chart, 3 series, 250 points, from 2025-11-11 to 2026-11-06") |
+| `[badge]` | `Object` | a status the card shows beside its title ({tone, text}: the backtest's zone) |
+
+#### `ChartTheme` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `dark` | `boolean` |  |
+| `tokens` | `Object&lt;string, string&gt;` | the token values by name without --d- (ink, muted, link ...) |
+| `palette` | `string[]` | the categorical colours, in order |
+| `density` | `string` |  |
+| `size` | `{font: number, pad: number, symbol: number, line: number, title: number}` |  |
+| `tones` | `Object&lt;string, string&gt;` | good, bad, warn, accent, link, pos, neg, muted, faint, ink |
+| `sequential` | `string[]` | five colours from faint to strong |
+| `diverging` | `string[]` | five colours, negative to positive through the ground |
+| `nodata` | `string` |  |
+
+#### `ChartOptions` : `Object`
+
+The options of a chart (the spec says what to draw; these say how it lives in its page).
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[mode='card']` | `('card'\|'studio')` |  |
+| `[density='compact']` | `('comfortable'\|'compact'\|'terminal')` |  |
+| `[explain]` | `function(Object): Promise&lt;*&gt;` | the Explain hook (the grid's): a mark's context ({kind, title, series, field, value, category, rows, ids}) to an ExplainResult, words or an element |
+| `[link]` | `{channel: string, bus: Object}` | linked selection: the bus (default drishti-core's) and the channel a grid shares |
+| `[fetch]` | `function(string): Promise&lt;Object&gt;` | reads a spec's data.source (default: fetch, same origin, JSON) |
+| `[echarts]` | `Object` | the engine (default window.echarts) |
+| `[mapsBase]` | `string` | the folder of the map shapes (default /static/vendor/echarts/maps/) |
+| `[placeData]` | `function(string): Promise&lt;Object[]&gt;` | a map's rows of a level (a country's ISO alpha-3) when it is drilled |
+| `[samples]` | `Object&lt;string, Object&gt;` | the studio's spec of each kind |
+| `[mapMode='ranking']` | `('ranking'\|'table')` | a map's mode (g3 A or B) |
+| `[download]` | `function(string, (string\|Blob), string): void` | where exports go (default: a download) |
+| `[height]` | `number` | the drawing's height in pixels (default 300; a map 440) |
+| `[asOf]` | `string` | the data's date, for the status line |
 
 ## drishti-risk
 

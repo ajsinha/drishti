@@ -531,6 +531,56 @@ library with its module: an unlicensed module's library is not served, its kinds
   `tests/test_elements_chart_browser.py` against the fixture harness `static/elements/drishti-chart/drishti_harness.html` (synthetic
   data, no server; `?view=board|studio|map|link`, `&mapMode=table`, `&level=USA`, `&density=…`, `&theme=light`).
 
+### 8.3 As built: the gallery
+
+- **Where.** `static/gallery/drishti_gallery.html`, a static page: it needs no server and opens from the file system too (there the maps
+  cannot read their shapes: a browser refuses `file://` reads). The console serves it at **`/elements`** (and `/elements/gallery`), the
+  query kept; it is a Build page (the edition gate's `build` feature, `core/edition.py`) listed under Build → Learn. The page loads
+  drishti-core; its boot script loads every other library of the manifest with drishti-core's loader, so a library added to
+  `drishti_elements.json` is in the gallery with no change to the page. Nothing inline: it runs under a strict CSP.
+- **An Elements app, two modes of one component** (O6): `Drishti.gallery.start(el, {mode})` makes a `Gallery`; `mode: 'playground'`
+  (g4 A, the default) has three panes: the searchable list of libraries and components (version, the badge "no server needed", "needs a
+  Drishti server" or "banking module licence", element or function), the live component with its code tabs and status line (bundle size
+  and lines, the Node tests and browser file, the accessibility check, the time to draw), and the options with the event log;
+  `mode: 'docs'` (g4 B) is a page per component with the tabs Examples (each a runnable card with its code and "Open in playground"),
+  API, Accessibility and Changelog. The address keeps the state (`#mode=docs&c=pivot&tab=api&o={"layout":"terminal"}`).
+- **One home per fact: the catalogue.** `tools/docs/elements_api.py` writes `static/gallery/drishti_catalogue.js` from the same parse as
+  ELEMENTS_API.md (`tools/docs/elements_catalogue.py`; `--check` refuses a stale copy of either): per library its version, title,
+  licence, bundle size, Node tests and browser file, each module's opening words, every public symbol, **every typedef with its
+  properties** (name, type, default, optional, words: the options panel is made from them; a list of literals is a select, `boolean` a
+  switch, `number` and `string` inputs, anything else "set in code"), the string lists the code exports frozen (`GRID_EVENTS`,
+  `CHART_EVENTS`, `LAYOUTS`, `MAP_MODES` …: the event log listens to exactly these) and the library's lines of the product CHANGELOG;
+  besides, the libraries section 2 plans that the manifest does not hold yet (listed as "Not built yet" with their badge) and the AG Grid
+  adapter's mapping (section 6's table) with whether the adapter is built.
+- **The demos** (`drishti_gallery-demos.js` for drishti-core and drishti-grid, `-demos-chart.js` for drishti-chart, the maps and
+  drishti-risk, `-demos-inputs.js` for drishti-inputs and drishti-data): a demo names its library, the typedefs of its options, its event
+  lists, its modules and its examples. An element demo's `build(values)` is **the object the gallery mounts and prints**: the web
+  component, the JavaScript and the AG Grid shapes are written from it (shared rows and hooks by name), so a snippet is the example's
+  source, not a copy. A demo is shown only when its library is in the manifest. On this build: core (formats, theme tokens with contrast,
+  the event bus, dialogs, drawers and toasts, Explain, the API client against a stand-in, the accessibility helpers), grid (the grid in
+  three layouts and three densities, the pivot with the stand-in server's VaR and ES, the nine layouts × densities at once, server-side
+  rows at 100,000, live updates from a manual feed, editing through `setCellValue`, CSV and Excel), chart (every general kind and the
+  studio, the map in both modes from the world to a country's regions, a grid and a chart linked, a live chart, Vega-Lite translated)
+  and the four risk kinds; inputs and data (every input, the filter bar with a grid following it, data sources, the live client over a
+  manual feed, frames) come in with their libraries. The sample data and the stand-in server are the fixture harnesses' synthetic
+  figures (`drishti_gallery-data.js`).
+- **The AG Grid tab** (grid and pivot): the adapter is not built, so the tab is marked "planned": it shows the AG Grid Enterprise option
+  shapes an application would pass for the grid on the stage (`columnDefs` with `rowGroup`, `pivot`, `aggFunc`, `'drishti:server'` for a
+  non-additive measure, `pivotMode`, `rowModelType: 'serverSide'`, `sideBar` for the panel layout) and section 6's mapping with the
+  version 1 scope (O5) and what it leaves out. The Sutra tab shows the panel (`table`, `pivot`, `line`, `hbar` …) where a panel kind
+  draws the component, and says so where none does yet.
+- **Accessibility.** No axe is vendored: every demo gets the gallery's keyboard and ARIA smoke check (`audit` in
+  `drishti_gallery-code.js`): controls named, roles and ARIA attributes valid, every id an ARIA attribute names present, ids unique, no
+  positive tab index, something reachable by Tab, a grid with rows. The status line shows it; the Accessibility tab adds the keys from the
+  modules' own words (`drishti_keyboard.js`, `drishti_chart-view.js`), the grid's function keys and the roles found.
+- **Tests.** Node (`tests/elements/gallery.test.mjs`): the catalogue against the manifest and the code (the frozen lists equal what the
+  bundles export), the typedefs, the planned libraries, the AG mapping and the changelog; the option controls, the code writer and the AG
+  shapes; every demo naming what the catalogue holds. The routes and the menu item (`tests/test_elements_gallery.py`). One browser file
+  against the static page (`tests/test_elements_gallery_browser.py`, about 18 s): every component drawn with no page error and a clean
+  smoke check, its code tabs and status line; options from the JSDoc changing the component and its code, the grid in three densities
+  and both themes, the address restoring the state; the AG Grid tab, live, editing, export; the keys in the grid and the chart; every
+  example of every documentation page, its API, accessibility and changelog tabs, "Open in playground".
+
 ## 9. The documentation of every library
 
 The owner asked for documentation as rich as a commercial product's. Within the lean-docs rule (one home per fact; references are
@@ -557,7 +607,7 @@ gallery example runs, every guide links its API reference and tutorial, no optio
 [g4](mockups/elements/g4-gallery.html): option A, the three-pane playground (the list of libraries and components with their version and
 a badge: no server needed, needs a Drishti server, banking module licence; the live component; code tabs for the web component, plain
 JavaScript, a Sutra and, for the grid, the AG Grid adapter; options generated from the typed JSDoc; an event log), with option B's tabs
-(Examples, API, Accessibility, Changelog) as the published page. Served by the console at `/elements/gallery`; libraries 1 to 5 run with
+(Examples, API, Accessibility, Changelog) as the published page. Served by the console at `/elements` (as built: 8.3); libraries 1 to 5 run with
 no server (static files and sample data); 6 to 8 against the console's own server. **Each gallery example is a test**: the browser suite
 opens every example in both themes and three densities, runs axe, and checks the code snippet produces the same component (the snippet
 is the example's source, not a copy).
@@ -635,7 +685,8 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [ ] Vega retired (O1): Vega-Lite visuals translated to the spec (the translator is built, 8.2), Python visuals return a spec, the vendored Vega deleted
 - [x] The phone behaviour of the grid and the pivot (O2); the standalone Excel writer (O4)
 - [ ] drishti-inputs, drishti-insight, drishti-renderer 2.0.0, drishti-risk (in the banking plugin, licensed)
-- [ ] The gallery in both modes, `playground` (default) and `docs` (g4 A and B), every example a test in both themes and three densities, axe clean
+- [x] The gallery in both modes, `playground` (default) and `docs` (g4 A and B), every component and example run in its browser file, the grid in both themes and three densities, a keyboard/ARIA smoke check on every demo (8.3)
+- [ ] axe vendored for the gallery's check; every example in both themes and three densities
 - [ ] Documentation per library (section 9): guide, generated API reference with `--check`, tutorial, gallery, the AG Grid migration guide, theming and accessibility guides, changelogs, versioning policy; Help entries
 - [ ] The guards of section 11, the allow list
 - [ ] Every screen moved (section 12) and the old code deleted; the allow list empty

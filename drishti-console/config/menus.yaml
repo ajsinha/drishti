@@ -272,6 +272,7 @@ menus:
           - { id: panels, href: /help/rachana-reference#panels-the-twenty-two-kinds-and-developing-a-new-one, icon: grid-1x2, label: Panel kinds, desc: "The 22 panel kinds, one entry each", requires: [feature:build] }
           - { id: rachana-reference, href: /help/rachana-reference, icon: book, label: Rachana reference, desc: "Every key, panel option, format and problem code", requires: [feature:build] }
           - { id: pack-guide, href: /help/pack-developer-guide, icon: box-seam, label: Pack developer guide, desc: "Bring a new domain in, step by step", requires: [feature:build] }
+          - { id: elements-gallery, href: /elements, icon: puzzle, label: Elements gallery, desc: "Every {product} Elements component live: its options, code, events, API and accessibility", match: /elements, requires: [feature:build] }
   - id: admin
     label: Admin
     icon: shield-lock
