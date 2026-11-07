@@ -148,8 +148,7 @@ def test_a_trade_row_opens_in_the_terminal_and_an_unknown_counterparty_is_an_emp
     settled(page)
     first = page.locator('[data-visual="c-trades-table"] .dg-row').first
     trade_id = first.locator("a[data-open-terminal=trade]").inner_text()                                # the desk opens too, as a desk
-    first.focus()
-    page.keyboard.press("Enter")                                                                         # a table row is selectable from the keyboard
+    first.locator(".dg-cell:not(:has(a))").first.click()                                                 # a click on a row (not on a link): its actions, the row selected
     expect(page.locator('[data-chip="selection"]')).to_contain_text("trades.TRADE_ID")
     page.locator('[data-visual="c-trades-table"] [data-act="open-terminal"]').click()
     page.wait_for_url(f"**/v/trade/{trade_id}")

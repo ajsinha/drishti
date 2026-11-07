@@ -308,6 +308,9 @@ def decide(pg, act, comment=""):
     pg.locator("[data-rp-approve]").click()
     pg.wait_for_url("**/approvals/var-report/**")
     pg.wait_for_selector("[data-ap-item]:not([hidden])")
+    if pg.locator("[data-ap-act=%s]" % act).is_hidden():           # the queue offers no such decision to this person (four eyes)
+        pg.goto(back)
+        return None
     pg.locator("[data-ap-comment]").fill(comment)
     pg.locator("[data-ap-act=%s]" % act).click()
     wait(pg, "document.querySelector('[data-ap-said]').textContent !== ''")
@@ -381,8 +384,8 @@ def test_a_report_run_is_generated_checked_and_signed_by_three_people(stack, peo
     assert approve(mara, "Movement reviewed against the desks' positions.") == "Approved."
     drawn(mara, 1, sign_label("Checker"))
     assert "mara" in mara.locator("[data-rp-steps]").inner_text()
-    # four eyes: the maker may not sign the checker's step too (the queue says why; nothing is signed)
-    assert approve(mara, "") != "Approved."
+    # four eyes: the maker may not sign the checker's step too (the queue offers her no Approve; nothing is signed)
+    assert approve(mara, "") is None
     drawn(mara, 1, sign_label("Checker"))
     assert get(mara, base, f"/api/var/reports/{REPORT}/runs/{PERIOD}?version=1")["signoff"]["next"] == "checker"
     assert mara.locator("[data-rp-narrative]").evaluate("e => e.readOnly")    # past the maker: the narrative is closed
