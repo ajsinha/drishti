@@ -16,8 +16,7 @@
 tools/packgen/banking/make_data.py: trades, counterparties, desks, books and netting sets across three packs): the "Counterparty risk" report with its slicers,
 its top-10 bar and its drill-through to a page about one counterparty; the same report for a desk head (her row rule shows only her desk's trades; the netting sets, a fact of
 their own that the model lets her read, are not cut by it) and for an analyst (the counterparty name is masked); the "Cashflow ladder" report over legs and cashflows that are arrays inside the
-trade documents, drilled from year to quarter; and the Model view of the cross-pack 2.1 dataset (a version 1 dataset still has it): five boxes, five relationships, remove one, drag a column to bring it
-back, accept it from the proposals, drag a box.
+trade documents, drilled from year to quarter.
 
 Skipped when Playwright, Chromium, uv (to make the lake; or DRISHTI_BI_DELTA_ROOT) or the built server jar is missing, or a scratch port is in use. Never run with pytest -n."""
 import json
@@ -31,37 +30,10 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 
 import bi_report_stack  # noqa: E402
 from bi_report_helpers import card_value, chart, clean, click_mark, open_report, settled, sign_in  # noqa: E402
-from bi_report_stack import CONSOLE_URL, api  # noqa: E402
+from bi_report_stack import api  # noqa: E402
 
 COUNTERPARTY = "file:report:counterparty-risk"
 LADDER = "file:report:cashflow-ladder"
-RISK = "file:dataset:trading-risk-v1"           # the 2.1 sample, kept as a version 1 dataset: the Model view is for those (a model has its designer)
-
-
-# The packs' link graph declares every link between the shipped kinds (2.3.0), so a proposal needs a field it does not know: this stack's margin calls
-# (counterparty-risk's collateral-store, which no sample reads, replaced by a file connector) carry SETTLING_DESK, whose values are desk ids
-CALLS = """plugin: file
-kinds: [margin-call]
-settings:
-  root: {root}
-  rescan-seconds: 3600
-  layout:
-    margin-call:
-      columns: [CALL_ID, SETTLING_DESK, AMOUNT]
-"""
-SETTLING_DESKS = ["DESK-FX", "DESK-FI", "DESK-EQD", "DESK-RATES"]
-
-
-class CrossStack(bi_report_stack.ReportStack):
-    def prepare(self, work):
-        old = (bi_report_stack.ROOT / "drishti-server/src/test/resources/bi/samples-2.1/datasets/trading-risk.dataset.yaml").read_text(encoding="utf-8")
-        (work / "config/bi/datasets/trading-risk-v1.dataset.yaml").write_text(old.replace("dataset: trading-risk", "dataset: trading-risk-v1", 1), encoding="utf-8")
-        calls = self.tmp / "calls" / "2026-10-08"
-        calls.mkdir(parents=True, exist_ok=True)
-        (calls / "margin-call.jsonl").write_text("".join(json.dumps({"id": f"MC-{i:03d}", "CALL_ID": f"MC-{i:03d}", "SETTLING_DESK": SETTLING_DESKS[i % 4],
-                                                                     "AMOUNT": 250_000.0 * (1 + i % 5)}) + "\n" for i in range(20)), encoding="utf-8")
-        (work / "config" / "connectors").mkdir(parents=True, exist_ok=True)
-        (work / "config" / "connectors" / "collateral-store.yaml").write_text(CALLS.format(root=self.tmp / "calls"), encoding="utf-8")
 
 
 @pytest.fixture(scope="module")
@@ -74,7 +46,7 @@ def stack(tmp_path_factory):
     if not lake:
         pytest.skip("needs a Delta lake: DRISHTI_BI_DELTA_ROOT, or uv with deltalake, pyarrow and pyyaml (tools/packgen/banking/make_data.py --lake)")
     try:
-        s = CrossStack(tmp, delta_root=lake).start()
+        s = bi_report_stack.ReportStack(tmp, delta_root=lake).start()
     except FileNotFoundError as e:
         pytest.skip(str(e))
     yield s
@@ -249,125 +221,3 @@ def test_a_phone_reads_the_counterparty_page_in_one_column(stack, browser):
         if el.is_visible():
             assert el.bounding_box()["height"] >= 43, (el.evaluate("e => e.outerHTML.slice(0, 160)"), el.bounding_box())
     clean(page)
-
-
-# ---- the Model view -----------------------------------------------------------------------------------------------------------
-
-def yaml_text(page):
-    return page.evaluate("document.querySelector('.CodeMirror').CodeMirror.getValue()")
-
-
-def test_the_model_view_draws_five_boxes_and_five_lines_and_edits_the_yaml_both_ways(stack, browser):
-    page = sign_in(browser, "wes", viewport={"width": 1500, "height": 1500})                            # tall: a box that no relationship holds goes in a band below
-    page.goto(f"{CONSOLE_URL}/bi/m/{RISK}")
-    page.wait_for_selector("[data-model-root][data-ready=yes]", timeout=30000)
-    expect(page.locator(".bi-tbox")).to_have_count(5)
-    expect(page.locator("svg.bi-lines g[data-rel]")).to_have_count(5)
-    expect(page.locator("[data-readonly]")).to_be_visible()
-    expect(page.locator("[data-save]")).to_be_disabled()
-    assert "many-to-one" in page.locator("svg.bi-lines g[data-rel] title").first.text_content()               # the cardinality is on the line (and its ends say one and many)
-    assert page.locator("svg.bi-lines text").filter(has_text="*").count() >= 5
-    page.click("[data-save-copy]")
-    page.wait_for_url("**/bi/m/bi-**")
-    page.wait_for_selector("[data-model-root][data-ready=yes]")
-    expect(page.locator("[data-readonly]")).to_be_hidden()
-    base = yaml_text(page)
-    assert "from: trades.PORTFOLIO" in base
-    # remove one relationship in the list: the YAML loses exactly that line
-    page.locator('[data-rel-row]').filter(has_text="trades.PORTFOLIO").locator("[data-remove-rel]").click()
-    expect(page.locator("svg.bi-lines g[data-rel]")).to_have_count(4)
-    after = yaml_text(page)
-    assert "trades.PORTFOLIO" not in after.split("relationships:")[1].split("measures:")[0] and after.count("cardinality:") == base.count("cardinality:") - 1
-    assert "# STORED SAMPLE 2 of 3" in after and "rollups:" in after                                           # the rest of the file, comments included, is as it was
-    # drag trades.PORTFOLIO onto books.id: the form is filled in with a many-to-one, and Add writes it
-    page.drag_and_drop('[data-column="trades.PORTFOLIO"]', '[data-column="books.id"]')
-    assert page.input_value("[data-nr-from-t]") == "trades" and page.input_value("[data-nr-from-c]") == "PORTFOLIO"
-    assert page.input_value("[data-nr-to-t]") == "books" and page.input_value("[data-nr-to-c]") == "id"
-    assert page.input_value("[data-nr-card]") == "many-to-one"
-    page.click("[data-nr-add]")
-    expect(page.locator("svg.bi-lines g[data-rel]")).to_have_count(5)
-    assert "{ from: trades.PORTFOLIO, to: books.id, cardinality: many-to-one }" in yaml_text(page)
-    page.wait_for_function("() => document.querySelector('[data-valid]').textContent === 'Valid'")
-    # change the cardinality on the list and the direction: both go to the YAML
-    page.locator('[data-rel-row]').filter(has_text="trades.PORTFOLIO").locator("[data-direction]").select_option("both")
-    assert "direction: both" in yaml_text(page)
-    page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved")
-    clean(page)
-
-
-def test_a_box_is_moved_by_its_header_and_the_layout_is_kept_in_the_yaml(stack, browser):
-    page = sign_in(browser, "wes", viewport={"width": 1500, "height": 1500})
-    page.goto(f"{CONSOLE_URL}/bi/m/{RISK}")
-    page.wait_for_selector("[data-model-root][data-ready=yes]", timeout=30000)
-    page.click("[data-save-copy]")
-    page.wait_for_url("**/bi/m/bi-**")
-    page.wait_for_selector("[data-model-root][data-ready=yes]")
-    head = page.locator('.bi-tbox[data-table="desks"] header')
-    box = head.bounding_box()
-    page.mouse.move(box["x"] + 30, box["y"] + 8)
-    page.mouse.down()
-    page.mouse.move(box["x"] + 130, box["y"] + 58, steps=5)
-    page.mouse.up()
-    assert re.search(r"layout:.*\n(?:\s+\w+: \{ x: \d+, y: \d+ \}\n)+", yaml_text(page)), yaml_text(page)[-300:]
-    page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved")
-    page.reload()
-    page.wait_for_selector("[data-model-root][data-ready=yes]")
-    moved = page.evaluate("[...document.querySelectorAll('.bi-tbox')].map(b => [b.getAttribute('data-table'), b.style.left, b.style.top])")
-    assert any(m[0] == "desks" and m[1] != "" for m in moved)
-    clean(page)
-
-
-PROPOSAL_DEMO = """rachana: 1
-dataset: proposal-demo
-title: Proposal demo
-tables:
-  calls:
-    source: { kind: margin-call }
-    mode: cached
-    columns: { SETTLING_DESK: string, AMOUNT: decimal }
-  desks:
-    source: { kind: desk }
-    mode: cached
-    columns: { NAME: string }
-measures:
-  Called: { expr: "sum(calls.AMOUNT)" }
-"""
-
-
-def test_relationships_proposed_from_the_data_are_accepted_one_by_one(stack, browser):
-    """Two tables with no declared link: the server finds that every SETTLING_DESK of the margin calls is the id of a desk (profiling, no AI) and proposes it with the match rate."""
-    page = sign_in(browser, "wes")
-    page.goto(CONSOLE_URL + "/bi/designer")
-    made = page.evaluate("""async (body) => { const r = await fetch('/bi/api/workspaces/me/items', {method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({kind: 'dataset', title: 'Proposal demo', description: '', body})}); return await r.json(); }""", PROPOSAL_DEMO)
-    page.goto(f"{CONSOLE_URL}/bi/m/{made['id']}")
-    page.wait_for_selector("[data-model-root][data-ready=yes]", timeout=30000)
-    expect(page.locator(".bi-tbox")).to_have_count(2)
-    expect(page.locator("svg.bi-lines g[data-rel]")).to_have_count(0)
-    expect(page.locator("[data-no-rels]")).to_be_visible()
-    page.click("[data-infer]")
-    page.wait_for_selector("[data-proposals] [data-proposal]", timeout=90000)
-    mine = page.locator("[data-proposals] [data-proposal]").filter(has_text="calls.SETTLING_DESK")
-    assert mine.count() == 1 and "100% of 4 values match" in mine.first.inner_text(), mine.first.inner_text()            # the match rate, from the data
-    expect(page.locator("svg.bi-lines g[data-rel]")).to_have_count(0)                                    # proposing changes nothing
-    assert "relationships:" not in yaml_text(page)
-    mine.first.locator("[data-accept]").click()
-    expect(page.locator("svg.bi-lines g[data-rel]")).to_have_count(1)
-    assert "{ from: calls.SETTLING_DESK, to: desks.id, cardinality: many-to-one }" in yaml_text(page)
-    page.wait_for_function("() => document.querySelector('[data-valid]').textContent === 'Valid'")
-    page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved")
-    clean(page)
-
-
-def test_a_reader_cannot_use_the_model_view_but_sees_the_dataset_page(stack, browser):
-    page = sign_in(browser, "rita")
-    page.goto(f"{CONSOLE_URL}/bi/d/{RISK}")
-    page.wait_for_selector("[data-relationships] tbody tr")
-    expect(page.locator("[data-model-view]")).to_be_hidden()                                                # the link is for authors
-    page = sign_in(browser, "wes")
-    page.goto(f"{CONSOLE_URL}/bi/d/{RISK}")
-    page.wait_for_selector("[data-relationships] tbody tr")
-    expect(page.locator("[data-model-view]")).to_be_visible()

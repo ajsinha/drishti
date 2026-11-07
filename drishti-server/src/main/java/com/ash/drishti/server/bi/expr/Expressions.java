@@ -64,8 +64,8 @@ public final class Expressions {
         return legacy;
     }
 
-    /** The compiler's tree of a Rachana expression; a refusal is a {@link DelException}. */
-    public static Node parse(String text) {
+    /** The compiler's tree of a Rachana expression; a refusal is a {@link ExpressionException}. */
+    public static Node node(String text) {
         return read(text).node();
     }
 
@@ -75,13 +75,13 @@ public final class Expressions {
         if (hit instanceof Parsed p) {
             return p;
         }
-        if (hit instanceof DelException e) {
+        if (hit instanceof ExpressionException e) {
             throw e;
         }
         Object r;
         try {
             r = readUncached(text);
-        } catch (DelException e) {
+        } catch (ExpressionException e) {
             r = e;
         }
         if (text != null && cacheSize > 0) {
@@ -90,7 +90,7 @@ public final class Expressions {
             }
             CACHE.put(text, r);
         }
-        if (r instanceof DelException e) {
+        if (r instanceof ExpressionException e) {
             throw e;
         }
         return (Parsed) r;
@@ -98,14 +98,14 @@ public final class Expressions {
 
     private static Parsed readUncached(String text) {
         if (text == null || text.isBlank()) {
-            throw new DelException(NodeLowering.CODE, "an expression is expected here", null, 0, 0);
+            throw new ExpressionException(NodeLowering.CODE, "an expression is expected here", null, 0, 0);
         }
         CheckedMode.Parsed p;
         try {
             p = CheckedMode.parse(text);
         } catch (ElException e) {
             int at = Math.max(0, Math.min(text.length(), e.position()));
-            throw new DelException(NodeLowering.CODE, e.getMessage(), null, at, Math.min(text.length(), at + 1));
+            throw new ExpressionException(NodeLowering.CODE, e.getMessage(), null, at, Math.min(text.length(), at + 1));
         }
         return new Parsed(NodeLowering.lower(p), p, text);
     }
@@ -120,7 +120,7 @@ public final class Expressions {
         }
         Node n;
         try {
-            n = parse(text);
+            n = node(text);
         } catch (RuntimeException e) {
             return text;
         }
@@ -140,7 +140,7 @@ public final class Expressions {
         }
         Node n;
         try {
-            n = parse(text);
+            n = node(text);
         } catch (RuntimeException e) {
             return text;
         }

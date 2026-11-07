@@ -20,7 +20,7 @@ import com.ash.drishti.rachana.el.check.Problem;
 import com.ash.drishti.rachana.el.check.Scope;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
-import com.ash.drishti.server.bi.expr.DelException;
+import com.ash.drishti.server.bi.expr.ExpressionException;
 import com.ash.drishti.server.bi.expr.Expressions;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -51,8 +51,8 @@ final class ExpressionCheck {
         out.put("uses", Map.of("functions", c.functions(), "fields", c.fields(), "measures", c.measures()));
         if (c.ok()) {
             try {
-                Expressions.parse(expr);                                       // what BI's compiler runs
-            } catch (DelException e) {
+                Expressions.node(expr);                                       // what BI's compiler runs
+            } catch (ExpressionException e) {
                 problems.add(e.problem());
             }
         }

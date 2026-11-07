@@ -18,7 +18,7 @@ package com.ash.drishti.bicompute.custom;
 import com.ash.drishti.bicompute.custom.FunctionDef.Input;
 import com.ash.drishti.bicompute.custom.FunctionDef.Language;
 import com.ash.drishti.bicompute.formula.FormulaFunction;
-import com.ash.drishti.bicompute.formula.FormulaParser;
+import com.ash.drishti.bicompute.formula.FormulaLowering;
 import com.ash.drishti.bicompute.functions.Functions;
 import com.ash.drishti.bicompute.harness.FunctionCheck;
 import com.ash.drishti.bicompute.python.PythonFunction;
@@ -63,7 +63,7 @@ public final class CustomFunctions {
     /**
      * The settings ({@code drishti.pivot.functions}).
      *
-     * @param formula DEL formulas on
+     * @param formula formulas (Rachana) on
      * @param sql SQL macros on
      * @param python Python functions on (off as shipped)
      * @param java Java plug-ins on (off as shipped)
@@ -189,7 +189,7 @@ public final class CustomFunctions {
     private static FormulaFunction formula(String ref, String code, List<String> inputs) {
         try {
             return FormulaFunction.of(ref, code, inputs);
-        } catch (FormulaParser.FormulaException e) {
+        } catch (FormulaLowering.FormulaException e) {
             throw invalid("the formula: " + e.getMessage());
         }
     }

@@ -12,17 +12,16 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Deleting from the workspace list, designer errors and several datasets in the designer, in Chromium over the real server and console (tests/bi_report_stack.py on
-ports 18934 and 17934, security on, a small file lake; a second copy of the sample dataset, ``trades-second``, is added so a report can read two datasets).
+"""Deleting from the workspace list and designer errors, in Chromium over the real server and console (tests/bi_report_stack.py on ports 18934 and 17934,
+security on, a small file lake; the reports read the sample model trades-basic).
 
-The workspace list: a checkbox for each item you may delete, Select all, "Delete selected (N)" with one confirmation that lists the titles, a Delete in each row, a refused
-item reported as skipped while the others are deleted, a short id and a created time on each row, and the New item form that asks a report for its dataset and opens the
-designer on it. The designer: an incomplete visual shows its own "add a field" note while the others still draw and the Check list names the visual, a text field dropped on a
-table joins its columns and a field already there is not called a misfit, a report with no dataset asks for one. Several datasets: Add dataset, a tree for each, a dataset tag on a
-visual, a field of another dataset refused in a visual that reads one, a link ticked in the Links panel, a composed dataset offered as a draft to review, and a slicer that filters
-the visuals of both datasets in the viewer.
+The workspace list: a checkbox for each item you may delete, Select all, "Delete selected (N)" with one confirmation that lists the titles, a Delete in each row,
+a refused item reported as skipped while the others are deleted, a short id and a created time on each row, and the New item form that asks a report for its
+dataset and opens the designer on it. The designer: an incomplete visual shows its own "add a field" note while the others still draw and the Check list names
+the visual, a text field dropped on a table joins its columns and a field already there is not called a misfit, a report with no dataset asks for one. (Reports
+over several datasets went with the version 1 datasets: a report reads one model.)
 
-Skipped when Playwright, Chromium or the built server jar is missing, or a scratch port is in use. Never run with pytest -n (the ports are fixed)."""
+Skipped when Playwright, Chromium or the built server jar is missing, or a scratch port is in use."""
 import os
 import re
 
@@ -34,19 +33,10 @@ pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install
 from playwright.sync_api import expect, sync_playwright  # noqa: E402
 
 import bi_report_stack  # noqa: E402
-from bi_report_helpers import card_value, clean, settled, sign_in  # noqa: E402
-from bi_report_stack import CONSOLE_URL, ROOT, api  # noqa: E402
+from bi_report_helpers import clean, sign_in  # noqa: E402
+from bi_report_stack import CONSOLE_URL, api  # noqa: E402
 
 WES = ("wes", ["bi-writer"])
-
-
-class Stack(bi_report_stack.ReportStack):
-    def prepare(self, work):
-        # reports over several datasets are a version 1 feature (a report on a model reads one model): the 2.1 sample, kept by the server's tests, twice
-        text = (ROOT / "drishti-server/src/test/resources/bi/samples-2.1/datasets/trades-basic.dataset.yaml").read_text(encoding="utf-8")
-        (work / "config/bi/datasets/trades-basic.dataset.yaml").write_text(text, encoding="utf-8")
-        text = text.replace("dataset: trades-basic", "dataset: trades-second", 1).replace("title: Trades, the basics", "title: Trades, second copy", 1)
-        (work / "config/bi/datasets/trades-second.dataset.yaml").write_text(text, encoding="utf-8")
 
 
 @pytest.fixture(scope="module")
@@ -55,7 +45,7 @@ def stack(tmp_path_factory):
         if bi_report_stack.listening(port):
             pytest.skip(f"port {port} is in use: stop whatever listens there")
     try:
-        s = Stack(tmp_path_factory.mktemp("bidesign"), delta_root="").start()
+        s = bi_report_stack.ReportStack(tmp_path_factory.mktemp("bidesign"), delta_root="").start()
     except FileNotFoundError as e:
         pytest.skip(str(e))
     yield s
@@ -80,16 +70,13 @@ def make(kind, title, body="", workspace="me"):
 
 
 def report(name, visuals, extra="", dataset="trades-basic"):
-    return (f"rachana: 1\nreport: {name}\ntitle: {name}\n" + (f"dataset: {dataset}\n" if dataset else "") + extra + "pages:\n  - id: p\n    title: P\n    visuals:\n" + visuals)
+    """A report on the model ``dataset`` (every dataset is a table now, read through a model)."""
+    return (f"rachana: 1\nreport: {name}\ntitle: {name}\n" + (f"model: {dataset}@1\n" if dataset else "") + extra + "pages:\n  - id: p\n    title: P\n    visuals:\n" + visuals)
 
 
 def open_designer(page, item):
     page.goto(f"{CONSOLE_URL}/bi/design/{item}")
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
-
-
-def tree(page, dataset):
-    return page.locator(f'[data-dataset-tree="file:dataset:{dataset}"]')
 
 
 # ---- the workspace list: delete ---------------------------------------------------------------------------------------------------
@@ -187,16 +174,6 @@ def test_a_report_with_no_dataset_asks_for_one_in_the_designer(stack, browser):
     clean(page)
 
 
-def test_the_dataset_page_starts_a_report_on_it(stack, browser):
-    page = sign_in(browser, "wes", "/bi/datasets")
-    page.goto(CONSOLE_URL + "/bi/d/file:dataset:trades-basic")
-    page.wait_for_selector("[data-new-report]:not([hidden])")
-    page.click("[data-new-report]")
-    page.wait_for_selector("[data-new-dataset]")
-    page.wait_for_function("() => document.querySelector('[data-new-dataset]').value === 'file:dataset:trades-basic'")
-    clean(page)
-
-
 # ---- the designer: one incomplete visual, a text field in a table ----------------------------------------------------------------------
 
 def test_an_incomplete_visual_does_not_blank_the_others_and_the_check_names_it(stack, browser):
@@ -235,63 +212,4 @@ def test_a_text_field_dropped_on_a_table_joins_its_columns_and_says_where_when_i
     clean(page)
 
 
-# ---- several datasets ---------------------------------------------------------------------------------------------------------------------
 
-def test_several_datasets_in_the_designer_with_a_link_and_a_slicer_that_filters_both(stack, browser):
-    visuals = ("      - { id: main-n, type: card, title: Main trades, wells: { values: [Trades] }, at: { x: 0, y: 0, w: 3, h: 2 } }\n"
-               "      - { id: desk, type: slicer, wells: { field: [trade.DESK] }, format: { mode: list, scope: report }, at: { x: 9, y: 0, w: 3, h: 5 } }\n")
-    item = make("report", "Two datasets", report("two-datasets", visuals))
-    page = sign_in(browser, "wes", "/bi/w/me")
-    open_designer(page, item)
-    expect(page.locator("[data-links-panel]")).to_be_hidden()                                             # one dataset: no links panel
-    page.click("[data-add-dataset]")
-    page.wait_for_function("() => document.querySelector('[data-dataset-picker]').options.length > 1")
-    page.select_option("[data-dataset-picker]", "trades-second")
-    page.click("[data-dataset-add-go]")
-    expect(page.locator("[data-dataset-tree]")).to_have_count(2)                                          # one collapsible tree for each, labelled
-    assert "Trades, second copy" in tree(page, "trades-second").inner_text() and "(main)" in page.locator("[data-dataset-tree]").first.inner_text()
-    expect(tree(page, "trades-second").locator("[data-remove-dataset]")).to_be_enabled()                  # nothing reads it yet: it can be removed
-    # a measure of the second dataset dropped on the empty canvas makes a visual that reads it, tagged
-    page.drag_and_drop('[data-dataset-tree="file:dataset:trades-second"] [data-field="Trades"]', "[data-canvas-grid]", target_position={"x": 300, "y": 250})
-    page.wait_for_selector("[data-dataset-tag]")
-    assert "Trades, second copy" in page.inner_text("[data-dataset-tag]")
-    assert page.locator("[data-dataset-tag]").count() == 1                                                # the main card carries no tag
-    expect(tree(page, "trades-second").locator("[data-remove-dataset]")).to_be_disabled()                 # a visual reads it now
-    second = page.locator(".bi-dvis:has([data-dataset-tag])").get_attribute("data-visual")
-    # a field of the second dataset on the main card, which already reads the main dataset: refused, with the hint
-    page.drag_and_drop('[data-dataset-tree="file:dataset:trades-second"] [data-field="trade.DESK"]', '[data-visual="main-n"]')
-    page.wait_for_function("() => /reads/.test(document.querySelector('[data-msg]').textContent)")
-    msg = page.inner_text("[data-msg]")
-    assert "another visual, or make a composed dataset" in msg and "Trades, the basics" in msg and "Trades, second copy" in msg
-    assert page.locator('[data-visual="main-n"] [data-dataset-tag]').count() == 0
-    # the links panel suggests desk = desk (same name and type); ticking writes links: into the report
-    expect(page.locator("[data-links-panel]")).to_be_visible()
-    tick = page.locator('[data-link-tick="trade.DESK = trade.DESK"]')
-    expect(tick).to_have_count(1)
-    tick.check()
-    expect(page.locator("[data-links-current] li")).to_have_count(1)
-    page.click("[data-tab=yaml]")
-    page.wait_for_function("() => /links:/.test(document.querySelector('.CodeMirror') ? document.querySelector('.CodeMirror').CodeMirror.getValue() : document.querySelector('[data-yaml]').value)")
-    yaml = page.evaluate("document.querySelector('.CodeMirror') ? document.querySelector('.CodeMirror').CodeMirror.getValue() : document.querySelector('[data-yaml]').value")
-    assert "trade.DESK" in yaml and f"dataset: trades-second" in yaml
-    page.click("[data-tab=canvas]")
-    # a composed dataset is offered as text to review, not created
-    page.click("[data-make-composed]")
-    draft = page.inner_text("[data-composed-yaml]")
-    assert "from:" in draft and "join:" in draft and "trades-basic" in draft and "trades-second" in draft
-    s, items = api("GET", "/bi/workspaces/me/items", *WES)
-    assert not [i for i in items if i["kind"] == "dataset"]                                              # nothing was saved silently
-    page.click("[data-save]")
-    expect(page.locator(".bi-near").first).to_contain_text("Saved", timeout=15000)               # the save says so beside its button
-    # the viewer: the slicer filters both datasets' cards
-    page.goto(f"{CONSOLE_URL}/bi/r/{item}")
-    page.wait_for_selector("[data-ready=yes]", timeout=30000)
-    settled(page)
-    before = card_value(page, "main-n"), card_value(page, second)
-    assert before[0] == before[1] and before[0] > 0
-    page.locator('[data-visual="desk"] [data-slicer-value]').first.check()
-    page.wait_for_function(f"() => !document.querySelector('.bi-vis-busy') && Number(document.querySelector('[data-visual=\"main-n\"] .bi-card-value').getAttribute('data-value')) < {before[0]}", timeout=30000)
-    settled(page)
-    after = card_value(page, "main-n"), card_value(page, second)
-    assert after[0] == after[1] and 0 < after[0] < before[0]
-    clean(page)

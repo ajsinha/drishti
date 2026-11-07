@@ -35,6 +35,7 @@ from bi_report_stack import CONSOLE_URL  # noqa: E402
 
 DATASET = "wa-demo"
 REPORT = "file:report:wa-demo"
+TABLE = "file:table:bi.wa_demo_trade"             # the table the dataset wa-demo became (a rachana: 1 dataset is tables and a model)
 TRADES = 120                                                      # two days of 60
 
 DATASET_YAML = """rachana: 1
@@ -54,9 +55,9 @@ tables:
       mtm: decimal
       tradeDate: date
 measures:
-  Notional: { expr: "sum(trade.notional)", format: amount0 }
-  MTM: { expr: "sum(trade.mtm)", format: signed0 }
-  Trades: { expr: "count(trade)" }
+  Notional: { expr: "sum(trade.notional)", format: amount0, additive: true }      # each day holds its own trades (a flow): it adds over the dates
+  MTM: { expr: "sum(trade.mtm)", format: signed0, additive: true }
+  Trades: { expr: "count(trade)", additive: true }
   MTM rank: { expr: "rank(sum(trade.mtm))" }
   MTM 2-day average: { expr: "moving_avg(sum(trade.mtm), 2, trade.tradeDate)" }
 tests:
@@ -129,7 +130,7 @@ def opened(browser, user="rita", **ctx):
 
 def test_refresh_now_runs_in_the_background_and_its_history_survives_a_reload(stack, browser):
     page = sign_in(browser, "wes")
-    page.goto(CONSOLE_URL + "/bi/d/file:dataset:" + DATASET)
+    page.goto(CONSOLE_URL + "/bi/ds/" + TABLE)
     page.wait_for_selector("[data-refresh] tbody tr", timeout=30000)
     button = page.locator("[data-refresh-now]")
     expect(button).to_be_visible()
@@ -148,7 +149,7 @@ def test_refresh_now_runs_in_the_background_and_its_history_survives_a_reload(st
 
 def test_a_reader_without_the_author_power_has_no_refresh_button_or_tests_section(stack, browser):
     page = sign_in(browser, "rita")
-    page.goto(CONSOLE_URL + "/bi/d/file:dataset:" + DATASET)
+    page.goto(CONSOLE_URL + "/bi/ds/" + TABLE)
     page.wait_for_selector("[data-refresh] tbody tr", timeout=30000)
     page.wait_for_timeout(800)
     expect(page.locator("[data-refresh-now]")).to_be_hidden()
@@ -158,7 +159,7 @@ def test_a_reader_without_the_author_power_has_no_refresh_button_or_tests_sectio
 
 def test_the_dataset_page_runs_its_expected_values_and_says_which_fail(stack, browser):
     page = sign_in(browser, "wes")
-    page.goto(CONSOLE_URL + "/bi/d/file:dataset:" + DATASET)
+    page.goto(CONSOLE_URL + "/bi/ds/" + TABLE)
     expect(page.locator("[data-tests-sec]")).to_be_visible(timeout=30000)
     page.click("[data-tests-run]")
     page.wait_for_selector("[data-tests-table] tbody tr", timeout=60000)
@@ -211,8 +212,8 @@ def test_a_tablet_gets_two_columns_with_the_wide_visuals_across_and_a_desktop_th
 def test_the_designer_has_a_tablet_tab_that_writes_layouts_tablet(stack, browser):
     page = sign_in(browser, "wes")
     page.goto(CONSOLE_URL + "/bi/designer")
-    page.wait_for_selector("[data-new-dataset] option[value='file:dataset:" + DATASET + "']", state="attached")
-    page.select_option("[data-new-dataset]", "file:dataset:" + DATASET)
+    page.wait_for_selector("[data-new-dataset] option[value='mq:" + DATASET + "@1']", state="attached")
+    page.select_option("[data-new-dataset]", "mq:" + DATASET + "@1")
     page.fill("[data-new-title]", "Tablet draft")
     page.click("[data-new] button[type=submit]")
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)

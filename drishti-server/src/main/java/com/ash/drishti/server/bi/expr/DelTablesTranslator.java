@@ -15,10 +15,13 @@
  */
 package com.ash.drishti.server.bi.expr;
 
+import com.ash.drishti.rachana.el.CheckedMode;
+import com.ash.drishti.rachana.el.ElException;
 import com.ash.drishti.rachana.el.Printer;
 import com.ash.drishti.tables.check.ExpressionChecker;
 import com.ash.drishti.tables.migrate.DelTranslator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * The migration's DEL step (BI_FOUNDATION_2911E.md section 4.1), from part A: DEL read by its own parser (read, never evaluated), mapped to
@@ -37,10 +40,35 @@ public final class DelTablesTranslator implements DelTranslator {
             DelAst tree = DelParser.parse(t.equals("true") ? "True" : t.equals("false") ? "False" : del);
             String rachana = Printer.print(DelToRachana.map(tree).expr());
             return Result.ok(rachana, rachana.equals(del.strip()) ? List.of() : List.of("DEL into Rachana (section 2.4)"));
-        } catch (DelException e) {
+        } catch (ExpressionException e) {
+            if (e.getMessage() != null && e.getMessage().contains("is the old syntax")) {
+                return firstSyntax(del, e);
+            }
             return Result.refused("DEL does not read it: " + e.getMessage());
         } catch (IllegalArgumentException e) {
             return Result.refused("no Rachana form: " + e.getMessage());
+        }
+    }
+
+    /** {@code [Measure name]}; never a list of fields such as {@code by = [trades.desk]} (a dot) or a list of several items (a comma). */
+    private static final Pattern MEASURE_REF = Pattern.compile("(?<![A-Za-z0-9_\\]])\\[([A-Za-z][^\\],.'\"\\[]*)\\]");
+    private static final Pattern IN_PARENS = Pattern.compile("\\bin\\s*\\(([^()]*)\\)");
+
+    /**
+     * A text in BI's first expression syntax (an item without {@code expressions: 2}: Rachana-EL's operators and literals, {@code &&},
+     * {@code ||}, {@code !}, {@code c ? a : b}, {@code null}), which DEL refuses as its old syntax: read by Rachana's one parser after the
+     * first syntax's own spellings ({@code [Measure]} as {@code measure('Measure')}, {@code in (a, b)} as {@code in [a, b]}). A text Rachana's
+     * parser does not read stays refused with DEL's reason. Inside the migration tool only, so an installation that never ran the old
+     * converter still migrates.
+     */
+    private static Result firstSyntax(String del, ExpressionException old) {
+        String t = MEASURE_REF.matcher(del.strip()).replaceAll(m -> java.util.regex.Matcher.quoteReplacement("measure('" + m.group(1) + "')"));
+        t = IN_PARENS.matcher(t).replaceAll(m -> java.util.regex.Matcher.quoteReplacement("in [" + m.group(1) + "]"));
+        try {
+            String rachana = Printer.print(CheckedMode.parse(t).expr());
+            return Result.ok(rachana, List.of("the first expression syntax into Rachana"));
+        } catch (ElException | IllegalArgumentException e) {
+            return Result.refused("DEL does not read it: " + old.getMessage());
         }
     }
 }

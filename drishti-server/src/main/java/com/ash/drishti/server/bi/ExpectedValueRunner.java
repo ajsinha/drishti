@@ -132,10 +132,13 @@ public final class ExpectedValueRunner {
      *
      * @param role the role to run the tests without one of their own as; blank: the caller's own roles
      */
+    /** The kinds that carry tests: a report, a table of the layer (or a stored dataset item holding one) and a model. */
+    private static final java.util.Set<String> TESTED = java.util.Set.of("report", "table", "dataset", "model");
+
     public Run run(Principal p, String id, String yaml, String role) {
         BiStore.Item item = bi.readableItem(p, id);
-        if (!"report".equals(item.kind()) && !"dataset".equals(item.kind()) && !"model".equals(item.kind())) {
-            throw new DrishtiException(ErrorCode.BI_INVALID, "only a report, a dataset or a model has tests, not a " + item.kind());
+        if (!TESTED.contains(item.kind())) {
+            throw new DrishtiException(ErrorCode.BI_INVALID, "only a report, a table or a model has tests, not a " + item.kind());
         }
         if (yaml != null && !"report".equals(item.kind())) {
             bi.requirePower(p, BiAccess.AUTHOR);
@@ -151,7 +154,7 @@ public final class ExpectedValueRunner {
      * What would stop a publish: one line per test that fails or cannot run, each as its own role or the publisher's. Empty when the item has no tests or all pass.
      */
     public List<String> failures(Principal p, BiStore.Item item) {
-        if (!"report".equals(item.kind()) && !"dataset".equals(item.kind()) && !"model".equals(item.kind()) || item.body().isBlank()) {
+        if (!TESTED.contains(item.kind()) || item.body().isBlank()) {
             return List.of();
         }
         List<String> lines = new ArrayList<>();
@@ -178,7 +181,7 @@ public final class ExpectedValueRunner {
             }
             return out;
         }
-        if ("dataset".equals(item.kind()) && com.ash.drishti.server.bi.layer.DatasetDefParser.isVersion2(body)) {
+        if (("dataset".equals(item.kind()) || "table".equals(item.kind())) && com.ash.drishti.server.bi.layer.DatasetDefParser.isTable(body)) {
             return new LayerDatasetTests(this, datasetTests).run(p, body, chosen);       // the model layer's data tests (BI_DESIGN.md › The model layer: the specification of wave W1, section 1.8)
         }
         if ("dataset".equals(item.kind())) {

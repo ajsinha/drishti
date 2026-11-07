@@ -65,7 +65,7 @@ drishti.py pivot run --source trade --rows PRODUCT_TYPE --values "sum(NOTIONAL, 
 
 ## Step 2 · The playground: a function and its harness
 
-**UI.** Press `U` (or **Functions**). Name `wret`, language **formula (DEL)**, inputs `r, w`, code `sum(r * w) / sum(w)`; leave the sample
+**UI.** Press `U` (or **Functions**). Name `wret`, language **formula (Rachana)**, inputs `r, w`, code `sum(r * w) / sum(w)`; leave the sample
 rows and the group column `g`. Press **Check**. You see *Passes the harness*, the checks (one pass; batches of 1, 7, 1,000 and 65,536;
 2, 3 and 16 random parts merged left-deep and balanced under five seeds; an empty cell; a part of nulls; one row; equal rows; infinities;
 the state read back; the same bits twice; the cost; the state's size), the state after each part and after each merge (two sums, `[Σrw, Σw]`

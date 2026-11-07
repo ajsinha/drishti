@@ -175,7 +175,7 @@ public final class Functions {
 
     /**
      * As {@link #parse(String, String, PivotProvider)}, with custom functions ({@code resolver}) and formulas of the built-ins
-     * ({@code sum(PNL) / sum(abs(PNL))}, DEL's syntax; section 8.2) on a provider that evaluates built-ins.
+     * ({@code sum(PNL) / sum(abs(PNL))}, Rachana; section 8.2) on a provider that evaluates built-ins.
      */
     public static FunctionCall parse(String text, String label, PivotProvider provider, Resolver resolver, com.ash.drishti.bicompute.spi.Viewer v) {
         if (resolver != null && text != null && text.strip().startsWith("fn:")) {
@@ -187,7 +187,7 @@ public final class Functions {
         try {
             return simple(text, label, provider);
         } catch (com.ash.drishti.common.DrishtiException e) {
-            if (!provider.capabilities().builtIns() || text == null || !com.ash.drishti.bicompute.formula.FormulaParser.isFormula(text)) {
+            if (!provider.capabilities().builtIns() || text == null || !com.ash.drishti.bicompute.formula.FormulaLowering.isFormula(text)) {
                 throw e;
             }
             com.ash.drishti.bicompute.formula.FormulaFunction f = com.ash.drishti.bicompute.formula.FormulaFunction.of(text);

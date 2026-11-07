@@ -517,7 +517,7 @@ public final class BiService {
         }
         Instant now = Instant.now();
         String title = text(body, "title", 200, true);
-        String content = com.ash.drishti.server.bi.layer.LayerBodies.onSave(kind, checkedBody(body.get("body")));
+        String content = checkedBody(body.get("body"));
         String asReport = "board".equals(kind) ? BoardConverter.onCreate(content, title) : null;      // 2.4.0 (R7): a board is a report with board pages
         if (asReport != null) {
             kind = "report";
@@ -821,7 +821,7 @@ public final class BiService {
         if (base != null && !String.valueOf(base).isBlank() && !String.valueOf(base).equals(i.updatedAt() == null ? "" : i.updatedAt().toString())) {
             throw new DrishtiException(ErrorCode.BI_STALE, "'" + i.title() + "' was saved by " + i.updatedBy() + " since you opened it: reload it, save yours as a copy, or overwrite");
         }
-        String newBody = body.containsKey("body") ? com.ash.drishti.server.bi.layer.LayerBodies.onSave(i.kind(), checkedBody(body.get("body"))) : i.body();
+        String newBody = body.containsKey("body") ? checkedBody(body.get("body")) : i.body();
         String newTitle = body.containsKey("title") ? text(body, "title", 200, true) : i.title();
         if (BiTitles.KINDS.contains(i.kind())) {                                       // one title: the item's and the body's agree after every save
             String inBody = BiTitles.of(newBody);
@@ -1023,11 +1023,11 @@ public final class BiService {
     }
 
     private Map<String, Object> publishNow(Principal p, BiStore.Item i, String note, boolean force, boolean applyRenames) {
-        if (tablesCheck != null && com.ash.drishti.server.bi.layer.LayerBodies.tableLayer(i.kind(), i.body())) { tablesCheck.accept(p, i); } else if (layerCheck != null && ("model".equals(i.kind()) || "dataset".equals(i.kind()) && com.ash.drishti.server.bi.layer.DatasetDefParser.isVersion2(i.body()))) {
+        boolean layer = tablesCheck != null && com.ash.drishti.server.bi.layer.LayerBodies.tableLayer(i.kind(), i.body());
+        if (layer) { tablesCheck.accept(p, i); }                                     // the layer's checks; a model then passes its publish gate (name, safeguard, contract)
+        if (layerCheck != null && ("model".equals(i.kind()) || !layer && "dataset".equals(i.kind()) && com.ash.drishti.server.bi.layer.DatasetDefParser.isTable(i.body()))) {
             String noted = layerCheck.apply(p, i);                                  // the model layer's checks, contract and security safeguard: refuses with its code
-            if (!noted.isEmpty()) {
-                audit.record(p.user(), "bi-model-may-see-all", i.id(), noted);
-            }
+            if (!noted.isEmpty()) { audit.record(p.user(), "bi-model-may-see-all", i.id(), noted); }
         } else if ("dataset".equals(i.kind()) && !i.body().isBlank()) {
             com.ash.drishti.server.bi.dataset.DatasetParser.Result r = com.ash.drishti.server.bi.dataset.DatasetParser.parse(i.body());
             if (!r.ok()) {
@@ -1056,7 +1056,7 @@ public final class BiService {
         List<String> undrawn = undrawable(p, i, force, "published");
         // the expected values the item declares (docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 14): a failing one stops a publish unless a bi-admin forces it
         List<String> failing = List.of();
-        var gate = "python".equals(i.kind()) ? pythonTestGate : gov.refuseFailingTests() && Set.of("report", "dataset", "model").contains(i.kind()) ? testGate : null;
+        var gate = "python".equals(i.kind()) ? pythonTestGate : gov.refuseFailingTests() && Set.of("report", "table", "dataset", "model").contains(i.kind()) ? testGate : null;
         if (gate != null && i.body().contains("tests:")) {
             failing = gate.apply(p, i);
             if (!failing.isEmpty()) {
@@ -1071,7 +1071,7 @@ public final class BiService {
         // what this publish does to the reports that read a dataset (docs/guides/BI_GUIDE.md, Impact)
         ImpactAnalyzer.Result damage = null;
         ImpactAnalyzer.Result renaming = null;
-        if ("dataset".equals(i.kind()) && i.isPublished()) {
+        if (BiGovernance.isTable(i.kind()) && i.isPublished()) {
             damage = impact.impact(i, impact.publishedBody(i), i.body());
             if (applyRenames && !damage.change().renames().isEmpty()) {                       // the renames are applied to the reports after the checks below pass
                 renaming = damage;

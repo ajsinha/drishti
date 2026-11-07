@@ -195,8 +195,8 @@ def test_the_python_datasets_page_names_its_transform_and_its_inputs(stack, brow
     page.wait_for_url("**/bi/ds/**")
     page.wait_for_selector("[data-layer-dataset][data-ready=yes]", timeout=30000)
     expect(page.locator('[data-fact="source"]')).to_contain_text("the Python Transform pnl-vs-exposure")
-    expect(page.locator("[data-yaml]")).to_contain_text("model: trading-risk@1")
-    expect(page.locator("[data-yaml]")).to_contain_text("model: counterparty-exposure@1")
+    expect(page.locator("[data-yaml]")).to_contain_text('model: "trading-risk@1"')
+    expect(page.locator("[data-yaml]")).to_contain_text('model: "counterparty-exposure@1"')
     clean(page)
     page.close()
 

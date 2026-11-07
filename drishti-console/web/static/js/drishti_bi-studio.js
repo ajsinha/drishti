@@ -38,7 +38,7 @@
   /** Where an item opens in the Studio. */
   S.href = function (i) {
     if (i.kind === 'theme') { return '/bi/design/theme/' + B.id2path(i.id); }
-    if (i.kind === 'model') { return '/bi/md/' + B.id2path(i.id); }
+    if (i.kind === 'model' || i.kind === 'table') { return '/build/tables?kind=' + i.kind + '&item=' + B.id2path(i.id); }
     if (i.kind === 'dataset') { return '/bi/d/' + B.id2path(i.id); }
     if (i.kind === 'report') { return '/bi/design/' + B.id2path(i.id); }
     return '/bi/i/' + B.id2path(i.id);
@@ -84,7 +84,7 @@
     board: () => B.api('POST', '/workspaces/me/items', { kind: 'board', title: 'Board ' + new Date().toISOString().slice(0, 16).replace('T', ' '), description: '' })
       .then((it) => { window.location.href = '/bi/design/' + B.id2path(it.id); }),
     theme: () => { window.location.href = '/bi/design/theme/new'; },
-    dataset: () => { window.location.href = '/bi/datasets/new'; },
+    dataset: () => { window.location.href = '/build/tables?new=table'; },
     model: () => { window.location.href = '/bi/models'; }
   };
   const pick = B.q('[data-studio-new]', root);

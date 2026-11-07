@@ -21,28 +21,9 @@
   <p class="text-muted-d">A dataset is the model reports are built on: tables from the packs' kinds, their relationships, measures and row rules. Open one to read its model and run a query.</p></header>
 <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
 <p class="bi-note" data-layer-note>Every pack kind is already a dataset, and models put datasets in a star: <a href="/bi/models">Models and pack datasets</a>.</p>
-<p data-new-wizard-wrap hidden><a class="btn-pill btn-accent" data-new-wizard href="/bi/datasets/new-layer"><i class="bi bi-plus-lg" aria-hidden="true"></i> New dataset</a>
-  <span class="text-muted-d">Pick where it comes from (a connector query, a Python table, a model's answer, a narrowed pack dataset or the guided tables builder); no YAML.</span></p>
+<p data-new-wizard-wrap hidden><a class="btn-pill btn-accent" data-new-wizard href="/build/tables?new=table"><i class="bi bi-plus-lg" aria-hidden="true"></i> New table</a>
+  <span class="text-muted-d">Tables and models are written in Build › Tables &amp; models: a kind, a connector query, a Python table, a model's answer or another table, with a live preview.</span></p>
 <div class="bi-cards" data-datasets></div>
-<p class="bi-empty" data-empty hidden>No dataset yet. Start one from the packs below, or add a <code>*.dataset.yaml</code> file to the BI folder.</p>
-<section class="bi-sec" aria-labelledby="dStart" data-start hidden>
-  <h2 id="dStart">Start a model from the packs</h2>
-  <p class="text-muted-d">Choose the kinds. Each becomes a table; the links the packs declare become relationships (across packs), and relationships the data suggests are proposed, with how well the values match. Nothing changes a pack.</p>
-  <fieldset class="bi-kinds" data-kinds><legend>Kinds you may open</legend></fieldset>
-  <p class="bi-actions"><button type="button" class="btn-pill btn-accent" data-start-run>Start the model</button></p>
-  <div data-draft hidden>
-    <h3>Relationships read from the packs</h3>
-    <div class="tbl-wrap"><table class="tbl bi-tbl" data-draft-links data-plain><caption class="visually-hidden">Relationships from the packs</caption>
-      <thead><tr><th scope="col">From</th><th scope="col">To</th><th scope="col">Cardinality</th><th scope="col">Across packs</th></tr></thead><tbody></tbody></table></div>
-    <h3>Proposed from the data</h3>
-    <div class="tbl-wrap"><table class="tbl bi-tbl" data-draft-proposals data-plain><caption class="visually-hidden">Relationships proposed by value matching</caption>
-      <thead><tr><th scope="col">From</th><th scope="col">To</th><th scope="col">Match</th><th scope="col">Cardinality</th><th scope="col">Basis</th></tr></thead><tbody></tbody></table></div>
-    <p class="bi-empty" data-draft-none hidden>None.</p>
-    <ul class="bi-warn" data-draft-warnings></ul>
-    <h3>The YAML</h3>
-    <pre class="bi-body mono" data-draft-yaml tabindex="0"></pre>
-    <p class="bi-actions"><button type="button" class="btn-pill btn-accent" data-draft-save hidden>Save as a draft in my workspace</button></p>
-  </div>
-</section>
+<p class="bi-empty" data-empty hidden>No dataset yet. Make a table in Build › Tables &amp; models, or add a <code>*.table.yaml</code> file to the tables folder.</p>
 {% endblock %}
 {% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-dataset.js?v={{ ASSET_V }}"></script>{% endblock %}

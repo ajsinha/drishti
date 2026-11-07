@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The ExpressionEditor (docs/architecture/BI_DESIGN.md sections 3.3.8 and 8.1; docs/guides/BI_LANGUAGE_REFERENCE.md): one editor for every DEL expression a person
+/* The ExpressionEditor (docs/architecture/BI_DESIGN.md sections 3.3.8 and 8.1; docs/guides/RACHANA_REFERENCE.md): one editor for every DEL expression a person
    writes (a measure, a derived column, a dataset filter, a row rule, a report's own measure). It completes the fields (with type, meaning and format), the
    measures (writing measure('…')), the functions of the server's catalogue (signature, one line, one example, a link to the guide) and the keyword arguments
    of the call the caret is in; the call's card stays beside the input while you type its arguments. The console never parses DEL for meaning: as you type,

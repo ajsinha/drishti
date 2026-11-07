@@ -118,7 +118,7 @@ final class DocView {
 
     /** {@code fn(arg, arg)} with each path argument as its id (commas inside brackets, parentheses and quotes are the path's own). */
     private String measure(String text) {
-        if (text != null && (text.strip().startsWith("fn:") || com.ash.drishti.bicompute.formula.FormulaParser.isFormula(paths(text))
+        if (text != null && (text.strip().startsWith("fn:") || com.ash.drishti.bicompute.formula.FormulaLowering.isFormula(paths(text))
                 && !simpleCall(text))) {
             return paths(text);                     // a custom function's call or a formula: every path in it as its id
         }

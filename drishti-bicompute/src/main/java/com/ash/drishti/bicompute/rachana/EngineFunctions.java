@@ -60,7 +60,8 @@ public final class EngineFunctions implements FunctionProvider {
         List<Provided> out = new ArrayList<>();
         agg(out, "sum", 1, 2, "list, [field]", "mergeable", "the total (compensated); 0 when there is no number",
                 "sum($.LEGS[*].NOTIONAL)");
-        agg(out, "count", 1, 2, "list, [field]", "mergeable", "the elements (or the field's values) that are not empty",
+        agg(out, "count", 0, 2, "[list, [field]]", "mergeable", "the elements (or the field's values) that are not empty; count() with no argument "
+                + "is the rows of a pivot cell (a pivot formula) or of a measure's table",
                 "count($.EVENTS[?@.EVENT_TYPE == 'BOOKED'])");
         agg(out, "avg", 1, 2, "list, [field]", "mergeable", "the mean, Σx / n from the list's own sum and count", "avg($.LEGS, 'NOTIONAL')");
         agg(out, "min", 1, 2, "list, [field]", "mergeable", "the smallest number (several arguments: least)", "min($.LEGS[*].NOTIONAL)");
@@ -162,7 +163,7 @@ public final class EngineFunctions implements FunctionProvider {
         java.util.Set<String> done = new java.util.HashSet<>();
         out.forEach(p -> done.add(p.name()));
         for (Signatures.Signature s : Signatures.get().all()) {
-            if (!"E".equals(s.runs()) || done.contains(s.name()) || "measure".equals(s.name()) || "related".equals(s.name())) {
+            if (!"E".equals(s.runs()) || done.contains(s.name()) || "measure".equals(s.name()) || "related".equals(s.name()) || "related_rows".equals(s.name())) {
                 continue;
             }
             long positional = s.params().stream().filter(p -> !p.keywordOnly()).count();

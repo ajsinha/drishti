@@ -149,8 +149,6 @@ class ModelAcceptanceTest {
                           - { id: mtm, type: card, title: MTM, at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [MTM] } }
                           - { id: by-desk, type: bar, title: By desk, at: { x: 0, y: 2, w: 6, h: 4 }, wells: { axis: [trades.desk], values: [Notional, MTM] } }
                     """);
-            // since 2.2 the 2.1 dataset and its report are converted (BI_DESIGN.md 8.3): the model acc-trades and its dataset, the report on the model
-            com.ash.drishti.server.bi.TablesFolder.migrate(folder);           // tables migrate: the table acc-trades_trades, the model acc-trades, the report rebound
             // a model of the model layer over the same lake, and a dataset whose source is that model's answer (wave W1 package S4)
             Files.writeString(datasets.resolve("acc-trade.dataset.yaml"), """
                     rachana: 2
@@ -254,6 +252,8 @@ class ModelAcceptanceTest {
                     measures:
                       Total: { expr: "sum(a.total)" }
                     """);
+            // every dataset and model of the folder moved onto the table layer the way an installation is (tables migrate), the reports rebound
+            com.ash.drishti.server.bi.TablesFolder.migrate(folder);
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }
@@ -447,7 +447,7 @@ class ModelAcceptanceTest {
 
     @Test @Order(4)
     void aDatasetReadFromAModelAsksThatModelAsTheReaderAndACycleIsRefused() throws Exception {
-        for (String file : List.of("datasets/desk-book.dataset.yaml", "models/desk-view.model.yaml")) {
+        for (String file : List.of("tables/bi/desk_book.table.yaml", "tables/bi/desk-view.model.yaml")) {         // as tables migrate wrote them
             JsonNode checked = ok(call("POST", "/api/v1/bi/models/validate", as("wes", "admin"), Map.of("yaml", Files.readString(com.ash.drishti.server.TestRun.root().resolve("mq-accept-folder").resolve(file)))));
             assertThat(checked.path("valid").asBoolean()).as(file + ": " + checked.path("problems")).isTrue();
         }
@@ -471,7 +471,7 @@ class ModelAcceptanceTest {
         call("POST", "/api/v1/bi/mq", reader("rita"), Map.of("mq", 1, "model", "loop-model@1", "select", Map.of("measures", List.of("Total"))))
                 .andExpect(status().isUnprocessableEntity()).andExpect(jsonPath("$.code").value("DRS-9109"));
         JsonNode check = ok(call("POST", "/api/v1/bi/models/validate", as("wes", "admin"),
-                Map.of("yaml", Files.readString(com.ash.drishti.server.TestRun.root().resolve("mq-accept-folder/datasets/loop-a.dataset.yaml")))));
+                Map.of("yaml", Files.readString(com.ash.drishti.server.TestRun.root().resolve("mq-accept-folder/tables/bi/loop_a.table.yaml")))));
         assertThat(check.path("valid").asBoolean()).isFalse();
         assertThat(check.path("problems").toString()).contains("DRS-9109");
     }
@@ -503,7 +503,7 @@ class ModelAcceptanceTest {
         assertThat(csv.getContentAsString()).contains("DESK-A").doesNotContain("DESK-B");
         // a draft model: listed for its owner, readable by them, but a report on it cannot be published
         String model = ok(call("POST", "/api/v1/bi/workspaces/me/items", reader("wes"), Map.of("kind", "model", "title", "Draft model", "body",
-                "rachana: 2\nmodel: wes-draft\nversion: 1.0.0\ndatasets:\n  trades: { dataset: acc-trade, role: fact }\nmeasures:\n  Notional: { expr: \"sum(trades.notional)\" }\n")))
+                "rachana: 3\nmodel: wes-draft\nversion: 1.0.0\ntables:\n  trades: { table: bi.acc_trade, role: fact }\nmeasures:\n  Notional: { expr: \"sum(trades.notional)\" }\n")))
                 .path("id").asText();
         JsonNode listed = ok(call("GET", "/api/v1/bi/models", reader("wes"), null));
         assertThat(listed.path("models").toString()).contains("\"name\":\"wes-draft\"").contains("\"owner\":\"wes\"").contains("\"draft\":true");
@@ -539,7 +539,7 @@ class ModelAcceptanceTest {
     @Test @Order(7)
     void aModelIsSharedByReferenceListsItsConsumersAndIsNotDeletedWhileTheyReadIt() throws Exception {
         String model = ok(call("POST", "/api/v1/bi/workspaces/me/items", reader("wes"), Map.of("kind", "model", "title", "Shared model", "body",
-                "rachana: 2\nmodel: wes-shared\nversion: 1.0.0\ndatasets:\n  trades: { dataset: acc-trade, role: fact }\nmeasures:\n  Notional: { expr: \"sum(trades.notional)\" }\n")))
+                "rachana: 3\nmodel: wes-shared\nversion: 1.0.0\ntables:\n  trades: { table: bi.acc_trade, role: fact }\nmeasures:\n  Notional: { expr: \"sum(trades.notional)\" }\n")))
                 .path("id").asText();
         String body = "report: r%s\nmodel: wes-shared@1\npages:\n  - id: p\n    visuals:\n      - { id: a, type: card, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Notional] } }\n";
         String one = ok(call("POST", "/api/v1/bi/workspaces/me/items", reader("wes"), Map.of("kind", "report", "title", "One", "body", body.formatted("1")))).path("id").asText();
@@ -556,16 +556,16 @@ class ModelAcceptanceTest {
         call("DELETE", "/api/v1/bi/items/" + model, reader("wes"), null).andExpect(status().isNoContent());
         // the implicit model is one shared model per dataset: every report made from the dataset is its consumer
         String a = ok(call("POST", "/api/v1/bi/workspaces/me/items", reader("wes"), Map.of("kind", "report", "title", "Implicit A",
-                "body", body.formatted("3").replace("wes-shared@1", "\"dataset:acc-trade\"")))).path("id").asText();
-        JsonNode implicit = ok(call("GET", "/api/v1/bi/models/dataset:acc-trade/consumers", reader("wes"), null));
+                "body", body.formatted("3").replace("wes-shared@1", "\"dataset:bi.acc_trade\"")))).path("id").asText();
+        JsonNode implicit = ok(call("GET", "/api/v1/bi/models/dataset:bi.acc_trade/consumers", reader("wes"), null));
         assertThat(implicit.path("consumers").findValuesAsText("id")).contains(a);
-        assertThat(ok(call("GET", "/api/v1/bi/models/dataset:acc-trade/consumers", reader("rita"), null)).path("hidden").asInt()).as("rita cannot read wes's draft").isPositive();
+        assertThat(ok(call("GET", "/api/v1/bi/models/dataset:bi.acc_trade/consumers", reader("rita"), null)).path("hidden").asInt()).as("rita cannot read wes's draft").isPositive();
     }
 
     @Test @Order(8)
     void usingAModelNeedsReadOnIt() throws Exception {
         ok(call("POST", "/api/v1/bi/workspaces/me/items", reader("wes"), Map.of("kind", "model", "title", "Private model", "body",
-                "rachana: 2\nmodel: wes-private\nversion: 1.0.0\ndatasets:\n  trades: { dataset: acc-trade, role: fact }\nmeasures:\n  Notional: { expr: \"sum(trades.notional)\" }\n")));
+                "rachana: 3\nmodel: wes-private\nversion: 1.0.0\ntables:\n  trades: { table: bi.acc_trade, role: fact }\nmeasures:\n  Notional: { expr: \"sum(trades.notional)\" }\n")));
         Map<String, Object> q = Map.of("mq", 1, "model", "wes-private@1", "select", Map.of("measures", List.of("Notional")));
         ok(call("POST", "/api/v1/bi/mq", reader("wes"), q));
         call("POST", "/api/v1/bi/mq", reader("rita"), q).andExpect(status().is4xxClientError()).andExpect(jsonPath("$.code").value("DRS-9151"));
@@ -574,7 +574,7 @@ class ModelAcceptanceTest {
 
     @Test @Order(9)
     void rolesWithoutARuleAreNamedByCheckAndTheirEmptyAnswerSaysWhy() throws Exception {
-        String yaml = "rachana: 2\nmodel: wes-rules\nversion: 1.0.0\ndatasets:\n  trades: { dataset: acc-trade, role: fact }\nmeasures:\n  Notional: { expr: \"sum(trades.notional)\" }\n"
+        String yaml = "rachana: 3\nmodel: wes-rules\nversion: 1.0.0\ntables:\n  trades: { table: bi.acc_trade, role: fact }\nmeasures:\n  Notional: { expr: \"sum(trades.notional)\" }\n"
                 + "security:\n  rows:\n    trades:\n      - { role: [bi-risk], where: \"true\" }\n";
         JsonNode check = ok(call("POST", "/api/v1/bi/models/validate", reader("wes"), Map.of("yaml", yaml)));
         JsonNode warn = null;
@@ -611,7 +611,7 @@ class ModelAcceptanceTest {
         Map<String, Object> q = Map.of("mq", 1, "model", "acc-model@1", "select", Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional", "Trades")),
                 "time", Map.of("as-of", "2026-10-07"));
         JsonNode before = ok(call("POST", "/api/v1/bi/mq", reader("rita"), q)).path("rows");
-        String path = "/api/v1/bi/datasets/file:dataset:acc-trade/refresh";
+        String path = "/api/v1/bi/datasets/file:table:bi.acc_trade/refresh";
         JsonNode never = ok(call("GET", path, reader("wes"), null));
         assertThat(never.path("dataset").path("status").asText()).isEqualTo("never");
         JsonNode asked = ok(call("POST", path, reader("wes"), Map.of()));               // was DRS-9102: a rachana 2 dataset is read through the model layer
@@ -634,7 +634,7 @@ class ModelAcceptanceTest {
     @Test @Order(11)
     void aScheduledDatasetOfTheModelLayerShowsItsScheduleNotOnDemand() throws Exception {
         // drill 2.2.0: the refresh state of a rachana 2 dataset said "on demand" although its refresh: runs on the scheduler
-        JsonNode st = ok(call("GET", "/api/v1/bi/datasets/file:dataset:acc-sched/refresh", reader("wes"), null));
+        JsonNode st = ok(call("GET", "/api/v1/bi/datasets/file:table:bi.acc_sched/refresh", reader("wes"), null));
         assertThat(st.path("scheduled").asBoolean()).as(st.toString()).isTrue();
         assertThat(st.path("tables").path(0).path("schedule").asText()).as(st.toString()).contains("06:00");      // its one table's job
         assertThat(st.toString()).doesNotContain("on demand");
@@ -643,17 +643,16 @@ class ModelAcceptanceTest {
     // ---- publishing: the tests gate, the contract's semver, and readers pinned to a major --------------------------------
 
     static final String SV_DATASET = """
-            rachana: 2
-            dataset: sv-trade
+            rachana: 3
+            table: bi.sv_trade
             version: 1.0.0
-            source: { connector: acc-lake, kind: trade }
-            grain: { keys: [id] }
+            from: { kind: trade, connector: acc-lake }
+            keys: [id]
             columns:
-              desk:     { type: string }
-              notional: { type: decimal, aggregate: sum }
-            security:
-              rows:
-                - { role: [bi-risk, report-author, admin], where: "true" }
+              desk:     { path: "$.desk", type: string }
+              notional: { path: "$.notional", type: decimal, aggregate: sum }
+            rules:
+              - { role: [bi-risk, report-author, admin], where: "true" }
             tests:
               - { name: Rows on the day, agg: count, expect: 24, date: 2026-10-07 }
               - { name: Notional by desk, agg: sum, column: notional, by: [desk], row: { desk: DESK-A }, expect: 92000, date: 2026-10-07 }
@@ -662,11 +661,11 @@ class ModelAcceptanceTest {
             """;
 
     static final String SV_MODEL = """
-            rachana: 2
+            rachana: 3
             model: sv-model
             version: 1.0.0
-            datasets:
-              trades: { dataset: sv-trade, role: fact }
+            tables:
+              trades: { table: bi.sv_trade, role: fact }
             measures:
               Notional: { expr: "sum(trades.notional)" }
               Trades:   { expr: "count(trades)" }
@@ -675,7 +674,7 @@ class ModelAcceptanceTest {
     @Test @Order(12)
     void aDatasetsAndAModelsTestsGateThePublishAndANewMajorKeepsReadersPinnedToTheOld() throws Exception {
         String ws = ok(call("POST", "/api/v1/bi/workspaces", reader("wes"), Map.of("name", "Semver Desk"))).path("id").asText();
-        String ds = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", reader("wes"), Map.of("kind", "dataset", "title", "SV trades", "body", SV_DATASET))).path("id").asText();
+        String ds = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", reader("wes"), Map.of("kind", "table", "title", "SV trades", "body", SV_DATASET))).path("id").asText();
         JsonNode run = ok(call("POST", "/api/v1/bi/items/" + ds + "/tests", reader("wes"), Map.of()));
         Map<String, String> got = new TreeMap<>();
         run.path("results").forEach(x -> got.put(x.path("name").asText(), x.path("status").asText()));
@@ -740,18 +739,18 @@ class ModelAcceptanceTest {
         assertThat(model.path("model").path("version").asText()).isEqualTo("1.0.0");
         JsonNode up = model.path("upstream").get(0);
         assertThat(up.path("table").asText()).isEqualTo("trades");
-        assertThat(up.path("dataset").asText() + " " + up.path("version").asText()).isEqualTo("acc-trade 1.0.0");
+        assertThat(up.path("dataset").asText() + " " + up.path("version").asText()).isEqualTo("bi.acc_trade 1.0.0");
         assertThat(up.path("chain").toString()).contains("acc-lake");
         JsonNode source = up.path("chain").findValue("source");                    // past the connector: what it reads from, masked for a reader
         assertThat(source).as("the connector's source in %s", up.path("chain")).isNotNull();
         assertThat(source.path("connector").asText()).isEqualTo("acc-lake");
         assertThat(source.path("masked").asBoolean()).isTrue();
-        assertThat(model.path("downstream").findValuesAsText("id")).contains("file:dataset:desk-book");     // a dataset on the model's answer reads it
-        JsonNode ds = ok(call("GET", "/api/v1/bi/items/file:dataset:acc-trade/lineage", reader("wes"), null));
-        assertThat(ds.path("dataset").path("name").asText()).isEqualTo("acc-trade");
+        assertThat(model.path("downstream").findValuesAsText("id")).contains("file:table:bi.desk_book");     // a dataset on the model's answer reads it
+        JsonNode ds = ok(call("GET", "/api/v1/bi/items/file:table:bi.acc_trade/lineage", reader("wes"), null));
+        assertThat(ds.path("dataset").path("name").asText()).isEqualTo("bi.acc_trade");
         assertThat(ds.path("downstream").findValuesAsText("id")).contains("file:model:acc-model");
         assertThat(ds.path("downstream").get(0).path("as").asText()).isEqualTo("trades");
-        JsonNode impact = ok(call("GET", "/api/v1/bi/items/file:dataset:acc-trade/impact?remove=notional", reader("wes"), null));
+        JsonNode impact = ok(call("GET", "/api/v1/bi/items/file:table:bi.acc_trade/impact?remove=notional", reader("wes"), null));
         assertThat(impact.path("layer").asBoolean()).isTrue();
         JsonNode on = impact.path("affected").get(0);
         assertThat(on.path("id").asText()).isEqualTo("file:model:acc-model");
@@ -908,7 +907,7 @@ class ModelAcceptanceTest {
         String name = "acc-desk-" + Long.toString(System.nanoTime(), 36);           // the test data folder is kept between builds
         JsonNode promoted = ok(call("POST", "/api/v1/bi/runs/" + id + "/promote", reader("wes"), Map.of("name", name, "to", "report")));
         assertThat(promoted.path("version").asInt()).isEqualTo(1);
-        assertThat(promoted.path("yaml").asText()).contains("source: { run: " + name + ", version: 1").contains("computedAs: \"wes\"");
+        assertThat(promoted.path("yaml").asText()).contains("from: { run: " + name + ", params: { version: 1").contains("computedAs: \"wes\"");
         String report = promoted.path("report").path("item").asText();
         JsonNode drawn = ok(call("POST", "/api/v1/bi/reports/" + report + "/query", reader("wes"), "{\"page\":\"main\",\"visual\":\"rows\"}"));
         Map<String, Double> fromRun = new TreeMap<>();

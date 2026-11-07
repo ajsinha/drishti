@@ -17,8 +17,8 @@
 docs/architecture/BI_DESIGN.md section 12.2 for the console lane:
 
 * no BI page computes: no WebAssembly, Pyodide, DuckDB-Wasm or Perspective file is requested, and no page's policy allows 'wasm-unsafe-eval';
-* a %-of-total measure built in the UI (Quick calculation), equal to an independent computation of the same rows;
-* a parameter slicer (a what-if shock made in the Calculations tab) changes a report's numbers by exactly the shock;
+* a %-of-total measure (share_of), equal to an independent computation of the same rows;
+* a parameter slicer (a what-if shock of the model) changes a report's numbers by exactly the shock;
 * a live report follows pushed answers: its state chip says Live, and a data refresh redraws the visual through the standing query's stream;
 * the Explain panel under a visual shows the tiers, the layers and the times.
 
@@ -80,61 +80,44 @@ def browser(stack):
         b.close()
 
 
+TABLE = """rachana: 3
+table: bi.wave_b_trade
+version: 1.0.0
+title: Wave B trades
+from: { kind: trade }
+keys: [id]
+columns:
+  DESK: { path: "$.DESK", type: string }
+  MTM:  { path: "$.MTM", type: decimal }
+"""
+MODEL = """rachana: 3
+model: wave-b-model
+version: 1.0.0
+title: Wave B model
+tables:
+  trade: { table: bi.wave_b_trade, role: fact }
+measures:
+  Sum of MTM:  { expr: "sum(trade.MTM)" }
+  MTM share:   { expr: "share_of(measure('Sum of MTM'), over=ALL)", format: share }
+  MTM shocked: { expr: "measure('Sum of MTM') * (1 + param.shock)" }
+parameters:
+  shock: { kind: number, default: 0, min: -0.5, max: 0.5, step: 0.01 }
+"""
+
+
 @pytest.fixture(scope="module")
 def made(browser, stack):
-    """A model over trades and desks with Sum of MTM, its % of total made with Quick calculation, a what-if parameter and a shocked measure, published;
-    and a report on it (a table by desk). Built in the UI, as a designer would."""
+    """A table of the trades and a model over it with Sum of MTM, its % of total, a what-if parameter and a shocked measure, published; and a report on
+    it (a table by desk). Seeded through the API (models are written in Build › Tables & models; the model designer is gone)."""
     page = sign_in(browser, "wes")
     ws = fetch(page, "POST", "/bi/api/workspaces", {"name": "Wave B desk", "description": ""})
     assert ws["status"] in (200, 201), ws
-    m = fetch(page, "POST", "/bi/model-api/new", {"title": "Wave B model", "workspace": ws["body"]["id"], "datasets": ["pack.trading.trade", "pack.core.desk"]})
-    assert m["status"] == 200, m
-    page.goto(CONSOLE_URL + m["body"]["href"])
-    expect(page.locator('[data-md-root][data-ready="yes"]')).to_have_count(1, timeout=30000)
-    page.locator('[data-suggestion="trade.DESK->desk.id"] [data-accept]').click()
-    page.click('[data-tab="measures"]')
-    page.select_option("[data-nm-alias]", "trade")
-    page.select_option("[data-nm-column]", "MTM")
-    page.click("[data-nm-add]")
-    expect(page.locator('[data-measure="Sum of MTM"]')).to_be_visible(timeout=15000)
-    # % of total, with no formula typed: the Quick calculation writes share_of(..., over=ALL)
-    expect(page.locator("[data-quick-measure]")).to_be_visible(timeout=15000)
-    page.select_option("[data-qm-base]", "Sum of MTM")
-    page.select_option("[data-qm-calc]", "share-all")
-    expect(page.locator("[data-qm-expr]")).to_have_text("share_of(measure('Sum of MTM'), over=ALL)")
-    page.fill("[data-qm-name]", "MTM share")
-    shoot(page, "[data-quick-measure]", "quick-calculation")
-    page.click("[data-qm-add]")
-    expect(page.locator('[data-measure="MTM share"]')).to_be_visible(timeout=15000)
-    # a what-if parameter in the Calculations tab, and a measure shocked by it
-    page.click('[data-tab="calc"]')
-    page.fill("[data-p-new]", "shock")
-    page.select_option("[data-p-new-kind]", "number")
-    page.click("[data-p-add]")
-    expect(page.locator('[data-param="shock"]')).to_be_visible(timeout=15000)
-    page.fill("[data-cg-new]", "Time")
-    page.click("[data-cg-add]")
-    expect(page.locator('[data-cg="Time"]')).to_be_visible(timeout=15000)
-    page.click("[data-cal-add]")
-    expect(page.locator("[data-cal-holidays]")).to_be_visible(timeout=15000)
-    page.select_option("[data-cal-holidays]", "USNY")
-    page.select_option("[data-cal-fy]", "4")
-    shoot(page, "[data-calc-pane]", "calculations-tab", 900)
-    page.click('[data-tab="measures"]')
-    page.select_option("[data-qm-base]", "Sum of MTM")
-    page.select_option("[data-qm-calc]", "whatif")
-    page.select_option("[data-qm-what]", "shock")
-    page.fill("[data-qm-name]", "MTM shocked")
-    page.click("[data-qm-add]")
-    expect(page.locator('[data-measure="MTM shocked"]')).to_be_visible(timeout=15000)
-    page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
-    page.click("[data-publish]")
-    expect(page.locator("[data-state]")).to_have_text("Published", timeout=30000)
-    doc = page.evaluate("window.Drishti.model.doc")
-    assert doc["measures"]["MTM share"] == {"expr": "share_of(measure('Sum of MTM'), over=ALL)", "format": "share"}
-    assert doc["measures"]["MTM shocked"]["expr"] == "measure('Sum of MTM') * (1 + param.shock)" and doc["parameters"]["shock"]["kind"] == "number"
-    name = doc["model"]
+    for kind, body in (("table", TABLE), ("model", MODEL)):
+        it = fetch(page, "POST", "/bi/api/workspaces/" + ws["body"]["id"] + "/items", {"kind": kind, "title": "Wave B " + kind, "description": "", "body": body})
+        assert it["status"] in (200, 201), it
+        pub = fetch(page, "POST", "/bi/api/items/" + it["body"]["id"] + "/publish", {"note": "first"})
+        assert pub["status"] == 200, pub
+    name = "wave-b-model"
     body = ("rachana: 2\nreport: wave-b-desks\nversion: 1\ntitle: Wave B desks\nmodel: " + name + "@1\npages:\n  - id: main\n    title: Main\n    visuals:\n"
             "      - { id: desks, type: table, title: MTM by desk, at: { x: 0, y: 0, w: 12, h: 6 }, wells: { columns: [trade.DESK, Sum of MTM, MTM share, MTM shocked] } }\n")
     r = fetch(page, "POST", "/bi/api/workspaces/" + ws["body"]["id"] + "/items", {"kind": "report", "title": "Wave B desks", "body": body})

@@ -144,7 +144,7 @@ public record ResolvedDataset(DatasetDef def, List<List<DatasetDef.Rule>> layers
     /** True when the expression names one of the columns (bare, or after a dataset or alias name). */
     static boolean readsAny(String expr, Set<String> columns) {
         try {
-            return com.ash.drishti.server.bi.dataset.Node.anyMatch(com.ash.drishti.server.bi.expr.Expressions.parse(expr), x -> x instanceof com.ash.drishti.server.bi.dataset.Node.Ref r
+            return com.ash.drishti.server.bi.dataset.Node.anyMatch(com.ash.drishti.server.bi.expr.Expressions.node(expr), x -> x instanceof com.ash.drishti.server.bi.dataset.Node.Ref r
                     && columns.contains(r.parts().get(r.parts().size() - 1)));
         } catch (RuntimeException e) {
             return false;

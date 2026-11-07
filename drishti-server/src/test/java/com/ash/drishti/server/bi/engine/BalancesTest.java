@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -84,7 +85,7 @@ class BalancesTest {
                   DayOnDay: { expr: "measure('MTM') - as_of(measure('MTM'), shift_date(asof(), -1))" }
                   OpeningSnap: { expr: "opening(sum(trades.mtm), trades.businessDate)" }
                 """);
-        DatasetParser.Result r = DatasetParser.parse(yaml);
+        DatasetParser.Result r = Layered.dataset(yaml);
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         ds = new QueryService.Loaded("file:dataset:lake-bal", Layers.key("file:dataset:lake-bal"), r.dataset(), "h1");
     }
@@ -196,7 +197,7 @@ class BalancesTest {
         double yesterday = book.subList(0, 100).stream().mapToDouble(TestLake.Trade::mtm).sum();
         assertThat((double) r.columns().get(0).values()[0]).isCloseTo(today - yesterday, Offset.offset(1e-9));
         assertThat((double) r.columns().get(1).values()[0]).isEqualTo(book.subList(0, 7).stream().mapToDouble(TestLake.Trade::mtm).sum());
-        assertThatThrownBy(() -> service.query(new QueryService.Loaded("x", Layers.key("x"), DatasetParser.parse(TestLake.yaml().replace("measures:\n",
+        assertThatThrownBy(() -> service.query(new QueryService.Loaded("x", Layers.key("x"), Layered.dataset(TestLake.yaml().replace("measures:\n",
                 "measures:\n  Bad: { expr: \"as_of(measure('MTM'), trades.tradeDate)\" }\n")).dataset(), "h2"), new QueryRequest(List.of(), List.of("Bad"), List.of(), AS_OF, AS_OF,
                 List.of(), null, "auto"), risk(), false)).isInstanceOf(DrishtiException.class).hasMessageContaining("work out before the query");
     }

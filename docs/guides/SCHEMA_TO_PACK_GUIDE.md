@@ -809,18 +809,19 @@ bottom, nothing wider than the screen.
 
 ![The deal on a phone, 390 px wide](img/deepjson/08-phone.jpg)
 
-For analysis the pack ships a **BI model** with a table for every level, each row carrying the keys above it, so a cash flow can be counted by
+For analysis the pack ships a **BI model** with a table of the table layer for every level, each row carrying the keys above it, so a cash flow can be counted by
 its deal's counterparty or its leg's index:
 
 ```yaml
 # config/bi/models/book-deals.model.yaml (shortened)
+rachana: 3
 model: book-deals
-datasets:
-  deals: {dataset: book-deals-deals, role: dimension}
-  legs: {dataset: book-deals-legs, role: fact}              # each: LEGS
-  cash_flows: {dataset: book-deals-cash-flows, role: fact}  # each: LEGS[].CASH_FLOWS, with ^.LEG_ID
-  resets: {dataset: book-deals-resets, role: fact}          # each: LEGS[].CASH_FLOWS[].RESETS, with ^.FLOW_ID and ^^.LEG_ID
-  events: {dataset: book-deals-events, role: fact}
+tables:
+  deals: {table: book.deals_deals, role: dimension}
+  legs: {table: book.deals_legs, role: fact}              # grain: $.LEGS[*]
+  cash_flows: {table: book.deals_cash_flows, role: fact}  # grain: $.LEGS[*].CASH_FLOWS[*], with ^.LEG_ID
+  resets: {table: book.deals_resets, role: fact}          # grain: $.LEGS[*].CASH_FLOWS[*].RESETS[*], with ^.FLOW_ID and ^^.LEG_ID
+  events: {table: book.deals_events, role: fact}
 relationships:
   - {from: legs.id, to: deals.id}
   - {from: cash_flows.id, to: deals.id}
@@ -828,6 +829,9 @@ measures:
   Leg notional: {expr: sum(legs.NOTIONAL), format: amount0}
   Cash flows: {expr: count(cash_flows)}
 ```
+
+Each level is a table of the table layer beside it, `config/bi/tables/<kind>_<level>.table.yaml` (`rachana: 3`, its `grain:` the list it
+walks; [TABLES_GUIDE.md](TABLES_GUIDE.md)).
 
 ```bash
 python3 tools/drishti.py bi mq --model book-deals@1 --select deals.PRODUCT_TYPE --measures "Deals documents,Cash flows,Resets" --server http://HOST:18480 --token-file my-token.txt

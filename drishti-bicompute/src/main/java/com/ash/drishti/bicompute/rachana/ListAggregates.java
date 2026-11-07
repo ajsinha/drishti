@@ -61,6 +61,9 @@ final class ListAggregates {
 
     /** {@code name} over the evaluated arguments of a call. */
     static Object apply(String name, List<Object> args) {
+        if (args.isEmpty()) {
+            throw error(name, "count() counts the rows of a pivot cell or of a measure's table; over a list write count(list)");
+        }
         if (!(Values.simplify(args.get(0)) instanceof DataNode.Arr list)) {
             return empty(name);
         }

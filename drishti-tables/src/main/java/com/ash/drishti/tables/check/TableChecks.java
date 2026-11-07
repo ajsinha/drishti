@@ -38,7 +38,9 @@ public final class TableChecks {
 
     private static final Pattern SEMVER = Pattern.compile("\\d+\\.\\d+\\.\\d+");
     private static final Pattern AGE = Pattern.compile("\\d+[smhd]|P(T)?[0-9A-Z.]+");
-    private static final Set<String> TESTS = Set.of("unique", "not-null", "references-exist", "agg", "expect", "name", "description", "columns", "column");
+    private static final Set<String> TESTS = Set.of("unique", "not-null", "references-exist", "agg", "expect", "name", "description", "columns", "column", "tolerance",
+            "by", "row", "filters", "date", "role");
+    private static final Set<String> AGGS = Set.of("count", "distinct", "sum", "avg", "min", "max");
 
     private final ExpressionChecker expressions;
 
@@ -89,6 +91,18 @@ public final class TableChecks {
             }
             String at = "tests[" + i + "].";
             test.keySet().stream().filter(k -> !TESTS.contains(k)).forEach(k -> out.add(Problem.warning(TableCodes.UNREADABLE, at + k, "unknown key")));
+            if (test.containsKey("agg")) {                                   // an aggregate test: what it aggregates, what it expects, how near is near
+                if (!AGGS.contains(String.valueOf(test.get("agg")))) {
+                    out.add(Problem.error(TableCodes.UNREADABLE, at + "agg", "agg is one of " + String.join(", ", AGGS.stream().sorted().toList()) + ", not '" + test.get("agg") + "'"));
+                }
+                if (!test.containsKey("expect")) {
+                    out.add(Problem.error(TableCodes.UNREADABLE, at + "expect", "an aggregate test says what it expects: expect: <number> or { min, max }"));
+                }
+                Object tol = test.get("tolerance");
+                if (tol != null && !(tol instanceof Number) && !String.valueOf(tol).matches("\\d+(\\.\\d+)?%?")) {
+                    out.add(Problem.error(TableCodes.UNREADABLE, at + "tolerance", "a tolerance is a number or a percentage such as 1%, not '" + tol + "'"));
+                }
+            }
         }
         return out;
     }
@@ -114,7 +128,7 @@ public final class TableChecks {
     }
 
     private void columns(TableDef t, boolean documents, TableDef.Source.Form form, ExpressionChecker.Env env, List<Problem> out) {
-        if (t.columns().isEmpty()) {
+        if (t.columns().isEmpty() && form != TableDef.Source.Form.TABLE) {                 // a table over a table reads its base's columns
             out.add(Problem.error(TableCodes.COLUMN, "columns", "a table has at least one column"));
         }
         Set<String> masked = masked(t);
