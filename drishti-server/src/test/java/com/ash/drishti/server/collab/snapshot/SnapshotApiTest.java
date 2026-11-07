@@ -58,7 +58,7 @@ import org.springframework.test.web.servlet.MvcResult;
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance,logistics",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/snapshot-api-${random.uuid}/identity.db",
+        "drishti.database.sqlite.file=${drishti.test.dir}/snapshot-api-${random.uuid}/identity.db",
         "drishti.packs.overlay=${drishti.test.dir}/snapshot-api-overlay/added.yaml", "drishti.collab.limits.shares-per-minute=1000",
         "drishti.collab.store=file", "drishti.collab.dir=${drishti.test.dir}/snapshot-api-${random.uuid}/collab", "drishti.collab.console-url=https://drishti.test",
         "drishti.security.redact=trader,notional", "drishti.collab.snapshots.enabled=true", "drishti.collab.snapshots.max-panels=50", "drishti.collab.snapshots.max-rows=200", "drishti.collab.snapshots.max-height=8000", "drishti.collab.packs.logistics.snapshots.enabled=false"})

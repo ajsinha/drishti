@@ -413,7 +413,7 @@ moved:
   docs-guides-data-formats: data-guide#2-data-formats-json-lines-is-the-standard   # guides/DATA_FORMATS.md merged into guides/DATA_GUIDE.md (2.9.7)
   external-lakes: data-guide#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg   # guides/EXTERNAL_LAKES.md merged into guides/DATA_GUIDE.md (2.9.7)
   docs-architecture-content-store: docs-architecture-data-architecture#5-the-content-store-user-content-every-node-reaches   # architecture/CONTENT_STORE.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
-  docs-architecture-database: docs-architecture-data-architecture#6-the-one-drishti-database-design-not-built   # architecture/DATABASE.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
+  docs-architecture-database: docs-architecture-data-architecture#6-the-one-drishti-database   # architecture/DATABASE.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
   docs-architecture-drishti-iceberg: docs-architecture-data-architecture#3-drishti-iceberg-drishtis-own-apache-iceberg-engine   # architecture/DRISHTI_ICEBERG.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
   docs-architecture-history-queries: docs-architecture-data-architecture#2-history-queries-an-entity-over-time   # architecture/HISTORY_QUERIES.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
   docs-architecture-live: docs-architecture-data-architecture#1-live-updates   # architecture/LIVE.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)

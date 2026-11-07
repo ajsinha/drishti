@@ -21,7 +21,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 /** The same share contract with shares and the inbox as files ({@code drishti.collab.store=file}). */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance,logistics",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/shareapi-file-${random.uuid}/identity.db",
+        "drishti.database.sqlite.file=${drishti.test.dir}/shareapi-file-${random.uuid}/identity.db",
         "drishti.packs.overlay=${drishti.test.dir}/shareapi-file-overlay/added.yaml", "drishti.collab.limits.shares-per-minute=1000",
         "drishti.collab.inbox.poll=100ms", "drishti.collab.packs.logistics.share-enabled=false",
         "drishti.collab.store=file", "drishti.collab.dir=${drishti.test.dir}/shareapi-file-${random.uuid}/collab"})

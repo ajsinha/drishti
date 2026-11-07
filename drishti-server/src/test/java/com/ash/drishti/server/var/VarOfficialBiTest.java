@@ -50,7 +50,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.sources.plugins.demo.enabled=false", "drishti.var.official.enabled=false", "drishti.var.official.on-start=false",
         "drishti.bi.dir=${drishti.test.dir}/var-bi-folder", "drishti.tables.root=${drishti.test.dir}/var-bi-folder/tables", "drishti.bi.folder-refresh=1s",
         "drishti.bi.query.store-dir=${drishti.test.dir}/var-bi-store/${random.uuid}",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/var-bi-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=${drishti.test.dir}/var-bi-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)
 class VarOfficialBiTest {

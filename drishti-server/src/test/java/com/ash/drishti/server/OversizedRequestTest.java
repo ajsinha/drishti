@@ -34,7 +34,7 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
  */
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, properties = {"drishti.rachana.hot-reload=false",
         "drishti.sources.plugins.demo.settings.ticking=false",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/oversized-${random.uuid}/identity.db",
+        "drishti.database.sqlite.file=${drishti.test.dir}/oversized-${random.uuid}/identity.db",
         "drishti.builder.designs.dir=${drishti.test.dir}/oversized-files-${random.uuid}"})
 class OversizedRequestTest {
 

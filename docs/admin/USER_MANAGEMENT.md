@@ -394,14 +394,17 @@ Everything in this guide is in **one database**:
 
 The server reaches it through JPA (Hibernate and Spring Data repositories), with no hand-written SQL in the code.
 
-| Database | When | URL |
+It is the Drishti database, which also holds every other table Drishti owns, configured in its own file `config/db/database.yaml`
+([DATA_ARCHITECTURE.md › The one Drishti database](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database)):
+
+| Database (`drishti.database.kind`) | When | Where |
 |---|---|---|
-| **SQLite** (default) | one server; nothing to install | `jdbc:sqlite:./data/identity/drishti.db` |
-| **PostgreSQL** | several servers sharing users, or your database team's backups | `jdbc:postgresql://host:5432/drishti` |
+| **SQLite** (`sqlite`, default) | one server; nothing to install | `sqlite.file`: `./data/identity/drishti.db` |
+| **PostgreSQL** (`postgres`) | several servers sharing users, or your database team's backups | `postgres.url`: `jdbc:postgresql://host:5432/drishti` |
 
 ### The schema: two files, no migrations
 
-The tables are written out in full, once per database, in `drishti-identity/src/main/resources/db/`:
+The tables of the whole Drishti database are written out in full, once per database, in `drishti-identity/src/main/resources/db/`:
 
 - `schema-sqlite.sql`
 - `schema-postgres.sql`
@@ -409,7 +412,8 @@ The tables are written out in full, once per database, in `drishti-identity/src/
 The server runs the right file every time it starts. Each statement is `CREATE … IF NOT EXISTS`, so running it on an
 existing database changes nothing. There is no migration tool and no migration history: the file *is* the schema.
 On PostgreSQL the server also checks at start that its entities match the tables, and refuses to start, naming the
-column, if they do not.
+column, if they do not. A database made by another schema version is upgraded by copying it into a fresh one
+(`drishti.py db copy`, [OPERATIONS.md section 10.3](OPERATIONS.md#103-upgrading-the-drishti-database)).
 
 | Table | Holds |
 |---|---|
@@ -437,40 +441,45 @@ Deleting a user removes their role and pack rows with them (`ON DELETE CASCADE`)
    CREATE DATABASE drishti OWNER drishti;
    ```
 
-2. Point the server at it, through environment variables or `application.local.yaml`:
-
-   ```bash
-   export DRISHTI_IDENTITY_DB_URL=jdbc:postgresql://db.bank.example:5432/drishti
-   export DRISHTI_IDENTITY_DB_USER=drishti
-   export DRISHTI_IDENTITY_DB_PASSWORD='choose-a-long-one'
-   ```
+2. Point the server at it in `config/db/database.yaml` (every node the same), the password from the environment:
 
    ```yaml
-   # application.local.yaml
+   # config/db/database.yaml
    drishti:
-     identity:
-       database-url: jdbc:postgresql://db.bank.example:5432/drishti
-       database-user: drishti
-       database-password: ${DRISHTI_IDENTITY_DB_PASSWORD}
-       # database-pool-size: unset = drishti.db.pool.size (20) on PostgreSQL
+     database:
+       kind: postgres
+       postgres:
+         url: jdbc:postgresql://db.bank.example:5432/drishti
+         user: drishti
+         password: ${DRISHTI_DB_PASSWORD}
+       # pool:
+       #   size: 20          # unset: drishti.db.pool.size (20)
    ```
+
+   ```bash
+   export DRISHTI_DB_PASSWORD='choose-a-long-one'
+   ```
+
+   The shipped file reads the same from variables, so `DRISHTI_DB_KIND=postgres DRISHTI_DB_URL=jdbc:postgresql://… DRISHTI_DB_USER=drishti`
+   works without editing it. A site that already has users on SQLite copies them across first: `drishti.py db copy --from
+   config/db/database.yaml --to postgres-database.yaml` ([OPERATIONS.md section 10.3](OPERATIONS.md#103-upgrading-the-drishti-database)).
 
 3. Start the server. The log says:
 
    ```
-   identity database ready: jdbc:postgresql://db.bank.example:5432/drishti (db/schema-postgres.sql)
+   Drishti database ready: postgres jdbc:postgresql://db.bank.example:5432/drishti (db/schema-postgres.sql, schema version 1)
    ```
 
    If PostgreSQL is not up yet, the server waits for it, retrying with growing pauses for up to about four minutes:
-   *identity database not reachable yet (…); retrying in 2000 ms*.
+   *Drishti database not reachable yet (…); retrying in 2000 ms*.
 
 To try it locally with Docker (the repository's compose file runs PostgreSQL 18 on port 5432, or `DRISHTI_PG_PORT`):
 
 ```bash
 docker compose -f deploy/docker/compose.data.yaml up -d postgres
 docker compose -f deploy/docker/compose.data.yaml exec postgres psql -U drishti -c 'CREATE DATABASE drishti_identity'
-DRISHTI_IDENTITY_DB_URL=jdbc:postgresql://localhost:5432/drishti_identity DRISHTI_IDENTITY_DB_USER=drishti \
-DRISHTI_IDENTITY_DB_PASSWORD=drishti java -jar drishti-server/target/drishti-server-*.jar
+DRISHTI_DB_KIND=postgres DRISHTI_DB_URL=jdbc:postgresql://localhost:5432/drishti_identity DRISHTI_DB_USER=drishti \
+DRISHTI_DB_PASSWORD=drishti java -jar drishti-server/target/drishti-server-*.jar
 ```
 
 ### SQLite: what to know
@@ -590,7 +599,7 @@ storage or a cookie in the page; the provider's refresh token is sealed by the c
 | Development admin | created when the database has no users | `seed-admin` (`DRISHTI_SEED_ADMIN=false` in production), `seed-username`, `seed-password`, `seed-roles` |
 | Last admin | there is always one enabled admin: it cannot be disabled, demoted or deleted | — |
 | Self-protection | nobody can disable or delete their own account | — |
-| Database | SQLite file | `database-url` (`DRISHTI_IDENTITY_DB_URL`), `database-user`, `database-password`, `database-pool-size` (unset: `drishti.db.pool.size`, 20, on PostgreSQL; 8 on SQLite) |
+| Database | SQLite file | `config/db/database.yaml`: `drishti.database.kind` (`DRISHTI_DB_KIND`), `sqlite.file`, `postgres.url`, `postgres.user`, `postgres.password`, `pool.size` (unset: `drishti.db.pool.size`, 20, on PostgreSQL; 8 on SQLite) |
 
 Every user can see their own profile and roles on **My account** (`/account`), change their password (giving
 the current one), and choose their theme, clock zone, density and landing page.
@@ -802,7 +811,7 @@ server's own database before it takes effect there:
 
 ### Where it is kept
 
-The switches live in the Drishti database (SQLite by default, PostgreSQL for a cluster that shares one; [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built)),
+The switches live in the Drishti database (SQLite by default, PostgreSQL for a cluster that shares one; [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database)),
 in both complete schema files:
 
 | Table | Holds |

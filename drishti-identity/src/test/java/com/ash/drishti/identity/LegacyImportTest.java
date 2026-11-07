@@ -37,7 +37,7 @@ class LegacyImportTest {
     private AnnotationConfigApplicationContext open() {
         AnnotationConfigApplicationContext c = new AnnotationConfigApplicationContext();
         c.getEnvironment().getPropertySources().addFirst(new MapPropertySource("test", Map.of(
-                "drishti.identity.database-url", "jdbc:sqlite:" + dir.resolve("drishti.db"),
+                "drishti.database.sqlite.file", dir.resolve("drishti.db").toString(),
                 "drishti.identity.users-file", dir.resolve("users.json").toString(),
                 "drishti.identity.audit-file", dir.resolve("audit.jsonl").toString(),
                 "drishti.identity.preferences-dir", dir.resolve("preferences").toString(),

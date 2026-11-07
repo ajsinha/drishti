@@ -54,7 +54,7 @@ import org.springframework.test.context.DynamicPropertySource;
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.rachana.hot-reload=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.trades-only.kinds[0]=trade", "drishti.security.redact[0]=dv01",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db",
+        "drishti.database.sqlite.file=${drishti.test.dir}/identity-${random.uuid}/identity.db",
         "drishti.engines.flight.enabled=true", "drishti.engines.flight.port=0", "drishti.engines.flight.bind=127.0.0.1",
         "drishti.engines.flight.advertise=127.0.0.1"})
 class FlightServerTest {

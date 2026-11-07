@@ -1168,7 +1168,7 @@ Every setting of this part, with its type, default, environment variable, meanin
 | MongoDB ([MONGODB_CONNECTOR.md](MONGODB_CONNECTOR.md#connection-pool)) | the driver's pool (`maxPoolSize`, `minPoolSize`, `maxWaitTime`) | the statement timeout is the socket read timeout |
 | Redis ([REDIS_CONNECTOR.md](REDIS_CONNECTOR.md#connection-pool)) | Lettuce connections, each multiplexed | another is opened only when the open ones are busy (`pool-pipeline-depth`); `pool-max-lifetime` and `pool-connection-timeout` do not apply |
 | Aerospike ([AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md#connection-pool)) | the client's pool **per node** | `pool-size` is per node; `pool-connection-timeout` and `pool-max-lifetime` do not apply; borrows are not timed |
-| The identity database on PostgreSQL | a Hikari pool (`drishti.identity.database-pool-size`, else the site default) | leak detection is Hikari's |
+| The Drishti database on PostgreSQL | a Hikari pool (`drishti.database.pool.*` in `config/db/database.yaml`, else the site default) | leak detection is Hikari's |
 | **SQLite** (the default identity database) and **DuckDB** | **not pooled** | see below |
 
 **Why SQLite and DuckDB are exempt.** Both are embedded files opened inside the server process: no network, no server-side connection

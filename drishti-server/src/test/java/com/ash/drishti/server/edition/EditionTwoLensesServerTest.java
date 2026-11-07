@@ -46,7 +46,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
         "drishti.var.official.on-start=false", "drishti.ccr.exposure.official.enabled=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.bi.dir=../config/bi", "drishti.tables.root=../config/tables",
         "drishti.bi.query.store-dir=${drishti.test.dir}/lenses-bi-store/${random.uuid}",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/lenses-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=${drishti.test.dir}/lenses-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class EditionTwoLensesServerTest {
 

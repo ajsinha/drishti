@@ -44,7 +44,7 @@ import org.springframework.boot.test.context.SpringBootTest;
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=market-risk,counterparty-risk",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/sutra-cli-${random.uuid}/identity.db",
+        "drishti.database.sqlite.file=${drishti.test.dir}/sutra-cli-${random.uuid}/identity.db",
         "drishti.builder.designs.dir=${drishti.test.dir}/sutra-cli-files-${random.uuid}"})
 class SutraCliTest {
 

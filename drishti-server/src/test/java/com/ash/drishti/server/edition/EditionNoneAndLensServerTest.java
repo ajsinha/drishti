@@ -42,7 +42,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 @SpringBootTest(properties = {"drishti.lenses=risk", "drishti.packs.enabled=default", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false",
         "drishti.var.official.enabled=false", "drishti.var.official.on-start=false", "drishti.ccr.exposure.official.enabled=false",
         "drishti.bi.dir=../config/bi", "drishti.tables.root=../config/tables", "drishti.bi.query.store-dir=${drishti.test.dir}/lens-bi-store/${random.uuid}",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/lens-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=${drishti.test.dir}/lens-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class EditionNoneAndLensServerTest {
 

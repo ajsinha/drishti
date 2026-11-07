@@ -42,7 +42,8 @@ class CliLauncherScratchTest {
     void theSettingsPutEveryWrittenFolderInScratchAndKeepTheSitesLakesForReading(@TempDir Path scratch) {
         Map<String, String> p = CliLauncher.scratchProperties(scratch, Map.of(), Map.of("DRISHTI_FILES_ROOT", "/lakes/files"));
         assertThat(p.get("drishti.data.dir")).isEqualTo(scratch.resolve("data").toString());
-        assertThat(p.get("drishti.identity.database-url")).isEqualTo("jdbc:sqlite:" + scratch.resolve("data/identity/drishti.db"));
+        assertThat(p.get("drishti.database.sqlite.file")).isEqualTo(scratch.resolve("data/identity/drishti.db").toString());
+        assertThat(p.get("drishti.database.kind")).isEqualTo("sqlite");
         assertThat(p.get("drishti.store.root")).startsWith(scratch.toString());
         assertThat(p.get("DRISHTI_CACHE_ROOT")).startsWith(scratch.toString());
         assertThat(p).containsEntry("drishti.var.official.enabled", "false").containsEntry("drishti.ccr.exposure.official.enabled", "false")

@@ -18,20 +18,30 @@ package com.ash.drishti.identity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.ash.drishti.identity.database.DatabaseSettings;
+import com.ash.drishti.identity.database.DrishtiDatabase;
 import com.zaxxer.hikari.HikariConfig;
+import java.nio.file.Path;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.env.MockEnvironment;
 
-/** The identity database's pool: 20 by default on PostgreSQL (the site default), 8 on SQLite (embedded), with leak detection on. */
+/**
+ * The Drishti database's pool: 20 by default on PostgreSQL (the site default), 8 on SQLite (embedded), with leak detection on; a key in
+ * drishti.database.pool wins over the site's drishti.db.pool.
+ */
 class IdentityPoolTest {
 
-    private static IdentityProperties props(String url, Integer size) {
-        return new IdentityProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, url, null, null, size, null);
+    private static DatabaseSettings props(String url, Integer size) {
+        Map<String, String> pool = size == null ? Map.of() : Map.of("size", size.toString());
+        return url.startsWith("jdbc:sqlite:")
+                ? new DatabaseSettings("sqlite", Path.of(url.substring("jdbc:sqlite:".length())), null, null, null, pool, "test")
+                : new DatabaseSettings("postgres", null, url, null, null, pool, "test");
     }
 
-    private static HikariConfig configure(IdentityProperties p, MockEnvironment env) {
+    private static HikariConfig configure(DatabaseSettings p, MockEnvironment env) {
         HikariConfig c = new HikariConfig();
-        IdentityDatabase.applyPool(c, p, env);
+        DrishtiDatabase.applyPool(c, p, env::getProperty);
         return c;
     }
 
@@ -48,7 +58,7 @@ class IdentityPoolTest {
     }
 
     @Test
-    void theSiteSettingsAndTheIdentitiesOwnSizeAreHonoured() {
+    void theSiteSettingsAndTheDatabasesOwnSizeAreHonoured() {
         MockEnvironment env = new MockEnvironment().withProperty("drishti.db.pool.size", "35").withProperty("drishti.db.pool.leak-threshold", "15s")
                 .withProperty("drishti.db.pool.connection-timeout", "2s").withProperty("drishti.db.pool.statement-timeout", "0");
         HikariConfig c = configure(props("jdbc:postgresql://db.invalid/x", null), env);
@@ -57,6 +67,18 @@ class IdentityPoolTest {
         assertThat(c.getConnectionTimeout()).isEqualTo(2_000);
         assertThat(c.getDataSourceProperties().getProperty("options")).isNull();
         assertThat(configure(props("jdbc:postgresql://db.invalid/x", 5), env).getMaximumPoolSize()).isEqualTo(5);
+    }
+
+    @Test
+    void theDatabasesOwnPoolKeysWinOverTheSite() {
+        MockEnvironment env = new MockEnvironment().withProperty("drishti.db.pool.leak-threshold", "15s");
+        DatabaseSettings s = new DatabaseSettings("postgres", null, "jdbc:postgresql://db.invalid/x", null, null,
+                Map.of("leak-threshold", "5s", "size", "12"), "test");
+        HikariConfig c = configure(s, env);
+        assertThat(c.getLeakDetectionThreshold()).isEqualTo(5_000);
+        assertThat(c.getMaximumPoolSize()).isEqualTo(12);
+        DatabaseSettings bad = new DatabaseSettings("postgres", null, "jdbc:postgresql://db.invalid/x", null, null, Map.of("idle-timeout", "soon"), "test");
+        assertThatThrownBy(() -> configure(bad, env)).hasMessageContaining("drishti.database.pool.idle-timeout");
     }
 
     @Test

@@ -52,7 +52,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.ccr.exposure.official.enabled=false", "drishti.ccr.exposure.official.on-start=false",
         "drishti.bi.dir=${drishti.test.dir}/exposure-bi-folder", "drishti.tables.root=${drishti.test.dir}/exposure-bi-folder/tables", "drishti.bi.folder-refresh=1s",
         "drishti.bi.query.store-dir=${drishti.test.dir}/exposure-bi-store/${random.uuid}",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/exposure-bi-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=${drishti.test.dir}/exposure-bi-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)
 class ExposureOfficialBiTest {

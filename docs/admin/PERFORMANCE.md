@@ -665,8 +665,8 @@ gives back is the allocator's, not a leak.
 
 A server holds its own topics, streams and caches; servers share nothing at run time. To serve more users,
 run more servers behind a load balancer. Tokens are stateless, so any server can serve any request; console sign-in
-sessions and users live in the identity database, so servers behind one load balancer share one (PostgreSQL,
-`DRISHTI_IDENTITY_DB_URL`), or a session opened on one is unknown to the next. Live
+sessions and users live in the Drishti database, so servers behind one load balancer share one (PostgreSQL,
+`config/db/database.yaml`), or a session opened on one is unknown to the next. Live
 streams stay on the server that opened them, and the browser's reconnect may land on another server, which
 simply starts with a fresh `view` event. The console keeps each tab's live channel in its own memory, and the call on a channel that
 reaches another worker or another console is relayed to the one that holds it: the workers of one console always, consoles on several

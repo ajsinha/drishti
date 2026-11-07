@@ -39,7 +39,7 @@ import org.springframework.test.web.servlet.MvcResult;
  */
 @SpringBootTest(properties = {"drishti.edition=world", "drishti.packs.enabled=default", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false",
         "drishti.bi.dir=../config/bi", "drishti.tables.root=../config/tables", "drishti.bi.query.store-dir=${drishti.test.dir}/world-bi-store/${random.uuid}",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/world-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=${drishti.test.dir}/world-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class EditionWorldServerTest {
 

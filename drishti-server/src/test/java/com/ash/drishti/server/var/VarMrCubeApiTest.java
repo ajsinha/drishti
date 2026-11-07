@@ -78,7 +78,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
         "drishti.engines.mr-cube.enabled=true", "drishti.pivot.max-holistic-cells=20",
         "drishti.cube.mr.risk-classes.IR[0]=Rates", "drishti.cube.mr.risk-classes.CR[0]=Fixed income",
         "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
-        "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)
 class VarMrCubeApiTest {

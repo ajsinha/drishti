@@ -59,7 +59,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.risk.kinds[0]=*", "drishti.security.roles.risk.raw=true",
         "drishti.var.threads=2", "drishti.var.tier.mode=heap",
-        "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)
 class HierarchyColumnMissingTest {

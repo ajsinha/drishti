@@ -33,7 +33,7 @@ class SqliteIdentityStoreTest extends IdentityStoreContract {
 
     @Override
     protected Map<String, Object> database() {
-        return Map.of("drishti.identity.database-url", "jdbc:sqlite:" + tmp.resolve("identity/drishti.db"));
+        return Map.of("drishti.database.sqlite.file", tmp.resolve("identity/drishti.db").toString());
     }
 
     /**
@@ -44,7 +44,7 @@ class SqliteIdentityStoreTest extends IdentityStoreContract {
      */
     @Test
     void twoDatabasesReadAtTheSameMomentEachGetTheirOwnTimes() throws Exception {
-        ConfigurableApplicationContext other = open(Map.of("drishti.identity.database-url", "jdbc:sqlite:" + tmp.resolve("identity-2/drishti.db")));
+        ConfigurableApplicationContext other = open(Map.of("drishti.database.sqlite.file", tmp.resolve("identity-2/drishti.db").toString()));
         JpaUserStore one = bean(JpaUserStore.class);
         JpaUserStore two = other.getBean(JpaUserStore.class);
         Instant base = Instant.parse("2026-11-05T10:00:00.123Z");

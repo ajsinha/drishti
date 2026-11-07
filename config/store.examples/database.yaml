@@ -12,11 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 #
-# A cluster on PostgreSQL (no shared disk needed): usually the Drishti database itself; the table drishti_content is in
-# its complete schema file and is created at start. Copy to config/store/store.yaml on every node.
-backend: postgres
-postgres:
-  url: jdbc:postgresql://db.example.internal:5432/drishti
-  user: drishti
-  password: ${DRISHTI_STORE_PASSWORD:}
-  pool: 4
+# A cluster without a shared disk: the content store in the Drishti database (table drishti_content, in its complete schema files),
+# through the database's one pool. With the database on PostgreSQL (config/db/database.yaml, type: postgres) every node reaches it.
+# Copy to config/store/store.yaml on every node.
+backend: database

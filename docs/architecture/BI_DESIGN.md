@@ -1427,7 +1427,7 @@ applied by a transaction handler over a fixed number of ordered lanes (one chang
 checks against lost updates, four eyes, overlays and Drishti-owned kinds first (approved overlays flow into the lake), one source
 amendment as a pilot, the change log kept 7 years (configurable), lanes owned on the Drishti*net ring.
 
-0. **The one Drishti database** (item 0, first; [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built), decided 2026-10-20): identity and everything relational
+0. **The one Drishti database** (item 0, first; [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#6-the-one-drishti-database), decided 2026-10-20): identity and everything relational
    Drishti owns in one database, SQLite by default and PostgreSQL long term; no migrations (two complete schema files, a parity test,
    a version stamp, `drishti.py db copy`); configured in `config/db/database.yaml` (planned, not built).
 - **The edit log on it:** `drishti_edit_lane` (ownership by conditional UPDATE) and `drishti_edit_log` (acknowledged after commit,
@@ -4519,7 +4519,7 @@ Status: **built and built** (2026-10-21; the steps as built are in section 18.2b
 Decided by the product owner on 2026-10-20. Run records live in the content store
 ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches) section 9), so every Drishti\*net member sees the same runs. Builds on this document (sections 4.1 the pipeline, 6.1 caches, 6.3 concurrency, 6.5 horizontal scale, 6.7
 cost controls), [section 16](#16-rupaka-the-original-design-and-every-phase) section 7 (the query engine), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-e-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built) (S4 products and rollups, S5 slices
-and owners, S6 split queries), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (several servers), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built) (where relational state
+and owners, S6 split queries), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (several servers), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#6-the-one-drishti-database) (where relational state
 lives) and the statement bursting of [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader), whose per-recipient masking this reuses.
 
 ### 1. The decision
@@ -5669,7 +5669,7 @@ when the answer is `202`.
 ### 15. Settings: `config/runs/runs.yaml`
 
 There are more than a handful of settings, so they get their own file, following `config/connectors/`, `config/net/` and
-the planned `config/db/database.yaml` (DATA_ARCHITECTURE.md › The one Drishti database (design, not built), section 7; it was not built when runs shipped). `application.yaml` keeps only the pointer:
+`config/db/database.yaml` (DATA_ARCHITECTURE.md › The one Drishti database, section 6). `application.yaml` keeps only the pointer:
 
 ```yaml
 drishti:

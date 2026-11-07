@@ -63,7 +63,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.ccr.exposure.official.format=iceberg", "drishti.ccr.exposure.official.root=target/exposure-format-equality/official",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.risk.kinds[0]=*", "drishti.security.roles.risk.raw=true",
-        "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)
 class ExposureFormatEqualityTest {

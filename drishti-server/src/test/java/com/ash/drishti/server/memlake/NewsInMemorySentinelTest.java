@@ -75,7 +75,7 @@ import org.springframework.test.web.servlet.MvcResult;
         "drishti.lake.memory.stores.news.max-mb=32", "drishti.lake.memory.stores.news.chunk-kb=256",
         "drishti.lake.memory.stores.news.contract=NEWS-TEST-1",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=${drishti.test.dir}/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)
 @ExtendWith(OutputCaptureExtension.class)

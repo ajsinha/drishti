@@ -47,7 +47,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.sources.connectors-dir=target/hierarchy-upgrade/connectors", "drishti.data.dir=target/hierarchy-upgrade/data",
         "drishti.var.official.on-start=false", "drishti.ccr.exposure.official.on-start=false", "drishti.ccr.exposure.close-grace-seconds=0",
         "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
-        "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)
 class HierarchyUpgradeWithoutLettersTest {

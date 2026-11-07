@@ -48,7 +48,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.designer.kinds[0]=trade",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/design-blocks-${random.uuid}/identity.db",
+        "drishti.database.sqlite.file=${drishti.test.dir}/design-blocks-${random.uuid}/identity.db",
         "drishti.builder.designs.dir=${drishti.test.dir}/design-blocks-files-${random.uuid}"})
 @AutoConfigureMockMvc
 class DesignBlocksApiTest {

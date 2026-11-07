@@ -20,7 +20,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
-/** The identity database on PostgreSQL 18 (Docker; skipped where Docker is not reachable). */
+/** The Drishti database's identity tables on PostgreSQL 18 (Docker; skipped where Docker is not reachable). */
 @Testcontainers(disabledWithoutDocker = true)
 class PostgresIdentityStoreTest extends IdentityStoreContract {
 
@@ -29,7 +29,7 @@ class PostgresIdentityStoreTest extends IdentityStoreContract {
 
     @Override
     protected Map<String, Object> database() {
-        return Map.of("drishti.identity.database-url", POSTGRES.getJdbcUrl(), "drishti.identity.database-user", POSTGRES.getUsername(),
-                "drishti.identity.database-password", POSTGRES.getPassword());
+        return Map.of("drishti.database.kind", "postgres", "drishti.database.postgres.url", POSTGRES.getJdbcUrl(),
+                "drishti.database.postgres.user", POSTGRES.getUsername(), "drishti.database.postgres.password", POSTGRES.getPassword());
     }
 }

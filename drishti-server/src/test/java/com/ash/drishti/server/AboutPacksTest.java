@@ -47,7 +47,7 @@ import org.springframework.boot.test.context.SpringBootTest;
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=market-risk,counterparty-risk,world-economy",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/aboutpacks-${random.uuid}/identity.db",
+        "drishti.database.sqlite.file=${drishti.test.dir}/aboutpacks-${random.uuid}/identity.db",
         "drishti.builder.designs.dir=${drishti.test.dir}/aboutpacks-files-${random.uuid}"})
 class AboutPacksTest {
 

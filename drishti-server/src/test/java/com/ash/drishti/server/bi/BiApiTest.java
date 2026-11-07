@@ -54,7 +54,7 @@ import org.springframework.test.web.servlet.ResultActions;
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance,logistics",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/bi-api-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/bi-api-overlay/added.yaml",
+        "drishti.database.sqlite.file=${drishti.test.dir}/bi-api-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/bi-api-overlay/added.yaml",
         "drishti.bi.dir=${drishti.test.dir}/bi-api-folder", "drishti.bi.folder-refresh=1s"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

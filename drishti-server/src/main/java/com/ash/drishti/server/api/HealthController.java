@@ -119,14 +119,14 @@ public class HealthController {
     private final com.ash.drishti.server.RetryService retry;
     private final com.ash.drishti.server.design.HistoryDefinitions history;
     private final ObjectProvider<com.zaxxer.hikari.HikariDataSource> identityDataSource;
-    private final com.ash.drishti.identity.IdentityProperties identity;
+    private final com.ash.drishti.identity.database.DatabaseSettings identity;
     private final com.ash.drishti.server.security.MaskCoverage masks;
 
     public HealthController(SourceRegistry registry, SourceRouter router, PackRegistry packs, SutraRegistry sutras, LiveMetrics live,
             TopicHub hub, LiveStreamSlots slots, Entitlements entitlements, ObjectProvider<BuildProperties> build,
             org.springframework.core.env.Environment env, com.ash.drishti.server.loads.ExpectationService expectations, com.ash.drishti.server.connectors.ConnectorManager connectors,
             com.ash.drishti.server.bi.BiFolder biFolder, com.ash.drishti.server.RetryService retry,
-            ObjectProvider<com.zaxxer.hikari.HikariDataSource> identityDataSource, com.ash.drishti.identity.IdentityProperties identity,
+            ObjectProvider<com.zaxxer.hikari.HikariDataSource> identityDataSource, com.ash.drishti.identity.database.DatabaseSettings identity,
             com.ash.drishti.server.security.MaskCoverage masks, com.ash.drishti.server.design.HistoryDefinitions history) {
         this.history = history;
         this.masks = masks;
@@ -242,7 +242,7 @@ public class HealthController {
         // 2.9.5: a hierarchy the VaR or exposure engine skipped (its level column not in the source): "var LL" to why (DRS-5211, a warning)
         out.put("hierarchiesSkipped", com.ash.drishti.server.var.Hierarchies.skipped());
         Map<String, Object> identityPool = PoolReport.identity(identityDataSource.getIfAvailable(), identity.sqlite()).map(com.ash.drishti.api.pool.PoolStats::toMap).orElse(null);
-        out.put("identityPool", identityPool);                        // the identity database's pool (SQLite: embedded, exempt)
+        out.put("identityPool", identityPool);                        // the Drishti database's pool (SQLite: embedded, exempt)
         if (PoolReport.needsAttention(identityPool)) {
             poolsAttention.add("identity: every connection is in use and callers are waiting, or a connection was held past leak-threshold");
         }

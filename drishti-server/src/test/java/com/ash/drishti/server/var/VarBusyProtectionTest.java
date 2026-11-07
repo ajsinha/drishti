@@ -74,7 +74,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.admission.memory-warn=0.00001", "drishti.admission.memory-refuse-heavy=0.00002",   // under any heap: new heavy work waits
         "drishti.admission.memory-free-min-mb=1048576",                                                // and any free heap counts as short
         "drishti.admission.retry-after.load=20",
-        "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import({PinnedBusinessDate.class, VarBusyProtectionTest.ConfirmedReading.class})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)

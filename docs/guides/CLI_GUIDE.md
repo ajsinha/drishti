@@ -2853,6 +2853,24 @@ $ drishti.py tables migrate --check
 nothing to migrate
 ```
 
+### `db`: the Drishti database
+
+`db copy` copies the Drishti database (every table Drishti owns: identity, collaboration, the edit log, runs, approvals, the content
+store's database backend) into a fresh database built from the complete schema, and checks every table's row count. There are no
+migrations: this copy is how the schema is upgraded and how a site switches between SQLite and PostgreSQL
+([OPERATIONS.md section 10.3](../admin/OPERATIONS.md#103-upgrading-the-drishti-database)). It runs in Java from the server's exec jar
+(`java -jar drishti-server-*-exec.jar db copy ...`) without starting a server; stop the servers that use the source first.
+
+```
+drishti.py db copy --from SETTINGS.yaml --to SETTINGS.yaml [--check] [--drop-columns] [--data-dir DIR] [--json]
+```
+
+Each settings file has the layout of `config/db/database.yaml` (`drishti.database.kind`, `sqlite.file`, `postgres.url`, `user`,
+`password`); `${ENV}` placeholders are read from the environment and `${drishti.data.dir}` is `--data-dir` (default `./data`). The
+target must be fresh (a SQLite file that does not exist, or a PostgreSQL database with empty Drishti tables). `--check` reads the source
+and lists what would be copied, writing nothing; `--drop-columns` lets the copy leave out columns the new schema no longer has. Exit 0
+copied and verified, 1 failed, 2 refused or a usage error.
+
 ### Shell completion
 
 `drishti.py completion bash|zsh|powershell` prints a completion script generated from the command tree (groups, commands,

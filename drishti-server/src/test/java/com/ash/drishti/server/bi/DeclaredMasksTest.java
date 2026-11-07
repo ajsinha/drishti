@@ -39,7 +39,7 @@ import org.springframework.boot.test.context.SpringBootTest;
         "drishti.security.redact=",
         "drishti.security.roles.plain.kinds[0]=counterparty",
         "drishti.security.roles.rawrole.kinds[0]=counterparty", "drishti.security.roles.rawrole.raw=true",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=${drishti.test.dir}/identity-${random.uuid}/identity.db"})
 class DeclaredMasksTest {
 
     @Autowired Entitlements entitlements;

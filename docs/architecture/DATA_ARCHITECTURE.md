@@ -123,19 +123,15 @@ and the per-store documents; VaR's intake is [PARALLEL_LOADER.md](PARALLEL_LOADE
     - [9. BI content and BI runs](#9-bi-content-and-bi-runs)
     - [10. Collaboration, notes and the admin data](#10-collaboration-notes-and-the-admin-data)
     - [11. UI-written configuration: shared overlays (built for connectors and load overrides)](#11-ui-written-configuration-shared-overlays-built-for-connectors-and-load-overrides)
-6. [The one Drishti database (design, not built)](#6-the-one-drishti-database-design-not-built)
-    - [1. The decision](#1-the-decision)
-    - [2. What lives in it, and what does not](#2-what-lives-in-it-and-what-does-not)
-    - [3. SQLite or PostgreSQL](#3-sqlite-or-postgresql)
-    - [4. No migrations: two complete schema files](#4-no-migrations-two-complete-schema-files)
-    - [5. The schema version stamp](#5-the-schema-version-stamp)
-    - [6. Switching and upgrading: `db copy`](#6-switching-and-upgrading-db-copy)
-    - [7. Configuration: config/db/database.yaml (planned)](#7-configuration-configdbdatabaseyaml-planned)
-    - [8. Several servers](#8-several-servers)
-    - [9. Today and the change](#9-today-and-the-change)
-    - [10. Build plan](#10-build-plan)
-    - [11. Tests](#11-tests)
-    - [12. Decisions (product owner, 2026-10-20)](#12-decisions-product-owner-2026-10-20)
+6. [The one Drishti database](#6-the-one-drishti-database)
+    - [1. What lives in it, and what does not](#1-what-lives-in-it-and-what-does-not)
+    - [2. SQLite or PostgreSQL](#2-sqlite-or-postgresql)
+    - [3. No migrations: two complete schema files](#3-no-migrations-two-complete-schema-files)
+    - [4. The schema version stamp](#4-the-schema-version-stamp)
+    - [5. Upgrading and switching: `db copy`](#5-upgrading-and-switching-db-copy)
+    - [6. Configuration: config/db/database.yaml](#6-configuration-configdbdatabaseyaml)
+    - [7. Several servers](#7-several-servers)
+    - [8. Decisions (product owner, 2026-10-20)](#8-decisions-product-owner-2026-10-20)
 
 ## 1. Live updates
 
@@ -2832,7 +2828,7 @@ machinery:
 ## 5. The content store: user content every node reaches
 
 Status: **built (Designs; BI content and BI runs; collaboration and notes; embed apps, pack switches and audit; governance proposals; load history), built.** Front-loaded from item 0 of write-back, the one Drishti database. Related:
-[section 6](#6-the-one-drishti-database-design-not-built) (the one Drishti database), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (several servers),
+[section 6](#6-the-one-drishti-database) (the one Drishti database), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (several servers),
 [CONFIGURATION.md](../admin/CONFIGURATION.md) (`config/store/store.yaml`).
 
 ### 1. The problem
@@ -2875,12 +2871,10 @@ Windows and never contain `~`, which is reserved for the store's own sidecars. A
 `tombstones/<encoded key>` so `changes` reports it; a later put removes it. Since the version is a content hash, writing back
 identical bytes keeps the version (harmless: the content is the same). No hidden files, nothing outside the root.
 
-**sqlite and postgres.** One table, `drishti_content (k, v, version, updated_ms, deleted)`, in the two complete Drishti database
-schema files (`drishti-identity/src/main/resources/db/schema-sqlite.sql` and `schema-postgres.sql`; no migrations,
-SchemaParityTest keeps them equal). The backend applies the whole schema file at start (idempotent), so it may point at the
-Drishti database itself (the usual choice) or at a database of its own. The version is a counter; compare-and-set is
-`UPDATE … WHERE k = ? AND version = ?` (or an `INSERT` racing on the primary key for a create). A delete keeps a tombstone row
-(`deleted = 1`) so `changes` reports it. Postgres is tested with Testcontainers.
+**database.** One table, `drishti_content (k, v, version, updated_ms, deleted)`, in the Drishti database (section 6: SQLite or
+PostgreSQL, chosen in `config/db/database.yaml`), reached through that database's one pool; the table is in its two complete schema
+files. The version is a counter; compare-and-set is `UPDATE … WHERE k = ? AND version = ?` (or an `INSERT` racing on the primary key
+for a create). A delete keeps a tombstone row (`deleted = 1`) so `changes` reports it. PostgreSQL is tested with Testcontainers.
 
 **s3.** Objects `<prefix>/items/<key>`; the version is the ETag. Compare-and-set is the conditional PUT: `If-None-Match: *` for a
 create, `If-Match: <etag>` for an update; `412` or `409` answers `DRS-5057`. A delete compares the ETag (a HEAD, then `If-Match`)
@@ -2896,16 +2890,9 @@ Iceberg table, and BI can query who changed what and when. Not built.
 
 ```yaml
 # config/store/store.yaml
-backend: filesystem              # filesystem | sqlite | postgres | s3
+backend: filesystem              # filesystem | database (the Drishti database, config/db/database.yaml) | s3
 filesystem:
   root: ${drishti.data.dir:./data}/fstore
-sqlite:
-  url: jdbc:sqlite:${drishti.data.dir:./data}/identity/drishti.db   # the Drishti database itself (the usual choice)
-postgres:
-  url: jdbc:postgresql://db:5432/drishti
-  user: drishti
-  password: ${DRISHTI_STORE_PASSWORD:}
-  pool: 4
 s3:
   bucket: drishti-content
   prefix: prod
@@ -2917,7 +2904,7 @@ s3:
 ```
 
 A missing file or key means the default shown. `config/store.examples/` has `laptop.yaml` (filesystem), `cluster-nfs.yaml`
-(filesystem on a shared mount), `postgres.yaml` and `s3.yaml`.
+(filesystem on a shared mount), `database.yaml` (the Drishti database: with it on PostgreSQL, no shared disk) and `s3.yaml`.
 
 ### 5. Designs: the first user
 
@@ -2947,14 +2934,14 @@ writes `nodes/<node id>.json` into the store at start (its root as it sees it); 
 different root logs a warning (`content store roots differ`): the same share mounted at different paths, or two configurations
 pointing at one store. A node also logs its store at INFO (`content store: filesystem /mnt/drishti/fstore`). A local store per node
 cannot see the other nodes' records, so that case is caught by the log line and this rule, not by the check (next step: carry
-the root in the Drishti*net capability digest and compare it there). Postgres and S3 need no shared disk.
+the root in the Drishti*net capability digest and compare it there). The database backend on PostgreSQL and S3 need no shared disk.
 
 ### 7. Tests
 
 `ContentStoreContract` (drishti-identity tests) runs against every backend: concurrent creates and concurrent updates of one key
 (exactly one wins, the rest `DRS-5057`), conflict codes, list by prefix, delete (stale and current), changes (puts and deletes),
 binary-safe content (every byte value), a large item (6 MB), Unicode keys, bad keys (`DRS-5058`), and reopening the store keeps
-everything. Backends: filesystem, sqlite, postgres (Testcontainers), s3 on three S3 simulators:
+everything. Backends: filesystem, database on SQLite and on PostgreSQL (Testcontainers), s3 on three S3 simulators:
 
 | Test | Simulator | Runs where | Conditional writes covered |
 |---|---|---|---|
@@ -3206,176 +3193,151 @@ the in-place restart (`Restarter`) triggered on every node when another node ins
 merged when read, like the audit). The pack state needs the store opened in the environment post-processor (packs load before the
 Spring context), so each node materialises the shared state to its local folders before the packs are read.
 
-## 6. The one Drishti database (design, not built)
+## 6. The one Drishti database
 
-Status: **design, not built** (`DrishtiDatabase`, `config/db/database.yaml`, the stamp and `db copy`); the write-back tables are built
-(2026-10-25) in the two existing complete schema files, on the identity database's pool
-([WRITE_BACK.md › The design and its reasons, section 19](../guides/WRITE_BACK.md#19-implementation)). To be built as **item 0 of write-back**, before write-back itself (decided by the product owner). The content store
-([section 5](#5-the-content-store-user-content-every-node-reaches))
-was front-loaded from it. Related:
-[WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) (the edit log, lanes and overlays that live here), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (several servers),
-[CONFIGURATION.md](../admin/CONFIGURATION.md) (the settings).
-
-### 1. The decision
-
-All relational state that Drishti owns lives in **one database**, the *Drishti database*. Identity already lives in one;
-the write-back edit log, its lanes, overlays and Drishti-owned data live in the same one, and so does anything relational added later.
-There is no second store to back up, secure, size or switch.
-
-- **PostgreSQL is the long-term choice** (several servers, a real deployment, backups by the bank's DBAs).
-- **SQLite is the default**, for single-node setups: a Windows laptop, a demo machine, a developer. One file, nothing to install.
-- **You switch by configuration at any time**, through the planned `drishti.py db copy` (section 6). The code path is the same on both: the
-  same tables, the same SQL (with the few dialect differences kept in the two schema files and one small dialect class).
+All relational state that Drishti owns lives in **one database**, the *Drishti database*: SQLite by default (one file under the data
+folder) or PostgreSQL, chosen in its own file `config/db/database.yaml`. It has exactly two complete schema files, applied at every
+start; there are no migrations. Upgrading the schema and switching between SQLite and PostgreSQL are the same operation: a copy into a
+fresh database, `drishti.py db copy`. Related: [OPERATIONS.md](../admin/OPERATIONS.md#103-upgrading-the-drishti-database) (backup, upgrade,
+switching), [CONFIGURATION.md](../admin/CONFIGURATION.md) (the settings), [WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons)
+(the edit log, lanes and overlays that live here), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti)
+(several servers).
 
 ```
                        ┌──────────────────────────── the Drishti database ───────────────────────────┐
-  drishti-server ────▶ │ identity: users, roles, packs, preferences, tokens, sessions, audit, notes,  │
-  (one pool,           │           shares, threads, alerts, BI workspaces …           (today)        │
-   config/db/          │ write-back: drishti_edit_lane, drishti_edit_log, overlays, owned kinds      │
-   database.yaml)      │                                                                     │
-                       │ drishti_schema: the version stamp (section 5)                               │
-                       └────────────── SQLite file (default)  or  PostgreSQL (long term) ────────────┘
+  drishti-server ────▶ │ identity: users, roles, packs, preferences, tokens, sessions, audit          │
+  (one pool,           │ collaboration: notes, shares, threads, inbox, holds · alerts · switches      │
+   config/db/          │ BI workspaces, items, runs (one-node stores) · compute approvals             │
+   database.yaml)      │ write-back: lanes, edit log, change requests, overlays, owned values         │
+                       │ the content store's table (backend: database) · drishti_schema: the stamp    │
+                       └────────────── SQLite file (default)  or  PostgreSQL (several servers) ───────┘
 
   not here:  DuckDB (the BI engine: compute) · the lakes (Delta, Iceberg) · RocksDB caches · source systems
 ```
 
-### 2. What lives in it, and what does not
+### 1. What lives in it, and what does not
 
 | Lives in the Drishti database | Does not |
 |---|---|
 | Identity: users, roles, packs per user, preferences, API tokens, sessions, the audit trail | **DuckDB**, the BI engine: it is compute over the lakes and BI files, rebuilt from them, never a system of record |
-| Collaboration: notes, shares, threads, comments, mentions, inbox and outbox | The **lakes** (Delta, Iceberg): source data, written only by the loader (`lake build`, `lake publish`) |
-| BI workspaces, items, versions, usage and BI runs only with `drishti.bi.store: jpa` / `drishti.bi.runs.store: local` (one node); by default they live in the content store and the `drishti_bi_*` and `drishti_bi_run*` tables are legacy, read once by the import and kept ([section 5](#5-the-content-store-user-content-every-node-reaches) section 9); the content store's table `drishti_content` when `config/store/store.yaml` says `sqlite` or `postgres` ([section 5](#5-the-content-store-user-content-every-node-reaches)) | **Caches** (RocksDB, layout and fingerprint caches): derived, safe to delete |
-| Write-back (built): `drishti_edit_lane`, `drishti_edit_log`, `drishti_edit_request` (changes awaiting approval), `drishti_overlay`, `drishti_owned`, `drishti_edit_version` (each record's version) and `drishti_edit_cursor` (how far the reactive triggers and a follower of an edit primary have read each lane) ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) sections 5, 7, 11 and 19). New tables only: the schema version does not move | **Source systems** (ENDUR, CALYPSO, MUREX, connector databases): Drishti reads them, and writes to them only through a connector's `writes:` |
-| Compute approvals (built): `drishti_compute_request` (requests to approve what a connector or pool requires) and `drishti_compute_approval` (the approved items, revocable) ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) section 6) | Locked Python environments, staged jars and request scratch folders: files under `<data dir>/compute/` |
-| Administrators' switches (built): `drishti_switch` (commands and packs on or off, each with its hybrid-logical-clock stamp and node) and `drishti_switch_log` (every change, with who and why); the system of record that Drishti*net gossip spreads ([USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#where-it-is-kept)). New tables only: the schema version does not move | |
-| Anything relational added later | Files that are documents by nature (Sutras, packs, connector and net configuration): they stay files under `config/` |
+| Collaboration: notes, shares, threads, comments, mentions, inbox and outbox, holds and seals | The **lakes** (Delta, Iceberg): source data, written only by the loader (`lake build`, `lake publish`) |
+| BI workspaces, items, versions, usage and runs with `drishti.bi.store: jpa` / `drishti.bi.runs.store: local` (one node; by default they live in the content store, [section 5](#5-the-content-store-user-content-every-node-reaches) section 9) | **Caches** (RocksDB, layout and fingerprint caches): derived, safe to delete |
+| The content store's table `drishti_content` when `config/store/store.yaml` says `backend: database` (through this database's one pool) | **Source systems** (ENDUR, CALYPSO, MUREX, connector databases): Drishti reads them, and writes to them only through a connector's `writes:` |
+| Write-back: `drishti_edit_lane`, `drishti_edit_log`, `drishti_edit_request`, `drishti_overlay`, `drishti_owned`, `drishti_edit_version`, `drishti_edit_cursor` ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) sections 5, 7, 11 and 19) | Locked Python environments, staged jars and request scratch folders: files under `<data dir>/compute/` |
+| Compute approvals: `drishti_compute_request`, `drishti_compute_approval` ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) section 6) | Files that are documents by nature (Sutras, packs, connector and net configuration): they stay files under `config/` |
+| Administrators' switches: `drishti_switch`, `drishti_switch_log` ([USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#where-it-is-kept)) | |
+| `drishti_schema`: the schema version stamp (section 4) | |
 
-The rule for a new feature: **state Drishti owns and must not lose, with rows and keys, goes in the Drishti database.** A feature
-never opens its own SQLite file or its own schema.
+The rule for a new feature: **state Drishti owns and must not lose, with rows and keys, goes in the Drishti database**, through its one
+pool. A feature never opens its own SQLite file, its own pool or its own schema. A test (`SchemaParityTest`) fails the build when code
+outside the schema files creates or alters a table; the only exceptions are the compute engines and connector loaders that work on their
+own databases (DuckDB, a source system), each listed in the test with the reason.
 
-### 3. SQLite or PostgreSQL
+### 2. SQLite or PostgreSQL
 
-| | SQLite (default) | PostgreSQL (long term) |
+| | SQLite (default) | PostgreSQL |
 |---|---|---|
 | For | one server: a laptop, Windows, a demo, a developer | several servers, production, managed backups |
-| Install | nothing: a file under the data folder | a PostgreSQL 14+ server (or RDS / Aurora PostgreSQL) |
+| Install | nothing: a file under the data folder (`data/identity/drishti.db`) | a PostgreSQL 14+ server (or RDS / Aurora PostgreSQL) |
 | Writers | one at a time (WAL: readers never wait; `busy_timeout`, `IMMEDIATE` transactions) | many |
-| Several Drishti servers | each has its own file; nothing is shared (write-back: section 8 and WRITE_BACK.md › The design and its reasons, section 11) | all share one database: identity, roles and the edit log are cluster-wide |
-| Backup | copy the file with the server stopped, or the planned `drishti.py db copy` to a new file | the DBA's backups, point-in-time recovery |
+| Several Drishti servers | each has its own file; nothing is shared (write-back: section 7 and WRITE_BACK.md section 11) | all share one database: identity, roles and the edit log are cluster-wide |
+| Backup | SQLite's online backup of the file, or `drishti.py db copy` to a new file with the servers stopped | the DBA's backups, point-in-time recovery |
 
-The two are equals in the code: every query is tested on both; neither is a "test" database.
+The two are equals in the code: the same tables, the same SQL; the few dialect differences live in the two schema files.
 
-### 4. No migrations: two complete schema files
+### 3. No migrations: two complete schema files
 
-**No database migrations, ever.** No Flyway, no Liquibase, no numbered `ALTER` scripts, no column fix-ups in Java.
+There are **exactly two schema files**, `db/schema-sqlite.sql` and `db/schema-postgres.sql` (in `drishti-identity`, which owns the
+database: `DrishtiDatabase`, `DatabaseSchema`, `DatabaseCopy`). Each is the **complete** schema: every table, column, key and index.
 
-- There are **exactly two schema files**, one per kind, each the **complete** schema: every table, column, key and index Drishti uses.
-  They move from `drishti-identity` to the module that owns the Drishti database (`db/schema-sqlite.sql`, `db/schema-postgres.sql`).
-- They are **applied at every start, idempotently**: `CREATE TABLE IF NOT EXISTS`, `CREATE INDEX IF NOT EXISTS`. A fresh database
-  gets everything; an existing one at the same version is left as it is. A **new table** in a release is simply created by this step.
-- A **parity test** reads both files and checks they define the same tables, the same columns (by name, nullability and a mapped type:
-  `TEXT`↔`VARCHAR`, `INTEGER` 0/1↔`BOOLEAN`, `INTEGER PRIMARY KEY AUTOINCREMENT`↔`BIGSERIAL`), the same primary, unique and foreign keys
-  and the same indexes. A change to one file without the other fails the build.
-- A change to an **existing table's shape** (a column added, removed, retyped, a key changed) is made in both files, bumps the schema
-  version (section 5), and is reached by an existing database through `db copy` (section 6), never by an `ALTER`.
+- They are **applied at every start, idempotently** (`CREATE TABLE IF NOT EXISTS`, `CREATE INDEX IF NOT EXISTS`). A fresh database gets
+  everything; a new table in a release is simply created by this step.
+- Neither holds an `ALTER`, `DROP`, `UPDATE` or `INSERT`, and no Java code adds a column: no Flyway, no Liquibase, no numbered scripts,
+  no column fix-ups.
+- `SchemaParityTest` reads both files: the same tables, the same columns by name and nullability, the same indexes, the same schema
+  version; only the column types differ (SQLite types by value, PostgreSQL by declaration).
+- A change to an **existing table's shape** (a column added, removed or retyped, a key changed) is made in both files and bumps the
+  schema version (section 4). An existing database reaches it only through `db copy` (section 5).
 
 ```
  release N                       release N+1 (a column added to drishti_note)
- schema-sqlite.sql   (v4)        schema-sqlite.sql   (v5)   ─┐  parity test: same tables, columns, keys
- schema-postgres.sql (v4)        schema-postgres.sql (v5)   ─┘
+ schema-sqlite.sql   (v1)        schema-sqlite.sql   (v2)   ─┐  parity test: same tables, columns, indexes, version
+ schema-postgres.sql (v1)        schema-postgres.sql (v2)   ─┘
           │                                 │
-  existing db (v4) ── start N+1 ──▶ refused: "made by schema 4, this server needs 5: drishti.py db copy …"   (planned)
-          └──────────── drishti.py db copy ──▶ fresh db (v5) built from the complete schema, rows copied ──▶ start   (planned)
+  existing db (v1) ── start N+1 ──▶ refused: "made by schema 1; this server needs schema 2 … drishti.py db copy …"
+          └──────────── drishti.py db copy ──▶ fresh db (v2) built from the complete schema, rows copied, stamped ──▶ start
 ```
 
 Why: a complete file is the truth you can read in one place; there is no chain of scripts to replay, reorder or repair, and SQLite's
 limited `ALTER TABLE` never shapes the design.
 
-### 5. The schema version stamp
+### 4. The schema version stamp
 
-A one-row table holds the stamp:
-
-```sql
-CREATE TABLE IF NOT EXISTS drishti_schema (
-    id          INTEGER   PRIMARY KEY CHECK (id = 1),
-    version     INTEGER   NOT NULL,          -- the schema files' version, written in their first line
-    written_by  TEXT      NOT NULL,          -- the Drishti release that built the database
-    written_at  TIMESTAMP NOT NULL
-);
-```
-
-At start, after the idempotent apply:
+Each schema file carries its version on a line of its own (`-- schema-version: 1`); the one-row table `drishti_schema` holds the version
+that built the database (`version`, `written_by`: the release, `written_at`). At start, after the idempotent apply:
 
 | The database | The server |
 |---|---|
 | empty (new) | builds it from the complete schema and stamps it with the files' version |
-| stamped with the files' version | starts |
-| stamped with another version (older or newer) | **refuses to start**, naming both versions and the command: `the Drishti database was made by schema 4; this server needs schema 5. Stop the servers and run: drishti.py db copy --from config/db/database.yaml --to <new database.yaml>` |
-| not stamped (made by an older release) | compares its tables with the schema; if every existing table already has the schema's columns and keys it stamps it and starts, otherwise it refuses as above |
+| stamped with the files' version, holding every column of the schema | starts |
+| stamped with another version | **refuses to start**: `the Drishti database … was made by schema 1; this server needs schema 2. Stop the servers and copy it into a fresh database: drishti.py db copy --from config/db/database.yaml --to <new database.yaml> …` |
+| lacking a column the schema declares (an existing table made by an older schema) | refuses the same way, naming the missing columns |
+| not stamped (made before the stamp) but holding every column | is stamped and starts |
 
 The version moves only when an existing table changes shape; a release that only adds tables keeps it.
 
-### 6. Switching and upgrading: `db copy`
+### 5. Upgrading and switching: `db copy`
 
-Switching from SQLite to PostgreSQL, from PostgreSQL to another PostgreSQL, or upgrading across a schema version is **one command**:
+Switching from SQLite to PostgreSQL (or back, or to another PostgreSQL), and upgrading across a schema version, is **one command**,
+run with the servers stopped:
 
 ```
-drishti.py db copy --from config/db/database.yaml --to config/db/database.postgres.yaml [--check] [--batch 5000]   # planned, not built
+drishti.py db copy --from config/db/database.yaml --to new-database.yaml [--check] [--drop-columns] [--data-dir DIR] [--json]
 ```
 
-1. **Refuses** while a server uses the source (it checks the cluster's members and the SQLite lock); the copy needs the servers stopped.
-2. **Builds a fresh target** from the complete schema of the target's kind (it refuses a target that already has tables, unless
-   `--replace`).
-3. **Copies the rows** table by table in foreign-key order, in batches, columns matched by name: a column new in the target takes its
-   declared default; a column the target no longer has is listed and needs `--drop-columns` to proceed. Sequences (PostgreSQL) are set
-   past the highest copied key.
-4. **Checks** row counts per table and a checksum of every key column; any difference fails the copy and leaves the source untouched.
-5. **Stamps** the target with the schema version and prints the line to put in `database.yaml`.
+Each file has the layout of `config/db/database.yaml`. The command runs in Java from the server's exec jar, without starting a server
+(`java -jar drishti-server-*-exec.jar db copy …`).
 
-The source is never changed, so going back is pointing `database.yaml` at it again. `--check` does everything except the writes and
-reports what would be copied. Admin → Database shows the kind, the version, the size per table and the command for a copy.
+1. **Refuses a target that is not fresh:** a SQLite file that exists, or a PostgreSQL database whose Drishti tables hold rows.
+2. **Builds the target** from the complete schema of its kind.
+3. **Copies the rows** table by table in the schema file's order (parents before the tables that refer to them), in batches of 1,000,
+   columns matched by name: a column new in the schema takes its declared default; a column the schema no longer has is named and needs
+   `--drop-columns` to proceed. Values are read in the target's terms (SQLite's 0/1 booleans and epoch-millisecond times become
+   PostgreSQL's `BOOLEAN` and `TIMESTAMP WITH TIME ZONE`, and back). PostgreSQL's identity columns are set past the highest copied key.
+4. **Checks** every table's row count on both sides; any difference fails the copy.
+5. **Stamps** the target with the schema version.
 
-### 7. Configuration: `config/db/database.yaml` (planned)
+The source is never changed, so going back is pointing `config/db/database.yaml` at it again. `--check` reads the source and reports
+what would be copied (rows per table, new columns, columns to drop) and writes nothing. Tested SQLite → SQLite across a schema change
+(`DatabaseCopyTest`) and SQLite → PostgreSQL → SQLite (`PostgresDatabaseCopyTest`, Docker).
 
-The database has its own file, like `config/connectors/` and `config/net/`, never in `application.yaml`. `application.yaml` keeps only
-the pointer:
+### 6. Configuration: `config/db/database.yaml`
+
+The database has its own file, like `config/store/` and `config/net/`; `application.yaml` only imports it
+(`DRISHTI_DATABASE_CONFIG` names another file). Its keys are `drishti.database.*`:
 
 ```yaml
 drishti:
-  db:
-    file: ${DRISHTI_DB_FILE:./config/db/database.yaml}   # the Drishti database; ready-made files in config/db.examples/
+  database:
+    kind: ${DRISHTI_DB_KIND:sqlite}         # sqlite | postgres
+    sqlite:
+      file: ${DRISHTI_DB_FILE:${drishti.data.dir:./data}/identity/drishti.db}
+    postgres:
+      url: ${DRISHTI_DB_URL:}               # jdbc:postgresql://db:5432/drishti
+      user: ${DRISHTI_DB_USER:drishti}
+      password: ${DRISHTI_DB_PASSWORD:}     # only from the environment
+    pool:                                   # each key left out is the site's drishti.db.pool.*
+      # size: 20                            # unset: drishti.db.pool.size (20) on PostgreSQL, 8 on SQLite
 ```
 
-The planned `config/db/database.yaml` (not shipped yet):
+- `drishti.db.pool` in `application.yaml` stays the default pool of the **database connectors** and of this database; a key under
+  `drishti.database.pool` (`size`, `min-idle`, `idle-timeout`, `max-lifetime`, `connection-timeout`, `leak-threshold`,
+  `statement-timeout`) wins for this database.
+- The password is only ever a `${ENV}` placeholder.
+- The `drishti.identity.database-*` keys and the `DRISHTI_IDENTITY_DB_*` variables are not read: a server that finds one set refuses to
+  start and names the key to use instead.
 
-```yaml
-kind: sqlite                     # sqlite (default, one server) | postgres (several servers, production)
-sqlite:
-  file: ${drishti.data.dir}/identity/drishti.db     # under the data folder; the same file identity uses today, so an upgrade keeps it
-postgres:
-  url: ${DRISHTI_DB_URL:${DRISHTI_IDENTITY_DB_URL:}}            # jdbc:postgresql://db:5432/drishti
-  user: ${DRISHTI_DB_USER:${DRISHTI_IDENTITY_DB_USER:}}
-  password: ${DRISHTI_DB_PASSWORD:${DRISHTI_IDENTITY_DB_PASSWORD:}}   # only a ${ENV} placeholder; a literal is refused at start
-pool:
-  size: 20                       # PostgreSQL; SQLite (one writer) keeps 8
-  min-idle: 2
-  idle-timeout: 10m
-  max-lifetime: 30m
-  connection-timeout: 10s
-  leak-threshold: 60s
-  statement-timeout: 5m          # PostgreSQL only
-```
-
-- **The identity database settings move here:** `drishti.identity.database-url`, `database-user`, `database-password` and
-  `database-pool-size` leave `application.yaml`. The identity block keeps what is not about the database (passwords, lockout, the seed
-  administrator, `refresh-seconds`). A server that still finds one of the moved keys set starts, uses it, and warns once naming
-  `config/db/database.yaml` (planned); the old `DRISHTI_IDENTITY_DB_*` environment names keep working through the placeholders above.
-- `drishti.db.pool` in `application.yaml` stays as the default pool of the **database connectors**; the Drishti database's own pool is
-  the `pool:` above.
-- The password is only ever a `${ENV}` placeholder (the same rule as connector files).
-
-### 8. Several servers
+### 7. Several servers
 
 | Setup | The Drishti database | Write-back's edit log ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) section 11) |
 |---|---|---|
@@ -3384,48 +3346,16 @@ pool:
 | several servers on AWS, no PostgreSQL | SQLite per server | S3 conditional writes |
 | several servers, neither | SQLite per server | one named *edit primary* holds it; the others forward |
 
-PostgreSQL is what makes a cluster one system for everything Drishti owns; a cluster on SQLite works, and Admin → Edits and
-Admin → Database say plainly what is not shared.
+PostgreSQL is what makes a cluster one system for everything Drishti owns; a cluster on SQLite works, and Admin → Edits says plainly what
+is not shared. Every node of a cluster uses the same `config/db/database.yaml`.
 
-### 9. Today and the change
-
-| Today | After item 0 |
-|---|---|
-| `IdentityDatabase` in drishti-identity opens the pool and applies `db/schema-*.sql` (idempotent, "no migrations") | a `DrishtiDatabase` opens the one pool and applies the two complete files; identity, write-back and later features take their connections from it |
-| on SQLite three column fix-ups run in Java (`ensureHoldRange`, `ensureTokenScopes`, `ensureShareViewState`) | removed: the columns are in the complete schema; an older database without them is stamped only if it has them, otherwise `db copy` |
-| settings in `application.yaml` under `drishti.identity.database-*` | `config/db/database.yaml` (planned); a pointer in `application.yaml` |
-| no stamp, no parity test | `drishti_schema` and the parity test |
-
-### 10. Build plan
-
-| Step | What | Accepted when |
-|---|---|---|
-| 0.1 | `DrishtiDatabase` (pool, dialect, idempotent apply), the schema files moved, `drishti_schema`; identity uses it | every identity test passes on SQLite and PostgreSQL unchanged |
-| 0.2 | planned: `config/db/database.yaml`, `config/db.examples/`, the pointer, the moved keys with their warning | an older data folder starts with its users, roles and tokens and no setting changed |
-| 0.3 | the parity test; the column fix-ups removed | a column in one file and not the other fails the build |
-| 0.4 | planned: `drishti.py db copy` (and `--check`), the refusal on a version mismatch, Admin → Database | SQLite → PostgreSQL → SQLite round trip gives identical rows; a mismatched stamp refuses to start with the command named |
-| 0.5 | docs: CONFIGURATION, the admin guide, a tutorial step (UI, CLI, YAML) | the docs tests pass |
-
-The edit-log tables of write-back ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) section 7) are added to both files in W1, on this base (built
-2026-10-25, in the files under `drishti-identity` until they move; the parity test covers them).
-
-### 11. Tests
-
-- **Parity:** the two files define the same tables, columns, keys and indexes.
-- **Idempotent:** applying the schema twice changes nothing; a new table is created on an existing database.
-- **Stamp:** a database stamped with another version refuses to start and names `db copy`; an unstamped one with the right shape is stamped.
-- **Copy:** SQLite → PostgreSQL → SQLite keeps every row (counts and key checksums); a dropped column needs `--drop-columns`; a running
-  server blocks the copy.
-- **Upgrade:** an older data folder starts with its users and settings; the old environment names still reach PostgreSQL.
-
-### 12. Decisions (product owner, 2026-10-20)
+### 8. Decisions (product owner, 2026-10-20)
 
 1. **One Drishti database** for all Drishti-owned relational state: identity, the write-back edit log, lanes, overlays and owned data,
    and anything relational later. PostgreSQL long term; SQLite the default for single-node setups; switch by configuration at any time.
 2. **No migrations, ever:** two complete schema files (SQLite, PostgreSQL), applied idempotently at start, kept equal by a parity test.
-3. **Switching or upgrading is `drishti.py db copy` (planned):** a fresh database from the complete schema with the rows copied; a schema version
+3. **Switching or upgrading is `drishti.py db copy`:** a fresh database from the complete schema with the rows copied; a schema version
    stamp makes the server refuse a mismatch and name the command.
-4. **Its own configuration file** (planned), `config/db/database.yaml` (`kind: sqlite | postgres`, the SQLite file under the data folder, the
-   PostgreSQL url, user and password as `${ENV}`, the pool); the identity database settings move there; `application.yaml` keeps a pointer.
+4. **Its own configuration file**, `config/db/database.yaml` (`kind: sqlite | postgres`, the SQLite file under the data folder, the
+   PostgreSQL url, user and password as `${ENV}`, the pool); `application.yaml` only imports it.
 5. **DuckDB is compute, not this store.**
-6. Built as **item 0**.

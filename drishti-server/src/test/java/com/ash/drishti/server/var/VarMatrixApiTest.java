@@ -82,7 +82,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
         "drishti.security.roles.masked.kinds[0]=*", "drishti.security.roles.masked.raw=false",
         "drishti.security.roles.desk-y.kinds[0]=*", "drishti.security.roles.desk-y.raw=true", "drishti.var.access.desk-y[MGMT~DESK-Y]=positions",
         "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
-        "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)

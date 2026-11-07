@@ -62,7 +62,7 @@ import org.springframework.test.context.DynamicPropertySource;
         "drishti.var.official.on-start=false", "drishti.var.official.enabled=false", "drishti.var.currencies[0]=USD",
         "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0", "drishti.var.refusal-ttl-seconds=3",
         "drishti.disk.min-free-gb=100000000",                          // a guard past any disk: every build is refused for room
-        "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=target/identity-${random.uuid}/identity.db"})
 @Import(PinnedBusinessDate.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class VarRefusalRememberedTest {

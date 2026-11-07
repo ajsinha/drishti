@@ -53,7 +53,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"drishti.sources.plugins.demo.settings.tick-ms=60", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.security.registered-users-only=false",
-        "drishti.packs.enabled=trading,counterparty-risk,market-risk", "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/bi-live-${random.uuid}/identity.db",
+        "drishti.packs.enabled=trading,counterparty-risk,market-risk", "drishti.database.sqlite.file=${drishti.test.dir}/bi-live-${random.uuid}/identity.db",
         "drishti.packs.overlay=${drishti.test.dir}/bi-live-overlay/added.yaml", "drishti.bi.dir=${drishti.test.dir}/bi-live-folder", "drishti.tables.root=${drishti.test.dir}/bi-live-folder/tables", "drishti.bi.folder-refresh=1s",
         "drishti.bi.query.store-dir=${drishti.test.dir}/bi-live-store/${random.uuid}", "drishti.bi.live.batch=30ms", "drishti.bi.live.frame=50ms",
         "drishti.bi.live.status=1s", "drishti.bi.live.max-streams-per-user=2"})

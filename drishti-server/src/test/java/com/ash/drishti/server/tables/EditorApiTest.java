@@ -49,7 +49,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.rachana.hot-reload=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/editors-${random.uuid}/identity.db",
+        "drishti.database.sqlite.file=${drishti.test.dir}/editors-${random.uuid}/identity.db",
         "drishti.bi.dir=${drishti.test.dir}/editors-bi-folder-${random.uuid}", "drishti.bi.query.store-dir=${drishti.test.dir}/editors-store/${random.uuid}"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

@@ -82,7 +82,7 @@ class ArtifactApiTest {
         r.add("drishti.sources.connectors-dir", () -> root.resolve("connectors").toString());
         r.add("drishti.admin.uninstalled-dir", () -> root.resolve("uninstalled").toString());
         r.add("drishti.admin.hidden-bi-file", () -> root.resolve("hidden.txt").toString());
-        r.add("drishti.identity.database-url", () -> "jdbc:sqlite:" + root.resolve("identity/identity.db"));
+        r.add("drishti.database.sqlite.file", () -> root.resolve("identity/identity.db").toString());
         r.add("drishti.bi.query.store-dir", () -> root.resolve("bi-store").toString());
     }
 

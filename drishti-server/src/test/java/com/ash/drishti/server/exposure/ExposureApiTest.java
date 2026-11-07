@@ -73,7 +73,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.security.roles.agg.kinds[0]=*", "drishti.security.roles.agg.raw=true", "drishti.ccr.exposure.access.agg[CP-1]=aggregate",
         "drishti.security.roles.other.kinds[0]=*", "drishti.security.roles.other.raw=true", "drishti.ccr.exposure.access.other[CP-2]=trades",
         "drishti.security.roles.curves.kinds[0]=curve",
-        "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)

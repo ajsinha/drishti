@@ -51,7 +51,7 @@ public class EffectiveSettingsController {
     static final String MASK = "••••";
     static final List<String> TREES = List.of("drishti.", "server.", "spring.", "management.", "logging.", "springdoc.");
     static final Set<String> KNOWN_SECRETS = Set.of("drishti.security.secret", "drishti.security.metrics-token", "spring.mail.password",
-            "spring.datasource.password", "drishti.identity.database-password", "drishti.identity.seed-password", "drishti.http.proxy.password");
+            "spring.datasource.password", "drishti.database.postgres.password", "drishti.identity.seed-password", "drishti.http.proxy.password");
     private static final Set<String> SECRET_WORDS = Set.of("secret", "secrets", "password", "passwd", "passphrase", "token", "key", "credential",
             "credentials", "apikey");
     private static final Pattern WORDS = Pattern.compile("[.\\-_\\[\\]]+");

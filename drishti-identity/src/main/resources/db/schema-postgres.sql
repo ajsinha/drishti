@@ -11,9 +11,20 @@
 -- written permission of the copyright holder.
 --
 -- See the LICENSE file in the root of this repository for the full terms.
--- Drishti identity schema for PostgreSQL. Applied at start-up; every statement is idempotent (IF NOT EXISTS), so this
--- file is the whole schema, not a migration. Its twin is schema-sqlite.sql; the JPA entities in
--- com.ash.drishti.identity.db map onto both, and a test checks each against them.
+-- The complete schema of the Drishti database for PostgreSQL: every table Drishti owns (identity, collaboration, BI, runs, the
+-- content store, compute approvals, switches, write-back). Applied at every start; every statement is idempotent (IF NOT EXISTS), so
+-- this file is the whole schema, never a migration. Its twin is schema-sqlite.sql (a test keeps the two equal); the JPA entities in
+-- com.ash.drishti.identity.db map onto both. A change to an existing table's shape is made in both files and bumps the version below;
+-- an existing database reaches it only by `drishti.py db copy` into a fresh one (docs/architecture/DATA_ARCHITECTURE.md).
+-- schema-version: 1
+
+-- The schema version stamp: the version of these files that built the database (one row).
+CREATE TABLE IF NOT EXISTS drishti_schema (
+    id         INTEGER      PRIMARY KEY CHECK (id = 1),
+    version    INTEGER      NOT NULL,
+    written_by VARCHAR(64)  NOT NULL,
+    written_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
 
 CREATE TABLE IF NOT EXISTS drishti_user (
     username             VARCHAR(64)  PRIMARY KEY,
@@ -168,7 +179,6 @@ CREATE TABLE IF NOT EXISTS drishti_api_token (
     scopes       VARCHAR(200)
 );
 CREATE INDEX IF NOT EXISTS drishti_api_token_user ON drishti_api_token (username);
-ALTER TABLE drishti_api_token ADD COLUMN IF NOT EXISTS scopes VARCHAR(200);
 
 -- Console sign-in sessions: a row per session, by a hash of its id; signing out, or disabling, deleting or resetting
 -- the password of the user, removes the rows, and the console then refuses the cookie.
@@ -227,12 +237,11 @@ CREATE TABLE IF NOT EXISTS drishti_share (
     masked_spans VARCHAR(2000) NOT NULL,
     channels VARCHAR(40) NOT NULL,
     thread_id VARCHAR(30),
-    hash VARCHAR(64) NOT NULL
+    hash VARCHAR(64) NOT NULL,
+    view_state VARCHAR(4100)
 );
 CREATE INDEX IF NOT EXISTS drishti_share_sender ON drishti_share (sender, id);
 CREATE INDEX IF NOT EXISTS drishti_share_entity ON drishti_share (kind, entity_id);
--- The reader's view state sent with the share (control values and column filters, as query text); rows made before it have none.
-ALTER TABLE drishti_share ADD COLUMN IF NOT EXISTS view_state VARCHAR(4100);
 
 CREATE TABLE IF NOT EXISTS drishti_share_recipient (
     share_id VARCHAR(30) NOT NULL,
@@ -360,10 +369,10 @@ CREATE TABLE IF NOT EXISTS drishti_collab_hold (
     placed_by VARCHAR(64) NOT NULL,
     placed_at TIMESTAMP WITH TIME ZONE NOT NULL,
     released_by VARCHAR(64),
-    released_at TIMESTAMP WITH TIME ZONE
+    released_at TIMESTAMP WITH TIME ZONE,
+    date_from TIMESTAMP WITH TIME ZONE,
+    date_to TIMESTAMP WITH TIME ZONE
 );
-ALTER TABLE drishti_collab_hold ADD COLUMN IF NOT EXISTS date_from TIMESTAMP WITH TIME ZONE;
-ALTER TABLE drishti_collab_hold ADD COLUMN IF NOT EXISTS date_to TIMESTAMP WITH TIME ZONE;
 
 CREATE TABLE IF NOT EXISTS drishti_collab_seal (
     seal_key VARCHAR(200) PRIMARY KEY,

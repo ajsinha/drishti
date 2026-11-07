@@ -178,7 +178,7 @@ Nothing in `requires:` is fetched, built or run until an administrator approves 
   `compute-approve` role power is planned); never the person who changed the connector file (four
   eyes, as for write-back approvals).
 - **Recorded:** each decision is an audit entry (who, when, what, why), and the approved set is kept in the Drishti database
-  ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built)) as rows of a planned `drishti_compute_approval` table, so every node of a cluster sees the same
+  ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#6-the-one-drishti-database)) as rows of a planned `drishti_compute_approval` table, so every node of a cluster sees the same
   approvals.
 - **Revocation:** an administrator can revoke an approval; new requests are refused at once, in-flight ones finish.
 - **Signed packs:** a pack archive from the signed registry may ship wheels and jars; the signature proves where they came from, not

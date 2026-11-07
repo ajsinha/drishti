@@ -44,7 +44,7 @@ import org.springframework.test.web.servlet.ResultActions;
         "drishti.rachana.studio-save=true", "drishti.rachana.dirs=${java.io.tmpdir}/drishti-form-${random.uuid}",
         "drishti.governance.dir=${java.io.tmpdir}/drishti-form-props-${random.uuid}",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/form-api-${random.uuid}/identity.db",
+        "drishti.database.sqlite.file=${drishti.test.dir}/form-api-${random.uuid}/identity.db",
         "drishti.builder.designs.dir=${drishti.test.dir}/form-api-files-${random.uuid}"})
 @AutoConfigureMockMvc
 class DesignFormApiTest {

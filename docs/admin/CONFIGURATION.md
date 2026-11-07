@@ -324,6 +324,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | Variable | Sets | Default | What it does |
 |---|---|---|---|
 | `DRISHTI_PACKS_OVERLAY` | `spring.config.import` | `./data/packs/added.yaml` | The file of packs an administrator loaded from Admin → Packs; imported at start (`spring.config.import`) and named again by `drishti.packs.overlay`. Written by the server, not by hand. |
+| `DRISHTI_DATABASE_CONFIG` | `spring.config.import` | `./config/db/database.yaml` | The Drishti database's own file ([The Drishti database](#the-drishti-database-configdbdatabaseyaml)); imported at start. |
 | `DRISHTI_PORT` | `server.port` | `18480` | The server's HTTP port. |
 | `DRISHTI_HTTP2` | `server.http2.enabled` | `true` | HTTP/2 on the server's port as well as HTTP/1.1: Drishti*net peers multiplex their forwarded reads over one connection (`h2c` by the upgrade on plain HTTP, ALPN on TLS; up to 1,000 streams per connection), and browsers over TLS get it too. `false`: HTTP/1.1 only; peers then fall back to it on the same call ([OPERATIONS.md › Drishti*net: running several servers as one, section 7](OPERATIONS.md#7-routing-where-a-request-goes)). |
 | `DRISHTI_PRODUCT` | `drishti.branding.product` | `Drishti` | The product name shown in pages and messages. |
@@ -426,9 +427,6 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_AI_DEFAULT_MODEL` | `drishti.ai.default-model` | empty | The model used when a call names none: `provider/model`, or a model name only one provider has. |
 | `DRISHTI_MCP_ENABLED` | `drishti.mcp.enabled` | `false` | Turn on the MCP client ([AI.md](AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy)): server files in `drishti.mcp.dir` are read and their tools become callable through the policy. |
 | `DRISHTI_MCP_DIR` | `drishti.mcp.dir` | `./config/mcp` | The folder of MCP server files, one YAML per server (transport, `url`, `headers` as `${ENV}`, `allowed-tools`). Watched and reloaded live. |
-| `DRISHTI_IDENTITY_DB_URL` | `drishti.identity.database-url` | `jdbc:sqlite:./data/identity/drishti.db` | The identity database (users, roles, workspaces, audit); SQLite by default, or `jdbc:postgresql://…`. |
-| `DRISHTI_IDENTITY_DB_USER` | `drishti.identity.database-user` | empty | Its user. |
-| `DRISHTI_IDENTITY_DB_PASSWORD` | `drishti.identity.database-password` | empty | Its password. |
 | `DRISHTI_USERS_FILE` | `drishti.identity.users-file` | `./data/identity/users.json` | The pre-1.10 users file, imported once into an empty database. |
 | `DRISHTI_AUDIT_FILE` | `drishti.identity.audit-file` | `./data/identity/audit.jsonl` | The pre-1.10 audit file, imported once. |
 | `DRISHTI_FORCE_PW_CHANGE_ON_CREATE` | `drishti.identity.force-password-change-on-create` | `false` | Force a password change for newly created users. |
@@ -591,8 +589,9 @@ at start; a connector's own keys are live-reloaded with its file. Full guide: [C
 | `leak-threshold` (`pool-leak-threshold`) | `60s` | A connection borrowed longer than this is logged once as a WARNING with the stack of the code that borrowed it (`0` turns it off). |
 | `statement-timeout` (`statement-timeout`) | `5m` | The longest one statement or operation may run (PostgreSQL `statement_timeout`; MongoDB socket read timeout; Aerospike read and write `totalTimeout`; `0` for none). |
 
-Applies to the JDBC/PostgreSQL connector and its loader, MongoDB, Redis, Aerospike and the identity database on PostgreSQL. Not pooled, by design:
-**SQLite** (the default identity database) and **DuckDB**, embedded files opened inside the server process, with no network, no server connection limit and
+Applies to the JDBC/PostgreSQL connector and its loader, MongoDB, Redis, Aerospike and the Drishti database on PostgreSQL (its own
+`drishti.database.pool.*` keys win, [The Drishti database](#the-drishti-database-configdbdatabaseyaml)). Not pooled, by design:
+**SQLite** (the Drishti database's default) and **DuckDB**, embedded files opened inside the server process, with no network, no server connection limit and
 nothing to exhaust; they still close everything they open (an architecture test checks it). A time is seconds, or a number with `ms`, `s`, `m` or `h`.
 A value that does not parse stops the start naming the setting. Sizing: the database's `max_connections` must cover the sum of the pools of every
 server instance ([OPERATIONS.md, Sizing the connection pools](OPERATIONS.md#sizing-the-database-connection-pools)). Environment: the loaders read
@@ -1037,15 +1036,14 @@ Branding keys of the console beside `ui.product`: `ui.placeholder` (the command 
 browser and home-screen icons; the generated `/manifest.webmanifest` follows them). The console takes the server's product name and
 tagline from its about answer unless its own `ui.product` is set. The advice for `DRS-1017` and `DRS-4023` is in `ui.error_advice`.
 
-### `drishti.identity` — users, passwords and the identity database
+### `drishti.identity` — users and passwords
 
-Users, roles, saved workspaces and the audit trail live in one database (SQLite by default, PostgreSQL for several
-servers). The environment variables of this section are in the [environment variable index](#environment-variable-index).
+Users, roles, saved workspaces and the audit trail live in the Drishti database, configured in its own file
+([The Drishti database](#the-drishti-database-configdbdatabaseyaml)). The environment variables of this section are in the
+[environment variable index](#environment-variable-index).
 
 | Key | Default | Meaning |
 |---|---|---|
-| `database-url` / `database-user` / `database-password` | `jdbc:sqlite:./data/identity/drishti.db` / empty / empty (`DRISHTI_IDENTITY_DB_URL`, `_USER`, `_PASSWORD`) | The database; `jdbc:postgresql://host:5432/drishti` for PostgreSQL. |
-| `database-pool-size` | unset | Connections in the pool. Unset: PostgreSQL uses [`drishti.db.pool.size`](#drishtidbpool--database-connection-pools) (`20`), with its times and leak detection; SQLite is an embedded file with one writer at a time, is not pooled in that sense, and keeps `8`. |
 | `refresh-seconds` | `15` | How soon servers sharing one database see each other's role and pack changes. |
 | `iterations` | `240000` | PBKDF2-HMAC-SHA256 iterations for new password hashes. |
 | `min-password-length` | `10` | The shortest password accepted. |
@@ -1370,20 +1368,40 @@ Sample documents are never logged; deleting a Design deletes its samples at once
 | `sweep-interval` | `1h` | How often expired Designs are deleted. |
 | `max-ops` | `100` | Steps of the operation log a Design keeps for undo and redo (the oldest are dropped). |
 
+### The Drishti database: `config/db/database.yaml`
+
+Every table Drishti owns (identity, collaboration, the write-back edit log and lanes, governance, BI items and runs kept on one node,
+compute approvals, switches, the content store's `database` backend) is in **one database**, SQLite by default or PostgreSQL
+([DATA_ARCHITECTURE.md › The one Drishti database](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database)). Its settings are in
+their own file, `config/db/database.yaml`, imported by `application.yaml` (`DRISHTI_DATABASE_CONFIG` names another file), never in
+`application.yaml` itself. A missing file or key means the default. Every node of a cluster uses the same file.
+
+| Key (`drishti.database.`) | Default | Meaning |
+|---|---|---|
+| `kind` | `sqlite` (`DRISHTI_DB_KIND`) | `sqlite` (one file, nothing to install; one node) or `postgres` (several nodes, production). |
+| `sqlite.file` | `<data folder>/identity/drishti.db` (`DRISHTI_DB_FILE`) | The SQLite file. |
+| `postgres.url`, `postgres.user`, `postgres.password` | empty, `drishti`, empty (`DRISHTI_DB_URL`, `DRISHTI_DB_USER`, `DRISHTI_DB_PASSWORD`) | `jdbc:postgresql://host:5432/drishti`; the password only from the environment. |
+| `pool.size`, `pool.min-idle`, `pool.idle-timeout`, `pool.max-lifetime`, `pool.connection-timeout`, `pool.leak-threshold`, `pool.statement-timeout` | the site's [`drishti.db.pool`](#drishtidbpool--database-connection-pools) | The database's own pool; a key left out is the site's. The size is `20` on PostgreSQL and `8` on SQLite (one writer at a time) unless set here. |
+
+The schema is two complete files in the server (`db/schema-sqlite.sql`, `db/schema-postgres.sql`), applied at every start; there are no
+migrations. A database made by another schema version refuses to start and names the copy command; upgrading and switching between
+SQLite and PostgreSQL are `drishti.py db copy --from config/db/database.yaml --to <new>.yaml`
+([OPERATIONS.md, Upgrading the Drishti database](OPERATIONS.md#103-upgrading-the-drishti-database)). The old keys
+`drishti.identity.database-url`, `-user`, `-password`, `-pool-size` and the variables `DRISHTI_IDENTITY_DB_*` are not read; a server
+that finds one set refuses to start and names the key to use.
+
 ### The content store: `config/store/store.yaml`
 
 User content that every node of a Drishti*net cluster must reach (Build workbench Designs; comment threads, notes, shares, the inbox and
 outbox, legal holds; embed apps, pack switches, the audit trail and Sutra proposals; BI items, workspaces and runs next) is kept in the **content store** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)). Its settings are
 in their own file, named by `drishti.store.file` (`DRISHTI_STORE_FILE`, default `./config/store/store.yaml`), never in
 `application.yaml`. A missing file or key means the default. Ready-made variants: `config/store.examples/` (`laptop.yaml`,
-`cluster-nfs.yaml`, `postgres.yaml`, `s3.yaml`).
+`cluster-nfs.yaml`, `database.yaml`, `s3.yaml`).
 
 | Key | Default | Meaning |
 |---|---|---|
-| `backend` | `filesystem` | `filesystem`, `sqlite`, `postgres` or `s3`. |
+| `backend` | `filesystem` | `filesystem`, `database` or `s3`. `database`: the table `drishti_content` in the Drishti database (`config/db/database.yaml`, SQLite or PostgreSQL), through its one pool. |
 | `filesystem.root` | `<data folder>/fstore` | The folder (`data/fstore`). On a cluster it must be a **shared mount** (NFS, EFS, SMB) at the same path on every node. `DRISHTI_STORE_ROOT` overrides it. |
-| `sqlite.url` | `jdbc:sqlite:<data folder>/identity/drishti.db` | The Drishti database itself (one node). The table `drishti_content` is in its complete schema file. |
-| `postgres.url`, `user`, `password`, `pool` | none, `drishti`, `${DRISHTI_STORE_PASSWORD:}`, `4` | Usually the Drishti database. Needed for `backend: postgres`. |
 | `s3.bucket`, `prefix`, `region`, `endpoint`, `path-style`, `access-key`, `secret-key` | none, empty, `us-east-1`, empty (AWS), `false`, `${DRISHTI_STORE_ACCESS_KEY:}`, `${DRISHTI_STORE_SECRET_KEY:}` | S3 or a compatible store that honours `If-Match` / `If-None-Match` (MinIO: `endpoint` and `path-style: true`). Empty keys: the AWS default credentials chain. |
 
 Every node of a cluster must use the same settings; a node that finds another node recorded with a different root logs
@@ -1396,7 +1414,7 @@ Write-back ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reason
 `drishti.edit.file` (`DRISHTI_EDIT_FILE`, default `./config/edit/edit.yaml`; its siblings `lanes.yaml`, `policy.yaml` and `retention.yaml`
 are read from the same folder). A missing file or key means the default. **Off as shipped**: `edit.enabled: false`, so no change is
 accepted anywhere and no Submit is drawn; a fresh install or an upgrade is read-only. The edit log, lanes, approvals, overlays and owned
-values are tables of the Drishti database (the identity database's pool; [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built)).
+values are tables of the Drishti database (the identity database's pool; [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database)).
 
 | File and key | Default | Meaning |
 |---|---|---|
@@ -2172,7 +2190,7 @@ and follow tables, `drishti_collab_hold`; back them up with the rest of the iden
 | Key | Default | Meaning |
 |---|---|---|
 | `enabled` | `true` (`DRISHTI_COLLAB_ENABLED`) | Everything below. Off: every collaboration endpoint answers `403 DRS-7004`, and `GET /api/v1/collab` says `enabled: false`. |
-| `store` | `jpa` | Where shares and inbox rows are kept: `jpa` (the identity database, SQLite or PostgreSQL) or `file` (`dir`, one server only). The server refuses to start with `file` while `drishti.identity.database-url` is PostgreSQL. |
+| `store` | `jpa` | Where shares and inbox rows are kept: `jpa` (the Drishti database, SQLite or PostgreSQL) or `file` (`dir`, one server only). The server refuses to start with `file` while the Drishti database (`drishti.database.kind`) is PostgreSQL. |
 | `dir` | `./data/collab` (`DRISHTI_COLLAB_DIR`) | The file store's folder, and exports. |
 | `console-url` | empty (`DRISHTI_CONSOLE_URL`) | The console's address; a share's `link` is this plus `/share/sh_…` (relative when empty). Email stays off while it is empty. |
 | `directory.scope` | `shared-packs` | `shared-packs`: the picker lists only users who share at least one assigned pack with the caller (and roles by those people); `all`: every enabled user, for small firms. |
@@ -2710,18 +2728,19 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS.md](OPER
 
 ## Every setting
 
-Every key of every kind: 2,139 settings in 18 areas, and 329 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 2,138 settings in 19 areas, and 331 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
 | Area | Settings |
 |---|---|
-| [The server: `application.yaml`](#the-server-applicationyaml) | 540 |
+| [The server: `application.yaml`](#the-server-applicationyaml) | 538 |
 | [Compute engines: `config/engines/*.yaml`](#compute-engines-configenginesyaml) | 323 |
 | [The console: `application.yaml`](#the-console-applicationyaml) | 187 |
 | [The console's other files](#the-consoles-other-files) | 94 |
 | [Connectors: every plugin's settings](#connectors-every-plugins-settings) | 535 |
 | [Packs: `pack.yaml`](#packs-packyaml) | 137 |
 | [Editions: `config/editions/`](#editions-configeditions) | 70 |
-| [The content store: `config/store/store.yaml`](#the-content-store-configstorestoreyaml) | 14 |
+| [The Drishti database: `config/db/database.yaml`](#the-drishti-database-configdbdatabaseyaml) | 6 |
+| [The content store: `config/store/store.yaml`](#the-content-store-configstorestoreyaml) | 9 |
 | [BI runs: `config/runs/runs.yaml`](#bi-runs-configrunsrunsyaml) | 48 |
 | [Write-back: `config/edit/`](#write-back-configedit) | 18 |
 | [Compute workers: `config/compute/compute.yaml`](#compute-workers-configcomputecomputeyaml) | 23 |
@@ -2732,7 +2751,7 @@ Every key of every kind: 2,139 settings in 18 areas, and 329 environment variabl
 | [The data inbox's routing rules: `config/dataload.yaml`](#the-data-inboxs-routing-rules-configdataloadyaml) | 2 |
 | [The UI kit: `config/ui-kit/brand.yaml`](#the-ui-kit-configui-kitbrandyaml) | 19 |
 | [AI providers and MCP servers: `config/ai/`, `config/mcp/`](#ai-providers-and-mcp-servers-configai-configmcp) | 37 |
-| [Environment variable index](#environment-variable-index) | 329 |
+| [Environment variable index](#environment-variable-index) | 331 |
 
 Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.governance.*` and `drishti.ui-kit.*`, the console's `views.refresh_min_seconds`) are rows of the server and console tables below; the Sutra grammar itself is [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md).
 
@@ -3454,9 +3473,6 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.identity.database-url` | string | `jdbc:sqlite:./data/identity/drishti.db` | `DRISHTI_IDENTITY_DB_URL` | server | Users, roles defined in Admin → Roles, saved workspaces/monitors/settings and the audit trail live in one database (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL: DRISHTI\_IDENTITY\_DB\_URL=jdbc:postgresql://db:5432/drishti DRISHTI\_IDENTITY\_DB\_USER=drishti DRISHTI\_IDENTITY\_DB\_PASSWORD=... The schema (drishti-identity: db/schema-sqlite.sql, db/schema-postgres.sql) is applied at start; no migrations. | restart |  |
-| `drishti.identity.database-user` | string | empty | `DRISHTI_IDENTITY_DB_USER` | server | the identity database's user (PostgreSQL) | restart |  |
-| `drishti.identity.database-password` | string | empty | `DRISHTI_IDENTITY_DB_PASSWORD` | server | its password, from the environment (secret) | restart |  |
 | `drishti.identity.refresh-seconds` | integer | `15` |  | server | servers sharing one database see each other's role and pack changes this soon | restart |  |
 | `drishti.identity.users-file` | string | `./data/identity/users.json` | `DRISHTI_USERS_FILE` | server | The files of releases before 1.10, imported once into an empty database and renamed \*.imported. | restart |  |
 | `drishti.identity.audit-file` | string | `./data/identity/audit.jsonl` | `DRISHTI_AUDIT_FILE` | server | the pre-1.10 audit file, imported into the database once | restart |  |
@@ -3512,6 +3528,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
+| `drishti.db.file` | string | `./config/db/database.yaml` | `DRISHTI_DATABASE_CONFIG` | server | the Drishti database's own file (drishti.database.\*; the import above names the same file) | restart |  |
 | `drishti.db.pool.size` | integer | `20` |  | server | most connections open at once; a connector's own pool-size wins (SQLite and DuckDB are embedded and not pooled) | restart |  |
 | `drishti.db.pool.min-idle` | integer | `2` |  | server | idle connections kept when quiet | restart |  |
 | `drishti.db.pool.idle-timeout` | duration | `10m` |  | server | an idle connection beyond min-idle is closed after this long | restart |  |
@@ -5563,19 +5580,27 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 |---|---|---|---|---|---|---|---|
 | `packs` | list | `[core, market-data, trading, counterparty-risk, market-risk, world-economy, n...` |  | server and console | The packs a server enables when neither DRISHTI\_PACKS (drishti.packs.enabled) nor an edition names them: the full Drishti. The one list (docs/admin/EDITIONS.md › The design as built, section 5.1): the server reads it from its jar (drishti-packs copies this file in at build), the console from this folder; Docker and the stack pass DRISHTI\_PACKS through only when it is set. | restart |  |
 
+### The Drishti database: `config/db/database.yaml`
+
+The one relational database of every table Drishti owns, SQLite (the default) or PostgreSQL, built from two complete schema files with no migrations ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md), [OPERATIONS.md](OPERATIONS.md)); `DRISHTI_DATABASE_CONFIG` names the file. Upgrades and switches copy into a fresh database: `drishti.py db copy`.
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.database.kind` | string | `sqlite` | `DRISHTI_DB_KIND` | every node (the same everywhere) | sqlite (one file, nothing to install; one node) \| postgres (several nodes, production) | restart |  |
+| `drishti.database.sqlite.file` | string | `./data/identity/drishti.db` | `DRISHTI_DB_FILE` | every node (the same everywhere) | the database file, under the data folder | restart |  |
+| `drishti.database.postgres.url` | string | empty | `DRISHTI_DB_URL` | every node (the same everywhere) | e.g. jdbc:postgresql://db.example.internal:5432/drishti (required with kind postgres) | restart |  |
+| `drishti.database.postgres.user` | string | `drishti` | `DRISHTI_DB_USER` | every node (the same everywhere) | the database user | restart |  |
+| `drishti.database.postgres.password` | string | empty | `DRISHTI_DB_PASSWORD` | every node (the same everywhere) | its password, from the environment only (secret) | restart |  |
+| `drishti.database.pool` | string | empty |  | every node (the same everywhere) | a key left out is the site's drishti.db.pool.\* (application.yaml) | restart |  |
+
 ### The content store: `config/store/store.yaml`
 
 Where user content is kept so every node of a cluster reaches it ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)); `drishti.store.file` names the file.
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `backend` | string | `filesystem` |  | every node (the same everywhere) | Project Drishti · Any data. Any domain. One grammar. Copyright (c) 2026 Ashutosh Sinha &lt;ajsinha@gmail.com&gt;. All rights reserved. PROPRIETARY AND CONFIDENTIAL. This file is the confidential and proprietary property of Ashutosh Sinha. Unauthorised copying, use, modification, distribution or disclosure of this file, via any medium, is strictly prohibited except with the express prior written permission of the copyright holder. See the LICENSE file in the root of this repository for the full terms. The content store (docs/architecture/DATA\_ARCHITECTURE.md): where user content (Build workbench Designs today) is kept so that every node of a Drishti\*net cluster reaches it. The server reads this file at start (drishti.store.file in application.yaml); a missing file or key means the value shown here. Every node of a cluster must use the same settings. Examples: config/store.examples/. filesystem \| sqlite \| postgres \| s3 | restart |  |
+| `backend` | string | `filesystem` |  | every node (the same everywhere) | filesystem \| database (the Drishti database: config/db/database.yaml, SQLite or PostgreSQL) \| s3 | restart |  |
 | `filesystem.root` | string | `./data/fstore` |  | every node (the same everywhere) | A folder; on a cluster it must be a SHARED mount (NFS, EFS, SMB) at the same path on every node. DRISHTI\_STORE\_ROOT overrides it. | restart |  |
-| `sqlite.url` | string | `jdbc:sqlite:./data/identity/drishti.db` |  | every node (the same everywhere) | the Drishti database itself (one node) | restart |  |
-| `postgres.url` | string | `""` |  | every node (the same everywhere) | e.g. jdbc:postgresql://db:5432/drishti (the Drishti database) | restart |  |
-| `postgres.user` | string | `drishti` |  | every node (the same everywhere) | the database user | restart |  |
-| `postgres.password` | string | empty | `DRISHTI_STORE_PASSWORD` | every node (the same everywhere) | its password, from the environment only (secret) | restart |  |
-| `postgres.pool` | integer | `4` |  | every node (the same everywhere) | connections the store keeps at most | restart |  |
 | `s3.bucket` | string | `""` |  | every node (the same everywhere) | the bucket (required with backend: s3) | restart |  |
 | `s3.prefix` | string | `""` |  | every node (the same everywhere) | a key prefix inside the bucket; empty: the bucket's root | restart |  |
 | `s3.region` | string | `us-east-1` |  | every node (the same everywhere) | the bucket's region | restart |  |
@@ -6110,6 +6135,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_CONSOLE_TMP_DIR` | `tmp_dir` | empty | console | base of the console's temp folder drishti-console-&lt;pid&gt; (blank: DRISHTI\_TMP\_DIR, then &lt;data dir&gt;/tmp/console when started by run\_drishti\_web.py); removed on exit; left-over ones are listed on Health, never deleted automatically |
 | `DRISHTI_CONSOLE_URL` | `drishti.embed.audiences`, `drishti.collab.console-url` | `[""]` | server | the consoles that may accept embed tokens (their public URLs); the first is the default |
 | `DRISHTI_CONSOLE_WORKERS` | `server.workers` | `4` | console | processes serving pages (one Python process uses one core: ~40 pages/s measured); 1 = one process |
+| `DRISHTI_DATABASE_CONFIG` | `drishti.db.file` | `./config/db/database.yaml` | server | the Drishti database's own file (drishti.database.\*; the import above names the same file) |
 | `DRISHTI_DATALOAD_DIR` | `drishti.dataload.dir` (engine) | `./data/dataload` | engine | the inbox's folder: inbox/, inprocess/, outbox/, failed/, ledger/ and inbox.lock, all on one file system |
 | `DRISHTI_DATALOAD_ENABLED` | `drishti.engines.dataload.enabled` (engine) | `false` | engine | run the data inbox on this node: files dropped in &lt;dir&gt;/inbox with a .ready marker are loaded into the lake every interval; off as shipped |
 | `DRISHTI_DATALOAD_LAKE` | `drishti.dataload.lake` (engine), drishti.dataload.lake | `demo` | engine, server | the lake (config/lakes/&lt;lake&gt;.yaml, docs/guides/LAKE\_GUIDE.md) the tables are written to; a kind the lake file lacks gets its pack's recommended entry copied there first (a rule's lake: wins for its files; a folder is the old form, read with one warning) |
@@ -6117,6 +6143,11 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_DATALOAD_OWNER` | `drishti.dataload.owner` (engine) | `true` | engine | this node runs the inbox's cycles; in a cluster set it true on one node only (the folder lock also keeps a second runner out) |
 | `DRISHTI_DATALOAD_RULES` | `drishti.dataload.rules-file` (engine) | `./config/dataload.yaml` | engine | the routing rules: a file-name pattern to a pack and kind, read again every cycle |
 | `DRISHTI_DATA_DIR` | `drishti.data.dir`, `lakes.data_dir` | `./data` | console, server | The umbrella folder every runtime path below defaults under (identity database, caches, loads, collab, designs, reports, the pack overlay and settings, governance, the sample feeds). Each path's own setting still overrides its default. |
+| `DRISHTI_DB_FILE` | `drishti.database.sqlite.file` (database) | `./data/identity/drishti.db` | database | the database file, under the data folder |
+| `DRISHTI_DB_KIND` | `drishti.database.kind` (database) | `sqlite` | database | sqlite (one file, nothing to install; one node) \| postgres (several nodes, production) |
+| `DRISHTI_DB_PASSWORD` | `drishti.database.postgres.password` (database) | empty | database | its password, from the environment only |
+| `DRISHTI_DB_URL` | `drishti.database.postgres.url` (database) | empty | database | e.g. jdbc:postgresql://db.example.internal:5432/drishti (required with kind postgres) |
+| `DRISHTI_DB_USER` | `drishti.database.postgres.user` (database) | `drishti` | database | the database user |
 | `DRISHTI_DEFAULT_PACKS` | `drishti.packs.default-for-users` | empty | server | Packs new users get until an admin says otherwise (empty: every installed pack). |
 | `DRISHTI_DELTA_ENGINE` | `engine` (connector), delta engine | `native` | connector, packs | Reader engine: native (Delta Kernel without Hadoop; Windows), hadoop (also abfs://, gs://) or auto (native on Windows); not set: DRISHTI\_DELTA\_ENGINE, else native |
 | `DRISHTI_DELTA_ROOT` | `drishti.var.official.root` (engine), `drishti.ccr.exposure.official.root` (engine), every pack's delta connectors' root | `./data/delta` | engine, packs | a folder or s3://bucket/prefix |
@@ -6182,9 +6213,6 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_ICEBERG_ROOT` | iceberg profile | `./data/iceberg` | profile | The iceberg profile's root (path-based tables); also the lake tools' Iceberg root |
 | `DRISHTI_ICEBERG_URI` | iceberg profile | empty | profile | A REST catalog's URI |
 | `DRISHTI_ICEBERG_WAREHOUSE` | iceberg profile | empty | profile | A REST catalog's warehouse |
-| `DRISHTI_IDENTITY_DB_PASSWORD` | `drishti.identity.database-password` | empty | server | its password, from the environment |
-| `DRISHTI_IDENTITY_DB_URL` | `drishti.identity.database-url` | `jdbc:sqlite:./data/identity/drishti.db` | server | Users, roles defined in Admin → Roles, saved workspaces/monitors/settings and the audit trail live in one database (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL: DRISHTI\_IDENTITY\_DB\_URL=jdbc:postgresql://db:5432/drishti DRISHTI\_IDENTITY\_DB\_USER=drishti DRISHTI\_IDENTITY\_DB\_PASSWORD=... The schema (drishti-identity: db/schema-sqlite.sql, db/schema-postgres.sql) is applied at start; no migrations. |
-| `DRISHTI_IDENTITY_DB_USER` | `drishti.identity.database-user` | empty | server | the identity database's user (PostgreSQL) |
 | `DRISHTI_INDEX_DIR` | `drishti.index.dir` | empty | server | Where the connectors' multi-day type-ahead index keeps closed days as block-compressed segment files (one subfolder per connector). Blank: &lt;data dir&gt;/index, i.e. ./data/index. Size is capped per connector by its index.max-disk; a day that rolls out of the window, is evicted by the cap or is rebuilt gives its disk back at once. |
 | `DRISHTI_JAR` | `lakes.jar` | empty | console | the drishti-server exec jar that carries the writer (default: drishti-server/target) |
 | `DRISHTI_JAR_DIR` | screenshot tools | `drishti-server/target` | tools | Where the screenshot tools find the server jar |
@@ -6298,7 +6326,6 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_SIMM_PARAMETERS` | `drishti.simm.parameters-dir` (engine) | `./config/simm` | engine | the bank's licensed parameter files, one YAML a SIMM version (none ships: ISDA's numbers are licensed) |
 | `DRISHTI_STORE_ACCESS_KEY` | `s3.access-key` (store) | empty | store | empty: the AWS default credentials chain |
 | `DRISHTI_STORE_FILE` | `drishti.store.file` | `./config/store/store.yaml` | server | The content store (docs/architecture/DATA\_ARCHITECTURE.md): user content every node of a cluster can reach. Its settings are in their own file. |
-| `DRISHTI_STORE_PASSWORD` | `postgres.password` (store) | empty | store | its password, from the environment only |
 | `DRISHTI_STORE_ROOT` | `drishti.store.root` | empty | server | the filesystem backend's root, over the file's filesystem.root (empty: the file's, else &lt;data folder&gt;/fstore) |
 | `DRISHTI_STORE_SECRET_KEY` | `s3.secret-key` (store) | empty | store | its secret key, from the environment only |
 | `DRISHTI_STREAM_CACHE_GB` | trading-stream cache size | `10` | packs | The trading stream's disk cache size, in GB |

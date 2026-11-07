@@ -25,7 +25,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance,logistics",
         "drishti.collab.store=content", "drishti.store.root=${drishti.test.dir}/compliance-content-${random.uuid}/fstore",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/compliance-content-${random.uuid}/identity.db",
+        "drishti.database.sqlite.file=${drishti.test.dir}/compliance-content-${random.uuid}/identity.db",
         "drishti.packs.overlay=${drishti.test.dir}/compliance-content-overlay/added.yaml", "drishti.collab.limits.comments-per-minute=1000",
         "drishti.collab.limits.shares-per-minute=1000", "drishti.collab.limits.shares-per-day=1000", "drishti.collab.retention.keep-days=1",
         "drishti.collab.retention.interval=1h", "drishti.collab.inbox.poll=100ms"})

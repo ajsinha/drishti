@@ -61,6 +61,8 @@ spring:
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/flight.yaml
       - classpath:engines/openblas.yaml
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/openblas.yaml
+      # the Drishti database (identity, edit log, governance, BI items, runs, approvals, the content store's database backend): its own file
+      - optional:file:${DRISHTI_DATABASE_CONFIG:./config/db/database.yaml}
       - optional:file:./application.local.yaml
       # packs an administrator loaded from Admin → Packs (drishti.packs.added); written by the server, not by hand
       - optional:file:${DRISHTI_PACKS_OVERLAY:${drishti.data.dir:./data}/packs/added.yaml}
@@ -954,14 +956,8 @@ drishti:
     read-max-rows: 2000000           # the most rows one read of a virtual table stages; more is refused, never cut short
     scan-warn-rows: 1000000          # rows above which an unfiltered side of a model's join across connectors is warned about; a model's own scan-warn-rows wins
   identity:
-    # Users, roles defined in Admin → Roles, saved workspaces/monitors/settings and the audit trail live in one database
-    # (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL:
-    #   DRISHTI_IDENTITY_DB_URL=jdbc:postgresql://db:5432/drishti DRISHTI_IDENTITY_DB_USER=drishti DRISHTI_IDENTITY_DB_PASSWORD=...
-    # The schema (drishti-identity: db/schema-sqlite.sql, db/schema-postgres.sql) is applied at start; no migrations.
-    database-url: ${DRISHTI_IDENTITY_DB_URL:jdbc:sqlite:${drishti.data.dir}/identity/drishti.db}
-    database-user: ${DRISHTI_IDENTITY_DB_USER:}  # the identity database's user (PostgreSQL)
-    database-password: ${DRISHTI_IDENTITY_DB_PASSWORD:}  # its password, from the environment
-    # database-pool-size:           # unset: drishti.db.pool.size (20) on PostgreSQL; SQLite (embedded, one writer) keeps 8
+    # Users, roles defined in Admin → Roles, saved workspaces/monitors/settings and the audit trail live in the Drishti database,
+    # chosen in its own file config/db/database.yaml (drishti.database.*: SQLite by default, or PostgreSQL), not here.
     refresh-seconds: 15              # servers sharing one database see each other's role and pack changes this soon
     # The files of releases before 1.10, imported once into an empty database and renamed *.imported.
     users-file: ${DRISHTI_USERS_FILE:${drishti.data.dir}/identity/users.json}
@@ -1014,7 +1010,8 @@ drishti:
     fingerprint-cache-size: 100000  # one per (entity, generation; in a cluster, caller signature): about 30 MB full
     bind-parallelism: 0             # 0 = one binding thread per core
   db:
-    pool:                            # connection pools of every database connector and the identity database (docs/connectors/CONNECTOR_FILES.md)
+    file: ${DRISHTI_DATABASE_CONFIG:./config/db/database.yaml}   # the Drishti database's own file (drishti.database.*; the import above names the same file)
+    pool:                            # connection pools of every database connector and the Drishti database (docs/connectors/CONNECTOR_FILES.md)
       size: 20                       # most connections open at once; a connector's own pool-size wins (SQLite and DuckDB are embedded and not pooled)
       min-idle: 2                    # idle connections kept when quiet
       idle-timeout: 10m              # an idle connection beyond min-idle is closed after this long

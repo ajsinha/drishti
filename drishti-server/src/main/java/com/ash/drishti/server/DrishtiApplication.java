@@ -76,6 +76,9 @@ public class DrishtiApplication {
                     new com.ash.drishti.server.bi.expr.DelTablesTranslator())
                     .run(java.util.List.of(args).subList(1, args.length)));
         }
+        if (com.ash.drishti.identity.database.DatabaseCli.isCli(args)) {     // `db copy --from A --to B` (drishti.py db copy): no Spring, no web server
+            System.exit(new com.ash.drishti.identity.database.DatabaseCli(System.out, System.err).run(java.util.List.of(args).subList(1, args.length)));
+        }
         startTempFolder(args);
         if (com.ash.drishti.deltalake.write.LakeCli.isCli(args)) {         // `lake write --manifest M` (tools/lake/build.py): no Spring, no web server
             System.exit(com.ash.drishti.deltalake.write.LakeCli.run(args, System.out, System.err));

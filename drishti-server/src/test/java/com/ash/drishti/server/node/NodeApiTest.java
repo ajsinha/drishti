@@ -37,7 +37,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.sources.plugins.demo.settings.ticking=false", "drishti.identity.iterations=1000",
         "drishti.var.enabled=false", "drishti.ccr.exposure.enabled=false",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=${drishti.test.dir}/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class NodeApiTest {
 

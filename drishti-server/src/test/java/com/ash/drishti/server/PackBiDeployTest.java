@@ -43,7 +43,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * would break a report somebody else published.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=lakepack",
-        "drishti.bi.dir=${drishti.test.dir}/pack-bi-folder", "drishti.bi.query.store-dir=${drishti.test.dir}/pack-bi-store", "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/pack-bi-${random.uuid}/identity.db"})
+        "drishti.bi.dir=${drishti.test.dir}/pack-bi-folder", "drishti.bi.query.store-dir=${drishti.test.dir}/pack-bi-store", "drishti.database.sqlite.file=${drishti.test.dir}/pack-bi-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class PackBiDeployTest {

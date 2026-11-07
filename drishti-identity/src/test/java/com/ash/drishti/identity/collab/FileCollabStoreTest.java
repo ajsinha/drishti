@@ -18,7 +18,6 @@ package com.ash.drishti.identity.collab;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.identity.IdentityProperties;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -118,8 +117,8 @@ class FileCollabStoreTest {
     void aFileStoreIsRefusedBesideASharedDatabase() {
         CollabProperties file = new CollabProperties(null, "file", null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null);
-        IdentityProperties postgres = new IdentityProperties(null, null, null, null, null, null, null, null, null, null, null, null, null,
-                "jdbc:postgresql://db.invalid/x", null, null, null, null);
+        com.ash.drishti.identity.database.DatabaseSettings postgres = new com.ash.drishti.identity.database.DatabaseSettings("postgres", null,
+                "jdbc:postgresql://db.invalid/x", null, null, null, "test");
         assertThat(file.jpa()).isFalse();
         assertThatThrownBy(() -> com.ash.drishti.identity.IdentityConfiguration.requireSingleServerForFiles(file, postgres))
                 .isInstanceOf(IllegalStateException.class).hasMessageContaining("shared database");

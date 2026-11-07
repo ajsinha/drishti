@@ -57,7 +57,7 @@ import org.springframework.context.annotation.Import;
         "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0", "drishti.var.currencies[0]=USD",
         "drishti.var.sharding.enabled=true", "drishti.var.sharding.target-shard-mb=0.0003", "drishti.var.sharding.stable-seconds=0",
         "drishti.var.sharding.release-after-seconds=0",
-        "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=target/identity-${random.uuid}/identity.db"})
 @Import(PinnedBusinessDate.class)
 class VarShardSingleNodeTest {
 

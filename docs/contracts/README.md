@@ -116,7 +116,7 @@ ${DRISHTI_DELTA_ROOT}                         default ${drishti.data.dir}/delta
 |---|---|---|---|
 | **Fundamental: masters and terms** | Source systems, through their packs | Their own connectors | trades, counterparties, books, desks, legal entities, CSAs and agreements, market data, GLEIF |
 | **Fundamental: engine inputs** | Upstream engines, once per business date | The common risk lake | P&L vectors, sensitivities, scenario P&L, exposure paths, cash flows |
-| **Drishti-owned** | Drishti, from users' actions | The Drishti database and the content store ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built), [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)) | derived positions, portfolio definitions, baskets, captures, official end-of-day captures |
+| **Drishti-owned** | Drishti, from users' actions | The Drishti database and the content store ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database), [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)) | derived positions, portfolio definitions, baskets, captures, official end-of-day captures |
 | **Computed answers** | Drishti, when asked | Nowhere: computed, cached in memory, and stored only as a capture | VaR, FRTB charge, EAD, EE/PFE, LCR … |
 
 **The rule:** a computed figure is never stored in a fundamental or input table. A guard test fails the build when a table carries a

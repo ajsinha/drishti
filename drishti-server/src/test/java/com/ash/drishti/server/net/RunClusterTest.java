@@ -120,7 +120,7 @@ class RunClusterTest {
                 "--drishti.sources.connectors.run-lake.settings.id-field=TRADE_ID", "--drishti.sources.connectors.run-lake.settings.rescan-seconds=3600",
                 "--drishti.sources.plugins.demo.enabled=false", "--drishti.bi.runs.file=" + root.resolve("runs.yaml"),
                 // one identity database for both: the run rows are shared, so a node that dies has its runs adopted (13.3)
-                "--drishti.identity.database-url=jdbc:sqlite:" + identity.resolve("identity.db"),
+                "--drishti.database.sqlite.file=" + identity.resolve("identity.db"),
                 "--drishti.identity.users-file=" + identity.resolve("users.json"),
                 "--drishti.store.root=" + root.resolve("fstore"),                 // one content store for both: BI content and runs (DATA_ARCHITECTURE.md 9)
                 "--drishti.security.enabled=true", "--drishti.security.secret=" + TOKEN_SECRET, "--drishti.security.registered-users-only=false");

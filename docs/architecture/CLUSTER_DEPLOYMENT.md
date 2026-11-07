@@ -241,7 +241,7 @@ work, not for correctness.
 | **Data-serving** | entity pages, search, type-ahead, data map, World, Market packs | connector caches, `index.max-disk` | 0 / 2 / 3 | BI | VaR owners |
 | **Loader** | `drishti-lakeload` jobs (batch), `lake maintain` | `memory.budget-mb`, `parallel.writers`, spill on NVMe | 1 / 1 + standby / 2 + standby | nothing during the load window | any server |
 | **Python compute** | `config/compute/compute.yaml` pools (`risk`, `exposure`) | `workers`, `memory` per worker | on servers / on exposure owners / hosts of their own | exposure owners | VaR owners |
-| **Database** | PostgreSQL (identity, sessions, edit log, run leases) | `DRISHTI_IDENTITY_DB_URL`; pools per `drishti.db.pool.size` | 1 (SQLite allowed) / 1 + standby / 1 + standby | nothing | app servers |
+| **Database** | PostgreSQL (identity, sessions, edit log, run leases) | `config/db/database.yaml` (`kind: postgres`); pools per `drishti.db.pool.size` | 1 (SQLite allowed) / 1 + standby / 1 + standby | nothing | app servers |
 | **Lake** | S3 (Delta or Iceberg) or a shared file system | `DRISHTI_DELTA_ROOT` | managed | — | — |
 | **Kafka** | the PV topic for intraday | `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_VAR_PV_STREAM` | optional / 3 brokers / 3 brokers | — | — |
 
@@ -845,8 +845,8 @@ set is its own set and may go to any owner.
 | Content store | its backend | Designs unavailable | with PostgreSQL or S3 behind it | — |
 | Secrets | the vault | nothing while running (read at start) | — | restore before restarts |
 
-**Databases.** The identity database is SQLite by default (`drishti.identity.database-url`, `jdbc:sqlite:${drishti.data.dir}/identity/drishti.db`);
-a cluster needs PostgreSQL (`DRISHTI_IDENTITY_DB_URL`) so users, sessions, edit lanes and run leases are shared and failover works
+**Databases.** The Drishti database is SQLite by default (`config/db/database.yaml`, `drishti.database.sqlite.file`, `data/identity/drishti.db`);
+a cluster needs PostgreSQL (`kind: postgres`, the same file on every node; switch with `drishti.py db copy`) so users, sessions, edit lanes and run leases are shared and failover works
 ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons): "a cluster with neither ... no failover"). Size its `max_connections` for every member's pool
 (OPERATIONS section 16). A streaming standby (synchronous in one site, asynchronous to the recovery site) is PLANNED as a guide and a tested
 failover (`CD8`).
@@ -1617,7 +1617,7 @@ The product owner, 2026-10-18:
 | Retry and back-off per failing source | `RetryBoard` (`connector '…' failed (first time) … next try …`) |
 | Partial answers that say why | search `partial` + `failed: [{source, reason}]` |
 | Signed short-lived identity | `TokenVerifier.mint(user, roles, seconds)`; one `DRISHTI_TOKEN_SECRET` (or OIDC) for every node |
-| A shared user store | the identity database on PostgreSQL (`DRISHTI_IDENTITY_DB_URL`) instead of the per-node SQLite default |
+| A shared user store | the Drishti database on PostgreSQL (`config/db/database.yaml`, `kind: postgres`) instead of the per-node SQLite default |
 | Live streams | `StreamController` (server-sent events) and the subscriptions behind it |
 | Health and activity | `HealthController` (with `RequestActivity` and `PageTimes`), Admin → Health |
 | Files under the data folder | `drishti.data.dir`: the cluster's files go in `<data dir>/net/` |

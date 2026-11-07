@@ -79,7 +79,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.var.access.division-head[MGMT~DESK-X]=aggregate",
         "drishti.security.roles.curves.kinds[0]=curve",
         "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
-        "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)

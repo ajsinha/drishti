@@ -22,7 +22,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance,logistics",
         "drishti.collab.store=content", "drishti.store.root=${drishti.test.dir}/threadapi-content-${random.uuid}/fstore",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/threadapi-content-${random.uuid}/identity.db",
+        "drishti.database.sqlite.file=${drishti.test.dir}/threadapi-content-${random.uuid}/identity.db",
         "drishti.packs.overlay=${drishti.test.dir}/threadapi-content-overlay/added.yaml", "drishti.collab.limits.comments-per-minute=1000",
         "drishti.collab.inbox.poll=100ms", "drishti.collab.threads.edit-window=3s", "drishti.security.registered-users-only=true"})
 @AutoConfigureMockMvc

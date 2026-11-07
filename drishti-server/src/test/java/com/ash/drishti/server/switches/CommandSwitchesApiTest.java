@@ -38,7 +38,7 @@ import org.springframework.test.web.servlet.ResultActions;
  * to it; turned on again, all of it is back. Packs switch through the same ledger, with the reason kept.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=${drishti.test.dir}/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class CommandSwitchesApiTest {
 

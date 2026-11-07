@@ -13,6 +13,40 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.e — release notes (draft)
+
+*Not released yet.*
+
+## Upgrade: the Drishti database has its own file
+
+Every table Drishti owns (users, roles, sessions, tokens and the audit trail; collaboration; the write-back edit log and lanes; BI items
+and runs kept on one node; compute approvals; switches; the content store's database backend) is in **one database**, configured in its
+own file, `config/db/database.yaml`, no longer in `application.yaml`
+([OPERATIONS.md section 10.3](docs/admin/OPERATIONS.md#103-upgrading-the-drishti-database)).
+
+- **The settings move.** `drishti.identity.database-url`, `-user`, `-password` and `-pool-size`, and the variables
+  `DRISHTI_IDENTITY_DB_URL`, `_USER`, `_PASSWORD`, are not read any more; a server that finds one set **refuses to start** and names the
+  new key. Move them:
+
+  | Before | Now (`config/db/database.yaml`, `drishti.database.*`) | Variable |
+  |---|---|---|
+  | `drishti.identity.database-url: jdbc:sqlite:<file>` | `kind: sqlite`, `sqlite.file: <file>` | `DRISHTI_DB_KIND`, `DRISHTI_DB_FILE` |
+  | `drishti.identity.database-url: jdbc:postgresql://…` | `kind: postgres`, `postgres.url: jdbc:postgresql://…` | `DRISHTI_DB_KIND=postgres`, `DRISHTI_DB_URL` |
+  | `drishti.identity.database-user`, `-password` | `postgres.user`, `postgres.password` | `DRISHTI_DB_USER`, `DRISHTI_DB_PASSWORD` |
+  | `drishti.identity.database-pool-size` | `pool.size` | |
+
+  A site on the default SQLite file changes nothing: the file is still `data/identity/drishti.db`.
+- **The content store's `sqlite` and `postgres` backends are now one, `database`:** the `drishti_content` table in the Drishti database,
+  through its one pool. In `config/store/store.yaml` write `backend: database` and remove the `sqlite:` and `postgres:` sections (a server
+  that finds `backend: sqlite` or `postgres` refuses to start and says so); `DRISHTI_STORE_PASSWORD` is gone.
+  `config/store.examples/postgres.yaml` is now `database.yaml`.
+- **No column fix-ups at start.** The three columns older SQLite databases were given in code at start (`drishti_api_token.scopes`,
+  `drishti_share.view_state`, `drishti_collab_hold.date_from` and `date_to`) are in the complete schema; a database that still lacks
+  one refuses to start and names `drishti.py db copy`, the one upgrade path: stop the servers, copy into a fresh database, point
+  `config/db/database.yaml` at it ([OPERATIONS.md section 10.3](docs/admin/OPERATIONS.md#103-upgrading-the-drishti-database)). A database
+  that already has every column is stamped with the schema version at its first start and starts as before.
+- **Switching to PostgreSQL** is the same command: `drishti.py db copy --from config/db/database.yaml --to postgres-database.yaml`.
+
 # Drishti 2.9.11.d — release notes (draft)
 
 *Not released yet.*

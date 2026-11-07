@@ -20,7 +20,7 @@ environment variable, applies to, meaning, restart or live, since):
 
 * the server's ``application.yaml`` and the console's ``application.yaml``, each key's meaning its own YAML comment;
 * the connector settings catalogue (``plugin-settings.yaml``) and the shared ``tls.*`` and ``proxy.*`` specs of drishti-api;
-* the commented files under ``config/`` (the content store, BI runs, write-back, compute, Drishti*net, the UI kit, the editions,
+* the commented files under ``config/`` (the Drishti database, the content store, BI runs, write-back, compute, Drishti*net, the UI kit, the editions,
   the AI provider and MCP server files);
 * the files that are content rather than settings (``pack.yaml``, ``menus.yaml``, ``help.yaml``, ...), from their schemas in
   ``tools/settings_schemas.yaml``, checked against the keys the shipped files really use;
@@ -115,6 +115,10 @@ AREAS = [
          "(`default-packs.yaml`), read by the server (`Editions.java`) and the console (`core/edition.py`). The site's own configuration "
          "wins over any key: `drishti.edition-spec.<key>` on the server, `edition.<key>` in the console "
          "([EDITIONS.md](EDITIONS.md))."),
+    Area("database", "The Drishti database: `config/db/database.yaml`",
+         "The one relational database of every table Drishti owns, SQLite (the default) or PostgreSQL, built from two complete schema "
+         "files with no migrations ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md), [OPERATIONS.md](OPERATIONS.md)); "
+         "`DRISHTI_DATABASE_CONFIG` names the file. Upgrades and switches copy into a fresh database: `drishti.py db copy`."),
     Area("store", "The content store: `config/store/store.yaml`",
          "Where user content is kept so every node of a cluster reaches it ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)); "
          "`drishti.store.file` names the file."),
@@ -417,6 +421,7 @@ def all_rows() -> tuple[list[Row], list[str]]:
     rows += feature_rows()
     rows += yaml_rows("editions", [ROOT / "config/editions/default-packs.yaml"], "server and console", "restart",
                       "The default packs: `default-packs.yaml`")
+    rows += yaml_rows("database", [ROOT / "config/db/database.yaml"], "every node (the same everywhere)", "restart", "")
     rows += yaml_rows("store", [ROOT / "config/store/store.yaml"], "every node (the same everywhere)", "restart", "")
     rows += yaml_rows("runs", [ROOT / "config/runs/runs.yaml"], "server", "restart", None)
     for name in ("edit", "lanes", "policy", "retention"):
@@ -517,7 +522,7 @@ def env_index(rows: list[Row]) -> tuple[list[dict], list[str]]:
 
 
 def _area_short(area: str) -> str:
-    return {"server": "server", "engines": "engine", "console": "console", "connectors": "connector", "packs": "pack", "editions": "edition", "store": "store",
+    return {"server": "server", "engines": "engine", "console": "console", "connectors": "connector", "packs": "pack", "editions": "edition", "database": "database", "store": "store",
             "runs": "runs", "edit": "write-back", "compute": "compute", "net": "net", "ui-kit": "ui kit", "ai": "AI"}.get(area, area)
 
 

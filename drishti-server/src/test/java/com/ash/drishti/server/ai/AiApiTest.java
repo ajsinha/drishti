@@ -45,7 +45,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true", "drishti.security.roles.full.admin=true",
         "drishti.security.roles.plain.kinds[0]=*",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/aiapi-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=${drishti.test.dir}/aiapi-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class AiApiTest {
 

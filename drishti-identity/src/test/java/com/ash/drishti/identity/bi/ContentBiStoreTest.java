@@ -140,7 +140,7 @@ class ContentBiStoreTest {
     private AnnotationConfigApplicationContext open(String kind) {
         AnnotationConfigApplicationContext c = new AnnotationConfigApplicationContext();
         Map<String, Object> p = new HashMap<>();
-        p.put("drishti.identity.database-url", "jdbc:sqlite:" + dir.resolve("drishti.db"));
+        p.put("drishti.database.sqlite.file", dir.resolve("drishti.db").toString());
         p.put("drishti.identity.users-file", dir.resolve("users.json").toString());
         p.put("drishti.identity.audit-file", dir.resolve("audit.jsonl").toString());
         p.put("drishti.identity.preferences-dir", dir.resolve("preferences").toString());

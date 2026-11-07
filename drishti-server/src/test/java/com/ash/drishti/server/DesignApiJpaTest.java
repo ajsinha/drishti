@@ -37,7 +37,7 @@ import org.springframework.test.web.servlet.MockMvc;
 /** {@code drishti.builder.designs.store=jpa}: the same API on the identity database. */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/design-jpa-${random.uuid}/identity.db", "drishti.builder.designs.store=jpa",
+        "drishti.database.sqlite.file=${drishti.test.dir}/design-jpa-${random.uuid}/identity.db", "drishti.builder.designs.store=jpa",
         "drishti.builder.designs.dir=${drishti.test.dir}/design-jpa-must-stay-unused"})
 @AutoConfigureMockMvc
 class DesignApiJpaTest {

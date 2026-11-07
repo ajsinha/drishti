@@ -667,8 +667,9 @@ Defined in `drishti-server/src/main/resources/application.yaml`.
 | `DRISHTI_FORCE_PW_CHANGE_ON_CREATE` | `false` | new users must change their password at first sign-in |
 | `DRISHTI_FORCE_PW_CHANGE_ON_RESET` | `false` | users must change a password an admin reset |
 | `DRISHTI_USERS_FILE`, `DRISHTI_AUDIT_FILE` | `./data/identity/users.json`, `./data/identity/audit.jsonl` | an older identity store; read only once, to import them into the identity database |
-| `DRISHTI_IDENTITY_DB_URL` | `jdbc:sqlite:./data/identity/drishti.db` | the identity database (users, roles, audit, saved per-user documents). SQLite by default, or `jdbc:postgresql://...` |
-| `DRISHTI_IDENTITY_DB_USER`, `DRISHTI_IDENTITY_DB_PASSWORD` | empty | its credentials (PostgreSQL) |
+| `DRISHTI_DB_KIND` | `sqlite` | the Drishti database (users, roles, audit, saved per-user documents, the edit log and every other Drishti-owned table): `sqlite` or `postgres`. Its own file is `config/db/database.yaml` ([section 10.3](#103-upgrading-the-drishti-database)) |
+| `DRISHTI_DB_FILE` | `./data/identity/drishti.db` | the SQLite file |
+| `DRISHTI_DB_URL`, `DRISHTI_DB_USER`, `DRISHTI_DB_PASSWORD` | empty, `drishti`, empty | PostgreSQL: `jdbc:postgresql://host:5432/drishti` and its credentials |
 
 Everything about users, roles and the identity database is in [USER_MANAGEMENT.md](USER_MANAGEMENT.md).
 
@@ -1339,7 +1340,7 @@ working directory unless you changed them.
 
 | Path | Holds | Back up? | How |
 |---|---|---|---|
-| `data/identity/` | users, password hashes, the audit log, each user's settings, workspaces, monitors and pins. The SQLite database `drishti.db` (`DRISHTI_IDENTITY_DB_URL`), which also holds roles defined in Admin → Roles | **yes, daily** | 1.9: copy the directory (files are written atomically). 1.10 with SQLite: `sqlite3 data/identity/drishti.db ".backup '/backup/drishti/identity.db'"`, safe while running. With PostgreSQL: `pg_dump` the database |
+| `data/identity/` | the Drishti database on SQLite, `drishti.db` (`config/db/database.yaml`): users, password hashes, roles, the audit log, each user's settings, workspaces, monitors and pins, the edit log and every other Drishti-owned table | **yes, daily** | `sqlite3 data/identity/drishti.db ".backup '/backup/drishti/identity.db'"`, safe while running (section 10.3). With PostgreSQL: the DBA's backups (`pg_dump`, point-in-time recovery) |
 | `data/governance/` (`DRISHTI_GOVERNANCE_DIR`) | Sutra proposals, approvals and their history | **yes, daily** | copy the directory |
 | `sutras/` (`DRISHTI_SUTRAS`) | your own Sutras, and what Studio saves | **yes**, preferably in version control | git, or copy |
 | `application.local.yaml`, `drishti-console/config/application.local.yaml`, `/etc/drishti/drishti.env` | your configuration and secrets | **yes**, securely | copy |
@@ -1358,7 +1359,7 @@ working directory unless you changed them.
 | `data/bi-store/` (`DRISHTI_BI_STORE`) | the BI engine's Parquet layers (columns and rollups) | no | rebuilt from the sources for the business date asked for; may be deleted while the server is stopped |
 | `config/ai/`, `config/mcp/` (`DRISHTI_AI_DIR`, `DRISHTI_MCP_DIR`) | one YAML file per AI provider and per MCP server; no key is written in a file (`${ENV}` references) | yes, with the connector files | copy |
 | `data/collab/` (`DRISHTI_COLLAB_DIR`) | with the file store only: shares, threads and the outbox; compliance exports (kept 24 h). With the database store they are in `data/identity/` | **yes**, if you use the file store | copy |
-| `data/fstore/` (the content store, `config/store/store.yaml`, `DRISHTI_STORE_ROOT`) | user content every cluster node reaches: designs (and the Sutra designer's pages and drafts), collaboration, audit, embed apps, pack switches, proposals, load history, BI items and runs; with the `sqlite` or `postgres` backend it is the `drishti_content` table, with `s3` a bucket ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)) | **yes** | copy the directory (or back up that table or bucket) |
+| `data/fstore/` (the content store, `config/store/store.yaml`, `DRISHTI_STORE_ROOT`) | user content every cluster node reaches: designs (and the Sutra designer's pages and drafts), collaboration, audit, embed apps, pack switches, proposals, load history, BI items and runs; with the `database` backend it is the `drishti_content` table of the Drishti database, with `s3` a bucket ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)) | **yes** | copy the directory (or back up that table or bucket) |
 | `data/designs/`, `data/loads/`, `data/reports/` | the Build workbench's designs (only with the old `drishti.builder.designs.store: file`; the default `content` keeps them in the content store, and an old folder is imported once and renamed `designs-imported-<time>`), the data-load history and expectation overrides, scheduled report output | yes (designs and loads); reports as you need them | copy |
 | `data/packs/` | `installed/` (packs deployed or installed from the registry), `added.yaml` (packs loaded from Admin), `deploy-history.jsonl`, `samples-mode` | **yes**, with `config/packs/` if you deploy through Admin | copy |
 | `config/packs/` | the packs you installed | no, if they come from the release | keep your own packs in version control |
@@ -1371,7 +1372,7 @@ working directory unless you changed them.
 set -euo pipefail
 cd /opt/drishti
 stamp=$(date +%Y%m%d-%H%M)
-if [ -f data/identity/drishti.db ]; then                      # 1.10+: a consistent copy of the live SQLite database
+if [ -f data/identity/drishti.db ]; then                      # a consistent copy of the live SQLite database
   sqlite3 data/identity/drishti.db ".backup 'data/identity/backup.db'"
 fi
 keep=()                                                         # only what exists here: a server that never wrote data/designs has none
@@ -1398,10 +1399,91 @@ czf … data/state`, start), in a maintenance window; the messages that arrive m
 
 1. Stop the server: `sudo systemctl stop drishti-server`.
 2. Move the damaged directories aside, for example `mv data/identity data/identity.broken`.
-3. Unpack: `tar xzf /backup/drishti/drishti-20261001-0130.tgz -C /opt/drishti`. With 1.10 and SQLite, then
+3. Unpack: `tar xzf /backup/drishti/drishti-20261001-0130.tgz -C /opt/drishti`. With SQLite, then
    `mv data/identity/backup.db data/identity/drishti.db`.
 4. `sudo chown -R drishti:drishti /opt/drishti/data` and start the server.
 5. Check: sign in as an admin, open **Admin → Users** and **Admin → Audit**; the users and recent events are there.
+
+### 10.3 Upgrading the Drishti database
+
+Every table Drishti owns (identity, collaboration, the edit log and lanes, BI items and runs kept on one node, compute approvals, switches,
+the content store's `database` backend) is in one database, the *Drishti database*: SQLite by default, a file under the data folder, or
+PostgreSQL. It has its own file, `config/db/database.yaml`; every node of a cluster uses the same one. Its schema is two complete files in
+the server, applied at every start; there are no migrations. The design: [DATA_ARCHITECTURE.md section 6](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database).
+
+```yaml
+# config/db/database.yaml
+drishti:
+  database:
+    kind: ${DRISHTI_DB_KIND:sqlite}         # sqlite | postgres
+    sqlite:
+      file: ${DRISHTI_DB_FILE:${drishti.data.dir:./data}/identity/drishti.db}
+    postgres:
+      url: ${DRISHTI_DB_URL:}               # jdbc:postgresql://db.example.internal:5432/drishti
+      user: ${DRISHTI_DB_USER:drishti}
+      password: ${DRISHTI_DB_PASSWORD:}     # from the environment only
+```
+
+**Backup.** SQLite: `sqlite3 data/identity/drishti.db ".backup '/backup/drishti/identity.db'"` while the server runs (the nightly
+script in 10.1 does it), or, with the servers stopped, `drishti.py db copy` into a new file (below), which also checks every table's
+row count. PostgreSQL: the DBA's backups.
+
+**Upgrade by copy.** A release that changes the shape of an existing table moves the *schema version* (each schema file says it on its
+`-- schema-version: N` line, and the database keeps the version that built it in `drishti_schema`). A server started on a database
+made by another version, or one that lacks a column of the schema, refuses to start and says so:
+
+```text
+the Drishti database sqlite jdbc:sqlite:/opt/drishti/data/identity/drishti.db was made by schema 1; this server needs schema 2. Stop the
+servers and copy it into a fresh database: drishti.py db copy --from config/db/database.yaml --to <new database.yaml>, then point
+config/db/database.yaml at the new one (docs/admin/OPERATIONS.md, "Upgrading the Drishti database")
+```
+
+Upgrade by copying into a fresh database built from the new release's complete schema:
+
+1. Stop every server that uses the database (the copy reads it as it is).
+2. Write the target's settings, the layout of `config/db/database.yaml`, for example `/opt/drishti/new-database.yaml`:
+   ```yaml
+   drishti:
+     database:
+       kind: sqlite
+       sqlite:
+         file: /opt/drishti/data/identity/drishti-v2.db
+   ```
+3. See what will be copied (nothing is written):
+   ```bash
+   python3 tools/drishti.py db copy --from config/db/database.yaml --to /opt/drishti/new-database.yaml --check
+   ```
+   Each table is listed with its rows, the columns the new schema adds (they take their default) and any it no longer has.
+4. Copy (with the new release's jar):
+   ```bash
+   python3 tools/drishti.py db copy --from config/db/database.yaml --to /opt/drishti/new-database.yaml
+   ```
+   You should see every table with `verified` and a last line such as `61 tables, 18,240 rows, every count verified`. A column the new
+   schema dropped is named and the copy refused; run again with `--drop-columns` once you agree its values may go.
+5. Put the new settings in `config/db/database.yaml` (or replace it with the new file) and start the servers.
+
+The source is never changed: to go back, point `config/db/database.yaml` at it again. The target must be fresh: a SQLite file that does
+not exist yet, or a PostgreSQL database whose Drishti tables are empty. On Windows: `py tools\drishti.py db copy ...`, the same options.
+
+**Switching to PostgreSQL** (a cluster needs it: users, sessions, edit lanes and run leases are then shared) is the same copy:
+
+```bash
+cat > /opt/drishti/postgres-database.yaml <<'EOF'
+drishti:
+  database:
+    kind: postgres
+    postgres:
+      url: jdbc:postgresql://db.example.internal:5432/drishti
+      user: drishti
+      password: ${DRISHTI_DB_PASSWORD}
+EOF
+export DRISHTI_DB_PASSWORD='...'                 # the database user's password
+python3 tools/drishti.py db copy --from config/db/database.yaml --to /opt/drishti/postgres-database.yaml
+cp /opt/drishti/postgres-database.yaml config/db/database.yaml     # on every node
+```
+
+The empty PostgreSQL database needs only the user's right to create tables; the copy builds the schema, sets the auto-numbered keys past
+the copied ones and stamps the version. Switching back to SQLite is the same command the other way.
 
 ## 11. The lake: where it lives and keeping it bounded
 
@@ -2483,7 +2565,7 @@ User actions (sign-ins, user changes, cache purges, Sutra approvals) are not in 
 ## 15. Upgrades and rollback
 
 1. **Read the release notes** (`RELEASE_NOTES.md`, `CHANGELOG.md`) for anything marked as a change in
-   configuration or storage.
+   configuration or storage. A release that moves the Drishti database's schema version is upgraded by copy (section 10.3).
 2. **Back up** (section 10.1), and keep the old jar: `cp drishti-server.jar drishti-server-$(date +%F).jar`.
 3. **Build or fetch** the new release: `./mvnw -q clean package -DskipTests`.
 4. **Stop** the console and the server: `sudo systemctl stop drishti-console drishti-server`.
@@ -3062,7 +3144,7 @@ away (a deletion is refused and the user kept, as a new user, so the tombstone d
 other, sent to every node, audited as `last-admin-kept` and shown on **Admin → Health** under Drishti*net as *Last administrator kept*.
 Everything travels over
 the signed `POST /api/v1/net/state`; between nodes on an untrusted network add mutual TLS ([section 6](#6-security-the-key-mutual-tls-nodes-per-role))
-so the password hashes are not readable on the wire. With one shared identity database (PostgreSQL, `DRISHTI_IDENTITY_DB_URL`) the nodes already
+so the password hashes are not readable on the wire. With one shared Drishti database (PostgreSQL, `config/db/database.yaml`) the nodes already
 share all of it: set `user-state: off` in routing.yaml. Admin → Net → Members says how many changes were sent and applied and what waits for which
 peer.
 

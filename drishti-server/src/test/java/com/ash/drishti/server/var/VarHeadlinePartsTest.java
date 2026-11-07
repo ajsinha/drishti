@@ -51,7 +51,7 @@ import org.springframework.context.annotation.Import;
         "drishti.var.positions.rules[0].key[0]=SECURITY_ID",
         "drishti.var.official.on-start=false", "drishti.var.official.root=target/var-headline-parts/official",
         "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0", "drishti.var.currencies[0]=USD", "drishti.var.max-parts=2",
-        "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=target/identity-${random.uuid}/identity.db"})
 @Import(PinnedBusinessDate.class)
 class VarHeadlinePartsTest {
 

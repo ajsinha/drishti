@@ -17,8 +17,6 @@ package com.ash.drishti.identity.content;
 
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,44 +24,27 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Pattern;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import javax.sql.DataSource;
 
 /**
- * The SQLite and PostgreSQL content store: one table, {@code drishti_content}, from the complete Drishti database schema files
- * ({@code db/schema-sqlite.sql}, {@code db/schema-postgres.sql}; no migrations), applied whole at start. The version is a counter;
+ * The content store's {@code database} backend: one table, {@code drishti_content}, in the Drishti database (config/db/database.yaml,
+ * SQLite or PostgreSQL), reached through its one pool; the table is in the database's complete schema, applied at start. The version is a counter;
  * compare-and-set is a conditional {@code UPDATE} (or an {@code INSERT} racing on the primary key for a create); a delete keeps a tombstone row.
  */
 public final class JdbcContentStore implements ContentStore {
 
-    private final HikariDataSource ds;
-    private final boolean sqlite;
+    private final DataSource ds;
+    private final String label;
 
-    public JdbcContentStore(String url, String user, String password, int pool) {
-        this.sqlite = url.startsWith("jdbc:sqlite:");
-        HikariConfig c = new HikariConfig();
-        c.setJdbcUrl(url);
-        if (user != null && !user.isBlank()) {
-            c.setUsername(user);
-        }
-        if (password != null && !password.isBlank()) {
-            c.setPassword(password);
-        }
-        c.setMaximumPoolSize(sqlite ? 1 : Math.max(1, pool));
-        c.setPoolName("drishti-content");
-        if (sqlite) {
-            c.setConnectionInitSql("PRAGMA busy_timeout = 10000");
-        }
-        this.ds = new HikariDataSource(c);
-        ResourceDatabasePopulator schema = new ResourceDatabasePopulator(new ClassPathResource(sqlite ? "db/schema-sqlite.sql" : "db/schema-postgres.sql"));
-        schema.setSqlScriptEncoding("UTF-8");
-        schema.execute(ds);
+    /** The store over the Drishti database's pool ({@code label} names it in messages); the pool belongs to the database, not to the store. */
+    public JdbcContentStore(DataSource ds, String label) {
+        this.ds = ds;
+        this.label = label;
     }
 
     @Override
     public String root() {
-        return (sqlite ? "sqlite " : "postgres ") + Pattern.compile("password=[^&;]*").matcher(ds.getJdbcUrl()).replaceAll("password=***");
+        return "database " + label;
     }
 
     @Override
@@ -197,7 +178,7 @@ public final class JdbcContentStore implements ContentStore {
 
     @Override
     public void close() {
-        ds.close();
+        // the pool is the Drishti database's: it closes with the server
     }
 
     private static long version(String key, String v) {

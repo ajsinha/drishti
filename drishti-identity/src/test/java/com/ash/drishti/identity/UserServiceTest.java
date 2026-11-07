@@ -38,7 +38,7 @@ class UserServiceTest {
 
     private UserService service(boolean forceOnReset) {
         IdentityProperties p = new IdentityProperties(dir.resolve("users.json").toString(), dir.resolve("audit.jsonl").toString(),
-                1000, 10, 3, Duration.ofMinutes(15), true, null, null, null, false, forceOnReset, dir.resolve("prefs").toString(), null, null, null, null, null);
+                1000, 10, 3, Duration.ofMinutes(15), true, null, null, null, false, forceOnReset, dir.resolve("prefs").toString(), null);
         return new UserService(new FileUserStore(Path.of(p.usersFile())), new PasswordHasher(1000), new FileAuditLog(Path.of(p.auditFile())), p,
                 Set.of("admin", "trader", "risk", "author"));
     }
@@ -67,7 +67,7 @@ class UserServiceTest {
     @Test
     void aUserArrivingWhileTheSeedIsHashedIsNotOverwritten() {
         IdentityProperties p = new IdentityProperties(dir.resolve("users.json").toString(), dir.resolve("audit.jsonl").toString(),
-                1000, 10, 3, Duration.ofMinutes(15), true, null, null, null, false, false, dir.resolve("prefs").toString(), null, null, null, null, null);
+                1000, 10, 3, Duration.ofMinutes(15), true, null, null, null, false, false, dir.resolve("prefs").toString(), null);
         FileUserStore real = new FileUserStore(Path.of(p.usersFile()));
         java.time.Instant then = java.time.Instant.parse("2026-11-01T00:00:00Z");
         User clusters = new User("drishti-dev-admin", "Cluster admin", "", "Administration", Set.of("admin"), true, false, "x", 0, null, then, then,
@@ -116,7 +116,7 @@ class UserServiceTest {
     void aFirstAdministratorChosenInTheConfigurationIsNotTheDevelopmentAdmin() {
         IdentityProperties p = new IdentityProperties(dir.resolve("users.json").toString(), dir.resolve("audit.jsonl").toString(),
                 1000, 10, 3, Duration.ofMinutes(15), true, "ops-admin", "chosen-by-the-operator-9", null, false, false,
-                dir.resolve("prefs").toString(), null, null, null, null, null);
+                dir.resolve("prefs").toString(), null);
         UserService s = new UserService(new FileUserStore(Path.of(p.usersFile())), new PasswordHasher(1000), new FileAuditLog(Path.of(p.auditFile())), p,
                 Set.of("admin"));
         assertThat(p.seedPasswordIsDefault()).isFalse();

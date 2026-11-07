@@ -50,7 +50,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=alpha",
         "drishti.packs.watch=poll", "drishti.packs.poll=200ms", "drishti.packs.reload-debounce=100ms",
         "drishti.retry.packs.initial=300ms", "drishti.retry.packs.max=1s", "drishti.retry.packs.jitter=0",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/packreload-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=${drishti.test.dir}/packreload-${random.uuid}/identity.db"})
 class PackReloaderTest {
 
     static Path root;

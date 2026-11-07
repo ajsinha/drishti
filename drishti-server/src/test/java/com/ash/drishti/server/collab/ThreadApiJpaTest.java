@@ -21,7 +21,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 /** The thread contract with threads in the identity database (drishti.collab.store=jpa). */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance,logistics",
-        "drishti.collab.store=jpa", "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/threadapi-jpa-${random.uuid}/identity.db",
+        "drishti.collab.store=jpa", "drishti.database.sqlite.file=${drishti.test.dir}/threadapi-jpa-${random.uuid}/identity.db",
         "drishti.packs.overlay=${drishti.test.dir}/threadapi-jpa-overlay/added.yaml", "drishti.collab.limits.comments-per-minute=1000",
         "drishti.collab.inbox.poll=100ms", "drishti.collab.threads.edit-window=3s", "drishti.security.registered-users-only=true"})
 @AutoConfigureMockMvc

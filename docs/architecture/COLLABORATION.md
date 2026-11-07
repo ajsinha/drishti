@@ -391,7 +391,7 @@ the firm's archive (which carry the hashes) are what make rewriting detectable.
 entity on demand, cached), `shares/<yyyy-MM>/<id>.json`, `inbox/<user>.jsonl` with a read-marker file,
 `outbox/{pending,sent,dead}/<seq>.json` moved atomically between folders, `holds.json`. Writes are serialised per
 file with a `ReentrantLock` keyed by path (as `AlertHistory` locks per user) and fsync'd. One server only; the server
-refuses to start with `store: file` and `drishti.identity.database-url` on PostgreSQL (a shared database means several
+refuses to start with `store: file` and the Drishti database (`drishti.database.kind`) on PostgreSQL (a shared database means several
 servers).
 
 **Notes.** See [Decision 1](#decisions-for-the-product-owner): existing `drishti_note` rows are imported once into

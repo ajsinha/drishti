@@ -30,7 +30,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 /** The same compliance contract with the record as files ({@code drishti.collab.store=file}); holds are {@code holds.json}. */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance,logistics",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/compliance-file-${random.uuid}/identity.db",
+        "drishti.database.sqlite.file=${drishti.test.dir}/compliance-file-${random.uuid}/identity.db",
         "drishti.packs.overlay=${drishti.test.dir}/compliance-file-overlay/added.yaml", "drishti.collab.limits.comments-per-minute=1000",
         "drishti.collab.limits.shares-per-minute=1000", "drishti.collab.limits.shares-per-day=1000", "drishti.collab.retention.keep-days=1",
         "drishti.collab.retention.interval=1h", "drishti.collab.inbox.poll=100ms",

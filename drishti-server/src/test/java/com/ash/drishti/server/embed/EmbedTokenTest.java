@@ -57,7 +57,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=trading,counterparty-risk",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db",
+        "drishti.database.sqlite.file=${drishti.test.dir}/identity-${random.uuid}/identity.db",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.redact=trader,counterparty,mtm,COUNTERPARTY", "drishti.security.registered-users-only=false",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true",

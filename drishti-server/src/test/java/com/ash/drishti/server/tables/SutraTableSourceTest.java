@@ -59,7 +59,7 @@ import org.springframework.test.context.DynamicPropertySource;
         "drishti.security.redact[0]=dv01",
         "drishti.security.roles.fut-desk.kinds[0]=trade",
         "drishti.security.roles.all-desks.kinds[0]=trade", "drishti.security.roles.all-desks.raw=true",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=${drishti.test.dir}/identity-${random.uuid}/identity.db"})
 class SutraTableSourceTest {
 
     static final Path ROOT;

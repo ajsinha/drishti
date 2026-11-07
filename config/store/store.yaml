@@ -15,17 +15,10 @@
 # The content store (docs/architecture/DATA_ARCHITECTURE.md): where user content (Build workbench Designs today) is kept so that every
 # node of a Drishti*net cluster reaches it. The server reads this file at start (drishti.store.file in application.yaml); a missing
 # file or key means the value shown here. Every node of a cluster must use the same settings. Examples: config/store.examples/.
-backend: filesystem                # filesystem | sqlite | postgres | s3
+backend: filesystem                # filesystem | database (the Drishti database: config/db/database.yaml, SQLite or PostgreSQL) | s3
 filesystem:
   # A folder; on a cluster it must be a SHARED mount (NFS, EFS, SMB) at the same path on every node. DRISHTI_STORE_ROOT overrides it.
   root: ${drishti.data.dir:./data}/fstore
-sqlite:
-  url: jdbc:sqlite:${drishti.data.dir:./data}/identity/drishti.db   # the Drishti database itself (one node)
-postgres:
-  url: ""                          # e.g. jdbc:postgresql://db:5432/drishti (the Drishti database)
-  user: drishti  # the database user
-  password: ${DRISHTI_STORE_PASSWORD:}  # its password, from the environment only
-  pool: 4  # connections the store keeps at most
 s3:
   bucket: ""  # the bucket (required with backend: s3)
   prefix: ""  # a key prefix inside the bucket; empty: the bucket's root

@@ -25,40 +25,93 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 /**
- * The two identity schema files are one schema (docs/architecture/DATA_ARCHITECTURE.md: no migrations, two complete schema files): the same tables,
- * each with the same columns and the same nullability (their order may differ), and the same indexes. Only the column types differ (SQLite types by
- * value, PostgreSQL by declaration). A table added to one file and not the other fails here before it fails on someone's database.
+ * The Drishti database has exactly two complete schema files (docs/architecture/DATA_ARCHITECTURE.md, "The one Drishti database": no
+ * migrations): they define the same tables, each with the same columns and the same nullability (their order may differ), the same
+ * indexes and the same schema version; only the column types differ (SQLite types by value, PostgreSQL by declaration). Neither holds an
+ * {@code ALTER}. And no code creates or alters a table anywhere else, except the compute engines and the connector loaders listed below,
+ * which work on their own databases (DuckDB, a source system), never on the Drishti database.
  */
 class SchemaParityTest {
 
     private static final Path DB = Path.of("drishti-identity", "src", "main", "resources", "db");
     private static final Pattern TABLE = Pattern.compile("CREATE TABLE IF NOT EXISTS (\\w+) \\((.*?)\\);", Pattern.DOTALL);
-    /** Columns the SQLite file leaves to IdentityDatabase, which adds them in code (SQLite has no ADD COLUMN IF NOT EXISTS), and why. */
-    private static final Map<String, String> SQLITE_ADDS_IN_CODE = Map.of(
-            "drishti_share.view_state", "IdentityDatabase.ensureShareViewState adds it to a share table made before view state");
-
-    private static final Pattern ALTER = Pattern.compile("ALTER TABLE (\\w+) ADD COLUMN IF NOT EXISTS (\\w+)([^;]*);");
     private static final Pattern INDEX = Pattern.compile("CREATE (?:UNIQUE )?INDEX IF NOT EXISTS (\\w+) ON (\\w+) \\(([^)]*)\\)");
+    private static final Pattern VERSION = Pattern.compile("(?m)^-- schema-version: (\\d+)\\s*$");
+    private static final Pattern DDL = Pattern.compile("(?i)\\b(CREATE|ALTER)\\s+(TEMP\\s+|TEMPORARY\\s+|UNLOGGED\\s+|UNIQUE\\s+)?(TABLE|INDEX)\\b");
+
+    /** The only code that may create tables, and why: none of it touches the Drishti database. */
+    private static final Map<String, String> MAY_CREATE_TABLES = Map.ofEntries(
+            Map.entry("drishti-identity/src/main/java/com/ash/drishti/identity/database/DatabaseSchema.java", "applies the two schema files"),
+            Map.entry("drishti-bicompute/src/main/java/com/ash/drishti/bicompute/sql/DuckDbExecutor.java", "DuckDB: BI compute"),
+            Map.entry("drishti-server/src/main/java/com/ash/drishti/server/bi/engine/FrameSql.java", "DuckDB: the BI engine"),
+            Map.entry("drishti-server/src/main/java/com/ash/drishti/server/bi/engine/LiveAggregate.java", "DuckDB: the BI engine"),
+            Map.entry("drishti-server/src/main/java/com/ash/drishti/server/bi/engine/LiveHistory.java", "DuckDB: the BI engine"),
+            Map.entry("drishti-server/src/main/java/com/ash/drishti/server/bi/engine/LiveTable.java", "DuckDB: the BI engine"),
+            Map.entry("drishti-server/src/main/java/com/ash/drishti/server/bi/engine/StagedTables.java", "DuckDB: the BI engine"),
+            Map.entry("drishti-server/src/main/java/com/ash/drishti/server/bi/engine/TableBuilder.java", "DuckDB: the BI engine"),
+            Map.entry("drishti-server/src/main/java/com/ash/drishti/server/bi/sql/SqlService.java", "DuckDB: an in-memory engine per composite statement"),
+            Map.entry("plugins/drishti-plugin-cassandra/src/main/java/com/ash/drishti/plugin/cassandra/CassandraLayout.java", "a source system: Cassandra"),
+            Map.entry("plugins/drishti-plugin-cassandra/src/main/java/com/ash/drishti/plugin/cassandra/CassandraLoader.java", "a source system: Cassandra"),
+            Map.entry("plugins/drishti-plugin-duckdb/src/main/java/com/ash/drishti/plugin/duckdb/DuckDbLayout.java", "a source system: a DuckDB file"),
+            Map.entry("plugins/drishti-plugin-duckdb/src/main/java/com/ash/drishti/plugin/duckdb/DuckDbLoader.java", "a source system: a DuckDB file"),
+            Map.entry("plugins/drishti-plugin-jdbc/src/main/java/com/ash/drishti/plugin/jdbc/PostgresLayout.java", "a source system: a connector's PostgreSQL"),
+            Map.entry("plugins/drishti-plugin-jdbc/src/main/java/com/ash/drishti/plugin/jdbc/PostgresStage.java", "a source system: a connector's PostgreSQL"));
 
     @Test
-    void theSqliteAndPostgresSchemasHoldTheSameTablesColumnsAndIndexes() throws IOException {
+    void theSqliteAndPostgresSchemasHoldTheSameTablesColumnsIndexesAndVersion() throws IOException {
         Path root = RepositoryFiles.root();
         String sqlite = strip(Files.readString(root.resolve(DB).resolve("schema-sqlite.sql")));
         String postgres = strip(Files.readString(root.resolve(DB).resolve("schema-postgres.sql")));
         Map<String, List<String>> a = tables(sqlite);
-        SQLITE_ADDS_IN_CODE.keySet().forEach(k -> a.get(k.substring(0, k.indexOf('.'))).add(k.substring(k.indexOf('.') + 1)));
         Map<String, List<String>> b = tables(postgres);
         assertThat(b.keySet()).as("tables").containsExactlyInAnyOrderElementsOf(a.keySet());
         for (String t : a.keySet()) {
             assertThat(b.get(t)).as("columns of " + t + " (name and NOT NULL; the order may differ)").containsExactlyInAnyOrderElementsOf(a.get(t));
         }
         assertThat(indexes(postgres)).as("indexes").isEqualTo(indexes(sqlite));
+        assertThat(version(Files.readString(root.resolve(DB).resolve("schema-postgres.sql"))))
+                .as("the schema version of both files").isEqualTo(version(Files.readString(root.resolve(DB).resolve("schema-sqlite.sql"))));
+        assertThat(a).as("the stamp table").containsKey("drishti_schema");
+    }
+
+    @Test
+    void theSchemaFilesAreCompleteWithoutAlterOrDrop() throws IOException {
+        Path root = RepositoryFiles.root();
+        try (Stream<Path> files = Files.list(root.resolve(DB))) {
+            assertThat(files.map(p -> p.getFileName().toString()).filter(n -> n.endsWith(".sql")).sorted().toList())
+                    .as("exactly two schema files").containsExactly("schema-postgres.sql", "schema-sqlite.sql");
+        }
+        for (String f : List.of("schema-sqlite.sql", "schema-postgres.sql")) {
+            String sql = strip(Files.readString(root.resolve(DB).resolve(f))).toUpperCase(Locale.ROOT);
+            assertThat(sql).as(f + ": a complete schema, never a migration").doesNotContain("ALTER TABLE").doesNotContain("DROP ").doesNotContain("UPDATE ")
+                    .doesNotContain("INSERT ");
+        }
+    }
+
+    @Test
+    void noCodeCreatesOrAltersATableOutsideTheSchemaFiles() throws IOException {
+        Path root = RepositoryFiles.root();
+        List<String> found = new ArrayList<>();
+        for (Path p : RepositoryFiles.withSuffixes(Set.of(".java", ".py"))) {
+            String rel = root.relativize(p).toString().replace('\\', '/');
+            if (rel.contains("/src/test/") || rel.contains("/tests/") || p.getFileName().toString().startsWith("test_")) {
+                continue;
+            }
+            if (DDL.matcher(Files.readString(p)).find()) {
+                found.add(rel);
+            }
+        }
+        assertThat(found).as("code that creates or alters tables: the Drishti database's tables belong in the two schema files only "
+                + "(drishti-identity db/schema-*.sql); a compute engine or connector loader on its own database is listed in MAY_CREATE_TABLES with why")
+                .allMatch(MAY_CREATE_TABLES::containsKey);
     }
 
     @Test
@@ -70,6 +123,12 @@ class SchemaParityTest {
             assertThat(t.get("drishti_bi_run")).as(f).contains("id", "runner!", "owner!", "question!", "fingerprint!", "signature!", "tier!",
                     "engine!", "state!", "estimate!", "node!", "attempt!", "submitted_at!", "result_key", "lease_until");
         }
+    }
+
+    private static int version(String sql) {
+        Matcher m = VERSION.matcher(sql);
+        assertThat(m.find()).as("a '-- schema-version: N' line").isTrue();
+        return Integer.parseInt(m.group(1));
     }
 
     private static String strip(String sql) {
@@ -96,14 +155,6 @@ class SchemaParityTest {
                 cols.add(upper.contains("NOT NULL") ? name + "!" : name);
             }
             out.put(m.group(1).toLowerCase(Locale.ROOT), cols);
-        }
-        Matcher a = ALTER.matcher(sql);                      // a column added later to an existing table (PostgreSQL: ADD COLUMN IF NOT EXISTS)
-        while (a.find()) {
-            List<String> cols = out.get(a.group(1).toLowerCase(Locale.ROOT));
-            String name = a.group(2).toLowerCase(Locale.ROOT) + (a.group(3).toUpperCase(Locale.ROOT).contains("NOT NULL") ? "!" : "");
-            if (cols != null && !cols.contains(name)) {
-                cols.add(name);
-            }
         }
         return out;
     }

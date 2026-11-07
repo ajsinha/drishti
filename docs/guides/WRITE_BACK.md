@@ -432,7 +432,7 @@ SHA-256 signature over its place and body. The log is kept `retention.keep` (7 y
 
 Status: **W1 to W7 built (2026-10-25) and built (2026-10-26): [section 19](#19-implementation)** says what is built, what is not, and the
 decisions taken while building. Built; decisions in section 16 (2026-10-19 and
-2026-10-20). Related: [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built) (the one Drishti database: the edit log, lanes, overlays and owned data live in it;
+2026-10-20). Related: [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database) (the one Drishti database: the edit log, lanes, overlays and owned data live in it;
 ), [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) (Sutra and the renderer), [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (several servers),
 [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#21-genui-screens-composed-for-an-ai-agent-design-not-built) section 11 (write-back forms, deferred to this design), [BI_DESIGN.md](../architecture/BI_DESIGN.md) (review and proposals, reused
 here), [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) (connector files, where `writes:` lives). **Additions:** forms
@@ -461,7 +461,7 @@ millions of queues; and every edit carries **the version it was based on**.
 7. **Off by default, at three levels:** the site switch, the connector's `writes:` and the Sutra's `edit:`; a fresh install or an
    upgrade is read-only exactly as today (section 12).
 8. **Acknowledged means durable:** a change is acknowledged only once its row is committed in the edit log, in the one Drishti
-   database ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built)); a node that dies after the acknowledgement loses nothing (sections 7 and 11).
+   database ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database)); a node that dies after the acknowledgement loses nothing (sections 7 and 11).
 9. **The connector is the one place that knows a source system**, for reading and for writing (section 5.4).
 
 ### 3. The idea in one picture
@@ -541,7 +541,7 @@ node, page or job writes an edit's effect anywhere.
 
 | Target | Where the handler writes | In which transaction |
 |---|---|---|
-| overlay | a row of `drishti_overlay` in the Drishti database ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built)) | **the same transaction** as the edit-log row's state change and the lane's epoch check (section 11) |
+| overlay | a row of `drishti_overlay` in the Drishti database ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database)) | **the same transaction** as the edit-log row's state change and the lane's epoch check (section 11) |
 | owned | the kind's rows in the Drishti database | the same, one transaction |
 | source | nothing in the source directly: the edit-log row becomes `command: pending` (the outbox, section 5.3) | the same, one transaction; the source's own write happens later, in the source's own transaction |
 | the lake (Delta, Iceberg) | **never, per edit** | the loader folds approved overlays into the next day's build |
@@ -705,7 +705,7 @@ number of queues). Like a partitioned log:
 - **Changing `P`** moves keys between lanes; it is done with the queues drained (a maintenance switch: new changes wait, the lanes
   empty, `P` changes, they resume), never live.
 
-**The edit log: a durable, shared, ordered log in the Drishti database** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built); decided 2026-10-20). A lane
+**The edit log: a durable, shared, ordered log in the Drishti database** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database); decided 2026-10-20). A lane
 *is* its rows in the log, so the queue survives any restart and is visible to every node that shares the database:
 
 ```sql
@@ -932,14 +932,14 @@ Overlay and owned targets need the first and third levels only; a source target 
 - **Configuration**, like connectors and Drishti*net, in its own folder `config/edit/`: `edit.yaml` (`enabled: false` as shipped,
   `log: auto`, `primary:`, `s3:`, `follow:`; section 11), `policy.yaml` (defaults per kind and target, approval, the restate role),
   `lanes.yaml` (lanes, max-lane-depth, lane-warn, lane-lease, timeouts), `retention.yaml` (the edit log, section 16). The edit-log
-  tables live in the Drishti database, configured in `config/db/database.yaml` (planned) ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built)). Writes to a source are
+  tables live in the Drishti database, configured in `config/db/database.yaml` ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database)). Writes to a source are
   the connector file's `writes:` (section 5.4), off unless declared and switched on.
 
 ### 14. Build plan
 
 | Phase | What | Accepted when |
 |---|---|---|
-| W0 | **The one Drishti database** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built)): one pool and `config/db/database.yaml` (planned), two complete schema files with a parity test, the schema version stamp, `drishti.py db copy` | a 2.6.5 data folder starts with its users and settings; SQLite → PostgreSQL → SQLite keeps every row; a mismatched stamp refuses to start and names `db copy` |
+| W0 | **The one Drishti database** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database)): one pool and `config/db/database.yaml`, two complete schema files with a parity test, the schema version stamp, `drishti.py db copy` | a 2.6.5 data folder starts with its users and settings; SQLite → PostgreSQL → SQLite keeps every row; a mismatched stamp refuses to start and names `db copy` |
 | W1 | `edit:` in the Sutra schema and lint; Change API; the off-by-default switches and the roles (section 12); **the edit log on a single node with SQLite**: `drishti_edit_lane` and `drishti_edit_log` in both schema files, acknowledgement after commit, replay from `applied_seq`, the epoch checks (trivially one owner); lanes and handler; **owned** kinds and **overlays** as rows in the same transaction (corrections and notes first, section 16), overlays laid over the document at read time; version check; retention; inline edit and the pending bar | two users editing the same field: the second is conflicted with a diff, never silently overwritten; 100,000 concurrent changes over 1,000,000 entities on 64 lanes apply in per-entity order with no lost update (property test); a server killed after an acknowledgement applies the change once after restart; a fresh install is read-only |
 | W2 | Approval (four eyes), Review → Changes, history, CLI | a change needing approval cannot apply without it; self-approval refused |
 | W3 | **The cluster:** lane ownership by conditional UPDATE (the ring suggests), **fencing** by epoch on every append and apply, forwarding from any node, failover by lease; the **PostgreSQL** shared log, the **S3** log (lease by ETag, fences), the **edit primary** fallback, `edit.log: auto` and its rule, Admin → Edits (store, owners, warnings); the loader folding approved overlays into the next day's lake build (section 16) | the three cluster acceptance tests of section 15 pass on PostgreSQL and on S3; an approved overlay appears in the next lake build and in BI |
@@ -991,9 +991,9 @@ follows; GenUI's write-back forms build on this. W0 comes first.
 
 **2026-10-20**
 
-4. **One Drishti database** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built)): the edit log, lanes, overlays and owned data live in the same database as
+4. **One Drishti database** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database)): the edit log, lanes, overlays and owned data live in the same database as
    identity; PostgreSQL long term, SQLite the default for one node; no migrations (two complete schema files, a parity test, a version
-   stamp, `drishti.py db copy`); its own file `config/db/database.yaml` (planned). Built first (W0).
+   stamp, `drishti.py db copy`); its own file `config/db/database.yaml`.
 5. **A durable shared edit log replaces "replicated like user state"** (sections 7 and 11): `drishti_edit_lane` (ownership by
    conditional UPDATE; the ring only suggests) and `drishti_edit_log` (acknowledged only after commit; order by seq; replay from the
    last applied seq); every apply fenced by the epoch in the same transaction; any console to any server, forwarded to the owner.
@@ -1177,8 +1177,8 @@ for VaR's step V5).
 
 **Decided while building (2026-10-25)** (the designs' recommendations where they had one):
 
-1. **The Drishti database is the identity database's pool** for now: DATA_ARCHITECTURE.md item 0 (`config/db/database.yaml` (planned), `db copy`, the stamp) is
-   not built, so the write-back tables are in the two existing complete schema files and use the identity pool, which is the same database.
+1. **The write-back tables are in the Drishti database** (DATA_ARCHITECTURE.md section 6): in its two complete schema files, reached through
+   its one pool, configured in `config/db/database.yaml`.
 2. **Lease times are epoch milliseconds on the database's clock** (`lease_until BIGINT`), so SQLite and PostgreSQL compare them the same way.
 3. **The entry's signature is a SHA-256 digest** over its lane, seq, change id, epoch and body (`EditLog.intact`); signing with a key is
    not needed for tamper evidence inside one database.

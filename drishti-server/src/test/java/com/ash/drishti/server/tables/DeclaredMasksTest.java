@@ -46,7 +46,7 @@ import org.springframework.test.context.DynamicPropertySource;
         "drishti.security.redact=",
         "drishti.security.roles.plain.kinds[0]=trade",
         "drishti.security.roles.rawrole.kinds[0]=trade", "drishti.security.roles.rawrole.raw=true",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=${drishti.test.dir}/identity-${random.uuid}/identity.db"})
 class DeclaredMasksTest {
 
     static final Path ROOT;

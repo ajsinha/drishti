@@ -81,7 +81,9 @@ public class IdentityConfiguration {
      */
     @Bean(destroyMethod = "close")
     @org.springframework.context.annotation.Primary
-    public com.ash.drishti.identity.content.ContentStore contentStore(org.springframework.core.env.Environment env) {
+    public com.ash.drishti.identity.content.ContentStore contentStore(org.springframework.core.env.Environment env,
+            org.springframework.beans.factory.ObjectProvider<com.zaxxer.hikari.HikariDataSource> database,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.identity.database.DatabaseSettings> databaseSettings) {
         java.nio.file.Path file = java.nio.file.Path.of(env.getProperty("drishti.store.file", "./config/store/store.yaml"));
         java.nio.file.Path data = java.nio.file.Path.of(env.getProperty("drishti.data.dir", "./data"));
         com.ash.drishti.identity.content.ContentStoreSettings s = com.ash.drishti.identity.content.ContentStoreSettings.load(file, data, env::resolvePlaceholders);
@@ -89,7 +91,7 @@ public class IdentityConfiguration {
         if (!root.isBlank()) {
             s = s.withFsRoot(java.nio.file.Path.of(root));
         }
-        com.ash.drishti.identity.content.ContentStore store = s.open();
+        com.ash.drishti.identity.content.ContentStore store = s.open(database::getObject, databaseSettings.getObject().describe());
         String node = env.getProperty("drishti.net.node-id", "");
         com.ash.drishti.identity.content.ContentStoreNodes.announce(store,
                 node.isBlank() ? com.ash.drishti.identity.content.ContentStoreNodes.localName(env.getProperty("server.port", "")) : node);
@@ -184,7 +186,7 @@ public class IdentityConfiguration {
      * node only, the identity database ({@code jpa}) or files ({@code file}). Files are refused beside a shared (PostgreSQL) database.
      */
     @Bean
-    public com.ash.drishti.identity.collab.CollabTx collabTx(com.ash.drishti.identity.collab.CollabProperties props, IdentityProperties id,
+    public com.ash.drishti.identity.collab.CollabTx collabTx(com.ash.drishti.identity.collab.CollabProperties props, com.ash.drishti.identity.database.DatabaseSettings id,
             TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.CollabImport.Content collabContent) {
         requireSingleServerForFiles(props, id);
         if (collabContent.isPresent()) {
@@ -255,9 +257,9 @@ public class IdentityConfiguration {
         return com.ash.drishti.identity.collab.Seals.sealing(inner, seals);
     }
 
-    public static void requireSingleServerForFiles(com.ash.drishti.identity.collab.CollabProperties props, IdentityProperties id) {
+    public static void requireSingleServerForFiles(com.ash.drishti.identity.collab.CollabProperties props, com.ash.drishti.identity.database.DatabaseSettings id) {
         if ("file".equals(props.store()) && !id.sqlite()) {
-            throw new IllegalStateException("drishti.collab.store=file keeps shares on this server only, but drishti.identity.database-url "
+            throw new IllegalStateException("drishti.collab.store=file keeps shares on this server only, but the Drishti database (drishti.database.kind) "
                     + "is a shared database: use drishti.collab.store=jpa");
         }
     }

@@ -11,9 +11,21 @@
 -- written permission of the copyright holder.
 --
 -- See the LICENSE file in the root of this repository for the full terms.
--- Drishti identity schema for SQLite (the default: one file, nothing to install). Applied at start-up; every statement
--- is idempotent (IF NOT EXISTS), so this file is the whole schema, not a migration. Its twin is schema-postgres.sql.
+-- The complete schema of the Drishti database for SQLite (the default: one file, nothing to install): every table Drishti owns
+-- (identity, collaboration, BI, runs, the content store, compute approvals, switches, write-back). Applied at every start; every
+-- statement is idempotent (IF NOT EXISTS), so this file is the whole schema, never a migration. Its twin is schema-postgres.sql
+-- (a test keeps the two equal). A change to an existing table's shape is made in both files and bumps the version below; an existing
+-- database reaches it only by `drishti.py db copy` into a fresh one (docs/architecture/DATA_ARCHITECTURE.md, "The one Drishti database").
 -- SQLite keeps booleans as 0/1 and times as text or numbers; foreign keys are switched on per connection.
+-- schema-version: 1
+
+-- The schema version stamp: the version of these files that built the database (one row).
+CREATE TABLE IF NOT EXISTS drishti_schema (
+    id         INTEGER   PRIMARY KEY CHECK (id = 1),
+    version    INTEGER   NOT NULL,
+    written_by TEXT      NOT NULL,
+    written_at TIMESTAMP NOT NULL
+);
 
 CREATE TABLE IF NOT EXISTS drishti_user (
     username             TEXT    PRIMARY KEY,
@@ -226,7 +238,8 @@ CREATE TABLE IF NOT EXISTS drishti_share (
     masked_spans VARCHAR(2000) NOT NULL,
     channels VARCHAR(40) NOT NULL,
     thread_id VARCHAR(30),
-    hash VARCHAR(64) NOT NULL
+    hash VARCHAR(64) NOT NULL,
+    view_state VARCHAR(4100)
 );
 CREATE INDEX IF NOT EXISTS drishti_share_sender ON drishti_share (sender, id);
 CREATE INDEX IF NOT EXISTS drishti_share_entity ON drishti_share (kind, entity_id);

@@ -43,7 +43,7 @@ class ContentStoreSettingsTest {
         try (Stream<Path> s = Files.list(Path.of("..", "config", "store.examples"))) {
             backends = s.sorted().map(p -> ContentStoreSettings.load(p, DATA, RESOLVE).backend()).toList();
         }
-        assertThat(backends).containsExactlyInAnyOrder("filesystem", "filesystem", "postgres", "s3");
+        assertThat(backends).containsExactlyInAnyOrder("filesystem", "filesystem", "database", "s3");
     }
 
     @Test
@@ -51,8 +51,8 @@ class ContentStoreSettingsTest {
         ContentStoreSettings s = ContentStoreSettings.load(Path.of("target", "no-such-store.yaml"), DATA, RESOLVE);
         assertThat(s.backend()).isEqualTo("filesystem");
         assertThat(s.origin()).isEqualTo("default");
-        assertThatThrownBy(() -> ContentStoreSettings.from(Map.of("backend", "delta"), DATA, RESOLVE, "t")).hasMessageContaining("filesystem, sqlite, postgres or s3");
-        assertThatThrownBy(() -> ContentStoreSettings.from(Map.of("backend", "postgres"), DATA, RESOLVE, "t")).hasMessageContaining("postgres.url");
+        assertThatThrownBy(() -> ContentStoreSettings.from(Map.of("backend", "delta"), DATA, RESOLVE, "t")).hasMessageContaining("filesystem, database or s3");
+        assertThatThrownBy(() -> ContentStoreSettings.from(Map.of("backend", "postgres"), DATA, RESOLVE, "t")).hasMessageContaining("backend: database");
     }
 
     @Test

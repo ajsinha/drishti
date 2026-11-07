@@ -51,7 +51,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.redact=COUNTERPARTY",
         "drishti.edit.file=../config/edit/edit.yaml", "DRISHTI_EDIT_ENABLED=true",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/edit-${random.uuid}.db",
+        "drishti.database.sqlite.file=${drishti.test.dir}/edit-${random.uuid}.db",
         "drishti.security.roles.trader.kinds[0]=*", "drishti.security.roles.trader.raw=true", "drishti.security.roles.trader.edit=true",
         "drishti.security.roles.checker.kinds[0]=*", "drishti.security.roles.checker.raw=true", "drishti.security.roles.checker.approve=true",
         "drishti.security.roles.checker.edit=true",

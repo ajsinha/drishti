@@ -107,7 +107,7 @@ public final class NetNodes implements AutoCloseable {
         Path dir = root.resolve(name);
         List<String> args = new ArrayList<>(List.of("--server.port=" + port, "--drishti.data.dir=" + dir.resolve("data"),
                 "--drishti.net.dir=" + dir.resolve("net"), "--drishti.net.poll=200ms",
-                "--drishti.identity.database-url=jdbc:sqlite:" + dir.resolve("identity").resolve("identity.db"),
+                "--drishti.database.sqlite.file=" + dir.resolve("identity").resolve("identity.db"),
                 "--drishti.identity.users-file=" + dir.resolve("identity").resolve("users.json"),
                 "--drishti.identity.audit-file=" + dir.resolve("identity").resolve("audit.jsonl"),
                 "--drishti.identity.preferences-dir=" + dir.resolve("identity").resolve("preferences"),

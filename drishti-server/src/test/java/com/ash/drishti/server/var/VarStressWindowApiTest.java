@@ -71,7 +71,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.security.roles.risk.kinds[0]=*", "drishti.security.roles.risk.raw=true",
         "drishti.security.roles.viewer.kinds[0]=trade",
         "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
-        "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)
 class VarStressWindowApiTest {

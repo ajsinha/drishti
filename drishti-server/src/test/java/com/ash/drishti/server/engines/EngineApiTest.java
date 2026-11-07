@@ -44,7 +44,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.sources.plugins.demo.settings.ticking=false", "drishti.identity.iterations=1000",
         "drishti.engines.dir=${drishti.test.dir}/engines-${random.uuid}", "drishti.engines.watch-seconds=0", "drishti.bi.dir=../config/bi", "drishti.tables.root=../config/tables",
         "drishti.bi.query.store-dir=${drishti.test.dir}/engines-bi-store/${random.uuid}",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db"})
+        "drishti.database.sqlite.file=${drishti.test.dir}/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class EngineApiTest {
 

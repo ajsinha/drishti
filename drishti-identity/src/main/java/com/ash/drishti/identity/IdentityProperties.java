@@ -37,17 +37,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *     says otherwise for that user (default false)
  * @param forcePasswordChangeOnReset users must change a password an admin reset for them (default false)
  * @param preferencesDir per-user documents of releases before 1.10, imported with the users
- * @param databaseUrl the identity database: {@code jdbc:sqlite:<file>} (default) or {@code jdbc:postgresql://...}
- * @param databaseUser database user (PostgreSQL)
- * @param databasePassword database password (PostgreSQL)
- * @param databasePoolSize connections in the pool; unset: {@code drishti.db.pool.size} (20) on PostgreSQL, 8 on SQLite (one writer at a time)
  */
 @ConfigurationProperties("drishti.identity")
 public record IdentityProperties(
         String usersFile, String auditFile, Integer iterations, Integer minPasswordLength, Integer maxFailedAttempts,
         Duration lockout, Boolean seedAdmin, String seedUsername, String seedPassword, List<String> seedRoles,
         Boolean forcePasswordChangeOnCreate, Boolean forcePasswordChangeOnReset, String preferencesDir,
-        String databaseUrl, String databaseUser, String databasePassword, Integer databasePoolSize, String seedDisplayName) {
+        String seedDisplayName) {
 
     public IdentityProperties {
         usersFile = usersFile == null ? "./data/identity/users.json" : usersFile;
@@ -63,10 +59,6 @@ public record IdentityProperties(
         forcePasswordChangeOnCreate = forcePasswordChangeOnCreate != null && forcePasswordChangeOnCreate;
         forcePasswordChangeOnReset = forcePasswordChangeOnReset != null && forcePasswordChangeOnReset;
         preferencesDir = preferencesDir == null ? "./data/identity/preferences" : preferencesDir;
-        databaseUrl = databaseUrl == null || databaseUrl.isBlank() ? "jdbc:sqlite:./data/identity/drishti.db" : databaseUrl;
-        databaseUser = databaseUser == null ? "" : databaseUser;
-        databasePassword = databasePassword == null ? "" : databasePassword;
-        // null: the site default drishti.db.pool.size (20) on PostgreSQL; 8 on SQLite (an embedded file, exempt from pooling)
         seedDisplayName = seedDisplayName == null || seedDisplayName.isBlank() ? "Development admin" : seedDisplayName;
     }
 
@@ -76,10 +68,5 @@ public record IdentityProperties(
     /** Whether the seeded admin would have the well-known default password. */
     public boolean seedPasswordIsDefault() {
         return DEFAULT_SEED_PASSWORD.equals(seedPassword);
-    }
-
-    /** True for SQLite, false for PostgreSQL. */
-    public boolean sqlite() {
-        return databaseUrl.startsWith("jdbc:sqlite:");
     }
 }

@@ -60,10 +60,10 @@ public class PoolMetrics {
     });
 
     public PoolMetrics(MeterRegistry meters, SourceRegistry registry, ObjectProvider<HikariDataSource> identity,
-            com.ash.drishti.identity.IdentityProperties identityProperties) {
+            com.ash.drishti.identity.database.DatabaseSettings database) {
         this.registry = registry;
         this.identity = identity;
-        this.sqlite = identityProperties.sqlite();
+        this.sqlite = database.sqlite();
         add(meters, "max", "Most connections the pool opens at once", p -> p.max());
         add(meters, "open", "Connections open now", p -> p.open());
         add(meters, "in_use", "Connections borrowed now", p -> p.inUse());

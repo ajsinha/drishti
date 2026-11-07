@@ -95,7 +95,7 @@ wait_for() {  # wait_for <seconds> <command...>
 }
 PG_PORT=15432; REDIS_PORT=16379; MONGO_PORT=37017; AS_PORT=13000
 ENV=(DRISHTI_PORT="$PORT" DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_DELTA_ROOT="$DATA/empty-lake"
-     DRISHTI_IDENTITY_DB_URL="jdbc:sqlite:$SRV/identity/drishti.db" DRISHTI_USERS_FILE="$SRV/identity/users.json"
+     DRISHTI_DB_FILE="$SRV/identity/drishti.db" DRISHTI_USERS_FILE="$SRV/identity/users.json"
      DRISHTI_AUDIT_FILE="$SRV/identity/audit.jsonl" DRISHTI_GOVERNANCE_DIR="$SRV/governance" DRISHTI_REPORTS_DIR="$SRV/reports"
      DRISHTI_PACKS_OVERLAY="$SRV/packs/added.yaml" DRISHTI_PACKS_INSTALLED="$SRV/packs/installed" DRISHTI_FEEDS="$SRV/feeds"
      DRISHTI_REPORTS_ENABLED=false DRISHTI_ACCESS_LOG=false)
