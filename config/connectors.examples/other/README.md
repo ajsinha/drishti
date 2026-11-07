@@ -22,6 +22,8 @@ connectors:
 - aerospike
 - cassandra
 - delta
+- delta-external
+- delta-sharing
 - iceberg
 - iceberg-external
 - jdbc
@@ -39,7 +41,11 @@ files:
 - cassandra-astra.yaml
 - cassandra-tls.yaml
 - customer-lake.yaml
+- delta-external-spark-mart.yaml
+- delta-external-unity.yaml
 - delta-private-ca.yaml
+- delta-sharing-vendor.yaml
+- delta-unity-catalog.yaml
 - iceberg-external-risk-mart.yaml
 - iceberg-rest-private-ca.yaml
 - kafka-confluent-cloud.yaml
@@ -139,7 +145,11 @@ apply` refuse a credential written in clear. There is no loader for these files:
 | `cassandra-astra.yaml` | `cassandra` | `trade` | Trades in DataStax Astra |
 | `cassandra-tls.yaml` | `cassandra` | `trade` | Trades in Cassandra over mutual TLS |
 | `customer-lake.yaml` | `delta` | `customer` | Customer tables in the data lake |
+| `delta-external-spark-mart.yaml` | `delta-external` | `trade`, `counterparty` | risk-mart Delta tables written by Spark, columns mapped, documents built on read |
+| `delta-external-unity.yaml` | `delta-external` | `trade` | Unity Catalog tables main.risk.*, read with vended credentials |
 | `delta-private-ca.yaml` | `delta` | `customer` | Customer tables in the data lake over TLS |
+| `delta-sharing-vendor.yaml` | `delta-sharing` | `price` | end-of-day prices a market-data vendor shares |
+| `delta-unity-catalog.yaml` | `delta` | `trade` | the Endur trades table main.trading.trade_endur in Unity Catalog |
 | `iceberg-external-risk-mart.yaml` | `iceberg-external` | `trade`, `counterparty`, `market-quote` | risk-mart tables written by Spark, read through drishti-iceberg (no Hadoop) |
 | `iceberg-rest-private-ca.yaml` | `iceberg` | `trade` | Iceberg tables behind a REST catalog, object store over TLS |
 | `kafka-confluent-cloud.yaml` | `kafka` | `trade` | Trades from Confluent Cloud, Avro through Schema Registry |

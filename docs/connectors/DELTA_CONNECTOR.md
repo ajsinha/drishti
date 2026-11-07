@@ -48,6 +48,7 @@ Reading tables Databricks (or any Spark job) already writes, with or without Uni
 15. [Checklist for production](#15-checklist-for-production)
 16. [Engines: native and Hadoop](#16-engines-native-and-hadoop)
 17. [Delta Lake on AWS S3](#17-delta-lake-on-aws-s3)
+18. [Tables named in Unity Catalog](#18-tables-named-in-unity-catalog)
 
 Also: [Security: TLS and credentials](#security-tls-and-credentials) (before *As a connector file*).
 
@@ -1014,6 +1015,52 @@ deploy/aws/delta-s3/delta-s3.sh check --bucket acme-drishti-lake --prefix delta 
 root, the native engine, credentials from the default chain) against S3Mock in the test JVM, with only the stand-in's `s3.endpoint`
 added; `DeltaOnS3Test` and `DeltaOnS3HadoopTest` run it with `s3a://` on both engines. **Not run against AWS**: no AWS account is
 available to the build, so the live run of `delta-s3.sh` waits for an AWS sandbox account.
+
+## 18. Tables named in Unity Catalog
+
+A Drishti-shaped table that Databricks writes (section 5) and Unity Catalog names is read **by its name**, `catalog.schema.table`, not by
+its path. With `unity.host` set, each `table.<kind>` is a Unity Catalog table; Drishti asks Unity's open REST API
+(`/api/2.1/unity-catalog`) for the table's storage location and its **temporary credentials** (credential vending,
+`POST /temporary-table-credentials`, operation `READ`), then reads the table with Delta Kernel at that location, as any Delta table
+there. Each table gets an engine of its own whose S3 keys **renew themselves** `unity.renew-before-seconds` (300) before they expire;
+while Unity cannot be reached the old keys serve until they really expire. No storage keys of the server's own are needed.
+
+```yaml
+# config/connectors/trade-endur-unity.yaml
+plugin: delta
+kinds: [trade]
+settings:
+  unity.host: https://adb-1234567890.12.azuredatabricks.net
+  unity.client-id: ${UC_CLIENT_ID}            # OAuth machine-to-machine (a service principal); or unity.token: ${UC_TOKEN}
+  unity.client-secret: ${UC_CLIENT_SECRET}
+  s3.region: eu-west-2                         # the bucket's region
+  table.trade: main.trading.trade_endur        # or trading.trade_endur with unity.catalog, or trade_endur with unity.schema too
+  layout.trade.columns: TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,DESK,BOOK,COUNTERPARTY_ID
+```
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `unity.host` | | the workspace or server; set, `table.<kind>` names Unity tables |
+| `unity.token`, or `unity.client-id` with `unity.client-secret` | | the sign-in: a bearer token, or OAuth M2M at `<host>/oidc/v1/token` (`unity.oauth-token-uri`); secrets as `${ENV}` or `file:` |
+| `unity.catalog`, `unity.schema` | | the defaults of a shorter name |
+| `unity.vend` | `true` | `false`: read with the connector's own `s3.*` settings or the AWS chain, Unity only saying where the table is |
+
+**Grants are Unity's.** The principal needs `USE CATALOG`, `USE SCHEMA` and `SELECT` on the table, and `EXTERNAL USE SCHEMA` on its
+schema for credential vending; the metastore must allow external data access. Drishti adds no permissions of its own here; how Unity's
+grants and Drishti's roles meet is decided in 2.9.11.i's security discussion ([UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md)).
+
+**Refusals, in words**, in Health (the table left out) or, for a kind named in `kinds`, at start: `table not found: Unity Catalog at
+<host> has no main.trading.trade_endur`, `no grant: the principal Drishti signs in as may not read …`, `credential vending is off for …:
+the metastore must allow external data access, and the principal needs EXTERNAL USE SCHEMA`, `refused the sign-in (HTTP 401)`, `… is a
+VIEW: a view has no files of its own`, `… is a ICEBERG table, not Delta`. The native engine only; tables in S3 (or on local disk, the
+open-source Unity Catalog server's). **Not yet:** tables in Azure (ADLS) or Google Cloud Storage through Unity's vended credentials
+(read them by path with the hadoop engine, section 16), and Unity in a lake file (`catalog: {type: unity}`): connector settings only.
+Plain tables (no `id`/`doc` shape) named in Unity are read by `delta-external`
+([LAKEHOUSE_CONNECTORS.md](LAKEHOUSE_CONNECTORS.md)).
+
+**Tested** by `DeltaOnUnityCatalogTest`: the whole dated-source contract with every kind's table found through a mock Unity Catalog
+(Databricks' REST answers), and the refusals; vended S3 credentials and their renewal against S3Mock in `UnityCatalogTest`
+(drishti-lakehouse). Not yet run against a Databricks workspace.
 
 ## Appendix: walk-through and worked examples
 

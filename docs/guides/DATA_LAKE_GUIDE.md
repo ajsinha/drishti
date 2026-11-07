@@ -898,18 +898,26 @@ each) starts to earn its folders.
 ## 10. Connecting to an existing lakehouse (Databricks, Unity Catalog)
 
 When the bank's tables already sit in a lakehouse that Databricks, Spark, Trino or Snowflake writes, Drishti reads them in place, with its
-own readers inside the server (Delta Kernel and drishti-iceberg): **no Databricks cluster, Spark or warehouse is needed to read**. The
-tables need the shape of section 1 (`id`, `doc`, `business_date`, promoted columns); a Spark job that writes it is in
-[DELTA_CONNECTOR.md section 5](../connectors/DELTA_CONNECTOR.md#5-writing-the-lake). Each day sorted by `id` (on Databricks,
-`OPTIMIZE … ZORDER BY (id)` or liquid clustering on `id`) reads fastest.
+own readers inside the server (Delta Kernel, drishti-iceberg and drishti-lakehouse): **no Databricks cluster, Spark or warehouse is
+needed to read**. Two kinds of table are read:
 
-### 10.1 Built
+| The table | Connector | How it is found |
+|---|---|---|
+| Drishti's shape (section 1: `id`, `doc`, `business_date`, promoted columns), written by a Spark job ([DELTA_CONNECTOR.md section 5](../connectors/DELTA_CONNECTOR.md#5-writing-the-lake)) | `delta`, `iceberg` | a storage path (10.1), or a Unity Catalog name (10.2) |
+| **Plain columns**, as the owners wrote them (no shaped copy) | `delta-external`, `iceberg-external` | a storage path, a Unity Catalog name (10.2, 10.4), an Iceberg REST catalog |
+| Shared by another organisation | `delta-sharing` | a Delta Sharing profile (10.3) |
+
+The shaped table reads fastest at scale (promoted columns, an id map per day); a plain table needs no copy and no job, its columns mapped
+in the connector file. Either way, each day sorted by the id (on Databricks, `OPTIMIZE … ZORDER BY (id)` or liquid clustering on it)
+reads one entity in one row group.
+
+### 10.1 By storage path, and Iceberg through a REST catalog
 
 **Delta by storage path.** The lake file's `root` is the folder above the domains: `s3://bucket/prefix` (the default `native` engine),
 or `abfs://…` (Azure) and `gs://…` (Google Cloud) with the connector setting `engine: hadoop`
 ([DELTA_CONNECTOR.md section 16](../connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop)). Credentials: S3 from the AWS default
 chain (a task or instance role) or `${ENV}` references; Azure and Google Cloud through `hadoop.<key>` settings; a private CA through
-`tls.*`. With Unity Catalog, point the root at an external table's location and give the server read access to that storage.
+`tls.*`. With Unity Catalog, point the root at an external table's location and give the server read access to that storage, or name the table (10.2).
 
 ```yaml
 # config/lakes/bank-lakehouse.yaml
@@ -972,15 +980,103 @@ Check a connector against the real store before it serves anyone: `drishti.py co
 words. Every setting: [DELTA_CONNECTOR.md section 14](../connectors/DELTA_CONNECTOR.md#14-settings),
 [ICEBERG_CONNECTOR.md section 15](../connectors/ICEBERG_CONNECTOR.md#15-settings).
 
-### 10.2 Planned (not built)
+### 10.2 Unity Catalog for Delta: tables by name
 
-> **Under construction.** On the owner's roadmap (2026-11-07) for the platform release 2.9.11.f; none of this works today.
+A Delta table is named as Unity Catalog names it, `catalog.schema.table`, instead of by its path. Drishti calls Unity's open REST API
+for the table's **storage location** and **temporary credentials** (credential vending), then reads the table with Delta Kernel at that
+location. The credentials renew themselves five minutes before they expire; while Unity cannot be reached the old ones serve until they
+really expire. Sign-in is a token or OAuth machine-to-machine (a service principal), the secrets as `${ENV}` references.
 
-| Planned | What it will do | Today |
-|---|---|---|
-| **Unity Catalog for Delta** | a table found by its name, `catalog.schema.table`; Unity Catalog's credential vending; Unity Catalog's grants as the permissions | read Delta by storage path (external tables), or the same table as Iceberg through Unity's REST endpoint (UniForm) |
-| **Delta Sharing** | read tables a provider shares through the Delta Sharing protocol | not supported |
-| **Plain tables without the `id`/`doc` shape** | read a table of ordinary columns directly, driven by per-table configuration | a small job writes a Drishti-shaped copy beside it ([DELTA_CONNECTOR.md section 5](../connectors/DELTA_CONNECTOR.md#5-writing-the-lake)) |
+```yaml
+# config/connectors/trade-endur-unity.yaml: a Drishti-shaped table (delta)
+plugin: delta
+kinds: [trade]
+settings:
+  unity.host: https://adb-1234567890.12.azuredatabricks.net
+  unity.client-id: ${UC_CLIENT_ID}
+  unity.client-secret: ${UC_CLIENT_SECRET}
+  s3.region: eu-west-2
+  table.trade: main.trading.trade_endur
+  layout.trade.columns: TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,DESK,BOOK,COUNTERPARTY_ID
+```
+
+```yaml
+# config/connectors/trade-unity.yaml: a plain table (delta-external), its columns mapped
+plugin: delta-external
+kinds: [trade]
+settings:
+  unity.host: https://adb-1234567890.12.azuredatabricks.net
+  unity.token: ${UC_TOKEN}
+  unity.catalog: main
+  s3.region: eu-west-2
+  tables:
+    trade: {table: risk.trades, id: TRADE_ID}       # main.risk.trades
+```
+
+**Grants are Unity's**: the principal needs `USE CATALOG`, `USE SCHEMA` and `SELECT`, and `EXTERNAL USE SCHEMA` for vending; the
+metastore must allow external data access. Drishti adds no permissions of its own; how Unity's grants and Drishti's roles meet is decided
+in 2.9.11.i's security discussion (the [under-construction registry](../admin/UNDER_CONSTRUCTION.md)). A refusal is said in words, in
+Health: `table not found: Unity Catalog at … has no main.trading.trade_endur`, `no grant: … an owner grants USE CATALOG, USE SCHEMA and
+SELECT`, `credential vending is off for …: the metastore must allow external data access, and the principal needs EXTERNAL USE SCHEMA`,
+`refused the sign-in (HTTP 401)`, `… is a VIEW: a view has no files of its own`. Every setting: [DELTA_CONNECTOR.md section
+18](../connectors/DELTA_CONNECTOR.md#18-tables-named-in-unity-catalog) and [LAKEHOUSE_CONNECTORS.md section
+2](../connectors/LAKEHOUSE_CONNECTORS.md#2-unity-catalog-tables-by-name).
+
+### 10.3 Delta Sharing: tables another organisation shares
+
+`delta-sharing` reads tables a provider shares through the open Delta Sharing protocol: a **profile file** (the provider's endpoint, the
+bearer token as an environment reference), no storage keys. It lists the shares, schemas and tables, asks for a table's files (pre-signed
+URLs, renewed before they expire) with predicate hints, and reads their Parquet.
+
+```yaml
+# config/connectors/vendor-prices.yaml
+plugin: delta-sharing
+kinds: [price]
+settings:
+  profile: /etc/drishti/shares/vendor.share        # {"shareCredentialsVersion":1,"endpoint":"…","bearerToken":"${VENDOR_SHARING_TOKEN}"}
+  tables:
+    price: {table: market_data.eod.prices, id: [ISIN, CURRENCY], date: PRICE_DATE}
+  hints.market_data.eod.prices: PRICE_DATE >= 2026-01-01
+```
+
+Change data feed and streaming are out of scope. Details, refusals and limits: [LAKEHOUSE_CONNECTORS.md section
+3](../connectors/LAKEHOUSE_CONNECTORS.md#3-delta-sharing-shared-tables).
+
+### 10.4 Plain tables: no id/doc shape needed
+
+A table of ordinary columns is read directly: the connector names the id column(s), the business date (by default the date partition
+column) and which columns show, and Drishti **builds the document view on read**, every column searchable; no shaped copy and no job.
+Delta tables (by path, or by Unity name) through `delta-external`; Iceberg tables (by path, a REST catalog, Unity's Iceberg endpoint)
+through `iceberg-external` ([ICEBERG_EXTERNAL_CONNECTOR.md](../connectors/ICEBERG_EXTERNAL_CONNECTOR.md)). Large tables use the same
+scan paths and limits as the external Iceberg reader: the day's files pruned by the log's statistics, one row group for an id when the
+table is sorted by it, an id index per day otherwise.
+
+```yaml
+# config/connectors/trade-mart.yaml: the Delta tables a Spark job writes, as they are
+plugin: delta-external
+kinds: [trade, counterparty]
+settings:
+  root: s3://bank-lakehouse/marts
+  s3.region: eu-west-2
+  tables:
+    trade:
+      table: risk.trades                      # partitioned by business_date: the business date
+      id: [SOURCE_SYSTEM, TRADE_ID]
+      columns: {exclude: [_ETL_LOAD_TS]}
+      links: {COUNTERPARTY_ID: counterparty}
+    counterparty: {table: refdata.counterparties, id: CPTY_ID}
+```
+
+Column mapping (name or id), deletion vectors (rows deleted in place are left out), INT96 timestamps, structs, arrays and maps are read;
+`variant` is refused by name. [LAKEHOUSE_CONNECTORS.md](../connectors/LAKEHOUSE_CONNECTORS.md) is the one reference.
+
+### 10.5 Not yet
+
+> **Under construction** ([registry](../admin/UNDER_CONSTRUCTION.md)): Unity tables in Azure (ADLS) or Google Cloud Storage through
+> vended credentials (read them by path with the `delta` connector's hadoop engine meanwhile); Unity in a lake file
+> (`catalog: {type: unity}`): connector settings only today; Delta Sharing's history, its `delta` response format (shares with deletion
+> vectors) and OAuth profiles; how Unity's grants meet Drishti's roles (2.9.11.i). Nothing here has run against a real Databricks
+> workspace or provider yet: the tests use mock Unity Catalog and Delta Sharing servers and S3Mock.
 
 ## 11. Archives: zip and tar
 

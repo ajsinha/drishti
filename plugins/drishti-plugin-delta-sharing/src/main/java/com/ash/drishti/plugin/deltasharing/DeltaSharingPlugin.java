@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Tables another organisation shares through the open Delta Sharing protocol, served as Drishti kinds (DELTA_SHARING_CONNECTOR.md): a
+ * Tables another organisation shares through the open Delta Sharing protocol, served as Drishti kinds (LAKEHOUSE_CONNECTORS.md): a
  * profile file names the sharing server and the recipient's bearer token (an environment reference); the connector lists the shares,
  * schemas and tables, asks for a table's files (pre-signed URLs, with predicate hints) and reads their Parquet. No storage keys. The
  * columns are mapped as for any plain table ({@code tables.<kind>.id}, {@code date}, {@code columns.*}); the reader is the

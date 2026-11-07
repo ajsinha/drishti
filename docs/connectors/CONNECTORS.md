@@ -95,6 +95,9 @@ trading pack ships its three trade connectors this way ([DELTA_CONNECTOR.md](DEL
 | in PostgreSQL loaded for Drishti | `jdbc` table mode | [postgresql and jdbc](#postgresql-and-jdbc) |
 | in a Delta Lake or an Iceberg catalog | `delta`, `iceberg` | [delta lake](#delta-lake), [apache iceberg](#apache-iceberg) |
 | in Iceberg tables other engines write (Spark, Flink, Trino, Glue), read-only | `iceberg-external` | [ICEBERG_EXTERNAL_CONNECTOR.md](ICEBERG_EXTERNAL_CONNECTOR.md) |
+| in plain Delta tables other engines write (Spark, Databricks, delta-rs), by path or by name in Unity Catalog, read-only | `delta-external` | [LAKEHOUSE_CONNECTORS.md](LAKEHOUSE_CONNECTORS.md) |
+| in tables another organisation shares through Delta Sharing (a profile, no storage keys) | `delta-sharing` | [LAKEHOUSE_CONNECTORS.md section 3](LAKEHOUSE_CONNECTORS.md#3-delta-sharing-shared-tables) |
+| in Drishti-shaped Delta tables named in Unity Catalog (`catalog.schema.table`, vended credentials) | `delta` with `unity.host` | [DELTA_CONNECTOR.md section 18](DELTA_CONNECTOR.md#18-tables-named-in-unity-catalog) |
 | in AWS S3 Tables (managed Iceberg tables in a table bucket) | `iceberg` with `catalog: s3tables` | [ICEBERG_CONNECTOR.md section 20](ICEBERG_CONNECTOR.md#20-aws-s3-tables) |
 | in Delta Lake tables in AWS S3 | `delta` with `root: s3://<bucket>/<prefix>` | [DELTA_CONNECTOR.md section 17](DELTA_CONNECTOR.md#17-delta-lake-on-aws-s3) |
 | in DuckDB, MongoDB, Redis or Aerospike | `duckdb`, `mongodb`, `redis`, `aerospike` | [duckdb](#duckdb), [mongodb](#mongodb), [redis](#redis), [aerospike](#aerospike) |
@@ -223,6 +226,8 @@ Everything else (how it reads, every setting, scale and limits, troubleshooting,
 
 Iceberg tables that other engines write, in their own layout, are read (never written) by the plugin `iceberg-external`:
 [ICEBERG_EXTERNAL_CONNECTOR.md](ICEBERG_EXTERNAL_CONNECTOR.md).
+Plain Delta tables (by path or by Unity Catalog name) and Delta Sharing shares are read by `delta-external` and `delta-sharing`, with
+the same reader: [LAKEHOUSE_CONNECTORS.md](LAKEHOUSE_CONNECTORS.md).
 
 ## DuckDB
 

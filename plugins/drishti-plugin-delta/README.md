@@ -32,6 +32,16 @@ settings:
 - mode.*
 - layout.*
 - table.*
+- unity.host
+- unity.token
+- unity.client-id
+- unity.client-secret
+- unity.oauth-token-uri
+- unity.catalog
+- unity.schema
+- unity.vend
+- unity.renew-before-seconds
+- unity.timeout-seconds
 - hadoop.*
 - engine
 - date-column
@@ -107,7 +117,17 @@ runs is found without a restart. Two engines: `native` (the default; `java.nio` 
 | `kinds` | list |  | Kinds to serve (comma list); not set: every table found under the domain |
 | `mode.*` | string |  | Per-kind read mode |
 | `layout.*` | string |  | Per-kind layout: layout.<kind>.columns (promoted document paths), layout.<kind>.type-ahead (promoted columns whose values the type-ahead also matches: a name finds its id) |
-| `table.*` | string |  | Per-kind table folder under the domain when it is not the kind's name (table.trade: trade_endur) |
+| `table.*` | string |  | Per-kind table folder under the domain when it is not the kind's name (table.trade: trade_endur); with unity.host, the kind's table in Unity Catalog (table.trade: main.trading.trade_endur) |
+| `unity.host` | string |  | Unity Catalog's workspace or server (https://<workspace>.cloud.databricks.com, http://localhost:8080): tables are then named catalog.schema.table and found where Unity says, read with its vended credentials (DATA_LAKE_GUIDE.md section 10) |
+| `unity.token` | string |  | A bearer token for Unity Catalog (a personal access token or a service principal's): ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
+| `unity.client-id` | string |  | OAuth machine-to-machine: the service principal's client id (with unity.client-secret) |
+| `unity.client-secret` | string |  | OAuth machine-to-machine: the client secret, ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
+| `unity.oauth-token-uri` | string |  | Where OAuth tokens come from (default: <unity.host>/oidc/v1/token) |
+| `unity.catalog` | string |  | The catalog of a table named schema.table or table |
+| `unity.schema` | string |  | The schema of a table named table |
+| `unity.vend` | boolean | `true` | Read with the table's temporary credentials from Unity (credential vending); false: with this connector's own s3.* settings or the AWS chain |
+| `unity.renew-before-seconds` | int | `300` | Vended credentials are renewed this long before they expire; the old ones serve while Unity cannot be reached, until they really expire |
+| `unity.timeout-seconds` | int | `30` | Each call to Unity Catalog's API at most |
 | `hadoop.*` | string |  | Any Hadoop configuration property (hadoop.fs.s3a.connection.maximum) |
 | `engine` | string | `native` | Reader engine: native (Delta Kernel without Hadoop; Windows), hadoop (also abfs://, gs://) or auto (native on Windows); not set: DRISHTI_DELTA_ENGINE, else native |
 | `date-column` | string | `business_date` | Business date column |

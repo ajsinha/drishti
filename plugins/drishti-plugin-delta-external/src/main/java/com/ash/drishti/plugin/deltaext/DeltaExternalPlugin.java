@@ -25,7 +25,7 @@ import java.util.Map;
 
 /**
  * Plain Delta tables, as Spark, Databricks, delta-rs or Trino write them (any columns, no {@code id}/{@code doc} shape), served as
- * Drishti kinds (DELTA_EXTERNAL_CONNECTOR.md): the connector maps the columns ({@code tables.<kind>.id}, {@code date}, {@code columns.*},
+ * Drishti kinds (LAKEHOUSE_CONNECTORS.md): the connector maps the columns ({@code tables.<kind>.id}, {@code date}, {@code columns.*},
  * {@code links.*}) and the document view is built on read, so no shaped copy is needed. Tables are found by folder under {@code root}
  * (local disk or {@code s3://}) or by name in Unity Catalog ({@code unity.host}, {@code tables.<kind>.table: catalog.schema.table}), with
  * Unity's vended credentials. The reader is the {@code iceberg-external} connector's: drishti-lakehouse shows each Delta table as Iceberg.

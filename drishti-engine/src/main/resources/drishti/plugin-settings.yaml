@@ -105,7 +105,17 @@ plugins:
       - { name: kinds, type: list, desc: "Kinds to serve (comma list); not set: every table found under the domain", group: mapping }
       - { name: "mode.*", desc: "Per-kind read mode", group: mapping }
       - { name: "layout.*", desc: "Per-kind layout: layout.<kind>.columns (promoted document paths), layout.<kind>.type-ahead (promoted columns whose values the type-ahead also matches: a name finds its id)", group: mapping }
-      - { name: "table.*", desc: "Per-kind table folder under the domain when it is not the kind's name (table.trade: trade_endur)", group: mapping }
+      - { name: "table.*", desc: "Per-kind table folder under the domain when it is not the kind's name (table.trade: trade_endur); with unity.host, the kind's table in Unity Catalog (table.trade: main.trading.trade_endur)", group: mapping }
+      - { name: unity.host, desc: "Unity Catalog's workspace or server (https://<workspace>.cloud.databricks.com, http://localhost:8080): tables are then named catalog.schema.table and found where Unity says, read with its vended credentials (DATA_LAKE_GUIDE.md section 10)", group: unity }
+      - { name: unity.token, secret: true, desc: "A bearer token for Unity Catalog (a personal access token or a service principal's): ${ENV_VAR} or file:/path", group: unity }
+      - { name: unity.client-id, desc: "OAuth machine-to-machine: the service principal's client id (with unity.client-secret)", group: unity }
+      - { name: unity.client-secret, secret: true, desc: "OAuth machine-to-machine: the client secret, ${ENV_VAR} or file:/path", group: unity }
+      - { name: unity.oauth-token-uri, desc: "Where OAuth tokens come from (default: <unity.host>/oidc/v1/token)", group: unity }
+      - { name: unity.catalog, desc: "The catalog of a table named schema.table or table", group: unity }
+      - { name: unity.schema, desc: "The schema of a table named table", group: unity }
+      - { name: unity.vend, type: boolean, default: "true", desc: "Read with the table's temporary credentials from Unity (credential vending); false: with this connector's own s3.* settings or the AWS chain", group: unity }
+      - { name: unity.renew-before-seconds, type: int, default: "300", desc: "Vended credentials are renewed this long before they expire; the old ones serve while Unity cannot be reached, until they really expire", group: unity }
+      - { name: unity.timeout-seconds, type: int, default: "30", desc: "Each call to Unity Catalog's API at most", group: unity }
       - { name: "hadoop.*", desc: "Any Hadoop configuration property (hadoop.fs.s3a.connection.maximum)", group: tuning }
       - { name: engine, default: "native", desc: "Reader engine: native (Delta Kernel without Hadoop; Windows), hadoop (also abfs://, gs://) or auto (native on Windows); not set: DRISHTI_DELTA_ENGINE, else native", group: tuning }
       - { name: date-column, default: "business_date", desc: "Business date column", group: mapping }
@@ -250,6 +260,67 @@ plugins:
       - { name: s3.access-key, secret: true, desc: "S3 access key: ${ENV_VAR} or file:/path", group: s3 }
       - { name: s3.secret-key, secret: true, desc: "S3 secret key: ${ENV_VAR} or file:/path", group: s3 }
       - { name: s3.read-block-kb, type: int, default: "1024", desc: "The smallest ranged GET", group: s3 }
+  delta-external:
+    tls: true
+    proxy: true
+    settings:
+      - { name: "tables.*", desc: "Per kind (the columns mapped, the document built on read): tables.<kind>.table (namespace.table: folders under root, or catalog.schema.table in Unity Catalog), id (columns, joined by id-separator), id-separator (:), date (default: the date partition column), date-from (day), date-zone (UTC), mode (snapshot|effective), document (row|column:<name>), columns.exclude, columns.rename.<column>, links.<column> (a kind), depth (2); or tables: auto with namespace", group: mapping }
+      - { name: tables, desc: "auto: every table of the namespace is a kind (its name in lower case with -); each still needs its id (tables.<kind>.id)", group: mapping }
+      - { name: namespace, desc: "The namespace of tables: auto (folders under root, or catalog.schema)", group: connection }
+      - { name: root, type: path, desc: "The folder or s3:// prefix the tables are under (tables.<kind>.table names the folders below it); not with unity.host", group: connection }
+      - { name: unity.host, desc: "Unity Catalog's workspace or server (https://<workspace>.cloud.databricks.com, http://localhost:8080): tables are then named catalog.schema.table and found where Unity says, read with its vended credentials (DATA_LAKE_GUIDE.md section 10)", group: unity }
+      - { name: unity.token, secret: true, desc: "A bearer token for Unity Catalog (a personal access token or a service principal's): ${ENV_VAR} or file:/path", group: unity }
+      - { name: unity.client-id, desc: "OAuth machine-to-machine: the service principal's client id (with unity.client-secret)", group: unity }
+      - { name: unity.client-secret, secret: true, desc: "OAuth machine-to-machine: the client secret, ${ENV_VAR} or file:/path", group: unity }
+      - { name: unity.oauth-token-uri, desc: "Where OAuth tokens come from (default: <unity.host>/oidc/v1/token)", group: unity }
+      - { name: unity.catalog, desc: "The catalog of a table named schema.table or table", group: unity }
+      - { name: unity.schema, desc: "The schema of a table named table", group: unity }
+      - { name: unity.vend, type: boolean, default: "true", desc: "Read with the table's temporary credentials from Unity (credential vending); false: with this connector's own s3.* settings or the AWS chain", group: unity }
+      - { name: unity.renew-before-seconds, type: int, default: "300", desc: "Vended credentials are renewed this long before they expire; the old ones serve while Unity cannot be reached, until they really expire", group: unity }
+      - { name: unity.timeout-seconds, type: int, default: "30", desc: "Each call to Unity Catalog's API at most", group: unity }
+      - { name: history-versions, type: int, default: "30", desc: "How many recent Delta versions of each table are kept for known-at reads", group: tuning }
+      - { name: decimals, type: "enum:number|string", default: "number", desc: "Decimals in documents as JSON numbers, or as text keeping full precision", group: mapping }
+      - { name: binary, type: "enum:base64|omit", default: "base64", desc: "Binary columns in documents as Base64 text, or left out", group: mapping }
+      - { name: id-index-mb, type: int, default: "1024", desc: "Memory for the id indexes of tables not sorted by their id (about 60 B per id; least-used days dropped first)", group: tuning }
+      - { name: id-index-warn-rows, type: int, default: "5000000", desc: "Health suggests sorting a table by its id when one day's id index passes this", group: tuning }
+      - { name: max-index-rows, type: int, default: "10000000", desc: "Most rows type-ahead and column reads take from one day (or a table with no date); partial beyond it", group: tuning }
+      - { name: refresh-seconds, type: int, default: "10", desc: "How often each table's current version is checked", group: tuning }
+      - { name: lookback-days, type: int, default: "10", desc: "How far back a snapshot kind looks for the newest date on or before the one asked", group: tuning }
+      - { name: doc-cache-mb, type: int, default: "256", desc: "Memory for recently read documents", group: tuning }
+      - { name: columns-cache-mb, type: int, default: "1024", desc: "Memory for a day's searchable columns", group: tuning }
+      - { name: max-concurrent-reads, type: int, default: "16", desc: "Documents read at once at most", group: tuning }
+      - { name: max-queued-reads, type: int, default: "4096", desc: "Document reads that may wait for a slot; more are refused at once, and a read whose caller has gone leaves the queue", group: tuning }
+      - { name: source-name, desc: "The connector's name in provenance (delta-external)", group: connection, default: "delta-external" }
+      - { name: s3.endpoint, desc: "S3-compatible endpoint", group: s3 }
+      - { name: s3.region, desc: "S3 region (also for Unity tables in S3: the bucket's region)", group: s3 }
+      - { name: s3.path-style, type: boolean, default: "true", desc: "Path-style S3 addressing", group: s3 }
+      - { name: s3.access-key, secret: true, desc: "S3 access key: ${ENV_VAR} or file:/path", group: s3 }
+      - { name: s3.secret-key, secret: true, desc: "S3 secret key: ${ENV_VAR} or file:/path", group: s3 }
+      - { name: s3.read-block-kb, type: int, default: "1024", desc: "The smallest ranged GET", group: s3 }
+  delta-sharing:
+    proxy: true
+    settings:
+      - { name: "tables.*", desc: "Per kind (the columns mapped, the document built on read): tables.<kind>.table (share.schema.table, or schema.table with share), id (columns, joined by id-separator), id-separator (:), date (default: the date partition column), date-from (day), date-zone (UTC), mode (snapshot|effective), document (row|column:<name>), columns.exclude, columns.rename.<column>, links.<column> (a kind), depth (2); or tables: auto with namespace", group: mapping }
+      - { name: tables, desc: "auto: every table of the namespace is a kind (its name in lower case with -); each still needs its id (tables.<kind>.id)", group: mapping }
+      - { name: namespace, desc: "The namespace of tables: auto (share.schema)", group: connection }
+      - { name: profile, type: path, desc: "The provider's profile file (shareCredentialsVersion 1: endpoint and bearerToken); its bearerToken must be an environment reference (\"${PROVIDER_TOKEN}\"), never the token itself", group: connection }
+      - { name: endpoint, desc: "Instead of a profile: the sharing server's address (https://sharing.example.com/delta-sharing)", group: connection }
+      - { name: bearer-token, secret: true, desc: "Instead of a profile: the recipient's bearer token, ${ENV_VAR} or file:/path", group: connection }
+      - { name: share, desc: "The share of tables named schema.table", group: connection }
+      - { name: "hints.*", desc: "Predicate hints per table (hints.<share.schema.table>): comparisons joined by and (business_date >= 2026-01-01 and region = EMEA), sent so the server may leave out files that cannot match", group: mapping }
+      - { name: timeout-seconds, type: int, default: "60", desc: "Each call to the sharing server at most", group: tuning }
+      - { name: decimals, type: "enum:number|string", default: "number", desc: "Decimals in documents as JSON numbers, or as text keeping full precision", group: mapping }
+      - { name: binary, type: "enum:base64|omit", default: "base64", desc: "Binary columns in documents as Base64 text, or left out", group: mapping }
+      - { name: id-index-mb, type: int, default: "1024", desc: "Memory for the id indexes of tables not sorted by their id (about 60 B per id; least-used days dropped first)", group: tuning }
+      - { name: id-index-warn-rows, type: int, default: "5000000", desc: "Health suggests sorting a table by its id when one day's id index passes this", group: tuning }
+      - { name: max-index-rows, type: int, default: "10000000", desc: "Most rows type-ahead and column reads take from one day (or a table with no date); partial beyond it", group: tuning }
+      - { name: refresh-seconds, type: int, default: "10", desc: "How often each table's current version is checked", group: tuning }
+      - { name: lookback-days, type: int, default: "10", desc: "How far back a snapshot kind looks for the newest date on or before the one asked", group: tuning }
+      - { name: doc-cache-mb, type: int, default: "256", desc: "Memory for recently read documents", group: tuning }
+      - { name: columns-cache-mb, type: int, default: "1024", desc: "Memory for a day's searchable columns", group: tuning }
+      - { name: max-concurrent-reads, type: int, default: "16", desc: "Documents read at once at most", group: tuning }
+      - { name: max-queued-reads, type: int, default: "4096", desc: "Document reads that may wait for a slot; more are refused at once, and a read whose caller has gone leaves the queue", group: tuning }
+      - { name: source-name, desc: "The connector's name in provenance (delta-sharing)", group: connection, default: "delta-sharing" }
   aerospike:
     tls: true
     settings:

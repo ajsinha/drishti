@@ -126,3 +126,23 @@ items:
     menus: [ccr-cube]
     contracts: ["docs/guides/PIVOT_GUIDE.md#28-presets-the-risk-cubes", "docs/architecture/PIVOT_ENGINE.md#65-the-ccr-provider-later"]
 
+  - id: lakehouse-credentials-and-grants
+    what: decision
+    about: "Lakehouse credentials and grants, for review in 2.9.11.i's security discussion: Unity Catalog tokens and OAuth client secrets (${ENV} or file: references), vended table credentials (in memory, renewed before expiry) and Delta Sharing bearer tokens (an environment reference in the profile); Unity's grants decide what is read today and Drishti adds no permission of its own; how Unity's grants and Drishti's roles meet is undecided"
+    release: 2.9.11.i
+    treatment: under-construction
+    contracts: ["docs/connectors/DELTA_CONNECTOR.md#18-tables-named-in-unity-catalog", "docs/connectors/LAKEHOUSE_CONNECTORS.md#2-unity-catalog-tables-by-name", "docs/guides/DATA_LAKE_GUIDE.md#102-unity-catalog-for-delta-tables-by-name"]
+
+  - id: unity-adls-gcs-and-lake-files
+    what: engine
+    about: "Unity Catalog tables in Azure (ADLS: a vended SAS) or Google Cloud Storage (a vended OAuth token) are refused in words; Unity in a lake file (catalog: {type: unity}) is not read: the connector's unity.* settings are; tables in S3 and on local disk are read"
+    release: "a later release (planned)"
+    treatment: under-construction
+    contracts: ["docs/guides/DATA_LAKE_GUIDE.md#105-not-yet"]
+
+  - id: delta-sharing-history-and-oauth
+    what: engine
+    about: "Delta Sharing: a share's history (known-at reads the current version), the delta response format (tables shared with deletion vectors or column mapping) and OAuth profiles (version 2) are not read; change data feed and streaming are out of scope"
+    release: "a later release (planned)"
+    treatment: under-construction
+    contracts: ["docs/connectors/LAKEHOUSE_CONNECTORS.md#3-delta-sharing-shared-tables"]

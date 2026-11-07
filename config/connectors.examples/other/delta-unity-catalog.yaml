@@ -1,0 +1,28 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# Example: copy to config/connectors/trade-endur-unity.yaml to read a Drishti-shaped Delta table (id, doc, business_date, promoted
+# columns: DELTA_CONNECTOR.md section 5) that Databricks writes and Unity Catalog names, with Unity's vended credentials
+# (docs/connectors/DELTA_CONNECTOR.md, Unity Catalog). Secrets as ${ENV_VAR} references.
+plugin: delta
+kinds:
+- trade
+description: the Endur trades table main.trading.trade_endur in Unity Catalog
+settings:
+  unity.host: ${UC_HOST:https://adb-1234567890.12.azuredatabricks.net}
+  unity.token: ${UC_TOKEN:}
+  s3.region: ${UC_TABLES_REGION:eu-west-2}
+  table.trade: main.trading.trade_endur
+  layout.trade.columns: TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,DESK,BOOK,COUNTERPARTY_ID

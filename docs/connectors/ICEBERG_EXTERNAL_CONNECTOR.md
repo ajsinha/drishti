@@ -21,7 +21,7 @@ pyiceberg), in their own layout, as Drishti kinds: a table is a kind, a row is a
 runs on Windows too, and it **never writes**: the tables' owners maintain them with their own engines.
 
 For tables Drishti's own loader writes (an `id`, a `doc` column, `business_date`, promoted columns, sorted by id) use the `iceberg`
-connector ([ICEBERG_CONNECTOR.md](ICEBERG_CONNECTOR.md)): it reads that layout faster. Why there are two is section 15 of
+connector ([ICEBERG_CONNECTOR.md](ICEBERG_CONNECTOR.md)): it reads that layout faster. The same reader serves plain Delta tables and Delta Sharing shares (`delta-external`, `delta-sharing`: [LAKEHOUSE_CONNECTORS.md](LAKEHOUSE_CONNECTORS.md)). Why there are two is section 15 of
 [DATA_ARCHITECTURE.md › drishti-iceberg: Drishti's own Apache Iceberg engine](../architecture/DATA_ARCHITECTURE.md#15-two-connectors-drishti-tables-and-external-tables); this page is the one reference of `iceberg-external`. Every setting is also in [CONFIGURATION.md](../admin/CONFIGURATION.md#iceberg-external--iceberg-tables-drishti-does-not-write).
 
 ## Contents

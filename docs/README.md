@@ -206,6 +206,7 @@ not as a link.
 | Read your own database with your own SQL: several queries per kind | [JDBC_QUERIES.md](connectors/JDBC_QUERIES.md) |
 | Serve millions of entities a day from Apache Iceberg (Snowflake, Glue, Polaris, Trino) | [ICEBERG_CONNECTOR.md](connectors/ICEBERG_CONNECTOR.md) |
 | Serve Iceberg tables your Spark or Snowflake pipelines already write | [ICEBERG_EXTERNAL_CONNECTOR.md](connectors/ICEBERG_EXTERNAL_CONNECTOR.md) |
+| Serve plain Delta tables (by path or Unity Catalog name) or tables shared through Delta Sharing, as they are | [LAKEHOUSE_CONNECTORS.md](connectors/LAKEHOUSE_CONNECTORS.md) |
 | Serve a large book from one embedded DuckDB file, with no database server | [DUCKDB_CONNECTOR.md](connectors/DUCKDB_CONNECTOR.md) |
 | Serve entities from MongoDB documents | [MONGODB_CONNECTOR.md](connectors/MONGODB_CONNECTOR.md) |
 | Serve today and recent days from Redis memory, with live updates | [REDIS_CONNECTOR.md](connectors/REDIS_CONNECTOR.md) |
@@ -378,6 +379,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [DELTA_CONNECTOR.md](connectors/DELTA_CONNECTOR.md) | you run Drishti over a large Delta Lake (a million trades a day for seven years): layout, writers, reads, memory, maintenance, measurements, and the two engines (native without Hadoop, or Hadoop) |
 | [ICEBERG_CONNECTOR.md](connectors/ICEBERG_CONNECTOR.md) | you run Drishti over Apache Iceberg: the layout, path-based and REST catalogs, delete files, time travel, the loader and maintenance, sizing, measurements, and the two engines (native without Hadoop, or the Iceberg library) |
 | [ICEBERG_EXTERNAL_CONNECTOR.md](connectors/ICEBERG_EXTERNAL_CONNECTOR.md) | you serve Iceberg tables other engines write (Spark, Snowflake, Glue, Flink, dbt): rows as documents, ids and dates from columns or the table's metadata, every column searchable, an id index for unsorted tables, read-only |
+| [LAKEHOUSE_CONNECTORS.md](connectors/LAKEHOUSE_CONNECTORS.md) | you serve plain Delta tables (by path, or by name in Unity Catalog with vended credentials) or tables shared through Delta Sharing: columns mapped, documents built on read, read-only |
 | [DUCKDB_CONNECTOR.md](connectors/DUCKDB_CONNECTOR.md) | you run Drishti on one embedded DuckDB file: the layout, the loader and its file swap, the shared read-only instance, read paths, retention, sizing, memory, measurements |
 | [POSTGRES_CONNECTOR.md](connectors/POSTGRES_CONNECTOR.md) | you run Drishti on PostgreSQL at scale: partitioned table, promoted columns, COPY loader, monthly retention, sizing, measurements |
 | [JDBC_QUERIES.md](connectors/JDBC_QUERIES.md) | you read your own schema with SQL: the entity, its parts, ids, columns and reverse queries, parameters, naming, performance |

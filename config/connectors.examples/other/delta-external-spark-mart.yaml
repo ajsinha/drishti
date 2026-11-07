@@ -1,0 +1,38 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# Example: copy to config/connectors/trade-mart.yaml to serve plain Delta tables a Spark (or Databricks, delta-rs) job writes to S3 as
+# Drishti kinds, read in place, no shaped copy (docs/connectors/LAKEHOUSE_CONNECTORS.md). No keys: the task or instance role;
+# otherwise s3.access-key and s3.secret-key as ${ENV_VAR} references.
+plugin: delta-external
+kinds:
+- trade
+- counterparty
+description: risk-mart Delta tables written by Spark, columns mapped, documents built on read
+settings:
+  root: ${TRADE_MART_ROOT:s3://bank-lakehouse/marts}
+  s3.region: ${TRADE_MART_REGION:eu-west-2}
+  decimals: string
+  tables:
+    trade:
+      table: risk.trades                        # <root>/risk/trades, partitioned by business_date (the business date)
+      id: [SOURCE_SYSTEM, TRADE_ID]
+      columns:
+        exclude: [_ETL_LOAD_TS]
+      links:
+        COUNTERPARTY_ID: counterparty
+    counterparty:
+      table: refdata.counterparties
+      id: CPTY_ID                               # no date column: current only

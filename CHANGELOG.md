@@ -19,6 +19,35 @@
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
 
+## 2.9.11.f (unreleased)
+
+- **Lakehouse interoperability** (product owner, 2026-11-07; DATA_LAKE_GUIDE.md section 10, [LAKEHOUSE_CONNECTORS.md](docs/connectors/LAKEHOUSE_CONNECTORS.md)).
+  A new generic data-platform module, `drishti-lakehouse` (no domain code), shows a Delta table, or a table shared through Delta
+  Sharing, as an Iceberg table, so the external-table reader of `iceberg-external` builds the document view of any plain table:
+  - **Unity Catalog for Delta.** A table is named `catalog.schema.table` instead of a path: Drishti calls Unity Catalog's open REST
+    API for its storage location and its temporary credentials (credential vending), then reads it with Delta Kernel there. The
+    credentials renew themselves five minutes before they expire (the old ones serve while Unity is away, until they really expire);
+    sign-in by token or OAuth machine-to-machine, the secrets as `${ENV}` or `file:` references (`unity.*`). Refusals in words: table
+    not found, no grant, credential vending off, sign-in refused, a view, not Delta. In the `delta` connector (Drishti-shaped tables:
+    `table.<kind>: main.trading.trade_endur`, DELTA_CONNECTOR.md section 18) and in `delta-external` (plain tables). Unity's grants decide
+    what is read; credential handling and grants are registered for 2.9.11.i's security discussion.
+  - **Delta Sharing** (`delta-sharing`, a new connector): a profile file (its bearer token an environment reference, never the token
+    itself), the shares, schemas and tables listed, a table's files queried with predicate hints (`hints.<share.schema.table>`), the
+    Parquet read through the pre-signed URLs by ranged GETs, a URL renewed before it expires or when the store refuses it. No storage
+    keys. Change data feed and streaming are out of scope.
+  - **Plain tables** (`delta-external`, a new connector): Delta tables of ordinary columns, by folder under `root` or by Unity name;
+    the connector maps the id, the business date (by default the date partition column) and the columns shown, and the document is
+    built on read: no shaped copy. Column mapping, deletion vectors (rows deleted in place left out), INT96 timestamps, structs, arrays
+    and maps are read; the last `history-versions` versions answer *known at*. Plain Iceberg tables stay `iceberg-external`'s.
+  - Underneath: `S3Settings` takes credentials that renew themselves (`CredentialSource`, asked on every request); a table format may
+    list its own files for drishti-iceberg's planner (`TableOps.plan`) and bring its own deletion vectors (`DeletionVectors`).
+  - **Tests, no real cloud:** a Spark-shaped Delta table written in the test (Parquet without field ids, INT96, struct, array,
+    partitions, statistics; with column mapping; with a deletion vector), a mock Unity Catalog (Databricks' answers, expiring vended
+    credentials, OAuth M2M, every refusal) with the table in S3Mock in the test JVM, a mock Delta Sharing server with expiring
+    signed-style links and `Range`; the delta connector's dated-source contract through Unity names (`DeltaOnUnityCatalogTest`).
+  - **Under construction** (registry): Unity tables in ADLS or GCS through vended credentials, Unity in a lake file, a share's history,
+    the `delta` response format and OAuth profiles of Delta Sharing; credentials and grants for 2.9.11.i.
+
 ## 2.9.11.d (unreleased)
 - **Six lake folders kept in git, their content never** (DATA_LAKE_GUIDE.md section 1): `data/delta/demo`, `risklake`, `newslake` (news), `worldlake` (World Bank, IMF, UN), `regulators` (SEC, Federal Reserve, OSFI, central banks) and `capitalmarket` (prices, curves, vols, funds), each with only its README.md; the test data's `.jsonl.gz` files stay in git to build the demo lake. The five new lakes ship as lake files with no tables (`config/lakes/<lake>.yaml` and their jar copies), and **nothing shipped points at them**: every connector, rule and setting reads `demo` (guarded by `tools/test_empty_lakes.py`); a site points at them itself. The demo lake's one-time move and `build_demo_lakes` treat a folder holding only its README.md as empty.
 
