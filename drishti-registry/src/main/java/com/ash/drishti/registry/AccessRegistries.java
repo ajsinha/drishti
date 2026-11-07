@@ -55,6 +55,17 @@ public final class AccessRegistries {
         return new EmbeddedAccessRegistry(new YamlAccessStore(Path.of(modules), Path.of(access), loader), overrides, Clock.systemUTC());
     }
 
+    private static final java.util.Map<Object, EmbeddedAccessRegistry> SHARED = new java.util.WeakHashMap<>();
+
+    /**
+     * The one registry of a server, shared by everything that asks before the server's beans exist (the packs' start, the connector
+     * plugins' discovery, the modules' conditions) and by the server's {@code AccessRegistry} bean: made the first time the key (the
+     * server's environment) asks, held as long as the key lives.
+     */
+    public static synchronized EmbeddedAccessRegistry shared(Object key, Function<String, String> property, ClassLoader loader) {
+        return SHARED.computeIfAbsent(key, k -> embedded(property, loader));
+    }
+
     private static String orDefault(String v, String d) {
         return v == null || v.isBlank() ? d : v.strip();
     }

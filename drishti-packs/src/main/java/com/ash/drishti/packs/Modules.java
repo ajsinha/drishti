@@ -17,8 +17,6 @@ package com.ash.drishti.packs;
 
 import com.ash.drishti.registry.AccessRegistries;
 import com.ash.drishti.registry.EmbeddedAccessRegistry;
-import java.util.Map;
-import java.util.WeakHashMap;
 import org.springframework.core.env.Environment;
 
 /**
@@ -28,17 +26,20 @@ import org.springframework.core.env.Environment;
  */
 public final class Modules {
 
-    private static final Map<Environment, EmbeddedAccessRegistry> BY_ENV = new WeakHashMap<>();
-
     private Modules() {
     }
 
     /** The registry of the environment. */
-    public static synchronized EmbeddedAccessRegistry of(Environment env) {
-        return BY_ENV.computeIfAbsent(env, e -> AccessRegistries.embedded(k -> property(e, k), Modules.class.getClassLoader()));
+    public static EmbeddedAccessRegistry of(Environment env) {
+        java.lang.ref.WeakReference<Environment> ref = new java.lang.ref.WeakReference<>(env);   // the shared map holds the environment weakly
+        return AccessRegistries.shared(env, k -> property(ref.get(), k), Modules.class.getClassLoader());
     }
 
-    private static String property(Environment env, String key) {
+    /** A setting of the environment, or null when it is not set or the environment is gone. */
+    public static String property(Environment env, String key) {
+        if (env == null) {
+            return null;
+        }
         try {
             return env.getProperty(key);
         } catch (IllegalArgumentException e) {

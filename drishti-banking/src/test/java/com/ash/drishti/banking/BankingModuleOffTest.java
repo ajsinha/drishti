@@ -118,6 +118,7 @@ class BankingModuleOffTest {
         for (String c : List.of("var-engine", "var-positions", "var-pv-stream", "exposure-engine")) {
             assertThat(sources.connectorStatuses()).as(c).doesNotContainKey(c);
         }
+        assertThat(sources.plugins()).as("its connector plugins").noneMatch(p -> p.getClass().getName().startsWith("com.ash.drishti.banking."));
     }
 
     @Test
