@@ -665,7 +665,7 @@
       left.appendChild(acts);
       left.appendChild(h("p", "xx-note after", "Pre-deal what-if: the candidate is a copy of a booked trade's paths on the day's run, scaled by the "
         + "factor, added to " + (onCp ? "the netting set picked above (the counterparty's largest first)" : "this netting set") + ". paths: its values "
-        + "netted and collateralised with the set, path by path, by the Python exposure engine; addon: a netting set of its own, uncollateralised, "
+        + "netted and collateralised with the set, path by path, by the exposure engine; addon: a netting set of its own, uncollateralised, "
         + "SA-CCR's supervisory factor (flagged proxy)."));
       var out = h("div");
       out.dataset.xxWhatifOut = "1";

@@ -499,7 +499,7 @@ var-engine:
     var-result:
       compute: var-result
       result: { required: [VAR, ES, PNL], types: { VAR: number, ES: number } }
-  engine: { type: java, class: com.ash.drishti.server.var.VarResultEngine, version: "1.0" }
+  engine: { type: java, class: com.ash.drishti.banking.var.VarResultEngine, version: "1.0" }
   triggers:
     - { on: data-version, kinds: [pnl-vector, risk-hierarchy, scenario-set, portfolio], affects: all }
 ```
@@ -525,7 +525,7 @@ what-if on DESK:RATES  2026-09-30  in USD  (Java VaR engine (the server))
   -0.5 × BOOK:BOOK-RATES-3: standalone 34,296,045, incremental -27,034,460, component -32,542,151
 ```
 
-The command asked `POST /api/v1/var/what-if` with `{"scope": "DESK:RATES", "items": [{"copyOf": "BOOK:BOOK-RATES-3", "factor": -0.5}]}`.
+The command asked `POST /api/v1/risk/var/what-if` with `{"scope": "DESK:RATES", "items": [{"copyOf": "BOOK:BOOK-RATES-3", "factor": -0.5}]}`.
 The hedge alone has a VaR of 34,296,045; its incremental VaR is the change; its component in the desk after the trade is negative, as a
 hedge's is. A trade priced elsewhere goes in a file (`--trades new-swap.json`: `[{"LABEL": "new swap", "PNL": [509 numbers],
 "FACTOR": 1}]`).
@@ -755,7 +755,7 @@ $ drishti.py var show BANK --confidence 95
 ```
 
 `drishti.py var show BANK --horizon 10d` uses the default method, the setting `drishti.var.ten-day-method` (`sqrt10`). The API takes the
-same as `horizon`, `method`, `confidence` and `esConfidence` (`GET /api/v1/var/scope?scope=BANK&horizon=10d&method=sum`), and VRES as
+same as `horizon`, `method`, `confidence` and `esConfidence` (`GET /api/v1/risk/var/scope?scope=BANK&horizon=10d&method=sum`), and VRES as
 parameters (`VRES BANK~horizon=10d~method=sum <GO>`).
 
 **The YAML behind it.** The server's settings (`drishti-server/src/main/resources/application.yaml`, or your own configuration):
@@ -831,7 +831,7 @@ Scenario    09-24   09-25   09-28   09-29   09-30
 
 $ drishti.py var matrix BOOK:BOOK-RATES-1 --days 5 --csv > book-rates-1.csv     the whole matrix, as the page's export
 $ drishti.py var matrix POS-BOOK-EQD-2~SEC-WARRANT-USD-01 --by trade            the position's trades under the newest VaR scenario
-$ curl -s -H "Authorization: Bearer $TOKEN" "$SERVER/api/v1/var/matrix?id=BOOK:BOOK-RATES-1&days=5" | jq '.dates[] | {date, source, var, k}'
+$ curl -s -H "Authorization: Bearer $TOKEN" "$SERVER/api/v1/risk/var/matrix?id=BOOK:BOOK-RATES-1&days=5" | jq '.dates[] | {date, source, var, k}'
 ```
 
 **The configuration.** N is capped on the server, and the command belongs to the Risk and Trading editions:

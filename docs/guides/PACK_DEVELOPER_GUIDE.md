@@ -2023,7 +2023,7 @@ items:
     domain: Market risk                    # the tile's label
     needs: [counterparty-risk]             # other packs it needs (its own pack always); one off for the user: not shown
     steps:                                 # run in order; each binds its result to the name in `as`
-      - { as: tree, var: /tree, params: { hierarchy: LEGAL } }      # GET /api/v1/var/tree?hierarchy=LEGAL&asOf=<date>
+      - { as: tree, var: /tree, params: { hierarchy: LEGAL } }      # GET /api/v1/risk/var/tree?hierarchy=LEGAL&asOf=<date>
       - as: book                                                    # the best row: where filters, order ranks (largest first)
         pick: tree.nodes
         where: "book.limitUse > 1 and find(tree.nodes, 'id', book.parent).limitUse <= 1"

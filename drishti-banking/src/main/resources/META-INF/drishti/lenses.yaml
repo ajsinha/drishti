@@ -1,0 +1,47 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The lenses the banking module ships (docs/architecture/ACCESS_MODEL.md, docs/lenses/): each names the modules it needs (offered only
+# while they are all on) and the functions it bundles (the editions' command lists, config/editions/<lens>.yaml). A site's
+# config/access/lenses.yaml adds lenses or replaces one of these by its id.
+lenses:
+  - id: risk
+    title: Risk
+    modules: [banking]
+    home: home/risk_landing.html
+    functions: [CPTY, GRP, LE, BOOK, DESK, TRDR, CCP, TRD, CTRD, PTRD, LTRD, FX, HIER, PORT, POS, PNLV, SPV, FXS, SSET, VLIM, VRES, VOFF, AGR, CSA,
+      NSET, LIM, COLL, MC, XRUN, XPATH, EXP, PREDEAL, XOFC, NSMTM, CPMTM, VAR, PVAR, SMAT, SWIN, FRSA, SIMM, MCUBE]
+  - id: trading
+    title: Trading
+    modules: [banking]
+    home: home/trading_landing.html
+    functions: [TRD, CTRD, PTRD, LTRD, ITRD, BOOK, DESK, TRDR, POS, VLIM, VRES, TVAL, PNLV, HIER, PORT, DPNL, PNL, SENS, CPTY, GRP, NSET, NSMTM,
+      CPMTM, LIM, PREDEAL, EXP, CRV, REPO, FIX, IRV, CPV, FX, FXF, FXV, EQ, EQX, CMD, CMDC, BND, CDS, VAR]
+  - id: market
+    title: Market
+    modules: [capitalmarkets, banking]   # capital markets' functions over the market-data pack (the banking module's while its engines read it)
+    home: home/market_landing.html
+    functions: [CRV, REPO, IRV, CPV, FIX, INF, INFC, FX, FXF, FXV, CDS, BND, EQ, EQX, DIV, EQV, CMD, CMDC, CMDV, CORR, CORRC, EQB, USEQ, IDX, SIC, EDGAR, FILING, FACT, PXH, FUND, HELD, TRACK]
+  - id: cro
+    title: Chief risk officer
+    modules: [banking]
+    functions: [VAR, PVAR, EXP, FRSA, SIMM, MCUBE, VRES, VOFF, LIM, VLIM]
+  - id: mr-cube
+    title: MR cube
+    modules: [banking]
+    functions: [MCUBE, VAR, SENS, FRSA]
+  - id: ccr-cube
+    title: CCR cube
+    modules: [banking]
+    functions: [EXP, PREDEAL, NSET, CPTY, CSA, COLL, SIMM]

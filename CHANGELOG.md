@@ -15,10 +15,85 @@
 -->
 # Changelog
 
+## 2.9.11.g (unreleased)
+
+### The pre-deal service and the exposure what-if in Java
+
+- **The pre-deal check is a service of the exposure engine** (EXPOSURE_GUIDE.md section 18.9): `POST /api/v1/exposure/predeal` and the
+  command `PREDEAL <counterparty> LIKE <trade> [<notional>] [REVERSE] [IN <netting set>]` (or, without a template, `PREDEAL <counterparty>
+  <asset class> <notional> <maturity> [MTM <amount>]`), `GET /api/v1/exposure/predeal/grammar`, `drishti.py exposure predeal "PREDEAL …"`.
+  The what-if with the trade added is held to the counterparty's stored credit limit on its measure (`PFE 95 peak` at its confidence;
+  EEPE, EPE, peak EE) and to each tenor bucket's limit (`BUCKETS`, read from `credit-limit` now), and answers **approve** (exact data,
+  within the limit and every bucket), **decline** (exact, over the limit or a bucket) or **refer** with the reason: a proxy answer (the
+  `addon` method) only refers, never approves; so does no limit on record, a limit on a measure the engine does not compute, netting sets
+  the person does not see, a stale run, the netting set not certain, or no exposure for the counterparty. Every answer shows the method
+  and the template trade (copied: id, product, notional, the factor and side; or described), the limit before and after with the
+  headroom and the buckets, and the exposure before, with and incremental; SA-CCR's incremental EAD says **under construction**
+  (2.9.11.k). Computed as the person (a template only of a trade they see trade by trade, `403` otherwise; a counterparty they see none of
+  `403`); every check audited (`ccr-predeal`, with its check id, decision, method, command and limit use). Code: `ExposurePreDeal`,
+  `ExposurePreDealCommand`, `ExposurePreDealController` in the counterparty-risk server package `com.ash.drishti.server.exposure`.
+- **Counterparties → Pre-deal check** runs `PREDEAL` (the menu item that ran `XWIF`). Its screen is **under construction** (registry item
+  `pre-deal-screen`): it is built on the Drishti Elements libraries, which have not reached develop; until then `PREDEAL` typed in the
+  console says so and names the API and the command line. The exposure explorer's Pre-deal tab stays until that screen replaces it.
+- **The Trading landing's new-trade check** asks the pre-deal service for its exposure half: the decision, the limit use and every figure
+  are the server's (the console no longer divides by the limit or picks the netting set); when the copied trade has no paths on the run
+  the same check is asked described, and refers. Its verdict shows *Refer to credit* and *Declined: over the limit* with the reason.
+- **The exact pre-deal exposure what-if (`POST /api/v1/exposure/what-if`, method `paths`) is computed by the Java exposure engine**
+  (EXPOSURE_GUIDE.md sections 7, 18.7 and 19.5; COUNTERPARTY_ENGINES.md 6.4). `ExposureWhatIfMath` (`drishti-compute`) adds each
+  candidate's paths to its netting set's value path by path and computes the set's collateral and exposure again with `ExposureMath`, the
+  same code as every exposure figure; `ExposureWhatIfPaths` reads the scope and each joined netting set as the asker. The same request and
+  the same answer field by field (only the `engine` and `note` texts say Java); no sandbox, no reactive connector, no compute workers: it
+  answers on every server that runs exposure. Parity: the Python engine's answers on a book of four netting sets (margined with
+  thresholds, MTA, IA, rounding and IM; unmargined with IA; no CSA; collateral posted), six what-ifs over the three collateral models,
+  both rank rules, an unwind and a horizon change, recorded before it was retired (`ccr/whatif-parity.json`, `tools/ccr/`), are given
+  again to the cent (`ExposureWhatIfMathTest`). A `copyOf` is made only of a trade the asker sees trade by trade (`403` otherwise).
+- **The Python exposure engine is retired:** `drishti_compute.exposure` (`measures.py`, `whatif.py`) and its tests, the compute pool
+  `exposure` and `DRISHTI_COMPUTE_EXPOSURE_WORKERS`, the counterparty-risk pack's reactive connector `exposure-whatif` with its kind,
+  contract and command `XWIF`, the `exposure-result` parameters `detail` and `sets` (`ExposureWhatIfInputs`), and `DRS-5446`. A
+  never-edited `exposure-whatif.yaml` connector file is removed at start (kept beside it as `.retired-<time>.bak`); an edited one stays,
+  its kind listed as obsolete.
+- **Tests**: `ExposurePreDealApiTest` (the what-if equal to a full recompute with the trade booked, figure by figure and date by date;
+  approve; decline on the limit and on a bucket; refer on a proxy, no limit, a measure not computed and no exposure; two people at once
+  with their own entitlements; the grammar; the audit); the console's trading check, menus and under-construction tests; `test_expcli`.
+
 ## 2.9.11.h (unreleased)
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
 
+## 2.9.11.f (unreleased)
+
+- **Domain modules, phase 1: the backend split** ([DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md), [ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md)).
+  The core knows no industry: banking is a module. New Maven modules: **drishti-registry** (the access registry), **drishti-compute-banking**
+  (VaR and ES, parametric, components, backtesting, exposure, FRTB-SA, SIMM, beta and correlation: `com.ash.drishti.banking.compute`, pure
+  maths), **drishti-banking** (the VaR, exposure, FRTB-SA, SIMM, sensitivities, MR cube and official-results services, storage and API:
+  `com.ash.drishti.banking`) and **drishti-app** (the runnable jar, at its old path `drishti-server/target/drishti-server-<version>-exec.jar`).
+  The six places where the core used banking code are SPIs now (`PivotSourceProvider`, `CacheGroup`, `CapacityFigures`, `HealthFigures`,
+  `OfficialReaders.OfficialResults`, the edition's words); `ArchitectureRulesTest` fails the build when the core imports a domain, a
+  domain another, a domain's compute Spring or the server, or anything but the registry reads the access model. VaR, exposure and the BI
+  parity answers are unchanged.
+- **The access registry** (drishti-registry: `AccessRegistry`, `EmbeddedAccessRegistry`, `AccessStore`, `YamlAccessStore`): licence →
+  module → lens → function → permission, decided in one place. Each module's jar ships its manifest (`META-INF/drishti/module.yaml`:
+  packages, engines, packs, connectors, API, functions) and its lenses (with the modules they need and the functions they bundle); a module
+  is on when installed, licensed and enabled. No `config/access/licence.yaml` is the **development licence** (every module, unsigned), so an
+  existing installation changes nothing. A module that is off loads no bean, engine, job or API (`@ConditionalOnModule`), its packs and
+  connectors do not load, its API answers `404 DRS-1025`, and Admin → Engines says why its engines are not installed.
+- **Admin → Modules over REST**: `GET/POST /api/v1/admin/modules` (states, what each brings, the licence, the lenses; the switch, with a
+  reason, audited, written to `config/modules/<module>.yaml`, taken at the next start); `GET /api/v1/modules` (the modules loaded and the
+  lenses open to the caller). New settings `drishti.modules.dir`, `drishti.modules.<module>.enabled`, `drishti.modules.watch-seconds`,
+  `drishti.access.dir` (CONFIGURATION.md; OPERATIONS.md section 22).
+- **Functions** (command words such as VAR, TRD, EQV, EXP) are the finest unit of access: each belongs to one module (a word no module
+  declares is the core's), lenses bundle them, and the mnemonic switches (Admin → Commands) are decided by the registry: a function is on
+  when its module is on and no administrator turned it off; its API then answers `404 DRS-1026` (and `403 DRS-1027` is wired for per-person
+  grants in 2.9.11.i).
+- **The banking API is under `/api/v1/risk/…`** (`/risk/var`, `/risk/exposure`, `/risk/frtb`, `/risk/simm`, `/risk/sensitivities`,
+  `/risk/risk-factors`, `/risk/mr`); the old paths are answered as the new ones for this release (`Deprecation: true` and a `Link` to the
+  new path), then removed. Connector files naming the moved engine classes keep working for this release.
+- **Packs name their domain** (`domain: core | banking | economy | capitalmarkets` in `pack.yaml`; ids and folders unchanged): a pack loads
+  only while a module of its domain is on. A **capitalmarkets** module (content only, shipped with the core) holds the us-equities and
+  funds packs and the market data's functions (CRV, FX, EQV ...; the market-data pack stays banking's while its engines read it); GLEIF is
+  core reference data; economy keeps world-economy and news-and-markets. The Market lens needs capital markets and banking.
+- **Editions as lenses**: the risk, trading, market and world editions are lenses of the registry; an edition opened as a lens is offered
+  only while its modules are on.
 ## 2.9.11.e (unreleased)
 
 - **The console's pickers on drishti-inputs** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
@@ -37,7 +112,19 @@
   the submit); `Combobox` on a page's own field and in a `suggest` mode; `DateRangePicker` with presets given whole and `openEnded`;
   44 px targets on touch screens. The renderer 2.0.0 and the embeds load drishti-inputs for the controls (its style sheet in the view
   sheet, raised to 29 KB gzip on purpose). A guard fails a console script that draws its own multi-select or picker list.
-
+- **drishti-designer 0.1.0, the designer kit** (the product owner, 2026-11-07: "duplicated code will make the system unmaintainable";
+  [ELEMENTS.md section 8.8](docs/architecture/ELEMENTS.md#88-as-built-drishti-designer-the-designer-kit)): one layout canvas over a
+  layout model (grid or flow; snap, settle, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys,
+  undo and redo on one command stack or by snapshots), the palette, the inspector (a drishti-inputs Form), the outline, the YAML pane kept
+  in step with the model both ways (Studio's reader and schema assistant moved into it) and the designer shell of EDITORS.md in the three
+  layouts of mock-up g7 (studio the default, side by side, terminal; remembered per person). Moved onto it, the old code deleted: the
+  Build workbench's canvas, drags, YAML tab and about box; the BI report designer's canvas, undo and YAML tab (completion in the editor
+  in place of the suggestion strip); the table, model and Python editors' shell and YAML. `drishti_studio-yaml.js`,
+  `drishti_studio-assist.js` and `drishti_cm-yaml.js` deleted. drishti-inputs extended for it (CodeEditor: updateValue, highlight,
+  cursor, completeAfter, tabLeaves, YAML's Enter; Form: live). The standing rule **no bespoke UI**
+  ([ELEMENTS.md section 3.1](docs/architecture/ELEMENTS.md#31-standing-rule-no-bespoke-ui)) and its guard `test_designer_kit_guard.py`
+  (an allow-list of the screens still moving that only shrinks; every authoring screen and its state in section 12.3). The gallery has a
+  designer in each layout and a flow canvas; ELEMENTS_API.md covers the kit.
 - **The demo lake's layout, the owner's decision** (`config/lakes/demo.yaml` and its jar copy; DATA_LAKE_GUIDE.md section 2): `risk.scenario-pv`
   partitioned by `SCENARIO_SET_ID, GRAIN` after the business date, sorted by `LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, TRADE_ID`, zstd
   (vectors too), 256 MB files, 16 MB row groups, 30 days' time travel, maintenance (compaction to 256 MB, vacuum after 7 days,

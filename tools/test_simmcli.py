@@ -65,20 +65,20 @@ class FakeApi:
 
     def json(self, method, path, body=None):
         FakeApi.calls.append((method, path))
-        if path.startswith("/api/v1/simm/playground/recipes/"):
+        if path.startswith("/api/v1/risk/simm/playground/recipes/"):
             return {**ANSWER, "reproduced": FakeApi.reproduced}
-        if path.startswith("/api/v1/simm/playground/recipes"):
+        if path.startswith("/api/v1/risk/simm/playground/recipes"):
             return {"id": "SM-AB12CD34-1", "command": "PLAY SIMM RUN SM-AB12CD34-1", "knownAt": "2026-11-02T00:00:00Z"}
-        if path.startswith("/api/v1/simm/playground"):
+        if path.startswith("/api/v1/risk/simm/playground"):
             return {**ANSWER, "choices": [{"name": "concentration", "value": "on", "default": "on", "rule": "SIMM 7(b)"}],
                     "compare": {"words": "hvr: on → off lowers the margin by 12.00"}}
-        if path.startswith("/api/v1/simm/netting-sets"):
+        if path.startswith("/api/v1/risk/simm/netting-sets"):
             return {"date": "2026-09-30", "defaultVersion": "TOY-1", "computed": 1, "sumCollect": 5.0, "sumPost": 4.0,
                     "rows": [{"nettingSet": "NS-X", "counterparty": "CP-X", "imCollect": 5.0, "imPost": 4.0, "status": "computed"}]}
-        if path.startswith("/api/v1/simm/versions"):
+        if path.startswith("/api/v1/risk/simm/versions"):
             return {"parametersDir": "/x", "default": "TOY-1", "licence": "licensed", "versions": [{"version": "TOY-1", "file": "toy.yaml", "installed": True,
                                                                                                   "sha256": "ab" * 32, "problem": None}]}
-        if path.startswith("/api/v1/simm/against"):
+        if path.startswith("/api/v1/risk/simm/against"):
             return {"rows": [{"direction": "collect", "drishti": 5.0, "theirs": None, "difference": None, "status": "no call"}], "note": "no connector"}
         return ANSWER
 

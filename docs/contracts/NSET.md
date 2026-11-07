@@ -334,7 +334,7 @@ default (`drishti.ccr.nset.partial-collateral: none | pro-rata-positive-mtm`, op
 
 ### 6.3 Where it runs
 
-All of NSET is additive or a per-set `max`: **Java**, in the server (`drishti-compute`, package `com.ash.drishti.compute.ccr`, planned),
+All of NSET is additive or a per-set `max`: **Java**, in the server (`drishti-compute`, package `com.ash.drishti.banking.compute.ccr`, planned),
 on the same in-memory date as the other counterparty measures (§7). The reactive connector `nset-engine` serves the computed kind with a
 Java engine; no Python is needed. What-if (adding candidate trades) goes through the SA-CCR, EXP and LIM engines, which call this one.
 
@@ -451,7 +451,7 @@ reads:                                         # as the viewer; the engine reads
   - { kind: collateral-holding, as: holdings, all: true }
 engine:
   type: java
-  entry: com.ash.drishti.compute.ccr.NettingSetEngine
+  entry: com.ash.drishti.banking.compute.ccr.NettingSetEngine
   version: "1.0"
 triggers:
   - { on: data-version, kinds: [netting-set, netting-set-member, valuation, csa, collateral-holding], affects: all }

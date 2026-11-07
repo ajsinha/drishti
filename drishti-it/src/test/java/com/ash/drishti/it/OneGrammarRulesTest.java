@@ -55,7 +55,7 @@ class OneGrammarRulesTest {
             "com.ash.drishti.server.bi.expr.DelParser", "the migration tool's reader of DEL (drishti.py tables migrate and the stored items' "
                     + "migration at start): it reads the old texts it rewrites into Rachana, never evaluates them; deleted with the migration tool in "
                     + "2.9.14 (BI_FOUNDATION_2911E.md Q24)",
-            "com.ash.drishti.compute.var.ScopeExpr", "the VaR scope selector (VAR_GUIDE.md 5.2): moves in its own change with VaR's "
+            "com.ash.drishti.banking.compute.var.ScopeExpr", "the VaR scope selector (VAR_GUIDE.md 5.2): moves in its own change with VaR's "
                     + "exact-equality regression check (BI_FOUNDATION_2911E.md Q20)");
 
     /** A class that reads an expression language: a parser or lexer of expressions or formulas, or an expression type with a static parse. */

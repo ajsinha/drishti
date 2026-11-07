@@ -583,6 +583,14 @@
     var wordAt = __m["src/drishti_code-text.js"].wordAt, completions = __m["src/drishti_code-text.js"].completions, insertText = __m["src/drishti_code-text.js"].insertText, lineDiff = __m["src/drishti_code-text.js"].lineDiff, sideBySide = __m["src/drishti_code-text.js"].sideBySide, diffStats = __m["src/drishti_code-text.js"].diffStats;
     var InputBase = __m["src/drishti_inputs-dom.js"].InputBase, Listbox = __m["src/drishti_inputs-dom.js"].Listbox, Popover = __m["src/drishti_inputs-dom.js"].Popover, debounce = __m["src/drishti_inputs-dom.js"].debounce;
     let cmReady = null;
+    function yamlIndentAfter(before) {
+      before = String(before).replace(/\s+#.*$/, '');
+      const m = before.match(/^(\s*)((?:-\s+)*)/), rest = before.slice(m[0].length);
+      let n = m[1].length + m[2].length;
+      if (m[2] && (/^[{["']/.test(rest) || !/^[^\s#][^:#]*:(\s|$)/.test(rest))) { n = m[1].length; }
+      if (/^\s*(?:-\s+)*[^\s#][^:#]*:\s*([|>][-+0-9]*)?\s*$/.test(before) && !/[{[]/.test(before)) { n += 2; }
+      return n;
+    }
     function ensureCodeMirror(given) {
       const root = typeof window !== 'undefined' ? window : globalThis;
       if (given) { defineModes(given); return Promise.resolve(given); }
@@ -626,11 +634,17 @@
         const go = () => {
           this.area.remove();
           const cm = this.cm = CM(this.box, { value: this.value, mode: mode.cm, readOnly: o.readOnly ? true : false, lineNumbers: o.lineNumbers, gutters: ['di-lint-gutter', 'CodeMirror-linenumbers'],
-            indentUnit: o.indentUnit, tabSize: o.indentUnit, indentWithTabs: false, lineWrapping: false, screenReaderLabel: o.label || 'Code', extraKeys: this.extraKeys() });
+            indentUnit: o.indentUnit, tabSize: o.indentUnit, indentWithTabs: false, lineWrapping: !!o.lineWrapping, screenReaderLabel: o.label || 'Code', extraKeys: this.extraKeys() });
           cm.setSize(null, o.height);
           const ta = cm.getInputField();
           if (ta) { ta.setAttribute('aria-label', (o.label || 'Code') + (o.readOnly ? ' (read-only)' : '')); }
-          cm.on('change', (x, ch) => { this.value = cm.getValue(); this.changed(); if (ch.origin === '+input' && /[\w.$@]/.test(ch.text.join(''))) { this.complete(false); } else if (ch.origin !== 'complete') { this.pop.close(); } });
+          cm.on('change', (x, ch) => {
+            this.value = cm.getValue();
+            this.changed(ch.origin);
+            const before = ch.origin === '+input' && o.completeAfter ? cm.getLine(cm.getCursor().line).slice(0, cm.getCursor().ch) : '';
+            if (ch.origin === '+input' && (/[\w.$@]/.test(ch.text.join('')) || (before && o.completeAfter(before)))) { this.complete(!!(before && o.completeAfter(before))); } else if (ch.origin !== 'complete') { this.pop.close(); }
+          });
+          cm.on('cursorActivity', () => { const c = cm.getCursor(); this.emit('cursor', { line: c.line, ch: c.ch }); });
           cm.on('keydown', (x, e) => this.completionKey(e));
           cm.on('blur', () => this.doc.defaultView.setTimeout(() => { if (!this.cm.hasFocus()) { this.pop.close(); } }, 150));
           this.lintSoon();
@@ -644,11 +658,13 @@
         const unit = ' '.repeat(this.o.indentUnit), keys = { 'Ctrl-Space': () => this.complete(true), 'Cmd-Space': () => this.complete(true),
           Tab: (cm) => { if (cm.somethingSelected()) { cm.indentSelection('add'); } else { cm.replaceSelection(unit, 'end'); } },
           'Shift-Tab': (cm) => { cm.indentSelection('subtract'); } };
+        if (this.o.tabLeaves) { keys.Tab = false; keys['Shift-Tab'] = false; }
+        if (this.o.mode === 'yaml') { keys.Enter = (cm) => { const c = cm.getCursor(); cm.replaceSelection('\n' + ' '.repeat(yamlIndentAfter(cm.getLine(c.line).slice(0, c.ch))), 'end', '+input'); }; }
         Object.keys(this.o.keys || {}).forEach((k) => { keys[k] = () => this.o.keys[k](); });
         return keys;
       }
       refresh() { if (this.cm) { this.cm.refresh(); } }
-      changed() { this.emit('change', { value: this.value }); if (this.o.lint) { this.lintSoon(); } }
+      changed(origin) { this.emit('change', { value: this.value, origin: origin || 'input' }); if (this.o.lint) { this.lintSoon(); } }
       say(t) { this.host.setAttribute('data-note', t); announce(t); }
       complete(forced) {
         if (!this.cm || this.o.readOnly || (!this.o.catalogue && !this.o.complete)) { return Promise.resolve(); }
@@ -656,12 +672,13 @@
         if (!forced && w.word.replace(/^[$@]/, '').length < 1) { this.pop.close(); return Promise.resolve(); }
         this.asked = (this.asked || 0) + 1;
         const ask = this.asked;
-        const ctx = { word: w.word, line: line, ch: cur.ch, mode: this.o.mode };
+        const ctx = { word: w.word, line: line, ch: cur.ch, mode: this.o.mode, lineNo: cur.line, text: this.cm.getValue(), forced: !!forced };
         return Promise.resolve(this.o.complete ? this.o.complete(ctx) : completions(this.o.catalogue, w.word)).then((list) => {
           if (ask !== this.asked) { return; }
           list = (list || []).slice(0, 50);
           if (!list.length) { this.pop.close(); return; }
-          this.completing = { line: cur.line, from: w.from, to: cur.ch, list: list };
+          const from = list[0] && list[0].from !== undefined ? list[0].from : w.from;           // an entry may say where its word starts (a YAML key's '-')
+          this.completing = { line: cur.line, from: from, to: list[0] && list[0].to !== undefined ? list[0].to : cur.ch, list: list };
           this.listbox.render(list.map((e) => ({ value: e.name, label: e.name, detail: e.signature || e.description || e.kind || '', entry: e })), () => false);
           this.listbox.setActive(0);
           const at = this.cm.cursorCoords(true, 'window');
@@ -725,6 +742,28 @@
       goTo(line, ch) { if (this.cm) { this.cm.setCursor({ line: line - 1, ch: ch || 0 }); this.cm.focus(); } else { this.area.focus(); } }
       getValue() { return this.cm ? this.cm.getValue() : this.value; }
       setValue(text) { this.value = String(text || ''); if (this.cm) { this.cm.setValue(this.value); } else { this.area.value = this.value; } }
+      updateValue(text) {
+        text = String(text || '');
+        if (text === this.getValue()) { return false; }
+        if (!this.cm) { this.setValue(text); return true; }
+        const cm = this.cm, cur = cm.getCursor(), scroll = cm.getScrollInfo();
+        this.value = text;
+        cm.operation(() => { cm.setValue(text); cm.setCursor({ line: Math.min(cur.line, cm.lineCount() - 1), ch: cur.ch }); cm.scrollTo(scroll.left, scroll.top); });
+        return true;
+      }
+      highlight(from, to, o) {
+        this.lit = this.lit || [];
+        if (this.cm) { this.lit.forEach((n) => this.cm.removeLineClass(n, 'background', 'di-code-hl')); }
+        this.lit = [];
+        this.host.removeAttribute('data-hl');
+        if (from === null || from === undefined) { return; }
+        to = to === undefined ? from : to;
+        this.host.setAttribute('data-hl', (from + 1) + '-' + (to + 1));
+        if (!this.cm) { return; }
+        for (let n = from; n <= to && n < this.cm.lineCount(); n++) { this.lit.push(this.cm.addLineClass(n, 'background', 'di-code-hl')); }
+        if (!o || o.scroll !== false) { this.cm.scrollIntoView({ from: { line: from, ch: 0 }, to: { line: Math.min(to, from + 12), ch: 0 } }, 24); }
+      }
+      cursor() { if (this.cm) { const c = this.cm.getCursor(); return { line: c.line, ch: c.ch }; } const before = this.area.value.slice(0, this.area.selectionStart).split('\n'); return { line: before.length - 1, ch: before[before.length - 1].length }; }
       setReadOnly(on) { this.o.readOnly = !!on; this.host.toggleAttribute('data-readonly', !!on); if (this.cm) { this.cm.setOption('readOnly', !!on); } else { this.area.readOnly = !!on; } }
       focus() { if (this.cm) { this.cm.focus(); } else { this.area.focus(); } }
       destroy() { this.lintSoon.cancel(); if (this.anchor) { this.anchor.remove(); } super.destroy(); }
@@ -756,7 +795,7 @@
       setTexts(original, value) { this.o.original = original; this.o.value = value; this.render(); }
       stats() { return diffStats(this.ops); }
     }
-    return { "ensureCodeMirror": ensureCodeMirror, "CodeEditor": CodeEditor, "CodeDiff": CodeDiff };
+    return { "yamlIndentAfter": yamlIndentAfter, "ensureCodeMirror": ensureCodeMirror, "CodeEditor": CodeEditor, "CodeDiff": CodeDiff };
   })();
   /* ---- src/drishti_combobox.js ---- */
   __m["src/drishti_combobox.js"] = (function () {
@@ -2040,7 +2079,7 @@
       }
       actions() {
         const bar = this.el('div', { cls: 'di-form-actions' });
-        if (this.state !== 'editing') { return bar; }
+        if (this.state !== 'editing' || this.o.live) { return bar; }
         this.submitBtn = this.el('button', { cls: 'di-btn di-primary', text: this.o.fourEyes ? 'Submit for approval' : (this.o.submitLabel || 'Save'), attrs: { type: 'submit' }, data: { act: 'submit' } });
         bar.append(this.submitBtn, this.el('button', { cls: 'di-btn', text: 'Reset', attrs: { type: 'button' }, data: { act: 'reset' }, on: { click: () => this.reset() } }));
         return bar;
@@ -2455,7 +2494,7 @@
   __m["src/drishti_index.js"] = (function () {
     var defineInputElements = __m["src/drishti_inputs-element.js"].defineInputElements;
     function install(root) { if (root && root.document && root.customElements) { defineInputElements(root.customElements, root); } }
-    return { "install": install, "CALENDAR_RULES": __m["src/drishti_calendar.js"].CALENDAR_RULES, "easterSunday": __m["src/drishti_calendar.js"].easterSunday, "ruleDate": __m["src/drishti_calendar.js"].ruleDate, "HolidayCalendar": __m["src/drishti_calendar.js"].HolidayCalendar, "defineCalendar": __m["src/drishti_calendar.js"].defineCalendar, "calendar": __m["src/drishti_calendar.js"].calendar, "DATE_PRESETS": __m["src/drishti_calendar.js"].DATE_PRESETS, "resolvePreset": __m["src/drishti_calendar.js"].resolvePreset, "parseDateInput": __m["src/drishti_calendar.js"].parseDateInput, "monthGrid": __m["src/drishti_calendar.js"].monthGrid, "shiftDate": __m["src/drishti_calendar.js"].shiftDate, "uid": __m["src/drishti_inputs-dom.js"].uid, "debounce": __m["src/drishti_inputs-dom.js"].debounce, "InputBase": __m["src/drishti_inputs-dom.js"].InputBase, "Popover": __m["src/drishti_inputs-dom.js"].Popover, "Listbox": __m["src/drishti_inputs-dom.js"].Listbox, "normalizeOptions": __m["src/drishti_inputs-dom.js"].normalizeOptions, "searchOptions": __m["src/drishti_inputs-dom.js"].searchOptions, "CalendarView": __m["src/drishti_date-picker.js"].CalendarView, "DatePicker": __m["src/drishti_date-picker.js"].DatePicker, "DateRangePicker": __m["src/drishti_date-range.js"].DateRangePicker, "TreeModel": __m["src/drishti_tree.js"].TreeModel, "TreePicker": __m["src/drishti_tree-picker.js"].TreePicker, "MultiSelect": __m["src/drishti_multiselect.js"].MultiSelect, "TypeAhead": __m["src/drishti_combobox.js"].TypeAhead, "Combobox": __m["src/drishti_combobox.js"].Combobox, "words": __m["src/drishti_schema.js"].words, "pathParts": __m["src/drishti_schema.js"].pathParts, "getPath": __m["src/drishti_schema.js"].getPath, "setPath": __m["src/drishti_schema.js"].setPath, "conditionHolds": __m["src/drishti_schema.js"].conditionHolds, "fieldsOf": __m["src/drishti_schema.js"].fieldsOf, "defaults": __m["src/drishti_schema.js"].defaults, "fieldProblem": __m["src/drishti_schema.js"].fieldProblem, "validate": __m["src/drishti_schema.js"].validate, "visibleValue": __m["src/drishti_schema.js"].visibleValue, "changes": __m["src/drishti_schema.js"].changes, "parseField": __m["src/drishti_schema.js"].parseField, "Form": __m["src/drishti_form.js"].Form, "FilterModelBar": __m["src/drishti_filter-bar.js"].FilterModelBar, "FilterBar": __m["src/drishti_filter-bar.js"].FilterBar, "upgradeDateInput": __m["src/drishti_native.js"].upgradeDateInput, "upgradeCheckboxes": __m["src/drishti_native.js"].upgradeCheckboxes, "upgradeFields": __m["src/drishti_native.js"].upgradeFields, "rachanaMode": __m["src/drishti_code-modes.js"].rachanaMode, "yamlMode": __m["src/drishti_code-modes.js"].yamlMode, "MODES": __m["src/drishti_code-modes.js"].MODES, "defineModes": __m["src/drishti_code-modes.js"].defineModes, "MiniStream": __m["src/drishti_code-modes.js"].MiniStream, "tokens": __m["src/drishti_code-modes.js"].tokens, "wordAt": __m["src/drishti_code-text.js"].wordAt, "completions": __m["src/drishti_code-text.js"].completions, "insertText": __m["src/drishti_code-text.js"].insertText, "lineDiff": __m["src/drishti_code-text.js"].lineDiff, "sideBySide": __m["src/drishti_code-text.js"].sideBySide, "diffStats": __m["src/drishti_code-text.js"].diffStats, "ensureCodeMirror": __m["src/drishti_code-editor.js"].ensureCodeMirror, "CodeEditor": __m["src/drishti_code-editor.js"].CodeEditor, "CodeDiff": __m["src/drishti_code-editor.js"].CodeDiff, "INPUT_ELEMENTS": __m["src/drishti_inputs-element.js"].INPUT_ELEMENTS, "defineInputElements": __m["src/drishti_inputs-element.js"].defineInputElements };
+    return { "install": install, "CALENDAR_RULES": __m["src/drishti_calendar.js"].CALENDAR_RULES, "easterSunday": __m["src/drishti_calendar.js"].easterSunday, "ruleDate": __m["src/drishti_calendar.js"].ruleDate, "HolidayCalendar": __m["src/drishti_calendar.js"].HolidayCalendar, "defineCalendar": __m["src/drishti_calendar.js"].defineCalendar, "calendar": __m["src/drishti_calendar.js"].calendar, "DATE_PRESETS": __m["src/drishti_calendar.js"].DATE_PRESETS, "resolvePreset": __m["src/drishti_calendar.js"].resolvePreset, "parseDateInput": __m["src/drishti_calendar.js"].parseDateInput, "monthGrid": __m["src/drishti_calendar.js"].monthGrid, "shiftDate": __m["src/drishti_calendar.js"].shiftDate, "uid": __m["src/drishti_inputs-dom.js"].uid, "debounce": __m["src/drishti_inputs-dom.js"].debounce, "InputBase": __m["src/drishti_inputs-dom.js"].InputBase, "Popover": __m["src/drishti_inputs-dom.js"].Popover, "Listbox": __m["src/drishti_inputs-dom.js"].Listbox, "normalizeOptions": __m["src/drishti_inputs-dom.js"].normalizeOptions, "searchOptions": __m["src/drishti_inputs-dom.js"].searchOptions, "CalendarView": __m["src/drishti_date-picker.js"].CalendarView, "DatePicker": __m["src/drishti_date-picker.js"].DatePicker, "DateRangePicker": __m["src/drishti_date-range.js"].DateRangePicker, "TreeModel": __m["src/drishti_tree.js"].TreeModel, "TreePicker": __m["src/drishti_tree-picker.js"].TreePicker, "MultiSelect": __m["src/drishti_multiselect.js"].MultiSelect, "TypeAhead": __m["src/drishti_combobox.js"].TypeAhead, "Combobox": __m["src/drishti_combobox.js"].Combobox, "words": __m["src/drishti_schema.js"].words, "pathParts": __m["src/drishti_schema.js"].pathParts, "getPath": __m["src/drishti_schema.js"].getPath, "setPath": __m["src/drishti_schema.js"].setPath, "conditionHolds": __m["src/drishti_schema.js"].conditionHolds, "fieldsOf": __m["src/drishti_schema.js"].fieldsOf, "defaults": __m["src/drishti_schema.js"].defaults, "fieldProblem": __m["src/drishti_schema.js"].fieldProblem, "validate": __m["src/drishti_schema.js"].validate, "visibleValue": __m["src/drishti_schema.js"].visibleValue, "changes": __m["src/drishti_schema.js"].changes, "parseField": __m["src/drishti_schema.js"].parseField, "Form": __m["src/drishti_form.js"].Form, "FilterModelBar": __m["src/drishti_filter-bar.js"].FilterModelBar, "FilterBar": __m["src/drishti_filter-bar.js"].FilterBar, "upgradeDateInput": __m["src/drishti_native.js"].upgradeDateInput, "upgradeCheckboxes": __m["src/drishti_native.js"].upgradeCheckboxes, "upgradeFields": __m["src/drishti_native.js"].upgradeFields, "rachanaMode": __m["src/drishti_code-modes.js"].rachanaMode, "yamlMode": __m["src/drishti_code-modes.js"].yamlMode, "MODES": __m["src/drishti_code-modes.js"].MODES, "defineModes": __m["src/drishti_code-modes.js"].defineModes, "MiniStream": __m["src/drishti_code-modes.js"].MiniStream, "tokens": __m["src/drishti_code-modes.js"].tokens, "wordAt": __m["src/drishti_code-text.js"].wordAt, "completions": __m["src/drishti_code-text.js"].completions, "insertText": __m["src/drishti_code-text.js"].insertText, "lineDiff": __m["src/drishti_code-text.js"].lineDiff, "sideBySide": __m["src/drishti_code-text.js"].sideBySide, "diffStats": __m["src/drishti_code-text.js"].diffStats, "ensureCodeMirror": __m["src/drishti_code-editor.js"].ensureCodeMirror, "yamlIndentAfter": __m["src/drishti_code-editor.js"].yamlIndentAfter, "CodeEditor": __m["src/drishti_code-editor.js"].CodeEditor, "CodeDiff": __m["src/drishti_code-editor.js"].CodeDiff, "INPUT_ELEMENTS": __m["src/drishti_inputs-element.js"].INPUT_ELEMENTS, "defineInputElements": __m["src/drishti_inputs-element.js"].defineInputElements };
   })();
   return Object.freeze(Object.assign({ library: "drishti-inputs", version: "0.2.0" }, __m["src/drishti_index.js"]));
 });

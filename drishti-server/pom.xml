@@ -38,6 +38,7 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-memlake</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-identity</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-packs</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-registry</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-ai</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-demo</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-file</artifactId></dependency>
@@ -147,18 +148,20 @@
           </systemPropertyVariables>
         </configuration>
       </plugin>
-      <!-- the executable jar's manifest grants native access (RocksDB, SQLite, DuckDB, Hadoop load native libraries):
-           JDK 25 warns without it and a future JDK blocks it -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <configuration><archive><manifestEntries><Enable-Native-Access>ALL-UNNAMED</Enable-Native-Access><Add-Opens>java.base/java.nio</Add-Opens></manifestEntries></archive></configuration>
+        <!-- the tests' helpers and resources (TestRun, the test application.properties) for the domain modules' tests -->
+        <executions><execution><goals><goal>test-jar</goal></goals></execution></executions>
       </plugin>
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
-        <executions><execution><goals><goal>build-info</goal></goals></execution></executions>
-        <configuration><classifier>exec</classifier><mainClass>com.ash.drishti.server.DrishtiApplication</mainClass><layout>ZIP</layout></configuration>
+        <executions>
+          <execution><goals><goal>build-info</goal></goals></execution>
+          <execution><id>repackage</id><phase>none</phase></execution>
+        </executions>
+        <!-- the runnable jar is made by drishti-app (the core with the domain modules this build ships), at the same path as before -->
       </plugin>
     </plugins>
   </build>

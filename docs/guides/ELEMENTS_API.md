@@ -25,6 +25,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 | [drishti-core](#drishti-core) | 1.1.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines |
 | [drishti-grid](#drishti-grid) | 0.4.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
 | [drishti-inputs](#drishti-inputs) | 0.2.0 | Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema with four eyes, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
+| [drishti-designer](#drishti-designer) | 0.1.0 | The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review) |
 | [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
 | [drishti-chart](#drishti-chart) | 0.2.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
 | [drishti-risk](#drishti-risk) | 0.2.0 | The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser) |
@@ -7646,9 +7647,19 @@ CodeMirror on the page: the one given, the page's, or the vendored one loaded no
 
 Returns `Promise&lt;Object&gt;`.
 
+#### `yamlIndentAfter(before)`
+
+The indentation of a new YAML line after the text before the cursor: the line's own, a list item's content column, two more after a key that opens a block ("key:", "key: \|").
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `before` | `string` |  |
+
+Returns `number`.
+
 #### class `CodeEditor`
 
-The code editor. Events: change {value}, ready, lint {problems}, completed {entry}.
+The code editor. Events: change {value, origin} (origin 'setValue' when the page set the text), ready, lint {problems}, completed {entry}, cursor {line, ch} (0-based, as the cursor moves).
 
 ##### `new CodeEditor(host, options)`
 
@@ -7725,6 +7736,34 @@ Replaces the text.
 | `text` | `string` |  |
 
 Returns `void`.
+
+##### `CodeEditor.updateValue(text)`
+
+Replaces the text where it differs, keeping the cursor, the selection and the scroll (the document changed elsewhere: an undo, the visual side). Answers whether anything changed.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `boolean`.
+
+##### `CodeEditor.highlight(from, to, o)`
+
+Marks lines (0-based, inclusive) as the selected item's, and brings them into view; null clears the mark.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `from` | `?number` |  |
+| `[to]` | `number` |  |
+| `[o]` | `{scroll: boolean}` | scroll: bring the lines into view (default true) |
+
+Returns `void`.
+
+##### `CodeEditor.cursor()`
+
+The cursor (0-based line and column).
+
+Returns `{line: number, ch: number}`.
 
 ##### `CodeEditor.setReadOnly(on)`
 
@@ -7859,6 +7898,9 @@ A lint problem.
 | `[indentUnit=2]` | `number` | spaces an indent is (Python: 4) |
 | `[keys]` | `Object&lt;string, function(): *&gt;` | the page's own keys in the editor, CodeMirror's names ('Ctrl-Enter': run, Esc: close); Tab and Shift-Tab indent and dedent a selection |
 | `[CodeMirror]` | `Object` | a CodeMirror to use (default: the vendored one) |
+| `[completeAfter]` | `function(string): boolean` | also opens the completions when the text before the cursor passes this test (a YAML key's "kind: ", a path's "$.") |
+| `[lineWrapping=false]` | `boolean` |  |
+| `[tabLeaves=false]` | `boolean` | Tab and Shift+Tab move the focus out of the editor (a small box in a form) instead of indenting |
 
 #### `CatalogueEntry` : `Object`
 
@@ -7975,6 +8017,7 @@ A field the bar may filter.
 | `[readOnly=false]` | `boolean` |  |
 | `[layout='stacked']` | `('stacked'\|'columns')` |  |
 | `[locale]` | `string` | how numbers are read and shown |
+| `[live=false]` | `boolean` | no Save or Reset: each change is the host's at once (a designer's inspector) |
 
 #### `MultiSelectOptions` : `Object`
 
@@ -8080,6 +8123,2128 @@ A visible row of the tree.
 | `state` | `('checked'\|'mixed'\|'unchecked')` |  |
 | `status` | `?string` | 'loading' or the error's words while its children are asked for |
 | `match` | `boolean` | whether it matched the search |
+
+## drishti-designer
+
+Version 0.1.0. Bundle `static/elements/drishti-designer/drishti_designer.js`, global `Drishti.elements.designer`; requires drishti-core, drishti-inputs.
+
+### drishti_commands.js
+
+#### class `CommandStack`
+
+The command stack. Events: change {canUndo, canRedo, undoLabel, redoLabel, size}, done {command, how: 'run'\|'undo'\|'redo'}.
+
+##### `new CommandStack(o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `{limit: number, mergeMs: number, now: function(): number}` | limit: the steps kept (default 200); mergeMs: how close two steps with one mergeKey must be to merge (default 800 ms); now: the clock (tests) |
+
+##### `CommandStack.on(name, fn)`
+
+Listens to the stack's events.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `fn` | `function(Object): void` |  |
+
+Returns `function(): void`.
+
+##### `CommandStack.run(cmd)`
+
+Does a command and keeps it (inside group(): as part of the group's step).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `cmd` | `Command` |  |
+
+Returns `Command`.
+
+##### `CommandStack.push(cmd)`
+
+Keeps a command that was already done.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `cmd` | `Command` |  |
+
+Returns `Command`.
+
+##### `CommandStack.group(label, fn)`
+
+Runs fn with every command it makes kept as one step (nested groups join the outer one). A group with no command keeps nothing.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `label` | `string` |  |
+| `fn` | `function(): *` |  |
+
+Returns `*`: what fn returned.
+
+##### `CommandStack.canUndo()`
+
+Whether there is a step to take back.
+
+Returns `boolean`.
+
+##### `CommandStack.canRedo()`
+
+Whether there is a step to do again.
+
+Returns `boolean`.
+
+##### `CommandStack.undo()`
+
+Takes back the last step.
+
+Returns `?Command`: the step, or null when there is none.
+
+##### `CommandStack.redo()`
+
+Does again the last step undo took back.
+
+Returns `?Command`.
+
+##### `CommandStack.clear()`
+
+Forgets every step (a new document).
+
+Returns `void`.
+
+##### `CommandStack.markSaved()`
+
+Marks the present step as the saved one (dirty() is false until the next step).
+
+Returns `void`.
+
+##### `CommandStack.dirty()`
+
+Whether there are steps since the last markSaved().
+
+Returns `boolean`.
+
+##### `CommandStack.state()`
+
+What the undo and redo buttons show.
+
+Returns `{canUndo: boolean, canRedo: boolean, undoLabel: string, redoLabel: string, size: number}`.
+
+#### class `SnapshotHistory`
+
+Undo and redo by snapshots of one JSON document: change(label, fn) copies the document before fn edits it in place, and a step that changed nothing is not kept. The host reads the document from get() and is told after each step (onChange).
+
+##### `new SnapshotHistory(o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `{get: function(): Object, set: function(Object, string): void, limit: number, mergeMs: number, now: function(): number}` | get: the document now; set(doc, how): the document becomes doc (after undo or redo; how is 'undo' or 'redo') |
+
+##### `SnapshotHistory.on(name, fn)`
+
+Listens to the stack's events (change, done).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `fn` | `function(Object): void` |  |
+
+Returns `function(): void`.
+
+##### `SnapshotHistory.change(label, fn, o)`
+
+One step: fn edits the document (the one get() returns) in place. Refused (false) when fn returns false or throws, or changed nothing: the document is put back as it was.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `label` | `string` |  |
+| `fn` | `function(Object): (boolean\|void)` |  |
+| `[o]` | `{mergeKey: string}` |  |
+
+Returns `boolean`: whether a step was kept.
+
+##### `SnapshotHistory.record(label, before, after, o)`
+
+Keeps a step whose before and after are already known (the document as text, JSON).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `label` | `string` |  |
+| `before` | `string` |  |
+| `after` | `string` |  |
+| `[o]` | `{mergeKey: string}` |  |
+
+Returns `void`.
+
+##### `SnapshotHistory.undo()`
+
+Takes back the last step.
+
+Returns `?Command`.
+
+##### `SnapshotHistory.redo()`
+
+Does again the last step undo took back.
+
+Returns `?Command`.
+
+##### `SnapshotHistory.canUndo()`
+
+Whether there is a step to take back.
+
+Returns `boolean`.
+
+##### `SnapshotHistory.canRedo()`
+
+Whether there is a step to do again.
+
+Returns `boolean`.
+
+##### `SnapshotHistory.clear()`
+
+Forgets every step.
+
+Returns `void`.
+
+### drishti_selection.js
+
+#### class `Selection`
+
+The selected ids. Events: change {ids, primary, source}.
+
+##### `new Selection()`
+
+An empty selection.
+
+##### `Selection.on(name, fn)`
+
+Listens to one of its events; answers the function that stops listening.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `fn` | `function(Object): void` |  |
+
+Returns `function(): void`.
+
+##### `Selection.primary()`
+
+The primary id (the last picked), or null.
+
+Returns `?string`.
+
+##### `Selection.has(id)`
+
+Whether an id is selected.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `boolean`.
+
+##### `Selection.size()`
+
+How many are selected.
+
+Returns `number`.
+
+##### `Selection.list()`
+
+The selected ids, in picking order.
+
+Returns `string[]`: a copy, in picking order.
+
+##### `Selection.set(ids, source)`
+
+Selects exactly these ids (an id or null for one or none).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `(string\|string[]\|null)` |  |
+| `[source]` | `string` | who selected (canvas, outline, yaml ...): a listener may ignore its own echo |
+
+Returns `void`.
+
+##### `Selection.pick(id, additive, source)`
+
+A pick as a pointer or the keys make it: plain replaces, additive (Shift, Ctrl, Cmd) toggles the id in or out.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `additive` | `boolean` |  |
+| `[source]` | `string` |  |
+
+Returns `void`.
+
+##### `Selection.prune(exists)`
+
+Keeps only the ids that still exist (after a delete, an undo, a reload).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `exists` | `function(string): boolean` |  |
+
+Returns `void`.
+
+##### `Selection.clear()`
+
+Selects nothing.
+
+Returns `void`.
+
+### drishti_layout-rules.js
+
+#### `GRID`
+
+The columns of a screen.
+
+#### `MAX_H`
+
+The tallest a panel is, in rows.
+
+#### `DEFAULT_MIN_SPAN`
+
+A panel narrower than this is unreadable.
+
+#### `clamp(n, lo, hi)`
+
+n between lo and hi.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `n` | `number` |  |
+| `lo` | `number` |  |
+| `hi` | `number` |  |
+
+Returns `number`.
+
+#### `clampSpan(n, min, grid)`
+
+A width in columns, between the minimum and the whole grid.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `n` | `number` |  |
+| `[min=3]` | `number` |  |
+| `[grid=12]` | `number` |  |
+
+Returns `number`.
+
+#### `clampHeight(n, max)`
+
+A height in rows; 0 is "as tall as its content".
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `n` | `number` |  |
+| `[max=24]` | `number` |  |
+
+Returns `number`.
+
+#### `hideRefused(hiddenFlags, index)`
+
+Whether hiding the panel at index is refused: it would leave nothing visible.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `hiddenFlags` | `boolean[]` |  |
+| `index` | `number` |  |
+
+Returns `boolean`.
+
+#### `sizeText(title, span, height, grid)`
+
+What a screen reader hears for a panel's size.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `title` | `string` |  |
+| `span` | `number` |  |
+| `height` | `number` | rows, 0 for the content's height |
+| `[grid=12]` | `number` |  |
+
+Returns `string`.
+
+#### `rowsFromPixels(px, rowPx, max)`
+
+The rows a panel measured on screen fills (never short of what is shown).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `px` | `number` |  |
+| `rowPx` | `number` |  |
+| `[max=24]` | `number` |  |
+
+Returns `number`.
+
+#### `snap(px, stepPx)`
+
+A pixel offset as whole grid steps.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `px` | `number` |  |
+| `stepPx` | `number` | the size of one step (a column and its gap, a row and its gap) |
+
+Returns `number`.
+
+#### `clampRect(r, g)`
+
+A rectangle inside the grid: at least minW by minH, at most cols wide and maxH high, never left of 0 or above 0, never past the last column.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `r` | `Rect` |  |
+| `g` | `{cols: number, maxH: number, minW: number, minH: number}` |  |
+
+Returns `Rect`.
+
+#### `overlaps(a, b)`
+
+Whether two rectangles share a cell.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `a` | `Rect` |  |
+| `b` | `Rect` |  |
+
+Returns `boolean`.
+
+#### `settle(items, moved)`
+
+Settles a layout after `moved` changed: whatever it overlaps goes down below it, and so on (the top one stays where it was put). Changes the rectangles in place.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `items` | `Array&lt;{id: string, x: number, y: number, w: number, h: number}&gt;` |  |
+| `moved` | `{id: string}` |  |
+
+Returns `string[]`: the ids that went down.
+
+#### `bounds(rects)`
+
+The box around rectangles.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rects` | `Rect[]` |  |
+
+Returns `?Rect`.
+
+#### `ALIGN_EDGES`
+
+The edges align() takes.
+
+#### `alignRects(rects, edge)`
+
+Rectangles lined up on one edge of their box (center: the same middle column; middle: the same middle row).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rects` | `Rect[]` |  |
+| `edge` | `('left'\|'right'\|'top'\|'bottom'\|'center'\|'middle')` |  |
+
+Returns `Rect[]`: new rectangles, in the same order.
+
+#### `distributeRects(rects, axis)`
+
+Rectangles spread evenly along an axis between the first and the last (three or more): equal gaps, whole grid units.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rects` | `Rect[]` |  |
+| `axis` | `('x'\|'y')` |  |
+
+Returns `Rect[]`: new rectangles, in the same order.
+
+### drishti_layout-model.js
+
+#### class `LayoutModel`
+
+The layout model. Events: change {label, ids} after every step, undo and redo; commit {label, before, after, ids} for a host that keeps its own undo.
+
+##### `new LayoutModel(o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `LayoutOptions` |  |
+
+##### `LayoutModel.on(name, fn)`
+
+Listens to one of its events; answers the function that stops listening.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `fn` | `function(Object): void` |  |
+
+Returns `function(): void`.
+
+##### `LayoutModel.load(items, breakpoints)`
+
+Loads items (and breakpoints) without an undo step: a document opened, a host's model redrawn.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `items` | `LayoutItem[]` |  |
+| `[breakpoints]` | `Object&lt;string, {order: string[], hidden: string[], heights: Object&lt;string, number&gt;}&gt;` |  |
+
+Returns `void`.
+
+##### `LayoutModel.list()`
+
+The items, in reading order (grid: top to bottom, left to right; flow: area by area, in order).
+
+Returns `LayoutItem[]`.
+
+##### `LayoutModel.get(id)`
+
+An item by its id, or null.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `?LayoutItem`.
+
+##### `LayoutModel.ids()`
+
+The ids in reading order.
+
+Returns `string[]`.
+
+##### `LayoutModel.expand(ids)`
+
+The ids with every member of their groups.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+
+Returns `string[]`.
+
+##### `LayoutModel.commit(label, fn, o)`
+
+One step: fn changes this.state.items in place; kept on the stack (or handed to the host as "commit").
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `label` | `string` |  |
+| `fn` | `function(LayoutItem[]): (string[]\|void)` | answers the ids it changed |
+| `[o]` | `{mergeKey: string}` |  |
+
+Returns `boolean`: whether anything changed.
+
+##### `LayoutModel.add(items, o)`
+
+Adds items (grid: placed inside the grid and settled; flow: at the end of their area or before an id).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `items` | `(LayoutItem\|LayoutItem[])` |  |
+| `[o]` | `{label: string, before: string}` |  |
+
+Returns `string[]`: the ids added.
+
+##### `LayoutModel.remove(ids, label)`
+
+Removes items (with their groups).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+| `[label]` | `string` |  |
+
+Returns `boolean`.
+
+##### `LayoutModel.bottom()`
+
+The first free row under every item (grid).
+
+Returns `number`: the first free row under everything (grid).
+
+##### `LayoutModel.moveBy(ids, dx, dy, o)`
+
+Moves items (and their groups) by whole grid steps, as one block that stays inside the grid.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+| `dx` | `number` | columns |
+| `dy` | `number` | rows |
+| `[o]` | `{mergeKey: string, label: string}` |  |
+
+Returns `boolean`.
+
+##### `LayoutModel.resizeBy(ids, dw, dh, o)`
+
+Resizes items by whole grid steps (each inside the grid).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+| `dw` | `number` |  |
+| `dh` | `number` |  |
+| `[o]` | `{mergeKey: string, label: string}` |  |
+
+Returns `boolean`.
+
+##### `LayoutModel.setRect(id, rect, label)`
+
+Puts one item at a rectangle (a pointer's drop, a typed size).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `rect` | `import('./drishti_layout-rules.js').Rect` |  |
+| `[label]` | `string` |  |
+
+Returns `boolean`.
+
+##### `LayoutModel.align(ids, edge)`
+
+Lines items up on an edge of their box.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+| `edge` | `('left'\|'right'\|'top'\|'bottom'\|'center'\|'middle')` |  |
+
+Returns `boolean`.
+
+##### `LayoutModel.distribute(ids, axis)`
+
+Spreads three or more items evenly across ('x') or down ('y').
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+| `axis` | `('x'\|'y')` |  |
+
+Returns `boolean`.
+
+##### `LayoutModel.zOrder(ids, how)`
+
+Changes the stacking order: 'front', 'back', 'forward' (one up) or 'backward'.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+| `how` | `('front'\|'back'\|'forward'\|'backward')` |  |
+
+Returns `boolean`.
+
+##### `LayoutModel.group(ids)`
+
+Makes the items one group (they move, copy and delete together).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` | two or more |
+
+Returns `?string`: the group's id.
+
+##### `LayoutModel.ungroup(ids)`
+
+Breaks the groups of these items.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+
+Returns `boolean`.
+
+##### `LayoutModel.copy(ids)`
+
+Copies items (with their groups) to the model's clipboard; answers the copy as text (JSON) for the system clipboard.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+
+Returns `string`.
+
+##### `LayoutModel.paste(clip, at)`
+
+Pastes copied items with new ids (and new groups): grid, one row lower than the copies (or at a point); flow, after the last one.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[clip]` | `(string\|LayoutItem[])` | the copy (text or items; default: the model's clipboard) |
+| `[at]` | `{x: number, y: number}` |  |
+
+Returns `string[]`: the new ids.
+
+##### `LayoutModel.duplicate(ids)`
+
+Copies and pastes in one step (Ctrl+D).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+
+Returns `string[]`: the new ids.
+
+##### `LayoutModel.inArea(area)`
+
+The items of one area, in order (flow).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `area` | `string` |  |
+
+Returns `LayoutItem[]`.
+
+##### `LayoutModel.moveTo(id, to)`
+
+Moves an item to an area, before another item (or to the area's end).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `to` | `{area: string, before: (string\|null), after: (string\|null)}` |  |
+
+Returns `boolean`.
+
+##### `LayoutModel.step(id, step)`
+
+One place earlier (-1) or later (+1) in its area; false when it is already first or last.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `step` | `number` |  |
+
+Returns `boolean`.
+
+##### `LayoutModel.setSize(id, size)`
+
+Sets an item's span (flow) in columns, or its height in rows (0: the content's).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `size` | `{span: number, height: number}` |  |
+
+Returns `boolean`.
+
+##### `LayoutModel.order(bp, o)`
+
+The order a breakpoint shows (its own, else the reading order), without the hidden ones unless asked.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `bp` | `string` | 'phone', 'tablet' ... |
+| `[o]` | `{withHidden: boolean}` |  |
+
+Returns `string[]`.
+
+##### `LayoutModel.breakpoint(bp)`
+
+A breakpoint's own arrangement, as kept (order, hidden, heights), or null when it follows the full layout.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `bp` | `string` |  |
+
+Returns `?{order: string[], hidden: string[], heights: Object&lt;string, number&gt;}`.
+
+##### `LayoutModel.arrange(bp, change)`
+
+Changes a breakpoint: an item moved by `step` places, hidden or shown, or its height; arranging it back to the full layout's order with nothing hidden and no heights removes the breakpoint's entry.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `bp` | `string` |  |
+| `change` | `{move: [string, number], hide: [string, boolean], height: [string, number], order: string[]}` |  |
+
+Returns `boolean`.
+
+##### `LayoutModel.toJSON()`
+
+The model as data (items and breakpoints), for a host to save.
+
+Returns `{items: LayoutItem[], breakpoints: Object}`.
+
+### drishti_keymap.js
+
+#### `KEY_SCHEMES`
+
+The schemes of the arrows.
+
+#### `designerBindings(scheme, extra)`
+
+The bindings of a scheme with the host's own on top (a binding set to null is removed).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[scheme='move']` | `('move'\|'select')` |  |
+| `[extra]` | `Object&lt;string, ?DesignerAction&gt;` |  |
+
+Returns `Object&lt;string, DesignerAction&gt;`.
+
+#### `designerKeys(scheme, extra, o)`
+
+The function that reads a key press as a designer action (undefined: not a designer key).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[scheme='move']` | `('move'\|'select')` |  |
+| `[extra]` | `Object&lt;string, ?DesignerAction&gt;` |  |
+| `[o]` | `{mac: boolean}` |  |
+
+Returns `function(KeyboardEvent): (DesignerAction\|undefined)`.
+
+#### `keyHelp(scheme)`
+
+The keys as a list for a help card: [{keys, does}].
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[scheme='move']` | `('move'\|'select')` |  |
+
+Returns `Array&lt;{keys: string, does: string}&gt;`.
+
+### drishti_pointer.js
+
+#### `trackPointer(e, h, o)`
+
+Tracks one pointer from a press until it is let go.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `e` | `PointerEvent` | the pointerdown |
+| `h` | `TrackHandlers` |  |
+| `[o]` | `{threshold: number}` | pixels before a press is a drag (default 5; 0: at once) |
+
+Returns `{cancel: function(): void}`.
+
+#### class `DragHub`
+
+The drags of one page: sources made draggable with draggable(), targets registered with target(). Each page (each designer) makes its own hub.
+
+##### `new DragHub()`
+
+A hub with no targets yet.
+
+##### `DragHub.target(t)`
+
+Registers a drop target.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `t` | `DropTarget` |  |
+
+Returns `function(): void`: removes it.
+
+##### `DragHub.hit(x, y, payload, doc)`
+
+The target under a point that takes the payload (the innermost when targets nest).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `x` | `number` |  |
+| `y` | `number` |  |
+| `payload` | `Object` |  |
+| `doc` | `Document` |  |
+
+Returns `?DropTarget`.
+
+##### `DragHub.draggable(el, o)`
+
+Makes an element a drag source.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `Element` |  |
+| `o` | `{payload: function(PointerEvent): ?Object, label: function(Object): string, handle: string}` | payload: what is dragged (null: not this press); label: the ghost's text; handle: a selector the press must start in |
+
+Returns `function(): void`: stops it.
+
+##### `DragHub.start(e, payload, label)`
+
+Starts dragging a payload from a press (a ghost follows the pointer; the target under it is told).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `e` | `PointerEvent` |  |
+| `payload` | `Object` |  |
+| `[label]` | `string` |  |
+
+Returns `void`.
+
+#### `sortableList(list, o)`
+
+A list whose rows a person re-orders by dragging (a card list, a device's order): one pointer drag per press on a row (not on its buttons and fields); the row under the pointer is marked; letting go calls onMove(from, to) with the rows' indexes. The keys that do the same (Alt+arrows, buttons) are the host's.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `list` | `Element` |  |
+| `o` | `{row: string, canDrag: function(Element): boolean, canDrop: function(Element): boolean, onMove: function(number, number): void, dragClass: string, overClass: string}` | row: the rows' selector; dragClass and overClass: the moving row's and the target's classes |
+
+Returns `function(): void`: stops it.
+
+### drishti_layout-flow.js
+
+#### `flowHit(canvas, x, y)`
+
+The flow target under a point, or null outside every area.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `canvas` | `import('./drishti_layout-canvas.js').LayoutCanvas` |  |
+| `x` | `number` |  |
+| `y` | `number` |  |
+
+Returns `?FlowTarget`.
+
+#### `showFlowDrop(canvas, t, payload)`
+
+Shows where a drop lands: a line between items, a box over an empty area, or the item marked when the payload would go onto it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `canvas` | `import('./drishti_layout-canvas.js').LayoutCanvas` |  |
+| `t` | `?FlowTarget` |  |
+| `payload` | `Object` | ({item} when an item of the canvas moves) |
+
+Returns `void`.
+
+#### `clearFlowDrop(canvas)`
+
+Takes the drop's mark away.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `canvas` | `import('./drishti_layout-canvas.js').LayoutCanvas` |  |
+
+Returns `void`.
+
+### drishti_layout-canvas.js
+
+#### class `LayoutCanvas`
+
+The canvas. Events: select {ids}, open {id}, drop {payload, cell, target}, contextmenu {id, x, y}, action {type, ...}, moved {ids}, rendered.
+
+##### `new LayoutCanvas(el, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `HTMLElement` | the canvas element |
+| `o` | `LayoutCanvasOptions` |  |
+
+##### `LayoutCanvas.on(name, fn)`
+
+Listens to one of its events; answers the function that stops listening.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `fn` | `function(Object): void` |  |
+
+Returns `function(): void`.
+
+##### `LayoutCanvas.adopt(map, areas)`
+
+Flow: the host's elements of the items (after it drew its areas); the canvas decorates them.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `map` | `Object&lt;string, HTMLElement&gt;` | id -&gt; element |
+| `[areas]` | `Object&lt;string, HTMLElement&gt;` | the area elements |
+
+Returns `void`.
+
+##### `LayoutCanvas.itemEl(id)`
+
+The element of an item.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `?HTMLElement`.
+
+##### `LayoutCanvas.render()`
+
+Draws the model: grid items created, placed and refreshed; every item decorated and marked.
+
+Returns `void`.
+
+##### `LayoutCanvas.forget(id)`
+
+Grid: lets go of an item's element (it is made again by the next render: the host's look of it changed).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `void`.
+
+##### `LayoutCanvas.focus()`
+
+Focuses the primary selected item (or the first).
+
+Returns `void`.
+
+##### `LayoutCanvas.cellAt(x, y)`
+
+The grid cell under a point (grid).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `x` | `number` | clientX |
+| `y` | `number` | clientY |
+
+Returns `{x: number, y: number}`.
+
+##### `LayoutCanvas.selectDir(dir)`
+
+Selects another item: 'next', 'prev', 'first', 'last', or (flow) 'main' and 'side', the area's item nearest the one selected.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `dir` | `string` |  |
+
+Returns `void`.
+
+##### `LayoutCanvas.destroy()`
+
+Stops listening (the page leaves the designer).
+
+Returns `void`.
+
+### drishti_palette.js
+
+#### `searchPalette(entries, query)`
+
+Entries matching a search: every word of the query in the label, the detail, the category or the keywords.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `entries` | `PaletteEntry[]` |  |
+| `query` | `string` |  |
+
+Returns `PaletteEntry[]`.
+
+#### `paletteGroups(entries)`
+
+The entries in their categories, in the order the categories first appear.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `entries` | `PaletteEntry[]` |  |
+
+Returns `Array&lt;{category: string, entries: PaletteEntry[]}&gt;`.
+
+#### class `Palette`
+
+The palette. Events: add {entry, payload}, search {query, count}.
+
+##### `new Palette(el, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `HTMLElement` |  |
+| `o` | `{entries: PaletteEntry[], hub: import('./drishti_pointer.js').DragHub, dragType: string, label: string, placeholder: string, search: boolean}` | hub: drags go through it; dragType: also an HTML5 drag of this type (JSON payload); search: a search field (default true) |
+
+##### `Palette.on(name, fn)`
+
+Listens to one of its events; answers the function that stops listening.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `fn` | `function(Object): void` |  |
+
+Returns `function(): void`.
+
+##### `Palette.setEntries(entries)`
+
+New entries (the host's catalogue changed).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `entries` | `PaletteEntry[]` |  |
+
+Returns `void`.
+
+##### `Palette.shown()`
+
+The entries the search shows.
+
+Returns `PaletteEntry[]`: the entries the search shows.
+
+##### `Palette.filter(q)`
+
+Searches.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `q` | `string` |  |
+
+Returns `void`.
+
+##### `Palette.add(en)`
+
+Adds an entry (as a click or Enter does): the "add" event; a disabled one says why.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `en` | `PaletteEntry` |  |
+
+Returns `void`.
+
+### drishti_inspector.js
+
+#### `commonValues(objs)`
+
+The values several objects share: a key with one value in all of them keeps it; a key whose values differ is left out and named.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `objs` | `Object[]` |  |
+
+Returns `{values: Object, mixed: string[]}`.
+
+#### `sharedSchema(schemas)`
+
+The fields of a schema that every schema in a list has, with the same type (the schema of a mixed selection).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `schemas` | `Object[]` | object schemas |
+
+Returns `?Object`: an object schema, or null when nothing is shared.
+
+#### class `Inspector`
+
+The inspector. Events: change {ids, path, value, values}.
+
+##### `new Inspector(el, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `HTMLElement` |  |
+| `o` | `InspectorOptions` |  |
+
+##### `Inspector.on(name, fn)`
+
+Listens to one of its events; answers the function that stops listening.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `fn` | `function(Object): void` |  |
+
+Returns `function(): void`.
+
+##### `Inspector.follow(selection)`
+
+Follows a selection (the inspector redraws when it changes).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `selection` | `import('./drishti_selection.js').Selection` |  |
+
+Returns `function(): void`: stops following.
+
+##### `Inspector.show(ids)`
+
+Shows the properties of these ids.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+
+Returns `void`.
+
+##### `Inspector.refresh()`
+
+Draws the same selection again with fresh values (an undo, a YAML edit), keeping the focus on its field.
+
+Returns `void`.
+
+##### `Inspector.problems()`
+
+The problems of the fields shown, in words, by path.
+
+Returns `Object&lt;string, string&gt;`.
+
+### drishti_outline.js
+
+#### `flattenTree(nodes, closed)`
+
+The nodes as visible rows (depth first), with their level, parent and position.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `nodes` | `OutlineNode[]` |  |
+| `[closed]` | `Set&lt;string&gt;` | the ids of closed branches |
+
+Returns `Array&lt;{node: OutlineNode, level: number, parent: ?string, index: number, size: number}&gt;`.
+
+#### `findNode(nodes, id)`
+
+Where a node is: its parent's id (null at the top), its list and its index.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `nodes` | `OutlineNode[]` |  |
+| `id` | `string` |  |
+
+Returns `?{parent: ?string, list: OutlineNode[], index: number, node: OutlineNode}`.
+
+#### `isWithin(nodes, id, of)`
+
+Whether `id` is `of` or inside it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `nodes` | `OutlineNode[]` |  |
+| `id` | `string` |  |
+| `of` | `string` |  |
+
+Returns `boolean`.
+
+#### `moveNode(nodes, id, target, where)`
+
+A node moved before or after another, or inside it (as its last child): a new tree (the given one is not changed), or null when the move is impossible (onto itself, or into its own branch).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `nodes` | `OutlineNode[]` |  |
+| `id` | `string` |  |
+| `target` | `string` |  |
+| `where` | `('before'\|'after'\|'inside')` |  |
+
+Returns `?OutlineNode[]`.
+
+#### class `Outline`
+
+The outline. Events: move {id, target, where, parent}, open {id}, toggle {id, open}.
+
+##### `new Outline(el, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `HTMLElement` |  |
+| `o` | `{nodes: OutlineNode[], selection: import('./drishti_selection.js').Selection, label: string, canDrop: function(string, string, string): (boolean\|string), readOnly: boolean}` | canDrop(id, target, where): true, false, or why not in words |
+
+##### `Outline.on(name, fn)`
+
+Listens to one of its events; answers the function that stops listening.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `fn` | `function(Object): void` |  |
+
+Returns `function(): void`.
+
+##### `Outline.setNodes(nodes)`
+
+New nodes (the design changed).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `nodes` | `OutlineNode[]` |  |
+
+Returns `void`.
+
+##### `Outline.toggle(id, open)`
+
+Opens or closes a branch.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `[open]` | `boolean` | default: the other way |
+
+Returns `void`.
+
+##### `Outline.requestMove(id, target, where)`
+
+Asks for a move (the host's canDrop decides; the "move" event asks the host to do it).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `target` | `string` |  |
+| `where` | `('before'\|'after'\|'inside')` |  |
+
+Returns `boolean`: whether it was asked.
+
+##### `Outline.destroy()`
+
+Stops following the selection.
+
+Returns `void`.
+
+### drishti_yaml-read.js
+
+#### `yamlUnquote(s)`
+
+A scalar without its quotes.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `s` | `string` |  |
+
+Returns `string`.
+
+#### `parseYamlTree(text)`
+
+The tree of a YAML text (never throws).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `Object`: the root map node; root.tabs: the lines indented with tabs.
+
+#### `yamlGet(m, key)`
+
+A map node's value node by key.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `m` | `Object` |  |
+| `key` | `string` |  |
+
+Returns `(Object\|null\|undefined)`.
+
+#### `yamlPlain(n)`
+
+Plain JavaScript values of a node.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `n` | `Object` |  |
+
+Returns `*`.
+
+#### `yamlChain(root, path, line)`
+
+The nodes along a path ('[]' picks the list item at or before the line), outermost first.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `Object` |  |
+| `path` | `string[]` |  |
+| `line` | `number` |  |
+
+Returns `Object[]`.
+
+#### `yamlContext(lines, line, ch)`
+
+Where the cursor is.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `lines` | `string[]` |  |
+| `line` | `number` | 0-based |
+| `ch` | `number` |  |
+
+Returns `Object} {path, mode, key, prefix, from, flow, quoted, comment, scalar`.
+
+### drishti_yaml-write.js
+
+#### `yamlScalar(v)`
+
+A scalar as YAML.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `string`.
+
+#### `dumpYaml(value, o)`
+
+Plain values as block YAML.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `value` | `*` | an object, a list or a scalar |
+| `[o]` | `{indent: number}` | spaces per level (default 2) |
+
+Returns `string`: the text, ending with a new line.
+
+#### `yamlRanges(text)`
+
+The lines (0-based, first and last) each path of a YAML text spans, from its tree: every key of a map and every item of a list.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `Map&lt;string, [number, number]&gt;`: path -&gt; [first line, last line].
+
+#### `pathAtLine(ranges, line, only)`
+
+The deepest path whose lines hold a line (the item a click in the YAML belongs to), or ''.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ranges` | `Map&lt;string, [number, number]&gt;` | from yamlRanges |
+| `line` | `number` | 0-based |
+| `[only]` | `function(string): boolean` | only paths this accepts (a designer's items: "pages[0].visuals[2]") |
+
+Returns `string`.
+
+### drishti_yaml-assist.js
+
+#### `RACHANA_FUNCTION_ARGS`
+
+The argument names of Rachana's expression functions (their signatures in completion).
+
+#### `RACHANA_FUNCTION_HELP`
+
+What each of Rachana's expression functions gives, in words.
+
+#### class `YamlSchema`
+
+A JSON Schema read for the assistant: $refs resolved, the kinds of a kind-switched object ($defs.panel's allOf if/then) and the grammar's functions (x-rachana-functions).
+
+##### `new YamlSchema(raw, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `raw` | `Object` | the JSON Schema |
+| `[o]` | `{switched: string, help: Object&lt;string, string&gt;, args: Object&lt;string, string[]&gt;}` | switched: the $defs entry whose options follow its kind (default 'panel'); help and args: words and argument names of the functions |
+
+##### `YamlSchema.resolve(n)`
+
+A node with its $refs followed.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `n` | `Object` |  |
+
+Returns `?Object`.
+
+##### `YamlSchema.at(path)`
+
+The schema at a key path ('[]' for a list's items).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `path` | `string[]` |  |
+
+Returns `?Object`.
+
+##### `YamlSchema.isSwitched(n)`
+
+Whether a schema is the kind-switched object.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `n` | `Object` |  |
+
+Returns `boolean`: whether it is the kind-switched object.
+
+##### `YamlSchema.keys(n, kind)`
+
+The keys an object may hold (a kind-switched one: the common keys and its kind's options).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `n` | `Object` |  |
+| `[kind]` | `string` |  |
+
+Returns `string[]`.
+
+##### `YamlSchema.child(n, key)`
+
+A key's schema inside an object's.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `n` | `Object` |  |
+| `key` | `string` |  |
+
+Returns `?Object`.
+
+##### `YamlSchema.isExpr(n)`
+
+Whether a value is an expression of the grammar.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `n` | `Object` |  |
+
+Returns `boolean`: whether its value is an expression of the grammar.
+
+##### `YamlSchema.signature(name)`
+
+A function's signature, optional arguments marked with ?.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+
+Returns `string`.
+
+##### `YamlSchema.describe(n, key, kind, inSwitched)`
+
+A key's meaning in words.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `n` | `Object` |  |
+| `key` | `string` |  |
+| `[kind]` | `string` |  |
+| `[inSwitched]` | `boolean` |  |
+
+Returns `string`.
+
+#### `yamlPlace(schema, text, line, ch)`
+
+Where the cursor is, with its schema: the YAML context, the parsed tree, the chain of nodes, the map it is in and its kind.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `schema` | `YamlSchema` |  |
+| `text` | `string` |  |
+| `line` | `number` | 0-based |
+| `ch` | `number` |  |
+
+Returns `Object`.
+
+#### `yamlCompletions(schema, text, line, ch, o)`
+
+What completes the cursor's place, as drishti-inputs' completion entries (each with from and to: the columns it replaces).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `schema` | `YamlSchema` |  |
+| `text` | `string` |  |
+| `line` | `number` |  |
+| `ch` | `number` |  |
+| `[o]` | `{doc: *, explicit: boolean}` | doc: the sample document "$." and "@." walk |
+
+Returns `Array&lt;Object&gt;`.
+
+#### `yamlCheck(schema, text, validKinds)`
+
+The light check: a document's problems against the schema, as lint problems (1-based line; from and to columns).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `schema` | `YamlSchema` |  |
+| `text` | `string` |  |
+| `[validKinds]` | `string[]` | kinds a match may name besides the schema's |
+
+Returns `Array&lt;{line: number, from: number, to: number, severity: string, message: string}&gt;`.
+
+#### `yamlHelp(schema, text, line, ch)`
+
+The help of the key (or function) under the cursor: {title, text}, or null.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `schema` | `YamlSchema` |  |
+| `text` | `string` |  |
+| `line` | `number` |  |
+| `ch` | `number` |  |
+
+Returns `?{title: string, text: string}`.
+
+### drishti_yaml-pane.js
+
+#### `readYaml(text)`
+
+Reads YAML text into plain values; a line a reader cannot take (a key without its colon, a tab) is an error with its line.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `{value: *, problems: Array&lt;{line: number, message: string}&gt;}`.
+
+#### class `YamlPane`
+
+The YAML pane. Events: model {model, text} (an edit of the YAML read), problem {problems} (it did not read), text {text} (the text as written for the model), cursor {line, ch}.
+
+##### `new YamlPane(el, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `HTMLElement` |  |
+| `[o]` | `YamlPaneOptions` |  |
+
+##### `YamlPane.on(name, fn)`
+
+Listens to one of its events; answers the function that stops listening.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `fn` | `function(Object): void` |  |
+
+Returns `function(): void`.
+
+##### `YamlPane.setModel(model, o)`
+
+The model changed on the visual side (or was loaded): the YAML is written again. An edit being typed is not overwritten by its own echo (o.fromYaml: the change came from this pane).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `model` | `*` |  |
+| `[o]` | `{fromYaml: boolean}` |  |
+
+Returns `Promise&lt;string&gt;`: the text.
+
+##### `YamlPane.setText(text)`
+
+Puts text in the editor without reading it back (the server wrote it).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `void`.
+
+##### `YamlPane.getText()`
+
+The text as it stands.
+
+Returns `string`: the text.
+
+##### `YamlPane.read()`
+
+Reads the YAML now (a pause after typing does it on its own): the "model" event, or its problem shown.
+
+Returns `Promise&lt;boolean&gt;`: whether it read.
+
+##### `YamlPane.highlight(id, scroll)`
+
+Highlights an item's lines (and scrolls to them).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `?string` |  |
+| `[scroll=true]` | `boolean` |  |
+
+Returns `void`.
+
+##### `YamlPane.refresh()`
+
+Lays the editor out again (it was hidden).
+
+Returns `void`.
+
+##### `YamlPane.destroy()`
+
+Takes the pane out (the editor, the listeners).
+
+Returns `void`.
+
+### drishti_shell.js
+
+#### `SHELL_ACTIONS`
+
+The header's actions, in order, with their words.
+
+#### `SHELL_MODES`
+
+The modes of the middle pane.
+
+#### `SHELL_LAYOUTS`
+
+The layouts of the shell (mock-up g7: A the docked studio, B side by side, C the terminal).
+
+#### `SHELL_FKEYS`
+
+The terminal layout's function keys.
+
+#### `statusWords(s)`
+
+What the status pill says: a draft, proposed, approved or shipped, its versions, unsaved.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `s` | `{status: string, version: number, origin: string, dirty: boolean}` |  |
+
+Returns `{word: string, versions: string, tone: string}`.
+
+#### class `DesignerShell`
+
+The shell. Events: action {id}, mode {mode}, new {id}, open {group, item}, search {query}, tab {id}, command {text}, layout {layout, user}.
+
+##### `new DesignerShell(el, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `HTMLElement` |  |
+| `[o]` | `ShellOptions` |  |
+
+##### `DesignerShell.on(name, fn)`
+
+Listens to one of its events; answers the function that stops listening.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `fn` | `function(Object): void` |  |
+
+Returns `function(): void`.
+
+##### `DesignerShell.rail(id)`
+
+The element of a left-rail tab (objects, palette, outline).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `?HTMLElement`.
+
+##### `DesignerShell.showTab(id)`
+
+Shows a left-rail tab.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `void`.
+
+##### `DesignerShell.setLayout(layout, user)`
+
+The layout (user: the person picked it, so the "layout" event lets the host remember it).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `layout` | `string` | 'studio' (g7 A, the default), 'side-by-side' (B), 'terminal' (C) |
+| `[user]` | `boolean` |  |
+
+Returns `void`.
+
+##### `DesignerShell.placeInspector(anchor)`
+
+Side by side: the inspector is a card by the selection (null: back to its place).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `anchor` | `?Element` | the selected item's element |
+
+Returns `void`.
+
+##### `DesignerShell.togglePreview(on)`
+
+Shows or hides the preview pane (the Preview action's other half; side by side keeps it on).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[on]` | `boolean` |  |
+
+Returns `void`.
+
+##### `DesignerShell.setStatusBar(text)`
+
+The status bar's words (what is selected, where, the problems).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `void`.
+
+##### `DesignerShell.command(text)`
+
+A command typed on the terminal's command line: the header's actions by name ("validate", "propose", "yaml", "visual", "both", "layout studio"), else the "command" event for the host (add, select, align ...).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `void`.
+
+##### `DesignerShell.setCrumbs(crumbs)`
+
+Where you are: ['Build', 'Tables & models', 'Tables'] (the last is the group, kept in data-crumb-group).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `crumbs` | `Array&lt;(string\|{label: string, href: string})&gt;` |  |
+
+Returns `void`.
+
+##### `DesignerShell.setTitle(t)`
+
+The name in the header.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `t` | `string` |  |
+
+Returns `void`.
+
+##### `DesignerShell.setStatus(s)`
+
+The status pill and the versions (null hides them).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `s` | `?{status: string, version: number, origin: string, dirty: boolean}` |  |
+
+Returns `void`.
+
+##### `DesignerShell.setActions(states)`
+
+Turns actions on or off; an action that is off says why on hover.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `states` | `Object&lt;string, (boolean\|string)&gt;` | id -&gt; true (on) or why it is off |
+
+Returns `void`.
+
+##### `DesignerShell.setMode(mode, user)`
+
+The Visual / YAML / Both mode (user: the person picked it, so the "mode" event lets the host remember it).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `mode` | `string` |  |
+| `[user]` | `boolean` |  |
+
+Returns `void`.
+
+##### `DesignerShell.toggleYaml(open)`
+
+Shows or hides the YAML under the editor (Both mode).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[open]` | `boolean` |  |
+
+Returns `void`.
+
+##### `DesignerShell.setOpen(on)`
+
+Whether there is an object open (the YAML pane shows only then).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `on` | `boolean` |  |
+
+Returns `void`.
+
+##### `DesignerShell.setYamlState(text, tone)`
+
+The YAML pane's state line: live and valid, with problems, not valid yet, read-only.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+| `tone` | `('good'\|'warn'\|'bad'\|'')` |  |
+
+Returns `void`.
+
+##### `DesignerShell.setObjects(groups)`
+
+The objects on the left, in groups.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `groups` | `Array&lt;{id: string, label: string, items: Array&lt;{id: string, label: string, detail: string, current: boolean, search: string, data: Object}&gt;}&gt;` |  |
+
+Returns `void`.
+
+##### `DesignerShell.say(text, bad)`
+
+A message under the header (bad: a problem).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+| `[bad]` | `boolean` |  |
+
+Returns `void`.
+
+##### `DesignerShell.setReadOnly(ro)`
+
+The read-only bar (null hides it): words and an optional button.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ro` | `?{text: string, button: {label: string, run: function(): void}}` |  |
+
+Returns `void`.
+
+##### `DesignerShell.setImpactCount(n)`
+
+The Impact button's count.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `n` | `?number` |  |
+
+Returns `void`.
+
+##### `DesignerShell.dialog(title, body)`
+
+A modal dialog with a title and a body (its first field focused; focus goes back on close).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `title` | `string` |  |
+| `body` | `Node` |  |
+
+Returns `HTMLDialogElement`.
+
+##### `DesignerShell.closeDialog()`
+
+Closes the dialog (the focus goes back where it was).
+
+Returns `void`.
+
+##### `DesignerShell.propose(name, submit)`
+
+Propose for review (four eyes): a note for the reviewer, then submit(note) files it (the Approvals queue's API); its answer's words are shown. The dialog closes when it was filed.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` | what is proposed |
+| `submit` | `function(string): Promise&lt;*&gt;` |  |
+
+Returns `void`.
+
+### drishti_designer-element.js
+
+#### `DESIGNER_ELEMENTS`
+
+Every element of drishti-designer and the class it draws.
+
+#### `defineDesignerElements(registry, win)`
+
+Defines the elements (once each) on a registry.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `registry` | `CustomElementRegistry` |  |
+| `win` | `Window` |  |
+
+Returns `void`.
+
+### drishti_index.js
+
+#### `install(root)`
+
+Starts drishti-designer in a page (the bundle calls it when it loads): defines its elements, and keeps the console's name of the YAML reader (window.Drishti.yaml) pointing here.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `Window` |  |
+
+Returns `void`.
+
+### Types of drishti-designer
+
+#### `Command` : `Object`
+
+A step of a designer.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `label` | `string` | in words, for the menus and the announcement ("Move 2 items") |
+| `redo` | `function(): void` | does the step (also the first time, through run()) |
+| `undo` | `function(): void` | takes it back |
+| `[mergeKey]` | `string` | steps with the same key in a row (within mergeMs) become one step |
+
+#### `InspectorOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `schemaFor` | `function(string[]): ?Object` | the object schema of the selected ids (null: nothing to inspect) |
+| `valuesFor` | `function(string[]): Object` | the values of the selected ids |
+| `[empty='Select an item to see its properties.']` | `string` | what an empty selection says |
+| `[readOnly=false]` | `boolean` |  |
+| `[locale]` | `string` |  |
+
+#### `DesignerAction` : `Object`
+
+An action of a canvas key.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `type` | `string` | move \| size \| select \| undo \| redo \| copy \| cut \| paste \| duplicate \| delete \| selectAll \| group \| ungroup \| zorder \| open \| escape \| natural \| column |
+| `[dx]` | `number` |  |
+| `[dy]` | `number` |  |
+| `[dir]` | `string` | select: prev, next, first, last, main, side |
+| `[how]` | `string` | zorder: front, back, forward, backward |
+| `[area]` | `string` | column: main or right |
+
+#### `LayoutCanvasOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `model` | `import('./drishti_layout-model.js').LayoutModel` |  |
+| `selection` | `import('./drishti_selection.js').Selection` |  |
+| `[createItem]` | `function(Object): HTMLElement` | grid: the element of a new item (default: a frame with a heading) |
+| `[updateItem]` | `function(Object, HTMLElement): void` | grid: refreshes an item's element after a change |
+| `[removeItem]` | `function(string, HTMLElement): void` | grid: an item's element leaves the canvas (the host lets go of what it drew) |
+| `[label]` | `function(Object): string` | what an item is called (default: item.label or its id) |
+| `[handle]` | `string` | a selector inside an item that moves it (default: the whole item) |
+| `[rowPx=56]` | `number` | grid: a row's height |
+| `[gap=10]` | `number` | grid: the gap between columns and rows |
+| `[keys='move']` | `('move'\|'select')` | the arrows' scheme (keymap) |
+| `[extraKeys]` | `Object` | the host's bindings on top of the scheme |
+| `[readOnly=false]` | `boolean` |  |
+| `[resize=true]` | `boolean` | edges to resize by (grid: the corner; flow: the right and bottom edges) |
+| `[hub]` | `import('./drishti_pointer.js').DragHub` | the palette's drags land here |
+| `[dropType]` | `string` | a type of HTML5 drag the canvas takes (its data is JSON) |
+| `[areas]` | `Object&lt;string, HTMLElement&gt;` | flow: the area elements by name |
+| `[onAction]` | `function(string, Object): (boolean\|void)` | a key's action before the canvas does it; true: the host did it, false: the key is the page's (not taken), nothing: the canvas does it |
+
+#### `FlowTarget` : `Object`
+
+Where a drop at a point lands in a flow canvas.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `area` | `string` |  |
+| `id` | `?string` | the item it lands next to (null: the area's end) |
+| `[rel]` | `('before'\|'after')` |  |
+| `[side]` | `boolean` | items share a row there (the line is upright) |
+| `[edge]` | `boolean` | the point is on the item's rim (between items) |
+| `[gap]` | `boolean` | the point is past the area's last item |
+| `rect` | `DOMRect` | the item's (or the area's) box |
+
+#### `LayoutItem` : `Object`
+
+An item of a layout.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `[x]` | `number` | grid: first column |
+| `[y]` | `number` | grid: first row |
+| `[w]` | `number` | grid: columns |
+| `[h]` | `number` | grid: rows (flow: the height in rows, 0 for the content's) |
+| `[z]` | `number` | stacking order (higher is in front) |
+| `[group]` | `string` | items of one group move, copy and delete together |
+| `[area]` | `string` | flow: the area it sits in |
+| `[span]` | `number` | flow: its width in columns |
+| `[label]` | `string` | what a screen reader and the outline call it |
+| `[data]` | `Object` | the host's own (a visual, a panel): copied with the item, never read here |
+
+#### `LayoutOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[mode='grid']` | `('grid'\|'flow')` |  |
+| `[cols=12]` | `number` |  |
+| `[maxH=40]` | `number` | grid: the tallest item, in rows (flow: 24) |
+| `[minW=1]` | `number` |  |
+| `[minH=1]` | `number` |  |
+| `[minSpan=3]` | `number` | flow: the narrowest item |
+| `[settle=true]` | `boolean` | grid: what a move overlaps goes down |
+| `[areas=['main']` | `string[]` | ] flow: the areas, in order |
+| `[stack]` | `(CommandStack\|null)` | the undo stack (default: its own; null: the host keeps undo and hears "commit") |
+| `[newId]` | `function(string): string` | an id for a pasted item (default: the id with -2, -3 ...) |
+
+#### `Rect` : `Object`
+
+A rectangle in grid units.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `x` | `number` | first column (0-based) |
+| `y` | `number` | first row (0-based) |
+| `w` | `number` | columns |
+| `h` | `number` | rows |
+
+#### `OutlineNode` : `Object`
+
+A node of the outline.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `label` | `string` |  |
+| `[detail]` | `string` | a short note after the label (its kind, "opens on a click") |
+| `[icon]` | `string` |  |
+| `[children]` | `OutlineNode[]` |  |
+| `[fixed]` | `boolean` | cannot be dragged |
+
+#### `PaletteEntry` : `Object`
+
+An entry of the palette.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `label` | `string` |  |
+| `[category]` | `string` | the heading it sits under |
+| `[detail]` | `string` | one line under the label |
+| `[icon]` | `string` | a class for an &lt;i&gt; (the console's icon font) |
+| `[keywords]` | `string[]` | more words the search finds it by |
+| `[disabled]` | `boolean` |  |
+| `[why]` | `string` | why it is disabled, in words |
+| `[payload]` | `Object` | what a drag or an add carries (default: {palette: id}) |
+
+#### `TrackHandlers` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[start]` | `function(PointerEvent): (boolean\|void)` | the press became a drag; false cancels it |
+| `move` | `function(PointerEvent): void` |  |
+| `end` | `function(PointerEvent, boolean, boolean): void` | (event, committed, moved): committed is false after Escape or a cancel |
+
+#### `DropTarget` : `Object`
+
+A drop target.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `el` | `Element` | where drops land |
+| `[accepts]` | `function(Object): boolean` | whether it takes this payload (default: every one) |
+| `[over]` | `function(number, number, Object): void` | the pointer is over it (clientX, clientY, payload) |
+| `[leave]` | `function(): void` |  |
+| `drop` | `function(number, number, Object): void` |  |
+
+#### `ShellOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[crumbs]` | `string[]` | where you are (the last one is the group) |
+| `[title]` | `string` |  |
+| `[actions]` | `Array&lt;{id: string, label: string, title: string, primary: boolean}&gt;` | default SHELL_ACTIONS |
+| `[newItems]` | `Array&lt;{id: string, label: string}&gt;` | + New's menu (none: no + New) |
+| `[modes=true]` | `boolean` | the Visual / YAML / Both toggle |
+| `[mode='both']` | `string` |  |
+| `[search]` | `string` | the objects' search placeholder (none: no objects pane) |
+| `[preview=true]` | `boolean` | the right pane |
+| `[label='Designer']` | `string` |  |
+| `[rail]` | `Array&lt;{id: string, label: string}&gt;` | the left rail's tabs besides the objects (palette, outline); shell.rail(id) is each tab's element |
+| `[inspector=false]` | `boolean` | an inspector pane (shell.inspector) |
+| `[layout='studio']` | `('studio'\|'side-by-side'\|'terminal')` | g7's options A, B and C |
+| `[canMode]` | `function(string): (true\|string)` | whether a mode may be picked now, else why not in words |
+
+#### `YamlPaneOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[toYaml]` | `function(*): (string\|Promise&lt;string&gt;)` | the model as YAML (default: dumpYaml) |
+| `[fromYaml]` | `function(string): (*\|Promise&lt;*&gt;)` | the YAML as the model; throws or rejects with {message, line} (default: readYaml) |
+| `[lint]` | `function(string, *): (Array\|Promise&lt;Array&gt;)` | the validator: problems of the text (lint problems, 1-based lines) |
+| `[complete]` | `function(Object): (Array\|Promise&lt;Array&gt;)` | completion (drishti-inputs' hook: {word, line, ch, lineNo, text}) |
+| `[completeAfter]` | `function(string): boolean` |  |
+| `[selection]` | `import('./drishti_selection.js').Selection` |  |
+| `[pathOf]` | `function(string): ?string` | an item id's path in the YAML ("pages[0].visuals[2]") |
+| `[idAt]` | `function(string): ?string` | the item id a path names (the deepest path of a clicked line is tried, then its parents) |
+| `[delay=500]` | `number` | ms after typing stops before the YAML is read |
+| `[height=320]` | `number` |  |
+| `[readOnly]` | `boolean` |  |
+| `[label='YAML']` | `string` |  |
+| `[keys]` | `Object` | the editor's own keys |
+| `[CodeMirror]` | `Object` |  |
 
 ## drishti-data
 

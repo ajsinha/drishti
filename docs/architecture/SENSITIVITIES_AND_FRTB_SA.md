@@ -515,13 +515,13 @@ Built for sensitivities and FRTB-SA (the commands `FRSA <scope>`, `PLAY FRTB <sc
 
 | What | API | Command (terminal) | CLI |
 |---|---|---|---|
-| Sensitivities of a scope, by factor, bucket or grid | `GET /api/v1/sensitivities?scope=…&by=RISK_FACTOR,TENOR&grid=…` | `SENS <scope>` | `drishti.py sens show` |
-| The factor dictionary and the mapping refusals | `GET /api/v1/risk-factors?q=…` | `RFAC <factor or name>` | `drishti.py sens factors` |
-| FRTB-SA of a scope (SBM by class and scenario, DRC, RRAO) | `GET /api/v1/frtb/sa?scope=…` | `FRSA <scope>` | `drishti.py frtb sa` |
-| Its steps (buckets, WS, K, S, scenario) | `GET /api/v1/frtb/sa/explain?scope=…&class=…` | in `FRSA` | `drishti.py frtb explain` |
-| Contributions | `GET /api/v1/frtb/sa/contributions?scope=…&by=DESK` | in `FRSA` | `drishti.py frtb contributions` |
-| SIMM of a netting set or scope | `GET /api/v1/simm?nettingSet=…` (and `/netting-sets`, `/explain`, `/against`, `/versions`) | `SIMM <netting set>` (the computed figure) | `drishti.py simm show` |
-| The playgrounds | `/api/v1/frtb/playground`, `/api/v1/simm/playground` (and `.xlsx`, `/estimate`, `/template`) | `PLAY FRTB <scope>`, `PLAY FRTB RUN <id>`; `PLAY SIMM <netting set>`, `PLAY SIMM RUN <id>` | `drishti.py play frtb`; `drishti.py play simm` |
+| Sensitivities of a scope, by factor, bucket or grid | `GET /api/v1/risk/sensitivities?scope=…&by=RISK_FACTOR,TENOR&grid=…` | `SENS <scope>` | `drishti.py sens show` |
+| The factor dictionary and the mapping refusals | `GET /api/v1/risk/risk-factors?q=…` | `RFAC <factor or name>` | `drishti.py sens factors` |
+| FRTB-SA of a scope (SBM by class and scenario, DRC, RRAO) | `GET /api/v1/risk/frtb/sa?scope=…` | `FRSA <scope>` | `drishti.py frtb sa` |
+| Its steps (buckets, WS, K, S, scenario) | `GET /api/v1/risk/frtb/sa/explain?scope=…&class=…` | in `FRSA` | `drishti.py frtb explain` |
+| Contributions | `GET /api/v1/risk/frtb/sa/contributions?scope=…&by=DESK` | in `FRSA` | `drishti.py frtb contributions` |
+| SIMM of a netting set or scope | `GET /api/v1/risk/simm?nettingSet=…` (and `/netting-sets`, `/explain`, `/against`, `/versions`) | `SIMM <netting set>` (the computed figure) | `drishti.py simm show` |
+| The playgrounds | `/api/v1/risk/frtb/playground`, `/api/v1/risk/simm/playground` (and `.xlsx`, `/estimate`, `/template`) | `PLAY FRTB <scope>`, `PLAY FRTB RUN <id>`; `PLAY SIMM <netting set>`, `PLAY SIMM RUN <id>` | `drishti.py play frtb`; `drishti.py play simm` |
 | Official captures (planned) | the official run captures FRTB-SA per filer and date, as VaR | — | `drishti.py frtb capture` (planned) |
 
 **Computed kinds:** `frtb-sa-result` (the result of a scope and date) and `simm-result` (per netting set and regime), each with a contract
@@ -760,10 +760,10 @@ its text; `#` lines are comments), so the same `PlaygroundTemplate.explain()` re
 
 | File | Covers |
 |---|---|
-| [`playground/frtb-sa/template/explain.txt`](../../drishti-server/src/main/resources/playground/frtb-sa/template/explain.txt) | in plain words: what FRTB-SA answers, why a bank must hold it, the tabs, signs and units, the regime and its parameters; 18 steps from the delivered sensitivity to the total and the contributions, each with a worked number from the hand-built cases of section 13.1 (cases 1 to 5 together, with the default published table: GIRR delta 110,555.42, the index's own delta charge 150,000 and its curvature
+| [`playground/frtb-sa/template/explain.txt`](../../drishti-banking/src/main/resources/playground/frtb-sa/template/explain.txt) | in plain words: what FRTB-SA answers, why a bank must hold it, the tabs, signs and units, the regime and its parameters; 18 steps from the delivered sensitivity to the total and the contributions, each with a worked number from the hand-built cases of section 13.1 (cases 1 to 5 together, with the default published table: GIRR delta 110,555.42, the index's own delta charge 150,000 and its curvature
 30,000 give SBM 290,555.42 on the low scenario and a total of 566,732.73; without the index's delta 140,555.42 and 416,732.73; with the
 exact formula 140,579.79 and 416,757.11); every term of Main, Config, Data, WS, Buckets, Classes, Curvature, DRC, RRAO and Provenance with its MAR paragraph |
-| [`playground/simm/template/explain.txt`](../../drishti-server/src/main/resources/playground/simm/template/explain.txt) | in plain words: what SIMM answers, why initial margin is exchanged, the tabs, signs and units, the licensed parameters; 16 steps from the netting set's sensitivities to collect, post and the counterparty's call, each worked with the toy parameter set of case 6 (no licensed number appears); every term of Main, Config, Data, WS, Buckets, Classes, Curvature, Add-ons and Provenance |
+| [`playground/simm/template/explain.txt`](../../drishti-banking/src/main/resources/playground/simm/template/explain.txt) | in plain words: what SIMM answers, why initial margin is exchanged, the tabs, signs and units, the licensed parameters; 16 steps from the netting set's sensitivities to collect, post and the counterparty's call, each worked with the toy parameter set of case 6 (no licensed number appears); every term of Main, Config, Data, WS, Buckets, Classes, Curvature, Add-ons and Provenance |
 
 The decisions of section 16 are in the words: curvature from gamma is labelled an estimate, rates volatilities are lognormal unless a
 source declares normal, the regime is Basel MAR21 to MAR23 then OSFI CAR chapter 9, a credit index is one SIMM qualifier, and the FX

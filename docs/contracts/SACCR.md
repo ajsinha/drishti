@@ -303,7 +303,7 @@ EAD; the API never presents them as a decomposition.
 
 | Work | Where |
 |---|---|
-| Per trade: SD, δ, MF (both margined and unmargined), D; per set: the additive aggregates of §7.1 | Java at date load (`com.ash.drishti.compute.ccr.SaccrAggregates`, planned) |
+| Per trade: SD, δ, MF (both margined and unmargined), D; per set: the additive aggregates of §7.1 | Java at date load (`com.ash.drishti.banking.compute.ccr.SaccrAggregates`, planned) |
 | The formulas of §6.2–6.7 over the aggregates (bank-wide: about 1,000,000 aggregate rows), what-if, standalone EAD | Python engine `drishti_ccr.saccr:SaccrEngine` on the `risk` pool, Arrow in and out, split by netting set across workers (sums reduce) |
 | Reference implementation for tests | `tools/packgen/ccr/ccrmath.py` (planned), parity-tested against both |
 

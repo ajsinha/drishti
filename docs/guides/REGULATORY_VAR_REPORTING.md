@@ -408,7 +408,7 @@ desk P&L has no row of it either (a holiday); a period that starts before the fi
 
 **Demo:** `drishti.py var stats BANK --period FY2026` answers **228** official records, period end **112,041,646** (2026-09-30), average
 **151,812,526**, high **167,372,692** (2026-01-13), low **87,874,268** (2025-12-10); avg60 **166,450,508**. The same on a page:
-`VAR BANK STATS FY2026 <GO>`; the API: `GET /api/v1/var/statistics?scope=BANK&period=FY2026&measure=var` (`periodEnd`, `average`,
+`VAR BANK STATS FY2026 <GO>`; the API: `GET /api/v1/risk/var/statistics?scope=BANK&period=FY2026&measure=var` (`periodEnd`, `average`,
 `high`, `low`, `records`, `missing`, `average60`, `stressedAverage`, `preview`).
 
 **A demo server's synthetic history.** The demo lake holds three business dates of vectors (2026-09-28 to 2026-09-30); a server
@@ -478,7 +478,7 @@ The US table ships as `drishti.regulatory.backtesting.multipliers`; a Canadian b
 multiplier the supervisor imposes above the table's is an input (planned capital inputs, `MULTIPLIER_OVERRIDE`): the capital uses the
 larger.
 
-**Demo** (`drishti.py var backtest BANK`, `VAR BANK BACKTEST <GO>`, `GET /api/v1/var/backtesting?scope=BANK`): the bank over the 250
+**Demo** (`drishti.py var backtest BANK`, `VAR BANK BACKTEST <GO>`, `GET /api/v1/risk/var/backtesting?scope=BANK`): the bank over the 250
 business days 2025-10-01 to 2026-09-30: **3** exceptions against APL and **3** against HPL at 99% (2025-12-29, 2026-01-07, 2026-01-13);
 8 and 10 at 97.5% (expected 6.25); **green**, multiplier **3.00**. The inflation and money-market desks have 6 each at 99%: **amber**, 3.50.
 
@@ -636,7 +636,7 @@ tolerance; every trade reached by the risk-type mapping.
 
 ### 6.3 Runs, freezing and lineage
 
-A run (`POST /api/v1/var/reports/{report}/runs?period=FY2026`, `drishti.py var report run annual-report-var FY2026`, or *Generate*)
+A run (`POST /api/v1/risk/var/reports/{report}/runs?period=FY2026`, `drishti.py var report run annual-report-var FY2026`, or *Generate*)
 reads the period statistics of every row's node and of the prior period, fills every cell, computes diversification, runs the checks,
 pre-fills the narrative's facts (the average, the period end, the largest movement, the exceptions and their dates) and **freezes** the
 result in the content store (`var/reports/<report>/<period>/run-v<n>.json`) with the definition's file and digest and the code version.
