@@ -130,6 +130,7 @@
   // ---- a pivot by several fields, drawn by drishti-grid ---------------------------------------------------------------
   /** The grid's sheet (elements/drishti-grid/drishti_grid.css), once per document or shadow root that shows a nested pivot. */
   function sheet(host) {
+    if (/\/embed\/v1\/$/.test(ROOT)) { return; }        // <drishti-view>'s own sheet carries the grid's (tools/elements_sheet.py)
     var at = host.getRootNode ? host.getRootNode() : document, into = at === document || !at.host ? document.head : at;
     if (into.querySelector('link[data-grid-css]')) { return; }
     var l = document.createElement('link');

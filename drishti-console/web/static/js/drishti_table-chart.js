@@ -467,20 +467,30 @@
       self.status.textContent += ' · Chart all failed: ' + (err && err.message ? err.message : err);
     });
   };
+  /** The chart's data as a table, drawn by drishti-grid (Drishti Elements): the engine's figures as they are (the grid sums nothing:
+      clientAggregation false), sortable, the first column pinned; loaded the first time it is asked for. */
   Dialog.prototype.drawTable = function (m) {
-    var g = E().exportGrid(m, this.settings, this.src.title), PE = window.Drishti.pivotEngine || (window.drishtiModules || {}).pivotEngine;
-    var t = el('table', { cls: 'tbl', 'data-plain': true, 'data-no-chart': true, 'aria-label': 'The chart’s data' });
-    t.appendChild(el('thead', {}, [el('tr', {}, g.header.map(function (h) { return el('th', { scope: 'col', text: h }); }))]));
-    var b = el('tbody');
-    g.rows.forEach(function (r) {
-      b.appendChild(el('tr', {}, r.map(function (v, i) {
-        var n = typeof v === 'number';
-        return el(i ? 'td' : 'th', { scope: i ? null : 'row', cls: n ? 'num mono' : 'mono', text: v == null ? '' : n && PE ? PE.format(v, 'compact') : String(v) });
-      })));
+    var g = E().exportGrid(m, this.settings, this.src.title), PE = window.Drishti.pivotEngine || (window.drishtiModules || {}).pivotEngine, self = this;
+    var EL = window.Drishti.elements;
+    if (!EL || !(EL.grid || EL.load)) { this.tableBox.textContent = 'The table needs Drishti Elements (drishti-grid), which this page did not load.'; return; }
+    if (!EL.grid) {
+      EL.load('drishti-grid').then(function () { if (self.view === 'table' && self.last === m) { self.drawTable(m); } },
+        function (err) { self.tableBox.textContent = 'The table could not be drawn: ' + (err && err.message ? err.message : err); });
+      return;
+    }
+    var cols = g.header.map(function (h, i) {
+      var num = g.rows.some(function (r) { return typeof r[i] === 'number'; });
+      return { id: 'c' + i, field: 'c' + i, header: h, type: num ? 'number' : 'text', pinned: i ? null : 'left', width: i ? 120 : 180,
+        enableRowGroup: false, enablePivot: false, enableValue: false,
+        format: function (v) { return v == null ? '' : typeof v === 'number' && PE ? PE.format(v, 'compact') : String(v); } };
     });
-    t.appendChild(b);
+    var rows = g.rows.map(function (r, j) { var o = { __id: String(j) }; r.forEach(function (v, i) { o['c' + i] = v; }); return o; });
+    if (this.tgrid) { this.tgrid.destroy(); }
     this.tableBox.textContent = '';
-    this.tableBox.appendChild(t);
+    var box = el('div', { cls: 'tc-grid' });
+    this.tableBox.appendChild(box);
+    this.tgrid = new EL.grid.Grid(box, { columns: cols, rows: rows, getRowId: function (r) { return r.__id; }, layout: 'wells', density: 'compact', chrome: false,
+      clientAggregation: false, checkboxes: false, rowSelection: 'none', label: 'The chart’s data' });
   };
   Dialog.prototype.toggleTable = function () {
     this.view = this.view === 'table' ? 'chart' : 'table';

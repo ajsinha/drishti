@@ -178,10 +178,26 @@ async def versioned_css(request: Request, version: str):
     return response
 
 
+# Drishti Elements' bundles that the console's scripts draw with in an embed (static/elements/; ELEMENTS.md section 8): the nested pivot of tree rows
+# and Chart any table's table draw with drishti-grid, which needs drishti-core. Each library's own bundle and style sheet, nothing else.
+ELEMENT_BUNDLES = {("drishti-core", "drishti_core.js"), ("drishti-grid", "drishti_grid.js"), ("drishti-grid", "drishti_grid.css")}
+
+
+async def element_bundle(request: Request, library: str, name: str):
+    """One allow-listed Drishti Elements bundle or style sheet (``/elements/drishti-grid/drishti_grid.js``), for the console's scripts in an embed."""
+    if (library, name) not in ELEMENT_BUNDLES:
+        return await refuse(request, 404, "DRS-9404", f"no such library file: {library}/{name}")
+    path = WEB / "static/elements" / library / name
+    return await send(request, path.read_bytes(), "text/css" if name.endswith(".css") else "text/javascript", f'"{path.stat().st_mtime_ns:x}"')
+
+
 @router.get("/elements/{version}/{rest:path}")
 async def versioned(request: Request, version: str, rest: str):
     """The library at an exact semantic version, immutable (``/elements/1.1.0/drishti-elements.js``, ``.../m/<name>.js``, ``.../integrity.json``); a partial
-    version (``1``, ``1.1``) answers ``302`` to the exact one for a host that accepts updates (SRI needs the exact version). CLIENT_RENDERER.md › Drishti Elements: the design, section 13."""
+    version (``1``, ``1.1``) answers ``302`` to the exact one for a host that accepts updates (SRI needs the exact version). CLIENT_RENDERER.md › Drishti Elements: the design, section 13.
+    A Drishti Elements library's name in place of the version is its bundle (element_bundle)."""
+    if version.startswith("drishti-"):
+        return await element_bundle(request, version, rest)
     exact = dist.resolve(version)
     if exact is None:
         if dist.SEMVER.fullmatch(version):

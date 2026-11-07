@@ -162,6 +162,15 @@ async def elements(request: Request, version: str):
     return await cors(request, RedirectResponse(f"{BASE}/render/{ELEMENTS[exact]}/drishti-elements.js", status_code=302, headers={"Cache-Control": "public, max-age=60"}))
 
 
+@router.get("/elements/{library}/{name}")
+async def element_bundle(request: Request, library: str, name: str):
+    """Drishti Elements' bundles beside the console's scripts (/embed/v2/ stands for /static/): drishti-core and drishti-grid, which tree rows and
+    Chart any table draw with (routes/embed_routes.py ELEMENT_BUNDLES)."""
+    if name == "drishti-elements.js":
+        return await elements(request, library)
+    return await v1.element_bundle(request, library, name)
+
+
 @router.get("/js/{name}.js")
 async def script(request: Request, name: str):
     name = name.removeprefix("drishti_")
