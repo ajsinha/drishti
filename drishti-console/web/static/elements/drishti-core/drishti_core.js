@@ -1393,9 +1393,41 @@
             "vendor/echarts/echarts.min.js"
           ]
         },
+        "drishti-graph": {
+          "version": "0.1.0",
+          "title": "The graph: networks cyclic or acyclic on a canvas for thousands of nodes; force (seeded), layered (DAG), radial, circular and grouped layouts; zoom, pan, minimap and fit; neighbours expanded on demand; the shortest path; groups collapsed by an attribute and filters by type; size and colour by a measure with a legend; pin, multi-select and lasso; a selection panel with Explain; linked selection; export (PNG, SVG, data); keyboard and an adjacency table; live updates; the lineage preset; the view's graph panel",
+          "bundle": "drishti-graph/drishti_graph.js",
+          "entry": "drishti-graph/src/drishti_index.js",
+          "global": "graph",
+          "requires": [
+            "drishti-core",
+            "drishti-grid"
+          ],
+          "css": [
+            "elements/drishti-graph/drishti_graph.css",
+            "elements/drishti-grid/drishti_grid.css"
+          ],
+          "scripts": []
+        },
+        "drishti-tree": {
+          "version": "0.1.0",
+          "title": "The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, export, keyboard and ARIA",
+          "bundle": "drishti-tree/drishti_tree.js",
+          "entry": "drishti-tree/src/drishti_index.js",
+          "global": "tree",
+          "requires": [
+            "drishti-core",
+            "drishti-grid"
+          ],
+          "css": [
+            "elements/drishti-tree/drishti_tree.css",
+            "elements/drishti-grid/drishti_grid.css"
+          ],
+          "scripts": []
+        },
         "drishti-risk": {
           "version": "0.2.0",
-          "title": "The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser)",
+          "title": "The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser), and the presets for drishti-graph and drishti-tree (the counterparty structure graph; the VaR hierarchy tree): options only, so a page loads the graph or the tree library itself",
           "bundle": "drishti-risk/drishti_risk.js",
           "entry": "drishti-risk/src/drishti_index.js",
           "global": "risk",

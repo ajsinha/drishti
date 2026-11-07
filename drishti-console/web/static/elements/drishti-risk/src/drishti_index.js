@@ -22,6 +22,8 @@ export { TRAFFIC_LIGHT, trafficLight, tailFigures, tenorText, eepeOf, buildPnlDi
   registerRiskKinds } from './drishti_risk-kinds.js';
 export { RISK_GRID_DEFAULTS, TONES, figureColumn, riskGrid } from './drishti_risk-grid.js';
 export { riskChart } from './drishti_risk-chart.js';
+export { LIMIT_USE_BANDS, VAR_TREE_MEASURES, varHierarchyTree, limitBreaches } from './drishti_risk-tree.js';
+export { COUNTERPARTY_LEVELS, COUNTERPARTY_MEASURES, counterpartyStructureGraph } from './drishti_risk-graph.js';
 export { textColumn, moneyColumn } from './drishti_risk-columns.js';
 export { riskMoney, riskSigned, riskInt, riskPct } from './drishti_risk-format.js';
 

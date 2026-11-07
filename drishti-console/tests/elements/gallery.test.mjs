@@ -156,7 +156,7 @@ test('the AG Grid tab is live: the shapes it prints, given to the adapter, make 
 
 test('every demo names what the catalogue holds: its library, typedefs, events and modules', () => {
   globalThis.Drishti = undefined;
-  ['drishti_gallery-demos.js', 'drishti_gallery-demos-chart.js', 'drishti_gallery-demos-inputs.js'].forEach((f) => require(join(GALLERY, f)));
+  ['drishti_gallery-demos.js', 'drishti_gallery-demos-chart.js', 'drishti_gallery-demos-inputs.js', 'drishti_gallery-demos-graph.js', 'drishti_gallery-demos-tree.js'].forEach((f) => require(join(GALLERY, f)));
   const demos = globalThis.Drishti.gallery.demos;
   const ids = demos.map((d) => d.id);
   assert.equal(new Set(ids).size, ids.length, 'ids are unique');
@@ -177,7 +177,7 @@ test('every demo names what the catalogue holds: its library, typedefs, events a
     (d.examples || []).forEach((ex) => assert.ok(ex.title && ex.values, d.id + ' example'));
     if (d.kind === 'element') { assert.ok(typeof d.build === 'function', d.id + ' builds the object it mounts and prints'); }
   });
-  ['drishti-core', 'drishti-grid', 'drishti-chart', 'drishti-risk'].forEach((l) => assert.ok(demos.some((d) => d.library === l), l + ' has demos'));
+  ['drishti-core', 'drishti-grid', 'drishti-chart', 'drishti-graph', 'drishti-tree', 'drishti-risk'].forEach((l) => assert.ok(demos.some((d) => d.library === l), l + ' has demos'));
   assert.ok(shown >= 20);
 });
 
