@@ -3,9 +3,21 @@
   "file": "0-CAN-USA-MEX-GBR-DEU-FRA-ITA-JPN-KOR-AUS-M-N-CPI-PA-T-N-GY-8560a0b6f1f1.gz",
   "url": "https://sdmx.oecd.org/public/rest/data/OECD.SDD.TPS,DSD_PRICES@DF_PRICES_ALL,1.0/CAN+USA+MEX+GBR+DEU+FRA+ITA+JPN+KOR+AUS.M.N.CPI.PA._T.N.GY?startPeriod=2024-01&dimensionAtObservation=AllDimensions"
  },
+ "0-CAN-USA-MEX-GBR-DEU-FRA-ITA-JPN-KOR-AUS-M-N-CPI-PA-T-N-GY-d6358b4b788c": {
+  "file": "0-CAN-USA-MEX-GBR-DEU-FRA-ITA-JPN-KOR-AUS-M-N-CPI-PA-T-N-GY-d6358b4b788c.gz",
+  "url": "https://sdmx.oecd.org/public/rest/data/OECD.SDD.TPS,DSD_PRICES@DF_PRICES_ALL,1.0/CAN+USA+MEX+GBR+DEU+FRA+ITA+JPN+KOR+AUS.M.N.CPI.PA._T.N.GY?startPeriod=2024-04&dimensionAtObservation=AllDimensions"
+ },
  "AN-USA-MEX-GBR-DEU-FRA-ITA-JPN-KOR-AUS-UNE-LF-M-Y-T-Y-GE15-M-99c2890d7890": {
   "file": "AN-USA-MEX-GBR-DEU-FRA-ITA-JPN-KOR-AUS-UNE-LF-M-Y-T-Y-GE15-M-99c2890d7890.gz",
   "url": "https://sdmx.oecd.org/public/rest/data/OECD.SDD.TPS,DSD_LFS@DF_IALFS_UNE_M,1.0/CAN+USA+MEX+GBR+DEU+FRA+ITA+JPN+KOR+AUS.UNE_LF_M...Y._T.Y_GE15..M?startPeriod=2024-01&dimensionAtObservation=AllDimensions"
+ },
+ "AN-USA-MEX-GBR-DEU-FRA-ITA-JPN-KOR-AUS-UNE-LF-M-Y-T-Y-GE15-M-c2d9c82ce020": {
+  "file": "AN-USA-MEX-GBR-DEU-FRA-ITA-JPN-KOR-AUS-UNE-LF-M-Y-T-Y-GE15-M-c2d9c82ce020.gz",
+  "url": "https://sdmx.oecd.org/public/rest/data/OECD.SDD.TPS,DSD_LFS@DF_IALFS_UNE_M,1.0/CAN+USA+MEX+GBR+DEU+FRA+ITA+JPN+KOR+AUS.UNE_LF_M...Y._T.Y_GE15..M?startPeriod=2026-04&dimensionAtObservation=AllDimensions"
+ },
+ "CD-1-1-Q-CAN-USA-MEX-GBR-DEU-FRA-ITA-JPN-KOR-AUS-S1-B1GQ-G1-b815eec3f907": {
+  "file": "CD-1-1-Q-CAN-USA-MEX-GBR-DEU-FRA-ITA-JPN-KOR-AUS-S1-B1GQ-G1-b815eec3f907.gz",
+  "url": "https://sdmx.oecd.org/public/rest/data/OECD.SDD.NAD,DSD_NAMAIN1@DF_QNA_EXPENDITURE_GROWTH_OECD,1.1/Q..CAN+USA+MEX+GBR+DEU+FRA+ITA+JPN+KOR+AUS.S1..B1GQ......G1.?startPeriod=2025-Q3&dimensionAtObservation=AllDimensions"
  },
  "CD-1-1-Q-CAN-USA-MEX-GBR-DEU-FRA-ITA-JPN-KOR-AUS-S1-B1GQ-G1-d35a9a0009be": {
   "file": "CD-1-1-Q-CAN-USA-MEX-GBR-DEU-FRA-ITA-JPN-KOR-AUS-S1-B1GQ-G1-d35a9a0009be.gz",
@@ -14,5 +26,9 @@
  "TES-DF-CLI-CAN-USA-MEX-GBR-DEU-FRA-ITA-JPN-KOR-AUS-M-LI-AA-H-009a5813b74d": {
   "file": "TES-DF-CLI-CAN-USA-MEX-GBR-DEU-FRA-ITA-JPN-KOR-AUS-M-LI-AA-H-009a5813b74d.gz",
   "url": "https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_STES@DF_CLI,/CAN+USA+MEX+GBR+DEU+FRA+ITA+JPN+KOR+AUS.M.LI...AA...H?startPeriod=2024-01&dimensionAtObservation=AllDimensions"
+ },
+ "TES-DF-CLI-CAN-USA-MEX-GBR-DEU-FRA-ITA-JPN-KOR-AUS-M-LI-AA-H-7a865697a4ed": {
+  "file": "TES-DF-CLI-CAN-USA-MEX-GBR-DEU-FRA-ITA-JPN-KOR-AUS-M-LI-AA-H-7a865697a4ed.gz",
+  "url": "https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_STES@DF_CLI,/CAN+USA+MEX+GBR+DEU+FRA+ITA+JPN+KOR+AUS.M.LI...AA...H?startPeriod=2026-06&dimensionAtObservation=AllDimensions"
  }
 }

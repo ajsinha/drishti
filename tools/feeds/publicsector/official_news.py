@@ -120,6 +120,7 @@ class OfficialNews(PublicFeed):
         cutoff = (date.fromisoformat(self.as_of) - timedelta(days=keep_days)).isoformat()
         home = Path(state["dir"]) / "history"
         releases, sources, added, failed = [], [], 0, []
+        seen = state.setdefault("seen", {})                  # every release id ever kept, by publisher (bounded): dropped ones stay seen
         for s in self.spec.get("sources") or []:
             if s.get("enabled", True) is False:
                 continue
@@ -135,10 +136,14 @@ class OfficialNews(PublicFeed):
                 kept = {r["URL"]: r for r in json.loads(file.read_text(encoding="utf-8"))}
             except (OSError, ValueError):
                 kept = {}
+            known = seen.setdefault(s["id"], [])
             for it in got or []:
-                if it["link"] not in kept:
+                rid = release_id(s["id"], it["link"])
+                if it["link"] not in kept and rid not in known:
                     added += 1
                     kept[it["link"]] = self._release(s, it)
+                    known.append(rid)
+            del known[:-2000]
             mine = sorted((r for r in kept.values() if (r.get("PUBLISHED") or self.as_of) >= cutoff),
                           key=lambda r: r.get("PUBLISHED") or "", reverse=True)[:keep_n]
             file.parent.mkdir(parents=True, exist_ok=True)

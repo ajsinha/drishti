@@ -13,7 +13,10 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The narrower selection the recorded fixtures were made with (run.py run <feed> --selection this file --record fixtures/): a few
-# countries and series, so the fixtures stay small. The tests, the packs' samples and the browser test read the same recordings.
+# countries and series, so the fixtures stay small. The tests, the packs' samples and the browser test read the same recordings, each
+# recorded on 2026-11-07 for the business date 2026-11-06 (the first pull and the incremental one after it). Two exceptions, said in their
+# index.json: FRED was answered in its API's documented JSON shape from the series' public fredgraph.csv values (no key yet), and each GDELT
+# day is the real file cut to its first 4000 rows.
 world-development:
   countries: [CAN, USA, MEX, BRA, GBR, DEU, IND, CHN, JPN, NGA, ZAF, AUS]
   years: 8

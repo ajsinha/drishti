@@ -3,6 +3,10 @@
   "file": "t1-wds-rest-getDataFromVectorsAndLatestNPeriods-98d7b0d11619.gz",
   "url": "https://www150.statcan.gc.ca/t1/wds/rest/getDataFromVectorsAndLatestNPeriods"
  },
+ "t1-wds-rest-getDataFromVectorsAndLatestNPeriods-a89f27c83417": {
+  "file": "t1-wds-rest-getDataFromVectorsAndLatestNPeriods-a89f27c83417.gz",
+  "url": "https://www150.statcan.gc.ca/t1/wds/rest/getDataFromVectorsAndLatestNPeriods"
+ },
  "t1-wds-rest-getSeriesInfoFromVector-5d887124405a": {
   "file": "t1-wds-rest-getSeriesInfoFromVector-5d887124405a",
   "url": "https://www150.statcan.gc.ca/t1/wds/rest/getSeriesInfoFromVector"

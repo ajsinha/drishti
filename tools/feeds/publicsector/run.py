@@ -76,7 +76,7 @@ def run_one(name: str, a, log=print) -> int:
     limits = spec.get("limits") or {}
     fetch = Fetch(**({"opener": opener} if opener else {}), pause=float(limits.get("pause-seconds", 0.5)),
                   timeout=float(limits.get("timeout-seconds", 90)), log=log)
-    home = Path(a.state_dir) if a.state_dir else data_dir() / "feeds" / name
+    home = (Path(a.state_dir) / name) if a.state_dir else data_dir() / "feeds" / name
     state_file = home / "state.json"
     state = {} if a.full or not state_file.is_file() else json.loads(state_file.read_text(encoding="utf-8"))
     if a.full:
@@ -153,7 +153,7 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--inbox", action="store_true", help="write into the data inbox (<data>/dataload/inbox): the server loads it")
     r.add_argument("--load", action="store_true", help="load into the lake now (drishti.py lake build)")
     r.add_argument("--lake-root", help="with --load: write the lake under this folder (a scratch lake)")
-    r.add_argument("--state-dir", help="the feed's state folder (default <data>/feeds/<feed>)")
+    r.add_argument("--state-dir", help="a folder for the feeds' state, one sub-folder a feed (default <data>/feeds/<feed>)")
     r.add_argument("--full", action="store_true", help="forget the last pull's state: pull the whole selection again")
     r.add_argument("--fixtures", help="answer from recorded responses in this folder (tests): never the network")
     r.add_argument("--record", help="call the network and keep every response in this folder as a fixture")

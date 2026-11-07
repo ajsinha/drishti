@@ -3,6 +3,10 @@
   "file": "AVG-INTWO-BD-CDN-2YR-DQ-YLD-BD-CDN-10YR-DQ-YLD-FXUSDCAD-json-fb80b2594dfa.gz",
   "url": "https://www.bankofcanada.ca/valet/observations/V39079,AVG.INTWO,BD.CDN.2YR.DQ.YLD,BD.CDN.10YR.DQ.YLD,FXUSDCAD/json?start_date=2025-10-02"
  },
+ "AVG-INTWO-BD-CDN-2YR-DQ-YLD-BD-CDN-10YR-DQ-YLD-FXUSDCAD-json-ff5cb27ba4df": {
+  "file": "AVG-INTWO-BD-CDN-2YR-DQ-YLD-BD-CDN-10YR-DQ-YLD-FXUSDCAD-json-ff5cb27ba4df.gz",
+  "url": "https://www.bankofcanada.ca/valet/observations/V39079,AVG.INTWO,BD.CDN.2YR.DQ.YLD,BD.CDN.10YR.DQ.YLD,FXUSDCAD/json?start_date=2026-10-26"
+ },
  "fred-series-1fda9372723d": {
   "file": "fred-series-1fda9372723d",
   "note": "FRED API shape from fredgraph.csv",
@@ -43,6 +47,16 @@
   "note": "FRED API shape from fredgraph.csv",
   "url": "https://api.stlouisfed.org/fred/series?series_id=DFF&api_key=KEY&file_type=json"
  },
+ "fred-series-observations-06e6fd064774": {
+  "file": "fred-series-observations-06e6fd064774",
+  "note": "FRED API shape from fredgraph.csv",
+  "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DFF&api_key=KEY&file_type=json&observation_start=2026-10-26"
+ },
+ "fred-series-observations-11afc1b6faeb": {
+  "file": "fred-series-observations-11afc1b6faeb",
+  "note": "FRED API shape from fredgraph.csv",
+  "url": "https://api.stlouisfed.org/fred/series/observations?series_id=UNRATE&api_key=KEY&file_type=json&observation_start=2026-09-21"
+ },
  "fred-series-observations-2564cce7b98c": {
   "file": "fred-series-observations-2564cce7b98c.gz",
   "note": "FRED API shape from fredgraph.csv",
@@ -52,6 +66,11 @@
   "file": "fred-series-observations-30debf64f177.gz",
   "note": "FRED API shape from fredgraph.csv",
   "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DFF&api_key=KEY&file_type=json&observation_start=2025-10-02"
+ },
+ "fred-series-observations-36e23a509d41": {
+  "file": "fred-series-observations-36e23a509d41",
+  "note": "FRED API shape from fredgraph.csv",
+  "url": "https://api.stlouisfed.org/fred/series/observations?series_id=WALCL&api_key=KEY&file_type=json&observation_start=2026-10-25"
  },
  "fred-series-observations-391f9b0869dd": {
   "file": "fred-series-observations-391f9b0869dd",
@@ -68,6 +87,21 @@
   "note": "FRED API shape from fredgraph.csv",
   "url": "https://api.stlouisfed.org/fred/series/observations?series_id=WALCL&api_key=KEY&file_type=json&observation_start=2025-10-02"
  },
+ "fred-series-observations-5ce116c6e12a": {
+  "file": "fred-series-observations-5ce116c6e12a",
+  "note": "FRED API shape from fredgraph.csv",
+  "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DFEDTARU&api_key=KEY&file_type=json&observation_start=2026-10-28"
+ },
+ "fred-series-observations-75db93ff4958": {
+  "file": "fred-series-observations-75db93ff4958",
+  "note": "FRED API shape from fredgraph.csv",
+  "url": "https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=KEY&file_type=json&observation_start=2026-08-22"
+ },
+ "fred-series-observations-911ffc80382a": {
+  "file": "fred-series-observations-911ffc80382a",
+  "note": "FRED API shape from fredgraph.csv",
+  "url": "https://api.stlouisfed.org/fred/series/observations?series_id=T10Y2Y&api_key=KEY&file_type=json&observation_start=2026-10-27"
+ },
  "fred-series-observations-a2c1032a1481": {
   "file": "fred-series-observations-a2c1032a1481",
   "note": "FRED API shape from fredgraph.csv",
@@ -77,6 +111,16 @@
   "file": "fred-series-observations-a55bae1aabd5.gz",
   "note": "FRED API shape from fredgraph.csv",
   "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DFEDTARU&api_key=KEY&file_type=json&observation_start=2025-10-02"
+ },
+ "fred-series-observations-ad91061bf8fc": {
+  "file": "fred-series-observations-ad91061bf8fc",
+  "note": "FRED API shape from fredgraph.csv",
+  "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DGS2&api_key=KEY&file_type=json&observation_start=2026-10-26"
+ },
+ "fred-series-observations-c64a416beb85": {
+  "file": "fred-series-observations-c64a416beb85",
+  "note": "FRED API shape from fredgraph.csv",
+  "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=KEY&file_type=json&observation_start=2026-10-26"
  },
  "fred-series-observations-ed5cb552855d": {
   "file": "fred-series-observations-ed5cb552855d.gz",

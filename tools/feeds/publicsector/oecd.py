@@ -39,7 +39,11 @@ def parse_sdmx(msg: dict) -> list[dict]:
             idx = [int(i) for i in key.split(":")]
             row = {}
             for d, i in zip(dims, idx):
-                v = (d.get("values") or [])[i]
+                values = d.get("values") or []
+                if i >= len(values):
+                    row = {}
+                    break                                   # an index the structure does not list: not an observation we can name
+                v = values[i]
                 row[d["id"]] = (v.get("id"), v.get("name") or (v.get("names") or {}).get("en"))
             value = number(vals[0] if vals else None)
             if value is not None and "TIME_PERIOD" in row:
