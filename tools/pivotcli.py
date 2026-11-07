@@ -286,15 +286,18 @@ def register(groups, srv, ctx: dict) -> None:
             res = api.json("GET", "/api/v1/pivot/mr/versions")
         else:
             q = {"scope": a.scope or "BANK"}
-            if w == "explain":
+            if w == "explain":                           # a cell's move: the one Explain of its VaR (kind var), Why it moved
                 q.update({k: v for k, v in (("from", a.from_), ("to", a.to)) if v})
-                path = "/api/v1/pivot/mr/explain?"
+                q.update(kind="var", part="why")
+                path = "/api/v1/explain?"
             else:
                 q.update({k: v for k, v in (("grid", a.grid), ("asOf", a.date)) if v})
                 if w == "heat":
                     q["by"] = a.by or "QUALIFIER,TENOR"
                 path = "/api/v1/pivot/mr/sensitivities?"
             res = api.json("GET", path + urllib.parse.urlencode(q))
+            if w == "explain":
+                res = (res.get("why") or {}).get("answer", {})
         if a.json or w in ("versions", "ladder", "heat", "explain"):
             say_json(res)
         elif w == "headline":

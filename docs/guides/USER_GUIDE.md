@@ -330,8 +330,8 @@ says it equals the engine to the cent. On a phone: the headline and the explanat
 **The VaR page's layout.** The hierarchy tree is on the left (click **▸** to open a node, its name to see its VaR); the toolbar above
 the figures has two searchable drop-downs, **System baskets** (key **B**: the bank's portfolios) and **My baskets** (key **M**: the
 baskets you saved and those shared with you), where you type to search by name or description, move with ↑ ↓ and open with Enter;
-**How calculated ›** (key **H**) slides *How this number was built* in from the right, **Esc** closes it, and the link keeps it open
-(`&how=1`) ([VAR_GUIDE.md section 3.2](VAR_GUIDE.md#32-the-screen)).
+**Explain ›** (key **E**) opens the Explain drawer of the scope's VaR ([Explain: one for every number](#explain-one-for-every-number);
+[VAR_GUIDE.md section 3.2](VAR_GUIDE.md#32-the-screen)).
 
 **Construct your basket.** On the VaR page, **+ New basket** in the toolbar (or `Alt+B`) opens the basket's sheet across its top, one
 sheet like Excel: the VaR of any mix of trades, positions, portfolios, books, desks, limit letters and counterparties, a column per kind
@@ -357,7 +357,7 @@ largest by gross size); totals are over all 18,567*. The **Total** row, the sum 
 over every position ([VAR_GUIDE.md section 27a](VAR_GUIDE.md#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales)).
 
 **One year or two; 99% or 95%.** The page's labels say the confidence the figures are at (*VaR 95% · 1 day* when the
-server is set to 95%), and *How this number was built* says the scenario window (*newest 250 of 509 scenarios*);
+server is set to 95%), and Explain's *Inputs & lineage* says the scenario window (*newest 250 of 509 scenarios*);
 `drishti.py var show BANK --window 250 --confidence 0.95` compares on the command line, never official.
 
 **The top of the tree.** The VaR tree's top node shows the hierarchy data's name (*Drishti Bank* in the demo); an administrator
@@ -371,7 +371,7 @@ follow it, and the link keeps it (`&hierarchy=LL`); a letter's limit bar reads i
 the scope box (`LL:LL-0003`, `LL:LL-0003/DESK-RATES`) or search for it. Which hierarchies exist, and from which columns, is set by an
 administrator ([VAR_GUIDE.md section 15.14](VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns)).
 
-**Any form, any grain.** *How this number was built* says, per source system, whether its figures came as scenario PVs or P&L
+**Any form, any grain.** Explain's *Inputs & lineage* says, per source system, whether its figures came as scenario PVs or P&L
 vectors, per trade or per position. A position its system sends whole answers `POS:<id>`; its trades have no VaR of their own on that
 date (the trade page says so and links the position).
 
@@ -1469,9 +1469,10 @@ stays compact as its values change, and a panel under *More* starts ticking once
 - **Turning the phone** sideways redraws the page for the new width once. A desktop is never changed.
 
 **The VaR and exposure pages and Home.** The same tiers apply. On the VaR page the headline tiles and the method line come first, then
-the distribution of scenario P&L; the worst scenarios, the path, the history, contributions, captures, other currencies, the scope tree
-and *How this number was built* wait under *More on this page* (a tap opens that tab); *What-if* and *Construct your basket* are for the
-desktop. On the exposure page the tiles come first, then the profile; the tabs, the scope tree and the provenance wait under *More*. An
+the distribution of scenario P&L; the worst scenarios, the path, the history, contributions, captures, other currencies and the scope tree
+wait under *More on this page* (a tap opens that tab); a tap on a tile opens its Explain as a sheet from the bottom; *What-if* and
+*Construct your basket* are for the desktop. On the exposure page the tiles come first, then the profile; the tabs and the scope tree wait
+under *More*. An
 edition's Home keeps its command line, its tiles and its first card; other tables show five rows with *Show all*; charts, maps and the
 quick links wait under *More*.
 
@@ -1763,6 +1764,34 @@ to the page, so Drishti copies from that field instead (and says *Select the lin
 **When there is nothing to show** the page says why and offers today's view: an unknown entity (`DRS-1001`), a kind that keeps no daily
 history here (`DRS-1012`), no data in the range (`DRS-1013`), a range larger than allowed (`DRS-4021`, with a link to the last 30 days)
 or one that cannot hold (`FROM` after `TO`).
+
+## Explain: one for every number
+
+Every computed number has one **Explain**, the same on every screen: the VaR and ES tiles and the parametric figures of the VaR page, the
+exposure page's tiles, a cell of the MR cube. Numbers that can be explained are underlined with dots.
+
+- **Preview.** Hover the number (or focus it and press **?**): a small card with the answer in one line (*the 6th worst of 509 scenario
+  P&Ls (2026-07-16)*), a few facts and links to the four parts.
+- **The drawer.** Click the number (or focus it and press **E**; on the VaR and exposure pages **E** and **Explain ›** open the page's
+  main figure): a drawer on the right, the page still visible, with four tabs:
+  - **Formula**: the formula with the actual values (*k = ceil(509 × (1 − 0.99)) = 6*, the k-th worst scenario and its P&L), and the
+    number as the Pivot, BI and Sutras name it (`var()`);
+  - **Inputs & lineage**: what it was computed from: the scope as resolved, the positions and trades, those outside your view (counted,
+    never named), the method, the engine, and the lineage: every input table's data version on the date, the batches, the scenario set;
+  - **Why it moved**: since the previous business date (or the dates you choose), steps that add up exactly to the change, each with
+    who drove it, in views (Waterfall, Matrix, Sentences for VaR);
+  - **Workbook**: the live-formula Excel (the explanation's workbook, the playground's export) where one exists.
+  Under the tabs, the **checks** (inputs complete; a check not built yet is marked *Under construction*). **Esc** or **✕** closes it and
+  the focus goes back to the number. On a phone the drawer is a sheet from the bottom.
+- **The page.** **Open as a page ›** shows all four parts at once, for an auditor or for printing (**Print**); its address names the
+  number (`/explain?kind=var&measure=es&scope=DESK:RATES`), so it can be sent. `VAR EXPLAIN <scope> [from] [to]` opens it at Why it moved.
+
+Everything is computed and explained by the server for you, with your entitlements: an explanation never shows a row or an input you may
+not see (a restricted person is told how many trades are outside the view, never which). A stored figure says it is stored. A part that is
+not built yet for a kind of number says so (*Under construction*, and the release that builds it). The kinds explained today are VaR, ES,
+parametric VaR and ES, the fat-tail gap (kind `var`), the exposure figures (peak PFE, CE, EPE, EEPE, peak EE, EAD: kind `exposure`) and a
+pivot cell's move (kind `pivot`); `GET /api/v1/explain/kinds` lists them on your server
+([API_GUIDE.md, "Explain"](API_GUIDE.md#explain-any-number)).
 
 ## How fresh is it
 

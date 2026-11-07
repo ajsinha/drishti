@@ -26,7 +26,7 @@ an old id (``VAR VAR-COMM``, ``/v/var/VAR-COMM``, ``/v/var-node/VN-MGMT~DESK-RAT
 from __future__ import annotations
 
 import re
-from urllib.parse import quote
+from urllib.parse import parse_qs, quote, urlsplit
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response
@@ -134,7 +134,7 @@ def var_command(words: list[str], user: str) -> str | None:
     ``set``."""
     if words and words[-1].upper() == "<GO>":
         words = words[:-1]
-    if (why := explain_command(words, user)) is not None:     # VAR EXPLAIN <scope> [from] [to]: the page's Why it moved tab (2.9.10)
+    if (why := explain_command(words, user)) is not None:     # VAR EXPLAIN <scope> [from] [to]: the one Explain's page, Why it moved
         return why
     from routes.var_regulatory_routes import regulatory_command      # VAR BANK BACKTEST, VAR BANK STATS FY2026, VAR REPORT <report> <period>
     if (reg := regulatory_command(words)) is not None:
@@ -157,9 +157,9 @@ DAY = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def explain_command(words: list[str], user: str) -> str | None:
-    """Where ``VAR EXPLAIN <scope> [from] [to]`` (or ``VAR <scope> EXPLAIN [from] [to]``) goes: the VaR page at the scope on its
-    **Why it moved** tab (VAR_GUIDE.md section 3.11), the dates in the link (``efrom``, ``eto``); no scope: the bank. None when the
-    command does not ask for the explanation."""
+    """Where ``VAR EXPLAIN <scope> [from] [to]`` (or ``VAR <scope> EXPLAIN [from] [to]``) goes: the one Explain's page of the scope's VaR
+    (``/explain?kind=var``, SHARED_SCREENS.md section 3) at **Why it moved** (VAR_GUIDE.md section 3.11), the dates in the link (``from``,
+    ``to``); no scope: the bank. None when the command does not ask for the explanation."""
     w = [x for x in words if x.upper() != "<GO>"]
     if len(w) < 2 or w[0].upper() != "VAR":
         return None
@@ -174,15 +174,16 @@ def explain_command(words: list[str], user: str) -> str | None:
     else:
         return None
     if len(rest) == 1 and ":" in rest[0]:
-        where = f"/var?scope={quote(rest[0])}"
+        scope = rest[0]
     else:
         where = _var_where(["VAR"] + (rest or ["BANK"]), user)
-    if not where:
-        return None
-    where += "&tab=why"
+        if not where:
+            return None
+        scope = (parse_qs(urlsplit(where).query).get("scope") or ["BANK"])[0]
+    out = "/explain?kind=var&measure=var&scope=" + quote(scope)
     if dates:
-        where += "&efrom=" + dates[0] + ("&eto=" + dates[1] if len(dates) > 1 else "")
-    return where
+        out += "&from=" + dates[0] + ("&to=" + dates[1] if len(dates) > 1 else "")
+    return out + "&tab=why"
 
 
 def var_suggestions(q: str) -> list[dict]:
@@ -286,24 +287,13 @@ def lens_of(request: Request, h: str, m: str, q: str, esq: str, set_: str = "") 
             "esq": pick(esq, saved.get("esq"), _Q), "set": pick(set_, saved.get("set"), _SET)}
 
 
-#: the VaR page's tabs a link may open (tab=why: Why it moved, 2.9.10) and the views of Why it moved
-TABS = ("path", "hist", "contrib", "captures", "ccy", "why")
-EXPLAIN_VIEWS = ("waterfall", "matrix", "sentences")
-
-
-def explain_view(request: Request, view: str) -> str:
-    """The Why it moved view: the link's (``view=``), else the one the person chose last (their settings' ``varExplainView``), else
-    Waterfall."""
-    v = (view or "").strip().lower()
-    if v in EXPLAIN_VIEWS:
-        return v
-    saved = str((getattr(request.state, "settings", None) or {}).get("varExplainView") or "")
-    return saved if saved in EXPLAIN_VIEWS else "waterfall"
+#: the VaR page's tabs a link may open (why it moved is the one Explain's: VAR EXPLAIN, /explain?kind=var)
+TABS = ("path", "hist", "contrib", "captures", "ccy")
 
 
 @router.get("/var")
 async def page(request: Request, scope: str = "", capture: str = "", hierarchy: str = "MGMT", ccy: str = "", h: str = "", m: str = "",
-               q: str = "", esq: str = "", set: str = "", tab: str = "", view: str = "", pm: str = ""):  # noqa: A002 (the link's word)
+               q: str = "", esq: str = "", set: str = "", tab: str = "", pm: str = ""):  # noqa: A002 (the link's word)
     """The explorer's shell; its panels load in place (no full-page reload when drilling). ``ccy`` is the page's reporting currency
     (none: the one chosen earlier in the session, else USD); ``hierarchy`` the tree shown (MGMT, LEGAL, LL: any configured one); ``h``,
     ``m``, ``q``, ``esq``, ``set`` the lens (horizon, 10-day method, confidences, Normal or Stressed; none: the person's last choice, else
@@ -311,7 +301,7 @@ async def page(request: Request, scope: str = "", capture: str = "", hierarchy: 
     me = getattr(request.state, "identity", None)
     return render(request, "terminal/var.html", scope=scope or "BANK", capture=capture, hierarchy=hierarchy_of(hierarchy),
                   user=(me.user if me else "") or "", admin=bool(me and me.is_admin), screen="var", ccy=ccy.upper() if CCY.match(ccy or "") else "",
-                  lens=lens_of(request, h, m, q, esq, set), tab=tab if tab in TABS else "path", explain_view=explain_view(request, view),
+                  lens=lens_of(request, h, m, q, esq, set), tab=tab if tab in TABS else "path",
                   parametric_mode=pm == "1", mr_cube=_mr_cube_door(request))
 
 
@@ -328,9 +318,7 @@ _GETS = {"scope": ("scope", "parametric"), "hints": ("q", "limit"), "scope/path"
          "compare": ("a", "b"), "status": (), "official": (), "scope/currencies": ("scope",), "currencies": (),
          "intraday/streams": (), "basket/sheet": ("scope",),         # a scope laid into the basket sheet (a basket, a portfolio's copy)
          # the stress window selection (VAR_GUIDE.md section 18.9): the analysis of a node and the frozen proposals
-         "stress-window": ("scope", "hierarchy", "length", "confidence"), "stress-window/proposals": ("limit",),
-         # why it moved (VAR_GUIDE.md section 3.11): the explanation between two business dates and its Matrix view
-         "explain": ("scope", "from", "to", "confidence"), "explain/matrix": ("scope", "from", "to", "confidence")}
+         "stress-window": ("scope", "hierarchy", "length", "confidence"), "stress-window/proposals": ("limit",)}
 #: the answers that take a lens (2.9.7, VAR_GUIDE.md section 18.6), and its parameters as the engine names them
 LENS_PATHS = ("scope", "scope/path", "scope/history", "scope/contributions", "scope/currencies", "tree")
 LENS_PARAMS = ("horizon", "method", "confidence", "esConfidence", "set")
@@ -344,7 +332,8 @@ PROPOSAL = re.compile(r"^stress-window/proposals/SWP-[0-9]{1,12}$")
 
 @router.get("/api/var/explain.xlsx")
 async def explain_workbook(request: Request):
-    """Why it moved as a workbook of formulas (VAR_GUIDE.md section 3.11), streamed from the server as the person."""
+    """Why it moved as a workbook of formulas (VAR_GUIDE.md section 3.11; the Explain drawer's Workbook), streamed from the server as
+    the person."""
     from routes.play_routes import _stream
     q = request.query_params
     p = {k: q[k] for k in ("scope", "from", "to", "confidence") if q.get(k)}

@@ -378,6 +378,14 @@ class BackendClient:
         sent as a repeated parameter (``override``). The netting-set list computes every netting set of the date: this waits up to a minute."""
         return await self._send(method, path, ident, params={k: v for k, v in params.items() if v not in (None, "", [])}, timeout=60.0)
 
+    async def explain(self, method: str, path: str, ident, body=None, **params) -> Any:
+        """One Explain for every number (/api/v1/explain, docs/architecture/SHARED_SCREENS.md section 3), as the user. ``path`` starts after
+        /api/v1/explain (``""`` or ``/kinds``). Why it moved reads two business dates: this waits up to two minutes."""
+        kw: dict[str, Any] = {"params": {k: v for k, v in params.items() if v not in (None, "")}, "timeout": 120.0}
+        if body is not None:
+            kw["json"] = body
+        return await self._send(method, "/explain" + path, ident, **kw)
+
     async def pivot(self, method: str, path: str, ident, body=None, raw: bool = False, **params) -> Any:
         """The pivot engine (/api/v1/pivot, docs/guides/PIVOT_GUIDE.md), as the user. ``path`` starts after /api/v1/pivot (``/query``);
         ``raw`` returns the bytes and headers of an export. A table's first pivot reads it through its connector: this waits up to two

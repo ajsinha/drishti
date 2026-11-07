@@ -295,6 +295,7 @@ def create_app(settings: Settings) -> FastAPI:
     from routes import edition_routes, trading_routes
     from routes import data_out_routes
     from routes import render_routes
+    from routes import explain_routes
     from routes import admin_commands_routes, admin_engines_routes, artifact_routes, changes_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, phone_routes, lake_maint_routes, lake_routes, net_routes, play_routes, frtb_routes, simm_routes, smat_routes, var_regulatory_routes, var_routes
 
     def _lake_schedules(app):
@@ -631,6 +632,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(artifact_routes.router)
     app.include_router(lake_routes.router)
     app.include_router(net_routes.router)
+    app.include_router(explain_routes.router)          # Explain: one for every number, the preview, the drawer and the page (SHARED_SCREENS.md 3)
     app.include_router(lake_maint_routes.router)
     app.include_router(form_routes.router)
     app.include_router(ai_routes.router)

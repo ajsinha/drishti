@@ -351,7 +351,8 @@ set says so in place of the figures.
 
 Two columns and a toolbar, as the approved mock-up (`docs/lenses/mockups/var-layout/A.html`, and `A-drawer.html` with the drawer open):
 
-- **The toolbar** (under the status line): two searchable drop-downs for the baskets, **+ New basket**, **Backtest ›** and **How calculated ›**.
+- **The toolbar** (under the status line): two searchable drop-downs for the baskets, **+ New basket**, **Backtest ›**, **What-if…** and
+  **Explain ›**.
   - **Backtest ›** opens the regulatory backtest of the scope in view, on the date in view (the same page as `VAR <scope> BACKTEST`,
     [REGULATORY_VAR_REPORTING.md section 4.6](REGULATORY_VAR_REPORTING.md#46-backtesting)): its VaR against the P&L of the last 250
     business days, the exceptions and the zone.
@@ -368,8 +369,9 @@ Two columns and a toolbar, as the approved mock-up (`docs/lenses/mockups/var-lay
   - **+ New basket** (also **Alt+B**; the count of the parts your sheet holds beside it) opens **Construct your basket**, the sheet,
     across the top of the page ([section 3.5](#35-construct-your-basket)). The sheet is collapsed when the page opens; once you save, the
     new basket is in My baskets and the sheet collapses again.
-  - **How calculated ›** (key **H**) opens **How this number was built** as a drawer over the right of the screen
-    ([section 3.6](#36-how-this-number-was-built)).
+  - **Explain ›** (key **E**) opens the Explain drawer of the scope's VaR over the right of the screen: the formula with its values,
+    how the number was built, why it moved and the workbook ([section 3.6](#36-how-this-number-was-built)). Every figure tile has its
+    own: hover it for a one-line preview, click it for the drawer.
 - **Scopes** (left): the hierarchy chosen in the selector above it (Management: bank, division, desk, book; Legal entities: bank, legal
   entity, desk, book; and every configured hierarchy by its title, such as *Limit letters*: letter, desk; the choice kept
   in the link as `hierarchy=LL`; a hierarchy skipped on the date because its column is not in the data is listed *(not available)*,
@@ -557,19 +559,21 @@ owner's inbox; [OPERATIONS.md](../admin/OPERATIONS.md#9b-2-deleting-peoples-var-
 
 ### 3.6 How this number was built
 
-**How calculated ›** in the toolbar (or the key **H**) slides a drawer over the right of the screen; **Esc** or **✕** closes it and
-the focus goes back to the link. The drawer's state is in the page's link (`&how=1`), so a link can open the page with it open. Its
-content is the server's, as sent with the scope's answer (the browser computes nothing), with **Export CSV** (the scope's path),
-**Capture VaR** and **What-if…** (which closes the drawer and opens the basket's sheet). It starts under the top bar, so the command
-line and the bar's menus stay in reach. On a phone it rises from the bottom.
-
-![How calculated open on the bank: the drawer under the top bar, over the right of the screen](img/var/18-how-calculated.jpg)
+How a VaR figure was built is the **Explain** drawer's tab **Inputs & lineage** (the one Explain of every number,
+[USER_GUIDE.md, "Explain: one for every number"](USER_GUIDE.md#explain-one-for-every-number)): **Explain ›** in the toolbar (or the key
+**E**), or a click on the VaR or ES tile, slides the drawer over the right of the screen; **Esc** or **✕** closes it and the focus goes
+back to where it was. It starts under the top bar, so the command line and the bar's menus stay in reach; on a phone it rises from the
+bottom. Its four tabs are the same on every screen: **Formula** (the rank rule with the scope's numbers: N, k, the k-th worst scenario
+and its P&L), **Inputs & lineage** (below), **Why it moved** ([section 3.11](#311-why-it-moved-the-var-change-explained)) and
+**Workbook** (the explanation's .xlsx and the VaR Playground). **Open as a page** shows all four at once, for an auditor or for printing
+(`/explain?kind=var&scope=…`). Everything is the server's, computed for you (the browser computes nothing).
 
 The scope as resolved, the positions and trades included, those without a vector, those outside your entitlement, unknown ids, the
 vector batch and data version, the scenario set and its window, the method and rank rule, the ES rule, how components are allocated,
 the engine and its threads, your view, **the tier** the vector came from (a node's float64 aggregate, the date's memory-mapped hot file,
 or memory: [section 26](#26-the-tiered-memory-and-the-hot-file)), the members' hash, the time taken and whether the cache answered. The
-fields are those of the answer's provenance ([section 11.2](#112-the-headline-get-scope-and-its-provenance)).
+fields are those of the answer's provenance ([section 11.2](#112-the-headline-get-scope-and-its-provenance)); the lineage lists every input
+table's data version on the date, the batches and the scenario set.
 
 ![How this number was built: the rates desk without one book, from the hot file](img/var/08-provenance.jpg)
 
@@ -618,8 +622,8 @@ Opening a trade page never waits for the engines to load a date: until they have
 
 ### 3.8 On a phone
 
-The panels stack, with no sideways scrolling; the two basket drop-downs are full width, and *How this number was built* is a sheet that
-rises from the bottom (How calculated, or *More on this page*):
+The panels stack, with no sideways scrolling; the two basket drop-downs are full width, and the Explain drawer is a sheet that rises
+from the bottom (Explain ›, or a tap on a tile):
 
 ![The explorer on a 390 px phone](img/var/11-phone.jpg)
 
@@ -793,8 +797,9 @@ From the command line: `drishti.py var playground <scope> [--ids ...] [--xlsx FI
 ### 3.11 Why it moved: the VaR change explained
 
 VaR moved from one business date to the next; **Why it moved** says why, in causes that **add up exactly** to the change, and who drove
-each one. It is a tab of the VaR page beside the others (`VAR EXPLAIN <scope> <GO>`, or `VAR <scope> EXPLAIN`), it answers any scope the
-page answers (a node, a portfolio, a basket, an ad-hoc scope), and by default it compares the business date before the newest with the
+each one. It is the **Why it moved** tab of the VaR figure's Explain (the drawer, or the page `VAR EXPLAIN <scope> <GO>`, or
+`VAR <scope> EXPLAIN [from] [to]`, opens), in three views (**Waterfall**, **Matrix**: the scope and each child node, the steps across,
+and **Sentences**) with the two dates to compare; it answers any scope the page answers (a node, a portfolio, a basket, an ad-hoc scope), and by default it compares the business date before the newest with the
 newest. The design and its reasoning are in [OVERSIGHT_LENS.md section 4.1](../lenses/OVERSIGHT_LENS.md#41-ro1-var-change-explanation).
 
 **In plain words.** Drishti moves **one thing at a time** from yesterday's state to today's (the corrections to yesterday's data, the
@@ -915,7 +920,7 @@ book moved in (+10); the new trade C offset 11. The newest day became the worst 
 
 **On the demo data.** The test data holds three business dates, 2026-09-28 to 2026-09-30 ([section 22.1](#221-what-the-repository-ships-verified-2026-10-25-version-13)),
 so the tab compares 2026-09-29 with 2026-09-30 by default. The engine's answers (99%, 1-day, the default order; `GET
-/api/v1/var/explain` on a lake built with `lake demo --as-of data`), USD:
+/api/v1/explain?kind=var&part=why` on a lake built with `lake demo --as-of data`), USD:
 
 | Step | BANK 2026-09-29 → 09-30 | BANK 2026-09-28 → 09-29 | DESK:CREDIT 09-28 → 09-29 | DESK:FI 09-28 → 09-29 |
 |---|---|---|---|---|
@@ -958,7 +963,7 @@ VaR 2026-09-30                         55
 change                                +35  the steps add up: yes
 ```
 
-**The working as a workbook.** *Download the working (.xlsx)* (`drishti.py var explain <scope> --xlsx FILE`, `GET
+**The working as a workbook.** The Explain drawer's **Workbook** tab (`drishti.py var explain <scope> --xlsx FILE`, `GET
 /api/v1/var/explain.xlsx`) writes the explanation on the VaR Playground's frame ([section 3.10](#310-the-var-playground-play-var)): **Main**
 (the inputs Confidence and RankRule; each state's VaR worked from its column, N, k, the VaR scenario's date, the engine's VaR beside it and
 a check; each step as the difference of two state cells beside the engine's; the add-up check; the last state checked against the later
@@ -971,8 +976,9 @@ formula over the state before it and Data, and its ranks), **Drivers** (the engi
 **Settings** (`drishti.var.explain.*`, [section 12](#12-settings)): `enabled` (true), `order`, `window-lines` (`two`, or `one` window-roll
 line), `split-amendments` (true), `top` (10), `drivers-max` (2,000 trades per step whose incremental VaR is computed, the largest by their
 share of the state's tail), `cache-minutes` (10: answers are kept, never stored), `cache-mb` (32, weighed in bytes) and `matrix-max` (60
-child nodes). The API: `GET /api/v1/var/explain`, `/explain/matrix` and `/explain.xlsx` ([section 11.1](#111-the-endpoints)); the same
-entitlements as the scope's VaR (a scope is resolved as you on each date).
+child nodes). The API: `GET /api/v1/explain?kind=var&scope=…&from=…&to=…&part=why` (`view=matrix` for the Matrix view;
+[API_GUIDE.md, "Explain"](API_GUIDE.md#explain-any-number)) and `GET /api/v1/var/explain.xlsx` ([section 11.1](#111-the-endpoints)); the
+same entitlements as the scope's VaR (a scope is resolved as you on each date).
 
 ### 3.12 Parametric VaR beside historical (PVAR)
 
@@ -991,12 +997,13 @@ With the toggle on:
 | **The tree** | the **Parametric** and **Gap** columns beside each node's VaR, ES and limit |
 | **The P&L path** | the **normal curve** over the histogram, the historical marker (solid) and the parametric one (dashed), both tails lightly shaded and the gap bracket between the markers |
 
-**The ? on every parametric figure** (a tile, a tree cell, the curve) opens the server's own lines: the method, the window, the
-weighting, the confidence and z, the horizon, n, μ and σ, the formula with the scope's numbers, ES, historical VaR beside it and the gap
-with its reading. Every number comes from the answer (the browser computes nothing); on a phone it is a bottom sheet.
+**The ? on every parametric figure** (a tile, a tree cell) is its Explain: hover it for the preview, click it for the drawer, whose
+**Formula** is the server's own lines: the method, the window, the weighting, the confidence and z, the horizon, n, μ and σ, the formula
+with the scope's numbers, ES, historical VaR beside it and the gap with its reading. Every number comes from the answer (the browser
+computes nothing); on a phone the drawer is a bottom sheet.
 
 **The Normal curve toggle** (key **N**) hides the curve, the parametric marker, its tail and the gap bracket; the choice is remembered
-for you and in the link (`nc=0`). **Worked in the playground** (and the ? popovers' foot) opens the VaR Playground's **Parametric tab**
+for you and in the link (`nc=0`). **Worked in the playground** (and the Explain drawer's Workbook tab) opens the VaR Playground's **Parametric tab**
 on the scope ([section 3.10](#310-the-var-playground-play-var)): the figures, the steps, each position's μᵢ, σᵢ, cov(Pᵢ, P), ρᵢ and the
 Euler components that add up to the parametric VaR, and the workbook's Parametric tab. The MR cube and the pivot offer `pvar()` beside
 `var()` and `comp_var()`. [Tutorial 43](../tutorials/43-parametric-var-beside-historical.md) walks through it on the demo data.
@@ -1243,7 +1250,7 @@ more than 20,000 rows are refused in words (`400`, `413`); a role that may not n
 
 ## 6. Captures and compare
 
-**Capture VaR** (in the *How calculated* drawer, or the *Captured results* tab with a note) stores an immutable record of the answer as it is now:
+**Capture VaR** (the *Captured results* tab, with a note) stores an immutable record of the answer as it is now:
 
 - the numbers: VaR, ES, the rank rule, each part's component VaR, the 25 worst scenarios, and the full vector (whole dollars);
 - the members: the trades the scope resolved to;
@@ -1845,9 +1852,7 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 | `GET /playground/estimate` | `scope` or `ids`, `asOf`, `ccy`, `set` | the export's choices for the scope: `positions`, `layout`, `columns`, `rows`, `cells`, `formulas`, `bytes`, `size`, `recalc`, `apps`, `refused` (why it cannot be made) |
 | `GET /playground.xlsx` | as `/playground`, and `count` (`100`, `500` the default, `1000`, `10000`, `all`) | the workbook, streamed (`X-Drishti-Positions`, `X-Drishti-Estimated-Bytes`); a size no application opens, or above `playground.export-max-cells`: `400` in words before a byte is sent |
 | `GET /playground/template` | `positions` (10; 1 to 500), `scenarios` (509; 20 to 5,000) | the empty workbook: every formula in place, to paste PVs into and recalculate offline |
-| `GET /explain` | `scope`, `from`, `to` (business dates; none: the one before the newest, and the newest), `confidence`, `method` (`sequence`; `shapley` answers 400: planned) | why VaR moved ([section 3.11](#311-why-it-moved-the-var-change-explained)): the states (trades, vectors, days, VaR, the VaR scenario), the steps with their drivers, the display lines, the order used, the order-free view, the limit-use line, the sentences, `change`, `sumOfSteps` and `addsUp` |
-| `GET /explain/matrix` | `scope`, `from`, `to`, `confidence` | the Matrix view: the scope and each child node with every step |
-| `GET /explain.xlsx` | `scope`, `from`, `to`, `confidence` | the explanation as a workbook of formulas, checked against the engine |
+| `GET /explain.xlsx` | `scope`, `from`, `to`, `confidence` | why VaR moved as a workbook of formulas, checked against the engine (the explanation itself: `GET /api/v1/explain?kind=var`, [API_GUIDE.md, "Explain"](API_GUIDE.md#explain-any-number)) |
 
 ```
 GET  /api/v1/var/scope?scope=DESK:DESK-RATES               headline, ancestors, backtest summary, provenance
@@ -2803,7 +2808,7 @@ already folded into the vector, so `inputsBySystem.<system>.tradesWithoutPv` cou
 
 **Visibility.** Every answer's provenance carries `inputsBySystem`: per source system on the date, `form`, `grain`, `rows`,
 `decidedBy` (*record fields*, or *record fields, agreeing with the pin pv, position*) and `tradesWithoutPv`; `GET /api/v1/var/status`
-lists it per loaded date; the VaR page shows it in *How this number was built*.
+lists it per loaded date; the VaR page shows it in the Explain drawer's *Inputs & lineage*.
 
 **Files without the fields.** The fields are required on every PV or vector record: a file without them is refused (`DRS-5208`). `drishti.py var convert
 FILE --set VALUE_TYPE=PNL --set GRAIN=TRADE --set CURRENCY=USD --set SOURCE_SYSTEM=MUREX` adds them (`--infer` takes `VALUE_TYPE` from

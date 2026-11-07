@@ -21,7 +21,7 @@
    entity or a group, the netting sets' contributions and the pre-deal what-if (into a netting set it picks) at a counterparty, the netting-set workbench (collateral, trades, pre-deal) at a
    netting set, the trade in its netting set at a trade; By tenor and Captures everywhere. Every view is a command (EXP <scope>) and a
    URL (/exposure?scope=...), so links, the command line and F1 work. The time from a click to the painted headline is kept on the root
-   element (data-paint-ms) for the tests. */
+   element (data-paint-ms) for the tests. How a figure was built is the one Explain's (drishti_explain.js): hover a tile, click it, or Explain ›. */
 (function () {
   "use strict";
   var root = document.querySelector("[data-exposure]");
@@ -149,7 +149,7 @@
       if (seq !== S.seq) return;
       S.head = d;
       $("[data-xx-nopaths]").hidden = true;
-      ["[data-xx-tiles]", ".xx-chartbox", "[data-xx-prov-box]"].forEach(function (s) { $(s).hidden = false; });
+      ["[data-xx-tiles]", ".xx-chartbox", "[data-xx-actions]"].forEach(function (s) { $(s).hidden = false; });
       $("[data-xx-tabs]").parentNode.hidden = false;
       noticeRetired(d);
       renderHead(d);
@@ -191,7 +191,7 @@
     box.appendChild(h("b", null, message.replace(/^DRS-\d{4} /, "")));
     box.appendChild(h("p", "xx-note after", "The exposure engine computes from the day's simulated paths. When the upstream run covers this "
       + "scope its figures appear here; until then nothing is shown, never an old figure."));
-    ["[data-xx-tiles]", ".xx-chartbox", "[data-xx-prov-box]"].forEach(function (s) { $(s).hidden = true; });
+    ["[data-xx-tiles]", ".xx-chartbox", "[data-xx-actions]"].forEach(function (s) { $(s).hidden = true; });
     $("[data-xx-tabs]").parentNode.hidden = true;
     root.dataset.noPaths = scope;
   }
@@ -238,7 +238,7 @@
     });
     renderCrumb(d);
     renderChart(d);
-    renderProv(d);
+    bindExplain(d);
     var csv = $("[data-xx-csv]");
     csv.href = "/api/exposure/scope/profile?" + query({ scope: d.canonical, format: "csv" });
     var jl = $("[data-xx-jsonl]");
@@ -332,18 +332,20 @@
     }
   }
 
-  function renderProv(d) {
-    var p = d.provenance || {}, dl = $("[data-xx-prov]");
-    dl.textContent = "";
-    [["Scope", d.kind + " · " + d.canonical], ["Resolved", (p.resolved || []).join("; ") || p.scope],
-      ["Netting sets", int(p.nettingSets) + " (" + int(p.wholeSets) + " whole, " + int(p.partialSets) + " cut)"], ["Trades", int(p.trades)],
-      ["Outside your view", p.hiddenSets ? int(p.hiddenSets) + " netting sets, " + int(p.hiddenTrades) + " trades" : "none"],
-      ["Run", p.runId + " · " + p.model + " " + (p.modelVersion || "") + " · seed " + p.seed], ["Calibration", p.calibration + " · " + p.valueBasis + " · " + p.precision],
-      ["Grid", int(p.gridDates) + " dates (" + int(p.primaryDates) + " primary), look-back " + p.lookbackDays + " business days"],
-      ["Method", p.method], ["Contributions", p.contributions], ["Flags", (d.flags || []).join(", ") || "none"],
-      ["Warnings", (p.warnings || []).join("; ") || "none"], ["Tier", p.tier], ["Engine", p.engine], ["View", p.view],
-      ["Members", p.membershipHash], ["Computed", String(p.computedAt || "").replace("T", " ").slice(0, 19) + " · " + p.computeMs + " ms · cache " + p.cache]]
-      .forEach(function (r) { dl.appendChild(h("dt", null, r[0])); dl.appendChild(h("dd", null, r[1] === undefined ? "" : String(r[1]))); });
+  /** The one Explain (SHARED_SCREENS.md section 3, drishti_explain.js): each figure tile and Explain › carry their figure's request. */
+  function bindExplain(d) {
+    var req = function (measure) {
+      var r = { kind: "exposure", measure: measure, scope: d.canonical, q: S.q, collateral: S.collateral };
+      if (S.asOf) r.date = S.asOf;
+      return r;
+    };
+    var b = $("[data-xx-explain]");
+    if (b) b.setAttribute("data-explain", JSON.stringify(req("peak-pfe")));
+    if (!window.Drishti.Explain || level(d) === "trade") return;
+    ["peak-pfe", "epe", "eepe", "ead"].forEach(function (m, i) {
+      var v = $('[data-xx-tiles] [data-tile="' + i + '"] .v');
+      if (v) window.Drishti.Explain.bind(v, req(m));
+    });
   }
 
   // ---------------------------------------------------------------------------------------------------------------- tabs

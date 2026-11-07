@@ -20,8 +20,6 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.server.security.Principal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.Locale;
-import java.util.Map;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,16 +31,14 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 /**
- * Why VaR moved (VAR_GUIDE.md section 3.11; OVERSIGHT_LENS.md section 4.1, RO1), as the person (the same entitlements as the scope's VaR:
+ * Why VaR moved as a workbook (VAR_GUIDE.md section 3.11; OVERSIGHT_LENS.md section 4.1, RO1), as the person (the same entitlements as the scope's VaR:
  * a scope is resolved as the caller on each date). Reads only: every endpoint is a GET.
  * <pre>
- *   GET /api/v1/var/explain?scope=&amp;from=&amp;to=&amp;confidence=     the states, the steps with their drivers, the VaR scenario of each state,
- *        the order used, the order-free view by part, the limit-use line, the sentences and the add-up check
- *        (from, to: business dates, yyyy-MM-dd; none: the business date before the newest, and the newest)
- *   GET /api/v1/var/explain/matrix?scope=&amp;from=&amp;to=            the Matrix view: the scope and each child node, the steps across
  *   GET /api/v1/var/explain.xlsx?scope=&amp;from=&amp;to=              the explanation as a workbook of formulas, checked against the engine
+ *        (from, to: business dates, yyyy-MM-dd; none: the business date before the newest, and the newest)
  * </pre>
- * {@code method=shapley} is refused in words: the order-free Shapley variant is planned, not built.
+ * The explanation itself is the one Explain's ({@code GET /api/v1/explain?kind=var}, {@link VarNumberExplainer}): its Why it moved tab,
+ * the steps, drivers and the Matrix and Sentences views. This is its Workbook.
  */
 @RestController
 @RequestMapping("/api/v1/var")
@@ -70,32 +66,6 @@ public class VarExplainController {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "give a scope: scope=BANK, DESK:RATES, NODE:<id>, PORT:<id> ...");
         }
         return scope.strip();
-    }
-
-    static void method(String method) {
-        if (method == null || method.isBlank() || method.strip().equalsIgnoreCase("sequence")) {
-            return;
-        }
-        if (method.strip().toLowerCase(Locale.ROOT).equals("shapley")) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "method=shapley is planned, not built: the explanation is the configured sequence "
-                    + "(drishti.var.explain.order), whose steps add up exactly");
-        }
-        throw new DrishtiException(ErrorCode.BAD_REQUEST, "method is sequence (shapley is planned)");
-    }
-
-    @GetMapping("/explain")
-    public Map<String, Object> explain(@RequestParam(required = false) String scope, @RequestParam(required = false) String from,
-            @RequestParam(required = false) String to, @RequestParam(required = false) Double confidence,
-            @RequestParam(required = false) String method, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        method(method);
-        return explain.explain(p, scope(scope), date(from, "from"), date(to, "to"), confidence).answer();
-    }
-
-    @GetMapping("/explain/matrix")
-    public Map<String, Object> matrix(@RequestParam(required = false) String scope, @RequestParam(required = false) String from,
-            @RequestParam(required = false) String to, @RequestParam(required = false) Double confidence,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return explain.matrix(p, scope(scope), date(from, "from"), date(to, "to"), confidence);
     }
 
     @GetMapping("/explain.xlsx")

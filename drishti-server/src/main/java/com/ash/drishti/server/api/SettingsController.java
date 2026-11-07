@@ -115,8 +115,6 @@ public class SettingsController {
                     next.put("tradingView", v.asText());
                 }
                 case "varView" -> next.set("varView", varView(v));   // 2.9.7: the VaR page's horizon, method and confidences
-                case "varExplainView" -> next.put("varExplainView", oneOf(v, java.util.Set.of("waterfall", "matrix", "sentences"),
-                        "varExplainView"));                 // 2.9.10: the VaR page's Why it moved view (VAR_GUIDE.md section 3.11)
                 case "flash" -> next.put("flash", bool(v, "flash"));
                 case "searchLimit" -> {
                     if (!v.canConvertToInt() || v.asInt() < 10 || v.asInt() > 1000) {
@@ -248,7 +246,6 @@ public class SettingsController {
         out.set("homeLanding", s.path("homeLanding").isTextual() ? s.get("homeLanding") : json.nullNode());
         out.set("tradingView", s.path("tradingView").isTextual() ? s.get("tradingView") : json.nullNode());   // Drishti Trading's View as
         out.set("varView", s.path("varView").isObject() ? s.get("varView") : json.nullNode());        // the VaR page's lens (2.9.7)
-        out.set("varExplainView", s.path("varExplainView").isTextual() ? s.get("varExplainView") : json.nullNode());   // Why it moved's view (2.9.10)
         return out;
     }
 

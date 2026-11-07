@@ -430,8 +430,7 @@ def test_the_pre_deal_what_if_under_the_sheet(stack, browser):
     pg.reload()
     painted(pg, "DESK:DESK-FX")
     trd = pg.evaluate("fetch('/api/var/scope/contributions?scope=DESK:DESK-FX&by=trade').then(r => r.json()).then(d => d.rows[0].key)")
-    pg.locator("[data-vx-how]").click()                                      # How calculated (2.9.11.b: the provenance drawer)
-    pg.locator("[data-vx-whatif]").click()                                   # its What-if…: the desk into the sheet
+    pg.locator("[data-vx-whatif]").click()                                   # What-if… in the toolbar: the desk into the sheet
     wait(pg, "!document.querySelector('[data-vx-basket]').hidden && window.Drishti.VarBasket.parts() === 1")
     pg.locator("[data-vb-whatif-trade]").fill(trd)
     pg.locator("[data-vb-whatif-factor]").fill("-1")
