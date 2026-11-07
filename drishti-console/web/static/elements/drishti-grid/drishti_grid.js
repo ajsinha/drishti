@@ -540,7 +540,7 @@
       return n;
     }
     function applyValueFilters(answer, valueFilters) {
-      if (!valueFilters || !valueFilters.length) { return 0; }
+      if (!answer || !valueFilters || !valueFilters.length) { return 0; }
       const grand = answer.columns.find((c) => c.kind === 'grand');
       const hidden = [];
       answer.rows.forEach((r) => {

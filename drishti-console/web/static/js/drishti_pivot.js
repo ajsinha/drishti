@@ -508,7 +508,19 @@
     change(v);
     ["rows", "columns", "values", "expanded"].forEach(function (k) { v[k] = v[k] || []; });
     v.filters = v.filters || {};
-    mount(v);
+    var gr = state.grid, cols = gr.model.columns.all();
+    var known = function (id) { return cols.some(function (c) { return c.id === id; }); };
+    var w = wellsOf(v, cols);
+    var fits = v.rows.concat(v.columns).every(known) && w.values.length === v.values.length
+      && Object.keys(v.filters).every(function (k) { return k.charAt(0) === "_" || known(k); });
+    if (!fits) { mount(v); return; }                    // a field or measure the grid does not hold yet: drawn again with it
+    // the same fields: the grid keeps its scroll and layout; its view changes and it asks once
+    gr.model.pivotExtra = extraOf(v);
+    gr.model.setOpenState(v.expandTo ? v : Object.assign({}, v, {expandTo: {rows: 1, columns: Math.max(1, v.columns.length)}}));
+    state.slicers = (v.slicers || []).slice();
+    $("[data-pv-subtotals]").value = v.subtotals === "above" ? "above" : "below";
+    gr.setConditionalFormats(rulesOf(v.formats));
+    if (JSON.stringify(gr.model.wells.getState()) !== JSON.stringify(w)) { gr.model.wells.setState(w); } else { again(); }
   }
 
   function open(source, date, view) {
@@ -692,6 +704,7 @@
     reopen: function (date) { var v = viewBody(); if (v) { v.date = date; open(v.source, date, v); } },
     savedView: function () { return state.savedView; },
     grid: function () { return $("[data-pv-grid]"); },
+    gridApi: function () { return state.grid; },        // drishti-grid's Grid (its model: the rows and texts as drawn)
     // decorate(fn): fn(cellKey, context) gives a cell's marks ({cls, title, after}); redraw() draws them again
     decorate: function (fn) { state.decorators.push(fn); },
     redraw: function () { if (state.grid) { state.grid.refresh(); } }
