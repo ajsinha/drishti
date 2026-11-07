@@ -325,7 +325,7 @@ def test_the_filter_bar_drives_an_editable_grid_and_every_editor_undo_paste_and_
         await pg.wait_for_function("() => window.__harness.writes.length === 8")
         tx = await h(pg, "window.__harness.writes[7]")
         assert tx["source"] == "paste" and len(tx["edits"]) >= 4
-        assert "not valid" in await pg.text_content("#hx-grid .dg-toast")
+        await pg.wait_for_function("() => /not valid/.test((document.querySelector('#hx-grid .dg-toast') || {}).textContent || '')", timeout=5000)   # after the toast before it
         # Delete over a range; a refusal by the server puts the value back
         await cell(pg, "T1001", "COMMENT")
         await pg.keyboard.press("Delete")
