@@ -40,7 +40,7 @@ def main(out: Path) -> None:
         try:
             with sync_playwright() as p:
                 browser = p.chromium.launch()
-                page = sign_in(browser, "rita", "/bi")
+                page = sign_in(browser, "rita", "/bi/catalogue")
                 for run in ("server", "browser"):
                     if run == "browser" and not PYODIDE.exists():
                         break
@@ -49,7 +49,7 @@ def main(out: Path) -> None:
                     page.wait_for_timeout(600)
                     page.locator("[data-grid]").screenshot(path=str(out / f"report-{run}.png"))
                 page.context.close()
-                wes = sign_in(browser, "wes", "/bi")
+                wes = sign_in(browser, "wes", "/bi/catalogue")
                 wes.goto(CONSOLE_URL + "/bi/i/file:python:desk-pnl-volatility")
                 wes.wait_for_selector("[data-body]:not(:empty)", timeout=30000)
                 wes.get_by_role("button", name="Check the Python").click()

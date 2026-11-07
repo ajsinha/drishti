@@ -41,7 +41,6 @@
     if (text !== undefined && text !== null) e.textContent = text;
     return e;
   }
-  function typing(t) { return !!(t && (/INPUT|TEXTAREA|SELECT/.test(t.tagName || "") || t.isContentEditable)); }
   function reqOf(el) {
     try { return JSON.parse(el.getAttribute("data-explain") || "{}"); } catch (e) { return null; }
   }
@@ -423,23 +422,27 @@
     hoverTimer = setTimeout(function () { var req = reqOf(el); if (req && req.kind && el.matches(":hover") && !(drawer && !drawer.hidden)) { lastAnchor = el; preview(el, req); } }, 350);
   });
   document.addEventListener("mouseout", function (ev) { if (target(ev)) clearTimeout(hoverTimer); });
-  document.addEventListener("keydown", function (ev) {
-    if (ev.key === "Escape") {
-      if (pop && !pop.hidden) { closePreview(); return; }
-      if (drawer && !drawer.hidden && !typing(ev.target)) { ev.preventDefault(); close(); }
-      return;
-    }
-    if (ev.ctrlKey || ev.metaKey || ev.altKey || typing(ev.target)) return;
-    var focused = document.activeElement && document.activeElement.closest ? document.activeElement.closest("[data-explain]") : null;
-    if (ev.key === "e" || ev.key === "E") {
-      var el = focused || (popFor && document.contains(popFor) ? popFor : null) || document.querySelector("[data-explain-primary][data-explain]");
+  // the keys (the one keymap, drishti_keys.js): Escape closes the preview, then the drawer; E explains the focused number (else the
+  // preview's, else the page's main one); ? on a focused number previews it (anywhere else ? is the keymap's list)
+  var K = window.Drishti.keys;
+  var focusedNumber = function () { return document.activeElement && document.activeElement.closest ? document.activeElement.closest("[data-explain]") : null; };
+  K.register({ id: "explain.preview.close", keys: ["Escape"], scope: "dialog", area: "explain-preview", description: "Close the preview",
+    typing: true, keepDefault: true, open: function () { return !!(pop && !pop.hidden); }, run: function () { closePreview(); } });
+  K.register({ id: "explain.close", keys: ["Escape"], scope: "dialog", area: "explain", description: "Close Explain",
+    open: function () { return !!(drawer && !drawer.hidden); }, run: function () { close(); } });
+  K.register({ id: "explain.open", keys: ["E", "Shift+E"], scope: "global", group: "Explain", description: "Explain the number: its formula, inputs, why it moved, the workbook",
+    run: function () {
+      var el = focusedNumber() || (popFor && document.contains(popFor) ? popFor : null) || document.querySelector("[data-explain-primary][data-explain]");
       var req = el ? reqOf(el) : null;
-      if (req && req.kind) { ev.preventDefault(); open(req, el.getAttribute("data-explain-tab") || "formula", el); }
-    } else if (ev.key === "?" && focused) {
-      var r2 = reqOf(focused);
-      if (r2 && r2.kind) { ev.preventDefault(); lastAnchor = focused; preview(focused, r2); }
-    }
-  });
+      if (!(req && req.kind)) return false;
+      open(req, el.getAttribute("data-explain-tab") || "formula", el);
+    } });
+  K.register({ id: "explain.preview", keys: ["?"], scope: "panel", area: "explain-number", group: "Explain", description: "On a number: preview how it was made",
+    within: focusedNumber, run: function () {
+      var f = focusedNumber(), r2 = f ? reqOf(f) : null;
+      if (!(r2 && r2.kind)) return false;
+      lastAnchor = f; preview(f, r2);
+    } });
 
   var pageRoot = document.querySelector("[data-explain-page]");
   if (pageRoot) {

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The sitemap guard (2.9.11.f, config/sitemap.yaml): every page the console answers is reachable from the sitemap (a menu item, or an
+"""The sitemap guard (2.9.11.e, config/sitemap.yaml): every page the console answers is reachable from the sitemap (a menu item, or an
 in-context page reached from one), nothing is listed twice, every reference resolves, Help's sections are the sitemap's, and banking's
 entries say so (the domain split moves them)."""
 from __future__ import annotations

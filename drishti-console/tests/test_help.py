@@ -205,7 +205,7 @@ decisions plan release-notes changelog notices sutra-guide rachana-guide plugins
 def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages():
     """The decided structure (2.9.11.a, mock-up help-hub/A): eight sections and Internal for administrators."""
     catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
-    heads = yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text())["help-sections"]   # the sections: the sitemap's (2.9.11.f)
+    heads = yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text())["help-sections"]   # the sections: the sitemap's (2.9.11.e)
     assert [c["id"] for c in catalogue["sections"]] == [h["id"] for h in heads]
     assert [c["id"] for c in catalogue["sections"]] == ["get-started", "risk", "analytics", "data", "build", "operate", "reference",
                                                          "knowledge", "internal"]

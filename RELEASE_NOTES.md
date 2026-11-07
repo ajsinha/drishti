@@ -19,6 +19,9 @@
 
 ## Upgrade: one search (the console's `/api/suggest` is removed)
 
+- **BI's keys** are the keymap's: `?` (and the rail's Keys button) lists them with the rest of the screen's, and BI's own keys dialog is
+  gone; `g h` opens the Build home. The Pivot's keys (r c v f s, g, x, 1 to 9, e, w i u, l, m) are unchanged.
+
 - **A script that called the console's `GET /api/suggest?q=...`** asks `GET /api/search?in=command&q=...` instead and reads `items`
   (the same suggestions, in the same order, each now tagged with its `group`). `in=help` searches Help's pages and `in=all` everything
   (entities, commands, screens, Help pages, things you can build), grouped ([API_GUIDE.md](docs/guides/API_GUIDE.md#the-consoles-own-json-routes)).
@@ -60,7 +63,9 @@
   task tiles on a first visit; one search; *+ New* for every kind. **Removed homes:** *My designs* (its list, with Rename, Duplicate and
   Delete, is the Build home's *My drafts*) and Studio's start page.
 - **Redirects:** `/studio` with nothing after it opens `/build` (a Studio link with a Sutra, an example or a design opens it in the
-  workbench as before). Every other address is unchanged.
+  workbench as before). **`/bi` opens `/build`**: BI Studio's own home (its Recent, Favourites, Certified for you and Shared with me) is
+  folded into the Build home; `BI <GO>` and `RUPAKA <GO>` open the Build home, and published reports and boards are read from the
+  catalogue (`/bi/catalogue`, `BI CATALOGUE`). Every other address is unchanged.
 - **One sitemap.** `drishti-console/config/menus.yaml` is now **`config/sitemap.yaml`** and also draws the Admin pages' tabs (the Admin
   menu, which gains every Admin page), the BI rail (the BI menu, which gains the rail's pages), Help's sections (their name, icon, line and
   roles moved from `help.yaml`, which keeps each section's pages by its id) and the footer (each link names a menu item). A site that
@@ -74,7 +79,7 @@
 |---|---|
 | Build → My designs (`/build`) | Build → **Build home** (`/build`; the designs are its first list, *My drafts*) |
 | BI menu column *Rupaka: business intelligence* | *Business intelligence* |
-| BI rail *Home* | *BI home* |
+| BI rail *Home* (`/bi`) | the **Build home** (`/build`) |
 | BI rail *Runs* | *My runs* |
 | BI rail *Designer* | *Report designer* |
 | BI rail *Environments* | *Promotion (test to live)* |
@@ -101,6 +106,27 @@
   server or engine key is written to the server's `application.local.yaml`, a console key to the console's, each read at the next start.
   New endpoints `/api/v1/admin/settings/proposals` (list, propose, approve, reject, withdraw, applied); a new add-on admin page id
   `configuration` (editions that list `admin.pages` name it to keep it).
+
+## Upgrade: one Explain for every number
+
+Every computed number now has one **Explain** (USER_GUIDE.md, "Explain: one for every number"): hover a figure for a preview, click it
+(or press **E**) for a drawer with **Formula · Inputs & lineage · Why it moved · Workbook**, and **Open as a page** to print. It replaces
+these, which are **removed**:
+
+| Removed | Use instead |
+|---|---|
+| The VaR page's **How calculated ›** drawer (key **H**, `&how=1` in a link) | **Explain ›** (key **E**) or a click on a tile: tab *Inputs & lineage*, the same rows |
+| The VaR page's **Why it moved** tab (`&tab=why`, `&view=`, `&efrom=`, `&eto=`) and the setting `varExplainView` | the drawer's *Why it moved* (Waterfall, Matrix, Sentences, the two dates); `VAR EXPLAIN <scope> [from] [to]` opens `/explain?kind=var&…&tab=why` |
+| The **?** pop-ups of the parametric figures | the same **?**: its Explain, the server's lines in *Formula* |
+| The MR cube's **Explain the move** tables (rail and tab C) | the card's button: the cell's Explain at *Why it moved* |
+| The exposure page's **How this number was built** box | **Explain ›** and the tiles: tab *Inputs & lineage* (CSV, JSONL and Capture exposure stay beside it) |
+| `GET /api/v1/var/explain`, `GET /api/v1/var/explain/matrix` | `GET /api/v1/explain?kind=var&part=why&scope=…&from=…&to=…` (`view=matrix`); the engine's answer is `why.answer`; `method=shapley` is now `attribution=shapley` (still refused: planned) |
+| `GET /api/v1/pivot/mr/explain` | `GET /api/v1/explain?kind=var&part=why&scope=<the cell's scope>` |
+| Console `GET /api/var/explain`, `/api/var/explain/matrix`, `/api/pivot/mr/explain` | console `GET /api/explain` (the same parameters) |
+| The Pivot's **Why did it move?** card's own waterfall (key **W**), and the console's `POST /api/pivot/explain` it called | the same card's **Explain ›**: the one Explain at *Why it moved* (kind `pivot`; `POST /api/explain` with the view); the server's `POST /api/v1/pivot/explain` is unchanged |
+
+`GET /api/v1/var/explain.xlsx` stays (the drawer's Workbook). A saved link with `how=1` or `tab=why` opens the VaR page as before
+without them. Scripts that read the removed endpoints read `why.answer` of the new one (`drishti.py var explain` does).
 
 # Drishti 2.9.11.d — release notes (draft)
 
@@ -191,26 +217,6 @@
   answers each reader from their own inputs, and the python visuals (the report `python-desk-risk`, the board `python-wall`) draw on the
   server. Before, the model refused (`DRS-9026`) and the visuals were the console's. With compute off they still refuse, in words. The BI
   foundation parity record keeps the compute-off answers: they are its baseline, and nothing in it changed.
-
-## Upgrade: one Explain for every number (2.9.11.f)
-
-Every computed number now has one **Explain** (USER_GUIDE.md, "Explain: one for every number"): hover a figure for a preview, click it
-(or press **E**) for a drawer with **Formula · Inputs & lineage · Why it moved · Workbook**, and **Open as a page** to print. It replaces
-these, which are **removed**:
-
-| Removed | Use instead |
-|---|---|
-| The VaR page's **How calculated ›** drawer (key **H**, `&how=1` in a link) | **Explain ›** (key **E**) or a click on a tile: tab *Inputs & lineage*, the same rows |
-| The VaR page's **Why it moved** tab (`&tab=why`, `&view=`, `&efrom=`, `&eto=`) and the setting `varExplainView` | the drawer's *Why it moved* (Waterfall, Matrix, Sentences, the two dates); `VAR EXPLAIN <scope> [from] [to]` opens `/explain?kind=var&…&tab=why` |
-| The **?** pop-ups of the parametric figures | the same **?**: its Explain, the server's lines in *Formula* |
-| The MR cube's **Explain the move** tables (rail and tab C) | the card's button: the cell's Explain at *Why it moved* |
-| The exposure page's **How this number was built** box | **Explain ›** and the tiles: tab *Inputs & lineage* (CSV, JSONL and Capture exposure stay beside it) |
-| `GET /api/v1/var/explain`, `GET /api/v1/var/explain/matrix` | `GET /api/v1/explain?kind=var&part=why&scope=…&from=…&to=…` (`view=matrix`); the engine's answer is `why.answer`; `method=shapley` is now `attribution=shapley` (still refused: planned) |
-| `GET /api/v1/pivot/mr/explain` | `GET /api/v1/explain?kind=var&part=why&scope=<the cell's scope>` |
-| Console `GET /api/var/explain`, `/api/var/explain/matrix`, `/api/pivot/mr/explain` | console `GET /api/explain` (the same parameters) |
-
-`GET /api/v1/var/explain.xlsx` stays (the drawer's Workbook). A saved link with `how=1` or `tab=why` opens the VaR page as before
-without them. Scripts that read the removed endpoints read `why.answer` of the new one (`drishti.py var explain` does).
 
 ## Upgrade: removed and renamed pages (one analysis path)
 

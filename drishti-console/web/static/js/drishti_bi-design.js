@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Rupaka phase 3 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 9): the report designer's core - the draft being edited (the report model the server parses and writes), its undo
    history, the page tabs, the YAML tab (the same draft as text; an edit in either appears in the other), Check, and Save. The canvas, the Fields pane and the
    Visualizations and Filters panes are in drishti_bi-design-canvas.js and drishti_bi-design-panes.js and talk to this through window.drishtiBi.design (events: 'model',
@@ -588,15 +589,25 @@
     if (q('[data-tab="paper"]')) { q('[data-tab="paper"]').addEventListener('click', () => showTab('paper')); }       // a statement page's paper and preview (2.6.0)
     q('[data-preview]').addEventListener('change', (e) => { D.preview = e.target.checked; D.emit('preview', D.preview); });
     D.preview = true;
-    document.addEventListener('keydown', (e) => {
-      const k = e.key.toLowerCase();
-      if ((e.ctrlKey || e.metaKey) && k === 's') { e.preventDefault(); save(); return; }
-      // Escape deselects the visual (outside a field, a dialog or the YAML editor), so the next field added starts a visual of its own
-      if (e.key === 'Escape' && D.selected && !e.target.closest('input,textarea,select,.CodeMirror,dialog,[role=dialog]')) { D.select(null); D.say('Nothing selected: a field added now starts a new visual.'); return; }           // saves from anywhere, the YAML editor too, and never opens the browser's own Save dialog
-      if ((e.ctrlKey || e.metaKey) && !e.target.closest('input,textarea,select,.CodeMirror')) {
-        if (k === 'z' && !e.shiftKey) { e.preventDefault(); D.undo(); } else if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); D.redo(); }
-      }
-    });
+    // the designer's keys (the one keymap, drishti_keys.js); the visuals' own keys are their widgets', described so ? lists them
+    const K = window.Drishti.keys;
+    const outside = (e) => !e.target.closest('input,textarea,select,.CodeMirror');
+    // saves from anywhere, the YAML editor too, and never opens the browser's own Save dialog
+    K.register({ id: 'bi.design.save', keys: ['Ctrl+S', 'Meta+S'], scope: 'screen', area: 'bi-design', group: 'Designer', description: 'Save the draft',
+      typing: true, run: () => { save(); } });
+    // Escape deselects the visual (outside a field, a dialog or the YAML editor), so the next field added starts a visual of its own
+    K.register({ id: 'bi.design.deselect', keys: ['Escape'], scope: 'screen', area: 'bi-design', group: 'Designer', description: 'Deselect the visual',
+      keepDefault: true, when: (e) => !!D.selected && !e.target.closest('input,textarea,select,.CodeMirror,dialog,[role=dialog]'),
+      run: () => { D.select(null); D.say('Nothing selected: a field added now starts a new visual.'); } });
+    K.register({ id: 'bi.design.undo', keys: ['Ctrl+Z', 'Meta+Z'], scope: 'screen', area: 'bi-design', group: 'Designer', description: 'Undo',
+      when: outside, run: () => { D.undo(); } });
+    K.register({ id: 'bi.design.redo', keys: ['Ctrl+Y', 'Meta+Y', 'Ctrl+Shift+Z', 'Shift+Meta+Z', 'Ctrl+Shift+Y', 'Shift+Meta+Y'], scope: 'screen', area: 'bi-design',
+      group: 'Designer', description: 'Redo', when: outside, run: () => { D.redo(); } });
+    K.describe({ id: 'bi.design.walk', keys: ['Tab'], scope: 'panel', area: 'bi-design-canvas', group: 'Designer', description: 'Walk the panes and the visuals' });
+    K.describe({ id: 'bi.design.move', keys: ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'], scope: 'panel', area: 'bi-design-canvas', group: 'Designer',
+      description: 'On a visual: move it one cell; with Shift resize it' });
+    K.describe({ id: 'bi.design.delete', keys: ['Delete', 'Ctrl+D'], scope: 'panel', area: 'bi-design-canvas', group: 'Designer', description: 'On a visual: delete it; duplicate it' });
+    K.describe({ id: 'bi.design.format', keys: ['Enter'], scope: 'panel', area: 'bi-design-canvas', group: 'Designer', description: 'On a visual: go to its title in Format' });
     window.addEventListener('beforeunload', (e) => { if (D.dirty) { e.preventDefault(); e.returnValue = ''; } });
     if (window.CodeMirror) {
       editor = window.CodeMirror.fromTextArea(ta, { mode: 'rachana-yaml', lineNumbers: true, lineWrapping: true, indentUnit: 2, tabSize: 2, viewportMargin: Infinity, extraKeys: { Tab: (cm) => cm.replaceSelection('  ') } });

@@ -129,8 +129,13 @@
   you are on** (and the footer's new **Keys** button; on a view `?` stays About this page), from the same registrations; History's own keys
   dialog is replaced by it. Every page-level key handler moves into it (the VaR screen's B, M, H, N and Alt+B
   included); left outside, each with its reason: the engines menu's filter box (widget-internal), the drill-down's fallback for a host
-  page without the keymap, and BI and the pivot (#biKeys: folded after wip/bi-delete merges). A table's, a panel's zoom and About this
-  page's own keys stay on their widgets and are described to the keymap so the list shows them.
+  page without the keymap. **BI and the Pivot are folded in too** (the eleven BI and Pivot scripts that bound keys on the page on
+  their own: BI's `/` and `g` then `h c w r` (`g h` now opens the Build home), the designer's Ctrl+S, Ctrl+Z, Ctrl+Y and Escape, the tab
+  lists' arrows, the kiosk's K, arrows, P and Escape, the run drawer's Escape, the statement preview's Page Up and Down, the tooltip
+  page's Escape, the Pivot's r c v f s, g, x, 1 to 9 and e, its cards' w i u, l and m), and so is the one Explain's E, ? and Escape;
+  **BI's own Keys dialog (`#biKeys`) is deleted**: the rail's Keys button and `?` open the keymap's list, which describes the visuals'
+  and the designer's own keys. A table's, a panel's zoom and About this page's own keys stay on their widgets and are described to the
+  keymap so the list shows them; the allow-list keeps only the engines menu's filter box and the drill-down's fallback.
   - **`test_keymap.py`** (static, in the gate): every registration names a scope and an area, chords are written canonically, no two
     claim one key in one scope and area, ids are unique, no script binds keys on document or window outside the allow-list (and the
     allow-list has no stale entry), widget keys are described. **`test_keymap_browser.py`**: the `?` list (open, focus, Esc, the footer
@@ -192,7 +197,7 @@
     values, inputs and lineage, why it moved (steps that add up, as ViewModel panels the one renderer paints, and the engine's own answer),
     workbook links and checks; `part=preview` for the hover card. Core code (`server.explain`): **explainers register per kind** through the
     `Explainer` interface; the banking ones live with their engines (`var`: VaR, ES, parametric VaR and ES, the fat-tail gap;
-    `exposure`: peak PFE, CE, EPE, EEPE, peak EE, EAD) and move with 2.9.11.e; the core's `pivot` explains a pivot cell's move. A kind
+    `exposure`: peak PFE, CE, EPE, EEPE, peak EE, EAD) and move with the domain modules (2.9.11.f); the core's `pivot` explains a pivot cell's move. A kind
     whose engine is off answers `DRS-1020`. Computed as the caller: a restricted person is told how many trades are outside the view,
     never which (two-person tests on VaR and exposure).
   - **One client component**, `drishti_explain.js` and `drishti_explain.css`, on every signed-in page: any element with `data-explain`
@@ -207,8 +212,11 @@
     the parametric lines with the old ?'s and the steps with the engine's; `ExposureApiTest` the exposure box's rows.
   - `drishti.py var explain` and `drishti.py pivot mr explain` read the new endpoint (the same output).
   - Under construction (`config/under-construction.yaml`, `explain-*`): why it moved for ES and parametric figures and for exposure, the
-    exposure and pivot workbooks, the check against the official capture, BI measures, Sutra metrics, FRTB-SA and SIMM, and the Pivot
-    screen's own **Why did it move?** card, which moves onto the component once 2.9.11.d's BI internals are released.
+    exposure and pivot workbooks, the check against the official capture, BI measures, Sutra metrics, FRTB-SA and SIMM.
+  - **The Pivot's Why did it move? card (W) is on the one Explain** too: the card keeps its choices (the two cells or dates, the split,
+    the order) and **Explain ›** opens the drawer at Why it moved (kind `pivot`, the view in the body); its own waterfall and words
+    are deleted, and so is the console's `POST /api/pivot/explain` that drew them (the server's `POST /api/v1/pivot/explain` stays for
+    `drishti.py pivot explain` and scripts).
 - **One Build home** (docs/architecture/SHARED_SCREENS.md section 1, mock-up e1 A + B + C; USER_GUIDE.md › The Build home): `/build` is
   a rail grouped Data · Screens · Analysis · Work with a count per kind, lists with lineage both ways (what an item uses, what uses it,
   inverted across every kind gathered for the person), first-visit task tiles (Bring data in, Shape it, Show it, Package it; hidden per
@@ -216,8 +224,9 @@
   types in `core/build_types.py`, banking's (VaR baskets) in `core/build_types_banking.py`, so the domain split moves banking's entries as
   one file; every source runs at once with a time limit and a failing one leaves its kind without a count. Folded and deleted: *My
   designs* (`build/designs.html`, now the home's *My drafts* partial with its actions; `drishti_build-designs.js` is
-  `drishti_build-home.js`), Studio's bare start page (`/studio` redirects to `/build`); the BI rail reaches the Build home and Tables &
-  models by link (BI Studio's own home stays until bi-delete lands).
+  `drishti_build-home.js`), Studio's bare start page (`/studio` redirects to `/build`); **BI Studio's own home is folded in**: `/bi` redirects to `/build`,
+  `BI <GO>` and `RUPAKA <GO>` open the Build home, the BI menu and rail start from the Build home (`bi/home.html` and its script
+  deleted; the catalogue is where published reports and boards are read).
 - **One sitemap** (`drishti-console/config/sitemap.yaml`, was `menus.yaml`): the top bar, the Admin tabs (`admin/_nav.html` drawn from the
   Admin menu: its 26 hand-written links deleted), the BI rail (`bi/shell.html` drawn from the BI menu), Help's sections (heads moved from
   `help.yaml`) and the footer (links name menu items). Entries carry `domain:` (banking, economy); `also:` draws an item of another menu

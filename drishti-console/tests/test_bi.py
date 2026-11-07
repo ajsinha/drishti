@@ -44,7 +44,13 @@ def go(client, text):
 def test_the_keyword_opens_the_home_in_any_case(bi, typed):
     client, _ = bi
     r = go(client, typed)
-    assert r.status_code == 303 and r.headers["location"] == "/bi"
+    assert r.status_code == 303 and r.headers["location"] == "/build"                    # BI Studio's own home is the one Build home
+
+
+def test_the_old_bi_home_opens_the_build_home(bi):
+    client, _ = bi
+    r = client.get("/bi", follow_redirects=False)
+    assert r.status_code == 302 and r.headers["location"] == "/build"
 
 
 def test_the_keyword_opens_my_workspace_and_the_catalogue(bi):
@@ -75,7 +81,7 @@ def test_the_keyword_says_why_when_bi_is_not_for_you():
 def test_the_menu_is_shown_to_people_with_the_bi_power_only(bi):
     client, _ = bi
     top = client.get("/t").text
-    assert "bar-chart-line" in top and 'href="/bi"' in top and 'href="/bi/catalogue"' in top and 'href="/bi/w/me"' in top
+    assert "bar-chart-line" in top and 'href="/bi"' not in top and 'href="/bi/catalogue"' in top and 'href="/bi/w/me"' in top
     assert "Desk P&amp;L" not in top                                                      # no report names in the menu: hundreds would not fit
     assert top.index(">Views<") < top.index(">BI<") < top.index(">Build<")
     for powers in ((), ):
@@ -87,20 +93,20 @@ def test_the_menu_is_shown_to_people_with_the_bi_power_only(bi):
 
 def test_bi_settings_are_in_the_menu_only_for_bi_admin():
     admin, _ = make(powers=("bi", "bi-admin"))
-    assert 'href="/admin/bi"' in admin.get("/bi").text
+    assert 'href="/admin/bi"' in admin.get("/bi/catalogue").text
     author, _ = make(powers=("bi", "bi-author"))
-    assert "BI settings" not in author.get("/bi").text
+    assert "BI settings" not in author.get("/bi/catalogue").text
     assert author.get("/admin/bi").status_code == 403
 
 
-@pytest.mark.parametrize("path,page", [("/bi", "home"), ("/bi/catalogue", "catalogue"), ("/bi/workspaces", "workspaces"), ("/bi/w/me", "workspace"),
+@pytest.mark.parametrize("path,page", [("/bi/catalogue", "catalogue"), ("/bi/workspaces", "workspaces"), ("/bi/w/me", "workspace"),
                                        ("/bi/i/bi-1", "item"), ("/bi/datasets", "datasets"), ("/bi/designer", "designer"), ("/bi/notebook", "notebook")])
 def test_every_page_has_the_rail_and_the_shared_top_bar(bi, path, page):
     client, _ = bi
     r = client.get(path)
     assert r.status_code == 200
     assert f'data-bi-page="{page}"' in r.text and 'class="bi-rail"' in r.text and 'class="tbar"' in r.text or 'class="tbar-row1"' in r.text
-    for label in ("Home", "Catalogue", "My workspace", "Workspaces", "Datasets", "Report designer", "Pivot", "Notebook"):
+    for label in ("Build home", "Catalogue", "My workspace", "Workspaces", "Datasets", "Report designer", "Pivot", "Notebook"):
         assert label in r.text
     assert "f-keys" not in r.text and "fkeys" not in r.text.lower()                        # the terminal's F-key footer is not shown
     assert "<script>" not in r.text.replace("<script src", "") and " onclick=" not in r.text
@@ -180,7 +186,7 @@ def test_the_command_line_offers_rupaka(bi):
     word = client.get("/api/search", params={"in": "command", "q": "rupa"}).json()["items"]
     assert word[0]["mnemonic"] == "RUPAKA" and word[0]["complete"] == "RUPAKA "
     pages = client.get("/api/search", params={"in": "command", "q": "RUPAKA "}).json()["items"]
-    assert [p["href"] for p in pages[:3]] == ["/bi", "/bi/w/me", "/bi/catalogue"]
+    assert [p["href"] for p in pages[:3]] == ["/build", "/bi/w/me", "/bi/catalogue"]
     cat = client.get("/api/search", params={"in": "command", "q": "rupaka cat"}).json()["items"]
     assert cat[0]["href"] == "/bi/catalogue"
     rep = client.get("/api/search", params={"in": "command", "q": "rupaka desk"}).json()["items"]
@@ -205,14 +211,14 @@ def test_bi_can_be_switched_off_in_the_console():
     app = create_app(settings)
     app.state.backend = BiBackend()
     client = TestClient(app)
-    assert client.get("/bi").status_code == 404 and 'href="/bi/catalogue"' not in client.get("/t").text
+    assert client.get("/bi/catalogue").status_code == 404 and 'href="/bi/catalogue"' not in client.get("/t").text
     assert go(client, "RUPAKA").headers["location"].startswith("/t?error=")
 
 
 def test_bi_is_the_keyword_and_rupaka_its_alias(bi):
     client, _ = bi
     for typed in ("BI <GO>", "bi", "  Bi  "):
-        assert go(client, typed).headers["location"] == "/bi"
+        assert go(client, typed).headers["location"] == "/build"
     assert go(client, "BI WORKSPACE <GO>").headers["location"] == "/bi/w/me"
     assert go(client, "bi catalogue").headers["location"] == "/bi/catalogue"
     assert go(client, "BI bi-1 <GO>").headers["location"] == "/bi/r/bi-1"
@@ -220,7 +226,7 @@ def test_bi_is_the_keyword_and_rupaka_its_alias(bi):
     word = client.get("/api/search", params={"in": "command", "q": "b"}).json()["items"]
     assert word[0]["mnemonic"] == "BI" and word[0]["complete"] == "BI "
     pages = client.get("/api/search", params={"in": "command", "q": "BI "}).json()["items"]
-    assert [p["href"] for p in pages[:3]] == ["/bi", "/bi/w/me", "/bi/catalogue"] and pages[0]["complete"] == "BI"
+    assert [p["href"] for p in pages[:3]] == ["/build", "/bi/w/me", "/bi/catalogue"] and pages[0]["complete"] == "BI"
     rep = client.get("/api/search", params={"in": "command", "q": "bi desk"}).json()["items"]
     assert rep[0]["href"] == "/bi/i/bi-1" and rep[0]["complete"] == "BI Desk P&L"
     none, _ = make(powers=())

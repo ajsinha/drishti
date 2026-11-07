@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The sitemap: the one home of navigation (2.9.11.f; docs/guides/USER_GUIDE.md › Finding your way). One file draws the top bar's menus,
+# The sitemap: the one home of navigation (2.9.11.e; docs/guides/USER_GUIDE.md › Finding your way). One file draws the top bar's menus,
 # the Admin pages' tab strip (the admin menu), the BI rail (the bi menu), the Build home's links (the build menu), Help's sections
 # (help-sections:) and the footer; core/menus.py draws each. tests/test_sitemap.py guards it: every page the console answers is listed
 # here once (or is in-context: below, reached from a list it names), no id is used twice and no address is listed twice.
@@ -267,11 +267,10 @@ menus:
   - id: bi
     label: BI
     icon: bar-chart-line
-    also: [tables-models, pivot, build-home]
+    also: [build-home, tables-models, pivot]
     columns:
       - title: Business intelligence
         items:
-          - { id: bi-home, href: /bi, icon: house, label: BI home, desc: "Recent, favourites, certified for you, shared with me. Also: RUPAKA <GO>", match: /bi, requires: [bi, word:BI] }
           - { id: bi-catalogue, href: /bi/catalogue, icon: collection, label: Catalogue, desc: "Every published report and board you may open. Also: RUPAKA CATALOGUE", match: /bi/catalogue, requires: [bi, word:BI] }
           - { id: bi-workspace, href: /bi/w/me, icon: person-workspace, label: My workspace, desc: "Your drafts, and the shared workspaces you belong to. Also: RUPAKA WORKSPACE", match: /bi/w/, requires: [bi, word:BI] }
           - { id: bi-runs, href: "/bi/w/me?tab=runs", icon: activity, label: My runs, desc: "Your BI questions queued or running, and the last ones answered", requires: [bi, word:BI] }
@@ -287,7 +286,7 @@ menus:
       - title: Administer
         items:
           - { id: bi-settings, tab: bi, href: /admin/bi, icon: sliders, label: BI settings, desc: "Powers per role, who creates workspaces", match: /admin/bi, rail: false, requires: [bi, bi-admin, admin-page:bi] }
-  # The Build menu: the one Build home (2.9.11.f, docs/architecture/SHARED_SCREENS.md section 1) and the guided starts. The home's rail
+  # The Build menu: the one Build home (2.9.11.e, docs/architecture/SHARED_SCREENS.md section 1) and the guided starts. The home's rail
   # (Data, Screens, Analysis, Work) is the registry of object types (core/build_registry.py), not a list here.
   - id: build
     label: Build
@@ -419,10 +418,11 @@ in-context:
   /var/statistics: "VaR explorer"
   /w/new: "Workspaces"
   /mcube: "Engines → VaR → Market-risk cube (MCUBE)"
+  /explain: "Explain › Open as a page, on any explained number (the one Explain's drawer)"
 
 # Addresses that are not pages: data for a page's script, redirects of old addresses, sign-in, health and files.
-not-pages: [/about/competitive, /admin/commands, /asof, /auth/oidc/callback, /auth/oidc/login, /bi/explore, /bi/model-api/consumers,
+not-pages: [/about/competitive, /admin/commands, /asof, /auth/oidc/callback, /auth/oidc/login, /bi, /bi/explore, /bi/model-api/consumers,
             /bi/model-api/dataset, /bi/model-api/datasets, /bi/model-api/fields, /bi/model-api/roles, /bi/notebook/status, /bi/python/status,
-            /bi/transform/snippets, /build/binding, /build/review-count, /build/shape, /build/tables/workspaces, /datamap/data, /designer,
+            /bi/transform/snippets, /build/binding, /build/reviews, /build/shape, /build/tables/workspaces, /datamap/data, /designer,
             /dist/status, /favicon.ico, /go, /healthz, /healthz/backend, /lens/leave, /login, /logout, /manifest.webmanifest, /pyconsole,
-            /readyz, /render/demo, /render/demo/start, /studio, /studio/schema]
+            /readyz, /render/demo, /render/demo/start, /review/changes, /studio, /studio/schema]

@@ -94,7 +94,7 @@ def test_the_area_filter_keeps_one_area(client, server_settings):
 
 
 def test_the_reference_shows_no_values_and_points_administrators_to_the_editor(client, server_settings, monkeypatch):
-    """The values in effect are Admin → Configuration's (2.9.11.f): the reference is the document, for everyone."""
+    """The values in effect are Admin → Configuration's (2.9.11.e): the reference is the document, for everyone."""
     import routes.help_routes as hr
 
     text = client.get("/help/configuration", params={"q": "max-days"}).text            # security off: the acting user is an admin

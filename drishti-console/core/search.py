@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""One search (2.9.11.f): every type-ahead and search box of the console asks this service, through one endpoint (``GET /api/search``).
+"""One search (2.9.11.e): every type-ahead and search box of the console asks this service, through one endpoint (``GET /api/search``).
 
 It finds five kinds of thing and groups them, best group first:
 
@@ -113,7 +113,7 @@ async def form_words(request: Request, pack: str | None, kind: str | None, space
 
 
 RUPAKA = "RUPAKA"
-BI_ENTRIES = (("", "BI home", "Recent, favourites, certified, shared with me", "/bi"), ("WORKSPACE", "My workspace", "Your drafts and the workspaces you belong to", "/bi/w/me"),
+BI_ENTRIES = (("", "Build home", "Everything you build, BI's reports, boards, tables and models among it", "/build"), ("WORKSPACE", "My workspace", "Your drafts and the workspaces you belong to", "/bi/w/me"),
               ("CATALOGUE", "Catalogue", "Every published report and board you may open", "/bi/catalogue"))
 
 
@@ -161,8 +161,8 @@ async def command_line(request: Request, q: str, limit: int | None) -> list:
     if word(r"^\s*(b|bi|r|ru|rup|rupa|rupak)\s*$") and ed.word_on("BI" if q.strip().lower().startswith("b") else RUPAKA) \
             and await rupaka_words(request, "", None):    # the first letters of it: offer the keyword
         kw = "BI" if q.strip().lower().startswith("b") else RUPAKA
-        keyword = [{"mnemonic": kw, "title": "BI: business intelligence (Rupaka)", "subtitle": f"{kw} <GO> opens the BI home; {kw} CATALOGUE, {kw} WORKSPACE, {kw} <report>",
-                    "complete": f"{kw} ", "href": "/bi", "type": "bi"}]
+        keyword = [{"mnemonic": kw, "title": "BI: business intelligence (Rupaka)", "subtitle": f"{kw} <GO> opens the Build home; {kw} CATALOGUE, {kw} WORKSPACE, {kw} <report>",
+                    "complete": f"{kw} ", "href": "/build", "type": "bi"}]
     m = word(r"^\s*func(?:\s+(.*))?$")
     if m and ed.word_on("FUNC"):                                                   # FUNC: the command directory, filtered by what follows
         w = (m.group(1) or "").strip()

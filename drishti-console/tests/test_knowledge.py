@@ -134,4 +134,4 @@ def test_a_view_of_a_kind_with_a_knowledge_page_carries_the_link(client, monkeyp
 
 def test_knowledge_is_in_the_help_menu_once(client):
     page = client.get("/t").text
-    assert page.count('href="/what"') == 1 and "WHAT &lt;term&gt;" in page                       # listed once: the sitemap (2.9.11.f)
+    assert page.count('href="/what"') == 1 and "WHAT &lt;term&gt;" in page                       # listed once: the sitemap (2.9.11.e)

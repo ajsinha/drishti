@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The sitemap (config/sitemap.yaml, 2.9.11.f): the top bar's menus, the Admin pages' tab strip, the BI rail, Help's sections, the footer
+"""The sitemap (config/sitemap.yaml, 2.9.11.e): the top bar's menus, the Admin pages' tab strip, the BI rail, Help's sections, the footer
 and the command line's placeholder, as data (docs/admin/EDITIONS.md › The design as built, section 5.4): each item's ``requires:`` and
 the edition's (or the person's lens's) ``menus:`` lists decide what one request shows; nothing is kept per person.
 Read again when the file changes. The lens items ("Open Drishti Risk", "Leave Drishti Risk") are added here, from the lenses the server

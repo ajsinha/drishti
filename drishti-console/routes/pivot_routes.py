@@ -122,7 +122,7 @@ async def export(request: Request):
 
 @router.post("/api/pivot/{action}")
 async def post(request: Request, action: str):
-    if action not in ("query", "estimate", "expand", "compare", "rows", "inline", "views", "promote", "explain", "whatif", "functions", "live"):
+    if action not in ("query", "estimate", "expand", "compare", "rows", "inline", "views", "promote", "whatif", "functions", "live"):   # Why did it move: the one Explain (/api/explain, kind pivot)
         return JSONResponse({"detail": "no such pivot action"}, status_code=404)
     return await _call(request, "POST", "/" + action, await _body(request))
 

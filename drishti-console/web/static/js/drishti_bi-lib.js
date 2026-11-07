@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Rupaka phase 3: what the report viewer, the designer and the Model view share (BI_DESIGN.md › Rūpaka: the original design and every phase as built, sections 6.2, 8 and 9): DOM building with text only (never markup
    strings), the same-origin JSON calls to /bi/api (passed on to the server under the signed-in user's identity), number formats, the chart palettes and the
    few helpers about report models. Exposes window.drishtiBi. */
@@ -427,20 +428,25 @@
   if (!B.tabKeys) {
     B.tabKeys = true;
     const roving = (list) => { B.qa('[role=tab]', list).forEach((t) => { t.tabIndex = t.getAttribute('aria-selected') === 'true' ? 0 : -1; }); };
-    document.addEventListener('keydown', (e) => {
-      const tab = e.target && e.target.closest ? e.target.closest('[role=tab]') : null;
+    const listOf = (e) => {
+      const tab = e && e.target && e.target.closest ? e.target.closest('[role=tab]') : null;
       const list = tab && tab.closest('[role=tablist]');
-      if (!list || e.defaultPrevented || list.hasAttribute('data-own-keys') || e.altKey || e.ctrlKey || e.metaKey) { return; }
-      const tabs = B.qa('[role=tab]', list).filter((t) => !t.hidden && !t.disabled);
-      const i = tabs.indexOf(tab);
-      const to = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
-      if (to === undefined || i < 0) { return; }
-      e.preventDefault();
-      const next = tabs[(to + tabs.length) % tabs.length];
-      next.focus();
-      next.click();
-      window.setTimeout(() => roving(list), 0);
-    });
+      return list && !list.hasAttribute('data-own-keys') ? { tab: tab, list: list } : null;
+    };
+    window.Drishti.keys.register({ id: 'bi.tabs', keys: ['ArrowRight', 'ArrowLeft', 'Home', 'End'], scope: 'panel', area: 'bi-tabs', group: 'Tabs',
+      description: 'On a tab: the next or previous tab, the first or the last', within: () => (document.activeElement && document.activeElement.closest
+        ? document.activeElement.closest('[role=tablist]') : null), when: (e) => !!listOf(e),
+      run: (e) => {
+        const at = listOf(e), tabs = B.qa('[role=tab]', at.list).filter((t) => !t.hidden && !t.disabled);
+        const i = tabs.indexOf(at.tab);
+        const to = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
+        if (to === undefined || i < 0) { return false; }
+        const next = tabs[(to + tabs.length) % tabs.length];
+        next.focus();
+        next.click();
+        window.setTimeout(() => roving(at.list), 0);
+        return true;
+      } });
     const init = () => B.qa('[role=tablist]').filter((l) => !l.hasAttribute('data-own-keys')).forEach((l) => {
       roving(l);
       l.addEventListener('click', () => window.setTimeout(() => roving(l), 0));

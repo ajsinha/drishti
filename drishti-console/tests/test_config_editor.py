@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin → Configuration (2.9.11.f; core/config_editor.py): every setting in three tiers with search, the value in effect and its source,
+"""Admin → Configuration (2.9.11.e; core/config_editor.py): every setting in three tiers with search, the value in effect and its source,
 secrets never shown, and changes proposed through four eyes (never live): the stand-in below keeps the server's proposals as the server
 does (SettingProposals.java: never your own, one open change per key)."""
 from __future__ import annotations

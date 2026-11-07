@@ -36,11 +36,11 @@ def test_the_cards_and_their_calls_are_the_persons(backend, monkeypatch):
     page = c.get("/pivot?source=trade").text
     assert "drishti_pivot-functions.js" in page
     for marker in ('data-pf-open="explain"', 'data-pf-open="whatif"', 'data-pf-open="functions"', 'data-pf-card="explain"',
-                   "data-pf-waterfall", "data-pf-by", "data-pf-exclude", "data-pf-change", "data-pf-code", "data-pf-sample", "data-pf-check",
+                   "data-pf-explain", "data-pf-by", "data-pf-exclude", "data-pf-change", "data-pf-code", "data-pf-sample", "data-pf-check",
                    "data-pf-save"):
         assert marker in page, marker
-    assert c.post("/api/pivot/explain", json={"view": {"source": "trade"}, "by": "DESK"}).status_code == 200
-    assert sent[-1][:4] == ("POST", "/explain", "alice", {"view": {"source": "trade"}, "by": "DESK"})
+    assert "data-pf-waterfall" not in page                                    # Why asks the one Explain (drishti_explain.js)
+    assert c.post("/api/pivot/explain", json={"view": {"source": "trade"}, "by": "DESK"}).status_code == 404
     assert c.post("/api/pivot/whatif", json={"view": {}, "whatIf": {"exclude": {"BOOK": ["B-17"]}}}).status_code == 200
     assert sent[-1][1] == "/whatif"
     assert c.get("/api/pivot/functions").status_code == 200 and sent[-1][:2] == ("GET", "/functions")

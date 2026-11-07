@@ -636,8 +636,9 @@ dealt to the cells of every level it belongs to, each cell's inputs fed in batch
 ## 20. Why did it move: explain the difference
 
 Pick a cell (or two) and press **Why** (`W`): the difference between two cells, or one cell on two dates, split by the members of a
-dimension you choose, in steps that **add up** to the difference, drawn as a waterfall with its words ("Notional moved from 1.2bn to
-1.5bn (+300m); the largest steps: RATES +210m, FX +95m (new)").
+dimension you choose, in steps that **add up** to the difference. **Explain ›** on the card opens the one Explain (USER_GUIDE.md,
+"Explain: one for every number") at *Why it moved*: the words ("Notional moved from 1.2bn to 1.5bn (+300m); the largest steps: RATES
++210m, FX +95m (new)"), the waterfall of the steps and each member's step in a table, with the formula and inputs on the other tabs.
 
 | The measure | Each step |
 |---|---|

@@ -31,7 +31,7 @@ MAKE = "([k, t, b]) => window.drishtiBi.api('POST', '/workspaces/me/items', {kin
 
 
 def test_publish_in_a_private_workspace_explains_and_ctrl_s_saves_the_yaml(stack, browser):
-    page = sign_in(browser, "wes", "/bi")
+    page = sign_in(browser, "wes", "/bi/catalogue")
     rid = page.evaluate(MAKE, ["report", "Private report", REPORT])
     bid = page.evaluate(MAKE, ["board", "Private board", BOARD])
     for iid in (rid, bid):
@@ -113,7 +113,7 @@ def test_a_steward_outside_the_audience_approves_and_is_told_instead_of_seeing_a
     assert admin("PUT", "/admin/role-definitions/bi-stew", {"kinds": ["*"], "bi": ["bi", "bi-steward"]})[0] == 200
     assert admin("POST", "/admin/users", {"username": "stew", "displayName": "Stew", "email": "stew@desk.test", "roles": ["bi-stew"], "packs": ["trading"], "password": PASSWORD,
                                           "mustChangePassword": False})[0] in (200, 201, 409)
-    wes = sign_in(browser, "wes", "/bi")
+    wes = sign_in(browser, "wes", "/bi/catalogue")
     ws = wes.evaluate("() => window.drishtiBi.api('POST', '/workspaces', {name: 'Review desk', description: 'r'}).then(w => w.id)")
     wes.evaluate("(w) => window.drishtiBi.api('PUT', '/workspaces/' + w, {reviewRequired: true})", ws)
     iid = wes.evaluate("(w) => window.drishtiBi.api('POST', '/workspaces/' + w + '/items', {kind: 'report', title: 'To approve', description: '', body: %r}).then(i => i.id)" % REPORT, ws)

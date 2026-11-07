@@ -232,7 +232,7 @@ moved:
   var-explain: docs-guides-var-guide#311-why-it-moved-the-var-change-explained   # VAR EXPLAIN: why VaR moved, in causes that add up exactly (2.9.10)
   why-it-moved: docs-guides-var-guide#311-why-it-moved-the-var-change-explained
   var-baskets: docs-guides-var-guide#32-the-screen                        # the VaR screen's System baskets and My baskets drop-downs
-  how-calculated: user-guide#explain-one-for-every-number              # How calculated folded into the one Explain (2.9.11.f)
+  how-calculated: user-guide#explain-one-for-every-number              # How calculated folded into the one Explain (2.9.11.e)
   var-parametric: docs-guides-var-guide#1815-parametric-var-and-es-a-cross-check   # PVAR: parametric VaR beside historical (the guide's section), its Explain's Guide link
   pvar: docs-guides-var-guide#1815-parametric-var-and-es-a-cross-check            # PVAR by its word
   stress-window: docs-guides-var-guide#189-choosing-the-stress-window   # SWIN: which 12-month period is worst for today's portfolio

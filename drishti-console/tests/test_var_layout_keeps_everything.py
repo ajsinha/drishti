@@ -20,7 +20,7 @@ by How calculated (H). This file is the guard that nothing else went: the invent
 figure and every line of the explanation. The server-rendered page and the scripts are checked here; the drawn page in Chromium
 (a stand-in engine, the console in-process) at the end of the file. Skipped without Playwright or Chromium (the browser part only).
 
-2.9.11.f folded the drawer and the Why it moved tab into the one Explain (SHARED_SCREENS.md section 3, drishti_explain.js): every line
+2.9.11.e folded the drawer and the Why it moved tab into the one Explain (SHARED_SCREENS.md section 3, drishti_explain.js): every line
 of How this number was built is now the server's (VarNumberExplainer.java, checked below row for row), the tab is the drawer's Why it
 moved, and Explain › (E) opens it; the drawer's What-if moved to the toolbar."""
 import os
@@ -116,7 +116,7 @@ def test_every_part_of_the_var_screen_is_still_served(client):
 def test_the_five_tabs_stay_in_their_order(client):
     html = _page(client)
     tabs = re.findall(r'class="vx-tab" role="tab" data-tab="(\w+)"', html)
-    assert tabs == ["path", "hist", "contrib", "captures", "ccy"]          # Why it moved is the Explain drawer's tab (2.9.11.f)
+    assert tabs == ["path", "hist", "contrib", "captures", "ccy"]          # Why it moved is the Explain drawer's tab (2.9.11.e)
 
 
 def test_the_scripts_and_styles_stay(client):
@@ -209,7 +209,7 @@ class LayoutBackend(FakeBackend):
                     "sumOfParts": 1.0, "diversification": 0.0, "partsAdded": 1, "confidence": 0.99, "esConfidence": 0.975, "computeMs": 1}
         raise BackendError(404, "DRS-1003", "nothing here in this test")
 
-    async def explain(self, method, path, ident, body=None, **params):
+    async def explain_number(self, method, path, ident, body=None, **params):
         """The one Explain, as the server answers it (shapes of VarNumberExplainer), from this engine's own figures."""
         self.explained = getattr(self, "explained", []) + [dict(params)]
         if path == "/kinds":

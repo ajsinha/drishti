@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* One search box (2.9.11.f): the command line's type-ahead, Help's search and the global search (Alt+K) are this component over one
+/* One search box (2.9.11.e): the command line's type-ahead, Help's search and the global search (Alt+K) are this component over one
    endpoint, GET /api/search?in=command|help|all (core/search.py). It asks as you type (debounced, a stale answer aborted), shows the
    answer in an ARIA listbox (grouped by kind when asked), and is driven from the keyboard inside its own field: ↑ ↓ move, Enter opens,
    Esc closes. A field's keys are its own: the keymap never acts while you type (drishti_keys.js).

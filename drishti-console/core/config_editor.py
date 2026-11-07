@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin → Configuration (``/admin/configuration``, 2.9.11.f; docs/admin/OPERATIONS.md, "The configuration editor"): every setting of
+"""Admin → Configuration (``/admin/configuration``, 2.9.11.e; docs/admin/OPERATIONS.md, "The configuration editor"): every setting of
 docs/admin/CONFIGURATION.md in three tiers (everyday, admin, expert; the tier is the document's Tier column, kept in
 tools/settings_schemas.yaml), searchable, each with its value in effect and where it came from (the server's ``GET /admin/settings`` and
 this console's own, core/settings_page.py), and a change **proposed**, never written live: a second administrator approves it (the

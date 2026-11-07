@@ -39,7 +39,7 @@ def _design(client, location):
 # ---- the addresses ------------------------------------------------------------------------------------------------------------
 
 def test_bare_studio_is_the_build_home_and_its_confirmed_post_a_scratch_design(app_client):
-    """Studio's old home folds into the Build home (2.9.11.f); the start it confirmed (a scratch design on the default example) stays."""
+    """Studio's old home folds into the Build home (2.9.11.e); the start it confirmed (a scratch design on the default example) stays."""
     r = app_client.get("/studio", follow_redirects=False)
     assert r.status_code == 302 and r.headers["location"] == "/build"
     loc = app_client.post("/studio", data={}, follow_redirects=False).headers["location"]
@@ -93,7 +93,7 @@ def test_studio_design_and_sample_open_that_design_and_the_page_selects_the_samp
 
 
 def test_the_old_review_addresses_are_gone_and_the_reviews_live_in_the_approvals_queue(app_client):
-    # lean (2.9.11.c): the /studio/reviews redirect stubs are deleted; (2.9.11.f) the reviews are the one Approvals queue
+    # lean (2.9.11.c): the /studio/reviews redirect stubs are deleted; (2.9.11.e) the reviews are the one Approvals queue
     assert app_client.get("/studio/reviews", follow_redirects=False).status_code == 404
     r = app_client.get("/build/reviews", follow_redirects=False)
     assert r.status_code == 301 and r.headers["location"] == "/approvals?kind=sutra"

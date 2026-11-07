@@ -481,7 +481,7 @@ A failed call, in words.
 
 #### `errorWords(body, status, fallback)`
 
-The words of an error answer: its DRS code and the server's detail ("DRS-4005 ..."), else the fallback.
+The words of an error answer: its DRS code and the server's detail ("DRS-5001 ..."), else the fallback.
 
 | Parameter | Type | Meaning |
 |---|---|---|

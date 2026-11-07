@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The one keymap (2.9.11.f, web/static/js/drishti_keys.js), checked on the source: every key a page answers is registered with the
+"""The one keymap (2.9.11.e, web/static/js/drishti_keys.js), checked on the source: every key a page answers is registered with the
 keymap, written in its canonical form, and no two registrations claim the same key in the same scope and area; and no script listens for
 keys on the whole page (document, window, body) on its own, except the few on ALLOWED below, each with its reason. A widget's keys bound
 on its own element (a table, a drop-down, a dialog's field) are the widget's and are not page-level. The browser side (the ? overlay,
@@ -36,18 +36,6 @@ ALLOWED = {
     "drishti_engines-menu.js": (1, "widget-internal: the engines menu's filter box, ahead of Bootstrap's dropdown"),
     # a host page without the console's keymap (the client-side renderer's 'console' behaviours): the drill binds the document itself
     "drishti_drill.js": (1, "fallback for a host page that has no keymap; on a console page the drill registers drill.keys"),
-    # BI and pivot (#biKeys): folded after wip/bi-delete merges
-    "drishti_bi.js": (1, "#biKeys: folded after wip/bi-delete merges"),
-    "drishti_bi-design.js": (1, "#biKeys: folded after wip/bi-delete merges"),
-    "drishti_bi-lib.js": (1, "#biKeys: folded after wip/bi-delete merges"),
-    "drishti_bi-model-designer.js": (1, "#biKeys: folded after wip/bi-delete merges"),
-    "drishti_bi-report-board.js": (1, "#biKeys: folded after wip/bi-delete merges"),
-    "drishti_bi-runs-tab.js": (1, "#biKeys: folded after wip/bi-delete merges"),
-    "drishti_bi-statement.js": (1, "#biKeys: folded after wip/bi-delete merges"),
-    "drishti_bi-tooltips.js": (1, "#biKeys: folded after wip/bi-delete merges"),
-    "drishti_pivot.js": (1, "#biKeys: folded after wip/bi-delete merges"),
-    "drishti_pivot-functions.js": (1, "#biKeys: folded after wip/bi-delete merges"),
-    "drishti_pivot-switches.js": (1, "#biKeys: folded after wip/bi-delete merges"),
 }
 
 # Keys bound on a widget's own element and only described to the keymap (so the ? overlay lists them): they must stay described.
@@ -177,7 +165,7 @@ def test_registrations_are_found():
     regs = registrations()
     ids = {r[1] for r in regs}
     assert len(regs) >= 50, len(regs)
-    for rid in ("keys.overlay", "find.open", "command.focus", "help.context", "history.next", "var.how"):
+    for rid in ("keys.overlay", "find.open", "command.focus", "help.context", "history.next", "explain.open", "bi.go", "pivot.chart"):
         assert rid in ids, rid
 
 

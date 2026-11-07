@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Admin → Configuration (/admin/configuration, 2.9.11.f): tiers, search, the settings with their values in effect, proposals. Tokens only. */
+/* Admin → Configuration (/admin/configuration, 2.9.11.e): tiers, search, the settings with their values in effect, proposals. Tokens only. */
 .cfe-warn { color: var(--d-warn); }
 .cfe-queue { margin: 12px 0; padding: 10px 12px; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); }
 .cfe-queue h2 { margin: 0 0 6px; font-size: 15px; }

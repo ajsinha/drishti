@@ -32,11 +32,11 @@ from bi_gov_stack import CONSOLE_URL, PASSWORD, call
 def sign_in(browser, user, **ctx):
     context = browser.new_context(**{"viewport": {"width": 1600, "height": 1000}, "accept_downloads": True, **ctx})
     page = context.new_page()
-    page.goto(CONSOLE_URL + "/login?next=/bi")
+    page.goto(CONSOLE_URL + "/login?next=/bi/catalogue")
     page.fill("#lu", user)
     page.fill("#lp", PASSWORD)
     page.click("button[type=submit]")
-    page.wait_for_url("**/bi")
+    page.wait_for_url("**/bi/catalogue")
     return page
 
 

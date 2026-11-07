@@ -58,7 +58,7 @@ async def studio(request: Request, sutra: str | None = None, kind: str = "", id:
     workbench (canvas and YAML side by side, or the canvas alone for ``build=1``). Every other address would *start* something (an example
     as a copy, a Design that edits a Sutra, a stored entity, a scratch Design): a GET must not do that, or any page on the web could fill
     your quota with a link (QA 2026-10-03 S2-04), so it answers a small confirmation page whose button POSTs the same address."""
-    if not request.url.query:                    # Studio's old home: the Build home (2.9.11.f)
+    if not request.url.query:                    # Studio's old home: the Build home (2.9.11.e)
         return RedirectResponse("/build", status_code=302)
     backend, me = request.app.state.backend, ident(request)
     tab = "design" if build and build != "0" else "split"

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Build home (2.9.11.f; docs/architecture/SHARED_SCREENS.md section 1): the rail grouped Data · Screens · Analysis · Work with
+"""The Build home (2.9.11.e; docs/architecture/SHARED_SCREENS.md section 1): the rail grouped Data · Screens · Analysis · Work with
 counts, the lists with lineage (uses, used by), the first-visit tiles, one search, + New, the registry's domains, a source that fails,
 and two people with different roles and lenses seeing different menus and kinds (session isolation)."""
 from __future__ import annotations
@@ -220,6 +220,6 @@ def test_the_bi_rail_is_the_sitemaps_bi_menu(backend, monkeypatch):
     page = _client(_app(backend, monkeypatch)).get("/bi/transform").text
     rail = page.split('class="bi-rail"')[1].split("</nav>")[0]
     ids = re.findall(r'data-rail="([\w-]+)"', rail)
-    assert ids[:3] == ["bi-home", "bi-catalogue", "bi-workspace"] and ids[-3:] == ["tables-models", "pivot", "build-home"]
+    assert ids[:2] == ["bi-catalogue", "bi-workspace"] and ids[-3:] == ["build-home", "tables-models", "pivot"]   # BI Studio's own home is the Build home (/bi redirects)
     assert "bi-settings" not in ids                                                                   # rail: false, the top bar's only
     assert re.search(r'data-rail="bi-transform"[^>]*aria-current="page"', rail) and "data-runs-count" in rail

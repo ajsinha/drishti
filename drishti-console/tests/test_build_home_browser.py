@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Build home, the sitemap's menus and Admin → Configuration in a real browser (2.9.11.f): every button clicked. The rail's kinds,
+"""The Build home, the sitemap's menus and Admin → Configuration in a real browser (2.9.11.e): every button clicked. The rail's kinds,
 the task tiles (hide, show, open), + New (open, Escape), the search ("/" focuses it); the top bar's menus and the Admin tabs; the
 configuration editor's tiers, search, Propose a change (the dialog, a missing reason, the proposal), Withdraw. One console on the
 stand-in server (port 17938), whose server answers for tables, the catalogue, connectors and the proposals are kept below; skipped when

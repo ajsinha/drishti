@@ -177,7 +177,7 @@ Everything the page does, the server decides: the page is a shell that asks the 
 
 ![The BI menu in the top bar](img/bi/02-bi-menu.jpg)
 
-- **The BI menu** is the second entry of the top bar, right after **Views** (the order is Views, BI, Forms, Reports, Build, then Admin and Help for those who have them), with the icon `bar-chart-line`. It lists *BI home*, *My workspace*,
+- **The BI menu** is the second entry of the top bar, right after **Views** (the order is Views, BI, Forms, Reports, Build, then Admin and Help for those who have them), with the icon `bar-chart-line`. It lists *My workspace*,
   *Catalogue*, and under *Recent* the three items you opened most recently. It is shown only to people who hold the `bi` power (section 3), and
   not at all when BI is switched off. Administrators with `bi-admin` also see *BI settings* (under *Administer*).
 - **The Reports menu** (the top bar's fourth entry) holds the saved and scheduled reports of the terminal and, for people with the `bi` power, *BI reports* (the catalogue filtered to reports) and the BI reports you opened last. The **Forms** menu beside it is the terminal's query by form, not BI.
@@ -185,7 +185,7 @@ Everything the page does, the server decides: the page is a shell that asks the 
 
 | Type | Opens |
 |---|---|
-| `BI <GO>` | the BI home (`/bi`) |
+| `BI <GO>` | the Build home (`/build`; BI's own home, `/bi`, is folded into it and redirects there) |
 | `BI WORKSPACE <GO>` | your personal workspace (`/bi/w/me`) |
 | `BI CATALOGUE <GO>` | the catalogue (`/bi/catalogue`) |
 | `BI <report-or-board> <GO>` | an item by its id or its title (any case); a **report opens drawn** (`/bi/r/<id>`), any other item opens its page; if the words match several items, the catalogue searched for them (a pick list) |
@@ -228,7 +228,7 @@ wide canvas. The terminal's F-key footer is not shown (F1 opens help for BI).
 
 | Rail entry | Opens | State |
 |---|---|---|
-| Home | recent, favourites, certified for you, shared with me | built |
+| Build home | the one Build home (`/build`): BI Studio's own home (`/bi`) is folded into it and redirects there | built |
 | Catalogue | search, filters and sort over what you may open | built |
 | My workspace | your personal workspace | built |
 | Workspaces | the workspaces you belong to; create one | built |
@@ -239,8 +239,9 @@ wide canvas. The terminal's F-key footer is not shown (F1 opens help for BI).
 | Notebook | open a model as your masked extract; SQL cells run by the server, Python cells on its compute pool; notebooks | `/bi/notebook` ([USER_GUIDE.md](USER_GUIDE.md#the-notebook), section 21) |
 | Transforms | prepare data in Python step by step: inputs, snippets, a preview and a profile after each step | `/bi/transform` ([section 34, its section 17](#17-data-prep-the-transform-editor)) |
 
-**Keys** (shown by `?`): `/` search the catalogue (from another BI page it takes you to the catalogue with the search focused),
-`g h` home, `g c` catalogue, `g w` my workspace, `?` the list, `Esc` closes it. Keys are ignored while you type in a field.
+**Keys** (the console's one keymap: `?` or the rail's Keys button lists them with the rest of the screen's): `/` search the catalogue
+(from another BI page it takes you to the catalogue with the search focused), `g h` the Build home, `g c` catalogue, `g w` my workspace,
+`g r` my runs. Keys are ignored while you type in a field.
 
 **On a phone** (390 px) the rail becomes a scrolling bar above the page, cards stack in one column, every control is at least
 44 px high, and fields use 16 px text so the browser does not zoom.

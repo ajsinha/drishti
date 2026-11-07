@@ -79,7 +79,7 @@ def open_extract(page):
 
 
 def test_sql_and_python_run_on_the_server_and_the_notebook_saves(stack, browser):
-    page = sign_in(browser, "wes", "/bi")
+    page = sign_in(browser, "wes", "/bi/catalogue")
     errors = []
     page.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
     open_extract(page)
@@ -142,7 +142,7 @@ def test_sql_and_python_run_on_the_server_and_the_notebook_saves(stack, browser)
 
 
 def test_the_old_addresses_land_on_the_notebook(stack, browser):
-    page = sign_in(browser, "wes", "/bi")
+    page = sign_in(browser, "wes", "/bi/catalogue")
     for old in ("/bi/explore", "/pyconsole"):
         page.goto(CONSOLE_URL + old)
         page.wait_for_url("**/bi/notebook**")
@@ -154,7 +154,7 @@ def test_the_old_addresses_land_on_the_notebook(stack, browser):
 
 
 def test_the_page_fits_a_phone(stack, browser):
-    page = sign_in(browser, "wes", "/bi", viewport={"width": 390, "height": 844})
+    page = sign_in(browser, "wes", "/bi/catalogue", viewport={"width": 390, "height": 844})
     open_extract(page)
     for tab in ("python", "profile", "sql"):
         page.click(f"#bxT-{tab}")

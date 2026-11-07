@@ -104,6 +104,8 @@
     }
   }
 
+  /** The one Explain (drishti_explain.js, SHARED_SCREENS.md section 3) of the difference between the two cells or dates, at Why it moved:
+      the server's pivot explainer (kind pivot) answers with the steps that add up, drawn by the one renderer; this card only asks. */
   function explain() {
     var v = S.view();
     if (!v) { return fail(new Error("build a view first")); }
@@ -114,29 +116,8 @@
     var td = $("[data-pf-to-date]").value.trim();
     if (fd) { body.fromDate = fd; }
     if (td) { body.toDate = td; }
-    call("POST", "/explain", body).then(drawWaterfall).catch(fail);
-  }
-
-  function drawWaterfall(e) {
-    $("[data-pf-words]").textContent = e.words + " " + e.method + ".";
-    var steps = e.steps.slice();
-    if (Math.abs(e.residual.value) > 0) { steps.push({member: "residual: " + e.residual.name, cause: "residual", step: e.residual.value, cumulative: e.difference}); }
-    var lo = 0, hi = 0, run = 0;
-    steps.forEach(function (s) { run += s.step; lo = Math.min(lo, run, run - s.step); hi = Math.max(hi, run, run - s.step); });
-    var span = hi - lo || 1;
-    var html = ["<div><b>member</b></div><div><b>cause</b></div><div></div><div class='pf-num'><b>step</b></div>"];
-    run = 0;
-    steps.forEach(function (s) {
-      var from = run;
-      run += s.step;
-      var left = (Math.min(from, run) - lo) / span * 100;
-      var width = Math.max(0.5, Math.abs(s.step) / span * 100);
-      html.push("<div>" + esc(String(s.member)) + "</div><div>" + esc(s.cause) + "</div>"
-        + "<div class='pf-track'><span class='pf-bar" + (s.step < 0 ? " neg" : "") + "' style='left:" + left.toFixed(2) + "%;width:" + width.toFixed(2) + "%'></span></div>"
-        + "<div class='pf-num'>" + (s.step >= 0 ? "+" : "") + esc(fmt(s.step)) + "</div>");
-    });
-    html.push("<div><b>difference</b></div><div></div><div></div><div class='pf-num'><b>" + esc(fmt(e.difference)) + "</b></div>");
-    $("[data-pf-waterfall]").innerHTML = html.join("");
+    if (!window.Drishti.Explain) { return fail(new Error("Explain is not on this page")); }
+    window.Drishti.Explain.open({kind: "pivot", measure: "cell", body: body}, "why", $("[data-pf-explain]"));
   }
 
   // ---- what-if ----------------------------------------------------------------------------------------------------------------------
@@ -282,11 +263,10 @@
     }
   });
 
-  document.addEventListener("keydown", function (e) {
-    var tag = (e.target.tagName || "").toLowerCase();
-    if (tag === "input" || tag === "select" || tag === "textarea" || e.ctrlKey || e.metaKey || e.altKey) { return; }
-    var k = e.key.toLowerCase();
-    var which = {w: "explain", i: "whatif", u: "functions"}[k];
-    if (which) { e.preventDefault(); open(which); }
+  // W, I and U open the cards (the one keymap, drishti_keys.js)
+  [["W", "explain", "Why did it move? Two cells or dates, explained"], ["I", "whatif", "What-if: private, never written to the lake"],
+    ["U", "functions", "Custom functions"]].forEach(function (c) {
+    window.Drishti.keys.register({id: "pivot.card." + c[1], keys: [c[0], "Shift+" + c[0]], scope: "screen", area: "pivot-cards", group: "Pivot", description: c[2],
+      run: function () { open(c[1]); }});
   });
 })();

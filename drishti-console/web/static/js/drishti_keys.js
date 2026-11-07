@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* One keymap (2.9.11.f). Every key a page answers is registered here, with what it does, its scope and its conditions, and one listener on the
+/* One keymap (2.9.11.e). Every key a page answers is registered here, with what it does, its scope and its conditions, and one listener on the
    document dispatches them; the `?` overlay lists the keys of the screen you are on from the same registrations.
 
      Drishti.keys.register({ id: 'calc.toggle', keys: ['Alt+C'], scope: 'screen', area: 'view', group: 'View', description: 'Calc: Python on this view',

@@ -31,10 +31,10 @@
       menu.addEventListener('keydown', function (e) { if (e.key === 'Escape') { menu.open = false; menu.querySelector('summary').focus(); } });
     }
     var search = home.querySelector('[data-search]');
-    document.addEventListener('keydown', function (e) {
-      var t = e.target, typing = t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
-      if (e.key === '/' && !typing && search) { e.preventDefault(); search.focus(); }
-    });
+    if (search) {
+      window.Drishti.keys.register({ id: 'build.home.search', keys: ['/'], scope: 'screen', area: 'build-home', group: 'Build home', description: 'Search everything you can build',
+        run: function () { search.focus(); } });
+    }
   }
   var root = document.querySelector('[data-designs]');
   if (!root) { return; }

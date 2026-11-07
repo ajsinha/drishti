@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The one search (2.9.11.f, core/search.py, ``GET /api/search``): one endpoint for the command line's type-ahead (``in=command``),
+"""The one search (2.9.11.e, core/search.py, ``GET /api/search``): one endpoint for the command line's type-ahead (``in=command``),
 Help's search box (``in=help``) and the global search box (``in=all``); results ranked and grouped by kind (entities, commands,
 screens, Help pages, things you can build), each kind found, and only what the person may see (two people, two answers). The old
 type-ahead endpoint is gone. The browser side: test_keymap_browser.py."""

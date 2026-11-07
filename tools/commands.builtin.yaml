@@ -38,7 +38,7 @@ forms:
 words:
   - word: BI
     example: BI CATALOGUE
-    does: "The BI home. After it: WORKSPACE(S), CATALOGUE (CATALOG), RUNS (RUN), SETTINGS, or a report or board by name."
+    does: "The Build home (BI's own home is folded into it). After it: WORKSPACE(S), CATALOGUE (CATALOG), RUNS (RUN), SETTINGS, or a report or board by name."
   - word: RUPAKA
     example: RUPAKA
     does: The older name of BI; everything that works after BI works after it.
