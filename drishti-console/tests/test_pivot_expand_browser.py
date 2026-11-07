@@ -114,6 +114,6 @@ def test_with_a_next_level_the_plus_opens_the_member(stack, browser):
     bonds = [b["ISIN"] for i in issuers() if i["ISSUER_ID"] == first["value"] for b in i.get("BONDS") or []]
     assert sorted(k["value"] for k in kids) == sorted(bonds)
     assert all(k["expandable"] is False for k in kids), "the last level's members are leaves"
-    assert pg.locator('[data-pv-grid] .dg-row[aria-expanded="true"]').count() == 1
+    assert pg.locator('[data-pv-grid] .dg-row:not(.dg-k-total)[aria-expanded="true"]').count() == 1   # one member open (its total line closes it too)
     assert pg.errors == []
     pg.close()
