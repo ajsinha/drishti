@@ -59,6 +59,24 @@
   - Click tests for every changed button (the Notebook, Export data's menu item and both words, the VaR explorer's MR cube link, Counterparties →
     CCR cube); tutorials 10, 14 and 18 on the Notebook (tutorial 14's Python console step removed).
 
+- **The old BI code deleted; pivot formulas are Rachana** (BI_FOUNDATION_2911E.md section 11, the deletion; the product owner: no
+  critique, delete the old, fold the formulas within d). Deleted: `DatasetParser` version 1, `DatasetDefParser`'s `rachana: 2` form,
+  `ModelDefParser`'s `datasets:` form, DEL's checker, lowering, printer and catalogue (`bi/expr/functions.yaml`), `ExprParser`,
+  `LegacySources`, `StableIds`, the converters and `drishti.py bi migrate --expressions` / `--models`, and the pivot's
+  `FormulaParser` (7,873 lines removed and 1,467 added outside the docs, net 6,406 fewer; 6,000 fewer in main code). BI's folder refuses `datasets/` and `models/` in the old forms (`DRS-9196`). A pivot formula
+  is read by Rachana's one parser (`FormulaLowering`; `count()` with no argument counts the rows); saved formulas (views, their versions,
+  formula functions) are rewritten into Rachana at start, in place, once, audited (`PivotFormulaMigration`). A promoted run writes a table
+  that reads it (`from: { run }`). Build → New pack writes a deep kind's BI as tables of the table layer (`config/bi/tables/`) and a
+  `rachana: 3` model, and a pack's `config/bi/tables/` is loaded as table items. A pack's table that would break someone else's
+  published report is held, as a dataset was. `tables migrate` reads BI's first expression syntax (an item without `expressions: 2`:
+  `&&`, `||`, `!`, `c ? a : b`, `[Measure]`) with Rachana's parser, so an installation that never ran the removed `bi migrate --expressions`
+  still migrates. **Parity:** the 76 formulas recorded on the old parser
+  (1,801 SQL-path cells, 76 Java answers) give the same answers in their Rachana text (19 rewritten), but one changed by the product owner's decision (2026-11-07):
+  `count(where = CCY in [])`, refused on the old SQL path, answers 0 on both paths (an empty list matches nothing); BiFoundationParityTest (6,468
+  answers) and BiParityTest (13 cases) exact. `ModelDefTest` on `rachana: 3` tables and a model. Docs: BI_LANGUAGE_REFERENCE out of Help
+  (Q27; `/help/expressions` leads to Rachana's expressions, `/help/sql` to the API guide's Drishti SQL), RACHANA_REFERENCE (`count()`),
+  PIVOT_GUIDE (formulas in Rachana), BI_GUIDE (what BI reads; packs' BI content), CLI_GUIDE (`bi migrate`), SCHEMA_TO_PACK, tutorial 17
+  and OPERATIONS (back up `config/tables`), tutorial 37 (formula language), FUNCTIONS.md regenerated.
 - Decided (product owner, 2026-11-06): **tables use look-ups, models join**. The table editor says *look-up* (Source and look-ups, + Look-up); combining tables row by row is a model's relationships (EDITORS.md section 2, VIRTUAL_TABLES.md V10a, TABLES_GUIDE).
 - **The switch: BI reads the table layer** (BI_FOUNDATION_2911E.md section 7.3, step 5). The shipped datasets and models were migrated
   with `drishti.py tables migrate` (dry run first: 34 items converted, 0 refused; 103 expressions, 22 rewritten DEL into Rachana) into

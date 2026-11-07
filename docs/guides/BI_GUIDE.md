@@ -88,7 +88,7 @@ A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), t
     - [13. Model-layer datasets (`rachana: 2`)](#13-model-layer-datasets-rachana-2)
     - [14. Derivation: subset, filter, grain, derive, group](#14-derivation-subset-filter-grain-derive-group)
     - [15. The dataset wizard, version 2](#15-the-dataset-wizard-version-2)
-    - [16. A run's result as a dataset snapshot (`source: {run}`)](#16-a-runs-result-as-a-dataset-snapshot-source-run)
+    - [16. A run's result as a table snapshot (`from: { run }`)](#16-a-runs-result-as-a-table-snapshot-from--run-)
     - [17. Worked examples: the shipped models, row rules and the Model view](#17-worked-examples-the-shipped-models-row-rules-and-the-model-view)
 31. [Reports: the YAML, the visuals and how they behave](#31-reports-the-yaml-the-visuals-and-how-they-behave)
     - [1. Where a report lives](#1-where-a-report-lives)
@@ -804,8 +804,12 @@ The model is told the names, types and descriptions of the dataset and your word
 
 The model layer ([BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification)) splits what a version-1 dataset did in one file into two items: a **dataset** is one
 governed table (what one row is, its columns with roles and meanings, how it keeps time, its own security), and a **model** puts datasets in a star with
-relationships, measures and tighter security. Reports, the Notebook and the API ask a model with **one request shape**, the model query (`mq: 1`). Everything in
-sections 13 to 22 still works as written: version-1 datasets are read as models by a compatibility reader.
+relationships, measures and tighter security. Reports, the Notebook and the API ask a model with **one request shape**, the model query (`mq: 1`).
+
+**What BI reads.** BI reads the tables and models of the table layer (`rachana: 3`, [TABLES_GUIDE.md](TABLES_GUIDE.md)) and only Rachana in them. A
+dataset or model file in BI's own forms (`rachana: 1` or `2`, under `config/bi/datasets` or `config/bi/models`) is refused with `DRS-9196` and
+migrated by `drishti.py tables migrate`; the dataset YAML shown in this guide is the form that command reads. A pack carries its BI tables and
+model as `config/bi/tables/*.table.yaml` and `config/bi/models/*.model.yaml` in the layer's form.
 
 The table layer's own editors (tables, virtual tables, semantic models in the layer's form and Python-driven tables) are on the rail as
 **Tables & models** (`/build/tables`): one shell with the live YAML below the editor, a preview read as you, "adds up?" from the engine,
@@ -1371,7 +1375,7 @@ limit, with a note saying so. Parquet and PDF are not offered for runs yet.
 ### Promote a run
 
 **Promote…** in the drawer asks for a **Name** (the snapshot's and the dataset's, prefilled from the run's title), a **Title**, and **To**:
-*a dataset snapshot* keeps the result as a read-only table and makes a draft dataset in My workspace (`source: {run: …}`,
+*a dataset snapshot* keeps the result as a read-only table and makes a draft table in My workspace (`from: { run: … }`, [section 16](#16-a-runs-result-as-a-table-snapshot-from--run-) and
 [section 30](#30-datasets-the-yaml-the-expression-language-and-the-security-rules)); *a report on it* also makes a draft report with one table of every column. The rows are kept as you see them:
 a column masked for you stays masked for every reader. The drawer then says *Promoted to name@1* with links to **the draft dataset** and
 **the draft report**. Both follow the normal review before publishing, and the reviewer sees as whom the data was computed.
@@ -2395,7 +2399,7 @@ Validation never throws: it returns every problem with its code and the path of 
 
 ### 10. What is not built
 
-**A run's result promoted to a dataset snapshot is built**: see [section 16](#16-a-runs-result-as-a-dataset-snapshot-source-run). A rollup a
+**A run's result promoted to a table snapshot is built**: see [section 16](#16-a-runs-result-as-a-table-snapshot-from--run-). A rollup a
 repeated heavy question needs is suggested in Admin → BI → Runs and added to the model's draft when accepted (see [section 7](#7-modes-layers-and-rollups)).
 
 Marked so nothing is mistaken for working: a Python measure **inside a query** (a python visual runs it: 4.2);
@@ -2699,10 +2703,10 @@ The console calls: `POST /bi/model-api/dataset-yaml` (the document to YAML and t
 `POST /bi/api/expr/validate` (each formula, with `model: dataset:<base>` and `alias`), `POST /bi/api/sql/validate` (the SQL view), and for the preview the
 draft's implicit model asked with `shape: rows` (`POST /bi/api/mq`).
 
-### 16. A run's result as a dataset snapshot (`source: {run}`)
+### 16. A run's result as a table snapshot (`from: { run }`)
 
 A finished BI run (a model query or a SQL statement, [BI_DESIGN.md › BI runs: every BI query as a bounded, visible job, section 9.4](../architecture/BI_DESIGN.md#94-promoting-to-a-dataset-snapshot))
-can be **promoted**: its result is frozen as a snapshot and becomes a draft dataset you can build models and reports on.
+can be **promoted**: its result is frozen as a snapshot and becomes a draft table you can build models and reports on.
 
 **Through the API** (the run object's `can.promote` is true when you ran it, hold `bi-author` and it is a finished model query or SQL
 run; the drafts then appear in your workspace's Items):
@@ -2713,30 +2717,31 @@ curl -X POST "$DRISHTI/api/v1/bi/runs/r-java-1-01JA…/promote" -H "Authorizatio
 # 201 {"snapshot": "desk-pnl-2026", "version": 1, "dataset": {"name": "desk-pnl-2026", "item": "bi-…"}, "report": {"item": "bi-…"}, "yaml": "…"}
 ```
 
-**The YAML it writes** (edit the title, description and columns' roles before you publish; keep `source:` as it is):
+**The YAML it writes**, a table of the table layer (edit the title and the columns' roles before you publish; keep `from:` as it is):
 
 ```yaml
-rachana: 2
-dataset: desk-pnl-2026
+rachana: 3
+table: bi.desk_pnl_2026
 version: 1.0.0
 title: "Desk P&L 2026 (snapshot of run r-java-1-01JA…, as of 2026-09-30)"
-source: { run: desk-pnl-2026, version: 1, token: 9f3c… }   # the snapshot, pinned to a version; the token binds it to this dataset
+from: { run: desk-pnl-2026, params: { version: 1, token: 9f3c… } }   # the snapshot, pinned to a version; the token binds it to this table
 columns:
-  desk:   { type: string, path: "trades.desk", role: dimension }
-  pnl:    { type: decimal, path: "PnL", role: amount, aggregate: sum }
-  trader: { type: string, path: "trades.trader", role: dimension }
-grain: { keys: [desk, trader] }
-security:
-  masked: [trader]          # masked for the promoter: masked always
-provenance: { run: "r-java-1-01JA…", computedAs: "ajsinha", signature: "…", dataVersion: "…", asOf: "2026-09-30", question: "…" }
+  desk:   { type: string, title: "trades.desk", role: dimension }
+  pnl:    { type: decimal, title: "PnL", role: amount, aggregate: sum }
+  trader: { type: string, title: "trades.trader", masked: true, role: dimension }   # masked for the promoter: masked always
+keys: [desk, trader]
+provenance:
+  run: "r-java-1-01JA…"
+  computedAs: "ajsinha"
+  asOf: "2026-09-30"
 ```
 
 * **The rows are what you could see.** A column masked for you holds the mask in the snapshot and is declared `masked`, so it stays masked
   for every reader. Row rules you had are baked in: the snapshot never holds rows you could not read.
 * **It is a draft**, yours only, until it is reviewed and published like any dataset. The reviewer sees `provenance` (whose rights computed
-  it), so publishing data computed with broad rights to narrow readers is a visible decision. Add `security: rows:` for readers on top.
-* **Only this dataset reads the snapshot.** The snapshot is kept under `<data>/bi-runs/snapshots/<name>/v<N>/` with the dataset's name and
-  the token; another dataset pointing at it gets `DRS-9108`.
+  it), so publishing data computed with broad rights to narrow readers is a visible decision. Add `rules:` for readers on top.
+* **Only this table reads the snapshot.** The snapshot is kept under `<data>/bi-runs/snapshots/<name>/v<N>/` with the table's name and
+  the token; another table pointing at it gets `DRS-9108`.
 * **Promote again** (after a re-run) under the same name: version N+1, a new draft of the same dataset item. The newest
   `promote.versions-keep` (5, `config/runs/runs.yaml`) versions are kept. Snapshots are outside the result store's budget and sweeper.
 * `promote.enabled: false` turns promotion off.
@@ -4956,7 +4961,7 @@ A roll back puts an overwritten item's row and published versions back (versions
 
 #### BI content in a pack archive
 
-A pack archive may carry BI content: `config/bi/datasets/`, `models/`, `reports/`, `boards/`, `notebooks/` and `python/` inside the pack folder, one file per item, named `<name>.<kind>.yaml` (the shapes of the BI folder, this document). Deploying the pack does **not** copy them where readers could use them unchecked: they become a bundle and go through the same import, so the same rules apply.
+A pack archive may carry BI content: `config/bi/tables/` and `models/` (tables and models of the table layer, `rachana: 3`), `reports/`, `boards/`, `notebooks/` and `python/` inside the pack folder, one file per item, named `<name>.<kind>.yaml` (the shapes of the BI folder, this document). Deploying the pack does **not** copy them where readers could use them unchecked: they become a bundle and go through the same import, so the same rules apply.
 
 * **The upload check** adds a `bi` block: how many items by kind, and a dry run of the import (what would be created, changed, left alone or held back, and the published reports a changed dataset would break), so the administrator reads the impact before confirming.
 * **The deploy** loads the files as a real import into the shared workspace `packs` (`drishti.bi.governance.pack-workspace`, made if absent), one item per file with a stable id `pk-<pack>-<kind>-<name>`, **published** (version 1; the next version of the pack makes the next published version, and an unchanged file stays unchanged), with **the pack as its audience** (people who have the pack see it), owned by the administrator, tagged `pack:<name>`, never certified. The import is kept like any other, so *Roll back this import* undoes it; the deploy's own roll back of the pack files does not touch it.

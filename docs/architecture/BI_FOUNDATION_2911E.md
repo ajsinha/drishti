@@ -815,8 +815,7 @@ editors and the layer's settings (the store folder) come with it.
 
 ## 11. As built (part C): the switch
 
-Step 5 of 7.3, in two commits: the switch itself, then (after the mid-way critique of PRODUCT_CRITIQUE_BRIEF.md, area 3) the deletion of
-the old code.
+Step 5 of 7.3, in two commits: the switch itself, then the deletion of the old code.
 
 | Part | Built | Where |
 |---|---|---|
@@ -836,12 +835,26 @@ formulas now test for a missing value with `x == None` and `x != None`, in Java 
 refusals the switch may lift** (`count(trades)` alone or by a dimension field, measures of two facts with no join path, `moving_avg`
 without its date field) are unchanged: BI's compiler still answers them, and still refuses them.
 
-**Left for the deletion commit** (after the critique): DEL's parser, checker, lowering, printer and catalogue (`server.bi.expr`, except the
-migration's DEL reader `DelTablesTranslator` and what it needs, kept to 2.9.14 by Q24), `bi.dataset.ExprParser`, the readers of BI's own
-dataset and model files (`DatasetParser` version 1, `DatasetDefParser`'s `rachana: 2` form, `ModelDefParser`'s `datasets:` form) and the
-`datasets/` and `models/` folders of BI's folder, the wizard and `bi migrate --expressions/--models`; the BI test suites rewritten onto
-tables and models; `OneGrammarRulesTest`'s exceptions emptied but for the VaR scope selector (Q20) and the migration's DEL reader (Q24).
-**Open:** the pivot's formula parser (`bicompute.formula.FormulaParser`) still reads DEL's syntax (its fold needs `count()` without an
-argument in Rachana and a migration of saved formulas); BI's execution (`Layers`, `LiveTables`, the SQL compiler over `Node`) is BI's
-compiler fed by the layer's definitions, not yet the engine's one compiler of 2.6; the built-in columns keep BI's names (`businessDate`)
-in reports (Q12's rename not applied); `!=` in BI's SQL keeps SQL's rule (the migrated texts carry Q1's rewrite, so figures are equal).
+**The deletion** (the product owner: no critique; the old code deleted, the pivot's formulas folded into Rachana in the same release):
+
+| Part | Deleted or built | Where |
+|---|---|---|
+| BI's own files | the readers of BI's dataset and model files are gone: `DatasetParser` version 1, `DatasetDefParser`'s `rachana: 2` form, `ModelDefParser`'s `datasets:` form; BI's folder refuses `datasets/` and `models/` in those forms (`DRS-9196`, with the migration's command); a pack carries `config/bi/tables/` and `models/` in the layer's form (Build → New pack writes them) | `bi.dataset`, `bi.layer`, `bi.BiFolder`, `bi.PackBi` |
+| DEL | the checker, lowering, printer and catalogue (`bi/expr/functions.yaml`), `bi.dataset.ExprParser`, the converters (`bi.migrate`), `StableIds`, the legacy sources and `bi migrate --expressions` / `--models`; the migration's DEL reader stays (Q24) | `server.bi.expr`, `server.bi.migrate` |
+| A promoted run | a run promoted to a report writes a table that reads it (`from: { run }`) | `bi.runs.RunPromotion`, `bi.layer.LayerTables` |
+| The pivot's formulas | `bicompute.formula.FormulaParser` deleted: a formula is read by Rachana's one parser and lowered to the engine's formula tree (`FormulaLowering`); `count()` with no argument is Rachana's (the rows); BI's measures are handed to the engine as Rachana (`BiMeasures`) | `bicompute.formula.FormulaLowering` |
+| Saved formulas | migrated at start, in place, idempotent, audited (`pivot-formula-migrate`): saved views, their versions and formula functions in the content store, read by the migration's DEL reader and written in Rachana's one spelling | `server.pivot.PivotFormulaMigration` |
+| One grammar | `OneGrammarRulesTest`'s exceptions are the VaR scope selector (Q20) and the migration's DEL reader (Q24) only | `drishti-it` |
+
+**Formula parity.** Before the fold, 76 formulas (every shipped, documented and test formula, every construct of the old grammar) were
+recorded on the old parser: 1,801 cells on the tabular provider's SQL path and 76 answers on the Java path
+(`formula-parity/corpus.yaml`, `answers.json`). Each formula the migration rewrites carries its Rachana text in the set (19 of the 76);
+`PivotFormulaParityTest` asks every formula in its new text and reproduces every recorded answer, and `PivotFormulaMigrationTest`
+proves the migration writes exactly that text. One answer changed by decision: `count(where = CCY in [])` was refused on the old SQL path
+and answered 0 on the Java path; an empty list now matches nothing on both (0), its answer re-recorded (the product owner, 2026-11-07).
+
+**Open:** BI's execution (`Layers`, `LiveTables`, the SQL compiler over `Node`) is BI's compiler fed by the layer's definitions, not yet the
+engine's one compiler of 2.6; the built-in columns keep BI's names (`businessDate`) in reports (Q12's rename not applied); `!=` in BI's SQL
+keeps SQL's rule (the migrated texts carry Q1's rewrite, so figures are equal). BI_LANGUAGE_REFERENCE.md is out of Help (Q27; its old addresses lead to
+RACHANA_REFERENCE.md and the API guide's Drishti SQL); the file itself, with the recipes its test runs, goes with the docs rewrite, its
+recipes into the tables guide in Rachana.

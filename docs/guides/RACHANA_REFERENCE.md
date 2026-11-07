@@ -3209,7 +3209,7 @@ the document); `reduce` also binds `@acc`, the value so far.
 | Function | Arguments | Gives |
 |---|---|---|
 | `sum(list, 'field'?)` | 1–2 | the total of `field` over the list's elements (or of the elements themselves), compensated; non-numbers are skipped; `0` when `list` is not a list or holds no number |
-| `count(list, 'field'?)` | 1–2 | the elements (or the values of `field`) that are not empty; `0` for nothing |
+| `count(list, 'field'?)` | 0–2 | the elements (or the values of `field`) that are not empty; `0` for nothing. In a measure or a pivot formula, `count()` with no argument counts the rows (of the pivot cell, or of the one table the measure reads), `count(trades)` the rows of a table alias, `count(x)` the rows where `x` is not null, and `count(where = PNL < 0)` the rows that meet the condition |
 | `avg`, `median`, `variance`, `stddev`, `variance_pop`, `stddev_pop` `(list, 'field'?)` | 1–2 | the mean (from the list's own sum and count), the exact middle, the sample or population variance and standard deviation; empty for nothing |
 | `min(list)`, `max(list)` | 1 | the smallest or largest number of one list (with several arguments: `least`, `greatest`) |
 | `percentile(list, 'field'?, p)` | 2–3 | the exact `p`-quantile, `p` from 0 to 1 (linear interpolation, Excel's `PERCENTILE.INC`) |
