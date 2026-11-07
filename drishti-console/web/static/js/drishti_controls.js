@@ -19,7 +19,9 @@
    Changing one asks the server for only the panels that read it (GET .../panels?panels=a,b&ctl.x=...), swaps them in place, brings the
    other controls up to date (a cascading child's options, a corrected value), writes the values to the address (?ctl.leg=L2) and tells
    the live channel (event drishti:controls) so ticks keep the filter. A click on a row or bar of a panel with `on-select` sets a control.
-   Keyboard: every control is a native element (select, input, button, details) or a radio group with arrow keys; 44 px on touch.
+   The multi-select, the date and the date range are drishti-inputs' MultiSelect, DatePicker and DateRangePicker (search, chips, Select
+   all; typed dates such as T-1 or 6 Nov 2026; the range's presets are the server's, resolved on its calendar); the rest are native
+   elements (select, input, button) or a radio group with arrow keys; 44 px on touch.
    `window.drishtiModules.controls.init(root, options)` starts it on a document or a shadow root (the console, <drishti-view>):
    options.view (the .view element), options.panelsUrl(query) -> url, options.fetchJson(url) -> Promise, options.afterSwap(panel),
    options.urlState (write the address; default true on a page), options.scope (remembering), options.initial (ctl.* text to start from). */
@@ -41,6 +43,8 @@
 
   function init(root, options) {
     options = options || {};
+    var I = window.Drishti.elements && window.Drishti.elements.inputs;     // drishti-inputs (Drishti Elements): base.html, or the renderer, loads it
+    if (!I) { if (window.console) { console.warn('controls: drishti-inputs is not on this page'); } return null; }
     var view = options.view || (root.querySelector ? root.querySelector('[data-view]') : null);
     if (!view) { return null; }
     var defs = parse(view.getAttribute('data-controls'), []);
@@ -100,21 +104,16 @@
         set = function () { s.value = cur[d.id]; };
       } else if (d.kind === 'multi-select') {
         wrap = el('div', 'ctl ctl-multi', null, { 'data-ctl': d.id });
-        var det = el('details', 'ctl-pop'), sum = el('summary', 'ctl-sum', null, { id: id });
-        var boxes = [];
-        det.appendChild(sum);
-        (d.options || []).forEach(function (o) {
-          var l = el('label', 'ctl-item'), c = el('input', null, null, { type: 'checkbox', value: o.value, 'data-text': o.label || o.value });
-          l.appendChild(c); l.appendChild(el('span', null, o.label || o.value)); det.appendChild(l); boxes.push(c);
-        });
-        var ms = reg.multiselect.decorate(det, { label: d.label || d.id, boxes: boxes, onChange: function () {
-          change(d.id, boxes.filter(function (x) { return x.checked; }).map(function (x) { return x.value; }).join(',')); } });
-        wrap.appendChild(el('span', 'ctl-l', d.label || d.id, { id: id + '-l' })); wrap.appendChild(det); focusEl = sum;
-        set = function () {
-          var chosen = cur[d.id] ? cur[d.id].split(',') : [];
-          boxes.forEach(function (x) { x.checked = chosen.indexOf(x.value) >= 0; });
-          ms.refresh();
-        };
+        wrap.appendChild(el('span', 'ctl-l', d.label || d.id, { id: id + '-l' }));
+        var mhost = el('div', 'ctl-ms');
+        wrap.appendChild(mhost);
+        var picked = function () { return cur[d.id] ? cur[d.id].split(',') : []; };
+        var ms = new I.MultiSelect(mhost, { options: (d.options || []).map(function (o) { return { value: String(o.value), label: o.label || String(o.value) }; }),
+          value: picked(), label: d.label || d.id, placeholder: '(all)' });
+        ms.input.id = id;
+        ms.on('change', function (e) { change(d.id, e.value.join(',')); });
+        focusEl = ms.input;
+        set = function () { ms.setValue(picked()); };
       } else if (d.kind === 'toggle' && (d.options || []).length === 2) {
         var sw = el('button', 'ctl-switch', null, { type: 'button', role: 'switch', id: id });
         sw.addEventListener('click', function () { var o = d.options; change(d.id, cur[d.id] === o[1].value ? o[0].value : o[1].value); });
@@ -149,11 +148,12 @@
           });
         };
       } else if (d.kind === 'date') {
-        var di = el('input', 'ctl-in', null, { type: 'date', id: id });
-        di.addEventListener('change', function () { change(d.id, di.value); });
-        di.addEventListener('input', function () { change(d.id, di.value); });
-        wrap.appendChild(label); wrap.appendChild(di); focusEl = di;
-        set = function () { di.value = cur[d.id]; };
+        var dhost = el('div', 'ctl-date');
+        var dp = new I.DatePicker(dhost, { value: cur[d.id] || null, businessOnly: false, label: d.label || d.id });
+        dp.input.id = id;
+        dp.on('change', function (e) { change(d.id, e.value || ''); });
+        wrap.appendChild(label); wrap.appendChild(dhost); focusEl = dp.input;
+        set = function () { dp.setValue(cur[d.id] || null); };
       } else if (d.kind === 'slider') {
         // a slider: one thumb, or two (d.range, value from..to). Keys: arrows (one step), PageUp / PageDown (ten steps), Home, End; a drag with
         // a mouse, finger or pen. Each thumb is role=slider with aria-valuemin / -max / -now / -valuetext; the thumbs are 44 px on touch.
@@ -221,30 +221,36 @@
           fill.style.setProperty('--ctl-from', (d.range ? slPct(vals[0]) : 0) + '%'); fill.style.setProperty('--ctl-to', slPct(vals[vals.length - 1]) + '%');
           out.textContent = ready ? (d.range ? slText(vals[0]) + ' – ' + slText(vals[1]) : slText(vals[0])) : 'no bounds';
         };
-      } else if (d.kind === 'date-range' || d.kind === 'number-range') {
-        var isDate = d.kind === 'date-range';
-        wrap = el('div', 'ctl ctl-' + d.kind, null, { 'data-ctl': d.id, role: 'group', 'aria-labelledby': id + '-l' });
+      } else if (d.kind === 'date-range') {
+        wrap = el('div', 'ctl ctl-date-range', null, { 'data-ctl': d.id, role: 'group', 'aria-labelledby': id + '-l' });
         wrap.appendChild(el('span', 'ctl-l', d.label || d.id, { id: id + '-l' }));
-        var a = el('input', 'ctl-in ctl-from', null, { type: isDate ? 'date' : 'number', id: id, 'aria-label': (d.label || d.id) + ' from', step: 'any' }),
-          z = el('input', 'ctl-in ctl-to', null, { type: isDate ? 'date' : 'number', 'aria-label': (d.label || d.id) + ' to', step: 'any' });
-        if (!isDate) {
-          if (d.min != null) { a.placeholder = 'min ' + d.min; a.min = d.min; z.min = d.min; }
-          if (d.max != null) { z.placeholder = 'max ' + d.max; a.max = d.max; z.max = d.max; }
-        }
-        function join(pause) { change(d.id, a.value || z.value ? a.value + '..' + z.value : '', pause); }
+        var rhost = el('div', 'ctl-range');
+        wrap.appendChild(rhost);
+        var presets = (d.options || []).map(function (o) { var p = String(o.value).split('..'); return { id: String(o.value), label: o.label || String(o.value), from: p[0], to: p[1] }; })
+          .filter(function (p) { return p.from && p.to; });
+        var rp = new I.DateRangePicker(rhost, { presets: presets.length ? presets : false, label: d.label || d.id, openEnded: true });
+        rp.button.id = id;
+        var spanOf = function () {
+          var t = cur[d.id] || '', p = t.split('..');
+          return { from: p[0] || null, to: p[1] || null, preset: presets.some(function (x) { return x.id === t; }) ? t : null };
+        };
+        rp.setValue(spanOf());
+        rp.on('change', function (e) { change(d.id, e.from || e.to ? (e.from || '') + '..' + (e.to || '') : ''); });
+        focusEl = rp.button;
+        set = function () { rp.setValue(spanOf()); };
+      } else if (d.kind === 'number-range') {
+        wrap = el('div', 'ctl ctl-number-range', null, { 'data-ctl': d.id, role: 'group', 'aria-labelledby': id + '-l' });
+        wrap.appendChild(el('span', 'ctl-l', d.label || d.id, { id: id + '-l' }));
+        var a = el('input', 'ctl-in ctl-from', null, { type: 'number', id: id, 'aria-label': (d.label || d.id) + ' from', step: 'any' }),
+          z = el('input', 'ctl-in ctl-to', null, { type: 'number', 'aria-label': (d.label || d.id) + ' to', step: 'any' });
+        if (d.min != null) { a.placeholder = 'min ' + d.min; a.min = d.min; z.min = d.min; }
+        if (d.max != null) { z.placeholder = 'max ' + d.max; a.max = d.max; z.max = d.max; }
+        var join = function (pause) { change(d.id, a.value || z.value ? a.value + '..' + z.value : '', pause); };
         [a, z].forEach(function (x) {
           x.addEventListener('change', function () { join(0); });
-          x.addEventListener('input', function () { join(isDate ? 0 : SEARCH_PAUSE); });          // typing a number counts when the person pauses
+          x.addEventListener('input', function () { join(SEARCH_PAUSE); });          // typing a number counts when the person pauses
         });
         wrap.appendChild(a); wrap.appendChild(el('span', 'ctl-dash', '–', { 'aria-hidden': 'true' })); wrap.appendChild(z);
-        var preset = null;
-        if (isDate && (d.options || []).length) {
-          preset = el('select', 'ctl-in ctl-preset', null, { 'aria-label': (d.label || d.id) + ' presets' });
-          preset.appendChild(el('option', null, 'Range…', { value: '' }));
-          d.options.forEach(function (o) { preset.appendChild(el('option', null, o.label, { value: o.value })); });
-          preset.addEventListener('change', function () { if (preset.value) { change(d.id, preset.value); preset.value = ''; } });
-          wrap.appendChild(preset);
-        }
         focusEl = a;
         set = function () { var p = (cur[d.id] || '').split('..'); a.value = p[0] || ''; z.value = p[1] || ''; };
       } else {   // search

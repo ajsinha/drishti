@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Rupaka phase 3 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 9): the designer's three panes. Fields: the dataset's tables, columns (dates open into their parts), measures and
    hierarchies, with search; drag one onto the canvas or press its button. Visualizations: the catalogue of visual types, then Build (the field wells of the
    selected visual) and Format (titles, labels, colours from the theme, axes, number formats, conditional formats, slicer and drill settings; with no visual
@@ -332,6 +333,14 @@
       i.addEventListener('change', () => onChange(i.value));
       return i;
     }
+    /** A date: drishti-inputs' date picker over a date field (typed T-1 or 6 Nov 2026, or the calendar); onChange hears the ISO date. */
+    function dateInput(value, onChange, label) {
+      const i = textInput(value, onChange, { type: 'date', 'aria-label': label });
+      const box = h('span', { class: 'bi-date' }, i);
+      const I = window.Drishti.elements && window.Drishti.elements.inputs;
+      if (I) { I.upgradeDateInput(i); }
+      return box;
+    }
     function checkbox(label, value, onChange, attrs) {
       const c = h('input', Object.assign({ type: 'checkbox' }, attrs || {}));
       c.checked = !!value;
@@ -432,8 +441,8 @@
       D.reportV2(fmt, m);
       fmt.appendChild(frow('Colours', selectInput(B.PALETTES.map((n) => [n, n]), (m.theme || {}).palette || 'default', (x) => D.change('Theme', () => { m.theme = Object.assign({}, m.theme, { palette: x }); }), { 'data-theme-palette': '' }), 'default follows the console theme; colour-blind is Okabe-Ito.'));
       const dates = m.dates || {};
-      fmt.appendChild(frow('Business date from', textInput(dates.from, (x) => setDates({ from: x }), { type: 'date' })));
-      fmt.appendChild(frow('Business date to', textInput(dates.to, (x) => setDates({ to: x }), { type: 'date' })));
+      fmt.appendChild(frow('Business date from', dateInput(dates.from, (x) => setDates({ from: x }), 'Business date from')));
+      fmt.appendChild(frow('Business date to', dateInput(dates.to, (x) => setDates({ to: x }), 'Business date to')));
       fmt.appendChild(frow('Dataset', h('code', { text: m.dataset })));
       const lk = h('fieldset', { class: 'bi-fieldset', 'data-links': '' }, h('legend', { text: 'Links between datasets' }));
       (m.links || []).forEach((l, i) => {

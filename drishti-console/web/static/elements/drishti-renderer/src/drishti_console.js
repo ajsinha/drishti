@@ -17,7 +17,8 @@
    the tree rows and the drill-down (drishti-grid's document table, behave.js) and the nested pivot, drawn by drishti-grid's own grid
    with tree data (nested.js). From the console, until their screens move onto the libraries (ELEMENTS.md section 12): the per-column
    filter funnels and Chart any table (drishti_tables.js, drishti_colfilter.js), Zoom (drishti_zoom.js) and the controls
-   (drishti_multiselect.js, drishti_controls.js), each ONE implementation, loaded once per page from the console that serves this
+   (drishti_controls.js, drawing its multi-select and dates with drishti-inputs, whose bundle and style sheet are added to the page
+   first: a picker's list floats in the host's body), each ONE implementation, loaded once per page from the console that serves this
    library (vendored, never a CDN), with data-manual so they do not start on the host's document, and started here on this screen's
    root. Each keeps its state inside the container: a table's filters never touch the host's address. */
 import * as assets from './drishti_assets.js';
@@ -28,9 +29,19 @@ import { consoleTables } from '../../drishti-grid/src/drishti_index.js';
 import { textSortKey, compareTextKeys } from '../../drishti-core/src/drishti_index.js';
 
 /** The console's scripts still loaded, in the order they need each other (colfilter before tables). */
-export const SCRIPTS = ['colfilter', 'tables', 'zoom', 'multiselect', 'controls'];
+export const SCRIPTS = ['colfilter', 'tables', 'zoom', 'controls'];
+
+/** The Elements bundles the controls draw with (drishti-inputs needs drishti-core's bundle), when the host has not loaded them. */
+export const BUNDLES = ['drishti-core', 'drishti-inputs'];
 
 const loaded = () => assets.memoised('console-behaviours', async () => {
+  const E = (window.Drishti && window.Drishti.elements) || {};
+  if (!E.inputs) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet'; link.href = assets.statics('elements/drishti-inputs/drishti_inputs.css');
+    document.head.appendChild(link);
+    for (const b of BUNDLES) { if (!(E.libs && E.libs[b])) { await assets.script('elements/' + b + '/drishti_' + b.replace('drishti-', '') + '.js'); } }
+  }
   for (const n of SCRIPTS) { await assets.script('js/drishti_' + n + '.js'); }
 });
 

@@ -74,7 +74,7 @@ def share_to(ann, who_prefix, note, tick=None):
     dlg = ann.locator("[data-share-dialog]:not([hidden])")
     dlg.wait_for()
     ann.keyboard.type(who_prefix)
-    ann.locator("#shrList [role=option]").first.wait_for()
+    ann.locator(".di-combo-pop [role=option]").first.wait_for()          # drishti-inputs' combobox list
     ann.keyboard.press("Enter")
     ann.locator("[data-shr-chips] .shr-chip").first.wait_for()
     if tick is not None:
