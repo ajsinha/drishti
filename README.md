@@ -18,8 +18,8 @@ roles and masks decide who sees what, changes go through four eyes, access is lo
 marked as such.
 
 Beneath the risk sits a general platform: any data through connectors and domain packs, screens written as short YAML **Sutras** in the
-**Rachana** grammar, a pivot engine, business intelligence, data out through Arrow Flight and Flight SQL, and lakes in Delta Lake,
-Apache Iceberg or memory. The motto is **lean & streamlined**: one implementation of each thing, one grammar for every expression,
+**Rachana** grammar, one table layer under the pivot engine and business intelligence, Python on the server's sandboxed compute pool,
+data out through Arrow Flight and Flight SQL, and lakes in Delta Lake, Apache Iceberg or memory, each in its own folder. The motto is **lean & streamlined**: one implementation of each thing, one grammar for every expression,
 nothing on screen that is not built.
 
 ```
@@ -28,7 +28,7 @@ PVAR DESK DESK-RATES <GO>               →  the same explorer with parametric V
 EXP CPTY:CP-ALDERSHOT <GO>              →  exposure from the simulator's paths: EE, PFE, EPE, EEPE
 FRSA BANK <GO>                          →  FRTB-SA capital: SBM, DRC and RRAO, by class and bucket
 SIMM <GO>                               →  initial margin per netting set, to collect and to post
-MCUBE <GO>                              →  the market-risk cube: VaR by desk and risk class against limits
+MCUBE <GO>                              →  the market-risk cube (a Pivot preset): VaR by desk and risk class against limits
 TRD MX-20000001 <GO>                    →  a trade: terms, legs, cashflows, links to what it touches
 ```
 
@@ -42,7 +42,8 @@ TRD MX-20000001 <GO>                    →  a trade: terms, legs, cashflows, li
 - **VaR and ES for any scope**: the bank, a desk, a book, a counterparty, a portfolio, a basket, or an ad-hoc scope written as an
   expression (`BANK - DESK:CREDIT`). Drill from the bank to a trade with contributions that add up, hierarchies from rows or configured
   from the trades' own columns, limits per node, any reporting currency, intraday updates on top of the morning run, the official
-  end-of-day record, captures, history and backtests ([VAR_GUIDE.md](docs/guides/VAR_GUIDE.md),
+  end-of-day record, captures, history and backtests (**Backtest ›** from the explorer). Historical VaR uses the newest 250 scenarios of
+  each date as shipped (one year, the Basel minimum), or the whole set ([VAR_GUIDE.md](docs/guides/VAR_GUIDE.md),
   [tutorial 25](docs/tutorials/25-var-from-the-bank-to-a-trade.md)).
 - **Parametric VaR as a cross-check**: the explorer's **Parametric** toggle (or `PVAR`) fits the normal distribution to the scope's own
   scenario P&L and shows parametric VaR, ES and the fat-tail gap beside historical VaR. It is never the official figure: limits,
@@ -55,8 +56,9 @@ TRD MX-20000001 <GO>                    →  a trade: terms, legs, cashflows, li
 - **SIMM** initial margin per netting set and as an analytic over any scope. ISDA's calibrated numbers are licensed, so the parameter
   file ships empty and the bank installs its version ([SIMM_GUIDE.md](docs/guides/SIMM_GUIDE.md#4-the-licensed-parameter-file),
   [tutorial 32](docs/tutorials/32-simm-from-the-examples-to-a-netting-set.md)).
-- **The MR cube** (`MCUBE`): VaR by desk and risk class on the pivot engine, each cell equal to the VaR engine's answer for its scope,
-  with tail and attribution, DV01 buckets and what-if ([MR_CUBE_GUIDE.md](docs/guides/MR_CUBE_GUIDE.md),
+- **The MR cube** (`MCUBE`, the Pivot's preset `mr`, or **MR cube ›** from the VaR explorer): VaR by desk and risk class on the pivot
+  engine, each cell equal to the VaR engine's answer for its scope, with tail and attribution, DV01 buckets and what-if
+  ([MR_CUBE_GUIDE.md](docs/guides/MR_CUBE_GUIDE.md), [PIVOT_GUIDE.md section 28](docs/guides/PIVOT_GUIDE.md#28-presets-the-risk-cubes),
   [tutorial 38](docs/tutorials/38-the-mr-cube-on-the-pivot-engine.md)).
 
 **Explained.** The **?** on a figure opens the server's own lines: the method, the inputs and the formula with the scope's numbers.
@@ -70,22 +72,31 @@ every screen, pivot, BI query and Flight read. Corrections and screen designs go
 switched on or off per node in **Admin → Engines** ([OPERATIONS.md section 21](docs/admin/OPERATIONS.md#21-compute-engines-on-or-off)).
 **Nothing unbuilt looks built**: a figure, panel or menu item that depends on unbuilt work is registered in
 `config/under-construction.yaml` and is either shown with an *Under construction* chip or hidden
-([UNDER_CONSTRUCTION.md](docs/admin/UNDER_CONSTRUCTION.md)). Today that covers the stored SA-CCR and xVA figures, credit limit usage and
-the pre-deal limit decision, among others.
+([UNDER_CONSTRUCTION.md](docs/admin/UNDER_CONSTRUCTION.md)). Today that covers the stored SA-CCR and xVA figures, credit limit usage,
+the pre-deal limit decision, the CCR cube and the P&L explain's waterfall, among others.
 
 ## The platform
 
 ### Look up, search and analyse
 
 - **A keyboard-driven terminal**: type-ahead over every source, linked views of any entity, impact (F8), the raw document (F9), any past
-  business day, history and compare, live views that tick ([USER_GUIDE.md](docs/guides/USER_GUIDE.md),
+  business day, history and compare, live views that tick, panels and columns you can drag wider on every screen (kept per person)
+  ([USER_GUIDE.md](docs/guides/USER_GUIDE.md),
   [COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md), [tutorial 2](docs/tutorials/02-look-up-anything.md)).
 - **Search** by value (`TRD where QUANTITY > 200m order by QUANTITY desc`), in plain words parsed without any AI service, or with a
   form (`FORM <pack>`); monitors, alerts and workspaces ([tutorial 3](docs/tutorials/03-query-by-form.md)).
-- **The pivot engine** (`PIVOT`): any kind, search or measure as a pivot, every total computed from its own members, saved and shared
-  views, live pivots, Excel export with formulas ([PIVOT_GUIDE.md](docs/guides/PIVOT_GUIDE.md), [tutorial 33](docs/tutorials/33-the-pivot-engine.md)).
-- **Business intelligence** (Rūpaka) on the pivot engine: models, reports, live boards, governance and distribution, with row rules and
-  masks per reader ([BI_GUIDE.md](docs/guides/BI_GUIDE.md), [tutorial 10](docs/tutorials/10-first-bi-report.md)).
+- **One analysis path, Pivot → Report.** The pivot engine (`PIVOT`): any kind, search, table or measure as a pivot, every total computed
+  from its own members, saved and shared views, live pivots, risk cubes as presets, Excel export with formulas; a pivot kept becomes a
+  report ([PIVOT_GUIDE.md](docs/guides/PIVOT_GUIDE.md), [tutorial 33](docs/tutorials/33-the-pivot-engine.md)). **Export data** (`EXPORT`)
+  takes any kind out as Excel, CSV or JSON Lines.
+- **Business intelligence** (Rūpaka) on the pivot engine and the **table layer**: tables and models in Rachana
+  (`config/tables/<domain>/`), reports, live boards, governance and distribution, with row rules and masks per reader; a row rule on one
+  fact limits the related rows of another, so nobody sees more than they should ([BI_GUIDE.md](docs/guides/BI_GUIDE.md),
+  [TABLES_GUIDE.md](docs/guides/TABLES_GUIDE.md), [tutorial 10](docs/tutorials/10-first-bi-report.md),
+  [tutorial 44](docs/tutorials/44-virtual-tables-and-models.md)).
+- **The Notebook** (`/bi/notebook`): SQL cells in Drishti SQL run by the server as the reader, Python cells on the server's compute pool,
+  a profile of any result, and a cell promoted to a report visual, a measure or a Python-driven table
+  ([USER_GUIDE.md › The Notebook](docs/guides/USER_GUIDE.md#the-notebook), [tutorial 14](docs/tutorials/14-python-and-analyse.md)).
 - **One grammar.** Rachana paths and expressions are used everywhere: in Sutras, search, the pivot, BI and custom functions. The
   **function catalogue** lists every function with the rules each keeps (nulls, rounding, dates on the bank's calendars) and its Excel,
   SAS and MATLAB counterparts ([FUNCTIONS.md](docs/guides/FUNCTIONS.md), [FUNCTION_CATALOGUE.md](docs/architecture/FUNCTION_CATALOGUE.md)).
@@ -101,22 +112,31 @@ the pre-deal limit decision, among others.
   [tutorial 5](docs/tutorials/05-build-a-pack.md)).
 - **The Build workbench and the Sutra designer**: drag panels onto a live screen; a save is a proposal an approver reviews
   ([tutorial 6, part B](docs/tutorials/06-design-a-screen.md#part-b--on-a-live-page-the-sutra-designer)).
+- **Build › Tables & models**: one editor for tables, models and Python-driven tables, a visual side with the **live YAML below it**
+  (either edits the other), a preview read on the server as you (rows, totals, checks, the cost of a join across connectors, what uses
+  it), history, impact and four-eyes review ([TABLES_GUIDE.md section 11](docs/guides/TABLES_GUIDE.md#11-the-editors)).
 
 ### Data in
 
 - **Connectors**, one YAML file each in `config/connectors/`: Delta Lake and Apache Iceberg (Drishti's own engines, no Hadoop, local disk
   or S3), JDBC databases, DuckDB, MongoDB, Redis, Aerospike, Cassandra, Kafka, ActiveMQ, RabbitMQ, files, S3, REST and public feeds
   ([CONNECTORS.md](docs/connectors/CONNECTORS.md), [tutorial 4](docs/tutorials/04-connect-your-data.md)).
-- **One file per lake**: `config/lakes/<lake>.yaml` says where a lake is (a folder, `s3://` or `mem://`) and describes every table in it
-  (partitions after `business_date`, promoted columns, vectors, load mode, retention). Loaders, the data inbox and connectors all refer to
-  it; `drishti.py lake check` compares it with the tables on disk ([DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md),
-  [tutorial 34](docs/tutorials/34-one-file-per-lake.md)).
+- **One file per lake, each lake in its own folder**: `config/lakes/<lake>.yaml` says where a lake is (by default `data/delta/<lake>/`,
+  or any folder, `s3://` or `mem://`) and describes every table in it (partitions after `business_date`, promoted columns, vectors, load
+  mode, retention). Loaders, the data inbox and connectors all refer to it; `drishti.py lake check` compares it with the tables on disk.
+  The demo lake is `data/delta/demo`; real data goes into a lake of its own beside it (empty `risklake`, `newslake`, `worldlake`,
+  `regulators` and `capitalmarket` lakes ship ready), and **demo and real data never mix**: once a kind reads a real lake, the samples
+  stop answering for it, and Admin → Health flags a pack whose connectors read more than one lake
+  ([DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md), [tutorial 34](docs/tutorials/34-one-file-per-lake.md),
+  [tutorial 45](docs/tutorials/45-load-your-own-data-into-a-new-lake.md)).
 - **The load rules**: JSON Lines is the data standard. A plain file is one table and one business date, named in the file
-  (`<name>.<YYYY-MM-DD>.jsonl.gz`); a `.ready` control file says the file is complete and may override the name; a tar archive carries
+  (`<name>.<YYYY-MM-DD>.jsonl.gz`); a `.ready` control file says the file is complete, may override the name and names the lake
+  (`lake: risklake`, created by the first load); a tar archive carries
   several tables and dates and loads all or nothing. Loads **append** by default, and every row carries its load id, so
   `drishti.py lake undo <load-id>` removes exactly one load. Nothing is guessed: a file that breaks a rule is refused with the reason
   ([DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo), [tutorial 7](docs/tutorials/07-load-data-daily.md)).
-- **The data inbox** loads the files your ETL drops, by routing rules, with Admin → Data loads to watch, retry and undo
+- **The data inbox** loads the files your ETL drops, by routing rules, with Admin → Data loads to watch, retry and undo (in the load's
+  own lake); a load into a lake no connector reads says so and names the connectors to point at it
   ([tutorial 36](docs/tutorials/36-load-files-with-the-data-inbox.md)). For large loads, the parallel Java loader is multi-threaded and
   memory-bounded ([PARALLEL_LOADER.md](docs/architecture/PARALLEL_LOADER.md)).
 - **In-memory lakes** (`mem://`) for feeds that never touch disk, such as news ([IN_MEMORY_LAKE_GUIDE.md](docs/guides/IN_MEMORY_LAKE_GUIDE.md),
@@ -146,6 +166,10 @@ the pre-deal limit decision, among others.
 - **Clustering** (Drishti\*net, off by default): servers join by gossip, any member answers any request, VaR shards across members
   ([OPERATIONS.md section 18](docs/admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), [tutorial 19](docs/tutorials/19-a-cluster-of-three.md),
   [drishti-stack/](drishti-stack/README.md)).
+- **One Python runtime**: every Python run (python visuals and measures, Python tables, Notebook cells, transforms) runs on the server's
+  compute pool `python`, in a strict sandbox on Linux (no network, files confined by Landlock, CPU and memory limits), against pinned
+  libraries, each run audited and its rows checked against the table's contract; the console runs no Python of its own
+  ([PYTHON_COMPUTE.md section 19](docs/architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)).
 - **Linear algebra**: OpenBLAS is bundled for Linux and Windows x86-64 but **off as shipped**. A 250,000-position run gave the same VaR to
   the dollar with it on and off, with no clear end-to-end gain. Turn it on per node in Admin → Engines after measuring on your own
   hardware ([OPERATIONS.md section 2.1](docs/admin/OPERATIONS.md#21-server-requirements-native-libraries-blas)).
@@ -260,19 +284,19 @@ What changed and when: [RELEASE_NOTES.md](RELEASE_NOTES.md) and [CHANGELOG.md](C
 
 <!-- code-volume:begin -->
 
-*Measured 2026-11-06 from the files the repository tracks (`tools/docs/code_volume.py`; sample data and vendored libraries not counted).*
+*Measured 2026-11-07 from the files the repository tracks (`tools/docs/code_volume.py`; sample data and vendored libraries not counted).*
 
 | Kind | Lines | Files |
 |---|---|---|
-| Java, product | 423k | 2,110 |
-| Java, tests | 160k | 1,009 |
-| Python, product (console, tools, loaders) | 133k | 687 |
-| Python, tests | 96k | 544 |
-| JavaScript, HTML and CSS (console) | 111k | 698 |
-| YAML: configuration, Sutras, data contracts | 103k | 1,287 |
-| Markdown: guides, tutorials, design | 245k | 437 |
+| Java, product | 422k | 2,100 |
+| Java, tests | 160k | 1,011 |
+| Python, product (console, tools, loaders) | 132k | 682 |
+| Python, tests | 95k | 547 |
+| JavaScript, HTML and CSS (console) | 107k | 682 |
+| YAML: configuration, Sutras, data contracts | 104k | 1,343 |
+| Markdown: guides, tutorials, design | 244k | 435 |
 
-About **667k lines of product code** and **256k lines of tests** (38% of the product code), with **245k lines of documentation**; 48 Maven modules, 11 domain packs and 39 tutorials.
+About **661k lines of product code** and **255k lines of tests** (39% of the product code), with **244k lines of documentation**; 48 Maven modules, 11 domain packs and 40 tutorials.
 
 <!-- code-volume:end -->
 
