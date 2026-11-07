@@ -72,7 +72,7 @@ On a cluster, a connector edit made in Admin is a shared edit (Admin → Connect
 2. **Nothing inside needs unzipping.** The test data in `data\testdata` is `.jsonl.gz`; Drishti reads the `.gz` files
    directly.
 3. Create the folder `C:\Users\asinh09\drishti-private\endur\` and put your real ENDUR `.jsonl` files in it, **one file per
-   business date**, named by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)): the table, a dot, the date,
+   business date**, named by the load rules ([DATA_LOAD_RULES.md](../guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)): the table, a dot, the date,
    for example `trade_endur.2026-10-16.jsonl` (or `.jsonl.gz`, or `.jsonl.zip`; several dates may also come as one tar of
    `trade_endur\2026-10-16\` folders). A file named only by its date (`2026-10-16.jsonl`) is refused, with the name to give it.
 

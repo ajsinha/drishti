@@ -591,7 +591,7 @@ tools/load-aerospike.sh localhost:3000 test --trades 1000000 --days 3 --ttl-days
 ```
 
 `--trades N --days D` has `bulk_trades.py` write the book as a tar of `trade/<YYYY-MM-DD>/` folders under
-`<data folder>/build/loader-rows/` (the load rules, [DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)), loads it and removes it. `--ttl-days N` gives
+`<data folder>/build/loader-rows/` (the load rules, [DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)), loads it and removes it. `--ttl-days N` gives
 every record written a time to live of N days, so Aerospike expires old business dates by itself: there is no
 maintenance job, unlike the lake ([section 11](#11-the-lake-where-it-lives-and-keeping-it-bounded)). Without it,
 records never expire. In the generated book a day record takes about 7 KB of namespace storage and an index record
@@ -1538,8 +1538,8 @@ shipped (`config/engines/dataload.yaml`, Admin → Engines). Its folder, `drisht
 - **Stopping the server** in the middle is safe: the next cycle puts claimed files back, completes a load that committed, moves what
   was not moved and sends the signals not sent.
 - `drishti.py dataload status` (or `GET /api/v1/admin/dataload`) shows what waits, what failed and why, and the last cycles; Admin → Data
-  loads → Inbox draws the same as a board (waiting, loading table by table, last cycles, failures with Retry, Load now: [DATA_GUIDE.md
-  section 7.8](../guides/DATA_GUIDE.md#8-the-inbox-screen-admin--data-loads--inbox)).
+  loads → Inbox draws the same as a board (waiting, loading table by table, last cycles, failures with Retry, Load now: [DATA_LAKE_GUIDE.md
+  section 3.1](../guides/DATA_LAKE_GUIDE.md#31-the-data-inbox)).
 
 ## 12. Memory and caches
 

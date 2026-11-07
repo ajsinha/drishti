@@ -685,7 +685,7 @@ Only roles with `calc: true` see Calc (here `support-lead`). More in [Calc: Pyth
 (generated, or published public data such as the us-equities and gleif packs):
 
 1. the documents as gzipped JSON Lines under `data/testdata/<pack>/<kind>/`, named by the load rules
-   ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md) section 10): `<table>.<YYYY-MM-DD>.jsonl.gz`, a file a business day (the
+   ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo) section 5.2): `<table>.<YYYY-MM-DD>.jsonl.gz`, a file a business day (the
    first the snapshot, then each day's changes), or one dated snapshot the same on every day, or a tar of `<table>/<YYYY-MM-DD>/`
    folders where a date is several files, each dataset listed in `data/testdata/testdata.yaml` with its pack,
    kind, Delta connector and key (`tools/testdata/make_testdata.py` and `tools/testdata/publicsnap.py` write it; never by hand);

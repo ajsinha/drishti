@@ -828,7 +828,7 @@ This is the walk a tester follows without a terminal. It uses ports 18580 (serve
 
    | Parameter | Meaning | Placeholder |
    |---|---|---|
-   | `--from` | your big `.json` array, `.jsonl` or `.gz` (or a folder of them), named by its business date: the rows go under the date in the name ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)); add `--as-of YYYY-MM-DD` to give another | `$USER_HOME$/Downloads/trade.YYYY-MM-DD.json` |
+   | `--from` | your big `.json` array, `.jsonl` or `.gz` (or a folder of them), named by its business date: the rows go under the date in the name ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)); add `--as-of YYYY-MM-DD` to give another | `$USER_HOME$/Downloads/trade.YYYY-MM-DD.json` |
    | `--kind`, `--key` | entity kind, its id field | `trade`, `TRADE_ID` |
    | `--mode` | `overwrite-dates`: a re-run of the same date replaces it (append, the default, would add the rows again) | `overwrite-dates` |
    | `--partition-by` | the column(s) the Delta table is split by | `PRODUCT_TYPE` |

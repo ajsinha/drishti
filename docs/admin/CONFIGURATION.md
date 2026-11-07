@@ -5309,7 +5309,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `settings` | map | `{}` |  | the connector | The plugin's settings, as the tables above (every plugin, the shared tls.\* and proxy.\*, the plugin's own) | live (the connector restarts) |  |
 | `settings.*` | map | none |  | the connector | One setting of the plugin | live (the connector restarts) |  |
 
-#### A lake file: `config/lakes/<lake>.yaml` (docs/guides/LAKE_GUIDE.md)
+#### A lake file: `config/lakes/<lake>.yaml` (docs/guides/DATA_LAKE_GUIDE.md)
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
@@ -5938,7 +5938,7 @@ One YAML per ISDA SIMM version (`drishti.simm.parameters-dir`, default `./config
 
 ### The data inbox's routing rules: `config/dataload.yaml`
 
-Where a file dropped in the data inbox goes: a file-name pattern to a pack and kind (`drishti.dataload.rules-file`), read again at every cycle ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load), [DATALOAD_INBOX.md](../architecture/DATALOAD_INBOX.md)). The inbox's own settings are in `config/engines/dataload.yaml`.
+Where a file dropped in the data inbox goes: a file-name pattern to a pack and kind (`drishti.dataload.rules-file`), read again at every cycle ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load), [DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md#31-the-data-inbox)). The inbox's own settings are in `config/engines/dataload.yaml`.
 
 #### `dataload`
 

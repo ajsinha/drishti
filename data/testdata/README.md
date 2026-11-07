@@ -41,7 +41,7 @@ Written by `tools/testdata/make_testdata.py` (deterministic; `--check` says whet
 ([below](#the-market-snapshot-news-and-markets-offline)), kept as it is by `make_testdata.py`; so are the us-equities and gleif
 packs' public data ([below](#public-data-us-equities-and-gleif)), written by their own generators.
 
-**File names.** Every file follows the load rules ([DATA_LOAD_RULES.md](../../docs/architecture/DATA_LOAD_RULES.md), section 10):
+**File names.** Every file follows the load rules ([DATA_LAKE_GUIDE.md](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo), section 5.2):
 `<table>.<YYYY-MM-DD>.jsonl.gz`, the table the dataset's connector reads (`trade_endur`, `counterparty`, `pnl-vector` ...) and the
 business date, so `drishti.py lake build --from <file>` loads it with no date given; or a plain tar of `<table>/<YYYY-MM-DD>/` folders
 where a date is several files or one run writes many dates (the P&L vectors and scenario PVs one tar a date, the exposure paths, the
