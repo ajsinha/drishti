@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.mq;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -122,7 +123,7 @@ class RunPromotionTest {
         for (String cpty : List.of("CP-0", "CP-1", "CP-2", "CP-3")) {
             assertThat(file).doesNotContain("\"" + cpty + "\"");
         }
-        DatasetDefParser.Result parsed = DatasetDefParser.parse(p.yaml());
+        DatasetDefParser.Result parsed = Layered.tableDef(p.yaml());
         assertThat(parsed.ok()).as(p.yaml() + parsed.problems()).isTrue();
         DatasetDef d = parsed.dataset();
         assertThat(d.source().type()).isEqualTo(DatasetDef.Source.RUN);
@@ -142,7 +143,7 @@ class RunPromotionTest {
     void anUnmaskedPromoterKeepsTheValuesAndNothingIsDeclaredMasked() throws Exception {
         Run r = ran(MqHarness.RITA);
         RunPromotion.Promoted p = promotion.promote(r, new Principal("rita", MqHarness.RITA.roles()), "cpty-raw", "Raw", "report");
-        DatasetDef d = DatasetDefParser.parse(p.yaml()).dataset();
+        DatasetDef d = Layered.tableDef(p.yaml()).dataset();
         assertThat(d.security().masked()).isEmpty();
         ModelCatalog.Snapshot s = promotion.read("cpty-raw", "cpty-raw", "latest", d.source().runToken());
         assertThat(s.result().columns().get(0).values()).noneMatch(DataNode.MASK::equals);
@@ -154,7 +155,7 @@ class RunPromotionTest {
     void onlyTheDatasetItWasPromotedToReadsASnapshot() throws Exception {
         Run r = ran(MqHarness.RITA);
         RunPromotion.Promoted p = promotion.promote(r, new Principal("rita", MqHarness.RITA.roles()), "rita-book", null, "dataset");
-        String token = DatasetDefParser.parse(p.yaml()).dataset().source().runToken();
+        String token = Layered.tableDef(p.yaml()).dataset().source().runToken();
         // another author's dataset pointing at it: without the token, or under another name, it is refused
         assertThatThrownBy(() -> promotion.read("rita-book", "rita-book", "1", "guess")).isInstanceOf(MqException.class).hasMessageContaining("may not read it");
         assertThatThrownBy(() -> promotion.read("my-copy", "rita-book", "1", token)).isInstanceOf(MqException.class).hasMessageContaining("may not read it");

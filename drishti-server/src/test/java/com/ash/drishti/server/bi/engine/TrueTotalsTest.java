@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.bi.dataset.Dataset;
@@ -67,7 +68,7 @@ class TrueTotalsTest {
         lake = new TestLake(true);
         QueryProperties props = QueryProperties.defaults(store.toString());
         service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC());
-        DatasetParser.Result r = DatasetParser.parse(TestLake.yaml());
+        DatasetParser.Result r = Layered.dataset(TestLake.yaml());
         dataset = r.dataset();
         ds = new QueryService.Loaded("file:dataset:lake-test", Layers.key("file:dataset:lake-test"), dataset, "h1");
     }

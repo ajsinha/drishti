@@ -18,7 +18,6 @@ package com.ash.drishti.server.bi;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.dataset.UserAttributes;
 import com.ash.drishti.server.bi.engine.DuckDbEngine;
 import com.ash.drishti.server.bi.engine.Layers;
@@ -49,7 +48,7 @@ class BiMetricsTest {
         QueryProperties props = QueryProperties.defaults(store.toString());
         try (QueryService service = new QueryService(props, new DuckDbEngine(props), new TestLake(true), Clock.systemUTC())) {
             BiMetrics.attach(registry, service, new MqService(MqProperties.defaults()), null);
-            QueryService.Loaded ds = new QueryService.Loaded("file:dataset:m", Layers.key("file:dataset:m"), DatasetParser.parse(TestLake.yaml()).dataset(), "h");
+            QueryService.Loaded ds = new QueryService.Loaded("file:dataset:m", Layers.key("file:dataset:m"), Layered.dataset(TestLake.yaml()).dataset(), "h");
             QueryService.Caller rita = new QueryService.Caller("rita", Set.of("risk"), true, UserAttributes.of("rita", List.of("risk"), "", null), SqlCompiler.Masks.NONE);
             QueryRequest q = new QueryRequest(List.of("trades.desk"), List.of("Notional"), List.of(), TestLake.DAY2, TestLake.DAY2, List.of(), null, "columns");
             service.query(ds, q, rita, false);

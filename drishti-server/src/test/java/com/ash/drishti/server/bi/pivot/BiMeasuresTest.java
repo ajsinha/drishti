@@ -15,13 +15,13 @@
  */
 package com.ash.drishti.server.bi.pivot;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.bicompute.formula.FormulaFunction;
 import com.ash.drishti.bicompute.spi.Batch;
 import com.ash.drishti.bicompute.spi.Kind;
 import com.ash.drishti.server.bi.dataset.Dataset;
-import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.engine.TestLake;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
  */
 class BiMeasuresTest {
 
-    final Dataset ds = DatasetParser.parse(TestLake.yaml()).dataset();
+    final Dataset ds = Layered.dataset(TestLake.yaml()).dataset();
 
     @Test
     void theTestLakesMeasuresArePivotFunctions() {

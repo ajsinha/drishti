@@ -48,7 +48,7 @@ class UnderConstructionTest {
     private static SutraRegistry packs() {
         SutraBlocks.kit(Path.of("..", "config", "ui-kit"));
         List<String> dirs = new ArrayList<>();
-        for (String p : List.of("core", "counterparty-risk", "trading", "market-data")) {
+        for (String p : List.of("core", "counterparty-risk", "trading", "market-data", "market-risk")) {
             dirs.add(Path.of("..", "config", "packs", p, "sutras").toString());
         }
         return new SutraRegistry(new RachanaProperties(dirs, false, null, null, null, null, null, null, null, null), new ElCompiler());
@@ -78,7 +78,9 @@ class UnderConstructionTest {
                         assertThat(ids).as(item.id() + " in " + s.name()).containsAll(place.panels());
                         Sutra shown = uc.apply(s);
                         List<String> after = Stream.concat(shown.strip().stream().map(StripItem::bind), columns(shown.panels()).map(Column::bind)).toList();
-                        assertThat(after).as(item.id() + ": no registered value is bound any more").doesNotContainAnyElementsOf(place.binds());
+                        if (!place.binds().isEmpty()) {                       // a place may name panels only (pnl-explain-waterfall)
+                            assertThat(after).as(item.id() + ": no registered value is bound any more").doesNotContainAnyElementsOf(place.binds());
+                        }
                         for (String id : place.panels()) {
                             List<Panel> p = all(shown.panels()).filter(x -> id.equals(x.id())).toList();
                             if (item.hidden()) {

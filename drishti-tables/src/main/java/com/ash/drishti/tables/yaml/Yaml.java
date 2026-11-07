@@ -149,5 +149,5 @@ public final class Yaml {
 
     /** The descriptive keys every definition keeps as written. */
     static final Set<String> ABOUT = Set.of("id", "title", "description", "owner", "sample", "endorsement", "endorsedBy", "audience", "tags", "ai",
-            "layout", "lifecycle", "replaced-by", "golden", "contract", "perspectives", "fields");
+            "layout", "lifecycle", "replaced-by", "golden", "contract", "perspectives", "fields", "provenance");
 }

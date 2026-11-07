@@ -570,7 +570,7 @@ public final class ModelCatalog {
     /** Whether the caller may read a published {@code rachana: 2} dataset item of this name (or id). */
     private boolean mayReadDataset(Principal p, String name) {
         for (BiStore.Item i : tablesPublished()) {
-            DatasetDef d = DatasetDefParser.isVersion2(bi.publishedBody(i)) ? DatasetDefParser.parse(bi.publishedBody(i)).dataset() : null;
+            DatasetDef d = DatasetDefParser.isTable(bi.publishedBody(i)) ? DatasetDefParser.parse(bi.publishedBody(i)).dataset() : null;
             if (d != null && (d.name().equals(name) || i.id().equals(name) || i.id().equals("file:dataset:" + name) || i.id().equals("file:table:" + name))) {
                 try {
                     bi.readableItem(p, i.id());
@@ -596,7 +596,7 @@ public final class ModelCatalog {
 
     private Found ofItem(Principal p, BiStore.Item readable, boolean consumer) {
         String body = bi.bodyFor(p, readable);
-        if (DatasetDefParser.isVersion2(body)) {
+        if (DatasetDefParser.isTable(body)) {
             DatasetDefParser.Result r = DatasetDefParser.parse(body);
             if (!r.ok()) {
                 throw new MqException(MqException.Problem.of("DRS-9151", "model", "the dataset '" + readable.title() + "' has errors: " + r.firstError()));
@@ -615,7 +615,7 @@ public final class ModelCatalog {
 
     /** True for a {@code rachana: 1} dataset item (a live report's dataset until wave W3): asked through the engine as before, never as a model. */
     public boolean isVersion1(Principal p, BiStore.Item item) {
-        return "dataset".equals(item.kind()) && !DatasetDefParser.isVersion2(bi.bodyFor(p, item));
+        return "dataset".equals(item.kind()) && !DatasetDefParser.isTable(bi.bodyFor(p, item));
     }
 
     /** A {@code rachana: 1} dataset's answer through the engine, as the caller (its rules joined into the query, as in 2.1). */
@@ -655,7 +655,7 @@ public final class ModelCatalog {
         DatasetDef best = null;
         for (BiStore.Item i : tablesPublished()) {
             String body = bi.publishedBody(i);
-            if (!DatasetDefParser.isVersion2(body)) {
+            if (!DatasetDefParser.isTable(body)) {
                 continue;
             }
             DatasetDefParser.Result r = DatasetDefParser.parse(body);
@@ -775,7 +775,7 @@ public final class ModelCatalog {
     public Map<String, Object> check(String yaml) {
         Map<String, Object> m = new LinkedHashMap<>();
         List<DatasetParser.Problem> problems = new ArrayList<>();
-        if (DatasetDefParser.isVersion2(yaml)) {
+        if (DatasetDefParser.isTable(yaml)) {
             DatasetDefParser.Result r = DatasetDefParser.parse(yaml);
             problems.addAll(r.problems());
             m.put("kind", "dataset");
@@ -844,7 +844,7 @@ public final class ModelCatalog {
             if (!Boolean.TRUE.equals(c.get("valid"))) {
                 throw new DrishtiException(ErrorCode.LAYER_DATASET_INVALID, "'" + i.title() + "' cannot be published: " + firstError(c));
             }
-            if (published != null && DatasetDefParser.isVersion2(published)) {
+            if (published != null && DatasetDefParser.isTable(published)) {
                 DatasetDef was = DatasetDefParser.parse(published).dataset();
                 DatasetDef now = DatasetDefParser.parse(body).dataset();
                 String why = was == null ? null : Contracts.datasets(was, now).refusal();
@@ -958,7 +958,7 @@ public final class ModelCatalog {
      */
     public Map<String, Object> validateExpressionDraft(Principal p, String expr, Scope scope, String yaml, String alias) {
         Found f;
-        if (DatasetDefParser.isVersion2(yaml)) {
+        if (DatasetDefParser.isTable(yaml)) {
             DatasetDefParser.Result r = DatasetDefParser.parse(yaml);
             if (!r.ok()) {
                 throw new MqException(MqException.Problem.of("DRS-9151", "yaml", "the draft dataset has errors: " + r.firstError()));
@@ -1222,7 +1222,7 @@ public final class ModelCatalog {
         m.put("yaml", body);
         List<DatasetParser.Problem> problems = new ArrayList<>();
         String resolved = body;
-        if (DatasetDefParser.isVersion2(body)) {
+        if (DatasetDefParser.isTable(body)) {
             DatasetDefParser.Result r = DatasetDefParser.parse(body);
             problems.addAll(r.problems());
             if (r.dataset() != null && r.ok() && (r.dataset().extendsRef() != null || com.ash.drishti.server.bi.layer.LayerTables.isTable(body))) {
@@ -1266,7 +1266,7 @@ public final class ModelCatalog {
         bi.draftDatasets(p).stream().filter(i -> seen.add(i.id())).forEach(sets::add);    // the caller's own drafts too (a narrowed dataset before it is published)
         for (BiStore.Item i : sets) {
             String body = bi.bodyFor(p, i);
-            boolean v2 = DatasetDefParser.isVersion2(body);
+            boolean v2 = DatasetDefParser.isTable(body);
             String name = v2 ? Optional.ofNullable(DatasetDefParser.parse(body).dataset()).map(DatasetDef::name).orElse(i.title())
                     : com.ash.drishti.server.bi.gov.ImpactAnalyzer.declaredName(body);
             Map<String, Object> e = new LinkedHashMap<>();

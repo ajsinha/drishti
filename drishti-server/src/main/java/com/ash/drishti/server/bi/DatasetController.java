@@ -106,9 +106,9 @@ public class DatasetController {
         try {
             com.ash.drishti.identity.bi.BiStore.Item item = bi.readableItem(p, id);
             String text = bi.bodyFor(p, item);
-            String name = com.ash.drishti.server.bi.dataset.LegacySources.declaredName(text);
-            if (!name.isBlank()) {
-                model = com.ash.drishti.server.bi.layer.DatasetDefParser.isVersion2(text) ? "dataset:" + name : name + "@1";
+            com.ash.drishti.server.bi.layer.DatasetDef d = com.ash.drishti.server.bi.layer.DatasetDefParser.parse(text).dataset();
+            if (d != null) {
+                model = "dataset:" + d.name();
             }
         } catch (DrishtiException e) {
             // not one the caller may read: the reference as given

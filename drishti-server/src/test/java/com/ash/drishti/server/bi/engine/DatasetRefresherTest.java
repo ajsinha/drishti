@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.EntityDocument;
@@ -147,7 +148,7 @@ class DatasetRefresherTest {
 
     void start(String refresh, BiRefreshProperties props) {
         String yaml = TestLake.yaml().replace("version: 1\n", "version: 1\nrefresh: " + refresh + "\n");
-        DatasetParser.Result r = DatasetParser.parse(yaml);
+        DatasetParser.Result r = Layered.dataset(yaml);
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         ds = new QueryService.Loaded("file:dataset:lake-test", Layers.key("file:dataset:lake-test"), r.dataset(), "h1");
         BusinessDates dates = new BusinessDates(new BusinessDateProperties("USNY", "America/New_York", null), clock);
@@ -351,11 +352,11 @@ class DatasetRefresherTest {
         assertThat(RefreshSpec.normalise("daily at 06:00")).isEqualTo("daily 06:00");
         assertThat(RefreshSpec.normalise("business days at 07:30")).isEqualTo("business-days 07:30");
         for (String ok : List.of("hourly", "weekly mon 07:00", "monthly last 18:00 business", "after-load trade", "weekdays 18:30")) {
-            assertThat(DatasetParser.parse(TestLake.yaml().replace("version: 1\n", "version: 1\nrefresh: \"" + ok + "\"\n")).problems()).as(ok).noneMatch(DatasetParser.Problem::error);
+            assertThat(Layered.dataset(TestLake.yaml().replace("version: 1\n", "version: 1\nrefresh: \"" + ok + "\"\n")).problems()).as(ok).noneMatch(DatasetParser.Problem::error);
         }
-        DatasetParser.Result bad = DatasetParser.parse(TestLake.yaml().replace("version: 1\n", "version: 1\nrefresh: \"whenever\"\n"));
+        DatasetParser.Result bad = Layered.dataset(TestLake.yaml().replace("version: 1\n", "version: 1\nrefresh: \"whenever\"\n"));
         assertThat(bad.problems()).anyMatch(p -> p.error() && p.path().equals("refresh") && p.message().contains("not a schedule"));
-        DatasetParser.Result table = DatasetParser.parse(TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }", "source: { connector: trading-lake, kind: trade }\n    refresh: { schedule: \"daily 06:00\" }"));
+        DatasetParser.Result table = Layered.dataset(TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }", "source: { connector: trading-lake, kind: trade }\n    refresh: { schedule: \"daily 06:00\" }"));
         assertThat(table.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         assertThat(table.dataset().tables().get("trades").schedule()).isEqualTo("daily 06:00");
         assertThat(Dataset.Refresh.NONE.scheduled()).isFalse();

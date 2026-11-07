@@ -71,7 +71,7 @@ final class MqBindings {
         Map<String, Object> values = values(v, q);
         if (!values.isEmpty() && q.define().values().stream().anyMatch(t -> t.contains(PARAM))) {
             Map<String, String> define = new LinkedHashMap<>();
-            q.define().forEach((k, t) -> define.put(k, t.contains(PARAM) ? NodeText.print(bindParams(Expressions.parse(t), values)) : t));
+            q.define().forEach((k, t) -> define.put(k, t.contains(PARAM) ? NodeText.print(bindParams(Expressions.node(t), values)) : t));
             bound = new ModelQuery(bound.mq(), bound.model(), define, bound.fields(), bound.measures(), bound.where(), bound.having(), bound.time(), bound.sort(), bound.limit(),
                     bound.totals(), bound.drill(), bound.shape(), bound.params(), bound.options(), bound.ext());
         }
@@ -228,7 +228,7 @@ final class MqBindings {
             for (Map.Entry<String, Dataset.Measure> e : ds.measures().entrySet()) {
                 Dataset.Measure m = e.getValue();
                 if (m.expr() != null && m.expr().contains(PARAM)) {
-                    measures.put(e.getKey(), withExpr(m, NodeText.print(bindParams(Expressions.parse(m.expr()), values))));
+                    measures.put(e.getKey(), withExpr(m, NodeText.print(bindParams(Expressions.node(m.expr()), values))));
                     changed = true;
                 }
             }
@@ -248,7 +248,7 @@ final class MqBindings {
                 for (ModelDef.CalcGroup g : groups) {
                     String template = g.items().get(q.ext().calc().get(g.name()));
                     format = g.formats().getOrDefault(q.ext().calc().get(g.name()), format);     // the outermost item with a format of its own decides
-                    Node t = com.ash.drishti.server.bi.expr.Expressions.parse(template);
+                    Node t = com.ash.drishti.server.bi.expr.Expressions.node(template);
                     current = selected(t, current);
                 }
                 Node bound = values.isEmpty() ? current : bindParams(current, values);

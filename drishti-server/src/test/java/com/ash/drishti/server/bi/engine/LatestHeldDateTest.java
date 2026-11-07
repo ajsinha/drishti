@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -95,7 +96,7 @@ class LatestHeldDateTest {
     }
 
     private static QueryService.Loaded dataset() {
-        DatasetParser.Result r = DatasetParser.parse(TestLake.yaml());
+        DatasetParser.Result r = Layered.dataset(TestLake.yaml());
         return new QueryService.Loaded("file:dataset:held", Layers.key("file:dataset:held"), r.dataset(), "h1");
     }
 

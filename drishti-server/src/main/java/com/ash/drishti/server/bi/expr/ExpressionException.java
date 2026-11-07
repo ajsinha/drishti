@@ -16,27 +16,28 @@
 package com.ash.drishti.server.bi.expr;
 
 import com.ash.drishti.rachana.el.check.Problem;
-import com.ash.drishti.server.bi.dataset.ExprParser;
 
 /**
- * A DEL expression the server refuses: the problem code ({@code DRS-9127} for the language, {@code DRS-9129} for a function of a later wave,
- * {@code DRS-9161} for a masked field, {@code DRS-9100} for the old syntax once it is refused), what is wrong, how to fix it, and where ({@code start} to
- * {@code end}, character offsets). It is an {@link ExprParser.ExprException}, so every caller that handled the old parser's errors handles these.
+ * An expression BI refuses: the problem code ({@code DRS-9127} for the language, {@code DRS-9129} for a function of a later wave,
+ * {@code DRS-9161} for a masked field, {@code DRS-9100} for a text that is not Rachana), what is wrong, how to fix it, and where ({@code start}
+ * to {@code end}, character offsets).
  */
-public final class DelException extends ExprParser.ExprException {
+public final class ExpressionException extends RuntimeException {
 
     private final String code;
     private final String fix;
+    private final int start;
     private final int end;
 
-    public DelException(String code, String message, String fix, int start, int end) {
-        super(message, start);
+    public ExpressionException(String code, String message, String fix, int start, int end) {
+        super(message);
         this.code = code;
         this.fix = fix;
+        this.start = start;
         this.end = Math.max(start, end);
     }
 
-    public DelException(Problem p) {
+    public ExpressionException(Problem p) {
         this(p.code(), p.message(), p.fix(), p.start(), p.end());
     }
 
@@ -48,8 +49,13 @@ public final class DelException extends ExprParser.ExprException {
         return fix;
     }
 
+    /** Where the problem starts (a character offset). */
+    public int position() {
+        return start;
+    }
+
     public int start() {
-        return position();
+        return start;
     }
 
     public int end() {
@@ -57,6 +63,6 @@ public final class DelException extends ExprParser.ExprException {
     }
 
     public Problem problem() {
-        return new Problem(code, Problem.ERROR, getMessage(), fix, position(), end);
+        return new Problem(code, Problem.ERROR, getMessage(), fix, start, end);
     }
 }

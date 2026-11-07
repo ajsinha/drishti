@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.mq;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.common.DrishtiException;
@@ -59,7 +60,7 @@ class EquivalenceTest {
     void setUp() throws Exception {
         try (Stream<Path> files = Files.list(SAMPLES)) {
             for (Path f : files.sorted().toList()) {
-                DatasetParser.Result r = DatasetParser.parse(Files.readString(f));
+                DatasetParser.Result r = Layered.dataset(Files.readString(f));
                 if (r.dataset() != null && !r.dataset().framed()) {
                     samples.put(f.getFileName().toString(), r.dataset());
                 }

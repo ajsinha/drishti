@@ -55,7 +55,7 @@ public final class FormulaFunction implements AggFunction<Object> {
         FormulaAst.walk(tree, n -> {
             if (n instanceof FormulaAst.Field f && !fs.contains(f.name())) {
                 if (declared != null) {
-                    throw new FormulaParser.FormulaException(f.name() + " is not one of the function's inputs " + declared, -1);
+                    throw new FormulaLowering.FormulaException(f.name() + " is not one of the function's inputs " + declared, -1);
                 }
                 fs.add(f.name());
             }
@@ -83,7 +83,7 @@ public final class FormulaFunction implements AggFunction<Object> {
         this.plainSum = additive(tree);
     }
 
-    /** The formula as a function; refused in words ({@link FormulaParser.FormulaException}) when it is not a measure formula. */
+    /** The formula as a function; refused in words ({@link FormulaLowering.FormulaException}) when it is not a measure formula. */
     public static FormulaFunction of(String text) {
         return of(null, text);
     }
@@ -98,7 +98,7 @@ public final class FormulaFunction implements AggFunction<Object> {
      * the fields a view passes); null: the formula's own fields, in the order they appear.
      */
     public static FormulaFunction of(String name, String text, List<String> declared) {
-        FormulaAst t = FormulaParser.parse(text);
+        FormulaAst t = FormulaLowering.lower(text);
         String canon = text.strip().replaceAll("\\s+", " ");
         return new FormulaFunction(name == null ? canon : name, canon, t, declared);
     }
@@ -113,10 +113,10 @@ public final class FormulaFunction implements AggFunction<Object> {
             f = Functions.builtIn("count", a.where() == null ? List.of() : List.of("x"), List.of()).orElseThrow();
         } else {
             try {
-                String engine = FormulaParser.ENGINE_NAME.getOrDefault(fn, fn);
-                f = Functions.builtIn(engine, placeholder, a.numbers()).orElseThrow(() -> new FormulaParser.FormulaException("no aggregate " + fn, -1));
+                String engine = FormulaLowering.ENGINE_NAME.getOrDefault(fn, fn);
+                f = Functions.builtIn(engine, placeholder, a.numbers()).orElseThrow(() -> new FormulaLowering.FormulaException("no aggregate " + fn, -1));
             } catch (IllegalArgumentException e) {
-                throw new FormulaParser.FormulaException(fn + ": " + e.getMessage(), -1);
+                throw new FormulaLowering.FormulaException(fn + ": " + e.getMessage(), -1);
             }
         }
         List<RowExpr> args = a.args().stream().map(x -> new RowExpr(x, fields)).toList();

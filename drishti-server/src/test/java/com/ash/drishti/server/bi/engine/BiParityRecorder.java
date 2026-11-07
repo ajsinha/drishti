@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
-import com.ash.drishti.server.bi.dataset.DatasetParser;
+import com.ash.drishti.server.bi.Layered;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.util.LinkedHashMap;
@@ -45,7 +45,7 @@ class BiParityRecorder {
         QueryProperties props = QueryProperties.defaults(store.toString());
         try (QueryService service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC())) {
             QueryService.Loaded ds = new QueryService.Loaded("file:dataset:lake-test", Layers.key("file:dataset:lake-test"),
-                    DatasetParser.parse(TestLake.yaml()).dataset(), "h1");
+                    Layered.dataset(TestLake.yaml()).dataset(), "h1");
             Map<String, Object> all = new LinkedHashMap<>();
             all.put("recordedWith", "one grouped query per level (BI's totals before the pivot engine)");
             Map<String, Object> cases = new LinkedHashMap<>();

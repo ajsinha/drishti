@@ -67,7 +67,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/bi-ai-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/bi-ai-overlay/added.yaml",
-        "drishti.bi.dir=${drishti.test.dir}/bi-ai-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/bi-ai-store/${random.uuid}",
+        "drishti.bi.dir=${drishti.test.dir}/bi-ai-folder", "drishti.tables.root=${drishti.test.dir}/bi-ai-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/bi-ai-store/${random.uuid}",
         "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/bi-ai-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.ai-lake.plugin=file", "drishti.sources.connectors.ai-lake.kinds[0]=trade",
@@ -256,6 +256,7 @@ class BiAiTest {
                         - match: "QUESTION: [^\\n]*total"
                           reply: '{"fields":[],"measures":["Notional"],"dates":{"from":"2026-10-08","to":"2026-10-08"}}'
                     """);
+            com.ash.drishti.server.bi.TablesFolder.migrate(datasets.getParent());     // tables migrate: the datasets and models become the layer's, the reports rebound
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }

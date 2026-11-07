@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.mq;
 
+import com.ash.drishti.server.bi.Layered;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
@@ -25,7 +26,6 @@ import com.ash.drishti.server.bi.engine.QueryProperties;
 import com.ash.drishti.server.bi.engine.QueryRequest;
 import com.ash.drishti.server.bi.engine.QueryService;
 import com.ash.drishti.server.bi.layer.ModelDef;
-import com.ash.drishti.server.bi.layer.ModelDefParser;
 import com.ash.drishti.server.bi.pivot.BiAggregate;
 import com.ash.drishti.server.bi.report.BiReportProperties;
 import com.ash.drishti.server.bi.report.Report;
@@ -146,7 +146,7 @@ public final class BiFoundationCases {
                 continue;
             }
             String y = Files.readString(f);
-            String name = ModelDefParser.parse(y).model() == null ? f.getFileName().toString() : ModelDefParser.parse(y).model().name();
+            String name = Layered.modelDef(y).model() == null ? f.getFileName().toString() : Layered.modelDef(y).model().name();
             try {
                 models.put(name, MqHarness.model(y, k -> Optional.empty(), datasets.values().toArray(String[]::new)));
             } catch (RuntimeException e) {

@@ -109,10 +109,11 @@ class NetLiveBiTest {
         Path root = com.ash.drishti.server.TestRun.root().resolve(Path.of("net-it", "livebi-" + System.nanoTime()));
         int[] p = NetNodes.PORTS;
         bi(root.resolve("bi"), root.resolve("lake"));
+        com.ash.drishti.server.bi.TablesFolder.migrate(root.resolve("bi"));     // tables migrate: the datasets and models become the layer's
         NetNodes.folder(root.resolve("a/net"), p[0], List.of(), List.of(), List.of());
         NetNodes.folder(root.resolve("b/net"), p[1], List.of(), List.of(), List.of(p[0]));
         cluster = new NetNodes(root);
-        List<String> common = List.of("--drishti.bi.dir=" + root.resolve("bi"), "--drishti.sources.plugins.file.enabled=false",
+        List<String> common = List.of("--drishti.bi.dir=" + root.resolve("bi"), "--drishti.tables.root=" + root.resolve("bi").resolve("tables"), "--drishti.sources.plugins.file.enabled=false",
                 "--drishti.sources.connectors.finance-lake.enabled=false", "--drishti.sources.connectors.rep-lake.plugin=file",
                 "--drishti.sources.connectors.rep-lake.kinds[0]=trade", "--drishti.sources.connectors.rep-lake.settings.root=" + root.resolve("lake"),
                 "--drishti.sources.connectors.rep-lake.settings.id-field=TRADE_ID", "--drishti.sources.connectors.rep-lake.settings.rescan-seconds=3600");

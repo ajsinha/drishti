@@ -178,7 +178,7 @@ public final class ExpectedValueRunner {
             }
             return out;
         }
-        if ("dataset".equals(item.kind()) && com.ash.drishti.server.bi.layer.DatasetDefParser.isVersion2(body)) {
+        if ("dataset".equals(item.kind()) && com.ash.drishti.server.bi.layer.DatasetDefParser.isTable(body)) {
             return new LayerDatasetTests(this, datasetTests).run(p, body, chosen);       // the model layer's data tests (BI_DESIGN.md › The model layer: the specification of wave W1, section 1.8)
         }
         if ("dataset".equals(item.kind())) {

@@ -78,7 +78,7 @@ public final class ObjectSecurity {
             return m.inputs().stream().anyMatch(hidden::contains);
         }
         try {
-            return Node.anyMatch(Expressions.parse(m.expr()), x -> x instanceof Node.Ref r && r.parts().size() >= 2 && hidden.contains(r.parts().get(0) + "." + r.parts().get(1))
+            return Node.anyMatch(Expressions.node(m.expr()), x -> x instanceof Node.Ref r && r.parts().size() >= 2 && hidden.contains(r.parts().get(0) + "." + r.parts().get(1))
                     || x instanceof Node.MeasureRef mr && reads(flat, mr.name(), hidden, seen));
         } catch (RuntimeException e) {
             return false;
@@ -122,7 +122,7 @@ public final class ObjectSecurity {
             return;
         }
         try {
-            Node.walk(Expressions.parse(x.expr()), n -> {
+            Node.walk(Expressions.node(x.expr()), n -> {
                 if (n instanceof Node.Ref r && r.parts().size() >= 2) {
                     into.add(r.parts().get(0) + "." + r.parts().get(1));
                 } else if (n instanceof Node.MeasureRef mr) {
@@ -167,7 +167,7 @@ public final class ObjectSecurity {
         }
         q.define().forEach((name, expr) -> {
             try {
-                Node.walk(Expressions.parse(Expressions.withMeasureNames(expr, ids)), x -> {
+                Node.walk(Expressions.node(Expressions.withMeasureNames(expr, ids)), x -> {
                     if (x instanceof Node.Ref r && r.parts().size() >= 2) {
                         field(r.parts().get(0) + "." + r.parts().get(1), "define." + name, hidden, out);
                     } else if (x instanceof Node.MeasureRef mr) {

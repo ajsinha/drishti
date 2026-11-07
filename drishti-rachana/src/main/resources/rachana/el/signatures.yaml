@@ -382,18 +382,20 @@ functions:
 - name: count
   family: aggregate
   runs: E
-  signature: count(alias | x, where = null)
+  signature: count([alias | x], where = null)
   params:
-  - {name: x, type: table-or-any}
+  - {name: x, type: table-or-any, default: 'null'}
   - {name: where, type: boolean, default: 'null', keyword-only: true}
   returns: integer
   scopes: [aggregate]
-  description: count(trades) counts the rows of a dataset alias; count(x) counts the rows where x is not None.
+  description: count() counts the rows (of a pivot cell, or of the one table a measure reads); count(trades) the rows of a table alias; count(x) the rows where x is not null.
   examples:
+  - {expr: count(), says: 'how many rows (a pivot formula: the cell''s rows)'}
+  - {expr: 'count(where = PNL < 0) / count()', says: 'the share of losing rows (a pivot formula)'}
   - {expr: count(trades), says: how many trades}
   - {expr: 'count(trades, where = trades.MTM < 0)', says: how many trades lose money}
   - {expr: count(trades.PORTFOLIO), says: trades with a book}
-  edge-cases: {nulls: count(x) skips null; count(alias) counts every row., empty: 0 over no rows (never null).}
+  edge-cases: {nulls: count(x) skips null; count() and count(alias) count every row., empty: 0 over no rows (never null).}
 - name: distinct
   family: aggregate
   runs: E

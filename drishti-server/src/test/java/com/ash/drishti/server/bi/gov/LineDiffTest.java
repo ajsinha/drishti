@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.server.bi.gov;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.server.bi.dataset.DatasetParser;
 import org.junit.jupiter.api.Test;
 
 class LineDiffTest {
@@ -55,11 +55,11 @@ class LineDiffTest {
     void aFieldRemovedFromADatasetIsFoundByName() {
         String before = "dataset: d\ntables:\n  t:\n    source: { kind: trade }\n    columns: { a: string, b: string }\nmeasures:\n  N: { expr: \"count(t)\" }\n";
         String after = before.replace("b: string", "c: string");
-        Surface.Change c = Surface.change(Surface.Offer.of(DatasetParser.parse(before).dataset()), Surface.Offer.of(DatasetParser.parse(after).dataset()));
+        Surface.Change c = Surface.change(Surface.Offer.of(Layered.dataset(before).dataset()), Surface.Offer.of(Layered.dataset(after).dataset()));
         assertThat(c.breaking()).isTrue();
         assertThat(c.removedFields()).containsExactly("t.b");
         assertThat(c.addedFields()).containsExactly("t.c");
         assertThat(c.removedMeasures()).isEmpty();
-        assertThat(Surface.change(Surface.Offer.of(DatasetParser.parse(after).dataset()), Surface.Offer.of(DatasetParser.parse(before).dataset())).removedFields()).containsExactly("t.c");
+        assertThat(Surface.change(Surface.Offer.of(Layered.dataset(after).dataset()), Surface.Offer.of(Layered.dataset(before).dataset())).removedFields()).containsExactly("t.c");
     }
 }

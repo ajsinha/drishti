@@ -378,7 +378,30 @@
   },
   "count(where=CCY in [])" : {
     "sql" : {
-      "refused" : true
+      "*|*" : 0.0,
+      "*|DESK=COMMOD" : 0.0,
+      "*|DESK=CREDIT" : 0.0,
+      "*|DESK=EQUITY" : 0.0,
+      "*|DESK=FX" : 0.0,
+      "*|DESK=RATES" : 0.0,
+      "REGION=AMERICAS|*" : 0.0,
+      "REGION=AMERICAS|DESK=COMMOD" : 0.0,
+      "REGION=AMERICAS|DESK=CREDIT" : 0.0,
+      "REGION=AMERICAS|DESK=EQUITY" : 0.0,
+      "REGION=AMERICAS|DESK=FX" : 0.0,
+      "REGION=AMERICAS|DESK=RATES" : 0.0,
+      "REGION=APAC|*" : 0.0,
+      "REGION=APAC|DESK=COMMOD" : 0.0,
+      "REGION=APAC|DESK=CREDIT" : 0.0,
+      "REGION=APAC|DESK=EQUITY" : 0.0,
+      "REGION=APAC|DESK=FX" : 0.0,
+      "REGION=APAC|DESK=RATES" : 0.0,
+      "REGION=EMEA|*" : 0.0,
+      "REGION=EMEA|DESK=COMMOD" : 0.0,
+      "REGION=EMEA|DESK=CREDIT" : 0.0,
+      "REGION=EMEA|DESK=EQUITY" : 0.0,
+      "REGION=EMEA|DESK=FX" : 0.0,
+      "REGION=EMEA|DESK=RATES" : 0.0
     },
     "java" : 0.0
   },

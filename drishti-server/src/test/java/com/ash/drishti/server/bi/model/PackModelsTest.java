@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.model;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -173,7 +174,7 @@ class PackModelsTest {
     @Test
     void theDraftIsAValidDatasetWithStarterMeasures() {
         PackModels.Draft d = models(Set.of("order", "customer")).start(List.of("order", "customer"), "shop-model");
-        DatasetParser.Result r = DatasetParser.parse(d.yaml());
+        DatasetParser.Result r = Layered.dataset(d.yaml());
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         assertThat(r.dataset().tables()).containsOnlyKeys("order", "customer");
         assertThat(r.dataset().measures()).containsKeys("Count of order", "Total order amount");

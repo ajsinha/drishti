@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.mq;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.bi.engine.DuckDbEngine;
@@ -124,7 +125,7 @@ class DerivationTest {
     MqService mq = new MqService(MqProperties.defaults());
 
     static Function<String, Optional<DatasetDef>> kinds() {
-        DatasetDef desks = DatasetDefParser.parse(MqEngineTest.DESKS).dataset();
+        DatasetDef desks = Layered.tableDef(MqEngineTest.DESKS).dataset();
         return k -> "desk".equals(k) ? Optional.of(desks) : Optional.empty();
     }
 
@@ -211,7 +212,7 @@ class DerivationTest {
 
     @Test
     void checkRefusesWhatADerivationCannotDo() {
-        DatasetDef base = DatasetDefParser.parse(MqEngineTest.TRADES).dataset();
+        DatasetDef base = Layered.tableDef(MqEngineTest.TRADES).dataset();
         assertThat(codes(TOP_PER_DESK.replace("columns: [desk, currency, notional, mtm]", "columns: [desk, nope]"), base)).contains("DRS-9105");
         assertThat(codes(TOP_PER_DESK.replace("keep: latest by notional", "keep: latest by ghost"), base)).contains("DRS-9104");
         assertThat(codes(TOP_PER_DESK.replace("keep: latest by notional", "keep: whichever"), base)).contains("DRS-9104");
@@ -221,12 +222,12 @@ class DerivationTest {
         assertThat(codes(DESK_CCY.replace("trades: count", "trades: median"), base)).contains("DRS-9101");
         assertThat(codes(TOP_PER_DESK.replace("notionalK: { expr: \"notional / 1000\", type: decimal }", "notionalK: { expr: \"sum(notional)\", type: decimal }"), base))
                 .contains("DRS-9101");
-        assertThat(ResolvedDataset.extend(DatasetDefParser.parse(DESK_CCY).dataset(), ResolvedDataset.of(base)).def().columns().keySet())
+        assertThat(ResolvedDataset.extend(Layered.tableDef(DESK_CCY).dataset(), ResolvedDataset.of(base)).def().columns().keySet())
                 .containsExactly("desk", "currency", "notional", "notionalK", "mtm", "trades");
     }
 
     static List<String> codes(String yaml, DatasetDef base) {
-        DatasetDefParser.Result r = DatasetDefParser.parse(yaml);
+        DatasetDefParser.Result r = Layered.tableDef(yaml);
         List<String> out = new java.util.ArrayList<>(r.problems().stream().filter(com.ash.drishti.server.bi.dataset.DatasetParser.Problem::error)
                 .map(com.ash.drishti.server.bi.dataset.DatasetParser.Problem::code).toList());
         if (r.dataset() != null) {

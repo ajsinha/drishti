@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.server.bi.gov;
 
-import com.ash.drishti.server.bi.dataset.LegacySources;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.report.Report;
 import java.util.ArrayList;
@@ -298,7 +297,7 @@ public final class Surface {
         List<Use> fields = new ArrayList<>();
         List<Use> measures = new ArrayList<>();
         Collector c = new Collector(tables, fields, measures, new ArrayList<>());
-        for (Dataset.Input in : LegacySources.sources(d)) {
+        for (Dataset.Input in : d.inputs()) {
             if (!mine.test(in.dataset())) {
                 continue;
             }
