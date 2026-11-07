@@ -13,11 +13,15 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Report review and sign-off (terminal/var_reports.html; VAR_GUIDE.md section 18.14) and period statistics (var_statistics.html, section
    18.10): fills the pages from /api/var/reports and /api/var/statistics. Every text is set with textContent; the server decides every
-   rule (the steps' order, four eyes, a failed check blocking sign-off) and says why in words, shown here as they come. */
+   rule (the steps' order, four eyes, a failed check blocking sign-off) and says why in words, shown here as they come. The pilot pack,
+   the report as it will be filed and the checks are risk grids (drishti-risk's preset: <drishti-grid>, terminal layout); a click on a
+   report's cell (or Enter on it) opens its lineage. */
 (function () {
   "use strict";
+  const R = window.Drishti.elements.risk;
   const fmt = (v) => v == null || !isFinite(v) ? "—" : Math.round(v).toLocaleString("en-US");
   const mln = (v) => v == null || !isFinite(v) ? "—" : (v / 1e6).toFixed(2) + "m";
   function el(tag, attrs, text) {
@@ -84,24 +88,21 @@
 
   async function loadPack() {
     const { ok, j } = await getJson("/api/var/reports");
-    const tb = $("[data-rp-pack]");
-    tb.replaceChildren();
     if (!ok) { notice(j.detail); return null; }
     $("[data-rp-pack-sub]").textContent = (j.reports || []).length + " reports · fiscal year end " + j.fiscalYearEnd;
-    (j.reports || []).forEach((r) => {
-      if (r.report === report && !period) { period = r.currentPeriod; }
-      const tr = el("tr", { class: r.report === report ? "sel" : "" });
-      const a = el("a", { href: "/var/reports/" + r.report + "?period=" + encodeURIComponent(r.currentPeriod) }, r.report);
-      const td = el("td");
-      td.append(a);
-      const gen = el("button", { type: "button", class: "rg-btn" }, "Generate " + r.currentPeriod);
-      gen.addEventListener("click", () => generate(r.report, r.report === report && period ? period : r.currentPeriod));
-      const g = el("td");
-      g.append(gen);
-      tr.append(td, el("td", {}, r.title), el("td", {}, r.currentPeriod), el("td", { class: "num" }, r.run ? "v" + r.run.version : "—"),
-        el("td", {}, r.run ? r.run.state : "not generated"), g);
-      tb.append(tr);
-    });
+    (j.reports || []).forEach((r) => { if (r.report === report && !period) { period = r.currentPeriod; } });
+    const rows = (j.reports || []).map((r) => ({ report: r.report, title: r.title, period: r.currentPeriod, run: r.run ? "v" + r.run.version : "—",
+      state: r.run ? r.run.state : "not generated" }));
+    R.riskGrid($("[data-rp-pack]"), { title: "Pilot pack", rows: rows, getRowId: (r) => r.report,
+      getRowClass: (r) => (r.report === report ? "rg-sel" : null), getRowData: (r) => ({ report: r.report }),
+      columns: [{ field: "report", header: "Report", width: 150, cellRenderer: (x) => el("a", { href: "/var/reports/" + x.value + "?period=" + encodeURIComponent(x.row.period) }, x.value) },
+        { field: "title", header: "Title", width: 260 }, { field: "period", header: "Period", width: 100 },
+        { field: "run", header: "Run", width: 60, cellClass: () => "dg-num" }, { field: "state", header: "State", width: 110 },
+        { id: "generate", field: "period", header: "", width: 170, sortable: false, cellRenderer: (x) => {
+          const gen = el("button", { type: "button", class: "dg-cell-btn" }, "Generate " + x.row.period);
+          gen.addEventListener("click", () => generate(x.row.report, x.row.report === report && period ? period : x.row.period));
+          return gen;
+        } }] });
     return j;
   }
 
@@ -141,7 +142,7 @@
       box.append(p);
       $("[data-rp-foot]").textContent = bt.rule || "";
     } else {
-      box.append(table(r));
+      table(box, r);
       $("[data-rp-foot]").textContent = (r.footnotes || []).join(" ");
     }
     const card = $("[data-rp-narr-card]");
@@ -152,39 +153,41 @@
     checks();
   }
 
-  function table(r) {
+  /** The report as it will be filed: a row per line (the totals marked), a column per figure; each cell's text is the server's value in
+   *  the report's units; a click on a cell (or Enter on the focused one) opens its lineage. */
+  function table(box, r) {
     const thousands = r.units === "thousands";
-    const t = el("table");
-    const h = el("tr");
-    h.append(el("th", {}, "1-day 99% VaR, USD" + (thousands ? " thousands" : "")));
     const names = { "period-end": "Period end", average: "Average", high: "High", low: "Low", "prior-period-end": (r.priorPeriod || "Prior") + " period end", movement: "Movement" };
-    (r.columns || []).forEach((c) => h.append(el("th", { class: "num" }, names[c] || c)));
-    const thead = el("thead");
-    thead.append(h);
-    const tb = el("tbody");
-    (r.rows || []).forEach((row) => {
-      const tr = el("tr", { class: row.total ? "total" : "" });
-      const lab = el("td", {}, row.label + " ");
-      if (row.code) { lab.append(el("span", { class: "rg-note mono" }, row.code)); }
-      tr.append(lab);
-      (r.columns || []).forEach((c) => {
-        const cell = (row.cells || {})[c] || {};
-        let text;
-        if (cell.value == null) { text = cell.text || "—"; } else if (c === "movement") { text = (cell.value >= 0 ? "+" : "") + (cell.value * 100).toFixed(1) + "%" + (cell.flag ? " ⚑" : ""); } else { text = fmt(thousands ? cell.value / 1000 : cell.value); }
-        const td = el("td", { class: "num" + (cell.value < 0 ? " neg" : "") + (cell.flag ? " flag" : ""), "data-cell": "", tabindex: "0" }, text);
-        td.addEventListener("click", () => lineage(td, row, c, cell, text));
-        td.addEventListener("keydown", (e) => { if (e.key === "Enter") { lineage(td, row, c, cell, text); } });
-        tr.append(td);
-      });
-      tb.append(tr);
+    const cellOf = (row, c) => (row.cells || {})[c] || {};
+    const textOf = (c, cell) => {
+      if (cell.value == null) { return cell.text || "—"; }
+      if (c === "movement") { return (cell.value >= 0 ? "+" : "") + (cell.value * 100).toFixed(1) + "%" + (cell.flag ? " ⚑" : ""); }
+      return fmt(thousands ? cell.value / 1000 : cell.value);
+    };
+    const rows = (r.rows || []).map((row, i) => ({ id: String(i), line: row, label: row.label + (row.code ? " " + row.code : "") }));
+    const columns = [{ field: "label", header: "1-day 99% VaR, USD" + (thousands ? " thousands" : ""), width: 300, pinned: "left" }].concat((r.columns || []).map((c) => ({
+      id: c, header: names[c] || c, type: "number", additive: false, width: 130, valueGetter: (x) => cellOf(x.line, c).value,
+      format: (v, x) => textOf(c, x && x.line ? cellOf(x.line, c) : { value: v }),
+      cellClass: (v, x) => "rg-cell" + (cellOf(x.line, c).flag ? " dg-tone-warn" : "") })));
+    const grid = R.riskGrid(box, { title: r.title || "Report", rows: rows, columns: columns, getRowId: (x) => x.id, fitRows: 40,
+      getRowClass: (x) => (x.line.total ? "rg-total" : null) });
+    const open = (d) => {
+      if (!d || d.kind !== "leaf" || !d.data || d.columnId === "label") { return; }
+      const cell = cellOf(d.data.line, d.columnId);
+      lineage(d.data.line, d.columnId, cell, textOf(d.columnId, cell));
+    };
+    box._open = open;
+    box._grid = grid;
+    if (box._wired) { return; }
+    box._wired = true;
+    box.addEventListener("drishti:cell-clicked", (e) => box._open(e.detail));
+    box.addEventListener("keydown", (e) => {
+      const f = box._grid.model.navigator.focus;
+      if (e.key === "Enter" && f) { e.preventDefault(); box._open(box._grid.model.cellContext(f.row, f.col)); }
     });
-    t.append(thead, tb);
-    return t;
   }
 
-  function lineage(td, row, col, cell, text) {
-    root.querySelectorAll("td[data-cell].sel").forEach((x) => x.classList.remove("sel"));
-    td.classList.add("sel");
+  function lineage(row, col, cell, text) {
     $("[data-rp-lin-card]").hidden = false;
     const dl = $("[data-rp-lineage]");
     dl.replaceChildren();
@@ -256,15 +259,10 @@
     const cs = run.checksSummary || {};
     $("[data-rp-checks-sub]").textContent = (run.checks || []).length + " · " + cs.pass + " pass, " + cs.note + " need a note, " + cs.fail
       + " fail; a failed check blocks sign-off, never generation";
-    const tb = $("[data-rp-checks]");
-    tb.replaceChildren();
-    (run.checks || []).forEach((c) => {
-      const tr = el("tr");
-      const p = el("td");
-      p.append(el("span", { class: "rg-pill " + c.status }, c.status));
-      tr.append(p, el("td", {}, c.title || c.check), el("td", { class: "rg-note" }, c.evidence || ""));
-      tb.append(tr);
-    });
+    const rows = (run.checks || []).map((c, i) => ({ id: String(i), status: c.status, title: c.title || c.check, evidence: c.evidence || "" }));
+    R.riskGrid($("[data-rp-checks]"), { title: "Checks", rows: rows, getRowId: (x) => x.id,
+      columns: [{ field: "status", header: "Status", width: 80, cellRenderer: (x) => el("span", { class: "rg-pill " + x.value }, x.value) },
+        { field: "title", header: "Check", width: 230 }, { field: "evidence", header: "Evidence", width: 320, cellClass: () => "dg-tone-muted" }] });
   }
 
   async function saveNarrative() {

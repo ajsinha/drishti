@@ -43,6 +43,7 @@ import pytest
 
 from core.auth import mint_token
 from test_var_explorer_browser import ROOT, VAR_DATA
+from risk_elements import chart, chart_ready, grid_ready, grid_rows
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from wb_live import BROWSER_WAIT_MS, TOKEN_SECRET, _stack
 
@@ -163,8 +164,9 @@ def f1_opens(pg, anchor):
 # ---------------------------------------------------------------------------------------------------------------------------------- backtest
 
 def bt_painted(pg, node):
-    wait(pg, "(() => { const r = document.querySelector('[data-bt-parts] tr.sel'); return r && r.dataset.node === %r"
+    wait(pg, "(() => { const r = document.querySelector('[data-bt-parts]'); return r && r.dataset.selected === %r"
              " && document.querySelector('[data-bt-zone]').textContent !== '—'; })()" % node)
+    wait(pg, grid_ready("[data-bt-parts]"))
 
 
 def test_the_backtest_shows_the_engines_zone_multiplier_and_exceptions(stack, people, browser):
@@ -181,39 +183,44 @@ def test_the_backtest_shows_the_engines_zone_multiplier_and_exceptions(stack, pe
     assert pg.locator(f'[data-lamp="{d["zone"]}"]').evaluate("e => e.classList.contains('on')")
     assert pg.locator("[data-bt-mult]").inner_text() == f"{d['multiplier']:.2f}"
     # the counts: per confidence a heading row, then actual, hypothetical and risk-theoretical
-    rows = pg.locator("[data-bt-counts] tr")
-    assert rows.count() == 4 * len(d["counts"])
+    rows = grid_rows(pg, "[data-bt-counts]")
+    assert len(rows) == 4 * len(d["counts"])
     for i, c in enumerate(d["counts"]):
-        assert rows.nth(4 * i + 1).locator("td").nth(1).inner_text() == str(c["actual"])
-        assert rows.nth(4 * i + 2).locator("td").nth(1).inner_text() == str(c["hypothetical"])
-    # the exceptions table: one row per exception of the answer, each its date and its drivers
-    exc = pg.locator("[data-bt-exc] tr")
-    assert exc.count() == len(d["exceptions"])
+        assert rows[4 * i + 1]["cells"][1] == str(c["actual"])
+        assert rows[4 * i + 2]["cells"][1] == str(c["hypothetical"])
+    # the exceptions grid: one row per exception of the answer, each its date and its drivers
+    exc = grid_rows(pg, "[data-bt-exc]")
+    assert len(exc) == len(d["exceptions"])
     for i, e in enumerate(d["exceptions"]):
-        cells = exc.nth(i).locator("td")
-        assert cells.nth(0).inner_text() == e["date"]
-        assert cells.nth(7).inner_text() == ", ".join(e.get("drivers") or [])
+        assert exc[i]["cells"][0] == e["date"]
+        assert exc[i]["cells"][7] == ", ".join(e.get("drivers") or [])
     # the exceptions listed are those at the first confidence: the actual ones are the count the zone reads
     assert sum(1 for e in d["exceptions"] if e["which"] in ("actual", "both")) == d["counts"][0]["actual"]
     assert sum(1 for e in d["exceptions"] if e["which"] in ("hypothetical", "both")) == d["counts"][0]["hypothetical"]
-    # the chart: a bar a tested day, a marker an actual exception at 99%
-    assert pg.locator("[data-bt-chart] svg rect").count() == len(d["rows"])
-    marks99 = pg.locator("[data-bt-chart] svg path.exc").count()
+    # the chart (risk.backtest): a point a tested day, the actual exceptions at 99% marked, the card the server's zone and count
+    wait(pg, chart_ready("[data-bt-chart]"))
+    ch = chart(pg, "[data-bt-chart]")
+    assert ch["kind"] == "risk.backtest" and ch["series"][0]["n"] == len(d["rows"])
+    marks99 = ch["figures"]["counted"]
     assert marks99 == sum(1 for r in d["rows"] if r.get("var990") is not None and r["actual"] < -r["var990"])
-    pg.locator('[data-bt-q="1"]').click()                                   # 97.5%: more markers, the same page
-    wait(pg, "document.querySelector('[data-bt-q=\"1\"]').getAttribute('aria-pressed') === 'true'")
-    assert pg.locator("[data-bt-chart] svg path.exc").count() == sum(1 for r in d["rows"] if r.get("var975") is not None and r["actual"] < -r["var975"])
-    assert pg.locator("[data-bt-chart] svg path.exc").count() >= marks99
+    assert ch["figures"]["exceptions"] == d["counts"][0]["actual"] and ch["figures"]["zone"] == d["zone"]
+    assert ch["badge"]["text"].startswith(f"{d['zone']} · {d['counts'][0]['actual']} exceptions")
+    pg.locator('[data-bt-q="1"]').click()                                   # 97.5%: more exceptions, the same page
+    wait(pg, "document.querySelector('[data-bt-chart]').dataset.var === 'var975'")
+    ch = chart(pg, "[data-bt-chart]")
+    assert ch["figures"]["counted"] == sum(1 for r in d["rows"] if r.get("var975") is not None and r["actual"] < -r["var975"])
+    assert ch["figures"]["counted"] >= marks99
+    assert ch["figures"]["exceptions"] == d["counts"][1]["actual"]
     # the bank and its desks: a row each part; a desk's row draws its own backtest in place
-    assert pg.locator("[data-bt-parts] tr").count() == len(d["parts"])
+    assert len(grid_rows(pg, "[data-bt-parts]")) == len(d["parts"])
     desk = next(p for p in d["parts"] if p.get("level") == "desk" and p.get("zone"))
     pg.evaluate("window.__marker = 1")
-    pg.locator(f'[data-bt-parts] tr[data-node="{desk["node"]}"] td').nth(1).click()
+    pg.locator(f'[data-bt-parts] .dg-row[data-node="{desk["node"]}"] .dg-cell').nth(1).click()
     bt_painted(pg, desk["node"])
     dd = get(pg, base, "/api/var/backtesting?scope=" + "NODE:" + desk["node"])
     assert pg.locator("[data-bt-zone]").inner_text().lower() == dd["zone"] == desk["zone"]
     assert pg.locator("[data-bt-mult]").inner_text() == f"{dd['multiplier']:.2f}"
-    assert pg.locator("[data-bt-exc] tr").count() == len(dd["exceptions"])
+    assert len(grid_rows(pg, "[data-bt-exc]")) == len(dd["exceptions"])
     assert pg.evaluate("window.__marker") == 1                              # in place: no page load
     clean(pg)
     f1_opens(pg, "46-backtesting")
@@ -301,12 +308,12 @@ def test_a_report_run_is_generated_checked_and_signed_by_three_people(stack, peo
     go(mara, base, f"VAR REPORT {REPORT} {PERIOD} <GO>")
     mara.wait_for_url(f"**/var/reports/{REPORT}?period={PERIOD}*")
     pack = get(mara, base, "/api/var/reports")
-    wait(mara, "document.querySelectorAll('[data-rp-pack] tr').length === %d" % len(pack["reports"]))
-    row = mara.locator("[data-rp-pack] tr.sel")
+    wait(mara, "document.querySelectorAll('[data-rp-pack] .dg-row').length === %d" % len(pack["reports"]))
+    row = mara.locator("[data-rp-pack] .dg-row.rg-sel")
     assert REPORT in row.inner_text() and "not generated" in row.inner_text()
 
     # Generate freezes run v1 and opens it
-    row.locator("button").click()
+    row.locator("button.dg-cell-btn").click()
     mara.wait_for_url(f"**/var/reports/{REPORT}?period={PERIOD}&version=1")
     run = get(mara, base, f"/api/var/reports/{REPORT}/runs/{PERIOD}?version=1")
     assert run["version"] == 1 and run["signoff"]["next"] == "maker"
@@ -314,20 +321,22 @@ def test_a_report_run_is_generated_checked_and_signed_by_three_people(stack, peo
     print(f"\nreport {REPORT} {PERIOD} v1: checks {summary}: " + "; ".join(f"{c['status']} {c.get('title') or c.get('check')}" for c in run["checks"]))
     wait(mara, "document.querySelector('[data-rp-meta]').textContent.indexOf('run v1,') === 0")
     # the checks as the API's: a row each, its status and its title
-    checks = mara.locator("[data-rp-checks] tr")
-    assert checks.count() == len(run["checks"]) > 0
+    wait(mara, grid_ready("[data-rp-checks]"))
+    checks = grid_rows(mara, "[data-rp-checks]")
+    assert len(checks) == len(run["checks"]) > 0
     for i, c in enumerate(run["checks"]):
-        assert checks.nth(i).locator(".rg-pill").inner_text() == c["status"]
-        assert checks.nth(i).locator("td").nth(1).inner_text() == (c.get("title") or c.get("check"))
+        assert checks[i]["cells"][0] == c["status"]
+        assert checks[i]["cells"][1] == (c.get("title") or c.get("check"))
     assert mara.locator("[data-rp-checks-sub]").inner_text().startswith(f"{len(run['checks'])} · {summary['pass']} pass, {summary['note']} need a note, "
                                                                        f"{summary['fail']} fail")
     # the table as it will be filed: a row a definition row; the total's period end is the official figure; a cell's lineage
-    assert mara.locator("[data-rp-table] tbody tr").count() == len(run["rows"])
+    table = grid_rows(mara, "[data-rp-table]")
+    assert len(table) == len(run["rows"])
     total = next(r for r in run["rows"] if r.get("total"))
     end = total["cells"]["period-end"]["value"]
     shown = f"{round(end / 1000 if run.get('units') == 'thousands' else end):,}"
-    assert shown in mara.locator("[data-rp-table] tbody tr.total").inner_text()
-    mara.locator("[data-rp-table] tbody tr.total td[data-cell]").first.click()
+    assert shown in next(t for t in table if t["data"]["line"].get("total"))["cells"]
+    mara.locator("[data-rp-table] .dg-row.rg-total .dg-cell.rg-cell").first.click()
     mara.locator("[data-rp-lin-card]").wait_for()
     lin = mara.locator("[data-rp-lineage]").inner_text()
     assert "Official record" in lin and total["cells"]["period-end"]["lineage"]["node"] in lin
@@ -403,7 +412,7 @@ def test_a_report_run_is_generated_checked_and_signed_by_three_people(stack, peo
     assert all(w in steps for w in ("mara", "chen", "aria"))
     r = aria.request.get(base + files.first.get_attribute("href"))
     assert r.ok and len(r.body()) > 100
-    wait(aria, "Array.from(document.querySelectorAll('[data-rp-pack] tr.sel td')).some((t) => t.textContent === 'signed')")
+    wait(aria, "Array.from(document.querySelectorAll('[data-rp-pack] .dg-row.rg-sel .dg-cell')).some((t) => t.textContent === 'signed')")
     clean(aria)
     aria.context.close()
 

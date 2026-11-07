@@ -44,14 +44,15 @@
 (function () {
   "use strict";
   var root = document.querySelector("[data-var]");
-  if (!root || !window.Drishti.VarCharts) return;
-  var C = window.Drishti.VarCharts;
+  if (!root || !window.Drishti.elements || !window.Drishti.elements.risk) return;
+  var R = window.Drishti.elements.risk;                // drishti-risk: the grid and chart presets and the figures in words (ELEMENTS.md 4.8)
+  var money = R.riskMoney, signed = R.riskSigned;
   var $ = function (sel) { return root.querySelector(sel); };
   var params = new URLSearchParams(location.search);
   var CCY_KEY = "drishti.var.ccy";
   function storedCcy() { try { return sessionStorage.getItem(CCY_KEY) || ""; } catch (e) { return ""; } }
   var S = { scope: root.dataset.scope || "BANK", hierarchy: root.dataset.hierarchy || "MGMT", tab: root.dataset.tab || "path", by: "child", page: 0,
-            asOf: params.get("asOf") || "", tree: null, expanded: {}, children: {}, head: null, seq: 0, user: root.dataset.user || "",
+            asOf: params.get("asOf") || "", tree: null, open: {}, asking: {}, treeGrid: null, children: {}, head: null, seq: 0, user: root.dataset.user || "",
             admin: root.dataset.admin === "true",            // an administrator: Delete on every basket listed (the server checks again)
             ccy: (root.dataset.ccy || params.get("ccy") || storedCcy() || "USD").toUpperCase(),
             // the lens (2.9.7): "" is the default (1-day; the setting's 10-day method; the configured confidences)
@@ -153,9 +154,7 @@
     if (text !== undefined && text !== null) e.textContent = text;
     return e;
   }
-  function int(v) { return v === null || v === undefined || isNaN(v) ? "—" : Math.round(v).toLocaleString("en-US"); }
-  function pct(v) { return v === null || v === undefined || isNaN(v) ? "—" : (v * 100).toFixed(1) + "%"; }
-  function cell(tr, text, cls) { var td = h("td", cls, text); tr.appendChild(td); return td; }
+  var int = R.riskInt, pct = R.riskPct;
   function utilClass(u) { return u >= 0.9 ? "bad" : u >= 0.75 ? "warn" : "ok"; }
   function ubar(u, wide) {
     var span = h("span", "vx-ubar" + (wide ? " wide" : ""));
@@ -317,18 +316,18 @@
     var bt = d.backtest || {}, u = d.limitUse, cur = d.currency || "USD";
     var days = ln.horizon === "10D" ? "10 days" : "1 day", stressed = ln.set === "STRESSED", avg = d.stressAverage || {};
     var tiles = [
-      [(stressed ? "Stressed VaR " : "VaR ") + conf + "% · " + days + " · " + cur, d.empty ? "—" : C.money(d["var"]), d.empty ? "no trades: nothing to compute"
+      [(stressed ? "Stressed VaR " : "VaR ") + conf + "% · " + days + " · " + cur, d.empty ? "—" : money(d["var"]), d.empty ? "no trades: nothing to compute"
         : sq ? "1-day × √10 (3.162) · " + ordinal(d.k) + " worst of " + d.scenarios : ordinal(d.k) + " worst of " + d.scenarios + (sum ? " overlapping windows" : ""), null],
-      [(stressed ? "Stressed ES " : "ES ") + esc + "% · " + (ln.horizon === "10D" ? "10 days · " : "") + cur, d.empty ? "—" : C.money(d.es), d.empty ? "no trades"
+      [(stressed ? "Stressed ES " : "ES ") + esc + "% · " + (ln.horizon === "10D" ? "10 days · " : "") + cur, d.empty ? "—" : money(d.es), d.empty ? "no trades"
         : sq ? "1-day ES × √10" : "mean of worst " + d.esCount + (sum ? " windows" : ""), null],
-      ["Sum of standalone VaR", d.sumStandalone === null ? "—" : C.money(d.sumStandalone), d.childKind ? d.children + " " + d.childKind + (d.children === 1 ? "" : "s") : (d.children ? d.children + " parts" : "no parts"), null],
-      ["Diversification", d.diversification === null ? "—" : "−" + C.money(d.diversification),
+      ["Sum of standalone VaR", d.sumStandalone === null ? "—" : money(d.sumStandalone), d.childKind ? d.children + " " + d.childKind + (d.children === 1 ? "" : "s") : (d.children ? d.children + " parts" : "no parts"), null],
+      ["Diversification", d.diversification === null ? "—" : "−" + money(d.diversification),
         d.diversification === null ? "single part" : (d.diversification / d.sumStandalone * 100).toFixed(1) + "% of standalone", null],
       d.limitComparable === false
         ? ["Limit utilisation", "—", d.limitNote || "limit not comparable", "nc"]
-        : ["Limit utilisation", u === null || u === undefined ? "—" : (u * 100).toFixed(0) + "%", d.limit ? "limit " + C.money(d.limit) + (cur !== "USD" ? " " + cur + " (set in USD, at today's rate)" : "") : "no limit set", u === null || u === undefined ? null : utilClass(u)],
+        : ["Limit utilisation", u === null || u === undefined ? "—" : (u * 100).toFixed(0) + "%", d.limit ? "limit " + money(d.limit) + (cur !== "USD" ? " " + cur + " (set in USD, at today's rate)" : "") : "no limit set", u === null || u === undefined ? null : utilClass(u)],
       stressed
-        ? ["Stressed VaR · " + (avg.weeks || 12) + "-week average", avg.average === null || avg.average === undefined ? "—" : C.money(avg.average),
+        ? ["Stressed VaR · " + (avg.weeks || 12) + "-week average", avg.average === null || avg.average === undefined ? "—" : money(avg.average),
            avg.records ? "mean of " + avg.records + " official record" + (avg.records === 1 ? "" : "s") : (avg.note || "no official records"), null]
         : bt.applicable === false
         ? ["Backtest exceptions", "—", "backtesting is 1-day: not shown at 10 days", null]
@@ -445,6 +444,8 @@
   }
 
   // ---------------------------------------------------------------------------------------------------------------- P&L path
+  // Every chart is drishti-risk's (a <drishti-chart>), every table a <drishti-grid> in the terminal layout (the product owner's default
+  // for VaR screens); the figures are the server's, as it sent them: nothing is summed or recomputed here.
   function loadPath(seq) {
     ["[data-vx-histo]", "[data-vx-tail]", "[data-vx-series]"].forEach(function (s) { var e = $(s); if (!e.children.length) e.textContent = "computing…"; });
     return api("scope/path", { scope: S.scope, page: 0 }).then(function (d) {
@@ -452,7 +453,8 @@
       S.path = d;
       if (!d.series.some(function (v) { return v !== 0; })) {           // no trades (or none with a P&L): nothing to draw, said so
         ["[data-vx-histo]", "[data-vx-tail]", "[data-vx-series]"].forEach(function (s) { $(s).textContent = "No trades: no P&L path to draw."; });
-        $("[data-vx-pathtable] tbody").textContent = "";
+        say($("[data-vx-pathtable]"), "No trades in this scope on the date.");
+        S.pathRows = [];
         $("[data-vx-path-note]").textContent = "No trades in this scope on the date.";
         $("[data-vx-more]").hidden = true;
         return;
@@ -463,20 +465,26 @@
   }
 
   function drawPath(d) {
-    C.histogram($("[data-vx-histo]"), { edges: d.histogram.edges, counts: d.histogram.counts, "var": d["var"], es: d.es,
-      parametric: PM && window.Drishti.VarParametric && window.Drishti.VarParametric.curveOn() ? d.parametric : null });
-    C.bars($("[data-vx-tail]"), d.worst.map(function (w, r) {
-      return { k: "#" + w.rank, v: w.pnl, cls: r === d.k - 1 ? "var" : r < d.esCount ? "tail" : "",
-               tip: "#" + w.rank + " · " + w.date + "\n" + C.signed(w.pnl) + (r === d.k - 1 ? "\nthe VaR scenario" : ""), date: w.date };
-    }), { height: 210, labelEvery: 6, onPick: function (w) { drill(w.date); } });
-    var first = d.dates[0], win = d.lens && d.lens.method === "SUM";
+    var ln = d.lens || (S.head && S.head.lens) || {}, p = PM && window.Drishti.VarParametric && window.Drishti.VarParametric.curveOn() ? d.parametric : null;
+    var conf = { "var": ln.confidence || (S.head && S.head.confidence) || 0.99, es: ln.esConfidence || (S.head && S.head.esConfidence) || 0.975 };
+    R.riskChart($("[data-vx-histo]"), { kind: "risk.pnl-distribution", binned: { edges: d.histogram.edges, counts: d.histogram.counts }, "var": d["var"], es: d.es,
+      confidence: conf, value: { field: "pnl", title: "P&L", format: "compact" }, legend: "none",
+      parametric: p && p.curve ? { "var": p["var"], curve: p.curve, gap: p.gap, gapPct: p.gapPct, describe: p.curveDescribe } : null }, { height: 210 });
+    $("[data-vx-var-legend]").textContent = "VaR " + money(d["var"]);
+    $("[data-vx-es-legend]").textContent = "ES " + money(d.es);
+    R.riskChart($("[data-vx-tail]"), { kind: "bar", id: "key", x: { field: "key", title: "" }, y: { field: "pnl", format: "compact" }, legend: "none",
+      data: { rows: d.worst.map(function (w, r) { return { key: "#" + w.rank, pnl: w.pnl, date: w.date, atVar: r === d.k - 1 ? 1 : 0, inTail: r < d.esCount ? 1 : 0 }; }) },
+      colourWhen: [{ when: "atVar > 0", tone: "bad" }, { when: "inTail > 0", tone: "warn" }] },
+      { height: 210, onPick: function (w) { drill(w.date); } });
+    var win = d.lens && d.lens.method === "SUM";
     $("[data-vx-series-title]").textContent = (win ? "10-day P&L by window, each at its last day (" : d.lens && d.lens.method === "SQRT10"
       ? "P&L × √10 by scenario date (" : "P&L by scenario date (") + d.dates[0] + " to " + d.dates[1] + ")";
     var dates = scenarioDates(d);
-    C.bars($("[data-vx-series]"), d.series.map(function (v, i) {
-      return { k: dates[i] || String(i), v: v, cls: v <= -d["var"] ? "tail" : v < 0 ? "neg" : "", date: dates[i] };
-    }), { height: 150, line: { v: -d["var"], label: "−VaR" }, onPick: function (x) { drill(x.date); } });
-    void first;
+    R.riskChart($("[data-vx-series]"), { kind: "bar", id: "key", x: { field: "key", title: "" }, y: { field: "pnl", format: "compact" }, legend: "none",
+      data: { rows: d.series.map(function (v, i) { return { key: dates[i] || String(i), pnl: v, date: dates[i] }; }) },
+      colourWhen: [{ when: "pnl <= " + (-d["var"]), tone: "bad" }, { when: "pnl < 0", tone: "warn" }],
+      annotations: [{ type: "line", axis: "y", value: -d["var"], label: "−VaR", tone: "bad", style: "dashed" }] },
+      { height: 150, onPick: function (x) { drill(x.date); } });
   }
 
   /** The scenario dates, oldest first (index i of the series is date i). */
@@ -487,22 +495,44 @@
     return out;
   }
 
+  /** A message where a grid goes (computing, nothing to show, a failure); the next grid replaces it. */
+  function say(host, text, cls) {
+    host.textContent = "";
+    var p = h("p", cls || "vx-note", text);
+    if (cls === "vx-err") p.setAttribute("role", "alert");
+    host.appendChild(p);
+  }
+  /** A button inside a grid's cell that does its own thing (the row's click is not also run). */
+  function cellButton(text, cls, run) {
+    var b = h("button", cls || "vx-link", text);
+    b.type = "button";
+    b.addEventListener("click", function (ev) { ev.stopPropagation(); run(ev); });
+    return b;
+  }
+  /** A whole-unit figure column (P&L, component VaR ...): the text the explorer always printed; bad below zero when toned. */
+  function intCol(field, header, o) {
+    return R.figureColumn(field, header, Object.assign({ format: function (v) { return int(v); }, width: 120 }, o || {}));
+  }
+  var signTone = function (v) { return v < 0 ? "bad" : "good"; };
+
   function pathRows(d, append) {
-    var tb = $("[data-vx-pathtable] tbody");
-    if (!append) tb.textContent = "";
-    d.rows.forEach(function (r) {
-      var tr = document.createElement("tr");
-      if (r.rank === d.k) tr.className = "hl";
-      cell(tr, String(r.rank), "n mono");
-      cell(tr, r.windowFrom ? r.windowFrom + " … " + r.date : r.date, "mono");
-      cell(tr, int(r.pnl), "n mono " + (r.pnl < 0 ? "neg" : "pos"));
-      var from = cell(tr, r.from || "—", "mono");
-      if (r.fromScope) { from.classList.add("vx-linkcell"); from.addEventListener("click", function (ev) { ev.stopPropagation(); select(r.fromScope); }); }
-      cell(tr, r.fromCurrency || "", "mono");
-      cell(tr, r.fromPnl === undefined ? "" : int(r.fromPnl), "n mono neg");
-      tr.addEventListener("click", function () { drill(r.date); });
-      tb.appendChild(tr);
-    });
+    S.pathRows = (append ? S.pathRows || [] : []).concat(d.rows.map(function (r) {
+      return Object.assign({}, r, { when: r.windowFrom ? r.windowFrom + " … " + r.date : r.date });
+    }));
+    R.riskGrid($("[data-vx-pathtable]"), { title: "Scenarios by rank", getRowId: function (r) { return String(r.rank); }, rows: S.pathRows,
+      columns: [intCol("rank", "Rank", { format: function (v) { return String(v); }, width: 70 }),
+        { field: "when", header: "Scenario date", width: 190 },
+        intCol("pnl", "P&L", { tone: signTone }),
+        { field: "from", header: "Largest loss from", width: 220, format: function (v) { return v || "—"; },
+          cellRenderer: function (c) {
+            if (!c.row.fromScope) return null;
+            return cellButton(c.row.from || "—", "vx-link vx-linkcell", function () { select(c.row.fromScope); });
+          } },
+        { field: "fromCurrency", header: "Trade currency", width: 110 },
+        intCol("fromPnl", "Its P&L", { format: function (v) { return v === undefined ? "" : int(v); }, tone: function () { return "bad"; } })],
+      getRowClass: function (r) { return r.rank === d.k ? "vx-hl" : null; },
+      getRowData: function (r) { return { rank: r.rank, date: r.date, hl: r.rank === d.k ? "1" : null }; },
+      onRow: function (r) { drill(r.date); } });
     var more = $("[data-vx-more]");
     more.hidden = (d.page + 1) * d.pageSize >= d.total;
     var what = d.lens && d.lens.method === "SUM" ? "windows" : "scenarios";
@@ -526,23 +556,14 @@
       close.addEventListener("click", function () { box.hidden = true; });
       head.appendChild(close);
       box.appendChild(head);
-      var t = h("table", "vx-table");
-      var thr = document.createElement("tr");
-      ["Part", "Trade currency", "P&L that day", "Component VaR"].forEach(function (x, i) { thr.appendChild(h("th", i > 1 ? "n" : null, x)); });
-      t.appendChild(h("thead")).appendChild(thr);
-      var tb = h("tbody");
-      d.rows.slice(0, 15).forEach(function (r) {
-        var tr = document.createElement("tr");
-        cell(tr, r.label, "vx-linkcell");
-        cell(tr, r.tradeCurrency || "", "mono");
-        cell(tr, int(r.scenarioPnl), "n mono " + (r.scenarioPnl < 0 ? "neg" : "pos"));
-        cell(tr, int(r.componentVar), "n mono");
-        tr.addEventListener("click", function () { select(r.scope); });
-        tb.appendChild(tr);
-      });
-      if (!d.rows.length) { var tr = document.createElement("tr"); cell(tr, "No parts below this scope.", "vx-note").colSpan = 4; tb.appendChild(tr); }
-      t.appendChild(tb);
-      box.appendChild(t);
+      var g = h("div", "vx-grid");
+      g.dataset.vxDrillGrid = "";
+      box.appendChild(g);
+      if (!d.rows.length) { say(g, "No parts below this scope."); return; }
+      R.riskGrid(g, { title: "Contributors on " + date, rows: d.rows.slice(0, 15), getRowId: function (r) { return r.scope; },
+        columns: [{ field: "label", header: "Part", width: 240 }, { field: "tradeCurrency", header: "Trade currency", width: 110 },
+          intCol("scenarioPnl", "P&L that day", { tone: signTone }), intCol("componentVar", "Component VaR")],
+        getRowData: function (r) { return { scope: r.scope }; }, onRow: function (r) { select(r.scope); } });
     }).catch(function (e) { errorBox(box, e); });
   }
 
@@ -552,44 +573,37 @@
     if (!host.children.length) host.textContent = "computing…";
     return api("scope/history", { scope: S.scope }).then(function (d) {
       if (seq !== S.seq) return;
-      var keys = d.rows.map(function (r) { return r.date; });
-      C.lines(host, keys, [{ name: "−VaR", cls: "mk-var", data: d.rows.map(function (r) { return -r["var"]; }) },
-                           { name: "−ES", cls: "mk-es", data: d.rows.map(function (r) { return -r.es; }) }],
-              d.rows.map(function (r) { return { v: r.pnl, exc: r.exception }; }), { height: 260 });
+      R.riskChart(host, { kind: "line", x: { field: "date", type: "category", title: "" }, y: { format: "compact" }, legend: "none",
+        data: { rows: d.rows.map(function (r) { return { date: r.date, pnl: r.pnl, "var": r["var"], es: r.es, exc: r.exception ? 1 : 0 }; }) },
+        series: [{ field: "pnl", name: "hypothetical P&L", tone: "link", opacity: 0.8 }, { field: "var", name: "−VaR", negate: true, tone: "bad", style: "dashed" },
+                 { field: "es", name: "−ES", negate: true, tone: "accent" }],
+        marks: [{ when: "exc > 0", as: "point", field: "pnl", tone: "bad", name: "backtest exception" }],
+        annotations: [{ type: "line", axis: "y", value: 0, tone: "faint", style: "solid", showValue: false }] }, { height: 260 });
       var bt = d.backtest;
       $("[data-vx-hist-note]").textContent = bt.applicable === false ? "Replay. " + d.note + ". " + bt.note + "."
         : (d.mode === "official" ? "Official history. " : "Replay. ") + d.note + ". " + bt.exceptions
         + " exception" + (bt.exceptions === 1 ? "" : "s") + " in " + bt.days + " days: " + bt.light + " zone; Kupiec p = " + bt.kupiecPValue.toFixed(3)
         + ", Christoffersen p = " + bt.christoffersenPValue.toFixed(3) + ".";
-      var tb = $("[data-vx-histtable] tbody");
-      tb.textContent = "";
-      d.rows.slice().reverse().forEach(function (r) {
-        var tr = document.createElement("tr");
-        if (r.exception) tr.className = "hl";
-        cell(tr, r.date, "mono");
-        cell(tr, C.money(r["var"]), "n mono");
-        cell(tr, C.money(r.es), "n mono");
-        cell(tr, C.signed(r.pnl), "n mono " + (r.pnl < 0 ? "neg" : "pos"));
-        var td = cell(tr, "");
-        if (r.exception) td.appendChild(h("span", "vx-chip bad", "exception"));
-        tb.appendChild(tr);
-      });
+      R.riskGrid($("[data-vx-histtable]"), { title: "VaR, ES and P&L by date", rows: d.rows.slice().reverse(), getRowId: function (r) { return r.date; }, fitRows: 18,
+        columns: [{ field: "date", header: "Date", width: 110 }, R.figureColumn("var", "VaR", { format: money }), R.figureColumn("es", "ES", { format: money }),
+          R.figureColumn("pnl", "P&L", { format: signed, tone: signTone }),
+          { id: "exc", header: "", width: 96, sortable: false, valueGetter: function (r) { return r.exception ? "exception" : ""; },
+            cellRenderer: function (c) { return c.row.exception ? h("span", "vx-chip bad", "exception") : null; } }],
+        getRowClass: function (r) { return r.exception ? "vx-hl" : null; }, getRowData: function (r) { return { date: r.date, exception: r.exception ? "1" : null }; } });
     }).catch(function (e) { if (seq === S.seq) errorBox(host, e); });
   }
 
   // ---------------------------------------------------------------------------------------------------------------- contributions
   function loadContrib(seq) {
-    var tb = $("[data-vx-ctable] tbody");
-    if (!tb.children.length) { tb.textContent = ""; var tr = document.createElement("tr"); cell(tr, "computing…", "vx-note").colSpan = 8; tb.appendChild(tr); }
+    var host = $("[data-vx-ctable]");
+    if (!host.querySelector("drishti-grid")) say(host, "computing…");
     return api("scope/contributions", { scope: S.scope, by: S.by === "child" ? "" : S.by }).then(function (d) {
       if (seq !== S.seq) return;
       renderContrib(d);
     }).catch(function (e) {
       if (seq !== S.seq) return;
-      tb.textContent = "";
-      var tr = document.createElement("tr");
-      cell(tr, e.message, "vx-err").colSpan = 8;
-      tb.appendChild(tr);
+      $("[data-vx-ctotal]").hidden = true;
+      say(host, e.message, "vx-err");
     });
   }
 
@@ -605,56 +619,49 @@
   }
 
   function renderContrib(d) {
-    var tb = $("[data-vx-ctable] tbody");
-    tb.textContent = "";
+    var host = $("[data-vx-ctable]"), tot = $("[data-vx-ctotal]");
     var shownEl = $("[data-vx-ctable-shown]");
     if (shownEl) {
       shownEl.textContent = shownLine(d);
       shownEl.hidden = !shownEl.textContent;
     }
     if (!d.rows.length) {
-      var tr = document.createElement("tr");
-      cell(tr, S.head && S.head.kind === "trade" ? "A trade has no parts: its P&L path is its own vector." :
-        S.head && S.head.empty ? "No trades: nothing to break down." : "No parts you may see below this scope (a position level your role sees in aggregate only, or none).",
-        "vx-note").colSpan = 8;
-      tb.appendChild(tr);
+      tot.hidden = true;
+      say(host, S.head && S.head.kind === "trade" ? "A trade has no parts: its P&L path is its own vector." :
+        S.head && S.head.empty ? "No trades: nothing to break down." : "No parts you may see below this scope (a position level your role sees in aggregate only, or none).");
       return;
     }
-    var total = d["var"] || 1;
-    d.rows.forEach(function (r) {
-      var tr = document.createElement("tr");
-      tr.dataset.scope = r.scope;
-      tr.className = "vx-click";
-      var name = cell(tr, "", "vx-name");
-      if (r.direction) name.appendChild(chip(r.direction));
-      name.appendChild(document.createTextNode(" " + r.label + (r.quantity !== undefined ? " · " + int(r.quantity) : "") + (r.partial ? " (part)" : "")
-        + (r.kind === "part" ? " · " + int(r.trades) + " trades" : "")));
-      name.appendChild(addButton(r.scope, { type: r.kind === "part" ? r.word : kindWord(r.kind), id: r.key, name: r.label }));
-      var tc = cell(tr, r.tradeCurrency || "", "mono");
-      if (r.tradeCurrencyFrom) tc.title = "from " + r.tradeCurrencyFrom;
-      cell(tr, int(r.standaloneVar), "n mono");
-      cell(tr, int(r.componentVar), "n mono");
-      cell(tr, pct(r.pct), "n mono");
-      var b = cell(tr, "", "bar");
-      var bar = h("span", "vx-ubar wide");
-      var i = h("i", r.componentVar < 0 ? "hedge" : "var");
-      i.style.width = Math.min(100, Math.abs(r.componentVar) / total * 100) + "%";
-      bar.appendChild(i);
-      b.appendChild(bar);
-      cell(tr, r.marginalPer1m === null ? "—" : int(r.marginalPer1m), "n mono");
-      cell(tr, C.signed(r.incrementalVar), "n mono");
-      tr.addEventListener("click", function () { select(r.scope); });
-      tb.appendChild(tr);
+    R.riskGrid(host, { title: "Contributions", rows: d.rows, getRowId: function (r) { return r.scope; },
+      columns: [{ id: "name", header: "Scope", width: 300, pinned: "left",
+          valueGetter: function (r) {
+            return r.label + (r.quantity !== undefined ? " · " + int(r.quantity) : "") + (r.partial ? " (part)" : "") + (r.kind === "part" ? " · " + int(r.trades) + " trades" : "");
+          },
+          cellRenderer: function (c) {
+            var s = h("span", "vx-name");
+            if (c.row.direction) s.appendChild(chip(c.row.direction));
+            s.appendChild(document.createTextNode(" " + c.text));
+            s.appendChild(addButton(c.row.scope, { type: c.row.kind === "part" ? c.row.word : kindWord(c.row.kind), id: c.row.key, name: c.row.label }));
+            return s;
+          } },
+        { field: "tradeCurrency", header: "Trade currency", width: 110 },
+        intCol("standaloneVar", "Standalone VaR"), intCol("componentVar", "Component VaR"),
+        R.figureColumn("pct", "% of total", { format: pct, width: 90 }),
+        intCol("marginalPer1m", "Marginal (per 1m)", { format: function (v) { return v === null ? "—" : int(v); } }),
+        R.figureColumn("incrementalVar", "Incremental VaR", { format: signed })],
+      conditionalFormats: [{ column: "componentVar", type: "dataBar" }],
+      getRowData: function (r) { return { scope: r.scope }; }, onRow: function (r) { select(r.scope); } });
+    // the totals are the server's (the sum of component VaR is the scope's VaR by Euler; standalone VaRs do not add up to it)
+    tot.hidden = false;
+    tot.textContent = "";
+    [["Total standalone", int(d.sumStandalone), "sumStandalone"], ["Total component", int(d.sumComponent), "sumComponent"], ["", "100.0%", null],
+     ["", "diversification −" + money(d.diversification), "diversification"]].forEach(function (x) {
+      var s = h("span", "vx-ctot");
+      if (x[0]) s.appendChild(h("span", "k", x[0] + " "));
+      var b = h("b", null, x[1]);
+      if (x[2]) b.setAttribute("data-" + x[2].replace(/[A-Z]/g, function (c) { return "-" + c.toLowerCase(); }), String(d[x[2]]));
+      s.appendChild(b);
+      tot.appendChild(s);
     });
-    var t = document.createElement("tr");
-    t.className = "vx-total";
-    cell(t, "Total");
-    cell(t, "");
-    cell(t, int(d.sumStandalone), "n mono");
-    cell(t, int(d.sumComponent), "n mono");
-    cell(t, "100.0%", "n mono");
-    cell(t, "diversification −" + C.money(d.diversification), "vx-note").colSpan = 3;
-    tb.appendChild(t);
     $("[data-vx-ctable-note]").textContent = "Component VaR adds up to the scope's VaR (Euler, on the VaR scenario's neighbourhood). Incremental VaR = the scope's VaR minus its VaR without the row."
       + (d.truncated ? " " + shownLine(d) : "") + (d.by === "part" ? " The parts are the basket's, each alone in the standalone "
       + "column; a trade in two parts counts once, in the first." : "") + " Click a row to drill in; + basket adds it to your basket.";
@@ -681,42 +688,36 @@
   function loadCaptures(seq) {
     return api("captures", { scope: S.scope }, true).then(function (list) {
       if (seq !== S.seq) return;
-      var tb = $("[data-vx-captable] tbody");
-      tb.textContent = "";
-      if (!list.length) { var tr = document.createElement("tr"); cell(tr, "Nothing captured for this scope yet.", "vx-note").colSpan = 8; tb.appendChild(tr); }
-      list.forEach(function (c) {
-        var tr = document.createElement("tr");
-        tr.dataset.capture = c.id;
-        cell(tr, c.id, "mono");
-        cell(tr, c.businessDate, "mono");
-        cell(tr, String(c.capturedAt).replace("T", " ").slice(0, 19), "mono");
-        cell(tr, c.owner);
-        var cc = (c.currency && c.currency !== "USD" ? " " + c.currency : "") + (c.horizon === "10D" ? " · 10D" + (c.method === "SUM" ? " sum" : " √10") : "");
-        cell(tr, int(c["var"]) + cc, "n mono");
-        cell(tr, int(c.es) + cc, "n mono");
-        cell(tr, c.note || "");
-        var act = cell(tr, "");
-        [["Reopen", function () { reopen(c.id); }], ["Compare with now", function () { compare(c.id, "now"); }]].forEach(function (a) {
-          var b = h("button", "vx-link", a[0]); b.type = "button"; b.addEventListener("click", a[1]); act.appendChild(b); act.appendChild(document.createTextNode(" "));
-        });
-        var csv = h("a", "vx-link", "CSV");
-        csv.href = "/api/var/captures/" + encodeURIComponent(c.id) + "/csv";
-        act.appendChild(csv);
-        var jl = h("a", "vx-link", "JSONL");                                  // 2.9.4: the same rows, one a line
-        jl.href = "/api/var/captures/" + encodeURIComponent(c.id) + "/jsonl";
-        act.appendChild(document.createTextNode(" "));
-        act.appendChild(jl);
-        tb.appendChild(tr);
-      });
+      var host = $("[data-vx-captable]"), more = $("[data-vx-cap-more]");
+      more.hidden = true;
+      more.textContent = "";
+      if (!list.length) { say(host, "Nothing captured for this scope yet."); return; }
+      var lensOf = function (c) { return (c.currency && c.currency !== "USD" ? " " + c.currency : "") + (c.horizon === "10D" ? " · 10D" + (c.method === "SUM" ? " sum" : " √10") : ""); };
+      R.riskGrid(host, { title: "Captured results", rows: list, getRowId: function (c) { return c.id; },
+        columns: [{ field: "id", header: "Capture", width: 150 }, { field: "businessDate", header: "Date", width: 100 },
+          { id: "at", header: "Captured", width: 150, valueGetter: function (c) { return String(c.capturedAt).replace("T", " ").slice(0, 19); } },
+          { field: "owner", header: "By", width: 90 },
+          R.figureColumn("var", "VaR", { format: function (v, c) { return int(v) + lensOf(c); } }),
+          R.figureColumn("es", "ES", { format: function (v, c) { return int(v) + lensOf(c); } }),
+          { field: "note", header: "Note", width: 160, format: function (v) { return v || ""; } },
+          { id: "acts", header: "", width: 260, sortable: false, valueGetter: function () { return ""; },
+            cellRenderer: function (x) {
+              var c = x.row, s = h("span", "vx-acts");
+              s.appendChild(cellButton("Reopen", "vx-link", function () { reopen(c.id); }));
+              s.appendChild(document.createTextNode(" "));
+              s.appendChild(cellButton("Compare with now", "vx-link", function () { compare(c.id, "now"); }));
+              [["CSV", "csv"], ["JSONL", "jsonl"]].forEach(function (a) {             // 2.9.4: the same rows, one a line
+                var l = h("a", "vx-link", a[0]);
+                l.href = "/api/var/captures/" + encodeURIComponent(c.id) + "/" + a[1];
+                s.appendChild(document.createTextNode(" "));
+                s.appendChild(l);
+              });
+              return s;
+            } }],
+        getRowData: function (c) { return { capture: c.id }; } });
       if (list.length >= 2) {
-        var tr2 = document.createElement("tr");
-        var td = cell(tr2, "", "vx-note");
-        td.colSpan = 8;
-        var b = h("button", "vx-link", "Compare the two newest");
-        b.type = "button";
-        b.addEventListener("click", function () { compare(list[1].id, list[0].id); });
-        td.appendChild(b);
-        tb.appendChild(tr2);
+        more.hidden = false;
+        more.appendChild(cellButton("Compare the two newest", "vx-link", function () { compare(list[1].id, list[0].id); }));
       }
     }).catch(function (e) { if (seq === S.seq) errorBox($("[data-vx-compare]"), e); });
   }
@@ -755,16 +756,10 @@
       box.appendChild(dl);
       box.dataset.reopened = c.id;
       box.dataset.var = String(c["var"]);
-      var t = h("table", "vx-table");
-      var thr = document.createElement("tr");
-      ["Component", "Component VaR", "% of VaR"].forEach(function (x, i) { thr.appendChild(h("th", i ? "n" : null, x)); });
-      t.appendChild(h("thead")).appendChild(thr);
-      var tb = h("tbody");
-      (c.components || []).slice(0, 12).forEach(function (r) {
-        var tr = document.createElement("tr"); cell(tr, r.label); cell(tr, int(r.componentVar), "n mono"); cell(tr, pct(r.pct), "n mono"); tb.appendChild(tr);
-      });
-      t.appendChild(tb);
-      box.appendChild(t);
+      var g = h("div", "vx-grid");
+      box.appendChild(g);
+      R.riskGrid(g, { title: "Components of " + c.id, rows: (c.components || []).slice(0, 12),
+        columns: [{ field: "label", header: "Component", width: 240 }, intCol("componentVar", "Component VaR"), R.figureColumn("pct", "% of VaR", { format: pct, width: 90 })] });
     }).catch(function (e) { errorBox(box, e); });
   }
 
@@ -776,19 +771,14 @@
       box.textContent = "";
       box.dataset.compared = a + "|" + b;
       box.appendChild(h("h3", null, "Compare " + d.a.id + " (" + d.a.businessDate + ") with " + (d.b.id === "now" ? "now" : d.b.id) + " (" + d.b.businessDate + ")"));
-      var t = h("table", "vx-table");
-      var thr = document.createElement("tr");
-      ["", d.a.id, d.b.id === "now" ? "now" : d.b.id, "Change"].forEach(function (x, i) { thr.appendChild(h("th", i ? "n" : null, x)); });
-      t.appendChild(h("thead")).appendChild(thr);
-      var tb = h("tbody");
-      [["VaR", d.a["var"], d.b["var"], d.varChange], ["ES", d.a.es, d.b.es, d.esChange], ["Members", d.a.memberCount, d.b.memberCount, d.b.memberCount - d.a.memberCount]]
-        .concat(d.components.slice(0, 10).map(function (r) { return [r.label || r.key, r.a, r.b, r.change]; })).forEach(function (r) {
-          var tr = document.createElement("tr");
-          cell(tr, r[0]); cell(tr, int(r[1]), "n mono"); cell(tr, int(r[2]), "n mono"); cell(tr, C.signed(r[3] || 0), "n mono " + ((r[3] || 0) > 0 ? "neg" : "pos"));
-          tb.appendChild(tr);
-        });
-      t.appendChild(tb);
-      box.appendChild(t);
+      var rows = [["VaR", d.a["var"], d.b["var"], d.varChange], ["ES", d.a.es, d.b.es, d.esChange], ["Members", d.a.memberCount, d.b.memberCount, d.b.memberCount - d.a.memberCount]]
+        .concat(d.components.slice(0, 10).map(function (r) { return [r.label || r.key, r.a, r.b, r.change]; }))
+        .map(function (r, i) { return { i: i, what: r[0], a: r[1], b: r[2], change: r[3] || 0 }; });
+      var g = h("div", "vx-grid");
+      box.appendChild(g);
+      R.riskGrid(g, { title: "Compare", rows: rows, getRowId: function (r) { return String(r.i); },
+        columns: [{ field: "what", header: "", width: 220 }, intCol("a", d.a.id), intCol("b", d.b.id === "now" ? "now" : d.b.id),
+          R.figureColumn("change", "Change", { format: signed, tone: function (v) { return v > 0 ? "bad" : "good"; } })] });
       if (d.membersAdded.length || d.membersRemoved.length) {
         box.appendChild(h("p", "vx-note", "Trades added: " + (d.membersAdded.join(", ") || "none") + ". Removed: " + (d.membersRemoved.join(", ") || "none") + "."));
       }
@@ -799,49 +789,31 @@
   /** The tab "In other currencies", loaded only when opened: the scope's VaR and ES in each listed currency (from its PVs summed per
       trade currency, each with that currency's scenario FX), that VaR in the page's currency at today's rate, and the difference. */
   function loadCurrencies(seq) {
-    var tb = $("[data-vx-ccytable] tbody");
-    if (S.head && S.head.confidence) {                                // the headers say the answer's confidences
-      var th = $("[data-vx-ccytable] thead").querySelectorAll("th");
-      th[1].textContent = "VaR " + Math.round(S.head.confidence * 1000) / 10 + "%";
-      th[2].textContent = "ES " + Math.round(S.head.esConfidence * 1000) / 10 + "%";
-    }
-    if (!tb.children.length) { var w = document.createElement("tr"); cell(w, "computing…", "vx-note").colSpan = 5; tb.appendChild(w); }
+    var host = $("[data-vx-ccytable]");
+    if (!host.querySelector("drishti-grid")) say(host, "computing…");
     root.dataset.ccyLoads = String(Number(root.dataset.ccyLoads || 0) + 1);
     return api("scope/currencies", { scope: S.scope }).then(function (d) {
       if (seq !== S.seq) return;
-      $("[data-vx-ccy-inpage]").textContent = "VaR in " + d.currency + " at today's rate";
       $("[data-vx-ccy-note]").textContent = "The same scope in each reporting currency: " + d.note + ". Trade currencies in this scope: "
         + (d.tradeCurrencies || []).join(", ") + ".";
-      tb.textContent = "";
-      d.rows.forEach(function (r) {
-        var tr = document.createElement("tr");
-        tr.dataset.ccy = r.currency;
-        if (r.shown) tr.className = "shown";
-        var c = cell(tr, "");
-        if (r.shown) c.textContent = r.currency + " · shown";
-        else {
-          var b = h("button", "vx-link", r.currency);
-          b.type = "button";
-          b.title = "Show the page in " + r.currency;
-          b.addEventListener("click", function (ev) { ev.stopPropagation(); setCcy(r.currency); });
-          c.appendChild(b);
-        }
-        if (r.note) { cell(tr, r.note, "vx-note").colSpan = 4; tb.appendChild(tr); return; }
-        cell(tr, C.money(r["var"]), "n mono");
-        cell(tr, C.money(r.es), "n mono");
-        cell(tr, C.money(r.varInPage), "n mono");
-        cell(tr, r.difference === null || r.difference === undefined ? "—"
-          : C.signed(r.difference) + (r.differencePct === null || r.differencePct === undefined ? "" : " (" + (r.differencePct > 0 ? "+" : "") + (r.differencePct * 100).toFixed(1) + "%)"),
-          "n mono");
-        if (!r.shown) { tr.className = "vx-click"; tr.addEventListener("click", function () { setCcy(r.currency); }); }
-        tb.appendChild(tr);
-      });
+      var conf = S.head && S.head.confidence, esc = S.head && S.head.esConfidence;   // the headings say the answer's confidences
+      var noted = function (f) { return function (v, r) { return r.note ? "" : f(v); }; };
+      R.riskGrid(host, { title: "The scope in other currencies", rows: d.rows, getRowId: function (r) { return r.currency; },
+        columns: [{ field: "currency", header: "Currency", width: 120, valueGetter: function (r) { return r.shown ? r.currency + " · shown" : r.currency; },
+            cellRenderer: function (c) { return c.row.shown ? null : cellButton(c.row.currency, "vx-link", function () { setCcy(c.row.currency); }); } },
+          R.figureColumn("var", conf ? "VaR " + Math.round(conf * 1000) / 10 + "%" : "VaR", { format: noted(money) }),
+          R.figureColumn("es", esc ? "ES " + Math.round(esc * 1000) / 10 + "%" : "ES", { format: noted(money) }),
+          R.figureColumn("varInPage", "VaR in " + d.currency + " at today's rate", { format: noted(money), width: 170 }),
+          R.figureColumn("difference", "Difference", { width: 150, valueGetter: function (r) { return r.difference; },
+            format: function (v, r) {
+              if (r.note) return r.note;
+              return v === null || v === undefined ? "—" : signed(v) + (r.differencePct === null || r.differencePct === undefined ? "" : " (" + (r.differencePct > 0 ? "+" : "") + (r.differencePct * 100).toFixed(1) + "%)");
+            } })],
+        getRowClass: function (r) { return r.shown ? "vx-shown" : null; }, getRowData: function (r) { return { ccy: r.currency, shown: r.shown ? "1" : null }; },
+        onRow: function (r) { if (!r.shown) setCcy(r.currency); } });
     }).catch(function (e) {
       if (seq !== S.seq) return;
-      tb.textContent = "";
-      var tr = document.createElement("tr");
-      cell(tr, e.message, "vx-err").colSpan = 5;
-      tb.appendChild(tr);
+      say(host, e.message, "vx-err");
     });
   }
 
@@ -973,7 +945,7 @@
       S.tree = d;
       fillHierarchies(d);
       var byId = {};
-      d.nodes.forEach(function (n) { byId[n.id] = n; if (n.depth < 2) S.expanded[n.scope] = true; });
+      d.nodes.forEach(function (n) { byId[n.id] = n; });
       S.byId = byId;
       renderTree();
       renderAdhoc();
@@ -1023,91 +995,102 @@
     history.replaceState(history.state, "", u.toString());
   }
 
-  function treeRow(label, scope, depth, v, es, lim, opts) {
-    var row = h("div", "vx-row" + (opts.hdr ? " hdr" : ""));
-    row.setAttribute("role", "treeitem");
-    row.tabIndex = 0;
-    row.dataset.scope = scope;
-    var nm = h("span", "nm");
-    nm.style.paddingLeft = (depth * 9) + "px";
-    var tw = h("button", "tw", opts.expandable ? (S.expanded[scope] ? "▾" : "▸") : opts.adhoc ? "◇" : "·");
-    tw.type = "button";
-    tw.tabIndex = -1;
-    tw.setAttribute("aria-label", opts.expandable ? (S.expanded[scope] ? "Collapse" : "Expand") : "");
-    if (opts.expandable) {
-      row.setAttribute("aria-expanded", S.expanded[scope] ? "true" : "false");
-      tw.addEventListener("click", function (ev) { ev.stopPropagation(); toggle(scope); });
-    }
-    nm.appendChild(tw);
-    if (opts.direction) nm.appendChild(chip(opts.direction));
-    nm.appendChild(document.createTextNode(" " + label));
-    if (scope) nm.appendChild(addButton(scope, { type: opts.word || scope.split(":")[0], id: scope.replace(/^[A-Z]+:/, ""), name: label }));
-    row.appendChild(nm);
-    row.appendChild(h("span", "num", v === null || v === undefined ? "" : C.money(v)));
-    row.appendChild(h("span", "num muted", es === null || es === undefined ? "" : C.money(es)));
-    var l = h("span", "lim");
-    if (lim !== null && lim !== undefined) l.appendChild(ubar(lim)); else if (opts.noLimitText) l.appendChild(h("span", "muted small", opts.noLimitText));
-    row.appendChild(l);
-    row.addEventListener("click", function () { select(scope); });
-    row.addEventListener("keydown", function (ev) {
-      if (ev.key === "Enter") select(scope);
-      if (ev.key === "ArrowRight" && opts.expandable && !S.expanded[scope]) toggle(scope);
-      if (ev.key === "ArrowLeft" && opts.expandable && S.expanded[scope]) toggle(scope);
+  /** A row of the tree: a hierarchy node, a book's position or a position's trade; path is the ids from the top (drishti-grid's tree data). */
+  function nodePath(n) {
+    var p = [], x = n;
+    while (x) { p.unshift(x.id); x = x.parent && S.byId[x.parent]; }
+    return p;
+  }
+  function treeRows() {
+    var out = [];
+    (S.tree.nodes || []).forEach(function (n) {
+      var path = nodePath(n);
+      out.push({ path: path, scope: n.scope, name: n.name, level: n.level, "var": n["var"], es: n.es, limitUse: n.limitUse, parametric: n.parametric,
+        noLimitText: n.limitComparable === false ? "n/c" : "no limit" });                // 2.9.7: a limit of another horizon or confidence
+      if (n.level === "book" && n.expandable) partRows(out, n.scope, path);
     });
-    return row;
+    return out;
+  }
+  /** A book's positions, or a position's trades, under its row (from the contributions of that scope); "computing…" until asked. */
+  function partRows(out, scope, path) {
+    var kids = S.children[scope];
+    if (!kids) { out.push({ path: path.concat(["…"]), placeholder: scope, name: "computing…" }); return; }
+    if (kids.error) { out.push({ path: path.concat(["!"]), placeholder: scope, name: kids.error }); return; }
+    kids.forEach(function (r) {
+      var isPos = r.kind === "position", p = path.concat([r.scope]);
+      out.push({ path: p, scope: r.scope, name: (isPos ? r.label : r.key) + (r.quantity !== undefined ? " · " + money(r.quantity) : ""), direction: r.direction,
+        "var": r.standaloneVar, es: r.standaloneEs, limitUse: null, noLimitText: "c " + money(r.componentVar), kind: r.kind });
+      if (isPos) partRows(out, r.scope, p);
+    });
+  }
+  /** A part's children asked the first time its row opens. */
+  function loadParts(scope) {
+    if (S.children[scope] || S.asking[scope]) return;
+    S.asking[scope] = true;
+    api("scope/contributions", { scope: scope }).then(function (d) { S.children[scope] = d.rows; })
+      .catch(function (e) { S.children[scope] = { error: e.message }; })
+      .then(function () { delete S.asking[scope]; renderTree(); });
+  }
+
+  function treeColumns() {
+    var cols = [{ field: "name", header: "Scope", width: 230, pinned: "left",
+        cellRenderer: function (c) {
+          var r = c.row, s = h("span", "nm");
+          if (r.placeholder) { s.className = "nm muted"; s.textContent = r.name; return s; }
+          if (r.direction) s.appendChild(chip(r.direction));
+          s.appendChild(document.createTextNode(" " + r.name));
+          s.appendChild(addButton(r.scope, { type: r.kind === "position" ? "POS" : r.kind === "trade" ? "TRD" : r.scope.split(":")[0], id: r.scope.replace(/^[A-Z]+:/, ""), name: r.name }));
+          return s;
+        } },
+      R.figureColumn("var", "VaR " + S.ccy, { format: function (v) { return v === null || v === undefined ? "" : money(v); }, width: 86 }),
+      R.figureColumn("es", "ES", { format: function (v) { return v === null || v === undefined ? "" : money(v); }, width: 80, tone: function () { return "muted"; } }),
+      { id: "limit", header: "Limit", width: 96, sortable: false, valueGetter: function (r) { return r.limitUse; },
+        format: function (v, r) { return r.placeholder ? "" : v === null || v === undefined ? r.noLimitText || "" : (v * 100).toFixed(0) + "% of limit"; },
+        cellRenderer: function (c) {
+          var r = c.row;
+          if (r.placeholder) return "";
+          return r.limitUse === null || r.limitUse === undefined ? h("span", "muted small", r.noLimitText || "") : ubar(r.limitUse);
+        } }];
+    var P = PM && window.Drishti.VarParametric;
+    return P ? cols.concat(P.treeColumns()) : cols;      // the Parametric and Gap columns, each with its ?
   }
 
   function renderTree() {
-    var t = $("[data-vx-tree]");
-    t.textContent = "";
-    var hd = h("div", "vx-row hdr");
-    var pcols = PM && !!window.Drishti.VarParametric, lay = t.closest(".vx-layout");
-    if (lay) lay.setAttribute("data-resize-mode", pcols ? "parametric" : "historical");      // the widths a person set, kept per mode
-    hd.setAttribute("data-resize", "columns"); hd.setAttribute("data-resize-key", "var.tree");      // resizable columns (drishti-core's resize)
-    hd.setAttribute("data-resize-flex", "0"); hd.setAttribute("data-resize-scope", ".vx-tree");
-    ["Scope", "VaR " + S.ccy, "ES", "Limit"].concat(pcols ? ["Parametric", "Gap"] : []).forEach(function (x, i) { hd.appendChild(h("span", i ? "num" : null, x)); });
+    var t = $("[data-vx-tree]"), pcols = PM && !!window.Drishti.VarParametric, lay = t.closest(".vx-layout");
+    if (lay) lay.setAttribute("data-resize-mode", pcols ? "parametric" : "historical");      // the side panel's width a person set, kept per mode
     t.classList.toggle("vp-cols", !!pcols);
-    t.appendChild(hd);
-    var shown = {};
-    (S.tree.nodes || []).forEach(function (n) {
-      var parent = n.parent && S.byId[n.parent];
-      if (parent && (!shown[parent.id] || !S.expanded[parent.scope])) return;
-      shown[n.id] = true;
-      var tr = treeRow(n.name, n.scope, n.depth, n["var"], n.es, n.limitUse, { expandable: n.expandable,
-        noLimitText: n.limitComparable === false ? "n/c" : "no limit" });          // 2.9.7: a limit of another horizon or confidence
-      if (pcols) window.Drishti.VarParametric.treeCells(tr, n);                         // the Parametric and Gap columns, each with its ?
-      t.appendChild(tr);
-      if (n.level === "book" && S.expanded[n.scope]) appendChildren(t, n.scope, n.depth + 1);
+    // the columns' widths a person set, kept per mode in this browser (drishti-grid's own resize handles)
+    var wkey = "drishti.var.tree.widths." + (pcols ? "parametric" : "historical"), widths = {};
+    try { widths = JSON.parse(localStorage.getItem(wkey) || "{}") || {}; } catch (e) { widths = {}; }
+    var cols = treeColumns().map(function (c) { var id = c.id || c.field; return widths[id] ? Object.assign({}, c, { width: widths[id] }) : c; });
+    var g = R.riskGrid(t, { title: "Scopes", label: "Scope tree", rows: treeRows(), columns: cols, treeData: true, groupDefaultExpanded: 2, fitRows: 40,
+      getDataPath: function (r) { return r.path; }, getRowId: function (r) { return r.path.join("/"); },
+      getRowClass: function (r) { return r.scope && r.scope === S.scope ? "vx-current" : null; },
+      getRowData: function (r) { return { scope: r.scope || null, current: r.scope ? String(r.scope === S.scope) : null }; },
+      onRow: function (r) { if (r.scope) select(r.scope); } });
+    Object.keys(S.open).forEach(function (k) { g.model.rowModel.setExpanded(k.split("\u001f"), S.open[k]); });
+    g.model.rowModel.rows.forEach(function (r) {                                  // an open book or position asks for its parts
+      if (r.placeholder && !S.children[r.placeholder] && g.model.rowModel.isExpanded(r.path.slice(0, -1))) loadParts(r.placeholder);
     });
+    g.on("columnResized", function () {
+      var w = {};
+      g.model.columns.all().forEach(function (c) { w[c.id] = c.width; });
+      try { localStorage.setItem(wkey, JSON.stringify(w)); } catch (e) { /* kept for this page only */ }
+    });
+    g.on("rowExpanded", function (e) { if (!e.pivot) opened(e.path, true); });
+    g.on("rowCollapsed", function (e) { if (!e.pivot) opened(e.path, false); });
+    S.treeGrid = g;
     markTree();
   }
-
-  /** A book's positions, or a position's trades, below its row (from the contributions of that scope). */
-  function appendChildren(t, scope, depth) {
-    var kids = S.children[scope];
-    if (!kids) {
-      var wait = h("div", "vx-row muted", "computing…");
-      wait.dataset.waitFor = scope;
-      t.appendChild(wait);
-      api("scope/contributions", { scope: scope }).then(function (d) { S.children[scope] = d.rows; renderTree(); })
-        .catch(function (e) { S.children[scope] = []; wait.textContent = e.message; });
-      return;
-    }
-    kids.forEach(function (r) {
-      var isPos = r.kind === "position";
-      t.appendChild(treeRow((isPos ? r.label : r.key) + (r.quantity !== undefined ? " · " + C.money(r.quantity) : ""), r.scope, depth,
-        r.standaloneVar, r.standaloneEs, null, { expandable: isPos, direction: r.direction, noLimitText: "c " + C.money(r.componentVar) }));
-      if (isPos && S.expanded[r.scope]) appendChildren(t, r.scope, depth + 1);
-    });
-  }
-
-  function toggle(scope) {
-    S.expanded[scope] = !S.expanded[scope];
-    renderTree();
+  /** A node opened or closed: kept for the next drawing; a book or a position asks for its parts the first time. */
+  function opened(path, open) {
+    S.open[path.join("\u001f")] = open;
+    var row = (S.treeGrid.model.rowModel.rows || []).filter(function (r) { return r.path && r.path.join("\u001f") === path.join("\u001f"); })[0];
+    if (open && row && row.scope && !S.children[row.scope] && (row.level === "book" || row.kind === "position")) loadParts(row.scope);
   }
 
   function markTree() {
-    root.querySelectorAll(".vx-row[data-scope]").forEach(function (r) { r.setAttribute("aria-current", r.dataset.scope === S.scope ? "true" : "false"); });
+    if (S.treeGrid) S.treeGrid.refresh();                                          // the current scope's row marked (vx-current)
     if (window.Drishti.VarLayout) window.Drishti.VarLayout.mark(S.scope);          // the basket drop-downs name the scope when it is one of theirs
   }
 

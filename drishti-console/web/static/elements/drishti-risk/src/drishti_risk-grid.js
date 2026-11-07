@@ -69,10 +69,11 @@ export function riskGrid(host, options) {
   if (o.label || o.title) { el.setAttribute('aria-label', o.label || o.title); }
   if (el._onRow) { el.removeEventListener('drishti:cell-clicked', el._onRow); el._onRow = null; }
   el.options = o;
+  if (!el.grid && el.mount) { el.mount(); }        // a host not in the page yet (a sheet made before it is placed): drawn now all the same
   if (o.onRow) {
     el._onRow = (e) => {
       const d = e.detail || {};
-      if (d.kind !== 'leaf' || !d.data) { return; }
+      if (!d.data) { return; }                       // a leaf, or a tree node that is a row of its own
       o.onRow(d.data, e);
     };
     el.addEventListener('drishti:cell-clicked', el._onRow);

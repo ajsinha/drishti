@@ -51,34 +51,21 @@
 .mr-panes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: start; }
 @media (max-width: 1000px) { .mr-rail, .mr-panes { grid-template-columns: 1fr; } }
 .mr-rail h2, .mr-panes h2 { font-size: 13.5px; margin: 0 0 8px; }
-.mr-spark { display: block; margin-left: auto; color: var(--mr-blue); }
+.mr-spark { display: block; margin-left: auto; width: 64px; }
+.mr-spark svg { display: block; width: 64px; height: 14px; }
 .mr-lbar { position: relative; display: block; width: 100%; height: 6px; margin: 2px 0; background: var(--d-surface-2); border-radius: 3px; }
 .mr-lbar .f { position: absolute; display: block; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--mr-green); }
 .mr-lbar.warn .f { background: var(--mr-amber); }
 .mr-lbar.bad .f { background: var(--mr-red); }
 .mr-lbar .tick { position: absolute; top: -2px; bottom: -2px; width: 1px; background: var(--d-ink); opacity: .6; }
 .mr-lbar .tick.full { opacity: 1; }
-.mr-histo .bin { fill: var(--mr-blue); opacity: .75; }
-.mr-histo .bin.es { fill: var(--mr-red); opacity: .9; }
-.mr-histo .bin.v { fill: var(--mr-amber); opacity: .95; }
-.mr-histo .vline { stroke: var(--mr-amber); stroke-dasharray: 3 2; }
-.mr-histo .zero { stroke: var(--d-muted); stroke-width: .6; }
-.mr-histo text { font-size: 9.5px; fill: var(--d-muted); font-family: var(--d-font-mono); }
-.mr-histo .vlab { fill: var(--mr-amber); }
-.mr-histo .elab { fill: var(--mr-red); }
-.mr-water .add { fill: var(--mr-red); opacity: .85; }
-.mr-water .hedge { fill: var(--mr-green); opacity: .85; }
-.mr-water .tot { fill: var(--mr-amber); }
-.mr-water text { font-size: 10px; fill: var(--d-ink); font-family: var(--d-font-mono); }
-.mr-water text.wx { fill: var(--d-muted); }
-.mr-mini { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
-.mr-mini th, .mr-mini td { padding: 3px 6px; border-bottom: 1px dashed var(--d-border); text-align: right; white-space: nowrap; }
-.mr-mini .l { text-align: left; }
-.mr-mini tr.tot td { font-weight: 700; border-bottom: 0; }
-.mr-mini td.changed { outline: 2px solid var(--mr-blue); outline-offset: -2px; }
-.mr-heat td { text-align: center; }
-.mr-ladder td { min-width: 110px; }
-.mr-cbar { position: relative; display: block; width: 100px; height: 8px; margin: 3px 0 0 auto; background: var(--d-surface-2); border-radius: 2px; }
+/* the charts are drishti-chart (drishti-risk's P&L distribution, a waterfall) and the tables risk grids: only what a cell adds is here */
+.mr-gridhost { min-width: 0; }
+.mr .dg-row.mr-tot .dg-cell { font-weight: 700; }
+.mr .dg-cell.mr-changed { outline: 2px solid var(--mr-blue); outline-offset: -2px; }
+.mr-hcell { display: block; width: 100%; text-align: center; border-radius: 2px; font-family: var(--d-font-mono); }
+.mr-lcell { display: flex; align-items: center; gap: 4px; width: 100%; }
+.mr-cbar { position: relative; display: block; width: 60px; height: 8px; margin-left: auto; background: var(--d-surface-2); border-radius: 2px; }
 .mr-cbar .f { position: absolute; display: block; top: 0; bottom: 0; background: var(--mr-green); }
 .mr-cbar.warn .f { background: var(--mr-amber); }
 .mr-cbar.bad .f { background: var(--mr-red); }

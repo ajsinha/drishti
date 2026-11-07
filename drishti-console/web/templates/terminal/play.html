@@ -21,7 +21,7 @@
 {% block title %}VaR Playground{{ ' · Parametric' if measure == 'parametric' }} · {{ target or 'PLAY VAR' }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}play{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_var-playground.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}{% include "terminal/_risk_elements_css.html" %}<link rel="stylesheet" href="/static/css/drishti_var-playground.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="pg{{ ' pg-on-parametric' if measure == 'parametric' }}" data-play data-scope="{{ scope }}" data-ids="{{ ids }}" data-ccy="{{ ccy }}" data-h="{{ lens.h }}" data-m="{{ lens.m }}"
@@ -74,9 +74,7 @@
   <div class="pg-fbar" aria-label="Formula bar"><span class="pg-ref mono" data-pg-ref>—</span><span class="pg-fx mono">fx</span><code class="pg-formula" data-pg-formula>Select a cell</code></div>
   <div class="pg-body">
     <section class="pg-gridcard" aria-label="The grid: positions across, scenarios down, results below">
-      <div class="pg-scroll" data-pg-scroll tabindex="0" aria-label="The playground grid: scroll, or use the arrow keys to move the selection">
-        <div class="pg-canvas" data-pg-canvas></div>
-      </div>
+      <div class="pg-grid" data-pg-grid data-pg-canvas aria-label="The playground grid: scroll, or use the arrow keys to move the selection"></div>
       <div class="pg-legend" aria-label="Legend">
         <span><i class="sw sw-input" aria-hidden="true"></i>input (Config and Data in the workbook)</span>
         <span><i class="sw sw-loss" aria-hidden="true"></i>loss</span>
@@ -95,9 +93,9 @@
       <ol class="pg-param-steps" data-pg-param-steps></ol>
     </div>
     <h3>Each position: μᵢ, σᵢ, cov(Pᵢ, P), ρᵢ and the components that add up to the parametric VaR</h3>
-    <div class="pg-param-scroll"><table class="pg-param-table" data-pg-param-positions></table></div>
+    <div class="pg-param-grid-host" data-pg-param-positions></div>
     <h3>Each scenario: the weight, the deviation from μ and its square</h3>
-    <div class="pg-param-scroll short"><table class="pg-param-table" data-pg-param-scenarios></table></div>
+    <div class="pg-param-grid-host short" data-pg-param-scenarios></div>
   </section>
   {% endif %}
   <p class="pg-note">Positions are columns and scenarios rows, as in the workbook. Tinted cells are inputs (typed or pasted in the workbook); every
@@ -106,5 +104,5 @@
     so the portfolio is still the scope and its VaR the VaR page's.</p>
   {% endif %}
 </div>
-<script src="/static/js/drishti_var-playground.js?v={{ ASSET_V }}"></script>
+{% include "terminal/_risk_elements.html" %}<script src="/static/js/drishti_var-playground.js?v={{ ASSET_V }}"></script>
 {% endblock %}

@@ -8010,7 +8010,7 @@ The backtest: P&L against minus VaR, exceptions marked, the traffic light on the
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `spec` | `Object` | x (the date field), pnl (default hypothetical), var (the VaR field; drawn negated), actual (another P&L field), window (default 250) |
+| `spec` | `Object` | x (the date field), pnl (default hypothetical), var (the VaR field; drawn negated), actual (another P&L field), window (default 250), light (the server's {exceptions, zone, plus, multiplier}: shown as given; figures.counted is the page's own count of the rows, for a check), marks (more marks: another P&L's exceptions) |
 | `rows` | `Object[]` |  |
 | `env` | `Object` |  |
 
@@ -8022,7 +8022,7 @@ The exposure profile: EE and PFE over the tenors (a log axis by default), EEPE o
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `spec` | `Object` | x (tenor in years), ee, pfe, eepe (the server's), limit, log (default true) |
+| `spec` | `Object` | x (tenor in years), ee, pfe, eepe (the server's), limit, log (default true), more (further series drawn as given: the uncollateralised EE, the paths' fan) |
 | `rows` | `Object[]` |  |
 | `env` | `Object` |  |
 
@@ -8078,6 +8078,89 @@ Draws a risk table: a &lt;drishti-grid&gt; in host (made once and kept: a second
 | `options` | `Object` | columns, rows, title, subtitle, getRowId, fitRows (rows shown before it scrolls), onRow(row, event), explain, and anything a Grid takes (chrome: true for the terminal's command line and keys) |
 
 Returns `Object`: the Grid (its plain API: setRows, on, getState ...).
+
+### drishti_risk-chart.js
+
+#### `riskChart(host, spec, o)`
+
+Draws a risk chart in host.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `spec` | `Object` | a drishti-chart spec (a risk kind or any other) |
+| `[o]` | `Object` | onPick(row, ctx), height (the drawing's, px, default 220), density (default terminal), explain, and any Chart option |
+
+Returns `Object`: the Chart.
+
+### drishti_risk-columns.js
+
+#### `textColumn(field, header, o)`
+
+A label column.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `field` | `string` |  |
+| `header` | `string` |  |
+| `[o]` | `Object` | any ColumnDef property (width, pinned, cellRenderer ...) |
+
+Returns `Object`: a ColumnDef.
+
+#### `moneyColumn(field, header, fmt, o)`
+
+A money column: the server's figure written by the screen's rule; an empty figure of a total row is left empty.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `field` | `string` |  |
+| `header` | `string` |  |
+| `fmt` | `function(*): string` | the screen's money rule |
+| `[o]` | `Object` | figureColumn's options (additive, tone, width ...); a format here wins |
+
+Returns `Object`: a ColumnDef.
+
+### drishti_risk-format.js
+
+#### `riskMoney(v)`
+
+Compact money: 1.23m, -412k, 950; an em dash for no figure.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `?number` |  |
+
+Returns `string`.
+
+#### `riskSigned(v)`
+
+Compact money with its sign: +1.23m, -412k.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `?number` |  |
+
+Returns `string`.
+
+#### `riskInt(v)`
+
+Whole units with grouping: 1,234,567 and -12,000; an em dash for no figure.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `?number` |  |
+
+Returns `string`.
+
+#### `riskPct(v)`
+
+A share with one decimal: 0.4567 is 45.7%; an em dash for no figure.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `?number` |  |
+
+Returns `string`.
 
 ### drishti_index.js
 

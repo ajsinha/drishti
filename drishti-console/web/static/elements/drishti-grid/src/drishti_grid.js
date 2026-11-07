@@ -486,7 +486,7 @@ export class GridModel {
     if (row.kind === 'pivot') {
       const cell = this.answer.cells[row.entry.key + '|' + col.colKey];
       Object.assign(ctx, { measure: col.measure, coords: cell ? cell.coords : row.entry.coords, members: cell ? cell.members : 0, note: cell && cell.notes ? cell.notes[col.measure] || null : null, view: this.pivotView() });
-    } else if (row.kind === 'group') { Object.assign(ctx, { path: row.path || row.keys, field: row.field }); }
+    } else if (row.kind === 'group') { Object.assign(ctx, { path: row.path || row.keys, field: row.field }, row.tree && row.row ? { rowId: row.id, data: row.row } : {}); }
     else { Object.assign(ctx, { rowId: row.id, data: row.row }); }
     return ctx;
   }

@@ -80,13 +80,13 @@ def test_the_picker_moves_every_panel_and_the_tab_loads_only_when_opened(stack, 
     prov = pg.locator("[data-explain-drawer]").inner_text()
     assert "Reporting currency" in prov and "EUR, chosen in the header" in prov, prov
     assert "scenario PVs" in prov and "supplied" in prov and "via USD" in prov, prov
-    wait(pg, "document.querySelector('.vx-tree .vx-row.hdr') && document.querySelector('.vx-tree .vx-row.hdr').innerText.indexOf('EUR') >= 0", 60)
+    wait(pg, "document.querySelector('.vx-tree .dg-hrow.dg-hleaf') && document.querySelector('.vx-tree .dg-hrow.dg-hleaf').innerText.indexOf('EUR') >= 0", 60)
     assert all("ccy=EUR" in u for u in requests_to(pg, "/api/var/tree?")[-1:]), pg.seen
     shot(pg, "ccy-eur")
     assert not requests_to(pg, "/api/var/scope/currencies"), "the tab is loaded only when opened"
 
     pg.locator('.vx-tab[data-tab="ccy"]').click()
-    wait(pg, "document.querySelectorAll('[data-vx-ccytable] tbody tr[data-ccy]').length >= 5", 60)
+    wait(pg, "((document.querySelector('[data-vx-ccytable] drishti-grid') || {}).grid ? document.querySelector('[data-vx-ccytable] drishti-grid').grid.model.rowCount() : 0) >= 5", 60)
     assert len(requests_to(pg, "/api/var/scope/currencies")) == 1
     rows = pg.eval_on_selector_all("[data-vx-ccytable] tbody tr[data-ccy]", "rs => rs.map(r => [r.dataset.ccy, r.className])")
     assert [r[0] for r in rows] == ["USD", "EUR", "CAD", "JPY", "GBP"], rows
@@ -129,7 +129,7 @@ def test_on_a_phone_the_picker_and_the_tab_fit(stack, browser):
     box = pg.locator("[data-vx-ccy]").bounding_box()
     assert box and box["height"] >= 36 and box["x"] + box["width"] <= 391, box          # a touch target, inside the screen
     pg.locator('.vx-tab[data-tab="ccy"]').click()
-    wait(pg, "document.querySelectorAll('[data-vx-ccytable] tbody tr[data-ccy]').length >= 5", 60)
+    wait(pg, "((document.querySelector('[data-vx-ccytable] drishti-grid') || {}).grid ? document.querySelector('[data-vx-ccytable] drishti-grid').grid.model.rowCount() : 0) >= 5", 60)
     assert pg.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
     shot(pg, "ccy-phone")
     pg.close()

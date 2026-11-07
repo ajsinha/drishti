@@ -753,6 +753,25 @@ the screen's tests and screenshots are unchanged or deliberately updated.
    SIMM and the MR lens; moved into the banking plugin.
 10. **The allow list empty**; the guard strict; the inventory regenerated into section 2.
 
+### 12.1 The VaR and exposure family (step 9, 2.9.11.e): the migration checklist
+
+Every table of the family is a `<drishti-grid>` made by drishti-risk's preset `riskGrid` (the `terminal` layout and density, the
+product owner's default for VaR screens; the grid's own command line, wells, toolbar and function keys off inside a screen that has
+its own; `clientAggregation: false`; VaR, ES, limits and exposures `additive: false`, never summed in the browser), every chart a
+`<drishti-chart>` made by `riskChart` (drishti-risk's kinds where one fits), the figures in words by `riskMoney`, `riskSigned`,
+`riskInt` and `riskPct` (one home; the texts the screens printed before, so no figure changed). What the libraries gained for it:
+drishti-grid 0.4.0 (a column's `cellClass` and `cellRenderer`, a row's `getRowClass` and `getRowData`, `fitRows`, `chrome: false`,
+`pinnedTopRows` with `pinnedCellClicked`, a tree node's own row in its cell context), drishti-chart 0.2.0 (the histogram of the server's
+bins), drishti-risk 0.2.0 (the P&L distribution from the server's bins with its fitted normal; the presets).
+
+| Screen | Before (file, lines) | After | Tables → grids | Charts | Old code and CSS deleted |
+|---|---|---|---|---|---|
+| [x] VaR explorer (`VAR <scope>`) | `drishti_var-explorer.js` 1,343, `drishti_var-charts.js` 208, `drishti_var.css` 217 | explorer 1,326, charts deleted, CSS 168 | the scope tree (tree data: nodes, a book's positions and a position's trades asked when opened; the column widths kept per mode), the path, the scenario's contributors, the history, the contributions (Euler totals the server's, under the grid), the captures, a capture reopened, a comparison, the currencies | `risk.pnl-distribution` (the server's bins, VaR and ES), the worst 25 and the P&L by scenario date (bars, the VaR scenario and the tail toned, −VaR line), the history (P&L, −VaR, −ES, exceptions) | the SVG charts and their tip, the hand-built tables and the tree's rows |
+| [x] Parametric VaR (`PVAR`) | `drishti_var-parametric.js` 124, `drishti_var-parametric.css` 46 | 132, CSS 35 | the tree's Parametric and Gap columns (grid columns with the ?) | the fitted normal and its marker on the P&L distribution (the server's curve) | the tree cells, the SVG curve, tails and gap bracket (the gap is in its tile) |
+| [x] Basket sheet | `drishti_var-basket-sheet.js` 292, sheet CSS 22 lines | 186, 7 | one grid with cell editing: typing, Enter, Tab, Delete, undo; the paste with headings stays the sheet's; each cell toned by the server's check | — | the sheet's own table, editor, keys and windowing |
+| [x] Basket what-if | two tables in `drishti_var-basket.js` (831) | grids (807) | the what-if trades, before and after | — | `vb-table` |
+| [x] VaR Playground | `drishti_var-playground.js` 425, `drishti_var-playground.css` 118 | 405, CSS 111 | the workbook grid (the six header rows pinned, the label column pinned, 500 × 509 windowed), the Parametric tab's figures, positions and scenarios | — | the canvas, its windowing, keys and scroll code |
+
 ## 13. Risks
 
 | Risk | Mitigation |

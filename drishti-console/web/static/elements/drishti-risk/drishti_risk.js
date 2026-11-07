@@ -66,7 +66,7 @@
         annotations: [{ type: 'line', axis: 'x', value: -v, label: 'VaR ' + pct(conf.var), tone: 'bad', style: 'solid' }, { type: 'line', axis: 'x', value: -es, label: 'ES ' + pct(conf.es), tone: 'accent' }].concat(spec.annotations || []) });
       const p = spec.parametric;
       if (p && num(p.var) !== null) {
-        s.annotations = s.annotations.concat([{ type: 'line', axis: 'x', value: -num(p.var), label: 'parametric ' + env.fmt(num(p.var)), tone: 'warn', style: 'dashed' }]);
+        s.annotations = s.annotations.concat([{ type: 'line', axis: 'x', value: -num(p.var), label: 'parametric ' + env.fmt(num(p.var)), tone: 'warn', style: 'dashed', showValue: false }]);
       }
       const b = buildHistogram(s, rows, env);
       if (p && p.curve && p.curve.x && p.curve.x.length) {
@@ -86,15 +86,18 @@
     function buildBacktest(spec, rows, env) {
       const pf = fieldOf(spec.pnl) || 'hypothetical', vf = fieldOf(spec.var) || 'var99', xf = fieldOf(spec.x) || 'date', af = fieldOf(spec.actual);
       const window = spec.window || 250, last = rows.slice(-window);
-      const n = last.filter((r) => num(r[pf]) !== null && num(r[vf]) !== null && num(r[pf]) < -num(r[vf])).length, tl = trafficLight(n);
+      const counted = last.filter((r) => num(r[pf]) !== null && num(r[vf]) !== null && num(r[pf]) < -num(r[vf])).length;
+      const lt = spec.light || null, n = lt && num(lt.exceptions) !== null ? num(lt.exceptions) : counted;
+      const tl = lt && lt.zone ? { zone: String(lt.zone).toLowerCase(), plus: num(lt.plus) !== null ? num(lt.plus) : trafficLight(n).plus } : trafficLight(n);
       const series = [{ field: pf, name: (spec.pnlTitle || 'Hypothetical P&L') }].concat(af ? [{ field: af, name: spec.actualTitle || 'Actual P&L', opacity: 0.9 }] : [])
         .concat([{ field: vf, name: '−VaR ' + (spec.confidence ? Math.round(spec.confidence * 100) + '%' : '99%') + ' (day before)', negate: true, style: 'dashed', tone: 'bad' }]);
       const s = Object.assign({}, spec, { kind: 'line', x: Object.assign({ field: xf, type: 'time' }, typeof spec.x === 'object' ? spec.x : {}), y: Object.assign({ format: 'money' }, spec.y),
-        series: series, marks: [{ when: pf + ' < -' + vf, as: 'point', tone: 'bad', field: pf, name: 'Exception (' + n + ')' }],
+        series: series, marks: [{ when: pf + ' < -' + vf, as: 'point', tone: 'bad', field: pf, name: 'Exception (' + n + ')' }].concat(spec.marks || []),
         annotations: [{ type: 'line', axis: 'y', value: 0, tone: 'faint', style: 'solid', showValue: false }].concat(spec.annotations || []) });
       const b = buildSeriesChart(s, rows, env);
-      b.badge = { tone: tl.zone === 'green' ? 'good' : tl.zone === 'amber' ? 'warn' : 'bad', text: tl.zone + ' · ' + n + ' exceptions · plus ' + tl.plus.toFixed(2), zone: tl.zone };
-      b.figures = { exceptions: n, zone: tl.zone, plus: tl.plus, window: last.length };
+      const tail = lt && num(lt.multiplier) !== null ? 'multiplier ' + num(lt.multiplier).toFixed(2) : 'plus ' + tl.plus.toFixed(2);
+      b.badge = { tone: tl.zone === 'green' ? 'good' : tl.zone === 'amber' ? 'warn' : 'bad', text: tl.zone + ' · ' + n + ' exceptions · ' + tail, zone: tl.zone };
+      b.figures = { exceptions: n, zone: tl.zone, plus: tl.plus, window: last.length, counted: counted, fromServer: !!lt };
       b.summary = 'Backtest over ' + last.length + ' days: ' + n + ' exceptions, the ' + tl.zone + ' zone, plus factor ' + tl.plus.toFixed(2);
       return b;
     }
@@ -120,7 +123,7 @@
       if (eepe === null) { eepe = eepeOf(sorted.map((r) => num(r[xf])), sorted.map((r) => r[ef])); computed = true; }
       const limit = given(spec.limit, sorted), log = spec.log !== false;
       const s = Object.assign({}, spec, { kind: 'area', x: { field: xf, type: log ? 'log' : 'value', title: 'tenor', format: tenorText }, y: Object.assign({ format: 'money' }, spec.y),
-        series: [{ field: ef, name: 'EE', tone: 'link', opacity: 0.16 }, { field: pf, name: spec.pfeTitle || 'PFE 95%', tone: 'accent', opacity: 0.1 }],
+        series: [{ field: ef, name: 'EE', tone: 'link', opacity: 0.16 }, { field: pf, name: spec.pfeTitle || 'PFE 95%', tone: 'accent', opacity: 0.1 }].concat(spec.more || []),
         marks: limit !== null ? [{ when: pf + ' > ' + limit, field: pf, tone: 'bad', name: 'over the limit' }] : [],
         annotations: (limit !== null ? [{ type: 'line', axis: 'y', value: limit, label: 'limit', tone: 'bad' }] : []).concat(spec.annotations || []) });
       const b = buildSeriesChart(s, sorted, env);
@@ -181,10 +184,11 @@
       if (o.label || o.title) { el.setAttribute('aria-label', o.label || o.title); }
       if (el._onRow) { el.removeEventListener('drishti:cell-clicked', el._onRow); el._onRow = null; }
       el.options = o;
+      if (!el.grid && el.mount) { el.mount(); }        // a host not in the page yet (a sheet made before it is placed): drawn now all the same
       if (o.onRow) {
         el._onRow = (e) => {
           const d = e.detail || {};
-          if (d.kind !== 'leaf' || !d.data) { return; }
+          if (!d.data) { return; }                       // a leaf, or a tree node that is a row of its own
           o.onRow(d.data, e);
         };
         el.addEventListener('drishti:cell-clicked', el._onRow);
@@ -193,13 +197,65 @@
     }
     return { "RISK_GRID_DEFAULTS": RISK_GRID_DEFAULTS, "TONES": TONES, "figureColumn": figureColumn, "riskGrid": riskGrid };
   })();
+  /* ---- src/drishti_risk-chart.js ---- */
+  __m["src/drishti_risk-chart.js"] = (function () {
+    var defineChartElement = __lib("drishti-chart").defineChartElement;
+    function riskChart(host, spec, o) {
+      o = Object.assign({ density: 'terminal' }, o);
+      o.height = o.height || spec.height || 220;       // the drawing's height: the option's, else the spec's
+      const doc = host.ownerDocument, win = doc.defaultView;
+      if (win && win.customElements) { defineChartElement(win.customElements, win); }
+      let el = host.querySelector(':scope > drishti-chart');
+      if (!el) {
+        host.textContent = '';
+        el = doc.createElement('drishti-chart');
+        el.setAttribute('density', o.density);
+        el.style.display = 'block';
+        host.appendChild(el);
+        el.addEventListener('drishti:mark-clicked', (e) => {
+          const pick = el._onPick, d = e.detail || {};
+          if (pick && d.rows && d.rows.length === 1) { pick(d.rows[0], d); }
+        });
+      }
+      el._onPick = o.onPick || null;
+      const opts = Object.assign({}, o);
+      delete opts.onPick;                            // height: the drawing's (the card's title, legend and status line add to it)
+      if (!el.chart) { el.options = opts; }
+      el.spec = Object.assign({ onClick: o.explain ? 'explain' : 'select' }, spec);
+      if (!el.chart && el.mount) { el.mount(); }      // a host not in the page yet
+      return el.chart;
+    }
+    return { "riskChart": riskChart };
+  })();
+  /* ---- src/drishti_risk-columns.js ---- */
+  __m["src/drishti_risk-columns.js"] = (function () {
+    var figureColumn = __m["src/drishti_risk-grid.js"].figureColumn;
+    function textColumn(field, header, o) {
+      return Object.assign({ field: field, header: header, width: 130 }, o || {});
+    }
+    function moneyColumn(field, header, fmt, o) {
+      return figureColumn(field, header, Object.assign({ width: 120,
+        format: (v, r) => (v === null || v === undefined ? (r && (r.total === true || r.blank) ? '' : '—') : fmt(v)) }, o || {}));
+    }
+    return { "textColumn": textColumn, "moneyColumn": moneyColumn };
+  })();
+  /* ---- src/drishti_risk-format.js ---- */
+  __m["src/drishti_risk-format.js"] = (function () {
+    var formatter = __lib("drishti-core").formatter;
+    const compact = formatter('compact', { decimals: (a, u) => (u === 'k' || !u ? 0 : 2), minus: '-' });
+    function riskMoney(v) { return v === null || v === undefined || Number.isNaN(v) ? '—' : compact(v); }
+    function riskSigned(v) { return v === null || v === undefined || Number.isNaN(v) ? '—' : (v > 0 ? '+' : '') + compact(v); }
+    function riskInt(v) { return v === null || v === undefined || Number.isNaN(v) ? '—' : Math.round(v).toLocaleString('en-US'); }
+    function riskPct(v) { return v === null || v === undefined || Number.isNaN(v) ? '—' : (v * 100).toFixed(1) + '%'; }
+    return { "riskMoney": riskMoney, "riskSigned": riskSigned, "riskInt": riskInt, "riskPct": riskPct };
+  })();
   /* ---- src/drishti_index.js ---- */
   __m["src/drishti_index.js"] = (function () {
     var registerRiskKinds = __m["src/drishti_risk-kinds.js"].registerRiskKinds;
     const RISK_KINDS = Object.freeze(['risk.pnl-distribution', 'risk.backtest', 'risk.exposure-profile', 'risk.var-change']);
     registerRiskKinds();
     function install(root) { if (root) { registerRiskKinds(); } }
-    return { "RISK_KINDS": RISK_KINDS, "install": install, "TRAFFIC_LIGHT": __m["src/drishti_risk-kinds.js"].TRAFFIC_LIGHT, "trafficLight": __m["src/drishti_risk-kinds.js"].trafficLight, "tailFigures": __m["src/drishti_risk-kinds.js"].tailFigures, "tenorText": __m["src/drishti_risk-kinds.js"].tenorText, "eepeOf": __m["src/drishti_risk-kinds.js"].eepeOf, "buildPnlDistribution": __m["src/drishti_risk-kinds.js"].buildPnlDistribution, "buildBacktest": __m["src/drishti_risk-kinds.js"].buildBacktest, "buildExposureProfile": __m["src/drishti_risk-kinds.js"].buildExposureProfile, "buildVarChange": __m["src/drishti_risk-kinds.js"].buildVarChange, "registerRiskKinds": __m["src/drishti_risk-kinds.js"].registerRiskKinds, "RISK_GRID_DEFAULTS": __m["src/drishti_risk-grid.js"].RISK_GRID_DEFAULTS, "TONES": __m["src/drishti_risk-grid.js"].TONES, "figureColumn": __m["src/drishti_risk-grid.js"].figureColumn, "riskGrid": __m["src/drishti_risk-grid.js"].riskGrid };
+    return { "RISK_KINDS": RISK_KINDS, "install": install, "TRAFFIC_LIGHT": __m["src/drishti_risk-kinds.js"].TRAFFIC_LIGHT, "trafficLight": __m["src/drishti_risk-kinds.js"].trafficLight, "tailFigures": __m["src/drishti_risk-kinds.js"].tailFigures, "tenorText": __m["src/drishti_risk-kinds.js"].tenorText, "eepeOf": __m["src/drishti_risk-kinds.js"].eepeOf, "buildPnlDistribution": __m["src/drishti_risk-kinds.js"].buildPnlDistribution, "buildBacktest": __m["src/drishti_risk-kinds.js"].buildBacktest, "buildExposureProfile": __m["src/drishti_risk-kinds.js"].buildExposureProfile, "buildVarChange": __m["src/drishti_risk-kinds.js"].buildVarChange, "registerRiskKinds": __m["src/drishti_risk-kinds.js"].registerRiskKinds, "RISK_GRID_DEFAULTS": __m["src/drishti_risk-grid.js"].RISK_GRID_DEFAULTS, "TONES": __m["src/drishti_risk-grid.js"].TONES, "figureColumn": __m["src/drishti_risk-grid.js"].figureColumn, "riskGrid": __m["src/drishti_risk-grid.js"].riskGrid, "riskChart": __m["src/drishti_risk-chart.js"].riskChart, "textColumn": __m["src/drishti_risk-columns.js"].textColumn, "moneyColumn": __m["src/drishti_risk-columns.js"].moneyColumn, "riskMoney": __m["src/drishti_risk-format.js"].riskMoney, "riskSigned": __m["src/drishti_risk-format.js"].riskSigned, "riskInt": __m["src/drishti_risk-format.js"].riskInt, "riskPct": __m["src/drishti_risk-format.js"].riskPct };
   })();
   return Object.freeze(Object.assign({ library: "drishti-risk", version: "0.2.0" }, __m["src/drishti_index.js"]));
 });

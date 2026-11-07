@@ -1,0 +1,23 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The Drishti Elements a VaR or exposure screen draws with (ELEMENTS.md 4.8): drishti-grid, the vendored ECharts and drishti-chart, then
+   drishti-risk (its grid preset and chart kinds); drishti-core is in base.html's head. Included in a screen's scripts block before the
+   screen's own script; its style sheets are terminal/_risk_elements_css.html in the head. A page that loads ECharts itself includes it
+   with echarts_on_page set. #}
+<script src="/static/elements/drishti-grid/drishti_grid.js?v={{ ASSET_V }}"></script>
+{% if not echarts_on_page %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script>{% endif %}
+<script src="/static/elements/drishti-chart/drishti_chart.js?v={{ ASSET_V }}"></script>
+<script src="/static/elements/drishti-risk/drishti_risk.js?v={{ ASSET_V }}"></script>

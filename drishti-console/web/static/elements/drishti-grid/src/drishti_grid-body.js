@@ -20,6 +20,7 @@
    live change. Pointer work: click and Shift+click, drag a range, the context menu, header sort, the column menu, a group's toggle,
    resize and autosize by the handle, the row checkboxes. */
 import { h } from '../../drishti-core/src/drishti_index.js';
+import { getValue, formatValue } from './drishti_columns.js';
 import { headerSpans, pivotColumnLabels, markGroups, isTotalCell, nonAdditiveNote, cfBackground, figureRange, ruleFor } from './drishti_grid-ui.js';
 
 const CF_SCAN = 100000;
@@ -85,7 +86,7 @@ export class GridBody {
   /** @private the cell (r, display entry) under an event */
   cellOf(e) {
     const c = e.target.closest ? e.target.closest('.dg-cell') : null;
-    if (!c || !this.scroller.contains(c)) { return null; }
+    if (!c || c.dataset.pinned !== undefined || !this.scroller.contains(c)) { return null; }
     return { el: c, r: +c.dataset.r, c: +c.dataset.c };
   }
 
@@ -233,7 +234,8 @@ export class GridBody {
     const disp = v.displayColumns();
     const rh = vp.rowHeight, hrh = rh + 4;
     const sp = this.paneSpans(disp);
-    const headH = sp.levels * hrh;
+    const pinned = v.o.pinnedTopRows || [];
+    const headH = sp.levels * hrh + pinned.length * rh;
     const W = disp.leftW + disp.centerW + disp.rightW;
     if (v.o.fitRows) { this.fit(headH, rh, W); }
     vp.resize(Math.max(1, this.scroller.clientWidth), Math.max(rh, this.scroller.clientHeight - headH));
@@ -261,6 +263,8 @@ export class GridBody {
       this.headPane(row, sp.out.right[lv] || [], disp, 'right', lv, leaf);
       this.head.appendChild(row);
     }
+    // rows pinned under the headings (pinnedTopRows: a spreadsheet's header rows), kept in view as the rows scroll
+    pinned.forEach((data, k) => this.head.appendChild(this.pinnedRowEl(data, k, disp, centerShown, lead, trail, rh)));
     // rows
     this.rows.textContent = '';
     this.rows.style.top = rows.offset + 'px';
@@ -340,6 +344,34 @@ export class GridBody {
     cell.appendChild(box);
   }
 
+  /** @private a pinned top row: its cells drawn from its data by each column's format, class and renderer (not part of the rows) */
+  pinnedRowEl(data, k, disp, centerShown, lead, trail, rh) {
+    const doc = this.doc;
+    const row = h(doc, 'div', { cls: 'dg-row dg-pinned-top', attrs: { role: 'row' }, data: { pinned: String(k) }, style: { height: rh + 'px' } });
+    const cellOf = (d) => {
+      const col = d.col, value = getValue(data, col), text = formatValue(value, col, data);
+      const style = { width: d.width + 'px' };
+      if (d.pane === 'left') { style.left = disp.leftOffset[d.i] + 'px'; }
+      if (d.pane === 'right') { style.right = disp.rightOffset[d.i] + 'px'; }
+      const extra = col.cellClass ? col.cellClass(value, data) : null;
+      const cell = h(doc, 'div', { cls: 'dg-cell dg-' + d.pane + (col.type === 'number' ? ' dg-num' : '') + (extra ? ' ' + extra : ''),
+        attrs: { role: 'gridcell', 'aria-colindex': String(d.i + 1) }, data: { pinned: String(k), c: String(d.i) }, style: style });
+      const drawn = col.cellRenderer ? col.cellRenderer({ value: value, text: text, row: data, doc: doc, pinned: k }) : null;
+      cell.appendChild(drawn !== null && drawn !== undefined && drawn !== '' ? (typeof drawn === 'string' ? h(doc, 'span', { cls: 'dg-text', text: drawn }) : drawn) : h(doc, 'span', { cls: 'dg-text', text: text }));
+      return cell;
+    };
+    disp.left.forEach((d) => row.appendChild(cellOf(d)));
+    if (lead) { row.appendChild(h(doc, 'div', { cls: 'dg-gap', attrs: { role: 'presentation' }, style: { width: lead + 'px' } })); }
+    centerShown.forEach((d) => row.appendChild(cellOf(d)));
+    if (trail > 0) { row.appendChild(h(doc, 'div', { cls: 'dg-gap', attrs: { role: 'presentation' }, style: { width: trail + 'px' } })); }
+    disp.right.forEach((d) => row.appendChild(cellOf(d)));
+    row.addEventListener('pointerdown', (e) => {
+      const c = e.target.closest('.dg-cell');
+      if (c) { this.model.live.emit('pinnedCellClicked', { pinned: k, col: +c.dataset.c, columnId: this.model.shownColumns()[+c.dataset.c].id, data: data }); }
+    });
+    return row;
+  }
+
   /** @private a row's element */
   rowEl(r, x, disp, centerShown, lead, trail, focus, flash, levels) {
     const doc = this.doc, m = this.model;
@@ -353,6 +385,13 @@ export class GridBody {
     const row = h(doc, 'div', { cls: cls, attrs: { role: 'row', 'aria-rowindex': String(r + levels + 1), 'aria-selected': id !== null ? String(selected) : null,
       'aria-level': m.pivotMode || x.kind === 'group' || x.tree || x.depth ? String((x.depth || 0) + 1) : null, 'aria-expanded': expandable ? String(expanded) : null },
     style: { height: m.viewport.rowHeight + 'px' } });
+    const o = this.view.o;
+    if (x.row && (x.kind === 'leaf' || x.tree) && (o.getRowClass || o.getRowData)) {
+      // a host's class and data-* attributes for a leaf's row (a row it highlights; the key a row stands for)
+      const rc = o.getRowClass ? o.getRowClass(x.row) : null, rd = o.getRowData ? o.getRowData(x.row) : null;
+      if (rc) { row.className += ' ' + rc; }
+      if (rd) { Object.keys(rd).forEach((k) => { if (rd[k] !== null && rd[k] !== undefined) { row.dataset[k] = String(rd[k]); } }); }
+    }
     const rowKey = e ? 'p:' + e.key : x.kind === 'group' ? 'g:' + (x.path || x.keys || []).join('\u001f') : 'l:' + (x.id !== undefined ? x.id : r);
     const first = disp.all[0];
     const add = (d) => row.appendChild(this.cellEl(r, x, d, { kind: kind, expandable: expandable, expanded: expanded, first: d === first, focus: focus, flash: flash, rowKey: rowKey, selected: selected }, disp));
@@ -412,7 +451,7 @@ export class GridBody {
       if (k.expandable) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw', text: k.expanded ? '−' : '+', attrs: { 'aria-hidden': 'true' }, data: { r: String(r) } })); }
       else if (m.pivotMode || (m.rowModel.groupBy && m.rowModel.groupBy.length) || m.rowModel.treeData) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw dg-tw-none', attrs: { 'aria-hidden': 'true' } })); }
     }
-    const leafRow = x.kind === 'leaf' && !loading ? x.row : null;
+    const leafRow = !loading && x.row && (x.kind === 'leaf' || x.tree) ? x.row : null;   // a leaf's row, or a tree node's own
     if (leafRow && col.cellClass) { const extra = col.cellClass(value, leafRow); if (extra) { cell.className += ' ' + extra; } }
     const drawn = leafRow && col.cellRenderer ? col.cellRenderer({ value: value, text: text, row: leafRow, doc: doc }) : null;
     if (drawn !== null && drawn !== undefined && drawn !== '') { cell.appendChild(typeof drawn === 'string' ? h(doc, 'span', { cls: 'dg-text', text: drawn }) : drawn); }
