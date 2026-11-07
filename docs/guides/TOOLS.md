@@ -1562,6 +1562,28 @@ drishti-console/.venv/bin/python tools/drishti.py tables check
 drishti-console/.venv/bin/python tools/drishti.py tables migrate --dry-run
 ```
 
+### 5.18 elements
+
+Drishti Elements (the JavaScript and CSS libraries) for other applications (`tools/elements/cli.py`, with `dist.py`, `pack.py` and
+`dts.py` beside it; the guide [ELEMENTS_IN_YOUR_APP.md](ELEMENTS_IN_YOUR_APP.md)). Offline, Python only; nothing is published.
+
+- `elements pack --libs core,grid,chart [--theme dark|light|<theme>] [--out DIR] [--include-domain banking] [--no-engines] [--maps]`:
+  one `drishti-elements.js` and one `drishti-elements.css` with exactly the named libraries and the ones they require (deepest
+  first), the vendored engines they need (ECharts) unless `--no-engines`, and `drishti-elements-pack.json` (what is inside, with SRI
+  hashes). The output and its first comment name every library and version inside. A library licensed with a domain module
+  (drishti-risk: banking) is refused (exit 1) unless `--include-domain banking`; an unknown library is refused too. `--libs all`:
+  every library the licence allows. Default folder `target/elements/pack`.
+- `elements dist [--out DIR] [--include-domain banking] [--only zip|npm]`: the release archive `drishti-elements-<version>.zip` and the
+  npm tarballs `@drishti/elements-<name>` (`npm/drishti-elements-<name>-<version>.tgz`); with banking the archive is
+  `drishti-elements-<version>+banking.zip` and drishti-risk's tarball is added. Default folder `target/elements`.
+- `elements webjar-tree --out DIR [--version V]`: the WebJar's files; the Maven profile runs it
+  (`./mvnw -P elements -pl drishti-elements package`).
+
+```bash
+python3 tools/drishti.py elements pack --libs core,grid,chart --theme dark --out build/vendor/drishti
+python3 tools/drishti.py elements dist
+```
+
 ## 6. Store loaders: `tools/load-*.sh`
 
 Each loader writes the banking packs' demo data (1,791 sample documents x 10 business days, and with `--trades N --days D` a
@@ -1716,7 +1738,7 @@ of Parquet.
 | `tools/license_headers.py` | checks (exit `1` naming the files) or, with `--fix`, inserts the copyright header in every source file |
 | `tools/elements_sheet.py` | builds the `<drishti-view>` and report stylesheets from the console's CSS (run it when `drishti_bi.css` or the report CSS changes) |
 | `tools/render_sheet.py` | builds the client-side renderer's sheet (`static/render/<version>/drishti-render.css`) from the console's CSS and writes its `integrity.json`; `--check` says whether either is stale (CLIENT_RENDERER.md section 13). A released version's folder never changes: a change means a new version folder |
-| `tools/elements_package.py` | builds the npm package of Drishti Elements |
+| `tools/elements_package.py` | builds the npm package of Drishti Elements 1.x (`<drishti-view>`, `@drishti/elements`); the eight libraries' packages are `drishti.py elements dist` (5.18) |
 | `tools/make_icons.py` | the console's favicon and app icons from the logo mark |
 | `tools/fetch-pyodide.sh` | installs the pinned, checksummed Pyodide runtime Calc serves from its own origin (no CDN) |
 | `tools/docs/screenshots.py` | regenerates the guides' screenshots (Playwright, scratch ports); `drishti.py docs shots` runs it |
