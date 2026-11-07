@@ -26,7 +26,7 @@ export { GRID, MAX_H, DEFAULT_MIN_SPAN, clamp, clampSpan, clampHeight, hideRefus
   ALIGN_EDGES, alignRects, distributeRects } from './drishti_layout-rules.js';
 export { LayoutModel } from './drishti_layout-model.js';
 export { KEY_SCHEMES, designerBindings, designerKeys, keyHelp } from './drishti_keymap.js';
-export { trackPointer, DragHub, sortableList } from './drishti_pointer.js';
+export { DragHub, sortableList } from './drishti_pointer.js';
 export { flowHit, showFlowDrop, clearFlowDrop } from './drishti_layout-flow.js';
 export { LayoutCanvas } from './drishti_layout-canvas.js';
 export { searchPalette, paletteGroups, Palette } from './drishti_palette.js';

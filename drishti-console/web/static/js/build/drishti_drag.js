@@ -29,6 +29,6 @@
   WB.drag = {
     hub: hub,
     attach: function (el, spec) { return hub.draggable(el, { payload: spec.payload, label: spec.label }); },
-    track: function (e, h) { return K.trackPointer(e, h); }
+    track: function (e, h) { return window.Drishti.elements.core.trackPointer(e, h); }
   };
 })();

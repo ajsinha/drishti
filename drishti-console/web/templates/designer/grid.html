@@ -82,4 +82,4 @@
   {% endif %}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_designer-grid.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}{% include "_designer_kit.html" %}<script src="/static/js/drishti_designer-grid.js?v={{ ASSET_V }}"></script>{% endblock %}

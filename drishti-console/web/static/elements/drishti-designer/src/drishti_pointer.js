@@ -13,59 +13,14 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* One pointer drag for every designer (mouse, pen and touch alike; Pointer Events, not HTML5 drag and drop, which differs between
+/* (trackPointer is drishti-core's: one tracked pointer for every page.) One pointer drag for every designer (mouse, pen and touch alike; Pointer Events, not HTML5 drag and drop, which differs between
    browsers). A press becomes a drag after a few pixels, so a click still clicks; Escape cancels; the click that ends a drag is
    swallowed. A drag carries a payload (an item from the palette, a field, an item of the canvas) to the drop targets a page registers
    on a DragHub; the target under the pointer is told as the pointer moves (over) and when it is let go (drop). Everything a drag does
    has a key too: the drag is the quick way, never the only one. */
+import { trackPointer } from '../../drishti-core/src/drishti_index.js';
 
-/**
- * @typedef {Object} TrackHandlers
- * @property {function(PointerEvent): (boolean|void)} [start] the press became a drag; false cancels it
- * @property {function(PointerEvent): void} move
- * @property {function(PointerEvent, boolean, boolean): void} end (event, committed, moved): committed is false after Escape or a cancel
- */
 
-/**
- * Tracks one pointer from a press until it is let go.
- * @param {PointerEvent} e the pointerdown
- * @param {TrackHandlers} h
- * @param {{threshold: number}} [o] pixels before a press is a drag (default 5; 0: at once)
- * @returns {{cancel: function(): void}}
- */
-export function trackPointer(e, h, o) {
-  const doc = (e.target && e.target.ownerDocument) || document, win = doc.defaultView;
-  const id = e.pointerId, sx = e.clientX, sy = e.clientY, threshold = o && o.threshold !== undefined ? o.threshold : 5;
-  let moved = false, done = false;
-  const swallow = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
-  function finish(ev, committed) {
-    if (done) { return; }
-    done = true;
-    doc.removeEventListener('pointermove', move, true);
-    doc.removeEventListener('pointerup', up, true);
-    doc.removeEventListener('pointercancel', cancel, true);
-    doc.removeEventListener('keydown', key, true);
-    if (moved) { doc.addEventListener('click', swallow, true); win.setTimeout(() => doc.removeEventListener('click', swallow, true), 0); }
-    h.end(ev, committed && moved, moved);
-  }
-  function move(ev) {
-    if (ev.pointerId !== id) { return; }
-    if (!moved && Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) < threshold) { return; }
-    if (!moved && h.start && h.start(ev) === false) { finish(ev, false); return; }
-    moved = true;
-    ev.preventDefault();
-    h.move(ev);
-  }
-  function up(ev) { if (ev.pointerId === id) { finish(ev, true); } }
-  function cancel(ev) { if (ev.pointerId === id) { finish(ev, false); } }
-  function key(ev) { if (ev.key === 'Escape') { ev.stopPropagation(); ev.preventDefault(); finish({ clientX: sx, clientY: sy, pointerId: id }, false); } }
-  doc.addEventListener('pointermove', move, true);
-  doc.addEventListener('pointerup', up, true);
-  doc.addEventListener('pointercancel', cancel, true);
-  doc.addEventListener('keydown', key, true);
-  if (threshold === 0) { moved = true; if (h.start && h.start(e) === false) { finish(e, false); } }
-  return { cancel: () => finish({ clientX: sx, clientY: sy, pointerId: id }, false) };
-}
 
 /**
  * A drop target.
@@ -109,6 +64,7 @@ export class DragHub {
   hit(x, y, payload, doc) {
     const el = doc.elementFromPoint(x, y);
     if (!el) { return null; }
+    this.targets = this.targets.filter((t) => t.el.isConnected !== false);      // a target drawn again is registered again: the old one goes
     const hits = this.targets.filter((t) => t.el.contains(el) && (!t.accepts || t.accepts(payload)));
     hits.sort((a, b) => (a.el.contains(b.el) ? 1 : b.el.contains(a.el) ? -1 : 0));
     return hits[0] || null;
@@ -125,7 +81,8 @@ export class DragHub {
     el.style.touchAction = 'none';
     const down = (e) => {
       if (this.active || (e.pointerType === 'mouse' && e.button !== 0) || (o.handle && !e.target.closest(o.handle))) { return; }
-      if (e.target.closest('input, select, textarea, [contenteditable]') || (e.target !== el && e.target.closest('button, a') && !o.handle)) { return; }
+      const btn = e.target.closest('button, a');                      // a button inside the source is its own; the source may be a button itself
+      if (e.target.closest('input, select, textarea, [contenteditable]') || (btn && btn !== el && el.contains(btn) && !o.handle)) { return; }
       const payload = o.payload(e);
       if (payload) { this.start(e, payload, o.label ? o.label(payload) : ''); }
     };

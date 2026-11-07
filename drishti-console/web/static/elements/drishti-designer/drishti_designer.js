@@ -190,125 +190,6 @@
     }
     return { "KEY_SCHEMES": KEY_SCHEMES, "designerBindings": designerBindings, "designerKeys": designerKeys, "keyHelp": keyHelp };
   })();
-  /* ---- src/drishti_pointer.js ---- */
-  __m["src/drishti_pointer.js"] = (function () {
-    function trackPointer(e, h, o) {
-      const doc = (e.target && e.target.ownerDocument) || document, win = doc.defaultView;
-      const id = e.pointerId, sx = e.clientX, sy = e.clientY, threshold = o && o.threshold !== undefined ? o.threshold : 5;
-      let moved = false, done = false;
-      const swallow = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
-      function finish(ev, committed) {
-        if (done) { return; }
-        done = true;
-        doc.removeEventListener('pointermove', move, true);
-        doc.removeEventListener('pointerup', up, true);
-        doc.removeEventListener('pointercancel', cancel, true);
-        doc.removeEventListener('keydown', key, true);
-        if (moved) { doc.addEventListener('click', swallow, true); win.setTimeout(() => doc.removeEventListener('click', swallow, true), 0); }
-        h.end(ev, committed && moved, moved);
-      }
-      function move(ev) {
-        if (ev.pointerId !== id) { return; }
-        if (!moved && Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) < threshold) { return; }
-        if (!moved && h.start && h.start(ev) === false) { finish(ev, false); return; }
-        moved = true;
-        ev.preventDefault();
-        h.move(ev);
-      }
-      function up(ev) { if (ev.pointerId === id) { finish(ev, true); } }
-      function cancel(ev) { if (ev.pointerId === id) { finish(ev, false); } }
-      function key(ev) { if (ev.key === 'Escape') { ev.stopPropagation(); ev.preventDefault(); finish({ clientX: sx, clientY: sy, pointerId: id }, false); } }
-      doc.addEventListener('pointermove', move, true);
-      doc.addEventListener('pointerup', up, true);
-      doc.addEventListener('pointercancel', cancel, true);
-      doc.addEventListener('keydown', key, true);
-      if (threshold === 0) { moved = true; if (h.start && h.start(e) === false) { finish(e, false); } }
-      return { cancel: () => finish({ clientX: sx, clientY: sy, pointerId: id }, false) };
-    }
-    class DragHub {
-      constructor() {
-        this.targets = [];
-        this.active = null;
-      }
-      target(t) { this.targets.push(t); return () => { this.targets = this.targets.filter((x) => x !== t); }; }
-      hit(x, y, payload, doc) {
-        const el = doc.elementFromPoint(x, y);
-        if (!el) { return null; }
-        const hits = this.targets.filter((t) => t.el.contains(el) && (!t.accepts || t.accepts(payload)));
-        hits.sort((a, b) => (a.el.contains(b.el) ? 1 : b.el.contains(a.el) ? -1 : 0));
-        return hits[0] || null;
-      }
-      draggable(el, o) {
-        el.style.touchAction = 'none';
-        const down = (e) => {
-          if (this.active || (e.pointerType === 'mouse' && e.button !== 0) || (o.handle && !e.target.closest(o.handle))) { return; }
-          if (e.target.closest('input, select, textarea, [contenteditable]') || (e.target !== el && e.target.closest('button, a') && !o.handle)) { return; }
-          const payload = o.payload(e);
-          if (payload) { this.start(e, payload, o.label ? o.label(payload) : ''); }
-        };
-        el.addEventListener('pointerdown', down);
-        return () => el.removeEventListener('pointerdown', down);
-      }
-      start(e, payload, label) {
-        const doc = e.target.ownerDocument;
-        let ghost = null, over = null;
-        const setOver = (t) => { if (over && over !== t && over.leave) { over.leave(); } over = t; };
-        this.active = trackPointer(e, {
-          start: () => {
-            if (doc.defaultView.getSelection) { doc.defaultView.getSelection().removeAllRanges(); }
-            ghost = doc.createElement('div');
-            ghost.className = 'dd-ghost';
-            ghost.setAttribute('aria-hidden', 'true');
-            ghost.textContent = '⠿ ' + (label || payload.label || '');
-            doc.body.appendChild(ghost);
-            doc.body.classList.add('dd-dragging');
-          },
-          move: (ev) => {
-            ghost.style.transform = 'translate(' + (ev.clientX + 14) + 'px,' + (ev.clientY + 14) + 'px)';
-            const win = doc.defaultView;                                           // near the window's top or bottom edge the page scrolls
-            if (ev.clientY < 48) { win.scrollBy(0, -12); } else if (ev.clientY > win.innerHeight - 48) { win.scrollBy(0, 12); }
-            const t = this.hit(ev.clientX, ev.clientY, payload, doc);
-            setOver(t);
-            if (t && t.over) { t.over(ev.clientX, ev.clientY, payload); }
-          },
-          end: (ev, committed) => {
-            if (ghost) { ghost.remove(); }
-            doc.body.classList.remove('dd-dragging');
-            const t = committed ? this.hit(ev.clientX, ev.clientY, payload, doc) : null;
-            setOver(null);
-            this.active = null;
-            if (t) { t.drop(ev.clientX, ev.clientY, payload); }
-          }
-        });
-      }
-    }
-    function sortableList(list, o) {
-      const rows = () => Array.prototype.filter.call(list.children, (x) => x.matches(o.row));
-      const down = (e) => {
-        const li = e.target.closest(o.row);
-        if (!li || li.parentNode !== list || (e.pointerType === 'mouse' && e.button !== 0) || e.target.closest('button, input, select, textarea, label, a')) { return; }
-        if (o.canDrag && !o.canDrag(li)) { return; }
-        let over = null;
-        const mark = (x) => { if (over && o.overClass) { over.classList.remove(o.overClass); } over = x; if (x && o.overClass) { x.classList.add(o.overClass); } };
-        trackPointer(e, {
-          start: () => { if (o.dragClass) { li.classList.add(o.dragClass); } },
-          move: (ev) => {
-            const t = list.ownerDocument.elementFromPoint(ev.clientX, ev.clientY), r = t && t.closest(o.row);
-            mark(r && r.parentNode === list && r !== li && (!o.canDrop || o.canDrop(r)) ? r : null);
-          },
-          end: (ev, committed) => {
-            if (o.dragClass) { li.classList.remove(o.dragClass); }
-            const all = rows(), from = all.indexOf(li), to = over ? all.indexOf(over) : -1;
-            mark(null);
-            if (committed && to >= 0 && to !== from) { o.onMove(from, to); }
-          }
-        });
-      };
-      list.addEventListener('pointerdown', down);
-      return () => list.removeEventListener('pointerdown', down);
-    }
-    return { "trackPointer": trackPointer, "DragHub": DragHub, "sortableList": sortableList };
-  })();
   /* ---- src/drishti_layout-rules.js ---- */
   __m["src/drishti_layout-rules.js"] = (function () {
     const GRID = 12;
@@ -420,7 +301,7 @@
   __m["src/drishti_layout-canvas.js"] = (function () {
     var EventBus = __lib("drishti-core").EventBus, announce = __lib("drishti-core").announce, h = __lib("drishti-core").h;
     var designerKeys = __m["src/drishti_keymap.js"].designerKeys;
-    var trackPointer = __m["src/drishti_pointer.js"].trackPointer;
+    var trackPointer = __lib("drishti-core").trackPointer;
     var snap = __m["src/drishti_layout-rules.js"].snap;
     var flowHit = __m["src/drishti_layout-flow.js"].flowHit, showFlowDrop = __m["src/drishti_layout-flow.js"].showFlowDrop, clearFlowDrop = __m["src/drishti_layout-flow.js"].clearFlowDrop;
     class LayoutCanvas {
@@ -892,7 +773,7 @@
   /* ---- src/drishti_outline.js ---- */
   __m["src/drishti_outline.js"] = (function () {
     var EventBus = __lib("drishti-core").EventBus, announce = __lib("drishti-core").announce, h = __lib("drishti-core").h;
-    var trackPointer = __m["src/drishti_pointer.js"].trackPointer;
+    var trackPointer = __lib("drishti-core").trackPointer;
     function flattenTree(nodes, closed) {
       const out = [];
       const walk = (list, level, parent) => list.forEach((n, i) => {
@@ -2070,6 +1951,95 @@
     }
     return { "LayoutModel": LayoutModel };
   })();
+  /* ---- src/drishti_pointer.js ---- */
+  __m["src/drishti_pointer.js"] = (function () {
+    var trackPointer = __lib("drishti-core").trackPointer;
+    class DragHub {
+      constructor() {
+        this.targets = [];
+        this.active = null;
+      }
+      target(t) { this.targets.push(t); return () => { this.targets = this.targets.filter((x) => x !== t); }; }
+      hit(x, y, payload, doc) {
+        const el = doc.elementFromPoint(x, y);
+        if (!el) { return null; }
+        this.targets = this.targets.filter((t) => t.el.isConnected !== false);      // a target drawn again is registered again: the old one goes
+        const hits = this.targets.filter((t) => t.el.contains(el) && (!t.accepts || t.accepts(payload)));
+        hits.sort((a, b) => (a.el.contains(b.el) ? 1 : b.el.contains(a.el) ? -1 : 0));
+        return hits[0] || null;
+      }
+      draggable(el, o) {
+        el.style.touchAction = 'none';
+        const down = (e) => {
+          if (this.active || (e.pointerType === 'mouse' && e.button !== 0) || (o.handle && !e.target.closest(o.handle))) { return; }
+          const btn = e.target.closest('button, a');                      // a button inside the source is its own; the source may be a button itself
+          if (e.target.closest('input, select, textarea, [contenteditable]') || (btn && btn !== el && el.contains(btn) && !o.handle)) { return; }
+          const payload = o.payload(e);
+          if (payload) { this.start(e, payload, o.label ? o.label(payload) : ''); }
+        };
+        el.addEventListener('pointerdown', down);
+        return () => el.removeEventListener('pointerdown', down);
+      }
+      start(e, payload, label) {
+        const doc = e.target.ownerDocument;
+        let ghost = null, over = null;
+        const setOver = (t) => { if (over && over !== t && over.leave) { over.leave(); } over = t; };
+        this.active = trackPointer(e, {
+          start: () => {
+            if (doc.defaultView.getSelection) { doc.defaultView.getSelection().removeAllRanges(); }
+            ghost = doc.createElement('div');
+            ghost.className = 'dd-ghost';
+            ghost.setAttribute('aria-hidden', 'true');
+            ghost.textContent = '⠿ ' + (label || payload.label || '');
+            doc.body.appendChild(ghost);
+            doc.body.classList.add('dd-dragging');
+          },
+          move: (ev) => {
+            ghost.style.transform = 'translate(' + (ev.clientX + 14) + 'px,' + (ev.clientY + 14) + 'px)';
+            const win = doc.defaultView;                                           // near the window's top or bottom edge the page scrolls
+            if (ev.clientY < 48) { win.scrollBy(0, -12); } else if (ev.clientY > win.innerHeight - 48) { win.scrollBy(0, 12); }
+            const t = this.hit(ev.clientX, ev.clientY, payload, doc);
+            setOver(t);
+            if (t && t.over) { t.over(ev.clientX, ev.clientY, payload); }
+          },
+          end: (ev, committed) => {
+            if (ghost) { ghost.remove(); }
+            doc.body.classList.remove('dd-dragging');
+            const t = committed ? this.hit(ev.clientX, ev.clientY, payload, doc) : null;
+            setOver(null);
+            this.active = null;
+            if (t) { t.drop(ev.clientX, ev.clientY, payload); }
+          }
+        });
+      }
+    }
+    function sortableList(list, o) {
+      const rows = () => Array.prototype.filter.call(list.children, (x) => x.matches(o.row));
+      const down = (e) => {
+        const li = e.target.closest(o.row);
+        if (!li || li.parentNode !== list || (e.pointerType === 'mouse' && e.button !== 0) || e.target.closest('button, input, select, textarea, label, a')) { return; }
+        if (o.canDrag && !o.canDrag(li)) { return; }
+        let over = null;
+        const mark = (x) => { if (over && o.overClass) { over.classList.remove(o.overClass); } over = x; if (x && o.overClass) { x.classList.add(o.overClass); } };
+        trackPointer(e, {
+          start: () => { if (o.dragClass) { li.classList.add(o.dragClass); } },
+          move: (ev) => {
+            const t = list.ownerDocument.elementFromPoint(ev.clientX, ev.clientY), r = t && t.closest(o.row);
+            mark(r && r.parentNode === list && r !== li && (!o.canDrop || o.canDrop(r)) ? r : null);
+          },
+          end: (ev, committed) => {
+            if (o.dragClass) { li.classList.remove(o.dragClass); }
+            const all = rows(), from = all.indexOf(li), to = over ? all.indexOf(over) : -1;
+            mark(null);
+            if (committed && to >= 0 && to !== from) { o.onMove(from, to); }
+          }
+        });
+      };
+      list.addEventListener('pointerdown', down);
+      return () => list.removeEventListener('pointerdown', down);
+    }
+    return { "DragHub": DragHub, "sortableList": sortableList };
+  })();
   /* ---- src/drishti_yaml-assist.js ---- */
   __m["src/drishti_yaml-assist.js"] = (function () {
     var parseYamlTree = __m["src/drishti_yaml-read.js"].parseYamlTree, yamlContext = __m["src/drishti_yaml-read.js"].yamlContext, yamlChain = __m["src/drishti_yaml-read.js"].yamlChain, yamlGet = __m["src/drishti_yaml-read.js"].yamlGet;
@@ -2304,7 +2274,7 @@
       D.yaml = { parse: parseYamlTree, context: yamlContext, chain: yamlChain, get: yamlGet, plain: yamlPlain, unquote: yamlUnquote };
       if (root.document && root.customElements) { defineDesignerElements(root.customElements, root); }
     }
-    return { "install": install, "CommandStack": __m["src/drishti_commands.js"].CommandStack, "SnapshotHistory": __m["src/drishti_commands.js"].SnapshotHistory, "Selection": __m["src/drishti_selection.js"].Selection, "GRID": __m["src/drishti_layout-rules.js"].GRID, "MAX_H": __m["src/drishti_layout-rules.js"].MAX_H, "DEFAULT_MIN_SPAN": __m["src/drishti_layout-rules.js"].DEFAULT_MIN_SPAN, "clamp": __m["src/drishti_layout-rules.js"].clamp, "clampSpan": __m["src/drishti_layout-rules.js"].clampSpan, "clampHeight": __m["src/drishti_layout-rules.js"].clampHeight, "hideRefused": __m["src/drishti_layout-rules.js"].hideRefused, "sizeText": __m["src/drishti_layout-rules.js"].sizeText, "rowsFromPixels": __m["src/drishti_layout-rules.js"].rowsFromPixels, "snap": __m["src/drishti_layout-rules.js"].snap, "clampRect": __m["src/drishti_layout-rules.js"].clampRect, "overlaps": __m["src/drishti_layout-rules.js"].overlaps, "settle": __m["src/drishti_layout-rules.js"].settle, "bounds": __m["src/drishti_layout-rules.js"].bounds, "ALIGN_EDGES": __m["src/drishti_layout-rules.js"].ALIGN_EDGES, "alignRects": __m["src/drishti_layout-rules.js"].alignRects, "distributeRects": __m["src/drishti_layout-rules.js"].distributeRects, "LayoutModel": __m["src/drishti_layout-model.js"].LayoutModel, "KEY_SCHEMES": __m["src/drishti_keymap.js"].KEY_SCHEMES, "designerBindings": __m["src/drishti_keymap.js"].designerBindings, "designerKeys": __m["src/drishti_keymap.js"].designerKeys, "keyHelp": __m["src/drishti_keymap.js"].keyHelp, "trackPointer": __m["src/drishti_pointer.js"].trackPointer, "DragHub": __m["src/drishti_pointer.js"].DragHub, "sortableList": __m["src/drishti_pointer.js"].sortableList, "flowHit": __m["src/drishti_layout-flow.js"].flowHit, "showFlowDrop": __m["src/drishti_layout-flow.js"].showFlowDrop, "clearFlowDrop": __m["src/drishti_layout-flow.js"].clearFlowDrop, "LayoutCanvas": __m["src/drishti_layout-canvas.js"].LayoutCanvas, "searchPalette": __m["src/drishti_palette.js"].searchPalette, "paletteGroups": __m["src/drishti_palette.js"].paletteGroups, "Palette": __m["src/drishti_palette.js"].Palette, "commonValues": __m["src/drishti_inspector.js"].commonValues, "sharedSchema": __m["src/drishti_inspector.js"].sharedSchema, "Inspector": __m["src/drishti_inspector.js"].Inspector, "flattenTree": __m["src/drishti_outline.js"].flattenTree, "findNode": __m["src/drishti_outline.js"].findNode, "isWithin": __m["src/drishti_outline.js"].isWithin, "moveNode": __m["src/drishti_outline.js"].moveNode, "Outline": __m["src/drishti_outline.js"].Outline, "yamlUnquote": __m["src/drishti_yaml-read.js"].yamlUnquote, "parseYamlTree": __m["src/drishti_yaml-read.js"].parseYamlTree, "yamlGet": __m["src/drishti_yaml-read.js"].yamlGet, "yamlPlain": __m["src/drishti_yaml-read.js"].yamlPlain, "yamlChain": __m["src/drishti_yaml-read.js"].yamlChain, "yamlContext": __m["src/drishti_yaml-read.js"].yamlContext, "yamlScalar": __m["src/drishti_yaml-write.js"].yamlScalar, "dumpYaml": __m["src/drishti_yaml-write.js"].dumpYaml, "yamlRanges": __m["src/drishti_yaml-write.js"].yamlRanges, "pathAtLine": __m["src/drishti_yaml-write.js"].pathAtLine, "RACHANA_FUNCTION_ARGS": __m["src/drishti_yaml-assist.js"].RACHANA_FUNCTION_ARGS, "RACHANA_FUNCTION_HELP": __m["src/drishti_yaml-assist.js"].RACHANA_FUNCTION_HELP, "YamlSchema": __m["src/drishti_yaml-assist.js"].YamlSchema, "yamlPlace": __m["src/drishti_yaml-assist.js"].yamlPlace, "yamlCompletions": __m["src/drishti_yaml-assist.js"].yamlCompletions, "yamlCheck": __m["src/drishti_yaml-assist.js"].yamlCheck, "yamlHelp": __m["src/drishti_yaml-assist.js"].yamlHelp, "readYaml": __m["src/drishti_yaml-pane.js"].readYaml, "YamlPane": __m["src/drishti_yaml-pane.js"].YamlPane, "SHELL_ACTIONS": __m["src/drishti_shell.js"].SHELL_ACTIONS, "SHELL_MODES": __m["src/drishti_shell.js"].SHELL_MODES, "SHELL_LAYOUTS": __m["src/drishti_shell.js"].SHELL_LAYOUTS, "SHELL_FKEYS": __m["src/drishti_shell.js"].SHELL_FKEYS, "statusWords": __m["src/drishti_shell.js"].statusWords, "DesignerShell": __m["src/drishti_shell.js"].DesignerShell, "DESIGNER_ELEMENTS": __m["src/drishti_designer-element.js"].DESIGNER_ELEMENTS, "defineDesignerElements": __m["src/drishti_designer-element.js"].defineDesignerElements };
+    return { "install": install, "CommandStack": __m["src/drishti_commands.js"].CommandStack, "SnapshotHistory": __m["src/drishti_commands.js"].SnapshotHistory, "Selection": __m["src/drishti_selection.js"].Selection, "GRID": __m["src/drishti_layout-rules.js"].GRID, "MAX_H": __m["src/drishti_layout-rules.js"].MAX_H, "DEFAULT_MIN_SPAN": __m["src/drishti_layout-rules.js"].DEFAULT_MIN_SPAN, "clamp": __m["src/drishti_layout-rules.js"].clamp, "clampSpan": __m["src/drishti_layout-rules.js"].clampSpan, "clampHeight": __m["src/drishti_layout-rules.js"].clampHeight, "hideRefused": __m["src/drishti_layout-rules.js"].hideRefused, "sizeText": __m["src/drishti_layout-rules.js"].sizeText, "rowsFromPixels": __m["src/drishti_layout-rules.js"].rowsFromPixels, "snap": __m["src/drishti_layout-rules.js"].snap, "clampRect": __m["src/drishti_layout-rules.js"].clampRect, "overlaps": __m["src/drishti_layout-rules.js"].overlaps, "settle": __m["src/drishti_layout-rules.js"].settle, "bounds": __m["src/drishti_layout-rules.js"].bounds, "ALIGN_EDGES": __m["src/drishti_layout-rules.js"].ALIGN_EDGES, "alignRects": __m["src/drishti_layout-rules.js"].alignRects, "distributeRects": __m["src/drishti_layout-rules.js"].distributeRects, "LayoutModel": __m["src/drishti_layout-model.js"].LayoutModel, "KEY_SCHEMES": __m["src/drishti_keymap.js"].KEY_SCHEMES, "designerBindings": __m["src/drishti_keymap.js"].designerBindings, "designerKeys": __m["src/drishti_keymap.js"].designerKeys, "keyHelp": __m["src/drishti_keymap.js"].keyHelp, "DragHub": __m["src/drishti_pointer.js"].DragHub, "sortableList": __m["src/drishti_pointer.js"].sortableList, "flowHit": __m["src/drishti_layout-flow.js"].flowHit, "showFlowDrop": __m["src/drishti_layout-flow.js"].showFlowDrop, "clearFlowDrop": __m["src/drishti_layout-flow.js"].clearFlowDrop, "LayoutCanvas": __m["src/drishti_layout-canvas.js"].LayoutCanvas, "searchPalette": __m["src/drishti_palette.js"].searchPalette, "paletteGroups": __m["src/drishti_palette.js"].paletteGroups, "Palette": __m["src/drishti_palette.js"].Palette, "commonValues": __m["src/drishti_inspector.js"].commonValues, "sharedSchema": __m["src/drishti_inspector.js"].sharedSchema, "Inspector": __m["src/drishti_inspector.js"].Inspector, "flattenTree": __m["src/drishti_outline.js"].flattenTree, "findNode": __m["src/drishti_outline.js"].findNode, "isWithin": __m["src/drishti_outline.js"].isWithin, "moveNode": __m["src/drishti_outline.js"].moveNode, "Outline": __m["src/drishti_outline.js"].Outline, "yamlUnquote": __m["src/drishti_yaml-read.js"].yamlUnquote, "parseYamlTree": __m["src/drishti_yaml-read.js"].parseYamlTree, "yamlGet": __m["src/drishti_yaml-read.js"].yamlGet, "yamlPlain": __m["src/drishti_yaml-read.js"].yamlPlain, "yamlChain": __m["src/drishti_yaml-read.js"].yamlChain, "yamlContext": __m["src/drishti_yaml-read.js"].yamlContext, "yamlScalar": __m["src/drishti_yaml-write.js"].yamlScalar, "dumpYaml": __m["src/drishti_yaml-write.js"].dumpYaml, "yamlRanges": __m["src/drishti_yaml-write.js"].yamlRanges, "pathAtLine": __m["src/drishti_yaml-write.js"].pathAtLine, "RACHANA_FUNCTION_ARGS": __m["src/drishti_yaml-assist.js"].RACHANA_FUNCTION_ARGS, "RACHANA_FUNCTION_HELP": __m["src/drishti_yaml-assist.js"].RACHANA_FUNCTION_HELP, "YamlSchema": __m["src/drishti_yaml-assist.js"].YamlSchema, "yamlPlace": __m["src/drishti_yaml-assist.js"].yamlPlace, "yamlCompletions": __m["src/drishti_yaml-assist.js"].yamlCompletions, "yamlCheck": __m["src/drishti_yaml-assist.js"].yamlCheck, "yamlHelp": __m["src/drishti_yaml-assist.js"].yamlHelp, "readYaml": __m["src/drishti_yaml-pane.js"].readYaml, "YamlPane": __m["src/drishti_yaml-pane.js"].YamlPane, "SHELL_ACTIONS": __m["src/drishti_shell.js"].SHELL_ACTIONS, "SHELL_MODES": __m["src/drishti_shell.js"].SHELL_MODES, "SHELL_LAYOUTS": __m["src/drishti_shell.js"].SHELL_LAYOUTS, "SHELL_FKEYS": __m["src/drishti_shell.js"].SHELL_FKEYS, "statusWords": __m["src/drishti_shell.js"].statusWords, "DesignerShell": __m["src/drishti_shell.js"].DesignerShell, "DESIGNER_ELEMENTS": __m["src/drishti_designer-element.js"].DESIGNER_ELEMENTS, "defineDesignerElements": __m["src/drishti_designer-element.js"].defineDesignerElements };
   })();
   return Object.freeze(Object.assign({ library: "drishti-designer", version: "0.1.0" }, __m["src/drishti_index.js"]));
 });

@@ -199,12 +199,10 @@
           });
           t.addEventListener('pointerdown', function (e) {
             if (!ready) { return; }
-            e.preventDefault(); t.focus(); t.setPointerCapture(e.pointerId);
+            e.preventDefault(); t.focus();
             var r = track.getBoundingClientRect();
             function to(ev, pause) { slMove(i, lo + Math.max(0, Math.min(1, (ev.clientX - r.left) / (r.width || 1))) * (hi - lo), pause); }
-            function drag(ev) { to(ev, 120); }
-            function drop(ev) { t.removeEventListener('pointermove', drag); t.removeEventListener('pointerup', drop); t.removeEventListener('pointercancel', drop); to(ev, 0); }
-            t.addEventListener('pointermove', drag); t.addEventListener('pointerup', drop); t.addEventListener('pointercancel', drop);
+            window.Drishti.elements.core.trackPointer(e, { move: function (ev) { to(ev, 120); }, end: function (ev) { to(ev, 0); } }, { threshold: 0, capture: t });   // drishti-core's tracked pointer
           });
         });
         track.addEventListener('pointerdown', function (e) {                // a press on the track moves the nearest thumb there, then it can be dragged

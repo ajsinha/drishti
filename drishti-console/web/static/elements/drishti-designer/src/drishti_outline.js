@@ -20,7 +20,7 @@
    for a host that keeps its tree itself. The tree view's keys: the arrows, Home, End, Right and Left to open and close, Enter to open
    the item's properties. */
 import { EventBus, announce, h } from '../../drishti-core/src/drishti_index.js';
-import { trackPointer } from './drishti_pointer.js';
+import { trackPointer } from '../../drishti-core/src/drishti_index.js';
 
 /**
  * A node of the outline.

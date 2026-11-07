@@ -31,7 +31,8 @@
   var nameBox = root.querySelector('[data-gd-name]'), list = root.querySelector('[data-gd-suggest]'), frame = root.querySelector('[data-gd-preview]');
   var errBox = root.querySelector('[data-gd-error]'), sutra = root.querySelector('[data-gd-sutra]'), info = root.querySelector('[data-gd-info]');
   var nest = root.querySelector('[data-gd-nest]'), nestWrap = root.querySelector('[data-gd-nest-wrap]');
-  var state = null, sel = { r: 0, c: 0, kid: null }, anchor = null, rev = 0, dragging = null, choices = [], pick = -1;
+  var state = null, sel = { r: 0, c: 0, kid: null }, anchor = null, rev = 0, choices = [], pick = -1;
+  var hub = new window.Drishti.elements.designer.DragHub();          // a cell dragged onto another (drishti-designer)
 
   function el(tag, attrs, kids) {
     var e = document.createElement(tag);
@@ -124,25 +125,16 @@
         body.push(kid);
       });
       var cell = el('div', { 'class': 'gd-cell' + (picked ? ' gd-sel' : '') + (inRange ? ' gd-in' : '') + (x.panels.length ? '' : ' gd-blank'), role: 'gridcell',
-        tabindex: picked ? '0' : '-1', 'aria-selected': picked || inRange ? 'true' : 'false', 'data-gd-cell': x.ref, 'data-gd-range': x.range,
-        draggable: x.panels.length ? 'true' : null }, body);
+        tabindex: picked ? '0' : '-1', 'aria-selected': picked || inRange ? 'true' : 'false', 'data-gd-cell': x.ref, 'data-gd-range': x.range }, body);
       cell.style.gridRow = (x.r + 2) + ' / span ' + x.rs; cell.style.gridColumn = (x.c + 2) + ' / span ' + x.cs;
       cell.addEventListener('click', function (e) {
         if (e.shiftKey && state.grid.mode === 'areas') { if (!anchor) { anchor = { r: sel.r, c: sel.c }; } } else { anchor = null; }
         sel = { r: x.r, c: x.c, kid: null }; select(true);
       });
       cell.addEventListener('dblclick', function () { edit(); });
-      cell.addEventListener('dragstart', function (e) { dragging = x.ref; e.dataTransfer.setData('text/x-gd', x.ref); e.dataTransfer.effectAllowed = 'move'; });
-      cell.addEventListener('dragend', function () { dragging = null; });
-      cell.addEventListener('dragover', function (e) { if (dragging) { e.preventDefault(); cell.classList.add('gd-over'); } });
-      cell.addEventListener('dragleave', function () { cell.classList.remove('gd-over'); });
-      cell.addEventListener('drop', function (e) {
-        cell.classList.remove('gd-over');
-        if (!dragging) { return; }
-        e.preventDefault();
-        var from = dragging; dragging = null;
-        if (from !== x.ref) { sel = { r: x.r, c: x.c, kid: null }; step({ op: 'move', from: from, to: x.ref }); }
-      });
+      if (x.panels.length) { hub.draggable(cell, { payload: function (e) { return e.target.closest('.gd-kid') ? null : { ref: x.ref }; }, label: function () { return x.range; } }); }   // drishti-designer's one drag
+      hub.target({ el: cell, accepts: function (d) { return !!d.ref; }, over: function () { cell.classList.add('gd-over'); }, leave: function () { cell.classList.remove('gd-over'); },
+        drop: function (px, py, d) { cell.classList.remove('gd-over'); if (d.ref !== x.ref) { sel = { r: x.r, c: x.c, kid: null }; step({ op: 'move', from: d.ref, to: x.ref }); } } });
       sheet.appendChild(cell);
     });
     sutra.textContent = state.yaml || '';
