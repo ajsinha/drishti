@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""lake undo: remove one load's rows by its load id (docs/architecture/DATA_LOAD_RULES.md section 6.3).
+"""lake undo: remove one load's rows by its load id (docs/guides/DATA_LAKE_GUIDE.md section 5.5).
 
 Every row a load wrote carries its ``_load_id`` (``<run>.<file>``: a ``lake build``'s or the parallel loader's summary lists them under
 ``loads``; a row's ``_load_id`` column says it too). Undoing it removes exactly those rows, one commit per table and date, in every table

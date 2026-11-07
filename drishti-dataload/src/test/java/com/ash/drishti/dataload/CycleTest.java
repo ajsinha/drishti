@@ -28,7 +28,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** One cycle with a stand-in loader: what is loaded, moved, told, and every failure of DATALOAD_INBOX.md section 8. */
+/** One cycle with a stand-in loader: what is loaded, moved, told, and every failure of DATA_LAKE_GUIDE.md section 8. */
 class CycleTest {
 
     @TempDir Path tmp;

@@ -225,10 +225,10 @@ sections:
 # slug or slug#anchor. Documents that left the list (architecture, the per-plugin connector pages, the runbooks) are still in
 # the help centre at their path slug, so the old addresses keep working.
 moved:
-  lake-guide: data-lake-guide   # docs/guides/LAKE_GUIDE.md folded into DATA_LAKE_GUIDE.md (2.9.11.d)
+  lake-guide: data-lake-guide   # docs/guides/DATA_LAKE_GUIDE.md folded into DATA_LAKE_GUIDE.md (2.9.11.d)
   docs-guides-lake-guide: data-lake-guide
-  docs-architecture-data-load-rules: data-lake-guide#5-routing-business-dates-modes-repeats-and-undo   # DATA_LOAD_RULES.md folded into DATA_LAKE_GUIDE.md (2.9.11.d)
-  docs-architecture-dataload-inbox: data-lake-guide#31-the-data-inbox   # DATALOAD_INBOX.md folded into DATA_LAKE_GUIDE.md (2.9.11.d)
+  docs-architecture-data-load-rules: data-lake-guide#5-routing-business-dates-modes-repeats-and-undo   # DATA_LAKE_GUIDE.md folded into DATA_LAKE_GUIDE.md (2.9.11.d)
+  docs-architecture-dataload-inbox: data-lake-guide#31-the-data-inbox   # DATA_LAKE_GUIDE.md folded into DATA_LAKE_GUIDE.md (2.9.11.d)
   docs-guides-public-data: external-data   # docs/guides/PUBLIC_DATA.md, now EXTERNAL_DATA.md, listed as External data (2.9.1, 2.9.7)
   fact-of-the-day: user-guide#home-the-fact-of-the-day   # Home's Did you know tile (2.9.3), a section of the user guide (the page cap stands)
   public-data: external-data

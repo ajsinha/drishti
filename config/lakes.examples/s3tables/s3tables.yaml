@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/lakes.examples/s3tables/s3tables.yaml: an example lake file (docs/guides/LAKE_GUIDE.md), the lake the connector files of
+# config/lakes.examples/s3tables/s3tables.yaml: an example lake file (docs/guides/DATA_LAKE_GUIDE.md), the lake the connector files of
 # config/connectors.examples/s3tables/ name. Copy it to config/lakes/s3tables.yaml. Secrets only as ${ENV} or file:/path references.
 lake: s3tables
 format: iceberg

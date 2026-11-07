@@ -111,7 +111,7 @@ class LakeMaintenance:
     def overview(self, figures: list[dict]) -> dict:
         mc, ms, own = self.mod("maintconfig"), self.mod("maintschedule"), self.mod("ownership")
         config = self.config()
-        built = {str(r): own.built(r) for r in self.lakes.cfg.roots}
+        built = {str(r): own.built(r) for r in self.lakes.cfg.lake_roots()}
         rows = []
         for t in figures:
             name, root = t.get("table"), t.get("root")
@@ -145,7 +145,7 @@ class LakeMaintenance:
         """{root: [domain/table]} limited to this console's roots and, for a run, to the tables the lake tool built."""
         if not isinstance(selection, dict) or not selection:
             raise LakeError(400, "pick at least one table")
-        roots = {str(r): r for r in self.lakes.cfg.roots}
+        roots = {str(r): r for r in self.lakes.cfg.lake_roots()}
         own = self.mod("ownership")
         out = {}
         for root, names in selection.items():
@@ -323,7 +323,7 @@ class LakeMaintenance:
         """Starts the schedules that are due (one tick of the loop; tests call it with ``now``)."""
         mc, own = self.mod("maintconfig"), self.mod("ownership")
         config = self.config()
-        schedules = [s for s in mc.schedules(config) if any(mc.same_root(s["root"], str(r)) for r in self.lakes.cfg.roots)]
+        schedules = [s for s in mc.schedules(config) if any(mc.same_root(s["root"], str(r)) for r in self.lakes.cfg.lake_roots())]
         if not schedules:
             return []
         now = now or datetime.now(self.zone(config))
@@ -331,7 +331,7 @@ class LakeMaintenance:
         sched = self._scheduler(config)
         started = []
         for s, why in sched.due(schedules, now, built):
-            root = next(str(r) for r in self.lakes.cfg.roots if mc.same_root(s["root"], str(r)))
+            root = next(str(r) for r in self.lakes.cfg.lake_roots() if mc.same_root(s["root"], str(r)))
             names = [n for n in s.get("tables") or [] if n in built.get(s["root"], {})]
             if not names:
                 sched.ran(s, now, built)

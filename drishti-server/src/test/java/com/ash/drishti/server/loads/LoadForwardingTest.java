@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 /**
- * The one way a data-load signal reaches the other members (DATALOAD_INBOX.md section 4.9, PO-5): with a stand-in for the members, a ready
+ * The one way a data-load signal reaches the other members (DATA_LAKE_GUIDE.md, PO-5): with a stand-in for the members, a ready
  * load is passed on once to each live member as whoever made it (a person, or this node for the data inbox); a failed load, a load that
  * came from a peer and a server outside a cluster pass nothing on; the receiving side knows a member's own signal from a person's.
  */

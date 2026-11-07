@@ -197,7 +197,7 @@ a Delta lake, so a machine without them runs everything else.
 
 ```bash
 uv run --with pyyaml python tools/drishti.py --help
-uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta
+uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta/demo
 ```
 
 **With the console's environment** (what an IDE wants, see [section 14](#14-running-the-tools-from-pycharm-and-the-java-sutra-from-intellij);
@@ -1492,7 +1492,7 @@ options:
   --batch-rows BATCH_ROWS
 
 examples:
-  drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta
+  drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta/demo
   drishti.py data ingest --from day1.jsonl --from day2.jsonl --pack config/packs/my-bank --store files --root data/files --dry-run
 ```
 
@@ -3107,7 +3107,7 @@ $ drishti-console/.venv/bin/python tools/drishti.py server packs load curves-dem
 drishti: the server said 400 DRS-5001: DRS-5001 'curves-demo' is already loaded
 ```
 
-With a **Delta lake** instead: `--lake data/delta` in step 1 (the server's `DRISHTI_DELTA_ROOT`, default `<data>/delta`).
+With a **Delta lake** instead: `--lake data/delta/demo` in step 1 (the server's `DRISHTI_DELTA_ROOT`, default `<data>/delta`).
 
 4. Open the console, type `DC CRV-USD-OIS` and press Enter (`DC` is the mnemonic `pack new` chose, the kind's initials; see the pack's
    `README.md`). Pick a business date in the top bar: each date you ingested has its documents. The same from a shell:

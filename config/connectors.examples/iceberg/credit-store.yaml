@@ -14,7 +14,7 @@
 # Example: copy to config/connectors/credit-store.yaml to read the credit-store data from iceberg. It replaces the
 # connector file of the same name (settings are not merged). Credentials are ${ENV_VAR} references.
 # The lake (iceberg, its root or catalog, storage and tables) is config/lakes.examples/iceberg/iceberg.yaml: copy it to
-# config/lakes/iceberg.yaml beside this file (docs/guides/LAKE_GUIDE.md). This file keeps only what the connector reads.
+# config/lakes/iceberg.yaml beside this file (docs/guides/DATA_LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: iceberg
 kinds:
 - netting-set

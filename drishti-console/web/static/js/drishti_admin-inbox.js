@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Admin → Data loads → Inbox (DATALOAD_INBOX.md section 10, mock-up A). The board is drawn by the server (_inbox_body.html); this file
+/* Admin → Data loads → Inbox (DATA_LAKE_GUIDE.md section 3.1, mock-up A). The board is drawn by the server (_inbox_body.html); this file
    only redraws it from /admin/loads/inbox?partial=1 (every 5 s while a run loads, 30 s when quiet, never while the tab is hidden), keeps
    which columns a person opened or closed across redraws (on a phone the columns start closed but Loading), and sends Load now and Retry,
    saying the server's answer in words. It computes no figure: every count, time and duration on the board is the server's. */
@@ -97,7 +97,7 @@
     }
   });
 
-  // Undo a load (DATA_LOAD_RULES.md section 6.3): Check is a dry run; Undo asks for the load id again, then the server undoes it
+  // Undo a load (DATA_LAKE_GUIDE.md section 5.5): Check is a dry run; Undo asks for the load id again, then the server undoes it
   var undo = root.querySelector('[data-undo]');
   if (undo) {
     var idIn = undo.querySelector('[data-undo-id]');

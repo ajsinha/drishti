@@ -27,6 +27,8 @@ import urllib.error
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "tools" / "lake"))
+from lakeconfig import DEMO_ROOT_ENV  # noqa: E402  (the variable that names the demo lake's root: lakeconfig.py)
 if str(ROOT / "tools") not in sys.path:
     sys.path.append(str(ROOT / "tools"))
 from javacmd import java_cmd  # noqa: E402  (re-exported for the shots: -Djava.io.tmpdir=<work>/data/tmp/server)

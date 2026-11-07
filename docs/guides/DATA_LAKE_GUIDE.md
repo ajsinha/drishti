@@ -67,6 +67,7 @@ data/delta/
     ├── risk/scenario-pv/
     ├── risk/risk-hierarchy/
     └── _drishti-lake/                  the lake's own state: runs/ (one summary per load), locks/, staging/
+data/delta/risk-results/                the official VaR and exposure results the server publishes (their own lake files)
 ```
 
 `<data>` is the data folder (`drishti.data.dir`, `DRISHTI_DATA_DIR`; `./data` by default). Two lakes never share a folder, so the demo
@@ -503,7 +504,7 @@ hold: false                     # true: the file waits in the inbox until this k
 
 | Key | Value | Notes |
 |---|---|---|
-| `lake` | a lake's name (`[a-z0-9][a-z0-9_-]*`) | over the rule's `lake:` and `drishti.dataload.lake`. A lake with no file yet gets `config/lakes/<lake>.yaml` written, rooted at `<data>/delta/<lake>`, with the routed pack's recommended entries |
+| `lake` | a lake's name (`[a-z0-9][a-z0-9_-]*`) | the data inbox's key: over the rule's `lake:` and `drishti.dataload.lake`. A lake with no file yet gets `config/lakes/<lake>.yaml` written, rooted at `<data>/delta/<lake>`, with the routed pack's recommended entries. The command-line loaders take the lake from `--lake` (`target.lake`) instead |
 | `pack`, `kind`, `connector` | names | where the table's kind and layout come from |
 | `table` | a table name | over the name's; refused for a tar |
 | `business-date` | `YYYY-MM-DD` | over the name's date; refused for a tar |
@@ -742,7 +743,10 @@ settings:
   refresh-seconds: 30
 ```
 
-and the trades (`config/connectors/trade-endur.yaml`): `lake: risklake`, `lake-tables: trading.trade_endur`. Every table a connector
+and the trades (`config/connectors/trade-endur.yaml`): `lake: risklake`, `lake-tables: trading.trade_endur`. A connector may instead
+name its tables **by path** (`root:` a folder or `s3://…`, with `domain`, `table.<kind>`, `layout.<kind>.*`), for tables no lake file
+describes, such as a vendor's Delta table; both forms are permanent, and where a connector gives both, its own path wins over the lake
+file's (Admin → Connectors says so on the field). Every table a connector
 names must be in the lake file (*connector risk-store: lake risklake has no table risk.pnl-vector (…)*), and one connector reads one
 domain: split it otherwise. Then **restart the server** (or let it reload the connector files) and check with `drishti.py lake check`
 (section 8).
@@ -760,28 +764,25 @@ pack's template is written again at the next start), and restart. Nothing in eit
 
 ## 7. The demo lake's one-time move
 
-Until 2.9.11.d the demo lake's tables sat directly in `<data>/delta/<domain>/`. Now every lake has its own folder, and the demo lake is
-`<data>/delta/demo/`. A demo lake built in the older layout is **moved once, safely, at the server's start**
-(`drishti.lakes.relocate-on-start`), or by hand:
+Until 2.9.11.d the demo lake's tables sat directly in `<data>/delta/<domain>/`; now the demo lake is `<data>/delta/demo/`. A demo lake
+built in the older layout is **moved once, safely, at the server's first start** (`drishti.lakes.relocate-on-start`, on), or by hand with
+the server stopped:
 
 ```bash
-python3 tools/drishti.py lake relocate demo --dry-run     # what would move, nothing changed
-python3 tools/drishti.py lake relocate demo
+python3 tools/drishti.py lake relocate demo --dry-run     # the folders it would move and every table measured; nothing moves
+python3 tools/drishti.py lake relocate demo               # exit 0 moved (or nothing to move), 1 refused or moved back
 ```
 
-It is safe by construction:
+**Safe**: only the demo lake's own folders move, each by a rename on the same file system (no file copied or rewritten); every Delta table
+is measured before and after (version, data files, rows, every named file present) and **any difference or error moves everything
+back**; it refuses, moving nothing, when `<data>/delta/demo` exists, when a folder belongs to no lake file, or while a load holds the lock;
+it **never deletes** a file and records the move in `<data>/delta/demo/_drishti-lake/relocated.json`. Connector files the server once
+generated with the old default root follow the move: they are rewritten to `lake: demo`, each kept beside it as
+`<name>.yaml.before-lake-<time>.bak`. A site that sets `DRISHTI_DELTA_ROOT` keeps that root: nothing moves.
 
-- **Only the demo lake's folders move** (the first folder of each of its tables' paths, and `_drishti-lake`), by a rename on the same
-  file system; another lake's folders stay where they are.
-- **It refuses**, saying why, when the target folder exists, when anything at the old place belongs to no lake, when a folder is on
-  another file system, when a table there is Iceberg, when a table does not open, or when a load holds the lake's lock.
-- **It verifies**: every Delta table is opened and measured before and after (its version, its data files, its rows from the files'
-  statistics, and that every data file it names is there); any difference, or any error, **moves everything back**.
-- **It never deletes a file**, runs once, and records what moved in `<data>/delta/demo/_drishti-lake/relocated.json`.
-
-A site that sets `DRISHTI_DELTA_ROOT` keeps that root for the demo lake: nothing moves. To roll back by hand, stop the server and
-rename the folders under `<data>/delta/demo/` back to `<data>/delta/` (and remove `relocated.json`); the old layout is then moved again at
-the next start unless `drishti.lakes.relocate-on-start: false`. The procedure is also in [OPERATIONS.md](../admin/OPERATIONS.md).
+**Roll back by hand**: stop the server, set `drishti.lakes.relocate-on-start: false`, rename the folders under `<data>/delta/demo/` back to
+`<data>/delta/`, delete `relocated.json`, and put the `.bak` connector files back. Every check, refusal and message:
+[OPERATIONS.md, The lakes' folders](../admin/OPERATIONS.md#the-lakes-folders).
 
 ## 8. Checking a load, and troubleshooting
 
@@ -1022,11 +1023,11 @@ results are published.
 load mode), read-only; a lake file the reader refuses is shown as the refusal. The API: `GET /api/v1/admin/lakes/files`
 (`?check=true` adds the comparison with the tables on disk).
 
-**An older installation** whose connector files carry `root`, `domain`, `table.<kind>` or `layout.<kind>.*` keeps working with one
-warning. To move:
+**Connectors by path to a lake file.** A connector that names its tables by path keeps working with no warning. To give such tables a
+lake file of their own:
 
-1. `python3 tools/drishti.py lake migrate-config` prints the lake files it would write (one per distinct root) and each connector
-   rewritten to `lake: <name>`; nothing is written.
+1. `python3 tools/drishti.py lake migrate-config` prints the lake files it would write (one per distinct root, named after the root's
+   last folder) and each connector rewritten to `lake: <name>`; nothing is written.
 2. `python3 tools/drishti.py lake migrate-config --write` writes them (an existing lake file is never overwritten).
 3. `python3 tools/drishti.py lake check` compares each lake file with its tables on disk.
 4. Restart the server. Nothing under the data folder changes.

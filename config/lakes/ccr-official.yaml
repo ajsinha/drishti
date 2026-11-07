@@ -14,7 +14,7 @@
 
 # config/lakes/ccr-official.yaml: the official results the server publishes (docs/guides/EXPOSURE_GUIDE.md section 20), read only by BI's reader. Its format, root and
 # storage are the publisher's own settings (drishti.ccr.exposure.official.format, .root, .storage), so the reader follows wherever and however they are
-# published (Delta by default; Iceberg: the server makes the reader an Iceberg connector). docs/guides/LAKE_GUIDE.md.
+# published (Delta by default; Iceberg: the server makes the reader an Iceberg connector). docs/guides/DATA_LAKE_GUIDE.md.
 lake: ccr-official
 format: ${drishti.ccr.exposure.official.format:delta}
 root: ${drishti.ccr.exposure.official.root:${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}}

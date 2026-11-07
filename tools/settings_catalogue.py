@@ -142,7 +142,7 @@ AREAS = [
     Area("dataload", "The data inbox's routing rules: `config/dataload.yaml`",
          "Where a file dropped in the data inbox goes: a file-name pattern to a pack and kind (`drishti.dataload.rules-file`), read again "
          "at every cycle ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load), "
-         "[DATALOAD_INBOX.md](../architecture/DATALOAD_INBOX.md)). The inbox's own settings are in `config/engines/dataload.yaml`."),
+         "[DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md)). The inbox's own settings are in `config/engines/dataload.yaml`."),
     Area("ui-kit", "The UI kit: `config/ui-kit/brand.yaml`",
          "The site's brand for pages built with the Drishti UI kit (`drishti.ui-kit.dir`)."),
     Area("ai", "AI providers and MCP servers: `config/ai/`, `config/mcp/`",

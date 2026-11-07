@@ -58,7 +58,7 @@ class MemoryRatiosTest {
 
     private static List<ObjectNode> read(Path folder, int max) throws Exception {
         List<ObjectNode> out = new ArrayList<>();
-        for (FeedFiles.Part f : FeedFiles.parts(folder)) {           // its dated files and tars (DATA_LOAD_RULES.md section 10)
+        for (FeedFiles.Part f : FeedFiles.parts(folder)) {           // its dated files and tars (DATA_LAKE_GUIDE.md section 5.2)
             for (String line : f.lines()) {
                 if (out.size() >= max) {
                     return out;

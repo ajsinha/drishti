@@ -24,6 +24,7 @@ import urllib.error
 import urllib.request
 
 import _var
+from shotlib import DEMO_ROOT_ENV
 from shotlib import CONSOLE_PORT, ROOT, Ctx
 from shotlib import start_servers as _start
 
@@ -41,7 +42,7 @@ def start_servers(work) -> list:
     lake = work / "delta"
     if (lake / "risk" / "position-sensitivity").is_dir():       # a kept scratch folder (DRISHTI_SHOTS_WORK) already holds the lake: start on it
         _var.LAKE[:] = [lake]
-        procs = _start(work, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
+        procs = _start(work, {DEMO_ROOT_ENV: str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
                               "DRISHTI_SECURITY_ENABLED": "false"})
         deadline = time.monotonic() + 240
         while time.monotonic() < deadline:

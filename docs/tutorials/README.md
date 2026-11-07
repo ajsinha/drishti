@@ -160,7 +160,7 @@ The pictures are made, not drawn: `tools/docs/screenshots.py --guide tNN` (one s
 | `data/desk-params.model.yaml`, `data/monthly-statement.report.yaml` | a model with two field parameters and a statement on it | tutorial 20 |
 | `data/risklake/make_day.py` | a day of synthetic, Endur-style trades, positions' scenario PVs (509 scenarios) and VaR nodes, named by the load rules, with each file's rows and SHA-256 | tutorial 45 |
 
-Everything else is the demo lakes (`data/delta`, built by `lake demo`) and the packs you already have. The `world-economy` pack holds published data from the World Bank, UNDP, the CIA World Factbook and the IMF
+Everything else is the demo lake (`data/delta/demo`, built by `lake demo`) and the packs you already have. The `world-economy` pack holds published data from the World Bank, UNDP, the CIA World Factbook and the IMF
 ([EXTERNAL_DATA.md (world-economy)](../guides/EXTERNAL_DATA.md#the-world-economy-data-in-detail)); the IMF part is for internal demonstration only, so the tutorials use the world-economy pack.
 The us-equities and gleif packs (tutorial 27) hold published data from SEC EDGAR, Wikidata, the Nasdaq Trader directory and GLEIF, and the
 news-and-markets pack a captured snapshot of Yahoo Finance and Google News (internal only). Where every external source comes from, its

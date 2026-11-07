@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The inbox with the real loader (DATALOAD_INBOX.md section 12, integration): files of each format dropped in a temporary data folder,
+ * The inbox with the real loader (DATA_LAKE_GUIDE.md, integration): files of each format dropped in a temporary data folder,
  * cycles run, the loader started as a child Java process (four runs in all, each with a 256 MB heap), the Delta versions, the outbox and
  * the signals checked. The archives are the loaders' shared fixtures (tools/lake/testdata/archives).
  */
@@ -130,7 +130,7 @@ class DataInboxLoaderTest {
     }
 
     /**
-     * The business date from outside (docs/architecture/DATA_LOAD_RULES.md): the name's date for every row of the file, the rows whose own
+     * The business date from outside (docs/guides/DATA_LAKE_GUIDE.md): the name's date for every row of the file, the rows whose own
      * date differs only counted (the outcome, the report, the board); a .ready business-date over the name; a name without a date under the
      * business today; the table from the name when no rule matches. Two loader runs (one per route).
      */
@@ -203,7 +203,7 @@ class DataInboxLoaderTest {
     }
 
     /**
-     * A tar archive in the inbox (DATA_LOAD_RULES.md sections 3.1 and 4): each table folder loaded into its own table with each folder's date,
+     * A tar archive in the inbox (DATA_LAKE_GUIDE.md sections 4.4 and 4): each table folder loaded into its own table with each folder's date,
      * one load id for the archive; a table that fails rolls back the tables already committed and the archive goes to failed/ saying so.
      */
     @Test

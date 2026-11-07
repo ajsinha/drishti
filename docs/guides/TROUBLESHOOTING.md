@@ -763,7 +763,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
   history does not reach back that far, so a source that keeps no history answered (for example the `demo` source).
   The view shows that source's current data as a still snapshot: it does not update, and the top bar does not say
   *Live*.
-- **Check:** `ls data/delta/<domain>/<kind>/` lists the dates the lake has (`business_date=2026-09-30`, …).
+- **Check:** `ls data/delta/demo/<domain>/<kind>/` lists the dates the lake has (`business_date=2026-09-30`, …).
 - **Fix:** pick a date the lake covers, or build more history:
 
   ```bash
@@ -1089,7 +1089,7 @@ calls.
 | `DRS-1011 connector <name> is not configured` | `ls config/connectors`; Admin → Packs → Data source | a pack routes the kind to a connector nobody defined: create it (Admin → Connectors, **Create**) |
 | `failedToStart` shows `no plugin named 'null'` | the connector's file in `config/connectors/` (`drishti.py connector get <name>`) | the file has no `plugin:` (or a typo in a name defined only in the deprecated `application.yaml` form) |
 | `failedToStart` shows `no plugin named 'x'` | `ls drishti-server/target/*exec.jar`; `DRISHTI_PLUGIN_DIR` | misspelt plugin name (`postgres` is not a plugin; it is `jdbc`) |
-| Health `DOWN: no Delta tables under ./data/delta/<domain>` | `ls data/delta/<domain>/*/_delta_log` | build the lake or set `DRISHTI_DELTA_ROOT`; restart |
+| Health `DOWN: no Delta tables under ./data/delta/demo/<domain>` | `ls data/delta/demo/<domain>/*/_delta_log` | build the lake or set `DRISHTI_DELTA_ROOT`; restart |
 | A picked date shows *No data held for <date>* (the current data of an undated source) | `curl -s "$B/entities/<kind>/<id>/raw?asOf=<date>" \| jq .provenance` | the dated store does not hold that date (`lookback-days`, history kept); load it |
 | A picked date shows *Latest data on or before … is from …* | — | expected: the store's newest date on or before the one picked |
 | Live view does not tick | `jq .provenance` of the view (`/api/v1/views/<kind>/<id>`): `live` must be `true` | no live connector answers or pushes the kind: switch the stream on (`state` or `ticks` mode), the demo off |

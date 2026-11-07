@@ -365,7 +365,7 @@ core  counterparty-risk  market-data  market-risk  news-and-markets  trading  wo
 
 The retired example packs (`finance`, `genomics`, `logistics`, `retail-banking`, `climate-risk`, `operational-risk`,
 `liquidity-risk`) are under `examples/packs/`; `DRISHTI_PACKS_EXTRA_DIRS=examples/packs` lets you name one. What each pack contains,
-and how to write your own, is in [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which). The seven packs read Delta lakes under `./data/delta`; section 5 builds
+and how to write your own, is in [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which). The seven packs read the demo lake, `./data/delta/demo`; section 5 builds
 them.
 
 **Changing packs while the server runs.** The packs folder is watched (`DRISHTI_PACKS_WATCH`, default `auto`): copy a new pack folder in and it is
@@ -513,10 +513,10 @@ The compose file is a starting point. Before you rely on it, add:
          - drishti-governance:/opt/drishti/data/governance
    ```
    (and `drishti-governance: {}` under `volumes:`).
-2. **The lake.** The packs read `./data/delta` (`DRISHTI_DELTA_ROOT`). Mount your lake there, read-only, or set
+2. **The lake.** The packs read the demo lake, `./data/delta/demo` (`DRISHTI_DELTA_ROOT`). Mount your lake there, read-only, or set
    `DRISHTI_DELTA_ROOT` to an `s3a://` location (section 11):
    ```yaml
-         - /srv/lake:/opt/drishti/data/delta:ro
+         - /srv/lake:/opt/drishti/data/delta/demo:ro
    ```
    Without it, the lake connectors find no tables and their views say *No data available*.
 3. **The Kafka disk cache**, if you turn on a stream connector: a volume on `/opt/drishti/data/cache`, sized above
@@ -550,12 +550,50 @@ repository root.
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 ```
 
-It writes `data/delta/<domain>/<kind>/business_date=…/` for every dataset (the trades in `data/delta/trading/trade_endur`,
+It writes `data/delta/demo/<domain>/<kind>/business_date=…/` for every dataset (the trades in `data/delta/demo/trading/trade_endur`,
 `trade_calypso` and `trade_murex`, also partitioned by `PRODUCT_TYPE`), and tells a running server (or leaves a stamp for its next start)
 so its BI store reads the new data: [data/testdata/README.md](../../data/testdata/README.md). Your own data goes in with your ETL, or
 `drishti.py lake build` for a large JSON export ([TOOLS.md](../guides/TOOLS.md)). The retired example packs keep their generators under
-`tools/packgen/` (for instance `tools/packgen/banking/make_data.py --lake data/delta`, which writes JSON Lines rows under
+`tools/packgen/` (for instance `tools/packgen/banking/make_data.py --lake data/delta/demo`, which writes JSON Lines rows under
 `data/build/lake-rows` and then loads them; generating and loading are separate steps, [DATA_GUIDE.md](../guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).
+
+### The lakes' folders
+
+Every lake has its own folder under `<data>/delta` (DATA_LAKE_GUIDE.md section 1): the demo lake is `data/delta/demo`, a lake the data inbox
+creates for a load that names it is `data/delta/<lake>` (`data/delta/risklake`), and the official VaR and exposure results the server
+publishes stay in `data/delta/risk-results`. A lake file may name any other root; `DRISHTI_DELTA_ROOT`, when a site sets it, is the demo
+lake's root as before, and nothing below moves.
+
+**The one-time move.** A demo lake built in the older layout has its tables directly in `data/delta/<domain>/<table>`. At its first start
+the server moves them into `data/delta/demo/`, once, before any connector opens a table:
+
+- only the demo lake's own folders move (the first folder of each of its tables' paths, and `_drishti-lake`), each by a rename on the
+  same file system: 3.5 GB move in a moment, and no file is copied or rewritten;
+- every Delta table is opened and measured before and after the move: its version, its data files, its rows (from the files'
+  statistics), and that every data file it names is there; any difference, or any error, moves everything back;
+- it **refuses**, saying why in the log and moving nothing, when `data/delta/demo` exists already, when anything in `data/delta` belongs
+  to no lake file, when a folder is on another file system, when a table is Iceberg (its metadata holds absolute paths), when a table
+  does not open or names a missing file, or while a build or a load holds the lake's lock;
+- it **never deletes** a file; the empty `data/delta/demo` it made is removed again when it moves back;
+- it runs once: `data/delta/demo/_drishti-lake/relocated.json` records when, from where, and every table's version, files and rows;
+- then each connector file that still reads the demo lake by its old default root (`root: ${DRISHTI_DELTA_ROOT:./data/delta}`, as the
+  server generated them from the packs' templates before the lake form) is rewritten to `lake: demo` with `lake-tables:`, every reading
+  setting kept and the file before kept beside it (`<name>.yaml.before-lake-<time>.bak`); a connector with a root of its own (another
+  folder, `s3://...`) is left as it is.
+
+By hand (stop the server first: its connectors hold the tables open), or to see what it would do:
+
+```bash
+python3 tools/drishti.py lake relocate demo --dry-run     # the folders it would move and every table measured; nothing moves
+python3 tools/drishti.py lake relocate demo               # the move; exit 0 moved (or nothing to move), 1 refused or moved back
+```
+
+`drishti.lakes.relocate-on-start: false` (`DRISHTI_LAKES_RELOCATE_ON_START=false`) leaves it to the command. After the move, check:
+the server's log says *the one-time move into its own folder is done*; `python3 tools/drishti.py lake status --lake data/delta/demo`
+lists the tables; Admin → Lakes shows the demo lake under `data/delta/demo`; a view, a VaR and a BI page answer as before. A refusal
+leaves everything where it was and says what to do: move or describe the unknown folder, or move the tables by hand, then start again.
+A scheduled job or script that names `data/delta` for the demo lake names `data/delta/demo` from then on (`lake build --lake`, `lake
+maintain --root`, `deploy/lake-maintenance.yaml`).
 
 ### 5.2 PostgreSQL, Aerospike and Kafka in Docker
 
@@ -710,7 +748,7 @@ table of messages and fixes is in [CONNECTOR_FILES.md, section 12](../connectors
 | Variable | Default | Used by | What it does |
 |---|---|---|---|
 | `DRISHTI_LAKE_ENABLED` | `true` | every pack's Delta connector | `false` turns the lake connectors off (for example when a profile replaces them) |
-| `DRISHTI_DELTA_ROOT` | `./data/delta` | every pack's Delta connector | the lake root: a local directory or `s3a://bucket/path` |
+| `DRISHTI_DELTA_ROOT` | `./data/delta/demo` | every pack's Delta connector (the demo lake, `config/lakes/demo.yaml`) | the demo lake's root: a local directory or `s3a://bucket/path`; every other lake is in its own folder, `<data>/delta/<lake>` |
 | `DRISHTI_STREAM_TRADING` | `false` | `trading` pack, `trading-stream` | read live trades from Kafka |
 | `DRISHTI_KAFKA_BOOTSTRAP` | `localhost:9092` | `trading-stream` | Kafka bootstrap servers |
 | `DRISHTI_TRADING_TOPIC` | `drishti.trading.trades` | `trading-stream` | the topic |
@@ -1351,7 +1389,7 @@ working directory unless you changed them.
 | `data/net/` | `node-id` (this node's id, generated once: keep it, or the node rejoins as a new member), `peers.json` (the member table, saved every 10 minutes, on joins and leaves and at shutdown) | `node-id` yes; `peers.json` optional | copy; without `peers.json` a node rejoins from its seeds |
 | `data/connectors/generated/` | markers that say which connector files were written from a pack template and whether they were edited | no | rebuilt from the packs |
 | `data/cache/<connector>/` | the Kafka connectors' disk cache | no | rebuilt from the topic; cleared every night anyway |
-| `data/delta/` (`DRISHTI_DELTA_ROOT`) | the lake | by its owner | Drishti only reads it; back it up with your data platform's policy |
+| `data/delta/` (`DRISHTI_DELTA_ROOT`: the demo lake's own folder, `data/delta/demo`) | the lakes, each in its own folder (`demo/`, `risklake/`, ...), and the published official results (`risk-results/`) | by its owner | back each lake up with your data platform's policy; the official results are append-only records |
 | `data/feeds/` (`DRISHTI_FEEDS`) | files for the file connector | by whoever writes them | |
 | `config/tables/` (`drishti.tables.root`) | the table layer's tables and models (`<domain>/<name>.table.yaml`, `.model.yaml`), which BI's reports read | **yes**, preferably in version control | version control, or copy |
 | `config/bi/` (`DRISHTI_BI_DIR`) | Rūpaka reports, boards, notebooks and python files; what people publish from the BI pages is saved here too, and the identity database holds drafts, workspaces and history | **yes**, preferably in version control | version control, or copy |
@@ -1475,8 +1513,8 @@ uv run --with deltalake --with pyarrow --with pyyaml python tools/lake/maintain.
 You should see one JSON line per table, and nothing is changed:
 
 ```
-{"at": "2026-09-30T20:59:08-04:00", "event": "maintained", "dry_run": true, "table": "data/delta/civic/bill", "before": {"files": 10, "mb": 0.03}, "retention": {"cutoff": "2024-10-02", "would_remove_files": 0}, "vacuum": {"files": 0, "dry_run": true}, "after": {"files": 10, "mb": 0.03}}
-{"at": "2026-09-30T20:59:08-04:00", "event": "maintained", "dry_run": true, "table": "data/delta/civic/candidate", "before": {"files": 10, "mb": 0.03}, "retention": {"cutoff": "2024-10-02", "would_remove_files": 0}, "vacuum": {"files": 0, "dry_run": true}, "after": {"files": 10, "mb": 0.03}}
+{"at": "2026-09-30T20:59:08-04:00", "event": "maintained", "dry_run": true, "table": "data/delta/demo/civic/bill", "before": {"files": 10, "mb": 0.03}, "retention": {"cutoff": "2024-10-02", "would_remove_files": 0}, "vacuum": {"files": 0, "dry_run": true}, "after": {"files": 10, "mb": 0.03}}
+{"at": "2026-09-30T20:59:08-04:00", "event": "maintained", "dry_run": true, "table": "data/delta/demo/civic/candidate", "before": {"files": 10, "mb": 0.03}, "retention": {"cutoff": "2024-10-02", "would_remove_files": 0}, "vacuum": {"files": 0, "dry_run": true}, "after": {"files": 10, "mb": 0.03}}
 ...
 ```
 
@@ -3721,7 +3759,7 @@ values the next time it loads:
 
 ```yaml
 lakes:
-  - root: data/delta
+  - root: data/delta/demo
     domains: ["*"]
     keep-business-days: null      # the lake's defaults ...
     vacuum-hours: 168
@@ -3766,7 +3804,7 @@ no other scheduler for this, and no crontab entry is needed. To use cron instead
 
 ```yaml
 lakes:
-  - root: data/delta
+  - root: data/delta/demo
     schedules:
       - {name: nightly, when: "30 2 * * 2,3,4,5,6", tables: [trading/trade_endur], paused: false, by: admin, roles: [admin]}
       - {name: after-load, when: after-build, tables: [trading/trade_calypso], paused: true, by: admin, roles: [admin]}

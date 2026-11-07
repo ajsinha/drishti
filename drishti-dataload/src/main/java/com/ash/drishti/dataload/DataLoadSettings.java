@@ -18,7 +18,7 @@ package com.ash.drishti.dataload;
 import java.time.Duration;
 
 /**
- * The data inbox, {@code drishti.dataload.*} (docs/architecture/DATALOAD_INBOX.md section 9; config/engines/dataload.yaml). Plain values:
+ * The data inbox, {@code drishti.dataload.*} (docs/guides/DATA_LAKE_GUIDE.md section 3.1; config/engines/dataload.yaml). Plain values:
  * the server binds the keys onto this record; this module reads no configuration of its own but the routing rules' file.
  *
  * @param owner whether this node runs the inbox (true; in a cluster exactly one node should)

@@ -198,7 +198,7 @@ final class NativeMaintenance {
     }
 
     /**
-     * Undoes load {@code id} (docs/architecture/DATA_LOAD_RULES.md section 6.3): each day whose files may hold its rows ({@code _load_id}
+     * Undoes load {@code id} (docs/guides/DATA_LAKE_GUIDE.md section 5.5): each day whose files may hold its rows ({@code _load_id}
      * bounds) is rewritten without them, one commit a day; a day the load replaced (its commit an overwrite naming the load in
      * {@code drishti.load-ids}) gets the rows it had before back, with the rows later loads appended kept. Returns a line per day undone.
      */

@@ -46,7 +46,7 @@ About 20 minutes.
 ```yaml
 lake: demo
 format: delta
-root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
 defaults: {load-mode: replace}
 tables:
   trading.trade_endur:
@@ -73,7 +73,7 @@ python3 tools/drishti.py lake show
 lakes in .../config/lakes: 3
   ccr-official: delta at .../data/delta, 1 tables
     risk-results.exposure-official-cpty      risk-results/exposure-official-cpty      partitioned by business_date; 26 promoted
-  demo: delta at .../data/delta, 89 tables
+  demo: delta at .../data/delta/demo, 89 tables
     compute-demo.path-book                   compute-demo/path-book                   partitioned by business_date; 4 promoted
     ...
     risk.pnl-vector                          risk/pnl-vector                          partitioned by business_date; 32 promoted, vectors PNL
@@ -128,8 +128,8 @@ python3 tools/drishti.py lake check
 ```
 
 ```text
-  note  demo/risk.position-sensitivity: no table yet at .../data/delta/risk/position-sensitivity (a writer creates it as the lake file says)
-  note  demo/risk.risk-factor: no table yet at .../data/delta/risk/risk-factor (a writer creates it as the lake file says)
+  note  demo/risk.position-sensitivity: no table yet at .../data/delta/demo/risk/position-sensitivity (a writer creates it as the lake file says)
+  note  demo/risk.risk-factor: no table yet at .../data/delta/demo/risk/risk-factor (a writer creates it as the lake file says)
 lake check: 3 lakes, 0 errors
 ```
 

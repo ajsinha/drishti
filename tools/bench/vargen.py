@@ -222,7 +222,7 @@ def main(argv=None) -> int:
     bank = Bank(a)
     for d_index, d in enumerate(a.dates.split(",")):
         day = date.fromisoformat(d)
-        stem = f"{{kind}}.{d}"                       # the load rules' name, <table>.<YYYY-MM-DD>.jsonl.gz (DATA_LOAD_RULES.md section 10)
+        stem = f"{{kind}}.{d}"                       # the load rules' name, <table>.<YYYY-MM-DD>.jsonl.gz (DATA_LAKE_GUIDE.md section 5.2)
         if "scenario-set" in kinds:
             ds = scenario_dates(day)
             write_lines(out / "scenario-set" / f"{stem.format(kind='scenario-set')}.jsonl.gz", [json.dumps({

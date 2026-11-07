@@ -46,7 +46,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 /**
- * The server's wiring of the data inbox (docs/architecture/DATALOAD_INBOX.md; the inbox itself is the plain-Java module
+ * The server's wiring of the data inbox (docs/guides/DATA_LAKE_GUIDE.md; the inbox itself is the plain-Java module
  * {@code drishti-dataload}): {@code drishti.dataload.*} bound onto {@link DataLoadSettings}, the loaded packs for routing, busy protection
  * for the busy check, the bridge to {@link LoadService} for the signal (the same service method the HTTP data-load signal calls), and the
  * inbox as a compute engine ({@code config/engines/dataload.yaml}, off as shipped); in a cluster each signal is passed on to the other
@@ -65,11 +65,12 @@ public class DataLoadConfiguration {
 
     @Bean(destroyMethod = "stop")
     public DataInbox dataInbox(DataLoadSettings settings, ObjectProvider<LoadService> loads, ObjectProvider<AdmissionGate> gate,
-            ObjectProvider<NetService> net, ObjectProvider<BusinessDates> dates, ObjectProvider<PeerCalls> peers) {
+            ObjectProvider<NetService> net, ObjectProvider<BusinessDates> dates, ObjectProvider<PeerCalls> peers,
+            ObjectProvider<com.ash.drishti.engine.source.SourceRegistry> sources) {
         BusinessDates bd = dates.getIfAvailable();
         ZoneId zone = bd == null ? ZoneId.systemDefault() : bd.zone();
         String node = node(net.getIfAvailable());
-        return new DataInbox(settings, node, Clock.systemUTC(), zone, packs(loads), new LoaderProcess(settings),
+        return new DataInbox(settings, node, Clock.systemUTC(), zone, packs(loads, sources), new LoaderProcess(settings),
                 signal(loads, new LoadForwarding(peers.getIfAvailable()), LoadForwarding.node(node)), busy(gate));
     }
 
@@ -97,8 +98,8 @@ public class DataLoadConfiguration {
         }
     }
 
-    /** The loaded packs by name: the folder whose pack.yaml the loader reads, and the kinds. */
-    static Routes.Packs packs(ObjectProvider<LoadService> loads) {
+    /** The loaded packs by name: the folder whose pack.yaml the loader reads, and the kinds; the lakes the connectors read. */
+    static Routes.Packs packs(ObjectProvider<LoadService> loads, ObjectProvider<com.ash.drishti.engine.source.SourceRegistry> sources) {
         return new Routes.Packs() {
             @Override
             public Routes.PackInfo find(String name) {
@@ -118,6 +119,12 @@ public class DataLoadConfiguration {
             public java.util.List<String> names() {
                 LoadService s = loads.getIfAvailable();
                 return s == null ? java.util.List.of() : s.loadedPacks().stream().filter(p -> p.dir() != null).map(Pack::name).toList();
+            }
+
+            @Override
+            public java.util.Set<String> lakesRead() {
+                com.ash.drishti.engine.source.SourceRegistry r = sources == null ? null : sources.getIfAvailable();
+                return r == null ? null : r.lakesRead();
             }
         };
     }

@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * One run of the inbox (DATALOAD_INBOX.md section 4): the owner only, not while busy protection says the server is short, under the folder
+ * One run of the inbox (DATA_LAKE_GUIDE.md section 3.1): the owner only, not while busy protection says the server is short, under the folder
  * lock; the stopped runs finished ({@link Recovery}); the whole batch of ready, stable files found ({@link Inbox}) and claimed at once into
  * {@code inprocess/<run>/} ({@link Claims}; files that become ready meanwhile wait for the next cycle), duplicates skipped by SHA-256 ({@link Ledger}), routed ({@link Routes}) and loaded, the files of one table in one
  * loader run ({@link LoaderProcess}), one table after another; recorded, moved with their reports ({@link Outbox}) and, last, the server
@@ -229,7 +229,7 @@ public final class Cycle {
             }
             for (Claimed tar : tars) {
                 if (lock.held()) {
-                    loadTar(run, tar, ledger, outbox, files);
+                    loadTar(run, tar, ledger, outbox, files, notices);
                 } else {
                     giveBack(run, tar, Ledger.RETURNED, "the folder lock was lost (another runner took it): back in the inbox", ledger, outbox, files);
                 }
@@ -280,7 +280,7 @@ public final class Cycle {
             }
             if (FileDates.isTar(name)) {
                 List<String> tables = new ArrayList<>(LakeLoad.tarTables(file.toString()).keySet());
-                if (tables.isEmpty()) {                          // an empty archive: ignored, nothing touched (DATA_LOAD_RULES.md section 4.3)
+                if (tables.isEmpty()) {                          // an empty archive: ignored, nothing touched (DATA_LAKE_GUIDE.md)
                     String why = "empty: ignored (no file in <table>/<YYYY-MM-DD>/); nothing was written";
                     ledger.write(run, name, Ledger.IGNORED, JSON.createObjectNode().put("sha256", sha).put("size", size).put("reason", why));
                     outbox.done(run, file, marker, report(name, run, Ledger.IGNORED).put("sha256", sha).put("reason", why));
@@ -368,6 +368,13 @@ public final class Cycle {
             ObjectNode rep = report(c.name(), run, Ledger.LOADED).put("sha256", c.sha()).put("size", c.size());
             rep.set("route", routeNode);
             rep.put("dateBy", c.route().dateBy());                              // this file's business date, and where it came from
+            String unread = unread(c.route());
+            if (unread != null) {
+                rep.put("warning", unread);
+                if (!notices.contains(unread)) {
+                    notices.add(unread);
+                }
+            }
             rep.set("filesInLoad", JSON.valueToTree(go.stream().map(Claimed::name).toList()));
             if (l.summary() != null) {
                 rep.set("load", l.summary());
@@ -381,11 +388,11 @@ public final class Cycle {
     }
 
     /**
-     * A tar archive (DATA_LOAD_RULES.md sections 3.1 and 4): each table folder loaded in turn (table order), every load with one run id so
+     * A tar archive (DATA_LAKE_GUIDE.md sections 4.4 and 4): each table folder loaded in turn (table order), every load with one run id so
      * the archive's rows share one load id; if a table's load fails, the tables already committed are undone (all or nothing) and the
      * archive goes to {@code failed/} saying what failed and what was rolled back; else one data-load signal per table and date.
      */
-    private void loadTar(String run, Claimed tar, Ledger ledger, Outbox outbox, List<FileOutcome> files) throws IOException {
+    private void loadTar(String run, Claimed tar, Ledger ledger, Outbox outbox, List<FileOutcome> files, List<String> notices) throws IOException {
         String runId = run + "-" + Math.abs(tar.sha().hashCode() % 100000);
         String loadId = runId + ".1";
         List<String> committed = new ArrayList<>();
@@ -404,7 +411,7 @@ public final class Cycle {
                 committed.add(l.summary().path("table").asText());
             }
             if (code == LakeLoad.FAILED || code == LakeLoad.LOCKED || l.result().timedOut()) {
-                String undone = rollback(loadId, committed);
+                String undone = rollback(tar, loadId, committed);
                 fail(run, tar.name(), tar.file(), tar.marker(), tar.sha(), tar.size(), "table " + r.dataset() + " (" + r.pack() + "/" + r.kind() + "): "
                         + reason(l) + "; " + undone, l.summary(), ledger, outbox, files);
                 return;
@@ -430,13 +437,20 @@ public final class Cycle {
         ObjectNode rep = report(tar.name(), run, Ledger.LOADED).put("sha256", tar.sha()).put("size", tar.size()).put("loadId", loadId);
         rep.set("tables", tables);
         rep.put("dateBy", "each table and date from the archive's folders");
+        for (Routes.Route r : tar.tables()) {
+            String unread = unread(r);
+            if (unread != null && !notices.contains(unread)) {
+                notices.add(unread);
+                rep.put("warning", unread);
+            }
+        }
         outbox.done(run, tar.file(), tar.marker(), rep);
         files.add(new FileOutcome(tar.name(), Ledger.LOADED, rejected > 0 ? "loaded with rejects" : null, tar.route().pack(), tar.route().kind(),
                 versions, rows, rejected));
     }
 
     /** Undoes load {@code loadId} in the tables an archive had committed; the words for the failure's reason. */
-    private String rollback(String loadId, List<String> committed) {
+    private String rollback(Claimed tar, String loadId, List<String> committed) {
         if (committed.isEmpty()) {
             return "nothing had been committed";
         }
@@ -446,7 +460,7 @@ public final class Cycle {
                 String[] parts = p.split("/");
                 return parts.length >= 2 ? parts[parts.length - 2] + "/" + parts[parts.length - 1] : p;
             }).toList();
-            LakeUndo.undoAll(settings.lake(), loadId, names, false);
+            LakeUndo.undoAll(lakeRoot(tar.route().lake()), loadId, names, false);
             return "rolled back: " + String.join(", ", names) + " (load " + loadId + " undone)";
         } catch (Exception e) {
             LOG.warn("data inbox: the rollback of load {} failed: {}", loadId, e.toString());
@@ -507,6 +521,38 @@ public final class Cycle {
         ledger.write(run, c.name(), outcome, JSON.createObjectNode().put("sha256", c.sha()).put("size", c.size()).put("reason", why));
         outbox.back(c.file(), c.marker());
         files.add(new FileOutcome(c.name(), outcome, why, c.route().pack(), c.route().kind(), Map.of(), 0, 0));
+    }
+
+    /**
+     * The warning for a load into a lake that no connector reads (DATA_LAKE_GUIDE.md section 4): the rows are in the lake, but nothing shows
+     * them until a pack's connectors name it; null when a connector reads it, or when the server cannot say which lakes its connectors read.
+     */
+    String unread(Routes.Route r) {
+        if (r == null || r.lake() == null || !com.ash.drishti.lakeconfig.Lakes.validName(r.lake())) {
+            return null;
+        }
+        java.util.Set<String> read = packs.lakesRead();
+        if (read == null || read.contains(r.lake())) {
+            return null;
+        }
+        return unreadText(r.lake(), r.pack());
+    }
+
+    /** The words of {@link #unread}. */
+    public static String unreadText(String lake, String pack) {
+        return "loaded into " + lake + ", but no connector reads it: point " + pack + "'s connectors at it (lake: " + lake + ") and restart";
+    }
+
+    /** The folder of a lake for an undo: a lake of config/lakes/ by its root, else the folder given (the old form). */
+    static String lakeRoot(String lake) {
+        if (lake != null && com.ash.drishti.lakeconfig.Lakes.validName(lake)) {
+            try {
+                return com.ash.drishti.lakeconfig.Lakes.current().get(lake).root();
+            } catch (IllegalArgumentException | java.io.UncheckedIOException e) {
+                LOG.warn("data inbox: the lake {} cannot be read for the rollback: {}", lake, e.getMessage());
+            }
+        }
+        return lake;
     }
 
     private ObjectNode report(String name, String run, String outcome) {

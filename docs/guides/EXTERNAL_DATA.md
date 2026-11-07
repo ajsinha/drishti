@@ -720,7 +720,7 @@ the two fixings are of different days). A rerun of one source keeps the other so
 
 ```bash
 uv run --with deltalake --with pyarrow --with pyyaml python tools/ingest_jsonl.py --from data/publicdata/market-data \
-    --domain market --key fx-spot=PAIR,ir-curve=CURVE_ID,rate-fixing=INDEX_ID --lake data/delta
+    --domain market --key fx-spot=PAIR,ir-curve=CURVE_ID,rate-fixing=INDEX_ID --lake data/delta/demo
 ```
 
 Each file goes under the date in its name (the load rules); no date field is needed.

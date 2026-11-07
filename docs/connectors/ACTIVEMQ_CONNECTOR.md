@@ -516,7 +516,7 @@ The connector is undated. For history, serve the same kind from a dated connecto
 ```yaml
 # config/packs/counterparty-risk/pack.yaml (sketch)
 connectors:
-  credit-store:  { plugin: delta, settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: credit } }
+  credit-store:  { plugin: delta, settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: credit } }
   limits-mq:     { plugin: activemq, kinds: [credit-limit], settings: { destinations: queue:limits,
                    kind.limits: credit-limit, id-field.limits: LIMIT_ID } }
 routes:
