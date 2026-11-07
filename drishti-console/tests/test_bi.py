@@ -177,16 +177,16 @@ def test_role_powers_are_saved_through_the_role_definition_api(bi):
 
 def test_the_command_line_offers_rupaka(bi):
     client, _ = bi
-    word = client.get("/api/suggest", params={"q": "rupa"}).json()
+    word = client.get("/api/search", params={"in": "command", "q": "rupa"}).json()["items"]
     assert word[0]["mnemonic"] == "RUPAKA" and word[0]["complete"] == "RUPAKA "
-    pages = client.get("/api/suggest", params={"q": "RUPAKA "}).json()
+    pages = client.get("/api/search", params={"in": "command", "q": "RUPAKA "}).json()["items"]
     assert [p["href"] for p in pages[:3]] == ["/bi", "/bi/w/me", "/bi/catalogue"]
-    cat = client.get("/api/suggest", params={"q": "rupaka cat"}).json()
+    cat = client.get("/api/search", params={"in": "command", "q": "rupaka cat"}).json()["items"]
     assert cat[0]["href"] == "/bi/catalogue"
-    rep = client.get("/api/suggest", params={"q": "rupaka desk"}).json()
+    rep = client.get("/api/search", params={"in": "command", "q": "rupaka desk"}).json()["items"]
     assert rep[0]["href"] == "/bi/i/bi-1" and rep[0]["title"] == "Desk P&L"
     none, _ = make(powers=())
-    assert none.get("/api/suggest", params={"q": "rupaka "}).json() == []
+    assert none.get("/api/search", params={"in": "command", "q": "rupaka "}).json()["items"] == []
 
 
 def test_the_proof_of_concept_is_gone(bi):
@@ -217,11 +217,11 @@ def test_bi_is_the_keyword_and_rupaka_its_alias(bi):
     assert go(client, "bi catalogue").headers["location"] == "/bi/catalogue"
     assert go(client, "BI bi-1 <GO>").headers["location"] == "/bi/r/bi-1"
     assert go(client, "bi desk p&l").headers["location"] == "/bi/r/bi-1"
-    word = client.get("/api/suggest", params={"q": "b"}).json()
+    word = client.get("/api/search", params={"in": "command", "q": "b"}).json()["items"]
     assert word[0]["mnemonic"] == "BI" and word[0]["complete"] == "BI "
-    pages = client.get("/api/suggest", params={"q": "BI "}).json()
+    pages = client.get("/api/search", params={"in": "command", "q": "BI "}).json()["items"]
     assert [p["href"] for p in pages[:3]] == ["/bi", "/bi/w/me", "/bi/catalogue"] and pages[0]["complete"] == "BI"
-    rep = client.get("/api/suggest", params={"q": "bi desk"}).json()
+    rep = client.get("/api/search", params={"in": "command", "q": "bi desk"}).json()["items"]
     assert rep[0]["href"] == "/bi/i/bi-1" and rep[0]["complete"] == "BI Desk P&L"
     none, _ = make(powers=())
-    assert none.get("/api/suggest", params={"q": "bi "}).json() == []
+    assert none.get("/api/search", params={"in": "command", "q": "bi "}).json()["items"] == []

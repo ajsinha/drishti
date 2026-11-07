@@ -170,11 +170,8 @@
     announce('Pane ' + n + (ws.panes[n - 1] && ws.panes[n - 1].title ? ': ' + ws.panes[n - 1].title : ''));
     return true;
   }
-  document.addEventListener('keydown', function (e) {
-    if (!e.altKey || e.ctrlKey || e.metaKey) { return; }
-    var m = /^Digit([0-4])$/.exec(e.code || '') || /^([0-4])$/.exec(e.key || '');   // e.code: Alt+digit types a symbol on a Mac
-    if (m && toPane(+m[1])) { e.preventDefault(); }
-  });
+  window.Drishti.keys.register({ id: 'workspace.pane', keys: ['Alt+0', 'Alt+1', 'Alt+2', 'Alt+3', 'Alt+4'], scope: 'screen', area: 'workspace', group: 'Workspace',
+    description: 'Move to pane 1 to 4; Alt+0: the workspace bar', typing: true, run: function (e, chord) { return toPane(+chord.slice(-1)); } });
 
   // ---- dividers: drag (or arrow keys) to share the width or height between two neighbouring columns or rows ----------
   var TRACKS = { '2col': [2, 1], '3col': [3, 1], '2x2': [2, 2], '1+2': [2, 2] };
@@ -331,7 +328,8 @@
   });
   document.addEventListener('pointerup', function (e) { if (moving && e.pointerId === moving.id) { finish(e, true); } });
   document.addEventListener('pointercancel', function (e) { if (moving && e.pointerId === moving.id) { finish(e, false); } });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && moving) { finish(e, false); } });
+  window.Drishti.keys.register({ id: 'workspace.drag.cancel', keys: ['Escape'], scope: 'dialog', area: 'workspace-drag', description: 'Cancel the drag', typing: true,
+    keepDefault: true, open: function () { return !!moving; }, run: function (e) { finish(e, false); } });
 
   render();
 })();

@@ -116,15 +116,13 @@ document.addEventListener('click', function (e) {
   });
 
   // F1: help for the screen you are on.
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'F1') {
-      if (e.defaultPrevented) { return; }                  // About this page took it (a view: the drawer opens)
-      e.preventDefault();
+  // A view's About this page takes F1 first (drishti_about.js); a screen may register its own F1 (Capacity's section of the guide).
+  window.Drishti.keys.register({ id: 'help.context', keys: ['F1', 'Alt+Shift+1'], scope: 'global', group: 'Help', description: 'Help for the screen you are on',
+    typing: true, run: function () {
       var go = function () { window.location.href = '/help/context/' + encodeURIComponent(document.body.getAttribute('data-screen') || 'landing'); };
       var held = window.Drishti.beforeLeave ? window.Drishti.beforeLeave() : null;      // a page with an edit waiting sends it first (UX-22)
       if (held && held.then) { held.then(go, go); } else { go(); }
-    }
-  });
+    } });
 
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-theme-choice]');
@@ -139,13 +137,11 @@ document.addEventListener('click', function (e) {
 (function () {
   'use strict';
   if (window.parent === window || !document.body.classList.contains('embed')) { return; }
-  document.addEventListener('keydown', function (e) {
-    if (!e.altKey || e.ctrlKey || e.metaKey) { return; }
-    var m = /^Digit([0-4])$/.exec(e.code || '') || /^([0-4])$/.exec(e.key || '');
-    if (!m) { return; }
-    e.preventDefault();
-    try { window.parent.postMessage({ type: 'drishti:key', n: +m[1] }, location.origin); } catch (err) { /* not ours */ }
-  }, true);
+  window.Drishti.keys.register({ id: 'workspace.pane.handup', keys: ['Alt+0', 'Alt+1', 'Alt+2', 'Alt+3', 'Alt+4'], scope: 'screen', area: 'workspace-pane',
+    group: 'Workspace', description: 'Move to pane 1 to 4 (0: the workspace bar), also from inside a pane', typing: true, capture: true,
+    run: function (e, chord) {
+      try { window.parent.postMessage({ type: 'drishti:key', n: +chord.slice(-1) }, location.origin); } catch (err) { /* not ours */ }
+    } });
 })();
 
 /* Server colours (ADR-016): set from data attributes, since the content security policy allows no inline styles. */

@@ -377,12 +377,11 @@
     whatIf();
   });
   $("[data-mr-grid-pick]").addEventListener("change", tabC);
-  document.addEventListener("keydown", function (ev) {
-    if (ev.target.closest("input, textarea, select") || ev.ctrlKey || ev.metaKey || ev.altKey || !st.answer) { return; }
-    var k = ev.key;
-    if (k === "h" || k === "H") { setLens("horizon", opts().horizon ? "1d" : "10d"); }
-    else if (k === "[") { step(-1); }
-    else if (k === "]") { step(1); }
-    else if (k === "w" || k === "W") { showTab("sensitivities"); $("[data-mr-tray] input").focus(); ev.preventDefault(); }
-  });
+  var K = window.Drishti.keys, answered = function () { return !!st.answer; };
+  K.register({ id: "mr.horizon", keys: ["H", "Shift+H"], scope: "screen", area: "mr-lens", group: "Market risk", description: "Switch the horizon: 1 day or 10 days",
+    when: answered, run: function () { setLens("horizon", opts().horizon ? "1d" : "10d"); } });
+  K.register({ id: "mr.step", keys: ["[", "]"], scope: "screen", area: "mr-lens", group: "Market risk", label: "[ ]", description: "The previous or next business date",
+    when: answered, run: function (ev) { step(ev.key === "[" ? -1 : 1); } });
+  K.register({ id: "mr.whatif", keys: ["W", "Shift+W"], scope: "screen", area: "mr-lens", group: "Market risk", description: "What if: the sensitivities tray",
+    when: answered, run: function () { showTab("sensitivities"); $("[data-mr-tray] input").focus(); } });
 })();

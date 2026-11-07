@@ -64,9 +64,8 @@
   find.addEventListener('input', filter);
   packPick.addEventListener('change', filter);
   if (show) { show.addEventListener('change', filter); }
-  document.addEventListener('keydown', function (e) {
-    if (e.key === '/' && document.activeElement && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); find.focus(); }
-  });
+  window.Drishti.keys.register({ id: 'functions.find', keys: ['/'], scope: 'screen', area: 'functions', group: 'Functions', description: 'Find a command',
+    run: function () { find.focus(); } });
   filter();
   if (!admin) { return; }
 

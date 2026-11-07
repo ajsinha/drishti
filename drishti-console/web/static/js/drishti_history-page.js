@@ -150,11 +150,6 @@
   if (linkText) { linkText.addEventListener('focus', function () { linkText.select(); }); }
   if (shareBtn) { shareBtn.addEventListener('click', share); }
 
-  var help = root.querySelector('[data-hx-help]');
-  function showHelp() { if (help && !help.open) { help.showModal(); } }
-  if (help) { root.querySelector('[data-hx-help-close]').addEventListener('click', function () { help.close(); }); }
-  var helpBtn = root.querySelector('[data-hx-key="?"]');
-  if (helpBtn) { helpBtn.addEventListener('click', showHelp); }
 
   function rangeButton(label) {
     var a = root.querySelector('[data-hx-range-btn="' + label + '"]');
@@ -183,42 +178,29 @@
   }
   if (chartBtn) { chartBtn.addEventListener('click', chartDays); }
 
-  document.addEventListener('keydown', function (e) {
-    var tag = (e.target.tagName || '').toLowerCase();
-    if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) { return; }
-    if (help && help.open) { return; }                 // the dialog closes itself on Esc
-    if (e.ctrlKey || e.metaKey) { return; }
-    if (e.altKey) { if (e.key === 's' || e.key === 'S') { e.preventDefault(); share(); } return; }
-    var page = Math.max(1, Math.floor(((box && box.clientHeight) || 600) / 30) - 1), k = e.key;
-    var market = root.getAttribute('data-shape') === 'market';
-    var handled = true;
-    switch (k) {
-      case 'ArrowDown': case 'j': select(sel + 1); break;
-      case 'ArrowUp': case 'k': select(sel - 1); break;
-      case 'K': if (chartBtn) { chartDays(); } else { handled = false; } break;
-      case 'Home': select(0); break;
-      case 'End': select(rows().length - 1); break;
-      case 'PageDown': select(sel + page); break;
-      case 'PageUp': select(sel - page); break;
-      case 'ArrowRight': col = col + 1; markColumn(); break;
-      case 'ArrowLeft': col = Math.max(-1, col - 1); markColumn(); break;
-      case 'Enter': open(); break;
-      case 'c': case 'C': if (onlyBtn) { setOnly(!root.classList.contains('hx-only')); } else { handled = false; } break;
-      case 'd': case 'D': window.location.href = root.querySelector('[data-hx-key="d"]').href; break;
-      case 'e': case 'E': root.querySelector('[data-hx-key="e"]').click(); break;
-      case 'r': case 'R': if (rinput) { rinput.focus(); rinput.select(); } break;
-      case '?': showHelp(); break;
-      case '1': if (market) { rangeButton('1M'); } else { handled = false; } break;
-      case '3': if (market) { rangeButton('3M'); } else { handled = false; } break;
-      case '6': if (market) { rangeButton('6M'); } else { handled = false; } break;
-      case 'y': case 'Y': rangeButton('1Y'); break;
-      case 't': case 'T': rangeButton('YTD'); break;
-      case 'p': case 'P': if (series.length > 1) { field = (field + 1) % series.length; draw(); } else { handled = false; } break;
-      case 'Escape': if (col >= 0) { col = -1; markColumn(); } else if (today) { window.location.href = today; } break;
-      default: handled = false;
-    }
-    if (handled) { e.preventDefault(); }
-  });
+  // the keys of a history page (the ? overlay lists them, drishti_keys.js); a field keeps its own keys
+  var K = window.Drishti.keys, market = root.getAttribute('data-shape') === 'market';
+  function hx(id, keys, description, run, label) {
+    K.register({ id: 'history.' + id, keys: keys, scope: 'screen', area: 'history', group: 'History', description: description, run: run, label: label || '' });
+  }
+  function page() { return Math.max(1, Math.floor(((box && box.clientHeight) || 600) / 30) - 1); }
+  hx('next', ['ArrowDown', 'J'], 'Next day', function () { select(sel + 1); }, '↓ · j');
+  hx('previous', ['ArrowUp', 'K'], 'Previous day', function () { select(sel - 1); }, '↑ · k');
+  hx('ends', ['Home', 'End'], 'First, last day', function (e) { select(e.key === 'Home' ? 0 : rows().length - 1); });
+  hx('page', ['PageUp', 'PageDown'], 'A page up or down', function (e) { select(e.key === 'PageUp' ? sel - page() : sel + page()); });
+  hx('column', ['ArrowLeft', 'ArrowRight'], 'Previous, next column', function (e) { col = e.key === 'ArrowRight' ? col + 1 : Math.max(-1, col - 1); markColumn(); }, '← →');
+  hx('open', ['Enter'], 'Open the day\'s view, as it was', function () { open(); });
+  if (chartBtn) { hx('chart', ['Shift+K'], 'Chart these days (any column)', function () { chartDays(); }); }
+  if (onlyBtn) { hx('only', ['C', 'Shift+C'], 'Changes only, on and off', function () { setOnly(!root.classList.contains('hx-only')); }); }
+  hx('diff', ['D', 'Shift+D'], 'Diff: what changed, day by day', function () { window.location.href = root.querySelector('[data-hx-key="d"]').href; });
+  hx('export', ['E', 'Shift+E'], 'Export: CSV, Excel, JSON', function () { root.querySelector('[data-hx-key="e"]').click(); });
+  hx('range', ['R', 'Shift+R'], 'Type a range (30, 3M, YTD, FROM …)', function () { if (!rinput) { return false; } rinput.focus(); rinput.select(); });
+  if (market) { hx('range.months', ['1', '3', '6'], '1M, 3M, 6M', function (e, chord) { rangeButton(chord + 'M'); }); }
+  hx('range.year', ['Y', 'Shift+Y'], '1Y', function () { rangeButton('1Y'); });
+  hx('range.ytd', ['T', 'Shift+T'], 'YTD', function () { rangeButton('YTD'); });
+  hx('field', ['P', 'Shift+P'], 'Next chart field', function () { if (series.length < 2) { return false; } field = (field + 1) % series.length; draw(); });
+  hx('today', ['Escape'], 'Leave the column, else today\'s view', function () { if (col >= 0) { col = -1; markColumn(); } else if (today) { window.location.href = today; } else { return false; } });
+  hx('share', ['Alt+S', 'Alt+Shift+S'], 'Copy a link to these rows', function () { share(); });
 
   // ---- the market shape: the chart --------------------------------------------------------------------------------------------
   var chartEl = root.querySelector('[data-hx-chart]'), seriesEl = chartEl, cross = root.querySelector('[data-hx-cross]');

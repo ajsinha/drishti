@@ -95,10 +95,9 @@
         });
     });
   }
-  document.addEventListener('keydown', function (e) {
-    var t = e.target, typing = t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable);
-    if (typing || e.ctrlKey || e.metaKey || e.altKey || (dlg && dlg.open) || (ann && ann.open)) { return; }
-    if (e.key === '/') { var f = root.querySelector('[data-filter-kind]'); if (f) { e.preventDefault(); f.focus(); } }
-    if (e.key === 'e') { e.preventDefault(); openDialog(); }
-  });
+  function noDialog() { return !(dlg && dlg.open) && !(ann && ann.open); }
+  window.Drishti.keys.register({ id: 'loads.filter', keys: ['/'], scope: 'screen', area: 'admin-loads', group: 'Loads', description: 'Focus the kind filter',
+    when: noDialog, run: function () { var f = root.querySelector('[data-filter-kind]'); if (!f) { return false; } f.focus(); } });
+  window.Drishti.keys.register({ id: 'loads.config', keys: ['E'], scope: 'screen', area: 'admin-loads', group: 'Loads', description: 'Edit the loads settings',
+    when: noDialog, run: function () { openDialog(); } });
 })();

@@ -49,6 +49,15 @@
       });
     }
   }
+  // Help's search boxes (the hub, a guide's, the results page's): the one search box over Help's pages (GET /api/search?in=help); a page
+  // picked opens, Enter with none picked runs the full search (the form). A section's own filter and the Knowledge search stay as they are.
+  if (window.Drishti.searchBox) {
+    document.querySelectorAll('form.help-search[action="/help/search"]:not(.sec-search) input[name="q"]').forEach(function (q) {
+      if (q.form.querySelector('input[name="section"]')) { return; }
+      q.form.classList.add('drishti_search-host');
+      window.Drishti.searchBox(q, { where: 'help', label: 'Help pages', minChars: 2, fetchOnFocus: false });
+    });
+  }
   document.querySelectorAll('[data-copy]').forEach(function (b) {
     b.addEventListener('click', function () {
       var code = b.closest('figure').querySelector('code').innerText;

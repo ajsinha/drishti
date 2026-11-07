@@ -29,7 +29,6 @@
 
   function $(sel, from) { return (from || root).querySelector(sel); }
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) { n.className = cls; } if (text != null) { n.textContent = text; } return n; }
-  function typing(t) { return t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)); }
 
   function config() {
     if (conf) { return Promise.resolve(conf); }
@@ -266,11 +265,10 @@
     }
   });
 
-  document.addEventListener('keydown', function (e) {
-    if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && (e.code === 'KeyS' || e.key === 's' || e.key === 'S') && !typing(e.target) && root.hidden) {
-      e.preventDefault(); main.click();
-    }
-  });
+  window.Drishti.keys.register({ id: 'share.open', keys: ['Alt+S'], scope: 'screen', area: 'view', group: 'View', description: 'Share this view (or panel) with people, with a note',
+    when: function () { return root.hidden; }, run: function () { main.click(); } });
+  window.Drishti.keys.describe({ id: 'share.dialog', keys: ['Ctrl+Enter', 'Escape'], scope: 'dialog', area: 'share', label: 'Ctrl+Enter · Esc',
+    description: 'In Share: send, or close' });
 
   window.Drishti.Share = { open: open, close: close };
 })();

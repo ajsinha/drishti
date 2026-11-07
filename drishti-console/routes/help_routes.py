@@ -23,6 +23,7 @@ from markupsafe import Markup
 
 from core import under_construction
 from core.backend import BackendError, drs_message
+from core.search import help_pages
 from routes.common import ident, library, render
 
 router = APIRouter(include_in_schema=False)
@@ -184,7 +185,7 @@ async def help_search(request: Request, q: str = "", section: str = ""):
     sec = lib.section(section) if section else None
     if sec is not None and not _section_open(request, sec):
         sec = None
-    hits = [h for h in lib.search(q, section=sec["id"] if sec else "") if visible(request, h["guide"])]
+    hits = await help_pages(request, q, section=sec["id"] if sec else "")                    # the one search (core/search.py)
     return render(request, "help/search.html", q=q, hits=hits, section=sec, screen="help")
 
 
@@ -231,7 +232,7 @@ async def what(request: Request, q: str = ""):
     slug = lib.by_file.get(folder / entry.page) if entry else None
     if entry and slug:
         return RedirectResponse(f"/help/{slug}#{entry.anchor}", status_code=303)
-    hits = [h for h in lib.search(words) if h["guide"].category == CATEGORY and visible(request, h["guide"])]
+    hits = await help_pages(request, words, category=CATEGORY)
     return render(request, "help/search.html", q=words, hits=hits, knowledge=home or "", screen="help")
 
 
@@ -313,7 +314,7 @@ async def help_guide(request: Request, slug: str):
     uc = under_construction.of(request)                              # docs/admin/UNDER_CONSTRUCTION.md: a hidden page is not reached either
     if slug not in lib.guides or not visible(request, lib.guides[slug]) or uc.help_hidden(slug):   # a guide the edition or the person's roles hide is not reached by its address either
         return render(request, "help/search.html", status_code=404, q=slug.replace("-", " "),
-                      hits=[h for h in lib.search(slug.replace("-", " ")) if visible(request, h["guide"])], missing=slug, screen="help")
+                      hits=await help_pages(request, slug.replace("-", " ")), missing=slug, screen="help")
     g = lib.guides[slug]
     page = lib.render(slug)
     if uc.help_marked(slug):

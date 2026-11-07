@@ -150,8 +150,8 @@ def test_an_engines_commands_follow_the_same_rule_as_its_menu_column(backend, mo
         assert f"{title} is not opened for your role" in unquote(r.headers.get("location", "")), typed
     r = mira.get("/go", params={"q": "VAR BANK <GO>"}, follow_redirects=False)
     assert "not opened for your role" not in unquote(r.headers.get("location", ""))
-    assert bea.get("/api/suggest", params={"q": "VAR B"}).json() == [] and bea.get("/api/suggest", params={"q": "PLAY"}).json() == []
-    assert mira.get("/api/suggest", params={"q": "PLAY"}).json()                        # her VaR Playground is offered
+    assert bea.get("/api/search", params={"in": "command", "q": "VAR B"}).json()["items"] == [] and bea.get("/api/search", params={"in": "command", "q": "PLAY"}).json()["items"] == []
+    assert mira.get("/api/search", params={"in": "command", "q": "PLAY"}).json()["items"]                        # her VaR Playground is offered
     admin = _client(app)
     r = admin.get("/go", params={"q": "EXP BANK <GO>"}, follow_redirects=False)
     assert "not opened for your role" not in unquote(r.headers.get("location", ""))

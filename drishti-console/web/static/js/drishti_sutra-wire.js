@@ -216,11 +216,13 @@
     return el && el.closest('section.pnl[data-wire]') ? el : null;
   }
   document.addEventListener('click', function (e) { var el = target(e); if (el) { fire(el); } });
-  document.addEventListener('keydown', function (e) {
-    if (e.key !== 'Enter' && e.key !== ' ') { return; }
-    var el = e.target.matches && e.target.matches('[data-ev]') ? e.target : null;
-    if (el && el.closest('section.pnl[data-wire]')) { e.preventDefault(); e.stopPropagation(); fire(el); }
-  }, true);                                      // first: the table's own keys would follow the row's link on Enter
+  window.Drishti.keys.register({ id: 'wire.fire', keys: ['Enter', 'Space'], scope: 'panel', area: 'sutra-wire', group: 'Linked panels', capture: true,
+    description: 'On a row or point of a linked panel: show its detail in the panels it drives',
+    run: function (e) {                            // captured: the table's own keys would follow the row's link on Enter
+      var el = e.target.matches && e.target.matches('[data-ev]') ? e.target : null;
+      if (!el || !el.closest('section.pnl[data-wire]')) { return false; }
+      e.stopPropagation(); fire(el);
+    } });
 
   // ---- children that show always, or when opened ------------------------------------------------------------------------------------
   function load(sec) {

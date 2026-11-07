@@ -137,9 +137,8 @@
   if (form && body && toggle && brief) {
     toggle.addEventListener('click', function () { fold(!folded(), folded() ? 'show' : 'hide'); });
     brief.addEventListener('click', function (e) { e.preventDefault(); fold(false, 'show'); });
-    document.addEventListener('keydown', function (e) {
-      if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && (e.code === 'KeyF' || e.key === 'f')) { e.preventDefault(); fold(!folded(), folded() ? 'show' : 'hide'); }
-    });
+    window.Drishti.keys.register({ id: 'form.fold', keys: ['Alt+F'], scope: 'screen', area: 'form', group: 'Search form', typing: true,
+      description: 'Show or hide the search form', run: function () { fold(!folded(), folded() ? 'show' : 'hide'); } });
     form.addEventListener('submit', function () {
       var kept = ''; try { kept = sessionStorage.getItem('drishti.form') || ''; } catch (e) { kept = ''; }
       if (kept === 'shown') { var h = document.createElement('input'); h.type = 'hidden'; h.name = 'form'; h.value = 'shown'; form.appendChild(h); }

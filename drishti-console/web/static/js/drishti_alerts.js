@@ -132,12 +132,8 @@
       try { new Notification((document.body.getAttribute('data-product') || document.title) + ' · ' + a.severity, { body: a.id + ': ' + a.message }); } catch (err) { /* not available */ }
     }
   }
-  document.addEventListener('keydown', function (e) {           // Alt+I: the inbox (ignored while typing in a field)
-    var t = e.target;
-    if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && (e.code === 'KeyI' || e.key === 'i') && !(t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))) {
-      e.preventDefault(); window.location.href = '/inbox';
-    }
-  });
+  window.Drishti.keys.register({ id: 'inbox.open', keys: ['Alt+I'], scope: 'global', group: 'Go to', description: 'Your inbox: what people sent you',
+    run: function () { window.location.href = '/inbox'; } });
   bell.addEventListener('click', function () {
     if (window.Notification && Notification.permission === 'default') { Notification.requestPermission(); }
   });

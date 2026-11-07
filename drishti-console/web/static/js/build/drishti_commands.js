@@ -79,23 +79,17 @@
         onPick: function (it) { ctx.yaml.flush(); it.run(); say(it.label + '.'); } });
     }
 
-    document.addEventListener('keydown', function (e) {
-      if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'k') {
-        e.preventDefault(); e.stopPropagation();
-        if (WB.menu.isOpen()) { WB.menu.close(); } else { open(); }
-      }
-    }, true);
-    // G then C: to the canvas, unless you are typing
+    var K = window.Drishti.keys;
+    K.register({ id: 'build.palette', keys: ['Ctrl+K', 'Meta+K'], scope: 'screen', area: 'build-design', group: 'Workbench', capture: true, typing: true,
+      description: 'The command palette', run: function (e) { e.stopPropagation(); if (WB.menu.isOpen()) { WB.menu.close(); } else { open(); } } });
+    // G then C: to the canvas, unless you are typing (a CodeMirror editor counts as typing)
     var chord = 0;
-    document.addEventListener('keydown', function (e) {
-      if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) { return; }
-      var t = e.target, tag = (t.tagName || '').toLowerCase();
-      if (tag === 'input' || tag === 'textarea' || tag === 'select' || t.isContentEditable || (t.closest && t.closest('.CodeMirror'))) { return; }
-      var k = e.key.toLowerCase();
-      if (chord && k === 'c') { e.preventDefault(); chord = 0; goCanvas(); return; }
-      chord = k === 'g' ? Date.now() : 0;
-      if (chord) { setTimeout(function () { chord = 0; }, 1200); }
-    });
+    function notInEditor(e) { return !(e.target.closest && e.target.closest('.CodeMirror')); }
+    K.register({ id: 'build.goto.g', keys: ['G'], scope: 'screen', area: 'build-design', group: 'Workbench', label: 'G then C', keepDefault: true,
+      description: 'Go to the canvas', when: notInEditor,
+      run: function () { chord = Date.now(); setTimeout(function () { chord = 0; }, 1200); } });
+    K.register({ id: 'build.goto.c', keys: ['C'], scope: 'screen', area: 'build-design', hidden: true, description: 'Go to the canvas (after G)',
+      when: function (e) { return chord && notInEditor(e); }, run: function () { chord = 0; goCanvas(); } });
     var skip = document.querySelector('[data-skip-canvas]');
     if (skip) { skip.addEventListener('click', function (e) { e.preventDefault(); goCanvas(); }); }
     var button = document.querySelector('[data-palette-open]');

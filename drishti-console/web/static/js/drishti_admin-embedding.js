@@ -127,10 +127,9 @@
   });
 
   // ---- keys: "n" new, "/" filter (not while typing or in a dialog) -------------------------------------------------------------
-  document.addEventListener('keydown', function (e) {
-    var t = e.target, typing = t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable);
-    if (typing || e.ctrlKey || e.metaKey || e.altKey || root.querySelector('dialog[open]')) { return; }
-    if (e.key === '/') { e.preventDefault(); filter.focus(); }
-    if (e.key === 'n') { e.preventDefault(); openNew(); }
-  });
+  function noDialog() { return !root.querySelector('dialog[open]'); }
+  window.Drishti.keys.register({ id: 'embedding.filter', keys: ['/'], scope: 'screen', area: 'admin-embedding', group: 'Embedding', description: 'Focus the filter',
+    when: noDialog, run: function () { filter.focus(); } });
+  window.Drishti.keys.register({ id: 'embedding.new', keys: ['N'], scope: 'screen', area: 'admin-embedding', group: 'Embedding', description: 'A new application',
+    when: noDialog, run: function () { openNew(); } });
 })();
