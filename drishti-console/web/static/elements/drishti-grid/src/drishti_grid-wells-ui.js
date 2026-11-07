@@ -123,7 +123,7 @@ export class WellsView {
     let text = c.header;
     if (well === 'values') {
       const v = w.state.values[index];
-      text = c.additive === false ? c.header : c.header + (v.aggFunc && v.aggFunc !== 'sum' ? ' (' + (aggFunc(v.aggFunc) ? aggFunc(v.aggFunc).label.toLowerCase() : v.aggFunc) + ')' : '');
+      text = v.as ? v.as : c.additive === false ? c.header : c.header + (v.aggFunc && v.aggFunc !== 'sum' ? ' (' + w.funcLabel(v.aggFunc).toLowerCase() + ')' : '');
     }
     if (well === 'filters') {
       const f = w.state.filters[index].filter;
@@ -285,7 +285,7 @@ export class WellsView {
       if (well === 'values') {
         const val = w.state.values[index];
         if (c.additive === false) { out.push({ heading: 'Aggregation · computed by the server' }, { id: 'agg-server', label: c.measure || c.header, checked: true, disabled: true, why: c.header + ' is not additive: every total is the server\'s figure for its group, never a sum made in the browser' }); }
-        else { out.push({ heading: 'Aggregation' }); VALUE_FUNCS.forEach((f) => out.push({ id: 'agg:' + f, label: aggFunc(f).label, checked: val.aggFunc === f })); }
+        else { out.push({ heading: 'Aggregation' }); w.funcs().forEach((f) => out.push({ id: 'agg:' + f.name, label: f.label + (f.server ? ' (server)' : ''), checked: val.aggFunc === f.name })); }
         out.push({ sep: true });
       }
       if (well === 'filters') {
@@ -313,7 +313,7 @@ export class WellsView {
   /** @private */
   chipAction(id, field, well, index) {
     const v = this.view, w = this.w(), c = w.columns.get(field);
-    if (id.indexOf('agg:') === 0) { const r = w.setAggregation(index, id.slice(4)); if (!r.ok) { v.say(r.why); } v.wellsChanged(c.header + ': ' + aggFunc(id.slice(4)).label); return; }
+    if (id.indexOf('agg:') === 0) { const r = w.setAggregation(index, id.slice(4)); if (!r.ok) { v.say(r.why); } v.wellsChanged(c.header + ': ' + w.funcLabel(id.slice(4))); return; }
     if (id.indexOf('member:') === 0) {
       const text = id.slice(7), f = w.state.filters[index].filter, ex = new Set(f && f.excluded ? f.excluded.map(String) : []);
       if (ex.has(text)) { ex.delete(text); } else { ex.add(text); }

@@ -67,7 +67,7 @@ def test_the_page_is_the_pivot_screen_with_the_mr_lens_and_the_api_is_read_as_th
     assert "drishti_pivot.js" in page and "drishti_mr-lens.js" in page and "drishti_mr-lens.css" in page and "cube-core.js" not in page
     for marker in ("data-mr-tiles", "data-mr-seg=\"horizon\"", "data-mr-slider", 'data-mr-tab="tail"', 'data-mr-tab="sensitivities"',
                    "data-mr-tail", "data-mr-explain", "data-mr-comp", "data-mr-waterfall", "data-mr-heat", "data-mr-ladder", "data-mr-whatif",
-                   "data-pv-grid", "data-pv-fields"):
+                   "data-pv-grid", "drishti_grid.js"):
         assert marker in page, marker
     typed = c.get("/pivot", params={"preset": "mr", "text": "DESK:RATES BY MGMT.BOOK"}).text
     assert "data-preset=" in typed and "DESK:RATES" in typed

@@ -10,7 +10,7 @@
       "css": ["css/drishti_tokens.css", "css/drishti_resize.css"]
     },
     "drishti-grid": {
-      "version": "0.3.0",
+      "version": "0.4.0",
       "title": "The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and <drishti-grid> in three layouts and three densities), cell editing with undo, paste, write-back and four eyes",
       "entry": "src/drishti_index.js",
       "requires": ["drishti-core"],

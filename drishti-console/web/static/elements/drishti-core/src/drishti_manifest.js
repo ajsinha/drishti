@@ -34,7 +34,7 @@ export const MANIFEST = Object.freeze({
       ]
     },
     "drishti-grid": {
-      "version": "0.3.0",
+      "version": "0.4.0",
       "title": "The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and <drishti-grid> in three layouts and three densities), cell editing with undo, paste, write-back and four eyes",
       "bundle": "drishti-grid/drishti_grid.js",
       "entry": "drishti-grid/src/drishti_index.js",

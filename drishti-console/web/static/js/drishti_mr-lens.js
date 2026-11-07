@@ -28,7 +28,7 @@
   var root = S.root;
   function $(s) { return root.querySelector(s); }
   function $$(s) { return Array.prototype.slice.call(root.querySelectorAll(s)); }
-  var st = { versions: null, compare: null, tray: [], cell: null, answer: null };
+  var st = { versions: null, compare: null, tray: [], cell: null, answer: null, sparks: {} };
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function isNum(v) { return typeof v === "number" && isFinite(v); }
@@ -197,16 +197,27 @@
     var sub = $("[data-mr-spark-sub]"), box = $("[data-mr-sparks]");
     mr("POST", "/history", { view: S.view() }).then(function (h) {
       sub.textContent = h.measure + " · " + h.dates.length + " open date" + (h.dates.length === 1 ? "" : "s") + (h.note ? " · " + h.note : "");
-      var drawn = 0;
+      var drawn = 0, cells = (st.answer && st.answer.cells) || {};
+      st.sparks = {};
       Object.keys(h.series).forEach(function (key) {
-        var td = root.querySelector('[data-pv-grid] td[data-cell="' + (window.CSS && CSS.escape ? CSS.escape(key) : key) + '"][data-m="0"]');
         var svg = spark(h.series[key]);
-        if (td && svg && !td.querySelector(".mr-spark")) { td.insertAdjacentHTML("beforeend", svg); drawn++; }
+        if (svg && cells[key]) { st.sparks[key] = svg; drawn++; }
       });
+      S.redraw();                                                  // the grid draws them in the first measure's cells (sparkMark)
       box.innerHTML = '<p class="pv-sub">' + (h.dates.length < 2 ? "One open date: a sparkline needs two. Open earlier dates with the slider."
         : drawn + " cells carry a sparkline of " + esc(h.measure) + " from " + esc(h.dates[0]) + " to " + esc(h.dates[h.dates.length - 1]) + ". " + esc(h.how)) + "</p>";
     }).catch(function (e) { box.innerHTML = '<p class="pv-sub">' + esc(e.message) + "</p>"; });
   }
+  /** A cell's sparkline, drawn by the grid after the figure (the screen's decorate): the first measure's cells only. */
+  function sparkMark(key, ctx) {
+    var svg = st.sparks && st.sparks[key], first = st.answer && (st.answer.measures || [])[0];
+    if (!svg || !first || ctx.measure !== first.label) { return null; }
+    var t = document.createElement("template");
+    t.innerHTML = svg;
+    return { after: t.content.firstChild };
+  }
+  S.decorate(sparkMark);
+
   function tail(detail) {
     var key = detail.key, coords = detail.coords || {}, cell = detail.cell || {};
     st.cell = { coords: coords, scope: cell.scope, key: key };

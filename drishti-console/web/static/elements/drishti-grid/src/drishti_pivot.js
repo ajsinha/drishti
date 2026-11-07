@@ -100,7 +100,7 @@ export function normalizeView(view) {
 export function serverRequest(view, o) {
   const v = normalizeView(view);
   const values = o && o.only ? v.values.filter((x) => o.only.indexOf(valueLabel(x)) >= 0) : v.values;
-  const out = { rows: v.rows, columns: v.columns, values: values.map((x) => (x.as ? { measure: x.measure, as: x.as } : { measure: x.measure })),
+  const out = { rows: v.rows, columns: v.columns, values: values.map((x) => Object.assign({ measure: x.measure }, x.as ? { as: x.as } : {}, x.showAs ? { showAs: x.showAs } : {})),
     filters: v.filters, expanded: v.expanded, expandTo: v.expandTo, sort: v.sort, top: v.top, subtotals: v.subtotals };
   ['source', 'date', 'asOf', 'options', 'currency', 'slicers'].forEach((k) => { if (v[k] !== undefined) { out[k] = v[k]; } });
   return { view: out };
@@ -578,3 +578,32 @@ export function cellValue(answer, rowKey, colKey, measure) {
   if (!c) { return { value: null, note: null, members: 0 }; }
   return { value: c.values ? c.values[measure] : null, note: c.notes ? c.notes[measure] || null : null, members: c.members || 0 };
 }
+
+/**
+ * A server answer's figure as the pivot shows it, by the answer's own measure fields (it formats, never computes): a text answer
+ * (string_agg, the mode of names) as its text; percentages for a pct show-as; whole numbers for a rank, an ntile bucket and a measure
+ * whose unit is count; bn and m for large figures; two decimals otherwise. A grid takes it as its pivotFormat (answerFormat).
+ * @param {*} v
+ * @param {{id: string, unit: ?string, showAs: ?string}} [m] the answer's measure
+ * @returns {string}
+ */
+export function measureText(v, m) {
+  if (typeof v === 'string') { return v; }
+  if (v === null || v === undefined || typeof v !== 'number' || !isFinite(v)) { return ''; }
+  const showAs = m && m.showAs ? String(m.showAs) : '';
+  if (showAs.indexOf('pct') === 0) { return (v * 100).toFixed(2) + '%'; }
+  const whole = showAs === 'rank' || showAs.indexOf('ntile:') === 0
+    || (m && (m.unit === 'count' || ((m.unit === null || m.unit === undefined) && /^count|^trades/.test(m.id || ''))));   // no unit: an answer of before units
+  if (whole) { return Math.round(v).toLocaleString('en-US'); }
+  const a = Math.abs(v);
+  if (a >= 1e9) { return (v / 1e9).toFixed(2) + ' bn'; }
+  if (a >= 1e6) { return (v / 1e6).toFixed(2) + ' m'; }
+  return v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+/**
+ * The format of an answer's measure for GridOptions.pivotFormat: measureText bound to the measure.
+ * @param {{id: string, unit: ?string, showAs: ?string}} m
+ * @returns {function(*): string}
+ */
+export function answerFormat(m) { return (v) => measureText(v, m); }

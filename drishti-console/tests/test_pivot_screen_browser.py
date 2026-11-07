@@ -12,9 +12,10 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pivot screen (PIVOT_GUIDE.md) in a real browser against a stand-in engine: it opens on a source with a first arrangement, the grid
-shows the engine's figures as they are (every total the server's), a field moved to Columns asks again, the export panel opens, and no
-script error is raised."""
+"""The pivot screen (PIVOT_GUIDE.md) in a real browser against a stand-in engine, drawn by drishti-grid in its wells layout: it opens on a
+source with a first arrangement, the grid shows the engine's figures as they are (every total the server's), a field moved to Columns
+asks again, the export panel opens, and no script error is raised. The grid itself is tested once, against its fixture harness
+(test_elements_grid_browser.py); this file tests the screen's wiring and its numbers."""
 import pytest
 
 pytest.importorskip("playwright")
@@ -43,28 +44,28 @@ def page(stack):
         pg.errors = []
         pg.on("pageerror", lambda e: pg.errors.append(str(e)))
         pg.goto(stack[0] + "/pivot?source=trade", wait_until="load")
-        pg.wait_for_selector("[data-pv-grid] table.pv-table td.pv-c")
+        pg.wait_for_selector("[data-pv-grid] .dg-cell[data-cell]")
         yield pg
         b.close()
 
 
 def test_the_screen_opens_on_the_source_and_draws_the_engines_figures(page):
     assert page.locator("[data-pv-title]").text_content() == "Trades"
-    heads = page.locator("[data-pv-grid] tbody th.pv-rowhead .pv-lab").all_text_contents()
+    heads = page.locator("[data-pv-grid] .dg-row [role=rowheader] .dg-text").all_text_contents()
     assert heads[:4] == ["Credit", "Equities", "FX", "Rates"] and heads[-1] == "Total"
-    rows = page.locator("[data-pv-grid] tbody tr")
-    total = rows.last.locator("td.pv-c").first.text_content().replace(",", "")
+    rows = page.locator("[data-pv-grid] .dg-row")
+    total = rows.last.locator(".dg-cell[data-cell] .dg-text").first.text_content().replace(",", "")
     assert total == "400"                                                   # count() of the grand total, as the engine answered it
     assert not page.errors, page.errors
 
 
 def test_a_field_moved_to_columns_with_the_keyboard_asks_the_engine_again(page):
-    before = page.locator("[data-pv-grid] thead th.pv-colhead").count()
-    page.click('[data-pv-fields] .pv-field[data-field="CURRENCY"]')
-    page.keyboard.press("c")                                                # C: to Columns (the keyboard way of dragging)
-    page.wait_for_function(f"() => document.querySelectorAll('[data-pv-grid] thead th.pv-colhead').length > {before}")
-    cols = page.locator("[data-pv-grid] thead th.pv-colhead").all_text_contents()
-    assert cols[:5] == ["CAD", "EUR", "GBP", "JPY", "USD"] and cols[-1] == "Total"
+    before = page.locator("[data-pv-grid] .dg-hcell.dg-hgroup").count()
+    page.click(".dg-fields .dg-chip[data-field='CURRENCY'] .dg-chip-menu")   # the field's menu: the keyboard way of dragging
+    page.click(".dg-menu [data-action='to:columns']")
+    page.wait_for_function(f"() => document.querySelectorAll('[data-pv-grid] .dg-hcell.dg-hgroup').length > {before}")
+    cols = page.locator("[data-pv-grid] .dg-hcell.dg-hgroup .dg-hlabel").all_text_contents()
+    assert cols[:5] == ["CAD", "EUR", "GBP", "JPY", "USD"] and cols[-1] == "Grand total"
     assert not page.errors, page.errors
 
 
@@ -104,7 +105,7 @@ def test_the_chart_draws_the_engines_diversification_never_its_own(stack, page):
         pg.on("pageerror", lambda e: errors.append(str(e)))
         pg.route("**/api/pivot/query", lambda route: route.fulfill(status=200, content_type="application/json", body=json.dumps(_holistic_answer())))
         pg.goto(stack[0] + "/pivot?source=trade", wait_until="load")
-        pg.wait_for_selector("[data-pv-grid] table.pv-table td.pv-c")
+        pg.wait_for_selector("[data-pv-grid] .dg-cell[data-cell]")
         # Progressive (on as shipped) streams from /api/pivot/query/progressive: off, the screen asks /api/pivot/query, answered here
         pg.uncheck("[data-pv-progressive]")
         pg.wait_for_function("() => (document.querySelector('[data-pv-grid-title]') || {}).textContent.startsWith('Median')")

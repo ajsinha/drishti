@@ -23,7 +23,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 | Library | Version | What it is |
 |---|---|---|
 | [drishti-core](#drishti-core) | 1.1.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker, reading typed numbers, loading vendored engines |
-| [drishti-grid](#drishti-grid) | 0.3.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes |
+| [drishti-grid](#drishti-grid) | 0.4.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes |
 | [drishti-inputs](#drishti-inputs) | 0.1.0 | Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead, forms from a schema with four eyes, the filter bar, the code editor over CodeMirror |
 | [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
 
@@ -1213,7 +1213,7 @@ A listener: the event's payload and its name.
 
 ## drishti-grid
 
-Version 0.3.0. Bundle `static/elements/drishti-grid/drishti_grid.js`, global `Drishti.elements.grid`; requires drishti-core.
+Version 0.4.0. Bundle `static/elements/drishti-grid/drishti_grid.js`, global `Drishti.elements.grid`; requires drishti-core.
 
 ### drishti_columns.js
 
@@ -1609,6 +1609,27 @@ A cell's figure in an answer.
 
 Returns `{value: *, note: ?string, members: number}`.
 
+#### `measureText(v, m)`
+
+A server answer's figure as the pivot shows it, by the answer's own measure fields (it formats, never computes): a text answer (string_agg, the mode of names) as its text; percentages for a pct show-as; whole numbers for a rank, an ntile bucket and a measure whose unit is count; bn and m for large figures; two decimals otherwise. A grid takes it as its pivotFormat (answerFormat).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+| `[m]` | `{id: string, unit: ?string, showAs: ?string}` | the answer's measure |
+
+Returns `string`.
+
+#### `answerFormat(m)`
+
+The format of an answer's measure for GridOptions.pivotFormat: measureText bound to the measure.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `m` | `{id: string, unit: ?string, showAs: ?string}` |  |
+
+Returns `function(*): string`.
+
 ### drishti_wells.js
 
 #### `WELLS`
@@ -1629,6 +1650,22 @@ The wells of a pivot.
 |---|---|---|
 | `columns` | `import('./drishti_columns.js').ColumnModel` |  |
 | `[initial]` | `{rows: string[], columns: string[], values: WellValue[], filters: Array&lt;{colId: string, filter: Object}&gt;}` |  |
+
+##### `WellsModel.funcs()`
+
+The aggregations a value may take: the browser's (VALUE_FUNCS), then the server's own (GridOptions.serverFuncs).
+
+Returns `Array&lt;{name: string, label: string, server: boolean}&gt;`.
+
+##### `WellsModel.funcLabel(name)`
+
+An aggregation's label (Sum, Median), or its name when it is not known.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+
+Returns `string`.
 
 ##### `WellsModel.fieldList(search)`
 
@@ -2606,6 +2643,27 @@ Returns `Object`.
 Computes the pivot: in the browser for client-side rows (the non-additive measures then asked of the server, when serverPivot is given), else asked of the server. A value filter is applied either way.
 
 Returns `Promise&lt;void&gt;`.
+
+##### `GridModel.showAnswer(answer, o)`
+
+Shows a pivot answer the host fetched itself (a progressive answer's first, approximate one; a live patch; an answer a page holds), in the server's PivotAnswer shape. A request in flight is left alone when `o.keepAsking` (a progressive answer's exact one follows). With `o.patched` only figures moved: they flash, the open state and the columns stay.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `answer` | `Object` |  |
+| `[o]` | `{patched: boolean, keepAsking: boolean}` |  |
+
+Returns `void`.
+
+##### `GridModel.setOpenState(view)`
+
+Sets the pivot's open state from a view (its expanded nodes and expandTo), without computing: a saved view given back.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `view` | `{expanded: Array, expandTo: Object}` |  |
+
+Returns `void`.
 
 ##### `GridModel.togglePivotNode(axis, path, open)`
 

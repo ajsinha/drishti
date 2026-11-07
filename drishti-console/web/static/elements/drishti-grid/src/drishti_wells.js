@@ -29,6 +29,7 @@ export const VALUE_FUNCS = Object.freeze(['sum', 'count', 'avg', 'min', 'max', '
  * @property {string} colId
  * @property {string} aggFunc
  * @property {string} [as] its label
+ * @property {string} [showAs] how the server shows it (pct-grand, rank, diff:1:MONTH)
  */
 
 /**
@@ -44,7 +45,31 @@ export class WellsModel {
     /** @type {EventBus} changed {well} */
     this.events = new EventBus();
     this.state = { rows: [], columns: [], values: [], filters: [] };
+    /** @type {Array<{name: string, label: string}>} aggregations only a server computes (median, var_samp), offered beside VALUE_FUNCS */
+    this.serverFuncs = [];
+    /** @type {?string[]} the browser's aggregations offered (null: all of VALUE_FUNCS) */
+    this.allowedFuncs = null;
     if (initial) { this.setState(initial); }
+  }
+
+  /**
+   * The aggregations a value may take: the browser's (VALUE_FUNCS), then the server's own (GridOptions.serverFuncs).
+   * @returns {Array<{name: string, label: string, server: boolean}>}
+   */
+  funcs() {
+    const out = VALUE_FUNCS.filter((f) => !this.allowedFuncs || this.allowedFuncs.indexOf(f) >= 0).map((f) => ({ name: f, label: aggFunc(f).label, server: false }));
+    this.serverFuncs.forEach((f) => { if (!out.some((x) => x.name === f.name)) { out.push({ name: f.name, label: f.label || f.name, server: true }); } });
+    return out;
+  }
+
+  /**
+   * An aggregation's label (Sum, Median), or its name when it is not known.
+   * @param {string} name
+   * @returns {string}
+   */
+  funcLabel(name) {
+    const f = this.funcs().find((x) => x.name === name);
+    return f ? f.label : name;
   }
 
   /**
@@ -104,7 +129,7 @@ export class WellsModel {
       l.splice(index === undefined ? l.length : Math.max(0, Math.min(l.length, index)), 0, colId);
     } else if (well === 'values') {
       const l = this.state.values;
-      const v = { colId: colId, aggFunc: c.type === 'number' ? (c.aggFunc || 'sum') : 'count' };
+      const v = { colId: colId, aggFunc: c.aggFunc || (c.type === 'number' ? 'sum' : 'count') };
       l.splice(index === undefined ? l.length : index, 0, v);
     } else {
       if (this.has('filters', colId)) { return; }
@@ -151,7 +176,8 @@ export class WellsModel {
     if (!v) { throw new Error('no value ' + index); }
     const c = this.columns.get(v.colId);
     if (c && c.additive === false) { return { ok: false, why: c.header + ' is not additive: every total is computed by the server from its members, never a ' + func + ' made in the browser' }; }
-    if (!aggFunc(func)) { throw new Error('no aggregation ' + func + ' (' + VALUE_FUNCS.join(', ') + ')'); }
+    if (!this.funcs().some((f) => f.name === func)) { throw new Error('no aggregation ' + func + ' (' + this.funcs().map((f) => f.name).join(', ') + ')'); }
+    if (v.as && v.as === this.measureOf(v)) { delete v.as; }   // a label that was only the measure's text follows the new function
     v.aggFunc = func;
     this.events.emit('changed', { well: 'values' });
     return { ok: true, why: null };
@@ -218,7 +244,7 @@ export class WellsModel {
       values: this.state.values.map((v) => {
         const c = this.columns.get(v.colId);
         const label = v.as || (c && c.measure ? c.header : (c ? c.header : v.colId) + (v.aggFunc && v.aggFunc !== 'sum' ? ' (' + (aggFunc(v.aggFunc) ? aggFunc(v.aggFunc).label.toLowerCase() : v.aggFunc) + ')' : ''));
-        return { measure: this.measureOf(v), as: label };
+        return v.showAs ? { measure: this.measureOf(v), as: label, showAs: v.showAs } : { measure: this.measureOf(v), as: label };
       }),
       filters: filters
     }, extra || {});

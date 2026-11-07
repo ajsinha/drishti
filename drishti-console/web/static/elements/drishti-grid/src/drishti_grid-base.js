@@ -205,7 +205,7 @@ export class GridBase {
     if (id === 'grand') { this.ui.grandColumn = on; this._disp = null; this.refresh(); return; }
     if (id === 'above') { this.setPivotOptions({ subtotals: on ? 'above' : 'below' }, 'Subtotals ' + (on ? 'above' : 'below')); return; }
     if (id === 'defer') {
-      if (on) { this.draft = new WellsModel(m.columns, m.wells.getState()); this.draftDirty = false; } else { const d = this.draftDirty; if (d) { this.applyDraft(); } this.draft = null; }
+      if (on) { this.draft = new WellsModel(m.columns, m.wells.getState()); this.draft.serverFuncs = m.wells.serverFuncs; this.draft.allowedFuncs = m.wells.allowedFuncs; this.draftDirty = false; } else { const d = this.draftDirty; if (d) { this.applyDraft(); } this.draft = null; }
       this.renderChrome();
     }
   }

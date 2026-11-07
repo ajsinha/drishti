@@ -58,6 +58,15 @@ export const DENSITIES = Object.freeze({ comfortable: 36, compact: 28, terminal:
  * @property {{writeBack: function(Object): Promise<Object>, fourEyes: boolean, undoLimit: number}} [editing] cell editing
  *   (drishti_grid-edit.js): the server's write-back hook (each edit transaction; it answers applied, refused or proposed), four eyes
  * @property {string} [locale] how typed and pasted numbers are read (de-DE: 1.250,5)
+ * @property {Array<(string|{name: string, label: string})>} [serverFuncs] aggregations only the server computes (median, var_samp,
+ *   stddev_samp), offered in the wells and menus beside the browser's; a value with one is always asked of the server
+ * @property {string[]} [valueFuncs] the browser's aggregations offered in the wells and menus (default: every one of VALUE_FUNCS; a server
+ *   pivot offers those its server knows)
+ * @property {function(Object): ?(string|Object|function(*, Object): string)} [pivotFormat] a pivot measure's format, given the answer's
+ *   measure ({label, id, kind, unit, showAs}); default: its value column's
+ * @property {function(Object): ?{cls: string, title: string, after: (string|Node)}} [decorateCell] a host's marks on a cell, given its
+ *   context (cellContext with value and text): classes (a comment, a change since a date), a hover note, and a node or words after the
+ *   figure (a sparkline, a delta); it shows, it never changes a figure
  */
 
 /**
@@ -79,6 +88,8 @@ export class GridModel {
     this.viewport = new Viewport({ rowHeight: DENSITIES[this.density] });
     this.selection = new SelectionModel({ mode: o.rowSelection });
     this.wells = new WellsModel(this.columns);
+    this.wells.serverFuncs = (o.serverFuncs || []).map((f) => (typeof f === 'string' ? { name: f, label: f } : { name: f.name, label: f.label || f.name }));
+    this.wells.allowedFuncs = o.valueFuncs ? o.valueFuncs.slice() : null;
     this.pivotState = new PivotState();
     this.pivotMode = false;
     this.pivotExtra = {};
@@ -147,13 +158,17 @@ export class GridModel {
     const dims = a ? a.rowDimensions : [];
     const head = { id: '__rows', header: dims.map((d) => { const c = this.columns.get(d); return c ? c.header : d; }).join(' / ') || 'Total', type: 'text', pinned: 'left', width: 220, additive: true, rowHeader: true };
     const rc = a ? resultColumns(a) : [];
+    const byLabel = {};
+    (a ? a.measures || [] : []).forEach((x) => { byLabel[x.label] = x; });
     this._pivotCols = [head].concat(rc.map((r) => ({ id: r.id, header: r.headerPath.join(' › '), headerPath: r.headerPath, type: 'number', width: 120,
-      colKey: r.colKey, measure: r.measure, kind: r.kind, additive: !r.server, format: this.measureFormat(r.measure) })));
+      colKey: r.colKey, measure: r.measure, kind: r.kind, additive: !r.server, format: this.measureFormat(r.measure, byLabel[r.measure]),
+      approximate: !!byLabel[r.measure] && byLabel[r.measure].exact === false })));
     return this._pivotCols;
   }
 
-  /** @private a measure's format: its column's */
-  measureFormat(label) {
+  /** @private a measure's format: the host's pivotFormat for the answer's measure, else its column's */
+  measureFormat(label, measure) {
+    if (this.o.pivotFormat && measure) { const f = this.o.pivotFormat(measure); if (f) { return f; } }
     const labels = this.wells.toView().values.map((x) => x.as), i = labels.indexOf(label);
     const v = i >= 0 ? this.wells.state.values[i] : null;
     const c = v ? this.columns.get(v.colId) : null;
@@ -199,9 +214,12 @@ export class GridModel {
     if (row.kind === 'pivot') {
       if (col.rowHeader) { return String(v); }
       if (row.entry.kind === 'header') { return ''; }
+      const cell = this.answer.cells[row.entry.key + '|' + col.colKey];
+      if (cell && cell.texts && cell.texts[col.measure] !== undefined && cell.texts[col.measure] !== null) { return String(cell.texts[col.measure]); }
       const cv = cellValue(this.answer, row.entry.key, col.colKey, col.measure);
       if (cv.value === null && cv.note) { return '…'; }
-      return cv.value === null || cv.value === undefined ? '' : formatValue(cv.value, col);
+      if (cv.value === null || cv.value === undefined) { return ''; }
+      return (col.approximate ? '≈ ' : '') + (typeof cv.value === 'string' ? cv.value : formatValue(cv.value, col));
     }
     return formatValue(v, col, row.row);
   }
@@ -349,6 +367,33 @@ export class GridModel {
     }
     return Promise.resolve();
   }
+
+  /**
+   * Shows a pivot answer the host fetched itself (a progressive answer's first, approximate one; a live patch; an answer a page holds),
+   * in the server's PivotAnswer shape. A request in flight is left alone when `o.keepAsking` (a progressive answer's exact one follows).
+   * With `o.patched` only figures moved: they flash, the open state and the columns stay.
+   * @param {Object} answer
+   * @param {{patched: boolean, keepAsking: boolean}} [o]
+   * @returns {void}
+   */
+  showAnswer(answer, o) {
+    o = o || {};
+    if (this.pivotAbort && !o.keepAsking && !o.patched) { this.pivotAbort.abort(); this.pivotAbort = null; }
+    this.pivotMode = true;
+    this.answer = answer;
+    this._pivotCols = null;
+    this.viewport.setRowCount(this.rowCount());
+    if (o.patched) { this.live.emit('serverTotalsUpdated', { pivotCells: Object.keys(answer.cells || {}).length }); }
+    this.events.emit('changed', { what: 'pivot' });
+    if (!o.patched) { this.live.emit('pivotChanged', { view: this.pivotView(), rows: answer ? answer.rows.length : 0 }); }
+  }
+
+  /**
+   * Sets the pivot's open state from a view (its expanded nodes and expandTo), without computing: a saved view given back.
+   * @param {{expanded: Array, expandTo: Object}} view
+   * @returns {void}
+   */
+  setOpenState(view) { this.pivotState = new PivotState(view || {}); }
 
   /**
    * Opens or closes a pivot row or column group, and computes again.

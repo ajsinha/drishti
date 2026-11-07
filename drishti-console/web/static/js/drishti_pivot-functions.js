@@ -24,8 +24,8 @@
   var root = document.querySelector("[data-pivot-screen]");
   if (!root || !window.Drishti.PivotScreen) { return; }
   var S = window.Drishti.PivotScreen;
-  var esc = window.Drishti.PivotCore.esc;
-  var gridFmt = window.Drishti.PivotCore.fmt;
+  var esc = S.esc;
+  var gridFmt = S.fmt;
   /** A figure of these cards: as the grid formats it from 1 up; below 1, four significant digits (0.007, 0.006429), never rounded to
       0.01 or 0.00: a return or a rate is often that small. */
   var fmt = function (v) {
