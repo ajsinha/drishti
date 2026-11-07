@@ -1021,7 +1021,7 @@
   })();
   /* ---- src/drishti_map-view.js ---- */
   __m["src/drishti_map-view.js"] = (function () {
-    var h = __lib("drishti-core").h, toast = __lib("drishti-core").toast;
+    var h = __lib("drishti-core").h, ToastTray = __lib("drishti-core").ToastTray;
     var createGeoLoader = __m["src/drishti_chart-geo.js"].createGeoLoader;
     var buildMap = __m["src/drishti_chart-map.js"].buildMap;
     var rowsOf = __m["src/drishti_chart-data.js"].rowsOf;
@@ -1099,7 +1099,7 @@
           c.emit('levelChanged', { level: geo.level, places: geo.list.length });
         }, (e) => {
           c.loadingEl.hidden = true;
-          toast({ text: level === 'world' ? 'The world map did not load: ' + e.message : 'No regions for ' + level + ' (' + e.message + ')', tone: 'warn' });
+          this.say(level === 'world' ? 'The world map did not load: ' + e.message : 'No regions for ' + level + ' (' + e.message + ')');
           if (!this.geo) { c.fail(e); }
         });
       }
@@ -1108,9 +1108,13 @@
         return this.go(String(iso3).toUpperCase()).then(() => {
           if (this.geo && this.geo.level === String(iso3).toUpperCase() && first) {
             const pts = this.geo.points.length;
-            toast({ text: this.placeName(iso3, true) + ': ' + this.geo.list.length + ' regions loaded' + (pts ? ' (' + pts + ' as points)' : ''), tone: 'ok' });
+            this.say(this.placeName(iso3, true) + ': ' + this.geo.list.length + ' regions loaded' + (pts ? ' (' + pts + ' as points)' : ''));
           }
         });
+      }
+      say(text) {
+        if (!this.tray || !this.tray.tray.isConnected) { this.tray = new ToastTray({ parent: this.c.card, className: 'dc-toasts', max: 2, timeout: 3500, single: true }); }
+        this.tray.show({ text: text, className: 'dc-toast' });
       }
       back() { return this.go('world'); }
       placeName(code, country) {

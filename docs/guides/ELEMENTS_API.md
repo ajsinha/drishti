@@ -4770,6 +4770,16 @@ Opens a country's first-level regions (loaded once, then from the cache).
 
 Returns `Promise&lt;void&gt;`.
 
+##### `MapView.say(text)`
+
+A short message at the card's foot (a drill's regions loaded, a country without a regions file).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `void`.
+
 ##### `MapView.back()`
 
 Back to the world.

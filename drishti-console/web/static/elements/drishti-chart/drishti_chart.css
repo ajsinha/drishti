@@ -67,6 +67,10 @@ span.dc-lg { cursor: default; }
 .dc-full .dc-card { height: 100%; }
 .dc-full .dc-canvas { height: calc(100vh - 150px) !important; }
 
+/* the card's short messages (core's ToastTray inside the card) */
+.dc-toasts { position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%); z-index: 30; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
+.dc-toast { padding: 7px 14px; border-radius: 8px; background: var(--d-surface-2); border: 1px solid var(--d-accent); color: var(--d-ink); box-shadow: var(--d-shadow); }
+
 /* the data table */
 .dc-table { max-height: 320px; overflow: auto; padding: 0 10px 8px; }
 .dc-dtable, .dc-sortable { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.95em; }

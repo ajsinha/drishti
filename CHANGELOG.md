@@ -62,6 +62,32 @@
   switcher. Nothing inline: it runs under a strict CSP. A static fixture harness (`drishti_harness.html`, synthetic data, no server) in
   every layout, density and theme; 12 more Node tests and one browser test file against the harness (`test_elements_grid_browser.py`).
   The engine's pivot header rows (an open group's label line, subtotals below) no longer repeat the subtotal's figures.
+- **drishti-chart 0.1.0, with maps** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-chart-its-maps-and-drishti-risk)):
+  one engine-neutral spec over the vendored ECharts (kind, data inline or a server's answer, encodings x, y, series, size and colour,
+  drishti-core's formats, axes, legend, annotations as lines, bands, points and texts, conditional marks and colours, interactions);
+  the kinds line, area, bar (grouped, stacked, stacked to 100%, horizontal), scatter, bubble, histogram, waterfall, box plot, heatmap
+  (sequential and diverging), candlestick, pie, donut, gauge, treemap, sankey, layers and the map; `new Chart(el, spec, options)` and
+  `<drishti-chart>` in the two modes of g2, `card` (the default) and `studio` (the kind rail, the chart with its table, the spec beside
+  it with options that change both); the shared theme and the three densities; crosshair tooltips, legend toggles, drag-to-zoom with an
+  overview window, the keyboard (arrows walk the marks, Enter explains, T the table), **a click on any mark explains it** through the
+  grid's hook and drawing and selects its rows, the data table (▦, the accessible alternative), export (PNG at 2×, SVG drawn off screen,
+  CSV, the spec), **linked selection with drishti-grid** through drishti-core's bus (`linkGrid`), live updates by row id, throttled.
+  **Maps**: the world in Equal Earth, a double-click opens a country's first-level regions loaded on demand from the vendored Natural
+  Earth files (the United States in Albers with Alaska and Hawaii as insets, Canada's provinces and territories, every other country
+  in a fitted conic), a breadcrumb back, a quantile (with counts) or continuous choropleth, no-data hatching, bubbles, a metric picker,
+  and the two modes of g3, `ranking` (the default: legend, top ten with bars, the selected place with Explain and "Drill into
+  regions ›") and `table` (a floating legend and card, a world inset, a sortable table under the map). **Vega-Lite is translated** into
+  the spec (O1): the marks, encodings, aggregates, bins, layers, filters and calculations Drishti's visuals use, the rest named; the
+  vendored Vega stays until the screens move. Nothing inline (a strict CSP holds).
+- **drishti-risk 0.1.0** (the banking module's, licensed with it): `risk.pnl-distribution` (VaR and ES lines, the tail in red),
+  `risk.backtest` (exceptions marked, the traffic light with its plus factor on the card), `risk.exposure-profile` (EE, PFE, EEPE over the
+  first year, the limit, a log tenor axis) and `risk.var-change` on drishti-chart; the figures are the server's, computed in the page
+  only where there is no server, and then the card says so.
+- **drishti-core** gains the element maker, Explain's drawing (the grid, the chart and the map draw one ExplainResult) and the CSV
+  writer, moved from drishti-grid; the loader loads a library's vendored engine (ECharts) once. A static fixture harness for the chart
+  (`drishti-chart/drishti_harness.html`: every kind, mode and map level), 19 Node tests (`chart.test.mjs`, `maps.test.mjs`: the spec, the
+  translator, the kinds, the risk figures, the map loader on every one of the 252 region files) and one browser test file
+  (`test_elements_chart_browser.py`).
 
 ## 2.9.11.d (unreleased)
 

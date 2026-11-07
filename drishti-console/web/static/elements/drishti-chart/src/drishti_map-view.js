@@ -19,7 +19,7 @@
    (g3): 'ranking' (A, the default: a side column with the legend, the top ten with bars and the selected place with Explain and the
    drill) and 'table' (B: a floating legend, a world inset once drilled, the selected place in a floating card, a sortable table under
    the map). A click selects a place (its rows go to a linked grid) and explains it. */
-import { h, toast } from '../../drishti-core/src/drishti_index.js';
+import { h, ToastTray } from '../../drishti-core/src/drishti_index.js';
 import { createGeoLoader } from './drishti_chart-geo.js';
 import { buildMap } from './drishti_chart-map.js';
 import { rowsOf } from './drishti_chart-data.js';
@@ -133,7 +133,7 @@ export class MapView {
       c.emit('levelChanged', { level: geo.level, places: geo.list.length });
     }, (e) => {
       c.loadingEl.hidden = true;
-      toast({ text: level === 'world' ? 'The world map did not load: ' + e.message : 'No regions for ' + level + ' (' + e.message + ')', tone: 'warn' });
+      this.say(level === 'world' ? 'The world map did not load: ' + e.message : 'No regions for ' + level + ' (' + e.message + ')');
       if (!this.geo) { c.fail(e); }
     });
   }
@@ -148,9 +148,19 @@ export class MapView {
     return this.go(String(iso3).toUpperCase()).then(() => {
       if (this.geo && this.geo.level === String(iso3).toUpperCase() && first) {
         const pts = this.geo.points.length;
-        toast({ text: this.placeName(iso3, true) + ': ' + this.geo.list.length + ' regions loaded' + (pts ? ' (' + pts + ' as points)' : ''), tone: 'ok' });
+        this.say(this.placeName(iso3, true) + ': ' + this.geo.list.length + ' regions loaded' + (pts ? ' (' + pts + ' as points)' : ''));
       }
     });
+  }
+
+  /**
+   * A short message at the card's foot (a drill's regions loaded, a country without a regions file).
+   * @param {string} text
+   * @returns {void}
+   */
+  say(text) {
+    if (!this.tray || !this.tray.tray.isConnected) { this.tray = new ToastTray({ parent: this.c.card, className: 'dc-toasts', max: 2, timeout: 3500, single: true }); }
+    this.tray.show({ text: text, className: 'dc-toast' });
   }
 
   /**
