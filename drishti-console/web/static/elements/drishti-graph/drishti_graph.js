@@ -755,6 +755,14 @@
         batch((e) => !onPath(e) && !touches(e), th.muted, focusing ? 0.12 : (f.edges.length > 3000 ? 0.22 : 0.42), 1);
         batch(touches, th.tones.accent, 0.85, 1.3);
         batch(onPath, th.tones.accent, 1, 2.2);
+        if (f.edges.length <= 80 && k > 0.5) {
+          ctx.font = Math.max(9, f.labelSize - 1.5) + 'px ' + th.font; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillStyle = th.muted;
+          f.edges.forEach((e) => {
+            const a = f.pos.get(e.source), b = f.pos.get(e.target);
+            if (!e.label || !a || !b || (focusing && !lit(e.source) && !lit(e.target))) { return; }
+            ctx.fillText(e.label.length > 22 ? e.label.slice(0, 21) + '…' : e.label, (X(a) + X(b)) / 2, (Y(a) + Y(b)) / 2 - 2);
+          });
+        }
         let drawnN = 0, labels = 0;
         const scale = Math.min(1.4, Math.max(0.6, k));
         const order = f.nodes.slice().sort((a, b) => (lit(a.id) ? 1 : 0) - (lit(b.id) ? 1 : 0));
