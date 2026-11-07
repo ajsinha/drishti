@@ -49,6 +49,12 @@
   H.combo = new I.Combobox(document.getElementById('hx-combo'), { label: 'Counterparty', placeholder: 'Type a name', debounceMs: 120,
     source: (text, signal) => { H.asked++; H.lastQuery = text; return later(null, 40).then(() => { if (signal && signal.aborted) { const e = new Error('aborted'); e.name = 'AbortError'; throw e; } if (/^zz/i.test(text)) { throw new Error('the directory is down'); } return I.searchOptions(I.normalizeOptions(CPTYS), text).slice(0, 20); }); } });
 
+  H.select = new I.Select(document.getElementById('hx-select'), { label: 'Reporting currency', value: 'USD',
+    options: CCYS.map((c, i) => ({ value: c, label: c, group: i < 9 ? 'G10' : 'Emerging', disabled: c === 'RUB' })) });
+  H.selectChanges = [];
+  document.getElementById('hx-select').addEventListener('drishti:change', (e) => H.selectChanges.push(e.detail.value));
+  document.getElementById('hx-horizon').addEventListener('drishti:change', (e) => H.selectChanges.push(e.detail.value));
+
   /* ---- the filter bar and an editable grid that follows it ------------------------------------------------------------------------- */
   const bus = H.bus = core.createBus();
   const books = [];

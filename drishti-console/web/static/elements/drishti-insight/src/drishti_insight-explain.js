@@ -13,7 +13,6 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* One Explain for every number (docs/architecture/SHARED_SCREENS.md section 3; USER_GUIDE.md, "Explain"; the approved mock-up
    docs/architecture/mockups/shared-screens/e3-explain.html, A with B as its preview and C through a link). One component on every page:
 
@@ -26,10 +25,17 @@
 
    A number opts in with data-explain='{"kind":"var","measure":"es","scope":"DESK:RATES"}' (and data-explain-tab to open another tab
    first); a page may name its main number with data-explain-primary, which E opens when no number is focused. Script API:
-   Drishti.Explain.open(request, tab), .preview(anchor, request), .close(), .pageUrl(request, tab), .bind(el, request, tab).
+   Drishti.Explain.open(request, tab), .preview(anchor, request), .close(), .pageUrl(request, tab), .bind(el, request, tab),
+   .ask(request, part) (the server's answer for a part, cached per page).
    Everything is the server's (GET /api/explain, the person's own entitlements): the browser computes nothing, it places text. */
-(function () {
-  "use strict";
+/**
+ * Installs the one Explain in a page (once): the preview, the drawer, the full page when the page is /explain, the keys, and Drishti.Explain.
+ * @param {Window} win the page's window
+ * @returns {void}
+ */
+export function installExplain(win) {
+  const window = win, document = win.document;
+  window.Drishti = window.Drishti || {};
   var TABS = [["formula", "Formula"], ["inputs", "Inputs & lineage"], ["why", "Why it moved"], ["workbook", "Workbook"]];
   var cache = {};
   var drawer = null, pop = null, popFor = null, hoverTimer = null, lastAnchor = null, lib = null;
@@ -75,8 +81,10 @@
     return p;
   }
 
+  /** The full page's link: the request's parameters, and a body (a pivot cell's view) carried along as one JSON parameter, so the page asks the same. */
   function pageUrl(req, tab) {
     var q = query(req, tab ? { tab: tab } : {});
+    if (req.body) q.set("body", JSON.stringify(req.body));
     return "/explain?" + q.toString();
   }
 
@@ -426,7 +434,7 @@
   document.addEventListener("mouseout", function (ev) { if (target(ev)) clearTimeout(hoverTimer); });
   // the keys (the one keymap, drishti_keys.js): Escape closes the preview, then the drawer; E explains the focused number (else the
   // preview's, else the page's main one); ? on a focused number previews it (anywhere else ? is the keymap's list)
-  var K = window.Drishti.keys;
+  var K = window.Drishti.keys || { register: function () {} };          // a host page without the keymap: Explain has no keys there
   var focusedNumber = function () { return document.activeElement && document.activeElement.closest ? document.activeElement.closest("[data-explain]") : null; };
   K.register({ id: "explain.preview.close", keys: ["Escape"], scope: "dialog", area: "explain-preview", description: "Close the preview",
     typing: true, keepDefault: true, open: function () { return !!(pop && !pop.hidden); }, run: function () { closePreview(); } });
@@ -454,7 +462,7 @@
   }
 
   window.Drishti.Explain = {
-    open: open, close: close, preview: preview, pageUrl: pageUrl,
+    open: open, close: close, preview: preview, pageUrl: pageUrl, ask: ask,
     /** Marks el as an explainable number: hover previews, click opens the drawer (on tab), E opens it when focused. */
     bind: function (el, req, tab) {
       el.setAttribute("data-explain", JSON.stringify(req));
@@ -466,4 +474,4 @@
     isOpen: function () { return !!(drawer && !drawer.hidden); },
     state: S
   };
-})();
+}

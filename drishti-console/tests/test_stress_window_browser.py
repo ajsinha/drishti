@@ -24,6 +24,7 @@ import pytest
 
 from test_var_explorer_browser import _engine_ready, open_var
 from risk_elements import chart, chart_ready, grid_rows
+from select_helpers import choose, value, values  # <drishti-select>: drishti-inputs' Select
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from wb_live import _stack
 
@@ -69,4 +70,10 @@ def test_the_page_draws_its_chart_and_tables_across_the_page(stack, browser):
     cands = grid_rows(pg, "[data-sw-cands]")
     assert [c["data"]["first"] for c in cands] == [c["first"] for c in d["candidates"]]
     assert [c["cells"][2] for c in cands] == [f"{math.floor(c['var'] + 0.5):,}" for c in d["candidates"]]
+    # the pickers are drishti-inputs' Select: the hierarchies the server listed, the window's length picked asks again
+    assert values(pg, "[data-sw-hierarchy]") == list(d.get("hierarchies") or ["MGMT"]) and value(pg, "[data-sw-hierarchy]") == d["node"]["hierarchy"]
+    assert value(pg, "[data-sw-length]") == str(d["length"])
+    other = next(v for v in values(pg, "[data-sw-length]") if v != str(d["length"]))
+    choose(pg, "[data-sw-length]", other)
+    wait(pg, "document.querySelector('[data-sw-meta]').textContent.indexOf('which %s-day period') === 0" % other, 120)
     pg.close()

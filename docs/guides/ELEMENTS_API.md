@@ -28,6 +28,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 | [drishti-designer](#drishti-designer) | 0.1.0 | The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review) |
 | [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
 | [drishti-chart](#drishti-chart) | 0.2.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
+| [drishti-insight](#drishti-insight) | 0.1.0 | Insight on a Drishti server: the one Explain (preview, drawer, full page, keys), the one search box (command line, Help, Alt+K), the one Approvals queue and the workbook export |
 | [drishti-risk](#drishti-risk) | 0.2.0 | The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser) |
 | [drishti-renderer](#drishti-renderer) | 2.0.0 | The client renderer: Drishti screens from a static, live or streamed (GenUI) ViewModel, drawn with drishti-grid, drishti-chart, drishti-core and drishti-data; Elements 2.3 (drishti-view, drishti-panel, drishti-screen); hosts import its public entry, static/render/2.0.0/drishti-render.js |
 
@@ -2311,7 +2312,7 @@ The server-side row model.
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `o` | `{datasource: Datasource, blockSize: number, maxBlocks: number, getRowId: function(Object, number, string[]): string}` | blockSize default 100; maxBlocks default 50 (5,000 rows held) |
+| `o` | `{datasource: Datasource, blockSize: number, maxBlocks: number, getRowId: function(Object, number, string[]): string, treeData: boolean, isServerSideGroup: function(Object): boolean, getServerSideGroupKey: function(Object): string, groupDefaultExpanded: number}` | blockSize default 100; maxBlocks default 50 (5,000 rows held); treeData: the server answers a tree one level at a time, isServerSideGroup(row) says a row is a node that opens, getServerSideGroupKey(row) its key at its level (the tree column shows it); groupDefaultExpanded: nodes (or row groups) open down to this level as they load (-1: all; default 0) |
 
 ##### `ServerRowModel.setSortModel(m)`
 
@@ -2364,6 +2365,16 @@ Opens or closes a group row (its level loads when it comes into view).
 
 Returns `void`.
 
+##### `ServerRowModel.expandToLevel(level)`
+
+Opens every group or tree node down to a level as it loads (0: all closed; 99 or Infinity: all), forgetting single opens and closes. A level is asked of the server only when its rows come into view.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `level` | `number` |  |
+
+Returns `void`.
+
 ##### `ServerRowModel.refresh(o)`
 
 Drops cached blocks and asks again: every level, or one level and those under it.
@@ -2401,6 +2412,17 @@ A server's "data changed" notice (drishti-data's live feed): {purge: true} forge
 
 Returns `string`: what was done: purge, level, blocks, rows or nothing.
 
+##### `ServerRowModel.childKeys(lv, r)`
+
+The keys of the node or group a loaded row opens, or null when it opens nothing (a leaf).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `lv` | `Level` | the row's level |
+| `r` | `Object` | the row |
+
+Returns `?string[]`.
+
 ##### `ServerRowModel.rowCount()`
 
 How many rows are displayed (an estimate while a level's count is not known).
@@ -2415,7 +2437,7 @@ The row at a display index: the data when its block is in, else a placeholder ({
 |---|---|---|
 | `i` | `number` |  |
 
-Returns `?Object} {kind: 'group'\|'leaf'\|'loading', id, depth, row, keys, expanded, loading`.
+Returns `?Object} {kind: 'group'\|'leaf'\|'loading', id, depth, row, keys, expanded, loading`: ; tree data adds tree: true, treeKey (the row's key at its level) and path (a node's keys from the top); a node is a group that is also a row (its id is the row's).
 
 ##### `ServerRowModel.ensureRange(first, last)`
 
@@ -2447,12 +2469,12 @@ Returns `{blocks: number, inFlight: number}`.
 
 #### `memoryDatasource(rows, o)`
 
-A data source over rows held in memory (tests, demos, and a page that wants the server-side model's paging over local data): sorts, filters and groups as a server would, with an optional delay.
+A data source over rows held in memory (tests, demos, and a page that wants the server-side model's paging over local data): sorts, filters and groups as a server would, with an optional delay. With getDataPath it answers tree data a level at a time, as a server would: a request with treeData and groupKeys [k1..kn] gets the children of that node, each the row whose path ends there (or, for a node no row names, {[keyField]: key}) with treeGroup (it has children), treeKey (its key) and childCount; use isServerSideGroup: (r) =&gt; r.treeGroup and getServerSideGroupKey: (r) =&gt; r.treeKey.
 
 | Parameter | Type | Meaning |
 |---|---|---|
 | `rows` | `Object[]` |  |
-| `[o]` | `{delay: number, columns: import('./drishti_columns.js').ColumnModel}` |  |
+| `[o]` | `{delay: number, columns: import('./drishti_columns.js').ColumnModel, getDataPath: function(Object): string[], keyField: string}` |  |
 
 Returns `Datasource & {calls: BlockRequest[]}`.
 
@@ -5890,8 +5912,10 @@ Everything GridModel takes (columns, rows or datasource, serverPivot, explain, c
 | `[valueFuncs]` | `string[]` | the browser's aggregations offered in the wells and menus (default: every one of VALUE_FUNCS; a server pivot offers those its server knows) |
 | `[pivotFormat]` | `function(Object): ?(string\|Object\|function(*, Object): string)` | a pivot measure's format, given the answer's measure ({label, id, kind, unit, showAs}); default: its value column's |
 | `[decorateCell]` | `function(Object): ?{cls: string, title: string, style: Object&lt;string, string&gt;, before: Node, content: Node, after: (string\|Node)}` | a host's marks on a cell, given its context (cellContext with value and text): classes (a comment, a change since a date), a hover note, colours (color, background-color, font-weight, font-style: a conditional format), a node before the figure (an icon), a node in its place (a link holding the same text), and a node or words after it (a sparkline, a delta); it shows, it never changes a figure |
-| `[treeData=false]` | `boolean` | the rows make a tree by their paths (getDataPath): nodes open and close, a node no row names carries its figures as a group (the server's when clientAggregation is false); the first shown column holds the node's key |
+| `[treeData=false]` | `boolean` | the rows make a tree by their paths (getDataPath): nodes open and close, a node no row names carries its figures as a group (the server's when clientAggregation is false); the first shown column holds the node's key. With a datasource, the server answers the tree a level at a time (isServerSideGroup, getServerSideGroupKey) |
 | `[getDataPath]` | `function(Object): string[]` | a row's path from the top (tree data) |
+| `[isServerSideGroup]` | `function(Object): boolean` | tree data on server-side rows (treeData with a datasource): whether a row the server sent is a node that opens; opening it asks the server for its level with groupKeys = the node's path |
+| `[getServerSideGroupKey]` | `function(Object): string` | tree data on server-side rows: a row's key at its level (the tree column shows it; a node's path is its ancestors' keys and this one) |
 | `[groupDefaultExpanded=0]` | `number` | groups and tree nodes open down to this level (-1: all) |
 
 #### `KeyResult` : `Object`
@@ -5972,6 +5996,7 @@ A feed: subscribe(onMessage) gives every message and returns the function that s
 | `valueCols` | `Array&lt;{colId: string, aggFunc: string}&gt;` |  |
 | `pivotCols` | `string[]` |  |
 | `pivotMode` | `boolean` |  |
+| `[treeData]` | `boolean` | tree data: groupKeys is the path of the node whose children are asked ([] for the top) |
 | `[signal]` | `AbortSignal` |  |
 
 #### `BlockAnswer` : `Object`
@@ -7076,6 +7101,99 @@ Stops the type-ahead and takes the combobox out.
 
 Returns `void`.
 
+### drishti_select.js
+
+#### class `Select`
+
+A single-choice select with keyboard, type-ahead and search. Events: change {value, option}, open, close.
+
+##### `new Select(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `options` | `SelectOptions` |  |
+
+##### `Select.open(at)`
+
+Opens the list (on the picked option, or the first).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[at]` | `number` | the option to make active (an index of the list drawn) |
+
+Returns `void`.
+
+##### `Select.close(refocus)`
+
+Closes the list.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[refocus]` | `boolean` | put the focus back on the control |
+
+Returns `void`.
+
+##### `Select.pick(it)`
+
+Picks an option (a disabled one is refused).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `it` | `{value: *, label: string}` |  |
+
+Returns `void`.
+
+##### `Select.getValue()`
+
+The value picked, or null.
+
+Returns `*`.
+
+##### `Select.getOption()`
+
+The option picked ({value, label, detail, group, disabled}), or null (nothing picked, or a value no option has).
+
+Returns `?Object`.
+
+##### `Select.setValue(v, emit)`
+
+Sets the value: an option's value (the option's own value is kept: "0.99" picks the option 0.99), or one no option has (shown as it is).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+| `[emit]` | `boolean` | emit change when it changed |
+
+Returns `void`.
+
+##### `Select.setOptions(list, value)`
+
+Replaces the options; the value is kept when an option still has it, else value (when given), else the first enabled option.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `list` | `Array` | as the options option |
+| `[value]` | `*` |  |
+
+Returns `void`.
+
+##### `Select.setDisabled(off)`
+
+Turns the select on or off.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `off` | `boolean` |  |
+
+Returns `void`.
+
+##### `Select.focus()`
+
+Puts the keyboard focus on the control.
+
+Returns `void`.
+
 ### drishti_schema.js
 
 #### `words(key)`
@@ -8085,6 +8203,20 @@ A field of a form schema.
 | `[options]` | `Object` | the widget's options (a combobox's source, a tree's nodes, a code editor's mode) |
 | `[readOnly]` | `boolean` |  |
 | `[placeholder]` | `string` |  |
+
+#### `SelectOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[options]` | `Array&lt;(string\|number\|{value: *, label: string, detail: string, group: string, disabled: boolean})&gt;` | default: the host's &lt;option&gt; and &lt;optgroup&gt; children |
+| `[value]` | `*` | the value picked (default: the option marked selected, else the first enabled option; null with placeholder) |
+| `[label]` | `string` | the control's accessible name |
+| `[placeholder]` | `string` | the words while nothing is picked (and nothing is picked at first) |
+| `[search='auto']` | `(boolean\|string)` | the search field in the open list: true, false, or auto (more than searchMin options) |
+| `[searchMin=8]` | `number` |  |
+| `[name]` | `string` | a hidden input of this name carries the value in a plain form |
+| `[disabled=false]` | `boolean` |  |
+| `[renderOption]` | `function(Object, HTMLElement): void` | draws an option's content |
 
 #### `TreePickerOptions` : `Object`
 
@@ -11459,7 +11591,39 @@ A Vega-Lite specification as a drishti-chart spec, with every part that did not 
 | `vl` | `Object` | the Vega-Lite specification (data inline; a url is refused) |
 | `[o]` | `{rows: Object[], title: string}` | rows: the data when the specification has none (a BI visual's own rows) |
 
-Returns `{spec: ?Object, unsupported: string[], refused: ?string}`: refused: why nothing was drawn (a url, nothing to draw).
+Returns `{spec: ?Object, unsupported: string[], refused: ?string}`: refused: why nothing is drawn (a url, nothing to draw, or the features that do not translate, each with what to use instead); a spec is only given when the whole specification translated.
+
+#### `vegaLiteAlternative(path)`
+
+What to use instead of an unsupported Vega-Lite feature, from its path in the specification.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `path` | `string` | a path fromVegaLite listed ("$.facet", "$.layer[1].encoding.text", "$.transform[0]", "$.mark (text)") |
+
+Returns `string`: the alternative, in words.
+
+#### `vegaLiteRefusal(unsupported)`
+
+The sentence a refused specification shows: each unsupported feature with what to use instead.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `unsupported` | `string[]` | the paths fromVegaLite listed |
+
+Returns `string`.
+
+#### `vegaLiteIn(host, vl, o)`
+
+A Vega-Lite specification drawn in a host by drishti-chart, or refused there in words (each unsupported feature with what to use instead): never drawn wrong. The refusal is a status paragraph (class dc-refused, data-refused holding the unsupported paths).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `vl` | `Object` | the Vega-Lite specification |
+| `[o]` | `Object` | rows (the data when the specification has none), title, and chartIn's options |
+
+Returns `{chart: ?Object, refused: ?string, unsupported: string[], spec: ?Object}`.
 
 ### drishti_chart-parts.js
 
@@ -12092,6 +12256,18 @@ Defines &lt;drishti-chart&gt; in a registry (once; the bundle does it when it lo
 
 Returns `boolean`: whether it was defined now.
 
+#### `chartIn(host, spec, o)`
+
+A chart in a host element: a &lt;drishti-chart&gt; made there once (the host's content replaced), its spec set, and set again on the next call. What a page that draws a spec it was given (a report visual, a Python answer) calls instead of building a chart itself.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `spec` | `Object` | a drishti-chart spec |
+| `[o]` | `Object` | density (default compact), height (px; default: the host's height less the card's chrome, at least 140), and any Chart option |
+
+Returns `Object`: the Chart (el.chart), its ready promise as chart.ready.
+
 ### drishti_index.js
 
 #### `install(root)`
@@ -12194,6 +12370,81 @@ The options of a chart (the spec says what to draw; these say how it lives in it
 | `[download]` | `function(string, (string\|Blob), string): void` | where exports go (default: a download) |
 | `[height]` | `number` | the drawing's height in pixels (default 300; a map 440) |
 | `[asOf]` | `string` | the data's date, for the status line |
+
+## drishti-insight
+
+Version 0.1.0. Bundle `static/elements/drishti-insight/drishti_insight.js`, global `Drishti.elements.insight`; requires drishti-core.
+
+### drishti_insight-explain.js
+
+#### `installExplain(win)`
+
+Installs the one Explain in a page (once): the preview, the drawer, the full page when the page is /explain, the keys, and Drishti.Explain.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `win` | `Window` | the page's window |
+
+Returns `void`.
+
+### drishti_insight-search.js
+
+#### `installSearch(win)`
+
+Installs the one search box in a page (once): Drishti.searchBox, Drishti.find (Alt+K) and the top bar's search button.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `win` | `Window` | the page's window |
+
+Returns `void`.
+
+### drishti_insight-approvals.js
+
+#### `startApprovals(win)`
+
+Starts the one Approvals queue when the page holds it ([data-approvals]); on any other page it does nothing.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `win` | `Window` | the page's window |
+
+Returns `void`.
+
+### drishti_insight-workbook.js
+
+#### `workbookLinks(answer)`
+
+The workbook links of an Explain answer (its Workbook part): each {label, href, note}.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `answer` | `Object` | an answer of GET /api/explain (part workbook or all) |
+
+Returns `Array&lt;{label: string, href: string, note: (string\|undefined)}&gt;`.
+
+#### `exportWorkbook(req, o)`
+
+Downloads a number's workbook: asks the one Explain for the Workbook part and opens its first link (the .xlsx answers as a file).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `req` | `Object` | the number, as data-explain names it ({kind, measure, scope, ...}, or {kind, body} for a pivot cell) |
+| `[o]` | `{win: Window}` | win: the page (default window); its Drishti.Explain is the one Explain (installExplain) |
+
+Returns `Promise&lt;{label: string, href: string}&gt;`: the link opened; rejected in words when the number has no workbook.
+
+### drishti_index.js
+
+#### `install(root)`
+
+Installs the components in a page (the bundle calls it when it loads): search always, Explain unless the script tag says data-explain="off" (a page for someone not signed in), the Approvals queue when the page holds it. Once per page.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `Window` | the page's window (under Node: nothing to do) |
+
+Returns `void`.
 
 ## drishti-risk
 

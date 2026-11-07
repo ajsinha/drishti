@@ -77,6 +77,14 @@ def test_why_opens_its_card_and_asks_the_one_explain(stack, page):
     assert "Rates minus FX is 30" in drawer.text_content()
     sent = [b for k, b in stack[1].asked if k == "explain"][-1]
     assert sent["kind"] == "pivot" and sent["measure"] == "cell" and sent["part"] == "why" and sent["view"]["source"] == "trade"
+    # Open as a page: the view sent in the body rides along, and the page asks the server with it (all four parts)
+    href = drawer.locator("[data-dx-page]").get_attribute("href")
+    assert "body=" in href
+    n = len(stack[1].asked)
+    page.goto(stack[0] + href)
+    page.wait_for_function("() => { const r = document.querySelector('[data-explain-page]'); return r && r.dataset.state === 'ready'; }")
+    full = [b for k, b in stack[1].asked[n:] if k == "explain"][-1]
+    assert full["part"] == "all" and full["kind"] == "pivot" and full["view"] == sent["view"] and full["from"] == sent["from"] and full["by"] == sent["by"]
     assert not page.errors, page.errors
 
 

@@ -32,7 +32,7 @@ def _items(backend):
 def test_the_page_is_a_shell_the_script_fills(client):
     page = client.get("/approvals?box=sent&group=risk").text
     assert 'data-approvals' in page and 'data-box="sent"' in page and 'data-group="risk"' in page
-    assert "/static/js/drishti_approvals.js" in page and "/static/css/drishti_approvals.css" in page
+    assert "/static/elements/drishti-insight/drishti_insight.js" in page and "data-approvals" in page and "/static/css/drishti_approvals.css" in page
     for hook in ("data-ap-box=\"inbox\"", "data-ap-group=\"access\"", "data-ap-kind", "data-ap-act=\"approve\"", "data-ap-act=\"reject\"",
                  "data-ap-act=\"withdraw\"", "data-ap-ask", "data-ap-diff", "data-ap-effect", "data-ap-rules", "data-ap-thread"):
         assert hook in page, hook

@@ -113,7 +113,7 @@
     dates.to = new I.DatePicker($("[data-pf-to-date]"), {label: "Second date", businessOnly: false, shortcuts: true, placeholder: "the same date"});
   })();
 
-  /** The one Explain (drishti_explain.js, SHARED_SCREENS.md section 3) of the difference between the two cells or dates, at Why it moved:
+  /** The one Explain (drishti-insight, SHARED_SCREENS.md section 3) of the difference between the two cells or dates, at Why it moved:
       the server's pivot explainer (kind pivot) answers with the steps that add up, drawn by the one renderer; this card only asks. */
   function explain() {
     var v = S.view();

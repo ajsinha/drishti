@@ -215,6 +215,16 @@
 .di-k-insert, .di-k-changed + .di-k-changed { background: color-mix(in srgb, var(--d-ok) 12%, var(--d-surface)); }
 .di-k-none { background: var(--d-surface-2); }
 
+/* the single-choice select (drishti_select.js): the control sizes to its value like a native select; a long list has its search on top */
+.di-select { display: inline-block; vertical-align: middle; min-width: 6em; }
+.di-select-control { cursor: pointer; padding: 0 0 0 8px; user-select: none; white-space: nowrap; }
+.di-select-control:focus { outline: none; border-color: var(--d-accent); box-shadow: 0 0 0 2px var(--d-accent-tint); }
+.di-select-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.di-select-control.di-placeholder .di-select-text { color: var(--d-faint); }
+.di-select.di-disabled .di-select-control { opacity: 0.55; cursor: default; }
+.di-select-search { width: 100%; }
+.di-select-status { color: var(--d-faint); font-size: 0.88em; padding: 4px 8px 0; }
+.di-select-status:empty { display: none; }
 /* a page's own fields upgraded in place (drishti_native.js): the picker where the field was */
 .di-upgraded { display: inline-block; vertical-align: middle; min-width: 11rem; }
 .di-upgraded[hidden] { display: none; }

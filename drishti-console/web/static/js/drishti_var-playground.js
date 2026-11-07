@@ -334,43 +334,36 @@
     fill($("[data-pg-q]"), lens.confidences, lens.confidence);
     fill($("[data-pg-esq]"), lens.esConfidences, lens.esConfidence);
     root.querySelectorAll("[data-pg-set]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.pgSet === (lens.set === "STRESSED" ? "stressed" : "normal"))); });
-    var c = $("[data-pg-ccy]");
+    var c = $("[data-pg-ccy]").component;
     if (!c.options.length) {
       fetch("/api/var/currencies", { credentials: "same-origin" }).then(function (r) { return r.ok ? r.json() : { listed: [] }; }).then(function (x) {
         var all = (x.listed || []).concat((x.available || []).filter(function (a) { return (x.listed || []).indexOf(a) < 0; }));
         if (all.indexOf(d.currency) < 0) { all.unshift(d.currency); }
-        all.forEach(function (a) { var o = document.createElement("option"); o.value = a; o.textContent = a; c.appendChild(o); });
-        c.value = d.currency;
+        c.setOptions(all, d.currency);
       });
-    } else { c.value = d.currency; }
+    } else { c.setValue(d.currency); }
   }
+  /** A picker (a <drishti-select>, drishti-inputs) filled with confidences, cur picked. */
   function fill(sel, list, cur) {
-    sel.innerHTML = "";
-    (list || []).forEach(function (v) { var o = document.createElement("option"); o.value = String(v); o.textContent = confPct(v); sel.appendChild(o); });
-    sel.value = String(cur);
+    sel.component.setOptions((list || []).map(function (v) { return { value: String(v), label: confPct(v) }; }), String(cur));
   }
+  /** The export's choices: a refused one is shown disabled, its reason as its detail; the server's default picked. */
   function exportChoices() {
-    var sel = $("[data-pg-count]"), ch = S.data["export"].choices;
-    sel.innerHTML = "";
-    ch.forEach(function (c) {
-      var o = document.createElement("option");
-      o.value = c.count === 0 ? "all" : String(c.count);
-      o.textContent = c.label + (c.refused ? " (cannot be made)" : " · " + c.size);
-      o.disabled = !!c.refused;
-      if (c.refused) { o.title = c.refused; }
-      if (c["default"]) { o.selected = true; }
-      sel.appendChild(o);
-    });
+    var ch = S.data["export"].choices, def = ch.filter(function (c) { return c["default"]; })[0];
+    var key = function (c) { return c.count === 0 ? "all" : String(c.count); };
+    $("[data-pg-count]").component.setOptions(ch.map(function (c) {
+      return { value: key(c), label: c.label + (c.refused ? " (cannot be made)" : " · " + c.size), disabled: !!c.refused, detail: c.refused || "" };
+    }), def ? key(def) : undefined);
     estimate();
   }
   function estimate() {
-    var sel = $("[data-pg-count]"), ch = S.data["export"].choices[sel.selectedIndex];
+    var v = $("[data-pg-count]").value, ch = S.data["export"].choices.filter(function (c) { return (c.count === 0 ? "all" : String(c.count)) === String(v); })[0];
     if (!ch) { return; }
     $("[data-pg-estimate]").textContent = ch.refused ? ch.refused : "Workbook of " + ch.positions.toLocaleString("en-US") + " positions" + (S.data.total > ch.positions
       ? " (the other " + (S.data.total - ch.positions).toLocaleString("en-US") + " in Rest of scope)" : "") + ": about " + ch.size + ", " + ch.layout + ", recalculates in about "
       + ch.recalc + "; opens in " + ch.apps.join(", ") + ".";
   }
-  $("[data-pg-count]").addEventListener("change", estimate);
+  $("[data-pg-count]").addEventListener("drishti:change", estimate);
   $("[data-pg-export]").addEventListener("click", function () {
     var q = params();
     q.set("count", $("[data-pg-count]").value);
@@ -380,15 +373,15 @@
     var t = $("[data-pg-formula]").textContent;
     if (navigator.clipboard) { navigator.clipboard.writeText(t); }
   });
-  $("[data-pg-horizon]").addEventListener("change", function (e) {
-    var v = e.target.value, d = root.dataset;
+  $("[data-pg-horizon]").addEventListener("drishti:change", function (e) {
+    var v = e.detail.value, d = root.dataset;
     d.h = v === "1d" ? "" : "10d";
     d.m = v === "10d-sum" ? "sum" : v === "10d-sqrt10" ? "sqrt10" : "";
     remember(); load();
   });
-  $("[data-pg-q]").addEventListener("change", function (e) { root.dataset.q = e.target.value; remember(); load(); });
-  $("[data-pg-esq]").addEventListener("change", function (e) { root.dataset.esq = e.target.value; remember(); load(); });
-  $("[data-pg-ccy]").addEventListener("change", function (e) { root.dataset.ccy = e.target.value; remember(); load(); });
+  $("[data-pg-q]").addEventListener("drishti:change", function (e) { root.dataset.q = e.detail.value; remember(); load(); });
+  $("[data-pg-esq]").addEventListener("drishti:change", function (e) { root.dataset.esq = e.detail.value; remember(); load(); });
+  $("[data-pg-ccy]").addEventListener("drishti:change", function (e) { root.dataset.ccy = e.detail.value; remember(); load(); });
   root.querySelectorAll("[data-pg-set]").forEach(function (b) {
     b.addEventListener("click", function () {
       root.dataset.set = b.dataset.pgSet === "stressed" ? "stressed" : "";

@@ -85,7 +85,7 @@ public final class LakeRelocateOnStart implements EnvironmentPostProcessor, Orde
         String dir = env.getProperty("drishti.sources.connectors-dir", System.getenv().getOrDefault("DRISHTI_CONNECTORS_DIR", "./config/connectors"));
         try {
             com.ash.drishti.lakeconfig.LakeFiles.Migration m = com.ash.drishti.lakeconfig.LakeFiles.adoptDemo(Path.of(dir), lakes.folder() == null
-                    ? Path.of(Lakes.DEFAULT_DIR) : lakes.folder(), true);
+                    ? Path.of(Lakes.DEFAULT_DIR) : lakes.folder(), true, com.ash.drishti.packs.TemplateStamp::keepPristine);   // a never-edited file stays so
             m.notes().forEach(n -> LOG.log(System.Logger.Level.INFO, "connector " + n + " (the file before: <name>.yaml.before-lake-<time>.bak)"));
             m.lakeFiles().keySet().forEach(f -> LOG.log(System.Logger.Level.INFO, "lake file " + f + ": the tables those connectors read that it "
                     + "lacked were added at the end of its tables (every other line kept as it was)"));

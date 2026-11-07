@@ -80,6 +80,16 @@ public final class TemplateStamp {
         return s.isPresent() && s.get().text().equals(ConnectorFiles.etag(normal(split(text)[1])));
     }
 
+    /**
+     * The text a tool wrote over a file ({@code after}: the lake move's {@code lake: demo}), stamped again when the file it replaces
+     * ({@code before}) was stamped and never edited, so it still counts as unedited and keeps following its pack's template; otherwise
+     * {@code after} as it is (an edited file stays edited, a file without a stamp gets none).
+     */
+    public static String keepPristine(String before, String after) {
+        Optional<Stamp> s = of(before);
+        return s.isPresent() && pristine(before) ? stamp(after, s.get().pack(), s.get().template()) : after;
+    }
+
     /** The text without its stamp line (what a person reads and edits). */
     public static String withoutStamp(String text) {
         String[] parts = split(text);

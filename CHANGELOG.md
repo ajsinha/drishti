@@ -96,6 +96,58 @@
   only while its modules are on.
 ## 2.9.11.e (unreleased)
 
+- **Vega retired (the owner's decision O1): one drawing engine.** A report's `vega-lite` visual and a Python visual's `output: vega-lite`
+  are translated by drishti-chart (`fromVegaLite`) and drawn by drishti-chart; a feature it does not translate is refused in words with
+  what to use instead (`vegaLiteAlternative`, `vegaLiteRefusal`, `vegaLiteIn`; `chartIn(host, spec)` puts any spec in a host), never
+  drawn wrong. Python visuals may return a drishti-chart spec (`output: drishti-chart`, the preferred form; `data.source` refused in the
+  sandbox). Deleted: the vendored Vega, Vega-Lite, vega-embed and vega-interpreter, their VENDOR.md entry and notice, `drishti_bi-vega.js`
+  and every Vega code path. Tests: the two shipped specifications translate to the same data and encodings, a refused feature's message,
+  (`tests/test_vega_translate.py`), a guard that no file references the Vega library (`tests/test_bi_wave_c.py`), `test_items.py` (the
+  drishti-chart output).
+- **The Explain page carries a pivot cell's view**: Open as a page puts the body the drawer posted (the view, the cells, the split) in
+  the link as one JSON parameter (`body`), and the page asks with it (`test_explain_routes.py`, `test_pivot_functions_browser.py`).
+- **One Explain for a pivot cell**: the server's `POST /api/v1/pivot/explain` is folded into `POST /api/v1/explain` (kind `pivot`); the
+  old address is a deprecated alias for one release (it answers the engine's own answer, `why.answer`, with `Deprecation` and `Link`
+  headers); the audit (`pivot.explain`) moved to the explainer; `drishti.py pivot explain` and tutorial 37 use the one Explain.
+- **FRTB-SA class totals from the server**: `Sbm.Result.classTotal` and `classes()`, `classTotals` in `GET /api/v1/frtb/sa` (per
+  scenario and in the reported one); the FRTB screen's Total column is back, the server's figure (never summed in the browser).
+- **Connector stamp kept on the demo lake's move**: a stamped connector file nobody edited, rewritten to `lake: demo`, is stamped again
+  (`TemplateStamp.keepPristine`), so it still counts as unedited and keeps following its pack's template; an edited one stays edited.
+- **drishti-insight 0.1.0** (library 6, in the Elements manifest, so packing and the gallery include it): the one Explain, the one
+  search box and the one Approvals queue moved in whole from `drishti_explain.js`, `drishti_search-box.js` and `drishti_approvals.js`
+  (deleted), and the workbook export (`workbookLinks`, `exportWorkbook`); `base.html` loads the bundle once (Explain only for someone
+  signed in). Tests: `tests/elements/insight.test.mjs`; the keymap and Explain tests read the library's sources.
+- **The Elements 1.x npm package retired**: `tools/elements_package.py`, `core/element_package.py` and `web/elements/package/` deleted,
+  with the 1.x TypeScript generators; the 1.x embedding elements are frozen and still served unchanged at `/embed/v1/elements/1.4.5/`
+  (and the renderer 1.2.0 files as they were); the per-library packages replace the package.
+- **`tools/drishti.py` split**: its command tree is `tools/drishti_parser.py` (`build_parser(h)`), the commands stay in `drishti.py`
+  (1,495 → about 1,135 lines).
+- **drishti-grid**: the row model is chosen in `drishti_grid-model-base.js` (`rowModelFor`), keeping `drishti_grid.js` under the
+  modules' 530-line cap.
+- **Tests**: `test_docs_rot.py` knows the figures capture's test-only variables (`DRISHTI_FIGURES_OUT`, `DRISHTI_FIGURES_BASELINE`).
+
+- **drishti-grid: tree data on server-side rows** ([ELEMENTS.md section 8](docs/architecture/ELEMENTS.md), the AG Grid migration
+  guide): `treeData` with a `datasource`, `isServerSideGroup(row)` and `getServerSideGroupKey(row)` — the server answers the tree one
+  level at a time (`treeData: true` in the block request, `groupKeys` the path of the node whose children are asked); a node is a row
+  with the server's figures, a closed node reopens from its cached blocks, a sort or filter asks every open level again,
+  `refresh({keys})` asks one node's level, `groupDefaultExpanded` and expand/collapse all open levels as they load, the body draws a
+  `treegrid` with `aria-level` and `aria-expanded`. `memoryDatasource` answers tree requests with `getDataPath`. The AG Grid-style
+  adapter maps `treeData` with `rowModelType: 'serverSide'`, `isServerSideGroup` and `getServerSideGroupKey` (no longer reported as
+  unsupported); the adapter harness's `?mode=server-tree` and the gallery's "Server-side tree data" demo show it. Tests:
+  `tests/elements/tree.test.mjs`, `ag-adapter.test.mjs`, `test_elements_grid_browser.py`.
+- **A single-choice select in drishti-inputs, and the VaR and exposure screens' pickers on it** (ELEMENTS.md 8.2 and 12.2). `Select`,
+  `<drishti-select>` (`drishti_select.js`): the WAI-ARIA select-only combobox over the library's one listbox and popover (groups,
+  disabled options); Down, Up, Enter, Space, Alt+Down open, Home and End, Page Up and Down, type-ahead, Enter, Space or Alt+Up pick,
+  Escape and Tab close without picking; a long list (more than 8, or `search: true`) has a search field on top; in markup its options
+  are `<option>` and `<optgroup>` children; `name` makes a hidden input for a plain form; `setOptions`, `setDisabled`, `drishti:change`
+  `{value, option}`. Every native select of the VaR family and the exposure screens is now one: the VaR explorer's currency (its "More…"
+  group), scenarios, horizon, VaR and ES confidence and hierarchy (a hierarchy skipped on the date disabled, with why), the basket
+  sheet's saved baskets (searchable, asked when opened), the playground's horizon, confidences, currency and workbook size (a refused
+  size disabled with its reason), the stress window's hierarchy and window, the period statistics' measure, and the exposure explorer's
+  pre-deal form (netting set, candidate, method, whose figures). `terminal/_risk_elements.html` loads drishti-inputs; the gallery has a
+  Select demo; the harness and `test_elements_inputs_browser.py` test it by keyboard, type-ahead, search and ARIA; the screens' browser
+  tests pick through it (`tests/select_helpers.py`).
+
 - **The console's pickers on drishti-inputs** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
   the as-of date in the top bar is a business-date picker keyed by the server's holidays (T-1, month-end, a weekend or holiday refused
   in words); every date field of the terminal, BI and Admin pages (and the ones scripts make: BI's statement, designer and slicer

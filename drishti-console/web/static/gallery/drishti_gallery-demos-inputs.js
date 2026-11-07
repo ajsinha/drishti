@@ -108,6 +108,21 @@
   }));
 
   demos.push(inputDemo({
+    id: 'select', title: 'Select', about: 'drishti_select.js', types: ['SelectOptions'],
+    summary: 'One value from a list (the ARIA select-only combobox): arrows, Home and End, Page keys, type-ahead, groups, disabled options; a search on top of a long list.',
+    values: { label: 'Reporting currency', search: 'auto' },
+    examples: [{ title: 'Currencies, G10 and emerging (searchable)', values: {} }, { title: 'Horizon, three choices', values: { label: 'Horizon', short: true } },
+      { title: 'Nothing picked yet', values: { placeholder: 'Pick a currency' } }],
+    build: function (values, ctx) {
+      const short = values.short;
+      const options = ctx.memo(short ? 'horizons' : 'ccys-one', () => (short ? [{ value: '1d', label: '1-day' }, { value: '10d:sqrt10', label: '10-day (√10)' }, { value: '10d:sum', label: '10-day (sum)' }]
+        : CCYS.map((c, i) => ({ value: c, label: c, group: i < 9 ? 'G10' : 'Emerging', disabled: c === 'RUB', detail: c === 'RUB' ? 'no FX on the date' : '' }))));
+      const v = values.placeholder ? {} : { value: short ? '1d' : 'USD' };
+      return build('drishti-select', 'Select', Object.assign({ options: options }, v, typed(values, ['label', 'placeholder', 'search', 'searchMin', 'disabled'])), new Map([[options, 'options']]));
+    }
+  }));
+
+  demos.push(inputDemo({
     id: 'form', title: 'Form', about: 'drishti_form.js', types: ['FormOptions'],
     summary: 'A form from a schema: validation in words, conditional fields, arrays, dates by a calendar, the server\'s checks, a four-eyes submit to a second person.',
     values: { submitLabel: 'Propose', layout: 'columns' },
@@ -171,6 +186,28 @@
     build: () => build('drishti-code-diff', 'CodeDiff', { mode: 'yaml', labels: ['Published', 'Draft'], original: 'kind: view\ntitle: Desk risk\npanels:\n  - grid: $positions\n  - chart: $pnl\n',
       value: 'kind: view\ntitle: Desk risk and limits\npanels:\n  - grid: $positions\n  - chart: $pnl\n  - grid: $limits\n' })
   }));
+
+  /* ---------------- drishti-insight ---------------- */
+  demos.push({
+    id: 'workbook-export', title: 'Workbook export', about: 'drishti_insight-workbook.js', library: 'drishti-insight', kind: 'function', ag: false,
+    keys: [], events: [], sutra: () => null, types: [],
+    summary: 'A number\'s live-formula workbook, found through the one Explain\'s Workbook part and downloaded; the server writes it. Here the answer is a stand-in (the gallery has no server): Export logs the link it would open.',
+    values: { scope: 'BANK' }, examples: [{ title: 'VaR of the bank', values: {} }, { title: 'A desk', values: { scope: 'DESK:RATES' } }],
+    extra: [{ name: 'scope', control: { kind: 'select', values: ['BANK', 'DESK:RATES', 'DESK:FX'] }, desc: 'The number\'s scope.' }],
+    mount: function (host, values, ctx) {
+      const doc = host.ownerDocument, I = ctx.E.insight, h = ctx.h;
+      const answer = { workbook: { links: [{ label: 'VaR workbook (' + values.scope + ')', href: '/api/var/workbook?scope=' + encodeURIComponent(values.scope), note: 'live formulas, a Provenance sheet' }] } };
+      const win = { location: { assign: (u) => ctx.log('opened', { href: u }) }, Drishti: { Explain: { ask: () => Promise.resolve(answer) } } };
+      const rows = I.workbookLinks(answer).map((l) => h(doc, 'li', { text: l.label + ' · ' + l.href + (l.note ? ' · ' + l.note : '') }));
+      const go = () => I.exportWorkbook({ kind: 'var', measure: 'var', scope: values.scope }, { win: win }).then((l) => ctx.log('exported', { label: l.label }));
+      const el = h(doc, 'div', { cls: 'gx-fn' }, [h(doc, 'ul', {}, rows),
+        h(doc, 'div', { cls: 'gx-demo-bar', attrs: { role: 'toolbar', 'aria-label': 'Workbook' } }, [h(doc, 'button', { cls: 'gx-btn', text: 'Export', attrs: { type: 'button', 'data-action': 'export' }, on: { click: go } })])]);
+      host.appendChild(el);
+      return { target: el, element: el, ready: Promise.resolve(), destroy: () => el.remove() };
+    },
+    code: (values) => ({ js: "import { exportWorkbook } from '/static/elements/drishti-insight/src/drishti_index.js';\n\n// on a console page (the one Explain installed): the number's workbook, downloaded\nexportWorkbook({ kind: 'var', measure: 'var', scope: '" + values.scope + "' });",
+      element: '<script src="/static/elements/drishti-core/drishti_core.js"></script>\n<script src="/static/elements/drishti-insight/drishti_insight.js"></script>\n<script>\n  Drishti.elements.insight.exportWorkbook({ kind: \'var\', measure: \'var\', scope: \'' + values.scope + '\' });\n</script>' })
+  });
 
   /* ---------------- drishti-data ---------------- */
   function dataDemo(spec) { return Object.assign({ library: 'drishti-data', kind: 'function', ag: false, keys: [], events: [], sutra: () => null }, spec); }

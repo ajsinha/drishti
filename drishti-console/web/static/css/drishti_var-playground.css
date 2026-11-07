@@ -32,7 +32,8 @@
 .pg-ctrls { display: flex; flex-wrap: wrap; gap: var(--d-sp-8); align-items: center; }
 .pg-chip, .pg-export { display: inline-flex; gap: var(--d-sp-6); align-items: center; font-size: var(--d-fs-12_5); padding: var(--d-sp-3) var(--d-sp-10); border: 1px solid var(--d-border); border-radius: var(--d-radius-13); color: var(--d-muted); }
 .pg-chip select, .pg-export select { background: transparent; color: var(--d-ink); border: 0; font-size: var(--d-fs-12_5); max-width: 260px; }
-.pg-chip select option, .pg-export select option { background: var(--d-surface); color: var(--d-ink); }
+.pg-chip > drishti-select, .pg-export > drishti-select { max-width: 260px; }
+.pg-chip:has(> drishti-select), .pg-export:has(> drishti-select) { border: 0; padding: 0 var(--d-sp-4); }      /* the Select draws its own field */
 .pg-seg { display: inline-flex; border: 1px solid var(--d-border); border-radius: var(--d-radius-14); overflow: hidden; }
 .pg-segb { background: none; border: 0; padding: var(--d-sp-4) var(--d-sp-11); font-size: var(--d-fs-12_5); color: var(--d-muted); }
 .pg-segb[aria-pressed="true"] { background: var(--d-surface-2); color: var(--d-ink); font-weight: 600; box-shadow: inset 0 -2px 0 var(--d-accent); }

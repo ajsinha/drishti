@@ -237,7 +237,7 @@ export function translateAgOptions(go, o) {
   });
   const cols = columns(go.columnDefs, [], ctx, []);
   const tree = !!go.treeData;
-  if (tree && ctx.serverSide) { report.add('treeData with rowModelType ' + rmt, 'unsupported', 'tree data on client-side rows (rowData with getDataPath); server-side tree data is not built yet'); }
+  if (tree && rmt === 'infinite') { report.add('treeData with rowModelType infinite', 'unsupported', 'rowModelType serverSide with isServerSideGroup and getServerSideGroupKey (server-side tree data)'); }
   if (ctx.groups.length || tree || cols.some((c) => c.enableRowGroup)) {
     const a = go.autoGroupColumnDef || {};
     Object.keys(a).forEach((k) => { if (['headerName', 'width', 'minWidth', 'maxWidth', 'pinned', 'cellRendererParams', 'field'].indexOf(k) < 0) { report.add('autoGroupColumnDef.' + k, 'unknown', ''); } });
@@ -264,7 +264,11 @@ export function translateAgOptions(go, o) {
   const out = Object.assign({ columns: cols, rowSelection: mode, checkboxes: checkboxes, layout: dx.layout || (go.sideBar ? 'panel' : 'wells'), density: density,
     pinTotals: false, grandColumn: !!go.pivotRowTotals, columnGroupTotals: !!go.pivotColumnGroupTotals, treeData: tree,
     groupDefaultExpanded: go.groupDefaultExpanded || 0 }, ctx.serverSide ? {} : { rows: go.rowData || [] });
-  if (tree) { if (typeof go.getDataPath !== 'function') { throw new Error('treeData needs getDataPath(data)'); } out.getDataPath = (row) => go.getDataPath(row); }
+  if (tree && ctx.serverSide) {                                                 // server-side tree data: the server answers one level at a time
+    if (typeof go.isServerSideGroup !== 'function' || typeof go.getServerSideGroupKey !== 'function') { throw new Error('treeData with rowModelType serverSide needs isServerSideGroup(data) and getServerSideGroupKey(data)'); }
+    out.isServerSideGroup = (row) => !!go.isServerSideGroup(row);
+    out.getServerSideGroupKey = (row) => go.getServerSideGroupKey(row);
+  } else if (tree) { if (typeof go.getDataPath !== 'function') { throw new Error('treeData needs getDataPath(data)'); } out.getDataPath = (row) => go.getDataPath(row); }
   if (typeof go.getRowId === 'function') { out.getRowId = (row, i, keys) => String(go.getRowId({ data: row, level: keys ? keys.length : 0, parentKeys: keys ? keys.slice() : [], context: go.context, api: ctx.api })); }
   if (go.cacheBlockSize) { out.blockSize = go.cacheBlockSize; }
   const sctx = { column: (id) => o.columnOf ? o.columnOf(id) : cols.find((c) => c.id === id || c.field === id) || null, aggOf: (id) => ctx.aggNames[id], context: go.context,
