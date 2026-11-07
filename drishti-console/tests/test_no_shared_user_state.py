@@ -34,7 +34,7 @@ CHANGES = {"append", "add", "update", "pop", "popitem", "clear", "setdefault", "
 
 #: module-level mutable state, each with why it holds nothing one person could read of another
 ALLOWED = {
-    "core/menus.py:_cache": "the parsed menus.yaml by file stamp: configuration, the same for everyone",
+    "core/menus.py:_cache": "the parsed sitemap.yaml by file stamp: configuration, the same for everyone",
     "core/external_lib.py:_paths": "folders added to sys.path for the console's own libraries: configuration",
     "core/channel_relay.py:HANDLERS": "relay operation to its handler function, registered at import by the routes (code, not data); "
                                       "what a relay holds is per app (app.state.relay)",

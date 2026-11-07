@@ -132,6 +132,6 @@ def test_a_view_of_a_kind_with_a_knowledge_page_carries_the_link(client, monkeyp
     assert 'href="/help/knowledge-trades-and-products#term-trade" data-what-link' in page and "What does this mean?" in page
 
 
-def test_knowledge_is_in_the_build_and_help_menus(client):
+def test_knowledge_is_in_the_help_menu_once(client):
     page = client.get("/t").text
-    assert page.count('href="/what"') >= 2 and "also WHAT &lt;GO&gt;" in page
+    assert page.count('href="/what"') == 1 and "WHAT &lt;term&gt;" in page                       # listed once: the sitemap (2.9.11.f)

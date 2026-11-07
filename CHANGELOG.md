@@ -183,6 +183,28 @@
   - Under construction (`config/under-construction.yaml`, `explain-*`): why it moved for ES and parametric figures and for exposure, the
     exposure and pivot workbooks, the check against the official capture, BI measures, Sutra metrics, FRTB-SA and SIMM, and the Pivot
     screen's own **Why did it move?** card, which moves onto the component once 2.9.11.d's BI internals are released.
+- **One Build home** (docs/architecture/SHARED_SCREENS.md section 1, mock-up e1 A + B + C; USER_GUIDE.md › The Build home): `/build` is
+  a rail grouped Data · Screens · Analysis · Work with a count per kind, lists with lineage both ways (what an item uses, what uses it,
+  inverted across every kind gathered for the person), first-visit task tiles (Bring data in, Shape it, Show it, Package it; hidden per
+  browser), one search across every kind, + New per kind. Built from one registry of object types (`core/build_registry.py`): the core's
+  types in `core/build_types.py`, banking's (VaR baskets) in `core/build_types_banking.py`, so the domain split moves banking's entries as
+  one file; every source runs at once with a time limit and a failing one leaves its kind without a count. Folded and deleted: *My
+  designs* (`build/designs.html`, now the home's *My drafts* partial with its actions; `drishti_build-designs.js` is
+  `drishti_build-home.js`), Studio's bare start page (`/studio` redirects to `/build`); the BI rail reaches the Build home and Tables &
+  models by link (BI Studio's own home stays until bi-delete lands).
+- **One sitemap** (`drishti-console/config/sitemap.yaml`, was `menus.yaml`): the top bar, the Admin tabs (`admin/_nav.html` drawn from the
+  Admin menu: its 26 hand-written links deleted), the BI rail (`bi/shell.html` drawn from the BI menu), Help's sections (heads moved from
+  `help.yaml`) and the footer (links name menu items). Entries carry `domain:` (banking, economy); `also:` draws an item of another menu
+  without listing it twice. Plain renames of jargon labels (RELEASE_NOTES.md). Guard `tests/test_sitemap.py`: every console page is in the
+  sitemap or `in-context:` (with the page it opens from) or `not-pages:`, no id or address twice (per lens too), every item's link
+  answered, every reference resolved, banking entries tagged, the Build registry's domains.
+- **Admin → Configuration** (OPERATIONS.md › The configuration editor): every setting in three tiers with search, the value in effect and
+  its source, secrets masked and never proposed; changes go through four eyes: the server's `SettingProposals` (`/api/v1/admin/settings/proposals`,
+  a JSON file under the data folder, every step audited) writes an approved server or engine key as one line of `application.local.yaml`;
+  the approving console writes a console key into its own. Help → Configuration loses its administrators' *In effect* column (moved here).
+- **Settings tiers, one home** (`tools/settings_schemas.yaml` `tiers`): everyday by area:key (18), expert by pattern in the areas that
+  hold internals (413), admin by area (1,720); CONFIGURATION.md gains a *Tier* column; `settings_catalogue.py --check` fails when an area has
+  no tier or a listed key or pattern matches nothing (`test_settings_catalogue.py`).
 
 ## 2.9.11.d (unreleased)
 

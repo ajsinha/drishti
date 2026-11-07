@@ -633,6 +633,8 @@ drishti:
       - "* /api/v1/admin/commands/**"
       - "* /api/v1/admin/engines"             # Admin -> Engines: compute engines on or off on a node, written to its file, audited with a reason; never a token
       - "* /api/v1/admin/engines/**"
+      - "* /api/v1/admin/settings/proposals"      # Admin -> Configuration: settings changes proposed and decided by two administrators; never a token
+      - "* /api/v1/admin/settings/proposals/**"
       - "POST /api/v1/admin/data-out/streams/*/stop"   # Admin -> Data out: stop a live Flight stream (DRS-5610 to its reader); an administrator from the console, never a token
       - "* /api/v1/admin/collab/**"
       - "* /api/v1/admin/reports/**"

@@ -38,8 +38,11 @@ def _design(client, location):
 
 # ---- the addresses ------------------------------------------------------------------------------------------------------------
 
-def test_bare_studio_is_a_scratch_design_on_the_default_example_at_the_yaml_tab(app_client):
-    loc = _target(app_client, "/studio")
+def test_bare_studio_is_the_build_home_and_its_confirmed_post_a_scratch_design(app_client):
+    """Studio's old home folds into the Build home (2.9.11.f); the start it confirmed (a scratch design on the default example) stays."""
+    r = app_client.get("/studio", follow_redirects=False)
+    assert r.status_code == 302 and r.headers["location"] == "/build"
+    loc = app_client.post("/studio", data={}, follow_redirects=False).headers["location"]
     d = _design(app_client, loc)
     assert loc.endswith("?tab=split") and d["scratch"] is True and d["name"] == ""
     assert "sutra: all-panels-showcase" in d["sutra"] and [s["name"] for s in d["samples"]] == ["all-panels-showcase.json"]
@@ -119,8 +122,8 @@ def test_the_json_routes_the_workbench_still_asks_of_the_old_prefix_work(app_cli
 def test_the_build_menu_is_create_learn_with_no_studio_entry_and_approvals_is_one_place(app_client):
     page = app_client.get("/build").text
     menu = page.split('class="tbar-menus"')[1].split("</nav>")[0]
-    for text in ("Create", "New screen", "My designs", "Examples", "Learn", "Screen designer guide", "Sutra developer guide", "Tutorials",
-                 "Rachana reference", "Pack developer guide", "Approvals"):
+    for text in ("Create", "Build home", "New screen", "Examples", "Learn", "Screen designer guide", "Screen developer guide",
+                 "Tutorials", "Screen language reference", "Pack developer guide", "Approvals"):
         assert text in menu, text
     assert "Sutra Studio" not in menu and 'href="/studio' not in menu and "data-approvals-count" in menu and "Govern" not in menu
     assert "Screen Builder guide" not in menu

@@ -1194,7 +1194,7 @@ The Screen Designer over REST: `design create` from samples or a Sutra file, `de
 problems), `design propose`, `design proposals`, `design export` /
 `design import` (a pack fragment), `design bind` (a file in your development directory), `design autodesign`, `design get`,
 `design list`, `design delete`. The GitOps recipe (create, propose, approve from a pipeline) is in
-[CLI_GUIDE.md section 8](CLI_GUIDE.md); the page is Build → My designs ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench)).
+[CLI_GUIDE.md section 8](CLI_GUIDE.md); the page is Build → Build home → My drafts ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench)).
 
 ### 5.7 bi
 

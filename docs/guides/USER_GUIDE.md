@@ -32,7 +32,8 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | Section | What you learn |
 |---|---|
 | [The pages at a glance](#the-pages-at-a-glance) | Every page and its address |
-| [The top bar](#the-top-bar) | The menus and the round tools on the right |
+| [The top bar](#the-top-bar) | The menus and the round tools on the right; one sitemap draws every menu, the Admin tabs and the BI rail |
+| [The Build home](#the-build-home-everything-you-build-in-one-place) | Everything you build in one place: the rail by kind with counts, what each item uses and what uses it, + New, one search |
 | [The command line](#the-command-line) | Opening an entity, suggestions, what an error means |
 | [Pick lists](#pick-lists-when-a-command-names-several-entities) | `TRD MX-200000`, `CPTY north`, `TRD PRODUCT_TYPE=FX_QUANTO`, `TRD` |
 | [Tables: paging and the keyboard](#tables-sorting-filtering-paging-and-the-keyboard) | The pager, ▲ ▼, and the keys that walk a table |
@@ -153,14 +154,24 @@ you are on is highlighted.
 | **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](#the-forms-home), query by form), *Functions* (`/func`, also `FUNC <GO>`: every command you can use, what it does and an example; administrators switch commands on or off there, [USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)), *Data map* (`/datamap`, also `DATAMAP <GO>`: every kind of data, how it joins and how much there is, [The data map](#the-data-map)), *Data* (`/data`, also `EXPORT <GO>`: every dataset and its dates, a simple selection, a day downloaded as `.jsonl.gz`, [Export data](#export-data)), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
 | | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`), *Approvals* (`/approvals`: [the one queue](#approvals), with the number waiting) |
 | **Engines** (a role that opens an engine) | a column per engine running, its command word in the head | **VaR** `VAR`: *VaR explorer* `VAR BANK`, *Why it moved* `VAR BANK EXPLAIN`, *VaR Playground* `PLAY VAR`, *Scenario matrix* `SMAT`, *Regulatory reports*, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *Hierarchies and limit letters* `HIER` · **Exposure** `EXP`: *Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …` (the pre-deal check `XWIF` is under **Counterparties**) · **FRTB-SA** `FRSA`: *FRTB-SA capital* `FRSA BANK`, *FRTB-SA Playground* `PLAY FRTB EXAMPLE` · **SIMM** `SIMM`: *Netting sets* `SIMM`, *SIMM Playground* `PLAY SIMM EXAMPLE`; administrators also see *Admin → Engines* and, at the foot, the engines not running on any server (greyed, never links) |
-| **BI** (people with the `bi` power) | Rupaka: business intelligence | *BI home* (`/bi`), *My workspace* (`/bi/w/me`), *Catalogue* (`/bi/catalogue`), then *Recent*: the three items you opened last. Administrators with `bi-admin` also see *BI settings* ([BI_GUIDE.md](BI_GUIDE.md)) |
-| **Build** | Create | *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](SCHEMA_TO_PACK_GUIDE.md)), *My designs* (`/build`), *Examples* |
-| | Learn | *Knowledge* (`/what`, also `WHAT <GO>`: [Knowledge](#knowledge-what-the-words-mean)), *Tutorials*, *Schema to pack*, *Screen designer guide*, *Sutra developer guide*, *Panel kinds*, *Rachana reference*, *Pack developer guide* |
-| **Admin** (admins only) | People & access | *Users*, *Roles*, *Audit log* |
-| | Operations | *Packs*, *Connectors*, *Artifacts*, *Commands* (opens Functions with the switches), *Data loads*, *Lakes*, *Collaboration*, *Embedding*, *Net* (Drishti\*net: [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)), *Health*, *Caches*, *Capacity* (today against the plan; the single-node planner: [OPERATIONS.md 12.4](../admin/OPERATIONS.md#124-admin--capacity-today-against-the-plan)) |
-| **Help** | Learn | *Help centre* (`/help`, also `F1`), *Knowledge* (`WHAT <GO>`), *Install and run*, *About* |
+| **BI** (people with the `bi` power) | Business intelligence | *BI home* (`/bi`), *Catalogue* (`/bi/catalogue`), *My workspace* (`/bi/w/me`), *My runs*, *Workspaces* |
+| | Analyse | *Models*, *Datasets*, *Report designer* (`/bi/designer`), *Promotion (test to live)* (`/bi/environments`), *Notebook*, *Data prep* (`/bi/transform`) |
+| | Administer | *BI settings* (administrators with `bi-admin`, [BI_GUIDE.md](BI_GUIDE.md)) |
+| **Build** | Create | *Build home* (`/build`: [the Build home](#the-build-home-everything-you-build-in-one-place)), *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](SCHEMA_TO_PACK_GUIDE.md)), *Tables & models* (`/build/tables`), *Examples* |
+| | Learn | *Tutorials*, *Schema to pack*, *Screen designer guide*, *Screen developer guide*, *Panel kinds*, *Screen language reference*, *Pack developer guide* |
+| **Admin** (admins only) | People & access | *Users*, *Roles*, *API tokens*, *Who looked at what*, *Audit log*, *Saved VaR baskets* |
+| | Data | *Packs*, *Connectors*, *Data loads*, *Lakes*, *Record edits*, *Data out*, *Installed items* |
+| | Platform | *Configuration* ([the configuration editor](../admin/OPERATIONS.md#the-configuration-editor)), *Engines*, *Python workers*, *Cluster* (Drishti\*net: [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)), *AI*, *Collaboration*, *Embedded views*, *Health*, *Caches*, *Capacity* |
+| **Help** | Learn | *Help centre* (`/help`, also `F1`), *Knowledge* (`WHAT <GO>`), *Install and run*, *What's new*, *About* |
 
-**The Engines menu.** One menu holds every compute engine's pages: a column per engine, its command word (`VAR`, `EXP`, `FRSA`, `SIMM`) in the column's head, each page with its command on the right. It shows only the engines running on a server of the cluster (an engine an administrator turns off in *Admin → Engines* leaves it, with its pages and help) and only those your role opens: a market-risk role sees VaR, FRTB-SA and SIMM, a credit-risk role Exposure and SIMM, an administrator every engine; a role that opens none has no Engines menu at all. The same rule holds on the command line: an engine's command words (`VAR`, `SMAT`, `SWIN`, `PLAY VAR`; `EXP`, `XWIF`; `FRSA`, `PLAY FRTB`; `SIMM`, `PLAY SIMM`) are not offered in the type-ahead to a role that does not open the engine, and typing one says *VaR is not opened for your role; ask an administrator.* instead of running it. Help is not gated: every running engine's guide and tutorial stay open to everyone. With more than four engines running a search box at its top finds a page by its name, description or command (Enter opens the first left). On a phone the columns fold: tap an engine to open its pages, one engine at a time. Who opens which engine is set in `drishti-console/config/menus.yaml` (`opens:` per engine).
+**One sitemap.** Every way round the product is drawn from one file, `drishti-console/config/sitemap.yaml`: the menus above, the tabs
+along the top of every Admin page (the Admin menu, in its order), the BI rail (the BI menu), the sections of the help centre and the
+footer. A page is listed once; the Admin tabs and the BI rail reach a page of another menu (*BI settings*, *Functions*, *My account*,
+the *Pivot*, the *Build home*) without a second copy. What you see follows your role (an entry's requirements) and your lens (its own
+menus), worked out on each page for you alone. An administrator adds, moves or renames an entry there (the file is read again when
+it changes); a test holds every page of the console to an entry or to the page it opens from.
+
+**The Engines menu.** One menu holds every compute engine's pages: a column per engine, its command word (`VAR`, `EXP`, `FRSA`, `SIMM`) in the column's head, each page with its command on the right. It shows only the engines running on a server of the cluster (an engine an administrator turns off in *Admin → Engines* leaves it, with its pages and help) and only those your role opens: a market-risk role sees VaR, FRTB-SA and SIMM, a credit-risk role Exposure and SIMM, an administrator every engine; a role that opens none has no Engines menu at all. The same rule holds on the command line: an engine's command words (`VAR`, `SMAT`, `SWIN`, `PLAY VAR`; `EXP`, `XWIF`; `FRSA`, `PLAY FRTB`; `SIMM`, `PLAY SIMM`) are not offered in the type-ahead to a role that does not open the engine, and typing one says *VaR is not opened for your role; ask an administrator.* instead of running it. Help is not gated: every running engine's guide and tutorial stay open to everyone. With more than four engines running a search box at its top finds a page by its name, description or command (Enter opens the first left). On a phone the columns fold: tap an engine to open its pages, one engine at a time. Who opens which engine is set in `drishti-console/config/sitemap.yaml` (`opens:` per engine).
 
 **In an edition or a lens, its own subject menus.** Drishti Trading, Market and World put their subjects in the bar after **Views** (and **Engines**), and leave out Build; Drishti Risk keeps Views, Engines, BI, Admin and Help. Drishti Trading's one **Markets** menu gathers every market-data screen a trader reads, a column per subject, and its bar has no BI or Admin menu (both by command):
 
@@ -207,6 +218,32 @@ Worked example: find the audit log without typing an address.
 3. Press `Esc`, or click anywhere outside, to close a menu without choosing.
 
 If you do not see **Admin**, your account has no admin role; ask an administrator.
+
+## The Build home: everything you build in one place
+
+**Build → Build home** (`/build`) is the one place for everything you may build. The left rail lists every kind, grouped, each with
+how many you may see:
+
+| Group | Kinds |
+|---|---|
+| **Data** | *Connectors* and *Lakes* (administrators), *Tables & models* and *Python tables* (the `bi` power) |
+| **Screens** | *Sutras* (screens), *Packs*, *UI kit* |
+| **Analysis** | *Reports & boards* (the `bi` power), *Pivot views*, *Functions*, *VaR baskets* (where VaR is on) |
+| **Work** | *My drafts* (the first list: your screen designs with *Rename*, *Duplicate* and *Delete*, then your other drafts), *Waiting for review*, *Recently changed* (the last two weeks) |
+
+Choose a kind and the middle lists it: name, kind, status with its version, what each item **uses** and what **uses it** (a table
+uses a connector; a report uses a model; a model is used by six reports), and when it last changed and by whom. A name opens its
+editor. **+ New** starts any kind (a screen, a pack, a table or model, a Python table, a report, a connector, a function, a basket).
+The search box (or `/`) looks through every kind at once: `risk` finds the model *risk-by-desk*, the report *VaR by desk* and the
+table that feeds them.
+
+On your first visit four task tiles sit above the list: *Bring data in*, *Shape it*, *Show it* and *Package it*, each with how many
+there are and opening its first kind, beside *Continue where you left off* and *Waiting for you*. *Hide these tiles* keeps them away
+in this browser; *Show the task tiles* at the foot of the rail brings them back.
+
+What you may build follows your role: a viewer sees no *Connectors*; a kind whose server does not answer in time shows a dash
+instead of a count and says so when chosen. The old addresses keep working: `/studio` opens the Build home, and a Studio link with
+a Sutra or an example opens it in the workbench as before.
 
 ## The command line
 
@@ -2409,7 +2446,7 @@ server, `DRISHTI_STUDIO_SAVE=true`); without it **Save** is dimmed and says "Des
 a *stored* entity, and any panel that reads another entity with `source:`, still follow the kinds your roles open: a panel whose source you may not open shows
 "no access to <kind>" instead of its data.
 
-A design is yours and is kept by the server (**Build → My designs**). To start one:
+A design is yours and is kept by the server (**Build → Build home → My drafts**). To start one:
 
 - **Build → New screen**: bring JSON files, a schema or stored entities, and let auto-design draft a first screen;
 - **Build → Examples**: each example opens as your own copy;

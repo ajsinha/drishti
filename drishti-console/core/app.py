@@ -472,6 +472,8 @@ def create_app(settings: Settings) -> FastAPI:
 
     templates.env.globals["top_bar_menus"] = _menus.top_bar
     templates.env.globals["footer_links"] = _menus.footer
+    templates.env.globals["admin_tabs"] = _menus.admin_tabs        # the Admin pages' tab strip: the sitemap's admin menu
+    templates.env.globals["bi_rail"] = _menus.bi_rail              # the BI rail: the sitemap's bi menu
     templates.env.globals["command_placeholder"] = _menus.placeholder
     templates.env.globals["lens_links"] = _menus.lens_links
     templates.env.globals["lens_menu"] = _menus.lens_menu          # the subject menus folded into one on a phone (LX1 option C)
@@ -627,6 +629,8 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(data_routes.router)              # Export data: DATA, every dataset and a day as .jsonl.gz (DATA_GUIDE.md)
     app.include_router(compute_admin_routes.router)     # Admin -> Compute (docs/admin/OPERATIONS.md)
     app.include_router(admin_engines_routes.router)     # Admin -> Engines: compute engines on or off per server (COMPUTE_ENGINES.md)
+    from routes import config_editor_routes
+    app.include_router(config_editor_routes.router)     # Admin -> Configuration: every setting in three tiers, changes proposed (OPERATIONS.md)
     app.include_router(data_out_routes.router)          # Admin -> Data out: Arrow Flight, the page and the map (FLIGHT_GUIDE.md)
     app.include_router(connector_routes.router)
     app.include_router(artifact_routes.router)

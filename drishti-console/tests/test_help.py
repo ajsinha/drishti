@@ -127,7 +127,7 @@ KINDS = ("kv table tabs line area hbar ladder links status provenance markdown g
 def test_the_sutra_developer_guide_is_a_help_card_with_screenshots(client):
     import re
     index = help_pages(client)
-    assert "Sutra developer guide" in index and "/help/sutra-developer-guide" in index
+    assert "Screen developer guide" in index and "/help/sutra-developer-guide" in index
     page = client.get("/help/sutra-developer-guide")
     assert page.status_code == 200 and "data-unavailable" not in page.text
     srcs = set(re.findall(r'<img[^>]*\bsrc="([^"]+)"', page.text))
@@ -205,11 +205,13 @@ decisions plan release-notes changelog notices sutra-guide rachana-guide plugins
 def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages():
     """The decided structure (2.9.11.a, mock-up help-hub/A): eight sections and Internal for administrators."""
     catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
+    heads = yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text())["help-sections"]   # the sections: the sitemap's (2.9.11.f)
+    assert [c["id"] for c in catalogue["sections"]] == [h["id"] for h in heads]
     assert [c["id"] for c in catalogue["sections"]] == ["get-started", "risk", "analytics", "data", "build", "operate", "reference",
                                                          "knowledge", "internal"]
-    assert [c["name"] for c in catalogue["sections"]] == ["Get started", "Risk measures", "Analytics and BI", "Data", "Build", "Operate",
+    assert [c["name"] for c in heads] == ["Get started", "Risk measures", "Analytics and BI", "Data", "Build", "Operate",
                                                            "Reference", "Knowledge", "Internal"]
-    assert next(c for c in catalogue["sections"] if c["id"] == "internal")["roles"] == ["admin"]
+    assert next(c for c in heads if c["id"] == "internal")["roles"] == ["admin"]
     total = len(_pages(catalogue))
     # 47: the 45 pages plus VaR's two (the VaR guide and tutorial 25), the product owner's request of 2026-10-26: VaR help is two pages.
     # 49: plus exposure's two (the exposure guide and tutorial 26), the same rule (each measure has exactly two documents and two entries).

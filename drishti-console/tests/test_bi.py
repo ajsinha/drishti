@@ -100,7 +100,7 @@ def test_every_page_has_the_rail_and_the_shared_top_bar(bi, path, page):
     r = client.get(path)
     assert r.status_code == 200
     assert f'data-bi-page="{page}"' in r.text and 'class="bi-rail"' in r.text and 'class="tbar"' in r.text or 'class="tbar-row1"' in r.text
-    for label in ("Home", "Catalogue", "My workspace", "Workspaces", "Datasets", "Designer", "Pivot", "Notebook"):
+    for label in ("Home", "Catalogue", "My workspace", "Workspaces", "Datasets", "Report designer", "Pivot", "Notebook"):
         assert label in r.text
     assert "f-keys" not in r.text and "fkeys" not in r.text.lower()                        # the terminal's F-key footer is not shown
     assert "<script>" not in r.text.replace("<script src", "") and " onclick=" not in r.text
