@@ -347,6 +347,7 @@
       root.dataset.peak = peak ? peak.tenor : "";
     };
     draw(null);
+    $("[data-xx-fan-legend]").hidden = true;
     if (set) {
       var seq = S.seq;
       api("scope/distribution", { scope: d.canonical, bands: "true" }).then(function (x) {
@@ -354,6 +355,7 @@
         var b = x.bands || [];
         draw(b);
         root.dataset.fan = String(b.length);
+        $("[data-xx-fan-legend]").hidden = !b.length;
       }).catch(function () { /* the profile stands without its fan */ });
     }
   }

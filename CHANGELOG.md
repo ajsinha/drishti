@@ -257,6 +257,23 @@
 - **Settings tiers, one home** (`tools/settings_schemas.yaml` `tiers`): everyday by area:key (18), expert by pattern in the areas that
   hold internals (413), admin by area (1,720); CONFIGURATION.md gains a *Tier* column; `settings_catalogue.py --check` fails when an area has
   no tier or a listed key or pattern matches nothing (`test_settings_catalogue.py`).
+- **The VaR and exposure family on Drishti Elements** ([ELEMENTS.md section 12.1](docs/architecture/ELEMENTS.md#121-the-var-and-exposure-family-step-9-2911e-the-migration-checklist)):
+  every table of the VaR explorer (the scope tree as tree data, the path, the history, the contributions, the captures, the
+  currencies), parametric VaR, the basket's sheet (now drishti-grid's cell editing: typing, Enter, Tab, Delete, undo; the paste with
+  headings stays the sheet's) and its what-if, the VaR Playground (its six header rows pinned), backtesting, the regulatory screens, the
+  stress window, the scenario matrix, the MR lens, the risk landing, the exposure explorer and its counterparty screens, FRTB-SA and
+  SIMM is a `<drishti-grid>` in the **terminal layout** (the product owner's default for VaR screens) made by drishti-risk's preset
+  `riskGrid` (figures never summed in the browser); every chart is drishti-chart or a drishti-risk kind (`riskChart`): the P&L
+  distribution from the server's bins with VaR, ES and the fitted normal, the backtest with the server's zone, count and multiplier, the
+  exposure profile with the server's EEPE. **Deleted**: `drishti_var-charts.js` (208 lines) and `drishti_exposure-charts.js` (126), the
+  screens' hand-built tables, SVG drawing, sheet editor and playground canvas, and their CSS (2,524 lines out and 1,822 in under `web/`, libraries
+  included). Commands, addresses, keys and saved views unchanged. Market-risk code stays in drishti-risk (the owner's domain rule):
+  drishti-risk 0.2.0 gains the grid and chart presets, the figures in words (`riskMoney`, `riskSigned`, `riskInt`, `riskPct`: the texts
+  the screens printed before), `textColumn` and `moneyColumn`; the generic libraries only generic hooks: drishti-grid 0.4.0 (a column's
+  `cellClass` and `cellRenderer`, a row's `getRowClass` and `getRowData`, `fitRows`, `chrome: false`, `pinnedTopRows` with
+  `pinnedCellClicked`, a tree node's own row in its cell context), drishti-chart 0.2.0 (the histogram of a server's bins). A
+  before-and-after comparison of sixteen screens and tabs (`tests/screen_figures.py`, `tests/test_var_family_figures_browser.py`, run on
+  demand) and every family browser file on the new selectors with its assertions kept.
 
 ## 2.9.11.d (unreleased)
 

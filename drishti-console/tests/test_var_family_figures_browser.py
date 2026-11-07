@@ -70,14 +70,8 @@ def _settle(pg, by):
             pg.locator(f'.vx-segb[data-by="{by}"]').click()
             word = {"position": "POS:", "trade": "TRD:"}[by]
             wait(pg, "!!document.querySelector('[data-vx-ctable] [data-scope^=\"%s\"]')" % word, 120)
-    # every screen: no panel still computing or loading for two seconds running (a live connection keeps the network busy)
-    calm = 0
-    for _ in range(240):
-        busy = pg.evaluate("/computing|loading…|reading …/i.test(document.body.innerText)")
-        calm = 0 if busy else calm + 1
-        if calm >= 4:
-            break
-        pg.wait_for_timeout(500)
+    # every screen: no panel still computing or loading (a live connection keeps the network busy, so not networkidle)
+    wait(pg, "!/computing|loading…|reading …/i.test(document.body.innerText)", 120)
 
 
 @pytest.mark.parametrize("name,path,by", SCREENS, ids=[s[0] for s in SCREENS])
