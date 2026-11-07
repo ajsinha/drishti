@@ -2690,14 +2690,6 @@ Returns `string`.
 
 ### drishti_grid.js
 
-#### `LAYOUTS`
-
-The layouts a grid is drawn in (the visual shell; the model is the same).
-
-#### `DENSITIES`
-
-The densities, with their row heights in px.
-
 #### class `GridModel`
 
 The grid model.
@@ -2813,61 +2805,6 @@ Groups rows (grid mode).
 | `colIds` | `string[]` |  |
 
 Returns `void`.
-
-##### `GridModel.setPivotMode(on)`
-
-Turns pivot mode on or off; on, the wells' view is computed (or asked).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `on` | `boolean` |  |
-
-Returns `Promise&lt;void&gt;`.
-
-##### `GridModel.setPivotOptions(extra)`
-
-Sets the view's other parts (sort per level, top N, subtotals above or below, value filters, source, provider options).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `extra` | `Object` |  |
-
-Returns `Promise&lt;void&gt;`.
-
-##### `GridModel.pivotView()`
-
-The pivot view now: the wells, the grid's member filters, the open state and the options.
-
-Returns `Object`.
-
-##### `GridModel.runPivot()`
-
-Computes the pivot: in the browser for client-side rows (the non-additive measures then asked of the server, when serverPivot is given), else asked of the server. A value filter is applied either way.
-
-Returns `Promise&lt;void&gt;`.
-
-##### `GridModel.togglePivotNode(axis, path, open)`
-
-Opens or closes a pivot row or column group, and computes again.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `axis` | `('rows'\|'columns')` |  |
-| `path` | `Array&lt;Array&lt;string&gt;&gt;` | the node's (dimension, value) pairs |
-| `[open]` | `boolean` |  |
-
-Returns `Promise&lt;void&gt;`.
-
-##### `GridModel.expandPivotTo(axis, level)`
-
-Opens every pivot node of an axis to a level.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `axis` | `('rows'\|'columns')` |  |
-| `level` | `number` |  |
-
-Returns `Promise&lt;void&gt;`.
 
 ##### `GridModel.toggleRow(r, open)`
 
@@ -3047,94 +2984,6 @@ Connects a live feed (drishti_live.js: Server-Sent Events, a WebSocket, or drish
 
 Returns `function(): void`: disconnects.
 
-##### `GridModel.dataChanged(notice)`
-
-A server's "data changed" notice: server-side rows are asked again (all, a level, blocks, or the blocks holding some rows); a server pivot is computed again.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `notice` | `{purge: boolean, keys: string[], blocks: number[], rows: string[]}` |  |
-
-Returns `string`: what was done.
-
-##### `GridModel.applyPivotUpdates(pairs)`
-
-Changes the local pivot's figures for changed rows by difference (false: compute it again).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `pairs` | `Array&lt;{old: Object, value: Object}&gt;` |  |
-
-Returns `boolean`.
-
-##### `GridModel.refreshServerMeasures()`
-
-Asks the server again for the pivot's non-additive measures (every cell), and puts the figures in.
-
-Returns `Promise&lt;number&gt;`: how many figures came in.
-
-##### `GridModel.toTable()`
-
-The grid as shown, as a table to export: shown columns; in grid mode every filtered row (or the groups and their rows), in pivot mode the pivot's rows, with outline levels.
-
-Returns `import('./drishti_export.js').ExportTable`.
-
-##### `GridModel.exportCsv(o)`
-
-CSV text of the grid as shown.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `[o]` | `{formatted: boolean}` |  |
-
-Returns `string`.
-
-##### `GridModel.exportXlsx(o)`
-
-An Excel workbook of the grid as shown.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `[o]` | `{sheetName: string}` |  |
-
-Returns `Uint8Array`.
-
-##### `GridModel.setDensity(d)`
-
-Sets the density (the row height follows).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `d` | `('comfortable'\|'compact'\|'terminal')` |  |
-
-Returns `void`.
-
-##### `GridModel.setLayout(l)`
-
-Sets the layout's name (the shell draws it; nothing in the model changes).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `l` | `('wells'\|'panel'\|'terminal')` |  |
-
-Returns `void`.
-
-##### `GridModel.getState()`
-
-Everything a person set, to keep with a view or a link: columns, sort, filters, wells, pivot mode and open state, layout, density.
-
-Returns `Object`.
-
-##### `GridModel.setState(s)`
-
-Gives back a kept state.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `s` | `Object` |  |
-
-Returns `Promise&lt;void&gt;`.
-
 #### `createGridModel(o)`
 
 A new grid model.
@@ -3148,6 +2997,163 @@ Returns `GridModel`.
 ```js
 const g = createGridModel({columns: [{field: 'DESK'}, {field: 'PNL', type: 'number', format: 'amount0'}], rows: data});
 ```
+
+### drishti_grid-model-base.js
+
+#### `LAYOUTS`
+
+The layouts a grid is drawn in (the visual shell; the model is the same).
+
+#### `DENSITIES`
+
+The densities, with their row heights in px.
+
+#### class `GridModelBase`
+
+The pivot, the export and the kept state of a grid model; GridModel adds the rest (rows, columns, selection, keys, editing).
+
+##### `GridModelBase.setPivotMode(on)`
+
+Turns pivot mode on or off; on, the wells' view is computed (or asked).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `on` | `boolean` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `GridModelBase.setPivotOptions(extra)`
+
+Sets the view's other parts (sort per level, top N, subtotals above or below, value filters, source, provider options).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `extra` | `Object` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `GridModelBase.pivotView()`
+
+The pivot view now: the wells, the grid's member filters, the open state and the options.
+
+Returns `Object`.
+
+##### `GridModelBase.runPivot()`
+
+Computes the pivot: in the browser for client-side rows (the non-additive measures then asked of the server, when serverPivot is given), else asked of the server. A value filter is applied either way.
+
+Returns `Promise&lt;void&gt;`.
+
+##### `GridModelBase.togglePivotNode(axis, path, open)`
+
+Opens or closes a pivot row or column group, and computes again.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `axis` | `('rows'\|'columns')` |  |
+| `path` | `Array&lt;Array&lt;string&gt;&gt;` | the node's (dimension, value) pairs |
+| `[open]` | `boolean` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `GridModelBase.expandPivotTo(axis, level)`
+
+Opens every pivot node of an axis to a level.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `axis` | `('rows'\|'columns')` |  |
+| `level` | `number` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `GridModelBase.dataChanged(notice)`
+
+A server's "data changed" notice: server-side rows are asked again (all, a level, blocks, or the blocks holding some rows); a server pivot is computed again.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `notice` | `{purge: boolean, keys: string[], blocks: number[], rows: string[]}` |  |
+
+Returns `string`: what was done.
+
+##### `GridModelBase.applyPivotUpdates(pairs)`
+
+Changes the local pivot's figures for changed rows by difference (false: compute it again).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `pairs` | `Array&lt;{old: Object, value: Object}&gt;` |  |
+
+Returns `boolean`.
+
+##### `GridModelBase.refreshServerMeasures()`
+
+Asks the server again for the pivot's non-additive measures (every cell), and puts the figures in.
+
+Returns `Promise&lt;number&gt;`: how many figures came in.
+
+##### `GridModelBase.toTable()`
+
+The grid as shown, as a table to export: shown columns; in grid mode every filtered row (or the groups and their rows), in pivot mode the pivot's rows, with outline levels.
+
+Returns `import('./drishti_export.js').ExportTable`.
+
+##### `GridModelBase.exportCsv(o)`
+
+CSV text of the grid as shown.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `{formatted: boolean}` |  |
+
+Returns `string`.
+
+##### `GridModelBase.exportXlsx(o)`
+
+An Excel workbook of the grid as shown.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `{sheetName: string}` |  |
+
+Returns `Uint8Array`.
+
+##### `GridModelBase.setDensity(d)`
+
+Sets the density (the row height follows).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `d` | `('comfortable'\|'compact'\|'terminal')` |  |
+
+Returns `void`.
+
+##### `GridModelBase.setLayout(l)`
+
+Sets the layout's name (the shell draws it; nothing in the model changes).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `l` | `('wells'\|'panel'\|'terminal')` |  |
+
+Returns `void`.
+
+##### `GridModelBase.getState()`
+
+Everything a person set, to keep with a view or a link: columns, sort, filters, wells, pivot mode and open state, layout, density.
+
+Returns `Object`.
+
+##### `GridModelBase.setState(s)`
+
+Gives back a kept state.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `s` | `Object` |  |
+
+Returns `Promise&lt;void&gt;`.
 
 ### drishti_grid-live.js
 

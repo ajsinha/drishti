@@ -736,7 +736,7 @@ other libraries gained for it:
 - **Open.** The controls, the column funnels with Chart any table, and Zoom in `behaviours: 'console'` are still the console's scripts
   (they move with their screens: drishti-inputs for the controls, drishti-grid's column menus for the funnels); the renderer does not use
   drishti-inputs yet. drishti-insight is not built: About takes its source from `options.insight.about`. The libraries 2.0.0 imports are
-  not per-version folders yet (its integrity record covers its own modules). `drishti_grid.js` (the engine's model) is over 530 lines.
+  not per-version folders yet (its integrity record covers its own modules). The engine's model keeps under 530 lines a module: its pivot, export and kept state are `drishti_grid-model-base.js` (`GridModelBase`, which `GridModel` extends).
 
 ## 9. The documentation of every library
 

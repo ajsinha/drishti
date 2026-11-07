@@ -1739,570 +1739,138 @@
     }
     return { "VIEW_EVENTS": VIEW_EVENTS, "PHONE_WIDTH": PHONE_WIDTH, "FUNCTION_KEYS": FUNCTION_KEYS, "CF_TYPES": CF_TYPES, "headerSpans": headerSpans, "pivotColumnLabels": pivotColumnLabels, "markGroups": markGroups, "isTotalCell": isTotalCell, "nonAdditiveNote": nonAdditiveNote, "colourScaleAlpha": colourScaleAlpha, "dataBarWidth": dataBarWidth, "cfBackground": cfBackground, "figureRange": figureRange, "ruleFor": ruleFor, "phoneColumns": phoneColumns, "pivotMeasures": pivotMeasures, "columnMenuItems": columnMenuItems, "cellMenuItems": cellMenuItems, "commandText": commandText, "parseCommand": parseCommand, "parseCondition": parseCondition, "conditionText": conditionText, "statusItems": statusItems, "FlashTracker": FlashTracker };
   })();
-  /* ---- src/drishti_server-rows.js ---- */
-  __m["src/drishti_server-rows.js"] = (function () {
-    var EventBus = __lib("drishti-core").EventBus;
-    var SEP = __m["src/drishti_pivot.js"].SEP;
-    function Level(keys) { this.keys = keys; this.blocks = new Map(); this.rowCount = null; this.knownEnd = 0; }
-    class ServerRowModel {
-      constructor(o) {
-        if (!o || !o.datasource || typeof o.datasource.getRows !== 'function') { throw new Error('a server-side row model needs a datasource with getRows(request)'); }
-        this.datasource = o.datasource;
-        this.blockSize = o.blockSize || 100;
-        this.maxBlocks = o.maxBlocks || 50;
-        this.getRowId = o.getRowId || ((r, i, keys) => (r && r.id !== undefined ? String(r.id) : keys.concat([String(i)]).join(SEP)));
-        this.events = new EventBus();
-        this.sortModel = [];
-        this.filterModel = {};
-        this.quickFilter = '';
-        this.rowGroupCols = [];
-        this.valueCols = [];
-        this.pivotCols = [];
-        this.pivotMode = false;
-        this.expanded = new Set();
-        this.stamp = 0;
-        this.lru = [];
-        this.inFlight = new Map();
-        this.reset();
+  /* ---- src/drishti_grid-model-base.js ---- */
+  __m["src/drishti_grid-model-base.js"] = (function () {
+    var toCsv = __lib("drishti-core").toCsv;
+    var getValue = __m["src/drishti_columns.js"].getValue;
+    var PivotState = __m["src/drishti_pivot.js"].PivotState, pivotLocal = __m["src/drishti_pivot.js"].pivotLocal, pivotApplyUpdates = __m["src/drishti_pivot.js"].pivotApplyUpdates, serverRequest = __m["src/drishti_pivot.js"].serverRequest, mergeAnswer = __m["src/drishti_pivot.js"].mergeAnswer, applyValueFilters = __m["src/drishti_pivot.js"].applyValueFilters;
+    var toXlsx = __m["src/drishti_export.js"].toXlsx;
+    const LAYOUTS = Object.freeze(['wells', 'panel', 'terminal']);
+    const DENSITIES = Object.freeze({ comfortable: 36, compact: 28, terminal: 22 });
+    class GridModelBase {
+      setPivotMode(on) {
+        this.pivotMode = !!on;
+        this._pivotCols = null;
+        this.events.emit('changed', { what: 'pivot' });
+        return on ? this.runPivot() : Promise.resolve();
       }
-      reset() {
-        this.inFlight.forEach((x) => x.ctl && x.ctl.abort());
-        this.inFlight.clear();
-        this.levels = new Map([['', new Level([])]]);
-        this.lru = [];
-        this.stamp++;
-        this.display = null;
+      setPivotOptions(extra) { this.pivotExtra = Object.assign({}, this.pivotExtra, extra); return this.pivotMode ? this.runPivot() : Promise.resolve(); }
+      pivotView() {
+        const v = this.wells.toView(this.pivotExtra);
+        Object.keys(this.filterModel).forEach((k) => {
+          const f = this.filterModel[k], c = this.columns.get(k), field = c ? c.field : k;
+          if (f && f.type === 'set' && f.values) { v.filters[field] = { in: f.values.map(String), notIn: [] }; }
+          else if (f && f.type === 'set' && f.excluded) { v.filters[field] = { in: [], notIn: f.excluded.map(String) }; }
+        });
+        return Object.assign(v, this.pivotState.toView(this.answer));
       }
-      setSortModel(m) { this.sortModel = (m || []).slice(); this.reset(); this.events.emit('rowsChanged', { reason: 'sort' }); }
-      setFilterModel(m) { this.filterModel = Object.assign({}, m); this.reset(); this.events.emit('rowsChanged', { reason: 'filter' }); }
-      setQuickFilter(q) { this.quickFilter = q || ''; this.reset(); this.events.emit('rowsChanged', { reason: 'filter' }); }
-      setGrouping(s) {
-        this.rowGroupCols = (s.rowGroupCols || []).slice();
-        this.valueCols = (s.valueCols || []).slice();
-        this.pivotCols = (s.pivotCols || []).slice();
-        this.pivotMode = !!s.pivotMode;
-        this.expanded.clear();
-        this.reset();
-        this.events.emit('rowsChanged', { reason: 'group' });
-      }
-      setExpanded(keys, open) {
-        const k = keys.join(SEP), now = open === undefined ? !this.expanded.has(k) : open;
-        if (now) { this.expanded.add(k); if (!this.levels.has(k)) { this.levels.set(k, new Level(keys.slice())); } } else { this.expanded.delete(k); }
-        this.display = null;
-        this.events.emit('rowsChanged', { reason: 'expand' });
-      }
-      refresh(o) {
-        if (!o || !o.keys) { const exp = new Set(this.expanded); this.reset(); exp.forEach((k) => this.levels.set(k, new Level(k ? k.split(SEP) : []))); }
-        else {
-          const k = o.keys.join(SEP);
-          this.levels.forEach((lv, key) => {
-            if (key === k || key.indexOf(k ? k + SEP : '') === 0) {
-              lv.blocks.clear();
-              if (!o || o.purge !== false) { lv.rowCount = null; lv.knownEnd = 0; }
-            }
-          });
-          this.lru = this.lru.filter((x) => this.levels.get(x.level).blocks.has(x.block));
-          this.display = null;
-        }
-        this.events.emit('rowsChanged', { reason: 'refresh' });
-      }
-      invalidateBlock(keys, block) {
-        const lv = this.levels.get(keys.join(SEP));
-        const had = !!(lv && lv.blocks.delete(block));
-        if (had) { this.lru = this.lru.filter((x) => !(x.level === keys.join(SEP) && x.block === block)); this.display = null; this.events.emit('rowsChanged', { reason: 'invalidate' }); }
-        return had;
-      }
-      purge() { this.refresh(); }
-      dataChanged(notice) {
-        const n = notice || {};
-        if (n.purge || (!n.keys && !n.rows)) { this.purge(); return 'purge'; }
-        if (n.rows) {
-          const ids = new Set(n.rows.map(String));
-          let hit = 0;
-          this.levels.forEach((lv, key) => lv.blocks.forEach((b, bi) => {
-            if (b.rows.some((r, i) => ids.has(this.getRowId(r, bi * this.blockSize + i, lv.keys)))) { this.invalidateBlock(lv.keys, bi); hit++; }
-          }));
-          return hit ? 'rows' : 'nothing';
-        }
-        if (n.blocks) { n.blocks.forEach((b) => this.invalidateBlock(n.keys, b)); return 'blocks'; }
-        this.refresh({ keys: n.keys });
-        return 'level';
-      }
-      levelCount(lv) { return lv.rowCount !== null ? lv.rowCount : lv.knownEnd + this.blockSize; }
-      flatten() {
-        if (this.display) { return this.display; }
-        const out = [];
-        const walk = (key) => {
-          const lv = this.levels.get(key), n = this.levelCount(lv), depth = lv.keys.length;
-          for (let i = 0; i < n; i++) {
-            out.push([key, i]);
-            if (depth < this.rowGroupCols.length) {
-              const r = this.blockRow(lv, i);
-              if (r && !r.loading) {
-                const childKeys = lv.keys.concat([String(r[this.rowGroupCols[depth]])]), ck = childKeys.join(SEP);
-                if (this.expanded.has(ck)) { if (!this.levels.has(ck)) { this.levels.set(ck, new Level(childKeys)); } walk(ck); }
-              }
-            }
-          }
+      runPivot() {
+        const view = this.pivotView();
+        this._pivotCols = null;
+        if (!view.values.length) { this.answer = null; this.viewport.setRowCount(0); this.events.emit('changed', { what: 'pivot' }); return Promise.resolve(); }
+        if (this.pivotAbort) { this.pivotAbort.abort(); }
+        const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        this.pivotAbort = ctl;
+        const done = (a) => {
+          if (ctl && ctl.signal.aborted) { return; }
+          this.answer = a;
+          this._pivotCols = null;
+          this.viewport.setRowCount(this.rowCount());
+          this.events.emit('changed', { what: 'pivot' });
+          this.live.emit('pivotChanged', { view: view, rows: a ? a.rows.length : 0 });
         };
-        walk('');
-        this.display = out;
-        return out;
-      }
-      blockRow(lv, i) {
-        const b = lv.blocks.get(Math.floor(i / this.blockSize));
-        if (!b) { return null; }
-        const r = b.rows[i % this.blockSize];
-        return r === undefined ? null : r;
-      }
-      rowCount() { return this.expanded.size ? this.flatten().length : this.levelCount(this.levels.get('')); }
-      at(i) { return this.expanded.size ? this.flatten()[i] : ['', i]; }
-      rowAt(i) {
-        if (i < 0 || i >= this.rowCount()) { return null; }
-        const [key, n] = this.at(i), lv = this.levels.get(key), depth = lv.keys.length;
-        const r = this.blockRow(lv, n);
-        if (!r) { this.ensureBlock(key, Math.floor(n / this.blockSize)); return { kind: 'loading', id: 'loading:' + key + ':' + n, depth: depth, row: null, loading: true }; }
-        if (depth < this.rowGroupCols.length) {
-          const keys = lv.keys.concat([String(r[this.rowGroupCols[depth]])]);
-          return { kind: 'group', id: 'group:' + keys.join(SEP), depth: depth, row: r, keys: keys, field: this.rowGroupCols[depth], value: r[this.rowGroupCols[depth]],
-            count: r.childCount, expanded: this.expanded.has(keys.join(SEP)) };
+        const fail = (e) => { if (!(ctl && ctl.signal.aborted)) { this.events.emit('pivotError', { error: e }); } };
+        if (this.serverSide || this.o.clientAggregation === false) {
+          if (!this.o.serverPivot) { return Promise.reject(new Error(this.serverSide ? 'a pivot of server-side rows needs serverPivot' : 'clientAggregation is off: a pivot needs serverPivot')); }
+          return this.o.serverPivot(serverRequest(view), ctl && ctl.signal, this.serverSide ? null : this.rowModel.filteredRows()).then((a) => { applyValueFilters(a, view.valueFilters); done(a); }, fail);
         }
-        return { kind: 'leaf', id: this.getRowId(r, n, lv.keys), depth: depth, row: r, keys: lv.keys };
-      }
-      ensureRange(first, last) {
-        const count = this.rowCount(), waits = [];
-        const seen = new Set();
-        for (let i = Math.max(0, first); i <= Math.min(last, count - 1); i++) {
-          const [key, n] = this.at(i), b = Math.floor(n / this.blockSize), id = key + '#' + b;
-          if (seen.has(id)) { continue; }
-          seen.add(id);
-          waits.push(this.ensureBlock(key, b));
+        const byField = {};
+        this.columns.all().forEach((c) => { byField[c.field] = c; });
+        const rows = this.rowModel.filteredRows();
+        const a = pivotLocal(rows, view, { state: this.pivotState, column: (f) => byField[f] || null, value: (r, f) => (byField[f] ? getValue(r, byField[f]) : r[f]) });
+        done(a);
+        if (a.pending.length && this.o.serverPivot) {
+          const only = Array.from(new Set(a.pending.map((p) => p.measure)));
+          return this.o.serverPivot(serverRequest(view, { only: only }), ctl && ctl.signal, rows).then((s) => {
+            if (this.answer !== a) { return; }
+            mergeAnswer(a, s);
+            this.events.emit('changed', { what: 'pivot' });
+          }, fail);
         }
-        return Promise.all(waits).then(() => undefined);
+        return Promise.resolve();
       }
-      request(lv, block, signal) {
-        return { startRow: block * this.blockSize, endRow: (block + 1) * this.blockSize, sortModel: this.sortModel.slice(), filterModel: Object.assign({}, this.filterModel),
-          quickFilter: this.quickFilter, rowGroupCols: this.rowGroupCols.slice(), groupKeys: lv.keys.slice(), valueCols: this.valueCols.slice(),
-          pivotCols: this.pivotCols.slice(), pivotMode: this.pivotMode, signal: signal };
+      togglePivotNode(axis, path, open) { this.pivotState.toggle(axis, path, open); return this.runPivot(); }
+      expandPivotTo(axis, level) { this.pivotState.expandToLevel(axis, level); return this.runPivot(); }
+      dataChanged(notice) {
+        if (this.pivotMode && (this.serverSide || this.o.clientAggregation === false)) { this.runPivot(); return 'pivot'; }
+        if (!this.serverSide) { return 'nothing'; }
+        return this.rowModel.dataChanged(notice);
       }
-      ensureBlock(levelKey, block) {
-        const lv = this.levels.get(levelKey);
-        if (!lv || lv.blocks.has(block)) { return Promise.resolve(); }
-        const id = levelKey + '#' + block;
-        if (this.inFlight.has(id)) { return this.inFlight.get(id).p; }
-        const stamp = this.stamp, ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-        const p = Promise.resolve().then(() => this.datasource.getRows(this.request(lv, block, ctl ? ctl.signal : undefined))).then((a) => {
-          this.inFlight.delete(id);
-          if (stamp !== this.stamp) { return; }                         // the sort or filter changed meanwhile: a stale answer is dropped
-          const rows = (a && a.rows) || [];
-          lv.blocks.set(block, { rows: rows });
-          this.touch(levelKey, block);
-          const end = block * this.blockSize + rows.length;
-          lv.knownEnd = Math.max(lv.knownEnd, end);
-          if (a && typeof a.rowCount === 'number') { lv.rowCount = a.rowCount; } else if (rows.length < this.blockSize) { lv.rowCount = end; }
-          this.display = null;
-          this.events.emit('blockLoaded', { keys: lv.keys, block: block });
-          this.events.emit('rowsChanged', { reason: 'block' });
-        }, (e) => {
-          this.inFlight.delete(id);
-          if (stamp !== this.stamp || (e && (e.aborted || e.name === 'AbortError'))) { return; }
-          this.events.emit('loadFailed', { error: e, keys: lv.keys, block: block });
-        });
-        this.inFlight.set(id, { p: p, ctl: ctl });
-        return p;
+      applyPivotUpdates(pairs) {
+        if (!this.answer) { return false; }
+        return pivotApplyUpdates(this.answer, pairs).applied;
       }
-      touch(level, block) {
-        this.lru = this.lru.filter((x) => !(x.level === level && x.block === block));
-        this.lru.push({ level: level, block: block });
-        while (this.lru.length > this.maxBlocks) {
-          const old = this.lru.shift(), lv = this.levels.get(old.level);
-          if (lv) { lv.blocks.delete(old.block); }
-        }
-      }
-      cacheStats() { return { blocks: this.lru.length, inFlight: this.inFlight.size }; }
-    }
-    function memoryDatasource(rows, o) {
-      o = o || {};
-      const calls = [];
-      return {
-        calls: calls,
-        getRows(req) {
-          calls.push(req);
-          return new Promise((resolve, reject) => {
-            const run = () => {
-              if (req.signal && req.signal.aborted) { const e = new Error('aborted'); e.aborted = true; reject(e); return; }
-              let list = req.groupKeys.length ? rows.filter((r) => req.groupKeys.every((k, i) => String(r[req.rowGroupCols[i]]) === k)) : rows;
-              Object.keys(req.filterModel || {}).forEach((k) => {
-                const f = req.filterModel[k];
-                if (f && f.type === 'set' && f.values) { list = list.filter((r) => f.values.map(String).indexOf(String(r[k])) >= 0); }
-              });
-              if (req.groupKeys.length < req.rowGroupCols.length) {
-                const col = req.rowGroupCols[req.groupKeys.length], m = new Map();
-                list.forEach((r) => { const k = String(r[col]); const g = m.get(k) || { [col]: r[col], childCount: 0 }; g.childCount++; m.set(k, g); });
-                list = Array.from(m.values()).sort((a, b) => String(a[col]).localeCompare(String(b[col])));
-              } else if (req.sortModel && req.sortModel.length) {
-                const s = req.sortModel[0], dir = s.sort === 'desc' ? -1 : 1;
-                list = list.slice().sort((a, b) => (a[s.colId] < b[s.colId] ? -dir : a[s.colId] > b[s.colId] ? dir : 0));
-              }
-              resolve({ rows: list.slice(req.startRow, req.endRow), rowCount: list.length });
-            };
-            if (o.delay) { setTimeout(run, o.delay); } else { run(); }
-          });
-        }
-      };
-    }
-    return { "ServerRowModel": ServerRowModel, "memoryDatasource": memoryDatasource };
-  })();
-  /* ---- src/drishti_viewport.js ---- */
-  __m["src/drishti_viewport.js"] = (function () {
-    const MAX_SCROLL_HEIGHT = 15000000;
-    function columnAt(offsets, x) {
-      let lo = 0, hi = offsets.length - 2;
-      if (hi < 0) { return -1; }
-      while (lo < hi) {
-        const mid = (lo + hi + 1) >> 1;
-        if (offsets[mid] <= x) { lo = mid; } else { hi = mid - 1; }
-      }
-      return lo;
-    }
-    class Viewport {
-      constructor(o) {
-        o = o || {};
-        this.rowHeight = o.rowHeight || 28;
-        this.height = o.height || 600;
-        this.width = o.width || 1000;
-        this.overscanRows = o.overscanRows === undefined ? 6 : o.overscanRows;
-        this.overscanColumns = o.overscanColumns === undefined ? 2 : o.overscanColumns;
-        this.maxScrollHeight = o.maxScrollHeight || MAX_SCROLL_HEIGHT;
-        this.rowCount = 0;
-        this.scrollTop = 0;
-        this.scrollLeft = 0;
-      }
-      resize(width, height) { this.width = width; this.height = height; }
-      setRowCount(n) { this.rowCount = Math.max(0, n | 0); this.scrollTop = Math.min(this.scrollTop, this.maxScrollTop()); }
-      contentHeight() { return this.rowCount * this.rowHeight; }
-      scrollHeight() { return Math.min(this.contentHeight(), this.maxScrollHeight); }
-      maxScrollTop() { return Math.max(0, this.scrollHeight() - this.height); }
-      realTop(scrollTop) {
-        const max = this.maxScrollTop(), realMax = Math.max(0, this.contentHeight() - this.height);
-        if (this.contentHeight() <= this.maxScrollHeight || max === 0) { return scrollTop; }
-        return scrollTop / max * realMax;
-      }
-      scrollTo(top, left) {
-        this.scrollTop = Math.max(0, Math.min(this.maxScrollTop(), top));
-        if (left !== undefined) { this.scrollLeft = Math.max(0, left); }
-      }
-      rows() {
-        if (!this.rowCount) { return { first: 0, last: -1, offset: 0, firstVisible: 0, lastVisible: -1 }; }
-        const real = this.realTop(this.scrollTop), h = this.rowHeight;
-        const firstVisible = Math.min(this.rowCount - 1, Math.floor(real / h));
-        const lastVisible = Math.min(this.rowCount - 1, Math.ceil((real + this.height) / h) - 1);
-        const first = Math.max(0, firstVisible - this.overscanRows), last = Math.min(this.rowCount - 1, lastVisible + this.overscanRows);
-        const offset = this.scrollTop + (first * h - real);       // in the scroller's coordinates: where the first drawn row sits
-        return { first: first, last: last, offset: offset, firstVisible: firstVisible, lastVisible: lastVisible };
-      }
-      scrollToRow(index) {
-        const r = this.rows();
-        if (index >= r.firstVisible && index < r.lastVisible) { return null; }
-        const realMax = Math.max(0, this.contentHeight() - this.height);
-        const realTop = index < r.firstVisible ? index * this.rowHeight : (index + 1) * this.rowHeight - this.height;
-        const clamped = Math.max(0, Math.min(realMax, realTop));
-        const max = this.maxScrollTop();
-        const top = this.contentHeight() <= this.maxScrollHeight || realMax === 0 ? clamped : clamped / realMax * max;
-        this.scrollTo(top);
-        return this.scrollTop;
-      }
-      columns(offsets, pinnedWidth) {
-        const n = offsets.length - 1;
-        if (n <= 0) { return { first: 0, last: -1 }; }
-        const room = Math.max(0, this.width - (pinnedWidth || 0));
-        const a = columnAt(offsets, this.scrollLeft), b = columnAt(offsets, this.scrollLeft + room);
-        return { first: Math.max(0, a - this.overscanColumns), last: Math.min(n - 1, b + this.overscanColumns) };
-      }
-    }
-    return { "MAX_SCROLL_HEIGHT": MAX_SCROLL_HEIGHT, "columnAt": columnAt, "Viewport": Viewport };
-  })();
-  /* ---- src/drishti_selection.js ---- */
-  __m["src/drishti_selection.js"] = (function () {
-    var EventBus = __lib("drishti-core").EventBus;
-    class SelectionModel {
-      constructor(o) {
-        this.mode = (o && o.mode) || 'multiple';
-        this.events = new EventBus();
-        this.ids = new Set();
-        this.anchorIndex = null;
-        this.ranges = [];
-        this.rangeAnchor = null;
-      }
-      clickRow(index, idAt, mods) {
-        if (this.mode === 'none') { return; }
-        const m = mods || {}, id = idAt(index);
-        if (this.mode === 'single' || (!m.ctrl && !m.shift)) {
-          this.ids.clear();
-          if (id !== null) { this.ids.add(id); }
-          this.anchorIndex = index;
-        } else if (m.shift && this.anchorIndex !== null) {
-          if (!m.ctrl) { this.ids.clear(); }
-          const a = Math.min(this.anchorIndex, index), b = Math.max(this.anchorIndex, index);
-          for (let i = a; i <= b; i++) { const x = idAt(i); if (x !== null) { this.ids.add(x); } }
-        } else {
-          if (id !== null) { if (this.ids.has(id)) { this.ids.delete(id); } else { this.ids.add(id); } }
-          this.anchorIndex = index;
-        }
-        this.events.emit('changed', { what: 'rows' });
-      }
-      selectAll(ids) {
-        this.ids.clear();
-        if (ids) { for (const id of ids) { this.ids.add(id); } }
-        this.events.emit('changed', { what: 'rows' });
-      }
-      isSelected(id) { return this.ids.has(id); }
-      selectedIds() { return Array.from(this.ids); }
-      startRange(row, col, mods) {
-        if (!(mods && mods.ctrl)) { this.ranges = []; }
-        this.rangeAnchor = { row: row, col: col };
-        this.ranges.push({ r1: row, r2: row, c1: col, c2: col });
-        this.events.emit('changed', { what: 'ranges' });
-      }
-      extendRange(row, col) {
-        if (!this.rangeAnchor) { this.startRange(row, col); return; }
-        const a = this.rangeAnchor;
-        this.ranges[this.ranges.length - 1] = { r1: Math.min(a.row, row), r2: Math.max(a.row, row), c1: Math.min(a.col, col), c2: Math.max(a.col, col) };
-        this.events.emit('changed', { what: 'ranges' });
-      }
-      clearRanges() { this.ranges = []; this.rangeAnchor = null; this.events.emit('changed', { what: 'ranges' }); }
-      inRange(row, col) { return this.ranges.some((r) => row >= r.r1 && row <= r.r2 && col >= r.c1 && col <= r.c2); }
-    }
-    function rangeStats(ranges, valueAt, columnAt) {
-      let cells = 0, count = 0, sum = 0, min = null, max = null;
-      const seen = new Set(), nonAdd = new Set();
-      ranges.forEach((r) => {
-        for (let i = r.r1; i <= r.r2; i++) {
-          for (let j = r.c1; j <= r.c2; j++) {
-            const k = i + ':' + j;
-            if (seen.has(k)) { continue; }
-            seen.add(k);
-            cells++;
-            const v = valueAt(i, j);
-            if (typeof v !== 'number' || !isFinite(v)) { continue; }
-            count++;
-            sum += v;
-            min = min === null || v < min ? v : min;
-            max = max === null || v > max ? v : max;
-            const c = columnAt(j);
-            if (c && c.additive === false) { nonAdd.add(c.header || c.id); }
-          }
-        }
-      });
-      const na = Array.from(nonAdd);
-      return { cells: cells, count: count, sum: count && !na.length ? sum : null, avg: count && !na.length ? sum / count : null, min: min, max: max,
-        nonAdditive: na, warning: na.length ? na.join(', ') + (na.length > 1 ? ' are' : ' is') + ' not additive: a sum of them is not their total (ask the server for the total of a scope)' : null };
-    }
-    function toTsv(grid) {
-      const cell = (v) => {
-        const s = v === null || v === undefined ? '' : String(v);
-        return /[\t\n\r"]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-      };
-      return grid.map((r) => r.map(cell).join('\t')).join('\n');
-    }
-    function rangeCells(ranges, textAt, o) {
-      const out = [];
-      ranges.forEach((r) => {
-        if (o && o.headers) { const h = []; for (let j = r.c1; j <= r.c2; j++) { h.push(o.headers(j)); } out.push(h); }
-        for (let i = r.r1; i <= r.r2; i++) { const line = []; for (let j = r.c1; j <= r.c2; j++) { line.push(textAt(i, j)); } out.push(line); }
-      });
-      return out;
-    }
-    return { "SelectionModel": SelectionModel, "rangeStats": rangeStats, "toTsv": toTsv, "rangeCells": rangeCells };
-  })();
-  /* ---- src/drishti_keyboard.js ---- */
-  __m["src/drishti_keyboard.js"] = (function () {
-    var keyName = __lib("drishti-core").keyName;
-    class GridNavigator {
-      constructor(grid) {
-        this.grid = grid;
-        this.focus = null;
-      }
-      setFocus(row, col) {
-        if (row === null) { this.focus = null; return null; }
-        const R = this.grid.rowCount(), C = this.grid.columnCount();
-        if (!R || !C) { this.focus = null; return null; }
-        this.focus = { row: Math.max(0, Math.min(R - 1, row)), col: Math.max(0, Math.min(C - 1, col || 0)) };
-        return this.focus;
-      }
-      handleKey(e) {
-        const R = this.grid.rowCount(), C = this.grid.columnCount();
-        const none = { focus: null, action: null, handled: false };
-        if (!R || !C) { return none; }
-        if (!this.focus) { this.setFocus(0, 0); return { focus: this.focus, action: null, handled: true }; }
-        const f = this.focus, mod = e.ctrlKey || e.metaKey, page = Math.max(1, this.grid.pageSize ? this.grid.pageSize() : 10);
-        const move = (r, c, action) => ({ focus: this.setFocus(r, c), action: action || null, handled: true });
-        const k = e.key;
-        const group = this.grid.isGroup ? this.grid.isGroup(f.row) : false;
-        if (mod && !e.shiftKey && (k === 'c' || k === 'C')) { return { focus: null, action: 'copy', handled: true }; }
-        if (mod && (k === 'a' || k === 'A')) { return { focus: null, action: 'select-all', handled: true }; }
-        if (k === 'Escape') { return { focus: null, action: 'clear', handled: true }; }
-        if (group && f.col === 0 && !mod && (k === 'ArrowRight' || k === 'ArrowLeft')) {
-          const open = this.grid.isExpanded ? this.grid.isExpanded(f.row) : false;
-          if (e.shiftKey) { return { focus: null, action: k === 'ArrowRight' ? 'expand-all' : 'collapse-all', handled: true }; }
-          if (k === 'ArrowRight' && !open) { return { focus: null, action: 'expand', handled: true }; }
-          if (k === 'ArrowLeft' && open) { return { focus: null, action: 'collapse', handled: true }; }
-        }
-        const ext = e.shiftKey && !mod ? 'extend-range' : null;
-        switch (k) {
-          case 'ArrowUp': return move(mod ? 0 : f.row - 1, f.col, ext);
-          case 'ArrowDown': return move(mod ? R - 1 : f.row + 1, f.col, ext);
-          case 'ArrowLeft': return move(f.row, mod ? 0 : f.col - 1, ext);
-          case 'ArrowRight': return move(f.row, mod ? C - 1 : f.col + 1, ext);
-          case 'Home': return move(mod ? 0 : f.row, 0, e.shiftKey ? 'extend-range' : null);
-          case 'End': return move(mod ? R - 1 : f.row, C - 1, e.shiftKey ? 'extend-range' : null);
-          case 'PageUp': return move(f.row - page, f.col, ext);
-          case 'PageDown': return move(f.row + page, f.col, ext);
-          case 'Tab': {
-            if (e.shiftKey) { return f.col > 0 ? move(f.row, f.col - 1) : f.row > 0 ? move(f.row - 1, C - 1) : none; }
-            return f.col < C - 1 ? move(f.row, f.col + 1) : f.row < R - 1 ? move(f.row + 1, 0) : none;
-          }
-          case ' ':
-          case 'Spacebar':
-            if (e.shiftKey) { return { focus: null, action: 'select-row', handled: true }; }
-            return { focus: null, action: group ? (this.grid.isExpanded && this.grid.isExpanded(f.row) ? 'collapse' : 'expand') : 'toggle-row', handled: true };
-          case 'Enter':
-          case 'F2': return { focus: null, action: group && k === 'Enter' ? 'open' : 'edit', handled: true };
-          default:
-            if ((k === 'e' || k === 'E') && !mod && !e.altKey && this.grid.explain) { return { focus: null, action: 'explain', handled: true }; }
-            return none;
-        }
-      }
-      static help() {
-        return [
-          { keys: 'Arrows', does: 'move' }, { keys: 'Shift+Arrows', does: 'select a range' }, { keys: 'Ctrl+C', does: 'copy' },
-          { keys: 'Space', does: 'select the row, or open a group' }, { keys: 'Right / Left', does: 'open / close a group' },
-          { keys: 'Shift+Right / Left', does: 'open / close everything below' }, { keys: 'Enter', does: 'open or edit' }, { keys: 'E', does: 'Explain the figure' },
-          { keys: 'Ctrl+A', does: 'select all' }, { keys: 'Escape', does: 'clear' }
-        ];
-      }
-    }
-    function keyLabel(e) { return keyName(e); }
-    return { "GridNavigator": GridNavigator, "keyLabel": keyLabel };
-  })();
-  /* ---- src/drishti_grid-live.js ---- */
-  __m["src/drishti_grid-live.js"] = (function () {
-    const GRID_EVENTS = Object.freeze(['cellClicked', 'cellDoubleClicked', 'cellValueChanged', 'focusChanged', 'selectionChanged', 'rangeChanged',
-      'sortChanged', 'filterChanged', 'pivotChanged', 'groupChanged', 'rowExpanded', 'rowCollapsed', 'columnMoved', 'columnResized', 'columnPinned',
-      'columnVisible', 'rowDataUpdated', 'blockLoaded', 'blockFailed', 'explainOpened', 'serverTotalsUpdated', 'serverTotalsFailed', 'cellEditStarted',
-      'cellEditStopped', 'editTransaction', 'editUndone', 'editRedone', 'proposalResolved']);
-    function domEventName(name) { return 'drishti:' + name.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase()); }
-    class GridLive {
-      constructor(grid, o) {
-        this.grid = grid;
-        this.o = Object.assign({ asyncWaitMs: 50, flashMs: 1000, serverDebounceMs: 250, now: () => Date.now() }, o);
-        this.queue = [];
-        this.waiters = [];
-        this.timer = 0;
-        this.flashes = new Map();
-        this.target = null;
-        this.serverTimer = 0;
-        this.staleGroups = new Map();
-        this.stalePivot = false;
-        this.stats = { batches: 0, updates: 0 };
-      }
-      emit(name, detail) {
-        if (GRID_EVENTS.indexOf(name) < 0) { throw new Error('not a grid event: ' + name); }
-        this.grid.events.emit(name, detail || {});
-        if (this.target && typeof CustomEvent === 'function') {
-          this.target.dispatchEvent(new CustomEvent(domEventName(name), { detail: detail || {}, bubbles: true, composed: true }));
-        }
-      }
-      apply(tx) {
-        const g = this.grid;
-        if (g.serverSide) { throw new Error('the rows are the server\'s: send a dataChanged notice (dataChanged(notice))'); }
-        const before = g.pivotMode && g.answer && g.answer.incremental ? (tx.update || []).map((r) => {
-          const id = g.rowModel.getRowId(r, -1), i = g.rowModel.idIndex.get(id);
-          return i === undefined ? null : { old: g.rowModel.rows[i], value: r };
-        }).filter(Boolean) : null;
-        const res = g.rowModel.applyTransaction(tx);
-        const t = this.o.now();
-        res.changes.forEach((ch) => Object.keys(ch.cells).forEach((col) => { if (ch.cells[col].dir) { this.flashes.set(ch.id + '\u001f' + col, { dir: ch.cells[col].dir, at: t }); } }));
-        this.stats.updates += res.updated;
-        if (g.pivotMode) { this.pivotAfter(before, res); }
-        if (res.staleGroups.length) { res.staleGroups.forEach((p) => this.staleGroups.set(p.join('\u001f'), p)); this.askServerSoon(); }
-        this.emit('rowDataUpdated', { added: res.added, updated: res.updated, removed: res.removed, changes: res.changes });
-        return { added: res.added, updated: res.updated, removed: res.removed, changes: res.changes };
-      }
-      pivotAfter(before, res) {
-        const g = this.grid, a = g.answer;
-        if (!a || g.serverSide || g.o.clientAggregation === false) { this.stalePivot = true; this.askServerSoon(); return; }
-        const done = before && !res.added && !res.removed ? g.applyPivotUpdates(before) : false;
-        if (!done) { g.runPivot(); return; }
-        if (a.measures.some((m) => m.server)) { this.stalePivot = true; this.askServerSoon(); }
-        g.events.emit('changed', { what: 'pivot' });
-      }
-      applyAsync(tx) {
-        this.queue.push(tx);
-        const p = new Promise((resolve) => this.waiters.push(resolve));
-        if (!this.timer) { this.timer = setTimeout(() => this.flush(), this.o.asyncWaitMs); }
-        return p;
-      }
-      flush() {
-        clearTimeout(this.timer);
-        this.timer = 0;
-        if (!this.queue.length) { return null; }
-        const g = this.grid, add = [], remove = [], update = new Map();
-        this.queue.forEach((tx) => {
-          (tx.add || []).forEach((r) => add.push(r));
-          (tx.remove || []).forEach((r) => { const id = typeof r === 'string' ? r : g.rowModel.getRowId(r, -1); remove.push(id); update.delete(id); });
-          (tx.update || []).forEach((r) => update.set(g.rowModel.getRowId(r, -1), r));
-        });
-        this.queue = [];
-        const waiters = this.waiters;
-        this.waiters = [];
-        this.stats.batches++;
-        const res = this.apply({ add: add, update: Array.from(update.values()), remove: remove });
-        waiters.forEach((w) => w(res));
-        return res;
-      }
-      flashOf(rowId, colId) {
-        const k = rowId + '\u001f' + colId, f = this.flashes.get(k);
-        if (!f) { return null; }
-        if (this.o.now() - f.at > this.o.flashMs) { this.flashes.delete(k); return null; }
-        return f.dir;
-      }
-      askServerSoon() {
-        clearTimeout(this.serverTimer);
-        this.serverTimer = setTimeout(() => this.askServer(), this.o.serverDebounceMs);
-      }
-      askServer() {
-        clearTimeout(this.serverTimer);
-        this.serverTimer = 0;
-        const g = this.grid, waits = [];
-        if (this.staleGroups.size && g.o.serverGroupTotals && !g.serverSide) {
-          const want = g.rowModel.serverGroupColumns().filter((x) => this.staleGroups.has(x.path.join('\u001f')));
-          this.staleGroups.clear();
-          if (want.length) {
-            waits.push(Promise.resolve(g.o.serverGroupTotals({ groupBy: g.rowModel.groupBy.slice(), groups: want })).then((answers) => {
-              (answers || []).forEach((x) => g.rowModel.setGroupServerValues(x.path, x.values || {}));
-              this.emit('serverTotalsUpdated', { groups: (answers || []).map((x) => x.path) });
-              g.events.emit('changed', { what: 'rows', reason: 'server-totals' });
-            }, (e) => this.emit('serverTotalsFailed', { error: e })));
-          }
-        }
-        if (this.stalePivot && g.pivotMode && g.o.serverPivot) {
-          this.stalePivot = false;
-          waits.push(g.refreshServerMeasures().then((n) => this.emit('serverTotalsUpdated', { pivotCells: n }), (e) => this.emit('serverTotalsFailed', { error: e })));
-        }
-        return Promise.all(waits).then(() => undefined);
-      }
-      connect(feed) {
-        const g = this.grid;
-        return feed.subscribe((m) => {
-          if (!m || !m.type) { return; }
-          if (m.type === 'transaction') { if (g.serverSide) { g.dataChanged({ rows: (m.update || []).map((r) => g.rowModel.getRowId(r, -1)) }); } else { this.applyAsync(m); } }
-          else if (m.type === 'dataChanged') { g.dataChanged(m); }
-          else if (m.type === 'rows' && !g.serverSide) { g.rowModel.setRows(m.rows || []); this.emit('rowDataUpdated', { replaced: true, added: (m.rows || []).length, updated: 0, removed: 0, changes: [] }); }
+      refreshServerMeasures() {
+        const a = this.answer;
+        if (!a || !this.o.serverPivot) { return Promise.resolve(0); }
+        const labels = a.measures.filter((m) => m.server).map((m) => m.label);
+        if (!labels.length) { return Promise.resolve(0); }
+        const view = this.pivotView();
+        return this.o.serverPivot(serverRequest(view, { only: labels }), undefined, this.serverSide ? null : this.rowModel.filteredRows()).then((s) => {
+          if (this.answer !== a) { return 0; }
+          a.pending = [];
+          Object.keys(a.cells).forEach((k) => { const [row, column] = k.split('|'); labels.forEach((l) => a.pending.push({ row: row, column: column, coords: a.cells[k].coords, measure: l })); });
+          const n = mergeAnswer(a, s);
+          this.events.emit('changed', { what: 'pivot' });
+          return n;
         });
       }
+      toTable() {
+        const cols = this.shownColumns();
+        const rows = [], levels = [], bold = [];
+        const n = this.serverSide ? Math.min(this.rowCount(), 1048575) : this.rowCount();
+        for (let i = 0; i < n; i++) {
+          const x = this.rowAt(i);
+          if (!x || x.kind === 'loading') { continue; }
+          rows.push(cols.map((c, j) => {
+            const v = this.cellValue(i, j);
+            return x.kind === 'pivot' && c.rowHeader ? ' '.repeat(Math.max(0, (x.entry.depth || 1) - 1)) + v : v;
+          }));
+          levels.push(x.kind === 'pivot' ? Math.max(0, (x.entry.depth || 0) - 1) : x.depth || 0);
+          bold.push(x.kind === 'group' || (x.kind === 'pivot' && (x.entry.kind === 'total' || x.entry.kind === 'grand' || x.entry.kind === 'header')));
+        }
+        return { columns: cols.map((c) => ({ header: c.header, type: c.type, format: c.format, width: c.width })), rows: rows, levels: levels, bold: bold };
+      }
+      exportCsv(o) { return toCsv(this.toTable(), o); }
+      exportXlsx(o) { return toXlsx(this.toTable(), o); }
+      setDensity(d) {
+        if (!DENSITIES[d]) { throw new Error('no density ' + d + ' (' + Object.keys(DENSITIES).join(', ') + ')'); }
+        this.density = d;
+        this.viewport.rowHeight = DENSITIES[d];
+        this.events.emit('changed', { what: 'state' });
+      }
+      setLayout(l) {
+        if (LAYOUTS.indexOf(l) < 0) { throw new Error('no layout ' + l + ' (' + LAYOUTS.join(', ') + ')'); }
+        this.layout = l;
+        this.events.emit('changed', { what: 'state' });
+      }
+      getState() {
+        return { columns: this.columns.getState(), sort: this.sortModel.slice(), filters: JSON.parse(JSON.stringify(this.filterModel)), wells: this.wells.getState(),
+          pivot: this.pivotMode, pivotView: this.pivotMode ? this.pivotView() : null, pivotOptions: Object.assign({}, this.pivotExtra), layout: this.layout, density: this.density };
+      }
+      setState(s) {
+        if (s.columns) { this.columns.setState(s.columns); }
+        if (s.layout) { this.setLayout(s.layout); }
+        if (s.density) { this.setDensity(s.density); }
+        if (s.sort) { this.setSortModel(s.sort); }
+        if (s.filters) { this.filterModel = Object.assign({}, s.filters); this.rowModel.setFilterModel(this.filterModel); }
+        if (s.wells) { this.wells.state = JSON.parse(JSON.stringify(s.wells)); }
+        if (s.pivotOptions) { this.pivotExtra = Object.assign({}, s.pivotOptions); }
+        if (s.pivotView) { this.pivotState = new PivotState(s.pivotView); }
+        return this.setPivotMode(!!s.pivot);
+      }
     }
-    return { "GRID_EVENTS": GRID_EVENTS, "domEventName": domEventName, "GridLive": GridLive };
+    return { "LAYOUTS": LAYOUTS, "DENSITIES": DENSITIES, "GridModelBase": GridModelBase };
   })();
   /* ---- src/drishti_grid-edit.js ---- */
   __m["src/drishti_grid-edit.js"] = (function () {
@@ -2515,379 +2083,6 @@
     }
     return { "EDITORS": EDITORS, "editorOf": editorOf, "parseCellText": parseCellText, "validateCell": validateCell, "parseTsv": parseTsv, "GridEditing": GridEditing };
   })();
-  /* ---- src/drishti_grid.js ---- */
-  __m["src/drishti_grid.js"] = (function () {
-    var EventBus = __lib("drishti-core").EventBus, toCsv = __lib("drishti-core").toCsv;
-    var ColumnModel = __m["src/drishti_columns.js"].ColumnModel, getValue = __m["src/drishti_columns.js"].getValue, formatValue = __m["src/drishti_columns.js"].formatValue;
-    var ClientRowModel = __m["src/drishti_client-rows.js"].ClientRowModel;
-    var ServerRowModel = __m["src/drishti_server-rows.js"].ServerRowModel;
-    var Viewport = __m["src/drishti_viewport.js"].Viewport;
-    var SelectionModel = __m["src/drishti_selection.js"].SelectionModel, rangeStats = __m["src/drishti_selection.js"].rangeStats, toTsv = __m["src/drishti_selection.js"].toTsv, rangeCells = __m["src/drishti_selection.js"].rangeCells;
-    var GridNavigator = __m["src/drishti_keyboard.js"].GridNavigator;
-    var WellsModel = __m["src/drishti_wells.js"].WellsModel;
-    var PivotState = __m["src/drishti_pivot.js"].PivotState, pivotLocal = __m["src/drishti_pivot.js"].pivotLocal, pivotApplyUpdates = __m["src/drishti_pivot.js"].pivotApplyUpdates, serverRequest = __m["src/drishti_pivot.js"].serverRequest, mergeAnswer = __m["src/drishti_pivot.js"].mergeAnswer, applyValueFilters = __m["src/drishti_pivot.js"].applyValueFilters, resultColumns = __m["src/drishti_pivot.js"].resultColumns, cellValue = __m["src/drishti_pivot.js"].cellValue;
-    var GridLive = __m["src/drishti_grid-live.js"].GridLive;
-    var GridEditing = __m["src/drishti_grid-edit.js"].GridEditing;
-    var toXlsx = __m["src/drishti_export.js"].toXlsx;
-    var cycleSort = __lib("drishti-core").cycleSort, FILTER_CHANNEL = __lib("drishti-core").FILTER_CHANNEL;
-    const LAYOUTS = Object.freeze(['wells', 'panel', 'terminal']);
-    const DENSITIES = Object.freeze({ comfortable: 36, compact: 28, terminal: 22 });
-    class GridModel {
-      constructor(o) {
-        if (!o || !o.columns) { throw new Error('a grid needs columns'); }
-        this.o = o;
-        this.events = new EventBus();
-        this.columns = new ColumnModel(o.columns);
-        this.layout = LAYOUTS.indexOf(o.layout) >= 0 ? o.layout : 'wells';
-        this.density = DENSITIES[o.density] ? o.density : 'compact';
-        this.rowModel = o.datasource ? new ServerRowModel({ datasource: o.datasource, blockSize: o.blockSize, getRowId: o.getRowId })
-          : new ClientRowModel({ columns: this.columns, rows: o.rows || [], getRowId: o.getRowId, clientAggregation: o.clientAggregation, treeData: o.treeData,
-            getDataPath: o.getDataPath, groupDefaultExpanded: o.groupDefaultExpanded });
-        this.serverSide = !!o.datasource;
-        this.viewport = new Viewport({ rowHeight: DENSITIES[this.density] });
-        this.selection = new SelectionModel({ mode: o.rowSelection });
-        this.wells = new WellsModel(this.columns);
-        this.pivotState = new PivotState();
-        this.pivotMode = false;
-        this.pivotExtra = {};
-        this.answer = null;
-        this.sortModel = [];
-        this.filterModel = {};
-        this.navigator = new GridNavigator({
-          rowCount: () => this.rowCount(), columnCount: () => this.shownColumns().length,
-          pageSize: () => Math.max(1, Math.floor(this.viewport.height / this.viewport.rowHeight) - 1),
-          isGroup: (r) => { const x = this.rowAt(r); return !!x && (x.kind === 'group' || (x.kind === 'pivot' && x.entry.expandable)); },
-          isExpanded: (r) => { const x = this.rowAt(r); return !!x && (x.kind === 'group' ? x.expanded : x.kind === 'pivot' ? !!x.entry.expanded : false); },
-          explain: !!o.explain
-        });
-        this.live = new GridLive(this, o.live);
-        this.editing = new GridEditing(this, Object.assign({ locale: o.locale }, o.editing));
-        this.rowModel.events.on('rowsChanged', (p) => { this.viewport.setRowCount(this.rowCount()); this.events.emit('changed', { what: 'rows', reason: p.reason }); });
-        this.rowModel.events.on('blockLoaded', (p) => this.live.emit('blockLoaded', p));
-        this.rowModel.events.on('loadFailed', (p) => this.live.emit('blockFailed', p));
-        const colEvent = { order: 'columnMoved', width: 'columnResized', pinned: 'columnPinned', visible: 'columnVisible' };
-        this.columns.events.on('changed', (p) => {
-          this.events.emit('changed', { what: 'columns' });
-          if (colEvent[p.what]) { const c = this.columns.get(p.id); this.live.emit(colEvent[p.what], { colId: p.id, width: c && c.width, pinned: c && c.pinned, visible: c && !c.hidden }); }
-        });
-        this.selection.events.on('changed', (p) => {
-          this.events.emit('changed', { what: 'selection', which: p.what });
-          if (p.what === 'rows') { this.live.emit('selectionChanged', { ids: this.selection.selectedIds() }); } else { this.live.emit('rangeChanged', { ranges: this.selection.ranges.slice() }); }
-        });
-        this.wells.events.on('changed', () => { if (this.pivotMode) { this.runPivot(); } });
-        this.viewport.setRowCount(this.rowCount());
-      }
-      rowCount() {
-        if (this.pivotMode) { return this.answer ? this.pivotRows().length : 0; }
-        return this.rowModel.rowCount();
-      }
-      pivotRows() { return this.answer ? this.answer.rows : []; }
-      rowAt(i) {
-        if (this.pivotMode) { const e = this.pivotRows()[i]; return e ? { kind: 'pivot', id: 'pivot:' + e.kind + ':' + e.key, depth: Math.max(0, (e.depth || 0) - 1), entry: e } : null; }
-        return this.rowModel.rowAt(i);
-      }
-      shownColumns() {
-        if (!this.pivotMode) { return this.columns.visible(); }
-        if (this._pivotCols) { return this._pivotCols; }
-        const a = this.answer;
-        const dims = a ? a.rowDimensions : [];
-        const head = { id: '__rows', header: dims.map((d) => { const c = this.columns.get(d); return c ? c.header : d; }).join(' / ') || 'Total', type: 'text', pinned: 'left', width: 220, additive: true, rowHeader: true };
-        const rc = a ? resultColumns(a) : [];
-        this._pivotCols = [head].concat(rc.map((r) => ({ id: r.id, header: r.headerPath.join(' › '), headerPath: r.headerPath, type: 'number', width: 120,
-          colKey: r.colKey, measure: r.measure, kind: r.kind, additive: !r.server, format: this.measureFormat(r.measure) })));
-        return this._pivotCols;
-      }
-      measureFormat(label) {
-        const labels = this.wells.toView().values.map((x) => x.as), i = labels.indexOf(label);
-        const v = i >= 0 ? this.wells.state.values[i] : null;
-        const c = v ? this.columns.get(v.colId) : null;
-        return c && c.format ? c.format : 'amount0';
-      }
-      cellValue(r, c) {
-        const row = this.rowAt(r), col = this.shownColumns()[c];
-        if (!row || !col) { return undefined; }
-        if (row.kind === 'pivot') {
-          if (col.rowHeader) { return row.entry.label; }
-          if (row.entry.kind === 'header') { return null; }
-          return cellValue(this.answer, row.entry.key, col.colKey, col.measure).value;
-        }
-        if (row.tree && c === 0) { return row.treeKey; }
-        if (row.kind === 'group') {
-          if (c === 0) { return row.value; }
-          if (row.tree && row.row) { return getValue(row.row, col); }
-          const agg = row.aggregates || (row.row || {});
-          return agg[col.id] !== undefined ? agg[col.id] : null;
-        }
-        if (row.kind === 'loading') { return undefined; }
-        return getValue(row.row, col);
-      }
-      cellText(r, c) {
-        const row = this.rowAt(r), col = this.shownColumns()[c];
-        if (!row || !col) { return ''; }
-        if (row.kind === 'loading') { return c === 0 ? '…' : ''; }
-        const v = this.cellValue(r, c);
-        if (row.kind === 'group' && c === 0) { return (v === null || v === undefined ? '(blank)' : String(v)) + (row.count !== undefined ? ' (' + row.count + ')' : ''); }
-        if (row.kind === 'group' && row.pendingServer && row.pendingServer.indexOf(col.id) >= 0) { return '…'; }
-        if (row.kind === 'pivot') {
-          if (col.rowHeader) { return String(v); }
-          if (row.entry.kind === 'header') { return ''; }
-          const cv = cellValue(this.answer, row.entry.key, col.colKey, col.measure);
-          if (cv.value === null && cv.note) { return '…'; }
-          return cv.value === null || cv.value === undefined ? '' : formatValue(cv.value, col);
-        }
-        return formatValue(v, col, row.row);
-      }
-      setSortModel(model) { this.sortModel = (model || []).slice(); this.rowModel.setSortModel(this.sortModel); this.live.emit('sortChanged', { sortModel: this.sortModel.slice() }); }
-      toggleSort(colId, multi) { const m = cycleSort(this.sortModel, colId, multi); this.setSortModel(m); return m; }
-      setFilterModel(model) {
-        this.filterModel = Object.assign({}, model);
-        this.rowModel.setFilterModel(this.filterModel);
-        this.live.emit('filterChanged', { filterModel: Object.assign({}, this.filterModel) });
-        if (this.pivotMode) { this.runPivot(); }
-      }
-      setQuickFilter(q) { this.rowModel.setQuickFilter(q); this.live.emit('filterChanged', { quickFilter: q || '' }); }
-      followFilters(bus, o) {
-        o = o || {};
-        return bus.on(o.channel || FILTER_CHANNEL, (p) => {
-          if (!p || (o.source && p.source !== o.source)) { return; }
-          const known = {};
-          Object.keys(p.model || {}).forEach((k) => { const c = this.columns.get(k) || this.columns.all().find((x) => x.field === k); if (c) { known[c.id] = p.model[k]; } });
-          this.rowModel.setQuickFilter(p.quickFilter || '');
-          this.setFilterModel(known);
-        });
-      }
-      setRowGroups(colIds) {
-        if (this.serverSide) { this.rowModel.setGrouping({ rowGroupCols: colIds, valueCols: this.columns.all().filter((c) => c.enableValue).map((c) => ({ colId: c.id, aggFunc: c.aggFunc })) }); }
-        else {
-          this.rowModel.setGroupBy(colIds);
-          const want = this.rowModel.serverGroupColumns();
-          if (want.length && this.o.serverGroupTotals) { want.forEach((x) => this.live.staleGroups.set(x.path.join('\u001f'), x.path)); this.live.askServer(); }
-        }
-        this.live.emit('groupChanged', { rowGroups: (colIds || []).slice() });
-      }
-      setPivotMode(on) {
-        this.pivotMode = !!on;
-        this._pivotCols = null;
-        this.events.emit('changed', { what: 'pivot' });
-        return on ? this.runPivot() : Promise.resolve();
-      }
-      setPivotOptions(extra) { this.pivotExtra = Object.assign({}, this.pivotExtra, extra); return this.pivotMode ? this.runPivot() : Promise.resolve(); }
-      pivotView() {
-        const v = this.wells.toView(this.pivotExtra);
-        Object.keys(this.filterModel).forEach((k) => {
-          const f = this.filterModel[k], c = this.columns.get(k), field = c ? c.field : k;
-          if (f && f.type === 'set' && f.values) { v.filters[field] = { in: f.values.map(String), notIn: [] }; }
-          else if (f && f.type === 'set' && f.excluded) { v.filters[field] = { in: [], notIn: f.excluded.map(String) }; }
-        });
-        return Object.assign(v, this.pivotState.toView(this.answer));
-      }
-      runPivot() {
-        const view = this.pivotView();
-        this._pivotCols = null;
-        if (!view.values.length) { this.answer = null; this.viewport.setRowCount(0); this.events.emit('changed', { what: 'pivot' }); return Promise.resolve(); }
-        if (this.pivotAbort) { this.pivotAbort.abort(); }
-        const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-        this.pivotAbort = ctl;
-        const done = (a) => {
-          if (ctl && ctl.signal.aborted) { return; }
-          this.answer = a;
-          this._pivotCols = null;
-          this.viewport.setRowCount(this.rowCount());
-          this.events.emit('changed', { what: 'pivot' });
-          this.live.emit('pivotChanged', { view: view, rows: a ? a.rows.length : 0 });
-        };
-        const fail = (e) => { if (!(ctl && ctl.signal.aborted)) { this.events.emit('pivotError', { error: e }); } };
-        if (this.serverSide || this.o.clientAggregation === false) {
-          if (!this.o.serverPivot) { return Promise.reject(new Error(this.serverSide ? 'a pivot of server-side rows needs serverPivot' : 'clientAggregation is off: a pivot needs serverPivot')); }
-          return this.o.serverPivot(serverRequest(view), ctl && ctl.signal, this.serverSide ? null : this.rowModel.filteredRows()).then((a) => { applyValueFilters(a, view.valueFilters); done(a); }, fail);
-        }
-        const byField = {};
-        this.columns.all().forEach((c) => { byField[c.field] = c; });
-        const rows = this.rowModel.filteredRows();
-        const a = pivotLocal(rows, view, { state: this.pivotState, column: (f) => byField[f] || null, value: (r, f) => (byField[f] ? getValue(r, byField[f]) : r[f]) });
-        done(a);
-        if (a.pending.length && this.o.serverPivot) {
-          const only = Array.from(new Set(a.pending.map((p) => p.measure)));
-          return this.o.serverPivot(serverRequest(view, { only: only }), ctl && ctl.signal, rows).then((s) => {
-            if (this.answer !== a) { return; }
-            mergeAnswer(a, s);
-            this.events.emit('changed', { what: 'pivot' });
-          }, fail);
-        }
-        return Promise.resolve();
-      }
-      togglePivotNode(axis, path, open) { this.pivotState.toggle(axis, path, open); return this.runPivot(); }
-      expandPivotTo(axis, level) { this.pivotState.expandToLevel(axis, level); return this.runPivot(); }
-      toggleRow(r, open) {
-        const x = this.rowAt(r);
-        if (!x) { return Promise.resolve(); }
-        if (x.kind === 'pivot' && x.entry.expandable) {
-          const now = open === undefined ? !x.entry.expanded : open;
-          this.live.emit(now ? 'rowExpanded' : 'rowCollapsed', { path: x.entry.path, pivot: true });
-          return this.togglePivotNode('rows', x.entry.path, open);
-        }
-        if (x.kind === 'group') {
-          const path = x.path || x.keys, now = open === undefined ? !x.expanded : open;
-          this.rowModel.setExpanded(path, open);
-          this.live.emit(now ? 'rowExpanded' : 'rowCollapsed', { path: path, pivot: false });
-        }
-        return Promise.resolve();
-      }
-      idAt(r) { const x = this.rowAt(r); return !x ? null : x.kind === 'leaf' ? x.id : x.kind === 'pivot' && x.entry.kind !== 'header' ? x.id : null; }
-      key(e) {
-        const before = this.navigator.focus ? Object.assign({}, this.navigator.focus) : null;
-        const k = this.navigator.handleKey(e), f = this.navigator.focus;
-        const out = { handled: k.handled, action: k.action, focus: f, copy: null };
-        if (k.focus) {
-          if (k.action === 'extend-range') {
-            if (!this.selection.rangeAnchor && before) { this.selection.startRange(before.row, before.col); }
-            this.selection.extendRange(f.row, f.col);
-          } else { this.selection.startRange(f.row, f.col); }
-          this.viewport.scrollToRow(f.row);
-          this.events.emit('changed', { what: 'focus' });
-          this.live.emit('focusChanged', { row: f.row, col: f.col });
-        }
-        if (!f) { return out; }
-        switch (k.action) {
-          case 'copy': out.copy = this.copy(); break;
-          case 'select-all': this.selectAll(); break;
-          case 'select-row': this.selection.clickRow(f.row, (i) => this.idAt(i), { ctrl: true }); break;
-          case 'toggle-row': this.selection.clickRow(f.row, (i) => this.idAt(i), { ctrl: true }); break;
-          case 'expand': this.toggleRow(f.row, true); break;
-          case 'collapse': this.toggleRow(f.row, false); break;
-          case 'clear': this.selection.clearRanges(); break;
-          default: break;
-        }
-        return out;
-      }
-      selectAll() {
-        if (this.serverSide || this.pivotMode) { this.selection.startRange(0, 0); this.selection.extendRange(this.rowCount() - 1, this.shownColumns().length - 1); return; }
-        const rm = this.rowModel, ids = [];
-        for (let i = 0; i < rm.view.length; i++) { ids.push(rm.getRowId(rm.rows[rm.view[i]], rm.view[i])); }
-        this.selection.selectAll(ids);
-      }
-      copy(o) {
-        let ranges = this.selection.ranges;
-        if (!ranges.length && this.navigator.focus) { const f = this.navigator.focus; ranges = [{ r1: f.row, r2: f.row, c1: f.col, c2: f.col }]; }
-        const cols = this.shownColumns();
-        return toTsv(rangeCells(ranges, (r, c) => { const v = this.cellValue(r, c); return typeof v === 'number' ? String(v) : this.cellText(r, c); },
-          o && o.headers ? { headers: (j) => cols[j].header } : null));
-      }
-      rangeStats() {
-        const cols = this.shownColumns();
-        return rangeStats(this.selection.ranges, (r, c) => this.cellValue(r, c), (j) => cols[j]);
-      }
-      cellContext(r, c) {
-        const row = this.rowAt(r), col = this.shownColumns()[c];
-        if (!row || !col) { return null; }
-        const ctx = { row: r, col: c, columnId: col.id, header: col.header, value: this.cellValue(r, c), text: this.cellText(r, c), additive: col.additive !== false, kind: row.kind };
-        if (row.kind === 'pivot') {
-          const cell = this.answer.cells[row.entry.key + '|' + col.colKey];
-          Object.assign(ctx, { measure: col.measure, coords: cell ? cell.coords : row.entry.coords, members: cell ? cell.members : 0, note: cell && cell.notes ? cell.notes[col.measure] || null : null, view: this.pivotView() });
-        } else if (row.kind === 'group') { Object.assign(ctx, { path: row.path || row.keys, field: row.field }); }
-        else { Object.assign(ctx, { rowId: row.id, data: row.row }); }
-        return ctx;
-      }
-      explain(r, c) {
-        if (!this.o.explain) { return Promise.reject(new Error('this grid has no Explain hook')); }
-        const ctx = this.cellContext(r, c);
-        if (!ctx) { return Promise.reject(new Error('no cell at ' + r + ', ' + c)); }
-        this.live.emit('explainOpened', ctx);
-        return Promise.resolve(this.o.explain(ctx));
-      }
-      on(name, fn) { return this.events.on(name, fn); }
-      setEventTarget(el) { this.live.target = el; }
-      cellClicked(r, c, mods) {
-        const m = mods || {};
-        this.navigator.setFocus(r, c);
-        if (m.shift) { this.selection.extendRange(r, c); } else { this.selection.startRange(r, c, m); }
-        this.selection.clickRow(r, (i) => this.idAt(i), m);
-        this.live.emit('cellClicked', Object.assign(this.cellContext(r, c) || {}, { mods: m }));
-      }
-      cellDoubleClicked(r, c) { this.live.emit('cellDoubleClicked', this.cellContext(r, c) || {}); }
-      setCellValue(r, c, value) {
-        const p = this.editing.plan([{ r: r, c: c, value: value }]);
-        if (p.problems.length) { return false; }
-        this.editing.apply(p.edits, 'api').catch(() => {});
-        return true;
-      }
-      applyTransaction(tx) { return this.live.apply(tx); }
-      applyTransactionAsync(tx) { return this.live.applyAsync(tx); }
-      flushTransactions() { return this.live.flush(); }
-      flashOf(rowId, colId) { return this.live.flashOf(rowId, colId); }
-      connectLive(feed) { return this.live.connect(feed); }
-      dataChanged(notice) {
-        if (this.pivotMode && (this.serverSide || this.o.clientAggregation === false)) { this.runPivot(); return 'pivot'; }
-        if (!this.serverSide) { return 'nothing'; }
-        return this.rowModel.dataChanged(notice);
-      }
-      applyPivotUpdates(pairs) {
-        if (!this.answer) { return false; }
-        return pivotApplyUpdates(this.answer, pairs).applied;
-      }
-      refreshServerMeasures() {
-        const a = this.answer;
-        if (!a || !this.o.serverPivot) { return Promise.resolve(0); }
-        const labels = a.measures.filter((m) => m.server).map((m) => m.label);
-        if (!labels.length) { return Promise.resolve(0); }
-        const view = this.pivotView();
-        return this.o.serverPivot(serverRequest(view, { only: labels }), undefined, this.serverSide ? null : this.rowModel.filteredRows()).then((s) => {
-          if (this.answer !== a) { return 0; }
-          a.pending = [];
-          Object.keys(a.cells).forEach((k) => { const [row, column] = k.split('|'); labels.forEach((l) => a.pending.push({ row: row, column: column, coords: a.cells[k].coords, measure: l })); });
-          const n = mergeAnswer(a, s);
-          this.events.emit('changed', { what: 'pivot' });
-          return n;
-        });
-      }
-      toTable() {
-        const cols = this.shownColumns();
-        const rows = [], levels = [], bold = [];
-        const n = this.serverSide ? Math.min(this.rowCount(), 1048575) : this.rowCount();
-        for (let i = 0; i < n; i++) {
-          const x = this.rowAt(i);
-          if (!x || x.kind === 'loading') { continue; }
-          rows.push(cols.map((c, j) => {
-            const v = this.cellValue(i, j);
-            return x.kind === 'pivot' && c.rowHeader ? ' '.repeat(Math.max(0, (x.entry.depth || 1) - 1)) + v : v;
-          }));
-          levels.push(x.kind === 'pivot' ? Math.max(0, (x.entry.depth || 0) - 1) : x.depth || 0);
-          bold.push(x.kind === 'group' || (x.kind === 'pivot' && (x.entry.kind === 'total' || x.entry.kind === 'grand' || x.entry.kind === 'header')));
-        }
-        return { columns: cols.map((c) => ({ header: c.header, type: c.type, format: c.format, width: c.width })), rows: rows, levels: levels, bold: bold };
-      }
-      exportCsv(o) { return toCsv(this.toTable(), o); }
-      exportXlsx(o) { return toXlsx(this.toTable(), o); }
-      setDensity(d) {
-        if (!DENSITIES[d]) { throw new Error('no density ' + d + ' (' + Object.keys(DENSITIES).join(', ') + ')'); }
-        this.density = d;
-        this.viewport.rowHeight = DENSITIES[d];
-        this.events.emit('changed', { what: 'state' });
-      }
-      setLayout(l) {
-        if (LAYOUTS.indexOf(l) < 0) { throw new Error('no layout ' + l + ' (' + LAYOUTS.join(', ') + ')'); }
-        this.layout = l;
-        this.events.emit('changed', { what: 'state' });
-      }
-      getState() {
-        return { columns: this.columns.getState(), sort: this.sortModel.slice(), filters: JSON.parse(JSON.stringify(this.filterModel)), wells: this.wells.getState(),
-          pivot: this.pivotMode, pivotView: this.pivotMode ? this.pivotView() : null, pivotOptions: Object.assign({}, this.pivotExtra), layout: this.layout, density: this.density };
-      }
-      setState(s) {
-        if (s.columns) { this.columns.setState(s.columns); }
-        if (s.layout) { this.setLayout(s.layout); }
-        if (s.density) { this.setDensity(s.density); }
-        if (s.sort) { this.setSortModel(s.sort); }
-        if (s.filters) { this.filterModel = Object.assign({}, s.filters); this.rowModel.setFilterModel(this.filterModel); }
-        if (s.wells) { this.wells.state = JSON.parse(JSON.stringify(s.wells)); }
-        if (s.pivotOptions) { this.pivotExtra = Object.assign({}, s.pivotOptions); }
-        if (s.pivotView) { this.pivotState = new PivotState(s.pivotView); }
-        return this.setPivotMode(!!s.pivot);
-      }
-    }
-    function createGridModel(o) { return new GridModel(o); }
-    return { "LAYOUTS": LAYOUTS, "DENSITIES": DENSITIES, "GridModel": GridModel, "createGridModel": createGridModel };
-  })();
   /* ---- src/drishti_grid-actions.js ---- */
   __m["src/drishti_grid-actions.js"] = (function () {
     var memberText = __m["src/drishti_pivot.js"].memberText;
@@ -2896,7 +2091,7 @@
     var aggFunc = __m["src/drishti_aggregate.js"].aggFunc;
     var XLSX_TYPE = __m["src/drishti_export.js"].XLSX_TYPE;
     var columnMenuItems = __m["src/drishti_grid-ui.js"].columnMenuItems, cellMenuItems = __m["src/drishti_grid-ui.js"].cellMenuItems, FUNCTION_KEYS = __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, parseCondition = __m["src/drishti_grid-ui.js"].parseCondition, pivotMeasures = __m["src/drishti_grid-ui.js"].pivotMeasures;
-    var LAYOUTS = __m["src/drishti_grid.js"].LAYOUTS, DENSITIES = __m["src/drishti_grid.js"].DENSITIES;
+    var LAYOUTS = __m["src/drishti_grid-model-base.js"].LAYOUTS, DENSITIES = __m["src/drishti_grid-model-base.js"].DENSITIES;
     var openDialog = __lib("drishti-core").openDialog, h = __lib("drishti-core").h;
     var editorOf = __m["src/drishti_grid-edit.js"].editorOf;
     function onKey(v, e) {
@@ -3984,6 +3179,822 @@
     }
     return { "CellEditor": CellEditor };
   })();
+  /* ---- src/drishti_server-rows.js ---- */
+  __m["src/drishti_server-rows.js"] = (function () {
+    var EventBus = __lib("drishti-core").EventBus;
+    var SEP = __m["src/drishti_pivot.js"].SEP;
+    function Level(keys) { this.keys = keys; this.blocks = new Map(); this.rowCount = null; this.knownEnd = 0; }
+    class ServerRowModel {
+      constructor(o) {
+        if (!o || !o.datasource || typeof o.datasource.getRows !== 'function') { throw new Error('a server-side row model needs a datasource with getRows(request)'); }
+        this.datasource = o.datasource;
+        this.blockSize = o.blockSize || 100;
+        this.maxBlocks = o.maxBlocks || 50;
+        this.getRowId = o.getRowId || ((r, i, keys) => (r && r.id !== undefined ? String(r.id) : keys.concat([String(i)]).join(SEP)));
+        this.events = new EventBus();
+        this.sortModel = [];
+        this.filterModel = {};
+        this.quickFilter = '';
+        this.rowGroupCols = [];
+        this.valueCols = [];
+        this.pivotCols = [];
+        this.pivotMode = false;
+        this.expanded = new Set();
+        this.stamp = 0;
+        this.lru = [];
+        this.inFlight = new Map();
+        this.reset();
+      }
+      reset() {
+        this.inFlight.forEach((x) => x.ctl && x.ctl.abort());
+        this.inFlight.clear();
+        this.levels = new Map([['', new Level([])]]);
+        this.lru = [];
+        this.stamp++;
+        this.display = null;
+      }
+      setSortModel(m) { this.sortModel = (m || []).slice(); this.reset(); this.events.emit('rowsChanged', { reason: 'sort' }); }
+      setFilterModel(m) { this.filterModel = Object.assign({}, m); this.reset(); this.events.emit('rowsChanged', { reason: 'filter' }); }
+      setQuickFilter(q) { this.quickFilter = q || ''; this.reset(); this.events.emit('rowsChanged', { reason: 'filter' }); }
+      setGrouping(s) {
+        this.rowGroupCols = (s.rowGroupCols || []).slice();
+        this.valueCols = (s.valueCols || []).slice();
+        this.pivotCols = (s.pivotCols || []).slice();
+        this.pivotMode = !!s.pivotMode;
+        this.expanded.clear();
+        this.reset();
+        this.events.emit('rowsChanged', { reason: 'group' });
+      }
+      setExpanded(keys, open) {
+        const k = keys.join(SEP), now = open === undefined ? !this.expanded.has(k) : open;
+        if (now) { this.expanded.add(k); if (!this.levels.has(k)) { this.levels.set(k, new Level(keys.slice())); } } else { this.expanded.delete(k); }
+        this.display = null;
+        this.events.emit('rowsChanged', { reason: 'expand' });
+      }
+      refresh(o) {
+        if (!o || !o.keys) { const exp = new Set(this.expanded); this.reset(); exp.forEach((k) => this.levels.set(k, new Level(k ? k.split(SEP) : []))); }
+        else {
+          const k = o.keys.join(SEP);
+          this.levels.forEach((lv, key) => {
+            if (key === k || key.indexOf(k ? k + SEP : '') === 0) {
+              lv.blocks.clear();
+              if (!o || o.purge !== false) { lv.rowCount = null; lv.knownEnd = 0; }
+            }
+          });
+          this.lru = this.lru.filter((x) => this.levels.get(x.level).blocks.has(x.block));
+          this.display = null;
+        }
+        this.events.emit('rowsChanged', { reason: 'refresh' });
+      }
+      invalidateBlock(keys, block) {
+        const lv = this.levels.get(keys.join(SEP));
+        const had = !!(lv && lv.blocks.delete(block));
+        if (had) { this.lru = this.lru.filter((x) => !(x.level === keys.join(SEP) && x.block === block)); this.display = null; this.events.emit('rowsChanged', { reason: 'invalidate' }); }
+        return had;
+      }
+      purge() { this.refresh(); }
+      dataChanged(notice) {
+        const n = notice || {};
+        if (n.purge || (!n.keys && !n.rows)) { this.purge(); return 'purge'; }
+        if (n.rows) {
+          const ids = new Set(n.rows.map(String));
+          let hit = 0;
+          this.levels.forEach((lv, key) => lv.blocks.forEach((b, bi) => {
+            if (b.rows.some((r, i) => ids.has(this.getRowId(r, bi * this.blockSize + i, lv.keys)))) { this.invalidateBlock(lv.keys, bi); hit++; }
+          }));
+          return hit ? 'rows' : 'nothing';
+        }
+        if (n.blocks) { n.blocks.forEach((b) => this.invalidateBlock(n.keys, b)); return 'blocks'; }
+        this.refresh({ keys: n.keys });
+        return 'level';
+      }
+      levelCount(lv) { return lv.rowCount !== null ? lv.rowCount : lv.knownEnd + this.blockSize; }
+      flatten() {
+        if (this.display) { return this.display; }
+        const out = [];
+        const walk = (key) => {
+          const lv = this.levels.get(key), n = this.levelCount(lv), depth = lv.keys.length;
+          for (let i = 0; i < n; i++) {
+            out.push([key, i]);
+            if (depth < this.rowGroupCols.length) {
+              const r = this.blockRow(lv, i);
+              if (r && !r.loading) {
+                const childKeys = lv.keys.concat([String(r[this.rowGroupCols[depth]])]), ck = childKeys.join(SEP);
+                if (this.expanded.has(ck)) { if (!this.levels.has(ck)) { this.levels.set(ck, new Level(childKeys)); } walk(ck); }
+              }
+            }
+          }
+        };
+        walk('');
+        this.display = out;
+        return out;
+      }
+      blockRow(lv, i) {
+        const b = lv.blocks.get(Math.floor(i / this.blockSize));
+        if (!b) { return null; }
+        const r = b.rows[i % this.blockSize];
+        return r === undefined ? null : r;
+      }
+      rowCount() { return this.expanded.size ? this.flatten().length : this.levelCount(this.levels.get('')); }
+      at(i) { return this.expanded.size ? this.flatten()[i] : ['', i]; }
+      rowAt(i) {
+        if (i < 0 || i >= this.rowCount()) { return null; }
+        const [key, n] = this.at(i), lv = this.levels.get(key), depth = lv.keys.length;
+        const r = this.blockRow(lv, n);
+        if (!r) { this.ensureBlock(key, Math.floor(n / this.blockSize)); return { kind: 'loading', id: 'loading:' + key + ':' + n, depth: depth, row: null, loading: true }; }
+        if (depth < this.rowGroupCols.length) {
+          const keys = lv.keys.concat([String(r[this.rowGroupCols[depth]])]);
+          return { kind: 'group', id: 'group:' + keys.join(SEP), depth: depth, row: r, keys: keys, field: this.rowGroupCols[depth], value: r[this.rowGroupCols[depth]],
+            count: r.childCount, expanded: this.expanded.has(keys.join(SEP)) };
+        }
+        return { kind: 'leaf', id: this.getRowId(r, n, lv.keys), depth: depth, row: r, keys: lv.keys };
+      }
+      ensureRange(first, last) {
+        const count = this.rowCount(), waits = [];
+        const seen = new Set();
+        for (let i = Math.max(0, first); i <= Math.min(last, count - 1); i++) {
+          const [key, n] = this.at(i), b = Math.floor(n / this.blockSize), id = key + '#' + b;
+          if (seen.has(id)) { continue; }
+          seen.add(id);
+          waits.push(this.ensureBlock(key, b));
+        }
+        return Promise.all(waits).then(() => undefined);
+      }
+      request(lv, block, signal) {
+        return { startRow: block * this.blockSize, endRow: (block + 1) * this.blockSize, sortModel: this.sortModel.slice(), filterModel: Object.assign({}, this.filterModel),
+          quickFilter: this.quickFilter, rowGroupCols: this.rowGroupCols.slice(), groupKeys: lv.keys.slice(), valueCols: this.valueCols.slice(),
+          pivotCols: this.pivotCols.slice(), pivotMode: this.pivotMode, signal: signal };
+      }
+      ensureBlock(levelKey, block) {
+        const lv = this.levels.get(levelKey);
+        if (!lv || lv.blocks.has(block)) { return Promise.resolve(); }
+        const id = levelKey + '#' + block;
+        if (this.inFlight.has(id)) { return this.inFlight.get(id).p; }
+        const stamp = this.stamp, ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const p = Promise.resolve().then(() => this.datasource.getRows(this.request(lv, block, ctl ? ctl.signal : undefined))).then((a) => {
+          this.inFlight.delete(id);
+          if (stamp !== this.stamp) { return; }                         // the sort or filter changed meanwhile: a stale answer is dropped
+          const rows = (a && a.rows) || [];
+          lv.blocks.set(block, { rows: rows });
+          this.touch(levelKey, block);
+          const end = block * this.blockSize + rows.length;
+          lv.knownEnd = Math.max(lv.knownEnd, end);
+          if (a && typeof a.rowCount === 'number') { lv.rowCount = a.rowCount; } else if (rows.length < this.blockSize) { lv.rowCount = end; }
+          this.display = null;
+          this.events.emit('blockLoaded', { keys: lv.keys, block: block });
+          this.events.emit('rowsChanged', { reason: 'block' });
+        }, (e) => {
+          this.inFlight.delete(id);
+          if (stamp !== this.stamp || (e && (e.aborted || e.name === 'AbortError'))) { return; }
+          this.events.emit('loadFailed', { error: e, keys: lv.keys, block: block });
+        });
+        this.inFlight.set(id, { p: p, ctl: ctl });
+        return p;
+      }
+      touch(level, block) {
+        this.lru = this.lru.filter((x) => !(x.level === level && x.block === block));
+        this.lru.push({ level: level, block: block });
+        while (this.lru.length > this.maxBlocks) {
+          const old = this.lru.shift(), lv = this.levels.get(old.level);
+          if (lv) { lv.blocks.delete(old.block); }
+        }
+      }
+      cacheStats() { return { blocks: this.lru.length, inFlight: this.inFlight.size }; }
+    }
+    function memoryDatasource(rows, o) {
+      o = o || {};
+      const calls = [];
+      return {
+        calls: calls,
+        getRows(req) {
+          calls.push(req);
+          return new Promise((resolve, reject) => {
+            const run = () => {
+              if (req.signal && req.signal.aborted) { const e = new Error('aborted'); e.aborted = true; reject(e); return; }
+              let list = req.groupKeys.length ? rows.filter((r) => req.groupKeys.every((k, i) => String(r[req.rowGroupCols[i]]) === k)) : rows;
+              Object.keys(req.filterModel || {}).forEach((k) => {
+                const f = req.filterModel[k];
+                if (f && f.type === 'set' && f.values) { list = list.filter((r) => f.values.map(String).indexOf(String(r[k])) >= 0); }
+              });
+              if (req.groupKeys.length < req.rowGroupCols.length) {
+                const col = req.rowGroupCols[req.groupKeys.length], m = new Map();
+                list.forEach((r) => { const k = String(r[col]); const g = m.get(k) || { [col]: r[col], childCount: 0 }; g.childCount++; m.set(k, g); });
+                list = Array.from(m.values()).sort((a, b) => String(a[col]).localeCompare(String(b[col])));
+              } else if (req.sortModel && req.sortModel.length) {
+                const s = req.sortModel[0], dir = s.sort === 'desc' ? -1 : 1;
+                list = list.slice().sort((a, b) => (a[s.colId] < b[s.colId] ? -dir : a[s.colId] > b[s.colId] ? dir : 0));
+              }
+              resolve({ rows: list.slice(req.startRow, req.endRow), rowCount: list.length });
+            };
+            if (o.delay) { setTimeout(run, o.delay); } else { run(); }
+          });
+        }
+      };
+    }
+    return { "ServerRowModel": ServerRowModel, "memoryDatasource": memoryDatasource };
+  })();
+  /* ---- src/drishti_viewport.js ---- */
+  __m["src/drishti_viewport.js"] = (function () {
+    const MAX_SCROLL_HEIGHT = 15000000;
+    function columnAt(offsets, x) {
+      let lo = 0, hi = offsets.length - 2;
+      if (hi < 0) { return -1; }
+      while (lo < hi) {
+        const mid = (lo + hi + 1) >> 1;
+        if (offsets[mid] <= x) { lo = mid; } else { hi = mid - 1; }
+      }
+      return lo;
+    }
+    class Viewport {
+      constructor(o) {
+        o = o || {};
+        this.rowHeight = o.rowHeight || 28;
+        this.height = o.height || 600;
+        this.width = o.width || 1000;
+        this.overscanRows = o.overscanRows === undefined ? 6 : o.overscanRows;
+        this.overscanColumns = o.overscanColumns === undefined ? 2 : o.overscanColumns;
+        this.maxScrollHeight = o.maxScrollHeight || MAX_SCROLL_HEIGHT;
+        this.rowCount = 0;
+        this.scrollTop = 0;
+        this.scrollLeft = 0;
+      }
+      resize(width, height) { this.width = width; this.height = height; }
+      setRowCount(n) { this.rowCount = Math.max(0, n | 0); this.scrollTop = Math.min(this.scrollTop, this.maxScrollTop()); }
+      contentHeight() { return this.rowCount * this.rowHeight; }
+      scrollHeight() { return Math.min(this.contentHeight(), this.maxScrollHeight); }
+      maxScrollTop() { return Math.max(0, this.scrollHeight() - this.height); }
+      realTop(scrollTop) {
+        const max = this.maxScrollTop(), realMax = Math.max(0, this.contentHeight() - this.height);
+        if (this.contentHeight() <= this.maxScrollHeight || max === 0) { return scrollTop; }
+        return scrollTop / max * realMax;
+      }
+      scrollTo(top, left) {
+        this.scrollTop = Math.max(0, Math.min(this.maxScrollTop(), top));
+        if (left !== undefined) { this.scrollLeft = Math.max(0, left); }
+      }
+      rows() {
+        if (!this.rowCount) { return { first: 0, last: -1, offset: 0, firstVisible: 0, lastVisible: -1 }; }
+        const real = this.realTop(this.scrollTop), h = this.rowHeight;
+        const firstVisible = Math.min(this.rowCount - 1, Math.floor(real / h));
+        const lastVisible = Math.min(this.rowCount - 1, Math.ceil((real + this.height) / h) - 1);
+        const first = Math.max(0, firstVisible - this.overscanRows), last = Math.min(this.rowCount - 1, lastVisible + this.overscanRows);
+        const offset = this.scrollTop + (first * h - real);       // in the scroller's coordinates: where the first drawn row sits
+        return { first: first, last: last, offset: offset, firstVisible: firstVisible, lastVisible: lastVisible };
+      }
+      scrollToRow(index) {
+        const r = this.rows();
+        if (index >= r.firstVisible && index < r.lastVisible) { return null; }
+        const realMax = Math.max(0, this.contentHeight() - this.height);
+        const realTop = index < r.firstVisible ? index * this.rowHeight : (index + 1) * this.rowHeight - this.height;
+        const clamped = Math.max(0, Math.min(realMax, realTop));
+        const max = this.maxScrollTop();
+        const top = this.contentHeight() <= this.maxScrollHeight || realMax === 0 ? clamped : clamped / realMax * max;
+        this.scrollTo(top);
+        return this.scrollTop;
+      }
+      columns(offsets, pinnedWidth) {
+        const n = offsets.length - 1;
+        if (n <= 0) { return { first: 0, last: -1 }; }
+        const room = Math.max(0, this.width - (pinnedWidth || 0));
+        const a = columnAt(offsets, this.scrollLeft), b = columnAt(offsets, this.scrollLeft + room);
+        return { first: Math.max(0, a - this.overscanColumns), last: Math.min(n - 1, b + this.overscanColumns) };
+      }
+    }
+    return { "MAX_SCROLL_HEIGHT": MAX_SCROLL_HEIGHT, "columnAt": columnAt, "Viewport": Viewport };
+  })();
+  /* ---- src/drishti_selection.js ---- */
+  __m["src/drishti_selection.js"] = (function () {
+    var EventBus = __lib("drishti-core").EventBus;
+    class SelectionModel {
+      constructor(o) {
+        this.mode = (o && o.mode) || 'multiple';
+        this.events = new EventBus();
+        this.ids = new Set();
+        this.anchorIndex = null;
+        this.ranges = [];
+        this.rangeAnchor = null;
+      }
+      clickRow(index, idAt, mods) {
+        if (this.mode === 'none') { return; }
+        const m = mods || {}, id = idAt(index);
+        if (this.mode === 'single' || (!m.ctrl && !m.shift)) {
+          this.ids.clear();
+          if (id !== null) { this.ids.add(id); }
+          this.anchorIndex = index;
+        } else if (m.shift && this.anchorIndex !== null) {
+          if (!m.ctrl) { this.ids.clear(); }
+          const a = Math.min(this.anchorIndex, index), b = Math.max(this.anchorIndex, index);
+          for (let i = a; i <= b; i++) { const x = idAt(i); if (x !== null) { this.ids.add(x); } }
+        } else {
+          if (id !== null) { if (this.ids.has(id)) { this.ids.delete(id); } else { this.ids.add(id); } }
+          this.anchorIndex = index;
+        }
+        this.events.emit('changed', { what: 'rows' });
+      }
+      selectAll(ids) {
+        this.ids.clear();
+        if (ids) { for (const id of ids) { this.ids.add(id); } }
+        this.events.emit('changed', { what: 'rows' });
+      }
+      isSelected(id) { return this.ids.has(id); }
+      selectedIds() { return Array.from(this.ids); }
+      startRange(row, col, mods) {
+        if (!(mods && mods.ctrl)) { this.ranges = []; }
+        this.rangeAnchor = { row: row, col: col };
+        this.ranges.push({ r1: row, r2: row, c1: col, c2: col });
+        this.events.emit('changed', { what: 'ranges' });
+      }
+      extendRange(row, col) {
+        if (!this.rangeAnchor) { this.startRange(row, col); return; }
+        const a = this.rangeAnchor;
+        this.ranges[this.ranges.length - 1] = { r1: Math.min(a.row, row), r2: Math.max(a.row, row), c1: Math.min(a.col, col), c2: Math.max(a.col, col) };
+        this.events.emit('changed', { what: 'ranges' });
+      }
+      clearRanges() { this.ranges = []; this.rangeAnchor = null; this.events.emit('changed', { what: 'ranges' }); }
+      inRange(row, col) { return this.ranges.some((r) => row >= r.r1 && row <= r.r2 && col >= r.c1 && col <= r.c2); }
+    }
+    function rangeStats(ranges, valueAt, columnAt) {
+      let cells = 0, count = 0, sum = 0, min = null, max = null;
+      const seen = new Set(), nonAdd = new Set();
+      ranges.forEach((r) => {
+        for (let i = r.r1; i <= r.r2; i++) {
+          for (let j = r.c1; j <= r.c2; j++) {
+            const k = i + ':' + j;
+            if (seen.has(k)) { continue; }
+            seen.add(k);
+            cells++;
+            const v = valueAt(i, j);
+            if (typeof v !== 'number' || !isFinite(v)) { continue; }
+            count++;
+            sum += v;
+            min = min === null || v < min ? v : min;
+            max = max === null || v > max ? v : max;
+            const c = columnAt(j);
+            if (c && c.additive === false) { nonAdd.add(c.header || c.id); }
+          }
+        }
+      });
+      const na = Array.from(nonAdd);
+      return { cells: cells, count: count, sum: count && !na.length ? sum : null, avg: count && !na.length ? sum / count : null, min: min, max: max,
+        nonAdditive: na, warning: na.length ? na.join(', ') + (na.length > 1 ? ' are' : ' is') + ' not additive: a sum of them is not their total (ask the server for the total of a scope)' : null };
+    }
+    function toTsv(grid) {
+      const cell = (v) => {
+        const s = v === null || v === undefined ? '' : String(v);
+        return /[\t\n\r"]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      };
+      return grid.map((r) => r.map(cell).join('\t')).join('\n');
+    }
+    function rangeCells(ranges, textAt, o) {
+      const out = [];
+      ranges.forEach((r) => {
+        if (o && o.headers) { const h = []; for (let j = r.c1; j <= r.c2; j++) { h.push(o.headers(j)); } out.push(h); }
+        for (let i = r.r1; i <= r.r2; i++) { const line = []; for (let j = r.c1; j <= r.c2; j++) { line.push(textAt(i, j)); } out.push(line); }
+      });
+      return out;
+    }
+    return { "SelectionModel": SelectionModel, "rangeStats": rangeStats, "toTsv": toTsv, "rangeCells": rangeCells };
+  })();
+  /* ---- src/drishti_keyboard.js ---- */
+  __m["src/drishti_keyboard.js"] = (function () {
+    var keyName = __lib("drishti-core").keyName;
+    class GridNavigator {
+      constructor(grid) {
+        this.grid = grid;
+        this.focus = null;
+      }
+      setFocus(row, col) {
+        if (row === null) { this.focus = null; return null; }
+        const R = this.grid.rowCount(), C = this.grid.columnCount();
+        if (!R || !C) { this.focus = null; return null; }
+        this.focus = { row: Math.max(0, Math.min(R - 1, row)), col: Math.max(0, Math.min(C - 1, col || 0)) };
+        return this.focus;
+      }
+      handleKey(e) {
+        const R = this.grid.rowCount(), C = this.grid.columnCount();
+        const none = { focus: null, action: null, handled: false };
+        if (!R || !C) { return none; }
+        if (!this.focus) { this.setFocus(0, 0); return { focus: this.focus, action: null, handled: true }; }
+        const f = this.focus, mod = e.ctrlKey || e.metaKey, page = Math.max(1, this.grid.pageSize ? this.grid.pageSize() : 10);
+        const move = (r, c, action) => ({ focus: this.setFocus(r, c), action: action || null, handled: true });
+        const k = e.key;
+        const group = this.grid.isGroup ? this.grid.isGroup(f.row) : false;
+        if (mod && !e.shiftKey && (k === 'c' || k === 'C')) { return { focus: null, action: 'copy', handled: true }; }
+        if (mod && (k === 'a' || k === 'A')) { return { focus: null, action: 'select-all', handled: true }; }
+        if (k === 'Escape') { return { focus: null, action: 'clear', handled: true }; }
+        if (group && f.col === 0 && !mod && (k === 'ArrowRight' || k === 'ArrowLeft')) {
+          const open = this.grid.isExpanded ? this.grid.isExpanded(f.row) : false;
+          if (e.shiftKey) { return { focus: null, action: k === 'ArrowRight' ? 'expand-all' : 'collapse-all', handled: true }; }
+          if (k === 'ArrowRight' && !open) { return { focus: null, action: 'expand', handled: true }; }
+          if (k === 'ArrowLeft' && open) { return { focus: null, action: 'collapse', handled: true }; }
+        }
+        const ext = e.shiftKey && !mod ? 'extend-range' : null;
+        switch (k) {
+          case 'ArrowUp': return move(mod ? 0 : f.row - 1, f.col, ext);
+          case 'ArrowDown': return move(mod ? R - 1 : f.row + 1, f.col, ext);
+          case 'ArrowLeft': return move(f.row, mod ? 0 : f.col - 1, ext);
+          case 'ArrowRight': return move(f.row, mod ? C - 1 : f.col + 1, ext);
+          case 'Home': return move(mod ? 0 : f.row, 0, e.shiftKey ? 'extend-range' : null);
+          case 'End': return move(mod ? R - 1 : f.row, C - 1, e.shiftKey ? 'extend-range' : null);
+          case 'PageUp': return move(f.row - page, f.col, ext);
+          case 'PageDown': return move(f.row + page, f.col, ext);
+          case 'Tab': {
+            if (e.shiftKey) { return f.col > 0 ? move(f.row, f.col - 1) : f.row > 0 ? move(f.row - 1, C - 1) : none; }
+            return f.col < C - 1 ? move(f.row, f.col + 1) : f.row < R - 1 ? move(f.row + 1, 0) : none;
+          }
+          case ' ':
+          case 'Spacebar':
+            if (e.shiftKey) { return { focus: null, action: 'select-row', handled: true }; }
+            return { focus: null, action: group ? (this.grid.isExpanded && this.grid.isExpanded(f.row) ? 'collapse' : 'expand') : 'toggle-row', handled: true };
+          case 'Enter':
+          case 'F2': return { focus: null, action: group && k === 'Enter' ? 'open' : 'edit', handled: true };
+          default:
+            if ((k === 'e' || k === 'E') && !mod && !e.altKey && this.grid.explain) { return { focus: null, action: 'explain', handled: true }; }
+            return none;
+        }
+      }
+      static help() {
+        return [
+          { keys: 'Arrows', does: 'move' }, { keys: 'Shift+Arrows', does: 'select a range' }, { keys: 'Ctrl+C', does: 'copy' },
+          { keys: 'Space', does: 'select the row, or open a group' }, { keys: 'Right / Left', does: 'open / close a group' },
+          { keys: 'Shift+Right / Left', does: 'open / close everything below' }, { keys: 'Enter', does: 'open or edit' }, { keys: 'E', does: 'Explain the figure' },
+          { keys: 'Ctrl+A', does: 'select all' }, { keys: 'Escape', does: 'clear' }
+        ];
+      }
+    }
+    function keyLabel(e) { return keyName(e); }
+    return { "GridNavigator": GridNavigator, "keyLabel": keyLabel };
+  })();
+  /* ---- src/drishti_grid-live.js ---- */
+  __m["src/drishti_grid-live.js"] = (function () {
+    const GRID_EVENTS = Object.freeze(['cellClicked', 'cellDoubleClicked', 'cellValueChanged', 'focusChanged', 'selectionChanged', 'rangeChanged',
+      'sortChanged', 'filterChanged', 'pivotChanged', 'groupChanged', 'rowExpanded', 'rowCollapsed', 'columnMoved', 'columnResized', 'columnPinned',
+      'columnVisible', 'rowDataUpdated', 'blockLoaded', 'blockFailed', 'explainOpened', 'serverTotalsUpdated', 'serverTotalsFailed', 'cellEditStarted',
+      'cellEditStopped', 'editTransaction', 'editUndone', 'editRedone', 'proposalResolved']);
+    function domEventName(name) { return 'drishti:' + name.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase()); }
+    class GridLive {
+      constructor(grid, o) {
+        this.grid = grid;
+        this.o = Object.assign({ asyncWaitMs: 50, flashMs: 1000, serverDebounceMs: 250, now: () => Date.now() }, o);
+        this.queue = [];
+        this.waiters = [];
+        this.timer = 0;
+        this.flashes = new Map();
+        this.target = null;
+        this.serverTimer = 0;
+        this.staleGroups = new Map();
+        this.stalePivot = false;
+        this.stats = { batches: 0, updates: 0 };
+      }
+      emit(name, detail) {
+        if (GRID_EVENTS.indexOf(name) < 0) { throw new Error('not a grid event: ' + name); }
+        this.grid.events.emit(name, detail || {});
+        if (this.target && typeof CustomEvent === 'function') {
+          this.target.dispatchEvent(new CustomEvent(domEventName(name), { detail: detail || {}, bubbles: true, composed: true }));
+        }
+      }
+      apply(tx) {
+        const g = this.grid;
+        if (g.serverSide) { throw new Error('the rows are the server\'s: send a dataChanged notice (dataChanged(notice))'); }
+        const before = g.pivotMode && g.answer && g.answer.incremental ? (tx.update || []).map((r) => {
+          const id = g.rowModel.getRowId(r, -1), i = g.rowModel.idIndex.get(id);
+          return i === undefined ? null : { old: g.rowModel.rows[i], value: r };
+        }).filter(Boolean) : null;
+        const res = g.rowModel.applyTransaction(tx);
+        const t = this.o.now();
+        res.changes.forEach((ch) => Object.keys(ch.cells).forEach((col) => { if (ch.cells[col].dir) { this.flashes.set(ch.id + '\u001f' + col, { dir: ch.cells[col].dir, at: t }); } }));
+        this.stats.updates += res.updated;
+        if (g.pivotMode) { this.pivotAfter(before, res); }
+        if (res.staleGroups.length) { res.staleGroups.forEach((p) => this.staleGroups.set(p.join('\u001f'), p)); this.askServerSoon(); }
+        this.emit('rowDataUpdated', { added: res.added, updated: res.updated, removed: res.removed, changes: res.changes });
+        return { added: res.added, updated: res.updated, removed: res.removed, changes: res.changes };
+      }
+      pivotAfter(before, res) {
+        const g = this.grid, a = g.answer;
+        if (!a || g.serverSide || g.o.clientAggregation === false) { this.stalePivot = true; this.askServerSoon(); return; }
+        const done = before && !res.added && !res.removed ? g.applyPivotUpdates(before) : false;
+        if (!done) { g.runPivot(); return; }
+        if (a.measures.some((m) => m.server)) { this.stalePivot = true; this.askServerSoon(); }
+        g.events.emit('changed', { what: 'pivot' });
+      }
+      applyAsync(tx) {
+        this.queue.push(tx);
+        const p = new Promise((resolve) => this.waiters.push(resolve));
+        if (!this.timer) { this.timer = setTimeout(() => this.flush(), this.o.asyncWaitMs); }
+        return p;
+      }
+      flush() {
+        clearTimeout(this.timer);
+        this.timer = 0;
+        if (!this.queue.length) { return null; }
+        const g = this.grid, add = [], remove = [], update = new Map();
+        this.queue.forEach((tx) => {
+          (tx.add || []).forEach((r) => add.push(r));
+          (tx.remove || []).forEach((r) => { const id = typeof r === 'string' ? r : g.rowModel.getRowId(r, -1); remove.push(id); update.delete(id); });
+          (tx.update || []).forEach((r) => update.set(g.rowModel.getRowId(r, -1), r));
+        });
+        this.queue = [];
+        const waiters = this.waiters;
+        this.waiters = [];
+        this.stats.batches++;
+        const res = this.apply({ add: add, update: Array.from(update.values()), remove: remove });
+        waiters.forEach((w) => w(res));
+        return res;
+      }
+      flashOf(rowId, colId) {
+        const k = rowId + '\u001f' + colId, f = this.flashes.get(k);
+        if (!f) { return null; }
+        if (this.o.now() - f.at > this.o.flashMs) { this.flashes.delete(k); return null; }
+        return f.dir;
+      }
+      askServerSoon() {
+        clearTimeout(this.serverTimer);
+        this.serverTimer = setTimeout(() => this.askServer(), this.o.serverDebounceMs);
+      }
+      askServer() {
+        clearTimeout(this.serverTimer);
+        this.serverTimer = 0;
+        const g = this.grid, waits = [];
+        if (this.staleGroups.size && g.o.serverGroupTotals && !g.serverSide) {
+          const want = g.rowModel.serverGroupColumns().filter((x) => this.staleGroups.has(x.path.join('\u001f')));
+          this.staleGroups.clear();
+          if (want.length) {
+            waits.push(Promise.resolve(g.o.serverGroupTotals({ groupBy: g.rowModel.groupBy.slice(), groups: want })).then((answers) => {
+              (answers || []).forEach((x) => g.rowModel.setGroupServerValues(x.path, x.values || {}));
+              this.emit('serverTotalsUpdated', { groups: (answers || []).map((x) => x.path) });
+              g.events.emit('changed', { what: 'rows', reason: 'server-totals' });
+            }, (e) => this.emit('serverTotalsFailed', { error: e })));
+          }
+        }
+        if (this.stalePivot && g.pivotMode && g.o.serverPivot) {
+          this.stalePivot = false;
+          waits.push(g.refreshServerMeasures().then((n) => this.emit('serverTotalsUpdated', { pivotCells: n }), (e) => this.emit('serverTotalsFailed', { error: e })));
+        }
+        return Promise.all(waits).then(() => undefined);
+      }
+      connect(feed) {
+        const g = this.grid;
+        return feed.subscribe((m) => {
+          if (!m || !m.type) { return; }
+          if (m.type === 'transaction') { if (g.serverSide) { g.dataChanged({ rows: (m.update || []).map((r) => g.rowModel.getRowId(r, -1)) }); } else { this.applyAsync(m); } }
+          else if (m.type === 'dataChanged') { g.dataChanged(m); }
+          else if (m.type === 'rows' && !g.serverSide) { g.rowModel.setRows(m.rows || []); this.emit('rowDataUpdated', { replaced: true, added: (m.rows || []).length, updated: 0, removed: 0, changes: [] }); }
+        });
+      }
+    }
+    return { "GRID_EVENTS": GRID_EVENTS, "domEventName": domEventName, "GridLive": GridLive };
+  })();
+  /* ---- src/drishti_grid.js ---- */
+  __m["src/drishti_grid.js"] = (function () {
+    var EventBus = __lib("drishti-core").EventBus;
+    var ColumnModel = __m["src/drishti_columns.js"].ColumnModel, getValue = __m["src/drishti_columns.js"].getValue, formatValue = __m["src/drishti_columns.js"].formatValue;
+    var ClientRowModel = __m["src/drishti_client-rows.js"].ClientRowModel;
+    var ServerRowModel = __m["src/drishti_server-rows.js"].ServerRowModel;
+    var Viewport = __m["src/drishti_viewport.js"].Viewport;
+    var SelectionModel = __m["src/drishti_selection.js"].SelectionModel, rangeStats = __m["src/drishti_selection.js"].rangeStats, toTsv = __m["src/drishti_selection.js"].toTsv, rangeCells = __m["src/drishti_selection.js"].rangeCells;
+    var GridNavigator = __m["src/drishti_keyboard.js"].GridNavigator;
+    var WellsModel = __m["src/drishti_wells.js"].WellsModel;
+    var PivotState = __m["src/drishti_pivot.js"].PivotState, resultColumns = __m["src/drishti_pivot.js"].resultColumns, cellValue = __m["src/drishti_pivot.js"].cellValue;
+    var GridLive = __m["src/drishti_grid-live.js"].GridLive;
+    var GridEditing = __m["src/drishti_grid-edit.js"].GridEditing;
+    var GridModelBase = __m["src/drishti_grid-model-base.js"].GridModelBase, LAYOUTS = __m["src/drishti_grid-model-base.js"].LAYOUTS, DENSITIES = __m["src/drishti_grid-model-base.js"].DENSITIES;
+    var cycleSort = __lib("drishti-core").cycleSort, FILTER_CHANNEL = __lib("drishti-core").FILTER_CHANNEL;
+    class GridModel extends GridModelBase {
+      constructor(o) {
+        super();
+        if (!o || !o.columns) { throw new Error('a grid needs columns'); }
+        this.o = o;
+        this.events = new EventBus();
+        this.columns = new ColumnModel(o.columns);
+        this.layout = LAYOUTS.indexOf(o.layout) >= 0 ? o.layout : 'wells';
+        this.density = DENSITIES[o.density] ? o.density : 'compact';
+        this.rowModel = o.datasource ? new ServerRowModel({ datasource: o.datasource, blockSize: o.blockSize, getRowId: o.getRowId })
+          : new ClientRowModel({ columns: this.columns, rows: o.rows || [], getRowId: o.getRowId, clientAggregation: o.clientAggregation, treeData: o.treeData,
+            getDataPath: o.getDataPath, groupDefaultExpanded: o.groupDefaultExpanded });
+        this.serverSide = !!o.datasource;
+        this.viewport = new Viewport({ rowHeight: DENSITIES[this.density] });
+        this.selection = new SelectionModel({ mode: o.rowSelection });
+        this.wells = new WellsModel(this.columns);
+        this.pivotState = new PivotState();
+        this.pivotMode = false;
+        this.pivotExtra = {};
+        this.answer = null;
+        this.sortModel = [];
+        this.filterModel = {};
+        this.navigator = new GridNavigator({
+          rowCount: () => this.rowCount(), columnCount: () => this.shownColumns().length,
+          pageSize: () => Math.max(1, Math.floor(this.viewport.height / this.viewport.rowHeight) - 1),
+          isGroup: (r) => { const x = this.rowAt(r); return !!x && (x.kind === 'group' || (x.kind === 'pivot' && x.entry.expandable)); },
+          isExpanded: (r) => { const x = this.rowAt(r); return !!x && (x.kind === 'group' ? x.expanded : x.kind === 'pivot' ? !!x.entry.expanded : false); },
+          explain: !!o.explain
+        });
+        this.live = new GridLive(this, o.live);
+        this.editing = new GridEditing(this, Object.assign({ locale: o.locale }, o.editing));
+        this.rowModel.events.on('rowsChanged', (p) => { this.viewport.setRowCount(this.rowCount()); this.events.emit('changed', { what: 'rows', reason: p.reason }); });
+        this.rowModel.events.on('blockLoaded', (p) => this.live.emit('blockLoaded', p));
+        this.rowModel.events.on('loadFailed', (p) => this.live.emit('blockFailed', p));
+        const colEvent = { order: 'columnMoved', width: 'columnResized', pinned: 'columnPinned', visible: 'columnVisible' };
+        this.columns.events.on('changed', (p) => {
+          this.events.emit('changed', { what: 'columns' });
+          if (colEvent[p.what]) { const c = this.columns.get(p.id); this.live.emit(colEvent[p.what], { colId: p.id, width: c && c.width, pinned: c && c.pinned, visible: c && !c.hidden }); }
+        });
+        this.selection.events.on('changed', (p) => {
+          this.events.emit('changed', { what: 'selection', which: p.what });
+          if (p.what === 'rows') { this.live.emit('selectionChanged', { ids: this.selection.selectedIds() }); } else { this.live.emit('rangeChanged', { ranges: this.selection.ranges.slice() }); }
+        });
+        this.wells.events.on('changed', () => { if (this.pivotMode) { this.runPivot(); } });
+        this.viewport.setRowCount(this.rowCount());
+      }
+      rowCount() {
+        if (this.pivotMode) { return this.answer ? this.pivotRows().length : 0; }
+        return this.rowModel.rowCount();
+      }
+      pivotRows() { return this.answer ? this.answer.rows : []; }
+      rowAt(i) {
+        if (this.pivotMode) { const e = this.pivotRows()[i]; return e ? { kind: 'pivot', id: 'pivot:' + e.kind + ':' + e.key, depth: Math.max(0, (e.depth || 0) - 1), entry: e } : null; }
+        return this.rowModel.rowAt(i);
+      }
+      shownColumns() {
+        if (!this.pivotMode) { return this.columns.visible(); }
+        if (this._pivotCols) { return this._pivotCols; }
+        const a = this.answer;
+        const dims = a ? a.rowDimensions : [];
+        const head = { id: '__rows', header: dims.map((d) => { const c = this.columns.get(d); return c ? c.header : d; }).join(' / ') || 'Total', type: 'text', pinned: 'left', width: 220, additive: true, rowHeader: true };
+        const rc = a ? resultColumns(a) : [];
+        this._pivotCols = [head].concat(rc.map((r) => ({ id: r.id, header: r.headerPath.join(' › '), headerPath: r.headerPath, type: 'number', width: 120,
+          colKey: r.colKey, measure: r.measure, kind: r.kind, additive: !r.server, format: this.measureFormat(r.measure) })));
+        return this._pivotCols;
+      }
+      measureFormat(label) {
+        const labels = this.wells.toView().values.map((x) => x.as), i = labels.indexOf(label);
+        const v = i >= 0 ? this.wells.state.values[i] : null;
+        const c = v ? this.columns.get(v.colId) : null;
+        return c && c.format ? c.format : 'amount0';
+      }
+      cellValue(r, c) {
+        const row = this.rowAt(r), col = this.shownColumns()[c];
+        if (!row || !col) { return undefined; }
+        if (row.kind === 'pivot') {
+          if (col.rowHeader) { return row.entry.label; }
+          if (row.entry.kind === 'header') { return null; }
+          return cellValue(this.answer, row.entry.key, col.colKey, col.measure).value;
+        }
+        if (row.tree && c === 0) { return row.treeKey; }
+        if (row.kind === 'group') {
+          if (c === 0) { return row.value; }
+          if (row.tree && row.row) { return getValue(row.row, col); }
+          const agg = row.aggregates || (row.row || {});
+          return agg[col.id] !== undefined ? agg[col.id] : null;
+        }
+        if (row.kind === 'loading') { return undefined; }
+        return getValue(row.row, col);
+      }
+      cellText(r, c) {
+        const row = this.rowAt(r), col = this.shownColumns()[c];
+        if (!row || !col) { return ''; }
+        if (row.kind === 'loading') { return c === 0 ? '…' : ''; }
+        const v = this.cellValue(r, c);
+        if (row.kind === 'group' && c === 0) { return (v === null || v === undefined ? '(blank)' : String(v)) + (row.count !== undefined ? ' (' + row.count + ')' : ''); }
+        if (row.kind === 'group' && row.pendingServer && row.pendingServer.indexOf(col.id) >= 0) { return '…'; }
+        if (row.kind === 'pivot') {
+          if (col.rowHeader) { return String(v); }
+          if (row.entry.kind === 'header') { return ''; }
+          const cv = cellValue(this.answer, row.entry.key, col.colKey, col.measure);
+          if (cv.value === null && cv.note) { return '…'; }
+          return cv.value === null || cv.value === undefined ? '' : formatValue(cv.value, col);
+        }
+        return formatValue(v, col, row.row);
+      }
+      setSortModel(model) { this.sortModel = (model || []).slice(); this.rowModel.setSortModel(this.sortModel); this.live.emit('sortChanged', { sortModel: this.sortModel.slice() }); }
+      toggleSort(colId, multi) { const m = cycleSort(this.sortModel, colId, multi); this.setSortModel(m); return m; }
+      setFilterModel(model) {
+        this.filterModel = Object.assign({}, model);
+        this.rowModel.setFilterModel(this.filterModel);
+        this.live.emit('filterChanged', { filterModel: Object.assign({}, this.filterModel) });
+        if (this.pivotMode) { this.runPivot(); }
+      }
+      setQuickFilter(q) { this.rowModel.setQuickFilter(q); this.live.emit('filterChanged', { quickFilter: q || '' }); }
+      followFilters(bus, o) {
+        o = o || {};
+        return bus.on(o.channel || FILTER_CHANNEL, (p) => {
+          if (!p || (o.source && p.source !== o.source)) { return; }
+          const known = {};
+          Object.keys(p.model || {}).forEach((k) => { const c = this.columns.get(k) || this.columns.all().find((x) => x.field === k); if (c) { known[c.id] = p.model[k]; } });
+          this.rowModel.setQuickFilter(p.quickFilter || '');
+          this.setFilterModel(known);
+        });
+      }
+      setRowGroups(colIds) {
+        if (this.serverSide) { this.rowModel.setGrouping({ rowGroupCols: colIds, valueCols: this.columns.all().filter((c) => c.enableValue).map((c) => ({ colId: c.id, aggFunc: c.aggFunc })) }); }
+        else {
+          this.rowModel.setGroupBy(colIds);
+          const want = this.rowModel.serverGroupColumns();
+          if (want.length && this.o.serverGroupTotals) { want.forEach((x) => this.live.staleGroups.set(x.path.join('\u001f'), x.path)); this.live.askServer(); }
+        }
+        this.live.emit('groupChanged', { rowGroups: (colIds || []).slice() });
+      }
+      toggleRow(r, open) {
+        const x = this.rowAt(r);
+        if (!x) { return Promise.resolve(); }
+        if (x.kind === 'pivot' && x.entry.expandable) {
+          const now = open === undefined ? !x.entry.expanded : open;
+          this.live.emit(now ? 'rowExpanded' : 'rowCollapsed', { path: x.entry.path, pivot: true });
+          return this.togglePivotNode('rows', x.entry.path, open);
+        }
+        if (x.kind === 'group') {
+          const path = x.path || x.keys, now = open === undefined ? !x.expanded : open;
+          this.rowModel.setExpanded(path, open);
+          this.live.emit(now ? 'rowExpanded' : 'rowCollapsed', { path: path, pivot: false });
+        }
+        return Promise.resolve();
+      }
+      idAt(r) { const x = this.rowAt(r); return !x ? null : x.kind === 'leaf' ? x.id : x.kind === 'pivot' && x.entry.kind !== 'header' ? x.id : null; }
+      key(e) {
+        const before = this.navigator.focus ? Object.assign({}, this.navigator.focus) : null;
+        const k = this.navigator.handleKey(e), f = this.navigator.focus;
+        const out = { handled: k.handled, action: k.action, focus: f, copy: null };
+        if (k.focus) {
+          if (k.action === 'extend-range') {
+            if (!this.selection.rangeAnchor && before) { this.selection.startRange(before.row, before.col); }
+            this.selection.extendRange(f.row, f.col);
+          } else { this.selection.startRange(f.row, f.col); }
+          this.viewport.scrollToRow(f.row);
+          this.events.emit('changed', { what: 'focus' });
+          this.live.emit('focusChanged', { row: f.row, col: f.col });
+        }
+        if (!f) { return out; }
+        switch (k.action) {
+          case 'copy': out.copy = this.copy(); break;
+          case 'select-all': this.selectAll(); break;
+          case 'select-row': this.selection.clickRow(f.row, (i) => this.idAt(i), { ctrl: true }); break;
+          case 'toggle-row': this.selection.clickRow(f.row, (i) => this.idAt(i), { ctrl: true }); break;
+          case 'expand': this.toggleRow(f.row, true); break;
+          case 'collapse': this.toggleRow(f.row, false); break;
+          case 'clear': this.selection.clearRanges(); break;
+          default: break;
+        }
+        return out;
+      }
+      selectAll() {
+        if (this.serverSide || this.pivotMode) { this.selection.startRange(0, 0); this.selection.extendRange(this.rowCount() - 1, this.shownColumns().length - 1); return; }
+        const rm = this.rowModel, ids = [];
+        for (let i = 0; i < rm.view.length; i++) { ids.push(rm.getRowId(rm.rows[rm.view[i]], rm.view[i])); }
+        this.selection.selectAll(ids);
+      }
+      copy(o) {
+        let ranges = this.selection.ranges;
+        if (!ranges.length && this.navigator.focus) { const f = this.navigator.focus; ranges = [{ r1: f.row, r2: f.row, c1: f.col, c2: f.col }]; }
+        const cols = this.shownColumns();
+        return toTsv(rangeCells(ranges, (r, c) => { const v = this.cellValue(r, c); return typeof v === 'number' ? String(v) : this.cellText(r, c); },
+          o && o.headers ? { headers: (j) => cols[j].header } : null));
+      }
+      rangeStats() {
+        const cols = this.shownColumns();
+        return rangeStats(this.selection.ranges, (r, c) => this.cellValue(r, c), (j) => cols[j]);
+      }
+      cellContext(r, c) {
+        const row = this.rowAt(r), col = this.shownColumns()[c];
+        if (!row || !col) { return null; }
+        const ctx = { row: r, col: c, columnId: col.id, header: col.header, value: this.cellValue(r, c), text: this.cellText(r, c), additive: col.additive !== false, kind: row.kind };
+        if (row.kind === 'pivot') {
+          const cell = this.answer.cells[row.entry.key + '|' + col.colKey];
+          Object.assign(ctx, { measure: col.measure, coords: cell ? cell.coords : row.entry.coords, members: cell ? cell.members : 0, note: cell && cell.notes ? cell.notes[col.measure] || null : null, view: this.pivotView() });
+        } else if (row.kind === 'group') { Object.assign(ctx, { path: row.path || row.keys, field: row.field }); }
+        else { Object.assign(ctx, { rowId: row.id, data: row.row }); }
+        return ctx;
+      }
+      explain(r, c) {
+        if (!this.o.explain) { return Promise.reject(new Error('this grid has no Explain hook')); }
+        const ctx = this.cellContext(r, c);
+        if (!ctx) { return Promise.reject(new Error('no cell at ' + r + ', ' + c)); }
+        this.live.emit('explainOpened', ctx);
+        return Promise.resolve(this.o.explain(ctx));
+      }
+      on(name, fn) { return this.events.on(name, fn); }
+      setEventTarget(el) { this.live.target = el; }
+      cellClicked(r, c, mods) {
+        const m = mods || {};
+        this.navigator.setFocus(r, c);
+        if (m.shift) { this.selection.extendRange(r, c); } else { this.selection.startRange(r, c, m); }
+        this.selection.clickRow(r, (i) => this.idAt(i), m);
+        this.live.emit('cellClicked', Object.assign(this.cellContext(r, c) || {}, { mods: m }));
+      }
+      cellDoubleClicked(r, c) { this.live.emit('cellDoubleClicked', this.cellContext(r, c) || {}); }
+      setCellValue(r, c, value) {
+        const p = this.editing.plan([{ r: r, c: c, value: value }]);
+        if (p.problems.length) { return false; }
+        this.editing.apply(p.edits, 'api').catch(() => {});
+        return true;
+      }
+      applyTransaction(tx) { return this.live.apply(tx); }
+      applyTransactionAsync(tx) { return this.live.applyAsync(tx); }
+      flushTransactions() { return this.live.flush(); }
+      flashOf(rowId, colId) { return this.live.flashOf(rowId, colId); }
+      connectLive(feed) { return this.live.connect(feed); }
+    }
+    function createGridModel(o) { return new GridModel(o); }
+    return { "GridModel": GridModel, "createGridModel": createGridModel };
+  })();
   /* ---- src/drishti_grid-wells-ui.js ---- */
   __m["src/drishti_grid-wells-ui.js"] = (function () {
     var h = __lib("drishti-core").h;
@@ -4446,7 +4457,8 @@
   /* ---- src/drishti_grid-view.js ---- */
   __m["src/drishti_grid-view.js"] = (function () {
     var announce = __lib("drishti-core").announce;
-    var GridModel = __m["src/drishti_grid.js"].GridModel, LAYOUTS = __m["src/drishti_grid.js"].LAYOUTS, DENSITIES = __m["src/drishti_grid.js"].DENSITIES;
+    var GridModel = __m["src/drishti_grid.js"].GridModel;
+    var LAYOUTS = __m["src/drishti_grid-model-base.js"].LAYOUTS, DENSITIES = __m["src/drishti_grid-model-base.js"].DENSITIES;
     var GridBody = __m["src/drishti_grid-body.js"].GridBody;
     var WellsView = __m["src/drishti_grid-wells-ui.js"].WellsView;
     var Menu = __m["src/drishti_grid-dom.js"].Menu, Notes = __m["src/drishti_grid-dom.js"].Notes;
@@ -4736,7 +4748,7 @@
   __m["src/drishti_index.js"] = (function () {
     var defineGridElement = __m["src/drishti_grid-element.js"].defineGridElement;
     function install(root) { if (root && root.document && root.customElements) { defineGridElement(root.customElements, root); } }
-    return { "install": install, "ADDITIVE_FUNCS": __m["src/drishti_columns.js"].ADDITIVE_FUNCS, "normalizeColumn": __m["src/drishti_columns.js"].normalizeColumn, "getValue": __m["src/drishti_columns.js"].getValue, "formatValue": __m["src/drishti_columns.js"].formatValue, "ColumnModel": __m["src/drishti_columns.js"].ColumnModel, "AGG_FUNCS": __m["src/drishti_aggregate.js"].AGG_FUNCS, "aggFunc": __m["src/drishti_aggregate.js"].aggFunc, "parseMeasure": __m["src/drishti_aggregate.js"].parseMeasure, "isServerMeasure": __m["src/drishti_aggregate.js"].isServerMeasure, "aggregate": __m["src/drishti_aggregate.js"].aggregate, "SEP": __m["src/drishti_pivot.js"].SEP, "BLANK": __m["src/drishti_pivot.js"].BLANK, "memberText": __m["src/drishti_pivot.js"].memberText, "valueLabel": __m["src/drishti_pivot.js"].valueLabel, "normalizeView": __m["src/drishti_pivot.js"].normalizeView, "serverRequest": __m["src/drishti_pivot.js"].serverRequest, "memberFilters": __m["src/drishti_pivot.js"].memberFilters, "PivotState": __m["src/drishti_pivot.js"].PivotState, "pivotLocal": __m["src/drishti_pivot.js"].pivotLocal, "pivotApplyUpdates": __m["src/drishti_pivot.js"].pivotApplyUpdates, "mergeAnswer": __m["src/drishti_pivot.js"].mergeAnswer, "applyValueFilters": __m["src/drishti_pivot.js"].applyValueFilters, "resultColumns": __m["src/drishti_pivot.js"].resultColumns, "cellValue": __m["src/drishti_pivot.js"].cellValue, "WELLS": __m["src/drishti_wells.js"].WELLS, "VALUE_FUNCS": __m["src/drishti_wells.js"].VALUE_FUNCS, "WellsModel": __m["src/drishti_wells.js"].WellsModel, "ClientRowModel": __m["src/drishti_client-rows.js"].ClientRowModel, "ServerRowModel": __m["src/drishti_server-rows.js"].ServerRowModel, "memoryDatasource": __m["src/drishti_server-rows.js"].memoryDatasource, "MAX_SCROLL_HEIGHT": __m["src/drishti_viewport.js"].MAX_SCROLL_HEIGHT, "columnAt": __m["src/drishti_viewport.js"].columnAt, "Viewport": __m["src/drishti_viewport.js"].Viewport, "SelectionModel": __m["src/drishti_selection.js"].SelectionModel, "rangeStats": __m["src/drishti_selection.js"].rangeStats, "toTsv": __m["src/drishti_selection.js"].toTsv, "rangeCells": __m["src/drishti_selection.js"].rangeCells, "crc32": __m["src/drishti_export.js"].crc32, "zipStore": __m["src/drishti_export.js"].zipStore, "excelFormat": __m["src/drishti_export.js"].excelFormat, "toXlsx": __m["src/drishti_export.js"].toXlsx, "XLSX_TYPE": __m["src/drishti_export.js"].XLSX_TYPE, "GridNavigator": __m["src/drishti_keyboard.js"].GridNavigator, "keyLabel": __m["src/drishti_keyboard.js"].keyLabel, "LAYOUTS": __m["src/drishti_grid.js"].LAYOUTS, "DENSITIES": __m["src/drishti_grid.js"].DENSITIES, "GridModel": __m["src/drishti_grid.js"].GridModel, "createGridModel": __m["src/drishti_grid.js"].createGridModel, "GRID_EVENTS": __m["src/drishti_grid-live.js"].GRID_EVENTS, "domEventName": __m["src/drishti_grid-live.js"].domEventName, "GridLive": __m["src/drishti_grid-live.js"].GridLive, "EDITORS": __m["src/drishti_grid-edit.js"].EDITORS, "editorOf": __m["src/drishti_grid-edit.js"].editorOf, "parseCellText": __m["src/drishti_grid-edit.js"].parseCellText, "validateCell": __m["src/drishti_grid-edit.js"].validateCell, "parseTsv": __m["src/drishti_grid-edit.js"].parseTsv, "GridEditing": __m["src/drishti_grid-edit.js"].GridEditing, "CellEditor": __m["src/drishti_grid-editors.js"].CellEditor, "manualFeed": __m["src/drishti_live.js"].manualFeed, "renderWindow": __m["src/drishti_plain-render.js"].renderWindow, "renderText": __m["src/drishti_plain-render.js"].renderText, "renderHtml": __m["src/drishti_plain-render.js"].renderHtml, "docTable": __m["src/drishti_doc-table.js"].docTable, "docPivotable": __m["src/drishti_doc-table.js"].docPivotable, "docDrill": __m["src/drishti_doc-table.js"].docDrill, "heatBucket": __m["src/drishti_doc-table.js"].heatBucket, "docPivot": __m["src/drishti_doc-table.js"].docPivot, "docPlainTable": __m["src/drishti_doc-table.js"].docPlainTable, "treeVisibility": __m["src/drishti_doc-behave.js"].treeVisibility, "pageInfo": __m["src/drishti_doc-behave.js"].pageInfo, "enhanceDocTables": __m["src/drishti_doc-behave.js"].enhanceDocTables, "VIEW_EVENTS": __m["src/drishti_grid-ui.js"].VIEW_EVENTS, "PHONE_WIDTH": __m["src/drishti_grid-ui.js"].PHONE_WIDTH, "FUNCTION_KEYS": __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, "CF_TYPES": __m["src/drishti_grid-ui.js"].CF_TYPES, "headerSpans": __m["src/drishti_grid-ui.js"].headerSpans, "pivotColumnLabels": __m["src/drishti_grid-ui.js"].pivotColumnLabels, "markGroups": __m["src/drishti_grid-ui.js"].markGroups, "isTotalCell": __m["src/drishti_grid-ui.js"].isTotalCell, "nonAdditiveNote": __m["src/drishti_grid-ui.js"].nonAdditiveNote, "colourScaleAlpha": __m["src/drishti_grid-ui.js"].colourScaleAlpha, "dataBarWidth": __m["src/drishti_grid-ui.js"].dataBarWidth, "cfBackground": __m["src/drishti_grid-ui.js"].cfBackground, "figureRange": __m["src/drishti_grid-ui.js"].figureRange, "ruleFor": __m["src/drishti_grid-ui.js"].ruleFor, "phoneColumns": __m["src/drishti_grid-ui.js"].phoneColumns, "pivotMeasures": __m["src/drishti_grid-ui.js"].pivotMeasures, "columnMenuItems": __m["src/drishti_grid-ui.js"].columnMenuItems, "cellMenuItems": __m["src/drishti_grid-ui.js"].cellMenuItems, "commandText": __m["src/drishti_grid-ui.js"].commandText, "parseCommand": __m["src/drishti_grid-ui.js"].parseCommand, "parseCondition": __m["src/drishti_grid-ui.js"].parseCondition, "conditionText": __m["src/drishti_grid-ui.js"].conditionText, "statusItems": __m["src/drishti_grid-ui.js"].statusItems, "FlashTracker": __m["src/drishti_grid-ui.js"].FlashTracker, "Menu": __m["src/drishti_grid-dom.js"].Menu, "Notes": __m["src/drishti_grid-dom.js"].Notes, "sparkline": __m["src/drishti_grid-explain.js"].sparkline, "renderExplain": __m["src/drishti_grid-explain.js"].renderExplain, "localDrill": __m["src/drishti_grid-actions.js"].localDrill, "GridBase": __m["src/drishti_grid-base.js"].GridBase, "Grid": __m["src/drishti_grid-view.js"].Grid, "ELEMENT_NAME": __m["src/drishti_grid-element.js"].ELEMENT_NAME, "defineGridElement": __m["src/drishti_grid-element.js"].defineGridElement };
+    return { "install": install, "ADDITIVE_FUNCS": __m["src/drishti_columns.js"].ADDITIVE_FUNCS, "normalizeColumn": __m["src/drishti_columns.js"].normalizeColumn, "getValue": __m["src/drishti_columns.js"].getValue, "formatValue": __m["src/drishti_columns.js"].formatValue, "ColumnModel": __m["src/drishti_columns.js"].ColumnModel, "AGG_FUNCS": __m["src/drishti_aggregate.js"].AGG_FUNCS, "aggFunc": __m["src/drishti_aggregate.js"].aggFunc, "parseMeasure": __m["src/drishti_aggregate.js"].parseMeasure, "isServerMeasure": __m["src/drishti_aggregate.js"].isServerMeasure, "aggregate": __m["src/drishti_aggregate.js"].aggregate, "SEP": __m["src/drishti_pivot.js"].SEP, "BLANK": __m["src/drishti_pivot.js"].BLANK, "memberText": __m["src/drishti_pivot.js"].memberText, "valueLabel": __m["src/drishti_pivot.js"].valueLabel, "normalizeView": __m["src/drishti_pivot.js"].normalizeView, "serverRequest": __m["src/drishti_pivot.js"].serverRequest, "memberFilters": __m["src/drishti_pivot.js"].memberFilters, "PivotState": __m["src/drishti_pivot.js"].PivotState, "pivotLocal": __m["src/drishti_pivot.js"].pivotLocal, "pivotApplyUpdates": __m["src/drishti_pivot.js"].pivotApplyUpdates, "mergeAnswer": __m["src/drishti_pivot.js"].mergeAnswer, "applyValueFilters": __m["src/drishti_pivot.js"].applyValueFilters, "resultColumns": __m["src/drishti_pivot.js"].resultColumns, "cellValue": __m["src/drishti_pivot.js"].cellValue, "WELLS": __m["src/drishti_wells.js"].WELLS, "VALUE_FUNCS": __m["src/drishti_wells.js"].VALUE_FUNCS, "WellsModel": __m["src/drishti_wells.js"].WellsModel, "ClientRowModel": __m["src/drishti_client-rows.js"].ClientRowModel, "ServerRowModel": __m["src/drishti_server-rows.js"].ServerRowModel, "memoryDatasource": __m["src/drishti_server-rows.js"].memoryDatasource, "MAX_SCROLL_HEIGHT": __m["src/drishti_viewport.js"].MAX_SCROLL_HEIGHT, "columnAt": __m["src/drishti_viewport.js"].columnAt, "Viewport": __m["src/drishti_viewport.js"].Viewport, "SelectionModel": __m["src/drishti_selection.js"].SelectionModel, "rangeStats": __m["src/drishti_selection.js"].rangeStats, "toTsv": __m["src/drishti_selection.js"].toTsv, "rangeCells": __m["src/drishti_selection.js"].rangeCells, "crc32": __m["src/drishti_export.js"].crc32, "zipStore": __m["src/drishti_export.js"].zipStore, "excelFormat": __m["src/drishti_export.js"].excelFormat, "toXlsx": __m["src/drishti_export.js"].toXlsx, "XLSX_TYPE": __m["src/drishti_export.js"].XLSX_TYPE, "GridNavigator": __m["src/drishti_keyboard.js"].GridNavigator, "keyLabel": __m["src/drishti_keyboard.js"].keyLabel, "GridModel": __m["src/drishti_grid.js"].GridModel, "createGridModel": __m["src/drishti_grid.js"].createGridModel, "LAYOUTS": __m["src/drishti_grid-model-base.js"].LAYOUTS, "DENSITIES": __m["src/drishti_grid-model-base.js"].DENSITIES, "GridModelBase": __m["src/drishti_grid-model-base.js"].GridModelBase, "GRID_EVENTS": __m["src/drishti_grid-live.js"].GRID_EVENTS, "domEventName": __m["src/drishti_grid-live.js"].domEventName, "GridLive": __m["src/drishti_grid-live.js"].GridLive, "EDITORS": __m["src/drishti_grid-edit.js"].EDITORS, "editorOf": __m["src/drishti_grid-edit.js"].editorOf, "parseCellText": __m["src/drishti_grid-edit.js"].parseCellText, "validateCell": __m["src/drishti_grid-edit.js"].validateCell, "parseTsv": __m["src/drishti_grid-edit.js"].parseTsv, "GridEditing": __m["src/drishti_grid-edit.js"].GridEditing, "CellEditor": __m["src/drishti_grid-editors.js"].CellEditor, "manualFeed": __m["src/drishti_live.js"].manualFeed, "renderWindow": __m["src/drishti_plain-render.js"].renderWindow, "renderText": __m["src/drishti_plain-render.js"].renderText, "renderHtml": __m["src/drishti_plain-render.js"].renderHtml, "docTable": __m["src/drishti_doc-table.js"].docTable, "docPivotable": __m["src/drishti_doc-table.js"].docPivotable, "docDrill": __m["src/drishti_doc-table.js"].docDrill, "heatBucket": __m["src/drishti_doc-table.js"].heatBucket, "docPivot": __m["src/drishti_doc-table.js"].docPivot, "docPlainTable": __m["src/drishti_doc-table.js"].docPlainTable, "treeVisibility": __m["src/drishti_doc-behave.js"].treeVisibility, "pageInfo": __m["src/drishti_doc-behave.js"].pageInfo, "enhanceDocTables": __m["src/drishti_doc-behave.js"].enhanceDocTables, "VIEW_EVENTS": __m["src/drishti_grid-ui.js"].VIEW_EVENTS, "PHONE_WIDTH": __m["src/drishti_grid-ui.js"].PHONE_WIDTH, "FUNCTION_KEYS": __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, "CF_TYPES": __m["src/drishti_grid-ui.js"].CF_TYPES, "headerSpans": __m["src/drishti_grid-ui.js"].headerSpans, "pivotColumnLabels": __m["src/drishti_grid-ui.js"].pivotColumnLabels, "markGroups": __m["src/drishti_grid-ui.js"].markGroups, "isTotalCell": __m["src/drishti_grid-ui.js"].isTotalCell, "nonAdditiveNote": __m["src/drishti_grid-ui.js"].nonAdditiveNote, "colourScaleAlpha": __m["src/drishti_grid-ui.js"].colourScaleAlpha, "dataBarWidth": __m["src/drishti_grid-ui.js"].dataBarWidth, "cfBackground": __m["src/drishti_grid-ui.js"].cfBackground, "figureRange": __m["src/drishti_grid-ui.js"].figureRange, "ruleFor": __m["src/drishti_grid-ui.js"].ruleFor, "phoneColumns": __m["src/drishti_grid-ui.js"].phoneColumns, "pivotMeasures": __m["src/drishti_grid-ui.js"].pivotMeasures, "columnMenuItems": __m["src/drishti_grid-ui.js"].columnMenuItems, "cellMenuItems": __m["src/drishti_grid-ui.js"].cellMenuItems, "commandText": __m["src/drishti_grid-ui.js"].commandText, "parseCommand": __m["src/drishti_grid-ui.js"].parseCommand, "parseCondition": __m["src/drishti_grid-ui.js"].parseCondition, "conditionText": __m["src/drishti_grid-ui.js"].conditionText, "statusItems": __m["src/drishti_grid-ui.js"].statusItems, "FlashTracker": __m["src/drishti_grid-ui.js"].FlashTracker, "Menu": __m["src/drishti_grid-dom.js"].Menu, "Notes": __m["src/drishti_grid-dom.js"].Notes, "sparkline": __m["src/drishti_grid-explain.js"].sparkline, "renderExplain": __m["src/drishti_grid-explain.js"].renderExplain, "localDrill": __m["src/drishti_grid-actions.js"].localDrill, "GridBase": __m["src/drishti_grid-base.js"].GridBase, "Grid": __m["src/drishti_grid-view.js"].Grid, "ELEMENT_NAME": __m["src/drishti_grid-element.js"].ELEMENT_NAME, "defineGridElement": __m["src/drishti_grid-element.js"].defineGridElement };
   })();
   return Object.freeze(Object.assign({ library: "drishti-grid", version: "0.3.0" }, __m["src/drishti_index.js"]));
 });
