@@ -27,7 +27,7 @@ items:
   - id: sa-ccr-figures
     what: field
     about: "SA-CCR exposure at default, replacement cost, add-ons, multiplier and RWA: stored figures of the sa-ccr kind, not computed by an SA-CCR engine"
-    release: 2.9.11.l
+    release: 2.9.11.k
     treatment: under-construction
     sutras:
       - kind: sa-ccr
@@ -53,7 +53,7 @@ items:
   - id: credit-limit-usage
     what: field
     about: "A credit limit's used amount and utilisation as stored, not measured against the exposure engine's figure"
-    release: 2.9.11.l
+    release: 2.9.11.k
     treatment: under-construction
     sutras:
       - kind: credit-limit
@@ -73,7 +73,7 @@ items:
   - id: pre-deal-limit-decision
     what: decision
     about: "The pre-deal limit decision: approve, refer or decline a candidate trade against every limit it touches (the exposure what-if itself is built)"
-    release: 2.9.11.l
+    release: 2.9.11.k
     treatment: under-construction
     contracts: ["docs/contracts/LIM.md#64-pre-deal-check"]
 

@@ -2342,7 +2342,7 @@ the lake. When the engine is built, remove the item in the change that ships it.
   - id: sa-ccr-figures
     what: field
     about: "SA-CCR EAD, RC, add-ons and RWA: stored, not computed by an SA-CCR engine"
-    release: 2.9.11.l
+    release: 2.9.11.k
     treatment: under-construction
     sutras:
       - kind: sa-ccr
