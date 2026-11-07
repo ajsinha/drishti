@@ -63,7 +63,8 @@ export class TreePicker extends InputBase {
     this.search.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown') { e.preventDefault(); this.tree.focus(); this.move(0, true); } });
     this.tree.addEventListener('keydown', (e) => this.key(e));
     this.tree.addEventListener('click', (e) => this.click(e));
-    this.tree.addEventListener('focus', () => { if (!this.active) { this.move(0, true); } });
+    this.tree.addEventListener('mousedown', () => { this.pointer = true; setTimeout(() => { this.pointer = false; }, 0); });
+    this.tree.addEventListener('focus', () => { if (!this.active && !this.pointer) { this.move(0, true); } });   /* by the keyboard: the first node; a click picks its own */
     if (o.inline) { host.appendChild(this.box); host.classList.add('di-inline'); }
     else {
       this.pop = new Popover(this.doc, { cls: 'di-tree-pop', label: o.label || 'Choose', theme: host, onClose: () => { this.button.setAttribute('aria-expanded', 'false'); this.emit('close'); } });

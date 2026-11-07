@@ -159,10 +159,13 @@ def test_the_pickers_dates_ranges_tree_multiselect_and_combobox(browsers):
         await pg.click("#hx-ms .di-ms-control")
         await pg.keyboard.type("n")
         assert await pg.locator(".di-ms-pop .di-option").count() >= 5
+        assert "Select the" in await pg.text_content(".di-ms-pop [data-act='all']")
         await pg.click(".di-ms-pop [data-act='all']")
         value = await h(pg, "window.__harness.ms.getValue()")
-        assert len(value) == 12 and value[:2] == ["USD", "EUR"]                    # select the matching, up to the limit of 12
+        assert len(value) > 5 and value[:2] == ["USD", "EUR"] and all("N" in v for v in value[2:])   # the matching ones
         await pg.fill("#hx-ms .di-inline-field", "")
+        await pg.click(".di-ms-pop [data-act='all']")
+        assert len(await h(pg, "window.__harness.ms.getValue()")) == 12                 # every one, up to the limit of 12
         await pg.keyboard.press("Backspace")
         assert len(await h(pg, "window.__harness.ms.getValue()")) == 11
         assert await pg.locator("#hx-ms .di-chip-more").count() == 1
@@ -193,7 +196,7 @@ def test_a_form_from_a_schema_with_conditions_arrays_the_servers_check_and_four_
         await pg.fill(f"{f} [data-path='notional'] input", "500")
         await pg.click(f"{f} [data-act='submit']")
         summary = await pg.text_content(f"{f} .di-form-summary")
-        assert "Book must look like a book code such as RT-123" in summary and "Notional must be at least 1,000" in summary
+        assert "Book code must look like a book code such as RT-123" in summary and "Notional must be at least 1,000" in summary
         assert await pg.evaluate("() => document.activeElement.classList.contains('di-form-summary')")
         assert await pg.locator(f"{f} [data-path='strike']").is_hidden()
         await pg.click(f"{f} [data-path='product'] select")

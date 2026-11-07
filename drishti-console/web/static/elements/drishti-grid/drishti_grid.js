@@ -3563,25 +3563,18 @@
         return this.save(at.r, at.c, got.value, move, leaving);
       }
       save(r, c, value, move, leaving) {
-        const v = this.view, m = v.model;
-        this.busy = true;
-        const p = m.editing.commit([{ r: r, c: c, value: value }], 'edit');
+        const v = this.view, m = v.model, col = m.shownColumns()[c];
+        const plan = m.editing.plan([{ r: r, c: c, value: value }]);
+        if (plan.problems.length) { return Promise.resolve(this.problem(plan.problems[0].message, leaving)); }
+        const p = m.editing.apply(plan.edits, 'edit');
+        this.close(true);
+        if (move) { m.navigator.setFocus(r + move.dr, c + move.dc); m.selection.startRange(m.navigator.focus.row, m.navigator.focus.col, {}); v.afterFocus(true); }
+        v.body.scroller.focus({ preventScroll: true });
         return p.then((tx) => {
-          this.busy = false;
-          this.close(true);
           if (tx.status === 'proposed') { v.say('Sent for approval (' + tx.proposalId + '): the cell is marked until a second person decides'); }
-          else if (tx.edits.length) { v.say('Saved ' + m.shownColumns()[c].header); }
-          if (move) { m.navigator.setFocus(r + move.dr, c + move.dc); m.selection.startRange(m.navigator.focus.row, m.navigator.focus.col, {}); v.afterFocus(true); }
-          v.body.scroller.focus({ preventScroll: true });
+          else if (tx.edits.length) { v.say('Saved ' + col.header); }
           return true;
-        }, (err) => {
-          this.busy = false;
-          if (err.problems) { return this.problem(err.problems[0].message, leaving); }
-          this.close(false);
-          v.say('Not saved: ' + err.message);
-          v.body.scroller.focus({ preventScroll: true });
-          return false;
-        });
+        }, (err) => { v.say('Not saved: ' + err.message); return false; });
       }
       problem(text, leaving) {
         if (leaving || !this.el) { this.close(false); this.view.say('Not saved: ' + text); return false; }
