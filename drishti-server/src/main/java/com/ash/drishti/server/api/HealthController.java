@@ -230,10 +230,13 @@ public class HealthController {
             out.put("alerts", alerts.summary());                        // the platform alerts open on this member, and whether the rules were read
         }
         if (nativeLibraries != null) {
-            Map<String, Object> blas = nativeLibraries.describe();       // auto fell back to Java: DEGRADED (same results, slower), never down
-            Map<String, Object> store = nativeLibraries.store();          // RocksDB, else H2's MVStore: DEGRADED the same way
-            out.put("native", Map.of("blas", blas, "store", store));
-            if (("DEGRADED".equals(blas.get("status")) || "DEGRADED".equals(store.get("status"))) && "OK".equals(out.get("status"))) {
+            // BLAS: auto fell back to Java, DEGRADED (same results, slower), never down; the disk store (RocksDB, else H2's MVStore) the
+            // same way; DuckDB and SQLite are required without a fallback: one that cannot load is DOWN, and the server DEGRADED
+            Map<String, Object> all = nativeLibraries.all();
+            out.put("native", all);
+            boolean worse = all.values().stream()
+                    .anyMatch(v -> v instanceof Map<?, ?> e && ("DEGRADED".equals(e.get("status")) || "DOWN".equals(e.get("status"))));
+            if (worse && "OK".equals(out.get("status"))) {
                 out.put("status", "DEGRADED");
             }
         }

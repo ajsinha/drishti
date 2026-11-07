@@ -52,6 +52,14 @@ class NativeLibrariesTest {
         assertThat((List<?>) d.get("banner")).hasSize(s.degraded() ? 8 : 0);
         assertThat(d).containsKeys("summary", "line", "members", "canaryInterval");
         assertThat(n.degraded()).isEqualTo(s.degraded());
+        Map<String, Object> all = n.all();                              // Health and Admin -> Engines: native.*
+        assertThat(all).containsOnlyKeys("blas", "store", "duckdb", "sqlite");
+        Map<?, ?> duckdb = (Map<?, ?>) all.get("duckdb");
+        Map<?, ?> sqlite = (Map<?, ?>) all.get("sqlite");
+        assertThat(duckdb.get("status")).isEqualTo("OK");
+        assertThat(duckdb.get("required")).isEqualTo(true);
+        assertThat(sqlite.get("status")).isEqualTo("OK");
+        assertThat(sqlite.get("fallback")).isEqualTo("none (required)");
     }
 
     @Test

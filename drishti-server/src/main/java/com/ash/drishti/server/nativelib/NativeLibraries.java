@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.nativelib;
 
+import com.ash.drishti.nativ.core.RequiredLibraries;
 import com.ash.drishti.nativ.linalg.Blas;
 import com.ash.drishti.nativ.store.DiskStores;
 import com.ash.drishti.server.net.DigestService;
@@ -49,7 +50,8 @@ import org.springframework.stereotype.Component;
  * </ul>
  *
  * It also sets the disk store's mode ({@code drishti.native.store.mode}: RocksDB, else H2's MVStore; DRISHTI_NATIVE.md section 2) before
- * any connector opens a disk cache, and reports which serves ({@link #store}). Nothing here can stop the server.
+ * any connector opens a disk cache, and reports which serves ({@link #store}); and it lists DuckDB and SQLite, required without a fallback
+ * (DRISHTI_NATIVE.md sections 2.1 and 2.2; {@link RequiredLibraries}). Nothing here can stop the server.
  */
 @Component
 public class NativeLibraries {
@@ -70,6 +72,13 @@ public class NativeLibraries {
         DiskStores.Status store = DiskStores.status();
         LOG.info("Disk store: {}{}", store.impl() + (store.version() == null ? "" : " " + store.version()),
                 store.reason() == null ? "" : " (" + store.reason() + ")");
+        for (RequiredLibraries.Status r : RequiredLibraries.status()) {     // DuckDB and SQLite: required, no fallback
+            if (r.loaded()) {
+                LOG.info("{}", r.line());
+            } else {
+                LOG.error("{}. Use a supported platform (Linux, Windows or macOS) with the temporary folder writable.", r.line());
+            }
+        }
         String mode = env.getProperty("drishti.native.blas.mode", "auto");
         this.unknownMode = Blas.Mode.known(mode) ? null : mode;
         String dataDir = env.getProperty("drishti.data.dir", "./data");
@@ -225,6 +234,20 @@ public class NativeLibraries {
     /** The disk store of this node: {@code status} ({@code OK}, {@code DEGRADED} when auto fell back to MVStore), impl, mode, reason, version. */
     public Map<String, Object> store() {
         return DiskStores.status().toMap();
+    }
+
+    /** DuckDB and SQLite (required, no fallback): {@code status} {@code OK} or {@code DOWN}, version, reason, line. */
+    public Map<String, Map<String, Object>> required() {
+        return RequiredLibraries.toMap();
+    }
+
+    /** Everything Health and Admin -> Engines show under {@code native}: {@code blas}, {@code store}, {@code duckdb}, {@code sqlite}. */
+    public Map<String, Object> all() {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("blas", describe());
+        m.put("store", store());
+        m.putAll(required());
+        return m;
     }
 
     /** True when auto mode runs on the Java path (health DEGRADED). */

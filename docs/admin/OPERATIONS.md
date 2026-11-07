@@ -226,9 +226,12 @@ Every native library of the server lives in one module, `drishti-native`, behind
 
 | Library | What it serves | When it cannot load |
 |---|---|---|
-| **RocksDB** (bundled, `rocksdbjni`: Linux, Windows, macOS) | the connectors' disk caches, the message connectors' state stores, the derived sources' sorted stores | **H2's MVStore** (pure Java) serves instead: a loud warning once in the log, `native.store` **DEGRADED** in Admin → Health and `GET /api/v1/admin/health`; the server starts. A cache RocksDB wrote is not read by MVStore (each keeps its own files), so those caches start empty and a message connector's kept state starts empty |
-| **DuckDB** (bundled) | the BI engine, the SQL service, the pivot executor, the DuckDB connector | **required**: there is no fallback; the server says what failed and does not serve those parts |
-| **SQLite** (bundled driver) | the identity and state database of a single server | **required**: no fallback; use PostgreSQL, or a supported platform |
+| **RocksDB** (bundled, `rocksdbjni`: Linux, Windows, macOS) | the connectors' disk caches, the message connectors' state stores, the derived sources' sorted stores | **H2's MVStore** (pure Java) serves instead: a loud warning once in the log, `native.store` **DEGRADED** in Admin → Health and `GET /api/v1/admin/health`; the server starts. A cache RocksDB wrote is not read by MVStore (each keeps its own files), so those caches start empty and a message connector's kept state starts empty. The console shows a notice on Admin → Health and Admin → Engines until fixed |
+| **DuckDB** (bundled) | the BI engine, the SQL service, the pivot executor, the DuckDB connector | **required**: there is no fallback; the start log has an ERROR line, `native.duckdb` is **DOWN** in Health (the server DEGRADED) with an error notice in the console, and those parts do not serve |
+| **SQLite** (bundled driver) | the identity and state database of a single server | **required**: no fallback; `native.sqlite` **DOWN** the same way; use PostgreSQL, or a supported platform |
+
+DuckDB and SQLite are probed once at start (an in-memory database asked its version) and listed with their versions under Admin → Health,
+Native libraries, next to BLAS and the disk store.
 
 | Setting | Default | Meaning |
 |---|---|---|

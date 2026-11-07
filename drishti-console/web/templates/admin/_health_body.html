@@ -30,13 +30,16 @@
     heap {{ h.server.heapUsedMb }}/{{ h.server.heapMaxMb }} MB · {{ h.server.threads }} threads · Java {{ h.server.java }}</span>
 </div>
 
-{% with blas = (h.native or {}).get('blas') %}{% include "admin/_native_banner.html" %}{% endwith %}
+{% with blas = (h.native or {}).get('blas'), nat = h.native %}{% include "admin/_native_banner.html" %}{% endwith %}
 {% set nb = (h.native or {}).get('blas') %}
-{% if nb %}
+{% set nst = (h.native or {}).get('store') %}
+{% if nb or nst %}
 <div class="hl-sum" data-native-libs aria-label="Native libraries">
   <span><b>Native libraries</b></span>
-  <span class="mono {{ 't-warn' if nb.status == 'DEGRADED' }}" data-native-blas title="drishti.native.blas.mode (auto or java); the bundled OpenBLAS on Linux and Windows x86-64, else the Java kernels">{{ nb.line }}</span>
-  {% for node, w in (nb.members or {}).items() %}<span class="mono {{ 't-warn' if w.startswith('java-fallback') }}" data-native-member="{{ node }}">{{ node }}: {{ w }}</span>{% endfor %}
+  {% if nb %}<span class="mono {{ 't-warn' if nb.status == 'DEGRADED' }}" data-native-blas title="drishti.native.blas.mode (auto or java); the bundled OpenBLAS on Linux and Windows x86-64, else the Java kernels">{{ nb.line }}</span>
+  {% for node, w in (nb.members or {}).items() %}<span class="mono {{ 't-warn' if w.startswith('java-fallback') }}" data-native-member="{{ node }}">{{ node }}: {{ w }}</span>{% endfor %}{% endif %}
+  {% if nst %}<span class="mono {{ 't-warn' if nst.status == 'DEGRADED' }}" data-native-store title="drishti.native.store.mode (auto, java or native): RocksDB, else H2's MVStore">Disk store: {{ 'RocksDB' if nst.impl == 'rocksdb' else "H2's MVStore" }}{% if nst.version %} {{ nst.version }}{% endif %}{% if nst.reason %} ({{ nst.reason }}){% endif %}</span>{% endif %}
+  {% for lib in ('duckdb', 'sqlite') %}{% set r = (h.native or {}).get(lib) %}{% if r %}<span class="mono {{ 't-neg' if r.status == 'DOWN' }}" data-native-required="{{ lib }}" title="Required, without a fallback (DRISHTI_NATIVE.md sections 2.1 and 2.2)">{{ r.line }}</span>{% endif %}{% endfor %}
 </div>
 {% endif %}
 <div class="hl-sum" data-external-lib aria-label="External libraries">

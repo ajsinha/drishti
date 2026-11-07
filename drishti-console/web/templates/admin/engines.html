@@ -35,7 +35,7 @@
     <button type="button" role="tab" aria-selected="false" data-eng-tab="cluster" data-eng-cluster-tab>Cluster</button>
     <button type="button" role="tab" aria-selected="false" data-eng-tab="history">History</button>
   </div>
-{% with blas = (e.native or {}).get('blas') if e else None %}{% include "admin/_native_banner.html" %}{% endwith %}
+{% with blas = (e.native or {}).get('blas') if e else None, nat = (e.native if e else None) %}{% include "admin/_native_banner.html" %}{% endwith %}
   <p class="eng-error" data-eng-error role="alert" hidden></p>
   <p class="eng-done" data-eng-done role="status" hidden></p>
 

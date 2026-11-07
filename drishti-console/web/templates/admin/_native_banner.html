@@ -15,7 +15,8 @@
 #}
 {# The administrators' notice while drishti.native.blas.mode is auto and BLAS runs on the pure-Java path (docs/admin/OPERATIONS.md section
    2.1): shown on Admin -> Health and Admin -> Engines until fixed; the platform alert native-blas-fallback tells the inbox. `blas` is the
-   server's native.blas (GET /api/v1/admin/health or /api/v1/admin/engines); members on the Java path are named too. #}
+   server's native.blas (GET /api/v1/admin/health or /api/v1/admin/engines); members on the Java path are named too. The disk store's
+   fallback and a required library that cannot load (below) are told the same way. #}
 {% set nb = blas or {} %}
 {% set slow = [] %}
 {% for node, w in (nb.get('members') or {}).items() %}{% if w.startswith('java-fallback') %}{% set _ = slow.append(node ~ ': ' ~ w[14:]) %}{% endif %}{% endfor %}
@@ -37,3 +38,23 @@
   to silence this (Help → Configuration; OPERATIONS.md section 2.1).</span>
 </p>
 {% endif %}
+{# The disk store: auto mode fell back from RocksDB to H2's MVStore (native.store DEGRADED; DRISHTI_NATIVE.md section 14). Chosen Java
+   (drishti.native.store.mode: java) is OK and says nothing here. `nat` is the server's whole native map. #}
+{% set ns = (nat or {}).get('store') or {} %}
+{% if ns.get('status') == 'DEGRADED' %}
+<p class="asof-banner" role="alert" data-store-banner>
+  <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+  <span><b>The disk store runs on H2's MVStore (pure Java), not RocksDB.</b> This server: <span class="mono" data-store-reason>{{ ns.get('reason') }}</span>.
+  The disk caches and message-state stores give the same answers, with slower writes; caches RocksDB wrote earlier start empty. Fix: a
+  supported platform (Linux or Windows x86-64, macOS); or choose Java with <span class="mono">drishti.native.store.mode: java</span> to
+  silence this (Help → Configuration; OPERATIONS.md section 2.2).</span>
+</p>
+{% endif %}
+{# DuckDB and SQLite are required, without a fallback (DRISHTI_NATIVE.md sections 2.1 and 2.2): one that cannot load is an error. #}
+{% for lib in ('duckdb', 'sqlite') %}{% set r = (nat or {}).get(lib) or {} %}{% if r.get('status') == 'DOWN' %}
+<p class="asof-banner" role="alert" data-required-down="{{ lib }}">
+  <i class="bi bi-x-octagon" aria-hidden="true"></i>
+  <span><b>{{ r.get('line') }}.</b> There is no pure-Java substitute: {{ 'BI, the SQL service and the pivots' if lib == 'duckdb' else 'a server on SQLite' }}
+  cannot work here. Fix: a supported platform (Linux, Windows or macOS) with the temporary folder writable{{ '' if lib == 'duckdb' else '; or use PostgreSQL' }}.</span>
+</p>
+{% endif %}{% endfor %}

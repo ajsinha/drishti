@@ -41,6 +41,9 @@
     <!-- the disk store: RocksDB, else H2's MVStore (pure Java, on disk, keys in order) -->
     <dependency><groupId>org.rocksdb</groupId><artifactId>rocksdbjni</artifactId></dependency>
     <dependency><groupId>com.h2database</groupId><artifactId>h2</artifactId></dependency>
+    <!-- DuckDB and SQLite: required, no fallback; nativ.core.RequiredLibraries probes them through JDBC (the server brings the drivers) -->
+    <dependency><groupId>org.duckdb</groupId><artifactId>duckdb_jdbc</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.xerial</groupId><artifactId>sqlite-jdbc</artifactId><scope>test</scope></dependency>
     <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
     <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><scope>test</scope></dependency>
     <dependency><groupId>ch.qos.logback</groupId><artifactId>logback-classic</artifactId><scope>test</scope></dependency>

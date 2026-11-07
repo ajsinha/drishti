@@ -28,7 +28,11 @@
   - **The disk store falls back to pure Java**: `DiskCache` and `SortedStore` (`drishti-diskcache`) run on `nativ.store.DiskStore`, RocksDB when it
     loads, else **H2's MVStore** with one loud warning and `native.store` DEGRADED in Health and Admin → Engines; the server always starts. New
     setting `drishti.native.store.mode` (`auto`, `java`, `native`; `DRISHTI_NATIVE_STORE_MODE`). The disk cache's tests also run on MVStore.
-  - DuckDB and SQLite stay required, without a fallback (product owner).
+  - **DuckDB and SQLite in the registry**, required without a fallback (product owner): `nativ.core.RequiredLibraries` probes each once at
+    start (an in-memory database asked its version); Health and Admin → Engines list `native.duckdb` and `native.sqlite` (OK with the
+    version, or DOWN with the reason: an ERROR line in the log, the server DEGRADED, an error notice in the console).
+  - **The console says when the disk store fell back**: Admin → Health and Admin → Engines show a notice while `native.store` is DEGRADED
+    (auto mode on MVStore), and the Native libraries row lists the disk store, DuckDB and SQLite next to BLAS.
   - **The Java native-access warning fixed**: `--enable-native-access=ALL-UNNAMED` on every launcher (the stack, Docker, ECS, systemd, the Windows
     script, the IDE run configurations, the loaders, `tools/javacmd.py`) and in the Maven Surefire forks.
   - An architecture rule keeps RocksDB and MVStore inside `nativ.store`; H2's version is pinned once in the parent POM.
