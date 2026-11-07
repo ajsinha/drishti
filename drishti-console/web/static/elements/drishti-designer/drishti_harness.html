@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  The fixture harness of drishti-designer: no Drishti server (static files only). A small report designer assembled from the kit:
+  the shell (objects, Visual / YAML / Both, the header's actions, Propose for review to a stand-in approvals queue), the palette, the
+  grid canvas, the inspector, the outline and the YAML pane kept in step both ways; below it a flow canvas (two columns of panels, as a
+  screen is laid out). ?theme=light. Nothing inline: it runs under a strict CSP. The browser test is tests/test_elements_designer_browser.py.
+-->
+<html lang="en" data-theme="terminal">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>drishti-designer · fixture harness</title>
+<link rel="stylesheet" href="../../css/drishti_tokens.css">
+<link rel="stylesheet" href="../drishti-inputs/drishti_inputs.css">
+<link rel="stylesheet" href="drishti_designer.css">
+<link rel="stylesheet" href="drishti_harness.css">
+</head>
+<body>
+<header class="hx-top">
+  <b class="hx-brand">drishti-designer</b>
+  <button type="button" id="hx-theme">Light / dark</button>
+  <span id="hx-log" class="hx-log" aria-live="off"></span>
+</header>
+<div id="hx-shell"></div>
+<section class="hx-card" aria-labelledby="hx-h-flow">
+  <h2 id="hx-h-flow">A flow layout: a screen's main and side columns</h2>
+  <div id="hx-flow" class="hx-flow">
+    <div class="hx-area" data-area="main"></div>
+    <div class="hx-area hx-side" data-area="right"></div>
+  </div>
+</section>
+<script src="../drishti-core/drishti_core.js"></script>
+<script src="../drishti-inputs/drishti_inputs.js"></script>
+<script src="drishti_designer.js"></script>
+<script src="drishti_harness.js"></script>
+</body>
+</html>

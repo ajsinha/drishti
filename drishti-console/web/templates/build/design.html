@@ -119,7 +119,7 @@
         </div>
         <div class="wb-pane" id="wbPaneYaml" role="tabpanel" aria-labelledby="wbTabYaml" hidden data-split-ok>
           <div class="bs-status text-muted-d" data-field-help hidden></div>
-          <textarea data-yaml-src aria-label="Sutra (YAML)" spellcheck="false">{{ design.sutra }}</textarea>
+          <div data-yaml-src data-text="{{ design.sutra }}"></div>{# drishti-designer's YamlPane (build/drishti_yamltab.js); data-text: the Sutra as saved #}
         </div>
         <div class="wb-pane studio-summary" id="wbPaneSummary" role="tabpanel" aria-labelledby="wbTabSummary" hidden data-summary></div>
         <div class="wb-pane wb-notes" id="wbPaneNotes" role="tabpanel" aria-labelledby="wbTabNotes" hidden data-notes>
@@ -216,9 +216,7 @@
 {% endblock %}
 {% block scripts %}
 <script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/drishti_cm-yaml.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/drishti_studio-yaml.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/drishti_studio-assist.js?v={{ ASSET_V }}"></script>
+{% include "_designer_kit.html" %}
 <script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/drishti_geomap.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-chart/drishti_chart.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_charts.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script>

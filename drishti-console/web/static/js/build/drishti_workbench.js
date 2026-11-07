@@ -24,7 +24,7 @@
   if (!root) { return; }
   var WB = window.Drishti.WB, $ = function (s, r) { return (r || root).querySelector(s); }, $$ = function (s, r) { return Array.prototype.slice.call((r || root).querySelectorAll(s)); };
   var d = root.dataset, init = JSON.parse(d.init || '{}');
-  var store = WB.Store({ id: d.id, kind: d.kind, rev: parseInt(d.rev, 10), yaml: $('[data-yaml-src]').value, about: init.about || '', form: init.form || '', samples: init.samples.map(function (s) { return s.name; }), opsAt: init.opsAt, opsCount: init.opsCount, status: init.status });
+  var store = WB.Store({ id: d.id, kind: d.kind, rev: parseInt(d.rev, 10), yaml: $('[data-yaml-src]').getAttribute('data-text') || '', about: init.about || '', form: init.form || '', samples: init.samples.map(function (s) { return s.name; }), opsAt: init.opsAt, opsCount: init.opsCount, status: init.status });
   store.state.sampleInfo = init.samples;
 store.state.baseMoved = init.baseMoved || null;
   var live = $('[data-live]'), status = $('[data-say]'), stale = 0;

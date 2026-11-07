@@ -141,3 +141,12 @@ kbd { border: 1px solid var(--d-border); border-radius: 4px; padding: 0 4px; fon
   .gx-matrix, .gx-linked { grid-template-columns: minmax(0, 1fr); }
   .gx-top { flex-wrap: wrap; }
 }
+/* drishti-designer's demos */
+.gx-designer { min-height: 520px; }
+.gx-flow { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+.gx-flow-area { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 8px; align-content: start; min-height: 120px; border: 1px dashed var(--d-border); border-radius: 6px; padding: 6px; }
+.gx-flow-panel { grid-column: span 12; background: var(--d-surface-2); border: 1px solid var(--d-border); border-radius: 6px; padding: 6px 8px; min-height: 40px; font-size: 13px; }
+.gx-flow-panel.gx-span-6 { grid-column: span 6; } .gx-flow-panel.gx-span-4 { grid-column: span 4; } .gx-flow-panel.gx-span-3 { grid-column: span 3; }
+.gx-flow-panel.gx-span-5 { grid-column: span 5; } .gx-flow-panel.gx-span-7 { grid-column: span 7; } .gx-flow-panel.gx-span-8 { grid-column: span 8; }
+.gx-flow-panel.gx-span-9 { grid-column: span 9; } .gx-flow-panel.gx-span-10 { grid-column: span 10; } .gx-flow-panel.gx-span-11 { grid-column: span 11; }
+.gx-flow-h { cursor: grab; font-weight: 600; }

@@ -33,7 +33,7 @@ export { Form } from './drishti_form.js';
 export { FilterModelBar, FilterBar } from './drishti_filter-bar.js';
 export { rachanaMode, yamlMode, MODES, defineModes, MiniStream, tokens } from './drishti_code-modes.js';
 export { wordAt, completions, insertText, lineDiff, sideBySide, diffStats } from './drishti_code-text.js';
-export { ensureCodeMirror, CodeEditor, CodeDiff } from './drishti_code-editor.js';
+export { ensureCodeMirror, yamlIndentAfter, CodeEditor, CodeDiff } from './drishti_code-editor.js';
 export { INPUT_ELEMENTS, defineInputElements } from './drishti_inputs-element.js';
 import { defineInputElements } from './drishti_inputs-element.js';
 

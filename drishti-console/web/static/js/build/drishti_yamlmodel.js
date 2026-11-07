@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* What the Sutra text says, as plain JavaScript values, read with Studio's forgiving YAML reader (drishti_studio-yaml.js): the panels
+/* What the Sutra text says, as plain JavaScript values, read with the forgiving YAML reader of drishti-designer (window.Drishti.yaml): the panels
  * with their ids, kinds and options, and the title, strip, keys and match. The workbench never writes through this (every
  * change is an operation the server applies); it only reads, to fill the inspector and to know which panels exist.
  *
