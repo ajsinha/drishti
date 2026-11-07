@@ -797,6 +797,43 @@
     }
     return { "yamlIndentAfter": yamlIndentAfter, "ensureCodeMirror": ensureCodeMirror, "CodeEditor": CodeEditor, "CodeDiff": CodeDiff };
   })();
+  /* ---- src/drishti_code-upgrade.js ---- */
+  __m["src/drishti_code-upgrade.js"] = (function () {
+    var CodeEditor = __m["src/drishti_code-editor.js"].CodeEditor;
+    const PROTO = typeof HTMLTextAreaElement !== 'undefined' ? Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value') : null;
+    function upgradeCodeArea(ta, o) {
+      if (ta.drishtiCode) { return ta.drishtiCode; }
+      o = o || {};
+      const doc = ta.ownerDocument, host = doc.createElement('div');
+      host.className = 'di-code-host';
+      (ta.closest('label') || ta).after(host);                    // out of a label: a click in the editor is the editor's, not the label's
+      const native = PROTO || Object.getOwnPropertyDescriptor(Object.getPrototypeOf(ta), 'value');
+      const editor = new CodeEditor(host, { mode: o.mode || ta.getAttribute('data-di-code') || 'text', value: native.get.call(ta), label: ta.getAttribute('aria-label') || o.label || 'Code',
+        height: o.height || Number(ta.getAttribute('data-di-code-height')) || Math.max(120, (Number(ta.getAttribute('rows')) || 8) * 19), readOnly: ta.readOnly, lineWrapping: true,
+        complete: o.complete, lint: o.lint, keys: o.keys });
+      ta.hidden = true;
+      ta.setAttribute('data-di-code-upgraded', '');
+      let quiet = false;
+      Object.defineProperty(ta, 'value', {
+        configurable: true,
+        get: () => editor.getValue(),
+        set: (v) => { native.set.call(ta, v); quiet = true; try { editor.setValue(v); } finally { quiet = false; } }
+      });
+      editor.on('change', (c) => {
+        native.set.call(ta, c.value);
+        if (!quiet && c.origin !== 'setValue') { ta.dispatchEvent(new doc.defaultView.Event('input', { bubbles: true })); }
+      });
+      let committed = editor.getValue();                          // leaving the editor after an edit is a "change" on the text area, as a text area's is
+      Promise.resolve(editor.ready).then(() => { if (editor.cm) { editor.cm.on('blur', () => { if (editor.getValue() !== committed) { committed = editor.getValue(); ta.dispatchEvent(new doc.defaultView.Event('change', { bubbles: true })); } }); } });
+      ta.focus = () => editor.focus();                            // the page's focus() on its text area reaches the editor
+      ta.drishtiCode = editor;
+      return editor;
+    }
+    function upgradeCodeAreas(root) {
+      return Array.prototype.map.call(root.querySelectorAll('textarea[data-di-code]:not([data-di-code-upgraded])'), (ta) => upgradeCodeArea(ta));
+    }
+    return { "upgradeCodeArea": upgradeCodeArea, "upgradeCodeAreas": upgradeCodeAreas };
+  })();
   /* ---- src/drishti_combobox.js ---- */
   __m["src/drishti_combobox.js"] = (function () {
     var announce = __lib("drishti-core").announce;
@@ -2350,9 +2387,16 @@
   })();
   /* ---- src/drishti_index.js ---- */
   __m["src/drishti_index.js"] = (function () {
+    var upgradeCodeAreas = __m["src/drishti_code-upgrade.js"].upgradeCodeAreas;
     var defineInputElements = __m["src/drishti_inputs-element.js"].defineInputElements;
-    function install(root) { if (root && root.document && root.customElements) { defineInputElements(root.customElements, root); } }
-    return { "install": install, "CALENDAR_RULES": __m["src/drishti_calendar.js"].CALENDAR_RULES, "easterSunday": __m["src/drishti_calendar.js"].easterSunday, "ruleDate": __m["src/drishti_calendar.js"].ruleDate, "HolidayCalendar": __m["src/drishti_calendar.js"].HolidayCalendar, "defineCalendar": __m["src/drishti_calendar.js"].defineCalendar, "calendar": __m["src/drishti_calendar.js"].calendar, "DATE_PRESETS": __m["src/drishti_calendar.js"].DATE_PRESETS, "resolvePreset": __m["src/drishti_calendar.js"].resolvePreset, "parseDateInput": __m["src/drishti_calendar.js"].parseDateInput, "monthGrid": __m["src/drishti_calendar.js"].monthGrid, "shiftDate": __m["src/drishti_calendar.js"].shiftDate, "uid": __m["src/drishti_inputs-dom.js"].uid, "debounce": __m["src/drishti_inputs-dom.js"].debounce, "InputBase": __m["src/drishti_inputs-dom.js"].InputBase, "Popover": __m["src/drishti_inputs-dom.js"].Popover, "Listbox": __m["src/drishti_inputs-dom.js"].Listbox, "normalizeOptions": __m["src/drishti_inputs-dom.js"].normalizeOptions, "searchOptions": __m["src/drishti_inputs-dom.js"].searchOptions, "CalendarView": __m["src/drishti_date-picker.js"].CalendarView, "DatePicker": __m["src/drishti_date-picker.js"].DatePicker, "DateRangePicker": __m["src/drishti_date-range.js"].DateRangePicker, "TreeModel": __m["src/drishti_tree.js"].TreeModel, "TreePicker": __m["src/drishti_tree-picker.js"].TreePicker, "MultiSelect": __m["src/drishti_multiselect.js"].MultiSelect, "TypeAhead": __m["src/drishti_combobox.js"].TypeAhead, "Combobox": __m["src/drishti_combobox.js"].Combobox, "words": __m["src/drishti_schema.js"].words, "pathParts": __m["src/drishti_schema.js"].pathParts, "getPath": __m["src/drishti_schema.js"].getPath, "setPath": __m["src/drishti_schema.js"].setPath, "conditionHolds": __m["src/drishti_schema.js"].conditionHolds, "fieldsOf": __m["src/drishti_schema.js"].fieldsOf, "defaults": __m["src/drishti_schema.js"].defaults, "fieldProblem": __m["src/drishti_schema.js"].fieldProblem, "validate": __m["src/drishti_schema.js"].validate, "visibleValue": __m["src/drishti_schema.js"].visibleValue, "changes": __m["src/drishti_schema.js"].changes, "parseField": __m["src/drishti_schema.js"].parseField, "Form": __m["src/drishti_form.js"].Form, "FilterModelBar": __m["src/drishti_filter-bar.js"].FilterModelBar, "FilterBar": __m["src/drishti_filter-bar.js"].FilterBar, "rachanaMode": __m["src/drishti_code-modes.js"].rachanaMode, "yamlMode": __m["src/drishti_code-modes.js"].yamlMode, "MODES": __m["src/drishti_code-modes.js"].MODES, "defineModes": __m["src/drishti_code-modes.js"].defineModes, "MiniStream": __m["src/drishti_code-modes.js"].MiniStream, "tokens": __m["src/drishti_code-modes.js"].tokens, "wordAt": __m["src/drishti_code-text.js"].wordAt, "completions": __m["src/drishti_code-text.js"].completions, "insertText": __m["src/drishti_code-text.js"].insertText, "lineDiff": __m["src/drishti_code-text.js"].lineDiff, "sideBySide": __m["src/drishti_code-text.js"].sideBySide, "diffStats": __m["src/drishti_code-text.js"].diffStats, "ensureCodeMirror": __m["src/drishti_code-editor.js"].ensureCodeMirror, "yamlIndentAfter": __m["src/drishti_code-editor.js"].yamlIndentAfter, "CodeEditor": __m["src/drishti_code-editor.js"].CodeEditor, "CodeDiff": __m["src/drishti_code-editor.js"].CodeDiff, "INPUT_ELEMENTS": __m["src/drishti_inputs-element.js"].INPUT_ELEMENTS, "defineInputElements": __m["src/drishti_inputs-element.js"].defineInputElements };
+    function install(root) {
+      if (!root || !root.document) { return; }
+      if (root.customElements) { defineInputElements(root.customElements, root); }
+      const doc = root.document, go = () => upgradeCodeAreas(doc);          // the page's code areas (<textarea data-di-code>), now and as they appear
+      if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', go); } else { go(); }
+      if (root.MutationObserver) { new root.MutationObserver(() => { if (doc.querySelector('textarea[data-di-code]:not([data-di-code-upgraded])')) { go(); } }).observe(doc.documentElement, { childList: true, subtree: true }); }
+    }
+    return { "install": install, "CALENDAR_RULES": __m["src/drishti_calendar.js"].CALENDAR_RULES, "easterSunday": __m["src/drishti_calendar.js"].easterSunday, "ruleDate": __m["src/drishti_calendar.js"].ruleDate, "HolidayCalendar": __m["src/drishti_calendar.js"].HolidayCalendar, "defineCalendar": __m["src/drishti_calendar.js"].defineCalendar, "calendar": __m["src/drishti_calendar.js"].calendar, "DATE_PRESETS": __m["src/drishti_calendar.js"].DATE_PRESETS, "resolvePreset": __m["src/drishti_calendar.js"].resolvePreset, "parseDateInput": __m["src/drishti_calendar.js"].parseDateInput, "monthGrid": __m["src/drishti_calendar.js"].monthGrid, "shiftDate": __m["src/drishti_calendar.js"].shiftDate, "uid": __m["src/drishti_inputs-dom.js"].uid, "debounce": __m["src/drishti_inputs-dom.js"].debounce, "InputBase": __m["src/drishti_inputs-dom.js"].InputBase, "Popover": __m["src/drishti_inputs-dom.js"].Popover, "Listbox": __m["src/drishti_inputs-dom.js"].Listbox, "normalizeOptions": __m["src/drishti_inputs-dom.js"].normalizeOptions, "searchOptions": __m["src/drishti_inputs-dom.js"].searchOptions, "CalendarView": __m["src/drishti_date-picker.js"].CalendarView, "DatePicker": __m["src/drishti_date-picker.js"].DatePicker, "DateRangePicker": __m["src/drishti_date-range.js"].DateRangePicker, "TreeModel": __m["src/drishti_tree.js"].TreeModel, "TreePicker": __m["src/drishti_tree-picker.js"].TreePicker, "MultiSelect": __m["src/drishti_multiselect.js"].MultiSelect, "TypeAhead": __m["src/drishti_combobox.js"].TypeAhead, "Combobox": __m["src/drishti_combobox.js"].Combobox, "words": __m["src/drishti_schema.js"].words, "pathParts": __m["src/drishti_schema.js"].pathParts, "getPath": __m["src/drishti_schema.js"].getPath, "setPath": __m["src/drishti_schema.js"].setPath, "conditionHolds": __m["src/drishti_schema.js"].conditionHolds, "fieldsOf": __m["src/drishti_schema.js"].fieldsOf, "defaults": __m["src/drishti_schema.js"].defaults, "fieldProblem": __m["src/drishti_schema.js"].fieldProblem, "validate": __m["src/drishti_schema.js"].validate, "visibleValue": __m["src/drishti_schema.js"].visibleValue, "changes": __m["src/drishti_schema.js"].changes, "parseField": __m["src/drishti_schema.js"].parseField, "Form": __m["src/drishti_form.js"].Form, "FilterModelBar": __m["src/drishti_filter-bar.js"].FilterModelBar, "FilterBar": __m["src/drishti_filter-bar.js"].FilterBar, "rachanaMode": __m["src/drishti_code-modes.js"].rachanaMode, "yamlMode": __m["src/drishti_code-modes.js"].yamlMode, "MODES": __m["src/drishti_code-modes.js"].MODES, "defineModes": __m["src/drishti_code-modes.js"].defineModes, "MiniStream": __m["src/drishti_code-modes.js"].MiniStream, "tokens": __m["src/drishti_code-modes.js"].tokens, "wordAt": __m["src/drishti_code-text.js"].wordAt, "completions": __m["src/drishti_code-text.js"].completions, "insertText": __m["src/drishti_code-text.js"].insertText, "lineDiff": __m["src/drishti_code-text.js"].lineDiff, "sideBySide": __m["src/drishti_code-text.js"].sideBySide, "diffStats": __m["src/drishti_code-text.js"].diffStats, "ensureCodeMirror": __m["src/drishti_code-editor.js"].ensureCodeMirror, "yamlIndentAfter": __m["src/drishti_code-editor.js"].yamlIndentAfter, "CodeEditor": __m["src/drishti_code-editor.js"].CodeEditor, "CodeDiff": __m["src/drishti_code-editor.js"].CodeDiff, "upgradeCodeArea": __m["src/drishti_code-upgrade.js"].upgradeCodeArea, "upgradeCodeAreas": __m["src/drishti_code-upgrade.js"].upgradeCodeAreas, "INPUT_ELEMENTS": __m["src/drishti_inputs-element.js"].INPUT_ELEMENTS, "defineInputElements": __m["src/drishti_inputs-element.js"].defineInputElements };
   })();
   return Object.freeze(Object.assign({ library: "drishti-inputs", version: "0.1.0" }, __m["src/drishti_index.js"]));
 });
