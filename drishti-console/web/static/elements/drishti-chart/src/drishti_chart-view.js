@@ -21,14 +21,14 @@
    and the card's chrome and status line. Two modes of one component (g2): 'card' (A, the default) and 'studio' (B: the kinds in a rail,
    the chart with its table, the spec beside it with options that change both). A map (kind: 'map') is drawn by its view
    (drishti_map-view.js) inside the same card. */
-import { h, renderExplain, toCsv, download, EventBus, bus as sharedBus, announce } from '../../drishti-core/src/drishti_index.js';
-import { normalizeSpec, kindOf, specText } from './drishti_chart-spec.js';
+import { h, renderExplain, EventBus, bus as sharedBus, announce } from '../../drishti-core/src/drishti_index.js';
+import { normalizeSpec, kindOf } from './drishti_chart-spec.js';
 import { rowsOf } from './drishti_chart-data.js';
 import { chartTheme, formatterFor } from './drishti_chart-theme.js';
-import { rowId } from './drishti_chart-kinds.js';
-import { tooltipElement, dataTable, legendElement, markSelection, addZoom, dragBrush, svgOf, valueText } from './drishti_chart-parts.js';
+import { tooltipElement, dataTable, legendElement, markSelection, addZoom, dragBrush, valueText } from './drishti_chart-parts.js';
 import { MapView } from './drishti_map-view.js';
 import { Studio } from './drishti_chart-studio.js';
+import { ChartIO } from './drishti_chart-io.js';
 
 /** Every event a chart emits (on chart.events and as DOM events drishti:<kebab-name> on its element). */
 export const CHART_EVENTS = Object.freeze(['rendered', 'markClicked', 'selectionChanged', 'legendToggled', 'zoomChanged', 'explainOpened', 'explainShown', 'exported',
@@ -63,13 +63,14 @@ export const SELECTION_EVENT = 'drishti:selection';
 /**
  * A chart: the spec drawn in its card (or studio), with its tools, Explain, selection, export and live data.
  */
-export class Chart {
+export class Chart extends ChartIO {
   /**
    * @param {HTMLElement} el where the chart lives
    * @param {Object} spec the chart's spec (drishti_chart-spec.js)
    * @param {ChartOptions} [o]
    */
   constructor(el, spec, o) {
+    super();
     this.el = el;
     this.doc = el.ownerDocument;
     this.win = this.doc.defaultView;
@@ -395,97 +396,6 @@ export class Chart {
     announce((m.name !== undefined ? m.name + ': ' : '') + valueText(m, this.envNow.fmt), { document: this.doc });
   }
 
-  // ---- export -------------------------------------------------------------------------------------------------------------------------
-  /** @private the export menu under its button */
-  exportMenu(btn) {
-    if (this.menu) { this.menu.remove(); this.menu = null; return; }
-    const words = { png: 'PNG image (2x)', svg: 'SVG drawing', csv: 'CSV of the data', spec: 'Copy the spec' };
-    const close = () => { if (this.menu) { this.menu.remove(); this.menu = null; this.doc.removeEventListener('keydown', onKey, true); } };
-    const onKey = (e) => { if (e.key === 'Escape') { close(); btn.focus(); } };
-    this.menu = h(this.doc, 'div', { cls: 'dc-menu', attrs: { role: 'menu', 'aria-label': 'Export' } }, this.spec.export.map((x) => h(this.doc, 'button', { cls: 'dc-menu-item', text: words[x],
-      attrs: { type: 'button', role: 'menuitem', 'data-export': x }, on: { click: () => { close(); this.export(x); } } })));
-    this.card.appendChild(this.menu);
-    this.doc.addEventListener('keydown', onKey, true);
-    const first = this.menu.querySelector('button');
-    if (first) { first.focus(); }
-  }
-
-  /**
-   * Exports the chart: a PNG at twice the pixels, an SVG drawn off screen, the data as CSV, or the spec (copied, and handed back).
-   * @param {('png'|'svg'|'csv'|'spec')} what
-   * @returns {string} the content (a data URL for PNG)
-   */
-  export(what) {
-    const name = (this.spec.title || this.spec.kind).replace(/[^\w.-]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'chart';
-    const th = (this.envNow || this.env()).theme;
-    let out, type, file;
-    if (what === 'png') { out = this.engine.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: th.surface }); file = name + '.png'; type = 'image/png'; }
-    if (what === 'svg') { out = svgOf(this.E, Object.assign({}, this.engine.getOption(), this.map ? this.map.svgOption() : {}), this.canvas.clientWidth, this.canvas.clientHeight); file = name + '.svg'; type = 'image/svg+xml'; }
-    if (what === 'csv') { const t = this.map ? this.map.table() : this.built.table; out = toCsv({ columns: t.columns, rows: t.rows }); file = name + '.csv'; type = 'text/csv'; }
-    if (what === 'spec') { out = specText(this.rawSpec, { rows: true }); file = name + '.json'; type = 'application/json'; if (this.win.navigator.clipboard) { this.win.navigator.clipboard.writeText(out).catch(() => {}); } }
-    if (out === undefined) { throw new Error('no export ' + what + ' (png, svg, csv, spec)'); }
-    if (what !== 'spec') { (this.o.download || ((f, c, t) => download(this.doc, f, c, t)))(file, out, type); }
-    this.emit('exported', { what: what, file: file, size: out.length });
-    return out;
-  }
-
-  // ---- live data ------------------------------------------------------------------------------------------------------------------
-  /**
-   * Applies a transaction by row id (the spec's id field): rows added, updated (merged) and removed; drawn again, throttled.
-   * @param {{add: Object[], update: Object[], remove: Array<(string|Object)>}} tx
-   * @returns {{added: number, updated: number, removed: number}}
-   */
-  apply(tx) {
-    const at = new Map(this.rows.map((r, i) => [rowId(this.spec, r, i), i]));
-    let updated = 0, removed = 0;
-    (tx.update || []).forEach((u) => { const i = at.get(rowId(this.spec, u, -1)); if (i !== undefined) { this.rows[i] = Object.assign({}, this.rows[i], u); updated++; } });
-    if (tx.remove && tx.remove.length) {
-      const gone = new Set(tx.remove.map((r) => (typeof r === 'object' ? rowId(this.spec, r, -1) : String(r))));
-      const before = this.rows.length;
-      this.rows = this.rows.filter((r, i) => !gone.has(rowId(this.spec, r, i)));
-      removed = before - this.rows.length;
-    }
-    (tx.add || []).forEach((r) => this.rows.push(r));
-    const keep = this.spec.live && this.spec.live.keep;
-    if (keep && this.rows.length > keep) { this.rows.splice(0, this.rows.length - keep); }
-    this.later();
-    const out = { added: (tx.add || []).length, updated: updated, removed: removed };
-    this.emit('dataUpdated', out);
-    return out;
-  }
-
-  /**
-   * Appends rows (a feed's new points), drawn again throttled; the spec's live.keep caps how many stay.
-   * @param {Object[]} rows
-   * @returns {void}
-   */
-  append(rows) { this.apply({ add: rows }); }
-
-  /**
-   * Replaces every row.
-   * @param {Object[]} rows
-   * @returns {void}
-   */
-  replace(rows) { this.rows = rows.slice(); this.later(); this.emit('dataUpdated', { replaced: rows.length }); }
-
-  /** @private one drawing per throttle window (the spec's live.throttleMs, default 250) */
-  later() {
-    if (this.timer) { return; }
-    const ms = this.spec.live && this.spec.live.throttleMs !== undefined ? this.spec.live.throttleMs : 250;
-    this.timer = this.win.setTimeout(() => { this.timer = 0; this.draw(); }, ms);
-  }
-
-  /**
-   * Shows the crosshair and the tooltip at a row (a page's selected row followed by the chart); it comes back there after a resize.
-   * @param {number} index the row's index in the chart's rows (the category's, for one series by category)
-   * @returns {void}
-   */
-  pointAt(index) {
-    this.pinned = index;
-    if (this.engine && index >= 0) { this.engine.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: index }); }
-  }
-
-  // ---- modes and density ----------------------------------------------------------------------------------------------------------
   /**
    * Switches the mode: card (g2 A) or studio (g2 B).
    * @param {('card'|'studio')} mode

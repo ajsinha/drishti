@@ -18,7 +18,8 @@
    state a person keeps with a view. Every member works on the GridModel's own fields (columns, row model, wells, the answer). */
 import { toCsv } from '../../drishti-core/src/drishti_index.js';
 import { getValue } from './drishti_columns.js';
-import { PivotState, pivotLocal, pivotApplyUpdates, serverRequest, mergeAnswer, applyValueFilters } from './drishti_pivot.js';
+import { PivotState, pivotLocal, serverRequest } from './drishti_pivot.js';
+import { pivotApplyUpdates, mergeAnswer, applyValueFilters } from './drishti_pivot-answer.js';
 import { toXlsx } from './drishti_export.js';
 
 /** The layouts a grid is drawn in (the visual shell; the model is the same). */

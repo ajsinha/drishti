@@ -336,6 +336,287 @@
     }
     return { "CHART_DENSITIES": CHART_DENSITIES, "blend": blend, "alpha": alpha, "chartTheme": chartTheme, "toneColour": toneColour, "rampColour": rampColour, "formatterFor": formatterFor, "textStyle": textStyle, "axisOf": axisOf };
   })();
+  /* ---- src/drishti_chart-parts.js ---- */
+  __m["src/drishti_chart-parts.js"] = (function () {
+    var h = __lib("drishti-core").h;
+    var formatterFor = __m["src/drishti_chart-theme.js"].formatterFor, alpha = __m["src/drishti_chart-theme.js"].alpha, textStyle = __m["src/drishti_chart-theme.js"].textStyle;
+    function valueText(p, fmt) {
+      const v = p.value, t = p.seriesType;
+      if (t === 'boxplot' && Array.isArray(v)) { const b = v.slice(-5); return 'low ' + fmt(b[0]) + ' · Q1 ' + fmt(b[1]) + ' · median ' + fmt(b[2]) + ' · Q3 ' + fmt(b[3]) + ' · high ' + fmt(b[4]); }
+      if (t === 'candlestick' && Array.isArray(v)) { const b = v.slice(-4); return 'open ' + fmt(b[0]) + ' · close ' + fmt(b[1]) + ' · low ' + fmt(b[2]) + ' · high ' + fmt(b[3]); }
+      if (t === 'custom' && Array.isArray(v)) { return fmt(v[0]) + ' to ' + fmt(v[1]) + ': ' + v[2]; }
+      if (t === 'heatmap' && Array.isArray(v)) { return fmt(v[2]); }
+      if (t === 'pie') { return fmt(v) + (p.percent !== undefined ? ' · ' + p.percent + '%' : ''); }
+      if (t === 'sankey') { return fmt(p.data && p.data.value !== undefined ? p.data.value : v); }
+      if (Array.isArray(v)) { return t === 'scatter' && v.length === 3 ? fmt(v[2]) : fmt(v[1]); }
+      return v === null || v === undefined || (typeof v === 'number' && isNaN(v)) ? 'no data' : fmt(v);
+    }
+    function tooltipElement(doc, params, o) {
+      const list = (Array.isArray(params) ? params : [params]).filter((p) => p && !(p.seriesName || '').startsWith('__') && p.seriesName !== '_base');
+      const first = list[0] || {};
+      let head = o.names ? o.names(first) : first.name;
+      if (Array.isArray(params) && first.axisValueLabel !== undefined) { head = first.axisType === 'xAxis.time' || /^\d{10,}$/.test(String(first.axisValue)) ? new Date(first.axisValue).toISOString().slice(0, 10) : o.xfmt(first.axisValue); }
+      const box = h(doc, 'div', { cls: 'dc-tip' }, [h(doc, 'div', { cls: 'dc-tip-h', text: head === undefined || head === null ? '' : String(head) })]);
+      list.forEach((p) => {
+        const sw = h(doc, 'i', { cls: 'dc-tip-sw' });
+        const c = typeof p.color === 'string' ? p.color : null;
+        if (c) { sw.style.setProperty('background', c); }
+        box.appendChild(h(doc, 'div', { cls: 'dc-tip-r' }, [h(doc, 'span', {}, [sw, p.seriesName || '']), h(doc, 'b', { text: valueText(p, o.fmt) })]));
+      });
+      return box;
+    }
+    function dataTable(doc, table, caption, o) {
+      const fmts = table.columns.map((c) => (c.format ? formatterFor(c.format) : null)), limit = (o && o.limit) || 2000;
+      const cell = (v, i) => (v === null || v === undefined ? '—' : fmts[i] ? fmts[i](v) : typeof v === 'number' ? formatterFor()(v) : String(v));
+      return h(doc, 'table', { cls: 'dc-dtable' }, [
+        h(doc, 'caption', { text: caption }),
+        h(doc, 'thead', {}, [h(doc, 'tr', {}, table.columns.map((c) => h(doc, 'th', { text: c.header === undefined || c.header === null ? '' : String(c.header), attrs: { scope: 'col' } })))]),
+        h(doc, 'tbody', {}, table.rows.slice(0, limit).map((r) => h(doc, 'tr', {}, r.map((v, i) => h(doc, i === 0 ? 'th' : 'td', { text: cell(v, i), attrs: i === 0 ? { scope: 'row' } : null, cls: typeof v === 'number' ? 'dc-num' : '' })))))
+      ]);
+    }
+    function legendElement(doc, entries, o) {
+      return h(doc, 'div', { cls: 'dc-legend', attrs: { role: o.toggles ? 'group' : 'list', 'aria-label': 'Legend' } }, entries.map((e) => {
+        const sw = h(doc, 'i', { cls: 'dc-sw dc-sw-' + (e.style || 'box') });
+        sw.style.setProperty(e.style === 'dash' ? 'border-color' : 'background', e.colour);
+        if (e.style === 'line') { sw.style.setProperty('background', e.colour); }
+        if (!o.toggles) { return h(doc, 'span', { cls: 'dc-lg', attrs: { role: 'listitem' } }, [sw, e.name]); }
+        const off = o.hidden.has(e.name);
+        return h(doc, 'button', { cls: 'dc-lg' + (off ? ' dc-off' : ''), attrs: { type: 'button', 'aria-pressed': off ? 'false' : 'true', 'data-name': e.name, title: (off ? 'Show ' : 'Hide ') + e.name },
+          on: { click: () => o.onToggle(e.name) } }, [sw, e.name]);
+      }));
+    }
+    function placeOf(s, item, i, option) {
+      const v = item.value, xAx = Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis, yAx = Array.isArray(option.yAxis) ? option.yAxis[0] : option.yAxis;
+      if (s.type === 'heatmap') { return [v[0], v[1]]; }
+      if (s.type === 'custom') { return [(v[0] + v[1]) / 2, v[2]]; }
+      if (s.type === 'boxplot') { return [i, v[2]]; }
+      if (s.type === 'candlestick') { return [i, v[1]]; }
+      if (Array.isArray(v)) { return [v[0], v[1]]; }
+      if (yAx && yAx.type === 'category') { return [v, i]; }
+      return [xAx && xAx.data ? xAx.data[i] : i, v];
+    }
+    function markSelection(option, ids, th) {
+      if (!ids || !ids.size || !option.series) { return 0; }
+      const hits = [], has = (it) => it && it.ids && it.ids.some((x) => ids.has(x));
+      let n = 0;
+      option.series.forEach((s) => {
+        if (s.helper || s.name === '__selected') { return; }
+        if (s.type === 'pie') { (s.data || []).forEach((it) => { if (has(it)) { it.selected = true; n++; } }); return; }
+        if (['line', 'bar', 'scatter', 'heatmap', 'custom', 'boxplot', 'candlestick'].indexOf(s.type) < 0 || s.coordinateSystem === 'geo') { return; }
+        (s.data || []).forEach((it, i) => { if (has(it) && it.value !== null && it.value !== undefined) { hits.push(placeOf(s, it, i, option)); n++; } });
+      });
+      if (hits.length) {
+        option.series.push({ type: 'scatter', name: '__selected', helper: true, silent: true, z: 12, data: hits, symbol: 'circle', symbolSize: th.size.symbol + 9, tooltip: { show: false },
+          itemStyle: { color: alpha(th.tokens.accent, 0.12), borderColor: th.tokens.accent, borderWidth: 2.5 } });
+      }
+      return n;
+    }
+    function addZoom(option, spec, built, th) {
+      const z = spec.zoom;
+      if (!z || !option.xAxis || Array.isArray(option.xAxis) || option.xAxis.type === 'value' && option.yAxis && option.yAxis.type === 'category') { return false; }
+      const slider = { type: 'slider', xAxisIndex: 0, height: 22, bottom: 6, filterMode: 'none', borderColor: th.border, backgroundColor: th.surface2, fillerColor: alpha(th.tokens.accent, 0.16),
+        handleStyle: { color: th.tokens.accent, borderColor: th.tokens.accent }, moveHandleStyle: { color: th.tokens.accent }, textStyle: textStyle(th),
+        dataBackground: { lineStyle: { color: th.faint }, areaStyle: { color: alpha(th.faint, 0.2) } }, selectedDataBackground: { lineStyle: { color: th.tokens.accent }, areaStyle: { color: alpha(th.tokens.accent, 0.2) } },
+        brushSelect: false, labelFormatter: option.xAxis.type === 'time' ? (v) => new Date(v).toISOString().slice(0, 10) : undefined };
+      const inside = { type: 'inside', xAxisIndex: 0, filterMode: 'none', zoomOnMouseWheel: true, moveOnMouseMove: false, moveOnMouseWheel: false };
+      if (z.window && built.table.rows.length) {
+        const rows = built.table.rows, at = (i) => rows[Math.max(0, Math.min(rows.length - 1, i))][0];
+        const val = (i) => (option.xAxis.type === 'time' ? Date.parse(at(i) + 'T00:00:00Z') : option.xAxis.type === 'category' ? Math.max(0, Math.min(rows.length - 1, i)) : at(i));
+        const a = typeof z.window[0] === 'number' && z.window[0] <= rows.length ? val(z.window[0]) : z.window[0], b = typeof z.window[1] === 'number' && z.window[1] <= rows.length ? val(z.window[1] - 1) : z.window[1];
+        slider.startValue = inside.startValue = a; slider.endValue = inside.endValue = b;
+      }
+      option.dataZoom = [inside, slider];
+      option.grid.bottom = (option.grid.bottom || 10) + 30;
+      return true;
+    }
+    function svgOf(E, option, width, height) {
+      const off = E.init(null, null, { renderer: 'svg', ssr: true, width: Math.max(200, Math.round(width)), height: Math.max(150, Math.round(height)) });
+      try {
+        const o = Object.assign({}, option, { animation: false, dataZoom: (option.dataZoom || []).filter((d) => d.type !== 'inside') });
+        off.setOption(o);
+        return off.renderToSVGString();
+      } finally { off.dispose(); }
+    }
+    function dragBrush(engine, active, colour) {
+      const zr = engine.getZr();
+      let from = null;
+      const band = (x0, x1) => engine.setOption({ graphic: [{ id: 'dc-brush', type: 'rect', silent: true, z: 100, shape: { x: Math.min(x0, x1), y: 0, width: Math.abs(x1 - x0), height: zr.getHeight() }, style: { fill: colour } }] });
+      zr.on('mousedown', (e) => { from = active() && engine.containPixel('grid', [e.offsetX, e.offsetY]) ? e.offsetX : null; });
+      zr.on('mousemove', (e) => { if (from !== null && Math.abs(e.offsetX - from) > 4) { band(from, e.offsetX); } });
+      zr.on('mouseup', (e) => {
+        if (from === null) { return; }
+        const x0 = from, x1 = e.offsetX;
+        from = null;
+        engine.setOption({ graphic: [{ id: 'dc-brush', $action: 'remove' }] });
+        if (Math.abs(x1 - x0) <= 6) { return; }
+        const a = engine.convertFromPixel({ xAxisIndex: 0 }, Math.min(x0, x1)), b = engine.convertFromPixel({ xAxisIndex: 0 }, Math.max(x0, x1));
+        engine.dispatchAction({ type: 'dataZoom', dataZoomIndex: 0, startValue: a, endValue: b });
+      });
+    }
+    return { "valueText": valueText, "tooltipElement": tooltipElement, "dataTable": dataTable, "legendElement": legendElement, "markSelection": markSelection, "addZoom": addZoom, "svgOf": svgOf, "dragBrush": dragBrush };
+  })();
+  /* ---- src/drishti_chart-geo.js ---- */
+  __m["src/drishti_chart-geo.js"] = (function () {
+    const RAD = Math.PI / 180;
+    function equalEarth(lon, lat) {
+      const A1 = 1.340264, A2 = -0.081106, A3 = 0.000893, A4 = 0.003796, M = Math.sqrt(3) / 2;
+      const l = wrap(lon) * RAD, t = Math.asin(M * Math.sin(lat * RAD)), t2 = t * t, t6 = t2 * t2 * t2;
+      const x = l * Math.cos(t) / (M * (A1 + 3 * A2 * t2 + t6 * (7 * A3 + 9 * A4 * t2)));
+      const y = t * (A1 + A2 * t2 + t6 * (A3 + A4 * t2));
+      return [x, -y];
+    }
+    function wrap(d) { let x = d; while (x > 180) { x -= 360; } while (x < -180) { x += 360; } return x; }
+    function albers(o) {
+      const s1 = Math.sin(o.p1 * RAD), s2 = Math.sin(o.p2 * RAD), n = (s1 + s2) / 2, C = Math.cos(o.p1 * RAD) ** 2 + 2 * n * s1;
+      const r0 = Math.sqrt(C - 2 * n * Math.sin(o.p0 * RAD)) / n;
+      return (lon, lat) => {
+        const r = Math.sqrt(Math.max(0, C - 2 * n * Math.sin(lat * RAD))) / n, th = n * wrap(lon - o.l0) * RAD;
+        return [r * Math.sin(th), -(r0 - r * Math.cos(th))];
+      };
+    }
+    function plateCarree(midLat, l0) { const k = Math.cos(midLat * RAD); return (lon, lat) => [wrap(lon - l0) * RAD * k, -lat * RAD]; }
+    function projectGeometry(g, fn) {
+      const ring = (r) => r.map((p) => fn(p[0], p[1]));
+      if (g.type === 'Polygon') { return { type: 'Polygon', coordinates: g.coordinates.map(ring) }; }
+      if (g.type === 'MultiPolygon') { return { type: 'MultiPolygon', coordinates: g.coordinates.map((poly) => poly.map(ring)) }; }
+      if (g.type === 'Point') { return { type: 'Point', coordinates: fn(g.coordinates[0], g.coordinates[1]) }; }
+      return g;
+    }
+    function holdAntimeridian(g) {
+      const ring = (r) => {
+        let lo = Infinity, hi = -Infinity, east = 0;
+        r.forEach((q) => { lo = Math.min(lo, q[0]); hi = Math.max(hi, q[0]); if (q[0] > 0) { east++; } });
+        if (hi - lo <= 180) { return r; }
+        const side = east * 2 >= r.length ? 180 : -180;
+        return r.map((q) => ((side > 0 && q[0] < 0) || (side < 0 && q[0] > 0) ? [side, q[1]] : q));
+      };
+      if (g.type === 'Polygon') { return { type: 'Polygon', coordinates: g.coordinates.map(ring) }; }
+      if (g.type === 'MultiPolygon') { return { type: 'MultiPolygon', coordinates: g.coordinates.map((poly) => poly.map(ring)) }; }
+      return g;
+    }
+    function outerRings(g) { return g.type === 'Polygon' ? [g.coordinates[0]] : g.type === 'MultiPolygon' ? g.coordinates.map((p) => p[0]) : []; }
+    function bounds(pts) {
+      const b = [Infinity, Infinity, -Infinity, -Infinity];
+      pts.forEach((p) => { b[0] = Math.min(b[0], p[0]); b[1] = Math.min(b[1], p[1]); b[2] = Math.max(b[2], p[0]); b[3] = Math.max(b[3], p[1]); });
+      return b;
+    }
+    function ringArea(r) { let a = 0; for (let i = 0, j = r.length - 1; i < r.length; j = i++) { a += (r[j][0] + r[i][0]) * (r[j][1] - r[i][1]); } return Math.abs(a / 2); }
+    function coreExtent(features) {
+      const rings = [];
+      features.forEach((f) => outerRings(f.geometry).forEach((r) => { const b = bounds(r); rings.push({ b: b, a: ringArea(r) || 1e-6, c: [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2] }); }));
+      if (!rings.length) { return { lon0: 0, lat0: -10, lat1: 10, lonMin: -10, lonMax: 10 }; }
+      const tot = rings.reduce((s, r) => s + r.a, 0), cx = rings.reduce((s, r) => s + r.c[0] * r.a, 0) / tot, cy = rings.reduce((s, r) => s + r.c[1] * r.a, 0) / tot;
+      const core = rings.filter((r) => Math.abs(r.c[0] - cx) <= 30 && Math.abs(r.c[1] - cy) <= 25);
+      const use = core.length ? core : rings;
+      const b = [Math.min.apply(null, use.map((r) => r.b[0])), Math.min.apply(null, use.map((r) => r.b[1])), Math.max.apply(null, use.map((r) => r.b[2])), Math.max.apply(null, use.map((r) => r.b[3]))];
+      return { lon0: (b[0] + b[2]) / 2, lat0: b[1], lat1: b[3], lonMin: b[0], lonMax: b[2] };
+    }
+    function countryProjection(iso3, features) {
+      const e = coreExtent(features);
+      if (iso3 === 'USA') { return { name: 'albers-usa', project: albers({ p1: 29.5, p2: 45.5, p0: 37.5, l0: -96 }), extent: e }; }
+      if (iso3 === 'CAN') { return { name: 'albers-canada', project: albers({ p1: 49, p2: 77, p0: 63.39, l0: -91.87 }), extent: e }; }
+      const span = e.lat1 - e.lat0, p1 = e.lat0 + span / 6, p2 = e.lat1 - span / 6;
+      if (p1 * p2 > 0 && Math.abs(Math.sin(p1 * RAD) + Math.sin(p2 * RAD)) / 2 > 0.12) { return { name: 'albers-fitted', project: albers({ p1: p1, p2: p2, p0: (e.lat0 + e.lat1) / 2, l0: e.lon0 }), extent: e }; }
+      return { name: 'plate-carree', project: plateCarree((e.lat0 + e.lat1) / 2, e.lon0), extent: e };
+    }
+    const US_INSETS = Object.freeze({
+      'US-AK': Object.freeze({ proj: Object.freeze({ p1: 55, p2: 65, p0: 50, l0: -154 }), width: 0.25, left: 0 }),
+      'US-HI': Object.freeze({ proj: Object.freeze({ p1: 8, p2: 18, p0: 3, l0: -157 }), width: 0.11, left: 0.27 })
+    });
+    function affine(g, k, dx, dy) { return projectGeometry(g, (x, y) => [x * k + dx, y * k + dy]); }
+    function allPoints(g) { return g.type === 'Point' ? [g.coordinates] : [].concat.apply([], (g.type === 'Polygon' ? [g.coordinates] : g.coordinates).map((p) => [].concat.apply([], p))); }
+    function prepareRegions(geo) {
+      const iso3 = (geo.properties && geo.properties.iso3) || (geo.features[0] && geo.features[0].properties.iso3) || '';
+      const proj = countryProjection(iso3, geo.features.filter((f) => f.geometry.type !== 'Point' && !US_INSETS[f.properties.code]));
+      const shapes = [], points = [], by = { code: {}, name: {}, short: {} }, list = [], frames = [];
+      geo.features.forEach((f) => {
+        const p = f.properties, item = { code: p.code, name: p.name, point: f.geometry.type === 'Point' };
+        list.push(item);
+        by.code[p.code.toUpperCase()] = item; by.name[p.name.toLowerCase()] = item; by.short[p.code.split('-').pop().toUpperCase()] = item;
+        if (iso3 === 'USA' && US_INSETS[p.code]) { return; }
+        const g = projectGeometry(f.geometry, proj.project);
+        if (g.type === 'Point') { item.xy = g.coordinates; points.push(item); } else { shapes.push({ type: 'Feature', properties: { name: p.code, fullName: p.name }, geometry: g }); }
+      });
+      const main = bounds([].concat.apply([], shapes.map((s) => allPoints(s.geometry))).concat(points.map((p) => p.xy)));
+      const extent = Object.assign({}, proj.extent);
+      let fit = isFinite(main[0]) ? main : [-1, -1, 1, 1];
+      if (proj.name === 'albers-fitted' || proj.name === 'plate-carree') {
+        const corners = [];
+        for (let i = 0; i <= 8; i++) { corners.push(proj.project(extent.lonMin + (extent.lonMax - extent.lonMin) * i / 8, extent.lat0), proj.project(extent.lonMin + (extent.lonMax - extent.lonMin) * i / 8, extent.lat1)); }
+        fit = bounds(corners);
+      }
+      if (iso3 === 'USA') {
+        const W = main[2] - main[0];
+        geo.features.filter((f) => US_INSETS[f.properties.code]).forEach((f) => {
+          const ins = US_INSETS[f.properties.code], g0 = projectGeometry(f.geometry, albers(ins.proj)), b = bounds(allPoints(g0));
+          const k = ins.width * W / (b[2] - b[0]), x0 = main[0] + ins.left * W, y1 = main[3] + 0.03 * W;
+          const g = affine(g0, k, x0 - b[0] * k, y1 - b[3] * k);
+          shapes.push({ type: 'Feature', properties: { name: f.properties.code, fullName: f.properties.name }, geometry: g });
+          const fb = bounds(allPoints(g)), pad = 0.01 * W;
+          frames.push({ code: f.properties.code, box: [fb[0] - pad, fb[1] - pad, fb[2] + pad, fb[3] + pad] });
+        });
+        fit = bounds([[fit[0], fit[1]], [fit[2], fit[3]]].concat(frames.map((fr) => [fr.box[2], fr.box[3]])));
+      }
+      return { level: iso3, iso3: iso3, projection: proj.name, project: proj.project, shapes: shapes, points: points, by: by, list: list, fit: fit, frames: frames, all: drawnBounds(shapes, frames) };
+    }
+    function drawnBounds(shapes, frames) { return bounds([].concat.apply([], shapes.map((x) => allPoints(x.geometry))).concat([].concat.apply([], (frames || []).map((f) => [[f.box[0], f.box[1]], [f.box[2], f.box[3]]])))); }
+    function fitView(geo, width, height) {
+      const a = geo.all || geo.fit, f = geo.fit, w = width || 1, ht = height || 1;
+      const scale = (b) => Math.min(w / ((b[2] - b[0]) || 1e-9), ht / ((b[3] - b[1]) || 1e-9));
+      return { center: [(f[0] + f[2]) / 2, (f[1] + f[3]) / 2], zoom: Math.max(1, scale(f) / scale(a)) };
+    }
+    function prepareWorld(geo, pts) {
+      const shapes = [], points = [], by = { code: {}, name: {}, short: {} }, list = [];
+      geo.features.forEach((f) => {
+        const p = f.properties, item = { code: p.iso3, iso2: p.iso2 || null, name: p.name, point: false };
+        if (p.iso3 === 'ATA') { return; }
+        list.push(item);
+        by.code[p.iso3.toUpperCase()] = item; if (p.iso2) { by.short[p.iso2.toUpperCase()] = item; } by.name[p.name.toLowerCase()] = item;
+        shapes.push({ type: 'Feature', properties: { name: p.iso3, fullName: p.name }, geometry: projectGeometry(holdAntimeridian(f.geometry), equalEarth) });
+      });
+      (pts || []).forEach((p) => {
+        if (by.code[p.iso3]) { return; }
+        const item = { code: p.iso3, iso2: p.iso2 || null, name: p.name, point: true, xy: equalEarth(p.lon, p.lat) };
+        list.push(item); points.push(item);
+        by.code[p.iso3] = item; if (p.iso2) { by.short[p.iso2.toUpperCase()] = item; } by.name[p.name.toLowerCase()] = item;
+      });
+      const fit = bounds([equalEarth(-180, 0), equalEarth(180, 0), equalEarth(0, 84), equalEarth(0, -58)]);
+      return { level: 'world', iso3: null, projection: 'equal-earth', project: equalEarth, shapes: shapes, points: points, by: by, list: list, fit: fit, frames: [], all: drawnBounds(shapes, []) };
+    }
+    function findPlace(geo, code) {
+      if (code === null || code === undefined || !geo) { return null; }
+      const k = String(code).trim();
+      return geo.by.code[k.toUpperCase()] || geo.by.short[k.toUpperCase()] || geo.by.name[k.toLowerCase()] || null;
+    }
+    function createGeoLoader(o) {
+      o = o || {};
+      const base = (o.base || '/static/vendor/echarts/maps/').replace(/\/?$/, '/');
+      const get = o.fetchJson || ((url) => fetch(url, { credentials: 'same-origin' }).then((r) => { if (!r.ok) { throw new Error('map ' + url + ': ' + r.status); } return r.json(); }));
+      const cache = { world: null, regions: {} }, loads = [];
+      const fetched = (file) => { loads.push(file); return Promise.resolve().then(() => get(base + file)); };
+      return {
+        loads: loads,
+        world() {
+          if (!cache.world) {
+            cache.world = Promise.all([fetched('world-countries.json'), fetched('world-points.json').catch(() => [])]).then((got) => prepareWorld(got[0], got[1]));
+            cache.world.catch(() => { cache.world = null; });
+          }
+          return cache.world;
+        },
+        regions(iso3) {
+          const k = String(iso3 || '').toUpperCase();
+          if (!/^[A-Z]{3}$/.test(k)) { return Promise.reject(new Error('no country ' + iso3)); }
+          if (!cache.regions[k]) {
+            cache.regions[k] = fetched('regions/' + k + '.json').then(prepareRegions);
+            cache.regions[k].catch(() => { delete cache.regions[k]; });
+          }
+          return cache.regions[k];
+        },
+        hasRegions(iso3) { return !!cache.regions[String(iso3).toUpperCase()]; }
+      };
+    }
+    return { "equalEarth": equalEarth, "albers": albers, "plateCarree": plateCarree, "projectGeometry": projectGeometry, "holdAntimeridian": holdAntimeridian, "bounds": bounds, "coreExtent": coreExtent, "countryProjection": countryProjection, "US_INSETS": US_INSETS, "prepareRegions": prepareRegions, "fitView": fitView, "prepareWorld": prepareWorld, "findPlace": findPlace, "createGeoLoader": createGeoLoader };
+  })();
   /* ---- src/drishti_chart-kinds.js ---- */
   __m["src/drishti_chart-kinds.js"] = (function () {
     var registerKind = __m["src/drishti_chart-spec.js"].registerKind;
@@ -663,287 +944,6 @@
       registerKind('candlestick', { build: buildCandlestick, label: 'candlestick', cartesian: true });
     }
     return { "rowId": rowId, "seriesDefs": seriesDefs, "annotationMarks": annotationMarks, "buildSeriesChart": buildSeriesChart, "buildScatter": buildScatter, "buildHistogram": buildHistogram, "buildWaterfall": buildWaterfall, "buildBoxplot": buildBoxplot, "buildHeatmap": buildHeatmap, "buildCandlestick": buildCandlestick, "buildLayers": buildLayers, "registerAxisKinds": registerAxisKinds };
-  })();
-  /* ---- src/drishti_chart-parts.js ---- */
-  __m["src/drishti_chart-parts.js"] = (function () {
-    var h = __lib("drishti-core").h;
-    var formatterFor = __m["src/drishti_chart-theme.js"].formatterFor, alpha = __m["src/drishti_chart-theme.js"].alpha, textStyle = __m["src/drishti_chart-theme.js"].textStyle;
-    function valueText(p, fmt) {
-      const v = p.value, t = p.seriesType;
-      if (t === 'boxplot' && Array.isArray(v)) { const b = v.slice(-5); return 'low ' + fmt(b[0]) + ' · Q1 ' + fmt(b[1]) + ' · median ' + fmt(b[2]) + ' · Q3 ' + fmt(b[3]) + ' · high ' + fmt(b[4]); }
-      if (t === 'candlestick' && Array.isArray(v)) { const b = v.slice(-4); return 'open ' + fmt(b[0]) + ' · close ' + fmt(b[1]) + ' · low ' + fmt(b[2]) + ' · high ' + fmt(b[3]); }
-      if (t === 'custom' && Array.isArray(v)) { return fmt(v[0]) + ' to ' + fmt(v[1]) + ': ' + v[2]; }
-      if (t === 'heatmap' && Array.isArray(v)) { return fmt(v[2]); }
-      if (t === 'pie') { return fmt(v) + (p.percent !== undefined ? ' · ' + p.percent + '%' : ''); }
-      if (t === 'sankey') { return fmt(p.data && p.data.value !== undefined ? p.data.value : v); }
-      if (Array.isArray(v)) { return t === 'scatter' && v.length === 3 ? fmt(v[2]) : fmt(v[1]); }
-      return v === null || v === undefined || (typeof v === 'number' && isNaN(v)) ? 'no data' : fmt(v);
-    }
-    function tooltipElement(doc, params, o) {
-      const list = (Array.isArray(params) ? params : [params]).filter((p) => p && !(p.seriesName || '').startsWith('__') && p.seriesName !== '_base');
-      const first = list[0] || {};
-      let head = o.names ? o.names(first) : first.name;
-      if (Array.isArray(params) && first.axisValueLabel !== undefined) { head = first.axisType === 'xAxis.time' || /^\d{10,}$/.test(String(first.axisValue)) ? new Date(first.axisValue).toISOString().slice(0, 10) : o.xfmt(first.axisValue); }
-      const box = h(doc, 'div', { cls: 'dc-tip' }, [h(doc, 'div', { cls: 'dc-tip-h', text: head === undefined || head === null ? '' : String(head) })]);
-      list.forEach((p) => {
-        const sw = h(doc, 'i', { cls: 'dc-tip-sw' });
-        const c = typeof p.color === 'string' ? p.color : null;
-        if (c) { sw.style.setProperty('background', c); }
-        box.appendChild(h(doc, 'div', { cls: 'dc-tip-r' }, [h(doc, 'span', {}, [sw, p.seriesName || '']), h(doc, 'b', { text: valueText(p, o.fmt) })]));
-      });
-      return box;
-    }
-    function dataTable(doc, table, caption, o) {
-      const fmts = table.columns.map((c) => (c.format ? formatterFor(c.format) : null)), limit = (o && o.limit) || 2000;
-      const cell = (v, i) => (v === null || v === undefined ? '—' : fmts[i] ? fmts[i](v) : typeof v === 'number' ? formatterFor()(v) : String(v));
-      return h(doc, 'table', { cls: 'dc-dtable' }, [
-        h(doc, 'caption', { text: caption }),
-        h(doc, 'thead', {}, [h(doc, 'tr', {}, table.columns.map((c) => h(doc, 'th', { text: c.header === undefined || c.header === null ? '' : String(c.header), attrs: { scope: 'col' } })))]),
-        h(doc, 'tbody', {}, table.rows.slice(0, limit).map((r) => h(doc, 'tr', {}, r.map((v, i) => h(doc, i === 0 ? 'th' : 'td', { text: cell(v, i), attrs: i === 0 ? { scope: 'row' } : null, cls: typeof v === 'number' ? 'dc-num' : '' })))))
-      ]);
-    }
-    function legendElement(doc, entries, o) {
-      return h(doc, 'div', { cls: 'dc-legend', attrs: { role: o.toggles ? 'group' : 'list', 'aria-label': 'Legend' } }, entries.map((e) => {
-        const sw = h(doc, 'i', { cls: 'dc-sw dc-sw-' + (e.style || 'box') });
-        sw.style.setProperty(e.style === 'dash' ? 'border-color' : 'background', e.colour);
-        if (e.style === 'line') { sw.style.setProperty('background', e.colour); }
-        if (!o.toggles) { return h(doc, 'span', { cls: 'dc-lg', attrs: { role: 'listitem' } }, [sw, e.name]); }
-        const off = o.hidden.has(e.name);
-        return h(doc, 'button', { cls: 'dc-lg' + (off ? ' dc-off' : ''), attrs: { type: 'button', 'aria-pressed': off ? 'false' : 'true', 'data-name': e.name, title: (off ? 'Show ' : 'Hide ') + e.name },
-          on: { click: () => o.onToggle(e.name) } }, [sw, e.name]);
-      }));
-    }
-    function placeOf(s, item, i, option) {
-      const v = item.value, xAx = Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis, yAx = Array.isArray(option.yAxis) ? option.yAxis[0] : option.yAxis;
-      if (s.type === 'heatmap') { return [v[0], v[1]]; }
-      if (s.type === 'custom') { return [(v[0] + v[1]) / 2, v[2]]; }
-      if (s.type === 'boxplot') { return [i, v[2]]; }
-      if (s.type === 'candlestick') { return [i, v[1]]; }
-      if (Array.isArray(v)) { return [v[0], v[1]]; }
-      if (yAx && yAx.type === 'category') { return [v, i]; }
-      return [xAx && xAx.data ? xAx.data[i] : i, v];
-    }
-    function markSelection(option, ids, th) {
-      if (!ids || !ids.size || !option.series) { return 0; }
-      const hits = [], has = (it) => it && it.ids && it.ids.some((x) => ids.has(x));
-      let n = 0;
-      option.series.forEach((s) => {
-        if (s.helper || s.name === '__selected') { return; }
-        if (s.type === 'pie') { (s.data || []).forEach((it) => { if (has(it)) { it.selected = true; n++; } }); return; }
-        if (['line', 'bar', 'scatter', 'heatmap', 'custom', 'boxplot', 'candlestick'].indexOf(s.type) < 0 || s.coordinateSystem === 'geo') { return; }
-        (s.data || []).forEach((it, i) => { if (has(it) && it.value !== null && it.value !== undefined) { hits.push(placeOf(s, it, i, option)); n++; } });
-      });
-      if (hits.length) {
-        option.series.push({ type: 'scatter', name: '__selected', helper: true, silent: true, z: 12, data: hits, symbol: 'circle', symbolSize: th.size.symbol + 9, tooltip: { show: false },
-          itemStyle: { color: alpha(th.tokens.accent, 0.12), borderColor: th.tokens.accent, borderWidth: 2.5 } });
-      }
-      return n;
-    }
-    function addZoom(option, spec, built, th) {
-      const z = spec.zoom;
-      if (!z || !option.xAxis || Array.isArray(option.xAxis) || option.xAxis.type === 'value' && option.yAxis && option.yAxis.type === 'category') { return false; }
-      const slider = { type: 'slider', xAxisIndex: 0, height: 22, bottom: 6, filterMode: 'none', borderColor: th.border, backgroundColor: th.surface2, fillerColor: alpha(th.tokens.accent, 0.16),
-        handleStyle: { color: th.tokens.accent, borderColor: th.tokens.accent }, moveHandleStyle: { color: th.tokens.accent }, textStyle: textStyle(th),
-        dataBackground: { lineStyle: { color: th.faint }, areaStyle: { color: alpha(th.faint, 0.2) } }, selectedDataBackground: { lineStyle: { color: th.tokens.accent }, areaStyle: { color: alpha(th.tokens.accent, 0.2) } },
-        brushSelect: false, labelFormatter: option.xAxis.type === 'time' ? (v) => new Date(v).toISOString().slice(0, 10) : undefined };
-      const inside = { type: 'inside', xAxisIndex: 0, filterMode: 'none', zoomOnMouseWheel: true, moveOnMouseMove: false, moveOnMouseWheel: false };
-      if (z.window && built.table.rows.length) {
-        const rows = built.table.rows, at = (i) => rows[Math.max(0, Math.min(rows.length - 1, i))][0];
-        const val = (i) => (option.xAxis.type === 'time' ? Date.parse(at(i) + 'T00:00:00Z') : option.xAxis.type === 'category' ? Math.max(0, Math.min(rows.length - 1, i)) : at(i));
-        const a = typeof z.window[0] === 'number' && z.window[0] <= rows.length ? val(z.window[0]) : z.window[0], b = typeof z.window[1] === 'number' && z.window[1] <= rows.length ? val(z.window[1] - 1) : z.window[1];
-        slider.startValue = inside.startValue = a; slider.endValue = inside.endValue = b;
-      }
-      option.dataZoom = [inside, slider];
-      option.grid.bottom = (option.grid.bottom || 10) + 30;
-      return true;
-    }
-    function svgOf(E, option, width, height) {
-      const off = E.init(null, null, { renderer: 'svg', ssr: true, width: Math.max(200, Math.round(width)), height: Math.max(150, Math.round(height)) });
-      try {
-        const o = Object.assign({}, option, { animation: false, dataZoom: (option.dataZoom || []).filter((d) => d.type !== 'inside') });
-        off.setOption(o);
-        return off.renderToSVGString();
-      } finally { off.dispose(); }
-    }
-    function dragBrush(engine, active, colour) {
-      const zr = engine.getZr();
-      let from = null;
-      const band = (x0, x1) => engine.setOption({ graphic: [{ id: 'dc-brush', type: 'rect', silent: true, z: 100, shape: { x: Math.min(x0, x1), y: 0, width: Math.abs(x1 - x0), height: zr.getHeight() }, style: { fill: colour } }] });
-      zr.on('mousedown', (e) => { from = active() && engine.containPixel('grid', [e.offsetX, e.offsetY]) ? e.offsetX : null; });
-      zr.on('mousemove', (e) => { if (from !== null && Math.abs(e.offsetX - from) > 4) { band(from, e.offsetX); } });
-      zr.on('mouseup', (e) => {
-        if (from === null) { return; }
-        const x0 = from, x1 = e.offsetX;
-        from = null;
-        engine.setOption({ graphic: [{ id: 'dc-brush', $action: 'remove' }] });
-        if (Math.abs(x1 - x0) <= 6) { return; }
-        const a = engine.convertFromPixel({ xAxisIndex: 0 }, Math.min(x0, x1)), b = engine.convertFromPixel({ xAxisIndex: 0 }, Math.max(x0, x1));
-        engine.dispatchAction({ type: 'dataZoom', dataZoomIndex: 0, startValue: a, endValue: b });
-      });
-    }
-    return { "valueText": valueText, "tooltipElement": tooltipElement, "dataTable": dataTable, "legendElement": legendElement, "markSelection": markSelection, "addZoom": addZoom, "svgOf": svgOf, "dragBrush": dragBrush };
-  })();
-  /* ---- src/drishti_chart-geo.js ---- */
-  __m["src/drishti_chart-geo.js"] = (function () {
-    const RAD = Math.PI / 180;
-    function equalEarth(lon, lat) {
-      const A1 = 1.340264, A2 = -0.081106, A3 = 0.000893, A4 = 0.003796, M = Math.sqrt(3) / 2;
-      const l = wrap(lon) * RAD, t = Math.asin(M * Math.sin(lat * RAD)), t2 = t * t, t6 = t2 * t2 * t2;
-      const x = l * Math.cos(t) / (M * (A1 + 3 * A2 * t2 + t6 * (7 * A3 + 9 * A4 * t2)));
-      const y = t * (A1 + A2 * t2 + t6 * (A3 + A4 * t2));
-      return [x, -y];
-    }
-    function wrap(d) { let x = d; while (x > 180) { x -= 360; } while (x < -180) { x += 360; } return x; }
-    function albers(o) {
-      const s1 = Math.sin(o.p1 * RAD), s2 = Math.sin(o.p2 * RAD), n = (s1 + s2) / 2, C = Math.cos(o.p1 * RAD) ** 2 + 2 * n * s1;
-      const r0 = Math.sqrt(C - 2 * n * Math.sin(o.p0 * RAD)) / n;
-      return (lon, lat) => {
-        const r = Math.sqrt(Math.max(0, C - 2 * n * Math.sin(lat * RAD))) / n, th = n * wrap(lon - o.l0) * RAD;
-        return [r * Math.sin(th), -(r0 - r * Math.cos(th))];
-      };
-    }
-    function plateCarree(midLat, l0) { const k = Math.cos(midLat * RAD); return (lon, lat) => [wrap(lon - l0) * RAD * k, -lat * RAD]; }
-    function projectGeometry(g, fn) {
-      const ring = (r) => r.map((p) => fn(p[0], p[1]));
-      if (g.type === 'Polygon') { return { type: 'Polygon', coordinates: g.coordinates.map(ring) }; }
-      if (g.type === 'MultiPolygon') { return { type: 'MultiPolygon', coordinates: g.coordinates.map((poly) => poly.map(ring)) }; }
-      if (g.type === 'Point') { return { type: 'Point', coordinates: fn(g.coordinates[0], g.coordinates[1]) }; }
-      return g;
-    }
-    function holdAntimeridian(g) {
-      const ring = (r) => {
-        let lo = Infinity, hi = -Infinity, east = 0;
-        r.forEach((q) => { lo = Math.min(lo, q[0]); hi = Math.max(hi, q[0]); if (q[0] > 0) { east++; } });
-        if (hi - lo <= 180) { return r; }
-        const side = east * 2 >= r.length ? 180 : -180;
-        return r.map((q) => ((side > 0 && q[0] < 0) || (side < 0 && q[0] > 0) ? [side, q[1]] : q));
-      };
-      if (g.type === 'Polygon') { return { type: 'Polygon', coordinates: g.coordinates.map(ring) }; }
-      if (g.type === 'MultiPolygon') { return { type: 'MultiPolygon', coordinates: g.coordinates.map((poly) => poly.map(ring)) }; }
-      return g;
-    }
-    function outerRings(g) { return g.type === 'Polygon' ? [g.coordinates[0]] : g.type === 'MultiPolygon' ? g.coordinates.map((p) => p[0]) : []; }
-    function bounds(pts) {
-      const b = [Infinity, Infinity, -Infinity, -Infinity];
-      pts.forEach((p) => { b[0] = Math.min(b[0], p[0]); b[1] = Math.min(b[1], p[1]); b[2] = Math.max(b[2], p[0]); b[3] = Math.max(b[3], p[1]); });
-      return b;
-    }
-    function ringArea(r) { let a = 0; for (let i = 0, j = r.length - 1; i < r.length; j = i++) { a += (r[j][0] + r[i][0]) * (r[j][1] - r[i][1]); } return Math.abs(a / 2); }
-    function coreExtent(features) {
-      const rings = [];
-      features.forEach((f) => outerRings(f.geometry).forEach((r) => { const b = bounds(r); rings.push({ b: b, a: ringArea(r) || 1e-6, c: [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2] }); }));
-      if (!rings.length) { return { lon0: 0, lat0: -10, lat1: 10, lonMin: -10, lonMax: 10 }; }
-      const tot = rings.reduce((s, r) => s + r.a, 0), cx = rings.reduce((s, r) => s + r.c[0] * r.a, 0) / tot, cy = rings.reduce((s, r) => s + r.c[1] * r.a, 0) / tot;
-      const core = rings.filter((r) => Math.abs(r.c[0] - cx) <= 30 && Math.abs(r.c[1] - cy) <= 25);
-      const use = core.length ? core : rings;
-      const b = [Math.min.apply(null, use.map((r) => r.b[0])), Math.min.apply(null, use.map((r) => r.b[1])), Math.max.apply(null, use.map((r) => r.b[2])), Math.max.apply(null, use.map((r) => r.b[3]))];
-      return { lon0: (b[0] + b[2]) / 2, lat0: b[1], lat1: b[3], lonMin: b[0], lonMax: b[2] };
-    }
-    function countryProjection(iso3, features) {
-      const e = coreExtent(features);
-      if (iso3 === 'USA') { return { name: 'albers-usa', project: albers({ p1: 29.5, p2: 45.5, p0: 37.5, l0: -96 }), extent: e }; }
-      if (iso3 === 'CAN') { return { name: 'albers-canada', project: albers({ p1: 49, p2: 77, p0: 63.39, l0: -91.87 }), extent: e }; }
-      const span = e.lat1 - e.lat0, p1 = e.lat0 + span / 6, p2 = e.lat1 - span / 6;
-      if (p1 * p2 > 0 && Math.abs(Math.sin(p1 * RAD) + Math.sin(p2 * RAD)) / 2 > 0.12) { return { name: 'albers-fitted', project: albers({ p1: p1, p2: p2, p0: (e.lat0 + e.lat1) / 2, l0: e.lon0 }), extent: e }; }
-      return { name: 'plate-carree', project: plateCarree((e.lat0 + e.lat1) / 2, e.lon0), extent: e };
-    }
-    const US_INSETS = Object.freeze({
-      'US-AK': Object.freeze({ proj: Object.freeze({ p1: 55, p2: 65, p0: 50, l0: -154 }), width: 0.25, left: 0 }),
-      'US-HI': Object.freeze({ proj: Object.freeze({ p1: 8, p2: 18, p0: 3, l0: -157 }), width: 0.11, left: 0.27 })
-    });
-    function affine(g, k, dx, dy) { return projectGeometry(g, (x, y) => [x * k + dx, y * k + dy]); }
-    function allPoints(g) { return g.type === 'Point' ? [g.coordinates] : [].concat.apply([], (g.type === 'Polygon' ? [g.coordinates] : g.coordinates).map((p) => [].concat.apply([], p))); }
-    function prepareRegions(geo) {
-      const iso3 = (geo.properties && geo.properties.iso3) || (geo.features[0] && geo.features[0].properties.iso3) || '';
-      const proj = countryProjection(iso3, geo.features.filter((f) => f.geometry.type !== 'Point' && !US_INSETS[f.properties.code]));
-      const shapes = [], points = [], by = { code: {}, name: {}, short: {} }, list = [], frames = [];
-      geo.features.forEach((f) => {
-        const p = f.properties, item = { code: p.code, name: p.name, point: f.geometry.type === 'Point' };
-        list.push(item);
-        by.code[p.code.toUpperCase()] = item; by.name[p.name.toLowerCase()] = item; by.short[p.code.split('-').pop().toUpperCase()] = item;
-        if (iso3 === 'USA' && US_INSETS[p.code]) { return; }
-        const g = projectGeometry(f.geometry, proj.project);
-        if (g.type === 'Point') { item.xy = g.coordinates; points.push(item); } else { shapes.push({ type: 'Feature', properties: { name: p.code, fullName: p.name }, geometry: g }); }
-      });
-      const main = bounds([].concat.apply([], shapes.map((s) => allPoints(s.geometry))).concat(points.map((p) => p.xy)));
-      const extent = Object.assign({}, proj.extent);
-      let fit = isFinite(main[0]) ? main : [-1, -1, 1, 1];
-      if (proj.name === 'albers-fitted' || proj.name === 'plate-carree') {
-        const corners = [];
-        for (let i = 0; i <= 8; i++) { corners.push(proj.project(extent.lonMin + (extent.lonMax - extent.lonMin) * i / 8, extent.lat0), proj.project(extent.lonMin + (extent.lonMax - extent.lonMin) * i / 8, extent.lat1)); }
-        fit = bounds(corners);
-      }
-      if (iso3 === 'USA') {
-        const W = main[2] - main[0];
-        geo.features.filter((f) => US_INSETS[f.properties.code]).forEach((f) => {
-          const ins = US_INSETS[f.properties.code], g0 = projectGeometry(f.geometry, albers(ins.proj)), b = bounds(allPoints(g0));
-          const k = ins.width * W / (b[2] - b[0]), x0 = main[0] + ins.left * W, y1 = main[3] + 0.03 * W;
-          const g = affine(g0, k, x0 - b[0] * k, y1 - b[3] * k);
-          shapes.push({ type: 'Feature', properties: { name: f.properties.code, fullName: f.properties.name }, geometry: g });
-          const fb = bounds(allPoints(g)), pad = 0.01 * W;
-          frames.push({ code: f.properties.code, box: [fb[0] - pad, fb[1] - pad, fb[2] + pad, fb[3] + pad] });
-        });
-        fit = bounds([[fit[0], fit[1]], [fit[2], fit[3]]].concat(frames.map((fr) => [fr.box[2], fr.box[3]])));
-      }
-      return { level: iso3, iso3: iso3, projection: proj.name, project: proj.project, shapes: shapes, points: points, by: by, list: list, fit: fit, frames: frames, all: drawnBounds(shapes, frames) };
-    }
-    function drawnBounds(shapes, frames) { return bounds([].concat.apply([], shapes.map((x) => allPoints(x.geometry))).concat([].concat.apply([], (frames || []).map((f) => [[f.box[0], f.box[1]], [f.box[2], f.box[3]]])))); }
-    function fitView(geo, width, height) {
-      const a = geo.all || geo.fit, f = geo.fit, w = width || 1, ht = height || 1;
-      const scale = (b) => Math.min(w / ((b[2] - b[0]) || 1e-9), ht / ((b[3] - b[1]) || 1e-9));
-      return { center: [(f[0] + f[2]) / 2, (f[1] + f[3]) / 2], zoom: Math.max(1, scale(f) / scale(a)) };
-    }
-    function prepareWorld(geo, pts) {
-      const shapes = [], points = [], by = { code: {}, name: {}, short: {} }, list = [];
-      geo.features.forEach((f) => {
-        const p = f.properties, item = { code: p.iso3, iso2: p.iso2 || null, name: p.name, point: false };
-        if (p.iso3 === 'ATA') { return; }
-        list.push(item);
-        by.code[p.iso3.toUpperCase()] = item; if (p.iso2) { by.short[p.iso2.toUpperCase()] = item; } by.name[p.name.toLowerCase()] = item;
-        shapes.push({ type: 'Feature', properties: { name: p.iso3, fullName: p.name }, geometry: projectGeometry(holdAntimeridian(f.geometry), equalEarth) });
-      });
-      (pts || []).forEach((p) => {
-        if (by.code[p.iso3]) { return; }
-        const item = { code: p.iso3, iso2: p.iso2 || null, name: p.name, point: true, xy: equalEarth(p.lon, p.lat) };
-        list.push(item); points.push(item);
-        by.code[p.iso3] = item; if (p.iso2) { by.short[p.iso2.toUpperCase()] = item; } by.name[p.name.toLowerCase()] = item;
-      });
-      const fit = bounds([equalEarth(-180, 0), equalEarth(180, 0), equalEarth(0, 84), equalEarth(0, -58)]);
-      return { level: 'world', iso3: null, projection: 'equal-earth', project: equalEarth, shapes: shapes, points: points, by: by, list: list, fit: fit, frames: [], all: drawnBounds(shapes, []) };
-    }
-    function findPlace(geo, code) {
-      if (code === null || code === undefined || !geo) { return null; }
-      const k = String(code).trim();
-      return geo.by.code[k.toUpperCase()] || geo.by.short[k.toUpperCase()] || geo.by.name[k.toLowerCase()] || null;
-    }
-    function createGeoLoader(o) {
-      o = o || {};
-      const base = (o.base || '/static/vendor/echarts/maps/').replace(/\/?$/, '/');
-      const get = o.fetchJson || ((url) => fetch(url, { credentials: 'same-origin' }).then((r) => { if (!r.ok) { throw new Error('map ' + url + ': ' + r.status); } return r.json(); }));
-      const cache = { world: null, regions: {} }, loads = [];
-      const fetched = (file) => { loads.push(file); return Promise.resolve().then(() => get(base + file)); };
-      return {
-        loads: loads,
-        world() {
-          if (!cache.world) {
-            cache.world = Promise.all([fetched('world-countries.json'), fetched('world-points.json').catch(() => [])]).then((got) => prepareWorld(got[0], got[1]));
-            cache.world.catch(() => { cache.world = null; });
-          }
-          return cache.world;
-        },
-        regions(iso3) {
-          const k = String(iso3 || '').toUpperCase();
-          if (!/^[A-Z]{3}$/.test(k)) { return Promise.reject(new Error('no country ' + iso3)); }
-          if (!cache.regions[k]) {
-            cache.regions[k] = fetched('regions/' + k + '.json').then(prepareRegions);
-            cache.regions[k].catch(() => { delete cache.regions[k]; });
-          }
-          return cache.regions[k];
-        },
-        hasRegions(iso3) { return !!cache.regions[String(iso3).toUpperCase()]; }
-      };
-    }
-    return { "equalEarth": equalEarth, "albers": albers, "plateCarree": plateCarree, "projectGeometry": projectGeometry, "holdAntimeridian": holdAntimeridian, "bounds": bounds, "coreExtent": coreExtent, "countryProjection": countryProjection, "US_INSETS": US_INSETS, "prepareRegions": prepareRegions, "fitView": fitView, "prepareWorld": prepareWorld, "findPlace": findPlace, "createGeoLoader": createGeoLoader };
   })();
   /* ---- src/drishti_chart-map.js ---- */
   __m["src/drishti_chart-map.js"] = (function () {
@@ -1410,23 +1410,88 @@
     }
     return { "Studio": Studio };
   })();
+  /* ---- src/drishti_chart-io.js ---- */
+  __m["src/drishti_chart-io.js"] = (function () {
+    var h = __lib("drishti-core").h, toCsv = __lib("drishti-core").toCsv, download = __lib("drishti-core").download;
+    var specText = __m["src/drishti_chart-spec.js"].specText;
+    var rowId = __m["src/drishti_chart-kinds.js"].rowId;
+    var svgOf = __m["src/drishti_chart-parts.js"].svgOf;
+    class ChartIO {
+      exportMenu(btn) {
+        if (this.menu) { this.menu.remove(); this.menu = null; return; }
+        const words = { png: 'PNG image (2x)', svg: 'SVG drawing', csv: 'CSV of the data', spec: 'Copy the spec' };
+        const close = () => { if (this.menu) { this.menu.remove(); this.menu = null; this.doc.removeEventListener('keydown', onKey, true); } };
+        const onKey = (e) => { if (e.key === 'Escape') { close(); btn.focus(); } };
+        this.menu = h(this.doc, 'div', { cls: 'dc-menu', attrs: { role: 'menu', 'aria-label': 'Export' } }, this.spec.export.map((x) => h(this.doc, 'button', { cls: 'dc-menu-item', text: words[x],
+          attrs: { type: 'button', role: 'menuitem', 'data-export': x }, on: { click: () => { close(); this.export(x); } } })));
+        this.card.appendChild(this.menu);
+        this.doc.addEventListener('keydown', onKey, true);
+        const first = this.menu.querySelector('button');
+        if (first) { first.focus(); }
+      }
+      export(what) {
+        const name = (this.spec.title || this.spec.kind).replace(/[^\w.-]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'chart';
+        const th = (this.envNow || this.env()).theme;
+        let out, type, file;
+        if (what === 'png') { out = this.engine.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: th.surface }); file = name + '.png'; type = 'image/png'; }
+        if (what === 'svg') { out = svgOf(this.E, Object.assign({}, this.engine.getOption(), this.map ? this.map.svgOption() : {}), this.canvas.clientWidth, this.canvas.clientHeight); file = name + '.svg'; type = 'image/svg+xml'; }
+        if (what === 'csv') { const t = this.map ? this.map.table() : this.built.table; out = toCsv({ columns: t.columns, rows: t.rows }); file = name + '.csv'; type = 'text/csv'; }
+        if (what === 'spec') { out = specText(this.rawSpec, { rows: true }); file = name + '.json'; type = 'application/json'; if (this.win.navigator.clipboard) { this.win.navigator.clipboard.writeText(out).catch(() => {}); } }
+        if (out === undefined) { throw new Error('no export ' + what + ' (png, svg, csv, spec)'); }
+        if (what !== 'spec') { (this.o.download || ((f, c, t) => download(this.doc, f, c, t)))(file, out, type); }
+        this.emit('exported', { what: what, file: file, size: out.length });
+        return out;
+      }
+      apply(tx) {
+        const at = new Map(this.rows.map((r, i) => [rowId(this.spec, r, i), i]));
+        let updated = 0, removed = 0;
+        (tx.update || []).forEach((u) => { const i = at.get(rowId(this.spec, u, -1)); if (i !== undefined) { this.rows[i] = Object.assign({}, this.rows[i], u); updated++; } });
+        if (tx.remove && tx.remove.length) {
+          const gone = new Set(tx.remove.map((r) => (typeof r === 'object' ? rowId(this.spec, r, -1) : String(r))));
+          const before = this.rows.length;
+          this.rows = this.rows.filter((r, i) => !gone.has(rowId(this.spec, r, i)));
+          removed = before - this.rows.length;
+        }
+        (tx.add || []).forEach((r) => this.rows.push(r));
+        const keep = this.spec.live && this.spec.live.keep;
+        if (keep && this.rows.length > keep) { this.rows.splice(0, this.rows.length - keep); }
+        this.later();
+        const out = { added: (tx.add || []).length, updated: updated, removed: removed };
+        this.emit('dataUpdated', out);
+        return out;
+      }
+      append(rows) { this.apply({ add: rows }); }
+      replace(rows) { this.rows = rows.slice(); this.later(); this.emit('dataUpdated', { replaced: rows.length }); }
+      later() {
+        if (this.timer) { return; }
+        const ms = this.spec.live && this.spec.live.throttleMs !== undefined ? this.spec.live.throttleMs : 250;
+        this.timer = this.win.setTimeout(() => { this.timer = 0; this.draw(); }, ms);
+      }
+      pointAt(index) {
+        this.pinned = index;
+        if (this.engine && index >= 0) { this.engine.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: index }); }
+      }
+    }
+    return { "ChartIO": ChartIO };
+  })();
   /* ---- src/drishti_chart-view.js ---- */
   __m["src/drishti_chart-view.js"] = (function () {
-    var h = __lib("drishti-core").h, renderExplain = __lib("drishti-core").renderExplain, toCsv = __lib("drishti-core").toCsv, download = __lib("drishti-core").download, EventBus = __lib("drishti-core").EventBus, sharedBus = __lib("drishti-core").bus, announce = __lib("drishti-core").announce;
-    var normalizeSpec = __m["src/drishti_chart-spec.js"].normalizeSpec, kindOf = __m["src/drishti_chart-spec.js"].kindOf, specText = __m["src/drishti_chart-spec.js"].specText;
+    var h = __lib("drishti-core").h, renderExplain = __lib("drishti-core").renderExplain, EventBus = __lib("drishti-core").EventBus, sharedBus = __lib("drishti-core").bus, announce = __lib("drishti-core").announce;
+    var normalizeSpec = __m["src/drishti_chart-spec.js"].normalizeSpec, kindOf = __m["src/drishti_chart-spec.js"].kindOf;
     var rowsOf = __m["src/drishti_chart-data.js"].rowsOf;
     var chartTheme = __m["src/drishti_chart-theme.js"].chartTheme, formatterFor = __m["src/drishti_chart-theme.js"].formatterFor;
-    var rowId = __m["src/drishti_chart-kinds.js"].rowId;
-    var tooltipElement = __m["src/drishti_chart-parts.js"].tooltipElement, dataTable = __m["src/drishti_chart-parts.js"].dataTable, legendElement = __m["src/drishti_chart-parts.js"].legendElement, markSelection = __m["src/drishti_chart-parts.js"].markSelection, addZoom = __m["src/drishti_chart-parts.js"].addZoom, dragBrush = __m["src/drishti_chart-parts.js"].dragBrush, svgOf = __m["src/drishti_chart-parts.js"].svgOf, valueText = __m["src/drishti_chart-parts.js"].valueText;
+    var tooltipElement = __m["src/drishti_chart-parts.js"].tooltipElement, dataTable = __m["src/drishti_chart-parts.js"].dataTable, legendElement = __m["src/drishti_chart-parts.js"].legendElement, markSelection = __m["src/drishti_chart-parts.js"].markSelection, addZoom = __m["src/drishti_chart-parts.js"].addZoom, dragBrush = __m["src/drishti_chart-parts.js"].dragBrush, valueText = __m["src/drishti_chart-parts.js"].valueText;
     var MapView = __m["src/drishti_map-view.js"].MapView;
     var Studio = __m["src/drishti_chart-studio.js"].Studio;
+    var ChartIO = __m["src/drishti_chart-io.js"].ChartIO;
     const CHART_EVENTS = Object.freeze(['rendered', 'markClicked', 'selectionChanged', 'legendToggled', 'zoomChanged', 'explainOpened', 'explainShown', 'exported',
       'tableToggled', 'dataUpdated', 'modeChanged', 'densityChanged', 'kindChanged', 'levelChanged', 'metricChanged', 'placeSelected', 'pointerMoved',
       'error']);
     const CHART_MODES = Object.freeze(['card', 'studio']);
     const SELECTION_EVENT = 'drishti:selection';
-    class Chart {
+    class Chart extends ChartIO {
       constructor(el, spec, o) {
+        super();
         this.el = el;
         this.doc = el.ownerDocument;
         this.win = this.doc.defaultView;
@@ -1669,60 +1734,6 @@
         const m = this.firstMark(i);
         this.engine.dispatchAction({ type: 'showTip', seriesIndex: m.seriesIndex, dataIndex: m.dataIndex });
         announce((m.name !== undefined ? m.name + ': ' : '') + valueText(m, this.envNow.fmt), { document: this.doc });
-      }
-      exportMenu(btn) {
-        if (this.menu) { this.menu.remove(); this.menu = null; return; }
-        const words = { png: 'PNG image (2x)', svg: 'SVG drawing', csv: 'CSV of the data', spec: 'Copy the spec' };
-        const close = () => { if (this.menu) { this.menu.remove(); this.menu = null; this.doc.removeEventListener('keydown', onKey, true); } };
-        const onKey = (e) => { if (e.key === 'Escape') { close(); btn.focus(); } };
-        this.menu = h(this.doc, 'div', { cls: 'dc-menu', attrs: { role: 'menu', 'aria-label': 'Export' } }, this.spec.export.map((x) => h(this.doc, 'button', { cls: 'dc-menu-item', text: words[x],
-          attrs: { type: 'button', role: 'menuitem', 'data-export': x }, on: { click: () => { close(); this.export(x); } } })));
-        this.card.appendChild(this.menu);
-        this.doc.addEventListener('keydown', onKey, true);
-        const first = this.menu.querySelector('button');
-        if (first) { first.focus(); }
-      }
-      export(what) {
-        const name = (this.spec.title || this.spec.kind).replace(/[^\w.-]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'chart';
-        const th = (this.envNow || this.env()).theme;
-        let out, type, file;
-        if (what === 'png') { out = this.engine.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: th.surface }); file = name + '.png'; type = 'image/png'; }
-        if (what === 'svg') { out = svgOf(this.E, Object.assign({}, this.engine.getOption(), this.map ? this.map.svgOption() : {}), this.canvas.clientWidth, this.canvas.clientHeight); file = name + '.svg'; type = 'image/svg+xml'; }
-        if (what === 'csv') { const t = this.map ? this.map.table() : this.built.table; out = toCsv({ columns: t.columns, rows: t.rows }); file = name + '.csv'; type = 'text/csv'; }
-        if (what === 'spec') { out = specText(this.rawSpec, { rows: true }); file = name + '.json'; type = 'application/json'; if (this.win.navigator.clipboard) { this.win.navigator.clipboard.writeText(out).catch(() => {}); } }
-        if (out === undefined) { throw new Error('no export ' + what + ' (png, svg, csv, spec)'); }
-        if (what !== 'spec') { (this.o.download || ((f, c, t) => download(this.doc, f, c, t)))(file, out, type); }
-        this.emit('exported', { what: what, file: file, size: out.length });
-        return out;
-      }
-      apply(tx) {
-        const at = new Map(this.rows.map((r, i) => [rowId(this.spec, r, i), i]));
-        let updated = 0, removed = 0;
-        (tx.update || []).forEach((u) => { const i = at.get(rowId(this.spec, u, -1)); if (i !== undefined) { this.rows[i] = Object.assign({}, this.rows[i], u); updated++; } });
-        if (tx.remove && tx.remove.length) {
-          const gone = new Set(tx.remove.map((r) => (typeof r === 'object' ? rowId(this.spec, r, -1) : String(r))));
-          const before = this.rows.length;
-          this.rows = this.rows.filter((r, i) => !gone.has(rowId(this.spec, r, i)));
-          removed = before - this.rows.length;
-        }
-        (tx.add || []).forEach((r) => this.rows.push(r));
-        const keep = this.spec.live && this.spec.live.keep;
-        if (keep && this.rows.length > keep) { this.rows.splice(0, this.rows.length - keep); }
-        this.later();
-        const out = { added: (tx.add || []).length, updated: updated, removed: removed };
-        this.emit('dataUpdated', out);
-        return out;
-      }
-      append(rows) { this.apply({ add: rows }); }
-      replace(rows) { this.rows = rows.slice(); this.later(); this.emit('dataUpdated', { replaced: rows.length }); }
-      later() {
-        if (this.timer) { return; }
-        const ms = this.spec.live && this.spec.live.throttleMs !== undefined ? this.spec.live.throttleMs : 250;
-        this.timer = this.win.setTimeout(() => { this.timer = 0; this.draw(); }, ms);
-      }
-      pointAt(index) {
-        this.pinned = index;
-        if (this.engine && index >= 0) { this.engine.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: index }); }
       }
       setMode(mode) {
         if (CHART_MODES.indexOf(mode) < 0 || mode === this.mode) { return; }
@@ -2539,7 +2550,7 @@
     registerMapKind();
     registerKind('layer', { label: 'layers', cartesian: true, build: (spec, rows, env) => buildLayers(spec, rows, env, kindOf, (l) => rowsOf(l.data)) });
     function install(root) { if (root && root.document && root.customElements) { defineChartElement(root.customElements, root); } }
-    return { "install": install, "registerKind": __m["src/drishti_chart-spec.js"].registerKind, "kindOf": __m["src/drishti_chart-spec.js"].kindOf, "kindList": __m["src/drishti_chart-spec.js"].kindList, "KIND_ALIASES": __m["src/drishti_chart-spec.js"].KIND_ALIASES, "checkSpec": __m["src/drishti_chart-spec.js"].checkSpec, "normalizeSpec": __m["src/drishti_chart-spec.js"].normalizeSpec, "specText": __m["src/drishti_chart-spec.js"].specText, "rowsOf": __m["src/drishti_chart-data.js"].rowsOf, "fieldOf": __m["src/drishti_chart-data.js"].fieldOf, "num": __m["src/drishti_chart-data.js"].num, "members": __m["src/drishti_chart-data.js"].members, "sumBy": __m["src/drishti_chart-data.js"].sumBy, "bin": __m["src/drishti_chart-data.js"].bin, "quantile": __m["src/drishti_chart-data.js"].quantile, "boxStats": __m["src/drishti_chart-data.js"].boxStats, "quantileBreaks": __m["src/drishti_chart-data.js"].quantileBreaks, "classOf": __m["src/drishti_chart-data.js"].classOf, "compileCondition": __m["src/drishti_chart-data.js"].compileCondition, "conditionFields": __m["src/drishti_chart-data.js"].conditionFields, "CHART_DENSITIES": __m["src/drishti_chart-theme.js"].CHART_DENSITIES, "blend": __m["src/drishti_chart-theme.js"].blend, "alpha": __m["src/drishti_chart-theme.js"].alpha, "chartTheme": __m["src/drishti_chart-theme.js"].chartTheme, "toneColour": __m["src/drishti_chart-theme.js"].toneColour, "rampColour": __m["src/drishti_chart-theme.js"].rampColour, "formatterFor": __m["src/drishti_chart-theme.js"].formatterFor, "textStyle": __m["src/drishti_chart-theme.js"].textStyle, "axisOf": __m["src/drishti_chart-theme.js"].axisOf, "rowId": __m["src/drishti_chart-kinds.js"].rowId, "seriesDefs": __m["src/drishti_chart-kinds.js"].seriesDefs, "annotationMarks": __m["src/drishti_chart-kinds.js"].annotationMarks, "buildSeriesChart": __m["src/drishti_chart-kinds.js"].buildSeriesChart, "buildScatter": __m["src/drishti_chart-kinds.js"].buildScatter, "buildHistogram": __m["src/drishti_chart-kinds.js"].buildHistogram, "buildWaterfall": __m["src/drishti_chart-kinds.js"].buildWaterfall, "buildBoxplot": __m["src/drishti_chart-kinds.js"].buildBoxplot, "buildHeatmap": __m["src/drishti_chart-kinds.js"].buildHeatmap, "buildCandlestick": __m["src/drishti_chart-kinds.js"].buildCandlestick, "buildLayers": __m["src/drishti_chart-kinds.js"].buildLayers, "registerAxisKinds": __m["src/drishti_chart-kinds.js"].registerAxisKinds, "buildPie": __m["src/drishti_chart-kinds2.js"].buildPie, "buildGauge": __m["src/drishti_chart-kinds2.js"].buildGauge, "buildTreemap": __m["src/drishti_chart-kinds2.js"].buildTreemap, "buildSankey": __m["src/drishti_chart-kinds2.js"].buildSankey, "registerOtherKinds": __m["src/drishti_chart-kinds2.js"].registerOtherKinds, "equalEarth": __m["src/drishti_chart-geo.js"].equalEarth, "albers": __m["src/drishti_chart-geo.js"].albers, "plateCarree": __m["src/drishti_chart-geo.js"].plateCarree, "projectGeometry": __m["src/drishti_chart-geo.js"].projectGeometry, "bounds": __m["src/drishti_chart-geo.js"].bounds, "coreExtent": __m["src/drishti_chart-geo.js"].coreExtent, "countryProjection": __m["src/drishti_chart-geo.js"].countryProjection, "US_INSETS": __m["src/drishti_chart-geo.js"].US_INSETS, "prepareRegions": __m["src/drishti_chart-geo.js"].prepareRegions, "prepareWorld": __m["src/drishti_chart-geo.js"].prepareWorld, "findPlace": __m["src/drishti_chart-geo.js"].findPlace, "createGeoLoader": __m["src/drishti_chart-geo.js"].createGeoLoader, "holdAntimeridian": __m["src/drishti_chart-geo.js"].holdAntimeridian, "fitView": __m["src/drishti_chart-geo.js"].fitView, "mapMetrics": __m["src/drishti_chart-map.js"].mapMetrics, "placeValues": __m["src/drishti_chart-map.js"].placeValues, "mapScale": __m["src/drishti_chart-map.js"].mapScale, "ranking": __m["src/drishti_chart-map.js"].ranking, "buildMap": __m["src/drishti_chart-map.js"].buildMap, "registerMapKind": __m["src/drishti_chart-map.js"].registerMapKind, "colourTone": __m["src/drishti_chart-vega.js"].colourTone, "d3Format": __m["src/drishti_chart-vega.js"].d3Format, "fromVegaLite": __m["src/drishti_chart-vega.js"].fromVegaLite, "valueText": __m["src/drishti_chart-parts.js"].valueText, "tooltipElement": __m["src/drishti_chart-parts.js"].tooltipElement, "dataTable": __m["src/drishti_chart-parts.js"].dataTable, "legendElement": __m["src/drishti_chart-parts.js"].legendElement, "markSelection": __m["src/drishti_chart-parts.js"].markSelection, "addZoom": __m["src/drishti_chart-parts.js"].addZoom, "dragBrush": __m["src/drishti_chart-parts.js"].dragBrush, "svgOf": __m["src/drishti_chart-parts.js"].svgOf, "MAP_MODES": __m["src/drishti_map-view.js"].MAP_MODES, "geoLoader": __m["src/drishti_map-view.js"].geoLoader, "MapView": __m["src/drishti_map-view.js"].MapView, "Studio": __m["src/drishti_chart-studio.js"].Studio, "CHART_EVENTS": __m["src/drishti_chart-view.js"].CHART_EVENTS, "CHART_MODES": __m["src/drishti_chart-view.js"].CHART_MODES, "SELECTION_EVENT": __m["src/drishti_chart-view.js"].SELECTION_EVENT, "Chart": __m["src/drishti_chart-view.js"].Chart, "linkGrid": __m["src/drishti_chart-link.js"].linkGrid, "publishSelection": __m["src/drishti_chart-link.js"].publishSelection, "PANEL_KINDS": __m["src/drishti_chart-panels.js"].PANEL_KINDS, "escapeTip": __m["src/drishti_chart-panels.js"].escapeTip, "panelCompact": __m["src/drishti_chart-panels.js"].panelCompact, "panelLineCompact": __m["src/drishti_chart-panels.js"].panelLineCompact, "panelTokens": __m["src/drishti_chart-panels.js"].panelTokens, "labelFit": __m["src/drishti_chart-panels.js"].labelFit, "panelOption": __m["src/drishti_chart-panels.js"].panelOption, "drawMap": __m["src/drishti_chart-panel-draw.js"].drawMap, "PanelCharts": __m["src/drishti_chart-panel-draw.js"].PanelCharts, "CHART_ELEMENT": __m["src/drishti_chart-element.js"].CHART_ELEMENT, "defineChartElement": __m["src/drishti_chart-element.js"].defineChartElement };
+    return { "install": install, "registerKind": __m["src/drishti_chart-spec.js"].registerKind, "kindOf": __m["src/drishti_chart-spec.js"].kindOf, "kindList": __m["src/drishti_chart-spec.js"].kindList, "KIND_ALIASES": __m["src/drishti_chart-spec.js"].KIND_ALIASES, "checkSpec": __m["src/drishti_chart-spec.js"].checkSpec, "normalizeSpec": __m["src/drishti_chart-spec.js"].normalizeSpec, "specText": __m["src/drishti_chart-spec.js"].specText, "rowsOf": __m["src/drishti_chart-data.js"].rowsOf, "fieldOf": __m["src/drishti_chart-data.js"].fieldOf, "num": __m["src/drishti_chart-data.js"].num, "members": __m["src/drishti_chart-data.js"].members, "sumBy": __m["src/drishti_chart-data.js"].sumBy, "bin": __m["src/drishti_chart-data.js"].bin, "quantile": __m["src/drishti_chart-data.js"].quantile, "boxStats": __m["src/drishti_chart-data.js"].boxStats, "quantileBreaks": __m["src/drishti_chart-data.js"].quantileBreaks, "classOf": __m["src/drishti_chart-data.js"].classOf, "compileCondition": __m["src/drishti_chart-data.js"].compileCondition, "conditionFields": __m["src/drishti_chart-data.js"].conditionFields, "CHART_DENSITIES": __m["src/drishti_chart-theme.js"].CHART_DENSITIES, "blend": __m["src/drishti_chart-theme.js"].blend, "alpha": __m["src/drishti_chart-theme.js"].alpha, "chartTheme": __m["src/drishti_chart-theme.js"].chartTheme, "toneColour": __m["src/drishti_chart-theme.js"].toneColour, "rampColour": __m["src/drishti_chart-theme.js"].rampColour, "formatterFor": __m["src/drishti_chart-theme.js"].formatterFor, "textStyle": __m["src/drishti_chart-theme.js"].textStyle, "axisOf": __m["src/drishti_chart-theme.js"].axisOf, "rowId": __m["src/drishti_chart-kinds.js"].rowId, "seriesDefs": __m["src/drishti_chart-kinds.js"].seriesDefs, "annotationMarks": __m["src/drishti_chart-kinds.js"].annotationMarks, "buildSeriesChart": __m["src/drishti_chart-kinds.js"].buildSeriesChart, "buildScatter": __m["src/drishti_chart-kinds.js"].buildScatter, "buildHistogram": __m["src/drishti_chart-kinds.js"].buildHistogram, "buildWaterfall": __m["src/drishti_chart-kinds.js"].buildWaterfall, "buildBoxplot": __m["src/drishti_chart-kinds.js"].buildBoxplot, "buildHeatmap": __m["src/drishti_chart-kinds.js"].buildHeatmap, "buildCandlestick": __m["src/drishti_chart-kinds.js"].buildCandlestick, "buildLayers": __m["src/drishti_chart-kinds.js"].buildLayers, "registerAxisKinds": __m["src/drishti_chart-kinds.js"].registerAxisKinds, "buildPie": __m["src/drishti_chart-kinds2.js"].buildPie, "buildGauge": __m["src/drishti_chart-kinds2.js"].buildGauge, "buildTreemap": __m["src/drishti_chart-kinds2.js"].buildTreemap, "buildSankey": __m["src/drishti_chart-kinds2.js"].buildSankey, "registerOtherKinds": __m["src/drishti_chart-kinds2.js"].registerOtherKinds, "equalEarth": __m["src/drishti_chart-geo.js"].equalEarth, "albers": __m["src/drishti_chart-geo.js"].albers, "plateCarree": __m["src/drishti_chart-geo.js"].plateCarree, "projectGeometry": __m["src/drishti_chart-geo.js"].projectGeometry, "bounds": __m["src/drishti_chart-geo.js"].bounds, "coreExtent": __m["src/drishti_chart-geo.js"].coreExtent, "countryProjection": __m["src/drishti_chart-geo.js"].countryProjection, "US_INSETS": __m["src/drishti_chart-geo.js"].US_INSETS, "prepareRegions": __m["src/drishti_chart-geo.js"].prepareRegions, "prepareWorld": __m["src/drishti_chart-geo.js"].prepareWorld, "findPlace": __m["src/drishti_chart-geo.js"].findPlace, "createGeoLoader": __m["src/drishti_chart-geo.js"].createGeoLoader, "holdAntimeridian": __m["src/drishti_chart-geo.js"].holdAntimeridian, "fitView": __m["src/drishti_chart-geo.js"].fitView, "mapMetrics": __m["src/drishti_chart-map.js"].mapMetrics, "placeValues": __m["src/drishti_chart-map.js"].placeValues, "mapScale": __m["src/drishti_chart-map.js"].mapScale, "ranking": __m["src/drishti_chart-map.js"].ranking, "buildMap": __m["src/drishti_chart-map.js"].buildMap, "registerMapKind": __m["src/drishti_chart-map.js"].registerMapKind, "colourTone": __m["src/drishti_chart-vega.js"].colourTone, "d3Format": __m["src/drishti_chart-vega.js"].d3Format, "fromVegaLite": __m["src/drishti_chart-vega.js"].fromVegaLite, "valueText": __m["src/drishti_chart-parts.js"].valueText, "tooltipElement": __m["src/drishti_chart-parts.js"].tooltipElement, "dataTable": __m["src/drishti_chart-parts.js"].dataTable, "legendElement": __m["src/drishti_chart-parts.js"].legendElement, "markSelection": __m["src/drishti_chart-parts.js"].markSelection, "addZoom": __m["src/drishti_chart-parts.js"].addZoom, "dragBrush": __m["src/drishti_chart-parts.js"].dragBrush, "svgOf": __m["src/drishti_chart-parts.js"].svgOf, "MAP_MODES": __m["src/drishti_map-view.js"].MAP_MODES, "geoLoader": __m["src/drishti_map-view.js"].geoLoader, "MapView": __m["src/drishti_map-view.js"].MapView, "Studio": __m["src/drishti_chart-studio.js"].Studio, "CHART_EVENTS": __m["src/drishti_chart-view.js"].CHART_EVENTS, "CHART_MODES": __m["src/drishti_chart-view.js"].CHART_MODES, "SELECTION_EVENT": __m["src/drishti_chart-view.js"].SELECTION_EVENT, "Chart": __m["src/drishti_chart-view.js"].Chart, "ChartIO": __m["src/drishti_chart-io.js"].ChartIO, "linkGrid": __m["src/drishti_chart-link.js"].linkGrid, "publishSelection": __m["src/drishti_chart-link.js"].publishSelection, "PANEL_KINDS": __m["src/drishti_chart-panels.js"].PANEL_KINDS, "escapeTip": __m["src/drishti_chart-panels.js"].escapeTip, "panelCompact": __m["src/drishti_chart-panels.js"].panelCompact, "panelLineCompact": __m["src/drishti_chart-panels.js"].panelLineCompact, "panelTokens": __m["src/drishti_chart-panels.js"].panelTokens, "labelFit": __m["src/drishti_chart-panels.js"].labelFit, "panelOption": __m["src/drishti_chart-panels.js"].panelOption, "drawMap": __m["src/drishti_chart-panel-draw.js"].drawMap, "PanelCharts": __m["src/drishti_chart-panel-draw.js"].PanelCharts, "CHART_ELEMENT": __m["src/drishti_chart-element.js"].CHART_ELEMENT, "defineChartElement": __m["src/drishti_chart-element.js"].defineChartElement };
   })();
   return Object.freeze(Object.assign({ library: "drishti-chart", version: "0.1.0" }, __m["src/drishti_index.js"]));
 });

@@ -1858,6 +1858,8 @@ A pivot of rows the page holds, answered in the server's shape.
 
 Returns `Object} {measures, rowDimensions, columnDimensions, rows, columns, cells, pending, computedBy: 'browser', notes`.
 
+### drishti_pivot-answer.js
+
 #### `pivotApplyUpdates(answer, updates)`
 
 Changes a local pivot's figures for rows that changed (pivotLocal's answer, in place): each changed row's old values out of every cell it is in, its new ones in, by difference: exact for sums, counts and averages. The other cases (a row moved to another member, a min or max, top N, value filters) answer false: compute the pivot again. Non-additive measures are untouched: ask the server again.
@@ -9556,56 +9558,6 @@ Hides or shows a series (a legend entry).
 
 Returns `void`.
 
-##### `Chart.export(what)`
-
-Exports the chart: a PNG at twice the pixels, an SVG drawn off screen, the data as CSV, or the spec (copied, and handed back).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `what` | `('png'\|'svg'\|'csv'\|'spec')` |  |
-
-Returns `string`: the content (a data URL for PNG).
-
-##### `Chart.apply(tx)`
-
-Applies a transaction by row id (the spec's id field): rows added, updated (merged) and removed; drawn again, throttled.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `tx` | `{add: Object[], update: Object[], remove: Array&lt;(string\|Object)&gt;}` |  |
-
-Returns `{added: number, updated: number, removed: number}`.
-
-##### `Chart.append(rows)`
-
-Appends rows (a feed's new points), drawn again throttled; the spec's live.keep caps how many stay.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `rows` | `Object[]` |  |
-
-Returns `void`.
-
-##### `Chart.replace(rows)`
-
-Replaces every row.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `rows` | `Object[]` |  |
-
-Returns `void`.
-
-##### `Chart.pointAt(index)`
-
-Shows the crosshair and the tooltip at a row (a page's selected row followed by the chart); it comes back there after a resize.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `index` | `number` | the row's index in the chart's rows (the category's, for one series by category) |
-
-Returns `void`.
-
 ##### `Chart.setMode(mode)`
 
 Switches the mode: card (g2 A) or studio (g2 B).
@@ -9639,6 +9591,62 @@ Returns `void`.
 ##### `Chart.destroy()`
 
 Stops the chart: the engine, the observers, the link.
+
+Returns `void`.
+
+### drishti_chart-io.js
+
+#### class `ChartIO`
+
+A chart's export and live data; every member works on Chart's own fields.
+
+##### `ChartIO.export(what)`
+
+Exports the chart: a PNG at twice the pixels, an SVG drawn off screen, the data as CSV, or the spec (copied, and handed back).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `what` | `('png'\|'svg'\|'csv'\|'spec')` |  |
+
+Returns `string`: the content (a data URL for PNG).
+
+##### `ChartIO.apply(tx)`
+
+Applies a transaction by row id (the spec's id field): rows added, updated (merged) and removed; drawn again, throttled.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `tx` | `{add: Object[], update: Object[], remove: Array&lt;(string\|Object)&gt;}` |  |
+
+Returns `{added: number, updated: number, removed: number}`.
+
+##### `ChartIO.append(rows)`
+
+Appends rows (a feed's new points), drawn again throttled; the spec's live.keep caps how many stay.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `Object[]` |  |
+
+Returns `void`.
+
+##### `ChartIO.replace(rows)`
+
+Replaces every row.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `Object[]` |  |
+
+Returns `void`.
+
+##### `ChartIO.pointAt(index)`
+
+Shows the crosshair and the tooltip at a row (a page's selected row followed by the chart); it comes back there after a resize.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `index` | `number` | the row's index in the chart's rows (the category's, for one series by category) |
 
 Returns `void`.
 

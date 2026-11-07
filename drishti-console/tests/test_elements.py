@@ -55,3 +55,13 @@ def test_every_file_of_ours_is_prefixed_and_every_library_is_in_the_manifest():
         assert (ELEMENTS / name / spec["entry"]).is_file()
         for css in spec.get("css", []):
             assert (CONSOLE / "web" / "static" / css).is_file(), f"{name} needs {css}"
+
+
+#: The size of one Elements module (ELEMENTS.md section 3): a module over it is split by what it does, never trimmed of its comments.
+MODULE_LINES = 530
+
+
+def test_every_elements_module_stays_under_the_line_cap():
+    over = [f"{p.relative_to(ELEMENTS)}: {n} lines" for p in sorted(ELEMENTS.glob("*/src/*.js"))
+            if (n := len(p.read_text(encoding="utf-8").splitlines())) > MODULE_LINES]
+    assert not over, f"Elements modules over {MODULE_LINES} lines (split them by what they do): {over}"
