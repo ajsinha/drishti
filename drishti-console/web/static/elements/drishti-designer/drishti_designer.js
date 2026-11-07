@@ -1629,7 +1629,7 @@
         this.layoutSel.addEventListener('change', () => this.setLayout(this.layoutSel.value, true));
         head.appendChild(this.layoutSel);
         this.el.append(head, this.cmdBar, this.msg, grid, this.fkeys, this.statusBar, this.dlg);
-        this.el.addEventListener('keydown', (e) => this.onKey(e));
+        this.doc.addEventListener('keydown', (e) => { if (this.el.contains(e.target) || e.target === this.doc.body) { this.onKey(e); } });      // the focus may have left with a hidden pane
         this.previewOn = true;
         this.setLayout(o.layout);
         this.yamlOpen = true;

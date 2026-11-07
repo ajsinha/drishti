@@ -270,7 +270,7 @@ def test_new_table_steps_land_in_the_editor_and_both_sides_follow_each_other(pg)
     fill_yaml(pg, text + "columns: [\n")
     wait(pg, "/not valid/.test(document.querySelector('[data-yaml-state]').textContent)")
     assert pg.locator("[data-yaml] .di-lint-sign.di-lint-error").count() >= 1
-    pg.click("[data-goto-line] >> nth=0")
+    pg.click("[data-yaml] .di-problem button >> nth=0")                                   # a problem leads to its line (the code editor's list)
     pg.click("[data-mode=visual]")
     assert "waits until the YAML reads" in pg.inner_text("[data-msg]")
     fill_yaml(pg, text)
