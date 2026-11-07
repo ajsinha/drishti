@@ -297,6 +297,17 @@
 
 - Decks refreshed for 2.9.11–2.9.11.c
 
+- **Decks refreshed for 2.9.11.d** (docs/publications; chapters, no release numbers, pills only on what is not built): a new slide
+  *One table layer* (BI on tables and models in Rachana, Build › Tables & models with live YAML, Pivot → Report, the Notebook, one
+  Python runtime, resizable panels) in the Design-and-Evidence deck's Analyse chapter; a new slide *A lake of your own* (every lake in
+  its own folder, the demo lake's one-time move, the empty lakes shipped, `lake:` in `.ready`, the no-connector warning, demo and real
+  never mixed, undo in the load's lake) in the Data in chapters of the VaR Engine and Design-and-Evidence decks; the AWS deck's lake
+  file and load rules slide with a lake of its own and `dataload undo`, the demo lake's paths under `data/delta/demo`; the VaR deck's
+  scenario window as shipped (250); the BI model architecture in tables; *Export data* for the Data view; the under-construction
+  registry with the P&L explain waterfall and the CCR cube; the roadmap with the BI foundation and a lake of your own built and the
+  next steps in the agreed order (JavaScript libraries, domain modules, one Build home, docs, trust and controls, memory and speed,
+  counterparty engines and stress, collateral and margin, CVA, hardening).
+
 ### Tests and the drill
 
 - **The browser-test harness ([TEST_HARNESS.md](docs/architecture/TEST_HARNESS.md), ARCHITECTURE.md section 22, BENCHMARK.md
