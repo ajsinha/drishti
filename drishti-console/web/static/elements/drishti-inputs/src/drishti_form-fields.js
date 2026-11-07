@@ -203,7 +203,7 @@ export function drawField(form, f) {
       inp.value = show(v);
       inp.addEventListener(fs.lazy ? 'change' : 'input', () => {
         const r = parseField(fs, inp.value, f.label);
-        part.parseError = r.error;
+        part.parseError = r.error ? (fs.parseMessage || r.error) : null;
         set(r.error ? (numeric ? NaN : undefined) : r.value);
       });
       inp.addEventListener('blur', () => { if (!part.parseError && numeric) { inp.value = show(getPath(form.values, f.path)); } touch(); });

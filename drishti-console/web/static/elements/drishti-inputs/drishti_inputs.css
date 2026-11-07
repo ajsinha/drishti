@@ -219,6 +219,11 @@
 .di-upgraded { display: inline-block; vertical-align: middle; min-width: 11rem; }
 .di-upgraded[hidden] { display: none; }
 .di-upgraded-checks { display: block; max-width: 24rem; width: 100%; }
+/* a note that does not stop a submit (a warning), where a problem would be */
+.di-msg.di-note { color: var(--d-ink); }
+.di-msg.di-note::before { content: "⚠ "; color: var(--d-warn); }
+.di-warned .di-field, .di-warned .di-control { border-color: var(--d-warn); }
+
 /* times, dates with times, a money amount's currency, rows of checkboxes, a live form, steps */
 .di-time-pop .di-listbox { max-height: 16rem; overflow: auto; min-width: 7rem; }
 .di-time .di-field, .di-time .di-control { min-width: 6.5rem; }

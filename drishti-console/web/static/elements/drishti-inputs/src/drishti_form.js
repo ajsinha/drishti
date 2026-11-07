@@ -80,6 +80,7 @@ export class Form extends InputBase {
     this.touched = new Set();
     this.errors = {};
     this.server = {};
+    this.notes = {};
     this.parts = new Map();
     this.state = this.o.readOnly ? 'readonly' : 'editing';
     this.id = uid('form');
@@ -256,8 +257,10 @@ export class Form extends InputBase {
       if (p.ccy) { p.ccy.textContent = currencyOf(p.f.field, this.values, path) || '—'; }
       const why = shown && (this.touched.has(path) || this.tried) ? this.errors[path] : null;
       const msg = p.wrap.querySelector('#' + CSS_ESCAPE(p.id) + '-msg');
-      if (msg) { msg.textContent = why || ''; }
+      const note = shown && !why ? this.notes[path] : null;
+      if (msg) { msg.textContent = why || note || ''; msg.classList.toggle('di-note', !!note); }
       p.wrap.classList.toggle('di-invalid', !!why);
+      p.wrap.classList.toggle('di-warned', !!note);
       const target = p.input || (p.widget && p.widget.input);
       if (target) { if (why) { target.setAttribute('aria-invalid', 'true'); } else { target.removeAttribute('aria-invalid'); } }
     });
@@ -396,7 +399,14 @@ export class Form extends InputBase {
    * @param {*} value
    * @returns {void}
    */
-  setField(path, value) { this.values = setPath(this.values, path, value); this.narrow(path); this.render(); }   // the focus stays where it was
+  setField(path, value) {
+    this.values = setPath(this.values, path, value);
+    const p = this.parts.get(path), active = this.doc.activeElement;
+    if (!p || (active && p.wrap.contains(active))) { this.narrow(path).forEach((q) => this.redrawField(q)); this.refresh(); return; }   // a field being typed in keeps its text
+    this.redrawField(path);
+    this.narrow(path).forEach((q) => this.redrawField(q));
+    this.refresh();
+  }
 
   /**
    * A field's value.
@@ -433,6 +443,20 @@ export class Form extends InputBase {
    * @returns {void}
    */
   setErrors(errors) { this.server = Object.assign({}, errors); this.tried = true; this.refresh(); }
+
+  /**
+   * Notes by path that do not stop a submit (a warning: "above the desk limit"), shown where a problem would be when there is none.
+   * @param {Object<string, string>} notes
+   * @returns {void}
+   */
+  setNotes(notes) { this.notes = Object.assign({}, notes); this.refresh(); }
+
+  /**
+   * Problems from elsewhere shown at once, without marking every field tried (a live check as people type).
+   * @param {Object<string, string>} errors
+   * @returns {void}
+   */
+  showErrors(errors) { this.server = Object.assign({}, errors); Object.keys(errors).forEach((p) => this.touched.add(p)); this.refresh(); }
 }
 
 function CSS_ESCAPE(s) { return String(s).replace(/([^\w-])/g, '\\$1'); }

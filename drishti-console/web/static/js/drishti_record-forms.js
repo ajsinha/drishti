@@ -73,9 +73,6 @@
     return String(a) === String(b);
   }
   function valueOf(f, n) { return f.type === 'bool' ? n.checked : f.type === 'entity' ? (n.getAttribute('data-value') || '') : n.value; }
-  function paintCcy(st, root, vals) {
-    root.querySelectorAll('[data-ccy-of]').forEach(function (t) { var f = fieldOf(st, t.getAttribute('data-ccy-of')); if (f) { t.textContent = ccy(f, vals) || '—'; } });
-  }
   function api(method, path, body) {
     return fetch('/api/drafts' + (path || ''), { method: method, credentials: 'same-origin',
       headers: body ? { 'Content-Type': 'application/json', Accept: 'application/json' } : { Accept: 'application/json' }, body: body ? JSON.stringify(body) : undefined })
@@ -202,53 +199,61 @@
     return null;
   }
 
-  function fieldBox(st, f, value, isNew, onChange) {
-    var box = el('div', 'fm-field'); box.setAttribute('data-fm-field', f.id);
-    var lab = el('label', 'fm-label', f.label);
-    if (f.required && editable(f, isNew)) { lab.appendChild(el('span', 'fm-req', ' *')); }
-    box.appendChild(lab);
-    if (f.masked) {
-      box.classList.add('fm-masked');
-      lab.appendChild(el('span', 'fm-why', ' (Hidden for you)'));
-      box.appendChild(el('div', 'fm-ro fm-hidden', 'Hidden for you'));
-      return box;
+  /* The fields of the form beside the table or of a step of the drawer: drishti-inputs' Form (live), each record field as a field of its
+     schema: text, a number and money (shown grouped, the currency beside it: fixed or what another field holds), a date, a date and a
+     time (its zone beside it), a choice or a look-up, yes or no, long text, and an entity (the combobox above); a masked field says
+     Hidden for you, a locked or read-only one shows its value and why. The rules and hints are the form expressions' (drishti_form-expr.js),
+     so a message here is the server's own: errors stop a save, warnings are notes. Each control carries data-field. */
+  function schemaOf(st, f, isNew, masked) {
+    var label = f.label + (f.required && !masked && editable(f, isNew) ? ' *' : '');
+    var hook = { 'data-field': f.id }, base = { title: label, hook: hook, placeholder: f.placeholder || undefined };
+    if (masked) { return Object.assign(base, { type: 'string', title: f.label + ' (Hidden for you)', widget: 'fm-show', 'x-text': 'Hidden for you', 'x-hidden': true }); }
+    if (!editable(f, isNew)) { return Object.assign(base, { type: 'string', title: f.label + ' (' + why(f) + ')', widget: 'fm-show', 'x-field': f }); }
+    switch (f.type) {
+      case 'enum': case 'lookup':
+        return Object.assign(base, { type: 'string', widget: 'select', emptyLabel: f.type === 'lookup' ? 'Choose…' : '', enum: (f.options || []).map(function (o) { return String(o.value); }),
+          enumLabels: (f.options || []).map(function (o) { return f.type === 'lookup' && o.label !== o.value ? o.value + ' · ' + o.label : String(o.label); }) });
+      case 'textarea': return Object.assign(base, { type: 'string', format: 'textarea' });
+      case 'bool': return Object.assign(base, { type: 'boolean' });
+      case 'money': return Object.assign(base, { type: 'money', currency: f.currency || undefined, parseMessage: f.label + ' is an amount (1,000,000, 1.5m or 250k)' });
+      case 'number': return Object.assign(base, { type: 'number', parseMessage: f.label + ' is a number', hook: Object.assign(hook, { inputmode: 'decimal' }) });
+      case 'date': return Object.assign(base, { type: 'date', placeholder: f.placeholder || '2026-11-06, T-1' });
+      case 'datetime': return Object.assign(base, { type: 'datetime', timeZone: f.tz || 'UTC' });
+      case 'entity': return Object.assign(base, { type: 'string', widget: 'fm-entity', 'x-field': f });
+      default: return Object.assign(base, { type: 'string' });
     }
-    if (!editable(f, isNew)) {
-      box.classList.add('fm-locked');
-      lab.appendChild(el('span', 'fm-why', ' (' + why(f) + ')'));
-      var ro = el('div', 'fm-ro mono', fmt(f, value, st.vals) || '—'); ro.setAttribute('aria-readonly', 'true'); ro.setAttribute('data-field', f.id);
-      box.appendChild(ro);
-      return box;
-    }
-    var n = input(st, f, value, onChange);
-    lab.htmlFor = n.id;
-    box.appendChild(n.fmWrap || n);
-    var pk = picker(f, n);
-    if (pk) { lab.htmlFor = pk.input.id; }
-    var msg = el('div', 'fm-msgs'); msg.id = n.id + '-msg'; msg.setAttribute('data-msgs', f.id);
-    n.setAttribute('aria-describedby', ((n.getAttribute('aria-describedby') || '') + ' ' + msg.id).trim());
-    box.appendChild(msg);
-    return box;
   }
-
-  function showIssues(root, issues, generalBox) {
-    root.querySelectorAll('[data-msgs]').forEach(function (m) { m.textContent = ''; });
-    root.querySelectorAll('.fm-field').forEach(function (b) { b.classList.remove('fm-bad', 'fm-warned'); var i = b.querySelector('.fm-in'); if (i) { i.removeAttribute('aria-invalid'); } });
-    if (generalBox) { generalBox.textContent = ''; }
-    issues.forEach(function (is) {
-      var m = is.field ? root.querySelector('[data-msgs="' + is.field + '"]') : null;
-      var target = m || generalBox;
-      if (!target) { return; }
-      var p = el('p', 'fm-msg fm-' + (is.severity === 'warn' ? 'warn' : 'error'));
-      p.appendChild(el('i', 'bi ' + (is.severity === 'warn' ? 'bi-exclamation-triangle' : 'bi-x-octagon')));
-      p.appendChild(document.createTextNode(' ' + is.message));
-      target.appendChild(p);
-      var box = m && m.closest('.fm-field');
-      if (box) {
-        box.classList.add(is.severity === 'warn' ? 'fm-warned' : 'fm-bad');
-        if (is.severity !== 'warn') { var i = box.querySelector('.fm-in'); if (i) { i.setAttribute('aria-invalid', 'true'); } }
-      }
+  function fieldsForm(st, fields, values, isNew, masked, onChange) {
+    var I = window.Drishti.elements.inputs, props = {}, v = {}, host = el('div', 'fm-fields');
+    fields.forEach(function (f) {
+      var m = !!f.masked || (masked || []).indexOf(f.id) >= 0;
+      props[f.id] = schemaOf(st, f, isNew, m);
+      if (!X.empty(values[f.id])) { v[f.id] = f.type === 'bool' ? values[f.id] === true || values[f.id] === 'true' : props[f.id].type === 'money' || props[f.id].type === 'number' ? X.typed(f, values[f.id]) : f.type === 'datetime' ? String(values[f.id]).slice(0, 16) : values[f.id]; }
     });
+    var form = new I.Form(host, { live: true, label: st.form.title || 'Edit', schema: { type: 'object', properties: props }, value: v, widgets: {
+      'fm-show': function (w) {                                          // a value that may not be changed here: shown, with why in the label
+        var ro = el('div', 'fm-ro mono' + (w.field['x-hidden'] ? ' fm-hidden' : ''), w.field['x-hidden'] ? w.field['x-text'] : fmt(w.field['x-field'], values[w.field['x-field'].id], st.vals) || '—');
+        ro.setAttribute('aria-readonly', 'true'); ro.id = w.id;
+        return { el: ro };
+      },
+      'fm-entity': function (w) { var n = entityInput(st, w.field['x-field'], w.value, function (x) { w.set(x === '' ? undefined : x); w.touch(); }, w.id); return { el: n.fmWrap, input: n }; }
+    } });
+    form.on('change', function (e) { onChange(e.path, e.value === undefined ? '' : e.value); });
+    return { el: host, form: form,
+      /** the expressions' problems: errors on their fields (and the rest in the general box), warnings as notes */
+      show: function (issues, general) {
+        var errs = {}, notes = {};
+        if (general) { general.textContent = ''; }
+        issues.forEach(function (is) {
+          if (is.field && props[is.field]) { if (is.severity === 'warn') { notes[is.field] = notes[is.field] || is.message; } else { errs[is.field] = errs[is.field] || is.message; } return; }
+          if (general) { var p = el('p', 'fm-msg fm-' + (is.severity === 'warn' ? 'warn' : 'error')); p.appendChild(document.createTextNode(is.message)); general.appendChild(p); }
+        });
+        form.setNotes(notes);
+        form.showErrors(errs);
+      },
+      focusBad: function () { var bad = Object.keys(form.errors || {})[0]; if (bad) { form.focusField(bad); } },
+      set: function (fid, x) { form.setField(fid, x); }
+    };
   }
 
   function badge(text, kind) { var b = el('span', 'fm-badge fm-badge-' + (kind || 'draft'), text); b.setAttribute('data-fm-badge', ''); return b; }
@@ -399,22 +404,19 @@
     head.appendChild(btn('raw-x fm-x', '×', function () { if (!s.dirty || confirmLeave()) { s.dirty = false; closeBeside(st); } })).setAttribute('aria-label', 'Close the form');
     aside.appendChild(head);
     var body = el('div', 'fm-body'), general = el('div', 'fm-general');
-    st.form.fields.forEach(function (f) {
-      var masked = f.masked || (base.masked || []).indexOf(f.id) >= 0;
-      var ff = masked ? Object.assign({}, f, { masked: true }) : f;
-      body.appendChild(fieldBox(st, ff, values[f.id], false, function (v) { values[f.id] = v; s.dirty = true; s.saved = false; refresh(); }));
-    });
+    var ff = fieldsForm(st, st.form.fields, values, false, base.masked, function (fid, v) { values[fid] = v; s.dirty = true; s.saved = false; refresh(); });
+    body.appendChild(ff.el);
     aside.appendChild(body); aside.appendChild(general);
     var foot = el('footer', 'fm-foot');
     function saveDraft() {
       var issues = issuesOf();
-      if (issues.some(function (i) { return i.severity !== 'warn'; })) { showIssues(aside, issues, general); focusBad(aside); say('Fix the marked fields first'); return null; }
+      if (issues.some(function (i) { return i.severity !== 'warn'; })) { ff.show(issues, general); ff.focusBad(); say('Fix the marked fields first'); return null; }
       var changed = {};
       st.form.fields.forEach(function (f) { if (editable(f, false) && (base.masked || []).indexOf(f.id) < 0 && !same(f, values[f.id], was[f.id])) { changed[f.id] = typed(f, values[f.id]); } });
       return save(st, 'row:' + key, payload(st, 'edit', [{ record: key, values: changed, was: was }])).then(function (d) {
         s.dirty = false; s.saved = true; s.at = clock(); paint(d.warnings || []); say('Draft saved');
         return d;
-      }).catch(function (e) { showIssues(aside, (e.issues || []).length ? e.issues : [{ field: null, message: e.message, severity: 'error' }], general); return null; });
+      }).catch(function (e) { ff.show((e.issues || []).length ? e.issues : [{ field: null, message: e.message, severity: 'error' }], general); return null; });
     }
     var saveB = btn('fm-btn fm-primary fm-save', 'Save draft', function () { saveDraft(); });
     foot.appendChild(saveB);
@@ -434,15 +436,14 @@
     function paint(extra) {
       bdg.textContent = '';
       if (s.dirty) { bdg.appendChild(badge('Draft · not saved')); } else if (s.saved) { bdg.appendChild(badge('Draft saved' + (s.at ? ' ' + s.at : ''), 'saved')); }
-      if (extra && extra.length) { showIssues(aside, issuesOf(), general); }
+      if (extra && extra.length) { ff.show(issuesOf(), general); }
     }
-    function refresh() { showIssues(aside, issuesOf(), general); paintCcy(st, aside, values); paint(); }
+    function refresh() { ff.show(issuesOf(), general); paint(); }
     s.paint = paint;
     refresh();
-    var first = aside.querySelector('.fm-in, .fm-check');
+    var first = aside.querySelector('.fm-fields input:not([type=hidden]), .fm-fields select, .fm-fields textarea');
     if (first) { first.focus(); }
   }
-  function focusBad(root) { var b = root.querySelector('.fm-bad .fm-in'); if (b) { b.focus(); } }
   function closeBeside(st) {
     var a = st.sec.querySelector('[data-fm-side]');
     if (a) { a.remove(); }
@@ -668,17 +669,11 @@
       for (var j = 0; j < d.at; j++) { stepFields(j).forEach(function (f) { if (!X.empty(values[f.id])) { before.push(f.label + ' ' + fmt(f, values[f.id], values)); } }); }
       if (before.length) { body.appendChild(el('p', 'fm-sofar', 'So far: ' + before.join(' · ') + ' · in ' + page.id + '.')); }
       var mine = stepFields(d.at);
-      mine.forEach(function (f) {
-        var box = fieldBox(st, f, values[f.id], true, function (v) {
-          if (auto[f.id]) { delete auto[f.id]; var note = box.querySelector('[data-fm-auto]'); if (note) { note.remove(); } }
-          values[f.id] = v; d.dirty = true; live();
-        });
-        if (auto[f.id] && editable(f, true)) {
-          var note = el('p', 'fm-auto', 'Worked out: ' + auto[f.id] + ' · type to change it'); note.setAttribute('data-fm-auto', f.id);
-          box.appendChild(note);
-        }
-        body.appendChild(box);
+      d.ff = fieldsForm(st, mine, values, true, [], function (fid, v) {
+        if (auto[fid]) { delete auto[fid]; }
+        values[fid] = v; d.dirty = true; live();
       });
+      body.appendChild(d.ff.el);
       if (lastStep()) {
         var sum = el('dl', 'fm-summary');
         fields.forEach(function (f) { if (stepOf(f) !== steps[d.at].id) { sum.appendChild(el('dt', '', f.label)); sum.appendChild(el('dd', 'mono', fmt(f, values[f.id], values) || '—')); } });
@@ -691,25 +686,25 @@
       if (!lastStep()) {
         foot.appendChild(btn('fm-btn fm-primary fm-next', 'Next: ' + (steps[d.at + 1].label || steps[d.at + 1].id).toLowerCase(), function () {
           var is = issues(d.at);
-          if (is.some(function (x) { return x.severity !== 'warn'; })) { showIssues(body, is, d.general); focusBad(body); say('Fix the marked fields first'); return; }
+          if (is.some(function (x) { return x.severity !== 'warn'; })) { d.ff.show(is, d.general); d.ff.focusBad(); say('Fix the marked fields first'); return; }
           d.done[d.at] = true; d.at++; render();
         }));
       }
       function saveNew() {
         var is = issues(d.at);
-        if (is.some(function (x) { return x.severity !== 'warn'; })) { showIssues(body, is, d.general); focusBad(body); say('Fix the marked fields first'); return null; }
+        if (is.some(function (x) { return x.severity !== 'warn'; })) { d.ff.show(is, d.general); d.ff.focusBad(); say('Fix the marked fields first'); return null; }
         var vals = {};
         fields.forEach(function (f) { if (!X.empty(values[f.id])) { vals[f.id] = X.typed(f, values[f.id]); } });
         return save(st, 'new', payload(st, 'new', [{ record: null, values: vals }], { step: steps[d.at].id === '_all' ? '' : steps[d.at].id })).then(function (r) {
           d.dirty = false; d.at2 = clock(); live(); say('Draft saved');
           return r;
-        }).catch(function (e) { showIssues(body, (e.issues || []).length ? e.issues : [{ field: null, message: e.message, severity: 'error' }], d.general); return null; });
+        }).catch(function (e) { d.ff.show((e.issues || []).length ? e.issues : [{ field: null, message: e.message, severity: 'error' }], d.general); return null; });
       }
       foot.appendChild(btn('fm-btn' + (lastStep() ? ' fm-primary' : '') + ' fm-save', 'Save as draft', function () { saveNew(); }));
       if (lastStep()) { submitButton(st, true, saveNew, foot, function () { closeDrawer(st); }); }
       foot.appendChild(sendNote(st, true));
       live();
-      var first = body.querySelector('.fm-in, .fm-check');
+      var first = body.querySelector('.fm-fields input:not([type=hidden]), .fm-fields select, .fm-fields textarea');
       if (first) { first.focus(); }
     }
     function defaults() {
@@ -719,15 +714,19 @@
         var f = fieldOf(st, fid), r = X.evaluate(auto[fid], tv);
         values[fid] = r === null || r === undefined || (typeof r === 'number' && !isFinite(r)) ? '' : typeof r === 'number' ? Math.round(r * 1e6) / 1e6 : r;
         tv[fid] = X.typed(f, values[fid]);
-        var inp = body.querySelector('[data-field="' + fid + '"]');
-        if (inp && 'value' in inp && document.activeElement !== inp) { inp.value = X.empty(values[fid]) ? '' : numeric(f) ? fmt(f, values[fid]) : String(values[fid]); }
+        if (d.ff && d.ff.form.parts.has(fid)) { d.ff.set(fid, X.empty(values[fid]) ? undefined : numeric(f) ? X.typed(f, values[fid]) : values[fid]); }
+      });
+      if (!d.ff) { return; }
+      d.ff.form.parts.forEach(function (p, fid) {                  // a default worked out says so under its field until people type over it
+        var note = p.wrap.querySelector('[data-fm-auto]');
+        if (auto[fid] && !note) { note = el('p', 'fm-auto', 'Worked out: ' + auto[fid] + ' · type to change it'); note.setAttribute('data-fm-auto', fid); p.wrap.appendChild(note); }
+        else if (!auto[fid] && note) { note.remove(); }
       });
     }
     function live() {
       defaults();
-      paintCcy(st, body, values);
       var is = issues(d.at).filter(function (x) { return x.severity === 'warn' || touched(x.field); });
-      showIssues(body, is, d.general);
+      d.ff.show(is, d.general);
       var h = body.querySelector('[data-fm-hints]');
       h.textContent = '';
       var vals = {};

@@ -2335,7 +2335,7 @@
           inp.value = show(v);
           inp.addEventListener(fs.lazy ? 'change' : 'input', () => {
             const r = parseField(fs, inp.value, f.label);
-            part.parseError = r.error;
+            part.parseError = r.error ? (fs.parseMessage || r.error) : null;
             set(r.error ? (numeric ? NaN : undefined) : r.value);
           });
           inp.addEventListener('blur', () => { if (!part.parseError && numeric) { inp.value = show(getPath(form.values, f.path)); } touch(); });
@@ -2409,6 +2409,7 @@
         this.touched = new Set();
         this.errors = {};
         this.server = {};
+        this.notes = {};
         this.parts = new Map();
         this.state = this.o.readOnly ? 'readonly' : 'editing';
         this.id = uid('form');
@@ -2535,8 +2536,10 @@
           if (p.ccy) { p.ccy.textContent = currencyOf(p.f.field, this.values, path) || '—'; }
           const why = shown && (this.touched.has(path) || this.tried) ? this.errors[path] : null;
           const msg = p.wrap.querySelector('#' + CSS_ESCAPE(p.id) + '-msg');
-          if (msg) { msg.textContent = why || ''; }
+          const note = shown && !why ? this.notes[path] : null;
+          if (msg) { msg.textContent = why || note || ''; msg.classList.toggle('di-note', !!note); }
           p.wrap.classList.toggle('di-invalid', !!why);
+          p.wrap.classList.toggle('di-warned', !!note);
           const target = p.input || (p.widget && p.widget.input);
           if (target) { if (why) { target.setAttribute('aria-invalid', 'true'); } else { target.removeAttribute('aria-invalid'); } }
         });
@@ -2636,13 +2639,22 @@
         this.say(decision === 'approved' ? 'Approved' + (note ? ': ' + note : '') : 'Rejected' + (note ? ': ' + note : '') + '; the values are back as they were', decision === 'approved' ? 'ok' : 'bad');
       }
       busy(on) { if (this.submitBtn) { this.submitBtn.disabled = on; } this.form.setAttribute('aria-busy', String(on)); }
-      setField(path, value) { this.values = setPath(this.values, path, value); this.narrow(path); this.render(); }   // the focus stays where it was
+      setField(path, value) {
+        this.values = setPath(this.values, path, value);
+        const p = this.parts.get(path), active = this.doc.activeElement;
+        if (!p || (active && p.wrap.contains(active))) { this.narrow(path).forEach((q) => this.redrawField(q)); this.refresh(); return; }   // a field being typed in keeps its text
+        this.redrawField(path);
+        this.narrow(path).forEach((q) => this.redrawField(q));
+        this.refresh();
+      }
       getField(path) { return getPath(this.values, path); }
       say(text, tone) { this.banner.hidden = !text; this.banner.textContent = text || ''; this.banner.className = 'di-form-banner di-tone-' + (tone || 'info'); announce(text); }
       getValue() { return visibleValue(this.schema, this.values); }
       setValue(v) { this.initial = JSON.parse(JSON.stringify(v || {})); this.values = JSON.parse(JSON.stringify(this.initial)); this.touched.clear(); this.tried = false; this.at = 0; this.render(); }
       reset() { this.values = JSON.parse(JSON.stringify(this.initial)); this.touched.clear(); this.tried = false; this.server = {}; this.at = 0; this.render(); this.emit('reset'); }
       setErrors(errors) { this.server = Object.assign({}, errors); this.tried = true; this.refresh(); }
+      setNotes(notes) { this.notes = Object.assign({}, notes); this.refresh(); }
+      showErrors(errors) { this.server = Object.assign({}, errors); Object.keys(errors).forEach((p) => this.touched.add(p)); this.refresh(); }
     }
     function CSS_ESCAPE(s) { return String(s).replace(/([^\w-])/g, '\\$1'); }
     return { "Form": Form };
