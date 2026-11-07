@@ -20,7 +20,6 @@
    number for the one Explain (data-explain, opened by the page's Explain). The host gives it how to read the answer (load), how to hear the
    server's ticks (live) and where a book opens (openBook). */
 import { h, formatCompact, formatNumber, formatPercent, announce } from '../../drishti-core/src/drishti_index.js';
-import { Grid } from '../../drishti-grid/src/drishti_index.js';
 
 /** The parts of the home, in the page's order. */
 export const TRADER_HOME_PARTS = Object.freeze(['headline', 'books', 'markets', 'changes', 'feed']);
@@ -74,8 +73,9 @@ function varRequest(scope) { return scope ? JSON.stringify({ kind: 'var', measur
 export class TraderHome {
   /**
    * @param {HTMLElement} host the element the home fills
-   * @param {{load: function(string, {fresh: boolean}): Promise<Object>, live: ?function({tick: function(Object): void, state: function(string): void}): function(): void,
-   *   openBook: ?function(string): void, since: ?string, density: ?string, onPainted: ?function(Object): void}} o load(since) answers the
+   * @param {{Grid: Function, load: function(string, {fresh: boolean}): Promise<Object>, live: ?function({tick: function(Object): void, state: function(string): void}): function(): void,
+   *   openBook: ?function(string): void, since: ?string, density: ?string, onPainted: ?function(Object): void}} o Grid is drishti-grid's
+   *   Grid class (the host loads drishti-grid, so drishti-risk needs only drishti-core and drishti-chart); load(since) answers the
    *   home (GET /api/home/trading/home?since=, fresh after a tick); live subscribes to the server's ticks and gives back how to stop; openBook opens a book
    */
   constructor(host, o) {
@@ -83,6 +83,7 @@ export class TraderHome {
     this.host = host;
     this.doc = host.ownerDocument;
     this.o = Object.assign({ since: 'morning', density: 'terminal' }, o);
+    if (typeof this.o.Grid !== 'function') { throw new Error('the trader home draws with drishti-grid: give its Grid class (options.Grid)'); }
     this.since = this.o.since === 'visit' ? 'visit' : 'morning';
     this.answer = null;
     this.asking = null;
@@ -126,13 +127,13 @@ export class TraderHome {
     this.host.appendChild(e('div', { cls: 'th-cols th-cols-low' }, [
       card('changes', 'What changed', e('div', {}, [e('div', { cls: 'th-sinces', attrs: { role: 'group', 'aria-label': 'Since when' } }, this.sinceBtns), this.changesBox])),
       card('feed', 'Live feed', this.feedList, liveTag())]));
-    this.books = new Grid(this.booksBox, {
-      columns: this.bookColumns(), rows: [], getRowId: (r) => r.book, layout: 'terminal', density: this.o.density, chrome: false, checkboxes: false,
+    this.books = new this.o.Grid(this.booksBox, {
+      columns: this.bookColumns(), rows: [], getRowId: (r) => r.book, layout: 'wells', density: this.o.density, chrome: false, checkboxes: false,
       rowSelection: 'none', clientAggregation: false, label: 'My books', decorateCell: (c) => this.decorateBook(c), live: { flashMs: 1500 } });
-    this.markets = new Grid(this.marketsBox, {
+    this.markets = new this.o.Grid(this.marketsBox, {
       columns: [{ field: 'label', header: 'Market', width: 170 }, { field: 'last', header: 'Last', width: 110 },
         { field: 'chg', header: 'Chg', width: 100 }],
-      rows: [], getRowId: (r) => r.id, layout: 'terminal', density: this.o.density, chrome: false, checkboxes: false, rowSelection: 'none',
+      rows: [], getRowId: (r) => r.id, layout: 'wells', density: this.o.density, chrome: false, checkboxes: false, rowSelection: 'none',
       clientAggregation: false, label: 'Markets I watch', decorateCell: (c) => this.decorateMarket(c), live: { flashMs: 1500 } });
     this.booksBox.addEventListener('keydown', (ev) => {              // Enter on a book's cell opens it, as a click on its name does
       if (ev.key !== 'Enter' || !this.o.openBook) { return; }

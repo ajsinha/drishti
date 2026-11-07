@@ -43,7 +43,7 @@
 .th-card { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: 10px 12px; min-width: 0; }
 .th-card h2 { font-size: 13px; margin: 0 0 8px; display: flex; gap: 8px; align-items: baseline; }
 .th-tick { font-size: 10.5px; color: var(--d-ok); font-weight: normal; }
-.th-grid { height: 190px; min-width: 0; }
+.th-grid { height: 190px; min-width: 0; max-width: 100%; overflow: hidden; position: relative; }
 .th-book { color: var(--d-link); text-decoration: none; }
 .th-book:hover { text-decoration: underline; }
 .th-fig[data-explain] { cursor: pointer; }

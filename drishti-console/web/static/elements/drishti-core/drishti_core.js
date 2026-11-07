@@ -1401,8 +1401,7 @@
           "global": "risk",
           "requires": [
             "drishti-core",
-            "drishti-chart",
-            "drishti-grid"
+            "drishti-chart"
           ],
           "css": [
             "elements/drishti-risk/drishti_risk.css"

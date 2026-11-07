@@ -104,6 +104,14 @@ def _cell(page, book, fig):
     return page.locator(f"[data-th-books-grid] .dg-row:has([data-th-book='{book}']) [data-th-fig='{fig}']")
 
 
+def _explained(backend, scope):
+    """The server's Explain was asked for this scope (the drawer's request may land after the drawer shows)."""
+    deadline = time.monotonic() + 10
+    while not any(e.get("scope") == scope for e in getattr(backend, "explained", [])) and time.monotonic() < deadline:
+        time.sleep(0.05)
+    assert any(e.get("scope") == scope for e in getattr(backend, "explained", [])), getattr(backend, "explained", None)
+
+
 def _reset(backend, store):
     from core import market_landing, trading_landing
     trading_landing.forget()
@@ -143,22 +151,25 @@ def test_the_home_shows_the_servers_numbers_and_every_button_works(browser, home
         page.click("[data-th-refresh]")
         page.wait_for_function(f"() => Number(document.querySelector('[data-trader-home]').getAttribute('data-th-painted')) > {painted}")
         # Since my last visit: the visit was kept after the first paint; set it to midday to see the filter
-        page.wait_for_function("() => true")
-        store.setdefault(_app.state.auth.default.user, {})["traderHomeVisit"] = "2026-09-30T12:00:00+00:00"
+        user = _app.state.auth.default.user
+        deadline = time.monotonic() + 10
+        while not store.get(user, {}).get("traderHomeVisit") and time.monotonic() < deadline:   # the page kept this visit after its first paint
+            time.sleep(0.05)
+        visit = store[user]["traderHomeVisit"]                                 # now: every trade of the day was before it (the filter: test_trader_home.py)
         page.click("[data-th-since=visit]")
         page.wait_for_function("() => document.querySelector('[data-th-since=visit]').getAttribute('aria-pressed') === 'true'")
         page.wait_for_function("() => document.querySelector('[data-th-counts]').textContent.includes('0 cancelled')")
-        assert "your visit at 2026-09-30 12:00" in _text(page, "[data-th-counts]")
+        assert "0 new · 0 amended" in _text(page, "[data-th-counts]") and "your visit at " + visit.replace("T", " ")[:16] in _text(page, "[data-th-counts]")
         page.click("[data-th-since=morning]")
         page.wait_for_function("() => document.querySelector('[data-th-counts]').textContent.includes('1 cancelled')")
         # a VaR figure opens the one Explain, with the book's scope; Why it moved opens it on its Why tab
         _cell(page, "BOOK-RATES-2", "var").click()
         page.locator(".dx-drawer").wait_for(state="visible")
-        assert any(e.get("scope") == "BOOK:BOOK-RATES-2" for e in backend.explained)
+        _explained(backend, "BOOK:BOOK-RATES-2")
         page.keyboard.press("Escape")
         page.click("[data-th-tile=var] [data-th-v]")
         page.wait_for_function("() => document.querySelector('.dx-drawer') && !document.querySelector('.dx-drawer').hidden")
-        assert any(e.get("scope") == "BOOK:BOOK-RATES-1 + BOOK:BOOK-RATES-2" for e in backend.explained)
+        _explained(backend, "BOOK:BOOK-RATES-1 + BOOK:BOOK-RATES-2")
         page.keyboard.press("Escape")
         page.click("[data-th-why]")
         page.wait_for_function("() => document.querySelector('[data-dx-tab=why]')?.getAttribute('aria-selected') === 'true'")

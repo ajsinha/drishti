@@ -203,6 +203,10 @@ class TradingBackend(FakeBackend):
                     "flags": ["proxy"] if body.get("method") == "addon" else []}
         raise BackendError(404, "DRS-1001", f"no exposure endpoint {path}")
 
+    async def patch_settings(self, body, ident=None):
+        """The person's settings (the trader home keeps the time of a visit): kept nowhere here."""
+        return dict(body)
+
     async def command_history(self, ident=None):
         return ["TRD MX-20000001", "ECON CAN", "VAR BANK", "BOOK BOOK-RATES-1", "TRD MX-20000001", "SCN SCN-2008", "CTRD CP-ALDERSHOT"]
 

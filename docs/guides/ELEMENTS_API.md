@@ -9945,7 +9945,7 @@ The options of a chart (the spec says what to draw; these say how it lives in it
 
 ## drishti-risk
 
-Version 0.2.0. Bundle `static/elements/drishti-risk/drishti_risk.js`, global `Drishti.elements.risk`; requires drishti-core, drishti-chart, drishti-grid.
+Version 0.2.0. Bundle `static/elements/drishti-risk/drishti_risk.js`, global `Drishti.elements.risk`; requires drishti-core, drishti-chart.
 
 ### drishti_risk-kinds.js
 
@@ -10110,7 +10110,7 @@ The trader home, drawn into an element.
 | Parameter | Type | Meaning |
 |---|---|---|
 | `host` | `HTMLElement` | the element the home fills |
-| `o` | `{load: function(string, {fresh: boolean}): Promise&lt;Object&gt;, live: ?function({tick: function(Object): void, state: function(string): void}): function(): void, openBook: ?function(string): void, since: ?string, density: ?string, onPainted: ?function(Object): void}` | load(since) answers the home (GET /api/home/trading/home?since=, fresh after a tick); live subscribes to the server's ticks and gives back how to stop; openBook opens a book |
+| `o` | `{Grid: Function, load: function(string, {fresh: boolean}): Promise&lt;Object&gt;, live: ?function({tick: function(Object): void, state: function(string): void}): function(): void, openBook: ?function(string): void, since: ?string, density: ?string, onPainted: ?function(Object): void}` | Grid is drishti-grid's Grid class (the host loads drishti-grid, so drishti-risk needs only drishti-core and drishti-chart); load(since) answers the home (GET /api/home/trading/home?since=, fresh after a tick); live subscribes to the server's ticks and gives back how to stop; openBook opens a book |
 
 ##### `TraderHome.start()`
 

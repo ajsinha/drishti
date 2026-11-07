@@ -656,8 +656,8 @@ library with its module: an unlicensed module's library is not served, its kinds
   card says "computed here". **0.2.0 (2.9.11.g) adds the trader home** (`TraderHome`, `drishti_trader-home.js`, its look in
   `drishti_risk.css`; [SHARED_SCREENS.md section 4](SHARED_SCREENS.md#4-the-trader-home)): headline tiles, my books in a drishti-grid at
   terminal density (limit-use bars by `decorateCell`, transactions by book that flash), the markets grid, what changed and the live
-  feed; the host gives `load(since, {fresh})`, `live({tick, state})` and `openBook(book)`, so the library knows no address. drishti-risk
-  now requires drishti-grid.
+  feed; the host gives drishti-grid's `Grid` class, `load(since, {fresh})`, `live({tick, state})` and `openBook(book)`, so the library
+  knows no address and still requires only drishti-core and drishti-chart.
 - **drishti-core** gained what the grid and the chart share: the element maker (`h`, `placeAt`), Explain's drawing (`renderExplain`,
   `sparkline`, under each component's class prefix), the CSV writer and `download`. The loader loads a library's vendored engine (the
   manifest's `scripts`: ECharts for drishti-chart) once, and not when the page has it.

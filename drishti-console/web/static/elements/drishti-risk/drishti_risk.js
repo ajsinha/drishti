@@ -21,7 +21,7 @@
   var D = root.Drishti = root.Drishti || {}, E = D.elements = D.elements || {}, libs = E.libs = E.libs || {};
   var cs = typeof document !== 'undefined' && document.currentScript;
   if (!E.base && cs && cs.src) { E.base = cs.src.replace(/[^/]*\/[^/]*(\?.*)?$/, ''); }   /* .../elements/ */
-  var needs = {"drishti-core": "../drishti-core/drishti_core.js", "drishti-chart": "../drishti-chart/drishti_chart.js", "drishti-grid": "../drishti-grid/drishti_grid.js"};
+  var needs = {"drishti-core": "../drishti-core/drishti_core.js", "drishti-chart": "../drishti-chart/drishti_chart.js"};
   var lib = function (name) {
     if (libs[name]) { return libs[name]; }
     if (typeof module === 'object' && module && typeof require === 'function' && needs[name]) { return require(needs[name]); }
@@ -145,7 +145,6 @@
   /* ---- src/drishti_trader-home.js ---- */
   __m["src/drishti_trader-home.js"] = (function () {
     var h = __lib("drishti-core").h, formatCompact = __lib("drishti-core").formatCompact, formatNumber = __lib("drishti-core").formatNumber, formatPercent = __lib("drishti-core").formatPercent, announce = __lib("drishti-core").announce;
-    var Grid = __lib("drishti-grid").Grid;
     const TRADER_HOME_PARTS = Object.freeze(['headline', 'books', 'markets', 'changes', 'feed']);
     const TICK_WAIT_MS = 300;
     function money(v, signed) {
@@ -167,6 +166,7 @@
         this.host = host;
         this.doc = host.ownerDocument;
         this.o = Object.assign({ since: 'morning', density: 'terminal' }, o);
+        if (typeof this.o.Grid !== 'function') { throw new Error('the trader home draws with drishti-grid: give its Grid class (options.Grid)'); }
         this.since = this.o.since === 'visit' ? 'visit' : 'morning';
         this.answer = null;
         this.asking = null;
@@ -206,13 +206,13 @@
         this.host.appendChild(e('div', { cls: 'th-cols th-cols-low' }, [
           card('changes', 'What changed', e('div', {}, [e('div', { cls: 'th-sinces', attrs: { role: 'group', 'aria-label': 'Since when' } }, this.sinceBtns), this.changesBox])),
           card('feed', 'Live feed', this.feedList, liveTag())]));
-        this.books = new Grid(this.booksBox, {
-          columns: this.bookColumns(), rows: [], getRowId: (r) => r.book, layout: 'terminal', density: this.o.density, chrome: false, checkboxes: false,
+        this.books = new this.o.Grid(this.booksBox, {
+          columns: this.bookColumns(), rows: [], getRowId: (r) => r.book, layout: 'wells', density: this.o.density, chrome: false, checkboxes: false,
           rowSelection: 'none', clientAggregation: false, label: 'My books', decorateCell: (c) => this.decorateBook(c), live: { flashMs: 1500 } });
-        this.markets = new Grid(this.marketsBox, {
+        this.markets = new this.o.Grid(this.marketsBox, {
           columns: [{ field: 'label', header: 'Market', width: 170 }, { field: 'last', header: 'Last', width: 110 },
             { field: 'chg', header: 'Chg', width: 100 }],
-          rows: [], getRowId: (r) => r.id, layout: 'terminal', density: this.o.density, chrome: false, checkboxes: false, rowSelection: 'none',
+          rows: [], getRowId: (r) => r.id, layout: 'wells', density: this.o.density, chrome: false, checkboxes: false, rowSelection: 'none',
           clientAggregation: false, label: 'Markets I watch', decorateCell: (c) => this.decorateMarket(c), live: { flashMs: 1500 } });
         this.booksBox.addEventListener('keydown', (ev) => {              // Enter on a book's cell opens it, as a click on its name does
           if (ev.key !== 'Enter' || !this.o.openBook) { return; }

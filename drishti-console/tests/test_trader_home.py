@@ -61,7 +61,9 @@ def _app(backend, trading: bool = True):
         return mine
 
     async def current(cookie, _backend):
-        return Identity(user=cookie or "ash", display=(cookie or "ash").title(), desk="", roles=("*",))
+        if not cookie:
+            return None                                      # not signed in
+        return Identity(user=cookie, display=cookie.title(), desk="", roles=("*",))
 
     backend.settings, backend.patch_settings = settings, patch_settings
     app.state.auth.current = current
@@ -145,14 +147,19 @@ def test_a_tick_reads_again_for_that_person_only():
     backend = TraderHomeBackend()
     app = _app(backend)
     ash, kim = _client(app, "ash"), _client(app, "kim")
-    assert _home(ash)["books"][0]["var"] == 6_120_000
+    assert _home(ash)["headline"]["pnl"] == 480_000
     assert _home(kim)["books"][0]["var"] == 9_000_000
+
+    def kept(user):
+        return [k for k in list(trading_landing._CACHE._data) if user in k]
+    assert kept("ash") and kept("kim")
+    kims = kept("kim")
     backend.book_var["BOOK-RATES-1"] = (6_500_000, 7_400_000)
-    backend.book_var["BOOK-RATES-3"] = (7_000_000, 8_000_000)
-    assert _home(ash)["books"][0]["var"] == 6_120_000                    # kept: no tick yet
     fresh = _home(ash, fresh="1")
     assert fresh["books"][0]["var"] == 6_500_000 and fresh["books"][0]["state"] == "near"
-    assert _home(kim)["books"][0]["var"] == 9_000_000                    # kim's kept answer did not go with ash's tick
+    assert kept("kim") == kims                                            # kim's kept reads did not go with ash's tick
+    assert trading_landing.forget_person(Identity(user="kim", display="Kim", desk="", roles=("*",))) == len(kims)
+    assert not kept("kim") and kept("ash")
 
 
 def test_since_my_last_visit_follows_the_persons_settings():
