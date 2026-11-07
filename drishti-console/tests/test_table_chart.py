@@ -107,7 +107,8 @@ def test_tables_load_the_chart_on_first_use_and_k_is_bound_on_the_table_only():
     for src in ("vendor/echarts/echarts.min.js", "js/drishti_pivot-engine.js", "js/drishti_table-chart-engine.js", "js/drishti_table-chart-sources.js", "js/drishti_table-chart.js"):
         assert f"'{src}'" in tables, src
     assert "css/drishti_table-chart.css" in tables and "data-no-chart" in tables
-    assert re.search(r"case 'k': case 'K': if \(chartable && !e\.altKey && !e\.ctrlKey && !e\.metaKey\)", tables)
+    grid = (JS.parent / "elements" / "drishti-grid" / "src" / "drishti_doc-console.js").read_text()   # the keys are drishti-grid's console tables'
+    assert re.search(r"case 'k': case 'K': if \(chartable && !e\.altKey && !e\.ctrlKey && !e\.metaKey\)", grid)
     base = (CONSOLE / "web" / "templates" / "base.html").read_text()
     assert "table-chart" not in base                                                  # nothing loads until a chart is opened
 
