@@ -78,10 +78,10 @@ class EngineApiTest {
         try {
             change(admin, "{\"reason\":\"capital moves to node var-1\",\"changes\":[{\"engine\":\"frtb-sa\",\"on\":false}]}").andExpect(status().isOk())
                     .andExpect(jsonPath("$.outcomes[0].outcome").value("live"));
-            mvc.perform(get("/api/v1/frtb/sa").param("scope", "EXAMPLE").header("Authorization", as("tina", "trader")))
+            mvc.perform(get("/api/v1/risk/frtb/sa").param("scope", "EXAMPLE").header("Authorization", as("tina", "trader")))
                     .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("DRS-1020")).andExpect(jsonPath("$.engine").value("frtb-sa"))
                     .andExpect(jsonPath("$.detail").value(containsString("FRTB-SA is not running on this server, and no other server of this cluster runs it")));
-            mvc.perform(get("/api/v1/sensitivities").param("scope", "BANK").header("Authorization", as("tina", "trader")))
+            mvc.perform(get("/api/v1/risk/sensitivities").param("scope", "BANK").header("Authorization", as("tina", "trader")))
                     .andExpect(result -> assertThat(result.getResponse().getContentAsString()).doesNotContain("DRS-1020"));
             mvc.perform(get("/public/about")).andExpect(jsonPath("$.engines[?(@.id == 'frtb-sa')].cluster").value(false));
             String file = Files.readString(registry.files().file(registry.entry("frtb-sa")));
@@ -90,7 +90,7 @@ class EngineApiTest {
         } finally {
             change(admin, "{\"reason\":\"back\",\"changes\":[{\"engine\":\"frtb-sa\",\"on\":true}]}").andExpect(status().isOk());
         }
-        mvc.perform(get("/api/v1/frtb/sa").param("scope", "EXAMPLE").header("Authorization", as("tina", "trader")))
+        mvc.perform(get("/api/v1/risk/frtb/sa").param("scope", "EXAMPLE").header("Authorization", as("tina", "trader")))
                 .andExpect(result -> assertThat(result.getResponse().getContentAsString()).doesNotContain("DRS-1020"));
         mvc.perform(get("/api/v1/admin/engines/history").header("Authorization", admin)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.changes[0].engine").value("frtb-sa")).andExpect(jsonPath("$.changes[0].change").value("on"))
@@ -109,7 +109,7 @@ class EngineApiTest {
             change(admin, "{\"reason\":\"a counterparty node\",\"withDependents\":true,\"changes\":[{\"engine\":\"var\",\"on\":false}]}")
                     .andExpect(status().isOk()).andExpect(jsonPath("$.outcomes[*].engine", containsInAnyOrder("frtb-sa", "mr-cube", "var")))
                     .andExpect(jsonPath("$.outcomes[2].engine").value("var"));                // the dependents first, then var
-            mvc.perform(get("/api/v1/var/status").header("Authorization", reader)).andExpect(status().isNotFound())
+            mvc.perform(get("/api/v1/risk/var/status").header("Authorization", reader)).andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.code").value("DRS-1020")).andExpect(jsonPath("$.engine").value("var"));
             mvc.perform(get("/api/v1/bi/items/file:table:bi.market_risk_var_latest").header("Authorization", admin)).andExpect(status().isNotFound());
         } finally {

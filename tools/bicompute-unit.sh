@@ -48,9 +48,9 @@ echo "main: compiled"
   $(find "$here/drishti-bicompute/src/test/java" -name '*.java')
 echo "test: compiled"
 if [ "${1:-}" = "--server" ]; then
-  # the server's pivot package (and the VaR provider) against the installed release's executable jar and its libraries
+  # the server's pivot package (its sources come from the modules: PivotSourceProvider) against the installed release's executable jar and its libraries
   shift
-  exec_jar="$m2/com/ash/drishti/drishti-server/$ver/drishti-server-$ver-exec.jar"
+  exec_jar="$m2/com/ash/drishti/drishti-app/$ver/drishti-app-$ver-exec.jar"   # the runnable jar is drishti-app's (the core with the domain modules)
   plain_jar="$m2/com/ash/drishti/drishti-server/$ver/drishti-server-$ver.jar"
   mkdir -p "$work/libs" "$work/server"
   echo "server: unpacking the libraries of $exec_jar"
@@ -60,7 +60,6 @@ if [ "${1:-}" = "--server" ]; then
   "${java_bin}javac" -J-Xmx768m -nowarn -proc:none -encoding UTF-8 --release 21 -d "$work/server" \
     -cp "$work/main:$plain_jar:$libs:$(jar com/ash/drishti/drishti-common/$ver)" \
     $(find "$here/drishti-server/src/main/java/com/ash/drishti/server/pivot" -name '*.java') \
-    "$here/drishti-banking/src/main/java/com/ash/drishti/banking/var/VarPivotProvider.java" \
     "$here/drishti-server/src/main/java/com/ash/drishti/server/net/PeerCalls.java" || { echo "server pivot package: javac failed ($?)"; exit 1; }
   echo "server pivot package: compiled"
 fi
