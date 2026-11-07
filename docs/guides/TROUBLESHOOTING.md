@@ -480,7 +480,7 @@ open its entity); a comment past its edit window is `DRS-7008`; the whole list i
 
 ## Alerts on numbers
 
-An alert that never fires, fires twice, or tells too much. Work down; each row is one cause. The alert's **history** (the edit page: `/alerts/measure/<name>`) says what every look did and why; *Check now* in the form, or `POST /api/v1/me/measure-alerts/preview`, says what the alert reads for you right now.
+An alert that never fires, fires twice, or tells too much. Work down; each row is one cause. The alert's **history** (the edit page: `/alerts/measure/<name>`) says what every look did and why; *Check now* in the form, or `POST /api/v1/alerts/rules/preview`, says what the alert reads for you right now.
 
 | Symptom | Cause | Check and fix |
 |---|---|---|
@@ -497,7 +497,7 @@ An alert that never fires, fires twice, or tells too much. Work down; each row i
 | It fired but nothing is in the inbox | Inbox was off for this alert, or `inbox.keep` pruned the row | The history's `delivered.inbox` says `ok`; the *Alerts* tab of the inbox lists the rows |
 | `delivered.email` says `skipped: no email address on file` | Your account has no address | An administrator sets it under Admin, Users (people cannot add their own) |
 | `delivered.email` says `retrying: attempt 1 of 4 failed (…); next try in 5 s`, then `sent (attempt 3 of 4)` | The mail server was unreachable and the shared retry policy (`drishti.retry.alerts.*`) is trying again; `emailAttempts` counts them | Nothing: it settles. A restart drops a pending retry (the history keeps the last text) |
-| `delivered.email` says `failed after 4 attempts: …` or `failed (permanent): … (not retried)` | The server stayed unreachable for `drishti.alerts.measure.max-attempts` tries, or refused the address (SMTP 5xx) | Fix `spring.mail.*` or the address on the account; the next firing is a new mail |
+| `delivered.email` says `failed after 4 attempts: …` or `failed (permanent): … (not retried)` | The server stayed unreachable for `drishti.alerts.max-attempts` tries, or refused the address (SMTP 5xx) | Fix `spring.mail.*` or the address on the account; the next firing is a new mail |
 | `delivered."webhook:ops"` says `failed (permanent): … allowed-hosts` | The webhook's host is not on `drishti.notify.webhook.allowed-hosts` (checked at every send), or its URL is `http://` without `webhook.allow-http` | An administrator adds the host (`hooks.corp.example` or `*.corp.example`) |
 | `delivered."webhook:ops"` says `failed (permanent): … is not set` | The `${ENV}` variable named in the webhook's `secret` or a header is not set in the server's environment | Set it and restart; the message names the variable, never a value |
 | `delivered."webhook:ops"` says `failed: the webhook answered HTTP 503` (retrying) or `failed (permanent): … HTTP 403` | The receiver is down (retried), or refused the post (a 4xx other than 408 and 429 is not retried) | Check the receiver; it verifies `X-Drishti-Signature` (HMAC-SHA256 of `timestamp.body` with the secret) and the timestamp |
@@ -509,7 +509,7 @@ An alert that never fires, fires twice, or tells too much. Work down; each row i
 | A board tile never notifies | `notify` needs a threshold of its level (`crit` needs `crit`), the board is not **published**, the trigger waits for a load, or **nobody can read it** | Validate the board (`POST /api/v1/bi/boards/validate`); see `/alerts/all` for the tile, who is alerted now and its history |
 | The history of a board tile says `this tile would tell 412 people, more than 300` | More readers than `max-audience` | Narrow the board's audience, or raise the setting |
 | The same person is told twice by a tile and their own alert | They are different alerts | Pause one |
-| Several servers all look | The evaluator runs on each | `drishti.alerts.measure.enabled=false` on all but one |
+| Several servers all look | The evaluator runs on each | `drishti.alerts.enabled=false` on all but one |
 
 ## Commands and views
 

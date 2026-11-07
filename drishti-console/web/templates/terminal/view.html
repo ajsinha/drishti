@@ -18,7 +18,7 @@
 {% block title %}{{ vm.title.id }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}view{% endblock %}
 {% block body_class %}terminal{% if embed %} embed{% endif %}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_dist.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_pivot.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_drill.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_about.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_wire.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_refresh.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_compute.css?v={{ ASSET_V }}">{% if vm.panels | selectattr('form') | list %}<link rel="stylesheet" href="/static/css/drishti_record-forms.css?v={{ ASSET_V }}">{% endif %}{% if calc and calc.offered and calc.allowed %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_dist.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_pivot.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_drill.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_about.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_wire.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_refresh.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_compute.css?v={{ ASSET_V }}">{% if vm.panels | selectattr('form') | list %}<link rel="stylesheet" href="/static/css/drishti_record-forms.css?v={{ ASSET_V }}">{% endif %}{% if calc and calc.offered and calc.allowed %}<link rel="stylesheet" href="/static/elements/drishti-inputs/drishti_inputs.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
 {% block nav %}{% if not embed %}{% with command_text=(vm.mnemonic ~ ' ' ~ vm.ref.id ~ ' <GO>') if vm.mnemonic else vm.ref.id, live=(vm.provenance.live and asof == 'live'), built_ms=vm.timings.total %}{% include "terminal/_topbar.html" %}{% endwith %}{% endif %}{% endblock %}
 {% block content %}
 <div class="view" data-view{% if embed %} data-embed{% endif %}{% if asof != 'live' %} data-static{% endif %} data-kind="{{ vm.ref.kind }}" data-id="{{ vm.ref.id }}" data-generation="{{ vm.provenance.generation }}" data-page-asof="{{ asof }}" data-known="{{ known_at or '' }}" data-label="{{ vm.title.id }}"{% if chosen_sutra %} data-chosen-sutra="{{ chosen_sutra }}"{% endif %}{% if designer and designer.design %} data-design="{{ designer.design }}"{% endif %}{% if designer and designer.customizing %} data-customizing{% endif %}
@@ -138,17 +138,17 @@
       <b>{{ k.key }}</b> <span class="fk-t">{{ full }}</span></button>{% endfor %}
     <button type="button" class="fk" data-fkey="Alt+ArrowLeft" data-action="back"><b>Alt+←</b> Back</button>
     {% if calc and calc.offered %}<button type="button" class="fk" data-calc-open{% if not calc.allowed %} disabled title="You do not have access: Calc needs a role with calc (ask an administrator)"{% else %} title="Calc: Python on this view (Alt+C)"{% endif %}><b>Alt+C</b> Calc</button>{% endif %}
-    {% if layout and layout.offered %}<button type="button" class="fk" data-layout-open{% if not layout.allowed %} disabled title="{{ layout.why }}"{% else %} title="Layout mode: arrange this view's panels for yourself (Alt+L){% if layout.mine %}. You are seeing your own layout{% endif %}"{% endif %}><b>Alt+L</b> Layout{% if layout.mine %} <span class="fk-mine" aria-label="(yours)">•</span>{% endif %}</button>{% endif %}</nav>
+    {% if layout and layout.offered %}<button type="button" class="fk" data-layout-open{% if not layout.allowed %} disabled title="{{ layout.why }}"{% else %} title="Layout mode: arrange this view's panels for yourself (Alt+L){% if layout.mine %}. You are seeing your own layout{% endif %}"{% endif %}><b>Alt+L</b> Layout{% if layout.mine %} <span class="fk-mine" aria-label="(yours)">•</span>{% endif %}</button>{% endif %}<button type="button" class="fk" data-keys-open title="Every key of this view"><b>Keys</b> All keys</button></nav>
   <span class="fk-note" title="Source: {{ vm.provenance.source }}">{% if vm.provenance.updatedAt %}updated <span data-age="{{ vm.provenance.updatedAt }}"{% if vm.provenance.stale %} class="t-warn"{% endif %} title="{{ vm.provenance.updatedAt }}">{{ vm.provenance.updatedAt[:16] | replace('T', ' ') }}</span>{% endif %} · gen {{ vm.provenance.generation }}{% if vm.provenance.businessDate %} · as of {{ vm.provenance.businessDate }}{% endif %} · <a href="/about" class="fk-copy">{{ COPYRIGHT.split(".")[0] }}</a></span>
 </footer>
 {% endif %}{% endblock %}
 {% block scripts %}
 <script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/drishti_geomap.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_charts.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_geomap.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-chart/drishti_chart.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_charts.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/drishti_view.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/drishti_pivot-engine.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/drishti_pivot-grid.js?v={{ ASSET_V }}"></script>
+
 <script src="/static/js/drishti_tree-rows.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/drishti_drill.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/drishti_raw-viewer.js?v={{ ASSET_V }}"></script>
@@ -169,9 +169,8 @@
 {% if not embed and vm.panels | selectattr('form') | list %}<script src="/static/js/drishti_form-expr.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_write-back.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_record-forms.js?v={{ ASSET_V }}"></script>{% endif %}
 {% if designer and designer.on and not embed %}<link rel="stylesheet" href="/static/css/drishti_designer.css?v={{ ASSET_V }}"><script src="/static/js/drishti_designer-forms.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_designer-settings.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_designer.js?v={{ ASSET_V }}"></script>{% endif %}
 {% if vm.controls %}<script src="/static/js/drishti_multiselect.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_controls.js?v={{ ASSET_V }}"></script>{% endif %}
-{% if calc and calc.offered and calc.allowed %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script>
-<script src="/static/vendor/codemirror/mode/python/python.js?v={{ ASSET_V }}"></script>
+{% if calc and calc.offered and calc.allowed %}<script src="/static/elements/drishti-inputs/drishti_inputs.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/drishti_calc.js?v={{ ASSET_V }}"></script>{% endif %}
 {% if vm.provenance.live and asof == 'live' %}<script src="/static/js/drishti_live.js?v={{ ASSET_V }}"></script>{% endif %}
-{% if layout and layout.offered and layout.allowed %}<script src="/static/js/drishti_layout-rules.js?v={{ ASSET_V }}"></script><script src="/static/js/build/drishti_grid-keys.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_layout.js?v={{ ASSET_V }}"></script>{% endif %}
+{% if layout and layout.offered and layout.allowed %}<script src="/static/js/drishti_layout-rules.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_layout.js?v={{ ASSET_V }}"></script>{% endif %}
 {% endblock %}

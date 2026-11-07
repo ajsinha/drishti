@@ -493,12 +493,12 @@ limit*, *above* `100000`, **Save**. What the form sends, with your session (a pe
 (the largest desk volatility, `1,117,385`, is above the limit), captured:
 
 ```text
-PUT /api/v1/me/measure-alerts/Desk%20volatility%20ceiling
+PUT /api/v1/alerts/rules/Desk%20volatility%20ceiling
     {"source":{"type":"model","model":"trades-basic@1","query":{"select":{"fields":["trade.DESK"],"measures":["Desk P&L volatility"]}},"reduce":"max"},
      "condition":{"type":"threshold","op":"above","value":100000},"trigger":{"mode":"after-load"}}
 200 {"name":"Desk volatility ceiling", ..., "source":{"type":"model","model":"trades-basic@1","measure":"Desk P&L volatility","reduce":"max", ...},
      "describe":"above 100,000","label":"trades-basic@1 · Desk P&L volatility","link":"/bi/i/trades-basic%401"}
-POST /api/v1/me/measure-alerts/Desk%20volatility%20ceiling/check
+POST /api/v1/alerts/rules/Desk%20volatility%20ceiling/check
 200 {... "history":[{"action":"fired","trigger":"saved","value":1117385.1394432886,"asOf":"2026-10-16",
      "message":"Desk volatility ceiling — now 1,117,385.1394 (above 100,000)","delivered":{"inbox":"ok","email":"off","bridge":"off","sms":"off"}}]}
 ```

@@ -16,7 +16,7 @@
 /* Regulatory VaR (terminal/var_backtesting.html, var_statistics.html, var_reports.html), after the approved mock-ups backtesting A and
    report-signoff A: the theme's tokens for every colour (drishti_tokens.css); a zone is a word and a lamp, never colour alone. */
 .rg { padding: 10px 14px 18px; color: var(--d-ink); font-size: 13px; max-width: 1560px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
-.rg .mono, .rg td.num, .rg .rg-big { font-family: var(--d-font-mono); font-variant-numeric: tabular-nums; }
+.rg .mono, .rg .rg-big { font-family: var(--d-font-mono); font-variant-numeric: tabular-nums; }
 .rg-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
 .rg-head h1 { margin: 0; font-size: 18px; font-weight: 600; }
 .rg-word { color: var(--d-accent); font-family: var(--d-font-mono); font-size: 13px; }
@@ -34,17 +34,12 @@
 .rg-card { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius, 6px); padding: 10px 12px; min-width: 0; }
 .rg-card h2 { margin: 0 0 8px; font-size: 14px; font-weight: 600; }
 .rg-card h2 .rg-sub { color: var(--d-muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
-.rg-chart svg { width: 100%; height: auto; display: block; }
-.rg-chart .gain { fill: color-mix(in srgb, var(--d-link) 70%, transparent); }
-.rg-chart .loss { fill: color-mix(in srgb, var(--d-warn) 55%, var(--d-neg)); }
-.rg-chart .hypo { fill: none; stroke: var(--d-muted); stroke-width: 1; }
-.rg-chart .var99 { fill: none; stroke: var(--d-warn); stroke-width: 1.6; }
-.rg-chart .var975 { fill: none; stroke: var(--d-warn); stroke-width: 1; stroke-dasharray: 4 3; opacity: .8; }
-.rg-chart .exc { fill: var(--d-neg); }
-.rg-chart .exch { fill: none; stroke: var(--d-warn); stroke-width: 1.4; }
-.rg-chart .axis { stroke: var(--d-border); }
-.rg-chart text { fill: var(--d-muted); font-size: 10px; }
-.rg-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--d-muted); font-size: 12px; margin-top: 6px; }
+/* the tables are risk grids (drishti-grid, terminal layout) and the chart a drishti-chart: only what the page adds to them is here */
+.rg-gridhost { min-width: 0; }
+.rg .dg-row.rg-sel .dg-cell { background: var(--d-emph-bg, var(--d-surface-2)); }
+.rg .dg-row.rg-total .dg-cell { font-weight: 700; }
+.rg .dg-row.rg-head-row .dg-cell { color: var(--d-muted); }
+.rg .dg-cell.rg-cell { cursor: pointer; }
 .rg-lamps { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
 .rg-lamp { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--d-border); }
 .rg-lamp.on.green { background: var(--d-ok); border-color: var(--d-ok); }
@@ -60,16 +55,6 @@
 .rg-tile .rg-k { color: var(--d-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
 .rg-big { font-size: 20px; margin: 2px 0; }
 .rg-tile .rg-s { color: var(--d-muted); font-size: 12px; }
-.rg table { width: 100%; border-collapse: collapse; }
-.rg th { text-align: left; color: var(--d-muted); font-weight: 500; font-size: 12px; padding: 4px 6px; border-bottom: 1px solid var(--d-border); }
-.rg td { padding: 4px 6px; border-bottom: 1px solid color-mix(in srgb, var(--d-border) 50%, transparent); vertical-align: top; }
-.rg td.num, .rg th.num { text-align: right; }
-.rg tr.sel td { background: var(--d-emph-bg, var(--d-surface-2)); }
-.rg tr[data-node], .rg td[data-cell] { cursor: pointer; }
-.rg td[data-cell].sel { outline: 2px solid var(--d-accent); outline-offset: -2px; }
-.rg .neg { color: var(--d-neg); }
-.rg .flag { color: var(--d-warn); font-weight: 600; }
-.rg tr.total td { font-weight: 700; border-top: 1px solid var(--d-border); }
 .rg-note { color: var(--d-muted); font-size: 12px; margin: 6px 0 0; }
 .rg-notice { border: 1px solid var(--d-warn); border-radius: 4px; padding: 6px 10px; color: var(--d-ink); }
 .rg-steps { list-style: none; padding: 0; margin: 0 0 8px; }
@@ -81,11 +66,7 @@
 .rg dl.rg-kv { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 4px 10px; margin: 0; }
 .rg dl.rg-kv dt { color: var(--d-muted); }
 .rg dl.rg-kv dd { margin: 0; overflow-wrap: anywhere; }
-.rg-spark { width: 180px; height: 26px; }
-.rg-spark .gain { stroke: var(--d-link); }
-.rg-spark .loss { stroke: var(--d-warn); }
-.rg-spark .var99 { fill: none; stroke: var(--d-warn); stroke-width: 1; }
-.rg-spark .exc { fill: var(--d-neg); }
+.rg-spark svg { width: 170px; height: 18px; display: block; }
 .rg-ask { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
 .rg-ask input, .rg-ask select { background: var(--d-bg); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 4px; padding: 4px 8px; }
 @media (max-width: 1100px) { .rg-grid { grid-template-columns: minmax(0, 1fr); } }

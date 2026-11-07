@@ -93,7 +93,7 @@ class TokenScopeTest {
         send(read, "POST", "/api/v1/builder/designs").andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.detail").value("this token lacks the scope design:write"));
         send(write, "POST", "/api/v1/builder/designs").andExpect(status().isCreated());                       // design:write creates a design
-        assertThat(code(write, "POST", "/api/v1/sutras/proposals/nope/approve")).isEqualTo(403);              // but cannot approve
+        assertThat(code(write, "POST", "/api/v1/approvals/sutra/nope/approve")).isEqualTo(403);              // but cannot approve
         assertThat(code(write, "PUT", "/api/v1/admin/packs/market-risk")).isEqualTo(403);                     // nor administer packs
         assertThat(code(write, "POST", "/api/v1/me/tokens")).isEqualTo(403);                                  // nor mint tokens
         assertThat(code(write, "POST", "/api/v1/admin/users")).isEqualTo(403);
@@ -111,8 +111,8 @@ class TokenScopeTest {
         String authorPacks = token("pat", "author", "{\"name\":\"p\",\"days\":30,\"scopes\":[\"packs:admin\"]}");
         String adminPacks = token("scope-admin", "admin", "{\"name\":\"p\",\"days\":30,\"scopes\":[\"packs:admin\"]}");
         // the scope opens the door; the role behind it decides
-        assertThat(code(authorApprove, "POST", "/api/v1/sutras/proposals/nope/approve")).isEqualTo(403);
-        assertThat(code(approverApprove, "POST", "/api/v1/sutras/proposals/nope/approve")).isNotIn(401, 403);   // unknown proposal, not a refusal
+        assertThat(code(authorApprove, "POST", "/api/v1/approvals/sutra/nope/approve")).isEqualTo(403);
+        assertThat(code(approverApprove, "POST", "/api/v1/approvals/sutra/nope/approve")).isNotIn(401, 403);   // unknown proposal, not a refusal
         assertThat(code(authorPacks, "PUT", "/api/v1/admin/packs/market-risk")).isEqualTo(403);
         assertThat(code(adminPacks, "PUT", "/api/v1/admin/packs/market-risk")).isNotIn(401, 403);
     }

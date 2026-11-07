@@ -35,14 +35,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * The stress window selection's API (VAR_GUIDE.md section 18.9; API_GUIDE.md): the analysis of a node, and the frozen proposals with
- * their maker-checker decision.
+ * the maker-checker decision is made in the one Approvals queue ({@code /api/v1/approvals}, kind {@code stress-window}).
  *
  * <pre>
  * GET  /api/v1/risk/var/stress-window?scope=BANK&amp;hierarchy=MGMT&amp;length=250&amp;confidence=0.99&amp;asOf=2026-09-30
  * POST /api/v1/risk/var/stress-window/proposals              {"scope":"BANK","hierarchy":"MGMT","first":"2007-11-30","note":"..."}
  * GET  /api/v1/risk/var/stress-window/proposals
  * GET  /api/v1/risk/var/stress-window/proposals/{id}
- * POST /api/v1/risk/var/stress-window/proposals/{id}/decision {"decision":"approve","note":"..."}
  * </pre>
  */
 @RestController
@@ -109,10 +108,9 @@ public class VarStressWindowController {
         return proposals.get(p, id);
     }
 
-    @PostMapping("/proposals/{id}/decision")
-    public Map<String, Object> decide(@PathVariable String id, @RequestBody Map<String, Object> body,
-            @RequestAttribute(name = Principal.ATTRIBUTE, required = false) Principal p) {
-        return proposals.decide(p, id, str(body.get("decision")), str(body.get("note")));
+    /** The proposals, for the Approvals queue: a decision is made there ({@code POST /api/v1/approvals/stress-window/{id}/approve}). */
+    VarStressProposals proposals() {
+        return proposals;
     }
 
     private static String str(Object o) {

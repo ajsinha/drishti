@@ -109,11 +109,17 @@ def _chrome():
     return next((c for c in candidates if c and os.access(c, os.X_OK)), None)
 
 
-def _run(chrome, tmp_path, body, script):
+def _run(chrome, tmp_path, body, script, wait=False):
+    """Runs a script in a page that holds the panel, drishti-core and drishti-grid (Drishti Elements' bundles) and the tree rows; with
+    ``wait`` the script ends by calling finish() (the grid draws on the next frames), else its result is written when it returns."""
     page = tmp_path / "page.html"
-    scripts = "".join(f'<script src="{(STATIC / js).as_uri()}"></script>' for js in ("drishti_pivot-grid.js", "drishti_tree-rows.js"))
-    page.write_text(f'<!doctype html><html><body>{body}{scripts}<script>var out = {{}};{script}'
-                    'document.body.insertAdjacentHTML("beforeend", "<pre id=result>" + JSON.stringify(out) + "</pre>");</script></body></html>')
+    elements = STATIC.parent / "elements"
+    srcs = [elements / "drishti-core" / "drishti_core.js", elements / "drishti-grid" / "drishti_grid.js", STATIC / "drishti_tree-rows.js"]
+    scripts = "".join(f'<script src="{p.as_uri()}"></script>' for p in srcs)
+    end = "" if wait else "finish();"
+    page.write_text(f'<!doctype html><html><body>{body}{scripts}<script>var out = {{}};'
+                    'function finish() { document.body.insertAdjacentHTML("beforeend", "<pre id=result>" + JSON.stringify(out) + "</pre>"); }'
+                    f'{script}{end}</script></body></html>')
     # Chromium puts its process-singleton socket in a throwaway profile under TMPDIR; a socket path longer than the system's limit (108
     # bytes) makes it abort at start ("Socket path too long") and print nothing, which is how these tests failed in a full run whose TMPDIR
     # was a long scratch folder. A long TMPDIR is replaced by /tmp for Chromium alone (the profile is removed when it exits); 120 s for a
@@ -122,7 +128,7 @@ def _run(chrome, tmp_path, body, script):
     if len(tempfile.gettempdir()) > 60:
         env["TMPDIR"] = "/tmp"
     done = subprocess.run([chrome, "--headless", "--no-sandbox", "--disable-gpu", "--allow-file-access-from-files",
-                           "--virtual-time-budget=3000", "--dump-dom", page.as_uri()], capture_output=True, text=True, timeout=120, env=env)
+                           "--virtual-time-budget=6000", "--dump-dom", page.as_uri()], capture_output=True, text=True, timeout=120, env=env)
     m = re.search(r'<pre id="result">(.*?)</pre>', done.stdout, re.S)
     assert m, done.stderr[-500:]
     return json.loads(m.group(1).replace("&quot;", '"').replace("&amp;", "&"))
@@ -154,25 +160,45 @@ def test_in_a_browser_a_table_row_expands_collapses_and_the_filter_keeps_its_anc
     assert got["cleared"] == ["Group", "Desk A", "Book 1", "Book 2", "Desk B", "Loose"]
 
 
-def test_in_a_browser_a_pivot_group_toggles_with_the_pivot_grid(client, tmp_path):
-    """The nested pivot panel is drawn by the one pivot grid (drishti_pivot-grid.js, the Pivot screen's) from the engine's figures."""
+def test_in_a_browser_a_pivot_group_toggles_with_the_grid(client, tmp_path):
+    """The nested pivot panel is drawn by drishti-grid (the Pivot screen's grid) from the engine's figures, shown as the server's text."""
     chrome = _chrome()
     if not chrome:
         pytest.skip("needs Chromium (playwright install chromium, or CHROME_BIN)")
     got = _run(chrome, tmp_path, _render(client, "pivot", NEST), """
       var host = document.querySelector('.pv-tree-host');
-      function heads() { return Array.from(host.querySelectorAll('tbody th.pv-rowhead .pv-lab')).map(function (t) { return t.textContent.trim(); }); }
-      function togs() { return Array.from(host.querySelectorAll('[data-pv-toggle]')).map(function (b) { return b.getAttribute('aria-expanded') + ':' + b.getAttribute('aria-label'); }); }
-      out.grid = !!host.querySelector('table.pv-table'); out.start = heads(); out.startTogs = togs();
-      host.querySelector('[data-pv-toggle]').click();
-      out.opened = heads(); out.openedTogs = togs();
-      host.querySelector('[data-pv-toggle]').click();
-      out.closed = heads();
-      out.cells = Array.from(host.querySelectorAll('tbody tr:first-child td.pv-c')).map(function (t) { return t.textContent; });
-    """)
-    assert got["grid"] is True
+      function heads() { return Array.from(host.querySelectorAll('.dg-row [role=rowheader] .dg-text')).map(function (t) { return t.textContent.trim(); }); }
+      function togs() { return Array.from(host.querySelectorAll('.dg-row[aria-expanded]')).map(function (r) {
+        return r.getAttribute('aria-expanded') + ':' + r.querySelector('[role=rowheader] .dg-text').textContent.trim(); }); }
+      out.err = [];
+      window.addEventListener('error', function (e) { out.err.push(String(e.message)); });
+      // the grid draws on its next frames: each step waits until what it reads is there (at most 3 s)
+      function until(ok, f) {
+        var n = 0;
+        (function poll() {
+          var hit = false;
+          try { hit = ok(); } catch (e) { hit = false; }
+          if (hit || ++n > 60) { try { f(); } catch (e) { out.err.push(String(e)); finish(); } } else { setTimeout(poll, 50); }
+        })();
+      }
+      until(function () { return heads().length === 3; }, function () {
+        out.grid = !!host.querySelector('.dg[data-chrome="none"] [role=treegrid], .dg[data-chrome="none"] [role=grid]');
+        out.start = heads(); out.startTogs = togs();
+        host.querySelector('.dg-row[aria-expanded] .dg-tw').click();
+        until(function () { return heads().indexOf('B1') >= 0; }, function () {
+          out.opened = heads(); out.openedTogs = togs();
+          host.querySelector('.dg-row[aria-expanded] .dg-tw').click();
+          until(function () { return heads().length === 3; }, function () {
+            out.closed = heads();
+            out.cells = Array.from(host.querySelectorAll('.dg-row')[0].querySelectorAll('.dg-cell[data-cell] .dg-text')).map(function (t) { return t.textContent; });
+            finish();
+          });
+        });
+      });
+    """, wait=True)
+    assert got["grid"] is True and not got["err"], got
     assert got["start"] == ["Rates", "FX", "Total"]                                # expand: 1, every group closed
-    assert got["startTogs"] == ["false:Expand Rates", "false:Expand FX"]
-    assert "B1" in got["opened"] and "B2" in got["opened"] and got["openedTogs"][0].startswith("true:Collapse Rates")
-    assert got["closed"] == got["start"]
-    assert got["cells"][:2] == ["161", "-40"]                                      # a group row shows its subtotals
+    assert got["startTogs"] == ["false:Rates", "false:FX"]
+    assert "B1" in got["opened"] and "B2" in got["opened"] and got["openedTogs"][0] == "true:Rates"
+    assert got["closed"] == got["start"], got
+    assert got["cells"][:2] == ["161", "-40"]                                      # a group row shows its subtotals, the server's text

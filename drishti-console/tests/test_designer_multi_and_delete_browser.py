@@ -184,7 +184,7 @@ def test_an_incomplete_visual_does_not_blank_the_others_and_the_check_names_it(s
     page = sign_in(browser, "wes", "/bi/w/me")
     open_designer(page, item)
     page.wait_for_function("() => document.querySelector('[data-visual=\"trades\"] .bi-card-value')", timeout=30000)      # the valid card still draws
-    page.wait_for_function("() => document.querySelectorAll('[data-visual=\"desks\"] tbody tr').length > 0", timeout=30000)
+    page.wait_for_function("() => document.querySelectorAll('[data-visual=\"desks\"] .dg-row').length > 0", timeout=30000)
     assert "Add a" in page.inner_text('[data-visual="empty-bar"]')                                       # its own placeholder, naming what to drop
     assert "axis" in page.inner_text('[data-visual="empty-bar"]') or "values" in page.inner_text('[data-visual="empty-bar"]')
     page.click("[data-check]")

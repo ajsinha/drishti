@@ -15,6 +15,7 @@
 """The stress window selection page in a real browser (docs/guides/VAR_GUIDE.md section 18.9) on the VaR demo lake with its P&L history:
 the page draws its controls, the chart and the candidates table across the page's width, with no script error."""
 import datetime
+import math
 import subprocess
 import sys
 from pathlib import Path
@@ -22,6 +23,7 @@ from pathlib import Path
 import pytest
 
 from test_var_explorer_browser import _engine_ready, open_var
+from risk_elements import chart, chart_ready, grid_rows
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from wb_live import _stack
 
@@ -54,10 +56,17 @@ def test_the_page_draws_its_chart_and_tables_across_the_page(stack, browser):
     pg = open_var(browser, str(stack), "/var/stress-window?scope=BANK&hierarchy=MGMT", {"width": 1600, "height": 1000})
     pg.on("pageerror", lambda e: errors.append(str(e)))
     pg.reload()
-    wait(pg, "document.querySelectorAll('[data-sw-cands] tbody tr').length > 0 || !!document.querySelector('[data-sw-alert]:not([hidden])')", 120)
+    wait(pg, "document.querySelectorAll('[data-sw-cands] .dg-row').length > 0 || !!document.querySelector('[data-sw-alert]:not([hidden])')", 120)
     assert not errors, errors                                         # (an alert line is the analysis' own finding, not a failure)
     width = pg.evaluate("document.querySelector('[data-swin]').getBoundingClientRect().width")
     assert width > 1000, "the page's content is %d px wide" % width
     assert pg.evaluate("document.querySelector('[data-sw-chart]').getBoundingClientRect().height") > 100
     assert pg.locator("[data-sw-ctrls], .sw-ctrls").first.is_visible()
+    # the numbers are the server's: the chart a point for every window start it valued, the candidates its own, in its order
+    wait(pg, chart_ready("[data-sw-chart]"), 60)
+    d = pg.evaluate("fetch('/api/var/stress-window?scope=BANK&hierarchy=MGMT', {credentials: 'same-origin'}).then((r) => r.json())")
+    assert chart(pg, "[data-sw-chart]")["series"][0]["n"] == len(d["series"]["var"])
+    cands = grid_rows(pg, "[data-sw-cands]")
+    assert [c["data"]["first"] for c in cands] == [c["first"] for c in d["candidates"]]
+    assert [c["cells"][2] for c in cands] == [f"{math.floor(c['var'] + 0.5):,}" for c in d["candidates"]]
     pg.close()

@@ -72,7 +72,7 @@ def test_home_lists_examples(client):
 
 
 def test_json_proxy_for_the_browser(client, backend):
-    s = client.get("/api/suggest", params={"q": "TRD IRS-4"}).json()
+    s = client.get("/api/search", params={"in": "command", "q": "TRD IRS-4"}).json()["items"]
     assert s[0]["complete"].startswith("TRD IRS-4")
     assert client.get("/api/raw/trade/IRS-48213").json()["provenance"]["source"] == "aero-risk"
     assert client.get("/api/view/trade/NOPE-1").status_code == 404
@@ -342,11 +342,11 @@ def test_one_channel_carries_every_live_subscription_of_a_tab(client, backend, m
                 event = line[7:]
             elif line.startswith("data: "):
                 seen.append((event, _json.loads(line[6:])))
-                if len([s for s in seen if s[0] == "frame"]) == 2 and any(s[0] == "alert" for s in seen):
+                if len([s for s in seen if s[0] == "frame"]) == 2 and any(s[0] == "notice" for s in seen):
                     break
     frames = {m["ch"]: m["d"]["patches"][0]["cell"]["text"] for e, m in seen if e == "frame"}
     assert frames == {"view:trade/IRS-48213": "IRS-48213", "view:trade/FXS-20931": "FXS-20931"}   # two views, one connection
-    assert any(e == "alert" and m["ch"] == "alerts" and m["d"]["severity"] == "critical" for e, m in seen)
+    assert any(e == "notice" and m["ch"] == "alerts" and m["d"]["type"] == "alert" for e, m in seen)        # an alert raised is a notice (the one alert engine)
     assert any(e == "view" and m["d"] == {"generation": 1742} for e, m in seen)
 
 

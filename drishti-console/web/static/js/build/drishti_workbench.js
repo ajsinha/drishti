@@ -73,15 +73,9 @@ store.state.baseMoved = init.baseMoved || null;
   // ---- the parts ---------------------------------------------------------------------------------------------------------------
   var canvas, inspector, actions, data, versions, about, form, controls;
   var schemaP = fetch('/studio/schema').then(function (r) { return r.json(); });
-  var toastTimer = 0;
+  var toasts = new window.Drishti.elements.core.ToastTray({ bare: true, single: true, timeout: 8000 });     // one toast at a time, with its action (drishti-core)
   function toast(text, label, run) {
-    var old = $('[data-toast]'); if (old) { old.remove(); }
-    clearTimeout(toastTimer);
-    var t = WB.el('div', 'wb-toast', null, { 'data-toast': '' }), b = WB.el('button', 'btn-pill btn-accent', label, { type: 'button' });
-    t.appendChild(WB.el('span', null, text + ' · ')); t.appendChild(b);
-    b.addEventListener('click', function () { clearTimeout(toastTimer); t.remove(); run(); });
-    document.body.appendChild(t);
-    toastTimer = setTimeout(function () { t.remove(); }, 8000);
+    toasts.show({ className: 'wb-toast', attrs: { 'data-toast': '' }, text: text + ' · ', action: { label: label, className: 'btn-pill btn-accent', run: run } });
   }
   var ui = { toast: toast, design: function () { centre.show('design'); }, required: function (k) { return inspector ? inspector.required(k) : []; }, canvas: function () { return canvas; }, inspect: function (s, o) { if (s) { right.show('inspector'); } inspector.show(s, o); }, selection: function () { return canvas.selected(); } };
   actions = WB.Actions(store, ui);
@@ -155,7 +149,7 @@ store.state.baseMoved = init.baseMoved || null;
     var f = pf.files[0];
     pf.value = '';
     if (!f) { return; }
-    if (f.size > parseFloat(d.maxFileMb) * 1048576) { store.emit('say', 'This file is too large: ' + (f.size / 1048576).toFixed(1) + ' MB; the limit is ' + d.maxFileMb + ' MB', true); return; }
+    if (f.size > parseFloat(d.maxFileMb) * 1048576) { store.emit('say', 'This file is too large: ' + window.Drishti.elements.core.formatBytes(f.size) + '; the limit is ' + d.maxFileMb + ' MB', true); return; }
     f.text().then(function (t) {
       var doc;
       try { doc = /\.jsonl$/i.test(f.name) ? JSON.parse(t.split('\n').filter(Boolean)[0]) : JSON.parse(t); } catch (e) { store.emit('say', f.name + ' is not valid JSON: ' + e.message, true); return; }
@@ -186,15 +180,14 @@ store.state.baseMoved = init.baseMoved || null;
     });
   }
   function typing(t) { var tag = (t.tagName || '').toLowerCase(); return tag === 'input' || tag === 'textarea' || tag === 'select' || t.isContentEditable || !!(t.closest && t.closest('.CodeMirror')); }
-  document.addEventListener('keydown', function (e) {
-    var k = e.key.toLowerCase();
-    if ((e.ctrlKey || e.metaKey) && !e.altKey && (k === 'z' || k === 'y') && !typing(e.target)) {
-      e.preventDefault();
-      if (k === 'y' || e.shiftKey) { store.redo(); } else { store.undo(); }
-    } else if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && (k === 'n') && e.target.closest && e.target.closest('[data-preview]') && e.target.matches('.pnl[data-panel], [data-wb-region]')) {
-      e.preventDefault(); actions.menuAdd();
-    }
-  });
+  var K = window.Drishti.keys, notTyping = function (e) { return !typing(e.target); };
+  K.register({ id: 'build.undo', keys: ['Ctrl+Z', 'Meta+Z'], scope: 'screen', area: 'build-design', group: 'Workbench', description: 'Undo', when: notTyping,
+    run: function () { store.undo(); } });
+  K.register({ id: 'build.redo', keys: ['Ctrl+Y', 'Meta+Y', 'Ctrl+Shift+Z', 'Shift+Meta+Z', 'Ctrl+Shift+Y', 'Shift+Meta+Y'], scope: 'screen', area: 'build-design', group: 'Workbench',
+    description: 'Redo', when: notTyping, run: function () { store.redo(); } });
+  K.register({ id: 'build.add', keys: ['N'], scope: 'panel', area: 'build-canvas', group: 'Workbench', description: 'On a panel or region of the canvas: add a panel',
+    when: function (e) { return e.target.closest && e.target.closest('[data-preview]') && e.target.matches('.pnl[data-panel], [data-wb-region]'); },
+    run: function () { actions.menuAdd(); } });
   // an edit still waiting for its pause is sent before F1 or a link takes the page away (UX-22); Escape in the inspector goes back to the panel (UX-10)
   function held() {
     var p = [yaml.flush(), inspector.flush(), notes.flush(), about.flush(), form.flush(), controls.flush()];

@@ -129,13 +129,6 @@ async def versions(request: Request):
     return await _call(request, "GET", "/versions")
 
 
-@router.get("/api/pivot/mr/explain")
-async def explain(request: Request, scope: str = "", from_: str = "", to: str = "", confidence: str = ""):
-    q = request.query_params
-    return await _call(request, "GET", "/explain", scope=q.get("scope", scope), to=q.get("to", to), confidence=q.get("confidence", confidence),
-                       **{"from": q.get("from", from_)})
-
-
 @router.get("/api/pivot/mr/sensitivities")
 async def sensitivities(request: Request):
     q = request.query_params

@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Drishti Trading's Home (home/trading_landing.html; EDITIONS.md › The design as built, section 14): paints the landing from the console's answers, which
    core/trading_landing.py works out from the servers' own, read as the person: /api/home/trading/me (whose figures: the trader or desk,
    their books, and the View as picker when they may pick), then valuations (P&L today, by book and trader, movers, DV01, the largest
@@ -23,6 +24,7 @@
    engine's, shown as it comes: nothing here adds up a figure (ONE_GRAMMAR.md section 5). The chart is SVG built through the DOM (the page's policy allows no inline style). */
 (function () {
   "use strict";
+  var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
   var root = document.querySelector("[data-trading-landing]");
   if (!root) return;
   var landing = root.getAttribute("data-trading-landing");
@@ -47,13 +49,7 @@
   function num(v) { return v === null || v === undefined || v === "" || isNaN(v) ? null : Number(v); }
   /** 1,840,000 → 1.84m; −142,000 → −142k; the sign as a real minus. */
   function money(v, signed) {
-    v = num(v);
-    if (v === null) return "—";
-    var a = Math.abs(v), s = v < 0 ? "−" : signed && v > 0 ? "+" : "";
-    if (a >= 1e9) return s + (a / 1e9).toFixed(2) + "bn";
-    if (a >= 1e6) return s + (a / 1e6).toFixed(2) + "m";
-    if (a >= 1e3) return s + (a / 1e3).toFixed(0) + "k";
-    return s + a.toFixed(0);
+    return F.formatCompact(num(v), { decimals: function (a, u) { return u === "k" || !u ? 0 : 2; }, sign: signed ? "always" : "auto" });
   }
   function pct(v) { v = num(v); return v === null ? "—" : Math.round(v * 100) + "%"; }
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; }
@@ -127,15 +123,15 @@
     get("/api/home/trading/valuations" + FOR).then(function (v) {
       if (!v.available) throw new Error(v.reason);
       $$("[data-tl-date]").forEach(function (e) { e.textContent = v.businessDate + (v.dataDate && v.dataDate !== v.businessDate ? " (the latest valuations are of " + v.dataDate + ")" : ""); });
-      $("[data-tl-count]").textContent = v.liveTrades.toLocaleString("en-US") + " live trades in my books" + (v.partial ? " (partial: " +
-        v.trades.toLocaleString("en-US") + " of " + v.matched.toLocaleString("en-US") + " read)" : "");
+      $("[data-tl-count]").textContent = F.formatNumber(v.liveTrades) + " live trades in my books" + (v.partial ? " (partial: " +
+        F.formatNumber(v.trades) + " of " + F.formatNumber(v.matched) + " read)" : "");
       if (v.pnl === null) tile("pnl", "—", v.mtmMasked ? "MtM is masked for your role" : v.figuresProblem ? v.figuresProblem :
         "no valuations on " + v.previousDate + ": no change to show");
       else tile("pnl", tone(el("span", "", money(v.pnl, true)), v.pnl), "MtM change since " + v.previousDate + " · " +
-        v.valuedBoth.toLocaleString("en-US") + " trades valued both days", v.pnl > 0 ? "good" : v.pnl < 0 ? "bad" : null);
+        F.formatNumber(v.valuedBoth) + " trades valued both days", v.pnl > 0 ? "good" : v.pnl < 0 ? "bad" : null);
       if (v.dv01 !== null) {
         $("[data-tl-tile='dv01']").hidden = false;
-        tile("dv01", money(v.dv01, true), "per bp, " + v.dv01Trades.toLocaleString("en-US") + " live trades");
+        tile("dv01", money(v.dv01, true), "per bp, " + F.formatNumber(v.dv01Trades) + " live trades");
       }
       var prod = $("[data-tl-product]");
       prod.textContent = "";
@@ -155,7 +151,7 @@
       var conf = num(r.confidence);
       $("[data-tl-var-k]").textContent = "My VaR" + (conf ? " (" + Math.round(conf * 100) + "%, 1-day)" : "");
       tile("var", money(r["var"]), r.intraday ? "intraday · " + (r.intraday.trades || 0) + " trades updated" + (r.intraday.lastAt ? " · " +
-        String(r.intraday.lastAt).slice(11, 16) : "") : "end of day · " + (r.trades || 0).toLocaleString("en-US") + " trades");
+        String(r.intraday.lastAt).slice(11, 16) : "") : "end of day · " + F.formatNumber(r.trades || 0) + " trades");
       if (r.intraday) $("[data-tl-intraday]").textContent = "· intraday as of " + String(r.intraday.lastAt || "").slice(11, 16);
       var w = r.worst;
       if (w) tile("limit", pct(w.limitUse), w.book + " · limit " + money(w.limit) + ((r.books || []).length > 1 ? " · the highest of " + r.books.length + " books" : ""),
@@ -270,7 +266,7 @@
       $$("[data-tl-date]").forEach(function (e) { e.textContent = v.businessDate + (v.dataDate && v.dataDate !== v.businessDate ? " (the latest valuations are of " + v.dataDate + ")" : ""); });
       $("[data-tl-mtm]").textContent = money(v.mtm, true);
       if (v.figuresProblem) $("[data-tl-mtm]").title = v.figuresProblem;
-      $("[data-tl-desk-count]").textContent = (s.books || []).length + " books · " + v.liveTrades.toLocaleString("en-US") + " live trades" +
+      $("[data-tl-desk-count]").textContent = (s.books || []).length + " books · " + F.formatNumber(v.liveTrades) + " live trades" +
         (v.partial ? " (partial)" : "");
       if (v.pnl === null) tile("pnl", "—", v.mtmMasked ? "MtM is masked for your role" : v.figuresProblem ? v.figuresProblem :
         "no valuations on " + v.previousDate + ": no change to show");
@@ -356,6 +352,7 @@
     var rows = p.rows, W = 600, H = 140, mid = 70;
     var big = Math.max.apply(null, rows.map(function (r) { return Math.max(Math.abs(r.pnl), Math.abs(r["var"])); })) || 1;
     var y = function (v) { return mid - (v / big) * (mid - 8); }, step = W / rows.length, bw = Math.max(2, step * 0.6);
+    var at = function (v) { return Math.round(v * 10) / 10; };              // an SVG coordinate (geometry, not a figure)
     var svg = document.createElementNS(SVG, "svg");
     svg.setAttribute("viewBox", "0 0 " + W + " " + H);
     svg.setAttribute("role", "img");
@@ -364,10 +361,10 @@
     add("line", { x1: 0, y1: mid, x2: W, y2: mid }, "axis");
     rows.forEach(function (r, i) {
       var x = i * step + (step - bw) / 2, top = Math.min(y(r.pnl), mid), h = Math.max(1, Math.abs(y(r.pnl) - mid));
-      add("rect", { x: x.toFixed(1), y: top.toFixed(1), width: bw.toFixed(1), height: h.toFixed(1) }, r.pnl >= 0 ? "gain" : "loss");
-      if (r.exception) add("circle", { cx: (x + bw / 2).toFixed(1), cy: y(r.pnl).toFixed(1), r: 5 }, "exc");
+      add("rect", { x: at(x), y: at(top), width: at(bw), height: at(h) }, r.pnl >= 0 ? "gain" : "loss");
+      if (r.exception) add("circle", { cx: at(x + bw / 2), cy: at(y(r.pnl)), r: 5 }, "exc");
     });
-    add("polyline", { points: rows.map(function (r, i) { return (i * step + step / 2).toFixed(1) + "," + y(-r["var"]).toFixed(1); }).join(" ") }, "varline");
+    add("polyline", { points: rows.map(function (r, i) { return at(i * step + step / 2) + "," + at(y(-r["var"])); }).join(" ") }, "varline");
     box.textContent = "";
     box.appendChild(svg);
     note.textContent = p.exceptions + " exception" + (p.exceptions === 1 ? "" : "s") + " in " + p.days + " days (" + rows[0].date + " to " +

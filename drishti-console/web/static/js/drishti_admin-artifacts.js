@@ -62,11 +62,8 @@
     none.hidden = shown > 0 || rows.length === 0;
   }
   [q, fKind, fState, fOrigin].forEach(function (c) { c.addEventListener('input', filter); c.addEventListener('change', filter); });
-  document.addEventListener('keydown', function (e) {
-    var t = e.target, typing = t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable);
-    if (typing || e.ctrlKey || e.metaKey || e.altKey || document.querySelector('dialog[open]')) { return; }
-    if (e.key === '/') { e.preventDefault(); pick('installed'); q.focus(); }
-  });
+  window.Drishti.keys.register({ id: 'artifacts.filter', keys: ['/'], scope: 'screen', area: 'admin-artifacts', group: 'Artifacts', description: 'Find an installed artifact',
+    when: function () { return !document.querySelector('dialog[open]'); }, run: function () { pick('installed'); q.focus(); } });
 
   // ---- Enable ----------------------------------------------------------------------------------------------------------------------
   root.addEventListener('click', function (e) {

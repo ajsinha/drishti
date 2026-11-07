@@ -22,7 +22,7 @@
 # switch names, still accepted: DRS-1024), shipped (the switch as shipped), installed, live-on (false: turning it on needs a restart),
 # prefixes (the settings it owns), needs (hard, on the same node: refused without them, DRS-1021), uses (soft: its parts that read the other
 # are hidden), api (server path prefixes: 404 DRS-1020 when it runs nowhere), console (console path prefixes; "=/path" is that path only),
-# words (command words; "PLAY VAR" is two), menus (item ids of drishti-console/config/menus.yaml), help (help.yaml slugs), landings, tiles
+# words (command words; "PLAY VAR" is two), menus (item ids of drishti-console/config/sitemap.yaml), help (help.yaml slugs), landings, tiles
 # (Home quick cards by title), lenses, bi (BI dataset id prefixes), cli (drishti.py commands), playgrounds, connectors (its own), kinds
 # (computed here), inputs (engine-input kinds it reads: not read ahead on a node where no running engine reads them), ai-tools.
 engines:

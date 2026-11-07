@@ -125,17 +125,24 @@ class Guide:
 class Library:
     """Loads the catalogue once; renders and searches guides on demand. Thread-safe for reads.
 
-    ``categories`` are the help centre's sections (help.yaml ``sections:``), in order: ``{id, name, icon, blurb, roles, groups, guides}``,
+    ``categories`` are the help centre's sections (the sitemap's ``help-sections:``, their pages from help.yaml ``sections:``), in order: ``{id, name, icon, blurb, roles, groups, guides}``,
     each group ``{title, words, guides}`` and ``guides`` every page of the section in order; a page's ``category`` is its section's id."""
 
-    def __init__(self, console_dir: Path, catalogue: Path, docs_dir: Path, packs: list | None = None):
+    def __init__(self, console_dir: Path, catalogue: Path, docs_dir: Path, packs: list | None = None, sections: list | None = None):
+        """``sections``: the sections' heads in order ({id, name, icon, blurb, roles}; default: the sitemap's help-sections:); the
+        catalogue lists each section's groups of pages by its id."""
         self.docs_dir = docs_dir
         data = yaml.safe_load(catalogue.read_text(encoding="utf-8"))
+        if sections is None:
+            from core.menus import help_sections
+            sections = help_sections(console_dir)
+        pages = {str(sec.get("id")): sec for sec in data.get("sections") or []}
         self.categories = []
         self.guides: dict[str, Guide] = {}
         self.aliases = {str(k): str(v) for k, v in (data.get("aliases") or {}).items()}
         self.documents = {str(k): str(v) for k, v in (data.get("documents") or {}).items()}
-        for sec in data.get("sections", []):
+        for head in sections:
+            sec = {**pages.get(str(head["id"]), {}), **head}
             groups = []
             for grp in sec.get("groups", []):
                 items = []
@@ -289,29 +296,6 @@ class Library:
         except ValueError:
             shown = Path(target)
         return f'<span class="help-repo" title="In the repository: {html.escape(str(shown))}">{m.group(3)}</span>'
-
-    def search(self, q: str, limit: int = 20, section: str = "") -> list[dict]:
-        """The guides whose text holds every word of ``q``, best first; with ``section`` only that section's listed pages (the
-        section-scoped search of its page)."""
-        words = [w for w in re.split(r"\W+", q.lower()) if len(w) > 1]
-        if not words:
-            return []
-        hits = []
-        sid = self.section_id(section) if section else ""
-        for g in self.guides.values():
-            if not g.listed and "qa" in g.path.parts:
-                continue                             # the QA records (history) are reachable by link, not search
-            if sid and (g.category != sid or not g.listed):
-                continue
-            text = self.render(g.slug)["text"]
-            low = text.lower()
-            score = sum(low.count(w) for w in words) + sum(10 for w in words if w in g.title.lower())
-            if score and all(w in low or w in g.title.lower() for w in words):
-                i = min((low.find(w) for w in words if low.find(w) >= 0), default=0)
-                snippet = text[max(0, i - 80): i + 160].strip()
-                hits.append({"guide": g, "score": score, "snippet": snippet})
-        hits.sort(key=lambda h: -h["score"])
-        return hits[:limit]
 
 
 def _full_size(m: re.Match) -> str:

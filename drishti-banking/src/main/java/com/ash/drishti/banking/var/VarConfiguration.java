@@ -159,6 +159,12 @@ public class VarConfiguration {
         return new VarExplain(svc, props);
     }
 
+    /** Explain a VaR figure (kind var, the one Explain of SHARED_SCREENS.md section 3): formula, inputs and lineage, why it moved, workbook. */
+    @Bean
+    com.ash.drishti.server.explain.Explainer varNumberExplainer(VarService svc, VarViews views, VarExplain explain) {
+        return new VarNumberExplainer(svc, views, explain);
+    }
+
     @Bean
     VarViews varViews(VarService svc, VarParametricProperties parametric) {
         VarViews v = new VarViews(svc).parametric(new VarParametric(parametric));

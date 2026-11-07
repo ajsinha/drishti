@@ -31,32 +31,20 @@ def test_the_code_editors_own_input_is_labelled():
     assert "getInputField().setAttribute('aria-label'" in JS
 
 
-def _proposal(status, base="", live=None):
-    new = OLD.replace("version: 3", "version: 4") if not base else OLD.replace("kind: kv", "kind: table")
-    return {"id": "P-000042", "name": "s-test", "version": 4 if not base else 3, "note": "", "author": "ana", "createdAt": "2026-10-01T09:00:00Z",
-            "status": status, "newVersion": not base, "stale": False, "mayApprove": False, "mayWithdraw": False,
-            "text": new, "baseText": base, "liveText": new if status == "approved" else "", "previousText": "" if status == "approved" else OLD}
-
-
 def test_an_approved_new_version_still_shows_its_diff(client, backend, monkeypatch):
-    async def proposal(id_, ident=None):
-        return _proposal("approved")
-
-    async def sutras(ident=None):
-        return [{"name": "s-test", "latest": 4, "versions": [3, 4]}]
-
-    async def sutra_source(name, version, ident=None):
-        return OLD if version == 3 else ""
-    monkeypatch.setattr(backend, "proposal", proposal, raising=False)
-    monkeypatch.setattr(backend, "sutras", sutras)
-    monkeypatch.setattr(backend, "sutra_source", sutra_source)
-    html = client.get("/build/reviews/P-000042").text
+    html = _sutra_view(client, backend, monkeypatch, OLD, OLD.replace("version: 3", "version: 4"))   # the latest earlier version, as the server answers
     assert "No differences" not in html and '+version: 4' in html
 
 
 def test_an_approved_change_to_a_live_version_is_shown_against_what_it_was_proposed_on(client, backend, monkeypatch):
-    async def proposal(id_, ident=None):
-        return _proposal("approved", base=OLD)
-    monkeypatch.setattr(backend, "proposal", proposal, raising=False)
-    html = client.get("/build/reviews/P-000042").text
+    html = _sutra_view(client, backend, monkeypatch, OLD, OLD.replace("kind: kv", "kind: table"), new_version=False)   # the text it was proposed on
     assert "No differences" not in html and "kind: table" in html
+
+
+def _sutra_view(client, backend, monkeypatch, before, after, evidence=None, new_version=True):
+    """The Approvals queue's Sutra view (the diff with its moves, the evidence) of a proposal whose texts the server gives as facts."""
+    async def approvals_item(kind, id_, ident=None):
+        return {"detail": {"item": {"kind": kind, "id": id_}, "facts": {"before": before, "after": after, "evidence": evidence, "newVersion": new_version}},
+                "actions": ["ask"]}
+    monkeypatch.setattr(backend, "approvals_item", approvals_item, raising=False)
+    return client.get("/approvals/api/view/sutra/P-000042").text

@@ -39,8 +39,9 @@
     return e;
   }
   function say(t, bad) { msg.textContent = t; msg.classList.toggle('t-bad', !!bad); msg.classList.toggle('t-ok', !bad && !!t); }
-  function num(n) { return Number(n || 0).toLocaleString('en-US'); }
-  function mb(b) { return (b / 1048576).toFixed(b < 10485760 ? 1 : 0) + ' MB'; }
+  var F = window.Drishti.elements.core;                                         // counts, sizes and durations by drishti-core
+  function num(n) { return F.formatNumber(Number(n || 0)); }
+  function mb(b) { return F.formatBytes(b, { decimals: function (a) { return a < 10485760 ? 1 : 0; } }); }
   function today() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 
   function current() { var k = kindSel.value; return kinds.filter(function (x) { return x.kind === k; })[0]; }
@@ -88,7 +89,7 @@
     var days = Object.keys(b.days || {});
     out.appendChild(el('p', { 'data-data-summary': true }, [el('b', { text: num(b.rows) + ' ' + b.kind + ' rows loaded' }),
       ' into ' + b.connector + ' for ' + (days.length === 1 ? days[0] : days.length + ' business dates') + (b.rejected ? '; ' + num(b.rejected) + ' refused' : '') +
-      ' (' + mb(b.bytes) + ' in ' + (b.millis / 1000).toFixed(1) + ' s).']));
+      ' (' + mb(b.bytes) + ' in ' + F.formatDuration(b.millis) + ').']));
     if (b.rejections && b.rejections.length) {
       out.appendChild(el('ul', { class: 'det-list t-warn', 'aria-label': 'Rows refused' }, b.rejections.map(function (x) { return el('li', { text: x }); })));
     }

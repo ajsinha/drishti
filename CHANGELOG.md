@@ -94,6 +94,371 @@
   core reference data; economy keeps world-economy and news-and-markets. The Market lens needs capital markets and banking.
 - **Editions as lenses**: the risk, trading, market and world editions are lenses of the registry; an edition opened as a lens is offered
   only while its modules are on.
+## 2.9.11.e (unreleased)
+
+- **The demo lake's layout, the owner's decision** (`config/lakes/demo.yaml` and its jar copy; DATA_LAKE_GUIDE.md section 2): `risk.scenario-pv`
+  partitioned by `SCENARIO_SET_ID, GRAIN` after the business date, sorted by `LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, TRADE_ID`, zstd
+  (vectors too), 256 MB files, 16 MB row groups, 30 days' time travel, maintenance (compaction to 256 MB, vacuum after 7 days,
+  checkpoints); `trading.trade_calypso` and `trading.trade_murex` partitioned by `PRODUCT_GROUP` instead of `PRODUCT_TYPE` (50+ product
+  types each; `PRODUCT_TYPE` stays promoted); every trade table compacted and vacuumed after 7 days. The trading pack's recommended
+  entries follow (tools/packgen/banking/make_packs.py). An existing demo lake is rebuilt with `drishti.py lake demo` to take it; a load
+  into an old-layout table is refused, naming both, until then. VaR figures are equal on either layout.
+
+- **The demo lake's move no longer changes the shipped `config/lakes/demo.yaml`** (found on the owner's stack after 2.9.11.d: at the
+  first start after the move the file was re-written in block style, quotes added, and 43 tables appended, so `git status` showed it
+  modified and the drill's clean-tree check would fail). Two causes: the shipped file lacked the 37 tables the example packs'
+  connectors read from the demo lake (climate, genomics, liquidity, operational risk, retail), and the code that moves old connector
+  files to `lake: demo` (`LakeFiles.adoptDemo`) re-serialised the whole file to add any entry. Now the shipped file (and its jar copy)
+  holds every table a shipped pack's connector reads, checked by a test and filled by `LakesCli pack-tables --lake demo --packs
+  config/packs,examples/packs --write`; a lake file is written only when an entry is really missing (a site's own connector naming a
+  kind the packs no longer have, or the data inbox's first load into a table), and then only that entry is added at the end of
+  `tables:` in the file's compact style, every other line and comment kept byte for byte (`tables: {}` of an empty lake becomes the
+  block). A start that finds nothing to add writes nothing (docs/admin/OPERATIONS.md, "The lakes' folders"). Found on the way: a
+  results reader of the older form (`var-results`, `exposure-results`: `risk-results` tables, same old root) was moved to `lake: demo`
+  and its table added to the demo lake, where it would have read `data/delta/demo/risk-results`; such a connector reads another shipped
+  lake's tables and is now left as it is.
+
+- **Drishti Elements, the design, decided by the product owner** ([ELEMENTS.md](docs/architecture/ELEMENTS.md)): the console's JavaScript as eight libraries (drishti-core, -inputs, -grid, -chart, -data, -insight, -renderer, -risk; 1 to 5 without a Drishti server), the measured inventory (116 of 258 scripts and modules, about 21,000 lines, fold into them; about 10 grids and 22 chart scripts into one each), the grid's three layouts (wells, panel, terminal: VaR screens default to terminal) and its server-side pivot with non-additive totals from the server, an AG Grid-style adapter for the Enterprise pivot API from public documentation only, one chart spec over ECharts with the risk kinds and maps (world to every country's first-level regions), packaging and licensing per domain module, the documentation of every library (guide, generated API reference, tutorial, gallery, AG Grid migration guide), the guards and the migration order; the decisions (Vega retired, the grid on phones, a standalone Excel writer, the adapter's scope, both options of g2, g3 and g4 built as modes with A the default); mock-ups [g1](docs/architecture/mockups/elements/g1-pivot-grid.html), [g2](docs/architecture/mockups/elements/g2-charts.html), [g3](docs/architecture/mockups/elements/g3-maps.html) and [g4](docs/architecture/mockups/elements/g4-gallery.html).
+- **Drishti Elements, the foundation** ([ELEMENTS.md section 8.1](docs/architecture/ELEMENTS.md#81-as-built-the-foundation-drishti-core-and-the-grids-engine)):
+  `static/elements/` with a manifest of the libraries and their versions, ES modules per library and one bundled file each written by
+  an offline Python build (`tools/elements/build.py`, `--check`), a loader (`Drishti.elements.load('drishti-grid')`), and the API
+  reference generated from the typed JSDoc ([ELEMENTS_API.md](docs/guides/ELEMENTS_API.md), `tools/docs/elements_api.py --check`).
+- **drishti-core 1.0.0**: numbers by the server's rules (half up on the decimal value, the true minus, the named formats generated from
+  `formats.yaml`, compact, percent, basis points, currency, a locale's separators), business dates and ranges, the theme tokens
+  generated from `drishti_tokens.css` with WCAG contrast arithmetic, an API client (errors in words with their DRS code, GET retries,
+  abort, time limit, the as-of header), an event bus, a focus trap, a live region and a roving tab index, keys and key maps, dialogs,
+  drawers and toasts. Folded in and deleted: `drishti_resize.js` and `build/drishti_grid-keys.js` (`Drishti.resize` and
+  `Drishti.GridKeys` keep their names); the alerts' and the workbench's toasts, the table editors' dialog and the number helpers of
+  twelve screens now call drishti-core (a value that rounds to zero reads `0`, never `−0`).
+- **drishti-grid 0.1.0, the engine** (no look yet): columns and the searchable field list, sort and filter models, the client-side row
+  model (typed indexes, row groups with figures from their members) and the server-side one (block requests with sort, filter, group
+  keys, values and pivot, a cache, refresh, abort), virtual scrolling for a million rows, the pivot in the server's own view and answer
+  (row and column groups, totals and subtotals above or below, open and closed groups, top N with Others, member and value filters,
+  pivot result columns), non-additive measures never summed in the browser (asked of the server and merged by coordinates), the
+  wells, selection with range figures that warn on a non-additive column, copy as TSV, CSV and a standalone .xlsx writer, the keys,
+  the Explain hook and the layout-neutral state. **Events and live data**: typed events on the bus and as DOM events (cell click,
+  double-click and edit, selection, range, sort, filter, pivot, groups, expand and collapse, column move, resize, pin and hide, row data
+  updated, server blocks loaded or failed, Explain opened); transactions by row id applied in place with a stable order under sort and
+  filter, batched for high-frequency feeds, each changed cell's direction kept for its flash; live feeds over Server-Sent Events or a
+  WebSocket; the server-side model's invalidate, purge and data-changed notice; group and pivot totals changed by difference, and
+  non-additive ones asked of the server again, debounced. 40 unit tests in Node (`tests/elements/`), and the 1,000,000-row figures in
+  [BENCHMARK.md](docs/admin/BENCHMARK.md).
+- **drishti-grid 0.2.0, the visual layer** ([ELEMENTS.md section 8.1](docs/architecture/ELEMENTS.md#81-as-built-the-foundation-drishti-core-and-the-grids-engine)):
+  `new Grid(element, options)` and `<drishti-grid>` (no framework, no shadow root) draw the engine in the three layouts of g1, all
+  built: `wells` (the default: fields with search and the four wells above the grid, Explain in a drawer that follows the selection),
+  `panel` (a side tool panel with grouped fields, checkboxes, the wells two by two, pivot mode, grand total column, subtotals above and
+  deferred update) and `terminal` (a command line read both ways, one lane of wells, Explain in a split pane with the steps, the worst
+  scenarios and the trend, function keys F2 to F10); densities comfortable, compact and terminal apart from the layout; light and dark
+  from drishti-core's tokens. Drag chips between wells (or move them from a chip's menu by the keyboard), aggregation per value (the
+  server's for a non-additive one), member and value filters, top N, collapsible pivot column groups, the grand totals and any column
+  pinned, the column menu, the context menu (Explain, copy, copy with headers, CSV and Excel, chart the range, the rows behind a cell
+  in a dialog, group, pin), row checkboxes, ranges by drag or Shift+click with the status bar (count, sum, average, min, max; a sum of
+  VaR is refused with a warning), ◆ non-additive totals with a hover note, colour scales and data bars, Explain on E and F2, the full
+  keyboard with grid or treegrid roles and announcements, the flash of live changes (still under reduced motion), loading placeholders
+  for server blocks, virtual rows and columns; on a phone (O2) the first column pinned and a pivot as one value column with a measure
+  switcher. Nothing inline: it runs under a strict CSP. A static fixture harness (`drishti_harness.html`, synthetic data, no server) in
+  every layout, density and theme; 12 more Node tests and one browser test file against the harness (`test_elements_grid_browser.py`).
+  The engine's pivot header rows (an open group's label line, subtotals below) no longer repeat the subtotal's figures.
+- **drishti-inputs 0.1.0** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+  business-date pickers keyed by holiday calendars (rules with weekend rolls, n-th weekdays and Easter, or the server's dates; unions
+  such as US+UK; T-1, month-end, typed `T-3`, `ME`, `6 Nov 2026`; non-business days refused in words), a date-range picker with twelve
+  presets that move with the business date, a tree picker (compact partial selection, children from the server with loading and
+  Retry, search), a multi-select (search, chips, select-all, a limit), a combobox with server type-ahead (debounced, aborted, cached,
+  in order), forms from a JSON-schema-like description (validation in words, conditional fields, repeatable groups, the server's
+  checks, a four-eyes submit that files a proposal and waits), a filter bar that emits the filter model on a bus for grids and charts,
+  and the code editor over the vendored CodeMirror (Rachana, YAML and Python; completion from the function catalogue through a hook;
+  lint marks and a problems list; read-only; a side-by-side or unified diff). Each a class and a web component.
+- **drishti-data 0.1.0**: one data-source contract for grids and charts (in memory, REST pages, Drishti's server-side rows, Arrow,
+  live; any source is the grid's datasource as it is), the live client over Server-Sent Events or a WebSocket (reconnect with a
+  jittered back-off, a heartbeat, resume from the last event id, states for a status line), backpressure into the grid's
+  `applyTransactionAsync` (one batch at a time, the rest folded by row id), and the Arrow client (Flight over HTTP where a server
+  offers it, else Arrow over HTTP, else JSON; columns read without a copy where they can be, rows as views, column types for a grid).
+  The grid's own SSE and WebSocket feeds are gone: the live client is the one connection.
+- **drishti-grid 0.3.0, cell editing**: editors per type (text, a number in the grid's locale read loosely, a date through
+  drishti-inputs' business-date picker, a select, a checkbox), started by Enter, F2, a double click or typing, saved by Enter or Tab,
+  Escape to cancel; validation in words (required, min, max, length, options, the column's rule); each change one edit transaction
+  (`cellValueChanged`, `editTransaction`) with undo and redo; a paste of a range from Excel (quoted cells, one value filling a range);
+  Delete over a range; a write-back hook (applied, refused with the old values back, or proposed) and four eyes (cells marked until a
+  proposal is decided). `grid.followFilters(bus)` follows a filter bar.
+- **drishti-grid 0.4.0, the AG Grid-style adapter** ([ELEMENTS.md section 6](docs/architecture/ELEMENTS.md#6-the-ag-grid-style-adapter),
+  [the migration guide](docs/guides/AG_GRID_MIGRATION_GUIDE.md)): an application written for AG Grid Enterprise's pivoting moves to
+  drishti-grid by changing one call, `createGridFromAgOptions(el, gridOptions)`. Drishti never uses AG Grid; the adapter is written from
+  its public documentation only. Column definitions (defaults, types, groups, getters, formatters, comparators, classes and safe styles),
+  row grouping, pivoting (`rowGroup`, `pivot`, `aggFunc` with built-in, function and `aggFuncs` aggregations, `'drishti:server'` for a
+  non-additive measure whose every total is the server's), the totals and open levels, `sideBar` as the panel layout, the server-side
+  row model (`serverSideDatasource.getRows` with AG's request, in pivot mode each open level and `pivotResultFields` made into the
+  pivot), tree data, the common grid API calls (options at run time, transactions, selection, nodes, CSV and Excel, filter and column
+  state both ways, sizing, expand and collapse, the wells, `refreshServerSide`) and AG-named events from the grid's own. Every option not
+  taken in full is named once in the console with drishti-grid's way and listed by `reportUnsupported()`. The mapping's one home is the
+  code (`drishti_grid-ag-map.js`): the gallery's AG Grid tab (now live, with an adapter demo) and the guide's option table are
+  generated from it. The grid gained `registerAggFunc`, a column's `cellClass`, `cellStyle` and `system`, the pivot's `grandTotalRow`
+  and the view's `grandColumn` and `columnGroupTotals`. 12 Node tests (`ag-adapter.test.mjs`, one in `gallery.test.mjs`) and a browser
+  test against a static harness configured purely with AG-shaped options (`drishti_ag-harness.html`).
+- **drishti-core 1.1.0**: the sort and filter model moved in from the grid as the contract every library shares (with
+  `FILTER_CHANNEL` and `filterRows`), the element maker and placements, reading typed and pasted numbers in a locale, and loading a
+  library's vendored engine (`loadScript`, `loadStyle`, `staticUrl`). One static harness page for inputs, data and editing
+  (`drishti-inputs/drishti_harness.html`), 23 more Node tests (`inputs`, `data`, `grid-edit`) and one browser test file
+  (`test_elements_inputs_browser.py`). The console's pickers, forms, editors, live connections and Arrow reader that move onto these
+  later are listed in ELEMENTS.md 8.2.
+- **drishti-chart 0.1.0, with maps** ([ELEMENTS.md section 8.3](docs/architecture/ELEMENTS.md#83-as-built-drishti-chart-its-maps-and-drishti-risk)):
+  one engine-neutral spec over the vendored ECharts (kind, data inline or a server's answer, encodings x, y, series, size and colour,
+  drishti-core's formats, axes, legend, annotations as lines, bands, points and texts, conditional marks and colours, interactions);
+  the kinds line, area, bar (grouped, stacked, stacked to 100%, horizontal), scatter, bubble, histogram, waterfall, box plot, heatmap
+  (sequential and diverging), candlestick, pie, donut, gauge, treemap, sankey, layers and the map; `new Chart(el, spec, options)` and
+  `<drishti-chart>` in the two modes of g2, `card` (the default) and `studio` (the kind rail, the chart with its table, the spec beside
+  it with options that change both); the shared theme and the three densities; crosshair tooltips, legend toggles, drag-to-zoom with an
+  overview window, the keyboard (arrows walk the marks, Enter explains, T the table), **a click on any mark explains it** through the
+  grid's hook and drawing and selects its rows, the data table (▦, the accessible alternative), export (PNG at 2×, SVG drawn off screen,
+  CSV, the spec), **linked selection with drishti-grid** through drishti-core's bus (`linkGrid`), live updates by row id, throttled.
+  **Maps**: the world in Equal Earth, a double-click opens a country's first-level regions loaded on demand from the vendored Natural
+  Earth files (the United States in Albers with Alaska and Hawaii as insets, Canada's provinces and territories, every other country
+  in a fitted conic), a breadcrumb back, a quantile (with counts) or continuous choropleth, no-data hatching, bubbles, a metric picker,
+  and the two modes of g3, `ranking` (the default: legend, top ten with bars, the selected place with Explain and "Drill into
+  regions ›") and `table` (a floating legend and card, a world inset, a sortable table under the map). **Vega-Lite is translated** into
+  the spec (O1): the marks, encodings, aggregates, bins, layers, filters and calculations Drishti's visuals use, the rest named; the
+  vendored Vega stays until the screens move. Nothing inline (a strict CSP holds).
+- **drishti-risk 0.1.0** (the banking module's, licensed with it): `risk.pnl-distribution` (VaR and ES lines, the tail in red),
+  `risk.backtest` (exceptions marked, the traffic light with its plus factor on the card), `risk.exposure-profile` (EE, PFE, EEPE over the
+  first year, the limit, a log tenor axis) and `risk.var-change` on drishti-chart; the figures are the server's, computed in the page
+  only where there is no server, and then the card says so.
+- **drishti-core 1.1.0, for the chart**: gains the element maker, Explain's drawing (the grid, the chart and the map draw one ExplainResult) and the CSV
+  writer, moved from drishti-grid; the loader loads a library's vendored engine (ECharts) once. A static fixture harness for the chart
+  (`drishti-chart/drishti_harness.html`: every kind, mode and map level), 19 Node tests (`chart.test.mjs`, `maps.test.mjs`: the spec, the
+  translator, the kinds, the risk figures, the map loader on every one of the 252 region files) and one browser test file
+  (`test_elements_chart_browser.py`).
+- **The Elements gallery** ([ELEMENTS.md section 8.4](docs/architecture/ELEMENTS.md#84-as-built-the-gallery), mock-up g4): the live
+  documentation of every component, a static page that needs no server (`static/gallery/drishti_gallery.html`, from the file system
+  too) and the console's `/elements` (a Build page, under Build → Learn). Both modes of g4, the playground the default: the searchable
+  list of libraries and components with version and badge (no server needed, needs a Drishti server, banking module licence; the
+  libraries not built yet listed apart); the live component with code tabs written from the very object it was given (web component,
+  JavaScript, Sutra, and for the grid the AG Grid adapter's option shapes with section 6's mapping, marked planned); options generated
+  from the typed JSDoc; an event log; a status line with the bundle's size, the tests and a keyboard/ARIA smoke check; and the
+  documentation page (runnable examples with "Open in playground", the API from the JSDoc, the keys and roles, the changelog). Demos of
+  every component on this build: drishti-core's formats, theme, bus, overlays, Explain, API client and accessibility helpers; the grid in
+  its layouts and densities, the pivot, server-side rows, live updates from a manual feed, editing, export; every chart kind, the
+  studio, the maps in both modes, linked selection, a live chart, Vega-Lite translated; the four risk kinds; drishti-inputs' and
+  drishti-data's demos appear with those libraries. `tools/docs/elements_api.py` writes the gallery's catalogue
+  (`drishti_catalogue.js`) from the same parse as ELEMENTS_API.md, `--check` covering both; ELEMENTS_API.md now lists every library's
+  types (a `@typedef` was read as `@type` and dropped). 9 Node tests (`gallery.test.mjs`), the routes' tests and one browser file
+  (`test_elements_gallery_browser.py`, 5 tests, about 18 s).
+- **drishti-renderer 2.0.0: the client renderer rebuilt on the Elements libraries** ([CLIENT_RENDERER.md section 3](docs/architecture/CLIENT_RENDERER.md#3-the-librarys-shape),
+  [ELEMENTS.md section 8.5](docs/architecture/ELEMENTS.md#85-as-built-drishti-renderer-200)). The product owner's rule: no renderer-private
+  grid, chart, format, live or input code; the console and the renderer draw panels with the same components. Tables, trees, drills, the
+  pivot kind and every chart's Data table are **drishti-grid's document table** (the server's table, element for element 1.2.0's markup,
+  with sort, filter, paging, trees and drills); the nested pivot in `behaviours: 'console'` is **drishti-grid's grid with tree data** (new:
+  `treeData`, `getDataPath`); every chart is **drishti-chart's panel charts** (the console's options, series for series; the only place an
+  engine is called); the element maker, the rules for untrusted data (`attrAllowed`, `safeUrl`), formats (half up) and the API client
+  are **drishti-core's**; streams and Elements' one connection per page are **drishti-data's `LiveClient`** (new: SSE over fetch so a
+  bearer travels, an address asked at each connect, the event name in each message, `parseSse`). The renderer's `m/format.js`,
+  `m/tables.js`, `m/charts.js`, `m/draw.js` and its stream and channel code are gone from the current version; **1.2.0 stays served,
+  frozen, for existing embedders** (Elements 2.2 still points at it; Elements 2.3 at 2.0.0). Public entry `static/render/2.0.0/drishti-render.js`
+  (the 1.x API unchanged, plus `insight` hooks for About); `/embed/v2/elements/<library>/…` serves the libraries to other origins.
+  **One rounding rule**: the panel macros' computed figures (a share, a progress, a width, a heat bucket) round half up as the server and
+  the renderer do (`core/half_up.py`). Parity against the console's macros: 476 pairs, no difference beyond the intentional ones (CLIENT_RENDERER.md 14.4). Tests: Node (`data.test.mjs` fetch transport;
+  `chart.test.mjs` panel series against the frozen 1.2.0 builders; `doc-table.test.mjs` markup against the frozen `tables.js`;
+  `tree.test.mjs`), the render browser files moved to the libraries, and a static harness (`drishti-renderer/drishti_harness.html`, the
+  parity suite's ViewModels from `tools/elements/renderer_fixtures.py`) with a four-test browser file (`test_elements_renderer_browser.py`, about 5 s).
+- **One search** (lean & streamlined): `core/search.py` behind one console route, `GET /api/search?in=command|help|all`, answers the command
+  line's type-ahead (`in=command`, the server's order kept), Help's search box and results page and `/what` (`in=help`), and a new **global
+  search** (`in=all`): entities, commands, screens, Help pages and things you can build, grouped by kind, best group and best match first,
+  each source in parallel and a failing one named in `failed` while the rest answer. It follows entitlements (the server's), the menus'
+  rules (screens), Help's rule (pages), the BI catalogue (reports and boards), the edition, the lens and the engine switches.
+  **Removed:** the console's `GET /api/suggest`, the command line's own type-ahead in `api_routes.py` and `Library.search` (one search
+  instead of three). One client component, `drishti_search-box.js`, runs the command line, Help's box and the global search (`Alt+K`, or
+  the top bar's new search button): ARIA combobox and listbox, debounced, a stale request aborted. Tests: `test_search.py`; 14 test files
+  repointed to `/api/search`.
+- **One keymap**: `drishti_keys.js` holds every key a page answers, with its scope (dialog, panel, screen, global; the most specific
+  wins), its area, a description, and the rule that **a key never acts while you type** in a field. **`?` lists the keys of the screen
+  you are on** (and the footer's new **Keys** button; on a view `?` stays About this page), from the same registrations; History's own keys
+  dialog is replaced by it. Every page-level key handler moves into it (the VaR screen's B, M, H, N and Alt+B
+  included); left outside, each with its reason: the engines menu's filter box (widget-internal), the drill-down's fallback for a host
+  page without the keymap. **BI and the Pivot are folded in too** (the eleven BI and Pivot scripts that bound keys on the page on
+  their own: BI's `/` and `g` then `h c w r` (`g h` now opens the Build home), the designer's Ctrl+S, Ctrl+Z, Ctrl+Y and Escape, the tab
+  lists' arrows, the kiosk's K, arrows, P and Escape, the run drawer's Escape, the statement preview's Page Up and Down, the tooltip
+  page's Escape, the Pivot's r c v f s, g, x, 1 to 9 and e, its cards' w i u, l and m), and so is the one Explain's E, ? and Escape;
+  **BI's own Keys dialog (`#biKeys`) is deleted**: the rail's Keys button and `?` open the keymap's list, which describes the visuals'
+  and the designer's own keys. A table's, a panel's zoom and About this page's own keys stay on their widgets and are described to the
+  keymap so the list shows them; the allow-list keeps only the engines menu's filter box and the drill-down's fallback.
+  - **`test_keymap.py`** (static, in the gate): every registration names a scope and an area, chords are written canonically, no two
+    claim one key in one scope and area, ids are unique, no script binds keys on document or window outside the allow-list (and the
+    allow-list has no stale entry), widget keys are described. **`test_keymap_browser.py`**: the `?` list (open, focus, Esc, the footer
+    button, `?` typed in a field is a character) and the global search (Alt+K from anywhere, grouped answer, ↓ Enter opens, Esc twice).
+  - **Timings** (the demo data, one real server, develop's console and this one side by side, requests interleaved, 21 each, median):
+    the command line's type-ahead is unchanged, the same answers in the same order (`/api/suggest` 3.4 to 7.2 ms, `/api/search?in=command`
+    3.5 to 7.3 ms over `TRD`, `TRD MX-2`, `CPTY north`, `VAR`, `MX-20000001`); Help's results page is unchanged (81 to 105 ms before,
+    83 to 114 ms after, over `keyboard`, `value at risk`, `connector`); Help's box (`in=help`) 37 to 60 ms; the new global search
+    (`in=all`) 92 to 96 ms, most of it Help's full-text scan (a word index for Help is the next step if it must be faster).
+- **Docs:** USER_GUIDE (Keyboard: the `?` list and the rules; *Search everything (Alt+K)*), API_GUIDE (`/api/search`; `/api/suggest`
+  removed), RELEASE_NOTES (upgrade note), Help addresses `/help/keyboard` and `/help/global-search`.
+- **Candidates to fold later:** the embed element `<drishti-search>` and the server's `/api/v1/embed/search` are untouched; they search
+  for embedded hosts and could become `in=` modes of the one search.
+- **One Approvals queue** (SHARED_SCREENS.md section 2, the approved mock-up e2-approvals A with B's due-soon items; lean & streamlined):
+  every four-eyes item in one inbox, **Views → Approvals** (`/approvals`, a count on the top bar): Sutra proposals, corrections
+  (write-back), BI items, pivot functions, stress windows, regulatory report sign-offs and compute packages. **Due soon** (a report run near
+  its filing date, `drishti.approvals.due-days`) is pinned on top; filters *Data · Screens · Risk · Access*, *Mine sent*, *Done*. The item
+  shows **what changes** (a diff with the maker's reason; a Sutra's with its moved panels and the workbench's evidence), its **effect if
+  approved** (the impact service's answer for a corrected record, the published reports a BI change breaks, a node's stressed VaR under
+  each window, the files a signed run releases) and the **rules**; **Approve**, **Reject** with a reason, **Withdraw** your own, or **ask a
+  question** (a thread on the item; the maker is told without the text). The maker never approves their own; everything is audited.
+  - **One server API**, `/api/v1/approvals` (list, count, item, approve, reject, withdraw, questions): each kind is an `ApprovalSource` in its
+    own package (`SutraApprovals`, `ChangeApprovals`, `BiApprovals`, `FunctionApprovals`, `StressWindowApprovals`, `VarReportApprovals`,
+    `ComputeApprovals`) keeping its rules; the queue keeps nothing per person (session isolation) and keeps the question threads.
+  - **One CLI**, `drishti.py approvals list|show|approve|reject|withdraw|ask`; a new token scope `approve`.
+  - **Removed** (folded into the queue): the endpoints `POST /api/v1/sutras/proposals/{id}/approve|reject|withdraw`,
+    `/api/v1/changes/{id}/approve|reject|withdraw`, `/api/v1/bi/items/{id}/approve|reject`, `/api/v1/admin/compute/requests/{id}/approve|reject`,
+    `/api/v1/pivot/functions/{owner}/{ref}/approve`, `/api/v1/var/stress-window/proposals/{id}/decision`, and the sign-off actions of
+    `/api/v1/var/reports/{report}/runs/{period}/signoff` (the maker's narrative is `/narrative`); the console pages *Build → Govern →
+    Reviews* (`/build/reviews`, `/build/reviews/{id}`) and *Review → Changes* (`/review/changes`), which redirect (301) to the queue; the
+    approve and reject buttons of the BI item page, Admin → Compute, the pivot's Functions panel, the stress window screen and the report
+    sign-off screen (each now links to its item in the queue); the CLI commands `design approve|reject`, `change approve|reject|withdraw`,
+    `pivot functions approve`, `var stress-window --decide` and `var report sign`; the console's `/build/review-count`.
+  - Tests: `ApprovalQueueTest` (two people each see their own queue, due soon first, decisions audited, question threads only for who may
+    see the item), `ApprovalApiTest` (the API over real Sutra proposals, with security on), `test_approvals.py`, `test_approvals_browser.py`
+    (every button of the queue), `test_approvalscli.py`; 21 Java and 14 console test files repointed.
+- **One alert engine** (lean & streamlined): the measure-alert service is the engine (`com.ash.drishti.server.alerts.AlertService`,
+  settings `drishti.alerts.*`): rules on a visual, a dataset or model measure, an entity's field or **a Rachana-EL rule on one entity**
+  (the new condition `rule`), looked at on a schedule, after a data load or live; delivered as before (inbox, email, chat bridges, webhooks,
+  text). **One lifecycle** for every alert raised, the platform's included: **raised → acknowledged → resolved** (by itself when the number
+  comes back, or by hand with a note), **owners** (who acknowledged it; a platform alert can be assigned), **snooze** (a breach while snoozed
+  is held and raised when the snooze ends; a snoozed platform series tells nobody). The Alerts page lists *Raised for you* beside your rules.
+  - **One API**, `/api/v1/alerts` (raised, acknowledge, resolve, snooze, assign, rules, suggestions, the notification stream) and
+    `/api/v1/admin/alerts` (everyone's rules, the board tiles that notify, the platform alerts).
+  - **Folded and deleted:** the entity-rule engine (`AlertEngine`, `AlertRule`, `AlertEvent`, the identity store's `AlertHistory`, its table
+    `drishti_alert` and the setting `drishti.alerts.keep`); its rules are **converted at start, once,** into rules of the engine (a field
+    source, the condition `rule`; live when the source pushes changes, else after each load of the kind). The platform alerts keep reading the
+    server's meters (`config/alerts/platform-alerts.yaml`, unchanged) and are listed, acknowledged, snoozed and assigned by the engine; their
+    own controller is gone. A data load's *alerts* step hands the kind to the engine (`n alerts to look`). Endpoints removed:
+    `/api/v1/me/alerts`, `/api/v1/me/alerts/rules/**`, `/api/v1/me/alerts/suggestions/{kind}`, `/api/v1/me/measure-alerts/**`,
+    `/api/v1/admin/measure-alerts/**`; the stream moved from `/api/v1/me/alerts/stream` to `/api/v1/alerts/stream` (its `alert` event is
+    gone: an alert raised is a `notice` of type `alert`).
+  - Tests: `AlertServiceTest` (the lifecycle, snooze, the converter, the rule condition, the platform alerts for administrators only),
+    `AlertsAndMonitorsTest`, `FieldMaskingTest`, `LoadsApiTest`, `PlatformMetricsApiTest` repointed; console `test_alert_routes.py`,
+    `test_monitors_alerts.py`.
+- **One Explain for every number** (SHARED_SCREENS.md section 3, the approved mock-up e3: A, the drawer, with B its preview and C the
+  page; USER_GUIDE.md "Explain: one for every number"; API_GUIDE.md "Explain any number"; lean & streamlined):
+  - **One server service**, `GET /api/v1/explain` (and `POST` with a body, `GET /api/v1/explain/kinds`): any number's formula with its
+    values, inputs and lineage, why it moved (steps that add up, as ViewModel panels the one renderer paints, and the engine's own answer),
+    workbook links and checks; `part=preview` for the hover card. Core code (`server.explain`): **explainers register per kind** through the
+    `Explainer` interface; the banking ones live with their engines (`var`: VaR, ES, parametric VaR and ES, the fat-tail gap;
+    `exposure`: peak PFE, CE, EPE, EEPE, peak EE, EAD) and move with the domain modules (2.9.11.f); the core's `pivot` explains a pivot cell's move. A kind
+    whose engine is off answers `DRS-1020`. Computed as the caller: a restricted person is told how many trades are outside the view,
+    never which (two-person tests on VaR and exposure).
+  - **One client component**, `drishti_explain.js` and `drishti_explain.css`, on every signed-in page: any element with `data-explain`
+    gets the preview (hover, `?`), the drawer (click, `E`; tabs Formula · Inputs & lineage · Why it moved · Workbook, the checks under
+    them) and the page (`/explain?…`, Print). The console only displays.
+  - **Folded and deleted:** the VaR page's **How calculated** drawer (key H, `how=1`), its **Why it moved** tab (`tab=why`,
+    `drishti_var-explain.js`, the person's `varExplainView` setting), the parametric figures' **?** pop-ups, the MR cube's two **Explain
+    the move** cards (now a button that opens the drawer) and the exposure page's **How this number was built** box. Their server
+    endpoints `GET /api/v1/var/explain`, `GET /api/v1/var/explain/matrix` and `GET /api/v1/pivot/mr/explain` and the console's
+    `/api/var/explain`, `/api/var/explain/matrix` and `/api/pivot/mr/explain` are gone; `VAR EXPLAIN` opens the Explain page at Why it
+    moved. Every explanation they gave is kept with the same numbers: `VarExplainApiTest` compares the drawer's rows with the old box's,
+    the parametric lines with the old ?'s and the steps with the engine's; `ExposureApiTest` the exposure box's rows.
+  - `drishti.py var explain` and `drishti.py pivot mr explain` read the new endpoint (the same output).
+  - Under construction (`config/under-construction.yaml`, `explain-*`): why it moved for ES and parametric figures and for exposure, the
+    exposure and pivot workbooks, the check against the official capture, BI measures, Sutra metrics, FRTB-SA and SIMM.
+  - **The Pivot's Why did it move? card (W) is on the one Explain** too: the card keeps its choices (the two cells or dates, the split,
+    the order) and **Explain ›** opens the drawer at Why it moved (kind `pivot`, the view in the body); its own waterfall and words
+    are deleted, and so is the console's `POST /api/pivot/explain` that drew them (the server's `POST /api/v1/pivot/explain` stays for
+    `drishti.py pivot explain` and scripts).
+- **One Build home** (docs/architecture/SHARED_SCREENS.md section 1, mock-up e1 A + B + C; USER_GUIDE.md › The Build home): `/build` is
+  a rail grouped Data · Screens · Analysis · Work with a count per kind, lists with lineage both ways (what an item uses, what uses it,
+  inverted across every kind gathered for the person), first-visit task tiles (Bring data in, Shape it, Show it, Package it; hidden per
+  browser), one search across every kind, + New per kind. Built from one registry of object types (`core/build_registry.py`): the core's
+  types in `core/build_types.py`, banking's (VaR baskets) in `core/build_types_banking.py`, so the domain split moves banking's entries as
+  one file; every source runs at once with a time limit and a failing one leaves its kind without a count. Folded and deleted: *My
+  designs* (`build/designs.html`, now the home's *My drafts* partial with its actions; `drishti_build-designs.js` is
+  `drishti_build-home.js`), Studio's bare start page (`/studio` redirects to `/build`); **BI Studio's own home is folded in**: `/bi` redirects to `/build`,
+  `BI <GO>` and `RUPAKA <GO>` open the Build home, the BI menu and rail start from the Build home (`bi/home.html` and its script
+  deleted). Its four lists are the Build home's **For you** strip (product owner, 2026-11-07): Recent, Favourites, Certified for you
+  and Shared with me, as the server's BI home answers them for the person (`GET /bi/api/home`, asked by the page; nothing per person is
+  kept in the console), drawn with drishti-core's API client and element maker (`drishti_build-for-you.js`), each with a star that adds
+  or removes a favourite; shown on the home itself to a person BI is open to. BI items only: the Build home's other kinds have no
+  favourites, certification or sharing yet, and their recent changes are *Work → Recently changed*. Tests: `test_bi.py` (the strip and
+  where it shows), `test_bi_browser.py` (certified, shared, star and un-star, a title opens its item, recent after opening).
+- **One sitemap** (`drishti-console/config/sitemap.yaml`, was `menus.yaml`): the top bar, the Admin tabs (`admin/_nav.html` drawn from the
+  Admin menu: its 26 hand-written links deleted), the BI rail (`bi/shell.html` drawn from the BI menu), Help's sections (heads moved from
+  `help.yaml`) and the footer (links name menu items). Entries carry `domain:` (banking, economy); `also:` draws an item of another menu
+  without listing it twice. Plain renames of jargon labels (RELEASE_NOTES.md). Guard `tests/test_sitemap.py`: every console page is in the
+  sitemap or `in-context:` (with the page it opens from) or `not-pages:`, no id or address twice (per lens too), every item's link
+  answered, every reference resolved, banking entries tagged, the Build registry's domains.
+- **Admin → Configuration** (OPERATIONS.md › The configuration editor): every setting in three tiers with search, the value in effect and
+  its source, secrets masked and never proposed; changes go through four eyes: the server's `SettingProposals` (`/api/v1/admin/settings/proposals`,
+  a JSON file under the data folder, every step audited) writes an approved server or engine key as one line of `application.local.yaml`;
+  the approving console writes a console key into its own. Help → Configuration loses its administrators' *In effect* column (moved here).
+- **Settings tiers, one home** (`tools/settings_schemas.yaml` `tiers`): everyday by area:key (18), expert by pattern in the areas that
+  hold internals (413), admin by area (1,720); CONFIGURATION.md gains a *Tier* column; `settings_catalogue.py --check` fails when an area has
+  no tier or a listed key or pattern matches nothing (`test_settings_catalogue.py`).
+- **The BI and Pivot family moved onto drishti-grid** ([ELEMENTS.md section 12.1](docs/architecture/ELEMENTS.md#121-the-migration-checklist)):
+  - **The Pivot screen** (`PIVOT`, and its presets the MR cube `MCUBE` and the CCR cube) is drawn by drishti-grid in its `wells`
+    layout: the catalogue's fields, a document's paths by their grain and the engine's measures are the grid's fields; the wells, the
+    member filters, + and −, a level (1 to 9), Shift+→ and the aggregation menus build the view, and every answer is the server's
+    through the grid's `serverPivot` hook (`clientAggregation: false`: VaR and ES are never summed in the browser; ◆ marks a
+    non-additive total). A figure's **Explain is its provenance** (the rows behind it, its reference, its comments) in the grid's
+    drawer; the scan estimate, compare (the change shown after each figure), slicers, a typed path, the chart of the selection (now drishti-chart),
+    export, save and share, the switches (exact, ≈, progressive, rollups, live) and saved views keep working, labels included. The
+    live pivot's patches flash through the grid; comments and the MR cube's sparklines are the grid's cell decorations. Keys: **E now
+    explains a figure** (the grid's key); expand by another field moved to **Shift+E**. The two dates of *Why did it move?* are
+    drishti-inputs' date pickers.
+  - **Tree rows**: a Sutra's nested pivot panel is drawn by drishti-grid (+ and − in the page, the server's text and tones).
+  - **BI**: the table visual, a perspective grid, a report's *rows behind* and *as a table* views, and the Notebook's result tables
+    are drishti-grid (sort by a heading, the first column pinned, conditional formats with their icons, data bars, links to the
+    terminal, a row's actions by a click or Enter; the engine's totals under the table, never added up from the rows shown).
+  - **Chart any table**: *View as table* is drishti-grid.
+  - **Deleted**: the pivot grid `drishti_pivot-grid.js` (186 lines; its name stays as a 36-line loader only because the frozen
+    renderer 1.2.0 asks for it), the Pivot screen's field list and zones, the BI table's own `<table>` with its sort code, the
+    Notebook's and Chart any table's tables, and their CSS (`drishti_pivot.css` 194 → 56 lines, the screen's sheet 153 → 101).
+  - **drishti-grid 0.4.0**: aggregations only the server computes (`serverFuncs`) and the browser's offered ones (`valueFuncs`), a
+    pivot's figures shown by the answer's own fields (`measureText`, `answerFormat`: units, show-as, the server's text and tones, ≈),
+    `showAnswer` (a host's answer or live patch), `setOpenState`, `decorateCell` (classes, notes, colours, an icon, a node in place or
+    after the figure), `chrome: false` (the grid alone in a panel), each pivot cell's key as `data-cell`; a value's label that was only
+    its measure follows a new function.
+  - **Elements 1.4.5** (the embed): `<drishti-view>` and `<drishti-report>` load drishti-core and drishti-grid with the console's
+    scripts (`/embed/v1/js/elements-core.js`, `elements-grid.js`; `/embed/v1|v2/elements/<library>/<file>`); the view sheet carries
+    the grid's style (its budget raised on purpose to 27 KB gzip).
+  - Not moved yet (listed in ELEMENTS.md 12.1): BI's matrix (needs values on rows and the tabular layout in drishti-grid), the
+    other charts (BI's visuals, Chart any table: the chart migration), BI's date and time controls.
+- **Elements migration: the general screens** ([ELEMENTS.md section 8.6](docs/architecture/ELEMENTS.md#86-as-built-the-general-screens-moved-history-data-admin-help-landings-live)):
+  the history and data pages, Admin, Help, the landings and every view's tables, charts and live connection draw with the libraries
+  (BI, the Pivot, VaR and exposure move on their own branches).
+  - **Tables**: every server table's sort, filter box, column funnels, pages, rows per page, keys and a zoomed panel's fit are
+    drishti-grid's console tables (`consoleTables`); `drishti_tables.js` is their host (474 to 90 lines); the funnels read cells with
+    drishti-core's `textSortKey` (their own reading deleted). Every page and the embed load drishti-grid.
+  - **Charts**: a view's panel charts are drishti-chart's `PanelCharts` (the client renderer's), hosted by `drishti_charts.js` (421 to
+    95 lines; `drishti_view.js`'s line, area and surface code deleted); the history page's chart and a field's history are drishti-chart's
+    `Chart` (`pointAt`, `pointerMoved`: the crosshair follows the selected row); Calc's charts too. The page-settled signal asks
+    drishti-chart. A category or time axis shows no second label under the crosshair (QA1-15, now for every chart).
+  - **Live**: the browser's one live connection is drishti-data's `LiveClient` (the hub keeps the tabs, keys, replay and session
+    checks; its own EventSource, retry and close are deleted; `LiveClient` takes the clock's timer functions); the server watch hears the
+    channel's drop instead of wrapping `window.EventSource`. Every page loads drishti-data.
+  - **Code editor**: Calc's editor is drishti-inputs' `CodeEditor` (Python; `keys`, `indentUnit` and `refresh` join it; the error line is a
+    lint mark).
+  - **Numbers**: 35 files' `toFixed`, `toLocaleString` and `Intl.NumberFormat` are drishti-core's formats; `formatBytes` and
+    `formatDuration` join drishti-core (one home for sizes and timings).
+  - **Guards** (`tests/test_elements_guards.py`, a quick file check): no console script calls ECharts or Vega, sorts a table by its
+    headings, formats numbers on its own or opens its own EventSource or WebSocket; the allow-list holds only files `wip/e-migrate-bi` and
+    `wip/e-migrate-var` are moving, each with its branch, and only shrinks.
+  - **Browser times** (55 browser files these changes touch, six workers): the same files on the tree before the migration and
+    after, side by side on one machine, took 32.0 and 31.5 s for the tables and history files run alone (no change); in the full
+    sets the machine was shared with other runs and the sums varied by run (2,252 s before, 3,835 s after, 1,744 s in 2.9.11.d's
+    drill), so they say nothing either way. The thinner screen tests the owner asked for come with the component tests (the gallery).
+  - **Still to move** (ELEMENTS.md 8.6): the multi-select, the pickers, the controls, the forms and the Build and Studio editors.
+- **The VaR and exposure family on Drishti Elements** ([ELEMENTS.md section 12.2](docs/architecture/ELEMENTS.md#122-the-var-and-exposure-family-step-9-2911e-the-migration-checklist)):
+  every table of the VaR explorer (the scope tree as tree data, the path, the history, the contributions, the captures, the
+  currencies), parametric VaR, the basket's sheet (now drishti-grid's cell editing: typing, Enter, Tab, Delete, undo; the paste with
+  headings stays the sheet's) and its what-if, the VaR Playground (its six header rows pinned), backtesting, the regulatory screens, the
+  stress window, the scenario matrix, the MR lens, the risk landing, the exposure explorer and its counterparty screens, FRTB-SA and
+  SIMM is a `<drishti-grid>` in the **terminal layout** (the product owner's default for VaR screens) made by drishti-risk's preset
+  `riskGrid` (figures never summed in the browser); every chart is drishti-chart or a drishti-risk kind (`riskChart`): the P&L
+  distribution from the server's bins with VaR, ES and the fitted normal, the backtest with the server's zone, count and multiplier, the
+  exposure profile with the server's EEPE. **Deleted**: `drishti_var-charts.js` (208 lines) and `drishti_exposure-charts.js` (126), the
+  screens' hand-built tables, SVG drawing, sheet editor and playground canvas, and their CSS (2,524 lines out and 1,822 in under `web/`, libraries
+  included). Commands, addresses, keys and saved views unchanged. Market-risk code stays in drishti-risk (the owner's domain rule):
+  drishti-risk 0.2.0 gains the grid and chart presets, the figures in words (`riskMoney`, `riskSigned`, `riskInt`, `riskPct`: the texts
+  the screens printed before), `textColumn` and `moneyColumn`; the generic libraries only generic hooks: drishti-grid 0.4.0 (a column's
+  `cellClass` and `cellRenderer`, a row's `getRowClass` and `getRowData`, `fitRows`, `chrome: false`, `pinnedTopRows` with
+  `pinnedCellClicked`, a tree node's own row in its cell context), drishti-chart 0.2.0 (the histogram of a server's bins). A
+  before-and-after comparison of sixteen screens and tabs (`tests/screen_figures.py`, `tests/test_var_family_figures_browser.py`, run on
+  demand) and every family browser file on the new selectors with its assertions kept.
 
 ## 2.9.11.d (2026-11-07)
 - **Six lake folders kept in git, their content never** (DATA_LAKE_GUIDE.md section 1): `data/delta/demo`, `risklake`, `newslake` (news), `worldlake` (World Bank, IMF, UN), `regulators` (SEC, Federal Reserve, OSFI, central banks) and `capitalmarket` (prices, curves, vols, funds), each with only its README.md; the test data's `.jsonl.gz` files stay in git to build the demo lake. The five new lakes ship as lake files with no tables (`config/lakes/<lake>.yaml` and their jar copies), and **nothing shipped points at them**: every connector, rule and setting reads `demo` (guarded by `tools/test_empty_lakes.py`); a site points at them itself. The demo lake's one-time move and `build_demo_lakes` treat a folder holding only its README.md as empty.

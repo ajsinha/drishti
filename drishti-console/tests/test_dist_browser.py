@@ -180,7 +180,7 @@ def test_the_list_on_a_phone_has_tap_targets_of_44_px(stack, browser):
 
 
 def test_a_reader_who_may_not_open_the_report_is_refused_the_file(stack, browser):
-    page = sign_in(browser, "nobi", next_path="/bi")
+    page = sign_in(browser, "nobi", next_path="/bi/catalogue")
     r = page.request.get(CONSOLE_URL + "/dist/bi/" + REPORT + ".xlsx?page=overview")
     assert r.status in (403, 404) and "DRS-" in r.text()
     page.context.close()

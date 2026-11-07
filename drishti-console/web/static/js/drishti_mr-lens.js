@@ -17,40 +17,41 @@
 /* The MR lens of the pivot screen (MCUBE; docs/guides/MR_CUBE_GUIDE.md; MR_CUBE_LENS.md section 6.7): the pivot is the pivot engine's own
    grid (drishti_pivot.js, drishti_pivot-grid.js) on source var; this file draws what the MR cube adds around it. Layout A: the headline strip, the lens
    controls (they change the view's options and the engine answers again), the time-travel slider, sparklines in the grid's cells and the
-   rail of a clicked cell's tail and explain. Tab B: components (the engine's comp_var by the first row dimension), the waterfall, the
+   rail of a clicked cell's tail and explain (the one Explain). Tab B: components (the engine's comp_var by the first row dimension), the waterfall, the
    view's histogram, the factor heat map. Tab C: the DV01 ladder, the what-if side by side, explain. Every number is the server's
-   (/api/pivot/... and /api/pivot/mr/...); this file only draws. Keys: H 1D/10D, [ and ] step the date, W the what-if tray. */
+   (/api/pivot/... and /api/pivot/mr/...); this file only draws, with Drishti Elements: the histograms are drishti-risk's
+   risk.pnl-distribution of the server's bins, the waterfall a drishti-chart waterfall, the components, heat map, ladder and what-if risk
+   grids (<drishti-grid>, terminal layout), the sparklines drishti-core's. Keys: H 1D/10D, [ and ] step the date, W the what-if tray. */
 (function () {
   "use strict";
+  var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
+  var R = window.Drishti.elements.risk;                                       // the risk grid preset and chart (drishti-risk)
   var S = window.Drishti.PivotScreen;
   if (!S || S.root.getAttribute("data-lens") !== "mr") { return; }
   var root = S.root;
   function $(s) { return root.querySelector(s); }
   function $$(s) { return Array.prototype.slice.call(root.querySelectorAll(s)); }
-  var st = { versions: null, compare: null, tray: [], cell: null, answer: null };
+  var st = { versions: null, compare: null, tray: [], cell: null, answer: null, sparks: {} };
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function isNum(v) { return typeof v === "number" && isFinite(v); }
-  function money(v) { return isNum(v) ? (v < 0 ? "−" : "") + Math.abs(v).toLocaleString("en-US", { maximumFractionDigits: 0 }) : "—"; }
-  function compact(v) {
-    if (!isNum(v)) { return "—"; }
-    var a = Math.abs(v), s = v < 0 ? "−" : "";
-    return a >= 1e9 ? s + (a / 1e9).toFixed(1) + "bn" : a >= 1e6 ? s + (a / 1e6).toFixed(1) + "m" : a >= 1e3 ? s + (a / 1e3).toFixed(1) + "k" : s + a.toFixed(0);
-  }
+  function money(v) { return isNum(v) ? F.formatNumber(v) : "—"; }
+  function compact(v) { return isNum(v) ? F.formatCompact(v, { decimals: 1, smallDecimals: 0 }) : "—"; }
   function pct(v, d) { return isNum(v) ? (v * 100).toFixed(d == null ? 1 : d) + "%" : "—"; }
   function mr(method, path, body) { return S.call(method, "/mr" + path, body); }
   function opts() { var v = S.view(); return (v && v.options) || {}; }
 
-  // ---- drawing (inline SVG in the theme's colours; nothing from a CDN) --------------------------------------------------------------
-  function spark(values, w, h) {
-    w = w || 64; h = h || 14;
-    var xs = (values || []).map(function (v, i) { return isNum(v) ? [i, v] : null; }).filter(Boolean);
-    if (xs.length < 2) { return ""; }
-    var lo = Math.min.apply(null, xs.map(function (p) { return p[1]; })), hi = Math.max.apply(null, xs.map(function (p) { return p[1]; }));
-    var n = values.length - 1 || 1, span = hi - lo || 1;
-    var pts = xs.map(function (p) { return (p[0] / n * (w - 2) + 1).toFixed(1) + "," + (h - 2 - (p[1] - lo) / span * (h - 4)).toFixed(1); });
-    return '<svg class="mr-spark" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + " " + h + '" aria-hidden="true"><polyline points="' + pts.join(" ")
-      + '" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>';
+  // ---- drawing (Drishti Elements in the theme's colours) ----------------------------------------------------------------------------
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) { e.className = cls; } if (text !== undefined && text !== null) { e.textContent = text; } return e; }
+  function note(box, text) { box.textContent = ""; box.appendChild(el("p", "pv-sub", text)); }
+  /** A cell's sparkline: drishti-core's, of the values the server gave (two at least). */
+  function spark(values) {
+    var xs = (values || []).filter(isNum);
+    if (xs.length < 2) { return null; }
+    var s = el("span", "mr-spark");
+    s.setAttribute("aria-hidden", "true");
+    s.appendChild(F.sparkline(document, xs, undefined, "dg"));
+    return s;
   }
   function limitBar(use) {
     if (!isNum(use)) { return ""; }
@@ -58,63 +59,52 @@
     return '<span class="mr-lbar ' + cls + '" title="' + pct(use) + ' of the limit"><span class="f" style="width:' + Math.min(100, use * 100 / 1.2).toFixed(1)
       + '%"></span><b class="tick" style="left:' + (80 / 1.2).toFixed(1) + '%"></b><b class="tick full" style="left:' + (100 / 1.2).toFixed(1) + '%"></b></span>';
   }
-  function histogram(d, w, h) {
-    w = w || 340; h = h || 150;
-    if (!d || !d.counts || !d.counts.length) { return '<p class="pv-sub">No scenario P&amp;L for this cell.</p>'; }
-    var n = d.counts.length, max = Math.max.apply(null, d.counts.concat([1])), lo = d.edges[0], hi = d.edges[n], span = hi - lo || 1;
-    var bw = (w - 20) / n, top = 26, base = h - 20, out = [];
-    function x(v) { return 10 + (v - lo) / span * (w - 20); }
-    var varAt = -d.var, esEdge = d.tail && d.tail.length ? d.tail[d.tail.length - 1].pnl : varAt;
-    for (var i = 0; i < n; i++) {
-      var bh = d.counts[i] / max * (base - top);
-      var cls = d.edges[i + 1] <= esEdge + 1e-9 ? "es" : (varAt >= d.edges[i] && varAt <= d.edges[i + 1] ? "v" : "");
-      out.push('<rect class="bin ' + cls + '" x="' + (10 + i * bw + 0.5).toFixed(1) + '" y="' + (base - bh).toFixed(1) + '" width="' + Math.max(1, bw - 1).toFixed(1)
-        + '" height="' + bh.toFixed(1) + '"><title>' + d.counts[i] + " scenarios, " + compact(d.edges[i]) + " to " + compact(d.edges[i + 1]) + "</title></rect>");
-    }
-    var vx = x(varAt);
-    out.push('<line class="vline" x1="' + vx.toFixed(1) + '" x2="' + vx.toFixed(1) + '" y1="' + (top - 14) + '" y2="' + base + '"/>');
-    out.push('<text class="vlab" x="' + (vx + 3).toFixed(1) + '" y="' + (top - 4) + '">V −VaR ' + compact(d.var) + " (#" + d.k + " of " + d.scenarios + ")</text>");
-    out.push('<text class="elab" x="10" y="' + (top + 8) + '">E ES tail, ' + d.esCount + " worst</text>");
-    if (lo < 0 && hi > 0) { out.push('<line class="zero" x1="' + x(0).toFixed(1) + '" x2="' + x(0).toFixed(1) + '" y1="' + top + '" y2="' + base + '"/>'); }
-    out.push('<text class="ax" x="10" y="' + (h - 4) + '">' + compact(lo) + '</text><text class="ax" x="' + (w - 10) + '" y="' + (h - 4) + '" text-anchor="end">' + compact(hi) + "</text>");
-    return '<svg class="mr-histo" viewBox="0 0 ' + w + " " + h + '" width="100%" role="img" aria-label="Scenario P&amp;L histogram: VaR ' + esc(money(d.var))
-      + ", ES " + esc(money(d.es)) + '">' + out.join("") + "</svg>";
+  /** The server's scenario P&L of a scope as drishti-risk's P&L distribution: its bins, its VaR and ES (V and E on the lines). */
+  function histogram(box, d, height) {
+    box.textContent = "";
+    if (!d || !d.counts || !d.counts.length) { note(box, "No scenario P&L for this cell."); return null; }
+    var host = el("div", "mr-chart");
+    box.appendChild(host);
+    R.riskChart(host, { kind: "risk.pnl-distribution", data: { rows: [] }, binned: { edges: d.edges, counts: d.counts }, var: d.var, es: d.es,
+      confidence: { var: d.confidence || 0.99, es: d.esConfidence || 0.975 }, value: { title: "scenario P&L", format: "compact" },
+      subtitle: "V −VaR " + compact(d.var) + " (#" + d.k + " of " + d.scenarios + ") · E ES tail, " + d.esCount + " worst" }, { height: height });
+    return host;
   }
-  function waterfall(parts, total) {
-    var w = 640, h = 260;
+  /** The Euler components as a waterfall to the total: adds bad, hedges good, the total the server's VaR. */
+  function waterfall(box, parts, total) {
     var ps = parts.filter(function (p) { return isNum(p.value); }).sort(function (a, b) { return b.value - a.value; });
-    if (!ps.length) { return '<p class="pv-sub">No components.</p>'; }
-    var run = 0, hi = 0, lo = 0;
-    ps.forEach(function (p) { run += p.value; hi = Math.max(hi, run); lo = Math.min(lo, run); });
-    hi = Math.max(hi, total || 0);
-    var top = 24, base = h - 28, span = hi - lo || 1, bw = (w - 20) / (ps.length + 1), out = [], at = 0;
-    function y(v) { return top + (hi - v) / span * (base - top); }
-    ps.forEach(function (p, i) {
-      var a = at, b = at + p.value, x0 = 10 + i * bw;
-      out.push('<rect class="' + (p.value < 0 ? "hedge" : "add") + '" x="' + (x0 + 3).toFixed(1) + '" y="' + y(Math.max(a, b)).toFixed(1) + '" width="' + (bw - 6).toFixed(1)
-        + '" height="' + Math.max(1, Math.abs(y(a) - y(b))).toFixed(1) + '"><title>' + esc(p.label) + ": " + esc(money(p.value)) + "</title></rect>");
-      out.push('<text class="wl" x="' + (x0 + bw / 2).toFixed(1) + '" y="' + (y(Math.max(a, b)) - 3).toFixed(1) + '" text-anchor="middle">' + compact(p.value) + "</text>");
-      out.push('<text class="wx" x="' + (x0 + bw / 2).toFixed(1) + '" y="' + (h - 10) + '" text-anchor="middle">' + esc(String(p.label).slice(0, 10)) + "</text>");
-      at = b;
-    });
-    var tx = 10 + ps.length * bw;
-    out.push('<rect class="tot" x="' + (tx + 3).toFixed(1) + '" y="' + y(Math.max(0, total)).toFixed(1) + '" width="' + (bw - 6).toFixed(1) + '" height="'
-      + Math.max(1, Math.abs(y(0) - y(total))).toFixed(1) + '"><title>Total ' + esc(money(total)) + "</title></rect>");
-    out.push('<text class="wl tot" x="' + (tx + bw / 2).toFixed(1) + '" y="' + (y(Math.max(0, total)) - 3).toFixed(1) + '" text-anchor="middle">' + compact(total) + "</text>");
-    out.push('<text class="wx" x="' + (tx + bw / 2).toFixed(1) + '" y="' + (h - 10) + '" text-anchor="middle">Total</text>');
-    return '<svg class="mr-water" viewBox="0 0 ' + w + " " + h + '" width="100%" role="img" aria-label="VaR attribution waterfall">' + out.join("") + "</svg>";
+    if (!ps.length) { note(box, "No components."); return; }
+    var rows = ps.map(function (p) { return { step: String(p.label), change: p.value }; }).concat([{ step: "Total", change: total, total: true }]);
+    R.riskChart(box, { kind: "waterfall", data: { rows: rows }, id: "step", category: { field: "step" }, value: { field: "change", format: "compact" },
+      totals: { field: "total" }, up: "bad", down: "good", total: "warn", labels: true, legend: "none" }, { height: 260 });
   }
-  function ladderBar(net, limit, status, scale) {
-    var half = 50, s = scale || Math.abs(net) || 1, len = Math.min(half, Math.abs(net) / s * half), x = net >= 0 ? half : half - len;
-    var cls = status === "breach" ? "bad" : status === "near" ? "warn" : "ok";
-    var ticks = isNum(limit) ? '<b class="tick" style="left:' + Math.max(0, half - limit / s * half).toFixed(1) + '%"></b><b class="tick" style="left:'
-      + Math.min(100, half + limit / s * half).toFixed(1) + '%"></b>' : "";
-    return '<span class="mr-cbar ' + cls + '"><span class="f" style="left:' + x.toFixed(1) + "%;width:" + len.toFixed(1) + '%"></span><b class="zero"></b>' + ticks + "</span>";
+  /** A DV01 cell of the ladder: the net and its use, the breach or near badge, the centre-zero bar against the limit (CSSOM widths). */
+  function ladderCell(c, scale) {
+    var box = el("span", "mr-lcell");
+    if (!isNum(c.net)) { box.appendChild(el("span", "pv-sub", "·")); return box; }
+    box.appendChild(el("span", "mono", compact(c.net) + (isNum(c.use) ? " · " + pct(c.use, 0) : "")));
+    if (c.status === "breach" || c.status === "near") { box.appendChild(el("span", "mr-badge " + (c.status === "breach" ? "bad" : "warn"), c.status)); }
+    var half = 50, s = scale || Math.abs(c.net) || 1, len = Math.min(half, Math.abs(c.net) / s * half);
+    var bar = el("span", "mr-cbar " + (c.status === "breach" ? "bad" : c.status === "near" ? "warn" : "ok")), f = el("span", "f");
+    f.style.left = (c.net >= 0 ? half : half - len).toFixed(1) + "%";
+    f.style.width = len.toFixed(1) + "%";
+    bar.appendChild(f);
+    bar.appendChild(el("b", "zero"));
+    if (isNum(c.limit)) {
+      [Math.max(0, half - c.limit / s * half), Math.min(100, half + c.limit / s * half)].forEach(function (at) { var t = el("b", "tick"); t.style.left = at.toFixed(1) + "%"; bar.appendChild(t); });
+    }
+    box.appendChild(bar);
+    return box;
   }
-  function heat(v, full) {
-    if (!isNum(v) || !full) { return ""; }
-    var a = (Math.min(1, Math.abs(v) / full) * 0.55 + 0.05) * 100;
-    return "background: color-mix(in srgb, var(" + (v >= 0 ? "--d-ok" : "--d-bad") + ") " + a.toFixed(0) + "%, transparent)";
+  /** A heat map cell: ▲ long or ▼ short with the figure, its ground the share of the largest (CSSOM). */
+  function heatCell(c, full) {
+    var s = el("span", "mr-hcell", isNum(c.net) ? (c.net < 0 ? "▼ " : "▲ ") + compact(c.net) : "·");
+    s.title = (c.positions || 0) + " positions";
+    if (isNum(c.net) && full) {
+      var a = (Math.min(1, Math.abs(c.net) / full) * 0.55 + 0.05) * 100;
+      s.style.background = "color-mix(in srgb, var(" + (c.net >= 0 ? "--d-ok" : "--d-bad") + ") " + a.toFixed(0) + "%, transparent)";
+    }
+    return s;
   }
 
   // ---- A2: the headline strip ------------------------------------------------------------------------------------------------------
@@ -200,16 +190,25 @@
     var sub = $("[data-mr-spark-sub]"), box = $("[data-mr-sparks]");
     mr("POST", "/history", { view: S.view() }).then(function (h) {
       sub.textContent = h.measure + " · " + h.dates.length + " open date" + (h.dates.length === 1 ? "" : "s") + (h.note ? " · " + h.note : "");
-      var drawn = 0;
+      var drawn = 0, cells = (st.answer && st.answer.cells) || {};
+      st.sparks = {};
       Object.keys(h.series).forEach(function (key) {
-        var td = root.querySelector('[data-pv-grid] td[data-cell="' + (window.CSS && CSS.escape ? CSS.escape(key) : key) + '"][data-m="0"]');
-        var svg = spark(h.series[key]);
-        if (td && svg && !td.querySelector(".mr-spark")) { td.insertAdjacentHTML("beforeend", svg); drawn++; }
+        var line = spark(h.series[key]);                           // drishti-core's sparkline (an element)
+        if (line && cells[key]) { st.sparks[key] = line; drawn++; }
       });
+      S.redraw();                                                  // the grid draws them in the first measure's cells (sparkMark)
       box.innerHTML = '<p class="pv-sub">' + (h.dates.length < 2 ? "One open date: a sparkline needs two. Open earlier dates with the slider."
         : drawn + " cells carry a sparkline of " + esc(h.measure) + " from " + esc(h.dates[0]) + " to " + esc(h.dates[h.dates.length - 1]) + ". " + esc(h.how)) + "</p>";
     }).catch(function (e) { box.innerHTML = '<p class="pv-sub">' + esc(e.message) + "</p>"; });
   }
+  /** A cell's sparkline, drawn by the grid after the figure (the screen's decorate): the first measure's cells only. */
+  function sparkMark(key, ctx) {
+    var line = st.sparks && st.sparks[key], first = st.answer && (st.answer.measures || [])[0];
+    if (!line || !first || ctx.measure !== first.label) { return null; }
+    return { after: line.cloneNode(true) };                      // a copy each draw: the grid redraws its rows
+  }
+  S.decorate(sparkMark);
+
   function tail(detail) {
     var key = detail.key, coords = detail.coords || {}, cell = detail.cell || {};
     st.cell = { coords: coords, scope: cell.scope, key: key };
@@ -217,28 +216,30 @@
     $("[data-mr-tail-title]").innerHTML = esc(name) + ' <span class="pv-sub">tail</span>';
     $("[data-mr-tail]").innerHTML = '<div class="mr-skel"></div>';
     mr("POST", "/detail", { view: S.view(), coords: coords }).then(function (x) {
-      $("[data-mr-tail]").innerHTML = histogram(x, 340, 150) + '<p class="pv-sub">VaR scenario ' + esc(x.varDate || "?") + " · " + (x.trades || 0)
-        + " trades in " + (x.positions || 0) + " positions · " + esc(x.method || "") + "</p>";
-    }).catch(function (e) { $("[data-mr-tail]").innerHTML = '<p class="pv-sub">' + esc(e.message) + "</p>"; });
+      var box = $("[data-mr-tail]");
+      if (histogram(box, x, 170)) {
+        box.appendChild(el("p", "pv-sub", "VaR scenario " + (x.varDate || "?") + " · " + (x.trades || 0) + " trades in " + (x.positions || 0) + " positions · " + (x.method || "")));
+      }
+    }).catch(function (e) { note($("[data-mr-tail]"), e.message); });
     explain("[data-mr-explain]", "[data-mr-explain-dates]", cell.scope);
   }
+  /** Explain the move (A7, C4): the one Explain of the cell's VaR (drishti_explain.js; SHARED_SCREENS.md section 3) at Why it moved, the
+      compare date (or the date before) to the view's: the card names it, hover previews it, a click opens the drawer. */
   function explain(target, datesEl, scope) {
     if (!scope) { $(target).innerHTML = '<p class="pv-sub">No scope text names this cell: explain asks the engine of a scope.</p>'; return; }
-    var q = new URLSearchParams({ scope: scope });
-    if (st.compare) { q.set("from", st.compare); }
-    if (st.answer && st.answer.date) { q.set("to", st.answer.date); }
-    $(target).innerHTML = '<div class="mr-skel"></div>';
-    mr("GET", "/explain?" + q).then(function (x) {
-      $(datesEl).textContent = x.from + " → " + x.to;
-      var h = '<table class="mr-mini"><tr><td class="l">VaR ' + esc(x.from) + (x.official && x.official.captured ? " (official)" : "") + '</td><td class="mono">' + money(x.varFrom) + "</td></tr>";
-      (x.lines || []).forEach(function (l, i) {
-        h += '<tr><td class="l">' + (i + 1) + " " + esc(l.label) + '</td><td class="mono ' + (l.effect > 0 ? "up" : l.effect < 0 ? "down" : "") + '">'
-          + (l.effect > 0 ? "+" : "") + money(l.effect) + "</td></tr>";
-      });
-      h += '<tr class="tot"><td class="l">VaR ' + esc(x.to) + '</td><td class="mono">' + money(x.varTo) + "</td></tr></table>";
-      $(target).innerHTML = h + '<p class="pv-sub">' + (x.addsUp ? "The exact steps add up to the change. " : "The steps do not add up: see the engine's warnings. ")
-        + esc((x.factorOverlay && x.factorOverlay.note) || "") + "</p>";
-    }).catch(function (e) { $(target).innerHTML = '<p class="pv-sub">' + esc(e.message) + "</p>"; });
+    var req = { kind: "var", measure: "var", scope: scope };
+    if (st.compare) { req.from = st.compare; }
+    if (st.answer && st.answer.date) { req.to = st.answer.date; req.date = st.answer.date; }
+    $(datesEl).textContent = (req.from || "the date before") + " → " + (req.to || "the newest");
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "pv-btn";
+    b.textContent = "Why it moved: " + scope + " ›";
+    b.setAttribute("data-explain", JSON.stringify(req));
+    b.setAttribute("data-explain-tab", "why");
+    b.setAttribute("data-mr-explain-open", "");
+    $(target).textContent = "";
+    $(target).appendChild(b);
   }
 
   // ---- the tabs ------------------------------------------------------------------------------------------------------------------------
@@ -271,59 +272,64 @@
       });
       var total = grand ? grand.VaR : null;
       parts.sort(function (x, y) { return (y.value || 0) - (x.value || 0); });
-      $("[data-mr-comp]").innerHTML = '<table class="mr-mini wide"><thead><tr><th class="l">' + esc((a.rowDimensions || [])[0] || "") + "</th><th>Comp VaR</th><th>% of VaR</th><th>Standalone VaR</th></tr></thead><tbody>"
-        + parts.map(function (p) {
-          return '<tr><td class="l">' + esc(p.label) + '</td><td class="mono ' + (p.value < 0 ? "down" : "") + '">' + money(p.value) + '</td><td class="mono">'
-            + pct(total ? p.value / total : null) + '</td><td class="mono">' + money(p.standalone) + "</td></tr>";
-        }).join("") + '</tbody><tfoot><tr class="tot"><td class="l">Total</td><td class="mono">' + money(grand && grand["Comp VaR"]) + '</td><td class="mono">100.0%</td><td class="mono">'
-        + money(total) + "</td></tr></tfoot></table>";
-      $("[data-mr-waterfall]").innerHTML = waterfall(parts, total);
-    }).catch(function (e) { $("[data-mr-comp]").innerHTML = '<p class="pv-sub">' + esc(e.message) + "</p>"; });
+      // the share of VaR is the server's two figures divided for the reading; the total row is the server's grand total, never a sum here
+      var rows = parts.map(function (p, i) { return { id: "p" + i, label: p.label, comp: p.value, share: total ? p.value / total : null, standalone: p.standalone }; })
+        .concat([{ id: "total", label: "Total", comp: grand && grand["Comp VaR"], share: 1, standalone: total, total: true }]);
+      R.riskGrid($("[data-mr-comp]"), { title: "Components", rows: rows, getRowId: function (r) { return r.id; }, getRowClass: function (r) { return r.total ? "mr-tot" : null; },
+        columns: [{ field: "label", header: (a.rowDimensions || [])[0] || "", width: 170 },
+          R.figureColumn("comp", "Comp VaR", { format: money, width: 130, tone: function (v) { return v < 0 ? "good" : null; } }),
+          R.figureColumn("share", "% of VaR", { format: function (v) { return pct(v); }, width: 90 }),
+          R.figureColumn("standalone", "Standalone VaR", { format: money, width: 140 })] });
+      waterfall($("[data-mr-waterfall]"), parts, total);
+    }).catch(function (e) { note($("[data-mr-comp]"), e.message); });
     mr("POST", "/detail", { view: S.view(), coords: {} }).then(function (x) {
       $("[data-mr-hist-title]").textContent = (x.scope || "the view") + " · " + x.scenarios + " scenario P&Ls · V and E marked";
-      $("[data-mr-hist]").innerHTML = histogram(x, 520, 170);
-    }).catch(function (e) { $("[data-mr-hist]").innerHTML = '<p class="pv-sub">' + esc(e.message) + "</p>"; });
+      histogram($("[data-mr-hist]"), x, 220);
+    }).catch(function (e) { note($("[data-mr-hist]"), e.message); });
     sens($("[data-mr-heat]"), { by: "QUALIFIER,TENOR" }, heatTable);
   }
 
-  function sens(el, extra, draw) {
+  function sens(box, extra, draw) {
     var q = new URLSearchParams(Object.assign({ scope: opts().scope || "BANK" }, extra));
     if (st.answer && st.answer.date) { q.set("asOf", st.answer.date); }
-    el.innerHTML = '<div class="mr-skel"></div>';
-    mr("GET", "/sensitivities?" + q).then(function (s) { el.innerHTML = draw(s); }).catch(function (e) {
-      el.innerHTML = '<p class="pv-sub">' + esc(/DRS-1020/.test(e.message) ? "The sensitivities engine is off on this server." : e.message) + "</p>";
+    box.textContent = "";
+    box.appendChild(el("div", "mr-skel"));
+    mr("GET", "/sensitivities?" + q).then(function (s) { box.textContent = ""; draw(box, s); }).catch(function (e) {
+      note(box, /DRS-1020/.test(e.message) ? "The sensitivities engine is off on this server." : e.message);
     });
   }
-  function heatTable(s) {
-    if (!s.rows.length) { return '<p class="pv-sub">No sensitivities of the scope on ' + esc(s.date) + " (GIRR delta).</p>"; }
+  /** A matrix of the server's sensitivities (rows by the first dimension, a column a bucket) as a risk grid; each cell drawn by draw(c). */
+  function matrix(box, s, o) {
+    var rows = s.rows.map(function (r) { var x = { id: r.key, key: r.key, net: r.net }; r.cells.forEach(function (c, i) { x["c" + i] = c; }); return x; });
+    var cols = [{ field: "key", header: o.first, width: 120, pinned: "left" }].concat(s.columns.map(function (c, i) {
+      return { id: "c" + i, header: String(c), type: "number", additive: false, width: o.width, sortable: false,
+        valueGetter: function (r) { return r["c" + i] && isNum(r["c" + i].net) ? r["c" + i].net : null; }, format: function (v) { return isNum(v) ? compact(v) : "·"; },
+        cellRenderer: function (x) { return o.cell(x.row["c" + i] || {}); } };
+    })).concat(o.net ? [R.figureColumn("net", "Net", { format: compact, width: 90 })] : []);
+    var host = el("div", "mr-gridhost");
+    box.appendChild(host);
+    R.riskGrid(host, { title: o.title, rows: rows, columns: cols, getRowId: function (r) { return r.id; } });
+    box.appendChild(el("p", "pv-sub", o.foot));
+  }
+  function heatTable(box, s) {
+    if (!s.rows.length) { note(box, "No sensitivities of the scope on " + s.date + " (GIRR delta)."); return; }
     var full = 0;
     s.rows.forEach(function (r) { r.cells.forEach(function (c) { if (isNum(c.net)) { full = Math.max(full, Math.abs(c.net)); } }); });
-    return '<table class="mr-mini mr-heat"><thead><tr><th class="l">' + esc(s.by[0]) + " \\ " + esc(s.by[1]) + "</th>" + s.columns.map(function (c) { return "<th>" + esc(c) + "</th>"; }).join("")
-      + "</tr></thead><tbody>" + s.rows.map(function (r) {
-        return '<tr><th class="l">' + esc(r.key) + "</th>" + r.cells.map(function (c) {
-          return '<td class="mono" style="' + heat(c.net, full) + '" title="' + (c.positions || 0) + ' positions">' + (isNum(c.net) ? (c.net < 0 ? "▼ " : "▲ ") + compact(c.net) : "·") + "</td>";
-        }).join("") + "</tr>";
-      }).join("") + '</tbody></table><p class="pv-sub">' + esc(s.currency) + " per bp · ▲ long (green), ▼ short (red), every cell printed · " + s.elements
-      + " elements of " + s.records + " records</p>";
+    matrix(box, s, { title: "Factor heat map", first: s.by[0] + " \\ " + s.by[1], width: 92, cell: function (c) { return heatCell(c, full); },
+      foot: s.currency + " per bp · ▲ long (green), ▼ short (red), every cell printed · " + s.elements + " elements of " + s.records + " records" });
   }
 
   function tabC() {
     var pick = $("[data-mr-grid-pick]");
-    sens($("[data-mr-ladder]"), { grid: pick.value || "BANK-IR-TENOR" }, function (s) {
+    sens($("[data-mr-ladder]"), { grid: pick.value || "BANK-IR-TENOR" }, function (box, s) {
       if (!pick.options.length) {
-        pick.innerHTML = (s.grids || []).map(function (g) { return "<option" + (g === s.grid ? " selected" : "") + ">" + esc(g) + "</option>"; }).join("");
+        (s.grids || []).forEach(function (g) { var o = el("option", "", g); o.selected = g === s.grid; pick.appendChild(o); });
       }
-      if (!s.rows.length) { return '<p class="pv-sub">No GIRR delta of the scope on ' + esc(s.date) + ".</p>"; }
+      if (!s.rows.length) { note(box, "No GIRR delta of the scope on " + s.date + "."); return; }
       var scale = 0;
       s.rows.forEach(function (r) { r.cells.forEach(function (c) { scale = Math.max(scale, Math.abs(c.net || 0), c.limit || 0); }); });
-      return '<table class="mr-mini mr-ladder"><thead><tr><th class="l">DV01 (' + esc(s.grid) + ")</th>" + s.columns.map(function (c) { return "<th>" + esc(c) + "</th>"; }).join("")
-        + "<th>Net</th></tr></thead><tbody>" + s.rows.map(function (r) {
-          return '<tr><th class="l">' + esc(r.key) + "</th>" + r.cells.map(function (c) {
-            if (!isNum(c.net)) { return '<td class="pv-sub">·</td>'; }
-            var badge = c.status === "breach" ? '<span class="mr-badge bad">breach</span>' : c.status === "near" ? '<span class="mr-badge warn">near</span>' : "";
-            return '<td><span class="mono">' + compact(c.net) + (isNum(c.use) ? " · " + pct(c.use, 0) : "") + "</span>" + badge + ladderBar(c.net, c.limit, c.status, scale) + "</td>";
-          }).join("") + '<td class="mono">' + compact(r.net) + "</td></tr>";
-        }).join("") + '</tbody></table><p class="pv-sub">' + esc(s.limits) + " · centre zero: long right, short left · " + s.elements + " elements</p>";
+      matrix(box, s, { title: "Sensitivity ladder", first: "DV01 (" + s.grid + ")", width: 130, net: true, cell: function (c) { return ladderCell(c, scale); },
+        foot: s.limits + " · centre zero: long right, short left · " + s.elements + " elements" });
     });
     whatIf();
     explain("[data-mr-explain2]", "[data-mr-explain2-dates]", (st.cell && st.cell.scope) || opts().scope || "BANK");
@@ -332,16 +338,24 @@
   function whatIf() {
     $("[data-mr-tray-items]").textContent = st.tray.map(function (t) { return t.copyOf + " × " + t.factor; }).join(" · ");
     if (!st.tray.length) { return; }
-    $("[data-mr-whatif]").innerHTML = '<div class="mr-skel"></div>';
+    var box = $("[data-mr-whatif]");
+    box.textContent = "";
+    box.appendChild(el("div", "mr-skel"));
     mr("POST", "/what-if", { view: S.view(), items: st.tray }).then(function (w) {
-      $("[data-mr-whatif]").innerHTML = '<table class="mr-mini wide"><thead><tr><th class="l">Scope</th><th>Before</th><th>After</th><th>Incremental</th></tr></thead><tbody>'
-        + w.rows.map(function (r) {
-          var changed = isNum(r.incremental) && isNum(r.before) && Math.abs(r.incremental) > Math.abs(r.before) * 0.005;
-          return '<tr><td class="l">' + esc(r.label) + "</td>" + (r.note ? '<td colspan="3" class="pv-sub">' + esc(r.note) + "</td>" : '<td class="mono">' + money(r.before)
-            + '</td><td class="mono' + (changed ? " changed" : "") + '">' + money(r.after) + '</td><td class="mono ' + (r.incremental < 0 ? "down" : r.incremental > 0 ? "up" : "")
-            + '">' + (r.incremental > 0 ? "+" : "") + money(r.incremental) + "</td>") + "</tr>";
-        }).join("") + '</tbody></table><p class="pv-sub">' + esc(w.engine) + "</p>";
-    }).catch(function (e) { $("[data-mr-whatif]").innerHTML = '<p class="pv-sub">' + esc(e.message) + "</p>"; });
+      box.textContent = "";
+      var host = el("div", "mr-gridhost");
+      box.appendChild(host);
+      var rows = w.rows.map(function (r, i) { return Object.assign({ id: "w" + i }, r); });
+      var val = function (f) { return function (r) { return r.note ? null : r[f]; }; };
+      R.riskGrid(host, { title: "What-if", rows: rows, getRowId: function (r) { return r.id; },
+        columns: [{ field: "label", header: "Scope", width: 170 },
+          R.figureColumn("before", "Before", { valueGetter: val("before"), format: function (v, r) { return r && r.note ? r.note : money(v); }, width: 140 }),
+          R.figureColumn("after", "After", { valueGetter: val("after"), format: function (v, r) { return r && r.note ? "" : money(v); }, width: 130,
+            cellClass: function (v, r) { return isNum(r.incremental) && isNum(r.before) && Math.abs(r.incremental) > Math.abs(r.before) * 0.005 ? "mr-changed" : null; } }),
+          R.figureColumn("incremental", "Incremental", { valueGetter: val("incremental"), width: 130,
+            format: function (v, r) { return r && r.note ? "" : (v > 0 ? "+" : "") + money(v); }, tone: function (v) { return v < 0 ? "good" : v > 0 ? "bad" : null; } })] });
+      box.appendChild(el("p", "pv-sub", w.engine));
+    }).catch(function (e) { note(box, e.message); });
   }
 
   // ---- wiring ------------------------------------------------------------------------------------------------------------------------
@@ -377,12 +391,11 @@
     whatIf();
   });
   $("[data-mr-grid-pick]").addEventListener("change", tabC);
-  document.addEventListener("keydown", function (ev) {
-    if (ev.target.closest("input, textarea, select") || ev.ctrlKey || ev.metaKey || ev.altKey || !st.answer) { return; }
-    var k = ev.key;
-    if (k === "h" || k === "H") { setLens("horizon", opts().horizon ? "1d" : "10d"); }
-    else if (k === "[") { step(-1); }
-    else if (k === "]") { step(1); }
-    else if (k === "w" || k === "W") { showTab("sensitivities"); $("[data-mr-tray] input").focus(); ev.preventDefault(); }
-  });
+  var K = window.Drishti.keys, answered = function () { return !!st.answer; };
+  K.register({ id: "mr.horizon", keys: ["H", "Shift+H"], scope: "screen", area: "mr-lens", group: "Market risk", description: "Switch the horizon: 1 day or 10 days",
+    when: answered, run: function () { setLens("horizon", opts().horizon ? "1d" : "10d"); } });
+  K.register({ id: "mr.step", keys: ["[", "]"], scope: "screen", area: "mr-lens", group: "Market risk", label: "[ ]", description: "The previous or next business date",
+    when: answered, run: function (ev) { step(ev.key === "[" ? -1 : 1); } });
+  K.register({ id: "mr.whatif", keys: ["W", "Shift+W"], scope: "screen", area: "mr-lens", group: "Market risk", description: "What if: the sensitivities tray",
+    when: answered, run: function () { showTab("sensitivities"); $("[data-mr-tray] input").focus(); } });
 })();

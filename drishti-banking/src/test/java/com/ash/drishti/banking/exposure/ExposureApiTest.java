@@ -463,4 +463,55 @@ class ExposureApiTest {
         assertThat(d.get("bands")).hasSize(3);
         assertThat(d.at("/bands/1/q95").asLong()).isEqualTo(3_000_000L);
     }
+
+    /**
+     * The one Explain of an exposure figure (kind exposure): the How this number was built box folded into Inputs &amp; lineage, row for
+     * row the words it showed; the tiles' figures; why it moved and the workbook said to be under construction; a second person who sees
+     * CP-2 only is told how many netting sets are outside the view, never their names.
+     */
+    @Test
+    @Order(11)
+    void theOneExplainFoldsTheProvenanceBoxAndKeepsItsWords() throws Exception {
+        JsonNode d = scope("CPTY:CP-1");
+        JsonNode p = d.get("provenance");
+        java.util.function.Function<String, JsonNode> explain = measure -> {
+            try {
+                return get("/api/v1/explain", as("rita", "risk"), "kind", "exposure", "measure", measure, "scope", "CPTY:CP-1", "q", "0.75",
+                        "date", ExposureLakeFixture.DAY.toString());
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
+        };
+        JsonNode x = explain.apply("peak-pfe");
+        assertThat(x.get("value").asLong()).isEqualTo(d.get("peakPfe").asLong());
+        assertThat(explain.apply("epe").get("value").asLong()).isEqualTo(d.get("epe").asLong());
+        assertThat(explain.apply("eepe").get("value").asLong()).isEqualTo(d.get("eepe").asLong());
+        assertThat(explain.apply("ead").get("value").asLong()).isEqualTo(d.get("eadImm").asLong());
+        assertThat(explain.apply("ce").get("value").asLong()).isEqualTo(d.get("ce").asLong());
+        java.util.Map<String, String> rows = new java.util.LinkedHashMap<>();
+        x.at("/inputs/rows").forEach(r -> rows.put(r.get("label").asText(), r.get("value").asText()));
+        // the old box's rows (drishti_exposure-explorer.js renderProv), in Java
+        assertThat(rows.get("Scope")).isEqualTo(d.get("kind").asText() + " · " + d.get("canonical").asText());
+        assertThat(rows.get("Trades")).isEqualTo(String.format(java.util.Locale.US, "%,d", p.get("trades").asLong()));
+        assertThat(rows.get("Netting sets")).isEqualTo(p.get("nettingSets").asInt() + " (" + p.get("wholeSets").asInt() + " whole, "
+                + p.get("partialSets").asInt() + " cut)");
+        assertThat(rows.get("Run")).isEqualTo(p.get("runId").asText() + " · " + p.get("model").asText() + " "
+                + (p.hasNonNull("modelVersion") ? p.get("modelVersion").asText() : "") + " · seed " + p.get("seed").asText());
+        assertThat(rows.get("Calibration")).isEqualTo(p.get("calibration").asText() + " · " + p.get("valueBasis").asText() + " · " + p.get("precision").asText());
+        assertThat(rows.get("Method")).isEqualTo(p.get("method").asText());
+        assertThat(rows.get("Contributions")).isEqualTo(p.get("contributions").asText());
+        assertThat(rows.get("Engine")).isEqualTo(p.get("engine").asText());
+        assertThat(rows.get("View")).isEqualTo(p.get("view").asText());
+        assertThat(rows.get("Members")).isEqualTo(p.get("membershipHash").asText());
+        assertThat(rows).containsKeys("Resolved", "Outside your view", "Grid", "Flags", "Warnings", "Tier", "Computed");
+        assertThat(x.at("/formula/lines/0").asText()).contains("PFE_q(k)");
+        assertThat(x.at("/why/underConstruction/id").asText()).isEqualTo("explain-exposure-why");
+        assertThat(x.at("/workbook/underConstruction/id").asText()).isEqualTo("explain-exposure-workbook");
+        // a second person: CP-2 only
+        JsonNode other = get("/api/v1/explain", as("ola", "other"), "kind", "exposure", "scope", "BANK", "date", ExposureLakeFixture.DAY.toString());
+        String words = other.toString();
+        assertThat(words).contains("netting sets, ");
+        assertThat(words).doesNotContain("NS-X");
+        assertThat(other.get("value").asLong()).isEqualTo(get("/api/v1/risk/exposure/scope", as("ola", "other"), "scope", "BANK").get("peakPfe").asLong());
+    }
 }

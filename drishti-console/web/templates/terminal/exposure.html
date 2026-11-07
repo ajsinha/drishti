@@ -15,13 +15,13 @@
 #}
 {# The exposure explorer (EXPOSURE_GUIDE.md section 3; the approved combined mock-up): the command line with the switches and the run;
    the breadcrumb with Back; the scope tree (bank, legal entities, counterparties, netting sets, the open set's trades) with each node's
-   peak PFE; the headline tiles; the profile chart; tabs that change with the scope's level. A shell: drishti_exposure-explorer.js fills every
+   peak PFE; the headline tiles (each explained by the one Explain, drishti_explain.js); the profile chart (drishti-risk on drishti-chart); tabs (their tables drishti-grid, terminal layout) that change with the scope's level. A shell: drishti_exposure-explorer.js fills every
    panel from /api/exposure/... and moves the whole screen to a scope in place. #}
 {% extends "base.html" %}
 {% block title %}Exposure · {{ scope }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}exposure{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_exposure.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}{% include "terminal/_risk_elements_css.html" %}<link rel="stylesheet" href="/static/css/drishti_exposure.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text='EXP ' ~ scope ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 {% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'exposure') %}{# the phone display (MOBILE_DISPLAY.md 8) #}
@@ -55,25 +55,21 @@
       <div class="xx-nopaths" data-xx-nopaths role="status" hidden></div>
       <div class="xx-tiles" data-xx-tiles aria-live="polite"{{ part(PP, 'tiles') }}></div>
       <div class="xx-panel xx-chartbox"{{ part(PP, 'chart') }}>
-        <div class="xx-ph"><h2>Profile</h2>
-          <span class="xx-legend"><span><i class="lg-ee"></i>EE</span><span><i class="lg-pfe"></i><span data-xx-pfe-legend>PFE 95%</span></span>
-            <span><i class="lg-unc"></i>EE uncollateralised</span><span data-xx-fan-legend hidden{{ part(PP, 'fan') }}><i class="lg-fan"></i>paths 5–95% · 25–75%</span></span>
-          <span class="xx-fresh" data-xx-fresh="chart"></span></div>
+        <div class="xx-ph"><h2>Profile</h2><span class="xx-fresh" data-xx-fresh="chart"></span></div>
         <div class="xx-chart" data-xx-chart></div>
+        <p class="xx-note" data-xx-fan-legend hidden{{ part(PP, 'fan') }}>A netting set's simulated paths: the 5%, 25%, 75% and 95% lines around EE.</p>
       </div>
       <div class="xx-panel"{{ part(PP, 'tabs') }}>
         <div class="xx-tabs" role="tablist" data-xx-tabs></div>
         <div class="xx-pb" data-xx-pane></div>
       </div>
-      <details class="xx-panel xx-prov" data-xx-prov-box{{ part(PP, 'prov') }}>
-        <summary class="xx-ph"><h2>How this number was built</h2><span class="xx-fresh">the run, the inputs, the method, the view</span></summary>
-        <div class="xx-pb"><dl data-xx-prov></dl>
-          <div class="xx-actions"><a class="btn btn-sm xx-btn" data-xx-csv href="#">Download the profile (CSV)</a> <a class="btn btn-sm xx-btn" data-xx-jsonl href="#" title="A grid date a line">JSONL</a>
-            <button type="button" class="btn btn-sm xx-btn" data-xx-capture-side>Capture exposure</button></div></div>
-      </details>
+      <div class="xx-actions" data-xx-actions>
+        <button type="button" class="btn btn-sm xx-btn" data-xx-explain data-explain-primary aria-keyshortcuts="E" title="Explain the peak PFE: the formula with its values, the inputs and lineage (E); every tile has its own">Explain ›</button>
+        <a class="btn btn-sm xx-btn" data-xx-csv href="#">Download the profile (CSV)</a> <a class="btn btn-sm xx-btn" data-xx-jsonl href="#" title="A grid date a line">JSONL</a>
+        <button type="button" class="btn btn-sm xx-btn" data-xx-capture-side>Capture exposure</button></div>
     </section>
   </div>
   {{ foot(PP, request.url | string) }}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_exposure-charts.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_exposure-explorer.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}{% include "terminal/_risk_elements.html" %}<script src="/static/js/drishti_exposure-explorer.js?v={{ ASSET_V }}"></script>{% endblock %}

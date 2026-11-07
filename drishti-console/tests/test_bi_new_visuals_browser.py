@@ -248,10 +248,10 @@ def test_totals_of_measures_that_do_not_add_up_are_the_engines(stack, browser):
     assert abs(float(texts["MTM per notional"].replace(",", "").replace("+", "").replace("\u2212", "-")) - ratio) < 0.01
     assert abs(float(texts["Avg MTM"].replace(",", "").replace("+", "").replace("\u2212", "-")) - overall_avg) < 1
     assert "–" not in grand.inner_text()
-    foot = page.locator('[data-visual="table"] tfoot tr[data-total-row]')
+    foot = page.locator('[data-visual="table"] [data-total-row]')                                    # the engine's totals under the grid
     expect(foot).to_have_count(1)
-    assert foot.locator('td[data-measure="Largest notional"]').inner_text().replace(",", "") == f"{largest:.0f}"
-    assert foot.locator('td[data-measure="Trades"]').inner_text().replace(",", "") == str(len(data))
+    assert foot.locator('[data-measure="Largest notional"] b').inner_text().replace(",", "") == f"{largest:.0f}"
+    assert foot.locator('[data-measure="Trades"] b').inner_text().replace(",", "") == str(len(data))
     clean(page)
     page.context.close()
 
@@ -321,7 +321,7 @@ def test_a_phone_reads_the_new_visuals_in_one_column_without_sideways_scroll(sta
     for vis in ("world", "points", "steps", "spread", "boxes", "bubbles"):
         box = page.locator(f'[data-visual="{vis}"]').bounding_box()
         assert 150 <= box["height"] <= 400 and box["width"] <= 390, (vis, box)
-    for sel in ("[data-reset]:not([hidden])", "[data-pages] a", '[data-visual="matrix"] .bi-twist', '[data-visual="table"] .bi-sorthead'):
+    for sel in ("[data-reset]:not([hidden])", "[data-pages] a", '[data-visual="matrix"] .bi-twist', '[data-visual="table"] .dg-hcell.dg-leaf'):
         for el in page.locator(sel).all():
             if el.is_visible():
                 assert el.bounding_box()["height"] >= 43, (sel, el.bounding_box())

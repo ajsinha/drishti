@@ -79,7 +79,7 @@
     up.addEventListener('click', function () {
       var f = chosen();
       if (!f) { return; }
-      if (f.size > maxMb * 1048576) { say(msg, f.name + ' is ' + (f.size / 1048576).toFixed(1) + ' MB; the limit is ' + maxMb + ' MB.', true); return; }
+      if (f.size > maxMb * 1048576) { say(msg, f.name + ' is ' + window.Drishti.elements.core.formatBytes(f.size) + '; the limit is ' + maxMb + ' MB.', true); return; }
       var headers = { 'Content-Type': 'application/octet-stream', 'X-Drishti-Filename': f.name.replace(/[^\x20-\x7e]/g, '_') };
       var pub = dep.querySelector('[data-publisher]').value.trim(), sig = dep.querySelector('[data-signature]').value.trim();
       if (sig) { headers['X-Drishti-Signature'] = sig; headers['X-Drishti-Publisher'] = pub; }

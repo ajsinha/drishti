@@ -62,7 +62,7 @@
 .hx-v.t-pos, .hx .t-pos { color: var(--d-pos); }
 .hx-v.t-neg, .hx .t-neg { color: var(--d-neg); }
 .hx-chart-box { border: 1px solid var(--d-border); border-radius: 6px; background: var(--d-surface); padding: .4rem .5rem .2rem; margin-bottom: .6rem; min-width: 0; overflow: hidden; }   /* the hover label never widens the page (QA1-14) */
-.hx-chart { width: 100%; height: 300px; }
+.hx-chart { width: 100%; }                                                   /* drishti-chart's card: 300 px, 220 on a phone */
 .hx-cross { margin: 0 .3rem .2rem; min-height: 1.2em; color: var(--d-muted); font-size: .78rem; text-align: right; }
 
 /* the table */
@@ -122,7 +122,7 @@
 /* the foot: legend and keys */
 .hx-foot { margin-top: .55rem; display: flex; flex-wrap: wrap; justify-content: space-between; gap: .3rem 1.2rem; color: var(--d-muted); font-size: .78rem; }
 .hx-foot p { margin: 0; }
-.hx-foot kbd, .hx-help kbd { font-family: var(--d-font-mono); border: 1px solid var(--d-border); border-bottom-width: 2px; border-radius: 4px; padding: 0 .3rem;
+.hx-foot kbd { font-family: var(--d-font-mono); border: 1px solid var(--d-border); border-bottom-width: 2px; border-radius: 4px; padding: 0 .3rem;
   font-size: .72rem; background: var(--d-surface-2); color: var(--d-ink); margin-right: .15rem; }
 .hx-sw { display: inline-block; width: 1.4rem; height: .8rem; vertical-align: middle; margin-right: .3rem; border-radius: 2px; }
 .hx-sw-ch { background: var(--d-emph-bg); box-shadow: inset 0 -2px 0 var(--d-warn); }
@@ -131,11 +131,6 @@
 .hx-li { white-space: nowrap; }
 .hx-sw-same { width: auto; height: auto; color: var(--d-muted); font-family: var(--d-font-mono); font-size: .72rem; border: 1px solid var(--d-border);
   padding: 0 .3rem; vertical-align: baseline; }
-.hx-help { border: 1px solid var(--d-border); border-radius: 8px; background: var(--d-surface); color: var(--d-ink); padding: .8rem 1rem; max-width: min(46rem, 94vw); }
-.hx-help::backdrop { background: rgba(0, 0, 0, .45); }
-.hx-help header { display: flex; justify-content: space-between; align-items: center; margin-bottom: .4rem; }
-.hx-help h3 { font-size: 1rem; margin: 0; color: var(--d-ink); }
-.hx-help td { white-space: normal; color: var(--d-ink); }
 .hx-error-links { display: flex; gap: 1.2rem; }
 
 @media (max-width: 720px) {
@@ -145,7 +140,6 @@
   .hx-rform input { width: 100%; }
   .hx-chg li { grid-template-columns: 1fr auto auto auto; }
   .hx-path, .hx-dl { display: none; }
-  .hx-chart { height: 220px; }
 }
 @media (prefers-reduced-motion: reduce) { .hx * { transition: none !important; } }
 

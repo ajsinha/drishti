@@ -144,7 +144,7 @@ def ready(page, sel="#rep", timeout=60000):
     page.wait_for_function("(s) => !document.querySelector(s).shadowRoot.querySelector('.bi-vis-busy')", arg=sel, timeout=timeout)
 
 
-def console_page(browser, user, path="/bi", **ctx):
+def console_page(browser, user, path="/bi/catalogue", **ctx):
     context = browser.new_context(**{"viewport": {"width": 1400, "height": 900}, **ctx})
     page = context.new_page()
     page.errors = []
@@ -183,7 +183,7 @@ def test_a_host_page_under_a_strict_policy_draws_the_report_live_and_masked(stac
     page.click('[data-login="author"]')
     page.wait_for_function("(n) => window.__events.filter(e => e.name === 'loaded' && e.id === 'rep').length > n", arg=before, timeout=60000)
     ready(page)
-    cells = rep.locator('[data-visual="movers"] tbody tr td:nth-child(3)').all_inner_texts()
+    cells = rep.locator('[data-visual="movers"] .dg-row .dg-cell:nth-child(3)').all_inner_texts()
     assert cells and set(cells) == {"•••"}, cells
     masked = events(page, "masked")
     assert masked and any("trader" in c.lower() for c in masked[-1]["detail"]["columns"])          # trade.TRADER_ID (2.3.0 names)
@@ -193,7 +193,7 @@ def test_a_host_page_under_a_strict_policy_draws_the_report_live_and_masked(stac
     expect(rep.locator("[data-live-state]")).to_have_attribute("data-live-state", "live")
     # the page tabs work in the element; a 2.1 Perspective grid is Drishti's own grid of the server's rows (2.3.0), so no WebAssembly under the host's policy
     rep.locator('[data-page="grid"]').click()
-    expect(rep.locator('[data-type="perspective-grid"] table tbody tr').first).to_be_visible(timeout=20000)
+    expect(rep.locator('[data-type="perspective-grid"] .dg-row').first).to_be_visible(timeout=20000)
     assert any(e["detail"]["page"] == "grid" for e in events(page, "page-changed"))
     page.evaluate("document.getElementById('rep').selectPage('desk')")
     expect(rep.locator('[data-visual="trades"]')).to_be_visible()
@@ -206,8 +206,8 @@ def test_a_host_page_under_a_strict_policy_draws_the_report_live_and_masked(stac
 def test_the_same_user_in_the_console_sees_the_trader_the_element_masks(stack, browser):
     page = console_page(browser, "rita", f"/bi/r/{S.REPORT}")
     page.wait_for_selector("[data-ready=yes]", state="attached", timeout=30000)
-    page.wait_for_selector('[data-visual="movers"] tbody tr')
-    cells = page.locator('[data-visual="movers"] tbody tr td:nth-child(3)').all_inner_texts()
+    page.wait_for_selector('[data-visual="movers"] .dg-row')
+    cells = page.locator('[data-visual="movers"] .dg-row .dg-cell:nth-child(3)').all_inner_texts()
     assert cells and "•••" not in cells, "the console shows a user with the raw power the real traders"
     page.context.close()
 

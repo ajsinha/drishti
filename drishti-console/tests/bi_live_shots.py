@@ -36,11 +36,11 @@ from bi_live_stack import BOARD, CONSOLE_URL, EXPOSURE, PASSWORD, REPORT
 def sign_in(browser, user="rita", **ctx):
     context = browser.new_context(**{"viewport": {"width": 1600, "height": 900}, **ctx})
     page = context.new_page()
-    page.goto(CONSOLE_URL + "/login?next=/bi")
+    page.goto(CONSOLE_URL + "/login?next=/bi/catalogue")
     page.fill("#lu", user)
     page.fill("#lp", PASSWORD)
     page.click("button[type=submit]")
-    page.wait_for_url("**/bi")
+    page.wait_for_url("**/bi/catalogue")
     return page
 
 

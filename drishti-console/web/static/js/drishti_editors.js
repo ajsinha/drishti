@@ -52,7 +52,7 @@
   E.clear = clear;
   E.num = function (v) {
     if (typeof v !== 'number') { return v === null || v === undefined ? '' : String(v); }
-    return Math.abs(v) >= 1000 || Number.isInteger(v) ? v.toLocaleString(undefined, { maximumFractionDigits: 2 }) : String(Math.round(v * 10000) / 10000);
+    return Math.abs(v) >= 1000 || Number.isInteger(v) ? window.Drishti.elements.core.formatNumber(v, { maxDecimals: 2, minus: '-' }) : String(Math.round(v * 10000) / 10000);
   };
 
   function api(method, path, body) {
@@ -474,12 +474,9 @@
     q('[data-dialog-title]').textContent = title;
     var host = clear(q('[data-dialog-body]'));
     host.appendChild(body);
-    if (!d.open) { d.showModal(); }
-    var f = host.querySelector('input, select, textarea, button');
-    if (f) { f.focus(); }
-    return d;
+    return window.Drishti.elements.core.openDialog(d, { within: host });        // modal, its first field focused, focus given back on close
   }
-  function closeDialog() { var d = q('[data-dialog]'); if (d.open) { d.close(); } }
+  function closeDialog() { window.Drishti.elements.core.closeDialog(q('[data-dialog]')); }
   E.closeDialog = closeDialog;
 
   function doHistory() {
@@ -589,10 +586,10 @@
       b.addEventListener('click', function () { menu.hidden = true; nb.setAttribute('aria-expanded', 'false'); E.newSteps(ctx, b.getAttribute('data-new-kind')); });
     });
     q('[data-dialog-close]').addEventListener('click', closeDialog);
-    document.addEventListener('keydown', function (e) {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's' && S) { e.preventDefault(); if (!q('[data-act="save"]').disabled) { doSave(); } }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && S) { e.preventDefault(); q('[data-act="validate"]').click(); }
-    });
+    window.Drishti.keys.register({ id: 'editors.save', keys: ['Ctrl+S', 'Meta+S'], scope: 'screen', area: 'editors', group: 'Editor', typing: true,
+      description: 'Save', run: function () { if (!S) { return false; } if (!q('[data-act="save"]').disabled) { doSave(); } } });
+    window.Drishti.keys.register({ id: 'editors.check', keys: ['Ctrl+Enter', 'Meta+Enter'], scope: 'screen', area: 'editors', group: 'Editor', typing: true,
+      description: 'Check it', run: function () { if (!S) { return false; } q('[data-act="validate"]').click(); } });
     root.setAttribute('aria-busy', 'true');
     Promise.all([
       api('GET', 'prefs').then(function (p) { E.prefs = p; }).catch(function () { /* defaults */ }),

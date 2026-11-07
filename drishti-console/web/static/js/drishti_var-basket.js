@@ -29,6 +29,7 @@
    Alt+B, and survives a reload (this browser). */
 (function () {
   "use strict";
+  var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
   var KEY = (window.Drishti.key ? window.Drishti.key("drishti.varBasket2") : "drishti.varBasket2");   // per person: never the last one's
   var DEFAULT_COLS = [{ key: "TRD", title: "Trade" }, { key: "POS", title: "Position" }, { key: "PORT", title: "Portfolio" },
                       { key: "BOOK", title: "Book" }, { key: "DESK", title: "Desk" }, { key: "CPTY", title: "Counterparty" }];
@@ -53,18 +54,8 @@
     return e;
   }
   function btn(cls, text, title) { var b = h("button", "btn btn-sm vb-btn " + (cls || ""), text); b.type = "button"; if (title) b.title = title; return b; }
-  function money(v) {
-    if (v === null || v === undefined || isNaN(v)) return "—";
-    return (v < 0 ? "−" : "") + Math.round(Math.abs(v)).toLocaleString("en-US");
-  }
-  function short(v) {
-    if (v === null || v === undefined || isNaN(v)) return "—";
-    var a = Math.abs(v), s = v < 0 ? "−" : "";
-    if (a >= 1e9) return s + (a / 1e9).toFixed(2) + "bn";
-    if (a >= 1e6) return s + (a / 1e6).toFixed(a >= 1e8 ? 0 : 1) + "m";
-    if (a >= 1e3) return s + (a / 1e3).toFixed(a >= 1e5 ? 0 : 1) + "k";
-    return s + Math.round(a);
-  }
+  function money(v) { return v === null || v === undefined || isNaN(v) ? "—" : F.formatNumber(v); }
+  var short = F.formatter("compact", { decimals: function (a, u) { return u === "bn" ? 2 : u === "m" ? (a >= 1e8 ? 0 : 1) : u === "k" ? (a >= 1e5 ? 0 : 1) : 0; } });
   /** The page's business date and reporting currency (the explorer keeps ccy in its link): every answer of the sheet in it. */
   function asOf() {
     var q = new URLSearchParams(location.search), p = q.get("asOf"), c = q.get("ccy");
@@ -572,25 +563,13 @@
     if (!el.wifList) return;
     el.wifList.textContent = "";
     if (!T.whatif.length) return;
-    var t = h("table", "vb-table");
-    var hr = h("tr");
-    ["Copy of", "Factor", ""].forEach(function (x, i) { hr.appendChild(h("th", i === 1 ? "n" : null, x)); });
-    t.appendChild(h("thead")).appendChild(hr);
-    var tb = h("tbody");
-    T.whatif.forEach(function (w, k) {
-      var tr = h("tr");
-      tr.dataset.vbWhatifChip = w.copyOf;
-      tr.appendChild(h("td", "mono", w.copyOf));
-      tr.appendChild(h("td", "n mono", String(w.factor).replace("-", "−")));
-      var td = h("td");
-      var x = btn("", "×", "Remove the what-if " + w.copyOf);
-      x.dataset.vbWdel = String(k);
-      td.appendChild(x);
-      tr.appendChild(td);
-      tb.appendChild(tr);
-    });
-    t.appendChild(tb);
-    el.wifList.appendChild(t);
+    var R = window.Drishti.elements.risk;                  // drishti-risk's grid preset (the terminal layout)
+    R.riskGrid(el.wifList, { title: "What-if trades", rows: T.whatif.map(function (w, k) { return { k: k, copyOf: w.copyOf, factor: w.factor }; }),
+      getRowId: function (r) { return String(r.k); }, getRowData: function (r) { return { vbWhatifChip: r.copyOf }; },
+      columns: [{ field: "copyOf", header: "Copy of", width: 200 },
+        { field: "factor", header: "Factor", type: "number", width: 80, format: function (v) { return String(v).replace("-", "−"); } },
+        { id: "x", header: "", width: 50, sortable: false, valueGetter: function () { return ""; },
+          cellRenderer: function (c) { var x = btn("", "×", "Remove the what-if " + c.row.copyOf); x.dataset.vbWdel = String(c.row.k); return x; } }] });
   }
   function openWhatIf() {
     show();
@@ -612,30 +591,18 @@
       el.wifOut.textContent = "";
       el.wifOut.dataset.done = "ready";
       var b = w.before || {}, a = w.after || {}, ch = w.change || {};
-      var t = h("table", "vb-table");
-      var hr = h("tr");
-      ["", "Before", "After", "Incremental"].forEach(function (x, i) { hr.appendChild(h("th", i ? "n" : null, x)); });
-      t.appendChild(h("thead")).appendChild(hr);
-      var tb = h("tbody");
       var cl = function (x) { return x ? Math.round(x * 1000) / 10 + "%" : ""; };   // the answer's confidences, never fixed here
-      [[("VaR " + cl(w.confidence)).trim(), b["var"], a["var"], ch["var"]], [("ES " + cl(w.esConfidence)).trim(), b.es, a.es, ch.es]].forEach(function (r) {
-        var tr = h("tr");
-        tr.appendChild(h("td", null, r[0]));
-        tr.appendChild(h("td", "n mono", short(r[1])));
-        tr.appendChild(h("td", "n mono", short(r[2])));
-        tr.appendChild(h("td", "n mono " + (r[3] > 0 ? "up" : "down"), (r[3] > 0 ? "+" : "") + short(r[3])));
-        tb.appendChild(tr);
-      });
-      (w.items || []).forEach(function (it) {
-        var tr = h("tr", "vb-sub");
-        tr.appendChild(h("td", null, it.label + " alone " + short(it.standaloneVar)));
-        tr.appendChild(h("td", "n mono", ""));
-        tr.appendChild(h("td", "n mono", "component " + short(it.componentVar)));
-        tr.appendChild(h("td", "n mono", (it.incrementalVar > 0 ? "+" : "") + short(it.incrementalVar)));
-        tb.appendChild(tr);
-      });
-      t.appendChild(tb);
-      el.wifOut.appendChild(t);
+      var rows = [{ what: ("VaR " + cl(w.confidence)).trim(), before: short(b["var"]), after: short(a["var"]), inc: ch["var"] },
+                  { what: ("ES " + cl(w.esConfidence)).trim(), before: short(b.es), after: short(a.es), inc: ch.es }]
+        .concat((w.items || []).map(function (it) {
+          return { what: it.label + " alone " + short(it.standaloneVar), before: "", after: "component " + short(it.componentVar), inc: it.incrementalVar, sub: true };
+        }));
+      var g = h("div", "vb-grid");
+      el.wifOut.appendChild(g);
+      window.Drishti.elements.risk.riskGrid(g, { title: "What-if: before and after", rows: rows, getRowClass: function (r) { return r.sub ? "vb-sub" : null; },
+        columns: [{ field: "what", header: "", width: 240 }, { field: "before", header: "Before", width: 100 }, { field: "after", header: "After", width: 140 },
+          { field: "inc", header: "Incremental", type: "number", additive: false, width: 110, format: function (v) { return (v > 0 ? "+" : "") + short(v); },
+            cellClass: function (v) { return v > 0 ? "dg-tone-bad" : "dg-tone-good"; } }] });
       el.wifOut.appendChild(h("p", "vb-note", "Pre-deal what-if by the server's VaR engine: " + (w.note || "")));
     }).catch(function (e) {
       el.wifOut.textContent = "";
@@ -825,14 +792,10 @@
   // ---------------------------------------------------------------------------------------------------------------- Alt+B
   function start() {
     countBadge();
-    document.addEventListener("keydown", function (ev) {
-      if (ev.altKey && !ev.ctrlKey && !ev.metaKey && (ev.key === "b" || ev.key === "B" || ev.code === "KeyB")) {
-        // only where the page offers the basket (the explorer's "Construct your basket"); the landing page's Alt+B is its Back to
-        if (!document.querySelector("[data-vx-basket-open]") || document.querySelector("[accesskey=b]")) return;
-        ev.preventDefault();
-        toggle();
-      }
-    });
+    // only where the page offers the basket (the explorer's "Construct your basket"); the landing page's Alt+B is its Back to
+    window.Drishti.keys.register({ id: "var.basket.sheet", keys: ["Alt+B", "Alt+Shift+B"], scope: "screen", area: "var", group: "VaR", typing: true,
+      description: "Construct your basket: open or close the sheet",
+      when: function () { return !!document.querySelector("[data-vx-basket-open]") && !document.querySelector("[accesskey=b]"); }, run: function () { toggle(); } });
     // the explorer moved to another reporting currency: the basket's figures follow it
     document.addEventListener("drishti:var-currency", function () { if (host && !empty()) check(); });
   }

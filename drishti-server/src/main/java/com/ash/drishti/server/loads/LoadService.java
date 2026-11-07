@@ -29,7 +29,6 @@ import com.ash.drishti.engine.time.BusinessDates;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.packs.Pack;
 import com.ash.drishti.packs.PackRegistry;
-import com.ash.drishti.server.alerts.AlertEngine;
 import java.time.Clock;
 import java.time.DateTimeException;
 import java.time.Duration;
@@ -43,8 +42,8 @@ import java.util.regex.Pattern;
 /**
  * "A batch landed": records the announcement (once per pack, kind, date and batch) and, when the load is {@code ready}, makes
  * Drishti act on it, each as a step with its own result: <b>refresh</b> (the pack's connectors drop what they cached, so dates and
- * views include the new data now), <b>verify</b> (the kind has entities on the date), <b>alerts</b> (every rule on the kind is
- * evaluated on the date), <b>smoke</b> (open a few sample entities, when the pack asks), <b>notices</b> (the people the pack names).
+ * views include the new data now), <b>verify</b> (the kind has entities on the date), <b>alerts</b> (the alert engine
+ * looks at the alerts that follow loads of the kind, after its load delay), <b>smoke</b> (open a few sample entities, when the pack asks), <b>notices</b> (the people the pack names).
  * A {@code failed} load is recorded and told, and nothing else runs. Drishti never ingests: the data is where the ETL put it.
  */
 public final class LoadService {
@@ -65,7 +64,8 @@ public final class LoadService {
     private final SourceRegistry sources;
     private final SourceRouter router;
     private final ViewPipeline pipeline;
-    private final AlertEngine alerts;
+    /** The alert engine's look after a load: how many alerts will look at the kind's new date (set by the alert engine, which reads loads). */
+    private volatile java.util.function.ToIntBiFunction<String, LocalDate> alerts = (k, d) -> 0;
     private final LoadNotifier notifier;
     private final BusinessDates dates;
     private final AuditLog audit;
@@ -75,7 +75,7 @@ public final class LoadService {
 
     @SuppressWarnings("java:S107")
     public LoadService(PackRegistry packs, LoadStore store, LoadsConfig.Overrides configs, LoadsProperties props, SourceRegistry sources,
-            SourceRouter router, ViewPipeline pipeline, AlertEngine alerts, LoadNotifier notifier, BusinessDates dates, AuditLog audit, Clock clock) {
+            SourceRouter router, ViewPipeline pipeline, LoadNotifier notifier, BusinessDates dates, AuditLog audit, Clock clock) {
         this.packs = packs;
         this.store = store;
         this.configs = configs;
@@ -83,12 +83,16 @@ public final class LoadService {
         this.sources = sources;
         this.router = router;
         this.pipeline = pipeline;
-        this.alerts = alerts;
         this.notifier = notifier;
         this.dates = dates;
         this.audit = audit;
         this.clock = clock;
         this.refreshes = new RefreshCoalescer(props.refreshWindow());
+    }
+
+    /** The alert engine registers its look after a load here (it reads loads, so it cannot be given to the constructor). */
+    public void alertsOnLoad(java.util.function.ToIntBiFunction<String, LocalDate> look) {
+        this.alerts = look;
     }
 
     /** The refreshes of the connectors (tests and the health page: how many ran, how many wait). */
@@ -177,8 +181,9 @@ public final class LoadService {
                 long a0 = System.nanoTime();
                 LoadRecord.Step st;
                 try {
-                    fired = alerts.evaluateKindOn(kind, date, props.verifyTimeout());
-                    st = new LoadRecord.Step("alerts", "ok", fired + " alert" + (fired == 1 ? "" : "s") + " fired", ms(a0));
+                    fired = alerts.applyAsInt(kind, date);
+                    st = new LoadRecord.Step("alerts", "ok", fired + " alert" + (fired == 1 ? "" : "s") + " to look at " + kind + " " + date
+                            + (fired == 0 ? "" : " (after the load delay)"), ms(a0));
                 } catch (RuntimeException e) {
                     st = new LoadRecord.Step("alerts", "failed", message(e), ms(a0));
                 }
@@ -208,11 +213,11 @@ public final class LoadService {
                 }
             }
         }
-        audit.record(by, "data-load-" + status, packName, kind + " " + date + (batch == null ? "" : " batch " + batch) + ", " + verified + ", " + fired + " alerts, " + told + " told");
+        audit.record(by, "data-load-" + status, packName, kind + " " + date + (batch == null ? "" : " batch " + batch) + ", " + verified + ", " + fired + " alerts to look, " + told + " told");
         return new Outcome(done, false);
     }
 
-    /** The one-line notice: {@code trade for 2026-10-06 loaded: 48,213 rows, 12 rejected; 3 alerts fired}. */
+    /** The one-line notice: {@code trade for 2026-10-06 loaded: 48,213 rows, 12 rejected; 3 alerts to look}. */
     public static String summary(LoadRecord r) {
         StringBuilder s = new StringBuilder(r.kind()).append(' ');
         if (LoadRecord.FAILED.equals(r.status())) {
@@ -236,7 +241,7 @@ public final class LoadService {
         if ("not-found".equals(r.verified())) {
             s.append("; NOT FOUND in the data");
         } else if ("verified".equals(r.verified())) {
-            s.append("; ").append(r.alerts()).append(" alert").append(r.alerts() == 1 ? "" : "s").append(" fired");
+            s.append("; ").append(r.alerts()).append(" alert").append(r.alerts() == 1 ? "" : "s").append(" to look");
         }
         return s.toString();
     }

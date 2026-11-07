@@ -14,8 +14,8 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* Parametric VaR on the VaR explorer (docs/architecture/PARAMETRIC_VAR.md; VAR_GUIDE.md section 3.12): the toggle's bar, the three tiles,
-   the tree's Parametric and Gap columns, the normal curve and its marker (blue), the fat-tail gap (warning colour) and the ? popover (a
-   bottom sheet on a phone). Theme tokens only. */
+   the tree's Parametric and Gap columns (drishti-grid cells: blue, the gap in the warning colour) and the ? (the normal curve is
+   drishti-risk's P&L distribution). Theme tokens only. */
 .vp-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0; }
 .vp-badge { font-size: 11px; color: var(--d-muted); border: 1px solid var(--d-border); border-radius: 3px; padding: 2px 6px; }
 .vp-toggle { font-size: 12px; color: var(--d-ink); display: inline-flex; align-items: center; gap: 4px; }
@@ -28,29 +28,8 @@
 .vp-q { border: 1px solid var(--d-border); background: var(--d-surface); color: var(--d-link); border-radius: 50%; width: 16px; height: 16px;
   font: 600 10px/14px var(--d-font-sans); padding: 0; margin-left: 4px; cursor: pointer; flex: none; }
 .vp-q:focus-visible { outline: 2px solid var(--d-accent); }
-.vp-pop { position: absolute; z-index: 60; max-width: 520px; background: var(--d-bg); color: var(--d-ink); border: 1px solid var(--d-border);
-  border-radius: 6px; box-shadow: var(--d-shadow); padding: 10px 14px; font-size: 12px; }
-.vp-pop h4 { font-size: 13px; margin: 0 22px 6px 0; }
-.vp-pop p { margin: 3px 0; }
-.vp-pop .vp-pop-status { color: var(--d-warn); }
-.vp-pop .vp-pop-foot { border-top: 1px solid var(--d-border); padding-top: 6px; margin-top: 8px; color: var(--d-muted); }
-.vp-pop .vp-pop-foot a { color: var(--d-link); }
-.vp-pop-x { position: absolute; right: 6px; top: 4px; border: 0; background: none; color: var(--d-muted); font-size: 16px; cursor: pointer; }
-.vp-pop.sheet { position: fixed; left: 0 !important; right: 0; bottom: 0; top: auto !important; max-width: none; max-height: 70vh; overflow-y: auto;
-  border-radius: 10px 10px 0 0; }
-.vx-tree.vp-cols .vx-row { grid-template-columns: var(--rz-cols, minmax(130px, 1fr) 56px 50px 44px 62px 56px); }
 /* the two parametric columns need room: the scope names keep at least 130px (they were squeezed to nothing in a 330px panel) */
 @media (min-width: 1101px) { .vx-layout:has(.vx-tree.vp-cols) { grid-template-columns: var(--vx-side, 480px) minmax(0, 1fr); } }
 /* a figure and its ? on one line, so a row stays one line high */
-.vx-tree.vp-cols .vx-row > .vp-blue { white-space: nowrap; display: inline-flex; align-items: center; justify-content: flex-end; gap: 2px; }
+.vp-cell { white-space: nowrap; display: inline-flex; align-items: center; justify-content: flex-end; gap: 2px; }
 @media (min-width: 801px) and (max-width: 1100px) { .vx-layout:has(.vx-tree.vp-cols) { grid-template-columns: var(--vx-side, 440px) minmax(0, 1fr); } }
-.vx-svg .vp-curve { stroke: var(--d-link); stroke-width: 2; }
-.vx-svg .vp-mark { stroke: var(--d-link); stroke-dasharray: 5 3; fill: var(--d-link); }
-.vx-svg .vp-tail.hist { fill: var(--d-bad); opacity: 0.07; }
-.vx-svg .vp-tail.param { fill: var(--d-link); opacity: 0.08; }
-.vx-svg .vp-gap { stroke: var(--d-warn); stroke-width: 1.5; }
-.vx-svg .vp-gap-label { fill: var(--d-warn); font-size: 10px; }
-@media (max-width: 600px) {
-  .vx-tree.vp-cols .vx-row { grid-template-columns: minmax(0, 1fr) 62px 62px; }
-  .vx-tree.vp-cols .vx-row > :nth-child(3), .vx-tree.vp-cols .vx-row > :nth-child(4), .vx-tree.vp-cols .vx-row > :nth-child(6) { display: none; }
-}

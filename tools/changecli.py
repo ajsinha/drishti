@@ -15,7 +15,8 @@
 """`drishti.py change ...` and `drishti.py edits`: write-back from the command line (docs/guides/WRITE_BACK.md › The design and its reasons, section 13; the guide:
 docs/guides/WRITE_BACK.md, "Submitting"), for the caller's token (it needs the edit scope): propose a change to a record's fields
 (the same request as a form's Submit: the field must be editable by a Sutra's form with save:, the server checks everything again),
-submit a form's draft, list changes, show one, approve, reject or withdraw, a record's history, and Admin -> Edits (edits status).
+submit a form's draft, list changes, show one, a record's history, and Admin -> Edits (edits status). A change is approved, rejected
+or withdrawn in the one Approvals queue (`drishti.py approvals approve change chg-...`).
 Exit codes: 0, 1 (refused, conflicted, or the server said no), 2 (usage)."""
 from __future__ import annotations
 
@@ -24,8 +25,7 @@ import urllib.parse
 EPILOG = ("examples:\n  drishti.py change propose --kind trade --id MX-50000001 --set NOTIONAL=26000000 --from NOTIONAL=25000000 --reason \"booking typo\"\n"
           "  drishti.py change submit d-4ab964fa3060 --reason \"booking typo\"\n"
           "  drishti.py change list --state awaiting\n  drishti.py change show chg-01JB3Z5V9Q8R7S6T5U4V3W2X1Y\n"
-          "  drishti.py change approve chg-01JB3Z5V9Q8R7S6T5U4V3W2X1Y --note \"checked against the ticket\"\n"
-          "  drishti.py change reject chg-01JB3Z5V9Q8R7S6T5U4V3W2X1Y --reason \"wrong ticket\"\n"
+          "  drishti.py approvals approve change chg-01JB3Z5V9Q8R7S6T5U4V3W2X1Y --comment \"checked against the ticket\"\n"
           "  drishti.py change history trade MX-50000001\n  drishti.py edits status")
 
 
@@ -61,7 +61,7 @@ def render_change(c: dict, say) -> None:
 
 
 def register(groups, srv, ctx: dict) -> None:
-    """Adds ``change propose|submit|list|show|approve|reject|withdraw|history`` and ``edits status``."""
+    """Adds ``change propose|submit|list|show|history`` and ``edits status``."""
     import argparse
 
     Api, CliError, say_json = ctx["Api"], ctx["CliError"], ctx["say_json"]
@@ -103,10 +103,6 @@ def register(groups, srv, ctx: dict) -> None:
             else:
                 render_change(res, print)
             return 0 if res.get("state") not in ("refused", "conflicted", "rejected") else 1
-        if c in ("approve", "reject", "withdraw"):
-            body = {"note": a.note or ""} if c == "approve" else {"reason": a.reason or ""} if c == "reject" else {}
-            say_json(api.json("POST", f"/api/v1/changes/{q(a.change)}/{c}", body))
-            return 0
         res = api.json("GET", f"/api/v1/entities/{q(a.kind_)}/{q(a.id_)}/history")
         if a.json:
             say_json(res)
@@ -129,7 +125,7 @@ def register(groups, srv, ctx: dict) -> None:
         say_json(Api.from_args(a).json("GET", "/api/v1/admin/edits"))
         return 0
 
-    p = groups.add_parser("change", help="change: write-back (propose a change, submit a form's draft, approve, reject, history)",
+    p = groups.add_parser("change", help="change: write-back (propose a change, submit a form's draft, list, history; decide in approvals)",
                           description=__doc__.split("\n\n")[0], epilog=EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="change_cmd", required=True)
     pr = sub.add_parser("propose", help="propose a change to a record's fields, as you", parents=[srv])
@@ -150,14 +146,8 @@ def register(groups, srv, ctx: dict) -> None:
     ls.add_argument("--kind")
     ls.add_argument("--entity")
     ls.add_argument("--mine", action="store_true", help="only yours")
-    for name, what in (("show", "one change"), ("approve", "approve a change (an approver, never your own)"),
-                       ("reject", "reject a change with a reason"), ("withdraw", "withdraw your change while it awaits approval")):
-        s = sub.add_parser(name, help=what, parents=[srv])
-        s.add_argument("change", help="the change id (chg-...)")
-        if name == "approve":
-            s.add_argument("--note")
-        if name == "reject":
-            s.add_argument("--reason", required=True)
+    s = sub.add_parser("show", help="one change", parents=[srv])
+    s.add_argument("change", help="the change id (chg-...)")
     h = sub.add_parser("history", help="a record's changes from the edit log", parents=[srv])
     h.add_argument("kind_", metavar="KIND")
     h.add_argument("id_", metavar="ID")

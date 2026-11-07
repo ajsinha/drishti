@@ -39,7 +39,6 @@ import org.springframework.web.bind.annotation.RestController;
  *   POST /api/v1/risk/mr/detail    {view, coords}                 a cell's tail and histogram through the view's lens
  *   POST /api/v1/risk/mr/history   {view}                         the sparklines: the view on the open dates up to its own
  *   GET  /api/v1/risk/mr/versions                                 the time-travel slider's stops: dates and their batches
- *   GET  /api/v1/risk/mr/explain?scope=&amp;from=&amp;to=&amp;confidence=   why a cell's VaR moved: the engine's exact steps on its scope
  *   GET  /api/v1/risk/mr/sensitivities?scope=&amp;grid=&amp;by=&amp;class=&amp;measure=&amp;ccy=   the DV01 ladder by a grid, or the heat map by two parts
  *   POST /api/v1/risk/mr/what-if   {view, items}                  the what-if side by side: each row of the view and its total
  * </pre>
@@ -97,13 +96,6 @@ public class MrCubeController {
     @GetMapping("/versions")
     public Map<String, Object> versions(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         return extras.versions(p);
-    }
-
-    @GetMapping("/explain")
-    public Map<String, Object> explain(@RequestParam(required = false) String scope, @RequestParam(required = false) String from,
-            @RequestParam(required = false) String to, @RequestParam(required = false) Double confidence,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return extras.explain(p, scope, VarExplainController.date(from, "from"), VarExplainController.date(to, "to"), confidence);
     }
 
     @GetMapping("/sensitivities")

@@ -23,6 +23,7 @@ import json
 import re
 
 from jinja2 import Environment, FileSystemLoader
+from core import half_up
 
 from conftest import CONSOLE, FIXTURES
 from core import channel, render_dist as rd
@@ -95,11 +96,13 @@ def test_v2_answers_the_view_model_with_its_contract_and_its_live_key(backend):
 def test_v2_serves_the_renderer_immutably_with_partial_versions_and_elements_2(backend):
     embed = make_client(backend)
     record = json.loads((rd.ROOT / rd.VERSION / rd.RECORD).read_text())
-    for rel in ("drishti-render.js", "drishti-elements.js", "m/elements.js", "drishti-render.css"):
+    for rel in ("drishti-render.js", "drishti-elements.js", "drishti-render.d.ts", "drishti-render.css"):
         r = embed.get(f"/embed/v2/render/{rd.VERSION}/{rel}", headers={"Origin": HOST})
         assert r.status_code == 200 and rd.sri(r.content) == record["files"][rel]["integrity"] and "immutable" in r.headers["cache-control"]
-    r = embed.get("/embed/v2/render/1/drishti-render.js", headers={"Origin": HOST}, follow_redirects=False)
+    r = embed.get("/embed/v2/render/2/drishti-render.js", headers={"Origin": HOST}, follow_redirects=False)
     assert r.status_code == 302 and r.headers["location"] == f"/embed/v2/render/{rd.VERSION}/drishti-render.js"
+    r = embed.get("/embed/v2/render/1/drishti-render.js", headers={"Origin": HOST}, follow_redirects=False)
+    assert r.status_code == 302 and r.headers["location"] == "/embed/v2/render/1.2.0/drishti-render.js", "1.x pinned hosts keep the frozen 1.2.0"
     assert embed.get("/embed/v2/render/0.1/drishti-render.js", follow_redirects=False).status_code in (404, 410)     # retired with 1.0.0 and 1.1.0
     gone = embed.get("/embed/v2/render/3.0.0/drishti-render.js")
     assert gone.status_code == 410 and gone.json()["code"] == "DRS-8006"
@@ -117,6 +120,7 @@ def test_v2_is_off_with_embedding(client):
 # ---- the three console fixes phase 1 found ------------------------------------------------------------------------------------
 def _macros():
     e = Environment(loader=FileSystemLoader(str(WEB / "templates")), extensions=["jinja2.ext.do"], autoescape=True)
+    half_up.install(e)
     e.globals.update(ASSET_V="", design_on=lambda: True)
     return e.get_template("_macros/panels.html").module
 

@@ -304,7 +304,7 @@ def test_a_proposed_draft_opens_read_only_with_a_banner_instead_of_failing_on_sa
 def test_one_broken_visual_is_one_error_card_and_the_others_are_drawn_for_a_reader(stack, browser):
     rid = make_report("One bad visual", "      - { id: good, type: card, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Gross notional] } }\n"
                                         "      - { id: bad, type: card, at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [NoSuchMeasure] } }\n")
-    pg = sign_in(browser, "wes", "/bi")
+    pg = sign_in(browser, "wes", "/bi/catalogue")
     pg.goto(f"{CONSOLE_URL}/bi/r/{rid}")
     pg.wait_for_selector("[data-ready=yes]", timeout=30000)
     pg.wait_for_function("() => !document.querySelector('.bi-vis-busy') && document.querySelectorAll('.bi-vis').length === 2", timeout=30000)

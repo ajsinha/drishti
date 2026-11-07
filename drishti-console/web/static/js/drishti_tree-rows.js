@@ -18,15 +18,15 @@
    1. A table or ladder whose Sutra says children: (table.tbl-tree): the ▸/▾ button of a row opens and closes the rows under
       it, any number of levels deep; the filter box and the column filters (drishti_colfilter.js) keep the rows that match and the
       ancestors of those rows: a parent shows, open, when any row below it matches.
-   2. A pivot by a list of fields (div.pv-tree-host): the nested rows are drawn by the pivot grid (drishti_pivot-grid.js, the Pivot
-      screen's: + and − on the groups, subtotals, the grand total) from the panel's own data, every figure the pivot engine's
-      (ChartBinder computes them with drishti-bicompute) and shown as the server's text; one renderer for pivot rows.
+   2. A pivot by a list of fields (div.pv-tree-host): the nested rows are drawn by drishti-grid (Drishti Elements, the Pivot screen's
+      grid: + and − on the groups, subtotals, the grand total) from the panel's own data, every figure the pivot engine's (ChartBinder
+      computes them with drishti-bicompute) and shown as the server's text; one grid for pivot rows.
    Both are plain buttons, so Tab, Enter and Space work; the state is aria-expanded. Live updates replace panels: new ones
    are enhanced when they appear (data-tree-ready marks the ones already done). */
 (function () {
   'use strict';
   var me = document.currentScript, reg0 = window.drishtiModules || {};
-  var ROOT = me && /\/js\/tree-rows\.js/.test(me.src || '') ? me.src.replace(/js\/(?:drishti_)?tree-rows\.js.*$/, '') : '/static/';
+  var ROOT = me && /\/js\/(?:drishti_)?tree-rows\.js/.test(me.src || '') ? me.src.replace(/js\/(?:drishti_)?tree-rows\.js.*$/, '') : '/static/';
   var VER = me && /[?&]v=([^&]+)/.exec(me.src || '') ? /[?&]v=([^&]+)/.exec(me.src)[1] : '';
 
   var treeState = {};                                      // a tree's filters by panel, so a live patch that replaces the table keeps them
@@ -127,13 +127,14 @@
     paint();
   }
 
-  // ---- a pivot by several fields, drawn by the pivot grid -------------------------------------------------------------
-  /** The grid's sheet (css/drishti_pivot-screen.css), once per document or shadow root that shows a nested pivot. */
+  // ---- a pivot by several fields, drawn by drishti-grid ---------------------------------------------------------------
+  /** The grid's sheet (elements/drishti-grid/drishti_grid.css), once per document or shadow root that shows a nested pivot. */
   function sheet(host) {
+    if (/\/embed\/v1\/$/.test(ROOT)) { return; }        // <drishti-view>'s own sheet carries the grid's (tools/elements_sheet.py)
     var at = host.getRootNode ? host.getRootNode() : document, into = at === document || !at.host ? document.head : at;
-    if (into.querySelector('link[data-pivot-grid-css]')) { return; }
+    if (into.querySelector('link[data-grid-css]')) { return; }
     var l = document.createElement('link');
-    l.rel = 'stylesheet'; l.href = ROOT + 'css/drishti_pivot-screen.css' + (VER ? '?v=' + VER : ''); l.setAttribute('data-pivot-grid-css', '');
+    l.rel = 'stylesheet'; l.href = ROOT + 'elements/drishti-grid/drishti_grid.css' + (VER ? '?v=' + VER : ''); l.setAttribute('data-grid-css', '');
     into.appendChild(l);
   }
   var US = '\u001f';
@@ -142,11 +143,10 @@
    * columns of `across` and the total; every cell keeps the server's text and tone (formats, masks), its figure for the heat.
    */
   function answerOf(d, closed) {
-    var cols = (d.columns || []).map(function (c) { return { kind: 'node', key: 'c' + US + c, label: c }; });
-    if (d.totals) { cols.push({ kind: 'grand', key: '*', label: 'Total' }); }
-    var label = { sum: 'Sum', count: 'Count', avg: 'Average', min: 'Min', max: 'Max' }[d.agg] || d.agg || 'Value';
-    var rows = [], cells = {}, hidden = null, fmt = {};
-    fmt[label] = { style: 'scale' };
+    var cols = (d.columns || []).map(function (c) { return { kind: 'node', key: 'c' + US + c, label: c, path: [['across', c]], depth: 1 }; });
+    if (d.totals) { cols.push({ kind: 'grand', key: '*', label: 'Total', path: [], depth: 0 }); }
+    var label = labelOf(d), levels = d.levels || [];
+    var rows = [], cells = {}, hidden = null;
     function cell(v, c) {                                  // the measure's figure (for the heat), the server's text and tone
       var o = { values: {}, texts: {}, tones: {} };
       o.values[label] = typeof v === 'number' ? v : null; o.texts[label] = c ? c.text : ''; o.tones[label] = c && c.tone ? 't-' + c.tone : '';
@@ -157,7 +157,8 @@
       if (hidden !== null && key.indexOf(hidden + US) === 0) { return; }
       hidden = null;
       if (r.group && closed[key]) { hidden = key; }
-      rows.push({ kind: 'node', key: key, label: r.label, depth: path.length, expandable: !!r.group, expanded: !!r.group && !closed[key] });
+      rows.push({ kind: 'node', key: key, label: r.label, depth: path.length, expandable: !!r.group, expanded: !!r.group && !closed[key],
+        path: path.map(function (v, i) { return [levels[i] || 'level' + (i + 1), v]; }) });
       (r.cells || []).forEach(function (c, i) {
         if (!cols[i]) { return; }
         cells[key + '|' + cols[i].key] = cell((r['values'] || [])[i], c);
@@ -165,44 +166,60 @@
       if (r.total) { cells[key + '|*'] = cell(null, r.total); }
     });
     if (d.totals) {
-      rows.push({ kind: 'grand', key: '*', label: 'Total', depth: 0 });
+      rows.push({ kind: 'grand', key: '*', label: 'Total', depth: 0, path: [] });
       d.totals.forEach(function (c, i) {
         var k = i < (d.columns || []).length ? cols[i].key : '*';
         cells['*|' + k] = cell(null, c);
       });
     }
-    return { rowDimensions: d.levels || [], columns: cols, rows: rows, cells: cells, measures: [{ id: d.agg || 'value', label: label, kind: 'mergeable' }],
-      view: d.heat ? { formats: fmt } : {} };
+    return { rowDimensions: levels, columnDimensions: [], columns: cols, rows: rows, cells: cells,
+      measures: [{ id: d.agg || 'value', label: label, kind: 'server', server: true }] };
   }
+  function labelOf(d) { return { sum: 'Sum', count: 'Count', avg: 'Average', min: 'Min', max: 'Max' }[d.agg] || d.agg || 'Value'; }
 
   function pivotTree(host) {
-    var PG = reg0.pivotGrid || window.Drishti.PivotCore || (window.drishtiModules || {}).pivotGrid;
-    if (!PG) { return; }
-    var d = JSON.parse(host.getAttribute('data-pv-tree')), closed = {};
+    var E = window.Drishti.elements;
+    if (!E || (!E.grid && !E.load)) { return; }           // no Drishti Elements on the page: the plain table stays
+    if (!E.grid) { host.setAttribute('data-tree-ready', ''); E.load('drishti-grid').then(function () { draw(host); }, function () { /* the plain table stays */ }); return; }
+    draw(host);
+    host.setAttribute('data-tree-ready', '');
+  }
+
+  /** Draws the panel's pivot with drishti-grid: the panel's own figures (the engine's, computed by ChartBinder with drishti-bicompute),
+      shown as the server's text; a + or − opens or closes a group in the page (nothing is asked again: the panel holds every level). */
+  function draw(host) {
+    var G = window.Drishti.elements.grid;
+    var d = JSON.parse(host.getAttribute('data-pv-tree')), closed = {}, label = labelOf(d);
     (d.rows || []).forEach(function (r) {                  // the groups shown closed at first: those at or below `expand` levels
       if (r.group && (r.path || []).length >= d.expand) { closed[(r.path || []).join(US)] = true; }
     });
     sheet(host);
-    function draw(focusKey) {
-      var a = answerOf(d, closed), box = host.querySelector('.pv-tree-grid');
-      if (!box) { box = document.createElement('div'); box.className = 'pv-tree-grid pv-scroll'; host.textContent = ''; host.appendChild(box); }
-      PG.render(box, a, {
-        onToggle: function (row) {
-          if (!row || !row.expandable) { return; }
-          if (closed[row.key]) { delete closed[row.key]; } else { closed[row.key] = true; }
-          draw(row.key);
-        }
-      });
-      if (focusKey != null) {
-        var again = Array.prototype.filter.call(box.querySelectorAll('[data-pv-toggle]'), function (x) {
-          return a.rows[+x.getAttribute('data-pv-toggle')].key === focusKey;
-        })[0];
-        if (again) { again.focus(); }
-      }
+    var box = document.createElement('div');
+    box.className = 'pv-tree-grid';
+    host.textContent = '';
+    host.appendChild(box);
+    size(answerOf(d, closed).rows.length, 28);              // a height before the first draw: the grid draws the rows its height holds
+    var grid = new G.Grid(box, {
+      columns: [{ id: 'v', field: 'v', header: label, type: 'number', measure: d.agg || 'value', additive: false, enableValue: true }],
+      layout: 'wells', density: 'compact', chrome: false, checkboxes: false, rowSelection: 'none', clientAggregation: false, pinTotals: false,
+      label: (d.levels || []).join(' › ') || 'Nested rows',
+      conditionalFormats: d.heat ? [{ measure: label, type: 'colourScale' }] : [],
+      serverPivot: function () { return Promise.resolve(answerOf(d, closed)); }
+    });
+    // a + or −: the grid tells which group before it asks again, and the answer is this panel's own rows with that group open or closed
+    box.addEventListener('drishti:row-expanded', function (e) { delete closed[pathKey(e.detail.path)]; });
+    box.addEventListener('drishti:row-collapsed', function (e) { closed[pathKey(e.detail.path)] = true; });
+    box.addEventListener('drishti:pivot-changed', function () { fit(); });
+    function fit() { if (size(grid.model.rowCount(), grid.model.viewport.rowHeight)) { grid.refresh(); } }
+    function size(n, rh) {                                 // as tall as its rows (a panel, not a page), at most 30 rows before it scrolls
+      var px = (Math.min(n, 30) + 2) * rh + 6 + 'px';
+      if (box.style.height === px) { return false; }
+      box.style.height = px;
+      return true;
     }
-    draw();
-    host.setAttribute('data-tree-ready', '');
+    grid.setPivot({ rows: [], columns: [], values: [{ colId: 'v' }], filters: [] });
   }
+  function pathKey(path) { return (path || []).map(function (p) { return p[1]; }).join(US); }
 
   /** init(root, options): expandable rows under root (the document or a ShadowRoot), now and as panels are swapped in. */
   function init(root, options) {

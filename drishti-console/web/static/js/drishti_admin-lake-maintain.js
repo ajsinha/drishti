@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Admin → Lakes → Maintain: pick tables (all, by domain, one by one), dry run or maintain now with progress per table and cancel, settings per
    table, schedules (a day-and-time picker that writes the cron text, or after every build) and the history. Everything goes through
    /admin/api/lakes/maintain/... (routes/lake_maint_routes.py); the engine is tools/lake/maintain.py, the same as `drishti.py lake maintain`. */
@@ -43,8 +44,9 @@
       });
     });
   }
-  function fmt(n) { return n === null || n === undefined ? '–' : Number(n).toLocaleString(); }
-  function mb(n) { return n === null || n === undefined ? '–' : (Number(n) < 1 ? (Number(n) * 1024).toFixed(1) + ' KB' : Number(n).toFixed(2) + ' MB'); }
+  var F = window.Drishti.elements.core;                                         // counts and sizes by drishti-core
+  function fmt(n) { return F.formatNumber(n, { maxDecimals: 3, empty: '–' }); }
+  function mb(n) { return n === null || n === undefined ? '–' : F.formatBytes(Number(n) * 1048576, { decimals: 2 }); }
 
   // the selection ------------------------------------------------------------------------------------------------
   function picks() { return $$('[data-mt-pick]'); }
@@ -300,7 +302,7 @@
     });
   }
   function settingsText(s) {
-    return (s['keep-business-days'] === null ? 'keep all dates' : Number(s['keep-business-days']).toLocaleString() + ' business days') + ' · ' + s['target-file-mb'] + ' MB files · ' +
+    return (s['keep-business-days'] === null ? 'keep all dates' : fmt(s['keep-business-days']) + ' business days') + ' · ' + s['target-file-mb'] + ' MB files · ' +
       (s.checkpoint ? 'checkpoint' : 'no checkpoint') + ' · ' + (s['vacuum-hours'] === null ? 'no vacuum' : 'vacuum ' + s['vacuum-hours'] + ' h');
   }
   function refresh() {

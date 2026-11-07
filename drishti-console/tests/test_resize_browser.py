@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Resizable panels and columns (static/js/drishti_resize.js), the one component every screen uses, in a real browser on a page of its
+"""Resizable panels and columns (drishti-core's resize, static/elements/drishti-core/src/drishti_resize.js), the one component every screen uses, in a real browser on a page of its
 own markup under a strict CSP (script-src and style-src 'self'): no server, the per-worker browser only.
 
 * a splitter: dragged, kept after a reload, held between its least and most, reset by a double-click;
@@ -58,7 +58,7 @@ HTML = """<!DOCTYPE html><html lang="en" data-theme="terminal"><head><meta chars
     <div id="later"></div>
   </main>
 </div>
-<script src="/static/js/drishti_resize.js"></script></body></html>"""
+<script src="/static/elements/drishti-core/drishti_core.js"></script></body></html>"""
 HEADERS = {"content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'"}
 
 

@@ -29,6 +29,17 @@ TRADES = [[DESKS[i % 4], CCY[(i * 7) % 5], PRODUCTS[(i * 3) % 5], f"2026-{(i % 9
 class PivotBackend(ChartBackend):
     """The chart tests' stand-in, plus the pivot screen's calls: sources, a catalogue, the estimate and the query of one source."""
 
+    async def explain_number(self, method, path, ident, body=None, **params):
+        """The one Explain (/api/v1/explain): the Pivot's Why card asks kind pivot with the view in the body; answered as the server
+        words a pivot cell's difference (PivotCellExplainer), its why part as words only (the steps' waterfall is the server's panels)."""
+        if path == "/kinds":
+            return {"kinds": [{"kind": "pivot", "measures": ["cell"]}]}
+        self.asked.append(("explain", dict(body or {}, **params)))
+        return {"kind": "pivot", "measure": "cell", "subject": "trade", "title": "count() of trade", "text": "30", "unit": "", "asOf": "2026-10-30",
+                "origin": "computed by the pivot engine in the server for you, from the rows you may see",
+                "why": {"available": False, "note": "Rates minus FX is 30 by DESK, member by member."},
+                "checks": [{"ok": True, "text": "the steps add up to the difference"}]}
+
     async def pivot(self, method, path, ident, body=None, raw=False, **params):
         if path == "/sources":
             return {"sources": [{"source": "trade", "title": "Trades", "provider": "tabular"}]}
@@ -104,13 +115,7 @@ class PivotBackend(ChartBackend):
         if path.startswith("/live/") and method == "DELETE":
             self.ended.append(path)
             return {}
-        # ---- the Why, What-if and Functions cards (drishti_pivot-functions.js), answered as the engine words them ----
-        if path == "/explain" and method == "POST":
-            self.asked.append(("explain", body))
-            return {"words": "Rates minus FX is 30", "method": "by DESK, member by member",
-                    "steps": [{"member": "IRS", "cause": "member", "step": 40, "cumulative": 40},
-                              {"member": "CDS", "cause": "member", "step": -10, "cumulative": 30}],
-                    "residual": {"name": "none", "value": 0}, "difference": 30}
+        # ---- the What-if and Functions cards (drishti_pivot-functions.js), answered as the engine words them ----
         if path == "/whatif" and method == "POST":
             self.asked.append(("whatif", body))
             return {"diff": {"DESK=Rates|*": {"delta": {"count()": -25}}, "DESK=FX|*": {"delta": {"count()": 0}}, "*|*": {"delta": {"count()": -25}}}}

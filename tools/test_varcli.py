@@ -224,17 +224,13 @@ class VarCli(unittest.TestCase):
                         "total": 18567, "shown": 5000, "rows": []}, 10, cut.append)
         self.assertIn("(5,000 of 18,567 positions shown (the largest by gross size); totals are over all 18,567)", cut[0])
 
-    def test_the_stress_window_selection_asks_proposes_and_decides(self):
+    def test_the_stress_window_selection_asks_and_proposes(self):
         run("stress-window", "DESK:DESK-RATES", "--date", "2026-09-30", "--length", "125", "--json")
         self.assertEqual(self.query()[1:3], ("/api/v1/risk/var/stress-window", {"scope": "DESK:DESK-RATES", "hierarchy": "MGMT", "length": "125",
                                                                           "asOf": "2026-09-30"}))
         run("stress-window", "--propose", "--first", "2007-11-30", "--note", "Bear and Lehman", "--json")
         self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/risk/var/stress-window/proposals",
                                              {"scope": "BANK", "hierarchy": "MGMT", "note": "Bear and Lehman", "first": "2007-11-30"}))
-        run("stress-window", "--decide", "SWP-000001", "--decision", "approve", "--json")
-        self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/risk/var/stress-window/proposals/SWP-000001/decision",
-                                             {"decision": "approve", "note": ""}))
-        self.assertEqual(run("stress-window", "--decide", "SWP-000001"), 2)                       # no decision named
         run("stress-window", "--proposals", "--json")
         self.assertEqual(FakeApi.calls[-1][0:2], ("GET", "/api/v1/risk/var/stress-window/proposals"))
         out = []
@@ -284,11 +280,12 @@ class VarCli(unittest.TestCase):
 
     def test_explain_asks_its_paths_and_prints_the_waterfall_as_aligned_lines(self):
         run("explain", "DESK:RATES", "--from", "2026-09-29", "--to", "2026-09-30", "--json")
-        self.assertEqual(self.query(), ("GET", "/api/v1/risk/var/explain", {"scope": "DESK:RATES", "from": "2026-09-29", "to": "2026-09-30"}, None))
+        self.assertEqual(self.query(), ("GET", "/api/v1/explain", {"scope": "DESK:RATES", "from": "2026-09-29", "to": "2026-09-30",
+                                                                "kind": "var", "part": "why"}, None))
         run("explain", "BANK", "--matrix", "--json")
-        self.assertEqual(self.query()[1:3], ("/api/v1/risk/var/explain/matrix", {"scope": "BANK"}))
+        self.assertEqual(self.query()[1:3], ("/api/v1/explain", {"scope": "BANK", "kind": "var", "part": "why", "view": "matrix"}))
         run("explain", "BANK", "--confidence", "0.95", "--json")
-        self.assertEqual(self.query()[2], {"scope": "BANK", "confidence": "0.95"})
+        self.assertEqual(self.query()[2], {"scope": "BANK", "confidence": "0.95", "kind": "var", "part": "why"})
         out = []
         V.render_explain(EXPLAIN, out.append)
         text = "\n".join(out)
@@ -375,9 +372,9 @@ class RegulatoryCli(unittest.TestCase):
         self.assertEqual(FakeApi.calls[-1][1], "/api/v1/risk/var/statistics?scope=BANK&period=FY2026&measure=var")
         run("report", "run", "annual-report-var", "FY2026", "--json")
         self.assertEqual(FakeApi.calls[-1][:2], ("POST", "/api/v1/risk/var/reports/annual-report-var/runs?period=FY2026"))
-        run("report", "sign", "annual-report-var", "FY2026", "--step", "checker", "--comment", "ok", "--json")
-        self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/risk/var/reports/annual-report-var/runs/FY2026/signoff",
-                                             {"action": "approve", "step": "checker", "comment": "ok"}))
+        run("report", "narrative", "annual-report-var", "FY2026", "--narrative", "The year in one line.", "--json")
+        self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/risk/var/reports/annual-report-var/runs/FY2026/narrative",
+                                             {"narrative": "The year in one line."}))
         run("official", "--synthetic-history", "259")
         self.assertEqual(FakeApi.calls[-1][:2], ("POST", "/api/v1/risk/var/official/synthetic-history?days=259"))
 

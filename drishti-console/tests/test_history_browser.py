@@ -200,16 +200,16 @@ def test_the_hover_label_follows_a_resize_and_never_widens_the_page(url, browser
         pg.wait_for_selector("[data-hx-chart] canvas", timeout=10000)
         box = pg.locator("[data-hx-chart]").bounding_box()
         pg.mouse.move(box["x"] + box["width"] - 30, box["y"] + box["height"] / 2)              # hover the newest days, at the right end
-        pg.wait_for_selector(".hx-tip", state="visible", timeout=5000)
+        pg.wait_for_selector(".dc-tip-box", state="visible", timeout=5000)                         # drishti-chart's tooltip
         pg.set_viewport_size({"width": 720, "height": 900})
         pg.wait_for_function("() => { const c = document.querySelector('[data-hx-chart]').getBoundingClientRect(); return c.width < 700; }")
         pg.wait_for_timeout(400)                                                               # the resize observer's turn
         assert pg.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), pg.evaluate("document.documentElement.scrollWidth")
-        tip = pg.evaluate("""() => { const t = document.querySelector('.hx-tip'), c = document.querySelector('[data-hx-chart]').getBoundingClientRect();
+        tip = pg.evaluate("""() => { const t = document.querySelector('.dc-tip-box'), c = document.querySelector('[data-hx-chart]').getBoundingClientRect();
             if (!t || getComputedStyle(t).display === 'none' || getComputedStyle(t).opacity === '0') { return null; }
             const r = t.getBoundingClientRect(); return {right: r.right, chartRight: c.right + 1}; }""")
         assert tip is None or tip["right"] <= tip["chartRight"], tip                          # hidden, or put back inside the chart
-        assert pg.evaluate("echarts.getInstanceByDom(document.querySelector('[data-hx-chart]')).getOption().xAxis[0].axisPointer.label.show") is False
+        assert pg.evaluate("echarts.getInstanceByDom(document.querySelector('[data-hx-chart] .dc-canvas')).getOption().xAxis[0].axisPointer.label.show") is False
         assert not errors, errors
     finally:
         ctx.close()

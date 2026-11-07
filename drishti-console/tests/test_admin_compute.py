@@ -70,7 +70,7 @@ def test_the_page_shows_pools_workers_queues_approvals_and_environments(client, 
         assert text in page, text
     assert '<caption class="visually-hidden">' in page and 'scope="col"' in page
     theirs = page.split('data-request="cr-1"')[1].split('data-request=')[0]
-    assert 'data-decide="approve"' in theirs and 'data-decide="reject"' in theirs
+    assert 'href="/approvals/compute/cr-1"' in theirs and 'data-decide="approve"' not in theirs     # decided in the one Approvals queue
     mine = page.split('data-request="cr-2"')[1].split('data-request=')[0]
     assert "data-decide" not in mine and "you asked" in mine                     # four eyes: no buttons on one's own request
     approved = page.split('data-request="cr-3"')[1].split('data-envs')[0]
@@ -88,8 +88,9 @@ def test_compute_off_says_so(client, backend, monkeypatch):
 def test_decisions_builds_tests_and_cancels_reach_the_server(client, backend, monkeypatch):
     calls = []
     with_compute(backend, monkeypatch, calls)
-    assert client.post("/admin/compute/api/requests/cr-1/approve", json={"reason": "scanned"}).status_code == 200
-    assert ("POST", "/compute/requests/cr-1/approve", {"reason": "scanned"}) in calls
+    assert client.post("/admin/compute/api/requests/cr-1/approve", json={"reason": "scanned"}).status_code == 404     # in Approvals now
+    assert client.post("/admin/compute/api/requests/cr-3/revoke", json={"reason": "withdrawn"}).status_code == 200
+    assert ("POST", "/compute/requests/cr-3/revoke", {"reason": "withdrawn"}) in calls
     assert client.post("/admin/compute/api/requests/cr-1/delete", json={}).status_code == 404
     assert client.post("/admin/compute/api/pools/risk/test", json={}).json()["worker"] == "drishti-main/risk#2"
     assert client.post("/admin/compute/api/pools/risk/build", json={}).json()["id"] == "f9dc94904d9d8554"
@@ -98,6 +99,6 @@ def test_decisions_builds_tests_and_cancels_reach_the_server(client, backend, mo
 
 
 def test_a_refusal_comes_back_with_its_code(client, backend, monkeypatch):
-    with_compute(backend, monkeypatch, [], fail=("/approve", 409, "DRS-9202", "four eyes: admin1 asked for cr-2 and cannot approve it"))
-    r = client.post("/admin/compute/api/requests/cr-2/approve", json={"reason": "mine"})
-    assert r.status_code == 409 and r.json()["code"] == "DRS-9202" and "four eyes" in r.json()["detail"]
+    with_compute(backend, monkeypatch, [], fail=("/revoke", 409, "DRS-9202", "cr-2 is pending, not approved: nothing to revoke"))
+    r = client.post("/admin/compute/api/requests/cr-2/revoke", json={"reason": "mine"})
+    assert r.status_code == 409 and r.json()["code"] == "DRS-9202" and "nothing to revoke" in r.json()["detail"]

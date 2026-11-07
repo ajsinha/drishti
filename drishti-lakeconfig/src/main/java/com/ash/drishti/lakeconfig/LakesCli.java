@@ -38,6 +38,8 @@ import java.util.stream.Stream;
  * check          [--dir D] [--connectors C]               the checks of LAKE_CONFIG.md section 6
  * migrate-config [--dir D] --connectors C [--write]       lake files from old connector files; a dry run unless --write
  * add-entry      [--dir D] --lake L --pack P --kind K [--connector N]   a pack's recommended entry copied into the lake file once
+ * pack-tables    [--dir D] --lake L --packs P1,P2 [--write]   the tables the packs' connectors read from L that its file lacks; with
+ *                --write added at the end of its tables, every other line kept (how config/lakes/demo.yaml is kept complete)
  * </pre>
  */
 public final class LakesCli {
@@ -120,7 +122,19 @@ public final class LakesCli {
                         ? "the pack's recommended entry for " + t.name() + " was copied into " + file + "; edit it there from now on"
                         : file + " has an entry for " + t.name() + " already: it is the truth and was left as it is");
             }
-            default -> throw new IllegalArgumentException("unknown command " + args[0] + ": dump, table, check, migrate-config or add-entry");
+            case "pack-tables" -> {
+                String lake = need(o, "lake");
+                Path file = dir.resolve(lake + ".yaml");
+                List<Path> roots = new ArrayList<>();
+                for (String p : need(o, "packs").split(",")) {
+                    roots.add(Path.of(p.strip()));
+                }
+                Map<String, JsonNode> wanted = LakeFiles.packTables(LakeFiles.packFiles(roots), lake);
+                List<String> added = o.containsKey("write") ? LakeFiles.addEntries(file, wanted) : LakeFiles.missing(file, wanted);
+                return Map.of("lake", lake, "file", file.toString(), "tables", wanted.size(), "written", o.containsKey("write") && !added.isEmpty(),
+                        "missing", added);
+            }
+            default -> throw new IllegalArgumentException("unknown command " + args[0] + ": dump, table, check, migrate-config, add-entry or pack-tables");
         }
     }
 

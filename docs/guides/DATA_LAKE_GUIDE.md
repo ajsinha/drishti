@@ -144,6 +144,12 @@ tables:
     date: BUSINESS_DATE
 ```
 
+The shipped demo lake (`config/lakes/demo.yaml`) lays out its scenario PVs with `partition-by: [SCENARIO_SET_ID, GRAIN]`,
+`sort-by: [LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, TRADE_ID]`, zstd, 256 MB files, 16 MB row groups, 30 days of time travel and
+maintenance (compaction, vacuum after 7 days, checkpoints), and its Calypso and Murex trades by `PRODUCT_GROUP`. A demo lake built
+before this layout keeps its old partitions: a load into such a table is refused, naming both layouts, until the lake is rebuilt with
+`python3 tools/drishti.py lake demo` (VaR answers are the same on either layout).
+
 Positions are scenario-PV rows of `GRAIN: POSITION` (a `POSITION_ID`, placed by its book and naming its trades in `TRADE_IDS`); a
 position the VaR engine derives from trades needs no table of its own. The shape of every VaR input, field by field, is the
 [VaR guide's data contract](VAR_GUIDE.md).
@@ -226,7 +232,10 @@ an entry for every one of them. The first row answers the same questions from 3 
 
 **Rules of thumb**: a partition (one date and one value) should hold **at least about 1 GB**; partition only by a **low-cardinality**
 column (a handful of values) that almost every query names; when a day holds less than about 1 GB, use **no extra partition at all**.
-The demo lake partitions its trades by `PRODUCT_TYPE` to show the feature; for 1M trades a day, section 9 recommends none.
+The demo lake partitions Endur's trades by `PRODUCT_TYPE` (a few products), Calypso's and Murex's by `PRODUCT_GROUP` (each books 50+
+product types: a folder per type would be the small-file shape above), and the scenario PVs by `SCENARIO_SET_ID, GRAIN` (a VaR run reads
+one scenario set, trades and positions apart), each sorted so a legal entity's, desk's and book's rows sit together; for 1M trades a
+day, section 9 recommends no trade partition at all.
 
 A partition column is fixed when the table is first written: changing `partition-by` later means rebuilding the table (load its dates
 again into a fresh table), and `drishti.py lake check` reports a table whose partitions differ from its file (section 8).

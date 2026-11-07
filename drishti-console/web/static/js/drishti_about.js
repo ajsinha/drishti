@@ -147,6 +147,11 @@
   }
 
   // Captured, so a view's F1 reaches us before drishti_app.js (which then yields to a handled key); inside the open drawer F1 is left to drishti_app.js.
+  if (root === document && window.Drishti.keys) {                     // bound on root (an element's keys stay in its shadow root); the console's keymap lists them
+    window.Drishti.keys.describe({ id: 'about.toggle', keys: ['F1', '?'], scope: 'screen', area: 'about', group: 'About this page', label: 'F1 · ?',
+      description: 'Open or close About this page (F1 again: the guide; the Keys button lists every key)' });
+    window.Drishti.keys.describe({ id: 'about.close', keys: ['Escape'], scope: 'dialog', area: 'about', description: 'Close About this page' });
+  }
   root.addEventListener('keydown', function (e) {
     if (e.ctrlKey || e.metaKey) { return; }
     if (e.key === 'F1' && !e.altKey && !e.shiftKey && options.guideKey !== false) {

@@ -73,7 +73,7 @@ phone:                                   # the phone display in this edition (do
 
 menus:                                   # by id, per menu; a menu not named shows every item its switches allow
   top: [views, engines, bi, admin, help]  # the top menus by id, in order; one not named is not drawn
-  # the Views menu's items by id, in order (drishti-console/config/menus.yaml)
+  # the Views menu's items by id, in order (drishti-console/config/sitemap.yaml)
   views: [terminal, search, functions, datamap, data, reports, workspaces, monitors, alerts]
   help: [help-centre, knowledge, install, about]  # the Help menu's items by id
   footer: [help, about, release-notes]  # the footer's links by id
@@ -101,7 +101,7 @@ help:
 
 admin:                                   # the Admin pages shown; the others answer 404 (and are off the menu and the tab strip)
   # the Admin pages kept, by id; the others answer 404
-  pages: [users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, engines, health, caches, capacity, bi, scopes]
+  pages: [users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, engines, health, caches, capacity, bi, scopes, configuration]
 
 branding:                                # Drishti's name and eye mark kept; a licensee may override in site configuration
   product: Drishti Risk  # the product name the edition shows (a site's own branding wins)

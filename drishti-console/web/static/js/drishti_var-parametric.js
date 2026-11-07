@@ -5,10 +5,10 @@
    Parametric VaR on the VaR explorer (docs/architecture/PARAMETRIC_VAR.md; VAR_GUIDE.md section 3.12): a toggle (Parametric; the link's
    pm=1, which the PVAR command opens with) that adds, beside the historical figures, the tiles (parametric VaR, parametric ES, the
    fat-tail gap), the tree's Parametric and Gap columns, and the normal curve over the P&L path's histogram with both markers, shaded
-   tails and the gap bracket (drishti_var-charts.js). The Euler components and the worked figures are in the VaR Playground's Parametric tab.
+   tails and the gap bracket (drishti-risk's P&L distribution with the server's fitted normal). The Euler components and the worked figures are in the VaR Playground's Parametric tab.
 
-   Every parametric figure has a ? that opens the server's own lines (describe): how it was computed, with the numbers; a bottom sheet on a
-   phone. The browser computes nothing: every number, curve point and line comes from the answer (the server-computes-risk rule). The
+   Every parametric figure has a ? that is the one Explain's (drishti_explain.js; SHARED_SCREENS.md section 3): hover for the preview, click
+   for the drawer, its Formula the server's own lines (describe) with the numbers. The browser computes nothing: every number, curve point and line comes from the answer (the server-computes-risk rule). The
    Normal curve toggle (key N) is remembered per person (localStorage) and in the link (nc=0). */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 (function () {
@@ -17,7 +17,7 @@
   if (!root) return;
   var ON = root.dataset.pm === "1";
   var $ = function (sel) { return root.querySelector(sel); };
-  var C = window.Drishti.VarCharts, X = null, NC_KEY = "drishti.var.pvar.curve";
+  var R = window.Drishti.elements.risk, X = null, NC_KEY = "drishti.var.pvar.curve";
   var params = new URLSearchParams(location.search);
   var curve = params.get("nc") === "0" ? false : (function () { try { return localStorage.getItem(NC_KEY) !== "0"; } catch (e) { return true; } })();
 
@@ -27,54 +27,17 @@
     if (text !== undefined && text !== null) e.textContent = text;
     return e;
   }
-  function money(v) { return v === null || v === undefined ? "—" : C.money(v); }
+  function money(v) { return R.riskMoney(v); }
   function pct(v) { return v === null || v === undefined ? "—" : (v >= 0 ? "+" : "") + (v * 100).toFixed(1) + "%"; }
 
-  // ---------------------------------------------------------------------------------------------------------------- the ? popover
-  var pop = null, popFor = null;
-  function closeTip() { if (pop) { pop.hidden = true; popFor = null; } }
-  /** The ? of a figure: the server's lines, opened on click (and hover on a desktop), closed by its ×, Escape or another ?. */
-  function qmark(lines, title) {
+  // ---------------------------------------------------------------------------------------------------------------- the ?
+  /** The ? of a figure: the one Explain of its measure (pvar, pes, pgap) on its scope. */
+  function qmark(measure, scope, title) {
     var b = h("button", "vp-q", "?");
     b.type = "button";
-    b.setAttribute("aria-label", "How it was calculated" + (title ? ": " + title : ""));
-    b.addEventListener("click", function (ev) { ev.stopPropagation(); open(b, lines); });
-    b.addEventListener("mouseenter", function () { if (window.matchMedia && window.matchMedia("(hover: hover)").matches && !popFor) open(b, lines, true); });
+    b.setAttribute("aria-label", "Explain" + (title ? ": " + title : ""));
+    b.setAttribute("data-explain", JSON.stringify(X ? X.explainReq(measure, scope) : { kind: "var", measure: measure, scope: scope }));
     return b;
-  }
-  function open(anchor, lines, peek) {
-    if (!pop) {
-      pop = h("div", "vp-pop");
-      pop.setAttribute("role", "dialog");
-      pop.setAttribute("aria-label", "How it was calculated");
-      document.body.appendChild(pop);
-      document.addEventListener("keydown", function (ev) { if (ev.key === "Escape") closeTip(); });
-      document.addEventListener("click", function (ev) { if (pop && !pop.hidden && !pop.contains(ev.target)) closeTip(); });
-    }
-    if (popFor === anchor && !peek) { closeTip(); return; }
-    pop.textContent = "";
-    var x = h("button", "vp-pop-x", "×");
-    x.type = "button";
-    x.setAttribute("aria-label", "Close");
-    x.addEventListener("click", closeTip);
-    pop.appendChild(x);
-    (lines || ["No explanation in the answer."]).forEach(function (line, i) { pop.appendChild(h(i === 0 ? "h4" : "p", i === 1 ? "vp-pop-status" : null, line)); });
-    var link = h("p", "vp-pop-foot");
-    var play = h("a", null, "Worked in the playground");
-    play.href = playLink();
-    var guide = h("a", null, "Guide");
-    guide.href = "/help/var-parametric";
-    link.appendChild(play);
-    link.appendChild(document.createTextNode(" · "));
-    link.appendChild(guide);
-    pop.appendChild(link);
-    pop.hidden = false;
-    popFor = anchor;
-    if (window.innerWidth <= 600) { pop.classList.add("sheet"); return; }   // a bottom sheet on a phone
-    pop.classList.remove("sheet");
-    var r = anchor.getBoundingClientRect();
-    pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - pop.offsetWidth - 8)) + "px";
-    pop.style.top = (r.bottom + window.scrollY + 6) + "px";
   }
 
   /** The VaR Playground's Parametric tab for the scope shown. */
@@ -94,33 +57,40 @@
     }
     off.hidden = true;
     var conf = Math.round(p.confidence * 1000) / 10, esc = Math.round(p.esConfidence * 1000) / 10, days = (d.lens || {}).horizon === "10D" ? "10 days" : "1 day";
-    var gapLines = (p.describe || []).filter(function (l) { return /^Fat-tail gap/.test(l); });
-    [["Parametric VaR " + conf + "% · " + days, money(p["var"]), "z·σ − μ = " + p.z.toFixed(4) + " × " + money(p.sigma) + " − (" + money(p.mu) + ")", p.describe, "pvar"],
-     ["Parametric ES " + esc + "%", money(p.es), "σ × " + p.esFactor.toFixed(4) + " − μ", p.describe, "pes"],
+    [["Parametric VaR " + conf + "% · " + days, money(p["var"]), "z·σ − μ = " + p.z.toFixed(4) + " × " + money(p.sigma) + " − (" + money(p.mu) + ")", "pvar"],
+     ["Parametric ES " + esc + "%", money(p.es), "σ × " + p.esFactor.toFixed(4) + " − μ", "pes"],
      ["Fat-tail gap", (p.gap >= 0 ? "+" : "") + money(p.gap), pct(p.gapPct) + " · skew " + p.skew.toFixed(2) + " · ex. kurtosis " + p.excessKurtosis.toFixed(2),
-      [p.describe[0].replace("Parametric VaR", "Fat-tail gap")].concat(gapLines, (p.notes || [])), "pgap"]].forEach(function (x) {
+      "pgap"]].forEach(function (x) {
       var tile = h("div", "vx-tile vp-tile");
-      tile.dataset.vpTile = x[4];
+      tile.dataset.vpTile = x[3];
       var l = h("div", "l", x[0]);
-      l.appendChild(qmark(x[3], x[0]));
+      l.appendChild(qmark(x[3], null, x[0]));
       tile.appendChild(l);
-      tile.appendChild(h("div", "v mono" + (x[4] === "pgap" ? (p.gap > 0 ? " vp-warn" : "") : " vp-blue"), x[1]));
+      tile.appendChild(h("div", "v mono" + (x[3] === "pgap" ? (p.gap > 0 ? " vp-warn" : "") : " vp-blue"), x[1]));
       tile.appendChild(h("div", "s mono", x[2]));
       t.appendChild(tile);
     });
   }
 
-  /** The tree's Parametric and Gap cells, each with the node's own ?. */
-  function treeCells(row, n) {
-    var p = n.parametric;
-    var a = h("span", "num vp-blue", p ? money(p["var"]) : "");
-    var g = h("span", "num" + (p && p.gap > 0 ? " vp-warn" : ""), p ? (p.gap >= 0 ? "+" : "") + money(p.gap) : "");
-    if (p) {
-      a.appendChild(qmark(p.describe, n.name));
-      g.title = pct(p.gapPct) + " of the parametric VaR";
-    }
-    row.appendChild(a);
-    row.appendChild(g);
+  /** The tree's Parametric and Gap columns (drishti-grid columns of the explorer's tree), the Parametric figure with the node's own ?. */
+  function treeColumns() {
+    var pv = function (r) { return r.parametric ? r.parametric["var"] : null; }, gap = function (r) { return r.parametric ? r.parametric.gap : null; };
+    return [R.figureColumn("pvar", "Parametric", { valueGetter: pv, width: 104, format: function (v) { return v === null ? "" : money(v); },
+        cellClass: function () { return "vp-blue"; },
+        cellRenderer: function (c) {
+          if (!c.row.parametric) return null;
+          var s = h("span", "vp-cell", c.text);
+          s.appendChild(qmark("pvar", c.row.scope, c.row.name));
+          return s;
+        } }),
+      R.figureColumn("pgap", "Gap", { valueGetter: gap, width: 90, format: function (v) { return v === null ? "" : (v >= 0 ? "+" : "") + money(v); },
+        cellClass: function (v) { return v > 0 ? "vp-warn" : null; },
+        cellRenderer: function (c) {
+          if (!c.row.parametric) return null;
+          var s = h("span", null, c.text);
+          s.title = pct(c.row.parametric.gapPct) + " of the parametric VaR";
+          return s;
+        } })];
   }
 
   // ---------------------------------------------------------------------------------------------------------------- the frame
@@ -149,16 +119,14 @@
     if (!ON) return;
     $("[data-vp-curve]").checked = curve;
     $("[data-vp-curve]").addEventListener("change", function (e) { setCurve(e.target.checked); });
-    document.addEventListener("keydown", function (ev) {
-      var tag = (ev.target && ev.target.tagName) || "";
-      if ((ev.key === "n" || ev.key === "N") && !ev.ctrlKey && !ev.metaKey && !ev.altKey && !/INPUT|TEXTAREA|SELECT/.test(tag)) setCurve(!curve);
-    });
+    window.Drishti.keys.register({ id: "var.parametric.curve", keys: ["N", "Shift+N"], scope: "screen", area: "var", group: "VaR", keepDefault: true,
+      description: "Parametric VaR: the normal curve on or off", run: function () { setCurve(!curve); } });
     $("[data-vp-play]").addEventListener("click", function (ev) {
       ev.preventDefault();
       location.href = playLink();
     });
   }
 
-  window.Drishti.VarParametric = { start: start, headline: headline, treeCells: treeCells, on: function () { return ON; },
+  window.Drishti.VarParametric = { start: start, headline: headline, treeColumns: treeColumns, on: function () { return ON; },
     curveOn: function () { return curve; } };
 })();

@@ -580,7 +580,17 @@ the server moves them into `data/delta/demo/`, once, before any connector opens 
 - then each connector file that still reads the demo lake by its old default root (`root: ${DRISHTI_DELTA_ROOT:./data/delta}`, as the
   server generated them from the packs' templates before the lake form) is rewritten to `lake: demo` with `lake-tables:`, every reading
   setting kept and the file before kept beside it (`<name>.yaml.before-lake-<time>.bak`); a connector with a root of its own (another
-  folder, `s3://...`) is left as it is.
+  folder, `s3://...`), and a reader of the official results (`risk-results`: tables of the `var-official` or `ccr-official` lake), are
+  left as they are.
+
+**What the move changes, and what it never does.** It changes the demo lake's folders (above) and the connector files in
+`config/connectors` that read it by the old root: those are the site's own files, never part of the shipped tree. It does not change
+the shipped lake files: `config/lakes/demo.yaml` holds an entry for every table a shipped pack's connector reads (a test checks it), so
+after the move `git status` shows nothing in `config/lakes`. Only when a site's own connector reads a table the file has no entry for
+(an older or edited connector file naming a kind the packs no longer have) is that entry added, at the end of the file's `tables:`, in
+its compact style, every other line kept byte for byte; the log names the file. The same holds for the data inbox's first load into a
+table a lake file lacks (the empty lakes `risklake`, `newslake`, `worldlake`, `regulators`, `capitalmarket`): only that entry is
+added. A start that finds nothing to add writes nothing. To see what a site's start added: `git diff config/lakes`.
 
 By hand (stop the server first: its connectors hold the tables open), or to see what it would do:
 
@@ -818,6 +828,39 @@ Or pass `--drishti.live.max-streams=40000` on the command line. Console settings
 `DRISHTI_CONSOLE__<SECTION>__<KEY>`, for example `DRISHTI_CONSOLE__BACKEND__TIMEOUT_SECONDS=30`, or
 `--backend.timeout_seconds=30`. The order of precedence and every setting are in
 [CONFIGURATION.md](CONFIGURATION.md).
+
+### The configuration editor
+
+**Admin → Configuration** (`/admin/configuration`, administrators) is every setting of [CONFIGURATION.md](CONFIGURATION.md) in three
+tiers, a tab each:
+
+| Tier | What | For example |
+|---|---|---|
+| **Everyday** (the first tab, kept small) | what a business lead changes | the lenses offered (`drishti.lenses`), the VaR confidences and scenario window, the exposure confidences, the console's feature switches (`features.*`) |
+| **Admin** | what an operator sets | security, connectors, lakes, engines, retention, paths, branding, the UI kit |
+| **Expert** | performance and internals | pools, caches, buffers, timeouts, threads, sharding, native code, admission |
+
+Each row shows the key and its environment variable, what it means, its area and whether a change needs a restart, the **value in
+effect** on this server (or in this console) and **where it came from** (`default`, `file` with the file's name, `env` with the
+variable, `argument`), its default and its tier. The search box takes a key, an environment variable or words of a meaning, in any
+order, across the chosen tier (or *Every tier*); the area list narrows it to one area. Secrets are never shown: a key with a word
+secret, password, token, key or credential in it shows `••••` and cannot be changed here (set it in the environment or the secrets
+file).
+
+**A change is a proposal, never a live write.** *Propose a change* on a row of the server's `application.yaml`, an engine's file or the
+console's `application.yaml` asks for the new value and the reason. The proposal waits at the top of the page under *Waiting for
+approval*; its proposer may *Withdraw* it, and only a **second administrator** may *Approve* or *Reject* it (four eyes; one change
+waiting per key). On approval:
+
+- a server or engine key is written by the server as one line of its `application.local.yaml` (in the server's working directory,
+  every other line and comment kept, the line naming the proposal, the proposer and the approver), read at the server's next start;
+- a console key is written by the console of the approver into its own `config/application.local.yaml`, read at its next start.
+
+Every step (proposed, approved, rejected, withdrawn, applied) is an audit entry (Admin → Audit log). Settings of other files
+(connectors, packs, editions, the cluster folder, the content store, ...) show *in its file*: they are changed on their own screens or
+files. The tier of each setting lives in one place, `tools/settings_schemas.yaml` (`tiers`), from which `tools/settings_catalogue.py`
+writes CONFIGURATION.md's *Tier* column; `--check` fails when an area has no tier or a listed key or pattern matches nothing. The API is
+`/api/v1/admin/settings/proposals` ([API_GUIDE.md](../guides/API_GUIDE.md)); Help → Configuration stays the reference, for everyone.
 
 ## 7. Running as services (systemd)
 
@@ -3525,11 +3568,11 @@ with the file named. An environment is never changed in place: a new lock is a n
 |---|---|
 | Pools | per pool: workers busy, idle and starting here; the other nodes serving it and their workers; queued by class; served, crashed, recycled, failures by kind; run and queue latency (p50, p95); ready or why not; **Test** (the sample engine) and **Build** (a locked environment) |
 | Busy now | the requests running: worker, request id, user, class, kind, for how long; **Cancel** |
-| Approval requests | id, connector or pool, the items (kind, name, version, source, native code, sha256), who asked and when, the state and decision; **Approve**, **Reject**, **Revoke** (a reason each time; no buttons on your own request) |
+| Approval requests | id, connector or pool, the items (kind, name, version, source, native code, sha256), who asked and when, the state and decision; **Decide in Approvals** (approve or reject in the one Approvals queue) and **Revoke** (a reason each time; nothing to decide on your own request) |
 | Environments | id, Python and platform, packages, built when and by whom, the last failure, size |
 | Recent requests | the last 200 on this node: user, pool and kind, class, outcome, queued and run time, worker |
 
-The same data is `GET /api/v1/admin/compute`; decisions are `POST /api/v1/admin/compute/requests/{id}/approve|reject|revoke` with
+The same data is `GET /api/v1/admin/compute`; decisions are `POST /api/v1/approvals/compute/{id}/approve|reject|revoke` with
 `{"reason": "..."}`, a build `POST /api/v1/admin/compute/pools/{pool}/build`, a test `POST .../pools/{pool}/test`, a cancel
 `POST /api/v1/admin/compute/running/{id}/cancel` ([API_GUIDE.md](../guides/API_GUIDE.md)).
 

@@ -645,7 +645,9 @@ capture, the data versions it was computed from, the period. A failed check bloc
 
 ### 6.4 Sign-off
 
-Steps in the definition's order (`POST …/runs/{period}/signoff`, `drishti.py var report sign`): **one person signs one step** of a run
+Steps in the definition's order, each signed in the one Approvals queue (`POST /api/v1/approvals/var-report/{report}:{period}:v{n}/approve`,
+`drishti.py approvals approve var-report ...`; the run is due `drishti.approvals.due-days.var-report` days after its period ends and is pinned
+on top as the date nears): **one person signs one step** of a run
 (four eyes); a failed check blocks every approval; a check that needs a note needs the maker's comment; the narrative is the maker's,
 edited before the maker signs; the checker or the approver may **send the run back** to the maker with a comment, which clears the steps.
 The record (`signoff-v<n>.json`) keeps every action: who, when, the comment.

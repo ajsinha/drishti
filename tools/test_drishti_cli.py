@@ -52,8 +52,9 @@ class Wiring(unittest.TestCase):
                [("pack", c) for c in ("new", "check", "about-check", "publish", "keygen", "verify", "install")] + \
                [("data", "ingest"), ("data", "load"), ("data", "landed"), ("data", "loads"),("server", "smoke"), ("view", "get"), ("view", "explain"), ("server", "health"), ("server", "packs"), ("docs", "shots"), ("bi", "workspace"), ("bi", "catalogue")] + \
                [("lake", c) for c in ("build", "scan", "status", "maintain")] + \
-               [("design", c) for c in ("list", "create", "get", "save", "check", "propose", "approve", "reject", "proposals", "export", "import",
-                                        "bind", "autodesign", "delete")]
+               [("design", c) for c in ("list", "create", "get", "save", "check", "propose", "proposals", "export", "import",
+                                        "bind", "autodesign", "delete")] + \
+               [("approvals", c) for c in ("list", "show", "approve", "reject", "withdraw", "ask")]
 
     def test_every_command_has_help(self):
         for group, cmd in self.COMMANDS:
@@ -354,17 +355,17 @@ class Rest(unittest.TestCase):
     def test_propose_approve_reject(self):
         FakeServer.routes[("POST", "/api/v1/builder/designs/d1/propose")] = (
             202, {"proposal": {"id": "P-1", "name": "t", "version": 2, "status": "pending"}})
-        FakeServer.routes[("POST", "/api/v1/sutras/proposals/P-1/approve")] = (200, {"id": "P-1", "name": "t", "version": 2, "status": "approved"})
-        FakeServer.routes[("POST", "/api/v1/sutras/proposals/P-1/reject")] = (
+        FakeServer.routes[("POST", "/api/v1/approvals/sutra/P-1/approve")] = (200, {"kind": "sutra", "id": "P-1", "title": "t v2", "status": "approved"})
+        FakeServer.routes[("POST", "/api/v1/approvals/sutra/P-1/reject")] = (
             403, {"title": "forbidden", "detail": "DRS-5002 you may not approve", "code": "DRS-5002"})
         FakeServer.routes[("GET", "/api/v1/sutras/proposals")] = (200, {"enabled": True, "proposals": [
             {"id": "P-1", "name": "t", "version": 2, "status": "pending", "author": "a"}]})
         self.assertIn("proposal P-1", self.go("design", "propose", "d1", "--note", "n")[1])
         self.assertEqual({"note": "n"}, json.loads(FakeServer.requests[-1][5]))
         self.assertIn("P-1  t v2  pending", self.go("design", "proposals", "--status", "pending")[1])
-        self.assertIn("approved", self.go("design", "approve", "P-1", "--comment", "ok")[1])
-        self.assertEqual({"comment": "ok"}, json.loads(FakeServer.requests[-1][5]))
-        code, _, err = self.go("design", "reject", "P-1", "--comment", "no")
+        self.assertIn("APPROVED", self.go("approvals", "approve", "sutra", "P-1", "--comment", "ok")[1])     # decided in the one queue
+        self.assertEqual({"comment": "ok", "params": {}}, json.loads(FakeServer.requests[-1][5]))
+        code, _, err = self.go("approvals", "reject", "sutra", "P-1", "--comment", "no")
         self.assertEqual(1, code)
         self.assertIn("403", err)
 

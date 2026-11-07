@@ -300,7 +300,7 @@ Sutra `portfolio.v1.sutra.yaml` (strip lines 42–50); contract class `input`; s
 Both **computed** and built: `var-result` by the Java `VarResultEngine` (the reactive connector `var-engine` of `pack.yaml`),
 `var-official` the published official captures, read only. The pre-deal what-if is the same Java engine's (`POST /api/v1/risk/var/what-if`,
 VAR_GUIDE.md section 8.2), not a kind. They are the reference pattern for every
-other measure in this document: computed when asked, provenance on every answer (VAR_GUIDE.md section 11.2, "How this number was built"),
+other measure in this document: computed when asked, provenance on every answer (VAR_GUIDE.md section 11.2; the Explain drawer's Inputs & lineage),
 captures, an official end-of-day record that engines never read back.
 
 | Field | Note | Pri. |
@@ -762,7 +762,7 @@ data-quality warning, never a reject.
 
 Today every Sutra has `data-provenance@1` (`config/ui-kit/fragments/data-provenance.v1.fragment.yaml`): the record's source, freshness,
 the Sutra and what was masked. That is **record** provenance. Computed answers also carry **figure** provenance: the VaR and exposure
-pages show "How this number was built" and "How it was computed" (VAR_GUIDE.md section 11.2; `exposure-result.v1.sutra.yaml` panel `how`).
+pages show the one Explain (Inputs & lineage) and "How it was computed" (VAR_GUIDE.md section 11.2; `exposure-result.v1.sutra.yaml` panel `how`).
 
 Proposal: every derived or computed figure on a page shows, on hover or in a "How it was built" panel:
 

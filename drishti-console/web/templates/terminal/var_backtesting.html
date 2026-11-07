@@ -21,7 +21,7 @@
 {% block title %}Backtesting · {{ scope }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}var-backtesting{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_var-regulatory.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_var-regulatory.css?v={{ ASSET_V }}">{% include "terminal/_risk_elements_css.html" %}{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="rg" data-backtesting data-scope="{{ scope }}" data-asof="{{ as_of }}">
@@ -46,16 +46,12 @@
   <div class="rg-grid">
     <section class="rg-card rg-chart-card" aria-labelledby="btChartTitle">
       <h2 id="btChartTitle"><span data-bt-title>VaR against actual and hypothetical P&amp;L</span><span class="rg-sub">USD; exceptions marked</span></h2>
-      <div class="rg-chart" data-bt-chart role="img" aria-label="Actual P&amp;L bars against the official VaR of the day before"></div>
-      <div class="rg-legend" aria-label="Legend">
-        <span>▮ actual P&amp;L (gain, loss)</span><span>— hypothetical P&amp;L</span><span>— −VaR 99% (official, the day before)</span>
-        <span>- - −VaR 97.5%</span><span>▲ actual exception</span><span>○ hypothetical exception</span>
-      </div>
+      <div class="rg-chart" data-bt-chart aria-label="Actual P&amp;L against the official VaR of the day before"></div>
     </section>
     <section class="rg-card" aria-labelledby="btZoneTitle">
       <h2 id="btZoneTitle"><span data-bt-zone-title>Zone and multiplier</span><span class="rg-sub" data-bt-zone-sub></span></h2>
       <div class="rg-lamps" aria-hidden="true"><span class="rg-lamp green" data-lamp="green"></span><span class="rg-lamp amber" data-lamp="amber"></span><span class="rg-lamp red" data-lamp="red"></span><span class="rg-zone" data-bt-zone>—</span></div>
-      <table><thead><tr><th>Confidence, 1-day</th><th class="num">Exceptions</th><th class="num">Zone</th></tr></thead><tbody data-bt-counts></tbody></table>
+      <div class="rg-gridhost" data-bt-counts></div>
       <div class="rg-tiles rg-gap">
         <div class="rg-tile"><div class="rg-k">Capital multiplier</div><div class="rg-big" data-bt-mult>—</div><div class="rg-s" data-bt-rule-short></div></div>
         <div class="rg-tile"><div class="rg-k">VaR 99% today</div><div class="rg-big" data-bt-var>—</div><div class="rg-s" data-bt-var-date></div></div>
@@ -66,15 +62,13 @@
   </div>
   <section class="rg-card rg-desk" aria-labelledby="btDesksTitle">
     <h2 id="btDesksTitle">Bank and desks<span class="rg-sub">click a row to draw its chart</span></h2>
-    <table><thead><tr><th>Scope</th><th class="num">VaR 99%</th><th class="num">99% actual</th><th class="num">99% hypo</th><th class="num">97.5% actual</th><th class="num">97.5% hypo</th><th>Zone</th><th class="num">Multiplier</th><th>Days</th></tr></thead>
-      <tbody data-bt-parts></tbody></table>
+    <div class="rg-gridhost" data-bt-parts></div>
   </section>
   <section class="rg-card rg-exc" aria-labelledby="btExcTitle">
     <h2 id="btExcTitle"><span data-bt-exc-title>Exceptions</span><span class="rg-sub">each opens the VaR of the day before</span></h2>
-    <table><thead><tr><th>Date</th><th class="num">VaR 99% (day before)</th><th class="num">Actual</th><th class="num">Hypothetical</th><th class="num">Risk-theoretical</th><th>Which</th><th class="num">Excess</th><th>Desks that drove it</th><th>Open</th></tr></thead>
-      <tbody data-bt-exc></tbody></table>
+    <div class="rg-gridhost" data-bt-exc></div>
     <p class="rg-note" data-bt-untested></p>
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-backtesting.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% include "terminal/_risk_elements.html" %}<script src="/static/js/drishti_var-backtesting.js?v={{ ASSET_V }}"></script>{% endblock %}

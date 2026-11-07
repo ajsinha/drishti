@@ -14,7 +14,7 @@
 
 """The workbench (/build/d/{id}) in a real browser, over a real server: the all-panels showcase built from its samples by mouse and by
 keyboard alone, a panel moved and sized with the YAML changing and its comments kept, a stale revision (409), undo and redo,
-"Preview with a file...", the tests matrix following the design, and layout mode still working on the shared drishti_grid-keys.js.
+"Preview with a file...", the tests matrix following the design, and layout mode still working on the shared panel keys (drishti-core's Drishti.GridKeys).
 
 Runs Chromium through Playwright against ``wb_live.py``'s server; skipped when Playwright, its Chromium, the server jar or JDK 25 is
 missing."""
@@ -360,7 +360,8 @@ def test_layout_mode_still_moves_and_sizes_with_the_shared_grid_keys(browser):
     root = CONSOLE / "web" / "static" / "js"
     page = browser.new_page()
     page.set_content(LAYOUT_PAGE)
-    for f in ("drishti_layout-rules.js", "build/drishti_grid-keys.js", "drishti_layout.js"):
+    page.add_script_tag(path=str(CONSOLE / "web" / "static" / "elements" / "drishti-core" / "drishti_core.js"))   # the shared panel keys
+    for f in ("drishti_keys.js", "drishti_layout-rules.js", "drishti_layout.js"):   # the one keymap first, as base.html loads it
         page.add_script_tag(path=str(root / f))
     page.keyboard.press("Alt+l")
     assert page.evaluate("window.Drishti.layout.active()")

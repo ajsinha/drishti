@@ -152,7 +152,7 @@ def test_admin_by_command_is_for_administrators_only(backend, monkeypatch):
 def test_every_subject_item_runs_a_command_its_edition_shows():
     """Every subject menu an edition names exists, and each of its items' commands is one the edition allows or a word it keeps (else
     the item would never show): the menus never hold what the command line does not."""
-    spec = yaml.safe_load((CONSOLE / "config" / "menus.yaml").read_text(encoding="utf-8"))
+    spec = yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))
     menus = {m["id"]: m for m in spec["menus"]}
     from core.edition import Edition
     for name in ("risk", "trading", "market", "world"):

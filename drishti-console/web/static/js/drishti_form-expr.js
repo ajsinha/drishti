@@ -158,7 +158,7 @@
     return String(v);
   }
 
-  function plain(n) { return Number(n).toLocaleString('en-US', { maximumFractionDigits: 6 }); }
+  function plain(n) { return window.Drishti.elements.core.formatNumber(Number(n), { maxDecimals: 6, minus: '-' }); }
   function isDate(s) { return /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(Date.parse(s + 'T00:00:00Z')); }
   function isDateTime(s) { return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(s) && !isNaN(Date.parse(s + 'Z')); }
   function stamp(s) { return s.length === 10 ? s + 'T00:00' : s; }

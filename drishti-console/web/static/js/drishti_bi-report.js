@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Rupaka phase 3 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 8): the report viewer at /bi/r/<id>[/<page>]. It asks the server for the report once (/bi/api/reports/<id>: the model, the
    problems and the dataset's fields), lays each page out on its 12-column grid, and asks for each visual's data one query at a time (at most three at once:
    the server allows three per person; a refusal for busy is retried), under the state the person has built: slicers, the marks selected on other visuals,
@@ -26,6 +27,12 @@
   const B = window.drishtiBi;
   const h = B.h, q = (s, sc) => B.q(s, sc || canvas);
   const reportId = canvas.getAttribute('data-item');
+  // a visual's own keys (visualKey, bound on each frame): described to the one keymap so ? lists them
+  [['bi.visual.walk', ['Tab'], 'Next visual, in reading order'], ['bi.visual.marks', ['ArrowLeft', 'ArrowRight'], 'In a chart: the next mark; Enter selects it'],
+    ['bi.visual.clear', ['Escape'], 'Clear the selection of a visual'], ['bi.visual.table', ['T', 'R'], 'In a visual: show as a table; show the rows'],
+    ['bi.visual.drill', ['D', 'U'], 'In a visual: drill down; drill up']].forEach((d) => {
+    window.Drishti.keys.describe({ id: d[0], keys: d[1], scope: 'panel', area: 'bi-visual', group: 'Report', description: d[2] });
+  });
 
   const state = { slicers: {}, selections: [], drills: {}, carry: [], dates: null, mode: 'filter', rows: {}, all: {}, asTable: {}, time: { mode: 'now' } };
   const MAX_FOLLOW = 12;                    // standing queries one page holds (the server allows drishti.bi.mq.max-subscriptions-per-user for a person)

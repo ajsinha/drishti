@@ -50,7 +50,7 @@ def test_environments_page_is_in_the_rail_and_has_the_export_and_import_forms(bi
     r = client.get("/bi/environments")
     assert r.status_code == 200 and 'data-bi-page="environments"' in r.text
     assert "data-export" in r.text and "data-import" in r.text and "Dry run" in r.text and "/static/js/drishti_bi-env.js" in r.text
-    assert 'href="/bi/environments"' in client.get("/bi").text
+    assert 'href="/bi/environments"' in client.get("/bi/catalogue").text
     none, _ = make(powers=())
     assert none.get("/bi/environments").status_code == 403
 
