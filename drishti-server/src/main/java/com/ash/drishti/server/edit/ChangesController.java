@@ -15,8 +15,6 @@
  */
 package com.ash.drishti.server.edit;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -100,11 +98,5 @@ public class ChangesController {
         m.put("version", edits.version(kind, id));
         m.put("changes", edits.history(p, kind, id, Math.max(1, Math.min(limit, 500))));
         return m;
-    }
-
-    private void requireOn() {
-        if (!edits.settings().enabled()) {
-            throw new DrishtiException(ErrorCode.EDIT_OFF, "editing is off on this server (edit.enabled in config/edit/edit.yaml)");
-        }
     }
 }
