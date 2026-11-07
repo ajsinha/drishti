@@ -14,31 +14,30 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* The one keymap's ? overlay (drishti_keys.js) and the one search box (drishti_search-box.js): the global search dialog, a box in a page. */
-.drishti_keys-overlay, .drishti_find { position: fixed; inset: 0; z-index: 2000; background: rgba(0, 0, 0, .45); display: flex;
-  align-items: flex-start; justify-content: center; padding: 8vh 1rem 1rem; }
-.drishti_keys-overlay[hidden], .drishti_find[hidden] { display: none; }
-.drishti_keys-card, .drishti_find-card { background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 8px;
-  box-shadow: var(--d-shadow); width: min(46rem, 100%); max-height: 80vh; overflow: auto; padding: 1rem 1.2rem; outline: none; }
-.drishti_keys-card header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .4rem; }
-.drishti_keys-card h2 { font-size: 1.05rem; margin: 0; }
-.drishti_keys-card h3 { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--d-muted); margin: .9rem 0 .3rem; }
-.drishti_keys-card h4 { font-size: .85rem; margin: .5rem 0 .2rem; color: var(--d-ink); }
+.drishti_keys-overlay, .drishti_find { position: fixed; inset: 0; z-index: var(--d-z-overlay); background: var(--d-scrim); display: flex;
+  align-items: flex-start; justify-content: center; padding: 8vh var(--d-sp-16) var(--d-sp-16); }
+.drishti_keys-card, .drishti_find-card { background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-8);
+  box-shadow: var(--d-shadow); width: min(46rem, 100%); max-height: 80vh; overflow: auto; padding: var(--d-sp-16) var(--d-sp-19_2); outline: none; }
+.drishti_keys-card header { display: flex; align-items: center; justify-content: space-between; gap: var(--d-sp-16); margin-bottom: var(--d-sp-6_4); }
+.drishti_keys-card h2 { font-size: var(--d-fs-16_8); margin: 0; }
+.drishti_keys-card h3 { font-size: var(--d-fs-12_48); text-transform: uppercase; letter-spacing: .06em; color: var(--d-muted); margin: var(--d-sp-14_4) 0 var(--d-sp-4_8); }
+.drishti_keys-card h4 { font-size: var(--d-fs-13_6); margin: var(--d-sp-8) 0 var(--d-sp-3_2); color: var(--d-ink); }
 .drishti_keys-card dl { margin: 0; }
-.drishti_keys-card dl > div { display: grid; grid-template-columns: minmax(9rem, 14rem) 1fr; gap: .8rem; padding: .22rem 0; border-bottom: 1px solid var(--d-border); }
+.drishti_keys-card dl > div { display: grid; grid-template-columns: minmax(9rem, 14rem) 1fr; gap: var(--d-sp-12_8); padding: var(--d-sp-3_52) 0; border-bottom: 1px solid var(--d-border); }
 .drishti_keys-card dt { font-weight: 400; white-space: nowrap; }
 .drishti_keys-card dd { margin: 0; color: var(--d-muted); }
-.drishti_keys-card kbd { font: .78rem var(--d-font-mono); padding: .05rem .35rem; border: 1px solid var(--d-border); border-radius: 4px; background: var(--d-bg-2); color: var(--d-ink); }
-.drishti_keys-foot, .drishti_find-foot { font-size: .78rem; color: var(--d-muted); margin: .8rem 0 0; }
-.drishti_find-card .cmd-box { position: relative; display: flex; align-items: center; gap: .5rem; }
+.drishti_keys-card kbd { font: var(--d-fs-12_48) var(--d-font-mono); padding: var(--d-sp-0_8) var(--d-sp-5_6); border: 1px solid var(--d-border); border-radius: var(--d-radius-4); background: var(--d-bg-2); color: var(--d-ink); }
+.drishti_keys-foot, .drishti_find-foot { font-size: var(--d-fs-12_48); color: var(--d-muted); margin: var(--d-sp-12_8) 0 0; }
+.drishti_find-card .cmd-box { position: relative; display: flex; align-items: center; gap: var(--d-sp-8); }
 .drishti_find-card .cmd-input { flex: 1; width: 100%; }
-.drishti_find-card .cmd-list { position: static; margin-top: .5rem; box-shadow: none; max-height: 60vh; }
-.cmd-list .sg-group { display: block; cursor: default; font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--d-faint);
-  padding: .45rem .75rem .15rem; }
+.drishti_find-card .cmd-list { position: static; margin-top: var(--d-sp-8); box-shadow: none; max-height: 60vh; }
+.cmd-list .sg-group { display: block; cursor: default; font-size: var(--d-fs-11_2); text-transform: uppercase; letter-spacing: .06em; color: var(--d-faint);
+  padding: var(--d-sp-7_2) var(--d-sp-12) var(--d-sp-2_4); }
 .cmd-list .sg-group:hover { background: none; }
 .drishti_search-host { position: relative; }
 .drishti_search-list li { grid-template-columns: 1fr; }
 .drishti_search-list .sg-m:empty { display: none; }
-.tbar-find-btn { background: none; border: 1px solid var(--d-border); border-radius: 5px; color: var(--d-muted); padding: .2rem .45rem; line-height: 1; }
+.tbar-find-btn { background: none; border: 1px solid var(--d-border); border-radius: var(--d-radius-5); color: var(--d-muted); padding: var(--d-sp-3_2) var(--d-sp-7_2); line-height: 1; }
 .tbar-find-btn:hover, .tbar-find-btn:focus-visible { color: var(--d-ink); border-color: var(--d-accent); }
-.sf-keys { background: none; border: 0; color: inherit; padding: 0; margin-left: .6rem; cursor: pointer; }
-@media (max-width: 640px) { .drishti_keys-card dl > div { grid-template-columns: 1fr; gap: .1rem; } }
+.sf-keys { background: none; border: 0; color: inherit; padding: 0; margin-left: var(--d-sp-9_6); cursor: pointer; }
+@media (max-width: 640px) { .drishti_keys-card dl > div { grid-template-columns: 1fr; gap: var(--d-sp-1_6); } }

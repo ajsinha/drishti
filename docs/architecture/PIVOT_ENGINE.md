@@ -378,7 +378,7 @@ The paused MR cube's `VarCubeSource` becomes this provider, unchanged in its ari
   on a sharded date one call per owner for all of a view's cells (`VarBook.vectors`, `ShardedVectors.sumSets`, built on the branch).
 - **Finish**: VaR, ES, stressed VaR at the lens's confidence and horizon; component VaR as a cell's share of the grand total's tail
   scenario; diversification shown beside each total (Σ cells − total).
-- **Totals**: each total is its own set's vector, summed from members, so it equals `GET /api/v1/var/scope` for that scope to the bit
+- **Totals**: each total is its own set's vector, summed from members, so it equals `GET /api/v1/risk/var/scope` for that scope to the bit
   (the branch's tests already prove it). Merging cells' vectors would be faster but equal only to the cent; it is not used for official
   figures (decision 3, [section 23](#23-decisions)).
 - **Scope text**: a cell's scope in VaR's grammar (`DESK:RATES-NY & CCY:USD`) so any cell can be asked of the VaR engine itself.
@@ -1199,7 +1199,7 @@ The same words as the API; `--wait` for background runs; a refused view prints t
 | `ExactQuantileTest` | iterative selection equals a sort on the same data, across splits |
 | `FunctionHarnessTest` | the harness fails a function whose merge is wrong, non-deterministic, too slow or too large, and passes the built-ins |
 | `PythonFunctionSandboxTest` | no network, no files, no processes, the time and memory limits, only declared columns; nothing written for memory-only data |
-| `VarProviderParityTest` | the paused branch's tests unchanged: every cell and total equal to `/api/v1/var/scope` to the bit, sharded and whole |
+| `VarProviderParityTest` | the paused branch's tests unchanged: every cell and total equal to `/api/v1/risk/var/scope` to the bit, sharded and whole |
 | `LazyExpandTest` | expanding a node computes only its children; the expansion state round-trips through a saved view and a link |
 | `OthersTest` | Others equals the measure over its own members (VaR from vectors), not total minus top N |
 | `CurrencyAndUnitsTest` | mixed currencies refused unless converted; percentages not summed |

@@ -242,6 +242,16 @@ public final class EngineRegistry implements AutoCloseable {
         return reasons.getOrDefault(id, "");
     }
 
+    /**
+     * Says why an engine this build lists is not installed here: its module is off (docs/architecture/ACCESS_MODEL.md), so its code was not
+     * loaded. Shown on Admin -> Engines and in the API's 404.
+     */
+    public void notInstalledBecause(String id, String why) {
+        if (states.get(id) == State.NOT_INSTALLED && why != null && !why.isBlank()) {
+            reasons.put(id, why);
+        }
+    }
+
     public String restartNeeded(String id) {
         return restart.getOrDefault(id, "");
     }

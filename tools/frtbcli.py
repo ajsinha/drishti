@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """`drishti.py sens ...`, `drishti.py frtb ...` and `drishti.py play frtb ...`: position sensitivities and FRTB-SA from the command line
-(docs/guides/FRTB_SA_GUIDE.md section 9; the API: /api/v1/sensitivities, /api/v1/risk-factors, /api/v1/frtb), as the token's user sees
+(docs/guides/FRTB_SA_GUIDE.md section 9; the API: /api/v1/risk/sensitivities, /api/v1/risk/risk-factors, /api/v1/risk/frtb), as the token's user sees
 them: a scope's sensitivities summed by factor or bucket (sens show), the factor dictionary (sens factors), the FRTB-SA capital of a scope
 (frtb sa), its steps (frtb explain), its contributions (frtb contributions), and the playground: a comparison of one switch, the workbook
 of live formulas, a saved recipe and its replay to the cent (play frtb). Exit codes: 0, 1 (the server said no), 2 (usage)."""
@@ -74,7 +74,7 @@ def register(groups, srv, ctx: dict) -> None:
         api = Api.from_args(a)
         c = a.frtb_cmd
         if c == "sens-show":
-            res = api.json("GET", "/api/v1/sensitivities?" + enc(params(a, scope=a.scope, by=a.by)))
+            res = api.json("GET", "/api/v1/risk/sensitivities?" + enc(params(a, scope=a.scope, by=a.by)))
             if a.json:
                 say_json(res)
             else:
@@ -82,7 +82,7 @@ def register(groups, srv, ctx: dict) -> None:
                 for r in res["rows"][: a.top]:
                     print(f"{r['key']:<48} {r['measure']:<15} {money(r['value']):>20} {r['positions']:>6} positions")
         elif c == "sens-factors":
-            res = api.json("GET", "/api/v1/risk-factors?" + enc(params(a, q=a.q, limit=a.limit)))
+            res = api.json("GET", "/api/v1/risk/risk-factors?" + enc(params(a, q=a.q, limit=a.limit)))
             if a.json:
                 say_json(res)
             else:
@@ -90,12 +90,12 @@ def register(groups, srv, ctx: dict) -> None:
                 for r in res["rows"]:
                     print(f"{r['factor']:<40} {r['class']:<7} bucket {r['frtbBucket']:<5} {', '.join(r['sourceNames'])}")
         elif c == "sa":
-            res = api.json("GET", "/api/v1/frtb/sa?" + enc(params(a, scope=a.scope)))
+            res = api.json("GET", "/api/v1/risk/frtb/sa?" + enc(params(a, scope=a.scope)))
             say_json(res) if a.json else render_sa(res, print)
         elif c == "explain":
-            say_json(api.json("GET", "/api/v1/frtb/sa/explain?" + enc(params(a, scope=a.scope, **{"class": a.cls}))))
+            say_json(api.json("GET", "/api/v1/risk/frtb/sa/explain?" + enc(params(a, scope=a.scope, **{"class": a.cls}))))
         elif c == "contributions":
-            res = api.json("GET", "/api/v1/frtb/sa/contributions?" + enc(params(a, scope=a.scope, by=a.by)))
+            res = api.json("GET", "/api/v1/risk/frtb/sa/contributions?" + enc(params(a, scope=a.scope, by=a.by)))
             if a.json:
                 say_json(res)
             else:
@@ -104,7 +104,7 @@ def register(groups, srv, ctx: dict) -> None:
                     print(f"{r['key']:<44} {money(r['contribution']):>20}")
         elif c == "play":
             if a.recipe:
-                res = api.json("GET", "/api/v1/frtb/playground/recipes/" + urllib.parse.quote(a.recipe))
+                res = api.json("GET", "/api/v1/risk/frtb/playground/recipes/" + urllib.parse.quote(a.recipe))
                 if a.json:
                     say_json(res)
                 else:
@@ -114,16 +114,16 @@ def register(groups, srv, ctx: dict) -> None:
             if not a.scope:
                 raise CliError("give a scope (BANK, DESK:DESK-RATES, EXAMPLE) or --recipe FR-...", 2)
             if a.xlsx:
-                _, body = api.request("GET", "/api/v1/frtb/playground.xlsx?" + enc(params(a, scope=a.scope)))
+                _, body = api.request("GET", "/api/v1/risk/frtb/playground.xlsx?" + enc(params(a, scope=a.scope)))
                 with open(a.xlsx, "wb") as f:
                     f.write(body)
                 print(f"wrote {a.xlsx} ({len(body):,} bytes): the FRTB-SA Playground workbook, every figure a formula and every switch a cell of "
                       "Config (a recipe was saved with it: its id is on Main and Provenance)")
             elif a.save:
-                res = api.json("POST", "/api/v1/frtb/playground/recipes?" + enc(params(a, scope=a.scope)))
+                res = api.json("POST", "/api/v1/risk/frtb/playground/recipes?" + enc(params(a, scope=a.scope)))
                 say_json(res) if a.json else print(f"saved recipe {res['id']}: {res['command']} (inputs as known at {res['knownAt']})")
             else:
-                res = api.json("GET", "/api/v1/frtb/playground?" + enc(params(a, scope=a.scope, compare=a.compare)))
+                res = api.json("GET", "/api/v1/risk/frtb/playground?" + enc(params(a, scope=a.scope, compare=a.compare)))
                 if a.json:
                     say_json(res)
                 else:

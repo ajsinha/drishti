@@ -23,7 +23,6 @@ import com.ash.drishti.server.api.RequestActivity;
 import com.ash.drishti.server.disk.DiskBudget;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.Principal;
-import com.ash.drishti.server.var.VarController;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -70,10 +69,10 @@ public class CapacityController {
     private final CapacityLive live;
 
     @org.springframework.beans.factory.annotation.Autowired
-    public CapacityController(Entitlements entitlements, AuditLog audit, ObjectProvider<BuildProperties> build, ObjectProvider<VarController> var,
+    public CapacityController(Entitlements entitlements, AuditLog audit, ObjectProvider<BuildProperties> build, ObjectProvider<CapacityFigures> figures,
             ObjectProvider<DiskBudget> disk, ObjectProvider<RequestActivity> activity, ObjectProvider<MeterRegistry> meters) {
         this(entitlements, audit, CapacityPlanner.builtIn(build.getIfAvailable() == null ? "dev" : build.getIfAvailable().getVersion()),
-                CapacityWorkbook.builtIn(), new CapacityLive(var::getIfAvailable, disk::getIfAvailable, activity::getIfAvailable, meters::getIfAvailable));
+                CapacityWorkbook.builtIn(), new CapacityLive(() -> figures.orderedStream().toList(), disk::getIfAvailable, activity::getIfAvailable, meters::getIfAvailable));
     }
 
     CapacityController(Entitlements entitlements, AuditLog audit, CapacityPlanner planner, CapacityWorkbook workbook, CapacityLive live) {
@@ -137,7 +136,7 @@ public class CapacityController {
                 });
                 extra = only;
             }
-            measured = measured(m);
+            measured = measured(m, live.figures());
         }
         List<String> changed = new ArrayList<>();
         Map<String, Object> defaults = planner.defaults();
@@ -165,7 +164,7 @@ public class CapacityController {
 
     /** The measured figures that are not inputs, for the block under the inputs. */
     @SuppressWarnings("unchecked")
-    static List<String[]> measured(Map<String, Object> m) {
+    static List<String[]> measured(Map<String, Object> m, List<CapacityFigures> figures) {
         List<String[]> rows = new ArrayList<>();
         Map<String, Object> s = (Map<String, Object>) m.getOrDefault("server", Map.of());
         add(rows, "Heap max (-Xmx)", s.get("heapMaxMb"), "MB");
@@ -174,11 +173,12 @@ public class CapacityController {
         add(rows, "Resident memory (RSS)", s.get("rssMb"), "MB");
         add(rows, "Machine memory", s.get("ramMb"), "MB");
         add(rows, "Cores (hardware threads the JVM sees)", s.get("cpus"), "cores");
-        if (m.get("var") instanceof Map<?, ?> v) {
-            add(rows, "VaR dates open", v.get("openDates"), "dates");
-            add(rows, "Open dates' heap", v.get("openHeapMb"), "MB");
-            add(rows, "Safety net (open-heap limit)", v.get("openHeapLimitMb"), "MB");
-            add(rows, "Mapped hot files", v.get("mappedMb"), "MB");
+        for (CapacityFigures f : figures) {                      // each module's engine's rows (DOMAIN_MODULES.md J3)
+            if (m.get(f.key()) instanceof Map<?, ?> v) {
+                for (Object[] r : f.rows((Map<String, Object>) v)) {
+                    add(rows, String.valueOf(r[0]), r[1], String.valueOf(r[2]));
+                }
+            }
         }
         if (m.get("disk") instanceof Map<?, ?> d) {
             add(rows, "Disk free (data folder)", d.get("freeBytes") instanceof Number n ? n.longValue() / CapacityLive.MB / 1024.0 : null, "GB");

@@ -123,7 +123,7 @@ themselves in `tools/drishti.py` and the group modules it registers (`datacli.py
 | `var` | `var show`, `var parts`, `var path`, `var history`, `var tree`, `var matrix`, `var stress-window`, `var status`, `var shards`, `var capture`, `var captures`, `var compare`, `var basket`, `var baskets`, `var basket-delete`, `var official`, `var backtest`, `var stats`, `var report`, `var reload`, `var intraday`, `var convert`, `var whatif`, `var playground`, `var explain` | [5.12](#512-var) |
 | `sens`, `frtb`, `play` | `sens show`, `sens factors`, `frtb sa`, `frtb explain`, `frtb contributions`, `play frtb` | [5.14](#514-sens-frtb-and-play-frtb) |
 | `simm`, `play` | `simm show`, `simm list`, `simm explain`, `simm against`, `simm versions`, `play simm` | [5.15](#515-simm-and-play-simm) |
-| `exposure` | `exposure show`, `exposure parts`, `exposure tree`, `exposure profile`, `exposure distribution`, `exposure status`, `exposure capture`, `exposure captures`, `exposure compare`, `exposure official`, `exposure retention`, `exposure reload`, `exposure whatif` | [5.13](#513-exposure) |
+| `exposure` | `exposure show`, `exposure parts`, `exposure tree`, `exposure profile`, `exposure distribution`, `exposure status`, `exposure capture`, `exposure captures`, `exposure compare`, `exposure official`, `exposure retention`, `exposure reload`, `exposure whatif`, `exposure predeal` | [5.13](#513-exposure) |
 | `completion` | `drishti.py completion bash` (also `zsh`, `powershell`) | [5.8](#58-view-and-completion) |
 
 The group modules live beside it and are not run on their own: `tools/authoring.py` (`data profile`, `pack regenerate|diff|catalogue|i18n`),
@@ -1361,7 +1361,7 @@ forms). `--check` fails when it is stale; a console test runs the same check.
 
 ### 5.12 var
 
-The VaR engine from the terminal (`tools/varcli.py`; [VAR_GUIDE.md](VAR_GUIDE.md), the API `/api/v1/var`), as the token's user sees
+The VaR engine from the terminal (`tools/varcli.py`; [VAR_GUIDE.md](VAR_GUIDE.md), the API `/api/v1/risk/var`), as the token's user sees
 it (their nodes, their masks). A scope is the scope grammar's text: quote it in the shell (`'BANK - DESK:CREDIT'`). `--date YYYY-MM-DD`
 picks the business date (default the newest with vectors); `--json` prints the server's answer.
 - `var show SCOPE` prints the headline: VaR and ES with their ranks, the limit and its use, the parts and diversification, the backtest,
@@ -1398,7 +1398,7 @@ picks the business date (default the newest with vectors); `--json` prints the s
 - `var intraday [--date D]`: each loaded date's intraday layer (updates, trades, batches, what was ignored or refused); `var intraday --load FILE.jsonl [--date D] [--lake DIR] [--no-signal] [--dry-run]` appends an intraday batch to the lake (`lake build --mode append`) and raises its data-load signal ([VAR_GUIDE.md section 8.4](VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)); a file mixing scenario PVs and P&L vectors is routed by each record's `VALUE_TYPE`.
 - `var convert FILE.jsonl [--set FIELD=VALUE ...] [--infer] [--out F]`: makes an older PV or vector file say what each record is (`VALUE_TYPE`, `GRAIN`, `CURRENCY`, `SOURCE_SYSTEM`, leading each line), e.g. `--set VALUE_TYPE=PNL --set GRAIN=TRADE --set CURRENCY=USD --set SOURCE_SYSTEM=MUREX`; `--infer` takes `VALUE_TYPE` from the payload and `GRAIN` from the id; exit 1 when a record still lacks one ([VAR_GUIDE.md section 15.13](VAR_GUIDE.md#1513-inputs-any-form-any-grain)).
 - `var whatif SCOPE [--copy TRADE=FACTOR ...] [--trades FILE.json]`: the scope's VaR, ES and stressed VaR before and after
-  hypothetical trades, by the server's VaR engine (`POST /api/v1/var/what-if`, no compute workers needed): `--copy` a booked trade or any
+  hypothetical trades, by the server's VaR engine (`POST /api/v1/risk/var/what-if`, no compute workers needed): `--copy` a booked trade or any
   scope scaled (`--copy MX-30000121=-1`, its unwind; `--copy BOOK:BOOK-RATES-3=-0.5`), `--trades` trades priced elsewhere (a JSON list of
   `{LABEL, PNL: [one number per scenario day], FACTOR}`); each trade's standalone, incremental and component VaR
   ([VAR_GUIDE.md section 8.2](VAR_GUIDE.md#82-the-what-if-the-java-engine)).
@@ -1413,7 +1413,7 @@ drishti-console/.venv/bin/python tools/drishti.py var whatif 'DESK:RATES' --trad
 
 ### 5.13 exposure
 
-The exposure engine from the terminal (`tools/expcli.py`; [EXPOSURE_GUIDE.md](EXPOSURE_GUIDE.md), the API `/api/v1/exposure`),
+The exposure engine from the terminal (`tools/expcli.py`; [EXPOSURE_GUIDE.md](EXPOSURE_GUIDE.md), the API `/api/v1/risk/exposure`),
 as the token's user sees it (their counterparties, groups and legal entities; trades, aggregate or none). A scope is the scope grammar's
 text (`BANK`, `LE:LE-NY`, `GROUP:GRP-ALDERSHOT`, `CPTY:CP-ALDERSHOT`, `NSET:NS-ALDERSHOT-LDN`, `TRD:<id>`, `DESK:`, `BOOK:`,
 `WHERE:<rule>`, with `+ - &`): quote it in the shell. The scoped subcommands take `--date YYYY-MM-DD` (default the newest date with
@@ -1437,9 +1437,12 @@ paths), `--q Q` (the PFE confidence, default 0.95) and `--collateral lagged|curr
 - `exposure whatif SCOPE [--like TRADE] [--factor F] [--set NETTING_SET] [--candidates FILE.json] [--method paths|addon]`: the
   scope's exposure before and after candidate trades. `--like` copies a booked trade's paths on the run (`--factor -1` is its unwind),
   `--set` the netting set it joins (default a set of its own); `--candidates` is a JSON list of `{tradeId, nettingSet, paths:
-  {copyOf, factor} or {runId, mtm}, assetClass, notional, maturityDate, mtm}`. `paths` (the default) is exact, by the Python exposure
-  engine (`exposure-whatif`; the compute workers must be on, `DRISHTI_COMPUTE_ENABLED=true`, else `DRS-5446`); `addon` is the
-  conservative proxy computed by the server.
+  {copyOf, factor} or {runId, mtm}, assetClass, notional, maturityDate, mtm}`. `paths` (the default) is exact, the candidates' paths
+  added to their netting sets path by path; `addon` is the conservative proxy; both computed by the server's exposure engine.
+- `exposure predeal WORDS… [--date D]`: the pre-deal check, the command as typed (`PREDEAL <counterparty> LIKE <trade> [<notional>]
+  [REVERSE] [IN <netting set>]`, or `PREDEAL <counterparty> <asset class> <notional> <maturity> [MTM <amount>]`; the word `PREDEAL` may
+  be left out): the server's decision approve, refer or decline with its reasons, the method, the template, the limit and its tenor
+  buckets before and after ([EXPOSURE_GUIDE.md section 18.9](EXPOSURE_GUIDE.md#189-the-pre-deal-check)).
 
 Exit codes are `0`, `1` (the server said no) and `2` (usage).
 
@@ -1447,7 +1450,14 @@ Exit codes are `0`, `1` (the server said no) and `2` (usage).
 drishti-console/.venv/bin/python tools/drishti.py exposure show CPTY:CP-ALDERSHOT
 drishti-console/.venv/bin/python tools/drishti.py exposure parts NSET:NS-ALDERSHOT-NY --by trade --figure EE --top 10
 drishti-console/.venv/bin/python tools/drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA
+drishti-console/.venv/bin/python tools/drishti.py exposure predeal "PREDEAL CP-ALDERSHOT LIKE CLY-4003028 250M"
 ```
+
+The what-if's parity tools (`tools/ccr/`, standard library only): `record_whatif_parity.py <out.json>` wrote the reference answers of
+`ExposureWhatIfMathTest` (`ccr/whatif-parity.json`) from the earlier Python engine (run it with a 2.9.11.a checkout's
+`drishti-compute/src/main/python` on `PYTHONPATH`); `whatif_api_parity.py record --repo . --server <url> --user rita --out before.json`
+records the API's what-if answers on the demo's CP-ALDERSHOT from one server, and `check ... --against before.json` asks another server
+the same and compares every field (±1 USD, `engine` and `note` aside); exit 0 when equal.
 
 ### 5.14 sens, frtb and play frtb
 
@@ -1515,7 +1525,7 @@ The pivot engine as the token's user sees it (`tools/pivotcli.py`; [PIVOT_GUIDE.
 - `pivot views`; `pivot save NAME [view flags] [--share role:risk]`.
 - `--option KEY=V` (repeatable): a provider's option; the VaR source's (the MR cube, [MR_CUBE_GUIDE.md](MR_CUBE_GUIDE.md)) are `scope`,
   `horizon`, `method`, `confidence`, `esConfidence`, `set` and `ccy`.
-- `pivot mr headline|cell|versions|explain|ladder|heat|whatif`: the MR cube's lens (`/api/v1/pivot/mr`): the view's headline, a cell's
+- `pivot mr headline|cell|versions|explain|ladder|heat|whatif`: the MR cube's lens (`/api/v1/risk/mr`): the view's headline, a cell's
   tail (`--cell DIM=V,...`), the slider's dates, why a scope moved (`--scope`, `--from`, `--to`), the DV01 ladder (`--grid`), the heat
   map (`--by QUALIFIER,TENOR`), the what-if side by side (`--copy TRADE --factor -1`).
 - `pivot functions list`; `pivot functions test FILE --sample ROWS.csv [--group COL]` (the harness's checks and the states part by part;

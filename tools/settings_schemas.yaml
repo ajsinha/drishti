@@ -52,7 +52,7 @@ tiers:
            "*warm*", "*squeeze*", "*pinned*", "*page-size*", "*bytes*", "*-mb", "*_mb", "*max-rows*", "*interval*",
            "*poll*", "*debounce*", "*coalesce*", "*jvm*", "*duckdb*", "*kafka.*"]
   expert-in: [server, engines, console, connectors, store, runs, edit, compute, net, ai, dataload]
-  areas: { server: admin, engines: admin, console: admin, console-files: admin, connectors: admin, packs: admin, editions: admin,
+  areas: { server: admin, engines: admin, modules: admin, console: admin, console-files: admin, connectors: admin, packs: admin, editions: admin,
            store: admin, runs: admin, edit: admin, compute: admin, net: admin, alerts: admin, reports: admin, simm: admin,
            dataload: admin, ui-kit: admin, ai: admin }
 schemas:
@@ -282,6 +282,15 @@ schemas:
       - { key: kinds, type: list, default: "what the plugin reports", meaning: "The kinds it serves" }
       - { key: settings, type: map, default: "{}", meaning: "The plugin's settings, as the tables above (every plugin, the shared tls.* and proxy.*, the plugin's own)" }
       - { key: "settings.*", type: map, meaning: "One setting of the plugin" }
+  module-file:
+    area: modules
+    title: "A module's switch: `config/modules/<module>.yaml` (docs/architecture/ACCESS_MODEL.md)"
+    file: "config/modules/*.yaml"
+    files: ["config/modules/*.yaml"]
+    applies: the module, on this server
+    change: restart (a module's beans, engines, jobs and API load at start)
+    keys:
+      - { key: enabled, type: boolean, default: "the manifest's (true)", meaning: "false: the module is off here (Admin -> Modules writes it); drishti.modules.<id>.enabled wins over it" }
   lake-file:
     area: connectors
     title: "A lake file: `config/lakes/<lake>.yaml` (docs/guides/DATA_LAKE_GUIDE.md)"
@@ -317,6 +326,7 @@ schemas:
       - { key: pack, type: string, meaning: "Required: the pack's name, equal to its folder's name (else the pack is refused)" }
       - { key: version, type: string, default: "0", meaning: "X.Y.Z, shown in About, Admin -> Health and Admin -> Packs and checked by deploys and the registry" }
       - { key: code, type: string, default: none, meaning: "The pack's short code: typed alone it opens the pack's overview (/p/<pack>); must not equal a mnemonic" }
+      - { key: domain, type: string, default: core, meaning: "The domain it serves (core, banking, economy, capitalmarkets): a pack of a domain loads only while a module of that domain is on (docs/architecture/ACCESS_MODEL.md)" }
       - { key: title, type: string, default: "the pack's name", meaning: "Its name in menus, help and admin pages" }
       - { key: description, type: string, default: "", meaning: "One paragraph for About and the help centre" }
       - { key: sample, type: boolean, default: "false", meaning: "A demonstration pack: drishti.packs.samples can hide it from business users" }

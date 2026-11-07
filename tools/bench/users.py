@@ -89,14 +89,14 @@ def var_pick(r: random.Random, a) -> tuple:
             return f"DESK:DESK-{r.randrange(a.var_desks):03d}"
         return f"BOOK:BOOK-{r.randrange(a.var_desks):03d}-{r.randrange(a.var_books_per_desk)}"
     if x < 0.60:
-        return "var-node", "/api/v1/var/scope?" + urlencode({"scope": node(), "asOf": date})
+        return "var-node", "/api/v1/risk/var/scope?" + urlencode({"scope": node(), "asOf": date})
     if x < 0.80:
-        return "var-bank-minus-desk", "/api/v1/var/scope?" + urlencode({"scope": f"BANK - DESK:{desk}", "asOf": date})
+        return "var-bank-minus-desk", "/api/v1/risk/var/scope?" + urlencode({"scope": f"BANK - DESK:{desk}", "asOf": date})
     if x < 0.90:
-        return "var-basket", "/api/v1/var/scope?" + urlencode({"scope": f"PORT:PF-BASKET-BIG-{r.randrange(a.var_big_baskets):02d}", "asOf": date})
+        return "var-basket", "/api/v1/risk/var/scope?" + urlencode({"scope": f"PORT:PF-BASKET-BIG-{r.randrange(a.var_big_baskets):02d}", "asOf": date})
     if r.random() < 0.5:
-        return "var-contrib", "/api/v1/var/scope/contributions?" + urlencode({"scope": f"DESK:{desk}", "by": "position", "asOf": date})
-    return "var-path", "/api/v1/var/scope/path?" + urlencode({"scope": node(), "page": 0, "size": 60, "asOf": date})
+        return "var-contrib", "/api/v1/risk/var/scope/contributions?" + urlencode({"scope": f"DESK:{desk}", "by": "position", "asOf": date})
+    return "var-path", "/api/v1/risk/var/scope/path?" + urlencode({"scope": node(), "page": 0, "size": 60, "asOf": date})
 
 
 def pick(r: random.Random, a):

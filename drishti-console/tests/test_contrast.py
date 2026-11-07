@@ -120,8 +120,15 @@ def test_the_css_colours_text_only_with_checked_tokens():
         if f.name == "drishti_tokens.css":
             continue
         used |= set(re.findall(r"(?<![-\w])color:\s*var\(--d-([a-z0-9-]+)\)", f.read_text()))
-    checked = set(TEXT_TOKENS) | {"on-accent", "on-fill"}
+    checked = set(TEXT_TOKENS) | {"on-accent", "on-fill"} | FIXED_LABELS
     assert {"faint", "accent"} <= used <= checked, sorted(used - checked)
+
+
+# Fixed colours on fixed grounds (drishti_tokens.css, "Fixed colours"): white on a coloured badge or tile, the navigation band's
+# white text and its date field, the heat map's ink, FRTB-SA's Terminal colours, print ink; and the page ground as the label on the warn
+# badge. Each is the colour its rule drew before it became a token.
+FIXED_LABELS = {"on-color", "on-band", "band-field-ink", "band-past-ink", "band-button-ink", "on-trading-green", "heat-ink",
+                "frtb-amber", "frtb-bad", "frtb-muted", "print-ink", "bg"}
 
 
 def test_the_light_fallback_is_the_light_theme():

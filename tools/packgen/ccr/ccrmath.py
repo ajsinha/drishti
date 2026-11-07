@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The exposure measures by exactly the rules of the server's exposure engine (com.ash.drishti.compute.ccr.ExposureMath;
+"""The exposure measures by exactly the rules of the server's exposure engine (com.ash.drishti.banking.compute.ccr.ExposureMath;
 docs/guides/EXPOSURE_GUIDE.md sections 17 and 18), in plain Python over lists, so the test data's reference figures and the engine's answers are
 the same numbers (the parity test in drishti-compute reads them):
 

@@ -449,7 +449,7 @@ equity-analytics EQ-CSCA  FAILED  (req-mvpm72j5-a7a17e82f69a)
     reads:
     - { kind: equity, as: equity, id: "{id}" }
     - { kind: equity-index, as: index, ids: "{inputs.equity.EQUITY_INDEX}", limit: 1 }
-    engine: { type: java, class: com.ash.drishti.compute.reactive.analytics.BetaEngine }
+    engine: { type: java, class: com.ash.drishti.banking.compute.analytics.BetaEngine }
 ```
 
 You should see a beta of **−0.07** against EQX-NDX over 29 daily returns, with a correlation of −0.03. The

@@ -17,59 +17,59 @@
    (drishti_tokens.css), so dark and light read the same; a state is said in words as well as colour; on a phone the tables scroll sideways and the
    map's detail stacks below it. */
 .dout { min-width: 0; }
-.dout-head { display: flex; flex-wrap: wrap; gap: .4rem 1rem; align-items: baseline; margin: .6rem 0 .4rem; }
-.dout-head h2 { margin: 0; font-size: 1.05rem; }
-.dout-meta { color: var(--d-muted); font-size: .8rem; }
-.dout-toggle { margin-left: auto; display: inline-flex; border: 1px solid var(--d-border); border-radius: 14px; overflow: hidden; }
-.dout-toggle button { background: none; border: 0; color: var(--d-muted); padding: .25rem .8rem; font: inherit; font-size: .8rem; cursor: pointer; min-height: 30px; }
+.dout-head { display: flex; flex-wrap: wrap; gap: var(--d-sp-6_4) var(--d-sp-16); align-items: baseline; margin: var(--d-sp-9_6) 0 var(--d-sp-6_4); }
+.dout-head h2 { margin: 0; font-size: var(--d-fs-16_8); }
+.dout-meta { color: var(--d-muted); font-size: var(--d-fs-12_8); }
+.dout-toggle { margin-left: auto; display: inline-flex; border: 1px solid var(--d-border); border-radius: var(--d-radius-14); overflow: hidden; }
+.dout-toggle button { background: none; border: 0; color: var(--d-muted); padding: var(--d-sp-4) var(--d-sp-12_8); font: inherit; font-size: var(--d-fs-12_8); cursor: pointer; min-height: 30px; }
 .dout-toggle button[aria-checked="true"] { background: var(--d-surface); color: var(--d-ink); font-weight: 600; box-shadow: inset 0 -2px 0 var(--d-accent); }
-.dout-error { border-left: 3px solid var(--d-bad); padding: .5rem .8rem; color: var(--d-bad); background: var(--d-surface); }
-.dout-done { border-left: 3px solid var(--d-ok); padding: .5rem .8rem; background: var(--d-surface); }
-.dout-service { display: flex; flex-wrap: wrap; gap: .5rem 1.1rem; align-items: center; padding: .5rem .8rem; border: 1px solid var(--d-border);
-  border-radius: 8px; background: var(--d-surface); font-size: .8rem; margin-bottom: .7rem; }
-.dout-service .k { color: var(--d-muted); margin-right: .25rem; }
+.dout-error { border-left: 3px solid var(--d-bad); padding: var(--d-sp-8) var(--d-sp-12_8); color: var(--d-bad); background: var(--d-surface); }
+.dout-done { border-left: 3px solid var(--d-ok); padding: var(--d-sp-8) var(--d-sp-12_8); background: var(--d-surface); }
+.dout-service { display: flex; flex-wrap: wrap; gap: var(--d-sp-8) var(--d-sp-17_6); align-items: center; padding: var(--d-sp-8) var(--d-sp-12_8); border: 1px solid var(--d-border);
+  border-radius: var(--d-radius-8); background: var(--d-surface); font-size: var(--d-fs-12_8); margin-bottom: var(--d-sp-11_2); }
+.dout-service .k { color: var(--d-muted); margin-right: var(--d-sp-4); }
 .dout-service .acts { margin-left: auto; }
-.dout-sw { display: inline-flex; align-items: center; gap: .5rem; }
-.dout-sw i { display: inline-block; width: 34px; height: 18px; border-radius: 9px; border: 1px solid var(--d-border); position: relative; }
+.dout-sw { display: inline-flex; align-items: center; gap: var(--d-sp-8); }
+.dout-sw i { display: inline-block; width: 34px; height: 18px; border-radius: var(--d-radius-9); border: 1px solid var(--d-border); position: relative; }
 .dout-sw i::after { content: ""; position: absolute; left: 2px; top: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--d-muted); }
 .dout-sw.on i { border-color: var(--d-accent); } .dout-sw.on i::after { left: 18px; background: var(--d-accent); }
-.dout-view { display: flex; flex-direction: column; gap: .7rem; }
-.dout-card { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 8px; padding: .7rem; min-width: 0; }
-.dout-card h3 { margin: 0 0 .5rem; font-size: .85rem; } .dout-card h3 span { color: var(--d-muted); font-weight: 400; font-size: .75rem; margin-left: .35rem; }
-.dout-grid21 { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); gap: .7rem; }
-.dout-grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .7rem; }
-.dout-mapgrid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: .7rem; align-items: start; }
-.dout-nodes { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: .5rem; }
-.dout-node { border: 1px solid var(--d-border); border-radius: 8px; padding: .45rem .6rem; font-size: .8rem; display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
-.dout-node .h { display: flex; gap: .5rem; align-items: baseline; flex-wrap: wrap; }
-.dout-node .ad { font-family: var(--d-font-mono); font-size: .72rem; color: var(--d-link); word-break: break-all; }
+.dout-view { display: flex; flex-direction: column; gap: var(--d-sp-11_2); }
+.dout-card { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius-8); padding: var(--d-sp-11_2); min-width: 0; }
+.dout-card h3 { margin: 0 0 var(--d-sp-8); font-size: var(--d-fs-13_6); } .dout-card h3 span { color: var(--d-muted); font-weight: 400; font-size: var(--d-fs-12); margin-left: var(--d-sp-5_6); }
+.dout-grid21 { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); gap: var(--d-sp-11_2); }
+.dout-grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--d-sp-11_2); }
+.dout-mapgrid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: var(--d-sp-11_2); align-items: start; }
+.dout-nodes { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--d-sp-8); }
+.dout-node { border: 1px solid var(--d-border); border-radius: var(--d-radius-8); padding: var(--d-sp-7_2) var(--d-sp-9_6); font-size: var(--d-fs-12_8); display: flex; flex-direction: column; gap: var(--d-sp-3_2); min-width: 0; }
+.dout-node .h { display: flex; gap: var(--d-sp-8); align-items: baseline; flex-wrap: wrap; }
+.dout-node .ad { font-family: var(--d-font-mono); font-size: var(--d-fs-11_52); color: var(--d-link); word-break: break-all; }
 .dout-scroll { overflow-x: auto; }
-.dout-tbl { border-collapse: separate; border-spacing: 0; font-size: .78rem; font-variant-numeric: tabular-nums; width: 100%; }
-.dout-tbl th, .dout-tbl td { padding: .3rem .5rem; white-space: nowrap; text-align: right; border-bottom: 1px solid var(--d-border); vertical-align: top; }
+.dout-tbl { border-collapse: separate; border-spacing: 0; font-size: var(--d-fs-12_48); font-variant-numeric: tabular-nums; width: 100%; }
+.dout-tbl th, .dout-tbl td { padding: var(--d-sp-4_8) var(--d-sp-8); white-space: nowrap; text-align: right; border-bottom: 1px solid var(--d-border); vertical-align: top; }
 .dout-tbl th { color: var(--d-muted); font-weight: 500; }
 .dout-tbl .l { text-align: left; } .dout-tbl td.wr { white-space: normal; min-width: 220px; }
 .dout-tbl tr.hot td { background: color-mix(in srgb, var(--d-bad) 12%, transparent); }
 .dout-tbl tr.live td { background: color-mix(in srgb, var(--d-accent) 8%, transparent); }
-.dout-req { display: block; font-family: var(--d-font-mono); font-size: .72rem; color: var(--d-muted); white-space: normal; word-break: break-all; max-width: 420px; }
-.dout-sub { font-size: .72rem; color: var(--d-muted); }
-.dout-note { font-size: .75rem; color: var(--d-muted); margin: .4rem 0 0; }
+.dout-req { display: block; font-family: var(--d-font-mono); font-size: var(--d-fs-11_52); color: var(--d-muted); white-space: normal; word-break: break-all; max-width: 420px; }
+.dout-sub { font-size: var(--d-fs-11_52); color: var(--d-muted); }
+.dout-note { font-size: var(--d-fs-12); color: var(--d-muted); margin: var(--d-sp-6_4) 0 0; }
 .dout-bad { color: var(--d-bad); }
-.dout-pill { display: inline-block; padding: 0 .5rem; border-radius: 10px; font-size: .7rem; font-weight: 600; border: 1px solid currentColor; }
+.dout-pill { display: inline-block; padding: 0 var(--d-sp-8); border-radius: var(--d-radius-10); font-size: var(--d-fs-11_2); font-weight: 600; border: 1px solid currentColor; }
 .dout-pill.g { color: var(--d-ok); } .dout-pill.r { color: var(--d-bad); } .dout-pill.b { color: var(--d-accent); } .dout-pill.n { color: var(--d-muted); }
-.dout-gauge .t { display: flex; justify-content: space-between; gap: .5rem; flex-wrap: wrap; font-size: .8rem; }
-.dout-gauge .track { position: relative; height: 12px; border-radius: 6px; border: 1px solid var(--d-border); margin: .3rem 0; }
-.dout-gauge .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; }
+.dout-gauge .t { display: flex; justify-content: space-between; gap: var(--d-sp-8); flex-wrap: wrap; font-size: var(--d-fs-12_8); }
+.dout-gauge .track { position: relative; height: 12px; border-radius: var(--d-radius-6); border: 1px solid var(--d-border); margin: var(--d-sp-4_8) 0; }
+.dout-gauge .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: var(--d-radius-6); }
 .dout-gauge .fill.g { background: var(--d-ok); } .dout-gauge .fill.a { background: var(--d-warn); } .dout-gauge .fill.r { background: var(--d-bad); }
 .dout-mapwrap { overflow-x: auto; }
-.dout-map { width: 100%; min-width: 560px; font-size: 12px; }
+.dout-map { width: 100%; min-width: 560px; font-size: var(--d-fs-12); }
 .dout-map rect.box { fill: var(--d-bg); stroke: var(--d-border); }
 .dout-map rect.box.self { stroke: var(--d-accent); }
 .dout-map rect.cl { fill: none; stroke: var(--d-accent); }
-.dout-map text { fill: var(--d-ink); } .dout-map text.m { fill: var(--d-muted); font-family: ui-monospace, monospace; font-size: 11px; }
+.dout-map text { fill: var(--d-ink); } .dout-map text.m { fill: var(--d-muted); font-family: ui-monospace, monospace; font-size: var(--d-fs-11); }
 .dout-map path.lns { fill: none; stroke: var(--d-muted); cursor: pointer; opacity: .8; }
 .dout-map path.lns.stream { stroke: var(--d-accent); }
 .dout-map path.lns.sel, .dout-map path.lns:focus { stroke: var(--d-ok); opacity: 1; outline: none; }
-.dout-dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .25rem .7rem; font-size: .78rem; margin: 0 0 .6rem; }
+.dout-dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--d-sp-4) var(--d-sp-11_2); font-size: var(--d-fs-12_48); margin: 0 0 var(--d-sp-9_6); }
 .dout-dl dt { color: var(--d-muted); } .dout-dl dd { margin: 0; min-width: 0; }
 @media (max-width: 1000px) { .dout-grid21, .dout-grid2, .dout-mapgrid { grid-template-columns: minmax(0, 1fr); } .dout-toggle { margin-left: 0; } }
 @media (max-width: 480px) { .dout-toggle button, .dout-tbl .btn { min-height: 40px; } }

@@ -61,7 +61,11 @@ public final class JavaRunner implements EngineRunner {
         }
         try {
             ClassLoader cl = Thread.currentThread().getContextClassLoader() != null ? Thread.currentThread().getContextClassLoader() : JavaRunner.class.getClassLoader();
-            Class<?> c = Class.forName(className, true, cl);
+            String moved = moved(cl).get(className);
+            if (moved != null) {                     // a class a module moved (a connector file written before the move still names it)
+                LOG.info("{}: the engine class {} is now {}; the connector's file can name the new one", connector, className, moved);
+            }
+            Class<?> c = Class.forName(moved != null ? moved : className, true, cl);
             if (!ComputeEngine.class.isAssignableFrom(c)) {
                 throw new IllegalArgumentException(connector + ": " + className + " is not a ComputeEngine");
             }
@@ -70,6 +74,29 @@ public final class JavaRunner implements EngineRunner {
             throw new IllegalArgumentException(connector + ": the engine class " + className + " cannot be loaded: " + e);
         }
     }
+
+    /**
+     * The engine classes the modules moved, old name to new: every {@value #MOVED} on the class path (a module lists its own moves, so a
+     * connector file written before the move keeps working for a release).
+     */
+    static java.util.Map<String, String> moved(ClassLoader cl) {
+        java.util.Map<String, String> out = new java.util.HashMap<>();
+        try {
+            for (java.net.URL u : java.util.Collections.list(cl.getResources(MOVED))) {
+                java.util.Properties p = new java.util.Properties();
+                try (java.io.InputStream in = u.openStream()) {
+                    p.load(in);
+                }
+                p.forEach((k, v) -> out.putIfAbsent(String.valueOf(k).strip(), String.valueOf(v).strip()));
+            }
+        } catch (java.io.IOException e) {
+            LOG.warn("the moved engine classes could not be read: {}", e.toString());
+        }
+        return out;
+    }
+
+    /** The class-path name of a module's list of moved classes. */
+    static final String MOVED = "META-INF/drishti/moved-classes.properties";
 
     /** A runner of an engine instance (tests, and engines a server builds itself). */
     public static JavaRunner of(ComputeEngine engine) {

@@ -15,10 +15,85 @@
 -->
 # Changelog
 
+## 2.9.11.g (unreleased)
+
+### The pre-deal service and the exposure what-if in Java
+
+- **The pre-deal check is a service of the exposure engine** (EXPOSURE_GUIDE.md section 18.9): `POST /api/v1/exposure/predeal` and the
+  command `PREDEAL <counterparty> LIKE <trade> [<notional>] [REVERSE] [IN <netting set>]` (or, without a template, `PREDEAL <counterparty>
+  <asset class> <notional> <maturity> [MTM <amount>]`), `GET /api/v1/exposure/predeal/grammar`, `drishti.py exposure predeal "PREDEAL …"`.
+  The what-if with the trade added is held to the counterparty's stored credit limit on its measure (`PFE 95 peak` at its confidence;
+  EEPE, EPE, peak EE) and to each tenor bucket's limit (`BUCKETS`, read from `credit-limit` now), and answers **approve** (exact data,
+  within the limit and every bucket), **decline** (exact, over the limit or a bucket) or **refer** with the reason: a proxy answer (the
+  `addon` method) only refers, never approves; so does no limit on record, a limit on a measure the engine does not compute, netting sets
+  the person does not see, a stale run, the netting set not certain, or no exposure for the counterparty. Every answer shows the method
+  and the template trade (copied: id, product, notional, the factor and side; or described), the limit before and after with the
+  headroom and the buckets, and the exposure before, with and incremental; SA-CCR's incremental EAD says **under construction**
+  (2.9.11.k). Computed as the person (a template only of a trade they see trade by trade, `403` otherwise; a counterparty they see none of
+  `403`); every check audited (`ccr-predeal`, with its check id, decision, method, command and limit use). Code: `ExposurePreDeal`,
+  `ExposurePreDealCommand`, `ExposurePreDealController` in the counterparty-risk server package `com.ash.drishti.server.exposure`.
+- **Counterparties → Pre-deal check** runs `PREDEAL` (the menu item that ran `XWIF`). Its screen is **under construction** (registry item
+  `pre-deal-screen`): it is built on the Drishti Elements libraries, which have not reached develop; until then `PREDEAL` typed in the
+  console says so and names the API and the command line. The exposure explorer's Pre-deal tab stays until that screen replaces it.
+- **The Trading landing's new-trade check** asks the pre-deal service for its exposure half: the decision, the limit use and every figure
+  are the server's (the console no longer divides by the limit or picks the netting set); when the copied trade has no paths on the run
+  the same check is asked described, and refers. Its verdict shows *Refer to credit* and *Declined: over the limit* with the reason.
+- **The exact pre-deal exposure what-if (`POST /api/v1/exposure/what-if`, method `paths`) is computed by the Java exposure engine**
+  (EXPOSURE_GUIDE.md sections 7, 18.7 and 19.5; COUNTERPARTY_ENGINES.md 6.4). `ExposureWhatIfMath` (`drishti-compute`) adds each
+  candidate's paths to its netting set's value path by path and computes the set's collateral and exposure again with `ExposureMath`, the
+  same code as every exposure figure; `ExposureWhatIfPaths` reads the scope and each joined netting set as the asker. The same request and
+  the same answer field by field (only the `engine` and `note` texts say Java); no sandbox, no reactive connector, no compute workers: it
+  answers on every server that runs exposure. Parity: the Python engine's answers on a book of four netting sets (margined with
+  thresholds, MTA, IA, rounding and IM; unmargined with IA; no CSA; collateral posted), six what-ifs over the three collateral models,
+  both rank rules, an unwind and a horizon change, recorded before it was retired (`ccr/whatif-parity.json`, `tools/ccr/`), are given
+  again to the cent (`ExposureWhatIfMathTest`). A `copyOf` is made only of a trade the asker sees trade by trade (`403` otherwise).
+- **The Python exposure engine is retired:** `drishti_compute.exposure` (`measures.py`, `whatif.py`) and its tests, the compute pool
+  `exposure` and `DRISHTI_COMPUTE_EXPOSURE_WORKERS`, the counterparty-risk pack's reactive connector `exposure-whatif` with its kind,
+  contract and command `XWIF`, the `exposure-result` parameters `detail` and `sets` (`ExposureWhatIfInputs`), and `DRS-5446`. A
+  never-edited `exposure-whatif.yaml` connector file is removed at start (kept beside it as `.retired-<time>.bak`); an edited one stays,
+  its kind listed as obsolete.
+- **Tests**: `ExposurePreDealApiTest` (the what-if equal to a full recompute with the trade booked, figure by figure and date by date;
+  approve; decline on the limit and on a bucket; refer on a proxy, no limit, a measure not computed and no exposure; two people at once
+  with their own entitlements; the grammar; the audit); the console's trading check, menus and under-construction tests; `test_expcli`.
+
 ## 2.9.11.h (unreleased)
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
 
+## 2.9.11.f (unreleased)
+
+- **Domain modules, phase 1: the backend split** ([DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md), [ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md)).
+  The core knows no industry: banking is a module. New Maven modules: **drishti-registry** (the access registry), **drishti-compute-banking**
+  (VaR and ES, parametric, components, backtesting, exposure, FRTB-SA, SIMM, beta and correlation: `com.ash.drishti.banking.compute`, pure
+  maths), **drishti-banking** (the VaR, exposure, FRTB-SA, SIMM, sensitivities, MR cube and official-results services, storage and API:
+  `com.ash.drishti.banking`) and **drishti-app** (the runnable jar, at its old path `drishti-server/target/drishti-server-<version>-exec.jar`).
+  The six places where the core used banking code are SPIs now (`PivotSourceProvider`, `CacheGroup`, `CapacityFigures`, `HealthFigures`,
+  `OfficialReaders.OfficialResults`, the edition's words); `ArchitectureRulesTest` fails the build when the core imports a domain, a
+  domain another, a domain's compute Spring or the server, or anything but the registry reads the access model. VaR, exposure and the BI
+  parity answers are unchanged.
+- **The access registry** (drishti-registry: `AccessRegistry`, `EmbeddedAccessRegistry`, `AccessStore`, `YamlAccessStore`): licence →
+  module → lens → function → permission, decided in one place. Each module's jar ships its manifest (`META-INF/drishti/module.yaml`:
+  packages, engines, packs, connectors, API, functions) and its lenses (with the modules they need and the functions they bundle); a module
+  is on when installed, licensed and enabled. No `config/access/licence.yaml` is the **development licence** (every module, unsigned), so an
+  existing installation changes nothing. A module that is off loads no bean, engine, job or API (`@ConditionalOnModule`), its packs and
+  connectors do not load, its API answers `404 DRS-1025`, and Admin → Engines says why its engines are not installed.
+- **Admin → Modules over REST**: `GET/POST /api/v1/admin/modules` (states, what each brings, the licence, the lenses; the switch, with a
+  reason, audited, written to `config/modules/<module>.yaml`, taken at the next start); `GET /api/v1/modules` (the modules loaded and the
+  lenses open to the caller). New settings `drishti.modules.dir`, `drishti.modules.<module>.enabled`, `drishti.modules.watch-seconds`,
+  `drishti.access.dir` (CONFIGURATION.md; OPERATIONS.md section 22).
+- **Functions** (command words such as VAR, TRD, EQV, EXP) are the finest unit of access: each belongs to one module (a word no module
+  declares is the core's), lenses bundle them, and the mnemonic switches (Admin → Commands) are decided by the registry: a function is on
+  when its module is on and no administrator turned it off; its API then answers `404 DRS-1026` (and `403 DRS-1027` is wired for per-person
+  grants in 2.9.11.i).
+- **The banking API is under `/api/v1/risk/…`** (`/risk/var`, `/risk/exposure`, `/risk/frtb`, `/risk/simm`, `/risk/sensitivities`,
+  `/risk/risk-factors`, `/risk/mr`); the old paths are answered as the new ones for this release (`Deprecation: true` and a `Link` to the
+  new path), then removed. Connector files naming the moved engine classes keep working for this release.
+- **Packs name their domain** (`domain: core | banking | economy | capitalmarkets` in `pack.yaml`; ids and folders unchanged): a pack loads
+  only while a module of its domain is on. A **capitalmarkets** module (content only, shipped with the core) holds the us-equities and
+  funds packs and the market data's functions (CRV, FX, EQV ...; the market-data pack stays banking's while its engines read it); GLEIF is
+  core reference data; economy keeps world-economy and news-and-markets. The Market lens needs capital markets and banking.
+- **Editions as lenses**: the risk, trading, market and world editions are lenses of the registry; an edition opened as a lens is offered
+  only while its modules are on.
 ## 2.9.11.e (unreleased)
 
 - **Vega retired (the owner's decision O1): one drawing engine.** A report's `vega-lite` visual and a Python visual's `output: vega-lite`
@@ -435,6 +510,31 @@
   `pinnedCellClicked`, a tree node's own row in its cell context), drishti-chart 0.2.0 (the histogram of a server's bins). A
   before-and-after comparison of sixteen screens and tabs (`tests/screen_figures.py`, `tests/test_var_family_figures_browser.py`, run on
   demand) and every family browser file on the new selectors with its assertions kept.
+- **The console's CSS on design tokens, the look unchanged** ([ELEMENTS.md 4.1, Design tokens](docs/architecture/ELEMENTS.md#design-tokens)):
+  `drishti_tokens.css` is the one home of every colour and scale. Each hard-coded colour became a token whose value in every theme is
+  what its rule drew: fixed colours (white labels on coloured fills, the navigation band, scrims, the theme menu's swatches, FRTB-SA's
+  Terminal colours), the landings' and Capacity's hues per theme, elevations, and the print palette (last in the file, with no
+  `!important`). The type scale (53 steps in rem named by their px, 7 relative, 10 fluid display sizes), spacing (51 steps up to 2rem),
+  radii, layers (14 `--d-z-*`), breakpoints (24 `--d-bp-*`) and the Elements' densities are tokens of exactly the values in use;
+  grid and chart take their density sizes from them. Gone: rules of removed screens (the old Studio, the BI model designer and layer
+  wizard, the browser Python console, the top bar's clock and desk name, the exposure sparkline, unused tone and text utilities), the
+  `[hidden]` rules of console-only sheets that Bootstrap's own covers, rules repeated twice, the theme button's hidden label, and
+  fallbacks of tokens that never existed (`--d-text`, `--d-fg`, `--d-mono`, `--d-border-strong`: the value they drew is written).
+  `!important` removed where specificity or order does it; the rest is on an allow-list with a reason each. The embedded view, report
+  and renderer sheets write the fixed tokens into their rules, so their size is unchanged. Numbers (90 sheets): lines 9,404 → 9,256;
+  distinct hex colours outside the token file 75 → 0 and `rgb()` 15 → 0 (194 distinct hex in all the CSS; 5 and 1 remain in
+  `drishti_record-forms.css`, being rewritten by the forms work); literal font sizes 69 → 0 (12 remain in the three sheets the forms
+  work is rewriting); `!important` 149 → 98; `@media` widths 25 → 24 breakpoints.
+  - **Proof the look did not change** (`tools/dev/css_visual_check.py`, [TEST_HARNESS.md 3.14](docs/architecture/TEST_HARNESS.md#314-the-css-visual-check)):
+    landing, the VaR explorer, Pivot, a BI report, Build home, Admin and Help at 1440 px and landing, VaR and Help at 390 px, in all ten
+    themes, before and after against one server, compared pixel by pixel: 100 pictures, 76 identical, 23 within the anti-aliasing
+    tolerance (the VaR charts' edges, as between two runs of the same tree), 1 different (a BI report's timing footer, whose width
+    follows a measured time; identical when taken again); no picture differs because of the CSS.
+  - **Guards** (`test_css_tokens.py`, a quick file check): no colour literal outside the token file, font sizes only from the type scale,
+    `@media` widths only from the breakpoints, no undefined `--d-*`, and `!important` only on its allow-list, which only shrinks.
+  - **Left for the forms work's merge**: `drishti_form.css`, `drishti_record-forms.css` and `drishti_controls.css` (colours, font sizes,
+    their `!important`), and the stacked-label rules repeated in eighteen forms with the seven checkbox-row classes that escape them
+    with `!important`: one form-label convention.
 
 ## 2.9.11.d (2026-11-07)
 - **Six lake folders kept in git, their content never** (DATA_LAKE_GUIDE.md section 1): `data/delta/demo`, `risklake`, `newslake` (news), `worldlake` (World Bank, IMF, UN), `regulators` (SEC, Federal Reserve, OSFI, central banks) and `capitalmarket` (prices, curves, vols, funds), each with only its README.md; the test data's `.jsonl.gz` files stay in git to build the demo lake. The five new lakes ship as lake files with no tables (`config/lakes/<lake>.yaml` and their jar copies), and **nothing shipped points at them**: every connector, rule and setting reads `demo` (guarded by `tools/test_empty_lakes.py`); a site points at them itself. The demo lake's one-time move and `build_demo_lakes` treat a folder holding only its README.md as empty.

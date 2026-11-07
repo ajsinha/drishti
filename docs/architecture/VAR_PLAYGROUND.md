@@ -162,7 +162,7 @@ stamped in every tab's footer and the document properties.
   git are `template.properties` (name, version, and every cell format by name: `style.input.money=6`, `style.check=16`, the check
   colours `dxf.pass`, `dxf.fail`), `xl/styles.xml` (the look), `docProps/core.xml` and `docProps/app.xml` (with `{{PRODUCT}}`,
   `{{COPYRIGHT}}`, `{{OWNER}}`, `{{TEMPLATE_VERSION}}` filled from the branding configuration) and `explain.txt` (the Explain tab's
-  steps, `{Name}` a cell reference and `{Name:v}` its value), under `drishti-server/src/main/resources/playground/var/template/`. They
+  steps, `{Name}` a cell reference and `{Name:v}` its value), under `drishti-banking/src/main/resources/playground/var/template/`. They
   are packaged as resources and assembled into the .xlsx as each export is written (comments dropped, placeholders filled); the sheets,
   the named cells and every formula are written by the generator (`VarPlaygroundBook`) for exactly the positions chosen, so a 1-position
   workbook has no empty 500-column layout and a 10,000-position one is not limited by a template.
@@ -174,7 +174,7 @@ stamped in every tab's footer and the document properties.
 - **A bank's own house style.** `drishti.var.playground.template` may name a folder holding a bank's own versions of these files; it
   must keep every style name of `template.properties` (checked when the server starts: a missing name or file refuses the template with
   the list of what is missing).
-- **Works alone.** The empty workbook is downloadable (the playground's form and `GET /api/v1/var/playground/template?positions=10`):
+- **Works alone.** The empty workbook is downloadable (the playground's form and `GET /api/v1/risk/var/playground/template?positions=10`):
   every formula in place over blank Data, Config and FX; paste scenario PVs, fill the rates and it calculates offline.
 
 ## 6. The tabs
@@ -341,9 +341,9 @@ Each is in [CONFIGURATION.md](../admin/CONFIGURATION.md) through the settings ca
   or trades); `PLAY` is checked free against every pack's mnemonics and is an edition word (`commands.words.PLAY`, on in Drishti Risk and
   Drishti Trading). The console's page is `/play`; its JSON `/api/play/grid`, `/api/play/estimate`, `/api/play/export.xlsx`,
   `/api/play/template.xlsx`.
-- **API:** `GET /api/v1/var/playground` (the grid as JSON: at most 500 positions, the figures, the engine's figures, the checks, the
-  formula bar's formulas, the export's choices), `GET /api/v1/var/playground/estimate`, `GET /api/v1/var/playground.xlsx?count=500|all`
-  (streamed) and `GET /api/v1/var/playground/template`; their parameters in [VAR_GUIDE.md section 11.1](../guides/VAR_GUIDE.md#111-the-endpoints).
+- **API:** `GET /api/v1/risk/var/playground` (the grid as JSON: at most 500 positions, the figures, the engine's figures, the checks, the
+  formula bar's formulas, the export's choices), `GET /api/v1/risk/var/playground/estimate`, `GET /api/v1/risk/var/playground.xlsx?count=500|all`
+  (streamed) and `GET /api/v1/risk/var/playground/template`; their parameters in [VAR_GUIDE.md section 11.1](../guides/VAR_GUIDE.md#111-the-endpoints).
 - **CLI:** `drishti.py var playground <scope> [--ids A,B] [--xlsx out.xlsx] [--count N|all] [--estimate]`.
 
 ## 12. Tests in the drill

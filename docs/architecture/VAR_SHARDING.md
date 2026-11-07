@@ -56,7 +56,7 @@ millions of trades is served by several modest servers, and adding one moves onl
  a request for scope X on any member:
    node of a hierarchy  -> its aggregate, here (VAR BANK and the desks stay instant)
    anything else        -> the planner's rows split by shard; each shard's part to one ready owner
-                           (POST /api/v1/var/partial, signed, one hop, as the caller), partial float64 vectors back,
+                           (POST /api/v1/risk/var/partial, signed, one hop, as the caller), partial float64 vectors back,
                            exactly one per shard, added in shard order; VaR and ES taken once
 ```
 
@@ -106,7 +106,7 @@ and `data`, the digest of the inputs it was built from). A reporting currency's 
 by each member on the date it puts together.
 
 **The skeleton**: the hot file without its matrices (`ShardSkeleton`: `META`, `SCEN`, `TIDS`, `TCOL`, `BOOK`, `AKEY`, `AGGS`, `CTOT`,
-`CELL`, `RANG`, each with its CRC32C; flag `SKELETON` (8)), sent by an owner (`GET /api/v1/var/shards/skeleton`) to the members that put
+`CELL`, `RANG`, each with its CRC32C; flag `SKELETON` (8)), sent by an owner (`GET /api/v1/risk/var/shards/skeleton`) to the members that put
 the date together without holding the shard: about 0.8 KB a trade against 2 KB of rows at 509 scenarios.
 
 **Putting a date together** (`ShardAssembly`, `drishti-compute`): the shards' trades side by side in shard order are the whole date's
@@ -172,7 +172,7 @@ them run by run); each set is summed shard by shard (`ShardGather`, `com.ash.dri
 - else its part (a bitmap of the shard's own ordinals) goes to one member, in this order: the shard's owners that announced it ready at the
   data version the date was put together from (first owner first), then any other member that announced it so (an old owner during a
   handover), then its owners not ready yet (they build it from the lake when the lake still holds that data). The call is
-  `POST /api/v1/var/partial`, signed with the cluster key, one hop, with the caller's on-behalf-of token: the owner applies the caller's
+  `POST /api/v1/risk/var/partial`, signed with the cluster key, one hop, with the caller's on-behalf-of token: the owner applies the caller's
   rights again (the rows asked must be in the caller's view of the shard, else `403`) and answers the float64 sum of the rows, labelled with
   the shard, the shard map's digest, the shard's data digest and the number of rows;
 - an answer labelled otherwise is refused and the next member asked; a member that holds another data version refuses the call (`409
@@ -290,24 +290,24 @@ Sharding needs the tiered memory (`drishti.var.tier.mode: mapped`, the default).
 
 | Endpoint | Who | What |
 |---|---|---|
-| `GET /api/v1/var/shards?asOf=` | anyone who may open `pnl-vector` | the settings, the members (owner, in the view, draining, zone, what each announces ready), the shard books held here, and the date's map with each shard's range, rows, owners and the members ready for it |
-| `POST /api/v1/var/shards/drain {on}` | administrators | drain this member (`on: true`) or take it back |
-| `POST /api/v1/var/partial` | members only (signed) | a shard's part of a set summed here |
-| `GET /api/v1/var/shards/skeleton?date=&ccy=&shard=&map=&digest=` | members only (signed) | a shard's skeleton |
+| `GET /api/v1/risk/var/shards?asOf=` | anyone who may open `pnl-vector` | the settings, the members (owner, in the view, draining, zone, what each announces ready), the shard books held here, and the date's map with each shard's range, rows, owners and the members ready for it |
+| `POST /api/v1/risk/var/shards/drain {on}` | administrators | drain this member (`on: true`) or take it back |
+| `POST /api/v1/risk/var/partial` | members only (signed) | a shard's part of a set summed here |
+| `GET /api/v1/risk/var/shards/skeleton?date=&ccy=&shard=&map=&digest=` | members only (signed) | a shard's skeleton |
 
 **API tokens** (`drishti.security.token-never` in application.yaml, TOKEN_SCOPES in API_GUIDE.md): both `POST`s are never open to a
 personal API token. `/partial` reads data, but it is not a read `POST` for a token (`token-read-posts`): it is the members' own channel,
 signed with the cluster key and made with the caller's on-behalf-of token (the owner applies the caller's rights again), like
 `/compute/peer/**`; opening it to tokens would only add a door to that channel. `/shards/drain` is an administrator's action (the console,
-the CLI, a task's stop hook signed in as an administrator), like `/var/reload`. `GET /api/v1/var/shards` reads as any `GET`.
+the CLI, a task's stop hook signed in as an administrator), like `/var/reload`. `GET /api/v1/risk/var/shards` reads as any `GET`.
 
 `drishti.py var shards [--date D] [--json]` prints the same; `--drain` and `--undrain` (administrators). No new screen: a proposed Admin →
 Health "Shards" panel is an open item (mock-ups first).
 
 ## 11. Fargate scale-in and drain
 
-Before a task stops (a scale-in, a deploy), drain it: `drishti.py var shards --drain` (or `POST /api/v1/var/shards/drain`, from the task's
-stop hook), then wait until `GET /api/v1/var/shards` says `"safeToStop": true` (it holds no shard: every one has been built by its new
+Before a task stops (a scale-in, a deploy), drain it: `drishti.py var shards --drain` (or `POST /api/v1/risk/var/shards/drain`, from the task's
+stop hook), then wait until `GET /api/v1/risk/var/shards` says `"safeToStop": true` (it holds no shard: every one has been built by its new
 owners, announced and held ready for the grace period). The draining member leaves the owners' view at once (it does not wait for
 `stable-seconds`), keeps answering the requests it receives and serving its shards until each is handed over. Give the task's
 `stopTimeout` at least the time to build its largest shard plus `grace-seconds`. A member started with `drain: true` takes no shard.
@@ -378,7 +378,7 @@ shards, 2 scopes are asked on two members every 300 ms: no request fails or diff
 
 - **Admin → Health "Shards" panel** (proposed, not built: mock-ups first): the members with their shards ready and held, each date's map
   with owners and readiness, a draining member's progress to "safe to stop", the last refusals (`DRS-5215`, `DRS-5216`). Until then
-  `GET /api/v1/var/shards` and `drishti.py var shards`.
+  `GET /api/v1/risk/var/shards` and `drishti.py var shards`.
 - An intraday batch's morning rows of shards held elsewhere are still read one call each (a contribution table's are fetched ahead,
   [section 15](#15-contributions-under-load)); the same read-ahead would serve them, and an intraday date's overlay store.
 - The 2.3 M benchmark sharded on real servers with the second builder's sorted lake loader: its per-file key ranges make the
@@ -400,7 +400,7 @@ members keep one deadline per answer and no carrier thread pinned while a skelet
 | choose the parts | `VarViews.listed`, `VarPartTotals` | a table: the positions (or trades) of the scope, the `max-parts` largest by gross size; the standalone sums: the whole positions not yet kept (or the trades), a step of 1,024 at a time, the steps side by side on the vector-sum pool |
 | list their reads | `VarBook.readAhead` | each whole position's run of ordinals (`forEachPositionRead`: none when its vector is already kept or comes from the hot file), each trade of a position only partly in the scope, each trade asked for |
 | group by shard | `ShardedVectors.batched` | each read cut at the shard boundaries as `addRangeInto`, `copy` and `addInto` cut it; the reads of shards held here are left alone; the others grouped by shard, a read asked twice asked once |
-| ask the owners | `VarShardRows.sumAll` → `POST /api/v1/var/partials` | one call per remote shard of up to 1,024 row sets (`ShardedVectors.BATCH`, about 4 MB of float64 back at 509 scenarios; a larger table makes more calls), every shard's calls side by side on virtual threads; a single set still goes to `/partial` |
+| ask the owners | `VarShardRows.sumAll` → `POST /api/v1/risk/var/partials` | one call per remote shard of up to 1,024 row sets (`ShardedVectors.BATCH`, about 4 MB of float64 back at 509 scenarios; a larger table makes more calls), every shard's calls side by side on virtual threads; a single set still goes to `/partial` |
 | build the parts | `VarViews.position`, `VarViews.trade` | unchanged: each read finds its answer where it would have asked for it (a map of the fetched reads, for the asking thread while the table is built) |
 
 `/partials` is asked `{date, ccy, shard, map, digest, runs: [...]}`, each set as its runs `[from, to)` (int32 pairs, base64: 8 bytes for

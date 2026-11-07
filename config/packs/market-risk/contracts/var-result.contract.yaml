@@ -23,7 +23,7 @@ status: active
 title: VaR of a scope (computed)
 description: The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the scope grammar of VAR_GUIDE.md section 5), computed
   when asked by the server's VaR engine as the person asking; never stored.
-source: 'computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.server.var.VarResultEngine)'
+source: 'computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.banking.var.VarResultEngine)'
 grain: One answer per question (the scope asked for and the business date), computed when asked.
 key: []
 dated-by: on request
