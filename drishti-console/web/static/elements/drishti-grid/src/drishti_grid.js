@@ -133,7 +133,8 @@ export class GridModel {
 
   /** @private a measure's format: its column's */
   measureFormat(label) {
-    const v = (this.wells.state.values || []).find((x, i) => this.wells.toView().values[i].as === label);
+    const labels = this.wells.toView().values.map((x) => x.as), i = labels.indexOf(label);
+    const v = i >= 0 ? this.wells.state.values[i] : null;
     const c = v ? this.columns.get(v.colId) : null;
     return c && c.format ? c.format : 'amount0';
   }
