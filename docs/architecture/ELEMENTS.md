@@ -16,10 +16,10 @@
 
 # Drishti Elements: the console's JavaScript as eight reusable libraries
 
-**Status: design, not built** (release 2.9.11.e, product owner 2026-11-07; mock-ups g1 to g4 below, g1 decided). The internal design:
+**Status: design, not built** (release 2.9.11.e, product owner 2026-11-07; mock-ups g1 to g4 below, all decided). The internal design:
 what each library is, what it takes over from today's code, the grid's pivot, the AG Grid-style adapter, the chart spec and the maps,
 packaging and licensing, the documentation of every library, the gallery, the guards, the order in which Drishti's screens move, the
-risks and the questions still open. The renderer, the embed API and Elements 2.x (`<drishti-view>`) are designed in
+risks and the product owner's decisions. The renderer, the embed API and Elements 2.x (`<drishti-view>`) are designed in
 [CLIENT_RENDERER.md](CLIENT_RENDERER.md) and are not repeated here.
 
 ## Contents
@@ -37,7 +37,7 @@ risks and the questions still open. The renderer, the embed API and Elements 2.x
 11. [The guards](#11-the-guards)
 12. [Moving Drishti's screens onto the libraries](#12-moving-drishtis-screens-onto-the-libraries)
 13. [Risks](#13-risks)
-14. [Open decisions for the product owner](#14-open-decisions-for-the-product-owner)
+14. [Decisions of the product owner (2026-11-07)](#14-decisions-of-the-product-owner-2026-11-07)
 15. [Build checklist](#15-build-checklist)
 
 ## 1. Why: one implementation of each thing
@@ -334,7 +334,7 @@ A kind is a module that turns the spec into ECharts options; a domain library re
 appear in the gallery and in Sutras like the general ones.
 
 **Vega-Lite.** Today a BI visual of `type: vega-lite` and a Python visual's Vega-Lite output draw with Vega (845 KB, and an interpreter
-to avoid `unsafe-eval`). Two engines is dual machinery; the choice is open decision O1.
+to avoid `unsafe-eval`). Two engines is dual machinery, so Vega is retired (decision O1, section 14).
 
 ### 7.3 Maps
 
@@ -440,7 +440,7 @@ the screen's tests and screenshots are unchanged or deliberately updated.
 4. **drishti-grid, the pivot**: the Pivot screen and the MR cube, the nested pivot panel, BI's matrix and tables, the basket's sheet, the
    playground's grid, the designer's grid.
 5. **drishti-chart**: the renderer's charts, `drishti_view.js` and `drishti_charts.js`, BI's visuals, Chart any table, history charts,
-   then the maps (`drishti_geomap.js`); Vega-Lite as decided (O1).
+   then the maps (`drishti_geomap.js`); Vega-Lite visuals translated to the spec and Vega deleted (O1).
 6. **drishti-inputs**: controls, forms, pickers, the code and formula editors (Build, Studio, the editors, BI).
 7. **drishti-insight**: About and Explain, search, approvals, workbook export.
 8. **drishti-renderer 2.0.0**: drawn with libraries 1 to 5; `behaviours: 'console'` from libraries.
@@ -456,21 +456,23 @@ the screen's tests and screenshots are unchanged or deliberately updated.
 | Performance at millions of rows | virtual rows and columns from the first commit; a gallery page with 1,000,000 rows and a frame-time budget in the browser suite |
 | An adapter that looks like a clone | clean-room rule (public documentation only), Drishti's look, our own names in code; reviewed before release |
 | Moving every screen is long | ordered by reuse (tables first), one branch per step, the allow list as the progress bar; no screen keeps old code past its step |
-| Two charting engines (Vega and ECharts) | open decision O1 decides before step 5 |
+| Two charting engines (Vega and ECharts) | Vega retired in step 5 (O1); a visual outside the translatable subset is listed and redrawn |
 | Licensing leaks (drishti-risk reachable without a licence) | served by the plugin behind the entitlement and licence check; a guard |
 | Outside users pin old versions | immutable folders, a release train, a deprecation window of one release |
 
-## 14. Open decisions for the product owner
+## 14. Decisions of the product owner (2026-11-07)
 
-| # | Question | Options | Recommendation |
-|---|---|---|---|
-| O1 | **Vega-Lite's future** | (a) retire Vega: translate Vega-Lite visuals to the drishti-chart spec (the common subset: marks, encodings, facets) and let Python visuals return a drishti-chart spec; (b) keep Vega as a second engine for `vega-lite` visuals only | (a): one engine, 845 KB and the expression interpreter gone; visuals outside the subset listed and redrawn once |
-| O2 | **The grid on a phone** | (a) cards: one card per row, the first column as its title; (b) horizontal scroll with the first column pinned; (c) a pivot collapses to one value column with a measure switcher | (b) for grids and (c) for pivots, (a) only where a Sutra asks for cards |
-| O3 | Where libraries 1 to 5 may be used | (a) inside the owner's applications only; (b) any customer application under the product licence | (a) now; (b) with the licensing work |
-| O4 | The standalone Excel export | (a) a small writer in drishti-grid (values, outline, formats); (b) vendor a library | (a): no new dependency, a few hundred lines |
-| O5 | The AG adapter's scope in version 1 | (a) pivot, row grouping, server-side row model, tree data (section 6); (b) also master-detail and integrated charts | (a) |
-| O6 | Mock-ups g2, g3, g4 | g2: A board of cards or B kind studio; g3: A map with ranking or B map over its table; g4: A playground or B documentation page | A for each, with B's parts as options (g2 B is the gallery's chart page, g3 B's table is `table: 'below'`, g4 B's tabs are the published page) |
-| O7 | Names | keep "Drishti Elements" for the family (Elements 2.x becomes part of drishti-renderer) | keep |
+| # | Question | Decided |
+|---|---|---|
+| O1 | **Vega-Lite's future** | **Retire Vega**: Vega-Lite visuals are translated to the drishti-chart spec (the common subset: marks, encodings, facets) and Python visuals return a drishti-chart spec; visuals outside the subset are listed and redrawn once; Vega, its 845 KB and the expression interpreter are deleted |
+| O2 | **The grid on a phone** | grids scroll across with the first column pinned; a pivot collapses to one value column with a measure switcher; cards (one per row, the first column as its title) only where a Sutra asks for them |
+| O3 | Where libraries 1 to 5 may be used | inside the product owner's applications now; any customer application with the licensing work |
+| O4 | The standalone Excel export | a small writer in drishti-grid (values, outline, formats); no new dependency |
+| O5 | The AG adapter's scope in version 1 | pivot, row grouping, the server-side row model and tree data (section 6) |
+| O6 | Mock-ups g2, g3, g4 | **both options of each are built as modes of one component, A the default**: the chart card `mode: 'card'` (g2 A) or `'studio'` (g2 B, the kind rail and the spec beside the chart); the map `mode: 'ranking'` (g3 A) or `'table'` (g3 B, the floating legend, the inset and the table below); the gallery `mode: 'playground'` (g4 A) or `'docs'` (g4 B, the Examples, API, Accessibility and Changelog tabs) |
+| O7 | Names | "Drishti Elements" is the family; Elements 2.x is part of drishti-renderer |
+
+g1 was decided separately: the grid's three layouts (section 5.1).
 
 ## 15. Build checklist
 
@@ -481,9 +483,11 @@ the screen's tests and screenshots are unchanged or deliberately updated.
 - [ ] drishti-grid: virtual rows and columns, columns and menus, ranges and the status bar, filters, tree, editing, export, conditional formats, accessibility
 - [ ] drishti-grid pivot: the three layouts `wells`, `panel` and `terminal` (VaR screens default to `terminal`, others to `wells`), aggregation pickers, value filters, collapsible pivot result columns, totals, server-side model with the request of 5.3, non-additive totals from the server
 - [ ] The AG Grid-style adapter with the table of section 6 as code, and its unknown-option report
-- [ ] drishti-chart: the spec, the general kinds, the data-table alternative, export, Explain; maps with per-country loading
+- [ ] drishti-chart: the spec, the general kinds, the data-table alternative, export, Explain; the chart card's modes `card` (default) and `studio` (g2 A and B); maps with per-country loading and the modes `ranking` (default) and `table` (g3 A and B)
+- [ ] Vega retired (O1): Vega-Lite visuals translated to the spec, Python visuals return a spec, the vendored Vega deleted
+- [ ] The phone behaviour of the grid and the pivot (O2); the standalone Excel writer (O4)
 - [ ] drishti-inputs, drishti-insight, drishti-renderer 2.0.0, drishti-risk (in the banking plugin, licensed)
-- [ ] The gallery (g4 A with B's tabs), every example a test in both themes and three densities, axe clean
+- [ ] The gallery in both modes, `playground` (default) and `docs` (g4 A and B), every example a test in both themes and three densities, axe clean
 - [ ] Documentation per library (section 9): guide, generated API reference with `--check`, tutorial, gallery, the AG Grid migration guide, theming and accessibility guides, changelogs, versioning policy; Help entries
 - [ ] The guards of section 11, the allow list
 - [ ] Every screen moved (section 12) and the old code deleted; the allow list empty
