@@ -1,0 +1,302 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The feature register of the documentation: every major feature has exactly one guide and one tutorial (the owner's rule: one guide and
+# one tutorial per major feature, nothing more for users). Read by tools/docs/docs_gates.py, the docs gates (warn mode until the end of
+# 2.9.11.g, then fail): a feature whose guide or tutorial is missing, a guide or tutorial over its budget by more than 10%, and the counts
+# over their caps are reported.
+#
+# Per feature: id; name; who; guide (the target path under docs/) and guide_budget (hand-written lines); tutorial (the target path, or
+# "after <release>" when it waits for one) and tutorial_budget; domain (core, risk, world); lenses (who sees it in Help: all, or lens
+# ids); section (the Help section); contracts (the contract pages it links to); sources (today's documents that fold into it).
+
+caps:                       # the count caps the gates check
+  guides: 24
+  tutorials: 23
+  reference: 10
+  contracts: 30
+  knowledge: 5
+  help-entries: 65
+budget-tolerance: 0.10      # a guide or tutorial over its budget by more than this is reported
+
+features:
+  - id: F1
+    name: Find anything
+    who: everyone
+    guide: guides/USER_GUIDE.md
+    guide_budget: 1200
+    tutorial: tutorials/01-first-15-minutes.md
+    tutorial_budget: 600
+    domain: core
+    lenses: [all]
+    section: get-started
+    sources: [guides/USER_GUIDE.md, architecture/COLLABORATION.md, tutorials/01-first-15-minutes.md, tutorials/02-look-up-anything.md,
+              tutorials/03-query-by-form.md, tutorials/08-share-and-collaborate.md, tutorials/21-an-entity-over-time.md]
+  - id: F2
+    name: Pivot, cubes and Explain
+    who: analysts, risk
+    guide: guides/PIVOT_GUIDE.md
+    guide_budget: 1200
+    tutorial: tutorials/pivot-cubes-and-explain.md
+    tutorial_budget: 550
+    domain: core
+    lenses: [all]
+    section: analytics
+    contracts: [VAR, PNL]
+    sources: [guides/PIVOT_GUIDE.md, guides/MR_CUBE_GUIDE.md, architecture/PIVOT_ENGINE.md, architecture/FUNCTION_CATALOGUE.md,
+              tutorials/33-the-pivot-engine.md, tutorials/37-custom-functions-and-explain.md, tutorials/38-the-mr-cube-on-the-pivot-engine.md]
+  - id: F3
+    name: Reports and dashboards
+    who: analysts
+    guide: guides/REPORTS_GUIDE.md
+    guide_budget: 1800
+    tutorial: tutorials/reports-and-dashboards.md
+    tutorial_budget: 800
+    domain: core
+    lenses: [all]
+    section: analytics
+    sources: [guides/BI_GUIDE.md, architecture/BI_DESIGN.md, tutorials/09-reports.md, tutorials/10-first-bi-report.md,
+              tutorials/11-bi-that-runs-itself.md, tutorials/12-live-bi-and-boards.md, tutorials/13-govern-bi.md,
+              tutorials/18-several-datasets-in-one-report.md, tutorials/20-statements-and-field-parameters.md]
+  - id: F4
+    name: Notebook and Python
+    who: quants, analysts
+    guide: guides/NOTEBOOK_GUIDE.md
+    guide_budget: 700
+    tutorial: tutorials/notebook-and-python.md
+    tutorial_budget: 450
+    domain: core
+    lenses: [all]
+    section: analytics
+    sources: [guides/BI_GUIDE.md, architecture/PYTHON_COMPUTE.md, tutorials/14-python-and-analyse.md]
+  - id: F5
+    name: AI assistant
+    who: everyone, admin
+    guide: guides/AI_GUIDE.md
+    guide_budget: 700
+    tutorial: tutorials/ai-assistant.md
+    tutorial_budget: 400
+    domain: core
+    lenses: [all]
+    section: analytics
+    sources: [admin/AI.md, tutorials/15-ai-in-drishti.md]
+  - id: F6
+    name: Corrections and approvals
+    who: ops, risk
+    guide: guides/APPROVALS_GUIDE.md
+    guide_budget: 600
+    tutorial: tutorials/correct-and-approve.md
+    tutorial_budget: 300
+    domain: core
+    lenses: [all]
+    section: analytics
+    sources: [guides/WRITE_BACK.md, architecture/COLLABORATION.md, tutorials/24-correct-a-trade-and-approve-it.md]
+  - id: R1
+    name: Value at risk
+    who: risk
+    guide: guides/VAR_GUIDE.md
+    guide_budget: 2500
+    tutorial: tutorials/var-from-the-bank-to-a-trade.md
+    tutorial_budget: 900
+    domain: risk
+    lenses: [risk, trading, cro]
+    section: risk
+    contracts: [VAR, PNL, STR]
+    sources: [guides/VAR_GUIDE.md, architecture/PARAMETRIC_VAR.md, architecture/VAR_PLAYGROUND.md, architecture/VAR_SHARDING.md,
+              tutorials/25-var-from-the-bank-to-a-trade.md, tutorials/43-parametric-var-beside-historical.md]
+  - id: R1r
+    name: Regulatory VaR reporting
+    who: risk, regulatory
+    guide: guides/REGULATORY_VAR_REPORTING.md
+    guide_budget: 850
+    tutorial: "none (a reference guide, by the owner's rule of one regulatory document)"
+    domain: risk
+    lenses: [risk, cro]
+    section: risk
+    contracts: [VAR]
+    sources: [guides/REGULATORY_VAR_REPORTING.md]
+  - id: R2
+    name: Counterparty exposure
+    who: credit risk
+    guide: guides/EXPOSURE_GUIDE.md
+    guide_budget: 1400
+    tutorial: tutorials/exposure-from-the-bank-to-a-trade.md
+    tutorial_budget: 550
+    domain: risk
+    lenses: [risk, cro]
+    section: risk
+    contracts: [EXP, NSET, LIM]
+    sources: [guides/EXPOSURE_GUIDE.md, tutorials/26-exposure-from-the-bank-to-a-trade.md]
+  - id: R3
+    name: FRTB-SA
+    who: capital
+    guide: guides/FRTB_SA_GUIDE.md
+    guide_budget: 600
+    tutorial: tutorials/frtb-sa.md
+    tutorial_budget: 300
+    domain: risk
+    lenses: [risk]
+    section: risk
+    contracts: [FRTB, TVAL]
+    sources: [guides/FRTB_SA_GUIDE.md, architecture/SENSITIVITIES_AND_FRTB_SA.md, tutorials/30-frtb-sa-from-the-cases-to-a-desk.md]
+  - id: R4
+    name: SIMM
+    who: margin
+    guide: guides/SIMM_GUIDE.md
+    guide_budget: 600
+    tutorial: tutorials/simm.md
+    tutorial_budget: 300
+    domain: risk
+    lenses: [risk]
+    section: risk
+    contracts: [SIMM, NSET]
+    sources: [guides/SIMM_GUIDE.md, tutorials/32-simm-from-the-examples-to-a-netting-set.md]
+  - id: R5
+    name: Groupings and analytics
+    who: risk
+    guide: guides/GROUPINGS_ANALYTICS_GUIDE.md
+    guide_budget: 800
+    tutorial: tutorials/groupings-and-analytics.md
+    tutorial_budget: 500
+    domain: risk
+    lenses: [risk, trading]
+    section: risk
+    contracts: [TRADING_GROUPINGS, GRP]
+    sources: [guides/GROUPINGS_ANALYTICS_GUIDE.md, tutorials/27-groupings-and-analytics.md]
+  - id: R6
+    name: The bank's data
+    who: data teams
+    guide: guides/BANK_DATA_GUIDE.md
+    guide_budget: 1200
+    tutorial: tutorials/a-day-of-bank-data.md
+    tutorial_budget: 400
+    domain: risk
+    lenses: [risk, trading, market]
+    section: data
+    sources: [tutorials/07-load-data-daily.md]
+  - id: W1
+    name: World data
+    who: research, macro
+    guide: guides/WORLD_DATA_GUIDE.md
+    guide_budget: 1500
+    tutorial: tutorials/world-data.md
+    tutorial_budget: 500
+    domain: world
+    lenses: [world]
+    section: data
+    sources: [guides/FUNDS_GUIDE.md, guides/EXTERNAL_DATA.md, tutorials/28-funds-and-etfs.md]
+  - id: B1
+    name: Connect and load
+    who: builders, ops
+    guide: guides/DATA_GUIDE.md
+    guide_budget: 1500
+    tutorial: tutorials/connect-and-load.md
+    tutorial_budget: 700
+    domain: core
+    lenses: [all]
+    section: data
+    sources: [guides/DATA_GUIDE.md, guides/LAKE_GUIDE.md, guides/IN_MEMORY_LAKE_GUIDE.md, connectors/CONNECTORS.md, connectors/CONNECTOR_FILES.md,
+              connectors/TLS.md, connectors/DEMO_DATA.md, tutorials/04-connect-your-data.md, tutorials/34-one-file-per-lake.md,
+              tutorials/36-load-files-with-the-data-inbox.md, tutorials/31-news-in-memory-only.md]
+  - id: B2
+    name: Tables and models
+    who: builders
+    guide: guides/TABLES_GUIDE.md
+    guide_budget: 800
+    tutorial: tutorials/tables-and-models.md
+    tutorial_budget: 400
+    domain: core
+    lenses: [all]
+    section: build
+    sources: [guides/TABLES_GUIDE.md, tutorials/44-virtual-tables-and-models.md]
+  - id: B3
+    name: Packs and screens
+    who: builders
+    guide: guides/BUILD_GUIDE.md
+    guide_budget: 2000
+    tutorial: tutorials/build-a-pack-and-a-screen.md
+    tutorial_budget: 700
+    domain: core
+    lenses: [all]
+    section: build
+    sources: [guides/PACK_DEVELOPER_GUIDE.md, guides/SUTRA_DEVELOPER_GUIDE.md, guides/SCHEMA_TO_PACK_GUIDE.md, tutorials/05-build-a-pack.md,
+              tutorials/06-design-a-screen.md, tutorials/23-computed-panels.md]
+  - id: B4
+    name: Data out
+    who: developers
+    guide: guides/FLIGHT_GUIDE.md
+    guide_budget: 500
+    tutorial: tutorials/data-out.md
+    tutorial_budget: 300
+    domain: core
+    lenses: [all]
+    section: data
+    sources: [guides/FLIGHT_GUIDE.md, tutorials/35-data-out-with-arrow-flight.md]
+  - id: B5
+    name: Embed
+    who: developers
+    guide: guides/EMBED_GUIDE.md
+    guide_budget: 800
+    tutorial: tutorials/embed-drishti.md
+    tutorial_budget: 300
+    domain: core
+    lenses: [all]
+    section: build
+    sources: [architecture/CLIENT_RENDERER.md, tutorials/16-embed-drishti.md]
+  - id: B6
+    name: Extend
+    who: developers
+    guide: guides/DEVELOPER_GUIDE.md
+    guide_budget: 1200
+    tutorial: after 2.9.11.e
+    tutorial_budget: 400
+    domain: core
+    lenses: [admin, developer]
+    section: build
+    sources: [connectors/CONNECTOR_DEVELOPER_GUIDE.md, guides/PACK_DEVELOPER_GUIDE.md, guides/API_GUIDE.md]
+  - id: O1
+    name: Install and operate
+    who: operators
+    guide: guides/OPERATIONS_GUIDE.md
+    guide_budget: 2500
+    tutorial: tutorials/run-it-in-production.md
+    tutorial_budget: 400
+    domain: core
+    lenses: [admin]
+    section: operate
+    sources: [guides/GETTING_STARTED.md, admin/OPERATIONS.md, guides/OPERATIONALISING.md, guides/TROUBLESHOOTING.md, guides/TOOLS.md,
+              tutorials/17-run-it-in-production.md]
+  - id: O2
+    name: Clusters and scale
+    who: operators
+    guide: guides/CLUSTER_GUIDE.md
+    guide_budget: 1500
+    tutorial: tutorials/a-cluster-of-three.md
+    tutorial_budget: 400
+    domain: core
+    lenses: [admin]
+    section: operate
+    sources: [architecture/CLUSTER_DEPLOYMENT.md, architecture/RESOURCES_AND_SCALE.md, admin/PERFORMANCE.md, architecture/VAR_SHARDING.md,
+              tutorials/19-a-cluster-of-three.md]
+  - id: O3
+    name: People, access and editions
+    who: administrators
+    guide: guides/ADMIN_GUIDE.md
+    guide_budget: 1200
+    tutorial: after 2.9.11.h
+    tutorial_budget: 350
+    domain: core
+    lenses: [admin]
+    section: operate
+    sources: [admin/USER_MANAGEMENT.md, admin/EDITIONS.md, architecture/COMPUTE_ENGINES.md]

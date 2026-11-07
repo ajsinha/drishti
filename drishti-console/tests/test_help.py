@@ -210,7 +210,7 @@ def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages()
     assert [c["name"] for c in catalogue["sections"]] == ["Get started", "Risk measures", "Analytics and BI", "Data", "Build", "Operate",
                                                            "Reference", "Knowledge", "Internal"]
     assert next(c for c in catalogue["sections"] if c["id"] == "internal")["roles"] == ["admin"]
-    total = len(_pages(catalogue))
+    total = len([g for g in _pages(catalogue) if not g.get("roles")])     # what a customer sees: Internal's admin-only pages are not counted
     # 47: the 45 pages plus VaR's two (the VaR guide and tutorial 25), the product owner's request of 2026-10-26: VaR help is two pages.
     # 49: plus exposure's two (the exposure guide and tutorial 26), the same rule (each measure has exactly two documents and two entries).
     # 51: plus the groupings and analytics' two (the guide and tutorial 27, 2.9.2), the same rule.
@@ -227,6 +227,8 @@ def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages()
     # 2.9.11.b's data inbox, custom functions and MR cube tutorials raised the ceiling to 70; 2.9.11.c's lake and Flight pages to 72.
     # 73: plus Schema to pack (docs/guides/SCHEMA_TO_PACK_GUIDE.md, 2.9.11.c), split from the data guide when it passed 1,500 lines.
     # 75: plus virtual tables' two (the tables guide and tutorial 44, 2.9.11.d), the same rule (a feature's guide and tutorial).
+    # 2.9.11.g: counted without the admin-only Internal pages (the competitive analysis, the contracts of engines not built); the test-data
+    # samples page became Data contracts and the generated connector reference joined Reference; the docs plan brings it to about 60.
     assert 30 <= total <= 75, total
 
 

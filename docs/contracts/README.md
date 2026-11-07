@@ -387,10 +387,11 @@ are the contracts.
   command, valid, pages current).
 
 **The guides' data sections.** Each measure or feature guide (VaR, exposure, FRTB-SA, SIMM, the market-risk cube, funds, groupings and
-analytics, pivot) has a section listing every dataset the feature reads: what it is for, whether it is required, its sample files and one
-real record from `data/testdata`, formatted. `tools/docs/guide_data.py` writes those sections from `tools/docs/guide_data.yaml` and these
-contracts (the key, the field and required counts, the link to the pack's page); `--check` fails when a section is stale or shows a field
-its kind's contract does not have ([TOOLS.md](../guides/TOOLS.md)).
+analytics, pivot) has a short table of every kind the feature reads: whether it is needed, what for, and a link to the kind's section here.
+The contract pages are the one home of the fields and of one example record per kind (formatted, long arrays shortened `/* … N more … */`,
+from `data/testdata`, written by `tools/contracts.py docs` through `tools/docs/examples.py`); the guides and the packs' guides repeat
+neither. `tools/docs/guide_data.py` writes the guides' tables from `tools/docs/guide_data.yaml`; `--check` fails when a table is stale or a
+kind has no contract ([TOOLS.md](../guides/TOOLS.md)).
 
 ### Every kind, A to Z
 

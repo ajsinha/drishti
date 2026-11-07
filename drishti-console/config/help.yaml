@@ -39,7 +39,7 @@ most-used:
 aliases: { start: get-started, use: get-started, bi: analytics, packs: data, layouts: build }
 
 # An unlisted document's section, by its top folder under docs/ ("" for the top-level *.md; any other folder: default).
-documents: { connectors: data, contracts: data, admin: operate, guides: reference, architecture: build, tutorials: get-started,
+documents: { connectors: data, contracts: data, reference: reference, admin: operate, guides: reference, architecture: build, tutorials: get-started,
              knowledge: knowledge, qa: build, "": operate, default: build }
 
 # A pack's own guides join their section under this group, at its end.
@@ -192,6 +192,9 @@ sections:
       - title: "What's new"
         guides:
           - { slug: release-notes, doc: ../RELEASE_NOTES.md, title: Release notes, icon: tag, summary: "What each release contains and its known limits." }
+      - title: "Connectors"
+        guides:
+          - { slug: connector-reference, doc: reference/CONNECTORS.md, title: "Connector reference", icon: plug, summary: "Every connector the plugins provide, generated from the plugin READMEs: what each does, its capabilities, its setting keys, authentication, licence and Windows notes, each linking to the plugin's README for the settings explained, the data structure and examples." }
   - id: knowledge
     name: Knowledge
     icon: lightbulb
