@@ -17,7 +17,7 @@
    (wells, open state, the answer: computed in the browser for rows in the page, asked of the server for the rest, non-additive totals
    always the server's), selection, keyboard focus, the viewport, export, copy and the Explain hook. It knows nothing of the DOM or of
    the layout: wells, panel and terminal are shells over the same state (getState carries the layout's name only to give it back). */
-import { EventBus } from '../../drishti-core/src/drishti_index.js';
+import { EventBus, toCsv } from '../../drishti-core/src/drishti_index.js';
 import { ColumnModel, getValue, formatValue } from './drishti_columns.js';
 import { ClientRowModel } from './drishti_client-rows.js';
 import { ServerRowModel } from './drishti_server-rows.js';
@@ -27,7 +27,7 @@ import { GridNavigator } from './drishti_keyboard.js';
 import { WellsModel } from './drishti_wells.js';
 import { PivotState, pivotLocal, pivotApplyUpdates, serverRequest, mergeAnswer, applyValueFilters, resultColumns, cellValue } from './drishti_pivot.js';
 import { GridLive } from './drishti_grid-live.js';
-import { toCsv, toXlsx } from './drishti_export.js';
+import { toXlsx } from './drishti_export.js';
 import { cycleSort } from './drishti_sort-filter.js';
 
 /** The layouts a grid is drawn in (the visual shell; the model is the same). */

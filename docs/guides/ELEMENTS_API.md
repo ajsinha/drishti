@@ -24,6 +24,8 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 |---|---|---|
 | [drishti-core](#drishti-core) | 1.0.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts |
 | [drishti-grid](#drishti-grid) | 0.2.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities) |
+| [drishti-chart](#drishti-chart) | 0.1.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
+| [drishti-risk](#drishti-risk) | 0.1.0 | The banking module's chart kinds on drishti-chart (licensed with the module): the P&L distribution with VaR and ES, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit |
 
 ## drishti-core
 
@@ -932,6 +934,87 @@ Shows a toast in the page's shared tray (made on first use).
 | `t` | `(ToastOptions\|string)` | the options, or the text |
 
 Returns `?{element: HTMLElement, close: function(): void}`.
+
+### drishti_dom.js
+
+#### `h(doc, tag, p, children)`
+
+Makes an element: classes, text, attributes, data, CSSOM styles (never a style attribute), listeners and children.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `tag` | `string` |  |
+| `[p]` | `{cls: string, text: string, attrs: Object&lt;string, string&gt;, data: Object&lt;string, string&gt;, style: Object&lt;string, string&gt;, on: Object&lt;string, function(Event): void&gt;}` |  |
+| `[children]` | `Array&lt;(Node\|string\|null)&gt;` |  |
+
+Returns `HTMLElement`.
+
+#### `placeAt(el, x, y)`
+
+Keeps a floating element inside the window: at (x, y), moved left or up when it would leave it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `HTMLElement` |  |
+| `x` | `number` |  |
+| `y` | `number` |  |
+
+Returns `void`.
+
+### drishti_files.js
+
+#### `toCsv(t, o)`
+
+The table as CSV text.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `t` | `ExportTable` |  |
+| `[o]` | `{formatted: boolean, separator: string, bom: boolean}` | formatted: values as shown (named formats), else raw (default); separator default ","; bom default true |
+
+Returns `string`.
+
+#### `download(doc, name, content, type)`
+
+Hands the person a file: text, bytes or a data: URL, through a blob link (nothing leaves the page).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `name` | `string` | the file's name |
+| `content` | `(string\|Uint8Array\|Blob)` | text, bytes, a Blob, or a data: URL (a PNG from a canvas) |
+| `[type='text/plain']` | `string` | the MIME type of text or bytes |
+
+Returns `void`.
+
+### drishti_explain.js
+
+#### `sparkline(doc, values, limit, prefix)`
+
+A small line of figures over time, as SVG (the colours are the style sheet's: .&lt;prefix&gt;-spark).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `values` | `number[]` |  |
+| `[limit]` | `number` | a dashed line at the limit |
+| `[prefix='dx']` | `string` | the class prefix of the component drawing it (dg: the grid, dc: the chart) |
+
+Returns `SVGElement`.
+
+#### `renderExplain(el, st, mode, o)`
+
+Draws an Explain state into its place: 'drawer' and 'card' one column, 'split' three panes (the explanation, the worst scenarios, the trend).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `HTMLElement` | the place |
+| `st` | `?ExplainState` | nothing yet: the hint of how to ask |
+| `mode` | `('drawer'\|'card'\|'split')` |  |
+| `[o]` | `{onClose: function(): void, explainable: boolean, prefix: string, hint: string}` | onClose: a close button; prefix: the component's class prefix (default dx); hint: the words shown before anything is asked |
+
+Returns `void`.
 
 ### drishti_loader.js
 
@@ -2229,17 +2312,6 @@ Returns `Array&lt;Array&lt;string&gt;&gt;`.
 
 ### drishti_export.js
 
-#### `toCsv(t, o)`
-
-The table as CSV text.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `t` | `ExportTable` |  |
-| `[o]` | `{formatted: boolean, separator: string, bom: boolean}` | formatted: values as shown (named formats), else raw (default); separator default ","; bom default true |
-
-Returns `string`.
-
 #### `crc32(b)`
 
 CRC-32 of bytes (the zip's checksum).
@@ -3231,31 +3303,6 @@ Returns `void`.
 
 ### drishti_grid-dom.js
 
-#### `h(doc, tag, p, children)`
-
-Makes an element: classes, text, attributes, data, CSSOM styles (never a style attribute), listeners and children.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `doc` | `Document` |  |
-| `tag` | `string` |  |
-| `[p]` | `{cls: string, text: string, attrs: Object&lt;string, string&gt;, data: Object&lt;string, string&gt;, style: Object&lt;string, string&gt;, on: Object&lt;string, function(Event): void&gt;}` |  |
-| `[children]` | `Array&lt;(Node\|string\|null)&gt;` |  |
-
-Returns `HTMLElement`.
-
-#### `placeAt(el, x, y)`
-
-Keeps a floating element inside the window: at (x, y), moved left or up when it would leave it.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `el` | `HTMLElement` |  |
-| `x` | `number` |  |
-| `y` | `number` |  |
-
-Returns `void`.
-
 #### class `Menu`
 
 A menu: items (drishti_grid-ui.js MenuItem) as role menu, opened at a point or under an element; the arrows move, Enter or Space runs, Escape and a click outside close; focus goes back to where it was.
@@ -3857,6 +3904,1302 @@ Returns `boolean`: whether it was defined now (false: no registry, or defined al
 #### `install(root)`
 
 Starts drishti-grid in a page (the bundle calls it when it loads; nothing happens without a document): defines &lt;drishti-grid&gt;.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `Window` |  |
+
+Returns `void`.
+
+## drishti-chart
+
+Version 0.1.0. Bundle `static/elements/drishti-chart/drishti_chart.js`, global `Drishti.elements.chart`; requires drishti-core.
+
+### drishti_chart-spec.js
+
+#### `registerKind(name, def, o)`
+
+Registers a kind (a domain library's too). A name already taken is refused unless replace is said.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `def` | `KindDef` |  |
+| `[o]` | `{replace: boolean}` |  |
+
+Returns `void`.
+
+#### `kindOf(name)`
+
+A registered kind, or null.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+
+Returns `?KindDef`.
+
+#### `kindList()`
+
+The registered kinds in the order they were registered: name, label and family.
+
+Returns `Array&lt;{name: string, label: string, family: string, cartesian: boolean}&gt;`.
+
+#### `KIND_ALIASES`
+
+The aliases a spec may use for a kind.
+
+#### `checkSpec(spec)`
+
+A spec's problems, each with its path: an unknown kind, a missing field, a condition that does not read, a value of the wrong kind.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` |  |
+
+Returns `Array&lt;{path: string, message: string}&gt;`.
+
+#### `normalizeSpec(spec)`
+
+A spec ready to draw: the kind's alias resolved, x, y and value as objects, the defaults filled in (legend at the bottom, click to Explain, every export, the data table on). The spec given is not changed.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` |  |
+
+Returns `Object`.
+
+#### `specText(spec, o)`
+
+The spec as people read it: two-space JSON with the keys in a stable order (kind, title, data first); inline rows shortened to their count so the spec stays readable beside the chart.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` |  |
+| `[o]` | `{rows: boolean}` | rows: keep inline rows whole (copy spec does) |
+
+Returns `string`.
+
+### drishti_chart-data.js
+
+#### `rowsOf(data)`
+
+The rows of a spec's data as objects.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `data` | `*` | an array of objects, {rows: [...]} (objects, or arrays with columns), {values: [...]} or a server answer {columns: [names or {name}], rows: [[...]]} |
+
+Returns `Object[]`.
+
+#### `fieldOf(enc)`
+
+The name of the field an encoding names: "DESK", {field: "DESK"}, or null.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `enc` | `*` |  |
+
+Returns `?string`.
+
+#### `num(v)`
+
+A number, or null when the value is not one.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `?number`.
+
+#### `members(rows, field, order)`
+
+The members of a field in the order they first appear (or the order given; members not in it follow).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `Object[]` |  |
+| `field` | `string` |  |
+| `[order]` | `string[]` |  |
+
+Returns `string[]`.
+
+#### `sumBy(rows, key, field)`
+
+The sum of a field over rows grouped by keys (a wide table from long rows): {key: sum}.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `Object[]` |  |
+| `key` | `function(Object): string` |  |
+| `field` | `string` |  |
+
+Returns `Map&lt;string, number&gt;`.
+
+#### `bin(values, o)`
+
+The bins of a histogram: equal widths over the values' range (or the extent given), each with its count.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `values` | `number[]` |  |
+| `[o]` | `{bins: number, extent: number[]}` | bins default 20 (Sturges' rule when "auto") |
+
+Returns `Array&lt;{x0: number, x1: number, count: number}&gt;`.
+
+#### `quantile(sorted, p)`
+
+A quantile of sorted numbers (linear between the two nearest, as R's type 7).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `sorted` | `number[]` | ascending |
+| `p` | `number` | 0 to 1 |
+
+Returns `?number`.
+
+#### `boxStats(values)`
+
+The five figures of a box (whiskers at the furthest values within 1.5 IQR) and the values beyond them.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `values` | `number[]` |  |
+
+Returns `?{box: number[], outliers: number[], n: number}`: box: [low whisker, Q1, median, Q3, high whisker].
+
+#### `quantileBreaks(values, classes)`
+
+The class breaks of a quantile scale: classes - 1 breaks, each the value at its quantile of the values with a figure.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `values` | `Array&lt;?number&gt;` | null: no data |
+| `[classes=5]` | `number` |  |
+
+Returns `{breaks: number[], min: ?number, max: ?number}`.
+
+#### `classOf(v, breaks)`
+
+The class of a value under quantile breaks: 0 to breaks.length, or -1 for no data.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+| `breaks` | `number[]` |  |
+
+Returns `number`.
+
+#### `compileCondition(text)`
+
+Reads a condition into a function of a row: comparisons (&lt; &lt;= &gt; &gt;= == != === !==) of numbers, strings and fields (a bare name, or datum.name and datum['name'] as Vega-Lite writes them), arithmetic (+ - * /, unary minus), !, && and \|\|, and brackets. Nothing else (no calls, no assignments): an unreadable condition is an error with its place.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` | for example "hypothetical &lt; -var99" or "datum.MTM &lt; 0" |
+
+Returns `function(Object): *`.
+
+#### `conditionFields(text)`
+
+The fields a condition reads (for the data table and the spec's checks).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `string[]`.
+
+### drishti_chart-theme.js
+
+#### `CHART_DENSITIES`
+
+The densities: font size, the chart's inner padding, the symbol size and the line width.
+
+#### `blend(a, b, f)`
+
+A colour between two (each a hex or rgb() colour), as rgb().
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `a` | `string` |  |
+| `b` | `string` |  |
+| `f` | `number` | 0 is a, 1 is b |
+
+Returns `string`.
+
+#### `alpha(c, a)`
+
+A colour with an alpha, as rgba().
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `c` | `string` |  |
+| `a` | `number` | 0 to 1 |
+
+Returns `string`.
+
+#### `chartTheme(o)`
+
+The chart's theme: the tokens it draws with, the categorical palette, the tones a spec names, the ramps of scales and the density.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `{element: Element, theme: string, density: string, tokens: Object&lt;string, string&gt;}` | element: read the page's computed tokens on it; theme: read a theme of the table instead; tokens: given outright (tests) |
+
+Returns `ChartTheme`.
+
+#### `toneColour(th, tone, i)`
+
+A tone a spec names (good, bad, warn, accent, muted ...) as its colour, or the colour itself, or the palette's nth.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `th` | `ChartTheme` |  |
+| `tone` | `*` | a name, a colour, or a number (the palette's index) |
+| `[i]` | `number` | the palette's index when tone is empty |
+
+Returns `string`.
+
+#### `rampColour(ramp, v, lo, hi)`
+
+The colour of a value on a ramp (five colours) between lo and hi.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ramp` | `string[]` |  |
+| `v` | `number` |  |
+| `lo` | `number` |  |
+| `hi` | `number` |  |
+
+Returns `string`.
+
+#### `formatterFor(f)`
+
+A formatter for a spec's format: a drishti-core named format (amount0, pct2, compact ...), money (compact, two decimals), number, integer, percent, bp, date, {currency: 'USD'}, or a function. Nothing given: a compact figure for large values, else up to two decimals.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `f` | `*` |  |
+
+Returns `function(*): string`.
+
+#### `textStyle(th, colour)`
+
+The text style of the chart's words at the density.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `th` | `ChartTheme` |  |
+| `[colour]` | `string` | default: faint |
+
+Returns `Object`.
+
+#### `axisOf(th, base, fmt)`
+
+An axis of the theme: its line, ticks, split lines and labels with their formatter.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `th` | `ChartTheme` |  |
+| `base` | `Object` | the ECharts axis (type, data, name ...) |
+| `[fmt]` | `function(*): string` | the labels' formatter (value axes) |
+
+Returns `Object`.
+
+### drishti_chart-kinds.js
+
+#### `rowId(spec, row, i)`
+
+The id of a row (the spec's id field, else its index).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` |  |
+| `row` | `Object` |  |
+| `i` | `number` |  |
+
+Returns `string`.
+
+#### `seriesDefs(spec, rows)`
+
+The series a spec draws over x: a list of fields (wide rows), one series per member of a field ({by}: long rows, y.field the value), or y's field alone.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` |  |
+| `rows` | `Object[]` |  |
+
+Returns `Array&lt;{name: string, field: string, test: ?function(Object): boolean, def: Object}&gt;`.
+
+#### `annotationMarks(spec, rows, th, o)`
+
+The annotations of a spec as ECharts mark lines, mark areas and mark points of a series (the first one drawn).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` |  |
+| `rows` | `Object[]` |  |
+| `th` | `Object` | the chart theme |
+| `o` | `{horizontal: boolean, fmt: function(*): string, xfmt: function(*): string}` |  |
+
+Returns `Object} {markLine, markArea, markPoint`: for the series.
+
+#### `buildSeriesChart(spec, rows, env)`
+
+Line, area and bar: categories (or time, or values) on one axis, one series per field or member, with stacks, percent stacks, negated series, dashed styles, a right-hand axis, conditional marks and annotations.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` |  |
+| `rows` | `Object[]` |  |
+| `env` | `{theme: Object, fmt: function(*): string, xfmt: function(*): string}` |  |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `buildScatter(spec, rows, env)`
+
+Scatter and bubble: two value axes, a series per colour member, a size field scaled by area for bubbles.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` |  |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `buildHistogram(spec, rows, env)`
+
+Histogram: the values of a field in equal bins (a value axis, so lines at a value, VaR's for one, sit where they belong), with the tail beyond a value in its own tone.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | bins (a count or "auto"), tail {below\|above: a number or a field of the first row, tone} |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `buildWaterfall(spec, rows, env)`
+
+Waterfall: each step's change from the one before, as floating bars, with totals (the first, the last, or rows marked by a field) drawn from zero; increases and decreases in their tones.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | category, value, totals (['first', 'last'] or {field}), up and down (tones; default good and bad) |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `buildBoxplot(spec, rows, env)`
+
+Box plot: the five figures of a field's values per category (whiskers at 1.5 IQR) and the values beyond them as points.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | category, value |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `buildHeatmap(spec, rows, env)`
+
+Heatmap: a value at each (x, y) pair of categories, coloured on a sequential or diverging scale (diverging is centred on mid, 0 by default), with the legend's scale under it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | x, y, value, scale {type: 'sequential'\|'diverging', mid}, labels |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `buildCandlestick(spec, rows, env)`
+
+Candlestick: open, close, low and high of each date, up in the good tone and down in the bad one.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | x (the date), open, close, low, high (fields) |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `buildLayers(spec, rows, env, kindOf, rowsOfSpec)`
+
+Layers: several cartesian specs over the same axes (a strip of dots with a tick at each median; bars with a line), the data and the encodings a layer leaves out taken from the spec around it, categories the union of every layer's.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | layers: [specs] |
+| `rows` | `Object[]` | the spec's rows (a layer with no data of its own uses them) |
+| `env` | `Object` |  |
+| `kindOf` | `function(string): ?Object` | the kind registry's lookup |
+| `rowsOfSpec` | `function(Object): Object[]` | a layer's rows |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `registerAxisKinds()`
+
+Registers the kinds of this module (the library's entry calls it once).
+
+Returns `void`.
+
+### drishti_chart-kinds2.js
+
+#### `buildPie(spec, rows, env)`
+
+Pie and donut: a value per category (summed), the largest first unless the spec keeps its order; small slices beyond top folded into "Other".
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | category, value, top (default 12), sort (false: as given) |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `buildGauge(spec, rows, env)`
+
+Gauge: one figure against its range, with bands in tones (a limit's green, amber and red).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | value ({field} of the first row, or {value}), min, max, bands [{to, tone}], format |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `buildTreemap(spec, rows, env)`
+
+Treemap: a value nested by levels of fields (desk, then book), each top-level member in its palette colour.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | levels (fields, outermost first) or category, value |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `buildSankey(spec, rows, env)`
+
+Sankey: flows from a source to a target with a value (the links summed), nodes in palette colours.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | source, target, value (fields) |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `registerOtherKinds()`
+
+Registers the kinds of this module (the library's entry calls it once).
+
+Returns `void`.
+
+### drishti_chart-geo.js
+
+#### `equalEarth(lon, lat)`
+
+The Equal Earth projection (Šavrič, Patterson and Jenny, 2018): equal area, the world's shapes kept pleasant.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `lon` | `number` | degrees |
+| `lat` | `number` | degrees |
+
+Returns `number[]`: [x, y] (y down).
+
+#### `albers(o)`
+
+An Albers equal-area conic projection with two standard parallels.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `{p1: number, p2: number, p0: number, l0: number}` | standard parallels, the origin's latitude and the central meridian |
+
+Returns `function(number, number): number[]`: (lon, lat) to [x, y] (y down).
+
+#### `plateCarree(midLat, l0)`
+
+A plate carrée scaled at a latitude (for a country where a conic does not fit).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `midLat` | `number` |  |
+| `l0` | `number` | the central meridian |
+
+Returns `function(number, number): number[]`.
+
+#### `projectGeometry(g, fn)`
+
+A projected copy of a GeoJSON geometry (Polygon, MultiPolygon, Point).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `g` | `Object` |  |
+| `fn` | `function(number, number): number[]` |  |
+
+Returns `Object`.
+
+#### `bounds(pts)`
+
+The box of points [[x, y], ...]: [minX, minY, maxX, maxY].
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `pts` | `number[][]` |  |
+
+Returns `number[]`.
+
+#### `coreExtent(features)`
+
+The extent a country's map is fitted to (lon/lat): its rings near the area-weighted centre, so far-away parts (France's overseas regions) do not shrink the mainland; they stay on the map, reachable by panning.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `features` | `Object[]` | GeoJSON features (polygons; points ignored) |
+
+Returns `{lon0: number, lat0: number, lat1: number, lonMin: number, lonMax: number}`.
+
+#### `countryProjection(iso3, features)`
+
+The projection of a country's regions: Albers for the United States and Canada (Statistics Canada's parallels), a conic fitted to the country's core extent otherwise, a scaled plate carrée where a conic cannot fit (the parallels on both sides of the equator).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `iso3` | `string` |  |
+| `features` | `Object[]` |  |
+
+Returns `{name: string, project: function(number, number): number[], extent: Object}`.
+
+#### `US_INSETS`
+
+The insets of the United States: Alaska and Hawaii, each in its own Albers, scaled and set under the lower 48's south-west.
+
+#### `prepareRegions(geo)`
+
+A country's regions projected: polygons named by their ISO 3166-2 code (so the engine's map matches data by code), the small ones as points, the extent to fit, and for the United States Alaska and Hawaii moved into insets with their frames.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `geo` | `Object` | regions/&lt;ISO3&gt;.json |
+
+Returns `RegionGeo`.
+
+#### `prepareWorld(geo, pts)`
+
+The world projected (Equal Earth): countries named by ISO alpha-3, the small ones (world-points.json) as points.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `geo` | `Object` | world-countries.json |
+| `[pts]` | `Array&lt;{iso3: string, iso2: string, name: string, lon: number, lat: number}&gt;` | world-points.json |
+
+Returns `RegionGeo`.
+
+#### `findPlace(geo, code)`
+
+The place a code or name means on a level: an ISO alpha-3 or alpha-2 country, an ISO 3166-2 region ("US-CA"), a region's code without its country ("CA" on the United States' map) or an English name; null when the map has no such place.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `geo` | `RegionGeo` |  |
+| `code` | `*` |  |
+
+Returns `?{code: string, name: string}`.
+
+#### `createGeoLoader(o)`
+
+A loader of the shapes: the world once, each country's regions the first time they are asked, cached for the session (a failed load is forgotten, so it can be asked again).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `{base: string, fetchJson: function(string): Promise&lt;Object&gt;}` | base: the maps folder ("/static/vendor/echarts/maps/"); fetchJson: how to read a file (default: fetch, same origin) |
+
+Returns `{world: function(): Promise&lt;RegionGeo&gt;, regions: function(string): Promise&lt;RegionGeo&gt;, hasRegions: function(string): boolean, loads: string[]}`.
+
+### drishti_chart-map.js
+
+#### `mapMetrics(spec)`
+
+The metrics a map offers (its picker): the spec's metrics, or its value alone.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` |  |
+
+Returns `Array&lt;{field: string, title: string, format: *}&gt;`.
+
+#### `placeValues(spec, rows, geo, metric)`
+
+Each place's value on a level: the rows matched to places (by the place field: an ISO code or a name) and summed per place; places without a figure keep null (no data); rows that match no place are counted.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` |  |
+| `rows` | `Object[]` |  |
+| `geo` | `import('./drishti_chart-geo.js').RegionGeo` |  |
+| `metric` | `{field: string}` |  |
+
+Returns `{places: Array&lt;{code: string, name: string, point: boolean, v: ?number, r: number[], ids: string[]}&gt;, unmatched: number}`.
+
+#### `mapScale(places, th, scale)`
+
+The choropleth's scale: quantile classes (each with its range, colour and count of places, and the no-data count) or a continuous ramp; colourOf gives a value's colour, classOf its class.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `places` | `Array&lt;{v: ?number}&gt;` |  |
+| `th` | `Object` | the chart theme |
+| `[scale]` | `{type: ('quantile'\|'continuous'), classes: number}` |  |
+
+Returns `{type: string, classes: Array&lt;{from: number, to: number, colour: string, count: number}&gt;, nodata: number, min: ?number, max: ?number, colourOf: function(?number): ?string, classOf: function(?number): number}`.
+
+#### `ranking(places, n)`
+
+The top places by value (largest first), with their share of the level's total.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `places` | `Array&lt;{code: string, name: string, v: ?number}&gt;` |  |
+| `[n=10]` | `number` |  |
+
+Returns `Array&lt;{code: string, name: string, v: number, share: number, rank: number}&gt;`.
+
+#### `buildMap(spec, rows, geo, env)`
+
+The map as the engine draws it, with what the view shows around it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | normalised |
+| `rows` | `Object[]` |  |
+| `geo` | `import('./drishti_chart-geo.js').RegionGeo` | projected shapes of the level |
+| `env` | `{theme: Object, mapName: string, metric: Object, highlight: ?number, selected: string[], hatch: *}` | mapName: the name the shapes are registered under; highlight: a legend class to keep bright; selected: place codes outlined; hatch: the no-data fill (a pattern; default the theme's no-data colour) |
+
+Returns `Object} {option, places, scale, ranking, table, summary, unmatched, legend`.
+
+#### `registerMapKind()`
+
+Registers the map kind: its build needs the shapes, so the view draws it (drishti_map-view.js); the registry lists it for the studio and the spec's checks.
+
+Returns `void`.
+
+### drishti_chart-vega.js
+
+#### `colourTone(c)`
+
+A colour as the tone people meant: red is bad, green good, orange or amber accent, grey muted, anything else link.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `c` | `string` | a CSS colour (hex or a name) |
+
+Returns `string`.
+
+#### `d3Format(f)`
+
+A d3 number format as drishti-core's named format (or a format object): ",.0f" amount0, ",.2f" amount2, ".0%" pct0, ".2%" pct2, "~s" and ".2s" compact, "$,.0f" amount0; null when there is no near match.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `f` | `string` |  |
+
+Returns `*`.
+
+#### `fromVegaLite(vl, o)`
+
+A Vega-Lite specification as a drishti-chart spec, with every part that did not translate.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `vl` | `Object` | the Vega-Lite specification (data inline; a url is refused) |
+| `[o]` | `{rows: Object[], title: string}` | rows: the data when the specification has none (a BI visual's own rows) |
+
+Returns `{spec: ?Object, unsupported: string[], refused: ?string}`: refused: why nothing was drawn (a url, nothing to draw).
+
+### drishti_chart-parts.js
+
+#### `valueText(p, fmt)`
+
+A mark's figure in words, by its series type (a bar's value, a box's five figures, a bin's range and count, a flow's value).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `p` | `Object` | an engine event's params (seriesType, value, data, percent) |
+| `fmt` | `function(*): string` | the value format |
+
+Returns `string`.
+
+#### `tooltipElement(doc, params, o)`
+
+The tooltip: a heading (the axis value or the mark's name) and one line per series with its swatch; an element, built with the DOM.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `params` | `(Object\|Object[])` | the engine's params (an array for an axis tooltip) |
+| `o` | `{fmt: function(*): string, xfmt: function(*): string, names: function(Object): string}` |  |
+
+Returns `HTMLElement`.
+
+#### `dataTable(doc, table, caption, o)`
+
+The data table: a caption (the chart's description), the columns' headings and every row formatted as on the chart; the first column is the row's heading.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `table` | `{columns: Array&lt;{header: string, format: *}&gt;, rows: Array&lt;Array&lt;*&gt;&gt;}` |  |
+| `caption` | `string` |  |
+| `[o]` | `{limit: number}` | limit: the most rows drawn (default 2,000; the CSV has every row) |
+
+Returns `HTMLElement`.
+
+#### `legendElement(doc, entries, o)`
+
+The legend's entries: buttons that hide and show their series (aria-pressed), or plain keys where the entries are not series.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `entries` | `Array&lt;{name: string, colour: string, style: string}&gt;` |  |
+| `o` | `{toggles: boolean, hidden: Set&lt;string&gt;, onToggle: function(string): void}` |  |
+
+Returns `HTMLElement`.
+
+#### `markSelection(option, ids, th)`
+
+Marks the selected rows' marks: an outline over each (a cartesian chart), or the slices selected (a pie). Rows are matched by id.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `option` | `Object` | the engine's option (changed in place) |
+| `ids` | `Set&lt;string&gt;` | the selected row ids |
+| `th` | `Object` | the chart theme |
+
+Returns `number`: how many marks are marked.
+
+#### `addZoom(option, spec, built, th)`
+
+The overview window and drag-to-zoom of a cartesian chart: an 'inside' zoom on the wheel, a slider with the series' shape under the chart, and the engine's drag-select (the card takes the global cursor after drawing). A window of indexes ([150, 250]) or values.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `option` | `Object` | changed in place |
+| `spec` | `Object` |  |
+| `built` | `Object` | the kind's answer (its table gives an index's value) |
+| `th` | `Object` |  |
+
+Returns `boolean`: whether the chart zooms.
+
+#### `svgOf(E, option, width, height)`
+
+The chart as SVG text, drawn off screen by the engine's server-side renderer at the card's size (the export's SVG).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `E` | `Object` | the engine (echarts) |
+| `option` | `Object` |  |
+| `width` | `number` |  |
+| `height` | `number` |  |
+
+Returns `string`.
+
+### drishti_map-view.js
+
+#### `MAP_MODES`
+
+A map's modes: ranking (g3 A, the default) and table (g3 B).
+
+#### `geoLoader(base, fetchJson)`
+
+The shared loader of a maps folder (one per folder in a page: every map of the page shares its cache).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `base` | `string` |  |
+| `[fetchJson]` | `function(string): Promise&lt;Object&gt;` |  |
+
+Returns `Object`.
+
+#### class `MapView`
+
+The map's view inside a Chart: the level, its shapes and rows, the legend, ranking, table, breadcrumb and drill.
+
+##### `new MapView(chart)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `chart` | `Object` | the Chart it draws in |
+
+##### `MapView.remount()`
+
+Attaches to the card again (after the chart's mode changed): the breadcrumb, the metric picker, the side column or the table, events.
+
+Returns `MapView`.
+
+##### `MapView.metric()`
+
+The metric shown (the picker's).
+
+Returns `Object`.
+
+##### `MapView.load()`
+
+Loads the spec's level (the world, or a country's regions) and draws it.
+
+Returns `Promise&lt;void&gt;`.
+
+##### `MapView.drill(iso3)`
+
+Opens a country's first-level regions (loaded once, then from the cache).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `iso3` | `string` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `MapView.back()`
+
+Back to the world.
+
+Returns `Promise&lt;void&gt;`.
+
+##### `MapView.draw()`
+
+Draws the level: the map, the legend, the ranking or the table, the breadcrumb and the status line.
+
+Returns `void`.
+
+##### `MapView.pick(code, o)`
+
+Selects a place: its figure in the side column or card, its rows to a linked grid.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `code` | `string` |  |
+| `[o]` | `{explain: boolean}` |  |
+
+Returns `void`.
+
+##### `MapView.setMode(mode)`
+
+Switches the mode: ranking (g3 A) or table (g3 B).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `mode` | `('ranking'\|'table')` |  |
+
+Returns `void`.
+
+##### `MapView.table()`
+
+The table of places (the CSV export).
+
+Returns `{columns: Object[], rows: Array&lt;Array&lt;*&gt;&gt;}`.
+
+##### `MapView.svgOption()`
+
+What the SVG export changes: the hatching (a canvas pattern) drawn as the plain no-data colour.
+
+Returns `Object`.
+
+### drishti_chart-studio.js
+
+#### class `Studio`
+
+The studio mode's frame around a Chart: the kind rail, the table under the chart, the spec and its options.
+
+##### `new Studio(chart)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `chart` | `Object` | the Chart (its card goes in the middle) |
+
+##### `Studio.update(built)`
+
+Draws the rail, the options and the spec for what the chart shows now.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `built` | `Object` | the kind's answer (its table goes under the chart) |
+
+Returns `void`.
+
+##### `Studio.destroy()`
+
+Leaves the studio (the chart goes back to a card).
+
+Returns `void`.
+
+### drishti_chart-view.js
+
+#### `CHART_EVENTS`
+
+Every event a chart emits (on chart.events and as DOM events drishti:&lt;kebab-name&gt; on its element).
+
+#### `CHART_MODES`
+
+The modes of a chart: card (g2 A, the default) and studio (g2 B).
+
+#### `SELECTION_EVENT`
+
+The selection's event on drishti-core's bus: {channel, ids, source}.
+
+#### class `Chart`
+
+A chart: the spec drawn in its card (or studio), with its tools, Explain, selection, export and live data.
+
+##### `new Chart(el, spec, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `HTMLElement` | where the chart lives |
+| `spec` | `Object` | the chart's spec (drishti_chart-spec.js) |
+| `[o]` | `ChartOptions` |  |
+
+##### `Chart.setSpec(spec, o)`
+
+Replaces the spec (the studio's kind rail does; a page may too) and draws it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` |  |
+| `[o]` | `{draw: boolean}` | draw default true |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `Chart.draw()`
+
+Draws the chart again from its rows (after a theme, density, data or selection change; live updates come here throttled).
+
+Returns `void`.
+
+##### `Chart.emit(name, detail)`
+
+Emits an event on chart.events and as a DOM event drishti:&lt;kebab-name&gt; on the element.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` | one of CHART_EVENTS |
+| `[detail]` | `Object` |  |
+
+Returns `void`.
+
+##### `Chart.markContext(p)`
+
+The context of a mark, as the Explain hook gets it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `p` | `Object` | the engine's event params (seriesIndex, dataIndex, data, name, value) |
+
+Returns `Object} {kind, title, series, field, value, text, category, rows, ids`.
+
+##### `Chart.setSelection(ids, o)`
+
+Selects rows by id: their marks are outlined; tells the linked grid (unless silent).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+| `[o]` | `{silent: boolean}` | silent: a selection that came from the link (not sent back) |
+
+Returns `void`.
+
+##### `Chart.selection()`
+
+The ids selected.
+
+Returns `string[]`.
+
+##### `Chart.explain(ctx)`
+
+Explains a mark through the hook, in the side sheet (the grid's drawing of an ExplainResult).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ctx` | `Object` | a mark's context (markContext) |
+
+Returns `Promise&lt;*&gt;`.
+
+##### `Chart.toggleTable(open)`
+
+Shows or hides the data table (the accessible alternative) in place of the drawing.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[open]` | `boolean` | default: the other state |
+
+Returns `void`.
+
+##### `Chart.toggleSeries(name)`
+
+Hides or shows a series (a legend entry).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+
+Returns `void`.
+
+##### `Chart.export(what)`
+
+Exports the chart: a PNG at twice the pixels, an SVG drawn off screen, the data as CSV, or the spec (copied, and handed back).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `what` | `('png'\|'svg'\|'csv'\|'spec')` |  |
+
+Returns `string`: the content (a data URL for PNG).
+
+##### `Chart.apply(tx)`
+
+Applies a transaction by row id (the spec's id field): rows added, updated (merged) and removed; drawn again, throttled.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `tx` | `{add: Object[], update: Object[], remove: Array&lt;(string\|Object)&gt;}` |  |
+
+Returns `{added: number, updated: number, removed: number}`.
+
+##### `Chart.append(rows)`
+
+Appends rows (a feed's new points), drawn again throttled; the spec's live.keep caps how many stay.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `Object[]` |  |
+
+Returns `void`.
+
+##### `Chart.replace(rows)`
+
+Replaces every row.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `Object[]` |  |
+
+Returns `void`.
+
+##### `Chart.setMode(mode)`
+
+Switches the mode: card (g2 A) or studio (g2 B).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `mode` | `('card'\|'studio')` |  |
+
+Returns `void`.
+
+##### `Chart.setMapMode(mode)`
+
+Switches a map's mode: ranking (g3 A) or table (g3 B); nothing for other kinds.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `mode` | `('ranking'\|'table')` |  |
+
+Returns `void`.
+
+##### `Chart.setDensity(d)`
+
+Switches the density: comfortable, compact or terminal (the grid's three).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `d` | `('comfortable'\|'compact'\|'terminal')` |  |
+
+Returns `void`.
+
+##### `Chart.destroy()`
+
+Stops the chart: the engine, the observers, the link.
+
+Returns `void`.
+
+### drishti_chart-link.js
+
+#### `linkGrid(grid, o)`
+
+Links a drishti-grid (the Grid, the element's grid, or its GridModel) to a selection channel: its row selection is published, and a selection published by a chart selects the grid's rows.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `grid` | `Object` |  |
+| `o` | `{channel: string, bus: Object}` | the channel the charts share; bus default drishti-core's |
+
+Returns `function(): void`: unlinks.
+
+#### `publishSelection(channel, ids, o)`
+
+Publishes a selection on a channel (a page's own control, a test).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `channel` | `string` |  |
+| `ids` | `string[]` |  |
+| `[o]` | `{bus: Object, source: *}` |  |
+
+Returns `void`.
+
+### drishti_chart-element.js
+
+#### `CHART_ELEMENT`
+
+The element's tag name.
+
+#### `defineChartElement(registry, win)`
+
+Defines &lt;drishti-chart&gt; in a registry (once; the bundle does it when it loads in a page).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[registry]` | `CustomElementRegistry` | default: the window's |
+| `[win]` | `Window` | the window whose HTMLElement the element extends |
+
+Returns `boolean`: whether it was defined now.
+
+### drishti_index.js
+
+#### `install(root)`
+
+Starts drishti-chart in a page (the bundle calls it when it loads; nothing happens without a document): defines &lt;drishti-chart&gt;.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `Window` |  |
+
+Returns `void`.
+
+## drishti-risk
+
+Version 0.1.0. Bundle `static/elements/drishti-risk/drishti_risk.js`, global `Drishti.elements.risk`; requires drishti-core, drishti-chart.
+
+### drishti_risk-kinds.js
+
+#### `TRAFFIC_LIGHT`
+
+The Basel backtest zones over 250 days: exceptions to the zone, and the plus factor of each count.
+
+#### `trafficLight(n)`
+
+The zone and plus factor of a count of exceptions.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `n` | `number` | exceptions in the window |
+
+Returns `{zone: ('green'\|'amber'\|'red'), plus: number}`.
+
+#### `tailFigures(pnl, varConf, esConf)`
+
+VaR and ES of scenario P&L (positive numbers: losses), as a page with no server computes them: VaR the loss at the quantile, ES the mean of the losses beyond it. Inside Drishti these figures come from the server.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `pnl` | `number[]` |  |
+| `varConf` | `number` | for example 0.99 |
+| `esConf` | `number` | for example 0.975 |
+
+Returns `{var: ?number, es: ?number}`.
+
+#### `tenorText(t)`
+
+A tenor in years as people write it (0.25: 3M, 1: 1Y, 0.02: 1W).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `t` | `?number` |  |
+
+Returns `string`.
+
+#### `eepeOf(tenors, ee)`
+
+Effective EPE: the time-weighted mean of effective EE (its running maximum) over the first year, as a page with no server computes it. Inside Drishti the server's figure comes in the spec.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `tenors` | `number[]` | in years, ascending |
+| `ee` | `number[]` |  |
+
+Returns `?number`.
+
+#### `buildPnlDistribution(spec, rows, env)`
+
+The P&L distribution with VaR and ES.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | value (the P&L field), var and es (the server's figures), confidence {var, es}, bins |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `Object`.
+
+#### `buildBacktest(spec, rows, env)`
+
+The backtest: P&L against minus VaR, exceptions marked, the traffic light on the card.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | x (the date field), pnl (default hypothetical), var (the VaR field; drawn negated), actual (another P&L field), window (default 250) |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `Object`.
+
+#### `buildExposureProfile(spec, rows, env)`
+
+The exposure profile: EE and PFE over the tenors (a log axis by default), EEPE over the first year, the limit, a breach of it marked.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | x (tenor in years), ee, pfe, eepe (the server's), limit, log (default true) |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `Object`.
+
+#### `buildVarChange(spec, rows, env)`
+
+What moved VaR from one day to the next: a waterfall where an increase is bad and a decrease good.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | category (the step), value (the change; the first and last rows are the two days' VaR) |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `Object`.
+
+#### `registerRiskKinds()`
+
+Registers the risk kinds in drishti-chart's registry (the library does it when it loads, and only where the banking module is licensed: the console serves this library to no one else).
+
+Returns `string[]`: the kinds registered now.
+
+### drishti_index.js
+
+#### `RISK_KINDS`
+
+The kinds this library adds to drishti-chart.
+
+#### `install(root)`
+
+Starts drishti-risk in a page (the bundle calls it): the kinds are registered already, when the module is read.
 
 | Parameter | Type | Meaning |
 |---|---|---|

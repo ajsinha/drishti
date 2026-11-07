@@ -25,8 +25,7 @@ import { aggFunc } from './drishti_aggregate.js';
 import { XLSX_TYPE } from './drishti_export.js';
 import { columnMenuItems, cellMenuItems, FUNCTION_KEYS, parseCondition, pivotMeasures } from './drishti_grid-ui.js';
 import { LAYOUTS, DENSITIES } from './drishti_grid.js';
-import { openDialog } from '../../drishti-core/src/drishti_index.js';
-import { h } from './drishti_grid-dom.js';
+import { openDialog, h } from '../../drishti-core/src/drishti_index.js';
 
 /**
  * A key on the grid: the view's own keys first, then the engine's navigator; the focus scrolled into view.

@@ -22,7 +22,7 @@
    The toolbar (pivot, expand, collapse, pin totals, formatting, export, view), the status bar (the rows, the pivot's source, figures
    still asked of the server, the value filters, the selection's count, sum, average, min and max with the non-additive warning), the
    command line and the function keys are drawn here; what they run is drishti_grid-actions.js. */
-import { h } from './drishti_grid-dom.js';
+import { h } from '../../drishti-core/src/drishti_index.js';
 import { formatValue } from './drishti_columns.js';
 import { rangeStats } from './drishti_selection.js';
 import { renderExplain } from './drishti_grid-explain.js';

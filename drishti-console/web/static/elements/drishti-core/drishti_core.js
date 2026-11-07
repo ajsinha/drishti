@@ -339,6 +339,27 @@
     }
     return { "parseDate": parseDate, "daysInMonth": daysInMonth, "isoDate": isoDate, "today": today, "formatDate": formatDate, "formatDateRange": formatDateRange, "isBusinessDay": isBusinessDay, "addBusinessDays": addBusinessDays, "previousBusinessDay": previousBusinessDay, "businessDaysBetween": businessDaysBetween };
   })();
+  /* ---- src/drishti_dom.js ---- */
+  __m["src/drishti_dom.js"] = (function () {
+    function h(doc, tag, p, children) {
+      const el = doc.createElement(tag);
+      p = p || {};
+      if (p.cls) { el.className = p.cls; }
+      if (p.text !== undefined && p.text !== null) { el.textContent = p.text; }
+      if (p.attrs) { Object.keys(p.attrs).forEach((k) => { if (p.attrs[k] !== null && p.attrs[k] !== undefined && p.attrs[k] !== false) { el.setAttribute(k, p.attrs[k] === true ? '' : String(p.attrs[k])); } }); }
+      if (p.data) { Object.keys(p.data).forEach((k) => { el.dataset[k] = p.data[k]; }); }
+      if (p.style) { Object.keys(p.style).forEach((k) => { el.style.setProperty(k, p.style[k]); }); }
+      if (p.on) { Object.keys(p.on).forEach((k) => el.addEventListener(k, p.on[k])); }
+      (children || []).forEach((c) => { if (c !== null && c !== undefined) { el.appendChild(typeof c === 'string' ? doc.createTextNode(c) : c); } });
+      return el;
+    }
+    function placeAt(el, x, y) {
+      const win = el.ownerDocument.defaultView, r = el.getBoundingClientRect();
+      el.style.left = Math.max(4, Math.min(x, win.innerWidth - r.width - 8)) + 'px';
+      el.style.top = Math.max(4, Math.min(y, win.innerHeight - r.height - 8)) + 'px';
+    }
+    return { "h": h, "placeAt": placeAt };
+  })();
   /* ---- src/drishti_events.js ---- */
   __m["src/drishti_events.js"] = (function () {
     class EventBus {
@@ -375,6 +396,79 @@
     function createBus(o) { return new EventBus(o); }
     const bus = new EventBus();
     return { "EventBus": EventBus, "createBus": createBus, "bus": bus };
+  })();
+  /* ---- src/drishti_explain.js ---- */
+  __m["src/drishti_explain.js"] = (function () {
+    var h = __m["src/drishti_dom.js"].h;
+    const SVG = 'http://www.w3.org/2000/svg';
+    function sparkline(doc, values, limit, prefix) {
+      const P = prefix || 'dx';
+      const w = 280, ht = 90, svg = doc.createElementNS(SVG, 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + ht);
+      svg.setAttribute('class', P + '-spark');
+      svg.setAttribute('role', 'img');
+      svg.setAttribute('aria-label', 'trend of ' + values.length + ' points, last ' + (values.length ? values[values.length - 1] : ''));
+      const all = values.concat(typeof limit === 'number' ? [limit] : []);
+      const lo = Math.min.apply(null, all), hi = Math.max.apply(null, all), span = hi - lo || 1;
+      const y = (v) => (ht - 8 - (ht - 16) * (v - lo) / span).toFixed(1);
+      const pts = values.map((v, i) => (values.length > 1 ? (i * (w - 4) / (values.length - 1) + 2) : w / 2).toFixed(1) + ',' + y(v)).join(' ');
+      const line = doc.createElementNS(SVG, 'polyline');
+      line.setAttribute('points', pts);
+      line.setAttribute('class', P + '-spark-line');
+      svg.appendChild(line);
+      if (typeof limit === 'number') {
+        const l = doc.createElementNS(SVG, 'line');
+        [['x1', 0], ['x2', w], ['y1', y(limit)], ['y2', y(limit)]].forEach(([k, v]) => l.setAttribute(k, String(v)));
+        l.setAttribute('class', P + '-spark-limit');
+        svg.appendChild(l);
+      }
+      return svg;
+    }
+    function main(doc, r, P) {
+      const out = h(doc, 'div', { cls: P + '-ex-main' });
+      out.appendChild(h(doc, 'h3', { cls: P + '-ex-title', text: 'Explain' + (r.title ? ' · ' + r.title : '') }));
+      if (r.value) { out.appendChild(h(doc, 'div', { cls: P + '-ex-value', text: r.value })); }
+      if (r.scope) { out.appendChild(h(doc, 'div', { cls: P + '-ex-scope', text: r.scope })); }
+      if (r.steps && r.steps.length) {
+        out.appendChild(h(doc, 'ol', { cls: P + '-ex-steps' }, r.steps.map((s) => h(doc, 'li', {}, [h(doc, 'span', { text: s.label }), h(doc, 'span', { cls: P + '-ex-fig', text: s.value || '' })]))));
+      }
+      if (r.parts && r.parts.length) {
+        const mx = Math.max.apply(null, r.parts.map((p) => Math.abs(p.value || 0)).concat([1e-9]));
+        out.appendChild(h(doc, 'div', { cls: P + '-ex-sub', text: r.partsTitle || 'Made of' }));
+        out.appendChild(h(doc, 'div', { cls: P + '-ex-bars' }, r.parts.slice(0, 8).map((p) => h(doc, 'div', { cls: P + '-ex-bar' }, [
+          h(doc, 'span', { text: p.label }),
+          h(doc, 'span', { cls: P + '-ex-track' }, [h(doc, 'span', { cls: P + '-ex-fill' + ((p.value || 0) < 0 ? ' ' + P + '-neg' : ''), style: { width: Math.round(100 * Math.abs(p.value || 0) / mx) + '%' } })]),
+          h(doc, 'span', { cls: P + '-ex-fig', text: p.text || String(p.value) })]))));
+      }
+      if (r.note) { out.appendChild(h(doc, 'p', { cls: P + '-ex-note', text: r.note })); }
+      if (r.links && r.links.length) { out.appendChild(h(doc, 'div', { cls: P + '-ex-links' }, r.links.map((l) => h(doc, 'a', { text: l.label, attrs: { href: l.href || '#' } })))); }
+      return out;
+    }
+    function renderExplain(el, st, mode, o) {
+      const doc = el.ownerDocument;
+      o = o || {};
+      const P = o.prefix || 'dx';
+      el.textContent = '';
+      if (o.onClose && st) { el.appendChild(h(doc, 'button', { cls: P + '-ex-close', text: '×', attrs: { type: 'button', 'aria-label': 'Close Explain' }, on: { click: o.onClose } })); }
+      if (!st) {
+        el.appendChild(h(doc, 'div', { cls: P + '-ex-main' }, [h(doc, 'h3', { cls: P + '-ex-title', text: 'Explain' }),
+          h(doc, 'p', { cls: P + '-ex-hint', text: o.hint || (o.explainable === false ? 'There is no Explain hook here.' : 'Select a figure and press ' + (mode === 'split' ? 'F2' : 'E') + ': how it was made, its scope and what drives it.') })]));
+        return;
+      }
+      if (st.loading) { el.appendChild(h(doc, 'div', { cls: P + '-ex-main ' + P + '-ex-loading', attrs: { 'aria-busy': 'true' } }, [h(doc, 'h3', { cls: P + '-ex-title', text: 'Explain' }), h(doc, 'p', { text: 'Asking how this figure was made…' })])); return; }
+      if (st.error) { el.appendChild(h(doc, 'div', { cls: P + '-ex-main' }, [h(doc, 'h3', { cls: P + '-ex-title', text: 'Explain' }), h(doc, 'p', { cls: P + '-ex-error', text: String(st.error.message || st.error) })])); return; }
+      const r = st.result;
+      if (r && typeof r === 'object' && typeof r.nodeType === 'number') { el.appendChild(r); return; }
+      const res = typeof r === 'string' ? { note: r } : (r || {});
+      if (mode !== 'split') { el.appendChild(main(doc, res, P)); return; }
+      const worst = h(doc, 'div', { cls: P + '-ex-pane' }, [h(doc, 'h3', { cls: P + '-ex-title', text: 'Worst scenarios' })]);
+      (res.scenarios || []).slice(0, 10).forEach((s, i) => worst.appendChild(h(doc, 'div', { cls: P + '-ex-row' }, [h(doc, 'i', { text: String(i + 1) }), h(doc, 'span', { text: s.label }), h(doc, 'span', { cls: P + '-ex-fig ' + P + '-neg', text: s.value })])));
+      if (!(res.scenarios || []).length) { worst.appendChild(h(doc, 'p', { cls: P + '-ex-hint', text: 'No scenarios for this figure.' })); }
+      const trend = h(doc, 'div', { cls: P + '-ex-pane' }, [h(doc, 'h3', { cls: P + '-ex-title', text: 'Trend' })]);
+      if (res.trend && res.trend.length) { trend.appendChild(sparkline(doc, res.trend, res.limit, P)); } else { trend.appendChild(h(doc, 'p', { cls: P + '-ex-hint', text: 'No history for this figure.' })); }
+      el.append(h(doc, 'div', { cls: P + '-ex-pane' }, [main(doc, res, P)]), worst, trend);
+    }
+    return { "sparkline": sparkline, "renderExplain": renderExplain };
   })();
   /* ---- src/drishti_formats-table.js ---- */
   __m["src/drishti_formats-table.js"] = (function () {
@@ -647,6 +741,43 @@
       }
     }
     return { "MINUS": MINUS, "EMPTY": EMPTY, "MASK": MASK, "plainDigits": plainDigits, "roundHalfUp": roundHalfUp, "group": group, "formatNumber": formatNumber, "formatPercent": formatPercent, "formatBasisPoints": formatBasisPoints, "formatCurrency": formatCurrency, "COMPACT_UNITS": COMPACT_UNITS, "formatCompact": formatCompact, "defineFormats": defineFormats, "hasFormat": hasFormat, "namedFormat": namedFormat, "formatNames": formatNames, "formatSpec": formatSpec, "formatNamed": formatNamed, "formatter": formatter };
+  })();
+  /* ---- src/drishti_files.js ---- */
+  __m["src/drishti_files.js"] = (function () {
+    var formatNamed = __m["src/drishti_format.js"].formatNamed, hasFormat = __m["src/drishti_format.js"].hasFormat;
+    var isoDate = __m["src/drishti_dates.js"].isoDate;
+    function toCsv(t, o) {
+      o = o || {};
+      const sep = o.separator || ',';
+      const cell = (v, c) => {
+        let s;
+        if (v === null || v === undefined) { s = ''; }
+        else if (o.formatted && c && typeof c.format === 'string' && hasFormat(c.format)) { s = formatNamed(c.format, v); }
+        else if (v instanceof Date) { s = isoDate(v); }
+        else { s = String(v); }
+        return s.indexOf(sep) >= 0 || /["\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      };
+      const lines = [t.columns.map((c) => cell(c.header)).join(sep)];
+      t.rows.forEach((r) => lines.push(r.map((v, i) => cell(v, t.columns[i])).join(sep)));
+      return (o.bom === false ? '' : '﻿') + lines.join('\r\n') + '\r\n';
+    }
+    function download(doc, name, content, type) {
+      const win = doc.defaultView;
+      const a = doc.createElement('a');
+      let url = null;
+      if (typeof content === 'string' && content.indexOf('data:') === 0) { a.href = content; } else {
+        const blob = content instanceof win.Blob ? content : new win.Blob([content], { type: type || 'text/plain' });
+        url = win.URL.createObjectURL(blob);
+        a.href = url;
+      }
+      a.download = name;
+      a.hidden = true;
+      doc.body.appendChild(a);
+      a.click();
+      a.remove();
+      if (url) { win.setTimeout(() => win.URL.revokeObjectURL(url), 1000); }
+    }
+    return { "toCsv": toCsv, "download": download };
   })();
   /* ---- src/drishti_resize.js ---- */
   __m["src/drishti_resize.js"] = (function () {
@@ -1021,7 +1152,8 @@
           "css": [
             "css/drishti_tokens.css",
             "css/drishti_resize.css"
-          ]
+          ],
+          "scripts": []
         },
         "drishti-grid": {
           "version": "0.2.0",
@@ -1034,7 +1166,37 @@
           ],
           "css": [
             "elements/drishti-grid/drishti_grid.css"
+          ],
+          "scripts": []
+        },
+        "drishti-chart": {
+          "version": "0.1.0",
+          "title": "The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec",
+          "bundle": "drishti-chart/drishti_chart.js",
+          "entry": "drishti-chart/src/drishti_index.js",
+          "global": "chart",
+          "requires": [
+            "drishti-core"
+          ],
+          "css": [
+            "elements/drishti-chart/drishti_chart.css"
+          ],
+          "scripts": [
+            "vendor/echarts/echarts.min.js"
           ]
+        },
+        "drishti-risk": {
+          "version": "0.1.0",
+          "title": "The banking module's chart kinds on drishti-chart (licensed with the module): the P&L distribution with VaR and ES, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit",
+          "bundle": "drishti-risk/drishti_risk.js",
+          "entry": "drishti-risk/src/drishti_index.js",
+          "global": "risk",
+          "requires": [
+            "drishti-core",
+            "drishti-chart"
+          ],
+          "css": [],
+          "scripts": []
         }
       }
     });
@@ -1082,6 +1244,22 @@
       l.setAttribute('data-drishti-elements', href);
       doc.head.appendChild(l);
     }
+    const scripts = {};
+    function addScript(doc, src) {
+      const plain = src.split('?')[0];
+      if (scripts[plain]) { return scripts[plain]; }
+      const present = Array.prototype.some.call(doc.querySelectorAll('script[src]'), (x) => (x.getAttribute('src') || '').split('?')[0] === plain);
+      if (present) { return (scripts[plain] = Promise.resolve()); }
+      scripts[plain] = new Promise((resolve, reject) => {
+        const s = doc.createElement('script');
+        s.src = src;
+        s.async = false;
+        s.onload = () => resolve();
+        s.onerror = () => { delete scripts[plain]; reject(new Error('Could not load ' + src)); };
+        doc.head.appendChild(s);
+      });
+      return scripts[plain];
+    }
     function loadOne(name) {
       if (loaded(name)) { return Promise.resolve(loaded(name)); }
       if (state.pending[name]) { return state.pending[name]; }
@@ -1089,7 +1267,8 @@
       const doc = r.document;
       if (!doc) { return Promise.reject(new Error('load: ' + name + ' is not loaded, and there is no page to load it into (under Node: require its bundle)')); }
       l.css.forEach((c) => addCss(doc, staticBase() + c + '?v=' + l.version));
-      state.pending[name] = new Promise((resolve, reject) => {
+      const engine = (l.scripts || []).reduce((p, src) => p.then(() => addScript(doc, staticBase() + src)), Promise.resolve());
+      state.pending[name] = engine.then(() => new Promise((resolve, reject) => {
         const s = doc.createElement('script');
         s.src = base() + l.bundle + '?v=' + l.version;
         s.async = false;
@@ -1097,7 +1276,8 @@
         s.onload = () => { delete state.pending[name]; const api = loaded(name); if (api) { resolve(api); } else { reject(new Error(name + ' loaded but did not register itself')); } };
         s.onerror = () => { delete state.pending[name]; reject(new Error('Could not load ' + name + ' ' + l.version + ' from ' + s.src)); };
         doc.head.appendChild(s);
-      });
+      }));
+      state.pending[name].catch(() => { delete state.pending[name]; });
       return state.pending[name];
     }
     function load(names) {
@@ -1666,7 +1846,7 @@
       D.elements.load = load;
       if (root.document && root.requestAnimationFrame) { installResize(root); }
     }
-    return { "install": install, "MINUS": __m["src/drishti_format.js"].MINUS, "EMPTY": __m["src/drishti_format.js"].EMPTY, "MASK": __m["src/drishti_format.js"].MASK, "COMPACT_UNITS": __m["src/drishti_format.js"].COMPACT_UNITS, "plainDigits": __m["src/drishti_format.js"].plainDigits, "roundHalfUp": __m["src/drishti_format.js"].roundHalfUp, "group": __m["src/drishti_format.js"].group, "formatNumber": __m["src/drishti_format.js"].formatNumber, "formatPercent": __m["src/drishti_format.js"].formatPercent, "formatBasisPoints": __m["src/drishti_format.js"].formatBasisPoints, "formatCurrency": __m["src/drishti_format.js"].formatCurrency, "formatCompact": __m["src/drishti_format.js"].formatCompact, "defineFormats": __m["src/drishti_format.js"].defineFormats, "hasFormat": __m["src/drishti_format.js"].hasFormat, "namedFormat": __m["src/drishti_format.js"].namedFormat, "formatNames": __m["src/drishti_format.js"].formatNames, "formatSpec": __m["src/drishti_format.js"].formatSpec, "formatNamed": __m["src/drishti_format.js"].formatNamed, "formatter": __m["src/drishti_format.js"].formatter, "parseDate": __m["src/drishti_dates.js"].parseDate, "daysInMonth": __m["src/drishti_dates.js"].daysInMonth, "isoDate": __m["src/drishti_dates.js"].isoDate, "today": __m["src/drishti_dates.js"].today, "formatDate": __m["src/drishti_dates.js"].formatDate, "formatDateRange": __m["src/drishti_dates.js"].formatDateRange, "isBusinessDay": __m["src/drishti_dates.js"].isBusinessDay, "addBusinessDays": __m["src/drishti_dates.js"].addBusinessDays, "previousBusinessDay": __m["src/drishti_dates.js"].previousBusinessDay, "businessDaysBetween": __m["src/drishti_dates.js"].businessDaysBetween, "DEFAULT_THEME": __m["src/drishti_theme.js"].DEFAULT_THEME, "THEME_STORAGE_KEY": __m["src/drishti_theme.js"].THEME_STORAGE_KEY, "TEXT_TOKENS": __m["src/drishti_theme.js"].TEXT_TOKENS, "GROUND_TOKENS": __m["src/drishti_theme.js"].GROUND_TOKENS, "themes": __m["src/drishti_theme.js"].themes, "scheme": __m["src/drishti_theme.js"].scheme, "currentTheme": __m["src/drishti_theme.js"].currentTheme, "setTheme": __m["src/drishti_theme.js"].setTheme, "token": __m["src/drishti_theme.js"].token, "tokens": __m["src/drishti_theme.js"].tokens, "parseColor": __m["src/drishti_theme.js"].parseColor, "luminance": __m["src/drishti_theme.js"].luminance, "contrastRatio": __m["src/drishti_theme.js"].contrastRatio, "readableOn": __m["src/drishti_theme.js"].readableOn, "contrastProblems": __m["src/drishti_theme.js"].contrastProblems, "AS_OF_HEADER": __m["src/drishti_api.js"].AS_OF_HEADER, "ApiError": __m["src/drishti_api.js"].ApiError, "errorWords": __m["src/drishti_api.js"].errorWords, "ApiClient": __m["src/drishti_api.js"].ApiClient, "createClient": __m["src/drishti_api.js"].createClient, "api": __m["src/drishti_api.js"].api, "call": __m["src/drishti_api.js"].call, "EventBus": __m["src/drishti_events.js"].EventBus, "createBus": __m["src/drishti_events.js"].createBus, "bus": __m["src/drishti_events.js"].bus, "FOCUSABLE": __m["src/drishti_a11y.js"].FOCUSABLE, "focusable": __m["src/drishti_a11y.js"].focusable, "trapFocus": __m["src/drishti_a11y.js"].trapFocus, "announce": __m["src/drishti_a11y.js"].announce, "rovingIndex": __m["src/drishti_a11y.js"].rovingIndex, "rovingTabindex": __m["src/drishti_a11y.js"].rovingTabindex, "installResize": __m["src/drishti_resize.js"].installResize, "scanResize": __m["src/drishti_resize.js"].scanResize, "resizeHandle": __m["src/drishti_resize.js"].resizeHandle, "resetResize": __m["src/drishti_resize.js"].resetResize, "WORKBENCH": __m["src/drishti_keys.js"].WORKBENCH, "LAYOUT": __m["src/drishti_keys.js"].LAYOUT, "interpretPanelKey": __m["src/drishti_keys.js"].interpretPanelKey, "GridKeys": __m["src/drishti_keys.js"].GridKeys, "keyName": __m["src/drishti_keys.js"].keyName, "normalizeKey": __m["src/drishti_keys.js"].normalizeKey, "keymap": __m["src/drishti_keys.js"].keymap, "openDialog": __m["src/drishti_overlay.js"].openDialog, "closeDialog": __m["src/drishti_overlay.js"].closeDialog, "openDrawer": __m["src/drishti_overlay.js"].openDrawer, "ToastTray": __m["src/drishti_overlay.js"].ToastTray, "toast": __m["src/drishti_overlay.js"].toast, "configure": __m["src/drishti_loader.js"].configure, "manifest": __m["src/drishti_loader.js"].manifest, "libraryVersion": __m["src/drishti_loader.js"].libraryVersion, "requirements": __m["src/drishti_loader.js"].requirements, "loaded": __m["src/drishti_loader.js"].loaded, "load": __m["src/drishti_loader.js"].load };
+    return { "install": install, "MINUS": __m["src/drishti_format.js"].MINUS, "EMPTY": __m["src/drishti_format.js"].EMPTY, "MASK": __m["src/drishti_format.js"].MASK, "COMPACT_UNITS": __m["src/drishti_format.js"].COMPACT_UNITS, "plainDigits": __m["src/drishti_format.js"].plainDigits, "roundHalfUp": __m["src/drishti_format.js"].roundHalfUp, "group": __m["src/drishti_format.js"].group, "formatNumber": __m["src/drishti_format.js"].formatNumber, "formatPercent": __m["src/drishti_format.js"].formatPercent, "formatBasisPoints": __m["src/drishti_format.js"].formatBasisPoints, "formatCurrency": __m["src/drishti_format.js"].formatCurrency, "formatCompact": __m["src/drishti_format.js"].formatCompact, "defineFormats": __m["src/drishti_format.js"].defineFormats, "hasFormat": __m["src/drishti_format.js"].hasFormat, "namedFormat": __m["src/drishti_format.js"].namedFormat, "formatNames": __m["src/drishti_format.js"].formatNames, "formatSpec": __m["src/drishti_format.js"].formatSpec, "formatNamed": __m["src/drishti_format.js"].formatNamed, "formatter": __m["src/drishti_format.js"].formatter, "parseDate": __m["src/drishti_dates.js"].parseDate, "daysInMonth": __m["src/drishti_dates.js"].daysInMonth, "isoDate": __m["src/drishti_dates.js"].isoDate, "today": __m["src/drishti_dates.js"].today, "formatDate": __m["src/drishti_dates.js"].formatDate, "formatDateRange": __m["src/drishti_dates.js"].formatDateRange, "isBusinessDay": __m["src/drishti_dates.js"].isBusinessDay, "addBusinessDays": __m["src/drishti_dates.js"].addBusinessDays, "previousBusinessDay": __m["src/drishti_dates.js"].previousBusinessDay, "businessDaysBetween": __m["src/drishti_dates.js"].businessDaysBetween, "DEFAULT_THEME": __m["src/drishti_theme.js"].DEFAULT_THEME, "THEME_STORAGE_KEY": __m["src/drishti_theme.js"].THEME_STORAGE_KEY, "TEXT_TOKENS": __m["src/drishti_theme.js"].TEXT_TOKENS, "GROUND_TOKENS": __m["src/drishti_theme.js"].GROUND_TOKENS, "themes": __m["src/drishti_theme.js"].themes, "scheme": __m["src/drishti_theme.js"].scheme, "currentTheme": __m["src/drishti_theme.js"].currentTheme, "setTheme": __m["src/drishti_theme.js"].setTheme, "token": __m["src/drishti_theme.js"].token, "tokens": __m["src/drishti_theme.js"].tokens, "parseColor": __m["src/drishti_theme.js"].parseColor, "luminance": __m["src/drishti_theme.js"].luminance, "contrastRatio": __m["src/drishti_theme.js"].contrastRatio, "readableOn": __m["src/drishti_theme.js"].readableOn, "contrastProblems": __m["src/drishti_theme.js"].contrastProblems, "AS_OF_HEADER": __m["src/drishti_api.js"].AS_OF_HEADER, "ApiError": __m["src/drishti_api.js"].ApiError, "errorWords": __m["src/drishti_api.js"].errorWords, "ApiClient": __m["src/drishti_api.js"].ApiClient, "createClient": __m["src/drishti_api.js"].createClient, "api": __m["src/drishti_api.js"].api, "call": __m["src/drishti_api.js"].call, "EventBus": __m["src/drishti_events.js"].EventBus, "createBus": __m["src/drishti_events.js"].createBus, "bus": __m["src/drishti_events.js"].bus, "FOCUSABLE": __m["src/drishti_a11y.js"].FOCUSABLE, "focusable": __m["src/drishti_a11y.js"].focusable, "trapFocus": __m["src/drishti_a11y.js"].trapFocus, "announce": __m["src/drishti_a11y.js"].announce, "rovingIndex": __m["src/drishti_a11y.js"].rovingIndex, "rovingTabindex": __m["src/drishti_a11y.js"].rovingTabindex, "installResize": __m["src/drishti_resize.js"].installResize, "scanResize": __m["src/drishti_resize.js"].scanResize, "resizeHandle": __m["src/drishti_resize.js"].resizeHandle, "resetResize": __m["src/drishti_resize.js"].resetResize, "WORKBENCH": __m["src/drishti_keys.js"].WORKBENCH, "LAYOUT": __m["src/drishti_keys.js"].LAYOUT, "interpretPanelKey": __m["src/drishti_keys.js"].interpretPanelKey, "GridKeys": __m["src/drishti_keys.js"].GridKeys, "keyName": __m["src/drishti_keys.js"].keyName, "normalizeKey": __m["src/drishti_keys.js"].normalizeKey, "keymap": __m["src/drishti_keys.js"].keymap, "openDialog": __m["src/drishti_overlay.js"].openDialog, "closeDialog": __m["src/drishti_overlay.js"].closeDialog, "openDrawer": __m["src/drishti_overlay.js"].openDrawer, "ToastTray": __m["src/drishti_overlay.js"].ToastTray, "toast": __m["src/drishti_overlay.js"].toast, "h": __m["src/drishti_dom.js"].h, "placeAt": __m["src/drishti_dom.js"].placeAt, "toCsv": __m["src/drishti_files.js"].toCsv, "download": __m["src/drishti_files.js"].download, "sparkline": __m["src/drishti_explain.js"].sparkline, "renderExplain": __m["src/drishti_explain.js"].renderExplain, "configure": __m["src/drishti_loader.js"].configure, "manifest": __m["src/drishti_loader.js"].manifest, "libraryVersion": __m["src/drishti_loader.js"].libraryVersion, "requirements": __m["src/drishti_loader.js"].requirements, "loaded": __m["src/drishti_loader.js"].loaded, "load": __m["src/drishti_loader.js"].load };
   })();
   return Object.freeze(Object.assign({ library: "drishti-core", version: "1.0.0" }, __m["src/drishti_index.js"]));
 });

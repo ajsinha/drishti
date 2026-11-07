@@ -985,22 +985,7 @@
   })();
   /* ---- src/drishti_export.js ---- */
   __m["src/drishti_export.js"] = (function () {
-    var namedFormat = __lib("drishti-core").namedFormat, formatNamed = __lib("drishti-core").formatNamed, hasFormat = __lib("drishti-core").hasFormat, isoDate = __lib("drishti-core").isoDate;
-    function toCsv(t, o) {
-      o = o || {};
-      const sep = o.separator || ',';
-      const cell = (v, c) => {
-        let s;
-        if (v === null || v === undefined) { s = ''; }
-        else if (o.formatted && c && typeof c.format === 'string' && hasFormat(c.format)) { s = formatNamed(c.format, v); }
-        else if (v instanceof Date) { s = isoDate(v); }
-        else { s = String(v); }
-        return s.indexOf(sep) >= 0 || /["\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-      };
-      const lines = [t.columns.map((c) => cell(c.header)).join(sep)];
-      t.rows.forEach((r) => lines.push(r.map((v, i) => cell(v, t.columns[i])).join(sep)));
-      return (o.bom === false ? '' : '﻿') + lines.join('\r\n') + '\r\n';
-    }
+    var namedFormat = __lib("drishti-core").namedFormat, isoDate = __lib("drishti-core").isoDate;
     const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) { c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; } t[n] = c >>> 0; } return t; })();
     function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) { c = CRC[(c ^ b[i]) & 0xFF] ^ (c >>> 8); } return (c ^ 0xFFFFFFFF) >>> 0; }
     const utf8 = (s) => new TextEncoder().encode(s);
@@ -1126,7 +1111,7 @@
       ]);
     }
     const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-    return { "toCsv": toCsv, "crc32": crc32, "zipStore": zipStore, "excelFormat": excelFormat, "toXlsx": toXlsx, "XLSX_TYPE": XLSX_TYPE };
+    return { "crc32": crc32, "zipStore": zipStore, "excelFormat": excelFormat, "toXlsx": toXlsx, "XLSX_TYPE": XLSX_TYPE };
   })();
   /* ---- src/drishti_wells.js ---- */
   __m["src/drishti_wells.js"] = (function () {
@@ -2033,7 +2018,7 @@
   })();
   /* ---- src/drishti_grid.js ---- */
   __m["src/drishti_grid.js"] = (function () {
-    var EventBus = __lib("drishti-core").EventBus;
+    var EventBus = __lib("drishti-core").EventBus, toCsv = __lib("drishti-core").toCsv;
     var ColumnModel = __m["src/drishti_columns.js"].ColumnModel, getValue = __m["src/drishti_columns.js"].getValue, formatValue = __m["src/drishti_columns.js"].formatValue;
     var ClientRowModel = __m["src/drishti_client-rows.js"].ClientRowModel;
     var ServerRowModel = __m["src/drishti_server-rows.js"].ServerRowModel;
@@ -2043,7 +2028,7 @@
     var WellsModel = __m["src/drishti_wells.js"].WellsModel;
     var PivotState = __m["src/drishti_pivot.js"].PivotState, pivotLocal = __m["src/drishti_pivot.js"].pivotLocal, pivotApplyUpdates = __m["src/drishti_pivot.js"].pivotApplyUpdates, serverRequest = __m["src/drishti_pivot.js"].serverRequest, mergeAnswer = __m["src/drishti_pivot.js"].mergeAnswer, applyValueFilters = __m["src/drishti_pivot.js"].applyValueFilters, resultColumns = __m["src/drishti_pivot.js"].resultColumns, cellValue = __m["src/drishti_pivot.js"].cellValue;
     var GridLive = __m["src/drishti_grid-live.js"].GridLive;
-    var toCsv = __m["src/drishti_export.js"].toCsv, toXlsx = __m["src/drishti_export.js"].toXlsx;
+    var toXlsx = __m["src/drishti_export.js"].toXlsx;
     var cycleSort = __m["src/drishti_sort-filter.js"].cycleSort;
     const LAYOUTS = Object.freeze(['wells', 'panel', 'terminal']);
     const DENSITIES = Object.freeze({ comfortable: 36, compact: 28, terminal: 22 });
@@ -2391,145 +2376,6 @@
     function createGridModel(o) { return new GridModel(o); }
     return { "LAYOUTS": LAYOUTS, "DENSITIES": DENSITIES, "GridModel": GridModel, "createGridModel": createGridModel };
   })();
-  /* ---- src/drishti_grid-dom.js ---- */
-  __m["src/drishti_grid-dom.js"] = (function () {
-    function h(doc, tag, p, children) {
-      const el = doc.createElement(tag);
-      p = p || {};
-      if (p.cls) { el.className = p.cls; }
-      if (p.text !== undefined && p.text !== null) { el.textContent = p.text; }
-      if (p.attrs) { Object.keys(p.attrs).forEach((k) => { if (p.attrs[k] !== null && p.attrs[k] !== undefined && p.attrs[k] !== false) { el.setAttribute(k, p.attrs[k] === true ? '' : String(p.attrs[k])); } }); }
-      if (p.data) { Object.keys(p.data).forEach((k) => { el.dataset[k] = p.data[k]; }); }
-      if (p.style) { Object.keys(p.style).forEach((k) => { el.style.setProperty(k, p.style[k]); }); }
-      if (p.on) { Object.keys(p.on).forEach((k) => el.addEventListener(k, p.on[k])); }
-      (children || []).forEach((c) => { if (c !== null && c !== undefined) { el.appendChild(typeof c === 'string' ? doc.createTextNode(c) : c); } });
-      return el;
-    }
-    function placeAt(el, x, y) {
-      const win = el.ownerDocument.defaultView, r = el.getBoundingClientRect();
-      el.style.left = Math.max(4, Math.min(x, win.innerWidth - r.width - 8)) + 'px';
-      el.style.top = Math.max(4, Math.min(y, win.innerHeight - r.height - 8)) + 'px';
-    }
-    let menuSeq = 0;
-    class Menu {
-      constructor(doc, o) {
-        this.doc = doc;
-        this.o = o || {};
-        this.el = null;
-        this.before = null;
-        this.onDown = (e) => { if (this.el && !this.el.contains(e.target)) { this.close(); } };
-      }
-      isOpen() { return !!this.el; }
-      open(items, at) {
-        this.close();
-        this.before = this.doc.activeElement;
-        this.at = at;
-        this.items = items;
-        const el = this.el = h(this.doc, 'div', { cls: this.o.className || 'dg-menu', attrs: { role: 'menu', id: 'dg-menu-' + (++menuSeq), 'aria-label': at.label || 'Menu', tabindex: '-1' } });
-        if (at.theme) { ['data-density', 'data-layout'].forEach((a) => { if (at.theme.getAttribute(a)) { el.setAttribute(a, at.theme.getAttribute(a)); } }); }
-        el.addEventListener('keydown', (e) => this.key(e));
-        this.fill();
-        this.doc.body.appendChild(el);
-        const r = at.anchor ? at.anchor.getBoundingClientRect() : null;
-        placeAt(el, r ? r.left : at.x, r ? r.bottom + 4 : at.y);
-        this.doc.addEventListener('mousedown', this.onDown, true);
-        const first = this.enabled()[0];
-        (first || el).focus();
-        return el;
-      }
-      fill() {
-        const el = this.el, doc = this.doc, list = typeof this.items === 'function' ? this.items() : this.items;
-        el.textContent = '';
-        list.forEach((it) => {
-          if (it.sep) { el.appendChild(h(doc, 'div', { cls: 'dg-menu-sep', attrs: { role: 'separator' } })); return; }
-          if (it.heading) { el.appendChild(h(doc, 'div', { cls: 'dg-menu-head', text: it.heading, attrs: { role: 'presentation' } })); return; }
-          if (it.input) {
-            const field = h(doc, 'input', { cls: 'dg-menu-input', attrs: { type: 'text', placeholder: it.input.placeholder || '', 'aria-label': it.label, value: it.input.value || '' } });
-            const go = () => this.run(it, field.value);
-            field.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); go(); } });
-            el.appendChild(h(doc, 'div', { cls: 'dg-menu-form', data: { action: it.id } }, [h(doc, 'span', { text: it.label }), field,
-              h(doc, 'button', { cls: 'dg-btn', text: 'Apply', attrs: { type: 'button', 'data-apply': it.id }, on: { click: go } })]));
-            return;
-          }
-          const check = it.checked !== undefined;
-          const item = h(doc, 'div', {
-            cls: 'dg-menu-item' + (it.checked ? ' on' : '') + (it.disabled ? ' off' : ''),
-            attrs: { role: check ? 'menuitemcheckbox' : 'menuitem', tabindex: '-1', 'aria-checked': check ? String(!!it.checked) : null,
-              'aria-disabled': it.disabled ? 'true' : null, title: it.disabled && it.why ? it.why : null },
-            data: { action: it.id }
-          }, [h(doc, 'span', { cls: 'dg-menu-ic', text: it.checked ? '✓' : (it.icon || ''), attrs: { 'aria-hidden': 'true' } }), h(doc, 'span', { cls: 'dg-menu-label', text: it.label }),
-            it.key ? h(doc, 'span', { cls: 'dg-menu-key', text: it.key }) : null]);
-          item.addEventListener('click', (e) => { e.stopPropagation(); this.run(it); });
-          item.addEventListener('mousemove', () => { if (this.doc.activeElement !== item) { item.focus(); } });
-          el.appendChild(item);
-        });
-      }
-      enabled() { return this.el ? Array.from(this.el.querySelectorAll('.dg-menu-item:not(.off), .dg-menu-input')) : []; }
-      run(it, value) {
-        if (it.disabled) { return; }
-        const keep = it.keep && typeof this.items === 'function';
-        const at = this.at;
-        if (!keep) { this.close(); }
-        at.run(it.id, value);
-        if (keep && this.el) {
-          const idx = this.enabled().indexOf(this.doc.activeElement);
-          this.fill();
-          const list = this.enabled();
-          (list[Math.max(0, idx)] || this.el).focus();
-        }
-      }
-      key(e) {
-        const list = this.enabled(), i = list.indexOf(this.doc.activeElement);
-        if (e.target && e.target.tagName === 'INPUT' && e.key !== 'Escape' && e.key !== 'ArrowDown' && e.key !== 'ArrowUp') { return; }
-        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-          e.preventDefault();
-          const n = list.length;
-          if (n) { list[e.key === 'ArrowDown' ? (i + 1) % n : (i - 1 + n) % n].focus(); }
-        } else if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); if (list.length) { list[e.key === 'Home' ? 0 : list.length - 1].focus(); } }
-        else if (e.key === 'Escape' || e.key === 'Tab') { e.preventDefault(); e.stopPropagation(); this.close(true); }
-        else if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          const cur = this.doc.activeElement;
-          if (cur && cur.classList.contains('dg-menu-item')) { cur.click(); }
-        }
-      }
-      close(refocus) {
-        if (!this.el) { return; }
-        this.el.remove();
-        this.el = null;
-        this.doc.removeEventListener('mousedown', this.onDown, true);
-        if (refocus && this.before && this.before.focus) { this.before.focus(); }
-        if (this.o.onClose) { this.o.onClose(); }
-      }
-    }
-    class Notes {
-      constructor(host, uid) {
-        const doc = host.ownerDocument;
-        this.tip = h(doc, 'div', { cls: 'dg-tip', attrs: { role: 'tooltip', id: uid + '-tip', hidden: true } });
-        this.msg = h(doc, 'div', { cls: 'dg-toast', attrs: { role: 'status', 'aria-live': 'polite', hidden: true } });
-        doc.body.appendChild(this.tip);
-        host.appendChild(this.msg);
-        this.timer = 0;
-      }
-      showTip(text, el) {
-        const r = el.getBoundingClientRect();
-        this.tip.textContent = text;
-        this.tip.hidden = false;
-        placeAt(this.tip, r.left, r.bottom + 6);
-        el.setAttribute('aria-describedby', this.tip.id);
-      }
-      hideTip() { this.tip.hidden = true; }
-      say(text) {
-        const win = this.msg.ownerDocument.defaultView;
-        this.msg.textContent = text;
-        this.msg.hidden = false;
-        win.clearTimeout(this.timer);
-        this.timer = win.setTimeout(() => { this.msg.hidden = true; }, 2600);
-      }
-      destroy() { this.tip.remove(); this.msg.remove(); }
-    }
-    return { "h": h, "placeAt": placeAt, "Menu": Menu, "Notes": Notes };
-  })();
   /* ---- src/drishti_grid-actions.js ---- */
   __m["src/drishti_grid-actions.js"] = (function () {
     var memberText = __m["src/drishti_pivot.js"].memberText;
@@ -2539,8 +2385,7 @@
     var XLSX_TYPE = __m["src/drishti_export.js"].XLSX_TYPE;
     var columnMenuItems = __m["src/drishti_grid-ui.js"].columnMenuItems, cellMenuItems = __m["src/drishti_grid-ui.js"].cellMenuItems, FUNCTION_KEYS = __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, parseCondition = __m["src/drishti_grid-ui.js"].parseCondition, pivotMeasures = __m["src/drishti_grid-ui.js"].pivotMeasures;
     var LAYOUTS = __m["src/drishti_grid.js"].LAYOUTS, DENSITIES = __m["src/drishti_grid.js"].DENSITIES;
-    var openDialog = __lib("drishti-core").openDialog;
-    var h = __m["src/drishti_grid-dom.js"].h;
+    var openDialog = __lib("drishti-core").openDialog, h = __lib("drishti-core").h;
     function onKey(v, e) {
       const m = v.model, k = e.key, mod = e.ctrlKey || e.metaKey;
       if (mod && e.shiftKey && (k === 'c' || k === 'C')) { e.preventDefault(); runAction(v, 'copy-headers'); return; }
@@ -2971,7 +2816,7 @@
   })();
   /* ---- src/drishti_grid-body.js ---- */
   __m["src/drishti_grid-body.js"] = (function () {
-    var h = __m["src/drishti_grid-dom.js"].h;
+    var h = __lib("drishti-core").h;
     var headerSpans = __m["src/drishti_grid-ui.js"].headerSpans, pivotColumnLabels = __m["src/drishti_grid-ui.js"].pivotColumnLabels, markGroups = __m["src/drishti_grid-ui.js"].markGroups, isTotalCell = __m["src/drishti_grid-ui.js"].isTotalCell, nonAdditiveNote = __m["src/drishti_grid-ui.js"].nonAdditiveNote, cfBackground = __m["src/drishti_grid-ui.js"].cfBackground, figureRange = __m["src/drishti_grid-ui.js"].figureRange, ruleFor = __m["src/drishti_grid-ui.js"].ruleFor;
     const CF_SCAN = 100000;
     class GridBody {
@@ -3325,9 +3170,132 @@
     }
     return { "GridBody": GridBody };
   })();
+  /* ---- src/drishti_grid-dom.js ---- */
+  __m["src/drishti_grid-dom.js"] = (function () {
+    var h = __lib("drishti-core").h, placeAt = __lib("drishti-core").placeAt;
+    let menuSeq = 0;
+    class Menu {
+      constructor(doc, o) {
+        this.doc = doc;
+        this.o = o || {};
+        this.el = null;
+        this.before = null;
+        this.onDown = (e) => { if (this.el && !this.el.contains(e.target)) { this.close(); } };
+      }
+      isOpen() { return !!this.el; }
+      open(items, at) {
+        this.close();
+        this.before = this.doc.activeElement;
+        this.at = at;
+        this.items = items;
+        const el = this.el = h(this.doc, 'div', { cls: this.o.className || 'dg-menu', attrs: { role: 'menu', id: 'dg-menu-' + (++menuSeq), 'aria-label': at.label || 'Menu', tabindex: '-1' } });
+        if (at.theme) { ['data-density', 'data-layout'].forEach((a) => { if (at.theme.getAttribute(a)) { el.setAttribute(a, at.theme.getAttribute(a)); } }); }
+        el.addEventListener('keydown', (e) => this.key(e));
+        this.fill();
+        this.doc.body.appendChild(el);
+        const r = at.anchor ? at.anchor.getBoundingClientRect() : null;
+        placeAt(el, r ? r.left : at.x, r ? r.bottom + 4 : at.y);
+        this.doc.addEventListener('mousedown', this.onDown, true);
+        const first = this.enabled()[0];
+        (first || el).focus();
+        return el;
+      }
+      fill() {
+        const el = this.el, doc = this.doc, list = typeof this.items === 'function' ? this.items() : this.items;
+        el.textContent = '';
+        list.forEach((it) => {
+          if (it.sep) { el.appendChild(h(doc, 'div', { cls: 'dg-menu-sep', attrs: { role: 'separator' } })); return; }
+          if (it.heading) { el.appendChild(h(doc, 'div', { cls: 'dg-menu-head', text: it.heading, attrs: { role: 'presentation' } })); return; }
+          if (it.input) {
+            const field = h(doc, 'input', { cls: 'dg-menu-input', attrs: { type: 'text', placeholder: it.input.placeholder || '', 'aria-label': it.label, value: it.input.value || '' } });
+            const go = () => this.run(it, field.value);
+            field.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); go(); } });
+            el.appendChild(h(doc, 'div', { cls: 'dg-menu-form', data: { action: it.id } }, [h(doc, 'span', { text: it.label }), field,
+              h(doc, 'button', { cls: 'dg-btn', text: 'Apply', attrs: { type: 'button', 'data-apply': it.id }, on: { click: go } })]));
+            return;
+          }
+          const check = it.checked !== undefined;
+          const item = h(doc, 'div', {
+            cls: 'dg-menu-item' + (it.checked ? ' on' : '') + (it.disabled ? ' off' : ''),
+            attrs: { role: check ? 'menuitemcheckbox' : 'menuitem', tabindex: '-1', 'aria-checked': check ? String(!!it.checked) : null,
+              'aria-disabled': it.disabled ? 'true' : null, title: it.disabled && it.why ? it.why : null },
+            data: { action: it.id }
+          }, [h(doc, 'span', { cls: 'dg-menu-ic', text: it.checked ? '✓' : (it.icon || ''), attrs: { 'aria-hidden': 'true' } }), h(doc, 'span', { cls: 'dg-menu-label', text: it.label }),
+            it.key ? h(doc, 'span', { cls: 'dg-menu-key', text: it.key }) : null]);
+          item.addEventListener('click', (e) => { e.stopPropagation(); this.run(it); });
+          item.addEventListener('mousemove', () => { if (this.doc.activeElement !== item) { item.focus(); } });
+          el.appendChild(item);
+        });
+      }
+      enabled() { return this.el ? Array.from(this.el.querySelectorAll('.dg-menu-item:not(.off), .dg-menu-input')) : []; }
+      run(it, value) {
+        if (it.disabled) { return; }
+        const keep = it.keep && typeof this.items === 'function';
+        const at = this.at;
+        if (!keep) { this.close(); }
+        at.run(it.id, value);
+        if (keep && this.el) {
+          const idx = this.enabled().indexOf(this.doc.activeElement);
+          this.fill();
+          const list = this.enabled();
+          (list[Math.max(0, idx)] || this.el).focus();
+        }
+      }
+      key(e) {
+        const list = this.enabled(), i = list.indexOf(this.doc.activeElement);
+        if (e.target && e.target.tagName === 'INPUT' && e.key !== 'Escape' && e.key !== 'ArrowDown' && e.key !== 'ArrowUp') { return; }
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          const n = list.length;
+          if (n) { list[e.key === 'ArrowDown' ? (i + 1) % n : (i - 1 + n) % n].focus(); }
+        } else if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); if (list.length) { list[e.key === 'Home' ? 0 : list.length - 1].focus(); } }
+        else if (e.key === 'Escape' || e.key === 'Tab') { e.preventDefault(); e.stopPropagation(); this.close(true); }
+        else if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          const cur = this.doc.activeElement;
+          if (cur && cur.classList.contains('dg-menu-item')) { cur.click(); }
+        }
+      }
+      close(refocus) {
+        if (!this.el) { return; }
+        this.el.remove();
+        this.el = null;
+        this.doc.removeEventListener('mousedown', this.onDown, true);
+        if (refocus && this.before && this.before.focus) { this.before.focus(); }
+        if (this.o.onClose) { this.o.onClose(); }
+      }
+    }
+    class Notes {
+      constructor(host, uid) {
+        const doc = host.ownerDocument;
+        this.tip = h(doc, 'div', { cls: 'dg-tip', attrs: { role: 'tooltip', id: uid + '-tip', hidden: true } });
+        this.msg = h(doc, 'div', { cls: 'dg-toast', attrs: { role: 'status', 'aria-live': 'polite', hidden: true } });
+        doc.body.appendChild(this.tip);
+        host.appendChild(this.msg);
+        this.timer = 0;
+      }
+      showTip(text, el) {
+        const r = el.getBoundingClientRect();
+        this.tip.textContent = text;
+        this.tip.hidden = false;
+        placeAt(this.tip, r.left, r.bottom + 6);
+        el.setAttribute('aria-describedby', this.tip.id);
+      }
+      hideTip() { this.tip.hidden = true; }
+      say(text) {
+        const win = this.msg.ownerDocument.defaultView;
+        this.msg.textContent = text;
+        this.msg.hidden = false;
+        win.clearTimeout(this.timer);
+        this.timer = win.setTimeout(() => { this.msg.hidden = true; }, 2600);
+      }
+      destroy() { this.tip.remove(); this.msg.remove(); }
+    }
+    return { "Menu": Menu, "Notes": Notes };
+  })();
   /* ---- src/drishti_grid-wells-ui.js ---- */
   __m["src/drishti_grid-wells-ui.js"] = (function () {
-    var h = __m["src/drishti_grid-dom.js"].h;
+    var h = __lib("drishti-core").h;
     var VALUE_FUNCS = __m["src/drishti_wells.js"].VALUE_FUNCS;
     var aggFunc = __m["src/drishti_aggregate.js"].aggFunc;
     var parseCondition = __m["src/drishti_grid-ui.js"].parseCondition, conditionText = __m["src/drishti_grid-ui.js"].conditionText;
@@ -3624,78 +3592,16 @@
   })();
   /* ---- src/drishti_grid-explain.js ---- */
   __m["src/drishti_grid-explain.js"] = (function () {
-    var h = __m["src/drishti_grid-dom.js"].h;
-    const SVG = 'http://www.w3.org/2000/svg';
-    function sparkline(doc, values, limit) {
-      const w = 280, ht = 90, svg = doc.createElementNS(SVG, 'svg');
-      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + ht);
-      svg.setAttribute('class', 'dg-spark');
-      svg.setAttribute('role', 'img');
-      svg.setAttribute('aria-label', 'trend of ' + values.length + ' points, last ' + (values.length ? values[values.length - 1] : ''));
-      const all = values.concat(typeof limit === 'number' ? [limit] : []);
-      const lo = Math.min.apply(null, all), hi = Math.max.apply(null, all), span = hi - lo || 1;
-      const y = (v) => (ht - 8 - (ht - 16) * (v - lo) / span).toFixed(1);
-      const pts = values.map((v, i) => (values.length > 1 ? (i * (w - 4) / (values.length - 1) + 2) : w / 2).toFixed(1) + ',' + y(v)).join(' ');
-      const line = doc.createElementNS(SVG, 'polyline');
-      line.setAttribute('points', pts);
-      line.setAttribute('class', 'dg-spark-line');
-      svg.appendChild(line);
-      if (typeof limit === 'number') {
-        const l = doc.createElementNS(SVG, 'line');
-        [['x1', 0], ['x2', w], ['y1', y(limit)], ['y2', y(limit)]].forEach(([k, v]) => l.setAttribute(k, String(v)));
-        l.setAttribute('class', 'dg-spark-limit');
-        svg.appendChild(l);
-      }
-      return svg;
-    }
-    function main(doc, r) {
-      const out = h(doc, 'div', { cls: 'dg-ex-main' });
-      out.appendChild(h(doc, 'h3', { cls: 'dg-ex-title', text: 'Explain' + (r.title ? ' · ' + r.title : '') }));
-      if (r.value) { out.appendChild(h(doc, 'div', { cls: 'dg-ex-value', text: r.value })); }
-      if (r.scope) { out.appendChild(h(doc, 'div', { cls: 'dg-ex-scope', text: r.scope })); }
-      if (r.steps && r.steps.length) {
-        out.appendChild(h(doc, 'ol', { cls: 'dg-ex-steps' }, r.steps.map((s) => h(doc, 'li', {}, [h(doc, 'span', { text: s.label }), h(doc, 'span', { cls: 'dg-ex-fig', text: s.value || '' })]))));
-      }
-      if (r.parts && r.parts.length) {
-        const mx = Math.max.apply(null, r.parts.map((p) => Math.abs(p.value || 0)).concat([1e-9]));
-        out.appendChild(h(doc, 'div', { cls: 'dg-ex-sub', text: r.partsTitle || 'Made of' }));
-        out.appendChild(h(doc, 'div', { cls: 'dg-ex-bars' }, r.parts.slice(0, 8).map((p) => h(doc, 'div', { cls: 'dg-ex-bar' }, [
-          h(doc, 'span', { text: p.label }),
-          h(doc, 'span', { cls: 'dg-ex-track' }, [h(doc, 'span', { cls: 'dg-ex-fill' + ((p.value || 0) < 0 ? ' dg-neg' : ''), style: { width: Math.round(100 * Math.abs(p.value || 0) / mx) + '%' } })]),
-          h(doc, 'span', { cls: 'dg-ex-fig', text: p.text || String(p.value) })]))));
-      }
-      if (r.note) { out.appendChild(h(doc, 'p', { cls: 'dg-ex-note', text: r.note })); }
-      if (r.links && r.links.length) { out.appendChild(h(doc, 'div', { cls: 'dg-ex-links' }, r.links.map((l) => h(doc, 'a', { text: l.label, attrs: { href: l.href || '#' } })))); }
-      return out;
-    }
+    var coreSparkline = __lib("drishti-core").sparkline, coreRenderExplain = __lib("drishti-core").renderExplain;
+    function sparkline(doc, values, limit) { return coreSparkline(doc, values, limit, 'dg'); }
     function renderExplain(el, st, mode, o) {
-      const doc = el.ownerDocument;
-      o = o || {};
-      el.textContent = '';
-      if (o.onClose && st) { el.appendChild(h(doc, 'button', { cls: 'dg-ex-close', text: '×', attrs: { type: 'button', 'aria-label': 'Close Explain' }, on: { click: o.onClose } })); }
-      if (!st) {
-        el.appendChild(h(doc, 'div', { cls: 'dg-ex-main' }, [h(doc, 'h3', { cls: 'dg-ex-title', text: 'Explain' }),
-          h(doc, 'p', { cls: 'dg-ex-hint', text: o.explainable === false ? 'This grid has no Explain hook.' : 'Select a figure and press ' + (mode === 'split' ? 'F2' : 'E') + ': how it was made, its scope and what drives it.' })]));
-        return;
-      }
-      if (st.loading) { el.appendChild(h(doc, 'div', { cls: 'dg-ex-main dg-ex-loading', attrs: { 'aria-busy': 'true' } }, [h(doc, 'h3', { cls: 'dg-ex-title', text: 'Explain' }), h(doc, 'p', { text: 'Asking how this figure was made…' })])); return; }
-      if (st.error) { el.appendChild(h(doc, 'div', { cls: 'dg-ex-main' }, [h(doc, 'h3', { cls: 'dg-ex-title', text: 'Explain' }), h(doc, 'p', { cls: 'dg-ex-error', text: String(st.error.message || st.error) })])); return; }
-      const r = st.result;
-      if (r && typeof r === 'object' && typeof r.nodeType === 'number') { el.appendChild(r); return; }
-      const res = typeof r === 'string' ? { note: r } : (r || {});
-      if (mode !== 'split') { el.appendChild(main(doc, res)); return; }
-      const worst = h(doc, 'div', { cls: 'dg-ex-pane' }, [h(doc, 'h3', { cls: 'dg-ex-title', text: 'Worst scenarios' })]);
-      (res.scenarios || []).slice(0, 10).forEach((s, i) => worst.appendChild(h(doc, 'div', { cls: 'dg-ex-row' }, [h(doc, 'i', { text: String(i + 1) }), h(doc, 'span', { text: s.label }), h(doc, 'span', { cls: 'dg-ex-fig dg-neg', text: s.value })])));
-      if (!(res.scenarios || []).length) { worst.appendChild(h(doc, 'p', { cls: 'dg-ex-hint', text: 'No scenarios for this figure.' })); }
-      const trend = h(doc, 'div', { cls: 'dg-ex-pane' }, [h(doc, 'h3', { cls: 'dg-ex-title', text: 'Trend' })]);
-      if (res.trend && res.trend.length) { trend.appendChild(sparkline(doc, res.trend, res.limit)); } else { trend.appendChild(h(doc, 'p', { cls: 'dg-ex-hint', text: 'No history for this figure.' })); }
-      el.append(h(doc, 'div', { cls: 'dg-ex-pane' }, [main(doc, res)]), worst, trend);
+      coreRenderExplain(el, st, mode, Object.assign({ hint: o && o.explainable === false ? 'This grid has no Explain hook.' : undefined }, o, { prefix: 'dg' }));
     }
     return { "sparkline": sparkline, "renderExplain": renderExplain };
   })();
   /* ---- src/drishti_grid-shell.js ---- */
   __m["src/drishti_grid-shell.js"] = (function () {
-    var h = __m["src/drishti_grid-dom.js"].h;
+    var h = __lib("drishti-core").h;
     var formatValue = __m["src/drishti_columns.js"].formatValue;
     var rangeStats = __m["src/drishti_selection.js"].rangeStats;
     var renderExplain = __m["src/drishti_grid-explain.js"].renderExplain;
@@ -4145,7 +4051,7 @@
   __m["src/drishti_index.js"] = (function () {
     var defineGridElement = __m["src/drishti_grid-element.js"].defineGridElement;
     function install(root) { if (root && root.document && root.customElements) { defineGridElement(root.customElements, root); } }
-    return { "install": install, "ADDITIVE_FUNCS": __m["src/drishti_columns.js"].ADDITIVE_FUNCS, "normalizeColumn": __m["src/drishti_columns.js"].normalizeColumn, "getValue": __m["src/drishti_columns.js"].getValue, "formatValue": __m["src/drishti_columns.js"].formatValue, "ColumnModel": __m["src/drishti_columns.js"].ColumnModel, "isBlank": __m["src/drishti_sort-filter.js"].isBlank, "compareValues": __m["src/drishti_sort-filter.js"].compareValues, "compareRows": __m["src/drishti_sort-filter.js"].compareRows, "cycleSort": __m["src/drishti_sort-filter.js"].cycleSort, "passes": __m["src/drishti_sort-filter.js"].passes, "rowFilter": __m["src/drishti_sort-filter.js"].rowFilter, "filterWords": __m["src/drishti_sort-filter.js"].filterWords, "AGG_FUNCS": __m["src/drishti_aggregate.js"].AGG_FUNCS, "aggFunc": __m["src/drishti_aggregate.js"].aggFunc, "parseMeasure": __m["src/drishti_aggregate.js"].parseMeasure, "isServerMeasure": __m["src/drishti_aggregate.js"].isServerMeasure, "aggregate": __m["src/drishti_aggregate.js"].aggregate, "SEP": __m["src/drishti_pivot.js"].SEP, "BLANK": __m["src/drishti_pivot.js"].BLANK, "memberText": __m["src/drishti_pivot.js"].memberText, "valueLabel": __m["src/drishti_pivot.js"].valueLabel, "normalizeView": __m["src/drishti_pivot.js"].normalizeView, "serverRequest": __m["src/drishti_pivot.js"].serverRequest, "memberFilters": __m["src/drishti_pivot.js"].memberFilters, "PivotState": __m["src/drishti_pivot.js"].PivotState, "pivotLocal": __m["src/drishti_pivot.js"].pivotLocal, "pivotApplyUpdates": __m["src/drishti_pivot.js"].pivotApplyUpdates, "mergeAnswer": __m["src/drishti_pivot.js"].mergeAnswer, "applyValueFilters": __m["src/drishti_pivot.js"].applyValueFilters, "resultColumns": __m["src/drishti_pivot.js"].resultColumns, "cellValue": __m["src/drishti_pivot.js"].cellValue, "WELLS": __m["src/drishti_wells.js"].WELLS, "VALUE_FUNCS": __m["src/drishti_wells.js"].VALUE_FUNCS, "WellsModel": __m["src/drishti_wells.js"].WellsModel, "ClientRowModel": __m["src/drishti_client-rows.js"].ClientRowModel, "ServerRowModel": __m["src/drishti_server-rows.js"].ServerRowModel, "memoryDatasource": __m["src/drishti_server-rows.js"].memoryDatasource, "MAX_SCROLL_HEIGHT": __m["src/drishti_viewport.js"].MAX_SCROLL_HEIGHT, "columnAt": __m["src/drishti_viewport.js"].columnAt, "Viewport": __m["src/drishti_viewport.js"].Viewport, "SelectionModel": __m["src/drishti_selection.js"].SelectionModel, "rangeStats": __m["src/drishti_selection.js"].rangeStats, "toTsv": __m["src/drishti_selection.js"].toTsv, "rangeCells": __m["src/drishti_selection.js"].rangeCells, "toCsv": __m["src/drishti_export.js"].toCsv, "crc32": __m["src/drishti_export.js"].crc32, "zipStore": __m["src/drishti_export.js"].zipStore, "excelFormat": __m["src/drishti_export.js"].excelFormat, "toXlsx": __m["src/drishti_export.js"].toXlsx, "XLSX_TYPE": __m["src/drishti_export.js"].XLSX_TYPE, "GridNavigator": __m["src/drishti_keyboard.js"].GridNavigator, "keyLabel": __m["src/drishti_keyboard.js"].keyLabel, "LAYOUTS": __m["src/drishti_grid.js"].LAYOUTS, "DENSITIES": __m["src/drishti_grid.js"].DENSITIES, "GridModel": __m["src/drishti_grid.js"].GridModel, "createGridModel": __m["src/drishti_grid.js"].createGridModel, "GRID_EVENTS": __m["src/drishti_grid-live.js"].GRID_EVENTS, "domEventName": __m["src/drishti_grid-live.js"].domEventName, "GridLive": __m["src/drishti_grid-live.js"].GridLive, "eventSourceFeed": __m["src/drishti_live.js"].eventSourceFeed, "webSocketFeed": __m["src/drishti_live.js"].webSocketFeed, "manualFeed": __m["src/drishti_live.js"].manualFeed, "renderWindow": __m["src/drishti_plain-render.js"].renderWindow, "renderText": __m["src/drishti_plain-render.js"].renderText, "renderHtml": __m["src/drishti_plain-render.js"].renderHtml, "VIEW_EVENTS": __m["src/drishti_grid-ui.js"].VIEW_EVENTS, "PHONE_WIDTH": __m["src/drishti_grid-ui.js"].PHONE_WIDTH, "FUNCTION_KEYS": __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, "CF_TYPES": __m["src/drishti_grid-ui.js"].CF_TYPES, "headerSpans": __m["src/drishti_grid-ui.js"].headerSpans, "pivotColumnLabels": __m["src/drishti_grid-ui.js"].pivotColumnLabels, "markGroups": __m["src/drishti_grid-ui.js"].markGroups, "isTotalCell": __m["src/drishti_grid-ui.js"].isTotalCell, "nonAdditiveNote": __m["src/drishti_grid-ui.js"].nonAdditiveNote, "colourScaleAlpha": __m["src/drishti_grid-ui.js"].colourScaleAlpha, "dataBarWidth": __m["src/drishti_grid-ui.js"].dataBarWidth, "cfBackground": __m["src/drishti_grid-ui.js"].cfBackground, "figureRange": __m["src/drishti_grid-ui.js"].figureRange, "ruleFor": __m["src/drishti_grid-ui.js"].ruleFor, "phoneColumns": __m["src/drishti_grid-ui.js"].phoneColumns, "pivotMeasures": __m["src/drishti_grid-ui.js"].pivotMeasures, "columnMenuItems": __m["src/drishti_grid-ui.js"].columnMenuItems, "cellMenuItems": __m["src/drishti_grid-ui.js"].cellMenuItems, "commandText": __m["src/drishti_grid-ui.js"].commandText, "parseCommand": __m["src/drishti_grid-ui.js"].parseCommand, "parseCondition": __m["src/drishti_grid-ui.js"].parseCondition, "conditionText": __m["src/drishti_grid-ui.js"].conditionText, "statusItems": __m["src/drishti_grid-ui.js"].statusItems, "FlashTracker": __m["src/drishti_grid-ui.js"].FlashTracker, "h": __m["src/drishti_grid-dom.js"].h, "placeAt": __m["src/drishti_grid-dom.js"].placeAt, "Menu": __m["src/drishti_grid-dom.js"].Menu, "Notes": __m["src/drishti_grid-dom.js"].Notes, "sparkline": __m["src/drishti_grid-explain.js"].sparkline, "renderExplain": __m["src/drishti_grid-explain.js"].renderExplain, "localDrill": __m["src/drishti_grid-actions.js"].localDrill, "GridBase": __m["src/drishti_grid-base.js"].GridBase, "Grid": __m["src/drishti_grid-view.js"].Grid, "ELEMENT_NAME": __m["src/drishti_grid-element.js"].ELEMENT_NAME, "defineGridElement": __m["src/drishti_grid-element.js"].defineGridElement };
+    return { "install": install, "ADDITIVE_FUNCS": __m["src/drishti_columns.js"].ADDITIVE_FUNCS, "normalizeColumn": __m["src/drishti_columns.js"].normalizeColumn, "getValue": __m["src/drishti_columns.js"].getValue, "formatValue": __m["src/drishti_columns.js"].formatValue, "ColumnModel": __m["src/drishti_columns.js"].ColumnModel, "isBlank": __m["src/drishti_sort-filter.js"].isBlank, "compareValues": __m["src/drishti_sort-filter.js"].compareValues, "compareRows": __m["src/drishti_sort-filter.js"].compareRows, "cycleSort": __m["src/drishti_sort-filter.js"].cycleSort, "passes": __m["src/drishti_sort-filter.js"].passes, "rowFilter": __m["src/drishti_sort-filter.js"].rowFilter, "filterWords": __m["src/drishti_sort-filter.js"].filterWords, "AGG_FUNCS": __m["src/drishti_aggregate.js"].AGG_FUNCS, "aggFunc": __m["src/drishti_aggregate.js"].aggFunc, "parseMeasure": __m["src/drishti_aggregate.js"].parseMeasure, "isServerMeasure": __m["src/drishti_aggregate.js"].isServerMeasure, "aggregate": __m["src/drishti_aggregate.js"].aggregate, "SEP": __m["src/drishti_pivot.js"].SEP, "BLANK": __m["src/drishti_pivot.js"].BLANK, "memberText": __m["src/drishti_pivot.js"].memberText, "valueLabel": __m["src/drishti_pivot.js"].valueLabel, "normalizeView": __m["src/drishti_pivot.js"].normalizeView, "serverRequest": __m["src/drishti_pivot.js"].serverRequest, "memberFilters": __m["src/drishti_pivot.js"].memberFilters, "PivotState": __m["src/drishti_pivot.js"].PivotState, "pivotLocal": __m["src/drishti_pivot.js"].pivotLocal, "pivotApplyUpdates": __m["src/drishti_pivot.js"].pivotApplyUpdates, "mergeAnswer": __m["src/drishti_pivot.js"].mergeAnswer, "applyValueFilters": __m["src/drishti_pivot.js"].applyValueFilters, "resultColumns": __m["src/drishti_pivot.js"].resultColumns, "cellValue": __m["src/drishti_pivot.js"].cellValue, "WELLS": __m["src/drishti_wells.js"].WELLS, "VALUE_FUNCS": __m["src/drishti_wells.js"].VALUE_FUNCS, "WellsModel": __m["src/drishti_wells.js"].WellsModel, "ClientRowModel": __m["src/drishti_client-rows.js"].ClientRowModel, "ServerRowModel": __m["src/drishti_server-rows.js"].ServerRowModel, "memoryDatasource": __m["src/drishti_server-rows.js"].memoryDatasource, "MAX_SCROLL_HEIGHT": __m["src/drishti_viewport.js"].MAX_SCROLL_HEIGHT, "columnAt": __m["src/drishti_viewport.js"].columnAt, "Viewport": __m["src/drishti_viewport.js"].Viewport, "SelectionModel": __m["src/drishti_selection.js"].SelectionModel, "rangeStats": __m["src/drishti_selection.js"].rangeStats, "toTsv": __m["src/drishti_selection.js"].toTsv, "rangeCells": __m["src/drishti_selection.js"].rangeCells, "crc32": __m["src/drishti_export.js"].crc32, "zipStore": __m["src/drishti_export.js"].zipStore, "excelFormat": __m["src/drishti_export.js"].excelFormat, "toXlsx": __m["src/drishti_export.js"].toXlsx, "XLSX_TYPE": __m["src/drishti_export.js"].XLSX_TYPE, "GridNavigator": __m["src/drishti_keyboard.js"].GridNavigator, "keyLabel": __m["src/drishti_keyboard.js"].keyLabel, "LAYOUTS": __m["src/drishti_grid.js"].LAYOUTS, "DENSITIES": __m["src/drishti_grid.js"].DENSITIES, "GridModel": __m["src/drishti_grid.js"].GridModel, "createGridModel": __m["src/drishti_grid.js"].createGridModel, "GRID_EVENTS": __m["src/drishti_grid-live.js"].GRID_EVENTS, "domEventName": __m["src/drishti_grid-live.js"].domEventName, "GridLive": __m["src/drishti_grid-live.js"].GridLive, "eventSourceFeed": __m["src/drishti_live.js"].eventSourceFeed, "webSocketFeed": __m["src/drishti_live.js"].webSocketFeed, "manualFeed": __m["src/drishti_live.js"].manualFeed, "renderWindow": __m["src/drishti_plain-render.js"].renderWindow, "renderText": __m["src/drishti_plain-render.js"].renderText, "renderHtml": __m["src/drishti_plain-render.js"].renderHtml, "VIEW_EVENTS": __m["src/drishti_grid-ui.js"].VIEW_EVENTS, "PHONE_WIDTH": __m["src/drishti_grid-ui.js"].PHONE_WIDTH, "FUNCTION_KEYS": __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, "CF_TYPES": __m["src/drishti_grid-ui.js"].CF_TYPES, "headerSpans": __m["src/drishti_grid-ui.js"].headerSpans, "pivotColumnLabels": __m["src/drishti_grid-ui.js"].pivotColumnLabels, "markGroups": __m["src/drishti_grid-ui.js"].markGroups, "isTotalCell": __m["src/drishti_grid-ui.js"].isTotalCell, "nonAdditiveNote": __m["src/drishti_grid-ui.js"].nonAdditiveNote, "colourScaleAlpha": __m["src/drishti_grid-ui.js"].colourScaleAlpha, "dataBarWidth": __m["src/drishti_grid-ui.js"].dataBarWidth, "cfBackground": __m["src/drishti_grid-ui.js"].cfBackground, "figureRange": __m["src/drishti_grid-ui.js"].figureRange, "ruleFor": __m["src/drishti_grid-ui.js"].ruleFor, "phoneColumns": __m["src/drishti_grid-ui.js"].phoneColumns, "pivotMeasures": __m["src/drishti_grid-ui.js"].pivotMeasures, "columnMenuItems": __m["src/drishti_grid-ui.js"].columnMenuItems, "cellMenuItems": __m["src/drishti_grid-ui.js"].cellMenuItems, "commandText": __m["src/drishti_grid-ui.js"].commandText, "parseCommand": __m["src/drishti_grid-ui.js"].parseCommand, "parseCondition": __m["src/drishti_grid-ui.js"].parseCondition, "conditionText": __m["src/drishti_grid-ui.js"].conditionText, "statusItems": __m["src/drishti_grid-ui.js"].statusItems, "FlashTracker": __m["src/drishti_grid-ui.js"].FlashTracker, "Menu": __m["src/drishti_grid-dom.js"].Menu, "Notes": __m["src/drishti_grid-dom.js"].Notes, "sparkline": __m["src/drishti_grid-explain.js"].sparkline, "renderExplain": __m["src/drishti_grid-explain.js"].renderExplain, "localDrill": __m["src/drishti_grid-actions.js"].localDrill, "GridBase": __m["src/drishti_grid-base.js"].GridBase, "Grid": __m["src/drishti_grid-view.js"].Grid, "ELEMENT_NAME": __m["src/drishti_grid-element.js"].ELEMENT_NAME, "defineGridElement": __m["src/drishti_grid-element.js"].defineGridElement };
   })();
   return Object.freeze(Object.assign({ library: "drishti-grid", version: "0.2.0" }, __m["src/drishti_index.js"]));
 });

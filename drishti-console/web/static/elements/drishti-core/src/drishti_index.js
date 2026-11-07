@@ -14,8 +14,8 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* drishti-core: what every other library and every page builds on. Formats (the server's rules), business dates, theme tokens, the API
-   client, the event bus, accessibility helpers, resize handles, keys, dialogs, drawers and toasts, and the loader of the other
-   libraries. In a page the bundle (drishti_core.js) registers it as window.Drishti.elements.core and runs install(): the resize
+   client, the event bus, accessibility helpers, resize handles, keys, dialogs, drawers and toasts, the element maker, Explain as every
+   component draws it, and the loader of the other libraries. In a page the bundle (drishti_core.js) registers it as window.Drishti.elements.core and runs install(): the resize
    component starts, and the console's older names (Drishti.resize, Drishti.GridKeys) point here. */
 import { installResize } from './drishti_resize.js';
 import { GridKeys } from './drishti_keys.js';
@@ -33,6 +33,9 @@ export { FOCUSABLE, focusable, trapFocus, announce, rovingIndex, rovingTabindex 
 export { installResize, scanResize, resizeHandle, resetResize } from './drishti_resize.js';
 export { WORKBENCH, LAYOUT, interpretPanelKey, GridKeys, keyName, normalizeKey, keymap } from './drishti_keys.js';
 export { openDialog, closeDialog, openDrawer, ToastTray, toast } from './drishti_overlay.js';
+export { h, placeAt } from './drishti_dom.js';
+export { toCsv, download } from './drishti_files.js';
+export { sparkline, renderExplain } from './drishti_explain.js';
 export { configure, manifest, libraryVersion, requirements, loaded, load } from './drishti_loader.js';
 
 /**
