@@ -29,7 +29,8 @@ import re
 import subprocess
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-ALLOWED = ("drishti-lakeconfig/", "tools/lake/lakeconfig.py")
+# the tutorials' picture scripts build a scratch site and show its folders exactly as a reader sees them (data/delta/risklake/...)
+ALLOWED = ("drishti-lakeconfig/", "tools/lake/lakeconfig.py", "tools/docs/shots/")
 PATH = re.compile(r"^\.?[/\\]?data[/\\]delta([/\\]|$)")
 REF = re.compile(r"DRISHTI_DELTA_ROOT")
 JOIN = re.compile(r"""\bdata(?:_dir\(\))?["']?\s*\)?\s*/\s*["']delta["']""")

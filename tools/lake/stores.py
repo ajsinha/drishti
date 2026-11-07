@@ -100,7 +100,8 @@ def older_layout(lake: pathlib.Path, lakes_dir: pathlib.Path | None = None) -> l
     at start, or ``drishti.py lake relocate demo`` (docs/admin/OPERATIONS.md)."""
     import yaml
     lake = pathlib.Path(lake).resolve()
-    if lake.exists() or lake.parent.name != "delta" or lake.name == "delta":
+    placeholder = lake.is_dir() and [c.name for c in lake.iterdir()] == ["README.md"]   # kept in git with only its README.md
+    if (lake.exists() and not placeholder) or lake.parent.name != "delta" or lake.name == "delta":
         return []
     f = pathlib.Path(lakes_dir or os.environ.get("DRISHTI_LAKES_DIR") or (ROOT / "config" / "lakes")) / f"{lake.name}.yaml"
     if not f.is_file():

@@ -96,6 +96,8 @@ demo lake's file also ships inside the server, so a server started in another fo
 `demo.yaml` in the folder wins. Example lake files for S3, Iceberg path tables, AWS S3 Tables, a REST catalog behind a private CA and an
 in-memory store are in `config/lakes.examples/`, each beside its connectors in `config/connectors.examples/`.
 
+**The lakes Drishti ships.** `demo` (the demo data, built from the committed test data in `data/testdata/`) and five lakes that ship empty, as definitions only: `risklake` (the bank's own risk data), `newslake` (news), `worldlake` (the World Bank, the IMF, the United Nations), `regulators` (the SEC, the Federal Reserve, OSFI and other central banks) and `capitalmarket` (prices, curves, volatility surfaces, funds). Each has its lake file in `config/lakes/` with no tables and its folder `data/delta/<lake>/` holding only a README.md; what a build or a load writes there is never committed. Nothing shipped points at the five: every connector reads `demo` until you point it elsewhere (section 6).
+
 ## 2. The lake file, every key
 
 ### 2.1 A worked example: `config/lakes/risklake.yaml`
