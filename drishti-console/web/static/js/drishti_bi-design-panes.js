@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Rupaka phase 3 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 9): the designer's three panes. Fields: the dataset's tables, columns (dates open into their parts), measures and
    hierarchies, with search; drag one onto the canvas or press its button. Visualizations: the catalogue of visual types, then Build (the field wells of the
    selected visual) and Format (titles, labels, colours from the theme, axes, number formats, conditional formats, slicer and drill settings; with no visual
