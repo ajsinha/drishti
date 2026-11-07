@@ -909,7 +909,7 @@ This is the developer's reference and cookbook. The design and its history are i
 3. **Give your page a token provider** that asks *your own backend* for a token (section 2), and add the one script line and an element:
 
 ```html
-<script type="module" src="https://drishti.bank.example/embed/v1/elements/1.4.4/drishti-elements.js" crossorigin="anonymous"></script>
+<script type="module" src="https://drishti.bank.example/embed/v1/elements/1.4.5/drishti-elements.js" crossorigin="anonymous"></script>
 <script type="module">
   DrishtiElements.configure({
     tokenProvider: async () => {                      // your backend, not Drishti: it holds your client secret
@@ -1040,8 +1040,8 @@ The console serves the library at an **exact semantic version**, immutably, and 
 
 | URL | What |
 |---|---|
-| `/embed/v1/elements/1.4.4/drishti-elements.js` | the entry (imports `./m/<name>.js`, which are served beside it) |
-| `/embed/v1/elements/1.4.4/integrity.json` | `{"name", "version", "api", "files": {"drishti-elements.js": {"integrity": "sha384-…", "bytes": 2500}, "m/report.js": …}}` |
+| `/embed/v1/elements/1.4.5/drishti-elements.js` | the entry (imports `./m/<name>.js`, which are served beside it) |
+| `/embed/v1/elements/1.4.5/integrity.json` | `{"name", "version", "api", "files": {"drishti-elements.js": {"integrity": "sha384-…", "bytes": 2500}, "m/report.js": …}}` |
 | `/embed/v1/elements/1/…`, `/embed/v1/elements/1.1/…` | `302` to the exact version (for a host that accepts updates; SRI needs the exact one) |
 | `/embed/v1/drishti-elements.js` | the console's current library, revalidated on each load (a host that follows the console) |
 
@@ -2907,7 +2907,7 @@ one visual without chrome, the phone layout in the element and the console, the 
 
 **Built, beside Elements 1.x** ([ADR-022](adr/022-one-renderer-in-the-browser.md),
 [section 13](#13-the-elements-versioning-and-distribution)). Elements 1.x (this document's sections 1
-to 18) is unchanged: HTML over `/embed/v1/`, version 1.4.4. Elements 2.0 keeps 1.x's element API and changes only the inside: the element
+to 18) is unchanged: HTML over `/embed/v1/`, version 1.4.5. Elements 2.0 keeps 1.x's element API and changes only the inside: the element
 draws with Drishti Render 1.0.0 from the ViewModel the embed API v2 answers as JSON. A page uses one major or the other.
 **Elements 2.1** (renderer 1.1.0; `/embed/v2/elements/2/` answers it, 2.0 stays at `/embed/v2/elements/2.0/`) adds
 `auth="popup"` and `DrishtiElements.configure({ auth: 'popup' })`: a page with no backend signs its user in through the console's single
@@ -2916,7 +2916,7 @@ sign-on in a window opened on a click, and the element shows the state `sign-in`
 
 | | Elements 1.x | Elements 2.0 |
 |---|---|---|
-| Import | `/embed/v1/drishti-elements.js` (or `/embed/v1/elements/1.4.4/…`) | `/embed/v2/elements/2/drishti-elements.js` (a `302` to `/embed/v2/render/1.0.0/drishti-elements.js`) |
+| Import | `/embed/v1/drishti-elements.js` (or `/embed/v1/elements/1.4.5/…`) | `/embed/v2/elements/2/drishti-elements.js` (a `302` to `/embed/v2/render/1.0.0/drishti-elements.js`) |
 | The view | `GET /embed/v1/views/{kind}/{id}`: head, banners and panels as the console's HTML, sanitised | `GET /embed/v2/views/{kind}/{id}`: the ViewModel (`"contract": "1.0"`), drawn by the renderer; `Drishti-Subscribe` names its live key |
 | Parts | `…/panels` and `…/about` as HTML | `…/panels` (panels and strip cells) and `…/about` (`{explain, index}`) as JSON; `…/panels/{panel}/records` as in 1.x |
 | Live | `/embed/v1/channel`, `view:` keys, panel patches as HTML | `/embed/v2/channel` (the same channel code), `vm:` keys, panel patches as panels |
@@ -3040,7 +3040,7 @@ screen is bound to. Everything after that is Drishti's ordinary machinery.
 | Time travel | `AsOf(businessDate, knownAt, live)`, `AsOfResolver` | `asOf` and `knownAt` on a GenUI URL | none |
 | Live views | `StreamController` (`GET /api/v1/views/{kind}/{id}/stream`, SSE: `view`, `frame`, `: hb`), `ViewStream`, `TopicHub`, `FrameMailbox`, `LiveStreamSlots` | ticks on a composed screen | `ViewStream` rebuilds with `pipeline.view(ref, …)` or `pipeline.build(main, …)`, i.e. with the *registered* Sutra (`ViewStream.java` line 144): a composed Sutra needs a rebuild that keeps it |
 | Console channel | `drishti-console/core/channel.py` (`view:kind/id?ctl.…` keys), `routes/api_routes.py` `channel()`, `_panel_html` | one connection per page; panels as HTML | only `view:` keys |
-| Elements | `drishti-console/web/embed/element.js`, `panel.js`, `report.js`, `search.js`, `about.js`; `routes/embed_routes.py` (`/embed/v1/views/{kind}/{id}`, `/embed/v1/channel`); library 1.4.4 (`web/elements/package/package.json`) | the host-side renderer, styles (`web/static/css/drishti_tokens.css`, `drishti_theme.css`, `--d-*` properties), charts, CSP and SRI story | no element for a composed screen |
+| Elements | `drishti-console/web/embed/element.js`, `panel.js`, `report.js`, `search.js`, `about.js`; `routes/embed_routes.py` (`/embed/v1/views/{kind}/{id}`, `/embed/v1/channel`); library 1.4.5 (`web/elements/package/package.json`) | the host-side renderer, styles (`web/static/css/drishti_tokens.css`, `drishti_theme.css`, `--d-*` properties), charts, CSP and SRI story | no element for a composed screen |
 | Embed tokens | `EmbedTokenService`, `EmbedController` (`POST /api/v1/embed/token`, RFC 8693), `EmbedProperties` (scopes to `METHOD path` patterns), `RateWindows`, `EmbedUsage`; console `core/embed_auth.py`, `core/embed_limits.py` | scoping a host application | no `embed:genui` scope |
 | Query by form | `FormController` (`GET /api/v1/forms/{pack}`, `POST /api/v1/forms/{pack}/{kind}/compile`), `FormSpec`, `FormField`, `FormCompiler`; the pack's `form:` section; console `core/forms.py`, `routes/form_routes.py`, `css/drishti_form.css` | form fragments compile to the same search command | the form is a page, not a panel |
 | Search | `SearchController` (`GET /api/v1/search`, `/csv`, `/compare`) | result rows for a search binding | rows are not an `EntityDocument` |

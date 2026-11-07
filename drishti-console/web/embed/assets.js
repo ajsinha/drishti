@@ -58,8 +58,9 @@ const script = (url) => memo('script:' + url, () => new Promise((resolve, reject
   document.head.appendChild(s);
 }));
 
-// the console's own scripts, in order: the table engine before the grid it draws nested rows with (served from the allow-list in routes/embed_routes.py)
-export const ENHANCERS = ['pivot-engine', 'pivot-grid', 'view', 'geomap', 'charts', 'colfilter', 'tables', 'tree-rows', 'about', 'about-hints', 'zoom', 'multiselect', 'controls'];
+// the console's own scripts, in order: Drishti Elements' drishti-core and drishti-grid (tree rows draw nested pivots with the grid), the table engine
+// (served from the allow-list in routes/embed_routes.py)
+export const ENHANCERS = ['elements-core', 'elements-grid', 'pivot-engine', 'view', 'geomap', 'charts', 'colfilter', 'tables', 'tree-rows', 'about', 'about-hints', 'zoom', 'multiselect', 'controls'];
 export const chartLibs = (server) => memo('charts:' + server, async () => {
   await script(server + API + '/echarts.js');
   quietDispose();
@@ -67,7 +68,7 @@ export const chartLibs = (server) => memo('charts:' + server, async () => {
 });
 
 /** What <drishti-report> draws with: ECharts, then the console's report code (window.drishtiBi), in order. */
-export const REPORT_LIBS = ['geomap'].concat(['lib', 'phone', 'visuals', 'visuals-format', 'grids', 'matrix', 'multiples', 'frame', 'live'].map((n) => 'bi-' + n));
+export const REPORT_LIBS = ['elements-core', 'elements-grid', 'geomap'].concat(['lib', 'phone', 'visuals', 'visuals-format', 'grids', 'matrix', 'multiples', 'frame', 'live'].map((n) => 'bi-' + n));
 export const reportLibs = (server) => memo('rlibs:' + server, async () => {
   await script(server + API + '/echarts.js');
   quietDispose();
