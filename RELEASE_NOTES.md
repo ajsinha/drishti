@@ -46,6 +46,20 @@
 - **New, and the preferred form for Python:** a Python visual whose manifest says `output: drishti-chart` returns a drishti-chart spec
   with its rows inline, drawn as it is, every kind the library has ([BI_GUIDE.md](docs/guides/BI_GUIDE.md#14-vega-lite-output)).
 
+## Upgrade: the pivot cell's Explain, the Elements 1.x package, the FRTB-SA totals
+
+- **`POST /api/v1/pivot/explain` is deprecated** and is removed in the next release: ask `POST /api/v1/explain` with `kind: pivot,
+  measure: cell` and the same body (the old `measure`, the value's label, is now `value`); the engine's steps are under `why.answer`.
+  Until then the old address answers as before, with `Deprecation: true` and a `Link` to its successor. `drishti.py pivot explain`
+  already uses the new address.
+- **Explain › Open as a page** from a pivot cell now opens the same explanation the drawer showed (the view travels in the link).
+- **The `@drishti/elements` 1.x npm package is no longer built** (its tool `tools/elements_package.py` is deleted). Pages that embed the
+  1.x elements from the console are unaffected: `/embed/v1/elements/1.4.5/` serves the same bytes, as do the renderer 1.2.0 files. New
+  work takes the per-library packages (`drishti.py elements dist`, ELEMENTS_IN_YOUR_APP.md).
+- **The FRTB-SA screen shows each class's Total again**, the server's figure (`classTotals` in `GET /api/v1/frtb/sa`).
+- **Generated connector files stay unedited across the demo lake's move**: a file nobody edited keeps following its pack's template at
+  later upgrades.
+
 ## Upgrade: one search (the console's `/api/suggest` is removed)
 
 - **BI's keys** are the keymap's: `?` (and the rail's Keys button) lists them with the rest of the screen's, and BI's own keys dialog is

@@ -2155,6 +2155,274 @@
     function answerFormat(m) { return (v) => measureText(v, m); }
     return { "pivotApplyUpdates": pivotApplyUpdates, "mergeAnswer": mergeAnswer, "applyValueFilters": applyValueFilters, "resultColumns": resultColumns, "cellValue": cellValue, "measureText": measureText, "answerFormat": answerFormat };
   })();
+  /* ---- src/drishti_server-rows.js ---- */
+  __m["src/drishti_server-rows.js"] = (function () {
+    var EventBus = __lib("drishti-core").EventBus;
+    var SEP = __m["src/drishti_pivot.js"].SEP;
+    function Level(keys) { this.keys = keys; this.blocks = new Map(); this.rowCount = null; this.knownEnd = 0; }
+    class ServerRowModel {
+      constructor(o) {
+        if (!o || !o.datasource || typeof o.datasource.getRows !== 'function') { throw new Error('a server-side row model needs a datasource with getRows(request)'); }
+        this.datasource = o.datasource;
+        this.blockSize = o.blockSize || 100;
+        this.maxBlocks = o.maxBlocks || 50;
+        this.treeData = !!o.treeData;
+        if (this.treeData && (typeof o.isServerSideGroup !== 'function' || typeof o.getServerSideGroupKey !== 'function')) {
+          throw new Error('tree data on server-side rows needs isServerSideGroup(row) and getServerSideGroupKey(row)');
+        }
+        this.isServerSideGroup = o.isServerSideGroup || null;
+        this.getServerSideGroupKey = o.getServerSideGroupKey || null;
+        this.openTo = o.groupDefaultExpanded === -1 ? Infinity : Math.max(0, o.groupDefaultExpanded || 0);
+        this.collapsed = new Set();
+        this.getRowId = o.getRowId || ((r, i, keys) => (r && r.id !== undefined ? String(r.id) : keys.concat([String(i)]).join(SEP)));
+        this.events = new EventBus();
+        this.sortModel = [];
+        this.filterModel = {};
+        this.quickFilter = '';
+        this.rowGroupCols = [];
+        this.valueCols = [];
+        this.pivotCols = [];
+        this.pivotMode = false;
+        this.expanded = new Set();
+        this.stamp = 0;
+        this.lru = [];
+        this.inFlight = new Map();
+        this.reset();
+      }
+      reset() {
+        this.inFlight.forEach((x) => x.ctl && x.ctl.abort());
+        this.inFlight.clear();
+        this.levels = new Map([['', new Level([])]]);
+        this.lru = [];
+        this.stamp++;
+        this.display = null;
+      }
+      setSortModel(m) { this.sortModel = (m || []).slice(); this.reset(); this.events.emit('rowsChanged', { reason: 'sort' }); }
+      setFilterModel(m) { this.filterModel = Object.assign({}, m); this.reset(); this.events.emit('rowsChanged', { reason: 'filter' }); }
+      setQuickFilter(q) { this.quickFilter = q || ''; this.reset(); this.events.emit('rowsChanged', { reason: 'filter' }); }
+      setGrouping(s) {
+        this.rowGroupCols = (s.rowGroupCols || []).slice();
+        this.valueCols = (s.valueCols || []).slice();
+        this.pivotCols = (s.pivotCols || []).slice();
+        this.pivotMode = !!s.pivotMode;
+        this.expanded.clear();
+        this.collapsed.clear();
+        this.reset();
+        this.events.emit('rowsChanged', { reason: 'group' });
+      }
+      setExpanded(keys, open) {
+        const k = keys.join(SEP), now = open === undefined ? !this.isOpen(k, keys.length - 1) : open;
+        if (now) { this.expanded.add(k); this.collapsed.delete(k); if (!this.levels.has(k)) { this.levels.set(k, new Level(keys.slice())); } }
+        else { this.expanded.delete(k); this.collapsed.add(k); }
+        this.display = null;
+        this.events.emit('rowsChanged', { reason: 'expand' });
+      }
+      expandToLevel(level) {
+        this.openTo = level >= 99 ? Infinity : Math.max(0, level || 0);
+        this.expanded.clear();
+        this.collapsed.clear();
+        this.display = null;
+        this.events.emit('rowsChanged', { reason: 'expand' });
+      }
+      refresh(o) {
+        if (!o || !o.keys) { const exp = new Set(this.expanded); this.reset(); exp.forEach((k) => this.levels.set(k, new Level(k ? k.split(SEP) : []))); }
+        else {
+          const k = o.keys.join(SEP);
+          this.levels.forEach((lv, key) => {
+            if (key === k || key.indexOf(k ? k + SEP : '') === 0) {
+              lv.blocks.clear();
+              if (!o || o.purge !== false) { lv.rowCount = null; lv.knownEnd = 0; }
+            }
+          });
+          this.lru = this.lru.filter((x) => this.levels.get(x.level).blocks.has(x.block));
+          this.display = null;
+        }
+        this.events.emit('rowsChanged', { reason: 'refresh' });
+      }
+      invalidateBlock(keys, block) {
+        const lv = this.levels.get(keys.join(SEP));
+        const had = !!(lv && lv.blocks.delete(block));
+        if (had) { this.lru = this.lru.filter((x) => !(x.level === keys.join(SEP) && x.block === block)); this.display = null; this.events.emit('rowsChanged', { reason: 'invalidate' }); }
+        return had;
+      }
+      purge() { this.refresh(); }
+      dataChanged(notice) {
+        const n = notice || {};
+        if (n.purge || (!n.keys && !n.rows)) { this.purge(); return 'purge'; }
+        if (n.rows) {
+          const ids = new Set(n.rows.map(String));
+          let hit = 0;
+          this.levels.forEach((lv, key) => lv.blocks.forEach((b, bi) => {
+            if (b.rows.some((r, i) => ids.has(this.getRowId(r, bi * this.blockSize + i, lv.keys)))) { this.invalidateBlock(lv.keys, bi); hit++; }
+          }));
+          return hit ? 'rows' : 'nothing';
+        }
+        if (n.blocks) { n.blocks.forEach((b) => this.invalidateBlock(n.keys, b)); return 'blocks'; }
+        this.refresh({ keys: n.keys });
+        return 'level';
+      }
+      isOpen(key, depth) { return this.expanded.has(key) || (depth < this.openTo && !this.collapsed.has(key)); }
+      nested() { return this.expanded.size > 0 || (this.openTo > 0 && (this.treeData || this.rowGroupCols.length > 0)); }
+      childKeys(lv, r) {
+        if (this.treeData) { return this.isServerSideGroup(r) ? lv.keys.concat([String(this.getServerSideGroupKey(r))]) : null; }
+        const depth = lv.keys.length;
+        return depth < this.rowGroupCols.length ? lv.keys.concat([String(r[this.rowGroupCols[depth]])]) : null;
+      }
+      levelCount(lv) { return lv.rowCount !== null ? lv.rowCount : lv.knownEnd + this.blockSize; }
+      flatten() {
+        if (this.display) { return this.display; }
+        const out = [];
+        const walk = (key) => {
+          const lv = this.levels.get(key), n = this.levelCount(lv), depth = lv.keys.length;
+          for (let i = 0; i < n; i++) {
+            out.push([key, i]);
+            if (this.treeData || depth < this.rowGroupCols.length) {
+              const r = this.blockRow(lv, i), childKeys = r && !r.loading ? this.childKeys(lv, r) : null;
+              if (childKeys) {
+                const ck = childKeys.join(SEP);
+                if (this.isOpen(ck, depth)) { if (!this.levels.has(ck)) { this.levels.set(ck, new Level(childKeys)); } walk(ck); }
+              }
+            }
+          }
+        };
+        walk('');
+        this.display = out;
+        return out;
+      }
+      blockRow(lv, i) {
+        const b = lv.blocks.get(Math.floor(i / this.blockSize));
+        if (!b) { return null; }
+        const r = b.rows[i % this.blockSize];
+        return r === undefined ? null : r;
+      }
+      rowCount() { return this.nested() ? this.flatten().length : this.levelCount(this.levels.get('')); }
+      at(i) { return this.nested() ? this.flatten()[i] : ['', i]; }
+      rowAt(i) {
+        if (i < 0 || i >= this.rowCount()) { return null; }
+        const [key, n] = this.at(i), lv = this.levels.get(key), depth = lv.keys.length;
+        const r = this.blockRow(lv, n);
+        if (!r) { this.ensureBlock(key, Math.floor(n / this.blockSize)); return { kind: 'loading', id: 'loading:' + key + ':' + n, depth: depth, row: null, loading: true }; }
+        if (this.treeData) {
+          const keys = this.childKeys(lv, r), id = this.getRowId(r, n, lv.keys);
+          if (!keys) { return { kind: 'leaf', tree: true, treeKey: String(this.getServerSideGroupKey(r)), id: id, depth: depth, row: r, keys: lv.keys }; }
+          return { kind: 'group', tree: true, treeKey: keys[keys.length - 1], id: id, depth: depth, row: r, keys: keys, path: keys, field: null, value: keys[keys.length - 1],
+            expanded: this.isOpen(keys.join(SEP), depth) };                       // the tree column shows the key alone, as the client tree does
+        }
+        if (depth < this.rowGroupCols.length) {
+          const keys = lv.keys.concat([String(r[this.rowGroupCols[depth]])]);
+          return { kind: 'group', id: 'group:' + keys.join(SEP), depth: depth, row: r, keys: keys, field: this.rowGroupCols[depth], value: r[this.rowGroupCols[depth]],
+            count: r.childCount, expanded: this.isOpen(keys.join(SEP), depth) };
+        }
+        return { kind: 'leaf', id: this.getRowId(r, n, lv.keys), depth: depth, row: r, keys: lv.keys };
+      }
+      ensureRange(first, last) {
+        const count = this.rowCount(), waits = [];
+        const seen = new Set();
+        for (let i = Math.max(0, first); i <= Math.min(last, count - 1); i++) {
+          const [key, n] = this.at(i), b = Math.floor(n / this.blockSize), id = key + '#' + b;
+          if (seen.has(id)) { continue; }
+          seen.add(id);
+          waits.push(this.ensureBlock(key, b));
+        }
+        return Promise.all(waits).then(() => undefined);
+      }
+      request(lv, block, signal) {
+        const q = { startRow: block * this.blockSize, endRow: (block + 1) * this.blockSize, sortModel: this.sortModel.slice(), filterModel: Object.assign({}, this.filterModel),
+          quickFilter: this.quickFilter, rowGroupCols: this.rowGroupCols.slice(), groupKeys: lv.keys.slice(), valueCols: this.valueCols.slice(),
+          pivotCols: this.pivotCols.slice(), pivotMode: this.pivotMode, signal: signal };
+        if (this.treeData) { q.treeData = true; }
+        return q;
+      }
+      ensureBlock(levelKey, block) {
+        const lv = this.levels.get(levelKey);
+        if (!lv || lv.blocks.has(block)) { return Promise.resolve(); }
+        const id = levelKey + '#' + block;
+        if (this.inFlight.has(id)) { return this.inFlight.get(id).p; }
+        const stamp = this.stamp, ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const p = Promise.resolve().then(() => this.datasource.getRows(this.request(lv, block, ctl ? ctl.signal : undefined))).then((a) => {
+          this.inFlight.delete(id);
+          if (stamp !== this.stamp) { return; }                         // the sort or filter changed meanwhile: a stale answer is dropped
+          const rows = (a && a.rows) || [];
+          lv.blocks.set(block, { rows: rows });
+          this.touch(levelKey, block);
+          const end = block * this.blockSize + rows.length;
+          lv.knownEnd = Math.max(lv.knownEnd, end);
+          if (a && typeof a.rowCount === 'number') { lv.rowCount = a.rowCount; } else if (rows.length < this.blockSize) { lv.rowCount = end; }
+          this.display = null;
+          this.events.emit('blockLoaded', { keys: lv.keys, block: block });
+          this.events.emit('rowsChanged', { reason: 'block' });
+        }, (e) => {
+          this.inFlight.delete(id);
+          if (stamp !== this.stamp || (e && (e.aborted || e.name === 'AbortError'))) { return; }
+          this.events.emit('loadFailed', { error: e, keys: lv.keys, block: block });
+        });
+        this.inFlight.set(id, { p: p, ctl: ctl });
+        return p;
+      }
+      touch(level, block) {
+        this.lru = this.lru.filter((x) => !(x.level === level && x.block === block));
+        this.lru.push({ level: level, block: block });
+        while (this.lru.length > this.maxBlocks) {
+          const old = this.lru.shift(), lv = this.levels.get(old.level);
+          if (lv) { lv.blocks.delete(old.block); }
+        }
+      }
+      cacheStats() { return { blocks: this.lru.length, inFlight: this.inFlight.size }; }
+    }
+    function memoryDatasource(rows, o) {
+      o = o || {};
+      const calls = [];
+      return {
+        calls: calls,
+        getRows(req) {
+          calls.push(req);
+          return new Promise((resolve, reject) => {
+            const run = () => {
+              if (req.signal && req.signal.aborted) { const e = new Error('aborted'); e.aborted = true; reject(e); return; }
+              if (req.treeData) {
+                if (typeof o.getDataPath !== 'function') { reject(new Error('a tree data request needs the memory datasource\'s getDataPath')); return; }
+                let level = treeLevel(rows, o.getDataPath, req.groupKeys, o.keyField || 'key');
+                if (req.sortModel && req.sortModel.length) { level = sortRows(level, req.sortModel[0]); }
+                resolve({ rows: level.slice(req.startRow, req.endRow), rowCount: level.length });
+                return;
+              }
+              let list = req.groupKeys.length ? rows.filter((r) => req.groupKeys.every((k, i) => String(r[req.rowGroupCols[i]]) === k)) : rows;
+              Object.keys(req.filterModel || {}).forEach((k) => {
+                const f = req.filterModel[k];
+                if (f && f.type === 'set' && f.values) { list = list.filter((r) => f.values.map(String).indexOf(String(r[k])) >= 0); }
+              });
+              if (req.groupKeys.length < req.rowGroupCols.length) {
+                const col = req.rowGroupCols[req.groupKeys.length], m = new Map();
+                list.forEach((r) => { const k = String(r[col]); const g = m.get(k) || { [col]: r[col], childCount: 0 }; g.childCount++; m.set(k, g); });
+                list = Array.from(m.values()).sort((a, b) => String(a[col]).localeCompare(String(b[col])));
+              } else if (req.sortModel && req.sortModel.length) {
+                list = sortRows(list, req.sortModel[0]);
+              }
+              resolve({ rows: list.slice(req.startRow, req.endRow), rowCount: list.length });
+            };
+            if (o.delay) { setTimeout(run, o.delay); } else { run(); }
+          });
+        }
+      };
+    }
+    function sortRows(list, s) {
+      const dir = s.sort === 'desc' ? -1 : 1;
+      return list.slice().sort((a, b) => (a[s.colId] < b[s.colId] ? -dir : a[s.colId] > b[s.colId] ? dir : 0));
+    }
+    function treeLevel(rows, getDataPath, keys, keyField) {
+      const out = new Map(), d = keys.length;
+      rows.forEach((r) => {
+        const p = getDataPath(r).map(String);
+        if (p.length <= d || keys.some((k, i) => p[i] !== k)) { return; }
+        const k = p[d];
+        let x = out.get(k);
+        if (!x) { x = { row: null, kids: new Set() }; out.set(k, x); }
+        if (p.length === d + 1) { x.row = r; } else { x.kids.add(p[d + 1]); }
+      });
+      return Array.from(out.entries()).map(([k, x]) => Object.assign({}, x.row || { [keyField]: k }, { treeKey: k, treeGroup: x.kids.size > 0, childCount: x.kids.size }));
+    }
+    return { "ServerRowModel": ServerRowModel, "memoryDatasource": memoryDatasource };
+  })();
   /* ---- src/drishti_grid-model-base.js ---- */
   __m["src/drishti_grid-model-base.js"] = (function () {
     var toCsv = __lib("drishti-core").toCsv;
@@ -2162,12 +2430,20 @@
     var PivotState = __m["src/drishti_pivot.js"].PivotState, pivotLocal = __m["src/drishti_pivot.js"].pivotLocal, serverRequest = __m["src/drishti_pivot.js"].serverRequest;
     var pivotApplyUpdates = __m["src/drishti_pivot-answer.js"].pivotApplyUpdates, mergeAnswer = __m["src/drishti_pivot-answer.js"].mergeAnswer, applyValueFilters = __m["src/drishti_pivot-answer.js"].applyValueFilters;
     var toXlsx = __m["src/drishti_export.js"].toXlsx;
+    var ClientRowModel = __m["src/drishti_client-rows.js"].ClientRowModel;
+    var ServerRowModel = __m["src/drishti_server-rows.js"].ServerRowModel;
     const LAYOUTS = Object.freeze(['wells', 'panel', 'terminal']);
     const DENSITIES = Object.freeze({ comfortable: 36, compact: 28, terminal: 22 });
     function placeGrandRow(answer, where) {
       if (!answer || !answer.rows || ['top', 'bottom', 'none'].indexOf(where) < 0) { return; }
       const grand = answer.rows.filter((r) => r.kind === 'grand'), rest = answer.rows.filter((r) => r.kind !== 'grand');
       answer.rows = where === 'none' ? rest : where === 'top' ? grand.concat(rest) : rest.concat(grand);
+    }
+    function rowModelFor(o, columns) {
+      const tree = { treeData: o.treeData, groupDefaultExpanded: o.groupDefaultExpanded, getRowId: o.getRowId };
+      return o.datasource ? new ServerRowModel(Object.assign({ datasource: o.datasource, blockSize: o.blockSize, isServerSideGroup: o.isServerSideGroup,
+        getServerSideGroupKey: o.getServerSideGroupKey }, tree))
+        : new ClientRowModel(Object.assign({ columns: columns, rows: o.rows || [], clientAggregation: o.clientAggregation, getDataPath: o.getDataPath }, tree));
     }
     class GridModelBase {
       setPivotMode(on) {
@@ -2305,7 +2581,7 @@
         return this.setPivotMode(!!s.pivot);
       }
     }
-    return { "LAYOUTS": LAYOUTS, "DENSITIES": DENSITIES, "placeGrandRow": placeGrandRow, "GridModelBase": GridModelBase };
+    return { "LAYOUTS": LAYOUTS, "DENSITIES": DENSITIES, "placeGrandRow": placeGrandRow, "rowModelFor": rowModelFor, "GridModelBase": GridModelBase };
   })();
   /* ---- src/drishti_grid-edit.js ---- */
   __m["src/drishti_grid-edit.js"] = (function () {
@@ -2837,274 +3113,6 @@
     }
     return { "onKey": onKey, "openColumnMenu": openColumnMenu, "openCellMenu": openCellMenu, "localDrill": localDrill, "runAction": runAction, "toolbarAction": toolbarAction };
   })();
-  /* ---- src/drishti_server-rows.js ---- */
-  __m["src/drishti_server-rows.js"] = (function () {
-    var EventBus = __lib("drishti-core").EventBus;
-    var SEP = __m["src/drishti_pivot.js"].SEP;
-    function Level(keys) { this.keys = keys; this.blocks = new Map(); this.rowCount = null; this.knownEnd = 0; }
-    class ServerRowModel {
-      constructor(o) {
-        if (!o || !o.datasource || typeof o.datasource.getRows !== 'function') { throw new Error('a server-side row model needs a datasource with getRows(request)'); }
-        this.datasource = o.datasource;
-        this.blockSize = o.blockSize || 100;
-        this.maxBlocks = o.maxBlocks || 50;
-        this.treeData = !!o.treeData;
-        if (this.treeData && (typeof o.isServerSideGroup !== 'function' || typeof o.getServerSideGroupKey !== 'function')) {
-          throw new Error('tree data on server-side rows needs isServerSideGroup(row) and getServerSideGroupKey(row)');
-        }
-        this.isServerSideGroup = o.isServerSideGroup || null;
-        this.getServerSideGroupKey = o.getServerSideGroupKey || null;
-        this.openTo = o.groupDefaultExpanded === -1 ? Infinity : Math.max(0, o.groupDefaultExpanded || 0);
-        this.collapsed = new Set();
-        this.getRowId = o.getRowId || ((r, i, keys) => (r && r.id !== undefined ? String(r.id) : keys.concat([String(i)]).join(SEP)));
-        this.events = new EventBus();
-        this.sortModel = [];
-        this.filterModel = {};
-        this.quickFilter = '';
-        this.rowGroupCols = [];
-        this.valueCols = [];
-        this.pivotCols = [];
-        this.pivotMode = false;
-        this.expanded = new Set();
-        this.stamp = 0;
-        this.lru = [];
-        this.inFlight = new Map();
-        this.reset();
-      }
-      reset() {
-        this.inFlight.forEach((x) => x.ctl && x.ctl.abort());
-        this.inFlight.clear();
-        this.levels = new Map([['', new Level([])]]);
-        this.lru = [];
-        this.stamp++;
-        this.display = null;
-      }
-      setSortModel(m) { this.sortModel = (m || []).slice(); this.reset(); this.events.emit('rowsChanged', { reason: 'sort' }); }
-      setFilterModel(m) { this.filterModel = Object.assign({}, m); this.reset(); this.events.emit('rowsChanged', { reason: 'filter' }); }
-      setQuickFilter(q) { this.quickFilter = q || ''; this.reset(); this.events.emit('rowsChanged', { reason: 'filter' }); }
-      setGrouping(s) {
-        this.rowGroupCols = (s.rowGroupCols || []).slice();
-        this.valueCols = (s.valueCols || []).slice();
-        this.pivotCols = (s.pivotCols || []).slice();
-        this.pivotMode = !!s.pivotMode;
-        this.expanded.clear();
-        this.collapsed.clear();
-        this.reset();
-        this.events.emit('rowsChanged', { reason: 'group' });
-      }
-      setExpanded(keys, open) {
-        const k = keys.join(SEP), now = open === undefined ? !this.isOpen(k, keys.length - 1) : open;
-        if (now) { this.expanded.add(k); this.collapsed.delete(k); if (!this.levels.has(k)) { this.levels.set(k, new Level(keys.slice())); } }
-        else { this.expanded.delete(k); this.collapsed.add(k); }
-        this.display = null;
-        this.events.emit('rowsChanged', { reason: 'expand' });
-      }
-      expandToLevel(level) {
-        this.openTo = level >= 99 ? Infinity : Math.max(0, level || 0);
-        this.expanded.clear();
-        this.collapsed.clear();
-        this.display = null;
-        this.events.emit('rowsChanged', { reason: 'expand' });
-      }
-      refresh(o) {
-        if (!o || !o.keys) { const exp = new Set(this.expanded); this.reset(); exp.forEach((k) => this.levels.set(k, new Level(k ? k.split(SEP) : []))); }
-        else {
-          const k = o.keys.join(SEP);
-          this.levels.forEach((lv, key) => {
-            if (key === k || key.indexOf(k ? k + SEP : '') === 0) {
-              lv.blocks.clear();
-              if (!o || o.purge !== false) { lv.rowCount = null; lv.knownEnd = 0; }
-            }
-          });
-          this.lru = this.lru.filter((x) => this.levels.get(x.level).blocks.has(x.block));
-          this.display = null;
-        }
-        this.events.emit('rowsChanged', { reason: 'refresh' });
-      }
-      invalidateBlock(keys, block) {
-        const lv = this.levels.get(keys.join(SEP));
-        const had = !!(lv && lv.blocks.delete(block));
-        if (had) { this.lru = this.lru.filter((x) => !(x.level === keys.join(SEP) && x.block === block)); this.display = null; this.events.emit('rowsChanged', { reason: 'invalidate' }); }
-        return had;
-      }
-      purge() { this.refresh(); }
-      dataChanged(notice) {
-        const n = notice || {};
-        if (n.purge || (!n.keys && !n.rows)) { this.purge(); return 'purge'; }
-        if (n.rows) {
-          const ids = new Set(n.rows.map(String));
-          let hit = 0;
-          this.levels.forEach((lv, key) => lv.blocks.forEach((b, bi) => {
-            if (b.rows.some((r, i) => ids.has(this.getRowId(r, bi * this.blockSize + i, lv.keys)))) { this.invalidateBlock(lv.keys, bi); hit++; }
-          }));
-          return hit ? 'rows' : 'nothing';
-        }
-        if (n.blocks) { n.blocks.forEach((b) => this.invalidateBlock(n.keys, b)); return 'blocks'; }
-        this.refresh({ keys: n.keys });
-        return 'level';
-      }
-      isOpen(key, depth) { return this.expanded.has(key) || (depth < this.openTo && !this.collapsed.has(key)); }
-      nested() { return this.expanded.size > 0 || (this.openTo > 0 && (this.treeData || this.rowGroupCols.length > 0)); }
-      childKeys(lv, r) {
-        if (this.treeData) { return this.isServerSideGroup(r) ? lv.keys.concat([String(this.getServerSideGroupKey(r))]) : null; }
-        const depth = lv.keys.length;
-        return depth < this.rowGroupCols.length ? lv.keys.concat([String(r[this.rowGroupCols[depth]])]) : null;
-      }
-      levelCount(lv) { return lv.rowCount !== null ? lv.rowCount : lv.knownEnd + this.blockSize; }
-      flatten() {
-        if (this.display) { return this.display; }
-        const out = [];
-        const walk = (key) => {
-          const lv = this.levels.get(key), n = this.levelCount(lv), depth = lv.keys.length;
-          for (let i = 0; i < n; i++) {
-            out.push([key, i]);
-            if (this.treeData || depth < this.rowGroupCols.length) {
-              const r = this.blockRow(lv, i), childKeys = r && !r.loading ? this.childKeys(lv, r) : null;
-              if (childKeys) {
-                const ck = childKeys.join(SEP);
-                if (this.isOpen(ck, depth)) { if (!this.levels.has(ck)) { this.levels.set(ck, new Level(childKeys)); } walk(ck); }
-              }
-            }
-          }
-        };
-        walk('');
-        this.display = out;
-        return out;
-      }
-      blockRow(lv, i) {
-        const b = lv.blocks.get(Math.floor(i / this.blockSize));
-        if (!b) { return null; }
-        const r = b.rows[i % this.blockSize];
-        return r === undefined ? null : r;
-      }
-      rowCount() { return this.nested() ? this.flatten().length : this.levelCount(this.levels.get('')); }
-      at(i) { return this.nested() ? this.flatten()[i] : ['', i]; }
-      rowAt(i) {
-        if (i < 0 || i >= this.rowCount()) { return null; }
-        const [key, n] = this.at(i), lv = this.levels.get(key), depth = lv.keys.length;
-        const r = this.blockRow(lv, n);
-        if (!r) { this.ensureBlock(key, Math.floor(n / this.blockSize)); return { kind: 'loading', id: 'loading:' + key + ':' + n, depth: depth, row: null, loading: true }; }
-        if (this.treeData) {
-          const keys = this.childKeys(lv, r), id = this.getRowId(r, n, lv.keys);
-          if (!keys) { return { kind: 'leaf', tree: true, treeKey: String(this.getServerSideGroupKey(r)), id: id, depth: depth, row: r, keys: lv.keys }; }
-          return { kind: 'group', tree: true, treeKey: keys[keys.length - 1], id: id, depth: depth, row: r, keys: keys, path: keys, field: null, value: keys[keys.length - 1],
-            expanded: this.isOpen(keys.join(SEP), depth) };                       // the tree column shows the key alone, as the client tree does
-        }
-        if (depth < this.rowGroupCols.length) {
-          const keys = lv.keys.concat([String(r[this.rowGroupCols[depth]])]);
-          return { kind: 'group', id: 'group:' + keys.join(SEP), depth: depth, row: r, keys: keys, field: this.rowGroupCols[depth], value: r[this.rowGroupCols[depth]],
-            count: r.childCount, expanded: this.isOpen(keys.join(SEP), depth) };
-        }
-        return { kind: 'leaf', id: this.getRowId(r, n, lv.keys), depth: depth, row: r, keys: lv.keys };
-      }
-      ensureRange(first, last) {
-        const count = this.rowCount(), waits = [];
-        const seen = new Set();
-        for (let i = Math.max(0, first); i <= Math.min(last, count - 1); i++) {
-          const [key, n] = this.at(i), b = Math.floor(n / this.blockSize), id = key + '#' + b;
-          if (seen.has(id)) { continue; }
-          seen.add(id);
-          waits.push(this.ensureBlock(key, b));
-        }
-        return Promise.all(waits).then(() => undefined);
-      }
-      request(lv, block, signal) {
-        const q = { startRow: block * this.blockSize, endRow: (block + 1) * this.blockSize, sortModel: this.sortModel.slice(), filterModel: Object.assign({}, this.filterModel),
-          quickFilter: this.quickFilter, rowGroupCols: this.rowGroupCols.slice(), groupKeys: lv.keys.slice(), valueCols: this.valueCols.slice(),
-          pivotCols: this.pivotCols.slice(), pivotMode: this.pivotMode, signal: signal };
-        if (this.treeData) { q.treeData = true; }
-        return q;
-      }
-      ensureBlock(levelKey, block) {
-        const lv = this.levels.get(levelKey);
-        if (!lv || lv.blocks.has(block)) { return Promise.resolve(); }
-        const id = levelKey + '#' + block;
-        if (this.inFlight.has(id)) { return this.inFlight.get(id).p; }
-        const stamp = this.stamp, ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-        const p = Promise.resolve().then(() => this.datasource.getRows(this.request(lv, block, ctl ? ctl.signal : undefined))).then((a) => {
-          this.inFlight.delete(id);
-          if (stamp !== this.stamp) { return; }                         // the sort or filter changed meanwhile: a stale answer is dropped
-          const rows = (a && a.rows) || [];
-          lv.blocks.set(block, { rows: rows });
-          this.touch(levelKey, block);
-          const end = block * this.blockSize + rows.length;
-          lv.knownEnd = Math.max(lv.knownEnd, end);
-          if (a && typeof a.rowCount === 'number') { lv.rowCount = a.rowCount; } else if (rows.length < this.blockSize) { lv.rowCount = end; }
-          this.display = null;
-          this.events.emit('blockLoaded', { keys: lv.keys, block: block });
-          this.events.emit('rowsChanged', { reason: 'block' });
-        }, (e) => {
-          this.inFlight.delete(id);
-          if (stamp !== this.stamp || (e && (e.aborted || e.name === 'AbortError'))) { return; }
-          this.events.emit('loadFailed', { error: e, keys: lv.keys, block: block });
-        });
-        this.inFlight.set(id, { p: p, ctl: ctl });
-        return p;
-      }
-      touch(level, block) {
-        this.lru = this.lru.filter((x) => !(x.level === level && x.block === block));
-        this.lru.push({ level: level, block: block });
-        while (this.lru.length > this.maxBlocks) {
-          const old = this.lru.shift(), lv = this.levels.get(old.level);
-          if (lv) { lv.blocks.delete(old.block); }
-        }
-      }
-      cacheStats() { return { blocks: this.lru.length, inFlight: this.inFlight.size }; }
-    }
-    function memoryDatasource(rows, o) {
-      o = o || {};
-      const calls = [];
-      return {
-        calls: calls,
-        getRows(req) {
-          calls.push(req);
-          return new Promise((resolve, reject) => {
-            const run = () => {
-              if (req.signal && req.signal.aborted) { const e = new Error('aborted'); e.aborted = true; reject(e); return; }
-              if (req.treeData) {
-                if (typeof o.getDataPath !== 'function') { reject(new Error('a tree data request needs the memory datasource\'s getDataPath')); return; }
-                let level = treeLevel(rows, o.getDataPath, req.groupKeys, o.keyField || 'key');
-                if (req.sortModel && req.sortModel.length) { level = sortRows(level, req.sortModel[0]); }
-                resolve({ rows: level.slice(req.startRow, req.endRow), rowCount: level.length });
-                return;
-              }
-              let list = req.groupKeys.length ? rows.filter((r) => req.groupKeys.every((k, i) => String(r[req.rowGroupCols[i]]) === k)) : rows;
-              Object.keys(req.filterModel || {}).forEach((k) => {
-                const f = req.filterModel[k];
-                if (f && f.type === 'set' && f.values) { list = list.filter((r) => f.values.map(String).indexOf(String(r[k])) >= 0); }
-              });
-              if (req.groupKeys.length < req.rowGroupCols.length) {
-                const col = req.rowGroupCols[req.groupKeys.length], m = new Map();
-                list.forEach((r) => { const k = String(r[col]); const g = m.get(k) || { [col]: r[col], childCount: 0 }; g.childCount++; m.set(k, g); });
-                list = Array.from(m.values()).sort((a, b) => String(a[col]).localeCompare(String(b[col])));
-              } else if (req.sortModel && req.sortModel.length) {
-                list = sortRows(list, req.sortModel[0]);
-              }
-              resolve({ rows: list.slice(req.startRow, req.endRow), rowCount: list.length });
-            };
-            if (o.delay) { setTimeout(run, o.delay); } else { run(); }
-          });
-        }
-      };
-    }
-    function sortRows(list, s) {
-      const dir = s.sort === 'desc' ? -1 : 1;
-      return list.slice().sort((a, b) => (a[s.colId] < b[s.colId] ? -dir : a[s.colId] > b[s.colId] ? dir : 0));
-    }
-    function treeLevel(rows, getDataPath, keys, keyField) {
-      const out = new Map(), d = keys.length;
-      rows.forEach((r) => {
-        const p = getDataPath(r).map(String);
-        if (p.length <= d || keys.some((k, i) => p[i] !== k)) { return; }
-        const k = p[d];
-        let x = out.get(k);
-        if (!x) { x = { row: null, kids: new Set() }; out.set(k, x); }
-        if (p.length === d + 1) { x.row = r; } else { x.kids.add(p[d + 1]); }
-      });
-      return Array.from(out.entries()).map(([k, x]) => Object.assign({}, x.row || { [keyField]: k }, { treeKey: k, treeGroup: x.kids.size > 0, childCount: x.kids.size }));
-    }
-    return { "ServerRowModel": ServerRowModel, "memoryDatasource": memoryDatasource };
-  })();
   /* ---- src/drishti_viewport.js ---- */
   __m["src/drishti_viewport.js"] = (function () {
     const MAX_SCROLL_HEIGHT = 15000000;
@@ -3460,8 +3468,6 @@
   __m["src/drishti_grid.js"] = (function () {
     var EventBus = __lib("drishti-core").EventBus;
     var ColumnModel = __m["src/drishti_columns.js"].ColumnModel, getValue = __m["src/drishti_columns.js"].getValue, formatValue = __m["src/drishti_columns.js"].formatValue;
-    var ClientRowModel = __m["src/drishti_client-rows.js"].ClientRowModel;
-    var ServerRowModel = __m["src/drishti_server-rows.js"].ServerRowModel;
     var Viewport = __m["src/drishti_viewport.js"].Viewport;
     var SelectionModel = __m["src/drishti_selection.js"].SelectionModel, rangeStats = __m["src/drishti_selection.js"].rangeStats, toTsv = __m["src/drishti_selection.js"].toTsv, rangeCells = __m["src/drishti_selection.js"].rangeCells;
     var GridNavigator = __m["src/drishti_keyboard.js"].GridNavigator;
@@ -3470,7 +3476,7 @@
     var resultColumns = __m["src/drishti_pivot-answer.js"].resultColumns, cellValue = __m["src/drishti_pivot-answer.js"].cellValue;
     var GridLive = __m["src/drishti_grid-live.js"].GridLive;
     var GridEditing = __m["src/drishti_grid-edit.js"].GridEditing;
-    var GridModelBase = __m["src/drishti_grid-model-base.js"].GridModelBase, LAYOUTS = __m["src/drishti_grid-model-base.js"].LAYOUTS, DENSITIES = __m["src/drishti_grid-model-base.js"].DENSITIES;
+    var GridModelBase = __m["src/drishti_grid-model-base.js"].GridModelBase, LAYOUTS = __m["src/drishti_grid-model-base.js"].LAYOUTS, DENSITIES = __m["src/drishti_grid-model-base.js"].DENSITIES, rowModelFor = __m["src/drishti_grid-model-base.js"].rowModelFor;
     var cycleSort = __lib("drishti-core").cycleSort, FILTER_CHANNEL = __lib("drishti-core").FILTER_CHANNEL;
     class GridModel extends GridModelBase {
       constructor(o) {
@@ -3481,10 +3487,7 @@
         this.columns = new ColumnModel(o.columns);
         this.layout = LAYOUTS.indexOf(o.layout) >= 0 ? o.layout : 'wells';
         this.density = DENSITIES[o.density] ? o.density : 'compact';
-        this.rowModel = o.datasource ? new ServerRowModel({ datasource: o.datasource, blockSize: o.blockSize, getRowId: o.getRowId, treeData: o.treeData,
-          isServerSideGroup: o.isServerSideGroup, getServerSideGroupKey: o.getServerSideGroupKey, groupDefaultExpanded: o.groupDefaultExpanded })
-          : new ClientRowModel({ columns: this.columns, rows: o.rows || [], getRowId: o.getRowId, clientAggregation: o.clientAggregation, treeData: o.treeData,
-            getDataPath: o.getDataPath, groupDefaultExpanded: o.groupDefaultExpanded });
+        this.rowModel = rowModelFor(o, this.columns);
         this.serverSide = !!o.datasource;
         this.viewport = new Viewport({ rowHeight: DENSITIES[this.density] });
         this.selection = new SelectionModel({ mode: o.rowSelection });

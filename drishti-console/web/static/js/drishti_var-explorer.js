@@ -28,7 +28,7 @@
    shared with me); the sheet is collapsed until "+ New basket" (or Alt+B, + basket, Edit) and collapses again once saved. A saved
    basket of yours has "Edit" (an administrator's on everyone's; a basket shared with you and a portfolio, the bank's, have "Edit a copy")
    and "Delete", which asks in a dialog (drishti_scope-delete.js), then refreshes the list and says so. How a number was built is the one Explain's
-   (drishti_explain.js): the VaR and ES tiles and Explain › carry their figure's request (bindExplain), the page's scope, date and lens. "Capture VaR" stores an immutable snapshot that reopens exactly, compares with
+   (drishti-insight): the VaR and ES tiles and Explain › carry their figure's request (bindExplain), the page's scope, date and lens. "Capture VaR" stores an immutable snapshot that reopens exactly, compares with
    another capture or with now, and exports as CSV.
 
    The reporting currency (2.9.4, the product owner's mock-up A): a select in the header strip lists the configured currencies and
@@ -433,7 +433,7 @@
     return r;
   }
 
-  /** The VaR and ES tiles and Explain ›: hover previews, a click (or E) opens the drawer (drishti_explain.js). */
+  /** The VaR and ES tiles and Explain ›: hover previews, a click (or E) opens the drawer (drishti-insight). */
   function bindExplain(d) {
     var E = window.Drishti.Explain, b = $("[data-vx-explain]");
     if (b) b.setAttribute("data-explain", JSON.stringify(explainReq("var")));

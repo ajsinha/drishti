@@ -766,7 +766,7 @@ other libraries gained for it:
   transport in `data.test.mjs`).
 - **Open.** The controls, the column funnels with Chart any table, and Zoom in `behaviours: 'console'` are still the console's scripts
   (they move with their screens: drishti-inputs for the controls, drishti-grid's column menus for the funnels); the renderer does not use
-  drishti-inputs yet. drishti-insight is not built: About takes its source from `options.insight.about`. The libraries 2.0.0 imports are
+  drishti-inputs yet. About takes its source from `options.insight.about` (drishti-insight's hook, 8.8). The libraries 2.0.0 imports are
   not per-version folders yet (its integrity record covers its own modules). The engine's model keeps under 530 lines a module: its pivot, export and kept state are `drishti_grid-model-base.js` (`GridModelBase`, which `GridModel` extends).
 
 ### 8.6 As built: the general screens moved (history, data, Admin, Help, landings, live)
@@ -846,6 +846,27 @@ owner's decision of 2026-11-07). How to use them: [ELEMENTS_IN_YOUR_APP.md](../g
   bytes in all three, reproducibly; the Maven profile builds the jar (offline; skipped without Java or the exec plugin in the local
   repository); dependency resolution and the banking exclusion; themes; every export declared. `tests/test_elements_pack_browser.py`
   (about 3 s): a static page with only the two packed files draws a grid and a chart under a strict CSP and asks for nothing else.
+
+
+### 8.8 As built: drishti-insight 0.1.0
+
+Library 6 (`static/elements/drishti-insight/`, in the manifest, so the distribution packs it and the gallery lists it) holds the
+components that read a Drishti server's answers as the person, moved whole from the console's scripts (nothing kept beside them):
+
+- **The one Explain** (`drishti_insight-explain.js`, was `static/js/drishti_explain.js`): the preview, the drawer with its four tabs,
+  the full page at `/explain` (a pivot cell's view carried in the link as one JSON parameter, `body`), the keys E, ? and Esc, and
+  `Drishti.Explain` (`open`, `preview`, `close`, `pageUrl`, `bind`, `ask`). The drawing of a figure's explanation stays drishti-core's.
+- **The one search box** (`drishti_insight-search.js`, was `static/js/drishti_search-box.js`): `Drishti.searchBox` for the command
+  line's type-ahead and Help's search, and `Drishti.find` (Alt+K).
+- **The one Approvals queue** (`drishti_insight-approvals.js`, was `static/js/drishti_approvals.js`): it starts on the page that holds
+  `[data-approvals]` and does nothing elsewhere.
+- **The workbook export** (`drishti_insight-workbook.js`): `workbookLinks(answer)` and `exportWorkbook(request)`, a number's
+  live-formula workbook found through the one Explain's Workbook part and downloaded; the server writes the workbook.
+
+`base.html` loads the bundle once for every page (after the keymap); its `install` adds the search box always, Explain unless the tag
+says `data-explain="off"` (a page for someone not signed in) and the Approvals queue on its page. Tests: `tests/elements/insight.test.mjs`
+(the entry, the workbook export, the queue's start) and the browser files of the screens that use them (Explain, the keymap and the
+search, Approvals).
 
 ## 9. The documentation of every library
 
@@ -1017,7 +1038,9 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [x] The phone behaviour of the grid and the pivot (O2); the standalone Excel writer (O4)
 - [x] drishti-inputs: pickers, forms with four eyes, the filter bar, the code editor (8.2); the formula input and people picker as their screens move
 - [x] drishti-renderer 2.0.0 on the libraries (8.5; the console's controls, funnels and Zoom still its scripts until their screens move)
-- [ ] drishti-insight, drishti-risk (in the banking plugin, licensed)
+- [x] drishti-insight 0.1.0 (8.8): the one Explain, the one search box, the Approvals queue and the workbook export, in the manifest, so
+  packing and the gallery include it
+- [ ] drishti-risk in the banking plugin, licensed
 - [x] The distribution (8.7): per-library packages with `.d.ts`, themes, `drishti.py elements pack` with the banking exclusion, the
   zip with SRI hashes, npm tarballs for an internal registry, the WebJar (`-P elements`); the guide ELEMENTS_IN_YOUR_APP.md
 - [ ] The licence check (2.9.11.i) replaces `--include-domain` as the gate on drishti-risk

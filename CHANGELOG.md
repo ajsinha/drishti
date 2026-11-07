@@ -21,6 +21,35 @@
 
 ## 2.9.11.e (unreleased)
 
+- **Vega retired (the owner's decision O1): one drawing engine.** A report's `vega-lite` visual and a Python visual's `output: vega-lite`
+  are translated by drishti-chart (`fromVegaLite`) and drawn by drishti-chart; a feature it does not translate is refused in words with
+  what to use instead (`vegaLiteAlternative`, `vegaLiteRefusal`, `vegaLiteIn`; `chartIn(host, spec)` puts any spec in a host), never
+  drawn wrong. Python visuals may return a drishti-chart spec (`output: drishti-chart`, the preferred form; `data.source` refused in the
+  sandbox). Deleted: the vendored Vega, Vega-Lite, vega-embed and vega-interpreter, their VENDOR.md entry and notice, `drishti_bi-vega.js`
+  and every Vega code path. Tests: the two shipped specifications translate to the same data and encodings, a refused feature's message,
+  a guard that no file references the Vega library (`tests/test_bi_wave_c.py`), `test_items.py` (the drishti-chart output).
+- **The Explain page carries a pivot cell's view**: Open as a page puts the body the drawer posted (the view, the cells, the split) in
+  the link as one JSON parameter (`body`), and the page asks with it (`test_explain_routes.py`, `test_pivot_functions_browser.py`).
+- **One Explain for a pivot cell**: the server's `POST /api/v1/pivot/explain` is folded into `POST /api/v1/explain` (kind `pivot`); the
+  old address is a deprecated alias for one release (it answers the engine's own answer, `why.answer`, with `Deprecation` and `Link`
+  headers); the audit (`pivot.explain`) moved to the explainer; `drishti.py pivot explain` and tutorial 37 use the one Explain.
+- **FRTB-SA class totals from the server**: `Sbm.Result.classTotal` and `classes()`, `classTotals` in `GET /api/v1/frtb/sa` (per
+  scenario and in the reported one); the FRTB screen's Total column is back, the server's figure (never summed in the browser).
+- **Connector stamp kept on the demo lake's move**: a stamped connector file nobody edited, rewritten to `lake: demo`, is stamped again
+  (`TemplateStamp.keepPristine`), so it still counts as unedited and keeps following its pack's template; an edited one stays edited.
+- **drishti-insight 0.1.0** (library 6, in the Elements manifest, so packing and the gallery include it): the one Explain, the one
+  search box and the one Approvals queue moved in whole from `drishti_explain.js`, `drishti_search-box.js` and `drishti_approvals.js`
+  (deleted), and the workbook export (`workbookLinks`, `exportWorkbook`); `base.html` loads the bundle once (Explain only for someone
+  signed in). Tests: `tests/elements/insight.test.mjs`; the keymap and Explain tests read the library's sources.
+- **The Elements 1.x npm package retired**: `tools/elements_package.py`, `core/element_package.py` and `web/elements/package/` deleted,
+  with the 1.x TypeScript generators; the 1.x embedding elements are frozen and still served unchanged at `/embed/v1/elements/1.4.5/`
+  (and the renderer 1.2.0 files as they were); the per-library packages replace the package.
+- **`tools/drishti.py` split**: its command tree is `tools/drishti_parser.py` (`build_parser(h)`), the commands stay in `drishti.py`
+  (1,495 → about 1,135 lines).
+- **drishti-grid**: the row model is chosen in `drishti_grid-model-base.js` (`rowModelFor`), keeping `drishti_grid.js` under the
+  modules' 530-line cap.
+- **Tests**: `test_docs_rot.py` knows the figures capture's test-only variables (`DRISHTI_FIGURES_OUT`, `DRISHTI_FIGURES_BASELINE`).
+
 - **drishti-grid: tree data on server-side rows** ([ELEMENTS.md section 8](docs/architecture/ELEMENTS.md), the AG Grid migration
   guide): `treeData` with a `datasource`, `isServerSideGroup(row)` and `getServerSideGroupKey(row)` — the server answers the tree one
   level at a time (`treeData: true` in the block request, `groupKeys` the path of the node whose children are asked); a node is a row

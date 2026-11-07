@@ -21,7 +21,7 @@
    entity or a group, the netting sets' contributions and the pre-deal what-if (into a netting set it picks) at a counterparty, the netting-set workbench (collateral, trades, pre-deal) at a
    netting set, the trade in its netting set at a trade; By tenor and Captures everywhere. Every view is a command (EXP <scope>) and a
    URL (/exposure?scope=...), so links, the command line and F1 work. The time from a click to the painted headline is kept on the root
-   element (data-paint-ms) for the tests. How a figure was built is the one Explain's (drishti_explain.js): hover a tile, click it, or Explain ›. */
+   element (data-paint-ms) for the tests. How a figure was built is the one Explain's (drishti-insight): hover a tile, click it, or Explain ›. */
 (function () {
   "use strict";
   var root = document.querySelector("[data-exposure]");
@@ -360,7 +360,7 @@
     }
   }
 
-  /** The one Explain (SHARED_SCREENS.md section 3, drishti_explain.js): each figure tile and Explain › carry their figure's request. */
+  /** The one Explain (SHARED_SCREENS.md section 3, drishti-insight): each figure tile and Explain › carry their figure's request. */
   function bindExplain(d) {
     var req = function (measure) {
       var r = { kind: "exposure", measure: measure, scope: d.canonical, q: S.q, collateral: S.collateral };

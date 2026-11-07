@@ -19,8 +19,6 @@
    the layout: wells, panel and terminal are shells over the same state (getState carries the layout's name only to give it back). */
 import { EventBus } from '../../drishti-core/src/drishti_index.js';
 import { ColumnModel, getValue, formatValue } from './drishti_columns.js';
-import { ClientRowModel } from './drishti_client-rows.js';
-import { ServerRowModel } from './drishti_server-rows.js';
 import { Viewport } from './drishti_viewport.js';
 import { SelectionModel, rangeStats, toTsv, rangeCells } from './drishti_selection.js';
 import { GridNavigator } from './drishti_keyboard.js';
@@ -29,7 +27,7 @@ import { PivotState } from './drishti_pivot.js';
 import { resultColumns, cellValue } from './drishti_pivot-answer.js';
 import { GridLive } from './drishti_grid-live.js';
 import { GridEditing } from './drishti_grid-edit.js';
-import { GridModelBase, LAYOUTS, DENSITIES } from './drishti_grid-model-base.js';
+import { GridModelBase, LAYOUTS, DENSITIES, rowModelFor } from './drishti_grid-model-base.js';
 import { cycleSort, FILTER_CHANNEL } from '../../drishti-core/src/drishti_index.js';
 
 /**
@@ -89,10 +87,7 @@ export class GridModel extends GridModelBase {
     this.columns = new ColumnModel(o.columns);
     this.layout = LAYOUTS.indexOf(o.layout) >= 0 ? o.layout : 'wells';
     this.density = DENSITIES[o.density] ? o.density : 'compact';
-    this.rowModel = o.datasource ? new ServerRowModel({ datasource: o.datasource, blockSize: o.blockSize, getRowId: o.getRowId, treeData: o.treeData,
-      isServerSideGroup: o.isServerSideGroup, getServerSideGroupKey: o.getServerSideGroupKey, groupDefaultExpanded: o.groupDefaultExpanded })
-      : new ClientRowModel({ columns: this.columns, rows: o.rows || [], getRowId: o.getRowId, clientAggregation: o.clientAggregation, treeData: o.treeData,
-        getDataPath: o.getDataPath, groupDefaultExpanded: o.groupDefaultExpanded });
+    this.rowModel = rowModelFor(o, this.columns);
     this.serverSide = !!o.datasource;
     this.viewport = new Viewport({ rowHeight: DENSITIES[this.density] });
     this.selection = new SelectionModel({ mode: o.rowSelection });

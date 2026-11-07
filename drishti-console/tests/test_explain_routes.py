@@ -52,8 +52,8 @@ def test_the_var_page_carries_explain_and_none_of_the_old_panels(client):
     assert "drishti_var-explain.js" not in html
     assert "data-vx-explain data-explain-primary" in html and ">Explain ›</button>" in html
     assert "data-vx-whatif" in html                                   # the drawer's What-if moved to the toolbar
-    assert "/static/js/drishti_explain.js" in html and "/static/css/drishti_explain.css" in html
-    assert html.index("drishti_explain.js") < html.index("drishti_var-explorer.js")   # the component is there before the page binds to it
+    assert "/static/elements/drishti-insight/drishti_insight.js" in html and "/static/css/drishti_explain.css" in html
+    assert html.index("drishti_insight.js") < html.index("drishti_var-explorer.js")   # the component is there before the page binds to it
     ex = client.get("/exposure?scope=BANK").text
     assert "data-xx-prov" not in ex and "How this number was built" not in ex and "data-xx-explain data-explain-primary" in ex
 
@@ -106,7 +106,7 @@ def test_the_page_carries_a_pivot_cells_view_sent_in_the_body(client):
     assert page.status_code == 200
     req = json.loads(htmllib.unescape(page.text.split('data-explain-request="')[1].split('"')[0]))
     assert req == {"kind": "pivot", "measure": "cell", "body": body}
-    js = (CONSOLE / "web/static/js/drishti_explain.js").read_text(encoding="utf-8")
+    js = (CONSOLE / "web/static/elements/drishti-insight/src/drishti_insight-explain.js").read_text(encoding="utf-8")
     assert 'if (req.body) q.set("body", JSON.stringify(req.body));' in js        # the drawer's link carries it
     for bad in ("[1, 2]", "not json"):
         assert client.get("/explain?" + urllib.parse.urlencode({"kind": "pivot", "body": bad})).status_code == 400

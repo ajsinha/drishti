@@ -13,7 +13,6 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* One Explain for every number (docs/architecture/SHARED_SCREENS.md section 3; USER_GUIDE.md, "Explain"; the approved mock-up
    docs/architecture/mockups/shared-screens/e3-explain.html, A with B as its preview and C through a link). One component on every page:
 
@@ -26,10 +25,17 @@
 
    A number opts in with data-explain='{"kind":"var","measure":"es","scope":"DESK:RATES"}' (and data-explain-tab to open another tab
    first); a page may name its main number with data-explain-primary, which E opens when no number is focused. Script API:
-   Drishti.Explain.open(request, tab), .preview(anchor, request), .close(), .pageUrl(request, tab), .bind(el, request, tab).
+   Drishti.Explain.open(request, tab), .preview(anchor, request), .close(), .pageUrl(request, tab), .bind(el, request, tab),
+   .ask(request, part) (the server's answer for a part, cached per page).
    Everything is the server's (GET /api/explain, the person's own entitlements): the browser computes nothing, it places text. */
-(function () {
-  "use strict";
+/**
+ * Installs the one Explain in a page (once): the preview, the drawer, the full page when the page is /explain, the keys, and Drishti.Explain.
+ * @param {Window} win the page's window
+ * @returns {void}
+ */
+export function installExplain(win) {
+  const window = win, document = win.document;
+  window.Drishti = window.Drishti || {};
   var TABS = [["formula", "Formula"], ["inputs", "Inputs & lineage"], ["why", "Why it moved"], ["workbook", "Workbook"]];
   var cache = {};
   var drawer = null, pop = null, popFor = null, hoverTimer = null, lastAnchor = null, lib = null;
@@ -454,7 +460,7 @@
   }
 
   window.Drishti.Explain = {
-    open: open, close: close, preview: preview, pageUrl: pageUrl,
+    open: open, close: close, preview: preview, pageUrl: pageUrl, ask: ask,
     /** Marks el as an explainable number: hover previews, click opens the drawer (on tab), E opens it when focused. */
     bind: function (el, req, tab) {
       el.setAttribute("data-explain", JSON.stringify(req));
@@ -466,4 +472,4 @@
     isOpen: function () { return !!(drawer && !drawer.hidden); },
     state: S
   };
-})();
+}

@@ -27,6 +27,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 | [drishti-inputs](#drishti-inputs) | 0.1.0 | Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead, forms from a schema with four eyes, the filter bar, the code editor over CodeMirror |
 | [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
 | [drishti-chart](#drishti-chart) | 0.2.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
+| [drishti-insight](#drishti-insight) | 0.1.0 | Insight on a Drishti server: the one Explain (preview, drawer, full page, keys), the one search box (command line, Help, Alt+K), the one Approvals queue and the workbook export |
 | [drishti-risk](#drishti-risk) | 0.2.0 | The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser) |
 | [drishti-renderer](#drishti-renderer) | 2.0.0 | The client renderer: Drishti screens from a static, live or streamed (GenUI) ViewModel, drawn with drishti-grid, drishti-chart, drishti-core and drishti-data; Elements 2.3 (drishti-view, drishti-panel, drishti-screen); hosts import its public entry, static/render/2.0.0/drishti-render.js |
 
@@ -10016,6 +10017,81 @@ The options of a chart (the spec says what to draw; these say how it lives in it
 | `[download]` | `function(string, (string\|Blob), string): void` | where exports go (default: a download) |
 | `[height]` | `number` | the drawing's height in pixels (default 300; a map 440) |
 | `[asOf]` | `string` | the data's date, for the status line |
+
+## drishti-insight
+
+Version 0.1.0. Bundle `static/elements/drishti-insight/drishti_insight.js`, global `Drishti.elements.insight`; requires drishti-core.
+
+### drishti_insight-explain.js
+
+#### `installExplain(win)`
+
+Installs the one Explain in a page (once): the preview, the drawer, the full page when the page is /explain, the keys, and Drishti.Explain.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `win` | `Window` | the page's window |
+
+Returns `void`.
+
+### drishti_insight-search.js
+
+#### `installSearch(win)`
+
+Installs the one search box in a page (once): Drishti.searchBox, Drishti.find (Alt+K) and the top bar's search button.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `win` | `Window` | the page's window |
+
+Returns `void`.
+
+### drishti_insight-approvals.js
+
+#### `startApprovals(win)`
+
+Starts the one Approvals queue when the page holds it ([data-approvals]); on any other page it does nothing.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `win` | `Window` | the page's window |
+
+Returns `void`.
+
+### drishti_insight-workbook.js
+
+#### `workbookLinks(answer)`
+
+The workbook links of an Explain answer (its Workbook part): each {label, href, note}.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `answer` | `Object` | an answer of GET /api/explain (part workbook or all) |
+
+Returns `Array&lt;{label: string, href: string, note: (string\|undefined)}&gt;`.
+
+#### `exportWorkbook(req, o)`
+
+Downloads a number's workbook: asks the one Explain for the Workbook part and opens its first link (the .xlsx answers as a file).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `req` | `Object` | the number, as data-explain names it ({kind, measure, scope, ...}, or {kind, body} for a pivot cell) |
+| `[o]` | `{win: Window}` | win: the page (default window); its Drishti.Explain is the one Explain (installExplain) |
+
+Returns `Promise&lt;{label: string, href: string}&gt;`: the link opened; rejected in words when the number has no workbook.
+
+### drishti_index.js
+
+#### `install(root)`
+
+Installs the components in a page (the bundle calls it when it loads): search always, Explain unless the script tag says data-explain="off" (a page for someone not signed in), the Approvals queue when the page holds it. Once per page.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `Window` | the page's window (under Node: nothing to do) |
+
+Returns `void`.
 
 ## drishti-risk
 

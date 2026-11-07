@@ -15,7 +15,7 @@
 explanation is the server's (``/api/v1/explain``), asked as the person, so their entitlements, row rules and masks apply.
 
 - ``GET /api/explain?kind=&measure=&part=&...`` and ``POST /api/explain`` (a pivot cell sends its view): the same-origin proxy that the
-  preview card and the drawer (web/static/js/drishti_explain.js) read;
+  preview card and the drawer (drishti-insight: web/static/elements/drishti-insight/src/drishti_insight-explain.js) read;
 - ``GET /api/explain/kinds``: the kinds that can be explained on this server;
 - ``GET /explain?kind=&...&tab=&body=``: the full page, all four parts at once, for an auditor or for printing; ``body`` is the JSON
   object a number asked with a body (a pivot cell's view) carries, so the page asks exactly what the drawer asked."""
