@@ -60,7 +60,7 @@ def _upper(e: PB.PackSpec) -> PB.PackSpec:
 def spec() -> PB.PackSpec:
     e, p = _upper(ECO.spec()), _upper(POL.spec())
     return dataclasses.replace(
-        e, name="world-economy", code="WRLD", title="World economy", generator="tools/packgen/world/make.py",
+        e, name="world-economy", code="WRLD", title="World economy", generator="tools/packgen/world/make.py", module_domain="economy",
         description=e.description.rstrip(".") + "; and governments and societies: government type, office holders, elections, parties with seats, "
                     "and social and governance indicators (CIA World Factbook, World Bank, UNDP).",
         domains={**e.domains, **p.domains}, examples=e.examples + p.examples, columns={**e.columns, **p.columns},

@@ -68,6 +68,7 @@ class PackSpec:
     roles: dict = field(default_factory=dict)
     columns: dict[str, list[str]] = field(default_factory=dict)
     sample: bool = False                            # a demonstration pack (pack.yaml sample: true): see drishti.packs.samples
+    module_domain: str = ""                         # the domain module it serves (pack.yaml domain:, ACCESS_MODEL.md); blank: not written
     code: str = ""                                  # typed alone, opens the pack's overview (pack.yaml code:)   # kind -> key fields shown in pick lists (pack.yaml columns:)
     impact: dict | None = None
     # kind -> the fields its Delta table keeps as real columns (the connector's layout): what a BI dataset over the kind reads without
@@ -214,8 +215,11 @@ def check(spec: PackSpec, docs: dict) -> list[str]:
 def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
     base = pack_dir(spec)
     out: dict[Path, str] = {}
-    out[base / "pack.yaml"] = (f"{YAML_HEADER}\n\n# {_generated(spec, 'file')}\n# {spec.title} pack for Drishti.\n"
-                               + yaml.safe_dump(_lake_form(manifest(spec, known_fields)), sort_keys=False, allow_unicode=True, width=140))
+    body = yaml.safe_dump(_lake_form(manifest(spec, known_fields)), sort_keys=False, allow_unicode=True, width=140)
+    if spec.module_domain:                          # the domain line with what it means, as every pack.yaml writes it
+        body = body.replace(f"pack: {spec.name}\n", f"pack: {spec.name}\ndomain: {spec.module_domain}   # the domain it serves "
+                            "(docs/architecture/ACCESS_MODEL.md): it loads only while a module of the domain is on\n", 1)
+    out[base / "pack.yaml"] = f"{YAML_HEADER}\n\n# {_generated(spec, 'file')}\n# {spec.title} pack for Drishti.\n" + body
     for k in spec.kinds:
         if k.kind not in spec.hand_written:
             out[base / "sutras" / MS.slug(k.group) / f"{k.kind}.v1.sutra.yaml"] = sutra(spec, k, min(docs.get(k.kind) or [None], key=lambda x: x or ""))
