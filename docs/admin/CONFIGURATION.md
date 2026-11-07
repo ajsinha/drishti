@@ -5443,14 +5443,14 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `alerts[].when` | string | none |  | the pack | The condition, an expression on the document | live |  |
 | `alerts[].message` | string | none |  | the pack | What the alert says | live |  |
 | `alerts[].severity` | string | `info` |  | the pack | info, warning or critical | live |  |
-| `positions` | map | `drishti.var.positions` |  | the pack | How the VaR engine derives positions from the trades of a date (VAR\_GUIDE.md section 15.6) | live |  |
+| `positions` | map | `drishti.var.positions` |  | the pack | How the VaR engine derives positions from the trades of a date (VAR.md section 2.6) | live |  |
 | `positions.live-statuses` | list | none |  | the pack | The TRADE\_STATUS values that count | live |  |
 | `positions.rules` | list | none |  | the pack | The rules, the first that holds a trade keys its position | live |  |
 | `positions.rules[].name` | string | none |  | the pack | The rule's name | live |  |
 | `positions.rules[].groups` | list | `[]` |  | the pack | PRODUCT\_GROUP values it holds | live |  |
 | `positions.rules[].types` | list | `[]` |  | the pack | PRODUCT\_TYPE values it holds | live |  |
 | `positions.rules[].key` | list | `none: one position per trade` |  | the pack | The fields keying the position, the first the trade carries | live |  |
-| `hierarchies` | map | `{}` |  | the pack | The hierarchies the VaR and exposure engines build (VAR\_GUIDE.md section 16); drishti.var.hierarchies wins | live |  |
+| `hierarchies` | map | `{}` |  | the pack | The hierarchies the VaR and exposure engines build (VAR.md section 3); drishti.var.hierarchies wins | live |  |
 | `hierarchies.<name>` | map | none |  | the pack | One hierarchy | live |  |
 | `hierarchies.<name>.title` | string | none |  | the pack | Its name | live |  |
 | `hierarchies.<name>.source` | string | `columns when levels are given` |  | the pack | risk-hierarchy (the stored rows) or columns (built from the trades' own columns) | live |  |
