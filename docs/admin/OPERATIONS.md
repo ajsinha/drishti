@@ -27,7 +27,7 @@ handbook stays the reference for one server and its console.
 ## Contents
 
 1. [What you are running](#1-what-you-are-running)
-2. [Prerequisites](#2-prerequisites) · [Native libraries (BLAS)](#21-server-requirements-native-libraries-blas)
+2. [Prerequisites](#2-prerequisites) · [Native libraries (BLAS)](#21-server-requirements-native-libraries-blas) · [The other native libraries](#22-the-other-native-libraries)
 3. [Install from a build (one machine)](#3-install-from-a-build-one-machine)
 4. [Install with Docker Compose](#4-install-with-docker-compose)
 5. [Data stores, sample data and feeds](#5-data-stores-sample-data-and-feeds)
@@ -218,6 +218,26 @@ file, audited, kept in History, and can be made for another member from the Clus
 a start-up self-test of awkward shapes against Java, argument checks in Java before every native call (a bad argument never reaches
 native code), a per-call size bound, any failure or NaN from finite inputs redone on Java with the native path switched off for the rest
 of the run (the breaker: the banner, the alert and DEGRADED follow), and the self-test repeated every `canary-interval`.
+
+### 2.2 The other native libraries
+
+Every native library of the server lives in one module, `drishti-native`, behind a Drishti interface
+([DRISHTI_NATIVE.md](../architecture/DRISHTI_NATIVE.md)); BLAS above is one of them.
+
+| Library | What it serves | When it cannot load |
+|---|---|---|
+| **RocksDB** (bundled, `rocksdbjni`: Linux, Windows, macOS) | the connectors' disk caches, the message connectors' state stores, the derived sources' sorted stores | **H2's MVStore** (pure Java) serves instead: a loud warning once in the log, `native.store` **DEGRADED** in Admin → Health and `GET /api/v1/admin/health`; the server starts. A cache RocksDB wrote is not read by MVStore (each keeps its own files), so those caches start empty and a message connector's kept state starts empty |
+| **DuckDB** (bundled) | the BI engine, the SQL service, the pivot executor, the DuckDB connector | **required**: there is no fallback; the server says what failed and does not serve those parts |
+| **SQLite** (bundled driver) | the identity and state database of a single server | **required**: no fallback; use PostgreSQL, or a supported platform |
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `drishti.native.store.mode` (`DRISHTI_NATIVE_STORE_MODE`) | `auto` | `auto`: RocksDB, else MVStore with the warning; `java`: MVStore, chosen (no warning, status OK); `native`: RocksDB, or a store fails to open (for a test bench) |
+
+**Native access.** Every launcher Drishti ships (the stack, the Docker images, the ECS entry point, systemd, `tools/windows/start-server.ps1`,
+the IDE run configurations, the loaders and every command started through `tools/javacmd.py`) and the Maven test JVMs pass
+`--enable-native-access=ALL-UNNAMED`, so JavaCPP, RocksDB, DuckDB and the codecs load without the JVM's restricted-method warning and keep
+loading when a later Java denies native access by default. A site with its own launcher adds the same flag.
 
 ## 3. Install from a build (one machine)
 

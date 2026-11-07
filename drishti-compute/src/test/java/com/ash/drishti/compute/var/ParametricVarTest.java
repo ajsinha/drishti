@@ -19,9 +19,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.data.Offset.offset;
 
-import com.ash.drishti.compute.linalg.Blas;
-import com.ash.drishti.compute.linalg.JavaBlas;
-import com.ash.drishti.compute.linalg.LinearAlgebra;
+import com.ash.drishti.nativ.linalg.Blas;
+import com.ash.drishti.nativ.linalg.JavaBlas;
+import com.ash.drishti.nativ.linalg.LinearAlgebra;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;

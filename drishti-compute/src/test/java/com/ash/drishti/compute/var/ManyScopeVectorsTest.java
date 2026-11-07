@@ -89,7 +89,7 @@ class ManyScopeVectorsTest {
             sets.add(OrdinalSet.empty());
             sets.add(OrdinalSet.of(5, 77, 9_000));
             List<double[]> many = book.vectors(sets, sums);
-            boolean exact = !com.ash.drishti.compute.linalg.Blas.get().isNative();
+            boolean exact = !com.ash.drishti.nativ.linalg.Blas.get().isNative();
             for (int i = 0; i < sets.size(); i++) {
                 double[] one = book.vector(sets.get(i), sums);
                 if (exact) {

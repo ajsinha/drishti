@@ -59,7 +59,7 @@ CP="plugins/drishti-plugin-iceberg/target/classes:$(./mvnw -q -o dependency:buil
 if [[ -n "$TRADES" ]]; then
   uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl "$ROWS/bulk-trades.tar"            # the bulk book: a tar of trade/<YYYY-MM-DD>/ folders
 fi
-if ! "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.iceberg.IcebergLoader "$ROWS" "$ROOT" "${OPTS[@]}"; then
+if ! "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 --enable-native-access=ALL-UNNAMED -cp "$CP" com.ash.drishti.plugin.iceberg.IcebergLoader "$ROWS" "$ROOT" "${OPTS[@]}"; then
   rm -rf "$ROWS"
   echo "load-iceberg: the load did not finish: see the line above" >&2
   exit 1

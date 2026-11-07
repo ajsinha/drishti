@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.compute.linalg;
+package com.ash.drishti.nativ.linalg;
 
 /**
  * The pure-Java {@link LinearAlgebra}: the reference BLAS loop orders, written so the JIT vectorises the inner loops (contiguous

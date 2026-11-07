@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.compute.linalg;
+package com.ash.drishti.nativ.linalg;
 
 /**
  * The start-up check of a native library against {@link JavaBlas} (HIGH_PERFORMANCE_NATIVE.md section 9.4): a product of each kind on

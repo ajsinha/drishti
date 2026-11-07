@@ -50,5 +50,5 @@ CP="plugins/drishti-plugin-cassandra/target/classes:$(./mvnw -q -o dependency:bu
 if [[ -n "$TRADES" ]]; then
   uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl "$ROWS/bulk-trades.tar"            # the bulk book: a tar of trade/<YYYY-MM-DD>/ folders
 fi
-"$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.cassandra.CassandraLoader "$ROWS" "$POINTS" "$DC" "${OPTS[@]}"
+"$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 --enable-native-access=ALL-UNNAMED -cp "$CP" com.ash.drishti.plugin.cassandra.CassandraLoader "$ROWS" "$POINTS" "$DC" "${OPTS[@]}"
 rm -rf "$ROWS"

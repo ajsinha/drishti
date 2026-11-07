@@ -15,7 +15,8 @@
  */
 package com.ash.drishti.server.nativelib;
 
-import com.ash.drishti.compute.linalg.Blas;
+import com.ash.drishti.nativ.linalg.Blas;
+import com.ash.drishti.nativ.store.DiskStores;
 import com.ash.drishti.server.net.DigestService;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.MultiGauge;
@@ -47,7 +48,8 @@ import org.springframework.stereotype.Component;
  *   <li>the cluster digest (service {@code native-blas}): each member's binding, shown per node.
  * </ul>
  *
- * Nothing here can stop the server.
+ * It also sets the disk store's mode ({@code drishti.native.store.mode}: RocksDB, else H2's MVStore; DRISHTI_NATIVE.md section 2) before
+ * any connector opens a disk cache, and reports which serves ({@link #store}). Nothing here can stop the server.
  */
 @Component
 public class NativeLibraries {
@@ -64,6 +66,10 @@ public class NativeLibraries {
     private volatile DigestService digests;
 
     public NativeLibraries(Environment env, ObjectProvider<MeterRegistry> registry) {
+        DiskStores.configure(env.getProperty(DiskStores.MODE_PROPERTY, "auto"));
+        DiskStores.Status store = DiskStores.status();
+        LOG.info("Disk store: {}{}", store.impl() + (store.version() == null ? "" : " " + store.version()),
+                store.reason() == null ? "" : " (" + store.reason() + ")");
         String mode = env.getProperty("drishti.native.blas.mode", "auto");
         this.unknownMode = Blas.Mode.known(mode) ? null : mode;
         String dataDir = env.getProperty("drishti.data.dir", "./data");
@@ -214,6 +220,11 @@ public class NativeLibraries {
         m.put("members", members);
         m.put("clusterPath", Blas.clusterJava() == null ? (s.isNative() ? "native" : "java") : "java: " + Blas.clusterJava());
         return m;
+    }
+
+    /** The disk store of this node: {@code status} ({@code OK}, {@code DEGRADED} when auto fell back to MVStore), impl, mode, reason, version. */
+    public Map<String, Object> store() {
+        return DiskStores.status().toMap();
     }
 
     /** True when auto mode runs on the Java path (health DEGRADED). */

@@ -39,13 +39,14 @@ Drishti is proprietary. It bundles or builds with these third-party components u
 | CPython, numpy, pandas, scipy, statsmodels, matplotlib and their dependencies (inside Pyodide) | PSF-2.0, BSD-3-Clause, BSD-3-Clause, BSD-3-Clause, BSD-3-Clause, PSF-based (matplotlib); see each package |
 | Delta Kernel, Apache Parquet (parquet-java), snappy-java, AWS SDK for Java 2.x and Apache HttpClient 5 (the Delta connector and its native engine, `drishti-deltalake`) | Apache-2.0 |
 | zstd-jni (Parquet pages compressed with ZSTD) | BSD-2-Clause |
-| JavaCPP and its OpenBLAS preset (`org.bytedeco:javacpp`, `org.bytedeco:openblas`, the `linux-x86_64` and `windows-x86_64` builds; BLAS in `drishti-compute`) | Apache-2.0 (JavaCPP, used under it; also offered under GPL-2.0 with the Classpath Exception) |
+| JavaCPP and its OpenBLAS preset (`org.bytedeco:javacpp`, `org.bytedeco:openblas`, the `linux-x86_64` and `windows-x86_64` builds; BLAS in `drishti-native`) | Apache-2.0 (JavaCPP, used under it; also offered under GPL-2.0 with the Classpath Exception) |
 | OpenBLAS 0.3.26 (inside the JavaCPP preset's jars) | BSD-3-Clause |
 | libgfortran, libquadmath, libgcc_s (GCC runtime libraries inside the OpenBLAS preset's jars) | GPL-3.0 with the GCC Runtime Library Exception; libquadmath LGPL-2.1 |
 | Apache Avro (decodes Schema Registry messages in the Kafka connector, `drishti-plugin-kafka`), with Apache Commons Compress | Apache-2.0 |
 | PostgreSQL JDBC driver (pgjdbc; the Drishti database and the `jdbc` connector) | BSD-2-Clause |
 | Apache Hadoop client (`hadoop-client-api`, `hadoop-client-runtime`; the Delta and Iceberg connectors' library engines) and Apache Iceberg Java (`drishti-plugin-iceberg`) | Apache-2.0 |
-| RocksDB (`rocksdbjni`; the disk caches and the message connectors' state store, `drishti-diskcache`) | Apache-2.0 / GPL-2.0 (dual; used under Apache-2.0) |
+| RocksDB (`rocksdbjni`; the disk caches and the message connectors' state store, `drishti-native` for `drishti-diskcache`) | Apache-2.0 / GPL-2.0 (dual; used under Apache-2.0) |
+| H2 Database Engine's MVStore (`com.h2database:h2`; the pure-Java disk store when RocksDB cannot load, `drishti-native`) | MPL-2.0 / EPL-1.0 (dual; used under EPL-1.0) |
 | Apache Kafka client (`kafka-clients`, `drishti-plugin-kafka`) | Apache-2.0 |
 | Apache ActiveMQ client (`activemq-client`, `drishti-plugin-activemq`) | Apache-2.0 |
 | Jakarta Messaging API (`jakarta.jms-api`, with the ActiveMQ client) | EPL-2.0 / GPL-2.0 with Classpath Exception |

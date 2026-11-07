@@ -19,7 +19,7 @@ EXPOSE 18480
 # line moves it); the server removes stale copies from its temp base at start, so a killed container leaves nothing in /tmp
 # native memory (PERFORMANCE.md, Resident memory): two glibc malloc arenas, direct buffers capped, the JDK's per-thread temporary direct
 # buffers cached up to 256 KB only, freed native memory given back, native memory tracked; a heap dump on OutOfMemoryError in data/dumps
-ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/drishti/data/dumps -Djava.io.tmpdir=/opt/drishti/data/tmp/server" \
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 --enable-native-access=ALL-UNNAMED -XX:NativeMemoryTracking=summary -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/drishti/data/dumps -Djava.io.tmpdir=/opt/drishti/data/tmp/server" \
     MALLOC_ARENA_MAX=2 \
     DRISHTI_VAR_KEEP_HOT_FILES=true \
     DRISHTI_EXPOSURE_KEEP_HOT_FILES=true

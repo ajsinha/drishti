@@ -92,7 +92,7 @@ if [ "$((${DRISHTI_LAKE_MEMORY_MB:-0} + ARROW_MB))" -gt 0 ] 2>/dev/null; then
 fi
 # shellcheck disable=SC2086
 exec "$D/bin/drishti-node.sh" run java "$@" -Xmx"${DRISHTI_HEAP:-8g}" -XX:+UseZGC -XX:-UsePerfData $DIRECT -XX:TrimNativeHeapInterval=60000 \
-  -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary \
+  -Djdk.nio.maxCachedBufferSize=262144 --enable-native-access=ALL-UNNAMED -XX:NativeMemoryTracking=summary \
   -Djava.io.tmpdir="$TMPDIR" -Duser.home="$HOME" \
   -XX:ErrorFile="$D/data/logs/hs_err_pid%p.log" -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath="$D/data/dumps" \
   -Xlog:gc*:file="$D/data/logs/gc-%p.log":time,uptime:filecount=5,filesize=20m \

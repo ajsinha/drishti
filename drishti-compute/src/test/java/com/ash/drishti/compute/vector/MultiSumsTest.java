@@ -18,9 +18,9 @@ package com.ash.drishti.compute.vector;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import com.ash.drishti.compute.linalg.Blas;
-import com.ash.drishti.compute.linalg.JavaBlas;
-import com.ash.drishti.compute.linalg.LinearAlgebra;
+import com.ash.drishti.nativ.linalg.Blas;
+import com.ash.drishti.nativ.linalg.JavaBlas;
+import com.ash.drishti.nativ.linalg.LinearAlgebra;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

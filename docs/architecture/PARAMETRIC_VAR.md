@@ -164,7 +164,7 @@ For **nodes and groups** (no size), the screens show the marginal as *per +1% of
 
 **Correlation and covariance matrix.** For the parts of a scope (`matrix=true`, at most `drishti.var.parametric.matrix-max-parts`, 60),
 with X the centred N × k matrix of the parts' vectors (`X_ji = √w_j·(p_ij − μ_i)`, equal weights with `1/(N−1)`), the covariance is
-`C = XᵀX`, one `dgemm` through the `LinearAlgebra` seam (`com.ash.drishti.compute.linalg`, branch `wip/blas`: OpenBLAS when present,
+`C = XᵀX`, one `dgemm` through the `LinearAlgebra` seam (`com.ash.drishti.nativ.linalg` in `drishti-native`: OpenBLAS when present,
 pure Java otherwise, the canary and per-call fallback included); the correlation `R_il = C_il / √(C_ii·C_ll)`. `σ² = Σ_i Σ_l C_il` is
 returned as a check. The **components** themselves are not read off the matrix: each is one `ddot` of its centred vector with the
 scope's (index order, the Java path), so the figures the tree and the contribution table show never depend on which BLAS answered.

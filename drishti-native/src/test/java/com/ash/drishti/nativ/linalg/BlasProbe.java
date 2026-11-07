@@ -13,20 +13,17 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.compute.linalg;
+package com.ash.drishti.nativ.linalg;
 
-/** The bundled OpenBLAS cannot be used here: {@link Blas} binds {@link JavaBlas} instead and says {@link #reason()} loudly. Never stops the server. */
-final class BlasUnavailableException extends RuntimeException {
+/** A JVM of its own for {@link LinearAlgebraTest}: binds from the system properties, multiplies once, prints what answered. */
+public final class BlasProbe {
 
-    private final String reason;
+    private BlasProbe() {}
 
-    BlasUnavailableException(String reason, Throwable cause) {
-        super(reason, cause);
-        this.reason = reason;
-    }
-
-    /** Why. */
-    String reason() {
-        return reason;
+    public static void main(String[] args) {
+        LinearAlgebra la = Blas.get();
+        double[] c = new double[1];
+        la.dgemm(false, false, 1, 1, 3, 1.0, new double[] {1, 2, 3}, 0, 1, new double[] {1, 1, 1}, 0, 3, 0.0, c, 0, 1);
+        System.out.println("probe: " + la.name() + " " + c[0]);
     }
 }

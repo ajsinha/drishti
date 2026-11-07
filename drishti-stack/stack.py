@@ -247,7 +247,7 @@ def build_lake(stack: dict, name: str) -> None:
 # the JDK's per-thread temporary direct buffers cached only up to 256 KB (a larger one is freed after its read), and native memory tracked
 # (jcmd <pid> VM.native_memory summary)
 SERVER_MEMORY_FLAGS = ["-XX:MaxDirectMemorySize=256m", "-XX:TrimNativeHeapInterval=60000", "-Djdk.nio.maxCachedBufferSize=262144",
-                       "-XX:NativeMemoryTracking=summary"]
+                       "--enable-native-access=ALL-UNNAMED", "-XX:NativeMemoryTracking=summary"]
 DUMPS = RUN / "dumps"
 MB = 1 << 20
 

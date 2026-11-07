@@ -15,6 +15,20 @@
 -->
 # Changelog
 
+## 2.9.11.e (unreleased)
+
+- **`drishti-native`: every native library behind a Drishti interface with a Java fallback** (DRISHTI_NATIVE.md section 14):
+  - **BLAS moved in**: `compute.linalg` is now `com.ash.drishti.nativ.linalg` in the new module `drishti-native` (the same classes and tests, the
+    same `drishti.native.blas.*` settings, `openblas` engine switch, modes, canary and cluster agreement); `drishti-compute` no longer names
+    JavaCPP or OpenBLAS. The VaR figures are unchanged.
+  - **The disk store falls back to pure Java**: `DiskCache` and `SortedStore` (`drishti-diskcache`) run on `nativ.store.DiskStore`, RocksDB when it
+    loads, else **H2's MVStore** with one loud warning and `native.store` DEGRADED in Health and Admin → Engines; the server always starts. New
+    setting `drishti.native.store.mode` (`auto`, `java`, `native`; `DRISHTI_NATIVE_STORE_MODE`). The disk cache's tests also run on MVStore.
+  - DuckDB and SQLite stay required, without a fallback (product owner).
+  - **The Java native-access warning fixed**: `--enable-native-access=ALL-UNNAMED` on every launcher (the stack, Docker, ECS, systemd, the Windows
+    script, the IDE run configurations, the loaders, `tools/javacmd.py`) and in the Maven Surefire forks.
+  - An architecture rule keeps RocksDB and MVStore inside `nativ.store`; H2's version is pinned once in the parent POM.
+
 ## 2.9.11.d (unreleased)
 
 - **One Python runtime: every Python run on the server's compute pools** (SYNTHESIS A11, Brief 3; PYTHON_COMPUTE.md section 19; lean & streamlined):

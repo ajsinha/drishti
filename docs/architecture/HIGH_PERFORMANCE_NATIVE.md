@@ -448,7 +448,7 @@ and the identical-scenario check prevent that.
 
 ### 6.3 How it is bound and shipped (as built)
 
-- **One interface**, `com.ash.drishti.compute.linalg.LinearAlgebra` (`dgemm`, `dgemv`, `ddot`, `daxpy` on `double[]`, column-major as in
+- **One interface**, `com.ash.drishti.nativ.linalg.LinearAlgebra` (module `drishti-native`) (`dgemm`, `dgemv`, `ddot`, `daxpy` on `double[]`, column-major as in
   Fortran BLAS), with two implementations: `JavaBlas` (pure Java, the reference loop orders, so a loop written the same way gives the same
   bits) and `NativeBlas` (OpenBLAS). Callers see only the interface; the binding is chosen once at start (`Blas`), and an ArchUnit rule
   keeps every class but `NativeBlas` away from the binding library.

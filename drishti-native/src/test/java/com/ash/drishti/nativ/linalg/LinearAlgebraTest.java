@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.compute.linalg;
+package com.ash.drishti.nativ.linalg;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -122,7 +122,7 @@ class LinearAlgebraTest {
         String out = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
         assertThat(p.waitFor(60, TimeUnit.SECONDS)).isTrue();
         assertThat(out).contains("probe: java 6.0");
-        assertThat(out).doesNotContain("org.bytedeco").doesNotContain("com.ash.drishti.compute.linalg.NativeBlas");
+        assertThat(out).doesNotContain("org.bytedeco").doesNotContain("com.ash.drishti.nativ.linalg.NativeBlas");
     }
 
     @Test

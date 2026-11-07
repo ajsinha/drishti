@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.ash.drishti</groupId>
+    <artifactId>drishti-parent</artifactId>
+    <version>2.9.11.c</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+  <artifactId>drishti-native</artifactId>
+  <name>drishti-native</name>
+  <description>Every native library of the server behind a Drishti interface with a pure-Java fallback (docs/architecture/DRISHTI_NATIVE.md):
+    linear algebra (OpenBLAS, else Drishti's Java kernels) and the disk store (RocksDB, else H2's MVStore). Plain Java, no Spring; the only
+    module that names a native binding</description>
+  <dependencies>
+    <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></dependency>
+    <!-- BLAS: OpenBLAS bundled for Linux and Windows x86-64 (JavaCPP), else Drishti's own Java kernels (nativ.linalg) -->
+    <dependency><groupId>org.bytedeco</groupId><artifactId>javacpp</artifactId></dependency>
+    <dependency><groupId>org.bytedeco</groupId><artifactId>javacpp</artifactId><classifier>linux-x86_64</classifier></dependency>
+    <dependency><groupId>org.bytedeco</groupId><artifactId>javacpp</artifactId><classifier>windows-x86_64</classifier></dependency>
+    <dependency><groupId>org.bytedeco</groupId><artifactId>openblas</artifactId></dependency>
+    <dependency><groupId>org.bytedeco</groupId><artifactId>openblas</artifactId><classifier>linux-x86_64</classifier></dependency>
+    <dependency><groupId>org.bytedeco</groupId><artifactId>openblas</artifactId><classifier>windows-x86_64</classifier></dependency>
+    <!-- the disk store: RocksDB, else H2's MVStore (pure Java, on disk, keys in order) -->
+    <dependency><groupId>org.rocksdb</groupId><artifactId>rocksdbjni</artifactId></dependency>
+    <dependency><groupId>com.h2database</groupId><artifactId>h2</artifactId></dependency>
+    <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>ch.qos.logback</groupId><artifactId>logback-classic</artifactId><scope>test</scope></dependency>
+  </dependencies>
+</project>

@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.benchmarks;
 
-import com.ash.drishti.compute.linalg.Blas;
-import com.ash.drishti.compute.linalg.JavaBlas;
-import com.ash.drishti.compute.linalg.LinearAlgebra;
+import com.ash.drishti.nativ.linalg.Blas;
+import com.ash.drishti.nativ.linalg.JavaBlas;
+import com.ash.drishti.nativ.linalg.LinearAlgebra;
 import com.ash.drishti.compute.vector.MappedMatrix;
 import com.ash.drishti.compute.vector.MultiSums;
 import com.ash.drishti.compute.vector.OrdinalSet;

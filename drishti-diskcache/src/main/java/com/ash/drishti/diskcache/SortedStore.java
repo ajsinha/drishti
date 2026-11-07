@@ -15,29 +15,24 @@
  */
 package com.ash.drishti.diskcache;
 
+import com.ash.drishti.nativ.store.DiskStore;
+import com.ash.drishti.nativ.store.DiskStores;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiPredicate;
 import java.util.stream.Stream;
-import org.rocksdb.CompactionStyle;
-import org.rocksdb.CompressionType;
-import org.rocksdb.Options;
-import org.rocksdb.ReadOptions;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
-import org.rocksdb.RocksIterator;
-import org.rocksdb.WriteBatch;
-import org.rocksdb.WriteOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A sorted key-value store on local disk (RocksDB) for data built from other data and rebuilt at will: one folder, written
+ * A sorted key-value store on local disk (drishti-native's {@link DiskStore}: RocksDB, else H2's MVStore) for data built from other data and rebuilt at will: one folder, written
  * once by one builder, then read by any number of threads, then deleted whole. Nothing is ever dropped while it is open
  * (unlike {@link DiskCache}, which drops its oldest files past a budget), so a reader sees everything written; there is no
  * write-ahead log (after a crash the folder is deleted and built again). Keys are UTF-8 strings, read back in their sort order.
@@ -50,23 +45,15 @@ public final class SortedStore implements AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(SortedStore.class);
     private static final int BATCH = 10_000;
 
-    static {
-        RocksDB.loadLibrary();
-    }
-
     private final Path dir;
-    private final Options options;
-    private final RocksDB db;
-    private final WriteOptions write = new WriteOptions().setDisableWAL(true);
-    private WriteBatch batch = new WriteBatch();
-    private int batched;
+    private final DiskStore db;
+    private List<byte[][]> batch = new ArrayList<>(BATCH);
     private final AtomicInteger readers = new AtomicInteger();
     private volatile boolean closing;
     private boolean closed;
 
-    private SortedStore(Path dir, Options options, RocksDB db) {
+    private SortedStore(Path dir, DiskStore db) {
         this.dir = dir;
-        this.options = options;
         this.db = db;
     }
 
@@ -74,12 +61,9 @@ public final class SortedStore implements AutoCloseable {
     public static SortedStore create(Path dir) throws IOException {
         deleteFolder(dir);
         Files.createDirectories(dir);
-        Options o = new Options().setCreateIfMissing(true).setCompressionType(CompressionType.LZ4_COMPRESSION)
-                .setWriteBufferSize(64L * 1024 * 1024).setCompactionStyle(CompactionStyle.LEVEL).setLevelCompactionDynamicLevelBytes(true);
         try {
-            return new SortedStore(dir, o, RocksDB.open(o, dir.toString()));
-        } catch (RocksDBException e) {
-            o.close();
+            return new SortedStore(dir, DiskStores.open(dir, DiskStore.Options.sorted(true)));
+        } catch (IOException e) {
             throw new IOException("cannot open a sorted store at " + dir + ": " + e.getMessage(), e);
         }
     }
@@ -89,12 +73,10 @@ public final class SortedStore implements AutoCloseable {
         if (!Files.isDirectory(dir)) {
             return null;
         }
-        Options o = new Options().setCreateIfMissing(false).setCompressionType(CompressionType.LZ4_COMPRESSION)
-                .setCompactionStyle(CompactionStyle.LEVEL).setLevelCompactionDynamicLevelBytes(true);
         try {
-            return new SortedStore(dir, o, RocksDB.open(o, dir.toString()));
-        } catch (RocksDBException e) {
-            o.close();
+            DiskStore db = DiskStores.open(dir, DiskStore.Options.sorted(false));
+            return db == null ? null : new SortedStore(dir, db);
+        } catch (IOException e) {
             return null;
         }
     }
@@ -102,11 +84,11 @@ public final class SortedStore implements AutoCloseable {
     /** Adds one entry (batched: visible to readers after {@link #finish}). */
     public void put(String key, byte[] value) {
         try {
-            batch.put(key.getBytes(StandardCharsets.UTF_8), value);
-            if (++batched >= BATCH) {
+            batch.add(new byte[][] {key.getBytes(StandardCharsets.UTF_8), value});
+            if (batch.size() >= BATCH) {
                 flushBatch();
             }
-        } catch (RocksDBException e) {
+        } catch (IOException e) {
             throw new UncheckedIOException(new IOException("sorted store " + dir + ": " + e.getMessage(), e));
         }
     }
@@ -115,20 +97,16 @@ public final class SortedStore implements AutoCloseable {
     public void finish() {
         try {
             flushBatch();
-            try (org.rocksdb.FlushOptions f = new org.rocksdb.FlushOptions().setWaitForFlush(true)) {
-                db.flush(f);
-            }
-        } catch (RocksDBException e) {
+            db.flush();
+        } catch (IOException e) {
             throw new UncheckedIOException(new IOException("sorted store " + dir + ": " + e.getMessage(), e));
         }
     }
 
-    private void flushBatch() throws RocksDBException {
-        if (batched > 0) {
-            db.write(write, batch);
-            batch.close();
-            batch = new WriteBatch();
-            batched = 0;
+    private void flushBatch() throws IOException {
+        if (!batch.isEmpty()) {
+            db.putAll(batch);
+            batch = new ArrayList<>(BATCH);
         }
     }
 
@@ -139,7 +117,7 @@ public final class SortedStore implements AutoCloseable {
         }
         try {
             return db.get(key.getBytes(StandardCharsets.UTF_8));
-        } catch (RocksDBException e) {
+        } catch (IOException e) {
             throw new UncheckedIOException(new IOException("sorted store " + dir + ": " + e.getMessage(), e));
         } finally {
             leave();
@@ -154,20 +132,19 @@ public final class SortedStore implements AutoCloseable {
         if (!enter()) {
             return 0;
         }
-        int n = 0;
+        int[] n = {0};
         byte[] p = prefix.getBytes(StandardCharsets.UTF_8);
-        try (ReadOptions ro = new ReadOptions().setPrefixSameAsStart(false); RocksIterator it = db.newIterator(ro)) {
-            for (it.seek(p); it.isValid(); it.next()) {
-                byte[] k = it.key();
+        try {
+            db.scan(p, (k, v) -> {
                 if (!startsWith(k, p)) {
-                    break;
+                    return false;
                 }
-                n++;
-                if (!visit.test(new String(k, StandardCharsets.UTF_8), it.value())) {
-                    break;
-                }
-            }
-            return n;
+                n[0]++;
+                return visit.test(new String(k, StandardCharsets.UTF_8), v);
+            });
+            return n[0];
+        } catch (IOException e) {
+            throw new UncheckedIOException(new IOException("sorted store " + dir + ": " + e.getMessage(), e));
         } finally {
             leave();
         }
@@ -241,10 +218,8 @@ public final class SortedStore implements AutoCloseable {
             return;
         }
         closed = true;
-        batch.close();
-        write.close();
+        batch = List.of();
         db.close();
-        options.close();
         if (keep) {
             return;
         }
@@ -256,26 +231,11 @@ public final class SortedStore implements AutoCloseable {
     }
 
     /**
-     * Whether another process has the store in {@code dir} open: RocksDB holds a lock on its {@code LOCK} file while open (an fcntl lock,
-     * which {@link java.nio.channels.FileChannel#tryLock} sees on Linux and macOS). A folder without one, or whose lock is free, is not in use.
+     * Whether another process has the store in {@code dir} open: each disk store holds a lock on a file while open (RocksDB its
+     * {@code LOCK} file, MVStore its own file). A folder without one, or whose lock is free, is not in use.
      */
     public static boolean inUse(Path dir) {
-        Path lock = dir.resolve("LOCK");
-        if (!Files.isRegularFile(lock)) {
-            return false;
-        }
-        try (java.nio.channels.FileChannel ch = java.nio.channels.FileChannel.open(lock, java.nio.file.StandardOpenOption.WRITE)) {
-            java.nio.channels.FileLock l = ch.tryLock();
-            if (l == null) {
-                return true;
-            }
-            l.release();
-            return false;
-        } catch (java.nio.channels.OverlappingFileLockException e) {
-            return true;
-        } catch (IOException e) {
-            return false;
-        }
+        return DiskStores.inUse(dir);
     }
 
     /** Deletes a store's folder (all of it); nothing when it does not exist. */

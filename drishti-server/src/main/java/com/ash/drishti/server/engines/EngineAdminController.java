@@ -187,7 +187,7 @@ public class EngineAdminController {
         m.put("node", registry.node());
         m.put("dir", registry.files().dir().toAbsolutePath().normalize().toString());
         if (nativeLibraries != null) {
-            m.put("native", Map.of("blas", nativeLibraries.describe()));   // the BLAS path of this node and of each member
+            m.put("native", Map.of("blas", nativeLibraries.describe(), "store", nativeLibraries.store()));   // BLAS (this node and each member), the disk store
         }
         long total = 0;
         List<Map<String, Object>> rows = new ArrayList<>();

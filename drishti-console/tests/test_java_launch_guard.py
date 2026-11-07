@@ -125,11 +125,13 @@ def test_java_cmd_puts_the_flag_first_and_makes_the_folder(tmp_path):
     import java_launch
     java_launch._mod._VERSIONS.update({"java": 21, "/jdk/bin/java": 21})      # Java 21: no compact headers (2.9.7 adds them on 25)
     cache = "-Djdk.nio.maxCachedBufferSize=262144"          # the JDK's per-thread temporary direct buffers cached up to 256 KB only
+    native = "--enable-native-access=ALL-UNNAMED"           # JNI libraries load without the restricted-method warning (2.9.11.e)
     cmd = java_cmd("/jdk/bin/java", ["-Xmx1g", "-jar", "s.jar", "--server.port=1"], tmp=tmp_path / "jvm")
-    assert cmd == ["/jdk/bin/java", f"{FLAG}{tmp_path / 'jvm'}", cache, "-Xmx1g", "-jar", "s.jar", "--server.port=1"]
+    assert cmd == ["/jdk/bin/java", f"{FLAG}{tmp_path / 'jvm'}", cache, native, "-Xmx1g", "-jar", "s.jar", "--server.port=1"]
     assert (tmp_path / "jvm").is_dir()
-    assert java_cmd("java", [f"{FLAG}/elsewhere", "-jar", "s.jar"], tmp=tmp_path / "no") == ["java", cache, f"{FLAG}/elsewhere", "-jar", "s.jar"]
-    assert java_cmd("java", ["-Djdk.nio.maxCachedBufferSize=0", "-jar", "s.jar"], tmp=tmp_path / "jvm")[2:] == ["-Djdk.nio.maxCachedBufferSize=0", "-jar", "s.jar"]
+    assert java_cmd("java", [f"{FLAG}/elsewhere", "-jar", "s.jar"], tmp=tmp_path / "no") == ["java", cache, native, f"{FLAG}/elsewhere", "-jar", "s.jar"]
+    assert java_cmd("java", ["-Djdk.nio.maxCachedBufferSize=0", "-jar", "s.jar"], tmp=tmp_path / "jvm")[2:] == [native, "-Djdk.nio.maxCachedBufferSize=0", "-jar", "s.jar"]
+    assert native not in java_cmd("java", ["--enable-native-access=ALL-UNNAMED", "-jar", "s.jar"], tmp=tmp_path / "jvm")[1:-3]
     assert not (tmp_path / "no").exists()
     # the default: the server's own temp base for that working folder and environment, as TempFiles.configuredBase computes it
     assert server_tmp(tmp_path, {}) == (tmp_path / "data" / "tmp" / "server").resolve()

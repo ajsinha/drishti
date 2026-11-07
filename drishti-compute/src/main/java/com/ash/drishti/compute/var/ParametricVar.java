@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.compute.var;
 
-import com.ash.drishti.compute.linalg.LinearAlgebra;
+import com.ash.drishti.nativ.linalg.LinearAlgebra;
 import java.util.List;
 
 /**

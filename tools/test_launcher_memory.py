@@ -28,7 +28,8 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-FLAGS = ("-XX:MaxDirectMemorySize=256m", "-XX:TrimNativeHeapInterval=60000", "-Djdk.nio.maxCachedBufferSize=262144", "-XX:NativeMemoryTracking=summary")
+FLAGS = ("-XX:MaxDirectMemorySize=256m", "-XX:TrimNativeHeapInterval=60000", "-Djdk.nio.maxCachedBufferSize=262144", "-XX:NativeMemoryTracking=summary",
+         "--enable-native-access=ALL-UNNAMED")
 DIAGNOSTICS = ("HeapDumpOnOutOfMemoryError", "HeapDumpPath=", "-Xlog:gc*:file=", "filecount=5,filesize=20m")
 PRODUCTION = ("drishti-stack/stack.py", "deploy/docker/ecs/server-entrypoint.sh", "deploy/docker/server.Dockerfile", "tools/windows/start-server.ps1")
 LAUNCHERS = {  # file: whether it sets MALLOC_ARENA_MAX too

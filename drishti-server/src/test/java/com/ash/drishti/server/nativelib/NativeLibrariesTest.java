@@ -17,7 +17,7 @@ package com.ash.drishti.server.nativelib;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.compute.linalg.Blas;
+import com.ash.drishti.nativ.linalg.Blas;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.List;
@@ -75,7 +75,7 @@ class NativeLibrariesTest {
             String r = NativeLibraries.agree(Map.of("node-b", "native 0.3.26", "node-c", "java-fallback no bundled OpenBLAS for linux-aarch64"));
             assertThat(r).contains("node-c (java-fallback no bundled OpenBLAS for linux-aarch64)").contains("every member sums on Java");
             assertThat(Blas.clusterJava()).isEqualTo(r);
-            assertThat(Blas.forClusterSums()).isSameAs(com.ash.drishti.compute.linalg.JavaBlas.INSTANCE);
+            assertThat(Blas.forClusterSums()).isSameAs(com.ash.drishti.nativ.linalg.JavaBlas.INSTANCE);
             assertThat(NativeLibraries.agree(Map.of("node-d", "unknown (an older server: Java)"))).contains("node-d");
             assertThat(NativeLibraries.agree(Map.of("node-b", "native 0.3.26"))).isNull();   // every member native: the agreement lifts
             assertThat(Blas.clusterJava()).isNull();
@@ -100,7 +100,7 @@ class NativeLibrariesTest {
         assertThat(s.degraded()).isFalse();
         assertThat(n.describe().get("status")).isEqualTo("OK");                         // a notice, never DEGRADED
         assertThat(NativeLibraries.wire(s)).startsWith("java chosen by admin");           // the members count it as Java
-        assertThat(Blas.get()).isSameAs(com.ash.drishti.compute.linalg.JavaBlas.INSTANCE);
+        assertThat(Blas.get()).isSameAs(com.ash.drishti.nativ.linalg.JavaBlas.INSTANCE);
         try {
             e.start();                                                                    // the self-test, then OpenBLAS
             assertThat(Blas.status().isNative()).isTrue();

@@ -26,11 +26,30 @@
   </parent>
   <artifactId>drishti-diskcache</artifactId>
   <name>drishti-diskcache</name>
-  <description>A disk-backed, size-bounded, self-clearing cache (RocksDB) for live data</description>
+  <description>A disk-backed, size-bounded, self-clearing cache for live data, on drishti-native's disk store (RocksDB, else H2's MVStore)</description>
   <dependencies>
-    <dependency><groupId>org.rocksdb</groupId><artifactId>rocksdbjni</artifactId><version>${rocksdb.version}</version></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-native</artifactId></dependency>
     <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></dependency>
     <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
     <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><scope>test</scope></dependency>
   </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <executions>
+          <!-- the pure-Java lane (DRISHTI_NATIVE.md section 1, rule 5): every test again on H2's MVStore, the store RocksDB falls back to -->
+          <execution>
+            <id>java-store</id>
+            <phase>test</phase>
+            <goals><goal>test</goal></goals>
+            <configuration>
+              <systemPropertyVariables><drishti.native.store.mode>java</drishti.native.store.mode></systemPropertyVariables>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

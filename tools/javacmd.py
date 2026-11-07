@@ -66,6 +66,10 @@ CACHE_LIMIT = CACHE_FLAG + "262144"
 # 2.9.7 (RESOURCES_AND_SCALE.md 5.4, D5): compact object headers (about 10% less heap) whenever the JVM is 25 or later. A product flag
 # there (JEP 519); Java 21 refuses to start with it, and 24 is not supported, so it is added only when the version says 25+.
 COMPACT = "-XX:+UseCompactObjectHeaders"
+
+# 2.9.11.e (DRISHTI_NATIVE.md section 3): native access granted, so JavaCPP, RocksDB, DuckDB and the codecs load their JNI libraries
+# without a restricted-method warning, and keep loading when a later Java denies native access by default. Accepted by Java 21 and 25.
+NATIVE = "--enable-native-access=ALL-UNNAMED"
 _VERSIONS: dict = {}
 
 
@@ -90,15 +94,16 @@ def version_flags(java, args=()) -> list:
 
 
 def java_cmd(java, args, tmp=None, cwd=None, env=None) -> list:
-    """``[java, -Djava.io.tmpdir=<folder>, -Djdk.nio.maxCachedBufferSize=262144, *args]``; ``cwd`` and ``env`` are the ones the JVM
+    """``[java, -Djava.io.tmpdir=<folder>, -Djdk.nio.maxCachedBufferSize=262144, --enable-native-access=ALL-UNNAMED, *args]``; ``cwd`` and ``env`` are the ones the JVM
     will run with (they decide the default folder). A flag already in the arguments wins. On Java 25 and later
     ``-XX:+UseCompactObjectHeaders`` too (2.9.7)."""
     args = [str(a) for a in args]
     cache = [] if any(a.startswith(CACHE_FLAG) for a in args) else [CACHE_LIMIT]
     compact = version_flags(java, args)
+    native = [] if any(a.startswith("--enable-native-access") for a in args) else [NATIVE]
     if any(a.startswith(FLAG) for a in args):
-        return [str(java), *compact, *cache, *args]
-    return [str(java), tmp_flag(tmp, cwd, env), *compact, *cache, *args]
+        return [str(java), *compact, *cache, *native, *args]
+    return [str(java), tmp_flag(tmp, cwd, env), *compact, *cache, *native, *args]
 
 
 @contextlib.contextmanager

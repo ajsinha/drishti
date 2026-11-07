@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.compute.linalg;
+package com.ash.drishti.nativ.linalg;
 
 /**
  * Dense linear algebra on {@code double[]}: the few BLAS routines Drishti's hot paths use (HIGH_PERFORMANCE_NATIVE.md section 6). Two

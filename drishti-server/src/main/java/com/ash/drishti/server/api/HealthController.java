@@ -231,8 +231,9 @@ public class HealthController {
         }
         if (nativeLibraries != null) {
             Map<String, Object> blas = nativeLibraries.describe();       // auto fell back to Java: DEGRADED (same results, slower), never down
-            out.put("native", Map.of("blas", blas));
-            if ("DEGRADED".equals(blas.get("status")) && "OK".equals(out.get("status"))) {
+            Map<String, Object> store = nativeLibraries.store();          // RocksDB, else H2's MVStore: DEGRADED the same way
+            out.put("native", Map.of("blas", blas, "store", store));
+            if (("DEGRADED".equals(blas.get("status")) || "DEGRADED".equals(store.get("status"))) && "OK".equals(out.get("status"))) {
                 out.put("status", "DEGRADED");
             }
         }

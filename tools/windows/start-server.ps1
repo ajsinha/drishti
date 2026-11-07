@@ -140,7 +140,7 @@ $logs = Join-Path $root 'data\logs'
 $dumps = Join-Path $root 'data\dumps'
 New-Item -ItemType Directory -Force -Path $logs, $dumps | Out-Null
 $javaArgs = @("-Djava.io.tmpdir=$tmpDir", "-Xmx$Heap", '-XX:MaxDirectMemorySize=256m', '-XX:TrimNativeHeapInterval=60000',
-    '-Djdk.nio.maxCachedBufferSize=262144', '-XX:NativeMemoryTracking=summary', '-XX:+HeapDumpOnOutOfMemoryError', "-XX:HeapDumpPath=$dumps",
+    '-Djdk.nio.maxCachedBufferSize=262144', '--enable-native-access=ALL-UNNAMED', '-XX:NativeMemoryTracking=summary', '-XX:+HeapDumpOnOutOfMemoryError', "-XX:HeapDumpPath=$dumps",
     '-Xlog:gc*:file=data/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m', '-jar', $Jar)
 if ($major -ge 25) { $javaArgs = @('-XX:+UseCompactObjectHeaders') + $javaArgs }
 # direct memory (IN_MEMORY_LAKE.md section 3a; FLIGHT_GUIDE.md section 10): the in-memory lake's stores and Arrow's buffers (the compute

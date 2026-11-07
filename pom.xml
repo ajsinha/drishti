@@ -46,6 +46,7 @@
     <module>drishti-packs</module>
     <module>drishti-ai</module>
     <module>drishti-testkit</module>
+    <module>drishti-native</module>
     <module>drishti-diskcache</module>
     <module>drishti-messaging</module>
     <module>drishti-lakeconfig</module>
@@ -110,6 +111,8 @@
     <!-- Kotlin is used only by S3Mock (tests): its runtime needs the stdlib it was built with, not Boot 3.5's 1.9 -->
     <kotlin.version>2.2.21</kotlin.version>
     <rocksdb.version>11.0.4</rocksdb.version>
+    <!-- H2's MVStore: the pure-Java disk store drishti-native falls back to when RocksDB cannot load (DRISHTI_NATIVE.md section 2) -->
+    <h2.version>2.3.232</h2.version>
     <aerospike.version>10.5.0</aerospike.version>
     <!-- the Apache Cassandra Java driver (also ScyllaDB, Astra, Keyspaces): pure Java, no native library -->
     <cassandra-driver.version>4.19.3</cassandra-driver.version>
@@ -128,7 +131,7 @@
          add-opens java.base/java.nio for its memory module (see drishti-flight and the server launch flags) -->
     <arrow.version>19.0.0</arrow.version>
     <!-- BLAS (HIGH_PERFORMANCE_NATIVE.md section 6): JavaCPP's OpenBLAS preset, the library bundled per platform; only the linux-x86_64 and
-         windows-x86_64 classifiers (never openblas-platform, which brings every platform); only compute.linalg.NativeBlas names it -->
+         windows-x86_64 classifiers (never openblas-platform, which brings every platform); only drishti-native's nativ.linalg.NativeBlas names it -->
     <javacpp.version>1.5.10</javacpp.version>
     <openblas.version>0.3.26-${javacpp.version}</openblas.version>
     <!-- test classes run in this many parallel JVM forks per module (each fork reused for many classes); -Ddrishti.test.forks=1
@@ -173,6 +176,8 @@
       <!-- Redis: Lettuce on Netty 4.1 (the line Spring Boot 3.5 manages); zstd for compressed documents and columns -->
       <dependency><groupId>io.lettuce</groupId><artifactId>lettuce-core</artifactId><version>${lettuce.version}</version></dependency>
       <dependency><groupId>com.github.luben</groupId><artifactId>zstd-jni</artifactId><version>${zstd-jni.version}</version></dependency>
+      <dependency><groupId>com.h2database</groupId><artifactId>h2</artifactId><version>${h2.version}</version></dependency>
+      <dependency><groupId>org.rocksdb</groupId><artifactId>rocksdbjni</artifactId><version>${rocksdb.version}</version></dependency>
       <dependency><groupId>org.bytedeco</groupId><artifactId>javacpp</artifactId><version>${javacpp.version}</version></dependency>
       <dependency><groupId>org.bytedeco</groupId><artifactId>javacpp</artifactId><version>${javacpp.version}</version><classifier>linux-x86_64</classifier></dependency>
       <dependency><groupId>org.bytedeco</groupId><artifactId>javacpp</artifactId><version>${javacpp.version}</version><classifier>windows-x86_64</classifier></dependency>
@@ -199,6 +204,7 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-jdbc</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-native</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-diskcache</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-messaging</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-deltalake</artifactId><version>${project.version}</version></dependency>
@@ -256,7 +262,9 @@
                go in the same folder, which is how it exists before the first fork starts. Keep @{argLine} first: a module or a
                coverage agent may add its own. -->
           <tempDir>tmp</tempDir>
-          <argLine>@{argLine} -Djava.io.tmpdir=${project.build.directory}/tmp</argLine>
+          <!-- native access granted (JEP 472; DRISHTI_NATIVE.md section 3): JavaCPP, RocksDB, DuckDB, zstd-jni and the other JNI libraries load
+               without a restricted-method warning, and keep loading when a later Java denies by default -->
+          <argLine>@{argLine} --enable-native-access=ALL-UNNAMED -Djava.io.tmpdir=${project.build.directory}/tmp</argLine>
           <systemPropertyVariables>
             <!-- as the server does at start (ProxySettings.allowBasicThroughTunnels): the JDK reads this once, at its first
                  HTTP client, so a test that makes a client before a proxy test would otherwise fix the default (Basic refused) -->

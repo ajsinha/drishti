@@ -74,7 +74,7 @@
               <forkCount>1</forkCount>
               <reuseForks>false</reuseForks>
               <includes><include>**/DirectMemorySoakTest.java</include></includes>
-              <argLine>@{argLine} -Djava.io.tmpdir=${project.build.directory}/tmp -XX:MaxDirectMemorySize=64m -Xmx1g</argLine>
+              <argLine>@{argLine} --enable-native-access=ALL-UNNAMED -Djava.io.tmpdir=${project.build.directory}/tmp -XX:MaxDirectMemorySize=64m -Xmx1g</argLine>
             </configuration>
           </execution>
         </executions>

@@ -45,7 +45,7 @@ ROWS="$DATA/build/loader-rows"; rm -rf "$ROWS"; mkdir -p "$ROWS"
 uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$ROWS/banking.tar"
 ./mvnw -q -o install -DskipTests -pl plugins/drishti-plugin-mongodb -am
 CP="plugins/drishti-plugin-mongodb/target/classes:$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-mongodb -Dmdep.outputFile=/dev/stdout)"
-LOADER=("$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.mongodb.MongoLoader)
+LOADER=("$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 --enable-native-access=ALL-UNNAMED -cp "$CP" com.ash.drishti.plugin.mongodb.MongoLoader)
 if [[ -n "$TRADES" ]]; then
   "${LOADER[@]}" "$ROWS/banking.tar" "$URI" "$DB" ${OPTS[@]+"${OPTS[@]}"}
   # the bulk book: a tar of trade/<YYYY-MM-DD>/ folders (the load rules), then the loader on it

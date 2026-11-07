@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.var;
 
-import com.ash.drishti.compute.linalg.Blas;
+import com.ash.drishti.nativ.linalg.Blas;
 import com.ash.drishti.compute.var.ParametricVar;
 import com.ash.drishti.compute.var.VarLens;
 import java.util.ArrayList;

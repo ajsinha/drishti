@@ -118,8 +118,17 @@ class ArchitectureRulesTest {
      */
     @ArchTest
     static final ArchRule onlyNativeBlasNamesTheBinding = noClasses()
-            .that().doNotHaveFullyQualifiedName("com.ash.drishti.compute.linalg.NativeBlas")
+            .that().doNotHaveFullyQualifiedName("com.ash.drishti.nativ.linalg.NativeBlas")
             .should().dependOnClassesThat().resideInAnyPackage("org.bytedeco..", "dev.ludovic.netlib..");
+
+    /**
+     * The disk store's bindings live in drishti-native's store package (DRISHTI_NATIVE.md section 7): callers open a DiskStore through
+     * DiskStores, so RocksDB can fall back to H2's MVStore without a caller knowing.
+     */
+    @ArchTest
+    static final ArchRule onlyTheStorePackageNamesTheDiskStores = noClasses()
+            .that().resideOutsideOfPackage("com.ash.drishti.nativ.store..")
+            .should().dependOnClassesThat().resideInAnyPackage("org.rocksdb..", "org.h2.mvstore..");
 
     @ArchTest
     static final ArchRule controllersOnlyInServer = noClasses()

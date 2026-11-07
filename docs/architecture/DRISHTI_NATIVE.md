@@ -16,7 +16,7 @@
 
 # drishti-native: native libraries behind Drishti's own abstractions, with Java fallbacks
 
-**Status: design for 2.9.12 (product owner, 2026-11-04); QuantLib parked (section 6).** One module holds every native integration of the server, each behind a
+**Status: partly built in 2.9.11.e (section 14); the rest designed (product owner, 2026-11-04); QuantLib parked (section 6).** One module holds every native integration of the server, each behind a
 Drishti interface with a pure-Java implementation that always works, so **Drishti runs on any environment**. It realises the seam of
 [HIGH_PERFORMANCE_NATIVE.md](HIGH_PERFORMANCE_NATIVE.md) section 2.8 on Java 21 (JNI through JavaCPP) and keeps room for the Java 25
 paths of that design (FFM, the Vector API) as further implementations of the same interfaces.
@@ -43,11 +43,11 @@ paths of that design (FFM, the Vector API) as further implementations of the sam
 
 | Capability | Interface (planned names) | Native | Java | Today |
 |---|---|---|---|---|
-| **Linear algebra, level 1–3** | `LinearAlgebra` (`dgemm`, `dgemv`, `ddot`, `daxpy`) | OpenBLAS (bytedeco) | Drishti's kernels (`JavaBlas`, `MultiSums`) | built in 2.9.11.c in `drishti-compute` (`compute.linalg`) and `drishti-server` (`server.nativelib`); **moved** here |
+| **Linear algebra, level 1–3** | `LinearAlgebra` (`dgemm`, `dgemv`, `ddot`, `daxpy`) | OpenBLAS (bytedeco) | Drishti's kernels (`JavaBlas`; `MultiSums` in `compute.vector` calls the interface) | **built**: `nativ.linalg` in `drishti-native` (moved from `compute.linalg` in 2.9.11.e); the server's wiring stays in `server.nativelib` |
 | **Decompositions and solvers** | `Lapack` (Cholesky, LU, QR, symmetric eigen, SVD, least squares, solve) | LAPACK from the **same** OpenBLAS jar | Hipparchus | new |
 | **Statistics and optimisation** | `Stats`, `Optimise`, `Interpolate`, `Distributions` | none needed | Hipparchus (pure Java; SciPy's role) | new |
 | **Compression** | `Codecs` (zstd, Snappy, LZ4, gzip/deflate) | zstd-jni, snappy-java, lz4-java | aircompressor (pure Java, same formats) | natives used in five modules without a fallback |
-| **Key-value disk store** | `DiskStore` (the disk cache: get, put, remove, scan in key order) | RocksDB | **H2's MVStore** (pure Java, on disk, keys in order) | RocksDB in `drishti-diskcache`, no fallback |
+| **Key-value disk store** | `DiskStore` (the disk cache: get, put, remove, scan in key order) | RocksDB | **H2's MVStore** (pure Java, on disk, keys in order) | **built** in 2.9.11.e: `nativ.store` (`DiskStore`, `DiskStores`, `RocksDbStore`, `MvStore`); `drishti-diskcache` uses it |
 | **Embedded SQL engine** | `SqlEngine` (open a database or an in-memory engine, run a statement with its memory, thread and time limits, answer in Arrow) | DuckDB | **none, by decision** (section 2.1) | DuckDB used directly in `drishti-server` (BI engine, SQL service), `drishti-bicompute` (the pivot executor) and `plugin-duckdb` |
 
 ### 2.1 DuckDB: required, without a fallback
@@ -107,12 +107,13 @@ The global `drishti.native.mode` (`auto`, `off`, `on`) applies to every capabili
 
 ## 5. Linear algebra and maths
 
-### 5.1 What moves from 2.9.11.c
+### 5.1 BLAS in the module
 
-`compute.linalg` (`LinearAlgebra`, `JavaBlas`, `NativeBlas`, `GuardedBlas`, `Blas`, `Canary`, `BlasProbe`) and `server.nativelib`
-(`NativeLibraries`, `OpenBlasEngine`) move into `drishti-native`, unchanged in behaviour (the near-tie rule, the cluster's one BLAS path,
-`gemm-min-sets`, `gemm-min-density`, the live Admin switch). The settings keep their names (`drishti.native.blas.*`). One commit moves
-them; nothing stays behind.
+`nativ.linalg` (`LinearAlgebra`, `JavaBlas`, `NativeBlas`, `GuardedBlas`, `Blas`, `Canary`) is the BLAS of the server, unchanged in
+behaviour from 2.9.11.c (the near-tie rule, the cluster's one BLAS path, `gemm-min-sets`, `gemm-min-density`, the live Admin switch);
+the settings keep their names (`drishti.native.blas.*`). `server.nativelib` (`NativeLibraries`, `OpenBlasEngine`) is the server's Spring
+side of it (settings, Health, Admin → Engines, the meters, the cluster digest): the module stays Spring-free (section 3), so that wiring
+stays in the server.
 
 ### 5.2 LAPACK
 
@@ -230,3 +231,14 @@ lean platform), with "Performance II" (2.9.11.n) or a release of its own.
 
 Not taken: FAISS (Lucene's HNSW and hnswlib in pure Java suffice), CUDA/GPU (heavy, rarely present), a second SQL engine (DuckDB only),
 QuantLib (parked, a release of its own).
+
+## 14. As built in 2.9.11.e
+
+| Part | As built |
+|---|---|
+| The module | `drishti-native` (plain Java, no Spring; depends on SLF4J and the native jars only). Packages `com.ash.drishti.nativ.linalg` and `com.ash.drishti.nativ.store`; `core`, `maths`, `codec` and `sql` are not made yet |
+| BLAS | `compute.linalg` moved unchanged (`git mv`, package renamed): `LinearAlgebra`, `JavaBlas`, `NativeBlas`, `GuardedBlas`, `Blas`, `Canary`, `BlasUnavailableException` and their tests. The settings (`drishti.native.blas.*`), the `openblas` engine switch, the modes, the near-tie rule, the cluster agreement and the canary are as before. The Spring wiring (`NativeLibraries`, `OpenBlasEngine`: settings, Health, Admin → Engines, meters, the cluster digest) stays in `server.nativelib`, the server's side of the seam |
+| The disk store | `DiskStore` with three kinds (a cache bounded by size and age, state kept whatever its size, a sorted store written in batches); `RocksDbStore` with the options the disk cache had before; `MvStore` on H2 2.3.232's MVStore (one file `drishti-store.mv.db` in the folder; keys compared unsigned, as RocksDB's; a cache past its budget is emptied whole; the age limit kept per entry). `DiskStores.open` chooses by `drishti.native.store.mode` (`auto`, `java`, `native`), loads RocksDB once and falls back with one loud warning; `DiskStores.status()` feeds Health and Admin → Engines (`native.store`). `DiskCache` and `SortedStore` name no RocksDB class |
+| DuckDB and SQLite | required, unchanged (sections 2.1 and 2.2); their move behind `SqlEngine` and the registry is still to do |
+| Native access | `--enable-native-access=ALL-UNNAMED` on every launcher and in the Maven Surefire forks ([OPERATIONS.md section 2.2](../admin/OPERATIONS.md#22-the-other-native-libraries)) |
+| Proofs | `LinearAlgebraTest` and `BlasResilienceTest` (BLAS parity within 1e-12, unchanged); `DiskStoreParityTest` (the same values and scans from both stores over a random workload, reopen, budget, age limit, the modes); `drishti-diskcache`'s tests run twice, the second time on MVStore (`java-store` execution); an architecture rule keeps `org.rocksdb` and `org.h2.mvstore` inside `nativ.store` |

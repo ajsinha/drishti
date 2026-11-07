@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.compute.vector;
 
-import com.ash.drishti.compute.linalg.Blas;
-import com.ash.drishti.compute.linalg.LinearAlgebra;
+import com.ash.drishti.nativ.linalg.Blas;
+import com.ash.drishti.nativ.linalg.LinearAlgebra;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

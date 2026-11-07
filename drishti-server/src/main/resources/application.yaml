@@ -196,6 +196,8 @@ drishti:
       canary-interval: 6h            # the self-test against Java is run again this often (0: only at start); a failure switches OpenBLAS off for the run
       gemm-min-sets: 32              # a 1,024-row tile of many-scope sums is one dgemm when at least this many sets share it (tuned on one machine: BENCHMARK.md section 17)
       gemm-min-density: 0.25         # ...and at least this share of its (set, row) pairs are members; sparser tiles are added in Java
+    store:
+      mode: ${DRISHTI_NATIVE_STORE_MODE:auto}  # the disk caches' and message stores' disk store (DRISHTI_NATIVE.md section 2): auto: RocksDB, else H2's MVStore (pure Java) with a warning and Health DEGRADED; java: MVStore, chosen; native: RocksDB or the store fails to open
   engines:                           # compute engines on or off per node, each with its own file (docs/architecture/COMPUTE_ENGINES.md; Admin -> Engines)
     dir: ${DRISHTI_ENGINES_DIR:./config/engines}   # the folder of the engines' files Admin -> Engines writes (the imports above name the same folder)
     drain: 30s                       # an engine turned off live: requests in flight finish within this, then are cancelled

@@ -48,10 +48,10 @@ ROWS="$DATA/build/loader-rows"; rm -rf "$ROWS"; mkdir -p "$ROWS"
 uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$ROWS/banking.tar"
 ./mvnw -q -o install -DskipTests -pl plugins/drishti-plugin-duckdb -am
 CP="plugins/drishti-plugin-duckdb/target/classes:$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-duckdb -Dmdep.outputFile=/dev/stdout)"
-"$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.duckdb.DuckDbLoader "$ROWS/banking.tar" "$DB" --recreate "${OPTS[@]}"
+"$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 --enable-native-access=ALL-UNNAMED -cp "$CP" com.ash.drishti.plugin.duckdb.DuckDbLoader "$ROWS/banking.tar" "$DB" --recreate "${OPTS[@]}"
 if [[ -n "$TRADES" ]]; then
   # the bulk book: a tar of trade/<YYYY-MM-DD>/ folders (the load rules), then the loader on it
   uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl "$ROWS/bulk-trades.tar"
-  "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.duckdb.DuckDbLoader "$ROWS/bulk-trades.tar" "$DB" "${OPTS[@]}"
+  "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 --enable-native-access=ALL-UNNAMED -cp "$CP" com.ash.drishti.plugin.duckdb.DuckDbLoader "$ROWS/bulk-trades.tar" "$DB" "${OPTS[@]}"
 fi
 rm -rf "$ROWS"
