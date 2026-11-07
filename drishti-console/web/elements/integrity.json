@@ -10,8 +10,8 @@
       "integrity": "sha384-tHV7896IfEMgFZl6K5b0i3PxPsc3zDaFszS4UijjcRvq9gMg4H9OHT/5UjMTfUnG"
     },
     "m/assets.js": {
-      "bytes": 5327,
-      "integrity": "sha384-svr3+x4WF/nxzWIK+dr3CXwZjXr3QdahU3oxZPa43e8Zh84wknTPZXwfDbHI79R9"
+      "bytes": 5411,
+      "integrity": "sha384-C6dIUOom5j7jJVANMoWMyIJCBJZcdiDk2fYLP4wZGw5LLsFa2KDvZHz1r2zlQls4"
     },
     "m/config.js": {
       "bytes": 1526,
@@ -27,7 +27,7 @@
     },
     "m/enhancers.js": {
       "bytes": 5939,
-      "integrity": "sha384-StjYMRlZHX0eX8NvgwgTAWaf6SyQ46znZY9uUUbZ6E14N2lN7ODBLnXitNK13HK1"
+      "integrity": "sha384-n+M8CfhBWeEf4gCIcISGSYWoqYadJP6uNGtWuDd0XUhjIxUn7TeDNGDUOAxPRB9W"
     },
     "m/frames.js": {
       "bytes": 3789,

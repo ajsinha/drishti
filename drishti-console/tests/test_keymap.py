@@ -36,6 +36,8 @@ ALLOWED = {
     "drishti_engines-menu.js": (1, "widget-internal: the engines menu's filter box, ahead of Bootstrap's dropdown"),
     # a host page without the console's keymap (the client-side renderer's 'console' behaviours): the drill binds the document itself
     "drishti_drill.js": (1, "fallback for a host page that has no keymap; on a console page the drill registers drill.keys"),
+    # BI's tab lists in <drishti-report> on another site (no keymap there): the same fallback
+    "drishti_bi-lib.js": (1, "fallback for a host page that has no keymap; on a console page BI's tabs register bi.tabs"),
 }
 
 # Keys bound on a widget's own element and only described to the keymap (so the ? overlay lists them): they must stay described.

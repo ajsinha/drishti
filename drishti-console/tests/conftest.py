@@ -1231,6 +1231,9 @@ def open_studio(client, url, **params):
     q = dict(parse_qsl(parts.query, keep_blank_values=True))
     q.update(params)
     asked = client.get(parts.path, params=q, follow_redirects=False)
+    if asked.status_code == 302 and asked.headers.get("location") == "/build" and not q:
+        # a bare /studio is the Build home now (2.9.11.e); the start it confirmed (a scratch design) is the same POST as before
+        return client.post(parts.path, data={}, follow_redirects=False)
     if asked.status_code == 302:                       # a Design of yours, or another page: nothing is created by asking
         return asked
     assert asked.status_code == 200 and "data-start-form" in asked.text, (url, asked.status_code)

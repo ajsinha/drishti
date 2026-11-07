@@ -96,15 +96,6 @@ def capture(c: Ctx):
     c.save("06-capture-compare.jpg", locator=".xx-main")
 
 
-@shot("07-provenance.jpg")
-def provenance(c: Ctx):
-    open_exp(c, "/exposure?scope=CPTY:CP-ALDERSHOT")
-    painted(c, "CPTY:CP-ALDERSHOT")
-    c.page.locator("[data-xx-prov-box] summary").click()
-    c.page.wait_for_timeout(400)
-    c.save("07-provenance.jpg", locator="[data-xx-prov-box]")
-
-
 @shot("08-phone.jpg")
 def phone(c: Ctx):
     open_exp(c, "/exposure?scope=BANK", 390, 844)

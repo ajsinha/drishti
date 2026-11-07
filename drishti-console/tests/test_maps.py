@@ -175,4 +175,4 @@ def test_the_bi_map_has_level_and_drill_in_the_format_pane_and_the_scripts_load_
         text = (CONSOLE / "web" / "templates" / page).read_text(encoding="utf-8")
         assert text.index("drishti_geomap.js") < text.index("drishti_charts.js"), page
     embed = (CONSOLE / "web" / "embed" / "assets.js").read_text(encoding="utf-8")
-    assert "'geomap', 'charts'" in embed and "['geomap'].concat(" in embed
+    assert "'geomap', 'charts'" in embed and "'geomap'].concat(" in embed          # the report's libraries: drishti-core and -grid, then geomap, then BI's

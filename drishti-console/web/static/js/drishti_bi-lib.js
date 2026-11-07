@@ -433,20 +433,27 @@
       const list = tab && tab.closest('[role=tablist]');
       return list && !list.hasAttribute('data-own-keys') ? { tab: tab, list: list } : null;
     };
-    window.Drishti.keys.register({ id: 'bi.tabs', keys: ['ArrowRight', 'ArrowLeft', 'Home', 'End'], scope: 'panel', area: 'bi-tabs', group: 'Tabs',
-      description: 'On a tab: the next or previous tab, the first or the last', within: () => (document.activeElement && document.activeElement.closest
-        ? document.activeElement.closest('[role=tablist]') : null), when: (e) => !!listOf(e),
-      run: (e) => {
-        const at = listOf(e), tabs = B.qa('[role=tab]', at.list).filter((t) => !t.hidden && !t.disabled);
-        const i = tabs.indexOf(at.tab);
-        const to = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
-        if (to === undefined || i < 0) { return false; }
-        const next = tabs[(to + tabs.length) % tabs.length];
-        next.focus();
-        next.click();
-        window.setTimeout(() => roving(at.list), 0);
-        return true;
-      } });
+    const move = (e) => {
+      const at = listOf(e), tabs = B.qa('[role=tab]', at.list).filter((t) => !t.hidden && !t.disabled);
+      const i = tabs.indexOf(at.tab);
+      const to = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
+      if (to === undefined || i < 0) { return false; }
+      const next = tabs[(to + tabs.length) % tabs.length];
+      next.focus();
+      next.click();
+      window.setTimeout(() => roving(at.list), 0);
+      return true;
+    };
+    if (window.Drishti.keys) {                          // the console: the one keymap
+      window.Drishti.keys.register({ id: 'bi.tabs', keys: ['ArrowRight', 'ArrowLeft', 'Home', 'End'], scope: 'panel', area: 'bi-tabs', group: 'Tabs',
+        description: 'On a tab: the next or previous tab, the first or the last', within: () => (document.activeElement && document.activeElement.closest
+          ? document.activeElement.closest('[role=tablist]') : null), when: (e) => !!listOf(e), run: move });
+    } else {                                            // a host page without the console's keymap (<drishti-report> in another site)
+      document.addEventListener('keydown', (e) => {
+        if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || !listOf(e)) { return; }
+        if (move(e)) { e.preventDefault(); }
+      });
+    }
     const init = () => B.qa('[role=tablist]').filter((l) => !l.hasAttribute('data-own-keys')).forEach((l) => {
       roving(l);
       l.addEventListener('click', () => window.setTimeout(() => roving(l), 0));

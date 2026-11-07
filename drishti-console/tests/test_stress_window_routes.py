@@ -49,6 +49,4 @@ def test_the_json_goes_to_the_engine_as_the_user(client, backend, monkeypatch):
     assert seen[-1][1] == "/stress-window/proposals/SWP-000001"
     assert client.post("/api/var/stress-window/proposals", json={"scope": "BANK", "first": "2007-11-30"}).status_code == 200
     assert seen[-1][:3] == ("POST", "/stress-window/proposals", {"scope": "BANK", "first": "2007-11-30"})
-    assert client.post("/api/var/stress-window/proposals/SWP-000001/decision", json={"decision": "approve"}).status_code == 200
-    assert seen[-1][:2] == ("POST", "/stress-window/proposals/SWP-000001/decision")
-    assert client.post("/api/var/stress-window/proposals/../x/decision", json={}).status_code == 404
+    assert client.post("/api/var/stress-window/proposals/SWP-000001/decision", json={"decision": "approve"}).status_code == 404   # decided in the one Approvals queue
