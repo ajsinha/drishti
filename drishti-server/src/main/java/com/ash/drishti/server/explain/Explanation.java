@@ -27,7 +27,7 @@ import java.util.Map;
  * One explanation, the same four parts for every number (SHARED_SCREENS.md section 3): the <b>formula</b> with its actual values, the
  * <b>inputs and lineage</b> (what it was computed from, down to the sources, tables and load dates), <b>why it moved</b> (since the
  * previous date, steps that add up, when the explainer can), the <b>workbook</b> (the live-formula Excel, where one exists), plus the
- * <b>checks</b> and the one-line <b>preview</b> the hover card shows. Built by an {@link Explainer}; the answer is {@link #toMap()}.
+ * <b>checks</b> and the one-line <b>preview</b> the hover card shows. Built by an {@link Explainer}; the answer is {@link #toMap(ExplainRequest)}.
  *
  * <p>A part the explainer cannot give yet names its entry in the under-construction registry ({@code config/under-construction.yaml});
  * {@link NumberExplainService} adds the entry's words and release. A stored figure says it is stored ({@link #stored(String)}).

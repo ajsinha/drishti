@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.TreeSet;
 
 /**
- * Explain a VaR figure (kind {@code var}; VAR_GUIDE.md section 3.13): VaR, ES, parametric VaR and ES, and the fat-tail gap of a scope, as
+ * Explain a VaR figure (kind {@code var}; VAR_GUIDE.md sections 3.6 and 3.11): VaR, ES, parametric VaR and ES, and the fat-tail gap of a scope, as
  * the VaR page shows them. One explanation folds what were three panels: the formula with its values and the parametric lines (the
  * <b>?</b> pop-ups), the inputs and lineage (How calculated), and why it moved (the Why it moved tab: {@link VarExplain}'s exact steps in
  * three views). Every figure is the engine's own answer for the person ({@link VarViews#headline}), so the numbers are the screen's.
