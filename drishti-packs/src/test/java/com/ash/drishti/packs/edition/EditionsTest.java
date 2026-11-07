@@ -101,7 +101,7 @@ class EditionsTest {
         assertThat(risk.wordOn("RUPAKA")).isFalse();
         assertThat(risk.wordOn("VAR")).isTrue();
         assertThat(risk.wordOn("EXP")).isTrue();
-        assertThat(risk.datasetShown("market-risk-var-latest")).isTrue();
+        assertThat(risk.datasetShown("bi.market_risk_var_latest")).isTrue();
         assertThat(risk.datasetShown("trades-basic-trade")).isFalse();
         assertThat(risk.modelShown("market-risk-var@1")).isTrue();
         assertThat(risk.modelShown("trades-basic")).isFalse();
