@@ -137,7 +137,7 @@ export class Popover {
     if (this.o.theme && this.o.theme.closest) { const t = this.o.theme.closest('[data-density]'); if (t) { el.setAttribute('data-density', t.getAttribute('data-density')); } }
     el.appendChild(content);
     el.addEventListener('keydown', this.onKey);
-    this.doc.body.appendChild(el);
+    (anchor.closest && anchor.closest('dialog[open]') || this.doc.body).appendChild(el);   /* inside an open modal dialog: in its top layer, not inert */
     placeUnder(el, anchor, { matchWidth: true });
     this.doc.addEventListener('mousedown', this.onDown, true);
     if (!o || o.focus !== false) { const f = el.querySelector('[autofocus], input, button, [tabindex="0"]'); if (f) { f.focus(); } }

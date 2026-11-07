@@ -119,11 +119,10 @@ export class CellEditor {
   key(e) {
     if (!this.at) { return; }
     const k = e.key;
-    if (this.picker && this.picker.pop.isOpen() && (k === 'Escape' || k === 'ArrowDown' || k === 'ArrowUp')) { e.stopPropagation(); return; }
-    e.stopPropagation();
-    if (k === 'Escape') { e.preventDefault(); this.cancel(); return; }
-    if (k === 'Enter') { e.preventDefault(); this.commit({ dr: e.shiftKey ? -1 : 1, dc: 0 }); return; }
-    if (k === 'Tab') { e.preventDefault(); this.commit({ dr: 0, dc: e.shiftKey ? -1 : 1 }); }
+    if (this.picker && this.picker.pop.isOpen() && (k === 'Escape' || k === 'ArrowDown' || k === 'ArrowUp')) { return; }   /* the calendar's own */
+    if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); this.cancel(); return; }
+    if (k === 'Enter') { e.preventDefault(); e.stopPropagation(); this.commit({ dr: e.shiftKey ? -1 : 1, dc: 0 }); return; }
+    if (k === 'Tab') { e.preventDefault(); e.stopPropagation(); this.commit({ dr: 0, dc: e.shiftKey ? -1 : 1 }); }
   }
 
   /** @private the focus left the editor (and its calendar): commit, or give up when the value is not valid */
@@ -191,7 +190,6 @@ export class CellEditor {
     this.msg.textContent = text;
     this.input.setAttribute('aria-invalid', 'true');
     this.el.classList.add('dg-editor-bad');
-    this.view.model.live.emit('cellEditStopped', { row: this.at.r, col: this.at.c, saved: false, problem: text });
     this.input.focus();
     return false;
   }

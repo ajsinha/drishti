@@ -134,7 +134,7 @@ export class DateRangePicker extends InputBase {
       focus: draft.from ? draft.from : this.cal.monthStart(this.asOf),
       range: () => ({ from: draft.from, to: draft.to, hover: draft.hover }),
       selected: (d) => d === draft.from || d === draft.to,
-      onHover: (d) => { if (draft.from && !draft.to) { draft.hover = d; this.view.render(); this.view.focusDay(); } },
+      onHover: (d) => { if (draft.from && !draft.to && draft.hover !== d) { draft.hover = d; this.view.render(); } },
       onPick: (d) => {
         if (!draft.from || draft.to) { Object.assign(draft, { from: d, to: null, preset: null }); }
         else { if (d < draft.from) { draft.to = draft.from; draft.from = d; } else { draft.to = d; } draft.preset = null; }

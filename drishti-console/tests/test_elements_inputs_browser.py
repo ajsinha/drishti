@@ -202,7 +202,7 @@ def test_a_form_from_a_schema_with_conditions_arrays_the_servers_check_and_four_
         await pg.select_option(f"{f} [data-path='product'] select", label="Swap")
         await pg.click(f"{f} [data-path='legs'] [data-act='add']")
         assert await pg.locator(f"{f} .di-repeat-item").count() == 2
-        await pg.select_option(f"{f} [data-path='legs[1].pay'] select", label="Float")
+        await pg.check(f"{f} [data-path='legs[1].pay'] input[type=radio] >> nth=1")
         assert await pg.locator(f"{f} [data-path='legs[1].rate']").is_hidden()      # a leg's own condition
         await pg.fill(f"{f} [data-path='book'] input", "RT-999")
         await pg.fill(f"{f} [data-path='notional'] input", "25m")
@@ -370,7 +370,7 @@ def test_the_code_editor_completion_lint_read_only_python_and_the_diff(browsers)
         await pg.wait_for_selector(".di-complete-pop .di-option")
         assert "stressed_var" in await pg.text_content(".di-complete-pop")
         await pg.keyboard.press("Enter")
-        await pg.keyboard.type("99, 10d) + foo(")
+        await pg.keyboard.type("99, 10d) + (foo(")
         await pg.wait_for_function("() => document.querySelectorAll('#hx-code .di-problem').length >= 2")
         problems = await pg.text_content("#hx-code .di-problems")
         assert "no function foo" in problems and "is not closed" in problems
@@ -383,7 +383,7 @@ def test_the_code_editor_completion_lint_read_only_python_and_the_diff(browsers)
         assert await h(pg, "window.__harness.yaml.getValue()") == before            # read-only
         assert await pg.locator("#hx-yaml .cm-keyword").count() >= 3
         await pg.wait_for_selector("#hx-py .cm-keyword")                             # the vendored Python mode, loaded when asked
-        assert await pg.locator("#hx-diff .di-diff-row").count() == 6
+        assert await pg.locator("#hx-diff .di-diff-row").count() == 7
         assert "+2" in await pg.text_content("#hx-diff .di-diff-add")
         await pg.click("#hx-diff [data-act='layout']")
         assert await pg.locator("#hx-diff .di-diff-unified").count() == 1

@@ -104,7 +104,7 @@ export class Form extends InputBase {
   /** @private the buttons */
   actions() {
     const bar = this.el('div', { cls: 'di-form-actions' });
-    if (this.state === 'readonly') { return bar; }
+    if (this.state !== 'editing') { return bar; }
     this.submitBtn = this.el('button', { cls: 'di-btn di-primary', text: this.o.fourEyes ? 'Submit for approval' : (this.o.submitLabel || 'Save'), attrs: { type: 'submit' }, data: { act: 'submit' } });
     bar.append(this.submitBtn, this.el('button', { cls: 'di-btn', text: 'Reset', attrs: { type: 'button' }, data: { act: 'reset' }, on: { click: () => this.reset() } }));
     return bar;

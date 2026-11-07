@@ -474,7 +474,7 @@
         if (this.o.theme && this.o.theme.closest) { const t = this.o.theme.closest('[data-density]'); if (t) { el.setAttribute('data-density', t.getAttribute('data-density')); } }
         el.appendChild(content);
         el.addEventListener('keydown', this.onKey);
-        this.doc.body.appendChild(el);
+        (anchor.closest && anchor.closest('dialog[open]') || this.doc.body).appendChild(el);   /* inside an open modal dialog: in its top layer, not inert */
         placeUnder(el, anchor, { matchWidth: true });
         this.doc.addEventListener('mousedown', this.onDown, true);
         if (!o || o.focus !== false) { const f = el.querySelector('[autofocus], input, button, [tabindex="0"]'); if (f) { f.focus(); } }
@@ -1141,7 +1141,7 @@
           focus: draft.from ? draft.from : this.cal.monthStart(this.asOf),
           range: () => ({ from: draft.from, to: draft.to, hover: draft.hover }),
           selected: (d) => d === draft.from || d === draft.to,
-          onHover: (d) => { if (draft.from && !draft.to) { draft.hover = d; this.view.render(); this.view.focusDay(); } },
+          onHover: (d) => { if (draft.from && !draft.to && draft.hover !== d) { draft.hover = d; this.view.render(); } },
           onPick: (d) => {
             if (!draft.from || draft.to) { Object.assign(draft, { from: d, to: null, preset: null }); }
             else { if (d < draft.from) { draft.to = draft.from; draft.from = d; } else { draft.to = d; } draft.preset = null; }
@@ -2003,7 +2003,7 @@
       }
       actions() {
         const bar = this.el('div', { cls: 'di-form-actions' });
-        if (this.state === 'readonly') { return bar; }
+        if (this.state !== 'editing') { return bar; }
         this.submitBtn = this.el('button', { cls: 'di-btn di-primary', text: this.o.fourEyes ? 'Submit for approval' : (this.o.submitLabel || 'Save'), attrs: { type: 'submit' }, data: { act: 'submit' } });
         bar.append(this.submitBtn, this.el('button', { cls: 'di-btn', text: 'Reset', attrs: { type: 'button' }, data: { act: 'reset' }, on: { click: () => this.reset() } }));
         return bar;
