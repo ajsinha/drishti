@@ -333,7 +333,7 @@ under a second on the demo; at 2.3M positions it is bounded by the churn, not th
 today's hierarchy only when a book moved: the books that moved, not the bank.
 
 **Where it shows.** **Built (2.9.10):** `VAR EXPLAIN <scope>` (and `VAR <scope> EXPLAIN`), the **Why it moved** tab on the VaR page
-(a waterfall, each step opening its contributors), `drishti.py var explain` and the API `GET /api/v1/var/explain?scope=&from=&to=`
+(a waterfall, each step opening its contributors), `drishti.py var explain` and the API `GET /api/v1/explain?kind=var&scope=&from=&to=&part=why`
 ([VAR_GUIDE.md section 3.11](../guides/VAR_GUIDE.md#311-why-it-moved-the-var-change-explained)). Later: the Appetite landing's card
 ([section 5.4](#54-three-landings-to-mock-up-later)) and the daily risk report. `from` and `to` may be any two dates, not only consecutive ones (a month's
 change for the committee), and `to` may be **now** (intraday since the morning's official figure).
@@ -442,7 +442,7 @@ position grain). Nothing new is asked of the bank. The risk-factor overlay needs
 - `VAR EXPLAIN <scope> [from] [to]` or `VAR <scope> EXPLAIN [from] [to]` on the command line: `VAR EXPLAIN BANK`,
   `VAR DESK DESK-CREDIT EXPLAIN 2026-06-30` (FUNC lists it; the edition word `VAR` covers it).
 - `drishti.py var explain <scope> [--from] [--to] [--confidence] [--matrix] [--xlsx FILE] [--json]`, the waterfall as aligned lines.
-- `GET /api/v1/var/explain?scope=&from=&to=&confidence=` (`method=shapley` answers 400: planned), with `/explain/matrix` and
+- `GET /api/v1/explain?kind=var&part=why&scope=&from=&to=&confidence=` (`attribution=shapley` answers 400: planned), with `view=matrix` and
   `/explain.xlsx` (the working as a workbook of formulas): `{states[], steps[{name, effect,
   contributors[], rest}], orderFree[], limit{}, provenance}`; the same entitlements as the scope's VaR (a person who cannot see a
   book sees its contribution folded into *the others*).
@@ -573,8 +573,8 @@ When an action is applied, the breach service reads the `edit.applied` event of 
 Three small additions are needed, none of them a new panel kind: **reference lines on `line` and `area`** (`markers:`, as `histogram`
 has: the near level beside the limit on Q6); **a new record's field defaulting from the record the page shows** (a form `default:` reads
 the form's own fields today; an action's record needs the breach id, `default: "$.BREACH_ID"`); and **the pending request's decision in
-place** (Approve, Approve with conditions, Reject on Q9: the same decision as Review → Changes, with the same four-eyes checks, drawn on
-the record's screen; until it exists, Q9 links to Review → Changes). The new pack fragment is `breach-detail@1` (the opened breach's
+place** (Approve, Approve with conditions, Reject on Q9: the same decision as the Approvals queue, with the same four-eyes checks, drawn on
+the record's screen; until it exists, Q9 links to the Approvals queue). The new pack fragment is `breach-detail@1` (the opened breach's
 panels, used by the Queue, the Board's drawer and the record's own page).
 
 **How each figure is computed.**

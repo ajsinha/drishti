@@ -40,7 +40,7 @@ About 15 minutes.
 
 ## Step 1 · Point the news connector at memory
 
-**The YAML.** The store is a lake of its own (docs/guides/LAKE_GUIDE.md section 6): copy its lake file, and the example connector over
+**The YAML.** The store is a lake of its own (docs/guides/IN_MEMORY_LAKE_GUIDE.md): copy its lake file, and the example connector over
 the pack's own:
 
 ```bash
@@ -231,7 +231,7 @@ Put `max-mb: 256` back.
 ## Step 8 · Go back to the disk lake
 
 ```bash
-rm config/connectors/news-store.yaml       # the pack's own connector reads data/delta/news again
+rm config/connectors/news-store.yaml       # the pack's own connector reads data/delta/demo/news again
 # and remove the drishti.lake.memory block from application.local.yaml
 ```
 

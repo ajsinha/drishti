@@ -29,6 +29,7 @@ import urllib.error
 import urllib.request
 
 from _var import open_var, painted
+from shotlib import DEMO_ROOT_ENV
 from shotlib import CONSOLE_PORT, ROOT, Ctx, register
 from shotlib import start_servers as _start
 
@@ -53,7 +54,7 @@ def start_servers(work) -> list:
                         "--engine", "auto"], capture_output=True, text=True, cwd=ROOT, timeout=900)
     if r.returncode != 0 or not (lake / "risk" / "pnl-vector").is_dir():
         sys.exit("could not build the lake without LIMIT_LETTER: " + (r.stderr or r.stdout)[-600:])
-    procs = _start(work, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_CONNECTORS_DIR": str(work / "connectors"), "DRISHTI_DATA_DIR": str(work / "data"),
+    procs = _start(work, {DEMO_ROOT_ENV: str(lake), "DRISHTI_CONNECTORS_DIR": str(work / "connectors"), "DRISHTI_DATA_DIR": str(work / "data"),
                           "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_SECURITY_ENABLED": "false"})
     deadline = time.monotonic() + 240
     while True:

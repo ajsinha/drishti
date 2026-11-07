@@ -134,6 +134,12 @@ public class VarConfiguration {
         return new VarExplain(svc, props);
     }
 
+    /** Explain a VaR figure (kind var, the one Explain of SHARED_SCREENS.md section 3): formula, inputs and lineage, why it moved, workbook. */
+    @Bean
+    com.ash.drishti.server.explain.Explainer varNumberExplainer(VarService svc, VarViews views, VarExplain explain) {
+        return new VarNumberExplainer(svc, views, explain);
+    }
+
     @Bean
     VarViews varViews(VarService svc, VarParametricProperties parametric) {
         VarViews v = new VarViews(svc).parametric(new VarParametric(parametric));
@@ -164,13 +170,25 @@ public class VarConfiguration {
      * lake (its {@code lake} setting, else drishti.var.official.root, the risk lake's root) with the trades' tables' layout of the loaded
      * pack, then announced as a data-load of the kind (LoadService), so the intraday layer applies it as it applies a file.
      */
+    /**
+     * Where the PV topic's windows are written: {@code lake: <name>} (a lake of config/lakes/, its root: {@code demo} as the pack ships it),
+     * or a folder named directly; unset, the demo lake's.
+     */
+    static String pvLake(String lake) {
+        String ref = lake == null || lake.isBlank() ? "demo" : lake.strip();
+        if (com.ash.drishti.lakeconfig.Lakes.validName(ref)) {
+            return com.ash.drishti.lakeconfig.Lakes.current().get(ref).root();
+        }
+        return ref;
+    }
+
     @Bean
     Object varPvStreamSinks(VarService svc, VarOfficial official, VarProperties props, ObjectProvider<LoadService> loads,
             ObjectProvider<PackRegistry> packs, com.ash.drishti.engine.source.SourceRegistry registry) {
         VarPvStreamPlugin.install(settings -> {
-            String root = settings.getOrDefault("lake", props.official().root());
+            String root = pvLake(settings.get("lake"));
             if (root == null || root.isBlank()) {
-                throw new com.ash.drishti.api.PluginNotConfigured("var-pv-stream needs settings.lake (the risk lake's root)");
+                throw new com.ash.drishti.api.PluginNotConfigured("var-pv-stream needs settings.lake (the lake the PVs go to: demo)");
             }
             String pack = settings.getOrDefault("pack", "market-risk");
             String topic = settings.getOrDefault("topic", "drishti.risk.pv-updates");

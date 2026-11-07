@@ -21,8 +21,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.ash.drishti.server.alerts.AlertEngine;
-import com.ash.drishti.server.alerts.AlertEvent;
 import com.ash.drishti.server.security.TokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,7 +54,7 @@ class FieldMaskingTest {
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
-    @Autowired AlertEngine alerts;
+    @Autowired com.ash.drishti.identity.UserService users;
     @Autowired com.ash.drishti.server.security.MaskCoverage coverage;
     private final ObjectMapper json = new ObjectMapper();
 
@@ -231,33 +229,31 @@ class FieldMaskingTest {
 
     @Test
     void alertsAndPhrasesCannotProbeAMaskedField() throws Exception {
-        String user = "u-masked";
-        long before = alerts.events(user, 1).stream().mapToLong(e -> e.seq()).max().orElse(Long.MIN_VALUE);  // the history survives runs
-        mvc.perform(put("/api/v1/me/alerts/rules/Probe").header("Authorization", as("masked")).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"kind\":\"trade\",\"id\":\"MX-20000001\",\"when\":\"$.COUNTERPARTY == 'CP-MERIDIAN-RE'\",\"severity\":\"info\"}"))
-                .andExpect(status().isOk());
-        mvc.perform(put("/api/v1/me/alerts/rules/Shown").header("Authorization", as("masked")).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"kind\":\"trade\",\"id\":\"MX-20000001\",\"when\":\"$.QUANTITY > 0\",\"severity\":\"info\","
-                        + "\"message\":\"Notional ${fmt(first($.LEGS).NOTIONAL, 'compact')} with ${$.COUNTERPARTY}\"}"))
-                .andExpect(status().isOk());
-        long deadline = System.currentTimeMillis() + 5000;
-        while (since(user, before).isEmpty() && System.currentTimeMillis() < deadline) {
-            Thread.sleep(50);
+        if (users.find("u-masked").isEmpty()) {                   // an alert rule is evaluated as its owner: a person of the directory
+            users.create("test", "u-masked", new com.ash.drishti.identity.UserService.Profile("u-masked", "", "", java.util.Set.of("masked"), true),
+                    "Str0ng-Passw0rd-masked", false);
         }
-        Thread.sleep(400);
-        assertThat(since(user, before)).isNotEmpty().allSatisfy(e -> {   // the rule on the masked counterparty never fires
-            assertThat(e.rule()).isEqualTo("Shown");
-            assertThat(e.message()).isEqualTo("Notional " + MASK + " with " + MASK);
+        String probe = "{\"severity\":\"info\",\"source\":{\"type\":\"field\",\"kind\":\"trade\",\"id\":\"MX-20000001\",\"field\":\"%s\"},"
+                + "\"condition\":{\"type\":\"rule\"},\"trigger\":{\"mode\":\"after-load\",\"kind\":\"trade\"}}";
+        mvc.perform(put("/api/v1/alerts/rules/Probe").header("Authorization", as("masked")).contentType(MediaType.APPLICATION_JSON)
+                .content(String.format(probe, "$.COUNTERPARTY == 'CP-MERIDIAN-RE'"))).andExpect(status().isOk());
+        mvc.perform(put("/api/v1/alerts/rules/Shown").header("Authorization", as("masked")).contentType(MediaType.APPLICATION_JSON)
+                .content(String.format(probe, "$.QUANTITY > 0"))).andExpect(status().isOk());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/v1/alerts/rules/Probe/check").header("Authorization", as("masked")))
+                .andExpect(status().isOk());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/v1/alerts/rules/Shown/check").header("Authorization", as("masked")))
+                .andExpect(status().isOk());
+        JsonNode raised = new com.fasterxml.jackson.databind.ObjectMapper().readTree(mvc.perform(get("/api/v1/alerts").header("Authorization", as("masked")))
+                .andReturn().getResponse().getContentAsString());
+        assertThat(raised).isNotEmpty().allSatisfy(e -> {                 // the rule on the masked counterparty never fires, and no message carries it
+            assertThat(e.path("title").asText()).isEqualTo("Shown");
+            assertThat(e.toString()).doesNotContain("CP-MERIDIAN-RE");
         });
 
         JsonNode full = read("/api/v1/phrase", "full", "text", "trades of trader TRDR-ASHAH");
         JsonNode masked = read("/api/v1/phrase", "masked", "text", "trades of trader TRDR-ASHAH");
         assertThat(full.path("query").asText()).contains("TRDR-ASHAH");
         assertThat(masked.path("query").asText()).doesNotContain("TRDR-ASHAH");
-    }
-
-    private List<AlertEvent> since(String user, long seq) {
-        return alerts.events(user, 50).stream().filter(e -> e.seq() > seq).toList();
     }
 
     @Test

@@ -22,7 +22,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import * as G from '../../web/static/elements/drishti-grid/src/drishti_index.js';
 import * as C from '../../web/static/elements/drishti-core/src/drishti_index.js';
-import { toCsv } from '../../web/static/elements/drishti-core/src/drishti_index.js';
+const { toCsv } = C;
 
 const require = createRequire(import.meta.url);
 const M = '−';

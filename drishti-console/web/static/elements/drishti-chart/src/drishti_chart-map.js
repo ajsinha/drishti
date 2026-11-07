@@ -25,7 +25,7 @@
 import { registerKind } from './drishti_chart-spec.js';
 import { fieldOf, num, quantileBreaks, classOf } from './drishti_chart-data.js';
 import { rampColour, alpha, formatterFor, textStyle, blend } from './drishti_chart-theme.js';
-import { findPlace, bounds } from './drishti_chart-geo.js';
+import { findPlace, bounds, fitView } from './drishti_chart-geo.js';
 import { rowId } from './drishti_chart-kinds.js';
 
 /**
@@ -112,9 +112,9 @@ function centreOf(shape) {
  * @param {Object} spec normalised
  * @param {Object[]} rows
  * @param {import('./drishti_chart-geo.js').RegionGeo} geo projected shapes of the level
- * @param {{theme: Object, mapName: string, metric: Object, highlight: ?number, selected: string[], hatch: *}} env mapName: the name the
+ * @param {{theme: Object, mapName: string, metric: Object, highlight: ?number, selected: string[], hatch: *, width: number, height: number}} env mapName: the name the
  *   shapes are registered under; highlight: a legend class to keep bright; selected: place codes outlined; hatch: the no-data fill (a
- *   pattern; default the theme's no-data colour)
+ *   pattern; default the theme's no-data colour); width and height: the drawing's size in pixels (the view fits the level to it)
  * @returns {Object} {option, places, scale, ranking, table, summary, unmatched, legend}
  */
 export function buildMap(spec, rows, geo, env) {
@@ -157,7 +157,7 @@ export function buildMap(spec, rows, geo, env) {
     animation: false, textStyle: textStyle(th),
     tooltip: { trigger: 'item', confine: true },
     geo: { map: env.mapName, projection: { project: (p) => p, unproject: (p) => p }, roam: true, scaleLimit: { min: 0.8, max: 24 },
-      boundingCoords: [[geo.fit[0], geo.fit[1]], [geo.fit[2], geo.fit[3]]], layoutCenter: ['50%', '50%'], layoutSize: '96%',
+      aspectScale: 1, left: 8, right: 8, top: 8, bottom: 8, center: fitView(geo, env.width, env.height).center, zoom: fitView(geo, env.width, env.height).zoom,
       itemStyle: { areaColor: env.hatch || th.nodata, borderColor: blend(th.border, th.surface, 0.2), borderWidth: 0.5 },
       emphasis: { itemStyle: { areaColor: alpha(th.tokens.accent, 0.55) }, label: { show: false } }, select: { disabled: true }, label: { show: false }, regions: regions },
     series: series

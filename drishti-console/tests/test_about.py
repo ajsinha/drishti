@@ -97,7 +97,9 @@ def test_an_unknown_entity_answers_with_the_servers_problem(client):
 
 def test_the_f1_key_yields_to_the_drawer_and_the_drawer_is_wired_to_the_guide():
     app_js = (WEB / "static" / "js" / "drishti_app.js").read_text()
-    assert re.search(r"key === 'F1'\) \{\s*if \(e\.defaultPrevented\) \{ return; \}", app_js)
+    assert "id: 'help.context', keys: ['F1'" in app_js                              # F1 is the keymap's (drishti_keys.js), which
+    keys_js = (WEB / "static" / "js" / "drishti_keys.js").read_text()                # leaves a key a widget already took
+    assert "if (e.defaultPrevented || e.isComposing) { return; }" in keys_js
     about_js = (WEB / "static" / "js" / "drishti_about.js").read_text()
     assert "e.key === 'F1'" in about_js and "if (isOpen() && current === 'about') { return; }" in about_js      # F1 again inside the drawer: drishti_app.js goes to the guide
     assert "e.key === '?'" in about_js and "typing(e.target)" in about_js            # `?` is ignored in a text field

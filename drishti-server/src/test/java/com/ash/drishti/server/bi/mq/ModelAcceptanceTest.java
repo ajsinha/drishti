@@ -343,7 +343,7 @@ class ModelAcceptanceTest {
     }
 
     JsonNode alertPreview(String who, String source) throws Exception {
-        return ok(call("POST", "/api/v1/me/measure-alerts/preview", reader(who), "{\"title\":\"t\",\"source\":" + source
+        return ok(call("POST", "/api/v1/alerts/rules/preview", reader(who), "{\"title\":\"t\",\"source\":" + source
                 + ",\"condition\":{\"type\":\"threshold\",\"op\":\"above\",\"value\":0},\"trigger\":{\"mode\":\"schedule\",\"schedule\":\"hourly\"}}"));
     }
 
@@ -598,12 +598,12 @@ class ModelAcceptanceTest {
     @Test @Order(10)
     void anAlertRefusesAValueMaskedForItsOwnerAndAManyRowVisualWithoutAChoice() throws Exception {
         String cond = ",\"condition\":{\"type\":\"threshold\",\"op\":\"above\",\"value\":0},\"trigger\":{\"mode\":\"schedule\",\"schedule\":\"hourly\"}}";
-        call("PUT", "/api/v1/me/measure-alerts/mtm-watch", reader("ann"), "{\"title\":\"t\",\"source\":{\"type\":\"model\",\"model\":\"acc-trades\",\"query\":{\"select\":"
+        call("PUT", "/api/v1/alerts/rules/mtm-watch", reader("ann"), "{\"title\":\"t\",\"source\":{\"type\":\"model\",\"model\":\"acc-trades\",\"query\":{\"select\":"
                 + "{\"measures\":[\"MTM\"]}}}" + cond).andExpect(status().isUnprocessableEntity()).andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("masked for you")));
         String visual = "{\"title\":\"t\",\"source\":{\"type\":\"visual\",\"report\":\"" + REPORT + "\",\"visual\":\"by-desk\"%s}" + cond;
-        call("PUT", "/api/v1/me/measure-alerts/by-desk", reader("rita"), visual.formatted("")).andExpect(status().isUnprocessableEntity())
+        call("PUT", "/api/v1/alerts/rules/by-desk", reader("rita"), visual.formatted("")).andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("rows, so say which number to watch")));
-        ok(call("PUT", "/api/v1/me/measure-alerts/by-desk", reader("rita"), visual.formatted(",\"reduce\":\"sum\"")));
+        ok(call("PUT", "/api/v1/alerts/rules/by-desk", reader("rita"), visual.formatted(",\"reduce\":\"sum\"")));
     }
 
     @Test @Order(11)

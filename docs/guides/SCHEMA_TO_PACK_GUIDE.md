@@ -179,7 +179,7 @@ and every load is stored under the business date of the day it is loaded, so yes
 alone with no date: no dated store, the pack serves its samples.
 
 The tool is the feed's producer here. With a date field it writes the kind's documents one file per business date
-(`<kind>.<YYYY-MM-DD>.jsonl.gz`), and those files load by the [load rules](../architecture/DATA_LOAD_RULES.md), like any other feed. The
+(`<kind>.<YYYY-MM-DD>.jsonl.gz`), and those files load by the [load rules](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo), like any other feed. The
 loader takes each file's date from its name and never reads a row's date. Documents without the field go into `<kind>.jsonl.gz`, which
 loads under `--as-of` or the business today.
 
@@ -196,7 +196,7 @@ routes: {trade: desk-pack-store}         # which connector answers each kind
 connector-templates:                     # the connection settings, as the pack's suggestion
   desk-pack-store:
     plugin: delta
-    settings: {root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: desk-pack, ...}
+    settings: {root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: desk-pack, ...}
 ```
 
 At the server's first start with the pack on, it writes the suggestion to `config/connectors/desk-pack-store.yaml` once and never overwrites it; from
@@ -344,7 +344,7 @@ confirmation deploys. The version it replaces is kept: **roll back** there ([OPE
 
 ### Drafts, keyboard, phone, themes
 
-**Save draft** keeps the state (the schemas, your choices, the file names and counts, not the data) as a design named `New pack: <name>` in *My designs*; it is saved when you move between steps and resumed from the
+**Save draft** keeps the state (the schemas, your choices, the file names and counts, not the data) as a design named `New pack: <name>` in *My drafts* (the Build home); it is saved when you move between steps and resumed from the
 page. Data files are chosen again after a resume. Every control is a native button, field or select: Tab through, Enter or Space to press; the Sutra list takes Up and Down, the tabs Left and Right. In the light and dark themes colours come from the console's tokens
 and every state has a word as well as a colour. At phone width the columns stack and every control is 44 px:
 

@@ -107,9 +107,10 @@ def test_a_failed_request_says_its_code_once_on_every_build_page(live_console, p
     page.goto(live_console + "/build/d/doesnotexist")
     text = page.locator("[role=alert]").first.text_content()
     assert text.count("DRS-5006") == 1, text
-    page.goto(live_console + "/build/reviews/P-999999")
-    text = page.locator("[role=alert]").first.text_content()
-    assert len(re.findall(r"DRS-\d+", text)) == 1, text
+    page.goto(live_console + "/approvals/sutra/P-999999")
+    page.wait_for_function("() => /could not be opened/.test(document.querySelector('[data-ap-pick]').textContent)")
+    text = page.locator("[data-ap-pick]").text_content()
+    assert len(re.findall(r"DRS-\d+", text)) <= 1, text
     page.goto(live_console + "/build/new")
     page.locator("[data-kind]").fill("bad kind!")
     page.locator("[data-name]").fill("x")

@@ -205,7 +205,7 @@ drishti:
     sample-interval: 15s             # how often the gauges are sampled and the alert rules evaluated
     disk-interval: 60s               # how often the disk folders are measured for the gauges (a folder's size walks its files)
     alerts:
-      enabled: ${DRISHTI_ALERTS_ENABLED:true}  # evaluate the platform alert rules (Admin -> Health, Alerts; GET /api/v1/admin/alerts)
+      enabled: ${DRISHTI_ALERTS_ENABLED:true}  # evaluate the platform alert rules (Admin -> Health; the alert engine lists them: Alerts, GET /api/v1/admin/alerts)
       file: ${DRISHTI_ALERTS_FILE:./config/alerts/platform-alerts.yaml}  # the rules: metric, threshold, how long, severity (a missing file: no rules, and Health says so)
       notify-roles: admin            # the roles told in their inbox (and the bell) when an alert opens, comma-separated; blank: nobody
       keep: 200                      # alerts opened and closed kept for the page, newest first (in memory: a restart starts afresh)
@@ -351,6 +351,7 @@ drishti:
       - /api/v1/pivot/rows
       - /api/v1/pivot/export
       - /api/v1/pivot/inline             # rows the caller already holds (a chart of a table's shown rows), aggregated by the engine
+      - /api/v1/explain                  # Explain any number with a body (a pivot cell's view): computed as the caller, written nowhere
       - /api/v1/tables/editor/check      # the table and model editors (TABLES_GUIDE.md section 11): checks, previews and proposals that store nothing
       - /api/v1/tables/editor/statement
       - /api/v1/tables/editor/preview
@@ -434,12 +435,16 @@ drishti:
         description: "Read data through Arrow Flight (FLIGHT_GUIDE.md): kinds, BI models, pivot views, VaR vectors and the in-memory lake, as your roles, masks and row rules allow, every read audited. It opens no HTTP call. data:read:<domain> (a pack such as trading, bi, var, a lake) opens one domain only."
         allow: []
       "[edit]":
-        description: "Submit changes through write-back (WRITE_BACK.md: forms, the CLI's change propose), approve or reject other people's, withdraw your own. No token has it unless chosen; it never exceeds your roles: the edit power, the field's roles, masks and four eyes all apply, and editing must be on."
+        description: "Submit changes through write-back (WRITE_BACK.md: forms, the CLI's change propose), and approve, reject or withdraw them in the one Approvals queue (kind change). No token has it unless chosen; it never exceeds your roles: the edit power, the field's roles, masks and four eyes all apply, and editing must be on."
         allow:
           - POST /api/v1/changes
-          - POST /api/v1/changes/*/approve
-          - POST /api/v1/changes/*/reject
-          - POST /api/v1/changes/*/withdraw
+          - POST /api/v1/approvals/change/*/approve
+          - POST /api/v1/approvals/change/*/reject
+          - POST /api/v1/approvals/change/*/withdraw
+      "[approve]":
+        description: "Approve, reject or withdraw items in the one Approvals queue (/api/v1/approvals), of every kind your roles let you decide; never your own (four eyes). Report sign-offs, stress windows, compute packages and questions stay a person's, in the console."
+        allow:
+          - POST /api/v1/approvals/*/*/*
       "[design:write]":
         description: "Create, edit, check, propose, share and bind Designs, save Sutras from Studio (a save is a proposal with governance on), withdraw your own proposals. Needs the author role."
         allow:
@@ -449,12 +454,12 @@ drishti:
           - DELETE /api/v1/builder/**
           - POST /api/v1/studio/**
           - POST /api/v1/sutras
-          - POST /api/v1/sutras/proposals/*/withdraw
+          - POST /api/v1/approvals/sutra/*/withdraw
       "[design:approve]":
-        description: "Approve or reject proposed Sutras. Needs the approver or admin role, and never your own proposal with four-eyes on."
+        description: "Approve or reject proposed Sutras in the one Approvals queue (kind sutra). Needs the approver or admin role, and never your own proposal with four-eyes on."
         allow:
-          - POST /api/v1/sutras/proposals/*/approve
-          - POST /api/v1/sutras/proposals/*/reject
+          - POST /api/v1/approvals/sutra/*/approve
+          - POST /api/v1/approvals/sutra/*/reject
       "[bi:write]":
         description: "Business intelligence (Rupaka): create, edit, move, propose, withdraw, publish and delete your workspaces' items, restore versions and saved states, ask what a dataset change would break, mark favourites, create workspaces (when the policy lets you). Needs the bi-author power and the workspace role at call time."
         allow:
@@ -491,8 +496,8 @@ drishti:
       "[bi:approve]":
         description: "Business intelligence: approve or reject proposed items (the approve power or bi-steward, never your own proposal with four-eyes on), endorse (promote; certify needs bi-steward) and import a bundle (bi-steward)."
         allow:
-          - POST /api/v1/bi/items/*/approve
-          - POST /api/v1/bi/items/*/reject
+          - POST /api/v1/approvals/bi/*/approve
+          - POST /api/v1/approvals/bi/*/reject
           - POST /api/v1/bi/items/*/endorse
           - POST /api/v1/bi/bundle/import
           - POST /api/v1/bi/imports/*/rollback   # undo an import (a steward, as the import itself)
@@ -521,9 +526,10 @@ drishti:
           - POST /api/v1/pivot/views/*/*/comments/*/reopen
           - DELETE /api/v1/pivot/views/*/*/comments/*
       "[pivot:approve]":
-        description: "Pivot: approve or revoke a custom function someone else wrote (the pivot-approver role or an administrator at call time; never your own)."
+        description: "Pivot: approve (in the one Approvals queue, kind function) or revoke a custom function someone else wrote (the pivot-approver role or an administrator at call time; never your own)."
         allow:
-          - POST /api/v1/pivot/functions/*/*/approve
+          - POST /api/v1/approvals/function/*/approve
+          - POST /api/v1/approvals/function/*/reject
           - POST /api/v1/pivot/functions/*/*/revoke
       "[pivot:admin]":
         description: "Pivot: define, remove and refresh rollups of partial states (Admin -> Pivot rollups). Needs the admin role at call time."
@@ -597,9 +603,13 @@ drishti:
       - "POST /api/v1/var/reload"              # reloading the VaR vectors: an administrator in the console
       - "POST /api/v1/var/official"            # running the official end-of-day VaR capture: an administrator in the console
       - "POST /api/v1/var/official/synthetic-history"   # seeding a demo server's synthetic official records: an administrator
-      - "POST /api/v1/var/reports/*/runs/*/signoff"     # a report's maker, checker and approver sign as people, never a token
+      - "POST /api/v1/var/reports/*/runs/*/narrative"  # a report's maker writes the narrative as a person, never a token
+      - "POST /api/v1/approvals/var-report/**"          # a report's maker, checker and approver sign as people (the Approvals queue), never a token
       - "POST /api/v1/var/stress-window/proposals"      # proposing a stress window is a governance step a person takes
-      - "POST /api/v1/var/stress-window/proposals/*/decision"   # approving or rejecting one, by a second person
+      - "POST /api/v1/approvals/stress-window/**"       # approving or rejecting one, by a second person
+      - "POST /api/v1/approvals/compute/**"            # compute requirements: an administrator in the console
+      - "POST /api/v1/approvals/*/*/questions"          # a question on an item: a person asks it
+      - "* /api/v1/alerts/**"                           # the alerts raised for a person and their rules: personal state, set in the console
       - "POST /api/v1/var/intraday/streams/*/apply"   # applying a PV topic's waiting window now: an administrator in the console
       # VaR shards (docs/architecture/VAR_SHARDING.md section 10). /partial is one member's call to another, signed with the cluster key
       # and made as the caller (their on-behalf-of token; the owner applies their rights again): like /compute/peer/**, never a token's.
@@ -623,11 +633,13 @@ drishti:
       - "* /api/v1/admin/commands/**"
       - "* /api/v1/admin/engines"             # Admin -> Engines: compute engines on or off on a node, written to its file, audited with a reason; never a token
       - "* /api/v1/admin/engines/**"
+      - "* /api/v1/admin/settings/proposals"      # Admin -> Configuration: settings changes proposed and decided by two administrators; never a token
+      - "* /api/v1/admin/settings/proposals/**"
       - "POST /api/v1/admin/data-out/streams/*/stop"   # Admin -> Data out: stop a live Flight stream (DRS-5610 to its reader); an administrator from the console, never a token
       - "* /api/v1/admin/collab/**"
       - "* /api/v1/admin/reports/**"
       - "* /api/v1/admin/subscriptions/**"
-      - "* /api/v1/admin/measure-alerts/**"
+      - "* /api/v1/admin/alerts/rules/**"            # pausing, resuming or deleting someone's alert rule: an administrator in the console
       - "* /api/v1/shares/**"
       - "* /api/v1/threads/**"
       - "* /api/v1/comments/**"
@@ -732,8 +744,15 @@ drishti:
     server-roles: {}                 # "[server]": [roles]   absent = every signed-in user
     tool-roles: {}                   # "[server/tool]": [roles]
     server-features: {}              # "[server]": [features]
-  alerts:
-    keep: 1000                      # fired alerts kept per user, in the identity database (they survive restarts)
+  approvals:                         # the one Approvals queue (docs/architecture/SHARED_SCREENS.md section 2; USER_GUIDE.md, Approvals)
+    due-soon-days: 3                 # an item due within this many days (or overdue) is pinned at the top as due soon
+    due-days:                        # per kind: an item with a period is due this many days after its period ends
+      var-report: 30                 # a regulatory report run (VAR_GUIDE.md section 18.14)
+    per-kind: 200                    # most items one kind adds to one list
+    max-question: 2000               # longest question or answer on an item, in characters
+    max-questions: 200               # most questions and answers kept on one item
+  alerts:                            # the one alert engine (USER_GUIDE.md, Alerts; CONFIGURATION.md, drishti.alerts): every key has a default
+    enabled: true                    # false stops the evaluator and refuses new alert rules (stored ones are kept)
   access-log:                        # who looked at what: views, raw, history, searches, CSV (Admin → Access)
     enabled: ${DRISHTI_ACCESS_LOG:true}  # record who looked at what (Admin -> Access)
     keep-days: 90                    # older events are pruned once a day

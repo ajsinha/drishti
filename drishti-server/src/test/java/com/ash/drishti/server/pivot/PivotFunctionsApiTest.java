@@ -92,12 +92,12 @@ class PivotFunctionsApiTest {
 
         JsonNode saved = call("asha", "analyst", post("/api/v1/pivot/functions"), definition(), 200);
         assertThat(saved.path("ref").asText()).isEqualTo("fn:asha/wret@1");
-        call("asha", "analyst", post("/api/v1/pivot/functions/asha/wret@1/approve"), Map.of("scope", "everyone", "reason", "mine"), 403);
+        call("asha", "analyst", post("/api/v1/approvals/function/asha:wret@1/approve"), Map.of("comment", "mine", "params", Map.of("scope", "everyone")), 403);
         String num = numberField("raj", "analyst");
         Map<String, Object> view = Map.of("source", "trade", "values", List.of(Map.of("measure", "fn:asha/wret@1(" + num + ", " + num + ")")));
         call("raj", "analyst", post("/api/v1/pivot/query"), view, 403);
-        call("anna", "pivot-approver", post("/api/v1/pivot/functions/asha/wret@1/approve"), Map.of("scope", "everyone", "reason",
-                "reviewed"), 200);
+        call("anna", "pivot-approver", post("/api/v1/approvals/function/asha:wret@1/approve"), Map.of("comment", "reviewed", "params",
+                Map.of("scope", "everyone")), 200);
         JsonNode a = call("raj", "analyst", post("/api/v1/pivot/query"), view, 200);
         assertThat(a.toString()).contains("fn:asha/wret@1");
         call("anna", "pivot-approver", post("/api/v1/pivot/functions/asha/wret@1/revoke"), Map.of("reason", "wrong weights"), 200);
@@ -145,6 +145,15 @@ class PivotFunctionsApiTest {
         sum += e.path("residual").path("value").asDouble();
         assertThat(sum).isCloseTo(e.path("difference").asDouble(), org.assertj.core.data.Offset.offset(1e-6 * Math.max(1,
                 Math.abs(e.path("difference").asDouble()))));
+        // the one Explain of the cell (kind pivot, POST with the pivot's own body): the same steps, drawn as panels
+        Map<String, Object> body = new java.util.LinkedHashMap<>(Map.of("kind", "pivot", "view", view, "from", Map.of("productType", types.get(0)),
+                "to", Map.of("productType", types.get(1)), "by", text));
+        JsonNode x = call("asha", "analyst", post("/api/v1/explain"), body, 200);
+        assertThat(x.at("/why/answer/steps")).isEqualTo(e.path("steps"));
+        assertThat(x.at("/why/change").asDouble()).isEqualTo(e.path("difference").asDouble());
+        assertThat(x.get("value").asDouble()).isEqualTo(e.at("/to/value").asDouble());
+        assertThat(x.at("/why/panels/1/kind").asText()).isEqualTo("waterfall");
+        assertThat(x.at("/workbook/underConstruction/id").asText()).isEqualTo("explain-pivot-workbook");
 
         JsonNode w = call("asha", "analyst", post("/api/v1/pivot/whatif"), Map.of("view", view, "whatIf", Map.of("changes",
                 List.of(Map.of("field", num, "scale", 2)))), 200);

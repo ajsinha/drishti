@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Boards as a report layout (R7, 2.4.0; docs/guides/BI_GUIDE.md) in the report viewer: the tiles of a page with `layout: board` and the board's kiosk. A tile shows
    a visual of another report (`from:`): it is asked of that report, as the person looking (its model, their rows and masks), followed live like any visual,
    and coloured by its `alert:` (said in words under it, never by colour alone). Ordinary visuals on a board page are the report's own and take its slicers,
@@ -198,13 +199,17 @@
       btn.hidden = !o.pages().length;
       btn.addEventListener('click', () => setKiosk(!kiosk));
       document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && kiosk) { setKiosk(false, true); } });
-      document.addEventListener('keydown', (e) => {
-        if (e.target.closest('input,select,textarea') || e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented) { return; }   // a table visual took K for its chart
-        const pages = o.pages(), i = pages.indexOf(o.current());
-        if (e.key === 'Escape' && kiosk) { setKiosk(false, true); } else if ((e.key === 'k' || e.key === 'K') && pages.length) { setKiosk(!kiosk); }
-        else if (kiosk && (e.key === 'ArrowRight' || e.key === 'ArrowLeft') && pages.length > 1 && i >= 0) { o.go(pages[(i + (e.key === 'ArrowRight' ? 1 : pages.length - 1)) % pages.length]); }
-        else if (kiosk && (e.key === 'p' || e.key === 'P') && o.togglePause) { o.togglePause(); }
-      });
+      // the kiosk's keys (the one keymap; a table visual that took K for its chart has prevented it, and the keymap leaves it)
+      const K = window.Drishti.keys;
+      K.register({ id: 'bi.kiosk', keys: ['K', 'Shift+K'], scope: 'screen', area: 'bi-report', group: 'Report', description: 'Kiosk: full screen, the pages in turn',
+        keepDefault: true, when: () => o.pages().length > 0, run: () => { setKiosk(!kiosk); } });
+      K.register({ id: 'bi.kiosk.leave', keys: ['Escape'], scope: 'screen', area: 'bi-report', group: 'Report', description: 'Leave the kiosk',
+        keepDefault: true, when: () => kiosk, run: () => { setKiosk(false, true); } });
+      K.register({ id: 'bi.kiosk.page', keys: ['ArrowRight', 'ArrowLeft'], scope: 'screen', area: 'bi-report', group: 'Report', description: 'In the kiosk: the next or previous page',
+        keepDefault: true, when: () => kiosk && o.pages().length > 1 && o.pages().indexOf(o.current()) >= 0,
+        run: (e) => { const pages = o.pages(), i = pages.indexOf(o.current()); o.go(pages[(i + (e.key === 'ArrowRight' ? 1 : pages.length - 1)) % pages.length]); } });
+      K.register({ id: 'bi.kiosk.pause', keys: ['P', 'Shift+P'], scope: 'screen', area: 'bi-report', group: 'Report', description: 'In the kiosk: pause or go on turning the pages',
+        keepDefault: true, when: () => kiosk && !!o.togglePause, run: () => { o.togglePause(); } });
       if (new URLSearchParams(window.location.search).get('kiosk') === '1' && o.pages().length) { setKiosk(true, true); }
     }
 

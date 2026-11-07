@@ -228,9 +228,8 @@
 
   // the drawer's tab, the header button, the keyboard
   document.querySelectorAll('[data-discussion-open]').forEach(function (b) { b.addEventListener('click', function () { if (host.isOpen() && host.tab() === 'discussion') { host.close(); } else { open(); } }); });
-  document.addEventListener('keydown', function (e) {
-    if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && (e.code === 'KeyN' || e.key === 'n')) { e.preventDefault(); open(); }
-  });
+  window.Drishti.keys.register({ id: 'discussion.open', keys: ['Alt+N'], scope: 'screen', area: 'view', group: 'View', typing: true,
+    description: 'Discussion: the second tab of the side drawer', run: function () { open(); } });
   document.addEventListener('drishti:drawer', function (e) {
     document.querySelectorAll('[data-discussion-open]').forEach(function (b) { b.setAttribute('aria-expanded', e.detail.open && e.detail.tab === 'discussion' ? 'true' : 'false'); });
     if (e.detail.open && e.detail.tab === 'discussion' && !threads.length) { load(); }

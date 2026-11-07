@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** The caller's inbox: notices (shares first) rendered for the caller's current rights. The live feed is {@code /me/alerts/stream}. */
+/** The caller's inbox: notices (shares first) rendered for the caller's current rights. The live feed is {@code /api/v1/alerts/stream}. */
 @RestController
 @RequestMapping("/api/v1/me/inbox")
 public class InboxController {

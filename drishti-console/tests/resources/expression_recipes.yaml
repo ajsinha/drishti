@@ -35,7 +35,7 @@ recipes:
   - { id: R17, title: "Largest trade", expr: "max(trades.NOTIONAL)", by: [desks.NAME], scope: aggregate }
   - { id: R18, title: "Worst trade", expr: "min(trades.MTM)", by: [desks.NAME], scope: aggregate }
   - { id: R19, title: "Swaps only", expr: "count(trades, where = contains(trades.PRODUCT_TYPE, 'SWAP'))", by: [desks.NAME], scope: aggregate }
-  - { id: R20, title: "One book family", expr: "sum(trades.NOTIONAL, where = startswith(trades.PORTFOLIO, 'BOOK-FX'))", by: [desks.NAME], scope: aggregate }
+  - { id: R20, title: "One book family", expr: "sum(trades.NOTIONAL, where = starts_with(trades.PORTFOLIO, 'BOOK-FX'))", by: [desks.NAME], scope: aggregate }
   - { id: R21, title: "DV01 by currency", expr: "sum(trades.DV01)", by: [trades.CURRENCY], scope: aggregate }
   - { id: R22, title: "Absolute DV01", expr: "sum(abs(trades.DV01))", by: [desks.NAME], scope: aggregate }
   - { id: R23, title: "DV01 per million notional", expr: "ratio(sum(trades.DV01), sum(trades.NOTIONAL)) * 1000000", by: [trades.CURRENCY], scope: aggregate }
@@ -67,14 +67,14 @@ recipes:
   - { id: R49, title: "Day-on-day change in P&L", expr: "sum(trades.PNL_1D) - lag(sum(trades.PNL_1D), 1, trades.TRADE_DATE)", by: [trades.TRADE_DATE], scope: aggregate }
   - { id: R50, title: "Day-on-day change in MTM, per cent", expr: "ratio(sum(trades.MTM) - lag(sum(trades.MTM), 1, trades.TRADE_DATE), abs(lag(sum(trades.MTM), 1, trades.TRADE_DATE))) * 100", by: [trades.TRADE_DATE], scope: aggregate }
   - { id: R51, title: "Day-on-day change per desk", expr: "sum(trades.MTM) - lag(sum(trades.MTM), 1, trades.TRADE_DATE, by = [desks.NAME])", by: [desks.NAME, trades.TRADE_DATE], scope: aggregate }
-  - { id: R52, title: "Cumulative trade count", expr: "cumulative(count(trades), trades.TRADE_DATE)", by: [trades.TRADE_DATE], scope: aggregate }
+  - { id: R52, title: "Cumulative trade count", expr: "running(count(trades), trades.TRADE_DATE)", by: [trades.TRADE_DATE], scope: aggregate }
   - { id: R53, title: "Tenor bucket", expr: "days_between(trades.TRADE_DATE, trades.MATURITY_DATE) <= 365 ? '0-1y' : days_between(trades.TRADE_DATE, trades.MATURITY_DATE) <= 1825 ? '1-5y' : '5y+'", by: [desks.NAME], scope: row }
   - { id: R54, title: "Ageing bucket of a trade", expr: "days_between(trades.TRADE_DATE, date('2026-10-09')) <= 30 ? 'under 30 days' : days_between(trades.TRADE_DATE, date('2026-10-09')) <= 90 ? 'under 90 days' : 'older'", by: [desks.NAME], scope: row }
   - { id: R55, title: "Long or short", expr: "trades.MTM >= 0 ? 'Long' : 'Short'", by: [desks.NAME], scope: row }
   - { id: R56, title: "Rating, with a default", expr: "coalesce(counterparties.RATING, 'NR')", by: [counterparties.SECTOR], scope: row }
   - { id: R57, title: "Big live trades (a row filter)", expr: "trades.TRADE_STATUS != 'MATURED' && trades.NOTIONAL >= 5000000", by: [desks.NAME], scope: row }
   - { id: R58, title: "Each desk head sees their desks", expr: "trades.DESK in user.desks", by: [], scope: rule }
-  - { id: R59, title: "Everyone sees the published books, desk heads also their own", expr: "startswith(trades.PORTFOLIO, 'BOOK-PUB') || trades.DESK in user.desks", by: [], scope: rule }
+  - { id: R59, title: "Everyone sees the published books, desk heads also their own", expr: "starts_with(trades.PORTFOLIO, 'BOOK-PUB') || trades.DESK in user.desks", by: [], scope: rule }
   - { id: R60, title: "Share of the total you may see", expr: "share_of(sum(trades.MTM), over = ALL)", by: [desks.NAME], scope: aggregate }
   - { id: R61, title: "A book's share of its desk", expr: "share_of(sum(trades.MTM), over = [books.NAME])", by: [desks.NAME, books.NAME], scope: aggregate }
   - { id: R62, title: "Share of the parent level", expr: "parent_of(sum(trades.MTM), hierarchy = 'Desk and book')", by: [desks.NAME, books.NAME], scope: aggregate }
@@ -83,7 +83,7 @@ recipes:
   - { id: R65, title: "Live MTM whatever the slicers say about status", expr: "calc(sum(trades.MTM), where = trades.TRADE_STATUS != 'MATURED')", by: [desks.NAME], scope: aggregate }
   - { id: R66, title: "The average desk", expr: "avg_by(sum(trades.MTM), by = [desks.NAME])", by: [counterparties.SECTOR], scope: aggregate }
   - { id: R67, title: "Fiscal year to date", expr: "fiscal_ytd(sum(trades.PNL_1D), trades.TRADE_DATE)", by: [desks.NAME], scope: aggregate }
-  - { id: R68, title: "The last day's MTM (a balance)", expr: "last(sum(trades.MTM), trades.TRADE_DATE)", by: [desks.NAME], scope: aggregate }
+  - { id: R68, title: "The last day's MTM (a balance)", expr: "latest(sum(trades.MTM), trades.TRADE_DATE)", by: [desks.NAME], scope: aggregate }
   - { id: R69, title: "Month-end closing", expr: "closing(sum(trades.MTM), trades.TRADE_DATE)", by: [desks.NAME], scope: aggregate }
   - { id: R70, title: "Opening balance", expr: "opening(sum(trades.MTM), trades.TRADE_DATE)", by: [desks.NAME], scope: aggregate }
   - { id: R71, title: "Average daily balance", expr: "avg_over(sum(trades.MTM), trades.TRADE_DATE)", by: [desks.NAME], scope: aggregate }

@@ -100,7 +100,7 @@ class DesignGovernanceWaveTest {
     }
 
     private void approveLatest(String pid) throws Exception {
-        ok(send(post("/api/v1/sutras/proposals/" + pid + "/approve"), as("rui", "approver"), "{}"));
+        ok(send(post("/api/v1/approvals/sutra/" + pid + "/approve"), as("rui", "approver"), "{}"));
     }
 
     private String proposalOf(String id, String who) throws Exception {
@@ -270,7 +270,7 @@ class DesignGovernanceWaveTest {
         String ana = as("ana", "author");
         String id = create(ana, "{\"name\":\"eyes\",\"kind\":\"w1-thing\",\"sutra\":" + JSON.writeValueAsString(sutra("eyes", 1, "terms")) + "}");
         String pid = proposalOf(id, ana);
-        send(post("/api/v1/sutras/proposals/" + pid + "/approve"), as("ANA", "approver"), "{}").andExpect(status().isForbidden());
+        send(post("/api/v1/approvals/sutra/" + pid + "/approve"), as("ANA", "approver"), "{}").andExpect(status().isForbidden());
         approveLatest(pid);
     }
 }

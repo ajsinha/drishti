@@ -131,6 +131,15 @@ a:hover { text-decoration: underline; }
 .code-panel pre { margin: 0; overflow-x: auto; padding: 1rem 1.1rem; font-size: .8rem; line-height: 1.55; color: var(--d-ink); }
 .tok-k { color: var(--d-accent); } .tok-s { color: var(--d-link); } .tok-c { color: var(--d-faint); }
 
+/* the quick cards under Home's headline: part of the landing, so they keep their size whether or not the fact of the day (drishti_dyk.css) is on */
+.lp-quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .75rem; margin: 2rem 0 0; text-align: left; }
+.lp-quick-card { display: flex; flex-direction: column; gap: .3rem; min-height: 44px; padding: 1rem 1.1rem; border-radius: 10px; border: 1px solid var(--d-border);
+  background: var(--d-surface); color: var(--d-ink); text-decoration: none; transition: border-color .2s; }
+.lp-quick-card:hover, .lp-quick-card:focus-visible { border-color: var(--d-accent); color: var(--d-ink); text-decoration: none; }
+.lp-quick-card .bi { color: var(--d-accent); }
+.lp-quick-card span { color: var(--d-muted); font-size: .9rem; font-family: var(--d-font-mono); }
+@media (max-width: 560px) { .lp-quick { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+
 .lp-pipe { width: 100%; height: auto; }
 .lp-pipe .node rect { fill: var(--d-surface); stroke: var(--d-border); }
 .lp-pipe .node text { fill: var(--d-ink); font: 600 13px var(--d-font-sans); }

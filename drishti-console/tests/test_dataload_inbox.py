@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin → Data loads → Inbox in the console (DATALOAD_INBOX.md section 10, mock-up A): the board drawn from the server's status (every
+"""Admin → Data loads → Inbox in the console (DATA_LAKE_GUIDE.md section 3.1, mock-up A): the board drawn from the server's status (every
 figure the server's words), its partial for the page's own refresh, Load now and Retry passed to the server with its answers, the report
 link, the Data loads tabs, and the page gone with the engine."""
 from urllib.parse import unquote

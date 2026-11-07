@@ -69,7 +69,7 @@ function Invoke-Tool([string[]]$toolArgs) {
 }
 
 # the loader's input: a folder of the samples' tar and the book's, <kind>/<YYYY-MM-DD>/ folders (the load rules,
-# docs/architecture/DATA_LOAD_RULES.md: each row under its folder's date), read in one load
+# docs/guides/DATA_LAKE_GUIDE.md: each row under its folder's date), read in one load
 $jsonl = Join-Path $data 'build\loader-rows'
 if (Test-Path $jsonl) { Remove-Item $jsonl -Recurse -Force }
 New-Item -ItemType Directory -Force -Path $jsonl | Out-Null

@@ -585,12 +585,15 @@
   }
 
   // ---- keys ---------------------------------------------------------------------------------------------------------------
-  document.addEventListener('keydown', function (e) {
-    var t = e.target, typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
-    if (typing || e.ctrlKey || e.metaKey || e.altKey || dlg.open || confirmDlg.open) { return; }
-    if (e.key === 'n' && newBtn) { e.preventDefault(); openNew('', newBtn); }
-    else if (e.key === '/' && filter) { e.preventDefault(); filter.focus(); }
-  });
+  function noDialog() { return !dlg.open && !confirmDlg.open; }
+  if (newBtn) {
+    window.Drishti.keys.register({ id: 'connectors.new', keys: ['N'], scope: 'screen', area: 'admin-connectors', group: 'Connectors', description: 'A new connector',
+      when: noDialog, run: function () { openNew('', newBtn); } });
+  }
+  if (filter) {
+    window.Drishti.keys.register({ id: 'connectors.filter', keys: ['/'], scope: 'screen', area: 'admin-connectors', group: 'Connectors', description: 'Focus the filter',
+      when: noDialog, run: function () { filter.focus(); } });
+  }
 
   // links from a pack: ?name=x opens it, ?new=x opens New connector pre-filled from the pack's suggestion
   var params = new URLSearchParams(location.search);

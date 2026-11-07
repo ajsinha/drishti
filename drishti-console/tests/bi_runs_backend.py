@@ -217,7 +217,7 @@ class RunsBackend(BiBackend):
                 while sent < len(self.events):
                     yield "run", json.dumps(self.events[sent])
                     sent += 1
-        if path == "/me/alerts/stream":
+        if path == "/alerts/stream":
             yield "hello", "{}"
             sent = len(self.notices)
             while True:

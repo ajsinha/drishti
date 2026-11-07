@@ -197,7 +197,7 @@ to jump to it. The preview changes nothing on the server.
    {"enabled":true,"proposals":[]}
    ```
 
-   A pending proposal is listed here and at **Build → Govern → Reviews** (`/build/reviews`) in the console. It becomes live when an approver
+   A pending proposal is listed here and at **Views → Approvals** (`/approvals`) in the console. It becomes live when an approver
    approves it.
 
 ## Fixes
@@ -228,7 +228,7 @@ Things to know:
   Sutra cannot be overwritten under the same name and version (`DRS-2028`). Raise `version` (for example to 2); the
   highest version wins, and the pack file stays as it was.
 - With review on (`drishti.governance.enabled`, default `true`), the save becomes a proposal. Someone with the
-  approver role, or an admin, approves it at **Build → Govern → Reviews**. With four-eyes on (the default when security is
+  approver role, or an admin, approves it at **Views → Approvals**. With four-eyes on (the default when security is
   on), nobody approves their own proposal.
 
 **Go back to the last good version.** Revert the file in version control and save; hot reload applies it. For

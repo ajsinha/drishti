@@ -38,8 +38,8 @@ import java.util.TreeSet;
 /**
  * The MR lens of the pivot screen beside the pivot engine's answers (MR_CUBE_GUIDE.md sections 5 to 8; layout A and tabs B and C of
  * MR_CUBE_LENS.md section 6.7): the headline strip of the view's scope, a cell's tail and histogram, the sparklines (the same view on the
- * open dates before, from the pivot engine's cache when it can), the time-travel slider's stops, "explain the move" of a cell (the VaR
- * engine's exact steps on its scope), the sensitivity ladder and the factor heat map ({@link MrSensitivities}), and the what-if side by side
+ * open dates before, from the pivot engine's cache when it can), the time-travel slider's stops (a cell's move is explained by the one
+ * Explain, kind var on the cell's scope), the sensitivity ladder and the factor heat map ({@link MrSensitivities}), and the what-if side by side
  * per row (the Java what-if on each row's scope). The grid itself is the pivot engine's ({@code /api/v1/pivot/query} on source {@code var});
  * every figure here is the server's, the console only draws.
  */
@@ -48,15 +48,13 @@ public final class MrCubeExtras {
     /** The most of the lake's own dates the slider lists (newest first). */
     static final int HELD_DATES = 20;
     private final VarService svc;
-    private final VarExplain explain;
     private final VarWhatIf whatIf;
     private final PivotCore core;
     private final VarPivotProvider provider;
     private final MrSensitivities sensitivities;
 
-    MrCubeExtras(VarService svc, VarExplain explain, PivotCore core, VarPivotProvider provider) {
+    MrCubeExtras(VarService svc, PivotCore core, VarPivotProvider provider) {
         this.svc = svc;
-        this.explain = explain;
         this.whatIf = new VarWhatIf(svc);
         this.core = core;
         this.provider = provider;
@@ -238,21 +236,6 @@ public final class MrCubeExtras {
         out.put("newest", stops.isEmpty() ? null : stops.get(stops.size() - 1).get("date"));
         out.put("note", "the stops are business dates (with an official record, open here, or held by the lake) and, within an open date, its "
                 + "batches in order; a date not open is opened when it is chosen");
-        return out;
-    }
-
-    /**
-     * Why a cell moved between two dates (layout A, A7; tab C, C4): the VaR engine's explanation of the cell's scope (the exact steps that
-     * add up, each with its top contributors).
-     */
-    public Map<String, Object> explain(Principal p, String scope, LocalDate from, LocalDate to, Double confidence) {
-        if (scope == null || scope.isBlank()) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "explain names the cell's scope (in its provenance): scope=DESK:RATES, "
-                    + "(NODE:MGMT~DESK-RATES) & (WHERE:...)");
-        }
-        Map<String, Object> out = new LinkedHashMap<>(explain.explain(p, scope.strip(), from, to, confidence).answer());
-        out.put("factorOverlay", Map.of("available", false, "note", "the factor overlay (Σ sensitivity × the factor's move between the two "
-                + "dates) needs each factor's move by date, which the lake does not hold yet; the exact steps above add up on their own"));
         return out;
     }
 

@@ -174,6 +174,10 @@
       e.preventDefault();
       if (e.shiftKey) { fullscreen(p); } else { toggle(p); }
     });
+    if (isDoc && window.Drishti && window.Drishti.keys) {      // bound on root (an element's keys stay in its shadow root); the console's keymap lists them
+      window.Drishti.keys.describe({ id: 'panel.zoom', keys: ['Z', 'Shift+Z', 'Escape'], scope: 'panel', area: 'panel', group: 'Panels', label: 'Z · Shift+Z · Esc',
+        description: 'On a focused panel: zoom it or restore it; Shift+Z also asks for full screen; Esc restores it' });
+    }
     if (isDoc) {
       on(window, 'resize', function () { if (zoomed) { measure(); } });
       on(window, 'hashchange', function () { var m = /^#zoom=(.+)$/.exec(location.hash); if (m) { zoom(decodeURIComponent(m[1])); } else { unzoom(false); } });

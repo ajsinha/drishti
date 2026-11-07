@@ -57,10 +57,10 @@
   function toggle() { if (drawer.hidden) { open(); } else { close(); } }
   document.querySelectorAll('[data-calc-open]').forEach(function (b) { b.addEventListener('click', toggle); });
   $('[data-calc-close]').addEventListener('click', close);
-  document.addEventListener('keydown', function (e) {
-    if (e.altKey && !e.ctrlKey && !e.metaKey && (e.code === 'KeyC' || e.key === 'c' || e.key === 'C')) { e.preventDefault(); toggle(); return; }
-    if (e.key === 'Escape' && !drawer.hidden && !e.defaultPrevented) { close(); }
-  });
+  window.Drishti.keys.register({ id: 'calc.toggle', keys: ['Alt+C', 'Alt+Shift+C'], scope: 'screen', area: 'view', group: 'View', typing: true,
+    description: 'Calc: Python on this view (Option+C on a Mac)', run: toggle });
+  window.Drishti.keys.register({ id: 'calc.close', keys: ['Escape'], scope: 'dialog', area: 'calc', description: 'Close Calc', typing: true, keepDefault: true,
+    open: function () { return !drawer.hidden; }, run: close });
 
   function setup() {
     var draft = load(DKEY);

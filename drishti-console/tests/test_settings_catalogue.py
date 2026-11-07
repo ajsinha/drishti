@@ -54,11 +54,34 @@ def test_every_row_has_the_one_shape():
     heads = re.findall(r"^\| Key \| .* \|$", gen, re.M)
     assert heads and set(heads) == {"| " + " | ".join(cat.COLUMNS) + " |"}
     rows = [ln for ln in gen.splitlines() if ln.startswith("| `") and "Variable" not in ln]
-    eight = [r for r in rows if len(re.split(r"(?<!\\)\|", r)) - 2 == 8]
-    assert len(eight) > 1500
-    for r in eight:
-        meaning = re.split(r"(?<!\\)\|", r)[6].strip()
-        assert meaning, r
+    nine = [r for r in rows if len(re.split(r"(?<!\\)\|", r)) - 2 == 9]
+    assert len(nine) > 1500
+    for r in nine:
+        cells = re.split(r"(?<!\\)\|", r)
+        assert cells[6].strip(), r
+        assert cells[9].strip() in cat.TIERS, r
+
+
+def test_every_setting_has_a_tier_from_the_one_list():
+    """The tier of each setting lives in tools/settings_schemas.yaml (tiers); everyday stays small: what a business lead changes."""
+    rows, _ = cat.all_rows()
+    assert cat.assign_tiers(rows) == []
+    assert all(r.tier in cat.TIERS for r in rows)
+    everyday = sorted(r.key for r in rows if r.tier == "everyday")
+    assert len(everyday) <= 25, everyday
+    assert "drishti.lenses" in everyday and "drishti.var.confidence" in everyday and "features.build" in everyday
+    assert not [r.key for r in rows if r.tier == "everyday" and ("branding" in r.key or "ui-kit" in r.key or r.area == "ui-kit")]
+    assert {r.tier for r in rows if r.key.startswith("drishti.branding.") or r.area == "ui-kit"} == {"admin"}
+
+
+def test_the_tier_check_names_an_area_without_a_tier(monkeypatch):
+    spec = cat.schemas()
+    spec["tiers"] = {**spec["tiers"], "areas": {k: v for k, v in spec["tiers"]["areas"].items() if k != "simm"},
+                     "everyday": [*spec["tiers"]["everyday"], "server:drishti.no-such-key"]}
+    monkeypatch.setattr(cat, "schemas", lambda: spec)
+    rows, _ = cat.all_rows()
+    found = cat.assign_tiers(rows)
+    assert any("has no tier" in f and "simm" in f for f in found) and any("drishti.no-such-key is no setting" in f for f in found)
 
 
 def _flat(node, prefix=""):

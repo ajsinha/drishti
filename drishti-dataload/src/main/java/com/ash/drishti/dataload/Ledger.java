@@ -39,7 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The ledger (DATALOAD_INBOX.md section 2): one JSON line per step a file takes ({@code claimed}, {@code duplicate}, {@code loaded},
+ * The ledger (DATA_LAKE_GUIDE.md): one JSON line per step a file takes ({@code claimed}, {@code duplicate}, {@code loaded},
  * {@code failed}, {@code returned}, {@code locked}), in {@code ledger/ledger-<yyyy-MM>.jsonl}, appended and never rewritten. A line is
  * written and forced to disk before the step it records is acted on, so a restart reads where every file stood (section 7); the SHA-256 of
  * every loaded file finds the same file dropped again (section 4.5). Kept when the outbox is cleaned.
@@ -56,9 +56,9 @@ public final class Ledger {
     public static final String FAILED = "failed";
     public static final String RETURNED = "returned";
     public static final String LOCKED = "locked";
-    /** An empty file or archive: nothing written, no business date touched (DATA_LOAD_RULES.md section 4.3). */
+    /** An empty file or archive: nothing written, no business date touched (DATA_LAKE_GUIDE.md). */
     public static final String IGNORED = "ignored";
-    /** An archive whose load failed part-way: the tables it had committed undone (DATA_LOAD_RULES.md section 4.5). */
+    /** An archive whose load failed part-way: the tables it had committed undone (DATA_LAKE_GUIDE.md). */
     public static final String ROLLED_BACK = "rolled back";
 
     private final Path dir;

@@ -120,7 +120,7 @@ def check_figures(page, target):
 
 
 def test_the_sample_runs_on_the_server_sandboxed(stack, browser):
-    page = sign_in(browser, "rita", "/bi")
+    page = sign_in(browser, "rita", "/bi/catalogue")
     open_report(page, "file:report:py-server")
     settled(page)
     check_figures(page, "server")
@@ -129,7 +129,7 @@ def test_the_sample_runs_on_the_server_sandboxed(stack, browser):
 
 
 def test_the_sample_as_shipped_asks_the_server_first(stack, browser):
-    page = sign_in(browser, "wes", "/bi")
+    page = sign_in(browser, "wes", "/bi/catalogue")
     page.goto(f"{CONSOLE_URL}/bi/r/file:report:python-desk-risk")
     page.wait_for_selector("[data-ready=yes]", timeout=30000)
     settled(page)
@@ -140,7 +140,7 @@ def test_the_sample_as_shipped_asks_the_server_first(stack, browser):
 
 def test_a_report_that_asks_for_the_browser_runs_on_the_console_under_the_strict_policy(stack, browser):
     """2.3.0 (BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 6): `run: browser` of a 2.2 report is read as `server` and runs on the server's compute pool; the page loads no WebAssembly."""
-    page = sign_in(browser, "rita", "/bi")
+    page = sign_in(browser, "rita", "/bi/catalogue")
     wasm = []
     page.on("request", lambda r: wasm.append(r.url) if r.url.endswith(".wasm") or "pyodide" in r.url else None)
     open_report(page, "file:report:py-browser")
@@ -154,7 +154,7 @@ def test_a_report_that_asks_for_the_browser_runs_on_the_console_under_the_strict
 
 
 def test_the_designer_offers_the_python_visual(stack, browser):
-    page = sign_in(browser, "wes", "/bi")
+    page = sign_in(browser, "wes", "/bi/catalogue")
     cat = page.request.get(f"{CONSOLE_URL}/bi/api/reports/catalogue").json()
     assert cat["visuals"]["python"]["group"] == "python" and "python" not in cat["reserved"]
     page.close()

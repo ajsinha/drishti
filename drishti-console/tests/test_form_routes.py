@@ -45,13 +45,13 @@ def test_the_reserved_word_opens_the_form(cl):
 
 
 def test_type_ahead_offers_only_packs_with_kinds_then_their_kinds(cl):
-    packs = cl.get("/api/suggest", params={"q": "form "}).json()
+    packs = cl.get("/api/search", params={"in": "command", "q": "form "}).json()["items"]
     assert [s["complete"] for s in packs] == ["FORM trading "] and packs[0]["href"] == "/form/trading"       # "empty" has no kind to search
-    assert [s["complete"] for s in cl.get("/api/suggest", params={"q": "FORM tra"}).json()] == ["FORM trading "]
-    kinds = cl.get("/api/suggest", params={"q": "FORM trading "}).json()
+    assert [s["complete"] for s in cl.get("/api/search", params={"in": "command", "q": "FORM tra"}).json()["items"]] == ["FORM trading "]
+    kinds = cl.get("/api/search", params={"in": "command", "q": "FORM trading "}).json()["items"]
     assert [(s["title"], s["href"]) for s in kinds] == [("Trade", "/form/trading?kind=trade"), ("Desk P&L", "/form/trading?kind=desk-pnl")]
-    assert [s["title"] for s in cl.get("/api/suggest", params={"q": "FORM trading des"}).json()] == ["Desk P&L"]
-    assert cl.get("/api/suggest", params={"q": "FORM nothing "}).json() == []
+    assert [s["title"] for s in cl.get("/api/search", params={"in": "command", "q": "FORM trading des"}).json()["items"]] == ["Desk P&L"]
+    assert cl.get("/api/search", params={"in": "command", "q": "FORM nothing "}).json()["items"] == []
 
 
 def test_the_form_has_an_input_for_every_type(cl):

@@ -119,7 +119,7 @@
     });
     show('fields');
   }
-  // The business date by the load rules (docs/architecture/DATA_LOAD_RULES.md): a date given here, else the file name's, else the
+  // The business date by the load rules (docs/guides/DATA_LAKE_GUIDE.md): a date given here, else the file name's, else the
   // business today; never a field of the rows.
   function businessDate() {
     var u = state.upload || {}, given = $('[data-lake-asof]').value;

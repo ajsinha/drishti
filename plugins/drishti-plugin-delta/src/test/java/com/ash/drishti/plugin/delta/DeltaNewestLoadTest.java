@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Appends (docs/architecture/DATA_LOAD_RULES.md section 6.1): an id two loads wrote on one date is read as the newest load's copy (the
+ * Appends (docs/guides/DATA_LAKE_GUIDE.md): an id two loads wrote on one date is read as the newest load's copy (the
  * largest {@code _load_id}, then commit order), by a document fetch and by the bulk vector read; ids only one load wrote are kept.
  */
 class DeltaNewestLoadTest {

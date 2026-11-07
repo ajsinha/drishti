@@ -13,8 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Write-back, the console's side (docs/guides/WRITE_BACK.md): ``/api/changes`` passes each call to the server's ``/api/v1/changes``
-as the signed-in person (static/js/drishti_write-back.js submits a form's draft after the review and confirm sheet); Review → Changes lists the
-changes waiting for an approver (approve, reject) and the person's own; Admin → Edits shows where the edit log lives, its lanes,
+as the signed-in person (static/js/drishti_write-back.js submits a form's draft after the review and confirm sheet); a change waiting for an
+approver is decided in the one Approvals queue (routes/approval_routes.py); Admin → Edits shows where the edit log lives, its lanes,
 warnings, source commands not confirmed and each connector's ``writes:`` with its switch. The rules are the server's (the edit power,
 the field's roles, masks, four eyes); this only draws them."""
 from __future__ import annotations
@@ -33,7 +33,6 @@ router = APIRouter(include_in_schema=False)
 CHANGE = re.compile(r"^chg-[0-9A-Z]{26}$")
 NAME = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
 LIMIT = 256 * 1024
-STATES = ("awaiting", "queued", "applied", "refused", "conflicted", "rejected", "withdrawn")
 
 
 def _problem(e: BackendError) -> JSONResponse:
@@ -96,57 +95,11 @@ async def one(request: Request, change: str):
     return await _call(request, "GET", "/changes/" + change)
 
 
-@router.post("/api/changes/{change}/{action}")
-async def decide_api(request: Request, change: str, action: str):
-    if not CHANGE.match(change) or action not in ("approve", "reject", "withdraw"):
-        return _bad("approve, reject or withdraw a change by its id")
-    try:
-        body = await json_body(request, limit=LIMIT)
-    except BodyError:
-        body = {}
-    return await _call(request, "POST", f"/changes/{change}/{action}", body or {})
-
-
 @router.get("/api/entities/{kind}/{id_}/history")
 async def history(request: Request, kind: str, id_: str):
     if not NAME.match(kind):
         return _bad("a kind is lower case, digits and -")
     return await _call(request, "GET", f"/entities/{kind}/{quote(id_, safe='')}/history")
-
-
-# ---- Review → Changes -----------------------------------------------------------------------------------------------------------
-
-@router.get("/review/changes")
-async def changes_page(request: Request, state: str = "awaiting", mine: str = ""):
-    """Changes waiting for an approver (yours to decide: never your own), or your own, or every one in a state."""
-    state = state if state in STATES or state == "all" else "awaiting"
-    q = {"limit": "200"}
-    if state != "all":
-        q["state"] = state
-    if mine:
-        q["mine"] = "true"
-    backend, me = request.app.state.backend, ident(request)
-    try:
-        s = await backend._send("GET", "/changes/settings", me)
-        data = await backend._send("GET", "/changes?" + urlencode(q), me)
-    except BackendError as e:
-        return render(request, "review/changes.html", status_code=e.status, changes=[], state=state, mine=mine, settings={}, error=e, screen="build")
-    return render(request, "review/changes.html", changes=(data or {}).get("changes", []), state=state, mine=mine, settings=s or {}, error=None,
-                  screen="build")
-
-
-@router.post("/review/changes/{change}/{action}")
-async def decide_page(request: Request, change: str, action: str):
-    if not CHANGE.match(change) or action not in ("approve", "reject", "withdraw"):
-        return RedirectResponse("/review/changes", status_code=303)
-    form = parse_qs((await request.body()).decode("utf-8", "replace"))
-    note = form.get("note", [""])[0][:500]
-    body = {"note": note} if action == "approve" else {"reason": note} if action == "reject" else {}
-    try:
-        await request.app.state.backend._send("POST", f"/changes/{change}/{action}", ident(request), json=body)
-    except BackendError as e:
-        return render(request, "review/changes.html", status_code=e.status, changes=[], state="awaiting", mine="", settings={}, error=e, screen="build")
-    return RedirectResponse("/review/changes", status_code=303)
 
 
 # ---- Admin → Edits --------------------------------------------------------------------------------------------------------------

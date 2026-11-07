@@ -83,7 +83,7 @@ def test_the_ccr_preset_is_under_construction_behind_its_counterparties_door(bac
     assert 'data-preset-name="ccr"' in page and 'data-source=""' in page
     reg = (Path(__file__).resolve().parents[2] / "config" / "under-construction.yaml").read_text(encoding="utf-8")
     assert "id: ccr-cube-preset" in reg and "menus: [ccr-cube]" in reg
-    menus = (Path(__file__).resolve().parents[1] / "config" / "menus.yaml").read_text(encoding="utf-8")
+    menus = (Path(__file__).resolve().parents[1] / "config" / "sitemap.yaml").read_text(encoding="utf-8")
     assert 'id: ccr-cube, cmd: CCUBE, href: "/pivot?preset=ccr"' in menus
     assert pivot_presets.command("CCUBE <GO>".split()) == "/pivot?preset=ccr"
     r = c.get("/go", params={"q": "CCUBE <GO>"}, follow_redirects=False)

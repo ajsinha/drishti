@@ -56,7 +56,7 @@ import java.util.concurrent.TimeUnit;
  * limit for {@code effective} tables (a row only when the entity changes, e.g. reference data). {@code knownAt}
  * reads the table as it was at that instant (Delta time travel), before later corrections.
  *
- * <p>Settings: {@code root} (default {@code ./data/delta}), {@code domain} (a sub-folder, e.g. {@code finance}),
+ * <p>Settings: {@code root} (default the demo lake's folder, {@code <data>/delta/demo}; or {@code lake: <name>}, resolved through its lake file), {@code domain} (a sub-folder, e.g. {@code finance}),
  * {@code kinds} (comma list; default: every table found), {@code mode.<kind>} ({@code snapshot}|{@code effective}),
  * {@code lookback-days} (10), {@code id-column} ({@code id}), {@code doc-column} ({@code doc}), {@code date-column}
  * ({@code business_date}), {@code refresh-seconds} (10: how often a table's latest version is checked), {@code warm-dates}
@@ -278,7 +278,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
         // local disk or object storage (s3a://, abfs://, gs://), read by the native engine or Hadoop's (`engine`): the
         // rest of the connector does not know which
-        String root = ctx.setting("root", com.ash.drishti.api.DataDir.under("delta"));
+        String root = ctx.setting("root", com.ash.drishti.api.DataDir.under("delta/demo"));   // no root and no lake: the demo lake's own folder
         // a lake in memory (mem://, IN_MEMORY_LAKE.md section 8): memory-only by contract, so nothing of it may reach a disk here either:
         // no id-map files, no document cache on disk, no index segments on disk (the memory caches still apply)
         this.memoryOnly = com.ash.drishti.lakeio.StorageProviders.memoryOnly(root);

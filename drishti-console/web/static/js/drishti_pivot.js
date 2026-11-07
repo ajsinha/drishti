@@ -596,29 +596,34 @@
       try { var d = JSON.parse(e.dataTransfer.getData("text/plain")); add(z.getAttribute("data-pv-zone"), d.field, d.native); } catch (err) { /* not a field */ }
     });
   });
-  document.addEventListener("keydown", function (e) {
-    var tag = (e.target.tagName || "").toLowerCase();
-    if (tag === "input" || tag === "select" || tag === "textarea" || e.ctrlKey || e.metaKey || e.altKey) { return; }
-    var k = e.key.toLowerCase();
-    if (state.focusField && document.activeElement === state.focusField && "rcvfs".indexOf(k) >= 0) {
-      e.preventDefault();
+  // the Pivot's keys (the one keymap, drishti_keys.js; ? lists them)
+  var K = window.Drishti.keys;
+  var onField = function () { return !!state.focusField && document.activeElement === state.focusField; };
+  K.register({id: "pivot.field.add", keys: ["R", "C", "V", "F", "S", "Shift+R", "Shift+C", "Shift+V", "Shift+F", "Shift+S"], scope: "panel", area: "pivot-fields",
+    group: "Pivot", label: "r c v f s", description: "On a field: add it to rows, columns, values, filters or slicers", within: function () { return root; }, when: onField,
+    run: function (e) {
+      var k = e.key.toLowerCase();
       add({r: "rows", c: "columns", v: "values", f: "filters", s: "slicers"}[k], state.focusField.getAttribute("data-field"), state.focusField.getAttribute("data-native") === "1");
-      return;
-    }
-    if (!state.answer) { return; }
-    if (k === "g") { e.preventDefault(); chart(); }
-    else if (k === "x") { e.preventDefault(); $("[data-pv-export-open]").click(); }
-    else if (/^[1-9]$/.test(k) && root.contains(document.activeElement)) {
-      e.preventDefault();
+    }});
+  K.register({id: "pivot.chart", keys: ["G", "Shift+G"], scope: "screen", area: "pivot", group: "Pivot", description: "Chart the answer",
+    when: function () { return !!state.answer; }, run: function () { chart(); }});
+  K.register({id: "pivot.export", keys: ["X", "Shift+X"], scope: "screen", area: "pivot", group: "Pivot", description: "Export the answer",
+    when: function () { return !!state.answer; }, run: function () { $("[data-pv-export-open]").click(); }});
+  K.register({id: "pivot.expand.to", keys: ["1", "2", "3", "4", "5", "6", "7", "8", "9"], scope: "panel", area: "pivot", group: "Pivot", label: "1 … 9",
+    description: "Open the rows to that level", within: function () { return root; }, when: function () { return !!state.answer; },
+    run: function (e) {
+      var k = e.key;
+      if (!/^[1-9]$/.test(k)) { return false; }
       state.view.expandTo = {rows: +k, columns: (state.view.expandTo || {}).columns || 1};
       run();
-    } else if (k === "e" && state.selection.length) {
-      e.preventDefault();
+    }});
+  K.register({id: "pivot.expand.by", keys: ["E", "Shift+E"], scope: "screen", area: "pivot", group: "Pivot", description: "Expand the selected row by a field",
+    when: function () { return !!state.answer && !!state.selection.length; },
+    run: function () {
       var row = state.answer.rows[state.selection[0].row];
       var by = window.prompt("Expand " + row.label + " by which field?", "");
       if (by) { expandBy(row, by.trim()); }
-    }
-  });
+    }});
   // The screen's one face for the code around it, which reads the view and the answer and never computes: a lens (the MR cube,
   // drishti_mr-lens.js) changes the view's options; the custom functions, explain and what-if cards (drishti_pivot-functions.js) read the view, its
   // answer and the selection; the switches, live pivots and comments (drishti_pivot-switches.js) send the request body as asked, redraw, run again.

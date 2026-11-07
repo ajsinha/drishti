@@ -165,16 +165,6 @@ public class BiController {
         return bi.withdraw(p, id);
     }
 
-    @PostMapping("/items/{id}/approve")
-    public Map<String, Object> approve(@PathVariable String id, @RequestBody(required = false) Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return bi.approve(p, id, note(body), force(body), renames(body));
-    }
-
-    @PostMapping("/items/{id}/reject")
-    public Map<String, Object> reject(@PathVariable String id, @RequestBody(required = false) Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return bi.reject(p, id, note(body));
-    }
-
     @PostMapping("/items/{id}/publish")
     public Map<String, Object> publish(@PathVariable String id, @RequestBody(required = false) Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         return bi.publish(p, id, note(body), force(body), renames(body));

@@ -29,8 +29,9 @@ write-back tables are built).
 | 4. Reactive connectors | R1 to R4 built and built; R5 and R6 planned |
 | 5. The content store | built, built |
 | 6. The one Drishti database | design, not built (the write-back tables are built) |
+| 7. Loading: the data inbox and the load rules | built (internal notes; the guide is DATA_LAKE_GUIDE.md) |
 
-The people who load data read [DATA_GUIDE.md](../guides/DATA_GUIDE.md); the connectors are [CONNECTORS.md](../connectors/CONNECTORS.md)
+The people who load data read [DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md) and [DATA_GUIDE.md](../guides/DATA_GUIDE.md); the connectors are [CONNECTORS.md](../connectors/CONNECTORS.md)
 and the per-store documents; VaR's intake is [PARALLEL_LOADER.md](PARALLEL_LOADER.md). Each section keeps its own numbering.
 
 ## Contents
@@ -136,6 +137,7 @@ and the per-store documents; VaR's intake is [PARALLEL_LOADER.md](PARALLEL_LOADE
     - [10. Build plan](#10-build-plan)
     - [11. Tests](#11-tests)
     - [12. Decisions (product owner, 2026-10-20)](#12-decisions-product-owner-2026-10-20)
+7. [Loading: the data inbox and the load rules (internal)](#7-loading-the-data-inbox-and-the-load-rules-internal)
 
 ## 1. Live updates
 
@@ -304,10 +306,10 @@ A monitor is a saved list of 1 to 50 entities shown as rows. Its stream is **one
 
 Rows whose entity is missing, not live, or not visible to you simply never tick.
 
-#### Server: alerts (`GET /api/v1/me/alerts/stream`)
+#### Server: alerts (`GET /api/v1/alerts/stream`)
 
 ```bash
-curl -N http://localhost:18480/api/v1/me/alerts/stream
+curl -N http://localhost:18480/api/v1/alerts/stream
 ```
 
 ```text
@@ -316,12 +318,12 @@ data:{"user":"anonymous"}
 ```
 
 With security off and no `X-Drishti-User` header the user is `anonymous`; the console sends
-`X-Drishti-User: ash` (or the signed-in user). When one of your rules fires you receive:
+`X-Drishti-User: ash` (or the signed-in user). When one of your rules raises an alert you receive it as an inbox row:
 
 ```text
-event:alert
+event:notice
 id:12
-data:{"seq":12,"at":"2026-09-30T14:02:11.120Z","user":"ash","rule":"mtm-limit","kind":"trade","id":"END-1000008","severity":"warn","message":"MTM above 2.1m","generation":31}
+data:{"seq":12,"at":"2026-09-30T14:02:11.120Z","type":"alert","kind":"alert","id":"/alerts/measure/mtm-limit","title":"mtm-limit — holds (trade/END-1000008 · $.mtm > 2100000)", ...}
 ```
 
 The alerts stream does not count against `drishti.live.max-streams`.
@@ -639,53 +641,38 @@ off; `X-Drishti-User` says whose monitor it is (with security on, your token doe
 2. Keep a stream open in a second terminal, so you see the alert arrive:
 
    ```bash
-   curl -N -H 'X-Drishti-User: ash' http://localhost:18480/api/v1/me/alerts/stream
+   curl -N -H 'X-Drishti-User: ash' http://localhost:18480/api/v1/alerts/stream
    ```
 
    You should see `event:hello` with `{"user":"ash"}`.
-3. Save a rule (`PUT /api/v1/me/alerts/rules/{name}`). `when` is a Rachana-EL condition over the entity's
-   document; `message` is a template:
+3. Save a rule (`PUT /api/v1/alerts/rules/{name}`): a field source whose field is a Rachana-EL condition over the entity's document,
+   and the condition `rule`, looked at live (the demo source pushes its ticks):
 
    ```bash
-   curl -s -X PUT http://localhost:18480/api/v1/me/alerts/rules/mtm-above-2-1m \
+   curl -s -X PUT http://localhost:18480/api/v1/alerts/rules/mtm-above-2-1m \
         -H 'Content-Type: application/json' -H 'X-Drishti-User: ash' \
-        -d '{"kind": "trade", "id": "END-1000008", "when": "$.mtm > 2100000", "severity": "warn",
-             "message": "${$.tradeId}: MTM ${fmt($.mtm, '"'"'signed0'"'"')}"}'
+        -d '{"title": "END-1000008 MTM above 2.1m", "severity": "warn",
+             "source": {"type": "field", "kind": "trade", "id": "END-1000008", "field": "$.mtm > 2100000"},
+             "condition": {"type": "rule"}, "trigger": {"mode": "live"}}'
    ```
 
-   You should see the rule echoed back. Saving checks the condition and the message (`DRS-2101` for a typo,
-   `DRS-5001 severity must be one of […]` for anything but `info`, `warn` or `critical`), then evaluates the rule **at once** against the
-   current document.
-4. If MTM is already above 2.1 m, the alert fires immediately; otherwise it fires on the first tick that crosses
-   the line. In the second terminal you should see:
-
-   ```text
-   event:alert
-   id:1
-   data:{"seq":1,"at":"2026-10-01T01:50:12.301Z","user":"ash","rule":"mtm-above-2-1m","kind":"trade","id":"END-1000008","severity":"warn","message":"END-1000008: MTM +2,104,880","generation":41}
-   ```
-
-   It does not fire again while MTM stays above 2.1 m. When MTM falls below and rises above again, it fires again.
-5. Recent alerts (the newest `drishti.alerts.keep`, 1,000, per user, kept in the identity database across restarts) are listed by
-   `curl -s -H 'X-Drishti-User: ash' 'http://localhost:18480/api/v1/me/alerts?limit=10'`; the bell in the console
-   shows the same. Delete the rule with `curl -s -X DELETE -H 'X-Drishti-User: ash' http://localhost:18480/api/v1/me/alerts/rules/mtm-above-2-1m`.
+   You should see the rule echoed back with `"describe": "holds: $.mtm > 2100000"`. Saving checks the condition (`DRS-2101` for a typo,
+   `DRS-9062` for anything else wrong, such as a severity other than `info`, `warn` or `critical`), then looks **at once** at the current
+   document.
+4. If MTM is already above 2.1 m, an alert is raised immediately; otherwise on the first tick that crosses the line (after the rule's
+   quiet time, `trigger.debounce`). In the second terminal you should see an `event:notice` of type `alert`. It is not raised again while
+   MTM stays above 2.1 m; when MTM falls below and rises above again, it is raised again.
+5. The alerts raised for you are listed by `curl -s -H 'X-Drishti-User: ash' 'http://localhost:18480/api/v1/alerts'` (stage `raised`,
+   then `acknowledged` or `resolved`: `POST /api/v1/alerts/acknowledge {"id": ...}`); the bell in the console shows the same. Delete the
+   rule with `curl -s -X DELETE -H 'X-Drishti-User: ash' http://localhost:18480/api/v1/alerts/rules/mtm-above-2-1m`.
 
 Packs can suggest rules for a kind (`alerts:` in `pack.yaml`), which the console offers when you create one:
-`GET /api/v1/me/alerts/suggestions/netting-set` returns, with the retired example pack `finance` enabled,
+`GET /api/v1/alerts/suggestions/netting-set` returns, with the retired example pack `finance` enabled,
 `{"kind": "netting-set", "name": "PFE near limit", "when": "$.utilisation > 0.8", "severity": "warn", …}`. With the
-banking packs enabled, no pack suggests rules for `trade`, so `GET /api/v1/me/alerts/suggestions/trade` returns `[]`.
+banking packs enabled, no pack suggests rules for `trade`, so `GET /api/v1/alerts/suggestions/trade` returns `[]`.
 
-A rule is saved with `PUT /api/v1/me/alerts/rules/{name}`; it needs `kind`, `id` and `when`, and takes an
-optional `severity` (`info`, `warn` (default) or `critical`), `message` and `enabled`. For example, to be
-told when END-1000008's MTM rises above 2.1 million:
-
-```json
-{"kind": "trade", "id": "END-1000008", "when": "$.mtm > 2100000", "severity": "warn",
- "message": "MTM ${fmt($.mtm, 'signed0')}"}
-```
-
-Because it fires on the false → true edge, you get one alert when MTM crosses 2.1 m, not one per tick while it
-stays above. Users normally create rules from the console's alerts page; see [USER_GUIDE.md](../guides/USER_GUIDE.md).
+Because a rule raises on the false → true edge, you get one alert when MTM crosses 2.1 m, not one per tick while it stays above. Users
+normally create rules from the console's Alerts page; see [USER_GUIDE.md](../guides/USER_GUIDE.md#alerts).
 
 ### Live BI: a report's live tables
 
@@ -3429,3 +3416,84 @@ The edit-log tables of write-back ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-th
    PostgreSQL url, user and password as `${ENV}`, the pool); the identity database settings move there; `application.yaml` keeps a pointer.
 5. **DuckDB is compute, not this store.**
 6. Built as **item 0**.
+
+## 7. Loading: the data inbox and the load rules (internal)
+
+The user-facing behaviour (the lake file, the inbox's folders and cycle, the `.ready` file, routing, business dates, modes, undo) is
+[DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md); this section keeps only how it is built and why. Requested by the product owner on
+2026-11-03 ("an automatic data loader: a `dataload/inbox` and `dataload/outbox` folder … every 10 minutes … ingest them using Java into
+Delta … a separate Maven module; it can work as a thread in the server"); the load rules decided 2026-11-04; the per-lake folders, the
+demo move and the `.ready` file's `lake:` added in 2.9.11.d (2026-11-07).
+
+### 1. Reused, never rewritten
+
+| Need | Reused | As |
+|---|---|---|
+| Read JSON Lines, `.gz`, `.zst`, `.zip`, tars, with every archive guard | `drishti-lakeload`: `Archives`, `TarStream`, `GzipMembers`, `SourceReader` | the inbox's reader |
+| Write Delta and Iceberg in parallel, one commit per business date, a table lock, a run log, exit codes 0/1/2/3 | `LakeLoad`, `Loader`, `DeltaTarget`, `IcebergTarget`, `LoadConfig`, `LoadReport` | the inbox's writer, run as a child process |
+| A table's layout | the lake files (`drishti-lakeconfig`: `Lakes`, `LakeFiles`, `PackEntry`) and `PackLayout` | routing |
+| Tell the server | `LoadService.announce` (what `POST /api/v1/packs/{pack}/loads` calls), `RefreshCoalescer`, `LoadForwarding` in a cluster | the signal, idempotent per pack, kind, date and batch |
+| Schedules, switches, busy protection, temp files | the scheduler, `config/engines/*.yaml`, `AdmissionGate` (`Work.BULK_LOAD`), `TempFiles` | as every engine |
+
+The module `drishti-dataload` only **finds, claims, routes, records and moves** files: `Inbox` (the hand-shake), `Claims` (`inprocess/`,
+the lock and its heartbeat), `Ledger`, `Routes`, `ReadyNote`, `LoaderProcess` (the child `LakeLoad`, behind the `LoadRunner` contract),
+`Outbox`, `Recovery`, `Cycle`, `DataInbox` (the schedule, Load now, Retry, the status), `InboxStatus` (the one status source of the
+Inbox screen), `RowForms`, `Signal`. The server keeps the wiring (`server.dataload.DataLoadConfiguration`, `DataLoadController`).
+`ArchitectureRulesTest` holds the module off the server, Spring, any table format and any storage: only the loader writes a table.
+
+### 2. Safety by construction
+
+- **One runner**: the owner node only, plus `inbox.lock` (created atomically, a heartbeat; a lock older than three intervals is taken over
+  and logged). **Runs never overlap**: a due cycle while a run holds the lock is recorded as skipped.
+- **A file is in exactly one place**: the inbox, one run's `inprocess/<run>/`, the outbox, or failed. Files are renamed into the run's
+  folder before anything is read; the ledger line `claimed` is written first.
+- **The load runs as a child Java process** (`-Dloader.main=…LakeLoad` from the server's own jar), with its own heap, `nice`, the server's
+  temp folder and a time limit: a large or malformed file never takes the server's heap; the exit code says what happened.
+- **Crash recovery** (`Recovery`): files only claimed go back; a load whose summary says it committed is completed from the summary
+  (never loaded again; the run's `.route.json` says pack, kind and batch); not yet moved: moved; signals in `signals.jsonl` not yet sent:
+  sent. A crash inside the loader before its summary sends the file back and it loads again: replace leaves the same data, append skips
+  the batch's committed dates.
+- **Batches**: one loader run per table (pack, kind, connector, table, date, key, lake, format); when a run of several files fails without
+  a commit, each file is loaded again alone so one bad file fails alone. A tar's tables share one `--run-id` (one load id); a failure
+  undoes the committed ones (`LakeUndo.undoAll`).
+- **Row forms** (`RowForms`): the first line of a plain, gzip or zstd file is looked at; loader rows and lake rows are refused with the
+  tool that loads them.
+- **The warning** for a load into a lake no connector reads (`Cycle.unread`) comes from the packs' `lakesRead()`; null when the server
+  cannot say.
+- **The demo move** (`LakeRelocate`, run at start by `drishti.lakes.relocate-on-start` and by `drishti.py lake relocate`): renames only the
+  lake's own top folders, measures every Delta table before and after (version, files, rows from statistics, every named file present),
+  moves everything back on any difference, never deletes, records `relocated.json`.
+
+### 3. The load rules: principles and decisions
+
+The business date comes from outside the data (command line, `.ready`, name, business today), never from a row; a plain file is one
+table and one date, a tar the one container for several; the `.ready` file is the control file; nothing is guessed; every load can be
+undone (`_load_id`, `_source_file`). Python (`tools/lake/filedate.py`) and Java (`FileDates`) read one list of example names with their
+expected outcome, `tools/lake/testdata/file-dates/names.json`, so the two cannot drift. A table made before `_load_id` gains the two
+nullable columns on its first load (one metadata commit, no file rewritten); its earlier rows count as the oldest load. Our own
+generators write dated names or tars with date folders; the conversion was checked by counts and checksums per table and date.
+
+| # | Question | Decided |
+|---|---|---|
+| L1 | Where does the business date come from? | outside the data only |
+| L2 | What may one file hold? | a plain file one table and one date; a tar any, as `<table>/<YYYY-MM-DD>/` |
+| L4 | Overrides | command line > `.ready` > name; a tar's folders cannot be overridden |
+| L5 | Empty files and archives | ignored, nothing touched |
+| L8 | An archive that fails part-way | rolled back: all or nothing |
+| L9 | New tables | only when asked for and allowed by the inbox |
+| L10 | Undo | by load id, from the command line and Admin |
+| D1 | `ready.all` | every data file, with the stability check; moved to the outbox after the cycle |
+| D2 | `inprocess/`, `failed/`, `ledger/` | added: needed for crash safety, bad files and duplicates |
+| D3 | The load inside the server or in a child | a child process |
+| D4 | A file with no rule | `failed/` with the reason, never guessed |
+| D5 | The same file again | skipped by SHA-256; a changed file with the same name is loaded |
+| D7 | Which nodes run it | the owner only, plus the folder lock |
+
+### 4. The Inbox screen and its tests
+
+The screen is mock-up A of three ([A](mockups/dataload-inbox/A.html), [B](mockups/dataload-inbox/B.html),
+[C](mockups/dataload-inbox/C.html)), chosen 2026-11-03: a status board whose columns follow the folders. It draws only the server's words
+(`DataInbox.status()` through `InboxStatus`); the page is listed under the engine's console paths, so it is gone while no server runs the
+inbox. Tests: the hand-shake, claims and the lock (two runners, a stale lock), the ledger, routing, every failure, recovery with a fault
+injected after each step, and an integration over a temporary data folder and lake. Still planned: the three-node and Windows (NTFS)
+tests.

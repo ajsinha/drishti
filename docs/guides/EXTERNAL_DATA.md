@@ -712,7 +712,7 @@ python3 tools/publicdata/official_market_data.py refresh ecb-fx --years 5 --scop
 python3 tools/publicdata/official_market_data.py refresh us-treasury sofr --since 2020
 ```
 
-It writes one file a kind and business date, named by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)):
+It writes one file a kind and business date, named by the load rules ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)):
 the date is each document's `AS_OF`, the day of its newest observation, in the pack's own shapes (UPPER_SNAKE): `fx-spot.<date>.jsonl`
 (`FX-EURUSD` and eleven more pairs, crosses through EUR, with daily `HISTORY`), `ir-curve.<date>.jsonl` (`CRV-USD-UST-PAR`: the latest
 par curve and the 2Y, 10Y and 30Y history) and `rate-fixing.<date>.jsonl` (`FIX-SOFR`, `FIX-ESTR`, newest fixing first; two files when
@@ -720,7 +720,7 @@ the two fixings are of different days). A rerun of one source keeps the other so
 
 ```bash
 uv run --with deltalake --with pyarrow --with pyyaml python tools/ingest_jsonl.py --from data/publicdata/market-data \
-    --domain market --key fx-spot=PAIR,ir-curve=CURVE_ID,rate-fixing=INDEX_ID --lake data/delta
+    --domain market --key fx-spot=PAIR,ir-curve=CURVE_ID,rate-fixing=INDEX_ID --lake data/delta/demo
 ```
 
 Each file goes under the date in its name (the load rules); no date field is needed.

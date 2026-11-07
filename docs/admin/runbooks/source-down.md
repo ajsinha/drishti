@@ -143,7 +143,7 @@ Connector settings are listed per plugin in [CONFIGURATION.md](../CONFIGURATION.
 
 4. Try the source directly, outside Drishti: for a database, run the connector's query in a SQL client; for
    REST, `curl` the `base-url`; for Kafka, check the topic with your Kafka tools; for a lake, list the domain
-   folder (`ls ./data/delta/trading/trade`).
+   folder (`ls ./data/delta/demo/trading/trade`).
 
 ## Fixes
 

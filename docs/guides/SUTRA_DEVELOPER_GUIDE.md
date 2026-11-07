@@ -897,7 +897,7 @@ You should see `{"save": true, "approve": true, "review": true, "author": true}`
 1. In the workbench, type a note for the reviewer (*What changed?*) and press **Submit for review** (or **Ctrl+S**). The Sutra is checked as it stands; if it has problems they are listed and nothing
    is submitted. Otherwise the status line says `Submitted counterparty-mine v1 for review as <id>`. What the button says in each situation is in [SCREEN_DESIGNER
    §22](RACHANA_REFERENCE.md#22-saving-and-proposing).
-2. An approver opens **Build → Govern → Reviews** (`/build/reviews`), sees the proposal with a diff against the live version (empty for a new Sutra), and approves or rejects it (a rejection needs a
+2. An approver opens **Views → Approvals** (`/approvals`), sees the proposal with a diff against the live version (empty for a new Sutra), and approves or rejects it (a rejection needs a
    reason). Panel blocks that only changed place are listed as moves (*moved: Legs from position 1 to 2 (main → side)*), with the remaining edits as a line diff; **Full line diff** opens the plain
    diff.
 3. With security on and `drishti.governance.four-eyes: true` (the default), the author cannot approve their own proposal (`DRS-2007`). If someone changed the live Sutra after you proposed, approval is
@@ -905,7 +905,7 @@ You should see `{"save": true, "approve": true, "review": true, "author": true}`
 4. On approval the file is written to `<first site Sutra directory>/<domain>/<name>.v<N>.sutra.yaml` (here `./sutras/studio/counterparty-mine.v1.sutra.yaml`, unless the Sutra says `domain:`) and goes
    live at once.
 
-**From the command line**, the same proposal is one call with the YAML as the body (`design:write` scope); an approver answers it with `POST /api/v1/sutras/proposals/{id}/approve` (`design:approve`
+**From the command line**, the same proposal is one call with the YAML as the body (`design:write` scope); an approver answers it with `POST /api/v1/approvals/sutra/{id}/approve` (`design:approve`
 scope):
 
 ```bash

@@ -303,7 +303,7 @@ one JSON line: requests a second and, per kind of request, p50/p95/p99 and failu
 `users.py` runs the workload model with **asyncio**: each simulated user is a coroutine with its own cookie jar that
 signs in through the console, opens views with `GET /v/...`, opens the tab's **live channel** (`/api/channel`, server-sent
 events, kept open and read to the end), subscribes and unsubscribes views on it as a browser does, types searches into
-`/api/suggest`, and records, per action, the latency people feel and, per live frame, the tick-to-frame time (the frame's arrival
+`/api/search?in=command`, and records, per action, the latency people feel and, per live frame, the tick-to-frame time (the frame's arrival
 against the publish time `mqpublish.py` stamps into the document it sends). Standard library plus `httpx`, which
 the console already depends on.
 

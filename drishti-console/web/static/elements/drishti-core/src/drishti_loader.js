@@ -124,27 +124,28 @@ export function staticUrl(path) { return staticBase() + String(path).replace(/^\
 const scripts = {};
 
 /**
- * Loads a classic script into the page once (a vendored engine a library wraps: CodeMirror, Arrow JS); resolves when it has run.
+ * Loads a classic script into the page once (a vendored engine a library wraps: ECharts, CodeMirror, Arrow JS); resolves when it has run.
+ * A script the page already has (the same address, the query aside) is not loaded again.
  * @param {string} src its address (staticUrl for a vendored file)
  * @returns {Promise<void>}
  */
 export function loadScript(src) {
-  if (scripts[src]) { return scripts[src]; }
+  const plain = String(src).split('?')[0];
+  if (scripts[plain]) { return scripts[plain]; }
   const doc = root().document;
   if (!doc) { return Promise.reject(new Error('loadScript: there is no page to load ' + src + ' into')); }
   // a script the page itself carries has run (classic scripts block); one this loader added has run once it says so
-  const plain = src.split('?')[0];
   if (Array.prototype.some.call(doc.scripts, (s) => (s.getAttribute('src') || '').split('?')[0] === plain && (s.dataset.loaded === '1' || !s.hasAttribute('data-drishti-script')))) { return Promise.resolve(); }
-  scripts[src] = new Promise((resolve, reject) => {
+  scripts[plain] = new Promise((resolve, reject) => {
     const s = doc.createElement('script');
     s.src = src;
     s.async = false;
     s.setAttribute('data-drishti-script', '');
     s.onload = () => { s.dataset.loaded = '1'; resolve(); };
-    s.onerror = () => { delete scripts[src]; reject(new Error('Could not load ' + src)); };
+    s.onerror = () => { delete scripts[plain]; reject(new Error('Could not load ' + src)); };
     doc.head.appendChild(s);
   });
-  return scripts[src];
+  return scripts[plain];
 }
 
 /**

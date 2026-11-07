@@ -146,7 +146,7 @@ ui:
     cache_seconds: 21600  # how long the facts of one user, business date and set of packs are kept
     timeout_seconds: 90  # a fact taking longer is left out
   # The quick cards under the Home headline, signed in: each opens its command; one naming a pack shows only while that pack is on.
-  placeholder: ""             # the command line's placeholder; blank: config/menus.yaml's (an edition's menus.placeholder presets it)
+  placeholder: ""             # the command line's placeholder; blank: config/sitemap.yaml's (an edition's menus.placeholder presets it)
   logo: ""                   # a logo image (a URL under /static/, or a data: URL) instead of the eye mark, in the top bar and on public pages; blank: the eye
   favicon: ""                # the browser icon (a URL); blank: /favicon.ico (the eye)
   apple_touch_icon: ""       # the home-screen icon (a URL); blank: the eye's

@@ -210,7 +210,7 @@ abstract class KindTable {
         return out;
     }
 
-    /** The column every row carries: the load that wrote it ({@code <run>.<file>}, in time order; DATA_LOAD_RULES.md section 6.1). */
+    /** The column every row carries: the load that wrote it ({@code <run>.<file>}, in time order; DATA_LAKE_GUIDE.md). */
     static final String LOAD_ID = "_load_id";
 
     /**
@@ -244,7 +244,7 @@ abstract class KindTable {
 
     /**
      * The day's ids, read from the id column alone (no document is read), sorted, with the file each is in. An id that several loads
-     * wrote (appends: DATA_LOAD_RULES.md section 6.1) is the newest load's: the largest {@code _load_id}, then the later file.
+     * wrote (appends: DATA_LAKE_GUIDE.md) is the newest load's: the largest {@code _load_id}, then the later file.
      */
     IdMap ids(Layout l, Day day) {
         boolean loads = day.files().size() > 1 && l.hasColumn(LOAD_ID);

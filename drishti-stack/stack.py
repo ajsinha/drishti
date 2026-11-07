@@ -221,6 +221,16 @@ def node_net(stack: dict, node: dict) -> Path:
     return net
 
 
+def _lakeconfig():
+    """tools/lake/lakeconfig.py: where the lakes are, and the variable that names the demo lake's root."""
+    import importlib.util
+    import sys as _s
+    p = Path(__file__).resolve().parents[1] / "tools" / "lake"
+    if str(p) not in _s.path:
+        _s.path.insert(0, str(p))
+    return importlib.import_module("lakeconfig")
+
+
 def lake_dir(name: str) -> Path:
     return STACK_DATA / "lakes" / name
 
@@ -297,11 +307,11 @@ def node_env(stack: dict, node: dict, keys: dict) -> tuple[dict, Path]:
     (home / "data").mkdir(parents=True, exist_ok=True)
     (home / "connectors").mkdir(parents=True, exist_ok=True)
     env.update(DRISHTI_DATA_DIR=str(home / "data"), DRISHTI_CONNECTORS_DIR=str(home / "connectors"), DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"))
-    # the node's demo lake is the repository's lake file, config/lakes/demo.yaml (docs/guides/LAKE_GUIDE.md): the same tables, partitions
-    # and promoted columns as every node; its root, ${DRISHTI_DELTA_ROOT:...}, is the node's synthetic lake (stack.yaml lakes)
+    # the node's demo lake is the repository's lake file, config/lakes/demo.yaml (docs/guides/DATA_LAKE_GUIDE.md): the same tables, partitions
+    # and promoted columns as every node; its root, the demo lake's (config/lakes/demo.yaml), is the node's synthetic lake (stack.yaml lakes)
     env["DRISHTI_LAKES_DIR"] = str(ROOT / "config" / "lakes")
     if node.get("lake"):
-        env["DRISHTI_DELTA_ROOT"] = str(lake_dir(node["lake"]))
+        env[_lakeconfig().DEMO_ROOT_ENV] = str(lake_dir(node["lake"]))
     return env, home
 
 

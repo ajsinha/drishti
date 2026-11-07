@@ -23,6 +23,7 @@ from markupsafe import Markup
 
 from core import under_construction
 from core.backend import BackendError, drs_message
+from core.search import help_pages
 from routes.common import ident, library, render
 
 router = APIRouter(include_in_schema=False)
@@ -184,15 +185,15 @@ async def help_search(request: Request, q: str = "", section: str = ""):
     sec = lib.section(section) if section else None
     if sec is not None and not _section_open(request, sec):
         sec = None
-    hits = [h for h in lib.search(q, section=sec["id"] if sec else "") if visible(request, h["guide"])]
+    hits = await help_pages(request, q, section=sec["id"] if sec else "")                    # the one search (core/search.py)
     return render(request, "help/search.html", q=q, hits=hits, section=sec, screen="help")
 
 
 @router.get("/help/configuration")
 async def help_configuration(request: Request, q: str = "", area: str = ""):
-    """Help → Configuration: docs/admin/CONFIGURATION.md, searchable by key, environment variable or words, filtered by area; an
-    administrator also sees the values in effect on the server and in this console, and where each came from (core/settings_page.py)."""
-    from core.settings_page import areas, console_effective, searchable, server_effective
+    """Help → Configuration: docs/admin/CONFIGURATION.md, searchable by key, environment variable or words, filtered by area (core/settings_page.py).
+    The values in effect, and changes to them, are Admin → Configuration's (routes/config_editor_routes.py)."""
+    from core.settings_page import areas, searchable
 
     lib = await library(request)
     g = lib.guides.get("configuration")
@@ -200,19 +201,10 @@ async def help_configuration(request: Request, q: str = "", area: str = ""):
         return await help_guide(request, "configuration")
     page = lib.render("configuration")
     me = ident(request)
-    admin = bool(me is not None and me.is_admin)
-    server = console = None
-    server_error = None
-    if admin:
-        try:
-            server = server_effective(await request.app.state.backend.admin("GET", "/settings", me))
-        except BackendError as e:
-            server, server_error = {}, drs_message(e.code, e.detail, " ")
-        console = console_effective(request.app.state.settings, ROOT / "drishti-console" / "config")
-    body, matched, total = searchable(page["html"], q, area, server, console)
+    body, matched, total = searchable(page["html"], q, area)
     category = _siblings(request, lib, g)
     return render(request, "help/configuration.html", guide=g, page={**page, "html": body}, category=category, q=q, area=area,
-                  areas=areas(page["html"]), matched=matched, total=total, admin=admin, server_error=server_error, screen="help")
+                  areas=areas(page["html"]), matched=matched, total=total, admin=bool(me is not None and me.is_admin), screen="help")
 
 
 @router.get("/what")
@@ -231,7 +223,7 @@ async def what(request: Request, q: str = ""):
     slug = lib.by_file.get(folder / entry.page) if entry else None
     if entry and slug:
         return RedirectResponse(f"/help/{slug}#{entry.anchor}", status_code=303)
-    hits = [h for h in lib.search(words) if h["guide"].category == CATEGORY and visible(request, h["guide"])]
+    hits = await help_pages(request, words, category=CATEGORY)
     return render(request, "help/search.html", q=words, hits=hits, knowledge=home or "", screen="help")
 
 
@@ -313,7 +305,7 @@ async def help_guide(request: Request, slug: str):
     uc = under_construction.of(request)                              # docs/admin/UNDER_CONSTRUCTION.md: a hidden page is not reached either
     if slug not in lib.guides or not visible(request, lib.guides[slug]) or uc.help_hidden(slug):   # a guide the edition or the person's roles hide is not reached by its address either
         return render(request, "help/search.html", status_code=404, q=slug.replace("-", " "),
-                      hits=[h for h in lib.search(slug.replace("-", " ")) if visible(request, h["guide"])], missing=slug, screen="help")
+                      hits=await help_pages(request, slug.replace("-", " ")), missing=slug, screen="help")
     g = lib.guides[slug]
     page = lib.render(slug)
     if uc.help_marked(slug):

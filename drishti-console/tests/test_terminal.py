@@ -72,7 +72,7 @@ def test_home_lists_examples(client):
 
 
 def test_json_proxy_for_the_browser(client, backend):
-    s = client.get("/api/suggest", params={"q": "TRD IRS-4"}).json()
+    s = client.get("/api/search", params={"in": "command", "q": "TRD IRS-4"}).json()["items"]
     assert s[0]["complete"].startswith("TRD IRS-4")
     assert client.get("/api/raw/trade/IRS-48213").json()["provenance"]["source"] == "aero-risk"
     assert client.get("/api/view/trade/NOPE-1").status_code == 404

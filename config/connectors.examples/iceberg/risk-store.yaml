@@ -17,7 +17,7 @@
 # kinds and layouts: the P&L and scenario-PV vectors are list<double> columns (layout.<kind>.vectors), as `lake build --format iceberg`
 # and `build_demo_lakes.py --store risk=iceberg` write them. Credentials are ${ENV_VAR} references.
 # The lake (iceberg, its root or catalog, storage and tables) is config/lakes.examples/iceberg/iceberg.yaml: copy it to
-# config/lakes/iceberg.yaml beside this file (docs/guides/LAKE_GUIDE.md). This file keeps only what the connector reads.
+# config/lakes/iceberg.yaml beside this file (docs/guides/DATA_LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: iceberg
 kinds:
 - stress-scenario

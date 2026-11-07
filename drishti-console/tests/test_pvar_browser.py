@@ -46,12 +46,13 @@ def test_pvar_view_a_the_tooltips_and_the_curve(browser, stack):
     pvar = api["parametric"]["var"]
     tile = pg.inner_text("[data-vp-tile='pvar']")
     assert "Parametric VaR" in tile
-    pg.click("[data-vp-tile='pvar'] .vp-q")
-    pop = pg.inner_text(".vp-pop")
+    pg.click("[data-vp-tile='pvar'] .vp-q")                                       # the ? is its Explain: the drawer, the server's lines
+    wait(pg, "(() => { const d = document.querySelector('[data-explain-drawer]'); return d && !d.hidden && d.dataset.state === 'ready' && d.dataset.tab === 'formula'; })()", seconds=120)
+    pop = pg.inner_text("[data-explain-drawer]")
     assert "not the official VaR" in pop and f"{pvar:,}".replace("-", "−") in pop          # the server's number, as the server wrote it
     assert "never in the browser" in pop
     pg.keyboard.press("Escape")
-    assert pg.is_hidden(".vp-pop")
+    assert pg.is_hidden("[data-explain-drawer]")
     wait(pg, "document.querySelector('[data-vx-tree]').classList.contains('vp-cols')")
     assert "Parametric" in pg.inner_text("[data-vx-tree] .vx-row.hdr") and "Gap" in pg.inner_text("[data-vx-tree] .vx-row.hdr")
     # with the two parametric columns the scope names stay readable (they were once squeezed to "…") and a row stays one line high
@@ -98,6 +99,8 @@ def test_the_phone_sheet(browser, stack):
     pg = page(browser, stack, "/var?scope=BANK&pm=1", width=390)
     wait(pg, "document.querySelectorAll('[data-vp-tiles] .vp-tile').length === 3", seconds=60)
     pg.click("[data-vp-tile='pgap'] .vp-q")
-    assert "sheet" in pg.get_attribute(".vp-pop", "class")
+    wait(pg, "(() => { const d = document.querySelector('[data-explain-drawer]'); return d && !d.hidden && d.dataset.state === 'ready' && d.dataset.tab === 'formula'; })()", seconds=120)
+    box = pg.locator("[data-explain-drawer]").bounding_box()                     # a sheet from the bottom
+    assert box["width"] >= 389 and box["y"] > 100
     assert pg.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
     assert not pg.errors, pg.errors

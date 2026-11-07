@@ -48,7 +48,8 @@ What a bank user and an operator actually do. Each row is one feature: one guide
 | R5 | **Groupings and analytics** | risk | concentrations, groupings, analytics over trading hierarchies |
 | R6 | **The bank's data** | data teams | what a bank sends each day (trades, market data, reference), which contracts, the daily cycle |
 | W1 | **World data** | research, macro | economies, companies, funds and ETFs, entities (LEI), news; the public-data refresh scripts |
-| B1 | **Connect and load** | builders, ops | connectors, the data inbox, load rules, lakes (Delta, Iceberg, in-memory) |
+| B1 | **Connect** | builders, ops | connectors, the data-load signal, formats, external data, Export data |
+| B1b | **Data lake & data load** | builders, ops, data teams | lakes (Delta, Iceberg, in-memory), the lake file, the data inbox, `.ready`, load rules, `lake build`, the parallel loader, sizing, reading an existing lakehouse (product owner, 2026-11-07: "there should be a dedicated document on Drishti data lake & data load with real examples") |
 | B2 | **Tables and models** | builders | virtual tables, the table and model editors, Python-driven tables |
 | B3 | **Packs and screens** | builders | a pack from a schema, Sutras, the designer, forms, the phone display |
 | B4 | **Data out** | developers | Arrow Flight and Flight SQL, exports, pandas/JDBC/ODBC |
@@ -58,7 +59,7 @@ What a bank user and an operator actually do. Each row is one feature: one guide
 | O2 | **Clusters and scale** | operators | several servers as one, AWS, sizing, sharding, tuning |
 | O3 | **People, access and editions** | administrators | users, sign-on, roles, editions, lenses, engine and mnemonic switches, (h) module licences |
 
-22 features → 22 guides + 1 kept reference guide (Regulatory VaR reporting, owner rule), 22 tutorials.
+23 features → 23 guides + 1 kept reference guide (Regulatory VaR reporting, owner rule), 23 tutorials (B1 split into B1 Connect and B1b Data lake & data load, product owner, 2026-11-07).
 
 ## 2. One guide and one tutorial per feature
 
@@ -82,7 +83,8 @@ that see it). Contract pages are those of §4.
 | R5 | `GROUPINGS_ANALYTICS_GUIDE.md` | 800 | `groupings-and-analytics` (27) | 500 | TRADING_GROUPINGS, GRP | Risk / risk / risk, trading |
 | R6 | `BANK_DATA_GUIDE.md` (pack guides core, banking-data-model, trading, trading-products, market-data, market-data-catalogue, market-risk, counterparty-risk; knowledge intros) | 1,200 | `a-day-of-bank-data` (07) | 400 | core, trading, market-data, market-risk, counterparty-risk | Data / risk / risk, trading, market |
 | W1 | `WORLD_DATA_GUIDE.md` (FUNDS_GUIDE, EXTERNAL_DATA, pack guides world-economy, us-equities, funds, gleif, news-and-markets) | 1,500 | `world-data` (28 widened) | 500 | world-economy, us-equities, funds, gleif, news-and-markets | Data / world / world |
-| B1 | `DATA_GUIDE.md` (DATA_GUIDE, LAKE_GUIDE, IN_MEMORY_LAKE_GUIDE, CONNECTORS, CONNECTOR_FILES, TLS, DEMO_DATA, connector types, DATALOAD_INBOX, DATA_LOAD_RULES, LAKE_CONFIG) | 1,500 | `connect-and-load` (04, 34, 36, 31, 29's lake part) | 700 | the kind being loaded | Data / core / all |
+| B1 | `DATA_GUIDE.md` (DATA_GUIDE, CONNECTORS, CONNECTOR_FILES, TLS, DEMO_DATA, connector types) | 1,000 | `connect-your-data` (04) | 300 | the kind being loaded | Data / core / all |
+| B1b | `DATA_LAKE_GUIDE.md` (written 2.9.11.d: LAKE_GUIDE, DATA_LOAD_RULES and DATALOAD_INBOX folded in, DATA_GUIDE's lakehouse, archive, feed and inbox sections; later IN_MEMORY_LAKE_GUIDE, LAKE_CONFIG use) | 1,100 | `load-your-own-data-into-a-new-lake` (45; 34, 36, 31, 29's lake part) | 500 | VAR, the kinds being loaded | Data / core / all |
 | B2 | `TABLES_GUIDE.md` (+ VIRTUAL_TABLES, EDITORS 1–4) | 800 | `tables-and-models` (44) | 400 | — | Build / core / all |
 | B3 | `BUILD_GUIDE.md` (PACK_DEVELOPER I–VII, SUTRA_DEVELOPER, SCHEMA_TO_PACK, WRITE_BACK form design, MOBILE_DISPLAY) | 2,000 | `build-a-pack-and-a-screen` (05, 06, 23) | 700 | — | Build / core / all |
 | B4 | `FLIGHT_GUIDE.md` (+ export) | 500 | `data-out` (35) | 300 | — | Data / core / all |
@@ -124,8 +126,9 @@ Knowledge primers and the release notes. Help listed entries: 79 → about 60 (e
 | guides/FUNDS_GUIDE | → WORLD_DATA_GUIDE | funds are one of the world packs |
 | guides/GETTING_STARTED | → OPERATIONS_GUIDE part 1 | install is the operator's first task; F1 links to it |
 | guides/GROUPINGS_ANALYTICS_GUIDE | keep (R5) | |
-| guides/IN_MEMORY_LAKE_GUIDE | → DATA_GUIDE | a lake option, not a feature of its own |
-| guides/LAKE_GUIDE | → DATA_GUIDE | |
+| guides/IN_MEMORY_LAKE_GUIDE | → DATA_LAKE_GUIDE | a lake option, not a feature of its own |
+| guides/LAKE_GUIDE | → DATA_LAKE_GUIDE (done, 2.9.11.d) | |
+| guides/DATA_LAKE_GUIDE | keep (B1b) | the one home for lakes and loading |
 | guides/MR_CUBE_GUIDE | → PIVOT_GUIDE | the cube is a Pivot preset since d |
 | guides/OPERATIONALISING | → OPERATIONS_GUIDE | deploy, promote, roll back |
 | guides/PACK_DEVELOPER_GUIDE | → BUILD_GUIDE (I–VII) + DEVELOPER_GUIDE (VIII) | 6k lines, two audiences |
@@ -193,7 +196,8 @@ Knowledge primers and the release notes. Help listed entries: 79 → about 60 (e
 | HIGH_PERFORMANCE_NATIVE | keep until i | |
 | DRISHTI_NATIVE | fold into ARCHITECTURE after e, delete | built in e |
 | SHARED_SCREENS | fold into USER/BUILD guides after f, delete | built in f |
-| ARROW_FLIGHT, IN_MEMORY_LAKE, LAKE_CONFIG, DATALOAD_INBOX, DATA_LOAD_RULES, PARALLEL_LOADER | → DATA_GUIDE / FLIGHT_GUIDE (use) + ARCHITECTURE (how), delete | built |
+| ARROW_FLIGHT, IN_MEMORY_LAKE, LAKE_CONFIG, PARALLEL_LOADER | → DATA_LAKE_GUIDE / FLIGHT_GUIDE (use) + ARCHITECTURE (how), delete | built |
+| DATALOAD_INBOX, DATA_LOAD_RULES | done (2.9.11.d): use → DATA_LAKE_GUIDE, internal notes → DATA_ARCHITECTURE section 7, deleted | built |
 | BI_DESIGN, BI_FOUNDATION_2911E, VIRTUAL_TABLES, ONE_GRAMMAR | → REPORTS/TABLES guides + ARCHITECTURE, delete | built in d |
 | PIVOT_ENGINE, PYTHON_COMPUTE, COMPUTE_ENGINES | → PIVOT/NOTEBOOK/ADMIN guides + ARCHITECTURE, delete | built |
 | PARAMETRIC_VAR, VAR_PLAYGROUND, VAR_SHARDING | → VAR_GUIDE / CLUSTER_GUIDE, delete | built |

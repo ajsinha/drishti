@@ -77,7 +77,7 @@ async def page(request: Request):
         memory = await request.app.state.backend.admin("GET", "/lakes/memory", me)
     except BackendError:
         memory = None
-    try:                                  # the lake files (LAKE_GUIDE.md): every lake and table as the server reads them, read-only
+    try:                                  # the lake files (DATA_LAKE_GUIDE.md): every lake and table as the server reads them, read-only
         lake_files = await request.app.state.backend.admin("GET", "/lakes/files", me)
     except BackendError:
         lake_files = None
@@ -93,7 +93,7 @@ async def table_page(request: Request, root: str = "", table: str = ""):
     if not me.is_admin:
         return render(request, "admin/forbidden.html", status_code=403)
     lakes = _lakes(request)
-    roots = {str(r): r for r in lakes.cfg.roots}
+    roots = {str(r): r for r in lakes.cfg.lake_roots()}
     parts = table.split("/")
     path = roots[root] / parts[0] / parts[1] if root in roots and len(parts) == 2 and all(p and p not in (".", "..") for p in parts) else None
     if path is None or not (path / "_delta_log").is_dir():
@@ -147,7 +147,7 @@ async def _readers(request: Request, me, domain: str, name: str) -> list[dict]:
                 continue
             d = await request.app.state.backend.admin("GET", f"/connectors/{c['name']}", me)
             st = d.get("settings") or {}
-            if st.get("lake"):                    # a connector naming a lake (LAKE_GUIDE.md): its tables are the lake file's entries
+            if st.get("lake"):                    # a connector naming a lake (DATA_LAKE_GUIDE.md): its tables are the lake file's entries
                 if lake_files is None:
                     lake_files = (await request.app.state.backend.admin("GET", "/lakes/files", me)).get("lakes") or []
                 named = [x.strip() for x in str(st.get("lake-tables") or "").split(",") if x.strip()]
@@ -186,7 +186,7 @@ async def targets(request: Request):
                                    "packs": [u.get("pack") for u in c.get("usedBy") or [] if isinstance(u, dict)] or ([c["template"]] if c.get("template") else [])})
     except BackendError as e:
         return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
-    return {"roots": [str(r) for r in lakes.cfg.roots], "tables": tables, "connectors": connectors, "runs": lakes.runs(10), "config": lakes.cfg.as_dict()}
+    return {"roots": [str(r) for r in lakes.cfg.lake_roots()], "tables": tables, "connectors": connectors, "runs": lakes.runs(10), "config": lakes.cfg.as_dict()}
 
 
 @router.post("/api/lakes/upload")

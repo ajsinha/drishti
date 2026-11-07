@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* The VaR explorer (terminal/var.html, drishti_var-explorer.js, drishti_var-charts.js), after the approved mock-up var-drilldown: two columns (the
-   scopes, the scope; how it was built a drawer since 2.9.11.b: drishti_var-layout.css), dense tables, tabular figures, the theme's tokens (drishti_tokens.css), so every
+   scopes, the scope; how a number was built: the one Explain, drishti_explain.css), dense tables, tabular figures, the theme's tokens (drishti_tokens.css), so every
    theme reads. The charts are SVG coloured here by class. */
 .vx { padding: 10px 14px 18px; color: var(--d-ink); font-size: 13px; }
 .vx .mono, .vx .num, .vx td.n, .vx th.n { font-family: var(--d-font-mono); font-variant-numeric: tabular-nums; }
@@ -158,9 +158,9 @@
 .vx-drill { margin-top: 10px; border: 1px solid var(--d-border); border-radius: 3px; }
 .vx-compare { margin-top: 10px; padding: 8px; border: 1px solid var(--d-border); border-radius: 3px; }
 .vx-compare h3 { font-size: 12px; margin: 0 0 6px; }
-.vx-capdl, .vx-prov dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 5px 10px; font-size: 11.5px; }
-.vx-capdl dt, .vx-prov dt { color: var(--d-muted); }
-.vx-capdl dd, .vx-prov dd { margin: 0; word-break: break-word; }
+.vx-capdl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 5px 10px; font-size: 11.5px; }
+.vx-capdl dt { color: var(--d-muted); }
+.vx-capdl dd { margin: 0; word-break: break-word; }
 .vx-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .vx-note { font-size: 11.5px; color: var(--d-muted); }
 .vx-err { color: var(--d-bad); font-size: 12px; margin: 6px 0; }
@@ -212,14 +212,6 @@
   .vx-ccy { flex: 1 1 100%; justify-content: space-between; } .vx-ccy-select { min-height: 40px; flex: 1 1 auto; max-width: 60%; font-size: 14px; } }
 
 /* Why it moved (2.9.10, VAR_GUIDE.md section 3.11): the view switch, the dates, the export; the panels are the renderer's own */
-.vw-bar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
-.vw-dates { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin: 0; }
-.vw-dates label { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; color: var(--d-muted); }
-.vw-dates input[type="date"] { width: auto; min-width: 0; }
-.vw-host { min-height: 120px; margin-top: 8px; }
-.vw[data-state="computing"] .vw-host { opacity: .6; }
 @media (max-width: 640px) {
-  .vw-bar .vx-seg { display: none; }                  /* a phone draws the answer and the steps whatever the view */
-  .vw-dates { width: 100%; }
 }
 

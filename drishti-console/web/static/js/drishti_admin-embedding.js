@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Admin → Embedding. The list is server-rendered; this registers an application (New application dialog), shows a client secret once
    (after create and after rotate), enables, disables and deletes, filters the rows, and adds two keys: "n" opens the new-application
    dialog and "/" focuses the filter. Every call is same-origin JSON to /admin/embedding/api/...; the page is reloaded after a change,
@@ -127,10 +128,9 @@
   });
 
   // ---- keys: "n" new, "/" filter (not while typing or in a dialog) -------------------------------------------------------------
-  document.addEventListener('keydown', function (e) {
-    var t = e.target, typing = t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable);
-    if (typing || e.ctrlKey || e.metaKey || e.altKey || root.querySelector('dialog[open]')) { return; }
-    if (e.key === '/') { e.preventDefault(); filter.focus(); }
-    if (e.key === 'n') { e.preventDefault(); openNew(); }
-  });
+  function noDialog() { return !root.querySelector('dialog[open]'); }
+  window.Drishti.keys.register({ id: 'embedding.filter', keys: ['/'], scope: 'screen', area: 'admin-embedding', group: 'Embedding', description: 'Focus the filter',
+    when: noDialog, run: function () { filter.focus(); } });
+  window.Drishti.keys.register({ id: 'embedding.new', keys: ['N'], scope: 'screen', area: 'admin-embedding', group: 'Embedding', description: 'A new application',
+    when: noDialog, run: function () { openNew(); } });
 })();

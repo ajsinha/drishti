@@ -60,7 +60,7 @@ import org.slf4j.LoggerFactory;
  *       settings:
  *         bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
  *         topic: ${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}
- *         lake: ${DRISHTI_DELTA_ROOT:...}
+ *         lake: demo                       # the lake the windows are written to (config/lakes/demo.yaml)
  * </pre>
  */
 public final class VarPvStreamPlugin implements SourcePlugin {

@@ -65,7 +65,7 @@ class ExposureParityTest {
     }
 
     static void lines(Path folder, Consumer<JsonNode> each) throws IOException {
-        for (String line : FeedFiles.lines(folder, p -> true)) {      // its dated files and tars (DATA_LOAD_RULES.md section 10)
+        for (String line : FeedFiles.lines(folder, p -> true)) {      // its dated files and tars (DATA_LAKE_GUIDE.md section 5.2)
             each.accept(JSON.readTree(line));
         }
     }

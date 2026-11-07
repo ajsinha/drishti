@@ -1,0 +1,56 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* The Build home (/build, 2.9.11.e): the rail of kinds, the list with lineage, the first-visit task tiles. The console's tokens only. */
+.bh { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 16px; padding: 12px 16px 24px; }
+.bh-rail { display: flex; flex-direction: column; gap: 2px; border-right: 1px solid var(--d-border); padding-right: 8px; }
+.bh-group { margin: 12px 10px 4px; color: var(--d-muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
+.bh-kind { display: flex; align-items: center; gap: 8px; padding: 7px 10px; color: var(--d-ink); text-decoration: none; border-radius: var(--d-radius); border-left: 3px solid transparent; }
+.bh-kind:hover, .bh-kind:focus-visible { background: var(--d-surface-2); }
+.bh-kind[aria-current="page"] { background: var(--d-surface-2); border-left-color: var(--d-accent); }
+.bh-kind span { flex: 1; }
+.bh-count { color: var(--d-muted); font-variant-numeric: tabular-nums; }
+.bh-count.warn { color: var(--d-warn); font-weight: 600; }
+.bh-tiles-link { margin-top: 12px; color: var(--d-muted); }
+.bh-main { min-width: 0; }
+.bh-hdr { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.bh-hdr h1 { margin: 2px 0 0; font-size: 22px; }
+.bh-sp { flex: 1; }
+.bh-search { display: flex; gap: 4px; }
+.bh-search input { min-width: 260px; padding: 5px 10px; border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); color: var(--d-ink); }
+.bh-new { position: relative; }
+.bh-new summary { list-style: none; cursor: pointer; }
+.bh-new summary::-webkit-details-marker { display: none; }
+.bh-new ul { position: absolute; right: 0; z-index: 20; min-width: 220px; margin: 4px 0 0; padding: 6px; list-style: none; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); box-shadow: var(--d-shadow); }
+.bh-new li a { display: block; padding: 6px 8px; color: var(--d-ink); text-decoration: none; border-radius: var(--d-radius); }
+.bh-new li a:hover, .bh-new li a:focus-visible { background: var(--d-surface-2); }
+.bh-sub { margin: 14px 0 6px; font-size: 15px; }
+.bh-tiles { margin-bottom: 16px; }
+.bh-tile-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.bh-tile { display: flex; flex-direction: column; gap: 4px; padding: 12px; color: var(--d-ink); text-decoration: none; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); }
+.bh-tile:hover, .bh-tile:focus-visible { border-color: var(--d-accent); }
+.bh-tile span { color: var(--d-muted); font-size: 12px; }
+.bh-tile .bh-tile-n { color: var(--d-accent); font-size: 22px; font-weight: 700; }
+.bh-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.bh-card { padding: 10px 12px; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); }
+.bh-card h3 { margin: 0 0 6px; font-size: 14px; }
+.bh-card ul { margin: 0; padding-left: 18px; }
+.bh-ref { font-family: var(--d-font-mono); font-size: 12px; }
+@media (max-width: 760px) {
+  .bh { grid-template-columns: 1fr; }
+  .bh-rail { border-right: 0; border-bottom: 1px solid var(--d-border); padding: 0 0 8px; }
+  .bh-two { grid-template-columns: 1fr; }
+  .bh-search input { min-width: 0; width: 100%; }
+}

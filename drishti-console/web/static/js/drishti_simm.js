@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* ISDA SIMM (terminal/simm.html; docs/guides/SIMM_GUIDE.md sections 7 and 8). The screen (SIMM): every netting set with IM to collect and
    post (computed, stored and labelled, or why not computed), the selected one's breakdown by product and risk class, and the margin
    against the counterparty's call. The playground (PLAY SIMM): the Choices panel (version, concentration, HVR), the side, a switch compared

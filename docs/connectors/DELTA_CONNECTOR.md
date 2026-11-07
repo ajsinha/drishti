@@ -109,7 +109,7 @@ it ([section 5](#5-writing-the-lake)); the connector uses it when it is there an
 ## 3. What is on disk
 
 ```
-<root>/                                         DRISHTI_DELTA_ROOT, e.g. ./data/delta or s3a://risk-lake/lake
+<root>/                                         DRISHTI_DELTA_ROOT, e.g. ./data/delta/demo or s3a://risk-lake/lake
 └── trading/                                    the data domain (the connector's `domain`)
     ├── trade_endur/                            one Delta table per source system and kind (`table.trade` of connector trade-endur)
     │   ├── _delta_log/                         the transaction log: one JSON file per commit, plus checkpoints
@@ -136,7 +136,7 @@ Each row has these columns:
 | `QUANTITY` | double | promoted field |
 
 A nested path is promoted with its dot as `__` (`LEGS.CURRENCY` → `LEGS__CURRENCY`). One row, as `lake demo` writes it
-(`data/delta/trading/trade_murex`, read with `deltalake`; the document shortened):
+(`data/delta/demo/trading/trade_murex`, read with `deltalake`; the document shortened):
 
 ```
 id                  MX-20000001
@@ -191,7 +191,7 @@ connectors:
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [trade]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
       domain: trading
       union: true               # one source system of several: the union serves the kind
       table: { trade: trade_endur }   # the kind trade is read from <root>/trading/trade_endur
@@ -255,9 +255,9 @@ Drishti only reads the lake. Whatever writes it must follow the layout. The repo
 |---|---|
 | `drishti.py lake build --from <file> --pack <pack> --connector <name>` | a day of a source system's documents into its table, in the pack's layout ([TOOLS.md](../guides/TOOLS.md)): rows sorted by id, row groups of 256 KB and pages of 64 KB (`DRISHTI_LAKE_ROW_GROUP_KB`, `DRISHTI_LAKE_PAGE_KB`), the pack's `ingest.<kind>.flatten` fields added as plain fields and promoted columns |
 | `drishti.py lake build --engine java …`, or the parallel lake loader on its own | millions of JSON Lines rows (the scenario PVs of 2.3M positions) from a folder or S3, parsed and written on every core with memory bounded by `memory.budget-mb`, one Delta version per business date replacing it; the same table as `lake build` (documents byte for byte, columns, `list<double>` vectors), each date sorted by `LEGAL_ENTITY`, `DESK`, id by default so a file's statistics name its legal entities and desks, the vector column BYTE_STREAM_SPLIT + ZSTD ([TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader), [PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md)) |
-| `tools/packgen/banking/make_data.py --lake data/delta` | the banking packs' sample documents, 10 business days, every domain, the trade tables in their layout: written as JSON Lines rows (`data/build/lake-rows/banking-history.tar`, `banking-restated.tar`: tars of `<table>/<YYYY-MM-DD>/rows.jsonl`, the load rules' form), then loaded by `load_rows.py` (`--no-load` stops after the rows) |
-| `tools/samplegen/lake.py --samples <dir> --root data/delta --domain <d> --days 10` | one pack's samples into one domain, the same two steps; it prints `<table>: <n> entities x 10 business days` per table and writes the newest date twice (the restated file is a second commit, restating one document per kind), so *known at* before that commit shows the original; local disk only |
-| `tools/samplegen/load_rows.py --rows <history.tar> --restated <restated.tar> --root data/delta` | the loader of those rows: one JSON object a line, `{"domain", "kind", "table", "id", "date", "doc"}` ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)); each row stored under its tar folder's date (a plain file: `--as-of`, its `.ready` date, its name's, or the business today), never its own `date`, which is only counted when it differs; a plain file of several tables is refused (send a tar) |
+| `tools/packgen/banking/make_data.py --lake data/delta/demo` | the banking packs' sample documents, 10 business days, every domain, the trade tables in their layout: written as JSON Lines rows (`data/build/lake-rows/banking-history.tar`, `banking-restated.tar`: tars of `<table>/<YYYY-MM-DD>/rows.jsonl`, the load rules' form), then loaded by `load_rows.py` (`--no-load` stops after the rows) |
+| `tools/samplegen/lake.py --samples <dir> --root data/delta/demo --domain <d> --days 10` | one pack's samples into one domain, the same two steps; it prints `<table>: <n> entities x 10 business days` per table and writes the newest date twice (the restated file is a second commit, restating one document per kind), so *known at* before that commit shows the original; local disk only |
+| `tools/samplegen/load_rows.py --rows <history.tar> --restated <restated.tar> --root data/delta/demo` | the loader of those rows: one JSON object a line, `{"domain", "kind", "table", "id", "date", "doc"}` ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)); each row stored under its tar folder's date (a plain file: `--as-of`, its `.ready` date, its name's, or the business today), never its own `date`, which is only counted when it differs; a plain file of several tables is refused (send a tar) |
 | `tools/samplegen/bulk_trades.py --trades N --days D` | a large trade book for scale tests: one JSONL file a day (`data/build/bulk/<system>/`), then each through `lake build` into the system's trade table, replacing it |
 | `tools/lake/maintain.py relayout` | rewrites an existing table into its layout, one business day at a time |
 | `tools/samplegen/layout.py` | the shared code: reads a pack's layout, promotes fields, sorts, cuts files and row groups, sets the statistics columns |
@@ -553,7 +553,7 @@ schedule:
   at: "02:30"
   zone: America/New_York
 lakes:
-  - root: ./data/delta                # or s3://risk-lake/banking with storage-options
+  - root: ./data/delta/demo           # or s3://risk-lake/banking with storage-options
     domains: ["*"]
     keep-business-days: 1800          # about seven years back from today; older business days are deleted (null keeps all)
     max-drop-share: 0.5               # deleting more of a table in one run needs --force-drop
@@ -571,7 +571,7 @@ uv run --with deltalake --with pyarrow --with pyyaml python tools/lake/maintain.
 ```
 
 ```json
-{"at": "2026-09-30T21:57:32-04:00", "event": "maintained", "dry_run": true, "table": "data/delta/civic/bill", "before": {"files": 10, "mb": 0.03}, "retention": {"cutoff": "2024-10-02", "would_remove_files": 0}, "vacuum": {"files": 0, "dry_run": true}, "after": {"files": 10, "mb": 0.03}}
+{"at": "2026-09-30T21:57:32-04:00", "event": "maintained", "dry_run": true, "table": "data/delta/demo/civic/bill", "before": {"files": 10, "mb": 0.03}, "retention": {"cutoff": "2024-10-02", "would_remove_files": 0}, "vacuum": {"files": 0, "dry_run": true}, "after": {"files": 10, "mb": 0.03}}
 ```
 
 Run it for real with `--once` (from cron), or keep it running with `--daemon` (every day at `schedule.at`). A table that
@@ -588,7 +588,7 @@ daily files, and sets the statistics columns on the table.
 `relayout` does the same on demand, for a table written another way:
 
 ```bash
-uv run --with deltalake --with pyarrow --with pyyaml python tools/lake/maintain.py relayout --root data/delta --domain trading
+uv run --with deltalake --with pyarrow --with pyyaml python tools/lake/maintain.py relayout --root data/delta/demo --domain trading
 ```
 
 **On Amazon S3** nothing maintains a Delta table by itself: S3 stores files and knows nothing of the log. Run
@@ -717,7 +717,7 @@ when it was; a document search says `"partial": true` with a smaller `scanned`.
 | opening a trade takes seconds | row groups are large (written with defaults), or the day's id map is being read | rewrite with `row-group-rows: 1000` (`relayout --force`); the second open is fast |
 | the first search of the morning is slow | the newest day changed and its columns are loading | it is loaded in the background after each re-index; wait a minute after a large load |
 | Health: `not laid out as the pack declares` | the writer did not write the promoted columns | `maintain.py relayout --root … --domain …` |
-| views say *No data available*; health `DOWN: no Delta tables under ./data/delta/trading` | the lake was not built, or `DRISHTI_DELTA_ROOT` points elsewhere | build it, or set `DRISHTI_DELTA_ROOT` and restart; tables built while the server runs are found within a minute |
+| views say *No data available*; health `DOWN: no Delta tables under ./data/delta/demo/trading` | the lake was not built, or `DRISHTI_DELTA_ROOT` points elsewhere | build it, or set `DRISHTI_DELTA_ROOT` and restart; tables built while the server runs are found within a minute |
 | `domain escapes the Delta root` under `failedToStart` | `domain` contains `..` or starts with `/` | a plain folder name |
 | an old picked date falls back to the samples | the date is more than `lookback-days` past the newest partition on or before it | load that date, or raise `lookback-days` |
 | *known at* shows the latest data | the lake was copied without keeping file times (Delta resolves instants against `_delta_log` modification times) | copy with `cp -p` / `rsync -t`; for S3, times are upload times |
@@ -805,7 +805,7 @@ no-proxy, site default, `proxy: none`) and `HadoopLakeProxyTest` (the `fs.s3a.pr
 ### The lake file: where the root and the layout live
 
 The lake itself (its root, storage, each table's folder, partitions, promoted columns and vectors) is described once, in its lake file
-`config/lakes/<lake>.yaml`, and the connector names it ([LAKE_GUIDE.md](../guides/LAKE_GUIDE.md)). The connector file then keeps only
+`config/lakes/<lake>.yaml`, and the connector names it ([DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md)). The connector file then keeps only
 reading concerns:
 
 ```yaml
@@ -819,9 +819,11 @@ settings:
   refresh-seconds: 10
 ```
 
-A connector that names a lake and also sets `root`, `domain`, `table.<kind>`, `layout.<kind>.columns` or `layout.<kind>.vectors` fails,
-naming both. The form below, with those keys in the connector file, is the older one: it is read for one more release with one warning,
-and `drishti.py lake migrate-config` moves it into a lake file ([LAKE_GUIDE.md section 8](../guides/LAKE_GUIDE.md#8-migrating-an-older-installation)).
+Both forms are permanent. A connector that names a lake and also gives `root`, `domain`, `table.<kind>` or `layout.<kind>.*` itself
+uses its own values over the lake file's (Admin → Connectors says so on each such field). The form below, with those keys in the
+connector file and no `lake:`, names its tables by path or URI (a folder, `s3://bucket/prefix`): for tables no lake file describes, such
+as a vendor's Delta table on S3; `drishti.py lake migrate-config` moves such connectors into a lake file when you want one
+([DATA_LAKE_GUIDE.md section 12](../guides/DATA_LAKE_GUIDE.md#12-other-lakes-packs-and-older-installations)).
 
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
 
@@ -832,7 +834,7 @@ enabled: ${DRISHTI_LAKE_ENABLED:true}
 kinds: [trade]
 description: The ENDUR trades of the trading pack
 settings:
-  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
   domain: trading
   table.trade: trade_endur        # the table of this source system: <root>/trading/trade_endur
   union: "true"                   # one of the connectors whose trades together are the kind (ENDUR, CALYPSO, MUREX)
@@ -949,7 +951,7 @@ Rewriting a date as Snappy stays available and is optional (for other readers of
 for `abfs://`/`gs://` lakes):
 
 ```bash
-uv run --with deltalake --with pyarrow --with pyyaml python tools/lake/maintain.py relayout --root data/delta \
+uv run --with deltalake --with pyarrow --with pyyaml python tools/lake/maintain.py relayout --root data/delta/demo \
     --domain trading --kind trade --dates 2026-09-30 --force
 ```
 
@@ -1020,7 +1022,7 @@ Moved here from the former connector guides, so that everything about this conne
 ### Walk-through, step by step
 
 Your batch jobs (Spark, Databricks, Python `deltalake`) write the end-of-day data of each domain to Delta Lake tables:
-years of business dates. This is Drishti's default store: every banking pack reads one domain of `./data/delta`.
+years of business dates. This is Drishti's default store: every banking pack reads one domain of the demo lake, `./data/delta/demo`.
 
 1. **Know the data.** One table per kind under `<root>/<domain>/<kind>/`, partitioned by `business_date`, with the
    columns `id`, `doc` and the promoted fields ([section 3](#3-what-is-on-disk)). Writing a day from Python (the same
@@ -1035,7 +1037,7 @@ docs = {"MX-20000001": {"TRADE_ID": "MX-20000001", "QUANTITY": 242000000.0, "SOU
 table = pa.table({"id": pa.array(list(docs), pa.string()),
                   "doc": pa.array([json.dumps(d) for d in docs.values()], pa.string()),
                   "business_date": pa.array([day] * len(docs), pa.date32())})
-write_deltalake("data/delta/trading/trade", table, mode="overwrite",
+write_deltalake("data/delta/demo/trading/trade", table, mode="overwrite",
                 partition_by=["business_date"], predicate=f"business_date = '{day.isoformat()}'")
 ```
 
@@ -1050,12 +1052,12 @@ write_deltalake("data/delta/trading/trade", table, mode="overwrite",
 # the seven packs' lakes from the committed test data: sixty business days ending today (data/testdata/README.md)
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 # or one pack's samples into one domain (tools/samplegen/lake.py: JSONL rows, then loaded; section 5)
-drishti-console/.venv/bin/python tools/samplegen/lake.py --samples config/packs/market-data/samples --root data/delta --domain market --days 10
+drishti-console/.venv/bin/python tools/samplegen/lake.py --samples config/packs/market-data/samples --root data/delta/demo --domain market --days 10
 java -jar drishti-server/target/drishti-server-*-exec.jar          # DRISHTI_PACKS unset: the seven packs
 ```
 
    What the writers produce is described in [section 5](#5-writing-the-lake). For S3, build locally and copy the folders up
-   (`aws s3 sync data/delta/trading s3://risk-lake/banking/trading`), bearing in mind that time travel then resolves
+   (`aws s3 sync data/delta/demo/trading s3://risk-lake/banking/trading`), bearing in mind that time travel then resolves
    against the upload times.
 4. **In the terminal**: `TRD MX-20000001 <GO>`; pick an earlier business date in the top bar and an amended trade's numbers change; *Raw JSON* (F9)
    shows `businessDate`. `CPTY CP-NORTHBRIDGE <GO>` on a picked date lists its netting sets (*Netting sets* panel) and F8
@@ -1078,7 +1080,7 @@ connectors:
     kinds:
     - trade                               # serve only trades from this domain
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # one variable moves every pack's lake
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}   # one variable moves every pack's lake
       domain: trading                     # tables live under <root>/trading/
       table:
         trade: trade_endur                # ... in the table trade_endur (not trade): one table per source system
@@ -1100,7 +1102,7 @@ connectors:
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [counterparty, counterparty-group, issuer, ccp, legal-entity, book, desk, trader, calendar, clearing-account]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
       domain: reference
       mode.counterparty: effective        # a row only when the counterparty changes
       mode.book: effective
@@ -1108,7 +1110,7 @@ connectors:
 ```
 
 A connector without `kinds` serves every table it finds in its domain (the retired example pack `examples/packs/finance` declares its lake so):
-`finance-lake: { plugin: delta, enabled: "${DRISHTI_LAKE_ENABLED:true}", settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: finance, lookback-days: 10 } }`.
+`finance-lake: { plugin: delta, enabled: "${DRISHTI_LAKE_ENABLED:true}", settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: finance, lookback-days: 10 } }`.
 
 **Site form**, your own domain, as the connector file `config/connectors/treasury-lake.yaml`:
 
@@ -1155,7 +1157,7 @@ The table is read at `s3a://risk-lake/banking/trading/trade_endur`.
 ```yaml
 schedule: { at: "02:30", zone: America/New_York }
 lakes:
-  - root: ./data/delta
+  - root: ./data/delta/demo
     domains: ["*"]
     keep-business-days: 520      # about two years; older partitions are deleted (null keeps all)
     max-drop-share: 0.5
