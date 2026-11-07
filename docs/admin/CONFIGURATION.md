@@ -19,8 +19,9 @@ This is the one document for configuring Drishti, and the only one: every settin
 connector plugin, packs, editions, the content store, BI runs, write-back, compute, Drishti*net, the UI kit, the AI provider and MCP
 server files), the environment variables that feed them, and how the layers combine. Other documents explain a feature and link
 here for its settings. The console shows the same document at **Help → Configuration** (`/help/configuration`), searchable by key,
-environment variable or words, and an administrator sees there the value in effect on the server and the console beside each
-default, and where it came from.
+environment variable or words. **Admin → Configuration** (`/admin/configuration`) shows every setting by tier (everyday, admin,
+expert: the *Tier* column below) with the value in effect on the server and the console, where it came from, and a change proposed
+for a second administrator to approve ([OPERATIONS.md, The configuration editor](OPERATIONS.md#the-configuration-editor)).
 
 The first half is written by hand: how configuration works, placeholders, value formats, recipes, and notes area by area with
 examples. The second half, [Every setting](#every-setting), is generated from the files themselves by `tools/settings_catalogue.py`
@@ -137,7 +138,7 @@ easier to write in YAML than as environment variables. Put them in `application.
 
 ### Seeing what is in effect
 
-There is no endpoint that dumps the configuration, but most settings show up somewhere you can read:
+Admin → Configuration shows the value in effect of every key of the server's and the console's `application.yaml` (and of the engines' files) and where it came from (`GET /api/v1/admin/settings` is its answer for the server). Most settings also show up somewhere you can read:
 
 | To check | Ask | Look for |
 |---|---|---|
@@ -1032,7 +1033,7 @@ role-based access to the lens link (read, not wired). Its own feature switches, 
 `features.datamap`, `features.data` (Export data, `DATA`), `features.workspaces`, `features.monitors`, `features.alerts`, `features.lakes` (Admin → Lakes), `features.reports`,
 `features.collaboration` (Admin → Collaboration). `/studio` (the Build workbench's entry) follows `features.build`. A page whose switch is off answers 404.
 
-Branding keys of the console beside `ui.product`: `ui.placeholder` (the command line's placeholder; blank: `config/menus.yaml`'s),
+Branding keys of the console beside `ui.product`: `ui.placeholder` (the command line's placeholder; blank: `config/sitemap.yaml`'s),
 `ui.logo` (an image under `/static/`, or a `data:` URL, drawn instead of the eye mark), `ui.favicon` and `ui.apple_touch_icon` (the
 browser and home-screen icons; the generated `/manifest.webmanifest` follows them). The console takes the server's product name and
 tagline from its about answer unless its own `ui.product` is set. The advice for `DRS-1017` and `DRS-4023` is in `ui.error_advice`.
@@ -1348,7 +1349,7 @@ with `413 DRS-5005` before it is all parsed.
 
 ### `drishti.builder.designs` — the Build workbench's Designs
 
-A Design (`/api/v1/builder/designs`, **Build → My designs**) keeps a user's samples, Sutra and notes on the server, so work
+A Design (`/api/v1/builder/designs`, **Build → Build home → My drafts**) keeps a user's samples, Sutra and notes on the server, so work
 survives a console restart and shows on every console. Only its owner can reach it (anyone else gets `404 DRS-5006`).
 Sample documents are never logged; deleting a Design deletes its samples at once. A limit answers `413 DRS-5005`.
 

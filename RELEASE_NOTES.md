@@ -13,6 +13,60 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.f — release notes (draft)
+
+*Not released yet.* **One Build home, one sitemap, and a configuration editor with settings in three tiers.**
+
+## Upgrade: one Build home, one sitemap
+
+- **The Build home** (`/build`) is the one place for everything a person builds: a rail grouped *Data* (connectors, lakes, tables and
+  models, Python tables), *Screens* (Sutras, packs, the UI kit), *Analysis* (reports and boards, pivot views, functions, VaR baskets) and
+  *Work* (my drafts, waiting for review, recently changed), each with its count; each list shows what an item uses and what uses it; four
+  task tiles on a first visit; one search; *+ New* for every kind. **Removed homes:** *My designs* (its list, with Rename, Duplicate and
+  Delete, is the Build home's *My drafts*) and Studio's start page.
+- **Redirects:** `/studio` with nothing after it opens `/build` (a Studio link with a Sutra, an example or a design opens it in the
+  workbench as before). Every other address is unchanged.
+- **One sitemap.** `drishti-console/config/menus.yaml` is now **`config/sitemap.yaml`** and also draws the Admin pages' tabs (the Admin
+  menu, which gains every Admin page), the BI rail (the BI menu, which gains the rail's pages), Help's sections (their name, icon, line and
+  roles moved from `help.yaml`, which keeps each section's pages by its id) and the footer (each link names a menu item). A site that
+  changed `menus.yaml` moves its changes to `sitemap.yaml`; a site that changed a help section's name or icon in `help.yaml` moves it to
+  `sitemap.yaml`'s `help-sections:`. Admin's *Commands* is the *Functions* page (`/func`) in the Admin tabs.
+- **Help → Configuration is the reference only.** The values in effect, for administrators, moved to Admin → Configuration.
+
+## Renamed (plain words for jargon)
+
+| Before | Now |
+|---|---|
+| Build → My designs (`/build`) | Build → **Build home** (`/build`; the designs are its first list, *My drafts*) |
+| BI menu column *Rupaka: business intelligence* | *Business intelligence* |
+| BI rail *Home* | *BI home* |
+| BI rail *Runs* | *My runs* |
+| BI rail *Designer* | *Report designer* |
+| BI rail *Environments* | *Promotion (test to live)* |
+| BI rail *Transforms* | *Data prep* |
+| Build → Learn *Sutra developer guide* | *Screen developer guide* |
+| Build → Learn *Rachana reference* | *Screen language reference* |
+| Admin *Tokens* | *API tokens* |
+| Admin *Access* | *Who looked at what* |
+| Admin *Ad-hoc scopes* | *Saved VaR baskets* |
+| Admin *Artifacts* | *Installed items* |
+| Admin *Edits* | *Record edits* |
+| Admin *Compute* | *Python workers* |
+| Admin *Net* | *Cluster* |
+| Admin *Embedding* | *Embedded views* |
+| Engines → VaR *MR cube* | *Market-risk cube* |
+| Counterparties *CCR cube* | *Counterparty-risk cube* |
+| Admin → Configuration (was a link to Help → Configuration) | **Admin → Configuration**, the configuration editor (`/admin/configuration`) |
+
+## New
+
+- **Admin → Configuration** (`/admin/configuration`): every setting in three tiers, *everyday* (what a business lead changes: the lenses,
+  the VaR and exposure confidences, the scenario window, the feature switches), *admin* and *expert*, searchable, each with its value in
+  effect and where it came from; secrets never shown. A change is a **proposal** a second administrator approves (four eyes); an approved
+  server or engine key is written to the server's `application.local.yaml`, a console key to the console's, each read at the next start.
+  New endpoints `/api/v1/admin/settings/proposals` (list, propose, approve, reject, withdraw, applied); a new add-on admin page id
+  `configuration` (editions that list `admin.pages` name it to keep it).
+
 # Drishti 2.9.11.d — release notes (draft)
 
 *Not released yet.*

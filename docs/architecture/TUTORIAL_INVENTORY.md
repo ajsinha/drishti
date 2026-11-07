@@ -26,8 +26,8 @@ the tutorials planned but not written.
 - **Commands**: every `drishti.py <group> <command>` in every tutorial was checked against the CLI's own parser (`drishti.py <group> --help`):
   all resolve.
 - **Command words**: every command word a tutorial types (`TRD`, `VAR`, `MCUBE`, `PVAR`, `FUND` ...) was found in a pack, the engines file,
-  `menus.yaml` or the built-in words: all resolve (`DQ`, `DQP` and `MYTRD` are made by the reader in tutorials 5 and 21).
-- **Menus**: every *Admin → X*, *Build → X*, *BI → X* and *Review → X* against `drishti-console/config/menus.yaml`, the Admin navigation
+  `sitemap.yaml` or the built-in words: all resolve (`DQ`, `DQP` and `MYTRD` are made by the reader in tutorials 5 and 21).
+- **Menus**: every *Admin → X*, *Build → X*, *BI → X* and *Review → X* against `drishti-console/config/sitemap.yaml`, the Admin navigation
   and BI's rail: all exist.
 - **Removed today**: the Studio stubs and `studio` switch, the notes API, LegacyAsk and Ask's model settings, the fva / sa-ccr / ccr-cube
   engine switches, `PLAY PVAR` and the parametric views B and C, the duplicate menu items, the pre-`drishti_` asset names: no tutorial
@@ -118,7 +118,7 @@ the tutorials planned but not written.
 - **Commands**: `bi catalogue`, `doctor`, `lake demo`, `server health`, `view get`.
 - **Command words**: `TRD`.
 - **API calls**: 1 distinct, e.g. `/api/v1/search`.
-- **Stale or changed**: 01:171 the top bar listed Views, BI, Build, Admin, Help without **Engines** (menus.yaml has it since 2.9.11.a): text fixed, picture img/t01/02-home.jpg (2026-11-01) to be re-run. 01:64-75 the `lake demo` summary predates the test data's conversion to dated files (2026-11-04): marked to be re-run. 01:99 `doctor` shows `drishti-server-2.9.11.b-exec.jar (version 2.5.0)` and 01:366 `version 2.9.2`: the jar name was edited into an older capture by the 2.9.11.b release commit (97d8b59ac): marked to be re-run. Opens with git clone and a build (UX review): a note now lets a reader with a running server start at step 3.
+- **Stale or changed**: 01:171 the top bar listed Views, BI, Build, Admin, Help without **Engines** (sitemap.yaml has it since 2.9.11.a): text fixed, picture img/t01/02-home.jpg (2026-11-01) to be re-run. 01:64-75 the `lake demo` summary predates the test data's conversion to dated files (2026-11-04): marked to be re-run. 01:99 `doctor` shows `drishti-server-2.9.11.b-exec.jar (version 2.5.0)` and 01:366 `version 2.9.2`: the jar name was edited into an older capture by the 2.9.11.b release commit (97d8b59ac): marked to be re-run. Opens with git clone and a build (UX review): a note now lets a reader with a running server start at step 3.
 - **Overlap**: step 7 is a teaser of 3; step 8 of 10.
 - **Verdict**: REWRITE-STEPS: the entry point; kept, with the install made skippable; three outputs and one picture to re-run. Splitting install (operators) from the tour (everyone) is 2.9.11.g's four role doors.
 

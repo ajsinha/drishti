@@ -214,3 +214,12 @@ def test_the_admin_tabs_are_the_sitemaps_admin_menu(backend, monkeypatch, path):
     ids = [t for _h, t in tabs]
     assert ids[:2] == ["users", "roles"] and "configuration" in ids and ids[-1] == "account" and "functions" in ids
     assert ("/admin/configuration", "configuration") in tabs
+
+
+def test_the_bi_rail_is_the_sitemaps_bi_menu(backend, monkeypatch):
+    page = _client(_app(backend, monkeypatch)).get("/bi/transform").text
+    rail = page.split('class="bi-rail"')[1].split("</nav>")[0]
+    ids = re.findall(r'data-rail="([\w-]+)"', rail)
+    assert ids[:3] == ["bi-home", "bi-catalogue", "bi-workspace"] and ids[-3:] == ["tables-models", "pivot", "build-home"]
+    assert "bi-settings" not in ids                                                                   # rail: false, the top bar's only
+    assert re.search(r'data-rail="bi-transform"[^>]*aria-current="page"', rail) and "data-runs-count" in rail

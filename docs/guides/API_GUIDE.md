@@ -1467,7 +1467,7 @@ Operation codes: `DRS-5020` malformed, `DRS-5021` no such panel, `DRS-5022` kind
 
 #### Designs: your work, kept on the server
 
-`/api/v1/builder/designs` keeps a user's samples, Sutra and notes (the Build workbench's *My designs*). Open to every signed-in
+`/api/v1/builder/designs` keeps a user's samples, Sutra and notes (the Build home's *My drafts*). Open to every signed-in
 user; a design is reachable only by its owner (anyone else gets `404 DRS-5006`); limits answer `413 DRS-5005`
 (`drishti.builder.designs.*`). Sample contents are never logged.
 

@@ -780,6 +780,39 @@ Or pass `--drishti.live.max-streams=40000` on the command line. Console settings
 `--backend.timeout_seconds=30`. The order of precedence and every setting are in
 [CONFIGURATION.md](CONFIGURATION.md).
 
+### The configuration editor
+
+**Admin → Configuration** (`/admin/configuration`, administrators) is every setting of [CONFIGURATION.md](CONFIGURATION.md) in three
+tiers, a tab each:
+
+| Tier | What | For example |
+|---|---|---|
+| **Everyday** (the first tab, kept small) | what a business lead changes | the lenses offered (`drishti.lenses`), the VaR confidences and scenario window, the exposure confidences, the console's feature switches (`features.*`) |
+| **Admin** | what an operator sets | security, connectors, lakes, engines, retention, paths, branding, the UI kit |
+| **Expert** | performance and internals | pools, caches, buffers, timeouts, threads, sharding, native code, admission |
+
+Each row shows the key and its environment variable, what it means, its area and whether a change needs a restart, the **value in
+effect** on this server (or in this console) and **where it came from** (`default`, `file` with the file's name, `env` with the
+variable, `argument`), its default and its tier. The search box takes a key, an environment variable or words of a meaning, in any
+order, across the chosen tier (or *Every tier*); the area list narrows it to one area. Secrets are never shown: a key with a word
+secret, password, token, key or credential in it shows `••••` and cannot be changed here (set it in the environment or the secrets
+file).
+
+**A change is a proposal, never a live write.** *Propose a change* on a row of the server's `application.yaml`, an engine's file or the
+console's `application.yaml` asks for the new value and the reason. The proposal waits at the top of the page under *Waiting for
+approval*; its proposer may *Withdraw* it, and only a **second administrator** may *Approve* or *Reject* it (four eyes; one change
+waiting per key). On approval:
+
+- a server or engine key is written by the server as one line of its `application.local.yaml` (in the server's working directory,
+  every other line and comment kept, the line naming the proposal, the proposer and the approver), read at the server's next start;
+- a console key is written by the console of the approver into its own `config/application.local.yaml`, read at its next start.
+
+Every step (proposed, approved, rejected, withdrawn, applied) is an audit entry (Admin → Audit log). Settings of other files
+(connectors, packs, editions, the cluster folder, the content store, ...) show *in its file*: they are changed on their own screens or
+files. The tier of each setting lives in one place, `tools/settings_schemas.yaml` (`tiers`), from which `tools/settings_catalogue.py`
+writes CONFIGURATION.md's *Tier* column; `--check` fails when an area has no tier or a listed key or pattern matches nothing. The API is
+`/api/v1/admin/settings/proposals` ([API_GUIDE.md](../guides/API_GUIDE.md)); Help → Configuration stays the reference, for everyone.
+
 ## 7. Running as services (systemd)
 
 ### 7.1 An environment file

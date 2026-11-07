@@ -1214,7 +1214,7 @@ bg, bg-2, surface and surface-2, and for `--d-on-accent` on accent fills; ≥ 3:
 | `/w`, `/w/{name}` | Workspaces: 2–4 embedded views with follow-the-selection between panes, saved per user on the server |
 | `/studio`, `/studio/reviews` | Sutra Studio (editor + live preview) and the review queue |
 | `/designer`, `/designer/new`, `/designer/grid`, `/designer/outline` | The Sutra designer and its modes (`ui.designer`, off by default) |
-| `/build`, `/build/d/{id}`, `/build/new`, `/build/pack/new` | The Build workbench: My designs, one design (Sutra, samples, panels, controls, form, About), New pack from schemas |
+| `/build`, `/build/d/{id}`, `/build/new`, `/build/pack/new` | The Build home (every kind a person builds, My drafts), the workbench: one design (Sutra, samples, panels, controls, form, About), New pack from schemas |
 | `/build/reviews`, `/review/changes` | Designs waiting for review; write-back changes waiting for an approver |
 | `/forms`, `/form/{pack}` | Query by form: the forms home and one pack's form |
 | `/reports`, `/reports/all` | Saved and scheduled reports, and BI reports |

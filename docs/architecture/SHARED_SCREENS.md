@@ -80,7 +80,7 @@ and deletes what it replaces.
 
 | # | Screen | Replaces | Done |
 |---|---|---|---|
-| 1 | One Build home (rail, lists with lineage, first-visit tiles, one search) | Studio, BI Studio, the workbench, the pack tools' homes | ☐ |
+| 1 | One Build home (rail, lists with lineage, first-visit tiles, one search) | Studio, BI Studio, the workbench, the pack tools' homes | ☑ (2.9.11.f; BI Studio's home after bi-delete: the under-construction registry) |
 | 2 | One Approvals queue (inbox, due soon, diff, effect, rules, questions) | the per-kind approval queues | ☐ |
 | 3 | One Explain (preview, drawer with four tabs, full page) | the five explain panels | ☐ |
 | 4 | The trader home (headline figures, books, markets, what changed, feed) | the generic home for the Trading lens | ☐ |
