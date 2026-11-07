@@ -1,0 +1,199 @@
+bringing up nodes...
+bringing up nodes...
+
+........................................................................ [ 84%]
+.F.........F.                                                            [100%]
+=================================== FAILURES ===================================
+__________________ test_the_side_by_side_and_terminal_layouts __________________
+[gw3] linux -- Python 3.13.15 /home/ashutosh/IdeaProjects/drishti/drishti-console/.venv/bin/python
+
+browsers = <browser_harness.Browsers object at 0x7663e85638c0>
+
+    def test_the_side_by_side_and_terminal_layouts(browsers):
+        async def side(pg):
+            assert await h(pg, "getComputedStyle(document.querySelector('.dd-main')).display") == "grid"
+            assert await pg.locator("[data-dd-panel='palette']").is_visible() and await pg.locator("[data-dd-panel='outline']").is_visible()
+            await pg.click("#hx-canvas [data-dd-id='v2'] .dd-item-body")
+            card = await pg.locator(".dd-insp-side").bounding_box()
+            item = await pg.locator("#hx-canvas [data-dd-id='v2']").bounding_box()
+            assert abs(card["x"] - (item["x"] + item["width"] + 8)) < 2 or card["x"] + card["width"] <= item["x"], "the inspector is a card by the selection"
+            await pg.select_option("[data-dd-layout-pick]", "studio")
+            assert await h(pg, "window.__harness.layouts") == ["studio"]
+        run(browsers, side, "layout=side-by-side")
+    
+        async def term(pg):
+            assert await pg.locator(".dd-cmdbar").is_visible() and await pg.locator(".dd-fkeys").is_visible()
+            await pg.click("#hx-canvas [data-dd-id='v1'] .dd-item-body")
+            await pg.keyboard.press("Control+k")
+            assert await h(pg, "document.activeElement.hasAttribute('data-dd-cmd')")
+            await pg.keyboard.type("add card")
+            await pg.keyboard.press("Enter")
+            assert await at(pg, "v11") is not None
+            await pg.fill("[data-dd-cmd]", "select v3")
+            await pg.press("[data-dd-cmd]", "Enter")
+            assert await h(pg, "window.__harness.selection.primary()") == "v3"
+            await pg.fill("[data-dd-cmd]", "frobnicate")
+            await pg.press("[data-dd-cmd]", "Enter")
+            assert "No command" in await pg.text_content("[data-msg]")
+            await pg.focus("#hx-canvas [data-dd-id='v3']")
+            await pg.keyboard.press("F3")
+            assert "Valid" in await pg.text_content("[data-msg]")
+            await pg.keyboard.press("F4")
+            assert await h(pg, "document.querySelector('[data-dd-shell]').getAttribute('data-dd-mode')") == "yaml"
+            await pg.keyboard.press("F4")
+            await pg.keyboard.press("F7")
+            assert await pg.locator("[data-history]").is_visible()
+>       run(browsers, term, "layout=terminal&theme=light")
+
+tests/test_elements_designer_browser.py:223: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_elements_designer_browser.py:61: in run
+    browsers.run(go(), timeout=120)
+tests/browser_harness.py:81: in run
+    return asyncio.run_coroutine_threadsafe(coro, self.loop).result(timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ashutosh/.local/share/uv/python/cpython-3.13.15-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py:460: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/home/ashutosh/.local/share/uv/python/cpython-3.13.15-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py:402: in __get_result
+    raise self._exception
+tests/test_elements_designer_browser.py:58: in go
+    await body(pg)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+pg = <Page url='http://render.test/static/elements/drishti-designer/drishti_harness.html?layout=terminal&theme=light'>
+
+    async def term(pg):
+        assert await pg.locator(".dd-cmdbar").is_visible() and await pg.locator(".dd-fkeys").is_visible()
+        await pg.click("#hx-canvas [data-dd-id='v1'] .dd-item-body")
+        await pg.keyboard.press("Control+k")
+        assert await h(pg, "document.activeElement.hasAttribute('data-dd-cmd')")
+        await pg.keyboard.type("add card")
+        await pg.keyboard.press("Enter")
+        assert await at(pg, "v11") is not None
+        await pg.fill("[data-dd-cmd]", "select v3")
+        await pg.press("[data-dd-cmd]", "Enter")
+        assert await h(pg, "window.__harness.selection.primary()") == "v3"
+        await pg.fill("[data-dd-cmd]", "frobnicate")
+        await pg.press("[data-dd-cmd]", "Enter")
+        assert "No command" in await pg.text_content("[data-msg]")
+        await pg.focus("#hx-canvas [data-dd-id='v3']")
+        await pg.keyboard.press("F3")
+        assert "Valid" in await pg.text_content("[data-msg]")
+        await pg.keyboard.press("F4")
+        assert await h(pg, "document.querySelector('[data-dd-shell]').getAttribute('data-dd-mode')") == "yaml"
+        await pg.keyboard.press("F4")
+        await pg.keyboard.press("F7")
+>       assert await pg.locator("[data-history]").is_visible()
+E       assert False
+
+tests/test_elements_designer_browser.py:222: AssertionError
+___ test_new_table_steps_land_in_the_editor_and_both_sides_follow_each_other ___
+[gw0] linux -- Python 3.13.15 /home/ashutosh/IdeaProjects/drishti/drishti-console/.venv/bin/python
+
+pg = <Page url='http://127.0.0.1:43009/build/tables?new=table'>
+
+    def test_new_table_steps_land_in_the_editor_and_both_sides_follow_each_other(pg):
+        dropped = new_table(pg, "mine.trade_view")
+        assert f"[data-col-row='{dropped}']" and pg.locator(f"[data-col-row='{dropped}']").count() == 0
+        assert "table: mine.trade_view" in yaml(pg)
+        # a visual edit shows in the YAML with its line highlighted
+        pg.click("[data-add-computed]")
+        pg.fill("[data-col-from='NEW_COLUMN']", "$.QUANTITY / 1000")
+        wait(pg, "window.Drishti.editors.yamlText().includes('$.QUANTITY / 1000')")
+        settle(pg)
+        assert pg.locator("[data-yaml] .di-code[data-hl]").count() == 1            # the line being edited is marked in the YAML
+        pg.fill("[data-col-name='NEW_COLUMN']", "MTM_K")
+        pg.press("[data-col-name='NEW_COLUMN']", "Tab")
+        wait(pg, "window.Drishti.editors.yamlText().includes('MTM_K:')")
+        settle(pg)
+        pg.select_option("[data-col-type='MTM_K']", "integer")
+        wait(pg, "/MTM_K:.*integer/.test(window.Drishti.editors.yamlText())")
+        pg.check("[data-col-key='MTM_K']")
+        wait(pg, "/(keys: \\[[^\\]]*MTM_K|MTM_K:.*key: true)/.test(window.Drishti.editors.yamlText())")
+        pg.uncheck("[data-col-key='MTM_K']")
+        settle(pg)
+        # a source column added from the checklist, then shown off again
+        avail = pg.get_attribute("[data-col-add] >> nth=0", "data-col-add")
+        pg.click(f"[data-col-add='{avail}']")
+        wait(pg, f"!!document.querySelector(\"[data-col-row='{avail}']\")")
+        pg.click(f"[data-col-show='{avail}']")
+        wait(pg, f"!document.querySelector(\"[data-col-row='{avail}']\")")
+        # the filter, with type-ahead from the function catalogue
+        pg.click("[data-path=filter]")
+        pg.keyboard.type("abs")
+        wait(pg, "!!document.querySelector('.ed-fx:not([hidden]) li')")
+        pg.keyboard.press("Escape")
+        pg.fill("[data-path=filter]", "$.QUANTITY != null")
+        wait(pg, "window.Drishti.editors.yamlText().includes('filter:')")
+        pg.select_option("[data-materialize]", "on-load")
+        wait(pg, "window.Drishti.editors.yamlText().includes('materialize: on-load')")
+        settle(pg)
+        # a YAML edit shows in the visual side; a broken line is marked and the visual view waits
+        text = yaml(pg).replace("title: My trades", "title: Our trades")
+        fill_yaml(pg, text)
+        wait(pg, "document.querySelector('[data-path=title]').value === 'Our trades'")
+        fill_yaml(pg, text + "columns: [\n")
+        wait(pg, "/not valid/.test(document.querySelector('[data-yaml-state]').textContent)")
+        assert pg.locator("[data-yaml] .di-lint-sign.di-lint-error").count() >= 1
+>       pg.click("[data-goto-line] >> nth=0")
+
+tests/test_editors_browser.py:273: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/conftest.py:1300: in wrapped_click
+    out = click(self, selector, *a, **k)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../drishti-console/.venv/lib/python3.13/site-packages/playwright/sync_api/_generated.py:11102: in click
+    self._sync(
+../../../../drishti-console/.venv/lib/python3.13/site-packages/playwright/_impl/_page.py:889: in click
+    return await self._main_frame._click(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../drishti-console/.venv/lib/python3.13/site-packages/playwright/_impl/_frame.py:594: in _click
+    await self._channel.send("click", self._timeout, locals_to_params(locals()))
+../../../../drishti-console/.venv/lib/python3.13/site-packages/playwright/_impl/_connection.py:76: in send
+    return await self._connection.wrap_api_call(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <playwright._impl._connection.Connection object at 0x7138f2b5a9c0>
+cb = <function Channel.send.<locals>.<lambda> at 0x7138c44be520>
+is_internal = False, title = None
+
+    async def wrap_api_call(
+        self, cb: Callable[[], Any], is_internal: bool = False, title: str = None
+    ) -> Any:
+        if self._api_zone.get():
+            return await cb()
+        task = asyncio.current_task(self._loop)
+        parsed_st = _attach_api_call_information(
+            getattr(task, "__pw_stack__", None) or _capture_stack_trace(),
+            is_internal,
+            title,
+        )
+        self._api_zone.set(parsed_st)
+        try:
+            return await cb()
+        except Exception as error:
+>           raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+E           playwright._impl._errors.TimeoutError: Page.click: Timeout 30000ms exceeded.
+E           Call log:
+E             - waiting for locator("[data-goto-line]").first
+
+../../../../drishti-console/.venv/lib/python3.13/site-packages/playwright/_impl/_connection.py:632: TimeoutError
+=============================== warnings summary ===============================
+../../../../drishti-console/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1
+../../../../drishti-console/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1
+../../../../drishti-console/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1
+../../../../drishti-console/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1
+../../../../drishti-console/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1
+  /home/ashutosh/IdeaProjects/drishti/drishti-console/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+drishti-console/tests/test_workbench_ux2c_browser.py::test_a_file_that_is_not_json_is_named_when_it_is_chosen
+  /home/ashutosh/IdeaProjects/drishti/drishti-console/.venv/lib/python3.13/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'app_id' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_elements_designer_browser.py::test_the_side_by_side_and_terminal_layouts
+FAILED tests/test_editors_browser.py::test_new_table_steps_land_in_the_editor_and_both_sides_follow_each_other
+2 failed, 83 passed, 6 warnings in 552.34s (0:09:12)

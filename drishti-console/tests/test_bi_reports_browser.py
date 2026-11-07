@@ -425,7 +425,7 @@ def test_designer_resize_with_the_pointer_snaps_to_the_grid(stack, browser):
     new_draft(page)
     page.drag_and_drop('[data-field="Notional"]', "[data-canvas-grid]", target_position={"x": 20, "y": 20})
     page.wait_for_selector('.bi-dvis[data-type="card"]')
-    handle = page.locator(".bi-dvis .bi-resize").first
+    handle = page.locator(".bi-dvis [data-dd-edge=se]").first                          # the layout canvas's corner (drishti-designer)
     hb = handle.bounding_box()
     grid = page.locator("[data-canvas-grid]").bounding_box()
     step = (grid["width"] - 11 * 10) / 12 + 10

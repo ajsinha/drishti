@@ -1,0 +1,12 @@
+# Generated at first start from the connector template of pack 'counterparty-risk'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
+# drishti-template: pack=counterparty-risk template=4254b89d0a96ad25 text=4254b89d0a96ad25
+plugin: delta
+enabled: "${DRISHTI_LAKE_ENABLED:true}"
+kinds:
+- netting-set
+- credit-limit
+- cva
+- sa-ccr
+settings:
+  lake: demo
+  lake-tables: "credit.netting-set,credit.credit-limit,credit.cva,credit.sa-ccr"

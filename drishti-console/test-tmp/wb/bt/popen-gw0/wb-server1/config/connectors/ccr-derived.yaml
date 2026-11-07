@@ -1,0 +1,89 @@
+# Generated at first start from the connector template of pack 'counterparty-risk'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
+# drishti-template: pack=counterparty-risk template=2ad63277c23f6919 text=2ad63277c23f6919
+plugin: derived
+enabled: "${DRISHTI_CCR_DERIVED_ENABLED:true}"
+description: "Netting-set and counterparty MtM totals derived from the trade valuations\
+  \ of live trades (a live status, not past maturity), once per business date: shown\
+  \ beside the stored figures until the netting-set engine computes them"
+kinds:
+- nset-mtm
+- cpty-mtm
+settings:
+  refresh: 60s
+  nset-mtm.from: trade-valuation
+  nset-mtm.where: nonblank($.NETTING_SET) && ($.TRADE_STATUS == 'NEW' || $.TRADE_STATUS
+    == 'VALIDATED' || $.TRADE_STATUS == 'AMENDED')
+  nset-mtm.group-by: $.NETTING_SET
+  nset-mtm.id-field: NETTING_SET_ID
+  nset-mtm.members: TRADE_IDS
+  nset-mtm.max-members: 100000
+  nset-mtm.rows-field: TRADES
+  nset-mtm.fields.STATUS_LIVE_COUNT: count
+  nset-mtm.fields.COUNTERPARTY: first $.COUNTERPARTY
+  nset-mtm.fields.COUNTERPARTIES: distinct $.COUNTERPARTY
+  nset-mtm.fields.MTM_CURRENCIES: distinct $.MTM_CURRENCY
+  nset-mtm.fields.VALUATION_DATES: distinct $.VALUATION_DATE
+  nset-mtm.rows.TRADE_ID: $.TRADE_ID
+  nset-mtm.rows.TRADE_STATUS: $.TRADE_STATUS
+  nset-mtm.rows.PRODUCT_TYPE: $.PRODUCT_TYPE
+  nset-mtm.rows.PRODUCT_GROUP: $.PRODUCT_GROUP
+  nset-mtm.rows.CURRENCY: $.CURRENCY
+  nset-mtm.rows.BOOK: $.PORTFOLIO
+  nset-mtm.rows.NOTIONAL: $.NOTIONAL
+  nset-mtm.rows.MATURITY_DATE: $.MATURITY_DATE
+  nset-mtm.rows.MTM: $.MTM
+  nset-mtm.rows.MTM_CURRENCY: $.MTM_CURRENCY
+  nset-mtm.rows.LIVE: "!nonblank($.MATURITY_DATE) || days($.VALUATION_DATE, $.MATURITY_DATE)\
+    \ >= 0"
+  nset-mtm.then.TRADE_COUNT: "size($.TRADES[?@.LIVE])"
+  nset-mtm.then.NET_MTM: "sum($.TRADES[?@.LIVE], 'MTM')"
+  nset-mtm.then.GROSS_POSITIVE_MTM: "sum($.TRADES[?@.LIVE && @.MTM > 0], 'MTM')"
+  nset-mtm.then.GROSS_NEGATIVE_MTM: "sum($.TRADES[?@.LIVE && @.MTM < 0], 'MTM')"
+  nset-mtm.then.CE_UNCOLLATERALISED: "max(sum($.TRADES[?@.LIVE], 'MTM'), 0)"
+  nset-mtm.then.NETTING_BENEFIT: "sum($.TRADES[?@.LIVE && @.MTM > 0], 'MTM') - max(sum($.TRADES[?@.LIVE],\
+    \ 'MTM'), 0)"
+  nset-mtm.then.NET_TO_GROSS: "sum($.TRADES[?@.LIVE && @.MTM > 0], 'MTM') > 0 ? max(sum($.TRADES[?@.LIVE],\
+    \ 'MTM'), 0) / sum($.TRADES[?@.LIVE && @.MTM > 0], 'MTM') : 0"
+  nset-mtm.then.BY_PRODUCT_GROUP: "group($.TRADES[?@.LIVE], 'PRODUCT_GROUP', 'MTM')"
+  nset-mtm.then.PAST_MATURITY_COUNT: "size($.TRADES[?!@.LIVE])"
+  nset-mtm.then.PAST_MATURITY_MTM: "sum($.TRADES[?!@.LIVE], 'MTM')"
+  nset-mtm.then.PAST_MATURITY: "$.TRADES[?!@.LIVE]"
+  nset-mtm.then.SUM_CURRENCY: '''USD'''
+  nset-mtm.then.CURRENCY_NOTE: "size($.MTM_CURRENCIES) == 1 && first($.MTM_CURRENCIES)\
+    \ == 'USD' ? 'USD: every member in USD, no conversion' : 'not converted: members\
+    \ in ' + size($.MTM_CURRENCIES) + ' currencies, the converted total comes from\
+    \ the netting-set engine'"
+  nset-mtm.sort.TRADES: MTM desc
+  nset-mtm.sort.BY_PRODUCT_GROUP: value desc
+  cpty-mtm.from: trade-valuation
+  cpty-mtm.where: nonblank($.NETTING_SET) && ($.TRADE_STATUS == 'NEW' || $.TRADE_STATUS
+    == 'VALIDATED' || $.TRADE_STATUS == 'AMENDED')
+  cpty-mtm.group-by: $.COUNTERPARTY
+  cpty-mtm.id-field: COUNTERPARTY
+  cpty-mtm.members: TRADE_IDS
+  cpty-mtm.max-members: 100000
+  cpty-mtm.rows-field: TRADES
+  cpty-mtm.fields.STATUS_LIVE_COUNT: count
+  cpty-mtm.fields.MTM_CURRENCIES: distinct $.MTM_CURRENCY
+  cpty-mtm.fields.VALUATION_DATES: distinct $.VALUATION_DATE
+  cpty-mtm.rows.TRADE_ID: $.TRADE_ID
+  cpty-mtm.rows.NETTING_SET: $.NETTING_SET
+  cpty-mtm.rows.MTM: $.MTM
+  cpty-mtm.rows.LIVE: "!nonblank($.MATURITY_DATE) || days($.VALUATION_DATE, $.MATURITY_DATE)\
+    \ >= 0"
+  cpty-mtm.then.TRADE_COUNT: "size($.TRADES[?@.LIVE])"
+  cpty-mtm.then.NET_MTM: "sum($.TRADES[?@.LIVE], 'MTM')"
+  cpty-mtm.then.GROSS_POSITIVE_MTM: "sum($.TRADES[?@.LIVE && @.MTM > 0], 'MTM')"
+  cpty-mtm.then.GROSS_NEGATIVE_MTM: "sum($.TRADES[?@.LIVE && @.MTM < 0], 'MTM')"
+  cpty-mtm.then.NETTING_SETS: "group($.TRADES[?@.LIVE], 'NETTING_SET', 'MTM')"
+  cpty-mtm.then.NETTING_SET_COUNT: "size(group($.TRADES[?@.LIVE], 'NETTING_SET', 'MTM'))"
+  cpty-mtm.then.CE_UNCOLLATERALISED: "sum(group($.TRADES[?@.LIVE], 'NETTING_SET',\
+    \ 'MTM')[?@.value > 0], 'value')"
+  cpty-mtm.then.PAST_MATURITY_COUNT: "size($.TRADES[?!@.LIVE])"
+  cpty-mtm.then.SUM_CURRENCY: '''USD'''
+  cpty-mtm.then.CURRENCY_NOTE: "size($.MTM_CURRENCIES) == 1 && first($.MTM_CURRENCIES)\
+    \ == 'USD' ? 'USD: every member in USD, no conversion' : 'not converted: members\
+    \ in ' + size($.MTM_CURRENCIES) + ' currencies, the converted total comes from\
+    \ the netting-set engine'"
+  cpty-mtm.sort.NETTING_SETS: value desc
+  cpty-mtm.sort.TRADES: MTM desc

@@ -1,0 +1,86 @@
+{
+  "COUNTERPARTY": {
+    "ID": "CP-NORTHBRIDGE",
+    "NAME": "Northbridge Capital LLP",
+    "RATING": "A-",
+    "COUNTRY": "GB"
+  },
+  "NETTING_SETS": [
+    {
+      "ID": "NS-NB-RATES",
+      "AGREEMENT": "ISDA-NB-2002",
+      "TRADES": 14,
+      "NET_MTM": 2150000
+    },
+    {
+      "ID": "NS-NB-FX",
+      "AGREEMENT": "ISDA-NB-2002",
+      "TRADES": 6,
+      "NET_MTM": -480000
+    }
+  ],
+  "HIERARCHY": {
+    "NODES": [
+      {
+        "ID": "GRP-NORTHBRIDGE",
+        "LABEL": "Northbridge Holdings",
+        "TYPE": "group"
+      },
+      {
+        "ID": "CP-NORTHBRIDGE",
+        "LABEL": "Northbridge Capital LLP",
+        "TYPE": "counterparty"
+      },
+      {
+        "ID": "ISDA-NB-2002",
+        "LABEL": "ISDA 2002 Master",
+        "TYPE": "agreement"
+      },
+      {
+        "ID": "CSA-NB-1",
+        "LABEL": "Credit support annex",
+        "TYPE": "agreement"
+      },
+      {
+        "ID": "NS-NB-RATES",
+        "LABEL": "Rates netting set",
+        "TYPE": "netting-set"
+      },
+      {
+        "ID": "NS-NB-FX",
+        "LABEL": "FX netting set",
+        "TYPE": "netting-set"
+      }
+    ],
+    "EDGES": [
+      {
+        "FROM": "GRP-NORTHBRIDGE",
+        "TO": "CP-NORTHBRIDGE",
+        "LABEL": "owns"
+      },
+      {
+        "FROM": "CP-NORTHBRIDGE",
+        "TO": "ISDA-NB-2002",
+        "LABEL": "signed"
+      },
+      {
+        "FROM": "ISDA-NB-2002",
+        "TO": "CSA-NB-1",
+        "LABEL": "supported by"
+      },
+      {
+        "FROM": "ISDA-NB-2002",
+        "TO": "NS-NB-RATES",
+        "LABEL": "nets"
+      },
+      {
+        "FROM": "ISDA-NB-2002",
+        "TO": "NS-NB-FX",
+        "LABEL": "nets"
+      }
+    ]
+  },
+  "AGREEMENT": "ISDA-NB-2002",
+  "NETTING_SET": "NS-NB-RATES",
+  "DESK": "DESK-RATES"
+}

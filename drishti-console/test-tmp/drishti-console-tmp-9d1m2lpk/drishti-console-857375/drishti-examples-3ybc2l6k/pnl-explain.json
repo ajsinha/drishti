@@ -1,0 +1,70 @@
+{
+  "TRADE_ID": "DEMO-BOND-1",
+  "CURRENCY": "USD",
+  "MTM": 1209000,
+  "PNL1D": -41000,
+  "PNL_EXPLAIN": [
+    {
+      "STEP": "Opening MTM",
+      "PNL": 1250000
+    },
+    {
+      "STEP": "Carry",
+      "PNL": 18400
+    },
+    {
+      "STEP": "Rates move",
+      "PNL": -96300
+    },
+    {
+      "STEP": "Credit spread",
+      "PNL": 41200
+    },
+    {
+      "STEP": "Funding",
+      "PNL": -7600
+    },
+    {
+      "STEP": "Other",
+      "PNL": 3100
+    }
+  ],
+  "SENSITIVITIES": [
+    {
+      "BUCKET": "3M",
+      "DV01": -120
+    },
+    {
+      "BUCKET": "1Y",
+      "DV01": -1450
+    },
+    {
+      "BUCKET": "2Y",
+      "DV01": -4200
+    },
+    {
+      "BUCKET": "5Y",
+      "DV01": -16800
+    },
+    {
+      "BUCKET": "10Y",
+      "DV01": -39800
+    },
+    {
+      "BUCKET": "20Y",
+      "DV01": -21100
+    },
+    {
+      "BUCKET": "30Y",
+      "DV01": -6400
+    }
+  ],
+  "RISK": {
+    "DV01": -89000,
+    "CONVEXITY": 7400
+  },
+  "TERMS": {
+    "COUPON": 0.0425,
+    "YIELD": 0.0449
+  }
+}

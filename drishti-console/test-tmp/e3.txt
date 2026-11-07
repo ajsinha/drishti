@@ -1,0 +1,90 @@
+bringing up nodes...
+bringing up nodes...
+
+...........F.                                                            [100%]
+=================================== FAILURES ===================================
+_______ test_python_table_template_notebook_contract_and_the_sample_run ________
+[gw1] linux -- Python 3.13.15 /home/ashutosh/IdeaProjects/drishti/drishti-console/.venv/bin/python
+
+pg = <Page url='http://127.0.0.1:39143/build/tables?kind=table&item=bi-5ac0bc746a'>
+
+    def test_python_table_template_notebook_contract_and_the_sample_run(pg):
+        open_editors(pg)
+        pg.click("[data-act=new]")
+        pg.click("[data-new-kind=python]")
+        pg.fill("[data-new-name]", "mine.headroom")
+        pg.click("[data-step-next]")
+        pg.check("[data-new-start=template]")
+        pg.click("[data-step-next]")
+        wait(pg, "!!document.querySelector('[data-dialog][open] [data-template]')")
+        pg.click("[data-template='group-stats']")
+        wait(pg, "document.querySelector('[data-python-code]').value.includes('def build')")
+        assert pg.locator("[data-contract-col]").count() == 5
+        # the sample run is on: the server runs authored code on its compute pool
+        assert not pg.is_disabled("[data-py-run]") and pg.locator("[data-uc='python-table-runs']").count() == 0
+        pg.click("[data-py-templates]")
+        wait(pg, "!!document.querySelector('[data-dialog][open] [data-templates]')")
+        pg.click("[data-dialog-close]")
+        pg.click("[data-py-notebook]")
+        wait(pg, "!!document.querySelector('[data-dialog][open] [data-cells]')")
+        pg.click("[data-cell-add]")
+        assert pg.locator("[data-cell]").count() == 3
+        assert not pg.is_disabled("[data-cell-run]")
+        pg.click("[data-turn-into-table]")
+        wait(pg, "document.querySelector('[data-python-code]').value.includes('inputs[\"trade_legs\"]')")
+        wait(pg, "!!document.querySelector(\"[data-input='trade_legs']\")")
+        pg.click("[data-input-remove='trade_legs']")
+        wait(pg, "!document.querySelector(\"[data-input='trade_legs']\")")
+        pg.click("[data-input-remove='pnl']")                          # the template's own input (risk.daily_pnl) is not in this catalogue: the run reads every input
+        wait(pg, "!document.querySelector(\"[data-input='pnl']\")")
+        pg.select_option("[data-input-pick]", "trading.trade_summary")
+        pg.click("[data-input-add]")
+        wait(pg, "!!document.querySelector(\"[data-input='trade_summary']\")")
+        pg.click("[data-py-propose-contract]")
+        wait(pg, "!!document.querySelector(\"[data-contract-col='ABS_NOTIONAL']\")")
+        settle(pg)
+        pg.fill("[data-contract-new]", "EXTRA")
+        pg.click("[data-contract-add]")
+        wait(pg, "window.Drishti.editors.yamlText().includes('EXTRA')")
+        pg.select_option("[data-contract-type='EXTRA']", "integer")
+        pg.check("[data-contract-key='EXTRA']")
+        pg.check("[data-contract-notnull='EXTRA']")
+        wait(pg, "window.Drishti.editors.yamlText().includes('not-null')")
+        pg.click("[data-contract-remove='EXTRA']")
+        pg.select_option("[data-py-runs]", "on-load")
+        pg.fill("[data-py-pool]", "default")
+        pg.fill("[data-py-timeout]", "120")
+        pg.fill("[data-py-memory]", "1024")
+        wait(pg, "window.Drishti.editors.yamlText().includes('on-load')")
+        settle(pg)
+        assert "Press Sample run" in pg.inner_text("[data-sample-run]")
+        # the sample run: the input read as this person, the code run on the pool, the rows checked against the contract (which names columns it does not return)
+        pg.fill("[data-python-code]", "def build(inputs, params):\n    t = inputs['trade_summary']\n    return t.groupby('PRODUCT', as_index=False)['MTM'].sum()\n")
+        pg.click("[data-py-run]")
+        wait(pg, "!!document.querySelector('[data-sample-run=ran]')", 180)
+        assert pg.locator("[data-sample-rows] th").all_inner_texts() == ["PRODUCT", "MTM"]
+        assert "is not in what the code returned" in pg.inner_text("[data-preview]")
+        pg.click("[data-act=save]")
+        wait(pg, "!!document.querySelector('[data-dialog][open] [data-save-go]')")
+        pg.click("[data-save-go]")
+        wait(pg, "/Saved as a draft/.test(document.querySelector('[data-msg]').textContent)")
+>       assert pg.locator("[data-group='python'] [data-object='mine.headroom']").count() == 1
+E       assert 0 == 1
+E        +  where 0 = count()
+E        +    where count = <Locator frame=<Frame name= url='http://127.0.0.1:39143/build/tables?kind=table&item=bi-5ac0bc746a'> selector="[data-group='python'] [data-object='mine.headroom']">.count
+E        +      where <Locator frame=<Frame name= url='http://127.0.0.1:39143/build/tables?kind=table&item=bi-5ac0bc746a'> selector="[data-group='python'] [data-object='mine.headroom']"> = locator("[data-group='python'] [data-object='mine.headroom']")
+E        +        where locator = <Page url='http://127.0.0.1:39143/build/tables?kind=table&item=bi-5ac0bc746a'>.locator
+
+tests/test_editors_browser.py:468: AssertionError
+=============================== warnings summary ===============================
+../../../../drishti-console/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1
+../../../../drishti-console/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1
+../../../../drishti-console/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1
+../../../../drishti-console/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1
+  /home/ashutosh/IdeaProjects/drishti/drishti-console/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_editors_browser.py::test_python_table_template_notebook_contract_and_the_sample_run
+1 failed, 12 passed, 4 warnings in 65.20s (0:01:05)

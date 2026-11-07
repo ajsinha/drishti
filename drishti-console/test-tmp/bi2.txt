@@ -1,0 +1,80 @@
+F.                                                                       [100%]
+=================================== FAILURES ===================================
+___________ test_designer_undo_redo_and_the_yaml_tab_work_both_ways ____________
+
+stack = <bi_report_stack.ReportStack object at 0x781096ea4590>
+browser = <Browser type=<BrowserType name=chromium executable_path=/home/ashutosh/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome> version=153.0.8010.12>
+
+    def test_designer_undo_redo_and_the_yaml_tab_work_both_ways(stack, browser):
+        page = sign_in(browser, "wes")
+        new_draft(page)
+        page.drag_and_drop('[data-field="Trades"]', "[data-canvas-grid]", target_position={"x": 40, "y": 30})
+        page.wait_for_selector('.bi-dvis[data-type="card"]')
+        page.click("[data-undo]")
+        expect(page.locator(".bi-dvis")).to_have_count(0)
+>       page.click("[data-redo]")
+
+tests/test_bi_reports_browser.py:371: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/conftest.py:1300: in wrapped_click
+    out = click(self, selector, *a, **k)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../drishti-console/.venv/lib/python3.13/site-packages/playwright/sync_api/_generated.py:11102: in click
+    self._sync(
+../../../../drishti-console/.venv/lib/python3.13/site-packages/playwright/_impl/_page.py:889: in click
+    return await self._main_frame._click(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../drishti-console/.venv/lib/python3.13/site-packages/playwright/_impl/_frame.py:594: in _click
+    await self._channel.send("click", self._timeout, locals_to_params(locals()))
+../../../../drishti-console/.venv/lib/python3.13/site-packages/playwright/_impl/_connection.py:76: in send
+    return await self._connection.wrap_api_call(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <playwright._impl._connection.Connection object at 0x781096ea6e40>
+cb = <function Channel.send.<locals>.<lambda> at 0x781096dda660>
+is_internal = False, title = None
+
+    async def wrap_api_call(
+        self, cb: Callable[[], Any], is_internal: bool = False, title: str = None
+    ) -> Any:
+        if self._api_zone.get():
+            return await cb()
+        task = asyncio.current_task(self._loop)
+        parsed_st = _attach_api_call_information(
+            getattr(task, "__pw_stack__", None) or _capture_stack_trace(),
+            is_internal,
+            title,
+        )
+        self._api_zone.set(parsed_st)
+        try:
+            return await cb()
+        except Exception as error:
+>           raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+E           playwright._impl._errors.TimeoutError: Page.click: Timeout 30000ms exceeded.
+E           Call log:
+E             - waiting for locator("[data-redo]")
+E               - locator resolved to <button disabled data-redo="" type="button" class="btn-pill btn-ghost">…</button>
+E             - attempting click action
+E               2 × waiting for element to be visible, enabled and stable
+E                 - element is not enabled
+E               - retrying click action
+E               - waiting 20ms
+E               2 × waiting for element to be visible, enabled and stable
+E                 - element is not enabled
+E               - retrying click action
+E                 - waiting 100ms
+E               58 × waiting for element to be visible, enabled and stable
+E                  - element is not enabled
+E                - retrying click action
+E                  - waiting 500ms
+
+../../../../drishti-console/.venv/lib/python3.13/site-packages/playwright/_impl/_connection.py:632: TimeoutError
+=============================== warnings summary ===============================
+../../../../drishti-console/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1
+  /home/ashutosh/IdeaProjects/drishti/drishti-console/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_bi_reports_browser.py::test_designer_undo_redo_and_the_yaml_tab_work_both_ways
+1 failed, 1 passed, 1 warning in 59.84s

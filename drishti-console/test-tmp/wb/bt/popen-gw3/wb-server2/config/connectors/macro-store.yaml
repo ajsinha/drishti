@@ -1,0 +1,14 @@
+# Generated at first start from the connector template of pack 'world-economy'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
+# drishti-template: pack=world-economy template=283adeb8fc97db8c text=283adeb8fc97db8c
+plugin: delta
+enabled: "${DRISHTI_LAKE_ENABLED:true}"
+kinds:
+- economy
+- macro-indicator
+- economic-forecast
+- labour-market
+- fiscal-position
+- region-economy
+settings:
+  lake: demo
+  lake-tables: "macro.economy,macro.macro-indicator,macro.economic-forecast,macro.labour-market,macro.fiscal-position,macro.region-economy"

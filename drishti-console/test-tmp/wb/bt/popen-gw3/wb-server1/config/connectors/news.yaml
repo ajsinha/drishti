@@ -1,0 +1,51 @@
+# Generated at first start from the connector template of pack 'news-and-markets'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
+# drishti-template: pack=news-and-markets template=c9e9feffc9398da9 text=c9e9feffc9398da9
+plugin: news
+enabled: "${DRISHTI_NEWS_ENABLED:false}"
+kinds:
+- news
+settings:
+  base-url: "${DRISHTI_NEWS_URL:https://news.google.com/rss/search}"
+  language: en
+  country: US
+  max-items: 15
+  timeout-seconds: 10
+  cache-ttl-seconds: 600
+  cache-max-entities: 200
+  relevance: title
+  user-agent: "${drishti.branding.product:Drishti} news connector (sample)"
+  aliases.Apple: "Apple Inc, AAPL, iPhone"
+  aliases.Microsoft: MSFT
+  aliases.Alphabet: "Google, GOOGL"
+  aliases.Amazon: "AMZN, AWS"
+  aliases.NVIDIA: "Nvidia, NVDA"
+  aliases.Tesla: "TSLA, Elon Musk"
+  aliases.Meta_Platforms: "Meta, Facebook, Instagram"
+  aliases.Netflix: NFLX
+  aliases.JPMorgan_Chase: "JPMorgan, JP Morgan, Jamie Dimon"
+  aliases.Bank_of_America: "BofA, BAC"
+  aliases.Goldman_Sachs: Goldman
+  aliases.Exxon_Mobil: "Exxon, ExxonMobil"
+  aliases.Chevron: CVX
+  aliases.Shell: Shell plc
+  aliases.Merck: "Merck & Co, MRK"
+  aliases.Pfizer: PFE
+  aliases.Walmart: WMT
+  aliases.Coca-Cola: "Coke, Coca Cola"
+  aliases.Disney: "Walt Disney, DIS"
+  aliases.Boeing: BA
+  aliases.Federal_Reserve: "Fed, FOMC, Powell"
+  aliases.European_Central_Bank: "ECB, Lagarde"
+  aliases.Bank_of_England: BoE
+  aliases.Bank_of_Japan: BoJ
+  aliases.inflation: "CPI, consumer prices"
+  aliases.interest_rates: "rate cut, rate hike, rates"
+  aliases.oil_prices: "crude, Brent, oil"
+  aliases.bitcoin: "crypto, cryptocurrency"
+  aliases.artificial_intelligence: "AI, machine learning"
+  aliases.climate_change: "global warming, emissions, climate"
+  aliases.India: "Indian, New Delhi"
+  aliases.Germany: "German, Berlin"
+  aliases.Brazil: "Brazilian, Brasilia"
+  aliases.Deutsche_Bank: Deutsche
+  aliases.Toyota: "トヨタ, Toyota Motor"

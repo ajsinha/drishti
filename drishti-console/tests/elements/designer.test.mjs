@@ -47,13 +47,14 @@ test('the command stack: run, undo, redo, groups as one step, merging, saved and
 });
 
 test('snapshot undo: a host that changes its document in place', () => {
-  let doc = { pages: [{ visuals: [] }] };
-  const hist = new K.SnapshotHistory({ get: () => doc, set: (d) => { doc = d; } });
+  let doc = { pages: [{ visuals: [] }] }, redoable = null;
+  const hist = new K.SnapshotHistory({ get: () => doc, set: (d, how) => { doc = d; if (how === 'undo') { redoable = hist.canRedo(); } } });
   assert.equal(hist.change('Add', (m) => { m.pages[0].visuals.push({ id: 'v1' }); }), true);
   assert.equal(hist.change('Nothing', () => {}), false, 'a step that changed nothing is not kept');
   assert.equal(hist.change('Refused', (m) => { m.pages.push({}); return false; }), false);
   assert.equal(doc.pages.length, 1, 'a refused step is put back');
   hist.undo(); assert.equal(doc.pages[0].visuals.length, 0);
+  assert.equal(redoable, true, 'a host redrawing its buttons during the step already sees Redo');
   hist.redo(); assert.equal(doc.pages[0].visuals[0].id, 'v1');
 });
 

@@ -1,0 +1,102 @@
+{
+  "TRADE_ID": "DEMO-BOND-1",
+  "DIRECTION": "BUY",
+  "CURRENCY": "USD",
+  "NEXT_INDEX": 2,
+  "CONFIRMATION": {
+    "STATUS": "Confirmed"
+  },
+  "CLEARING": {
+    "STATUS": "Cleared"
+  },
+  "REGULATORY": {
+    "REPORTING_STATUS": "Pending"
+  },
+  "SETTLEMENT": {
+    "STATUS": "Scheduled"
+  },
+  "SCHEDULE": [
+    {
+      "DATE": "2025-10-31",
+      "RATE": 0.0425,
+      "AMOUNT": 1062500,
+      "STATUS": "Paid"
+    },
+    {
+      "DATE": "2026-05-01",
+      "RATE": 0.0425,
+      "AMOUNT": 1062500,
+      "STATUS": "Paid"
+    },
+    {
+      "DATE": "2026-10-30",
+      "RATE": 0.0425,
+      "AMOUNT": 1062500,
+      "STATUS": "Pending"
+    },
+    {
+      "DATE": "2027-04-30",
+      "RATE": 0.0425,
+      "AMOUNT": 1062500,
+      "STATUS": "Scheduled"
+    },
+    {
+      "DATE": "2027-10-29",
+      "RATE": 0.0425,
+      "AMOUNT": 1062500,
+      "STATUS": "Scheduled"
+    },
+    {
+      "DATE": "2028-04-28",
+      "RATE": 0.0425,
+      "AMOUNT": 1062500,
+      "STATUS": "Scheduled"
+    },
+    {
+      "DATE": "2028-10-27",
+      "RATE": 0.0425,
+      "AMOUNT": 1062500,
+      "STATUS": "Scheduled"
+    },
+    {
+      "DATE": "2029-04-27",
+      "RATE": 0.0425,
+      "AMOUNT": 1062500,
+      "STATUS": "Scheduled"
+    }
+  ],
+  "LIFECYCLE": {
+    "TIMELINE": [
+      {
+        "DATE": "2026-08-31",
+        "EVENT": "Booked",
+        "STATUS": "Done",
+        "DESCRIPTION": "Booked by the rates desk from the broker ticket."
+      },
+      {
+        "DATE": "2026-08-31",
+        "EVENT": "Confirmed",
+        "STATUS": "Done",
+        "DESCRIPTION": "Matched with the counterparty."
+      },
+      {
+        "DATE": "2026-09-01",
+        "EVENT": "Cleared",
+        "STATUS": "Done",
+        "DESCRIPTION": "Accepted by the clearing house."
+      },
+      {
+        "DATE": "2026-10-30",
+        "EVENT": "Next payment",
+        "STATUS": "Pending",
+        "DESCRIPTION": "Semi-annual coupon of 1,062,500."
+      },
+      {
+        "DATE": "2038-04-30",
+        "EVENT": "Maturity",
+        "STATUS": "Scheduled",
+        "DESCRIPTION": "Redemption at par."
+      }
+    ]
+  }
+}

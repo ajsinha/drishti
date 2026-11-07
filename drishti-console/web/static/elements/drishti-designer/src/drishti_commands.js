@@ -126,8 +126,8 @@ export class CommandStack {
   undo() {
     const c = this.done.pop();
     if (!c) { return null; }
-    c.undo();
-    this.undone.push(c);
+    this.undone.push(c);                                        // moved first: a listener the step wakes sees the stack as it will be
+    try { c.undo(); } catch (e) { this.undone.pop(); this.done.push(c); throw e; }
     this.lastAt = 0;
     this.changed('undo', c);
     return c;
@@ -140,8 +140,8 @@ export class CommandStack {
   redo() {
     const c = this.undone.pop();
     if (!c) { return null; }
-    c.redo();
     this.done.push(c);
+    try { c.redo(); } catch (e) { this.done.pop(); this.undone.push(c); throw e; }
     this.lastAt = 0;
     this.changed('redo', c);
     return c;

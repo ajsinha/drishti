@@ -1,0 +1,28 @@
+# Generated at first start from the connector template of pack 'core'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
+# drishti-template: pack=core template=ac5e92b9ce4cae41 text=ac5e92b9ce4cae41
+plugin: delta
+enabled: "${DRISHTI_LAKE_ENABLED:true}"
+kinds:
+- counterparty
+- counterparty-group
+- issuer
+- ccp
+- legal-entity
+- book
+- desk
+- trader
+- calendar
+- clearing-account
+settings:
+  lake: demo
+  lake-tables: "reference.counterparty,reference.counterparty-group,reference.issuer,reference.ccp,reference.legal-entity,reference.book,reference.desk,reference.trader,reference.calendar,reference.clearing-account"
+  mode.counterparty: effective
+  mode.counterparty-group: effective
+  mode.issuer: effective
+  mode.ccp: effective
+  mode.legal-entity: effective
+  mode.book: effective
+  mode.desk: effective
+  mode.trader: effective
+  mode.calendar: effective
+  mode.clearing-account: effective

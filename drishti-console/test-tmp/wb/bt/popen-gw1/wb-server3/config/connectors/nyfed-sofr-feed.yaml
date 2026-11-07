@@ -1,0 +1,11 @@
+# Generated at first start from the connector template of pack 'market-data'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
+# drishti-template: pack=market-data template=0a8e7e4f62bc5b5c text=0a8e7e4f62bc5b5c
+plugin: feed
+enabled: "${DRISHTI_FEED_NYFED_SOFR:false}"
+kinds:
+- rate-fixing
+settings:
+  feed: nyfed-sofr
+  user-agent: "${drishti.branding.product:feed} public data feed connector"
+  stale-after: 4d
+  refresh-minutes: 60

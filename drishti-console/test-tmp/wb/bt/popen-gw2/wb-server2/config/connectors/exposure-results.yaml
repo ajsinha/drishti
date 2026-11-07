@@ -1,0 +1,12 @@
+# Generated at first start from the connector template of pack 'counterparty-risk'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
+# drishti-template: pack=counterparty-risk template=2c857606835c1e20 text=2c857606835c1e20
+plugin: delta
+enabled: "${DRISHTI_EXPOSURE_ENABLED:true}"
+description: "The official end-of-day exposure of every netting set, counterparty\
+  \ and group the server publishes (risk-results/exposure-official-cpty), read only:\
+  \ for BI and other readers, never an engine's input"
+kinds:
+- exposure-official-cpty
+settings:
+  lake: ccr-official
+  lake-tables: risk-results.exposure-official-cpty

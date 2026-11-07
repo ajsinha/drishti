@@ -1,0 +1,6 @@
+# Generated at first start from the connector template of pack 'market-risk'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
+# drishti-template: pack=market-risk template=b0ba313a22c9eac8 text=b0ba313a22c9eac8
+plugin: var-positions
+enabled: "${DRISHTI_VAR_ENABLED:true}"
+kinds:
+- position

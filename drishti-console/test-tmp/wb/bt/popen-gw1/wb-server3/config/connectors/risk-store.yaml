@@ -1,0 +1,24 @@
+# Generated at first start from the connector template of pack 'market-risk'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
+# drishti-template: pack=market-risk template=4f9aff037b36f22a text=4f9aff037b36f22a
+plugin: delta
+enabled: "${DRISHTI_LAKE_ENABLED:true}"
+kinds:
+- stress-scenario
+- stress-result
+- frtb-sensitivity
+- pnl-explain
+- trade-valuation
+- portfolio
+- pnl-vector
+- scenario-pv
+- fx-scenario
+- scenario-set
+- risk-hierarchy
+- var-limit
+- desk-pnl
+- pnl-history
+- position-sensitivity
+- risk-factor
+settings:
+  lake: demo
+  lake-tables: "risk.stress-scenario,risk.stress-result,risk.frtb-sensitivity,risk.pnl-explain,risk.trade-valuation,risk.portfolio,risk.pnl-vector,risk.scenario-pv,risk.fx-scenario,risk.scenario-set,risk.risk-hierarchy,risk.var-limit,risk.desk-pnl,risk.pnl-history,risk.position-sensitivity,risk.risk-factor"

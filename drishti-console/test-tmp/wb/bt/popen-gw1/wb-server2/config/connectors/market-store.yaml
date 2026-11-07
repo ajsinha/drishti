@@ -1,0 +1,28 @@
+# Generated at first start from the connector template of pack 'market-data'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
+# drishti-template: pack=market-data template=7069acc6ff3bef0a text=7069acc6ff3bef0a
+plugin: delta
+enabled: "${DRISHTI_LAKE_ENABLED:true}"
+kinds:
+- ir-curve
+- repo-curve
+- fx-spot
+- fx-forward-curve
+- fx-vol-surface
+- ir-vol-cube
+- cap-vol-surface
+- equity
+- equity-index
+- dividend-curve
+- equity-vol-surface
+- credit-curve
+- inflation-index
+- inflation-curve
+- commodity
+- commodity-curve
+- commodity-vol-surface
+- rate-fixing
+- bond
+- correlation-matrix
+settings:
+  lake: demo
+  lake-tables: "market.ir-curve,market.repo-curve,market.fx-spot,market.fx-forward-curve,market.fx-vol-surface,market.ir-vol-cube,market.cap-vol-surface,market.equity,market.equity-index,market.dividend-curve,market.equity-vol-surface,market.credit-curve,market.inflation-index,market.inflation-curve,market.commodity,market.commodity-curve,market.commodity-vol-surface,market.rate-fixing,market.bond,market.correlation-matrix"

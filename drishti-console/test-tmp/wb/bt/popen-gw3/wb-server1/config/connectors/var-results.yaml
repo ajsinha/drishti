@@ -1,0 +1,11 @@
+# Generated at first start from the connector template of pack 'market-risk'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
+# drishti-template: pack=market-risk template=cda5f17949a411df text=cda5f17949a411df
+plugin: delta
+enabled: "${DRISHTI_VAR_ENABLED:true}"
+description: "The official end-of-day VaR results the server publishes (risk-results/var-official),\
+  \ read only: for BI and other readers, never an engine's input"
+kinds:
+- var-official
+settings:
+  lake: var-official
+  lake-tables: risk-results.var-official

@@ -1,0 +1,11 @@
+# Generated at first start from the connector template of pack 'market-data'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
+# drishti-template: pack=market-data template=b055703d8984f8d8 text=b055703d8984f8d8
+plugin: feed
+enabled: "${DRISHTI_FEED_ECB_ESTR:false}"
+kinds:
+- rate-fixing
+settings:
+  feed: ecb-estr
+  user-agent: "${drishti.branding.product:feed} public data feed connector"
+  stale-after: 4d
+  refresh-minutes: 60

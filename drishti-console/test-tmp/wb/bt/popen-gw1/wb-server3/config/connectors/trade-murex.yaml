@@ -1,0 +1,11 @@
+# Generated at first start from the connector template of pack 'trading'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
+# drishti-template: pack=trading template=a960d23d48ec1cc4 text=a960d23d48ec1cc4
+plugin: delta
+enabled: "${DRISHTI_LAKE_ENABLED:true}"
+kinds:
+- trade
+settings:
+  lake: demo
+  lake-tables: trading.trade_murex
+  union: "true"
+  source-name: trade-murex
