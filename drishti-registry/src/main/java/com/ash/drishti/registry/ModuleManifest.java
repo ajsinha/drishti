@@ -40,12 +40,12 @@ import java.util.Map;
  * @param packs      the packs it owns (ids)
  * @param connectors the connectors and connector plugins it owns (names)
  * @param api        the server API prefixes it answers ({@code /api/v1/risk})
- * @param words      the command words it brings ({@code VAR}, {@code EXP})
+ * @param functions  the functions it brings (command words: {@code VAR}, {@code EXP}, {@code TRD}), each with the APIs behind it
  * @param source     where the manifest was read, in words
  */
 public record ModuleManifest(String id, String domain, String title, String about, String version, List<String> requires, String feature,
         boolean code, boolean shipped, boolean installed, List<String> packages, List<String> engines, List<String> packs,
-        List<String> connectors, List<String> api, List<String> words, String source) {
+        List<String> connectors, List<String> api, List<FunctionSpec> functions, String source) {
 
     /** The core's id: always installed, licensed and on; it cannot be switched off. */
     public static final String CORE = "core";
@@ -68,8 +68,7 @@ public record ModuleManifest(String id, String domain, String title, String abou
         packs = clean(packs);
         connectors = clean(connectors);
         api = clean(api);
-        words = words == null ? List.of() : words.stream().filter(w -> w != null).map(w -> w.strip().toUpperCase(Locale.ROOT)).filter(w -> !w.isEmpty())
-                .toList();
+        functions = functions == null ? List.of() : functions.stream().filter(f -> f != null && !f.word().isEmpty()).toList();
         source = source == null ? "" : source;
     }
 
@@ -85,7 +84,7 @@ public record ModuleManifest(String id, String domain, String title, String abou
         return new ModuleManifest(String.valueOf(id), str(m.get("domain")), str(m.get("title")), str(m.get("about")), str(m.get("version")),
                 list(m.get("requires")), str(m.get("feature")), !Boolean.FALSE.equals(bool(m.get("code"))), !Boolean.FALSE.equals(bool(m.get("enabled"))),
                 installed, list(c.get("packages")), list(c.get("engines")), list(c.get("packs")), list(c.get("connectors")), list(c.get("api")),
-                list(c.get("words")), source);
+                functions(c.get("functions")), source);
     }
 
     /** True when the class (its binary name) belongs to this module's code. */
@@ -101,18 +100,40 @@ public record ModuleManifest(String id, String domain, String title, String abou
         return false;
     }
 
+    /** The words of its functions. */
+    public List<String> words() {
+        return functions.stream().map(FunctionSpec::word).toList();
+    }
+
     /** True when the API path is one of this module's (a prefix, at a segment boundary). */
     public boolean ownsApi(String path) {
+        return under(path, api);
+    }
+
+    /** True when the path is under one of the prefixes (at a segment boundary, or a {@code .} suffix such as {@code .xlsx}). */
+    static boolean under(String path, List<String> prefixes) {
         if (path == null) {
             return false;
         }
-        for (String p : api) {
+        for (String p : prefixes) {
             String q = p.endsWith("/") ? p.substring(0, p.length() - 1) : p;
             if (path.equals(q) || path.startsWith(q + "/") || path.startsWith(q + ".")) {
                 return true;
             }
         }
         return false;
+    }
+
+    private static List<FunctionSpec> functions(Object o) {
+        List<FunctionSpec> out = new ArrayList<>();
+        if (o instanceof List<?> l) {
+            for (Object x : l) {
+                if (x != null) {
+                    out.add(FunctionSpec.of(x));
+                }
+            }
+        }
+        return List.copyOf(out);
     }
 
     static String norm(String s) {

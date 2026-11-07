@@ -65,8 +65,46 @@ public interface AccessRegistry {
      */
     boolean packOn(String packId, String domain);
 
-    /** The words of the modules that are on (command words a module brings). */
+    /** The functions of the modules that are on (command words a module brings), the core's not listed. */
     Set<String> words();
+
+    /** The module the function (a command word, any case) belongs to; empty for the core's (a word no module declares). */
+    Optional<String> moduleOfFunction(String word);
+
+    /** The function whose APIs hold the path; empty when no function declares it. */
+    Optional<String> functionOfApi(String path);
+
+    /**
+     * True when the function is on here: its module is on and no administrator switched it off (the mnemonic switch, Admin → Commands,
+     * asked through {@link #functionSwitches}).
+     */
+    boolean functionOn(String word);
+
+    /** Why the function is off, in words; empty when it is on. */
+    Optional<String> functionOffReason(String word);
+
+    /**
+     * True when the person may use the function: it is on, and (from 2.9.11.i) a role of theirs grants it through a lens's bundle or a
+     * single grant, and none denies it. Until then every person may use every function that is on.
+     */
+    boolean functionAllowed(Subject subject, String word);
+
+    /**
+     * Where the administrator's installation-level function switches are kept (the switches ledger, Admin → Commands: gossiped across the
+     * cluster); the registry asks it and decides. {@code on(word)} is null when no switch was set.
+     */
+    void functionSwitches(FunctionSwitches switches);
+
+    /** The administrator's installation-level function switches, as the registry reads them. */
+    @FunctionalInterface
+    interface FunctionSwitches {
+
+        /** True or false when an administrator set the function's switch; null when not set (on). */
+        Boolean on(String word);
+
+        /** No switch set anywhere. */
+        FunctionSwitches NONE = w -> null;
+    }
 
     /** The lenses offered here: those whose modules are all on. */
     List<Lens> lenses();

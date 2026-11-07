@@ -63,11 +63,13 @@ class AccessRegistryTest {
                     packs: [market-risk]
                     connectors: [var-engine]
                     api: [/api/v1/risk]
-                    words: [VAR, EXP]
+                    functions:
+                      - {word: VAR, api: [/api/v1/risk/var]}
+                      - {word: EXP, api: [/api/v1/risk/exposure]}
                 """);
         write(jar.resolve(YamlAccessStore.LENSES), """
                 lenses:
-                  - {id: risk, title: Risk, modules: [banking], home: /home/risk}
+                  - {id: risk, title: Risk, modules: [banking], functions: [VAR, EXP, TRD], home: /home/risk}
                   - {id: world, title: World, modules: [economy]}
                   - {id: cio, title: CIO, modules: []}
                 """);
@@ -240,6 +242,34 @@ class AccessRegistryTest {
         assertThat(r.lenses()).extracting(Lens::title).contains("Chief information officer");
         assertThat(r.lensOffered("gov")).isFalse();
         assertThat(r.warnings()).anyMatch(w -> w.contains("the lens 'gov'"));
+    }
+
+    @Test
+    void functionsBelongToOneModuleAndGoWithIt() throws IOException {
+        EmbeddedAccessRegistry r = registry();
+        Map<String, Boolean> ledger = new HashMap<>();
+        r.functionSwitches(ledger::get);
+        assertThat(r.moduleOfFunction("var")).contains("banking");
+        assertThat(r.moduleOfFunction("BI")).isEmpty();                       // a word no module declares is the core's
+        assertThat(r.functionOfApi("/api/v1/risk/var/explorer")).contains("VAR");
+        assertThat(r.functionOfApi("/api/v1/risk/exposure.xlsx")).contains("EXP");
+        assertThat(r.functionOfApi("/api/v1/pivot/query")).isEmpty();
+        assertThat(r.functionOn("VAR")).isTrue();
+        assertThat(r.lenses().get(0).functions()).containsExactly("VAR", "EXP", "TRD");
+        Subject anyone = new Subject("x", Set.of(), Set.of(), false);
+        assertThat(r.functionAllowed(anyone, "VAR")).isTrue();               // everyone until per-person grants (2.9.11.i)
+
+        ledger.put("VAR", false);                                              // the administrator's switch (the mnemonic switch)
+        assertThat(r.functionOn("VAR")).isFalse();
+        assertThat(r.functionOffReason("VAR")).get().asString().contains("switched it off");
+        assertThat(r.functionAllowed(anyone, "VAR")).isFalse();
+        assertThat(r.functionOn("EXP")).isTrue();
+
+        write(modules.resolve("banking.yaml"), "enabled: false\n");
+        r.refresh();
+        assertThat(r.functionOn("EXP")).isFalse();
+        assertThat(r.functionOffReason("EXP")).get().asString().contains("module 'banking' is off");
+        assertThat(r.functionOn("BI")).isTrue();
     }
 
     @Test

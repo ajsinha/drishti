@@ -65,7 +65,7 @@ class CapacityControllerTest {
     private final CapacityWorkbook workbook = CapacityWorkbook.builtIn();
     private final RequestActivity activity = new RequestActivity();
     private final CapacityController controller = new CapacityController(entitlements, audit, planner, workbook,
-            new CapacityLive(() -> null, () -> null, () -> activity, () -> null));
+            new CapacityLive(java.util.List::of, () -> null, () -> activity, () -> null));
 
     {
         doThrow(new DrishtiException(ErrorCode.FORBIDDEN, "vic is not an administrator")).when(entitlements).requireAdmin(VIC);

@@ -122,6 +122,14 @@ public class HealthController {
     private final com.ash.drishti.identity.IdentityProperties identity;
     private final com.ash.drishti.server.security.MaskCoverage masks;
 
+    /** The modules' engines' figures (a module's beans); none in a test that makes the controller itself. */
+    private java.util.List<HealthFigures> moduleFigures = java.util.List.of();
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void moduleFigures(java.util.List<HealthFigures> figures) {
+        this.moduleFigures = java.util.List.copyOf(figures);
+    }
+
     public HealthController(SourceRegistry registry, SourceRouter router, PackRegistry packs, SutraRegistry sutras, LiveMetrics live,
             TopicHub hub, LiveStreamSlots slots, Entitlements entitlements, ObjectProvider<BuildProperties> build,
             org.springframework.core.env.Environment env, com.ash.drishti.server.loads.ExpectationService expectations, com.ash.drishti.server.connectors.ConnectorManager connectors,
@@ -239,8 +247,9 @@ public class HealthController {
         out.put("tmp", com.ash.drishti.common.TempFiles.info());
         out.put("externalLib", com.ash.drishti.common.ExternalLib.info());
         out.put("sources", sources);
-        // 2.9.5: a hierarchy the VaR or exposure engine skipped (its level column not in the source): "var LL" to why (DRS-5211, a warning)
-        out.put("hierarchiesSkipped", com.ash.drishti.server.var.Hierarchies.skipped());
+        for (HealthFigures f : moduleFigures) {                     // the modules' engines' figures (DOMAIN_MODULES.md J4)
+            out.put(f.key(), f.value());
+        }
         Map<String, Object> identityPool = PoolReport.identity(identityDataSource.getIfAvailable(), identity.sqlite()).map(com.ash.drishti.api.pool.PoolStats::toMap).orElse(null);
         out.put("identityPool", identityPool);                        // the identity database's pool (SQLite: embedded, exempt)
         if (PoolReport.needsAttention(identityPool)) {

@@ -44,6 +44,7 @@ public final class EmbeddedAccessRegistry implements AccessRegistry, AutoCloseab
     private final List<Runnable> listeners = new CopyOnWriteArrayList<>();
     private volatile Snapshot snapshot;
     private volatile AutoCloseable watch;
+    private volatile FunctionSwitches functionSwitches = FunctionSwitches.NONE;
 
     /**
      * @param store     where the model is kept
@@ -152,6 +153,53 @@ public final class EmbeddedAccessRegistry implements AccessRegistry, AutoCloseab
     @Override
     public Set<String> words() {
         return snapshot.words;
+    }
+
+    @Override
+    public Optional<String> moduleOfFunction(String word) {
+        String w = word == null ? "" : word.strip().toUpperCase(java.util.Locale.ROOT);
+        return snapshot.model.modules().stream().filter(m -> m.words().contains(w)).map(ModuleManifest::id).findFirst();
+    }
+
+    @Override
+    public Optional<String> functionOfApi(String path) {
+        for (ModuleManifest m : snapshot.model.modules()) {
+            for (FunctionSpec f : m.functions()) {
+                if (f.ownsApi(path)) {
+                    return Optional.of(f.word());
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public boolean functionOn(String word) {
+        return functionOffReason(word).isEmpty();
+    }
+
+    @Override
+    public Optional<String> functionOffReason(String word) {
+        if (word == null || word.isBlank()) {
+            return Optional.empty();
+        }
+        String w = word.strip().toUpperCase(java.util.Locale.ROOT);
+        Optional<String> module = moduleOfFunction(w);
+        if (module.isPresent() && !moduleOn(module.get())) {
+            return Optional.of("its module '" + module.get() + "' is off: " + module(module.get()).map(ModuleState::reason).orElse(""));
+        }
+        Boolean on = functionSwitches.on(w);
+        return Boolean.FALSE.equals(on) ? Optional.of("an administrator switched it off (Admin -> Commands)") : Optional.empty();
+    }
+
+    @Override
+    public boolean functionAllowed(Subject subject, String word) {
+        return subject != null && functionOn(word);              // per-person grants and denials: 2.9.11.i
+    }
+
+    @Override
+    public void functionSwitches(FunctionSwitches switches) {
+        this.functionSwitches = switches == null ? FunctionSwitches.NONE : switches;
     }
 
     @Override

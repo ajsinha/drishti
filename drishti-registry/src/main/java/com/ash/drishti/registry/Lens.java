@@ -24,17 +24,19 @@ import java.util.List;
  * @param id      its id ({@code risk})
  * @param title   the name people read
  * @param modules the modules it needs (the core is implied)
+ * @param functions the functions it bundles (command words); a person working in the lens uses these (grants and denials on top: 2.9.11.i)
  * @param home    its home page (a console path), or blank
  * @param menus   its menu entries (ids), as the console declares them
  * @param help    its Help pages (slugs)
  * @param source  where it was declared, in words
  */
-public record Lens(String id, String title, List<String> modules, String home, List<String> menus, List<String> help, String source) {
+public record Lens(String id, String title, List<String> modules, List<String> functions, String home, List<String> menus, List<String> help, String source) {
 
     public Lens {
         id = ModuleManifest.norm(id);
         title = title == null || title.isBlank() ? id : title.strip();
         modules = modules == null ? List.of() : modules.stream().map(ModuleManifest::norm).filter(s -> !s.isEmpty()).toList();
+        functions = functions == null ? List.of() : functions.stream().map(f -> f.strip().toUpperCase(java.util.Locale.ROOT)).filter(f -> !f.isEmpty()).toList();
         home = home == null ? "" : home.strip();
         menus = menus == null ? List.of() : List.copyOf(menus);
         help = help == null ? List.of() : List.copyOf(help);

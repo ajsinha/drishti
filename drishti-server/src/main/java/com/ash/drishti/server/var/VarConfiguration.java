@@ -74,6 +74,31 @@ public class VarConfiguration {
         return svc;
     }
 
+    /** The VaR engine's figures on Admin -> Capacity (DOMAIN_MODULES.md J3). */
+    @Bean
+    VarCapacityFigures varCapacityFigures(VarController controller) {
+        return new VarCapacityFigures(controller);
+    }
+
+    /**
+     * {@code /api/v1/health}'s {@code hierarchiesSkipped} (DOMAIN_MODULES.md J4): a hierarchy the VaR or exposure engine skipped (its level
+     * column not in the source), "var LL" to why (DRS-5211, a warning).
+     */
+    @Bean
+    com.ash.drishti.server.api.HealthFigures hierarchiesSkippedHealth() {
+        return new com.ash.drishti.server.api.HealthFigures() {
+            @Override
+            public String key() {
+                return "hierarchiesSkipped";
+            }
+
+            @Override
+            public Object value() {
+                return Hierarchies.skipped();
+            }
+        };
+    }
+
     /** Readiness waits for the VaR engine's newest date (CD1, drishti.node.readiness.engines). */
     @Bean
     com.ash.drishti.server.node.ReadinessGate varNewestDateReady(VarService svc) {

@@ -219,7 +219,7 @@ public final class YamlAccessStore implements AccessStore {
                         continue;
                     }
                     out.add(new Lens(String.valueOf(m.get("id")), ModuleManifest.str(m.get("title")), ModuleManifest.list(m.get("modules")),
-                            ModuleManifest.str(m.get("home")), ModuleManifest.list(m.get("menus")), ModuleManifest.list(m.get("help")), source));
+                            ModuleManifest.list(m.get("functions")), ModuleManifest.str(m.get("home")), ModuleManifest.list(m.get("menus")), ModuleManifest.list(m.get("help")), source));
                 }
             }
         }
