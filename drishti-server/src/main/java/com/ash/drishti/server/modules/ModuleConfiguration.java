@@ -84,12 +84,12 @@ public class ModuleConfiguration {
         return r;
     }
 
-    /** Beside the engine gate, after the caller is known. */
+    /** Just before the engine gate (4), after the caller is known: a module that is off says so, before its engines are asked. */
     @Bean
     public FilterRegistrationBean<ModuleGateFilter> moduleGateFilter(AccessRegistry registry, Started started) {
         FilterRegistrationBean<ModuleGateFilter> r = new FilterRegistrationBean<>(new ModuleGateFilter(registry, started::loaded));
         r.addUrlPatterns("/api/*");
-        r.setOrder(4);
+        r.setOrder(3);
         return r;
     }
 }

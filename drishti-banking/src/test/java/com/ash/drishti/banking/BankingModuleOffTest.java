@@ -71,7 +71,7 @@ class BankingModuleOffTest {
         List<String> found = new ArrayList<>();
         for (String name : ctx.getBeanDefinitionNames()) {
             Class<?> t = ctx.getType(name);
-            if (t != null && t.getName().startsWith("com.ash.drishti.banking.")) {
+            if (t != null && t.getName().startsWith("com.ash.drishti.banking.") && t != BankingTestServer.class) {   // the tests' own start class
                 found.add(name + " (" + t.getName() + ")");
             }
         }
