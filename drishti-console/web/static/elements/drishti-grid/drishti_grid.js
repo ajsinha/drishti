@@ -2848,6 +2848,14 @@
         this.datasource = o.datasource;
         this.blockSize = o.blockSize || 100;
         this.maxBlocks = o.maxBlocks || 50;
+        this.treeData = !!o.treeData;
+        if (this.treeData && (typeof o.isServerSideGroup !== 'function' || typeof o.getServerSideGroupKey !== 'function')) {
+          throw new Error('tree data on server-side rows needs isServerSideGroup(row) and getServerSideGroupKey(row)');
+        }
+        this.isServerSideGroup = o.isServerSideGroup || null;
+        this.getServerSideGroupKey = o.getServerSideGroupKey || null;
+        this.openTo = o.groupDefaultExpanded === -1 ? Infinity : Math.max(0, o.groupDefaultExpanded || 0);
+        this.collapsed = new Set();
         this.getRowId = o.getRowId || ((r, i, keys) => (r && r.id !== undefined ? String(r.id) : keys.concat([String(i)]).join(SEP)));
         this.events = new EventBus();
         this.sortModel = [];
@@ -2880,12 +2888,21 @@
         this.pivotCols = (s.pivotCols || []).slice();
         this.pivotMode = !!s.pivotMode;
         this.expanded.clear();
+        this.collapsed.clear();
         this.reset();
         this.events.emit('rowsChanged', { reason: 'group' });
       }
       setExpanded(keys, open) {
-        const k = keys.join(SEP), now = open === undefined ? !this.expanded.has(k) : open;
-        if (now) { this.expanded.add(k); if (!this.levels.has(k)) { this.levels.set(k, new Level(keys.slice())); } } else { this.expanded.delete(k); }
+        const k = keys.join(SEP), now = open === undefined ? !this.isOpen(k, keys.length - 1) : open;
+        if (now) { this.expanded.add(k); this.collapsed.delete(k); if (!this.levels.has(k)) { this.levels.set(k, new Level(keys.slice())); } }
+        else { this.expanded.delete(k); this.collapsed.add(k); }
+        this.display = null;
+        this.events.emit('rowsChanged', { reason: 'expand' });
+      }
+      expandToLevel(level) {
+        this.openTo = level >= 99 ? Infinity : Math.max(0, level || 0);
+        this.expanded.clear();
+        this.collapsed.clear();
         this.display = null;
         this.events.emit('rowsChanged', { reason: 'expand' });
       }
@@ -2926,6 +2943,13 @@
         this.refresh({ keys: n.keys });
         return 'level';
       }
+      isOpen(key, depth) { return this.expanded.has(key) || (depth < this.openTo && !this.collapsed.has(key)); }
+      nested() { return this.expanded.size > 0 || (this.openTo > 0 && (this.treeData || this.rowGroupCols.length > 0)); }
+      childKeys(lv, r) {
+        if (this.treeData) { return this.isServerSideGroup(r) ? lv.keys.concat([String(this.getServerSideGroupKey(r))]) : null; }
+        const depth = lv.keys.length;
+        return depth < this.rowGroupCols.length ? lv.keys.concat([String(r[this.rowGroupCols[depth]])]) : null;
+      }
       levelCount(lv) { return lv.rowCount !== null ? lv.rowCount : lv.knownEnd + this.blockSize; }
       flatten() {
         if (this.display) { return this.display; }
@@ -2934,11 +2958,11 @@
           const lv = this.levels.get(key), n = this.levelCount(lv), depth = lv.keys.length;
           for (let i = 0; i < n; i++) {
             out.push([key, i]);
-            if (depth < this.rowGroupCols.length) {
-              const r = this.blockRow(lv, i);
-              if (r && !r.loading) {
-                const childKeys = lv.keys.concat([String(r[this.rowGroupCols[depth]])]), ck = childKeys.join(SEP);
-                if (this.expanded.has(ck)) { if (!this.levels.has(ck)) { this.levels.set(ck, new Level(childKeys)); } walk(ck); }
+            if (this.treeData || depth < this.rowGroupCols.length) {
+              const r = this.blockRow(lv, i), childKeys = r && !r.loading ? this.childKeys(lv, r) : null;
+              if (childKeys) {
+                const ck = childKeys.join(SEP);
+                if (this.isOpen(ck, depth)) { if (!this.levels.has(ck)) { this.levels.set(ck, new Level(childKeys)); } walk(ck); }
               }
             }
           }
@@ -2953,17 +2977,23 @@
         const r = b.rows[i % this.blockSize];
         return r === undefined ? null : r;
       }
-      rowCount() { return this.expanded.size ? this.flatten().length : this.levelCount(this.levels.get('')); }
-      at(i) { return this.expanded.size ? this.flatten()[i] : ['', i]; }
+      rowCount() { return this.nested() ? this.flatten().length : this.levelCount(this.levels.get('')); }
+      at(i) { return this.nested() ? this.flatten()[i] : ['', i]; }
       rowAt(i) {
         if (i < 0 || i >= this.rowCount()) { return null; }
         const [key, n] = this.at(i), lv = this.levels.get(key), depth = lv.keys.length;
         const r = this.blockRow(lv, n);
         if (!r) { this.ensureBlock(key, Math.floor(n / this.blockSize)); return { kind: 'loading', id: 'loading:' + key + ':' + n, depth: depth, row: null, loading: true }; }
+        if (this.treeData) {
+          const keys = this.childKeys(lv, r), id = this.getRowId(r, n, lv.keys);
+          if (!keys) { return { kind: 'leaf', tree: true, treeKey: String(this.getServerSideGroupKey(r)), id: id, depth: depth, row: r, keys: lv.keys }; }
+          return { kind: 'group', tree: true, treeKey: keys[keys.length - 1], id: id, depth: depth, row: r, keys: keys, path: keys, field: null, value: keys[keys.length - 1],
+            expanded: this.isOpen(keys.join(SEP), depth) };                       // the tree column shows the key alone, as the client tree does
+        }
         if (depth < this.rowGroupCols.length) {
           const keys = lv.keys.concat([String(r[this.rowGroupCols[depth]])]);
           return { kind: 'group', id: 'group:' + keys.join(SEP), depth: depth, row: r, keys: keys, field: this.rowGroupCols[depth], value: r[this.rowGroupCols[depth]],
-            count: r.childCount, expanded: this.expanded.has(keys.join(SEP)) };
+            count: r.childCount, expanded: this.isOpen(keys.join(SEP), depth) };
         }
         return { kind: 'leaf', id: this.getRowId(r, n, lv.keys), depth: depth, row: r, keys: lv.keys };
       }
@@ -2979,9 +3009,11 @@
         return Promise.all(waits).then(() => undefined);
       }
       request(lv, block, signal) {
-        return { startRow: block * this.blockSize, endRow: (block + 1) * this.blockSize, sortModel: this.sortModel.slice(), filterModel: Object.assign({}, this.filterModel),
+        const q = { startRow: block * this.blockSize, endRow: (block + 1) * this.blockSize, sortModel: this.sortModel.slice(), filterModel: Object.assign({}, this.filterModel),
           quickFilter: this.quickFilter, rowGroupCols: this.rowGroupCols.slice(), groupKeys: lv.keys.slice(), valueCols: this.valueCols.slice(),
           pivotCols: this.pivotCols.slice(), pivotMode: this.pivotMode, signal: signal };
+        if (this.treeData) { q.treeData = true; }
+        return q;
       }
       ensureBlock(levelKey, block) {
         const lv = this.levels.get(levelKey);
@@ -3029,6 +3061,13 @@
           return new Promise((resolve, reject) => {
             const run = () => {
               if (req.signal && req.signal.aborted) { const e = new Error('aborted'); e.aborted = true; reject(e); return; }
+              if (req.treeData) {
+                if (typeof o.getDataPath !== 'function') { reject(new Error('a tree data request needs the memory datasource\'s getDataPath')); return; }
+                let level = treeLevel(rows, o.getDataPath, req.groupKeys, o.keyField || 'key');
+                if (req.sortModel && req.sortModel.length) { level = sortRows(level, req.sortModel[0]); }
+                resolve({ rows: level.slice(req.startRow, req.endRow), rowCount: level.length });
+                return;
+              }
               let list = req.groupKeys.length ? rows.filter((r) => req.groupKeys.every((k, i) => String(r[req.rowGroupCols[i]]) === k)) : rows;
               Object.keys(req.filterModel || {}).forEach((k) => {
                 const f = req.filterModel[k];
@@ -3039,8 +3078,7 @@
                 list.forEach((r) => { const k = String(r[col]); const g = m.get(k) || { [col]: r[col], childCount: 0 }; g.childCount++; m.set(k, g); });
                 list = Array.from(m.values()).sort((a, b) => String(a[col]).localeCompare(String(b[col])));
               } else if (req.sortModel && req.sortModel.length) {
-                const s = req.sortModel[0], dir = s.sort === 'desc' ? -1 : 1;
-                list = list.slice().sort((a, b) => (a[s.colId] < b[s.colId] ? -dir : a[s.colId] > b[s.colId] ? dir : 0));
+                list = sortRows(list, req.sortModel[0]);
               }
               resolve({ rows: list.slice(req.startRow, req.endRow), rowCount: list.length });
             };
@@ -3048,6 +3086,22 @@
           });
         }
       };
+    }
+    function sortRows(list, s) {
+      const dir = s.sort === 'desc' ? -1 : 1;
+      return list.slice().sort((a, b) => (a[s.colId] < b[s.colId] ? -dir : a[s.colId] > b[s.colId] ? dir : 0));
+    }
+    function treeLevel(rows, getDataPath, keys, keyField) {
+      const out = new Map(), d = keys.length;
+      rows.forEach((r) => {
+        const p = getDataPath(r).map(String);
+        if (p.length <= d || keys.some((k, i) => p[i] !== k)) { return; }
+        const k = p[d];
+        let x = out.get(k);
+        if (!x) { x = { row: null, kids: new Set() }; out.set(k, x); }
+        if (p.length === d + 1) { x.row = r; } else { x.kids.add(p[d + 1]); }
+      });
+      return Array.from(out.entries()).map(([k, x]) => Object.assign({}, x.row || { [keyField]: k }, { treeKey: k, treeGroup: x.kids.size > 0, childCount: x.kids.size }));
     }
     return { "ServerRowModel": ServerRowModel, "memoryDatasource": memoryDatasource };
   })();
@@ -3427,7 +3481,8 @@
         this.columns = new ColumnModel(o.columns);
         this.layout = LAYOUTS.indexOf(o.layout) >= 0 ? o.layout : 'wells';
         this.density = DENSITIES[o.density] ? o.density : 'compact';
-        this.rowModel = o.datasource ? new ServerRowModel({ datasource: o.datasource, blockSize: o.blockSize, getRowId: o.getRowId })
+        this.rowModel = o.datasource ? new ServerRowModel({ datasource: o.datasource, blockSize: o.blockSize, getRowId: o.getRowId, treeData: o.treeData,
+          isServerSideGroup: o.isServerSideGroup, getServerSideGroupKey: o.getServerSideGroupKey, groupDefaultExpanded: o.groupDefaultExpanded })
           : new ClientRowModel({ columns: this.columns, rows: o.rows || [], getRowId: o.getRowId, clientAggregation: o.clientAggregation, treeData: o.treeData,
             getDataPath: o.getDataPath, groupDefaultExpanded: o.groupDefaultExpanded });
         this.serverSide = !!o.datasource;
@@ -5239,7 +5294,7 @@
       row('`refreshServerSide({ route, purge })`, `purge`', 'mapped', '`ServerRowModel.refresh({keys, purge})`; a server pivot is asked again'),
       row('`rowModelType: \'infinite\'` with `datasource.getRows`', 'partial', 'the server-side row model without groups'),
       row('`treeData`, `getDataPath`', 'mapped', '`treeData`, `getDataPath` (client-side rows)'),
-      row('`isServerSideGroup`, `getServerSideGroupKey` (server-side tree data)', 'unsupported', 'tree data on client-side rows; server-side tree data is not built yet'),
+      row('`treeData` with `rowModelType: \'serverSide\'`, `isServerSideGroup`, `getServerSideGroupKey` (server-side tree data)', 'mapped', 'tree data on the server-side row model: each node\'s level asked when it opens, `groupKeys` its path'),
       row('`rowData`, `getRowId`, `rowSelection` (`singleRow`, `multiRow`, `single`, `multiple`, `checkboxes`), `quickFilterText`', 'mapped', '`rows`, `getRowId`, `rowSelection` and `checkboxes`, the quick filter'),
       row('`rowHeight`', 'partial', 'the nearest density: up to 24 px terminal, up to 31 px compact, else comfortable'),
       row('`domLayout: \'autoHeight\'`', 'partial', 'the element\'s height follows the row count when drawn; give large data a fixed height'),
@@ -5256,12 +5311,12 @@
     ]);
     const AG_NOT_COVERED = 'integrated charts (use drishti-chart on a range), master-detail rows, sparkline cell renderers, row dragging between grids, ' +
       'AG Grid\'s theming API and CSS classes (Drishti\'s theme applies), the viewport row model, pagination, custom cell renderers, editors and ' +
-      'header components, server-side tree data.';
+      'header components.';
     const AG_GRID_OPTIONS = Object.freeze(['columnDefs', 'defaultColDef', 'columnTypes', 'rowData', 'getRowId', 'rowSelection', 'animateRows', 'domLayout',
       'pivotMode', 'groupDefaultExpanded', 'pivotDefaultExpanded', 'groupTotalRow', 'groupIncludeFooter', 'grandTotalRow', 'groupIncludeTotalFooter',
       'pivotRowTotals', 'pivotColumnGroupTotals', 'autoGroupColumnDef', 'groupDisplayType', 'suppressAggFuncInHeader', 'aggFuncs', 'sideBar',
       'rowGroupPanelShow', 'pivotPanelShow', 'rowModelType', 'serverSideDatasource', 'datasource', 'cacheBlockSize', 'serverSidePivotResultFieldSeparator',
-      'treeData', 'getDataPath', 'quickFilterText', 'context', 'rowHeight', 'enableCellChangeFlash', 'cellSelection', 'enableRangeSelection', 'statusBar',
+      'treeData', 'getDataPath', 'isServerSideGroup', 'getServerSideGroupKey', 'quickFilterText', 'context', 'rowHeight', 'enableCellChangeFlash', 'cellSelection', 'enableRangeSelection', 'statusBar',
       'suppressMenuHide', 'drishti']);
     const AG_COLUMN_KEYS = Object.freeze(['field', 'colId', 'headerName', 'headerTooltip', 'children', 'groupId', 'type', 'cellDataType', 'width',
       'minWidth', 'maxWidth', 'flex', 'resizable', 'hide', 'pinned', 'sortable', 'sort', 'sortIndex', 'filter', 'valueGetter', 'valueFormatter',
@@ -5281,8 +5336,6 @@
       detailCellRendererParams: 'not covered in version 1',
       rowDragManaged: 'not covered in version 1',
       theme: 'Drishti\'s theme tokens (drishti_tokens.css) and densities',
-      isServerSideGroup: 'tree data on client-side rows (treeData, getDataPath); server-side tree data is not built yet',
-      getServerSideGroupKey: 'tree data on client-side rows (treeData, getDataPath); server-side tree data is not built yet',
       loadingOverlayComponent: 'drishti-grid\'s loading placeholders',
       noRowsOverlayComponent: 'drishti-grid\'s empty text',
       localeText: 'drishti-grid\'s words',
@@ -5701,7 +5754,7 @@
       });
       const cols = columns(go.columnDefs, [], ctx, []);
       const tree = !!go.treeData;
-      if (tree && ctx.serverSide) { report.add('treeData with rowModelType ' + rmt, 'unsupported', 'tree data on client-side rows (rowData with getDataPath); server-side tree data is not built yet'); }
+      if (tree && rmt === 'infinite') { report.add('treeData with rowModelType infinite', 'unsupported', 'rowModelType serverSide with isServerSideGroup and getServerSideGroupKey (server-side tree data)'); }
       if (ctx.groups.length || tree || cols.some((c) => c.enableRowGroup)) {
         const a = go.autoGroupColumnDef || {};
         Object.keys(a).forEach((k) => { if (['headerName', 'width', 'minWidth', 'maxWidth', 'pinned', 'cellRendererParams', 'field'].indexOf(k) < 0) { report.add('autoGroupColumnDef.' + k, 'unknown', ''); } });
@@ -5728,7 +5781,11 @@
       const out = Object.assign({ columns: cols, rowSelection: mode, checkboxes: checkboxes, layout: dx.layout || (go.sideBar ? 'panel' : 'wells'), density: density,
         pinTotals: false, grandColumn: !!go.pivotRowTotals, columnGroupTotals: !!go.pivotColumnGroupTotals, treeData: tree,
         groupDefaultExpanded: go.groupDefaultExpanded || 0 }, ctx.serverSide ? {} : { rows: go.rowData || [] });
-      if (tree) { if (typeof go.getDataPath !== 'function') { throw new Error('treeData needs getDataPath(data)'); } out.getDataPath = (row) => go.getDataPath(row); }
+      if (tree && ctx.serverSide) {                                                 // server-side tree data: the server answers one level at a time
+        if (typeof go.isServerSideGroup !== 'function' || typeof go.getServerSideGroupKey !== 'function') { throw new Error('treeData with rowModelType serverSide needs isServerSideGroup(data) and getServerSideGroupKey(data)'); }
+        out.isServerSideGroup = (row) => !!go.isServerSideGroup(row);
+        out.getServerSideGroupKey = (row) => go.getServerSideGroupKey(row);
+      } else if (tree) { if (typeof go.getDataPath !== 'function') { throw new Error('treeData needs getDataPath(data)'); } out.getDataPath = (row) => go.getDataPath(row); }
       if (typeof go.getRowId === 'function') { out.getRowId = (row, i, keys) => String(go.getRowId({ data: row, level: keys ? keys.length : 0, parentKeys: keys ? keys.slice() : [], context: go.context, api: ctx.api })); }
       if (go.cacheBlockSize) { out.blockSize = go.cacheBlockSize; }
       const sctx = { column: (id) => o.columnOf ? o.columnOf(id) : cols.find((c) => c.id === id || c.field === id) || null, aggOf: (id) => ctx.aggNames[id], context: go.context,

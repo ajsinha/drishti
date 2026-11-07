@@ -2310,7 +2310,7 @@ The server-side row model.
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `o` | `{datasource: Datasource, blockSize: number, maxBlocks: number, getRowId: function(Object, number, string[]): string}` | blockSize default 100; maxBlocks default 50 (5,000 rows held) |
+| `o` | `{datasource: Datasource, blockSize: number, maxBlocks: number, getRowId: function(Object, number, string[]): string, treeData: boolean, isServerSideGroup: function(Object): boolean, getServerSideGroupKey: function(Object): string, groupDefaultExpanded: number}` | blockSize default 100; maxBlocks default 50 (5,000 rows held); treeData: the server answers a tree one level at a time, isServerSideGroup(row) says a row is a node that opens, getServerSideGroupKey(row) its key at its level (the tree column shows it); groupDefaultExpanded: nodes (or row groups) open down to this level as they load (-1: all; default 0) |
 
 ##### `ServerRowModel.setSortModel(m)`
 
@@ -2363,6 +2363,16 @@ Opens or closes a group row (its level loads when it comes into view).
 
 Returns `void`.
 
+##### `ServerRowModel.expandToLevel(level)`
+
+Opens every group or tree node down to a level as it loads (0: all closed; 99 or Infinity: all), forgetting single opens and closes. A level is asked of the server only when its rows come into view.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `level` | `number` |  |
+
+Returns `void`.
+
 ##### `ServerRowModel.refresh(o)`
 
 Drops cached blocks and asks again: every level, or one level and those under it.
@@ -2400,6 +2410,17 @@ A server's "data changed" notice (drishti-data's live feed): {purge: true} forge
 
 Returns `string`: what was done: purge, level, blocks, rows or nothing.
 
+##### `ServerRowModel.childKeys(lv, r)`
+
+The keys of the node or group a loaded row opens, or null when it opens nothing (a leaf).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `lv` | `Level` | the row's level |
+| `r` | `Object` | the row |
+
+Returns `?string[]`.
+
 ##### `ServerRowModel.rowCount()`
 
 How many rows are displayed (an estimate while a level's count is not known).
@@ -2414,7 +2435,7 @@ The row at a display index: the data when its block is in, else a placeholder ({
 |---|---|---|
 | `i` | `number` |  |
 
-Returns `?Object} {kind: 'group'\|'leaf'\|'loading', id, depth, row, keys, expanded, loading`.
+Returns `?Object} {kind: 'group'\|'leaf'\|'loading', id, depth, row, keys, expanded, loading`: ; tree data adds tree: true, treeKey (the row's key at its level) and path (a node's keys from the top); a node is a group that is also a row (its id is the row's).
 
 ##### `ServerRowModel.ensureRange(first, last)`
 
@@ -2446,12 +2467,12 @@ Returns `{blocks: number, inFlight: number}`.
 
 #### `memoryDatasource(rows, o)`
 
-A data source over rows held in memory (tests, demos, and a page that wants the server-side model's paging over local data): sorts, filters and groups as a server would, with an optional delay.
+A data source over rows held in memory (tests, demos, and a page that wants the server-side model's paging over local data): sorts, filters and groups as a server would, with an optional delay. With getDataPath it answers tree data a level at a time, as a server would: a request with treeData and groupKeys [k1..kn] gets the children of that node, each the row whose path ends there (or, for a node no row names, {[keyField]: key}) with treeGroup (it has children), treeKey (its key) and childCount; use isServerSideGroup: (r) =&gt; r.treeGroup and getServerSideGroupKey: (r) =&gt; r.treeKey.
 
 | Parameter | Type | Meaning |
 |---|---|---|
 | `rows` | `Object[]` |  |
-| `[o]` | `{delay: number, columns: import('./drishti_columns.js').ColumnModel}` |  |
+| `[o]` | `{delay: number, columns: import('./drishti_columns.js').ColumnModel, getDataPath: function(Object): string[], keyField: string}` |  |
 
 Returns `Datasource & {calls: BlockRequest[]}`.
 
@@ -5889,8 +5910,10 @@ Everything GridModel takes (columns, rows or datasource, serverPivot, explain, c
 | `[valueFuncs]` | `string[]` | the browser's aggregations offered in the wells and menus (default: every one of VALUE_FUNCS; a server pivot offers those its server knows) |
 | `[pivotFormat]` | `function(Object): ?(string\|Object\|function(*, Object): string)` | a pivot measure's format, given the answer's measure ({label, id, kind, unit, showAs}); default: its value column's |
 | `[decorateCell]` | `function(Object): ?{cls: string, title: string, style: Object&lt;string, string&gt;, before: Node, content: Node, after: (string\|Node)}` | a host's marks on a cell, given its context (cellContext with value and text): classes (a comment, a change since a date), a hover note, colours (color, background-color, font-weight, font-style: a conditional format), a node before the figure (an icon), a node in its place (a link holding the same text), and a node or words after it (a sparkline, a delta); it shows, it never changes a figure |
-| `[treeData=false]` | `boolean` | the rows make a tree by their paths (getDataPath): nodes open and close, a node no row names carries its figures as a group (the server's when clientAggregation is false); the first shown column holds the node's key |
+| `[treeData=false]` | `boolean` | the rows make a tree by their paths (getDataPath): nodes open and close, a node no row names carries its figures as a group (the server's when clientAggregation is false); the first shown column holds the node's key. With a datasource, the server answers the tree a level at a time (isServerSideGroup, getServerSideGroupKey) |
 | `[getDataPath]` | `function(Object): string[]` | a row's path from the top (tree data) |
+| `[isServerSideGroup]` | `function(Object): boolean` | tree data on server-side rows (treeData with a datasource): whether a row the server sent is a node that opens; opening it asks the server for its level with groupKeys = the node's path |
+| `[getServerSideGroupKey]` | `function(Object): string` | tree data on server-side rows: a row's key at its level (the tree column shows it; a node's path is its ancestors' keys and this one) |
 | `[groupDefaultExpanded=0]` | `number` | groups and tree nodes open down to this level (-1: all) |
 
 #### `KeyResult` : `Object`
@@ -5971,6 +5994,7 @@ A feed: subscribe(onMessage) gives every message and returns the function that s
 | `valueCols` | `Array&lt;{colId: string, aggFunc: string}&gt;` |  |
 | `pivotCols` | `string[]` |  |
 | `pivotMode` | `boolean` |  |
+| `[treeData]` | `boolean` | tree data: groupKeys is the path of the node whose children are asked ([] for the top) |
 | `[signal]` | `AbortSignal` |  |
 
 #### `BlockAnswer` : `Object`

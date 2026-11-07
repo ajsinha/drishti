@@ -21,6 +21,16 @@
 
 ## 2.9.11.e (unreleased)
 
+- **drishti-grid: tree data on server-side rows** ([ELEMENTS.md section 8](docs/architecture/ELEMENTS.md), the AG Grid migration
+  guide): `treeData` with a `datasource`, `isServerSideGroup(row)` and `getServerSideGroupKey(row)` — the server answers the tree one
+  level at a time (`treeData: true` in the block request, `groupKeys` the path of the node whose children are asked); a node is a row
+  with the server's figures, a closed node reopens from its cached blocks, a sort or filter asks every open level again,
+  `refresh({keys})` asks one node's level, `groupDefaultExpanded` and expand/collapse all open levels as they load, the body draws a
+  `treegrid` with `aria-level` and `aria-expanded`. `memoryDatasource` answers tree requests with `getDataPath`. The AG Grid-style
+  adapter maps `treeData` with `rowModelType: 'serverSide'`, `isServerSideGroup` and `getServerSideGroupKey` (no longer reported as
+  unsupported); the adapter harness's `?mode=server-tree` and the gallery's "Server-side tree data" demo show it. Tests:
+  `tests/elements/tree.test.mjs`, `ag-adapter.test.mjs`, `test_elements_grid_browser.py`.
+
 - **The demo lake's layout, the owner's decision** (`config/lakes/demo.yaml` and its jar copy; DATA_LAKE_GUIDE.md section 2): `risk.scenario-pv`
   partitioned by `SCENARIO_SET_ID, GRAIN` after the business date, sorted by `LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, TRADE_ID`, zstd
   (vectors too), 256 MB files, 16 MB row groups, 30 days' time travel, maintenance (compaction to 256 MB, vacuum after 7 days,

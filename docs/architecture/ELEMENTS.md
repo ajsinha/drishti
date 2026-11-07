@@ -313,11 +313,11 @@ by `reportUnsupported()`; the adapter never fails silently.
   of the same data, custom and non-additive aggregations, totals and levels, the server-side request and a server pivot from
   `pivotResultFields`, tree data, the events, the API, the filter models both ways, the unsupported report; the gallery's AG shapes
   given to the adapter make the stage's pivot (`gallery.test.mjs`). Browser: the static harness `drishti_ag-harness.html`
-  (`?mode=pivot|server|tree`), a grid configured purely with AG-shaped options (`test_elements_grid_browser.py`).
+  (`?mode=pivot|server|tree|server-tree`), a grid configured purely with AG-shaped options (`test_elements_grid_browser.py`).
 
 **Not covered in version 1** (named in the console when used): integrated charts (use drishti-chart on a range), master-detail rows,
 sparkline cell renderers, row dragging between grids, AG Grid's theming API and CSS classes (Drishti's theme applies), the viewport row
-model, pagination, custom cell renderers, editors and header components, server-side tree data. The migration guide lists each with its
+model, pagination, custom cell renderers, editors and header components. The migration guide lists each with its
 Drishti way.
 
 ## 7. drishti-chart: one spec, the kinds, the maps
@@ -741,7 +741,13 @@ other libraries gained for it:
   rows into a tree of their paths; intermediate nodes are made, a row may itself be a node, nodes open by path or `groupDefaultExpanded`,
   siblings follow the sort, a filter keeps a match's ancestors; a node no row names carries its figures as a group does, the server's
   when they are non-additive or `clientAggregation` is off (`serverGroupColumns`, `setGroupServerValues` by path); the body draws a
-  `treegrid` with `aria-level` and `aria-expanded`; the AG Grid-style adapter maps `treeData`, `getDataPath` and `autoGroupColumnDef` onto it (section 6). Not yet: tree data on server-side rows.
+  `treegrid` with `aria-level` and `aria-expanded`; the AG Grid-style adapter maps `treeData`, `getDataPath` and `autoGroupColumnDef` onto it (section 6).
+  **Tree data on server-side rows** (`drishti_server-rows.js`): `treeData` with a `datasource`, `isServerSideGroup(row)` and
+  `getServerSideGroupKey(row)`: the server answers the tree one level at a time; the top level is asked with `groupKeys: []` and
+  `treeData: true`, a node's level when it opens, with `groupKeys` the node's path; a node is a row too (its own figures, the
+  server's); a closed node reopens from its cached blocks; a sort or filter asks every open level again; `refresh({keys})` asks one
+  node's level and those under it; `groupDefaultExpanded` and expand/collapse all open levels as they load. The adapter maps AG's
+  `treeData` with `rowModelType: 'serverSide'`, `isServerSideGroup` and `getServerSideGroupKey` onto it (`?mode=server-tree`).
 - **drishti-chart, the panel charts** (`drishti_chart-panels.js`, `drishti_chart-panel-draw.js`, moved from the renderer's `m/charts.js`
   and `m/draw.js`): `panelOption(kind, data, tokens, size, view)` builds the console's own options for line, area, waterfall, histogram,
   scatter, candlestick, graph, donut and the surface (heatmap or 3D), series for series the frozen 1.2.0 builders' (a Node test compares

@@ -65,8 +65,13 @@ import { cycleSort, FILTER_CHANNEL } from '../../drishti-core/src/drishti_index.
  *   note, colours (color, background-color, font-weight, font-style: a conditional format), a node before the figure (an icon), a node
  *   in its place (a link holding the same text), and a node or words after it (a sparkline, a delta); it shows, it never changes a figure
  * @property {boolean} [treeData=false] the rows make a tree by their paths (getDataPath): nodes open and close, a node no row names carries
- *   its figures as a group (the server's when clientAggregation is false); the first shown column holds the node's key
+ *   its figures as a group (the server's when clientAggregation is false); the first shown column holds the node's key. With a
+ *   datasource, the server answers the tree a level at a time (isServerSideGroup, getServerSideGroupKey)
  * @property {function(Object): string[]} [getDataPath] a row's path from the top (tree data)
+ * @property {function(Object): boolean} [isServerSideGroup] tree data on server-side rows (treeData with a datasource): whether a row
+ *   the server sent is a node that opens; opening it asks the server for its level with groupKeys = the node's path
+ * @property {function(Object): string} [getServerSideGroupKey] tree data on server-side rows: a row's key at its level (the tree column
+ *   shows it; a node's path is its ancestors' keys and this one)
  * @property {number} [groupDefaultExpanded=0] groups and tree nodes open down to this level (-1: all)
  */
 
@@ -84,7 +89,8 @@ export class GridModel extends GridModelBase {
     this.columns = new ColumnModel(o.columns);
     this.layout = LAYOUTS.indexOf(o.layout) >= 0 ? o.layout : 'wells';
     this.density = DENSITIES[o.density] ? o.density : 'compact';
-    this.rowModel = o.datasource ? new ServerRowModel({ datasource: o.datasource, blockSize: o.blockSize, getRowId: o.getRowId })
+    this.rowModel = o.datasource ? new ServerRowModel({ datasource: o.datasource, blockSize: o.blockSize, getRowId: o.getRowId, treeData: o.treeData,
+      isServerSideGroup: o.isServerSideGroup, getServerSideGroupKey: o.getServerSideGroupKey, groupDefaultExpanded: o.groupDefaultExpanded })
       : new ClientRowModel({ columns: this.columns, rows: o.rows || [], getRowId: o.getRowId, clientAggregation: o.clientAggregation, treeData: o.treeData,
         getDataPath: o.getDataPath, groupDefaultExpanded: o.groupDefaultExpanded });
     this.serverSide = !!o.datasource;
