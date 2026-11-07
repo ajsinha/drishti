@@ -21,6 +21,11 @@
 
 ## 2.9.11.e (unreleased)
 
+- **Proposed for the owner's choice: drishti-graph, drishti-tree and the designer kit** (ELEMENTS.md section 16; mock-ups
+  docs/architecture/mockups/elements/g5-graph.html, g6-tree.html and g7-designer-kit.html, three options each, synthetic data): a
+  connected graph on a canvas (counterparty, ownership and AML networks; layouts, paths, grouping, Explain, a linked table), a tree
+  (org chart, tree grid with ◆ non-additive measures, sunburst; re-parenting as a four-eyes proposal), and the one shell every
+  designer is built on, shown as the BI report designer and as the form designer. Design only.
 - **The demo lake's layout, the owner's decision** (`config/lakes/demo.yaml` and its jar copy; DATA_LAKE_GUIDE.md section 2): `risk.scenario-pv`
   partitioned by `SCENARIO_SET_ID, GRAIN` after the business date, sorted by `LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, TRADE_ID`, zstd
   (vectors too), 256 MB files, 16 MB row groups, 30 days' time travel, maintenance (compaction to 256 MB, vacuum after 7 days,

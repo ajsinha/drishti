@@ -16,7 +16,7 @@
 
 # Drishti Elements: the console's JavaScript as eight reusable libraries
 
-**Status: being built** (release 2.9.11.e, product owner 2026-11-07; mock-ups g1 to g4 below, all decided; as built: 8.1 to 8.6). The internal design:
+**Status: being built** (release 2.9.11.e, product owner 2026-11-07; mock-ups g1 to g4 below, all decided; g5 to g7 proposed, section 16; as built: 8.1 to 8.6). The internal design:
 what each library is, what it takes over from today's code, the grid's pivot, the AG Grid-style adapter, the chart spec and the maps,
 packaging and licensing, the documentation of every library, the gallery, the guards, the order in which Drishti's screens move, the
 risks and the product owner's decisions. The renderer, the embed API and Elements 2.x (`<drishti-view>`) are designed in
@@ -39,6 +39,7 @@ risks and the product owner's decisions. The renderer, the embed API and Element
 13. [Risks](#13-risks)
 14. [Decisions of the product owner (2026-11-07)](#14-decisions-of-the-product-owner-2026-11-07)
 15. [Build checklist](#15-build-checklist)
+16. [Proposed: drishti-graph, drishti-tree and the designer kit (mock-ups g5, g6, g7), for the owner's choice](#16-proposed-drishti-graph-drishti-tree-and-the-designer-kit-mock-ups-g5-g6-g7-for-the-owners-choice)
 
 ## 1. Why: one implementation of each thing
 
@@ -1020,3 +1021,55 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [ ] The general screens' multi-select, pickers, controls, forms and Build editors (8.6, still to move)
 - [ ] Every screen moved (section 12) and the old code deleted; the allow list empty (the BI and Pivot family: 12.1)
 - [ ] `tools/elements/inventory.py` (planned) regenerates section 2's figures; README and CHANGELOG updated; two drills
+
+## 16. Proposed: drishti-graph, drishti-tree and the designer kit (mock-ups g5, g6, g7), for the owner's choice
+
+Three new components, mock-ups first: each page has three options (A, B, C) in the chrome of g1 to g4 (the toolbar, menus, status
+line, the three densities, light and dark). Synthetic data only. Nothing is built until the product owner picks; as with the grid,
+the options may become modes of one component.
+
+**g5, drishti-graph** ([g5-graph.html](mockups/elements/g5-graph.html)): a generic connected-graph component on a canvas (WebGL
+above about 50,000 nodes, layouts in a Web Worker). Data sets: a counterparty network (groups, legal entities, netting sets, CSAs,
+trades), a GLEIF-style ownership chain, an AML transaction network; each with a dense cluster (1,500 trades, 600 vehicles, an
+800-account community). Shared by all options: force, hierarchy and radial layouts; zoom, pan, minimap; expand a node's neighbours,
+collapse what is below; search; the shortest path between two nodes; group and collapse by an attribute; size and colour by a
+measure with a legend; edge width by weight; pin; filter by type; a selection with Explain (EAD by SA-CCR, look-through ownership,
+the AML score's rules); a table linked both ways; export PNG, SVG and the data.
+
+| Option | Arrangement and interaction | Best for |
+|---|---|---|
+| A, canvas with a side inspector | filters, grouping, size, colour and the legend on the left; the inspector, Explain and the neighbours on the right; a table of the selection under the canvas | mouse-first exploration (recommended default) |
+| B, canvas over a linked table | the controls float on the canvas, the inspector is a card at the node; below, a table of every drawn node, edge or the path, sortable and filterable, linked both ways | analysts who work from grids (counterparty reviews, AML cases) |
+| C, terminal with a graph query line | a command line (`path`, `expand`, `group by`, `top 10 exposure`, `explain`, `filter`, `export`), an output pane, function keys, monospace | the keyboard, traders |
+
+**g6, drishti-tree** ([g6-tree.html](mockups/elements/g6-tree.html)): a generic hierarchy component. Data sets: a VaR hierarchy (bank,
+divisions, desks, books) with VaR, ES and limit use, a legal-entity structure, and a lineage DAG (sources, tables, models, reports;
+a node with two parents is marked ⧉). Shared: expand and collapse, search that opens the matching branches, breadcrumbs, measures on
+the nodes with VaR and ES marked ◆ and never summed (the children's sum shown beside, the gap is the diversification), Explain,
+an edit mode where a node is dragged to a new parent and the moves become one proposal for four-eyes review, export PNG, SVG, CSV, JSON.
+
+| Option | Shape | Best for |
+|---|---|---|
+| A, org chart | top-down boxes with figures and a limit-use bar; the lineage as a layered DAG left to right | structures people present |
+| B, tree grid with measures | an indented tree in drishti-grid (`role="treegrid"`), a column per measure, the limit-use bar, keyboard | risk managers' daily view (recommended default) |
+| C, sunburst or icicle | an additive measure (positions, notional, RWA, rows) as angle or width, colour by limit use; VaR is never an angle | where it is concentrated, at a glance |
+
+**g7, the designer kit** ([g7-designer-kit.html](mockups/elements/g7-designer-kit.html)): one shell on which every designer is built
+(Sutra screens, BI reports, forms, semantic models, tables, Python tables and models, the Build workbench's YAML), with the header
+of [EDITORS.md](EDITORS.md) section 1. The page shows the same kit as the BI report designer and, by a switch, as the form designer:
+only the palette, the schemas and the preview's widgets change. Shared: a layout canvas (drag, drop, resize, snap to the 12-column
+grid, multi-select, align and distribute, undo and redo, keyboard moves); a searchable palette; an inspector generated from the
+component's schema (required fields, validation as typed, fields shown only when they apply); the outline as a tree in g6's style,
+dragged to re-order; the live YAML (selection and YAML highlight each other, values edited in place with type-ahead from the Rachana
+catalogue, lint markers and a problems list); the header's versions, Validate, Preview, History, Impact and Propose for review (four
+eyes, with the diff against the approved version); a preview drawn with the real Elements widgets (grid, chart, KPI, form fields).
+
+| Option | Arrangement | Best for |
+|---|---|---|
+| A, studio with docked panes | palette and outline as tabs on the left, the canvas with the YAML docked below, the inspector and the preview on the right | most builders (recommended default) |
+| B, code beside, live preview | outline over palette on the left, the canvas and the YAML side by side, the preview always on; the inspector as a card at the selection | people who read and write the YAML |
+| C, terminal, keyboard first | a command line and a Ctrl+K palette, the outline as a property grid, a dense inspector, the YAML with its problems below, function keys | builders who keep to the keyboard |
+
+After the choice: drishti-graph and drishti-tree join drishti-chart's family as generic components (domain variants in the domain
+libraries), the GLEIF and counterparty screens and the data map move onto them; the designer kit becomes part of drishti-inputs and
+every editor of EDITORS.md is rebuilt on it.
