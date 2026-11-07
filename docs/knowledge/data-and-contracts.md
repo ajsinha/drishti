@@ -184,7 +184,7 @@ internal use only. The External data page says which is which.
 
 ## 7. Where to go deeper
 
-- [Data contracts](../contracts/README.md): the rules every contract shares, and [every command's contract](../contracts/packs/README.md).
+- [Data contracts](../contracts/README.md): the rules every contract shares, and [every command's contract](../contracts/README.md#every-kind-a-to-z).
 - [The command catalog](../guides/COMMAND_CATALOG.md): every command with its class.
 - [External data](../guides/EXTERNAL_DATA.md): every external source, its licence and refresh script.
 - [Data loads](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) and [Connectors](../connectors/CONNECTORS.md).

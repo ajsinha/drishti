@@ -17,7 +17,7 @@
 
 # Data contracts of the funds pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/funds/guides/funds.md](../../../config/packs/funds/guides/funds.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per kind of the pack: what one record is, its key, how it is stored and dated, every field, one example record from the committed test data, the validation rules and what a person still has to confirm. This page is the one home of these facts: guides and tutorials link here. The rules every contract shares, and every kind from A to Z, are in [the contracts index](../README.md).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -43,7 +43,6 @@ A US mutual fund or ETF from SEC public data: the fact sheet, the look-through h
 | Storage | connector `funds-store` (plugin `delta`), table `<root>/funds/fund/` |
 | Columns | `TICKER`, `NAME`, `TYPE`, `TICKERS`, `ADVISER`, `INDEX_ID`, `NET_ASSETS`, `EXPENSE_RATIO`, `HOLDING_COUNT`, `REPORT_DATE`, `RANK` |
 | Test data | data/testdata/funds/fund |
-| Worked example | [funds/fund](../samples/funds/fund.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -354,6 +353,324 @@ A US mutual fund or ETF from SEC public data: the fact sheet, the look-through h
 | `PURCHASES` | amount | required | USD | Creation units it bought over the year, by value. Source: N-CEN AUTHORIZED_PARTICIPANT.PURCHASE_VALUE. | `14638424000.0` |  |
 | `REDEMPTIONS` | amount | required | USD | Creation units it redeemed over the year, by value. Source: N-CEN AUTHORIZED_PARTICIPANT.REDEEM_VALUE. | `6246681000.0` |  |
 
+**Example**
+
+The most complete record of `data/testdata/funds/fund/fund.tar` → `fund/2026-10-26/snapshot.part-01.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "TICKER": "VOO",
+  "NAME": "Vanguard 500 Index Fund",
+  "TYPE": "Mutual fund with an ETF share class",
+  "FUND_KEY": "S000002839",
+  "SERIES_ID": "S000002839",
+  "CIK": "0000036405",
+  "REGISTRANT": "Vanguard Index Funds",
+  "LEI": "12WZ1W76P8QD4VJ6OB47",
+  "REGISTRANT_LEI": "549300G6KNDK44WUN559",
+  "TICKERS": "VOO VFINX VFIAX VFFSX",
+  "CLASSES": [
+    {
+      "CLASS_ID": "C000007773",
+      "TICKER": "VFINX",
+      "CLASS_NAME": "Investor Shares",
+      "EXPENSE_RATIO": 0.14,
+      "RETURN_3M": 15.16
+    },
+    {
+      "CLASS_ID": "C000007774",
+      "TICKER": "VFIAX",
+      "CLASS_NAME": "Admiral Shares",
+      "EXPENSE_RATIO": 0.04,
+      "RETURN_3M": 15.19
+    },
+    /* … 2 more … */
+  ],
+  "CLASS_COUNT": 4,
+  "PRIMARY_CLASS": "C000092055",
+  "IS_ETF": true,
+  "IS_INDEX": true,
+  "IS_FUND_OF_FUNDS": false,
+  "IS_TARGET_DATE": false,
+  "IS_MASTER_FEEDER": false,
+  "INDEX_ID": "SP500",
+  "EXCHANGE": "NYSE Arca",
+  "CREATION_UNIT": 25000.0,
+  "AP_COUNT": 34,
+  "AUTHORISED_PARTICIPANTS": [
+    {
+      "NAME": "Merrill Lynch Pro",
+      "LEI": "549300PMHS66E71I2D34",
+      "PURCHASES": 98971900250.0,
+      "REDEMPTIONS": 34270892750.0
+    },
+    {
+      "NAME": "JP Morgan",
+      "LEI": "ZBUT11V806EZRVTWT807",
+      "PURCHASES": 45551057250.0,
+      "REDEMPTIONS": 52861680000.0
+    },
+    /* … 8 more … */
+  ],
+  "ADVISER": "The Vanguard Group, Inc.",
+  "ADVISER_LEI": "5493002789CX3L0CJP65",
+  "SUB_ADVISERS": "",
+  "CUSTODIAN": "State Street Bank and Trust Company",
+  "CUSTODIAN_LEI": "571474TGEMMWANRLN572",
+  "ADMINISTRATOR": "THE VANGUARD GROUP, INC.",
+  "TRANSFER_AGENT": "The Vanguard Group, Inc.",
+  "AUDITOR": "PRICEWATERHOUSECOOPERS LLP",
+  "AUDITOR_LEI": "5493002GVO7EO8RNNS37",
+  "LENDS_SECURITIES": true,
+  "NCEN_PERIOD": "2025-12-31",
+  "NCEN_ACCESSION": "0000036405-26-000103",
+  "GLEIF_RELATIONSHIPS": [
+    {
+      "TYPE": "Managed by",
+      "LEI": "5493002789CX3L0CJP65",
+      "STATUS": "ACTIVE"
+    },
+    {
+      "TYPE": "Sub-fund of",
+      "LEI": "549300G6KNDK44WUN559",
+      "STATUS": "ACTIVE"
+    }
+  ],
+  "RANK": 2,
+  "REPORT_DATE": "2026-06-30",
+  "FILED": "2026-08-28",
+  "ACCESSION": "0000036405-26-000473",
+  "NPORT_URL": "https://www.sec.gov/Archives/edgar/data/36405/000003640526000473/",
+  "TOTAL_ASSETS": 1673632288919.0,
+  "NET_ASSETS": 1671231561960.0,
+  "EXPENSE_RATIO": 0.03,
+  "GROSS_EXPENSE_RATIO": 0.03,
+  "MANAGEMENT_FEE": 0.02,
+  "TURNOVER": 2.0,
+  "PROSPECTUS_FILED": "2026-04-28",
+  "ANNUAL_RETURNS": [
+    {
+      "YEAR": "2018",
+      "RETURN": -4.42
+    },
+    {
+      "YEAR": "2019",
+      "RETURN": 31.46
+    },
+    /* … 6 more … */
+  ],
+  "RETURN_LAST_YEAR": 17.84,
+  "RETURN_YEAR": 2025,
+  "RETURN_3M": 15.19,
+  "FLOWS": [
+    {
+      "MONTH": "2026-04",
+      "SALES": 40632647042.0601,
+      "REINVESTMENT": 5915.33,
+      "REDEMPTIONS": 12174698544.92,
+      "NET_FLOW": 28457954412.47,
+      "RETURN": 10.49057487
+    },
+    {
+      "MONTH": "2026-05",
+      "SALES": 32054277718.52,
+      "REINVESTMENT": 435.62,
+      "REDEMPTIONS": 16225703909.41,
+      "NET_FLOW": 15828574244.73,
+      "RETURN": 5.26044899
+    },
+    /* … 1 more … */
+  ],
+  "SALES": 165272945735.27,
+  "REDEMPTIONS": 131179756990.89,
+  "REINVESTMENT": 1706087683.97,
+  "NET_FLOW": 35799276428.35,
+  "HOLDING_COUNT": 520,
+  "HOLDINGS_SHOWN": 520,
+  "HOLDINGS_REST_COUNT": 0,
+  "HOLDINGS_REST_PCT": 0,
+  "HOLDINGS_REST_VALUE": 0,
+  "TOP10_PCT": 36.403,
+  "TOP50_PCT": 62.962,
+  "HHI": 0.01942,
+  "LARGEST": "NVIDIA Corp",
+  "LARGEST_PCT": 7.514237,
+  "WITH_LEI": 494,
+  "EQUITY_PCT": 99.749,
+  "US_COMPANY_PCT": 99.397,
+  "US_COMPANIES": 495,
+  "BY_ASSET": [
+    {
+      "KEY": "EC",
+      "LABEL": "Common equity",
+      "PCT": 99.749,
+      "VALUE": 1667040888390.0,
+      "COUNT": 506
+    },
+    {
+      "KEY": "STIV",
+      "LABEL": "Short-term investment vehicle",
+      "PCT": 0.349,
+      "VALUE": 5833051440.0,
+      "COUNT": 2
+    },
+    /* … 1 more … */
+  ],
+  "BY_ISSUER_TYPE": [
+    {
+      "KEY": "CORP",
+      "LABEL": "Corporate",
+      "PCT": 100.098,
+      "VALUE": 1672873939830.0,
+      "COUNT": 508
+    },
+    {
+      "KEY": "OTHER",
+      "LABEL": "Other",
+      "PCT": -0.004,
+      "VALUE": -75145092.0,
+      "COUNT": 12
+    }
+  ],
+  "BY_COUNTRY": [
+    {
+      "KEY": "US",
+      "LABEL": "US",
+      "PCT": 100.098,
+      "VALUE": 1672873939830.0,
+      "COUNT": 508
+    },
+    {
+      "KEY": "N/A",
+      "LABEL": "N/A",
+      "PCT": -0.004,
+      "VALUE": -75145092.0,
+      "COUNT": 12
+    }
+  ],
+  "BY_SECTOR": [
+    {
+      "KEY": "Manufacturing",
+      "LABEL": "Manufacturing",
+      "PCT": 52.494,
+      "VALUE": 877288695603.0,
+      "COUNT": 202
+    },
+    {
+      "KEY": "Services",
+      "LABEL": "Services",
+      "PCT": 19.469,
+      "VALUE": 325363924667.0,
+      "COUNT": 75
+    },
+    /* … 7 more … */
+  ],
+  "DERIVATIVE_COUNT": 12,
+  "DERIVATIVES_NOTIONAL": 4349958523.0,
+  "DERIVATIVES": [
+    {
+      "NAME": "TRS:JPMORGAN CHASE & CO USD 2027-Aug-31",
+      "TITLE": "TRS:JPMORGAN CHASE & CO USD 2027-Aug-31",
+      "DERIVATIVE": "SWP",
+      "PAYOFF": "N/A",
+      /* … 9 more keys … */
+    },
+    {
+      "NAME": "S&P500 EMINI FUT Sep26",
+      "TITLE": "S&P500 EMINI FUT Sep26",
+      "DERIVATIVE": "FUT",
+      "PAYOFF": "N/A",
+      /* … 10 more keys … */
+    },
+    /* … 10 more … */
+  ],
+  "COUNTERPARTIES": [
+    {
+      "NAME": "BANK OF AMERICA, N.A.",
+      "LEI": "B4TYDEB6GKMZO031MB27",
+      "POSITIONS": 9,
+      "NOTIONAL": 4206627848.0,
+      "VALUE": -63410285.0
+    },
+    {
+      "NAME": "GOLDMAN SACHS INTERNATIONAL",
+      "LEI": "W22LROWP2IHZNBB6K528",
+      "POSITIONS": 1,
+      "NOTIONAL": 64060000.0,
+      "VALUE": -8530000.0
+    },
+    /* … 2 more … */
+  ],
+  "COUNTERPARTY_COUNT": 4,
+  "HOLDINGS": [
+    {
+      "NAME": "NVIDIA Corp",
+      "TITLE": "NVIDIA CORP",
+      "CUSIP": "67066G104",
+      "ISIN": "US67066G1040",
+      /* … 13 more keys … */
+    },
+    {
+      "NAME": "Apple Inc",
+      "TITLE": "APPLE INC",
+      "CUSIP": "037833100",
+      "ISIN": "US0378331005",
+      /* … 13 more keys … */
+    },
+    /* … 518 more … */
+  ],
+  "VIEWS": [
+    {
+      "VIEW": "LOOK_THROUGH",
+      "TITLE": "Look-through holdings"
+    },
+    {
+      "VIEW": "VS_INDEX",
+      "TITLE": "vs S&P 500"
+    }
+  ],
+  "PROVENANCE": {
+    "SOURCE": "U.S. Securities and Exchange Commission: Form N-PORT, Form N-CEN and prospectus risk/return summary data sets; mutual fund ticker file",
+    "LICENCE": "Public domain (U.S. Government work); SEC fair access policy (descriptive User-Agent, at most 10 requests a second)",
+    "RETRIEVED_AT": "2026-10-26",
+    "NOTE": "Holdings, flows and returns as the fund filed them on Form N-PORT for 2026-06-30; census facts from its newest Form N-CEN; fees and calendar-year returns from…"
+  },
+  "MOST_HELD_COMPANY": "NVDA",
+  "MOST_HELD_NAME": "Nvidia",
+  "ALSO_HELD_BY": [
+    {
+      "FUND": "VTI",
+      "FUND_NAME": "Vanguard Total Stock Market Index Fund",
+      "TYPE": "Mutual fund with an ETF share class",
+      "PCT": 6.3554,
+      "VALUE": 146036467451.0,
+      "SHARES": 729853903.0,
+      "REPORT_DATE": "2026-06-30",
+      "NET_ASSETS": 2297839156548.0
+    },
+    {
+      "FUND": "IVV",
+      "FUND_NAME": "iShares Core S&P 500 ETF",
+      "TYPE": "ETF",
+      "PCT": 7.5059,
+      "VALUE": 66662358368.0,
+      "SHARES": 333161869.0,
+      "REPORT_DATE": "2026-06-30",
+      "NET_ASSETS": 888128937468.0
+    },
+    /* … 8 more … */
+  ],
+  "VS_INDEX": {
+    "INDEX_ID": "SP500",
+    "INDEX_NAME": "S&P 500",
+    "BASIS": "tracks",
+    "WEIGHTING": "market capitalisation computed from SEC data",
+    /* … 13 more keys … */
+  },
+  "ACTIVE_SHARE": 5.29
+}
+```
+
 **Links:** `MOST_HELD_COMPANY` → `us-company`, `HOLDINGS[].COMPANY` → `us-company`, `VS_INDEX.ROWS[].COMPANY` → `us-company`.
 
 **Validation**
@@ -410,7 +727,6 @@ The reverse look-through: every fund of the pack that holds one us-equities comp
 | Storage | connector `funds-store` (plugin `delta`), table `<root>/funds/fund-holder/` |
 | Columns | `TICKER`, `NAME`, `FUNDS`, `TOTAL_VALUE`, `PCT_OF_SHARES` |
 | Test data | data/testdata/funds/fund-holder |
-| Worked example | [funds/fund-holder](../samples/funds/fund-holder.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -462,6 +778,68 @@ The reverse look-through: every fund of the pack that holds one us-equities comp
 | `RETRIEVED_AT` | date | required |  | The date the data sets were downloaded. Source: the download cache. | `2026-10-26` |  |
 | `NOTE` | text | required |  | What the document holds and from which filings. Source: written by tools/packgen/funds/build.py. | `Every holding of the pack's funds in this company (Form N-P…` |  |
 
+**Example**
+
+The most complete record of `data/testdata/funds/fund-holder/fund-holder.2026-10-26.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "TICKER": "A",
+  "NAME": "Agilent Technologies",
+  "COMPANY": "A",
+  "SECTOR": "Manufacturing",
+  "FUNDS": 43,
+  "ETFS": 15,
+  "TOTAL_VALUE": 7751546198.0,
+  "TOTAL_SHARES": 57800330.0,
+  "SHARES_OUTSTANDING": 283498871,
+  "PCT_OF_SHARES": 20.388,
+  "AVG_WEIGHT": 0.1313,
+  "MAX_WEIGHT": 1.4933,
+  "TOP_HOLDER": "VTI",
+  "HOLDERS": [
+    {
+      "FUND": "VTI",
+      "FUND_NAME": "Vanguard Total Stock Market Index Fund",
+      "TYPE": "Mutual fund with an ETF share class",
+      "PCT": 0.0518,
+      "VALUE": 1190260009.0,
+      "SHARES": 8960777.0,
+      "REPORT_DATE": "2026-06-30",
+      "NET_ASSETS": 2297839156548.0
+    },
+    {
+      "FUND": "VOO",
+      "FUND_NAME": "Vanguard 500 Index Fund",
+      "TYPE": "Mutual fund with an ETF share class",
+      "PCT": 0.0582,
+      "VALUE": 972761510.0,
+      "SHARES": 7323357.0,
+      "REPORT_DATE": "2026-06-30",
+      "NET_ASSETS": 1671231561960.0
+    },
+    /* … 41 more … */
+  ],
+  "TOP_WEIGHTS": [
+    {
+      "FUND": "VGHCX",
+      "PCT": 1.4933
+    },
+    {
+      "FUND": "XLV",
+      "PCT": 0.6532
+    },
+    /* … 8 more … */
+  ],
+  "PROVENANCE": {
+    "SOURCE": "U.S. Securities and Exchange Commission: Form N-PORT, Form N-CEN and prospectus risk/return summary data sets; mutual fund ticker file",
+    "LICENCE": "Public domain (U.S. Government work); SEC fair access policy (descriptive User-Agent, at most 10 requests a second)",
+    "RETRIEVED_AT": "2026-10-26",
+    "NOTE": "Every holding of the pack's funds in this company (Form N-PORT), each fund as of its own report date."
+  }
+}
+```
+
 **Links:** `COMPANY` → `us-company`, `HOLDERS[].FUND` → `fund`, `TOP_WEIGHTS[].FUND` → `fund`.
 
 **Validation**
@@ -498,7 +876,6 @@ The funds and ETFs of the pack that track one us-equities index, by net assets, 
 | Storage | connector `funds-store` (plugin `delta`), table `<root>/funds/index-funds/` |
 | Columns | `INDEX`, `NAME`, `FUNDS`, `TOTAL_NET_ASSETS` |
 | Test data | data/testdata/funds/index-funds |
-| Worked example | [funds/index-funds](../samples/funds/index-funds.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -535,6 +912,40 @@ The funds and ETFs of the pack that track one us-equities index, by net assets, 
 | `LICENCE` | text | required |  | The source's licence (public domain). Source: written by tools/packgen/funds/build.py. | `Public domain (U.S. Government work); SEC fair access polic…` |  |
 | `RETRIEVED_AT` | date | required |  | The date the data sets were downloaded. Source: the download cache. | `2026-10-26` |  |
 | `NOTE` | text | required |  | What the document holds and from which filings. Source: written by tools/packgen/funds/build.py. | `The pack's funds whose name names this index (N-CEN says wh…` |  |
+
+**Example**
+
+The most complete record of `data/testdata/funds/index-funds/index-funds.2026-10-26.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "INDEX": "DJIA",
+  "NAME": "Dow Jones Industrial Average",
+  "FUNDS": 1,
+  "ETFS": 1,
+  "TOTAL_NET_ASSETS": 45207847202.0,
+  "LARGEST": "DIA",
+  "ROWS": [
+    {
+      "FUND": "DIA",
+      "NAME": "SPDR Dow Jones Industrial Average ETF Trust",
+      "TYPE": "ETF (unit investment trust)",
+      "NET_ASSETS": 45207847202.0,
+      "EXPENSE_RATIO": null,
+      "MEMBERS_HELD": 30,
+      "ACTIVE_SHARE": 1.8,
+      "REPORT_DATE": "2026-07-31",
+      "IS_ETF": true
+    }
+  ],
+  "PROVENANCE": {
+    "SOURCE": "U.S. Securities and Exchange Commission: Form N-PORT, Form N-CEN and prospectus risk/return summary data sets; mutual fund ticker file",
+    "LICENCE": "Public domain (U.S. Government work); SEC fair access policy (descriptive User-Agent, at most 10 requests a second)",
+    "RETRIEVED_AT": "2026-10-26",
+    "NOTE": "The pack's funds whose name names this index (N-CEN says whether a fund is an index fund, not which index); index weights are not public."
+  }
+}
+```
 
 **Links:** `ROWS[].FUND` → `fund`.
 

@@ -17,7 +17,7 @@
 
 # Data contracts of the us-equities pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/us-equities/guides/us-equities.md](../../../config/packs/us-equities/guides/us-equities.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per kind of the pack: what one record is, its key, how it is stored and dated, every field, one example record from the committed test data, the validation rules and what a person still has to confirm. This page is the one home of these facts: guides and tutorials link here. The rules every contract shares, and every kind from A to Z, are in [the contracts index](../README.md).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -47,7 +47,6 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 | Storage | connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/us-company/` |
 | Columns | `TICKER`, `NAME`, `LEI_LEGAL_NAME`, `CIK`, `LEI`, `EXCHANGE`, `INDEX_TEXT`, `SECTOR`, `SIC`, `SIC_DESCRIPTION`, `STATE_OF_INCORPORATION`, `REVENUE` |
 | Test data | data/testdata/us-equities/us-company |
-| Worked example | [us-equities/us-company](../samples/us-equities/us-company.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -147,6 +146,146 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 | `LICENCE` | text | required |  | The licences of the sources. | `Public domain (SEC EDGAR); CC0 1.0 (Wikidata, GLEIF)` |  |
 | `URL` | text | required |  | The company's page on SEC EDGAR. | `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&…` |  |
 
+**Example**
+
+The most complete record of `data/testdata/us-equities/us-company/us-company.2026-10-24.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "TICKER": "BA",
+  "NAME": "Boeing",
+  "SEC_NAME": "BOEING CO",
+  "CIK": "0000012927",
+  "OTHER_TICKERS": "BA-PA",
+  "EXCHANGE": "NYSE, NYSE",
+  "LISTING": "New York Stock Exchange",
+  "SIC": "3721",
+  "SIC_DESCRIPTION": "Aircraft",
+  "DIVISION": "D",
+  "SECTOR": "Manufacturing",
+  "STATE_OF_INCORPORATION": "DE",
+  "FISCAL_YEAR_END": "12-31",
+  "FILER_CATEGORY": "Large accelerated filer",
+  "HEADQUARTERS": "Chicago",
+  "BUSINESS_ADDRESS": "ARLINGTON, VA",
+  "FOUNDED": "1916-07-15",
+  "WEBSITE": "https://boeing.com/",
+  "PHONE": "7034146338",
+  "LEI": "RVHJWBXLJ1RFUBSY1F30",
+  "LEI_LEGAL_NAME": "THE BOEING COMPANY",
+  "LEI_STATUS": "ISSUED",
+  "LEI_SOURCE": "GLEIF, LEI from Wikidata",
+  "INDEXES": [
+    {
+      "INDEX": "DJIA",
+      "NAME": "Dow Jones Industrial Average",
+      "SINCE": ""
+    },
+    {
+      "INDEX": "SP500",
+      "NAME": "S&P 500",
+      "SINCE": ""
+    }
+  ],
+  "INDEX_TEXT": "Dow Jones Industrial Average, S&P 500",
+  "CURRENCY": "USD",
+  "FISCAL_YEAR": 2025,
+  "REVENUE": 89463000000,
+  "NET_INCOME": 2235000000,
+  "ASSETS": 168235000000,
+  "LIABILITIES": 162778000000,
+  "EQUITY": 5454000000,
+  "EPS_DILUTED": 2.48,
+  "SHARES_OUTSTANDING": 785347096,
+  "FINANCIALS": [
+    {
+      "YEAR": 2016,
+      "PERIOD_END": "2016-12-31",
+      "REVENUE": 93496000000,
+      "NET_INCOME": 5034000000,
+      "ASSETS": 89997000000,
+      "LIABILITIES": 88080000000,
+      "EQUITY": 817000000,
+      "EPS_DILUTED": 7.83
+    },
+    {
+      "YEAR": 2017,
+      "PERIOD_END": "2017-12-31",
+      "REVENUE": 94005000000,
+      "NET_INCOME": 8458000000,
+      "ASSETS": 112362000000,
+      "LIABILITIES": 110649000000,
+      "EQUITY": 1656000000,
+      "EPS_DILUTED": 13.85
+    },
+    /* … 8 more … */
+  ],
+  "FACTS": [
+    {
+      "FACT": "BA-REVENUE",
+      "LABEL": "Revenue"
+    },
+    {
+      "FACT": "BA-NET-INCOME",
+      "LABEL": "Net income"
+    },
+    /* … 5 more … */
+  ],
+  "FILINGS": [
+    {
+      "ACCESSION": "0001225208-26-007500",
+      "FORM": "4",
+      "FILED": "2026-09-01",
+      "REPORT_DATE": "2026-08-28",
+      "DESCRIPTION": "Change in beneficial ownership (insider)"
+    },
+    {
+      "ACCESSION": "0001628280-26-059427",
+      "FORM": "8-K",
+      "FILED": "2026-08-28",
+      "REPORT_DATE": "2026-08-24",
+      "DESCRIPTION": "Current report"
+    },
+    /* … 18 more … */
+  ],
+  "INDEX_IDS": [
+    "DJIA",
+    "SP500"
+  ],
+  "FACT_IDS": [
+    "BA-REVENUE",
+    "BA-NET-INCOME",
+    "BA-ASSETS",
+    "BA-LIABILITIES",
+    "BA-EQUITY",
+    "BA-EPS-DILUTED",
+    "BA-SHARES-OUTSTANDING"
+  ],
+  "FILING_IDS": [
+    "0001225208-26-007500",
+    "0001628280-26-059427",
+    "0001628280-26-058481",
+    "0001225208-26-007209",
+    /* … 12 more … */,
+    "0001225208-26-006506",
+    "0001225208-26-006505",
+    "0001225208-26-006504",
+    "0001225208-26-006200"
+  ],
+  "LATEST_FILING": "2026-09-01",
+  "SIC_SECTOR": "3721",
+  "PRICE_HISTORY": "PX-BA",
+  "PROVENANCE": {
+    "SOURCE": "U.S. Securities and Exchange Commission, EDGAR (submissions, XBRL company facts); Wikidata; GLEIF; Nasdaq Trader symbol directory",
+    "RETRIEVED_AT": "2026-10-24",
+    "LICENCE": "Public domain (SEC EDGAR); CC0 1.0 (Wikidata, GLEIF)",
+    "URL": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000012927"
+  },
+  "ECONOMY": "ECON-USA",
+  "MARKET_WATCH": "CO-BA"
+}
+```
+
 **Links:** `EQUITY` → `equity`, `INDEX_IDS` → `index-membership`, `FACT_IDS` → `financial-fact`, `FILING_IDS` → `filing`, `SIC_SECTOR` → `sic-sector`, `ECONOMY` → `economy`, `MARKET_WATCH` → `listed-company`, `FINANCIALS[].EQUITY` → `equity`.
 
 **Validation**
@@ -197,7 +336,6 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF re
 | Storage | connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/index-membership/` |
 | Columns | `INDEX`, `NAME`, `MEMBERS` |
 | Test data | data/testdata/us-equities/index-membership |
-| Worked example | [us-equities/index-membership](../samples/us-equities/index-membership.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -233,6 +371,53 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF re
 | `LICENCE` | text | required |  | The licences of the sources. | `Public domain (SEC EDGAR); CC0 1.0 (Wikidata)` |  |
 | `NOTE` | text | required |  | What the membership is and is not (membership only: index weights and levels are proprietary). | `Membership only. Index weights and levels are proprietary t…` |  |
 | `RETRIEVED_AT` | date | required |  | The date the sources were retrieved (YYYY-MM-DD). | `2026-10-24` |  |
+
+**Example**
+
+The most complete record of `data/testdata/us-equities/index-membership/index-membership.2026-10-24.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "INDEX": "DJIA",
+  "NAME": "Dow Jones Industrial Average",
+  "MEMBERS": 30,
+  "ROWS": [
+    {
+      "TICKER": "AAPL",
+      "NAME": "Apple Inc.",
+      "SECTOR": "Manufacturing",
+      "SIC": "3571",
+      "SIC_DESCRIPTION": "Electronic Computers",
+      "EXCHANGE": "Nasdaq",
+      "REVENUE": 416161000000,
+      "NET_INCOME": 112010000000,
+      "CURRENCY": "USD",
+      "FISCAL_YEAR": 2025,
+      "SINCE": ""
+    },
+    {
+      "TICKER": "AMGN",
+      "NAME": "Amgen",
+      "SECTOR": "Manufacturing",
+      "SIC": "2836",
+      "SIC_DESCRIPTION": "Biological Products, (No Diagnostic Substances)",
+      "EXCHANGE": "Nasdaq",
+      "REVENUE": 36751000000,
+      "NET_INCOME": 7711000000,
+      "CURRENCY": "USD",
+      "FISCAL_YEAR": 2025,
+      "SINCE": ""
+    },
+    /* … 28 more … */
+  ],
+  "PROVENANCE": {
+    "SOURCE": "SEC Form N-PORT of DIA (SPDR DOW JONES INDUSTRIAL AVERAGE ETF TRUST), the stocks it reported holding on 2026-07-31 (filed 2026-09-18, accession 0001410368-26-0…",
+    "LICENCE": "Public domain (SEC EDGAR); CC0 1.0 (Wikidata)",
+    "NOTE": "Membership as the tracking fund holds it on its report date. Index weights and levels are proprietary to their index providers and are not included.",
+    "RETRIEVED_AT": "2026-10-24"
+  }
+}
+```
 
 **Validation**
 
@@ -335,7 +520,6 @@ The filings browser: the latest SEC filings of the covered companies, of every f
 | Storage | connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/filing-feed/` |
 | Columns | `FEED`, `NAME`, `FILINGS` |
 | Test data | data/testdata/us-equities/filing-feed |
-| Worked example | [us-equities/filing-feed](../samples/us-equities/filing-feed.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -379,6 +563,58 @@ The filings browser: the latest SEC filings of the covered companies, of every f
 | `RETRIEVED_AT` | date | required |  | The date the source was retrieved (YYYY-MM-DD). | `2026-10-24` |  |
 | `LICENCE` | text | required |  | The licence of the source. | `Public domain (U.S. Government work); SEC EDGAR fair access…` |  |
 
+**Example**
+
+The most complete record of `data/testdata/us-equities/filing-feed/filing-feed.2026-10-24.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "FEED": "10-K",
+  "NAME": "Annual reports",
+  "FORM": "10-K",
+  "FILINGS": 13,
+  "COMPANIES": 13,
+  "LATEST": "2026-10-23",
+  "EARLIEST": "2026-08-05",
+  "ROWS": [
+    {
+      "ACCESSION": "0001628280-26-067038",
+      "FILED": "2026-10-23",
+      "COMPANY": "JBL",
+      "COMPANY_NAME": "Jabil",
+      "FORM": "10-K",
+      "DESCRIPTION": "Annual report"
+    },
+    {
+      "ACCESSION": "0001628280-26-066391",
+      "FILED": "2026-10-20",
+      "COMPANY": "FDS",
+      "COMPANY_NAME": "Factset Research Systems Inc",
+      "FORM": "10-K",
+      "DESCRIPTION": "Annual report"
+    },
+    /* … 11 more … */
+  ],
+  "BY": [
+    {
+      "LABEL": "ACN",
+      "VALUE": 1
+    },
+    {
+      "LABEL": "COST",
+      "VALUE": 1
+    },
+    /* … 11 more … */
+  ],
+  "BY_TITLE": "Filings by company",
+  "PROVENANCE": {
+    "SOURCE": "U.S. Securities and Exchange Commission, EDGAR (submissions: the latest filings of each company covered)",
+    "RETRIEVED_AT": "2026-10-24",
+    "LICENCE": "Public domain (U.S. Government work); SEC EDGAR fair access policy (descriptive User-Agent, at most 10 requests a second)"
+  }
+}
+```
+
 **Links:** `ROWS[].COMPANY` → `us-company`.
 
 **Validation**
@@ -413,7 +649,6 @@ One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (meta
 | Storage | connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/filing/` |
 | Columns | `ACCESSION`, `COMPANY`, `COMPANY_NAME`, `FORM`, `FILED`, `REPORT_DATE` |
 | Test data | data/testdata/us-equities/filing |
-| Worked example | [us-equities/filing](../samples/us-equities/filing.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -439,6 +674,37 @@ One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (meta
 |---|---|---|---|---|---|---|
 | `ITEM` | text | required |  | The 8-K item number (EDGAR items), as text ("2.02"). | `8.01` |  |
 | `DESCRIPTION` | text | optional |  | The item in words (2.02: Results of operations and financial condition); absent for an item the pack has no wording for. | `Other events` |  |
+
+**Example**
+
+The most complete record of `data/testdata/us-equities/filing/filing.2026-10-24.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "ACCESSION": "0001104659-26-117587",
+  "COMPANY": "ABT",
+  "COMPANY_NAME": "Abbott Laboratories",
+  "FORM": "8-K",
+  "FORM_NAME": "Current report",
+  "FILED": "2026-10-21",
+  "REPORT_DATE": "2026-10-21",
+  "PRIMARY_DOCUMENT": "tm2627971d1_8k.htm",
+  "DOCUMENT_DESCRIPTION": "FORM 8-K",
+  "SIZE_KB": 278,
+  "ITEMS": [
+    {
+      "ITEM": "8.01",
+      "DESCRIPTION": "Other events"
+    },
+    {
+      "ITEM": "9.01",
+      "DESCRIPTION": "Financial statements and exhibits"
+    }
+  ],
+  "ITEMS_TEXT": "8.01, 9.01",
+  "PATH": "1800/000110465926117587"
+}
+```
 
 **Links:** `COMPANY` → `us-company`.
 
@@ -476,7 +742,6 @@ One financial concept of one company (revenue, net income, assets...) over up to
 | Storage | connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/financial-fact/` |
 | Columns | `FACT_ID`, `COMPANY`, `COMPANY_NAME`, `CONCEPT`, `LABEL`, `LATEST`, `LATEST_YEAR` |
 | Test data | data/testdata/us-equities/financial-fact |
-| Worked example | [us-equities/financial-fact](../samples/us-equities/financial-fact.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -504,6 +769,43 @@ One financial concept of one company (revenue, net income, assets...) over up to
 | `VALUE` | amount | required | UNIT | The figure for that fiscal year, in UNIT. | `20853000000` |  |
 | `FILED` | date | required |  | The date the annual report carrying the value was filed, YYYY-MM-DD. | `2019-02-22` |  |
 | `ACCESSION` | text | required |  | The EDGAR accession number of that annual report (0001047469-19-000624). | `0001047469-19-000624` |  |
+
+**Example**
+
+The most complete record of `data/testdata/us-equities/financial-fact/financial-fact.2026-10-24.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "FACT_ID": "ABT-REVENUE",
+  "COMPANY": "ABT",
+  "COMPANY_NAME": "Abbott Laboratories",
+  "CIK": "0000001800",
+  "CONCEPT": "REVENUE",
+  "LABEL": "Revenue",
+  "UNIT": "USD",
+  "XBRL_TAG": "RevenueFromContractWithCustomerExcludingAssessedTax",
+  "LATEST": 44328000000,
+  "LATEST_YEAR": 2025,
+  "YEARS": 10,
+  "HISTORY": [
+    {
+      "YEAR": 2016,
+      "PERIOD_END": "2016-12-31",
+      "VALUE": 20853000000,
+      "FILED": "2019-02-22",
+      "ACCESSION": "0001047469-19-000624"
+    },
+    {
+      "YEAR": 2017,
+      "PERIOD_END": "2017-12-31",
+      "VALUE": 27390000000,
+      "FILED": "2020-02-21",
+      "ACCESSION": "0001104659-20-023904"
+    },
+    /* … 8 more … */
+  ]
+}
+```
 
 **Links:** `COMPANY` → `us-company`.
 

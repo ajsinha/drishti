@@ -17,7 +17,7 @@
 
 # Data contracts of the core pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/core/guides/core.md](../../../config/packs/core/guides/core.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per kind of the pack: what one record is, its key, how it is stored and dated, every field, one example record from the committed test data, the validation rules and what a person still has to confirm. This page is the one home of these facts: guides and tutorials link here. The rules every contract shares, and every kind from A to Z, are in [the contracts index](../README.md).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -49,7 +49,6 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/counterparty/` |
 | Test data | data/testdata/core/counterparty |
-| Worked example | [core/counterparty](../samples/core/counterparty.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -117,6 +116,81 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 | `TO` | id | required |  | The child node's id (a NODES[].ID). | `CP-ALDERSHOT` |  |
 | `LABEL` | text | required |  | How FROM relates to TO: parent of (group to member), signed (counterparty to ISDA), secured by (ISDA to each CSA, one per bank legal entity), nets (ISDA to netting set), governs (CSA to the netting set it margins). | `governs`, `nets`, `parent of`, `secured by`, `signed` |  |
 
+**Example**
+
+The most complete record of `data/testdata/core/counterparty/counterparty.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "COUNTERPARTY_ID": "CP-CASCADIA",
+  "NAME": "Cascadia Airlines Inc.",
+  "LEI": "5493005CUB4V16ZSQX54",
+  "RATING": "BB",
+  "SECTOR": "Airlines",
+  "COUNTRY": "CA",
+  "TYPE": "Corporate",
+  "COUNTRY_OF_RISK": "CA",
+  "UEN": "UEN0100148",
+  "ECONOMY": "ECON-CAN",
+  "NEWS_ID": "NEWS-Cascadia_Airlines_Inc.",
+  "NET_MTM": 344226486.49,
+  "NETTING_SETS": [
+    {
+      "ID": "NS-CASCADIA-FRA",
+      "AGREEMENT": "AGR-CASCADIA-ISDA",
+      "TRADES": 29,
+      "NET_MTM": 11911200.06
+    },
+    {
+      "ID": "NS-CASCADIA-LDN",
+      "AGREEMENT": "AGR-CASCADIA-ISDA",
+      "TRADES": 134,
+      "NET_MTM": -135967217.75
+    },
+    /* … 2 more … */
+  ],
+  "KYC": {
+    "STATUS": "Approved",
+    "RISK_RATING": "Enhanced",
+    "LAST_REVIEW": "2026-02-11",
+    "EMIR_CLASSIFICATION": "NFC-",
+    "PD_1Y": 0.0068
+  },
+  "GROUP": "GRP-CASCADIA",
+  "CREDIT_LIMIT": "LIM-CASCADIA",
+  "HIERARCHY": {
+    "NODES": [
+      {
+        "ID": "GRP-CASCADIA",
+        "LABEL": "Cascadia Airlines Inc.",
+        "TYPE": "Group (ultimate parent)"
+      },
+      {
+        "ID": "CP-CASCADIA",
+        "LABEL": "Cascadia Airlines Inc.",
+        "TYPE": "Counterparty"
+      },
+      /* … 9 more … */
+    ],
+    "EDGES": [
+      {
+        "FROM": "GRP-CASCADIA",
+        "TO": "CP-CASCADIA",
+        "LABEL": "parent of"
+      },
+      {
+        "FROM": "CP-CASCADIA",
+        "TO": "AGR-CASCADIA-ISDA",
+        "LABEL": "signed"
+      },
+      /* … 12 more … */
+    ]
+  },
+  "CREDIT_CURVE": "CDS-CASCADIA",
+  "LEGAL_ENTITY": "LE-NY"
+}
+```
+
 **Links:** `ECONOMY` → `economy`, `NEWS_ID` → `news`, `NETTING_SETS` → `netting-set`, `GROUP` → `counterparty-group`, `CREDIT_LIMIT` → `credit-limit`, `CREDIT_CURVE` → `credit-curve`, `LEGAL_ENTITY` → `legal-entity`, `NETTING_SETS[].AGREEMENT` → `agreement`.
 
 **Validation**
@@ -168,7 +242,6 @@ Economic group of related counterparties (obligor group).
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/counterparty-group/` |
 | Test data | data/testdata/core/counterparty-group |
-| Worked example | [core/counterparty-group](../samples/core/counterparty-group.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -187,6 +260,26 @@ Economic group of related counterparties (obligor group).
 | `ID` | id | required |  | The member: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | `CP-ALDERSHOT` |  |
 | `NAME` | text | required |  | The member's legal name (its counterparty NAME). | `Aldershot Pension Trust` |  |
 | `RATING` | text | required |  | The member's credit rating, S&P-style (AA-, BBB+ …). | `AA-` |  |
+
+**Example**
+
+The most complete record of `data/testdata/core/counterparty-group/counterparty-group.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "GROUP_ID": "GRP-ALDERSHOT",
+  "NAME": "Aldershot Pension Trust",
+  "LIMIT": 7980000000.0,
+  "UTILISATION": 0.6673,
+  "MEMBERS": [
+    {
+      "ID": "CP-ALDERSHOT",
+      "NAME": "Aldershot Pension Trust",
+      "RATING": "AA-"
+    }
+  ]
+}
+```
 
 **Validation**
 
@@ -224,7 +317,6 @@ Issuer of bonds and reference entity for CDS.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/issuer/` |
 | Test data | data/testdata/core/issuer |
-| Worked example | [core/issuer](../samples/core/issuer.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -247,6 +339,35 @@ Issuer of bonds and reference entity for CDS.
 | `ISIN` | text | required |  | The bond's ISIN, 12 characters (without the BND- prefix of the market-data pack's bond id). | `DEBUND064772` |  |
 | `COUPON` | rate | required | fraction | The bond's annual coupon rate, as a fraction (0.038 is 3.8%). | `0.038` |  |
 | `MATURITY` | date | required |  | The bond's maturity date. | `2031-03-15` |  |
+
+**Example**
+
+The most complete record of `data/testdata/core/issuer/issuer.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "ISSUER_ID": "ISS-CASCADIA",
+  "NAME": "Cascadia Airlines Inc.",
+  "RATING": "BB",
+  "SECTOR": "Airlines",
+  "COUNTRY": "CA",
+  "BONDS": [
+    {
+      "ISIN": "CACASC059511",
+      "COUPON": 0.0552,
+      "MATURITY": "2031-02-15"
+    },
+    {
+      "ISIN": "CACASC169344",
+      "COUPON": 0.0602,
+      "MATURITY": "2036-01-15"
+    }
+  ],
+  "CREDIT_CURVE": "CDS-CASCADIA",
+  "LEI": "5493005CUB4V16ZSQX54",
+  "EQUITY": "EQ-CSCA"
+}
+```
 
 **Links:** `CREDIT_CURVE` → `credit-curve`, `EQUITY` → `equity`.
 
@@ -286,7 +407,6 @@ A clearing house with its default fund and margin model.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/ccp/` |
 | Test data | data/testdata/core/ccp |
-| Worked example | [core/ccp](../samples/core/ccp.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -305,6 +425,26 @@ A clearing house with its default fund and margin model.
 |---|---|---|---|---|---|---|
 | `ID` | id | required |  | The account: an ACCOUNT_ID of the core pack's clearing-account kind (CLR-…). | `CLR-CME-1` |  |
 | `IM` | amount | required | USD | The initial margin posted on the account, in the bank's reporting currency (USD in the demo). | `43200000` |  |
+
+**Example**
+
+The most complete record of `data/testdata/core/ccp/ccp.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "CCP_ID": "CCP-CME",
+  "NAME": "CME Clearing",
+  "DEFAULT_FUND": 720000000.0,
+  "IM_POSTED": 43200000,
+  "MARGIN_MODEL": "SPAN 2",
+  "ACCOUNTS": [
+    {
+      "ID": "CLR-CME-1",
+      "IM": 43200000
+    }
+  ]
+}
+```
 
 **Validation**
 
@@ -341,7 +481,6 @@ The bank's own booking entity.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/legal-entity/` |
 | Test data | data/testdata/core/legal-entity |
-| Worked example | [core/legal-entity](../samples/core/legal-entity.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -371,6 +510,43 @@ The bank's own booking entity.
 | `PNL` | amount | required | USD | The book's one-day P&L: the sum of its trades' PNL_1D, gain positive. | `-327989` |  |
 | `MTM` | amount | required | USD | The book's mark to market: the sum of its trades' MTM, from the bank's side (positive is owed to the bank). | `8879873` |  |
 | `TRADES` | integer | required |  | The number of trades in the book. | `17` |  |
+
+**Example**
+
+The most complete record of `data/testdata/core/legal-entity/legal-entity.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "ENTITY_ID": "LE-FRA",
+  "NAME": "Drishti Bank Europe AG",
+  "LEI": "549300Z9DXU4T18OK744",
+  "JURISDICTION": "DE",
+  "REGULATOR": "ECB / BaFin",
+  "DESKS": [
+    {
+      "ID": "DESK-SFT",
+      "NAME": "Repo and securities lending"
+    }
+  ],
+  "BOOKS": [
+    {
+      "BOOK": "BOOK-SFT-1",
+      "DESK": "Repo and securities lending",
+      "PNL": -11770547,
+      "MTM": 343752092,
+      "TRADES": 243
+    },
+    {
+      "BOOK": "BOOK-SFT-2",
+      "DESK": "Repo and securities lending",
+      "PNL": 2468694,
+      "MTM": -330586411,
+      "TRADES": 206
+    },
+    /* … 1 more … */
+  ]
+}
+```
 
 **Links:** `JURISDICTION` → `jurisdiction`, `BOOKS[].BOOK` → `book`, `BOOKS[].DESK` → `desk`.
 
@@ -417,7 +593,6 @@ A trading book: owner desk, trades and risk.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/book/` |
 | Test data | data/testdata/core/book |
-| Worked example | [core/book](../samples/core/book.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -449,6 +624,52 @@ A trading book: owner desk, trades and risk.
 | `MATURITY` | date | required |  | The trade's maturity date. | `2026-10-07` |  |
 | `MATURITY_BUCKET` | text | required |  | The remaining maturity bucket of the trade: 0-1Y, 1-2Y, 2-5Y, 5-10Y or 10Y+. | `0-1Y`, `1-2Y`, `10Y+`, `2-5Y`, `5-10Y` |  |
 | `MTM` | amount | required | USD | The trade's MTM, in the bank's reporting currency (USD in the demo). | `3656838` |  |
+
+**Example**
+
+The most complete record of `data/testdata/core/book/book.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "BOOK_ID": "BOOK-COMM-1",
+  "NAME": "Commodities · book 1",
+  "DESK_NAME": "Commodities",
+  "TRADE_COUNT": 1000,
+  "MTM": -153823146,
+  "DV01": 0,
+  "TOP_TRADES": [
+    {
+      "TRADE_ID": "1003930",
+      "STATUS": "AMENDED",
+      "PRODUCT": "ENGY-SWAP",
+      "ASSET_CLASS": "Commodity",
+      "CURRENCY": "USD",
+      "BOOK": "BOOK-COMM-1",
+      "NOTIONAL": 10199198808.0,
+      "MATURITY": "2028-03-31",
+      "MATURITY_BUCKET": "1-2Y",
+      "MTM": -135004954
+    },
+    {
+      "TRADE_ID": "1000098",
+      "STATUS": "AMENDED",
+      "PRODUCT": "ENGY-SWAP",
+      "ASSET_CLASS": "Commodity",
+      "CURRENCY": "USD",
+      "BOOK": "BOOK-COMM-1",
+      "NOTIONAL": 5640972613.63,
+      "MATURITY": "2029-05-31",
+      "MATURITY_BUCKET": "2-5Y",
+      "MTM": -113670565
+    },
+    /* … 8 more … */
+  ],
+  "DESK": "DESK-COMM",
+  "ACCOUNTING_TREATMENT": "Fair value (FVTPL)",
+  "REGULATORY_BOOK": "Trading book",
+  "VOLCKER": "Market making"
+}
+```
 
 **Links:** `BOOK_ID` → `path-book`, `DESK` → `desk`, `TOP_TRADES[].TRADE_ID` → `trade`.
 
@@ -495,7 +716,6 @@ A trading desk: books, limits and risk results.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/desk/` |
 | Test data | data/testdata/core/desk |
-| Worked example | [core/desk](../samples/core/desk.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -527,6 +747,53 @@ A trading desk: books, limits and risk results.
 | `CURRENCY` | text | required |  | The trade's currency, ISO 4217. | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
 | `FAMILY` | text | required |  | The trade's product family (swap, option, future, bond, linear, exotic, sft, money …). | `future` |  |
 | `MTM` | amount | required | USD | The trade's MTM, in the bank's reporting currency (USD in the demo). | `324697` |  |
+
+**Example**
+
+The most complete record of `data/testdata/core/desk/desk.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "DESK_ID": "DESK-COMM",
+  "NAME": "Commodities",
+  "HEAD": "T. Brennan",
+  "BOOKS": [
+    {
+      "ID": "BOOK-COMM-1",
+      "TRADES": 1000,
+      "MTM": -153823146
+    },
+    {
+      "ID": "BOOK-COMM-2",
+      "TRADES": 980,
+      "MTM": 142738168
+    },
+    /* … 1 more … */
+  ],
+  "MTM": -317888291,
+  "LEGAL_ENTITY": "LE-NY",
+  "ASSET_CLASSES": [
+    "Commodity"
+  ],
+  "POSITIONS": [
+    {
+      "TRADE_ID": "1000003",
+      "BOOK": "BOOK-COMM-1",
+      "CURRENCY": "USD",
+      "FAMILY": "swap",
+      "MTM": -5176568
+    },
+    {
+      "TRADE_ID": "1000019",
+      "BOOK": "BOOK-COMM-1",
+      "CURRENCY": "USD",
+      "FAMILY": "linear",
+      "MTM": -47602
+    },
+    /* … 2966 more … */
+  ]
+}
+```
 
 **Links:** `LEGAL_ENTITY` → `legal-entity`, `POSITIONS[].TRADE_ID` → `trade`, `POSITIONS[].BOOK` → `book`.
 
@@ -571,7 +838,6 @@ A trader and their books.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/trader/` |
 | Test data | data/testdata/core/trader |
-| Worked example | [core/trader](../samples/core/trader.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -589,6 +855,29 @@ A trader and their books.
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `ID` | id | required |  | The book: a BOOK_ID of the core pack's book kind (BOOK-…). | `BOOK-RATES-1` |  |
+
+**Example**
+
+The most complete record of `data/testdata/core/trader/trader.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "TRADER_ID": "TRDR-ASHAH",
+  "NAME": "A. Shah",
+  "DESK_NAME": "Rates · Swaps and options",
+  "TRADE_COUNT": 732,
+  "BOOKS": [
+    {
+      "ID": "BOOK-RATES-1"
+    },
+    {
+      "ID": "BOOK-RATES-2"
+    },
+    /* … 1 more … */
+  ],
+  "DESK": "DESK-RATES"
+}
+```
 
 **Links:** `TRADER_ID` → `trader`, `DESK` → `desk`.
 
@@ -628,7 +917,6 @@ Business-day calendar (USNY, TARGET, GBLO, JPTO…).
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/calendar/` |
 | Test data | data/testdata/core/calendar |
-| Worked example | [core/calendar](../samples/core/calendar.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -652,6 +940,42 @@ Business-day calendar (USNY, TARGET, GBLO, JPTO…).
 | `WEEKDAY` | text | required |  | The weekday of DATE, in English (Monday … Friday). | `Friday`, `Monday`, `Thursday`, `Tuesday`, `Wednesday` |  |
 | `YEAR` | integer | required |  | The year of the holiday (four digits). | `2026` |  |
 | `OBSERVED` | text | optional |  | Yes when DATE is the observed (moved) day of a holiday that falls on a weekend; empty otherwise. | `Yes` |  |
+
+**Example**
+
+The most complete record of `data/testdata/core/calendar/calendar.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "CALENDAR_ID": "CAL-EUTA",
+  "NAME": "TARGET2",
+  "HOLIDAYS": [
+    {
+      "DATE": "2026-01-01",
+      "NAME": "New Year's Day",
+      "WEEKDAY": "Thursday",
+      "YEAR": 2026,
+      "OBSERVED": ""
+    },
+    {
+      "DATE": "2026-04-03",
+      "NAME": "Good Friday",
+      "WEEKDAY": "Friday",
+      "YEAR": 2026,
+      "OBSERVED": ""
+    },
+    /* … 6 more … */
+  ],
+  "HOLIDAYS_2026": 5,
+  "HOLIDAYS_2027": 3,
+  "NEXT_HOLIDAY": "Christmas Day",
+  "NEXT_HOLIDAY_DATE": "2026-12-25",
+  "WEEKEND": [
+    "Saturday",
+    "Sunday"
+  ]
+}
+```
 
 **Validation**
 
@@ -688,7 +1012,6 @@ An account at a CCP holding cleared trades and margin.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/clearing-account/` |
 | Test data | data/testdata/core/clearing-account |
-| Worked example | [core/clearing-account](../samples/core/clearing-account.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -716,6 +1039,48 @@ An account at a CCP holding cleared trades and margin.
 | `MATURITY` | date | required |  | The trade's maturity date. | `2027-05-21` |  |
 | `MATURITY_BUCKET` | text | required |  | The remaining maturity bucket of the trade: 0-1Y, 1-2Y, 2-5Y, 5-10Y or 10Y+. | `0-1Y`, `1-2Y`, `10Y+`, `2-5Y`, `5-10Y` |  |
 | `MTM` | amount | required | USD | The trade's MTM, in the bank's reporting currency (USD in the demo). | `197399` |  |
+
+**Example**
+
+The most complete record of `data/testdata/core/clearing-account/clearing-account.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "ACCOUNT_ID": "CLR-CME-1",
+  "CCP_NAME": "CME Clearing",
+  "IM": 43200000,
+  "VM_TODAY": -15597445,
+  "EXCESS": 8640000,
+  "TRADES": [
+    {
+      "TRADE_ID": "MX-20000067",
+      "STATUS": "VALIDATED",
+      "PRODUCT": "Short-term interest rate future",
+      "ASSET_CLASS": "Rates",
+      "CURRENCY": "GBP",
+      "BOOK": "BOOK-RATES-2",
+      "NOTIONAL": 221100000.0,
+      "MATURITY": "2027-05-21",
+      "MATURITY_BUCKET": "0-1Y",
+      "MTM": 217139
+    },
+    {
+      "TRADE_ID": "MX-20000068",
+      "STATUS": "VALIDATED",
+      "PRODUCT": "Short-term interest rate future",
+      "ASSET_CLASS": "Rates",
+      "CURRENCY": "USD",
+      "BOOK": "BOOK-RATES-3",
+      "NOTIONAL": 15000000.0,
+      "MATURITY": "2027-01-14",
+      "MATURITY_BUCKET": "0-1Y",
+      "MTM": -99634
+    },
+    /* … 28 more … */
+  ],
+  "CCP": "CCP-CME"
+}
+```
 
 **Links:** `CCP` → `ccp`, `TRADES[].TRADE_ID` → `trade`, `TRADES[].BOOK` → `book`.
 

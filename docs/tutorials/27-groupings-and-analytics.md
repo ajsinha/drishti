@@ -528,4 +528,4 @@ Further: [guide section 23](../guides/GROUPINGS_ANALYTICS_GUIDE.md#23-the-retire
   retired pages ([section 18](../guides/GROUPINGS_ANALYTICS_GUIDE.md#18-reconciliation-stored-against-computed)).
 - [Tutorial 25](25-var-from-the-bank-to-a-trade.md) and [tutorial 26](26-exposure-from-the-bank-to-a-trade.md): the same rule (computed,
   never stored) for VaR and exposure.
-- The data contracts of every command: [docs/contracts/packs/](../contracts/packs/README.md).
+- The data contracts of every command: [the contracts index](../contracts/README.md#every-kind-a-to-z).

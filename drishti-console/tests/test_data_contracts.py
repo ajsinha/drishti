@@ -50,5 +50,5 @@ def test_the_contract_pages_are_current():
 
 
 def test_the_pages_are_indexed():
-    assert "contracts/packs/README.md" in (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
-    assert "packs/README.md" in (ROOT / "docs" / "contracts" / "README.md").read_text(encoding="utf-8")
+    assert "contracts/README.md#every-kind-a-to-z" in (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+    assert "packs/core.md" in (ROOT / "docs" / "contracts" / "README.md").read_text(encoding="utf-8")

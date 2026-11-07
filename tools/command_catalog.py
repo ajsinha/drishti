@@ -109,7 +109,7 @@ def render() -> str:
            "the computed measures), *Drishti's own* (made by Drishti) and *computed* (worked out when asked). **Change** says when a "
            "command moves to the compute model, or when the figures on a record start to be computed instead of stored "
            "([the roadmap](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)). "
-           "Each mnemonic's fields are in its data contract ([every command's contract](../contracts/packs/README.md)).", "",
+           "Each mnemonic's fields are in its data contract ([every command's contract](../contracts/README.md#every-kind-a-to-z)).", "",
            f"In numbers: {classes.get('fundamental', 0)} fundamental, {classes.get('input', 0)} engine input, "
            f"{classes.get('drishti-owned', 0)} Drishti's own and {classes.get('computed', 0)} computed; {len(moving)} move to the compute "
            f"model and {len(split)} keep their record while its figures become computed.", "",

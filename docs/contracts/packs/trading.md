@@ -17,7 +17,7 @@
 
 # Data contracts of the trading pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/trading/guides/trading.md](../../../config/packs/trading/guides/trading.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per kind of the pack: what one record is, its key, how it is stored and dated, every field, one example record from the committed test data, the validation rules and what a person still has to confirm. This page is the one home of these facts: guides and tutorials link here. The rules every contract shares, and every kind from A to Z, are in [the contracts index](../README.md).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -46,7 +46,6 @@ A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the
 | Columns | `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `PRODUCT_SUB_TYPE`, `PRODUCT_GROUP`, `TRADE_STATUS`, `TRADE_VERSION`, `BUY_SELL_CODE`, `CURRENCY`, `QUANTITY`, `TRADE_DATE`, `MATURITY_DATE`, `COUNTERPARTY`, `LEGAL_ENTITY`, `PORTFOLIO`, `TRADER_ID`, `NOTIONAL`, `INDEX_NAME` |
 | Partitioned by | `PRODUCT_TYPE` |
 | Test data | data/testdata/trades/endur, data/testdata/trades/calypso, data/testdata/trades/murex |
-| Worked example | [trades/endur](../samples/trades/endur.md) · [trades/calypso](../samples/trades/calypso.md) · [trades/murex](../samples/trades/murex.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -184,6 +183,105 @@ A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the
 | `SEQUENCE_NUMBER` | integer | optional |  | The event's order in the booking system (equal to EVENT_NUMBER in the test data). | `1` |  |
 | `VAULT_LOCATION_ALLOCATION` | unknown | optional |  | The vault a metal delivery event is allocated to; empty when none (always empty in the test data). Carried through; not read by Drishti. |  |  |
 | `NY_CURVE_FLAG` | unknown | optional |  | The booking system's New York close curve flag for the event; empty when not set (always empty in the test data). Carried through; not read by Drishti. |  |  |
+
+**Example**
+
+The most complete record of `data/testdata/trades/endur/trade_endur.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "SOURCE_SYSTEM": "ENDUR",
+  "SOURCE_UPDATE_TIME": "2026-09-30T17:26:00Z",
+  "TRADE_DATE": "2025-07-17",
+  "INPUT_DATE": "",
+  "TRADE_ID": "1002932",
+  "TRADE_STATUS": "NEW",
+  "TRADE_ACTION": "AMEND",
+  "TRADE_VERSION": "7",
+  "TRANSACTION_ID": "700039165",
+  "PACKAGE_ID": "",
+  "QUANTITY": 59400.0,
+  "PRICE": 83.7938,
+  "BUY_SELL_CODE": "B",
+  "PRODUCT_TYPE": "Commodity",
+  "PRODUCT_SUB_TYPE": "COMM-WARRANTS-INV",
+  "PRODUCT_GROUP": "",
+  "PRODUCT_SUB_GROUP": "",
+  "OPTION_TYPE": null,
+  "STRIKE_PRICE": null,
+  "COUNTERPARTY": "CP-CASCADIA",
+  "COUNTERPARTY_UEN": "UEN0100148",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "CA",
+  "ORIGINAL_COUNTERPARTY": "",
+  "ORIGINAL_COUNTERPARTY_UEN": "",
+  "INTERNAL_EXTERNAL_CODE": "External",
+  "TRANSIT": "00107",
+  "LEGAL_ENTITY": "LE-NY",
+  "PORTFOLIO": "BOOK-COMM-3",
+  "TRADER_ID": "TRDR-FROSSI",
+  "TRADER_FIRST_NAME": "F.",
+  "TRADER_LAST_NAME": "Rossi",
+  "START_DATE": "2025-09-01",
+  "MATURITY_DATE": "2026-08-31",
+  "REGISTRY_DELIVERY_DATE": "2025-09-01",
+  "CURRENCY": "USD",
+  "DELIVERY_VERSUS_PAYMENT": "NO",
+  "STRATEGY": null,
+  "INTERNAL_TRADING_STRATEGY": "",
+  "NY_CURVE_FLAG": "",
+  "VAULT_LOCATION_ALLOCATION": "LME Rotterdam",
+  "PRECIOUS_METAL_FLAG": "Y",
+  "TT_GROUP": "",
+  "TT_BOOK": "",
+  "LEASE_PERPETUITY_FLAG": "N",
+  "SETTLEMENT_DATE": "",
+  "LEGS": [
+    {
+      "LEG_ID": "1",
+      "LEG_TYPE": "PHYSICAL",
+      "LEG_ECONOMIC_TYPE": "",
+      "CURRENCY": "USD",
+      /* … 21 more keys … */
+    },
+    {
+      "LEG_ID": "2",
+      "LEG_TYPE": "FIXED",
+      "LEG_ECONOMIC_TYPE": "",
+      "CURRENCY": "USD",
+      /* … 21 more keys … */
+    }
+  ],
+  "EVENTS": [
+    {
+      "LEG_ID": "2",
+      "EVENT_ID": "9021788",
+      "EVENT_NUMBER": 1,
+      "EVENT_TYPE": "CASH_SETTLEMENT",
+      "PAYMENT_TYPE": "Commodity payment",
+      "EVENT_DATE": "2025-10-02",
+      "AMOUNT": -418969.0,
+      "CURRENCY": "USD",
+      "SEQUENCE_NUMBER": 1,
+      "VAULT_LOCATION_ALLOCATION": "",
+      "NY_CURVE_FLAG": ""
+    },
+    {
+      "LEG_ID": "2",
+      "EVENT_ID": "9021789",
+      "EVENT_NUMBER": 2,
+      "EVENT_TYPE": "CASH_SETTLEMENT",
+      "PAYMENT_TYPE": "Commodity payment",
+      "EVENT_DATE": "2025-11-02",
+      "AMOUNT": -418969.0,
+      "CURRENCY": "USD",
+      "SEQUENCE_NUMBER": 2,
+      "VAULT_LOCATION_ALLOCATION": "",
+      "NY_CURVE_FLAG": ""
+    },
+    /* … 13 more … */
+  ]
+}
+```
 
 **Links:** `TRADE_ID` → `trade`, `COUNTERPARTY` → `counterparty`, `ORIGINAL_COUNTERPARTY` → `counterparty`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `TRADER_ID` → `trader`, `TT_GROUP` → `desk`, `TT_BOOK` → `book`, `LEGS[].INDEX.GROUP` → `counterparty-group`.
 

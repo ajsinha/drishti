@@ -17,7 +17,7 @@
 
 # Data contracts of the news-and-markets pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/news-and-markets/guides/news-and-markets.md](../../../config/packs/news-and-markets/guides/news-and-markets.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per kind of the pack: what one record is, its key, how it is stored and dated, every field, one example record from the committed test data, the validation rules and what a person still has to confirm. This page is the one home of these facts: guides and tutorials link here. The rules every contract shares, and every kind from A to Z, are in [the contracts index](../README.md).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -43,7 +43,6 @@ A topic and the news about it: headlines (newest first) with their publishers an
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `news-store` (plugin `delta`), table `<root>/news/news-topic/` |
 | Test data | config/packs/news-and-markets/samples |
-| Worked example | [news-and-markets/news-topic](../samples/news-and-markets/news-topic.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -58,6 +57,27 @@ A topic and the news about it: headlines (newest first) with their publishers an
 | `NEWS_ID` | id | required |  | The topic's headlines with the relevance filter on: a NEWS_ID of the news kind (NEWS-<name>). | `NEWS-Federal_Reserve` (pattern `^NEWS-`) | `news` |
 | `NEWS_ALL_ID` | id | required |  | The topic's headlines without the relevance filter: a NEWS_ID of the news kind (NEWS-<name>~all). | `NEWS-Federal_Reserve~all` (pattern `^NEWS-`) | `news` |
 | `ECONOMY` | id | optional |  | The economy the topic belongs to: an id of the world-economy pack's economy kind (ECON-<ISO 3166-1 alpha-3>). | `ECON-IND` (pattern `^ECON-`) | `economy` |
+
+**Example**
+
+The most complete record of `config/packs/news-and-markets/samples/news-topic.jsonl` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "TOPIC_ID": "TOPIC-INDIA",
+  "NAME": "India",
+  "CATEGORY": "Country",
+  "ALIASES": [
+    "Indian",
+    "New Delhi"
+  ],
+  "ALIAS_TEXT": "Indian, New Delhi",
+  "EDITION": "default",
+  "NEWS_ID": "NEWS-India",
+  "NEWS_ALL_ID": "NEWS-India~all",
+  "ECONOMY": "ECON-IND"
+}
+```
 
 **Links:** `NEWS_ID` → `news`, `NEWS_ALL_ID` → `news`, `ECONOMY` → `economy`.
 
@@ -97,7 +117,6 @@ The headlines for one name, as the news connector computed them: newest first, f
 | Cadence | intraday (due: on demand, when the connector is on) |
 | Storage | connector `news` (plugin `news`) |
 | Test data | data/testdata/news-and-markets/news |
-| Worked example | [news-and-markets/news](../samples/news-and-markets/news.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -153,6 +172,76 @@ The headlines for one name, as the news connector computed them: newest first, f
 | `TERMS` | text | required |  | The terms the headlines may be shown under. | `Headlines and links belong to their publishers; shown for i…` |  |
 | `SNAPSHOT` | text | required |  | Says the document is served from the committed snapshot in the demo lake, not live. | `Snapshot captured 2026-10-18 03:24 UTC from Google News; se…` |  |
 
+**Example**
+
+The most complete record of `data/testdata/news-and-markets/news/news.2026-10-18.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "NEWS_ID": "NEWS-Alphabet",
+  "ENTITY": "Alphabet",
+  "ALIASES": [
+    "Google",
+    "GOOGL"
+  ],
+  "EDITION": "en-US",
+  "RELEVANCE_FILTER": "on",
+  "COUNT": 15,
+  "FETCHED_AT": "2026-10-18 03:25 UTC (snapshot captured 2026-10-18)",
+  "ITEMS": [
+    {
+      "PUBLISHED": "2026-10-18 01:37 UTC",
+      "SOURCE": "Simply Wall Street",
+      "TITLE": "Alphabet (GOOGL) Plans Toronto Robotaxi Service By 2028",
+      "LINK": "https://news.google.com/rss/articles/CBMiugFBVV95cUxOWF9ZUUxETmlWdDF5VS1QVjZFbU5YUWp4bGlRTmpSWTJzTUtkZ0hSR3Ntcmt1R0JZVU45VkNXU0hHYk9TQXU0dERzeENqQ0FBY3JKbk45Vm…",
+      "SNIPPET": ""
+    },
+    {
+      "PUBLISHED": "2026-10-18 00:03 UTC",
+      "SOURCE": "TradingKey",
+      "TITLE": "Alphabet Stock Price Forecast: Can Expanding Access to Gemini 4 Argon Help Its Stock Recover?",
+      "LINK": "https://news.google.com/rss/articles/CBMi7AFBVV95cUxNcG1EUWVvaFpxcDgwRzNNZzRRb2tJTlMzSWVmYjJEb0UwSUZYNy1Dc3pSZmRvdTF0UnRkZHZoNDlLSHFPWWhDVDRmeWUzV25HNWRmLUg3Q3…",
+      "SNIPPET": ""
+    },
+    /* … 13 more … */
+  ],
+  "BY_SOURCE": [
+    {
+      "SOURCE": "The Motley Fool",
+      "COUNT": 3
+    },
+    {
+      "SOURCE": "Benzinga",
+      "COUNT": 2
+    },
+    /* … 10 more … */
+  ],
+  "PIPELINE": [
+    {
+      "DROPPED": 4,
+      "KEPT": 96,
+      "STEP": "relevance"
+    },
+    {
+      "DROPPED": 0,
+      "KEPT": 96,
+      "STEP": "duplicates"
+    },
+    /* … 1 more … */
+  ],
+  "FETCHED": 100,
+  "PROVENANCE": {
+    "FEED": "Google News RSS (news.google.com)",
+    "FETCHED": "2026-10-18 03:25 UTC",
+    "CACHED_FOR": "3600 s",
+    "TERMS": "Headlines and links belong to their publishers; shown for information",
+    "SNAPSHOT": "Snapshot captured 2026-10-18 03:24 UTC from Google News; served from the demo lake (news-store), not live; the data belongs to its providers, shown for demonst…"
+  },
+  "SNAPSHOT": "Snapshot captured 2026-10-18 03:24 UTC from Google News",
+  "SNAPSHOT_CAPTURED_AT": "2026-10-18T03:24:33Z"
+}
+```
+
 **Links:** `NEWS_ID` → `news`.
 
 **Validation**
@@ -196,7 +285,6 @@ A listed company: its live quote and price history (yfinance connector) and its 
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `news-store` (plugin `delta`), table `<root>/news/listed-company/` |
 | Test data | config/packs/news-and-markets/samples |
-| Worked example | [news-and-markets/listed-company](../samples/news-and-markets/listed-company.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -214,6 +302,31 @@ A listed company: its live quote and price history (yfinance connector) and its 
 | `QUOTE_ID` | id | required |  | The company's quote: a QUOTE_ID of the quote kind (QUOTE-<ticker>). | `QUOTE-AAPL` (pattern `^QUOTE-`) | `quote` |
 | `NEWS_ID` | id | required |  | The company's headlines with the relevance filter on: a NEWS_ID of the news kind (NEWS-<name>). | `NEWS-Apple` (pattern `^NEWS-`) | `news` |
 | `NEWS_ALL_ID` | id | required |  | The company's headlines without the relevance filter: a NEWS_ID of the news kind (NEWS-<name>~all). | `NEWS-Apple~all` (pattern `^NEWS-`) | `news` |
+
+**Example**
+
+The most complete record of `config/packs/news-and-markets/samples/listed-company.jsonl` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "COMPANY_ID": "CO-AAPL",
+  "TICKER": "AAPL",
+  "NAME": "Apple Inc.",
+  "ALIASES": [
+    "Apple Inc",
+    "AAPL",
+    "iPhone"
+  ],
+  "ALIAS_TEXT": "Apple Inc, AAPL, iPhone",
+  "EXCHANGE": "Nasdaq",
+  "SECTOR": "Technology",
+  "COUNTRY": "US",
+  "ECONOMY": "ECON-USA",
+  "QUOTE_ID": "QUOTE-AAPL",
+  "NEWS_ID": "NEWS-Apple",
+  "NEWS_ALL_ID": "NEWS-Apple~all"
+}
+```
 
 **Links:** `ECONOMY` → `economy`, `QUOTE_ID` → `quote`, `NEWS_ID` → `news`, `NEWS_ALL_ID` → `news`.
 
@@ -254,7 +367,6 @@ A quote and recent price history for a ticker, as the yfinance connector compute
 | Cadence | intraday (due: on demand, when the connector is on) |
 | Storage | connector `yfinance` (plugin `yfinance`) |
 | Test data | data/testdata/news-and-markets/quote |
-| Worked example | [news-and-markets/quote](../samples/news-and-markets/quote.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -307,6 +419,65 @@ A quote and recent price history for a ticker, as the yfinance connector compute
 | `CACHED_FOR` | text | required |  | How long the connector caches a fetch (its cache TTL), as text. | `3600 s` |  |
 | `TERMS` | text | required |  | The terms the data may be used under. | `Sample and internal demonstration use only; not for product…` |  |
 | `SNAPSHOT` | text | required |  | Says the document is served from the committed snapshot in the demo lake, not live, and that the data belongs to its providers. | `Snapshot captured 2026-10-18 03:24 UTC from Yahoo Finance; …` |  |
+
+**Example**
+
+The most complete record of `data/testdata/news-and-markets/quote/quote.2026-10-18.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "QUOTE_ID": "QUOTE-AAPL",
+  "SYMBOL": "AAPL",
+  "NAME": "Apple Inc.",
+  "EXCHANGE": "NasdaqGS",
+  "CURRENCY": "USD",
+  "INSTRUMENT_TYPE": "EQUITY",
+  "PRICE": 343.46,
+  "PREVIOUS_CLOSE": 342.0,
+  "CHANGE": 1.4599999999999795,
+  "CHANGE_PCT": 0.4269005847953157,
+  "DAY_LOW": 340.46,
+  "DAY_HIGH": 347.82,
+  "FIFTY_TWO_WEEK_LOW": 243.42,
+  "FIFTY_TWO_WEEK_HIGH": 348.15,
+  "VOLUME": 59852690.0,
+  "MARKET_CAP": null,
+  "MARKET_STATE": "CLOSED",
+  "AS_OF": "2026-10-16 16:00 America/New_York (snapshot captured 2026-10-18)",
+  "HISTORY": [
+    {
+      "DATE": "2025-10-17",
+      "OPEN": 248.02000427246094,
+      "HIGH": 253.3800048828125,
+      "LOW": 247.27000427246094,
+      "CLOSE": 252.2899932861328,
+      "VOLUME": 49147000.0
+    },
+    {
+      "DATE": "2025-10-20",
+      "OPEN": 255.88999938964844,
+      "HIGH": 264.3800048828125,
+      "LOW": 255.6300048828125,
+      "CLOSE": 262.239990234375,
+      "VOLUME": 90483000.0
+    },
+    /* … 249 more … */
+  ],
+  "DAY_RANGE": "340.46 – 347.82",
+  "FIFTY_TWO_WEEK_RANGE": "243.42 – 348.15",
+  "HISTORY_RANGE": "1y",
+  "INTERVAL": "1d",
+  "PROVENANCE": {
+    "FEED": "Yahoo Finance public chart endpoint (unofficial)",
+    "FETCHED": "2026-10-18T03:24:33.511628799Z",
+    "CACHED_FOR": "3600 s",
+    "TERMS": "Sample and internal demonstration use only; not for production or redistribution",
+    "SNAPSHOT": "Snapshot captured 2026-10-18 03:24 UTC from Yahoo Finance; served from the demo lake (news-store), not live; the data belongs to its providers, shown for demon…"
+  },
+  "SNAPSHOT": "Snapshot captured 2026-10-18 03:24 UTC from Yahoo Finance",
+  "SNAPSHOT_CAPTURED_AT": "2026-10-18T03:24:33Z"
+}
+```
 
 **Links:** `QUOTE_ID` → `quote`.
 

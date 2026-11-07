@@ -1315,7 +1315,7 @@ The data contract of every command (`tools/contracts.py`, also run on its own as
 - `contract check` fails when a command has no contract, a contract is invalid or no longer matches its pack (identity, id pattern,
   links, the retirements in `tools/contracts.policy.yaml`) and its samples and test data (fields added or gone, a required field empty,
   a value outside an enum, a changed type). `--no-data` skips the data and takes a second.
-- `contract docs` writes `docs/contracts/packs/<pack>.md` and the index `docs/contracts/packs/README.md`; `--check` fails when they are stale.
+- `contract docs` writes `docs/contracts/packs/<pack>.md` and the A–Z block of the index `docs/contracts/README.md`; `--check` fails when they are stale.
 - `contract bootstrap KIND` drafts a contract from the pack, its samples and test data, its `config/about.yaml` glossary and its Sutras,
   and prints it; `--write` saves it (`--force` replaces one that exists), `--all` drafts every command without one. What the draft infers
   rather than reads is listed under `review` for a person to confirm.

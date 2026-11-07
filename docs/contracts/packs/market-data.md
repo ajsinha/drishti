@@ -17,7 +17,7 @@
 
 # Data contracts of the market-data pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/market-data/guides/market-data.md](../../../config/packs/market-data/guides/market-data.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per kind of the pack: what one record is, its key, how it is stored and dated, every field, one example record from the committed test data, the validation rules and what a person still has to confirm. This page is the one home of these facts: guides and tutorials link here. The rules every contract shares, and every kind from A to Z, are in [the contracts index](../README.md).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -61,7 +61,6 @@ Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a c
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/ir-curve/` |
 | Test data | data/testdata/market-data/ir-curve |
-| Worked example | [market-data/ir-curve](../samples/market-data/ir-curve.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -100,6 +99,61 @@ Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a c
 |---|---|---|---|---|---|---|
 | `TENOR` | text | required |  | The start of the 1-year forward period, from the record's date (1Y .. 20Y). | `10Y`, `15Y`, `1Y`, `20Y`, `2Y`, `3Y`, `5Y`, `7Y` |  |
 | `RATE` | rate | required | percent | The 1-year forward rate starting at the tenor, in percent. | `3.7737` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-data/ir-curve/ir-curve.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "CURVE_ID": "CRV-AUD-BASIS",
+  "CURRENCY": "AUD",
+  "CURVE_TYPE": "Cross-currency basis",
+  "INDEX": "AONIA",
+  "TEN_Y": 0.042199999999999994,
+  "SLOPE_2S_10S": 51.2,
+  "AS_OF": "2026-09-30",
+  "POINTS": [
+    {
+      "TENOR": "1M",
+      "MATURITY": "2026-10-30",
+      "INSTRUMENT": "Deposit / future",
+      "QUOTE": 0.035983,
+      "ZERO_RATE": 3.6037,
+      "DF": 0.997001
+    },
+    {
+      "TENOR": "3M",
+      "MATURITY": "2026-12-30",
+      "INSTRUMENT": "Deposit / future",
+      "QUOTE": 0.036045,
+      "ZERO_RATE": 3.6208,
+      "DF": 0.990989
+    },
+    /* … 10 more … */
+  ],
+  "FORWARDS": [
+    {
+      "TENOR": "1Y",
+      "RATE": 3.7737
+    },
+    {
+      "TENOR": "2Y",
+      "RATE": 3.9964
+    },
+    /* … 6 more … */
+  ],
+  "INTERPOLATION": "Log-linear on discount factors",
+  "DAY_COUNT": "ACT/365F",
+  "CALENDAR": "CAL-GBLO",
+  "FIXING_INDEX": "FIX-AONIA",
+  "BUILT_AT": "2026-09-30T18:02:41Z",
+  "SOURCES": [
+    "Broker composite",
+    "Exchange settlements"
+  ]
+}
+```
 
 **Links:** `CALENDAR` → `calendar`, `FIXING_INDEX` → `rate-fixing`.
 
@@ -146,7 +200,6 @@ General-collateral or specials repo rates by term.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/repo-curve/` |
 | Test data | data/testdata/market-data/repo-curve |
-| Worked example | [market-data/repo-curve](../samples/market-data/repo-curve.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -165,6 +218,31 @@ General-collateral or specials repo rates by term.
 |---|---|---|---|---|---|---|
 | `TENOR` | text | required |  | The repo term (ON, 1W, 1M, 3M, 6M, 1Y). | `1M`, `1W`, `1Y`, `3M`, `6M`, `ON` |  |
 | `RATE` | rate | required | percent | The repo rate for TENOR, in percent (3.5221 is 3.5221%; note: OVERNIGHT is a fraction). | `3.5221` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-data/repo-curve/repo-curve.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "CURVE_ID": "REPO-AUD",
+  "CURRENCY": "AUD",
+  "COLLATERAL": "General collateral (government)",
+  "OVERNIGHT": 0.0352,
+  "AS_OF": "2026-09-30",
+  "POINTS": [
+    {
+      "TENOR": "ON",
+      "RATE": 3.5221
+    },
+    {
+      "TENOR": "1W",
+      "RATE": 3.5255
+    },
+    /* … 4 more … */
+  ]
+}
+```
 
 **Validation**
 
@@ -204,7 +282,6 @@ Spot rate for a currency pair with bid/ask.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/fx-spot/` |
 | Test data | data/testdata/market-data/fx-spot |
-| Worked example | [market-data/fx-spot](../samples/market-data/fx-spot.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -239,6 +316,43 @@ Spot rate for a currency pair with bid/ask.
 | `SPOT_LAG` | text | required |  | The pair's spot settlement lag (T+2). | `T+2` |  |
 | `CALENDAR` | id | required |  | The settlement calendars, joined by + (GBLO+USNY); not a CALENDAR_ID, although the contract links it to calendar. | `GBLO+USNY` | `calendar` |
 | `NDF` | boolean | required |  | true when the pair trades as a non-deliverable forward (USDINR, USDBRL, USDKRW). | `False` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-data/fx-spot/fx-spot.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "PAIR": "FX-AUDUSD",
+  "PAIR_NAME": "AUD/USD",
+  "MID": 0.661,
+  "BID": 0.66097,
+  "ASK": 0.66103,
+  "CHANGE_1D": -0.01092,
+  "SPOT_DATE": "2026-10-02",
+  "HISTORY": [
+    {
+      "DATE": "2026-08-19",
+      "MID": 0.69653
+    },
+    {
+      "DATE": "2026-08-20",
+      "MID": 0.70057
+    },
+    /* … 28 more … */
+  ],
+  "CONVENTIONS": {
+    "BASE": "AUD",
+    "QUOTE": "USD",
+    "PIP_FACTOR": 10000,
+    "SPOT_LAG": "T+2",
+    "CALENDAR": "GBLO+USNY",
+    "NDF": false
+  },
+  "FX_FORWARD_CURVE": "FXF-AUDUSD",
+  "FX_VOL_SURFACE": "FXV-AUDUSD"
+}
+```
 
 **Links:** `FX_FORWARD_CURVE` → `fx-forward-curve`, `FX_VOL_SURFACE` → `fx-vol-surface`, `CONVENTIONS.CALENDAR` → `calendar`.
 
@@ -282,7 +396,6 @@ Forward points by tenor for a pair.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/fx-forward-curve/` |
 | Test data | data/testdata/market-data/fx-forward-curve |
-| Worked example | [market-data/fx-forward-curve](../samples/market-data/fx-forward-curve.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -303,6 +416,34 @@ Forward points by tenor for a pair.
 | `TENOR` | text | required |  | The forward tenor (ON, 1W, 1M … 2Y). | `ON` |  |
 | `PIPS` | amount | required | pips | The forward points for TENOR: (OUTRIGHT minus spot) times the pip factor (10,000; 100 for a JPY pair). | `0.0` |  |
 | `OUTRIGHT` | amount | required | quote currency per base | The outright forward rate for TENOR, in quote currency per one unit of the base. | `0.661` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-data/fx-forward-curve/fx-forward-curve.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "CURVE_ID": "FXF-AUDUSD",
+  "PAIR": "AUDUSD",
+  "SPOT": 0.661,
+  "POINTS_3M": 1.7,
+  "POINTS_1Y": 6.6,
+  "POINTS": [
+    {
+      "TENOR": "ON",
+      "PIPS": 0.0,
+      "OUTRIGHT": 0.661
+    },
+    {
+      "TENOR": "1W",
+      "PIPS": 0.1,
+      "OUTRIGHT": 0.66101
+    },
+    /* … 7 more … */
+  ],
+  "FX_SPOT": "FX-AUDUSD"
+}
+```
 
 **Links:** `FX_SPOT` → `fx-spot`.
 
@@ -341,7 +482,6 @@ Implied vols by expiry and delta (ATM, 25D RR/BF).
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/fx-vol-surface/` |
 | Test data | data/testdata/market-data/fx-vol-surface |
-| Worked example | [market-data/fx-vol-surface](../samples/market-data/fx-vol-surface.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -368,6 +508,45 @@ Implied vols by expiry and delta (ATM, 25D RR/BF).
 | `C_10` | amount | required | percent | The 10-delta call implied volatility, in percent a year. | `9.4` |  |
 | `RR_25` | amount | required | vol points | The 25-delta risk reversal at the expiry: call vol minus put vol, in vol points. | `-0.36` |  |
 | `BF_25` | amount | required | vol points | The 25-delta butterfly at the expiry: average of the 25-delta wings minus ATM, in vol points. | `0.25` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-data/fx-vol-surface/fx-vol-surface.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "SURFACE_ID": "FXV-AUDUSD",
+  "PAIR": "AUDUSD",
+  "ATM_1M": 9.17,
+  "ATM_1Y": 9.9,
+  "RR_1Y": -0.46,
+  "GRID": [
+    {
+      "EXPIRY": "1M",
+      "P_10": 10.04,
+      "P_25": 9.6,
+      "ATM": 9.17,
+      "C_25": 9.24,
+      "C_10": 9.4,
+      "RR_25": -0.36,
+      "BF_25": 0.25
+    },
+    {
+      "EXPIRY": "3M",
+      "P_10": 10.22,
+      "P_25": 9.76,
+      "ATM": 9.31,
+      "C_25": 9.38,
+      "C_10": 9.54,
+      "RR_25": -0.38,
+      "BF_25": 0.26
+    },
+    /* … 4 more … */
+  ],
+  "MODEL": "Vanna-volga smile, delta-quoted",
+  "FX_SPOT": "FX-AUDUSD"
+}
+```
 
 **Links:** `FX_SPOT` → `fx-spot`.
 
@@ -408,7 +587,6 @@ Normal (bp) swaption vols by expiry × tenor.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/ir-vol-cube/` |
 | Test data | data/testdata/market-data/ir-vol-cube |
-| Worked example | [market-data/ir-vol-cube](../samples/market-data/ir-vol-cube.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -431,6 +609,39 @@ Normal (bp) swaption vols by expiry × tenor.
 | `T_5Y` | amount | required | bp (normal vol) | The volatility of the swaption on a 5-year swap: normal, basis points a year. | `143.74` |  |
 | `T_10Y` | amount | required | bp (normal vol) | The volatility of the swaption on a 10-year swap: normal, basis points a year. | `141.09` |  |
 | `T_30Y` | amount | required | bp (normal vol) | The volatility of the swaption on a 30-year swap: normal, basis points a year. | `136.56` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-data/ir-vol-cube/ir-vol-cube.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "CUBE_ID": "IRV-AUD",
+  "CURRENCY": "AUD",
+  "MODEL": "Normal (Bachelier), SABR smile",
+  "V_1Y_10Y": 137.22,
+  "V_5Y_5Y": 132.72,
+  "GRID": [
+    {
+      "EXPIRY": "1M",
+      "T_1Y": 148.55,
+      "T_2Y": 146.78,
+      "T_5Y": 143.74,
+      "T_10Y": 141.09,
+      "T_30Y": 136.56
+    },
+    {
+      "EXPIRY": "3M",
+      "T_1Y": 147.6,
+      "T_2Y": 145.83,
+      "T_5Y": 142.82,
+      "T_10Y": 140.19,
+      "T_30Y": 135.69
+    },
+    /* … 5 more … */
+  ]
+}
+```
 
 **Validation**
 
@@ -468,7 +679,6 @@ Cap vols by maturity and strike.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/cap-vol-surface/` |
 | Test data | data/testdata/market-data/cap-vol-surface |
-| Worked example | [market-data/cap-vol-surface](../samples/market-data/cap-vol-surface.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -490,6 +700,38 @@ Cap vols by maturity and strike.
 | `K_3` | amount | required | bp (normal vol) | The cap volatility at a 3% strike for MATURITY: a normal volatility in basis points a year. | `135.86` |  |
 | `K_4` | amount | required | bp (normal vol) | The cap volatility at a 4% strike for MATURITY: a normal volatility in basis points a year. | `131.29` |  |
 | `K_5` | amount | required | bp (normal vol) | The cap volatility at a 5% strike for MATURITY: a normal volatility in basis points a year. | `134.03` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-data/cap-vol-surface/cap-vol-surface.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "SURFACE_ID": "CPV-AUD",
+  "CURRENCY": "AUD",
+  "ATM_5Y": 124.3,
+  "GRID": [
+    {
+      "MATURITY": "1Y",
+      "ATM": 130.38,
+      "K_2": 140.42,
+      "K_3": 135.86,
+      "K_4": 131.29,
+      "K_5": 134.03
+    },
+    {
+      "MATURITY": "2Y",
+      "ATM": 128.34,
+      "K_2": 138.22,
+      "K_3": 133.73,
+      "K_4": 129.24,
+      "K_5": 131.94
+    },
+    /* … 4 more … */
+  ],
+  "MODEL": "Normal, stripped caplets"
+}
+```
 
 **Validation**
 
@@ -527,7 +769,6 @@ A listed stock: price, dividends, sector and identifiers.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/equity/` |
 | Test data | data/testdata/market-data/equity |
-| Worked example | [market-data/equity](../samples/market-data/equity.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -576,6 +817,63 @@ A listed stock: price, dividends, sector and identifiers.
 | `RIC` | text | required |  | The Refinitiv instrument code. | `CSCA.T` |  |
 | `FIGI` | text | required |  | The Financial Instrument Global Identifier (12 characters). | `BBG2033A30F5` |  |
 
+**Example**
+
+The most complete record of `data/testdata/market-data/equity/equity.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "TICKER": "EQ-GRNT",
+  "NAME": "Granite Building Materials plc",
+  "PRICE": 7.42,
+  "CHANGE_1D": -0.01067,
+  "MARKET_CAP": 24065196960,
+  "SECTOR": "Materials",
+  "EXCHANGE": "LSE",
+  "CURRENCY": "GBP",
+  "HISTORY": [
+    {
+      "DATE": "2026-08-19",
+      "CLOSE": 6.77
+    },
+    {
+      "DATE": "2026-08-20",
+      "CLOSE": 6.74
+    },
+    /* … 28 more … */
+  ],
+  "OHLC": [
+    {
+      "DATE": "2026-07-08",
+      "OPEN": 7.2,
+      "HIGH": 7.24,
+      "LOW": 7.17,
+      "CLOSE": 7.21,
+      "VOLUME": 9012652
+    },
+    {
+      "DATE": "2026-07-09",
+      "OPEN": 7.19,
+      "HIGH": 7.2,
+      "LOW": 7.09,
+      "CLOSE": 7.15,
+      "VOLUME": 14016214
+    },
+    /* … 58 more … */
+  ],
+  "IDENTIFIERS": {
+    "ISIN": "GB0GRNT00017",
+    "BLOOMBERG": "GRNT LS Equity",
+    "RIC": "GRNT.L",
+    "FIGI": "BBG1D831446F"
+  },
+  "ISSUER": "ISS-GRANITE",
+  "EQUITY_VOL_SURFACE": "EQV-GRNT",
+  "DIVIDEND_CURVE": "DIV-GRNT",
+  "EQUITY_INDEX": "EQX-UKX"
+}
+```
+
 **Links:** `ISSUER` → `issuer`, `EQUITY_VOL_SURFACE` → `equity-vol-surface`, `DIVIDEND_CURVE` → `dividend-curve`, `EQUITY_INDEX` → `equity-index`.
 
 **Validation**
@@ -620,7 +918,6 @@ Index level with its largest constituents.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/equity-index/` |
 | Test data | data/testdata/market-data/equity-index |
-| Worked example | [market-data/equity-index](../samples/market-data/equity-index.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -650,6 +947,40 @@ Index level with its largest constituents.
 |---|---|---|---|---|---|---|
 | `DATE` | date | required |  | A business day of the close history, oldest first, ending at the record's date. | `2026-08-19` |  |
 | `CLOSE` | amount | required | index points | The index's closing level that day. | `25294.78` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-data/equity-index/equity-index.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "INDEX_ID": "EQX-NDX",
+  "NAME": "Nasdaq-100",
+  "LEVEL": 24530.0,
+  "CHANGE_1D": 0.00986,
+  "CONSTITUENT_COUNT": 101,
+  "CURRENCY": "USD",
+  "CONSTITUENTS": [
+    {
+      "EQUITY": "EQ-NVTK",
+      "WEIGHT": 0.02
+    }
+  ],
+  "HISTORY": [
+    {
+      "DATE": "2026-08-19",
+      "CLOSE": 25294.78
+    },
+    {
+      "DATE": "2026-08-20",
+      "CLOSE": 25348.48
+    },
+    /* … 28 more … */
+  ],
+  "EQUITY_VOL_SURFACE": "EQV-NDX",
+  "DIVIDEND_CURVE": "DIV-NDX"
+}
+```
 
 **Links:** `EQUITY_VOL_SURFACE` → `equity-vol-surface`, `DIVIDEND_CURVE` → `dividend-curve`, `CONSTITUENTS[].EQUITY` → `equity`.
 
@@ -695,7 +1026,6 @@ Expected dividends by year (implied from dividend futures and forwards).
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/dividend-curve/` |
 | Test data | data/testdata/market-data/dividend-curve |
-| Worked example | [market-data/dividend-curve](../samples/market-data/dividend-curve.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -714,6 +1044,30 @@ Expected dividends by year (implied from dividend futures and forwards).
 |---|---|---|---|---|---|---|
 | `YEAR` | text | required |  | The calendar year (as text) the expected dividends are paid in. | `2026`, `2027`, `2028`, `2029`, `2030`, `2031` |  |
 | `AMOUNT` | amount | required | underlier currency per share | The expected dividends of that year, per share (or index point), in the underlier's currency. | `0.6` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-data/dividend-curve/dividend-curve.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "CURVE_ID": "DIV-CSCA",
+  "UNDERLIER": "EQ-CSCA",
+  "DIVIDEND_YIELD": 0.0275,
+  "POINTS": [
+    {
+      "YEAR": "2026",
+      "AMOUNT": 0.6
+    },
+    {
+      "YEAR": "2027",
+      "AMOUNT": 0.63
+    },
+    /* … 4 more … */
+  ],
+  "UNDERLYING_EQUITY": "EQ-CSCA"
+}
+```
 
 **Links:** `UNDERLYING_EQUITY` → `equity`, `UNDERLYING_INDEX` → `equity-index`.
 
@@ -756,7 +1110,6 @@ Implied vols by expiry and moneyness.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/equity-vol-surface/` |
 | Test data | data/testdata/market-data/equity-vol-surface |
-| Worked example | [market-data/equity-vol-surface](../samples/market-data/equity-vol-surface.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -780,6 +1133,40 @@ Implied vols by expiry and moneyness.
 | `M_100` | amount | required | percent | The at-the-money implied volatility (strike 100% of spot), in percent a year. | `37.54` |  |
 | `M_110` | amount | required | percent | The implied volatility at a strike of 110% of spot, in percent a year. | `36.64` |  |
 | `M_120` | amount | required | percent | The implied volatility at a strike of 120% of spot, in percent a year. | `35.74` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-data/equity-vol-surface/equity-vol-surface.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "SURFACE_ID": "EQV-CSCA",
+  "UNDERLIER": "EQ-CSCA",
+  "ATM_1M": 37.54,
+  "ATM_1Y": 36.67,
+  "SKEW_1Y": 3.63,
+  "GRID": [
+    {
+      "EXPIRY": "1M",
+      "M_80": 43.17,
+      "M_90": 40.35,
+      "M_100": 37.54,
+      "M_110": 36.64,
+      "M_120": 35.74
+    },
+    {
+      "EXPIRY": "3M",
+      "M_80": 42.93,
+      "M_90": 40.13,
+      "M_100": 37.33,
+      "M_110": 36.44,
+      "M_120": 35.54
+    },
+    /* … 4 more … */
+  ],
+  "MODEL": "SVI, moneyness-quoted"
+}
+```
 
 **Validation**
 
@@ -817,7 +1204,6 @@ CDS par spreads by tenor, recovery and implied default probabilities.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/credit-curve/` |
 | Test data | data/testdata/market-data/credit-curve |
-| Worked example | [market-data/credit-curve](../samples/market-data/credit-curve.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -842,6 +1228,39 @@ CDS par spreads by tenor, recovery and implied default probabilities.
 | `SPREAD` | rate | required | bp | The par spread for TENOR, in basis points. | `4.5` |  |
 | `HAZARD` | amount | required | fraction a year | The flat hazard rate for TENOR: the spread over one minus the recovery, a fraction a year. | `0.0006` |  |
 | `SURVIVAL` | amount | required | probability | The probability of surviving to TENOR, between 0 and 1. | `0.9997` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-data/credit-curve/credit-curve.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "CURVE_ID": "CDS-BUND",
+  "ISSUER_NAME": "Federal Republic of Germany",
+  "SPREAD_5Y": 9,
+  "RECOVERY": 0.25,
+  "SENIORITY": "Senior unsecured",
+  "DOC_CLAUSE": "MM14",
+  "PD_1Y": 0.000666,
+  "POINTS": [
+    {
+      "TENOR": "6M",
+      "SPREAD": 4.5,
+      "HAZARD": 0.0006,
+      "SURVIVAL": 0.9997
+    },
+    {
+      "TENOR": "1Y",
+      "SPREAD": 5.0,
+      "HAZARD": 0.000667,
+      "SURVIVAL": 0.999334
+    },
+    /* … 5 more … */
+  ],
+  "ISSUER": "ISS-BUND",
+  "CURRENCY": "EUR"
+}
+```
 
 **Links:** `ISSUER` → `issuer`.
 
@@ -885,7 +1304,6 @@ Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…).
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/inflation-index/` |
 | Test data | data/testdata/market-data/inflation-index |
-| Worked example | [market-data/inflation-index](../samples/market-data/inflation-index.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -907,6 +1325,35 @@ Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…).
 | `MONTH` | text | required |  | The reference month, YYYY-MM. | `2026-08` |  |
 | `VALUE` | amount | required | index points | The index level for MONTH, in index points. | `128.4` |  |
 | `YOY` | amount | required | fraction | The year-on-year change for MONTH, as a fraction. | `0.021` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-data/inflation-index/inflation-index.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "INDEX_ID": "INF-HICPX",
+  "NAME": "Euro HICP ex-tobacco",
+  "LATEST": 128.4,
+  "YOY": 0.021,
+  "LAG": "3 months",
+  "CURRENCY": "EUR",
+  "FIXINGS": [
+    {
+      "MONTH": "2026-08",
+      "VALUE": 128.4,
+      "YOY": 0.021
+    },
+    {
+      "MONTH": "2026-07",
+      "VALUE": 128.176,
+      "YOY": 0.0218
+    },
+    /* … 10 more … */
+  ],
+  "INFLATION_CURVE": "INFC-HICPX"
+}
+```
 
 **Links:** `INFLATION_CURVE` → `inflation-curve`.
 
@@ -946,7 +1393,6 @@ Zero-coupon breakevens by tenor, with monthly seasonality.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/inflation-curve/` |
 | Test data | data/testdata/market-data/inflation-curve |
-| Worked example | [market-data/inflation-curve](../samples/market-data/inflation-curve.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -973,6 +1419,42 @@ Zero-coupon breakevens by tenor, with monthly seasonality.
 |---|---|---|---|---|---|---|
 | `MONTH` | text | required |  | The calendar month, by its three-letter English name (Jan .. Dec). | `Jan` |  |
 | `FACTOR` | amount | required | fraction | The month's additive seasonal adjustment to monthly inflation, as a fraction (0.0015 is 15 bp). | `0.00075` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-data/inflation-curve/inflation-curve.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "CURVE_ID": "INFC-HICPX",
+  "INDEX": "INF-HICPX",
+  "BE_5Y": 0.021588,
+  "BE_10Y": 0.022497,
+  "POINTS": [
+    {
+      "TENOR": "1Y",
+      "BREAKEVEN": 1.994
+    },
+    {
+      "TENOR": "2Y",
+      "BREAKEVEN": 2.0548
+    },
+    /* … 4 more … */
+  ],
+  "SEASONALITY": [
+    {
+      "MONTH": "Jan",
+      "FACTOR": 0.00075
+    },
+    {
+      "MONTH": "Feb",
+      "FACTOR": 0.0013
+    },
+    /* … 10 more … */
+  ],
+  "INFLATION_INDEX": "INF-HICPX"
+}
+```
 
 **Links:** `INFLATION_INDEX` → `inflation-index`.
 
@@ -1013,7 +1495,6 @@ A traded commodity with its benchmark, unit and venue.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/commodity/` |
 | Test data | data/testdata/market-data/commodity |
-| Worked example | [market-data/commodity](../samples/market-data/commodity.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1052,6 +1533,51 @@ A traded commodity with its benchmark, unit and venue.
 | `LISTING` | text | required |  | The contract months listed (Monthly). | `Monthly` |  |
 | `TICK_SIZE` | amount | required | SPEC.UNIT | The minimum price move, in SPEC.UNIT. | `0.01` |  |
 | `TRADING_HOURS` | text | required |  | The exchange's trading hours, as text. | `Sun-Fri 18:00-17:00 ET` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-data/commodity/commodity.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "COMMODITY_ID": "CMD-BRENT",
+  "NAME": "Brent crude oil",
+  "FRONT": 74.6,
+  "UNIT": "USD/bbl",
+  "EXCHANGE": "ICE",
+  "SECTOR": "Energy",
+  "OHLC": [
+    {
+      "DATE": "2026-07-08",
+      "OPEN": 78.82,
+      "HIGH": 81.67,
+      "LOW": 77.95,
+      "CLOSE": 79.99,
+      "VOLUME": 393381
+    },
+    {
+      "DATE": "2026-07-09",
+      "OPEN": 80.12,
+      "HIGH": 80.96,
+      "LOW": 78.22,
+      "CLOSE": 78.65,
+      "VOLUME": 366117
+    },
+    /* … 58 more … */
+  ],
+  "SPEC": {
+    "CONTRACT": "BRENT",
+    "UNIT": "USD/bbl",
+    "EXCHANGE": "ICE",
+    "SETTLEMENT": "Physical",
+    "LISTING": "Monthly",
+    "TICK_SIZE": 0.01,
+    "TRADING_HOURS": "Sun-Fri 18:00-17:00 ET"
+  },
+  "COMMODITY_CURVE": "CMDC-BRENT",
+  "COMMODITY_VOL_SURFACE": "CMDV-BRENT"
+}
+```
 
 **Links:** `COMMODITY_CURVE` → `commodity-curve`, `COMMODITY_VOL_SURFACE` → `commodity-vol-surface`.
 
@@ -1100,7 +1626,6 @@ Futures settlement prices by delivery month.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/commodity-curve/` |
 | Test data | data/testdata/market-data/commodity-curve |
-| Worked example | [market-data/commodity-curve](../samples/market-data/commodity-curve.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1122,6 +1647,35 @@ Futures settlement prices by delivery month.
 | `MONTH` | text | required |  | The contract month as a futures code: the month letter (F Jan … Z Dec) and the year's last digit (X6 is November 2026). | `X6` |  |
 | `PRICE` | amount | required | UNIT | The futures price of the contract month, in the curve's UNIT. | `74.6` |  |
 | `OPEN_INTEREST` | integer | required | contracts | The contract month's open interest, in contracts. | `200000` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-data/commodity-curve/commodity-curve.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "CURVE_ID": "CMDC-BRENT",
+  "COMMODITY": "Brent crude oil",
+  "FRONT": 74.6,
+  "SHAPE": "backwardation",
+  "ROLL": -0.4,
+  "POINTS": [
+    {
+      "MONTH": "X6",
+      "PRICE": 74.6,
+      "OPEN_INTEREST": 200000
+    },
+    {
+      "MONTH": "Z6",
+      "PRICE": 74.302,
+      "OPEN_INTEREST": 143306
+    },
+    /* … 10 more … */
+  ],
+  "COMMODITY_REF": "CMD-BRENT",
+  "UNIT": "USD/bbl"
+}
+```
 
 **Links:** `COMMODITY_REF` → `commodity`.
 
@@ -1165,7 +1719,6 @@ Implied vols by delivery month and moneyness.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/commodity-vol-surface/` |
 | Test data | data/testdata/market-data/commodity-vol-surface |
-| Worked example | [market-data/commodity-vol-surface](../samples/market-data/commodity-vol-surface.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1184,6 +1737,33 @@ Implied vols by delivery month and moneyness.
 | `M_90` | amount | required | percent | The implied volatility at a strike of 90% of the month's futures price, in percent a year. | `32.82` |  |
 | `M_100` | amount | required | percent | The at-the-money implied volatility (strike 100% of the futures price), in percent a year. | `31.32` |  |
 | `M_110` | amount | required | percent | The implied volatility at a strike of 110% of the month's futures price, in percent a year. | `32.12` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-data/commodity-vol-surface/commodity-vol-surface.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "SURFACE_ID": "CMDV-BRENT",
+  "COMMODITY": "Brent crude oil",
+  "ATM_FRONT": 31.32,
+  "GRID": [
+    {
+      "MONTH": "X6",
+      "M_90": 32.82,
+      "M_100": 31.32,
+      "M_110": 32.12
+    },
+    {
+      "MONTH": "Z6",
+      "M_90": 32.24,
+      "M_100": 30.74,
+      "M_110": 31.54
+    },
+    /* … 6 more … */
+  ]
+}
+```
 
 **Validation**
 
@@ -1221,7 +1801,6 @@ Published overnight and term rate fixings (SOFR, €STR, SONIA…).
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/rate-fixing/` |
 | Test data | data/testdata/market-data/rate-fixing |
-| Worked example | [market-data/rate-fixing](../samples/market-data/rate-fixing.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1243,6 +1822,36 @@ Published overnight and term rate fixings (SOFR, €STR, SONIA…).
 | `RATE` | rate | required | fraction | The fixed rate, as a fraction (RATE_PCT is the same in percent). | `0.03806` |  |
 | `RATE_PCT` | rate | required | percent | The same fixing as RATE, in percent (RATE times 100). | `3.806` |  |
 | `VOLUME_BN` | amount | required | billions of CURRENCY | The volume of transactions underlying the fixing, in billions of CURRENCY. | `1075.7` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-data/rate-fixing/rate-fixing.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "INDEX_ID": "FIX-AONIA",
+  "NAME": "AUD Overnight Index Average",
+  "LATEST": 0.03806,
+  "ADMINISTRATOR": "RBA",
+  "TENOR": "Overnight",
+  "CURRENCY": "AUD",
+  "FIXINGS": [
+    {
+      "DATE": "2026-09-30",
+      "RATE": 0.03806,
+      "RATE_PCT": 3.806,
+      "VOLUME_BN": 1075.7
+    },
+    {
+      "DATE": "2026-09-29",
+      "RATE": 0.038074,
+      "RATE_PCT": 3.8074,
+      "VOLUME_BN": 611.6
+    },
+    /* … 18 more … */
+  ]
+}
+```
 
 **Validation**
 
@@ -1284,7 +1893,6 @@ A listed bond: terms, price, yield, spreads and analytics.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/bond/` |
 | Test data | data/testdata/market-data/bond |
-| Worked example | [market-data/bond](../samples/market-data/bond.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1333,6 +1941,59 @@ A listed bond: terms, price, yield, spreads and analytics.
 | `DATE` | date | required |  | A business day of the price history, oldest first, ending at the record's date. | `2026-08-19` |  |
 | `PRICE` | amount | required | per 100 face | The bond's clean price that day, per 100 of face. | `95.492` |  |
 
+**Example**
+
+The most complete record of `data/testdata/market-data/bond/bond.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "ISIN": "BND-BRVERD054608",
+  "ISIN_CODE": "BRVERD054608",
+  "ISSUER_NAME": "Verdant Agri Holdings",
+  "COUPON": 0.0579,
+  "MATURITY": "2031-09-15",
+  "PRICE": 94.302,
+  "YIELD": 0.071,
+  "Z_SPREAD": 323.0,
+  "MOD_DURATION": 4.35,
+  "RATING": "BB-",
+  "TERMS": {
+    "CURRENCY": "USD",
+    "COUPON_FREQUENCY": "Semi-annual",
+    "DAY_COUNT": "ACT/ACT",
+    "ISSUE_DATE": "2021-09-15",
+    "AMOUNT_ISSUED": 5100000000,
+    "SENIORITY": "Senior unsecured",
+    "CALLABLE": false,
+    "CUSIP": null
+  },
+  "COUPONS": [
+    {
+      "DATE": "2027-09-15",
+      "AMOUNT": 2.895
+    },
+    {
+      "DATE": "2028-09-15",
+      "AMOUNT": 2.895
+    },
+    /* … 3 more … */
+  ],
+  "HISTORY": [
+    {
+      "DATE": "2026-08-19",
+      "PRICE": 95.492
+    },
+    {
+      "DATE": "2026-08-20",
+      "PRICE": 95.371
+    },
+    /* … 28 more … */
+  ],
+  "ISSUER": "ISS-VERDANT",
+  "BENCHMARK_CURVE": "CRV-USD-GOVT"
+}
+```
+
 **Links:** `ISSUER` → `issuer`, `BENCHMARK_CURVE` → `ir-curve`.
 
 **Validation**
@@ -1376,7 +2037,6 @@ A correlation set: the factors whose pairwise correlations basket, quanto and sp
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/correlation-matrix/` |
 | Test data | data/testdata/market-data/correlation-matrix |
-| Worked example | [market-data/correlation-matrix](../samples/market-data/correlation-matrix.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1387,6 +2047,30 @@ A correlation set: the factors whose pairwise correlations basket, quanto and sp
 | `FACTORS` | text list | required |  | The factors of the set, in matrix order: equity tickers and FX pairs (EURUSD) by their market-data names; the correlations are computed from their price histories. |  |  |
 | `EQUITY_IDS` | id list | required |  | The factors that are equities (their price history: HISTORY[].CLOSE) |  | `equity` |
 | `FX_IDS` | id list | required |  | The factors that are FX pairs (their history: HISTORY[].MID) |  | `fx-spot` |
+
+**Example**
+
+The most complete record of `data/testdata/market-data/correlation-matrix/correlation-matrix.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "MATRIX_ID": "CORR-EU-EQ",
+  "NAME": "European equities",
+  "FACTORS": [
+    "ORBT",
+    "RHNB",
+    "GRNT",
+    "LUMN"
+  ],
+  "EQUITY_IDS": [
+    "EQ-ORBT",
+    "EQ-RHNB",
+    "EQ-GRNT",
+    "EQ-LUMN"
+  ],
+  "FX_IDS": []
+}
+```
 
 **Validation**
 

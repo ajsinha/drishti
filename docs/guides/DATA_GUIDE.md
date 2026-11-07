@@ -23,7 +23,7 @@ examples), and **a pack from a schema** (section 5: JSON Schema files or a folde
 **the data inbox** (section 7: drop files in a folder with a `.ready` marker, and they are loaded into the lake by themselves).
 
 Connecting a store is [CONNECTORS.md](../connectors/CONNECTORS.md) and [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md); the
-shape of each command's data is its [contract](../contracts/packs/README.md); how the data layer is built (live updates, history
+shape of each command's data is its [contract](../contracts/README.md#every-kind-a-to-z); how the data layer is built (live updates, history
 queries, the Iceberg engine, reactive connectors, the content store, the database) is [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md).
 Each section keeps its own numbering (section 1's "section 4" is *4. The API reference* inside section 1).
 

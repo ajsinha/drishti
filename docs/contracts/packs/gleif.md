@@ -17,7 +17,7 @@
 
 # Data contracts of the gleif pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/gleif/guides/gleif.md](../../../config/packs/gleif/guides/gleif.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per kind of the pack: what one record is, its key, how it is stored and dated, every field, one example record from the committed test data, the validation rules and what a person still has to confirm. This page is the one home of these facts: guides and tutorials link here. The rules every contract shares, and every kind from A to Z, are in [the contracts index](../README.md).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -45,7 +45,6 @@ A legal entity from its LEI record: key facts, addresses, registration and renew
 | Storage | connector `gleif-store` (plugin `delta`), table `<root>/gleif/lei-entity/` |
 | Columns | `LEI`, `NAME`, `LEI_COUNTRY`, `LEGAL_CITY`, `LEGAL_FORM`, `REGISTRATION_STATUS`, `RENEWAL_LATE`, `SEGMENT`, `NEXT_RENEWAL`, `US_COMPANY` |
 | Test data | data/testdata/gleif/lei-entity |
-| Worked example | [gleif/lei-entity](../samples/gleif/lei-entity.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -136,6 +135,90 @@ A legal entity from its LEI record: key facts, addresses, registration and renew
 | `RETRIEVED_AT` | date | required |  | The date GLEIF's data was retrieved (YYYY-MM-DD). | `2026-10-25` |  |
 | `LICENCE` | text | required |  | The licence of the source (CC0 1.0). | `CC0 1.0 (GLEIF's terms: free of charge, no restriction; attribution appreciated)` |  |
 | `URL` | text | required |  | The LEI's record on search.gleif.org. | `https://search.gleif.org/#/record/HWUPKR0MPOU8FGXBT394` |  |
+
+**Example**
+
+The most complete record of `data/testdata/gleif/lei-entity/lei-entity.2026-10-25.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "LEI": "123WALMHY1GZXG2YDL90",
+  "NAME": "PVH CORP.",
+  "OTHER_NAMES": [
+    {
+      "NAME": "Phillips-Van Heusen Corporation",
+      "TYPE": "previous legal name"
+    }
+  ],
+  "LEGAL_FORM": "Corporation",
+  "JURISDICTION": "US-DE",
+  "LEI_COUNTRY": "US",
+  "COUNTRY_NAME": "United States of America (the)",
+  "LEGAL_ADDRESS": "C/O CORPORATION SERVICE COMPANY, 251 LITTLE FALLS DRIVE, 19808 WILMINGTON, US-DE, US",
+  "LEGAL_CITY": "WILMINGTON",
+  "HQ_ADDRESS": "251 LITTLE FALLS DRIVE, 19808 WILMINGTON, US-DE, US",
+  "REGISTERED_AS": "823142",
+  "ENTITY_STATUS": "ACTIVE",
+  "CREATED": "1976-04-08",
+  "REGISTRATION_STATUS": "ISSUED",
+  "INITIAL_REGISTRATION": "2012-06-19",
+  "LAST_UPDATE": "2026-02-10",
+  "NEXT_RENEWAL": "2027-02-12",
+  "RENEWAL_LATE": false,
+  "MANAGING_LOU": "Bloomberg Finance L.P.",
+  "BICS": "PVHCUS33XXX",
+  "BIC_COUNT": 1,
+  "ISIN_COUNT": 902,
+  "OPENCORPORATES": "us_de/823142",
+  "LEI_GROUP": "123WALMHY1GZXG2YDL90",
+  "PARENT_EXCEPTIONS": [
+    {
+      "LEVEL": "Direct parent",
+      "REASON": "NO_KNOWN_PERSON",
+      "MEANING": "No known person controls it (shares widely held)"
+    },
+    {
+      "LEVEL": "Ultimate parent",
+      "REASON": "NO_KNOWN_PERSON",
+      "MEANING": "No known person controls it (shares widely held)"
+    }
+  ],
+  "CHILDREN": [
+    {
+      "LEI": "549300C1WOX3PH7LDL30",
+      "NAME": "피브이에이치코리아",
+      "COUNTRY": "KR"
+    },
+    {
+      "LEI": "549300NTI2NBOWYFH565",
+      "NAME": "PVH BRANDS AUSTRALIA PTY LIMITED",
+      "COUNTRY": "AU"
+    },
+    /* … 1 more … */
+  ],
+  "CHILD_COUNT": 3,
+  "DIRECT_CHILDREN_GLEIF": 3,
+  "ULTIMATE_CHILDREN_GLEIF": 15,
+  "GLEIF_GROUP_SIZE": 16,
+  "MAPPING_IDS": [
+    "PVHCUS33XXX",
+    "US6936561009",
+    "US693656AE03",
+    "US69376N2A77",
+    "US69376N2B50",
+    "US69376N2C34"
+  ],
+  "SEGMENT": "US equities",
+  "US_COMPANY": "PVH",
+  "US_COMPANY_NAME": "PVH Corp.",
+  "PROVENANCE": {
+    "SOURCE": "GLEIF, the Global Legal Entity Identifier Foundation (LEI records, golden copy level 2, mapping files)",
+    "RETRIEVED_AT": "2026-10-25",
+    "LICENCE": "CC0 1.0 (GLEIF's terms: free of charge, no restriction; attribution appreciated)",
+    "URL": "https://search.gleif.org/#/record/123WALMHY1GZXG2YDL90"
+  }
+}
+```
 
 **Links:** `JURISDICTION` → `jurisdiction`, `LEI_COUNTRY` → `lei-country`, `LEI_GROUP` → `lei-group`, `MAPPING_IDS` → `lei-mapping`, `US_COMPANY` → `us-company`.
 
@@ -273,7 +356,6 @@ One consolidation relationship from GLEIF's level 2 data: the child, its direct 
 | Storage | connector `gleif-store` (plugin `delta`), table `<root>/gleif/lei-relationship/` |
 | Columns | `RELATIONSHIP_ID`, `LEVEL`, `CHILD_ENTITY`, `PARENT_ENTITY`, `RELATIONSHIP_STATUS` |
 | Test data | data/testdata/gleif/lei-relationship |
-| Worked example | [gleif/lei-relationship](../samples/gleif/lei-relationship.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -301,6 +383,34 @@ One consolidation relationship from GLEIF's level 2 data: the child, its direct 
 | `TYPE` | text | required |  | The period's type in lower case: accounting period or document filing period. | `accounting period`, `document filing period` |  |
 | `START` | date | optional |  | The first day of the period, YYYY-MM-DD; absent when GLEIF gives none. | `2021-01-01` |  |
 | `END` | date | optional |  | The end of the period (YYYY-MM-DD); absent when it is open. | `2021-12-31` |  |
+
+**Example**
+
+The most complete record of `data/testdata/gleif/lei-relationship/lei-relationship.2026-10-25.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "RELATIONSHIP_ID": "LEIREL-0292001381F1R1IB5B85-DIRECT",
+  "LEVEL": "Direct",
+  "CHILD_ENTITY": "0292001381F1R1IB5B85",
+  "PARENT_ENTITY": "2549003PEZXUT7MDBU41",
+  "RELATIONSHIP_STATUS": "ACTIVE",
+  "START": "2006-01-25",
+  "PERIODS": [
+    {
+      "TYPE": "accounting period",
+      "START": "2017-01-01",
+      "END": "2017-12-31"
+    }
+  ],
+  "ACCOUNTING_STANDARD": "IFRS",
+  "REGISTRATION_STATUS": "PUBLISHED",
+  "INITIAL_REGISTRATION": "2016-07-14",
+  "LAST_UPDATE": "2026-07-27",
+  "NEXT_RENEWAL": "2027-07-13",
+  "LEI_GROUP": "2549003PEZXUT7MDBU41"
+}
+```
 
 **Links:** `CHILD_ENTITY` → `lei-entity`, `PARENT_ENTITY` → `lei-entity`, `LEI_GROUP` → `lei-group`.
 
@@ -412,7 +522,6 @@ An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it.
 | Storage | connector `gleif-store` (plugin `delta`), table `<root>/gleif/lei-mapping/` |
 | Columns | `IDENTIFIER`, `TYPE`, `ENTITY_LEI`, `ENTITY_NAME` |
 | Test data | data/testdata/gleif/lei-mapping |
-| Worked example | [gleif/lei-mapping](../samples/gleif/lei-mapping.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -426,6 +535,23 @@ An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it.
 | `LEI_GROUP` | id | required |  | The entity's ownership group: the LEI of its ultimate parent, the id of the computed lei-group kind. | `06BTX5UWZD0GQ5N5Y745` | `lei-group` |
 | `MAPPING_FILE` | text | required |  | The GLEIF mapping file the pair was read from (isin-lei-…, LEI-BIC-…, LEI-MIC-….zip), which dates it. | `LEI-BIC-20260925.zip`, `LEI-MIC-20261012.zip`, `isin-lei-20261024T071512.zip` |  |
 | `ISIN_COUNT` | integer | optional |  | ISINs of the issuer | `909` |  |
+
+**Example**
+
+The most complete record of `data/testdata/gleif/lei-mapping/lei-mapping.2026-10-25.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "IDENTIFIER": "US9297401088",
+  "TYPE": "ISIN",
+  "ENTITY_LEI": "06BTX5UWZD0GQ5N5Y745",
+  "ENTITY_NAME": "WESTINGHOUSE AIR BRAKE TECHNOLOGIES CORPORATION",
+  "COUNTRY": "US",
+  "LEI_GROUP": "06BTX5UWZD0GQ5N5Y745",
+  "ISIN_COUNT": 909,
+  "MAPPING_FILE": "isin-lei-20261024T071512.zip"
+}
+```
 
 **Links:** `ENTITY_LEI` → `lei-entity`, `LEI_GROUP` → `lei-group`.
 

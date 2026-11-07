@@ -17,7 +17,7 @@
 
 # Data contracts of the market-risk pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/market-risk/guides/market-risk.md](../../../config/packs/market-risk/guides/market-risk.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per kind of the pack: what one record is, its key, how it is stored and dated, every field, one example record from the committed test data, the validation rules and what a person still has to confirm. This page is the one home of these facts: guides and tutorials link here. The rules every contract shares, and every kind from A to Z, are in [the contracts index](../README.md).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -59,7 +59,6 @@ A named historical or hypothetical shock set.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/stress-scenario/` |
 | Test data | data/testdata/market-risk/stress-scenario |
-| Worked example | [market-risk/stress-scenario](../samples/market-risk/stress-scenario.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -78,6 +77,31 @@ A named historical or hypothetical shock set.
 |---|---|---|---|---|---|---|
 | `FACTOR` | text | required |  | The market variable the scenario moves, such as an equity index, a spread or a curve. | `Equities` |  |
 | `SHOCK` | amount | required |  | How far the factor moves. The unit follows the factor: a proportional change for prices and spreads, percentage points for interest rates, points for volatility. | `-0.34` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-risk/stress-scenario/stress-scenario.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "SCENARIO_ID": "SCN-COVID2020",
+  "NAME": "COVID-19 March 2020",
+  "TYPE": "Historical",
+  "SEVERITY": "Severe",
+  "SHOCKS": [
+    {
+      "FACTOR": "Equities",
+      "SHOCK": -0.34
+    },
+    {
+      "FACTOR": "Credit spreads (IG)",
+      "SHOCK": 1.35
+    },
+    /* … 3 more … */
+  ],
+  "HORIZON": "10 days"
+}
+```
 
 **Validation**
 
@@ -115,7 +139,6 @@ P&L of a desk under a scenario, by book.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/stress-result/` |
 | Test data | data/testdata/market-risk/stress-result |
-| Worked example | [market-risk/stress-result](../samples/market-risk/stress-result.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -135,6 +158,32 @@ P&L of a desk under a scenario, by book.
 |---|---|---|---|---|---|---|
 | `BOOK` | id | required |  | The book: a BOOK_ID of the core pack's book kind (BOOK-…). | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` |
 | `PNL` | amount | required | USD | The book's share of the scenario P&L. | `-25019855` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-risk/stress-result/stress-result.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "RESULT_ID": "STR-COVID2020-COMM",
+  "SCENARIO_NAME": "COVID-19 March 2020",
+  "PNL": -2792342695,
+  "LIMIT": 2853100000.0,
+  "BY_BOOK": [
+    {
+      "BOOK": "BOOK-COMM-1",
+      "PNL": -1042637979
+    },
+    {
+      "BOOK": "BOOK-COMM-2",
+      "PNL": -1156508787
+    },
+    /* … 1 more … */
+  ],
+  "SCENARIO": "SCN-COVID2020",
+  "DESK": "DESK-COMM"
+}
+```
 
 **Links:** `SCENARIO` → `stress-scenario`, `DESK` → `desk`, `BY_BOOK[].BOOK` → `book`.
 
@@ -176,7 +225,6 @@ Delta, vega and curvature by risk class and bucket (SBM).
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/frtb-sensitivity/` |
 | Test data | data/testdata/market-risk/frtb-sensitivity |
-| Worked example | [market-risk/frtb-sensitivity](../samples/market-risk/frtb-sensitivity.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -207,6 +255,43 @@ Delta, vega and curvature by risk class and bucket (SBM).
 |---|---|---|---|---|---|---|
 | `RISK_CLASS` | text | required |  | The FRTB risk class of the row: GIRR (general interest rate risk), CSR non-securitisation (credit spread), Equity, Commodity or FX. | `CSR non-securitisation`, `Commodity`, `Equity`, `FX`, `GIRR` |  |
 | `CHARGE` | amount | required | USD | The class's contribution to the book's sensitivities-based charge. | `16165538` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-risk/frtb-sensitivity/frtb-sensitivity.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "RESULT_ID": "FRTB-COMM-1",
+  "BOOK": "BOOK-COMM-1",
+  "DELTA_CHARGE": 483955624,
+  "VEGA_CHARGE": 132239986,
+  "CURVATURE_CHARGE": 57461534,
+  "TOTAL": 673657144,
+  "SENSITIVITIES": [
+    {
+      "RISK_CLASS": "Commodity",
+      "BUCKET": "1",
+      "MEASURE": "Delta",
+      "VALUE": -11282673
+    },
+    {
+      "RISK_CLASS": "Commodity",
+      "BUCKET": "1",
+      "MEASURE": "Vega",
+      "VALUE": -2508590
+    },
+    /* … 4 more … */
+  ],
+  "BY_CLASS": [
+    {
+      "RISK_CLASS": "Commodity",
+      "CHARGE": 673657144
+    }
+  ],
+  "APPROACH": "FRTB standardised (SBM)"
+}
+```
 
 **Links:** `BOOK` → `book`.
 
@@ -250,7 +335,6 @@ Daily P&L attributed to risk factors, new trades and residual.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/pnl-explain/` |
 | Test data | data/testdata/market-risk/pnl-explain |
-| Worked example | [market-risk/pnl-explain](../samples/market-risk/pnl-explain.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -278,6 +362,43 @@ Daily P&L attributed to risk factors, new trades and residual.
 |---|---|---|---|---|---|---|
 | `STEP` | text | required |  | The name of one step of the explain waterfall, in order from zero to the actual P&L; the last step is the unexplained rest. | `Carry` |  |
 | `PNL` | amount | required | USD | Each step moves the running total from zero to the actual P&L; the last step is the unexplained rest. | `-11428` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-risk/pnl-explain/pnl-explain.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "RESULT_ID": "PNL-COMM-1",
+  "DATE": "2026-09-30",
+  "ACTUAL": -3815115,
+  "EXPLAINED": -3930641,
+  "UNEXPLAINED": 115526,
+  "ATTRIBUTION": [
+    {
+      "FACTOR": "Rates delta",
+      "PNL": -1650869
+    },
+    {
+      "FACTOR": "FX delta",
+      "PNL": -471677
+    },
+    /* … 4 more … */
+  ],
+  "EXPLAIN_STEPS": [
+    {
+      "STEP": "Carry",
+      "PNL": -550290
+    },
+    {
+      "STEP": "Roll-down",
+      "PNL": -235838
+    },
+    /* … 7 more … */
+  ],
+  "BOOK": "BOOK-COMM-1"
+}
+```
 
 **Links:** `BOOK` → `book`.
 
@@ -319,7 +440,6 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/trade-valuation/` |
 | Columns | `VALUATION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `PRODUCT_GROUP`, `PORTFOLIO`, `DESK`, `COUNTERPARTY`, `NETTING_SET`, `TRADER_ID`, `BUY_SELL_CODE`, `TRADE_STATUS`, `CURRENCY`, `NOTIONAL`, `MTM`, `MTM_CURRENCY`, `PNL_1D`, `DV01`, `TRADE_DATE`, `MATURITY_DATE`, `VALUATION_DATE` |
 | Test data | data/testdata/market-risk/trade-valuation |
-| Worked example | [market-risk/trade-valuation](../samples/market-risk/trade-valuation.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -346,6 +466,36 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 | `TRADE_DATE` | date | required |  | The date the trade was dealt (YYYY-MM-DD). | `2025-06-20` |  |
 | `MATURITY_DATE` | date | required |  | The trade's maturity date. | `2028-07-31` |  |
 | `VALUATION_DATE` | date | required |  | The date the trade is valued on: the business date of the file. | `2026-09-30` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-risk/trade-valuation/trade-valuation.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "VALUATION_ID": "TVAL-1000001",
+  "TRADE_ID": "1000001",
+  "SOURCE_SYSTEM": "ENDUR",
+  "PRODUCT_TYPE": "ComSwap",
+  "PRODUCT_GROUP": "Commodity",
+  "PORTFOLIO": "BOOK-COMM-2",
+  "DESK": "DESK-COMM",
+  "COUNTERPARTY": "CP-HARBORPT",
+  "NETTING_SET": "NS-HARBORPT-NY",
+  "TRADER_ID": "TRDR-FROSSI",
+  "BUY_SELL_CODE": "S",
+  "TRADE_STATUS": "AMENDED",
+  "CURRENCY": "USD",
+  "NOTIONAL": 209962179.0,
+  "MTM": 5151600,
+  "MTM_CURRENCY": "USD",
+  "PNL_1D": -347255,
+  "DV01": 0,
+  "TRADE_DATE": "2025-06-20",
+  "MATURITY_DATE": "2028-07-31",
+  "VALUATION_DATE": "2026-09-30"
+}
+```
 
 **Links:** `TRADE_ID` → `trade`, `PORTFOLIO` → `book`, `DESK` → `desk`, `COUNTERPARTY` → `counterparty`, `NETTING_SET` → `netting-set`, `TRADER_ID` → `trader`.
 
@@ -445,6 +595,79 @@ A position: one security held in one book (or one OTC trade), the trades that bu
 | `COUNTERPARTY` | id | required |  | The trade's counterparty: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | `CP-SUMMIT` (pattern `^CP-`) | `counterparty` |
 | `TRADE_CURRENCY` | text | optional |  | The trade's currency: the currency its scenario PVs come in, else its own CURRENCY (a P&L vector, sent in USD). | `EUR` |  |
 
+**Example**
+
+The most complete record of `config/packs/market-risk/samples/position.jsonl` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "POSITION_ID": "POS-BOOK-EQD-2~SEC-WARRANT-USD-01",
+  "BUSINESS_DATE": "2026-09-30",
+  "POSITION_RULE": "securities",
+  "SECURITY_ID": "SEC-WARRANT-USD-01",
+  "INSTRUMENT_ID": "SEC-WARRANT-USD-01",
+  "INSTRUMENT": "Equity warrant USD 2027-05",
+  "POSITION_TYPE": "fungible",
+  "DIRECTION": "SHORT",
+  "QUANTITY": -1772145212.5,
+  "GROSS_QUANTITY": 2816087612.5,
+  "TRADE_COUNT": 9,
+  "LONG_TRADES": 2,
+  "SHORT_TRADES": 7,
+  "TRADE_IDS": [
+    "MX-20000274",
+    "MX-30001161",
+    "MX-30001605",
+    "MX-30002049",
+    "MX-30002939",
+    "MX-30003381",
+    "MX-30003823",
+    "MX-30003825",
+    "MX-30004271"
+  ],
+  "TRADES": [
+    {
+      "TRADE_ID": "MX-20000274",
+      "QUANTITY": -179000000.0,
+      "DIRECTION": "SHORT",
+      "PV": 3143714.0,
+      "PRODUCT_TYPE": "WARRANT",
+      "COUNTERPARTY": "CP-SUMMIT",
+      "TRADE_CURRENCY": "USD"
+    },
+    {
+      "TRADE_ID": "MX-30001161",
+      "QUANTITY": -235564000.0,
+      "DIRECTION": "SHORT",
+      "PV": 4137128.0,
+      "PRODUCT_TYPE": "WARRANT",
+      "COUNTERPARTY": "CP-SUMMIT",
+      "TRADE_CURRENCY": "USD"
+    },
+    /* … 7 more … */
+  ],
+  "LEGAL_ENTITY": "LE-LDN",
+  "DIVISION": "DIV-MARKETS",
+  "DESK": "DESK-EQD",
+  "TT_BOOK": "BOOK-EQD-2",
+  "PORTFOLIO": "BOOK-EQD-2",
+  "STRATEGY": "",
+  "COUNTERPARTY": "CP-SUMMIT",
+  "PRODUCT_GROUP": "Equity",
+  "PRODUCT_TYPE": "WARRANT",
+  "CURRENCY": "USD",
+  "COUNTERPARTIES": [
+    "CP-SUMMIT"
+  ],
+  "MARKET_VALUE": 41018452,
+  "NOTIONAL": 2816087612,
+  "TAGS": [],
+  "STATUS": "open",
+  "SCENARIO_SET_ID": "HS-509",
+  "VAR_SCOPE": "POS:POS-BOOK-EQD-2~SEC-WARRANT-USD-01"
+}
+```
+
 **Links:** `TRADE_IDS` → `trade`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`, `PORTFOLIO` → `book`, `COUNTERPARTY` → `counterparty`, `TRADES[].TRADE_ID` → `trade`, `TRADES[].COUNTERPARTY` → `counterparty`.
 
 **Validation**
@@ -490,7 +713,6 @@ A portfolio in terms of the positions inside it: longs and shorts, market value,
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/portfolio/` |
 | Columns | `PORTFOLIO_ID`, `NAME`, `TYPE`, `OWNER` |
 | Test data | data/testdata/market-risk/portfolio |
-| Worked example | [market-risk/portfolio](../samples/market-risk/portfolio.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -527,6 +749,37 @@ A portfolio in terms of the positions inside it: longs and shorts, market value,
 |---|---|---|---|---|---|---|
 | `KIND` | text | required |  | The kind of the node the portfolio reports under (bank, division, desk, legal-entity, book). | `division` |  |
 | `ID` | id | required |  | The desk or book the portfolio reports under. | `DIV-MARKETS` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-risk/portfolio/portfolio.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "PORTFOLIO_ID": "PF-ASHA-UNWIND",
+  "NAME": "Unwind candidates (Asha)",
+  "OWNER": "asha",
+  "TYPE": "BASKET",
+  "DEFINITION": {
+    "MEMBERS": [
+      {
+        "POSITION_ID": "POS-BOOK-RATES-1~MX-20000002"
+      },
+      {
+        "POSITION_ID": "POS-BOOK-RATES-1~MX-20000003"
+      },
+      /* … 7 more … */
+    ]
+  },
+  "ROLLS_UP_TO": {
+    "KIND": "division",
+    "ID": "DIV-MARKETS"
+  },
+  "BUSINESS_DATE": "2026-09-30",
+  "VALID_FROM": "2026-01-02",
+  "VALID_TO": null
+}
+```
 
 **Links:** `PORTFOLIO_ID` → `portfolio`, `DEFINITION.MEMBERS[].POSITION_ID` → `position`, `DEFINITION.MEMBERS[].TRADE_ID` → `trade`.
 
@@ -570,7 +823,6 @@ One trade's (or one position's) P&L under every scenario of the date's scenario 
 | Columns | `VALUE_TYPE`, `GRAIN`, `TRADE_ID`, `POSITION_ID`, `CURRENCY`, `SOURCE_SYSTEM`, `SECURITY_ID`, `INSTRUMENT`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `PORTFOLIO`, `STRATEGY`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `PV`, `TAGS`, `TRADE_STATUS`, `MATURITY_DATE`, `STATUS`, `REPORTING_CCY`, `SCENARIO_SET_ID`, `BATCH_ID`, `RUN_KIND`, `COMPUTED_AT`, `TRADE_IDS` |
 | Vectors | `PNL` |
 | Test data | data/testdata/market-risk/pnl-vector |
-| Worked example | [market-risk/pnl-vector](../samples/market-risk/pnl-vector.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -615,6 +867,62 @@ One trade's (or one position's) P&L under every scenario of the date's scenario 
 | `RESTATEMENT` | integer | required |  | 0 for the first run of the date, then 1, 2, ... each time the date is restated (rewritten whole with a new BATCH_ID). | `0` |  |
 | `RUN_KIND` | text | optional |  | Which run the row belongs to (VAR_GUIDE.md section 8.4): FULL (or none) for the day's full run; INTRADAY for an update a pricing system sends during the day: only the changed trades, amended, new or cancelled, priced over the same scenario set; each intraday batch has its own BATCH_ID and a later COMPUTED_AT, and the latest COMPUTED_AT per trade wins. A cancel is an INTRADAY row whose TRADE_STATUS is not live (CANCELLED), its PVs empty. | `FULL`, `INTRADAY` |  |
 | `TRADE_IDS` | id list | optional |  | At GRAIN POSITION, the trades the position aggregates when its source system knows them: kept for navigation (the position page lists them; a trade page links its position); none of them may be sent on its own as well (DRS-5210). | `["1000279", "1000280"]` | `trade` |
+
+**Example**
+
+The most complete record of `data/testdata/market-risk/pnl-vector/pnl-vector-2026-09-30.tar` → `pnl-vector/2026-09-30/cob.part-001.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "VALUE_TYPE": "PNL",
+  "GRAIN": "TRADE",
+  "TRADE_ID": "CLY-3000267",
+  "CURRENCY": "USD",
+  "SOURCE_SYSTEM": "CALYPSO",
+  "VECTOR_ID": "PNL-CLY-3000267-HS-509",
+  "SECURITY_ID": null,
+  "INSTRUMENT": "Repurchase agreement USD 2027-01",
+  "BUSINESS_DATE": "2026-09-30",
+  "SCENARIO_SET_ID": "HS-509",
+  "TRADE_VERSIONS": "v3",
+  "TRADE_STATUS": "AMENDED",
+  "MATURITY_DATE": "2027-01-04",
+  "LEGAL_ENTITY": "LE-FRA",
+  "DIVISION": "DIV-TREASURY",
+  "DESK": "DESK-SFT",
+  "TT_BOOK": "BOOK-SFT-1",
+  "LIMIT_LETTER": "LL-0001",
+  "PORTFOLIO": "BOOK-SFT-1",
+  "STRATEGY": "",
+  "PRODUCT_GROUP": "Securities financing",
+  "PRODUCT_TYPE": "REPO",
+  "COUNTERPARTY": "CP-BRAMBLE",
+  "DIRECTION": "SHORT",
+  "QUANTITY": -178000000.0,
+  "TAGS": "",
+  "TRADE_CURRENCY": "USD",
+  "REPORTING_CCY": "USD",
+  "PV": 396058,
+  "PNL": [
+    1535,
+    57,
+    5271,
+    -2374,
+    /* … 501 more … */,
+    -855,
+    -5201,
+    57,
+    2303
+  ],
+  "STATUS": "ok",
+  "PRICER": "demo-factor-model",
+  "MODEL_VERSION": "demo-2",
+  "COMPUTED_AT": "2026-09-30T06:00:00Z",
+  "BATCH_ID": "B-2026-09-30-01",
+  "RESTATEMENT": 0,
+  "RUN_KIND": "FULL"
+}
+```
 
 **Links:** `TRADE_ID` → `trade`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`, `PORTFOLIO` → `book`, `COUNTERPARTY` → `counterparty`.
 
@@ -676,7 +984,6 @@ A trade's present value under each historical scenario and its base PV of the sa
 | Columns | `VALUE_TYPE`, `GRAIN`, `TRADE_ID`, `POSITION_ID`, `CURRENCY`, `SOURCE_SYSTEM`, `SECURITY_ID`, `INSTRUMENT`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `PORTFOLIO`, `STRATEGY`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `BASE_PV`, `VALUATION_DATE`, `BASE_VALUATION_DATE`, `TAGS`, `TRADE_STATUS`, `MATURITY_DATE`, `STATUS`, `SCENARIO_SET_ID`, `BATCH_ID`, `RUN_KIND`, `COMPUTED_AT`, `TRADE_IDS` |
 | Vectors | `SCENARIO_PV` |
 | Test data | data/testdata/market-risk/scenario-pv |
-| Worked example | [market-risk/scenario-pv](../samples/market-risk/scenario-pv.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -721,6 +1028,62 @@ A trade's present value under each historical scenario and its base PV of the sa
 | `RESTATEMENT` | integer | required |  | 0 for the first run of the date, then 1, 2, ... each time the date is restated. | `0` |  |
 | `RUN_KIND` | text | optional |  | Which run the row belongs to (VAR_GUIDE.md section 8.4): FULL (or none) for the day's full run; INTRADAY for an update a pricing system sends during the day: only the changed trades, amended, new or cancelled, priced over the same scenario set; each intraday batch has its own BATCH_ID and a later COMPUTED_AT, and the latest COMPUTED_AT per trade wins. A cancel is an INTRADAY row whose TRADE_STATUS is not live (CANCELLED), its PVs empty. | `FULL`, `INTRADAY` |  |
 | `TRADE_IDS` | id list | optional |  | At GRAIN POSITION, the trades the position aggregates when its source system knows them: kept for navigation (the position page lists them; a trade page links its position); none of them may be sent on its own as well (DRS-5210). | `["1000279", "1000280"]` | `trade` |
+
+**Example**
+
+The most complete record of `data/testdata/market-risk/scenario-pv/scenario-pv-2026-09-30.tar` → `scenario-pv/2026-09-30/cob.part-001.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "VALUE_TYPE": "PV",
+  "GRAIN": "TRADE",
+  "TRADE_ID": "1000019",
+  "CURRENCY": "USD",
+  "SOURCE_SYSTEM": "ENDUR",
+  "SCENARIO_PV_ID": "SPV-1000019-HS-509",
+  "SECURITY_ID": null,
+  "INSTRUMENT": "NOSTRO USD 2028-02",
+  "BUSINESS_DATE": "2026-09-30",
+  "SCENARIO_SET_ID": "HS-509",
+  "TRADE_VERSIONS": "v5",
+  "TRADE_STATUS": "AMENDED",
+  "MATURITY_DATE": "2028-02-29",
+  "LEGAL_ENTITY": "LE-NY",
+  "DIVISION": "DIV-MARKETS",
+  "DESK": "DESK-COMM",
+  "TT_BOOK": "BOOK-COMM-1",
+  "LIMIT_LETTER": "LL-0001",
+  "PORTFOLIO": "BOOK-COMM-1",
+  "STRATEGY": "",
+  "PRODUCT_GROUP": "Commodity",
+  "PRODUCT_TYPE": "CallNot",
+  "COUNTERPARTY": "CP-ALDERSHOT",
+  "DIRECTION": "SHORT",
+  "QUANTITY": -2500000.0,
+  "TAGS": "option",
+  "BASE_PV": -47602.0,
+  "VALUATION_DATE": "2026-09-30",
+  "BASE_VALUATION_DATE": "2026-09-30",
+  "SCENARIO_PV": [
+    38326.0,
+    -241580.0,
+    -163019.0,
+    41589.0,
+    /* … 501 more … */,
+    -61824.0,
+    -70394.0,
+    57770.0,
+    -48113.0
+  ],
+  "STATUS": "ok",
+  "PRICER": "demo-factor-model",
+  "MODEL_VERSION": "demo-2",
+  "COMPUTED_AT": "2026-09-30T06:00:00Z",
+  "BATCH_ID": "B-2026-09-30-01",
+  "RESTATEMENT": 0,
+  "RUN_KIND": "FULL"
+}
+```
 
 **Links:** `SCENARIO_PV_ID` → `scenario-pv`, `TRADE_ID` → `trade`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`, `PORTFOLIO` → `book`, `COUNTERPARTY` → `counterparty`.
 
@@ -787,7 +1150,6 @@ A currency's rate against USD today and under each historical scenario, as the r
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/fx-scenario/` |
 | Columns | `CURRENCY`, `RATE`, `SCENARIO_SET_ID` |
 | Test data | data/testdata/market-risk/fx-scenario |
-| Worked example | [market-risk/fx-scenario](../samples/market-risk/fx-scenario.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -802,6 +1164,34 @@ A currency's rate against USD today and under each historical scenario, as the r
 | `RATES` | vector | required | USD per unit | USD per one unit of the currency under each scenario, oldest first: index i is the scenario set's day i. Every cross rate goes through USD. *509 values in the test data* |  |  |
 | `SOURCE` | text | required |  | The system or model that produced the rates (the demo's synthetic factor model). | `demo-factor-model` |  |
 | `BATCH_ID` | id | required |  | The risk batch that produced the rates, the same run as the date's scenario PVs and P&L vectors (one batch per date, DRS-5203). | `B-2026-09-30-01` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-risk/fx-scenario/fx-scenario.tar` → `fx-scenario/2026-09-30/cob.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "FX_SCENARIO_ID": "FXS-AUD-HS-509",
+  "BUSINESS_DATE": "2026-09-30",
+  "SCENARIO_SET_ID": "HS-509",
+  "CURRENCY": "AUD",
+  "QUOTE": "USD per 1 AUD",
+  "RATE": 0.661,
+  "RATES": [
+    0.6636463229,
+    0.6635844635,
+    0.6613830351,
+    0.6603155366,
+    /* … 501 more … */,
+    0.6671531932,
+    0.6578772357,
+    0.6604073513,
+    0.6643224994
+  ],
+  "SOURCE": "demo-factor-model",
+  "BATCH_ID": "B-2026-09-30-01"
+}
+```
 
 **Validation**
 
@@ -840,7 +1230,6 @@ The historical scenario days of a business date, oldest first: index i of every 
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/scenario-set/` |
 | Test data | data/testdata/market-risk/scenario-set |
-| Worked example | [market-risk/scenario-set](../samples/market-risk/scenario-set.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -859,6 +1248,36 @@ The historical scenario days of a business date, oldest first: index i of every 
 | `DESCRIPTION` | text | required |  | A description of the set in words. | `Historical simulation, 509 business days, equal weights` |  |
 | `SET_TYPE` | text | optional |  | STRESS for the date's stress scenario set (stressed VaR, VAR_GUIDE.md section 18.8); absent or HISTORICAL for the normal set. A set that does not say is the stress set when its id starts with drishti.var.stress.id-prefix (HS-STRESS-). | `HISTORICAL`, `STRESS` |  |
 | `SYNTHETIC` | boolean | optional |  | True when the set's moves are synthetic rather than market history (the demo's stress set): every stressed answer says so. | `True` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-risk/scenario-set/scenario-set.tar` → `scenario-set/2026-09-30/cob.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "SCENARIO_SET_ID": "HS-509",
+  "BUSINESS_DATE": "2026-09-30",
+  "SCENARIO_DATES": [
+    "2024-09-17",
+    "2024-09-18",
+    "2024-09-19",
+    "2024-09-20",
+    /* … 501 more … */,
+    "2026-09-24",
+    "2026-09-25",
+    "2026-09-28",
+    "2026-09-29"
+  ],
+  "SCENARIO_COUNT": 509,
+  "WINDOW_START": "2024-09-17",
+  "WINDOW_END": "2026-09-29",
+  "HORIZON_DAYS": 1,
+  "REVALUATION": "full",
+  "WEIGHTS": null,
+  "SOURCE_BATCH": "B-2026-09-30-01",
+  "DESCRIPTION": "Historical simulation, 509 business days, equal weights"
+}
+```
 
 **Validation**
 
@@ -892,7 +1311,6 @@ One node of a VaR hierarchy (MGMT or LEGAL): its level, parent, children, the bo
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/risk-hierarchy/` |
 | Columns | `NODE_ID`, `HIERARCHY`, `LEVEL`, `PARENT_ID`, `NAME` |
 | Test data | data/testdata/market-risk/risk-hierarchy |
-| Worked example | [market-risk/risk-hierarchy](../samples/market-risk/risk-hierarchy.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -916,6 +1334,37 @@ One node of a VaR hierarchy (MGMT or LEGAL): its level, parent, children, the bo
 |---|---|---|---|---|---|---|
 | `KIND` | text | required |  | The kind of master record the node is (legal-entity, desk, book). | `book`, `desk`, `legal-entity` |  |
 | `ID` | id | required |  | The id of the master record the node is (a legal entity, desk or book id). | `LE-NY` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-risk/risk-hierarchy/risk-hierarchy.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "NODE_ID": "LEGAL~DESK-COMM",
+  "HIERARCHY": "LEGAL",
+  "LEVEL": "desk",
+  "PARENT_ID": "LEGAL~LE-NY",
+  "NAME": "Commodities",
+  "REF": {
+    "KIND": "desk",
+    "ID": "DESK-COMM"
+  },
+  "CHILDREN": [
+    "LEGAL~BOOK-COMM-1",
+    "LEGAL~BOOK-COMM-2",
+    "LEGAL~BOOK-COMM-3"
+  ],
+  "BOOKS": [
+    "BOOK-COMM-1",
+    "BOOK-COMM-2",
+    "BOOK-COMM-3"
+  ],
+  "BUSINESS_DATE": "2026-09-30",
+  "VALID_FROM": "2026-01-02",
+  "VALID_TO": null
+}
+```
 
 **Links:** `NODE_ID` → `risk-hierarchy`.
 
@@ -952,7 +1401,6 @@ The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's 
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/var-limit/` |
 | Columns | `LIMIT_ID`, `HIERARCHY`, `NODE_ID`, `LIMIT_VAR`, `CURRENCY` |
 | Test data | data/testdata/market-risk/var-limit |
-| Worked example | [market-risk/var-limit](../samples/market-risk/var-limit.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -968,6 +1416,25 @@ The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's 
 | `BUSINESS_DATE` | date | required |  | The close of business the limit applies to (YYYY-MM-DD). | `2026-09-30` |  |
 | `VALID_FROM` | date | required |  | The first date the limit is valid (YYYY-MM-DD). Informational. | `2026-01-02` |  |
 | `VALID_TO` | date | optional |  | The last date the limit is valid (YYYY-MM-DD); null while it is open-ended. Informational. |  |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-risk/var-limit/var-limit.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "LIMIT_ID": "VL-LL~BANK",
+  "HIERARCHY": "LL",
+  "NODE_ID": "LL~BANK",
+  "LIMIT_VAR": 150000000,
+  "CURRENCY": "USD",
+  "HORIZON": "1D",
+  "CONFIDENCE": 0.99,
+  "BUSINESS_DATE": "2026-09-30",
+  "VALID_FROM": "2026-01-02",
+  "VALID_TO": null
+}
+```
 
 **Links:** `NODE_ID` → `risk-hierarchy`.
 
@@ -1002,7 +1469,6 @@ The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md secti
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/desk-pnl/` |
 | Columns | `DESK_PNL_ID`, `DESK_ID`, `LEGAL_ENTITY`, `ACTUAL_PNL`, `HYPOTHETICAL_PNL`, `FEES_AND_COMMISSIONS`, `CURRENCY`, `SOURCE`, `AS_OF` |
 | Test data | data/testdata/market-risk/desk-pnl |
-| Worked example | [market-risk/desk-pnl](../samples/market-risk/desk-pnl.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1018,6 +1484,25 @@ The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md secti
 | `CURRENCY` | text | required |  | The currency of the amounts, ISO 4217: USD. | `USD` |  |
 | `SOURCE` | text | required |  | The system the row came from (the finance ledger or the front-office P&L system); demo-finance on the test data. | `demo-finance` |  |
 | `AS_OF` | timestamp | required |  | When the source produced the figures (UTC). A restated day is sent again with a later AS_OF; the lake's newest row wins. | `2026-09-30T22:00:00Z` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-risk/desk-pnl/desk-pnl.tar` → `desk-pnl/2026-09-30/cob.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "DESK_PNL_ID": "DPNL-DESK-COMM-2026-09-30",
+  "BUSINESS_DATE": "2026-09-30",
+  "DESK_ID": "DESK-COMM",
+  "LEGAL_ENTITY": "LE-NY",
+  "ACTUAL_PNL": 199665,
+  "HYPOTHETICAL_PNL": -479876,
+  "FEES_AND_COMMISSIONS": 298323,
+  "CURRENCY": "USD",
+  "SOURCE": "demo-finance",
+  "AS_OF": "2026-09-30T22:00:00Z"
+}
+```
 
 **Links:** `LEGAL_ENTITY` → `legal-entity`.
 
@@ -1053,7 +1538,6 @@ Today's portfolio at one hierarchy node revalued over every business day of a lo
 | Columns | `HIERARCHY`, `NODE_ID`, `LEVEL`, `CURRENCY`, `FIRST_DAY`, `LAST_DAY`, `DAY_COUNT` |
 | Vectors | `PNL` |
 | Test data | data/testdata/market-risk/pnl-history |
-| Worked example | [market-risk/pnl-history](../samples/market-risk/pnl-history.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1075,6 +1559,54 @@ Today's portfolio at one hierarchy node revalued over every business day of a lo
 | `SOURCE_BATCH` | text | optional |  | The batch of the pricing system that produced the history. Informational. | `B-2026-09-30-HIST` |  |
 | `DESCRIPTION` | text | optional |  | What the history is, in words. |  |  |
 | `BUSINESS_DATE` | date | required |  | The positions date (YYYY-MM-DD), whose portfolio was revalued over the history. | `2026-09-30` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-risk/pnl-history/pnl-history.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "HISTORY_ID": "PNLH-LEGAL~BANK",
+  "BUSINESS_DATE": "2026-09-30",
+  "HIERARCHY": "LEGAL",
+  "NODE_ID": "LEGAL~BANK",
+  "NAME": "Drishti Bank",
+  "LEVEL": "bank",
+  "CURRENCY": "USD",
+  "FIRST_DAY": "2007-01-02",
+  "LAST_DAY": "2026-09-29",
+  "DAY_COUNT": 4938,
+  "HISTORY_DATES": [
+    "2007-01-02",
+    "2007-01-03",
+    "2007-01-04",
+    "2007-01-05",
+    /* … 4930 more … */,
+    "2026-09-24",
+    "2026-09-25",
+    "2026-09-28",
+    "2026-09-29"
+  ],
+  "PNL": [
+    34375815.28,
+    -26816987.53,
+    -31968465.89,
+    -9368696.87,
+    /* … 4930 more … */,
+    70184458.13,
+    35883219.34,
+    -44744875.68,
+    -2554349.24
+  ],
+  "SYNTHETIC": true,
+  "ANCHORS": [
+    "HS-STRESS-2008",
+    "HS-509"
+  ],
+  "SOURCE_BATCH": "B-2026-09-30-HIST",
+  "DESCRIPTION": "The long-history P&L of today's portfolio at this node, one value per business day since 2007, for the stress window selection; synthetic for the demo (not mar…"
+}
+```
 
 **Links:** `NODE_ID` → `risk-hierarchy`.
 
@@ -1111,7 +1643,6 @@ The first-order and curvature sensitivities of each position (or trade) to the s
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/position-sensitivity/` |
 | Columns | `SENSITIVITY_ID`, `GRAIN`, `POSITION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `BATCH_ID`, `STATUS`, `DESK`, `TT_BOOK`, `PRODUCT_TYPE`, `CURRENCY` |
 | Test data | data/testdata/market-risk/position-sensitivity |
-| Worked example | [market-risk/position-sensitivity](../samples/market-risk/position-sensitivity.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1160,6 +1691,68 @@ The first-order and curvature sensitivities of each position (or trade) to the s
 | `SIMM_BUCKET` | text | optional |  | The ISDA SIMM bucket of the factor (Residual when none applies); the dictionary wins when they differ (a warning). | `1` |  |
 | `SHOCK_SIZE` | rate | optional | basis points (rates and spreads) or a fraction of the spot or price | The curvature shock applied (required on CURVATURE_UP and CURVATURE_DOWN), checked against the risk weight of the factor's bucket (MAR21.5, MAR21.98 to MAR21.101); a different shock is a warning. | `170` |  |
 | `IMPLIED_VOL` | rate | optional | fraction | The implied volatility of a VEGA element, for the vega risk sensitivity (vega × implied volatility, MAR21.25). | `0.28` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-risk/position-sensitivity/position-sensitivity.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "SENSITIVITY_ID": "SENS-1000019-B-SENS-2026-09-30-01",
+  "GRAIN": "TRADE",
+  "POSITION_ID": "POS-BOOK-COMM-1~1000019",
+  "TRADE_ID": "1000019",
+  "TRADE_IDS": [
+    "1000019"
+  ],
+  "SOURCE_SYSTEM": "ENDUR",
+  "BUSINESS_DATE": "2026-09-30",
+  "BATCH_ID": "B-SENS-2026-09-30-01",
+  "RUN_KIND": "FULL",
+  "COMPUTED_AT": "2026-09-30T06:10:00Z",
+  "RESTATEMENT": 0,
+  "STATUS": "ok",
+  "PRICER": "demo-factor-model",
+  "MODEL_VERSION": "demo-sens-1",
+  "LEGAL_ENTITY": "LE-NY",
+  "DIVISION": "DIV-MARKETS",
+  "DESK": "DESK-COMM",
+  "TT_BOOK": "BOOK-COMM-1",
+  "LIMIT_LETTER": "LL-0001",
+  "FRTB_DESK": "FD-COMM",
+  "PRODUCT_GROUP": "Commodity",
+  "PRODUCT_TYPE": "CallNot",
+  "TRADE_STATUS": "AMENDED",
+  "MATURITY_DATE": "2028-02-29",
+  "CURRENCY": "USD",
+  "SENSITIVITIES": [
+    {
+      "RISK_FACTOR": "CM/PRICE/BRENT",
+      "MEASURE": "CURVATURE_DOWN",
+      "VALUE": 3888576.98,
+      "CURRENCY": "USD",
+      "RISK_CLASS": "COMM",
+      "FRTB_BUCKET": "2",
+      "TENOR": null,
+      "SIMM_BUCKET": "2",
+      "SHOCK_SIZE": 0.35
+    },
+    {
+      "RISK_FACTOR": "CM/PRICE/BRENT",
+      "MEASURE": "CURVATURE_UP",
+      "VALUE": -2066410.39,
+      "CURRENCY": "USD",
+      "RISK_CLASS": "COMM",
+      "FRTB_BUCKET": "2",
+      "TENOR": null,
+      "SIMM_BUCKET": "2",
+      "SHOCK_SIZE": 0.35
+    },
+    /* … 4 more … */
+  ],
+  "VOL_CONVENTION": "LOGNORMAL"
+}
+```
 
 **Links:** `TRADE_ID` → `trade`, `DESK` → `desk`, `TT_BOOK` → `book`, `LEGAL_ENTITY` → `legal-entity`.
 
@@ -1212,7 +1805,6 @@ Every risk factor the bank's sensitivities use, named by the factor naming stand
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/risk-factor/` |
 | Columns | `RISK_FACTOR`, `FACTOR_TYPE`, `RISK_CLASS`, `QUALIFIER`, `TENOR`, `FRTB_BUCKET`, `SIMM_RISK_CLASS`, `SIMM_BUCKET` |
 | Test data | data/testdata/market-risk/risk-factor |
-| Worked example | [market-risk/risk-factor](../samples/market-risk/risk-factor.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1245,6 +1837,41 @@ Every risk factor the bank's sensitivities use, named by the factor naming stand
 | `VALID_TO` | date | optional |  | The last business date the row applies to; empty while it applies. |  |  |
 | `BUSINESS_DATE` | date | required |  | The business date of the delivery (YYYY-MM-DD); the lake's partition. | `2026-09-30` |  |
 | `SOURCE` | text | required |  | The system the dictionary row came from. | `demo-factor-master` |  |
+
+**Example**
+
+The most complete record of `data/testdata/market-risk/risk-factor/risk-factor.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "RISK_FACTOR": "CR/SPREAD/CDX.NA.HY/CDS/10Y",
+  "FACTOR_TYPE": "SPREAD",
+  "RISK_CLASS": "CSR_NS",
+  "QUALIFIER": "CDX.NA.HY",
+  "CURVE": "CDS",
+  "UNDERLYING": "CDX.NA.HY",
+  "TENOR": "10Y",
+  "UNDERLYING_TENOR": null,
+  "FRTB_BUCKET": "18",
+  "SIMM_RISK_CLASS": "CreditQ",
+  "SIMM_BUCKET": "Residual",
+  "SIMM_LABEL1": "10y",
+  "SIMM_LABEL2": "CDS",
+  "SECTOR": "Index",
+  "CREDIT_QUALITY": "HY",
+  "LIQUIDITY_HORIZON": 40,
+  "MODELLABLE": false,
+  "MARKET_DATA_REF": "CDX-CDX.NA.HY#10Y",
+  "SOURCE_NAMES": [
+    "MX:CR:SPREAD-CDX.NA.HY-CDS-10Y",
+    "CR.SPREAD.CDX.NA.HY.CDS.10Y",
+    "10Y_CDS_CDX.NA.HY_SPREAD_CR"
+  ],
+  "VALID_FROM": "2026-01-02",
+  "BUSINESS_DATE": "2026-09-30",
+  "SOURCE": "demo-factor-master"
+}
+```
 
 **Validation**
 

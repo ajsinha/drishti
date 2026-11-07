@@ -17,7 +17,7 @@
 
 # Data contracts of the compute-demo pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/compute-demo/guides/compute-demo.md](../../../config/packs/compute-demo/guides/compute-demo.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per kind of the pack: what one record is, its key, how it is stored and dated, every field, one example record from the committed test data, the validation rules and what a person still has to confirm. This page is the one home of these facts: guides and tutorials link here. The rules every contract shares, and every kind from A to Z, are in [the contracts index](../README.md).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -44,7 +44,6 @@ A book of synthetic P&L strips, and the sum of their paths computed when the pag
 | Storage | connector `compute-demo-store` (plugin `delta`), table `<root>/compute-demo/path-book/` |
 | Columns | `BOOK_ID`, `NAME`, `DESK`, `STRIP_COUNT` |
 | Test data | config/packs/compute-demo/samples |
-| Worked example | [compute-demo/path-book](../samples/compute-demo/path-book.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -56,6 +55,31 @@ A book of synthetic P&L strips, and the sum of their paths computed when the pag
 | `STRIP_COUNT` | integer | required |  | How many path strips (path-strip rows) the book holds. | `30` |  |
 | `MEMBERS` | text list | required |  | The ids of the book's P&L strips (path-strip records). |  |  |
 | `PATH_ID` | id | required |  | The id the book's computed path is asked under (PSUM or PSUMJ <PATH_ID>). | `BOOK-CREDIT` |  |
+
+**Example**
+
+The most complete record of `config/packs/compute-demo/samples/path-book.jsonl` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "BOOK_ID": "BOOK-CREDIT",
+  "NAME": "Credit book",
+  "DESK": "CREDIT",
+  "STRIP_COUNT": 30,
+  "MEMBERS": [
+    "STRIP-CREDIT-001",
+    "STRIP-CREDIT-002",
+    "STRIP-CREDIT-003",
+    "STRIP-CREDIT-004",
+    /* … 22 more … */,
+    "STRIP-CREDIT-027",
+    "STRIP-CREDIT-028",
+    "STRIP-CREDIT-029",
+    "STRIP-CREDIT-030"
+  ],
+  "PATH_ID": "BOOK-CREDIT"
+}
+```
 
 **Links:** `BOOK_ID` → `path-book`, `DESK` → `desk`.
 
@@ -93,7 +117,6 @@ A synthetic P&L strip of the compute-demo pack: one path vector in a path book, 
 | Storage | connector `compute-demo-store` (plugin `delta`), table `<root>/compute-demo/path-strip/` |
 | Columns | `STRIP_ID`, `BOOK_ID`, `INSTRUMENT`, `DAYS` |
 | Test data | config/packs/compute-demo/samples |
-| Worked example | [compute-demo/path-strip](../samples/compute-demo/path-strip.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -105,6 +128,31 @@ A synthetic P&L strip of the compute-demo pack: one path vector in a path book, 
 | `INSTRUMENT` | text | required |  | The instrument type the strip stands for (synthetic). | `SWAPTION` |  |
 | `DAYS` | integer | required |  | The number of scenario days in PNL (250). | `250` |  |
 | `PNL` | vector | required |  | The strip's synthetic P&L, one number per scenario day, in day order. *250 values in the test data* |  |  |
+
+**Example**
+
+The most complete record of `config/packs/compute-demo/samples/path-strip.jsonl` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "STRIP_ID": "STRIP-RATES-001",
+  "BOOK_ID": "BOOK-RATES",
+  "DESK": "RATES",
+  "INSTRUMENT": "SWAPTION",
+  "DAYS": 250,
+  "PNL": [
+    -128.64,
+    -848.83,
+    1213.63,
+    143.87,
+    /* … 242 more … */,
+    330.13,
+    -581.55,
+    1223.91,
+    -690.56
+  ]
+}
+```
 
 **Links:** `BOOK_ID` → `path-book`, `DESK` → `desk`.
 

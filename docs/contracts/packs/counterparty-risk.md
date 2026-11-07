@@ -17,7 +17,7 @@
 
 # Data contracts of the counterparty-risk pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/counterparty-risk/guides/counterparty-risk.md](../../../config/packs/counterparty-risk/guides/counterparty-risk.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per kind of the pack: what one record is, its key, how it is stored and dated, every field, one example record from the committed test data, the validation rules and what a person still has to confirm. This page is the one home of these facts: guides and tutorials link here. The rules every contract shares, and every kind from A to Z, are in [the contracts index](../README.md).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -55,7 +55,6 @@ ISDA, GMRA or GMSLA master agreement with its key elections.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `legal-store` (plugin `delta`), table `<root>/legal/agreement/` |
 | Test data | data/testdata/counterparty-risk/agreement |
-| Worked example | [counterparty-risk/agreement](../samples/counterparty-risk/agreement.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -81,6 +80,36 @@ ISDA, GMRA or GMSLA master agreement with its key elections.
 | `TERMINATION_CURRENCY` | text | required |  | The currency the close-out amount is paid in. | `USD` |  |
 | `ADDITIONAL_TERMINATION_EVENTS` | text | required |  | Further events, such as a downgrade, that let a party end the trades. | `Rating downgrade below BBB-` |  |
 | `PROTOCOLS` | text | required |  | The ISDA protocols both parties adhered to, which amend the agreement. | `ISDA 2020 IBOR Fallbacks; 2018 US Resolution Stay` |  |
+
+**Example**
+
+The most complete record of `data/testdata/counterparty-risk/agreement/agreement.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "AGREEMENT_ID": "AGR-ALDERSHOT-ISDA",
+  "TYPE": "ISDA 2002 Master",
+  "COUNTERPARTY_NAME": "Aldershot Pension Trust",
+  "GOVERNING_LAW": "English",
+  "SIGNED": "2015-12-10",
+  "CLOSE_OUT_NETTING": "Enforceable",
+  "ELECTIONS": {
+    "AUTOMATIC_EARLY_TERMINATION": false,
+    "CROSS_DEFAULT": "3% of shareholders' equity",
+    "SET_OFF": true,
+    "TERMINATION_CURRENCY": "USD",
+    "ADDITIONAL_TERMINATION_EVENTS": "Rating downgrade below BBB-",
+    "PROTOCOLS": "ISDA 2020 IBOR Fallbacks; 2018 US Resolution Stay"
+  },
+  "COUNTERPARTY": "CP-ALDERSHOT",
+  "CSAS": [
+    "CSA-ALDERSHOT-FRA",
+    "CSA-ALDERSHOT-LDN",
+    "CSA-ALDERSHOT-NY",
+    "CSA-ALDERSHOT-TKY"
+  ]
+}
+```
 
 **Links:** `ELECTIONS` → `election`, `COUNTERPARTY` → `counterparty`, `CSAS` → `csa`.
 
@@ -122,7 +151,6 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `legal-store` (plugin `delta`), table `<root>/legal/csa/` |
 | Test data | data/testdata/counterparty-risk/csa |
-| Worked example | [counterparty-risk/csa](../samples/counterparty-risk/csa.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -153,6 +181,47 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 |---|---|---|---|---|---|---|
 | `ASSET` | text | required |  | An asset the counterparty may deliver as collateral. | `G7 government bonds 1-5Y`, `G7 government bonds 5-10Y`, `G7 government bonds < 1Y`, `USD, EUR, GBP cash` |  |
 | `HAIRCUT` | rate | required |  | The share taken off the asset's value when it is counted as collateral. | `0.0` |  |
+
+**Example**
+
+The most complete record of `data/testdata/counterparty-risk/csa/csa.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "CSA_ID": "CSA-ALDERSHOT-FRA",
+  "MARGIN_TYPE": "VM",
+  "CSA_CURRENCY": "USD",
+  "THRESHOLD_US": 10000000.0,
+  "THRESHOLD_THEM": 10000000.0,
+  "MTA": 500000,
+  "MTA_US": 500000,
+  "MTA_THEM": 500000,
+  "INDEPENDENT_AMOUNT": 0,
+  "FREQUENCY": "Daily",
+  "MARGIN_FREQUENCY_DAYS": 1,
+  "MPOR_DAYS": 10,
+  "ELIGIBLE": [
+    {
+      "ASSET": "USD, EUR, GBP cash",
+      "HAIRCUT": 0.0
+    },
+    {
+      "ASSET": "G7 government bonds < 1Y",
+      "HAIRCUT": 0.005
+    },
+    /* … 2 more … */
+  ],
+  "AGREEMENT": "AGR-ALDERSHOT-ISDA",
+  "COUNTERPARTY": "CP-ALDERSHOT",
+  "LEGAL_ENTITY": "LE-FRA",
+  "NETTING_SETS": [
+    "NS-ALDERSHOT-FRA"
+  ],
+  "COLLATERAL_BALANCES": [
+    "COLL-ALDERSHOT-FRA"
+  ]
+}
+```
 
 **Links:** `AGREEMENT` → `agreement`, `COUNTERPARTY` → `counterparty`, `NETTING_SETS` → `netting-set`, `COLLATERAL_BALANCES` → `collateral-balance`, `LEGAL_ENTITY` → `legal-entity`.
 
@@ -198,7 +267,6 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/netting-set/` |
 | Test data | data/testdata/counterparty-risk/netting-set |
-| Worked example | [counterparty-risk/netting-set](../samples/counterparty-risk/netting-set.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -245,6 +313,75 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 |---|---|---|---|---|---|---|
 | `ASSET` | text | required |  | An asset class of the set's trades. | `Securities financing` |  |
 | `MTM` | amount | required | USD | The net mark to market of the set's trades in that asset class, from the bank's side. | `-339550` |  |
+
+**Example**
+
+The most complete record of `data/testdata/counterparty-risk/netting-set/netting-set.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "NETTING_SET_ID": "NS-ALDERSHOT-FRA",
+  "TRADE_COUNT": 35,
+  "NET_MTM": -22673015.35,
+  "COLLATERAL": -15251373,
+  "LIMIT": 7000000.0,
+  "CVA": -46,
+  "TRADES": [
+    {
+      "TRADE_ID": "CLY-4000583",
+      "STATUS": "LIVE",
+      "PRODUCT": "Tri-party repo",
+      "ASSET_CLASS": "Securities financing",
+      "CURRENCY": "EUR",
+      "BOOK": "BOOK-SFT-3",
+      "NOTIONAL": 645808000.0,
+      "MATURITY": "2026-10-15",
+      "MATURITY_BUCKET": "0-1Y",
+      "MTM": -14229099.25
+    },
+    {
+      "TRADE_ID": "CLY-4004249",
+      "STATUS": "LIVE",
+      "PRODUCT": "Reverse repo",
+      "ASSET_CLASS": "Securities financing",
+      "CURRENCY": "EUR",
+      "BOOK": "BOOK-SFT-1",
+      "NOTIONAL": 671692000.0,
+      "MATURITY": "2026-10-07",
+      "MATURITY_BUCKET": "0-1Y",
+      "MTM": 13871720.6
+    },
+    /* … 33 more … */
+  ],
+  "BY_ASSET": [
+    {
+      "ASSET": "Securities financing",
+      "MTM": -22673015
+    }
+  ],
+  "COUNTERPARTY": "CP-ALDERSHOT",
+  "AGREEMENT": "AGR-ALDERSHOT-ISDA",
+  "CSA": "CSA-ALDERSHOT-FRA",
+  "CREDIT_LIMIT": "LIM-ALDERSHOT",
+  "CVA_RESULT": "CVA-ALDERSHOT-FRA",
+  "SACCR": "SACCR-ALDERSHOT-FRA",
+  "SIMM": "SIMM-ALDERSHOT",
+  "COLLATERAL_BALANCE": "COLL-ALDERSHOT-FRA",
+  "LEGAL_ENTITY": "LE-FRA",
+  "NETTING_ENFORCEABLE": true,
+  "TRADE_IDS": [
+    "CLY-3000280",
+    "CLY-3000286",
+    "CLY-3000289",
+    "CLY-4000284",
+    /* … 27 more … */,
+    "CLY-4004280",
+    "CLY-4004557",
+    "CLY-4004583",
+    "CLY-4004588"
+  ]
+}
+```
 
 **Links:** `COUNTERPARTY` → `counterparty`, `AGREEMENT` → `agreement`, `CSA` → `csa`, `CREDIT_LIMIT` → `credit-limit`, `CVA_RESULT` → `cva`, `SACCR` → `sa-ccr`, `SIMM` → `simm`, `COLLATERAL_BALANCE` → `collateral-balance`, `LEGAL_ENTITY` → `legal-entity`, `TRADE_IDS` → `trade`, `TRADES[].TRADE_ID` → `trade`, `TRADES[].BOOK` → `book`.
 
@@ -302,7 +439,6 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/credit-limit/` |
 | Test data | data/testdata/counterparty-risk/credit-limit |
-| Worked example | [counterparty-risk/credit-limit](../samples/counterparty-risk/credit-limit.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -328,6 +464,40 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 | `LIMIT` | amount | required | USD | The limit that applies to this tenor bucket. | `337000000` |  |
 | `USED` | amount | required | USD | The exposure in this tenor bucket. | `191080181` |  |
 | `UTILISATION` | rate | required | fraction of the limit (0.567 is 56.7%) | The share of the bucket's limit that is used: USED divided by LIMIT, as a fraction. Above 1 is a breach. | `0.567` |  |
+
+**Example**
+
+The most complete record of `data/testdata/counterparty-risk/credit-limit/credit-limit.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "LIMIT_ID": "LIM-ALDERSHOT",
+  "COUNTERPARTY_NAME": "Aldershot Pension Trust",
+  "MEASURE": "PFE 95 peak",
+  "LIMIT": 7980000000.0,
+  "USED": 5324955300,
+  "UTILISATION": 0.6673,
+  "STATUS": "Within limit",
+  "BUCKETS": [
+    {
+      "BUCKET": "0-1Y",
+      "LIMIT": 7980000000,
+      "USED": 4526212005,
+      "UTILISATION": 0.5672
+    },
+    {
+      "BUCKET": "1-3Y",
+      "LIMIT": 7980000000,
+      "USED": 5324955300,
+      "UTILISATION": 0.6673
+    },
+    /* … 3 more … */
+  ],
+  "COUNTERPARTY": "CP-ALDERSHOT",
+  "APPROVED_BY": "Credit Risk Committee",
+  "REVIEW_DUE": "2027-03-19"
+}
+```
 
 **Links:** `COUNTERPARTY` → `counterparty`.
 
@@ -369,7 +539,6 @@ Credit, debit and funding valuation adjustments with sensitivities.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/cva/` |
 | Test data | data/testdata/counterparty-risk/cva |
-| Worked example | [counterparty-risk/cva](../samples/counterparty-risk/cva.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -400,6 +569,47 @@ Credit, debit and funding valuation adjustments with sensitivities.
 | `FACTOR` | text | required |  | The market input that is bumped to see how the adjustment changes. | `Counterparty spread`, `EUR rates`, `FX vol`, `Recovery`, `USD rates` |  |
 | `BUMP` | text | required |  | The size of the move applied to the factor. | `+1 bp`, `+1 vol`, `+1%` |  |
 | `DELTA` | integer | required | USD | The change in the adjustment for the bump. | `0` |  |
+
+**Example**
+
+The most complete record of `data/testdata/counterparty-risk/cva/cva.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "RESULT_ID": "CVA-CASCADIA-FRA",
+  "CVA": -44139,
+  "DVA": 1363,
+  "FVA": -14293,
+  "KVA": -41215,
+  "CS01": -795,
+  "COMPONENTS": [
+    {
+      "NAME": "CVA",
+      "AMOUNT": -44139
+    },
+    {
+      "NAME": "DVA",
+      "AMOUNT": 1363
+    },
+    /* … 2 more … */
+  ],
+  "SENSITIVITIES": [
+    {
+      "FACTOR": "Counterparty spread",
+      "BUMP": "+1 bp",
+      "DELTA": -795
+    },
+    {
+      "FACTOR": "USD rates",
+      "BUMP": "+1 bp",
+      "DELTA": 177
+    },
+    /* … 3 more … */
+  ],
+  "NETTING_SET": "NS-CASCADIA-FRA",
+  "CREDIT_CURVE": "CDS-CASCADIA"
+}
+```
 
 **Links:** `NETTING_SET` → `netting-set`, `CREDIT_CURVE` → `credit-curve`.
 
@@ -444,7 +654,6 @@ Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/sa-ccr/` |
 | Test data | data/testdata/counterparty-risk/sa-ccr |
-| Worked example | [counterparty-risk/sa-ccr](../samples/counterparty-risk/sa-ccr.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -476,6 +685,44 @@ Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
 | `HEDGING_SET` | text | required |  | The group of trades within an asset class that can offset one another, for example by currency for interest rates. | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
 | `EFFECTIVE_NOTIONAL` | amount | required | USD | The hedging set's notional after supervisory delta and maturity adjustments and netting inside the set. | `-89605479` |  |
 | `SF` | amount | required | fraction of the effective notional (0.005 is 0.5%) | The supervisory factor, as a fraction, applied to the effective notional to get the add-on. | `0.005` |  |
+
+**Example**
+
+The most complete record of `data/testdata/counterparty-risk/sa-ccr/sa-ccr.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "CALC_ID": "SACCR-ALDERSHOT-FRA",
+  "REPLACEMENT_COST": 0,
+  "ADD_ON": 9479416,
+  "MULTIPLIER": 0.6819,
+  "EAD": 9049620,
+  "RWA": 1809924,
+  "ADD_ONS": [
+    {
+      "ASSET_CLASS": "Interest rate",
+      "ADD_ON": 9479416
+    }
+  ],
+  "HEDGING_SETS": [
+    {
+      "ASSET_CLASS": "Interest rate",
+      "HEDGING_SET": "JPY",
+      "EFFECTIVE_NOTIONAL": -216135527,
+      "SF": 0.005
+    },
+    {
+      "ASSET_CLASS": "Interest rate",
+      "HEDGING_SET": "USD",
+      "EFFECTIVE_NOTIONAL": -667293465,
+      "SF": 0.005
+    },
+    /* … 3 more … */
+  ],
+  "NETTING_SET": "NS-ALDERSHOT-FRA",
+  "ALPHA": 1.4
+}
+```
 
 **Links:** `NETTING_SET` → `netting-set`.
 
@@ -521,7 +768,6 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `collateral-store` (plugin `delta`), table `<root>/collateral/collateral-balance/` |
 | Test data | data/testdata/counterparty-risk/collateral-balance |
-| Worked example | [counterparty-risk/collateral-balance](../samples/counterparty-risk/collateral-balance.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -545,6 +791,39 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 | `MARKET_VALUE` | amount | required | USD | The current market value of the asset before the haircut. | `76517` |  |
 | `HAIRCUT` | rate | required | fraction of the market value (0.005 is 0.5%) | The share taken off the market value to allow for the price moving before the asset can be sold. The CSA sets it by asset type and maturity. | `0.005` |  |
 | `VALUE` | amount | required | USD | The market value after the haircut, the amount that counts as collateral. | `76134` |  |
+
+**Example**
+
+The most complete record of `data/testdata/counterparty-risk/collateral-balance/collateral-balance.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "BALANCE_ID": "COLL-ALDERSHOT-FRA",
+  "HELD": 0,
+  "POSTED": 15251373,
+  "NET": -15251373,
+  "AS_OF": "2026-09-30",
+  "POSITIONS": [
+    {
+      "ASSET": "Solaris Energy Corp. 2031",
+      "DIRECTION": "Posted",
+      "MARKET_VALUE": 5109338,
+      "HAIRCUT": 0.005,
+      "VALUE": 5083791
+    },
+    {
+      "ASSET": "United States Treasury 2036",
+      "DIRECTION": "Posted",
+      "MARKET_VALUE": 5109338,
+      "HAIRCUT": 0.005,
+      "VALUE": 5083791
+    },
+    /* … 1 more … */
+  ],
+  "CSA": "CSA-ALDERSHOT-FRA",
+  "NETTING_SET": "NS-ALDERSHOT-FRA"
+}
+```
 
 **Links:** `CSA` → `csa`, `NETTING_SET` → `netting-set`.
 
@@ -586,7 +865,6 @@ A variation or initial margin call and its settlement status.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `collateral-store` (plugin `delta`), table `<root>/collateral/margin-call/` |
 | Test data | data/testdata/counterparty-risk/margin-call |
-| Worked example | [counterparty-risk/margin-call](../samples/counterparty-risk/margin-call.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -611,6 +889,37 @@ A variation or initial margin call and its settlement status.
 | `AT` | text | required |  | When the step happened. | `2026-09-28 09:05`, `2026-09-28 11:40`, `2026-09-29 10:15`, `2026-09-30 09:05`, `2026-09-30 11:40` |  |
 | `EVENT` | text | required |  | The stage of the call, from issue to agreement and settlement. | `Agreed`, `Call issued`, `Settled` |  |
 | `BY` | text | required |  | The party or system that took the step. | `collateral-system`, `counterparty ops`, `payments` |  |
+
+**Example**
+
+The most complete record of `data/testdata/counterparty-risk/margin-call/margin-call.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "CALL_ID": "MC-ALDERSHOT-FRA-1",
+  "CALL_DATE": "2026-09-30",
+  "MARGIN_TYPE": "Variation",
+  "DIRECTION": "They call",
+  "AMOUNT": 1215000.0,
+  "STATUS": "Agreed",
+  "DISPUTE_AMOUNT": 0,
+  "EVENTS": [
+    {
+      "AT": "2026-09-30 09:05",
+      "EVENT": "Call issued",
+      "BY": "collateral-system"
+    },
+    {
+      "AT": "2026-09-30 11:40",
+      "EVENT": "Agreed",
+      "BY": "counterparty ops"
+    }
+  ],
+  "NETTING_SET": "NS-ALDERSHOT-FRA",
+  "CSA": "CSA-ALDERSHOT-FRA",
+  "CURRENCY": "USD"
+}
+```
 
 **Links:** `NETTING_SET` → `netting-set`, `CSA` → `csa`.
 
@@ -659,7 +968,6 @@ Initial margin by risk class and product class.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `collateral-store` (plugin `delta`), table `<root>/collateral/simm/` |
 | Test data | data/testdata/counterparty-risk/simm |
-| Worked example | [counterparty-risk/simm](../samples/counterparty-risk/simm.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -680,6 +988,33 @@ Initial margin by risk class and product class.
 |---|---|---|---|---|---|---|
 | `RISK_CLASS` | text | required |  | The ISDA SIMM risk class: Interest rate, Credit qualifying, Credit non-qualifying, Equity, Commodity or FX. | `Commodity`, `Credit qualifying`, `Equity`, `FX`, `Interest rate` |  |
 | `IM` | amount | required | USD | The initial margin of one SIMM risk class: interest rate, credit qualifying, credit non-qualifying, equity, commodity or FX. | `3180857` |  |
+
+**Example**
+
+The most complete record of `data/testdata/counterparty-risk/simm/simm.2026-07-08.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "CALC_ID": "SIMM-ALDERSHOT",
+  "TOTAL": 230875368,
+  "POSTED": 223949107,
+  "RECEIVED": 235492875,
+  "VERSION": "ISDA SIMM 2.7",
+  "RISK_CLASSES": [
+    {
+      "RISK_CLASS": "Interest rate",
+      "IM": 103893916
+    },
+    {
+      "RISK_CLASS": "Credit qualifying",
+      "IM": 27705044
+    },
+    /* … 3 more … */
+  ],
+  "NETTING_SET": "NS-ALDERSHOT-FRA",
+  "COUNTERPARTY": "CP-ALDERSHOT"
+}
+```
 
 **Links:** `NETTING_SET` → `netting-set`, `COUNTERPARTY` → `counterparty`.
 
@@ -721,7 +1056,6 @@ An upstream exposure simulation of a business date: its paths, its grid of futur
 | Storage | connector `exposure-store` (plugin `delta`), table `<root>/risk/simulation-run/` |
 | Columns | `RUN_ID`, `CALIBRATION`, `PATHS`, `STATUS`, `BATCH_ID` |
 | Test data | data/testdata/counterparty-risk/simulation-run |
-| Worked example | [counterparty-risk/simulation-run](../samples/counterparty-risk/simulation-run.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -751,6 +1085,79 @@ An upstream exposure simulation of a business date: its paths, its grid of futur
 | `BATCH_ID` | id | required |  | The run's batch id; every exposure-path row of the run carries the same. | `XB-2026-09-30-01` |  |
 | `COMPUTED_AT` | timestamp | required |  | When the run finished, ISO-8601 UTC. | `2026-09-30T23:40:00Z` |  |
 | `STATUS` | text | required |  | The run's status: complete is read; a run of any other status is not. | `complete` |  |
+
+**Example**
+
+The most complete record of `data/testdata/counterparty-risk/simulation-run/simulation-run.2026-09-30.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "RUN_ID": "XR-2026-09-30-01",
+  "BUSINESS_DATE": "2026-09-30",
+  "MARKET_DATA_DATE": "2026-09-30",
+  "MODEL": "One correlated Brownian factor per asset class (rates, FX, credit, equity, commodity) and a walk of each trade's own; values amortise to zero at maturity (tool…",
+  "MODEL_VERSION": "drishti-testgen-ccr-1.0",
+  "CALIBRATION": "REAL_WORLD",
+  "PATHS": 200,
+  "SEED": "ccr|XR-2026-09-30-01",
+  "ANTITHETIC": false,
+  "GRID_DATES": [
+    "2026-10-07",
+    "2026-10-14",
+    "2026-10-16",
+    "2026-10-30",
+    /* … 16 more … */,
+    "2033-09-16",
+    "2033-09-30",
+    "2036-09-16",
+    "2036-09-30"
+  ],
+  "GRID_ROLE": [
+    "PRIMARY",
+    "PRIMARY",
+    "LOOKBACK",
+    "PRIMARY",
+    /* … 16 more … */,
+    "LOOKBACK",
+    "PRIMARY",
+    "LOOKBACK",
+    "PRIMARY"
+  ],
+  "LOOKBACK_OF": [
+    -1,
+    -1,
+    3,
+    -1,
+    /* … 16 more … */,
+    21,
+    -1,
+    23,
+    -1
+  ],
+  "GRID_TENORS": [
+    "1W",
+    "2W",
+    null,
+    "1M",
+    /* … 16 more … */,
+    null,
+    "7Y",
+    null,
+    "10Y"
+  ],
+  "LOOKBACK_DAYS": 10,
+  "VALUE_BASIS": "FUTURE",
+  "CURRENCY": "USD",
+  "PRECISION": "float64",
+  "CREDIT_PATHS": false,
+  "NETTING_SETS": 8,
+  "TRADES": 523,
+  "ROWS": 7540,
+  "BATCH_ID": "XB-2026-09-30-01",
+  "COMPUTED_AT": "2026-09-30T23:40:00Z",
+  "STATUS": "complete"
+}
+```
 
 **Links:** `RUN_ID` → `simulation-run`, `NETTING_SETS` → `netting-set`.
 
@@ -792,7 +1199,6 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 | Columns | `TRADE_ID`, `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `ASSET_CLASS`, `PRODUCT`, `SOURCE_SYSTEM`, `MATURITY_DATE`, `NOTIONAL`, `GRID_INDEX`, `GRID_DATE`, `RUN_ID`, `BATCH_ID`, `STATUS` |
 | Vectors | `MTM` |
 | Test data | data/testdata/counterparty-risk/exposure-path |
-| Worked example | [counterparty-risk/exposure-path](../samples/counterparty-risk/exposure-path.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -819,6 +1225,46 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 | `STATUS` | text | required |  | ok, proxied (an approximate model) or failed (no values). | `ok` |  |
 | `PRICER` | text | required |  | The pricer the simulator valued the trade with (testgen-factor-walk in the test data). | `testgen-factor-walk` |  |
 | `BATCH_ID` | id | required |  | The run's batch: equal to the simulation-run's BATCH_ID. | `XB-2026-09-30-01` |  |
+
+**Example**
+
+The most complete record of `data/testdata/counterparty-risk/exposure-path/exposure-path.tar` → `exposure-path/2026-09-30/cob.part-001.jsonl.gz` (the newest business date of the committed test data, or the pack's samples); long arrays are shortened with a `/* … N more … */` comment, which is not part of the data.
+
+```jsonc
+{
+  "PATH_ROW_ID": "XR-2026-09-30-01~CLY-3000280~0",
+  "BUSINESS_DATE": "2026-09-30",
+  "RUN_ID": "XR-2026-09-30-01",
+  "TRADE_ID": "CLY-3000280",
+  "SOURCE_SYSTEM": "CALYPSO",
+  "NETTING_SET": "NS-ALDERSHOT-FRA",
+  "COUNTERPARTY": "CP-ALDERSHOT",
+  "LEGAL_ENTITY": "LE-FRA",
+  "DESK": "DESK-SFT",
+  "TT_BOOK": "BOOK-SFT-1",
+  "LIMIT_LETTER": "LL-0001",
+  "ASSET_CLASS": "Securities financing",
+  "PRODUCT": "Tri-party repo",
+  "NOTIONAL": 260700000.0,
+  "MATURITY_DATE": "2027-02-15",
+  "GRID_INDEX": 0,
+  "GRID_DATE": "2026-10-07",
+  "MTM": [
+    -523841,
+    -1015981,
+    -712385,
+    -991918,
+    /* … 192 more … */,
+    -789507,
+    -534603,
+    -638599,
+    -552661
+  ],
+  "STATUS": "ok",
+  "PRICER": "testgen-factor-walk",
+  "BATCH_ID": "XB-2026-09-30-01"
+}
+```
 
 **Links:** `RUN_ID` → `simulation-run`, `TRADE_ID` → `trade`, `NETTING_SET` → `netting-set`, `COUNTERPARTY` → `counterparty`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`.
 
