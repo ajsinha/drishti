@@ -33,7 +33,7 @@ import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 /**
- * The committed test data's files as the tests read them (docs/architecture/DATA_LOAD_RULES.md section 10; the Python half is
+ * The committed test data's files as the tests read them (docs/guides/DATA_LAKE_GUIDE.md section 5.2; the Python half is
  * {@code tools/lake/feedfiles.py}): a table's folder holds one file per business date, {@code <table>.<YYYY-MM-DD>.jsonl.gz}, or plain
  * tar archives of {@code <table>/<YYYY-MM-DD>/<file>.jsonl.gz} folders. {@link #parts} lists every file of every date (a tar's members
  * read in place), the dates in order and each date's files in name order; {@link #lines} reads their JSON Lines.

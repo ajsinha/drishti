@@ -292,7 +292,7 @@ and Flight add theirs once BI reads the layer. Every command takes `--json`.
 
 ### Offering a table for new data
 
-A table a data load creates (a new lake table, DATA_LOAD_RULES.md section 7) is offered a flat virtual table; nothing is defined until
+A table a data load creates (a new lake table, DATA_LAKE_GUIDE.md section 5.6) is offered a flat virtual table; nothing is defined until
 someone accepts it. `tables offer` reads a sample of the new documents and suggests one column per scalar field (a nested object's
 fields one level down, `$.OWNER.NAME` as `OWNER_NAME`), each typed from its values (`integer`, `decimal`, `boolean`, `date`,
 `timestamp`, else `string`), the id field (`id` or a name ending `_ID`) as the key when it is unique in the sample, and names each list

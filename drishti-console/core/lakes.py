@@ -22,7 +22,7 @@ that process. Afterwards, as the administrator who started it, the console binds
 (the connector API: validated, written atomically, audited, the old text kept) and announces the load (``POST
 /api/v1/packs/{pack}/loads``), so the server refreshes and people are told. No token is handed to the build process.
 
-The business date of the rows is the load rules' (docs/architecture/DATA_LOAD_RULES.md): the date the administrator gives (as of),
+The business date of the rows is the load rules' (docs/guides/DATA_LAKE_GUIDE.md): the date the administrator gives (as of),
 else the date in the file's name (``trades.2026-11-03.jsonl``), else the business today; never a field of the rows.
 
 Only lake roots listed in ``lakes.roots`` can be written: a lake is a folder under one of them (``<root>/<domain>/<kind>``). Unset, the roots
@@ -134,7 +134,7 @@ class Upload:
     size: int = 0
     created: float = field(default_factory=time.time)
     scan: dict | None = None
-    date: str | None = None                      # the business date the file's name carries (DATA_LOAD_RULES.md), None: none
+    date: str | None = None                      # the business date the file's name carries (DATA_LAKE_GUIDE.md), None: none
     today: str | None = None                     # the business today, the date of a name without one
 
     def view(self) -> dict:
@@ -294,7 +294,7 @@ class Lakes:
         if not PATH.match(str(p.get("key") or "")):
             raise LakeError(400, "choose the id field (key)")
         if p.get("date"):
-            raise LakeError(400, "a business date comes from outside the rows (DATA_LOAD_RULES.md): the file's name, or a date you give "
+            raise LakeError(400, "a business date comes from outside the rows (DATA_LAKE_GUIDE.md): the file's name, or a date you give "
                                  "(as of); never a field of the rows")
         if p.get("asOf") and not re.match(r"^\d{4}-\d{2}-\d{2}$", str(p["asOf"])):
             raise LakeError(400, "as of is a date, yyyy-MM-dd")
@@ -399,7 +399,7 @@ def connector_text(current: str | None, root: Path, domain: str, kind: str, colu
         kinds.append(kind)
     doc["kinds"] = kinds
     st = doc.get("settings") if isinstance(doc.get("settings"), dict) else {}
-    # binding names a folder: a connector that named a lake (LAKE_GUIDE.md) is bound in the older form (root, domain, layout; one warning
+    # binding names a folder: a connector that named a lake (DATA_LAKE_GUIDE.md) is bound in the older form (root, domain, layout; one warning
     # at start) rather than refused for setting both; drishti.py lake migrate-config describes that folder as a lake of its own
     st.pop("lake", None)
     st.pop("lake-tables", None)

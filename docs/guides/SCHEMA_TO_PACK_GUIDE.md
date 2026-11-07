@@ -179,7 +179,7 @@ and every load is stored under the business date of the day it is loaded, so yes
 alone with no date: no dated store, the pack serves its samples.
 
 The tool is the feed's producer here. With a date field it writes the kind's documents one file per business date
-(`<kind>.<YYYY-MM-DD>.jsonl.gz`), and those files load by the [load rules](../architecture/DATA_LOAD_RULES.md), like any other feed. The
+(`<kind>.<YYYY-MM-DD>.jsonl.gz`), and those files load by the [load rules](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo), like any other feed. The
 loader takes each file's date from its name and never reads a row's date. Documents without the field go into `<kind>.jsonl.gz`, which
 loads under `--as-of` or the business today.
 

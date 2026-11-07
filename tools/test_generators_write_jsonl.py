@@ -115,7 +115,7 @@ class RunTheGenerators(unittest.TestCase):
         files = data_files(folder)
         self.assertGreaterEqual(len(files), at_least, f"nothing written under {folder}")
         for f in files:
-            if f.name.endswith(".tar"):                      # a tar of <table>/<YYYY-MM-DD>/ JSON Lines (DATA_LOAD_RULES.md): its members
+            if f.name.endswith(".tar"):                      # a tar of <table>/<YYYY-MM-DD>/ JSON Lines (DATA_LAKE_GUIDE.md): its members
                 import io
                 import tarfile
                 with tarfile.open(f) as t:
@@ -168,7 +168,7 @@ class RunTheGenerators(unittest.TestCase):
         self.assert_jsonl(self.d / "rows2", 2)
 
     def test_the_store_loaders_rows_are_tars_of_kind_and_date_folders(self):
-        """The load rules (docs/architecture/DATA_LOAD_RULES.md): rows of several kinds or days go in a tar of <kind>/<YYYY-MM-DD>/
+        """The load rules (docs/guides/DATA_LAKE_GUIDE.md): rows of several kinds or days go in a tar of <kind>/<YYYY-MM-DD>/
         folders, each row in its own date's folder; a plain file is one kind and one day."""
         (self.d / "store").mkdir()
         self.run_tool("tools/packgen/banking/make_data.py", "--jsonl", self.d / "store" / "banking.tar")

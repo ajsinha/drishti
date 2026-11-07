@@ -65,7 +65,7 @@ public final class LakeFiles {
     }
 
     /**
-     * Creates {@code <lakesDir>/<name>.yaml} for a lake a load names that has no file yet (the data inbox, DATA_LOAD_RULES.md section 5): a
+     * Creates {@code <lakesDir>/<name>.yaml} for a lake a load names that has no file yet (the data inbox, DATA_LAKE_GUIDE.md section 4): a
      * Delta lake in its own folder, {@code root: ${drishti.data.dir:./data}/delta/<name>}, with {@code tables} (the routed packs' recommended
      * entries). A file that exists is never touched (false); the name must be a lake's name ({@link Lakes#NAME}).
      *
@@ -88,7 +88,7 @@ public final class LakeFiles {
             ts.set(t.name(), entry(t));
         }
         Files.createDirectories(lakesDir);
-        String text = header(lakesDir) + "# config/lakes/" + name + ".yaml: the lake " + name + ", created by " + why + " (docs/guides/LAKE_GUIDE.md).\n"
+        String text = header(lakesDir) + "# config/lakes/" + name + ".yaml: the lake " + name + ", created by " + why + " (docs/guides/DATA_LAKE_GUIDE.md).\n"
                 + "# Its tables are folders under its root, <data>/delta/" + name + "/<domain>/<table>; edit the entries here from now on, and\n"
                 + "# point a pack's connectors at it with lake: " + name + " (then restart).\n" + YAML.writeValueAsString(root);
         try {
@@ -258,7 +258,7 @@ public final class LakeFiles {
         for (ObjectNode lake : byRoot.values()) {
             Path target = lakesDir.resolve(lake.get("lake").asText() + ".yaml");
             lakes.put(target, header(lakesDir) + "# " + target.getFileName() + ": written by drishti.py lake migrate-config from the connector files"
-                    + " (docs/guides/LAKE_GUIDE.md); edit here from now on\n" + YAML.writeValueAsString(lake));
+                    + " (docs/guides/DATA_LAKE_GUIDE.md); edit here from now on\n" + YAML.writeValueAsString(lake));
         }
         if (write) {
             Files.createDirectories(lakesDir);

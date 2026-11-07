@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The lake files (``config/lakes/<lake>.yaml``, docs/guides/LAKE_GUIDE.md) for the Python tools: ``lake build``, ``lake demo``,
+"""The lake files (``config/lakes/<lake>.yaml``, docs/guides/DATA_LAKE_GUIDE.md) for the Python tools: ``lake build``, ``lake demo``,
 ``build_demo_lakes.py``, ``lake check``, ``lake show`` and ``lake migrate-config``.
 
 There is ONE reader of the lake files, in Java (drishti-lakeconfig, ``com.ash.drishti.lakeconfig.LakesCli``): this module runs it and
@@ -153,7 +153,7 @@ def dump(folder: pathlib.Path | None = None) -> dict:
 
 
 # ---- where lakes are ---------------------------------------------------------------------------------------------------------------------
-# The one place the tools know the lakes' folders (LAKE_GUIDE.md section 1): every lake in its own folder, <data>/delta/<lake> (an Iceberg
+# The one place the tools know the lakes' folders (DATA_LAKE_GUIDE.md section 2): every lake in its own folder, <data>/delta/<lake> (an Iceberg
 # lake <data>/iceberg/<lake>), unless its lake file names a root; the demo lake's root may be named by DEMO_ROOT_ENV, as config/lakes/demo.yaml
 # says. A tool that needs a lake's folder asks root(); nothing else spells data/delta.
 
@@ -288,19 +288,19 @@ def cmd_migrate(a) -> int:
 def register(sub, add) -> None:
     """``lake show``, ``lake check`` and ``lake migrate-config`` (cli.py adds them to the ``lake`` group)."""
     s = add(sub, "show", lambda a, extra: cmd_show(a), "lake show: every lake of config/lakes/ and its tables, as the server reads them", [],
-            "example:\n  drishti.py lake show\nGuide: docs/guides/LAKE_GUIDE.md")
+            "example:\n  drishti.py lake show\nGuide: docs/guides/DATA_LAKE_GUIDE.md")
     s.add_argument("--dir", help="the lake folder (default DRISHTI_LAKES_DIR, else config/lakes)")
     s.add_argument("--json", action="store_true")
     c = add(sub, "check", lambda a, extra: cmd_check(a), "lake check: connectors name known lakes; each lake file matches its tables on disk "
             "(format, partition columns, promoted columns)", [], "example:\n  drishti.py lake check\nexit: 0 ok, 1 an error found. "
-            "Guide: docs/guides/LAKE_GUIDE.md")
+            "Guide: docs/guides/DATA_LAKE_GUIDE.md")
     c.add_argument("--dir", help="the lake folder (default DRISHTI_LAKES_DIR, else config/lakes)")
     c.add_argument("--connectors-dir", help="the connector files (default DRISHTI_CONNECTORS_DIR, else config/connectors)")
     c.add_argument("--json", action="store_true")
     m = add(sub, "migrate-config", lambda a, extra: cmd_migrate(a), "lake migrate-config: write lake files from connector files that "
             "describe their lake (root, domain, table.<kind>, layout.<kind>.*) and rewrite those connectors to lake: <name>", [],
             "examples:\n  drishti.py lake migrate-config                 (a dry run: prints the files)\n"
-            "  drishti.py lake migrate-config --write\nNothing in the data folder changes. Guide: docs/guides/LAKE_GUIDE.md section 8")
+            "  drishti.py lake migrate-config --write\nNothing in the data folder changes. Guide: docs/guides/DATA_LAKE_GUIDE.md section 12")
     m.add_argument("--dir", help="the lake folder written (default DRISHTI_LAKES_DIR, else config/lakes)")
     m.add_argument("--connectors-dir", help="the connector files (default DRISHTI_CONNECTORS_DIR, else config/connectors)")
     m.add_argument("--write", action="store_true", help="write the files (default: a dry run)")

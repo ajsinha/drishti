@@ -233,7 +233,7 @@ schemas:
       - { key: "settings.*", type: map, meaning: "One setting of the plugin" }
   lake-file:
     area: connectors
-    title: "A lake file: `config/lakes/<lake>.yaml` (docs/guides/LAKE_GUIDE.md)"
+    title: "A lake file: `config/lakes/<lake>.yaml` (docs/guides/DATA_LAKE_GUIDE.md)"
     file: "config/lakes/*.yaml"
     files: ["config/lakes/*.yaml", "config/lakes.examples/*/*.yaml"]
     applies: every writer and reader of the lake
@@ -357,7 +357,7 @@ schemas:
       - { key: routes, type: map, default: "{}", meaning: "kind -> the connector that answers it (drishti.sources.routes)" }
       - { key: "routes.<name>", type: string, meaning: "One kind's connector" }
       - { key: ingest, type: map, default: "{}", meaning: "For the tools only (drishti.py data ingest --pack, lake build --pack, pack check): each kind's id and business-date fields; ignored by the server" }
-      - { key: lake, type: map, default: none, meaning: "The tables the pack recommends (docs/guides/LAKE_GUIDE.md section 7): lake.tables, the shape of a lake file's tables:, copied into a lake file the first time a writer meets the kind; its Delta and Iceberg templates name lake: and lake-tables:" }
+      - { key: lake, type: map, default: none, meaning: "The tables the pack recommends (docs/guides/DATA_LAKE_GUIDE.md section 12): lake.tables, the shape of a lake file's tables:, copied into a lake file the first time a writer meets the kind; its Delta and Iceberg templates name lake: and lake-tables:" }
       - { key: "lake.*", type: map, meaning: "lake.tables.<domain>.<table>: one recommended entry (kind, path, partition-by, promote, vectors, sort-by, file-rows, row-group-rows, flatten, ...)" }
       - { key: "ingest.<name>", type: map, meaning: "One kind" }
       - { key: "ingest.<name>.key", type: string, meaning: "Its id field" }
@@ -407,7 +407,7 @@ env:
   # the packs' connectors (config/packs/<pack>/pack.yaml)
   - { name: DRISHTI_DELTA_ROOT, by: packs, default: "./data/delta/demo", sets: "the demo lake's root (config/lakes/demo.yaml)", meaning: "Root of the demo lake, which every pack's Delta connector reads (lake: demo); every lake's own default is <data>/delta/<lake>" }
   - { name: DRISHTI_LAKES_RELOCATE_ON_START, by: server, default: "true", sets: "drishti.lakes.relocate-on-start", meaning: "At start, move a demo lake built in the older layout (<data>/delta/<domain>) into <data>/delta/demo once, safely (verified, moved back on any error, never a delete); false: only by drishti.py lake relocate demo (docs/admin/OPERATIONS.md)" }
-  - { name: DRISHTI_LAKES_DIR, by: server, default: "./config/lakes", sets: "drishti.lakes.dir", meaning: "The lake folder: one config/lakes/<lake>.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/LAKE_GUIDE.md)" }
+  - { name: DRISHTI_LAKES_DIR, by: server, default: "./config/lakes", sets: "drishti.lakes.dir", meaning: "The lake folder: one config/lakes/<lake>.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/DATA_LAKE_GUIDE.md)" }
   - { name: DRISHTI_DATALOAD_LAKE, by: server, default: demo, sets: "drishti.dataload.lake", meaning: "The lake (config/lakes/<lake>.yaml) the data inbox writes to; a folder is the older form" }
   - { name: DRISHTI_DELTA_ENGINE, by: packs, default: native, sets: "delta engine", meaning: "native, hadoop or auto, for every Delta connector without its own engine" }
   - { name: DRISHTI_LAKE_ENABLED, by: packs, default: "true", sets: "the packs' data connectors", meaning: "false switches every pack's data connector off (the demo samples still answer)" }

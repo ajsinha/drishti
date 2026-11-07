@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""A pack's lake block and its connector templates (docs/guides/LAKE_GUIDE.md section 7).
+"""A pack's lake block and its connector templates (docs/guides/DATA_LAKE_GUIDE.md section 12).
 
 A pack ships its recommended table entries in a ``lake:`` block of ``pack.yaml`` (the shape of a lake file's ``tables:``), and its
 Delta and Iceberg connector templates name the lake (``lake: demo``) and their entries (``lake-tables:``), nothing of the tables'

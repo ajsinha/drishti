@@ -108,7 +108,7 @@ class OfficialReadersTest {
     @Test
     @SuppressWarnings("unchecked")
     void aReaderInTheLakeFormBecomesIcebergAndKeepsItsLake() {
-        // the lake form (docs/guides/LAKE_GUIDE.md): config/lakes/var-official.yaml takes its root, format and storage from the
+        // the lake form (docs/guides/DATA_LAKE_GUIDE.md): config/lakes/var-official.yaml takes its root, format and storage from the
         // publisher's settings, so the reader only changes plugin; nothing of the root is written into it
         Map<String, Object> reader = new java.util.LinkedHashMap<>(Map.of("plugin", "delta", "kinds", List.of("var-official"),
                 "settings", Map.of("lake", "var-official", "lake-tables", "risk-results.var-official")));

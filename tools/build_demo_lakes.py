@@ -18,7 +18,7 @@
    (default: the date of your newest ENDUR file when ``--endur-dir`` is given, else today's business date), and the connector files
    pointed at the lake. No pack's data is served by the demo connector: start the server with it off.
 2. With ``--endur-dir``: the synthetic ENDUR trades are replaced by your files, named by the load rules
-   (docs/architecture/DATA_LOAD_RULES.md): one file per business date, ``trade_endur.YYYY-MM-DD.jsonl`` (or ``.jsonl.gz``,
+   (docs/guides/DATA_LAKE_GUIDE.md): one file per business date, ``trade_endur.YYYY-MM-DD.jsonl`` (or ``.jsonl.gz``,
    ``.jsonl.zip``: a zip of that date's JSON Lines), or a tar archive of ``trade_endur/YYYY-MM-DD/`` folders (``.tar``, ``.tgz``,
    ``.tar.gz``, ``.tar.zip``) holding any number of dates; a ``.ready`` file beside one is honoured. Each is loaded with
    ``drishti.py lake build`` (its dates from its name or folders, mode replace), exactly as the Windows QA guide's step 3.2 does.

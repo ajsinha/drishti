@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *       that are good are in ({@link #finish()}).</li>
  *   <li><b>Retention counts back from the newest business date of the load.</b> A retention cut-off ({@code --keep-days},
  *       {@code --keep-months}, {@code --ttl-days}) is computed from the newest business date the load wrote (a plain
- *       file's date, a tar's newest folder: DATA_LOAD_RULES.md), never from the newest date the store holds; a run that
+ *       file's date, a tar's newest folder: DATA_LAKE_GUIDE.md), never from the newest date the store holds; a run that
  *       writes no row counts from today in the business zone (a maintenance run: its own {@code --as-of}).</li>
  *   <li><b>No mass drop by accident.</b> A run that would drop more than {@code --max-drop-share} (0.5) of a table's
  *       data refuses to drop anything unless {@code --force-drop} is given ({@link #checkDrop}).</li>

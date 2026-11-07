@@ -34,7 +34,7 @@ import calc_snippets
 import layout
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-import packlake  # noqa: E402  (tools/packlake.py: the templates' tables as the pack's lake: entries, docs/guides/LAKE_GUIDE.md)
+import packlake  # noqa: E402  (tools/packlake.py: the templates' tables as the pack's lake: entries, docs/guides/DATA_LAKE_GUIDE.md)
 
 #: the partitions after business_date the pack recommends (the demo lake, config/lakes/demo.yaml, says the same)
 PARTITIONS = {f"trading.trade_{s}": ["PRODUCT_TYPE"] for s in ("endur", "calypso", "murex")}

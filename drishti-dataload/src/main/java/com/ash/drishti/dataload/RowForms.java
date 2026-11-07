@@ -28,7 +28,7 @@ import java.nio.file.Path;
 import java.util.zip.GZIPInputStream;
 
 /**
- * The self-describing row forms (DATALOAD_INBOX.md section 5; DATA_GUIDE.md section 2.2): <i>loader rows</i>
+ * The self-describing row forms (DATA_LAKE_GUIDE.md section 5.1; DATA_GUIDE.md section 2.2): <i>loader rows</i>
  * {@code {domain, kind, id, date, doc, columns}} and <i>lake rows</i> {@code {domain, kind, table, id, date, doc}}. The parallel lake loader
  * reads documents (one entity a line) and has no reader for these forms, and the inbox writes no second one: a file whose first line is
  * such a row is refused with the reason and the tool that loads it. Only the first line of a plain, gzip or zstd file is looked at (an

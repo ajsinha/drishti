@@ -805,7 +805,7 @@ no-proxy, site default, `proxy: none`) and `HadoopLakeProxyTest` (the `fs.s3a.pr
 ### The lake file: where the root and the layout live
 
 The lake itself (its root, storage, each table's folder, partitions, promoted columns and vectors) is described once, in its lake file
-`config/lakes/<lake>.yaml`, and the connector names it ([LAKE_GUIDE.md](../guides/LAKE_GUIDE.md)). The connector file then keeps only
+`config/lakes/<lake>.yaml`, and the connector names it ([DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md)). The connector file then keeps only
 reading concerns:
 
 ```yaml
@@ -823,7 +823,7 @@ Both forms are permanent. A connector that names a lake and also gives `root`, `
 uses its own values over the lake file's (Admin → Connectors says so on each such field). The form below, with those keys in the
 connector file and no `lake:`, names its tables by path or URI (a folder, `s3://bucket/prefix`): for tables no lake file describes, such
 as a vendor's Delta table on S3; `drishti.py lake migrate-config` moves such connectors into a lake file when you want one
-([LAKE_GUIDE.md section 8](../guides/LAKE_GUIDE.md#8-moving-connectors-to-the-lake-form)).
+([DATA_LAKE_GUIDE.md section 12](../guides/DATA_LAKE_GUIDE.md#12-other-lakes-packs-and-older-installations)).
 
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
 

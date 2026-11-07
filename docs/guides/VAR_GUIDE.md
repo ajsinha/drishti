@@ -4944,7 +4944,7 @@ Every dataset historical VaR uses, what it is for, whether it is required, where
 data (`data/testdata/`), formatted, with long arrays shortened as `/* … N more … */`. The engine itself, its computations and its
 screens are in the sections above; the field-by-field rules of each kind are its **data contract**
 ([docs/contracts/packs/market-risk.md](../contracts/packs/market-risk.md)); how files are named, dated and loaded is
-[DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md).
+[DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo).
 
 The sample data is synthetic (a 40-factor model, labelled with source systems such as ENDUR, CALYPSO and MUREX); the demo lake moves its
 dates to the latest business days when it is built, so a file dated 2026-09-30 appears on a recent business date in the console.

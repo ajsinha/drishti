@@ -883,7 +883,7 @@ public final class ConnectorManager {
         }
         List<String> own = com.ash.drishti.lakeconfig.ConnectorLake.PLUGINS.contains(d.plugin())
                 ? com.ash.drishti.lakeconfig.ConnectorLake.overridden(d.settings()) : List.of();
-        for (String k : own) {                                  // both forms: the explicit path wins (LAKE_GUIDE.md section 2)
+        for (String k : own) {                                  // both forms: the explicit path wins (DATA_LAKE_GUIDE.md section 6)
             out.add(new Problem("warning", "settings." + k, "the connector names lake " + d.settings().get(com.ash.drishti.lakeconfig.ConnectorLake.LAKE)
                     + " and gives " + k + " itself: its own value wins over the lake file's"));
         }

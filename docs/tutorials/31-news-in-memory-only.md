@@ -40,7 +40,7 @@ About 15 minutes.
 
 ## Step 1 · Point the news connector at memory
 
-**The YAML.** The store is a lake of its own (docs/guides/LAKE_GUIDE.md section 6): copy its lake file, and the example connector over
+**The YAML.** The store is a lake of its own (docs/guides/IN_MEMORY_LAKE_GUIDE.md): copy its lake file, and the example connector over
 the pack's own:
 
 ```bash

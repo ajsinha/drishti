@@ -77,7 +77,7 @@ async def page(request: Request):
         memory = await request.app.state.backend.admin("GET", "/lakes/memory", me)
     except BackendError:
         memory = None
-    try:                                  # the lake files (LAKE_GUIDE.md): every lake and table as the server reads them, read-only
+    try:                                  # the lake files (DATA_LAKE_GUIDE.md): every lake and table as the server reads them, read-only
         lake_files = await request.app.state.backend.admin("GET", "/lakes/files", me)
     except BackendError:
         lake_files = None
@@ -147,7 +147,7 @@ async def _readers(request: Request, me, domain: str, name: str) -> list[dict]:
                 continue
             d = await request.app.state.backend.admin("GET", f"/connectors/{c['name']}", me)
             st = d.get("settings") or {}
-            if st.get("lake"):                    # a connector naming a lake (LAKE_GUIDE.md): its tables are the lake file's entries
+            if st.get("lake"):                    # a connector naming a lake (DATA_LAKE_GUIDE.md): its tables are the lake file's entries
                 if lake_files is None:
                     lake_files = (await request.app.state.backend.admin("GET", "/lakes/files", me)).get("lakes") or []
                 named = [x.strip() for x in str(st.get("lake-tables") or "").split(",") if x.strip()]

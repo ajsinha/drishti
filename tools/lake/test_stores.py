@@ -54,7 +54,7 @@ def test_switching_a_system_writes_its_connector_file_and_keeps_the_old_text(tmp
     doc = yaml.safe_load((folder / "trade-calypso.yaml").read_text(encoding="utf-8"))
     assert doc["plugin"] == "iceberg" and doc["kinds"] == ["trade"]
     s = doc["settings"]
-    # the lake form (docs/guides/LAKE_GUIDE.md): the connector names the lake demo-iceberg; its file, beside the connector folder, holds
+    # the lake form (docs/guides/DATA_LAKE_GUIDE.md): the connector names the lake demo-iceberg; its file, beside the connector folder, holds
     # the table (the pack's entry, the partition field kept as a promoted column) and the root
     assert s["engine"] == "native" and s["lake"] == stores.ICEBERG_LAKE and s["lake-tables"] == "trading.trade_calypso"
     assert s["union"] is True and s["source-name"] == "trade-calypso" and "root" not in s and "layout" not in s

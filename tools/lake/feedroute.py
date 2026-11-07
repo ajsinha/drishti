@@ -14,7 +14,7 @@
 
 """Where a feed file goes, for the command-line loaders (``lake build``, ``data ingest``): the one place that pairs a file with its
 ``.ready`` file and maps a table name (a file name's first segment, a tar's folder) to a pack and kind
-(docs/architecture/DATA_LOAD_RULES.md sections 3 and 5). The data inbox does the same in drishti-dataload (``Routes``, ``ReadyNote``).
+(docs/guides/DATA_LAKE_GUIDE.md sections 5 and 5). The data inbox does the same in drishti-dataload (``Routes``, ``ReadyNote``).
 
 * **Pairing**: ``<file>.ready`` (the data file's full name), or the name without its data extension (``trades.2026-11-03.ready``,
   ``eod.tar.ready``). A short name that could pair with two data files releases neither.

@@ -46,7 +46,7 @@ public record MemoryLakeSettings(Map<String, Store> stores, List<TableSpec> tabl
     }
 
     /**
-     * These settings with the memory stores the lake files describe (decision L3, docs/guides/LAKE_GUIDE.md section 6): every lake whose
+     * These settings with the memory stores the lake files describe (decision L3, docs/guides/IN_MEMORY_LAKE_GUIDE.md): every lake whose
      * root is {@code mem://<store>} is a store, its {@code memory:} block giving the cap, chunk size, contract, owner and idle trim, its
      * {@code format} the store's. A store still under {@code drishti.lake.memory.stores} (the engine file, the old place) is read with one
      * warning naming {@code drishti.py lake migrate-config}; a store named in both places is refused, naming both.

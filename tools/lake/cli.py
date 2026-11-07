@@ -22,7 +22,7 @@ the default; Apache Iceberg with `build --format iceberg`, and `maintain` for a 
     demo       the demo lakes of the seven packs from the committed test data, data/testdata (tools/lake/demo.py)
     maintain   retention, compaction, checkpoints and vacuum, now or on schedules; --history (tools/lake/maintain.py; options passed through)
     memory     the in-memory lake over REST: status, jobs, refill (tools/lake/memory_cli.py; docs/guides/IN_MEMORY_LAKE_GUIDE.md)
-    show       every lake of config/lakes/ and its tables, as the server reads them (tools/lake/lakeconfig.py; docs/guides/LAKE_GUIDE.md)
+    show       every lake of config/lakes/ and its tables, as the server reads them (tools/lake/lakeconfig.py; docs/guides/DATA_LAKE_GUIDE.md)
     check      connectors name known lakes; each lake file matches its tables on disk (format, partitions, promoted columns)
     migrate-config  lake files from connector files that still describe their lake; the connectors rewritten to lake: <name>
 """
@@ -135,7 +135,7 @@ def register(groups, add, srv, ctx: dict | None = None) -> None:
     _mod("demo").add_arguments(dm)
     u = add(sub, "undo", cmd_undo, "lake undo: remove one load's rows by its load id, in every table of the lake (a replace restored); asks "
             "to confirm", [], "examples:\n  drishti.py lake undo 20261104T093000.123-4242.1 --lake data/delta/demo --dry-run\n"
-            "  drishti.py lake undo 20261104T093000.123-4242.1 --lake data/delta/demo --yes\nGuide: docs/architecture/DATA_LOAD_RULES.md section 6.3")
+            "  drishti.py lake undo 20261104T093000.123-4242.1 --lake data/delta/demo --yes\nGuide: docs/guides/DATA_LAKE_GUIDE.md section 5.5")
     _mod("undo").add_arguments(u)
     rl = add(sub, "relocate", cmd_relocate, "lake relocate: move a lake built in the older layout (<data>/delta/<domain>) into its own folder "
              "<data>/delta/<lake> once: verified, moved back on any error, never a delete", [],
@@ -148,6 +148,6 @@ def register(groups, add, srv, ctx: dict | None = None) -> None:
             "  drishti.py lake maintain --history\n"
             "  drishti.py lake maintain relayout --root data/delta/demo --domain trading\n"
             "Only tables lake build built are maintained (--force-foreign overrides, with a warning). Guide: docs/admin/OPERATIONS.md")
-    _mod("lakeconfig").register(sub, add)                               # lake show|check|migrate-config (2.9.11.c, LAKE_GUIDE.md)
+    _mod("lakeconfig").register(sub, add)                               # lake show|check|migrate-config (2.9.11.c, DATA_LAKE_GUIDE.md)
     if ctx:
         _mod("memory_cli").register(sub, add, srv, ctx)                # lake memory status|jobs|refill (2.9.11, IN_MEMORY_LAKE.md)

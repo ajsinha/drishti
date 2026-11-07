@@ -111,7 +111,7 @@ public final class IcebergMirror {
         Path feed = Files.createTempDirectory(work, kind + "-");
         try {
             // the producer of the feed: one tar of <kind>/<YYYY-MM-DD>/ folders (or one dated file), so each row lands under its own
-            // business date by the load rules (DATA_LOAD_RULES.md), never under the business today of an undated name
+            // business date by the load rules (DATA_LAKE_GUIDE.md), never under the business today of an undated name
             Path file = com.ash.drishti.testkit.LoaderRows.write(feed, lines);
             IcebergLoader.run(new String[] {file.toString(), root.toString(), "--engine", "native", "--spill-dir", work.toString(), "--buffer-mb", "64"});
         } finally {

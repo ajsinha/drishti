@@ -73,7 +73,7 @@ columns, read without touching the documents. DuckDB adds three constraints of i
 
 `DuckDbLoader` (in the plugin) writes, and the connector reads, one DuckDB file (for example
 `data/duckdb/drishti.duckdb`) with a schema per data domain. Its input is loader rows (`{"domain", "kind", "id", "date", "doc",
-"columns"}`), filed by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)): a tar of `<kind>/<YYYY-MM-DD>/`
+"columns"}`), filed by the load rules ([DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)): a tar of `<kind>/<YYYY-MM-DD>/`
 folders (what `make_data.py --jsonl FILE.tar` and `bulk_trades.py --jsonl FILE.tar` write) files each row under its folder's date;
 a plain file (`<kind>.<YYYY-MM-DD>.jsonl`, or `-`) is one kind on one date: `--as-of`, else its `.ready` file's, else its name's,
 else the business today. A row's own `date` stays in its document; rows whose date differs are counted. A plain file of two

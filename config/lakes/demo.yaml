@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/lakes/demo.yaml: the demo lake (docs/guides/LAKE_GUIDE.md section 3). The demo lake is a lake like any other: drishti.py lake
+# config/lakes/demo.yaml: the demo lake (docs/guides/DATA_LAKE_GUIDE.md section 2.1). The demo lake is a lake like any other: drishti.py lake
 # demo, tools/build_demo_lakes.py, the data inbox and the demo's connectors all write and read through this file. Every table is
 # partitioned by business_date first, always; partition-by names only what comes after it. A table's entry is the truth: an administrator
 # edits it here, never in a connector file or on a command line (a --partition-by that disagrees is refused, naming both). Like every lake

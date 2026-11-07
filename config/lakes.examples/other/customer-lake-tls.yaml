@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/lakes.examples/other/customer-lake-tls.yaml: an example lake file (docs/guides/LAKE_GUIDE.md), the lake the connector files of
+# config/lakes.examples/other/customer-lake-tls.yaml: an example lake file (docs/guides/DATA_LAKE_GUIDE.md), the lake the connector files of
 # config/connectors.examples/other/ name. Copy it to config/lakes/customer-lake-tls.yaml. Secrets only as ${ENV} or file:/path references.
 lake: customer-lake-tls
 format: delta

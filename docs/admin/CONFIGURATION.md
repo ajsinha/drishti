@@ -4049,7 +4049,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.lake.memory.stores` | map | `{}` |  | server (each node its own) | the old place of the memory stores, read for one more release with a warning: a store is now a lake, config/lakes/&lt;store&gt;.yaml with root: mem://&lt;store&gt; and memory: { max-mb (the hard cap), chunk-kb (1024), contract, owner (true), idle-trim-minutes (10) } (docs/guides/LAKE\_GUIDE.md section 6); the caps add to -XX:MaxDirectMemorySize | restart |  |
+| `drishti.lake.memory.stores` | map | `{}` |  | server (each node its own) | the old place of the memory stores, read for one more release with a warning: a store is now a lake, config/lakes/&lt;store&gt;.yaml with root: mem://&lt;store&gt; and memory: { max-mb (the hard cap), chunk-kb (1024), contract, owner (true), idle-trim-minutes (10) } (docs/guides/IN\_MEMORY\_LAKE\_GUIDE.md); the caps add to -XX:MaxDirectMemorySize | restart |  |
 | `drishti.lake.memory.tables` | list | `[]` |  | server (each node its own) | the tables and their replenish jobs: name, store, folder, source { connector, kind, file, url, headers, ids, ids-from }, mode (replace, append, merge), key, sort-by, business-date, columns, every or cron, signal, warm-up, pin, keep-versions (2), codec (zstd) | restart |  |
 | `drishti.lake.memory.history-keep` | integer | `50` |  | server (each node its own) | the runs kept per table for Admin -&gt; Lakes and drishti.py lake memory jobs (in memory) | restart |  |
 | `drishti.lake.memory.job-threads` | integer | `2` |  | server (each node its own) | replenish jobs that may run at once (one per table at most) | restart |  |
@@ -4084,7 +4084,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.dataload.reject-max-percent` | integer | `0` |  | server (each node its own) | the share of rows a load may reject and still commit (exit 2, rejects in the report); over it nothing is committed and the file goes to failed/ | restart |  |
 | `drishti.dataload.reload-duplicates` | boolean | `false` |  | server (each node its own) | false: a file whose SHA-256 was loaded before is not loaded again (to the outbox, "already loaded"); true: loaded again | restart |  |
 | `drishti.dataload.keep-outbox-days` | integer | `30` |  | server (each node its own) | outbox/ and failed/ day folders older than this are deleted (0: kept for ever); the ledger is kept | restart |  |
-| `drishti.dataload.lake` | string | `demo` | `DRISHTI_DATALOAD_LAKE` | server (each node its own) | the lake (config/lakes/&lt;lake&gt;.yaml, docs/guides/LAKE\_GUIDE.md) the tables are written to; a kind the lake file lacks gets its pack's recommended entry copied there first (a rule's lake: wins for its files; a folder is the old form, read with one warning) | restart |  |
+| `drishti.dataload.lake` | string | `demo` | `DRISHTI_DATALOAD_LAKE` | server (each node its own) | the lake (config/lakes/&lt;lake&gt;.yaml, docs/guides/DATA\_LAKE\_GUIDE.md) the tables are written to; a kind the lake file lacks gets its pack's recommended entry copied there first (a rule's lake: wins for its files; a folder is the old form, read with one warning) | restart |  |
 | `drishti.dataload.rules-file` | string | `./config/dataload.yaml` | `DRISHTI_DATALOAD_RULES` | server (each node its own) | the routing rules: a file-name pattern to a pack and kind, read again every cycle | restart |  |
 | `drishti.dataload.nice` | boolean | `true` |  | server (each node its own) | run the loader at a lower priority (nice 10) where the system has nice; never on Windows | restart |  |
 | `drishti.dataload.default-mode` | string | `append` |  | server (each node its own) | a file's load mode when its .ready file says none: append (the rows are added) or replace (each business date of the file replaced) | restart |  |
@@ -4809,7 +4809,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `lake` | string | none |  | `delta` connectors | The lake this connector reads (config/lakes/&lt;lake&gt;.yaml, docs/guides/LAKE\_GUIDE.md): root, storage, catalog, table folders, promoted columns and vectors come from its file; with lake set, root, domain, table.&lt;kind&gt; and layout.&lt;kind&gt;.\* are refused here. Not set: the older form (those keys in this file, one warning) | live (the connector restarts) |  |
+| `lake` | string | none |  | `delta` connectors | The lake this connector reads (config/lakes/&lt;lake&gt;.yaml, docs/guides/DATA\_LAKE\_GUIDE.md): root, storage, catalog, table folders, promoted columns and vectors come from its file; with lake set, root, domain, table.&lt;kind&gt; and layout.&lt;kind&gt;.\* are refused here. Not set: the older form (those keys in this file, one warning) | live (the connector restarts) |  |
 | `lake-tables` | list | none |  | `delta` connectors | With lake: the lake file's entries this connector reads (trading.trade\_endur), where a kind has several tables; not set: the one table of each kind | live (the connector restarts) |  |
 | `root` | path | `<data dir>/delta` |  | `delta` connectors | Lake root (folder, or s3://bucket/prefix); default: the delta folder of the data directory | live (the connector restarts) |  |
 | `domain` | string | none |  | `delta` connectors | The data-domain folder under the root; may not contain `..` or start with `/` | live (the connector restarts) |  |
@@ -4937,7 +4937,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `lake` | string | none |  | `iceberg` connectors | The lake this connector reads (config/lakes/&lt;lake&gt;.yaml, docs/guides/LAKE\_GUIDE.md): root, storage, catalog, table folders, promoted columns and vectors come from its file; with lake set, root, domain, table.&lt;kind&gt; and layout.&lt;kind&gt;.\* are refused here. Not set: the older form (those keys in this file, one warning) | live (the connector restarts) |  |
+| `lake` | string | none |  | `iceberg` connectors | The lake this connector reads (config/lakes/&lt;lake&gt;.yaml, docs/guides/DATA\_LAKE\_GUIDE.md): root, storage, catalog, table folders, promoted columns and vectors come from its file; with lake set, root, domain, table.&lt;kind&gt; and layout.&lt;kind&gt;.\* are refused here. Not set: the older form (those keys in this file, one warning) | live (the connector restarts) |  |
 | `lake-tables` | list | none |  | `iceberg` connectors | With lake: the lake file's entries this connector reads (trading.trade\_endur), where a kind has several tables; not set: the one table of each kind | live (the connector restarts) |  |
 | `layout.*` | string | none |  | `iceberg` connectors | Per-kind layout: layout.&lt;kind&gt;.columns (promoted document paths), layout.&lt;kind&gt;.vectors (list&lt;double&gt; columns such as a P&amp;L vector, read in bulk and put back into documents) | live (the connector restarts) |  |
 | `doc-disk-cache.enabled` | boolean | `true` |  | `iceberg` connectors | Documents already read also kept on disk (RocksDB, one per connector), keyed by the date's files: answered without reading a data file, also after a restart | live (the connector restarts) |  |
@@ -5309,7 +5309,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `settings` | map | `{}` |  | the connector | The plugin's settings, as the tables above (every plugin, the shared tls.\* and proxy.\*, the plugin's own) | live (the connector restarts) |  |
 | `settings.*` | map | none |  | the connector | One setting of the plugin | live (the connector restarts) |  |
 
-#### A lake file: `config/lakes/<lake>.yaml` (docs/guides/LAKE_GUIDE.md)
+#### A lake file: `config/lakes/<lake>.yaml` (docs/guides/DATA_LAKE_GUIDE.md)
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
@@ -5430,7 +5430,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `routes` | map | `{}` |  | the pack | kind -&gt; the connector that answers it (drishti.sources.routes) | live |  |
 | `routes.<name>` | string | none |  | the pack | One kind's connector | live |  |
 | `ingest` | map | `{}` |  | the pack | For the tools only (drishti.py data ingest --pack, lake build --pack, pack check): each kind's id and business-date fields; ignored by the server | live |  |
-| `lake` | map | `none` |  | the pack | The tables the pack recommends (docs/guides/LAKE\_GUIDE.md section 7): lake.tables, the shape of a lake file's tables:, copied into a lake file the first time a writer meets the kind; its Delta and Iceberg templates name lake: and lake-tables: | live |  |
+| `lake` | map | `none` |  | the pack | The tables the pack recommends (docs/guides/DATA\_LAKE\_GUIDE.md section 12): lake.tables, the shape of a lake file's tables:, copied into a lake file the first time a writer meets the kind; its Delta and Iceberg templates name lake: and lake-tables: | live |  |
 | `lake.*` | map | none |  | the pack | lake.tables.&lt;domain&gt;.&lt;table&gt;: one recommended entry (kind, path, partition-by, promote, vectors, sort-by, file-rows, row-group-rows, flatten, ...) | live |  |
 | `ingest.<name>` | map | none |  | the pack | One kind | live |  |
 | `ingest.<name>.key` | string | none |  | the pack | Its id field | live |  |
@@ -5938,7 +5938,7 @@ One YAML per ISDA SIMM version (`drishti.simm.parameters-dir`, default `./config
 
 ### The data inbox's routing rules: `config/dataload.yaml`
 
-Where a file dropped in the data inbox goes: a file-name pattern to a pack and kind (`drishti.dataload.rules-file`), read again at every cycle ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load), [DATALOAD_INBOX.md](../architecture/DATALOAD_INBOX.md)). The inbox's own settings are in `config/engines/dataload.yaml`.
+Where a file dropped in the data inbox goes: a file-name pattern to a pack and kind (`drishti.dataload.rules-file`), read again at every cycle ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load), [DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md)). The inbox's own settings are in `config/engines/dataload.yaml`.
 
 #### `dataload`
 
@@ -6112,7 +6112,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_CONSOLE_WORKERS` | `server.workers` | `4` | console | processes serving pages (one Python process uses one core: ~40 pages/s measured); 1 = one process |
 | `DRISHTI_DATALOAD_DIR` | `drishti.dataload.dir` (engine) | `./data/dataload` | engine | the inbox's folder: inbox/, inprocess/, outbox/, failed/, ledger/ and inbox.lock, all on one file system |
 | `DRISHTI_DATALOAD_ENABLED` | `drishti.engines.dataload.enabled` (engine) | `false` | engine | run the data inbox on this node: files dropped in &lt;dir&gt;/inbox with a .ready marker are loaded into the lake every interval; off as shipped |
-| `DRISHTI_DATALOAD_LAKE` | `drishti.dataload.lake` (engine), drishti.dataload.lake | `demo` | engine, server | the lake (config/lakes/&lt;lake&gt;.yaml, docs/guides/LAKE\_GUIDE.md) the tables are written to; a kind the lake file lacks gets its pack's recommended entry copied there first (a rule's lake: wins for its files; a folder is the old form, read with one warning) |
+| `DRISHTI_DATALOAD_LAKE` | `drishti.dataload.lake` (engine), drishti.dataload.lake | `demo` | engine, server | the lake (config/lakes/&lt;lake&gt;.yaml, docs/guides/DATA\_LAKE\_GUIDE.md) the tables are written to; a kind the lake file lacks gets its pack's recommended entry copied there first (a rule's lake: wins for its files; a folder is the old form, read with one warning) |
 | `DRISHTI_DATALOAD_LOADER_HEAP` | `drishti.dataload.loader-heap` (engine) | `4g` | engine | the loader's own heap (the child Java process's -Xmx): a load never uses the server's heap |
 | `DRISHTI_DATALOAD_OWNER` | `drishti.dataload.owner` (engine) | `true` | engine | this node runs the inbox's cycles; in a cluster set it true on one node only (the folder lock also keeps a second runner out) |
 | `DRISHTI_DATALOAD_RULES` | `drishti.dataload.rules-file` (engine) | `./config/dataload.yaml` | engine | the routing rules: a file-name pattern to a pack and kind, read again every cycle |
@@ -6194,7 +6194,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_JDBC_USER` | `drishti.sources.plugins.jdbc.settings.user` | empty | server | its database user |
 | `DRISHTI_KAFKA_BOOTSTRAP` | Kafka brokers | `localhost:9092` | packs | The brokers of the trading stream and the VaR PV topic |
 | `DRISHTI_LABS_CALC` | `drishti.calc.enabled`, `labs.calc` | `false` | console, server | Labs: off as shipped; on also needs a role with calc, and a pack that enables it for the view's kind |
-| `DRISHTI_LAKES_DIR` | drishti.lakes.dir | `./config/lakes` | server | The lake folder: one config/lakes/&lt;lake&gt;.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/LAKE\_GUIDE.md) |
+| `DRISHTI_LAKES_DIR` | drishti.lakes.dir | `./config/lakes` | server | The lake folder: one config/lakes/&lt;lake&gt;.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/DATA\_LAKE\_GUIDE.md) |
 | `DRISHTI_LAKES_RELOCATE_ON_START` | drishti.lakes.relocate-on-start | `true` | server | At start, move a demo lake built in the older layout (&lt;data&gt;/delta/&lt;domain&gt;) into &lt;data&gt;/delta/demo once, safely (verified, moved back on any error, never a delete); false: only by drishti.py lake relocate demo (docs/admin/OPERATIONS.md) |
 | `DRISHTI_LAKE_CLASSPATH` | lake load | none | tools | The class path of the Java lake loader |
 | `DRISHTI_LAKE_ENABLED` | the packs' data connectors | `true` | packs | false switches every pack's data connector off (the demo samples still answer) |

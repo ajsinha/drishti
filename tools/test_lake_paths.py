@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""The guard: no code outside the lake configuration hard-codes where a lake is (LAKE_GUIDE.md section 1). Every lake is in its own folder,
+"""The guard: no code outside the lake configuration hard-codes where a lake is (DATA_LAKE_GUIDE.md section 2). Every lake is in its own folder,
 <data>/delta/<lake>, or where its lake file says; the server and the loader resolve it through drishti-lakeconfig, the tools through
 tools/lake/lakeconfig.py. Code (Java, Python, JavaScript; tests excluded) may not:
 

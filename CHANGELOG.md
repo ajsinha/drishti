@@ -21,8 +21,26 @@
 
 ## 2.9.11.d (unreleased)
 
-- **Every lake in its own folder; real data loads beside the demo, never over it** (product owner, 2026-11-07; LAKE_GUIDE.md section 1,
-  DATA_LOAD_RULES.md section 5, OPERATIONS.md *The lakes' folders*):
+- **The data lake and data load guide, one home for lakes and loading** ([DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md); the
+  product owner, 2026-11-07: "there should be a dedicated document on Drishti data lake & data load with real examples"): what a lake is
+  (one file per lake, each lake in its own folder `data/delta/<lake>/`), every key of the lake file with a worked `risklake.yaml` for
+  trades, positions' scenario PVs and VaR nodes, why few partition columns (the folder-explosion arithmetic) and what to use instead, the
+  file layout's rules of thumb, retention and maintenance; loading three ways (the data inbox, `drishti.py lake build`, the parallel
+  loader); every key of the `.ready` file, `lake:` included, with examples (a plain file, a gz held, a tar of several tables, checksums);
+  routing, business dates, replace and append, repeats and undo; pointing the connectors at a lake and the *no connector reads it*
+  warning; the demo lake's one-time move; checking a load and a troubleshooting table; sizing a day of 1M trades and 50K positions × 509
+  scenarios in two layouts; reading an existing lakehouse (Delta by storage path, Iceberg through Unity Catalog's REST endpoint with vended
+  credentials, the Delta features read or refused by name; Unity Catalog for Delta, Delta Sharing and plain tables marked planned). Examples
+  run on a scratch data folder. **Folded in and deleted:** `docs/guides/LAKE_GUIDE.md`, `docs/architecture/DATA_LOAD_RULES.md`,
+  `docs/architecture/DATALOAD_INBOX.md` (their internal design notes now DATA_ARCHITECTURE.md section 7), and DATA_GUIDE's lakehouse,
+  archive, feed and inbox sections (DATA_GUIDE keeps connectors and links there). **Tutorial 45**, *Load your own data into a new lake*
+  (UI, command line and YAML at every step), with `docs/tutorials/data/risklake/make_day.py` (a deterministic synthetic day). Help: the
+  guide and the tutorial listed, `moved:` for the three folded pages; the docs map; DOCS_PLAN.md splits B1 into B1 Connect and B1b Data
+  lake & data load; every link re-pointed.
+- **`drishti.py lake undo` with the server's exec jar**: the Delta undo's JSON is read after any library log lines on standard output
+  (before, the command failed with `lake undo (Delta): } ]`).
+- **Every lake in its own folder; real data loads beside the demo, never over it** (product owner, 2026-11-07; DATA_LAKE_GUIDE.md sections 1, 4 and 7,
+  OPERATIONS.md *The lakes' folders*):
   - **A lake's root defaults to `<data>/delta/<lake>`** (`Lakes.defaultRoot`): a lake file without `root:` is in its own folder, and a lake
     file may still name any root. The demo lake is `data/delta/demo` (`config/lakes/demo.yaml`: `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}`;
     `DRISHTI_DELTA_ROOT`, when a site sets it, still names its root). The official results stay at `<data>/delta/risk-results`.

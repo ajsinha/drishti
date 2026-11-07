@@ -195,7 +195,7 @@ class KeepOtherDates(unittest.TestCase):
 @unittest.skipUnless(HAVE, "needs deltalake and PyYAML")
 class TheDemoLakesOwnFolder(unittest.TestCase):
     """The demo lake is built where its lake file says, config/lakes/demo.yaml: <data>/delta/demo/<domain>/<table> (every lake in its own
-    folder, LAKE_GUIDE.md section 1), with no --lake given; nothing directly under <data>/delta but the lake's folder; and a lake still in the
+    folder, DATA_LAKE_GUIDE.md section 2), with no --lake given; nothing directly under <data>/delta but the lake's folder; and a lake still in the
     older layout (its tables directly in <data>/delta) is not built over: it is moved first."""
 
     def test_lake_demo_writes_under_data_delta_demo(self):

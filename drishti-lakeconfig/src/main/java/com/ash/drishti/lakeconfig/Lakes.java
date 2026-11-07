@@ -372,7 +372,7 @@ public final class Lakes {
         Lake l = lakes.get(name);
         if (l == null) {
             throw new IllegalArgumentException("no lake named " + name + " (" + (lakes.isEmpty() ? "no lake file in " + dir
-                    : "known: " + lakes.keySet() + " in " + dir) + "): add config/lakes/" + name + ".yaml (docs/guides/LAKE_GUIDE.md)");
+                    : "known: " + lakes.keySet() + " in " + dir) + "): add config/lakes/" + name + ".yaml (docs/guides/DATA_LAKE_GUIDE.md)");
         }
         return l;
     }

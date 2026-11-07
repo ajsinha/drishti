@@ -27,7 +27,7 @@ other table as it is; a running server picks the new trades up within a minute. 
 with the day's amendments, use make_trades.py instead. To go back to the sample trades over 10 days:
 python3 tools/packgen/banking/make_data.py --lake data/delta/demo (with uv run --with deltalake --with pyarrow --with pyyaml).
 
---jsonl FILE.tar (a tar of trade/<YYYY-MM-DD>/ folders, any --days) or FILE|- (one day: --days 1; the load rules, docs/architecture/DATA_LOAD_RULES.md)
+--jsonl FILE.tar (a tar of trade/<YYYY-MM-DD>/ folders, any --days) or FILE|- (one day: --days 1; the load rules, docs/guides/DATA_LAKE_GUIDE.md)
 writes loader rows instead ({"domain", "kind", "id", "date", "doc", "columns"}: the document and the fields the trading
 pack promotes, by path), for tools/load-aerospike.sh and the other stores' loaders.
 
@@ -232,7 +232,7 @@ def main(argv: list[str]) -> int:
         tar = a.jsonl.endswith(".tar")
         if not tar and len(days) > 1:
             ap.error(f"--jsonl {a.jsonl}: {len(days)} business days of trades: a stream or plain file is one table and one date "
-                     "(docs/architecture/DATA_LOAD_RULES.md): write a .tar of trade/<YYYY-MM-DD>/ folders, or --days 1")
+                     "(docs/guides/DATA_LAKE_GUIDE.md): write a .tar of trade/<YYYY-MM-DD>/ folders, or --days 1")
         jobs = [(list(range(s, min(s + 5_000, a.trades))), d, len(days) - 1 - n) for n, d in enumerate(days) for s in range(0, a.trades, 5_000)]
         written = 0
         if tar:                                       # each day into its own file beside the tar, then packed (no day held in memory)

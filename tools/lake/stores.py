@@ -196,7 +196,7 @@ def copy(delta: pathlib.Path, root: pathlib.Path, table_name: str, data: pathlib
         reader = threading.Thread(target=echo, daemon=True)
         reader.start()
         try:
-            # the load rules (DATA_LOAD_RULES.md): rows of several dates go as a tar of <table>/<YYYY-MM-DD>/ folders, each row
+            # the load rules (DATA_LAKE_GUIDE.md): rows of several dates go as a tar of <table>/<YYYY-MM-DD>/ folders, each row
             # in its Delta business date's folder
             out = feedfiles.RowsTarStream(proc.stdin.buffer)
             for line in rows(delta, table_name, newest, domain):
@@ -273,7 +273,7 @@ def lakes_folder(connectors: pathlib.Path) -> pathlib.Path:
 
 def iceberg_lake(connectors: pathlib.Path, pack: dict, template: dict, ice: pathlib.Path, data: pathlib.Path) -> pathlib.Path:
     """``demo-iceberg.yaml``: the Iceberg store of the demo tables moved by --store, one entry per table the template reads, copied from
-    the pack's recommended entries (LAKE_GUIDE.md section 7; Iceberg keeps a partition field as a promoted column). Entries already
+    the pack's recommended entries (DATA_LAKE_GUIDE.md section 12; Iceberg keeps a partition field as a promoted column). Entries already
     there are kept as they are: the lake file is the truth once written."""
     import yaml
     sys.path.insert(0, str(ROOT / "tools"))
@@ -297,7 +297,7 @@ def iceberg_lake(connectors: pathlib.Path, pack: dict, template: dict, ice: path
             e["promote"] = [p for p in part if p not in (e.get("promote") or [])] + list(e.get("promote") or [])
         tables.setdefault(name, e or None)
     f.parent.mkdir(parents=True, exist_ok=True)
-    f.write_text(f"# Written by tools/build_demo_lakes.py --store: the demo tables kept in Iceberg (docs/guides/LAKE_GUIDE.md); edit here.\n"
+    f.write_text(f"# Written by tools/build_demo_lakes.py --store: the demo tables kept in Iceberg (docs/guides/DATA_LAKE_GUIDE.md); edit here.\n"
                  + yaml.safe_dump(doc, sort_keys=False, width=140), encoding="utf-8")
     return f
 

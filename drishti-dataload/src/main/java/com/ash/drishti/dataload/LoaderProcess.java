@@ -38,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The load itself (DATALOAD_INBOX.md section 6): the parallel lake loader, {@code com.ash.drishti.lakeload.LakeLoad}, started as a child
+ * The load itself (DATA_LAKE_GUIDE.md): the parallel lake loader, {@code com.ash.drishti.lakeload.LakeLoad}, started as a child
  * Java process of the server with its own heap ({@code loader-heap}), at a lower priority ({@code nice}) and the server's temp folder, on a
  * load file this class writes (the loader's own keys: TOOLS.md section 4.13). A large or malformed file can never take the server's heap;
  * the loader's exit code says what happened (0 loaded, 2 loaded with rejects, 1 failed, 3 the table locked); a load past
@@ -80,7 +80,7 @@ public final class LoaderProcess implements LoadRunner {
 
     /**
      * The load file for {@code files} going where {@code route} says; written to {@code config}. When the route names a lake of
-     * {@code config/lakes/} (docs/guides/LAKE_GUIDE.md) and that lake has no entry for the kind yet, the pack's recommended entry is copied
+     * {@code config/lakes/} (docs/guides/DATA_LAKE_GUIDE.md) and that lake has no entry for the kind yet, the pack's recommended entry is copied
      * into the lake file first and said so (decision L2): the table is then created exactly as the lake file says, and from then on the
      * lake file is the truth. The load's batch id (the files' names and sizes) is always written: a table whose lake entry says
      * {@code load-mode: append} records it in the commit, so a repeated or retried file is never appended twice.
@@ -112,7 +112,7 @@ public final class LoaderProcess implements LoadRunner {
         boolean named = r.lake() != null && r.lake().matches("[a-z0-9][a-z0-9_-]*");      // a lake of config/lakes/ (else a folder: the old form)
         put(t, "table", r.table() != null || !named || r.connector() == null || r.newDomain() != null ? r.table()
                 : com.ash.drishti.lakeconfig.PackEntry.read(r.packDir(), r.kind(), r.connector()).table());
-        // the mode (DATA_LOAD_RULES.md section 3): the .ready file's, else the lake file's entry for the table, else the inbox's default
+        // the mode (DATA_LAKE_GUIDE.md section 5): the .ready file's, else the lake file's entry for the table, else the inbox's default
         t.put(r.modeGiven() ? "mode" : "default-mode", "append".equals(r.mode()) ? "append" : "replace-date");
         t.put("batch-id", batchId(files));
         ObjectNode rj = root.putObject("rejects");
@@ -128,7 +128,7 @@ public final class LoaderProcess implements LoadRunner {
     /**
      * A lake named by the route that lacks the kind gets the pack's entry, once; a lake with no file yet (a {@code .ready} file's or a rule's
      * {@code lake: risklake}) is created first: {@code config/lakes/<lake>.yaml}, a Delta lake in its own folder {@code <data>/delta/<lake>},
-     * with the pack's recommended entry for the kind (DATA_LOAD_RULES.md section 5). A lake the shipped files describe (the demo lake on a
+     * with the pack's recommended entry for the kind (DATA_LAKE_GUIDE.md section 4). A lake the shipped files describe (the demo lake on a
      * server without its file) is never shadowed by a new file.
      */
     static void lakeEntry(Routes.Route r) throws IOException {

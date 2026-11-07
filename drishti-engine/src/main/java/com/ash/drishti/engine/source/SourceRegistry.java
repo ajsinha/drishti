@@ -432,7 +432,7 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     /**
      * The settings a connector's plugin is given: its own, secrets resolved, and for a Delta or Iceberg connector that names
      * {@code lake:} what its lake file says of its kinds (root, storage, table folders, promoted columns, vectors:
-     * docs/guides/LAKE_GUIDE.md). Every connector passes here, whichever file or template it came from, so the lake file is read in one
+     * docs/guides/DATA_LAKE_GUIDE.md). Every connector passes here, whichever file or template it came from, so the lake file is read in one
      * place. A lake that is not known, or a connector that names a lake and repeats one of its keys, fails the connector with the reason.
      */
     static Map<String, String> ownSettings(String name, SourcesProperties.ConnectorSettings c) {
@@ -656,7 +656,7 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
 
     /**
      * The lakes the switched-on Delta and Iceberg connectors read: each one's {@code lake:}, and for a connector that still names its
-     * {@code root} itself, the lake of that root (docs/guides/LAKE_GUIDE.md). The data inbox warns of a load into a lake not in it.
+     * {@code root} itself, the lake of that root (docs/guides/DATA_LAKE_GUIDE.md). The data inbox warns of a load into a lake not in it.
      */
     public java.util.Set<String> lakesRead() {
         java.util.Set<String> out = new java.util.TreeSet<>();

@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The lake a file goes to (DATA_LOAD_RULES.md section 5): {@code lake:} in the {@code .ready} file over the rule's and the inbox's default; a
+ * The lake a file goes to (DATA_LAKE_GUIDE.md section 4): {@code lake:} in the {@code .ready} file over the rule's and the inbox's default; a
  * lake with no file yet created ({@code config/lakes/<lake>.yaml}, its own folder {@code <data>/delta/<lake>}, the pack's entry), the tables
  * landing at {@code <data>/delta/<lake>/<domain>/<table>}; and the warning when no connector reads the lake. Synthetic rows in a temporary
  * folder only.

@@ -36,7 +36,7 @@ EXAMPLES = ROOT / "examples" / "packs"              # the retired example packs 
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "banking"))
 sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import packlake  # noqa: E402  (tools/packlake.py: the templates' tables as the pack's lake: entries, docs/guides/LAKE_GUIDE.md)
+import packlake  # noqa: E402  (tools/packlake.py: the templates' tables as the pack's lake: entries, docs/guides/DATA_LAKE_GUIDE.md)
 
 
 def _lake_form(m: dict) -> dict:

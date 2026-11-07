@@ -27,7 +27,7 @@ titles and glossary entries with TODO text for every field the Sutras show) and 
 --date FIELD (or kind=FIELD,...) names the field each document carries its own date in: the pack then reads from a dated Delta lake
 (business_date partition; the business-date picker and history work), and the field spreads the samples over dates. --lake DIR (or
 --store files --files-root DIR) writes every kind into such a store (<DIR>/<pack>/<kind>/, in the layout pack.yaml declares), so
-the demo lake's root serves it (config/lakes/demo.yaml); each file goes under its business date by the load rules (docs/architecture/DATA_LOAD_RULES.md: the
+the demo lake's root serves it (config/lakes/demo.yaml); each file goes under its business date by the load rules (docs/guides/DATA_LAKE_GUIDE.md: the
 date in its name, trade.2026-11-03.jsonl, else the business today), --date or not: a date field is only counted when a row says another
 date. Needs: uv run --with deltalake --with pyarrow --with pyyaml.
 """

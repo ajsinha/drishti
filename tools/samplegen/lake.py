@@ -20,7 +20,7 @@ loading are separate steps (docs/guides/DATA_GUIDE.md): this writes JSONL; tools
     uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/lake.py \\
         --samples examples/packs/finance/samples --root data/delta/demo --domain finance --days 10 [--as-of 2026-09-30] [--rows DIR] [--no-load]
 
-Rows (--rows DIR, default <root>/../build/lake-rows), by the load rules (docs/architecture/DATA_LOAD_RULES.md: a file is one table and
+Rows (--rows DIR, default <root>/../build/lake-rows), by the load rules (docs/guides/DATA_LAKE_GUIDE.md: a file is one table and
 one date, a tar holds several): <name>-history.tar, every business date of every kind as <table>/<YYYY-MM-DD>/rows.jsonl, and
 <name>-restated.tar, the newest date's correction of one document per kind, which the loader writes as a second commit so time
 travel ("as known at") has something to show. --no-load stops after the rows. A row:
