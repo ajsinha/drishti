@@ -53,7 +53,7 @@
 .xx-main { min-width: 0; }
 .xx-btn { background: var(--d-surface-2); color: var(--d-ink); border: 1px solid var(--d-border); padding: var(--d-sp-3) var(--d-sp-9); font-size: var(--d-fs-11_5); }
 .xx-btn.primary { background: var(--d-fill); color: var(--d-on-fill); border-color: var(--d-fill); font-weight: 600; }
-.xx-input, .xx-select { background: var(--d-bg); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-3); padding: var(--d-sp-3) var(--d-sp-6); font-size: var(--d-fs-12); }
+.xx-input { background: var(--d-bg); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-3); padding: var(--d-sp-3) var(--d-sp-6); font-size: var(--d-fs-12); }
 .xx-link { background: none; border: 0; padding: 0; color: var(--d-link); cursor: pointer; font-size: inherit; text-decoration: underline; }
 
 /* the tree */

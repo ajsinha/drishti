@@ -820,31 +820,26 @@
   var NAMES = { USD: "US dollar", EUR: "Euro", CAD: "Canadian dollar", JPY: "Japanese yen", GBP: "Pound sterling", CHF: "Swiss franc",
                 AUD: "Australian dollar", NZD: "New Zealand dollar", SEK: "Swedish krona", NOK: "Norwegian krone", HKD: "Hong Kong dollar",
                 SGD: "Singapore dollar", CNY: "Chinese yuan", INR: "Indian rupee", MXN: "Mexican peso", BRL: "Brazilian real" };
-  function option(c) { var o = document.createElement("option"); o.value = c; o.textContent = c + (NAMES[c] ? " · " + NAMES[c] : ""); return o; }
+  function option(c, group) { return { value: c, label: c + (NAMES[c] ? " · " + NAMES[c] : ""), group: group || "" }; }
+  /** A header picker's drishti-inputs Select (the <drishti-select> element's component). */
+  function picker(sel) { return $(sel).component; }
 
   /** The header's Reporting currency: the listed currencies and "More…", which adds every other currency with FX on the date. */
   function loadPicker(more) {
-    var sel = $("[data-vx-ccy]");
+    var sel = picker("[data-vx-ccy]");
     api("currencies", {}).then(function (d) {
-      sel.textContent = "";
-      var listed = d.listed || ["USD"];
-      listed.forEach(function (c) { sel.appendChild(option(c)); });
+      var listed = d.listed || ["USD"], list = listed.map(function (c) { return option(c); });
       var others = (d.available || []).filter(function (c) { return listed.indexOf(c) < 0; });
       if (more || listed.indexOf(S.ccy) < 0) {
-        var g = document.createElement("optgroup");
-        g.label = "More currencies with FX on " + d.businessDate;
-        others.forEach(function (c) { g.appendChild(option(c)); });
-        if (others.indexOf(S.ccy) < 0 && listed.indexOf(S.ccy) < 0) g.appendChild(option(S.ccy));
-        if (g.children.length) sel.appendChild(g);
+        var g = "More currencies with FX on " + d.businessDate;
+        others.forEach(function (c) { list.push(option(c, g)); });
+        if (others.indexOf(S.ccy) < 0 && listed.indexOf(S.ccy) < 0) list.push(option(S.ccy, g));
       } else if (others.length) {
-        var m = document.createElement("option");
-        m.value = "__more";
-        m.textContent = "More…";
-        sel.appendChild(m);
+        list.push({ value: "__more", label: "More…", detail: others.length + " more with FX" });
       }
-      sel.value = S.ccy;
+      sel.setOptions(list, S.ccy);
       root.dataset.ccyReady = "true";
-    }).catch(function () { sel.value = S.ccy; });
+    }).catch(function () { sel.setValue(S.ccy); });
   }
 
   /** The whole page in another reporting currency: kept for the session, put in the link and the command, every panel reloaded. */
@@ -857,9 +852,9 @@
     var u = new URL(location.href);
     if (c !== "USD") u.searchParams.set("ccy", c); else u.searchParams.delete("ccy");
     history.replaceState({ scope: S.scope, ccy: c }, "", u.toString());
-    var sel = $("[data-vx-ccy]");
-    if (![].some.call(sel.options, function (o) { return o.value === c; })) sel.appendChild(option(c));
-    sel.value = c;
+    var sel = picker("[data-vx-ccy]");
+    if (!sel.options.some(function (o) { return o.value === c; })) sel.setOptions(sel.options.concat([option(c)]), c);
+    else sel.setValue(c);
     S.children = {};
     S.tree = null;
     loadTree();
@@ -869,24 +864,15 @@
   // ---------------------------------------------------------------------------------------------------------------- the lens (2.9.7)
   function lensState() { return { h: S.h, m: S.m, q: S.q, esq: S.esq, set: S.set }; }
 
-  function confOption(f, isDefault) {
-    var o = document.createElement("option");
-    o.value = isDefault ? "" : String(f);
-    o.textContent = pctWord(f) + "%" + (isDefault ? " · default" : "");
-    o.dataset.f = String(f);
-    return o;
-  }
+  function confOption(f, isDefault) { return { value: isDefault ? "" : String(f), label: pctWord(f) + "%" + (isDefault ? " · default" : "") }; }
 
   /** The Confidence and ES selects from the engine's configured lists (/status: confidences, esConfidences), the defaults marked. */
   function loadLensPicker() {
     api("status", {}).then(function (st) {
       S.lensStatus = st;
       [["[data-vx-conf]", st.confidences || [], st.confidence, "q"], ["[data-vx-esconf]", st.esConfidences || [], st.esConfidence, "esq"]].forEach(function (x) {
-        var sel = $(x[0]);
-        sel.textContent = "";
-        x[1].forEach(function (f) { sel.appendChild(confOption(f, Math.abs(f - x[2]) < 1e-9)); });
         if (S[x[3]] && Math.abs(Number(S[x[3]]) - x[2]) < 1e-9) S[x[3]] = "";      // the default named: kept as the default
-        sel.value = S[x[3]] || "";
+        picker(x[0]).setOptions(x[1].map(function (f) { return confOption(f, Math.abs(f - x[2]) < 1e-9); }), S[x[3]] || "");
       });
       root.dataset.lensReady = "true";
     }).catch(function () { /* the selects keep their one option */ });
@@ -916,17 +902,18 @@
     select(S.scope, { noPush: true });
     document.dispatchEvent(new CustomEvent("drishti:var-lens", { detail: lensState() }));
   }
-  $("[data-vx-horizon]").addEventListener("change", function (ev) {
-    var v = ev.target.value.split(":");
+  // the header's pickers are <drishti-select>s (drishti-inputs): drishti:change carries the value picked
+  $("[data-vx-horizon]").addEventListener("drishti:change", function (ev) {
+    var v = String(ev.detail.value).split(":");
     setLens({ h: v[0] === "10d" ? "10d" : "", m: v[1] || "" });
   });
-  $("[data-vx-conf]").addEventListener("change", function (ev) { setLens({ q: ev.target.value }); });
-  $("[data-vx-scenarios]").addEventListener("change", function (ev) { setLens({ set: ev.target.value === "stressed" ? "stressed" : "" }); });
-  $("[data-vx-esconf]").addEventListener("change", function (ev) { setLens({ esq: ev.target.value }); });
+  $("[data-vx-conf]").addEventListener("drishti:change", function (ev) { setLens({ q: ev.detail.value }); });
+  $("[data-vx-scenarios]").addEventListener("drishti:change", function (ev) { setLens({ set: ev.detail.value === "stressed" ? "stressed" : "" }); });
+  $("[data-vx-esconf]").addEventListener("drishti:change", function (ev) { setLens({ esq: ev.detail.value }); });
 
-  $("[data-vx-ccy]").addEventListener("change", function (ev) {
-    var v = ev.target.value;
-    if (v === "__more") { ev.target.value = S.ccy; loadPicker(true); setTimeout(function () { ev.target.focus(); }, 0); return; }
+  $("[data-vx-ccy]").addEventListener("drishti:change", function (ev) {
+    var v = ev.detail.value, sel = picker("[data-vx-ccy]");
+    if (v === "__more") { sel.setValue(S.ccy); loadPicker(true); sel.focus(); return; }
     setCcy(v);
   });
 
@@ -968,22 +955,12 @@
 
   /** The hierarchy selector from the date's hierarchies (2.9.5: every configured one, by its title), the current one chosen. */
   function fillHierarchies(d) {
-    var sel = $("[data-vx-hierarchy]");
+    var sel = picker("[data-vx-hierarchy]");
     var info = d.hierarchyInfo || (d.hierarchies || []).map(function (id) { return { id: id, title: id }; });
     if (!info.length) return;
-    var have = Array.prototype.map.call(sel.options, function (o) { return o.value + "|" + o.textContent; }).join(",");
-    var want = info.map(function (x) { return x.id + "|" + (x.title || x.id) + (x.skipped ? " (not available)" : ""); }).join(",");
-    if (have !== want) {
-      sel.textContent = "";
-      info.forEach(function (x) {
-        var o = document.createElement("option");
-        o.value = x.id;
-        o.textContent = (x.title || x.id) + (x.skipped ? " (not available)" : "");
-        if (x.skipped) { o.disabled = true; o.title = x.note || ""; }   // 2.9.5: skipped on this date (its column not in the data), said why
-        sel.appendChild(o);
-      });
-    }
-    sel.value = d.hierarchy || S.hierarchy;
+    // 2.9.5: a hierarchy skipped on this date (its column not in the data) is shown disabled, with why
+    sel.setOptions(info.map(function (x) { return { value: x.id, label: (x.title || x.id) + (x.skipped ? " (not available)" : ""), disabled: !!x.skipped, detail: x.skipped ? x.note || "" : "" }; }),
+      d.hierarchy || S.hierarchy);
   }
 
   /** The hierarchy shown, kept in the page's link (hierarchy=LL). */
@@ -1228,7 +1205,7 @@
     api("scope/path", { scope: S.scope, page: S.page }).then(function (d) { pathRows(d, true); });
   });
   $("[data-vx-hierarchy]").value = S.hierarchy;
-  $("[data-vx-hierarchy]").addEventListener("change", function (ev) { setHierarchy(ev.target.value); loadTree(); });
+  $("[data-vx-hierarchy]").addEventListener("drishti:change", function (ev) { setHierarchy(ev.detail.value); loadTree(); });
   $("[data-vx-capture]").addEventListener("click", function () { doCapture($("[data-vx-cap-note]")); });
 
   function csvOfPath(ev) {

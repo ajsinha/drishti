@@ -135,6 +135,18 @@
   adapter maps `treeData` with `rowModelType: 'serverSide'`, `isServerSideGroup` and `getServerSideGroupKey` (no longer reported as
   unsupported); the adapter harness's `?mode=server-tree` and the gallery's "Server-side tree data" demo show it. Tests:
   `tests/elements/tree.test.mjs`, `ag-adapter.test.mjs`, `test_elements_grid_browser.py`.
+- **A single-choice select in drishti-inputs, and the VaR and exposure screens' pickers on it** (ELEMENTS.md 8.2 and 12.2). `Select`,
+  `<drishti-select>` (`drishti_select.js`): the WAI-ARIA select-only combobox over the library's one listbox and popover (groups,
+  disabled options); Down, Up, Enter, Space, Alt+Down open, Home and End, Page Up and Down, type-ahead, Enter, Space or Alt+Up pick,
+  Escape and Tab close without picking; a long list (more than 8, or `search: true`) has a search field on top; in markup its options
+  are `<option>` and `<optgroup>` children; `name` makes a hidden input for a plain form; `setOptions`, `setDisabled`, `drishti:change`
+  `{value, option}`. Every native select of the VaR family and the exposure screens is now one: the VaR explorer's currency (its "More…"
+  group), scenarios, horizon, VaR and ES confidence and hierarchy (a hierarchy skipped on the date disabled, with why), the basket
+  sheet's saved baskets (searchable, asked when opened), the playground's horizon, confidences, currency and workbook size (a refused
+  size disabled with its reason), the stress window's hierarchy and window, the period statistics' measure, and the exposure explorer's
+  pre-deal form (netting set, candidate, method, whose figures). `terminal/_risk_elements.html` loads drishti-inputs; the gallery has a
+  Select demo; the harness and `test_elements_inputs_browser.py` test it by keyboard, type-ahead, search and ARIA; the screens' browser
+  tests pick through it (`tests/select_helpers.py`).
 
 - **The demo lake's layout, the owner's decision** (`config/lakes/demo.yaml` and its jar copy; DATA_LAKE_GUIDE.md section 2): `risk.scenario-pv`
   partitioned by `SCENARIO_SET_ID, GRAIN` after the business date, sorted by `LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, TRADE_ID`, zstd

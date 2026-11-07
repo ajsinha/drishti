@@ -7078,6 +7078,99 @@ Stops the type-ahead and takes the combobox out.
 
 Returns `void`.
 
+### drishti_select.js
+
+#### class `Select`
+
+A single-choice select with keyboard, type-ahead and search. Events: change {value, option}, open, close.
+
+##### `new Select(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `options` | `SelectOptions` |  |
+
+##### `Select.open(at)`
+
+Opens the list (on the picked option, or the first).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[at]` | `number` | the option to make active (an index of the list drawn) |
+
+Returns `void`.
+
+##### `Select.close(refocus)`
+
+Closes the list.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[refocus]` | `boolean` | put the focus back on the control |
+
+Returns `void`.
+
+##### `Select.pick(it)`
+
+Picks an option (a disabled one is refused).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `it` | `{value: *, label: string}` |  |
+
+Returns `void`.
+
+##### `Select.getValue()`
+
+The value picked, or null.
+
+Returns `*`.
+
+##### `Select.getOption()`
+
+The option picked ({value, label, detail, group, disabled}), or null (nothing picked, or a value no option has).
+
+Returns `?Object`.
+
+##### `Select.setValue(v, emit)`
+
+Sets the value: an option's value (the option's own value is kept: "0.99" picks the option 0.99), or one no option has (shown as it is).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+| `[emit]` | `boolean` | emit change when it changed |
+
+Returns `void`.
+
+##### `Select.setOptions(list, value)`
+
+Replaces the options; the value is kept when an option still has it, else value (when given), else the first enabled option.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `list` | `Array` | as the options option |
+| `[value]` | `*` |  |
+
+Returns `void`.
+
+##### `Select.setDisabled(off)`
+
+Turns the select on or off.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `off` | `boolean` |  |
+
+Returns `void`.
+
+##### `Select.focus()`
+
+Puts the keyboard focus on the control.
+
+Returns `void`.
+
 ### drishti_schema.js
 
 #### `words(key)`
@@ -7986,6 +8079,20 @@ A field of a form schema.
 | `[options]` | `Object` | the widget's options (a combobox's source, a tree's nodes, a code editor's mode) |
 | `[readOnly]` | `boolean` |  |
 | `[placeholder]` | `string` |  |
+
+#### `SelectOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[options]` | `Array&lt;(string\|number\|{value: *, label: string, detail: string, group: string, disabled: boolean})&gt;` | default: the host's &lt;option&gt; and &lt;optgroup&gt; children |
+| `[value]` | `*` | the value picked (default: the option marked selected, else the first enabled option; null with placeholder) |
+| `[label]` | `string` | the control's accessible name |
+| `[placeholder]` | `string` | the words while nothing is picked (and nothing is picked at first) |
+| `[search='auto']` | `(boolean\|string)` | the search field in the open list: true, false, or auto (more than searchMin options) |
+| `[searchMin=8]` | `number` |  |
+| `[name]` | `string` | a hidden input of this name carries the value in a plain form |
+| `[disabled=false]` | `boolean` |  |
+| `[renderOption]` | `function(Object, HTMLElement): void` | draws an option's content |
 
 #### `TreePickerOptions` : `Object`
 

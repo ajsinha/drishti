@@ -39,9 +39,9 @@ PAGE_INVENTORY = [
     # the status strip
     ("the command echo", "data-vx-cmd"), ("the business date", "data-vx-date"), ("the scenario set", "data-vx-set"),
     ("the data version", "data-vx-version"), ("the intraday badge", "data-vx-intraday"), ("the paint timing", "data-vx-timing"),
-    ("F1 help: the VaR guide", 'href="/help/context/var"'), ("the reporting currency", 'aria-label="Reporting currency"'),
+    ("F1 help: the VaR guide", 'href="/help/context/var"'), ("the reporting currency", ' label="Reporting currency"'),
     ("Normal or stressed", "data-vx-scenarios"), ("the horizon", "data-vx-horizon"), ("the VaR confidence", "data-vx-conf"),
-    ("the ES confidence", "data-vx-esconf"), ("the ES confidence's label", 'aria-label="ES confidence"'),
+    ("the ES confidence", "data-vx-esconf"), ("the ES confidence's label", ' label="ES confidence"'),
     # notices and the basket's sheet (collapsed until asked)
     ("the notice", "data-vx-notice"), ("the notices", "data-vx-notices"), ("the basket's sheet", "data-vx-basket hidden"),
     ("the sheet's opener (Alt+B)", 'aria-keyshortcuts="Alt+B"'), ("the basket's count", "data-basket-count"),

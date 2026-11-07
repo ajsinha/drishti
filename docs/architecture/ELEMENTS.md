@@ -159,7 +159,8 @@ the formats and JSON calls of `drishti_bi-lib.js`, and the dialogs of `drishti_b
 
 ### 4.2 drishti-inputs
 
-`<drishti-multiselect>`, `<drishti-date>` (date, range, relative ranges, business dates), `<drishti-people>`, `<drishti-form>` (fields
+`<drishti-select>` (one value from a list: keyboard, type-ahead, search on a long list), `<drishti-multiselect>`, `<drishti-date>` (date,
+range, relative ranges, business dates), `<drishti-people>`, `<drishti-form>` (fields
 from a JSON schema, rules evaluated as people type, drafts), `<drishti-filter-bar>`, `<drishti-code>` (CodeMirror with YAML, Python,
 SQL and Rachana modes, completion from a schema), `<drishti-formula>` (Rachana with completion and the red part of a formula that does
 not read).
@@ -519,6 +520,13 @@ library with its module: an unlicensed module's library is not served, its kinds
     all (the matching ones) and Clear, a limit, Backspace takes the last chip; thousands of options (the best 300 drawn, "N more").
   - **`Combobox`, `<drishti-combobox>`** over `TypeAhead`: a list or a server search, debounced, a minimum length, the request it
     replaces aborted, a late answer dropped, recent answers cached, the server's error in words, free text when allowed.
+  - **`Select`, `<drishti-select>`** (`drishti_select.js`): one value from a list, the WAI-ARIA select-only combobox over the same
+    `Listbox` and `Popover` as the combobox and the multi-select (groups, disabled options, the cap). On the control: Down, Up, Enter,
+    Space or Alt+Down open; Home and End open on the first or last; a printable key types ahead. In the list: the arrows, Page Up and
+    Down, Home and End; Enter, Space or Alt+Up pick; Escape and Tab close without picking. A long list (more than `searchMin`, 8, or
+    `search: true`) has a search field on top that holds the focus. In markup its options may be `<option>` and `<optgroup>` children
+    (`selected` marks the value), so a template swaps `<select>` for `<drishti-select>`; `name` makes a hidden input for a plain form;
+    `setOptions(list, value)` refills it, `setDisabled`, `drishti:change` with `{value, option}` (a value set by code emits nothing).
   - **`Form`, `<drishti-form>`** from a JSON-schema-like description (`drishti_schema.js`, pure): string, number and integer (read
     loosely, shown formatted), boolean, date, date range, enum (radios up to three, else a select), arrays of an enum (the multi-select),
     arrays of objects (repeatable groups: add, remove, move), objects (fieldsets), a combobox, a tree, the code editor; conditions
@@ -1019,8 +1027,15 @@ cells, the same way before and after the move; `tests/test_var_family_figures_br
 `DRISHTI_FIGURES_BASELINE`) captures sixteen screens and tabs on the market-risk demo data and compares them with a capture of the code
 before the move.
 
-**Open.** The exposure scope tree is still hand-built (not tree data yet); the pre-deal form, the hierarchy, horizon and confidence pickers stay native
-selects (drishti-inputs has no single-choice select); the scenario matrix's date headings lose their hover note (in the column
+**Pickers.** Every picker of the VaR family and the exposure screens is drishti-inputs' `Select` (`<drishti-select>`, section 8.2): the
+VaR explorer's reporting currency (its "More…" group), scenarios, horizon, VaR and ES confidence and hierarchy (a hierarchy skipped on the
+date disabled with why), the basket sheet's saved baskets (asked when the list opens, searchable), the playground's horizon, confidences,
+currency and workbook size (a refused size disabled with its reason), the stress window's hierarchy and window, the period statistics'
+measure (a plain form: the hidden input), and the exposure explorer's pre-deal form (the netting set, the candidate, the method, whose
+figures). `terminal/_risk_elements.html` loads drishti-inputs. FRTB-SA's and SIMM's own choice selects (side, by, compare) and the
+library's own two (a form's enum of more than three, the grid's select editor) are still native.
+
+**Open.** The exposure scope tree is still hand-built (not tree data yet); the scenario matrix's date headings lose their hover note (in the column
 description instead); the screens' scripts move into the banking plugin with the module platform (section 8).
 
 ## 13. Risks
@@ -1063,6 +1078,8 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [x] Vega retired (O1): Vega-Lite visuals translated to the spec and drawn by drishti-chart (8.3), unsupported features refused in words, Python visuals may return a spec (`output: drishti-chart`), the vendored Vega deleted; a guard (`tests/test_bi_wave_c.py`) keeps every reference to the library out
 - [x] The phone behaviour of the grid and the pivot (O2); the standalone Excel writer (O4)
 - [x] drishti-inputs: pickers, forms with four eyes, the filter bar, the code editor (8.2); the formula input and people picker as their screens move
+- [x] drishti-inputs' single-choice `Select` (`<drishti-select>`, 8.2); the VaR family's and the exposure screens' native selects replaced (12.2: hierarchy, horizon, confidences, currency, the pre-deal form)
+- [ ] The library's own native selects (a form's enum select, the grid's select editor) and FRTB-SA's and SIMM's choice selects on `Select`
 - [x] drishti-renderer 2.0.0 on the libraries (8.5; the console's controls, funnels and Zoom still its scripts until their screens move)
 - [x] drishti-insight 0.1.0 (8.8): the one Explain, the one search box, the Approvals queue and the workbook export, in the manifest, so
   packing and the gallery include it

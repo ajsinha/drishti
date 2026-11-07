@@ -108,6 +108,21 @@
   }));
 
   demos.push(inputDemo({
+    id: 'select', title: 'Select', about: 'drishti_select.js', types: ['SelectOptions'],
+    summary: 'One value from a list (the ARIA select-only combobox): arrows, Home and End, Page keys, type-ahead, groups, disabled options; a search on top of a long list.',
+    values: { label: 'Reporting currency', search: 'auto' },
+    examples: [{ title: 'Currencies, G10 and emerging (searchable)', values: {} }, { title: 'Horizon, three choices', values: { label: 'Horizon', short: true } },
+      { title: 'Nothing picked yet', values: { placeholder: 'Pick a currency' } }],
+    build: function (values, ctx) {
+      const short = values.short;
+      const options = ctx.memo(short ? 'horizons' : 'ccys-one', () => (short ? [{ value: '1d', label: '1-day' }, { value: '10d:sqrt10', label: '10-day (√10)' }, { value: '10d:sum', label: '10-day (sum)' }]
+        : CCYS.map((c, i) => ({ value: c, label: c, group: i < 9 ? 'G10' : 'Emerging', disabled: c === 'RUB', detail: c === 'RUB' ? 'no FX on the date' : '' }))));
+      const v = values.placeholder ? {} : { value: short ? '1d' : 'USD' };
+      return build('drishti-select', 'Select', Object.assign({ options: options }, v, typed(values, ['label', 'placeholder', 'search', 'searchMin', 'disabled'])), new Map([[options, 'options']]));
+    }
+  }));
+
+  demos.push(inputDemo({
     id: 'form', title: 'Form', about: 'drishti_form.js', types: ['FormOptions'],
     summary: 'A form from a schema: validation in words, conditional fields, arrays, dates by a calendar, the server\'s checks, a four-eyes submit to a second person.',
     values: { submitLabel: 'Propose', layout: 'columns' },

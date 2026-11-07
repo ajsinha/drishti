@@ -128,10 +128,11 @@
       el.mode.appendChild(b);
     });
     right.appendChild(el.mode);
-    el.pick = h("select", "vb-input vb-pick");
-    el.pick.setAttribute("aria-label", "Open a saved basket");
-    el.pick.dataset.vbPick = "";
-    right.appendChild(el.pick);
+    var pickEl = h("drishti-select", "vb-pick");          // drishti-inputs' Select (search, keyboard, ARIA); its list asked from the server when it opens
+    pickEl.dataset.vbPick = "";
+    pickEl.options = { label: "Open a saved basket", placeholder: "Open a saved basket ▾", options: [], search: true };
+    right.appendChild(pickEl);
+    el.pick = pickEl.component;
     el.close = btn("", "✕", "Close the sheet (Alt+B opens it again)");
     el.close.dataset.vbClose = "";
     right.appendChild(el.close);
@@ -271,8 +272,8 @@
       changed(false);
     });
     el.xlsx.addEventListener("click", download);
-    el.pick.addEventListener("focus", listSaved);
-    el.pick.addEventListener("change", function () { var v = el.pick.value; el.pick.value = ""; if (v) edit(v); });
+    el.pick.on("open", listSaved);
+    el.pick.on("change", function (e) { var v = e.value; el.pick.setValue(null); if (v) edit(v); });
     el.wifRun.addEventListener("click", function () {
       var id = el.wifTrade.value.trim().replace(/^TRD:/i, ""), f = Number(el.wifFactor.value);
       if (!id) { el.wifTrade.focus(); el.wifOut.textContent = "Name a booked trade (or a scope) to copy."; return; }
@@ -695,17 +696,7 @@
   /** The baskets the viewer may open, for "Open a saved basket ▾" (asked when the list is opened). */
   function listSaved() {
     get("baskets?").then(function (bs) {
-      var cur = el.pick.value;
-      el.pick.textContent = "";
-      var o = h("option", null, "Open a saved basket ▾");
-      o.value = "";
-      el.pick.appendChild(o);
-      bs.forEach(function (b) {
-        var x = h("option", null, b.name + " · " + b.id + (b.fromSheet ? "" : " (scope)"));
-        x.value = "BASKET:" + b.id;
-        el.pick.appendChild(x);
-      });
-      el.pick.value = cur;
+      el.pick.setOptions(bs.map(function (b) { return { value: "BASKET:" + b.id, label: b.name + " · " + b.id + (b.fromSheet ? "" : " (scope)") }; }));
     }).catch(function () { /* none listed */ });
   }
 
