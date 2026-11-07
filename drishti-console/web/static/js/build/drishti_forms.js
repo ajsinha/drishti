@@ -61,12 +61,12 @@
     if (kind === 'enum' || (enums[leaf] && (kind === 'string' || kind === 'text'))) {
       var opts = (s['enum'] || enums[leaf]).map(String);
       if (value != null && value !== '' && opts.indexOf(String(value)) < 0) { opts = opts.concat([String(value)]); }
-      return { field: { type: 'string', enum: opts, widget: 'select', emptyLabel: '(none)' }, into: function (v) { return v == null || v === '' ? undefined : String(v); },
+      return { field: { type: 'string', enum: opts, widget: 'select', emptyLabel: '(none)', hook: { 'aria-label': name } }, into: function (v) { return v == null || v === '' ? undefined : String(v); },
         out: function (v) { return v === undefined || v === '' ? null : v; } };
     }
-    if (kind === 'boolean') { return { field: { type: 'boolean', widget: 'switch' }, into: function (v) { return v === true; }, out: function (v) { return v ? true : null; } }; }
+    if (kind === 'boolean') { return { field: { type: 'boolean', widget: 'switch', hook: { 'aria-label': name } }, into: function (v) { return v === true; }, out: function (v) { return v ? true : null; } }; }
     if (kind === 'integer') {
-      return { field: { type: 'integer', minimum: s.minimum == null ? undefined : s.minimum, maximum: s.maximum == null ? undefined : s.maximum, lazy: true },
+      return { field: { type: 'integer', minimum: s.minimum == null ? undefined : s.minimum, maximum: s.maximum == null ? undefined : s.maximum, lazy: true, hook: { 'aria-label': name } },
         into: function (v) { return typeof v === 'number' ? v : undefined; },
         out: function (v) {
           if (v === undefined || v === null) { return null; }
@@ -76,7 +76,7 @@
     }
     if (kind === 'count-or-const') {
       var c = (s.oneOf.filter(function (o) { return o['const'] !== undefined; })[0] || {})['const'], min = (s.oneOf.filter(function (o) { return o.type === 'integer'; })[0] || {}).minimum;
-      return { field: { type: 'object', properties: { n: { type: 'integer', title: 'How many', minimum: min != null ? min : 1, lazy: true, when: { field: 'all', falsy: true } }, all: { type: 'boolean', title: String(c) } } },
+      return { field: { type: 'object', properties: { n: { type: 'integer', title: leaf, hook: { 'aria-label': name }, minimum: min != null ? min : 1, lazy: true, when: { field: 'all', falsy: true } }, all: { type: 'boolean', title: String(c) } } },
         into: function (v) { return v === c ? { all: true } : { all: false, n: typeof v === 'number' ? v : undefined }; },
         out: function (v) { v = v || {}; return v.all ? c : (typeof v.n === 'number' && !isNaN(v.n) ? v.n : null); } };
     }
@@ -110,7 +110,7 @@
         into: function (v) { return { on: v === true || !!(v && typeof v === 'object'), settings: settings.into(v && typeof v === 'object' ? v : {}) }; },
         out: function (v) { v = v || {}; if (!v.on) { return null; } var o = settings.out(v.settings); return o === SKIP ? SKIP : (o || true); } };
     }
-    return { field: { type: 'string', lazy: true }, into: function (v) { return v == null ? undefined : String(v); }, out: function (v) { return v === undefined || v === '' ? null : v; } };
+    return { field: { type: 'string', lazy: true, hook: { 'aria-label': name } }, into: function (v) { return v == null ? undefined : String(v); }, out: function (v) { return v === undefined || v === '' ? null : v; } };
   }
 
   /** The control of one option: a live drishti-inputs Form with one field, the option. */
@@ -118,7 +118,7 @@
     var I = window.Drishti.elements && window.Drishti.elements.inputs;
     var conv = toField(s, value, name, enums), host = el('div', 'wb-form', null, { 'data-wb-form': name });
     if (!I) { return host; }
-    var form = new I.Form(host, { live: true, label: name, schema: { type: 'object', properties: { v: Object.assign({}, conv.field, { title: name }) } }, value: { v: conv.into(value) } });
+    var form = new I.Form(host, { live: true, schema: { type: 'object', properties: { v: Object.assign({}, conv.field, { title: name }) } }, value: { v: conv.into(value) } });
     form.on('change', function () { var out = conv.out(form.getField('v')); if (out !== SKIP) { onChange(out); } });
     return host;
   }

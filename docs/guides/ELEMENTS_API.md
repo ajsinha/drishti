@@ -24,7 +24,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 |---|---|---|
 | [drishti-core](#drishti-core) | 1.1.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines |
 | [drishti-grid](#drishti-grid) | 0.4.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
-| [drishti-inputs](#drishti-inputs) | 0.2.0 | Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema with four eyes, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
+| [drishti-inputs](#drishti-inputs) | 0.3.0 | Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema (live or embedded, steps, named fields, hooks, custom widgets, time, date-and-time and money) with four eyes, the time and date-and-time pickers, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
 | [drishti-designer](#drishti-designer) | 0.1.0 | The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review) |
 | [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
 | [drishti-chart](#drishti-chart) | 0.2.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
@@ -6015,7 +6015,7 @@ A tree node.
 
 ## drishti-inputs
 
-Version 0.2.0. Bundle `static/elements/drishti-inputs/drishti_inputs.js`, global `Drishti.elements.inputs`; requires drishti-core.
+Version 0.3.0. Bundle `static/elements/drishti-inputs/drishti_inputs.js`, global `Drishti.elements.inputs`; requires drishti-core.
 
 ### drishti_calendar.js
 
@@ -7517,6 +7517,26 @@ Problems from elsewhere (a server's answer), by path.
 
 Returns `void`.
 
+##### `Form.setNotes(notes)`
+
+Notes by path that do not stop a submit (a warning: "above the desk limit"), shown where a problem would be when there is none.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `notes` | `Object&lt;string, string&gt;` |  |
+
+Returns `void`.
+
+##### `Form.showErrors(errors)`
+
+Problems from elsewhere shown at once, without marking every field tried (a live check as people type).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `errors` | `Object&lt;string, string&gt;` |  |
+
+Returns `void`.
+
 ### drishti_form-fields.js
 
 #### `defineWidget(name, factory)`
@@ -8401,6 +8421,7 @@ A field of a form schema.
 | `[lazy]` | `boolean` | text and numbers: the value changes when the field is left or Enter is pressed, not at each key |
 | `[noLabel]` | `boolean` | a custom widget that draws its own label |
 | `[addLabel]` | `string` | an array of objects: the words of its Add button |
+| `[parseMessage]` | `string` | the words when typed text does not read as the field's type (default: the form's own) |
 
 #### `TimePickerOptions` : `Object`
 

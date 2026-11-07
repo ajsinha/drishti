@@ -96,6 +96,16 @@
   only while its modules are on.
 ## 2.9.11.e (unreleased)
 
+- **The forms on drishti-inputs' `Form`** ([ELEMENTS.md 8.2, "The forms on Form"](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+  the query form (`FORM <pack>`: the server sends its schema, the fields are a `Form` embedded in the page's GET form and the address is
+  unchanged), the subscription's When, the table editor's name, rows and look-up dialog, BI's Format pane, the Build inspector's
+  structured options and the record forms' fields (beside the table and in the drawer's steps). **drishti-inputs 0.3.0**: `Form` gains
+  live and embedded modes, steps, named fields for server forms, hooks (`hook`, `optionHook`, `submitHook`, a field's `data-path`),
+  custom widgets (`defineWidget`), the types `time`, `datetime` and `money`, a row of checkboxes, dependent lists, `setField`,
+  `setNotes`, `showErrors`; the new `TimePicker` and `DateTimePicker`, and the native time and date-time fields upgraded in place (the
+  top bar's Known at, compare, the record forms). The column filter's dates and BI's date parameters are the date picker. Deleted: the
+  query form's server-drawn fields, its dependents and long-list search, the record forms' field boxes, messages and currency painter,
+  the inspector's hand-made lists, objects and number checks, the Format pane's hand-made controls, and their CSS.
 - **The console's pickers on drishti-inputs** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
   the as-of date in the top bar is a business-date picker keyed by the server's holidays (T-1, month-end, a weekend or holiday refused
   in words); every date field of the terminal, BI and Admin pages (and the ones scripts make: BI's statement, designer and slicer
