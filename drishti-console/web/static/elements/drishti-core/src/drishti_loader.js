@@ -134,11 +134,13 @@ export function loadScript(src) {
   if (scripts[plain]) { return scripts[plain]; }
   const doc = root().document;
   if (!doc) { return Promise.reject(new Error('loadScript: there is no page to load ' + src + ' into')); }
-  if (Array.prototype.some.call(doc.querySelectorAll('script[src]'), (x) => (x.getAttribute('src') || '').split('?')[0] === plain)) { return (scripts[plain] = Promise.resolve()); }
+  // a script the page itself carries has run (classic scripts block); one this loader added has run once it says so
+  if (Array.prototype.some.call(doc.scripts, (s) => (s.getAttribute('src') || '').split('?')[0] === plain && (s.dataset.loaded === '1' || !s.hasAttribute('data-drishti-script')))) { return Promise.resolve(); }
   scripts[plain] = new Promise((resolve, reject) => {
     const s = doc.createElement('script');
     s.src = src;
     s.async = false;
+    s.setAttribute('data-drishti-script', '');
     s.onload = () => { s.dataset.loaded = '1'; resolve(); };
     s.onerror = () => { delete scripts[plain]; reject(new Error('Could not load ' + src)); };
     doc.head.appendChild(s);

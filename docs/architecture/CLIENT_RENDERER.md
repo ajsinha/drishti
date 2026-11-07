@@ -16,7 +16,9 @@
 # The client-side renderer: one renderer, in the browser
 
 **Status: built; one page renderer.** The console's pages are drawn by the server (Jinja, the macros): that is the one page renderer.
-This library draws **embeds** (Elements 2.x, the embed API v2) and **`<drishti-report>`** only, in **one version (1.2.0)**; the
+This library draws **embeds** (Elements 2.x, the embed API v2) and **`<drishti-report>`** only. **Renderer 2.0.0** (release 2.9.11.e) is
+**drishti-renderer, Drishti Elements library 7**: the same public API, every panel drawn with the shared libraries (section 3, and
+[ELEMENTS.md](ELEMENTS.md) for the libraries); **1.2.0 stays served, frozen and unchanged, for the embedders that pinned it**. The
 console's own client-drawn mode (a client mode, phase 2's `drishti_view-render.js`) and the versions 0.1.0 to 1.1.0 are retired. Both
 phases are built. The decision:
 [ADR-022](adr/022-one-renderer-in-the-browser.md), which supersedes the rendering part of
@@ -227,15 +229,42 @@ first hit of a common kind, in your lens), names the lens you are inside, and sa
 
 ## 3. The library's shape
 
+**2.0.0: the renderer is an Elements library** (the product owner's rule, 2026-11-07: no renderer-private grid, chart, format, live or
+input code; the console and the renderer draw panels with the same components, so one component test covers both). Its modules are
+`static/elements/drishti-renderer/src/` (ES modules under 530 lines, typed JSDoc, the reference generated into
+[ELEMENTS_API.md](../guides/ELEMENTS_API.md)), bundled by `tools/elements/build.py` as `drishti_renderer.js` for classic pages; hosts
+import the **public entry** `static/render/2.0.0/drishti-render.js`, which says from its own address where the libraries, the console's
+static files and the sheet are (so the same files work under `/embed/v2/render/2.0.0/` for other origins).
+
 | Rule | Implementation |
 |---|---|
-| Plain ES modules, no build toolchain | `drishti-render.js` imports `m/*.js`; served as they are, readable, no bundler, no transpiler |
-| One entry plus CSS | `drishti-render.js`, `drishti-render.css` (generated, section 5), `drishti-render.d.ts`, `integrity.json` |
-| Vendored dependencies only | ECharts 6.1.0 and ECharts GL (`static/vendor/echarts*`), the Natural Earth shapes through `static/js/drishti_geomap.js`, Bootstrap Icons' font; Arrow JS 21.1.0 through the console's `Drishti.fetchTable` where a table is read (section 10) |
-| No CDN, ever | a test reads every file for an outside URL (`test_render_library.py`); the parity suite fails any request off the console's origin |
-| Files under 1,500 lines | the largest module is about 300 lines (2,220 in all) |
+| Plain ES modules, no build toolchain | the entry imports `../../elements/drishti-renderer/src/drishti_index.js`, which imports drishti-core, drishti-grid, drishti-chart and drishti-data by their entries; served as they are |
+| One entry plus CSS | `render/2.0.0/`: `drishti-render.js`, `drishti-elements.js`, `drishti-render.css` (generated, section 5, now with drishti-grid's sheet), `drishti-render.d.ts`, `integrity.json` (which also records the renderer's own modules) |
+| Vendored dependencies only | ECharts and ECharts GL (loaded by the renderer under its Trusted Types policy, drawn only by drishti-chart), the Natural Earth shapes through `static/js/drishti_geomap.js`, Bootstrap Icons' font |
+| No CDN, ever | `test_render_library.py` reads every file of the version and of the renderer's modules; the parity suite fails any request off the console's origin |
+| No code of its own for what a library does | `test_render_library.py` fails an engine call, an `EventSource`, a `toFixed` or `Intl.NumberFormat`, or a table built by the renderer |
 
-**The modules** (version 0.1.0, retired; today `drishti-console/web/static/render/1.2.0/`):
+**What each library draws** (2.0.0):
+
+| Part of a screen | Drawn by | Was (1.2.0, frozen) |
+|---|---|---|
+| tables, trees (`children:`), drills (`levels:`), a table offering Pivot, the pivot kind, every chart's Data table | **drishti-grid**'s document table (`docPivotable`, `docDrill`, `docPivot`, `docPlainTable`; `enhanceDocTables` sorts, filters, pages, opens trees and drills) with the renderer's cells as hooks (`tableHooks`: entity links, tones, row attributes) | `m/tables.js`, part of `m/behave.js` |
+| the nested pivot in `behaviours: 'console'` | **drishti-grid**'s grid with **tree data** (`treeData`, `getDataPath`; every figure the server's text, `clientAggregation` off) | the console's `drishti_pivot-grid.js` and `drishti_tree-rows.js` |
+| every chart (line, area, waterfall, histogram, scatter, candlestick, graph, donut, surface, map) | **drishti-chart**'s panel charts (`PanelCharts`, `panelOption`): the console's options, series for series; the only place an engine is called | `m/charts.js`, `m/draw.js` |
+| the element maker, untrusted-data rules, formats, the API client | **drishti-core** (`h`, `attrAllowed`, `safeUrl`, `roundHalfUp`, `formatNumber`, `formatPythonFloat`, `createClient`) | `m/dom.js`, `m/format.js`, part of `m/net.js` |
+| streams, and Elements' one connection per page | **drishti-data**'s `LiveClient` (Server-Sent Events, or SSE over fetch so the bearer travels; reconnect with back-off, resume from the last id) | `m/net.js`, the connection of `m/elements.js` |
+| About this page | the renderer's drawing from JSON, its source a hook for drishti-insight (`options.insight.about`) | `m/about.js` |
+| the controls, the funnels and Chart any table, Zoom (`behaviours: 'console'`) | still the console's scripts, loaded beside the library, until their screens move onto drishti-inputs and drishti-grid (ELEMENTS.md section 12) | the same, with four more scripts |
+
+**The renderer's own modules** (screen logic only): `drishti_render.js` (the entry: `render`, the `Handle`, `<drishti-screen>`),
+`drishti_screen.js` (paint, patch, stream messages, in-place navigation, events; the panel charts wired), `drishti_view.js` (banners,
+head, panels in their places), `drishti_layout.js` (the Sutra grid), `drishti_kinds.js` (the panel frame, its states, each kind mapped
+onto the libraries), `drishti_cells.js`, `drishti_behave.js` (widths, tabs, row events), `drishti_net.js` (addresses and DRS problems
+over drishti-core's client and drishti-data's live client), `drishti_assets.js`, `drishti_console.js`, `drishti_nested.js`,
+`drishti_about.js`, `drishti_signin.js`, `drishti_embed.js` and `drishti_elements.js` (Elements 2.3), `drishti_dom.js` (drishti-core's
+maker behind the allow-list).
+
+**The 1.x modules** (`static/render/1.2.0/`, frozen; their history is in git):
 
 | Module | What it holds |
 |---|---|
@@ -256,7 +285,8 @@ first hit of a common kind, in your lens), names the lens you are inside, and sa
 | `m/about.js` (1.0.0) | About this page drawn from the explanation's JSON (a port of `_macros/about.html`): the console's drawer body on the pages the library draws, and the library's own side sheet (`about: true`) |
 | `m/elements.js`, `drishti-elements.js` (1.0.0) | Elements 2.0: `<drishti-view>`, `<drishti-panel>`, `<drishti-screen>` on `render()`, the token provider and one live connection per page (section 13) |
 
-**Size.** 0.1.0: JavaScript 135 KB, **49 KB gzip** across 14 modules. 1.0.0: 184 KB, **67 KB gzip** across 19 files with Elements 2.0
+**Size.** 2.0.0: the renderer's own modules 168 KB, **63 KB gzip** (its 15 modules and the version folder's entries); with
+drishti-core, -grid, -chart and -data loaded beside it, which a page using them shares. 0.1.0: JavaScript 135 KB, **49 KB gzip** across 14 modules. 1.0.0: 184 KB, **67 KB gzip** across 19 files with Elements 2.0
 (the renderer alone, without `m/elements.js` and `drishti-elements.js`, about 57 KB gzip); the sheet 149 KB, **27 KB gzip** in both. ECharts (1 MB, 330 KB gzip) is
 loaded only when a screen has a chart, and only once per page; a host page that already has `window.echarts` uses its own.
 
@@ -296,6 +326,7 @@ patch(view, frame); subscribe(view, source);         // the same as functions
 | `viewUrl`, `streamUrl`, `eventSource` | the console's | when the host proxies the console, or needs its own EventSource |
 | `designOn` | `false` | "How this view was built" links its Sutra to the designer (the console sets it by lens: `design_on()`) |
 | `behaviours` (1.0.0) | `'library'` | `'library'`: the library's light ones (sorting, one filter box, paging, trees, drills, tabs); `'console'`: the console's own (per-column funnels, Chart any table, the Pivot tab's grid, the nested-pivot grid, the drill-down, zoom, the controls), loaded and started inside the container; `'host'`: none but the widths, the host page's scripts enhance the DOM (the console's own page) |
+| `insight` (2.0.0) | none | the insight components' hooks (drishti-insight): `{ about(ref, generation) }` answers About this page's JSON from the host's own source instead of `aboutUrl` |
 | `about` (1.0.0) | `false` | an About button in the head and `?`: About this page drawn from JSON in a side sheet inside the container |
 | `navigation: 'follow'` (1.0.0) | | a link is a link: `drishti:navigate` first (cancel it to stay), then the browser follows it, so Ctrl+click and "open in a new tab" work (the console's own page) |
 | `viewUrl`, `aboutUrl`, `recordsUrl`, `panelsUrl` (1.0.0) | the console's | where the view, About, a pivot's rows and a control's panels come from (Elements 2.0 points them at the embed API v2) |
@@ -338,14 +369,17 @@ below 640 px and on coarse pointers). It is adopted as a constructable sheet, so
 ## 6. Formats and tones
 
 The server formats every value a person reads (VIEWMODEL.md, "Formatted text plus a tone"); the renderer formats nothing of the
-data. It computes only what the macros compute, and does it the way Python and Jinja do, so both print the same characters:
+data. It computes only what the macros compute, with drishti-core (2.0.0; 1.2.0's `m/format.js` followed Python, half to even): **the
+server's half-up rounding wins** (decided 2026-11-07), in both renderers: the panel macros round with the console's `half_up` filter
+(`core/half_up.py`, half up on the decimal value) where they used Jinja's `round`, so the console's pages and the library print the same
+characters (a computation at 62.5% now reads 63%, in both):
 
-| What | Rule (`m/format.js`) |
+| What | Rule (2.0.0) |
 |---|---|
-| A bar's width, a gauge's level, a donut's share, a heat bucket, a progress percentage | Python's `round()` (half to even, on the double's exact decimal digits; `pyRound`) |
-| The few raw numbers a chart's Data table prints (candle prices and volumes) | Python's `str(float)`: `74.0`, `1e+17`, `1e-05` (`pyFloat`) |
+| A bar's width, a gauge's level, a donut's share, a heat bucket, a progress percentage | drishti-core's `roundHalfUp` and `formatNumber` (half up on the decimal value); the heat bucket is drishti-grid's `heatBucket` |
+| The few raw numbers a chart's Data table prints (an older server's candles, without `openText`) | Python's `str(float)`: `74.0`, `1e+17`, `1e-05` (drishti-core's `formatPythonFloat`) |
 | A tone | the word becomes the class `t-<tone>`; the nine tones of the contract are drawn, any other word is written as a class the sheet ignores (the macros' behaviour), so the value is untoned |
-| Axis ticks | the console's own (`compact`: 1.75m, 250k, −1.2bn; the line chart keeps its slightly different one) |
+| Axis ticks | drishti-chart's `panelCompact` and `panelLineCompact` on drishti-core's `formatCompact` (1.75m, 250k, −1.2bn; the line chart keeps its slightly different one) |
 
 A finding for the contract: the candlestick's Data table prints raw numbers (`74.0`), the only place a client must format a number
 the server did not. Proposed for the ViewModel's next minor: `openText`, `highText`, ... beside the numbers, as points have `xText`.
@@ -400,7 +434,7 @@ click on a point, a node or a place that names an entity opens it in place.
 | drill-down | `drishti_drill.js` (levels, crumbs, Esc; the address `?dr.<panel>=` and Back) | levels, crumbs, Up and Esc **in place**: the host's address never changes |
 | sorting, filtering, paging | `drishti_tables.js` + `drishti_colfilter.js` (funnels, per-column filters, the chart button, the address) | `'library'`: heading buttons (ascending, descending, the server's order, the console's value rules), one filter box, 25 a page with a pager; **`'console'` (1.0.0): the console's funnels, per-column filters and Chart any table** (the chart dialog opens over the host's page, never a window) |
 | Pivot (a table whose Sutra says `pivot:`) | a link to the pivot screen (`/pivot?source=panel/…`) | both modes: the link; the pivot screen itself is a console screen (every figure the server's pivot engine); a nested `pivot` panel is redrawn by `drishti_pivot-grid.js` in `'console'` mode |
-| nested pivot rows | `drishti_tree-rows.js` redraws them with the Pivot grid | the macro's plain table; **`'console'`: the Pivot grid** (`drishti_tree-rows.js` from `data-pv-tree`) |
+| nested pivot rows | `drishti_tree-rows.js` redraws them with the Pivot grid | the macro's plain table; **`'console'`: drishti-grid's grid with tree data** (2.0.0; 1.x loaded `drishti_tree-rows.js` and the Pivot grid) |
 | the drill's address | `drishti_drill.js` keeps `?dr.<panel>=` and Back | the console's page: the same (`behaviours: 'host'`); another host: `drishti_drill.js` in place, the host's address untouched (`address: false`) |
 | About this page | `about.js` fetches the drawer's HTML | **drawn by the library from JSON** (`?format=json`, `m/about.js`): the console's drawer on its client pages, a side sheet in the container elsewhere |
 | row and bar events (`ev`, `pick`) | `drishti_sutra-wire.js`, `drishti_controls.js` | `drishti:row-click` and `drishti:select`; the host (or phase 2's port of `drishti_sutra-wire.js`) asks the server for the panels that follow |
@@ -610,11 +644,19 @@ it loads (`/static/js/<name>.js` and the embed routes' `/js/<name>.js` answer wi
 
 ## 13. The Elements, versioning and distribution
 
-**Versions.** One folder per version: `drishti-console/web/static/render/<version>/`: **0.1.0** (the preview, unchanged), **1.0.0**
-(phase 2, unchanged) and **1.1.0** (follow-ups: `m/signin.js`, `auth`, the lens in `DRS-4023` fixes, Elements 2.1; the current
-version, which the console's pages import). A released folder is immutable: `integrity.json` holds the SHA-384 (subresource integrity) of every distributed file, and
+**Versions.** One folder per version: `drishti-console/web/static/render/<version>/`. Served today: **2.0.0** (drishti-renderer on the
+Elements libraries, the current version, which the console's pages import; Elements 2.3) and **1.2.0** (frozen, byte for byte, for the
+embedders that pinned it; Elements 2.2); 0.1.0 to 1.1.0 are retired. **Migrating from 1.x to 2.0.0**: change the version in the import
+(`/static/render/2.0.0/drishti-render.js`, or `/embed/v2/render/2/…`); the API, the options, the events, the Elements attributes and the
+ViewModel contract are 1.x's, so nothing else changes. What a host may see: the console's column funnels in `behaviours: 'console'` are
+unchanged, the nested pivot is drishti-grid's tree grid (its own headings, keyboard and density), a figure exactly on a half rounds up
+(section 6), and the new option `insight` (About from a host's source). A host that bundled 1.x's `m/` files bundles
+`static/elements/drishti-renderer/src/` and the four libraries it imports instead (the npm layout below names them). A released folder is immutable: `integrity.json` holds the SHA-384 (subresource integrity) of every distributed file, and
 `tests/test_render_library.py` and `test_render_phase2.py` fail when a file of any version changed without a new record, so a change means
-a new folder and a new version (`tools/render_sheet.py` writes the current version's sheet and record). The playground (`demo.html`,
+a new folder and a new version (`tools/render_sheet.py` writes the current version's sheet and record). From 2.0.0 the record also holds the
+renderer's own modules under `static/elements/drishti-renderer/src/`; the libraries it draws with (drishti-core, -grid, -chart, -data)
+are versioned by the release train (`static/elements/drishti_elements.json`) until the Elements' per-version folders (ELEMENTS.md
+section 8) make the whole set immutable. The playground (`demo.html`,
 `demo.js`, `demo.css`) is served beside it but is not part of the record.
 
 **The final paths** (decided in phase 2; section 19, its section 19):
@@ -623,7 +665,8 @@ a new folder and a new version (`tools/render_sheet.py` writes the current versi
 |---|---|---|
 | `/static/render/<version>/…` | the library on the console's own origin (the console's pages, same-origin hosts) | as `/static/` |
 | `/embed/v2/render/<version>/…` | the same files for other origins: CORS for the origins of the registered host applications; a partial version (`1`, `1.0`) answers `302` to the exact one; a version this console does not serve answers `410 DRS-8006` | `immutable`, one year |
-| `/embed/v2/elements/<2, 2.2, 2.2.0, 2.1, 2.1.0, 2.0, 2.0.0>/drishti-elements.js` | Elements 2.x by its own version: a `302` to `/embed/v2/render/<renderer>/drishti-elements.js` (Elements 2.2.0 is carried by renderer 1.2.0, 2.1.0 by 1.1.0, 2.0.0 by 1.0.0; `2` answers the newest) | 60 s |
+| `/embed/v2/elements/<2, 2.3, 2.3.0, 2.2, 2.2.0>/drishti-elements.js` | Elements 2.x by its own version: a `302` to `/embed/v2/render/<renderer>/drishti-elements.js` (Elements 2.3.0 is carried by renderer 2.0.0, 2.2.0 by the frozen 1.2.0; `2` answers the newest; 2.1 and 2.0 retired) | 60 s |
+| `/embed/v2/elements/<library>/src/<module>.js`, `/embed/v2/elements/<library>/drishti_<name>.css` | the Elements libraries renderer 2.0.0 imports (drishti-core, -grid, -chart, -data, -renderer), allow-listed | revalidated |
 | `/embed/v2/sign-in`, `/check`, `/callback`, `/refresh`, `/redeem` | the sign-in window of `auth: 'popup'` (section 10.1) | `no-store` |
 | `/embed/v2/js/<name>.js`, `/embed/v2/vendor/…`, `/embed/v2/css/table-chart.css` | what the library loads from beside itself (it finds `/embed/v2/` from its own URL as it finds `/static/` on the console): the console's behaviour scripts, ECharts and ECharts GL, the map shapes, the icon font, the chart dialog's sheet; allow-listed | revalidated |
 | `/embed/v2/views/{kind}/{id}` (+ `/about`, `/panels`, `/panels/{panel}/records`), `/embed/v2/channel`, `/embed/v2/resolve` | the embed API v2: the ViewModel as JSON (with its contract), About and panels as JSON, a pivot's rows, the live channel (`vm:` subscriptions: panels as JSON) | `no-store` |
@@ -678,7 +721,7 @@ widths; the showcase with the designer off and in light DOM; and **every Sutra o
 document by a real server (`POST /api/v1/studio/preview`, the server jar run by `wb_live.py`) plus the documented examples, at both
 widths.
 
-**The results (2026-10-30):** 476 pairs, no difference but the intentional ones ([section 14.2](#142-results)).
+**The results (2026-10-30, renderer 1.x):** 476 pairs, no difference but the intentional ones ([section 14.2](#142-results)); **renderer 2.0.0 (2026-11-07): the same 476 pairs, no difference** ([section 14.4](#144-renderer-200-against-the-macros-2026-11-07)).
 
 ### 14.1 Intentional differences
 
@@ -725,6 +768,26 @@ pack views (section 14.3), until phase 2 fixed it.
   suite's console side).
 - `None` prints as "None" in Jinja where a field is `null` rather than missing (e.g. a gauge's `label: null` is never printed, but a
   future field could be): the renderer prints nothing.
+
+### 14.4 Renderer 2.0.0 against the macros (2026-11-07)
+
+The same suite, unchanged in method, against drishti-renderer 2.0.0 (tables by drishti-grid's document table, charts by drishti-chart's
+panel charts): **476 pairs, no difference** in the accessible tree, the text, the cells, the links, the tones or any chart's series
+beyond 14.1's intentional ones: the showcase in all 11 themes and the seven edge cases in two themes, each at 390 and 1280 px, the five
+captured views, the designer off and light DOM (64 pairs), and 206 of 231 pack Sutras bound on their samples by a real server (412
+pairs; the same 25 not bound as before). No CSP violation, no request off the console's origin, no script error, no sideways scroll.
+The first run found one difference, a computation's progress at 62.5% (the macros printed 62, half to even; the renderer 63, half up);
+it is settled in the macros by the decided rule (section 6), so both print 63.
+
+**Visual differences of 2.0.0** (none in the compared tree, text, cells, links, tones or series):
+
+| Difference | Where | Why |
+|---|---|---|
+| A figure exactly on a half rounds up | a donut's share, a computation's progress, a bar's or gauge's width, a heat bucket; the console's pages too | the server's rule (decided); the macros moved to it with the renderer |
+| Axis tick labels at exact ties (`1.005` → `1.01`, `9.995e6` → `10m`) and a tiny negative tick `0` instead of `−0` | inside the charts (not compared: ticks are laid out by the engine) | drishti-core's `formatCompact` is the one formatter |
+| The candlestick tooltip escapes its prices too | tooltips | drishti-chart escapes every tooltip value |
+| The nested pivot in `behaviours: 'console'` is drishti-grid's tree grid (its headings, twisties, keyboard, density, the grand total as a last row) instead of the console's pivot grid | console behaviours only (embeds, Elements) | the grid's tree data is the one tree; every figure is still the server's text |
+| A tree table in `behaviours: 'console'` keeps its own filter box (drishti-grid's) | console behaviours | 1.2.0 loaded the console's tree script for it |
 
 ## 15. Accessibility parity
 

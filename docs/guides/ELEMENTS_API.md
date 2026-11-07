@@ -28,6 +28,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 | [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
 | [drishti-chart](#drishti-chart) | 0.1.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
 | [drishti-risk](#drishti-risk) | 0.1.0 | The banking module's chart kinds on drishti-chart (licensed with the module): the P&L distribution with VaR and ES, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit |
+| [drishti-renderer](#drishti-renderer) | 2.0.0 | The client renderer: Drishti screens from a static, live or streamed (GenUI) ViewModel, drawn with drishti-grid, drishti-chart, drishti-core and drishti-data; Elements 2.3 (drishti-view, drishti-panel, drishti-screen); hosts import its public entry, static/render/2.0.0/drishti-render.js |
 
 ## drishti-core
 
@@ -219,6 +220,16 @@ A formatter function with its options fixed, for a screen's one-line helpers (co
 | `[options]` | `Object` | the kind's options (currency: {currency, ...}) |
 
 Returns `function(*): string`.
+
+#### `formatPythonFloat(x)`
+
+Python's str() of a float, as the server's templates print a raw number: "74.0" for a whole number, exponents from 1e16 and below 1e-4 as Python writes them ("1e+17", "1e-05"). Only for a number the server sent without its text (an older server's candles).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `x` | `*` |  |
+
+Returns `string`.
 
 ### drishti_dates.js
 
@@ -481,7 +492,7 @@ A failed call, in words.
 
 #### `errorWords(body, status, fallback)`
 
-The words of an error answer: its DRS code and the server's detail ("DRS-5001 ..."), else the fallback.
+The words of an error answer: its DRS code and the server's detail ("DRS-1001 ..."), else the fallback.
 
 | Parameter | Type | Meaning |
 |---|---|---|
@@ -1127,6 +1138,27 @@ The rows that pass a filter model (and a quick filter), each filter's column rea
 
 Returns `Object[]`.
 
+#### `textSortKey(text)`
+
+A drawn cell's sort key, read as the console's tables read it: an amount (separators, signs with the true minus or a dash, k, m, mm, b, bn, tn, a trailing % or bp) is a number; an ISO date is its time; anything else is its lower-cased text. The document table sorts by it, as the console's server tables do.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` | the cell's text as shown |
+
+Returns `{n: number, s: string}`: n for a number or a date, else s.
+
+#### `compareTextKeys(a, b)`
+
+The order of two sort keys (textSortKey): numbers and dates before text, numbers by value, text by code point.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `a` | `{n: number, s: string}` |  |
+| `b` | `{n: number, s: string}` |  |
+
+Returns `number`.
+
 ### drishti_dom.js
 
 #### `h(doc, tag, p, children)`
@@ -1165,6 +1197,26 @@ Places a floating element (position: fixed) under an anchor, or above it when th
 | `[o]` | `{gap: number, matchWidth: boolean}` | gap default 4 px; matchWidth: at least as wide as the anchor |
 
 Returns `void`.
+
+#### `attrAllowed(name)`
+
+Whether an attribute name may carry a value from data (the allow-list, data-* and aria-*; never on*, style, src, srcdoc, formaction).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+
+Returns `boolean`.
+
+#### `safeUrl(u)`
+
+The address itself when it is safe in an href (control characters and spaces around it ignored), else null.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `u` | `*` |  |
+
+Returns `?string`.
 
 ### drishti_parse.js
 
@@ -1963,7 +2015,7 @@ The client-side row model.
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `o` | `{columns: import('./drishti_columns.js').ColumnModel, rows: Object[], getRowId: function(Object, number): string, clientAggregation: boolean}` | clientAggregation false: no group figure is computed here, every one is left for the server (the console's policy) |
+| `o` | `{columns: import('./drishti_columns.js').ColumnModel, rows: Object[], getRowId: function(Object, number): string, clientAggregation: boolean, treeData: boolean, getDataPath: function(Object): string[], groupDefaultExpanded: number}` | clientAggregation false: no group figure is computed here, every one is left for the server (the console's policy); treeData: the rows make a tree by their paths (drishti_tree-data.js); groupDefaultExpanded: open groups and tree nodes down to this level |
 
 ##### `ClientRowModel.setRows(rows)`
 
@@ -3446,6 +3498,118 @@ The window as plain table markup (escaped), with the grid roles a screen reader 
 
 Returns `string`.
 
+### drishti_doc-table.js
+
+#### `docTable(doc, d, hooks)`
+
+A table panel's table (the macro table): plain, or a tree when the data says expand (rows with children, open to that depth).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `d` | `Object` | the panel's data: columns, numeric, rows ({cells, highlight, path, pick, ev, children}), total, more, expand, search |
+| `[hooks]` | `DocTableHooks` |  |
+
+Returns `HTMLElement`: div.tbl-wrap holding the table.
+
+#### `docPivotable(doc, panel, hooks)`
+
+A table that offers Pivot (the macro pivotable): the table, and under it the link to the pivot screen on the panel's rows when the data names a pivot source.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `panel` | `{id: string, title: string, data: Object}` |  |
+| `[hooks]` | `DocTableHooks` |  |
+
+Returns `(HTMLElement\|HTMLElement[])`: the table, or the table and the Pivot link.
+
+#### `docDrill(doc, panel, hooks)`
+
+A table whose data has levels (the macro drill): one level shows at a time, the breadcrumb above it, a row opens the rows under it. The behaviour is enhanceDocTables'.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `panel` | `{id: string, title: string, data: Object}` | data: columns, numeric, rows (with children and crumb), levels ({title, columns, numeric} per level under the first), total, more, root, search |
+| `[hooks]` | `DocTableHooks` |  |
+
+Returns `HTMLElement`: div.drill.
+
+#### `heatBucket(v, lo, hi)`
+
+The heat bucket 0..9 of a figure between the smallest and the largest (5 when the scale is flat), rounded half up as the server rounds.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `number` |  |
+| `lo` | `number` |  |
+| `hi` | `number` |  |
+
+Returns `number`.
+
+#### `docPivot(doc, d, hooks)`
+
+The pivot kind's table (the macros pivot and pivot_table): rows by one field, or nested by several (the plain table, which a host's pivot grid may redraw from data-pv-tree), with heat buckets, row totals and the totals row.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `d` | `Object` | the panel's data: by, columns, rows ({label, path, group, cells, values, total}), heat, min, max, totals, more, levels |
+| `[hooks]` | `DocTableHooks` |  |
+
+Returns `HTMLElement`.
+
+#### `docPlainTable(doc, headRow, rows, o)`
+
+The plain Data table a chart keeps (nothing is only in the picture): in a details element whose summary is "Data", a table that is never sorted (data-plain). A heading is a string (numeric after the first) or {text, num}; a row's first cell is its row heading (o.rowHeader draws it, e.g. an entity link), every other cell a figure (td.mono.num) or {content, cls} for a cell of another class (cls null: none). A row heading that is a Node is drawn as it is.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `headRow` | `Array&lt;(string\|{text: string, num: boolean})&gt;` |  |
+| `rows` | `Array&lt;Array&lt;*&gt;&gt;` |  |
+| `[o]` | `{summary: string, details: boolean, rowHeader: function(*, number): (Node\|string\|Array)}` | details false: the div.tbl-wrap alone, without the details and its summary |
+
+Returns `HTMLElement`: details.xchart-data (or div.tbl-wrap).
+
+### drishti_doc-behave.js
+
+#### `treeVisibility(depths, opens, matches)`
+
+What a tree table shows: per row, whether it is visible and whether it is drawn open. With a query (matches given) a row shows when it or a row under it matches, and a row is open when a row under it matches; without one, a row shows when its parent is shown and open.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `depths` | `number[]` | each row's depth, rows in document order (a row's children follow it) |
+| `opens` | `boolean[]` | whether each row is open (by the person) |
+| `matches` | `?boolean[]` | whether each row matches the query, or null when there is no query |
+
+Returns `{visible: boolean[], open: boolean[]}`.
+
+#### `pageInfo(total, page, size)`
+
+A pager's state and words: the page kept inside the pages, the rows it shows, "1–25 of 60" or "No rows match".
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `total` | `number` | the rows that pass the filter |
+| `page` | `number` | the page asked for (0 first) |
+| `size` | `number` | rows a page |
+
+Returns `{page: number, pages: number, first: number, last: number, text: string}`: first and last are row indexes (last exclusive).
+
+#### `enhanceDocTables(scope, o)`
+
+Enhances the document tables under a scope (a whole view, or one panel drawn again): tree tables, drills and, with tables on, sorting, filtering and paging on every plain table (not a tree, a drill's table, a pivot or a Data table). Each element once.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `scope` | `(Element\|DocumentFragment\|ShadowRoot)` |  |
+| `[o]` | `{tables: boolean, sort: boolean, pageSize: number}` | tables default true (false: no sorting, filter boxes or pages at all); sort default true (false: plain tables are left as drawn, no heading buttons, filter box or pager, for a host whose own table tools take them; trees keep their filter box and drills work); pageSize default 25 |
+
+Returns `void`.
+
 ### drishti_grid-ui.js
 
 #### `VIEW_EVENTS`
@@ -4473,6 +4637,16 @@ A row as the grid sees it at a display index.
 | `[group]` | `string` | a heading above several columns |
 | `[description]` | `string` | words for the field list |
 
+#### `DocTableHooks` : `Object`
+
+What the host draws in a document table: a cell's content, its tone class, a row's extra attributes.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[content]` | `function(Object): (Node\|string\|Array)` | a cell's drawn value (default: its text) |
+| `[tone]` | `function(Object): string` | a cell's tone class, with its leading space (default: ' t-&lt;tone&gt;' or '') |
+| `[rowAttrs]` | `function(Object, number): Object` | extra attributes on a plain table's row (null and false are left out) |
+
 #### `ExportTable` : `import('../../drishti-core/src/drishti_files.js').ExportTable`
 
 #### `CellEdit` : `Object`
@@ -4592,6 +4766,9 @@ Everything GridModel takes (columns, rows or datasource, serverPivot, explain, c
 | `[live]` | `{asyncWaitMs: number, flashMs: number, serverDebounceMs: number}` | the live data's timings (drishti_grid-live.js) |
 | `[editing]` | `{writeBack: function(Object): Promise&lt;Object&gt;, fourEyes: boolean, undoLimit: number}` | cell editing (drishti_grid-edit.js): the server's write-back hook (each edit transaction; it answers applied, refused or proposed), four eyes |
 | `[locale]` | `string` | how typed and pasted numbers are read (de-DE: 1.250,5) |
+| `[treeData=false]` | `boolean` | the rows make a tree by their paths (getDataPath): nodes open and close, a node no row names carries its figures as a group (the server's when clientAggregation is false); the first shown column holds the node's key |
+| `[getDataPath]` | `function(Object): string[]` | a row's path from the top (tree data) |
+| `[groupDefaultExpanded=0]` | `number` | groups and tree nodes open down to this level (-1: all) |
 
 #### `KeyResult` : `Object`
 
@@ -4687,6 +4864,21 @@ A data source: the one function the model calls.
 | Name | Type | Meaning |
 |---|---|---|
 | `getRows` | `function(BlockRequest): Promise&lt;BlockAnswer&gt;` |  |
+
+#### `TreeNode` : `Object`
+
+A tree node.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `number` |  |
+| `path` | `string[]` | the keys from the top |
+| `depth` | `number` | path length less one |
+| `row` | `number` | the row number it carries, or -1 for a node no row names |
+| `children` | `TreeNode[]` |  |
+| `aggregates` | `Object&lt;string, *&gt;` | a node without a row: its figures by column id |
+| `serverCols` | `string[]` | the columns whose figures are the server's |
+| `pendingServer` | `string[]` | those still waiting |
 
 #### `WellValue` : `Object`
 
@@ -6828,6 +7020,16 @@ Closes and forgets the page's online listener.
 
 Returns `void`.
 
+#### `parseSse(text)`
+
+Reads Server-Sent Events from text (the fetch transport, and anything else that has the raw stream): the whole events and what is left for the next chunk. An event: its name (default message), its data lines joined by new lines, its id; a comment line alone is a sign of life.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `{events: Array&lt;{event: string, data: string, id: ?string, comment: boolean}&gt;, rest: string}`.
+
 ### drishti_arrow.js
 
 #### `ARROW_MEDIA`
@@ -7098,8 +7300,12 @@ Returns `import('./drishti_live-client.js').LiveClient`.
 
 | Name | Type | Meaning |
 |---|---|---|
-| `url` | `string` | the feed's address (http(s) for SSE, ws(s) for a WebSocket) |
-| `[transport]` | `('sse'\|'websocket')` | default: websocket for ws:// and wss://, else sse |
+| `url` | `(string\|function(): string)` | the feed's address (http(s) for SSE, ws(s) for a WebSocket), or a function asked at every connect |
+| `[transport]` | `('sse'\|'websocket'\|'fetch')` | default: websocket for ws:// and wss://, else sse; fetch: SSE read with fetch |
+| `[headers]` | `(Object&lt;string, string&gt;\|function({status: number}): (Object&lt;string, string&gt;\|Promise&lt;Object&lt;string, string&gt;&gt;))` | fetch: the request's headers, or a function of the last failure (status 401 after a refused token) that answers them |
+| `[credentials='same-origin']` | `string` | fetch: the request's credentials |
+| `[eventField]` | `string` | each message gets its SSE event name under this field (when it has none of its own) |
+| `[fetch]` | `Function` | fetch: for tests |
 | `[heartbeatMs=45000]` | `number` | no message for this long: reconnect (0: no watchdog) |
 | `[pingMs]` | `number` | WebSocket: send {"type":"ping"} this often (default heartbeatMs / 3) |
 | `[backoff]` | `{baseMs: number, maxMs: number, factor: number, jitter: boolean}` |  |
@@ -8325,6 +8531,134 @@ Publishes a selection on a channel (a page's own control, a test).
 
 Returns `void`.
 
+### drishti_chart-panels.js
+
+#### `PANEL_KINDS`
+
+The panel kinds drawn with the engine (VIEWMODEL.md section 4).
+
+#### `escapeTip(s)`
+
+Text made safe for a tooltip (the engine writes tooltips as markup).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `s` | `*` |  |
+
+Returns `string`.
+
+#### `panelCompact(v)`
+
+An axis tick as the console's charts write it: 1.75m, 250k, −1.2bn (at most two decimals for bn, none past 100m, one for k, two below 10,000; never grouped, as the console never groups a tick; trailing zeros dropped).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `number` |  |
+
+Returns `string`.
+
+#### `panelLineCompact(v)`
+
+The line and area charts' own ticks (the console's view.js): fixed decimals (2.0bn, 1.5m, 250k, 12.5k), a plain minus, and at most two decimals below 10,000.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `number` |  |
+
+Returns `string`.
+
+#### `panelTokens(el)`
+
+The theme's colours as the console names them (--d-ink, --d-link, ...) and its mono font, read from an element of the view.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `Element` |  |
+
+Returns `Object&lt;string, string&gt;`: ink, muted, faint, border, link, accent, neg, pos, ok, warn, bad, surface, bg-2, mono.
+
+#### `labelFit(steps, size)`
+
+Where a waterfall's step labels go: flat above the bars, turned up, or none, from the step count and the chart's size.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `steps` | `Array&lt;{text: string}&gt;` |  |
+| `[size]` | `{width: number, height: number}` |  |
+
+Returns `{mode: ('flat'\|'up'\|'none'), top: number}`.
+
+#### `panelOption(kind, data, tokens, size, view)`
+
+A panel's chart option: the console's, from the panel's data (VIEWMODEL.md section 4) and the theme's tokens (panelTokens).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `kind` | `string` | one of PANEL_KINDS but map (line, area, waterfall, histogram, scatter, candlestick, graph, donut, surface) |
+| `data` | `Object` | the panel's data |
+| `tokens` | `Object&lt;string, string&gt;` | panelTokens of the view |
+| `[size]` | `{width: number, height: number}` | the drawing's size (the waterfall's labels and the graph's layers use it) |
+| `[view]` | `('heatmap'\|'3d')` | the surface's view (default heatmap) |
+
+Returns `Object`: the engine's option.
+
+### drishti_chart-panel-draw.js
+
+#### `drawMap(E, G, el, d, t, onLink, chartsOut)`
+
+Draws a map panel from the console's shapes; resolves with its clickable places and its note.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `E` | `Object` | the engine (echarts) |
+| `G` | `Object` | the console's map helper (drishti_geomap.js: world, region, find, option, codeOf) |
+| `el` | `HTMLElement` | the chart's container |
+| `d` | `Object` | the map panel's data (mode, region, highlight, shade, link, unit) |
+| `t` | `Object&lt;string, string&gt;` | panelTokens of the view |
+| `onLink` | `function(Object): void` | a clicked place that names an entity ({kind, id}) |
+| `chartsOut` | `Object[]` | the engine instances drawn (the map's is added) |
+
+Returns `Promise&lt;?{places: Array&lt;{name: string, link: Object, text: string}&gt;, note: string}&gt;`: null when a later draw replaced this one.
+
+#### class `PanelCharts`
+
+The panel charts of one rendered view (a shadow root or an element): draw, redraw after a theme change, dispose.
+
+##### `new PanelCharts(root, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `(ShadowRoot\|Element)` | where the view is drawn |
+| `o` | `PanelChartsOptions` |  |
+
+##### `PanelCharts.draw(scope)`
+
+Draws every chart container in a scope (the whole view by default, or one panel a live frame replaced).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[scope]` | `(ShadowRoot\|Element)` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `PanelCharts.redraw()`
+
+Draws every chart again (a theme change: the colours are read anew).
+
+Returns `Promise&lt;void&gt;`.
+
+##### `PanelCharts.instances()`
+
+The engine instances drawn now (tests read their options).
+
+Returns `Object[]`.
+
+##### `PanelCharts.dispose()`
+
+Stops listening and disposes of every chart.
+
+Returns `void`.
+
 ### drishti_chart-element.js
 
 #### `CHART_ELEMENT`
@@ -8370,6 +8704,19 @@ Returns `void`.
 | `fit` | `number[]` | [minX, minY, maxX, maxY] the view fits |
 | `all` | `number[]` | [minX, minY, maxX, maxY] of everything drawn |
 | `frames` | `Array&lt;{code: string, box: number[]}&gt;` | inset frames (Alaska, Hawaii) |
+
+#### `PanelChartsOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `engine` | `function(): Promise&lt;Object&gt;` | loads the engine (ECharts) and resolves with it (the host's loader: its own policy for scripts) |
+| `[gl]` | `function(): Promise&lt;void&gt;` | loads ECharts GL (the surface in 3D); without it a 3D surface is drawn as its heatmap |
+| `[geo]` | `function(): Promise&lt;Object&gt;` | the console's map helper (drishti_geomap.js); without it a map says it did not load |
+| `[onLink]` | `function(Object, HTMLElement): void` | a point, a node or a place that names an entity was clicked ({kind, id}, the container) |
+| `[onPlaces]` | `function(HTMLElement, Array&lt;{name: string, link: Object, text: string}&gt;, string): void` | a map's clickable places and its note, for the host to list |
+| `[selector='[data-r-chart]` | `string` | '] the chart containers |
+| `[specOf]` | `function(HTMLElement): ?{kind: string, data: Object}` | a container's kind and data (default el.__drishti) |
+| `[tokensFrom]` | `function(): Element` | the element the colour tokens are read from (default the root's .view, its host, or the page) |
 
 #### `KindDef` : `Object`
 
@@ -8545,6 +8892,332 @@ The kinds this library adds to drishti-chart.
 #### `install(root)`
 
 Starts drishti-risk in a page (the bundle calls it): the kinds are registered already, when the module is read.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `Window` |  |
+
+Returns `void`.
+
+## drishti-renderer
+
+Version 2.0.0. Bundle `static/elements/drishti-renderer/drishti_renderer.js`, global `Drishti.elements.renderer`; requires drishti-core, drishti-grid, drishti-chart, drishti-data.
+
+### drishti_render.js
+
+#### `VERSION`
+
+The renderer's version (Elements library drishti-renderer).
+
+#### `CONTRACTS`
+
+The ViewModel contract majors this renderer draws (VIEWMODEL.md section 8: a ViewModel without a contract is 1).
+
+#### `render(container, source, options)`
+
+Paints a screen and returns its handle; handle.ready settles when the first paint is done. Rendering into a container again replaces what it showed.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `container` | `HTMLElement` | where the screen is drawn |
+| `source` | `(Object\|{kind: string, id: string, controls: Object}\|{stream: string}\|AsyncIterable&lt;Object&gt;)` | a ViewModel (the JSON of GET /api/v1/views/{kind}/{id}); {kind, id} to fetch it as the person; {stream: url} for a streamed (GenUI) or live screen; or an async iterable of stream messages |
+| `[options]` | `Object` | see drishti-render.d.ts (every option has a default: shadow true, navigation 'in-place', live true, theme 'inherit') |
+
+Returns `Handle`.
+
+#### `patch`
+
+patch(handle, frame): applies a live frame {seq, generation, patches} (VIEWMODEL.md section 5).
+
+#### `subscribe`
+
+subscribe(handle, source?): follows the view's stream (default: this console's relay); returns the function that stops it.
+
+#### `defineScreen(win)`
+
+Defines &lt;drishti-screen&gt; on render() (once; a page with Elements 2.x has it as the alias of &lt;drishti-view&gt;).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `win` | `Window` |  |
+
+Returns `void`.
+
+#### `installRender(win)`
+
+The renderer's page-wide names: window.DrishtiRender (version, render, patch, subscribe, KINDS, CONTRACTS, trustedTypes) and, after the module graph has run, &lt;drishti-screen&gt;.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `win` | `Window` |  |
+
+Returns `void`.
+
+### drishti_kinds.js
+
+#### `KINDS` : `ReadonlyArray&lt;string&gt;`
+
+The kinds this renderer draws (VIEWMODEL.md section 4): all twenty-two.
+
+#### `tableHooks(R)`
+
+The renderer's cells as drishti-grid's document table hooks: a cell's value (links, inactive commands), its tone, a row's attributes.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `R` | `Object` | the screen's rendering context |
+
+Returns `{content: function(Object): *, tone: function(Object): string, rowAttrs: function(Object, number): Object}`.
+
+### drishti_assets.js
+
+#### `setAssetBase(o)`
+
+Where the console's static files and the renderer's sheet are (the public entry calls it with addresses made from its own URL).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `{statics: string, sheet: string}` | statics: the console's static root ("https://drishti.example/static/"); sheet: the sheet's address |
+
+Returns `void`.
+
+#### `statics(rel)`
+
+The address of a file under the console's static root.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rel` | `string` | for example "vendor/echarts/echarts.min.js" |
+
+Returns `string`.
+
+#### `trustedTypesActive`
+
+Whether script URLs go through the renderer's Trusted Types policy.
+
+### drishti_dom.js
+
+#### `safeAttrs(attrs)`
+
+The attributes that may be set, values as text (null, undefined and false are left out; true is an empty attribute); a refused name or an unsafe link is dropped and said once in the browser's console.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `attrs` | `?Object&lt;string, *&gt;` |  |
+
+Returns `Object&lt;string, (string\|boolean)&gt;`.
+
+#### `h(tag, attrs, ...children)`
+
+One element: h(tag, attrs, ...children). attrs: allowed attributes; children: strings, numbers, nodes, arrays of those, or null.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `tag` | `string` |  |
+| `attrs` | `?Object&lt;string, *&gt;` |  |
+| `children` | `...*` |  |
+
+Returns `HTMLElement`.
+
+#### `str(v)`
+
+Jinja's {{ x }} of a value: the macros never print a missing cell, so null is "".
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `string`.
+
+#### `toneClass(c)`
+
+The tone class of a cell as the macros write it (" t-&lt;tone&gt;"), or "" for none: the nine tones of the contract are drawn, any other word is a class the sheet ignores (the value is untoned).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `c` | `?{tone: string}` |  |
+
+Returns `string`.
+
+### drishti_net.js
+
+#### `fixFor`
+
+The fix for a refusal: the server's own words first (the console knows the person's lens), then the code's, then the status's.
+
+#### `problem(code, detail, fix, status = 0)`
+
+A problem: {code, status, detail, fix}, also an Error (so it can be thrown and logged).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `code` | `string` |  |
+| `detail` | `string` |  |
+| `[fix]` | `string` |  |
+| `[status]` | `number` |  |
+
+Returns `Error`.
+
+#### `viewUrl(o, ref)`
+
+The address of a view: options.viewUrl(ref) when the host has its own, else the console's /api/view/{kind}/{id}.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `Object` |  |
+| `ref` | `{kind: string, id: string, controls: Object}` |  |
+
+Returns `string`.
+
+#### `streamUrl(o, ref)`
+
+The default stream: the console's relay of the server's stream, raw (the ViewModel's own frames, not the console's HTML).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `Object` |  |
+| `ref` | `(string\|{kind: string, id: string})` |  |
+
+Returns `string`.
+
+#### `fetchView(o, ref)`
+
+Fetches a ViewModel for {kind, id} as the person (the console's cookie on its own origin, or the host's bearer token).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `Object` |  |
+| `ref` | `{kind: string, id: string}` |  |
+
+Returns `Promise&lt;Object&gt;`.
+
+#### `openStream(o, refOrUrl, on)`
+
+Follows a stream of Server-Sent Events with drishti-data's live client: `view` (a whole ViewModel), `frame` (live patches), `message` (a GenUI stream message: skeleton, panel-add, panel-replace, patch, done, error) and `gone`. options.eventSource(url) makes the EventSource when the host needs its own (headers, a polyfill). A stream that is gone is closed; a dropped one is opened again after a back-off (from 3 s, as a browser's own EventSource waits) and resumes from the last event id.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `Object` |  |
+| `refOrUrl` | `(string\|{kind: string, id: string})` |  |
+| `on` | `{view: function(Object): void, frame: function(Object): void, message: function(Object): void, gone: function(Error): void}` |  |
+
+Returns `function(): void`: closes it.
+
+#### `personFetch(o)`
+
+A fetch as the person: the host's bearer token when it gave a token provider, the console's session otherwise.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `Object` | the screen's options |
+
+Returns `function(string, Object): Promise&lt;Response&gt;`.
+
+### drishti_nested.js
+
+#### `nestedPivotOptions(d, title)`
+
+The grid's options for a nested pivot's data (the ViewModel's pivot panel: by, levels, columns, rows with paths, totals).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `d` | `Object` | the panel's data |
+| `title` | `string` | the panel's title (the grid's name for a screen reader) |
+
+Returns `Object`: drishti-grid options (columns, rows, treeData, getDataPath, groupDefaultExpanded, clientAggregation false).
+
+### drishti_embed.js
+
+#### `ELEMENTS_VERSION`
+
+The Elements version this renderer carries.
+
+#### `API`
+
+The embed API the elements read.
+
+#### `cfg`
+
+The page's settings (DrishtiElements.configure): the console, the token provider, auth, the live connection's waits.
+
+#### `serverOf`
+
+The console the elements read when no server is named: the one that serves the library.
+
+#### `usePopup(server)`
+
+auth 'popup' (configure({ auth: 'popup' }) or the auth="popup" attribute): the page's token comes from the console's sign-in window (CLIENT_RENDERER.md 10.1) instead of a host backend; every element and the live channel share it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[server]` | `string` | the console (default the one that serves the library) |
+
+Returns `Object`: the sign-in of that console.
+
+#### `getToken(force)`
+
+The page's bearer token: the one kept while it is fresh, else the provider's (it waits briefly for a host that sets it late).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[force]` | `boolean` | ask the provider even when the kept token is fresh (after a 401) |
+
+Returns `Promise&lt;?string&gt;`.
+
+#### `invalidateToken`
+
+Forgets the page's token: the next call asks the provider again (the host's user changed, or the server said so).
+
+#### `providerChanged`
+
+The host set its provider (configure, or the property): a load waiting for one goes on.
+
+#### `resolve(text, opts = {})`
+
+A typed command ("TRD 1000008") to the entity it names: {ref, ...} or {ref: null, candidates} (the host's search box).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+| `[opts]` | `{server: string, signal: AbortSignal}` |  |
+
+Returns `Promise&lt;Object&gt;`.
+
+#### `connectionFor`
+
+The page's one connection to a server's channel.
+
+#### `connectionCount`
+
+How many connections the page holds (one per server).
+
+### drishti_elements.js
+
+#### `elementClasses(win)`
+
+The element classes for a window: DrishtiView (&lt;drishti-view&gt;, &lt;drishti-screen&gt;) and DrishtiPanel (&lt;drishti-panel&gt;).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `win` | `Window` |  |
+
+Returns `{DrishtiView: Function, DrishtiPanel: Function}`.
+
+#### `define(win)`
+
+Defines the tags (once per page; a page that loaded Elements 1.x keeps its own).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `win` | `Window` |  |
+
+Returns `{DrishtiView: Function, DrishtiPanel: Function}`.
+
+### drishti_index.js
+
+#### `install(root)`
+
+Starts drishti-renderer in a page (the bundle calls it when it loads): window.DrishtiRender and &lt;drishti-screen&gt;.
 
 | Parameter | Type | Meaning |
 |---|---|---|

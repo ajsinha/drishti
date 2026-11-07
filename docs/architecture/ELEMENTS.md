@@ -16,7 +16,7 @@
 
 # Drishti Elements: the console's JavaScript as eight reusable libraries
 
-**Status: being built** (release 2.9.11.e, product owner 2026-11-07; mock-ups g1 to g4 below, all decided; as built: 8.1 to 8.4). The internal design:
+**Status: being built** (release 2.9.11.e, product owner 2026-11-07; mock-ups g1 to g4 below, all decided; as built: 8.1 to 8.5). The internal design:
 what each library is, what it takes over from today's code, the grid's pivot, the AG Grid-style adapter, the chart spec and the maps,
 packaging and licensing, the documentation of every library, the gallery, the guards, the order in which Drishti's screens move, the
 risks and the product owner's decisions. The renderer, the embed API and Elements 2.x (`<drishti-view>`) are designed in
@@ -618,7 +618,7 @@ library with its module: an unlicensed module's library is not served, its kinds
   |---|---|
   | marks bar, line, area, point, circle, square, tick, rect, arc, boxplot | bar, line, area, scatter (or bubble with size), heatmap, pie or donut (innerRadius), boxplot |
   | rule at a constant (`datum`), or a few rows' values | annotation lines |
-  | `layer` with data of its own or inherited | the chart kind `layer` |
+  | `layer` with data of its own or inherited | layers of one chart (drishti-chart's `layer`) |
   | encodings x, y, color, fill, stroke, size, theta; tooltip and opacity | axes, `series: {by}`, `colour`, bubble size, the pie's value; Drishti's tooltip |
   | types quantitative, nominal, ordinal, temporal | value, category (sorted as Vega-Lite sorts), time |
   | `aggregate` sum, mean, average, count, min, max, median; `bin` with maxbins | rows aggregated in the translation; the histogram kind |
@@ -696,6 +696,47 @@ library with its module: an unlicensed module's library is not served, its kinds
   smoke check, its code tabs and status line; options from the JSDoc changing the component and its code, the grid in three densities
   and both themes, the address restoring the state; the AG Grid tab, live, editing, export; the keys in the grid and the chart; every
   example of every documentation page, its API, accessibility and changelog tabs, "Open in playground".
+
+### 8.5 As built: drishti-renderer 2.0.0
+
+The client renderer is library 7 (CLIENT_RENDERER.md is its one home: [section 3](CLIENT_RENDERER.md#3-the-librarys-shape) the modules and
+what each library draws, [section 6](CLIENT_RENDERER.md#6-formats-and-tones) the rounding, [section 13](CLIENT_RENDERER.md#13-the-elements-versioning-and-distribution)
+versions and the migration from 1.x, [section 14.4](CLIENT_RENDERER.md#144-renderer-200-against-the-macros-2026-11-07) parity). What the
+other libraries gained for it:
+
+- **drishti-grid, the document table** (`drishti_doc-table.js`, `drishti_doc-behave.js`): the grid draws the server's table as it speaks
+  the server's pivot. The ViewModel's plain tables, trees (`children`, `expand`), drills (`levels`), tables offering Pivot, the pivot kind
+  (heat buckets, half up) and a chart's Data table are a semantic `<table>`, every row in the DOM, with the console's table classes,
+  element for element renderer 1.2.0's markup (a Node test compares them with the frozen `tables.js`); what a cell shows and its tone
+  come from the host's hooks. `enhanceDocTables` gives the console's behaviours in place: heading sort (ascending, descending, the
+  server's order) by drishti-core's `textSortKey` (amounts with k, m, bn, tn, %, bp, dates, as the console's tables read them), one filter
+  box, 25-row pages, tree rows whose filter keeps ancestors, drill levels with crumbs, Up, Esc and Backspace; `sort: false` leaves plain
+  tables to a host's own tools. The console's server tables fold into it in step 3 of section 12.
+- **drishti-grid, tree data** (`drishti_tree-data.js`; the checklist's item): `treeData: true` with `getDataPath(row)` builds the client
+  rows into a tree of their paths; intermediate nodes are made, a row may itself be a node, nodes open by path or `groupDefaultExpanded`,
+  siblings follow the sort, a filter keeps a match's ancestors; a node no row names carries its figures as a group does, the server's
+  when they are non-additive or `clientAggregation` is off (`serverGroupColumns`, `setGroupServerValues` by path); the body draws a
+  `treegrid` with `aria-level` and `aria-expanded`. Not yet: tree data on server-side rows, the AG-style adapter's mapping.
+- **drishti-chart, the panel charts** (`drishti_chart-panels.js`, `drishti_chart-panel-draw.js`, moved from the renderer's `m/charts.js`
+  and `m/draw.js`): `panelOption(kind, data, tokens, size, view)` builds the console's own options for line, area, waterfall, histogram,
+  scatter, candlestick, graph, donut and the surface (heatmap or 3D), series for series the frozen 1.2.0 builders' (a Node test compares
+  them); ticks on drishti-core's `formatCompact`. `PanelCharts(root, {engine, gl, geo, onLink, onPlaces})` draws a view's chart
+  containers (sizes, theme redraw, clicks that name an entity, the surface's switch, the map from the console's shapes) and holds every
+  engine call a panel chart makes. The console's `drishti_view.js` and `drishti_charts.js` move onto it in step 5.
+- **drishti-data, the live client**: a `fetch` transport (Server-Sent Events read with fetch, so a bearer token travels; the headers a
+  function of the last refusal), an address asked at every connect (a channel whose subscriptions are in its address), `eventField`
+  (each message carries its SSE event name) and `parseSse`. The renderer's streams and Elements' one connection per page use it.
+- **drishti-core**: `attrAllowed` and `safeUrl` (the rules for drawing untrusted data), `formatPythonFloat` (an older server's raw candle
+  prices), `textSortKey` and `compareTextKeys`; one script loader (`loadScript`, also for a library's engine).
+- **Harness and tests.** `static/elements/drishti-renderer/drishti_harness.html` draws the parity suite's ViewModels
+  (`drishti_fixtures.json`, written by `tools/elements/renderer_fixtures.py`) one shot or streamed, in each behaviours mode and theme, with
+  no server; `tests/test_elements_renderer_browser.py` (four tests, about 5 s) tests the renderer's wiring of the components, which are
+  tested in their own harnesses and Node files (`doc-table.test.mjs`, `tree.test.mjs`, the panel section of `chart.test.mjs`, the fetch
+  transport in `data.test.mjs`).
+- **Open.** The controls, the column funnels with Chart any table, and Zoom in `behaviours: 'console'` are still the console's scripts
+  (they move with their screens: drishti-inputs for the controls, drishti-grid's column menus for the funnels); the renderer does not use
+  drishti-inputs yet. drishti-insight is not built: About takes its source from `options.insight.about`. The libraries 2.0.0 imports are
+  not per-version folders yet (its integrity record covers its own modules). `drishti_grid.js` (the engine's model) is over 530 lines.
 
 ## 9. The documentation of every library
 
@@ -795,14 +836,15 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [ ] drishti-core: formats with the server's rounding, tokens and densities, API client, events, keymap, dialogs, menus, resize; its gallery pages
 - [x] drishti-data: sources (local, REST, Drishti pivot and rows), Arrow, live (8.2)
 - [x] drishti-grid: virtual rows and columns, columns and menus, ranges and the status bar, filters, editing (8.2), export, conditional formats, accessibility
-- [ ] drishti-grid: tree data (a path per row, with the AG Grid-style adapter's tree data, O5)
+- [x] drishti-grid: tree data (a path per row, 8.5); the AG Grid-style adapter's tree data (O5) with the adapter
 - [x] drishti-grid pivot: the three layouts `wells`, `panel` and `terminal` (VaR screens default to `terminal`, others to `wells`), aggregation pickers, value filters, collapsible pivot result columns, totals, server-side model with the request of 5.3, non-additive totals from the server
 - [ ] The AG Grid-style adapter with the table of section 6 as code, and its unknown-option report
 - [x] drishti-chart: the spec, the general kinds, the data-table alternative, export, Explain; the chart card's modes `card` (default) and `studio` (g2 A and B); maps with per-country loading and the modes `ranking` (default) and `table` (g3 A and B); drishti-risk's four kinds (8.3)
 - [ ] Vega retired (O1): Vega-Lite visuals translated to the spec (the translator is built, 8.3), Python visuals return a spec, the vendored Vega deleted
 - [x] The phone behaviour of the grid and the pivot (O2); the standalone Excel writer (O4)
 - [x] drishti-inputs: pickers, forms with four eyes, the filter bar, the code editor (8.2); the formula input and people picker as their screens move
-- [ ] drishti-insight, drishti-renderer 2.0.0, drishti-risk (in the banking plugin, licensed)
+- [x] drishti-renderer 2.0.0 on the libraries (8.5; the console's controls, funnels and Zoom still its scripts until their screens move)
+- [ ] drishti-insight, drishti-risk (in the banking plugin, licensed)
 - [x] The gallery in both modes, `playground` (default) and `docs` (g4 A and B), every component and example run in its browser file, the grid in both themes and three densities, a keyboard/ARIA smoke check on every demo (8.4)
 - [ ] axe vendored for the gallery's check; every example in both themes and three densities
 - [ ] Documentation per library (section 9): guide, generated API reference with `--check`, tutorial, gallery, the AG Grid migration guide, theming and accessibility guides, changelogs, versioning policy; Help entries

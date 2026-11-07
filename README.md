@@ -266,13 +266,13 @@ What changed and when: [RELEASE_NOTES.md](RELEASE_NOTES.md) and [CHANGELOG.md](C
 |---|---|---|
 | Java, product | 425k | 2,117 |
 | Java, tests | 161k | 1,013 |
-| Python, product (console, tools, loaders) | 134k | 692 |
-| Python, tests | 98k | 559 |
-| JavaScript, HTML and CSS (console) | 141k | 797 |
+| Python, product (console, tools, loaders) | 134k | 696 |
+| Python, tests | 99k | 563 |
+| JavaScript, HTML and CSS (console) | 173k | 855 |
 | YAML: configuration, Sutras, data contracts | 104k | 1,333 |
-| Markdown: guides, tutorials, design | 253k | 437 |
+| Markdown: guides, tutorials, design | 290k | 445 |
 
-About **701k lines of product code** and **259k lines of tests** (37% of the product code), with **253k lines of documentation**; 48 Maven modules, 11 domain packs and 40 tutorials.
+About **733k lines of product code** and **260k lines of tests** (35% of the product code), with **290k lines of documentation**; 48 Maven modules, 11 domain packs and 40 tutorials.
 
 <!-- code-volume:end -->
 

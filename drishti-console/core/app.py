@@ -421,6 +421,8 @@ def create_app(settings: Settings) -> FastAPI:
         return str(text or "").replace("{product}", str(ctx.get("PRODUCT") or ""))
 
     templates.env.filters["product"] = product
+    from core import half_up
+    half_up.install(templates.env)                      # the panel macros' one rounding rule (half up, as the server and the renderer)
     app.state.settings = settings
     from core.edition import Editions
 

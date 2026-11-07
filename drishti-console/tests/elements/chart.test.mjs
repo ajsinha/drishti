@@ -23,6 +23,9 @@ import { createRequire } from 'node:module';
 import * as C from '../../web/static/elements/drishti-chart/src/drishti_index.js';
 import * as R from '../../web/static/elements/drishti-risk/src/drishti_index.js';
 import { EventBus } from '../../web/static/elements/drishti-core/src/drishti_index.js';
+import * as fs from 'node:fs';
+import * as Frozen from '../../web/static/render/1.2.0/m/charts.js';
+import * as FrozenFormat from '../../web/static/render/1.2.0/m/format.js';
 
 const require = createRequire(import.meta.url);
 const th = C.chartTheme({ theme: 'terminal' });
@@ -267,4 +270,107 @@ test('the bundles: the chart and the risk library load under Node with the same 
   assert.equal(typeof chart.fromVegaLite, 'function');
   assert.ok(chart.kindOf('risk.backtest'));
   assert.equal(risk.trafficLight(12).zone, 'red');
+});
+
+// ---- the ViewModel's panel charts (moved from the client renderer 1.2.0): the same series as the frozen builders -------------------
+const TOK = { ink: '#111111', muted: '#666666', faint: '#999999', border: '#cccccc', link: '#0b5cad', accent: '#b8860b', neg: '#c0392b', pos: '#1e8449',
+  ok: '#27ae60', warn: '#e67e22', bad: '#a93226', surface: '#ffffff', 'bg-2': '#f4f4f4', mono: 'monospace' };
+const SIZE = { width: 640, height: 300 };
+const showcase = JSON.parse(fs.readFileSync(new URL('../fixtures/view_sutra_all-panels-showcase.json', import.meta.url), 'utf8'));
+// the shapes of render_cases.py the showcase lacks
+const EXTRA = [
+  { kind: 'line', data: { x: ['1M', '3M', '1Y', '5Y'], series: [{ label: 'SOFR', values: [3.9, null, 3.7, 3.6], tone: 'link' }, { label: 'Old', values: [4.0, 3.9, 3.8, 'x'], tone: 'accent' }],
+    mark: '5Y', markText: '5Y point 3.60%', unit: '%', step: true, limit: 3.95, limitLabel: 'cap' } },
+  { kind: 'surface', data: { x: ['a', 'b'], y: ['r1', 'r2'], z: [[1.0, null], [2.5, 3.0]], min: 1.0, max: 3.0, view: 'heatmap' } },
+  { kind: 'scatter', data: { points: [{ x: 1, y: 2, size: 4, xText: '1', yText: '2', group: 'g1', link: { kind: 'book', id: 'B1' } }, { x: 2, y: 1, size: 9, xText: '2', yText: '1', label: 'two', group: 'g2' }],
+    groups: ['g1', 'g2'], xLabel: 'X', yLabel: 'Y', sized: true, more: 7 } },
+  { kind: 'candlestick', data: { candles: [{ x: '2026-09-01', open: 1, high: 2.5, low: 0.5, close: 2 }, { x: '2026-09-02', open: 2, high: 2, low: 1e-5, close: 1e17 }], volume: false } },
+  { kind: 'graph', data: { nodes: [{ id: 'A', label: 'Alpha', focus: true, link: { kind: 'counterparty', id: 'A' } }, { id: 'B', label: 'Beta', group: 'g' }],
+    edges: [{ from: 'A', to: 'B' }, { from: 'A', to: 'Z' }], layout: 'force', more: 2 } },
+  { kind: 'donut', data: { shape: 'donut', total: '9.0m', bars: [{ label: 'Rates', value: 4.5e6, text: '4.5m' }, { label: 'FX', value: -3e6, text: '−3.0m' }, { label: 'Credit', value: 1.5e6, text: '1.5m' }] } },
+  { kind: 'waterfall', data: { unit: 'USD', steps: [1, 2, 3, 4, 5, 6, 7, 8].map((i) => ({ label: 'S' + i, value: i, from: i * (i - 1) / 2, to: i * (i + 1) / 2, text: '+' + i, total: false })) } },
+  { kind: 'histogram', data: { bins: [{ from: 0, to: 1, count: 3, label: '0 to 1' }, { from: 1, to: 2, count: 1, label: '1 to 2' }],
+    markers: [{ label: 'VaR', value: 0.5, text: '0.5', tone: 'neg' }, { value: 1.5, text: '1.5' }], count: 4, dropped: 2, unit: 'm' } },
+  { kind: 'area', data: {} }, { kind: 'waterfall', data: {} }, { kind: 'histogram', data: {} }, { kind: 'scatter', data: {} }, { kind: 'candlestick', data: {} },
+  { kind: 'graph', data: {} }, { kind: 'donut', data: {} }, { kind: 'surface', data: {} }];
+const CHART_KINDS = new Set(['line', 'area', 'waterfall', 'histogram', 'scatter', 'candlestick', 'graph', 'surface']);
+const CASES = showcase.panels.filter((p) => CHART_KINDS.has(p.kind)).map((p) => ({ kind: p.kind, data: p.data })).concat(EXTRA);
+const seriesOf = (o) => JSON.parse(JSON.stringify((o.series || []).map((s) => ({ type: s.type, name: s.name == null ? '' : String(s.name), data: s.data || null })),
+  (k, v) => (typeof v === 'function' ? undefined : v)));
+
+test('panel charts: every kind gives the frozen 1.2.0 series, point for point (the parity suite compares them with the console)', () => {
+  assert.ok(CASES.length >= 20);
+  assert.deepEqual([...C.PANEL_KINDS], ['line', 'area', 'waterfall', 'histogram', 'scatter', 'candlestick', 'graph', 'donut', 'surface', 'map']);
+  for (const c of CASES) {
+    const views = c.kind === 'surface' ? ['heatmap', '3d'] : [undefined];
+    for (const v of views) {
+      const mine = C.panelOption(c.kind, c.data, TOK, SIZE, v), old = Frozen.BUILD[c.kind](JSON.parse(JSON.stringify(c.data)), TOK, SIZE, v);
+      assert.deepEqual(seriesOf(mine), seriesOf(old), c.kind + (v ? ' ' + v : ''));
+      assert.deepEqual(Object.keys(mine).sort(), Object.keys(old).sort(), c.kind + ': the same parts of the option');
+    }
+  }
+  assert.throws(() => C.panelOption('sankey', {}, TOK), /no panel chart sankey/);
+  assert.deepEqual(C.labelFit([{ text: 'x' }], SIZE), Frozen.labelFit([{ text: 'x' }], SIZE));
+  assert.equal(C.escapeTip('<b a="1">&'), '&lt;b a=&quot;1&quot;&gt;&amp;');
+});
+
+test('panel charts: the tick formatters print what 1.2.0 printed, on drishti-core formatCompact (ties round half up)', () => {
+  const vals = [0, 0.125, 2.675, 3.6, 3.95, 12.5, 74.06, 999.995, 9999.5, -9999.994, 10000, 12345, -12345.6, 99949, 99950, 100000, 123456, 999999, 1e6, 1234567,
+    -1.5e6, 1e7, 12345678, 99.5e6, 1e8, 123456789, 999999999, 1e9, 1.235e9, -2.5e9, 1e12, 1.2345e12, -0.4, NaN, Infinity];
+  for (const v of vals) {
+    assert.equal(C.panelCompact(v), String(FrozenFormat.compact(v)), 'compact ' + v);
+    assert.equal(C.panelLineCompact(v), String(FrozenFormat.lineCompact(v)), 'lineCompact ' + v);
+  }
+  // where they differ, on purpose: the decimal half-up of drishti-core (the server's FormatSpec) against the double's toFixed, and no "−0"
+  assert.deepEqual([C.panelCompact(1.005), FrozenFormat.compact(1.005)], ['1.01', '1']);
+  assert.deepEqual([C.panelCompact(9.995e6), FrozenFormat.compact(9.995e6)], ['10m', '9.99m']);
+  assert.deepEqual([C.panelCompact(-0.001), FrozenFormat.compact(-0.001)], ['0', '−0']);
+});
+
+test('panel charts: tokens are read from the view, and the manager draws, links, breaks in words and disposes', async () => {
+  const styles = { '--d-ink': ' #111 ', '--d-link': '#00f', '--d-font-mono': ' mono ' };
+  const fakeEl = { ownerDocument: { defaultView: { getComputedStyle: () => ({ getPropertyValue: (k) => styles[k] || '' }) } } };
+  const t = C.panelTokens(fakeEl);
+  assert.equal(t.ink, '#111');
+  assert.equal(t.link, '#00f');
+  assert.equal(t.mono, 'mono');
+  assert.equal(t['bg-2'], '');
+  const made = [], clicks = {};
+  const engine = {
+    getInstanceByDom: (el) => el.__inst || null,
+    init: (el, theme, o) => {
+      const inst = { el, renderer: o.renderer, option: null, disposed: false, setOption(opt) { if (el.__fail) { throw new Error('bad'); } this.option = opt; },
+        on(n, fn) { clicks[el.id] = fn; }, isDisposed() { return this.disposed; }, dispose() { this.disposed = true; el.__inst = null; }, resize() {} };
+      el.__inst = inst; made.push(inst); return inst;
+    }
+  };
+  const box = (id, kind, data, fail) => {
+    const attrs = { 'data-r-chart': kind };
+    return { id, __drishti: { kind, data }, __fail: fail, clientWidth: 600, clientHeight: 280, className: 'chart', textContent: '',
+      getAttribute: (k) => (k in attrs ? attrs[k] : null), removeAttribute: (k) => { delete attrs[k]; }, setAttribute: (k, v) => { attrs[k] = v; }, attrs, closest: () => null };
+  };
+  const els = [box('a', 'scatter', CASES.find((c) => c.kind === 'scatter' && c.data.groups && c.data.groups.length).data), box('b', 'line', { x: ['1'], series: [] }, true), box('c', 'map', { mode: 'world' })];
+  const listeners = {};
+  const win = { ResizeObserver: null, requestAnimationFrame: (f) => f(), document: { body: {} } };
+  const root = { ownerDocument: { defaultView: win }, querySelectorAll: () => els, querySelector: () => null, host: null, firstElementChild: null,
+    addEventListener: (n, f) => { listeners[n] = f; }, removeEventListener: (n) => { delete listeners[n]; } };
+  const opened = [];
+  const pc = new C.PanelCharts(root, { engine: () => Promise.resolve(engine), tokensFrom: () => fakeEl, onLink: (l, el) => opened.push([l, el.id]) });
+  await pc.draw();
+  assert.equal(made[0].renderer, 'svg');
+  assert.deepEqual(seriesOf(made[0].option), seriesOf(Frozen.BUILD.scatter(els[0].__drishti.data, t, { width: 600, height: 280 })));
+  clicks.a({ data: { point: { link: { kind: 'book', id: 'B1' } } } });
+  assert.deepEqual(opened, [[{ kind: 'book', id: 'B1' }, 'a']]);
+  assert.equal(els[1].textContent, 'No data available');
+  assert.equal(els[1].className, 'pnl-empty');
+  assert.equal(els[1].attrs['data-r-chart'], undefined);
+  assert.equal(els[2].textContent, 'The map did not load');           // no map helper given
+  assert.equal(pc.instances().length, 1);
+  pc.dispose();
+  assert.equal(made[0].disposed, true);
+  assert.equal(listeners.click, undefined);
+  const none = box('d', 'line', {});
+  const pc2 = new C.PanelCharts(Object.assign({}, root, { querySelectorAll: () => [none] }), { engine: () => Promise.reject(new Error('blocked')) });
+  await pc2.draw();
+  assert.equal(none.textContent, 'Charts are not available');
 });

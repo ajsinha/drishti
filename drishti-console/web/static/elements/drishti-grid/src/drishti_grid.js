@@ -58,6 +58,10 @@ export const DENSITIES = Object.freeze({ comfortable: 36, compact: 28, terminal:
  * @property {{writeBack: function(Object): Promise<Object>, fourEyes: boolean, undoLimit: number}} [editing] cell editing
  *   (drishti_grid-edit.js): the server's write-back hook (each edit transaction; it answers applied, refused or proposed), four eyes
  * @property {string} [locale] how typed and pasted numbers are read (de-DE: 1.250,5)
+ * @property {boolean} [treeData=false] the rows make a tree by their paths (getDataPath): nodes open and close, a node no row names carries
+ *   its figures as a group (the server's when clientAggregation is false); the first shown column holds the node's key
+ * @property {function(Object): string[]} [getDataPath] a row's path from the top (tree data)
+ * @property {number} [groupDefaultExpanded=0] groups and tree nodes open down to this level (-1: all)
  */
 
 /**
@@ -74,7 +78,8 @@ export class GridModel {
     this.layout = LAYOUTS.indexOf(o.layout) >= 0 ? o.layout : 'wells';
     this.density = DENSITIES[o.density] ? o.density : 'compact';
     this.rowModel = o.datasource ? new ServerRowModel({ datasource: o.datasource, blockSize: o.blockSize, getRowId: o.getRowId })
-      : new ClientRowModel({ columns: this.columns, rows: o.rows || [], getRowId: o.getRowId, clientAggregation: o.clientAggregation });
+      : new ClientRowModel({ columns: this.columns, rows: o.rows || [], getRowId: o.getRowId, clientAggregation: o.clientAggregation, treeData: o.treeData,
+        getDataPath: o.getDataPath, groupDefaultExpanded: o.groupDefaultExpanded });
     this.serverSide = !!o.datasource;
     this.viewport = new Viewport({ rowHeight: DENSITIES[this.density] });
     this.selection = new SelectionModel({ mode: o.rowSelection });
@@ -174,8 +179,10 @@ export class GridModel {
       if (row.entry.kind === 'header') { return null; }
       return cellValue(this.answer, row.entry.key, col.colKey, col.measure).value;
     }
+    if (row.tree && c === 0) { return row.treeKey; }
     if (row.kind === 'group') {
       if (c === 0) { return row.value; }
+      if (row.tree && row.row) { return getValue(row.row, col); }
       const agg = row.aggregates || (row.row || {});
       return agg[col.id] !== undefined ? agg[col.id] : null;
     }

@@ -352,7 +352,7 @@
     host.appendChild(paint);
     var model = { contract: "1.0", ref: { kind: "explain", id: a.kind + ":" + a.subject }, title: { pill: "Why it moved", id: a.title + " · " + x.from + " to " + x.to },
                   strip: [], panels: x.panels || [], keys: [], provenance: { source: "the server's Explain, GET /api/v1/explain?kind=" + a.kind } };
-    lib = lib || import("/static/render/1.2.0/drishti-render.js");
+    lib = lib || import("/static/render/2.0.0/drishti-render.js");
     return lib.then(function (R) {
       var v = R.render(paint, model, { theme: document.documentElement.getAttribute("data-theme") || "terminal", header: "none", help: false,
                                        tables: true, live: false, navigation: "host", device: window.innerWidth <= 640 ? "phone" : "desk" });

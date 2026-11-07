@@ -172,6 +172,8 @@ def test_links_and_panels_that_read_a_command_turned_off_say_not_active():
 
     from conftest import CONSOLE
     env = Environment(loader=FileSystemLoader(str(CONSOLE / "web" / "templates")))
+    from core import half_up
+    half_up.install(env)
     env.globals.update(drs_message=lambda *a: "", drs_advice=lambda *a: "")
     macros = env.get_template("_macros/panels.html").module
     cell = str(macros.cell_text({"text": "FRTB-RATES-1", "tone": "inactive", "link": None}))

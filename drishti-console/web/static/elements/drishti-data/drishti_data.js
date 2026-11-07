@@ -344,8 +344,9 @@
       constructor(o) {
         if (!o || !o.url) { throw new Error('a live client needs the feed\'s url'); }
         this.o = Object.assign({ heartbeatMs: 45000, resumeParam: 'lastEventId', events: ['message'] }, o);
-        this.transport = this.o.transport || (/^wss?:/i.test(this.o.url) ? 'websocket' : 'sse');
-        if (this.transport !== 'sse' && this.transport !== 'websocket') { throw new Error('no live transport ' + this.transport + ' (sse, websocket)'); }
+        this.transport = this.o.transport || (/^wss?:/i.test(this.url()) ? 'websocket' : 'sse');
+        if (['sse', 'websocket', 'fetch'].indexOf(this.transport) < 0) { throw new Error('no live transport ' + this.transport + ' (sse, websocket, fetch)'); }
+        this.lastStatus = 0;
         this.events = new EventBus();
         this.backoff = new Backoff(this.o.backoff);
         this.heart = new Heartbeat({ timeoutMs: this.o.heartbeatMs, onTimeout: () => this.dropped(new Error('no message or heartbeat for ' + Math.round(this.o.heartbeatMs / 1000) + ' s')) });
@@ -368,23 +369,25 @@
       }
       setState(s, extra) { this.state = s; this.events.emit('state', Object.assign({ state: s, attempt: this.backoff.attempt }, extra)); }
       open() { this.stopped = false; this.connectNow(); }
+      url() { return typeof this.o.url === 'function' ? String(this.o.url()) : this.o.url; }
       address() {
-        if (this.transport !== 'sse' || this.lastEventId === null) { return this.o.url; }
-        return this.o.url + (this.o.url.indexOf('?') >= 0 ? '&' : '?') + encodeURIComponent(this.o.resumeParam) + '=' + encodeURIComponent(this.lastEventId);
+        const u = this.url();
+        if (this.transport === 'websocket' || this.lastEventId === null) { return u; }
+        return u + (u.indexOf('?') >= 0 ? '&' : '?') + encodeURIComponent(this.o.resumeParam) + '=' + encodeURIComponent(this.lastEventId);
       }
       connectNow() {
         clearTimeout(this.retry);
         this.teardown();
         this.setState('connecting');
         this.stats.connects++;
-        try { this.conn = this.transport === 'sse' ? this.sse() : this.ws(); }
+        try { this.conn = this.transport === 'sse' ? this.sse() : this.transport === 'fetch' ? this.fetchSse() : this.ws(); }
         catch (e) { this.dropped(e); }
       }
       sse() {
         const ES = this.o.EventSource || globalThis.EventSource;
         if (!ES) { throw new Error('this page has no EventSource'); }
         const es = new ES(this.address(), { withCredentials: !!this.o.withCredentials });
-        const onMsg = (e) => this.received(e.data, e.lastEventId);
+        const onMsg = (e) => this.received(e.data, e.lastEventId, e.type);
         this.o.events.forEach((n) => es.addEventListener(n, onMsg));
         es.addEventListener('heartbeat', () => this.alive());
         es.addEventListener('open', () => this.opened());
@@ -394,7 +397,7 @@
       ws() {
         const WS = this.o.WebSocket || globalThis.WebSocket;
         if (!WS) { throw new Error('this page has no WebSocket'); }
-        const ws = new WS(this.o.url, this.o.protocols);
+        const ws = new WS(this.url(), this.o.protocols);
         let ping = 0;
         ws.addEventListener('open', () => {
           if (this.lastEventId !== null) { ws.send(JSON.stringify({ type: 'resume', lastEventId: this.lastEventId })); }
@@ -407,6 +410,34 @@
         ws.addEventListener('error', () => { /* close follows */ });
         return { close: () => { clearInterval(ping); this.closing = true; try { ws.close(); } catch (e) { /* already */ } this.closing = false; }, raw: ws };
       }
+      fetchSse() {
+        const F = this.o.fetch || globalThis.fetch, ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        if (!F) { throw new Error('this page has no fetch'); }
+        let closed = false;
+        const run = async () => {
+          const hd = typeof this.o.headers === 'function' ? await this.o.headers({ status: this.lastStatus }) : (this.o.headers || {});
+          const res = await F(this.address(), { headers: Object.assign({ Accept: 'text/event-stream' }, hd), credentials: this.o.credentials || 'same-origin',
+            cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
+          if (!res.ok) { this.lastStatus = res.status; throw Object.assign(new Error('the live feed answered ' + res.status), { status: res.status }); }
+          this.lastStatus = 0;
+          this.opened();
+          const reader = res.body.getReader(), dec = new TextDecoder();
+          let buf = '';
+          for (;;) {
+            const r = await reader.read();
+            if (r.done || closed) { break; }
+            const got = parseSse(buf + dec.decode(r.value, { stream: true }));
+            buf = got.rest;
+            got.events.forEach((e) => {
+              if (e.event === 'heartbeat' || (e.data === '' && e.comment)) { this.alive(); return; }
+              if (this.o.events.indexOf(e.event) >= 0) { this.received(e.data, e.id, e.event); }
+            });
+          }
+          throw new Error('the live feed ' + this.url() + ' ended');
+        };
+        run().catch((e) => { if (!closed) { this.events.emit('error', { error: e, status: e.status || 0 }); this.dropped(e); } });
+        return { close: () => { closed = true; if (ctrl) { ctrl.abort(); } }, raw: ctrl };
+      }
       opened() {
         if (this.stats.connects > 1) { this.stats.reconnects++; }
         this.backoff.reset();
@@ -414,13 +445,14 @@
         this.setState('open', { resumedFrom: this.lastEventId });
       }
       alive() { this.stats.heartbeats++; this.heart.beat(); }
-      received(data, eventId) {
+      received(data, eventId, eventName) {
         this.heart.beat();
         let m;
         try { m = typeof data === 'string' ? JSON.parse(data) : data; }
         catch (e) { this.events.emit('error', { error: new Error('the live feed sent text that is not JSON: ' + String(data).slice(0, 80)) }); return; }
         if (!m || typeof m !== 'object') { return; }
         if (m.type === 'heartbeat' || m.type === 'pong' || m.type === 'ping') { this.stats.heartbeats++; return; }
+        if (this.o.eventField && eventName && m[this.o.eventField] === undefined) { m[this.o.eventField] = eventName; }
         const id = eventId || (m.eventId !== undefined ? m.eventId : m.seq !== undefined ? m.seq : null);
         if (id !== null && id !== undefined && id !== '') { this.lastEventId = String(id); }
         this.stats.messages++;
@@ -448,7 +480,26 @@
       }
       destroy() { this.close(); this.subs.clear(); if (this.win && this.win.removeEventListener) { this.win.removeEventListener('online', this.onOnline); } }
     }
-    return { "LIVE_STATES": LIVE_STATES, "LiveClient": LiveClient };
+    function parseSse(text) {
+      const events = [];
+      const blocks = String(text).replace(/\r\n?/g, '\n').split('\n\n');
+      const rest = blocks.pop();
+      blocks.forEach((b) => {
+        let event = 'message', id = null, comment = false;
+        const data = [];
+        b.split('\n').forEach((line) => {
+          if (line === '') { return; }
+          if (line[0] === ':') { comment = true; return; }
+          const at = line.indexOf(':'), field = at < 0 ? line : line.slice(0, at);
+          let value = at < 0 ? '' : line.slice(at + 1);
+          if (value[0] === ' ') { value = value.slice(1); }
+          if (field === 'event') { event = value; } else if (field === 'data') { data.push(value); } else if (field === 'id') { id = value; }
+        });
+        if (data.length || comment) { events.push({ event: event, data: data.join('\n'), id: id, comment: comment && !data.length }); }
+      });
+      return { events: events, rest: rest };
+    }
+    return { "LIVE_STATES": LIVE_STATES, "LiveClient": LiveClient, "parseSse": parseSse };
   })();
   /* ---- src/drishti_sources.js ---- */
   __m["src/drishti_sources.js"] = (function () {
@@ -586,7 +637,7 @@
   __m["src/drishti_index.js"] = (function () {
     var LiveClient = __m["src/drishti_live-client.js"].LiveClient;
     function live(o) { return new LiveClient(o); }
-    return { "live": live, "Backoff": __m["src/drishti_backoff.js"].Backoff, "Heartbeat": __m["src/drishti_backoff.js"].Heartbeat, "TransactionSink": __m["src/drishti_backpressure.js"].TransactionSink, "pipeToGrid": __m["src/drishti_backpressure.js"].pipeToGrid, "LIVE_STATES": __m["src/drishti_live-client.js"].LIVE_STATES, "LiveClient": __m["src/drishti_live-client.js"].LiveClient, "ARROW_MEDIA": __m["src/drishti_arrow.js"].ARROW_MEDIA, "ARROW_VENDOR": __m["src/drishti_arrow.js"].ARROW_VENDOR, "arrowLib": __m["src/drishti_arrow.js"].arrowLib, "readColumn": __m["src/drishti_arrow.js"].readColumn, "DataFrame": __m["src/drishti_arrow.js"].DataFrame, "fromArrow": __m["src/drishti_arrow.js"].fromArrow, "fromArrowTable": __m["src/drishti_arrow.js"].fromArrowTable, "fromJson": __m["src/drishti_arrow.js"].fromJson, "readResponse": __m["src/drishti_arrow.js"].readResponse, "fetchFrame": __m["src/drishti_arrow.js"].fetchFrame, "ArrowClient": __m["src/drishti_arrow.js"].ArrowClient, "rowRequest": __m["src/drishti_sources.js"].rowRequest, "memorySource": __m["src/drishti_sources.js"].memorySource, "restSource": __m["src/drishti_sources.js"].restSource, "serverSideSource": __m["src/drishti_sources.js"].serverSideSource, "arrowSource": __m["src/drishti_sources.js"].arrowSource, "liveSource": __m["src/drishti_sources.js"].liveSource, "readAll": __m["src/drishti_sources.js"].readAll };
+    return { "live": live, "Backoff": __m["src/drishti_backoff.js"].Backoff, "Heartbeat": __m["src/drishti_backoff.js"].Heartbeat, "TransactionSink": __m["src/drishti_backpressure.js"].TransactionSink, "pipeToGrid": __m["src/drishti_backpressure.js"].pipeToGrid, "LIVE_STATES": __m["src/drishti_live-client.js"].LIVE_STATES, "LiveClient": __m["src/drishti_live-client.js"].LiveClient, "parseSse": __m["src/drishti_live-client.js"].parseSse, "ARROW_MEDIA": __m["src/drishti_arrow.js"].ARROW_MEDIA, "ARROW_VENDOR": __m["src/drishti_arrow.js"].ARROW_VENDOR, "arrowLib": __m["src/drishti_arrow.js"].arrowLib, "readColumn": __m["src/drishti_arrow.js"].readColumn, "DataFrame": __m["src/drishti_arrow.js"].DataFrame, "fromArrow": __m["src/drishti_arrow.js"].fromArrow, "fromArrowTable": __m["src/drishti_arrow.js"].fromArrowTable, "fromJson": __m["src/drishti_arrow.js"].fromJson, "readResponse": __m["src/drishti_arrow.js"].readResponse, "fetchFrame": __m["src/drishti_arrow.js"].fetchFrame, "ArrowClient": __m["src/drishti_arrow.js"].ArrowClient, "rowRequest": __m["src/drishti_sources.js"].rowRequest, "memorySource": __m["src/drishti_sources.js"].memorySource, "restSource": __m["src/drishti_sources.js"].restSource, "serverSideSource": __m["src/drishti_sources.js"].serverSideSource, "arrowSource": __m["src/drishti_sources.js"].arrowSource, "liveSource": __m["src/drishti_sources.js"].liveSource, "readAll": __m["src/drishti_sources.js"].readAll };
   })();
   return Object.freeze(Object.assign({ library: "drishti-data", version: "0.1.0" }, __m["src/drishti_index.js"]));
 });

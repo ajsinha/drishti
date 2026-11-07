@@ -146,6 +146,42 @@ test('the live client: a silent connection is dropped after the heartbeat; a Web
   assert.throws(() => new D.LiveClient({ url: '/x', transport: 'carrier-pigeon' }), /no live transport/);
 });
 
+test('the live client over fetch: SSE read with fetch so a bearer travels, the address asked at every connect, the event name in each message, a 401 remembered for the next headers', async () => {
+  const P = D.parseSse('event: frame\ndata: {"seq":1}\nid: 5\n\n: keep-alive\n\ndata: {"a":\ndata: 2}\n\nevent: vi');
+  assert.deepEqual(P.events.map((e) => [e.event, e.data, e.id, e.comment]), [['frame', '{"seq":1}', '5', false], ['message', '', null, true], ['message', '{"a":\n2}', null, false]]);
+  assert.equal(P.rest, 'event: vi');
+  const calls = [];
+  let answer = 0;
+  const enc = new TextEncoder();
+  const fakeFetch = (url, init) => {
+    calls.push({ url, auth: init.headers.Authorization, accept: init.headers.Accept });
+    if (answer++ === 0) { return Promise.resolve({ ok: false, status: 401 }); }
+    const chunks = ['event: view\ndata: {"ref":{"kind":"trade"}}\nid: 9\n\nevent: fr', 'ame\ndata: {"seq":2}\n\nevent: heartbeat\ndata: {}\n\n'];
+    let i = 0;
+    return Promise.resolve({ ok: true, status: 200, body: { getReader: () => ({ read: () => (i < chunks.length ? Promise.resolve({ value: enc.encode(chunks[i++]), done: false }) : new Promise(() => {})) }) } });
+  };
+  let keys = 'a';
+  const seen = [];
+  const c = new D.LiveClient({ url: () => '/channel?s=' + keys, transport: 'fetch', fetch: fakeFetch, events: ['view', 'frame'], eventField: '$event',
+    headers: (info) => ({ Authorization: 'Bearer ' + (info.status === 401 ? 'fresh' : 'stale') }), heartbeatMs: 0, backoff: { baseMs: 5, jitter: false }, window: {} });
+  const errors = [];
+  c.on('error', (e) => { if (e.status) { errors.push(e.status); } });
+  c.subscribe((m) => seen.push(m));
+  await tick(2);
+  assert.deepEqual(errors, [401]);
+  keys = 'a&s=b';
+  await tick(25);
+  assert.equal(calls.length, 2);
+  assert.deepEqual(calls.map((x) => x.auth), ['Bearer stale', 'Bearer fresh']);
+  assert.equal(calls[1].url, '/channel?s=a&s=b');
+  assert.equal(calls[1].accept, 'text/event-stream');
+  assert.deepEqual(seen, [{ ref: { kind: 'trade' }, $event: 'view' }, { seq: 2, $event: 'frame' }]);
+  assert.equal(c.lastEventId, '2');
+  assert.equal(c.state, 'open');
+  c.destroy();
+  assert.equal(c.state, 'closed');
+});
+
 test('data sources: in memory (filter, sort, groups, windows), REST by POST and by GET, readAll for a chart, a live source', async () => {
   const rows = Array.from({ length: 250 }, (_, i) => ({ id: 'T' + i, desk: ['Rates', 'FX', 'Credit'][i % 3], mtm: (i % 7) - 3 }));
   const s = D.memorySource(rows);
