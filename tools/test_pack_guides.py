@@ -14,7 +14,7 @@
 
 """Every pack guide is complete (the product owner's request of 2026-10-26: data contract, data retrieval and details for all packs):
 each pack with contracts has a guide listed in its help entry that ends with the generated Data contracts and Data retrieval sections,
-naming every kind and every column of its contracts; every stored kind has an origin in data_retrieval.yaml (an external source or a
+the first a row per kind linking to its contract page (the one home of the columns); every stored kind has an origin in data_retrieval.yaml (an external source or a
 generator); every external source names a refresh script and a licence; the packs without a guide generator are current
 (guide_data.py --check); every pack README points to its guide's two sections and to the External data page when it has external
 sources."""
@@ -50,7 +50,7 @@ def test_the_ten_packs_with_contracts_are_all_here():
 
 
 @pytest.mark.parametrize("pack", PACKS, ids=lambda d: d.name)
-def test_the_guide_has_both_sections_with_every_kind_and_column(pack):
+def test_the_guide_has_both_sections_with_every_kind_linked_to_its_contract(pack):
     guide = pack / "guides" / f"{pack.name}.md"
     assert guide.is_file(), f"{pack.name}: no guide"
     helps = yaml.safe_load((pack / "config" / "help.yaml").read_text()) or {}
@@ -60,10 +60,11 @@ def test_the_guide_has_both_sections_with_every_kind_and_column(pack):
     assert text.index("## Data contracts") < text.index("## Data retrieval")
     contracts = text[text.index("## Data contracts"):text.index("## Data retrieval")]
     retrieval = text[text.index("## Data retrieval"):]
+    assert "```" not in contracts and "| Column |" not in contracts, f"{pack.name}: fields belong to the contract page, not the guide"
     for c in GD.contracts(pack):
-        assert f"### {c['mnemonic']}: " in contracts and f"(`{c['kind']}`)" in contracts, f"{pack.name}: {c['kind']}"
-        for f in c.get("fields") or []:
-            assert f"| `{f['name']}` |" in contracts, f"{pack.name}/{c['kind']}: column {f['name']}"
+        # one home for data: each kind is a row linking to its section of docs/contracts/packs/<pack>.md, which holds the fields
+        assert f"| `{c['mnemonic']}` | `{c['kind']}` |" in contracts, f"{pack.name}: {c['kind']}"
+        assert f"contracts/packs/{pack.name}.md#{GD._anchor(c)})" in contracts, f"{pack.name}: {c['kind']} does not link to its contract"
         assert f"| `{c['mnemonic']}` | `{c['kind']}` |" in retrieval, f"{pack.name}: {c['kind']} has no origin row"
     assert "EXTERNAL_DATA.md" in retrieval and "lake demo" in retrieval and "Offline" in retrieval
 
