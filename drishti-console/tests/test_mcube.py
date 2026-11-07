@@ -25,6 +25,7 @@ import pytest
 from core.backend import BackendError
 from routes.mcube_routes import mcube_command, parse
 from test_play import RISK_ABOUT, _app
+import engine_fakes  # noqa: E402
 
 
 @pytest.mark.parametrize("typed, where", [
@@ -57,6 +58,7 @@ def test_the_page_is_the_pivot_screen_with_the_mr_lens_and_the_api_is_read_as_th
         return {"ok": True, "path": path}
 
     monkeypatch.setattr(backend, "pivot", pivot, raising=False)
+    engine_fakes.patch(monkeypatch, backend, pivot=pivot)
     app, c = _app(backend, monkeypatch, RISK_ABOUT)
     r = c.get("/go", params={"q": "MCUBE DESK:RATES BY MGMT.BOOK <GO>"}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == "/pivot?preset=mr&text=DESK%3ARATES+BY+MGMT.BOOK"

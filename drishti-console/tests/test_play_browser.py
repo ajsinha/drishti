@@ -30,6 +30,7 @@ pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install
 
 from conftest import CONSOLE, FakeBackend  # noqa: E402
 from test_live_tabs_browser import browser  # noqa: E402,F401 - the shared browser fixture
+import engine_fakes  # noqa: E402
 
 N, SHOWN, TOTAL = 509, 500, 560
 
@@ -98,6 +99,8 @@ GRID = _grid()
 
 class PlayBackend(FakeBackend):
     asked: list = []
+
+    engine = engine_fakes.method
 
     async def var(self, verb, path, ident, /, body=None, raw=False, accept="", **params):
         PlayBackend.asked.append((path, dict(params)))

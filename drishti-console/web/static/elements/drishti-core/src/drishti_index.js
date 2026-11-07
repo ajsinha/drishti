@@ -34,7 +34,7 @@ export { FOCUSABLE, focusable, trapFocus, announce, rovingIndex, rovingTabindex 
 export { installResize, scanResize, resizeHandle, resetResize } from './drishti_resize.js';
 export { WORKBENCH, LAYOUT, interpretPanelKey, GridKeys, keyName, normalizeKey, keymap } from './drishti_keys.js';
 export { openDialog, closeDialog, openDrawer, ToastTray, toast } from './drishti_overlay.js';
-export { configure, manifest, libraryVersion, requirements, loaded, load, staticUrl, loadScript, loadStyle } from './drishti_loader.js';
+export { configure, manifest, libraryVersion, requirements, loaded, load, refused, staticUrl, loadScript, loadStyle } from './drishti_loader.js';
 export { isBlank, compareValues, compareRows, cycleSort, passes, rowFilter, filterWords, FILTER_CHANNEL, filterRows, textSortKey,
   compareTextKeys } from './drishti_filters.js';
 export { h, placeAt, placeUnder, attrAllowed, safeUrl } from './drishti_dom.js';

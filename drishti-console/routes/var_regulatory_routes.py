@@ -21,7 +21,7 @@
   (``VAR REPORT annual-report-var FY2026``).
 
 Each page is a shell: web/static/js/drishti_var-backtesting.js and drishti_var-reports.js fill it from the same-origin JSON below, which asks the
-server (``/api/v1/var/backtesting``, ``/statistics``, ``/reports``) as the person. Behind the edition's ``VAR`` word, as the explorer."""
+server (``/api/v1/risk/var/backtesting``, ``/statistics``, ``/reports``) as the person. Behind the edition's ``VAR`` word, as the explorer."""
 from __future__ import annotations
 
 import re
@@ -33,6 +33,7 @@ from fastapi.responses import JSONResponse, Response
 from core.backend import BackendError
 from core.csrf import json_body
 from routes.common import ident, render
+from plugins.banking import risk_api
 
 router = APIRouter(include_in_schema=False)
 
@@ -122,10 +123,10 @@ async def api_backtesting(request: Request):
     q = request.query_params
     try:
         if q.get("format") == "xlsx":
-            body, headers = await request.app.state.backend.var("GET", "/backtesting", ident(request), raw=True, scope=q.get("scope", ""),
+            body, headers = await risk_api.var(request.app.state.backend, "GET", "/backtesting", ident(request), raw=True, scope=q.get("scope", ""),
                                                                 format="xlsx", asOf=q.get("asOf", ""))
             return Response(body, media_type=FORMATS["xlsx"], headers={"Content-Disposition": headers.get("content-disposition", "attachment")})
-        return await request.app.state.backend.var("GET", "/backtesting", ident(request), scope=q.get("scope", ""), asOf=q.get("asOf", ""))
+        return await risk_api.var(request.app.state.backend, "GET", "/backtesting", ident(request), scope=q.get("scope", ""), asOf=q.get("asOf", ""))
     except BackendError as e:
         return _problem(e)
 
@@ -134,7 +135,7 @@ async def api_backtesting(request: Request):
 async def api_statistics(request: Request):
     q = request.query_params
     try:
-        return await request.app.state.backend.var("GET", "/statistics", ident(request), scope=q.get("scope", ""), period=q.get("period", ""),
+        return await risk_api.var(request.app.state.backend, "GET", "/statistics", ident(request), scope=q.get("scope", ""), period=q.get("period", ""),
                                                    measure=q.get("measure", "var"))
     except BackendError as e:
         return _problem(e)
@@ -143,7 +144,7 @@ async def api_statistics(request: Request):
 @router.get("/api/var/reports")
 async def api_reports(request: Request):
     try:
-        return await request.app.state.backend.var("GET", "/reports", ident(request))
+        return await risk_api.var(request.app.state.backend, "GET", "/reports", ident(request))
     except BackendError as e:
         return _problem(e)
 
@@ -160,7 +161,7 @@ async def api_generate(request: Request, report: str):
     if (bad := _checked(report, period or "FY2000")) is not None:
         return bad
     try:
-        return await request.app.state.backend.var("POST", f"/reports/{report}/runs", ident(request), period=period)
+        return await risk_api.var(request.app.state.backend, "POST", f"/reports/{report}/runs", ident(request), period=period)
     except BackendError as e:
         return _problem(e)
 
@@ -170,7 +171,7 @@ async def api_run(request: Request, report: str, period: str):
     if (bad := _checked(report, period)) is not None:
         return bad
     try:
-        return await request.app.state.backend.var("GET", f"/reports/{report}/runs/{quote(period)}", ident(request),
+        return await risk_api.var(request.app.state.backend, "GET", f"/reports/{report}/runs/{quote(period)}", ident(request),
                                                     version=request.query_params.get("version", ""))
     except BackendError as e:
         return _problem(e)
@@ -186,7 +187,7 @@ async def api_narrative(request: Request, report: str, period: str):
     if isinstance(keep.get("narrative"), str):
         keep["narrative"] = keep["narrative"][:4000]
     try:
-        return await request.app.state.backend.var("POST", f"/reports/{report}/runs/{quote(period)}/narrative", ident(request), body=keep)
+        return await risk_api.var(request.app.state.backend, "POST", f"/reports/{report}/runs/{quote(period)}/narrative", ident(request), body=keep)
     except BackendError as e:
         return _problem(e)
 
@@ -200,7 +201,7 @@ async def api_file(request: Request, report: str, period: str):
     if fmt not in FORMATS:
         return JSONResponse({"code": "DRS-5001", "detail": "a file is xlsx, csv or pdf"}, status_code=400)
     try:
-        body, headers = await request.app.state.backend.var("GET", f"/reports/{report}/runs/{quote(period)}/file", ident(request), raw=True,
+        body, headers = await risk_api.var(request.app.state.backend, "GET", f"/reports/{report}/runs/{quote(period)}/file", ident(request), raw=True,
                                                             format=fmt, version=q.get("version", ""), draft=q.get("draft", ""))
     except BackendError as e:
         return _problem(e)

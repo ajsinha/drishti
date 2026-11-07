@@ -32,6 +32,7 @@ from pathlib import Path
 import pytest
 
 from conftest import CONSOLE, FakeBackend
+import engine_fakes  # noqa: E402
 
 # ------------------------------------------------------------------------------------------------------------------ the inventory
 #: the page as served (terminal/var.html): (what it is, the text that must be in the page)
@@ -180,6 +181,8 @@ class LayoutBackend(FakeBackend):
                 "trades": 120, "terms": [], "ancestors": [], "lens": {"horizon": "1D", "method": "", "label": "1-day", "confidence": 0.99,
                                                                      "esConfidence": 0.975, "set": ""},
                 "provenance": dict(PROV, scope=scope)}
+
+    engine = engine_fakes.method
 
     async def var(self, method, path, ident, /, body=None, raw=False, accept="", **params):
         from core.backend import BackendError

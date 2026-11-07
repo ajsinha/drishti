@@ -14,7 +14,7 @@
 
 """The VaR explorer (docs/guides/VAR_GUIDE.md section 3): ``VAR DESK RATES <GO>`` opens
 ``/var?scope=DESK:RATES``. The page is a shell; web/static/js/drishti_var-explorer.js fills its panels from the same-origin JSON below, which
-asks the server's VaR engine (/api/v1/var) with the user's own identity, so entitlements by node and masks apply as on every screen.
+asks the server's VaR engine (/api/v1/risk/var) with the user's own identity, so entitlements by node and masks apply as on every screen.
 
 Command words after VAR (``VAR BANK``, ``VAR LE LE-NY``, ``VAR DIV MARKETS``, ``VAR DESK RATES``, ``VAR BOOK BOOK-RATES-1``,
 ``VAR POS <position>``, ``VAR TRD <trade>``, ``VAR CPTY <counterparty>``, ``VAR PORT <portfolio>``, ``VAR SCOPE <basket or portfolio>``,
@@ -35,6 +35,8 @@ from core import arrow_answer
 from core.backend import BackendError
 from core.csrf import json_body
 from routes.common import ident, render
+from plugins.banking import risk_api
+from core import plugins as _plugins
 
 router = APIRouter(include_in_schema=False)
 
@@ -334,12 +336,12 @@ PROPOSAL = re.compile(r"^stress-window/proposals/SWP-[0-9]{1,12}$")
 async def explain_workbook(request: Request):
     """Why it moved as a workbook of formulas (VAR_GUIDE.md section 3.11; the Explain drawer's Workbook), streamed from the server as
     the person."""
-    from routes.play_routes import _stream
+    from core.workbook_stream import stream
     q = request.query_params
     p = {k: q[k] for k in ("scope", "from", "to", "confidence") if q.get(k)}
     if not p.get("scope"):
         return JSONResponse({"code": "DRS-5001", "detail": "give a VaR scope"}, status_code=400)
-    return await _stream(request, "/var/explain.xlsx", p, "var-explain.xlsx")
+    return await stream(request, risk_api.path("/var/explain.xlsx"), p, "var-explain.xlsx")
 
 
 @router.get("/api/var/{path:path}")
@@ -347,11 +349,11 @@ async def api_get(request: Request, path: str):
     q = request.query_params
     try:
         if path.startswith("captures/") and path.endswith(("/csv", "/jsonl")):     # a capture's CSV or JSON Lines (2.9.4), as the server made it
-            body, headers = await request.app.state.backend.var("GET", "/" + path, ident(request), raw=True, part=q.get("part", ""))
+            body, headers = await risk_api.var(request.app.state.backend, "GET", "/" + path, ident(request), raw=True, part=q.get("part", ""))
             return Response(body, media_type="text/csv" if path.endswith("/csv") else "application/jsonl",
                             headers={"Content-Disposition": headers.get("content-disposition", "attachment")})
         if path.startswith("captures/") or path.startswith("baskets/") or PROPOSAL.match(path):
-            return await request.app.state.backend.var("GET", "/" + path, ident(request))
+            return await risk_api.var(request.app.state.backend, "GET", "/" + path, ident(request))
         if path not in _GETS:
             return JSONResponse({"code": "DRS-1001", "detail": f"no VaR endpoint {path}"}, status_code=404)
         params = {k: q.get(k, "") for k in _GETS[path]}
@@ -363,9 +365,9 @@ async def api_get(request: Request, path: str):
                 if q.get(k):
                     params[k] = q.get(k)
         if path in ARROW_TABLES and arrow_answer.wanted(request.headers.get("accept")):   # 2.9.7: the table as Arrow (DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6)
-            content, headers = await request.app.state.backend.var("GET", "/" + path, ident(request), raw=True, accept=arrow_answer.MEDIA, **params)
+            content, headers = await risk_api.var(request.app.state.backend, "GET", "/" + path, ident(request), raw=True, accept=arrow_answer.MEDIA, **params)
             return arrow_answer.pass_on(content, headers, *ARROW_TABLES[path])
-        return await request.app.state.backend.var("GET", "/" + path, ident(request), **params)
+        return await risk_api.var(request.app.state.backend, "GET", "/" + path, ident(request), **params)
     except BackendError as e:
         return _problem(e)
 
@@ -378,7 +380,7 @@ async def basket_workbook(request: Request):
     extra = {k: q[k] for k in ("asOf", "ccy") if q.get(k)}
     sheet = await json_body(request)                      # a body that is not a JSON object is a 400/415 before the server is asked
     try:
-        body, headers = await request.app.state.backend.var("POST", "/basket/sheet.xlsx", ident(request), body=sheet, raw=True, **extra)
+        body, headers = await risk_api.var(request.app.state.backend, "POST", "/basket/sheet.xlsx", ident(request), body=sheet, raw=True, **extra)
     except BackendError as e:
         return _problem(e)
     return Response(body, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -389,19 +391,19 @@ async def basket_workbook(request: Request):
 async def api_post(request: Request, path: str):
     if APPLY_NOW.match(path):
         try:
-            return await request.app.state.backend.var("POST", "/" + path, ident(request))
+            return await risk_api.var(request.app.state.backend, "POST", "/" + path, ident(request))
         except BackendError as e:
             return _problem(e)
     if path == "stress-window/proposals":           # the proposal; its decision is made in the one Approvals queue
         try:
-            return await request.app.state.backend.var("POST", "/" + path, ident(request), body=await json_body(request))
+            return await risk_api.var(request.app.state.backend, "POST", "/" + path, ident(request), body=await json_body(request))
         except BackendError as e:
             return _problem(e)
     if path not in ("baskets", "captures", "what-if", "basket/sheet"):    # basket/sheet: the sheet's checks and figures (VAR_GUIDE.md 3.5)
         return JSONResponse({"code": "DRS-1001", "detail": f"no VaR endpoint {path}"}, status_code=404)
     try:
         extra = {"ccy": request.query_params["ccy"]} if request.query_params.get("ccy") else {}    # a capture or a what-if in that currency
-        return await request.app.state.backend.var("POST", "/" + path, ident(request), body=await json_body(request),
+        return await risk_api.var(request.app.state.backend, "POST", "/" + path, ident(request), body=await json_body(request),
                                                    asOf=request.query_params.get("asOf", ""), **extra)
     except BackendError as e:
         return _problem(e)
@@ -414,7 +416,7 @@ async def api_delete_basket(request: Request, owner: str, name: str):
     q = request.query_params
     extra = {k: q[k][:500] for k in ("reason", "version") if q.get(k)}
     try:
-        await request.app.state.backend.var("DELETE", f"/baskets/{quote(owner, safe='')}/{quote(name, safe='')}", ident(request), **extra)
+        await risk_api.var(request.app.state.backend, "DELETE", f"/baskets/{quote(owner, safe='')}/{quote(name, safe='')}", ident(request), **extra)
     except BackendError as e:
         return _problem(e)
     return Response(status_code=204)
@@ -474,3 +476,27 @@ async def stress_window_page(request: Request, scope: str = "BANK", hierarchy: s
     return render(request, "terminal/stress_window.html", scope=(scope or "BANK").strip()[:120], hierarchy=hierarchy_of(hierarchy),
                   length=n, user=(me.user if me else "") or "", screen="var-stress-window",
                   command_text=f"SWIN {(scope or 'BANK').strip()}")
+
+
+@router.get("/admin/scopes")
+async def scopes(request: Request, owner: str = ""):
+    """Admin → Saved VaR baskets (the banking module's Admin page): every person's saved VaR baskets (their ad-hoc scopes kept by name),
+    filtered by owner, each with Delete and an optional reason (docs/guides/VAR_GUIDE.md section 3.5). Deleting goes through /api/var/baskets/<owner>/<name>, which the server allows an administrator."""
+    me = ident(request)
+    if not me.is_admin:
+        from routes.admin_routes import _forbidden
+        return _forbidden(request)
+    rows, error = [], None
+    try:
+        rows = await risk_api.var(request.app.state.backend, "GET", "/admin/baskets", me, owner=owner.strip())
+    except BackendError as e:
+        if e.status in (401, 403):
+            return render(request, "admin/forbidden.html", status_code=e.status, error=e)
+        error = e                               # the VaR engine is off or unreachable: said on the page
+    return render(request, "admin/scopes.html", rows=rows, owner=owner, error=error, viewer=me.user)
+
+
+# ---- the core's hooks (core/plugins.py, DOMAIN_MODULES.md C2 and C3) ---------------------------------------------------------------
+_plugins.command(redirect_for, needs=("VAR",), user=True)                     # VAR DESK RATES: the VaR explorer
+_plugins.retired(retired_link)                                                # a retired stored VaR record (VAR-COMM): the explorer at its scope
+_plugins.hints(r"^\s*var\s+\S", var_suggestions, needs=("VAR",))             # a VAR command's horizons and confidences once a scope is typed

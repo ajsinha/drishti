@@ -15,7 +15,7 @@
 """The scenario matrix (2.9.7, docs/guides/VAR_GUIDE.md section 3.9; the approved mock-up scenario-matrix-B): ``SMAT <id> [N] <GO>``
 opens ``/smat?id=<id>&days=N``, one trade, position or VaR node's scenario P&L (rows, by historical day) across its last N business
 dates (columns, 20 when N is not given; at most ``drishti.var.smat.max-days`` on the server, 60). The page is a shell:
-web/static/js/drishti_scenario-matrix.js fills it from ``/api/smat/matrix``, which asks the server's VaR engine (``/api/v1/var/matrix``) as the
+web/static/js/drishti_scenario-matrix.js fills it from ``/api/smat/matrix``, which asks the server's VaR engine (``/api/v1/risk/var/matrix``) as the
 person, so their nodes, roles and masks apply; the rows travel as Arrow when the page has Arrow JS (509 rows by up to 60 dates), JSON
 otherwise. ``/api/smat/matrix.csv``, its twin ``/api/smat/matrix.jsonl`` and ``/api/smat/matrix.arrow`` are the page's exports.
 
@@ -39,6 +39,8 @@ from fastapi.responses import JSONResponse, RedirectResponse, Response
 from core import arrow_answer
 from core.backend import BackendError
 from routes.common import ident, render
+from plugins.banking import risk_api
+from core import plugins as _plugins
 
 router = APIRouter(include_in_schema=False)
 
@@ -122,9 +124,9 @@ async def matrix(request: Request):
         return JSONResponse({"code": "DRS-5001", "detail": "give a trade, a position or a VaR scope: id=T-1001, id=DESK:RATES"}, status_code=400)
     try:
         if arrow_answer.wanted(request.headers.get("accept")):
-            content, headers = await request.app.state.backend.var("GET", "/matrix", ident(request), raw=True, accept=arrow_answer.MEDIA, **p)
+            content, headers = await risk_api.var(request.app.state.backend, "GET", "/matrix", ident(request), raw=True, accept=arrow_answer.MEDIA, **p)
             return arrow_answer.pass_on(content, headers, "records", "rows")
-        return JSONResponse(await request.app.state.backend.var("GET", "/matrix", ident(request), **p), headers={"Cache-Control": "no-store"})
+        return JSONResponse(await risk_api.var(request.app.state.backend, "GET", "/matrix", ident(request), **p), headers={"Cache-Control": "no-store"})
     except BackendError as e:
         return _problem(e)
 
@@ -164,7 +166,7 @@ def to_csv(answer: dict) -> str:
 async def matrix_csv(request: Request):
     p = _params(request)
     try:
-        answer = await request.app.state.backend.var("GET", "/matrix", ident(request), **p)
+        answer = await risk_api.var(request.app.state.backend, "GET", "/matrix", ident(request), **p)
     except BackendError as e:
         return _problem(e)
     return Response(to_csv(answer), media_type="text/csv; charset=utf-8",
@@ -193,7 +195,7 @@ async def matrix_jsonl(request: Request):
     """The matrix as JSON Lines, the CSV export's twin (every CSV download has one: tools/test_exports_offer_jsonl.py)."""
     p = _params(request)
     try:
-        answer = await request.app.state.backend.var("GET", "/matrix", ident(request), **p)
+        answer = await risk_api.var(request.app.state.backend, "GET", "/matrix", ident(request), **p)
     except BackendError as e:
         return _problem(e)
     return Response(to_jsonl(answer), media_type="application/x-ndjson; charset=utf-8",
@@ -205,7 +207,7 @@ async def matrix_arrow(request: Request):
     """The matrix as an Arrow IPC stream file (the rows the record batch, the rest in its metadata, as the page reads it)."""
     p = _params(request)
     try:
-        content, headers = await request.app.state.backend.var("GET", "/matrix", ident(request), raw=True, accept=arrow_answer.MEDIA, **p)
+        content, headers = await risk_api.var(request.app.state.backend, "GET", "/matrix", ident(request), raw=True, accept=arrow_answer.MEDIA, **p)
     except BackendError as e:
         return _problem(e)
     if arrow_answer.MEDIA not in (headers.get("content-type") or "").lower():   # the server sends JSON for a matrix Arrow is not written with
@@ -223,3 +225,16 @@ def entity_target(kind: str, id_: str) -> str | None:
     """The id the matrix of an entity page reads (a P&L vector's or scenario PV's own id: the server finds its trade or position), or
     None for a kind that offers no matrix."""
     return id_ if kind in LINKED_KINDS and id_ else None
+
+
+# ---- the core's hooks (core/plugins.py, DOMAIN_MODULES.md C2 and C3) ---------------------------------------------------------------
+def _type_ahead(request, m) -> list[dict]:
+    """SMAT <id> [N]: the scenario matrix's own line in the type-ahead."""
+    w = (m.group(1) or "").strip()
+    return [{"mnemonic": "SMAT", "title": "Scenario matrix: scenario P&L by scenario day across the last N business dates" + (f", of {w}" if w else ""),
+             "subtitle": "SMAT <trade, position or VaR scope> [N] <GO> (SMAT DESK:RATES 20, SMAT POS <position>, SMAT TRD <trade> 30)",
+             "complete": f"SMAT {w}".strip(), "href": smat_command(["SMAT"] + w.split()) or "/smat", "type": "smat"}]
+
+
+_plugins.command(redirect_for, needs=("SMAT",))                               # SMAT <id> [N]: the scenario matrix
+_plugins.type_ahead(r"^\s*smat(?:\s+(.*))?$", _type_ahead, needs=("SMAT",))

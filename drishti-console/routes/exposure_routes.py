@@ -14,7 +14,7 @@
 
 """The exposure explorer (docs/guides/EXPOSURE_GUIDE.md section 3): ``EXP <scope> <GO>`` opens ``/exposure?scope=<scope>``. The page
 is a shell; web/static/js/drishti_exposure-explorer.js fills it from the same-origin JSON below, which asks the server's exposure engine
-(/api/v1/exposure) as the user, so entitlements by counterparty, group and legal entity and the name mask apply as on every screen.
+(/api/v1/risk/exposure) as the user, so entitlements by counterparty, group and legal entity and the name mask apply as on every screen.
 
 Commands: ``EXP`` (the bank), ``EXP NSET:NS-ALDERSHOT-FRA`` as typed, and the spaced forms ``EXP NSET NS-ALDERSHOT-FRA``, ``EXP CPTY
 CP-ALDERSHOT``, ``EXP GROUP GRP-ALDERSHOT``, ``EXP LE LE-NY``, ``EXP TRD <trade>`` made into the scope grammar; any scope text
@@ -32,6 +32,8 @@ from fastapi.responses import JSONResponse, RedirectResponse, Response
 from core.backend import BackendError
 from core.csrf import json_body
 from routes.common import ident, render
+from plugins.banking import risk_api
+from core import plugins as _plugins
 
 router = APIRouter(include_in_schema=False)
 
@@ -115,17 +117,17 @@ async def api_get(request: Request, path: str):
         fmt = path.rsplit("/", 1)[-1] if path.startswith("captures/") and path.endswith(("/csv", "/jsonl")) else q.get("format") if path == "scope/profile" else None
         csv = fmt in ("csv", "jsonl")
         if path.startswith("captures/") and not csv:
-            return await request.app.state.backend.exposure("GET", "/" + path, ident(request))
+            return await risk_api.exposure(request.app.state.backend, "GET", "/" + path, ident(request))
         if path not in _GETS and not csv:
             return JSONResponse({"code": "DRS-1001", "detail": f"no exposure endpoint {path}"}, status_code=404)
         params = {k: q.get(k, "") for k in _GETS.get(path, ())}
         if q.get("asOf"):
             params["asOf"] = q.get("asOf")
         if csv:
-            body, headers = await request.app.state.backend.exposure("GET", "/" + path, ident(request), raw=True, **params)
+            body, headers = await risk_api.exposure(request.app.state.backend, "GET", "/" + path, ident(request), raw=True, **params)
             return Response(body, media_type="text/csv" if fmt == "csv" else "application/jsonl",
                             headers={"Content-Disposition": headers.get("content-disposition", "attachment")})
-        return await request.app.state.backend.exposure("GET", "/" + path, ident(request), **params)
+        return await risk_api.exposure(request.app.state.backend, "GET", "/" + path, ident(request), **params)
     except BackendError as e:
         return _problem(e)
 
@@ -136,7 +138,7 @@ async def api_post(request: Request, path: str):
         return JSONResponse({"code": "DRS-1001", "detail": f"no exposure endpoint {path}"}, status_code=404)
     q = request.query_params
     try:
-        return await request.app.state.backend.exposure("POST", "/" + path, ident(request), body=await json_body(request),
+        return await risk_api.exposure(request.app.state.backend, "POST", "/" + path, ident(request), body=await json_body(request),
                                                         **({"asOf": q.get("asOf")} if q.get("asOf") else {}))
     except BackendError as e:
         return _problem(e)
@@ -151,7 +153,7 @@ def redirect_for(typed: str) -> RedirectResponse | None:
 #: what ``PREDEAL`` typed says until the Counterparties → Pre-deal check screen is built on the Drishti Elements libraries (registry item
 #: ``pre-deal-screen``); the check itself is the server's and answers now
 PREDEAL_PENDING = ("PREDEAL: the Counterparties → Pre-deal check screen is under construction (it is built on the Drishti Elements "
-                   "libraries); the check answers now from POST /api/v1/exposure/predeal and drishti.py exposure predeal \"PREDEAL "
+                   "libraries); the check answers now from POST /api/v1/risk/exposure/predeal and drishti.py exposure predeal \"PREDEAL "
                    "<counterparty> LIKE <trade> <notional>\" (EXPOSURE_GUIDE.md section 18.9)")
 
 
@@ -161,3 +163,9 @@ def predeal_redirect(typed: str) -> RedirectResponse | None:
     if not words or words[0].upper() != "PREDEAL":
         return None
     return RedirectResponse(f"/t?error={quote(PREDEAL_PENDING)}", status_code=303)
+
+
+# ---- the core's hooks (core/plugins.py, DOMAIN_MODULES.md C2) ----------------------------------------------------------------------
+_plugins.command(predeal_redirect, needs=("EXP",))                            # PREDEAL ...: the pre-deal check
+_plugins.command(redirect_for, needs=("EXP",))                                # EXP NSET NS-X, EXP EXP-X (retired): exposure-result
+_plugins.retired(retired_link)                                                # a retired stored exposure profile (EXP-X-FRA): NSET:NS-X-FRA

@@ -15,6 +15,7 @@
 """The stress window selection (routes/var_routes.py; docs/guides/VAR_GUIDE.md section 18.9): SWIN opens /var/stress-window on the node
 it names; the page is a shell; its JSON (the analysis, the proposals, the decision) goes to the engine as the user, nothing else."""
 from routes.var_routes import swin_command
+import engine_fakes  # noqa: E402
 
 
 def test_swin_opens_the_tool_on_the_node():
@@ -39,7 +40,7 @@ def test_the_json_goes_to_the_engine_as_the_user(client, backend, monkeypatch):
     async def var(method, path, ident, body=None, raw=False, **params):
         seen.append((method, path, body, params))
         return {"ok": 1}
-    monkeypatch.setattr(backend, "var", var, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var)
     assert client.get("/api/var/stress-window?scope=BANK&hierarchy=MGMT&length=250&asOf=2026-09-30").status_code == 200
     assert seen[-1] == ("GET", "/stress-window", None, {"scope": "BANK", "hierarchy": "MGMT", "length": "250", "confidence": "",
                                                         "asOf": "2026-09-30"})

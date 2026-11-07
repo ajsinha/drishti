@@ -17,7 +17,7 @@ mock-up B, the capital stack with the class × measure grid and the bucket drill
 <scope> <GO>`` opens the FRTB-SA Playground (the grid of weighted sensitivities with its formula bar and the explanation beside it, the
 Choices panel with every method switch, a switch compared side by side with the difference explained by step, Save recipe and Export to
 Excel); ``PLAY FRTB RUN <id> <GO>`` replays a saved recipe and says whether it reproduced to the cent. Every figure is the server's
-(``/api/v1/frtb/...``, as the person); the pages are shells that web/static/js/drishti_frtb-sa.js fills. The scope words are the VaR explorer's;
+(``/api/v1/risk/frtb/...``, as the person); the pages are shells that web/static/js/drishti_frtb-sa.js fills. The scope words are the VaR explorer's;
 ``EXAMPLE`` runs the design's hand-built cases."""
 from __future__ import annotations
 
@@ -29,6 +29,8 @@ from fastapi.responses import JSONResponse
 
 from core.backend import BackendError
 from routes.common import ident, render
+from plugins.banking import risk_api
+from core import plugins as _plugins
 
 router = APIRouter(include_in_schema=False)
 
@@ -106,7 +108,7 @@ async def playground_page(request: Request, scope: str = "", recipe: str = ""):
 
 async def _get(request: Request, path: str, **params):
     try:
-        return JSONResponse(await request.app.state.backend.frtb("GET", path, ident(request), **params), headers={"Cache-Control": "no-store"})
+        return JSONResponse(await risk_api.risk(request.app.state.backend, "GET", path, ident(request), **params), headers={"Cache-Control": "no-store"})
     except BackendError as e:
         return _problem(e)
 
@@ -144,7 +146,7 @@ async def risk_factors(request: Request):
 @router.post("/api/frtb/recipes")
 async def save_recipe(request: Request):
     try:
-        return JSONResponse(await request.app.state.backend.frtb("POST", "/frtb/playground/recipes", ident(request), **_params(request)))
+        return JSONResponse(await risk_api.risk(request.app.state.backend, "POST", "/frtb/playground/recipes", ident(request), **_params(request)))
     except BackendError as e:
         return _problem(e)
 
@@ -159,15 +161,19 @@ async def replay(request: Request, rid: str):
 @router.get("/api/frtb/export.xlsx")
 async def export(request: Request):
     """The workbook of live formulas for what is on screen (its switches and overrides), streamed from the server; a recipe is saved with it."""
-    from routes.play_routes import _stream
+    from core.workbook_stream import stream
     query = []
     for k, v in _params(request, ("scope", "ccy", "asOf")).items():
         for x in (v if isinstance(v, list) else [v]):
             query.append((k, x))
-    return await _stream(request, "/frtb/playground.xlsx" + ("?" + urlencode(query) if query else ""), {}, "frtb-sa-playground.xlsx")
+    return await stream(request, risk_api.path("/frtb/playground.xlsx" + ("?" + urlencode(query) if query else "")), {}, "frtb-sa-playground.xlsx")
 
 
 @router.get("/api/frtb/template.xlsx")
 async def template(request: Request):
-    from routes.play_routes import _stream
-    return await _stream(request, "/frtb/playground/template", {}, "frtb-sa-playground-hand-built-cases.xlsx")
+    from core.workbook_stream import stream
+    return await stream(request, risk_api.path("/frtb/playground/template"), {}, "frtb-sa-playground-hand-built-cases.xlsx")
+
+
+# ---- the core's hooks (core/plugins.py, DOMAIN_MODULES.md C2) ----------------------------------------------------------------------
+_plugins.command(redirect_for, needs=("VAR", "FRSA"))                         # FRSA <scope>: FRTB-SA capital

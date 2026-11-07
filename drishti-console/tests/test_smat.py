@@ -30,6 +30,7 @@ from core.app import create_app
 from core.auth import Identity
 from core.config import load_settings
 from routes.smat_routes import smat_command, to_csv
+import engine_fakes  # noqa: E402
 
 RISK_ABOUT = {"product": "Drishti Risk", "tagline": "VaR and exposure from your own pricing data", "edition": {"name": "risk", "title": "Drishti Risk"}}
 MARKET_ABOUT = {"product": "Drishti Market", "tagline": "Curves", "edition": {"name": "market", "title": "Drishti Market"}}
@@ -105,7 +106,7 @@ def _var(backend, monkeypatch, sent: list):
             return json.dumps(ANSWER).encode(), {"content-type": "application/json"}
         return ANSWER
 
-    monkeypatch.setattr(backend, "var", var, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var)
 
 
 def test_the_page_and_its_answers_are_read_as_the_person(backend, monkeypatch):

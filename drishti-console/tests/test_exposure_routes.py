@@ -56,5 +56,5 @@ def test_predeal_typed_says_its_screen_is_under_construction_and_names_the_servi
     r = client.get("/go?q=PREDEAL CP-ALDERSHOT LIKE 1000001 250M <GO>", follow_redirects=False)
     where = unquote(r.headers["location"])
     assert r.status_code == 303 and where.startswith("/t?error=PREDEAL")
-    assert "under construction" in where and "/api/v1/exposure/predeal" in where and "drishti.py exposure predeal" in where
+    assert "under construction" in where and "/api/v1/risk/exposure/predeal" in where and "drishti.py exposure predeal" in where
     assert exp_command("PREDEAL CP-ALDERSHOT".split()) is None                       # not an explorer command

@@ -508,7 +508,7 @@
     var aj = h("a", null, "JSON Lines");
     aj.href = "/api/exposure/scope/profile?" + query({ scope: d.canonical, format: "jsonl" });
     p.appendChild(aj);
-    p.appendChild(document.createTextNode(" · drishti.py exposure profile '" + d.canonical + "' --csv (or --jsonl) · GET /api/v1/exposure/scope/profile?format=csv"));
+    p.appendChild(document.createTextNode(" · drishti.py exposure profile '" + d.canonical + "' --csv (or --jsonl) · GET /api/v1/risk/exposure/scope/profile?format=csv"));
     pane.appendChild(p);
   }
 

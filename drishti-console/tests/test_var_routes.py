@@ -16,6 +16,7 @@
 stored VaR (VAR VAR-COMM, /v/var/VAR-COMM, /v/var-node/VN-<node>) opens the explorer at the matching scope with a notice; the page and
 its JSON need no server to answer a bad path."""
 from routes.var_routes import retired_link, var_command
+import engine_fakes  # noqa: E402
 
 
 def test_command_words_open_the_explorer_on_their_scope():
@@ -73,7 +74,7 @@ def test_the_basket_trays_hints_and_what_if_go_to_the_engine_as_the_user(client,
     async def var(method, path, ident, body=None, raw=False, **params):
         seen.append((method, path, body, params))
         return [{"type": "PORT", "id": "PF-USD-RATES", "scope": "PORT:PF-USD-RATES", "trades": 918, "var": 28968862}] if path == "/hints" else {"ok": 1}
-    monkeypatch.setattr(backend, "var", var, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var)
     r = client.get("/api/var/hints?q=pf%20usd&limit=8")
     assert r.status_code == 200 and r.json()[0]["scope"] == "PORT:PF-USD-RATES"
     assert seen[-1] == ("GET", "/hints", None, {"q": "pf usd", "limit": "8"})
@@ -121,7 +122,7 @@ def test_every_answer_passes_the_reporting_currency_to_the_engine(client, backen
     async def var(method, path, ident, body=None, raw=False, **params):
         seen.append((method, path, body, params))
         return {"ok": 1}
-    monkeypatch.setattr(backend, "var", var, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var)
     for url in ("/api/var/scope?scope=BANK&ccy=EUR", "/api/var/scope/path?scope=BANK&page=0&ccy=EUR", "/api/var/tree?hierarchy=MGMT&ccy=EUR",
                 "/api/var/scope/contributions?scope=BANK&by=trade&ccy=EUR", "/api/var/hints?q=x&ccy=EUR"):
         assert client.get(url).status_code == 200
@@ -143,7 +144,7 @@ def test_apply_now_of_a_pv_stream_goes_to_the_engine(client, backend, monkeypatc
     async def var(method, path, ident, body=None, raw=False, **params):
         seen.append((method, path, body, params))
         return {"status": "applied", "rows": 3, "batchId": "K-2026-09-30-1"}
-    monkeypatch.setattr(backend, "var", var, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var)
     r = client.post("/api/var/intraday/streams/pv-updates/apply")
     assert r.status_code == 200 and r.json()["rows"] == 3
     assert seen[-1][:2] == ("POST", "/intraday/streams/pv-updates/apply")
@@ -216,7 +217,7 @@ def test_the_page_has_the_lens_pickers_and_keeps_the_lens_of_its_link(client, ba
     async def var(verb, path, ident, /, body=None, raw=False, **params):      # positional only: the lens's method is a parameter
         seen.append((verb, path, body, params))
         return {"ok": 1}
-    monkeypatch.setattr(backend, "var", var, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var)
     for url in ("/api/var/scope", "/api/var/scope/path", "/api/var/scope/history", "/api/var/scope/contributions", "/api/var/scope/currencies",
                 "/api/var/tree"):
         assert client.get(url + "?scope=BANK&horizon=10d&method=sum&confidence=0.95&esConfidence=0.975").status_code == 200
@@ -243,7 +244,7 @@ def test_stressed_var_in_a_command_the_page_and_every_answer(client, backend, mo
     async def var(verb, path, ident, /, body=None, raw=False, **params):
         seen.append(params)
         return {"ok": 1}
-    monkeypatch.setattr(backend, "var", var, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var)
     for url in ("/api/var/scope", "/api/var/scope/path", "/api/var/scope/history", "/api/var/scope/contributions", "/api/var/tree"):
         assert client.get(url + "?scope=BANK&set=stressed").status_code == 200
         assert seen[-1].get("set") == "stressed", url
@@ -260,7 +261,7 @@ def test_deleting_a_basket_goes_to_the_engine_with_its_reason_and_version(client
         if path.endswith("/nobody/gone"):
             raise BackendError(404, "DRS-1003", "no basket nobody/gone of yours")
         return None
-    monkeypatch.setattr(backend, "var", var, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var)
     r = client.delete("/api/var/baskets/rita/rates-hedges?reason=left%20the%20desk&version=2")
     assert r.status_code == 204
     assert seen[-1] == ("DELETE", "/baskets/rita/rates-hedges", {"reason": "left the desk", "version": "2"})
@@ -281,7 +282,7 @@ def test_the_basket_sheet_goes_to_the_engine_as_lists_and_comes_back_as_its_answ
         if raw:
             return b"PK\x03\x04", {"content-disposition": 'attachment; filename="mix.xlsx"'}
         return {"found": 2, "notFound": 0, "cells": [], "var": 1.0} if method == "POST" else {"sheet": sheet}
-    monkeypatch.setattr(backend, "var", var, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var)
     r = client.post("/api/var/basket/sheet?asOf=2026-09-30&ccy=EUR", json=sheet)
     assert r.status_code == 200 and r.json()["found"] == 2
     assert seen[-1] == ("POST", "/basket/sheet", sheet, {"asOf": "2026-09-30", "ccy": "EUR"})
@@ -321,7 +322,7 @@ def test_admin_ad_hoc_scopes_lists_every_persons_baskets_with_delete(client, bac
         return [{"id": "rita/unwind", "owner": "rita", "name": "Unwind candidates", "type": "BASKET", "scope": "TRD:T1,T2",
                  "sharedWith": ["ola", "role:risk"], "createdAt": "2026-10-01T09:00:00Z", "updatedAt": "2026-10-02T09:00:00Z",
                  "version": 3, "bytes": 312}]
-    monkeypatch.setattr(backend, "var", var, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var)
     page = client.get("/admin/scopes?owner=rit")
     assert page.status_code == 200
     assert seen[-1] == ("GET", "/admin/baskets", {"owner": "rit"})
@@ -337,6 +338,6 @@ def test_admin_ad_hoc_scopes_says_when_the_engine_is_off(client, backend, monkey
 
     async def var(method, path, ident, /, body=None, raw=False, **params):
         raise BackendError(503, "DRS-5204", "the VaR engine is off")
-    monkeypatch.setattr(backend, "var", var, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var)
     page = client.get("/admin/scopes")
     assert page.status_code == 200 and "the VaR engine is off" in page.text

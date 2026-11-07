@@ -17,10 +17,13 @@
    loader); load('drishti-grid') adds the libraries it requires first, then its style sheets, its vendored engine's scripts (ECharts for
    drishti-chart: once, and not when the page has them) and its bundle (?v=<version>, so a new
    version is never read from a stale cache), once each, and resolves with the library's API. Where the files are: the folder
-   drishti-core's bundle was loaded from, or configure({base}). The manifest is generated from drishti_elements.json by the build. */
+   drishti-core's bundle was loaded from, or configure({base}). The manifest is generated from drishti_elements.json by the build.
+   A library ships with a module (drishti-risk with banking; core: every installation). Where the page says which modules are on for
+   the person (configure({modules}), else the page's <meta name="drishti-modules" content="banking economy">), a library of another
+   module is refused, and so is every library that requires it; with nothing said (a page without a Drishti server) every library loads. */
 import { MANIFEST } from './drishti_manifest.js';
 
-const state = { base: null, staticBase: null, pending: {} };
+const state = { base: null, staticBase: null, pending: {}, modules: null };
 
 function root() { return typeof window !== 'undefined' ? window : globalThis; }
 function registry() {
@@ -31,13 +34,34 @@ function registry() {
 
 /**
  * Where the libraries are: base, the elements folder ("/static/elements/"); staticBase, the static root the style sheets are named from
- * (default: the folder above base).
- * @param {{base: string, staticBase: string}} o
+ * (default: the folder above base); modules, the domain modules on for the person (a library of any other module is refused).
+ * @param {{base: string, staticBase: string, modules: string[]}} o
  * @returns {void}
  */
 export function configure(o) {
   if (o.base) { state.base = o.base.replace(/\/?$/, '/'); }
   if (o.staticBase) { state.staticBase = o.staticBase.replace(/\/?$/, '/'); }
+  if (Array.isArray(o.modules)) { state.modules = o.modules.map(String); }
+}
+
+function modulesOn() {
+  if (state.modules) { return state.modules; }
+  const doc = root().document;
+  const meta = doc && doc.querySelector ? doc.querySelector('meta[name="drishti-modules"]') : null;
+  return meta ? String(meta.getAttribute('content') || '').split(/\s+/).filter(Boolean) : null;
+}
+
+/**
+ * Why a library may not be loaded on this page (its module is not on for the person), or null when it may.
+ * @param {string} name for example "drishti-risk"
+ * @returns {?string}
+ */
+export function refused(name) {
+  const l = MANIFEST.libraries[name];
+  const mod = l && l.module ? l.module : 'core';
+  const on = modulesOn();
+  if (mod === 'core' || on === null || on.indexOf(mod) >= 0) { return null; }
+  return name + " belongs to the module '" + mod + "', which is not available here: ask your administrator";
 }
 
 function base() { return state.base || registry().base || '/static/elements/'; }
@@ -165,5 +189,7 @@ export function load(names) {
   const list = Array.isArray(names) ? names : [names];
   let order;
   try { order = []; list.forEach((n) => requirements(n).forEach((x) => { if (order.indexOf(x) < 0) { order.push(x); } })); } catch (e) { return Promise.reject(e); }
+  const no = order.map(refused).filter(Boolean);
+  if (no.length) { return Promise.reject(new Error(no[0])); }
   return order.reduce((p, n) => p.then(() => loadOne(n)), Promise.resolve()).then(() => Array.isArray(names) ? list.map(loaded) : loaded(names));
 }

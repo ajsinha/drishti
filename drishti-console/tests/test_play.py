@@ -27,6 +27,7 @@ from core.app import create_app
 from core.auth import Identity
 from core.config import load_settings
 from routes.play_routes import play_command
+import engine_fakes  # noqa: E402
 
 RISK_ABOUT = {"product": "Drishti Risk", "tagline": "VaR and exposure from your own pricing data", "edition": {"name": "risk", "title": "Drishti Risk"}}
 MARKET_ABOUT = {"product": "Drishti Market", "tagline": "Curves", "edition": {"name": "market", "title": "Drishti Market"}}
@@ -93,7 +94,7 @@ def _server(backend, monkeypatch, sent: list):
         sent.append(("STREAM", path, getattr(ident, "user", None), {}))
         return _Upstream(b"PK\x03\x04workbook")
 
-    monkeypatch.setattr(backend, "var", var, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var)
     monkeypatch.setattr(backend, "open_download", open_download, raising=False)
 
 
@@ -113,7 +114,7 @@ def test_the_page_grid_and_export_are_read_as_the_person(backend, monkeypatch):
     assert c.get("/api/play/grid").status_code == 400                                     # no scope, no ids: said in words
     x = c.get("/api/play/export.xlsx", params={"scope": "DESK:RATES", "count": "all"})
     assert x.status_code == 200 and x.content == b"PK\x03\x04workbook" and "var-playground_" in x.headers["content-disposition"]
-    assert sent[-1][0] == "STREAM" and sent[-1][1].startswith("/var/playground.xlsx?") and "count=all" in sent[-1][1]
+    assert sent[-1][0] == "STREAM" and sent[-1][1].startswith("/risk/var/playground.xlsx?") and "count=all" in sent[-1][1]
     t = c.get("/api/play/template.xlsx", params={"positions": 5})
     assert t.status_code == 200 and sent[-1][1] == "/var/playground/template?positions=5&scenarios=509"
     e = c.get("/api/play/estimate", params={"scope": "BANK", "view": "pnl"})

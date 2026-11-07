@@ -19,6 +19,7 @@ the engine and nothing else."""
 import pathlib
 
 from routes.var_routes import pvar_command, var_command, var_suggestions
+import engine_fakes  # noqa: E402
 
 
 def test_pvar_opens_the_explorer_in_parametric_mode():
@@ -60,7 +61,7 @@ def test_the_proxy_passes_parametric_and_matrix_on(client, backend, monkeypatch)
     async def var(method, path, ident, body=None, raw=False, **params):
         seen.append((method, path, params))
         return {"rows": [], "parametric": {"var": 1}}
-    monkeypatch.setattr(backend, "var", var, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var)
     r = client.get("/api/var/scope?scope=BANK&parametric=false")
     assert r.status_code == 200
     assert seen[-1][2].get("parametric") == "false"

@@ -18,18 +18,18 @@
    rows opened with + and − (each asked of the server), ≈ and ◆ marks, a figure's Explain (its provenance) in the drawer; the
    scan-estimate bar above; slicers and paths; a chart of the selection below (a non-additive measure is never stacked); the Export menu
    (Excel with outline and formulas only where a measure adds up, CSV, Arrow, the definition). drishti_pivot.js fills it from
-   /api/pivot/...; every figure is the server's (clientAggregation: false). With lens "mr" (MCUBE, the MR cube: MR_CUBE_GUIDE.md) the
-   same screen on source var carries the MR lens: the headline strip, the lens controls, the time-travel slider and tabs A (the pivot with
-   sparklines and a right rail of tail, explain and provenance), B (components, waterfall, histogram, heat map) and C (ladder, what-if,
-   explain), drawn by drishti_mr-lens.js from /api/pivot/mr/...; one pivot engine, one grid. #}
+   /api/pivot/...; every figure is the server's (clientAggregation: false). A preset's lens (a domain module's: MCUBE's "mr", the
+   banking module's MR cube, MR_CUBE_GUIDE.md) adds its parts while its module is on: the module's plugin.yaml names them (screens.pivot:
+   its style sheets, scripts and the templates above and below the grid), drawn here by screen_parts(); the core names none of them. One
+   pivot engine, one grid. #}
 {% extends "base.html" %}
 {% block title %}{% if cube %}{{ cube.title }}{% else %}Pivot{% if source %} · {{ source }}{% endif %}{% endif %} · {{ PRODUCT }}{% endblock %}
 {% block screen %}pivot{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-inputs/drishti_inputs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-chart/drishti_chart.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_pivot-screen.css?v={{ ASSET_V }}">{% if lens == 'mr' %}<link rel="stylesheet" href="/static/css/drishti_mr-lens.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-inputs/drishti_inputs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-chart/drishti_chart.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_pivot-screen.css?v={{ ASSET_V }}">{% for href in screen_parts('pivot', 'css', lens=lens) %}<link rel="stylesheet" href="/static/{{ href }}?v={{ ASSET_V }}">{% endfor %}{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
-<div class="pv{% if lens == 'mr' %} mr{% endif %}" data-pivot-screen{% if cube %} data-preset-name="{{ cube.name }}"{% endif %} data-source="{{ source }}" data-view-id="{{ view_id }}" data-date="{{ date }}"{% if lens %} data-lens="{{ lens }}"{% endif %}{% if preset %} data-preset="{{ preset }}"{% endif %}>
+<div class="pv{% if lens %} {{ lens }}{% endif %}" data-pivot-screen{% if cube %} data-preset-name="{{ cube.name }}"{% endif %} data-source="{{ source }}" data-view-id="{{ view_id }}" data-date="{{ date }}"{% if lens %} data-lens="{{ lens }}"{% endif %}{% if preset %} data-preset="{{ preset }}"{% endif %}>
   <div class="pv-head">
     {% if cube %}<h1 class="pv-title"><span class="pv-word mono" title="Type {{ cube.word }}, a scope, BY rows,columns, MEASURE …, then &lt;GO&gt;">{{ cube.word }}</span>
       <span data-pv-title>{{ cube.title }}</span></h1>{% else %}<h1 class="pv-title"><span class="pv-word mono" title="Type PIVOT, a table (or var) or @owner/name, then &lt;GO&gt;">PIVOT</span>
@@ -64,7 +64,7 @@
     <label class="pv-chip" title="Keep the view current: only the cells that moved are sent (L)"><input type="checkbox" data-pv-live> Live <kbd>L</kbd></label>
     <span class="pv-computed" data-pv-computed aria-live="polite" title="How the answer was computed"></span>
   </div>
-  {% if lens == 'mr' %}{% include "terminal/_mr_lens.html" %}{% endif %}
+  {% for part in screen_parts('pivot', 'top', lens=lens) %}{% include part %}{% endfor %}
   <div class="pv-slicers" data-pv-slicers role="group" aria-label="Slicers" hidden></div>
   <div class="pv-estimate" data-pv-estimate role="status" hidden></div>
   <p class="pv-notice" data-pv-notice role="alert" hidden></p>
@@ -96,7 +96,7 @@
       <p class="pv-sub">Excel: values with formats, outline levels, SUM formulas only where a figure adds up, a Provenance sheet. Every export is audited.</p>
     </section>
   </div>
-  {% if lens == 'mr' %}{% include "terminal/_mr_panes.html" %}{% endif %}
+  {% for part in screen_parts('pivot', 'below', lens=lens) %}{% include part %}{% endfor %}
   <section class="pv-card pf-card" data-pf-card="explain" hidden aria-labelledby="pfExplainTitle">
     <h2 id="pfExplainTitle">Why did it move? <span class="pv-sub">the difference in steps that add up</span></h2>
     <div class="pf-form">
@@ -148,4 +148,4 @@
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-grid/drishti_grid.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-inputs/drishti_inputs.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-chart/drishti_chart.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot-switches.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot-functions.js?v={{ ASSET_V }}"></script>{% if lens == 'mr' %}<script src="/static/js/drishti_mr-lens.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-grid/drishti_grid.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-inputs/drishti_inputs.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-chart/drishti_chart.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot-switches.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot-functions.js?v={{ ASSET_V }}"></script>{% for src in screen_parts('pivot', 'js', lens=lens) %}<script src="/static/{{ src }}?v={{ ASSET_V }}"></script>{% endfor %}{% endblock %}

@@ -16,7 +16,7 @@
 ``/play?scope=...`` (or ``/play?ids=...``), every VaR figure of the scope worked out in a spreadsheet-like grid (positions across,
 scenarios down, at most 500 positions, the rest in one Rest of scope column) with a tall explanation beside it, and exported as an .xlsx of
 real formulas that recalculates in Excel, LibreOffice and Google Sheets. The page is a shell: web/static/js/drishti_var-playground.js fills it
-from ``/api/play/grid``, which asks the server's VaR engine (``/api/v1/var/playground``) as the person, so their nodes, roles and masks
+from ``/api/play/grid``, which asks the server's VaR engine (``/api/v1/risk/var/playground``) as the person, so their nodes, roles and masks
 apply. ``/api/play/export.xlsx`` streams the workbook (100, 500, 1,000, 10,000 or all positions), ``/api/play/estimate`` says what each
 choice is before it is made, ``/api/play/template.xlsx`` is the empty workbook.
 
@@ -29,12 +29,14 @@ from __future__ import annotations
 from urllib.parse import urlencode
 
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
-from starlette.background import BackgroundTask
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.backend import BackendError
+from core.workbook_stream import stream
 from routes import var_routes
 from routes.common import ident, render
+from plugins.banking import risk_api
+from core import plugins as _plugins
 
 router = APIRouter(include_in_schema=False)
 
@@ -133,7 +135,7 @@ async def grid(request: Request):
     if not p.get("scope") and not p.get("ids"):
         return JSONResponse({"code": "DRS-5001", "detail": "give a VaR scope (scope=DESK:RATES) or ids (ids=POS-1,T-1001)"}, status_code=400)
     try:
-        return JSONResponse(await request.app.state.backend.var("GET", "/playground", ident(request), **p), headers={"Cache-Control": "no-store"})
+        return JSONResponse(await risk_api.var(request.app.state.backend, "GET", "/playground", ident(request), **p), headers={"Cache-Control": "no-store"})
     except BackendError as e:
         return _problem(e)
 
@@ -143,20 +145,9 @@ async def estimate(request: Request):
     """Each export choice's size, recalculation time and the applications that open it, before it is made."""
     p = {k: v for k, v in _params(request).items() if k in ("scope", "ids", "ccy", "set", "asOf")}
     try:
-        return JSONResponse(await request.app.state.backend.var("GET", "/playground/estimate", ident(request), **p))
+        return JSONResponse(await risk_api.var(request.app.state.backend, "GET", "/playground/estimate", ident(request), **p))
     except BackendError as e:
         return _problem(e)
-
-
-async def _stream(request: Request, path: str, params: dict, fallback: str):
-    try:
-        upstream = await request.app.state.backend.open_download(path + ("?" + urlencode(params) if params else ""), ident(request))
-    except BackendError as e:
-        return _problem(e)
-    disposition = upstream.headers.get("content-disposition") or f'attachment; filename="{fallback}"'
-    return StreamingResponse(upstream.aiter_bytes(), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                             background=BackgroundTask(upstream.aclose),
-                             headers={"Content-Disposition": disposition, "Cache-Control": "no-store"})
 
 
 @router.get("/api/play/export.xlsx")
@@ -166,11 +157,28 @@ async def export(request: Request):
     p.pop("view", None)
     if not p.get("scope") and not p.get("ids"):
         return JSONResponse({"code": "DRS-5001", "detail": "give a VaR scope or ids"}, status_code=400)
-    return await _stream(request, "/var/playground.xlsx", p, "var-playground.xlsx")
+    return await stream(request, risk_api.path("/var/playground.xlsx"), p, "var-playground.xlsx")
 
 
 @router.get("/api/play/template.xlsx")
 async def template(request: Request, positions: int = 10, scenarios: int = 509):
     """The empty workbook: paste scenario PVs into Data, fill Config and FX, and every figure recalculates offline."""
-    return await _stream(request, "/var/playground/template", {"positions": positions, "scenarios": scenarios}, "var-playground-template.xlsx")
+    return await stream(request, risk_api.path("/var/playground/template"), {"positions": positions, "scenarios": scenarios}, "var-playground-template.xlsx")
 
+
+# ---- the core's hooks (core/plugins.py, DOMAIN_MODULES.md C2 and C3) ---------------------------------------------------------------
+def _type_ahead(request, m) -> list[dict]:
+    """PLAY VAR <scope|ids>: the VaR Playground's own line in the type-ahead."""
+    w = (m.group(1) or "").strip()
+    if not w.upper().startswith("VAR"):
+        w = ("VAR " + w).strip()
+    me = getattr(request.state, "identity", None)
+    return [{"mnemonic": "PLAY", "title": "VaR Playground: every VaR figure worked in a grid and an Excel workbook of real formulas"
+             + (f", of {w[4:]}" if w[4:] else ""),
+             "subtitle": "PLAY VAR <scope or ids> <GO> (PLAY VAR DESK RATES, PLAY VAR BANK 10D SUM, PLAY VAR POS-10442 T-1001)",
+             "complete": f"PLAY {w}".strip(), "href": play_command(["PLAY"] + w.split(), (me.user if me else "") or "") or "/play",
+             "type": "play"}]
+
+
+_plugins.command(redirect_for, needs=("PLAY", "VAR"), user=True)              # PLAY VAR <scope|ids>: the VaR Playground
+_plugins.type_ahead(r"^\s*play(?:\s+(.*))?$", _type_ahead, needs=("PLAY", "VAR"))

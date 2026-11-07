@@ -1,0 +1,74 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The banking module's console part (docs/architecture/DOMAIN_MODULES.md section 8, ACCESS_MODEL.md section 2). The console reads this file
+# (core/modules.py); the server's manifest (drishti-banking's META-INF/drishti/module.yaml) decides whether the module is on. While the
+# module is off for a person, everything listed here is gone for them: its routes and pages answer 404, its words are neither offered nor
+# run (typed anyway: "VAR is not available to you: ask your administrator"), its menus, Help pages, Build types, search hits, tiles and
+# lenses are not drawn, and its static assets are not served (nor to a person whose lens does not use the module). The screens themselves
+# still live in routes/, web/templates and web/static; they move into this folder in the split's second half.
+module: banking
+title: Banking and risk
+
+# the routers the console includes for the module, in this order (where the core's routers were: before the terminal's)
+routers: [routes.trading_routes, routes.var_regulatory_routes, routes.var_routes, routes.smat_routes, routes.frtb_routes, routes.simm_routes,
+          routes.play_routes, routes.exposure_routes, routes.mcube_routes]
+# files that fill the core's hooks on import (core/plugins.py): the Build home's types, the landings' figures
+registers: [core.build_types_banking, routes.trading_routes]
+
+# its compute engines: their words, console pages, menus, Help pages, tiles and lenses are the engine catalogue's (config/engines.yaml)
+engines: [var, exposure, sensitivities, frtb-sa, simm, mr-cube]
+# its own command words beyond the engines' (the playgrounds, the counterparty cube)
+words: [PLAY, "PLAY FRTB", "PLAY SIMM", CCUBE, FRSA, SIMM, MCUBE, SENS, RFAC]
+# its console pages and APIs beyond the engines' console paths
+paths: [/frtb, /api/frtb/, /play/frtb, /simm, /api/simm/, /play/simm, /play, /api/play/, /mcube, /api/pivot/mr/, /var/backtesting,
+        /var/statistics, /var/reports, /api/var/, /var/stress-window, /api/home/trading/, /home/trading/, /api/home/market/, /admin/scopes]
+# its static files, globs under web/static
+assets:
+  - js/drishti_var-*.js
+  - css/drishti_var.css
+  - css/drishti_var-*.css
+  - js/drishti_exposure-*.js
+  - css/drishti_exposure.css
+  - js/drishti_frtb-sa.js
+  - css/drishti_frtb-sa.css
+  - js/drishti_simm.js
+  - js/drishti_scenario-matrix.js
+  - css/drishti_scenario-matrix.css
+  - js/drishti_smat-link.js
+  - js/drishti_play-link.js
+  - js/drishti_stress-window.js
+  - css/drishti_stress-window.css
+  - js/drishti_mr-lens.js
+  - css/drishti_mr-lens.css
+  - js/drishti_risk-landing.js
+  - css/drishti_risk-landing.css
+  - js/drishti_trading-landing.js
+  - css/drishti_trading-landing.css
+  - js/drishti_market-landing.js
+  - css/drishti_market-landing.css
+  - elements/drishti-risk/*
+  - elements/drishti-risk/src/*
+# its templates (the core's never include them; a core screen takes a module's parts through screens: below)
+templates: [terminal/var.html, terminal/var_backtesting.html, terminal/var_reports.html, terminal/var_statistics.html, terminal/exposure.html,
+            terminal/frtb.html, terminal/simm.html, terminal/smat.html, terminal/play.html, terminal/stress_window.html, terminal/_mr_lens.html,
+            terminal/_mr_panes.html, home/risk_landing.html, home/trading_landing.html, home/market_landing.html, admin/scopes.html]
+# what it adds to a core screen, while it is on: the Pivot's market-risk preset (lens mr) draws the MR lens's strip and panes
+screens:
+  pivot:
+    when: {lens: mr}
+    css: [css/drishti_mr-lens.css]
+    js: [js/drishti_mr-lens.js]
+    top: [terminal/_mr_lens.html]
+    below: [terminal/_mr_panes.html]
