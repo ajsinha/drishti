@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* The Format pane generated from the format schemas (report schema v2, R6, 2.4.0): GET /bi/api/reports/format-schemas gives each visual family's sections and
    properties (types, enums, ranges, labels, hints), and this draws them as drishti-inputs' Form, one live form per section (a checkbox for a boolean, a choice
    for an enum, a number with its range read loosely, a group for an object such as the value axis or the axis titles, rows of checkboxes for data bars and a

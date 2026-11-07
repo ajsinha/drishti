@@ -155,7 +155,6 @@ IMPORTANT_ALLOW = {
     "drishti_explain.css|.dx-pop.dx-sheet|left": _INLINE,
     "drishti_explain.css|.dx-pop.dx-sheet|top": _INLINE,
     "drishti_explain.css|@media print .dx-page-head .dx-btn|display": _PRINT,
-    "drishti_form.css|.qf-enum .qf-dep-off|display": _PENDING,
     "drishti_gradients.css|@media print body|background": _PRINT,
     "drishti_history.css|@media (prefers-reduced-motion: reduce) .hx *|transition": _MOTION,
     "drishti_layout.css|.pnl-off|display": _HIDE,
@@ -180,7 +179,6 @@ IMPORTANT_ALLOW = {
     "drishti_phone.css|[data-phone-tier=\"more\"]:not(.ph-open)|display": _HIDE,
     "drishti_pivot.css|@media print .tr-tog|display": _PRINT,
     "drishti_record-forms.css|.fm-bad .fm-in|border-color": _PENDING,
-    "drishti_record-forms.css|.fm-entity-none|cursor": _PENDING,
     "drishti_resize.css|html[data-rz-dragging=\"x\"]|cursor": _DRAG,
     "drishti_resize.css|html[data-rz-dragging=\"y\"]|cursor": _DRAG,
     "drishti_screen-grid.css|@media (max-width: 640px) .sg-area > .sg-cells > .pnl|grid-column": _GRID,
@@ -217,7 +215,7 @@ IMPORTANT_ALLOW = {
     "drishti_theme.css|@media (prefers-reduced-motion: reduce) *|animation": _MOTION,
     "drishti_theme.css|@media (prefers-reduced-motion: reduce) *|transition": _MOTION,
 }
-IMPORTANT_CEILING = 98   # 2.9.11.e: 149 before the token pass; lower it with every entry that leaves the list
+IMPORTANT_CEILING = 96   # 2.9.11.e: 149 before the token pass; lower it with every entry that leaves the list
 
 
 def important_keys(name: str, text: str) -> list:
