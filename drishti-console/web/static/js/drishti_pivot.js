@@ -406,37 +406,34 @@
     // the engine's own gap of this column (Σ parts − total, PivotAnswer.diversification): drawn as total − Σ parts, never added up here
     var gap = ((grandRow.diversificationByColumn || {})[colKey] || {})[m.label];
     var note;
-    var colors = [];
     if (holistic && total != null && gap != null && sel.length <= 1) {
       names = names.concat(["Diversification", "Total"]);
       values = values.concat([-gap, total]);
       note = m.label + " does not add up: the total is its own figure from its own members, so the parts stand beside it and the "
         + "diversification (total − Σ parts = " + fmt(-gap, m) + ", the engine's) is drawn as its own bar, never stacked.";
-      colors = values.map(function (x, i) { return i === values.length - 1 ? "#d9a441" : i === values.length - 2 ? "#c87a52" : "#6f9fd8"; });
     } else {
       note = m.label + (m.plainSum ? " adds up: the bars sum to the total." : " by member; each figure is the cell's own.");
-      colors = values.map(function () { return "#6f9fd8"; });
     }
-    var series = [{type: "bar", data: values.map(function (v, i) { return {value: v, itemStyle: {color: colors[i]}}; }), label: {show: true, position: "top", formatter: function (p) { return fmt(p.value, m); }}}];
     $("[data-pv-chartcard]").hidden = false;
     $("[data-pv-chart-title]").textContent = "Chart of the selection: " + m.label + " by " + ((a.rowDimensions || [])[0] || "total");
     $("[data-pv-chart-sub]").textContent = "suggested: " + (holistic ? "bars beside the total (it does not stack)" : "bar") + " · linked to the pivot";
     $("[data-pv-chart-note]").textContent = note;
     var box = $("[data-pv-chart-box]");
-    if (!window.echarts) { box.textContent = names.map(function (n, i) { return n + ": " + fmt(values[i], m); }).join(" · "); return; }
-    var styles = getComputedStyle(document.body);
-    var ink = styles.getPropertyValue("--d-ink").trim() || "#ddd";
-    var muted = styles.getPropertyValue("--d-muted").trim() || "#999";
-    state.chart = state.chart || window.echarts.init(box, null, {renderer: "svg"});
-    state.chart.setOption({backgroundColor: "transparent", textStyle: {color: ink}, grid: {left: 70, right: 20, top: 30, bottom: 50},
-      xAxis: {type: "category", data: names, axisLabel: {color: muted, interval: 0, rotate: names.length > 6 ? 30 : 0}},
-      yAxis: {type: "value", axisLabel: {color: muted, formatter: function (v) { return fmt(v, m); }}, splitLine: {lineStyle: {color: muted, opacity: 0.2}}},
-      tooltip: {trigger: "axis", valueFormatter: function (v) { return fmt(v, m); }}, series: series}, true);
-    state.chart.off("click");
-    state.chart.on("click", function (p) {
-      var r = picked.filter(function (x) { return x.label === p.name; })[0];
-      if (r && r.expandable && !r.expanded) { state.grid.model.togglePivotNode("rows", r.path, true); }
-    });
+    var C = window.Drishti.elements && window.Drishti.elements.chart;
+    if (!C) { box.textContent = names.map(function (n, i) { return n + ": " + fmt(values[i], m); }).join(" · "); return; }
+    // drishti-chart: one bar per figure as the engine gave it (the diversification and the total beside the parts, never stacked)
+    var roles = values.map(function (x, i) { return holistic && total != null && gap != null && sel.length <= 1 ? (i === values.length - 1 ? "total" : i === values.length - 2 ? "div" : "part") : "part"; });
+    var spec = {kind: "bar", title: m.label, id: "id", data: {rows: names.map(function (n, i) { return {id: String(i), name: n, value: values[i], role: roles[i]}; })},
+      x: "name", y: {field: "value", format: function (v) { return fmt(v, m); }, title: m.label}, series: [{field: "value", name: m.label}],
+      labels: true, legend: "none", onClick: "none", colourWhen: [{when: "role == 'total'", tone: "warn"}, {when: "role == 'div'", tone: "bad"}]};
+    if (state.chart) { state.chart.setSpec(spec); } else {
+      state.chart = new C.Chart(box, spec, {density: "compact", height: 280});
+      box.addEventListener("drishti:mark-clicked", function (e) {         // a member's bar opens its row in the pivot
+        var r = (state.charted || []).filter(function (x) { return x.label === (e.detail || {}).category; })[0];
+        if (r && r.expandable && !r.expanded) { state.grid.model.togglePivotNode("rows", r.path, true); }
+      });
+    }
+    state.charted = picked;
   }
 
   // ---- export, save, share ---------------------------------------------------------------------------------------------------
