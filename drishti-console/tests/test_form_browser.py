@@ -108,16 +108,19 @@ def test_the_second_box_follows_the_operator_and_a_date_becomes_relative(page, u
     assert page.locator('[name="v2.mtm"]').is_visible()
     page.select_option('[name="op.mtm"]', ">")
     assert not page.locator('[name="v2.mtm"]').is_visible()
-    picker = page.locator('.qf-field[data-field="maturityDate"] .di-upgraded').first                    # the date is drishti-inputs' date picker
-    rel = page.locator('.qf-field[data-field="maturityDate"] .qf-vrel')
+    box = page.locator('.qf-field[data-field="maturityDate"]')                                         # drishti-inputs' Form: a fieldset per field
+    picker, rel = box.locator('[data-form-path$=".v"]'), box.locator('[data-form-path$=".vrel"]')         # the date picker, or words for a relative range
     assert picker.is_visible() and not rel.is_visible()
     page.select_option('[name="op.maturityDate"]', "relative")
-    assert not picker.is_visible() and rel.is_visible() and rel.get_attribute("list") == "qf-presets"   # words for a relative range instead
+    assert not picker.is_visible() and rel.is_visible()
+    rel.locator("input").click()
+    assert "last 5 business days" in page.locator(".di-combo-pop").inner_text()                         # the presets are offered as suggestions
+    page.keyboard.press("Escape")
     page.select_option('[name="op.maturityDate"]', "between")
-    assert picker.is_visible() and not rel.is_visible() and page.locator('[name="v2.maturityDate"] + .di-upgraded').is_visible()
-    picker.locator("input").fill("2031-06-30")
-    picker.locator("input").press("Enter")
-    assert page.locator('.qf-field[data-field="maturityDate"] input.qf-v').input_value() == "2031-06-30"   # the field the form sends keeps the ISO date
+    assert picker.is_visible() and not rel.is_visible() and box.locator('[data-form-path$=".v2"]').is_visible()
+    picker.locator("input").first.fill("2031-06-30")
+    picker.locator("input").first.press("Enter")
+    assert page.locator('input[type=hidden][name="v.maturityDate"]').input_value() == "2031-06-30"     # the form sends the ISO date, under the address's name
 
 
 def test_a_regex_runs_and_an_unsafe_one_is_refused_with_its_code(page, url, be):
@@ -227,9 +230,9 @@ def test_the_form_stays_open_when_the_person_kept_it_open_and_on_a_phone_the_tog
 
 def test_an_enum_with_many_values_is_one_dropdown_with_search_and_the_url_stays_the_same(page, url, be):
     page.goto(url + "/form/trading", wait_until="load")
-    box = page.locator(".di-upgraded-checks").first                                      # drishti-inputs' multi-select over the checkboxes
-    assert page.locator(".di-upgraded-checks").count() == 1                              # nine values: a multi-select; the book (three) stays a checkbox row
-    assert page.locator('[name="v.book"]').count() == 3 and page.locator(".qf-enum input[name='v.book']").first.is_visible()
+    box = page.locator(".qf-field .di-multiselect").first                                # drishti-inputs' multi-select
+    assert page.locator(".qf-field .di-multiselect").count() == 1                        # nine values: a multi-select; the book (three) stays a row of checkboxes
+    assert page.locator('[name="v.book"]').count() == 3 and page.locator(".qf-field input[name='v.book']").first.is_visible()
     field = box.locator("input[role=combobox]")
     chips = lambda: box.locator(".di-chip-label").all_inner_texts()                     # noqa: E731
     assert chips() == [] and field.get_attribute("placeholder") == "Any" and page.locator(".di-ms-pop").count() == 0
@@ -249,12 +252,12 @@ def test_an_enum_with_many_values_is_one_dropdown_with_search_and_the_url_stays_
     page.keyboard.press("Enter")
     page.keyboard.press("Escape")
     assert chips() == ["BOND", "PUTTABLE_BOND", "REPO"]
-    assert sorted(page.eval_on_selector_all("input[name='v.productType']:checked", "els => els.map(e => e.value)")) == ["BOND", "PUTTABLE_BOND", "REPO"]
+    assert sorted(page.eval_on_selector_all("input[type=hidden][name='v.productType']", "els => els.map(e => e.value)")) == ["BOND", "PUTTABLE_BOND", "REPO"]
     page.get_by_role("button", name="Search", exact=True).first.click()
     page.wait_for_url("**/form/trading?**")
     assert "v.productType=BOND" in page.url and "v.productType=PUTTABLE_BOND" in page.url and "v.productType=REPO" in page.url        # the criteria encoding is unchanged
     page.locator(".qf-toggle").click()                                                                                                   # the criteria fold away after a search
-    box = page.locator(".di-upgraded-checks").first
+    box = page.locator(".qf-field .di-multiselect").first
     assert box.locator(".di-chip-label").all_inner_texts() == ["BOND", "PUTTABLE_BOND", "REPO"]                                          # and the page comes back as chosen
     box.locator(".di-ms-control").click()
     page.locator(".di-ms-pop [data-act='clear']").click()
@@ -265,9 +268,9 @@ def test_the_dropdown_has_finger_sized_rows_on_a_phone(browser, url):
     ctx = browser.new_context(viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True, bypass_csp=True)
     pg = ctx.new_page()
     pg.goto(url + "/form/trading", wait_until="load")
-    pg.locator(".di-upgraded-checks .di-ms-control").tap()
+    pg.locator(".qf-field .di-multiselect .di-ms-control").tap()
     pg.wait_for_selector(".di-ms-pop .di-option")
-    small = pg.evaluate("[...document.querySelectorAll('.di-ms-pop .di-option, .di-ms-pop .di-btn, .di-upgraded-checks .di-ms-control')].filter(e => e.offsetParent && e.getBoundingClientRect().height < 43.5).length")
+    small = pg.evaluate("[...document.querySelectorAll('.di-ms-pop .di-option, .di-ms-pop .di-btn, .qf-field .di-multiselect .di-ms-control')].filter(e => e.offsetParent && e.getBoundingClientRect().height < 43.5).length")
     assert small == 0
     assert pg.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
     ctx.close()
@@ -318,18 +321,16 @@ def test_endur_and_comswap_offer_only_their_sub_types_and_find_only_endur_swaps(
     try:
         page.goto(url + "/form/trading", wait_until="load")
         page.locator('input[name="v.SOURCE_SYSTEM"][value="ENDUR"]').check()
-        types = page.locator('.qf-field[data-field="PRODUCT_SUB_TYPE"] .di-upgraded-checks')
-        assert types.count() == 1 and page.locator('.qf-enum[data-depends]').count() == 1      # the sub type list is a multi-select that still depends
-        product = page.locator('.qf-field[data-field="PRODUCT_TYPE"] .di-upgraded-checks')
+        types = page.locator('.qf-field[data-field="PRODUCT_SUB_TYPE"] .di-multiselect')
+        assert types.count() == 1                                                          # the sub type list is a multi-select that depends on the product
+        product = page.locator('.qf-field[data-field="PRODUCT_TYPE"] .di-multiselect')
         product.locator("input[role=combobox]").fill("ComSwap")
         page.locator(".di-ms-pop .di-option", has_text="ComSwap").first.click()
         product.locator("input[role=combobox]").press("Escape")
+        print("DEBUG", page.eval_on_selector_all(".qf-field[data-field=PRODUCT_TYPE] .di-chip-label", "els => els.map(e => e.textContent)"), page.eval_on_selector_all(".qf-field[data-field=PRODUCT_TYPE] input[type=hidden]", "els => els.map(e => e.name + '=' + e.value + (e.disabled ? ' disabled' : ''))"), page.eval_on_selector_all("input[type=hidden]", "els => els.map(e => e.name + '=' + e.value)"))
         types.locator(".di-ms-control").click()                                            # the sub type's multi-select offers only what applies
         assert sorted(page.locator(".di-ms-pop .di-option .di-option-label").all_inner_texts()) == ["ENGY-B-SWAP", "ENGY-SWAP"]
         page.keyboard.press("Escape")
-        offered = page.eval_on_selector_all('.qf-field[data-field="PRODUCT_SUB_TYPE"] input[type=checkbox]',
-                                            "els => els.filter(e => !e.closest('.qf-dep-off')).map(e => e.value)")
-        assert sorted(offered) == ["ENGY-B-SWAP", "ENGY-SWAP"]
         page.get_by_role("button", name="Search", exact=True).first.click()
         page.wait_for_url("**/form/trading?**")
         assert "v.SOURCE_SYSTEM=ENDUR" in page.url and "v.PRODUCT_TYPE=ComSwap" in page.url

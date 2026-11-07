@@ -2211,7 +2211,7 @@
       if (fs.type === 'array' && fs.items && fs.items.type === 'object') { return drawRepeat(form, f, wrap, msg, help, ro); }
       const factory = (form.o.widgets && form.o.widgets[widget]) || WIDGETS.get(widget);
       const mount = (Cls, opts) => { const host = form.el('div', { cls: 'di-form-widget' }); part.widget = new Cls(host, Object.assign({ label: f.label }, fs.options, opts)); part.names = fs.name ? form.el('span', { cls: 'di-names', attrs: { hidden: true } }) : null; return host; };
-      const opts = () => offeredValues(fs.items && fs.items.enum ? fs.items : fs, form.values, f.path).map((x) => {
+      const opts = () => offeredValues(fs.items && fs.items.enum ? Object.assign({}, fs.items, { dependsOn: fs.dependsOn, parents: fs.parents }) : fs, form.values, f.path).map((x) => {
         const all = fs.enum || (fs.items && fs.items.enum) || [], labels = fs.enumLabels || (fs.items && fs.items.enumLabels), i = all.indexOf(x);
         return { value: x, label: labels && i >= 0 ? labels[i] : String(x) };
       });
