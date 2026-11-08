@@ -26,6 +26,9 @@ import { InputBase, Listbox, Popover, debounce } from './drishti_inputs-dom.js';
 
 let cmReady = null;
 
+/** A text on one line: its line breaks as spaces. @param {*} t @returns {string} */
+function oneLine(t) { return String(t || '').replace(/\r?\n/g, ' '); }
+
 /**
  * The indentation of a new YAML line after the text before the cursor: the line's own, a list item's content column, two more after a
  * key that opens a block ("key:", "key: |").
@@ -90,6 +93,8 @@ export function ensureCodeMirror(given) {
  *   (a YAML key's "kind: ", a path's "$.")
  * @property {boolean} [lineWrapping=false]
  * @property {boolean} [tabLeaves=false] Tab and Shift+Tab move the focus out of the editor (a small box in a form) instead of indenting
+ * @property {boolean} [singleLine=false] one line, as a form's text field (a formula, a filter): Enter adds no line (the page's Enter key
+ *   still runs), a line break pasted or set becomes a space; with height 'auto' it grows as the line wraps
  */
 
 /**
@@ -104,6 +109,7 @@ export class CodeEditor extends InputBase {
   constructor(host, options) {
     super(host, options, 'di-code');
     const o = this.o = Object.assign({ mode: 'rachana', lineNumbers: true, height: 200, lintDelay: 400, value: '', indentUnit: 2 }, this.o);
+    if (o.singleLine) { o.value = oneLine(o.value); }
     if (!MODES[o.mode]) { throw new Error('no code mode ' + o.mode + ' (' + Object.keys(MODES).join(', ') + ')'); }
     this.value = String(o.value || '');
     this.problems = [];
@@ -146,6 +152,7 @@ export class CodeEditor extends InputBase {
       if (this.invalid) { this.setInvalid(true); }
       const ta = cm.getInputField();
       if (ta) { ta.setAttribute('aria-label', (o.label || 'Code') + (o.readOnly ? ' (read-only)' : '')); }
+      if (o.singleLine) { cm.on('beforeChange', (x, ch) => { if (ch.update && ch.text.length > 1) { ch.update(ch.from, ch.to, [ch.text.join(' ')]); } }); }
       cm.on('change', (x, ch) => {
         this.value = cm.getValue();
         this.changed(ch.origin);
@@ -169,6 +176,7 @@ export class CodeEditor extends InputBase {
       Tab: (cm) => { if (cm.somethingSelected()) { cm.indentSelection('add'); } else { cm.replaceSelection(unit, 'end'); } },
       'Shift-Tab': (cm) => { cm.indentSelection('subtract'); } };
     if (this.o.tabLeaves) { keys.Tab = false; keys['Shift-Tab'] = false; }
+    if (this.o.singleLine) { keys.Enter = () => {}; keys['Shift-Enter'] = () => {}; }
     if (this.o.mode === 'yaml') { keys.Enter = (cm) => { const c = cm.getCursor(); cm.replaceSelection('\n' + ' '.repeat(yamlIndentAfter(cm.getLine(c.line).slice(0, c.ch))), 'end', '+input'); }; }
     Object.keys(this.o.keys || {}).forEach((k) => { keys[k] = () => this.o.keys[k](); });
     return keys;
@@ -306,7 +314,7 @@ export class CodeEditor extends InputBase {
    * @param {string} text
    * @returns {void}
    */
-  setValue(text) { this.value = String(text || ''); if (this.cm) { this.cm.setValue(this.value); } else { this.area.value = this.value; } }
+  setValue(text) { this.value = this.o.singleLine ? oneLine(text) : String(text || ''); if (this.cm) { this.cm.setValue(this.value); } else { this.area.value = this.value; } }
 
   /**
    * Replaces the text where it differs, keeping the cursor, the selection and the scroll (the document changed elsewhere: an undo,
@@ -315,7 +323,7 @@ export class CodeEditor extends InputBase {
    * @returns {boolean}
    */
   updateValue(text) {
-    text = String(text || '');
+    text = this.o.singleLine ? oneLine(text) : String(text || '');
     if (text === this.getValue()) { return false; }
     if (!this.cm) { this.setValue(text); return true; }
     const cm = this.cm, cur = cm.getCursor(), scroll = cm.getScrollInfo();

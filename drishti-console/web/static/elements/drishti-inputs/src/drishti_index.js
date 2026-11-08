@@ -38,8 +38,8 @@ export { upgradeDateInput, upgradeTimeInput, upgradeDateTimeInput, upgradeCheckb
 export { rachanaMode, yamlMode, MODES, defineModes, MiniStream, tokens } from './drishti_code-modes.js';
 export { wordAt, completions, insertText, lineDiff, sideBySide, diffStats } from './drishti_code-text.js';
 export { ensureCodeMirror, yamlIndentAfter, CodeEditor, CodeDiff } from './drishti_code-editor.js';
-export { upgradeCodeArea, upgradeCodeAreas } from './drishti_code-upgrade.js';
-import { upgradeCodeAreas } from './drishti_code-upgrade.js';
+export { upgradeCodeArea, upgradeCodeAreas, CODE_AREA_SELECTOR } from './drishti_code-upgrade.js';
+import { upgradeCodeAreas, CODE_AREA_SELECTOR } from './drishti_code-upgrade.js';
 export { INPUT_ELEMENTS, defineInputElements } from './drishti_inputs-element.js';
 import { defineInputElements } from './drishti_inputs-element.js';
 
@@ -52,7 +52,7 @@ import { defineInputElements } from './drishti_inputs-element.js';
 export function install(root) {
   if (!root || !root.document) { return; }
   if (root.customElements) { defineInputElements(root.customElements, root); }
-  const doc = root.document, go = () => upgradeCodeAreas(doc);          // the page's code areas (<textarea data-di-code>), now and as they appear
+  const doc = root.document, go = () => upgradeCodeAreas(doc);          // the page's code areas (<textarea data-di-code>, <input data-di-code>), now and as they appear
   if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', go); } else { go(); }
-  if (root.MutationObserver) { new root.MutationObserver(() => { if (doc.querySelector('textarea[data-di-code]:not([data-di-code-upgraded])')) { go(); } }).observe(doc.documentElement, { childList: true, subtree: true }); }
+  if (root.MutationObserver) { new root.MutationObserver(() => { if (doc.querySelector(CODE_AREA_SELECTOR)) { go(); } }).observe(doc.documentElement, { childList: true, subtree: true }); }
 }

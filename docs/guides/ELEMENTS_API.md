@@ -8276,24 +8276,28 @@ Returns `{added: number, removed: number, same: number}`.
 
 #### `upgradeCodeArea(ta, o)`
 
-Makes one text area a code editor (once); answers the editor.
+Makes one text area (or one-line input) a code editor (once); answers the editor.
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `ta` | `HTMLTextAreaElement` |  |
-| `[o]` | `{mode: string, height: number, complete: Function, lint: Function}` | beside the element's own attributes |
+| `ta` | `(HTMLTextAreaElement\|HTMLInputElement)` |  |
+| `[o]` | `{mode: string, height: number, complete: Function, lint: Function, keys: Object}` | beside the element's own attributes and drishtiCodeOptions |
 
 Returns `CodeEditor`.
 
 #### `upgradeCodeAreas(root)`
 
-Upgrades every &lt;textarea data-di-code&gt; inside a root (a page, a dialog drawn later).
+Upgrades every &lt;textarea data-di-code&gt; and &lt;input data-di-code&gt; inside a root (a page, a dialog drawn later).
 
 | Parameter | Type | Meaning |
 |---|---|---|
 | `root` | `ParentNode` |  |
 
 Returns `CodeEditor[]`.
+
+#### `CODE_AREA_SELECTOR`
+
+The elements upgradeCodeAreas makes code editors (install's observer looks for them).
 
 ### drishti_inputs-element.js
 
@@ -8377,6 +8381,7 @@ A lint problem.
 | `[completeAfter]` | `function(string): boolean` | also opens the completions when the text before the cursor passes this test (a YAML key's "kind: ", a path's "$.") |
 | `[lineWrapping=false]` | `boolean` |  |
 | `[tabLeaves=false]` | `boolean` | Tab and Shift+Tab move the focus out of the editor (a small box in a form) instead of indenting |
+| `[singleLine=false]` | `boolean` | one line, as a form's text field (a formula, a filter): Enter adds no line (the page's Enter key still runs), a line break pasted or set becomes a space; with height 'auto' it grows as the line wraps |
 
 #### `CatalogueEntry` : `Object`
 
