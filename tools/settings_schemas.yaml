@@ -145,6 +145,8 @@ schemas:
       - { key: "sections[].groups[].guides[].roles", type: list, default: "[]", meaning: "Who may see it: none, everyone; else only an administrator or a person holding one of these roles (others get 404 and do not find it)" }
       - { key: "sections[].groups[].guides[].engine", type: string, default: none, meaning: "The compute engine it is about: left out while it runs on no server (an administrator sees it greyed); open to anyone who can open Help otherwise" }
       - { key: "sections[].groups[].guides[].pair", type: string, default: none, meaning: "The tutorial drawn beside this guide on its row (a page of the same group)" }
+      - { key: "sections[].groups[].guides[].domain", type: string, default: core, meaning: "The domain module the page belongs to (core, banking, capitalmarkets, economy): while it is off for the person the page is not listed, searched or served" }
+      - { key: "sections[].groups[].guides[].lenses", type: list, default: none, meaning: "The lenses that show the page (none: every lens; the full product shows every page)" }
       - { key: moved, type: map, default: shipped, meaning: "Retired addresses: old slug -> slug or slug#anchor, answered with a 301" }
       - { key: "moved.<name>", type: string, meaning: "One retired slug and the page (and section) that took it over" }
       - { key: knowledge, type: map, default: shipped, meaning: "\"What does this mean?\" beside a data page: screen or kind -> the Knowledge page or glossary entry that explains it" }

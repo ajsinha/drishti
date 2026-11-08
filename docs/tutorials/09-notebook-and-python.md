@@ -25,7 +25,7 @@ About 60 minutes (step 12: 15 minutes).
 
 ## Before you start
 
-- The quick-start environment of [tutorial 10](08-reports-and-dashboards.md#before-you-start) (the demo lakes: 15,000 trade valuations over ten desks,
+- The quick-start environment of [tutorial 8](08-reports-and-dashboards.md#before-you-start) (the demo lakes: 15,000 trade valuations over ten desks,
   business date 2026-10-16) and tutorial 10 done (reports, workspaces, `Economics desk`). You sign in as the development administrator, who holds the `bi-author` power that Python needs (SQL cells need only `bi`).
 - Python on the server: compute switched on, and the server's compute pool `python` pointed at an interpreter that carries the pinned libraries (`DRISHTI_COMPUTE_ENABLED=true`, `DRISHTI_PYTHON=<python with pandas, numpy, pyarrow and scipy at the versions of config/compute/locks/python.lock>`; [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md)). Every Python item runs on that pool, in a strict sandbox (no network, files held to its own folder), never in the console or your browser; on a Windows server Python is off and says why.
   the browser. **Calc** (the step that asks a BI model from a view, Alt+C) is the one exception: it is Python on the screen you are on, in your browser, so its
@@ -600,7 +600,7 @@ The steps run where every Python item runs, on the server's compute pool; the sn
 
 ## Next steps
 
-- [Tutorial 15](10-ai-assistant.md): ask the data in words.
+- [Tutorial 10](10-ai-assistant.md): ask the data in words.
 - [REPORTS_GUIDE.md](../guides/NOTEBOOK_GUIDE.md#3-python-measures-and-visuals): the manifest, where Python runs, the sandbox in full, `DRS-9070` to `9075`, section 13 for the Transform and
   section 17 for the Transform editor and the snippets. [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook): the page, limits and notebooks. [USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view) is Calc, the Python panel inside a screen.
 

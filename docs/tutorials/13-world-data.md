@@ -33,7 +33,7 @@ About 1 h 10 min in all; each part can be done on its own day.
 
 ## Before you start
 
-- [Tutorial 1](01-first-15-minutes.md#part-a--install-start-and-look-around) done: a server and console you can build, start and stop.
+- [Tutorial 1, Part A](01-first-15-minutes.md#part-a--install-start-and-look-around) done: a server and console you can build, start and stop.
 - The demo lake built with the public-data packs: `python3 tools/drishti.py lake demo`, and the packs loaded:
   `DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds`.
 - For the command-line steps: `DRISHTI_SERVER=http://localhost:18480` and `DRISHTI_TOKEN=...` (My account → API tokens), or `--user`

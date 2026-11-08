@@ -172,5 +172,5 @@ the sheet take the whole screen, with the difference, the destination and the re
 - Make your own screen's form submit: add `save:` to its `form:` ([APPROVALS_GUIDE.md section 4a](../guides/APPROVALS_GUIDE.md#4-submitting-a-change)).
 - Send amendments to a booking system: a JDBC connector's `writes:` with its guard and idempotency clause, switched on in Admin → Edits
   ([APPROVALS_GUIDE.md section 13](../guides/APPROVALS_GUIDE.md#10-writing-to-a-source-writes), [JDBC_QUERIES.md section 16](../../plugins/drishti-plugin-jdbc/README.md#writes-commands-that-change-a-record)).
-- Recompute on a change: a reactive connector with a `write-back` trigger ([tutorial 23](19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector)).
+- Recompute on a change: a reactive connector with a `write-back` trigger ([tutorial 19, Part C](19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector)).
 - Run several servers: PostgreSQL for the Drishti database, or an edit primary ([APPROVALS_GUIDE.md section 11](../guides/APPROVALS_GUIDE.md#8-the-edit-log-lanes-and-the-cluster)).

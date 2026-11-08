@@ -403,7 +403,7 @@ Click the **BI** icon (or type `BI` and press Enter).
 ![The BI home: a menu on the left (Home, Catalogue, My workspace and more) and the sections Recent, Favourites, Certified for you and Shared with me](img/t01/09-bi-home.jpg)
 
 You should see the BI home: a menu on the left (Home, Catalogue, My workspace, Datasets, Insights and so on) and, in the middle, the sections *Recent*, *Favourites*, *Certified for you* and *Shared with me*, which fill as you use BI. Business intelligence is Drishti's second front: reports and boards built on models and datasets, with their own guide ([REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md)) and tutorial
-([tutorial 10](08-reports-and-dashboards.md#part-a--your-first-bi-report)). The shipped models read the same sixty days of the lakes.
+([tutorial 8, Part A](08-reports-and-dashboards.md#part-a--your-first-bi-report)). The shipped models read the same sixty days of the lakes.
 
 **From the command line** (with the token of Step 9), the catalogue as you may see it:
 

@@ -192,13 +192,13 @@ word `BI` goes there from the command line, in any case: `BI <GO>` the Build hom
 catalogue, `BI SETTINGS <GO>` the BI settings (administrators with `bi-admin`), `BI <report-or-board> <GO>` a published item by id or title (a **report opens drawn**, with its slicers, drill-down and drill-through; type-ahead completes after `BI `; `RUPAKA` still works as an alias). Without the power the menu is not there and `BI <GO>`
 says what is missing. No pack can define a mnemonic named `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT`, `DATAMAP` or `DATA`. The BI page, its keys (`/`, `g h`, `g c`, `g w`, `?`) and what it can and cannot do yet:
 [REPORTS_GUIDE.md](REPORTS_GUIDE.md). **Using a report:** click a bar and the page filters to it, the buttons in a visual's header drill down, drill through to another page, show the rows behind it or open a trade in the terminal, and a slicer filters
-what it can reach ([REPORTS_GUIDE.md](REPORTS_GUIDE.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas in BI Studio, with its Explorer, tabs and Problems and Query dock ([REPORTS_GUIDE.md](REPORTS_GUIDE.md) sections 15 and 26, [tutorial 10](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report)); the YAML reference is [REPORTS_GUIDE.md](REPORTS_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers). The BI rail also opens *Analyse*, *Transforms* (Python data prep step by step) and the *Python console*.
+what it can reach ([REPORTS_GUIDE.md](REPORTS_GUIDE.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas in BI Studio, with its Explorer, tabs and Problems and Query dock ([REPORTS_GUIDE.md](REPORTS_GUIDE.md) sections 15 and 26, [tutorial 8, Part A](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report)); the YAML reference is [REPORTS_GUIDE.md](REPORTS_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers). The BI rail also opens *Analyse*, *Transforms* (Python data prep step by step) and the *Python console*.
 
 **In a report:** a **parameter slicer** may switch *which* field or measure a visual draws (a field parameter: the chart breaks down
 by desk, then by portfolio; it shows MTM, then notional), and the choice is yours alone, as any slicer's ([REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](REPORTS_GUIDE.md#11-field-parameters)).
 A report may also have **statement pages**: paper, page by page, with a header and footer, page numbers and a period, downloaded as PDF or
 Excel made as you (your masks and row rules), and sent by a subscription as one statement per recipient; the reference is
-[REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](REPORTS_GUIDE.md#12-statements-paginated-reports-page-exact-one-per-reader), the walk-through [tutorial 20](../tutorials/08-reports-and-dashboards.md#part-c--statements-and-field-parameters).
+[REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](REPORTS_GUIDE.md#12-statements-paginated-reports-page-exact-one-per-reader), the walk-through [tutorial 8, Part C](../tutorials/08-reports-and-dashboards.md#part-c--statements-and-field-parameters).
 
 **On the right:** round tools, from left to right.
 
@@ -1406,14 +1406,14 @@ Newer screens (every pack screen is built from the same parts) can do more than 
   says *Edited here*), or conflicted if the trade moved since you opened it (your draft is kept). Approvers decide in the **Approvals** queue
   (Build → Govern → Changes). Someone else's change to the record you are viewing shows *Changed by … just now*.
   The reference is [APPROVALS_GUIDE.md section 4a](APPROVALS_GUIDE.md#4-submitting-a-change); a walk-through is
-  [tutorial 24](../tutorials/11-correct-and-approve.md).
+  [tutorial 11](../tutorials/11-correct-and-approve.md).
 - **Screens laid out on a grid.** A screen with named areas may have a split you drag (its position kept for you), areas shown as
   tabs and panels that fold. Where the screen allows it, you may drag panels to another place and resize them, for yourself;
   **Reset layout** goes back. Such a screen does not offer layout mode (`Alt+L`): the grid replaces it.
 - **Your page.** With the Sutra designer on, **Customize** in a page's header changes the page for you alone (move, hide, columns,
   what a click opens, refresh, letting people edit); the header then says *Your page*, whose link opens the pack's page.
   [RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31](RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid) and
-  [tutorial 19, Part B (the Sutra designer)](../tutorials/19-build-a-pack-and-a-screen.md#on-a-live-page-the-sutra-designer).
+  [tutorial 19 (the Sutra designer)](../tutorials/19-build-a-pack-and-a-screen.md#on-a-live-page-the-sutra-designer).
 
 ## Zoom a panel
 
@@ -1710,7 +1710,7 @@ The round **Live** button beside the box is a toggle, the same on a laptop and a
 You can still pick another date while paused. The choice is kept as you move between pages. A screen reader hears
 *Live updates on — click to pause* or *Live updates paused — click to resume*, which is also its tooltip.
 
-Step by step, with pictures (a past date, the same layout with that day's figures, a Saturday, back to Live): [tutorial 2](../tutorials/01-first-15-minutes.md#part-b--look-up-anything), step 14. It needs the sample history ([OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine), Step 5).
+Step by step, with pictures (a past date, the same layout with that day's figures, a Saturday, back to Live): [tutorial 1, Part B](../tutorials/01-first-15-minutes.md#part-b--look-up-anything), step 14. It needs the sample history ([OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine), Step 5).
 
 What the banners mean:
 
@@ -2145,7 +2145,7 @@ one live connection.
 
 ## Scheduled reports
 
-A report is a search that runs on its own, on a schedule, and delivers its result as a CSV or JSON Lines file (**Format**); **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [REPORTS_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 0](REPORTS_GUIDE.md#181-the-reports-page-and-scheduled-searches); the walk-through is [tutorial 9](../tutorials/08-reports-and-dashboards.md#part-e--scheduled-searches-and-subscriptions).
+A report is a search that runs on its own, on a schedule, and delivers its result as a CSV or JSON Lines file (**Format**); **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [REPORTS_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 0](REPORTS_GUIDE.md#181-the-reports-page-and-scheduled-searches); the walk-through is [tutorial 8, Part E](../tutorials/08-reports-and-dashboards.md#part-e--scheduled-searches-and-subscriptions).
 
 ## Alerts
 
@@ -2224,7 +2224,7 @@ after a data load, or when it changes), and how to tell you: your **inbox** and 
 inside the limit (by the *hysteresis* you set, if any) and does not fire again within the *cooldown* (30 minutes by default). Your rules are on the **Alerts** page (also **Reports**, *My alerts*): *Look now*, *Pause*, *Resume*,
 *Edit and history* (what every look did, and what was sent where) and *Delete*; what they raised is under *Raised for you* and in the
 **Alerts** tab of your inbox. If a board's author has made a tile notify, you are told when it turns red, on your own number.
-Reference: [REPORTS_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4](REPORTS_GUIDE.md#19-alerts-on-numbers); walk-through: [tutorial 11](../tutorials/08-reports-and-dashboards.md#part-d--bi-that-runs-itself).
+Reference: [REPORTS_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4](REPORTS_GUIDE.md#19-alerts-on-numbers); walk-through: [tutorial 8, Part D](../tutorials/08-reports-and-dashboards.md#part-d--bi-that-runs-itself).
 
 ## Workspaces
 
@@ -3688,4 +3688,4 @@ The picture is real output of that cell on the sample trades dataset: ten desks,
 The **Notebook** (`/bi/notebook`, the BI rail's *Notebook*) is the one place for code over data: SQL cells run by the server and Python cells
 run on the server's compute pool, over an extract of the rows you may see. Everything about it (extracts, cells, saving, promoting, the profile,
 limits and errors) is in [NOTEBOOK_GUIDE.md](NOTEBOOK_GUIDE.md#2-the-notebook), with Python measures, visuals and data prep; the walk-through is
-[tutorial 14](../tutorials/09-notebook-and-python.md). For Python in your own browser on a view's rows, see [Calc](#calc-python-on-any-view).
+[tutorial 9](../tutorials/09-notebook-and-python.md). For Python in your own browser on a view's rows, see [Calc](#calc-python-on-any-view).

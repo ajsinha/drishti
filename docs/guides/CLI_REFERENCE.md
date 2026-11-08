@@ -3260,7 +3260,7 @@ drishti.py bi item tests ID [--role R]                                          
 drishti.py bi dataset refresh ID [--now] [--wait S]                                 the refresh state; --now refreshes and waits until it ends (a rachana 2 dataset: through the models that read it)
 ```
 
-Publishing is `bi catalogue publish ID` (above). Captured, the steps of [tutorial 1, Part D, Part D](../tutorials/08-reports-and-dashboards.md#part-d--bi-that-runs-itself):
+Publishing is `bi catalogue publish ID` (above). Captured, the steps of [tutorial 8, Part D, Part D](../tutorials/08-reports-and-dashboards.md#part-d--bi-that-runs-itself):
 
 ```text
 $ python3 tools/drishti.py bi item new economics-desk docs/tutorials/data/trades-daily.dataset.yaml

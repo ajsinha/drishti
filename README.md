@@ -116,7 +116,7 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
 - **Business intelligence on the table layer**: tables and models written in Rachana (Build › Tables & models, with the YAML live
   beside the form), reports and boards, row rules across facts, governance and distribution, and the **Notebook** with one Python
   runtime on the server's sandboxed pool ([TABLES_GUIDE.md](docs/guides/TABLES_GUIDE.md), [REPORTS_GUIDE.md](docs/guides/REPORTS_GUIDE.md),
-  [tutorial 44](docs/tutorials/18-tables-and-models.md), [tutorial 10](docs/tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report)).
+  [tutorial 18](docs/tutorials/18-tables-and-models.md), [tutorial 8, Part A](docs/tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report)).
 - **One grammar.** Rachana paths and expressions are used in Sutras, search, the Pivot, BI and custom functions; the **function
   catalogue** lists every function with its rules and its Excel, SAS and MATLAB counterparts ([FUNCTIONS.md](docs/guides/FUNCTIONS.md),
   [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md)).
@@ -127,7 +127,7 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
   from the shape of the data. One pipeline draws every entity of every kind ([BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies)).
 - **Domain packs** bring an industry's kinds, functions, Sutras, links, roles and connectors in YAML only; a pack can be made from your
   own JSON Schema or JSON Lines ([BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md), [BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack),
-  [tutorial 5](docs/tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data)).
+  [tutorial 19, Part A](docs/tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data)).
 - **The Build home** (`/build`) is the one place for what people build: connectors, lakes, tables and models, Sutras, packs, reports and
   boards, pivot views, functions, VaR baskets, each with what it uses and what uses it, and the drafts waiting for review
   ([tutorial 19, Part B](docs/tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench-and-on-a-live-page)).
@@ -187,18 +187,18 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
   construction. Client examples: [examples/clients/](examples/clients/README.md).
 - **REST API** under `/api/v1` with API tokens; the banking engines under `/api/v1/risk/…` ([API_REFERENCE.md](docs/guides/API_REFERENCE.md)).
 - **Embedding**: live views, panels and reports inside other web applications ([EMBED_GUIDE.md](docs/guides/EMBED_GUIDE.md),
-  [tutorial 16](docs/tutorials/20-embed-drishti.md)).
+  [tutorial 20](docs/tutorials/20-embed-drishti.md)).
 
 ## Operate
 
 - **Security**: passwords or OpenID Connect, roles per kind, field masks, API tokens, an access log and an audit trail; **off by default**
-  for a developer machine and turned on for any shared one ([ADMIN_GUIDE.md](docs/guides/ADMIN_GUIDE.md), [tutorial 17](docs/tutorials/21-run-it-in-production.md)).
+  for a developer machine and turned on for any shared one ([ADMIN_GUIDE.md](docs/guides/ADMIN_GUIDE.md), [tutorial 21](docs/tutorials/21-run-it-in-production.md)).
 - **Admin → Configuration**: every setting in three tiers (everyday, admin, expert), with its value in effect and where it came from; a
   change is a proposal a second administrator approves. Every setting is listed in [CONFIGURATION.md](docs/admin/CONFIGURATION.md).
 - **Modules and engines on or off** per node ([OPERATIONS_GUIDE.md section 22](docs/guides/OPERATIONS_GUIDE.md#65-engines-modules-and-editions); Admin → Engines,
   [section 21](docs/guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off)).
 - **Clustering** (Drishti\*net, off by default): servers join by gossip, any member answers any request, VaR shards across members
-  ([OPERATIONS_GUIDE.md section 18](docs/guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet), [tutorial 19](docs/tutorials/22-a-cluster-of-three.md)).
+  ([OPERATIONS_GUIDE.md section 18](docs/guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet), [tutorial 22](docs/tutorials/22-a-cluster-of-three.md)).
 - **Linear algebra**: OpenBLAS is bundled for Linux and Windows x86-64, **off as shipped**; turn it on per node after measuring
   ([OPERATIONS_GUIDE.md section 2.1](docs/guides/OPERATIONS_GUIDE.md#149-native-libraries-blas)).
 - **Deployment** by hand, with systemd, Docker Compose ([deploy/docker/compose.yaml](deploy/docker/compose.yaml)), AWS ECS, and on

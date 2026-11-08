@@ -2009,7 +2009,7 @@ source with the MR lens around it (headline strip, time-travel slider, tabs B an
 **correct non-additive totals**: every cell, subtotal and total is the VaR (or ES, SBM …) of its own set of trades, re-aggregated from their
 scenario P&L vectors, never a sum of other cells. How to use it: [PIVOT_GUIDE.md section 29](../guides/PIVOT_GUIDE.md#29-the-mr-cube-preset) and
 [PIVOT_GUIDE.md › Presets](../guides/PIVOT_GUIDE.md#28-presets-the-risk-cubes); the tutorial is
-[tutorial 12, Part C](../tutorials/07-pivot-cubes-and-explain.md#part-c--the-mr-cube-desks-by-risk-class-with-the-right-totals). This section keeps the product view: who it serves, what is still
+[tutorial 7, Part C](../tutorials/07-pivot-cubes-and-explain.md#part-c--the-mr-cube-desks-by-risk-class-with-the-right-totals). This section keeps the product view: who it serves, what is still
 open, the build checklist, and the **shared cube core** and **data contracts** that the CCR cube ([section 7](#7-ccr-cube-lens)) reuses.
 
 ### 6.1 Who uses it and their questions

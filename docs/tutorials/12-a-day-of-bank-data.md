@@ -280,7 +280,7 @@ download is audited: Admin → Audit lists it as `data.download` with the date, 
 
 - Wire your own job: [DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) section 11 has copy-ready recipes; make a token with only `loads:write` for it ([Permissions](../guides/DATA_GUIDE.md#10-permissions)).
 - [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#18-distribution-the-reports-page-export-and-subscriptions) section 4 covers alerts on numbers in full: thresholds, changes, hysteresis, cooldown, delivery.
-- [Tutorial 8 · Share and collaborate](01-first-15-minutes.md#part-d--share-and-collaborate).
+- [Tutorial 1, Part D · Share and collaborate](01-first-15-minutes.md#part-d--share-and-collaborate).
 
 ## If something goes wrong
 

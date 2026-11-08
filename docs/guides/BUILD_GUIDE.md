@@ -3620,7 +3620,7 @@ panels:
 - **Forms.** `form:` lets people edit a table's records beside it, in its cells or in a New drawer ([section 28](#28-forms-letting-people-edit-records)).
 
 You rarely need to write these by hand: the **Sutra designer** ([section 25](#25-the-build-workbench)) writes them from plain choices, and
-[tutorial 19, Part B (the Sutra designer)](../tutorials/19-build-a-pack-and-a-screen.md#on-a-live-page-the-sutra-designer) builds such a screen step by step.
+[tutorial 19 (the Sutra designer)](../tutorials/19-build-a-pack-and-a-screen.md#on-a-live-page-the-sutra-designer) builds such a screen step by step.
 
 ## 21. Expandable row groups: pivot `by` lists and tree tables
 
@@ -3848,7 +3848,7 @@ the checks run as you type. Its full manual is [RACHANA_REFERENCE.md](RACHANA_RE
 | You are doing | In the workbench | Section |
 |---|---|---|
 | starting from data, a schema, an example or an existing Sutra | **Build → New screen** | [§1](RACHANA_REFERENCE.md#1-start-bring-data) |
-| changing a live page in plain words (move, hide, columns, what a click opens, refresh, let people edit), or a screen from one line | the **Sutra designer** (`ui.designer`): **Customize** on the page, **Describe**, **Outline**, **Grid** | [§31](RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid), [tutorial 19, Part B (the Sutra designer)](../tutorials/19-build-a-pack-and-a-screen.md#on-a-live-page-the-sutra-designer) |
+| changing a live page in plain words (move, hide, columns, what a click opens, refresh, let people edit), or a screen from one line | the **Sutra designer** (`ui.designer`): **Customize** on the page, **Describe**, **Outline**, **Grid** | [§31](RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid), [tutorial 19 (the Sutra designer)](../tutorials/19-build-a-pack-and-a-screen.md#on-a-live-page-the-sutra-designer) |
 | writing the YAML by hand, with completion and a check as you type | the **YAML** tab (or **Split**, with the screen beside it) | [§9](RACHANA_REFERENCE.md#9-the-yaml-tab-the-split-view-and-the-summary) |
 | seeing what is wrong, with the code and the line | the **Problems** tab | [§10](RACHANA_REFERENCE.md#10-problems) |
 | checking every panel against every sample | the **Tests** tab: ok / empty / error / no access | [§11](RACHANA_REFERENCE.md#11-tests-as-you-type) |

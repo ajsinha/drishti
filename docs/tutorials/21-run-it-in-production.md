@@ -25,7 +25,7 @@ About 60 minutes (most of it waiting for a restart or a backup you then read).
 
 ## Before you start
 
-- A running server and console with sign-in on: the quick-start environment of [tutorial 8, Part A](08-reports-and-dashboards.md#before-you-start) (the demo lakes,
+- A running server and console with sign-in on: the quick-start environment of [tutorial 8](08-reports-and-dashboards.md#before-you-start) (the demo lakes,
   the run configurations **Drishti server (demo lakes)** and **Drishti console**, whose variables are the development values this tutorial replaces);
   you have used Admin, Users and Roles in tutorials 1 and 8, and the personal API token of tutorial 1, Part A is in `DRISHTI_TOKEN`.
 - Shell access to the machine that runs the server (you restart it a few times) and `tar`, `curl` and `python3`.
@@ -349,8 +349,8 @@ once a day; **Delete permanently** needs the name typed. Everything above is in 
 
 - [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md) for everything above in full, and [CONFIGURATION.md](../admin/CONFIGURATION.md) for every setting. [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md) for users, roles, single sign-on and embedding.
 - [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#16-tuning) and [CLUSTER_GUIDE.md, method 9](../admin/BENCHMARK.md#213-many-users-soaks-and-memory) before you size a big installation; [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#21-troubleshooting) and the runbooks in [the runbooks](../guides/OPERATIONS_GUIDE.md#20-runbooks) for incidents.
-- Several servers, each with its own data, as one cluster: [tutorial 19](22-a-cluster-of-three.md) and [OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet).
-- The tutorials again, now as users: [tutorial 8](01-first-15-minutes.md#part-d--share-and-collaborate) and [tutorial 9](08-reports-and-dashboards.md#part-e--scheduled-searches-and-subscriptions) are what your people will do first.
+- Several servers, each with its own data, as one cluster: [tutorial 22](22-a-cluster-of-three.md) and [OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet).
+- The tutorials again, now as users: [tutorial 1, Part D](01-first-15-minutes.md#part-d--share-and-collaborate) and [tutorial 8, Part E](08-reports-and-dashboards.md#part-e--scheduled-searches-and-subscriptions) are what your people will do first.
 
 ## If something goes wrong
 
