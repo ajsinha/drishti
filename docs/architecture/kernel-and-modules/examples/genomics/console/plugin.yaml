@@ -15,7 +15,7 @@
 # EXAMPLE (design, not built): console/plugin.yaml of the genomics sample module, format 2 (docs/architecture/KERNEL_AND_MODULES.md
 # section 9). Everything the console shows for the module is DECLARED here and nowhere else: routes, menus, functions' pages, Home cards,
 # slots, settings page, the API proxy list. No code registers a route at import; the kernel reads this file into its live route table, and
-# withdrawing the file's entries withdraws every page (section 10).
+# withdrawing the file's entries withdraws every page (section 12).
 format: 2
 module: genomics
 title: Genomics
@@ -23,7 +23,6 @@ title: Genomics
 templates: templates            # namespace "genomics:" (genomics:variant_explorer.html); may extend kernel/* layouts only
 static: static                  # served at /m/genomics/static/0.1.0/... (immutable, SRI)
 i18n: i18n                      # t('genomics.explorer.title')
-handlers: drishti_modules.genomics.pages   # the one Python module named by `handler:` below; imported lazily, on first use
 
 routes:                         # under /m/genomics; ids are unique in the module; links use route ids, never raw paths
   - id: home
@@ -35,7 +34,6 @@ routes:                         # under /m/genomics; ids are unique in the modul
     path: /variants/{cohort}
     params: { cohort: { kind: cohort, required: true } }
     page: variant_explorer.html                  # tier 2: a composed page from Elements (templates/variant_explorer.html)
-    handler: variant_explorer                    # optional: builds the page's context (pages.variant_explorer(ctx) -> dict)
     title: "Variant explorer · {cohort}"
     function: VARX
     permission: genomics:read

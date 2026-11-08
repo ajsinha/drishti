@@ -1,5 +1,5 @@
 EXAMPLE (design, not built): removing the genomics module from a 3-node cluster, four eyes, and what disappears
-(docs/architecture/KERNEL_AND_MODULES.md section 10). P2 behaviour: every surface disappears at once on approval (hot); the module's
+(docs/architecture/KERNEL_AND_MODULES.md section 12). P2 behaviour: every surface disappears at once on approval (hot); the module's
 code leaves the processes at the next rolling restart; its files stay until `module prune`; data and saved work stay.
 
 # Administrator 1 (alice) proposes

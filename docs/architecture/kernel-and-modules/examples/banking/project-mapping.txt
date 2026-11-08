@@ -1,5 +1,5 @@
 EXAMPLE (design, not built): banking as a module Maven project (docs/architecture/KERNEL_AND_MODULES.md section 8.10). Today's files on the
-left; the sub-module of the banking project they move to (a `git mv` in phase P2, section 12.3 step 6); the folder of banking-3.0.0.dmod
+left; the sub-module of the banking project they move to (a `git mv` in phase P2, section 14.3 step 6); the folder of banking-3.0.0.dmod
 they end up in on the right. The project lives at modules/banking/ in this repository (question Q9) and builds on its own:
 `cd modules/banking && mvn verify` needs only the SDK artefacts (drishti-kernel-api, drishti-kernel-testkit, the plugin), never the
 kernel's sources.
@@ -31,7 +31,7 @@ modules/banking/
 │                                      the banking terms of the glossary, docs/contracts/ for banking's kinds
 ├── banking-test/                   <- drishti-banking/src/test, drishti-compute-banking/src/test (harness-based from P2),
 │                                      drishti-console/tests/test_var*.py, test_exposure*.py ... (console harness),
-│                                      the VaR exact check (tests/var-exact) and BankingAbsenceTest (section 10.11)
+│                                      the VaR exact check (tests/var-exact) and BankingAbsenceTest (section 12.11)
 └── settings/                       <- new: schema.json from today's drishti.var.* / drishti.exposure.* keys (CONFIGURATION.md),
                                        defaults.yaml with today's values (they leave config/application.yaml)
 

@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 720" width="760" height="720" role="img" aria-label="Kernel, modules, distributions" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'DejaVu Sans', Arial, sans-serif">
 <!-- Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND CONFIDENTIAL. -->
 <title>Kernel, modules, distributions</title>
-<defs><marker id="a1a2333" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1a2333"/></marker><marker id="a1f5fbf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1f5fbf"/></marker><marker id="a1e8a55" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1e8a55"/></marker><marker id="ac62828" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c62828"/></marker><marker id="ae8a33a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#e8a33a"/></marker><marker id="a2bb3a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#2bb3a3"/></marker><marker id="a5c6a80" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#5c6a80"/></marker><marker id="a12324f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#12324f"/></marker></defs>
+<defs><marker id="a1a2333" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1a2333"/></marker><marker id="a1f5fbf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1f5fbf"/></marker><marker id="a1e8a55" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1e8a55"/></marker><marker id="ac62828" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c62828"/></marker><marker id="ae8a33a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#e8a33a"/></marker><marker id="a2bb3a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#2bb3a3"/></marker><marker id="a5c6a80" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#5c6a80"/></marker><marker id="a12324f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#12324f"/></marker><marker id="a6a4fb3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#6a4fb3"/></marker></defs>
 <rect x="0.5" y="0.5" width="759" height="719" rx="14" fill="#f7f9fc" stroke="#cdd6e3"/>
 <text x="24" y="38" font-size="20" font-weight="700" fill="#12324f">Kernel, modules, distributions</text>
 <text x="24" y="60" font-size="13" fill="#5c6a80">One kernel; modules plug in through the kernel API; a distribution file picks them and the brand.</text>
@@ -34,9 +34,9 @@
 <text x="576" y="290" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">Java · Python · packs</text>
 <text x="576" y="307" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">cohorts · variants (sample)</text>
 <rect x="24" y="352" width="712" height="40" rx="8" fill="#12324f"/>
-<text x="380" y="377" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">KERNEL API 1.x  ·  SPIs · Rachana 1 · contract format 1 · Elements core · REST namespace · events</text>
+<text x="380" y="377" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">KERNEL API 1.x  ·  SPIs · Rachana 1 · contract format 1 · REST namespace · events</text>
 <rect x="24" y="404" width="712" height="196" rx="10" fill="#ffffff" stroke="#12324f" stroke-width="2"/>
-<text x="40" y="428" font-size="14" font-weight="700" fill="#12324f" text-anchor="start">THE KERNEL · domain-free BI and aggregation</text>
+<text x="40" y="428" font-size="14" font-weight="700" fill="#12324f" text-anchor="start">THE DRISHTI KERNEL · domain-free Data &amp; BI (the console is a separate tier)</text>
 <rect x="40" y="440" width="160" height="146" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
 <text x="52" y="462" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">Grammar &amp; screens</text>
 <text x="52" y="480" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">Rachana, Sutras</text>
@@ -47,8 +47,8 @@
 <text x="224" y="462" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">Analysis</text>
 <text x="224" y="480" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">Pivot engine</text>
 <text x="224" y="497" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">BI, tables, models</text>
-<text x="224" y="514" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">Notebook</text>
-<text x="224" y="531" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">Elements core</text>
+<text x="224" y="514" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">aggregation, what-if</text>
+<text x="224" y="531" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">Python workers</text>
 <rect x="384" y="440" width="160" height="146" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
 <text x="396" y="462" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">Data</text>
 <text x="396" y="480" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">lakes (Delta, Iceberg)</text>
@@ -60,7 +60,7 @@
 <text x="568" y="480" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">registry &amp; licence</text>
 <text x="568" y="497" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">security, approvals</text>
 <text x="568" y="514" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">cluster, Health</text>
-<text x="568" y="531" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">Python pool + sandbox</text>
+<text x="568" y="531" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">module runtime</text>
 <text x="24" y="628" font-size="12" font-weight="700" fill="#5c6a80" text-anchor="start">CONNECTORS · the kernel&#x27;s drivers (never in a module)</text>
 <rect x="24" y="638" width="81" height="34" rx="17" fill="#dff1e7" stroke="#1e8a55" stroke-width="1.5"/>
 <text x="64.5" y="660" font-size="13" font-weight="400" fill="#1a2333" text-anchor="middle">Delta</text>

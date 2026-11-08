@@ -1,13 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 660" width="760" height="660" role="img" aria-label="Modules in a cluster: placed, not everywhere" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'DejaVu Sans', Arial, sans-serif">
 <!-- Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND CONFIDENTIAL. -->
 <title>Modules in a cluster: placed, not everywhere</title>
-<defs><marker id="a1a2333" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1a2333"/></marker><marker id="a1f5fbf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1f5fbf"/></marker><marker id="a1e8a55" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1e8a55"/></marker><marker id="ac62828" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c62828"/></marker><marker id="ae8a33a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#e8a33a"/></marker><marker id="a2bb3a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#2bb3a3"/></marker><marker id="a5c6a80" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#5c6a80"/></marker><marker id="a12324f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#12324f"/></marker></defs>
+<defs><marker id="a1a2333" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1a2333"/></marker><marker id="a1f5fbf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1f5fbf"/></marker><marker id="a1e8a55" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1e8a55"/></marker><marker id="ac62828" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c62828"/></marker><marker id="ae8a33a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#e8a33a"/></marker><marker id="a2bb3a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#2bb3a3"/></marker><marker id="a5c6a80" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#5c6a80"/></marker><marker id="a12324f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#12324f"/></marker><marker id="a6a4fb3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#6a4fb3"/></marker></defs>
 <rect x="0.5" y="0.5" width="759" height="659" rx="14" fill="#f7f9fc" stroke="#cdd6e3"/>
 <text x="24" y="38" font-size="20" font-weight="700" fill="#12324f">Modules in a cluster: placed, not everywhere</text>
-<text x="24" y="60" font-size="13" fill="#5c6a80">The deployer places each part on named nodes or roles; others forward; drift shows in the matrix.</text>
-<rect x="24" y="84" width="712" height="74" rx="8" fill="#ebe5f7" stroke="#6a4fb3" stroke-width="1.5"/>
-<text x="36" y="106" font-size="14" font-weight="700" fill="#6a4fb3" text-anchor="start">Console (any number; nothing installed by hand)</text>
-<text x="36" y="125" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">asks the registry which modules are active and where · console bundles from the kernel (signed)</text>
+<text x="24" y="60" font-size="13" fill="#5c6a80">Each part on named nodes or roles, console parts on console nodes; others forward; drift in the matrix.</text>
+<rect x="24" y="84" width="350" height="74" rx="8" fill="#ebe5f7" stroke="#6a4fb3" stroke-width="1.5"/>
+<text x="36" y="106" font-size="14" font-weight="700" fill="#6a4fb3" text-anchor="start">console-1  ·  console parts only</text>
+<text x="36" y="125" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">role: console · banking ✓ · capitalmarkets ✓ · genomics ✓</text>
+<rect x="386" y="84" width="350" height="74" rx="8" fill="#ebe5f7" stroke="#6a4fb3" stroke-width="1.5"/>
+<text x="398" y="106" font-size="14" font-weight="700" fill="#6a4fb3" text-anchor="start">console-research  ·  console parts only</text>
+<text x="398" y="125" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">role: console (+ by name) · genomics ✓ (placed by name)</text>
 <path d="M200,158 L200,190" fill="none" stroke="#12324f" stroke-width="1.8" marker-end="url(#a12324f)"/>
 <text x="262" y="178" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="middle" font-style="italic">registry, bundles</text>
 <path d="M560,158 L560,190" fill="none" stroke="#1e8a55" stroke-width="1.8" marker-end="url(#a1e8a55)"/>
@@ -48,18 +51,24 @@
 <text x="36" y="486" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">no default &#x27;all nodes&#x27; · heavy: max-nodes + memory check at activation · heavy on every node only with allow-all + four eyes</text>
 <rect x="24" y="526" width="712" height="112" rx="8" fill="#ffffff" stroke="#5c6a80" stroke-width="1.5"/>
 <text x="36" y="548" font-size="14" font-weight="700" fill="#5c6a80" text-anchor="start">Node × module matrix (Health, Admin → Cluster)</text>
-<text x="150" y="574" font-size="13" font-weight="700" fill="#5c6a80" text-anchor="start">main</text>
-<text x="290" y="574" font-size="13" font-weight="700" fill="#5c6a80" text-anchor="start">b</text>
-<text x="430" y="574" font-size="13" font-weight="700" fill="#5c6a80" text-anchor="start">c</text>
-<text x="570" y="574" font-size="13" font-weight="700" fill="#5c6a80" text-anchor="start">gpu</text>
-<text x="40" y="598" font-size="13" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">banking</text>
-<text x="150" y="598" font-size="13" font-weight="400" fill="#1e8a55" text-anchor="start">api, feeds ✓</text>
-<text x="290" y="598" font-size="13" font-weight="400" fill="#1e8a55" text-anchor="start">api, compute ✓</text>
-<text x="430" y="598" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="start">not placed</text>
-<text x="570" y="598" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="start">not placed</text>
-<text x="40" y="620" font-size="13" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">genomics</text>
-<text x="150" y="620" font-size="13" font-weight="400" fill="#1e8a55" text-anchor="start">api ✓</text>
-<text x="290" y="620" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="start">not placed</text>
-<text x="430" y="620" font-size="13" font-weight="700" fill="#e8a33a" text-anchor="start">present ! amber</text>
-<text x="570" y="620" font-size="13" font-weight="700" fill="#c62828" text-anchor="start">placed, missing ✗</text>
+<text x="140" y="574" font-size="13" font-weight="700" fill="#5c6a80" text-anchor="start">main</text>
+<text x="240" y="574" font-size="13" font-weight="700" fill="#5c6a80" text-anchor="start">b</text>
+<text x="340" y="574" font-size="13" font-weight="700" fill="#5c6a80" text-anchor="start">c</text>
+<text x="440" y="574" font-size="13" font-weight="700" fill="#5c6a80" text-anchor="start">gpu</text>
+<text x="540" y="574" font-size="13" font-weight="700" fill="#5c6a80" text-anchor="start">console-1</text>
+<text x="640" y="574" font-size="13" font-weight="700" fill="#5c6a80" text-anchor="start">con-research</text>
+<text x="32" y="598" font-size="13" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">banking</text>
+<text x="140" y="598" font-size="13" font-weight="400" fill="#1e8a55" text-anchor="start">api,feeds ✓</text>
+<text x="240" y="598" font-size="13" font-weight="400" fill="#1e8a55" text-anchor="start">api,comp ✓</text>
+<text x="340" y="598" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="start">—</text>
+<text x="440" y="598" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="start">—</text>
+<text x="540" y="598" font-size="13" font-weight="400" fill="#1e8a55" text-anchor="start">console ✓</text>
+<text x="640" y="598" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="start">—</text>
+<text x="32" y="620" font-size="13" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">genomics</text>
+<text x="140" y="620" font-size="13" font-weight="400" fill="#1e8a55" text-anchor="start">api ✓</text>
+<text x="240" y="620" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="start">—</text>
+<text x="340" y="620" font-size="13" font-weight="700" fill="#e8a33a" text-anchor="start">present !</text>
+<text x="440" y="620" font-size="13" font-weight="700" fill="#c62828" text-anchor="start">missing ✗</text>
+<text x="540" y="620" font-size="13" font-weight="400" fill="#1e8a55" text-anchor="start">console ✓</text>
+<text x="640" y="620" font-size="13" font-weight="400" fill="#1e8a55" text-anchor="start">console ✓</text>
 </svg>
