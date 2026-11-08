@@ -125,7 +125,7 @@ seconds at most on the demo data; later visits that day read them back). When no
 is left out and the headline stands alone. Under the headline, **quick cards** open *Market risk* (`VAR BANK`), *Exposure* (`EXP BANK`),
 *Funds and ETFs* (`FUND SPY`) and *Data map* (`DATAMAP`); a card whose pack is off is not shown. An administrator turns the tile off
 with `ui.facts.enabled: false` (`DRISHTI_HOME_FACTS=false`) and sets the cards under `ui.home_cards` in the console's
-`application.yaml`; a pack author adds facts as the [pack developer guide](PACK_DEVELOPER_GUIDE.md#facts-for-home) describes.
+`application.yaml`; a pack author adds facts as the [pack developer guide](BUILD_GUIDE.md#74-facts-for-home) describes.
 
 ## The top bar
 
@@ -157,7 +157,7 @@ you are on is highlighted.
 | **BI** (people with the `bi` power) | Business intelligence | *Catalogue* (`/bi/catalogue`), *My workspace* (`/bi/w/me`), *My runs*, *Workspaces* |
 | | Analyse | *Models*, *Datasets*, *Report designer* (`/bi/designer`), *Promotion (test to live)* (`/bi/environments`), *Notebook*, *Data prep* (`/bi/transform`) |
 | | Administer | *BI settings* (administrators with `bi-admin`, [REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
-| **Build** | Create | *Build home* (`/build`: [the Build home](#the-build-home-everything-you-build-in-one-place)), *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](SCHEMA_TO_PACK_GUIDE.md)), *Tables & models* (`/build/tables`), *Examples* |
+| **Build** | Create | *Build home* (`/build`: [the Build home](#the-build-home-everything-you-build-in-one-place)), *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack)), *Tables & models* (`/build/tables`), *Examples* |
 | | Learn | *Tutorials*, *Schema to pack*, *Screen designer guide*, *Screen developer guide*, *Panel kinds*, *Screen language reference*, *Pack developer guide* |
 | **Admin** (admins only) | People & access | *Users*, *Roles*, *API tokens*, *Who looked at what*, *Audit log*, *Saved VaR baskets* |
 | | Data | *Packs*, *Connectors*, *Data loads*, *Lakes*, *Record edits*, *Data out*, *Installed items* |
@@ -302,7 +302,7 @@ several trades (`TRD MX-2000 30`) gives the pick list, and each of its rows open
 `MYBOOK 30` is `BOOK BOOK-RATES-1 30`.
 
 Mnemonics come from the packs that are switched on. Every command, with what it does and an example, is in
-[COMMAND_CATALOG.md](COMMAND_CATALOG.md); the packs themselves are in [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#the-packs-that-ship). The most used ones, from the seven default packs:
+[COMMAND_CATALOG.md](COMMAND_CATALOG.md); the packs themselves are in [BUILD_GUIDE.md](BUILD_GUIDE.md#311-the-packs-that-ship). The most used ones, from the seven default packs:
 
 | Mnemonic | Kind | Example |
 |---|---|---|
@@ -638,7 +638,7 @@ Type a pack's code alone, for example `MKT <GO>`, to see what the market-data pa
 mnemonic to list that kind. Below the kinds, **What the pack holds** gives the pack README's summary, its data sources (with
 any internal-only flag) and, folded, its *Data structures*: each kind's id rule, fields with an example and a description, and
 nested structures by path, for the kinds you may open only. Every pack has a code (`CORE`, `MKT`, `TRDS`, `CCR`, `MRSK`, `WRLD`,
-`NWMK`, … see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#pack-codes)); the pack's name (`market-data`) works too.
+`NWMK`, … see [BUILD_GUIDE.md](BUILD_GUIDE.md#316-pack-codes)); the pack's name (`market-data`) works too.
 
 ## Pick lists: when a command names several entities
 
@@ -686,7 +686,7 @@ The first column is the id (a link). Then come:
 
 1. the fields your command uses (`CURRENCY` and `QUANTITY` in `TRD MX-2* CURRENCY=usd order by QUANTITY desc`);
 2. the kind's **key fields**, which the pack declares under `columns:` in its `pack.yaml`
-   ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#columns-the-key-fields-of-a-pick-list)). In the shipped packs:
+   ([BUILD_GUIDE.md](BUILD_GUIDE.md#43-columns-the-key-fields-of-a-pick-list)). In the shipped packs:
 
    | Kind | Key fields shown |
    |---|---|
@@ -1059,7 +1059,7 @@ On a phone the legs become tabs that scroll along one line, the terms stack, and
 The same layout is what you get from **inference** for any document that holds lists inside a short list of records, even with no Sutra written
 for it ([Inference](RACHANA_REFERENCE.md#the-rules)). To build such a screen see
 [Panels inside a tab](RACHANA_REFERENCE.md#panels-inside-a-tab) and
-[Modelling deep documents](PACK_DEVELOPER_GUIDE.md#modelling-deep-documents-legs-cashflows-and-fixings).
+[Modelling deep documents](BUILD_GUIDE.md#55-modelling-deep-documents-legs-cash-flows-and-fixings).
 
 ## Reading a view
 
@@ -1247,7 +1247,7 @@ world-economy pack (`ECON ECON-USA`), in that pack's words:
 - The drawer is fetched the first time you open it, never with the page, so it does not slow a view down.
 - When a live update brings a newer generation of the data, an open drawer asks again (at most once in two seconds).
 - No text? A pack without an `about` entry for the kind still shows the other layers; the pack's author can add one
-  ([how](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary); how it works inside is
+  ([how](BUILD_GUIDE.md#72-about-text-and-glossary); how it works inside is
   [HOW_IT_FITS.md](RACHANA_REFERENCE.md#about-this-page-end-to-end)).
 - Hover hints on field labels and a help popover on each panel's `?` come with the glossary stage; today the panel `?`
   still opens that panel kind's page in this guide.
@@ -1398,14 +1398,14 @@ Newer screens (every pack screen is built from the same parts) can do more than 
 - **Editing a record.** Where a screen lets you, clicking a row opens a form beside the table, or a pencil on a column lets you edit
   in the cell, and **New …** opens a guided drawer. Fields you may not change say why; a wrong value is explained under its field.
   **Save draft** keeps a **draft** that only you see (*You have 2 drafts on this page* offers them again). The page asks before you
-  leave with changes not saved. The reference is [WRITE_BACK.md](WRITE_BACK.md).
+  leave with changes not saved. The reference is [APPROVALS_GUIDE.md](APPROVALS_GUIDE.md).
 - **Submitting a change (write-back).** Where editing is on, you hold the edit power and the form says where it goes (the book
   desk's trades do), **Submit…** opens a sheet: what you saw, what is there now and your change; where it goes (a correction kept beside
   the booking system's value, or an amendment sent to it); who approves (never you); what it recomputes; and the reason. After **Confirm**
   the sheet follows it: waiting for an approver, applied (everyone viewing the trade sees the new value at once, *How this view was built*
   says *Edited here*), or conflicted if the trade moved since you opened it (your draft is kept). Approvers decide in the **Approvals** queue
   (Build → Govern → Changes). Someone else's change to the record you are viewing shows *Changed by … just now*.
-  The reference is [WRITE_BACK.md section 4a](WRITE_BACK.md#4a-submitting-a-change-write-back); a walk-through is
+  The reference is [APPROVALS_GUIDE.md section 4a](APPROVALS_GUIDE.md#4-submitting-a-change); a walk-through is
   [tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
 - **Screens laid out on a grid.** A screen with named areas may have a split you drag (its position kept for you), areas shown as
   tabs and panels that fold. Where the screen allows it, you may drag panels to another place and resize them, for yourself;
@@ -2456,7 +2456,7 @@ What changes when a pack is off for you:
 - its mnemonics leave the suggestions, and its examples leave `/t`, the help centre and the search page;
 - opening one of its entities is refused with `DRS-5002 … may not open … entities`;
 - a pack's parents stay usable through it: with *Counterparty credit risk* on, a netting set still links to
-  its trades and counterparties (see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#who-sees-which-pack)).
+  its trades and counterparties (see [BUILD_GUIDE.md](BUILD_GUIDE.md#314-who-sees-which-pack)).
 
 **Apply** needs at least one ticked pack; with none ticked it does nothing. The choice is saved to your
 account. You can choose only among the packs an administrator assigned to you, and only among packs that
@@ -2519,7 +2519,7 @@ Sutra folder (`./sutras/…/irs-fixfloat.v2.sutra.yaml`), and views use the high
 revision, and Undo brings the old text back.
 
 The [screen designer guide](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) (every pane, with pictures) and the
-[Sutra developer guide](SUTRA_DEVELOPER_GUIDE.md) go much further.
+[Sutra developer guide](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies) go much further.
 
 ### Reviews: approving a Sutra
 
@@ -2625,7 +2625,7 @@ if asked anyway. Roles only matter when sign-in is on. More in [USER_MANAGEMENT.
 | Changed | when and by whom it was last switched |
 
 A **Sample** badge beside the title marks a demonstration pack. **Load** and **Unload** take effect at once, with no restart; a pack folder you add,
-edit or delete on the server is picked up the same way (see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#live-reload-the-packs-folder-is-watched)). Above the table, the
+edit or delete on the server is picked up the same way (see [BUILD_GUIDE.md](BUILD_GUIDE.md#296-live-reload-the-packs-folder-is-watched)). Above the table, the
 *Sample packs* section says who sees samples and offers **Hide samples from business users**: only authors and administrators then see sample
 packs, everyone else has them filtered out as if switched off. *Hide samples from everyone* unloads them; *Show samples to everyone* brings them back.
 The choice is saved, applied at once and recorded in the audit log (`pack-samples`).
@@ -2655,7 +2655,7 @@ first checks the pack together with the loaded ones (a clash, such as the retire
 with the reason and nothing changes), then records it and puts it to use at once: no restart, nobody is signed out, and
 open views carry on. The page confirms and refreshes. A pack loaded this way shows **Unload**, which takes it back the
 same way (not while another loaded pack builds on it). See
-[PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#loading-a-pack-while-the-server-runs-1).
+[BUILD_GUIDE.md](BUILD_GUIDE.md#292-loading-a-pack-while-the-server-runs).
 
 #### One pack: its own page
 
@@ -2889,7 +2889,7 @@ On a phone the fields stack in one column and every control is at least 44 px.
 
 ### Who decides what the form offers
 
-The pack's author writes the form (`form:` in `pack.yaml`, see the [Pack developer guide](PACK_DEVELOPER_GUIDE.md#form-the-search-form-of-a-kind)); a pack that does not gets one
+The pack's author writes the form (`form:` in `pack.yaml`, see the [Pack developer guide](BUILD_GUIDE.md#46-form-the-search-form-of-a-kind)); a pack that does not gets one
 inferred from its search columns and screen. Authors can shape a kind's form in the workbench's [Form tab](RACHANA_REFERENCE.md#the-form-tab).
 
 ## Calc: Python on any view
@@ -2918,7 +2918,7 @@ strip, the tables, searches and columns alike.
 |---|---|
 | Re-price a trade under a rate move, recompute a VaR, interpolate a curve, pivot a desk's P&L your own way, once | **Calc** |
 | Try an idea on what is on the screen before asking for a panel | **Calc** |
-| A figure everyone sees on a view, every time | a panel in the kind's Sutra ([Sutra developer guide](SUTRA_DEVELOPER_GUIDE.md)): computed on the server, cached, live |
+| A figure everyone sees on a view, every time | a panel in the kind's Sutra ([Sutra developer guide](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies)): computed on the server, cached, live |
 | Find entities by value (`TRD where mtm > 1m`) | [search](#search-by-value), on the command line |
 | Be told when a figure crosses a line | an [alert](#alerts): the server checks it on every change |
 | The same search as a file every morning | a [scheduled report](REPORTS_GUIDE.md#181-the-reports-page-and-scheduled-searches) |
@@ -3224,7 +3224,7 @@ computes.
 The shipped ones are written by `tools/packgen/banking/make_packs.py` (the generator kept its name from the banking packs it began with) from their sources,
 `tools/packgen/banking/snippets/<pack>/<name>.py` (read by `calc_snippets.py`; never edit the generated
 `config/packs/<domain>/<pack>/python/` files: change the source and run the generator, see
-[PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)). A source starts, after its copyright header, with
+[BUILD_GUIDE.md](BUILD_GUIDE.md#301-how-the-shipped-packs-are-generated)). A source starts, after its copyright header, with
 
 ```python
 # title: Key-rate DV01 by bump and reprice

@@ -459,7 +459,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_BI_MIGRATE_ON_START` | `drishti.bi.migrate.on-start` | `true` | At start, moves stored items once: every stored dataset and model into the table layer, then 2.3 boards into reports (each change audited, the text before kept in the item's history). `false`: the items stay unread until they are moved ([drishti.bi.migrate](#drishtibimigrate--migrations-of-stored-bi-items)). |
 | `DRISHTI_BI_STORE` | `drishti.bi.query.store-dir` | `./data/bi-store` | The BI store: the typed Parquet layers (columns, rollups, live snapshots) the dataset query engine writes and reads, and DuckDB's spill folder. Rebuildable from the connectors; never commit it. |
 | `DRISHTI_PACKS_DIR` | `drishti.packs.dir` | `./config/packs` | The packs directory. If it does not exist and the old `./packs` does, `./packs` is used with a warning (one release). |
-| `DRISHTI_PACKS_EXTRA_DIRS` | `drishti.packs.extra-dirs` | empty | Further pack folders, comma-separated, looked in after the packs directory (the shipped packs win a name): `examples/packs` makes the retired example packs (finance, genomics, logistics, retail-banking, climate-risk, operational-risk, liquidity-risk) loadable by name ([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#retired-example-packs-examplespacks)). |
+| `DRISHTI_PACKS_EXTRA_DIRS` | `drishti.packs.extra-dirs` | empty | Further pack folders, comma-separated, looked in after the packs directory (the shipped packs win a name): `examples/packs` makes the retired example packs (finance, genomics, logistics, retail-banking, climate-risk, operational-risk, liquidity-risk) loadable by name ([BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#311-the-packs-that-ship)). |
 | `DRISHTI_PACKS_OVERLAY` | `drishti.packs.overlay` | `./data/packs/added.yaml` | The file of packs an administrator loaded from Admin → Packs; imported at start (`spring.config.import`) and named again by `drishti.packs.overlay`. Written by the server, not by hand. |
 | `DRISHTI_PACKS_SAMPLES` | `drishti.packs.samples` | `visible` | Who sees sample packs: `visible`, `developers` (author or admin) or `hidden`; Admin → Packs can override it. |
 | `DRISHTI_PACKS_SAMPLES_FILE` | `drishti.packs.samples-file` | `./data/packs/samples-mode` | Where the Admin → Packs choice for sample packs is saved. |
@@ -893,7 +893,7 @@ drishti:
 
 `TRD 1000015 30 <GO>` shows an entity over the business days it has data
 ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time), `GET /api/v1/history/{kind}/{id}`). These limits follow a settings reload
-without a restart. A pack's `history:` block can lower `max-days` and set `default-days` per kind ([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which)).
+without a restart. A pack's `history:` block can lower `max-days` and set `default-days` per kind ([BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which)).
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -924,7 +924,7 @@ without a restart. A pack's `history:` block can lower `max-days` and set `defau
 The pack loader also writes some keys for the rest of the server (`drishti.packs.loaded`,
 `drishti.packs.kinds.*`, `drishti.packs.overrides`, `drishti.rachana.pack-dirs`,
 `drishti.rachana.pack-formats-files`, `drishti.inference.pack-semantics-files`,
-`drishti.sources.plugins.demo.settings.dirs`). Do not set them yourself. See [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which).
+`drishti.sources.plugins.demo.settings.dirs`). Do not set them yourself. See [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which).
 
 ### `drishti.packs.registry` — the signed pack registry
 
@@ -936,7 +936,7 @@ The pack loader also writes some keys for the rest of the server (`drishti.packs
 | `max-archive-mb` / `max-unpacked-mb` | `50` / `200` | Size limits for an archive and for what it unpacks to. |
 | `allow-http` | `false` | Accept plain `http:` registries. For tests only. |
 
-See [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#a-signed-pack-registry-publishing-and-installing).
+See [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#291-a-signed-pack-registry-publishing-and-installing).
 
 ### `drishti.packs.deploy` and `drishti.packs.settings-dir` — deploy an archive, and the legacy data-source overrides
 
@@ -1392,7 +1392,7 @@ The start logs `content store: <backend> <root> (settings <file>)`.
 
 ### Write-back: `config/edit/`
 
-Write-back ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons); the administrator's guide [WRITE_BACK.md, for administrators](../guides/WRITE_BACK.md#for-administrators-write-back-is-off-as-shipped)) has its own folder, named by
+Write-back ([APPROVALS_GUIDE.md](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals); the administrator's guide [APPROVALS_GUIDE.md, for administrators](../guides/APPROVALS_GUIDE.md#7-for-administrators-switching-write-back-on)) has its own folder, named by
 `drishti.edit.file` (`DRISHTI_EDIT_FILE`, default `./config/edit/edit.yaml`; its siblings `lanes.yaml`, `policy.yaml` and `retention.yaml`
 are read from the same folder). A missing file or key means the default. **Off as shipped**: `edit.enabled: false`, so no change is
 accepted anywhere and no Submit is drawn; a fresh install or an upgrade is read-only. The edit log, lanes, approvals, overlays and owned
@@ -1496,7 +1496,7 @@ Not in the bundled file; the defaults apply until you set them.
 | `max-scan` | `20000` | At most this many entities of a kind are read per search; the result says when it stopped short. |
 | `budget` | `3s` | Time a search may take to list and read; slower sources are left out. |
 | `columns.<kind>` | from packs | A kind's key fields in pick lists and searches (`columns:` in `pack.yaml`). |
-| `pivot.<kind>` | from packs | Pivot on the kind's results (the pivot screen): `true`, or the pivot as a JSON string (`pivot:` in `pack.yaml`, [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#pivot-pivot-on-search-results)). |
+| `pivot.<kind>` | from packs | Pivot on the kind's results (the pivot screen): `true`, or the pivot as a JSON string (`pivot:` in `pack.yaml`, [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#44-pivot-pivot-on-search-results)). |
 
 ### `drishti.calc` — Python in the browser
 
@@ -1511,7 +1511,7 @@ decides who may use it (roles with `calc`), keeps each user's snippets, and serv
 | `max-snippet-chars` | `50000` | A saved snippet's code, at most (never more than 60,000: a saved document is at most 64 KB). Each user keeps at most 50 snippets. |
 
 Which views offer Calc is a pack's choice (`python: { enabled: true }` in `pack.yaml`), not configuration; see
-[PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#calc-python-snippets).
+[BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#76-calc-python-snippets).
 
 ### `drishti.var` — the VaR engine
 
@@ -2385,7 +2385,7 @@ document explains how it reads, its layout, scale and limits.
 | <a id="cassandra"></a>`cassandra` | Cassandra, ScyllaDB, Astra, Keyspaces; retention is the loader's (`--ttl-days`, `--keep-days`); `proxy.*` refused | [README, Settings](../../plugins/drishti-plugin-cassandra/README.md#settings) | [CASSANDRA_CONNECTOR.md](../../plugins/drishti-plugin-cassandra/README.md) |
 | <a id="feed--public-data-feeds"></a>`feed` | public data feeds, one connector per feed (off by default) | [README, Settings](../../plugins/drishti-plugin-feeds/README.md#settings) | [FEEDS_CONNECTOR.md](../../plugins/drishti-plugin-feeds/README.md) |
 | <a id="news-and-yfinance--connectors-that-compute-data-on-demand"></a>`news`, `yfinance` | computed on demand, nothing stored; off as shipped (names leave the network); pages reading them through `source:` need `drishti.graph.link-budget` raised above 40 ms | [README, Settings](../../plugins/drishti-plugin-news/README.md#settings), [README, Settings](../../plugins/drishti-plugin-yfinance/README.md#settings) | [NEWS.md](../../plugins/drishti-plugin-news/README.md), [YFINANCE.md](../../plugins/drishti-plugin-yfinance/README.md) |
-| <a id="derived--kinds-computed-from-other-kinds"></a>`derived` | kinds computed from other kinds (built in) | [types/derived/README.md](../connectors/types/derived/README.md) | [PACK_DEVELOPER_GUIDE.md Part II](../guides/PACK_DEVELOPER_GUIDE.md#derived-kinds-entities-computed-from-other-kinds) |
+| <a id="derived--kinds-computed-from-other-kinds"></a>`derived` | kinds computed from other kinds (built in) | [types/derived/README.md](../connectors/types/derived/README.md) | [BUILD_GUIDE.md Part II](../guides/BUILD_GUIDE.md#53-derived-kinds-entities-computed-from-other-kinds) |
 | <a id="demo--sample-data"></a>`demo` | the packs' samples; the shipped `application.yaml` sets only `drishti.sources.plugins.demo.enabled` (`DRISHTI_DEMO_ENABLED`) | [README, Settings](../../plugins/drishti-plugin-demo/README.md#settings) | [DEMO_CONNECTOR.md](../../plugins/drishti-plugin-demo/README.md) |
 
 ---
@@ -2562,7 +2562,7 @@ sign-on settings (`auth.oidc`) apply to every server; each server verifies the I
 | `copyright` / `notice` | the Drishti copyright and a ban on unauthorised copying | The legal lines in the footer and on the About page. Change them here, never in code; the server has the same under `drishti.branding`. |
 | `error_advice` | a short text for each of `DRS-1001`, `DRS-1002`, `DRS-1003`, `DRS-1004`, `DRS-1016`, `DRS-1007`, `DRS-4003`, `DRS-4004`, and `default` | What an error page tells the user to do, by the code the server answered with. `{kind}` and `{id}` in a text become the entity asked for; a code with no entry gets `default`. Edit it so the advice fits your site (who to ask, which channel). |
 | `showcase` | four screenshots of the retired finance example pack | The landing page's pictures: `{slug, title, cmd, sutra}` each, the image being `web/static/img/shot-<slug>.png`. A caption names its `cmd` only when that command is one of the packs' examples. |
-| `facts.enabled` | `${DRISHTI_HOME_FACTS:true}` | Home's **Did you know** tile (the fact of the day, signed in): the facts each pack declares in `config/facts.yaml`, computed as the user on the business date ([USER_GUIDE.md](../guides/USER_GUIDE.md#home-the-fact-of-the-day), [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#facts-for-home)). `false`: no tile. |
+| `facts.enabled` | `${DRISHTI_HOME_FACTS:true}` | Home's **Did you know** tile (the fact of the day, signed in): the facts each pack declares in `config/facts.yaml`, computed as the user on the business date ([USER_GUIDE.md](../guides/USER_GUIDE.md#home-the-fact-of-the-day), [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#74-facts-for-home)). `false`: no tile. |
 | `facts.cache_seconds` | `21600` | How long the facts of one user, business date and set of packs are kept before they are computed again. |
 | `facts.timeout_seconds` | `90` | A fact that takes longer is left out of the tile. |
 | `home_cards` | Market risk (`VAR BANK`), Exposure (`EXP BANK`), Funds and ETFs (`FUND SPY`), Data map (`DATAMAP`) | The quick cards under Home's headline, signed in: `{title, cmd, pack, icon}` each; a card naming a `pack` is shown only while that pack is on for the user. |
@@ -2922,7 +2922,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.edit.file` | string | `./config/edit/edit.yaml` | `DRISHTI_EDIT_FILE` | server | Write-back (docs/guides/WRITE\_BACK.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml). Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only. | restart |  | admin |
+| `drishti.edit.file` | string | `./config/edit/edit.yaml` | `DRISHTI_EDIT_FILE` | server | Write-back (docs/guides/APPROVALS\_GUIDE.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml). Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only. | restart |  | admin |
 
 #### `drishti.index`
 
@@ -3038,7 +3038,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.security.clock-skew` | duration | `30s` |  | server | clock difference tolerated when checking a token's expiry | restart |  | admin |
 | `drishti.security.metrics-token` | string | empty | `DRISHTI_METRICS_TOKEN` | server | With security on, /actuator (except /actuator/health) needs an admin token or this one, for Prometheus: scrape\_configs: \[{ job\_name: drishti, metrics\_path: /actuator/prometheus, bearer\_token: &lt;this&gt; }] (secret) | restart |  | admin |
 | `drishti.security.token-read-posts` | list | empty |  | server | A personal API token reads by default: GET and HEAD, plus these POSTs, which carry a query in the body and change nothing (a pivot of a search, a command line). Add a path only if it writes nothing. | restart |  | admin |
-| `drishti.security.token-scopes` | map | `{…}` |  | server | WRITE SCOPES (TOKEN\_SCOPES in docs/guides/API\_GUIDE.md): a token is made with `read` (the default: all of the above) or with scopes from this list (keys in \[brackets] keep the colon); each opens the METHOD path patterns under `allow` (\* = any method). A scope is only a door: the controller behind it still checks the roles of the token's user at the time of the call, so a token never does more than its user. A write that no scope opens, and nothing in token-never, is refused. Every non-GET endpoint must be declared in token-read-posts, a scope or token-never (TokenScopeGuardTest fails the build otherwise). A module adds its own read-only POSTs and scopes in its jar (META-INF/drishti/token-scopes.yaml: the banking module's risk:write and its read POSTs), offered only while it is on. | restart |  | admin |
+| `drishti.security.token-scopes` | map | `{…}` |  | server | WRITE SCOPES (TOKEN\_SCOPES in docs/guides/API\_REFERENCE.md): a token is made with `read` (the default: all of the above) or with scopes from this list (keys in \[brackets] keep the colon); each opens the METHOD path patterns under `allow` (\* = any method). A scope is only a door: the controller behind it still checks the roles of the token's user at the time of the call, so a token never does more than its user. A write that no scope opens, and nothing in token-never, is refused. Every non-GET endpoint must be declared in token-read-posts, a scope or token-never (TokenScopeGuardTest fails the build otherwise). A module adds its own read-only POSTs and scopes in its jar (META-INF/drishti/token-scopes.yaml: the banking module's risk:write and its read POSTs), offered only while it is on. | restart |  | admin |
 | `drishti.security.token-never` | list | empty |  | server | never for a token, whatever its scopes: tokens, users, sign-in, personal and collaboration state | restart |  | admin |
 | `drishti.security.token-write-max-days` | integer | `90` |  | server | a token with a write scope must expire, within this many days (read tokens: 1-366 or never) | restart |  | admin |
 | `drishti.security.roles` | map | `{…}` |  | server | the built-in roles: kinds ("\*" all), raw (see unmasked JSON), author, approve, admin, calc, layout, edit and bi powers; packs add roles of their own | restart |  | admin |
@@ -3075,7 +3075,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.embed.mask` | string | `always` |  | server | embed calls always mask drishti.security.redact fields, whatever the user's roles | restart |  | admin |
 | `drishti.embed.allow-wildcard-origins` | boolean | `false` |  | server | let an application register https://\*.suffix origins (review apps) | restart |  | admin |
 | `drishti.embed.assertion-max-age` | duration | `60s` |  | server | longest life of a client or user assertion a host signs | restart |  | admin |
-| `drishti.embed.sign-in-window` | boolean | `true` | `DRISHTI_EMBED_SIGN_IN_WINDOW` | server | the renderer's auth: 'popup' (CLIENT\_RENDERER.md 10.1): a registered host's page signs its user in | restart |  | admin |
+| `drishti.embed.sign-in-window` | boolean | `true` | `DRISHTI_EMBED_SIGN_IN_WINDOW` | server | the renderer's auth: 'popup' (EMBED\_GUIDE.md 10.1): a registered host's page signs its user in | restart |  | admin |
 | `drishti.embed.scopes` | map | `{…}` |  | server | what each embed scope opens; a token calls nothing else, and never writes | restart |  | admin |
 | `drishti.embed.search.max-results` | integer | `10` |  | server | most results one search returns | restart |  | admin |
 | `drishti.embed.search.min-chars` | integer | `2` |  | server | shortest query searched | restart |  | admin |
@@ -3391,7 +3391,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.bi.exec.breaker-failures` | integer | `5` |  | server | consecutive failures that open a connector's circuit breaker (DRS-9026 at once while open) | restart |  | admin |
 | `drishti.bi.exec.breaker-open` | duration | `30s` |  | server | how long an open breaker refuses before one fragment may try again | restart |  | admin |
 | `drishti.bi.exec.node` | string | empty | `DRISHTI_BI_NODE` | server | this Java node's name when several serve the site (blank: one node) | restart |  | admin |
-| `drishti.bi.exec.background-share` | number | `0.25` |  | server | BI runs: the most of the slots background work (runs, dataset refresh) holds at once (docs/architecture/BI\_DESIGN.md 10.1) | restart |  | admin |
+| `drishti.bi.exec.background-share` | number | `0.25` |  | server | BI runs: the most of the slots background work (runs, dataset refresh) holds at once (docs/architecture/ARCHITECTURE.md §28 10.1) | restart |  | admin |
 | `drishti.bi.exec.standing-share` | number | `0.25` |  | server | the most of the slots standing-query maintenance holds at once; interactive work keeps the rest | restart |  | admin |
 | `drishti.bi.exec.fragments-share` | number | `0.5` |  | server | the most of a connector's max-fragments the layer builds of background runs hold at once | restart |  | admin |
 
@@ -3399,7 +3399,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.bi.runs.file` | string | `./config/runs/runs.yaml` | `DRISHTI_BI_RUNS_FILE` | server | BI runs (docs/architecture/BI\_DESIGN.md); ready-made in config/runs.examples/ | restart |  | admin |
+| `drishti.bi.runs.file` | string | `./config/runs/runs.yaml` | `DRISHTI_BI_RUNS_FILE` | server | BI runs (docs/architecture/ARCHITECTURE.md §28); ready-made in config/runs.examples/ | restart |  | admin |
 
 #### `drishti.bi.plan`
 
@@ -5388,7 +5388,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 
 ### Packs: `pack.yaml`
 
-`config/packs/<domain>/<pack>/pack.yaml`, read by the server's pack loader (`PackLoader`) and the console. A changed pack is reloaded while the server runs ([Live reload](../guides/PACK_DEVELOPER_GUIDE.md#live-reload-the-packs-folder-is-watched)). Guide: [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#packyaml-key-by-key).
+`config/packs/<domain>/<pack>/pack.yaml`, read by the server's pack loader (`PackLoader`) and the console. A changed pack is reloaded while the server runs ([Live reload](../guides/BUILD_GUIDE.md#296-live-reload-the-packs-folder-is-watched)). Guide: [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#4-packyaml-key-by-key).
 
 #### `pack.yaml`
 
@@ -5651,7 +5651,7 @@ Every BI question as a bounded, visible job ([ARCHITECTURE.md §28](../architect
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `enabled` | boolean | `true` |  | server | Project Drishti · Any data. Any domain. One grammar. Copyright (c) 2026 Ashutosh Sinha &lt;ajsinha@gmail.com&gt;. All rights reserved. PROPRIETARY AND CONFIDENTIAL. This file is the confidential and proprietary property of Ashutosh Sinha. Unauthorised copying, use, modification, distribution or disclosure of this file, via any medium, is strictly prohibited except with the express prior written permission of the copyright holder. See the LICENSE file in the root of this repository for the full terms. BI runs (docs/architecture/BI\_DESIGN.md › BI runs: every BI query as a bounded, visible job, section 15): every BI question as a bounded, visible job. The server reads this file at start (drishti.bi.runs.file in application.yaml); every key has its default, so a missing key or file means the value shown here. Ready-made variants are in config/runs.examples/. false: every question runs synchronously, with no Runs tab | restart |  | admin |
+| `enabled` | boolean | `true` |  | server | Project Drishti · Any data. Any domain. One grammar. Copyright (c) 2026 Ashutosh Sinha &lt;ajsinha@gmail.com&gt;. All rights reserved. PROPRIETARY AND CONFIDENTIAL. This file is the confidential and proprietary property of Ashutosh Sinha. Unauthorised copying, use, modification, distribution or disclosure of this file, via any medium, is strictly prohibited except with the express prior written permission of the copyright holder. See the LICENSE file in the root of this repository for the full terms. BI runs (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job, section 15): every BI question as a bounded, visible job. The server reads this file at start (drishti.bi.runs.file in application.yaml); every key has its default, so a missing key or file means the value shown here. Ready-made variants are in config/runs.examples/. false: every question runs synchronously, with no Runs tab | restart |  | admin |
 | `workers` | integer | `2` |  | server | runs executing at once on this node | restart |  | expert |
 | `engines` | map | `{}` |  | server | external engines (groundwork for a later release): athena: {...}, trino: {...}, spark: {...} | restart |  | admin |
 | `workspace-visibility` | string | `owner-and-shared` |  | server | owner-and-shared \| members (members see others' run rows, never results) | restart |  | admin |
@@ -5777,7 +5777,7 @@ Every BI question as a bounded, visible job ([ARCHITECTURE.md §28](../architect
 
 ### Write-back: `config/edit/`
 
-Write-back's four files ([WRITE_BACK.md](../guides/WRITE_BACK.md): the administrator's guide and, in its section 16, the design); `drishti.edit.file` names `edit.yaml`, the others sit beside it.
+Write-back's four files ([APPROVALS_GUIDE.md](../guides/APPROVALS_GUIDE.md): the administrator's guide and, in its section 16, the design); `drishti.edit.file` names `edit.yaml`, the others sit beside it.
 
 #### `edit.yaml`
 
@@ -6179,7 +6179,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_BI_MIGRATE_ON_START` | `drishti.bi.migrate.on-start` | `true` | server | at start: stored datasets and models into the table layer, 2.3 boards into reports; audited, the text before kept; idempotent |
 | `DRISHTI_BI_NODE` | `drishti.bi.exec.node` | empty | server | this Java node's name when several serve the site (blank: one node) |
 | `DRISHTI_BI_NOTEBOOK_MAX_ROWS` | `bi.notebook.max_rows` | `10000` | console | most rows of an extract (the reader's rows, cut here); 10 to 100000 |
-| `DRISHTI_BI_RUNS_FILE` | `drishti.bi.runs.file` | `./config/runs/runs.yaml` | server | BI runs (docs/architecture/BI\_DESIGN.md); ready-made in config/runs.examples/ |
+| `DRISHTI_BI_RUNS_FILE` | `drishti.bi.runs.file` | `./config/runs/runs.yaml` | server | BI runs (docs/architecture/ARCHITECTURE.md §28); ready-made in config/runs.examples/ |
 | `DRISHTI_BI_STORE` | `drishti.bi.query.store-dir` | `./data/bi-store` | server | the BI store: typed Parquet layers (columns, rollups) written here; never under the repository |
 | `DRISHTI_BI_TRANSFORM_PREVIEW_ROWS` | `bi.transform.preview_rows` | `1000` | console | rows of each input the step-by-step run starts from (the reader's rows, asked of the server); 10 to 50000 |
 | `DRISHTI_CACHE_RESET_AT` | trading-stream cache reset | `02:00` | packs | The disk cache's nightly clearing time (New York) |
@@ -6223,11 +6223,11 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_DUCKDB_PATH` | duckdb profile | `./data/duckdb/drishti.duckdb` | profile | The duckdb profile's file (one file, a schema per domain) |
 | `DRISHTI_EDITION` | `drishti.edition` | empty | server | The edition (docs/admin/LENSES.md): blank is the full Drishti; risk is Drishti Risk. It names config/lenses/&lt;module&gt;/&lt;lens&gt;.yaml, read as a layer under the site's configuration before the packs load; every member of a cluster sets the same value, and the console learns it from /api/v1/about. A change needs a restart. |
 | `DRISHTI_EDIT_ENABLED` | `edit.enabled` (write-back) | `false` | write-back | the write-back switch: false refuses every change (UI, CLI, API) and shows no Submit |
-| `DRISHTI_EDIT_FILE` | `drishti.edit.file` | `./config/edit/edit.yaml` | server | Write-back (docs/guides/WRITE\_BACK.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml). Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only. |
+| `DRISHTI_EDIT_FILE` | `drishti.edit.file` | `./config/edit/edit.yaml` | server | Write-back (docs/guides/APPROVALS\_GUIDE.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml). Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only. |
 | `DRISHTI_EMBED_ENABLED` | `drishti.embed.enabled`, `embed.enabled` | `false` | console, server | off: no token endpoint, embed tokens refused. Needs drishti.security.enabled |
 | `DRISHTI_EMBED_KEY_FILE` | `drishti.embed.signing-key` | empty | server | PEM with a PKCS#8 EC PRIVATE KEY and a PUBLIC KEY block (ES256); empty = generated at start |
 | `DRISHTI_EMBED_SIGN_IN` | `embed.sign_in.enabled` | `true` | console | needs auth.oidc.enabled; off: the window answers DRS-8003 and pages keep the token exchange |
-| `DRISHTI_EMBED_SIGN_IN_WINDOW` | `drishti.embed.sign-in-window` | `true` | server | the renderer's auth: 'popup' (CLIENT\_RENDERER.md 10.1): a registered host's page signs its user in |
+| `DRISHTI_EMBED_SIGN_IN_WINDOW` | `drishti.embed.sign-in-window` | `true` | server | the renderer's auth: 'popup' (EMBED\_GUIDE.md 10.1): a registered host's page signs its user in |
 | `DRISHTI_ENGINES_DIR` | `drishti.engines.dir` | `./config/engines` | server | the folder of the engines' files Admin -&gt; Engines writes (the imports above name the same folder) |
 | `DRISHTI_EXPOSURE_ENABLED` | `drishti.engines.exposure.enabled` (engine) | `true` | engine | run the exposure engine on this node: /api/v1/exposure, EXP, the exposure-engine connector (live) |
 | `DRISHTI_EXPOSURE_HOT_DATES` | `drishti.ccr.exposure.hot-dates` (engine) | `10` | engine | business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay (as VaR's) |

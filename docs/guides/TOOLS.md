@@ -22,7 +22,7 @@ on **synthetic** data, and, for the tools that run unattended, how to schedule t
 safe re-runs).
 
 The depth lives elsewhere and is linked from each section: every option of every command with its output is in
-[CLI_GUIDE.md](CLI_GUIDE.md); turning schema files and JSON into a pack is [DATA_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md); running a site
+[CLI_GUIDE.md](CLI_GUIDE.md); turning schema files and JSON into a pack is [DATA_GUIDE.md](BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack); running a site
 (deploys, monitoring, capacity, runbooks) is [OPERATIONS.md](../admin/OPERATIONS.md); announcing loads is [DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed).
 
 All the data on this page is invented, and every example runs on a fresh clone as it is: the files are the committed test data
@@ -989,7 +989,7 @@ drishti-console/.venv/bin/python tools/drishti.py pack check build/tools-walk/sy
 --strict` on the drafted pack exits `1`: the default Sutra shows fields its About text does not explain yet (`DRS-2047`, a warning that
 `--strict` makes an error). Write the About text (`pack about-check`), then make CI strict.
 
-Real output: [CLI_GUIDE.md section 5](CLI_GUIDE.md); schema files to a pack: [DATA_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md).
+Real output: [CLI_GUIDE.md section 5](CLI_GUIDE.md); schema files to a pack: [DATA_GUIDE.md](BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack).
 **Scheduling**: `pack check` belongs in CI (exit `1` fails the build; `--junit DIR` for the report); `pack deploy` is idempotent
 (the same bundle twice changes nothing) and keeps the replaced version for `pack rollback`.
 
@@ -1285,8 +1285,8 @@ drishti-console/.venv/bin/python tools/drishti.py compute event write-back chg-7
 
 ### 5.10a change and edits
 
-Write-back from the terminal (`tools/changecli.py`, [WRITE_BACK.md](WRITE_BACK.md#16-the-design-and-its-reasons),
-[WRITE_BACK.md section 4a](WRITE_BACK.md#4a-submitting-a-change-write-back)), as the caller's token (it needs the `edit` scope):
+Write-back from the terminal (`tools/changecli.py`, [APPROVALS_GUIDE.md](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals),
+[APPROVALS_GUIDE.md section 4a](APPROVALS_GUIDE.md#4-submitting-a-change)), as the caller's token (it needs the `edit` scope):
 - `change propose --kind KIND --id ID --set FIELD=VALUE [...] [--from FIELD=VALUE ...] [--reason TEXT] [--sutra S --panel P] [--date YYYY-MM-DD] [--override]`
   proposes a change to a record's fields: the same request as a form's Submit. A field must be editable by a Sutra's form with `save:`;
   `--from` is the value you saw (a field that moved since is conflicted, never written over).
@@ -1726,8 +1726,8 @@ ExecStart=/opt/drishti/drishti-console/.venv/bin/python tools/drishti.py lake ma
 | `tools/packgen/pack_from_jsonl.py` | the engine of `drishti.py pack new`: a complete pack from a folder of JSON Lines |
 | `tools/contracts.py` | the data contract of every command (`drishti.py contract`, [5.11](#511-contract)): drafts one from a pack and its data, checks them all, writes `docs/contracts/packs`; the schema `tools/contracts.schema.json` and the product owner's decisions `tools/contracts.policy.yaml` beside it |
 | `tools/knowledge.py` | the Knowledge pages' glossaries (`docs/knowledge/`): writes each page's terms and the home's A to Z from `docs/knowledge/glossary.yaml`; `--check` fails when a page differs or the glossary is invalid (`tools/test_knowledge_pages.py`) |
-| `tools/packgen/readme.py` | a pack's `README.md` (the README standard, [PACK_DEVELOPER_GUIDE.md Part IV](PACK_DEVELOPER_GUIDE.md#the-readme-standard)) for a pack without a generator of its own; `--all --check` fails on any pack whose README is missing, stale or breaks the standard |
-| `tools/packgen/common/guide_data.py` | every pack guide's *Data contracts* and *Data retrieval* sections (from the contracts and `data_retrieval.yaml`; the pack generators call it); run alone it writes compute-demo's guide and the generated block of the news-and-markets guide; `--check` fails when they are stale ([PACK_DEVELOPER_GUIDE.md Part IV](PACK_DEVELOPER_GUIDE.md#the-readme-standard)) |
+| `tools/packgen/readme.py` | a pack's `README.md` (the README standard, [BUILD_GUIDE.md Part IV](BUILD_GUIDE.md#303-the-readme-standard)) for a pack without a generator of its own; `--all --check` fails on any pack whose README is missing, stale or breaks the standard |
+| `tools/packgen/common/guide_data.py` | every pack guide's *Data contracts* and *Data retrieval* sections (from the contracts and `data_retrieval.yaml`; the pack generators call it); run alone it writes compute-demo's guide and the generated block of the news-and-markets guide; `--check` fails when they are stale ([BUILD_GUIDE.md Part IV](BUILD_GUIDE.md#303-the-readme-standard)) |
 | `tools/connector_readmes.py` | the settings tables of every connector README (from `plugin-settings.yaml`) and the file tables of the template folders' READMEs; `--check` fails when one is stale ([DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#1014-the-readme-standard-for-connectors)) |
 | `tools/packgen/banking/make_data.py`, `make_packs.py`, `make_sutras.py`, `make_docs.py` | the banking packs: their sample data and lake, manifests, Sutras and guides, from one taxonomy |
 | `tools/packgen/climate/make.py`, `liquidity/make.py`, `oprisk/make.py`, `retail/make.py` | the climate-risk, liquidity-risk, operational-risk and retail-banking packs, built on the banking data |
@@ -1763,7 +1763,7 @@ of Parquet.
 
 | Tool | What it is for |
 |---|---|
-| `tools/drill.sh` | "Drill it" ([PACK_DEVELOPER_GUIDE.md §2.6](PACK_DEVELOPER_GUIDE.md#26-the-drill-toolsdrillsh)): first a gate of a few minutes (licence headers, the generated documents and data that must be current, the docs and help console tests, the quick file checks (every test marked `static`), and one Java 21 build of the working tree with Javadoc, doclint and Spotless that runs only the rule tests), stopping at its first failure; then at once the console suite in a browser lane (handed out by test on as many workers as the memory available holds, its memory sampled, files over the 300 s per-file budget flagged; [TEST_HARNESS.md](../architecture/TEST_HARNESS.md)) and an other lane (by file), each longest first, the Python tool tests in two lanes (every `tools/**/test_*.py` and `tests/` folder, found rather than listed, one pytest process a file, a failed file listed after all have run), and the Java 21 verify and the Java 25 one, each in a copy of the committed tree; failed console tests run once more file by file (flakes logged, `tools/drill-known.txt` lists accepted failures); a check that the tests left no file under `config/` and wrote nothing to the data folder (a server running from the repository turns the data check into a listed warning); then push develop, merge into main, push main; nothing is pushed unless all pass. `--docs` for a docs-only change, `--no-push` to verify only, `--keep-going` to see every failure, `--gate` for the gate alone. Once per release wave. |
+| `tools/drill.sh` | "Drill it" ([BUILD_GUIDE.md §2.6](DEVELOPER_GUIDE.md#26-the-drill-toolsdrillsh)): first a gate of a few minutes (licence headers, the generated documents and data that must be current, the docs and help console tests, the quick file checks (every test marked `static`), and one Java 21 build of the working tree with Javadoc, doclint and Spotless that runs only the rule tests), stopping at its first failure; then at once the console suite in a browser lane (handed out by test on as many workers as the memory available holds, its memory sampled, files over the 300 s per-file budget flagged; [TEST_HARNESS.md](../architecture/TEST_HARNESS.md)) and an other lane (by file), each longest first, the Python tool tests in two lanes (every `tools/**/test_*.py` and `tests/` folder, found rather than listed, one pytest process a file, a failed file listed after all have run), and the Java 21 verify and the Java 25 one, each in a copy of the committed tree; failed console tests run once more file by file (flakes logged, `tools/drill-known.txt` lists accepted failures); a check that the tests left no file under `config/` and wrote nothing to the data folder (a server running from the repository turns the data check into a listed warning); then push develop, merge into main, push main; nothing is pushed unless all pass. `--docs` for a docs-only change, `--no-push` to verify only, `--keep-going` to see every failure, `--gate` for the gate alone. Once per release wave. |
 | `tools/drillkit/drill_plan.py` | the drill's console planner: `lanes` (the browser lane holds every file that drives a browser or uses the scratch ports, the other lane the rest; each longest first from `data/drill/durations.json`), `merge` (a run's per-file seconds into the durations), `rerun` (each failed test once more, file by file, under a time limit of twice the file's recorded time and at least ten minutes; every outcome reported; known failures from `tools/drill-known.txt` accepted), `workers` (the browser lane's workers from the memory available, the CPU threads and the scratch ports' limit of 12), `budget` (the browser files of a run over the 300 s per-file budget; `tools/drill-budgets.txt` lists the files allowed over it with their reasons), `static` (the quick file checks the gate runs: the console files with a test marked `static`, or `--kind tools` the tools files marked so) |
 | `tools/drillkit/drill_monitor.py` | what a test run holds in memory: `watch` samples, every few seconds, the server JVMs, other JVMs, Chromium processes, consoles and pytest processes (count and resident memory) and the machine's available memory into a CSV (`--under PID` for one lane); `summary` prints the peaks. The drill samples its browser lane into `data/drill/monitor-browser.csv` |
 | `tools/drillkit/drill_timings.py` | the drill's pytest plugin (`-p drill_timings`): the seconds each test file took, written to the file `DRILL_TIMINGS_OUT` names when the session ends |
@@ -1851,7 +1851,7 @@ python3 tools/api_docs.py zip              # drishti-console/web/apidocs/drishti
 
 Bring schema files and JSON or JSON Lines data; the page profiles every file in the browser (arrays streamed), proposes kinds, ids,
 business dates and one Sutra per type, previews them, and builds a pack bundle to download or deploy. The command-line twin is
-`drishti.py pack make`. Guide: [DATA_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md).
+`drishti.py pack make`. Guide: [DATA_GUIDE.md](BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack).
 
 ### 10.2 Admin → Data loads → Lakes (`/admin/lakes`)
 

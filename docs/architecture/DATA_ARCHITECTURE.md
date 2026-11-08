@@ -592,7 +592,7 @@ views that show it, through the same subscription that carries its updates:
    repaints from the server. A page reloaded while the entity is deleted gets the usual "not held" answer
    (`DRS-1001`), since no source holds it.
 
-A source plugin that deletes (see [§5.2 of the developer guide](../guides/PACK_DEVELOPER_GUIDE.md#52-add-a-source-plugin))
+A source plugin that deletes (see [§5.2 of the developer guide](../guides/DEVELOPER_GUIDE.md#52-add-a-source-plugin))
 pushes `EntityDocument.deleted(ref, provenance)` to its listeners; one that never deletes needs no change. A listener
 that does not care about deletes skips documents whose `deleted()` is true. Eviction from a full state store is not a
 deletion and is not pushed.
@@ -1199,7 +1199,7 @@ history:
 Unknown keys are warnings, bad values errors, with a new code **`DRS-2061` `HISTORY_INVALID`** (422) beside `DRS-2060` `FORM_INVALID`. The
 checks run where pack manifests are checked: the deploy stage (`manifestCheck` in `server/deploy/PackDeployService.java`), `sutra lint <pack-dir>`
 (`server/cli/SutraCli`) and pack reload (a warning in the log and on Admin → Packs, as `FormDefinitions` logs a bad form). The Build
-workbench gets a History tab later (open question 3). `docs/guides/PACK_DEVELOPER_GUIDE.md` gets a step for it.
+workbench gets a History tab later (open question 3). `docs/guides/BUILD_GUIDE.md` gets a step for it.
 
 #### 6.2 Embedded series
 
@@ -1812,7 +1812,7 @@ than 10,000 trades, deletes its folder at the end and exits 1 on a missed target
 | `docs/guides/USER_GUIDE.md` › The command line | the range after the id (section 4), the history page, keys, changes only, DIFF, plain words |
 | `docs/guides/API_REFERENCE.md` | `GET /api/v1/history/{kind}/{id}` with the JSON of section 8; `/net/history`; the codes in "Error code table"; the console's export routes |
 | `docs/guides/CLI_GUIDE.md` | `drishti.py history` |
-| `docs/guides/PACK_DEVELOPER_GUIDE.md`, `docs/guides/PACK_DEVELOPER_GUIDE.md` | the `history:` block (section 6), with the shipped packs' blocks as examples |
+| `docs/guides/BUILD_GUIDE.md`, `docs/guides/BUILD_GUIDE.md` | the `history:` block (section 6), with the shipped packs' blocks as examples |
 | `docs/admin/CONFIGURATION.md` | `drishti.history.*` (test_docs_settings.py) |
 | `docs/guides/TROUBLESHOOTING.md` | the six codes, each with its fix (test_docs_error_codes.py) |
 | `docs/admin/OPERATIONS.md` | `/net/history` in the routing section |
@@ -1820,7 +1820,7 @@ than 10,000 trades, deletes its folder at the end and exits 1 on a missed target
 | help cards | `drishti-console/config/help.yaml` (a "History" guide under the command line category) and the trading and market-data packs' `config/help.yaml` |
 | `CHANGELOG.md`, `RELEASE_NOTES.md` | each step's line |
 | `docs/architecture/CLUSTER_DEPLOYMENT.md` | the history row with the new measurements |
-| this document | implementation notes, as WRITE_BACK.md and CLUSTER_DEPLOYMENT.md keep them |
+| this document | implementation notes, as APPROVALS_GUIDE.md and CLUSTER_DEPLOYMENT.md keep them |
 | **tutorial 21** `docs/tutorials/21-an-entity-over-time.md` | hands-on and complete: (1) `TRD 1000015 30` in the UI, the same with `drishti.py history trade 1000015 --days 30`, and the `history:` YAML that shapes it; (2) changes only and DIFF (UI, `--changes-only`, `--diff`); (3) open a day (UI; `drishti.py view get trade/1000015 --date …`); (4) `EQ EQ-CSCA 3M`, the chart and the numbers (UI, CLI, YAML `chart:`, `headline:`); (5) add `history:` to your own pack and `sutra lint` it (YAML, CLI, Admin → Packs); (6) export (UI, `--csv`); (7) plain words; (8) limits and errors (`max-days`, `DRS-4021`). Every step shows the UI, the CLI where there is one, and the YAML, with screenshots in `img/` |
 
 ### 21. Where the code forced a change from the agreed design
@@ -2161,7 +2161,7 @@ where it differs from the design below, is in [section 21](#21-built-r1-to-r4); 
 connectors is [the reactive connector's README](../connectors/types/reactive/README.md) and [tutorial 23](../tutorials/23-computed-panels.md).
 Everything named below that section 21 does not list as built is **planned**. Related designs:
 [NOTEBOOK_GUIDE.md](../guides/NOTEBOOK_GUIDE.md) (the workers that run the computations, `requires:` and approval),
-[VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) (the first reactive connector: a generic VaR engine), [WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) (a saved change
+[VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) (the first reactive connector: a generic VaR engine), [APPROVALS_GUIDE.md](ARCHITECTURE.md#31-collaboration-write-back-and-approvals) (a saved change
 can trigger a computation), [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms) (screens that read many sources), [section 1](#1-live-updates) (how results reach
 the screen), [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the connector SPI).
 
@@ -2368,7 +2368,7 @@ watch it.
 | `on:` | Fires when | The event carries | Typical use |
 |---|---|---|---|
 | `request` (always on) | a panel, a BI query or an API call reads the kind | the request | every computed kind |
-| `write-back` | a change is **applied** in the edit log ([WRITE_BACK.md › The design and its reasons, section 18](../guides/WRITE_BACK.md#18-saving-through-connectors-triggers-and-viewers)) | change id, kind, entity, lane, seq, by, the fields changed | an amended trade recomputes the VaR of its book and every node above it |
+| `write-back` | a change is **applied** in the edit log ([APPROVALS_GUIDE.md › The design and its reasons, section 18](ARCHITECTURE.md#317-the-applied-event-triggers-and-viewers)) | change id, kind, entity, lane, seq, by, the fields changed | an amended trade recomputes the VaR of its book and every node above it |
 | `live` | a live connector delivers a message for one of the listed kinds (Kafka, MQ, Redis) | kind, id, the source's offset or sequence | a trade booked in the source system recomputes its book's VaR intraday |
 | `data-version` | a static connector's data version moves for a kind and date (a new lake load is published) | kind, business date, old and new version | the overnight vectors land: every cached result of that date is stale, the watched ones recompute |
 | `schedule` | a cron expression, in a named zone | the tick time | refresh the watched scopes every 15 minutes in trading hours |
@@ -2437,7 +2437,7 @@ data, whatever loads arrive while they run.
 - **A late result never overwrites a newer one.** If an event-driven recompute that started at watermark `L17:3410` finishes after one
   that started at `L17:3412`, the older is dropped (counted, never shown).
 - Events of one **lane** of the edit log are processed in seq order (the lane already orders them,
-  [WRITE_BACK.md › The design and its reasons, section 7](../guides/WRITE_BACK.md#7-edit-queues-lanes-the-edit-log-and-the-transaction-handler)); events of one **Kafka
+  [APPROVALS_GUIDE.md › The design and its reasons, section 7](ARCHITECTURE.md#313-lanes-the-edit-log-and-the-transaction-handler)); events of one **Kafka
   partition** in offset order. Across lanes and partitions there is no order to keep: a result simply includes a set of
   watermarks.
 
@@ -2783,7 +2783,7 @@ Built on the compute workers C1 to C3 ([NOTEBOOK_GUIDE.md](../guides/NOTEBOOK_GU
 | Panel states | `ready`, `computing` (progress), `stale`, `failed`, `refused` in the view model (`PanelView.compute`) and drawn in place; the console follows `compute:<request>` on the live channel and fetches the panel again when it is done or updated | `ViewModel`, `panels.html`, `drishti_compute.js` |
 | Lifecycle | authorise (the viewer's kinds), parameters, pin (the read kinds' data versions and the sandbox version), key (with the view signature: a hash of the roles and the embedding app, `Principal.securitySignature`), cache, single flight, admission (per-user in-flight; the pool's fair queue), inputs read and masked as the viewer, engine, progress, validate, stamp (`STAMP`: pin, inputs, watermark, trigger, engine, where it ran, signature, result hash), cache, audit (`compute.answer`, `compute.failed`) | `ReactiveConnector` |
 | Engines | Python in a compute pool (Arrow in and out; fan-out over every worker of the pool and its peers with `split` and `reduce`); Java in the server (Drishti's own always; others with `compute.in-process-java: true`) | `PythonRunner`, `JavaRunner` |
-| Triggers | `write-back` and any event through `POST /api/v1/compute/events` (administrators) and `ReactiveHub.publish` (the write-back module's hook: built 2026-10-25, every applied change after its commit, with the watermark `L<lane> -> seq`, replayed per lane from the edit log's cursor; [WRITE_BACK.md › The design and its reasons, section 19](../guides/WRITE_BACK.md#19-implementation)); `live`: the entities of its kinds a watched computation read are followed, a new generation recomputes the results that read them; `data-version`: the load signal and a check every 30 s; `schedule`: `cron` (Spring's six fields) or `every`. `affects`: `all`, `subscribed`, id templates, or an expression a Java engine answers. Coalescing, watermark ordering, dedupe as designed | `Triggers`, `Coalescer` |
+| Triggers | `write-back` and any event through `POST /api/v1/compute/events` (administrators) and `ReactiveHub.publish` (the write-back module's hook: built 2026-10-25, every applied change after its commit, with the watermark `L<lane> -> seq`, replayed per lane from the edit log's cursor; [APPROVALS_GUIDE.md › The design and its reasons, section 19](ARCHITECTURE.md#31-collaboration-write-back-and-approvals)); `live`: the entities of its kinds a watched computation read are followed, a new generation recomputes the results that read them; `data-version`: the load signal and a check every 30 s; `schedule`: `cron` (Spring's six fields) or `every`. `affects`: `all`, `subscribed`, id templates, or an expression a Java engine answers. Coalescing, watermark ordering, dedupe as designed | `Triggers`, `Coalescer` |
 | Isolation | request ids per read, events to the owner only, view signature in keys, inputs masked per viewer, a recomputed result read again by each watcher through their own view, private sandboxes (`sbx-…`, frozen copies), live views rebuilt on behalf of their viewer | `RequestEvents`, `ViewerExecutor` |
 | HTTP and CLI | `POST /api/v1/compute/{connector}/{kind}`, `GET …/requests/{id}/stream`, `DELETE …/requests/{id}`, `POST …/events`, sandboxes, `GET /api/v1/admin/compute/reactive`; `drishti.py compute` `run`, `cancel`, `event`, `sandboxes`, `reactive` | `ReactiveController`, `tools/computecli.py` |
 
@@ -3206,10 +3206,10 @@ Spring context), so each node materialises the shared state to its local folders
 
 Status: **design, not built** (`DrishtiDatabase`, `config/db/database.yaml`, the stamp and `db copy`); the write-back tables are built
 (2026-10-25) in the two existing complete schema files, on the identity database's pool
-([WRITE_BACK.md › The design and its reasons, section 19](../guides/WRITE_BACK.md#19-implementation)). To be built as **item 0 of write-back**, before write-back itself (decided by the product owner). The content store
+([APPROVALS_GUIDE.md › The design and its reasons, section 19](ARCHITECTURE.md#31-collaboration-write-back-and-approvals)). To be built as **item 0 of write-back**, before write-back itself (decided by the product owner). The content store
 ([section 5](#5-the-content-store-user-content-every-node-reaches))
 was front-loaded from it. Related:
-[WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) (the edit log, lanes and overlays that live here), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (several servers),
+[APPROVALS_GUIDE.md](ARCHITECTURE.md#31-collaboration-write-back-and-approvals) (the edit log, lanes and overlays that live here), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (several servers),
 [CONFIGURATION.md](../admin/CONFIGURATION.md) (the settings).
 
 ### 1. The decision
@@ -3242,7 +3242,7 @@ There is no second store to back up, secure, size or switch.
 | Identity: users, roles, packs per user, preferences, API tokens, sessions, the audit trail | **DuckDB**, the BI engine: it is compute over the lakes and BI files, rebuilt from them, never a system of record |
 | Collaboration: notes, shares, threads, comments, mentions, inbox and outbox | The **lakes** (Delta, Iceberg): source data, written only by the loader (`lake build`, `lake publish`) |
 | BI workspaces, items, versions, usage and BI runs only with `drishti.bi.store: jpa` / `drishti.bi.runs.store: local` (one node); by default they live in the content store and the `drishti_bi_*` and `drishti_bi_run*` tables are legacy, read once by the import and kept ([section 5](#5-the-content-store-user-content-every-node-reaches) section 9); the content store's table `drishti_content` when `config/store/store.yaml` says `sqlite` or `postgres` ([section 5](#5-the-content-store-user-content-every-node-reaches)) | **Caches** (RocksDB, layout and fingerprint caches): derived, safe to delete |
-| Write-back (built): `drishti_edit_lane`, `drishti_edit_log`, `drishti_edit_request` (changes awaiting approval), `drishti_overlay`, `drishti_owned`, `drishti_edit_version` (each record's version) and `drishti_edit_cursor` (how far the reactive triggers and a follower of an edit primary have read each lane) ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) sections 5, 7, 11 and 19). New tables only: the schema version does not move | **Source systems** (ENDUR, CALYPSO, MUREX, connector databases): Drishti reads them, and writes to them only through a connector's `writes:` |
+| Write-back (built): `drishti_edit_lane`, `drishti_edit_log`, `drishti_edit_request` (changes awaiting approval), `drishti_overlay`, `drishti_owned`, `drishti_edit_version` (each record's version) and `drishti_edit_cursor` (how far the reactive triggers and a follower of an edit primary have read each lane) ([APPROVALS_GUIDE.md](ARCHITECTURE.md#31-collaboration-write-back-and-approvals) sections 5, 7, 11 and 19). New tables only: the schema version does not move | **Source systems** (ENDUR, CALYPSO, MUREX, connector databases): Drishti reads them, and writes to them only through a connector's `writes:` |
 | Compute approvals (built): `drishti_compute_request` (requests to approve what a connector or pool requires) and `drishti_compute_approval` (the approved items, revocable) ([NOTEBOOK_GUIDE.md](../guides/NOTEBOOK_GUIDE.md) section 6) | Locked Python environments, staged jars and request scratch folders: files under `<data dir>/compute/` |
 | Administrators' switches (built): `drishti_switch` (commands and packs on or off, each with its hybrid-logical-clock stamp and node) and `drishti_switch_log` (every change, with who and why); the system of record that Drishti*net gossip spreads ([USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#where-it-is-kept)). New tables only: the schema version does not move | |
 | Anything relational added later | Files that are documents by nature (Sutras, packs, connector and net configuration): they stay files under `config/` |
@@ -3257,7 +3257,7 @@ never opens its own SQLite file or its own schema.
 | For | one server: a laptop, Windows, a demo, a developer | several servers, production, managed backups |
 | Install | nothing: a file under the data folder | a PostgreSQL 14+ server (or RDS / Aurora PostgreSQL) |
 | Writers | one at a time (WAL: readers never wait; `busy_timeout`, `IMMEDIATE` transactions) | many |
-| Several Drishti servers | each has its own file; nothing is shared (write-back: section 8 and WRITE_BACK.md › The design and its reasons, section 11) | all share one database: identity, roles and the edit log are cluster-wide |
+| Several Drishti servers | each has its own file; nothing is shared (write-back: section 8 and APPROVALS_GUIDE.md › The design and its reasons, section 11) | all share one database: identity, roles and the edit log are cluster-wide |
 | Backup | copy the file with the server stopped, or the planned `drishti.py db copy` to a new file | the DBA's backups, point-in-time recovery |
 
 The two are equals in the code: every query is tested on both; neither is a "test" database.
@@ -3373,7 +3373,7 @@ pool:
 
 ### 8. Several servers
 
-| Setup | The Drishti database | Write-back's edit log ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) section 11) |
+| Setup | The Drishti database | Write-back's edit log ([APPROVALS_GUIDE.md](ARCHITECTURE.md#31-collaboration-write-back-and-approvals) section 11) |
 |---|---|---|
 | one server | SQLite (or PostgreSQL) | in the same database |
 | several servers, PostgreSQL | **one shared database**: identity and the edit log cluster-wide | in it: the full guarantee |
@@ -3402,7 +3402,7 @@ Admin → Database say plainly what is not shared.
 | 0.4 | planned: `drishti.py db copy` (and `--check`), the refusal on a version mismatch, Admin → Database | SQLite → PostgreSQL → SQLite round trip gives identical rows; a mismatched stamp refuses to start with the command named |
 | 0.5 | docs: CONFIGURATION, the admin guide, a tutorial step (UI, CLI, YAML) | the docs tests pass |
 
-The edit-log tables of write-back ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) section 7) are added to both files in W1, on this base (built
+The edit-log tables of write-back ([APPROVALS_GUIDE.md](ARCHITECTURE.md#31-collaboration-write-back-and-approvals) section 7) are added to both files in W1, on this base (built
 2026-10-25, in the files under `drishti-identity` until they move; the parity test covers them).
 
 ### 11. Tests

@@ -109,8 +109,8 @@ scripts, `--json`.
 Concepts used throughout (each is explained in its own guide; this one only links to them):
 
 - A **pack** is a folder: `pack.yaml`, Sutras, samples, tests, help text.
-  [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md).
-- A **Sutra** is the YAML that says how one kind of document is shown. [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md).
+  [BUILD_GUIDE.md](BUILD_GUIDE.md).
+- A **Sutra** is the YAML that says how one kind of document is shown. [BUILD_GUIDE.md](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies).
 - A **design** is a Sutra in progress in the Screen Designer, with its samples and its history of edits.
   [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench).
 - A **dated store** is where a pack reads documents *per business date*: a Delta lake or the file connector's
@@ -118,7 +118,7 @@ Concepts used throughout (each is explained in its own guide; this one only link
 - A pack becomes known to a running server in **four ways**: its folder is copied into the packs folder the server watches (`pack deploy`, `pack make`'s `pack/<name>`: the server checks it and loads it by itself, no restart), the server is started with it in `DRISHTI_PACKS` (a restart),
   an administrator loads it in **Admin → Packs** (at once), or it is installed from a registry.
   `drishti.py pack new --load`, `server packs load` and `pack install` are the command-line forms of the last two.
-  [PACK_DEVELOPER_GUIDE.md#loading-a-pack-while-the-server-runs-1](PACK_DEVELOPER_GUIDE.md#loading-a-pack-while-the-server-runs-1) has the rules.
+  [BUILD_GUIDE.md#292-loading-a-pack-while-the-server-runs](BUILD_GUIDE.md#292-loading-a-pack-while-the-server-runs) has the rules.
 
 Run the program from the repository root, or from anywhere with its path, with the console's interpreter
 (`drishti-console/.venv/bin/python`, which the quick start of [data/testdata/README.md](../../data/testdata/README.md) installs with PyYAML, deltalake
@@ -511,7 +511,7 @@ Sutra is `data/build/sutras/<kind>/<kind>-<group>.v1.sutra.yaml` with its `where
 holds samples drawn across the dates (with `--date FIELD`; the test data's trades carry no business-date field, their business date is the
 file's day). The `--out` folder is created when missing; it must not hold files of yours. A per-kind form names the field for each kind when
 one run reads several kinds: `--key trade=TRADE_ID,counterparty=COUNTERPARTY_ID`. The generator is described in
-[SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md); `--fallback` also writes a `<kind>-default` Sutra for documents no group matches.
+[BUILD_GUIDE.md](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies); `--fallback` also writes a `<kind>-default` Sutra for documents no group matches.
 
 
 #### Many product types in many files: one command, one Sutra per product type
@@ -659,7 +659,7 @@ ok      /tmp/genout/trade/trade-default.v1.sutra.yaml
 
 and `/tmp/genout/trade/trade-endur-comswap.v1.sutra.yaml` begins `match: { kind: trade, where: "$.SOURCE_SYSTEM == 'ENDUR' && $.PRODUCT_TYPE == 'ComSwap'", priority: 10 }`, with a `kv` of details, the
 legs as tabs, a pivot and the footer panels: a draft to edit, not a finished screen (it formats a numeric `TRADE_ID` with `amount0` in the strip, for one). Remove `/tmp/gen` and `/tmp/genout` when you
-are done. The whole workflow, including a complete pack and loading the data, is in [Generating a pack from JSON Lines](PACK_DEVELOPER_GUIDE.md#generating-a-pack-from-json-lines).
+are done. The whole workflow, including a complete pack and loading the data, is in [Generating a pack from JSON Lines](BUILD_GUIDE.md#10-a-pack-from-json-lines-pack-new).
 
 #### In CI
 
@@ -688,11 +688,11 @@ guard.
 
 ### `sutra design --schema` and `pack make --schema`
 
-Both take **JSON Schema** (draft 2020-12 or 07, JSON or YAML) and run the rules of [Schema to pack](SCHEMA_TO_PACK_GUIDE.md): kind, key, links, labels, formats, match column, strip, About text,
+Both take **JSON Schema** (draft 2020-12 or 07, JSON or YAML) and run the rules of [Schema to pack](BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack): kind, key, links, labels, formats, match column, strip, About text,
 tests. `sutra design --schema FILE... [--kind K] [--out DIR]` prints the Sutras (or writes `<out>/<kind>/<name>.v1.sutra.yaml` and `<out>/tests/`); `pack make --schema FILE|DIR... [DATA] --name N`
 writes the same folder as `pack make` below, for many kinds, with synthetic samples (named `sample-synthetic-N.json`) where no real documents are given. A JSON Lines file or folder after `--schema` is data.
 Flags: `--key`, `--date`, `--match` (as `kind=FIELD`; `--match none`), `--mnemonic`, `--strip N`, `--count N` (design) / `--samples N` (make), `--code`, `--description`, `--connector`, `--yes` (never ask which
-field is the key). The example schemas are in `docs/guides/examples/schemas/`; real output is in [Schema to pack](SCHEMA_TO_PACK_GUIDE.md#the-command-line).
+field is the key). The example schemas are in `docs/guides/examples/schemas/`; real output is in [Schema to pack](BUILD_GUIDE.md#86-the-command-line).
 
 ### `pack make`: everything in one folder
 
@@ -932,12 +932,12 @@ ingest:
 ```
 
 It is an optional **tooling key**: `data ingest --pack` and `pack check` read it, the server ignores it (it is listed in the
-key table of [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md)). Delete it and the pack loads exactly the same.
+key table of [BUILD_GUIDE.md](BUILD_GUIDE.md)). Delete it and the pack loads exactly the same.
 
 ### `pack check`: lint + test + help coverage, for CI
 
 For each pack: `sutra lint` (with `--strict`: help warnings fail), then `sutra test` (renders every sample, checks `expect.yaml`
-and reports help coverage per Sutra), and a check of the pack.yaml tooling keys: the `ingest:` block names real kinds with a `key` and a `date`, and the `form:` section (the search form of each kind, see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#form-the-search-form-of-a-kind)) is valid: a path that is not a path, an unknown
+and reports help coverage per Sutra), and a check of the pack.yaml tooling keys: the `ingest:` block names real kinds with a `key` and a `date`, and the `form:` section (the search form of each kind, see [BUILD_GUIDE.md](BUILD_GUIDE.md#46-form-the-search-form-of-a-kind)) is valid: a path that is not a path, an unknown
 `type`, an operator the type lacks, a duplicate field, `values` on a field that is not an `enum` or a kind the pack does not have is reported with the kind and the field, and fails the run:
 
 ```text
@@ -1064,7 +1064,7 @@ drishti-console/.venv/bin/python tools/drishti.py pack about-check data/build/cu
 ```
 
 Fix each by adding the field under `kinds.<kind>.glossary` (or a pack-wide `vocabulary` entry) in `config/about.yaml`; the
-format is in [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md).
+format is in [BUILD_GUIDE.md](BUILD_GUIDE.md).
 
 ### `pack regenerate`: new data, new Sutras, none of your edits lost
 
@@ -1332,7 +1332,7 @@ published curves-demo 1.0.0 (53987 bytes, sha256 d0c68128a431…) signed by me
 (Your key, and so the public key and the checksum, differ: a new key pair is made each time.)
 
 A server trusts a publisher by being configured with the public key
-(`drishti.packs.registry.trusted-keys.<publisher>`); see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which).
+(`drishti.packs.registry.trusted-keys.<publisher>`); see [BUILD_GUIDE.md](BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which).
 
 ### `pack install`: install from the registry on a running server
 
@@ -3137,7 +3137,7 @@ mode replaces only the dates in the input, and the server picks the new files up
 **Three ways a pack becomes known** to a server (the third is section 10.4): start with `DRISHTI_PACKS=...,curves-demo` and a
 restart, or put it in the watched packs folder as above; `server packs load curves-demo` (or **Admin → Packs → Load**; it takes effect at
 once, with no restart, and is remembered in `data/packs/added.yaml`); install from a registry. See
-[PACK_DEVELOPER_GUIDE.md#loading-a-pack-while-the-server-runs-1](PACK_DEVELOPER_GUIDE.md#loading-a-pack-while-the-server-runs-1).
+[BUILD_GUIDE.md#292-loading-a-pack-while-the-server-runs](BUILD_GUIDE.md#292-loading-a-pack-while-the-server-runs).
 
 ### 10.2 A CI pipeline: lint, test, JUnit
 
@@ -3433,8 +3433,8 @@ environment `DRISHTI_JAR=...` (the tests that run `sutra lint` are skipped witho
 
 ### 14.7 Where next
 
-[GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm) runs the server and the console; [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and
-[PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md) are the references for what these commands produce and check.
+[GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm) runs the server and the console; [BUILD_GUIDE.md](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies) and
+[BUILD_GUIDE.md](BUILD_GUIDE.md) are the references for what these commands produce and check.
 
 ## 15. The headless Sutra tool
 
@@ -3445,5 +3445,5 @@ folder is `DRISHTI_TMP_DIR`, else a fresh folder in the system temp folder), the
 in `config/connectors/`), and the official VaR and exposure captures, the demo ticker, hot reload, compute workers, write-back and
 Drishti*net are off. The site's lakes (`DRISHTI_DELTA_ROOT`, `DRISHTI_ICEBERG_ROOT`, `DRISHTI_FILES_ROOT`, `DRISHTI_FEEDS`, each
 defaulting under `DRISHTI_DATA_DIR` or `data/`) and its added and installed packs are still read. The `tests/<sutra>/` convention, `expect.yaml`, the exit codes and
-CI wiring are section 15 of the [Sutra developer guide](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci); the workbench's own use of the same command is in
+CI wiring are section 15 of the [Sutra developer guide](BUILD_GUIDE.md#24-testing-expectyaml-sutra-lint-sutra-test-and-pack-check); the workbench's own use of the same command is in
 [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#26-the-command-line-and-ci). This section replaces the former `SUTRA_CLI.md`.

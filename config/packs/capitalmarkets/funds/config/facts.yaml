@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Did you know: this pack's facts for Home (drishti-console/core/facts.py; docs/guides/PACK_DEVELOPER_GUIDE.md, "Facts for Home").
+# Did you know: this pack's facts for Home (drishti-console/core/facts.py; docs/guides/BUILD_GUIDE.md, "Facts for Home").
 # Every number is computed from the funds pack's records (structured search and raw records) as the user who opens Home; a fact
 # whose condition does not hold is not shown. The records are not dated by business date: every date reads the same snapshot.
 facts: 1

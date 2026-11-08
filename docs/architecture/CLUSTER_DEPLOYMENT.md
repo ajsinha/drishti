@@ -847,7 +847,7 @@ set is its own set and may go to any owner.
 
 **Databases.** The identity database is SQLite by default (`drishti.identity.database-url`, `jdbc:sqlite:${drishti.data.dir}/identity/drishti.db`);
 a cluster needs PostgreSQL (`DRISHTI_IDENTITY_DB_URL`) so users, sessions, edit lanes and run leases are shared and failover works
-([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons): "a cluster with neither ... no failover"). Size its `max_connections` for every member's pool
+([APPROVALS_GUIDE.md](ARCHITECTURE.md#31-collaboration-write-back-and-approvals): "a cluster with neither ... no failover"). Size its `max_connections` for every member's pool
 (OPERATIONS section 16). A streaming standby (synchronous in one site, asynchronous to the recovery site) is PLANNED as a guide and a tested
 failover (`CD8`).
 

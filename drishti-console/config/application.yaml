@@ -78,7 +78,7 @@ ui:
   # The Sutra designer (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31): Customize on every entity page and Describe under Build -> New screen. A
   # user's changes are their own Design, never the pack's Sutra. Off: pages and the screen designer are exactly as before.
   designer: ${DRISHTI_UI_DESIGNER:false}
-  # The phone display (docs/guides/PACK_DEVELOPER_GUIDE.md): each panel of a page goes to a phone as must (shown in full, first), glance
+  # The phone display (docs/guides/BUILD_GUIDE.md): each panel of a page goes to a phone as must (shown in full, first), glance
   # (a compact form: five rows, a sparkline), more (loaded when tapped, under More on this page) or desk (named under On desktop). The
   # browser says what it is (the drishti-device cookie from the screen width, or an X-Drishti-Device header); a desktop is unchanged.
   phone:
@@ -138,7 +138,7 @@ ui:
     - { slug: commodity-future, title: Commodity future, cmd: TRD CFT-77120, sutra: listed-future v1 }
     - { slug: netting-set, title: Netting set, cmd: NSET NS-NORTH-01, sutra: netting-set v1 }
   # Home, signed in: "Did you know", the fact of the day, beside the headline. Each pack declares its facts in
-  # config/packs/<domain>/<pack>/config/facts.yaml (docs/guides/PACK_DEVELOPER_GUIDE.md, "Facts for Home"); they are computed from the server's
+  # config/packs/<domain>/<pack>/config/facts.yaml (docs/guides/BUILD_GUIDE.md, "Facts for Home"); they are computed from the server's
   # answers on the business date, as the user, and kept cache_seconds per user, date and set of packs. A fact taking longer than
   # timeout_seconds is left out. enabled false: no tile.
   facts:

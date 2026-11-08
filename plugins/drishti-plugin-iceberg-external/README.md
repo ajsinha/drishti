@@ -274,7 +274,7 @@ one and is not served until `tables.<kind>.id` names it. Kinds configured under 
 A kind's fields come from the table's schema, so a starter pack can be drafted from it. `StarterSchemas` writes each served kind's
 document as a JSON Schema, with the id (`x-drishti-role: key`), the business date (`x-drishti-role: date`) and the `links`
 (`x-drishti-link`), and the pack maker turns the schemas into a pack (the kind, its fields, a Sutra listing them, links), to edit like
-any pack ([SCHEMA_TO_PACK_GUIDE.md](../../docs/guides/SCHEMA_TO_PACK_GUIDE.md)):
+any pack ([BUILD_GUIDE.md](../../docs/guides/BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack)):
 
 ```bash
 java -cp "$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-iceberg-external -Dmdep.outputFile=/dev/stdout):plugins/drishti-plugin-iceberg-external/target/classes" \

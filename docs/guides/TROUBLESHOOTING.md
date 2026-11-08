@@ -181,7 +181,7 @@ returns, keep Java and report it). To run on Java on purpose and silence the war
   A pack's parents load by themselves: enabling `trading` also loads `core` and `market-data`. Other
   start-up messages from the pack loader: "`… declares pack 'x', expected 'y'`" (the folder name and the `pack:`
   key in its `pack.yaml` differ), "`packs require each other in a cycle`", and "`… is defined by both pack 'a'
-  and pack 'b'`" (two unrelated packs claim the same mnemonic or kind). See [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which).
+  and pack 'b'`" (two unrelated packs claim the same mnemonic or kind). See [BUILD_GUIDE.md](BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which).
 
 ### A pack you expected is missing
 
@@ -603,7 +603,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
 - **Cause:** the text is written by the domain pack, in its `config/about.yaml`. The drawer's other layers (where the data came from, why the page looks like this, where next) need no pack text. A kind the pack has not written about shows only the Sutra's `description`; a field with no glossary entry has no hint (the glossary layer needs a server with that stage of [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help)).
 - **Check:** a value reading `•••` in the sentence is masked for your role, on purpose. If the file has a mistake, the entry is left out and listed by `GET /api/v1/sutras/problems` (`DRS-2040` to `DRS-2044`, key `<pack>/<file>`) and on the admin *Sutras* page. "About this page could not be loaded" is a failed call: try again; the view itself is unaffected.
-- **Fix:** add or correct the entry: [About text and glossary](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary).
+- **Fix:** add or correct the entry: [About text and glossary](BUILD_GUIDE.md#72-about-text-and-glossary).
 
 ### The Ask box is missing, or says "Ask is unavailable"
 
@@ -727,7 +727,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
   You should see `['$.lcrId', '$.legalEntityName', '$.lcr', '$.hqla', '$.netOutflows', '$.minimum']`
   (automatic: the liquidity pack declares no `columns:`).
-- **Fix:** add `columns:` for the kind to its pack ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#columns-the-key-fields-of-a-pick-list)),
+- **Fix:** add `columns:` for the kind to its pack ([BUILD_GUIDE.md](BUILD_GUIDE.md#43-columns-the-key-fields-of-a-pick-list)),
   through the generator for a generated pack, and restart the server. For one search, name the fields you
   want in the command: `LCR lcr < 1.2 order by lcr` puts *Lcr* first.
 
@@ -959,7 +959,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Fix:** press **Load** on its row: the server checks it, records it in `data/packs/added.yaml` and puts it to use
   at once, with no restart. If it says *cannot load 'finance': kind trade is defined by both pack 'trading' and pack 'finance'*, the
   pack clashes with one already loaded (the retired example pack `finance` defines the same kinds as `trading`), and nothing
-  changed ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#the-packs-that-ship)).
+  changed ([BUILD_GUIDE.md](BUILD_GUIDE.md#311-the-packs-that-ship)).
 
 ### "Switch off" is greyed, or the API says "… is needed by …; switch those off first"
 
@@ -975,7 +975,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Check:** run the check that failed, for example `python3 tools/packgen/banking/make_packs.py --check`; the
   message lists the stale files, and `extra=[…]` lists files the generator did not write.
 - **Fix:** move the change into the generator, run it without `--check`, and commit both
-  ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)). To discard a hand edit instead:
+  ([BUILD_GUIDE.md](BUILD_GUIDE.md#301-how-the-shipped-packs-are-generated)). To discard a hand edit instead:
   `git checkout -- config/packs/<domain>/<name>/…`.
 
 ## Connectors

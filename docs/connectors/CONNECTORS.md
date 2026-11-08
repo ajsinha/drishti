@@ -127,7 +127,7 @@ Plugin `demo`. Every pack's samples, in memory, ticking.
 
 **Also built in: `derived`.** Kinds computed from other kinds (members grouped by an expression, with `count`, `sum`,
 `avg`, …), read through whichever connectors serve the members. It is part of the engine, not a plugin: see
-[PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#derived-kinds-entities-computed-from-other-kinds).
+[BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#53-derived-kinds-entities-computed-from-other-kinds).
 
 
 Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [DEMO_CONNECTOR.md](../../plugins/drishti-plugin-demo/README.md).
@@ -734,7 +734,7 @@ Points to remember:
   connector nobody defined loads, and its kinds answer `DRS-1011 connector <name> is not configured` ([CONNECTOR_FILES.md](CONNECTOR_FILES.md#a-pack-names-a-connector-nobody-defined)).
 - **Between packs**, a child pack that redefines a parent's connector template replaces it *as a whole*, and the override is
   listed in health (`overrides`); two unrelated packs that define the same connector differently stop the server at
-  start, naming both. See [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which).
+  start, naming both. See [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which).
 - **The deprecated form still works.** `drishti.sources.connectors.<name>` in `application.yaml` overrides a file setting by setting, with a warning that names the file to write.
 
 ### Switching connectors off

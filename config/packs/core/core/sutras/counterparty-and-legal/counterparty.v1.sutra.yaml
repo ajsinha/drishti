@@ -43,7 +43,7 @@ strip:
   - { label: UEN, bind: $.UEN }
   - { label: Type, bind: $.TYPE }
   - { label: Net MTM, bind: $.NET_MTM, fmt: signed0, tone: sign }
-phone:                                     # on a phone (docs/guides/PACK_DEVELOPER_GUIDE.md): who they are, then their netting sets at a glance
+phone:                                     # on a phone (docs/guides/BUILD_GUIDE.md): who they are, then their netting sets at a glance
   order: [kyc, nettingSets]
   summary: "${$.NAME} · rated ${$.RATING} · Net MTM ${fmt($.NET_MTM, 'signed0')}"
 panels:

@@ -54,7 +54,7 @@
     });
     document.dispatchEvent(new CustomEvent('drishti:switches', { detail: d }));
   }
-  /* Write-back (WRITE_BACK.md 18.5): your own change's steps as a toast (and to the review sheet that follows it); a change applied to the
+  /* Write-back (APPROVALS_GUIDE.md 18.5): your own change's steps as a toast (and to the review sheet that follows it); a change applied to the
      record this page shows says "changed by A. Sinha just now" (the name only for who may see the edit history; the page's live view
      brings the new values, masked for this reader). Everything else hears it as drishti:edit. */
   function onEdit(d) {

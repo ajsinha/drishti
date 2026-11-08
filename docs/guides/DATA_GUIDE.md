@@ -73,7 +73,7 @@ there**. One small signal, "this batch has landed", makes Drishti refresh what i
 alert rules on it, and tell the right people. Expectations then flag a batch that has *not* landed in time.
 
 Related: [API_REFERENCE.md](API_REFERENCE.md) (every endpoint, the error codes), [CLI_GUIDE.md](CLI_GUIDE.md) (the `drishti.py` program),
-[CONFIGURATION.md](../admin/CONFIGURATION.md) (every setting), [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) (what a pack is),
+[CONFIGURATION.md](../admin/CONFIGURATION.md) (every setting), [BUILD_GUIDE.md](BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) (what a pack is),
 [OPERATIONALISING.md](OPERATIONALISING.md) (shipping packs and data to servers).
 
 ### 1. Why: what the signal is for
@@ -174,7 +174,7 @@ files), **Admin -> Packs -> the pack -> Load data** takes one JSON array or JSON
 under its business date (or the day you choose, for a snapshot kind: `ingest: {snapshot: true}`), checks every row against the pack's Sutras
 (types with no Sutra, fields no Sutra shows), and then announces the load exactly as above, so the refresh, verify, alerts, smoke and notices
 run and the pages built from that kind (a `derived` connector's pages per value) are rebuilt. The worked example is
-[A deep trading JSON](SCHEMA_TO_PACK_GUIDE.md#appendix-a-deep-trading-json).
+[A deep trading JSON](BUILD_GUIDE.md#9-a-deep-trading-json-from-one-file-to-a-deployed-pack).
 
 ### 4. The API reference
 
@@ -878,7 +878,7 @@ EDGAR, Wikidata, Nasdaq Trader, GLEIF), where it comes from, its licence, which 
 ## 5. Schema to pack: generate a pack from JSON Schema
 
 A pack made from JSON Schema files, a folder of JSON Lines, or both (Build → New pack, or `drishti.py pack make`) has its own guide:
-[SCHEMA_TO_PACK_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md).
+[BUILD_GUIDE.md](BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack).
 
 ## 6. Export data: download a dataset
 

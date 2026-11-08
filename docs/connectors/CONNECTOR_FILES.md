@@ -140,8 +140,8 @@ variable, as everywhere in the file.
 ### Writes: saving to the source
 
 A connector may declare `writes:`: named commands that change a record in its source, used by write-back's `source` target
-([WRITE_BACK.md › The design and its reasons, section 5.4](../guides/WRITE_BACK.md#54-how-a-write-is-described-connector-writes); the administrator's guide
-[WRITE_BACK.md section 13](../guides/WRITE_BACK.md#13-writing-to-a-source-writes)). Each command has the `kind` it amends, the extra `params:` a Sutra
+([APPROVALS_GUIDE.md › The design and its reasons, section 5.4](../guides/APPROVALS_GUIDE.md#10-writing-to-a-source-writes); the administrator's guide
+[APPROVALS_GUIDE.md section 13](../guides/APPROVALS_GUIDE.md#10-writing-to-a-source-writes)). Each command has the `kind` it amends, the extra `params:` a Sutra
 may supply, its plugin's block (`jdbc:` with `sql`, the guard `expect-rows` and the idempotency clause `already-applied`), `confirm:`
 (`reply` or `next-load`) and `timeout:`. Only the JDBC plugin writes ([JDBC_QUERIES.md section 16](../../plugins/drishti-plugin-jdbc/README.md#writes-commands-that-change-a-record));
 the File, Delta and Iceberg connectors never do (a lake is not written per edit) and every other plugin is refused (*plugin … cannot
@@ -721,7 +721,7 @@ Buttons: **Edit** opens the editor described below, **Test connection** opens it
 ![The connector's page on a phone: one column, targets of at least 44 px](img/connector_files/13-connector-detail-phone.jpg)
 
 The pack side is the same: a pack's page lists the connectors it names, each linked here, and flags a missing one with **Create**
-([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#one-pack-its-own-page)).
+([BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#318-what-admin--packs-shows-about-a-pack)).
 
 ![A pack's page: its connectors, one running, one missing with Create](img/connector_files/12-pack-detail.jpg) ![A pack's page on a phone](img/connector_files/14-pack-detail-phone.jpg)
 

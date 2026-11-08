@@ -28,7 +28,7 @@ listed at `/api/csp-reports`.
 
 **The tokens are real.** The host's backend signs a short assertion about its signed-in user with its own RSA key
 (`demo-host-key.json`: a DEMO key, never use it anywhere real) and exchanges it, with its client secret, at the Drishti
-**server** (`POST /api/v1/embed/token`, RFC 8693, [API_GUIDE](../../docs/guides/API_REFERENCE.md#24-embedding-views-in-another-web-application)).
+**server** (`POST /api/v1/embed/token`, RFC 8693, [API_REFERENCE](../../docs/guides/API_REFERENCE.md#24-embedding-views-in-another-web-application)).
 The page gets a five-minute, read-only, always-masked embed token. Both demo users must exist in Drishti (the exchange refuses
 a stranger).
 

@@ -548,7 +548,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
                         s.version() > 0 ? s.name() : null, hidden.count(), hidden.panels()), timings).withControls(resolved.views(), selects(s))
                 .withLayout(com.ash.drishti.engine.view.ScreenGrid.of(layout.sutra()))
                 .withPhone(com.ash.drishti.engine.view.PhoneView.of(s, s.phone() == null || s.phone().summary() == null ? null
-                        : soft(() -> el.template(s.phone().summary()).render(eval))));   // docs/guides/PACK_DEVELOPER_GUIDE.md 5: tiers, order, summary line
+                        : soft(() -> el.template(s.phone().summary()).render(eval))));   // docs/guides/BUILD_GUIDE.md 5: tiers, order, summary line
         if (doc.data().get("partial").asBoolean()) {               // some of what makes the document did not answer: the page says so
             List<String> what = new ArrayList<>();
             DataNode m = doc.data().get("missing");

@@ -179,7 +179,7 @@ a parent's sample by shipping the same kind and id; type-ahead keeps one entry p
 does not restart connectors). Setting `dirs` by hand replaces what the packs put there, which is how a site serves a folder of its own
 samples. How the samples are generated, and loaded into every real store, is in
 [DEMO_DATA.md](../../docs/connectors/DEMO_DATA.md#the-samples); the format from a pack author's side is in
-[the pack developer's guide](../../docs/guides/PACK_DEVELOPER_GUIDE.md#samples).
+[the pack developer's guide](../../docs/guides/BUILD_GUIDE.md#54-samples).
 
 ## Reads and what each costs
 
@@ -323,7 +323,7 @@ no credentials, network or TLS, and reads only the kinds and ids its catalogues 
 ## See also
 
 - [The demo data](../../docs/connectors/DEMO_DATA.md) (how the samples are made and loaded into every other store) and
-  [the pack developer's guide](../../docs/guides/PACK_DEVELOPER_GUIDE.md#samples).
+  [the pack developer's guide](../../docs/guides/BUILD_GUIDE.md#54-samples).
 - [Every demo setting in CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#demo) and
   [connector files](../../docs/connectors/CONNECTOR_FILES.md).
 - [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

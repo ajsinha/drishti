@@ -428,7 +428,7 @@ investigation, rule testing and the evidence that tunes the platform.
 
 ## 11. Alerts and case management
 
-Built on write-back's Drishti-owned records and approvals ([WRITE_BACK.md](../guides/WRITE_BACK.md#10-approval)): alerts, cases and
+Built on write-back's Drishti-owned records and approvals ([APPROVALS_GUIDE.md](../guides/APPROVALS_GUIDE.md#6-the-approvals-queue)): alerts, cases and
 actions are `owned` records, every action is a form, every decision that ends a case or files a report needs a second approver.
 
 | State | Who | Action (each a form, each audited) |

@@ -223,7 +223,7 @@ drishti:
     file: ${DRISHTI_STORE_FILE:./config/store/store.yaml}
     root: ${DRISHTI_STORE_ROOT:}   # the filesystem backend's root, over the file's filesystem.root (empty: the file's, else <data folder>/fstore)
   edit:
-    # Write-back (docs/guides/WRITE_BACK.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml).
+    # Write-back (docs/guides/APPROVALS_GUIDE.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml).
     # Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only.
     file: ${DRISHTI_EDIT_FILE:./config/edit/edit.yaml}
   index:
@@ -429,7 +429,7 @@ drishti:
         description: "Read data through Arrow Flight (FLIGHT_GUIDE.md): kinds, BI models, pivot views, VaR vectors and the in-memory lake, as your roles, masks and row rules allow, every read audited. It opens no HTTP call. data:read:<domain> (a pack such as trading, bi, var, a lake) opens one domain only."
         allow: []
       "[edit]":
-        description: "Submit changes through write-back (WRITE_BACK.md: forms, the CLI's change propose), and approve, reject or withdraw them in the one Approvals queue (kind change). No token has it unless chosen; it never exceeds your roles: the edit power, the field's roles, masks and four eyes all apply, and editing must be on."
+        description: "Submit changes through write-back (APPROVALS_GUIDE.md: forms, the CLI's change propose), and approve, reject or withdraw them in the one Approvals queue (kind change). No token has it unless chosen; it never exceeds your roles: the edit power, the field's roles, masks and four eyes all apply, and editing must be on."
         allow:
           - POST /api/v1/changes
           - POST /api/v1/approvals/change/*/approve
@@ -586,7 +586,7 @@ drishti:
       - POST /api/v1/bi/models/*/preview-as     # previews another role's answers: audited, in the console only
       - PUT /api/v1/tables/editor/prefs         # a person's editor view: personal, in the console
       - "* /api/v1/me/**"
-      - "* /api/v1/drafts/**"                  # form drafts: personal, kept per person, saved from the console (WRITE_BACK.md)
+      - "* /api/v1/drafts/**"                  # form drafts: personal, kept per person, saved from the console (APPROVALS_GUIDE.md)
       - POST /api/v1/admin/edits/**            # write-back's switches (a connector's writes, withdrawing an overlay): an administrator in the console
       - "* /api/v1/auth/**"
       - "* /api/v1/admin/tokens/**"
@@ -651,7 +651,7 @@ drishti:
       author:  { kinds: ["*"], raw: true, author: true, calc: true, bi: [bi, bi-author] }   # calc: may use Calc, Python in the browser (USER_GUIDE.md)
       approver: { kinds: ["*"], raw: true, author: true, approve: true, calc: true, bi: [bi, bi-author] }   # reviews proposed Sutras (admins may too)
       pivot-approver: { kinds: ["*"], bi: [bi] }   # approves custom pivot functions someone else wrote (four eyes; drishti.pivot.functions.approver-role)
-      admin:   { kinds: ["*"], raw: true, author: true, admin: true, calc: true, edit: true }   # edit: may submit write-back changes (WRITE_BACK.md; editing itself is off until config/edit/edit.yaml turns it on)
+      admin:   { kinds: ["*"], raw: true, author: true, admin: true, calc: true, edit: true }   # edit: may submit write-back changes (APPROVALS_GUIDE.md; editing itself is off until config/edit/edit.yaml turns it on)
     oidc:                              # single sign-on: the console runs the flow, the server verifies the ID token
       enabled: ${DRISHTI_OIDC_ENABLED:false}  # verify single-sign-on ID tokens
       issuer: ${DRISHTI_OIDC_ISSUER:}  # the OIDC issuer URL

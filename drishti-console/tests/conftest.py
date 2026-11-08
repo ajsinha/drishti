@@ -1133,7 +1133,7 @@ class FakeBackend:
                 "markdown": "# The trading pack\n\n## What it is\n\nTrades.\n\n## Data structures\n\n### `trade`\n\n"
                             "| Field | Type | Example | Description |\n|---|---|---|---|\n| `TRADE_ID` | string | `MX-1` | The document's id |\n\n"
                             "Nested structures:\n\n| Path | Fields |\n|---|---|\n| `LEGS[].CASH_FLOWS[]` | `FLOW_ID` (string) |\n\n"
-                            "<script>alert(1)</script>\n\n[Packs](../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) [web](https://example.com) [bad](javascript:alert(1))\n"}
+                            "<script>alert(1)</script>\n\n[Packs](../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) [web](https://example.com) [bad](javascript:alert(1))\n"}
 
     async def pack_overview(self, name, ident=None):
         if name.upper() not in ("MKT", "MARKET-DATA"):
@@ -1256,7 +1256,7 @@ def open_studio(client, url, **params):
     return client.post("/studio", data=form, follow_redirects=False)
 
 
-# The phone display (docs/guides/PACK_DEVELOPER_GUIDE.md): below 640 px the console draws the phone page and static/js/drishti_phone.js reloads a page drawn for
+# The phone display (docs/guides/BUILD_GUIDE.md): below 640 px the console draws the phone page and static/js/drishti_phone.js reloads a page drawn for
 # another device. A browser test that is not about the phone display reads the whole page at any width, as a person who chose *Show
 # everything* does (the drishti-phone-all cookie, set before the first navigation, so no reload happens under the test); the phone
 # display's own tests keep it.

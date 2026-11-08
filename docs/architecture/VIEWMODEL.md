@@ -105,7 +105,7 @@ have no value (the record is written with "leave out nulls").
 | `selects` | Select`[]` | optional (left out when empty) | The panels whose click sets a control. |
 | `contract` | string | always | The ViewModel contract this view speaks, `major.minor`: `"1.0"` today (`ViewModel.CONTRACT`). A client refuses a major it does not know (Drishti Render's `DRS-9105`) and ignores what a newer minor adds. A ViewModel from an older server has none: it is `1.0`. See [section 8](#8-compatibility-and-versioning). |
 | `layout` | object | optional | The Sutra's screen grid (`areas`, `columns`, `split`, `tabs`, `sections`, `sticky`, `arrange`, `phone`, `tablet`) and each top-level panel's place. Left out when the Sutra has none: the panels then flow in two columns, `main` and `right`. See [Area and grid](#area-and-grid). |
-| `phone` | object | optional | What the Sutra says about the phone ([MOBILE_DISPLAY.md](../guides/PACK_DEVELOPER_GUIDE.md#part-ix-designing-for-phones)): `panels` (`{id: {tier, from, rows, columns, sort, series, figures, tab}}`, `from` being `fragment` or `sutra`), `order`, `default` and `summary` (the phone summary line, read against the document). Left out when the Sutra says nothing; a client then uses each panel kind's default tier. A desktop client ignores it. |
+| `phone` | object | optional | What the Sutra says about the phone ([MOBILE_DISPLAY.md](../guides/BUILD_GUIDE.md#32-designing-for-phones)): `panels` (`{id: {tier, from, rows, columns, sort, series, figures, tab}}`, `from` being `fragment` or `sutra`), `order`, `default` and `summary` (the phone summary line, read against the document). Left out when the Sutra says nothing; a client then uses each panel kind's default tier. A desktop client ignores it. |
 
 ---
 
@@ -726,10 +726,10 @@ curl -s $B/views/trade/MX-20000001 | jq -c '{mnemonic, title: .title.id, panels:
 ```
 
 - **Who you are.** With security on, `Authorization: Bearer <token>` (a signed JWT or a personal API token; see
-  [API_GUIDE, authentication](../guides/DEVELOPER_GUIDE.md#114-who-you-are-authentication)); with security off, `X-Drishti-User: <name>`
+  [DEVELOPER_GUIDE, authentication](../guides/DEVELOPER_GUIDE.md#114-who-you-are-authentication)); with security off, `X-Drishti-User: <name>`
   or nobody (`anonymous`). The answer is masked for that caller.
 - **Which day.** `X-Drishti-As-Of: 2026-09-29` or `?asOf=2026-09-29` (a snapshot: `provenance.live` is `false`), and
-  `X-Drishti-Known-At` / `?knownAt=` for time travel ([API_GUIDE, business date](../guides/DEVELOPER_GUIDE.md#115-which-day-the-business-date)).
+  `X-Drishti-Known-At` / `?knownAt=` for time travel ([DEVELOPER_GUIDE, business date](../guides/DEVELOPER_GUIDE.md#115-which-day-the-business-date)).
 - **Which layout.** `?sutra=<name>` (another Sutra of the kind) or `?design=<id>` (one of your Designs).
 - **Controls.** `?ctl.<id>=<value>`.
 - **Errors** are Problem Details with a `code`: `404 DRS-1001` (no such entity), `403 DRS-5002` (may not open the kind),

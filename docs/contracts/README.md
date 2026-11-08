@@ -70,7 +70,7 @@ may still change before it ships, and the document records each change.
 | [GRP.md](GRP.md) | GRP (`counterparty-group`): members kept, usage computed | PARKED (design kept) |
 | [CVA.md](CVA.md) | CVA (`cva`) | PARKED (design kept) |
 | [WWR.md](WWR.md) | wrong-way risk (new) | PARKED (design kept) |
-| [PACK_DEVELOPER_GUIDE.md Part II](../guides/GROUPINGS_ANALYTICS_GUIDE.md#10-the-contract-at-a-glance) | LEIG, LEIC, SIC, ECG (`lei-group`, `lei-country`, `sic-sector`, `country-group`: stored pages retired, computed under the same kinds), CORR (`correlation-result`; the sets keep their factors), USEQ ratios, PXH analytics | BUILT (2026-10-26; Track B) |
+| [BUILD_GUIDE.md Part II](../guides/GROUPINGS_ANALYTICS_GUIDE.md#10-the-contract-at-a-glance) | LEIG, LEIC, SIC, ECG (`lei-group`, `lei-country`, `sic-sector`, `country-group`: stored pages retired, computed under the same kinds), CORR (`correlation-result`; the sets keep their factors), USEQ ratios, PXH analytics | BUILT (2026-10-26; Track B) |
 | `CONCENTRATION.md` | large exposures (new); the OSFI report once its template is supplied | PARKED (not written) |
 | `LIQUIDITY.md` | LCR, NSFR, NCCF, cash-flow gaps (new) | PARKED (not written) |
 | `IRRBB.md` | ΔEVE, ΔNII (new) | PARKED (not written) |

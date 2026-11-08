@@ -678,7 +678,7 @@ groundwork.**
   refused for room remembered for five minutes so a crowd of requests makes one load; a date in use (read in the last two minutes)
   is never closed for room. **Pinned dates** (month-, quarter-, year- and
   fiscal-year-ends on the New York and Toronto calendars, the stress window, named dates), off by default.
-- **The phone display** ([MOBILE_DISPLAY](docs/guides/PACK_DEVELOPER_GUIDE.md#part-ix-designing-for-phones)): every panel has a phone tier (must, glance, more,
+- **The phone display** ([MOBILE_DISPLAY](docs/guides/BUILD_GUIDE.md#32-designing-for-phones)): every panel has a phone tier (must, glance, more,
   desk); a phone gets the must and glance panels, a tablet everything but the desk panels, a desktop is unchanged; *Show everything*
   and *Why these panels*; the tiers set in the grammar (`phone:`), by the site and by the edition. The lens menus fold into one menu on a
   phone.
@@ -885,7 +885,7 @@ finally right.**
   with no setup. It found 11 joins that do not hold (e.g. a jurisdiction code where an id is expected).
 - **The fact of the day on Home** ([USER_GUIDE "Home: the fact of the day"](docs/guides/USER_GUIDE.md)): one surprising, true
   sentence from your data, with a small picture, "Why does that happen?", the command that shows it and "Another fact". Each pack
-  declares its facts ([PACK_DEVELOPER_GUIDE "Facts for Home"](docs/guides/PACK_DEVELOPER_GUIDE.md)); they are computed as you, on
+  declares its facts ([PACK_DEVELOPER_GUIDE "Facts for Home"](docs/guides/BUILD_GUIDE.md)); they are computed as you, on
   your business date, and only those that hold today are shown. Seven ship: a book over its VaR limit while its desk is within, a
   desk that lowers VaR, posted collateral raising exposure, VaR against peak PFE, the most-held company, two managers holding one
   portfolio, a fund's weights above its net assets. Quick cards below: VAR BANK, EXP BANK, FUND SPY, DATAMAP.
@@ -1014,7 +1014,7 @@ designs kept ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#
 - **Admin → Commands** ([COMMANDS.md](docs/admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)): switch any command off for everyone; it then answers "not active"
   everywhere (page, API, command, CLI, search, exports, BI, AI; `403 DRS-1016`), stored in the Drishti database and gossiped to every
   server; ready for role-based access.
-- **Write-back** ([WRITE_BACK.md](docs/guides/WRITE_BACK.md#16-the-design-and-its-reasons), [EDITS.md](docs/guides/WRITE_BACK.md#for-administrators-write-back-is-off-as-shipped), tutorial 24, off by default):
+- **Write-back** ([WRITE_BACK.md](docs/architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals), [EDITS.md](docs/guides/APPROVALS_GUIDE.md#7-for-administrators-switching-write-back-on), tutorial 24, off by default):
   forms save through an edit log in the Drishti database, with four-eyes approval, a cluster mode, JDBC writes through an outbox, and
   reactive recomputes and live updates after each change.
 - **Branding from configuration:** the product name, owner, copyright and notices come from configuration only; guard tests.
@@ -1029,7 +1029,7 @@ designs kept ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#
 *2026-10-24.* **Sutra Next: screens that respond, built from one UI kit, designed in plain words; two public-data packs.**
 Everything since 2.6.7, including the patches pushed to main without a tag.
 
-- **Sutra Next** ([SUTRA_NEXT.md](docs/guides/RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms), [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md)):
+- **Sutra Next** ([SUTRA_NEXT.md](docs/guides/RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms), [SUTRA_DEVELOPER_GUIDE.md](docs/guides/BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies)):
   - **The Drishti UI kit** (`config/ui-kit/`): reusable fragments (`row-picker@1`, `field-list@1`, `cashflow-ladder@1`...), pack
     fragments (`trading/trade-table@1`), theme tokens and brand; every fragment and every Sutra carries a `doc:` docstring. Every pack
     screen now uses fragments, each proven to draw the same as before.
@@ -1038,7 +1038,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
   - **Refresh and freshness:** `refresh:` per panel or screen, with pause, resume and interval per person and Pause all; every panel says
     "updated N s ago", marks stale data and names a source that is not answering.
   - **Layout:** named areas on a 12-column grid, splits, tabs, sections, a sticky header, phone order; `user-can-arrange` per reader.
-  - **Forms** ([SUTRA_FORMS_GUIDE.md](docs/guides/WRITE_BACK.md)): edit beside a table, in its cells, or New in a guided drawer;
+  - **Forms** ([SUTRA_FORMS_GUIDE.md](docs/guides/APPROVALS_GUIDE.md)): edit beside a table, in its cells, or New in a guided drawer;
     money, date-time and linked-record fields (live server search), rules, computed defaults, masks and roles; **drafts only** until
     2.8.0's write-back.
   - **One server per screen** on a cluster; "your selections were reset" in words when a server goes away.

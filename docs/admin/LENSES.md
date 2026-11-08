@@ -539,7 +539,7 @@ Any feature preset can be overridden by its own setting too (for example `DRISHT
 site's `config/access/lenses.yaml` adds a lens to the registry or replaces a shipped one by its id (its modules, functions, cards and
 chips).
 
-**On a phone** ([MOBILE_DISPLAY.md](../guides/PACK_DEVELOPER_GUIDE.md#part-ix-designing-for-phones), [USER_GUIDE.md, On a phone](../guides/USER_GUIDE.md#on-a-phone)).
+**On a phone** ([MOBILE_DISPLAY.md](../guides/BUILD_GUIDE.md#32-designing-for-phones), [USER_GUIDE.md, On a phone](../guides/USER_GUIDE.md#on-a-phone)).
 A lens's `phone:` block sets and caps the phone tier of panels over every Sutra, after the site's `ui.phone`; `max:` is a cap no Sutra can
 exceed. `pages:` does the same for the parts of the VaR and exposure pages, and `home.phone` for the lens's landing. Drishti Risk ships one
 rule: a VaR contribution panel waits under *More on this page*.

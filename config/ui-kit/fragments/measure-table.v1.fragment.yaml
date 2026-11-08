@@ -59,7 +59,7 @@ doc:
     area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
   emits: []
   expects: []
-  # on a phone (docs/guides/PACK_DEVELOPER_GUIDE.md): a use or a Sutra's phone: overrides it
+  # on a phone (docs/guides/BUILD_GUIDE.md): a use or a Sutra's phone: overrides it
   phone: { tier: glance, rows: 5 }
   examples:
     - { use: measure-table@1, with: { id: by-desk, title: Exposure by desk, rows: $.BY_DESK, name-label: Desk, name: DESK, first-label: Exposure, first: EXPOSURE, second-label: "Limit used, %", second: USED, key: F3 } }

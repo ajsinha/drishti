@@ -993,7 +993,7 @@ fails any new class outside it that implements the function SPI's steps or emits
 
 ### 14.2 Phone tiers
 
-As the cube ([MOBILE_DISPLAY.md](../guides/PACK_DEVELOPER_GUIDE.md#part-ix-designing-for-phones)): the top-left of the grid and the headline are **must**; charts **glance**; expand,
+As the cube ([MOBILE_DISPLAY.md](../guides/BUILD_GUIDE.md#32-designing-for-phones)): the top-left of the grid and the headline are **must**; charts **glance**; expand,
 drill, explain and provenance **more**; the field list and the function playground **desk**.
 
 ### 14.3 Pivot charts: pick and choose

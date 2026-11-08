@@ -189,7 +189,7 @@ a day is loaded; a live source would make them tick.)
 
 - [Tutorial 9 · Reports](09-reports.md) runs a search on a schedule.
 - [USER_GUIDE.md › Search with a form](../guides/USER_GUIDE.md#search-with-a-form-form-pack) is the reference, including keyboard and phone use; the pack's author decides what the form offers
-  ([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#form-the-search-form-of-a-kind)).
+  ([BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#46-form-the-search-form-of-a-kind)).
 
 The form has no `drishti.py` command of its own: the search it writes is an ordinary command, which you can paste into the command line, send to `/api/v1/search` (as above) or put in a scheduled report.
 

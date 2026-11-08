@@ -575,7 +575,7 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
     layout = await request.app.state.layouts.context(request, vm, bool(embed))      # the user's own arrangement, if any
     grid_mine = await _grid_layout(request, vm, layout)                             # a Sutra with layout: (RACHANA_REFERENCE.md 13)
     panels = layout["panels"]
-    phone = await phone_routes.plan_for(request, vm, panels, bool(embed))   # a phone or tablet (docs/guides/PACK_DEVELOPER_GUIDE.md): its tiers
+    phone = await phone_routes.plan_for(request, vm, panels, bool(embed))   # a phone or tablet (docs/guides/BUILD_GUIDE.md): its tiers
     if phone and phone["device"] == "tablet":                       # a tablet keeps the page's layout, less its desk panels (under More)
         keep = {p.get("id") for p in phone["shown"]}
         panels = [p for p in panels if p.get("id") in keep]

@@ -320,4 +320,4 @@ The pack's files are written by `tools/packgen/funds/make.py`; its `--check` fai
 ## See also
 
 - [The funds pack](guides/funds.md): The 200 largest US mutual funds and ETFs with their holdings, from SEC Form N-PORT, Form N-CEN and the prospectus risk/return summaries (public domain), GLEIF (CC0): a fact sheet per fund, the look-through, the ETF against its index, the funds that hold a company. Refreshed by drishti.py feed run funds. Type FUND QQQ, HELD AAPL or TRACK SP500.
-- [Packs](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

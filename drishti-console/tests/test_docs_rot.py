@@ -245,8 +245,9 @@ def ignored(paths: list[str]) -> set[str]:
 
 # Files a worked example asks the reader to create (and another project's files the text points to), by document.
 EXAMPLE_PATHS = {
-    # the pack guide's worked example, and its Part VIII (was DEVELOPER_GUIDE.md, 2.9.7): the developer recipe's new files
-    "docs/guides/PACK_DEVELOPER_GUIDE.md": ("config/packs/helpdesk", "config/packs/library", "tools/packgen/library", "config/packs/my-bank",
+    # the build guide's worked examples, and the developer guide's recipes: the new files they create
+    "docs/guides/BUILD_GUIDE.md": ("config/packs/helpdesk", "config/packs/library", "tools/packgen/library", "config/packs/my-bank"),
+    "docs/guides/DEVELOPER_GUIDE.md": ("config/packs/my-bank",
                                             "MnemonicController.java", "MnemonicApiTest.java", "/Notice", "/db/NoticeEntity.java", "source_routes.py",
                                             "sources.html", "sources.js", "test_sources.py"),
     "docs/connectors/CONNECTORS.md": ("config/packs/equity-desk",),
@@ -543,8 +544,8 @@ def _ranges(text: str) -> set[str]:
 
 # Codes the documents name as reserved or retired on purpose (the error code table says which).
 RESERVED_CODES = {"DRS-3001"}
-# What a worked example adds: PACK_DEVELOPER_GUIDE Part VIII, section 5 builds an endpoint answering DRS-4005 and a drishti.notices setting.
-EXAMPLE_NAMES = {"docs/guides/PACK_DEVELOPER_GUIDE.md": {"DRS-4005", "drishti.notices.max-length"}}
+# What a worked example adds: DEVELOPER_GUIDE section 5 builds an endpoint answering DRS-4005 and a drishti.notices setting.
+EXAMPLE_NAMES = {"docs/guides/DEVELOPER_GUIDE.md": {"DRS-4005", "drishti.notices.max-length"}}
 
 
 def code_problems() -> list[str]:

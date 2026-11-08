@@ -124,9 +124,9 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
 ## Screens and Drishti Elements
 
 - **Sutras**: a product family's screen is a short, versioned YAML file; where there is none, the inference engine lays the screen out
-  from the shape of the data. One pipeline draws every entity of every kind ([SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md)).
+  from the shape of the data. One pipeline draws every entity of every kind ([BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies)).
 - **Domain packs** bring an industry's kinds, functions, Sutras, links, roles and connectors in YAML only; a pack can be made from your
-  own JSON Schema or JSON Lines ([PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md), [SCHEMA_TO_PACK_GUIDE.md](docs/guides/SCHEMA_TO_PACK_GUIDE.md),
+  own JSON Schema or JSON Lines ([BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md), [BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack),
   [tutorial 5](docs/tutorials/05-build-a-pack.md)).
 - **The Build home** (`/build`) is the one place for what people build: connectors, lakes, tables and models, Sutras, packs, reports and
   boards, pivot views, functions, VaR baskets, each with what it uses and what uses it, and the drafts waiting for review
@@ -267,8 +267,8 @@ only those of the modules they may use.
 |---|---|
 | use Drishti | [USER_GUIDE.md](docs/guides/USER_GUIDE.md), [VAR_GUIDE.md](docs/guides/VAR_GUIDE.md), [EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md), [PIVOT_GUIDE.md](docs/guides/PIVOT_GUIDE.md), [REPORTS_GUIDE.md](docs/guides/REPORTS_GUIDE.md) |
 | work with economies and the public sector | [PUBLIC_SECTOR_GUIDE.md](docs/guides/PUBLIC_SECTOR_GUIDE.md), [FUNDS_GUIDE.md](docs/guides/FUNDS_GUIDE.md), [EXTERNAL_DATA.md](docs/guides/EXTERNAL_DATA.md) |
-| add data or an industry | [DATA_GUIDE.md](docs/guides/DATA_GUIDE.md), [DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md), [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md), [TABLES_GUIDE.md](docs/guides/TABLES_GUIDE.md) |
-| build screens or use the libraries | [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md), [EMBED_GUIDE.md](docs/guides/EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app), [ELEMENTS_API.md](docs/guides/ELEMENTS_API.md) |
+| add data or an industry | [DATA_GUIDE.md](docs/guides/DATA_GUIDE.md), [DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md), [BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md), [TABLES_GUIDE.md](docs/guides/TABLES_GUIDE.md) |
+| build screens or use the libraries | [BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies), [EMBED_GUIDE.md](docs/guides/EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app), [ELEMENTS_API.md](docs/guides/ELEMENTS_API.md) |
 | run and administer it | [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md), [OPERATIONS.md](docs/admin/OPERATIONS.md), [LENSES.md](docs/admin/LENSES.md), [CONFIGURATION.md](docs/admin/CONFIGURATION.md) |
 | develop on it | [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md), [DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md), [API_REFERENCE.md](docs/guides/API_REFERENCE.md), [CLI_GUIDE.md](docs/guides/CLI_GUIDE.md) |
 

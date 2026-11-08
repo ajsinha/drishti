@@ -551,7 +551,7 @@ def create_app(settings: Settings) -> FastAPI:
     from core import engines as _engines_state
     templates.env.globals["engine_available"] = _engines_state.engine_available   # an engine running here or on a peer (Admin -> Data out: flight)
     from core import phone as _phone
-    templates.env.globals["phone_parts"] = _phone.page_parts         # the phone display on the VaR, exposure and landing pages (docs/guides/PACK_DEVELOPER_GUIDE.md 8)
+    templates.env.globals["phone_parts"] = _phone.page_parts         # the phone display on the VaR, exposure and landing pages (docs/guides/BUILD_GUIDE.md 8)
     templates.env.globals["phone_everything"] = _phone.everything
     app.state.servers = catalogue
     from core.backend_watch import BackendWatch

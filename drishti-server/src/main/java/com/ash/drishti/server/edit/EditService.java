@@ -39,7 +39,7 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 /**
- * Write-back's front door (WRITE_BACK.md › The design and its reasons, sections 6, 9 and 12; section 18.1 for forms): the UI, the CLI and the API make the same change
+ * Write-back's front door (APPROVALS_GUIDE.md › The design and its reasons, sections 6, 9 and 12; section 18.1 for forms): the UI, the CLI and the API make the same change
  * requests here. A submission is checked as the person (the site switch, the edit power, the kind, masks, the field's form and roles, the
  * target, a reason when required, a restatement's role), then either waits for approval ({@code drishti_edit_request}) or is appended
  * to its lane and acknowledged once committed. A form's draft is submitted by its id: the server reads the draft, turns each record into
@@ -187,7 +187,7 @@ public final class EditService {
         return build(p, body, first, kind, entity, list, origin);
     }
 
-    /** A form's draft turned into changes (WRITE_BACK.md 18.1, step 3): one per record, an item per changed field. */
+    /** A form's draft turned into changes (APPROVALS_GUIDE.md 18.1, step 3): one per record, an item per changed field. */
     private List<Change> fromDraft(Principal p, JsonNode body) {
         String id = body.path("draft").asText("");
         if (!DRAFT.matcher(id).matches()) {

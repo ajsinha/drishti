@@ -219,4 +219,4 @@ The pack's files are written by `tools/packgen/publicsector/make.py`; its `--che
 ## See also
 
 - [The official-news pack](guides/official-news.md): Press releases and notices of central banks, regulators and governments from their own feeds (Fed, ECB, BoC, BoE, SEC, OSFI, Federal Register, Canada Gazette), filled daily by the official-news feed into newslake, each publisher's terms recorded. Type PRESS PRESS-FED.
-- [Packs](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

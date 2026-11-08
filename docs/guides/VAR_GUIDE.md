@@ -1713,7 +1713,7 @@ for a sample of existing trades in the scope the engine reprices them and compar
 the what-if panel (*parity with the batch: 0.02%*); a scope whose check fails beyond tolerance shows its what-if numbers in amber with
 the reason. For the sandbox the engine returns before and after VaR, ES and limit use; each change's incremental VaR (in the order
 listed, and standalone); the new trade's component VaR in the scope; overlaid distributions; and a waterfall from before to after.
-*Book via write-back…* turns a sandbox's change into a change request ([WRITE_BACK.md](WRITE_BACK.md#16-the-design-and-its-reasons)); once applied,
+*Book via write-back…* turns a sandbox's change into a change request ([APPROVALS_GUIDE.md](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals)); once applied,
 the event trigger recomputes the real scopes; the sandbox is left as it was. Without QLRisk declared stable, what-if offers only the
 changes that need no pricing.
 
@@ -5175,7 +5175,7 @@ wholly inside, so 8,420 leaves are summed (about 34 MB, about 10 ms); the stamp 
 | V3 | baskets, entitlements by node (`positions`, `aggregate`), audit entries, official numbers; captures (new, product owner 2026-10-24). Accepted: an aggregate-only viewer sees a division's numbers and never a position; every answer is audited | built |
 | *VaR complete* parts 1 and 2 | retired stored kinds, derived positions, official captures and their publication, 7-year retention (part 1); the tiered memory, the benchmark, the computed kind, the what-if, `drishti.py var` (part 2) | built |
 | V4 | what-if: sandboxes, unwind and linear scaling, the reprice check; pricing through QLRisk if its API is stable; the QuantLib-Java parity. Accepted: a sandbox removing three trades matches the scope minus those trades exactly; with QLRisk, a new swap's incremental VaR in under 3 s | partly: copies of booked trades and vectors priced elsewhere ([section 8.2](#82-the-what-if-the-java-engine)); pricing planned ([section 8.4](#84-what-if-pricing-and-intraday-recomputes)) |
-| V5 | intraday: `write-back` and `data-version` triggers, the intraday layer, per-event impacts, pushes ([WRITE_BACK.md › The design and its reasons, section 18](WRITE_BACK.md#18-saving-through-connectors-triggers-and-viewers)). Accepted: two traders' amendments to one book: each sees their own impact, both see one shared number stamped with both events | planned |
+| V5 | intraday: `write-back` and `data-version` triggers, the intraday layer, per-event impacts, pushes ([APPROVALS_GUIDE.md › The design and its reasons, section 18](../architecture/ARCHITECTURE.md#317-the-applied-event-triggers-and-viewers)). Accepted: two traders' amendments to one book: each sees their own impact, both see one shared number stamped with both events | planned |
 | V6 | scale: sharding across Drishti\*net, the targets measured on a real server. Accepted: the measured numbers published; any target missed has a stated reason and plan | the hot store built (part 2); sharding built ([section 28](#28-sharding-across-drishtinet)) |
 
 **Tests.** The design asked for: additivity (a scope's vector equals the sum of its trades'; node vectors equal their children's sums);
@@ -5255,7 +5255,7 @@ annual report's trading VaR table (built); the US needs 10-day VaR and stressed 
 | **Drishti Risk** (edition `risk`, risk managers) | built | the same engine and commands (`VAR`, `VRES`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`, `SMAT`); the three landings: the Risk desk's VaR and ES tiles, the backtest and VaR by desk with limit use; the command landing's VaR chips and baskets; the risk map's hierarchy with VaR and limit use per node ([LENSES.md](../admin/LENSES.md#5-drishti-risk), [RISK_LENS.md](../lenses/README.md#12-what-it-answers-today)) |
 | **Drishti Trading** (edition `trading`, traders and desk heads) | built | "my book's" VaR, path and contributions; VaR limits; `SMAT`; the **new-trade check** from one VaR what-if and one pre-deal check ([TRADING_LENS.md](../lenses/README.md#222-the-new-trade-check)); no `SPV`, `FXS`, `SSET` or `VOFF` |
 | **Drishti Market** and **Drishti World** | built | no VaR (`VAR` and `SMAT` off) |
-| A phone | built | the explorer's phone layout ([section 3.8](#38-on-a-phone)); the configured phone tiers are a design ([MOBILE_DISPLAY.md](PACK_DEVELOPER_GUIDE.md#part-ix-designing-for-phones)) |
+| A phone | built | the explorer's phone layout ([section 3.8](#38-on-a-phone)); the configured phone tiers are a design ([MOBILE_DISPLAY.md](BUILD_GUIDE.md#32-designing-for-phones)) |
 | **Oversight**, **CRO** and **CIO** lenses; the **market risk cube** | design, not built | why VaR moved, breaches and escalation, the committee pack ([OVERSIGHT_LENS.md](../lenses/README.md#5-oversight-lens)); the CRO's VaR against risk appetite ([CRO_LENS.md](../lenses/README.md#8-cro-lens)); the CIO's view of whether the risk data behind VaR is on time and trustworthy: the 7am risk-ready time, official captures, the hot files' disk ([CIO_LENS.md](../lenses/README.md#9-cio-lens)); a pivot with correct non-additive VaR totals ([MR_CUBE_LENS.md](../lenses/README.md#6-mr-cube-lens)) |
 
 Under every edition the engine is the same: any scope, any currency, intraday, official records, the what-if, the API and the CLI. The

@@ -204,11 +204,11 @@ routes: { quote: yfinance }
   - { id: history, kind: line, source: "link($.QUOTE_ID, 'quote')", rows: $.HISTORY, x: DATE, y: CLOSE, fmt: price2 }
 ```
 
-See the [`news-and-markets` sample pack](../../docs/guides/PACK_DEVELOPER_GUIDE.md#sample-packs). **Offline** (`DRISHTI_OFFLINE=true`,
+See the [`news-and-markets` sample pack](../../docs/guides/BUILD_GUIDE.md#315-sample-packs). **Offline** (`DRISHTI_OFFLINE=true`,
 [CONFIGURATION](../../docs/admin/CONFIGURATION.md#drishtioffline--offline-mode-no-internet)) this connector never starts and shows
 *off (offline mode)* in Admin → Connectors; the pack's `news-store` then serves `quote` from a snapshot captured through this connector
 with `range: 1y` (`drishti.py testdata capture-market`;
-[PACK_DEVELOPER_GUIDE.md](../../docs/guides/PACK_DEVELOPER_GUIDE.md#news-and-markets-and-world-economy-offline)).
+[BUILD_GUIDE.md](../../docs/guides/BUILD_GUIDE.md#317-the-demo-lakes-where-the-seven-packs-read-their-data)).
 
 ## How it is built
 

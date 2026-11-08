@@ -62,7 +62,7 @@ release, and because a lake can be terabytes.
 
 | You copied | What happens | What you do |
 |---|---|---|
-| a **new pack** (a folder with a `pack.yaml`) | the packs folder is watched (`drishti.packs.watch`, default `auto`): after the copy has been quiet for 750 ms the pack is checked with the loaded ones, then loaded and remembered in `data/packs/added.yaml`. One that does not check out is not loaded; Admin → Packs and Health say why, and it is tried again by itself | nothing; or Admin → Packs → **Load** at once. With `drishti.packs.watch: off` only the Admin button acts. Details: [PACK_DEVELOPER_GUIDE.md, Live reload](PACK_DEVELOPER_GUIDE.md#live-reload-the-packs-folder-is-watched) |
+| a **new pack** (a folder with a `pack.yaml`) | the packs folder is watched (`drishti.packs.watch`, default `auto`): after the copy has been quiet for 750 ms the pack is checked with the loaded ones, then loaded and remembered in `data/packs/added.yaml`. One that does not check out is not loaded; Admin → Packs and Health say why, and it is tried again by itself | nothing; or Admin → Packs → **Load** at once. With `drishti.packs.watch: off` only the Admin button acts. Details: [BUILD_GUIDE.md, Live reload](BUILD_GUIDE.md#296-live-reload-the-packs-folder-is-watched) |
 | a **new version of a loaded pack** | the same watcher checks it again and swaps it in: new mnemonics, kinds, roles, links, Sutras and connector templates apply with no restart. A bad edit keeps the last good version running and shows the problem on the pack's row | nothing; watch Admin → Packs for a problem |
 | **Sutra files** into a loaded pack's `sutras/` | the watcher debounces (250 ms) and reloads | nothing; see `sutraProblems` in Admin → Health if a file is invalid (the last good version stays live) |
 | **data** | the connector sees a new Delta version or a new file at its next refresh | nothing; a new business date appears within a minute |
@@ -168,7 +168,7 @@ drishti: trading-1.0.0.tar.gz: sha256 does not match trading-1.0.0.tar.gz.sha256
 
 Use `--server-version 1.10.0` to check a bundle against an older server than your checkout, `--json` for a machine-readable report. Exit codes: 0 verified, 1 not verified, 2 usage.
 The `.sha256` file protects against damage and accidents; if the artifact travels through an untrusted store, publish it
-signed instead ([PACK_DEVELOPER_GUIDE.md, registry](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which); `pack publish`/`verify --registry`).
+signed instead ([BUILD_GUIDE.md, registry](BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which); `pack publish`/`verify --registry`).
 
 ## 5. Deploy by copying
 
@@ -268,7 +268,7 @@ All of these are plain text files, so they are copied like anything else.
 
 - **Sutras** (`*.sutra.yaml`) made by `sutra design`, `sutra gen`/`sutragen` or the Screen Designer are ordinary files. Copy them into a pack's `sutras/<folder>/`. On a **running** server they hot-reload ([RACHANA_REFERENCE.md, Editing files on disk](RACHANA_REFERENCE.md#hot-reload-the-workbench-and-governance)): a valid file replaces the old one at once, an invalid one is reported and the last good version stays live, a deleted file's Sutras disappear.
 - **Designer export:** `drishti.py design export <id> -o design.zip` writes a zip of the Sutra and its samples. Unzip it and copy the `.sutra.yaml` into the pack (git first, then the next bundle); or hot-copy it onto a server for an urgent fix, and put the same file into git afterwards so the next bundle contains it.
-- **`config/about.yaml`** (and `about.<lang>.yaml`): copy into `<pack>/config/`. Check it with `pack about-check config/packs/<domain>/<name>` before you ship ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md)).
+- **`config/about.yaml`** (and `about.<lang>.yaml`): copy into `<pack>/config/`. Check it with `pack about-check config/packs/<domain>/<name>` before you ship ([BUILD_GUIDE.md](BUILD_GUIDE.md)).
 
 Prefer shipping a Sutra change as a **new bundle** (a version, a checksum, a rollback). Hot-copy is for emergencies, and
 `pack verify <deployed folder>` will then report the drift until you redeploy a bundle.
@@ -447,8 +447,8 @@ More in [GETTING_STARTED.md (Windows)](GETTING_STARTED.md#drishti-on-windows).
 | new data does not show | the connector has not refreshed yet, or the layout differs from the pack's `ingest:` block | wait a minute; check the path layout in section 8 |
 | a partition appears half-loaded | it was copied in place | copy under a dot name and rename; for Delta copy `_delta_log` last |
 
-See also: [CLI_GUIDE.md](CLI_GUIDE.md) (every command), [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) (turning packs on, Load, the registry),
-[PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md) (building a pack), [OPERATIONS.md](../admin/OPERATIONS.md) (install, services, backups).
+See also: [CLI_GUIDE.md](CLI_GUIDE.md) (every command), [BUILD_GUIDE.md](BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) (turning packs on, Load, the registry),
+[BUILD_GUIDE.md](BUILD_GUIDE.md) (building a pack), [OPERATIONS.md](../admin/OPERATIONS.md) (install, services, backups).
 
 ## 16. `pack make`: one folder to deploy
 
@@ -473,7 +473,7 @@ When what you have is **JSON Schema** (and perhaps JSON Lines), `pack make --sch
 `MANIFEST.json`, `README.txt`), and **Build → New pack** makes the same bundle in the browser, with a preview of every Sutra, then hands it to
 **Admin → Packs → Deploy archive** (section 17.1): checked, previewed, confirmed, rolled back there. The bundle is byte-for-byte the format of `pack bundle`, so every step of
 sections 4 to 10 applies unchanged. Schemas alone give a pack that serves its samples (no connector, no data); with real documents the folder also has the dated store. A generated pack
-names its sources by logical connector name only. Rules and pictures: [DATA_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md).
+names its sources by logical connector name only. Rules and pictures: [DATA_GUIDE.md](BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack).
 
 <a id="17-deploy-from-admin--packs-change-a-data-source-history-and-roll-back"></a>
 ## 17. Deploy from Admin → Packs, connectors, history and roll back
@@ -694,7 +694,7 @@ Everything an administrator installs on a Drishti site is a file or a folder tha
 
 The same safe uninstall is on the pages you already use: **Admin → Packs** (an *Uninstall…* button on each pack), **Admin → Connectors** (on each connector with a
 file, the list and the connector's own page) and **Admin → BI** (a *Shipped files* table). They all open the same dialog, so the answer is the same wherever you
-start. The folders are still watched: an artifact you add, edit or delete by hand is picked up ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#live-reload-the-packs-folder-is-watched),
+start. The folders are still watched: an artifact you add, edit or delete by hand is picked up ([BUILD_GUIDE.md](BUILD_GUIDE.md#296-live-reload-the-packs-folder-is-watched),
 [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md), [config/bi/README.md](../../config/bi/README.md)). This page is the careful way to do the same.
 
 ### 18.1 The list
@@ -797,7 +797,7 @@ page then says what it did and where it went.
 The *Install* section of the page has three cards:
 
 - **A pack.** Upload an archive on **Admin → Packs → Deploy an archive** (`.tar.gz` or `.zip`): it is verified and previewed (breaking changes marked) before
-  anything changes, and the version it replaces is kept for roll-back ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which)). The card links there.
+  anything changes, and the version it replaces is kept for roll-back ([BUILD_GUIDE.md](BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which)). The card links there.
 - **A connector.** **Admin → Connectors → New connector**: a form or YAML, tested before it is saved ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)).
 - **A BI file.** Choose a file named `<name>.<kind>.yaml` (`kind` is `table`, `model`, `report`, `board`, `notebook` or `python`). A dataset file in BI's old
   form (`<name>.dataset.yaml`) is refused with `DRS-9196`: migrate it with `drishti.py tables migrate` and upload the tables and model it writes. **Nothing is written yet**: the server
@@ -944,5 +944,5 @@ $ printf 'dataset: lab-more\ntitle: x\n' | curl -s -X POST --data-binary @- -H '
 | A BI report is blank after its dataset was disabled | A hidden dataset is not in the catalogue; **Enable** it again. |
 | The page says *administrators only* | Only an administrator may use it; a token cannot (`token-never`). |
 
-See also: [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which), [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md), [REPORTS_GUIDE.md](REPORTS_GUIDE.md), [OPERATIONS.md](../admin/OPERATIONS.md),
+See also: [BUILD_GUIDE.md](BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which), [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md), [REPORTS_GUIDE.md](REPORTS_GUIDE.md), [OPERATIONS.md](../admin/OPERATIONS.md),
 [API_REFERENCE.md](API_REFERENCE.md#223-administration-artifacts-apiv1adminartifacts), [TROUBLESHOOTING.md](TROUBLESHOOTING.md) and [tutorial 17](../tutorials/17-run-it-in-production.md).

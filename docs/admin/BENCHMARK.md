@@ -843,7 +843,7 @@ on a server.**
 ### 8.1 A million trades a day on Delta
 
 Measured 2026-10-01 (server heap 15.6 GB), the trading pack's lake laid out as declared
-([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#large-kinds-the-lake-layout)), 1,000,000 trades a day over three business days
+([BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#51-large-kinds-the-lake-layout)), 1,000,000 trades a day over three business days
 (5.2 GB; `tools/samplegen/bulk_trades.py --trades 1000000 --days 3`), times over HTTP:
 
 | What | Time |

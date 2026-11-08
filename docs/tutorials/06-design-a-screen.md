@@ -424,7 +424,7 @@ field, a `*_DATE` column a date field:
         - { id: maturity_date, label: Maturity, bind: MATURITY_DATE, type: date }
 ```
 
-Rules, money and linked-record fields, masks and roles are in [WRITE_BACK.md](../guides/WRITE_BACK.md). Saving keeps a
+Rules, money and linked-record fields, masks and roles are in [APPROVALS_GUIDE.md](../guides/APPROVALS_GUIDE.md). Saving keeps a
 **draft** for each person; nothing is written to the source system until write-back.
 
 **Command line.** Your drafts, checked again on the server with the same rules:
@@ -562,8 +562,8 @@ or `drishti.py design propose <id>`.
   [its section 31](../guides/RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid) every mode of the designer in full;
   [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) lists every option of every panel and control;
   [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one) shows each of the 22 panel kinds with a picture.
-- [SUTRA_DEVELOPER_GUIDE.md](../guides/SUTRA_DEVELOPER_GUIDE.md) is the language guide; its
-  [section 11a](../guides/SUTRA_DEVELOPER_GUIDE.md#11a-fragments-events-children-refresh-and-forms) writes Part B's screen by hand.
+- [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies) is the language guide; its
+  [section 11a](../guides/BUILD_GUIDE.md#201-fragments-events-children-refresh-and-forms) writes Part B's screen by hand.
 
 ## If something goes wrong
 
@@ -579,5 +579,5 @@ or `drishti.py design propose <id>`.
 | a part of the Describe line is red | the sentence beside it says why; the result says *Fix the red part to see the screen* until it reads |
 | a refresh interval faster than 5 s is not offered | the console's `views.refresh_min_seconds` (default 5) |
 | `DRS-2057` in `sutra lint` | an event or source reads a panel that does not exist (a renamed panel id) |
-| `DRS-2058` | the `form:` does not read: an unknown key or field type ([WRITE_BACK.md](../guides/WRITE_BACK.md)) |
+| `DRS-2058` | the `form:` does not read: an unknown key or field type ([APPROVALS_GUIDE.md](../guides/APPROVALS_GUIDE.md)) |
 | `DRS-2059` | the `layout:` names an area the picture does not have |

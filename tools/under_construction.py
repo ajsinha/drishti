@@ -58,7 +58,7 @@ The data stays where it is; only what is displayed changes. **One mechanism:** t
 document (strip items and kv or table columns by their bind, panels by their id), so the console, the phone display, pivots and the client
 renderer read the same answer (the figure's tone is `uc`, drawn as the chip); the console reads the same file for its menu items and help
 pages. A new item that depends on unbuilt work is registered in the same change
-([PACK_DEVELOPER_GUIDE.md, Unbuilt work](../guides/PACK_DEVELOPER_GUIDE.md#unbuilt-work-the-under-construction-registry)).
+([BUILD_GUIDE.md, Unbuilt work](../guides/BUILD_GUIDE.md#unbuilt-work-the-under-construction-registry)).
 
 Settings: `drishti.under-construction.file` (server, `DRISHTI_UNDER_CONSTRUCTION_FILE`, default `./config/under-construction.yaml`, else the
 file beside the packs folder) and `under_construction.file` (console, default `../config/under-construction.yaml`).

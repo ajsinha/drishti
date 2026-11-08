@@ -282,7 +282,7 @@ drishti-console/.venv/bin/python tools/drishti.py data ingest --from your-folder
 `--pack`, give `--domain` and `--key` per kind. Each file goes under the date in its name (`trade.2026-11-03.jsonl`), or `--as-of`, else
 the business today ([DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)); `--date FIELD` only names a field whose differing rows are
 counted. See
-[Generating a pack from JSON Lines](../guides/PACK_DEVELOPER_GUIDE.md#generating-a-pack-from-json-lines) and
+[Generating a pack from JSON Lines](../guides/BUILD_GUIDE.md#10-a-pack-from-json-lines-pack-new) and
 [CLI_GUIDE.md](../guides/CLI_GUIDE.md).
 
 ## Your bank's names

@@ -15,7 +15,7 @@
  */
 /* Where ViewModels and frames come from (EMBED_GUIDE.md section 10): the console's own JSON (/api/view/{kind}/{id}, the person's
    session) by default, with a bearer token when the host gives a token provider (the token exchange of ELEMENTS.md section 8), and the
-   device class (X-Drishti-Device, docs/guides/PACK_DEVELOPER_GUIDE.md section 6) when the host says it. Every failure is a problem with a DRS code, words
+   device class (X-Drishti-Device, docs/guides/BUILD_GUIDE.md section 6) when the host says it. Every failure is a problem with a DRS code, words
    and the fix. */
 
 const FIXES = {
