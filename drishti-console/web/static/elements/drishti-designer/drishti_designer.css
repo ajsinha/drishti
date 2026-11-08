@@ -91,10 +91,37 @@
 .dd-fkeys { display: flex; flex-wrap: wrap; gap: 12px; font-family: var(--d-font-mono); font-size: 11px; color: var(--d-muted); }
 .dd-fkeys b { color: var(--d-ink); margin-right: 3px; }
 
+/* a studio's parts: the open documents above the editor, the dock under it, the header's links and choices, the rail folded away */
+.dd-docs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--d-border); min-height: 28px; }
+.dd-docs[hidden] { display: none; }
+.dd-doc { display: inline-flex; align-items: center; border: 1px solid var(--d-border); border-bottom: 0; border-radius: 4px 4px 0 0; background: var(--d-surface-2); }
+.dd-doc.dd-on { background: var(--d-surface); border-top: 2px solid var(--d-accent); }
+.dd-doc-tab { padding: 4px 8px; font-size: 12px; color: var(--d-ink); text-decoration: none; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dd-doc-x { background: none; border: 0; color: var(--d-muted); cursor: pointer; padding: 2px 6px; font-size: 13px; }
+.dd-doc-x:hover { color: var(--d-ink); }
+.dd-doc-tab:focus-visible, .dd-doc-x:focus-visible, .dd-rail-toggle:focus-visible { outline: 2px solid var(--d-link); outline-offset: -2px; }
+.dd-dock { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius, 6px); }
+.dd-dock-tabs { display: flex; border-bottom: 1px solid var(--d-border); }
+.dd-dock-folded .dd-dock-tabs { border-bottom: 0; }
+.dd-dock-tab { flex: 0 0 auto; padding: 6px 12px; }
+.dd-dock-count { font-size: 11px; color: var(--d-muted); }
+.dd-dock-count.dd-bad { color: var(--d-bad); font-weight: 700; }
+.dd-dock-body { padding: 6px 12px 10px; max-height: 16rem; overflow: auto; }
+.dd-dock-body[hidden], .dd-dock-pane[hidden] { display: none; }
+a.dd-btn { text-decoration: none; display: inline-block; }
+.dd-btn[aria-pressed="true"] { background: var(--d-accent-tint); border-color: var(--d-accent); color: var(--d-accent-strong, var(--d-ink)); }
+.dd-btn[hidden], .dd-choice[hidden] { display: none; }
+.dd-choice { width: auto; max-width: 16rem; }
+.dd-obj-badge { margin-left: 6px; font-size: 10px; padding: 0 5px; border: 1px solid var(--d-border); border-radius: 8px; color: var(--d-muted); }
+a.dd-obj { text-decoration: none; }
+.dd-obj[aria-current="page"] { background: var(--d-surface-2); border-left-color: var(--d-accent); font-weight: 600; }
+.dd-rail-off .dd-rail { display: none; }
+
 /* the layouts: studio (g7 A: rail | main with the YAML docked under it | inspector | preview), side by side (B), terminal (C) */
 .dd-preview-off .dd-side { display: none; }
 .dd-layout-side-by-side .dd-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .7fr); gap: 10px; align-items: start; }
-.dd-layout-side-by-side .dd-main > .dd-ro { grid-column: 1 / -1; }
+.dd-layout-side-by-side .dd-main > .dd-ro, .dd-layout-side-by-side .dd-main > .dd-docs, .dd-layout-side-by-side .dd-main > .dd-dock { grid-column: 1 / -1; }
+.dd-layout-side-by-side .dd-visual:has(+ .dd-yaml-panel[hidden]) { grid-column: 1 / -1; }                       /* no YAML beside it: the editor takes the width */
 .dd-layout-side-by-side .dd-rail-panel + .dd-rail-panel { border-top: 1px solid var(--d-border); margin-top: 8px; padding-top: 8px; }
 .dd-layout-side-by-side .dd-ptabs { display: none; }
 .dd-insp-side.dd-card { position: fixed; z-index: 40; left: var(--dd-card-l, auto); top: var(--dd-card-t, auto); right: auto; width: 300px; max-height: 70vh; box-shadow: var(--d-shadow); display: none; }
@@ -161,4 +188,5 @@ body.dd-dragging, body.dd-dragging * { cursor: grabbing; user-select: none; }
   .dd-layout-side-by-side .dd-main { grid-template-columns: minmax(0, 1fr); }
   .dd-objects, .dd-side { max-height: none; }
 }
+@media (pointer: coarse) { .dd-doc-x, .dd-dock-tab, .dd-rail-toggle, a.dd-obj { min-height: 44px; min-width: 44px; } }
 @media (prefers-reduced-motion: reduce) { .dd-item, .dd-ghost { transition: none; } }

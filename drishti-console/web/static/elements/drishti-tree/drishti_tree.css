@@ -162,6 +162,13 @@
 .dt-mark.dt-badge { border: 1px solid currentColor; border-radius: 999px; padding: 0 7px; font-size: 0.82em; font-weight: 600; }
 .dt-mark.dt-mono { font-family: var(--d-font-mono); }
 .dt-mark.dt-clip { max-width: 18em; overflow: hidden; text-overflow: ellipsis; }
+.dt-obtn { display: inline-flex; align-items: baseline; gap: 6px; background: none; border: 0; padding: 0 2px; margin: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; border-radius: 3px; min-width: 0; }
+.dt-obtn:hover { background: var(--d-highlight, var(--d-surface-2)); }
+.dt-oline-text { display: inline-flex; align-items: baseline; gap: 6px; }
+a.dt-mark { text-decoration: underline; }
+.dt-oact { background: none; border: 1px solid var(--d-border); border-radius: 4px; color: var(--d-muted); font: inherit; font-size: 0.85em; padding: 0 6px; cursor: pointer; }
+.dt-oact:hover:not(:disabled) { color: var(--d-ink); }
+.dt-oact:disabled { opacity: .5; cursor: not-allowed; }
 .dt-tone-accent { color: var(--d-accent); }
 .dt-tone-link { color: var(--d-link); }
 .dt-tone-good { color: var(--d-ok); }
@@ -180,3 +187,4 @@
 .dt-outline .dg-row.dt-drop-inside > .dg-cell { background: var(--d-surface-2); box-shadow: inset 0 0 0 1px var(--d-accent); }
 
 @media (max-width: 760px) { .dt-body { grid-template-columns: minmax(0, 1fr); } .dt-side { border-left: 0; border-top: 1px solid var(--d-border); } }
+@media (pointer: coarse) { .dt-obtn, .dt-oact { min-height: 44px; min-width: 44px; } }

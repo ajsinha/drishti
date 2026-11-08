@@ -1400,33 +1400,8 @@
     }
     return { "PANEL_MODES": PANEL_MODES, "readTableTree": readTableTree, "isChain": isChain, "TreePanel": TreePanel, "treeTables": treeTables };
   })();
-  /* ---- src/drishti_tree-outline.js ---- */
-  __m["src/drishti_tree-outline.js"] = (function () {
-    var h = __lib("drishti-core").h, announce = __lib("drishti-core").announce, EventBus = __lib("drishti-core").EventBus, trackPointer = __lib("drishti-core").trackPointer;
-    var HierarchyModel = __m["src/drishti_tree-model.js"].HierarchyModel;
-    var keyMove = __m["src/drishti_tree-io.js"].keyMove;
-    var Tree = __m["src/drishti_tree-view.js"].Tree;
-    const OUTLINE_TONES = Object.freeze(['muted', 'accent', 'link', 'good', 'warn', 'bad']);
-    function outlineFilter(model, q, textOf) {
-      const words = String(q || '').toLowerCase().split(/\s+/).filter(Boolean);
-      if (!words.length) { return { hits: [], keep: null }; }
-      const wordsOf = textOf || ((n) => n.label + ' ' + n.id + ' ' + n.kind), hits = [], keep = new Set();
-      model.all().forEach((n) => {
-        const hay = String(wordsOf(n) || '').toLowerCase();
-        if (!words.every((w) => hay.indexOf(w) >= 0)) { return; }
-        hits.push(n.id);
-        for (let p = n; p && !keep.has(p.id); p = p.parent) { keep.add(p.id); }
-      });
-      return { hits: hits, keep: keep };
-    }
-    function outlineKey(key, model, order, at) {
-      if (['ArrowDown', 'ArrowUp', 'Home', 'End', 'ArrowRight', 'ArrowLeft', 'Enter', ' '].indexOf(key) < 0) { return null; }
-      const mv = keyMove(key, model, order, at, true);
-      if (!mv) { return null; }
-      if (key !== 'Enter' && key !== ' ') { return mv; }
-      const n = model.node(mv.to);
-      return n && n.children.length ? { to: n.id, act: model.isOpen(n.id) ? 'close' : 'open' } : { to: mv.to, act: 'detail' };
-    }
+  /* ---- src/drishti_tree-nodes.js ---- */
+  __m["src/drishti_tree-nodes.js"] = (function () {
     function flattenTree(nodes, closed) {
       const out = [];
       const walk = (list, level, parent) => list.forEach((n, i) => {
@@ -1481,6 +1456,37 @@
       });
       return out;
     }
+    return { "flattenTree": flattenTree, "findNode": findNode, "isWithin": isWithin, "moveNode": moveNode, "nodesSource": nodesSource, "rowDataset": rowDataset };
+  })();
+  /* ---- src/drishti_tree-outline.js ---- */
+  __m["src/drishti_tree-outline.js"] = (function () {
+    var h = __lib("drishti-core").h, announce = __lib("drishti-core").announce, EventBus = __lib("drishti-core").EventBus, trackPointer = __lib("drishti-core").trackPointer;
+    var HierarchyModel = __m["src/drishti_tree-model.js"].HierarchyModel;
+    var keyMove = __m["src/drishti_tree-io.js"].keyMove;
+    var Tree = __m["src/drishti_tree-view.js"].Tree;
+    var nodesSource = __m["src/drishti_tree-nodes.js"].nodesSource, rowDataset = __m["src/drishti_tree-nodes.js"].rowDataset;
+    const OUTLINE_TONES = Object.freeze(['muted', 'accent', 'link', 'good', 'warn', 'bad']);
+    const dataAttrs = (a) => { const out = {}; Object.keys(a || {}).forEach((k) => { if (/^data-(?!dt-)[a-z0-9-]+$/.test(k) && a[k] !== null && a[k] !== undefined) { out[k] = String(a[k]); } }); return out; };
+    function outlineFilter(model, q, textOf) {
+      const words = String(q || '').toLowerCase().split(/\s+/).filter(Boolean);
+      if (!words.length) { return { hits: [], keep: null }; }
+      const wordsOf = textOf || ((n) => n.label + ' ' + n.id + ' ' + n.kind), hits = [], keep = new Set();
+      model.all().forEach((n) => {
+        const hay = String(wordsOf(n) || '').toLowerCase();
+        if (!words.every((w) => hay.indexOf(w) >= 0)) { return; }
+        hits.push(n.id);
+        for (let p = n; p && !keep.has(p.id); p = p.parent) { keep.add(p.id); }
+      });
+      return { hits: hits, keep: keep };
+    }
+    function outlineKey(key, model, order, at) {
+      if (['ArrowDown', 'ArrowUp', 'Home', 'End', 'ArrowRight', 'ArrowLeft', 'Enter', ' '].indexOf(key) < 0) { return null; }
+      const mv = keyMove(key, model, order, at, true);
+      if (!mv) { return null; }
+      if (key !== 'Enter' && key !== ' ') { return mv; }
+      const n = model.node(mv.to);
+      return n && n.children.length ? { to: n.id, act: model.isOpen(n.id) ? 'close' : 'open' } : { to: mv.to, act: 'detail' };
+    }
     const OID = '__oid', OPARENT = '__oparent', OLABEL = '__olabel', OKIND = '__okind';
     const DROPS = ['dt-drop-before', 'dt-drop-after', 'dt-drop-inside'];
     class TreeOutline {
@@ -1526,6 +1532,24 @@
         host.addEventListener('pointerdown', this.onDown);
         host.addEventListener('dblclick', this.onDbl);
         if (this.sel) { this.follow(); }
+        this.closeStarters(this.full.all());
+        const win = this.doc.defaultView;
+        if (o.fill && win && win.ResizeObserver) {
+          this.sizer = new win.ResizeObserver(() => this.fitWidth());
+          this.sizer.observe(host);
+        }
+      }
+      closeStarters(nodes) {
+        if (!this.o.startOpen) { return; }
+        let changed = false;
+        nodes.forEach((n) => { if (n.children.length && this.o.startOpen(n) === false && this.tree.model.open.delete(n.id)) { this.memory.delete(n.id); changed = true; } });
+        if (changed) { this.tree.model.events.emit('changed', { what: 'open' }); }
+      }
+      fitWidth() {
+        const g = this.tree.grid, w = Math.floor(this.host.clientWidth) - 2;
+        if (!g || w < 120) { return; }
+        const col = g.grid.model.columns.all()[0];
+        if (col && Math.abs(col.width - w) > 1) { g.grid.model.columns.setWidth(col.id, w); }
       }
       on(name, fn) { return this.events.on(name, fn); }
       setNodes(nodes) { this.setData(nodesSource(nodes)); if (this.sel) { this.follow(); } }
@@ -1554,12 +1578,26 @@
       labelCell(p) {
         const n = p.row ? this.full.node(p.row.__id) : null;
         if (!n) { return null; }
-        const marks = (this.o.marks ? this.o.marks(n) || [] : []).slice();
-        if (n.data.detail) { marks.push({ text: n.data.detail, detail: true }); }
-        const icon = n.data.icon ? h(p.doc, 'i', { cls: 'dt-oicon ' + n.data.icon, attrs: { 'aria-hidden': 'true' } }) : null;
-        return h(p.doc, 'span', { cls: 'dg-text dt-oline' }, [icon, h(p.doc, 'span', { cls: 'dt-oname' + (this.o.mono === false ? ' dt-plain' : ''), text: n.label })].concat(marks.map((m) => h(p.doc, 'span', {
-          cls: 'dt-mark dt-tone-' + (OUTLINE_TONES.indexOf(m.tone) >= 0 ? m.tone : 'muted') + (m.badge ? ' dt-badge' : '') + (m.mono ? ' dt-mono' : '') + (m.clip ? ' dt-clip' : '') + (m.detail ? ' dt-odetail' : ''),
-          text: String(m.text), attrs: { title: m.title || null } }))));
+        const o = this.o, doc = p.doc, marks = (o.marks ? o.marks(n) || [] : []).slice();
+        if (n.data.detail) { marks.push({ text: n.data.detail, detail: true }); }                 // a nested node's detail: a muted mark
+        const mark = (m) => h(doc, m.href ? 'a' : 'span', {
+          cls: 'dt-mark dt-tone-' + (OUTLINE_TONES.indexOf(m.tone) >= 0 ? m.tone : m.href ? 'link' : 'muted') + (m.badge ? ' dt-badge' : '') + (m.mono ? ' dt-mono' : '') + (m.clip ? ' dt-clip' : '') + (m.detail ? ' dt-odetail' : ''),
+          text: String(m.text), attrs: Object.assign({ title: m.title || null, href: m.href || null }, dataAttrs(m.attrs)) });
+        const icon = n.data.icon ? h(doc, 'i', { cls: 'dt-oicon ' + n.data.icon, attrs: { 'aria-hidden': 'true' } }) : null;
+        const inner = [icon, h(doc, 'span', { cls: 'dt-oname' + (o.mono === false ? ' dt-plain' : ''), text: n.label })].concat(marks.filter((m) => !m.href).map(mark));
+        const b = o.button ? o.button(n) : null;
+        let line;
+        if (b) {
+          line = h(doc, 'button', { cls: 'dt-obtn', attrs: Object.assign({ type: 'button', title: b.title || null, 'aria-label': b.label || null }, dataAttrs(b.attrs)) }, inner);
+          if (o.activate) { line.addEventListener('click', (e) => o.activate(n, e)); }
+        } else { line = h(doc, 'span', { cls: 'dt-oline-text', attrs: dataAttrs(o.attrs ? o.attrs(n) : null) }, inner); }
+        if (o.wire) { o.wire(n, line); }
+        const acts = (o.actions ? o.actions(n) || [] : []).map((a) => {
+          const x = h(doc, 'button', { cls: 'dt-oact', text: a.text || a.label, attrs: Object.assign({ type: 'button', 'aria-label': a.label, title: a.title || a.label, disabled: !!a.disabled }, dataAttrs(a.attrs)) });
+          x.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); a.run(n); });
+          return x;
+        });
+        return h(doc, 'span', { cls: 'dg-text dt-oline' }, [line].concat(marks.filter((m) => m.href).map(mark), acts));
       }
       reload(fresh) {
         const t = this.tree;
@@ -1577,7 +1615,7 @@
         this.full.load(data);
         if (this.detailOf && !this.full.node(this.detailOf)) { this.closeDetail(); }
         this.memory.forEach((id) => { if (!this.full.node(id)) { this.memory.delete(id); } });
-        this.full.all().forEach((n) => { if (!known.has(n.id) && n.children.length && n.depth < d) { this.memory.add(n.id); } });   // a new branch (or a node that now has children) opens as at the start
+        this.full.all().forEach((n) => { if (!known.has(n.id) && n.children.length && n.depth < d && !(this.o.startOpen && this.o.startOpen(n) === false)) { this.memory.add(n.id); } });   // a new branch (or a node that now has children) opens as at the start
         const f = outlineFilter(this.full, this.query, this.o.text);
         this.keep = f.keep;
         this.tree.hits = new Set(f.hits);
@@ -1669,7 +1707,7 @@
       }
       dragStart(e) {
         const n = this.movable ? this.nodeAt(e.target) : null;
-        if (!n || n.data.fixed || (e.target.closest && e.target.closest('.dg-tw')) || (e.pointerType === 'mouse' && e.button !== 0)) { return; }
+        if (!n || n.data.fixed || (e.target.closest && e.target.closest('.dg-tw, .dt-oact, a[href]')) || (e.pointerType === 'mouse' && e.button !== 0)) { return; }
         let drop = null;
         const box = this.treeBox, clear = () => box.querySelectorAll('.' + DROPS.join(', .')).forEach((x) => DROPS.forEach((c) => x.classList.remove(c)));
         trackPointer(e, {
@@ -1692,6 +1730,7 @@
       destroy() {
         this.offs.forEach((off) => off());
         this.events.clear();
+        if (this.sizer) { this.sizer.disconnect(); }
         this.host.removeEventListener('keydown', this.onKeyDown, true);
         this.host.removeEventListener('pointerdown', this.onDown);
         this.host.removeEventListener('dblclick', this.onDbl);
@@ -1700,13 +1739,13 @@
         this.host.classList.remove('dt-outline');
       }
     }
-    return { "OUTLINE_TONES": OUTLINE_TONES, "outlineFilter": outlineFilter, "outlineKey": outlineKey, "flattenTree": flattenTree, "findNode": findNode, "isWithin": isWithin, "moveNode": moveNode, "nodesSource": nodesSource, "TreeOutline": TreeOutline };
+    return { "OUTLINE_TONES": OUTLINE_TONES, "outlineFilter": outlineFilter, "outlineKey": outlineKey, "TreeOutline": TreeOutline };
   })();
   /* ---- src/drishti_index.js ---- */
   __m["src/drishti_index.js"] = (function () {
     var defineTreeElement = __m["src/drishti_tree-element.js"].defineTreeElement;
     function install(root) { if (root && root.document && root.customElements) { defineTreeElement(root.customElements, root); } }
-    return { "install": install, "PATH_SEP": __m["src/drishti_tree-model.js"].PATH_SEP, "HierarchyModel": __m["src/drishti_tree-model.js"].HierarchyModel, "orgLayout": __m["src/drishti_tree-layout.js"].orgLayout, "partition": __m["src/drishti_tree-layout.js"].partition, "arcPath": __m["src/drishti_tree-layout.js"].arcPath, "bandTone": __m["src/drishti_tree-layout.js"].bandTone, "svg": __m["src/drishti_tree-draw.js"].svg, "nodeColour": __m["src/drishti_tree-draw.js"].nodeColour, "drawOrg": __m["src/drishti_tree-draw.js"].drawOrg, "drawPartition": __m["src/drishti_tree-draw.js"].drawPartition, "partitionTable": __m["src/drishti_tree-draw.js"].partitionTable, "gridRows": __m["src/drishti_tree-grid.js"].gridRows, "TreeGrid": __m["src/drishti_tree-grid.js"].TreeGrid, "loadOpenChildren": __m["src/drishti_tree-hooks.js"].loadOpenChildren, "sideContent": __m["src/drishti_tree-side.js"].sideContent, "statusParts": __m["src/drishti_tree-side.js"].statusParts, "TREE_EXPORTS": __m["src/drishti_tree-io.js"].TREE_EXPORTS, "svgText": __m["src/drishti_tree-io.js"].svgText, "pngOf": __m["src/drishti_tree-io.js"].pngOf, "dataText": __m["src/drishti_tree-io.js"].dataText, "keyMove": __m["src/drishti_tree-io.js"].keyMove, "exportTree": __m["src/drishti_tree-io.js"].exportTree, "TREE_MODES": __m["src/drishti_tree-view.js"].TREE_MODES, "TREE_EVENTS": __m["src/drishti_tree-view.js"].TREE_EVENTS, "Tree": __m["src/drishti_tree-view.js"].Tree, "PANEL_MODES": __m["src/drishti_tree-panel.js"].PANEL_MODES, "readTableTree": __m["src/drishti_tree-panel.js"].readTableTree, "isChain": __m["src/drishti_tree-panel.js"].isChain, "TreePanel": __m["src/drishti_tree-panel.js"].TreePanel, "treeTables": __m["src/drishti_tree-panel.js"].treeTables, "OUTLINE_TONES": __m["src/drishti_tree-outline.js"].OUTLINE_TONES, "outlineFilter": __m["src/drishti_tree-outline.js"].outlineFilter, "outlineKey": __m["src/drishti_tree-outline.js"].outlineKey, "flattenTree": __m["src/drishti_tree-outline.js"].flattenTree, "findNode": __m["src/drishti_tree-outline.js"].findNode, "isWithin": __m["src/drishti_tree-outline.js"].isWithin, "moveNode": __m["src/drishti_tree-outline.js"].moveNode, "nodesSource": __m["src/drishti_tree-outline.js"].nodesSource, "TreeOutline": __m["src/drishti_tree-outline.js"].TreeOutline, "TREE_ELEMENT": __m["src/drishti_tree-element.js"].TREE_ELEMENT, "defineTreeElement": __m["src/drishti_tree-element.js"].defineTreeElement };
+    return { "install": install, "PATH_SEP": __m["src/drishti_tree-model.js"].PATH_SEP, "HierarchyModel": __m["src/drishti_tree-model.js"].HierarchyModel, "orgLayout": __m["src/drishti_tree-layout.js"].orgLayout, "partition": __m["src/drishti_tree-layout.js"].partition, "arcPath": __m["src/drishti_tree-layout.js"].arcPath, "bandTone": __m["src/drishti_tree-layout.js"].bandTone, "svg": __m["src/drishti_tree-draw.js"].svg, "nodeColour": __m["src/drishti_tree-draw.js"].nodeColour, "drawOrg": __m["src/drishti_tree-draw.js"].drawOrg, "drawPartition": __m["src/drishti_tree-draw.js"].drawPartition, "partitionTable": __m["src/drishti_tree-draw.js"].partitionTable, "gridRows": __m["src/drishti_tree-grid.js"].gridRows, "TreeGrid": __m["src/drishti_tree-grid.js"].TreeGrid, "loadOpenChildren": __m["src/drishti_tree-hooks.js"].loadOpenChildren, "sideContent": __m["src/drishti_tree-side.js"].sideContent, "statusParts": __m["src/drishti_tree-side.js"].statusParts, "TREE_EXPORTS": __m["src/drishti_tree-io.js"].TREE_EXPORTS, "svgText": __m["src/drishti_tree-io.js"].svgText, "pngOf": __m["src/drishti_tree-io.js"].pngOf, "dataText": __m["src/drishti_tree-io.js"].dataText, "keyMove": __m["src/drishti_tree-io.js"].keyMove, "exportTree": __m["src/drishti_tree-io.js"].exportTree, "TREE_MODES": __m["src/drishti_tree-view.js"].TREE_MODES, "TREE_EVENTS": __m["src/drishti_tree-view.js"].TREE_EVENTS, "Tree": __m["src/drishti_tree-view.js"].Tree, "PANEL_MODES": __m["src/drishti_tree-panel.js"].PANEL_MODES, "readTableTree": __m["src/drishti_tree-panel.js"].readTableTree, "isChain": __m["src/drishti_tree-panel.js"].isChain, "TreePanel": __m["src/drishti_tree-panel.js"].TreePanel, "treeTables": __m["src/drishti_tree-panel.js"].treeTables, "flattenTree": __m["src/drishti_tree-nodes.js"].flattenTree, "findNode": __m["src/drishti_tree-nodes.js"].findNode, "isWithin": __m["src/drishti_tree-nodes.js"].isWithin, "moveNode": __m["src/drishti_tree-nodes.js"].moveNode, "nodesSource": __m["src/drishti_tree-nodes.js"].nodesSource, "OUTLINE_TONES": __m["src/drishti_tree-outline.js"].OUTLINE_TONES, "outlineFilter": __m["src/drishti_tree-outline.js"].outlineFilter, "outlineKey": __m["src/drishti_tree-outline.js"].outlineKey, "TreeOutline": __m["src/drishti_tree-outline.js"].TreeOutline, "TREE_ELEMENT": __m["src/drishti_tree-element.js"].TREE_ELEMENT, "defineTreeElement": __m["src/drishti_tree-element.js"].defineTreeElement };
   })();
   return Object.freeze(Object.assign({ library: "drishti-tree", version: "0.2.0" }, __m["src/drishti_index.js"]));
 });

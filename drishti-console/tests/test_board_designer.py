@@ -67,8 +67,10 @@ def test_the_start_page_makes_a_board_as_a_report_with_a_board_page(client):
 def test_the_report_designer_is_in_the_studio_and_edits_tiles(client):
     page = client.get("/bi/design/bi-1")
     assert page.status_code == 200 and page.headers["content-security-policy"] == CSP
-    for marker in ("data-studio", "data-studio-rail", "data-studio-tabs", "data-studio-dock", 'data-dock-tab="problems"', 'data-dock-tab="query"'):
-        assert marker in page.text, marker
+    assert 'data-studio data-studio-kind="report"' in page.text and "/static/elements/drishti-designer/drishti_designer.js" in page.text
+    studio = (STATIC / "js" / "drishti_bi-studio.js").read_text(encoding="utf-8")     # BI Studio is the kit's DesignerShell: Explorer, open items, dock
+    for part in ("new K.DesignerShell(", "docs: true", "collapsible: true", "{ id: 'problems', label: 'Problems' }", "{ id: 'query', label: 'Query' }", "shell.setObjects(", "shell.setDocs("):
+        assert part in studio, part
     for script in ("drishti_bi-studio.js", "drishti_bi-format-pane.js", "drishti_bi-format-rules.js", "drishti_bi-design-v2.js", "drishti_bi-matrix.js", "drishti_bi-multiples.js", "drishti_bi-visuals-format.js"):
         assert "/static/js/" + script in page.text, script
     v2 = (STATIC / "js" / "drishti_bi-design-v2.js").read_text(encoding="utf-8")
@@ -84,8 +86,9 @@ def test_the_new_scripts_have_no_cdn_inline_code_or_markup_string():
         assert not re.search(r"\bon[a-z]+\s*=\s*['\"]", text), name
         assert len(text.splitlines()) < 1500, name
         assert text.startswith("/*\n * Project Drishti"), name
-    for tmpl in ("design.html", "designer.html", "design_theme.html", "_studio.html", "report.html"):
+    assert not (TEMPLATES / "_studio.html").exists()                                  # the hand-made Explorer, tabs and dock: deleted
+    for tmpl in ("design.html", "designer.html", "design_theme.html", "report.html"):
         html = (TEMPLATES / tmpl).read_text(encoding="utf-8")
         assert "<script>" not in html and " style=" not in html and not re.search(r"\sonclick=", html), tmpl
     css = (STATIC / "css" / "drishti_bi-studio.css").read_text(encoding="utf-8")
-    assert "min-height: 44px" in css and "@media" in css and "http" not in css
+    assert "min-height: 44px" in css and "@media" in css and "http" not in css and ".bi-studio-rail" not in css and ".bi-studio-dock" not in css

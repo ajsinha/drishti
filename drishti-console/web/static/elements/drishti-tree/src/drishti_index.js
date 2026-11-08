@@ -29,7 +29,8 @@ export { sideContent, statusParts } from './drishti_tree-side.js';
 export { TREE_EXPORTS, svgText, pngOf, dataText, keyMove, exportTree } from './drishti_tree-io.js';
 export { TREE_MODES, TREE_EVENTS, Tree } from './drishti_tree-view.js';
 export { PANEL_MODES, readTableTree, isChain, TreePanel, treeTables } from './drishti_tree-panel.js';
-export { OUTLINE_TONES, outlineFilter, outlineKey, flattenTree, findNode, isWithin, moveNode, nodesSource, TreeOutline } from './drishti_tree-outline.js';
+export { flattenTree, findNode, isWithin, moveNode, nodesSource } from './drishti_tree-nodes.js';
+export { OUTLINE_TONES, outlineFilter, outlineKey, TreeOutline } from './drishti_tree-outline.js';
 export { TREE_ELEMENT, defineTreeElement } from './drishti_tree-element.js';
 
 /**

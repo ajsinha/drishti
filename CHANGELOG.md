@@ -376,6 +376,23 @@
   guard's allow-list from 2 files to 1.
   BI's Visualizations are drishti-designer's `Palette`; the wells' Add a field a `Form` select. drishti-designer: a palette entry's own
   data attributes (`attrs`, data-* only) and the search field's (`searchAttrs`).
+  **The last two hand-made parts of the BI designer are on Drishti Elements** (ELEMENTS.md 12.3: *still their own* is empty). **BI
+  Studio is drishti-designer's `DesignerShell`** for the report (and board) and theme designers: the header (BI › Studio › Reports, the
+  name, the status pill, the designer's actions with their `data-*` hooks, + New), the Explorer as the shell's objects (links, a status
+  badge), the open items above the designer, Problems and Query in a dock under it, the left rail folding away; the three layouts
+  (studio, side by side, terminal with `DESIGN>` and the function keys) remembered per person in this browser; a workspace that
+  requires review proposes through the shell's Propose for review with a note for the reviewer. drishti-designer: the shell's `docs`,
+  `dock` and `collapsible` parts, link, toggle and choice actions with the host's `attrs`, `setLabel`, `showAction`, objects with an
+  `href` and a `badge`, the status in the host's words; its title stash renamed `data-dd-title` (no clash with a host's `data-title`).
+  Deleted: `templates/bi/_studio.html` (42 lines), the designers' hand-made headers, the Studio's Explorer, tabs and dock CSS
+  (`drishti_bi-studio.css` 75 → 54 lines; the header rules of `drishti_bi-design.css`); `drishti_bi-studio.js` 162 → 161 lines, now a
+  host of the kit with no DOM of its own. **The Fields pane is drishti-tree's `TreeOutline`** (the one tree component): a field a
+  button (a click or Enter adds it; dragged through the page's `DragHub`), the badges (masked, this report only, default or model, the
+  time function) as marks with their `data-*` attributes, Move to the model a link, a date's parts and Hierarchies closed at the start,
+  one branch per added dataset with its remove action; the hand-made `details`/`ul` tree, its search code and its CSS (13 rules)
+  deleted. drishti-tree's outline: `button`, `activate`, `wire`, `attrs`, `actions`, `startOpen`, `fill`, a mark's `href` and `attrs`.
+  drishti-grid: a bare grid (`chrome: false`) draws no wells. Tests follow person-visible behaviour (a field one level under its
+  folder by `aria-level`); `tests/dnd.py` (an HTML5 drag helper, dead since the kit's pointer drags) deleted.
 - **Vega retired (the owner's decision O1): one drawing engine.** A report's `vega-lite` visual and a Python visual's `output: vega-lite`
   are translated by drishti-chart (`fromVegaLite`) and drawn by drishti-chart; a feature it does not translate is refused in words with
   what to use instead (`vegaLiteAlternative`, `vegaLiteRefusal`, `vegaLiteIn`; `chartIn(host, spec)` puts any spec in a host), never

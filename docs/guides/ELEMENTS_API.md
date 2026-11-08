@@ -9721,36 +9721,7 @@ Draws every server tree table under a scope (table.tbl-tree not yet drawn) as a 
 
 Returns `TreePanel[]`: the panels drawn now and still in the page.
 
-### drishti_tree-outline.js
-
-#### `OUTLINE_TONES`
-
-The tones a mark may take.
-
-#### `outlineFilter(model, q, textOf)`
-
-The filter of an outline: the nodes whose words hold every word of the query (any case), and the nodes to keep (those and every node above them). An empty query keeps everything (keep null).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `model` | `HierarchyModel` |  |
-| `q` | `string` |  |
-| `[textOf]` | `function(import('./drishti_tree-model.js').TreeNode): string` | default: label, id and kind |
-
-Returns `{hits: string[], keep: ?Set&lt;string&gt;}`.
-
-#### `outlineKey(key, model, order, at)`
-
-What a key does on an outline's focused node: keyMove's tree keys, with Enter and Space opening or closing a node with children and showing the detail of one without.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `key` | `string` |  |
-| `model` | `HierarchyModel` |  |
-| `order` | `string[]` | the ids of the rows shown, top to bottom |
-| `at` | `string` | the focused node |
-
-Returns `?{to: string, act: ('focus'\|'open'\|'close'\|'detail')}`.
+### drishti_tree-nodes.js
 
 #### `flattenTree(nodes, closed)`
 
@@ -9808,6 +9779,37 @@ Nested nodes as an outline's hierarchy: rows naming their parent, each keeping i
 | `nodes` | `OutlineNode[]` |  |
 
 Returns `import('./drishti_tree-model.js').HierarchySource`.
+
+### drishti_tree-outline.js
+
+#### `OUTLINE_TONES`
+
+The tones a mark may take.
+
+#### `outlineFilter(model, q, textOf)`
+
+The filter of an outline: the nodes whose words hold every word of the query (any case), and the nodes to keep (those and every node above them). An empty query keeps everything (keep null).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `model` | `HierarchyModel` |  |
+| `q` | `string` |  |
+| `[textOf]` | `function(import('./drishti_tree-model.js').TreeNode): string` | default: label, id and kind |
+
+Returns `{hits: string[], keep: ?Set&lt;string&gt;}`.
+
+#### `outlineKey(key, model, order, at)`
+
+What a key does on an outline's focused node: keyMove's tree keys, with Enter and Space opening or closing a node with children and showing the detail of one without.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `key` | `string` |  |
+| `model` | `HierarchyModel` |  |
+| `order` | `string[]` | the ids of the rows shown, top to bottom |
+| `at` | `string` | the focused node |
+
+Returns `?{to: string, act: ('focus'\|'open'\|'close'\|'detail')}`.
 
 #### class `TreeOutline`
 
@@ -10090,6 +10092,21 @@ How a hierarchy is read.
 | `[lazyField='lazy']` | `string` | a row's field that is true when the node has children the host gives later (addChildren) |
 | `[measures]` | `TreeMeasure[]` |  |
 
+#### `OutlineNode` : `Object`
+
+A nested node of an outline (OutlineOptions.nodes).
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `label` | `string` |  |
+| `[detail]` | `string` | a short note after the label (its kind, "opens on a click"): a muted mark |
+| `[icon]` | `string` | the classes of an icon before the label |
+| `[children]` | `OutlineNode[]` |  |
+| `[fixed]` | `boolean` | cannot be dragged (a heading, a "drop here" row: still a place to drop on) |
+| `[cls]` | `string` | more classes on its row (the host's look: a drop row, a heading) |
+| `[attrs]` | `Object&lt;string, string&gt;` | the host's own data-* attributes on its row (its selectors: data-panel="trades"); other names are left out, the row's role and state stay the outline's |
+
 #### `OutlineMark` : `Object`
 
 A mark after a node's label.
@@ -10102,6 +10119,21 @@ A mark after a node's label.
 | `[title]` | `string` | the words on hover (the reason, the whole text of a clipped mark) |
 | `[mono=false]` | `boolean` | in the monospace face (a type, an example value) |
 | `[clip=false]` | `boolean` | long text cut with an ellipsis |
+| `[href]` | `string` | a link (Move to the model): drawn after the line, outside its button |
+| `[attrs]` | `Object&lt;string, string&gt;` | the host's data-* attributes on the mark (its selectors) |
+
+#### `OutlineAction` : `Object`
+
+A small button after a node's line.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `label` | `string` | its words (a screen reader's name; the text when no icon) |
+| `[text]` | `string` | what it shows (default: the label) |
+| `[title]` | `string` |  |
+| `[disabled]` | `boolean` |  |
+| `[attrs]` | `Object&lt;string, string&gt;` | the host's data-* attributes |
+| `run` | `function(import('./drishti_tree-model.js').TreeNode): void` |  |
 
 #### `OutlineOptions` : `Object`
 
@@ -10122,21 +10154,18 @@ The options of an outline.
 | `[text]` | `function(import('./drishti_tree-model.js').TreeNode): string` | the words a filter looks in (default: label, id, kind) |
 | `[detail]` | `function(import('./drishti_tree-model.js').TreeNode, HTMLElement): (string[]\|void)` | a node's detail: lines of text to show, or nothing after filling the box itself; no lines and an empty box: the node has no detail |
 | `[onKey]` | `function(import('./drishti_tree-model.js').TreeNode, KeyboardEvent): boolean` | the host's keys on the focused node, before the outline's (true: handled) |
-
-#### `OutlineNode` : `Object`
-
-A nested node of an outline (OutlineOptions.nodes).
-
-| Name | Type | Meaning |
-|---|---|---|
-| `id` | `string` |  |
-| `label` | `string` |  |
-| `[detail]` | `string` | a short note after the label (its kind, "opens on a click"): a muted mark |
-| `[icon]` | `string` | the classes of an icon before the label |
-| `[children]` | `OutlineNode[]` |  |
-| `[fixed]` | `boolean` | cannot be dragged (a heading, a "drop here" row: still a place to drop on) |
-| `[cls]` | `string` | more classes on its row (the host's look: a drop row, a heading) |
-| `[attrs]` | `Object&lt;string, string&gt;` | the host's own data-* attributes on its row (its selectors: data-panel="trades"); other names are left out, the row's role and state stay the outline's |
+| `[button]` | `function(import('./drishti_tree-model.js').TreeNode): ?{label: string, title: string, attrs: Object&lt;string, string&gt;}` | the node's line as a button (its name for a screen reader, its title, the host's data-* attributes), or null: plain text |
+| `[activate]` | `function(import('./drishti_tree-model.js').TreeNode, Event): void` | a click on a node's button |
+| `[wire]` | `function(import('./drishti_tree-model.js').TreeNode, HTMLElement): void` | the host's own behaviour on a node's line (a drag from a field list), each time it is drawn |
+| `[attrs]` | `function(import('./drishti_tree-model.js').TreeNode): ?Object&lt;string, string&gt;` | the host's data-* attributes on a node's line (a table, a folder) when it is not a button |
+| `[actions]` | `function(import('./drishti_tree-model.js').TreeNode): OutlineAction[]` | small buttons after a node's line |
+| `[startOpen]` | `function(import('./drishti_tree-model.js').TreeNode): boolean` | false: the branch starts closed (a date's parts) |
+| `[fill=false]` | `boolean` | the node's column as wide as the panel (it follows the panel's width) |
+| `[mono]` | `boolean` | the node's name in the monospace face (default: true with data, false with nodes) |
+| `[selection]` | `Object` | a Selection to follow both ways (drishti-designer's: pick, set, list, has, primary, on('change')) |
+| `[canDrop]` | `function(string, string, string): (boolean\|string)` | canDrop(id, target, where): true, false, or why not in words; without it a node may go anywhere but inside itself |
+| `[movable]` | `boolean` | rows may be dragged and moved with Alt+arrows (default: true when canDrop or selection is given) |
+| `[readOnly=false]` | `boolean` | no moves (a design that cannot change) |
 
 #### `TableTreeRow` : `Object`
 
@@ -11362,7 +11391,7 @@ The problems of the fields shown, in words, by path.
 
 Returns `Object&lt;string, string&gt;`.
 
-### drishti_tree-outline.js
+### drishti_tree-nodes.js
 
 #### `flattenTree(nodes, closed)`
 
@@ -11410,6 +11439,8 @@ A nested node moved before or after another, or inside it (as its last child): a
 | `where` | `('before'\|'after'\|'inside')` |  |
 
 Returns `?OutlineNode[]`.
+
+### drishti_tree-outline.js
 
 #### class `Outline`
 
@@ -11925,13 +11956,13 @@ What the status pill says: a draft, proposed, approved or shipped, its versions,
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `s` | `{status: string, version: number, origin: string, dirty: boolean}` |  |
+| `s` | `{status: string, version: number, origin: string, dirty: boolean, text: string, versions: string}` | text (and versions): the host's own words in place of the made ones |
 
 Returns `{word: string, versions: string, tone: string}`.
 
 #### class `DesignerShell`
 
-The shell. Events: action {id}, mode {mode}, new {id}, open {group, item}, search {query}, tab {id}, command {text}, layout {layout, user}.
+The shell. Events: action {id} (a toggle's {id, pressed}, a choice's {id, value}), mode {mode}, new {id}, open {group, item}, search {query}, tab {id}, command {text}, layout {layout, user}, close {id} (an open document), dock {id}, rail {open}.
 
 ##### `new DesignerShell(el, o)`
 
@@ -12062,6 +12093,80 @@ Turns actions on or off; an action that is off says why on hover.
 
 Returns `void`.
 
+##### `DesignerShell.setLabel(id, label)`
+
+An action's words (Publish or Propose, as the place requires).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `label` | `string` |  |
+
+Returns `void`.
+
+##### `DesignerShell.showAction(id, on)`
+
+Shows or hides an action (one that does not apply here).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `on` | `boolean` |  |
+
+Returns `void`.
+
+##### `DesignerShell.setDocs(list)`
+
+The open documents above the editor (docs).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `list` | `Array&lt;{id: string, label: string, href: string, current: boolean}&gt;` |  |
+
+Returns `void`.
+
+##### `DesignerShell.dockPane(id)`
+
+A dock pane's element, for the host to fill (dock).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `?HTMLElement`.
+
+##### `DesignerShell.showDock(id)`
+
+Opens a dock pane (null folds the dock).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `?string` |  |
+
+Returns `void`.
+
+##### `DesignerShell.setDockCount(id, n, bad)`
+
+The count on a dock tab (bad: an error among them).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `n` | `?number` |  |
+| `[bad]` | `boolean` |  |
+
+Returns `void`.
+
+##### `DesignerShell.setRail(open)`
+
+Shows or folds the left rail (collapsible).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `open` | `boolean` |  |
+
+Returns `void`.
+
 ##### `DesignerShell.setMode(mode, user)`
 
 The Visual / YAML / Both mode (user: the person picked it, so the "mode" event lets the host remember it).
@@ -12110,7 +12215,7 @@ The objects on the left, in groups.
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `groups` | `Array&lt;{id: string, label: string, items: Array&lt;{id: string, label: string, detail: string, current: boolean, search: string, data: Object}&gt;}&gt;` |  |
+| `groups` | `Array&lt;{id: string, label: string, items: Array&lt;{id: string, label: string, detail: string, current: boolean, search: string, data: Object, href: string, badge: string, title: string}&gt;}&gt;` | an item with an href is a link to the object's own address (a studio of pages), else a button that emits "open"; a badge is a word after its name (draft) |
 
 Returns `void`.
 
@@ -12349,13 +12454,31 @@ A drop target.
 | `[leave]` | `function(): void` |  |
 | `drop` | `function(number, number, Object): void` |  |
 
+#### `ShellAction` : `Object`
+
+One of the header's actions.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `label` | `string` |  |
+| `[title]` | `string` | the words on hover |
+| `[primary]` | `boolean` |  |
+| `[attrs]` | `Object&lt;string, string&gt;` | the host's data-* attributes (its selectors: data-save) |
+| `[href]` | `string` | a link (View, the item's page): an anchor, never disabled |
+| `[toggle]` | `boolean` | pressed or not (aria-pressed); the "action" event says {id, pressed} |
+| `[pressed]` | `boolean` | a toggle's start |
+| `[choices]` | `Array&lt;{value: string, label: string, disabled: boolean}&gt;` | a choice (a select); the "action" event says {id, value} |
+| `[enabled]` | `boolean` | on from the start (default: off until setActions turns it on) |
+| `[hidden]` | `boolean` |  |
+
 #### `ShellOptions` : `Object`
 
 | Name | Type | Meaning |
 |---|---|---|
 | `[crumbs]` | `string[]` | where you are (the last one is the group) |
 | `[title]` | `string` |  |
-| `[actions]` | `Array&lt;{id: string, label: string, title: string, primary: boolean}&gt;` | default SHELL_ACTIONS |
+| `[actions]` | `import('./drishti_shell-parts.js').ShellAction[]` | default SHELL_ACTIONS (a button each; links, toggles and choices too, with the host's data-* attributes) |
 | `[newItems]` | `Array&lt;{id: string, label: string}&gt;` | + New's menu (none: no + New) |
 | `[modes=true]` | `boolean` | the Visual / YAML / Both toggle |
 | `[mode='both']` | `string` |  |
@@ -12366,6 +12489,9 @@ A drop target.
 | `[inspector=false]` | `boolean` | an inspector pane (shell.inspector) |
 | `[layout='studio']` | `('studio'\|'side-by-side'\|'terminal')` | g7's options A, B and C |
 | `[canMode]` | `function(string): (true\|string)` | whether a mode may be picked now, else why not in words |
+| `[docs=false]` | `boolean` | the open documents above the editor (setDocs; "close" {id}) |
+| `[dock]` | `Array&lt;{id: string, label: string}&gt;` | the dock's tabs under the editor (dockPane(id), showDock, setDockCount; "dock" {id}) |
+| `[collapsible=false]` | `boolean` | the left rail folds away (a button in the header; setRail; "rail" {open}) |
 
 #### `YamlPaneOptions` : `Object`
 

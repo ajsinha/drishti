@@ -23,13 +23,12 @@
   const canvas = document.getElementById('biCanvas');
   if (!B || !B.ai || !B.design || !canvas || canvas.getAttribute('data-bi-page') !== 'designer') { return; }
   const D = B.design, ai = B.ai, h = B.h;
-  const bar = document.querySelector('.bi-dactions');
+  const open = document.querySelector('[data-ai-suggest]');            // the Studio's header action (drishti_bi-studio.js), shown when the AI may suggest
   const checkBox = document.querySelector('[data-check-box]');
-  if (!bar || !checkBox) { return; }
+  if (!open || !checkBox) { return; }
   const fail = (el, e) => B.say(el, (e && e.code ? e.code + ' ' : '') + ((e && (e.detail || e.message)) || 'The AI call failed.'), true);
 
   // ---- Suggest visuals ----------------------------------------------------------------------------------------------------------------------
-  const open = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-ai-suggest': '', hidden: '' }, B.icon('lightbulb'), ' Suggest visuals');
   const goal = h('div', { class: 'bi-ai-goal' });                     // the question: a drishti-inputs Form field (a text area, data-ai-goal)
   const goalForm = new window.Drishti.elements.inputs.Form(goal, { embedded: true, label: 'Suggest visuals', schema: { type: 'object', properties: { goal: { type: 'string', title: 'What do you want to see?',
     widget: 'textarea', maxLength: 600, hook: 'data-ai-goal', options: { rows: 2 }, placeholder: 'For example: where the exposure sits, and a way to filter it by desk' } } } });
@@ -40,7 +39,6 @@
   const box = h('section', { class: 'bi-checkpanel bi-ai-box', 'data-ai-suggest-box': '', hidden: '', 'aria-label': 'Suggest visuals' }, h('h2', { text: 'Suggest visuals' }),
     h('p', { class: 'text-muted-d', text: 'The model sees the names, types and descriptions of this report’s dataset, never a row. Each suggestion has passed the report check; nothing is added until you press Add.' }),
     goal, h('p', {}, go, ' ', close), msg, list);
-  bar.insertBefore(open, bar.firstChild);
   checkBox.parentNode.insertBefore(box, checkBox);
   ai.on(() => { open.hidden = !(ai.enabled && ai.assist); });
   open.addEventListener('click', () => { box.hidden = false; goalForm.focusField('goal'); });
