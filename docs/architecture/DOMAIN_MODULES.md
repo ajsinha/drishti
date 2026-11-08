@@ -257,25 +257,37 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
   its files; no core script or style names a module file), the Elements loader's refusal (`tests/elements/core.test.mjs`), and on the
   server `BankingModuleOffTest` / `BankingModuleOnTest` (the console's answers: `/api/v1/modules` and `/public/about`).
 
-**Phase 2, second half, must do:**
+**Phase 2, second half, as built so far (2.9.11.f):**
 
-1. **The console plugin's moves** (`drishti-console/plugins/banking`): the routes, templates, JavaScript, CSS and landings moved into
-   the folder (its plugin.yaml then names them there); Help's `risk` section and the console's engine entries in the plugin.
-2. **The engine catalogue by module**: the banking engines' entries (`engines/catalogue.yaml` and the console's byte-equal copy) move into
-   the module; the banking token-scope entries of `application.yaml` with them (Spring lists cannot be split across files today: a
-   module-contributed scope list is needed).
-3. **Rule 4 (strings)**: the static check over the core's sources for the banking words, with an allow list that only shrinks (today: the
-   catalogue, `application.yaml`'s risk scopes, `CapacityController`'s planner rows by key, the console).
-4. **Packs by folder** (step 7): one folder per domain under `config/packs` (core, banking, economy, capitalmarkets), the pack loader reading one level of domain folders; deferred
+- **The console plugin's moves** (with `git mv`, so later merges follow): the banking routes (`plugins/banking/routes/`: VaR, regulatory
+  VaR, SMAT, FRTB-SA, SIMM, the playgrounds, exposure and the pre-deal check, the MR cube, the trading and market landings' figures), its
+  landings' code and Build types (`plugins/banking/{trading_landing,market_landing,build_types,risk_api}.py`), its templates
+  (`plugins/banking/templates/`, the same names: the console searches each module's folder after `web/templates`) and its scripts and
+  styles (`plugins/banking/static/`, served at the same `/static/...` addresses after `web/static`, gated by module and lens); the World
+  landing into `plugins/economy/`. drishti-risk stays an Elements library under `web/static/elements` (its manifest names its module).
+- **The engine catalogue by module**: the banking engines' entries are drishti-banking's `META-INF/drishti/engines.yaml` (read before the
+  core's `engines/catalogue.yaml`; absent when the module is not installed), their jar files `engines/<id>.yaml` are its own (imported
+  `optional:` by `application.yaml`), and the console's copies are `plugins/banking/engines.yaml` and `config/engines.yaml` (the core's),
+  byte for byte (`EngineCatalogueTest`, `BankingEngineCatalogueTest`). A core engine's soft use of a module's engine (the pivot uses VaR)
+  counts only where the module is installed.
+- **Rule 4 (strings)**: `tools/domain_strings.py` counts the banking names (command words, engine ids, connectors, API and console paths,
+  packages) in the core's code (Java outside the banking modules; the console's core, routes, scripts, styles and templates) against
+  `tools/domain_strings_allowed.yaml`, which only shrinks (a quick file check, `tools/test_domain_strings.py`).
+
+**Phase 2, second half, still to do:**
+
+1. **The banking token-scope entries** of `application.yaml` into the module (a module-contributed scope list: Spring lists cannot be
+   split across files today), and Help's `risk` section into the plugin.
+2. **Packs by folder** (step 7): one folder per domain under `config/packs` (core, banking, economy, capitalmarkets), the pack loader reading one level of domain folders; deferred
    because about 90 Python files (console and tools) join `config/packs/<id>` directly: a shared resolver first.
-5. **Banking configuration** (step 8): `config/lakes/{var,ccr}-official.yaml`, the banking BI reports, models, tables, fragments and
+3. **Banking configuration** (step 8): `config/lakes/{var,ccr}-official.yaml`, the banking BI reports, models, tables, fragments and
    notebooks into the banking folders.
-6. **The thin jar and the plugins folder** (step 9): `drishti-app` builds the core jar alone, and a site's `plugins/` (already on the
+4. **The thin jar and the plugins folder** (step 9): `drishti-app` builds the core jar alone, and a site's `plugins/` (already on the
    launcher's `loader.path` pattern) holds the module jars; the registry's *installed* follows the jar.
-7. **Editions folded** (and their pack lists by module: World without us-equities and funds, Market with them, once the World landing's cards and the console's tests move): the editions risk, trading, market and world are lenses now (the registry's lenses, the edition files still read
+5. **Editions folded** (and their pack lists by module: World without us-equities and funds, Market with them, once the World landing's cards and the console's tests move): the editions risk, trading, market and world are lenses now (the registry's lenses, the edition files still read
    for their home, cards and BI lists); folding the instance editions (`drishti.edition`, `var-engine`, `default-packs`, `features`) into
    modules and lenses, and removing `config/editions/`, needs the console's lens and home code (phase 2).
-8. **Python worker code**: none of banking's is left in `drishti-compute/src/main/python/drishti_compute` (the exposure what-if moved
+6. **Python worker code**: none of banking's is left in `drishti-compute/src/main/python/drishti_compute` (the exposure what-if moved
    to Java in 2.9.11.g); the tools' banking scripts move with the module.
-9. **The drills**: one with the banking module absent (the core starts, serves BI, Pivot and the economy packs, and says *not
+7. **The drills**: one with the banking module absent (the core starts, serves BI, Pivot and the economy packs, and says *not
     installed* for a banking word).

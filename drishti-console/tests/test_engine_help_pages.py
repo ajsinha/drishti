@@ -44,8 +44,8 @@ def _guides():
 
 def test_an_engine_hides_only_its_own_pages():
     guides = _guides()
-    engines = yaml.safe_load((CONSOLE / "config" / "engines.yaml").read_text(encoding="utf-8"))
-    engines = engines["engines"] if isinstance(engines, dict) else engines
+    from core import engines as catalogue
+    engines = catalogue.entries()                      # the core's and every module's (plugins/<module>/engines.yaml)
     shared = {"operations", "configuration", "user-guide", "api-guide", "cli-guide", "troubleshooting", "getting-started"}
     for e in engines:
         for slug in e.get("help") or []:

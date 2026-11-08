@@ -102,6 +102,13 @@
   its pages and routes answer 404, menus (sitemap `domain:` tags, now drawn by the module's state; a new `requires: module:<id>`), the
   Engines menu, the Admin strip, search, the command line and its type-ahead, Help (its guides, tutorials and section) and the Build home
   leave it out, and typed anyway it says *VRES is not available to you: ask your administrator*.
+- **Domain modules, phase 2 (second half, first steps): the moves.** The banking console code, pages, scripts and styles live in
+  `drishti-console/plugins/banking/` (`routes/`, `templates/`, `static/`, the landings' code, the Build types, the engine calls), the
+  World landing in `plugins/economy/`; the console finds a module's templates after its own and serves a module's files at the same
+  `/static/...` addresses, gated by module and lens. The banking engines are the module's: their catalogue entries in drishti-banking's
+  `META-INF/drishti/engines.yaml` (and the console's `plugins/banking/engines.yaml`), their jar files in its `engines/`; a server without
+  the module lists none of them. Rule 4 of the boundaries as a check: `tools/domain_strings.py` counts the banking names in the core's
+  code against an allow list that only shrinks. `EngineRegistryTest` and `EngineFilesTest` run in drishti-banking (they use its engines).
 - **Static assets by module**: each module's console part is `drishti-console/plugins/<module>/plugin.yaml` (its routers, engines, words,
   pages, templates, static files, and the parts it adds to a core screen). An off module's scripts, styles and Elements library are not
   served (404), and neither to a person whose lens does not use the module (the World lens gets no banking file). The Elements manifest
