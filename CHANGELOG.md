@@ -4933,7 +4933,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   (`drishti.test.dir`; `TestRun` in the tests: test properties say `${drishti.test.dir}/...`, seeded folders use `TestRun.dir`,
   temporary ones `TestRun.temp`) and removes it when it ends, after closing its Spring test contexts; every context gets an empty
   collaboration folder of its own. The identity, messaging and Iceberg tests that wrote under `target/` or the JVM's temp folder use
-  JUnit's `@TempDir`. The drill builds with `./mvnw clean verify` ([DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md#developer-guide-connectors-plugins-modules-and-the-api)).
+  JUnit's `@TempDir`. The drill builds with `./mvnw clean verify` ([DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md)).
 - **A graph link field can be scoped to its pack** (`graph.fields.<F>.scope: pack`,
   [PACK_DEVELOPER_GUIDE.md](docs/guides/BUILD_GUIDE.md)): the field is a link only in the documents of the declaring pack's
   own kinds. World-economy's `JURISDICTION` (a `JUR-` id) is scoped, so a gleif entity's `JURISDICTION` (`US-DE`) and a core legal
@@ -6450,7 +6450,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
 
 - **Drill:** the failed console tests are re-run from the run's own summary (the pytest cache is off, so `--last-failed` re-ran the
   whole suite), one file at a time under a 20-minute limit; the Java 25 run re-runs a failed test once and reports it as a flake.
-  [DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md#developer-guide-connectors-plugins-modules-and-the-api).
+  [DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md).
 
 - **Report schema v2 (R6).** A visual's `format:` is typed per visual family: one JSON Schema per family, written in YAML in the server
   (`bi/report/format/*.yaml`: chart, other-chart, card, table, matrix, slicer, static, code, and the shared common), checked on every report (a bad
@@ -7233,7 +7233,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
 - **Added:** the `BI` command keyword, working like `FORM`: `BI <GO>` the BI home, `BI WORKSPACE`, `BI CATALOGUE`, `BI <report-or-board>` by id or title (several matches open the catalogue searched), type-ahead after `BI ` offering the items the user may open; `RUPAKA` stays as an alias. `BI` is a reserved word beside `RUPAKA` and `FORM`: the pack loader and `drishti pack check` refuse a pack mnemonic named `BI` (no shipped pack uses it). Docs: BI_GUIDE, USER_GUIDE, PACK_DEVELOPER_GUIDE, RUPAKA.md section 4.
 - **Changed:** query by form: an enum field with more than 6 values (asset class, product type, book, desk, currency) is one **multi-select dropdown** the size of a select
   instead of a wall of tick boxes: a summary ("All", "REPO", "3 selected: ABS, REPO, +1"), a search box, *Select all* / *Clear*, keyboard, 44 px rows on touch; up to 6 values stay
-  a checkbox row; the address encoding is unchanged. One shared component, `static/js/multiselect.js` ([DEVELOPER_GUIDE 5.8a](docs/guides/DEVELOPER_GUIDE.md#developer-guide-connectors-plugins-modules-and-the-api)), also draws the
+  a checkbox row; the address encoding is unchanged. One shared component, `static/js/multiselect.js` ([DEVELOPER_GUIDE 5.8a](docs/guides/DEVELOPER_GUIDE.md)), also draws the
   `multi-select` controls of Sutras and works inside `<drishti-view>`. Tests: `test_form_browser.py`.
 - **Added:** **controls on a screen** (Rūpaka phase 0a, [RUPAKA.md 8.1](docs/architecture/ARCHITECTURE.md#289-reports-boards-and-controls)
   "as built"). A Sutra declares `controls:` (dropdown, multi-select, cascading, toggle, segmented, date, date-range, number-range, top-n, search; options from a list,

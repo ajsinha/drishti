@@ -1182,7 +1182,7 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 | Add users and roles | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
 | Connect your own data | [CONNECTORS.md](../connectors/CONNECTORS.md) and [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) |
 | Build a Delta lake from your own JSON export | [TOOLS.md](TOOLS.md) (`drishti.py lake build`) |
-| Build Drishti from source, run the tests | [BUILD_GUIDE.md](DEVELOPER_GUIDE.md#developer-guide-connectors-plugins-modules-and-the-api), [Running from IntelliJ IDEA and PyCharm](#running-from-intellij-idea-and-pycharm) |
+| Build Drishti from source, run the tests | [BUILD_GUIDE.md](DEVELOPER_GUIDE.md), [Running from IntelliJ IDEA and PyCharm](#running-from-intellij-idea-and-pycharm) |
 | See every document | [the documentation map](../README.md) |
 
 ---

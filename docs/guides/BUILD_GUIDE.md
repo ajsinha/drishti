@@ -1597,8 +1597,11 @@ only trades no product Sutra matches. To make it the default where operations st
 With no Sutra, inference also walks the tree. Open `trade` / `MX-20000001` with *auto-design* as the start and you get, among others: a `tabs` *Legs*
 for `LEGS` (two similar objects), a `table` of the first leg's cash flows, a `table` or `ladder` of the events (rows with a date), and `kv` panels
 for the deal's own fields. Keep what is useful, delete the rest, and add labels and keys
-([Inference](RACHANA_REFERENCE.md#inference-the-screens-drishti-draws-with-no-sutra)). To find a path, press **F9** on any view for its raw JSON, or
-read the **shape** in the workbench's left pane: a path is exactly the keys you see there, joined with dots, with `[n]` for list positions.
+([Inference](RACHANA_REFERENCE.md#inference-the-screens-drishti-draws-with-no-sutra)).
+
+!!! tip "Finding the path"
+    Press **F9** on any view to see its raw JSON. In the workbench, the **shape** in the left pane lists the document the Sutra
+    reads. A path is exactly the keys you see there, joined with dots, with `[n]` for list positions.
 
 ## 7. Modelling content: vocabulary, About text, help, facts, roles, Calc
 

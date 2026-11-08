@@ -246,7 +246,9 @@ def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages()
     # 77: plus the public sector's two (the Public sector guide and tutorial 46, 2.9.11.g), the same rule (a domain's guide and tutorial).
     # 76: the docs fold (2.9.11.g): the in-memory lake guide became a section of the data lake guide; the cap is the count, so a new
     # listed page needs a page folded first.
-    assert 30 <= total <= 76, total
+    # 80: the 2.9.11.h docs rewrite (builder D): six build and analyse guides fold into five (Reports, Notebook, Approvals, Build, Embed,
+    # plus the Developer guide), each beside its tutorial (10, 14, 24, 5, 16) on its row; the tutorial fold of the same release brings it down.
+    assert 30 <= total <= 80, total
 
 
 def test_every_old_help_address_still_opens_something(client):
