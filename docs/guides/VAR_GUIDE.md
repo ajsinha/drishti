@@ -1923,6 +1923,7 @@ The last answers:
 | `sumStandalone` | integer or null | Σ standalone VaR of every default part ([section 11.1](#111-the-endpoints): never cut by `max-parts`) |
 | `diversification` | integer or null | `sumStandalone − var` (two parts or more) |
 | `limit`, `limitUse` | integer, number, or null | the node's or the portfolio's VaR limit (its `var-limit` row); `var / limit` |
+| `limitStatus`, `limitNear` | text or null, number | where the VaR stands against the limit: `within`, `near` (from `limitNear`, the setting `drishti.risk.limit-near`, 0.8) or `breach` (over 100%); null without a comparable limit. The official record's nodes carry it too (read with the record), and the what-if's `limit` gives the scope's limit, `useBefore`, `useAfter`, `statusBefore` and `status`. Screens show it; none computes its own |
 | `backtest` | object | `{days, exceptions, light, kupiecLr, kupiecPValue, christoffersenLr, christoffersenPValue}` ([section 18.4](#184-history-and-backtest)) |
 | `ancestors` | list | `[{label, scope}]` from the MGMT root to the node (a position or trade: its book's path, then its position) |
 | `provenance` | object | below |

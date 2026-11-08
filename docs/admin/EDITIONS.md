@@ -490,7 +490,7 @@ each on a copy of a booked trade of the product scaled to your notional, give on
 85%* and *Counterparty near its limit · peak PFE 401.5m → 409.2m · 97% of limit*. When the trade copied has no paths on the day's run the
 counterparty half is the engine's add-on proxy, labelled **proxy**; both halves are the server's engines and need no compute workers.
 
-**Other settings** (all in `trading:`): `near-limit` (0.8: from this share of its VaR limit a book is "near"; the counterparty half takes the exposure engine's own status), `limit-days` (5),
+**Other settings** (all in `trading:`): `limit-days` (5),
 `pnl-var-days` (60), `max-rows` (20,000 valuations a date before the figures say **partial**), `live-statuses` (`NEW`, `VALIDATED`,
 `AMENDED`).
 
@@ -956,7 +956,7 @@ two minutes per person, date and scope; two panels needing the same valuations w
     my most traded counterparty, then the file's cards).
 - **B "desk", Desk head** (desk heads; a trader sees their own desk):
   - **Desk P&L today** (as above, over the desk, with the best book), **Desk VaR** and its limit use (`DESK:<id>`), **Breaches** (books
-    above their limit), **Near limit** (books at `trading.near-limit`, 80%, or more), **Largest counterparty**: its share of the desk's
+    above their limit), **Near limit** (books the VaR engine says are `near`: `drishti.risk.limit-near`, 80%, or more), **Largest counterparty**: its share of the desk's
     positive MtM over live trades (current exposure before netting and collateral). The exposure engine does take a desk:
      `DESK:<id>` is a `partial` scope, each netting set it cuts recomputed from the desk's trades
      ([EXPOSURE_GUIDE.md section 4](../guides/EXPOSURE_GUIDE.md#4-scopes)); what it does not have is **allocated** exposure (the desk's share
@@ -983,8 +983,8 @@ then the largest notional), and scales it to the notional (factor = notional ÷ 
 copy's).
 
 - **VaR**: `POST /api/v1/var/what-if {scope: BOOK:<book>, items: [{copyOf, factor}]}` (the VaR page's basket what-if, the server's VaR engine)
-  gives VaR before and after; the book's limit (its `/var/scope`) gives limit use before and after: **fits** below `near-limit`, **near**
-  from it, **breaches** above 100%; no limit: the change only. When the engine cannot answer (no vectors for the book on the date) the half says why.
+  gives VaR before and after; the answer's `limit` gives the book's limit, its use before and after and the status after, the server's: **fits** (`within`), **near**
+  (from `drishti.risk.limit-near`), **breaches** (`breach`); no comparable limit: the change only. When the engine cannot answer (no vectors for the book on the date) the half says why.
 - **Counterparty**: the exposure engine's pre-deal check, `POST /api/v1/risk/exposure/predeal {counterparty, like: <the copy>, notional,
   side}` (EXPOSURE_GUIDE.md section 18.9): the decision and the counterparty's credit limit before and after, and the state as the server
   says it: **fits** (the limit `within`), **near** (from the engine's `drishti.ccr.exposure.limit-near`), **breaches** (a decline), or

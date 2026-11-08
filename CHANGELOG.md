@@ -74,13 +74,18 @@
   what-if (the profile overlay with the limit and the incremental PFE per tenor on drishti-chart through drishti-risk; the figures and the
   table by tenor on drishti-grid). Every number is the server's; a typed command checks at once; a phone layout; gone with the banking
   module. The registry item `pre-deal-screen` is retired.
-- **The Trading landing's new-trade check takes the counterparty's state from the server**: fits, near or breaches is the pre-deal
-  answer's limit status (`within`, `near` from the engine's `limit-near`, `breach`); the console no longer applies `trading.near-limit`
-  to it (that setting now serves the VaR half and the books only).
+- **One limit rule, the server's** (new setting `drishti.risk.limit-near`, 0.8, in `config/engines/var.yaml`; `RiskLimits` in the banking
+  module): every limit the module holds a figure to says **within**, **near** (from that share) or **breach** (over 100%) in the answer
+  itself: each VaR scope and node (`limitStatus`, `limitNear`), the official record's nodes (read with the record), the VaR what-if
+  (`limit`: the scope's limit, the use before and after, `statusBefore`, `status`), the pre-deal check's credit limit and tenor buckets,
+  and the sensitivity ladder's cells (now `within` rather than `ok`). `MrSensitivities.NEAR` and exposure's `limit-near` are folded into
+  it. **The Trading landing shows the server's status and computes none**: the book rows, the desk headline, the Breaches and Near limit
+  tiles, the desk head's limit use by book and day, and both halves of the new-trade check (the VaR half reads the what-if's own `limit`;
+  the console no longer divides by the book's limit). `limit_state` and the setting `trading.near-limit` are removed.
 - **One way to check a trade**: the exposure explorer's Pre-deal tab, its form and the console's what-if proxy (`POST /api/exposure/what-if`)
   are removed; the tab's address (`/exposure?scope=…&tab=predeal`) opens the check at that counterparty or netting set. The API and
   `drishti.py exposure whatif` keep the what-if alone.
-- **The pre-deal answer says near** (new setting `drishti.ccr.exposure.limit-near`, 0.8): the limit and each bucket `within`, `near`
+- **The pre-deal answer says near** (by `drishti.risk.limit-near`, the one limit rule above): the limit and each bucket `within`, `near`
   (from that share: still approved, the reason says which) or `breach`; also `headroomBefore` and `near` on the limit, `increment`,
   `useBefore` and `headroomAfter` on each bucket, and with the exact method the IMM EAD (`ead`, α × EEPE) before, with and incremental.
   The one Explain explains a check (kind `predeal`: `ExposurePreDealExplainer`; the check made again, not audited twice).
