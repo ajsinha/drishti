@@ -76,11 +76,10 @@
       " · node-level P&L history " + hist.first + " to " + hist.last + (hist.synthetic ? " (synthetic, demo)" : "") + " · rolling " +
       d.length + "-day VaR " + Math.round(d.confidence * 1000) / 10 + "% 1-day for every window start (the " + ordinal(d.rank) + " worst day)";
     chips(d);
-    var hs = $("[data-sw-hierarchy]"); hs.textContent = "";
-    (d.hierarchies || [S.hierarchy]).forEach(function (x) { var o = h("option", "", x); o.value = x; o.selected = x === d.node.hierarchy; hs.appendChild(o); });
-    var ls = $("[data-sw-length]");
-    if (![].some.call(ls.options, function (o) { return +o.value === d.length; })) { var o = h("option", "", d.length + " days"); o.value = d.length; ls.appendChild(o); }
-    ls.value = String(d.length);
+    $("[data-sw-hierarchy]").component.setOptions(d.hierarchies || [S.hierarchy], d.node.hierarchy);       // <drishti-select>s (drishti-inputs)
+    var ls = $("[data-sw-length]").component;
+    if (!ls.options.some(function (o) { return +o.value === d.length; })) { ls.setOptions(ls.options.concat([{ value: String(d.length), label: d.length + " days" }])); }
+    ls.setValue(String(d.length));
     alert(d);
     chart(d);
     candidates(d);
@@ -202,8 +201,8 @@
     }).catch(function () { box.textContent = ""; });
   }
 
-  $("[data-sw-hierarchy]").addEventListener("change", function (e) { S.hierarchy = e.target.value; S.scope = "BANK"; load(); });
-  $("[data-sw-length]").addEventListener("change", function (e) { S.length = e.target.value; load(); });
+  $("[data-sw-hierarchy]").addEventListener("drishti:change", function (e) { S.hierarchy = e.detail.value; S.scope = "BANK"; load(); });
+  $("[data-sw-length]").addEventListener("drishti:change", function (e) { S.length = e.detail.value; load(); });
   $("[data-sw-export]").addEventListener("click", function () {
     var d = S.data; if (!d) return;
     var lines = ["window_first_day,stressed_var_usd"];

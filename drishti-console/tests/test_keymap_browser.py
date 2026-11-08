@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The one keymap and the one search in a real browser (2.9.11.e; drishti_keys.js, drishti_search-box.js), over a console of its own on the
+"""The one keymap and the one search in a real browser (2.9.11.e; drishti_keys.js, drishti-insight's search), over a console of its own on the
 stand-in server:
 - ? opens the keys of the screen (a dialog, focus inside, the global keys listed, no conflicts registered), Esc closes it and gives the
   focus back; the footer's Keys button opens it too; ? typed into the command line is a character, not the overlay;
@@ -51,6 +51,8 @@ def console():
     while not server.started and time.monotonic() < deadline:
         time.sleep(0.05)
     assert server.started, "the console did not start"
+    while not app.state.help_warm.done() and time.monotonic() < deadline + 120:   # Help's pages rendered (core/app.py, _warm_help):
+        time.sleep(0.05)                                                     # the global search reads cached text, as on a running console
     yield f"http://127.0.0.1:{port}"
     server.should_exit = True
 

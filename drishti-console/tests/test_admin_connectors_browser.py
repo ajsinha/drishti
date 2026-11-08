@@ -296,10 +296,16 @@ def test_create_test_save_edit_disable_and_uninstall_is_the_only_way_out(browser
     dlg.locator("[data-tab='yaml']").click()
     yaml = dlg.locator("[data-yaml]")
     assert "url: jdbc:postgresql://db.example.com:5432/orders" in yaml.input_value()
-    yaml.fill(yaml.input_value().rstrip("\n") + "\n  pool-size: 12\n")
+    # typed into the code editor as a person types (CodeMirror's +input), then the form tab clicked: the editor's blur is the text area's
+    # "change" (upgradeCodeArea), straight after its "input" events
+    page.wait_for_function("() => !!(document.querySelector('[data-yaml]').drishtiCode || {}).cm")
+    yaml.evaluate("e => { window.__changes = 0; e.addEventListener('change', () => { window.__changes++; }); }")
+    yaml.evaluate("""e => { const cm = e.drishtiCode.cm, end = { line: cm.lastLine(), ch: cm.getLine(cm.lastLine()).length };
+      cm.focus(); cm.setCursor(end); cm.replaceRange((cm.getLine(cm.lastLine()) ? '\\n' : '') + '  pool-size: 12', end, end, '+input'); }""")
     dlg.locator("[data-tab='form']").click()
     dlg.locator("[data-setting='pool-size']").wait_for()
     page.wait_for_function("() => document.querySelector('[data-setting=\"pool-size\"]').value === '12'")   # the YAML edit reached the form
+    assert page.evaluate("window.__changes") == 1                                                  # one "change" on leaving, none for the page's own text
     dlg.locator("[data-f-description]").fill("Orders database")
     dlg.locator("[data-save]").click()
     page.wait_for_function("() => document.querySelector('tr[data-conn=\"orders-db\"] .text-muted-d') !== null && document.body.innerText.includes('Orders database')", timeout=15000)
@@ -389,7 +395,7 @@ def test_the_editor_works_from_the_keyboard(browser, conn_console):
     tab.focus()
     page.keyboard.press("ArrowRight")                                                              # arrow keys move between the tabs
     page.wait_for_function("() => document.querySelector('[data-tab=\"yaml\"]').getAttribute('aria-selected') === 'true'")
-    assert dlg.locator("[data-yaml]").is_visible() and dlg.locator("[data-pane='form']").is_hidden()
+    assert dlg.locator(".di-code-host").is_visible() and dlg.locator("[data-pane='form']").is_hidden()       # the YAML's code editor
     page.keyboard.press("ArrowLeft")
     page.wait_for_function("() => document.querySelector('[data-tab=\"form\"]').getAttribute('aria-selected') === 'true'")
     page.keyboard.press("Escape")

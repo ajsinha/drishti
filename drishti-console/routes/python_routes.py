@@ -58,7 +58,7 @@ async def status(request: Request):
 @router.post("/bi/python/run")
 async def run(request: Request):
     """Body ``{report, page, visual, state}``: one python visual, run on the server over the rows the person may see. Answers ``{kind, ...}``: ``measure``
-    (``by``, ``rows``), ``echarts`` (``option``), ``vega-lite``, ``svg`` or ``png``, plus ``ms``, ``inputRows`` and ``masked``."""
+    (``by``, ``rows``), ``drishti-chart`` (``spec``), ``echarts`` (``option``), ``vega-lite`` (``spec``), ``svg`` or ``png``, plus ``ms``, ``inputRows`` and ``masked``."""
     body = await json_body(request)
     if not body.get("report") or not body.get("page") or not body.get("visual"):
         return JSONResponse({"code": "DRS-9070", "detail": "send {report, page, visual, state}"}, status_code=422)

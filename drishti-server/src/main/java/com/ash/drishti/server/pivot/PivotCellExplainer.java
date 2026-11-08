@@ -22,6 +22,7 @@ import com.ash.drishti.server.explain.ExplainPanels;
 import com.ash.drishti.server.explain.ExplainRequest;
 import com.ash.drishti.server.explain.Explainer;
 import com.ash.drishti.server.explain.Explanation;
+import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.server.security.Principal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -33,17 +34,20 @@ import org.springframework.stereotype.Component;
  * Explain a pivot cell (kind {@code pivot}, core; PIVOT_GUIDE.md): a cell of a pivot answer on two dates (or two cells), its difference
  * split by a dimension's members in steps that add up, by the pivot engine's own explanation ({@link Explain}), as the person (the view is
  * resolved and checked as for every pivot query: row rules and masks apply). Asked with a POST, the body the pivot's own: {@code view},
- * {@code value} (the value's label or id), {@code from}, {@code fromDate}, {@code to}, {@code toDate}, {@code by}, {@code order}.
+ * {@code value} (the value's label or id), {@code from}, {@code fromDate}, {@code to}, {@code toDate}, {@code by}, {@code order}. Each
+ * explanation is audited ({@code pivot.explain}). {@code POST /api/v1/pivot/explain} is a deprecated alias of this for one release.
  */
 @Component
 final class PivotCellExplainer implements Explainer {
 
     private final PivotController pivot;
     private final PivotCore core;
+    private final AuditLog audit;
 
-    PivotCellExplainer(PivotController pivot, PivotCore core) {
+    PivotCellExplainer(PivotController pivot, PivotCore core, AuditLog audit) {
         this.pivot = pivot;
         this.core = core;
+        this.audit = audit;
     }
 
     @Override
@@ -75,6 +79,8 @@ final class PivotCellExplainer implements Explainer {
                 body.get("to") == null ? null : coords(body.get("to")), r.text("toDate"), r.required("by", "by=DESK (the dimension whose members split the difference)"),
                 r.text("order"), r.text("price"), r.text("quantity"));
         Map<String, Object> a = Explain.explain(core, pivot.on(p), req);
+        audit.record(p.user(), "pivot.explain", view.source(), "from=" + req.from() + "@" + req.fromDate() + "; to=" + req.to() + "@" + req.toDate()
+                + "; by=" + req.by());
         Map<String, Object> from = (Map<String, Object>) a.get("from");
         Map<String, Object> to = (Map<String, Object>) a.get("to");
         Double value = to.get("value") instanceof Number n ? n.doubleValue() : null;

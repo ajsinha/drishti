@@ -22,7 +22,7 @@ backtest, a desk's contributions, a book's positions, Construct your basket (its
 drawer (How calculated), the portfolio and position pages, the explorer on a phone, var-result read as an ordinary kind, and an id that is not a live trade."""
 from __future__ import annotations
 
-from _var import WIDE, open_var, painted, start_servers, tab  # noqa: F401 - start_servers is the driver's hook
+from _var import WIDE, choose, open_var, painted, start_servers, tab  # noqa: F401 - start_servers is the driver's hook
 from shotlib import Ctx, register
 
 shot = register("var")
@@ -207,7 +207,7 @@ def in_currency(c: Ctx, scope: str, ccy: str) -> None:
     open_var(c, "/var?scope=" + scope)
     painted(c, scope)
     c.until("document.querySelector('[data-var]').dataset.ccyReady === 'true'", 60)
-    c.page.select_option("[data-vx-ccy]", ccy)
+    choose(c, "[data-vx-ccy]", ccy)
     c.until("document.querySelector('.vx-tile[data-tile=\"0\"] .l').innerText.indexOf(%r) >= 0" % ccy, 90)
     painted(c, scope)
     c.until("document.querySelector('.vx-tree .vx-row.hdr') && document.querySelector('.vx-tree .vx-row.hdr').innerText.indexOf(%r) >= 0" % ccy, 90)

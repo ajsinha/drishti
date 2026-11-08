@@ -812,7 +812,9 @@ is measured before and after (version, data files, rows, every named file presen
 back**; it refuses, moving nothing, when `<data>/delta/demo` exists, when a folder belongs to no lake file, or while a load holds the lock;
 it **never deletes** a file and records the move in `<data>/delta/demo/_drishti-lake/relocated.json`. Connector files the server once
 generated with the old default root follow the move: they are rewritten to `lake: demo`, each kept beside it as
-`<name>.yaml.before-lake-<time>.bak`. A site that sets `DRISHTI_DELTA_ROOT` keeps that root: nothing moves.
+`<name>.yaml.before-lake-<time>.bak`. A file nobody edited since it was generated keeps counting as unedited (its template stamp is
+written again over the new text), so it still follows its pack's template at upgrades; an edited file stays edited. A site that sets
+`DRISHTI_DELTA_ROOT` keeps that root: nothing moves.
 
 **Roll back by hand**: stop the server, set `drishti.lakes.relocate-on-start: false`, rename the folders under `<data>/delta/demo/` back to
 `<data>/delta/`, delete `relocated.json`, and put the `.bak` connector files back. Every check, refusal and message:

@@ -17,7 +17,13 @@
    (startRow, endRow), the sort and filter models, the row groups and the group keys of the level it is under (a group row opens a
    level of its own, with its own blocks), the values and the pivot (the request a pivot server answers), and carries an AbortSignal:
    a sort or filter change aborts what is in flight and starts again. Blocks are cached (least recently used are dropped past
-   maxBlocks); refresh() drops them all (or one level) and asks again. A row not loaded yet is a placeholder (loading: true). */
+   maxBlocks); refresh() drops them all (or one level) and asks again. A row not loaded yet is a placeholder (loading: true).
+
+   Tree data on server-side rows (treeData with isServerSideGroup(row) and getServerSideGroupKey(row)): the server answers one level of
+   the tree at a time. The top level is asked with groupKeys []; a row the server marks as a group (isServerSideGroup) is a node that
+   opens, and opening it asks its level with groupKeys = the node's path (its ancestors' keys and its own, getServerSideGroupKey). A node
+   is a row too (it carries its own figures, the server's); a closed and reopened node uses its cached blocks; a sort or a filter asks
+   every open level again, sorted and filtered there; refresh({keys}) asks one node's level (and those under it) again. */
 import { EventBus } from '../../drishti-core/src/drishti_index.js';
 import { SEP } from './drishti_pivot.js';
 
@@ -33,6 +39,7 @@ import { SEP } from './drishti_pivot.js';
  * @property {Array<{colId: string, aggFunc: string}>} valueCols
  * @property {string[]} pivotCols
  * @property {boolean} pivotMode
+ * @property {boolean} [treeData] tree data: groupKeys is the path of the node whose children are asked ([] for the top)
  * @property {AbortSignal} [signal]
  */
 
@@ -55,14 +62,25 @@ function Level(keys) { this.keys = keys; this.blocks = new Map(); this.rowCount 
  */
 export class ServerRowModel {
   /**
-   * @param {{datasource: Datasource, blockSize: number, maxBlocks: number, getRowId: function(Object, number, string[]): string}} o
-   *   blockSize default 100; maxBlocks default 50 (5,000 rows held)
+   * @param {{datasource: Datasource, blockSize: number, maxBlocks: number, getRowId: function(Object, number, string[]): string,
+   *   treeData: boolean, isServerSideGroup: function(Object): boolean, getServerSideGroupKey: function(Object): string, groupDefaultExpanded: number}} o
+   *   blockSize default 100; maxBlocks default 50 (5,000 rows held); treeData: the server answers a tree one level at a time,
+   *   isServerSideGroup(row) says a row is a node that opens, getServerSideGroupKey(row) its key at its level (the tree column shows it);
+   *   groupDefaultExpanded: nodes (or row groups) open down to this level as they load (-1: all; default 0)
    */
   constructor(o) {
     if (!o || !o.datasource || typeof o.datasource.getRows !== 'function') { throw new Error('a server-side row model needs a datasource with getRows(request)'); }
     this.datasource = o.datasource;
     this.blockSize = o.blockSize || 100;
     this.maxBlocks = o.maxBlocks || 50;
+    this.treeData = !!o.treeData;
+    if (this.treeData && (typeof o.isServerSideGroup !== 'function' || typeof o.getServerSideGroupKey !== 'function')) {
+      throw new Error('tree data on server-side rows needs isServerSideGroup(row) and getServerSideGroupKey(row)');
+    }
+    this.isServerSideGroup = o.isServerSideGroup || null;
+    this.getServerSideGroupKey = o.getServerSideGroupKey || null;
+    this.openTo = o.groupDefaultExpanded === -1 ? Infinity : Math.max(0, o.groupDefaultExpanded || 0);
+    this.collapsed = new Set();
     this.getRowId = o.getRowId || ((r, i, keys) => (r && r.id !== undefined ? String(r.id) : keys.concat([String(i)]).join(SEP)));
     /** @type {EventBus} rowsChanged {reason}, blockLoaded {keys, block}, loadFailed {error, keys, block} */
     this.events = new EventBus();
@@ -108,6 +126,7 @@ export class ServerRowModel {
     this.pivotCols = (s.pivotCols || []).slice();
     this.pivotMode = !!s.pivotMode;
     this.expanded.clear();
+    this.collapsed.clear();
     this.reset();
     this.events.emit('rowsChanged', { reason: 'group' });
   }
@@ -119,8 +138,23 @@ export class ServerRowModel {
    * @returns {void}
    */
   setExpanded(keys, open) {
-    const k = keys.join(SEP), now = open === undefined ? !this.expanded.has(k) : open;
-    if (now) { this.expanded.add(k); if (!this.levels.has(k)) { this.levels.set(k, new Level(keys.slice())); } } else { this.expanded.delete(k); }
+    const k = keys.join(SEP), now = open === undefined ? !this.isOpen(k, keys.length - 1) : open;
+    if (now) { this.expanded.add(k); this.collapsed.delete(k); if (!this.levels.has(k)) { this.levels.set(k, new Level(keys.slice())); } }
+    else { this.expanded.delete(k); this.collapsed.add(k); }
+    this.display = null;
+    this.events.emit('rowsChanged', { reason: 'expand' });
+  }
+
+  /**
+   * Opens every group or tree node down to a level as it loads (0: all closed; 99 or Infinity: all), forgetting single opens and closes.
+   * A level is asked of the server only when its rows come into view.
+   * @param {number} level
+   * @returns {void}
+   */
+  expandToLevel(level) {
+    this.openTo = level >= 99 ? Infinity : Math.max(0, level || 0);
+    this.expanded.clear();
+    this.collapsed.clear();
     this.display = null;
     this.events.emit('rowsChanged', { reason: 'expand' });
   }
@@ -187,6 +221,24 @@ export class ServerRowModel {
     return 'level';
   }
 
+  /** @private whether the node or group of these joined keys (at this depth) is open: opened, or within groupDefaultExpanded and not closed */
+  isOpen(key, depth) { return this.expanded.has(key) || (depth < this.openTo && !this.collapsed.has(key)); }
+
+  /** @private whether the display may be more than the top level (an open group or node, or levels open by default) */
+  nested() { return this.expanded.size > 0 || (this.openTo > 0 && (this.treeData || this.rowGroupCols.length > 0)); }
+
+  /**
+   * The keys of the node or group a loaded row opens, or null when it opens nothing (a leaf).
+   * @param {Level} lv the row's level
+   * @param {Object} r the row
+   * @returns {?string[]}
+   */
+  childKeys(lv, r) {
+    if (this.treeData) { return this.isServerSideGroup(r) ? lv.keys.concat([String(this.getServerSideGroupKey(r))]) : null; }
+    const depth = lv.keys.length;
+    return depth < this.rowGroupCols.length ? lv.keys.concat([String(r[this.rowGroupCols[depth]])]) : null;
+  }
+
   /** @private how many rows a level shows: its count when known, else what is loaded plus one block to come */
   levelCount(lv) { return lv.rowCount !== null ? lv.rowCount : lv.knownEnd + this.blockSize; }
 
@@ -198,11 +250,11 @@ export class ServerRowModel {
       const lv = this.levels.get(key), n = this.levelCount(lv), depth = lv.keys.length;
       for (let i = 0; i < n; i++) {
         out.push([key, i]);
-        if (depth < this.rowGroupCols.length) {
-          const r = this.blockRow(lv, i);
-          if (r && !r.loading) {
-            const childKeys = lv.keys.concat([String(r[this.rowGroupCols[depth]])]), ck = childKeys.join(SEP);
-            if (this.expanded.has(ck)) { if (!this.levels.has(ck)) { this.levels.set(ck, new Level(childKeys)); } walk(ck); }
+        if (this.treeData || depth < this.rowGroupCols.length) {
+          const r = this.blockRow(lv, i), childKeys = r && !r.loading ? this.childKeys(lv, r) : null;
+          if (childKeys) {
+            const ck = childKeys.join(SEP);
+            if (this.isOpen(ck, depth)) { if (!this.levels.has(ck)) { this.levels.set(ck, new Level(childKeys)); } walk(ck); }
           }
         }
       }
@@ -224,25 +276,32 @@ export class ServerRowModel {
    * How many rows are displayed (an estimate while a level's count is not known).
    * @returns {number}
    */
-  rowCount() { return this.expanded.size ? this.flatten().length : this.levelCount(this.levels.get('')); }
+  rowCount() { return this.nested() ? this.flatten().length : this.levelCount(this.levels.get('')); }
 
   /** @private a display index as [level key, row in the level]: no open group, no flattening (a million rows cost nothing) */
-  at(i) { return this.expanded.size ? this.flatten()[i] : ['', i]; }
+  at(i) { return this.nested() ? this.flatten()[i] : ['', i]; }
 
   /**
    * The row at a display index: the data when its block is in, else a placeholder ({loading: true}); asks for the block.
    * @param {number} i
-   * @returns {?Object} {kind: 'group'|'leaf'|'loading', id, depth, row, keys, expanded, loading}
+   * @returns {?Object} {kind: 'group'|'leaf'|'loading', id, depth, row, keys, expanded, loading}; tree data adds tree: true, treeKey (the
+   *   row's key at its level) and path (a node's keys from the top); a node is a group that is also a row (its id is the row's)
    */
   rowAt(i) {
     if (i < 0 || i >= this.rowCount()) { return null; }
     const [key, n] = this.at(i), lv = this.levels.get(key), depth = lv.keys.length;
     const r = this.blockRow(lv, n);
     if (!r) { this.ensureBlock(key, Math.floor(n / this.blockSize)); return { kind: 'loading', id: 'loading:' + key + ':' + n, depth: depth, row: null, loading: true }; }
+    if (this.treeData) {
+      const keys = this.childKeys(lv, r), id = this.getRowId(r, n, lv.keys);
+      if (!keys) { return { kind: 'leaf', tree: true, treeKey: String(this.getServerSideGroupKey(r)), id: id, depth: depth, row: r, keys: lv.keys }; }
+      return { kind: 'group', tree: true, treeKey: keys[keys.length - 1], id: id, depth: depth, row: r, keys: keys, path: keys, field: null, value: keys[keys.length - 1],
+        expanded: this.isOpen(keys.join(SEP), depth) };                       // the tree column shows the key alone, as the client tree does
+    }
     if (depth < this.rowGroupCols.length) {
       const keys = lv.keys.concat([String(r[this.rowGroupCols[depth]])]);
       return { kind: 'group', id: 'group:' + keys.join(SEP), depth: depth, row: r, keys: keys, field: this.rowGroupCols[depth], value: r[this.rowGroupCols[depth]],
-        count: r.childCount, expanded: this.expanded.has(keys.join(SEP)) };
+        count: r.childCount, expanded: this.isOpen(keys.join(SEP), depth) };
     }
     return { kind: 'leaf', id: this.getRowId(r, n, lv.keys), depth: depth, row: r, keys: lv.keys };
   }
@@ -267,9 +326,11 @@ export class ServerRowModel {
 
   /** @private */
   request(lv, block, signal) {
-    return { startRow: block * this.blockSize, endRow: (block + 1) * this.blockSize, sortModel: this.sortModel.slice(), filterModel: Object.assign({}, this.filterModel),
+    const q = { startRow: block * this.blockSize, endRow: (block + 1) * this.blockSize, sortModel: this.sortModel.slice(), filterModel: Object.assign({}, this.filterModel),
       quickFilter: this.quickFilter, rowGroupCols: this.rowGroupCols.slice(), groupKeys: lv.keys.slice(), valueCols: this.valueCols.slice(),
       pivotCols: this.pivotCols.slice(), pivotMode: this.pivotMode, signal: signal };
+    if (this.treeData) { q.treeData = true; }
+    return q;
   }
 
   /**
@@ -324,9 +385,12 @@ export class ServerRowModel {
 
 /**
  * A data source over rows held in memory (tests, demos, and a page that wants the server-side model's paging over local data): sorts,
- * filters and groups as a server would, with an optional delay.
+ * filters and groups as a server would, with an optional delay. With getDataPath it answers tree data a level at a time, as a server
+ * would: a request with treeData and groupKeys [k1..kn] gets the children of that node, each the row whose path ends there (or, for a
+ * node no row names, {[keyField]: key}) with treeGroup (it has children), treeKey (its key) and childCount; use
+ * isServerSideGroup: (r) => r.treeGroup and getServerSideGroupKey: (r) => r.treeKey.
  * @param {Object[]} rows
- * @param {{delay: number, columns: import('./drishti_columns.js').ColumnModel}} [o]
+ * @param {{delay: number, columns: import('./drishti_columns.js').ColumnModel, getDataPath: function(Object): string[], keyField: string}} [o]
  * @returns {Datasource & {calls: BlockRequest[]}}
  */
 export function memoryDatasource(rows, o) {
@@ -339,6 +403,13 @@ export function memoryDatasource(rows, o) {
       return new Promise((resolve, reject) => {
         const run = () => {
           if (req.signal && req.signal.aborted) { const e = new Error('aborted'); e.aborted = true; reject(e); return; }
+          if (req.treeData) {
+            if (typeof o.getDataPath !== 'function') { reject(new Error('a tree data request needs the memory datasource\'s getDataPath')); return; }
+            let level = treeLevel(rows, o.getDataPath, req.groupKeys, o.keyField || 'key');
+            if (req.sortModel && req.sortModel.length) { level = sortRows(level, req.sortModel[0]); }
+            resolve({ rows: level.slice(req.startRow, req.endRow), rowCount: level.length });
+            return;
+          }
           let list = req.groupKeys.length ? rows.filter((r) => req.groupKeys.every((k, i) => String(r[req.rowGroupCols[i]]) === k)) : rows;
           Object.keys(req.filterModel || {}).forEach((k) => {
             const f = req.filterModel[k];
@@ -349,8 +420,7 @@ export function memoryDatasource(rows, o) {
             list.forEach((r) => { const k = String(r[col]); const g = m.get(k) || { [col]: r[col], childCount: 0 }; g.childCount++; m.set(k, g); });
             list = Array.from(m.values()).sort((a, b) => String(a[col]).localeCompare(String(b[col])));
           } else if (req.sortModel && req.sortModel.length) {
-            const s = req.sortModel[0], dir = s.sort === 'desc' ? -1 : 1;
-            list = list.slice().sort((a, b) => (a[s.colId] < b[s.colId] ? -dir : a[s.colId] > b[s.colId] ? dir : 0));
+            list = sortRows(list, req.sortModel[0]);
           }
           resolve({ rows: list.slice(req.startRow, req.endRow), rowCount: list.length });
         };
@@ -358,4 +428,24 @@ export function memoryDatasource(rows, o) {
       });
     }
   };
+}
+
+/** @private rows sorted by one sort model entry */
+function sortRows(list, s) {
+  const dir = s.sort === 'desc' ? -1 : 1;
+  return list.slice().sort((a, b) => (a[s.colId] < b[s.colId] ? -dir : a[s.colId] > b[s.colId] ? dir : 0));
+}
+
+/** @private the children of the node at keys: one row per next key, in the rows' order, marked treeGroup, treeKey and childCount */
+function treeLevel(rows, getDataPath, keys, keyField) {
+  const out = new Map(), d = keys.length;
+  rows.forEach((r) => {
+    const p = getDataPath(r).map(String);
+    if (p.length <= d || keys.some((k, i) => p[i] !== k)) { return; }
+    const k = p[d];
+    let x = out.get(k);
+    if (!x) { x = { row: null, kids: new Set() }; out.set(k, x); }
+    if (p.length === d + 1) { x.row = r; } else { x.kids.add(p[d + 1]); }
+  });
+  return Array.from(out.entries()).map(([k, x]) => Object.assign({}, x.row || { [keyField]: k }, { treeKey: k, treeGroup: x.kids.size > 0, childCount: x.kids.size }));
 }

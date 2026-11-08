@@ -13,50 +13,63 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The Subscribe form's "When": choices (daily at, business days at, weekly on, monthly on the last business day, hourly) that write the schedule text
-   (docs/guides/BI_GUIDE.md, schedules); the text itself stays editable under Advanced. The form also says which model the report reads, so a person
-   knows what the figures are asked of. Text only, never markup. */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
+/* The Subscribe form's "When": drishti-inputs' Form, live inside the page's form (how often, the day for a weekly one, the time with
+   the time picker; the day and the time show only when they apply), writing the schedule text (docs/guides/BI_GUIDE.md, schedules);
+   the text itself stays editable under Advanced, and a text the choices cannot say reads back as "on a schedule I write". The form also
+   says which model the report reads, so a person knows what the figures are asked of. Text only, never markup. */
 (function () {
   'use strict';
   var form = document.querySelector('[data-subscribe-form]');
   var raw = form && form.elements.schedule;
-  if (!form || !raw) { return; }
-  var kind = form.querySelector('[data-when-kind]'), time = form.querySelector('[data-when-time]'), day = form.querySelector('[data-when-day]'), shown = form.querySelector('[data-when-says]');
-  if (!kind) { return; }
-  var timeRow = form.querySelector('[data-when-time-row]'), dayRow = form.querySelector('[data-when-day-row]');
+  var host = form && form.querySelector('[data-when-form]');
+  var I = window.Drishti.elements && window.Drishti.elements.inputs;
+  if (!form || !raw || !host || !I) { return; }
+  var shown = form.querySelector('[data-when-says]');
+  var DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'], DAY_WORDS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  var schema = { type: 'object', required: ['kind'], properties: {
+    kind: { type: 'string', title: 'Send', hook: 'when-kind', allowEmpty: false,
+      enum: ['daily', 'business-days', 'weekly', 'month-end', 'hourly', 'custom'],
+      enumLabels: ['every day', 'every business day', 'every week on', 'on the last business day of the month', 'every hour', 'on a schedule I write (advanced)'], widget: 'select' },
+    day: { type: 'string', title: 'Day', hook: 'when-day', allowEmpty: false, enum: DAYS, enumLabels: DAY_WORDS, widget: 'select', when: { field: 'kind', equals: 'weekly' } },
+    time: { type: 'time', title: 'At', hook: 'when-time', when: { field: 'kind', notIn: ['hourly', 'custom'] } } } };
 
-  function build() {
-    var t = time.value || '07:30';
-    switch (kind.value) {
+  function build(v) {
+    var t = v.time || '07:30';
+    switch (v.kind) {
       case 'daily': return 'daily ' + t;
       case 'business-days': return 'business-days ' + t;
-      case 'weekly': return 'weekly ' + day.value + ' ' + t + ' business';
+      case 'weekly': return 'weekly ' + (v.day || 'mon') + ' ' + t + ' business';
       case 'month-end': return 'monthly last ' + t + ' business';
       case 'hourly': return 'hourly';
       default: return raw.value;
     }
   }
-  function words() {
-    var t = time.value || '07:30', d = day.options[day.selectedIndex] ? day.options[day.selectedIndex].textContent : '';
+  function words(v) {
+    var t = v.time || '07:30', d = DAY_WORDS[DAYS.indexOf(v.day || 'mon')];
     return { daily: 'Every day at ' + t, 'business-days': 'Every business day at ' + t, weekly: 'Every ' + d + ' at ' + t + ' (the next business day when it is a holiday)',
-      'month-end': 'On the last business day of the month at ' + t, hourly: 'Every hour', custom: 'The schedule text below' }[kind.value];
+      'month-end': 'On the last business day of the month at ' + t, hourly: 'Every hour', custom: 'The schedule text below' }[v.kind];
   }
+  /** An existing schedule read back into the choices; anything else is custom. */
+  function read(s) {
+    var m;
+    s = (s || '').trim();
+    if ((m = /^daily (\d\d:\d\d)$/.exec(s))) { return { kind: 'daily', day: 'mon', time: m[1] }; }
+    if ((m = /^business-days (\d\d:\d\d)$/.exec(s))) { return { kind: 'business-days', day: 'mon', time: m[1] }; }
+    if ((m = /^weekly (mon|tue|wed|thu|fri|sat|sun) (\d\d:\d\d)( business)?$/.exec(s))) { return { kind: 'weekly', day: m[1], time: m[2] }; }
+    if ((m = /^monthly last (\d\d:\d\d) business$/.exec(s))) { return { kind: 'month-end', day: 'mon', time: m[1] }; }
+    if (s === 'hourly') { return { kind: 'hourly', day: 'mon', time: '07:30' }; }
+    return s ? { kind: 'custom', day: 'mon', time: '07:30' } : { kind: 'business-days', day: 'mon', time: '07:30' };
+  }
+  var when = new I.Form(host, { schema: schema, value: read(raw.value), embedded: true, label: 'When', layout: 'columns' });
   function sync() {
-    var custom = kind.value === 'custom';
-    timeRow.hidden = custom || kind.value === 'hourly';
-    dayRow.hidden = kind.value !== 'weekly';
-    if (!custom) { raw.value = build(); }
-    shown.textContent = words() + '.';
+    var v = when.getField ? { kind: when.getField('kind'), day: when.getField('day'), time: when.getField('time') } : when.getValue();
+    if (v.kind !== 'custom') { raw.value = build(v); }
+    shown.textContent = words(v) + '.';
   }
-  /** Reads an existing schedule back into the choices; anything else is custom. */
-  function read() {
-    var s = raw.value.trim(), m;
-    if ((m = /^daily (\d\d:\d\d)$/.exec(s))) { kind.value = 'daily'; time.value = m[1]; } else if ((m = /^business-days (\d\d:\d\d)$/.exec(s))) { kind.value = 'business-days'; time.value = m[1]; } else if ((m = /^weekly (mon|tue|wed|thu|fri|sat|sun) (\d\d:\d\d)( business)?$/.exec(s))) { kind.value = 'weekly'; day.value = m[1]; time.value = m[2]; } else if ((m = /^monthly last (\d\d:\d\d) business$/.exec(s))) { kind.value = 'month-end'; time.value = m[1]; } else if (s === 'hourly') { kind.value = 'hourly'; } else if (s) { kind.value = 'custom'; } else { kind.value = 'business-days'; }
-    sync();
-  }
-  [kind, time, day].forEach(function (el) { el.addEventListener('change', sync); el.addEventListener('input', sync); });
-  raw.addEventListener('input', function () { var s = raw.value; kind.value = 'custom'; sync(); raw.value = s; });
-  read();
+  when.on('change', sync);
+  raw.addEventListener('input', function () { var s = raw.value; if (when.getField('kind') !== 'custom') { when.setField('kind', 'custom'); } raw.value = s; sync(); });
+  sync();
 
   // the model the report reads
   var note = form.querySelector('[data-model-note]');

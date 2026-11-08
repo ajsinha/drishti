@@ -26,7 +26,7 @@
 {% block title %}{% if cube %}{{ cube.title }}{% else %}Pivot{% if source %} · {{ source }}{% endif %}{% endif %} · {{ PRODUCT }}{% endblock %}
 {% block screen %}pivot{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-inputs/drishti_inputs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-chart/drishti_chart.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_pivot-screen.css?v={{ ASSET_V }}">{% if lens == 'mr' %}<link rel="stylesheet" href="/static/css/drishti_mr-lens.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-chart/drishti_chart.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_pivot-screen.css?v={{ ASSET_V }}">{% if lens == 'mr' %}<link rel="stylesheet" href="/static/css/drishti_mr-lens.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="pv{% if lens == 'mr' %} mr{% endif %}" data-pivot-screen{% if cube %} data-preset-name="{{ cube.name }}"{% endif %} data-source="{{ source }}" data-view-id="{{ view_id }}" data-date="{{ date }}"{% if lens %} data-lens="{{ lens }}"{% endif %}{% if preset %} data-preset="{{ preset }}"{% endif %}>
@@ -129,7 +129,7 @@
       <label>Inputs <input class="pv-input" data-pf-inputs value="r, w" aria-label="Inputs, comma separated"></label>
       <label>Kind <select data-pf-kind aria-label="Kind"><option>mergeable</option><option>sketch</option><option>holistic</option></select></label>
       <label>Entry <input class="pv-input" data-pf-entry placeholder="Python: the class; Java: the jar" aria-label="Entry"></label>
-      <label class="pf-wide">Code <textarea class="pv-input pf-code" data-pf-code rows="6" aria-label="Code">sum(r * w) / sum(w)</textarea></label>
+      <label class="pf-wide">Code <textarea class="pv-input pf-code" data-pf-code data-di-code="rachana" rows="6" aria-label="Code">sum(r * w) / sum(w)</textarea></label>
       <label class="pf-wide">Sample rows (CSV with a header) <textarea class="pv-input pf-code" data-pf-sample rows="5" aria-label="Sample rows">r,w,g
 0.012,3,A
 -0.004,1,B
@@ -148,4 +148,4 @@
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-grid/drishti_grid.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-inputs/drishti_inputs.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-chart/drishti_chart.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot-switches.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot-functions.js?v={{ ASSET_V }}"></script>{% if lens == 'mr' %}<script src="/static/elements/drishti-risk/drishti_risk.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_mr-lens.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-grid/drishti_grid.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-chart/drishti_chart.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot-switches.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot-functions.js?v={{ ASSET_V }}"></script>{% if lens == 'mr' %}<script src="/static/elements/drishti-risk/drishti_risk.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_mr-lens.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}

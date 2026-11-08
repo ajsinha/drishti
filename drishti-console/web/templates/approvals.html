@@ -16,7 +16,7 @@
 {# The one Approvals queue (SHARED_SCREENS.md section 2; the approved mock-up e2-approvals, option A with B's due-soon items pinned): the inbox
    on the left (due soon first, then the newest), the filters (Data · Screens · Risk · Access; Mine sent; Done), the chosen item on the right
    with what changes, its effect if approved, the rules, the questions, and Approve · Reject · Withdraw · Ask a question.
-   A shell: drishti_approvals.js fills it from /approvals/api/... #}
+   A shell: drishti-insight's Approvals queue fills it from /approvals/api/... #}
 {% extends "base.html" %}
 {% block title %}Approvals · {{ PRODUCT }}{% endblock %}
 {% block screen %}approvals{% endblock %}
@@ -93,4 +93,4 @@
   </div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_approvals.js?v={{ ASSET_V }}"></script>{% endblock %}
+{# the queue is drishti-insight's (startApprovals, loaded on every page by base.html): it starts here because the page holds [data-approvals] #}

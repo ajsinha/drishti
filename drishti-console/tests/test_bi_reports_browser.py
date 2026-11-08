@@ -425,7 +425,7 @@ def test_designer_resize_with_the_pointer_snaps_to_the_grid(stack, browser):
     new_draft(page)
     page.drag_and_drop('[data-field="Notional"]', "[data-canvas-grid]", target_position={"x": 20, "y": 20})
     page.wait_for_selector('.bi-dvis[data-type="card"]')
-    handle = page.locator(".bi-dvis .bi-resize").first
+    handle = page.locator(".bi-dvis [data-dd-edge=se]").first                          # the layout canvas's corner (drishti-designer)
     hb = handle.bounding_box()
     grid = page.locator("[data-canvas-grid]").bounding_box()
     step = (grid["width"] - 11 * 10) / 12 + 10
@@ -548,8 +548,8 @@ def test_every_visual_type_draws_with_data(stack, browser):
     page.click('[data-visual="matrix"] [data-group="DESK-FX"]')
     expect(page.locator('[data-visual="matrix"] tr[data-row^="DESK-FX"]')).to_have_count(1)
     assert page.locator('[data-visual="s-list"] [data-slicer-value]').count() == 3
-    page.click('[data-visual="s-drop"] summary')
-    assert page.locator('[data-visual="s-drop"] [data-slicer-value]').count() == 3
+    page.click('[data-visual="s-drop"] .di-ms-control')                              # drishti-inputs' multi-select over the slicer's values
+    assert page.locator('[data-visual="s-drop"] [data-slicer-value]').count() == 3 and page.locator(".di-ms-pop .di-option").count() == 3
     page.keyboard.press("Escape")
     page.fill('[data-visual="s-range"] [data-range="from"]', "3000000")
     page.press('[data-visual="s-range"] [data-range="from"]', "Enter")
@@ -609,7 +609,8 @@ def test_designer_filters_advanced_and_top_n_the_suggestions_and_conditional_col
     # the YAML tab offers what fits the cursor
     page.click('[data-tab="yaml"]')
     page.evaluate("""() => { const cm = document.querySelector('.CodeMirror').CodeMirror; cm.focus(); const n = cm.lineCount(); cm.setCursor({line: n - 1, ch: 0}); cm.replaceRange('      - { type: ', {line: n - 1, ch: cm.getLine(n - 1).length}); cm.setCursor({line: cm.lineCount() - 1, ch: 100}); }""")
-    page.wait_for_function("() => [...document.querySelectorAll('[data-suggest] .bi-suggest')].some(b => b.textContent === 'waterfall')", timeout=10000)
+    page.keyboard.press("Control+Space")                                                   # the editor's completion (drishti-inputs' CodeEditor)
+    page.wait_for_function("() => [...document.querySelectorAll('.di-complete-pop .di-option-label')].some(b => b.textContent === 'waterfall')", timeout=10000)
     clean(page)
 
 

@@ -579,7 +579,8 @@ the server moves them into `data/delta/demo/`, once, before any connector opens 
 - it runs once: `data/delta/demo/_drishti-lake/relocated.json` records when, from where, and every table's version, files and rows;
 - then each connector file that still reads the demo lake by its old default root (`root: ${DRISHTI_DELTA_ROOT:./data/delta}`, as the
   server generated them from the packs' templates before the lake form) is rewritten to `lake: demo` with `lake-tables:`, every reading
-  setting kept and the file before kept beside it (`<name>.yaml.before-lake-<time>.bak`); a connector with a root of its own (another
+  setting kept and the file before kept beside it (`<name>.yaml.before-lake-<time>.bak`); a file never edited since it was generated is
+  stamped again over the new text, so it still counts as unedited and keeps following its pack's template at upgrades; a connector with a root of its own (another
   folder, `s3://...`), and a reader of the official results (`risk-results`: tables of the `var-official` or `ccr-official` lake), are
   left as they are.
 

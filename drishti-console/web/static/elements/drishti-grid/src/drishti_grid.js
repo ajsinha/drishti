@@ -19,8 +19,6 @@
    the layout: wells, panel and terminal are shells over the same state (getState carries the layout's name only to give it back). */
 import { EventBus } from '../../drishti-core/src/drishti_index.js';
 import { ColumnModel, getValue, formatValue } from './drishti_columns.js';
-import { ClientRowModel } from './drishti_client-rows.js';
-import { ServerRowModel } from './drishti_server-rows.js';
 import { Viewport } from './drishti_viewport.js';
 import { SelectionModel, rangeStats, toTsv, rangeCells } from './drishti_selection.js';
 import { GridNavigator } from './drishti_keyboard.js';
@@ -29,7 +27,7 @@ import { PivotState } from './drishti_pivot.js';
 import { resultColumns, cellValue } from './drishti_pivot-answer.js';
 import { GridLive } from './drishti_grid-live.js';
 import { GridEditing } from './drishti_grid-edit.js';
-import { GridModelBase, LAYOUTS, DENSITIES } from './drishti_grid-model-base.js';
+import { GridModelBase, LAYOUTS, DENSITIES, rowModelFor } from './drishti_grid-model-base.js';
 import { cycleSort, FILTER_CHANNEL } from '../../drishti-core/src/drishti_index.js';
 
 /**
@@ -65,8 +63,13 @@ import { cycleSort, FILTER_CHANNEL } from '../../drishti-core/src/drishti_index.
  *   note, colours (color, background-color, font-weight, font-style: a conditional format), a node before the figure (an icon), a node
  *   in its place (a link holding the same text), and a node or words after it (a sparkline, a delta); it shows, it never changes a figure
  * @property {boolean} [treeData=false] the rows make a tree by their paths (getDataPath): nodes open and close, a node no row names carries
- *   its figures as a group (the server's when clientAggregation is false); the first shown column holds the node's key
+ *   its figures as a group (the server's when clientAggregation is false); the first shown column holds the node's key. With a
+ *   datasource, the server answers the tree a level at a time (isServerSideGroup, getServerSideGroupKey)
  * @property {function(Object): string[]} [getDataPath] a row's path from the top (tree data)
+ * @property {function(Object): boolean} [isServerSideGroup] tree data on server-side rows (treeData with a datasource): whether a row
+ *   the server sent is a node that opens; opening it asks the server for its level with groupKeys = the node's path
+ * @property {function(Object): string} [getServerSideGroupKey] tree data on server-side rows: a row's key at its level (the tree column
+ *   shows it; a node's path is its ancestors' keys and this one)
  * @property {number} [groupDefaultExpanded=0] groups and tree nodes open down to this level (-1: all)
  */
 
@@ -84,9 +87,7 @@ export class GridModel extends GridModelBase {
     this.columns = new ColumnModel(o.columns);
     this.layout = LAYOUTS.indexOf(o.layout) >= 0 ? o.layout : 'wells';
     this.density = DENSITIES[o.density] ? o.density : 'compact';
-    this.rowModel = o.datasource ? new ServerRowModel({ datasource: o.datasource, blockSize: o.blockSize, getRowId: o.getRowId })
-      : new ClientRowModel({ columns: this.columns, rows: o.rows || [], getRowId: o.getRowId, clientAggregation: o.clientAggregation, treeData: o.treeData,
-        getDataPath: o.getDataPath, groupDefaultExpanded: o.groupDefaultExpanded });
+    this.rowModel = rowModelFor(o, this.columns);
     this.serverSide = !!o.datasource;
     this.viewport = new Viewport({ rowHeight: DENSITIES[this.density] });
     this.selection = new SelectionModel({ mode: o.rowSelection });

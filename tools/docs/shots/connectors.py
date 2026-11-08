@@ -115,7 +115,7 @@ def dayfolder_view(c: Ctx):
 @shot("business-date-picker.jpg")
 def date_picker(c: Ctx):
     c.page.goto(f"{c.base}/asof?d=2026-09-29&next=/v/trade/T-1")          # what picking the date in the top bar does
-    c.page.wait_for_selector("input#asofDate")
+    c.page.wait_for_selector("#asofDate + .di-upgraded input")
     c.page.wait_for_timeout(1500)
     c.save("business-date-picker.jpg")
 

@@ -52,6 +52,22 @@ class TemplateStampTest {
         assertThat(TemplateStamp.stamp("plugin: delta\n", "p", "f")).startsWith("# drishti-template: pack=p template=f text=");
     }
 
+    @Test
+    void aToolsRewriteOfAnUneditedFileKeepsItUnedited() {
+        String s = TemplateStamp.stamp(TEXT, "risk", "abc123");
+        String rewritten = TemplateStamp.withoutStamp(s).replace("- trade\n", "- trade\nsettings:\n  lake: demo\n");
+        String kept = TemplateStamp.keepPristine(s, rewritten);
+        assertThat(TemplateStamp.pristine(kept)).as("stamped again over the new text").isTrue();
+        assertThat(TemplateStamp.of(kept).orElseThrow()).isEqualTo(new TemplateStamp.Stamp("risk", "abc123", TemplateStamp.of(kept).orElseThrow().text()));
+        assertThat(TemplateStamp.withoutStamp(kept)).isEqualTo(rewritten);
+        // an edited file stays edited; a file without a stamp gets none
+        String edited = s.replace("- trade", "- trade\n- valuation");
+        String after = edited + "settings:\n  lake: demo\n";
+        assertThat(TemplateStamp.keepPristine(edited, after)).isEqualTo(after);
+        assertThat(TemplateStamp.pristine(TemplateStamp.keepPristine(edited, after))).isFalse();
+        assertThat(TemplateStamp.keepPristine(TEXT, TEXT + "x: 1\n")).isEqualTo(TEXT + "x: 1\n");
+    }
+
     private static List<Pack> packs(Path dir, String yaml) throws Exception {
         Path p = Files.createDirectories(dir.resolve("packs/risk"));
         Files.writeString(p.resolve("pack.yaml"), yaml);

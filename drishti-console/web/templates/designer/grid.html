@@ -50,11 +50,7 @@
   <div class="gd-formula" role="group" aria-label="Formula bar">
     <output class="gd-name mono" data-gd-name aria-label="The selected cell">A1</output>
     <span class="gd-fx" aria-hidden="true">=</span>
-    <div class="gd-input">
-      <textarea class="mono" data-gd-formula rows="1" spellcheck="false" autocomplete="off" aria-label="The cell's formula: Enter keeps it, Shift+Enter a new line (another panel in the cell), Esc goes back"
-        aria-autocomplete="list" aria-controls="gdSuggest" aria-describedby="gdHelp"></textarea>
-      <ul class="gd-suggest" id="gdSuggest" role="listbox" data-gd-suggest hidden></ul>
-    </div>
+    <div class="gd-input" data-gd-formula aria-describedby="gdHelp"></div>
   </div>
   <div class="gd-error" data-gd-error role="alert" hidden><div class="gd-bad mono" data-gd-bad></div><p data-gd-why></p><p class="dz-note">Fix the red part: the cell keeps what it had until the formula reads.</p></div>
   <p class="dz-note gd-help" id="gdHelp" data-gd-info>Pick a cell. Arrows move, Shift+arrows pick a range, Enter edits, Esc goes back; drag a cell onto another to move its panel.</p>
@@ -82,4 +78,4 @@
   {% endif %}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_designer-grid.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}{% include "_designer_kit.html" %}<script src="/static/js/drishti_designer-grid.js?v={{ ASSET_V }}"></script>{% endblock %}

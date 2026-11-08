@@ -189,7 +189,7 @@ runs the hand-built cases of section 10 with no data.
 **`FRSA <scope> <GO>`** opens the capital screen:
 
 - **Capital stack** (the default tab): one bar each for delta, vega and curvature of the reported scenario, DRC, RRAO and the total, then
-  the class × measure grid; select a cell to drill into its buckets (K_b and S_b per scenario, the curvature side) and their factors.
+  the class × measure grid with each class's **Total** (its three charges added, the server's figure) and SBM; select a cell to drill into its buckets (K_b and S_b per scenario, the curvature side) and their factors.
 - **Scenarios**: every class and measure in the low, medium and high scenarios, the binding scenario outlined, the alternative
   specification marked where it applied.
 - **Contributions**: by desk, book, legal entity, product type or position; the sum is shown beside the total.

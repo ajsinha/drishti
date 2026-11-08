@@ -15,26 +15,26 @@
  */
 /* The statement designer's Paper tab (drishti_bi-statement.js, 2.6.0): the paper settings beside a page-by-page preview. The sheet is paper: white with the
    statement's own ink in every theme, as it prints. */
-.bi-st-wrap { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 1rem; align-items: start; }
+.bi-st-wrap { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: var(--d-sp-16); align-items: start; }
 @media (max-width: 1100px) { .bi-st-wrap { grid-template-columns: minmax(0, 1fr); } }
 /* QA2-15: the Paper tab sits between the Studio's side panels, so its width is not the window's: the settings go above the preview when
    the tab itself is narrow (a 1400 px window left the sheet about 130 px wide), and the margin boxes share their row, never running under
    the preview */
 .bi-dview[data-view="paper"] { container: st-paper / inline-size; }
 @container st-paper (max-width: 900px) { .bi-st-wrap { grid-template-columns: minmax(0, 1fr); } }
-.bi-st-settings { display: flex; flex-direction: column; gap: .35rem; }
-.bi-st-h { font-size: .85rem; font-weight: 600; margin: .6rem 0 .1rem; }
-.bi-st-row { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: .35rem; align-items: center; }
+.bi-st-settings { display: flex; flex-direction: column; gap: var(--d-sp-5_6); }
+.bi-st-h { font-size: var(--d-fs-13_6); font-weight: 600; margin: var(--d-sp-9_6) 0 var(--d-sp-1_6); }
+.bi-st-row { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: var(--d-sp-5_6); align-items: center; }
 .bi-st-row small { grid-column: 1 / -1; }
 .bi-st-row-wide { grid-template-columns: minmax(0, 1fr); }
-.bi-st-margins { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .25rem; }
+.bi-st-margins { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--d-sp-4); }
 .bi-st-margins .studio-in { min-width: 0; width: 100%; box-sizing: border-box; }
 .bi-st-preview { outline: none; }
-.bi-st-preview:focus-visible { box-shadow: 0 0 0 2px var(--accent, #2f6fde); border-radius: 4px; }
-.bi-st-bar { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin-bottom: .6rem; }
-.bi-st-where { min-width: 12rem; font-size: .85rem; }
-.bi-st-files { margin-left: auto; display: flex; gap: .3rem; }
-.bi-st-stage { overflow: auto; padding: 2px; }
-.bi-st-sheet { position: relative; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .25); overflow: hidden; margin: 0 auto 1rem; font-family: Helvetica, Arial, sans-serif; }
+.bi-st-preview:focus-visible { box-shadow: 0 0 0 2px var(--d-statement-focus); border-radius: var(--d-radius-4); }
+.bi-st-bar { display: flex; flex-wrap: wrap; gap: var(--d-sp-6_4); align-items: center; margin-bottom: var(--d-sp-9_6); }
+.bi-st-where { min-width: 12rem; font-size: var(--d-fs-13_6); }
+.bi-st-files { margin-left: auto; display: flex; gap: var(--d-sp-4_8); }
+.bi-st-stage { overflow: auto; padding: var(--d-sp-2); }
+.bi-st-sheet { position: relative; background: var(--d-paper); box-shadow: var(--d-elev-paper); overflow: hidden; margin: 0 auto var(--d-sp-16); font-family: Helvetica, Arial, sans-serif; }
 .bi-st-text { position: absolute; white-space: pre; line-height: 1; }
 .bi-st-rule, .bi-st-fill { position: absolute; }

@@ -68,6 +68,20 @@ def overflow(pg):
     return pg.evaluate("document.documentElement.scrollWidth > window.innerWidth + 1")
 
 
+
+def pick_date(pg, field, day):
+    """Types a date into a form's date picker (drishti-inputs) and leaves it."""
+    pg.fill(field, day)
+    pg.press(field, "Tab")
+
+
+def pick_datetime(pg, block, day, time):
+    """Types a date and a time into a form's date-and-time picker (drishti-inputs) and leaves each."""
+    pg.fill(block + " .di-datetime-date input", day)
+    pg.press(block + " .di-datetime-date input", "Tab")
+    pg.fill(block + " .di-time-field", time)
+    pg.press(block + " .di-time-field", "Tab")
+
 def test_a_form_beside_the_table_with_words_a_draft_and_resuming_it(stack, browser):
     pg = page(browser, stack, DESK)
     forget_drafts(pg, stack)
@@ -76,23 +90,23 @@ def test_a_form_beside_the_table_with_words_a_draft_and_resuming_it(stack, brows
     pg.click("#p-trades tbody tr[data-frow='1'] td:nth-child(2)")
     side = pg.locator("[data-fm-side]")
     side.wait_for()
-    assert "locked: you can view, not change" in side.locator("[data-fm-field='counterparty'] .fm-why").inner_text()
-    assert "read-only: set by the booking system" in side.locator("[data-fm-field='trade_id']").inner_text()
-    assert "· LE-" in side.locator("[data-fm-field='legal_entity'] .fm-ro").inner_text()      # an entity: its name, then its id
-    assert side.locator("[data-fm-field='notional'] .fm-unit").inner_text() == pg.evaluate(
+    assert "locked: you can view, not change" in side.locator("[data-path='counterparty'] .di-label").inner_text()
+    assert "read-only: set by the booking system" in side.locator("[data-path='trade_id']").inner_text()
+    assert "· LE-" in side.locator("[data-path='legal_entity'] .fm-ro").inner_text()      # an entity: its name, then its id
+    assert side.locator("[data-path='notional'] .di-unit").inner_text() == pg.evaluate(
         "JSON.parse(document.querySelector('#p-trades').getAttribute('data-form')).rows[1].values.currency")
     assert side.locator("[data-fm-badge]").count() == 0
     pg.fill("[data-fm-side] [data-field='notional']", "40,000,000")
-    warn = side.locator("[data-msgs='notional'] .fm-warn")
+    warn = side.locator("[data-path='notional'] .di-msg.di-note")
     assert warn.inner_text().strip() == "Above the desk limit of 30,000,000: a second approver is needed."
-    assert "Say why the trade is above the desk limit" in side.locator("[data-msgs='comment'] .fm-error").inner_text()
+    assert "Say why the trade is above the desk limit" in side.locator("[data-path='comment'] .di-msg").inner_text()
     assert side.locator("[data-fm-badge]").inner_text() == "Draft · not saved"
     pg.click("[data-fm-side] .fm-save")                          # an error: not saved, the field it names is focused
     assert pg.evaluate("document.activeElement.getAttribute('data-field')") == "comment"
     assert pg.evaluate("Drishti.forms.state().trades.dirty")
     pg.fill("[data-fm-side] [data-field='comment']", "Client hedge for the Q4 roll")
     assert side.locator(".fm-error").count() == 0 and warn.count() == 1
-    pg.fill("[data-fm-side] [data-field='executed_at']", "2026-10-22T09:41")      # a date and time, in its time zone
+    pick_datetime(pg, "[data-fm-side] [data-path='executed_at']", "2026-10-22", "09:41")      # a date and time, in its time zone
     IMG.mkdir(parents=True, exist_ok=True)
     wait(pg, "document.querySelector('#p-trades tr.wire-kids')")
     pg.evaluate("document.querySelectorAll('#p-trades tr.wire-kids').forEach(n => n.remove())")   # the cash flows the click opened: not in the picture
@@ -129,12 +143,12 @@ def test_a_masked_field_is_hidden_and_offers_nothing(stack, browser):
     pg.click("#p-trades tbody tr[data-frow='0'] td:nth-child(2)")
     side = pg.locator("[data-fm-side]")
     side.wait_for()
-    cp = side.locator("[data-fm-field='counterparty']")
+    cp = side.locator("[data-path='counterparty']")
     assert "Hidden for you" in cp.inner_text() and cp.locator("select, input").count() == 0
-    assert "locked: you can view, not change" in side.locator("[data-fm-field='trade_status']").inner_text()
-    assert side.locator("[data-fm-field='trade_status'] select").count() == 0
+    assert "locked: you can view, not change" in side.locator("[data-path='trade_status']").inner_text()
+    assert side.locator("[data-path='trade_status'] select").count() == 0
     pg.click("[data-fm-new]")                                     # the drawer never asks for a masked or locked field
-    assert pg.locator("[data-fm-drawer] [data-fm-field='counterparty']").count() == 0
+    assert pg.locator("[data-fm-drawer] [data-path='counterparty']").count() == 0
     pg.close()
 
 
@@ -198,7 +212,7 @@ def test_new_in_a_guided_drawer_with_a_live_hint(stack, browser):
     assert pg.locator("[data-fm-scrim]").is_visible()
     assert dr.locator(".fm-step").all_inner_texts() == ["1 · Who", "2 · What", "3 · Check"]
     dr.locator(".fm-next").click()                               # nothing chosen: Next says what is missing
-    assert "Counterparty is required" in dr.locator("[data-msgs='counterparty']").inner_text()
+    assert "Counterparty is required" in dr.locator("[data-path='counterparty'] .di-msg").inner_text()
     pg.select_option("[data-fm-drawer] [data-field='counterparty']", index=1)
     dr.locator(".fm-next").click()
     assert dr.locator(".fm-step").nth(0).inner_text() == "1 · Who ✓"
@@ -207,7 +221,7 @@ def test_new_in_a_guided_drawer_with_a_live_hint(stack, browser):
     pg.select_option("[data-fm-drawer] [data-field='product_type']", "IRS")
     pg.fill("[data-fm-drawer] [data-field='notional']", "25m")
     pg.select_option("[data-fm-drawer] [data-field='currency']", "USD")
-    pg.fill("[data-fm-drawer] [data-field='maturity_date']", "2031-06-30")
+    pick_date(pg, "[data-fm-drawer] [data-field='maturity_date']", "2031-06-30")
     hint = dr.locator("[data-fm-hint]").inner_text()
     assert "PFE limit after this trade:" in hint and " of " in hint and "%)" in hint
     assert dr.locator("[data-fm-badge]").inner_text() == "Draft · not saved"
@@ -235,7 +249,8 @@ def test_an_entity_by_search_money_a_worked_out_default_and_a_time(stack, browse
     pg.select_option("[data-fm-drawer] [data-field='counterparty']", index=1)
     ent = "[data-fm-drawer] [data-field='legal_entity']"
     pg.fill(ent, "europe")                                       # search by name: the list narrows as people type
-    opts = dr.locator(".fm-entity-list li[role='option']")
+    opts = pg.locator(".di-combo-pop [role='option']")           # drishti-inputs' combobox list, floating in the page
+    opts.first.wait_for()
     assert opts.count() >= 1 and all("europe" in t.lower() for t in opts.all_inner_texts())
     assert pg.get_attribute(ent, "aria-expanded") == "true"
     pg.keyboard.press("Enter")
@@ -244,11 +259,11 @@ def test_an_entity_by_search_money_a_worked_out_default_and_a_time(stack, browse
     assert dr.locator("[data-fm-open='legal_entity']").get_attribute("href") == "/v/legal-entity/" + kept
     dr.locator(".fm-next").click()
     pg.fill("[data-fm-drawer] [data-field='notional']", "lots")
-    assert dr.locator("[data-msgs='notional']").inner_text().strip() == "Notional is an amount (1,000,000, 1.5m or 250k)"
+    assert dr.locator("[data-path='notional'] .di-msg").inner_text().strip() == "Notional is an amount (1,000,000, 1.5m or 250k)"
     pg.fill("[data-fm-drawer] [data-field='notional']", "1.5m")
-    assert dr.locator("[data-fm-field='notional'] .fm-unit").inner_text() == "—"
+    assert dr.locator("[data-path='notional'] .di-unit").inner_text() == "—"
     pg.select_option("[data-fm-drawer] [data-field='currency']", "EUR")
-    assert dr.locator("[data-fm-field='notional'] .fm-unit").inner_text() == "EUR"           # the currency the currency field holds
+    assert dr.locator("[data-path='notional'] .di-unit").inner_text() == "EUR"           # the currency the currency field holds
     fee = "[data-fm-drawer] [data-field='upfront_fee']"
     assert pg.input_value(fee) == "1,500" and "Worked out: notional * 0.001" in dr.locator("[data-fm-auto]").inner_text()
     pg.fill("[data-fm-drawer] [data-field='notional']", "2m")
@@ -257,9 +272,9 @@ def test_an_entity_by_search_money_a_worked_out_default_and_a_time(stack, browse
     assert dr.locator("[data-fm-auto]").count() == 0             # typed over: no longer worked out
     pg.locator("[data-fm-drawer] [data-field='executed_at']").focus()
     assert pg.input_value(fee) == "2,500"                        # grouped once the field is left
-    assert dr.locator("[data-fm-field='executed_at'] .fm-unit").inner_text() == "Europe/London"
-    pg.fill("[data-fm-drawer] [data-field='executed_at']", "2026-10-23T14:05")
-    pg.fill("[data-fm-drawer] [data-field='maturity_date']", "2031-06-30")
+    assert dr.locator("[data-path='executed_at'] .di-zone").inner_text() == "Europe/London"
+    pick_datetime(pg, "[data-fm-drawer] [data-path='executed_at']", "2026-10-23", "14:05")
+    pick_date(pg, "[data-fm-drawer] [data-field='maturity_date']", "2031-06-30")
     pg.select_option("[data-fm-drawer] [data-field='product_type']", "IRS")
     dr.locator(".fm-next").click()
     summary = dr.locator(".fm-summary").inner_text()
@@ -286,20 +301,20 @@ def test_an_entity_field_searches_the_server_as_people_type(stack, browser):
     assert "kind=legal-entity" in got.value.url and "q=bank" in got.value.url and got.value.ok
     results = got.value.json()["results"]
     assert results and all("bank" in (r["label"] + r["id"]).lower() for r in results)
-    wait(pg, "!document.querySelector('[data-fm-drawer] .fm-entity-status')")
-    assert dr.locator(".fm-entity-list li[role='option']").count() >= 1
+    pg.locator(".di-combo-pop [role='option']").first.wait_for()
+    assert pg.locator(".di-combo-pop [role='option']").count() >= 1
     with pg.expect_response(lambda r: "/api/forms/lookup" in r.url):
         pg.fill(ent, "zzqx-nothing")
-    wait(pg, "document.querySelector('[data-fm-drawer] .fm-entity-none')")
-    assert dr.locator(".fm-entity-none").inner_text() == "No match for “zzqx-nothing”"
+    wait(pg, "document.querySelector('.di-combo-pop .di-empty')")
+    assert pg.locator(".di-combo-pop .di-empty").inner_text() == 'Nothing matches "zzqx-nothing"'
     pg.route("**/api/forms/lookup**", lambda route: route.abort())  # offline: the choices the page brought still answer
     pg.fill(ent, "europe")
-    wait(pg, "!document.querySelector('[data-fm-drawer] .fm-entity-status')")
-    assert dr.locator(".fm-entity-list li[role='option']").count() >= 1
+    wait(pg, "document.querySelector('.di-combo-pop [role=option]') && !/Searching/.test(document.querySelector('.di-combo-pop .di-combo-status').textContent)")
+    assert pg.locator(".di-combo-pop [role='option']").count() >= 1
     pg.unroute("**/api/forms/lookup**")
     with pg.expect_response(lambda r: "/api/forms/lookup" in r.url):
         pg.fill(ent, "bank")
-    wait(pg, "!document.querySelector('[data-fm-drawer] .fm-entity-status')")
+    wait(pg, "document.querySelector('.di-combo-pop [role=option]') && !/Searching/.test(document.querySelector('.di-combo-pop .di-combo-status').textContent)")
     pg.keyboard.press("ArrowDown")
     pg.keyboard.press("ArrowUp")
     pg.keyboard.press("Enter")                                   # picked with the keys
@@ -333,5 +348,5 @@ def test_a_phone_stacks_the_form_and_the_drawer_fills_the_screen(stack, browser)
     pg.click("[data-fm-new]")
     d = pg.locator("[data-fm-drawer]").bounding_box()
     assert d["x"] <= 1 and d["width"] >= 388
-    assert pg.locator("[data-fm-drawer] .fm-in").first.bounding_box()["height"] >= 36
+    assert pg.locator("[data-fm-drawer] .fm-fields .di-field").first.bounding_box()["height"] >= 36
     pg.close()

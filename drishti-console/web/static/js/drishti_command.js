@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The command line: Bloomberg-style type-ahead on the one search box (drishti_search-box.js, GET /api/search?in=command): suggestions
+/* The command line: Bloomberg-style type-ahead on the one search box (drishti-insight's search, GET /api/search?in=command): suggestions
    as you type (debounced 60 ms, stale requests aborted) in an ARIA listbox, driven from the keyboard: ↑/↓ move (↑ in an empty box:
    earlier commands), Tab completes, Enter opens (<GO>), Esc closes. After one entity's id a space offers history ranges (30, 3M, YTD,
    30 DIFF): choosing one opens the entity over time. "/" focuses the command line anywhere (the keymap, drishti_keys.js).

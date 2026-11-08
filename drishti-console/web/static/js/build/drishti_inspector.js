@@ -95,7 +95,7 @@
       var structured = p.type === 'integer' || p.type === 'number' || p.oneOf || p.type === 'array' || (Array.isArray(p.type) && p.type.indexOf('object') >= 0) || (value && typeof value === 'object');
       if (structured) {
         var made = WB.Forms.edit(p.type || p.oneOf ? p : {}, value, function (v) { set(v === undefined ? null : v, true); }, name, enums);
-        return made.tagName === 'FIELDSET' ? made : (made.tagName === 'INPUT' || made.tagName === 'SELECT' ? label(name, made) : WB.Forms.captioned(name, made));
+        return made.hasAttribute('data-wb-form') ? made : made.tagName === 'FIELDSET' ? made : (made.tagName === 'INPUT' || made.tagName === 'SELECT' ? label(name, made) : WB.Forms.captioned(name, made));   // a Form labels its own field
       }
       var t = textInput(value, set, isExpr || /^(rows|source|children|each|x|y|label|value|mark|max|text)$/.test(name), exprSource(panelId));
       var wrap = label(name + (req ? ' *' : ''), t.input);
@@ -269,7 +269,7 @@
       if (!sel) { screenForm(); } else if (sel.type === 'panel') { panelForm(sel, opts); } else if (sel.type === 'title') { titleForm(); } else if (sel.type === 'strip') { stripForm(); }
     }
     getSchema().then(function (raw) {
-      schema = new window.Drishti.assist.Schema(raw);
+      schema = new window.Drishti.elements.designer.YamlSchema(raw);      // the Rachana schema as drishti-designer reads it
       var col = raw.$defs.column.properties;
       enums.fmt = (col.fmt || {}).enum || []; enums.tone = (col.tone || {}).enum || [];
       show(cur);

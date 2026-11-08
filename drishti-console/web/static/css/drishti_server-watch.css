@@ -14,13 +14,11 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* The server-watch banner (js/drishti_server-watch.js): a compact bar at the top of the page. */
-.sw-banner { position: sticky; top: 0; z-index: 2000; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem;
-  padding: .35rem 1rem; background: var(--d-surface-2); color: var(--d-ink); border-bottom: 2px solid var(--d-warn); }
-.sw-banner[hidden] { display: none; }
+.sw-banner { position: sticky; top: 0; z-index: var(--d-z-overlay); display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-8);
+  padding: var(--d-sp-5_6) var(--d-sp-16); background: var(--d-surface-2); color: var(--d-ink); border-bottom: 2px solid var(--d-warn); }
 .sw-banner[data-state="up"] { border-bottom-color: var(--d-ok); }
 .sw-banner .sw-text { flex: 1 1 14rem; }
-.sw-btn { min-height: 44px; min-width: 44px; padding: 0 .9rem; border: 1px solid var(--d-border); border-radius: 6px;
+.sw-btn { min-height: 44px; min-width: 44px; padding: 0 var(--d-sp-14_4); border: 1px solid var(--d-border); border-radius: var(--d-radius-6);
   background: var(--d-surface); color: var(--d-ink); font: inherit; cursor: pointer; }
-.sw-btn[hidden] { display: none; }
 .sw-btn:hover { border-color: var(--d-accent); }
 .sw-btn:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }

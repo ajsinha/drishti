@@ -66,7 +66,7 @@ def test_numeric_options_take_numbers_and_enumerated_options_are_selects(live_co
     pick(page, "versions")
     rev = state(page, "rev")
     limit = page.get_by_label("limit", exact=True)
-    assert limit.get_attribute("type") == "number"
+    assert limit.get_attribute("inputmode") == "decimal"                  # drishti-inputs reads a number loosely (and checks it in words)
     limit.fill("5")
     limit.blur()
     settle(page, rev)

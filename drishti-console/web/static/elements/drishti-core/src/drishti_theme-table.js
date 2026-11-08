@@ -51,7 +51,12 @@ export const THEME_TABLE = Object.freeze({
       "--d-shadow": "0 10px 40px rgba(0, 0, 0, .35)",
       "--d-font-sans": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
       "--d-font-mono": "ui-monospace, SFMono-Regular, \"JetBrains Mono\", Menlo, Consolas, monospace",
-      "--d-radius": "10px"
+      "--d-radius": "10px",
+      "--d-market-violet": "#a78bfa",
+      "--d-trading-green": "#4fd18b",
+      "--d-world-teal": "#4cc9b8",
+      "--d-cap-violet": "#c792ea",
+      "--d-cap-teal": "#4fc1c9"
     }
   },
   "light": {
@@ -87,7 +92,12 @@ export const THEME_TABLE = Object.freeze({
       "--d-shadow": "0 10px 30px rgba(23, 36, 64, .10)",
       "--d-font-sans": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
       "--d-font-mono": "ui-monospace, SFMono-Regular, \"JetBrains Mono\", Menlo, Consolas, monospace",
-      "--d-radius": "10px"
+      "--d-radius": "10px",
+      "--d-market-violet": "#6d28d9",
+      "--d-trading-green": "#1a7f4b",
+      "--d-world-teal": "#0b7468",
+      "--d-cap-violet": "#7a45a8",
+      "--d-cap-teal": "#11808a"
     }
   },
   "blue": {
@@ -123,7 +133,15 @@ export const THEME_TABLE = Object.freeze({
       "--d-shadow": "0 10px 30px rgba(0, 121, 193, .12)",
       "--d-font-sans": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
       "--d-font-mono": "ui-monospace, SFMono-Regular, \"JetBrains Mono\", Menlo, Consolas, monospace",
-      "--d-radius": "10px"
+      "--d-radius": "10px",
+      "--d-market-violet": "#6d28d9",
+      "--d-trading-green": "#1a7f4b",
+      "--d-world-teal": "#0b7468",
+      "--d-cap-violet": "#c792ea",
+      "--d-cap-teal": "#4fc1c9",
+      "--d-nav-from": "#002654",
+      "--d-nav-via": "#0079c1",
+      "--d-nav-to": "#003168"
     }
   },
   "green": {
@@ -159,7 +177,15 @@ export const THEME_TABLE = Object.freeze({
       "--d-shadow": "0 10px 30px rgba(0, 96, 57, .12)",
       "--d-font-sans": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
       "--d-font-mono": "ui-monospace, SFMono-Regular, \"JetBrains Mono\", Menlo, Consolas, monospace",
-      "--d-radius": "10px"
+      "--d-radius": "10px",
+      "--d-market-violet": "#6d28d9",
+      "--d-trading-green": "#1a7f4b",
+      "--d-world-teal": "#0b7468",
+      "--d-cap-violet": "#c792ea",
+      "--d-cap-teal": "#4fc1c9",
+      "--d-nav-from": "#00261a",
+      "--d-nav-via": "#006039",
+      "--d-nav-to": "#1c3a2e"
     }
   },
   "wallstreet": {
@@ -195,7 +221,12 @@ export const THEME_TABLE = Object.freeze({
       "--d-shadow": "0 10px 40px rgba(0, 0, 0, .6)",
       "--d-font-sans": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
       "--d-font-mono": "ui-monospace, SFMono-Regular, \"JetBrains Mono\", Menlo, Consolas, monospace",
-      "--d-radius": "10px"
+      "--d-radius": "10px",
+      "--d-market-violet": "#a78bfa",
+      "--d-trading-green": "#4fd18b",
+      "--d-world-teal": "#4cc9b8",
+      "--d-cap-violet": "#c792ea",
+      "--d-cap-teal": "#4fc1c9"
     }
   },
   "crimson": {
@@ -231,7 +262,15 @@ export const THEME_TABLE = Object.freeze({
       "--d-shadow": "0 10px 30px rgba(41, 51, 82, .12)",
       "--d-font-sans": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
       "--d-font-mono": "ui-monospace, SFMono-Regular, \"JetBrains Mono\", Menlo, Consolas, monospace",
-      "--d-radius": "10px"
+      "--d-radius": "10px",
+      "--d-market-violet": "#6d28d9",
+      "--d-trading-green": "#1a7f4b",
+      "--d-world-teal": "#0b7468",
+      "--d-cap-violet": "#c792ea",
+      "--d-cap-teal": "#4fc1c9",
+      "--d-nav-from": "#5c0e1b",
+      "--d-nav-via": "#a51c30",
+      "--d-nav-to": "#293352"
     }
   },
   "crimson-dark": {
@@ -267,7 +306,16 @@ export const THEME_TABLE = Object.freeze({
       "--d-shadow": "0 10px 40px rgba(0, 0, 0, .5)",
       "--d-font-sans": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
       "--d-font-mono": "ui-monospace, SFMono-Regular, \"JetBrains Mono\", Menlo, Consolas, monospace",
-      "--d-radius": "10px"
+      "--d-radius": "10px",
+      "--d-market-violet": "#a78bfa",
+      "--d-trading-green": "#4fd18b",
+      "--d-world-teal": "#4cc9b8",
+      "--d-cap-violet": "#c792ea",
+      "--d-cap-teal": "#4fc1c9",
+      "--d-nav-from": "#2e0810",
+      "--d-nav-via": "#6e1120",
+      "--d-nav-to": "#1b2138",
+      "--d-band-button-ink": "#6e1120"
     }
   },
   "terminal-green": {
@@ -303,7 +351,12 @@ export const THEME_TABLE = Object.freeze({
       "--d-shadow": "0 10px 40px rgba(0, 0, 0, .45)",
       "--d-font-sans": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
       "--d-font-mono": "ui-monospace, SFMono-Regular, \"JetBrains Mono\", Menlo, Consolas, monospace",
-      "--d-radius": "10px"
+      "--d-radius": "10px",
+      "--d-market-violet": "#a78bfa",
+      "--d-trading-green": "#4fd18b",
+      "--d-world-teal": "#4cc9b8",
+      "--d-cap-violet": "#c792ea",
+      "--d-cap-teal": "#4fc1c9"
     }
   },
   "terminal-crimson": {
@@ -339,7 +392,12 @@ export const THEME_TABLE = Object.freeze({
       "--d-shadow": "0 10px 40px rgba(0, 0, 0, .5)",
       "--d-font-sans": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
       "--d-font-mono": "ui-monospace, SFMono-Regular, \"JetBrains Mono\", Menlo, Consolas, monospace",
-      "--d-radius": "10px"
+      "--d-radius": "10px",
+      "--d-market-violet": "#a78bfa",
+      "--d-trading-green": "#4fd18b",
+      "--d-world-teal": "#4cc9b8",
+      "--d-cap-violet": "#c792ea",
+      "--d-cap-teal": "#4fc1c9"
     }
   },
   "terminal-blue": {
@@ -375,7 +433,12 @@ export const THEME_TABLE = Object.freeze({
       "--d-shadow": "0 10px 40px rgba(0, 0, 0, .45)",
       "--d-font-sans": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
       "--d-font-mono": "ui-monospace, SFMono-Regular, \"JetBrains Mono\", Menlo, Consolas, monospace",
-      "--d-radius": "10px"
+      "--d-radius": "10px",
+      "--d-market-violet": "#a78bfa",
+      "--d-trading-green": "#4fd18b",
+      "--d-world-teal": "#4cc9b8",
+      "--d-cap-violet": "#c792ea",
+      "--d-cap-teal": "#4fc1c9"
     }
   }
 });

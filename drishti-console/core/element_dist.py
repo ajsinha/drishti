@@ -16,9 +16,9 @@
 
 The library is the ES modules under ``web/embed/``. Each release has a semantic version (``VERSION``, also the ``version`` the library reports in
 ``window.DrishtiElements``); the console serves exactly that version immutably at ``/embed/v1/elements/<version>/...`` with an ``integrity.json`` of SHA-384
-hashes (subresource integrity), answers a partial version (``1`` or ``1.1``) with a ``302`` to the exact one, and the npm package ``@drishti/elements``
-(``web/elements/package/``) is the same bytes. ``web/elements/integrity.json`` is the committed record: ``tests/test_element_package.py`` fails when the
-modules changed and ``VERSION`` did not, so a version always names the same bytes.
+hashes (subresource integrity) and answers a partial version (``1`` or ``1.1``) with a ``302`` to the exact one. The 1.x line is FROZEN for the embedders
+that use it: ``web/elements/integrity.json`` is its committed record and ``tests/test_element_package.py`` fails when a byte under ``web/embed/`` changes.
+Its npm package (``@drishti/elements`` 1.x) and the tool that built it are retired: the per-library packages replace them (``drishti.py elements pack``).
 """
 from __future__ import annotations
 
@@ -33,9 +33,8 @@ from pathlib import Path
 WEB = Path(__file__).resolve().parent.parent / "web"
 EMBED = WEB / "embed"
 OUT = WEB / "elements"
-PACKAGE = OUT / "package"
 LOCK = OUT / "integrity.json"
-VERSION = "1.4.5"                  # bump on ANY change of a file under web/embed/ (the guard test says so); major = the element API contract
+VERSION = "1.4.5"                  # frozen: the 1.x line takes no more changes (the guard test refuses a changed byte under web/embed/)
 API = "1.0"                        # the embed API contract the modules speak (Drishti-Embed-Api)
 ENTRY = "drishti-elements.js"
 SEMVER = re.compile(r"\d+(\.\d+){0,2}")
