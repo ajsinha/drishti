@@ -1651,7 +1651,6 @@ Every dataset the exposure engine reads, what it is for, whether it is required,
 | [`collateral-balance`](#296-collateral-balance-todays-collateral) | the collateral held and posted today per account | optional (the `current` collateral model) | `counterparty-risk/collateral-balance/collateral-balance.*.jsonl.gz` | [16](#16-reference-and-master-data-read) |
 | [`counterparty`](#297-counterparty-the-counterparties) | names, ratings and groups of the counterparties | for `CPTY:` scopes | `core/counterparty/counterparty.*.jsonl.gz` | — |
 | [`counterparty-group`](#298-counterparty-group-connected-groups) | the connected groups of counterparties | for `GROUP:` scopes | `core/counterparty-group/counterparty-group.*.jsonl.gz` | — |
-| [`risk-hierarchy`](#299-risk-hierarchy-the-trees) | the legal entity and management trees, shared with VaR | for hierarchy scopes (`LE:` and the trees) | `market-risk/risk-hierarchy/risk-hierarchy.*.jsonl.gz` | — |
 
 **The minimum for an exposure profile:** a `simulation-run`, its `exposure-path` rows and the `netting-set` rows that group the trades.
 The kinds are the engine's `drishti.ccr.exposure.kinds.*` settings (`config/engines/exposure.yaml`); a bank names its own there.
@@ -1669,7 +1668,7 @@ seed. The paths of `exposure-path` are ordered by this row exactly as the P&L ve
 The large input: one row per trade, grid date and run, `MTM` holding the trade's value on each path. Drishti sums a netting set's
 trades per path and date; an absent row after maturity means the trade is worth 0 there.
 
-- **Data contract:** [`exposure-path`](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) (XPATH), key `PATH_ROW_ID`; 21 fields, 20 required; the file [`exposure-path.contract.yaml`](../../config/packs/banking/counterparty-risk/contracts/exposure-path.contract.yaml).
+- **Data contract:** [`exposure-path`](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) (XPATH), key `PATH_ROW_ID`; 22 fields, 20 required; the file [`exposure-path.contract.yaml`](../../config/packs/banking/counterparty-risk/contracts/exposure-path.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/counterparty-risk.md#exposure-path) (files `data/testdata/counterparty-risk/exposure-path/exposure-path.tar`).
 
 ### 29.4 `netting-set`: the netting sets and their trades
@@ -1710,13 +1709,6 @@ A group of connected counterparties (a parent and its subsidiaries): the `GROUP:
 
 - **Data contract:** [`counterparty-group`](../contracts/packs/core.md#grp-counterparty-group-counterparty-group) (GRP), key `GROUP_ID`; 5 fields, 5 required; the file [`counterparty-group.contract.yaml`](../../config/packs/core/core/contracts/counterparty-group.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/core.md#counterparty-group) (files `data/testdata/core/counterparty-group/counterparty-group.*.jsonl.gz`).
-
-### 29.9 `risk-hierarchy`: the trees
-
-The market-risk pack's trees, shared with VaR: a legal-entity or desk scope of exposure is a node of one of them.
-
-- **Data contract:** [`risk-hierarchy`](../contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy) (HIER), key `NODE_ID`; 11 fields, 8 required; the file [`risk-hierarchy.contract.yaml`](../../config/packs/banking/market-risk/contracts/risk-hierarchy.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#risk-hierarchy) (files `data/testdata/market-risk/risk-hierarchy/risk-hierarchy.*.jsonl.gz`).
 <!-- guide-data:end -->
 
 ---

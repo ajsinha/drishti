@@ -928,10 +928,9 @@ Every dataset the pivot guide's examples and the MR cube preset read, what it is
 | [`position`](#274-position-positions) | a stored position table, when the bank delivers one | optional (a table source) | no sample in the demo data | [3](#3-sources-and-fields) |
 | [`pnl-vector`](#275-pnl-vector-pl-vectors-per-trade) | the MR cube preset: every trade's vector; its columns as dimensions | **one of the two**, per trade | `market-risk/pnl-vector/pnl-vector-*.tar` | [29.3](#293-the-inputs) |
 | [`scenario-set`](#276-scenario-set-the-scenario-days) | the scenario days of the histogram and the explain | for the MR cube | `market-risk/scenario-set/scenario-set.tar` | — |
-| [`risk-hierarchy`](#277-risk-hierarchy-the-trees) | the hierarchy levels as dimensions | for the MR cube | `market-risk/risk-hierarchy/risk-hierarchy.*.jsonl.gz` | — |
-| [`var-limit`](#278-var-limit-var-limits) | `limit()` and `limit_use()` | optional | `market-risk/var-limit/var-limit.*.jsonl.gz` | — |
-| [`position-sensitivity`](#279-position-sensitivity-the-sensitivities) | `dv01()`, `cs01()`, the ladder and the heat map | for the sensitivity measures | `market-risk/position-sensitivity/position-sensitivity.*.jsonl.gz` | [FRTB_SA_GUIDE.md 3](FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract) |
-| [`risk-factor`](#2710-risk-factor-the-factor-dictionary) | each factor's class, tenor and curve for the ladder | for the sensitivity measures | `market-risk/risk-factor/risk-factor.*.jsonl.gz` | — |
+| [`var-limit`](#277-var-limit-var-limits) | `limit()` and `limit_use()` | optional | `market-risk/var-limit/var-limit.*.jsonl.gz` | — |
+| [`position-sensitivity`](#278-position-sensitivity-the-sensitivities) | `dv01()`, `cs01()`, the ladder and the heat map | for the sensitivity measures | `market-risk/position-sensitivity/position-sensitivity.*.jsonl.gz` | [FRTB_SA_GUIDE.md 3](FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract) |
+| [`risk-factor`](#279-risk-factor-the-factor-dictionary) | each factor's class, tenor and curve for the ladder | for the sensitivity measures | `market-risk/risk-factor/risk-factor.*.jsonl.gz` | — |
 
 The pivot reads any stored kind through its connector ([section 3](#3-sources-and-fields)); these are the sources the guide's examples
 use. A field's type and unit (money, rate) come from the kind's data contract.
@@ -974,28 +973,21 @@ The ordered scenario days: the histogram's and the explain's dates.
 - **Data contract:** [`scenario-set`](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set) (SSET), key `SCENARIO_SET_ID`; 13 fields, 10 required; the file [`scenario-set.contract.yaml`](../../config/packs/banking/market-risk/contracts/scenario-set.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#scenario-set) (files `data/testdata/market-risk/scenario-set/scenario-set.tar`).
 
-### 27.7 `risk-hierarchy`: the trees
-
-The trees' levels are dimensions (`MGMT.DESK`, `LEGAL.LEGAL-ENTITY`, `LL.LIMIT_LETTER`).
-
-- **Data contract:** [`risk-hierarchy`](../contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy) (HIER), key `NODE_ID`; 11 fields, 8 required; the file [`risk-hierarchy.contract.yaml`](../../config/packs/banking/market-risk/contracts/risk-hierarchy.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#risk-hierarchy) (files `data/testdata/market-risk/risk-hierarchy/risk-hierarchy.*.jsonl.gz`).
-
-### 27.8 `var-limit`: VaR limits
+### 27.7 `var-limit`: VaR limits
 
 A node's VaR limit: the `limit()` and `limit_use()` measures.
 
 - **Data contract:** [`var-limit`](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit) (VLIM), key `LIMIT_ID`; 10 fields, 7 required; the file [`var-limit.contract.yaml`](../../config/packs/banking/market-risk/contracts/var-limit.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#var-limit) (files `data/testdata/market-risk/var-limit/var-limit.*.jsonl.gz`).
 
-### 27.9 `position-sensitivity`: the sensitivities
+### 27.8 `position-sensitivity`: the sensitivities
 
 The FRTB-SA engine's position sensitivities: `dv01()`, `cs01()`, the ladder and the heat map of tab C.
 
 - **Data contract:** [`position-sensitivity`](../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity) (SENS), key `SENSITIVITY_ID`; 28 fields, 19 required; the file [`position-sensitivity.contract.yaml`](../../config/packs/banking/market-risk/contracts/position-sensitivity.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#position-sensitivity) (files `data/testdata/market-risk/position-sensitivity/position-sensitivity.*.jsonl.gz`).
 
-### 27.10 `risk-factor`: the factor dictionary
+### 27.9 `risk-factor`: the factor dictionary
 
 The factor dictionary the sensitivities name their factors by.
 

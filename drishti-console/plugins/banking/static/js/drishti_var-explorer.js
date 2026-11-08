@@ -947,14 +947,12 @@
     });
   }
 
-  /** The hierarchy selector from the date's hierarchies (2.9.5: every configured one, by its title), the current one chosen. */
+  /** The hierarchy selector from the date's hierarchies (every configured one, by its title), the current one chosen. */
   function fillHierarchies(d) {
     var sel = picker("[data-vx-hierarchy]");
     var info = d.hierarchyInfo || (d.hierarchies || []).map(function (id) { return { id: id, title: id }; });
     if (!info.length) return;
-    // 2.9.5: a hierarchy skipped on this date (its column not in the data) is shown disabled, with why
-    sel.setOptions(info.map(function (x) { return { value: x.id, label: (x.title || x.id) + (x.skipped ? " (not available)" : ""), disabled: !!x.skipped, detail: x.skipped ? x.note || "" : "" }; }),
-      d.hierarchy || S.hierarchy);
+    sel.setOptions(info.map(function (x) { return { value: x.id, label: x.title || x.id, detail: (x.levels || []).join(" > ") }; }), d.hierarchy || S.hierarchy);
   }
 
   /** The hierarchy shown, kept in the page's link (hierarchy=LL). */
@@ -972,7 +970,8 @@
   /** A hierarchy node's row for the tree (2.9.7: "n/c" when the limit is of another horizon or confidence). */
   function nodeRow(n) {
     return { ID: n.id, PARENT: n.parent || null, LABEL: n.name, name: n.name, LEVEL: n.level, level: n.level, scope: n.scope, parametric: n.parametric,
-      VAR: n["var"], ES: n.es, LIMIT_USE: n.limitUse, LIMIT_STATUS: n.limitStatus, LIMIT_NOTE: n.limitComparable === false ? "n/c" : "no limit" };
+      VAR: n["var"], ES: n.es, LIMIT_USE: n.limitUse, LIMIT_STATUS: n.limitStatus, LIMIT_NOTE: n.limitComparable === false ? "n/c" : "no limit",
+      blank: !!n.blank, blankNote: n.blankNote || "" };
   }
   /** A book's positions, or a position's trades (the contributions of that scope), as rows under the part's row; a position's are lazy. */
   function partRows(parentId, kids) {
@@ -1012,7 +1011,17 @@
   function nameCell(c) {
     var r = c.row, s = h("span", "nm");
     if (r.direction) s.appendChild(chip(r.direction));
-    s.appendChild(document.createTextNode(" " + r.name));
+    s.appendChild(document.createTextNode(" "));
+    if (r.blank) {                                     // a (Blank) node: muted, in italics, its ? the count of trades and the fix
+      s.appendChild(h("span", "dg-blank", r.name));
+      var q = h("span", "dg-blank-q", "?");
+      q.title = r.blankNote;
+      q.setAttribute("role", "img");
+      q.setAttribute("aria-label", r.blankNote);
+      s.appendChild(q);
+    } else {
+      s.appendChild(document.createTextNode(r.name));
+    }
     s.appendChild(addButton(r.scope, { type: r.kind === "position" ? "POS" : r.kind === "trade" ? "TRD" : r.scope.split(":")[0], id: r.scope.replace(/^[A-Z]+:/, ""), name: r.name }));
     return s;
   }
