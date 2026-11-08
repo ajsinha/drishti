@@ -75,7 +75,7 @@ def test_the_page_lists_applications_usage_and_marks_config_apps(client, backend
 def test_the_scopes_on_offer_come_from_the_server(client, backend, monkeypatch):
     with_embed(backend, monkeypatch, [])
     page = client.get("/admin/embedding").text
-    assert 'name="scope" value="embed:about"' in page and 'name="scope" value="embed:view"' in page
+    assert '&#34;enum&#34;:[&#34;embed:about&#34;,&#34;embed:view&#34;]' in page                       # the scopes in the new-application Form's schema (core/admin_forms.py)
 
 
 def test_the_admin_menus_link_to_it(client, backend, monkeypatch):

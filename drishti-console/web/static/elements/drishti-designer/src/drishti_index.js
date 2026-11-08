@@ -16,10 +16,10 @@
 /* drishti-designer: the designer kit every Drishti designer and editor is built from (the product owner, 2026-11-07: "duplicated code
    will make the system unmaintainable"). The layout canvas over a layout model (grid or flow; place, move, resize with snap,
    multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack),
-   the palette, the inspector (a drishti-inputs Form from a schema), the outline (a tree, drag to re-order or re-parent), the YAML pane
+   the palette, the inspector (a drishti-inputs Form from a schema), the outline (drishti-tree's TreeOutline: drag to re-order or re-parent), the YAML pane
    (drishti-inputs' CodeEditor kept in step with the model both ways, the selected item highlighted, completion and lint from a JSON
    Schema) and the designer shell of EDITORS.md (three panes, Visual / YAML / Both, the header with versions, Validate, Preview,
-   History, Impact, Propose for review). Depends on drishti-core and drishti-inputs only. */
+   History, Impact, Propose for review). Depends on drishti-core, drishti-inputs and drishti-tree (the outline). */
 export { CommandStack, SnapshotHistory } from './drishti_commands.js';
 export { Selection } from './drishti_selection.js';
 export { GRID, MAX_H, DEFAULT_MIN_SPAN, clamp, clampSpan, clampHeight, hideRefused, sizeText, rowsFromPixels, snap, clampRect, overlaps, settle, bounds,
@@ -31,7 +31,8 @@ export { flowHit, showFlowDrop, clearFlowDrop } from './drishti_layout-flow.js';
 export { LayoutCanvas } from './drishti_layout-canvas.js';
 export { searchPalette, paletteGroups, entryAttrs, Palette } from './drishti_palette.js';
 export { commonValues, sharedSchema, Inspector } from './drishti_inspector.js';
-export { flattenTree, findNode, isWithin, moveNode, Outline } from './drishti_outline.js';
+// the one outline is drishti-tree's TreeOutline
+export { flattenTree, findNode, isWithin, moveNode, TreeOutline as Outline } from '../../drishti-tree/src/drishti_index.js';
 export { yamlUnquote, parseYamlTree, yamlGet, yamlPlain, yamlChain, yamlContext } from './drishti_yaml-read.js';
 export { yamlScalar, dumpYaml, yamlRanges, pathAtLine } from './drishti_yaml-write.js';
 export { RACHANA_FUNCTION_ARGS, RACHANA_FUNCTION_HELP, YamlSchema, yamlPlace, yamlCompletions, yamlCheck, yamlHelp } from './drishti_yaml-assist.js';

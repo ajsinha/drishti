@@ -89,7 +89,7 @@ def test_dry_run_maintain_foreign_disabled_and_a_schedule(browser, maint_console
     foreign = page.locator('[data-lake-table="risk/published"]')
     assert foreign.locator("input[type=checkbox]").is_disabled()
     assert "Maintained by its publisher" in foreign.inner_text()
-    page.locator('[data-mt-pick][value="trading/trade"]').check()
+    page.locator('[data-lake-table="trading/trade"] [data-select-box]').check()           # drishti-grid's row selection
     assert page.locator("[data-mt-count]").inner_text() == "1 table selected"
     page.wait_for_function("() => document.querySelector('[data-mt-cli]').textContent.includes('--tables trading/trade')")
     shot(page, "lake-maintain-tables.png", page.locator("[data-maint]"))
@@ -138,7 +138,7 @@ def test_phone_width_has_no_sideways_scroll(browser, maint_console):
     page.goto(url + "/admin/lakes")
     page.locator("[data-mt-sched-panel] summary").click()
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
-    for sel in ("[data-mt-dry]", "[data-mt-run]", '[data-mt-pick][value="trading/trade"]'):
+    for sel in ("[data-mt-dry]", "[data-mt-run]", '[data-lake-table="trading/trade"] [data-select-box]'):
         box = page.locator(sel).locator("xpath=ancestor-or-self::*[self::button or self::label][1]").bounding_box()
         assert box and box["height"] >= 40, sel
     page.close()

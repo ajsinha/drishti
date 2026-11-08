@@ -229,6 +229,11 @@
 
 ## 2.9.11.e (unreleased)
 
+- **The terminal's query form on the one server-drawn form** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+  `core/forms.py`'s `form_host` sends the criteria through `core/form_kit.host` (`data-di-form` + `data-schema`), and `drishti_form.js`
+  finds the `Form` with `formOf(host, {widgets})`; its own `new Form` path and the `data-qf-schema` attribute are deleted. `formOf`
+  called with `widgets` on a `Form` already drawn draws its fields again with them, the values kept. The page's GET address and every
+  criterion's name (`op.`, `v.`, `v2.`, `cs.<path>`) are unchanged.
 - **The Admin forms, part 2, on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, sixth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
   Users, Roles, Access, Audit, Configuration (search and *Propose a change*), Connectors (the list's filters and the connector editor),
   Artifacts (filters, a BI file), Packs (the archive, the signature, the breaking-change box), a pack's *Load a data file*, Lakes,
@@ -250,7 +255,7 @@
   a field found by its name, `[name="op.mtm"]`, is its `<drishti-select>`; `index=` picks too; `has_option` waits for an option). Also on
   `Select`: the designer kit's layout picker and the shell's header choices (the report designer's *View which version*), the filter bar's
   condition and date preset (drishti-inputs' panels: one opened from inside another keeps it open). **A guard**
-  (`tests/test_native_select_guard.py`) fails on a raw `<select>` in a console page, script, library source or plugin page; its allow-list (72 files:
+  (`tests/test_native_select_guard.py`) fails on a raw `<select>` in a console page, script, library source or plugin page; its allow-list (69 files:
   the libraries without drishti-inputs, the renderer's harness, the gallery, the screens of the native-select sweep) only shrinks.
 - **The theme designer's YAML on the kit's `YamlPane`** ([ELEMENTS.md section 12.3](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
   the theme as YAML is BI Studio's YAML panel (Visual, YAML, Both), both ways: an edit is read by the server after a pause, a line that does
@@ -260,6 +265,29 @@
   wide items and a named step); the report's `layouts` are written as before (an unchanged report's YAML is the same byte for byte).
 - **The editors remember the designer layout on the server**: `EditorService`'s prefs keep `layout` (studio, side by side, terminal) with
   the mode and the YAML pane, per person (`PUT /api/v1/tables/editor/prefs` `{layout}`; another value is `422`).
+- **One outline** ([ELEMENTS.md section 8.8](docs/architecture/ELEMENTS.md#88-as-built-drishti-graph-and-drishti-tree)): drishti-designer's own
+  outline (`drishti_outline.js`, 286 lines) is folded into drishti-tree's `TreeOutline` and deleted; the kit re-exports it as `Outline`
+  (drishti-designer 0.2.0 requires drishti-tree 0.2.0; `_designer_kit.html` loads drishti-tree). `TreeOutline` (292 → 526 lines) takes
+  nested nodes (`nodes`, `setNodes`: a detail, an icon, `fixed` rows that are drop places, the host's class and `data-*` on each row, every
+  row's `data-node`), follows a `Selection` both ways, and moves by drag (before, after, inside) or Alt+arrows with the host's `canDrop`
+  (`move`, `open`, `toggle` events); a node that gains children opens. The Sutra designer's Outline mode and the kit's harness use it;
+  the tests read `.dt-oname` and `.dt-odetail`. `tools/docs/elements_api.py` and `tools/elements/dts.py` follow a name re-exported under
+  another (`TreeOutline as Outline`).
+- **The workbench's menus on drishti-inputs** (Add panel, Bind field, File, Ship, the command palette, a dropped field's kinds): `Listbox`
+  under a search ranked by `searchOptions`, placed by drishti-core (`build/drishti_menus.js` 132 → 119 lines; the hand-made listbox and
+  its CSS deleted). `Listbox` gains `followActive`; `searchOptions` ranks a label that is the word first.
+- **Admin forms, part 1, on the one server-drawn form** ([ELEMENTS.md section 12.3, sixth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+  Collaboration (search, holds, export, verify, the list toggles, a comment's hide reason), Data loads (the filter embedded in its GET
+  form, Announce, Expectations with a repeatable row per kind), Embedding (filter, new application, the secret, rotate) and Lakes ›
+  Maintain (the choices, settings, a new schedule) are drawn by the same machinery as part 2: `core/form_kit.py`'s field helpers, the one
+  `admin_form` registry in `core/admin_forms.py`, `data-di-form` + `data-schema` and drishti-inputs' `formOf`. The two parallel
+  machineries are folded into one: `core/form_schema.py` and `formFromData` deleted, the alert form (`core/alert_form.py`) on the same host and
+  `form_kit`; `formOf` called again with a page's options (`onSubmit`, `check`) adds them to the Form already drawn. Lakes › Maintain's
+  per-row picks are drishti-grid's row selection (a column of checkboxes, *Select all* in its head). A new guard
+  (`test_admin_forms_guard.py`): no Admin template writes a raw `<input>`, `<select>` or `<textarea>`; its allow-list is empty.
+- **Fixed: an unchecked "Active" saved as active.** The alert form, a scheduled report and a subscription read a missing `enabled` field
+  (an unchecked checkbox is not sent) as on; now as off, and the subscribe form drawn again after a refusal keeps the box as it was. Tests
+  in `test_alert_routes.py` and `test_dist_routes.py`.
 - **The alert form on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
   the server sends the form's schema (`core/alert_form.py`, new, 168 lines) and the page's `Form`, embedded in its POST form, draws every
   field with the name it always submitted (saving and *Check now* unchanged); the source, condition and trigger groups follow the choice

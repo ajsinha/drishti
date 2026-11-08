@@ -23,11 +23,10 @@
 (function () {
   'use strict';
   var form = document.querySelector('[data-alert-form]');
-  var host = form && form.querySelector('[data-alert-fields][data-schema]');
+  var host = form && form.querySelector('[data-alert-fields][data-di-form]');
   if (!form || !host) { return; }
   var I = window.Drishti.elements.inputs;
-  var F = new I.Form(host, Object.assign(JSON.parse(host.getAttribute('data-schema')), { embedded: true, layout: 'columns', label: 'The alert',
-    pathAttr: 'data-form-path' }));
+  var F = I.formOf(host);                                   // the one server-drawn form (core/form_kit.py): embedded, its fields named as before
   var V = 'source.visual.', M = 'source.model.';
   function wrapOf(path) { return form.querySelector('[data-form-path="' + path + '"]'); }
 

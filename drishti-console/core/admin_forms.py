@@ -255,6 +255,178 @@ def connector_head(**_) -> Markup:
                   layout="columns", label="The connector")
 
 
+# ---- Admin › Collaboration, Data loads, Embedding and Lakes › Maintain. A Form with a Save of its own is not embedded (the Form is its own
+# <form>; the page's script gives it onSubmit through formOf); a dialog's Form has no buttons (the dialog's read it); the rest are read live.
+OWN = {"embedded": False, "resetButton": False, "doneText": "", "layout": "columns"}
+ALONE = {"embedded": False, "actions": False}
+DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+
+
+def collab_search(**_) -> Markup:
+    """Admin › Collaboration: find threads by who wrote in them, the entity or the dates."""
+    props = {"user": K.text("User", "user"), "kind": K.text("Kind", "kind"), "id": K.text("Id", "id"), "from": K.date("From", "from"), "to": K.date("To", "to")}
+    return K.host(K.schema(props), {}, attrs={"class": "acol-form", "data-acol-search": ""}, label="Find threads", submitLabel="Search", **OWN)
+
+
+def collab_toggle(*, title: str, hook: str, **_) -> Markup:
+    """One checkbox that filters a list at once (Only hidden comments, Active holds only)."""
+    return K.host(K.schema({"on": K.check(title, None, hook={hook: ""})}), {"on": False}, attrs={"class": "acol-check"}, label=title)
+
+
+def collab_hold(**_) -> Markup:
+    """Admin › Collaboration, Place a legal hold: the scope's own fields follow the scope; the reason is required."""
+    props = {
+        "scope": K.select("Scope", "scope", [("entity", "one entity"), ("kind", "a kind"), ("user", "a user"), ("thread", "a thread"), ("all", "everything")],
+                          hook={"data-acol-scope": ""}),
+        "kind": K.text("Kind", "kind", when={"field": "scope", "in": ["entity", "kind"]}),
+        "id": K.text("Id", "id", when={"field": "scope", "equals": "entity"}),
+        "user": K.text("User", "user", when={"field": "scope", "equals": "user"}),
+        "thread": K.text("Thread", "thread", when={"field": "scope", "equals": "thread"}),
+        "from": K.date("From", "from"), "to": K.date("To", "to"),
+        "reason": K.text("Reason", "reason", maxLength=400, description="Required: why the hold is placed (kept in the record)."),
+    }
+    return K.host(K.schema(props, required=["reason"]), {"scope": "entity"}, attrs={"class": "acol-form", "data-acol-hold-form": ""},
+                  label="Place a legal hold", submitLabel="Place hold", **OWN)
+
+
+def collab_export(**_) -> Markup:
+    """Admin › Collaboration, Compliance export: the dates, the entity or user, and what it carries."""
+    props = {"from": K.date("From", "from"), "to": K.date("To", "to"), "kind": K.text("Kind", "kind"), "id": K.text("Id", "id"), "user": K.text("User", "user"),
+             "includeShares": K.check("Shares", "includeShares"), "includeThreads": K.check("Threads", "includeThreads")}
+    return K.host(K.schema(props), {"includeShares": True, "includeThreads": True}, attrs={"class": "acol-form", "data-acol-export-form": ""},
+                  label="Compliance export", submitLabel="Start export", **OWN)
+
+
+def collab_verify(**_) -> Markup:
+    """Admin › Collaboration, Verify the chains: one thread, or everything."""
+    return K.host(K.schema({"thread": K.text("Thread", "thread", mono=True, placeholder="th_...")}), {}, attrs={"class": "acol-form", "data-acol-verify-form": ""},
+                  label="Verify the chains", submitLabel="Verify", **OWN)
+
+
+def loads_filter(*, kinds=(), kind: str = "", status: str = "", day: str = "", **_) -> Markup:
+    """Admin › Packs › Data loads, the history's filter: embedded in the page's GET form (kind, status and date as before)."""
+    props = {"kind": K.select("Kind", "kind", [(k, k) for k in kinds], empty="all", hook={"data-filter-kind": ""}),
+             "status": K.select("Status", "status", [("ready", "ready"), ("failed", "failed")], empty="all"),
+             "date": K.date("Date", "date")}
+    value = {"kind": kind or "", "status": status or "", **({"date": day} if day else {})}
+    return K.host(K.schema(props), value, attrs={"data-loads-filter": ""}, layout="columns", label="Filter the loads")
+
+
+def loads_announce(*, kinds=(), **_) -> Markup:
+    """Data loads, Announce a load: what an ETL says with ``drishti.py data landed`` (the dialog's Announce sends it)."""
+    kinds = list(kinds)
+    props = {"kind": K.select("Kind", "kind", [(k, k) for k in kinds]), "businessDate": K.date("Business date", "businessDate"),
+             "status": K.select("Status", "status", [("ready", "ready"), ("failed", "failed")]),
+             "rows": K.number("Rows (optional)", "rows", integer=True, minimum=0),
+             "batchId": K.text("Batch id (optional)", "batchId", maxLength=100), "note": K.text("Note (optional)", "note", maxLength=500)}
+    return K.host(K.schema(props, required=["kind", "businessDate"]), {"kind": kinds[0] if kinds else "", "status": "ready"}, attrs={"data-announce-form": ""},
+                  label="Announce a load", **ALONE)
+
+
+def loads_config(*, kinds=(), config: dict | None = None, **_) -> Markup:
+    """Data loads, Expectations settings: who is told, the smoke test, and each expected kind as a repeatable row."""
+    config = config or {}
+    notify = config.get("notify") or {}
+    expect = [{"kind": k, "by": e.get("by") or "19:00", "zone": e.get("zone") or "", "calendar": e.get("calendar") or ""}
+              for k, e in (config.get("expect") or {}).items()]
+    row = K.group("Expected kind", {
+        "kind": K.select("Kind", "x-kind", [(k, k) for k in kinds], hook={"data-x-kind": ""}),
+        "by": K.text("Due by (HH:mm)", "x-by", mono=True, hook={"data-x-by": ""}, pattern="[0-2][0-9]:[0-5][0-9]", patternMessage="a time such as 19:00",
+                     default="19:00"),
+        "zone": K.text("Time zone", "x-zone", hook={"data-x-zone": ""}, placeholder="server zone"),
+        "calendar": K.text("Calendar", "x-cal", hook={"data-x-cal": ""}, placeholder="server calendar")}, required=["kind", "by"])
+    props = {"roles": K.text("Tell these roles (comma separated)", "roles"), "users": K.text("and these users", "users"),
+             "email": K.check("also send an email (needs the email channel)", "email"),
+             "smoke": K.number("Smoke test: open this many sample entities after each ready load (0 = off)", "smoke", integer=True, minimum=0),
+             "expect": {"type": "array", "title": "Expected each business day", "items": row, "hook": {"data-expect-rows": ""},
+                        "itemHook": {"data-expect-row": ""}, "addHook": {"data-expect-add": ""}, "addLabel": "Add a kind"}}
+    value = {"roles": ", ".join(notify.get("roles") or []), "users": ", ".join(notify.get("users") or []), "email": bool(notify.get("email")),
+             "smoke": config.get("smoke") or 0, "expect": expect}
+    return K.host(K.schema(props), value, attrs={"data-config-form": ""}, label="Expectations settings", **ALONE)
+
+
+def embedding_filter(**_) -> Markup:
+    """Admin › Embedding: the applications' filter (the page's script filters the rows as one types)."""
+    return K.host(K.schema({"q": K.text("Filter the applications", "q", format="search", hook={"data-filter": ""}, placeholder="Filter by name, id or origin")}),
+                  {"q": ""}, attrs={"class": "emb-filter"}, layout="inline", label="Filter the applications")
+
+
+def embedding_new(*, emb: dict | None = None, **_) -> Markup:
+    """Admin › Embedding, New host application: the JWK set shows for a key, the scopes are a row of checkboxes."""
+    emb = emb or {}
+    scopes = emb.get("scopes") or ["embed:view"]
+    token_max = emb.get("tokenMaxSeconds") or 900
+    props = {
+        "name": K.text("Name", "name", maxLength=100, placeholder="Client CRM"),
+        "id": K.text("Id (lower case letters, digits, hyphens)", "id", mono=True, maxLength=32, pattern="[a-z][a-z0-9\\-]{1,31}",
+                     patternMessage="a lower-case letter, then letters, digits or hyphens (2 to 32)", placeholder="client-crm"),
+        "origins": K.area("Origins, one per line (scheme, host, optional port; no path)", "origins", rows=3, mono=True, placeholder="https://crm.bank.example",
+                          description="https://*.suffix is allowed." if emb.get("allowWildcardOrigins") else None),
+        "auth": K.radios("How the application signs in", "auth", [("secret", "Client secret (made now, shown once)"),
+                                                                  ("key", "Public key: a JWK set; the application signs its requests"), ("both", "Both")],
+                         option_hook="auth"),
+        "jwks": K.area("JWK set (JSON, public keys only)", "jwks", rows=5, mono=True, hook={"data-jwks-field": ""},
+                       placeholder='{"keys":[{"kty":"RSA","kid":"host-1","n":"...","e":"AQAB"}]}', when={"field": "auth", "notEquals": "secret"}),
+        "scope": K.checks("Scopes", "scope", scopes, option_hook="scope"),
+        "kinds": K.text("Kinds and reports it may show (comma separated; a report is report:<id>, every report report:*; empty: everything its users' "
+                        "roles open)", "kinds", mono=True, placeholder="trade, counterparty, report:file:report:trades-overview"),
+        "callsPerMinute": K.number("Calls per minute", "callsPerMinute", integer=True, minimum=1),
+        "userCallsPerMinute": K.number("Calls per user per minute", "userCallsPerMinute", integer=True, minimum=1),
+        "tokenSeconds": K.number(f"Token life (seconds, 30–{token_max})", "tokenSeconds", integer=True, minimum=30, maximum=token_max),
+        "contact": K.text("Contact (optional)", "contact", maxLength=200, placeholder="crm-team@bank.example"),
+    }
+    value = {"auth": "secret", "scope": scopes[:1], "callsPerMinute": emb.get("callsPerMinute") or 600,
+             "userCallsPerMinute": emb.get("userCallsPerMinute") or 60, "tokenSeconds": min(300, token_max)}
+    return K.host(K.schema(props, required=["name", "id", "origins"]), value, attrs={"data-new-form": ""}, label="New host application", **ALONE)
+
+
+def embedding_secret(**_) -> Markup:
+    """Admin › Embedding: the client secret, shown once (the page's script sets it)."""
+    return K.host(K.schema({"secret": K.text("Client secret", None, mono=True, hook={"data-secret-value": ""}, readOnly=True)}), {"secret": ""},
+                  attrs={"data-secret-fields": ""}, label="Client secret")
+
+
+def embedding_rotate(**_) -> Markup:
+    """Admin › Embedding, Rotate the secret: the old one's grace period."""
+    return K.host(K.schema({"grace": K.number("Grace period (seconds)", None, integer=True, hook={"data-rotate-grace": ""}, minimum=0)}), {"grace": 3600},
+                  attrs={"data-rotate-fields": ""}, label="Rotate the secret")
+
+
+def lake_pick(*, domains=(), **_) -> Markup:
+    """Admin › Lakes › Maintain's toolbar: one domain's tables at once (every table: the table's own Select all, drishti-grid's row selection)."""
+    return K.host(K.schema({"domain": K.select("Select a domain", None, [(d, d) for d in domains], empty="—", hook={"data-mt-domain": ""})}), {"domain": ""},
+                  attrs={"class": "mt-picks"}, layout="inline", label="Choose tables")
+
+
+def lake_settings(*, defaults: dict | None = None, **_) -> Markup:
+    """Lakes › Maintain, Settings for the selected tables (a blank keeps the default)."""
+    defaults = defaults or {}
+    props = {
+        "keep-business-days": K.number("Retention (business days; blank keeps every date)", None, integer=True, hook={"data-mt-set": "keep-business-days"},
+                                       minimum=1, placeholder="keep all"),
+        "target-file-mb": K.number("Target file size (MB)", None, integer=True, hook={"data-mt-set": "target-file-mb"}, minimum=1, maximum=4096,
+                                   placeholder=str(defaults.get("target-file-mb", ""))),
+        "vacuum-hours": K.number("Vacuum files unused for (hours; blank: no vacuum)", None, integer=True, hook={"data-mt-set": "vacuum-hours"}, minimum=0,
+                                 placeholder=str(defaults.get("vacuum-hours", ""))),
+        "checkpoint": K.check("Write a checkpoint", None, hook={"data-mt-set": "checkpoint"}),
+    }
+    return K.host(K.schema(props), {"checkpoint": True}, attrs={"class": "mt-settings"}, layout="columns", label="Settings for the selected tables")
+
+
+def lake_schedule(*, zone: str = "", **_) -> Markup:
+    """Lakes › Maintain, New schedule: at a time (the days, the time and the cron text it writes) or after every build."""
+    at_time = {"field": "mode", "equals": "time"}
+    props = {
+        "name": K.text("Name", None, hook={"data-mt-sname": ""}, placeholder="nightly"),
+        "mode": K.radios("When", None, [("time", "At a time"), ("after-build", "After every build of the table")], option_hook="mt-mode"),
+        "days": K.checks("Days", None, [(d, d.title()) for d in DAYS], option_hook="mt-day", when=at_time),
+        "at": K.time(f"Time ({zone})", None, hook={"data-mt-at": ""}, when=at_time),
+        "cron": K.text("Cron text (minute hour day month weekday)", None, mono=True, hook={"data-mt-cron": ""}, when=at_time),
+    }
+    value = {"mode": "time", "days": ["tue", "wed", "thu", "fri", "sat"], "at": "02:30", "cron": "30 2 * * 2,3,4,5,6"}
+    return K.host(K.schema(props), value, attrs={"class": "mt-schedule"}, layout="columns", label="New schedule for the selected tables")
+
+
 BUILDERS: dict[str, Callable[..., Markup]] = {
     "connector_head": connector_head,
     "net_explain": net_explain, "net_node": net_node,
@@ -263,7 +435,11 @@ BUILDERS: dict[str, Callable[..., Markup]] = {
     "pack_signature": pack_signature, "pack_data": pack_data,
     "role": role, "user": user, "search": search, "field": field, "access_filter": access_filter, "config_search": config_search,
     "config_propose": config_propose, "connector_filters": connector_filters, "artifact_filters": artifact_filters, "artifact_bi_file": artifact_bi_file,
-    "busy_override": busy_override}
+    "busy_override": busy_override,
+    "collab_search": collab_search, "collab_toggle": collab_toggle, "collab_hold": collab_hold, "collab_export": collab_export, "collab_verify": collab_verify,
+    "loads_filter": loads_filter, "loads_announce": loads_announce, "loads_config": loads_config,
+    "embedding_filter": embedding_filter, "embedding_new": embedding_new, "embedding_secret": embedding_secret, "embedding_rotate": embedding_rotate,
+    "lake_pick": lake_pick, "lake_settings": lake_settings, "lake_schedule": lake_schedule}
 
 
 def admin_form(form: str, /, **kw) -> Markup:

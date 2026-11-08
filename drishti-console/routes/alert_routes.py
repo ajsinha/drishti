@@ -25,7 +25,7 @@ from urllib.parse import parse_qs, quote
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 
-from core.alert_form import alert_form_schema
+from core.alert_form import alert_form_host
 from core.backend import BackendError, drs_message
 from core.csrf import json_body
 from routes.common import ident, render
@@ -113,7 +113,7 @@ def body_from(f: dict) -> dict:
     body = {"title": f.get("title", "").strip(), "severity": f.get("severity", "warn"), "source": source, "condition": cond, "trigger": trigger,
             "delivery": {"inbox": f.get("d_inbox") == "on", "email": f.get("d_email") == "on", "bridge": f.get("d_bridge") == "on",
                          "webhooks": sorted(k[2:] for k, v in f.items() if k.startswith("w_") and v == "on"), "sms": f.get("d_sms") == "on"},
-            "enabled": f.get("enabled", "on") == "on"}
+            "enabled": f.get("enabled") == "on"}                      # a checkbox: an unchecked one is not sent, so a missing field is off
     if (h := _num(f.get("hysteresis", ""))) is not None:
         body["hysteresis"] = h
     if f.get("cooldown", "").strip():
@@ -168,9 +168,9 @@ def decorate(alerts: list[dict], user: str = "") -> list[dict]:
 async def _page(request: Request, f: dict, *, alert: dict | None = None, error: str = "", status_code: int = 200, msg: str = ""):
     from routes.dist_routes import _options
     opts = await _options(request)
-    form = alert_form_schema(f, schedules=SCHEDULES, opts=opts, editing=alert is not None)     # drishti-inputs' Form, embedded in the page's POST form
+    form = alert_form_host(f, schedules=SCHEDULES, opts=opts, editing=alert is not None)     # drishti-inputs' Form, embedded in the page's POST form
     return render(request, "alert_form.html", status_code=status_code, f=f, alert=alert, error=error, msg=msg, schedules=SCHEDULES, screen="alerts", opts=opts,
-                  form_json=json.dumps(form, separators=(",", ":")), standing=standing(alert, getattr(request.state.identity, "user", "")) if alert else "")
+                  form_host=form, standing=standing(alert, getattr(request.state.identity, "user", "")) if alert else "")
 
 
 # -- the form ---------------------------------------------------------------------------------------------------------
