@@ -529,7 +529,7 @@ from the lakes, and the sign-in variables of 2.5 A (`$env:DRISHTI_SECURITY_ENABL
 | `-Packs` | `DRISHTI_PACKS`, else the seven | the packs to load |
 | `-Port` | `DRISHTI_PORT`, else `18480` | the server's port |
 | `-LakeRoot` | `DRISHTI_DELTA_ROOT`, else `.\data\delta` | the Delta Lake |
-| `-Engine` | `DRISHTI_DELTA_ENGINE`, else `native` | `native`, `hadoop` (needs `winutils.exe`) or `auto` |
+| `-Engine` | `DRISHTI_DELTA_ENGINE`, else `native` | `native`, `hadoop` (needs `winutils.exe`) or `auto` ([`delta` in CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake)) |
 | `-Heap` | `2g` | the heap limit (8 GB per million entities a day for a large lake) |
 | `-Jar` | the newest `drishti-server-*-exec.jar` | another jar |
 | `-Background`, `-Stop` | off | start without a window (log `data\logs\server.log`, process id `data\server.pid`); stop it |
@@ -1490,6 +1490,8 @@ pack only, never data; settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#dr
    `previous-versions/<pack>/<version>-<time>`, checks all loaded packs with the new one and puts it to use **at once, with no restart**. If the
    check fails or the server cannot start with the new files, the old files are put back and the history says *reverted*; users stay signed in.
 
+   ![The pack row after a deploy](img/deploy/04-pack-row.jpg)
+
 ### 9.2 History and roll back
 
 **Admin → Packs → History and roll back** lists every deployment, rollback and reverted attempt (when, pack, version, the version it replaced,
@@ -1581,6 +1583,10 @@ server can see.
 | Connector | `enabled: false` in its file (file and history stay); a templated connector can be disabled though not uninstalled | `enabled: true` |
 | BI file | hides it from the catalogue (the file stays; the list is `data/admin/bi-hidden.txt`); reports on a hidden dataset cannot run it | shows it again |
 
+![The dialog after Disable instead was refused because lab-child builds on lab-base: the box to switch the packs that build on it off too, and the server's answer, DRS-5041](img/artifacts/03-disabled.jpg)
+
+![The list after disabling lab-base and lab-child: both packs show status disabled and an Enable button](img/artifacts/03b-disabled-list.jpg)
+
 **Uninstall…** first asks for the impact. With nothing depending on it, it offers **Uninstall**, which **moves** the file or folder to
 `data/uninstalled/<timestamp>-<kind>-<name>/` (`payload/` exactly as it was, and `uninstalled.json`: who, when, what depended on it, where it came
 from; setting `drishti.admin.uninstalled-dir`); the watchers then unload, stop or drop it as if deleted. With dependants, **Uninstall is not
@@ -1598,6 +1604,8 @@ until you **Enable** it. **Delete permanently** removes an archive for good (typ
 `drishti.admin.uninstalled-keep` (30 days; `0` keeps them) are removed once a day, each audited; back up `data/uninstalled` with `data/` to keep
 them longer. Keep `data/` on the same disk as `config/` so an uninstall is one atomic move.
 
+![The Uninstalled tab: the archive of scratch-conn with who uninstalled it, when and what depended on it, and Restore and Delete permanently](img/artifacts/05-uninstalled.jpg)
+
 ### 10.3 Install
 
 The *Install* section has three cards: **a pack** (links to Admin → Packs → Deploy an archive, [9.1](#91-deploy-an-archive)); **a connector**
@@ -1607,6 +1615,14 @@ with a mapping at the top, the file's own key against its name, and the readers'
 name exists the card lists what depends on it; placing it then needs *Replace* and the name typed, and the old file is archived first. The file is
 placed atomically (a table or model in `config/tables/<domain>/`) and appears in the catalogue at once. A dataset file in BI's old form
 (`<name>.dataset.yaml`) is refused with `DRS-9196`: run `drishti.py tables migrate` and upload the tables and model it writes.
+
+![The BI file card after choosing a file: what the server found in it, and the button to place it](img/artifacts/06-bi-upload.jpg)
+
+At phone width the list keeps Disable and Uninstall on each row, and the dialogs' choices become full-width buttons.
+
+![Admin, Artifacts at phone width: the list with Disable and Uninstall on each row](img/artifacts/07-phone.jpg)
+
+![Admin, Artifacts at phone width: the dialog for a pack with nothing depending on it, Keep it as it is and Uninstall as full-width buttons](img/artifacts/08-phone-dialog.jpg)
 
 ### 10.4 The audit trail, the API and the codes
 
@@ -2316,6 +2332,13 @@ workbook, [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)).
 
 ![Admin → Capacity: Edit the plan](../admin/img/capacity/plan.png)
 
+![Download the working: which inputs](../admin/img/capacity/download.png)
+
+On a phone the page shows the four states and what breaks first, then the headroom bars; the live table and growth are folded, and
+editing the plan, the JVM arguments, the command line, the growth sliders and the download are on a wide screen.
+
+![Admin → Capacity on a phone (390 px)](../admin/img/capacity/phone.png)
+
 The live figures come from the VaR engine, the JVM (heap after the last collection), the process's `VmRSS` (Linux only), the disk budget and the
 request activity; a figure the server cannot tell is left empty, never guessed; the page refreshes every 60 s. The endpoints: `GET
 /api/v1/admin/capacity`, `/capacity/live`, `/capacity.xlsx?inputs=plan|live|both&Trades=450000&…`. From a terminal:
@@ -2576,6 +2599,9 @@ per table, so the demo lakes need nothing more.
 There is one engine, `tools/lake/maintain.py`: **Admin → Data loads → Lakes → Maintain** runs it in the console and `drishti.py lake maintain` from a
 terminal, cron or a container; both read and write `<data>/lakes/lake-maintenance.yaml` and keep the same history. An Iceberg table is maintained the
 same way (16.3). The examples use a small lake with two trade tables built by `lake build` and one table another system published (`risk/var_published`).
+Its parts beside `maintain.py`: `tools/lake/maintconfig.py` (the maintenance YAML and the run history), `tools/lake/maintschedule.py`
+(the one scheduler, used by `--daemon` and by the console), `tools/lake/ownership.py` (which tables Drishti's lake tool built: the only ones
+it maintains) and `tools/lake/maintain_iceberg.py` (the Iceberg tables, 16.3).
 
 ### 16.2 Maintain from the page or the command line
 
@@ -2669,7 +2695,11 @@ lakes:
 
 **History.** Every run (dry, manual, scheduled, command line) is in `<data>/lakes/maintenance-history.jsonl` (the last 2,000): when, who or which
 schedule, the tables, files and size before → after, the outcome (ok, partial, failed, cancelled), notes and errors. **Maintenance history** on the page
-lists the last 50; `drishti.py lake maintain --history` (`--json`, `--limit N`) prints them:
+lists the last 50; `drishti.py lake maintain --history` (`--json`, `--limit N`) prints them.
+
+![The maintenance history](../admin/img/lake-maintenance/lake-maintain-history.png)
+
+From the command line:
 
 ```text
 2026-10-17T19:51:57-04:00  ok        run     by ashutosh  2 table(s)  files 12 -> 6  MB 0.12 -> 0.04

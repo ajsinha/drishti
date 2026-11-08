@@ -664,7 +664,7 @@ A console serves about 40 pages a second a worker (measured).
 
 | Role | Java 21 | Java 25 |
 |---|---|---|
-| VaR owner, coordinator, large single server (heap ≥ 16 GB) | `-XX:+UseZGC -XX:+ZGenerational` | `-XX:+UseZGC -XX:+UseCompactObjectHeaders` |
+| VaR owner, coordinator, large single server (heap ≥ 16 GB) | `-XX:+UseZGC -XX:+ZGenerational -XX:SoftMaxHeapSize=<0.8 × Xmx>` | `-XX:+UseZGC -XX:+UseCompactObjectHeaders` |
 | BI, data-serving (heap 16–24 GB) | the same | the same |
 | Small server, pilot, stack node (≤ 8 GB) | G1 (the default), `-XX:G1PeriodicGCInterval=60000` | G1, plus `-XX:+UseCompactObjectHeaders` |
 | Loader, batch tools | G1 or `-XX:+UseParallelGC` (throughput) | the same |

@@ -1963,6 +1963,8 @@ AWS_ENDPOINT_URL=…` (MinIO, an S3-compatible store) the file check goes to tha
 
 ### 7.12 The S3 tests: S3Mock, moto and MinIO
 
+`tools/lake/s3sim.py` starts the S3 simulators (moto, MinIO) for these tests.
+
 Three S3 simulators, none needing Docker. Each suite prints which conditional writes its simulator covered
 (`[S3 conditional writes] …: create-only covered, update-if-match covered, delete-if-match covered, racing writers …`) and skips,
 with the reason, what the simulator does not honour.
@@ -3130,7 +3132,7 @@ a table with its plan, its as-of date and the columns masked for you; `--json` p
 
 ### `bi transform`: a Transform's inputs as you, and the snippets
 
-What the Transform editor's inputs and snippets picker do ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](BI_GUIDE.md#17-data-prep-the-transform-editor)). `input`
+What the Transform editor's inputs and snippets picker do (`tools/bitransform.py`, loaded by `drishti.py`; [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](BI_GUIDE.md#17-data-prep-the-transform-editor)). `input`
 asks the server, as the token's user, for each input of a Python dataset (`POST /api/v1/bi/python/input`: a model query, or a pack kind read through a
 connector) and prints its rows, what is masked for you and a short profile of every column; `snippets` and `snippet` read the console's library
 (`drishti-console/config/prep-snippets.yaml`, no server) and print the step a snippet makes, each value written as a literal.
@@ -3254,7 +3256,7 @@ wrote empty.pdf (2,093 bytes)
 
 ### `tables`: virtual tables and models
 
-The table layer's definitions under `config/tables` ([TABLES_GUIDE.md](TABLES_GUIDE.md)): listed, checked, previewed over sample documents,
+The table layer's definitions under `config/tables` (`tools/tablescli.py`; [TABLES_GUIDE.md](TABLES_GUIDE.md)): listed, checked, previewed over sample documents,
 traced, and BI's datasets and models migrated into them. The commands run in Java from the server's exec jar
 (`java -jar drishti-server-*-exec.jar tables ...`) without starting a server and write nothing under the data folder; paths are read from
 the folder you run them in (`--root` for another catalogue folder). Every command takes `--json`.

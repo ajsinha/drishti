@@ -265,7 +265,7 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
             "- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, "
             "the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta "
             "connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way "
-            "([Tools](../../../../../docs/guides/CLI_REFERENCE.md)).",
+            "([Command line](../../../../../docs/guides/CLI_REFERENCE.md)).",
             "- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's "
             "`--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists "
             "a kind and the pack's code opens its overview with the count of each kind.",

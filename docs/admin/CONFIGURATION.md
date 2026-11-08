@@ -5535,7 +5535,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 
 ### Lenses: `config/lenses/`
 
-A lens file (`config/lenses/<module>/<lens>.yaml`, an edition when it is the instance's), the feature presets (`features.yaml`) and the default packs (`config/packs/default-packs.yaml`, by module), read by the server (`Editions.java`) and the console (`core/edition.py`). The site's own configuration wins over any key: `drishti.edition-spec.<key>` on the server, `edition.<key>` in the console ([LENSES.md](LENSES.md)).
+A lens file (`config/lenses/<module>/<lens>.yaml`, an edition when it is the instance's), the feature presets (`features.yaml`) and the default packs (`config/packs/default-packs.yaml`, by module), read by the server (`Editions.java`) and the console (`core/edition.py`). The site's own configuration wins over any key: `drishti.edition-spec.<key>` on the server, `edition.<key>` in the console ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is)).
 
 #### A lens file: `config/lenses/<module>/<lens>.yaml`
 

@@ -12,7 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""docs/guides/CLI_REFERENCE.md is the one guide to every tool: it fails when a drishti.py command or a tools/ script is not mentioned in it, so a
+"""docs/guides/CLI_REFERENCE.md (with OPERATIONS_GUIDE.md for the maintenance and scheduling tools) is the guide to every tool: it fails when a
+drishti.py command or a tools/ script is not mentioned in them, so a
 new command or script cannot ship without its line in the guide."""
 from __future__ import annotations
 
@@ -23,7 +24,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 TOOLS = ROOT / "tools"
-GUIDE = (ROOT / "docs" / "guides" / "CLI_REFERENCE.md").read_text(encoding="utf-8")
+GUIDE = "\n".join((ROOT / "docs" / "guides" / name).read_text(encoding="utf-8") for name in ("CLI_REFERENCE.md", "OPERATIONS_GUIDE.md"))
 
 
 def _drishti():
@@ -62,12 +63,12 @@ def scripts() -> list[str]:
 
 def test_every_drishti_command_is_in_the_guide():
     missing = [c for c in commands() if c not in GUIDE]
-    assert not missing, f"docs/guides/CLI_REFERENCE.md does not mention: {missing}"
+    assert not missing, f"docs/guides/CLI_REFERENCE.md and OPERATIONS_GUIDE.md do not mention: {missing}"
 
 
 def test_every_tools_script_is_in_the_guide():
     missing = [s for s in scripts() if s not in GUIDE and Path(s).name not in GUIDE]
-    assert not missing, f"docs/guides/CLI_REFERENCE.md does not mention: {missing}"
+    assert not missing, f"docs/guides/CLI_REFERENCE.md and OPERATIONS_GUIDE.md do not mention: {missing}"
 
 
 def test_the_guide_is_in_the_docs_index_and_the_help_centre():
