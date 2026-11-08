@@ -215,48 +215,44 @@
     const first = S.run && (S.run.inputs || [])[0];
     return first ? first.columns.map((c) => c.name) : [];
   }
+  /** A step's parameters as drishti-inputs' Form (each control keeps data-param="<name>"): a column or an input is a choice, columns a row of
+   *  checkboxes, a yes or no a checkbox, a mapping lines of "B = BUY", values a list "a, b, c", a number read loosely. */
+  let paramsForm = null;
+  const mappingText = (m) => (m && typeof m === 'object' ? Object.keys(m).map((k) => k + ' = ' + m[k]).join('\n') : m == null ? '' : String(m));
   function drawParams(s, preset) {
     B.clear(paramsEl);
+    paramsForm = null;
     q('[data-snippet-help]').textContent = s ? s.description : '';
     if (!s) { return; }
-    const cols = columnsHere(), inputs = names();
+    const cols = columnsHere(), inputs = names(), props = {}, value = {};
     s.params.forEach((p) => {
-      const id = 'txp-' + p.name;
-      let control;
-      const def = preset && preset[p.name] != null ? preset[p.name] : p.default;
-      if (p.kind === 'column') {
-        control = h('select', { class: 'studio-select', id, 'data-param': p.name }, cols.map((c) => h('option', { value: c, text: c, selected: c === def })));
-      } else if (p.kind === 'columns') {
-        control = h('div', { class: 'tx-multi', id, 'data-param': p.name, 'data-multi': '' }, cols.map((c) => h('label', { class: 'tx-check' }, h('input', { type: 'checkbox', value: c, checked: Array.isArray(def) && def.indexOf(c) >= 0 }), ' ' + c)));
-      } else if (p.kind === 'input') {
-        control = h('select', { class: 'studio-select', id, 'data-param': p.name }, inputs.map((c, i) => h('option', { value: c, text: c, selected: c === def || (def == null && i === inputs.length - 1) })));
-      } else if (p.kind === 'choice' || p.kind === 'operator') {
-        control = h('select', { class: 'studio-select', id, 'data-param': p.name }, p.options.map((o) => h('option', { value: o, text: o, selected: o === def })));
-      } else if (p.kind === 'bool') {
-        control = h('input', { type: 'checkbox', id, 'data-param': p.name, checked: def !== false });
-      } else if (p.kind === 'mapping') {
-        control = h('textarea', { class: 'studio-in mono', id, rows: '3', 'data-param': p.name, placeholder: 'B = BUY\nS = SELL' });
-      } else {
-        control = h('input', { class: 'studio-in' + (p.kind === 'number' ? '' : ' mono'), id, 'data-param': p.name, type: p.kind === 'number' ? 'number' : 'text', autocomplete: 'off',
-          value: def == null ? '' : Array.isArray(def) ? def.join(', ') : String(def), placeholder: p.kind === 'values' ? 'a, b, c' : '' });
-      }
-      paramsEl.appendChild(h('label', { class: p.kind === 'bool' ? 'tx-check' : '', for: id }, p.kind === 'bool' ? [control, ' ' + p.label] : [p.label, control]));
+      const def = preset && preset[p.name] != null ? preset[p.name] : p.default, hook = { 'data-param': p.name };
+      let f;
+      if (p.kind === 'column') { f = { type: 'string', enum: cols, widget: 'select', allowEmpty: false }; value[p.name] = cols.indexOf(def) >= 0 ? def : cols[0]; }
+      else if (p.kind === 'columns') { f = { type: 'array', items: { type: 'string', enum: cols }, widget: 'checkboxes' }; value[p.name] = Array.isArray(def) ? def.filter((c) => cols.indexOf(c) >= 0) : []; }
+      else if (p.kind === 'input') { f = { type: 'string', enum: inputs, widget: 'select', allowEmpty: false }; value[p.name] = inputs.indexOf(def) >= 0 ? def : inputs[inputs.length - 1]; }
+      else if (p.kind === 'choice' || p.kind === 'operator') { f = { type: 'string', enum: p.options, widget: 'select', allowEmpty: false }; value[p.name] = p.options.indexOf(def) >= 0 ? def : p.options[0]; }
+      else if (p.kind === 'bool') { f = { type: 'boolean' }; value[p.name] = def !== false; }
+      else if (p.kind === 'mapping') { f = { type: 'string', widget: 'textarea', placeholder: 'B = BUY\nS = SELL', options: { rows: 3 } }; value[p.name] = mappingText(def) || undefined; }
+      else if (p.kind === 'number') { f = { type: 'number' }; value[p.name] = def == null || def === '' ? undefined : Number(def); }
+      else { f = { type: 'string', placeholder: p.kind === 'values' ? 'a, b, c' : '' }; value[p.name] = def == null ? undefined : Array.isArray(def) ? def.join(', ') : String(def); }
+      props[p.name] = Object.assign(f, { title: p.label, hook });
     });
+    paramsForm = new window.Drishti.elements.inputs.Form(paramsEl, { schema: { type: 'object', properties: props }, value, embedded: true, label: 'The step\'s settings' });
   }
   function paramValues(s) {
-    const out = {};
+    const out = {}, v = paramsForm ? paramsForm.getValue() : {};
     s.params.forEach((p) => {
-      const el = paramsEl.querySelector('[data-param="' + p.name + '"]');
-      if (!el) { return; }
-      if (p.kind === 'columns') { out[p.name] = B.qa('input:checked', el).map((i) => i.value); }
-      else if (p.kind === 'bool') { out[p.name] = el.checked; }
-      else if (p.kind === 'number') { out[p.name] = el.value === '' ? null : Number(el.value); }
-      else if (p.kind === 'values') { out[p.name] = el.value.split(',').map((x) => x.trim()).filter(Boolean); }
+      const x = v[p.name];
+      if (p.kind === 'columns') { out[p.name] = Array.isArray(x) ? x : []; }
+      else if (p.kind === 'bool') { out[p.name] = !!x; }
+      else if (p.kind === 'number') { out[p.name] = typeof x === 'number' && !isNaN(x) ? x : null; }
+      else if (p.kind === 'values') { out[p.name] = String(x || '').split(',').map((t) => t.trim()).filter(Boolean); }
       else if (p.kind === 'mapping') {
         const m = {};
-        el.value.split('\n').forEach((ln) => { const i = ln.indexOf('='); if (i > 0) { m[ln.slice(0, i).trim()] = ln.slice(i + 1).trim(); } });
+        String(x || '').split('\n').forEach((ln) => { const i = ln.indexOf('='); if (i > 0) { m[ln.slice(0, i).trim()] = ln.slice(i + 1).trim(); } });
         out[p.name] = m;
-      } else { out[p.name] = el.value; }
+      } else { out[p.name] = x == null ? '' : x; }
     });
     return out;
   }
