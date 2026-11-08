@@ -1,4 +1,4 @@
-EXAMPLE (design, not built): installing banking on a 3-node cluster, four eyes (docs/architecture/KERNEL_AND_MODULES.md sections 7.1, 7.3, 4.11).
+EXAMPLE (design, not built): installing banking on a 3-node cluster, four eyes (docs/architecture/KERNEL_AND_MODULES.md sections 7.1, 7.3, 4.11; placement: examples/site/placement.yaml).
 
 # Administrator 1 (alice) proposes
 $ python3 tools/drishti.py module install banking-3.0.0.dmod --server https://drishti-main.bank.internal:18480
@@ -19,11 +19,14 @@ Proposed as change CHG-2026-1108-0042 (module install banking 3.0.0). A second a
 
 # Administrator 2 (bob) approves (Admin -> Approvals, or:)
 $ python3 tools/drishti.py approvals approve CHG-2026-1108-0042 --reason "Release 2.9.11.i rollout, ticket RISK-4412"
-Approved. Installed into /data/drishti/modules/banking/3.0.0 on drishti-main, drishti-2, drishti-3 (sha256 matches on all)
-active.yaml: banking 3.0.0 (was: none). RESTART NEEDED on 3 nodes.
+Approved. Placement (config/placement.yaml): api on drishti-main, drishti-2 · compute, exposure on drishti-2 (max 1) · feeds, jobs on
+drishti-main (singleton) · nothing on drishti-3.
+Copied to drishti-main, drishti-2 only (sha256 and signature verified on each) · staged: 2/2 ready (memory check drishti-2: 6,144 +
+4,096 MB of 22,528 MB free) · activated together, config v318.
+active.yaml: banking 3.0.0 (was: none). RESTART NEEDED on 2 nodes (code, P2).
 
-$ python3 tools/drishti.py cluster restart --rolling
-drishti-3    stopping ... starting ... modules: economy 1.4.0, capitalmarkets 1.3.0, banking 3.0.0 · fingerprint 9b1e…  JOINED
-drishti-2    stopping ... starting ... fingerprint 9b1e…  JOINED
-drishti-main stopping ... starting ... fingerprint 9b1e…  JOINED
-Cluster: 3/3 nodes on fingerprint 9b1e… · banking LOADED (0 required needs unbound) · taint none
+$ python3 tools/drishti.py cluster restart --rolling --nodes placed:banking
+drishti-2    stopping ... starting ... modules: economy 1.4.0, capitalmarkets 1.3.0, banking 3.0.0 (api, compute, exposure)  JOINED
+drishti-main stopping ... starting ... modules: economy 1.4.0, capitalmarkets 1.3.0, banking 3.0.0 (api, feeds, jobs: leader)  JOINED
+drishti-3    not restarted (banking not placed; forwards banking requests)
+Cluster: 3/3 nodes match their placement · banking LOADED (0 required needs unbound) · taint none

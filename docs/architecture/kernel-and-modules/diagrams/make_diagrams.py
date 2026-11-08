@@ -268,17 +268,17 @@ def distributions():
 
 
 def phases():
-    ph = [("P1", "Kernel boundary to zero", BLUE, "i1",
-           ["kernel API jar (SPIs → kernel.api) · KindProvider", "domain strings 39 files → 0 · bindings.yaml"],
+    ph = [("P1", "Foundations: kernel boundary to zero", BLUE, "2.9.11.i1",
+           ["data standards · kernel API jar · KindProvider", "domain strings → 0 · drill under 60 min · memory"],
            "kernel boots with no module · VaR exactly equal"),
-          ("P2", "Package and module path", BLUE, "i2",
-           [".dmod + packager · class loader per module", "thin jar · console plugins from folders · Admin pages"],
-           "banking passes against the kernel alone"),
-          ("P3", "Distributions", TEAL, "i2",
-           ["distribution file · branding literals → 0", "drishti.finance · genomics sample"],
-           "drishti.genomics boots from config only"),
-          ("P4", "Trust", AMBER, "security release",
-           ["publisher signing · signed licence · four eyes", "cluster fingerprint · taint · CSP + SRI"],
+          ("P2", "Modules on one node", BLUE, "2.9.11.i2",
+           [".dmod · pages, route table · clean unload", "SDK (archetype, Maven plugin) · deploy CLI + Admin"],
+           "banking as .dmod · install, remove, reinstall clean"),
+          ("P3", "Cluster and white label", TEAL, "2.9.11.i3",
+           ["placement per part · singletons · heavy guards", "cluster deploy · rolling · distributions"],
+           "banking on main + b only · genomics from config"),
+          ("P4", "Trust", AMBER, "2.9.11.j",
+           ["publisher signing · revocation · signed licence", "taint · CSP + SRI · signed kernel"],
            "tampered or unlicensed module absent"),
           ("P5", "Repository and hot load", MUTED, "later",
            ["internal module repository", "hot load / unload of code"],
@@ -295,7 +295,7 @@ def phases():
             b.append(text(148, y + 48 + j * 20, "• " + ln, 13, INK))
         b.append(text(148, y + 94, "proof: " + proof, 13, GREEN, 700))
         y += 116
-    svg("phases", "Migration with banking as the proving ground", "Each phase ends with a proof; VaR stays exactly equal throughout.", y + 12, b)
+    svg("phases", "Migration in three releases, banking as the proving ground", "i1, i2, i3, then trust in j; each phase ends with a proof; VaR exactly equal.", y + 12, b)
 
 
 def analogy():
@@ -318,6 +318,130 @@ def analogy():
     svg("linux-analogy", "The Linux-module analogy", "The owner's frame: modules are compiled and packaged apart, and the kernel runs them.", y + 24, b)
 
 
+def page_flow():
+    """A module page's request: browser -> console dispatcher -> live route table -> module template + Elements -> API proxy -> server."""
+    b = []
+    b.append(box(24, 84, 180, 92, NAVY, head="Browser", lines=["GET /m/genomics/", "variants/BRCA-2026"], size=13, mono=False))
+    b.append(box(24, 196, 180, 74, NAVY, fill="#ffffff", head="the open page", lines=["Elements grid + chart"], size=12))
+    b.append(box(236, 84, 248, 186, BLUE, head="Console dispatcher (kernel)", size=12, lines=[
+        "1 identity · CSRF · lens", "2 look up the live route table", "3 module on for this person?",
+        "   its function allowed?", "4 render in the kernel shell", "   (the module's namespace)"]))
+    b.append(box(516, 84, 220, 124, VIOLET, head="Live route table", size=12, lines=[
+        "/m/genomics/variants/{cohort}", "  → genomics:variant_explorer.html", "/m/banking/var  (alias /var)",
+        "/m/oldmod/…  → TOMBSTONE (410)"]))
+    b.append(box(516, 220, 220, 50, MUTED, fill="#ffffff", lines=["rebuilt on module.* events", "no console restart"], size=12, dash=True))
+    b.append(arrow(204, 120, 234, 120, NAVY))
+    b.append(arrow(484, 130, 514, 130, BLUE)); b.append(arrow(514, 160, 486, 160, VIOLET))
+    b.append(box(236, 302, 248, 130, AMBER, head="Module template", size=12, lines=[
+        "genomics:variant_explorer.html", "{% extends 'kernel/page.html' %}", "Elements macros only", "kernel context: user, lens, theme,",
+        "i18n, csrf, module.settings"]))
+    b.append(box(516, 302, 220, 130, TEAL, head="Elements (static)", size=12, lines=[
+        "/static/elements/… (kernel)", "/m/genomics/static/0.1.0/", "  drishti_genomics.js", "CSP 'self' + SRI hashes"]))
+    b.append(arrow(360, 270, 360, 300, BLUE)); b.append(arrow(484, 366, 514, 366, AMBER))
+    b.append(arrow(236, 380, 120, 272, AMBER, curve=(160, 380, 120, 330))); b.append(label(150, 300, "HTML"))
+    b.append(box(24, 464, 330, 104, GREEN, head="Kernel API proxy (console)", size=12, lines=[
+        "fetch('/m/genomics/api/variants?…')", "same origin · session cookie · CSRF on writes", "→ /api/v1/genomics/… as the person"]))
+    b.append(arrow(80, 270, 80, 462, GREEN, dash=True)); b.append(label(116, 420, "data calls"))
+    b.append(box(406, 464, 330, 104, NAVY, head="Server: the module's child context", size=12, lines=[
+        "gates: module → function → permission → audit", "@ModuleApi controllers under /api/v1/genomics", "Kinds read as the person (row rules)"]))
+    b.append(arrow(354, 516, 404, 516, GREEN))
+    b.append(box(24, 590, 712, 50, RED, fill="#ffffff", size=12, lines=[
+        "Never: a module template reaching another module's templates, the server directly, other origins, or inline script."]))
+    svg("page-flow", "A module page, request to data", "Routes are looked up per request; templates render inside the kernel's shell; data goes through the proxy.", 662, b)
+
+
+def unload_sequence():
+    steps = [("0  Approved", "four eyes (remove) or the switch (disable) · cluster config version N+1", NAVY),
+             ("1  Gate closes", "registry: module LEAVING · new requests refused · route entries → tombstones", RED),
+             ("2  Tell", "module.leaving on the bus and drishti-net · open tabs get the notice", AMBER),
+             ("3  Drain", "in-flight requests ≤ 30 s · jobs, feeds, Python runs: cancel after 60 s", AMBER),
+             ("4  Withdraw contributions", "SPIs · functions, words · AI tools · exports · KindProviders · caches", BLUE),
+             ("5  Withdraw content", "packs · Sutras · lenses · menus · Home cards · Help · search · glossary", BLUE),
+             ("6  Console", "template namespace · static mount · Elements entries · hooks · settings pages", BLUE),
+             ("7  Server", "stop() · child context closed (REST gone) · Python path removed · loader dropped (P5)", BLUE),
+             ("8  Mark saved artefacts", "views, workspaces, dashboards, reports, exports: 'needs module X'", VIOLET),
+             ("9  Record", "audit line · metrics series ended · Health REMOVED · fingerprint · module.removed", GREEN)]
+    b, y = [], 84
+    for i, (h, d, c) in enumerate(steps):
+        b.append(box(24, y, 520, 52, c, head=h, lines=[d], size=12))
+        if i < len(steps) - 1:
+            b.append(arrow(284, y + 52, 284, y + 64, MUTED))
+        y += 64
+    b.append(box(568, 84, 168, 180, GREEN, head="Stays", size=12, lines=["the lake data", "bindings (orphaned)", "users' saved items", "  (marked, kept)",
+                                                                       "the .dmod files", "  (until prune)", "its state folder"]))
+    b.append(box(568, 280, 168, 162, RED, head="Gone", size=12, lines=["every page (410)", "every word, menu,", "card, Help page,", "search hit, asset,",
+                                                                   "API, job, AI tool,", "cache entry"]))
+    b.append(box(568, 458, 168, 170, NAVY, fill="#ffffff", head="P2 restart?", size=12, lines=["disappearance: no", "(steps 0–6, 8, 9 hot)", "code unload: at the",
+                                                                                     "next rolling restart", "P5: all hot, with", "the leak check"]))
+    svg("unload-sequence", "Offloading a module", "Ordered, server and console: refuse first, then drain, then withdraw every surface; data and saved work stay.", y + 16, b)
+
+
+def dev_path():
+    st = [("new", "drishti.py module new genomics", "the archetype: a parent pom and compute, service, python, packs, console, docs, test", BLUE),
+          ("run", "drishti.py module run", "the kernel + this module only, sample data; templates, Sutras, packs, static reload live", TEAL),
+          ("test", "mvn verify", "unit tests, the kernel harness, the conformance suite (the absence test too)", GREEN),
+          ("package", "mvn package", "drishti:validate → compile → test → conformance → assemble the .dmod", AMBER),
+          ("sign", "mvn deploy -Prelease", "drishti:sign with the publisher key (HSM), publish .dmod + .sha256", AMBER),
+          ("install", "drishti.py module install", "verify V1–V9 · four eyes · pages live at once · code at the rolling restart", VIOLET)]
+    b, y = [], 84
+    for i, (h, cmd, d, c) in enumerate(st):
+        b.append(f'<path d="M24,{y} L130,{y} L148,{y + 30} L130,{y + 60} L24,{y + 60} Z" fill="{c}"/>')
+        b.append(text(80, y + 36, h, 15, "#ffffff", 700, "middle"))
+        b.append(f'<rect x="160" y="{y}" width="576" height="60" rx="8" fill="{TINT[c]}" stroke="{c}" stroke-width="1.5"/>')
+        b.append(text(174, y + 24, cmd, 14, INK, 700, mono=True))
+        b.append(text(174, y + 45, d, 13, INK))
+        y += 70
+    y += 6
+    b.append(box(24, y, 346, 118, NAVY, head="On the developer's machine", size=13, lines=[
+        "JDK 21 · Maven 3.9 · the kernel's Python", "drishti-kernel-api (scope provided)", "drishti-kernel-testkit (scope test)",
+        "a development key (taint D)"]))
+    b.append(box(390, y, 346, 118, AMBER, head="In the publisher's CI", size=13, lines=[
+        "the same mvn verify, then -Prelease", "the signing key never in Git or on disks", "release notes · licence feature",
+        "the .dmod to the module repository"]))
+    y += 136
+    b.append(box(24, y, 712, 58, GREEN, fill=TINT[GREEN], size=13, lines=[
+        "Customer: Admin → Modules → Install → verify report → a second administrator approves",
+        "copied to the placed nodes only · fingerprint gossiped · remove and roll back with the same four eyes"]))
+    svg("dev-path", "The module developer path", "From an empty folder to a signed module at a customer, with the command at each step.", y + 80, b)
+
+
+def cluster_modules():
+    """Placement, not everything everywhere: banking api on main+b, compute on b, feeds/jobs on main, nothing on c; genomics on the GPU node."""
+    b = []
+    b.append(box(24, 84, 712, 74, VIOLET, head="Console (any number; nothing installed by hand)", size=13, lines=[
+        "asks the registry which modules are active and where · console bundles from the kernel (signed)"]))
+    b.append(arrow(200, 158, 200, 190, NAVY)); b.append(label(262, 178, "registry, bundles"))
+    b.append(arrow(560, 158, 560, 190, GREEN)); b.append(label(636, 178, "API proxy calls"))
+    b.append(box(24, 194, 712, 44, NAVY, fill=TINT[NAVY], size=13, lines=[
+        "Drishti*net routes each part only to nodes where it is placed and active; failover inside the placement"]))
+    nodes = [("drishti-main", "role: data-serving", [("banking  api", GREEN), ("banking  feeds, jobs ★", AMBER), ("genomics  api", GREEN)], NAVY),
+             ("drishti-b", "role: risk-compute", [("banking  api", GREEN), ("banking  COMPUTE (heavy)", BLUE), ("  VaR, FRTB, exposure", BLUE)], BLUE),
+             ("drishti-c", "no role", [("banking  not placed", MUTED), ("  no .dmod here;", MUTED), ("  forwards, never computes", MUTED)], MUTED),
+             ("drishti-gpu", "role: gpu", [("genomics  api", GREEN), ("genomics  ALIGNMENT", TEAL), ("  heavy, max-nodes 1", TEAL)], TEAL)]
+    for i, (h, role, ls, c) in enumerate(nodes):
+        x = 24 + i * 182
+        b.append(box(x, 270, 170, 140, c, head=h, size=13, dash=(c == MUTED)))
+        b.append(text(x + 12, 312, role, 12, MUTED, italic=True))
+        for j, (ln, lc) in enumerate(ls):
+            b.append(text(x + 12, 336 + j * 20, ln, 12, lc if lc != MUTED else INK, 700 if lc in (BLUE, TEAL, AMBER) else 400))
+        b.append(arrow(x + 85, 238, x + 85, 268, MUTED if c == MUTED else NAVY, dash=(c == MUTED)))
+    b.append(text(24, 432, "★ singleton: one elected runner among the placed nodes", 12, AMBER, 700))
+    b.append(box(24, 446, 712, 64, AMBER, fill=TINT[AMBER], head="Guards", size=12, lines=[
+        "no default 'all nodes' · heavy: max-nodes + memory check at activation · heavy on every node only with allow-all + four eyes"]))
+    b.append(box(24, 526, 712, 112, MUTED, fill="#ffffff", head="Node × module matrix (Health, Admin → Cluster)", size=13))
+    cols = [(150, "main"), (290, "b"), (430, "c"), (570, "gpu")]
+    for x, h in cols:
+        b.append(text(x, 574, h, 13, MUTED, 700))
+    rows = [("banking", [("api, feeds ✓", GREEN), ("api, compute ✓", GREEN), ("not placed", MUTED), ("not placed", MUTED)]),
+            ("genomics", [("api ✓", GREEN), ("not placed", MUTED), ("present ! amber", AMBER), ("placed, missing ✗", RED)])]
+    for j, (m, cells) in enumerate(rows):
+        y = 598 + j * 22
+        b.append(text(40, y, m, 13, INK, 700, mono=True))
+        for (x, _), (v, c) in zip(cols, cells):
+            b.append(text(x, y, v, 13, c, 700 if c in (RED, AMBER) else 400))
+    svg("cluster-modules", "Modules in a cluster: placed, not everywhere", "The deployer places each part on named nodes or roles; others forward; drift shows in the matrix.", 660, b)
+
+
 if __name__ == "__main__":
-    for f in (layers, anatomy, load_sequence, data_binding, distributions, phases, analogy):
+    for f in (layers, anatomy, load_sequence, data_binding, distributions, phases, analogy, page_flow, unload_sequence, dev_path, cluster_modules):
         f()

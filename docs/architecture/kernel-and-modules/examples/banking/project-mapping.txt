@@ -1,0 +1,46 @@
+EXAMPLE (design, not built): banking as a module Maven project (docs/architecture/KERNEL_AND_MODULES.md section 8.10). Today's files on the
+left; the sub-module of the banking project they move to (a `git mv` in phase P2, section 12.3 step 6); the folder of banking-3.0.0.dmod
+they end up in on the right. The project lives at modules/banking/ in this repository (question Q9) and builds on its own:
+`cd modules/banking && mvn verify` needs only the SDK artefacts (drishti-kernel-api, drishti-kernel-testkit, the plugin), never the
+kernel's sources.
+
+modules/banking/
+├── pom.xml                         parent: com.ash.drishti.sdk:drishti-module-parent; kernel API `provided`; the plugin; 7 sub-modules
+├── module.yaml                     <- drishti-banking/src/main/resources/META-INF/drishti/module.yaml (grown: section 3.3)
+│                                      + engines.yaml, lenses.yaml, token-scopes.yaml from the same folder
+│
+├── banking-compute/                <- drishti-compute-banking/  (VaR, exposure, FRTB-SA, SIMM, sensitivities, MR cube engines)  → java/
+│   └── pom.xml                        drops drishti-server and drishti-compute; depends on drishti-kernel-api (provided) only
+├── banking-service/                <- drishti-banking/          (BankingModule, REST controllers, SPI implementations)          → java/
+│   └── pom.xml                        @ModuleApi controllers under /api/v1/risk; ApiAlias for /api/v1/var ... for one release
+├── banking-python/                 <- drishti-compute/python/drishti_banking/ and config/packs/banking/*/python/                  → python/
+│   └── pom.xml                        tools/varcli.py and the other banking CLIs move here as console scripts of the module
+├── banking-packs/                  <- config/packs/banking/{banking-reference,trading,market-risk,counterparty-risk}/              → packs/
+│   │                                  + config/lenses/banking/ (→ lenses/), config/bi/banking/ (→ bi/),
+│   │                                  + config/lakes/banking/ forms (→ lakes/, tables only, no location)
+│   ├── data/needs.yaml             <- new: written from the contracts' storage: blocks (section 5.3)
+│   └── functions.yaml              <- the banking rows of today's function registry
+├── banking-console/                <- drishti-console/plugins/banking/                                                            → console/
+│   ├── plugin.yaml                    format 1 → format 2 (examples/banking/console/plugin.yaml): routes declared, routers deleted
+│   ├── templates/                  <- plugins/banking/templates/{terminal,home,admin}/*.html (namespace banking:)
+│   ├── pages/                      <- plugins/banking/routes/*.py, reduced to context builders (no FastAPI router, no pass-through)
+│   ├── static/                     <- the banking files of drishti-console/web/static/{js,css}/drishti_{var,exposure,frtb-sa,simm,...}*
+│   └── elements/drishti-risk/      <- drishti-console/web/static/elements/drishti-risk/                                         → elements/
+├── banking-docs/                   <- docs/guides/{VAR,REGULATORY_VAR_REPORTING,EXPOSURE,FRTB_SA,SIMM,MR_CUBE,FUNDS}_GUIDE.md,          → docs/
+│                                      docs/tutorials/{02,03,04,05,24,...}-*.md, their img/ folders, plugins/banking/help.yaml,
+│                                      the banking terms of the glossary, docs/contracts/ for banking's kinds
+├── banking-test/                   <- drishti-banking/src/test, drishti-compute-banking/src/test (harness-based from P2),
+│                                      drishti-console/tests/test_var*.py, test_exposure*.py ... (console harness),
+│                                      the VaR exact check (tests/var-exact) and BankingAbsenceTest (section 10.11)
+└── settings/                       <- new: schema.json from today's drishti.var.* / drishti.exposure.* keys (CONFIGURATION.md),
+                                       defaults.yaml with today's values (they leave config/application.yaml)
+
+What stays in the kernel: drishti-common, drishti-api, drishti-registry ... (section 2.1); the console core; Elements core; connectors.
+What is deleted (no dual machinery): drishti-console/plugins/banking/, the banking routers' import in core/plugins.py, the banking rows of
+tools/domain_strings_allowed.yaml, the banking modules in the root pom's <modules>, banking on the fat jar's class path.
+
+Build and use
+  $ cd modules/banking && mvn verify                 # 1,912 Java tests, 214 pytest, harness, conformance, VaR exact
+  $ mvn package                                     # target/dmod/banking-3.0.0.dmod (development-signed)
+  $ python3 ../../tools/drishti.py module run       # the kernel + banking only, demo lake from its samples, hot reload
+  $ mvn deploy -Prelease                            # signed with the Drishti publisher key (HSM), published to the module repository

@@ -1,0 +1,100 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# EXAMPLE (design, not built): the manifest of the genomics SAMPLE module, a hypothetical second domain that proves the kernel knows no
+# banking (docs/architecture/KERNEL_AND_MODULES.md sections 3.3, 8.9 and 9). Written by the archetype, kept by the developer; the Maven
+# plugin's drishti:validate checks it against module.schema.json and against the pom (id, version). No connector, host or credential.
+format: 1
+
+id: genomics
+version: 0.1.0
+title: Genomics
+about: Cohorts, samples and variant calls; allele frequencies, carrier rates and sample QC. A sample module of the Module SDK.
+domain: genomics
+publisher: { id: example-labs, name: "Example Labs (partner)", contact: "modules@example-labs.example" }
+
+licence:
+  feature: genomics
+  limits: [samples]
+
+kernel: ">=1.0 <2.0"
+rachana: ">=1 <2"
+contracts: ">=1 <2"
+plugin-api: ">=2 <3"                      # plugin.yaml format 2: declared routes (section 9.8)
+elements: ">=2.0 <3.0"
+
+requires: []
+conflicts: []
+
+java:
+  entry: com.example.genomics.GenomicsModule
+  spring: com.example.genomics.GenomicsAutoConfiguration
+  jars: [java/genomics-compute-0.1.0.jar, java/genomics-service-0.1.0.jar]
+  native: false
+
+compute:
+  engines:
+    - { id: allele-frequency, words: [AF, HWE], pool: compute, switch: true }
+
+python:
+  packages: [python/drishti_genomics]
+  requirements: python/requirements.txt
+  pools: [python]
+  items:
+    - { id: genomics.ld-decay,   module: drishti_genomics.ld_decay,   kind: visual }
+    - { id: genomics.qc-metrics, module: drishti_genomics.qc_metrics, kind: measure }
+
+provides:
+  kinds:
+    genomics: [sample, cohort, variant-call]
+  computed:
+    - { kind: variant-summary, by: com.example.genomics.compute.VariantSummaryProvider }
+
+packs: { folder: packs, list: [genomics], default-on: [genomics] }
+data: { needs: data/needs.yaml }
+
+api:
+  prefix: genomics                        # /api/v1/genomics/**
+  tokens: tokens/token-scopes.yaml        # genomics:write (cohort notes)
+
+console:
+  plugin: console/plugin.yaml             # routes, menus, Home cards, slots, the API proxy list (section 9)
+  elements: [elements/drishti-genomics]   # tier 3: the domain Elements library
+
+functions: functions.yaml                 # SAMPLE, COHORT, VARIANT, VARX, AF, HWE, LD, QC
+lenses: lenses/lenses.yaml                # cohorts
+bi: { reports: bi/reports }
+
+docs:
+  readme: docs/README.md
+  help: docs/help.yaml
+  glossary: docs/glossary.yaml
+  guides: [docs/guides/GENOMICS_GUIDE.md]
+  tutorials: [docs/tutorials/genomics-01-a-cohort-from-vcf.md]
+  features: docs/features.yaml
+
+settings: { schema: settings/schema.json, defaults: settings/defaults.yaml }
+
+events:
+  publishes: [genomics.cohort.ready]
+  subscribes: [data.loaded, binding.changed, settings.changed]
+
+parts:                                    # placed by the site (config/placement.yaml, section 4.11)
+  api:       { class: light,     contains: [rest, functions] }
+  alignment: { class: heavy,     contains: [engines: [allele-frequency], kind-providers, python-items], memory-mb: 24576, gpu: true }
+  jobs:      { class: singleton, contains: [scheduled-jobs] }
+  console:   { class: light,     contains: [console-bundle, help, glossary] }
+
+resources: { memory-mb: 512, threads: pool:compute }
+health: [genomics.cohorts]

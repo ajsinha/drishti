@@ -1,0 +1,75 @@
+EXAMPLE (design, not built): deploying banking 3.0.1 (an upgrade of 3.0.0) on the 3-node cluster from a script: plan, approve, apply,
+status (docs/architecture/KERNEL_AND_MODULES.md section 7.6; placement: examples/site/placement.yaml; the plan file:
+examples/site/deployment-plan.json). The Admin page (Admin -> Modules -> Deploy) calls the same API and shows the same plan.
+
+$ export DRISHTI_SERVER=https://drishti-main.bank.internal:18480
+$ export DRISHTI_TOKEN=$(secret-tool lookup drishti admin-alice)       # never on the command line
+
+# 1. Plan (alice): changes nothing
+$ python3 tools/drishti.py module deploy banking-3.0.1.dmod --placement config/placement.yaml --plan --out banking-3.0.1.plan.json
+Uploading banking-3.0.1.dmod (38.9 MB) to the module inbox ... done
+Verified     signature Ed25519 (publisher drishti, chain drishti-root, not revoked) · licence feature banking ok · kernel API 1.4 in ">=1.0 <2.0"
+Cluster      3 nodes · fingerprint 9b1e… · config v318 · banking 3.0.0 active
+
+PLAN dpl-2026-1108-0012  banking 3.0.0 -> 3.0.1 (upgrade)
+  PART      CLASS      drishti-main            drishti-b                       drishti-c
+  api       light      3.0.0 -> 3.0.1          3.0.0 -> 3.0.1                  -  (not placed)
+  compute   heavy      -                       3.0.0 -> 3.0.1  6,144 MB        -
+  exposure  heavy      -                       3.0.0 -> 3.0.1  4,096 MB        -
+  jobs      singleton  3.0.0 -> 3.0.1 (leader) -                               -
+  console   light      bundle 3.0.1 to 2 consoles (registry)
+  Copy to   drishti-main, drishti-b (drishti-c receives nothing)
+  Headroom  drishti-b: 10,240 MB needed while both versions are staged, 22,528 MB free in the module budget ... ok
+            drishti-main: 512 MB needed, 9,100 MB free ... ok
+  Replaces  3.0.0 on 2 nodes (kept for rollback until `module prune`)
+  Rolling   window 30 min: sessions pinned to 3.0.0 until reload; then converge on 3.0.1
+  Restart   code changed: rolling restart of drishti-b, then drishti-main (P2)
+  Warnings  none (heavy parts on 1 of 3 nodes; max-nodes 1)
+Plan written to banking-3.0.1.plan.json (fingerprint 9b1e…, config v318). Nothing changed.
+
+# 2. Apply (alice) proposes; four eyes
+$ python3 tools/drishti.py module deploy --apply banking-3.0.1.plan.json
+Proposed dpl-2026-1108-0012 (CHG-2026-1108-0061). Waiting for a second administrator.
+$ echo $?
+3
+
+# 3. Approve (bob, his own token)
+$ DRISHTI_TOKEN=$(secret-tool lookup drishti admin-bob) python3 tools/drishti.py module deploy approve dpl-2026-1108-0012 \
+      --reason "Release 2.9.11.i, ticket RISK-4430"
+Approved by bob. (The proposer cannot approve: alice's approve would answer DRS-1027.)
+
+# 4. Apply (alice, again: the same plan, checked against the cluster first)
+$ python3 tools/drishti.py module deploy --apply banking-3.0.1.plan.json
+Plan dpl-2026-1108-0012 still matches the cluster (fingerprint 9b1e…, config v318) ... ok
+[10:58:01] drishti-b     copy      38.9 MB ........................................ done (sha256 ok, signature ok)
+[10:58:02] drishti-main  copy      38.9 MB ........................................ done (sha256 ok, signature ok)
+[10:58:04] drishti-b     stage     V1-V9 ok · memory check ok ...................... ready
+[10:58:04] drishti-main  stage     V1-V9 ok ......................................... ready
+[10:58:05] cluster       activate  2/2 ready -> config v319 (banking 3.0.1 active on drishti-main, drishti-b)
+[10:58:05] cluster       pages     console bundle 3.0.1 published; route tables v43 on 2 consoles
+[10:58:06] drishti-b     restart   stopping ... starting ... banking 3.0.1 (api, compute, exposure) ......... JOINED
+[11:00:41] drishti-main  restart   stopping ... starting ... banking 3.0.1 (api, jobs: leader) ............. JOINED
+[11:00:42] cluster       converge  3.0.1 on all placed nodes; 14 sessions still pinned to 3.0.0 got "updated: reload"
+DEPLOYED dpl-2026-1108-0012 banking 3.0.1 · 2m 41s · audit AUD-2026-1108-88530
+$ echo $?
+0
+
+# A plan made before the cluster changed is refused
+$ python3 tools/drishti.py module deploy --apply old-banking.plan.json
+REFUSED DRS-1029: the cluster changed since this plan (plan fingerprint 51aa…, config v301; now 9b1e…, v319: drishti-c joined,
+placement changed). Make a new plan.
+$ echo $?
+2
+
+# 5. Status, scriptable
+$ python3 tools/drishti.py module deploy status dpl-2026-1108-0012 --json
+{"id":"dpl-2026-1108-0012","module":"banking","from":"3.0.0","to":"3.0.1","state":"DEPLOYED","proposedBy":"alice","approvedBy":"bob",
+ "nodes":{"drishti-main":{"parts":["api","jobs"],"state":"ACTIVE","leader":["jobs"]},"drishti-b":{"parts":["api","compute","exposure"],
+ "state":"ACTIVE"},"drishti-c":{"parts":[],"state":"NOT_PLACED"}},"started":"2026-11-08T10:58:01-05:00","finished":"2026-11-08T11:00:42-05:00"}
+
+# From a scheduler or CI (Linux / Windows): the same command and exit codes
+$ tools/deploy-module.sh --apply banking-3.0.1.plan.json
+PS> tools\deploy-module.ps1 --apply banking-3.0.1.plan.json
+
+# Undo
+$ python3 tools/drishti.py module deploy rollback dpl-2026-1108-0012      # a new plan back to 3.0.0 on the same placement; four eyes

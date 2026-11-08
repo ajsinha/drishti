@@ -3066,7 +3066,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-1024 | n/a | engine old key | a warning at start, never answered: an old switch name (`drishti.var.enabled`) is in use and decides; move it to the engine's file |
 | DRS-1025 | 404 | module off | the module of this path is not on here: not installed, not licensed or switched off (`config/modules/<module>.yaml`, `DRISHTI_MODULES_<MODULE>_ENABLED`, `POST /api/v1/admin/modules`; [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md) section 22); its API, new and old paths, answers in words, never 403 |
 | DRS-1026 | 404 | function off | the function (command word) behind this path is off here: its module is off or an administrator switched it off (Admin → Functions) |
-| DRS-1027 | 403 | function not allowed | the person may not use this function (per-person grants and denials, from 2.9.11.i; today every person may use every function that is on) |
+| DRS-1027 | 403 | function not allowed | the person may not use this function (per-person grants and denials, from 2.9.11.j; today every person may use every function that is on) |
 | DRS-1017 | 403 | edition pack refused | the server's edition lists its packs with allow-only ([LENSES.md](ADMIN_GUIDE.md#12-what-a-lens-is)): Admin → Packs load, Deploy archive (a failed check) and the registry install refuse any other pack. Add the pack to the edition's packs, or set `drishti.edition-spec.packs.allow-only=false` |
 | DRS-1015 | 503 | connector restarting | the connector the kind is routed to is being restarted (its file changed, a retry) and was not back within 30 s; a read waits that long for it (and for any connector of the kind being restarted) before answering; try again |
 | DRS-2001 | 422 | sutra parse | the Sutra text cannot be parsed |

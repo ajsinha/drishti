@@ -12,57 +12,98 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# EXAMPLE (design, not built): console/plugin.yaml inside banking-3.0.0.dmod (docs/architecture/KERNEL_AND_MODULES.md section 4.7).
-# Today's drishti-console/plugins/banking/plugin.yaml, unchanged in format; only the Python import root changes (plugins.banking ->
-# drishti_modules.banking, a namespace package rooted at the installed module's console/ folder). Templates are found in console/templates,
-# static files in console/static and served at /m/banking/static/3.0.0/... (question Q3); paths are the page addresses it claims.
-format: 1
+# EXAMPLE (design, not built): console/plugin.yaml inside banking-3.0.0.dmod, format 2 (docs/architecture/KERNEL_AND_MODULES.md sections
+# 4.7 and 9). Today's drishti-console/plugins/banking/plugin.yaml (format 1) lists `routers:` that FastAPI includes at import; format 2
+# DECLARES every page and every API pass-through instead, so the kernel's live route table owns them and can withdraw them (section 10).
+# One way: format 1 is read for one release with a deprecation line in Health, then refused (plugin-api >=2).
+#
+# What happens to today's nine route files (drishti-console/plugins/banking/routes/*.py, about 60 handlers):
+#   * the ~35 /api/var/**, /api/exposure/**, /api/frtb/**, /api/simm/**, /api/smat/**, /api/play/** pass-throughs -> `api.proxy` entries
+#     (no Python at all: the kernel's proxy forwards as the person; streamed workbooks and Arrow answers keep their media types);
+#   * the ~20 pages (/var, /exposure, /frtb, /simm, /smat, /play, /mcube, /predeal, /var/backtesting ...) -> `routes` entries, each a
+#     composed page (page:) with an optional handler (a plain function in drishti_modules.banking.pages that returns the page's context);
+#   * the home landings and Pivot panes -> `slots` (home.landing, pivot.top, pivot.below);
+#   * the typed commands (VAR DESK RATES -> the explorer) -> `words` with a grammar.
+format: 2
 module: banking
 title: Banking and risk
 
-routers: [drishti_modules.banking.routes.trading_routes, drishti_modules.banking.routes.var_regulatory_routes, drishti_modules.banking.routes.var_routes,
-          drishti_modules.banking.routes.smat_routes, drishti_modules.banking.routes.frtb_routes, drishti_modules.banking.routes.simm_routes,
-          drishti_modules.banking.routes.play_routes, drishti_modules.banking.routes.exposure_routes, drishti_modules.banking.routes.mcube_routes]
-registers: [drishti_modules.banking.build_types, drishti_modules.banking.routes.trading_routes]
-code: [drishti_modules.banking.trading_landing, drishti_modules.banking.market_landing, drishti_modules.banking.risk_api]
-
-help: help.yaml
+templates: templates            # namespace "banking:" (banking:var_explorer.html)
+static: static                  # /m/banking/static/3.0.0/... (Q3)
+i18n: i18n
+handlers: drishti_modules.banking.pages     # var, exposure, frtb, simm, smat, play, mcube, landings: context builders only
 engines: [var, exposure, sensitivities, frtb-sa, simm, mr-cube]
-words: [PLAY, "PLAY FRTB", "PLAY SIMM", CCUBE, FRSA, SIMM, MCUBE, SENS, RFAC]
-paths: [/frtb, /api/frtb/, /play/frtb, /simm, /api/simm/, /play/simm, /play, /api/play/, /mcube, /api/pivot/mr/, /var/backtesting,
-        /var/statistics, /var/reports, /api/var/, /var/stress-window, /api/home/trading/, /home/trading/, /api/home/market/, /admin/scopes]
-assets:
-  - js/drishti_var-*.js
-  - css/drishti_var.css
-  - css/drishti_var-*.css
-  - js/drishti_exposure-*.js
-  - css/drishti_exposure.css
-  - js/drishti_frtb-sa.js
-  - css/drishti_frtb-sa.css
-  - js/drishti_simm.js
-  - js/drishti_scenario-matrix.js
-  - css/drishti_scenario-matrix.css
-  - js/drishti_smat-link.js
-  - js/drishti_play-link.js
-  - js/drishti_stress-window.js
-  - css/drishti_stress-window.css
-  - js/drishti_mr-lens.js
-  - css/drishti_mr-lens.css
-  - js/drishti_risk-landing.js
-  - css/drishti_risk-landing.css
-  - js/drishti_trading-landing.js
-  - css/drishti_trading-landing.css
-  - js/drishti_market-landing.js
-  - css/drishti_market-landing.css
-  - elements/drishti-risk/*
-  - elements/drishti-risk/src/*
-templates: [terminal/var.html, terminal/var_backtesting.html, terminal/var_reports.html, terminal/var_statistics.html, terminal/exposure.html, terminal/predeal.html,
-            terminal/frtb.html, terminal/simm.html, terminal/smat.html, terminal/play.html, terminal/stress_window.html, terminal/_mr_lens.html,
-            terminal/_mr_panes.html, terminal/_risk_elements.html, home/risk_landing.html, home/trading_landing.html, home/market_landing.html, admin/scopes.html]
-screens:
-  pivot:
-    when: {lens: mr}
-    css: [css/drishti_mr-lens.css]
-    js: [elements/drishti-risk/drishti_risk.js, js/drishti_mr-lens.js]
-    top: [terminal/_mr_lens.html]
-    below: [terminal/_mr_panes.html]
+
+routes:                         # under /m/banking; `alias:` keeps today's addresses (Drishti-signed module: aliases allowed, Q15)
+  - { id: var-explorer,     path: "/var/{scope...}",          page: var_explorer.html,     handler: var.explorer,     function: VAR,
+      title: "VaR · {scope}", alias: /var }
+  - { id: var-backtesting,  path: /var/backtesting,           page: var_backtesting.html,  handler: var.backtesting,  function: VAR,  alias: /var/backtesting }
+  - { id: var-statistics,   path: /var/statistics,            page: var_statistics.html,   handler: var.statistics,   function: VAR,  alias: /var/statistics }
+  - { id: var-reports,      path: "/var/reports/{report?}",   page: var_reports.html,      handler: var.reports,      function: VREG, alias: /var/reports }
+  - { id: stress-window,    path: /var/stress-window,         page: stress_window.html,    handler: var.stress_window, function: SWIN, alias: /var/stress-window }
+  - { id: exposure,         path: "/exposure/{scope...}",     page: exposure.html,         handler: exposure.page,    function: EXP,  alias: /exposure }
+  - { id: predeal,          path: /predeal,                   page: predeal.html,          handler: exposure.predeal, function: PREDEAL, alias: /predeal }
+  - { id: frtb,             path: /frtb,                      page: frtb.html,             handler: frtb.page,        function: FRSA, alias: /frtb }
+  - { id: simm,             path: /simm,                      page: simm.html,             handler: simm.page,        function: SIMM, alias: /simm }
+  - { id: smat,             path: /smat,                      page: smat.html,             handler: smat.page,        function: SMAT, alias: /smat }
+  - { id: play,             path: "/play/{metric?}",          page: play.html,             handler: play.page,        function: PLAY, alias: /play }
+  - { id: mcube,            path: /mcube,                     sutra: market-risk/mr-cube,                               function: MCUBE, alias: /mcube }
+  - { id: scopes,           path: /admin/scopes,              page: admin_scopes.html,     handler: var.scopes,       function: VAR,
+      permission: risk:admin, alias: /admin/scopes, admin: true }      # an Admin tab (the admin menu), only for administrators
+
+api:                            # /m/banking/api/** -> /api/v1/risk/** as the person; today's /api/var/... console paths kept as aliases
+  aliases: { /api/var: /m/banking/api/var, /api/exposure: /m/banking/api/exposure, /api/frtb: /m/banking/api/frtb,
+             /api/simm: /m/banking/api/simm, /api/smat: /m/banking/api/smat, /api/play: /m/banking/api/play, /api/pivot/mr: /m/banking/api/mr }
+  proxy:
+    - { method: GET,    path: "/var/**" }
+    - { method: POST,   path: "/var/**",             permission: risk:write }
+    - { method: DELETE, path: "/var/baskets/{owner}/{name}", permission: risk:write }
+    - { method: GET,    path: "/var/explain.xlsx",   stream: true }
+    - { method: GET,    path: "/exposure/**" }
+    - { method: POST,   path: "/exposure/**",        permission: risk:write }
+    - { method: GET,    path: "/frtb/**" }
+    - { method: POST,   path: /frtb/recipes,         permission: risk:write }
+    - { method: GET,    path: "/simm/**" }
+    - { method: GET,    path: "/smat/matrix{.arrow,.csv,.jsonl,}", stream: true }
+    - { method: GET,    path: "/play/**" }
+    - { method: GET,    path: "/mr/**" }
+    - { method: POST,   path: "/mr/{action}",        permission: risk:write }
+  limits: { timeout-seconds: 120, max-response-mb: 512 }   # VaR workbooks and SMAT matrices are large
+
+words:                          # 60 words in functions.yaml; the ones that open a page name the route and their grammar
+  - { word: VAR,   route: var-explorer,  grammar: "VAR {scope...}",  example: "VAR DESK RATES" }
+  - { word: EXP,   route: exposure,      grammar: "EXP {scope...}",  example: "EXP CPTY:CP-ALDERSHOT" }
+  - { word: FRSA,  route: frtb }
+  - { word: SIMM,  route: simm }
+  - { word: SMAT,  route: smat }
+  - { word: SWIN,  route: stress-window }
+  - { word: PLAY,  route: play,          grammar: "PLAY {metric?}",  example: "PLAY FRTB" }
+  - { word: MCUBE, route: mcube }
+
+menus:                          # entries of the sitemap's menus, tagged domain: banking (today's `requires: module:banking`)
+  - { menu: risk, column: Market risk, id: var, route: var-explorer, params: { scope: BANK }, icon: shield-check, label: VaR explorer,
+      desc: "VaR, ES and their contributions for any scope · also VAR <scope> <GO>", lenses: [risk, cro, trading] }
+  - { menu: risk, column: Market risk, id: var-backtesting, route: var-backtesting, icon: activity, label: Backtesting }
+  - { menu: risk, column: Market risk, id: frtb, route: frtb, icon: calculator, label: FRTB-SA }
+  - { menu: risk, column: Counterparty, id: exposure, route: exposure, params: { scope: BANK }, icon: graph-up, label: Exposure }
+  - { menu: risk, column: Counterparty, id: simm, route: simm, icon: diagram-2, label: ISDA SIMM }
+  - { menu: build, column: Playgrounds, id: play, route: play, icon: easel, label: Playgrounds }
+
+home:                           # module.yaml's Home cards, now pointing at routes, not raw paths
+  risk:
+    cards:
+      - { title: VaR of the bank, route: var-explorer, params: { scope: BANK }, icon: shield-check }
+      - { title: VaR of the rates desk, route: var-explorer, params: { scope: "DESK RATES" }, icon: bar-chart-line }
+      - { title: Exposure of a counterparty, route: exposure, params: { scope: "CPTY:CP-ALDERSHOT" }, icon: graph-up }
+    landing: { slot: home.landing, template: home_risk_landing.html, handler: landings.risk }
+  trading: { landing: { slot: home.landing, template: home_trading_landing.html, handler: landings.trading } }
+  market:  { landing: { slot: home.landing, template: home_market_landing.html, handler: landings.market }, requires: [module:capitalmarkets] }
+
+slots:                          # today's screens.pivot (top, below) and the entity panels the VaR view augmenter feeds
+  - { slot: pivot.top,   when: { lens: mr }, template: _mr_lens.html, assets: [css/drishti_mr-lens.css, js/drishti_mr-lens.js] }
+  - { slot: pivot.below, when: { lens: mr }, template: _mr_panes.html }
+
+elements: [drishti-risk]        # tier 3: <drishti-risk-limit-bar>, <drishti-risk-pnl-distribution>, <drishti-risk-hierarchy> ...
+
+settings: { page: generated, expose-to-pages: [confidence, windows, root-name] }
+help: help.yaml

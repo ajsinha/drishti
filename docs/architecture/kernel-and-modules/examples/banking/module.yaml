@@ -108,7 +108,7 @@ api:
 
 console:
   plugin: console/plugin.yaml
-  paths: [/var, /exposure, /frtb, /simm, /smat, /play, /mcube, /admin/scopes, /home/trading]   # page addresses it claims (kept)
+                                          # routes and today's addresses (aliases /var, /exposure ...) are declared there (section 9.8)
   elements: [elements/drishti-risk]       # its domain Elements library (licensed with it)
 
 functions: functions.yaml                 # 60 command words: VAR, PVAR, SMAT, SWIN, PREDEAL, EXP, FRSA, SIMM, MCUBE, SENS, RFAC, TRD,
@@ -156,6 +156,14 @@ settings:
 events:
   publishes: [banking.var.date-ready, banking.var.limit-breach, banking.exposure.date-ready]
   subscribes: [data.loaded, data.changed, binding.changed, date.rolled, settings.changed]
+
+parts:                                    # what the deployer places, part by part (section 4.11.2); never where: config/placement.yaml
+  api:      { class: light,     contains: [rest, view-augmenters, explain, functions] }
+  compute:  { class: heavy,     contains: [engines: [var, sensitivities, frtb-sa, simm, mr-cube], kind-providers, python-items], memory-mb: 6144 }
+  exposure: { class: heavy,     contains: [engines: [exposure]], memory-mb: 4096 }
+  feeds:    { class: feed,      contains: [] }                         # none today (market data is capital markets', Q6)
+  jobs:     { class: singleton, contains: [scheduled-jobs, official-results-publish] }
+  console:  { class: light,     contains: [console-bundle, help, glossary] }
 
 resources:
   memory-mb: 6144                         # one VaR date of the benchmark book in memory, plus exposure (capacity planner)

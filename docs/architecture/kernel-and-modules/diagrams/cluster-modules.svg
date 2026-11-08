@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 660" width="760" height="660" role="img" aria-label="Modules in a cluster: placed, not everywhere" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'DejaVu Sans', Arial, sans-serif">
+<!-- Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND CONFIDENTIAL. -->
+<title>Modules in a cluster: placed, not everywhere</title>
+<defs><marker id="a1a2333" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1a2333"/></marker><marker id="a1f5fbf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1f5fbf"/></marker><marker id="a1e8a55" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1e8a55"/></marker><marker id="ac62828" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c62828"/></marker><marker id="ae8a33a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#e8a33a"/></marker><marker id="a2bb3a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#2bb3a3"/></marker><marker id="a5c6a80" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#5c6a80"/></marker><marker id="a12324f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#12324f"/></marker></defs>
+<rect x="0.5" y="0.5" width="759" height="659" rx="14" fill="#f7f9fc" stroke="#cdd6e3"/>
+<text x="24" y="38" font-size="20" font-weight="700" fill="#12324f">Modules in a cluster: placed, not everywhere</text>
+<text x="24" y="60" font-size="13" fill="#5c6a80">The deployer places each part on named nodes or roles; others forward; drift shows in the matrix.</text>
+<rect x="24" y="84" width="712" height="74" rx="8" fill="#ebe5f7" stroke="#6a4fb3" stroke-width="1.5"/>
+<text x="36" y="106" font-size="14" font-weight="700" fill="#6a4fb3" text-anchor="start">Console (any number; nothing installed by hand)</text>
+<text x="36" y="125" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">asks the registry which modules are active and where · console bundles from the kernel (signed)</text>
+<path d="M200,158 L200,190" fill="none" stroke="#12324f" stroke-width="1.8" marker-end="url(#a12324f)"/>
+<text x="262" y="178" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="middle" font-style="italic">registry, bundles</text>
+<path d="M560,158 L560,190" fill="none" stroke="#1e8a55" stroke-width="1.8" marker-end="url(#a1e8a55)"/>
+<text x="636" y="178" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="middle" font-style="italic">API proxy calls</text>
+<rect x="24" y="194" width="712" height="44" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="36" y="216" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">Drishti*net routes each part only to nodes where it is placed and active; failover inside the placement</text>
+<rect x="24" y="270" width="170" height="140" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="36" y="292" font-size="14" font-weight="700" fill="#12324f" text-anchor="start">drishti-main</text>
+<text x="36" y="312" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="start" font-style="italic">role: data-serving</text>
+<text x="36" y="336" font-size="12" font-weight="400" fill="#1e8a55" text-anchor="start">banking  api</text>
+<text x="36" y="356" font-size="12" font-weight="700" fill="#e8a33a" text-anchor="start">banking  feeds, jobs ★</text>
+<text x="36" y="376" font-size="12" font-weight="400" fill="#1e8a55" text-anchor="start">genomics  api</text>
+<path d="M109,238 L109,268" fill="none" stroke="#12324f" stroke-width="1.8" marker-end="url(#a12324f)"/>
+<rect x="206" y="270" width="170" height="140" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="218" y="292" font-size="14" font-weight="700" fill="#1f5fbf" text-anchor="start">drishti-b</text>
+<text x="218" y="312" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="start" font-style="italic">role: risk-compute</text>
+<text x="218" y="336" font-size="12" font-weight="400" fill="#1e8a55" text-anchor="start">banking  api</text>
+<text x="218" y="356" font-size="12" font-weight="700" fill="#1f5fbf" text-anchor="start">banking  COMPUTE (heavy)</text>
+<text x="218" y="376" font-size="12" font-weight="700" fill="#1f5fbf" text-anchor="start">  VaR, FRTB, exposure</text>
+<path d="M291,238 L291,268" fill="none" stroke="#12324f" stroke-width="1.8" marker-end="url(#a12324f)"/>
+<rect x="388" y="270" width="170" height="140" rx="8" fill="#eceff4" stroke="#5c6a80" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="400" y="292" font-size="14" font-weight="700" fill="#5c6a80" text-anchor="start">drishti-c</text>
+<text x="400" y="312" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="start" font-style="italic">no role</text>
+<text x="400" y="336" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">banking  not placed</text>
+<text x="400" y="356" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">  no .dmod here;</text>
+<text x="400" y="376" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">  forwards, never computes</text>
+<path d="M473,238 L473,268" fill="none" stroke="#5c6a80" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#a5c6a80)"/>
+<rect x="570" y="270" width="170" height="140" rx="8" fill="#dcf3f0" stroke="#2bb3a3" stroke-width="1.5"/>
+<text x="582" y="292" font-size="14" font-weight="700" fill="#2bb3a3" text-anchor="start">drishti-gpu</text>
+<text x="582" y="312" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="start" font-style="italic">role: gpu</text>
+<text x="582" y="336" font-size="12" font-weight="400" fill="#1e8a55" text-anchor="start">genomics  api</text>
+<text x="582" y="356" font-size="12" font-weight="700" fill="#2bb3a3" text-anchor="start">genomics  ALIGNMENT</text>
+<text x="582" y="376" font-size="12" font-weight="700" fill="#2bb3a3" text-anchor="start">  heavy, max-nodes 1</text>
+<path d="M655,238 L655,268" fill="none" stroke="#12324f" stroke-width="1.8" marker-end="url(#a12324f)"/>
+<text x="24" y="432" font-size="12" font-weight="700" fill="#e8a33a" text-anchor="start">★ singleton: one elected runner among the placed nodes</text>
+<rect x="24" y="446" width="712" height="64" rx="8" fill="#fbefd9" stroke="#e8a33a" stroke-width="1.5"/>
+<text x="36" y="468" font-size="13" font-weight="700" fill="#e8a33a" text-anchor="start">Guards</text>
+<text x="36" y="486" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">no default &#x27;all nodes&#x27; · heavy: max-nodes + memory check at activation · heavy on every node only with allow-all + four eyes</text>
+<rect x="24" y="526" width="712" height="112" rx="8" fill="#ffffff" stroke="#5c6a80" stroke-width="1.5"/>
+<text x="36" y="548" font-size="14" font-weight="700" fill="#5c6a80" text-anchor="start">Node × module matrix (Health, Admin → Cluster)</text>
+<text x="150" y="574" font-size="13" font-weight="700" fill="#5c6a80" text-anchor="start">main</text>
+<text x="290" y="574" font-size="13" font-weight="700" fill="#5c6a80" text-anchor="start">b</text>
+<text x="430" y="574" font-size="13" font-weight="700" fill="#5c6a80" text-anchor="start">c</text>
+<text x="570" y="574" font-size="13" font-weight="700" fill="#5c6a80" text-anchor="start">gpu</text>
+<text x="40" y="598" font-size="13" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">banking</text>
+<text x="150" y="598" font-size="13" font-weight="400" fill="#1e8a55" text-anchor="start">api, feeds ✓</text>
+<text x="290" y="598" font-size="13" font-weight="400" fill="#1e8a55" text-anchor="start">api, compute ✓</text>
+<text x="430" y="598" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="start">not placed</text>
+<text x="570" y="598" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="start">not placed</text>
+<text x="40" y="620" font-size="13" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">genomics</text>
+<text x="150" y="620" font-size="13" font-weight="400" fill="#1e8a55" text-anchor="start">api ✓</text>
+<text x="290" y="620" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="start">not placed</text>
+<text x="430" y="620" font-size="13" font-weight="700" fill="#e8a33a" text-anchor="start">present ! amber</text>
+<text x="570" y="620" font-size="13" font-weight="700" fill="#c62828" text-anchor="start">placed, missing ✗</text>
+</svg>

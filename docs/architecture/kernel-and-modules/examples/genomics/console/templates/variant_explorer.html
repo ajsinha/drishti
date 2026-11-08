@@ -1,0 +1,75 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  EXAMPLE (design, not built): a COMPOSED PAGE (tier 2) of the genomics module, genomics:variant_explorer.html
+  (docs/architecture/KERNEL_AND_MODULES.md sections 9.2 to 9.6). It extends the kernel's public layout and uses only the Elements
+  macros (kernel/elements.html) and the module's own domain components (tier 3, <drishti-genomics-*>). No inline script, no style
+  attribute with colours, no |safe, no URL of another origin, no other module's template: the sandboxed environment and the
+  conformance lint refuse each. Data comes through the kernel's API proxy (/m/genomics/api/...), as the person.
+#}
+{% extends "kernel/page.html" %}
+{% import "kernel/elements.html" as el %}
+{% import "genomics:_cohort_strip.html" as strip %}
+
+{% block title %}{{ t("genomics.explorer.title", cohort=route.params.cohort) }}{% endblock %}
+
+{% block assets %}
+  {{ asset("css/drishti_genomics.css") }}                      {# -> <link> with the versioned URL and its SRI hash #}
+  {{ asset("js/drishti_genomics-explorer.js", module=true) }}  {# an ES module on the Elements public API #}
+  {{ elements("drishti-genomics") }}                           {# tier 3: the module's domain library, from its Elements manifest #}
+{% endblock %}
+
+{% block page %}
+  {{ el.page_header(
+       pill=t("genomics.pill"),
+       title=route.params.cohort,
+       subtitle=t("genomics.explorer.subtitle"),
+       actions=[el.action("export", t("common.export"), function="EXPORT"),
+                el.action_link(t("genomics.qc"), url_for("qc", run="@latest"))]) }}
+
+  {{ strip.kpis(cohort=route.params.cohort, source=api("/cohorts/" ~ route.params.cohort ~ "/summary")) }}
+
+  {{ el.filter_bar(id="vx-filters", fields=[
+       el.field("gene", t("genomics.gene"), kind="text", suggest=api("/variants?suggest=gene")),
+       el.field("consequence", t("genomics.consequence"), kind="choice",
+                options=["missense", "nonsense", "frameshift", "splice", "synonymous"]),
+       el.field("af_max", t("genomics.af_max"), kind="number", value=module.settings["af-threshold"])]) }}
+
+  {{ el.layout(columns="2fr 1fr", children=[
+       el.grid(id="vx-grid",
+               source=api("/variants", cohort=route.params.cohort),
+               filters="vx-filters",
+               key="VARIANT_ID",
+               columns=[
+                 el.col("VARIANT_ID", t("genomics.variant"), link=url_for("variant-explorer", cohort=route.params.cohort) ~ "?v={VARIANT_ID}"),
+                 el.col("GENE", t("genomics.gene")),
+                 el.col("CONSEQUENCE", t("genomics.consequence"), chip=true),
+                 el.col("AF", t("genomics.af"), fmt="pct2"),
+                 el.col("CARRIERS", t("genomics.carriers"), fmt="int", total="sum"),
+                 el.col("HWE_P", "HWE p", fmt="sci2")],
+               explain=true,
+               export=true),
+       el.chart(id="vx-af",
+                kind="histogram",
+                source="vx-grid",
+                x="AF", bins=40,
+                title=t("genomics.af_distribution"),
+                threshold=module.settings["af-threshold"])]) }}
+
+  {# a tier-3 component of the module's own Elements library, fed by the grid's selection #}
+  <drishti-genomics-variant-track data-follows="vx-grid" data-source="{{ api('/variants/{VARIANT_ID}/carriers') }}"></drishti-genomics-variant-track>
+
+  {{ el.notice_area() }}   {# the kernel's notices: "module genomics is no longer installed" lands here (section 10.4) #}
+{% endblock %}

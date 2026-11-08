@@ -1,0 +1,94 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# EXAMPLE (design, not built): console/plugin.yaml of the genomics sample module, format 2 (docs/architecture/KERNEL_AND_MODULES.md
+# section 9). Everything the console shows for the module is DECLARED here and nowhere else: routes, menus, functions' pages, Home cards,
+# slots, settings page, the API proxy list. No code registers a route at import; the kernel reads this file into its live route table, and
+# withdrawing the file's entries withdraws every page (section 10).
+format: 2
+module: genomics
+title: Genomics
+
+templates: templates            # namespace "genomics:" (genomics:variant_explorer.html); may extend kernel/* layouts only
+static: static                  # served at /m/genomics/static/0.1.0/... (immutable, SRI)
+i18n: i18n                      # t('genomics.explorer.title')
+handlers: drishti_modules.genomics.pages   # the one Python module named by `handler:` below; imported lazily, on first use
+
+routes:                         # under /m/genomics; ids are unique in the module; links use route ids, never raw paths
+  - id: home
+    path: /
+    sutra: genomics/cohort-home                  # tier 1: a Sutra page, no template of its own
+    title: Genomics
+    function: COHORT
+  - id: variant-explorer
+    path: /variants/{cohort}
+    params: { cohort: { kind: cohort, required: true } }
+    page: variant_explorer.html                  # tier 2: a composed page from Elements (templates/variant_explorer.html)
+    handler: variant_explorer                    # optional: builds the page's context (pages.variant_explorer(ctx) -> dict)
+    title: "Variant explorer · {cohort}"
+    function: VARX
+    permission: genomics:read
+    alias: /variants                             # a short path outside /m/: checked against the reserved names (section 9.9)
+  - id: sample
+    path: /samples/{sample}
+    params: { sample: { kind: sample } }
+    sutra: genomics/sample
+    function: SAMPLE
+  - id: qc
+    path: /qc/{run}
+    page: qc_run.html
+    function: QC
+    permission: genomics:read
+  - id: moved-old-explorer                       # an address that moved: answered with 308 to the new route for one release
+    path: /explorer/{cohort}
+    moved: { to: variant-explorer, until: 0.3.0 }
+
+api:                                             # the console's API proxy: /m/genomics/api/** -> /api/v1/genomics/** as the person
+  proxy:
+    - { method: GET,  path: /variants }
+    - { method: GET,  path: "/variants/{id}/carriers" }
+    - { method: GET,  path: "/cohorts/{id}/summary" }
+    - { method: POST, path: "/cohorts/{id}/notes", permission: genomics:write }   # CSRF checked by the kernel
+  limits: { timeout-seconds: 30, max-response-mb: 64 }
+
+words:                                           # command words -> routes (the function registry keeps the word's module)
+  - { word: VARX,    route: variant-explorer, grammar: "VARX {cohort}", example: "VARX BRCA-2026" }
+  - { word: COHORT,  route: home }
+  - { word: SAMPLE,  route: sample, grammar: "SAMPLE {sample}" }
+  - { word: QC,      route: qc, grammar: "QC {run}" }
+
+menus:                                           # merged into the sitemap's menus; every entry tagged domain: genomics
+  - { menu: analyse, column: Genomics, id: genomics-explorer, route: variant-explorer, params: { cohort: "@last" },
+      icon: diagram-3, label: Variant explorer, desc: "Variants of a cohort: frequencies, carriers, QC · also VARX <cohort> <GO>",
+      lenses: [cohorts] }
+  - { menu: analyse, column: Genomics, id: genomics-qc, route: qc, params: { run: "@latest" }, icon: clipboard-check, label: Sample QC }
+
+home:                                            # Home cards and chips per lens
+  cohorts:
+    cards:
+      - { title: Variant explorer, route: variant-explorer, params: { cohort: BRCA-2026 }, icon: diagram-3 }
+      - { title: Latest QC run, route: qc, params: { run: "@latest" }, icon: clipboard-check }
+    chips: ["VARX BRCA-2026", "SAMPLE S-00042", "QC @latest"]
+
+slots:                                           # the only way into kernel pages: declared extension slots (section 9.3)
+  - { slot: entity.panels, kind: sample, template: _sample_qc_panel.html }
+  - { slot: pivot.top, when: { lens: cohorts }, template: _cohort_strip.html }
+
+settings:
+  page: generated                                # Admin -> Modules -> genomics -> Settings, generated from settings/schema.json
+  expose-to-pages: [default-cohort, af-threshold]   # the only settings a template sees (module.settings.*)
+
+help: ../docs/help.yaml
+search:                                          # extra search entries beyond Sutras, functions and Help (all tagged module: genomics)
+  - { label: "Variant explorer", route: variant-explorer, terms: [variants, allele frequency, carriers] }
