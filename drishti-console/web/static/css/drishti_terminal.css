@@ -446,7 +446,7 @@ body.embed .vhead { padding: var(--d-sp-9_6) var(--d-sp-12_8); }
   .asof-known .di-was-asof-known-in :is(.di-control, .di-field) { min-width: 0; }
 }
 /* on a phone the known-at field takes a row of its own under the date: beside it, its date and time were too narrow to tap (19 px) */
-@media (max-width: 520px) {
+@media (max-width: 560px) {
   .asof:has(.asof-known.on) { flex-wrap: wrap; }
   .asof-known.on { flex: 1 0 100%; }
   .asof-known.on .di-was-asof-known-in { flex: 1 1 auto; max-width: none; }
