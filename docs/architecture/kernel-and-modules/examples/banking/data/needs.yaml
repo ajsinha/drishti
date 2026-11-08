@@ -1,0 +1,90 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# EXAMPLE (design, not built): data/needs.yaml inside banking-3.0.0.dmod (docs/architecture/KERNEL_AND_MODULES.md section 5.3).
+# What the banking module reads, subscribes to and writes, by kind and contract range. The kernel binds each need to a connector or a
+# lake table the SITE configured (config/bindings.yaml); this file never names a connector, a plugin, a location or a credential.
+#
+#   use:       read | live (subscribes to changes) | write (a produced kind the kernel writes where the site says)
+#   required:  true | false | for: [functions]   (required only for those functions; others work without it)
+#   any-of:    a group id; the group is satisfied when one member is bound
+#   demo:      the demo lake's samples may serve it when nothing else does (and drishti.demo.enabled)
+#   used-by:   the functions and engines that depend on it (an unbound required need switches exactly these off, with the reason)
+format: 1
+module: banking
+
+needs:
+  # ---- reference (the banking-reference pack, question Q1; calendar is the kernel's)
+  - { kind: calendar,       contract: ">=1.0 <2", owner: kernel, use: [read], required: true, demo: true, used-by: ["*"] }
+  - { kind: legal-entity,   contract: ">=1.0 <2", use: [read], required: true, demo: true, used-by: [LE, VAR, EXP] }
+  - { kind: counterparty,   contract: ">=1.0 <2", use: [read], required: true, demo: true, used-by: [CPTY, EXP, PREDEAL] }
+  - { kind: book,           contract: ">=1.0 <2", use: [read], required: true, demo: true, used-by: [BOOK, VAR] }
+  - { kind: desk,           contract: ">=1.0 <2", use: [read], required: true, demo: true, used-by: [DESK, VAR] }
+  - { kind: trader,         contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [TRDR] }
+
+  # ---- trades: one store across the bank's booking systems, live during the day
+  - kind: trade
+    contract: ">=1.0 <2"
+    use: [read, live]
+    required: true
+    demo: true
+    used-by: [TRD, CTRD, PTRD, LTRD, VAR, EXP, PREDEAL]
+    purpose: "Every trade in the bank's booking systems; the VaR scope and the exposure netting follow its columns."
+    expects: { union: true }               # the kernel may bind several sources and read them as one
+
+  # ---- VaR inputs: a trade's scenario PVs OR its P&L vector (any-of A), per business date
+  - kind: scenario-pv
+    contract: ">=1.1 <2"                   # 1.1 added VALUE_TYPE
+    use: [read, live]                      # live = the intraday PV stream
+    any-of: A
+    demo: true
+    used-by: [VAR, PVAR, SMAT, SPV]
+  - { kind: pnl-vector,     contract: ">=1.0 <2", use: [read], any-of: A, demo: true, used-by: [VAR, PVAR, SMAT, PNLV] }
+  - { kind: fx-scenario,    contract: ">=1.0 <2", use: [read], required: { with: scenario-pv }, demo: true, used-by: [VAR, FXS] }
+  - { kind: scenario-set,   contract: ">=1.0 <2", use: [read], required: true, demo: true, used-by: [VAR, SWIN, SSET] }
+  - { kind: risk-hierarchy, contract: ">=1.0 <2", use: [read], required: true, demo: true, used-by: [VAR, VLIM, HIER] }
+  - { kind: portfolio,      contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [PORT] }
+  - { kind: var-limit,      contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [VLIM] }
+  - { kind: desk-pnl,       contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [DPNL, "VAR backtesting"] }
+  - { kind: pnl-history,    contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [SWIN, PNLH] }
+
+  # ---- sensitivities, FRTB-SA, SIMM
+  - { kind: position-sensitivity, contract: ">=1.0 <2", use: [read], required: { for: [FRSA, SIMM, SENS] }, demo: true, used-by: [FRSA, SIMM, SENS] }
+  - { kind: risk-factor,          contract: ">=1.0 <2", use: [read], required: { for: [FRSA, SIMM] }, demo: true, used-by: [RFAC, FRSA, SIMM] }
+
+  # ---- counterparty credit: netting, collateral, limits
+  - { kind: agreement,          contract: ">=1.0 <2", use: [read], required: { for: [EXP, PREDEAL] }, demo: true, used-by: [AGR, EXP] }
+  - { kind: csa,                contract: ">=1.0 <2", use: [read], required: { for: [EXP, PREDEAL, SIMM] }, demo: true, used-by: [CSA, EXP, SIMM] }
+  - { kind: netting-set,        contract: ">=1.0 <2", use: [read], required: { for: [EXP, PREDEAL, SIMM] }, demo: true, used-by: [NSET, EXP] }
+  - { kind: collateral-balance, contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [COLL, EXP] }
+  - { kind: credit-limit,       contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [LIM, PREDEAL] }
+
+  # ---- market data (the capitalmarkets module's kinds once it owns the pack, question Q6)
+  - { kind: ir-curve,       contract: ">=1.0 <2", owner: capitalmarkets, use: [read], required: { for: [EXP, TVAL] }, demo: true, used-by: [EXP, CRV] }
+  - { kind: fx-spot,        contract: ">=1.0 <2", owner: capitalmarkets, use: [read], required: { for: [EXP] }, demo: true, used-by: [EXP, FX] }
+  - { kind: fx-vol-surface, contract: ">=1.0 <2", owner: capitalmarkets, use: [read], required: false, demo: true, used-by: [EXP, FXV] }
+
+  # ---- what it produces
+  - kind: var-official
+    contract: ">=1.0 <2"
+    use: [write]
+    required: false                        # without a write binding the official results are not published (Health says so)
+    demo: true
+    used-by: [VOFF, "official end-of-day VaR"]
+  - { kind: exposure-official-cpty, contract: ">=1.0 <2", use: [write], required: false, demo: true, used-by: [XOFC] }
+
+computed:                                  # KindProviders of this module: not needs, not bindable; listed so Admin can show them
+  - { kind: position,        from: [trade, scenario-pv, pnl-vector] }
+  - { kind: var-result,      from: [position, scenario-set, risk-hierarchy] }
+  - { kind: exposure-result, from: [trade, netting-set, csa, collateral-balance, ir-curve, fx-spot] }

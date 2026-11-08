@@ -1,0 +1,85 @@
+{
+  "$comment": "EXAMPLE (design, not built): settings/schema.json inside banking-3.0.0.dmod (docs/architecture/KERNEL_AND_MODULES.md section 3). JSON Schema 2020-12; the kernel validates the site's values (config/modules/banking.yaml settings:, or DRISHTI_MODULES_BANKING_<KEY>) at start and on change, renders the form in Admin -> Modules -> banking -> Settings, and lists every key in CONFIGURATION.md. x-hot: true = applied without a restart. Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND CONFIDENTIAL.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "drishti:module:banking:settings:3",
+  "title": "Banking and risk",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "var": {
+      "type": "object",
+      "title": "Value at risk",
+      "additionalProperties": false,
+      "properties": {
+        "windows": {
+          "type": "array",
+          "title": "Scenario windows (days)",
+          "description": "The historical windows VaR is computed over; the first is the default on every screen.",
+          "items": { "type": "integer", "enum": [250, 509] },
+          "default": [509, 250],
+          "minItems": 1,
+          "x-hot": false
+        },
+        "confidence": {
+          "type": "number", "title": "Confidence", "minimum": 0.9, "maximum": 0.999, "default": 0.99, "x-hot": true
+        },
+        "es-confidence": {
+          "type": "number", "title": "ES confidence", "minimum": 0.9, "maximum": 0.999, "default": 0.975, "x-hot": true
+        },
+        "horizon-days": {
+          "type": "integer", "title": "Horizon (days)", "enum": [1, 10], "default": 1, "x-hot": true
+        },
+        "root-name": {
+          "type": "string", "title": "Name of the VaR tree's root",
+          "description": "The bank's name at the top of every hierarchy (per hierarchy: root-names).",
+          "default": "Drishti Bank", "maxLength": 80, "x-hot": true
+        },
+        "hierarchies": {
+          "type": "array",
+          "title": "Hierarchies",
+          "description": "Each hierarchy is a list of trade columns from the top down; limit letters name its levels.",
+          "items": {
+            "type": "object",
+            "required": ["id", "levels"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+              "levels": { "type": "array", "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" }, "minItems": 1 },
+              "limit-letters": { "type": "string", "pattern": "^[A-Z]*$" }
+            }
+          },
+          "default": [ { "id": "legal", "levels": ["LEGAL_ENTITY", "DIVISION", "DESK", "TT_BOOK"], "limit-letters": "LDKB" } ],
+          "x-hot": false
+        },
+        "inputs": {
+          "type": "string", "title": "Which input each source system sends",
+          "enum": ["auto", "scenario-pv", "pnl-vector"], "default": "auto", "x-hot": false
+        }
+      }
+    },
+    "exposure": {
+      "type": "object",
+      "title": "Exposure",
+      "additionalProperties": false,
+      "properties": {
+        "pfe-quantile": { "type": "number", "minimum": 0.9, "maximum": 0.999, "default": 0.95, "x-hot": true },
+        "paths": { "type": "integer", "minimum": 500, "maximum": 20000, "default": 5000, "x-hot": false },
+        "predeal": {
+          "type": "string", "title": "Pre-deal method", "enum": ["exact", "proxy"], "default": "exact", "x-hot": true
+        }
+      }
+    },
+    "simm": {
+      "type": "object",
+      "title": "ISDA SIMM",
+      "additionalProperties": false,
+      "properties": {
+        "parameter-file": {
+          "type": "string", "title": "The bank's licensed SIMM parameter file",
+          "description": "A file under the module's data folder; none is shipped (ISDA's parameters are licensed to the bank).",
+          "format": "uri-reference", "x-hot": false
+        }
+      }
+    }
+  }
+}

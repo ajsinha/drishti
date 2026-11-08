@@ -16,6 +16,10 @@
 
 # Domain modules: the boundary between the core and banking
 
+> **What comes next is [KERNEL_AND_MODULES.md](KERNEL_AND_MODULES.md)** (2.9.11.i, design): the kernel, the signed module package, loading from
+> module folders, kernel-controlled data binding and distributions. Section 6 step 9, section 7's D1 and D6 and section 8's *Phase 2, still to do*
+> moved there (its section 12); this document stays the record of the split as built until that design's phase P2 completes.
+
 **Status: phase 1 (the backend) built in 2.9.11.f: the Java modules split, the cycles J1 to J6 broken, the API under `/api/v1/risk`, the
 packs naming their domain, the rules as tests. Phase 2's first half built: the console asks the server for modules and functions on every
 door, static assets by module and lens, the console cycles C1 to C7 broken in place, the console on `/api/v1/risk` (section 8). The moves
@@ -307,7 +311,7 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
   branding; `drishti.edition` (a lens for the
   whole instance) and `drishti.lenses` are unchanged ([LENSES.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is), *Editions are lenses of modules*).
 
-**Phase 2, still to do:**
+**Phase 2, still to do** (carried into [KERNEL_AND_MODULES.md](KERNEL_AND_MODULES.md) section 10, phases P1 and P2):
 
 1. **The thin jar and the plugins folder** (step 9): `drishti-app` builds the core jar alone; the banking module (drishti-banking with
    drishti-compute-banking) is a module jar in a site's modules folder on the launcher's `loader.path`, and the registry's *installed*

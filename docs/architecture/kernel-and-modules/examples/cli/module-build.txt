@@ -1,0 +1,25 @@
+EXAMPLE (design, not built): `drishti.py module build` for banking (docs/architecture/KERNEL_AND_MODULES.md sections 7.1 and 8).
+
+$ cd modules/banking && python3 ../../tools/drishti.py module build --sign-with dev
+banking 3.0.0 · kernel API 1.0 · SDK 1.0.0
+
+[1/8] manifest          module.yaml valid (format 1); 4 packs, 6 engines, 60 functions, 6 lenses, 41 data needs, 3 computed kinds
+[2/8] java              mvn clean verify (drishti-compute-banking, drishti-banking) ............................ 1,912 tests, OK (6m 41s)
+[3/8] kernel API only   no import outside com.ash.drishti.kernel.api.. and the shared libraries ............... OK (ArchUnit)
+[4/8] python            python/requirements.txt within the kernel lock (numpy, pandas, scipy, pyarrow) ......... OK
+                        pytest python/ ........................................................................... 214 passed (38s)
+[5/8] harness           KernelHarness: kernel 2.9.11.i thin jar + banking (demo lake from its samples)
+                        conformance: manifest, functions answer, off means gone, Elements only, two people at once,
+                                     class loader unloads cleanly (50 cycles) .................................... 37/37 OK (3m 12s)
+                        VaR exact: 509 and 250 windows against tests/var-exact ................................. equal, bit for bit
+[6/8] content checks    no connector/plugin/credential keys; no secrets (patterns) ................................ OK
+                        contracts parse (contract-format 1), binding-hints only ................................. 79 OK
+                        Sutras parse (rachana 1) ................................................................. 64 OK
+                        docs gates on docs/ (register, links, one guide + one tutorial per feature) ............ OK
+                        CSP: no inline script, SRI for 31 static files .......................................... OK
+[7/8] package           target/dmod/banking-3.0.0.dmod (412 entries, 38.6 MB; module.yaml first, stored)
+[8/8] sign              DEVELOPMENT key (taint D on any kernel that loads it; refused unless drishti.modules.allow-dev)
+
+built  target/dmod/banking-3.0.0.dmod
+       sha256 6f1c0a9e5b2d4e7c8a3f91b0d2c6e4a7b8f0c1d2e3a4b5c6d7e8f9a0b1c2d3e4
+For a release: python3 ../../tools/drishti.py module sign target/dmod/banking-3.0.0.dmod --key pkcs11:token=drishti-modules;object=publisher

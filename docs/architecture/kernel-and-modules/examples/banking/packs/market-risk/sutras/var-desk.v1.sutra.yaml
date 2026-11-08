@@ -1,0 +1,62 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# EXAMPLE (design, not built): one Sutra as the banking module ships it, at packs/market-risk/sutras/var-desk.v1.sutra.yaml inside
+# banking-3.0.0.dmod (docs/architecture/KERNEL_AND_MODULES.md section 3). Rachana grammar 1, unchanged: the same file a pack holds today.
+# Nothing in it names where the data lives: the desk and its positions are read through the kernel's bindings (data/needs.yaml), the VaR
+# figures come from the module's computed kind var-result (a KindProvider) through the view augmenter.
+rachana: 1
+sutra: var-desk
+version: 1
+description: "A desk's VaR on one page: the headline figures, its books' contributions, its limit use and the P&L distribution."
+doc:
+  summary: "A desk's VaR and ES, its books' component VaR (adds up to the desk's VaR), its limit use and the scenario P&L distribution"
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/desk/DESK-RATES"
+    - "DESK DESK-RATES"
+match: { kind: desk, priority: 20, when: "module_on('banking')" }
+title: { pill: "Market risk · Desk", id: $.DESK_ID, with: $.NAME }
+strip:
+  - { label: VaR 99% 1D, bind: $.VAR_ENGINE.VAR, fmt: compact, emphasis: true }
+  - { label: ES 97.5%, bind: $.VAR_ENGINE.ES, fmt: compact }
+  - { label: Limit, bind: $.VAR_ENGINE.LIMIT, fmt: compact }
+  - { label: Limit use, bind: "$.VAR_ENGINE.VAR / $.VAR_ENGINE.LIMIT", fmt: pct0, tone: "limit($.VAR_ENGINE.VAR, $.VAR_ENGINE.LIMIT)" }
+  - { label: Books, bind: "count($.VAR_ENGINE.BOOKS)" }
+  - { label: Business date, bind: $.VAR_ENGINE.BUSINESS_DATE, fmt: date }
+panels:
+  - id: books
+    kind: table
+    title: "Its books (component VaR adds up to the desk's VaR; computed as the page opens)"
+    code: BOOK
+    key: F2
+    rows: $.VAR_ENGINE.BOOKS
+    empty: "No VaR figures: the engine could not answer (the note below says why)"
+    columns:
+      - { label: Book, bind: "@.TT_BOOK", link: true }
+      - { label: "VaR 99% (on its own)", bind: "@.VAR", fmt: amount0 }
+      - { label: Component VaR, bind: "@.COMPONENT_VAR", fmt: amount0, total: true }
+      - { label: Share, bind: "@.PCT_OF_VAR", fmt: pct0 }
+      - { label: Positions, bind: "@.POSITIONS" }
+  - { use: pnl-distribution@1, with: { id: dist, title: "The desk's P&L over the scenario days", rows: $.VAR_ENGINE.PNL, var: $.VAR_ENGINE.VAR, es: $.VAR_ENGINE.ES, key: F3 } }
+  - use: explainer-note@1
+    with:
+      title: In the VaR explorer
+      area: right
+      text: "Every scenario of this desk, its history and its books' contributions: VAR DESK ${$.DESK_ID} <GO>. A desk's VaR is never the sum of its books' VaRs; the components add up exactly."
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
+keys: { F7: "link($.LEGAL_ENTITY, 'legal-entity')", F9: raw }
