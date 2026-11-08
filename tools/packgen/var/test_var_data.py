@@ -82,6 +82,27 @@ def keys(d, prefix="") -> set[str]:
     return out
 
 
+
+#: the pack's MGMT and LEGAL hierarchies (config/packs/banking/market-risk/pack.yaml hierarchies:): level column and level, top first
+HIERARCHIES = {"MGMT": [("DIVISION", "division"), ("DESK", "desk"), ("TT_BOOK", "book")],
+               "LEGAL": [("LEGAL_ENTITY", "legal-entity"), ("DESK", "desk"), ("TT_BOOK", "book")]}
+
+
+def column_nodes(rows: list[dict]) -> dict[str, dict]:
+    """MGMT's and LEGAL's nodes as the server builds them from the rows' promoted columns (ids: leaf, root BANK): node id to its hierarchy,
+    level, parent and books."""
+    out: dict[str, dict] = {}
+    for h, levels in HIERARCHIES.items():
+        out[f"{h}~BANK"] = {"HIERARCHY": h, "LEVEL": "bank", "PARENT_ID": None, "BOOKS": set()}
+        for r in rows:
+            parent = f"{h}~BANK"
+            out[parent]["BOOKS"].add(r["TT_BOOK"])
+            for col, level in levels:
+                nid = f"{h}~{r[col]}"
+                out.setdefault(nid, {"HIERARCHY": h, "LEVEL": level, "PARENT_ID": parent, "BOOKS": set()})["BOOKS"].add(r["TT_BOOK"])
+                parent = nid
+    return out
+
 class VarDataTest(unittest.TestCase):
 
     @classmethod
@@ -93,7 +114,7 @@ class VarDataTest(unittest.TestCase):
         # every trade with the columns a position reads; a scenario-PV trade's PV is its USD value today, as the server takes it
         cls.rows = cls.vector_rows + [{**r, "PV": r["BASE_PV"] * cls.rate(r["CURRENCY"])} for r in cls.pv_rows]
         cls.vectors = {v["TRADE_ID"]: v for v in cls.rows}
-        cls.nodes = {n["NODE_ID"]: n for n in docs("risk-hierarchy")}
+        cls.nodes = column_nodes(cls.rows)
         cls.portfolios = {p["PORTFOLIO_ID"]: p for p in docs("portfolio")}
         cls.positions: dict[str, list[dict]] = defaultdict(list)
         for v in sorted(cls.rows, key=lambda r: r["TRADE_ID"]):
@@ -207,10 +228,10 @@ class VarDataTest(unittest.TestCase):
         self.assertLess(VM.var(VM.add(t["PNL"] for t in ts)), sum(VM.var(t["PNL"]) for t in ts))
 
     def test_no_input_carries_a_figure_and_the_retired_tables_are_gone(self):
-        for kind in ("pnl-vector", "scenario-pv", "fx-scenario", "portfolio", "risk-hierarchy", "scenario-set"):
+        for kind in ("pnl-vector", "scenario-pv", "fx-scenario", "portfolio", "scenario-set"):
             found = set().union(*(keys(d) for d in docs(kind))) & ENGINE_FIGURES
             self.assertEqual(found, set(), kind)
-        for kind in ("position", "var-node", "var"):
+        for kind in ("position", "var-node", "var", "risk-hierarchy"):
             self.assertFalse((TD / kind).exists(), kind)
 
     def test_portfolios_of_every_type_resolve_and_overlap(self):
@@ -302,7 +323,7 @@ class ThreeDatesTest(unittest.TestCase):
     DATES = ["2026-09-28", "2026-09-29", NEWEST]
 
     def test_every_dated_input_on_each_date_and_the_stress_set_on_the_newest_only(self):
-        for kind in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio", "var-limit"):
+        for kind in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "portfolio", "var-limit"):
             self.assertEqual(sorted({d["BUSINESS_DATE"] for d in docs(kind, day=None)}), self.DATES, kind)
         for kind in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set"):
             self.assertEqual({d["BUSINESS_DATE"] for d in docs(kind, stress=True, day=None)}, {NEWEST}, kind)
@@ -322,7 +343,7 @@ class ThreeDatesTest(unittest.TestCase):
 
     def test_one_book_moved_between_desks(self):
         def desk(day):
-            return next(n["PARENT_ID"] for n in docs("risk-hierarchy", day=day) if n["NODE_ID"] == "MGMT~BOOK-FI-3")
+            return column_nodes(docs("pnl-vector", day=day) + docs("scenario-pv", day=day))["MGMT~BOOK-FI-3"]["PARENT_ID"]
         self.assertEqual([desk(d) for d in self.DATES], ["MGMT~DESK-CREDIT", "MGMT~DESK-FI", "MGMT~DESK-FI"])
         self.assertEqual({r["DESK"] for r in docs("pnl-vector", day=self.DATES[0]) if r["TT_BOOK"] == "BOOK-FI-3"}, {"DESK-CREDIT"})
 

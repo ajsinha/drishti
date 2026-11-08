@@ -43,6 +43,7 @@ storage:
   - NETTING_SET
   - COUNTERPARTY
   - LEGAL_ENTITY
+  - DIVISION
   - DESK
   - TT_BOOK
   - LIMIT_LETTER
@@ -116,6 +117,12 @@ fields:
   example: LE-FRA
   pattern: ^LE-
   link: legal-entity
+- name: DIVISION
+  type: text
+  presence: optional
+  description: 'The division of the trade''s desk (DIV-…): the top level column of the hierarchy MGMT (DIVISION > DESK > TT_BOOK,
+    VAR_GUIDE.md section 15.14), as the trade''s VaR records carry it. A row that leaves it empty sits under the (Blank) division.'
+  example: DIV-TREASURY
 - name: DESK
   type: id
   presence: required
@@ -134,8 +141,8 @@ fields:
   type: text
   presence: optional
   description: 'The trade''s limit letter, as its VaR records carry it: the level column of the hierarchy LL (LIMIT_LETTER > DESK,
-    VAR_GUIDE.md section 16). When a hierarchy is built from it, every row carries it (a row that leaves it empty is refused, DRS-5211; a table
-    without the column skips that hierarchy alone, with a DRS-5211 warning).'
+    VAR_GUIDE.md section 15.14). Every hierarchy is built from promoted columns: a row that leaves a level column empty sits under a
+    (Blank) node at that level, and a table that does not promote the column puts every row there, with a DRS-5211 warning.'
   example: LL-0003
 - name: ASSET_CLASS
   type: text

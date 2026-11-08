@@ -188,7 +188,7 @@ class VarEvictionLruTest {
     void theSettingsDefaultToTenDatesAndFiveMinutes() {
         VarProperties p = new VarProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null);
+                null, null, null);
         assertThat(p.hotDates()).isEqualTo(10);
         assertThat(p.refusalTtlSeconds()).isEqualTo(300);
         assertThat(p.openHeapMb()).isZero();

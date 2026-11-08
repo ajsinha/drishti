@@ -59,7 +59,7 @@ import feedfiles as FF  # noqa: E402  (tools/lake/feedfiles.py: our dated feed f
 import ccrmath as M  # noqa: E402
 import paths as PT  # noqa: E402
 from positions import LIVE, replay  # noqa: E402  (a dataset's documents on its last day; the live trade statuses, as VaR's)
-from positions import letter_of, limit_letters  # noqa: E402  (2.9.5: each trade's limit letter, as the VaR feeds carry it)
+from positions import DIVISIONS, letter_of, limit_letters  # noqa: E402  (each trade's division and limit letter, as the VaR feeds carry them)
 
 PACK, CONNECTOR = "counterparty-risk", "exposure-store"
 KEYS = {"simulation-run": "RUN_ID", "exposure-path": "PATH_ROW_ID"}
@@ -176,6 +176,7 @@ class Run:
                 out.append({"PATH_ROW_ID": f"{self.run_id}~{t['TRADE_ID']}~{k}", "BUSINESS_DATE": self.inputs.cob, "RUN_ID": self.run_id,
                             "TRADE_ID": t["TRADE_ID"], "SOURCE_SYSTEM": source_system(t["TRADE_ID"]), "NETTING_SET": ns,
                             "COUNTERPARTY": s.get("COUNTERPARTY"), "LEGAL_ENTITY": s.get("LEGAL_ENTITY"),
+                            "DIVISION": DIVISIONS.get(self.inputs.desk_of_book.get(t.get("BOOK")), "DIV-MARKETS"),
                             "DESK": self.inputs.desk_of_book.get(t.get("BOOK")), "TT_BOOK": t.get("BOOK"),
                             "LIMIT_LETTER": letter_of(self.inputs.letters, t.get("BOOK"), str(t["TRADE_ID"])), "ASSET_CLASS": t.get("ASSET_CLASS"),
                             "PRODUCT": t.get("PRODUCT"), "NOTIONAL": t.get("NOTIONAL"), "MATURITY_DATE": t.get("MATURITY"),

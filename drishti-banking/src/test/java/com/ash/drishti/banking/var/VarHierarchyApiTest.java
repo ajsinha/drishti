@@ -38,18 +38,18 @@ import org.springframework.test.web.servlet.MockMvc;
 
 /**
  * A hierarchy built from the trades' columns over the API (2.9.5, VAR_GUIDE.md section 16), on {@link VarHierarchyFixture}: the limit
- * letters {@code LL} ({@code LIMIT_LETTER > DESK}, configured by {@code drishti.var.hierarchies}) beside MGMT and LEGAL from the rows. Its
- * tree and titles; a letter holding part of a book is exactly the sum of its trades ({@code LL:LL-A} is {@code TRD:T1,T3,T5}); a node
- * by its path and by {@code NODE:}; its limits from {@code var-limit} (none: blank); a position split between letters, said; a row with an
- * empty letter refused (DRS-5211) and a limit naming no node said (DRS-5212); the official records of every hierarchy; the word in the
+ * letters {@code LL} ({@code LIMIT_LETTER > DESK}, configured by {@code drishti.var.hierarchies}) beside MGMT and LEGAL, all three from
+ * the rows' promoted columns. Its tree and titles; a letter holding part of a book is exactly the sum of its trades ({@code LL:LL-A} is
+ * {@code TRD:T1,T3,T5}); a node by its path and by {@code NODE:}; its limits from {@code var-limit} (none: blank); a position split between
+ * letters, said; a row with an empty letter under LL's (Blank) letter (counted, its node a node); a limit of a node with no positions said
+ * as "limit, no positions", one its hierarchy cannot build said (DRS-5212); the official records of every hierarchy; the word in the
  * search hints and in a saved basket; a portfolio defined on a letter.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
         "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.risk-lake.plugin=delta",
         "drishti.sources.connectors.risk-lake.kinds[0]=pnl-vector", "drishti.sources.connectors.risk-lake.kinds[1]=scenario-set",
-        "drishti.sources.connectors.risk-lake.kinds[2]=risk-hierarchy", "drishti.sources.connectors.risk-lake.kinds[3]=portfolio",
-        "drishti.sources.connectors.risk-lake.kinds[4]=var-limit",
+        "drishti.sources.connectors.risk-lake.kinds[2]=var-limit", "drishti.sources.connectors.risk-lake.kinds[3]=portfolio",
         "drishti.sources.connectors.risk-lake.settings.domain=risk",
         "drishti.sources.connectors.risk-lake.settings.refresh-seconds=1",
         "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.columns=TRADE_ID,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,LIMIT_LETTER,PORTFOLIO,"
@@ -58,7 +58,11 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.vectors=PNL",
         "drishti.sources.connectors.var-positions.plugin=var-positions", "drishti.sources.connectors.var-positions.kinds[0]=position",
         "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
-        "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.risk-hierarchy=risk-lake",
+        "drishti.sources.routes.scenario-set=risk-lake", "drishti.var.hierarchies.MGMT.title=Management", "drishti.var.hierarchies.MGMT.levels=DESK > TT_BOOK",
+        "drishti.var.hierarchies.MGMT.level-names=desk > book", "drishti.var.hierarchies.MGMT.ids=leaf",
+        "drishti.var.hierarchies.MGMT.limits=var-limit", "drishti.var.hierarchies.LEGAL.title=Legal entity",
+        "drishti.var.hierarchies.LEGAL.levels=LEGAL_ENTITY", "drishti.var.hierarchies.LEGAL.ids=leaf",
+        "drishti.var.hierarchies.LEGAL.limits=var-limit",
         "drishti.sources.routes.portfolio=risk-lake", "drishti.sources.routes.var-limit=risk-lake", "drishti.sources.routes.var-result=var-engine",
         "drishti.var.positions.rules[0].name=securities", "drishti.var.positions.rules[0].groups[0]=Fixed income",
         "drishti.var.positions.rules[0].key[0]=SECURITY_ID",
@@ -111,23 +115,39 @@ class VarHierarchyApiTest {
         assertThat(t.get("title").asText()).isEqualTo("Limit letters");
         List<String> ids = new ArrayList<>();
         t.get("nodes").forEach(n -> ids.add(n.get("id").asText()));
-        assertThat(ids).containsExactly("LL~BANK", "LL~LL-A", "LL~LL-A/DESK-X", "LL~LL-A/DESK-Y", "LL~LL-B", "LL~LL-B/DESK-X");
+        // T10 leaves its letter empty: it sits under LL's (Blank) letter, a path id even at the top, its desk beneath it
+        assertThat(ids).containsExactly("LL~BANK", "LL~LL-A", "LL~LL-A/DESK-X", "LL~LL-A/DESK-Y", "LL~LL-B", "LL~LL-B/DESK-X", "LL~~", "LL~~/DESK-X");
         List<String> hs = new ArrayList<>();
         t.get("hierarchies").forEach(h -> hs.add(h.asText()));
-        assertThat(hs).containsExactly("LL", "LEGAL", "MGMT");         // the configured first, then the data's
-        assertThat(t.at("/hierarchyInfo/0/title").asText()).isEqualTo("Limit letters");
-        assertThat(t.at("/hierarchyInfo/0/word").asText()).isEqualTo("LL");
+        assertThat(hs).containsExactlyInAnyOrder("LL", "LEGAL", "MGMT");   // the configured hierarchies, in their configured order
+        JsonNode info = null;
+        for (JsonNode h : t.get("hierarchyInfo")) {
+            if (h.get("id").asText().equals("LL")) {
+                info = h;
+            }
+        }
+        assertThat(info.get("title").asText()).isEqualTo("Limit letters");
+        assertThat(info.get("word").asText()).isEqualTo("LL");
+        assertThat(info.get("emptyLabel").asText()).isEqualTo("(Blank)");
         // limits: from var-limit; a node without a row has none (null, never zero)
         for (JsonNode n : t.get("nodes")) {
             switch (n.get("id").asText()) {
                 case "LL~LL-A" -> assertThat(n.get("limit").asLong()).isEqualTo(700);
                 case "LL~LL-A/DESK-Y" -> assertThat(n.get("limit").asLong()).isEqualTo(300);
                 case "LL~LL-B" -> assertThat(n.get("limit").isNull()).isTrue();
+                case "LL~~" -> {
+                    assertThat(n.get("name").asText()).isEqualTo("(Blank)");
+                    assertThat(n.get("blank").asBoolean()).isTrue();
+                    assertThat(n.get("blankNote").asText()).contains("rows with no LIMIT_LETTER value: 1 trade;").contains("fix:");
+                    assertThat(n.get("limit").isNull()).isTrue();
+                }
                 default -> { }
             }
         }
         // the MGMT tree is unchanged
         assertThat(get("/api/v1/risk/var/tree").get("hierarchy").asText()).isEqualTo("MGMT");
+        // a limit row of a node LL can build but with no positions on the date: "limit, no positions", listed with the tree
+        assertThat(t.get("limitsNoPositions").toString()).contains("LL~LL-NOPE").contains("limit, no positions");
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/risk/var/tree").param("hierarchy", "NOPE")
                 .header("Authorization", rita())).andExpect(status().isNotFound());
     }
@@ -145,8 +165,9 @@ class VarHierarchyApiTest {
         assertThat(b.get("limit").isNull()).isTrue();
         assertThat(scope("LL:LL-A/DESK-Y").get("var").asDouble()).isEqualTo(scope("TRD:T5").get("var").asDouble());
         assertThat(scope("NODE:LL~LL-A/DESK-X").get("var").asDouble()).isEqualTo(scope("TRD:T1,T3").get("var").asDouble());
-        // the letters split BOOK-1: together they are the book
-        assertThat(scope("LL:LL-A + LL:LL-B").get("var").asDouble()).isEqualTo(scope("BANK").get("var").asDouble());
+        // the letters split BOOK-1: together (with the (Blank) letter's T10) they are the bank
+        assertThat(scope("LL:LL-A + LL:LL-B + NODE:LL~~").get("var").asDouble()).isEqualTo(scope("BANK").get("var").asDouble());
+        assertThat(scope("NODE:LL~~").get("var").asDouble()).isEqualTo(scope("TRD:T10").get("var").asDouble());
         assertThat(scope("BOOK:BOOK-1 & LL:LL-B").get("var").asDouble()).isEqualTo(scope("TRD:T2").get("var").asDouble());
         // a portfolio on a letter's node
         assertThat(scope("PORT:PF-LL-A").get("var").asDouble()).isEqualTo(a.get("var").asDouble());
@@ -160,17 +181,22 @@ class VarHierarchyApiTest {
         assertThat(p1.get("var").asDouble()).isEqualTo(scope("TRD:T1").get("var").asDouble());
         assertThat(scope("POS:" + VarHierarchyFixture.POS_A + "@LL-B").get("var").asDouble()).isEqualTo(scope("TRD:T2").get("var").asDouble());
         JsonNode bank = scope("BANK");
-        assertThat(bank.at("/provenance/warnings").toString()).contains("1 position had trades under two nodes").contains("DRS-5212")
-                .contains("LL~LL-NOPE");
-        assertThat(bank.at("/provenance/rejections").toString()).contains("DRS-5211").contains("T10").contains("LIMIT_LETTER is empty");
-        assertThat(bank.at("/provenance/warnings").toString()).doesNotContain("MGMT~DESK-X");     // MGMT reads no limits kind
+        String warnings = bank.at("/provenance/warnings").toString();
+        assertThat(warnings).contains("1 position had trades under two nodes")
+                .contains("limit, no positions").contains("LL~LL-NOPE")                    // LL can build it: no positions on the date
+                .contains("DRS-5212").contains("ZZ~X (the hierarchy ZZ is not configured")   // no hierarchy ZZ
+                .contains("LL~LL-A/DESK-X/BOOK-1 has 3 values; LL has 2 levels");           // deeper than LL's levels
+        // T10's empty letter: counted under LL's (Blank) letter, never refused
+        assertThat(warnings).contains("(Blank) LL~~ (LL, level limit-letter): 1 trades with no LIMIT_LETTER value");
+        assertThat(bank.at("/provenance/rejections").toString()).doesNotContain("T10");
+        assertThat(bank.at("/provenance/trades").asInt()).isEqualTo(6);
     }
 
     @Test
     void theOfficialRecordsHoldEveryHierarchysNodesAndTheWordIsSearchable() throws Exception {
         JsonNode cap = json.readTree(mvc.perform(post("/api/v1/risk/var/official").param("asOf", VarHierarchyFixture.DAY.toString()).header("Authorization", "Bearer " + tokens.mint("ada", List.of("admin"), 300)))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
-        assertThat(cap.path("nodes").asInt()).as(cap.toString()).isEqualTo(9 + 6);
+        assertThat(cap.path("nodes").asInt()).as(cap.toString()).isEqualTo(9 + 8);   // MGMT 6, LEGAL 3, LL 8 (its (Blank) letter and desk)
         JsonNode record = get("/api/v1/risk/var/official");
         assertThat(record.path("nodes").path("LL~LL-A").path("var").asDouble()).isEqualTo(scope("LL:LL-A").get("var").asDouble());
         String letterCapture = record.path("nodes").path("LL~LL-A").path("captureId").asText();

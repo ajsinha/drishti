@@ -53,7 +53,7 @@ final class ExposureIntake {
     private final Map<String, String> maturity = new HashMap<>();
     private final Map<String, Double> notional = new HashMap<>();
     private final Map<String, Double> firstMean = new HashMap<>();
-    /** The level columns of the column hierarchies (2.9.5): carried after the seven fixed columns; a row without one is refused. */
+    /** The hierarchies' level columns: carried after the seven fixed columns; an empty one puts the trade under a (Blank) node. */
     private List<String> levels = List.of();
     private int rows;
     private int rejected;
@@ -108,15 +108,7 @@ final class ExposureIntake {
             col(row, columns, "ASSET_CLASS"), col(row, columns, "PRODUCT"), col(row, columns, "SOURCE_SYSTEM")};
         System.arraycopy(fixed, 0, cols, 0, 7);
         for (int i = 0; i < levels.size(); i++) {
-            cols[7 + i] = col(row, columns, levels.get(i));
-            if (cols[7 + i] == null) {                                  // a column hierarchy places the trade by it: refused, never guessed
-                rejected++;
-                if (rejections.size() < LISTED) {
-                    rejections.add(ErrorCode.VAR_HIERARCHY_COLUMN.code() + " " + trade + ": " + levels.get(i) + " is empty: a hierarchy is built "
-                            + "from it, so the trade has no node");
-                }
-                return;
-            }
+            cols[7 + i] = col(row, columns, levels.get(i));            // empty: the trade sits under a (Blank) node at that level
         }
         String mat = col(row, columns, "MATURITY_DATE");
         double n = number(col(row, columns, "NOTIONAL"));

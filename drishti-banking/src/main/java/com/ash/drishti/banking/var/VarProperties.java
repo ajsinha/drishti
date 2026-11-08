@@ -43,7 +43,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param historyDays the history and backtest window (250 business days)
  * @param histogramBins the bins of the P&amp;L distribution sent to the screen
  * @param maxParts the most parts a contribution table computes at once (more: the largest by gross size, and said)
- * @param kinds the kinds the engine reads (vectors, hierarchy, scenario set, portfolios) and serves (positions)
+ * @param kinds the kinds the engine reads (vectors, scenario set, portfolios, limits) and serves (positions)
  * @param access per role, the hierarchy nodes it may see and how: {@code MGMT~DESK-RATES: positions} (its numbers, children, positions
  *     and trades) or {@code aggregate} (numbers and children, never a position); a role without an entry sees every node at
  *     {@code positions} level when it may open the vector kind, else nothing
@@ -56,8 +56,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *     first ask; USD always first; default USD, EUR, CAD, JPY, GBP; any other currency with FX is still built on first ask
  * @param currencyRetentionDates the newest business dates whose listed currencies are built ahead and kept on disk (5, one business
      *     week); an older date's listed-currency files are deleted when the next date is built ahead (on first ask they are built again)
- * @param rootName the name of every hierarchy's root node (the top of the VaR tree, "Drishti Bank" in the demo data); blank keeps the
- *     hierarchy data's own {@code NAME}
+ * @param rootName the name of every hierarchy's root node (the top of the VaR tree); blank keeps the hierarchy's own {@code root.name}
+ *     (its title when it sets none)
  * @param rootNames the name of one hierarchy's root (hierarchy id to name, e.g. MGMT, LEGAL); wins over {@code rootName} for it
  * @param intraday the intraday updates' settings: the PV topic's window (VAR_GUIDE.md section 8.4, Kafka)
  * @param inputs an optional pin per source system of what its records are (VAR_GUIDE.md section 15.13): the form ({@code pv}, {@code pnl}
@@ -67,10 +67,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param scenarioWindow how many scenarios the engine uses (VAR_GUIDE.md section 18.5): {@code all} (the whole scenario set, its length
  *     509 in the demo) or a number N, the newest N scenarios of each date's set (250: one year, about 500: two); at least 20; a set
  *     shorter than N is used whole, with a warning in the provenance
- * @param hierarchies the hierarchies (2.9.5, VAR_GUIDE.md section 16): id to its settings ({@code title}, {@code source:
- *     risk-hierarchy|columns}, {@code levels: "LIMIT_LETTER > DESK"}, {@code level-names}, {@code root}, {@code ids: path|leaf},
- *     {@code word}, {@code limits}); when set, wins over a loaded pack's {@code hierarchies:} block; neither: MGMT and LEGAL from the
- *     {@code risk-hierarchy} rows, as before 2.9.5
+ * @param hierarchies the hierarchies (VAR_GUIDE.md section 15.14), any number, each built from the trades' promoted columns: id to
+ *     its settings ({@code title}, {@code levels: "DIVISION > DESK > TT_BOOK"}, {@code level-names}, {@code root}, {@code ids: path|leaf},
+ *     {@code word}, {@code limits}, {@code empty-label}); when set, wins over a loaded pack's {@code hierarchies:} block (the market-risk
+ *     pack's MGMT, LEGAL and LL); neither: no hierarchy
+ * @param hierarchy what every hierarchy shares: the name of a (Blank) node ({@code empty-label}, default {@code (Blank)})
  * @param viewCacheMb the most memory the viewers' views (bitsets per date, version, currency and role set) may take (64); idle ones go
  *     after an hour and a date's go with it (2.9.7, CLUSTER_GUIDE.md section 5.3)
  * @param versionCheck how often an open date compares its data version with the lake's (30 s; 0 switches the watch off): a changed date
@@ -101,7 +102,20 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         Map<String, String> rootNames, Intraday intraday, Map<String, Input> inputs, String scenarioWindow,
         Map<String, Map<String, Object>> hierarchies, Integer viewCacheMb, java.time.Duration versionCheck, Integer loadThreads,
         String tenDayMethod, List<Double> confidences, List<Double> esConfidences, Stress stress, Integer refusalTtlSeconds, Long openHeapMb,
-        String fiscalYearEnd, com.ash.drishti.server.caches.PinnedDates.Settings pinned) {
+        String fiscalYearEnd, com.ash.drishti.server.caches.PinnedDates.Settings pinned, Hierarchy hierarchy) {
+
+    /**
+     * What every hierarchy shares (VAR_GUIDE.md section 15.14).
+     *
+     * @param emptyLabel the name of a (Blank) node: the node a row whose level column is empty (or not promoted by its source) sits under,
+     *     at that level ({@code (Blank)}, as Power BI names it); a hierarchy's own {@code empty-label} wins
+     */
+    public record Hierarchy(String emptyLabel) {
+        public Hierarchy {
+            emptyLabel = emptyLabel == null || emptyLabel.isBlank() ? com.ash.drishti.banking.compute.var.HierarchySpec.DEFAULT_EMPTY_LABEL
+                    : emptyLabel.strip();
+        }
+    }
 
     /**
      * Stressed VaR (VAR_GUIDE.md section 18.8): VaR and ES on a date's <b>stress scenario set</b>, a second scenario set of the date (the
@@ -253,12 +267,11 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
      * are {@code limit} (2.9.5, {@code var-limit}), read for the hierarchies whose {@code limits} names it. VaR by a trade column the
      * vectors do not carry ({@code by=attribute:TRADER_ID}) joins the trade valuations, {@code valuation}, by trade id (2.9.11).
      */
-    public record Kinds(String vector, String position, String hierarchy, String scenarioSet, String portfolio, String scenarioPv,
+    public record Kinds(String vector, String position, String scenarioSet, String portfolio, String scenarioPv,
             String fxScenario, String fxSpot, String limit, String valuation) {
         public Kinds {
             vector = vector == null ? "pnl-vector" : vector;
             position = position == null ? "position" : position;
-            hierarchy = hierarchy == null ? "risk-hierarchy" : hierarchy;
             scenarioSet = scenarioSet == null ? "scenario-set" : scenarioSet;
             portfolio = portfolio == null ? "portfolio" : portfolio;
             scenarioPv = scenarioPv == null ? "scenario-pv" : scenarioPv;
@@ -269,7 +282,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         }
 
         public List<String> all() {
-            return List.of(vector, position, hierarchy, scenarioSet, portfolio, scenarioPv, fxScenario, fxSpot, limit);
+            return List.of(vector, position, scenarioSet, portfolio, scenarioPv, fxScenario, fxSpot, limit);
         }
 
         /**
@@ -277,7 +290,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
          * ({@code fxSpot}) is not one: a market-data load does not reload VaR; a date reads the history it finds when it loads.
          */
         public List<String> inputs() {
-            return List.of(vector, hierarchy, scenarioSet, portfolio, scenarioPv, fxScenario, limit);
+            return List.of(vector, scenarioSet, portfolio, scenarioPv, fxScenario, limit);
         }
     }
 
@@ -389,7 +402,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         historyDays = historyDays == null || historyDays <= 1 ? 250 : historyDays;
         histogramBins = histogramBins == null || histogramBins < 5 ? 42 : histogramBins;
         maxParts = maxParts == null || maxParts <= 0 ? 5000 : maxParts;
-        kinds = kinds == null ? new Kinds(null, null, null, null, null, null, null, null, null, null) : kinds;
+        kinds = kinds == null ? new Kinds(null, null, null, null, null, null, null, null, null) : kinds;
         hierarchies = hierarchies == null ? Map.of() : hierarchies;
         access = access == null ? Map.of() : access;
         pathPage = pathPage == null || pathPage <= 0 ? 60 : pathPage;
@@ -427,6 +440,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         fiscalYearEnd = fiscalYearEnd == null ? "" : fiscalYearEnd.trim();
         com.ash.drishti.server.caches.PinnedDates.fiscalYearEnd(fiscalYearEnd);       // a bad value refuses the start
         pinned = pinned == null ? com.ash.drishti.server.caches.PinnedDates.Settings.none() : pinned;
+        hierarchy = hierarchy == null ? new Hierarchy(null) : hierarchy;
     }
 
     /** The heap the open books may take before the safety net closes some (bytes): {@code open-heap-mb}, or the automatic net. */

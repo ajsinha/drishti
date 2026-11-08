@@ -119,7 +119,8 @@ CONNECTORS = {
         "plugin": "delta", "enabled": "${DRISHTI_LAKE_ENABLED:true}", "kinds": ["simulation-run", "exposure-path"],
         "settings": {"root": _ROOT, "domain": "risk", "layout": {
             "simulation-run": {"columns": ["RUN_ID", "CALIBRATION", "PATHS", "STATUS", "BATCH_ID"]},
-            "exposure-path": {"columns": ["TRADE_ID", "NETTING_SET", "COUNTERPARTY", "LEGAL_ENTITY", "DESK", "TT_BOOK", "LIMIT_LETTER", "ASSET_CLASS", "PRODUCT",
+            "exposure-path": {"columns": ["TRADE_ID", "NETTING_SET", "COUNTERPARTY", "LEGAL_ENTITY", "DIVISION", "DESK", "TT_BOOK", "LIMIT_LETTER", "ASSET_CLASS",
+                                          "PRODUCT",
                                           "SOURCE_SYSTEM", "MATURITY_DATE", "NOTIONAL", "GRID_INDEX", "GRID_DATE", "RUN_ID", "BATCH_ID", "STATUS"],
                               "vectors": ["MTM"]}}},
     },

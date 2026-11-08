@@ -182,7 +182,8 @@ fields:
 - name: DIVISION
   type: id
   presence: required
-  description: 'The division of the desk the trade is booked in (a hierarchy level above the desk).'
+  description: 'The division of the desk the trade is booked in: the top level column of the hierarchy MGMT (DIVISION > DESK > TT_BOOK,
+    VAR_GUIDE.md section 15.14). Must be a promoted column.'
   example: DIV-MARKETS
 - name: DESK
   type: id
@@ -194,7 +195,7 @@ fields:
 - name: TT_BOOK
   type: id
   presence: required
-  description: 'The book the trade is booked in: a BOOK_ID of the core pack''s book kind (BOOK-…); a trade without a book is in no hierarchy node. Must be a promoted column.'
+  description: 'The book the trade is booked in: a BOOK_ID of the core pack''s book kind (BOOK-…); a trade without a book sits under the (Blank) book of its desk. Must be a promoted column.'
   example: BOOK-EQD-2
   pattern: ^BOOK-
   link: book
@@ -202,8 +203,9 @@ fields:
   type: text
   presence: optional
   description: 'The limit letter: the letter of authority the record''s VaR limit is granted under. A hierarchy may be built from
-    it (the market-risk pack''s LL, LIMIT_LETTER > DESK, VAR_GUIDE.md section 16): when one is, every row carries it (a row that leaves
-    it empty is refused, DRS-5211; a table without the column skips that hierarchy alone, with a DRS-5211 warning, and the rest loads).
+    it (the market-risk pack''s LL, LIMIT_LETTER > DESK, VAR_GUIDE.md section 15.14): every hierarchy level column must be a promoted
+    column; a row that leaves it empty sits under the (Blank) node at that level, and a table that does not promote it puts every row
+    there, with a DRS-5211 warning naming the fix.
     Per row, so a letter may hold part of a book.'
   example: LL-0003
 - name: PORTFOLIO

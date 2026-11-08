@@ -81,20 +81,20 @@ public class VarConfiguration {
     }
 
     /**
-     * {@code /api/v1/health}'s {@code hierarchiesSkipped} (DOMAIN_MODULES.md J4): a hierarchy the VaR or exposure engine skipped (its level
-     * column not in the source), "var LL" to why (DRS-5211, a warning).
+     * {@code /api/v1/health}'s {@code hierarchyWarnings} (DOMAIN_MODULES.md J4): a level column the VaR or exposure engine's source does not
+     * promote (its rows sit under (Blank) at that level), "var LL LIMIT_LETTER scenario-pv" to the words and the fix (DRS-5211, a warning).
      */
     @Bean
-    com.ash.drishti.server.api.HealthFigures hierarchiesSkippedHealth() {
+    com.ash.drishti.server.api.HealthFigures hierarchyWarningsHealth() {
         return new com.ash.drishti.server.api.HealthFigures() {
             @Override
             public String key() {
-                return "hierarchiesSkipped";
+                return "hierarchyWarnings";
             }
 
             @Override
             public Object value() {
-                return Hierarchies.skipped();
+                return Hierarchies.warnings();
             }
         };
     }

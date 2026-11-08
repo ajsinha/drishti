@@ -61,7 +61,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
         "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.risk-lake.plugin=delta",
         "drishti.sources.connectors.risk-lake.kinds[0]=pnl-vector", "drishti.sources.connectors.risk-lake.kinds[1]=scenario-set",
-        "drishti.sources.connectors.risk-lake.kinds[2]=risk-hierarchy",
+        "drishti.sources.connectors.risk-lake.kinds[2]=var-limit",
         "drishti.sources.connectors.risk-lake.settings.domain=risk",
         "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.columns=TRADE_ID,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,"
                 + "PRODUCT_GROUP,PRODUCT_TYPE,CURRENCY,COUNTERPARTY,DIRECTION,QUANTITY,PV,TRADE_STATUS,MATURITY_DATE,STATUS,REPORTING_CCY,"
@@ -69,7 +69,12 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
         "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.vectors=PNL",
         "drishti.sources.connectors.var-positions.plugin=var-positions", "drishti.sources.connectors.var-positions.kinds[0]=position",
         "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
-        "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.risk-hierarchy=risk-lake",
+        "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.var-limit=risk-lake",
+        "drishti.var.hierarchies.MGMT.title=Management", "drishti.var.hierarchies.MGMT.levels=DESK > TT_BOOK",
+        "drishti.var.hierarchies.MGMT.level-names=desk > book", "drishti.var.hierarchies.MGMT.ids=leaf",
+        "drishti.var.hierarchies.MGMT.limits=var-limit", "drishti.var.hierarchies.LEGAL.title=Legal entity",
+        "drishti.var.hierarchies.LEGAL.levels=LEGAL_ENTITY", "drishti.var.hierarchies.LEGAL.ids=leaf",
+        "drishti.var.hierarchies.LEGAL.limits=var-limit",
         "drishti.var.official.on-start=false", "drishti.var.official.publish=false", "drishti.var.currencies=USD",
         "drishti.var.hot-dates=2", "drishti.var.confidence=0.95",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
@@ -190,29 +195,24 @@ class VarExplainApiTest {
         VarLakeFixture.table(root, work, "scenario-set", "SCENARIO_SET_ID", List.of(
                 Map.of("SCENARIO_SET_ID", "HS-" + N, "BUSINESS_DATE", D1.toString(), "SCENARIO_DATES", all.subList(0, N)),
                 Map.of("SCENARIO_SET_ID", "HS-" + N, "BUSINESS_DATE", D2.toString(), "SCENARIO_DATES", all.subList(1, N + 1))), List.of(), null);
-        List<Map<String, Object>> nodes = new ArrayList<>();
+        // MGMT is built from the rows' DESK and TT_BOOK: BOOK-2's rows say DESK-X on the earlier date and DESK-Y on the later (the move);
+        // each node's limit is a var-limit row
+        List<Map<String, Object>> limits = new ArrayList<>();
         for (LocalDate day : List.of(D1, D2)) {
-            boolean later = day.equals(D2);
-            nodes.add(node(day, "MGMT~BANK", "bank", null, List.of("BOOK-1", "BOOK-2", "BOOK-3")));
-            nodes.add(node(day, "MGMT~DESK-X", "desk", "MGMT~BANK", later ? List.of("BOOK-1") : List.of("BOOK-1", "BOOK-2")));
-            nodes.add(node(day, "MGMT~DESK-Y", "desk", "MGMT~BANK", later ? List.of("BOOK-2", "BOOK-3") : List.of("BOOK-3")));
-            for (String b : List.of("BOOK-1", "BOOK-2", "BOOK-3")) {
-                String parent = b.equals("BOOK-1") || b.equals("BOOK-2") && !later ? "MGMT~DESK-X" : "MGMT~DESK-Y";
-                nodes.add(node(day, "MGMT~" + b, "book", parent, List.of(b)));
+            for (String id : List.of("MGMT~BANK", "MGMT~DESK-X", "MGMT~DESK-Y", "MGMT~BOOK-1", "MGMT~BOOK-2", "MGMT~BOOK-3")) {
+                limits.add(limit(day, id));
             }
         }
-        VarLakeFixture.table(root, work, "risk-hierarchy", "NODE_ID", nodes, List.of("NODE_ID", "LIMIT_VAR"), null);
+        VarLakeFixture.table(root, work, "var-limit", "LIMIT_ID", limits, List.of("HIERARCHY", "NODE_ID", "LIMIT_VAR"), null);
     }
 
-    static Map<String, Object> node(LocalDate day, String id, String level, String parent, List<String> books) {
+    static Map<String, Object> limit(LocalDate day, String id) {
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("NODE_ID", id);
+        m.put("LIMIT_ID", "VL-" + id);
         m.put("HIERARCHY", "MGMT");
-        m.put("LEVEL", level);
-        m.put("PARENT_ID", parent);
-        m.put("NAME", id.substring(5));
-        m.put("BOOKS", books);
+        m.put("NODE_ID", id);
         m.put("LIMIT_VAR", day.equals(D1) ? 100_000.0 : 120_000.0);
+        m.put("CURRENCY", "USD");
         m.put("BUSINESS_DATE", day.toString());
         return m;
     }

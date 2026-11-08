@@ -35,7 +35,6 @@ kinds:
 - scenario-pv
 - fx-scenario
 - scenario-set
-- risk-hierarchy
 - var-limit
 - desk-pnl
 - pnl-history
@@ -80,9 +79,6 @@ mnemonics:
   SSET:
     kind: scenario-set
     label: Scenario set
-  HIER:
-    kind: risk-hierarchy
-    label: Risk hierarchy node
   VLIM:
     kind: var-limit
     label: VaR limit of a hierarchy node
@@ -133,8 +129,6 @@ graph:
     kind: fx-scenario
   - pattern: ^HS-
     kind: scenario-set
-  - pattern: ^(MGMT|LEGAL)~
-    kind: risk-hierarchy
   - pattern: ^VL-
     kind: var-limit
   - pattern: ^DPNL-
@@ -146,9 +140,6 @@ graph:
   - pattern: ^(IR|INF|CR|FX|EQ|CM|VOL)/
     kind: risk-factor
   fields:
-    NODE_ID:
-      kind: risk-hierarchy
-      label: Hierarchy node
     PNL_VECTOR_ID:
       kind: pnl-vector
       label: P&L vector
@@ -196,7 +187,6 @@ connectors:
     - scenario-pv
     - fx-scenario
     - scenario-set
-    - risk-hierarchy
     - var-limit
     - desk-pnl
     - pnl-history
@@ -204,7 +194,7 @@ connectors:
     - risk-factor
     settings:
       lake: demo
-      lake-tables: risk.stress-scenario,risk.stress-result,risk.frtb-sensitivity,risk.pnl-explain,risk.trade-valuation,risk.portfolio,risk.pnl-vector,risk.scenario-pv,risk.fx-scenario,risk.scenario-set,risk.risk-hierarchy,risk.var-limit,risk.desk-pnl,risk.pnl-history,risk.position-sensitivity,risk.risk-factor
+      lake-tables: risk.stress-scenario,risk.stress-result,risk.frtb-sensitivity,risk.pnl-explain,risk.trade-valuation,risk.portfolio,risk.pnl-vector,risk.scenario-pv,risk.fx-scenario,risk.scenario-set,risk.var-limit,risk.desk-pnl,risk.pnl-history,risk.position-sensitivity,risk.risk-factor
   mr-derived:
     plugin: derived
     enabled: ${DRISHTI_MR_DERIVED_ENABLED:true}
@@ -318,7 +308,6 @@ connectors:
       - pnl-vector
       - scenario-pv
       - fx-scenario
-      - risk-hierarchy
       - scenario-set
       - portfolio
       - var-limit
@@ -345,7 +334,6 @@ routes:
   scenario-pv: risk-store
   fx-scenario: risk-store
   scenario-set: risk-store
-  risk-hierarchy: risk-store
   var-limit: risk-store
   desk-pnl: risk-store
   pnl-history: risk-store
@@ -525,19 +513,6 @@ form:
   - path: BUSINESS_DATE
     label: Business date
     type: date
-  risk-hierarchy:
-  - path: NODE_ID
-    label: Node id
-    type: id
-  - path: HIERARCHY
-    label: Hierarchy
-    type: text
-  - path: LEVEL
-    label: Level
-    type: enum
-  - path: NAME
-    label: Name
-    type: text
   var-limit:
   - path: LIMIT_ID
     label: Limit id
@@ -795,13 +770,6 @@ lake:
       - RATE
       - SCENARIO_SET_ID
     risk.scenario-set: null
-    risk.risk-hierarchy:
-      promote:
-      - NODE_ID
-      - HIERARCHY
-      - LEVEL
-      - PARENT_ID
-      - NAME
     risk.var-limit:
       promote:
       - LIMIT_ID

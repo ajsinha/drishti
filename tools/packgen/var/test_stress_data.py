@@ -32,7 +32,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import stress as ST  # noqa: E402
 import varmath as VM  # noqa: E402
-from test_var_data import docs  # noqa: E402
+from test_var_data import column_nodes, docs  # noqa: E402
 
 
 class StressDataTest(unittest.TestCase):
@@ -96,7 +96,7 @@ class HistoryDataTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.rows = {r["NODE_ID"]: r for r in docs("pnl-history")}
-        cls.nodes = {r["NODE_ID"]: r for r in docs("risk-hierarchy")}
+        cls.nodes = column_nodes(docs("pnl-vector") + docs("scenario-pv"))
 
     def test_one_row_per_node_above_the_books_every_day_since_2007(self):
         want = {n for n, r in self.nodes.items() if r["LEVEL"] != "book"}

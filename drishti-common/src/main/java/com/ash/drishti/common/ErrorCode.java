@@ -174,17 +174,22 @@ public enum ErrorCode {
      */
     VAR_INPUT_MIXED("DRS-5210", 422),
     /**
-     * VaR and exposure (2.9.5): a hierarchy built from columns ({@code drishti.var.hierarchies}, a pack's {@code hierarchies:}) names a
-     * level column a source does not keep: that hierarchy alone is skipped, a warning naming it, the column, the kind and the fix (the date,
-     * the other hierarchies and the official capture go on); or a row leaves the column empty: the row is refused and listed, never placed
-     * under a guessed node.
+     * VaR and exposure (VAR_GUIDE.md section 15.14): a hierarchy ({@code drishti.var.hierarchies}, a pack's {@code hierarchies:}) names a
+     * level column a source kind does not promote: a warning naming the hierarchy, the column, the kind and the fix ({@code promote <COLUMN>
+     * in layout.<kind>.columns}); that kind's rows sit under the (Blank) node at that level (the date, every hierarchy and the official
+     * capture go on). A row that leaves a level column empty sits under (Blank) too, counted in the date's warnings.
      */
     VAR_HIERARCHY_COLUMN("DRS-5211", 422),
-    /** VaR (2.9.5): a {@code var-limit} row names a node no hierarchy of the date has: a warning in the provenance, the row unused. */
+    /**
+     * VaR: a {@code var-limit} row names a node its hierarchy cannot build (the hierarchy is not configured, or the id has more values than
+     * the hierarchy has levels): a warning in the provenance with the reason, the row unused. A node its hierarchy can build but with no
+     * positions on the date is not this code: it shows as "limit, no positions".
+     */
     VAR_LIMIT_UNKNOWN_NODE("DRS-5212", 422),
     /**
-     * VaR (2.9.5): the hierarchies' configuration is not valid (a duplicate id, a reserved or duplicate scope word, no levels, a column
-     * hierarchy with {@code ids: leaf} whose value has two parents on the date): refused at start, or the date is refused, saying why.
+     * VaR: the hierarchies' configuration is not valid (a duplicate id, a reserved or duplicate scope word, no levels, the removed
+     * {@code source:} setting, a level column no source promotes, an {@code ids: leaf} hierarchy whose value has two parents on the date):
+     * refused at start, or the date is refused, saying why.
      */
     VAR_HIERARCHY_INVALID("DRS-5213", 422),
     /** VaR (2.9.5): the tree of a hierarchy the date does not have ({@code GET /api/v1/var/tree?hierarchy=LL}). */

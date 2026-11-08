@@ -30,7 +30,8 @@ import java.util.Map;
 
 /**
  * A tiny VaR lake written with Drishti's lake writer, whose answers are known by hand: 20 scenarios, five trades in four positions in
- * three books of two desks, a position netting a long of 100 and a short of 40 units of one security, the MGMT and LEGAL trees, and a
+ * three books of two desks, a position netting a long of 100 and a short of 40 units of one security, the MGMT and LEGAL nodes' limits
+ * (the trees themselves are built from the rows' DESK, TT_BOOK and LEGAL_ENTITY columns, as each test configures them), and a
  * RULE and a BASKET portfolio. Every vector is a multiple of the unit path {@link #U}. Beside them, rows the engine must not count: a
  * trade of no risk booked by another legal entity than its book's (a warning for {@code LE:}), a cancelled trade, a vector one value
  * short and a vector with a null in it (both rejected, DRS-5201). Positions are not in the lake: the engine derives them by the rules
@@ -148,17 +149,9 @@ final class VarLakeFixture {
                 "MATURITY_DATE", "STATUS", "REPORTING_CCY", "SCENARIO_SET_ID", "BATCH_ID"), "PNL");
         table(root, work, "scenario-set", "SCENARIO_SET_ID",
                 List.of(Map.of("SCENARIO_SET_ID", "HS-20", "BUSINESS_DATE", day.toString(), "SCENARIO_DATES", scenarioDates())), List.of(), null);
-        List<Map<String, Object>> nodes = new ArrayList<>();
-        nodes.add(node(day, "MGMT~BANK", "MGMT", "bank", null, List.of("BOOK-1", "BOOK-2", "BOOK-3"), 5000));
-        nodes.add(node(day, "MGMT~DESK-X", "MGMT", "desk", "MGMT~BANK", List.of("BOOK-1", "BOOK-2"), 1000));
-        nodes.add(node(day, "MGMT~DESK-Y", "MGMT", "desk", "MGMT~BANK", List.of("BOOK-3"), 600));
-        nodes.add(node(day, "MGMT~BOOK-1", "MGMT", "book", "MGMT~DESK-X", List.of("BOOK-1"), 800));
-        nodes.add(node(day, "MGMT~BOOK-2", "MGMT", "book", "MGMT~DESK-X", List.of("BOOK-2"), 500));
-        nodes.add(node(day, "MGMT~BOOK-3", "MGMT", "book", "MGMT~DESK-Y", List.of("BOOK-3"), 600));
-        nodes.add(node(day, "LEGAL~BANK", "LEGAL", "bank", null, List.of("BOOK-1", "BOOK-2", "BOOK-3"), 5000));
-        nodes.add(node(day, "LEGAL~LE-A", "LEGAL", "legal-entity", "LEGAL~BANK", List.of("BOOK-1", "BOOK-2"), 1000));
-        nodes.add(node(day, "LEGAL~LE-B", "LEGAL", "legal-entity", "LEGAL~BANK", List.of("BOOK-3"), 600));
-        table(root, work, "risk-hierarchy", "NODE_ID", nodes, List.of("NODE_ID", "LIMIT_VAR"), null);
+        // the MGMT (desk > book) and LEGAL (legal entity) trees are built from the rows' promoted columns (HIERARCHIES); their limits are
+        // var-limit rows
+        table(root, work, "var-limit", "LIMIT_ID", limits(day), List.of("HIERARCHY", "NODE_ID", "LIMIT_VAR"), null);
         List<Map<String, Object>> ports = List.of(
                 Map.of("PORTFOLIO_ID", "PF-EUR", "BUSINESS_DATE", day.toString(), "NAME", "Euro", "TYPE", "RULE", "OWNER", "risk",
                         "DEFINITION", Map.of("RULE", "CURRENCY == 'EUR'"), "LIMIT_VAR", 400.0),
@@ -168,17 +161,30 @@ final class VarLakeFixture {
         return root;
     }
 
-    private static Map<String, Object> node(LocalDate day, String id, String h, String level, String parent, List<String> books, double limit) {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("NODE_ID", id);
-        m.put("HIERARCHY", h);
-        m.put("LEVEL", level);
-        m.put("PARENT_ID", parent);
-        m.put("NAME", id.substring(id.indexOf('~') + 1));
-        m.put("BOOKS", books);
-        m.put("LIMIT_VAR", limit);
-        m.put("BUSINESS_DATE", day.toString());
-        return m;
+    /** The VaR limits of the MGMT and LEGAL nodes (var-limit rows, USD). */
+    static List<Map<String, Object>> limits(LocalDate day) {
+        Map<String, Double> by = new LinkedHashMap<>();
+        by.put("MGMT~BANK", 5000.0);
+        by.put("MGMT~DESK-X", 1000.0);
+        by.put("MGMT~DESK-Y", 600.0);
+        by.put("MGMT~BOOK-1", 800.0);
+        by.put("MGMT~BOOK-2", 500.0);
+        by.put("MGMT~BOOK-3", 600.0);
+        by.put("LEGAL~BANK", 5000.0);
+        by.put("LEGAL~LE-A", 1000.0);
+        by.put("LEGAL~LE-B", 600.0);
+        List<Map<String, Object>> out = new ArrayList<>();
+        by.forEach((id, limit) -> {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("LIMIT_ID", "VL-" + id);
+            m.put("HIERARCHY", id.substring(0, id.indexOf('~')));
+            m.put("NODE_ID", id);
+            m.put("LIMIT_VAR", limit);
+            m.put("CURRENCY", "USD");
+            m.put("BUSINESS_DATE", day.toString());
+            out.add(m);
+        });
+        return out;
     }
 
     /** One table: staged rows {@code [id, doc, {promoted}]} by business date, written with {@code lake write}. */

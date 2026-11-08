@@ -26,12 +26,11 @@ keeps its move on every date: factors.Market ``back``), one book moved between d
     scenario-set/     HS-509: the scenario days of the business date
     stress-*          the stress scenario set HS-STRESS-2008 (stress.py): its scenario set, P&L vectors, scenario PVs and scenario FX in
                       files of their own (stress-cob...) beside the normal set's, under the same table and date, for stressed VaR
-    risk-hierarchy/   the MGMT tree (bank, division, desk, book) and the LEGAL tree (bank, legal entity, desk, book); their VaR limits are var-limit rows
     portfolio/        portfolio definitions of the three types (HIERARCHY, RULE, BASKET), overlapping on purpose: no figures
-    var-limit/        2.9.5: the VaR limits by hierarchy and node id (USD): every node of the limit-letter hierarchy LL (built by the
-                      server from the rows' LIMIT_LETTER and DESK; a few left without one, shown blank), and the MGMT and LEGAL nodes' own
-                      limits, and every portfolio's (hierarchy PORTFOLIO): 2.9.7, the one home of every VaR limit (the
-                      risk-hierarchy rows and the portfolios carry none)
+    var-limit/        the VaR limits by hierarchy and node id (USD): every node of the limit-letter hierarchy LL (a few left without one,
+                      shown blank), every node of MGMT (bank, division, desk, book) and LEGAL (bank, legal entity, desk, book), and every
+                      portfolio's (hierarchy PORTFOLIO): the one home of every VaR limit. The server builds the three hierarchies from the
+                      rows' promoted columns (DIVISION, LEGAL_ENTITY, DESK, TT_BOOK, LIMIT_LETTER), every row carrying each of them
     desk-pnl/         the desks' daily actual and hypothetical P&L for regulatory backtesting (desk_pnl.py): 260 business days to the
                       business date, generated from each desk's scenario P&L (its risk-theoretical P&L) with front-office and finance
                       differences
@@ -83,9 +82,9 @@ import sutracases as SC  # noqa: E402  (tests/<sutra>/cases.jsonl)
 PACK, CONNECTOR, SET = "market-risk", "risk-store", "HS-509"
 #: kind -> its id field (the lake key)
 KEYS = {"pnl-vector": "VECTOR_ID", "scenario-pv": "SCENARIO_PV_ID", "fx-scenario": "FX_SCENARIO_ID", "scenario-set": "SCENARIO_SET_ID",
-        "risk-hierarchy": "NODE_ID", "portfolio": "PORTFOLIO_ID", "var-limit": "LIMIT_ID", "desk-pnl": "DESK_PNL_ID", "pnl-history": "HISTORY_ID"}
+        "portfolio": "PORTFOLIO_ID", "var-limit": "LIMIT_ID", "desk-pnl": "DESK_PNL_ID", "pnl-history": "HISTORY_ID"}
 #: the folders this generator used to write and no longer does (removed when it writes)
-RETIRED = ("position", "var-node")
+RETIRED = ("position", "var-node", "risk-hierarchy")
 #: the business dates the VaR data is written for: the newest and the two before it, so the VaR change explanation (VAR_GUIDE.md
 #: section 3.11) has real dates to compare; the stress set, the desk P&L and the long P&L history are the newest date's only
 VAR_DATES = 3
@@ -240,11 +239,6 @@ class Demo:
             row(n["HIERARCHY"], nid, n["LIMIT_VAR"])
         return rows
 
-    def hierarchy_rows(self) -> list[dict]:
-        """The nodes without their limits: every VaR limit lives in var-limit (2.9.7, DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)."""
-        return [{**{k: v for k, v in n.items() if k != "LIMIT_VAR"}, "BUSINESS_DATE": self.cob, "VALID_FROM": "2026-01-02", "VALID_TO": None}
-                for _, n in sorted(self.nodes.items())]
-
     def portfolio_limit_rows(self, portfolios: list[dict]) -> list[dict]:
         """A portfolio's VaR limit as a var-limit row of hierarchy PORTFOLIO (2.9.7): the limit the portfolio's definition was set with."""
         return [{"LIMIT_ID": f"VL-{p['PORTFOLIO_ID']}", "HIERARCHY": "PORTFOLIO", "NODE_ID": p["PORTFOLIO_ID"], "LIMIT_VAR": p["LIMIT_VAR"],
@@ -314,7 +308,7 @@ def documents(demo: Demo, newest_only: bool = True) -> dict[str, list[dict]]:
     demo.limits()
     portfolios = PF.rows(demo)
     limits = demo.var_limit_rows() + demo.portfolio_limit_rows(portfolios)
-    return {"risk-hierarchy": demo.hierarchy_rows(), "scenario-set": [demo.scenario_set()],
+    return {"scenario-set": [demo.scenario_set()],
             # sorted as a book's trades are contiguous (the engine sorts a date in memory anyway: the lake's order does not matter)
             "pnl-vector": sorted(demo.batch.vector_rows, key=lambda r: (r["LEGAL_ENTITY"], r["DESK"], r["TT_BOOK"], r["TRADE_ID"])),
             "scenario-pv": sorted(demo.batch.pv_rows, key=lambda r: (r["LEGAL_ENTITY"], r["DESK"], r["TT_BOOK"], r["TRADE_ID"])),
@@ -386,7 +380,6 @@ def samples(demo: Demo, docs: dict[str, list[dict]]) -> dict[Path, str]:
              "scenario-pv": [r for r in docs["scenario-pv"] if r["CURRENCY"] != "USD"][:1],
              "fx-scenario": [r for r in docs["fx-scenario"] if r["CURRENCY"] == "EUR"],
              "scenario-set": docs["scenario-set"],
-             "risk-hierarchy": [n for n in docs["risk-hierarchy"] if n["NODE_ID"] in ("MGMT~DESK-RATES", "LEGAL~LE-NY")],
              "var-limit": [r for r in docs["var-limit"] if r["HIERARCHY"] == "LL"][:3] + [r for r in docs["var-limit"]
                                                                                           if r["NODE_ID"] == "MGMT~DESK-RATES"],
              "portfolio": [r for r in docs["portfolio"] if r["PORTFOLIO_ID"] in ("PF-RATES-DESK", "PF-USD-RATES", "PF-ASHA-UNWIND")],

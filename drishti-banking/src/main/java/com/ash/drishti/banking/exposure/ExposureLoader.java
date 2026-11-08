@@ -55,8 +55,8 @@ final class ExposureLoader {
     private final SourceRouter router;
     private final ExposureProperties props;
     private final ExposureTier tier;
-    /** The hierarchies (2.9.5, shared with VaR): the level columns of the column hierarchies are read from the paths' rows. */
-    private java.util.function.Supplier<com.ash.drishti.banking.var.Hierarchies> hierarchies = com.ash.drishti.banking.var.Hierarchies::defaults;
+    /** The hierarchies (shared with VaR, VAR_GUIDE.md section 15.14): their level columns are read from the paths' rows. */
+    private java.util.function.Supplier<com.ash.drishti.banking.var.Hierarchies> hierarchies = com.ash.drishti.banking.var.Hierarchies::none;
 
     ExposureLoader(SourceRouter router, ExposureProperties props, ExposureTier tier) {
         this.router = router;
@@ -68,52 +68,45 @@ final class ExposureLoader {
         return tier;
     }
 
-    /** The hierarchies VaR builds (the setting, a pack's block, or the default), so exposure's nodes are the same. */
+    /** The hierarchies VaR builds (the setting, else a pack's block, else none), so exposure's nodes are the same. */
     ExposureLoader hierarchies(java.util.function.Supplier<com.ash.drishti.banking.var.Hierarchies> h) {
         this.hierarchies = h;
         return this;
     }
 
+    /**
+     * The hierarchies, checked against the paths' promoted columns: a level column the paths' table does not promote is a warning (every
+     * path row then sits under (Blank) at that level, said in Admin → Health and the log; DRS-5211), never a skipped hierarchy.
+     */
     com.ash.drishti.banking.var.Hierarchies hierarchies() {
-        com.ash.drishti.banking.var.Hierarchies all;
-        try {
-            all = hierarchies.get();
-        } catch (RuntimeException e) {
-            return com.ash.drishti.banking.var.Hierarchies.defaults();
-        }
-        // a column hierarchy whose level column the paths' table does not keep is skipped, said (DRS-5211 as a warning); the rest load
-        if (all.columnSpecs().isEmpty()) {
-            skipped = Map.of();
-            return all;
-        }
-        Map<String, String> why = all.missingColumns(Map.of(props.kinds().paths(), router.columnar(props.kinds().paths())), "");
-        for (com.ash.drishti.banking.compute.var.HierarchySpec s : all.columnSpecs()) {
-            com.ash.drishti.banking.var.Hierarchies.skipped("exposure", s.id(), why.get(s.id()));
-        }
-        if (!why.equals(skipped)) {
+        com.ash.drishti.banking.var.Hierarchies all = hierarchies.get();
+        Map<String, String> why = all.unpromoted(Map.of(props.kinds().paths(), router.columnar(props.kinds().paths())), false);
+        if (!why.equals(warned)) {
+            com.ash.drishti.banking.var.Hierarchies.warnings("exposure", why);
             why.values().forEach(w -> org.slf4j.LoggerFactory.getLogger(ExposureLoader.class).warn("exposure: {}", w));
+            warned = why;
         }
-        skipped = why;
-        return all.without(why.keySet());
+        return all;
     }
 
-    /** The column hierarchies skipped now (their level column not in the paths' table), id to why (2.9.5). */
-    private volatile Map<String, String> skipped = Map.of();
+    /** The level columns the paths' table does not promote, said once per change (hierarchy, column and kind to the words). */
+    private volatile Map<String, String> warned = Map.of();
 
-    Map<String, String> skipped() {
+    /** The hierarchy warnings now (a level column the paths do not promote), for the answers' provenance. */
+    Map<String, String> warnings() {
         hierarchies();
-        return skipped;
+        return warned;
     }
 
-    /** The configured hierarchies (the column ones' words name nodes in a scope). */
+    /** The configured hierarchies (their words name nodes in a scope). */
     List<com.ash.drishti.banking.compute.var.HierarchySpec> hierarchySpecs() {
         return hierarchies().specs();
     }
 
-    /** The scope words of the configured column hierarchies. */
+    /** The scope words of the configured hierarchies. */
     java.util.Set<String> words() {
         java.util.Set<String> out = new java.util.LinkedHashSet<>();
-        hierarchies().columnSpecs().forEach(s -> {
+        hierarchies().specs().forEach(s -> {
             if (s.word() != null) {
                 out.add(s.word());
             }
@@ -121,7 +114,7 @@ final class ExposureLoader {
         return out;
     }
 
-    /** The level columns the trades' rows must carry: the column hierarchies' (but those the engine reads anyway). */
+    /** The level columns the trades' rows carry: the hierarchies' (but those the engine reads anyway). */
     List<String> levels() {
         List<String> out = new ArrayList<>();
         for (String c : hierarchies().levelColumns()) {
@@ -236,7 +229,7 @@ final class ExposureLoader {
             }
         }
         for (String c : levels()) {
-            if (!out.contains(c)) {
+            if (!out.contains(c) && (kept.isEmpty() || kept.contains(c))) {   // a level column not promoted: its rows sit under (Blank)
                 out.add(c);
             }
         }

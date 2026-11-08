@@ -63,7 +63,6 @@ drishti:
         collateral: collateral-balance  # the kind of the collateral balances
         counterparty: counterparty  # the kind of the counterparties (the core pack's)
         group: counterparty-group  # the kind of the counterparty groups
-        hierarchy: risk-hierarchy  # the kind of the risk hierarchies (the market-risk pack's)
         limit: credit-limit          # the stored credit limits, read as stored (the explorer's limit column; LIM stays parked)
       access: {}                     # per role, per counterparty, group or legal entity: trades | aggregate | none (drishti.ccr.exposure.access.<role>[CP-ALDERSHOT]=aggregate)
       official:                      # the official end-of-day captures (docs/guides/EXPOSURE_GUIDE.md section 20)

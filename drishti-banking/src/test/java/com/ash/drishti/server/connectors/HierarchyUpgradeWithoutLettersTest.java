@@ -39,8 +39,9 @@ import org.springframework.test.web.servlet.MockMvc;
  * An upgraded server whose data predates the limit letters (2.9.5, the product owner's rule of 2026-10-28): the market-risk pack
  * configures the hierarchy LL from {@code LIMIT_LETTER}, but the P&amp;L vectors and the exposure paths in the lake are the earlier ones,
  * without the column ({@code VarLakeFixture}, {@code ExposureLakeFixture}). VaR and exposure still answer (var-result BANK and
- * exposure-result ready, MGMT and LEGAL as before); only LL is skipped, said as DRS-5211 with the fix in the provenance's warnings, in
- * Admin → Health (the skipped hierarchies) and in the log.
+ * exposure-result ready, MGMT and LEGAL as before); LL is built with every row under its (Blank) letter, said as DRS-5211 with the fix in
+ * the provenance's warnings, in Admin → Health (the hierarchy warnings) and in the log: the pack's layout names the column, so it is not a
+ * typo, only a connector file written before the column was added.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=market-risk,counterparty-risk",
         "drishti.sources.plugins.demo.enabled=false",
@@ -120,7 +121,7 @@ class HierarchyUpgradeWithoutLettersTest {
         assertThat(v.at("/result/VAR").isNumber()).isTrue();
         JsonNode x = compute("exposure-engine", "exposure-result", "{\"id\": \"NSET:NS-X\", \"asOf\": \"" + DAY + "\", \"wait\": 20000}");
         assertThat(x.get("state").asText()).as(x.toString()).isEqualTo("ready");
-        // the VaR answer says why LL is not there, with the fix
+        // the VaR answer says why LL's rows sit under (Blank), with the fix
         JsonNode desk = json.readTree(mvc.perform(get("/api/v1/risk/var/scope").param("scope", "DESK:DESK-X").param("asOf", DAY.toString()))
                 .andReturn().getResponse().getContentAsString());
         assertThat(desk.get("var").asDouble()).as(desk.toString()).isEqualTo(390);       // MGMT as before (VarApiTest's figure)
@@ -129,8 +130,9 @@ class HierarchyUpgradeWithoutLettersTest {
         JsonNode set = json.readTree(mvc.perform(get("/api/v1/risk/exposure/scope").param("scope", "NSET:NS-X").param("asOf", DAY.toString()))
                 .andReturn().getResponse().getContentAsString());
         assertThat(set.at("/provenance/warnings").toString()).contains("DRS-5211").contains("layout.exposure-path.columns");
-        assertThat(com.ash.drishti.banking.var.Hierarchies.skipped()).containsKeys("var LL", "exposure LL");
+        assertThat(com.ash.drishti.banking.var.Hierarchies.warnings()).containsKeys("var LL LIMIT_LETTER pnl-vector",
+                "exposure LL LIMIT_LETTER exposure-path");
         JsonNode health = json.readTree(mvc.perform(get("/api/v1/admin/health")).andReturn().getResponse().getContentAsString());
-        assertThat(health.path("hierarchiesSkipped").toString()).contains("var LL").contains("LIMIT_LETTER");
+        assertThat(health.path("hierarchyWarnings").toString()).contains("var LL LIMIT_LETTER").contains("promote LIMIT_LETTER");
     }
 }
