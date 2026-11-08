@@ -39,7 +39,7 @@ settings:
 auth: The cluster key (secret as ${DRISHTI_NET_SECRET}, at least 32 bytes, the same on every node) signs every call (HMAC, 60 s window), or mutual TLS (tls.*); each read carries a 30 s on-behalf-of token for the caller.
 licence: Part of drishti-server; no client library beyond the JDK's HttpClient (HTTP/2 between nodes by default).
 windows: Works the same on Windows (pure Java); peers must advertise the machine's real IP, never localhost or 127.0.0.1.
-doc: docs/admin/OPERATIONS.md
+doc: docs/guides/OPERATIONS_GUIDE.md
 ---
 # The net connector
 
@@ -123,6 +123,6 @@ view's provenance names the node for administrators, and Admin → Net → *Rout
 
 ## See also
 
-- [Drishti*net: the operator's guide](../../../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one): a cluster of three, the files, security, routing, Admin → Net.
-- [Drishti*net: the design](../../../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) and [history queries](../../../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time).
+- [Drishti*net: the operator's guide](../../../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet): a cluster of three, the files, security, routing, Admin → Net.
+- [Drishti*net: the design](../../../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet) and [history queries](../../../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time).
 - [Connector files](../../CONNECTOR_FILES.md) (the net files are managed the same way) and [TLS](../../TLS.md).

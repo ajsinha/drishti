@@ -30,8 +30,8 @@ About 25 minutes.
 - [Tutorial 33](33-the-pivot-engine.md) done: `PIVOT trade <GO>` answers with the demo trades.
 - Two users: you (an analyst) and a second user who may approve: an administrator, or a member of the role named by
   `drishti.pivot.functions.approver-role` (`pivot-approver`, one of the built-in roles as shipped: give it to the second user in
-  Admin → Users). See [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md#2-roles).
-- A token for the command line in `DRISHTI_TOKEN` or a `--token-file` ([TOOLS.md](../guides/TOOLS.md)).
+  Admin → Users). See [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#3-roles).
+- A token for the command line in `DRISHTI_TOKEN` or a `--token-file` ([CLI_REFERENCE.md](../guides/CLI_REFERENCE.md)).
 
 ## What you will learn
 

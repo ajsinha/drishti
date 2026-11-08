@@ -22,7 +22,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * The heap tier's position vectors are kept within a byte limit (2.9.7, RESOURCES_AND_SCALE.md section 3.9 item 8); past it a vector is
+ * The heap tier's position vectors are kept within a byte limit (2.9.7, CLUSTER_GUIDE.md section 3.9 item 8); past it a vector is
  * summed on each ask, to the same bits.
  */
 class VarBookPositionCacheTest {

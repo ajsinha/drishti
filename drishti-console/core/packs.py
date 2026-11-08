@@ -33,7 +33,7 @@ log = logging.getLogger(__name__)
 
 def default_enabled(console_dir: Path) -> str:
     """The packs the server enables when DRISHTI_PACKS is not set and no edition names them: the one list the server reads from its jar,
-    config/packs/default-packs.yaml, by module (docs/admin/LENSES.md › The design)."""
+    config/packs/default-packs.yaml, by module (docs/guides/ADMIN_GUIDE.md › The design)."""
     from core.edition import by_module
     try:
         f = (console_dir / "../config/packs/default-packs.yaml").resolve()

@@ -25,7 +25,7 @@ This page is the reference for the folder, the file format (with an example for 
 (including **several connectors serving one kind**, as the trades of three source systems do), live reload, the **Admin →
 Connectors** page, the REST API, the `drishti.py connector` commands, and moving off `application.yaml`. The settings each plugin
 reads are in its own page ([CONNECTORS.md](CONNECTORS.md) lists them). Every command output below was captured on a fresh clone
-with the demo lakes (`drishti.py lake demo`, [GETTING_STARTED.md](../guides/GETTING_STARTED.md#step-5--build-the-demo-lakes)).
+with the demo lakes (`drishti.py lake demo`, [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#24-build-the-demo-lakes)).
 
 Contents: [1](#1-the-model-in-one-minute) the model · [2](#2-the-folder) the folder · [3](#3-the-file) the file ·
 [4](#4-examples-one-per-store) examples · [5](#5-credentials-and-tls) credentials and TLS · [6](#6-how-packs-and-files-fit-together) packs and files ·
@@ -125,7 +125,7 @@ libraries by Maven coordinates and sha256 (`java:`), and connector plugins (`plu
 approved by an administrator stays off**: Admin → Connectors shows it as *waiting for approval* (state `NOT_APPROVED`) with the request
 to decide in Admin → Compute. The person who asked is `requires.requested-by`, else the administrator who last saved the file here.
 Editing the connector in the form keeps its `requires:` block. The keys, the lock file and the approval are in
-[OPERATIONS.md › Compute workers, section 6](../admin/OPERATIONS.md#6-requirements-environments-and-approval).
+[OPERATIONS_GUIDE.md › Compute workers, section 6](../guides/OPERATIONS_GUIDE.md#154-requirements-environments-and-approval).
 
 ### A computation: `plugin: reactive`
 
@@ -177,7 +177,7 @@ settings:
 `trade-calypso.yaml` and `trade-murex.yaml` are the same with `table.trade: trade_calypso` / `trade_murex` and their own
 `source-name`. The `layout.trade.columns` are the attributes promoted beside each document as Delta columns (UPPER_SNAKE, as in the
 documents), so searches, type-ahead and BI read them without opening documents. `drishti.py lake demo` writes these three tables;
-`drishti.py lake build` writes one from your own export ([TOOLS.md](../guides/TOOLS.md)).
+`drishti.py lake build` writes one from your own export ([CLI_REFERENCE.md](../guides/CLI_REFERENCE.md)).
 
 **A derived connector** (`config/connectors/trade-pages.yaml`, generated from the trading pack): no store behind it; it computes the
 counterparty, portfolio, legal-entity and index pages from the `trade` kind (whichever connectors serve it). The first of its four
@@ -657,7 +657,7 @@ Health show *failed — next retry in 20 s (attempt 3)* with the last error on t
 Health, `POST /api/v1/admin/retry/connectors[?name=site-quotes]`, admin role, audited as `connector-retry-now`, token scope
 `packs:admin`) tries at once. Saving the file starts the count again. Failures and recoveries are audited (`connector-retry-failed`,
 `connector-recovered`). All settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#retry-settings); the overview:
-[OPERATIONS.md](../admin/OPERATIONS.md#retries-what-failed-is-tried-again-by-itself).
+[OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#138-retries-what-failed-is-tried-again-by-itself).
 
 What is **not** live: a connector defined in the server's own configuration (`application.yaml`, deprecated) and a change of
 `connectors-dir` itself; both need a restart.
@@ -677,7 +677,7 @@ On the demo lakes it lists the seven packs' connectors: the three trade connecto
 anything does, and otherwise **moves the file** to `<data dir>/uninstalled/` where **Admin → Artifacts → Uninstalled** restores it. A
 connector created or edited through Admin (the shared overlay in the content store) is archived the same way: the text in force goes to the
 archive, the overlay is removed (its text stays in the shared history) with any file under it, and a restore puts it back as a file. A
-connector a pack's template names is only disabled or reset. See [OPERATIONALISING.md section 18](../guides/OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely).
+connector a pack's template names is only disabled or reset. See [OPERATIONS_GUIDE.md section 18](../guides/OPERATIONS_GUIDE.md#10-admin--artifacts-install-and-uninstall-safely).
 
 The list shows each connector's **origin** (`file`, `pack` for a template with no file yet, `application` for the deprecated
 configuration), plugin, kinds, **status** with the plugin's own health beside it, which packs use it (and for which kinds), and when it
@@ -1103,7 +1103,7 @@ it.
   hundred bytes per entity held (estimated); `aerospike` `columns-cache-mb` (1024) of promoted
   bins plus one id per entity in the index set (not the days kept). Add them up across connectors when sizing the heap (`-Xmx`).
 - **Database connections**: `pool-size` (20, the site default `drishti.db.pool.size`) per database connector, per server; the sum of the pools of all
-  servers must fit the database's `max_connections` ([OPERATIONS.md](../admin/OPERATIONS.md#sizing-the-database-connection-pools)).
+  servers must fit the database's `max_connections` ([OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#148-capacity-figures-database-pools-and-bi-scale)).
 - **Writing a database connector**: do not open connections yourself. Build a `ResourcePool` from `com.ash.drishti.api.pool` with
   `PoolSettings.resolve(ctx.settings())` (it reads `pool-size`, the site default and the other `pool-*` keys), borrow in a try-with-resources
   (`try (var lease = pool.borrow()) { ... }`) for one unit of work, `lease.invalidate()` on a broken connection, and return `pool.stats()` from
@@ -1191,7 +1191,7 @@ output of the default SQLite identity database; a pool that cannot time borrows 
 
 A connector's pool looks the same with `"type": "jdbc"` and `"exempt": false`. Prometheus has one series per connector (`connector`
 and `type` labels): `drishti_db_pool_max`, `_open`, `_in_use`, `_idle`, `_waiting`, `_longest_borrow_seconds`, `_leaks` and `_timeouts`
-([OPERATIONS.md, Monitoring](../admin/OPERATIONS.md#134-prometheus-and-grafana)).
+([OPERATIONS_GUIDE.md, Monitoring](../guides/OPERATIONS_GUIDE.md#134-prometheus-grafana-and-the-suggested-alerts)).
 
 What the log says when a borrow is held (from the pool's test, `pool-leak-threshold: 150ms`; the frames after the first two are the
 borrower's):
@@ -1211,8 +1211,8 @@ no free connection in the pool-test pool within 250 ms (1 of 1 in use, 0 waiting
 ```
 
 Sizing the pools against the database's `max_connections` is in
-[OPERATIONS.md](../admin/OPERATIONS.md#sizing-the-database-connection-pools); the symptoms and what to do are in
-[TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#a-connector-says-no-free-connection-in-the--pool).
+[OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#148-capacity-figures-database-pools-and-bi-scale); the symptoms and what to do are in
+[OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#212-things-that-failed-to-load-or-lost-their-connection).
 
 ## Status words, warnings and what the page tells you
 

@@ -5017,7 +5017,7 @@ panels:
   (`Your selections were reset because server X went away. Pick again.`), forgets the selections, closes their children and
   unmarks the rows, and the reader picks again. An expired token (`DRS-5002`, the server restarted) is said the same way.
   `NetSelectionTest` (two in-process servers: a token issued on A used through B, then A stopped) and `test_cluster_failover.py`
-  prove it; CLUSTER_DEPLOYMENT.md 11.1.
+  prove it; CLUSTER_GUIDE.md 11.1.
 - **Lint** (`DRS-2057`, every Sutra at load): a read of a panel the screen does not have, of an event it does not emit or of a
   payload field the event does not carry; a panel reading its own event; panels that wait on each other in a cycle (through events
   or as parent and child); `$src` in a panel with no source; a source `id` reading a payload field typed `number`, `date` or `bool`;
@@ -7547,7 +7547,7 @@ Status: **console wiring built and built (2026-10-21):** the engine (C1), the di
 docs; see [section 24](#24-the-console-wiring-c3-c6-c7). **Not built yet (server lane):** `for=chart` on the records
 endpoint (C2), saved charts (C4, C5), the `chart` panel kind and Promote (C8), Open in BI (C9), Chart all N through BI runs; their release is not decided.
 Feature decided by the product owner, beside BI runs
-([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job)) and the two Drishti\*net transport items ([CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti)). Written
+([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job)) and the two Drishti\*net transport items ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)). Written
 2026-10-20 from the agreed feature, checked against the console and server code on `develop`. Builds on the pivot engine
 (drishti-bicompute on the server; `drishti_pivot-engine.js`, its browser client, and `drishti_pivot-grid.js`, its grid; [PIVOT_GUIDE.md](PIVOT_GUIDE.md)),
 the chart panels (`drishti_charts.js`, [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one)), the BI visuals ([BI_GUIDE.md](BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) section 3) and
@@ -8202,7 +8202,7 @@ A user whose role masks `MTM` and a row-level rule on one desk:
 | [Tutorial 21](../tutorials/21-an-entity-over-time.md) and the tables tutorial | a section *Chart it* with UI, keys and the resulting YAML of a promoted chart panel, with screenshots (desktop and phone) |
 | [CONFIGURATION.md](../admin/CONFIGURATION.md) | the planned `drishti.charts.*` (with C2; none was built yet) |
 | [API_GUIDE.md](API_GUIDE.md) | `for=chart`, `/api/v1/me/charts`, `bi/drafts/from-chart` |
-| [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) N7 | `charts` among the replicated namespaces |
+| [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet) N7 | `charts` among the replicated namespaces |
 | this document | implementation notes; status to *built* |
 | CHANGELOG, RELEASE_NOTES | the release's entries |
 
@@ -8997,7 +8997,7 @@ Where each part is changed is section 7; the design, the open decisions and the 
 | [USER_GUIDE.md › About this page](USER_GUIDE.md#about-this-page) | *About this page*: keys, layers, panel and field help |
 | [Screen designer and the Build workbench](#screen-designer-and-the-build-workbench) | the workbench *About* tab |
 | [CONFIGURATION.md](../admin/CONFIGURATION.md) | `drishti.explain.*`, `drishti.about.*` |
-| [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | error-code table rows; "the About drawer says a field has no explanation" |
+| [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#21-troubleshooting) | error-code table rows; "the About drawer says a field has no explanation" |
 | HOW_IT_FITS.md (deleted, in git at tag v2.9.5; the section now lives [here](#about-this-page-end-to-end)) | a full section, not a line: *About this page, end to end*, worked on the same trade MX-20000001 as example A (the `?` press → `GET …/explain` → the view re-run for the caller → `MatchTrace`, emptiness reasons, provenance and health → `about.yaml` from the pack (with `extends`) rendered over the redacted document → the glossary → the drawer), the same for the genomics variant in example B in a few lines, `about.yaml` added to §1's picture and §2's pieces, and §7 *Where to change what* rows (about text, glossary, drawer, explain) |
 
 ### Build plan

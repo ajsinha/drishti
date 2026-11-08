@@ -111,7 +111,7 @@ public class ApiExceptionHandler {
     }
 
     /**
-     * New work asked to wait because the server is very busy (docs/admin/OPERATIONS.md, "Busy protection"): {@code 503}, its
+     * New work asked to wait because the server is very busy (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"): {@code 503}, its
      * {@code DRS-95xx} code, {@code Retry-After}, and the calm words ({@code title}, {@code because}) the console and drishti.py show.
      */
     @ExceptionHandler(com.ash.drishti.server.admission.BusyRefusal.class)
@@ -136,7 +136,7 @@ public class ApiExceptionHandler {
         return p;
     }
 
-    /** A compute engine that runs nowhere (COMPUTE_ENGINES.md section 5.1): {@code 404 DRS-1020} naming the engine. */
+    /** A compute engine that runs nowhere (ADMIN_GUIDE.md section 5.1): {@code 404 DRS-1020} naming the engine. */
     @ExceptionHandler(com.ash.drishti.server.engines.EngineOffException.class)
     ProblemDetail engineOff(com.ash.drishti.server.engines.EngineOffException e) {
         ProblemDetail p = drishti(e);

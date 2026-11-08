@@ -685,7 +685,7 @@ class DemoLake:
               "     drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.port=17480 --backend.url=http://127.0.0.1:18480\n"
               "     (these two commands run with sign-in off on both; the run configurations turn it on, with the same secrets on both:\n"
               "     the server's DRISHTI_SECURITY_ENABLED and DRISHTI_TOKEN_SECRET, the console's DRISHTI_AUTH_ENABLED, DRISHTI_TOKEN_SECRET,\n"
-              "     DRISHTI_SESSION_SECRET; docs/guides/GETTING_STARTED.md)\n"
+              "     DRISHTI_SESSION_SECRET; docs/guides/OPERATIONS_GUIDE.md)\n"
               "  3. Open (console port 17480 by default):\n"
               "     /v/trade/1000001             an ENDUR ComSwap (legs side by side, cash flows and resets)\n"
               "     /v/trade/CLY-3000157         a CALYPSO government bond;   /v/trade/MX-20000001   a MUREX swap\n"

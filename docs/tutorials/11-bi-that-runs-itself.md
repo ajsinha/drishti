@@ -264,7 +264,7 @@ export DRISHTI_CONSOLE_URL=https://drishti.example.com                  # where 
 export DRISHTI_MAIL_FROM=drishti@example.com
 ```
 
-(The same keys as `spring.mail.host` and so on in the server's `application.yml`; [OPERATIONS.md](../admin/OPERATIONS.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md#email-springmail-and-the-outbox) have all of them.) To try it **without sending anything anywhere**, use the catcher that ships with this
+(The same keys as `spring.mail.host` and so on in the server's `application.yml`; [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md#email-springmail-and-the-outbox) have all of them.) To try it **without sending anything anywhere**, use the catcher that ships with this
 tutorial: a small program that accepts any mail on your machine and writes each message to a file.
 
 ```bash
@@ -560,7 +560,7 @@ You should see a webhook per defined name and, once a gateway is set up, *Text e
 
 - [Tutorial 12](12-live-bi-and-boards.md): data that moves, and a wall of tiles that turn red.
 - [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding): every schedule word, retries, alerts on models and fields, chat bridges, board notifications.
-- [CLI_GUIDE.md](../guides/CLI_GUIDE.md): `bi item`, `bi dataset refresh` and `bi mq` with every option.
+- [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md): `bi item`, `bi dataset refresh` and `bi mq` with every option.
 - [Tutorial 9](09-reports.md) for scheduled searches and the Reports page.
 
 ## If something goes wrong

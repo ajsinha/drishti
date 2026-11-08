@@ -31,7 +31,7 @@ from core.config import load_settings
 TODAY = ["/t", "/s", "/forms", "/func", "/datamap", "/reports", "/w", "/m", "/alerts", "/build/new", "/build/pack/new", "/build",
          "/approvals", "/what", "/help/tutorials", "/help/pack-developer-guide", "/admin/users", "/admin/roles",
          "/admin/audit", "/admin/packs", "/admin/connectors", "/admin/artifacts", "/admin/loads", "/admin/lakes", "/admin/collab",
-         "/admin/embedding", "/admin/net", "/admin/health", "/admin/caches", "/help", "/help/install-and-run", "/about"]
+         "/admin/embedding", "/admin/net", "/admin/health", "/admin/caches", "/help", "/help/operations", "/about"]
 RISK_ABOUT = {"product": "Drishti Risk", "tagline": "VaR and exposure from your own pricing data", "edition": {"name": "risk", "title": "Drishti Risk"}}
 
 
@@ -125,12 +125,12 @@ def test_the_risk_edition_follows_its_file_on_every_surface(backend, monkeypatch
     assert 'href="/admin/users"' in tabs and 'href="/admin/ai"' not in tabs and 'href="/admin/compute"' not in tabs
     # help: the BI and Build categories hidden, and a guide that is not listed is not reached by its address
     centre = help_pages(c)
-    assert 'href="/help/install-and-run"' in centre and 'href="/help/knowledge-market-risk"' in centre
+    assert 'href="/help/operations#2-install-and-run-on-one-machine"' in centre and 'href="/help/knowledge-market-risk"' in centre
     assert 'href="/help/bi-guide"' not in centre and 'href="/help/pack-developer-guide"' not in centre
     assert 'href="/help/knowledge-economies"' not in centre                           # a Knowledge page of a pack the edition leaves out
     for slug in ("bi-guide", "pack-developer-guide", "knowledge-economies"):
         assert c.get(f"/help/{slug}").status_code == 404, slug
-    assert c.get("/help/install-and-run").status_code == 200
+    assert c.get("/help/operations").status_code == 200
     from core.guides import Library
     from routes.common import packs as _packs  # noqa: F401
     lib = Library(CONSOLE, CONSOLE / "config" / "help.yaml", app.state.docs_dir, [])

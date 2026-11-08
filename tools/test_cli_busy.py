@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Busy protection in drishti.py (docs/admin/OPERATIONS.md, "Busy protection"): a busy refusal (503 DRS-9501 to DRS-9505, Retry-After) is
+"""Busy protection in drishti.py (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"): a busy refusal (503 DRS-9501 to DRS-9505, Retry-After) is
 said in the server's own words, the same the console shows; with --wait (or DRISHTI_WAIT_BUSY=1) it is waited for and tried again, three
 times at most. An in-process server stands in for Drishti. Stdlib only.
 

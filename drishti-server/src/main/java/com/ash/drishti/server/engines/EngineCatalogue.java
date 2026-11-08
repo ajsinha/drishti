@@ -34,7 +34,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The engine catalogue (docs/architecture/COMPUTE_ENGINES.md section 2): every compute engine of the product, its file, switch, old switch
+ * The engine catalogue (docs/guides/ADMIN_GUIDE.md section 2): every compute engine of the product, its file, switch, old switch
  * names, what it needs and uses, and everything it brings to the screen. The core's engines are {@code engines/catalogue.yaml} inside the
  * server's jar; each domain module's are {@code META-INF/drishti/engines.yaml} inside its own jar (DOMAIN_MODULES.md: the module owns its
  * engines), read first. A module not installed brings none. Read once; a cycle of needs refuses it (the build test reads it too).

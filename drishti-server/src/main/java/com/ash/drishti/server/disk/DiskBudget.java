@@ -30,7 +30,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.LongSupplier;
 
 /**
- * One budget for the local disk (RESOURCES_AND_SCALE.md section 7.2, O5, 2.9.7). Each folder Drishti fills registers its name, path, cap
+ * One budget for the local disk (CLUSTER_GUIDE.md section 7.2, O5, 2.9.7). Each folder Drishti fills registers its name, path, cap
  * in bytes, how big it is and how to free space (its least recently used items that nobody has open). Before anything large is written
  * (a hot file, a shard book, a currency's book) the writer asks {@link #reserve}: a folder over its cap frees its oldest items first; when
  * the disk's free space after the write would fall under the <b>guard</b> ({@code drishti.disk.min-free-percent} and

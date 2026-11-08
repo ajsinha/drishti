@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The BI migrations of stored items (docs/guides/TROUBLESHOOTING.md "Migration problems"): every stored dataset and model into the table layer
+ * The BI migrations of stored items (docs/guides/OPERATIONS_GUIDE.md "Migration problems"): every stored dataset and model into the table layer
  * ({@link com.ash.drishti.server.tables.StoredTablesMigration}, docs/architecture/BI_DESIGN.md 4.3), then the 2.3 boards into reports ({@link BoardUpgrade}).
  * Run once at start-up ({@code drishti.bi.migrate.on-start}); boards also by a bi-admin from the API or {@code drishti.py bi migrate --boards [--dry-run]}.
  * Runs are serialised; each is idempotent; what a run could not convert is listed in {@link MigrationProblems}, shown in Admin, BI settings and on

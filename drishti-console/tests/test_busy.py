@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Busy protection in the console (docs/admin/OPERATIONS.md, "Busy protection"; mock-up A). The server decides; the console passes its busy
+"""Busy protection in the console (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"; mock-up A). The server decides; the console passes its busy
 refusal on unchanged (503, Retry-After, the calm words) to the page that asked, which counts down in place: the sign-in form, a VaR or
 exposure panel, Export data's Download card. Admin -> Health draws the "Busy protection" card and sends the operator's override."""
 from __future__ import annotations

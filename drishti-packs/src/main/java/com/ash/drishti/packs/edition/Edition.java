@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * The edition a server runs (docs/admin/LENSES.md): a named bundle of settings, {@code config/lenses/<module>/<lens>.yaml}, that turns
+ * The edition a server runs (docs/guides/ADMIN_GUIDE.md): a named bundle of settings, {@code config/lenses/<module>/<lens>.yaml}, that turns
  * Drishti into a focused product. {@link #NONE} (no {@code drishti.edition}) is the full Drishti: every test here answers "allowed", so
  * a server without an edition behaves exactly as before editions existed.
  *

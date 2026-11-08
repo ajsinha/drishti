@@ -556,7 +556,7 @@ render(el, { kind: 'trade', id: '1000008' }, { auth: 'popup', server: 'https://d
    the user, the application and the time (renewals marked `(renewed)`); a refusal is `embed-sign-in-window-refused` with its reason.
 9. **Settings:** console `embed.sign_in` (`enabled`, `redirect_uri`, `refresh`, `max_hours`), server `drishti.embed.sign-in-window`
    (default on), both needing single sign-on ([CONFIGURATION.md](../admin/CONFIGURATION.md)); the provider's client lists
-   `<console>/embed/v2/sign-in/callback` as a redirect URI ([USER_MANAGEMENT.md section 5](../admin/USER_MANAGEMENT.md#the-sign-in-window-for-pages-that-embed-views)).
+   `<console>/embed/v2/sign-in/callback` as a redirect URI ([ADMIN_GUIDE.md section 5](../guides/ADMIN_GUIDE.md#51-the-sign-in-window-for-pages-that-embed-views)).
 
 **Live frames** with `render()` and `auth: 'popup'`: off unless the host asks (`live`), since the console's `/api/stream` is a session
 route; `<drishti-view auth="popup">` is live over the page's one embed channel with the window's token.
@@ -1093,7 +1093,7 @@ sign-in and comes back.
 - **What the administrator sets once:** single sign-on on the console (`auth.oidc`) and the server (`drishti.security.oidc`), the provider's
   client allowing the console's `…/embed/v2/sign-in/callback` as a redirect URI, and the host application registered. The window is on by
   default (`embed.sign_in.enabled`, `drishti.embed.sign-in-window`); every sign-in through it is audited as `embed-sign-in-window` with the
-  page's origin, the user and the time ([USER_MANAGEMENT.md section 5](../admin/USER_MANAGEMENT.md#the-sign-in-window-for-pages-that-embed-views)).
+  page's origin, the user and the time ([ADMIN_GUIDE.md section 5](../guides/ADMIN_GUIDE.md#51-the-sign-in-window-for-pages-that-embed-views)).
 - Live frames: `render()` with `auth: 'popup'` draws the view as it is (`live` off unless you ask); `<drishti-view auth="popup">` is live
   over the page's one channel, as with a token.
 
@@ -1463,7 +1463,7 @@ ngAfterViewInit() { this.rep.nativeElement.addEventListener('drishti:filter-chan
 
 ### Troubleshooting by code
 
-The element puts the code in `drishti:error` (`detail.code`, `status`, `detail`, `fatal`) and shows it in the element when it has nothing else to show. The full list is in [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md); the ones an embedder meets:
+The element puts the code in `drishti:error` (`detail.code`, `status`, `detail`, `fatal`) and shows it in the element when it has nothing else to show. The full list is in [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#21-troubleshooting); the ones an embedder meets:
 
 | Code | Meaning | What to do |
 |---|---|---|
@@ -3692,7 +3692,7 @@ not turn it on.
 | `docs/guides/API_GUIDE.md` | section 13.1; the `genui:compose` token scope |
 | `docs/admin/CONFIGURATION.md` | section 12 |
 | [AI.md](../admin/AI.md#1-model-providers), [AI.md](../admin/AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy) | feature `genui`; the server's own MCP endpoint |
-| `docs/guides/CLI_GUIDE.md` | `drishti.py genui` (planned) |
+| `docs/guides/CLI_REFERENCE.md` | `drishti.py genui` (planned) |
 | `docs/guides/USER_GUIDE.md` | opening a composed screen, promoting it |
 | a new ADR in `adr/` | "Agents compose screens from governed fragments; no generated code is sent or run" |
 | [docs/README.md](../README.md), `CHANGELOG.md`, `RELEASE_NOTES.md` | entries |

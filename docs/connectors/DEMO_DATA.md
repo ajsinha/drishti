@@ -44,7 +44,7 @@ table per source system, `data/delta/demo/trading/trade_endur`, `trade_calypso` 
 `trade`; every other dataset goes to `data/delta/demo/<domain>/<kind>/`, partitioned by business date. Datasets of static reference data
 (world-economy, news-and-markets) are built from those packs' samples, the same on every day. The real output, the options
 (`--lake`, `--only`, `--with-real`, `--server`, `--no-signal`) and what a running server is told are in
-[GETTING_STARTED.md, Step 5](../guides/GETTING_STARTED.md#step-5--build-the-demo-lakes); the datasets, one row each (key, connector,
+[OPERATIONS_GUIDE.md, Step 5](../guides/OPERATIONS_GUIDE.md#24-build-the-demo-lakes); the datasets, one row each (key, connector,
 table, partitions, documents on day 1, changes a day, size), are in [data/testdata/README.md](../../data/testdata/README.md). One record of
 every data type, every field explained for the query that must produce it, is in the **[data samples](../contracts/samples/README.md)**.
 
@@ -161,7 +161,7 @@ it is (`--no-lake` stops after the JSONL). Neither step rewrites the packs' samp
 picks a new load up within a minute; no restart is needed. The layout: [DELTA_CONNECTOR.md](../../plugins/drishti-plugin-delta/README.md).
 
 For your own export (a large JSON array or JSON Lines of real trades), `drishti.py lake build` streams it into a Delta table with flat
-memory, partitions and promoted columns ([TOOLS.md](../guides/TOOLS.md)).
+memory, partitions and promoted columns ([CLI_REFERENCE.md](../guides/CLI_REFERENCE.md)).
 
 ## PostgreSQL
 
@@ -283,7 +283,7 @@ drishti-console/.venv/bin/python tools/drishti.py data ingest --from your-folder
 the business today ([DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)); `--date FIELD` only names a field whose differing rows are
 counted. See
 [Generating a pack from JSON Lines](../guides/PACK_DEVELOPER_GUIDE.md#generating-a-pack-from-json-lines) and
-[CLI_GUIDE.md](../guides/CLI_GUIDE.md).
+[CLI_REFERENCE.md](../guides/CLI_REFERENCE.md).
 
 ## Your bank's names
 

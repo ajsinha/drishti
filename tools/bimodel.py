@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Models and model queries on the command line (docs/guides/CLI_GUIDE.md "bi model, bi mq"): what the model designer and a report's visuals do,
+"""Models and model queries on the command line (docs/guides/CLI_REFERENCE.md "bi model, bi mq"): what the model designer and a report's visuals do,
 over REST as the token's user. Loaded by drishti.py; the Java server checks every model and answers every query (with the reader's row rules and masks).
 
   bi model list [--kind model|implicit|compat]          the models and datasets you may read

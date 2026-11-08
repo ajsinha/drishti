@@ -23,7 +23,7 @@ import java.util.SplittableRandom;
 import org.junit.jupiter.api.Test;
 
 /**
- * The fixed reduction order (2.9.7, RESOURCES_AND_SCALE.md section 6.7, PO-7): any scope's sum is equal to the bit whatever the threads
+ * The fixed reduction order (2.9.7, CLUSTER_GUIDE.md section 6.7, PO-7): any scope's sum is equal to the bit whatever the threads
  * (1, 2, 3, 8, 24), for dense ranges, scattered baskets, a single row and a set spanning two blocks; the earlier order (slices by thread
  * count) was not. The micro-benchmark against the earlier order is {@link #main} (100,000 rows of 509, never run in the build).
  */

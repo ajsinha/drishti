@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# One Drishti server as a node of a cluster: its drain before a stop and its readiness (docs/architecture/CLUSTER_DEPLOYMENT.md
+# One Drishti server as a node of a cluster: its drain before a stop and its readiness (docs/guides/CLUSTER_GUIDE.md
 # sections 4.6, 9.1 and 10.1; CD1 and CD2). POSIX sh with curl or wget, so it runs in the server images and on any VM.
 #
 #   drishti-node.sh drain [--wait SECONDS]     drain this node; wait until it is safe to stop (exit 0), or the wait ends (exit 3)

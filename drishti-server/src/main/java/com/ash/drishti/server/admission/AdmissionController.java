@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Admin, Health's "Busy protection" card (docs/admin/OPERATIONS.md, "Busy protection"): {@code GET /api/v1/admin/busy} the state, the
+ * Admin, Health's "Busy protection" card (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"): {@code GET /api/v1/admin/busy} the state, the
  * readings against their levels and the last refusals; {@code PUT /api/v1/admin/busy/override} an operator's override with a reason that
  * ends by itself (audited; never a token).
  */

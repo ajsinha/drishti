@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin -> Capacity in a real browser (docs/admin/OPERATIONS.md 12.4; RESOURCES_AND_SCALE.md 9.7), over a real server and console:
+"""Admin -> Capacity in a real browser (docs/guides/OPERATIONS_GUIDE.md 12.4; CLUSTER_GUIDE.md 9.7), over a real server and console:
 
 - the page opens on today against the plan: the four resources with a state in words, their headroom bars, what breaks first, this
   server beside the plan (its Java version measured), growth ×1 to ×3; the Capacity tab is the current one, after Caches;

@@ -83,7 +83,7 @@ settings:
 
 A connector behind the union (a stream of today's changes, the demo samples) is still not asked once the union holds the date. The
 trading pack ships its three trade connectors this way ([DELTA_CONNECTOR.md](../../plugins/drishti-plugin-delta/README.md#declaring-the-layout-in-a-pack));
-`drishti.py lake build --connector trade-endur` writes the table that connector reads ([TOOLS.md](../guides/TOOLS.md)).
+`drishti.py lake build --connector trade-endur` writes the table that connector reads ([CLI_REFERENCE.md](../guides/CLI_REFERENCE.md)).
 
 ## Which connector?
 

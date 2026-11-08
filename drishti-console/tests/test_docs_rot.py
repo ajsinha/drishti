@@ -24,7 +24,7 @@ the console's own help guides. For each one the checks below compare a name the 
 * a ``drishti.py`` command and its sub-commands exist in the CLI's argparse tree;
 * a ``DRISHTI_*`` environment variable, a ``drishti.*`` server setting and a console ``application.yaml`` key exist;
 * a ``DRS-NNNN`` code is one the code has, and every code the code has is in the one error-code table (API_GUIDE's *Error code
-  table*, status and meaning; TROUBLESHOOTING keeps cause and fix only where needed) or RACHANA_REFERENCE;
+  table*, status and meaning; OPERATIONS_GUIDE keeps cause and fix only where needed) or RACHANA_REFERENCE;
 * a command word typed with ``<GO>`` is a pack's mnemonic, a pack code or a reserved word;
 * a kind named as a kind (``the `trade` kind``, ``kind `trade```, ``--kind trade``, ``/v/trade/``) is a kind of some pack.
 
@@ -250,7 +250,7 @@ EXAMPLE_PATHS = {
                                             "MnemonicController.java", "MnemonicApiTest.java", "/Notice", "/db/NoticeEntity.java", "source_routes.py",
                                             "sources.html", "sources.js", "test_sources.py"),
     "docs/connectors/CONNECTORS.md": ("config/packs/equity-desk",),
-    "docs/guides/CLI_GUIDE.md": ("config/packs/curves-demo",),
+    "docs/guides/CLI_REFERENCE.md": ("config/packs/curves-demo",),
     "docs/guides/DATA_GUIDE.md": ("docs/BATCH_FILE_PROCESSING.md", "docs/HEADLESS_AND_ORCHESTRATION.md", "docs/TUTORIAL_delegate_connectors.md"),
 }
 

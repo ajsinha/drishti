@@ -353,7 +353,7 @@
         <module>drishti-elements</module>
       </modules>
     </profile>
-    <!-- The Java API reference (IMPLEMENTATION_PLAN row 2g, docs/guides/TOOLS.md › API references): `-P api-docs` runs Javadoc right
+    <!-- The Java API reference (IMPLEMENTATION_PLAN row 2g, docs/guides/CLI_REFERENCE.md › API references): `-P api-docs` runs Javadoc right
          after a module compiles, in the modules that set drishti.apidocs.skip to false, on the packages they name in
          drishti.apidocs.packages (drishti-api: all of it; drishti-compute: the shard machinery; drishti-server: ShardedMeasure and the
          members' view). Doclint is on: a broken {@link}, bad HTML or a malformed tag fails the build here, and

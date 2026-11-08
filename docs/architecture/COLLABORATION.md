@@ -837,7 +837,7 @@ off (`notify.email.share`), `EmailNotifier` wrote one more row in step 8, in the
 | 3 | Send through Spring's mail client. A failure retries with doubling backoff; a permanent refusal or the last attempt makes a **dead letter**, visible and retryable in the admin API. A mail-server outage needs no action: rows wait | `MailTransport`, `OutboxAdminController`; metrics `drishti.collab.mail`, `drishti.collab.outbox` |
 
 Email never carries a figure: the id and the note are all that leaves the firm's controls, and mail already sent cannot be recalled, which is why
-it holds nothing worth recalling. [OPERATIONS.md](../admin/OPERATIONS.md#9a-2-collaboration-email-and-the-outbox) is the runbook.
+it holds nothing worth recalling. [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#122-collaboration-email-and-the-outbox) is the runbook.
 
 ### Part 3: Vera opens `/share/sh_…` with her own rights
 
@@ -915,7 +915,7 @@ manifest of an export** (the first and last hash of every thread) in the firm's 
 
 Nothing is destroyed by default (`retention.keep-days: 0`). The compliance officer's levers are all under `/api/v1/admin/collab` (`ComplianceController`);
 they are API calls, there is no console page for them yet, and the runbooks are in
-[OPERATIONS.md](../admin/OPERATIONS.md#9a-3-collaboration-retention-legal-holds-and-the-compliance-export).
+[OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#123-retention-legal-holds-and-the-compliance-export).
 
 | # | What happens | Code |
 |---|---|---|
@@ -953,9 +953,9 @@ what their reader needs.
 | [USER_GUIDE.md](../guides/USER_GUIDE.md) | *Export, print and share* → *Share with a note* (dialog, recipients, as-shared banner, no-access page); a new *Discussion* section (threads, anchors, mentions, quotes, open as it was, edit window, resolve, follow); *The inbox*; the key table (`Alt+S`, `Alt+N`, `Alt+I`); the old Notes section points to Discussion |
 | [API_GUIDE.md](../guides/API_GUIDE.md) | endpoint reference for directory, shares, threads, inbox, admin; §Field masks lists shares, threads, inbox and email as masked answers; §access log adds `share` and `share:` detail; error table `DRS-7001`–`7012` and the new first digit; *Notes* marked deprecated with the mapping |
 | [CONFIGURATION.md](../admin/CONFIGURATION.md) | `drishti.collab.*`, `spring.mail.*` and their placeholders; the `collaborate` and `compliance` powers in `drishti.security` |
-| [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) | moderation, legal holds, exports, the compliance power, what users can learn about each other through the directory |
-| [OPERATIONS.md](../admin/OPERATIONS.md) | the outbox (dead letters, retry, mail test), several servers (lease, `outbox.enabled`), retention purge, backups of the collab tables |
-| [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) | "the email never arrived", "the shared link opened today's data", "someone was not notified"; error rows |
+| [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md) | moderation, legal holds, exports, the compliance power, what users can learn about each other through the directory |
+| [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md) | the outbox (dead letters, retry, mail test), several servers (lease, `outbox.enabled`), retention purge, backups of the collab tables |
+| [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#21-troubleshooting) | "the email never arrived", "the shared link opened today's data", "someone was not notified"; error rows |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | the collab package in the module list and security section (one paragraph, link here) |
 | HOW_IT_FITS.md (deleted, in git at tag v2.9.5; the section now lives [here](#share-and-discussion-end-to-end)) | a full section, *Share and Discussion, end to end* (§3.10, done in step 8): worked on trade MX-20000001 — the dialog → `POST /shares` with the as-of headers → pin, `mayReach` per recipient, masked spans → one transaction (share, inbox, outbox, access log) → the `notice` SSE event on the channel → the bell → `/share/sh_…` → the view built for the recipient with `asOf`/`knownAt` per request → the banner; then a comment with `@risk` on the VaR contribution panel and *Open as it was*; the genomics variant in a few lines (`link-only` email); collab added to §1's picture and §2's pieces; §7 rows (who may share, email, retention) |
 | `adr/020-collaboration-records-live-in-the-identity-database.md` | why the identity database, a transactional outbox, and links instead of data |
@@ -1117,8 +1117,8 @@ is at the comment's generation, else the cell's grouping, decimals, prefix and s
 No server change (the server sends the stored value). Tests: `test_collab_polish.py`, `test_collab_polish_browser.py`.
 
 **Step 8.** `HOW_IT_FITS.md` §3.10 (one worked example, A, on MX-20000001), the collaboration pieces in §1 and §2 and rows in §7;
-`ARCHITECTURE.md` (module row and a security paragraph); ADR-020; `USER_MANAGEMENT.md` (moderation, the compliance power, what the directory
-reveals); `OPERATIONS.md` (backups); `TROUBLESHOOTING.md` (the shared link and the missing notice); the console guide *Sharing and
+`ARCHITECTURE.md` (module row and a security paragraph); ADR-020; `ADMIN_GUIDE.md` (moderation, the compliance power, what the directory
+reveals); `OPERATIONS_GUIDE.md` (backups); `OPERATIONS_GUIDE.md` (the shared link and the missing notice); the console guide *Sharing and
 discussion* and `help.yaml` (`contextual: inbox`); pictures from `tools/docs/shots/collab.py` in `docs/guides/img/collab/`. Deviations: (1) the
 genomics example in a few lines is folded into §3.10's table rather than a second walk (example B is the same code with `link-only` mail);
 (2) the admin console page, the share reply box and the *also post* tick were built afterwards (*Console polish*); (3) the item moved; (4) the bell opens the inbox page, not a tray.

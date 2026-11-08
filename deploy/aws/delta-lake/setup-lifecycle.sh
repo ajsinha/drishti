@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Step 4 of docs/architecture/CLUSTER_DEPLOYMENT.md, Appendix C section 4: storage tiers of the lake by BUSINESS DATE. Run again monthly (maintain.sh does)
+# Step 4 of docs/guides/CLUSTER_GUIDE.md, Appendix C section 4: storage tiers of the lake by BUSINESS DATE. Run again monthly (maintain.sh does)
 # so the coming months have their rules; each run puts the whole lifecycle configuration, so it is idempotent.
 USAGE="setup-lifecycle.sh [--dry-run] [--env FILE] [--base-only] [--print]
 

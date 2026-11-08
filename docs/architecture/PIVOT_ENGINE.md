@@ -30,13 +30,13 @@ And it should operate on extremely large volume of data." Then: the MR cube shou
 cube then and build this capability first, then come back to MR cube". And: "we need to do better than Excel and better than anything out
 there" ([section 10](#10-beyond-anything-out-there)).
 
-**Read with:** [MR_CUBE_LENS.md section 4](../lenses/README.md#65-the-shared-cube-core-mr-and-ccr) (the shared cube core this
-engine grows from), [CCR_CUBE_LENS.md](../lenses/README.md#7-ccr-cube-lens) (the second cube on it), [BI_GUIDE.md](../guides/BI_GUIDE.md) (the BI
+**Read with:** [MR_CUBE_LENS.md section 4](LENSES.md#65-the-shared-cube-core-mr-and-ccr) (the shared cube core this
+engine grows from), [CCR_CUBE_LENS.md](LENSES.md#7-ccr-cube-lens) (the second cube on it), [BI_GUIDE.md](../guides/BI_GUIDE.md) (the BI
 query engine on DuckDB, rollups, true totals, run cards, Python measures), [RACHANA_REFERENCE.md › Rachana-EL expressions](../guides/RACHANA_REFERENCE.md#rachana-el-expressions)
 (DEL, the expression language), [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) (the compute worker pools), [VAR_SHARDING.md](VAR_SHARDING.md)
-(scatter and gather of partial sums across Drishti\*net), [COMPUTE_ENGINES.md](COMPUTE_ENGINES.md) (one file and one switch per engine),
-[IN_MEMORY_LAKE.md](DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk) (data that may never touch a disk), [RESOURCES_AND_SCALE.md](RESOURCES_AND_SCALE.md) (memory
-budgets and busy protection) and [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md).
+(scatter and gather of partial sums across Drishti\*net), [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off) (one file and one switch per engine),
+[IN_MEMORY_LAKE.md](DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk) (data that may never touch a disk), [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#15-sizing-memory-cpu-and-disk) (memory
+budgets and busy protection) and [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md).
 
 ## Contents
 
@@ -74,7 +74,7 @@ date". Excel answers it for the rows that fit in a sheet, with sums that are rig
 add up. Drishti answers it for any amount of data, for every measure it has (a sum of notional, a distinct count of counterparties, a
 99% VaR, an FRTB charge, a function a quant wrote this morning), and every total is right.
 
-1. **One pivot engine for all of Drishti.** The shared cube core of the MR and CCR cubes ([MR_CUBE_LENS.md section 4](../lenses/README.md#65-the-shared-cube-core-mr-and-ccr))
+1. **One pivot engine for all of Drishti.** The shared cube core of the MR and CCR cubes ([MR_CUBE_LENS.md section 4](LENSES.md#65-the-shared-cube-core-mr-and-ccr))
    grown up: it owns the view, the cells, the totals, the budget, the cache, provenance, saved views, explain, export and the cluster
    merge. It never computes a figure itself: **measure providers** behind one interface do.
 2. **Providers.** A **tabular** provider (DuckDB scans of Delta, Iceberg and Parquet, the BI engine Drishti already runs) for any table
@@ -101,7 +101,7 @@ add up. Drishti answers it for any amount of data, for every measure it has (a s
    drill-through to the rows; and beyond Excel: no row limit, correct non-additive totals, cell provenance, explain any difference, time
    travel, what-if, live cells, entitlements and masks applied before aggregation, saved and shared views, the cluster. Export to xlsx
    **with a native PivotTable**, csv, Arrow and Power Query.
-7. **An engine with its own switch:** `pivot`, in `config/engines/pivot.yaml` ([COMPUTE_ENGINES.md](COMPUTE_ENGINES.md)), off means it
+7. **An engine with its own switch:** `pivot`, in `config/engines/pivot.yaml` ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off)), off means it
    does not exist on that server.
 8. **Expand and collapse better than Excel** ([section 11](#11-expand-and-collapse-nested-levels-better-than-excel)): nested rows and
    columns computed lazily per opened node, "expand by" a different dimension per member, ragged hierarchies, a correct Others, down to
@@ -128,9 +128,9 @@ Read from the guides and the code on 2026-11-02. The engine reuses every row of 
 | Python measures in BI: `compute(table, params)` per group, sandboxed (isolated process, empty environment, no network, scratch folder only, CPU, memory, output limits, package allow-list) | [BI_GUIDE.md section 34](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), [its sandbox](../guides/BI_GUIDE.md#7-the-sandbox-exactly) | yes | the sandbox's guards, unchanged; a Python measure is a holistic custom function |
 | Compute worker pools (`drishti-compute`): fork-server per worker on Linux, warm workers on Windows, Arrow IPC scratch transport, limits, fan-out over nodes | [PYTHON_COMPUTE.md section 7](PYTHON_COMPUTE.md#7-the-worker-pool) | yes (C1 to C3) | the per-node pool that runs Python custom functions |
 | VaR sharding: partial vectors per shard added in shard order, bit-equal to the whole (`ShardedMeasure`, `ShardGather.Combine`) | [VAR_SHARDING.md](VAR_SHARDING.md) | yes | the cluster merge, lifted into the core for every provider |
-| Busy protection: one admission gate refusing new heavy work politely | [RESOURCES_AND_SCALE.md section 5.7](RESOURCES_AND_SCALE.md#57-busy-protection-refuse-politely-before-the-heap-runs-out), [OPERATIONS.md section 12.5](../admin/OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over) | yes (unreleased) | every pivot passes the gate |
+| Busy protection: one admission gate refusing new heavy work politely | [CLUSTER_GUIDE.md section 5.7](../guides/CLUSTER_GUIDE.md#156-memory), [OPERATIONS_GUIDE.md section 12.5](../guides/OPERATIONS_GUIDE.md#147-busy-protection-refuse-politely-never-fall-over) | yes (unreleased) | every pivot passes the gate |
 | The in-memory lake: tables on `mem://`, DuckDB's spill switched off for them, the never-on-disk guard at every sink | [IN_MEMORY_LAKE.md](DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk) | yes (unreleased) | the rule that a memory-only table is never spilled or written for user code |
-| Why VaR moved (RO1): exact steps that add up to the change | [OVERSIGHT_LENS.md section 4.1](../lenses/README.md#531-ro1-var-change-explanation) | yes | the method behind "explain the difference" ([section 10](#10-beyond-anything-out-there), item 1) |
+| Why VaR moved (RO1): exact steps that add up to the change | [OVERSIGHT_LENS.md section 4.1](LENSES.md#531-ro1-var-change-explanation) | yes | the method behind "explain the difference" ([section 10](#10-beyond-anything-out-there), item 1) |
 | The shared cube core and the MR source, on the paused branch `wip/mr-cube` | the branch (not merged) | built there, paused | the code this engine grows from ([section 7](#7-from-the-mr-cubes-core-to-the-pivot-engine-what-is-kept-what-changes)) |
 
 ## 3. One engine, many measure providers
@@ -394,7 +394,7 @@ total runs the formula on its own members' sums. They come with the 2.9.11 FRTB-
 
 State per netting set: the path matrix of MtMs (paths × time steps), netted and collateralised **per netting set first** (non-linear), then
 summed across netting sets per cell; finish: EE, EPE, PFE quantiles, EEPE; EAD from SA-CCR's formula provider. A netting set is never
-split across shards. Built with the CCR cube ([CCR_CUBE_LENS.md](../lenses/README.md#7-ccr-cube-lens)), in 2.9.12.
+split across shards. Built with the CCR cube ([CCR_CUBE_LENS.md](LENSES.md#7-ccr-cube-lens)), in 2.9.12.
 
 ### 6.6 An external distributed backend (future, not built)
 
@@ -757,7 +757,7 @@ never sampled: they show "computing" until exact. The person may stop at the app
 
 - **Cell budget**: views over `max-cells` (default 20,000 visible cells, totals included) are refused with the count and the dimension
   that makes them large; holistic cells have their own budget (`max-holistic-cells`, default 5,000), as the MR cube today.
-- **Busy protection**: every view passes the admission gate ([OPERATIONS.md section 12.5](../admin/OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over));
+- **Busy protection**: every view passes the admission gate ([OPERATIONS_GUIDE.md section 12.5](../guides/OPERATIONS_GUIDE.md#147-busy-protection-refuse-politely-never-fall-over));
   views over `busy-cells` or estimated over a minute ask it first; a refusal is the gate's polite message with its retry time.
 - **Partial-state cache**: in the one memory budget, weighed in bytes (`cache-mb`); keyed by provider data version, cell key and function;
   a new data version invalidates only the cells of the tables it changed.
@@ -787,7 +787,7 @@ phases.
 
 | # | Capability | How it works | Phase | Size |
 |---|---|---|---|---|
-| 1 | **Explain the difference between any two cells, or one cell over time** ("why is EMEA higher than last month") | for mergeable measures the difference is split **exactly** into contributions by member (the children of the cell along any dimension the person picks, each child's difference adding up to the total) and by cause where the provider knows causes (new members, members gone, value changes; for a price × quantity measure, the price and quantity effects in a fixed order with the cross term shown); for VaR, RO1's exact steps (restatement, hierarchy, trades out, window roll, market, trades in) per cell ([OVERSIGHT_LENS.md section 4.1](../lenses/README.md#531-ro1-var-change-explanation)); shown as a waterfall beside the cell; steps always add up to the difference, and the residual (if any) is named | P2 | L |
+| 1 | **Explain the difference between any two cells, or one cell over time** ("why is EMEA higher than last month") | for mergeable measures the difference is split **exactly** into contributions by member (the children of the cell along any dimension the person picks, each child's difference adding up to the total) and by cause where the provider knows causes (new members, members gone, value changes; for a price × quantity measure, the price and quantity effects in a fixed order with the cross term shown); for VaR, RO1's exact steps (restatement, hierarchy, trades out, window roll, market, trades in) per cell ([OVERSIGHT_LENS.md section 4.1](LENSES.md#531-ro1-var-change-explanation)); shown as a waterfall beside the cell; steps always add up to the difference, and the residual (if any) is named | P2 | L |
 | 2 | **Time travel and diff** | any view as of any business date and any **data version** (a Delta version or an Iceberg snapshot, `as-of`); **compare** two dates or versions side by side or as a diff grid with changed cells highlighted and new and gone members marked; each side's provenance names its versions | P1 | M |
 | 3 | **What-if inside the pivot** | an **overlay**: exclude members (a book), scale or override an input column (a price, a weight, a notional), add hypothetical rows; the tabular provider joins the overlay into the plan, the VaR provider uses its what-if arithmetic (`VarWhatIfMath`); only affected cells recompute; the original stays beside the what-if with the difference; an overlay is private, saved with the view, never written to the lake | P2 | M to L |
 | 4 | **Cell provenance and lineage** | every cell's popover: the data versions read, files or shards and nodes, rows counted, filters and row rules applied (in words), functions with their versions, the layer (rollup or scan), exact or ≈ with the error, time taken; one click to the rows (drill-through, paged, as the person may see them) | P1 | M |
@@ -1093,7 +1093,7 @@ POST /api/v1/pivot/export   { "view": "asha/desk-risk", "what": "rows", "cell": 
 
 ## 16. The engine switch and its configuration
 
-The `pivot` engine joins the catalogue of [COMPUTE_ENGINES.md](COMPUTE_ENGINES.md#2-the-engines): id `pivot`, file `pivot.yaml`,
+The `pivot` engine joins the catalogue of [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#211-the-engines): id `pivot`, file `pivot.yaml`,
 needs nothing; `mr-cube` and `ccr-cube` **need** it; BI **uses** it once phase PB is done (until then BI does not depend on it). Off, the
 engine does not exist on that server: `PIVOT`, the menu, Help pages, the CLI's `pivot` commands and the function playground disappear, and
 the cubes cannot be on.

@@ -32,7 +32,7 @@ import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.PropertySource;
 
 /**
- * Loads the edition {@code drishti.edition} names (docs/admin/LENSES.md) as a property layer just above the product's own
+ * Loads the edition {@code drishti.edition} names (docs/guides/ADMIN_GUIDE.md) as a property layer just above the product's own
  * defaults ({@code application.yaml} in the jar) and below the site's configuration (application.local.yaml, the packs overlay, environment
  * variables, arguments), before the packs load (it runs right after the configuration files are read; the packs' post-processor runs
  * last). Blank: nothing happens, the full Drishti.
@@ -125,7 +125,7 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
 
     /**
      * The name of the highest product-default source (an application*.yaml inside a jar or on the class path), or of an engine's file
-     * ({@code config/engines/<id>.yaml}, docs/architecture/COMPUTE_ENGINES.md section 3) when one is higher: an edition's presets sit above
+     * ({@code config/engines/<id>.yaml}, docs/guides/ADMIN_GUIDE.md section 3) when one is higher: an edition's presets sit above
      * both, so an edition that presets {@code var: off} still turns VaR off; null when there is none.
      */
     private static String productDefaults(ConfigurableEnvironment env) {

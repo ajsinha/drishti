@@ -42,7 +42,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Admin → Modules over REST (docs/architecture/ACCESS_MODEL.md, docs/admin/OPERATIONS.md › Modules): every module with its state (installed,
+ * Admin → Modules over REST (docs/architecture/ACCESS_MODEL.md, docs/guides/OPERATIONS_GUIDE.md › Modules): every module with its state (installed,
  * licensed, enabled, on, why not), what it brings, whether it was loaded at this start; the licence; the lenses offered; and the
  * administrator's switch (written to {@code config/modules/<id>.yaml}, audited with a reason, taken at the next start). For administrators
  * only, never a token (the security settings' token-never list). {@code GET /api/v1/modules}, for anyone signed in, is what the console asks

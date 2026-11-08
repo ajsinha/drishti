@@ -912,7 +912,7 @@ public final class Layers {
     private record Held(Path dir, String table, LocalDate date, long bytes, long builtAt) {}
 
     /**
-     * Keeps the store within its retention (RESOURCES_AND_SCALE.md section 7.2): per table (columns and rollups) at most
+     * Keeps the store within its retention (CLUSTER_GUIDE.md section 7.2): per table (columns and rollups) at most
      * {@code store-max-dates} business dates, the oldest beyond removed; then, while the store is over {@code store-max-gb}, the least
      * recently built dates go, never a table's newest. A partition is removed under its build lock (its metadata first, so no query starts on
      * it; a query reading its file now finishes on Linux, and on Windows the folder goes at a later trim); its date's generation moves on,

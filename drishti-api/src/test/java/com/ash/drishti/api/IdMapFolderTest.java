@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The id-map folder's safeguards (2.9.7, RESOURCES_AND_SCALE.md section 14.25): the cap never evicts a map in use, warns once about a
+ * The id-map folder's safeguards (2.9.7, CLUSTER_GUIDE.md section 14.25): the cap never evicts a map in use, warns once about a
  * map alone over it and trims the others; the TTL counts from the last use, never drops a mapped map nobody can vouch for, an open date,
  * the latest dates or today, is jittered within 10%, is at least 24 hours, and a delete that fails is tried again.
  */

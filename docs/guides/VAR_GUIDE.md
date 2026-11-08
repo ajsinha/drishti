@@ -31,7 +31,7 @@ Drishti's implementation and the regulatory side; other documents link here. Any
 one table what Drishti receives, what it computes, what it keeps only as a cache and what it records officially. The rest of the guide
 keeps to those four words.
 
-**Related documents:** [REGULATORY_VAR_REPORTING.md](REGULATORY_VAR_REPORTING.md) (the regulatory reports that need VaR) and [OVERSIGHT_LENS.md](../lenses/README.md#5-oversight-lens) (what market risk oversight needs, why VaR moved, the proposed Oversight lens). For the proposed market risk cube on this engine (a pivot with correct non-additive totals, sensitivities, FRTB SA and IMA, pre-deal pricing, every data contract), see the design: [MR_CUBE_LENS.md](../lenses/README.md#6-mr-cube-lens).
+**Related documents:** [REGULATORY_VAR_REPORTING.md](REGULATORY_VAR_REPORTING.md) (the regulatory reports that need VaR) and [OVERSIGHT_LENS.md](../architecture/LENSES.md#5-oversight-lens) (what market risk oversight needs, why VaR moved, the proposed Oversight lens). For the proposed market risk cube on this engine (a pivot with correct non-additive totals, sensitivities, FRTB SA and IMA, pre-deal pricing, every data contract), see the design: [MR_CUBE_LENS.md](../architecture/LENSES.md#6-mr-cube-lens).
 
 On 2026-10-26 this guide replaced five documents (this guide's first version, the explorer's page, the data contract `VAR.md`, the
 engine design and the data model); they were deleted (in git at tag v2.9.5). Where a design said otherwise,
@@ -552,7 +552,7 @@ basket, so you can save it again. Captures taken of the basket are kept: each st
 and says the basket no longer exists. Official end-of-day records never name a basket. A basket changed by its owner after you opened
 the dialog is not deleted unseen: the dialog says it changed (`409`) and you look again. Administrators manage everyone's baskets in
 **Admin → Ad-hoc scopes** (every owner's, filtered by owner, **Delete** with an optional reason that goes to the audit log and to the
-owner's inbox; [OPERATIONS.md](../admin/OPERATIONS.md#9b-2-deleting-peoples-var-baskets)). CLI: `drishti.py var basket-delete <name>`
+owner's inbox; [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#126-deleting-peoples-var-baskets)). CLI: `drishti.py var basket-delete <name>`
 (yours), `--owner <user> --reason <text>` (an administrator, anyone's). API: `POST /api/v1/risk/var/basket/sheet` (the checks and figures),
 `GET /api/v1/risk/var/basket/sheet?scope=` (a basket, a portfolio's copy or a scope laid into the sheet), `POST /api/v1/risk/var/basket/sheet.xlsx`,
 `POST /api/v1/risk/var/baskets` (save, edit), `DELETE /api/v1/risk/var/baskets/<owner>/<name>` ([section 11](#11-the-api)).
@@ -738,7 +738,7 @@ scenario picker and the details; the full matrix is on a larger screen. Nothing 
 ![The scenario matrix on a 390 px phone: the glance form](../tutorials/img/t25/21-scenario-matrix-phone.jpg)
 
 **Editions.** `SMAT` is part of Drishti Risk and Drishti Trading (`commands.words.SMAT: on`); Drishti Market and Drishti World leave it
-out: the command answers `DRS-4023`, `/smat` and `/api/smat/...` answer 404, and no page offers the link ([LENSES.md](../admin/LENSES.md)).
+out: the command answers `DRS-4023`, `/smat` and `/api/smat/...` answer 404, and no page offers the link ([LENSES.md](ADMIN_GUIDE.md#12-what-a-lens-is)).
 From the command line: `drishti.py var matrix <id> [--days N] [--by trade] [--csv]` ([section 10](#10-the-command-line)); the API:
 `GET /api/v1/risk/var/matrix` ([section 11.1](#111-the-endpoints)).
 
@@ -804,7 +804,7 @@ VaR moved from one business date to the next; **Why it moved** says why, in caus
 each one. It is the **Why it moved** tab of the VaR figure's Explain (the drawer, or the page `VAR EXPLAIN <scope> <GO>`, or
 `VAR <scope> EXPLAIN [from] [to]`, opens), in three views (**Waterfall**, **Matrix**: the scope and each child node, the steps across,
 and **Sentences**) with the two dates to compare; it answers any scope the page answers (a node, a portfolio, a basket, an ad-hoc scope), and by default it compares the business date before the newest with the
-newest. The design and its reasoning are in [OVERSIGHT_LENS.md section 4.1](../lenses/README.md#531-ro1-var-change-explanation).
+newest. The design and its reasoning are in [OVERSIGHT_LENS.md section 4.1](../architecture/LENSES.md#531-ro1-var-change-explanation).
 
 **In plain words.** Drishti moves **one thing at a time** from yesterday's state to today's (the corrections to yesterday's data, the
 books that moved, the trades that left, the oldest day leaving the scenario window, the market, the newest day entering it, the new
@@ -1951,8 +1951,8 @@ retention; official numbers are kept 7 years ([section 19](#19-official-end-of-d
 
 ## 10. The command line
 
-`drishti.py var …` (`tools/varcli.py`) asks the server's `/api/v1/risk/var` as your token's user ([TOOLS.md section 5.12](TOOLS.md#512-var),
-[CLI_GUIDE.md](CLI_GUIDE.md#var-the-var-engine)):
+`drishti.py var …` (`tools/varcli.py`) asks the server's `/api/v1/risk/var` as your token's user ([CLI_REFERENCE.md section 5.12](CLI_REFERENCE.md#var-the-var-engine),
+[CLI_REFERENCE.md](CLI_REFERENCE.md#var-the-var-engine)):
 
 | Command | Does |
 |---|---|
@@ -2272,7 +2272,7 @@ the optional fields `PARAMETRIC_VAR`, `PARAMETRIC_ES`, `PARAMETRIC_MU`, `PARAMET
 
 ## 12. Settings
 
-`drishti.var.*` in the engine's own file, `config/engines/var.yaml` (its switch `drishti.engines.var.enabled`; [OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)) ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtivar--the-var-engine)), bound
+`drishti.var.*` in the engine's own file, `config/engines/var.yaml` (its switch `drishti.engines.var.enabled`; [OPERATIONS_GUIDE.md section 21](ADMIN_GUIDE.md#21-compute-engines-on-or-off)) ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtivar--the-var-engine)), bound
 by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/risk/var/status` shows the effective values.
 
 | Setting | application.yaml | Default when unset or invalid | Meaning |
@@ -2363,7 +2363,7 @@ VaR needs no compute workers: every figure, the what-if included, is the server'
 | other numbers than this guide's | the lake was built with `--as-of today`: trades matured since 2026-09-30 drop out | rebuild with `--as-of data` |
 
 The server's log names every load, hot file built or reopened, and refusal; `GET /api/v1/risk/var/status` shows what is open and on disk.
-More codes: [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+More codes: [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#21-troubleshooting).
 
 ## Part II · The data contract
 
@@ -2504,7 +2504,7 @@ keeps its Delta log and its removed files 7 years (`delta.logRetentionDuration` 
 server (`drishti.var.official.retention-years`, 7). Lake maintenance (`lake maintain`, Admin → Lakes) never vacuums a file nor deletes
 a business date of those domains younger than 7 years, whatever a table's settings say: a lower `vacuum-hours` or `keep-business-days`
 is raised (61,368 hours; 1,827 business days) and the run says so (`retention-floor`); a lake's `retain-years:` changes it per domain
-([OPERATIONS.md](../admin/OPERATIONS.md#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain)). The connector only reads, and never vacuums.
+([OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#16-lake-maintenance-and-scheduling)). The connector only reads, and never vacuums.
 
 **The common risk lake (planned).** The VaR tables are already in domain `risk` behind `risk-store`. Every risk pack reads
 the same lake through that one connector ([README.md section 2](../contracts/README.md#2-the-common-risk-lake)); nothing changes for
@@ -3339,7 +3339,7 @@ the sources already send (P&L vectors or scenario PVs, [section 15](#15-inputs-f
 
 **Sums for any scope come first.** A scope's 10-day vector is the windowed sum of its **1-day vector**, which the engine sums from the
 position rows (the hot file's float32 rows in float64, or a node's float64 aggregate) in the fixed reduction order
-([RESOURCES_AND_SCALE.md section 6.7](../architecture/RESOURCES_AND_SCALE.md)). The windowing is a fixed left-to-right sum of ten values, so
+([CLUSTER_GUIDE.md section 6.7](CLUSTER_GUIDE.md#15-sizing-memory-cpu-and-disk)). The windowing is a fixed left-to-right sum of ten values, so
 a node's 10-day vector is **equal to the bit** whatever the shards and threads that summed its 1-day vector
 ([VAR_SHARDING.md](../architecture/VAR_SHARDING.md): the partials stay the 1-day vectors, never windows). **Tested:**
 `VarLensTest` (√10 equals the 1-day VaR and ES × √10 exactly at every confidence; the windows by hand on `1, 2, … 14` give `55, 65, 75,
@@ -4805,7 +4805,7 @@ Heap tier, N = 509:
 | vectors (float64) | 4,072,000 (3.88 MiB) | 509 × 8 per trade; the budget's measure |
 | vectors during load | + 4,072,000 | the unsorted copy while permuting |
 | trade columns | 84,000 | 17 × 4-byte codes + 2 × 8-byte numbers per trade, plus the dictionaries |
-| trade ids and index | about 98,000 | `String` per id and 8 bytes of two sorted indexes, exact and any case; measured at 100,000 trades, two dates open: 117 MB of heap (RESOURCES_AND_SCALE.md 14.22) |
+| trade ids and index | about 98,000 | `String` per id and 8 bytes of two sorted indexes, exact and any case; measured at 100,000 trades, two dates open: 117 MB of heap (CLUSTER_GUIDE.md 14.22) |
 | position index | 4 per trade + per position about 120 bytes of columns, 8 of run, an id and 8 bytes of two sorted indexes | |
 | ordinal set | 125 per set | one bit per trade of the date |
 | aggregates | 4,072 per book and per node | 88 nodes + 30 books in the demo: 0.48 MB |
@@ -4839,7 +4839,7 @@ aggregates. The rest of the heap is the columns and ids (`108·T + 136·P` and `
 `P·S·4 + Q·S·4 + A·S·8 + N·C·(S+1)·8 + about 120·T` a book (2.9 GB at 1,000,000).
 
 These formulas, term by term, with the heap to set, the RAM, the disk by folder and the settings for your own sizes, are in the planner
-workbook ([RESOURCES_AND_SCALE.md section 9.7](../architecture/RESOURCES_AND_SCALE.md#97-sizing-a-single-node-the-planner-workbook)).
+workbook ([CLUSTER_GUIDE.md section 9.7](CLUSTER_GUIDE.md#155-the-sizing-planner)).
 
 A memory budget applies to the heap tier (`drishti.var.memory-budget-mb`: float64 rows, 8 bytes a value); a date over it answers
 `503 DRS-5204`. The mapped tier's rows are bounded by the disk (a hard limit) and the page cache (advisory), section 26.8; its heap by
@@ -4985,7 +4985,7 @@ Scope membership itself adds nothing that grows with the date: a position costs 
 
 ## 28. Sharding across Drishti\*net
 
-Deploying a sharded cluster (owners and coordinators per role, shard sizes, zones, drains, failure timings): [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md).
+Deploying a sharded cluster (owners and coordinators per role, shard sizes, zones, drains, failure timings): [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md).
 
 **Off by default.** With no `sharding:` block in the market-risk pack and no `drishti.var.sharding.enabled`, every server holds whole dates
 as in sections 25 to 27. Switched on, a date's rows are spread over the Drishti\*net members; the design, the handover, the failure cases,
@@ -5228,7 +5228,7 @@ Everything in this list is **design, not built**; the plan row that builds it is
 | The lake layout at bank scale: the sort by hierarchy, the partition by scenario set, file and row-group sizes, `BYTE_STREAM_SPLIT` + ZSTD | open question 7, [section 29.2](#292-the-layout-the-design-chose-and-what-is-built) |
 | Age-weighted and filtered methods; ES backtests (Acerbi–Székely) | [section 18.3](#183-decomposition-of-a-scope-into-parts), [section 18.4](#184-history-and-backtest) |
 | The batch's due time and completeness rule; the load checks still not made | open question 4, [section 20.3](#203-what-the-load-checks) |
-| An optional *risk position* grouping for viewing; cubes and the overnight precomputation | [section 30](#30-the-design-record); the market risk cube in [MR_CUBE_LENS.md](../lenses/README.md#6-mr-cube-lens) |
+| An optional *risk position* grouping for viewing; cubes and the overnight precomputation | [section 30](#30-the-design-record); the market risk cube in [MR_CUBE_LENS.md](../architecture/LENSES.md#6-mr-cube-lens) |
 | The common risk lake for every risk pack; the scope words `GROUP:` and `NSET:` | parked, [section 15.1](#151-where-they-live) |
 
 Built since this list was first written: regulatory backtesting, period statistics and the report framework with its pilot pack
@@ -5252,16 +5252,16 @@ annual report's trading VaR table (built); the US needs 10-day VaR and stressed 
 | Where | Status | What it shows of VaR |
 |---|---|---|
 | **The full product** (no edition) | built | the VaR explorer (`VAR BANK <GO>`, [section 3](#3-the-explorer-screen-by-screen)) with the Horizon, Confidence, ES and Reporting currency pickers; the position and portfolio pages; the computed kind `VRES` and the what-if under the basket's sheet; the scenario matrix `SMAT`; the official records (`VOFF`); BI's VaR datasets; the API and the CLI |
-| **Drishti Risk** (edition `risk`, risk managers) | built | the same engine and commands (`VAR`, `VRES`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`, `SMAT`); the three landings: the Risk desk's VaR and ES tiles, the backtest and VaR by desk with limit use; the command landing's VaR chips and baskets; the risk map's hierarchy with VaR and limit use per node ([LENSES.md](../admin/LENSES.md#5-drishti-risk), [RISK_LENS.md](../lenses/README.md#12-what-it-answers-today)) |
-| **Drishti Trading** (edition `trading`, traders and desk heads) | built | "my book's" VaR, path and contributions; VaR limits; `SMAT`; the **new-trade check** from one VaR what-if and one pre-deal check ([TRADING_LENS.md](../lenses/README.md#222-the-new-trade-check)); no `SPV`, `FXS`, `SSET` or `VOFF` |
+| **Drishti Risk** (edition `risk`, risk managers) | built | the same engine and commands (`VAR`, `VRES`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`, `SMAT`); the three landings: the Risk desk's VaR and ES tiles, the backtest and VaR by desk with limit use; the command landing's VaR chips and baskets; the risk map's hierarchy with VaR and limit use per node ([LENSES.md](ADMIN_GUIDE.md#161-drishti-risk), [RISK_LENS.md](../architecture/LENSES.md#12-what-it-answers-today)) |
+| **Drishti Trading** (edition `trading`, traders and desk heads) | built | "my book's" VaR, path and contributions; VaR limits; `SMAT`; the **new-trade check** from one VaR what-if and one pre-deal check ([TRADING_LENS.md](../architecture/LENSES.md#222-the-new-trade-check)); no `SPV`, `FXS`, `SSET` or `VOFF` |
 | **Drishti Market** and **Drishti World** | built | no VaR (`VAR` and `SMAT` off) |
 | A phone | built | the explorer's phone layout ([section 3.8](#38-on-a-phone)); the configured phone tiers are a design ([MOBILE_DISPLAY.md](PACK_DEVELOPER_GUIDE.md#part-ix-designing-for-phones)) |
-| **Oversight**, **CRO** and **CIO** lenses; the **market risk cube** | design, not built | why VaR moved, breaches and escalation, the committee pack ([OVERSIGHT_LENS.md](../lenses/README.md#5-oversight-lens)); the CRO's VaR against risk appetite ([CRO_LENS.md](../lenses/README.md#8-cro-lens)); the CIO's view of whether the risk data behind VaR is on time and trustworthy: the 7am risk-ready time, official captures, the hot files' disk ([CIO_LENS.md](../lenses/README.md#9-cio-lens)); a pivot with correct non-additive VaR totals ([MR_CUBE_LENS.md](../lenses/README.md#6-mr-cube-lens)) |
+| **Oversight**, **CRO** and **CIO** lenses; the **market risk cube** | design, not built | why VaR moved, breaches and escalation, the committee pack ([OVERSIGHT_LENS.md](../architecture/LENSES.md#5-oversight-lens)); the CRO's VaR against risk appetite ([CRO_LENS.md](../architecture/LENSES.md#8-cro-lens)); the CIO's view of whether the risk data behind VaR is on time and trustworthy: the 7am risk-ready time, official captures, the hot files' disk ([CIO_LENS.md](../architecture/LENSES.md#9-cio-lens)); a pivot with correct non-additive VaR totals ([MR_CUBE_LENS.md](../architecture/LENSES.md#6-mr-cube-lens)) |
 
 Under every edition the engine is the same: any scope, any currency, intraday, official records, the what-if, the API and the CLI. The
 lens gaps that concern VaR (stressed VaR on the landings, horizon and confidence there, backtesting on the bank's P&L, why it moved) are
-listed in [RISK_LENS.md section 5](../lenses/README.md#13-gaps-and-proposals) and
-[TRADING_LENS.md section 5](../lenses/README.md#23-gaps-and-proposals).
+listed in [RISK_LENS.md section 5](../architecture/LENSES.md#13-gaps-and-proposals) and
+[TRADING_LENS.md section 5](../architecture/LENSES.md#23-gaps-and-proposals).
 
 ## 34. Configuration keys
 

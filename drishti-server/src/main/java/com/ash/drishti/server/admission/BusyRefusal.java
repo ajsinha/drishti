@@ -18,7 +18,7 @@ package com.ash.drishti.server.admission;
 import com.ash.drishti.common.DrishtiException;
 
 /**
- * New work asked to wait because the server is very busy (docs/admin/OPERATIONS.md, "Busy protection"): answered {@code 503} with
+ * New work asked to wait because the server is very busy (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"): answered {@code 503} with
  * {@code Retry-After} the seconds to wait and the work's code ({@code DRS-9501} to {@code DRS-9505}). The message is the calm sentence the
  * console, the API and {@code drishti.py} all show.
  */

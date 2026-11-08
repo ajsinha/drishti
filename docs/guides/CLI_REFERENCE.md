@@ -120,7 +120,7 @@ The browser column names the console page that runs the same engine; those pages
 | Keep a lake small and fast | | `drishti.py lake maintain` (on a timer) |
 | Load the demo data into Postgres, DuckDB, MongoDB, Redis, Aerospike, Cassandra, Iceberg, files or Delta | | `tools/load-*.sh`, `drishti.py data load` |
 | Check a machine before a demo | Admin → **Health** | `drishti.py doctor`, `drishti.py server smoke` |
-| Run VaR's many-scope sums on the bundled OpenBLAS or on the pure-Java path, live | Admin → **Engines** → Linear algebra: OpenBLAS | `drishti.py server blas status`, `server blas java --reason ...`, `server blas native --reason ...` (also as `admin blas`; [OPERATIONS.md section 2.1](../admin/OPERATIONS.md#21-server-requirements-native-libraries-blas)) |
+| Run VaR's many-scope sums on the bundled OpenBLAS or on the pure-Java path, live | Admin → **Engines** → Linear algebra: OpenBLAS | `drishti.py server blas status`, `server blas java --reason ...`, `server blas native --reason ...` (also as `admin blas`; [OPERATIONS_GUIDE.md section 2.1](OPERATIONS_GUIDE.md#149-native-libraries-blas)) |
 | Make, check or remove the AWS side of the S3 Tables or Delta Lake on S3 connector (bucket, namespace or prefix, IAM policy) | | `deploy/aws/s3-tables/s3-tables.sh`, `deploy/aws/delta-s3/delta-s3.sh` (`.ps1` on Windows; [7.14](#714-the-aws-connectors-tool-scripts-s3-tables-and-delta-lake-on-s3)) |
 | See or check the shape of a command's data (its data contract), or draft the contract of a new kind | | `drishti.py contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` |
 | Pin the Python libraries code people write may use on the server's compute pool `python` (every file's sha256, for `pip --require-hashes`) | | `python tools/python_lock.py config/compute/locks/python.in --out config/compute/locks/python.lock` ([PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)) |
@@ -174,7 +174,7 @@ It ends by running `pack check` and `pack verify` on what it made and prints a s
 deploying is "copy `pack/my-bank` into the server's packs folder (or `drishti.packs.installed-dir`), copy `data/delta` to its lake
 root or set `DRISHTI_DELTA_ROOT`, switch the pack on with `DRISHTI_PACKS`". New days later:
 `data ingest --from new-days --pack data/build/my-bank-1.0.0/pack/my-bank --lake <the lake>`. The details are in
-[section 5](#pack-make-everything-in-one-folder) and [OPERATIONALISING.md](OPERATIONALISING.md#16-pack-make-one-folder-to-deploy).
+[section 5](#pack-make-everything-in-one-folder) and [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#812-pack-make-one-folder-to-deploy).
 
 ## 2. Install and prerequisites
 
@@ -1098,14 +1098,14 @@ Exit codes: 0 ok, 1 problems, 2 usage (bad `--lang`, no `about.yaml`).
 ### `pack bundle`, `pack verify`, `pack deploy`, `pack rollback`: artifacts you ship by copying
 
 The offline path: no server API and no token. Full guide with real output, promotion, CI, Docker and Windows:
-[OPERATIONALISING.md](OPERATIONALISING.md).
+[OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#8-deploy-promote-and-roll-back-by-copying).
 
 ```bash
 drishti.py pack bundle config/packs/banking/trading --out dist                  # trading-1.0.0.tar.gz + .sha256 + .manifest.json (runs pack check first)
 drishti.py pack verify dist/trading-1.0.0.tar.gz                # sha256, manifest checksums, schema, server version, sutra lint + test
 drishti.py pack deploy dist/trading-1.0.0.tar.gz --to /opt/drishti/packs --backup /opt/drishti/backups [--dry-run]
 drishti.py pack rollback trading --to /opt/drishti/packs --backup /opt/drishti/backups [--version 1.0.0]
-# real output of each, on the shipped trading pack: OPERATIONALISING.md sections 3 to 5 and 10
+# real output of each, on the shipped trading pack: OPERATIONS_GUIDE.md sections 3 to 5 and 10
 ```
 
 `pack bundle` also takes `--no-check` (skip the `pack check` that runs first), `--requires-server VERSION` (the minimum server version written into the manifest; default this checkout's) and `--json`.
@@ -1358,7 +1358,7 @@ drishti.py data get DATASET [--date D] [--columns A,B,C] [--where "LINE"]... [-o
 - `--count` prints the selection in words, the SQL-like line, the row count and the estimated size, and downloads nothing.
 - `--wait`: when the server is busy (`503 DRS-9503`, busy protection) the download waits the server's `Retry-After` and starts again by
   itself, three times at most, saying so in the server's words. `DRISHTI_WAIT_BUSY=1` does the same for every command
-  ([OPERATIONS.md section 12.5](../admin/OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over)).
+  ([OPERATIONS_GUIDE.md section 12.5](OPERATIONS_GUIDE.md#147-busy-protection-refuse-politely-never-fall-over)).
 
 ```
 $ python tools/drishti.py data get trade-valuation --date 2026-09-30 --columns TRADE_ID,PRODUCT_TYPE,DESK,MTM \
@@ -1653,7 +1653,7 @@ the documents, the promoted columns and the vector columns (`--vector PNL`: `lis
 columns, the table being partitioned by business date alone. `--lake s3://bucket/prefix` writes to S3 (staged in a local scratch
 folder, no run record in the lake), and `--iceberg-set KEY=VALUE` (repeatable) passes any loader setting (`s3.region`, or a REST catalog
 such as AWS Glue: `catalog=rest`, `uri=…`, `warehouse=…`, `catalog.rest.signing-name=glue`). The build record makes the table Drishti's
-to maintain ([OPERATIONS.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](../admin/OPERATIONS.md#8-iceberg-lakes)).
+to maintain ([OPERATIONS_GUIDE.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](OPERATIONS_GUIDE.md#163-iceberg-lakes)).
 
 ```bash
 python3 tools/drishti.py lake build --from data/testdata/market-risk/pnl-vector/ --pack config/packs/banking/market-risk --connector risk-store \
@@ -1957,7 +1957,7 @@ data-load signal as `lake build` does. Exit: 0 ok, 1 failure (nothing committed)
 publish for the dates asked.
 
 `deploy/aws/delta-lake/load-day.sh` runs the three steps per table under a per-table lock; the whole AWS setup, sizing past 200 TB
-and the runbooks are [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-c-a-high-performance-delta-lake-on-aws-past-200-tb). Tested by `tools/lake/test_publish.py` (a local
+and the runbooks are [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md#13-the-delta-lake-in-s3-at-scale). Tested by `tools/lake/test_publish.py` (a local
 folder stands in for S3) and on S3 simulators by `tools/lake/test_s3_simulators.py` (section 7.12). With `--storage-option
 AWS_ENDPOINT_URL=…` (MinIO, an S3-compatible store) the file check goes to that endpoint with those keys, as the commit does.
 
@@ -2296,7 +2296,7 @@ drishti-console/.venv/bin/python tools/drishti.py server caches purge var.hot-fi
 
 ### `admin capacity`: Admin → Capacity from a terminal
 
-`admin capacity` is **Admin → Capacity** from a terminal ([OPERATIONS.md 12.4](../admin/OPERATIONS.md#124-admin--capacity-today-against-the-plan)): it reads the planner the server serves (`GET /api/v1/admin/capacity`, administrators) and evaluates it here with the evaluator the workbook is checked with, then prints the answers (`-Xmx`, the collector, `drishti.var.open-heap-mb`, RAM, disk, cores), the warnings that are not OK, the YAML block of the settings for `./application.local.yaml` and the whole JVM command line. `--set Name=value` changes any input by its workbook name (repeat it); `--live` puts this server's measured figures into the inputs and prints them (`GET /api/v1/admin/capacity/live`); `--all` prints every result line band by band; `--json` the inputs, the live figures and every result. `--xlsx FILE` downloads the formula workbook instead (`--inputs plan`, `live` or `both`), audited on the server as `capacity-workbook-downloaded`.
+`admin capacity` is **Admin → Capacity** from a terminal ([OPERATIONS_GUIDE.md 12.4](OPERATIONS_GUIDE.md#146-admin--capacity-today-against-the-plan)): it reads the planner the server serves (`GET /api/v1/admin/capacity`, administrators) and evaluates it here with the evaluator the workbook is checked with, then prints the answers (`-Xmx`, the collector, `drishti.var.open-heap-mb`, RAM, disk, cores), the warnings that are not OK, the YAML block of the settings for `./application.local.yaml` and the whole JVM command line. `--set Name=value` changes any input by its workbook name (repeat it); `--live` puts this server's measured figures into the inputs and prints them (`GET /api/v1/admin/capacity/live`); `--all` prints every result line band by band; `--json` the inputs, the live figures and every result. `--xlsx FILE` downloads the formula workbook instead (`--inputs plan`, `live` or `both`), audited on the server as `capacity-workbook-downloaded`.
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py admin capacity --set Trades=450000 --set Positions=450000
@@ -2339,11 +2339,11 @@ python3 tools/drishti.py server packs off  my-bank       # PUT  /api/v1/admin/pa
 
 `server commands list|off|on|history` are the administrator's switches of Functions (`FUNC`) from the terminal: commands, or with
 `--pack` whole packs, on or off for everyone, each change with `--reason`
-([USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)). As the admin
+([ADMIN_GUIDE.md (Functions)](ADMIN_GUIDE.md#20-functions-func-every-command-and-turning-one-on-or-off)). As the admin
 endpoints are never for a personal token, it runs as an administrator's signed token, or where sign-in is off with `--user`.
 `server engines list|show|on|off|history` (also `admin engines`) switches a compute engine on or off for this instance, and
 `server blas status`, `server blas java --reason ...` and `server blas native --reason ...` (also `admin blas`) run VaR's many-scope
-sums on the bundled OpenBLAS or on the pure-Java path, live ([OPERATIONS.md section 2.1](../admin/OPERATIONS.md#21-server-requirements-native-libraries-blas)).
+sums on the bundled OpenBLAS or on the pure-Java path, live ([OPERATIONS_GUIDE.md section 2.1](OPERATIONS_GUIDE.md#149-native-libraries-blas)).
 
 ### `server smoke`: does the server serve what it should
 
@@ -2402,7 +2402,7 @@ doctor: 0 red, 5 yellow
 
 ### `server packs deploy`, `history`, `rollback` and `datasource`
 
-Admin → Packs from the terminal ([the whole story with pictures: OPERATIONALISING.md, section 17](OPERATIONALISING.md#17-deploy-from-admin--packs-connectors-history-and-roll-back)).
+Admin → Packs from the terminal ([the whole story with pictures: OPERATIONS_GUIDE.md, section 17](OPERATIONS_GUIDE.md#9-admin--packs-deploy-an-archive-history-and-roll-back)).
 You need an administrator; a personal API token needs the **packs:admin** scope. The archive carries the pack only, never data.
 
 **`server packs deploy ARCHIVE [--preview] [--accept-breaking] [--sha256 HEX] [--signature-file F --publisher P] [--wait SECONDS]`**
@@ -2463,7 +2463,7 @@ rolled helpdesk back to 0.1.0 (replacing 0.2.0): Applied now; no restart.
 **`server packs datasource get PACK`** is the pack's connectors, **read only**: which connectors the pack names, the state of each, the plugin, the kinds
 this pack takes from it and what defines it (a file in the connector folder, the pack's own template, the server's configuration, or nothing). A pack names its
 connectors and routes its kinds to them; the settings belong to the site, in one YAML file per connector in `config/connectors/`, and are changed with the
-[`connector` commands](#connector-list-get-apply-delete-test-plugins-enable-disable-reset-history) below or in Admin → Connectors. More: [OPERATIONALISING.md, 17.5](OPERATIONALISING.md#175-where-a-pack-reads-its-data-connectors).
+[`connector` commands](#connector-list-get-apply-delete-test-plugins-enable-disable-reset-history) below or in Admin → Connectors. More: [OPERATIONS_GUIDE.md, 17.5](OPERATIONS_GUIDE.md#66-connectors-where-a-pack-reads-its-data).
 Exit: 0 every connector the pack names is configured; **1 while one is not** (or the server refused); 2 usage.
 
 ```text
@@ -2682,7 +2682,7 @@ demo lake, edit `trade-endur.yaml`'s `root` instead (Admin → Connectors, or `c
 
 ### `net`: Drishti*net's config/net/ folder
 
-`drishti.py net list | check | add-peer | set` work on the folder of Drishti*net's files ([OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)) on this machine, with no
+`drishti.py net list | check | add-peer | set` work on the folder of Drishti*net's files ([OPERATIONS_GUIDE.md](CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)) on this machine, with no
 server needed: they check every file as the server does (the same rules, the same line numbers) and refuse to write a file the server would
 refuse. `net members` reads the member table of a running server. The folder is `--dir`, else `DRISHTI_NET_DIR`, else `./config/net` (the server's
 `drishti.net.dir`); a write is atomic and keeps the previous text under `<data dir>/net/history/` (`--data-dir`, else `DRISHTI_DATA_DIR`, else
@@ -2733,14 +2733,14 @@ $ drishti.py net check
 (exit 1)
 ```
 
-Members advertise only a real address ([OPERATIONS.md › Drishti*net: running several servers as one, section 2](../admin/OPERATIONS.md#2-a-cluster-of-three)): `localhost`, `127.x.x.x`, `::1`,
+Members advertise only a real address ([OPERATIONS_GUIDE.md › Drishti*net: running several servers as one, section 2](CLUSTER_GUIDE.md#2-a-cluster-of-three)): `localhost`, `127.x.x.x`, `::1`,
 `0.0.0.0` and `::` are refused in `advertise-url` and in a seed's URL, and the message names this machine's address. `advertise-url` may be
 left out: the node then advertises this machine's primary IPv4 address with the server's port (Admin → Net → Members shows it as *detected*).
 
 The file `net set` wrote:
 
 ```yaml
-# config/net/node.yaml (Drishti*net, docs/admin/OPERATIONS.md)
+# config/net/node.yaml (Drishti*net, docs/guides/OPERATIONS_GUIDE.md)
 secret: ${DRISHTI_NET_SECRET}
 advertise-url: http://192.168.1.20:18784
 tags:
@@ -3745,7 +3745,7 @@ of Parquet.
 | `tools/drillkit/drill_timings.py` | the drill's pytest plugin (`-p drill_timings`): the seconds each test file took, written to the file `DRILL_TIMINGS_OUT` names when the session ends |
 | `tools/bicompute-unit.sh` | a light check of the pivot engine while a drill or a benchmark holds the machine: `javac` and the JUnit launcher at `-Xmx768m`, no Maven, against the jars of the last release installed in `~/.m2` (`DRISHTI_M2_VERSION`) and this checkout's `ErrorCode`; with test class names (`LivePivotTest ScaleSwitchesTest`) it runs them; `--server` also compiles the server's pivot package; its temporary folder is removed on exit. Never instead of the Maven build |
 | `tools/drill-known.txt` | the console tests the drill accepts when they fail: one line each, its pytest id, a `|` and the reason; reported at the end of the lane, never hidden |
-| `tools/sizing_planner.py` | reads the planner's one file, `drishti-server/src/main/resources/capacity/planner.yaml`, and writes the single-node sizing planner workbook `docs/architecture/Drishti-Sizing-Planner.xlsx` (inputs, results with the settings and JVM arguments, coefficients, explanation: [RESOURCES_AND_SCALE.md section 9.7](../architecture/RESOURCES_AND_SCALE.md#97-sizing-a-single-node-the-planner-workbook)), the server's workbook template (`drishti-server/src/main/resources/capacity/template/`, for Admin → Capacity's download) and the shared test vectors (`drishti-server/src/test/resources/capacity/test-vectors.json`); `--check` exits 1 when any of them is not a fresh build; PyYAML |
+| `tools/sizing_planner.py` | reads the planner's one file, `drishti-server/src/main/resources/capacity/planner.yaml`, and writes the single-node sizing planner workbook `docs/architecture/Drishti-Sizing-Planner.xlsx` (inputs, results with the settings and JVM arguments, coefficients, explanation: [CLUSTER_GUIDE.md section 9.7](CLUSTER_GUIDE.md#155-the-sizing-planner)), the server's workbook template (`drishti-server/src/main/resources/capacity/template/`, for Admin → Capacity's download) and the shared test vectors (`drishti-server/src/test/resources/capacity/test-vectors.json`); `--check` exits 1 when any of them is not a fresh build; PyYAML |
 | `tools/capacitycli.py` | `drishti.py admin capacity`: Admin → Capacity from a terminal, the server's planner evaluated with `sizing_planner.py`'s evaluator (`--live`, `--set Name=value`, `--all`, `--xlsx FILE --inputs plan\|live\|both`): [section 8](#admin-capacity-admin--capacity-from-a-terminal) |
 | `tools/domain_strings.py` | the domain boundaries' rule 4 ([DOMAIN_MODULES.md](../architecture/DOMAIN_MODULES.md) section 4): counts the banking names (command words, engine ids, connectors, API and console paths, packages) in the core's code against `tools/domain_strings_allowed.yaml`, which only shrinks; `--write` lowers the list after names moved into the module (a quick file check in the drill: `tools/test_domain_strings.py`) |
 | `tools/license_headers.py` | checks (exit `1` naming the files) or, with `--fix`, inserts the copyright header in every source file |
@@ -3764,11 +3764,11 @@ of Parquet.
 | `tools/bench/jfr_summary.py` | what a benchmark's JFR recordings say: `stages` splits a VaR date's first open into read, intake, sort, aggregate and write from its CPU samples (the lake read's own threads count as read); `views` writes the JDK's views (allocation by class and site, survivors, hot methods, GC pauses and CPU, pinned threads, contention) and counts pinned events and GC pauses |
 | `tools/bench/pivot_bench.py` | the pivot engine's benchmark ([BENCHMARK.md section 16](../admin/BENCHMARK.md#16-the-pivot-engine-at-scale)): `plan` (the run matrix and the disk it needs), `generate --data-dir D --gb N` (synthetic 40-column trades as JSON Lines loaded into Delta day by day; the lake grows by appending days; refuses /tmp, a tmpfs, the repository and a disk under 150 GB free), `run` (V1 to V5 against one server or a cluster, cold or warm, with or without a rollup; time to the first ≈ and the exact answer, the estimate against the reading; one JSON line each), `report` (the measured tables and 100 GB, 1 TB and 3 TB EXTRAPOLATED, labelled so), `clean`, `all` (5, 25 and 75 GB, every configuration, the data deleted at the end unless `--keep`); `test_pivot_bench.py` runs it small with the tool tests |
 | `tools/bench/charts.py` | the charts of [BENCHMARK.md](../admin/BENCHMARK.md#4-the-200000-position-var-and-cluster-run), drawn from the VaR run's results files (`var_bench.py`'s JSON lines) as plain SVG into `docs/admin/images/benchmark/` (`--to` another folder): requests a second by users, p99 by request type, a first open by stage, heap against the sizing formulas, GC pauses, the hottest CPU frames, disk and load time; transparent background, readable on light and dark pages; only measured cells are drawn; standard library only, rerun after every run |
-| `tools/bench/net_soak.py` (with `tools/bench/soak_check.py`) | the Drishti\*net soak on real processes: three servers (each with only the packs and connectors its lake holds, the others off by connector file), a console, `users.py` load, a shard and the seed killed and restarted, every answer (views, searches, about 140 distinct histories with ten ranges as administrator and as viewer, whose `PRICE` or `NAME` must read masked on every row and in every diff) checked against one server holding all the data; samples memory, heap, open files and threads every minute (the console with all its worker processes, summed and one by one) and ends with a verdict (no wrong answers: each one kept with its time, request and the rule that failed, the first 200 with `partial`, `problems` and a compact diff; errors only in kill windows, p95/p99 per action, memory flat after warm-up: the slope in the steady spans outside the kill windows and `--settle` seconds after each, the whole-run slope reported beside it), exit `0` only when it passes ([CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 17.1](../architecture/CLUSTER_DEPLOYMENT.md#171-the-soak-with-history-queries-and-long-runs)) |
+| `tools/bench/net_soak.py` (with `tools/bench/soak_check.py`) | the Drishti\*net soak on real processes: three servers (each with only the packs and connectors its lake holds, the others off by connector file), a console, `users.py` load, a shard and the seed killed and restarted, every answer (views, searches, about 140 distinct histories with ten ranges as administrator and as viewer, whose `PRICE` or `NAME` must read masked on every row and in every diff) checked against one server holding all the data; samples memory, heap, open files and threads every minute (the console with all its worker processes, summed and one by one) and ends with a verdict (no wrong answers: each one kept with its time, request and the rule that failed, the first 200 with `partial`, `problems` and a compact diff; errors only in kill windows, p95/p99 per action, memory flat after warm-up: the slope in the steady spans outside the kill windows and `--settle` seconds after each, the whole-run slope reported beside it), exit `0` only when it passes ([CLUSTER_GUIDE.md › Drishti*net: many servers, one Drishti, section 17.1](../admin/BENCHMARK.md#215-drishtinet)) |
 | `tools/bench/scale.sh`, `tools/bench/pinning.sh` | the scale benchmark per store and size, and the virtual-thread pinning comparison (Java 21 / 25); they start and stop their own servers by process id |
 | `tools/windows/start-server.ps1`, `tools/windows/start-console.ps1`, `tools/windows/load-delta.ps1` | starting the server and console, and loading the demo lake, on Windows |
-| `tools/rolling-upgrade.sh` (`tools/rolling.py`; Windows `tools/windows/rolling-upgrade.ps1`) | the rolling upgrade runner (CD3): a cluster upgraded one node at a time from an inventory (`deploy/rolling.example.yaml`), consoles, BI and data-serving, coordinators, then owners zone by zone; each drained, waited for until safe to stop, stopped, upgraded, started and waited for until ready, on VMs or ECS; `--dry-run`, `--from`, `--only` ([CLUSTER_DEPLOYMENT.md section 10.1](../architecture/CLUSTER_DEPLOYMENT.md#101-rolling-upgrades)) |
-| `deploy/bin/drishti-node.sh` (`deploy/bin/drishti-node.ps1`) | one server's drain before a stop and its readiness (CD1, CD2): `drain [--wait S]`, `undrain`, `status`, `wait-ready`, and `run COMMAND` (the server images' entry: drains on SIGTERM, then passes it on); the systemd unit's `ExecStop` ([OPERATIONS.md section 7.2](../admin/OPERATIONS.md#72-the-server)) |
+| `tools/rolling-upgrade.sh` (`tools/rolling.py`; Windows `tools/windows/rolling-upgrade.ps1`) | the rolling upgrade runner (CD3): a cluster upgraded one node at a time from an inventory (`deploy/rolling.example.yaml`), consoles, BI and data-serving, coordinators, then owners zone by zone; each drained, waited for until safe to stop, stopped, upgraded, started and waited for until ready, on VMs or ECS; `--dry-run`, `--from`, `--only` ([CLUSTER_GUIDE.md section 10.1](CLUSTER_GUIDE.md#82-rolling-upgrades)) |
+| `deploy/bin/drishti-node.sh` (`deploy/bin/drishti-node.ps1`) | one server's drain before a stop and its readiness (CD1, CD2): `drain [--wait S]`, `undrain`, `status`, `wait-ready`, and `run COMMAND` (the server images' entry: drains on SIGTERM, then passes it on); the systemd unit's `ExecStop` ([OPERATIONS_GUIDE.md section 7.2](OPERATIONS_GUIDE.md#53-running-as-services-systemd)) |
 | `tools/feeds/feed.sh`, `tools/windows/feed.ps1` | the one wrapper of every data feed on Linux and macOS, and on Windows: `drishti.py feed ...` with the console's Python (what cron, systemd and Task Scheduler run; [EXTERNAL_DATA.md](EXTERNAL_DATA.md)) |
 | `tools/smoke.py` | the engine of `drishti.py server smoke` |
 | `tools/javacmd.py` | `java_cmd()`: the one helper every Python launcher of a JVM uses, so each java it starts gets `-Djava.io.tmpdir=` (native libraries unpack in Drishti's own temp folder, not `/tmp`); a guard test fails on a tool that starts java without it ([CONFIGURATION.md](../admin/CONFIGURATION.md)) |
@@ -3843,7 +3843,7 @@ The group modules live beside it and are not run on their own: `tools/authoring.
 ### Running the tools from PyCharm (and the Java `sutra` from IntelliJ)
 
 The tools are ordinary Python scripts, so PyCharm runs and debugs them like any other, and the Java `sutra` tool runs from IntelliJ
-IDEA. (For the server and the console themselves see [GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm).) This section is the whole path, from an
+IDEA. (For the server and the console themselves see [OPERATIONS_GUIDE.md (IDE)](OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm).) This section is the whole path, from an
 empty PyCharm to a run configuration for each common task.
 
 #### Create the interpreter
@@ -3971,7 +3971,7 @@ environment `DRISHTI_JAR=...` (the tests that run `sutra lint` are skipped witho
 
 #### Where next
 
-[GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm) runs the server and the console; [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and
+[OPERATIONS_GUIDE.md (IDE)](OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm) runs the server and the console; [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and
 [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md) are the references for what these commands produce and check.
 
 ## 18. Recipes

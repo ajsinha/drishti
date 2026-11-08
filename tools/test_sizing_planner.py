@@ -116,7 +116,7 @@ class SizingPlannerTest(unittest.TestCase):
 
     def test_every_key_is_documented(self):
         docs = {n: (sp.ROOT / "docs" / n).read_text(encoding="utf-8") for n in
-                ("admin/CONFIGURATION.md", "admin/PERFORMANCE.md", "admin/OPERATIONS.md", "architecture/RESOURCES_AND_SCALE.md", "architecture/CLUSTER_DEPLOYMENT.md")}
+                ("admin/CONFIGURATION.md", "guides/CLUSTER_GUIDE.md", "guides/OPERATIONS_GUIDE.md", "admin/BENCHMARK.md")}
         conf = docs["admin/CONFIGURATION.md"]
         for name, key, _f, _u, env, src, _w, _c in sp.SETTINGS:
             rows = [line for line in conf.splitlines() if line.startswith(f"| `{key}` |")]

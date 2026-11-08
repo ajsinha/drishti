@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""What the console keeps of one person is never served to another (core/user_cache.py; docs/admin/USER_MANAGEMENT.md section 6). Two
+"""What the console keeps of one person is never served to another (core/user_cache.py; docs/guides/ADMIN_GUIDE.md section 6). Two
 people with different packs and roles ask the same pages at the same time (asyncio.gather over an httpx client on the console's ASGI app),
 and each answer must equal the one that person gets alone, from an empty cache: the designer's Describe (its mnemonic table is read as
 the person: their packs' overviews), Drishti Trading's landing figures (a role without raw sees TRADER_ID masked), and the same person on

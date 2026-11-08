@@ -69,7 +69,7 @@ public final class PivotCore {
         }
     }
 
-    /** Busy protection (OPERATIONS.md section 12.5): refuses politely by throwing; the host's gate. */
+    /** Busy protection (OPERATIONS_GUIDE.md section 12.5): refuses politely by throwing; the host's gate. */
     @FunctionalInterface
     public interface Admission {
         void admit(Viewer v, String what);

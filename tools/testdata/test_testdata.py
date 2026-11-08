@@ -106,7 +106,7 @@ class TestData(unittest.TestCase):
         want = len(self.m["datasets"])
         said = re.compile(r"(?m)(?:Demo lake ready: [^\n]*?: |the same |each of the |`gleif` \(|`funds` \(|`civic` \(|minutes\), |\(943 s\): |^\s+)(\d+) (?:Delta )?tables")
         wrong = []
-        for rel in ("data/testdata/README.md", "docs/guides/GETTING_STARTED.md", "docs/guides/PACK_DEVELOPER_GUIDE.md", "docs/guides/PACK_DEVELOPER_GUIDE.md",
+        for rel in ("data/testdata/README.md", "docs/guides/OPERATIONS_GUIDE.md", "docs/guides/PACK_DEVELOPER_GUIDE.md", "docs/guides/PACK_DEVELOPER_GUIDE.md",
                     "docs/architecture/TEST_HARNESS.md", "docs/connectors/DEMO_DATA.md", "docs/tutorials/01-first-15-minutes.md"):
             text = (ROOT / rel).read_text(encoding="utf-8")
             found = [int(n) for n in said.findall(text)]

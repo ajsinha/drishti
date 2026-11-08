@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti Trading's landings (docs/admin/LENSES.md › The design): the read-only figures of the Trader desk and Desk head, worked out
+"""Drishti Trading's landings (docs/guides/ADMIN_GUIDE.md › The design): the read-only figures of the Trader desk and Desk head, worked out
 by plugins/banking/trading_landing.py from the servers' own answers as the person, and their "View as" choice.
 
 ``GET /api/home/trading/{part}``: ``me`` (who "my" is, and the picker's choices when the person may pick), ``valuations`` (P&L today, by

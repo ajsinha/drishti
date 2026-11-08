@@ -18,7 +18,7 @@
 This is the one home of every benchmark of Drishti: what is measured and why, the harness and the exact commands to run each
 measurement again, the machine and the data, the results by area (VaR on one server and on a cluster, exposure, the loaders, trades at
 scale, the stores, memory and heap), the scaling fits with their extrapolations to 2.3 million and 10 million positions, and how to read
-the numbers. The server's own targets, and how to measure one installation, are in [PERFORMANCE.md](PERFORMANCE.md); how the engines
+the numbers. The server's own targets, and how to measure one installation, are in [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#16-tuning); how the engines
 work is in the [VaR guide](../guides/VAR_GUIDE.md) and the [exposure guide](../guides/EXPOSURE_GUIDE.md).
 
 **Measured and extrapolated are never mixed.** Every figure is one of three things, and says which:
@@ -77,7 +77,7 @@ run on a server.
 ### 2.1 The tools
 
 Everything is in `tools/bench/` (Python 3.11 or later, standard library, bash, `curl`; Docker for the stores that need a container), plus
-three opt-in Java benchmarks that are never part of the default test run. Each is listed in [TOOLS.md](../guides/TOOLS.md).
+three opt-in Java benchmarks that are never part of the default test run. Each is listed in [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md).
 
 | Tool | What it measures |
 |---|---|
@@ -87,7 +87,7 @@ three opt-in Java benchmarks that are never part of the default test run. Each i
 | `vargen.py`, `var_bench.py`, `jfr_summary.py` | the VaR run ([4](#4-the-200000-position-var-and-cluster-run)): synthetic VaR inputs; loader timing and the single and cluster runs with profiling; what the JFR recordings say |
 | `charts.py` | the charts of this document, drawn as SVG from the VaR run's results files into `docs/admin/images/benchmark/`; rerun after every run |
 | `pinning.sh` (`pinload.py`, `mqpublish.py`, `pinned_summary.py`) | Java 21 against 25 under 200 clients, and virtual-thread pinning ([10](#10-java-21-and-25-under-200-clients)) |
-| `net_soak.py`, `soak_check.py` | the Drishti\*net soak on real processes ([OPERATIONS.md › section 13](OPERATIONS.md#13-measured-the-soak-on-real-processes)) |
+| `net_soak.py`, `soak_check.py` | the Drishti\*net soak on real processes ([OPERATIONS_GUIDE.md › section 13](../guides/CLUSTER_GUIDE.md#11-operations-and-disaster-recovery)) |
 | `VarTierBenchmark`, `VarScaleBenchmark` (`drishti-compute`) | the VaR store alone: the tiered (mapped) store and the heap tier ([5](#5-var-the-store-a-dates-first-open-and-the-cost-per-request)) |
 | `ExposureTierBenchmark` (`drishti-server`) | the exposure store alone ([6](#6-exposure)) |
 | `ThroughputTest` (the Java loader's module) | the parallel loader per stage ([7.2](#72-the-java-parallel-loader-per-stage)) |
@@ -278,8 +278,8 @@ The data of each benchmark is synthetic and made by the harness, the same every 
 | logs | `var_bench.py` | the server's own log file: bytes over 120 s at rest after both dates opened, and over the load |
 | reading | `jfr_summary.py` | the JDK's `jfr view`s per recording; each first open split by stage (read, intake, sort, aggregate, write) from its CPU samples, the lake read's own threads counted as read |
 
-`users.py` counts a polite busy refusal (`503` with `DRS-9501` to `DRS-9505` and `Retry-After`, [OPERATIONS.md section
-12.5](OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over)) apart, as `busy`, not as an error.
+`users.py` counts a polite busy refusal (`503` with `DRS-9501` to `DRS-9505` and `Retry-After`, [OPERATIONS_GUIDE.md section
+12.5](../guides/OPERATIONS_GUIDE.md#147-busy-protection-refuse-politely-never-fall-over)) apart, as `busy`, not as an error.
 
 Swap is recorded at the start and end of every run and for every users window. A run is kept only when no page was swapped out during it
 and swap use grew by less than 256 MB; every run in the tables below passed.
@@ -869,7 +869,7 @@ Seven years of history (1,800 business days, 7,200 files, a 7.2 MB log with a ch
 
 Measured 2026-10-18 on 8.2 million synthetic trades of the real ENDUR, CALYPSO and MUREX shapes (313,000 to 492,000 a day each for 7
 business days, 1.16 million on the latest), 10,000 counterparties and 30,000 netting sets, an 8 GB heap, made and driven by `trades.py` and
-`users.py`. The design behind it: [CLUSTER_DEPLOYMENT.md › Appendix D](../architecture/CLUSTER_DEPLOYMENT.md#appendix-d-scale-strategy-millions-of-trades-fast-in-a-bounded-heap).
+`users.py`. The design behind it: [CLUSTER_GUIDE.md › Appendix D](../guides/CLUSTER_GUIDE.md#14-scale-strategy-for-one-server).
 
 | What | Measured |
 |---|---|
@@ -1321,7 +1321,7 @@ about 10% between two runs of the same configuration are noise. 0 errors in ever
 Java 21 and 25 serve this load within noise of each other: the 200 clients are the bottleneck, not the JVM (p50 around 55 ms; the slow
 requests are the heavy ones, views and F8). What Java 25 adds is memory: compact object headers save about 10% of heap on many small
 objects (5% on the VaR heap of section 4.4, which is mostly arrays), so on Java 21 give the server a little more `-Xmx`. The rules the code
-follows on Java 21 (no blocking inside `synchronized`) are in [PERFORMANCE.md › Java 21 and virtual-thread pinning](PERFORMANCE.md#java-21-and-virtual-thread-pinning).
+follows on Java 21 (no blocking inside `synchronized`) are in [CLUSTER_GUIDE.md › Java 21 and virtual-thread pinning](../architecture/ARCHITECTURE.md#14-concurrency-and-performance).
 
 ## 11. Memory and heap
 
@@ -1343,13 +1343,13 @@ follows on Java 21 (no blocking inside `synchronized`) are in [PERFORMANCE.md �
 
 **Resident memory follows the heap limit**, the direct and mapped buffers and the native libraries, not the data; it is listed, not
 fitted. The heap a server needs is its heap after collection with the dates it serves open, plus its working set, divided by about 0.61
-([RESOURCES_AND_SCALE.md section 9.5](../architecture/RESOURCES_AND_SCALE.md#95-capacity-tables)); what to budget, and the two settings that bound resident
-memory, are in [PERFORMANCE.md › Resident memory](PERFORMANCE.md#resident-memory-what-to-budget-and-two-settings).
+([CLUSTER_GUIDE.md section 9.5](../guides/CLUSTER_GUIDE.md#154-capacity-per-server)); what to budget, and the two settings that bound resident
+memory, are in [CLUSTER_GUIDE.md › Resident memory](../guides/CLUSTER_GUIDE.md#163-resident-memory-two-settings).
 
 ## 12. Scaling fits and extrapolation to 2.3M and 10M positions
 
 **Extrapolated, not measured.** These figures come from the measured points by the formulas shown. To size one server for your own
-loads, use the planner workbook ([RESOURCES_AND_SCALE.md section 9.7](../architecture/RESOURCES_AND_SCALE.md#97-sizing-a-single-node-the-planner-workbook)):
+loads, use the planner workbook ([CLUSTER_GUIDE.md section 9.7](../guides/CLUSTER_GUIDE.md#155-the-sizing-planner)):
 its coefficients are these measurements, calibrated to the 1,000,000-position run. A workstation does not run 2.3M or
 10M positions (one heavy job at a time); the full sizes run on a server.
 
@@ -1377,13 +1377,13 @@ run's slope. The other rows are fitted on the two measured sizes. The 2.3M and 1
 | a date's first open | 21 µs × P (in proportion to the current run; the earlier line through 4.5 and 26.3 s was 27 µs × P − 1 s) | 4.5 s | 20.9 s (26.3 s earlier) | about 48 s | about 3.5 min |
 
 The 509 values, USD only, of this run set these figures; the design's 36 GB `-Xmx` at 2.3M adds 1,518 values, four currency books, the
-2 GB load sort and headroom ([RESOURCES_AND_SCALE.md section 9.5](../architecture/RESOURCES_AND_SCALE.md#95-capacity-tables)). The
+2 GB load sort and headroom ([CLUSTER_GUIDE.md section 9.5](../guides/CLUSTER_GUIDE.md#154-capacity-per-server)). The
 earlier configuration's fit (H = H₀ + 2 × (b × P + a × N + P × N ÷ 16), 4.8) gave 8.8 GB and an `-Xmx` of about 15 to 19 GB at 2.3M,
 and about 37 GB and 61 GB at 10M; its P × N term made a bank with many nodes pay in heap before its vectors. Each further date kept open
 adds h × P to the heap after GC (0.72 GB at 1,000,000, 1.66 GB at 2.3M), about 1.2 GB and 2.7 GB of `-Xmx` (÷ 0.61); each currency book or
 stress book built ahead adds about one book more ([VAR_GUIDE.md section 27.1](../guides/VAR_GUIDE.md#271-bytes-per-date), whose per-book
 formula the 1,000,000-position run confirms: 0.77 GB predicted, 0.72 GB measured). At 10M the skeleton (ids and columns, most of h) sets
-`-Xmx`; mapping it (D1, [RESOURCES_AND_SCALE.md section 5.1](../architecture/RESOURCES_AND_SCALE.md#51-the-heap-skeleton-d1)) is the
+`-Xmx`; mapping it (D1, [CLUSTER_GUIDE.md section 5.1](../architecture/ARCHITECTURE.md#2812-bounded-resources-inside-one-server)) is the
 designed lever.
 
 ### 12.2 VaR, the reference bank
@@ -1439,11 +1439,11 @@ trades 60 s with progress; an applied write-back reflected in the shared VaR on 
 business date loaded and announced, every 10 minutes an intraday version, a restatement of a past date every 3 hours, history dates opened
 at random, 50 users of the mix of [4.1](#41-method). Sampled every minute: heap after GC, RSS, direct and mapped buffers, `/proc/<pid>/maps`
 lines, deleted-but-open files, every cache's size, every folder's size, free disk, threads, pool queues. **Pass:** heap after GC and RSS
-slopes over the last 6 hours under PERFORMANCE.md's gates (1% and 2% of the limit an hour); every folder under its cap at every sample and
+slopes over the last 6 hours under CLUSTER_GUIDE.md's gates (1% and 2% of the limit an hour); every folder under its cap at every sample and
 the disk never under the guard; mapped and deleted-file counts flat; no `OutOfMemoryError`, no thread death. Disk over N dates: with 60
 dates of hot files at 200,000 positions (about 1 GB each at 1,518 values) and `max-disk-gb` set to 20, the `var/hot` folder never above
-20 GB. The method of a soak on one installation is [PERFORMANCE.md method 9](PERFORMANCE.md#9-many-users-soak-runs-and-memory-profiling);
-the Drishti\*net soak on real processes is [OPERATIONS.md › section 13](OPERATIONS.md#13-measured-the-soak-on-real-processes).
+20 GB. The method of a soak on one installation is [CLUSTER_GUIDE.md method 9](#213-many-users-soaks-and-memory);
+the Drishti\*net soak on real processes is [OPERATIONS_GUIDE.md › section 13](../guides/CLUSTER_GUIDE.md#11-operations-and-disaster-recovery).
 
 ## 14. Reading the numbers, and their limits
 

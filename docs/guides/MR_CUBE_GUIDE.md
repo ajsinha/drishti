@@ -22,7 +22,7 @@ the server from those trades' scenario P&L vectors. A total is never the sum of 
 the gap as **diversification**. Around the pivot sit the headline of the view's scope, the time-travel slider, sparklines, a cell's tail
 histogram and why it moved, the components and their waterfall, the factor heat map, the DV01 ladder and a what-if side by side. The
 tutorial is [tutorial 38](../tutorials/38-the-mr-cube-on-the-pivot-engine.md); the lens design behind it is
-[MR_CUBE_LENS.md](../lenses/README.md#6-mr-cube-lens); the engine's design is [PIVOT_ENGINE.md](../architecture/PIVOT_ENGINE.md).
+[MR_CUBE_LENS.md](../architecture/LENSES.md#6-mr-cube-lens); the engine's design is [PIVOT_ENGINE.md](../architecture/PIVOT_ENGINE.md).
 
 ## Contents
 
@@ -237,7 +237,7 @@ The cell budget, busy protection and the cache are the pivot engine's (`drishti.
 **Switched off** (Admin → Engines, or the file), `/api/v1/risk/mr/...` answers `404 DRS-1020`, the `MCUBE` word, the menu entry and the
 Help pages are gone, the VaR source of the pivot engine offers `var()`, `es()`, `pv()` and `trades()` by the positions' columns only (an MR
 measure, a hierarchy level or an option is refused in words), and the cube's kept dimension codes are released. The engine-switch framework
-is [COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md). Every setting is in [CONFIGURATION.md](../admin/CONFIGURATION.md).
+is [ADMIN_GUIDE.md](ADMIN_GUIDE.md#21-compute-engines-on-or-off). Every setting is in [CONFIGURATION.md](../admin/CONFIGURATION.md).
 
 ## 10. API and command line
 
@@ -255,7 +255,7 @@ lens adds:
 
 A `view` is the view itself or a saved view's id (`owner/name`). On the command line: `drishti.py pivot run --source var --rows MGMT.DESK
 --cols RISK_CLASS --values "var()" --option horizon=10d`, and `drishti.py pivot mr headline|cell|versions|explain|ladder|heat|whatif`
-([TOOLS.md](TOOLS.md)). In the console: `MCUBE <GO>`.
+([CLI_REFERENCE.md](CLI_REFERENCE.md)). In the console: `MCUBE <GO>`.
 
 ## 11. Refusals and error codes
 

@@ -18,7 +18,7 @@
 # meaning, and where it differs from the schema's own: change (restart or live), applies. --check fails when a shipped file uses a key
 # its schema does not list. `maps` names the mappings whose keys are names (each becomes <name>).
 #
-# `tiers` is the one home of every setting's tier, the three of Admin → Configuration (docs/admin/OPERATIONS.md, "The configuration
+# `tiers` is the one home of every setting's tier, the three of Admin → Configuration (docs/guides/OPERATIONS_GUIDE.md, "The configuration
 # editor") and of CONFIGURATION.md's Tier column:
 #   everyday  what a business lead changes: a short list of keys, each written area:key (keep it small);
 #   expert    performance and internals (pools, caches, buffers, timeouts, threads, sharding, native code, admission):
@@ -471,12 +471,12 @@ schemas:
 env:
   # the packs' connectors (config/packs/<domain>/<pack>/pack.yaml)
   - { name: DRISHTI_DELTA_ROOT, by: packs, default: "./data/delta/demo", sets: "the demo lake's root (config/lakes/demo.yaml)", meaning: "Root of the demo lake, which every pack's Delta connector reads (lake: demo); every lake's own default is <data>/delta/<lake>" }
-  - { name: DRISHTI_LAKES_RELOCATE_ON_START, by: server, default: "true", sets: "drishti.lakes.relocate-on-start", meaning: "At start, move a demo lake built in the older layout (<data>/delta/<domain>) into <data>/delta/demo once, safely (verified, moved back on any error, never a delete); false: only by drishti.py lake relocate demo (docs/admin/OPERATIONS.md)" }
+  - { name: DRISHTI_LAKES_RELOCATE_ON_START, by: server, default: "true", sets: "drishti.lakes.relocate-on-start", meaning: "At start, move a demo lake built in the older layout (<data>/delta/<domain>) into <data>/delta/demo once, safely (verified, moved back on any error, never a delete); false: only by drishti.py lake relocate demo (docs/guides/OPERATIONS_GUIDE.md)" }
   - { name: DRISHTI_LAKES_DIR, by: server, default: "./config/lakes", sets: "drishti.lakes.dir", meaning: "The lake folder: one config/lakes/<lake>.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/DATA_LAKE_GUIDE.md)" }
   - { name: DRISHTI_DATALOAD_LAKE, by: server, default: demo, sets: "drishti.dataload.lake", meaning: "The lake (config/lakes/<lake>.yaml) the data inbox writes to; a folder is the older form" }
   - { name: DRISHTI_DELTA_ENGINE, by: packs, default: native, sets: "delta engine", meaning: "native, hadoop or auto, for every Delta connector without its own engine" }
   - { name: DRISHTI_LAKE_ENABLED, by: packs, default: "true", sets: "the packs' data connectors", meaning: "false switches every pack's data connector off (the demo samples still answer)" }
-  - { name: DRISHTI_CONSOLE_RELAY_KEY, by: console, default: ~, sets: "the live-channel relay key", meaning: "Signs the relay messages between the console's workers and, with live.relay.across_hosts, between consoles: the same secret on every console (the launcher makes one for its own workers when it is not set; CLUSTER_DEPLOYMENT.md section 9.4)" }
+  - { name: DRISHTI_CONSOLE_RELAY_KEY, by: console, default: ~, sets: "the live-channel relay key", meaning: "Signs the relay messages between the console's workers and, with live.relay.across_hosts, between consoles: the same secret on every console (the launcher makes one for its own workers when it is not set; CLUSTER_GUIDE.md section 9.4)" }
   - { name: DRISHTI_CONSOLE_RELAY_KEY_MADE, by: console, default: ~, sets: "(set by the launcher)", meaning: "Set by run_drishti_web.py when it made the relay key itself: the relay then stays on this host" }
   - { name: DRISHTI_ALLOW_INSECURE_TLS, by: server, default: ~, sets: "tls.insecure-trust-all", meaning: "Must be true for a connector to run with tls.insecure-trust-all: true (development only)" }
   - { name: DRISHTI_CCR_DERIVED_ENABLED, by: packs, default: "true", sets: "counterparty-risk's derived connector", meaning: "The counterparty-risk pack's derived kinds (netting-set and counterparty totals) on or off" }

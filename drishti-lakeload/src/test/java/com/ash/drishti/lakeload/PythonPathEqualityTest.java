@@ -110,7 +110,7 @@ class PythonPathEqualityTest {
     }
 
     /**
-     * The duplicate-record rule (TOOLS.md section 4.13) gives the same table on both paths and both formats: a plain {@code pv.jsonl}
+     * The duplicate-record rule (CLI_REFERENCE.md section 4.13) gives the same table on both paths and both formats: a plain {@code pv.jsonl}
      * beside its {@code pv.jsonl.gz} (the case that once made the paths differ) with ids repeated across the two files and within the
      * {@code .gz}; without {@code COMPUTED_AT} the last copy read is kept (pv.jsonl sorts before pv.jsonl.gz), with it the latest (some
      * copies without one, some ties).

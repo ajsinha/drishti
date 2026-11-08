@@ -80,7 +80,7 @@ $ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: ap
 {"username":"ann","displayName":"Ann","email":"","desk":"","roles":["bi-writer"],"enabled":true,"mustChangePassword":false,"locked":false, ...}
 ```
 
-There is no YAML for people: roles and users live in the server's user store ([USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)).
+There is no YAML for people: roles and users live in the server's user store ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md)).
 
 ## Step 2 · A workspace that asks for review
 
@@ -443,7 +443,7 @@ The YAML behind it is the connector's own file (`config/connectors/orders-lake.y
 - [Tutorial 14](14-python-and-analyse.md): Python in a measure, a visual and a notebook.
 - [BI_GUIDE.md](../guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments): every rule, setting (`drishti.governance.four-eyes`, `drishti.bi.governance.refuse-breaking`) and error code of this tutorial.
 - [BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer): models, their contract and their versions.
-- [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md): roles and users in depth; tutorial 17 summarises them.
+- [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md): roles and users in depth; tutorial 17 summarises them.
 
 ## If something goes wrong
 

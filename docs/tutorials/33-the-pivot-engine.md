@@ -30,7 +30,7 @@ About 30 minutes.
 - The server and console running on the demo lake (`drishti.py lake demo`, [tutorial 1](01-first-15-minutes.md)); `EXPORT trade <GO>` lists
   the trades. The figures below are those of the demo lake on business date 2026-09-30.
 - For step 6, the VaR engine on with the demo risk lake (`VAR BANK <GO>` answers).
-- A token for the command line in `DRISHTI_TOKEN` or a `--token-file` ([TOOLS.md](../guides/TOOLS.md)).
+- A token for the command line in `DRISHTI_TOKEN` or a `--token-file` ([CLI_REFERENCE.md](../guides/CLI_REFERENCE.md)).
 
 ## What you will learn
 

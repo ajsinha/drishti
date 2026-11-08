@@ -111,7 +111,7 @@ class Guide:
     listed: bool = True
     packs: tuple = ()                 # the packs the guide is about (a pack's own guide; help.yaml packs:), for an edition's help filter
     roles: tuple = ()                 # help.yaml roles: only people with one of these roles (or an administrator) see the guide; empty = everyone
-    engine: str = ""                  # help.yaml engine: the compute engine the guide is about; hidden while it runs nowhere (COMPUTE_ENGINES.md)
+    engine: str = ""                  # help.yaml engine: the compute engine the guide is about; hidden while it runs nowhere (ADMIN_GUIDE.md)
     pair: str = ""                    # help.yaml pair: the tutorial drawn beside this guide on its section's page
     group: str = ""                   # the group of its section it sits in (help.yaml groups[].title)
 

@@ -18,9 +18,9 @@
 Status: **built** (expanding
 [VAR_GUIDE.md section 28](../guides/VAR_GUIDE.md#28-sharding-across-drishtinet)). **Off by default**: with no `sharding:` block in
 the market-risk pack and no `drishti.var.sharding.enabled`, every date is loaded whole on each server. The operator's notes
-are in [OPERATIONS.md](../admin/OPERATIONS.md#var-shards); the settings in [CONFIGURATION.md](../admin/CONFIGURATION.md); the errors `DRS-5215` to
-`DRS-5217` in [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md). How sharding is deployed in a production cluster (counts per role, shard
-sizes, zones, drains in a rolling upgrade, every failure with its timing) is [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md), the deployment
+are in [OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#5-sharding); the settings in [CONFIGURATION.md](../admin/CONFIGURATION.md); the errors `DRS-5215` to
+`DRS-5217` in [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#21-troubleshooting). How sharding is deployed in a production cluster (counts per role, shard
+sizes, zones, drains in a rolling upgrade, every failure with its timing) is [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md), the deployment
 reference. This document is the machinery (measure-agnostic); what an operator of VaR needs from it, with bit-equality and the failure
 cases, is folded into the one VaR document's section 28.
 
@@ -159,7 +159,7 @@ its headroom). Because each server holds a full copy, **adding servers does not 
 
 Whichever is chosen, a node's vector stays **the same to the bit** as one server's (section 12). The three are compared, with a
 recommendation (memory-map it) and the capacity before and after at 2.3M and 10M positions, in
-[RESOURCES_AND_SCALE.md section 5.1](RESOURCES_AND_SCALE.md#51-the-heap-skeleton-d1).
+[CLUSTER_GUIDE.md section 5.1](ARCHITECTURE.md#2812-bounded-resources-inside-one-server).
 
 ## 6. Queries: scatter-gather with a completeness check
 

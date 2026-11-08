@@ -54,7 +54,7 @@ class MappedIdMapTest {
     }
 
     /**
-     * Fifty versions of one date in a row (2.9.7, RESOURCES_AND_SCALE.md section 7.3): at most two version folders stay (this one and the
+     * Fifty versions of one date in a row (2.9.7, CLUSTER_GUIDE.md section 7.3): at most two version folders stay (this one and the
      * one before, for a request started on it), and no deleted file stays mapped.
      */
     @Test

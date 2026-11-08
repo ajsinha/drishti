@@ -31,7 +31,7 @@ About 40 minutes.
 - Tutorial 10 done: a running server and console, signed in as a BI author (`bi-author`), the sample model *Trades, the basics* (`trades-basic@1`) and its
   dataset `trades-basic-trade` (the trade valuations).
 - For step 6, a server that can send mail (`spring.mail.host`) and two or more users with an email address.
-- A token for the command line: `DRISHTI_SERVER=http://localhost:18480` and `DRISHTI_TOKEN=...` (My account → API tokens, scope `bi:read`; [CLI_GUIDE.md](../guides/CLI_GUIDE.md#3-connecting-to-a-server-url-tokens-and-permissions)).
+- A token for the command line: `DRISHTI_SERVER=http://localhost:18480` and `DRISHTI_TOKEN=...` (My account → API tokens, scope `bi:read`; [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md#3-connecting-to-a-server-url-tokens-and-permissions)).
 
 The outputs below were captured on this version against the test stack of `drishti-console/tests/test_bi_wave_d_browser.py` (the sample's 60 valuations of
 2026-10-08); your numbers are your data's.

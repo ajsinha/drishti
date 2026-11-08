@@ -27,8 +27,8 @@ About 15 minutes, plus the first build (a few minutes, once) and the demo lakes 
 
 ## Before you start
 
-You need a Linux, macOS or Windows machine with Java 21 or newer, Python 3.13 ([the minimum](../guides/GETTING_STARTED.md#step-1--install-the-prerequisites)), [uv](https://docs.astral.sh/uv/) and git. Nothing else: no database, no
-Docker. On Windows follow [GETTING_STARTED.md (Windows)](../guides/GETTING_STARTED.md#drishti-on-windows) for the same steps in PowerShell.
+You need a Linux, macOS or Windows machine with Java 21 or newer, Python 3.13 ([the minimum](../guides/OPERATIONS_GUIDE.md#21-prerequisites)), [uv](https://docs.astral.sh/uv/) and git. Nothing else: no database, no
+Docker. On Windows follow [OPERATIONS_GUIDE.md (Windows)](../guides/OPERATIONS_GUIDE.md#4-drishti-on-windows) for the same steps in PowerShell.
 
 These tutorials run on the **quick-start environment** of [data/testdata/README.md](../../data/testdata/README.md): the seven packs (`core`, `market-data`, `trading`,
 `counterparty-risk`, `market-risk`, `world-economy`, `news-and-markets`) reading the **demo lakes**, sixty business days of production-shaped test data (5,000 trades from
@@ -36,7 +36,7 @@ each of three booking systems, ENDUR, CALYPSO and MUREX, and everything the pack
 `QUANTITY`), as in production.
 
 In these tutorials `<GO>` means "press Enter", commands are run from the repository root (the folder called `drishti`), and the server and the console are the two
-programs from [GETTING_STARTED.md](../guides/GETTING_STARTED.md): the **server** reads the data (port 18480), the **console** is the web pages you open (port 17480).
+programs from [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine): the **server** reads the data (port 18480), the **console** is the web pages you open (port 17480).
 Every step says what to do **in the UI** (IntelliJ IDEA and PyCharm run configurations, or the console's pages) and **from the command line** where a command exists.
 
 **Where this data comes from.** The banking packs' data is synthetic test data (fictitious names, `tools/testdata/make_testdata.py`); the `world-economy` pack's figures are published data from the World Bank (CC BY 4.0), UNDP (CC BY 3.0 IGO) and the CIA World Factbook (public domain), plus IMF forecasts that are **internal only**, fetched by `drishti.py feed run world-economy`; the `news-and-markets` pack's quotes and headlines are a captured snapshot of Yahoo Finance and Google News, **internal only** (`drishti.py feed run news-and-markets`). Each source, its licence and how to refresh it: [External data](../guides/EXTERNAL_DATA.md).
@@ -52,7 +52,7 @@ Every step says what to do **in the UI** (IntelliJ IDEA and PyCharm run configur
 
 ## Step 1 · Install, build and check the machine
 
-**In the UI.** Open the repository in IntelliJ IDEA (its run configurations are in `run-configs/`, [GETTING_STARTED.md (IDE)](../guides/GETTING_STARTED.md#running-from-intellij-idea-and-pycharm)) and run **Drishti build server jar**.
+**In the UI.** Open the repository in IntelliJ IDEA (its run configurations are in `run-configs/`, [OPERATIONS_GUIDE.md (IDE)](../guides/OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm)) and run **Drishti build server jar**.
 Then, in PyCharm opened on `drishti-console/` (its run configurations are in `drishti-console/run-configs/`), run **Build demo lakes**.
 
 **From the command line:**
@@ -353,7 +353,7 @@ export DRISHTI_SERVER=http://localhost:18480
 export DRISHTI_TOKEN=$(cat ~/drishti-tokens/tutorial.token)
 ```
 
-(The IDE's QA walk keeps it in `data/qa/token.txt` instead: [GETTING_STARTED.md (IDE)](../guides/GETTING_STARTED.md#running-from-intellij-idea-and-pycharm). The folder `data/` is git-ignored.)
+(The IDE's QA walk keeps it in `data/qa/token.txt` instead: [OPERATIONS_GUIDE.md (IDE)](../guides/OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm). The folder `data/` is git-ignored.)
 
 Without a token a signed-in server says no, in plain words:
 
@@ -401,7 +401,7 @@ state when it is not up.
 
 - [Tutorial 2 · Look up anything](02-look-up-anything.md): mnemonics, type-ahead, links, a past date, Compare.
 - [Tutorial 3 · Query by form](03-query-by-form.md): the form in depth, and keeping a search.
-- The [User guide](../guides/USER_GUIDE.md) describes every feature of the console; [CLI_GUIDE.md](../guides/CLI_GUIDE.md) every command; [data/testdata/README.md](../../data/testdata/README.md) the test data and its demo pages.
+- The [User guide](../guides/USER_GUIDE.md) describes every feature of the console; [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md) every command; [data/testdata/README.md](../../data/testdata/README.md) the test data and its demo pages.
 
 ## If something goes wrong
 

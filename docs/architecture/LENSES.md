@@ -2210,7 +2210,7 @@ modellability ([D9](#6611-d9-the-factor-dictionary-risk-factor-and-the-bucket-gr
 
 | Item | Target | Basis |
 |---|---|---|
-| Positions | 2.3M (10M trades) on the reference cluster | [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md) |
+| Positions | 2.3M (10M trades) on the reference cluster | [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md) |
 | Scenario values held | 1,518 a position (normal 509, stressed 250, spare), float32: 14 GB a date across owners | the same |
 | A view of about 500 scopes (40 × 12 with totals) | 400 ms p95 warm; a cell selected 60 ms; drill 150 ms | scaled from the VaR engine's scope answers |
 | Intraday batch to patched cells | 1 s after the batch applies | [6.3.5](#635-streaming-patches-of-visible-cells) |
@@ -2882,7 +2882,7 @@ resolves to a curve or a proxy, else its CVA is refused and named, never zero. *
 #### 7.3.14 CC14: exposure sharding
 
 Exposure shards with key `[COUNTERPARTY, NETTING_SET]` ([7.5.2](#752-shards-by-counterparty-and-netting-set)); the cluster design is
-[CLUSTER_DEPLOYMENT.md section 6](CLUSTER_DEPLOYMENT.md#6-exposure-sharding-in-depth-planned). **Size:** L; unscheduled.
+[CLUSTER_GUIDE.md section 6](ARCHITECTURE.md#2811-exposure-sharding-design-not-built). **Size:** L; unscheduled.
 
 #### 7.3.15 Scale, the FIS comparison, risks and decisions
 
@@ -3735,21 +3735,21 @@ change and incidents, Ask, and an **evidence pack** for a supervisor or audit.
 | A history beyond the look-back window, a dependency chain, a ready-by forecast | **Not built**: states cover today and `lookback-days`; the load history keeps `keep` loads a pack | [CONFIGURATION, `drishti.loads`](../admin/CONFIGURATION.md#drishtiloads--data-loads-a-batch-landed) |
 | A contract per kind with validation and rejects | **Built** | [contracts README 10](../contracts/README.md#10-validation-and-rejects) |
 | Content checks (past maturity, unmapped factors, stale prices, no LEI match) | **Not built** as checks; the Market lens shows market-data quality | [section 3](#3-market-lens) |
-| Data versions and provenance on every answer | **Built** | [RESOURCES_AND_SCALE 4.2](RESOURCES_AND_SCALE.md#42-data-versions-the-inputs-digest-and-provenance-today) |
+| Data versions and provenance on every answer | **Built** | [RESOURCES_AND_SCALE 4.2](../guides/CLUSTER_GUIDE.md#84-data-loads-configuration-and-maintenance-without-downtime) |
 | BI lineage and impact; official VaR and exposure records for any past date | **Built** | [BI_GUIDE 32](../guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments), [VAR_GUIDE 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
 | The configuration in one generated document, in the UI with value and origin | **Built** | [CONFIGURATION](../admin/CONFIGURATION.md#every-setting) |
 | Audit log (sign-ins, failures, locks, users, roles, tokens, packs, connectors, load settings, cache purges, secret rotations) | **Built** | [ADMIN_GUIDE, audit](../guides/ADMIN_GUIDE.md#26-read-the-audit-log) |
 | Write-back audit and four-eyes approval | **Built** | [WRITE_BACK 10](../guides/WRITE_BACK.md#10-approval) |
-| Access log of every answered read, 90 days | **Built** | [ADMIN_GUIDE, access log](../guides/ADMIN_GUIDE.md#8-who-looked-at-what-the-access-log), [OPERATIONS 9b](../admin/OPERATIONS.md#9b-the-access-log) |
+| Access log of every answered read, 90 days | **Built** | [ADMIN_GUIDE, access log](../guides/ADMIN_GUIDE.md#8-who-looked-at-what-the-access-log), [OPERATIONS 9b](../guides/OPERATIONS_GUIDE.md#114-what-leaves-the-server-ask-the-access-log-and-ai) |
 | Usage analytics by lens, screen and desk; an entitlement report as of a date | **Not built**; the access log does not record lens or screen | — |
 | Roles and powers; commands turned off by an administrator | **Built** | [ADMIN_GUIDE 3](../guides/ADMIN_GUIDE.md#3-roles) |
-| Secrets inventory with ages and a rotation policy | **Partly**: secrets from environment or files, embed secrets rotated and audited; no inventory | [OPERATIONS 9c](../admin/OPERATIONS.md#9c-pack-registry-keys) |
+| Secrets inventory with ages and a rotation policy | **Partly**: secrets from environment or files, embed secrets rotated and audited; no inventory | [OPERATIONS 9c](../guides/OPERATIONS_GUIDE.md#811-permissions-ownership-and-registry-keys) |
 | Internal-only rule for public sources | **Built** as a rule and switch; a report of where each is shown not built | [EXTERNAL_DATA 9](../guides/EXTERNAL_DATA.md#9-licences-and-internal-only-data) |
-| Admin → Health; Prometheus, Grafana, suggested alerts; platform metrics and alerts | **Built** | [OPERATIONS 13.2](../admin/OPERATIONS.md#132-admin--health), [13.4](../admin/OPERATIONS.md#134-prometheus-and-grafana), [13.6](../admin/OPERATIONS.md#136-platform-metrics-and-alerts) |
-| Drishti's own history of those metrics | **Not built** (CIO4) | [RESOURCES_AND_SCALE 8.3](RESOURCES_AND_SCALE.md#83-metrics-to-export) |
-| Cluster gossip, VaR sharding with replicas and zones; disk caps and the cache budget | **Built** | [CLUSTER_DEPLOYMENT 4.1](CLUSTER_DEPLOYMENT.md#41-membership-by-gossip-swim-over-http), [RESOURCES_AND_SCALE 14](RESOURCES_AND_SCALE.md#14-built) |
-| Readiness, drain, the rolling upgrade runner; the N and N−1 rule | **Built**; N and N−1 planned (CD4) | [CLUSTER_DEPLOYMENT 18](CLUSTER_DEPLOYMENT.md#18-built-against-planned) |
-| A history of releases and upgrades per node | **Partly**: each server reports its version; no history | [OPERATIONS 15](../admin/OPERATIONS.md#15-upgrades-and-rollback) |
+| Admin → Health; Prometheus, Grafana, suggested alerts; platform metrics and alerts | **Built** | [OPERATIONS 13.2](../guides/OPERATIONS_GUIDE.md#132-admin--health), [13.4](../guides/OPERATIONS_GUIDE.md#134-prometheus-grafana-and-the-suggested-alerts), [13.6](../guides/OPERATIONS_GUIDE.md#135-platform-metrics-and-alert-rules) |
+| Drishti's own history of those metrics | **Not built** (CIO4) | [RESOURCES_AND_SCALE 8.3](../guides/CLUSTER_GUIDE.md#159-seeing-it-admin--caches-health--disk-metrics-and-alerts) |
+| Cluster gossip, VaR sharding with replicas and zones; disk caps and the cache budget | **Built** | [CLUSTER_DEPLOYMENT 4.1](ARCHITECTURE.md#281-membership-by-gossip-swim-over-http), [RESOURCES_AND_SCALE 14](ARCHITECTURE.md#2812-bounded-resources-inside-one-server) |
+| Readiness, drain, the rolling upgrade runner; the N and N−1 rule | **Built**; N and N−1 planned (CD4) | [CLUSTER_DEPLOYMENT 18](../guides/CLUSTER_GUIDE.md) |
+| A history of releases and upgrades per node | **Partly**: each server reports its version; no history | [OPERATIONS 15](../guides/OPERATIONS_GUIDE.md#18-upgrades-and-rollback) |
 | Incidents; cloud cost; a BCBS 239 scorecard | **Not built** | — |
 | Ask | **Partly**: *Ask about this page* and BI's *ask the data*, off by default; across loads, checks, audit and incidents not built | [AI 7](../admin/AI.md#7-ask-on-the-ai-layer) |
 
@@ -3805,7 +3805,7 @@ what a score means.
 #### 9.3.4 Capacity, cost and adoption
 
 - **Capacity:** a linear fit of six months of daily positions, shown six months ahead; the **next scale step** is the position count at
-  which an owner's page cache or heap would pass its budget at today's member count ([CLUSTER_DEPLOYMENT 3.4](CLUSTER_DEPLOYMENT.md#34-disk-and-cache-budgets-per-role);
+  which an owner's page cache or heap would pass its budget at today's member count ([CLUSTER_DEPLOYMENT 3.4](../guides/CLUSTER_GUIDE.md#45-disk-and-cache-budgets-per-role);
   about 3.4M for three owners in the mock-up); **headroom** is the time until the forecast meets it.
 - **Cost (later):** the sum of `cloud-cost` for the estate's tags; a desk's cost is its own resources plus its share of each shared
   category by the rule's driver; the unallocated rest shows as *Shared*, never spread silently; cost per 1,000 positions.
@@ -3826,7 +3826,7 @@ what a score means.
 - **Ask:** tools over the records of [9.5](#95-data-needed-the-complete-list), never raw rows; each record cited and linked; an answer
   with a figure no tool returned is refused; on only when the site has a model provider.
 - **Read-only:** a row opens its owning page (a feed its Data loads page, a check its rejects, a node Admin → Net or Health, an audit line
-  Admin → Audit log, a secret its procedure in [OPERATIONS](../admin/OPERATIONS.md), an incident the bank's ticket). The only two actions
+  Admin → Audit log, a secret its procedure in [OPERATIONS](../guides/OPERATIONS_GUIDE.md), an incident the bank's ticket). The only two actions
   write records, never settings: the data office **confirms** a BCBS 239 score; anyone with the power **generates** the evidence pack.
 - **Response-time targets** (estimates, to be measured with the POC): landing 600 ms, tab 100 ms, a past date 1.5 s, Ask first token
   2 s, a quarter's evidence pack 30 s.
@@ -4058,7 +4058,7 @@ the owner's answer through write-back). A `FAIL` names a sample id or says why n
 
 New, computed, captured. One row per member per metric per hour, rolled up to a day (kept two years). Key `MEMBER`, `METRIC`,
 `PERIOD_START`, `GRAIN`; fields `ROLES`, `VERSION`, `VALUE`, `LIMIT`, `SAMPLES`. Sampled from the server's own Micrometer metrics
-([OPERATIONS 13.6](../admin/OPERATIONS.md#136-platform-metrics-and-alerts)) so the lens works without Prometheus:
+([OPERATIONS 13.6](../guides/OPERATIONS_GUIDE.md#135-platform-metrics-and-alert-rules)) so the lens works without Prometheus:
 
 | `METRIC` | Read from | State |
 |---|---|---|

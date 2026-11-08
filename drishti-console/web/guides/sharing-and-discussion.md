@@ -38,4 +38,4 @@ and the colleague sees the view **with their own permissions**.
 Everything else (the recipient rules, the no-access page, edit and retract, resolve and follow, the email opt-outs on the account page,
 moderation) is in the user guide: [Share a view with a note](/help/user-guide#share-a-view-with-a-note),
 [Your inbox](/help/user-guide#your-inbox), [Discussion](/help/user-guide#discussion). If something did not arrive or
-opened the wrong data, see [Troubleshooting](/help/troubleshooting).
+opened the wrong data, see [Troubleshooting](/help/operations#21-troubleshooting).

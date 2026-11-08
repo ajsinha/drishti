@@ -27,7 +27,7 @@ backend:
   timeout_seconds: 15  # per call to the server; longer than the server's own read limit (drishti.sources.fetch-timeout, 10 s), so its answer comes through
   pool_size: 64  # pooled HTTP connections to the server (per server, when there are several)
   check_seconds: ${DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS:5}   # how often the console asks each server if it is there (0 = never); pages show a banner and recover when it returns
-  # Several servers of one Drishti*net cluster (docs/admin/OPERATIONS.md, "The console and several servers"): one is enough, the console learns the
+  # Several servers of one Drishti*net cluster (docs/guides/OPERATIONS_GUIDE.md, "The console and several servers"): one is enough, the console learns the
   # rest. Empty: backend.url, as before. Each session keeps to one server while it answers and falls over to the next when it does not.
   urls: ${DRISHTI_BACKEND_URLS:}             # e.g. https://drishti-a:8480,https://drishti-b:8480
   discover: ${DRISHTI_BACKEND_DISCOVER:true} # pull the cluster's member list from the server in use, and keep it (<console data dir>/net/servers.json)
@@ -50,7 +50,7 @@ mcp:                                 # MCP client (docs/admin/AI.md): OFF by def
   server_roles: {}                   # server -> roles allowed
   tool_roles: {}                     # "server/tool" -> roles allowed
   server_features: {}                # server -> features allowed
-retry:                               # what failed is tried again by itself (docs/admin/OPERATIONS.md, "Retries"): the console's AI providers and MCP servers
+retry:                               # what failed is tried again by itself (docs/guides/OPERATIONS_GUIDE.md, "Retries"): the console's AI providers and MCP servers
   enabled: ${DRISHTI_RETRY_ENABLED:true}  # retry what failed (the console's AI providers and MCP servers); false turns the retries off
   initial: ${DRISHTI_RETRY_INITIAL:5s}      # wait before the first retry
   factor: 2.0                        # each further wait is this many times the one before
@@ -210,7 +210,7 @@ live:                        # live updates (docs/architecture/DATA_ARCHITECTURE
   # monitors; a view open in several tabs counts once). Each holds one stream to the server from the backend pool
   # (backend.pool_size). Beyond it a view says it is not live, and why, instead of silently not ticking.
   max_subscriptions: ${DRISHTI_LIVE_MAX_SUBSCRIPTIONS:32}
-  # The relay (docs/architecture/CLUSTER_DEPLOYMENT.md section 9.4, PO-11): a call on a live channel that reaches another worker or another
+  # The relay (docs/guides/CLUSTER_GUIDE.md section 9.4, PO-11): a call on a live channel that reaches another worker or another
   # console is passed to the one holding the channel, signed with DRISHTI_CONSOLE_RELAY_KEY. Across hosts every console needs the same key.
   relay:
     across_hosts: ${DRISHTI_CONSOLE_RELAY_ACROSS_HOSTS:false}  # true: consoles on several hosts behind one load balancer pass live-channel calls to each other, so the load balancer needs no stickiness
@@ -259,7 +259,7 @@ builder:                     # Build workbench, New (/build/new); docs/guides/RA
   pack_draft_concurrency: 4  # Sutras drafted at once against the server
   tools_dir: ../tools        # the repository's tools/ folder (packbundle.py makes the bundle); relative to drishti-console/
   studio_kind: sample        # the kind a new Design and "Open in Studio" preview a brought document as (a pasted document has no kind of its own)
-lakes:                       # Admin -> Data loads -> Lakes (/admin/lakes): a large JSON file into a Delta lake (docs/guides/TOOLS.md)
+lakes:                       # Admin -> Data loads -> Lakes (/admin/lakes): a large JSON file into a Delta lake (docs/guides/CLI_REFERENCE.md)
   roots: ${DRISHTI_LAKE_ROOTS:}   # the lake roots this console may write, comma-separated (the Delta connectors' root); empty: <data dir>/delta, as the server
   max_upload_mb: 4096        # largest file uploaded (streamed to the console's temporary folder, never held in memory)
   scan_docs: 20000           # documents read to suggest the id, date and classifiers (the build reads them all)

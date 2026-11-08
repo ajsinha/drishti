@@ -294,7 +294,7 @@ own**:
   under a legal hold). The API is in [API_GUIDE.md](API_GUIDE.md#comment-threads).
 - **Compliance** (`roles.<role>.compliance`): a compliance officer reads any share and the full record of any thread (hidden and retracted
   comments, every revision, unscrubbed), places and releases **legal holds**, runs the **export** and **verifies** the hash chains. The
-  runbooks are in [OPERATIONS.md](../admin/OPERATIONS.md#9a-3-collaboration-retention-legal-holds-and-the-compliance-export).
+  runbooks are in [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#123-retention-legal-holds-and-the-compliance-export).
 - **Admin → Collaboration** (`/admin/collab`) shows what the signed-in roles may use, and the server decides every call: *Threads and
   moderation* (search by user, kind, id and dates; read a thread with its hidden comments; **Hide**, **Unhide**, **Lock**, **Unlock**;
   `admin`), *Legal holds* (list, place by scope, release; `compliance`), *Compliance export* (start, wait, download once; `compliance`),
@@ -614,8 +614,8 @@ The console keeps a few answers for a moment so pages draw quickly. Nothing it k
 ### 10.2 The other Admin pages
 
 The pages for running the server (Admin → Connectors, Health, Caches, Capacity, Loads, Lakes, Net, Packs) are in
-[OPERATIONS.md](../admin/OPERATIONS.md); for example Admin → Capacity in
-[section 12.4](../admin/OPERATIONS.md#124-admin--capacity-today-against-the-plan). Admin → Commands, Engines and Modules are sections 20 to
+[OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md); for example Admin → Capacity in
+[section 12.4](OPERATIONS_GUIDE.md#146-admin--capacity-today-against-the-plan). Admin → Commands, Engines and Modules are sections 20 to
 22 below.
 
 ## 11. The users and roles API
@@ -806,7 +806,7 @@ DRISHTI_EDITION=risk docker compose -f deploy/docker/compose.yaml up -d
 
 **AWS ECS.** Set `DRISHTI_EDITION=risk` in your environment file (the one `deploy/aws/env.example` documents), then register the task
 definitions again and roll the services (`deploy/aws/ecs/register.sh --nodes`, as in
-[CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-b-drishti-on-aws-ecs-efs-and-s3)). Every node's task definition gets
+[CLUSTER_GUIDE.md](CLUSTER_GUIDE.md#12-drishti-on-aws-ecs-efs-and-s3)). Every node's task definition gets
 the same value.
 
 **Check it** from the command line: `curl -s http://localhost:18480/public/about` answers
@@ -1324,7 +1324,7 @@ also in the audit log (`command-disabled`, `command-enabled`, `pack-disabled`, `
 
 ### 20.5 Several servers
 
-On a cluster ([OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)) a change made on any server reaches
+On a cluster ([OPERATIONS_GUIDE.md](CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)) a change made on any server reaches
 every other within a gossip round or two, and is written to each server's own database before it takes effect there:
 
 - Every change carries a **stamp** (a hybrid logical clock: the wall time in milliseconds and a counter, never behind a stamp the server has
@@ -1577,7 +1577,7 @@ module is **on** when it is installed, licensed and enabled, and every module it
 offers none of its lenses, functions, packs or engines (its engines show *not installed* on Admin → Engines), and its API answers
 `404 DRS-1025`; a function that is off answers `404 DRS-1026`. The switch is `config/modules/<module>.yaml` (Admin → Modules writes it) or
 `DRISHTI_MODULES_<MODULE>_ENABLED`, and a change takes effect at the next start. The how-to, the licence file and what each module brings
-to the console are in [OPERATIONS.md, Modules on or off](../admin/OPERATIONS.md#22-modules-on-or-off).
+to the console are in [OPERATIONS_GUIDE.md, Modules on or off](OPERATIONS_GUIDE.md#65-engines-modules-and-editions).
 
 ## 23. Troubleshooting
 

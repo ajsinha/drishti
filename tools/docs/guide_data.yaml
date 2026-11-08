@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The data section of each measure or feature guide: read by tools/docs/guide_data.py, which writes it between the guide's
-# <!-- guide-data:begin <id> --> and <!-- guide-data:end --> markers (docs/guides/TOOLS.md section 9).
+# <!-- guide-data:begin <id> --> and <!-- guide-data:end --> markers (docs/guides/CLI_REFERENCE.md section 9).
 #
 # Per guide:   id, file, number (the section's number: the table is <number>.1, the datasets <number>.2 …), note (after the table).
 # Per dataset: kind; contract (the contract's kind when it differs, null when the kind has none); label (instead of `kind`); title;

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The release drill's console planner (tools/drill.sh; docs/guides/TOOLS.md, "The release drill").
+"""The release drill's console planner (tools/drill.sh; docs/guides/CLI_REFERENCE.md, "The release drill").
 
   drill_plan.py lanes  --tests DIR --durations FILE --out DIR [--exclude FILE ...] [--browser-workers N] [--other-workers N]
       Splits the console test files into two lanes and orders each longest first (from the recorded durations):

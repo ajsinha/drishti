@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Live-channel changes across the console's worker processes and across console hosts (PO-11, CLUSTER_DEPLOYMENT.md section 9.4).
+"""Live-channel changes across the console's worker processes and across console hosts (PO-11, CLUSTER_GUIDE.md section 9.4).
 
 The console serves its port from several worker processes (``server.workers``), and a site may run several consoles behind one load
 balancer. A live channel's stream is held by the worker that opened it, and the browser's later calls on it (``POST /api/channel/{cid}``,

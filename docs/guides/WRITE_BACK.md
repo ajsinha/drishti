@@ -272,7 +272,7 @@ People who watch the record see the new value at once on its page (masked for th
 
 From the command line, the same request: `drishti.py change submit d-4ab964fa3060 --reason "booking typo"` or
 `drishti.py change propose --kind trade --id MX-20000012 --set NOTIONAL=28001250 --from NOTIONAL=28000000 --reason "booking typo"`
-([TOOLS.md](TOOLS.md)); the API is `POST /api/v1/changes` ([API_GUIDE.md](API_GUIDE.md#write-back-changes)). A worked example with
+([CLI_REFERENCE.md](CLI_REFERENCE.md)); the API is `POST /api/v1/changes` ([API_GUIDE.md](API_GUIDE.md#write-back-changes)). A worked example with
 pictures is [tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
 
 ## 5. With the Sutra designer
@@ -433,7 +433,7 @@ SHA-256 signature over its place and body. The log is kept `retention.keep` (7 y
 Status: **W1 to W7 built (2026-10-25) and built (2026-10-26): [section 19](#19-implementation)** says what is built, what is not, and the
 decisions taken while building. Built; decisions in section 16 (2026-10-19 and
 2026-10-20). Related: [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built) (the one Drishti database: the edit log, lanes, overlays and owned data live in it;
-), [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) (Sutra and the renderer), [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (several servers),
+), [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) (Sutra and the renderer), [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet) (several servers),
 [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#21-genui-screens-composed-for-an-ai-agent-design-not-built) section 11 (write-back forms, deferred to this design), [BI_DESIGN.md](../architecture/BI_DESIGN.md) (review and proposals, reused
 here), [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) (connector files, where `writes:` lives). **Additions:** forms
 save through connectors, an applied change can trigger a point-in-time calculation in a reactive connector, and updated records and

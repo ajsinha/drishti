@@ -38,7 +38,7 @@ spring:
     # files read after this one: the engines' files (config/engines/<id>.yaml), application.local.yaml in the working directory, then the packs overlay Admin -> Packs writes
     # (DRISHTI_PACKS_OVERLAY, default <data dir>/packs/added.yaml)
     import:
-      # the engines' own files (docs/architecture/COMPUTE_ENGINES.md section 3): the jar's copy, then the site's, which wins key by key
+      # the engines' own files (docs/guides/ADMIN_GUIDE.md section 3): the jar's copy, then the site's, which wins key by key
       - optional:classpath:engines/var.yaml   # the banking module's (its jar): absent when the module is not installed
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/var.yaml
       - optional:classpath:engines/exposure.yaml   # the banking module's (its jar): absent when the module is not installed
@@ -79,7 +79,7 @@ spring:
     open-in-view: false      # no lazy loading while a view renders: the identity services load what they return
 
 logging:
-  # RESOURCES_AND_SCALE.md 6.4: with drishti.logging.file set the server writes its own log, rotated by size and day and kept
+  # CLUSTER_GUIDE.md 6.4: with drishti.logging.file set the server writes its own log, rotated by size and day and kept
   # within a total (compressed); unset (containers), standard output only, as before. The stack sets it per node (run/logs/<node>.log).
   file:
     name: ${drishti.logging.file:}  # the log file, from drishti.logging.file (empty: standard output only)
@@ -130,13 +130,13 @@ management:
         enabled: true  # /actuator/health/liveness and /actuator/health/readiness for Kubernetes probes
       group:
         readiness:
-          # readiness that means ready (CD1, CLUSTER_DEPLOYMENT.md section 9.1): Spring's own state and this node's (drishti.node.readiness):
+          # readiness that means ready (CD1, CLUSTER_GUIDE.md section 9.1): Spring's own state and this node's (drishti.node.readiness):
           # DOWN while joining, while an engine's newest date opens or an owned shard is not ready; OUT_OF_SERVICE while drained. Only
           # here: /actuator/health itself and liveness never wait for it
           include: readinessState,nodeReadiness
 
 drishti:
-  # The edition (docs/admin/LENSES.md): blank is the full Drishti; risk is Drishti Risk. It names
+  # The edition (docs/guides/ADMIN_GUIDE.md): blank is the full Drishti; risk is Drishti Risk. It names
   # config/lenses/<module>/<lens>.yaml, read as a layer under the site's configuration before the packs load; every member of a cluster sets the
   # same value, and the console learns it from /api/v1/about. A change needs a restart.
   edition: ${DRISHTI_EDITION:}
@@ -148,16 +148,16 @@ drishti:
     # The umbrella folder every runtime path below defaults under (identity database, caches, loads, collab, designs, reports, the
     # pack overlay and settings, governance, the sample feeds). Each path's own setting still overrides its default.
     dir: ${DRISHTI_DATA_DIR:./data}
-  logging:                           # RESOURCES_AND_SCALE.md 6.4: the server's own log file, read by logging: above
+  logging:                           # CLUSTER_GUIDE.md 6.4: the server's own log file, read by logging: above
     file: ${DRISHTI_LOG_FILE:}       # empty: standard output only (containers); drishti-stack sets run/logs/<node>.log
     max-file-mb: 100                 # one file's size before it rolls (also daily); rolled files compressed
     max-total-mb: 1024               # every rolled file together; the oldest go beyond
     max-files: 30                    # rolled days kept at most
-  memory:                            # RESOURCES_AND_SCALE.md 5.2, D3, PO-2: one cache budget for the heap
+  memory:                            # CLUSTER_GUIDE.md 5.2, D3, PO-2: one cache budget for the heap
     cache-share: 0.5                 # the share of -Xmx every cache in the budget may take together, in weighted pools
     # weights: {connector.idmaps: 20, connector.columns: 20, connector.documents: 6, connector.parts: 4, engine.answers: 20, engine.layouts: 10, small: 20}
     squeeze-at: 0.85                 # the heap after a collection past this share of -Xmx halves the connectors' and small pools for a minute
-  admission:                         # busy protection (docs/admin/OPERATIONS.md "Busy protection"): new heavy work waits politely instead of an out-of-memory
+  admission:                         # busy protection (docs/guides/OPERATIONS_GUIDE.md "Busy protection"): new heavy work waits politely instead of an out-of-memory
     enabled: ${DRISHTI_ADMISSION_ENABLED:true}  # false: nothing waits (Admin -> Health still shows the readings)
     memory-warn: 0.80                # the heap after the last collection past this share of -Xmx: Health says "getting full"
     memory-refuse-heavy: 0.85        # past this, new date loads, downloads, BI runs and bulk loads wait (503 DRS-9502 to DRS-9505, Retry-After)
@@ -180,13 +180,13 @@ drishti:
       pivot-view: 20                 # a large pivot view (DRS-9507)
     keep: 50                         # refusals kept for Admin -> Health (in memory)
     override-max-minutes: 240        # the longest an operator's override may last (it ends by itself)
-  disk:                              # RESOURCES_AND_SCALE.md 7: the local disk
+  disk:                              # CLUSTER_GUIDE.md 7: the local disk
     min-free-percent: 10             # the free-space guard: a build that would leave less than this share of the disk free is refused (DRS-5218)...
     min-free-gb: 20                  # ...or less than this many GB (both must hold)
     check-interval: 60s              # every folder measured and brought under its cap this often
     max-dumps: 2                     # heap dumps kept in the -XX:HeapDumpPath folder; the oldest beyond go at start
     dumps-dir: ${drishti.data.dir:./data}/dumps   # the dump folder when -XX:HeapDumpPath does not name one
-  native:                            # native libraries (docs/admin/OPERATIONS.md section 2.1; HIGH_PERFORMANCE_NATIVE.md section 6): nothing here can stop the server
+  native:                            # native libraries (docs/guides/OPERATIONS_GUIDE.md section 2.1; HIGH_PERFORMANCE_NATIVE.md section 6): nothing here can stop the server
     cache-dir: ${DRISHTI_NATIVE_CACHE_DIR:${drishti.data.dir:./data}/native-cache}  # where the bundled native libraries are unpacked (JavaCPP's cache), under the data folder
     max-bytes-mb: 1024               # the most off-heap memory JavaCPP may allocate itself (org.bytedeco.javacpp.maxBytes); BLAS calls take Java arrays
     blas:
@@ -195,7 +195,7 @@ drishti:
       canary-interval: 6h            # the self-test against Java is run again this often (0: only at start); a failure switches OpenBLAS off for the run
       gemm-min-sets: 32              # a 1,024-row tile of many-scope sums is one dgemm when at least this many sets share it (tuned on one machine: BENCHMARK.md section 17)
       gemm-min-density: 0.25         # ...and at least this share of its (set, row) pairs are members; sparser tiles are added in Java
-  engines:                           # compute engines on or off per node, each with its own file (docs/architecture/COMPUTE_ENGINES.md; Admin -> Engines)
+  engines:                           # compute engines on or off per node, each with its own file (docs/guides/ADMIN_GUIDE.md; Admin -> Engines)
     dir: ${DRISHTI_ENGINES_DIR:./config/engines}   # the folder of the engines' files Admin -> Engines writes (the imports above name the same folder)
     drain: 30s                       # an engine turned off live: requests in flight finish within this, then are cancelled
     watch-seconds: 5                 # how often the engine files are compared with what was read (an edit by hand takes effect as from the page)
@@ -204,7 +204,7 @@ drishti:
     watch-seconds: 5                 # how often the module and access files are compared with what was read (a change to a module takes effect at the next start; lenses and the licence at once)
   access:                            # the access model's files (docs/architecture/ACCESS_MODEL.md): the access registry reads them, nothing else does
     dir: ${DRISHTI_ACCESS_DIR:./config/access}     # licence.yaml (none: the development licence, every module), lenses.yaml, roles.yaml, assignments.yaml; none is needed
-  metrics:                           # the platform metrics and alerts (docs/admin/OPERATIONS.md section 13.6; RESOURCES_AND_SCALE.md 8.3, 8.5)
+  metrics:                           # the platform metrics and alerts (docs/guides/OPERATIONS_GUIDE.md section 13.6; CLUSTER_GUIDE.md 8.3, 8.5)
     enabled: ${DRISHTI_METRICS_ENABLED:true}  # export the platform gauges (caches, memory budget, disk, sources, feeds, loads) on /actuator/prometheus and evaluate the alert rules
     sample-interval: 15s             # how often the gauges are sampled and the alert rules evaluated
     disk-interval: 60s               # how often the disk folders are measured for the gauges (a folder's size walks its files)
@@ -247,14 +247,14 @@ drishti:
     enabled: ${DRISHTI_OFFLINE:false}
     plugins: news,yfinance,feed      # the public-data feed plugin too (US Treasury, ECB, NY Fed, FRED: market-data pack)
   net:
-    # Drishti*net (docs/admin/OPERATIONS.md): several servers as one. OFF unless <dir>/node.yaml says enabled: true; without the folder
+    # Drishti*net (docs/guides/OPERATIONS_GUIDE.md): several servers as one. OFF unless <dir>/node.yaml says enabled: true; without the folder
     # this server is a single server exactly as before. Everything else (this node, its seed peers, gossip timings, routing,
     # nodes per role) is in the files of that folder, managed like connector files (Admin -> Net, drishti.py net), never here.
     dir: ${DRISHTI_NET_DIR:./config/net}     # created on first write; ready-made files in config/net.examples/
     watch: ${DRISHTI_NET_WATCH:auto}         # auto (file events, polling as a fallback) | poll | off
     poll: 5s  # how often the folder is looked at when polling (and, with file events, at least this often anyway)
   node:
-    # This server as one node of a cluster (CLUSTER_DEPLOYMENT.md sections 4.6, 9.1 and 10.1; CD1 and CD2)
+    # This server as one node of a cluster (CLUSTER_GUIDE.md sections 4.6, 9.1 and 10.1; CD1 and CD2)
     readiness:                       # what /actuator/health/readiness waits for (liveness and /actuator/health never wait)
       enabled: true                  # false: readiness is Spring's alone (up once started)
       joining: true                  # DOWN while this node joins Drishti*net (its peers' digests not had yet; at most join-grace)
@@ -558,7 +558,7 @@ drishti:
           - POST /api/v1/admin/dataload/retry   # a failed inbox file back into the inbox (drishti.py dataload retry; an administrator)
           - POST /api/v1/admin/feeds/*/run      # a data feed's Run now (drishti.py feed run starts it locally; the server still requires an administrator)
       "[node:drain]":
-        description: "Drain this server before it stops and take it back (the stop hooks and the rolling upgrade runner, CLUSTER_DEPLOYMENT.md section 10.1): forwarded work and VaR shards handed to other members, readiness out of service. Needs the admin role at call time."
+        description: "Drain this server before it stops and take it back (the stop hooks and the rolling upgrade runner, CLUSTER_GUIDE.md section 10.1): forwarded work and VaR shards handed to other members, readiness out of service. Needs the admin role at call time."
         allow:
           - POST /api/v1/admin/node/drain
       "[ai:use]":
@@ -709,7 +709,7 @@ drishti:
       views-per-user-per-minute: 60           # calls per user (the default for a new registration)
       searches-per-user-per-minute: 30        # searches per user and application through <drishti-search>, on top of the call rates
     apps: []                                  # host applications declared here (GitOps): read-only in Admin → Embedding ("from config"), see docs/admin/CONFIGURATION.md
-  retry:                             # what failed is tried again by itself (docs/admin/OPERATIONS.md, "Retries"): packs refused, connectors, AI providers, MCP servers
+  retry:                             # what failed is tried again by itself (docs/guides/OPERATIONS_GUIDE.md, "Retries"): packs refused, connectors, AI providers, MCP servers
     enabled: true  # retry at all; false leaves a failure to the next file change or an administrator's Retry now
     initial: 5s                      # wait before the first retry
     factor: 2.0                      # each further wait is this many times the one before
@@ -835,7 +835,7 @@ drishti:
       cache-size: 50                            # pictures kept by view, generation and rights profile
       cache-ttl: 10m  # how long snapshot views and pictures are kept, by view, generation and rights profile
       recipients: count                         # the watermark names: count | names
-  admin:                             # Admin, Artifacts: uninstalling packs, connector files and shipped BI files safely (docs/guides/OPERATIONALISING.md)
+  admin:                             # Admin, Artifacts: uninstalling packs, connector files and shipped BI files safely (docs/guides/OPERATIONS_GUIDE.md)
     uninstalled-dir: ${DRISHTI_UNINSTALLED_DIR:${drishti.data.dir:./data}/uninstalled}   # an uninstall MOVES the artifact here; nothing is deleted
     uninstalled-keep: ${DRISHTI_UNINSTALLED_KEEP:30d}      # archives older than this are removed, once a day; 0 keeps them for ever
     uninstalled-prune-interval: 1d                        # how often the archive is pruned
@@ -939,7 +939,7 @@ drishti:
     expr:                            # the Drishti expression language, DEL v2 (docs/guides/RACHANA_REFERENCE.md; docs/admin/CONFIGURATION.md, drishti.bi.expr)
       legacy: refuse                 # the old expression syntax: refuse (DRS-9100 with the DEL v2 text as the fix; the default) or warn (read with DRS-9100)
       parse-cache: 10000             # parsed expressions kept (0: off)
-    migrate:                         # migrations of STORED BI items (docs/architecture/BI_DESIGN.md 8.3; docs/guides/TROUBLESHOOTING.md "Migration problems")
+    migrate:                         # migrations of STORED BI items (docs/architecture/BI_DESIGN.md 8.3; docs/guides/OPERATIONS_GUIDE.md "Migration problems")
       on-start: ${DRISHTI_BI_MIGRATE_ON_START:true}   # at start: stored datasets and models into the table layer, 2.3 boards into reports; audited, the text before kept; idempotent
       actor: system                  # the name the history, the item's events and the audit log give the start-up run
   layouts:                           # layout mode: each user's arrangement of a Sutra's panels (USER_GUIDE.md, Layout mode)

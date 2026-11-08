@@ -563,7 +563,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.cluster = pool if pool.enabled else None
     app.state.backend_watch = BackendWatch(catalogue, _seconds(settings.get("backend.check_seconds", 5)),
                                            url_of=(lambda s: pool.current() if s.id == catalogue.default else s.url) if pool.enabled else None)
-    # the console learns the server's edition, lenses and branding from its about answer (docs/admin/LENSES.md › The design)
+    # the console learns the server's edition, lenses and branding from its about answer (docs/guides/ADMIN_GUIDE.md › The design)
     app.state.backend_watch.on_about = lambda s, about: app.state.editions.learn(about) if s.id == catalogue.default and _real_backend(app) else None
     from core.user_stamps import UserStamps
 
@@ -695,13 +695,13 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(collab_admin_routes.router)
     app.include_router(embed_admin_routes.router)
     app.include_router(admin_commands_routes.router)    # the command switches' JSON; /admin/commands redirects to /func
-    app.include_router(functions_routes.router)         # Functions: FUNC, the command directory for everyone (docs/admin/USER_MANAGEMENT.md)
+    app.include_router(functions_routes.router)         # Functions: FUNC, the command directory for everyone (docs/guides/ADMIN_GUIDE.md)
     app.include_router(datamap_routes.router)           # Data map: DATAMAP, the packs' kinds and joins, checked against the data (USER_GUIDE.md)
     app.include_router(data_routes.router)              # Export data: DATA, every dataset and a day as .jsonl.gz (DATA_GUIDE.md)
-    app.include_router(compute_admin_routes.router)     # Admin -> Compute (docs/admin/OPERATIONS.md)
-    app.include_router(admin_engines_routes.router)     # Admin -> Engines: compute engines on or off per server (COMPUTE_ENGINES.md)
+    app.include_router(compute_admin_routes.router)     # Admin -> Compute (docs/guides/OPERATIONS_GUIDE.md)
+    app.include_router(admin_engines_routes.router)     # Admin -> Engines: compute engines on or off per server (ADMIN_GUIDE.md)
     from routes import config_editor_routes
-    app.include_router(config_editor_routes.router)     # Admin -> Configuration: every setting in three tiers, changes proposed (OPERATIONS.md)
+    app.include_router(config_editor_routes.router)     # Admin -> Configuration: every setting in three tiers, changes proposed (OPERATIONS_GUIDE.md)
     app.include_router(data_out_routes.router)          # Admin -> Data out: Arrow Flight, the page and the map (FLIGHT_GUIDE.md)
     app.include_router(connector_routes.router)
     app.include_router(artifact_routes.router)

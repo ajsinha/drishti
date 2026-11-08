@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The parallel lake loader's command line (docs/guides/TOOLS.md section 4.13):
+ * The parallel lake loader's command line (docs/guides/CLI_REFERENCE.md section 4.13):
  *
  * <pre>
  * java -Xmx8g -Djava.io.tmpdir=/data/tmp -cp &lt;class path&gt; com.ash.drishti.lakeload.LakeLoad --config load.yaml [--set key.path=value ...]
@@ -148,7 +148,7 @@ public final class LakeLoad {
                     case "-h", "--help" -> {
                         out.println("usage: LakeLoad --config FILE [--set key.path=value ...] [--as-of YYYY-MM-DD] [--table T] [--pack DIR] "
                                 + "[--kind K] [--mode append|replace] [--key FIELD] [--date-from auto|name] [--plan] [--summary FILE] [--progress FILE] "
-                                + "[--no-lock] [--no-run-log] [--dry-run] [--dataset NAME] [--json] [-q]   (docs/guides/TOOLS.md section 4.13, "
+                                + "[--no-lock] [--no-run-log] [--dry-run] [--dataset NAME] [--json] [-q]   (docs/guides/CLI_REFERENCE.md section 4.13, "
                                 + "docs/guides/DATA_LAKE_GUIDE.md)");
                         return OK;
                     }
@@ -156,7 +156,7 @@ public final class LakeLoad {
                 }
             }
             if (config == null && sets.isEmpty()) {
-                throw new IllegalArgumentException("give --config FILE (docs/guides/TOOLS.md section 4.13)");
+                throw new IllegalArgumentException("give --config FILE (docs/guides/CLI_REFERENCE.md section 4.13)");
             }
         } catch (IllegalArgumentException e) {
             out.println("lakeload: " + e.getMessage());

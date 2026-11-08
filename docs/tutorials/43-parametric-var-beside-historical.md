@@ -270,5 +270,5 @@ true: the sheet's VaR and ES equal the engine's to the cent.
   [section 18.15](../guides/VAR_GUIDE.md#1815-parametric-var-and-es-a-cross-check) (the method, EWMA, the 10-day lens, the decomposition).
 - [PARAMETRIC_VAR.md](../guides/VAR_GUIDE.md): the design, the worked example and the open questions.
 - [API_GUIDE.md, VaR engine](../guides/API_GUIDE.md#var-engine-apiv1riskvar): the `parametric` block, `parametric=false`, `matrix=true`,
-  `measure=parametric`; [CLI_GUIDE.md, var](../guides/CLI_GUIDE.md#var-the-var-engine): `--no-parametric`, `--matrix`, `--measure`.
+  `measure=parametric`; [CLI_REFERENCE.md, var](../guides/CLI_REFERENCE.md#var-the-var-engine): `--no-parametric`, `--matrix`, `--measure`.
 - [Tutorial 25](25-var-from-the-bank-to-a-trade.md): historical VaR from the bank to a trade; [tutorial 38](38-the-mr-cube-on-the-pivot-engine.md): the MR cube.

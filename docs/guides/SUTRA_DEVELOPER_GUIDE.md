@@ -42,7 +42,7 @@ workbench every example opens as **your own copy** (Build → New screen → Exa
 
 **What you need**
 
-- the quick-start stack of [GETTING_STARTED.md](GETTING_STARTED.md): the demo lakes built (`drishti-console/.venv/bin/python tools/drishti.py lake demo`), the server on `http://localhost:18480` with
+- the quick-start stack of [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine): the demo lakes built (`drishti-console/.venv/bin/python tools/drishti.py lake demo`), the server on `http://localhost:18480` with
   the seven packs (`DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets`, the run configuration **Drishti server (demo lakes)**) and the console on
   `http://localhost:17480`;
 - for the command-line checks, `curl` and `python3`, and a **personal API token**: sign in, open **My account → API tokens**, make one with the scope `design:write` (it reads everything you may read,
@@ -1382,7 +1382,7 @@ The Sutra decides what matters; inference would still fill any panel of it that 
 ## 15. Testing: `expect.yaml`, `sutra lint|test|preview`, CI
 
 How to test a Sutra (`expect.yaml`, the `tests/<sutra>/` samples, `sutra lint`, `sutra test`, `sutra preview` and CI wiring) is in
-[CLI_GUIDE.md, Testing Sutras](CLI_GUIDE.md#testing-sutras-expectyaml-the-tests-convention-and-ci), beside the rest of the `sutra` command.
+[CLI_REFERENCE.md, Testing Sutras](CLI_REFERENCE.md#testing-sutras-expectyaml-the-tests-convention-and-ci), beside the rest of the `sutra` command.
 
 ## 16. The Build workbench
 

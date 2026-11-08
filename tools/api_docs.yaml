@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The API references (IMPLEMENTATION_PLAN row 2g; tools/api_docs.py; docs/guides/TOOLS.md › API references): which public surfaces are
+# The API references (IMPLEMENTATION_PLAN row 2g; tools/api_docs.py; docs/guides/CLI_REFERENCE.md › API references): which public surfaces are
 # documented, checked and served at Help -> Developer. Generated at build time, never committed.
 #
 # java: a module whose pom sets drishti.apidocs.skip to false (the packages are its drishti.apidocs.packages); `mvn -P api-docs` writes

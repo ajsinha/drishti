@@ -23,13 +23,13 @@
 <div class="adm" data-lakes data-max-mb="{{ cfg.maxUploadMb }}">
   {% with tab='lakes' %}{% include "admin/_nav.html" %}{% endwith %}
   <p class="lk-crumb"><a href="/admin/loads">Data loads</a> <span aria-hidden="true">›</span> Lakes</p>
-  <h1 class="ws-h">Load a file into a lake <a class="emb-help" href="/help/tools" aria-label="Help: the lake build tool" title="Help: the lake build tool">?</a></h1>
+  <h1 class="ws-h">Load a file into a lake <a class="emb-help" href="/help/cli-guide" aria-label="Help: the lake build tool" title="Help: the lake build tool">?</a></h1>
   <details class="adm-about"><summary>About this page</summary>
   <p class="text-muted-d">Bring a large JSON export (an array or JSON Lines, gzipped or not) and turn it into a Delta table that {{ PRODUCT }}'s Delta connector
     reads: one row per document, the whole document kept (nested lists intact), partitioned by business date and the classifiers you pick.
     The build runs on this console's machine with the same engine as <span class="mono">drishti.py lake build</span>, so a run here and a scheduled run
     behave the same (lock, summary, run log). Re-running a day replaces that day only. Lake roots this console may write:
-    <span class="mono">{{ cfg.roots | join(', ') }}</span> (<span class="mono">lakes.roots</span>). See <a href="/help/tools">Tools</a>.</p>
+    <span class="mono">{{ cfg.roots | join(', ') }}</span> (<span class="mono">lakes.roots</span>). See <a href="/help/cli-guide">Tools</a>.</p>
   </details>
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
 

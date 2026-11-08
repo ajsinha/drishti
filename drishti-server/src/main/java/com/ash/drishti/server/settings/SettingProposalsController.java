@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Admin → Configuration's proposals (docs/admin/OPERATIONS.md, "The configuration editor"), administrators only: list, propose, approve,
+ * Admin → Configuration's proposals (docs/guides/OPERATIONS_GUIDE.md, "The configuration editor"), administrators only: list, propose, approve,
  * reject, withdraw, and a console's word that it wrote an approved console key ({@link SettingProposals}).
  */
 @RestController

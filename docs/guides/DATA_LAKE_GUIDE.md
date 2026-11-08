@@ -429,7 +429,7 @@ summary: data/delta/risklake/_drishti-lake/runs/20261107T080146.064-1786979.json
 2026-11-07T08:01:53-05:00 lake-build ok exit=0 run=20261107T080146.064-1786979 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=2000 rejected=0 dates=1 partitions=15 seconds=7.012
 ```
 
-The useful options (the full list: `drishti.py lake build --help`, [TOOLS.md](TOOLS.md)):
+The useful options (the full list: `drishti.py lake build --help`, [CLI_REFERENCE.md](CLI_REFERENCE.md)):
 
 | Option | Means |
 |---|---|
@@ -485,7 +485,7 @@ documents read: 300, rows written: 300, rejected: 0
 (*Captured*: the sample file repeated 20 position ids, so `latest-by: COMPUTED_AT` kept one copy of each and the date holds 280 rows.)
 On Windows, the same command in PowerShell with the jar's path; nothing else is needed. Command-line options over the file: `--as-of`,
 `--table`, `--pack`, `--kind`, `--mode append|replace`, `--key`, `--date-from`, `--plan`, `--set key.path=value`. Every key of a load
-file, with S3 and Iceberg examples, is [TOOLS.md section 4.13](TOOLS.md#413-the-parallel-lake-loader); the design and the memory model
+file, with S3 and Iceberg examples, is [CLI_REFERENCE.md section 4.13](CLI_REFERENCE.md#713-the-parallel-lake-loader); the design and the memory model
 are [DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload).
 
 ## 4. The `.ready` file, every key
@@ -821,7 +821,7 @@ written again over the new text), so it still follows its pack's template at upg
 
 **Roll back by hand**: stop the server, set `drishti.lakes.relocate-on-start: false`, rename the folders under `<data>/delta/demo/` back to
 `<data>/delta/`, delete `relocated.json`, and put the `.bak` connector files back. Every check, refusal and message:
-[OPERATIONS.md, The lakes' folders](../admin/OPERATIONS.md#the-lakes-folders).
+[OPERATIONS_GUIDE.md, The lakes' folders](OPERATIONS_GUIDE.md#71-the-lakes-folders).
 
 ## 8. Checking a load, and troubleshooting
 
@@ -1020,7 +1020,7 @@ The caps come from `DRISHTI_ARCHIVE_MAX_MB`, `DRISHTI_ARCHIVE_MAX_RATIO` and `DR
 takes `source.archive.*` in its load file. **Datasets** (the parallel loader with `datasets:`, and `drishti.py convert`): an archive with
 no folders is one dataset named after it; folders one level deep are one dataset each; loose files beside folders, or files deeper than
 one folder, are refused. With several datasets every one is read and checked before the first commit, so one that would fail stops the
-run with nothing loaded ([TOOLS.md section 4.13](TOOLS.md#413-the-parallel-lake-loader)).
+run with nothing loaded ([CLI_REFERENCE.md section 4.13](CLI_REFERENCE.md#713-the-parallel-lake-loader)).
 
 ```bash
 # a day's trades as one archive, into the table its folder names
@@ -1127,7 +1127,7 @@ settings:
 
 The tables' replenish jobs live in the in-memory lake's engine file `config/engines/memory-lake.yaml`, with its switch
 `drishti.engines.memory-lake.enabled` (off as shipped: set it to `true` or turn it on in Admin → Engines, then restart, since the stores'
-caps size the direct memory at start; [OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)), or in
+caps size the direct memory at start; [OPERATIONS_GUIDE.md section 21](ADMIN_GUIDE.md#21-compute-engines-on-or-off)), or in
 `application.local.yaml` or the environment:
 
 ```yaml
@@ -1231,7 +1231,7 @@ scheduled report. Only a download by you may leave the server."*
 - **Host checks** (Admin → Health, *In-memory lake*): no swap (or encrypted swap), no heap dump on out-of-memory unless to a RAM disk, no
   JFR recording at launch, the temporary folder on a RAM disk. Each is amber when not met.
 - **Sizing.** Memory per table is close to its Parquet size with zstd, plus at most one partly filled chunk per file. Measured on the demo
-  tables ([RESOURCES_AND_SCALE.md](../architecture/RESOURCES_AND_SCALE.md#58-the-in-memory-lake-measured)): the in-memory files are 4 to
+  tables ([CLUSTER_GUIDE.md](../admin/BENCHMARK.md#216-bounded-resources-of-one-server)): the in-memory files are 4 to
   42 times smaller than the decoded JSON and 1.6 to 3.9 times smaller than the disk lake's Snappy files. Small tables want small chunks
   (`chunk-kb: 64`).
 

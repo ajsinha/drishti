@@ -72,9 +72,9 @@ is the job of your own ETL (or of a pipeline engine such as DishtaYantra). What 
 there**. One small signal, "this batch has landed", makes Drishti refresh what it caches, check the data is really readable, evaluate the
 alert rules on it, and tell the right people. Expectations then flag a batch that has *not* landed in time.
 
-Related: [API_GUIDE.md](API_GUIDE.md) (every endpoint, the error codes), [CLI_GUIDE.md](CLI_GUIDE.md) (the `drishti.py` program),
+Related: [API_GUIDE.md](API_GUIDE.md) (every endpoint, the error codes), [CLI_REFERENCE.md](CLI_REFERENCE.md) (the `drishti.py` program),
 [CONFIGURATION.md](../admin/CONFIGURATION.md) (every setting), [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) (what a pack is),
-[OPERATIONALISING.md](OPERATIONALISING.md) (shipping packs and data to servers).
+[OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#8-deploy-promote-and-roll-back-by-copying) (shipping packs and data to servers).
 
 ### 1. Why: what the signal is for
 
@@ -95,7 +95,7 @@ With the signal, the same four things happen every time, in order, and each leav
 
 **What this is not.** Drishti will not copy, parse, transform or schedule your data. `drishti.py data ingest`, `data ingest --watch` and
 `pack make` exist to stage data for a demo, a small team or a proof of concept; they are not a production ETL (see
-[OPERATIONALISING.md](OPERATIONALISING.md) and [DEMO_DATA.md](../connectors/DEMO_DATA.md)). In production your ETL loads the store and, as its
+[OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#8-deploy-promote-and-roll-back-by-copying) and [DEMO_DATA.md](../connectors/DEMO_DATA.md)). In production your ETL loads the store and, as its
 last step, makes the one call this guide describes.
 
 ### 2. Concepts
@@ -273,7 +273,7 @@ A token with only the default `read` scope may call every `GET` above (as the us
 
 ### 5. The command line reference
 
-`tools/drishti.py` (see [CLI_GUIDE.md](CLI_GUIDE.md) for installing it and the connection options `--server`, `--token-file`, `--user`,
+`tools/drishti.py` (see [CLI_REFERENCE.md](CLI_REFERENCE.md) for installing it and the connection options `--server`, `--token-file`, `--user`,
 `--timeout`, and the `DRISHTI_SERVER` / `DRISHTI_TOKEN` / `DRISHTI_USER` environment). The token is never printed.
 
 #### `data landed`
@@ -727,7 +727,7 @@ entity (`<kind>/<id>.json`); `lake build`, `build_demo_lakes.py`, `data ingest` 
 (`UP (CSV input is deprecated: fixing/X.csv (convert to JSON Lines: drishti.py convert))`) until it is gone.
 
 **`drishti.py convert FILE [--out X.jsonl]`** turns CSV, a JSON array (or one object) or a folder of per-entity `.json` files into
-JSON Lines ([CLI_GUIDE.md](CLI_GUIDE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)):
+JSON Lines ([CLI_REFERENCE.md](CLI_REFERENCE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)):
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py convert trades.csv                    # trades.jsonl, a line per row
@@ -985,7 +985,7 @@ zcat trade-valuation_2026-09-30.jsonl.gz | head -2
 
 ### 6. The command line
 
-`drishti.py data get` does the same from a terminal ([CLI_GUIDE.md](CLI_GUIDE.md#data-get-a-dataset-as-jsonlgz-export-data)):
+`drishti.py data get` does the same from a terminal ([CLI_REFERENCE.md](CLI_REFERENCE.md#data-get-a-dataset-as-jsonlgz-export-data)):
 
 ```bash
 python3 tools/drishti.py data get                                     # the datasets you may download

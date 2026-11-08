@@ -16,7 +16,7 @@
 in the server's exec jar) instead of Python staging plus a Java writer: JSON Lines read, parsed, sorted and written as Parquet by many
 threads, one commit per business date, Delta or Iceberg, memory bounded by ``memory.budget-mb`` (docs/architecture/DATA_ARCHITECTURE.md).
 
-The run's options become the loader's configuration (a JSON file in the run's staging folder; docs/guides/TOOLS.md section 4.13 lists
+The run's options become the loader's configuration (a JSON file in the run's staging folder; docs/guides/CLI_REFERENCE.md section 4.13 lists
 its keys); ``--loader-set KEY=VALUE`` adds any key (``memory.budget-mb=4096``, ``memory.spill-dir=/mnt/ebs/spill``,
 ``parallel.writers=16``, ``target.layout.sort-by=[LEGAL_ENTITY,DESK,id]``). This build holds the lake's lock and writes the run log and
 summary as usual; the loader's summary (the same keys, plus throughput and memory) is merged into it.

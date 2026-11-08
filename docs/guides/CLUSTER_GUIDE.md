@@ -19,7 +19,7 @@ For operators who run Drishti on more than one server, or on one large one. It c
 a cluster of three from the first seed to production, Admin → Net, the roles of a larger estate and how many of each, VaR sharding from
 the operator's side, high availability, load balancing, zero-downtime upgrades and loads, security zones, operations and disaster
 recovery, Drishti on AWS (ECS, EFS, S3), the Delta lake in S3 at scale, the scale strategy for one server, sizing memory, CPU and disk,
-and tuning. Installing and running one server is the [operations guide](../admin/OPERATIONS.md); every setting named here is in
+and tuning. Installing and running one server is the [operations guide](OPERATIONS_GUIDE.md); every setting named here is in
 [CONFIGURATION.md](../admin/CONFIGURATION.md); every measured figure is in [BENCHMARK.md](../admin/BENCHMARK.md); how the cluster works
 inside is [ARCHITECTURE.md](../architecture/ARCHITECTURE.md). The hands-on walk-through is
 [tutorial 19, a cluster of three](../tutorials/19-a-cluster-of-three.md).
@@ -1079,7 +1079,7 @@ changed at T; a new version is loading". Official records keep every result vers
 | the cluster key | the three rolling steps of section 1.6 |
 
 Which setting needs what: [CONFIGURATION.md](../admin/CONFIGURATION.md). Packs, Sutras and data ship by copying a versioned bundle to each node
-([OPERATIONALISING.md](OPERATIONALISING.md)); with Drishti\*net a pack deployed to one node is served cluster-wide by the newest-version rule.
+([OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#8-deploy-promote-and-roll-back-by-copying)); with Drishti\*net a pack deployed to one node is served cluster-wide by the newest-version rule.
 **The lake:** vacuum, compaction and Iceberg snapshot expiry run beside readers (`lake maintain`, `deploy/lake-maintenance.yaml`); keep the
 retention above the longest open date's age.
 
@@ -1161,7 +1161,7 @@ skeletons are available. A whole-cluster stop: in reverse.
 Admin → Health has a Drishti\*net line (members alive and suspect, requests forwarded and failed over ten minutes, `gossipPort`,
 `peerProtocol`, *Last administrator kept*). Logs go to standard output (CloudWatch, journald) and rotated files under `data/logs`; `net:` lines
 name every join, suspicion, death and refused call, one WARN a change of state and a count once a minute, never a stack trace a call. The
-platform metrics and alert rules: [the operations guide](../admin/OPERATIONS.md#136-platform-metrics-and-alerts).
+platform metrics and alert rules: [the operations guide](OPERATIONS_GUIDE.md#135-platform-metrics-and-alert-rules).
 
 ### 11.3 Backups and disaster recovery
 
@@ -1205,7 +1205,7 @@ Exercise the failover twice a year. On AWS: section 12.10.
 | `503 DRS-5215` naming a shard | `drishti.py var shards --date D` | restore an owner; the shard is rebuilt after `stable-seconds` |
 | `409 DRS-5216` | members reading different lake versions | announce the load; every member reads the same lake |
 
-More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md#drishtinet). The measured soak of a three-node cluster on real processes (kills, failover
+More in [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2112-drishtinet). The measured soak of a three-node cluster on real processes (kills, failover
 times, zero wrong answers) and how to run a long soak: [BENCHMARK.md](../admin/BENCHMARK.md#21-measuring-one-installation).
 
 ---
@@ -1217,7 +1217,7 @@ in [`deploy/docker/ecs/`](../../deploy/docker/ecs); the EFS access points, Cloud
 in [`deploy/aws/ecs/`](../../deploy/aws/ecs); the lake in S3 is section 13 and [`deploy/aws/delta-lake/`](../../deploy/aws/delta-lake). Every
 script reads `deploy/aws/env` (copy it from `deploy/aws/env.example`; it holds ids and names, never a secret) and takes `--help` and
 `--dry-run`, tested that way (`tools/test_deploy_aws.py`); run each with `--dry-run` first in a development account. Docker and Kubernetes
-outside AWS: [OPERATIONALISING.md](OPERATIONALISING.md#13-docker-and-kubernetes).
+outside AWS: [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#55-kubernetes-ecs-and-mounted-packs).
 
 ### 12.1 The rule: every written path is on EFS, at the same path
 
@@ -1772,7 +1772,7 @@ old day's files move to its date's tier at the next lifecycle run.
 table); `checkpoint: true`; `vacuum-hours` = `LAKE_VACUUM_HOURS` (168; S3 keeps vacuumed files 14 more days as noncurrent versions);
 `compact: false` (each day arrives laid out and sorted, and a plain compaction would merge files out of id order: restate a day that needs
 re-laying instead). `--force-foreign` is needed because `lake maintain` treats every `s3://` table as foreign; these are Drishti's (written by
-`lake publish`), and the history marks the runs *forced*. `lake maintain` itself: [the operations guide](../admin/OPERATIONS.md#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain).
+`lake publish`), and the history marks the runs *forced*. `lake maintain` itself: [the operations guide](OPERATIONS_GUIDE.md#16-lake-maintenance-and-scheduling).
 
 ```text
  business date age:   0 ───────── 90 days ─────────────── 2 years ────────────────── LAKE_KEEP_BUSINESS_DAYS ──► removed
@@ -2118,7 +2118,7 @@ words. **Coefficients** lists every constant with its unit, source and status (m
 benchmark, or estimate); **Explain** says it in plain words with examples; the **Calibration check** reproduces the benchmark.
 
 The same planner is **Admin → Capacity** in the console (it evaluates as you type and offers **Download the working (.xlsx)** with every
-formula live; [the operations guide](../admin/OPERATIONS.md#124-admin--capacity-today-against-the-plan)) and `drishti.py admin capacity`.
+formula live; [the operations guide](OPERATIONS_GUIDE.md#146-admin--capacity-today-against-the-plan)) and `drishti.py admin capacity`.
 All three read one file, `drishti-server/src/main/resources/capacity/planner.yaml`; to calibrate to your servers change a coefficient there
 and run `python3 tools/sizing_planner.py` (`--check` exits 1 when the workbook, its template or the test vectors are stale). It plans one
 server: a sharded cluster divides the hot files, page cache and loads among members but copies each date's skeleton to every member.
@@ -2139,11 +2139,11 @@ server: a sharded cluster divides the hot files, page cache and loads among memb
   exports, BI runs and bulk loads, judged on the heap after the last collection, loads in flight, open dates, requests in flight and free
   disk. Past a wait level new heavy work is answered `503` with `Retry-After` (`DRS-9501` to `DRS-9505`); past the highest level new sign-ins
   wait too; reads of open dates are never gated. Under pressure, in order: the cache budget squeezes, the safety net closes least recently
-  used dates, then new heavy work waits. Levels, the console's message and the override: [the operations guide](../admin/OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over).
+  used dates, then new heavy work waits. Levels, the console's message and the override: [the operations guide](OPERATIONS_GUIDE.md#147-busy-protection-refuse-politely-never-fall-over).
 - **Direct memory.** `-XX:MaxDirectMemorySize=256m` and `-Djdk.nio.maxCachedBufferSize=262144` on every launcher; I/O goes through a pool of at
   most 64 reusable 128 KB buffers; Kafka fetches are capped. Admin → Health shows direct memory against its limit (amber from 80%). Mapped
   files do not count against it. Memory-only (in-memory lake) stores are direct memory too, each its own hard cap, and the launchers raise
-  the limit by their caps ([the operations guide](../admin/OPERATIONS.md#121a-direct-memory-and-the-diagnostics-of-a-long-run)).
+  the limit by their caps ([the operations guide](OPERATIONS_GUIDE.md#143-direct-memory-and-the-diagnostics-of-a-long-run)).
 - **Resident memory.** RSS levels off at about `-Xmx` plus 0.9 to 1 GB with glibc's default allocator, and about `-Xmx` plus 0.4 GB with
   `MALLOC_ARENA_MAX=2` (measured: [BENCHMARK.md](../admin/BENCHMARK.md#21-measuring-one-installation)). A server with VaR or exposure dates
   open also counts the page cache of its mapped hot files in RSS (at 1,000,000 positions and `-Xmx6g`: 6.9 GB with two dates open, 11.2 GB after
@@ -2192,7 +2192,7 @@ keeps answering, the lake is never touched, Health turns red. A folder near its 
 date are kept; a crash's `.part` files are deleted at the next start; a write that finds the disk filled by another process fails with an I/O
 error. **The lake's own retention** is the lake's (official results 7 years, `retention-years`; VaR input vectors as the bank's loaders keep
 them: about 12.4 TB of Parquet at 2.3M over 7 years at 1-day, 37 TB at 1,518 values). Sizing caches and disk per connector:
-[the operations guide](../admin/OPERATIONS.md#123-sizing-caches-and-disk-per-connector).
+[the operations guide](OPERATIONS_GUIDE.md#145-disk-caches-per-connector).
 
 ### 15.9 Seeing it: Admin → Caches, Health → Disk, metrics and alerts
 
@@ -2213,7 +2213,7 @@ cache; `drishti_memory_budget_bytes`, `drishti_memory_budget_used_bytes` per poo
 `drishti_disk_free_bytes`, `drishti_disk_guard_bytes`; `drishti_mapped_files`, `drishti_mapped_deleted_files` (Linux); the JVM's direct and
 mapped buffers. **Alerts** (`config/alerts/platform-alerts.yaml`, the same rules in PromQL in `deploy/prometheus/drishti-alerts.yaml`): a cache
 near its limit, heap after GC over 85% for 10 minutes, direct memory over 80%, a folder at its cap, free disk under the guard. The full list:
-[the operations guide](../admin/OPERATIONS.md#136-platform-metrics-and-alerts).
+[the operations guide](OPERATIONS_GUIDE.md#135-platform-metrics-and-alert-rules).
 
 ---
 
@@ -2294,7 +2294,7 @@ refusal (`DRS-9029`, `drishti.bi.exec.max-estimated-rows`) costs a log read; a q
 that never takes more than `background-share` of the slots.
 
 **Multi-day type-ahead** (`index.days` above 1) costs memory or disk, not latency: a prefix lookup is 0.002 ms from the heap tier and 0.045
-ms from a segment file, both far below the 30 ms budget ([the operations guide](../admin/OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index)).
+ms from a segment file, both far below the 30 ms budget ([the operations guide](OPERATIONS_GUIDE.md#144-the-multi-day-type-ahead-index)).
 
 ### 16.2 JVM settings
 

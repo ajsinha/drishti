@@ -166,12 +166,12 @@ def test_the_comment_reader():
     assert S.placeholder_default("${DRISHTI_FEEDS:${drishti.data.dir}/feeds}") == "./data/feeds"
     assert S.placeholder_default("${ANTHROPIC_API_KEY}") is None
     assert S.env_names("${A_B:${C_D:x}}") == ["A_B", "C_D"]
-    assert S.since("2.9.7 (RESOURCES_AND_SCALE.md 6.4): the log") == "2.9.7" and S.since("section 5.6") == ""
+    assert S.since("2.9.7 (CLUSTER_GUIDE.md 6.4): the log") == "2.9.7" and S.since("section 5.6") == ""
     assert cat.is_secret("drishti.security.secret") and not cat.is_secret("drishti.bi.ai.max-tokens")
 
 
 def test_the_engines_area_lists_every_engine_file_key_and_the_old_names(tmp_path, monkeypatch):
-    """COMPUTE_ENGINES.md section 12: the Engines area holds every key of every config/engines/*.yaml (the server area none of them), the
+    """ADMIN_GUIDE.md section 12: the Engines area holds every key of every config/engines/*.yaml (the server area none of them), the
     old switch names once each, and --check fails when a file and its jar copy differ or a key is in both application.yaml and a file."""
     rows, problems = cat.engine_rows()
     assert not problems, problems

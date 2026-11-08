@@ -15,7 +15,7 @@
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /*
- * The sign-in page under busy protection (docs/admin/OPERATIONS.md "Busy protection"; mock-up A, panel 1). The form is sent in the
+ * The sign-in page under busy protection (docs/guides/OPERATIONS_GUIDE.md "Busy protection"; mock-up A, panel 1). The form is sent in the
  * background; when the server says sign-ins wait (503 DRS-9501, Retry-After), the calm message counts down above the fields, the form keeps
  * what was typed, and it signs in by itself when the time is up (three times at most; Try now and Cancel beside it). Any other answer is
  * the page the server sent, shown as it is.

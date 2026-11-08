@@ -26,7 +26,7 @@ About 25 minutes.
 ## Before you start
 
 - [Tutorial 1](01-first-15-minutes.md) done (signed in as the development administrator, the token for the command line set) and [tutorial 8](08-share-and-collaborate.md) for the user `vera`.
-- Email needs an SMTP server, which a fresh install does not have. The tutorial shows what Drishti does without one (it keeps the run and retries); [OPERATIONS.md](../admin/OPERATIONS.md) says how to set `spring.mail.host` and the email channel.
+- Email needs an SMTP server, which a fresh install does not have. The tutorial shows what Drishti does without one (it keeps the run and retries); [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md) says how to set `spring.mail.host` and the email channel.
 
 ## What you will learn
 
@@ -194,7 +194,7 @@ On a phone the page is one column:
 
 ## Step 7 · From the command line and the API
 
-Creating and editing reports and subscriptions is done in the console (`drishti.py` has no command for scheduled reports or subscriptions; its `bi` commands, such as `drishti.py bi catalogue list` and `bi runs`, are for BI items: [CLI_GUIDE.md](../guides/CLI_GUIDE.md)). Reading them is REST, with the token of tutorial 1. A
+Creating and editing reports and subscriptions is done in the console (`drishti.py` has no command for scheduled reports or subscriptions; its `bi` commands, such as `drishti.py bi catalogue list` and `bi runs`, are for BI items: [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md)). Reading them is REST, with the token of tutorial 1. A
 personal token may read but never change your reports: a `PUT` with it is refused, `403 DRS-5002 API tokens may not call this endpoint`.
 
 ```text

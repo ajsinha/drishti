@@ -156,9 +156,9 @@ A Delta connector never writes per edit: write-back keeps corrections as overlay
 | `doc-disk-cache.zone` | string | `America/New_York` | Zone of the daily clearing |
 | `id-map-disk.enabled` | bool | `true` | Each table date id map written once per table version and memory-mapped: no heap per id, kept across restarts |
 | `id-map-disk.dir` | path | `<data dir>/cache/<connector>/idmaps` | Id maps written once per table version and date, read through a memory map (plugins/drishti-plugin-delta/README.md › The id map of a day) |
-| `id-map-disk.max-gb` | number | `5` | The most disk the id map files take; the least recently used beyond it are unmapped, then deleted, never a map in use (mapped, read or written in the last five minutes, a date open in VaR or exposure); a map alone over it is kept and warned about (OPERATIONS.md section 12.3) |
-| `id-map-disk.ttl` | duration |  | Off when empty or 0; at least 24h. Drops a map not used (mapped or read) for that long, give or take 10%; never the latest and previous dates, today, a date open in VaR or exposure (OPERATIONS.md section 12.3) |
-| `id-map-disk.idle-release` | duration | `30m` | A map not read for that long is unmapped (the file stays; the next read maps it again), never while a read is inside it nor for a date open in VaR or exposure: the cap then trims its file when the folder is over max-gb. At least 5m (OPERATIONS.md section 12.3) |
+| `id-map-disk.max-gb` | number | `5` | The most disk the id map files take; the least recently used beyond it are unmapped, then deleted, never a map in use (mapped, read or written in the last five minutes, a date open in VaR or exposure); a map alone over it is kept and warned about (OPERATIONS_GUIDE.md section 12.3) |
+| `id-map-disk.ttl` | duration |  | Off when empty or 0; at least 24h. Drops a map not used (mapped or read) for that long, give or take 10%; never the latest and previous dates, today, a date open in VaR or exposure (OPERATIONS_GUIDE.md section 12.3) |
+| `id-map-disk.idle-release` | duration | `30m` | A map not read for that long is unmapped (the file stays; the next read maps it again), never while a read is inside it nor for a date open in VaR or exposure: the cap then trims its file when the folder is over max-gb. At least 5m (OPERATIONS_GUIDE.md section 12.3) |
 | `columns-cache-mb` | int |  | Memory for days' column sets, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own |
 | `id-map-mb` | int |  | Memory for days' id maps, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own |
 | `lz4-via-native` | boolean | `true` | hadoop engine only: read LZ4 files through the native engine's decoder |
@@ -182,7 +182,7 @@ Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `un
 <!-- settings:end -->
 
 Every key with its tier and whether it applies live: [CONFIGURATION.md, `delta`](../../docs/admin/CONFIGURATION.md#delta-tls-proxy); sizing the
-caches and disk per connector: [OPERATIONS.md section 12.3](../../docs/admin/OPERATIONS.md#123-sizing-caches-and-disk-per-connector). Read
+caches and disk per connector: [OPERATIONS_GUIDE.md section 12.3](../../docs/guides/OPERATIONS_GUIDE.md#145-disk-caches-per-connector). Read
 beside the table, by the writers rather than the connector: `layout.<kind>.sort-by` (`id`), `layout.<kind>.file-rows` (250,000) and
 `layout.<kind>.row-group-rows` ([Row-group size](#row-group-size)). In a connector file the keys may be written nested
 (`layout: {trade: {columns: [...]}}`) or flat (`layout.trade.columns`).
@@ -345,7 +345,7 @@ column, so small groups make single reads cheap; column scans barely notice.
 
 | Writer | Row group | Set by |
 |---|---|---|
-| `drishti.py lake build`, `lake demo`, `build_demo_lakes.py` and the parallel loader into **Delta** (the Java writer) | **256 KB**, pages of 64 KB | `DRISHTI_LAKE_ROW_GROUP_KB`, `DRISHTI_LAKE_PAGE_KB`; the AWS deployment sets 1 MB ([CLUSTER_DEPLOYMENT.md section 7.1](../../docs/architecture/CLUSTER_DEPLOYMENT.md#71-the-numbers)) |
+| `drishti.py lake build`, `lake demo`, `build_demo_lakes.py` and the parallel loader into **Delta** (the Java writer) | **256 KB**, pages of 64 KB | `DRISHTI_LAKE_ROW_GROUP_KB`, `DRISHTI_LAKE_PAGE_KB`; the AWS deployment sets 1 MB ([CLUSTER_GUIDE.md section 7.1](../../docs/guides/CLUSTER_GUIDE.md#133-the-layout-buckets-tables-partitions-files)) |
 | the parallel loader into **Iceberg** | 1 MB, unless the layout sets `rowGroupBytes` | the loader's configuration ([DATA_LAKE_GUIDE.md section 3.3](../../docs/guides/DATA_LAKE_GUIDE.md#33-the-parallel-loader)) |
 | the Python writers on `tools/samplegen/layout.py` (`ingest_jsonl.py`, `samplegen/lake.py`, the banking `make_data.py`, `maintain.py relayout`) | `layout.<kind>.row-group-rows` **rows** | the pack's layout |
 
@@ -368,7 +368,7 @@ no layout.
 
 Drishti only reads the lake; whatever writes it follows the layout. The repository's writers do: `drishti.py lake build` and the parallel
 loader ([DATA_LAKE_GUIDE.md section 3](../../docs/guides/DATA_LAKE_GUIDE.md#3-loading-three-ways),
-[TOOLS.md section 4.13](../../docs/guides/TOOLS.md#413-the-parallel-lake-loader)), `tools/samplegen/load_rows.py` for JSON Lines rows
+[CLI_REFERENCE.md section 4.13](../../docs/guides/CLI_REFERENCE.md#713-the-parallel-lake-loader)), `tools/samplegen/load_rows.py` for JSON Lines rows
 (`{"domain", "kind", "table", "id", "date", "doc"}`, [DATA_GUIDE.md](../../docs/guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)),
 `tools/samplegen/bulk_trades.py --trades N --days D` for scale tests (one JSONL file a day, then `lake build`; memory stays flat), and
 `maintain.py relayout`, which rewrites an existing table into its layout one day at a time.
@@ -421,7 +421,7 @@ under `id-map-disk.max-gb` (5), least recently mapped first. A map is never evic
 cap is kept and warned about once. `id-map-disk.idle-release` unmaps an unread map (the file stays). `id-map-disk.ttl` (off; at least
 `24h`) drops maps unused that long, never the latest and previous dates, today or an open date. Admin → Caches shows each drop's reason
 (`expired (ttl)`, `evicted (max-gb)`, `replaced (new version)`) and the counts `idMapsExpired`, `idMapsEvicted`, `idMapsReplaced`,
-`idMapDiskMB`. Sizing: [OPERATIONS.md section 12.3](../../docs/admin/OPERATIONS.md#123-sizing-caches-and-disk-per-connector). Rows
+`idMapDiskMB`. Sizing: [OPERATIONS_GUIDE.md section 12.3](../../docs/guides/OPERATIONS_GUIDE.md#145-disk-caches-per-connector). Rows
 deleted through a deletion vector are not in the map.
 
 ### Opening one entity
@@ -448,7 +448,7 @@ a kind's newest day cannot be read at a rebuild, it keeps the ids listed before 
 ids are kept, so a type-ahead on a past date answers from that date's ids
 ([ARCHITECTURE.md section 9.1](../../docs/architecture/ARCHITECTURE.md#91-several-business-days)). A new commit rebuilds them in the
 background; a restated past day is caught every `index.reload-every` (10m), and **Admin → Connectors → Index** reloads a day by hand
-([OPERATIONS.md section 12.2](../../docs/admin/OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index)).
+([OPERATIONS_GUIDE.md section 12.2](../../docs/guides/OPERATIONS_GUIDE.md#144-the-multi-day-type-ahead-index)).
 
 ### The column set of a day and reverse lookups
 
@@ -589,13 +589,13 @@ settings:
   needs `s3:ListBucket` on the prefix and `s3:GetObject` on `<bucket>/<prefix>/*`; a loader also `s3:PutObject`, `s3:DeleteObject` and
   `s3:AbortMultipartUpload`; with SSE-KMS, `kms:Decrypt` (and `kms:GenerateDataKey` to write).
 - **Writing.** `drishti.py lake build` with an `s3://` lake and `lake publish`, or the parallel loader with an `s3://` target
-  ([TOOLS.md section 4.11](../../docs/guides/TOOLS.md#411-lake-publish-a-built-day-into-a-delta-table-in-s3)); commits rely on S3's
+  ([CLI_REFERENCE.md section 4.11](../../docs/guides/CLI_REFERENCE.md#711-lake-publish-a-built-day-into-a-delta-table-in-s3)); commits rely on S3's
   conditional PUTs (`deploy/aws/delta-lake/check-conditional-writes.sh` checks a bucket).
 - **The AWS side.** `deploy/aws/delta-s3/delta-s3.sh` (and `.ps1`) creates a private encrypted bucket, prefix and IAM policy, checks them
   by reading one table end to end, and removes them ([its README](../../deploy/aws/delta-s3/README.md),
-  [TOOLS.md section 4.14](../../docs/guides/TOOLS.md#414-the-aws-connectors-tool-scripts-s3-tables-and-delta-lake-on-s3)). A production lake
+  [CLI_REFERENCE.md section 4.14](../../docs/guides/CLI_REFERENCE.md#714-the-aws-connectors-tool-scripts-s3-tables-and-delta-lake-on-s3)). A production lake
   past 200 TB (KMS, VPC endpoint, tiers, loads, maintenance, alarms):
-  [CLUSTER_DEPLOYMENT.md](../../docs/architecture/CLUSTER_DEPLOYMENT.md#appendix-c-a-high-performance-delta-lake-on-aws-past-200-tb).
+  [CLUSTER_GUIDE.md](../../docs/guides/CLUSTER_GUIDE.md#13-the-delta-lake-in-s3-at-scale).
 - **Tested** against S3Mock with the shipped template's settings, and with `s3a://` on both engines; not yet run against a live AWS account.
 
 ## Security: TLS and credentials
@@ -643,5 +643,5 @@ set only when the endpoint is not on it). `https://` endpoints are tunnelled wit
 
 - [Several connectors for one kind (a union)](../../docs/connectors/CONNECTORS.md#several-connectors-for-one-kind-a-union), [Connector files](../../docs/connectors/CONNECTOR_FILES.md) and [TLS](../../docs/connectors/TLS.md).
 - [The data lake and data load guide](../../docs/guides/DATA_LAKE_GUIDE.md): lake files, loading, `.ready` files, maintenance.
-- [BENCHMARK.md, Trades at scale](../../docs/admin/BENCHMARK.md#8-trades-at-scale) and [OPERATIONS.md, Memory and caches](../../docs/admin/OPERATIONS.md#12-memory-and-caches).
+- [BENCHMARK.md, Trades at scale](../../docs/admin/BENCHMARK.md#8-trades-at-scale) and [OPERATIONS_GUIDE.md, Memory and caches](../../docs/guides/OPERATIONS_GUIDE.md#141-the-caches-and-admin--caches).
 - [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).

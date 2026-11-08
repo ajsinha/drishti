@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # What each feature an edition names (features: in config/lenses/<module>/<lens>.yaml) presets, on the server and in the console
-# (docs/admin/LENSES.md › The design). A value of off presets false; any other value (on, edition) presets true.
+# (docs/guides/ADMIN_GUIDE.md › The design). A value of off presets false; any other value (on, edition) presets true.
 # A setting the product writes as ${VARIABLE:default} keeps its variable, so the site still wins. A feature an edition does not
 # name keeps the product's default. The console's features.* flags are the console-only switches (all on by default).
 features:
@@ -23,7 +23,7 @@ features:
   pivot:         { server: [drishti.pivot.enabled] }
   reports:       { server: [drishti.reports.enabled], console: [features.reports] }
   collaboration: { server: [drishti.collab.enabled], console: [features.collaboration] }
-  var:           { server: [drishti.engines.var.enabled] }        # the compute engines' switches (config/engines/<id>.yaml, COMPUTE_ENGINES.md)
+  var:           { server: [drishti.engines.var.enabled] }        # the compute engines' switches (config/engines/<id>.yaml, ADMIN_GUIDE.md)
   exposure:      { server: [drishti.engines.exposure.enabled] }
   frtb-sa:       { server: [drishti.engines.frtb-sa.enabled] }
   simm:          { server: [drishti.engines.simm.enabled] }

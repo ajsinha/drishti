@@ -33,7 +33,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 /**
- * A server started with {@code drishti.edition=world} (Drishti World, config/lenses/economy/world.yaml; docs/admin/LENSES.md): the five
+ * A server started with {@code drishti.edition=world} (Drishti World, config/lenses/economy/world.yaml; docs/guides/ADMIN_GUIDE.md): the five
  * public-data packs alone (allow-only: another is refused with DRS-1017), the packs' own commands in FUNC and the type-ahead (VaR and
  * exposure words off), the BI datasets of the world-economy pack only, and the About answers and branding.
  */
@@ -116,7 +116,7 @@ class EditionWorldServerTest {
 
     @Autowired com.ash.drishti.server.engines.EngineRegistry engines;
 
-    /** The edition's features var: off and exposure: off preset the engines' switches (config/engines/, COMPUTE_ENGINES.md section 4). */
+    /** The edition's features var: off and exposure: off preset the engines' switches (config/engines/, ADMIN_GUIDE.md section 4). */
     @Test
     void theEditionsFeaturesTurnTheVarAndExposureEnginesOff() {
         assertThat(engines.state("var")).isEqualTo(com.ash.drishti.server.engines.EngineRegistry.State.OFF);

@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""No module of the console keeps state one person could read of another (docs/admin/USER_MANAGEMENT.md section 6). A module-level dict,
+"""No module of the console keeps state one person could read of another (docs/guides/ADMIN_GUIDE.md section 6). A module-level dict,
 list or set in core/ or routes/ is either a constant table (an UPPERCASE name the module never changes after import: no item set, no
 append, add, update, pop, clear...) or listed below with the reason it holds nothing of a person's, or is keyed by the person, server, roles
 and as-of (core/user_cache.py). A new one fails here until it is moved to the app's state, keyed by core.user_cache, or listed with its

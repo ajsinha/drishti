@@ -39,7 +39,7 @@ About 25 minutes.
 ## Step 1 · Make a colleague
 
 Open **Admin**, then **Users**, and press **New user**: user name `vera`, display name `Vera Lim`, the role `viewer`, an email address, a password of at least ten characters with letters and digits, and tick *must change password* only if you
-want that to be part of your test. (Roles and packs per user are explained in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).)
+want that to be part of your test. (Roles and packs per user are explained in [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md).)
 
 ![Admin → Users: the development administrator and Vera Lim, role viewer](img/t08/00-users.jpg)
 
@@ -125,7 +125,7 @@ You should see Vera's reply under your comment, any value she quotes shown as *s
 - [Tutorial 9 · Reports](09-reports.md) sends a view to people on a schedule.
 - [USER_GUIDE.md › Share a view with a note](../guides/USER_GUIDE.md#share-a-view-with-a-note), [Your inbox](../guides/USER_GUIDE.md#your-inbox) and [Discussion](../guides/USER_GUIDE.md#discussion) are the references.
 - Sharing, the inbox and discussions have no `drishti.py` command: they belong to people, and the API takes a signed-in session for them ([API_GUIDE.md](../guides/API_GUIDE.md)).
-  An administrator sets collaboration limits and the email channel in **Admin → Collaboration** ([OPERATIONS.md](../admin/OPERATIONS.md)).
+  An administrator sets collaboration limits and the email channel in **Admin → Collaboration** ([OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md)).
 
 ## If something goes wrong
 

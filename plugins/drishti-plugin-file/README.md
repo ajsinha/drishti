@@ -192,7 +192,7 @@ VALUE_STRING); 3 duplicate ids in trading/2026-09-29/trade.jsonl, the last line 
   ([ARCHITECTURE.md, Several business days](../../docs/architecture/ARCHITECTURE.md#91-several-business-days)); a folder or file whose
   modification time changes is a restated day, rebuilt at the next rescan, and a silent restatement is caught every
   `index.reload-every`; **Admin → Connectors → this connector → Index** reloads a day by hand
-  ([OPERATIONS.md, sizing the index](../../docs/admin/OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index)).
+  ([OPERATIONS_GUIDE.md, sizing the index](../../docs/guides/OPERATIONS_GUIDE.md#144-the-multi-day-type-ahead-index)).
 - **Searches, pick lists, derived kinds and impact** read the day's promoted columns, exactly as on Delta Lake: exact over every entity
   of the day (`partial: false`), no document read. Other fields read documents (20,000 at most, then `partial`). A day whose file
   cannot be read at all is a failure, not *not held*: reads fail with `DRS-1003`, searches are `partial` naming the connector, and
@@ -202,7 +202,7 @@ VALUE_STRING); 3 duplicate ids in trading/2026-09-29/trade.jsonl, the last line 
   entity only in its newest line). Impact (F8) therefore works from files as from any store.
 - **In a cluster** (Drishti*net) each kind names its table `file:<folder>#<fingerprint>`, a SHA-256 of the kind's files (path, size,
   modification time) taken at each rescan. Two servers reading the same folder say the same and are replicas; files that differ make them
-  shards ([OPERATIONS.md, the capability digest](../../docs/admin/OPERATIONS.md#5-what-each-node-offers-the-capability-digest)). A kind
+  shards ([OPERATIONS_GUIDE.md, the capability digest](../../docs/guides/CLUSTER_GUIDE.md#15-what-each-node-offers-the-capability-digest)). A kind
   with no file is not listed in the server's capability digest.
 
 ## Dates: snapshot and effective kinds
@@ -319,7 +319,7 @@ catches up at the next rescan. An id with `/` or `..` that would leave the root 
 **CSV** (`<id>.csv`, a header row, read as `{"rows": [...]}` with numbers and booleans typed) is deprecated: each CSV file logs a warning
 and health says `UP (CSV input is deprecated: fixing/X.csv (convert to JSON Lines: drishti.py convert))`. `drishti.py convert
 fixing/X.csv --rows-document --out fixing.jsonl` writes the JSON Lines line that serves the same document
-([CLI_GUIDE.md](../../docs/guides/CLI_GUIDE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)).
+([CLI_REFERENCE.md](../../docs/guides/CLI_REFERENCE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)).
 
 ## See also
 

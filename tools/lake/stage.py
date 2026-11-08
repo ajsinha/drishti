@@ -42,7 +42,7 @@ MISSING = object()
 KEEP_REJECTS = 50                    # rejects kept with where and why (all are counted)
 KEEP_DUPLICATE_EXAMPLES = 10         # duplicates named (kept and dropped file:line); all are counted
 LATEST_BY = "COMPUTED_AT"
-LOAD_ID, SOURCE_FILE = "_load_id", "_source_file"   # the columns every row carries (DATA_LAKE_GUIDE.md section 5)            # the timestamp field that decides which duplicate is kept (TOOLS.md section 4.13)
+LOAD_ID, SOURCE_FILE = "_load_id", "_source_file"   # the columns every row carries (DATA_LAKE_GUIDE.md section 5)            # the timestamp field that decides which duplicate is kept (CLI_REFERENCE.md section 4.13)
 OPEN_FILES = 64                      # staged files kept open at once
 DUPLICATE_WATCH = 5_000_000          # ids remembered (8 bytes each) to find duplicates; past this, duplicates are neither found nor dropped
 _YMD = re.compile(r"^(\d{4})(\d{2})(\d{2})$")
@@ -387,7 +387,7 @@ class Stager:
     # ----------------------------------------------------------------------------------------------- duplicates
 
     def resolve(self) -> None:
-        """The duplicate-record rule (TOOLS.md section 4.13; the Java loader's Latest and LoadReport do the same): of an id's copies on one
+        """The duplicate-record rule (CLI_REFERENCE.md section 4.13; the Java loader's Latest and LoadReport do the same): of an id's copies on one
         business date, the one with the latest ``latest-by`` timestamp is kept, else (none, or a tie) the last one read in input order
         (files sorted by path, then line order); a copy with a timestamp beats one without. The others leave their staged files and the
         row counts, are counted in ``duplicates`` and named in ``duplicate_examples``. Only the dates with duplicates are read again.

@@ -100,7 +100,7 @@ public class IdentityController {
 
     // ---- sign-in and self service --------------------------------------------------------------
 
-    /** Busy protection (docs/admin/OPERATIONS.md, "Busy protection"): a new sign-in waits when the server is very short of memory. */
+    /** Busy protection (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"): a new sign-in waits when the server is very short of memory. */
     private com.ash.drishti.server.admission.AdmissionGate gate;
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)

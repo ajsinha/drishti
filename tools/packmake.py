@@ -315,7 +315,7 @@ def readme_text(v: dict) -> str:
     w("  * 'port already in use': set DRISHTI_PORT to a free port.")
     w(f"  * pack check reports help warnings (DRS-2045..2047): fill the TODO texts in pack/{n}/config/about.yaml (`pack about-check` lists them).")
     w("  * Delta on Windows without winutils: keep DRISHTI_DELTA_ENGINE=native (the default there).")
-    w("  * More: docs/guides/CLI_GUIDE.md (pack make, data ingest) and docs/guides/OPERATIONALISING.md in the Drishti repository.\n")
+    w("  * More: docs/guides/CLI_REFERENCE.md (pack make, data ingest) and docs/guides/OPERATIONS_GUIDE.md in the Drishti repository.\n")
     return "\n".join(L)
 
 

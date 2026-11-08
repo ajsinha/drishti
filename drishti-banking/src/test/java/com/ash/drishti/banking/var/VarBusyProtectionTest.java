@@ -48,7 +48,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Busy protection in front of a VaR date (docs/admin/OPERATIONS.md, "Busy protection"): with the memory level set under any heap, opening a
+ * Busy protection in front of a VaR date (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"): with the memory level set under any heap, opening a
  * date not yet open is refused {@code 503 DRS-9502} with {@code Retry-After} and the calm words, and the lake is not read; the crowd's
  * second ask gets the seconds left; Admin, Health's card lists the refusal; an operator who lets everything through (a reason, audited)
  * opens the date, and a date already open keeps answering when automatic again.

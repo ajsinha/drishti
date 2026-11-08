@@ -57,7 +57,7 @@ public class ExposureConfiguration {
         return svc;
     }
 
-    /** The exposure engine as a compute engine (docs/architecture/COMPUTE_ENGINES.md): off, its dates and caches are released; its API answers 404. */
+    /** The exposure engine as a compute engine (docs/guides/ADMIN_GUIDE.md): off, its dates and caches are released; its API answers 404. */
     @Bean
     public com.ash.drishti.server.engines.BasicEngine exposureComputeEngine(ExposureService svc, ExposureCaches caches) {
         com.ash.drishti.server.engines.BasicEngine eng = new com.ash.drishti.server.engines.BasicEngine("exposure")

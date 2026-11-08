@@ -27,7 +27,7 @@ format, live reload and the Admin page are in [CONNECTOR_FILES.md](CONNECTOR_FIL
 | pick a connector for your data | [Which connector should I use?](#which-connector-should-i-use) |
 | see each shipped connector in one screen, with a minimal configuration | [The shipped connectors](CONNECTORS.md#which-connector) |
 | write your own connector | [The SourcePlugin SPI](#the-sourceplugin-spi) and [A worked example](#a-worked-example-the-dayfolder-plugin) |
-| run several connectors together, check them, fix them | [Combining connectors](CONNECTORS.md#combining-connectors), [Operating connectors](CONNECTOR_FILES.md#12-health-and-problems), [Troubleshooting](../guides/TROUBLESHOOTING.md#a-connector-symptom-check-and-fix) |
+| run several connectors together, check them, fix them | [Combining connectors](CONNECTORS.md#combining-connectors), [Operating connectors](CONNECTOR_FILES.md#12-health-and-problems), [Troubleshooting](../guides/OPERATIONS_GUIDE.md#216-connectors) |
 
 ## Contents
 
@@ -45,7 +45,7 @@ format, live reload and the Admin page are in [CONNECTOR_FILES.md](CONNECTOR_FIL
 12. [A worked example: the dayfolder plugin](#a-worked-example-the-dayfolder-plugin)
 13. [The README standard](#the-readme-standard)
 14. [The shipped connectors](CONNECTORS.md#which-connector) and 15. [Combining connectors](CONNECTORS.md#combining-connectors): in [CONNECTORS.md](CONNECTORS.md)
-16. [Operating connectors](CONNECTOR_FILES.md#12-health-and-problems): in [CONNECTOR_FILES.md](CONNECTOR_FILES.md), and 17. [Troubleshooting](../guides/TROUBLESHOOTING.md#a-connector-symptom-check-and-fix): in [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md)
+16. [Operating connectors](CONNECTOR_FILES.md#12-health-and-problems): in [CONNECTOR_FILES.md](CONNECTOR_FILES.md), and 17. [Troubleshooting](../guides/OPERATIONS_GUIDE.md#216-connectors): in [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#21-troubleshooting)
 
 ---
 
@@ -266,7 +266,7 @@ Whichever you choose, it is configured as a connector file (`config/connectors/<
 
 Every chapter below uses the same few commands. They are collected here once.
 
-**1. Build once** (from the repository root; see [GETTING_STARTED.md](../guides/GETTING_STARTED.md) for Java 21 or newer and the
+**1. Build once** (from the repository root; see [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine) for Java 21 or newer and the
 console's Python environment):
 
 ```bash
@@ -519,7 +519,7 @@ version leaves the grouped pages on their `refresh` timer. `dependsOn(kind)` is 
 
 ### `tableIdentity(kind)`: the same data on several servers
 
-With Drishti*net ([OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)) several servers may read the same table. `tableIdentity` names where the kind's data lives so that every
+With Drishti*net ([OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)) several servers may read the same table. `tableIdentity` names where the kind's data lives so that every
 server reading the same data says the same: the Delta connector gives the table's id from its log (`delta:<id>`), else its location (an object
 store's address, or a local path with the machine's name, since the same path on another machine is another table). Two servers whose sources
 name the same identity are *replicas* of the kind and a search asks only one; different identities are *shards* and a search asks all. Return
@@ -908,7 +908,7 @@ dropped (`pipeline`), so a person who wonders why a headline is missing can see 
 
 What it costs the rest of the system: a view waits for linked entities only `drishti.graph.link-budget` (40 ms), so the first view of a
 slow computed entity shows its panel as pending, and the next shows it from the cache. Raise the budget if you build pages on such
-connectors ([PERFORMANCE.md](../admin/PERFORMANCE.md)). And data that leaves the network must be said so wherever it is switched on:
+connectors ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#16-tuning)). And data that leaves the network must be said so wherever it is switched on:
 both shipped connectors are `enabled: false` as shipped and name what they send in their documents and in the pack's pages.
 
 Test it without the network: a local `com.sun.net.httpserver.HttpServer` serving canned answers (and a bad answer for every rule above:
@@ -1106,4 +1106,4 @@ structured page that links to them.
 
 ## The shipped connectors, combining them, operating them, troubleshooting
 
-These sections were part of this guide; each now has one home: the shipped connectors and combining connectors are in [CONNECTORS.md](CONNECTORS.md#combining-connectors); health, caches, disk state, timeouts and capacity are in [CONNECTOR_FILES.md section 12](CONNECTOR_FILES.md#12-health-and-problems); the symptom, check and fix table is in [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#a-connector-symptom-check-and-fix).
+These sections were part of this guide; each now has one home: the shipped connectors and combining connectors are in [CONNECTORS.md](CONNECTORS.md#combining-connectors); health, caches, disk state, timeouts and capacity are in [CONNECTOR_FILES.md section 12](CONNECTOR_FILES.md#12-health-and-problems); the symptom, check and fix table is in [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#216-connectors).

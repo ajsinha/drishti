@@ -45,7 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The platform gauges the CIO lens and the alert rules read (RESOURCES_AND_SCALE.md section 8.3; OPERATIONS.md section 13.6), sampled every
+ * The platform gauges the CIO lens and the alert rules read (CLUSTER_GUIDE.md section 8.3; OPERATIONS_GUIDE.md section 13.6), sampled every
  * {@code drishti.metrics.sample-interval} from what Admin, Caches and Admin, Health already compute, and exported with every other meter on
  * {@code /actuator/prometheus}:
  *

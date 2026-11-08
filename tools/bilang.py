@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The BI languages on the command line (docs/guides/CLI_GUIDE.md "bi expr, bi migrate, bi sql"): Rachana, BI's expression language, and Drishti SQL
+"""The BI languages on the command line (docs/guides/CLI_REFERENCE.md "bi expr, bi migrate, bi sql"): Rachana, BI's expression language, and Drishti SQL
 over REST, as the token's user. Loaded by drishti.py; every command talks to the Java server, which owns the one parser of each language. Datasets,
 models and expressions in BI's old forms are migrated by `drishti.py tables migrate`.
 

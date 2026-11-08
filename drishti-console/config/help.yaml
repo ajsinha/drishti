@@ -52,7 +52,6 @@ sections:
     groups:
       - title: "Begin here"
         guides:
-          - { slug: install-and-run, doc: guides/GETTING_STARTED.md, title: Install and run, icon: download, summary: "Prerequisites, build, the demo lakes in one command (lake demo), start the server and the console, sign in, a personal API token for the CLI, where {product} keeps things, Docker, the IDE, a different configuration, and everything that differs on Windows." }
           - { slug: user-guide, doc: guides/USER_GUIDE.md, title: User guide, icon: terminal, summary: "Home and its fact of the day, the top bar, commands, type-ahead, every key, tables, filters, controls, layout mode, the Pivot tab, business dates, Compare, workspaces, monitors, alerts, a page on a phone, the ten themes and how to choose one, settings, and what changes (nothing) when several servers act as one." }
           - { slug: sharing-and-discussion, title: Sharing and collaboration, icon: chat-square-text, summary: "Send a view with a note, read your inbox, discuss a number: what travels is your words and a link, and everyone sees the view with their own permissions." }
           - { slug: tutorials, doc: tutorials/README.md, title: Tutorials, icon: mortarboard, kind: tutorial, summary: "{tutorials} hands-on tutorials with real screenshots, one worked example each: from your first 15 minutes to BI, AI, embedding, running it in production and a cluster of three servers." }
@@ -129,17 +128,15 @@ sections:
       - title: "Set up"
         guides:
           - { slug: configuration, doc: admin/CONFIGURATION.md, title: Configuration, icon: sliders, summary: "The one configuration document: every setting of every kind (server, console, connectors, packs, editions, stores, BI runs, write-back, {product}*net, AI) with its default, environment variable and meaning, searchable by key, variable or words; administrators see the value in effect and where it came from." }
-          - { slug: lenses-guide, doc: admin/LENSES.md, title: "Lenses: run and offer Risk, Trading, Market, World and Public sector", icon: layers-half, summary: "A lens is a module's focused experience of {product}: its packs, commands, menus, Home, Help, Admin pages, BI items and branding. Run a whole instance as one lens (drishti.edition) on a server, the stack, Docker and ECS, or offer lenses to people (drishti.lenses: Open, Switch, Leave); what {product} Risk, Trading, Market and World and the Public sector lens show; Home landings, cards and chips (shown only while their function is on); who is who in Trading (trading.people, View as) and the new-trade check; Market's quality checks; World with and without capital markets; customising and white-labelling without forking; your own lens; clusters; troubleshooting; upgrading from editions; and the design." }
-          - { slug: lenses, doc: lenses/README.md, title: "Lenses: Risk, Trading, Market, World, Oversight, the risk cubes, the CRO and the CIO", icon: eyeglasses, summary: "One product document per lens: who uses Drishti Risk, Trading, Market and World (built) and the proposed Drishti Oversight (market risk oversight, the second line), the two risk cubes (the MR Cube for market risk and the CCR Cube for counterparty credit risk, on one shared cube core: pivots with correct non-additive totals, FRTB, SA-CCR, SIMM and CVA, every data contract they need, and how they beat FIS Adaptiv) and the CRO lens (the Chief Risk Officer's view: every risk appetite metric against its board limit, what changed overnight and why, breaches and temporary limit increases to approve, the top 10, data health and Ask, with its mock-ups and build checklist) and the CIO lens (the Chief Information Officer's view of the risk data estate: feeds against their service levels and the 7am-ready forecast, data quality, a BCBS 239 scorecard with its evidence, platform health, capacity, usage, security and change, with its mock-ups and build checklist), their questions by day, month and year, what each lens answers today with the guide it was read from, the gaps, the proposals and the data each needs." }
-          - { slug: user-management, doc: admin/USER_MANAGEMENT.md, title: Users and roles, icon: people, summary: "The seeded admin, managing users, roles and BI powers, password rules, lockout and the audit log." }
+          - { slug: admin, doc: guides/ADMIN_GUIDE.md, title: "Administration: people, access and lenses", icon: people, summary: "Signing in, your first ten minutes (add a person), roles and their powers (BI, Calc, layouts, pivots, discussion), packs per user, single sign-on (OpenID Connect), API tokens, embedding host applications, the access log, the identity database (SQLite or PostgreSQL) and the rules {product} enforces; what a lens is, running a whole instance as one lens or offering lenses to people, Home landings, the Risk, Trading, Market, World and Public sector lenses, customising and white-labelling, your own lens; Functions (FUNC): every command and turning one on or off; compute engines on or off (Admin → Engines); modules; troubleshooting." }
           - { slug: ai, doc: admin/AI.md, title: "AI: model providers and MCP servers", icon: stars, summary: "Model providers (seventeen vendor types), one file each, off by default; TLS and Test connection; the admin page and API.; the MCP client (tools, resources, prompts, SAJHA); the designs of AI management and the quant service." }
       - title: "Run"
         guides:
-          - { slug: operations, doc: admin/OPERATIONS.md, title: Operations, icon: hdd-stack, summary: "Deploying, the security checklist, monitoring, capacity, connection pools, the type-ahead index, several console workers, several servers as one ({product}*net: Admin → Net, real addresses only, drishti-stack), and shipping by copying; the runbooks." }
-          - { slug: cluster-deployment, doc: architecture/CLUSTER_DEPLOYMENT.md, title: "Cluster deployment: clusters, AWS and scale", icon: diagram-3, summary: "The full clustered deployment: every role (consoles, coordinators, VaR and exposure shard owners, BI, data serving, loaders, Python compute) and how many, gossip membership (SWIM) and rendezvous sharding, VaR and exposure sharding in depth, high availability, load balancing and zero downtime, the daily cycle, security, operations and disaster recovery, on-premises and AWS, the bill of materials; and in its appendices Drishti*net in full (gossip, the capability digest, routing, shared lakes, failure), Drishti on AWS (ECS, EFS, S3, the images and definitions), the Delta lake in S3 past 200 TB step by step, the scale strategy for one server, and the super-scale design (500 GB a day for seven years)." }
-          - { slug: deploy, doc: guides/OPERATIONALISING.md, title: "Deploy, promote and roll back", icon: archive, summary: "Bundles, offline verification, deploying by copying, promotion dev to test to prod, checks after a deploy and roll back; Admin → Packs (deploy an archive, history, roll back) and Admin → Artifacts (every installed pack, connector file and BI file, what depends on each, disable, uninstall to an archive, restore, install a BI file)." }
+          - { slug: operations, pair: docs-tutorials-17-run-it-in-production, doc: guides/OPERATIONS_GUIDE.md, title: "Install and operate", icon: hdd-stack, summary: "Install and run on one machine (prerequisites, build, the demo lakes, start the server and the console, sign in, a personal API token), Maven and the IDEs, Windows; installing for other people (layout, systemd, Docker, Kubernetes, console workers); configuring; data stores, lakes and feeds; deploying, promoting and rolling back by copying, Admin → Packs and Admin → Artifacts; the security checklist; monitoring and health; memory, caches and capacity; compute workers; lake maintenance and scheduling; backups; upgrades; the four runbooks; troubleshooting and the error codes." }
+          - { slug: docs-tutorials-17-run-it-in-production, doc: tutorials/17-run-it-in-production.md, title: "Operations tutorial: run it in production", icon: mortarboard, kind: tutorial, summary: "Nine steps, in the UI and on the command line: security on and proved, your own administrator, roles, BI powers and masks, tokens and their secret, backups, the heap, caches and pools, what to watch in health, upgrade and roll back, and taking something out safely." }
+          - { slug: cluster, pair: docs-tutorials-19-a-cluster-of-three, doc: guides/CLUSTER_GUIDE.md, title: "Clusters and scale", icon: diagram-3, summary: "Several servers as one ({product}*net: real addresses only, the files of config/net, membership, routing, Admin → Net), a cluster of three (drishti-stack, step by step, in production), the roles and how many, sharding, high availability, load balancing, zero downtime and rolling upgrades, the daily cycle, security zones, operations and disaster recovery, {product} on AWS (ECS, EFS and S3), the Delta lake in S3 at scale, the scale strategy for one server, sizing (memory, CPU, disk, the sizing planner) and tuning." }
+          - { slug: docs-tutorials-19-a-cluster-of-three, doc: tutorials/19-a-cluster-of-three.md, title: "Cluster tutorial: a cluster of three", icon: mortarboard, kind: tutorial, summary: "Eight steps: each node's folder and key, one seed, three nodes starting and meeting, a trade only one node holds, the console with several servers, who may reach which node, draining and stopping a node, and what follows you." }
           - { slug: benchmark, doc: admin/BENCHMARK.md, title: "Benchmark: every measurement and how to run it", icon: speedometer2, summary: "The one home of every benchmark: what is measured and why, the harness (tools/bench, the store-only benchmarks) and the exact commands to run each again, the machine and data; VaR at 200,000 positions on one server and a three-node cluster with 50 to 200 users, Java 21 and 25, G1 and ZGC; the VaR store, first open and cost per request; exposure; the Python and Java loaders; trades at scale; every store compared; memory and heap; scaling fits and extrapolations to 2.3M and 10M positions; how to read the numbers." }
-          - { slug: troubleshooting, doc: guides/TROUBLESHOOTING.md, title: Troubleshooting, icon: life-preserver, summary: "Symptoms, likely causes and fixes." }
   - id: reference
     groups:
       - title: "Programming"
@@ -149,10 +146,9 @@ sections:
           - { slug: viewmodel, doc: architecture/VIEWMODEL.md, title: "ViewModel contract", icon: braces, summary: "The JSON the server returns for every entity screen: the top level, cells, tones, provenance and masks, the data of all 22 panel kinds with real examples, live frames and patches, how to render it, versioning, and its JSON Schema." }
           - { slug: rachana-reference, doc: guides/RACHANA_REFERENCE.md, title: Rachana reference, icon: book, summary: "Every key (fragments and use:, emits and @panel.event, source:, children, refresh:, layout:, form:), panel option, format, tone, Rachana-EL expression and problem code." }
           - { slug: functions, doc: guides/FUNCTIONS.md, title: Functions, icon: calculator, summary: "Every function of Rachana and the pivot engine under its one name, generated from the registries: the scalars (math, logic, text, dates on the bank's calendars, lists) and the engine's aggregates (sum, count, avg, min, max, median, percentile, distinct, wavg, variance, stddev, the once-per-parent forms, group, measure, cell) with their arguments, form and source; the old spellings and what to write instead." }
-      - title: "Command line and tools"
+      - title: "Command line"
         guides:
-          - { slug: cli-guide, doc: guides/CLI_GUIDE.md, title: "Command line", icon: command, summary: "One program for the terminal and CI: JSON Lines to a pack, pack check with JUnit, loading data and packs, BI (models, SQL, Transforms, migrations), the demo lakes, drishti.py net, bi statement, data load --store cassandra, and the headless Sutra tool." }
-          - { slug: tools, doc: guides/TOOLS.md, title: "Tools", icon: tools, summary: "Every command, script and page that builds, loads and looks after {product}: drishti.py, lake build for large JSON exports, loaders, maintenance, generators, scheduling and sizing." }
+          - { slug: cli-guide, doc: guides/CLI_REFERENCE.md, title: "Command line", icon: command, summary: "One program for the terminal and CI, every command group with its how-to: sutra, pack (make, check, bundle, deploy, roll back), data and dataload, lake (a large JSON export into a Delta lake, the demo lakes, publish, the parallel loader), server and doctor, connector and net, view, design, bi and tables, the risk engines (var, exposure, sens, frtb, simm, pivot), compute, contract, elements, feed; the store loaders, generators and developer tools; recipes, JSON output and exit codes." }
       - title: "What's new"
         guides:
           - { slug: release-notes, doc: ../RELEASE_NOTES.md, title: Release notes, icon: tag, summary: "What each release contains and its known limits." }
@@ -188,10 +184,10 @@ moved:
   docs-architecture-virtual-tables: docs-architecture-architecture#24-virtual-tables-the-central-table-layer   # virtual tables folded into docs/architecture/ARCHITECTURE.md
   docs-architecture-one-grammar: docs-architecture-architecture#23-one-grammar-one-engine   # one grammar folded into docs/architecture/ARCHITECTURE.md
   docs-architecture-drishti-native: docs-architecture-architecture#25-drishti-native-native-maths-behind-abstractions-with-java-fallbacks   # drishti native folded into docs/architecture/ARCHITECTURE.md
-  docs-admin-runbooks-source-down: operations#171-source-down-or-slow   # source-down folded into docs/admin/OPERATIONS.md
-  docs-admin-runbooks-sutra-broken: operations#172-a-sutra-is-broken-or-an-edit-does-not-show   # sutra-broken folded into docs/admin/OPERATIONS.md
-  docs-admin-runbooks-live-latency-high: operations#173-live-latency-high-or-live-views-stop-ticking   # live-latency-high folded into docs/admin/OPERATIONS.md
-  docs-admin-runbooks-sign-in: operations#174-users-cannot-sign-in   # sign-in folded into docs/admin/OPERATIONS.md
+  docs-admin-runbooks-source-down: operations#201-source-down-or-slow   # source-down folded into docs/guides/OPERATIONS_GUIDE.md
+  docs-admin-runbooks-sutra-broken: operations#202-a-sutra-is-broken-or-an-edit-does-not-show   # sutra-broken folded into docs/guides/OPERATIONS_GUIDE.md
+  docs-admin-runbooks-live-latency-high: operations#203-live-latency-high-or-live-views-stop-ticking   # live-latency-high folded into docs/guides/OPERATIONS_GUIDE.md
+  docs-admin-runbooks-sign-in: operations#204-users-cannot-sign-in   # sign-in folded into docs/guides/OPERATIONS_GUIDE.md
   docs-guides-ag-grid-migration-guide: docs-guides-elements-in-your-app#9-moving-an-ag-grid-enterprise-pivot-app   # ag grid migration guide folded into docs/guides/ELEMENTS_IN_YOUR_APP.md
   docs-architecture-mobile-display: pack-developer-guide#part-ix-designing-for-phones   # mobile display folded into docs/guides/PACK_DEVELOPER_GUIDE.md
   docs-qa-windows-custom-data: docs-architecture-test-harness#9-manual-qa-on-windows-offline-with-your-own-trade-files   # windows-custom-data folded into docs/architecture/TEST_HARNESS.md
@@ -211,15 +207,15 @@ moved:
   docs-architecture-var-playground: docs-guides-var-guide   # var playground folded into docs/guides/VAR_GUIDE.md
   docs-architecture-sensitivities-and-frtb-sa: docs-guides-frtb-sa-guide   # sensitivities and frtb sa folded into docs/guides/FRTB_SA_GUIDE.md
   docs-contracts-frtb-data-structures: docs-contracts-frtb   # frtb data structures folded into docs/contracts/FRTB.md
-  docs-lenses-risk-lens: lenses#1-risk-lens   # risk lens folded into docs/lenses/README.md
-  docs-lenses-trading-lens: lenses#2-trading-lens   # trading lens folded into docs/lenses/README.md
-  docs-lenses-market-lens: lenses#3-market-lens   # market lens folded into docs/lenses/README.md
-  docs-lenses-world-lens: lenses#4-world-lens   # world lens folded into docs/lenses/README.md
-  docs-lenses-oversight-lens: lenses#5-oversight-lens   # oversight lens folded into docs/lenses/README.md
-  docs-lenses-mr-cube-lens: lenses#6-mr-cube-lens   # mr cube lens folded into docs/lenses/README.md
-  docs-lenses-ccr-cube-lens: lenses#7-ccr-cube-lens   # ccr cube lens folded into docs/lenses/README.md
-  docs-lenses-cro-lens: lenses#8-cro-lens   # cro lens folded into docs/lenses/README.md
-  docs-lenses-cio-lens: lenses#9-cio-lens   # cio lens folded into docs/lenses/README.md
+  docs-lenses-risk-lens: docs-architecture-lenses#1-risk-lens   # risk lens folded into docs/architecture/LENSES.md
+  docs-lenses-trading-lens: docs-architecture-lenses#2-trading-lens   # trading lens folded into docs/architecture/LENSES.md
+  docs-lenses-market-lens: docs-architecture-lenses#3-market-lens   # market lens folded into docs/architecture/LENSES.md
+  docs-lenses-world-lens: docs-architecture-lenses#4-world-lens   # world lens folded into docs/architecture/LENSES.md
+  docs-lenses-oversight-lens: docs-architecture-lenses#5-oversight-lens   # oversight lens folded into docs/architecture/LENSES.md
+  docs-lenses-mr-cube-lens: docs-architecture-lenses#6-mr-cube-lens   # mr cube lens folded into docs/architecture/LENSES.md
+  docs-lenses-ccr-cube-lens: docs-architecture-lenses#7-ccr-cube-lens   # ccr cube lens folded into docs/architecture/LENSES.md
+  docs-lenses-cro-lens: docs-architecture-lenses#8-cro-lens   # cro lens folded into docs/architecture/LENSES.md
+  docs-lenses-cio-lens: docs-architecture-lenses#9-cio-lens   # cio lens folded into docs/architecture/LENSES.md
   docs-connectors-activemq-connector: connectors   # activemq connector folded into plugins/drishti-plugin-activemq/README.md
   docs-connectors-aerospike-connector: connectors   # aerospike connector folded into plugins/drishti-plugin-aerospike/README.md
   docs-connectors-cassandra-connector: connectors   # cassandra connector folded into plugins/drishti-plugin-cassandra/README.md
@@ -245,14 +241,14 @@ moved:
   docs-guides-public-data: external-data   # docs/guides/PUBLIC_DATA.md, now EXTERNAL_DATA.md, listed as External data (2.9.1, 2.9.7)
   fact-of-the-day: user-guide#home-the-fact-of-the-day   # Home's Did you know tile (2.9.3), a section of the user guide (the page cap stands)
   public-data: external-data
-  lake-maintenance: operations#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain   # Admin -> Lakes -> Maintain's help link (docs/admin/OPERATIONS.md, in the reference)
-  capacity: operations#124-admin--capacity-today-against-the-plan               # Admin -> Capacity (2.9.11): its F1 and the page's link
-  engines: operations#21-compute-engines-on-or-off                             # Admin -> Engines (2.9.11 row 14): compute engines on or off per server
-  compute-engines: operations#21-compute-engines-on-or-off                     # the compute engines by their name
-  native-libraries: operations#21-server-requirements-native-libraries-blas    # the native libraries (BLAS): platforms, the Java fallback and its warning (2.9.11.c)
-  blas: operations#21-server-requirements-native-libraries-blas                # BLAS by its name
-  net: operations#18-drishtinet-running-several-servers-as-one                 # Admin -> Net's help link (docs/admin/OPERATIONS.md, the Drishti*net operator's guide, in the reference)
-  drishti-net: operations#18-drishtinet-running-several-servers-as-one          # Drishti*net by its name
+  lake-maintenance: operations#16-lake-maintenance-and-scheduling   # Admin -> Lakes -> Maintain's help link (docs/guides/OPERATIONS_GUIDE.md, in the reference)
+  capacity: operations#146-admin--capacity-today-against-the-plan               # Admin -> Capacity (2.9.11): its F1 and the page's link
+  engines: admin#21-compute-engines-on-or-off                             # Admin -> Engines (2.9.11 row 14): compute engines on or off per server
+  compute-engines: admin#21-compute-engines-on-or-off                     # the compute engines by their name
+  native-libraries: operations#149-native-libraries-blas    # the native libraries (BLAS): platforms, the Java fallback and its warning (2.9.11.c)
+  blas: operations#149-native-libraries-blas                # BLAS by its name
+  net: cluster#1-several-servers-as-one-drishtinet                 # Admin -> Net's help link (docs/guides/OPERATIONS_GUIDE.md, the Drishti*net operator's guide, in the reference)
+  drishti-net: cluster#1-several-servers-as-one-drishtinet          # Drishti*net by its name
   bi-studio: bi-guide#26-bi-studio-authoring-as-one-product   # BI Studio (2.4.0)
   limit-letters: docs-guides-var-guide#1514-hierarchies-from-the-rows-or-from-the-trades-columns   # VaR hierarchies by columns, LL (2.9.5)
   var-hierarchies: docs-guides-var-guide#1514-hierarchies-from-the-rows-or-from-the-trades-columns
@@ -288,10 +284,10 @@ moved:
   history-tutorial: docs-tutorials-21-an-entity-over-time                 # tutorial 21 (2.6.5)
   paginated-reports: bi-guide#24-statements-paginated-reports-page-exact-one-per-reader
   field-parameters: bi-guide#21-field-parameters-in-a-well             # field parameters in a report's wells (2.6.0)
-  drishti-stack: operations#2-a-cluster-of-three                     # the ready-made local cluster (drishti-stack/)
-  quickstart: install-and-run
-  windows: install-and-run#drishti-on-windows
-  ide-guide: install-and-run#running-from-intellij-idea-and-pycharm
+  drishti-stack: cluster#2-a-cluster-of-three                     # the ready-made local cluster (drishti-stack/)
+  quickstart: operations#2-install-and-run-on-one-machine
+  windows: operations#4-drishti-on-windows
+  ide-guide: operations#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm
   impact: user-guide#f8--impact
   monitors-and-alerts: user-guide#monitors
   workspaces: user-guide#workspaces
@@ -321,7 +317,7 @@ moved:
   nested-data: pack-developer-guide#sutras-over-deep-documents   # NESTED_DOCUMENTS.md merged into the pack developer guide (2.9.6)
   inference: rachana-reference#inference-the-screens-drishti-draws-with-no-sutra
   live: docs-architecture-data-architecture#1-live-updates
-  performance: docs-admin-performance
+  performance: cluster#16-tuning
   scale-benchmark: benchmark#9-the-stores-compared-10000-to-50000-trades-a-day   # SCALE_BENCHMARK.md merged into BENCHMARK.md
   connector-proxy: connector-tls#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers
   connector-demo: connectors#demo
@@ -344,12 +340,12 @@ moved:
   connector-kafka: connectors#kafka
   connector-activemq: connectors#activemq
   connector-rabbitmq: connectors#rabbitmq
-  operationalising: deploy
+  operationalising: operations#8-deploy-promote-and-roll-back-by-copying
   real-data: external-data#the-world-economy-data-in-detail
-  runbook-source-down: operations#171-source-down-or-slow
-  runbook-sutra-broken: operations#172-a-sutra-is-broken-or-an-edit-does-not-show
-  runbook-live-latency: operations#173-live-latency-high-or-live-views-stop-ticking
-  runbook-sign-in: operations#174-users-cannot-sign-in
+  runbook-source-down: operations#201-source-down-or-slow
+  runbook-sutra-broken: operations#202-a-sutra-is-broken-or-an-edit-does-not-show
+  runbook-live-latency: operations#203-live-latency-high-or-live-views-stop-ticking
+  runbook-sign-in: operations#204-users-cannot-sign-in
   how-it-fits: docs-architecture-architecture#5-walk-through-one-request   # HOW_IT_FITS.md deleted (2.9.6): its walk is ARCHITECTURE section 5
   elements: client-renderer#20-drishti-elements-the-design
   mcp-client: ai#2-the-mcp-client-other-servers-tools-behind-drishtis-policy
@@ -376,9 +372,9 @@ moved:
   docs-architecture-bi-model-architecture: docs-architecture-bi-design#14-the-model-architecture-decisions-d1-to-d6   # deleted (2.9.6); D1 to D6 now BI_DESIGN section 14
   docs-architecture-screen-builder: rachana-reference#32-reference-the-shape-engine-auto-design-and-the-builder-api   # deleted (2.9.6); its reference is RACHANA_REFERENCE › Screen designer, section 32
   docs-architecture-cassandra-connector-design: connectors   # CASSANDRA_CONNECTOR_DESIGN.md deleted (2.9.6)
-  docs-admin-load-and-memory: docs-admin-performance#9-many-users-soak-runs-and-memory-profiling   # deleted (2.9.6); its method is PERFORMANCE method 9
-  admin-artifacts: deploy#18-admin--artifacts-install-and-uninstall-safely   # Admin -> Artifacts' help link; docs/admin/ARTIFACTS.md merged into OPERATIONALISING.md section 18
-  docs-guides-operationalising: deploy   # OPERATIONALISING.md is listed as Deploy, promote and roll back
+  docs-admin-load-and-memory: benchmark#213-many-users-soaks-and-memory   # deleted (2.9.6); its method is PERFORMANCE method 9
+  admin-artifacts: operations#10-admin--artifacts-install-and-uninstall-safely   # Admin -> Artifacts' help link; docs/admin/ARTIFACTS.md merged into OPERATIONS_GUIDE.md section 18
+  docs-guides-operationalising: operations#8-deploy-promote-and-roll-back-by-copying   # OPERATIONS_GUIDE.md is listed as Deploy, promote and roll back
   docs-guides-pack-modelling-guide: pack-developer-guide#part-ii-modelling-in-depth-kinds-data-and-content   # merged into PACK_DEVELOPER_GUIDE Part II
   docs-guides-pack-lifecycle-guide: pack-developer-guide#part-iii-around-the-pack-inheritance-tests-versions-the-registry   # merged into PACK_DEVELOPER_GUIDE Part III
   docs-guides-pack-generators-guide: pack-developer-guide#part-iv-generated-packs-the-readme-standard-json-lines   # merged into PACK_DEVELOPER_GUIDE Part IV
@@ -398,18 +394,18 @@ moved:
   docs-admin-edits: write-back#for-administrators-write-back-is-off-as-shipped   # docs/admin/EDITS.md, now WRITE_BACK.md sections 8 to 15
   clients: api#clients-scripts-notebooks-and-excel   # Scripts, notebooks and Excel; docs/guides/CLIENTS.md merged into API_GUIDE.md
   docs-guides-clients: api#clients-scripts-notebooks-and-excel   # docs/guides/CLIENTS.md
-  docs-guides-ide-guide: install-and-run#running-from-intellij-idea-and-pycharm   # docs/guides/IDE_GUIDE.md merged into GETTING_STARTED.md
+  docs-guides-ide-guide: operations#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm   # docs/guides/IDE_GUIDE.md merged into OPERATIONS_GUIDE.md
   docs-guides-real-data: external-data#the-world-economy-data-in-detail   # docs/guides/REAL_DATA.md merged into EXTERNAL_DATA.md
-  docs-admin-commands: user-management#functions-func-every-command-and-turning-one-on-or-off   # docs/admin/COMMANDS.md merged into USER_MANAGEMENT.md
+  docs-admin-commands: admin#20-functions-func-every-command-and-turning-one-on-or-off   # docs/admin/COMMANDS.md merged into ADMIN_GUIDE.md
   docs-guides-qa-on-windows-with-custom-data: docs-architecture-test-harness#9-manual-qa-on-windows-offline-with-your-own-trade-files   # the Windows QA guide, now a QA script in docs/qa
   # One benchmark document: the store benchmark and the 200,000-position VaR run merged into docs/admin/BENCHMARK.md.
   docs-admin-scale-benchmark: benchmark#9-the-stores-compared-10000-to-50000-trades-a-day   # docs/admin/SCALE_BENCHMARK.md
   docs-architecture-benchmark-2-9-7: benchmark#4-the-200000-position-var-and-cluster-run   # the VaR and cluster run's document
   docs-architecture-testdata-from-seeds-plan: docs-architecture-implementation-plan#plan-test-data-from-seeds-approved-for-296-not-built   # architecture/TESTDATA_FROM_SEEDS_PLAN.md merged into IMPLEMENTATION_PLAN.md (2.9.7)
-  docs-architecture-editions: lenses-guide#15-the-design   # architecture/LENSES.md merged into admin/LENSES.md (2.9.7), now admin/LENSES.md
-  editions-guide: lenses-guide   # admin/EDITIONS_GUIDE.md renamed admin/LENSES.md (2.9.7), now admin/LENSES.md
-  editions: lenses-guide   # admin/LENSES.md renamed admin/LENSES.md: editions folded into lenses (2.9.11.f)
-  docs-admin-editions: lenses-guide
+  docs-architecture-editions: docs-architecture-lenses#10-the-lens-mechanism-the-design   # architecture/LENSES.md merged into guides/ADMIN_GUIDE.md (2.9.7), now guides/ADMIN_GUIDE.md
+  editions-guide: admin#12-what-a-lens-is   # admin/EDITIONS_GUIDE.md renamed guides/ADMIN_GUIDE.md (2.9.7), now guides/ADMIN_GUIDE.md
+  editions: admin#12-what-a-lens-is   # guides/ADMIN_GUIDE.md renamed guides/ADMIN_GUIDE.md: editions folded into lenses (2.9.11.f)
+  docs-admin-editions: admin#12-what-a-lens-is
   docs-architecture-write-back: write-back#16-the-design-and-its-reasons   # architecture/WRITE_BACK.md merged into guides/WRITE_BACK.md (2.9.7)
   docs-guides-write-back-guide: write-back   # guides/WRITE_BACK_GUIDE.md renamed guides/WRITE_BACK.md (2.9.7)
   docs-guides-write-back: write-back   # guides/WRITE_BACK.md is listed as Write-back (2.9.7)
@@ -420,14 +416,14 @@ moved:
   docs-architecture-ai-management: ai#3-ai-management-design-not-built   # architecture/AI_MANAGEMENT.md merged into admin/AI.md (2.9.7)
   docs-architecture-mcp-client: ai#2-the-mcp-client-other-servers-tools-behind-drishtis-policy   # architecture/MCP_CLIENT.md merged into admin/AI.md (2.9.7)
   docs-architecture-quant-service: ai#4-server-side-pricing-the-quant-service-proposed   # architecture/QUANT_SERVICE.md merged into admin/AI.md (2.9.7)
-  docs-admin-compute: operations#19-compute-workers   # admin/COMPUTE.md merged into admin/OPERATIONS.md (2.9.7)
-  docs-admin-lake-maintenance: operations#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain   # admin/LAKE_MAINTENANCE.md merged into admin/OPERATIONS.md (2.9.7)
-  docs-admin-net: operations#18-drishtinet-running-several-servers-as-one   # admin/NET.md merged into admin/OPERATIONS.md (2.9.7)
-  docs-architecture-aws-delta-lake: cluster-deployment#appendix-c-a-high-performance-delta-lake-on-aws-past-200-tb   # architecture/AWS_DELTA_LAKE.md merged into architecture/CLUSTER_DEPLOYMENT.md (2.9.7)
-  docs-architecture-aws-deployment: cluster-deployment#appendix-b-drishti-on-aws-ecs-efs-and-s3   # architecture/AWS_DEPLOYMENT.md merged into architecture/CLUSTER_DEPLOYMENT.md (2.9.7)
-  docs-architecture-drishti-net: cluster-deployment#appendix-a-drishtinet-many-servers-one-drishti   # architecture/DRISHTI_NET.md merged into architecture/CLUSTER_DEPLOYMENT.md (2.9.7)
-  docs-architecture-scale-strategy: cluster-deployment#appendix-d-scale-strategy-millions-of-trades-fast-in-a-bounded-heap   # architecture/SCALE_STRATEGY.md merged into architecture/CLUSTER_DEPLOYMENT.md (2.9.7)
-  docs-architecture-super-scale: cluster-deployment#appendix-e-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built   # architecture/SUPER_SCALE.md merged into architecture/CLUSTER_DEPLOYMENT.md (2.9.7)
+  docs-admin-compute: operations#15-compute-workers   # admin/COMPUTE.md merged into guides/OPERATIONS_GUIDE.md (2.9.7)
+  docs-admin-lake-maintenance: operations#16-lake-maintenance-and-scheduling   # admin/LAKE_MAINTENANCE.md merged into guides/OPERATIONS_GUIDE.md (2.9.7)
+  docs-admin-net: cluster#1-several-servers-as-one-drishtinet   # admin/NET.md merged into guides/OPERATIONS_GUIDE.md (2.9.7)
+  docs-architecture-aws-delta-lake: cluster#13-the-delta-lake-in-s3-at-scale   # architecture/AWS_DELTA_LAKE.md merged into guides/CLUSTER_GUIDE.md (2.9.7)
+  docs-architecture-aws-deployment: cluster#12-drishti-on-aws-ecs-efs-and-s3   # architecture/AWS_DEPLOYMENT.md merged into guides/CLUSTER_GUIDE.md (2.9.7)
+  docs-architecture-drishti-net: cluster#1-several-servers-as-one-drishtinet   # architecture/DRISHTI_NET.md merged into guides/CLUSTER_GUIDE.md (2.9.7)
+  docs-architecture-scale-strategy: cluster#14-scale-strategy-for-one-server   # architecture/SCALE_STRATEGY.md merged into guides/CLUSTER_GUIDE.md (2.9.7)
+  docs-architecture-super-scale: docs-architecture-architecture#2813-super-scale-design-not-built   # architecture/SUPER_SCALE.md merged into guides/CLUSTER_GUIDE.md (2.9.7)
   developer-guide: pack-developer-guide#part-viii-changing-drishtis-code-the-developer-guide   # guides/DEVELOPER_GUIDE.md merged into guides/PACK_DEVELOPER_GUIDE.md (2.9.7)
   packs: pack-developer-guide#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which   # guides/PACKS.md merged into guides/PACK_DEVELOPER_GUIDE.md (2.9.7)
   data-loads: data-guide#1-telling-drishti-new-data-has-landed   # guides/DATA_LOADS.md merged into guides/DATA_GUIDE.md (2.9.7)
@@ -459,11 +455,33 @@ moved:
   docs-architecture-bi-model-spec: docs-architecture-bi-design#15-the-model-layer-the-specification   # architecture/BI_MODEL_SPEC.md merged into architecture/BI_DESIGN.md (2.9.7)
   docs-architecture-bi-runs: docs-architecture-bi-design#17-bi-runs-every-bi-query-as-a-bounded-visible-job   # architecture/BI_RUNS.md merged into architecture/BI_DESIGN.md (2.9.7)
   docs-architecture-rupaka: docs-architecture-bi-design#16-rupaka-the-original-design-and-every-phase   # architecture/RUPAKA.md merged into architecture/BI_DESIGN.md (2.9.7)
-  docs-admin-cluster-deployment: cluster-deployment#appendices   # admin/CLUSTER_DEPLOYMENT.md (the consolidation's clusters, AWS and scale) merged into architecture/CLUSTER_DEPLOYMENT.md (2.9.7)
+  docs-admin-cluster-deployment: cluster   # admin/CLUSTER_DEPLOYMENT.md (the consolidation's clusters, AWS and scale) merged into guides/CLUSTER_GUIDE.md (2.9.7)
   feeds-guide: external-data   # docs/guides/FEEDS_GUIDE.md, folded into EXTERNAL_DATA.md (2.9.11.g)
   docs-guides-feeds-guide: external-data
   docs-guides-external-data: external-data   # guides/EXTERNAL_DATA.md by its path (2.9.7)
   docs-architecture-regulatory-var-reporting: docs-guides-regulatory-var-reporting   # architecture/REGULATORY_VAR_REPORTING.md moved to guides/ and listed under Use
+
+  # h-docs (2.9.11.h), operate guides (OPERATIONS, CLUSTER, ADMIN, CLI reference):
+  install-and-run: operations#2-install-and-run-on-one-machine   # guides/GETTING_STARTED.md folded into guides/OPERATIONS_GUIDE.md (part 1)
+  docs-guides-getting-started: operations#2-install-and-run-on-one-machine   # the same
+  deploy: operations#8-deploy-promote-and-roll-back-by-copying   # guides/OPERATIONALISING.md folded into guides/OPERATIONS_GUIDE.md
+  troubleshooting: operations#21-troubleshooting   # guides/TROUBLESHOOTING.md folded into guides/OPERATIONS_GUIDE.md
+  docs-guides-troubleshooting: operations#21-troubleshooting   # the same
+  docs-admin-operations: operations   # admin/OPERATIONS.md folded into guides/OPERATIONS_GUIDE.md
+  cluster-deployment: cluster   # architecture/CLUSTER_DEPLOYMENT.md folded into guides/CLUSTER_GUIDE.md (internals: ARCHITECTURE section 28)
+  docs-architecture-cluster-deployment: cluster   # the same
+  docs-architecture-resources-and-scale: cluster#15-sizing-memory-cpu-and-disk   # architecture/RESOURCES_AND_SCALE.md: sizing into CLUSTER_GUIDE, figures into admin/BENCHMARK.md
+  docs-admin-performance: cluster#16-tuning   # admin/PERFORMANCE.md: tuning into CLUSTER_GUIDE, figures into admin/BENCHMARK.md
+  user-management: admin   # admin/USER_MANAGEMENT.md folded into guides/ADMIN_GUIDE.md
+  docs-admin-user-management: admin   # the same
+  lenses-guide: admin#12-what-a-lens-is   # admin/LENSES.md folded into guides/ADMIN_GUIDE.md
+  docs-admin-lenses: admin#12-what-a-lens-is   # the same
+  lenses: docs-architecture-lenses   # lenses/README.md moved to architecture/LENSES.md (internal product planning, not listed)
+  docs-lenses-readme: docs-architecture-lenses   # the same
+  docs-architecture-compute-engines: admin#21-compute-engines-on-or-off   # architecture/COMPUTE_ENGINES.md: switches into ADMIN_GUIDE, internals into ARCHITECTURE section 27
+  tools: cli-guide   # guides/TOOLS.md: commands into guides/CLI_REFERENCE.md, scheduling and console tools into OPERATIONS_GUIDE
+  docs-guides-tools: cli-guide   # the same
+  docs-guides-cli-guide: cli-guide   # guides/CLI_GUIDE.md is guides/CLI_REFERENCE.md, listed as cli-guide
 
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).
@@ -496,8 +514,7 @@ contextual:
   view: user-guide
   studio: rachana-reference#screen-designer-and-the-build-workbench
   build: rachana-reference#screen-designer-and-the-build-workbench
-  admin: user-management
-  account: user-management
+  account: admin
   help: user-guide
   pivot: docs-guides-pivot-guide   # the pivot screen, PIVOT (F1 and its ?): the pivot guide
   data-out: flight-guide   # Admin -> Data out (F1): the Arrow Flight guide
@@ -529,7 +546,7 @@ contextual:
   play-frtb: docs-guides-frtb-sa-guide#8-the-frtb-sa-playground-play-frtb   # the FRTB-SA Playground, PLAY FRTB
   simm: docs-guides-simm-guide   # ISDA SIMM, the SIMM screen (F1 and its ?): the SIMM guide
   play-simm: docs-guides-simm-guide#8-the-simm-playground-play-simm   # the SIMM Playground, PLAY SIMM
-  func: user-management#functions-func-every-command-and-turning-one-on-or-off       # Functions, FUNC (F1 and its ?): the command directory and, for administrators, the switches
+  func: admin#20-functions-func-every-command-and-turning-one-on-or-off       # Functions, FUNC (F1 and its ?): the command directory and, for administrators, the switches
   datamap: user-guide#the-data-map   # the data map, DATAMAP (F1 and its ?): kinds, counts and joins checked against the data
   data: user-guide#export-data     # Export data, EXPORT (DATA, its older word; F1 and its ?): every dataset, a simple selection, a day as .jsonl.gz
   bi-designer: bi-guide#26-bi-studio-authoring-as-one-product
@@ -541,7 +558,6 @@ contextual:
 
   # h-docs (2.9.11.h), tutorials 39 -> 22:
 
-  # h-docs (2.9.11.h), operate guides (OPERATIONS, CLUSTER, ADMIN, CLI reference):
 
   # h-docs (2.9.11.h), build and analyse guides (REPORTS, NOTEBOOK, BUILD, APPROVALS, EMBED, DATA):
 

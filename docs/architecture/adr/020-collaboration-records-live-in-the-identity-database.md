@@ -47,7 +47,7 @@ the records prove.
 
 ## Consequences
 - The identity database now grows with discussion; retention (off by default) and its backup are an operations matter
-  ([OPERATIONS.md](../../admin/OPERATIONS.md#9a-3-collaboration-retention-legal-holds-and-the-compliance-export)).
+  ([OPERATIONS_GUIDE.md](../../guides/OPERATIONS_GUIDE.md#123-retention-legal-holds-and-the-compliance-export)).
 - Mail already sent cannot be recalled: that is why it carries no values. A reader who loses a right sees the notice stop showing the title and
   excerpt at once, because every read renders for current rights.
 - Replacing an email provider, adding a bridge or moving the records to PostgreSQL touches configuration or one bean, not the services.

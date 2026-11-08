@@ -21,7 +21,7 @@ server files), the environment variables that feed them, and how the layers comb
 here for its settings. The console shows the same document at **Help → Configuration** (`/help/configuration`), searchable by key,
 environment variable or words. **Admin → Configuration** (`/admin/configuration`) shows every setting by tier (everyday, admin,
 expert: the *Tier* column below) with the value in effect on the server and the console, where it came from, and a change proposed
-for a second administrator to approve ([OPERATIONS.md, The configuration editor](OPERATIONS.md#the-configuration-editor)).
+for a second administrator to approve ([OPERATIONS_GUIDE.md, The configuration editor](../guides/OPERATIONS_GUIDE.md#62-admin--configuration-the-configuration-editor)).
 
 The first half is written by hand: how configuration works, placeholders, value formats, recipes, and notes area by area with
 examples. The second half, [Every setting](#every-setting), is generated from the files themselves by `tools/settings_catalogue.py`
@@ -192,7 +192,7 @@ Each row was tried against a scratch server. Points to know:
 the first `}` (no nesting); a missing variable with no default is empty; and the result is typed (`true`/`false`
 become booleans, digits numbers). Precedence, lowest first: `drishti-console/config/application.yaml`, `drishti-console/config/application.local.yaml`,
 then `DRISHTI_CONSOLE__A__B` environment variables, then `--a.b=value` arguments. The console has no flag
-for choosing another config *directory*; see [QUICKSTART](../guides/GETTING_STARTED.md).
+for choosing another config *directory*; see [QUICKSTART](../guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine).
 
 ### The data folder and the config folder
 
@@ -294,7 +294,7 @@ the command line or in `JAVA_TOOL_OPTIONS`):
 | `-Xlog:gc*:file=<data dir>/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m` | a rotated GC log (100 MB at most); make the folder first, or the JVM does not start |
 | `-Ddrishti.open-dates.net-grace-seconds=120` (the default; no launcher passes it) | the byte safety net (`drishti.var.open-heap-mb`, `drishti.ccr.exposure.open-heap-mb`) never closes a date, nor its currency and stress books, read in the last this many seconds, so two dates asked in turn by many users do not close and reload each other at a small heap; idle dates still leave, a new load without room is still refused (`DRS-5204`); `0` turns it off ([VAR_GUIDE.md 26.8](../guides/VAR_GUIDE.md#268-dates-in-memory-over-years-of-history)). Likewise `-Ddrishti.parquet.footer-cache-mb=64`: the parsed Parquet footers kept, weighed at about 700 bytes a column chunk |
 
-Where each launcher puts the dumps and GC logs, and how to read them: [OPERATIONS.md](OPERATIONS.md#121a-direct-memory-and-the-diagnostics-of-a-long-run).
+Where each launcher puts the dumps and GC logs, and how to read them: [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#143-direct-memory-and-the-diagnostics-of-a-long-run).
 Kafka connectors fetch at most 4 MB a poll and 1 MB a partition; `client.fetch.max.bytes` and `client.max.partition.fetch.bytes` in the connector file change that.
 
 ### External libraries: `external_lib` (`DRISHTI_EXTERNAL_LIB`)
@@ -326,9 +326,9 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 |---|---|---|---|
 | `DRISHTI_PACKS_OVERLAY` | `spring.config.import` | `./data/packs/added.yaml` | The file of packs an administrator loaded from Admin → Packs; imported at start (`spring.config.import`) and named again by `drishti.packs.overlay`. Written by the server, not by hand. |
 | `DRISHTI_PORT` | `server.port` | `18480` | The server's HTTP port. |
-| `DRISHTI_HTTP2` | `server.http2.enabled` | `true` | HTTP/2 on the server's port as well as HTTP/1.1: Drishti*net peers multiplex their forwarded reads over one connection (`h2c` by the upgrade on plain HTTP, ALPN on TLS; up to 1,000 streams per connection), and browsers over TLS get it too. `false`: HTTP/1.1 only; peers then fall back to it on the same call ([OPERATIONS.md › Drishti*net: running several servers as one, section 7](OPERATIONS.md#7-routing-where-a-request-goes)). |
+| `DRISHTI_HTTP2` | `server.http2.enabled` | `true` | HTTP/2 on the server's port as well as HTTP/1.1: Drishti*net peers multiplex their forwarded reads over one connection (`h2c` by the upgrade on plain HTTP, ALPN on TLS; up to 1,000 streams per connection), and browsers over TLS get it too. `false`: HTTP/1.1 only; peers then fall back to it on the same call ([OPERATIONS_GUIDE.md › Drishti*net: running several servers as one, section 7](../guides/CLUSTER_GUIDE.md#17-where-a-request-goes)). |
 | `DRISHTI_PRODUCT` | `drishti.branding.product` | `Drishti` | The product name shown in pages and messages. |
-| `DRISHTI_EDITION` | `drishti.edition` | empty | The edition the server runs ([LENSES.md](LENSES.md)): empty is the full Drishti; `risk` is Drishti Risk; `world` is Drishti World; `market` is Drishti Market; `trading` is Drishti Trading. Every member of a cluster sets the same; the console learns it from the server. A restart applies it. |
+| `DRISHTI_EDITION` | `drishti.edition` | empty | The edition the server runs ([LENSES.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is)): empty is the full Drishti; `risk` is Drishti Risk; `world` is Drishti World; `market` is Drishti Market; `trading` is Drishti Trading. Every member of a cluster sets the same; the console learns it from the server. A restart applies it. |
 | `DRISHTI_LENS_DIR` | `drishti.lens-dir` | `./config/lenses` | The folder of the edition files (and `features.yaml`, `default-packs.yaml`). |
 | `DRISHTI_LENSES` | `drishti.lenses` | `risk,world,market,trading` | The editions a person may open as a lens on a full instance (`risk`, `world`, `market`, `trading`, or several: `risk,world,market,trading`, the default); empty: no lens link. Ignored when the server runs an edition. A lens hides, it does not secure. |
 | `DRISHTI_PLUGIN_DIR` | `drishti.sources.plugin-dir` | empty | A directory of extra plugin jars; empty: none. |
@@ -337,7 +337,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_HTTP_PROXY_PASSWORD` | `drishti.http.proxy.password` | empty | The proxy's password: an environment variable, never a literal in a file. |
 | `DRISHTI_DEMO_ENABLED` | `drishti.sources.plugins.demo.enabled` | `true` | Run the demo source (the packs' sample data). |
 | `DRISHTI_OFFLINE` | `drishti.offline.enabled` | `false` | Offline mode, for a machine with no internet: connectors of the internet plugins (`drishti.offline.plugins`: `news`, `yfinance`, `feed`) never start, whatever their files say; Admin → Connectors shows them *off (offline mode)*. See [`drishti.offline`](#drishtioffline--offline-mode-no-internet). |
-| `DRISHTI_NET_DIR` | `drishti.net.dir` | `./config/net` | Drishti*net's folder (`node.yaml`, `peers/*.yaml`, `gossip.yaml`, `routing.yaml`, `access.yaml`); without it, or with `enabled: false` in its `node.yaml`, the server is a single server. See [`drishti.net`](#drishtinet--drishtinet-the-cluster-folder) and [OPERATIONS.md](OPERATIONS.md#18-drishtinet-running-several-servers-as-one). |
+| `DRISHTI_NET_DIR` | `drishti.net.dir` | `./config/net` | Drishti*net's folder (`node.yaml`, `peers/*.yaml`, `gossip.yaml`, `routing.yaml`, `access.yaml`); without it, or with `enabled: false` in its `node.yaml`, the server is a single server. See [`drishti.net`](#drishtinet--drishtinet-the-cluster-folder) and [OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet). |
 | `DRISHTI_NET_WATCH` | `drishti.net.watch` | `auto` | How the folder is watched: `auto` (file events, polling as a fallback), `poll` or `off` (read at start only). |
 | `DRISHTI_FEEDS` | `drishti.sources.plugins.file.settings.root` | `./data/feeds` | The folder the bundled `file` source reads. |
 | `DRISHTI_REST_ENABLED` | `drishti.sources.plugins.rest.enabled` | `false` | Run the `rest` source. |
@@ -529,16 +529,16 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_PACKS_INSTALLED` | `packs.installed_dir` | empty | The server's installed packs (registry and Deploy archive); empty: `<data dir>/packs/installed`. Read first as the server does, so an installed pack's guides, examples and workspaces reach the console. |
 | `DRISHTI_PACKS` | `packs.enabled` | `default` | Only used when the server cannot be asked which packs are on; `default`: `config/packs/default-packs.yaml`. |
 | `DRISHTI_LENS_DIR` | `lens.dir` | `../config/lenses` | The folder of the edition files, the same the server reads (relative to `drishti-console/`). |
-| `DRISHTI_LAKE_ROOTS` | `lakes.roots` | empty | Admin → Data loads → Lakes ([TOOLS.md](../guides/TOOLS.md#4-lake-build-a-large-json-export-into-a-delta-lake)): the lake roots this console may write, comma-separated (relative paths resolve from `drishti-console/`); empty: `<data dir>/delta`, the server's own root. The page offers no other folder. |
+| `DRISHTI_LAKE_ROOTS` | `lakes.roots` | empty | Admin → Data loads → Lakes ([CLI_REFERENCE.md](../guides/CLI_REFERENCE.md#7-lake-a-large-json-export-into-a-delta-lake)): the lake roots this console may write, comma-separated (relative paths resolve from `drishti-console/`); empty: `<data dir>/delta`, the server's own root. The page offers no other folder. |
 | `DRISHTI_JAR` | `lakes.jar` | empty | The drishti-server exec jar whose Java writer the page's builds use (`lakes.engine: auto`); empty: the newest `drishti-server/target/drishti-server-*-exec.jar`, else the Python `deltalake` package. |
-| `DRISHTI_DATA_DIR` | `lakes.data_dir` | `../data` | Admin → Lakes → Maintain ([OPERATIONS.md](OPERATIONS.md#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain)): the data folder whose `lakes/lake-maintenance.yaml` (the file `lake maintain` reads by default) and `lakes/maintenance-history.jsonl` the page uses (relative paths resolve from `drishti-console/`). |
+| `DRISHTI_DATA_DIR` | `lakes.data_dir` | `../data` | Admin → Lakes → Maintain ([OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#16-lake-maintenance-and-scheduling)): the data folder whose `lakes/lake-maintenance.yaml` (the file `lake maintain` reads by default) and `lakes/maintenance-history.jsonl` the page uses (relative paths resolve from `drishti-console/`). |
 | `DRISHTI_LAKE_MAINTENANCE_SCHEDULES` | `lakes.maintenance_schedules` | `true` | Run the lake-maintenance schedules in this console; `false` when `lake maintain --daemon` runs them instead (run them in one place). |
 
 In `lake-maintenance.yaml`: a lake's `format` is `delta` (the default), `iceberg`, or `auto` (Iceberg tables under a local root
 found beside Delta ones); `orphan-hours` (72, the least allowed) is read for Iceberg tables only; `iceberg-settings` (a mapping) is
 passed to an Iceberg lake's maintenance as `--set key=value` (a REST catalog such as Glue: `catalog`, `uri`, `warehouse`,
-`catalog.rest.*`). [OPERATIONS.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](OPERATIONS.md#8-iceberg-lakes). `lake build --format delta|iceberg` (default
-`delta`) and `--iceberg-set KEY=VALUE` choose and configure the format of a build ([TOOLS.md](../guides/TOOLS.md)).
+`catalog.rest.*`). [OPERATIONS_GUIDE.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](../guides/OPERATIONS_GUIDE.md#163-iceberg-lakes). `lake build --format delta|iceberg` (default
+`delta`) and `--iceberg-set KEY=VALUE` choose and configure the format of a build ([CLI_REFERENCE.md](../guides/CLI_REFERENCE.md)).
 | (no variable) | `lakes.max_upload_mb`, `scan_docs`, `engine`, `python`, `keep_min`, `jobs` | `4096`, `20000`, `auto`, the console's Python, `240`, `2` | Largest upload (streamed to the console's temp folder); documents read to suggest the id, date and classifiers; `auto`, `drishti` or `deltalake`; the Python that runs `tools/lake/build.py`; minutes an upload and a finished build are kept; builds at once. |
 | `DRISHTI_AI_ENABLED` | `ai.enabled` | `false` | Turn on the console's own LLM provider layer (the recommended provider is `type: server`, which delegates to the server so keys stay there). |
 | `DRISHTI_AI_DIR` | `ai.dir` | `./config/ai` | The folder of provider files (the same format and, if you share the folder, the same files as the server). |
@@ -556,7 +556,7 @@ index too and explained in [Environment variables used by the packs and profiles
 
 ### Retry settings
 
-What failed is tried again by itself, with exponential backoff and jitter; see [OPERATIONS.md](OPERATIONS.md#retries-what-failed-is-tried-again-by-itself).
+What failed is tried again by itself, with exponential backoff and jitter; see [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#138-retries-what-failed-is-tried-again-by-itself).
 The server reads `drishti.retry.*` (packs refused, connectors, AI providers, MCP servers) and the console reads `retry.*` (its own AI
 providers and MCP servers; server names with hyphens, console names with underscores). A per-area override replaces any key for one
 area: `drishti.retry.<area>.<key>` on the server (areas `packs`, `connectors`, `ai`, `mcp`, `distribution`, `bi`, `alerts`) and `retry.<area>.<key>` in the console
@@ -595,7 +595,7 @@ Applies to the JDBC/PostgreSQL connector and its loader, MongoDB, Redis, Aerospi
 **SQLite** (the default identity database) and **DuckDB**, embedded files opened inside the server process, with no network, no server connection limit and
 nothing to exhaust; they still close everything they open (an architecture test checks it). A time is seconds, or a number with `ms`, `s`, `m` or `h`.
 A value that does not parse stops the start naming the setting. Sizing: the database's `max_connections` must cover the sum of the pools of every
-server instance ([OPERATIONS.md, Sizing the connection pools](OPERATIONS.md#sizing-the-database-connection-pools)). Environment: the loaders read
+server instance ([OPERATIONS_GUIDE.md, Sizing the connection pools](../guides/OPERATIONS_GUIDE.md#148-capacity-figures-database-pools-and-bi-scale)). Environment: the loaders read
 `DRISHTI_DB_POOL_SIZE`.
 
 ### `drishti.http.proxy` — the site's outbound HTTP proxy
@@ -640,7 +640,7 @@ disabled".
 
 ### `drishti.net` — Drishti*net, the cluster folder
 
-Several servers acting as one ([OPERATIONS.md](OPERATIONS.md#18-drishtinet-running-several-servers-as-one), the design [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti)). Like connectors, Drishti*net is
+Several servers acting as one ([OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet), the design [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)). Like connectors, Drishti*net is
 configured in a folder of small YAML files, never in `application.yaml`, which says only where the folder is and how it is watched. Without the
 folder, or while its `node.yaml` does not say `enabled: true`, the server is a single server.
 
@@ -654,7 +654,7 @@ The files, each checked against its schema (a refused file keeps the previous se
 
 | File | Settings (default) |
 |---|---|
-| `node.yaml` | `enabled` (`false`), `node-id` (generated once, kept in `<data dir>/net/node-id`), `advertise-url` (this machine's primary IPv4 address with `server.port`; never `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` or `::`), `tags` (`[]`), `peer-only-packs` (`[]`), `secret: ${DRISHTI_NET_SECRET}` and `previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}` (environment references only, at least 32 bytes), `tls.*` (mutual TLS), `gossip-port` (`auto`: a free port of its own for gossip, probes and digests, advertised through gossip; a port number; or `off`: the server's port. [OPERATIONS.md › Drishti*net: running several servers as one, section 4](OPERATIONS.md#4-membership-how-the-nodes-find-each-other)) |
+| `node.yaml` | `enabled` (`false`), `node-id` (generated once, kept in `<data dir>/net/node-id`), `advertise-url` (this machine's primary IPv4 address with `server.port`; never `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` or `::`), `tags` (`[]`), `peer-only-packs` (`[]`), `secret: ${DRISHTI_NET_SECRET}` and `previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}` (environment references only, at least 32 bytes), `tls.*` (mutual TLS), `gossip-port` (`auto`: a free port of its own for gossip, probes and digests, advertised through gossip; a port number; or `off`: the server's port. [OPERATIONS_GUIDE.md › Drishti*net: running several servers as one, section 4](../guides/CLUSTER_GUIDE.md#14-membership-how-nodes-find-each-other)) |
 | `peers/<name>.yaml` | `url` (a real address, as `advertise-url`), `tags`, `tls.*` (one file per seed) |
 | `gossip.yaml` | `interval` (`1s`), `fanout` (`3`), `suspect-after` (`5s`), `indirect-probes` (`2`), `dead-after` (`30s`), `forget-after` (`24h`), `persist-every` (`10m`) |
 | `routing.yaml` | `forward-timeout` (`5s`), `scatter-budget` (`3s`), `suggest-budget` (`150ms`), `link-budget` (`1s`: a view's linked entity that only a peer holds), `max-hops` (`1`; `0` forwards nothing), `weights.latency` (`1.0`), `user-state` (`replicate` or `off`: user state and console sign-in sessions), `join-wait` (`2s`), `join-grace` (`30s`), `peer-protocol` (`http2`: peer data multiplexed over one HTTP/2 connection per peer, a peer without it answered in HTTP/1.1; or `http1`) |
@@ -663,12 +663,12 @@ The files, each checked against its schema (a refused file keeps the previous se
 `enabled: true` without the key is refused at start and at every reload, as the server refuses a missing token secret with security on; so is
 an `advertise-url` or a seed `url` that is a loopback or wildcard address (the message names this machine's address to use instead), and
 `enabled: true` without `advertise-url` on a machine with no address but loopback. Members advertise only real addresses
-([OPERATIONS.md › Drishti*net: running several servers as one, section 2](OPERATIONS.md#2-a-cluster-of-three)). What gossip learns (the member table) is state, kept in `<data dir>/net/peers.json`, never in this folder. Every file in
-[OPERATIONS.md › Drishti*net: running several servers as one, section 3](OPERATIONS.md#3-the-files-of-confignet).
+([OPERATIONS_GUIDE.md › Drishti*net: running several servers as one, section 2](../guides/CLUSTER_GUIDE.md#2-a-cluster-of-three)). What gossip learns (the member table) is state, kept in `<data dir>/net/peers.json`, never in this folder. Every file in
+[OPERATIONS_GUIDE.md › Drishti*net: running several servers as one, section 3](../guides/CLUSTER_GUIDE.md#13-the-files-of-confignet).
 
 ### The console and several servers (Drishti*net)
 
-With Drishti*net on ([OPERATIONS.md](OPERATIONS.md#18-drishtinet-running-several-servers-as-one)), the console takes several servers instead of one, so it always has one to fall back to:
+With Drishti*net on ([OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)), the console takes several servers instead of one, so it always has one to fall back to:
 
 ```yaml
 # drishti-console/config/application.yaml
@@ -940,7 +940,7 @@ See [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#a-signed-pack-re
 
 ### `drishti.packs.deploy` and `drishti.packs.settings-dir` — deploy an archive, and the legacy data-source overrides
 
-Admin → Packs → **Deploy an archive** ([OPERATIONALISING.md, section 17](../guides/OPERATIONALISING.md#17-deploy-from-admin--packs-connectors-history-and-roll-back)). The **Data source** panel is now a read-only view of the pack's connectors, with links to Admin → Connectors.
+Admin → Packs → **Deploy an archive** ([OPERATIONS_GUIDE.md, section 17](../guides/OPERATIONS_GUIDE.md#9-admin--packs-deploy-an-archive-history-and-roll-back)). The **Data source** panel is now a read-only view of the pack's connectors, with links to Admin → Connectors.
 An uploaded archive (the pack only, never data) is checked, previewed against the running version, swapped into `drishti.packs.installed-dir` and loaded with the in-place restart.
 
 | Key | Default | Meaning |
@@ -1014,8 +1014,8 @@ message writes the name in code, and `BrandingLiteralTest` (drishti-it) fails on
 
 ### `drishti.edition` — editions and lenses
 
-An edition turns Drishti into a focused product with one setting ([LENSES.md](LENSES.md), the design in
-[its section 15](LENSES.md#15-the-design)). The edition file is a layer under the site's configuration: every key below it can still be set
+An edition turns Drishti into a focused product with one setting ([LENSES.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is), the design in
+[its section 15](../architecture/LENSES.md#10-the-lens-mechanism-the-design)). The edition file is a layer under the site's configuration: every key below it can still be set
 by the site.
 
 | Key | Default | Meaning |
@@ -1026,7 +1026,7 @@ by the site.
 | `drishti.lenses` | `risk,world,market,trading` (`DRISHTI_LENSES`; empty turns lenses off) | The editions a person may open as a lens on a full instance ("Open Drishti Risk", "Open Drishti World", "Open Drishti Market", "Open Drishti Trading"), comma list: `risk,world,market,trading` offers the four, and a person inside one switches to another. A lens hides, it does not secure. Ignored with an edition. |
 
 The console's side: `lens.dir` (`DRISHTI_LENS_DIR`, default `../config/lenses`); an `edition:` block in its
-`application.local.yaml` overrides the edition file's keys for the console (menus, Home, help, words; an edition's Home landings are its `home.landings`, drawn by its `home.template` with its `home.titles`: Drishti Risk's `desk`, `command`, `map`, Drishti World's `desk`, `explorer`, `map`, Drishti Market's `desk`, `explorer`, `quality`, Drishti Trading's `trader`, `desk`, `explorer`; Drishti Market's `quality.stale-days`, default 2, is the Quality landing's stale threshold in business days); Drishti Trading's `trading:` block: `trading.people` (who is who: `{user: {trader: TRDR-ASHAH}}` or `{user: {desk: DESK-COMM, role: desk-head}}`; the console's own `trading.people` in its `application.local.yaml` adds to the edition file's and wins for a name in both), `trading.match-records` (true: else a matching trader record), `trading.landing-by-role` (`{desk-head: desk, trader: trader}`, below the person's own choice), `trading.near-limit` (0.8), `trading.limit-days` (5), `trading.pnl-var-days` (60), `trading.max-rows` (20000), `trading.live-statuses`; a person's View as choice is their `tradingView` setting ([LENSES.md section 6](LENSES.md#6-drishti-trading)); `lens.roles` is the hook for
+`application.local.yaml` overrides the edition file's keys for the console (menus, Home, help, words; an edition's Home landings are its `home.landings`, drawn by its `home.template` with its `home.titles`: Drishti Risk's `desk`, `command`, `map`, Drishti World's `desk`, `explorer`, `map`, Drishti Market's `desk`, `explorer`, `quality`, Drishti Trading's `trader`, `desk`, `explorer`; Drishti Market's `quality.stale-days`, default 2, is the Quality landing's stale threshold in business days); Drishti Trading's `trading:` block: `trading.people` (who is who: `{user: {trader: TRDR-ASHAH}}` or `{user: {desk: DESK-COMM, role: desk-head}}`; the console's own `trading.people` in its `application.local.yaml` adds to the edition file's and wins for a name in both), `trading.match-records` (true: else a matching trader record), `trading.landing-by-role` (`{desk-head: desk, trader: trader}`, below the person's own choice), `trading.near-limit` (0.8), `trading.limit-days` (5), `trading.pnl-var-days` (60), `trading.max-rows` (20000), `trading.live-statuses`; a person's View as choice is their `tradingView` setting ([LENSES.md section 6](../guides/ADMIN_GUIDE.md#162-drishti-trading)); `lens.roles` is the hook for
 role-based access to the lens link (read, not wired). Its own feature switches, each on by default and preset by an edition through
 `config/lenses/features.yaml`: `features.build` (Build: new screens, packs, designs, reviews, changes), `features.forms` (`FORM`, `/forms`),
 `features.datamap`, `features.data` (Export data, `DATA`), `features.workspaces`, `features.monitors`, `features.alerts`, `features.lakes` (Admin → Lakes), `features.reports`,
@@ -1132,7 +1132,7 @@ is listed too.
 
 ### `drishti.embed` — embedded views for other web applications
 
-Off by default. A host application's backend buys a short embed token at the server (RFC 8693); every embed call is checked against the registered application and the user, and always masks. See [API_GUIDE.md](../guides/API_GUIDE.md#embedding-views-in-another-web-application) for the exchange and [USER_MANAGEMENT.md](USER_MANAGEMENT.md#embedding-host-applications) for registering an application.
+Off by default. A host application's backend buys a short embed token at the server (RFC 8693); every embed call is checked against the registered application and the user, and always masks. See [API_GUIDE.md](../guides/API_GUIDE.md#embedding-views-in-another-web-application) for the exchange and [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#7-embedding-host-applications) for registering an application.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1235,7 +1235,7 @@ drishti:
 ### Identity
 
 Users, passwords, lockout, the audit log and the identity database are configured under
-`drishti.identity.*`. See [USER_MANAGEMENT.md](USER_MANAGEMENT.md).
+`drishti.identity.*`. See [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md).
 
 ### `drishti.engine` — the view pipeline
 
@@ -1246,7 +1246,7 @@ Users, passwords, lockout, the audit log and the identity database are configure
 | `bind-parallelism` | `0` (one thread per CPU core) | Threads binding panels. `0` or a negative value means one per core. |
 
 Raise the cache sizes when many distinct entities are viewed and the cache hit rates in **Admin → Health** are
-low. See [PERFORMANCE.md](PERFORMANCE.md).
+low. See [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#16-tuning).
 
 ### `drishti.explain` — About this page
 
@@ -1263,7 +1263,7 @@ only when asked, by the same code as the view, for the caller (so masks and righ
 
 A question box in the drawer that answers from the page's own explanation with a language model you run or rent. **Nothing is sent
 anywhere unless you turn it on**, and then only for the packs you list. The server makes the call (the console is a proxy), the key
-comes from the environment only, and the model gets no tools. See [the privacy note](OPERATIONS.md#ask-about-this-page-and-your-data).
+comes from the environment only, and the model gets no tools. See [the privacy note](../guides/OPERATIONS_GUIDE.md#114-what-leaves-the-server-ask-the-access-log-and-ai).
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1277,7 +1277,7 @@ comes from the environment only, and the model gets no tools. See [the privacy n
 | `max-answer-tokens` / `max-answer-chars` | `400` / `2000` | The model's output cap and the cut applied to what comes back. |
 | `timeout` | `15s` | Slower than this is `504 DRS-4008`. |
 | `per-user-per-minute` / `per-user-per-day` | `6` / `100` | Over either is `429 DRS-4009`. A call that fails (the model errors or times out) still uses one of the allowance. |
-| `log-questions` | `true` | The question text goes to the [access log](OPERATIONS.md#9b-the-access-log) (action `ask`, with the outcome). `false` records only its length. The answer is never stored. |
+| `log-questions` | `true` | The question text goes to the [access log](../guides/OPERATIONS_GUIDE.md#114-what-leaves-the-server-ask-the-access-log-and-ai) (action `ask`, with the outcome). `false` records only its length. The answer is never stored. |
 | `anthropic-version` | `2023-06-01` | The `anthropic-version` header sent when `api: anthropic`. |
 | `log-answers` | `false` | `true` also writes the answer text to the server log (`drishti.ask`). |
 
@@ -1465,7 +1465,7 @@ overrides any of them with `index.kinds.<kind>.<setting>`.
 | `index.max-memory` | `600MB` | Most the kept days may use on the heap (an estimate, summed over the connector's kinds). Above it the oldest closed days move to disk (or are dropped when there is no disk). `0` = no cap. |
 | `index.storage` | `heap` | `heap`: closed days stay in memory until `max-memory`. `mmap`: closed days go to segment files at once (read with positional reads, not a memory map, so a removed file frees its disk immediately); only the newest day stays on the heap. |
 | `index.max-disk` | `2GB` | Most disk the connector's segment files may use; the oldest days drop above it. `0` = no cap. |
-| `index.reload-every` | `10m` | How often each *past* day is compared with its source and rebuilt when the source changed (a source with no version, such as S3, is rebuilt every cycle). `30s`, `10m`, `2h`, `1d`; a plain number is seconds; `0` = never. The newest day keeps its own faster refresh. Per kind: `index.kinds.<kind>.reload-every`. Admin can also reload by hand ([OPERATIONS.md section 12.2](OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index)). |
+| `index.reload-every` | `10m` | How often each *past* day is compared with its source and rebuilt when the source changed (a source with no version, such as S3, is rebuilt every cycle). `30s`, `10m`, `2h`, `1d`; a plain number is seconds; `0` = never. The newest day keeps its own faster refresh. Per kind: `index.kinds.<kind>.reload-every`. Admin can also reload by hand ([OPERATIONS_GUIDE.md section 12.2](../guides/OPERATIONS_GUIDE.md#144-the-multi-day-type-ahead-index)). |
 | `index.block-cache` | `16` | Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file). `0` = none. |
 | `index.warm` | `background` | `background`: past days are built after start, newest first. `lazy`: a day is built on the first search for it. |
 | `index.any-recent-day` | `false` | A bare id on the newest date also suggests ids seen only on earlier kept days, marked `last seen <date>`. |
@@ -1542,7 +1542,7 @@ else by `drishti.var.positions`.
 | `pinned` | every rule off | Pinned dates (`month-end`, `quarter-end`, `year-end`, `fiscal-year-end`, `stress-window`, `dates`): `back` and `keep: disk|memory` (VAR_GUIDE section 26.8). |
 | `version-check` | `30s` (`DRISHTI_VAR_VERSION_CHECK`) | The version watch: on a request, an open date compares its lake version (the connector's own, refreshed every `refresh-seconds`) with the one it was loaded from at most this often; when it moved without a data-load signal, the date is reloaded in the background and swapped in, the answers meanwhile carry a warning. One reload a date at a time; a failed one keeps the old date and says why. A date with intraday updates applied is left to its signal. `0` switches the watch off. |
 | `load-threads` | `2` | The threads that load business dates from the lake (and shard books, and listed currencies on first ask): a pool of their own (`drishti-var-load-*`, `drishti-var-shard-load-*`), never the common pool that parallel streams share. A load waiting for another on the pool is compensated, never deadlocked. |
-| `view-cache-mb` | `64` | The most memory the viewers' views take (each a bitset of the trades a role set sees, per date, version and currency); an idle view goes after an hour, and a date's views go when the date leaves memory or is reloaded ([RESOURCES_AND_SCALE.md 5.3](../architecture/RESOURCES_AND_SCALE.md#53-releases-with-the-date-d4)). |
+| `view-cache-mb` | `64` | The most memory the viewers' views take (each a bitset of the trades a role set sees, per date, version and currency); an idle view goes after an hour, and a date's views go when the date leaves memory or is reloaded ([CLUSTER_GUIDE.md 5.3](../guides/CLUSTER_GUIDE.md#156-memory)). |
 | `tier.mode` | `mapped` (`DRISHTI_VAR_TIER`) | `mapped`: each loaded date is written once to a local **hot file** (float32 position rows in hierarchy order, the trades of fungible positions, the aggregates in float64, columns and links) and memory-mapped; the heap keeps only the aggregates, columns and links, and a history date opens again from its file without reading the lake ([VAR_GUIDE.md section 26](../guides/VAR_GUIDE.md#26-the-tiered-memory-and-the-hot-file)). `heap`: every trade's vector in float64 on the heap. |
 | `tier.dir` | `${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}` | The hot files, one folder per business date (`inputs-<digest>.vhot`; the load's `spill-*.f64` and `build-*.part` while it runs). Local disk: about 2.3 GB a date per million trades. |
 | `tier.disk-dates` | `60` | Hot files kept on disk; the least recently used beyond are deleted (never an open date's). |
@@ -1585,7 +1585,7 @@ else by `drishti.var.positions`.
 
 Off by default: what is sharded is the market-risk pack's `sharding:` block (`enabled`, `key`, `kinds`, `target-shard-mb`, `replicas`); with
 no block and no `enabled` here every date loads whole. The same five keys here win over the block when set; a value that is not
-valid refuses the start. Design and operation: [VAR_SHARDING.md](../architecture/VAR_SHARDING.md), [OPERATIONS.md](OPERATIONS.md#var-shards).
+valid refuses the start. Design and operation: [VAR_SHARDING.md](../architecture/VAR_SHARDING.md), [OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#5-sharding).
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1679,7 +1679,7 @@ shipped, read-only files. The BI powers are granted on roles, see below.
 | `list-limit` | `200` | Most rows one catalogue or workspace list returns (at most 2000). |
 
 **BI powers on roles.** Under `drishti.security.roles.<role>` the key `bi` is a list of `bi`, `bi-author`, `bi-steward`, `bi-admin`
-(see [USER_MANAGEMENT.md](USER_MANAGEMENT.md#bi-powers-rupaka)); the built-in `viewer` holds `[bi]`, `author` and `approver` hold
+(see [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#34-bi-powers-rupaka)); the built-in `viewer` holds `[bi]`, `author` and `approver` hold
 `[bi, bi-author]`, `admin` holds all four. A role defined in Admin, Roles gets its powers from Admin, BI settings. Review before publish reuses
 `drishti.governance.four-eyes` and the `approve` power.
 
@@ -1838,7 +1838,7 @@ asking the whole question again (contexts, fields of other tables, loads and ref
 
 How the query engine shares the server ([BI_DESIGN.md §6.3 to §6.7](../architecture/BI_DESIGN.md#63-concurrency-fairness-and-memory)): work classes and
 slots, per-person and per-model shares, memory and cost budgets, per-connector fragment pools and circuit breakers, and the Java nodes of a site that runs
-more than one ([OPERATIONS.md, Scale](OPERATIONS.md#bi-scale)).
+more than one ([OPERATIONS_GUIDE.md, Scale](../guides/OPERATIONS_GUIDE.md#148-capacity-figures-database-pools-and-bi-scale)).
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1928,11 +1928,11 @@ Items **saved before** the old syntax was refused are not left broken: at start 
 ### `drishti.bi.migrate` — migrations of stored BI items
 
 What the server does at start with BI items it **stores** (drafts, proposals and the published text of every workspace item; shipped files in
-`drishti.bi.dir` are converted with the CLI instead, [CLI_GUIDE.md](../guides/CLI_GUIDE.md#bi-expr-bi-migrate-bi-sql-the-bi-languages)). Every
+`drishti.bi.dir` are converted with the CLI instead, [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md#bi-expr-bi-migrate-bi-sql-the-bi-languages)). Every
 migration is **idempotent** (a converted item has nothing left to convert, so the second start changes nothing), **audited** (`bi-expressions-migrated`
 per item, `bi-migration-run` per run), keeps **the text before as a saved state** of the item's history (*History*, *Restore*), and **never changes an
 item silently**: an item it cannot convert keeps its text and is listed in Admin, BI settings (`migrationProblems`), on the item's page and at
-`GET /api/v1/bi/migrate/problems` ([TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#bi-after-an-upgrade-migrations-of-stored-items)).
+`GET /api/v1/bi/migrate/problems` ([OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#2110-bi-after-an-upgrade)).
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -2166,7 +2166,7 @@ Design: [COLLABORATION.md](../architecture/COLLABORATION.md). A person writes a 
 directory, and Drishti notifies them in the app (always) and by email (off until configured); the link reopens the view
 pinned to the same business date and "known at" instant, with the **recipient's** rights. Shares, recipients and inbox rows are in
 the identity database (`drishti_share`, `drishti_share_recipient`, `drishti_inbox`, `drishti_outbox`, the thread, comment, revision, mention
-and follow tables, `drishti_collab_hold`; back them up with the rest of the identity database, [OPERATIONS.md](OPERATIONS.md#9a-3-collaboration-retention-legal-holds-and-the-compliance-export)). Who may share is the role power `roles.<role>.collaborate`; who may read any share is `compliance` (see
+and follow tables, `drishti_collab_hold`; back them up with the rest of the identity database, [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#123-retention-legal-holds-and-the-compliance-export)). Who may share is the role power `roles.<role>.collaborate`; who may read any share is `compliance` (see
 [`drishti.security`](#drishtisecurity--tokens-roles-field-masks)).
 
 | Key | Default | Meaning |
@@ -2208,10 +2208,10 @@ and follow tables, `drishti_collab_hold`; back them up with the rest of the iden
 | `retention.keep-days` | `0` | Days shares and threads are kept (a thread by its last activity, a share by its creation); `0` keeps them forever, so no record is destroyed by default. A legal hold always wins. |
 | `retention.kinds` | `{}` | Days per entity kind, by kind name in configuration (`{ trade: 2555, gene: 0 }`); beats the pack's days and the default; `0` keeps that kind forever. |
 | `packs.<pack>.retention-days` | unset | Days for every kind the pack owns (a number); beats the default. Order, most specific first: `retention.kinds.<kind>`, `packs.<pack>.retention-days`, `retention.keep-days`. |
-| `retention.interval` | `24h` | How often the purge runs. It starts only when some retention above 0 is configured, so a default install never runs it. See [OPERATIONS.md](OPERATIONS.md#9a-3-collaboration-retention-legal-holds-and-the-compliance-export). |
+| `retention.interval` | `24h` | How often the purge runs. It starts only when some retention above 0 is configured, so a default install never runs it. See [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#123-retention-legal-holds-and-the-compliance-export). |
 | `export-keep` | `24h` | How long a finished compliance export is kept before it is deleted (it is also deleted when downloaded: once). Files are written under `<dir>/exports`. |
 | `packs` | `{}` | Per-pack overrides by pack name, in configuration: `packs.genomics.share-enabled: false` switches sharing off for that pack's kinds (`403 DRS-7004`); `packs.genomics.email.content: link-only` makes email about that pack's kinds carry neither the id nor the note. |
-| `bridges.enabled` | `false` | Chat bridges (build step 9): post "comment + link" (or, for an alert, the alert and its condition) to Teams, Slack or a signed webhook for the events a route lists. Posts go through the outbox (retries, backoff and dead letters as for email) and never carry a data value. See [OPERATIONS.md](OPERATIONS.md#9a-4-chat-bridges-teams-slack-webhooks). |
+| `bridges.enabled` | `false` | Chat bridges (build step 9): post "comment + link" (or, for an alert, the alert and its condition) to Teams, Slack or a signed webhook for the events a route lists. Posts go through the outbox (retries, backoff and dead letters as for email) and never carry a data value. See [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#125-chat-bridges-teams-slack-webhooks). |
 | `bridges.render-as` | `viewer` | The role whose view of masked values the posted note follows: the note is written as a person with only that role would read it, so with the bundled `viewer` (no `raw`) a value copied from a masked field reads `•••`. Value quotes (`{$.mtm}`) are filled from that role's view of the document (a masked field stays `•••`), so posts can carry figures; an administrator may name a raw role for a restricted channel, and a `link-only` pack posts only the link. |
 | `bridges.allow` | `[]` | URL prefixes a bridge's URL must start with (written out in full, no wildcards: `[https://hooks.slack.com/services/, https://contoso.webhook.office.com/]`). Empty means no bridge can post: configuration alone cannot send data to a host nobody approved. |
 | `bridges.per-minute` | `30` | Posts per bridge per minute; the rest wait in the outbox and go a minute later (no attempt is counted). |
@@ -2244,7 +2244,7 @@ SMTP client is Spring Boot's: the standard `spring.mail.*` keys (or `SPRING_MAIL
 
 Each queued email is a row in `drishti_outbox` (or `outbox/{pending,sent,dead}/` for the file store) naming the recipient, the template and the share;
 the message itself is built when it is sent, for the recipient's rights then. Metrics: `drishti.collab.mail{outcome=sent|retry|dead|cancelled}`
-(counters) and `drishti.collab.outbox{state=pending|dead}` (gauges). Operating it: [OPERATIONS.md](OPERATIONS.md#9a-2-collaboration-email-and-the-outbox).
+(counters) and `drishti.collab.outbox{state=pending|dead}` (gauges). Operating it: [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#122-collaboration-email-and-the-outbox).
 A person chooses which events are emailed under `notify.email.{share,mention,reply}` in `PATCH /api/v1/me/settings` (all default to on).
 
 ### `drishti.reports` — scheduled reports
@@ -2260,7 +2260,7 @@ A person chooses which events are emailed under `notify.email.{share,mention,rep
 
 ### `drishti.admin` — uninstalling packs, connectors and BI files safely
 
-Admin → Artifacts ([OPERATIONALISING.md section 18](../guides/OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely)) moves what it uninstalls into an archive instead of deleting it. All values are read at start.
+Admin → Artifacts ([OPERATIONS_GUIDE.md section 18](../guides/OPERATIONS_GUIDE.md#10-admin--artifacts-install-and-uninstall-safely)) moves what it uninstalls into an archive instead of deleting it. All values are read at start.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -2343,7 +2343,7 @@ settings:
 
 Both lake connectors (`delta`, `iceberg`) keep an id-map folder and a document cache on local disk per connector. Nested
 (`id-map-disk: { max-gb: 20 }`) and flat (`id-map-disk.max-gb: 20`) forms are the same setting. Sizing, the safeguards and how to
-read Admin → Caches: [OPERATIONS.md section 12.3](OPERATIONS.md#123-sizing-caches-and-disk-per-connector).
+read Admin → Caches: [OPERATIONS_GUIDE.md section 12.3](../guides/OPERATIONS_GUIDE.md#145-disk-caches-per-connector).
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -2456,7 +2456,7 @@ SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti
 | `server.compression` | on for JSON and `text/event-stream` | |
 | `spring.threads.virtual.enabled` | `true` | Every request runs on a virtual thread. Leave it on. |
 | `spring.profiles.active` | none (`SPRING_PROFILES_ACTIVE`) | `postgres`, `aerospike`, `duckdb`, `files`, `iceberg`, `mongodb` or `redis` ([above](#profiles-another-store-instead-of-delta-lake); deprecated, connector files replace them). |
-| `spring.config.additional-location` | none (`SPRING_CONFIG_ADDITIONAL_LOCATION`) | Another config file or folder read **in addition to** the bundled one, e.g. `file:/etc/drishti/site.yaml`. See [QUICKSTART](../guides/GETTING_STARTED.md). |
+| `spring.config.additional-location` | none (`SPRING_CONFIG_ADDITIONAL_LOCATION`) | Another config file or folder read **in addition to** the bundled one, e.g. `file:/etc/drishti/site.yaml`. See [QUICKSTART](../guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine). |
 | `spring.config.location` | none | Config files read **instead of** the defaults: the bundled `application.yaml` is then not read unless you list `classpath:/application.yaml` first. |
 | `spring.config.import` | the local file and the packs overlay (bundled) | `optional:file:./application.local.yaml` and `optional:file:${DRISHTI_PACKS_OVERLAY:${drishti.data.dir:./data}/packs/added.yaml}`. |
 | `management.endpoints.web.exposure.include` | `health,info,prometheus,metrics` | Actuator endpoints: `/actuator/health` (with `/liveness` and `/readiness` probes), `/actuator/prometheus` (timer `drishti.view`, gauges `drishti.live.*`). |
@@ -2554,7 +2554,7 @@ sign-on settings (`auth.oidc`) apply to every server; each server verifies the I
 | `owner` / `owner_email` | `Ashutosh Sinha` / `ajsinha@gmail.com` | Who holds the rights, and an address beside the name (blank for none): the Author section of the About page. The server has `drishti.branding.owner`. |
 | `user`, `user_display`, `desk` | `ash` (`DRISHTI_USER`), `Ash`, `Rates desk` | The acting user when `auth.enabled` is false (local development only). |
 | `user_cache_seconds` | `10` | How long a console worker reuses what the server said about a user (settings, packs, view layouts, saved pivots, BI powers) before asking again. A change made on this console is seen at once by all its workers (the user stamps, see `server.workers`); this bounds how long another console behind the same address shows the old choice. |
-| `about_prefetch` | `true` (`DRISHTI_ABOUT_PREFETCH`) | Fetch the page's *About this page* answer once the view is idle, so table headers, strip and key-value labels that have a glossary entry are underlined (with a hint) before the drawer is opened. It costs the server one explain per page view: the view is derived again for the caller and kept `drishti.explain.cache-ttl`, so opening the drawer afterwards is free. Set `false` on a busy installation; the labels are then underlined when the drawer is first opened ([PERFORMANCE.md](PERFORMANCE.md#about-this-page-and-its-cost)). |
+| `about_prefetch` | `true` (`DRISHTI_ABOUT_PREFETCH`) | Fetch the page's *About this page* answer once the view is idle, so table headers, strip and key-value labels that have a glossary entry are underlined (with a hint) before the drawer is opened. It costs the server one explain per page view: the view is derived again for the caller and kept `drishti.explain.cache-ttl`, so opening the drawer afterwards is free. Set `false` on a busy installation; the labels are then underlined when the drawer is first opened ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#161-the-servers-knobs)). |
 | `designer` | `false` (`DRISHTI_UI_DESIGNER`) | The Sutra designer ([RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31](../guides/RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid)): a **Customize** button on every entity page (move, hide and add panels, choose a table's columns, say what a click shows; kept as the user's own Design, *My page · &lt;kind&gt;*, which then draws that page for that user only) **Describe** (Build, New screen: a screen from one command-style line, read by a deterministic parser), **Outline** (the screen as a list to rearrange) and **Grid** (the screen as a spreadsheet of formulas); each person's first mode is `designerMode` in `/me/settings`. Every mode edits the same Sutra YAML; the pack's Sutra is never changed. Off: no button, `/designer/*` answers 404 (`/designer/new` goes to Build, New screen) and pages are drawn by the server. |
 | `clock_tz` / `clock_label` | `America/New_York` / `NY` | The top-bar clock. |
 | `landing_examples` | `4` | How many example commands the landing page plays. They are the example commands (`console.examples`) of the packs switched on, so the landing page never names an entity of a pack that is not installed; with none, it shows the form `<MNEMONIC> <ID> <GO>`. Studio's first preview is the first of these examples too. |
@@ -2667,7 +2667,7 @@ The Python runtime is a folder, not a setting: `drishti-console/web/static/vendo
 Every environment variable, server (`DRISHTI_*` placeholders, Spring's relaxed names), console (placeholders and
 `DRISHTI_CONSOLE__<SECTION>__<KEY>`), packs, profiles and tools, is in the generated
 [environment variable index](#environment-variable-index) at the end, with what it sets, its default and its meaning. The Docker
-compose files in `deploy/` show these variables in use; see [OPERATIONS.md](OPERATIONS.md).
+compose files in `deploy/` show these variables in use; see [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md).
 
 | Variable | Used by | Sets |
 |---|---|---|
@@ -2699,7 +2699,7 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS.md](OPER
 | `DRISHTI_EMBED_SIGN_IN_WINDOW`, `DRISHTI_EMBED_SIGN_IN` | S, C | `drishti.embed.sign-in-window`, `embed.sign_in.enabled` |
 | `DRISHTI_PUBLIC_URL`, `DRISHTI_CONSOLE_URL`, `DRISHTI_EMBED_KEY_FILE` | S | `drishti.embed.issuer`, `.audiences`, `.signing-key` |
 | `DRISHTI_OIDC_CLIENT_SECRET`, `DRISHTI_OIDC_REDIRECT_URI` | C | `auth.oidc.*` |
-| `DRISHTI_SEED_ADMIN` and other identity variables | S | see [USER_MANAGEMENT.md](USER_MANAGEMENT.md) |
+| `DRISHTI_SEED_ADMIN` and other identity variables | S | see [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md) |
 | `DRISHTI_DELTA_ROOT`, `DRISHTI_DELTA_ENGINE`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_STREAM_*`, `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_TRADING_TOPIC`, `DRISHTI_VAR_PV_*`, `DRISHTI_CACHE_*`, `DRISHTI_FEED_*`, `FRED_API_KEY`, `DRISHTI_FRED_SERIES` | S (packs) | [pack connectors](#environment-variables-used-by-the-packs-and-profiles) |
 | `SPRING_PROFILES_ACTIVE`, `DRISHTI_PG_*`, `DRISHTI_AEROSPIKE_*`, `DRISHTI_DUCKDB_*`, `DRISHTI_FILES_ROOT`, `DRISHTI_ICEBERG_*`, `DRISHTI_MONGODB_*`, `DRISHTI_REDIS_*` | S | [profiles](#profiles-another-store-instead-of-delta-lake) |
 | `DRISHTI_CONSOLE_HOST`, `DRISHTI_CONSOLE_PORT`, `DRISHTI_BACKEND_URL`, `DRISHTI_USER` | C | `server.*`, `backend.url`, `ui.user` |
@@ -2789,13 +2789,13 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `management.endpoints.web.exposure.include` | string | `health,info,prometheus,metrics` |  | server | the actuator endpoints served: /actuator/health (liveness and readiness probes), info, prometheus (timer drishti.view, gauges drishti.live.\*), metrics | restart |  | admin |
 | `management.health.mail.enabled` | boolean | `false` |  | server | a mail server that is down is retried by the outbox; it must not turn the server's health red | restart |  | admin |
 | `management.endpoint.health.probes.enabled` | boolean | `true` |  | server | /actuator/health/liveness and /actuator/health/readiness for Kubernetes probes | restart |  | admin |
-| `management.endpoint.health.group.readiness.include` | string | `readinessState,nodeReadiness` |  | server | readiness that means ready (CD1, CLUSTER\_DEPLOYMENT.md section 9.1): Spring's own state and this node's (drishti.node.readiness): DOWN while joining, while an engine's newest date opens or an owned shard is not ready; OUT\_OF\_SERVICE while drained. Only here: /actuator/health itself and liveness never wait for it | restart |  | admin |
+| `management.endpoint.health.group.readiness.include` | string | `readinessState,nodeReadiness` |  | server | readiness that means ready (CD1, CLUSTER\_GUIDE.md section 9.1): Spring's own state and this node's (drishti.node.readiness): DOWN while joining, while an engine's newest date opens or an owned shard is not ready; OUT\_OF\_SERVICE while drained. Only here: /actuator/health itself and liveness never wait for it | restart |  | admin |
 
 #### `drishti`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.edition` | string | empty | `DRISHTI_EDITION` | server | The edition (docs/admin/LENSES.md): blank is the full Drishti; risk is Drishti Risk. It names config/lenses/&lt;module&gt;/&lt;lens&gt;.yaml, read as a layer under the site's configuration before the packs load; every member of a cluster sets the same value, and the console learns it from /api/v1/about. A change needs a restart. | restart |  | admin |
+| `drishti.edition` | string | empty | `DRISHTI_EDITION` | server | The edition (docs/guides/ADMIN\_GUIDE.md): blank is the full Drishti; risk is Drishti Risk. It names config/lenses/&lt;module&gt;/&lt;lens&gt;.yaml, read as a layer under the site's configuration before the packs load; every member of a cluster sets the same value, and the console learns it from /api/v1/about. A change needs a restart. | restart |  | admin |
 | `drishti.lens-dir` | string | `./config/lenses` | `DRISHTI_LENS_DIR` | server | the lenses' files: config/lenses/&lt;module&gt;/&lt;lens&gt;.yaml (one of no module in the folder itself), features.yaml | restart |  | admin |
 | `drishti.lenses` | string | `risk,world,market,trading` | `DRISHTI_LENSES` | server | Lenses (LENSES.md › The design): editions a person may open on a full instance ("Open Drishti Risk"), for their own session; no restart, every pack stays loaded. A lens hides, it does not secure. On by default (product owner, 2026-10-30): the four lenses; DRISHTI\_LENSES= (empty) turns them off. Ignored with an edition. | live |  | everyday |
 
@@ -3723,7 +3723,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 ### Compute engines: `config/engines/*.yaml`
 
-One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR, FVA, the two cubes, the in-memory lake, the data inbox), `config/engines/<engine>.yaml` (`DRISHTI_ENGINES_DIR`), imported by `application.yaml` after the jar's own copy of the same file: its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under the keys they always had. `application.local.yaml`, the environment and the command line still win over a file. Admin → Engines and `drishti.py server engines` write only the switch and `changed`; every other key is edited in the file ([COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md), [OPERATIONS.md](OPERATIONS.md#21-compute-engines-on-or-off)). The old switch names are listed last: they still work, with a warning at start (`DRS-1024`).
+One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR, FVA, the two cubes, the in-memory lake, the data inbox), `config/engines/<engine>.yaml` (`DRISHTI_ENGINES_DIR`), imported by `application.yaml` after the jar's own copy of the same file: its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under the keys they always had. `application.local.yaml`, the environment and the command line still win over a file. Admin → Engines and `drishti.py server engines` write only the switch and `changed`; every other key is edited in the file ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off), [ARCHITECTURE.md](../architecture/ARCHITECTURE.md#27-compute-engines)). The old switch names are listed last: they still work, with a warning at start (`DRS-1024`).
 
 #### `drishti.engines.var`
 
@@ -4236,7 +4236,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 
 ### Modules: `config/modules/*.yaml`
 
-One file per module (banking, capitalmarkets, economy), `config/modules/<module>.yaml` (`DRISHTI_MODULES_DIR`): the administrator's switch, and for a module in a jar of its own (banking) its name, so a server without the jar knows it and leaves it off as not installed; the module's manifest ships in its jar and the access registry reads both ([ACCESS_MODEL.md](../architecture/ACCESS_MODEL.md), [OPERATIONS.md](OPERATIONS.md)). `drishti.modules.<module>.enabled` (`DRISHTI_MODULES_<MODULE>_ENABLED`) wins over the file. A module is on when installed, licensed and enabled; a change takes effect at the next start.
+One file per module (banking, capitalmarkets, economy), `config/modules/<module>.yaml` (`DRISHTI_MODULES_DIR`): the administrator's switch, and for a module in a jar of its own (banking) its name, so a server without the jar knows it and leaves it off as not installed; the module's manifest ships in its jar and the access registry reads both ([ACCESS_MODEL.md](../architecture/ACCESS_MODEL.md), [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#65-engines-modules-and-editions)). `drishti.modules.<module>.enabled` (`DRISHTI_MODULES_<MODULE>_ENABLED`) wins over the file. A module is on when installed, licensed and enabled; a change takes effect at the next start.
 
 #### A module's switch: `config/modules/<module>.yaml` (docs/architecture/ACCESS_MODEL.md)
 
@@ -4274,7 +4274,7 @@ One file per module (banking, capitalmarkets, economy), `config/modules/<module>
 | `backend.timeout_seconds` | integer | `15` |  | console | per call to the server; longer than the server's own read limit (drishti.sources.fetch-timeout, 10 s), so its answer comes through | restart |  | expert |
 | `backend.pool_size` | integer | `64` |  | console | pooled HTTP connections to the server (per server, when there are several) | restart |  | expert |
 | `backend.check_seconds` | integer | `5` | `DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS` | console | how often the console asks each server if it is there (0 = never); pages show a banner and recover when it returns | restart |  | admin |
-| `backend.urls` | string | empty | `DRISHTI_BACKEND_URLS` | console | Several servers of one Drishti\*net cluster (docs/admin/OPERATIONS.md, "The console and several servers"): one is enough, the console learns the rest. Empty: backend.url, as before. Each session keeps to one server while it answers and falls over to the next when it does not. e.g. https://drishti-a:8480,https://drishti-b:8480 | restart |  | admin |
+| `backend.urls` | string | empty | `DRISHTI_BACKEND_URLS` | console | Several servers of one Drishti\*net cluster (docs/guides/OPERATIONS\_GUIDE.md, "The console and several servers"): one is enough, the console learns the rest. Empty: backend.url, as before. Each session keeps to one server while it answers and falls over to the next when it does not. e.g. https://drishti-a:8480,https://drishti-b:8480 | restart |  | admin |
 | `backend.discover` | boolean | `true` | `DRISHTI_BACKEND_DISCOVER` | console | pull the cluster's member list from the server in use, and keep it (&lt;console data dir&gt;/net/servers.json) | restart |  | admin |
 | `backend.discover_every` | duration | `60s` |  | console | how often the list is pulled again | restart |  | admin |
 | `backend.check_every` | duration | `5s` |  | console | how often each listed server's health is looked at | restart |  | admin |
@@ -4896,9 +4896,9 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `doc-disk-cache.zone` | string | `America/New_York` |  | `delta` connectors | Zone of the daily clearing | live (the connector restarts) |  | expert |
 | `id-map-disk.enabled` | boolean | `true` |  | `delta` connectors | Each table date id map written once per table version and memory-mapped: no heap per id, kept across restarts | live (the connector restarts) |  | admin |
 | `id-map-disk.dir` | path | `<data dir>/cache/<connector>/idmaps` |  | `delta` connectors | Id maps written once per table version and date, read through a memory map (plugins/drishti-plugin-delta/README.md › The id map of a day) | live (the connector restarts) |  | admin |
-| `id-map-disk.max-gb` | number | `5` |  | `delta` connectors | The most disk the id map files take; the least recently used beyond it are unmapped, then deleted, never a map in use (mapped, read or written in the last five minutes, a date open in VaR or exposure); a map alone over it is kept and warned about (OPERATIONS.md section 12.3) | live (the connector restarts) |  | admin |
-| `id-map-disk.ttl` | duration | none |  | `delta` connectors | Off when empty or 0; at least 24h. Drops a map not used (mapped or read) for that long, give or take 10%; never the latest and previous dates, today, a date open in VaR or exposure (OPERATIONS.md section 12.3) | live (the connector restarts) |  | admin |
-| `id-map-disk.idle-release` | duration | `30m` |  | `delta` connectors | A map not read for that long is unmapped (the file stays; the next read maps it again), never while a read is inside it nor for a date open in VaR or exposure: the cap then trims its file when the folder is over max-gb. At least 5m (OPERATIONS.md section 12.3) | live (the connector restarts) |  | admin |
+| `id-map-disk.max-gb` | number | `5` |  | `delta` connectors | The most disk the id map files take; the least recently used beyond it are unmapped, then deleted, never a map in use (mapped, read or written in the last five minutes, a date open in VaR or exposure); a map alone over it is kept and warned about (OPERATIONS\_GUIDE.md section 12.3) | live (the connector restarts) |  | admin |
+| `id-map-disk.ttl` | duration | none |  | `delta` connectors | Off when empty or 0; at least 24h. Drops a map not used (mapped or read) for that long, give or take 10%; never the latest and previous dates, today, a date open in VaR or exposure (OPERATIONS\_GUIDE.md section 12.3) | live (the connector restarts) |  | admin |
+| `id-map-disk.idle-release` | duration | `30m` |  | `delta` connectors | A map not read for that long is unmapped (the file stays; the next read maps it again), never while a read is inside it nor for a date open in VaR or exposure: the cap then trims its file when the folder is over max-gb. At least 5m (OPERATIONS\_GUIDE.md section 12.3) | live (the connector restarts) |  | admin |
 | `columns-cache-mb` | integer | none |  | `delta` connectors | Memory for days' column sets, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own | live (the connector restarts) |  | expert |
 | `id-map-mb` | integer | none |  | `delta` connectors | Memory for days' id maps, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own | live (the connector restarts) |  | expert |
 | `lz4-via-native` | boolean | `true` |  | `delta` connectors | hadoop engine only: read LZ4 files through the native engine's decoder | live (the connector restarts) |  | expert |
@@ -5006,9 +5006,9 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `doc-disk-cache.zone` | string | `America/New_York` |  | `iceberg` connectors | Zone of the daily clearing | live (the connector restarts) |  | expert |
 | `id-map-disk.enabled` | boolean | `true` |  | `iceberg` connectors | Each business date's id map written once per date's files and memory-mapped: no heap per id, kept across restarts and commits of other dates | live (the connector restarts) |  | admin |
 | `id-map-disk.dir` | path | `<data dir>/cache/<connector>/idmaps` |  | `iceberg` connectors | each date's id map written once and memory-mapped, kept across restarts | live (the connector restarts) |  | admin |
-| `id-map-disk.max-gb` | number | `5` |  | `iceberg` connectors | The most disk the id map files take; the least recently used beyond it are unmapped, then deleted, never a map in use (mapped, read or written in the last five minutes, a date open in VaR or exposure); a map alone over it is kept and warned about (OPERATIONS.md section 12.3) | live (the connector restarts) |  | admin |
-| `id-map-disk.ttl` | duration | none |  | `iceberg` connectors | Off when empty or 0; at least 24h. Drops a map not used (mapped or read) for that long, give or take 10%; never the latest and previous dates, today, a date open in VaR or exposure (OPERATIONS.md section 12.3) | live (the connector restarts) |  | admin |
-| `id-map-disk.idle-release` | duration | `30m` |  | `iceberg` connectors | A map not read for that long is unmapped (the file stays; the next read maps it again), never while a read is inside it nor for a date open in VaR or exposure: the cap then trims its file when the folder is over max-gb. At least 5m (OPERATIONS.md section 12.3) | live (the connector restarts) |  | admin |
+| `id-map-disk.max-gb` | number | `5` |  | `iceberg` connectors | The most disk the id map files take; the least recently used beyond it are unmapped, then deleted, never a map in use (mapped, read or written in the last five minutes, a date open in VaR or exposure); a map alone over it is kept and warned about (OPERATIONS\_GUIDE.md section 12.3) | live (the connector restarts) |  | admin |
+| `id-map-disk.ttl` | duration | none |  | `iceberg` connectors | Off when empty or 0; at least 24h. Drops a map not used (mapped or read) for that long, give or take 10%; never the latest and previous dates, today, a date open in VaR or exposure (OPERATIONS\_GUIDE.md section 12.3) | live (the connector restarts) |  | admin |
+| `id-map-disk.idle-release` | duration | `30m` |  | `iceberg` connectors | A map not read for that long is unmapped (the file stays; the next read maps it again), never while a read is inside it nor for a date open in VaR or exposure: the cap then trims its file when the folder is over max-gb. At least 5m (OPERATIONS\_GUIDE.md section 12.3) | live (the connector restarts) |  | admin |
 | `id-map-mb` | integer | `1024` |  | `iceberg` connectors | Id maps kept in the heap (MB) | live (the connector restarts) |  | expert |
 | `doc-cache-mb` | integer | `256` |  | `iceberg` connectors | Documents kept in the heap (MB) | live (the connector restarts) |  | expert |
 | `columns-cache-mb` | integer | `1024` |  | `iceberg` connectors | Promoted columns kept in the heap (MB) | live (the connector restarts) |  | expert |
@@ -5541,7 +5541,7 @@ A lens file (`config/lenses/<module>/<lens>.yaml`, an edition when it is the ins
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `edition` | string | `market` |  | an edition (server and console) | Drishti Market: the bank's own market data in one product: curves, fixings, FX, volatility surfaces and cubes, credit curves, equities, inflation, commodities, bonds and correlations, the inputs that feed risk and valuations. No trades and no VaR. Chosen by drishti.edition: market on every server (DRISHTI\_EDITION=market), or offered as a lens beside the others (drishti.lenses: risk,world,market). The site's configuration wins over any key (drishti.edition-spec.&lt;key&gt; on the server, edition.&lt;key&gt; in the console). docs/admin/LENSES.md (how to run it, then the design as built). | restart |  | admin |
+| `edition` | string | `market` |  | an edition (server and console) | Drishti Market: the bank's own market data in one product: curves, fixings, FX, volatility surfaces and cubes, credit curves, equities, inflation, commodities, bonds and correlations, the inputs that feed risk and valuations. No trades and no VaR. Chosen by drishti.edition: market on every server (DRISHTI\_EDITION=market), or offered as a lens beside the others (drishti.lenses: risk,world,market). The site's configuration wins over any key (drishti.edition-spec.&lt;key&gt; on the server, edition.&lt;key&gt; in the console). docs/guides/ADMIN\_GUIDE.md (how to run it, then the design as built). | restart |  | admin |
 | `title` | string | `Drishti Risk` |  | an edition (server and console) | the edition's name, in the top bar, the About page and the lens menu | restart |  | admin |
 | `description` | string | `VaR and counterparty exposure, from your own pricing data, in one place` |  | an edition (server and console) | one line on what the edition is for (About, the lens menu) | restart |  | admin |
 | `packs.enabled.core` | list | `[core]` |  | an edition (server and console) | the core's packs this lens opens | restart |  | admin |
@@ -5595,7 +5595,7 @@ A lens file (`config/lenses/<module>/<lens>.yaml`, an edition when it is the ins
 | `pivot` | on, off or edition | none |  | server and console | The feature pivot an edition file names under features: off presets false, on or edition true; presets drishti.pivot.enabled on the server | restart |  | admin |
 | `reports` | on, off or edition | none |  | server and console | The feature reports an edition file names under features: off presets false, on or edition true; presets drishti.reports.enabled on the server and features.reports in the console | restart |  | admin |
 | `collaboration` | on, off or edition | none |  | server and console | The feature collaboration an edition file names under features: off presets false, on or edition true; presets drishti.collab.enabled on the server and features.collaboration in the console | restart |  | admin |
-| `var` | on, off or edition | none |  | server and console | The feature var an edition file names under features: off presets false, on or edition true; presets drishti.engines.var.enabled on the server. the compute engines' switches (config/engines/&lt;id&gt;.yaml, COMPUTE\_ENGINES.md) | restart |  | admin |
+| `var` | on, off or edition | none |  | server and console | The feature var an edition file names under features: off presets false, on or edition true; presets drishti.engines.var.enabled on the server. the compute engines' switches (config/engines/&lt;id&gt;.yaml, ADMIN\_GUIDE.md) | restart |  | admin |
 | `exposure` | on, off or edition | none |  | server and console | The feature exposure an edition file names under features: off presets false, on or edition true; presets drishti.engines.exposure.enabled on the server | restart |  | admin |
 | `frtb-sa` | on, off or edition | none |  | server and console | The feature frtb-sa an edition file names under features: off presets false, on or edition true; presets drishti.engines.frtb-sa.enabled on the server | restart |  | admin |
 | `simm` | on, off or edition | none |  | server and console | The feature simm an edition file names under features: off presets false, on or edition true; presets drishti.engines.simm.enabled on the server | restart |  | admin |
@@ -5819,7 +5819,7 @@ Write-back's four files ([WRITE_BACK.md](../guides/WRITE_BACK.md): the administr
 
 ### Compute workers: `config/compute/compute.yaml`
 
-The supervisor, the Python pools and their environments ([OPERATIONS.md](OPERATIONS.md#19-compute-workers)).
+The supervisor, the Python pools and their environments ([OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#15-compute-workers)).
 
 #### `compute`
 
@@ -5851,13 +5851,13 @@ The supervisor, the Python pools and their environments ([OPERATIONS.md](OPERATI
 
 ### Drishti*net: `config/net/`
 
-The cluster folder (`drishti.net.dir`), watched while the server runs ([OPERATIONS.md](OPERATIONS.md#18-drishtinet-running-several-servers-as-one)); the shipped examples are in `config/net.examples/`.
+The cluster folder (`drishti.net.dir`), watched while the server runs ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)); the shipped examples are in `config/net.examples/`.
 
 #### `node.yaml`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `enabled` | boolean | `true` |  | each member | Project Drishti · Any data. Any domain. One grammar. Copyright (c) 2026 Ashutosh Sinha &lt;ajsinha@gmail.com&gt;. All rights reserved. PROPRIETARY AND CONFIDENTIAL. This file is the confidential and proprietary property of Ashutosh Sinha. Unauthorised copying, use, modification, distribution or disclosure of this file, via any medium, is strictly prohibited except with the express prior written permission of the copyright holder. See the LICENSE file in the root of this repository for the full terms. Example: copy to config/net/node.yaml (the server's drishti.net.dir) to make this server a member of a Drishti\*net cluster (docs/admin/OPERATIONS.md). Applied live: enabled false -&gt; true joins, true -&gt; false leaves cleanly. Without this file the server is a single server exactly as before. | live |  | admin |
+| `enabled` | boolean | `true` |  | each member | Project Drishti · Any data. Any domain. One grammar. Copyright (c) 2026 Ashutosh Sinha &lt;ajsinha@gmail.com&gt;. All rights reserved. PROPRIETARY AND CONFIDENTIAL. This file is the confidential and proprietary property of Ashutosh Sinha. Unauthorised copying, use, modification, distribution or disclosure of this file, via any medium, is strictly prohibited except with the express prior written permission of the copyright holder. See the LICENSE file in the root of this repository for the full terms. Example: copy to config/net/node.yaml (the server's drishti.net.dir) to make this server a member of a Drishti\*net cluster (docs/guides/OPERATIONS\_GUIDE.md). Applied live: enabled false -&gt; true joins, true -&gt; false leaves cleanly. Without this file the server is a single server exactly as before. | live |  | admin |
 | `advertise-url` | string | `https://drishti-b.internal:8480` |  | each member | the address peers and consoles call this node at: a name or the machine's real IP, | live |  | admin |
 | `tags` | list | `[region:emea, tier:risk]` |  | each member | never localhost, 127.x.x.x, ::1, 0.0.0.0 or :: (refused). Left out: this machine's primary IPv4 address (the default route's interface) with the server's port, e.g. http://192.168.1.20:8480 for nodes per role (access.yaml) | live |  | admin |
 | `peer-only-packs` | list | `[]` |  | each member | packs served to peers only, hidden from this node's own users | live |  | admin |
@@ -5907,7 +5907,7 @@ The cluster folder (`drishti.net.dir`), watched while the server runs ([OPERATIO
 
 ### Platform alert rules: `config/alerts/platform-alerts.yaml`
 
-The rules each server evaluates against its own metrics ([OPERATIONS.md](OPERATIONS.md#136-platform-metrics-and-alerts)); `drishti.metrics.alerts.file` names the file, read again when it changes. A rule's name is the site's own.
+The rules each server evaluates against its own metrics ([OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#135-platform-metrics-and-alert-rules)); `drishti.metrics.alerts.file` names the file, read again when it changes. A rule's name is the site's own.
 
 #### `rules`
 
@@ -6170,7 +6170,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_AUTH_ENABLED` | `auth.enabled` | `false` | console | off for local development |
 | `DRISHTI_BACKEND_DISCOVER` | `backend.discover` | `true` | console | pull the cluster's member list from the server in use, and keep it (&lt;console data dir&gt;/net/servers.json) |
 | `DRISHTI_BACKEND_URL` | `backend.url` | `http://127.0.0.1:18480` | console | where the server is (one server; backend.urls for several) |
-| `DRISHTI_BACKEND_URLS` | `backend.urls` | empty | console | Several servers of one Drishti\*net cluster (docs/admin/OPERATIONS.md, "The console and several servers"): one is enough, the console learns the rest. Empty: backend.url, as before. Each session keeps to one server while it answers and falls over to the next when it does not. e.g. https://drishti-a:8480,https://drishti-b:8480 |
+| `DRISHTI_BACKEND_URLS` | `backend.urls` | empty | console | Several servers of one Drishti\*net cluster (docs/guides/OPERATIONS\_GUIDE.md, "The console and several servers"): one is enough, the console learns the rest. Empty: backend.url, as before. Each session keeps to one server while it answers and falls over to the next when it does not. e.g. https://drishti-a:8480,https://drishti-b:8480 |
 | `DRISHTI_BI_BOARD_ROTATE_SECONDS` | `bi.board.rotate_seconds` | `30` | console | a board in kiosk mode turns to its next page after this long, unless the board sets rotate:; 3 to 3600 |
 | `DRISHTI_BI_DIR` | `drishti.bi.dir` | `./config/bi` | server | Rupaka files: datasets/, reports/, boards/, notebooks/, python/ (config/bi/README.md); never inside a pack |
 | `DRISHTI_BI_ENABLED` | `bi.enabled` | `true` | console | false: no BI top-bar menu, no /bi pages (the server's drishti.bi.enabled is separate) |
@@ -6198,7 +6198,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_CONSOLE_RELAY_ACROSS_HOSTS` | `live.relay.across_hosts` | `false` | console | true: consoles on several hosts behind one load balancer pass live-channel calls to each other, so the load balancer needs no stickiness |
 | `DRISHTI_CONSOLE_RELAY_ADVERTISE` | `live.relay.advertise` | empty | console | the address the other consoles reach this one at (blank: this machine's LAN address; never a loopback one) |
 | `DRISHTI_CONSOLE_RELAY_BIND` | `live.relay.bind` | `0.0.0.0` | console | the interface the relay listens on across hosts (within one host it listens on loopback only) |
-| `DRISHTI_CONSOLE_RELAY_KEY` | the live-channel relay key | none | console | Signs the relay messages between the console's workers and, with live.relay.across\_hosts, between consoles: the same secret on every console (the launcher makes one for its own workers when it is not set; CLUSTER\_DEPLOYMENT.md section 9.4) |
+| `DRISHTI_CONSOLE_RELAY_KEY` | the live-channel relay key | none | console | Signs the relay messages between the console's workers and, with live.relay.across\_hosts, between consoles: the same secret on every console (the launcher makes one for its own workers when it is not set; CLUSTER\_GUIDE.md section 9.4) |
 | `DRISHTI_CONSOLE_RELAY_KEY_MADE` | (set by the launcher) | none | console | Set by run\_drishti\_web.py when it made the relay key itself: the relay then stays on this host |
 | `DRISHTI_CONSOLE_RELAY_PORT` | `live.relay.port` | `17490` | console | across hosts, worker n listens on port + n (port .. port + server.workers - 1): open these between the consoles; 0 = any free port |
 | `DRISHTI_CONSOLE_SHUTDOWN_SECONDS` | `server.shutdown_seconds` | `5` | console | on a stop, how long open streams (live pages) may stay before they are closed; the browser then reconnects |
@@ -6221,7 +6221,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_DRAIN_WAIT` | deploy/bin/drishti-node.sh | `90` | tools | Seconds the stop hook waits for safeToStop after the drain (ECS on Fargate: at most 120 s for the whole stop) |
 | `DRISHTI_DUCKDB_MEMORY` | duckdb profile | `1GB` | profile | The shared DuckDB instance's memory limit |
 | `DRISHTI_DUCKDB_PATH` | duckdb profile | `./data/duckdb/drishti.duckdb` | profile | The duckdb profile's file (one file, a schema per domain) |
-| `DRISHTI_EDITION` | `drishti.edition` | empty | server | The edition (docs/admin/LENSES.md): blank is the full Drishti; risk is Drishti Risk. It names config/lenses/&lt;module&gt;/&lt;lens&gt;.yaml, read as a layer under the site's configuration before the packs load; every member of a cluster sets the same value, and the console learns it from /api/v1/about. A change needs a restart. |
+| `DRISHTI_EDITION` | `drishti.edition` | empty | server | The edition (docs/guides/ADMIN\_GUIDE.md): blank is the full Drishti; risk is Drishti Risk. It names config/lenses/&lt;module&gt;/&lt;lens&gt;.yaml, read as a layer under the site's configuration before the packs load; every member of a cluster sets the same value, and the console learns it from /api/v1/about. A change needs a restart. |
 | `DRISHTI_EDIT_ENABLED` | `edit.enabled` (write-back) | `false` | write-back | the write-back switch: false refuses every change (UI, CLI, API) and shows no Submit |
 | `DRISHTI_EDIT_FILE` | `drishti.edit.file` | `./config/edit/edit.yaml` | server | Write-back (docs/guides/WRITE\_BACK.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml). Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only. |
 | `DRISHTI_EMBED_ENABLED` | `drishti.embed.enabled`, `embed.enabled` | `false` | console, server | off: no token endpoint, embed tokens refused. Needs drishti.security.enabled |
@@ -6293,7 +6293,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_KAFKA_BOOTSTRAP` | Kafka brokers | `localhost:9092` | packs | The brokers of the trading stream and the VaR PV topic |
 | `DRISHTI_LABS_CALC` | `drishti.calc.enabled`, `labs.calc` | `false` | console, server | Labs: off as shipped; on also needs a role with calc, and a pack that enables it for the view's kind |
 | `DRISHTI_LAKES_DIR` | drishti.lakes.dir | `./config/lakes` | server | The lake folder: one config/lakes/&lt;lake&gt;.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/DATA\_LAKE\_GUIDE.md) |
-| `DRISHTI_LAKES_RELOCATE_ON_START` | drishti.lakes.relocate-on-start | `true` | server | At start, move a demo lake built in the older layout (&lt;data&gt;/delta/&lt;domain&gt;) into &lt;data&gt;/delta/demo once, safely (verified, moved back on any error, never a delete); false: only by drishti.py lake relocate demo (docs/admin/OPERATIONS.md) |
+| `DRISHTI_LAKES_RELOCATE_ON_START` | drishti.lakes.relocate-on-start | `true` | server | At start, move a demo lake built in the older layout (&lt;data&gt;/delta/&lt;domain&gt;) into &lt;data&gt;/delta/demo once, safely (verified, moved back on any error, never a delete); false: only by drishti.py lake relocate demo (docs/guides/OPERATIONS\_GUIDE.md) |
 | `DRISHTI_LAKE_CLASSPATH` | lake load | none | tools | The class path of the Java lake loader |
 | `DRISHTI_LAKE_ENABLED` | the packs' data connectors | `true` | packs | false switches every pack's data connector off (the demo samples still answer) |
 | `DRISHTI_LAKE_HEAP` | lake build | none | tools | The Java lake writer's heap |

@@ -889,7 +889,7 @@ that floods is sampled by the live table (`rows`, `age` limits).
 | Asked queries | **stateless**: any Java node answers any MQ; L1 is local (a miss on another node recomputes from shared layers) |
 | Standing queries and live tables | **sticky by model shard**: one node owns a model's live tables and its standing queries; others forward subscribe calls; failover replays from the connector's resync and the latest layer |
 | Generations | published on the bus; every node's L1 checks the vector before serving |
-| Console | stateless apart from SSE sessions (held by one console, the calls on them relayed to it: CLUSTER_DEPLOYMENT.md section 9.4) and the Python result cache (local, disposable) |
+| Console | stateless apart from SSE sessions (held by one console, the calls on them relayed to it: CLUSTER_GUIDE.md section 9.4) and the Python result cache (local, disposable) |
 | Python | the compute pool `python` on each Java node (`compute.pools.python`; more nodes, more workers) |
 
 Built in B (scale wave); until then a site runs one Java node and one or more consoles. The design keeps every
@@ -1305,14 +1305,14 @@ the drill.
 
 Drishti*net is built as a wave of its own, then fully tested; the Cassandra connector and drishti-iceberg are part of wave D.
 
-**Server lane:** N1–N7 of [CLUSTER_DEPLOYMENT.md §16](CLUSTER_DEPLOYMENT.md#16-build-plan): membership by gossip over HTTP and
+**Server lane:** N1–N7 of [CLUSTER_GUIDE.md §16](ARCHITECTURE.md#28-clusters-inside-membership-placement-and-routing): membership by gossip over HTTP and
 `peers.json`; capability digests; security (cluster key or mutual TLS, key rollover, on-behalf-of tokens, masks on both
 nodes, nodes per role); view and data forwarding with the newest pack served and peer-only packs; scatter-gather search,
 type-ahead and grouped pages; live relay and BI routing; user state across nodes and console failover. Configured like
 connectors, in `config/net/` (section 14 there).
 
 **Console lane:** Admin → Net (members, capability map, routing with *Explain*, access, security, files;
-[CLUSTER_DEPLOYMENT.md §13](CLUSTER_DEPLOYMENT.md#13-admin-management-and-observability)); `backend.urls` failover; docs and a tutorial
+[CLUSTER_GUIDE.md §13](../guides/CLUSTER_GUIDE.md#3-admin--net)); `backend.urls` failover; docs and a tutorial
 (UI, CLI and YAML).
 
 **Full testing:** in-process clusters with a fake clock (joins, leaves, crashes, a split and its healing), every routing
@@ -1336,7 +1336,7 @@ wrong answers; (5) QA findings fixed before the drill.
 settled at a product cause): `test_bi_gov_browser`, `test_pack_new_browser`, `test_bi_reports_browser`, `test_bi_wizard_and_controls_browser`,
 `test_form_browser`, `test_bi_wave_a_browser`, `test_bi_live_browser`, `test_tree_rows.py`, `test_bi_python_browser`,
 `test_bi_reports_cross_browser`, `test_controls_browser`, `test_embed_report_browser`; the Drishti*net gap that two nodes disabling the
-last administrators at the same moment could leave none enabled (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 11); members advertise only real addresses.
+last administrators at the same moment could leave none enabled (CLUSTER_GUIDE.md › Drishti*net: many servers, one Drishti, section 11); members advertise only real addresses.
 Moved to 2.6.5 (ends with a full drill): `test_showcase_clean_browser[map]` (the workbench of the map example now and then never loads:
 `window.Drishti.workbench` unset after 120 s, a script error at start suspected) and `test_embed_elements_browser`
 (`test_pivot_regroups_without_saving_inside_the_element[firefox|webkit]`: the live netting set redraws its panels on every tick, so the
@@ -1404,7 +1404,7 @@ the bell, `drishti.py bi runs`, Admin → BI → Runs, help cards and the browse
 
 **Also** (product owner, 2026-10-20):
 
-* **Gossip off the busy path** ([CLUSTER_DEPLOYMENT.md, as built, 2.6.7](CLUSTER_DEPLOYMENT.md#the-transport-between-nodes)): on the
+* **Gossip off the busy path** ([CLUSTER_GUIDE.md, as built, 2.6.7](ARCHITECTURE.md#281-membership-by-gossip-swim-over-http)): on the
   sender, gossip and probes get their own small HTTP client pool and a platform thread (today they share `PeerHttp`'s clients with data
   forwarding, and the round runs on a virtual thread); on the receiver, `/api/v1/net/gossip` and the probes are handled on a reserved
   path that heavy BI work cannot crowd out. Accepted when a heavy BI burst on one node gives **no false *suspect* anywhere**.
@@ -3651,14 +3651,14 @@ to the bytes of JSON, every time. The architecture therefore answers each query 
 
 The query planner rewrites a visual's query to the first layer that can answer it (rollup, then columns, then raw), and
 joins the hot state with today's columns for live tables. Drishti's own searches already work this way: the Delta
-connector's promoted columns are why a search over a million trades a day answers in about 134 ms (PERFORMANCE.md).
+connector's promoted columns are why a search over a million trades a day answers in about 134 ms (CLUSTER_GUIDE.md).
 
 **Engine interface.** The compiler emits SQL against an `AnalyticEngine` interface. **DuckDB** (embedded, no extra
 process) is the default. A dataset too large for one node sets `engine: <name>` and its `direct` tables are pushed down to
 a distributed engine the site already runs (Trino or Starburst, Spark or Databricks SQL, ClickHouse, StarRocks) through
 a connector, with Drishti still adding row rules and applying masks to the results. Reports and the designer do not change.
 
-**Sizing rule of thumb** (to be replaced by measurements, [PERFORMANCE.md method 9](../admin/PERFORMANCE.md#9-many-users-soak-runs-and-memory-profiling)): one DuckDB server for datasets whose
+**Sizing rule of thumb** (to be replaced by measurements, [CLUSTER_GUIDE.md method 9](../admin/BENCHMARK.md#213-many-users-soaks-and-memory)): one DuckDB server for datasets whose
 *columns* layer fits a few terabytes and whose heavy queries run at modest concurrency; a distributed engine beyond that.
 The phase 0 POC measured the JSON, columns and rollup paths side by side (RUPAKA_POC.md, since deleted: in git at tag v2.9.5).
 
@@ -4038,12 +4038,12 @@ an administrator can restrict which workspaces and roles may use each hook.
 - **Usage:** views per report and user, slow visuals, unused content (candidates to archive).
 - **Backups:** workspaces, datasets and reports are documents in the identity database and on disk; included in the existing
   backup and export procedures.
-- **Load and memory:** the method of [PERFORMANCE.md, method 9](../admin/PERFORMANCE.md#9-many-users-soak-runs-and-memory-profiling) gains a BI persona (report
+- **Load and memory:** the method of [CLUSTER_GUIDE.md, method 9](../admin/BENCHMARK.md#213-many-users-soaks-and-memory) gains a BI persona (report
   viewers) and the runner's memory budget.
 
 ### 17. Architecture
 
-**No new server processes unless they are needed.** The BI code runs inside the existing Drishti server (one package, `com.ash.drishti.server.bi`, with DuckDB embedded) and the console (its BI routes, templates and scripts); the only extra processes are the compute pool `python`'s workers and their sandboxed fork children (one per call: [PYTHON_COMPUTE.md section 19](PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)). When measured load calls for it (section 18), the scale-out is more Drishti servers (each with its pool `python`) behind a load balancer (PERFORMANCE.md, "Scaling out"). The target architecture is [section 4](#4-query-architecture) and [section 3.5](#35-python-sandboxed-workers-on-the-console-backend). The 2.1 diagram (Perspective, DuckDB-Wasm, Graphic Walker, the module names `drishti-bi-core`, `-query`, `-live`, `-ai`) was replaced and deleted (RUPAKA_2_1_ENGINE.md, in git at tag v2.9.5).
+**No new server processes unless they are needed.** The BI code runs inside the existing Drishti server (one package, `com.ash.drishti.server.bi`, with DuckDB embedded) and the console (its BI routes, templates and scripts); the only extra processes are the compute pool `python`'s workers and their sandboxed fork children (one per call: [PYTHON_COMPUTE.md section 19](PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)). When measured load calls for it (section 18), the scale-out is more Drishti servers (each with its pool `python`) behind a load balancer (CLUSTER_GUIDE.md, "Scaling out"). The target architecture is [section 4](#4-query-architecture) and [section 3.5](#35-python-sandboxed-workers-on-the-console-backend). The 2.1 diagram (Perspective, DuckDB-Wasm, Graphic Walker, the module names `drishti-bi-core`, `-query`, `-live`, `-ai`) was replaced and deleted (RUPAKA_2_1_ENGINE.md, in git at tag v2.9.5).
 
 ### 18. Performance targets
 
@@ -4055,7 +4055,7 @@ an administrator can restrict which workspaces and roles may use each hook.
 | Live visual, source change to screen, p99 | < 250 ms (charts, coalesced); < 100 ms (Perspective grid) |
 | Perspective grid sustained updates | 1,000 rows a second per visual without dropped frames below 45 fps |
 | Python runner call overhead | < 50 ms for a small table; server-side limits enforced |
-| Concurrent BI viewers per server | measured with the capacity method of [PERFORMANCE.md](../admin/PERFORMANCE.md#9-many-users-soak-runs-and-memory-profiling); target 500 viewers on the reference server |
+| Concurrent BI viewers per server | measured with the capacity method of [CLUSTER_GUIDE.md](../admin/BENCHMARK.md#213-many-users-soaks-and-memory); target 500 viewers on the reference server |
 
 ### 19. Non-goals for the first release
 
@@ -4506,7 +4506,7 @@ This is the one summary at 2.1.0. Since then Perspective and DuckDB-Wasm were re
 | Distribution (phase 7, wave D) | PDF, PNG, Excel (with **real charts**) and CSV exports, subscriptions per recipient with optional **narrative summaries**, alerts on measures with **retries**, **webhook and text** channels, `<drishti-report>`, **`<drishti-about>`**, **`<drishti-search>`**, React, Vue and Angular sample pages | [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding), [CLIENT_RENDERER.md](CLIENT_RENDERER.md#19-drishti-elements-developer-guide) |
 | Analyse (phase 9, wave C) | masked extracts, Slice and SQL in the browser (**DuckDB-Wasm**), Python cells, notebooks, **promotion to a report visual**, several extracts | [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook) |
 | Stage 2, AI | report from words, ask the data, explain a number, **designer copilot**, **dataset helper**, narrative summaries; off by default, under the AI policy | [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number) |
-| Operations | one temp folder per process; the multi-day type-ahead index with disk segments and reload | [OPERATIONS.md](../admin/OPERATIONS.md) |
+| Operations | one temp folder per process; the multi-day type-ahead index with disk segments and reload | [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md) |
 
 **Still not built, and not faked.** Nothing below is hinted at in the product as working.
 
@@ -4524,8 +4524,8 @@ This is the one summary at 2.1.0. Since then Perspective and DuckDB-Wasm were re
 Status: **built and built** (2026-10-21; the steps as built are in section 18.2b, the console contract as built in 14.5).
 Decided by the product owner on 2026-10-20. Run records live in the content store
 ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches) section 9), so every Drishti\*net member sees the same runs. Builds on this document (sections 4.1 the pipeline, 6.1 caches, 6.3 concurrency, 6.5 horizontal scale, 6.7
-cost controls), [section 16](#16-rupaka-the-original-design-and-every-phase) section 7 (the query engine), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-e-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built) (S4 products and rollups, S5 slices
-and owners, S6 split queries), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (several servers), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built) (where relational state
+cost controls), [section 16](#16-rupaka-the-original-design-and-every-phase) section 7 (the query engine), [CLUSTER_GUIDE.md](ARCHITECTURE.md#2813-super-scale-design-not-built) (S4 products and rollups, S5 slices
+and owners, S6 split queries), [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet) (several servers), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built) (where relational state
 lives) and the statement bursting of [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader), whose per-recipient masking this reuses.
 
 ### 1. The decision
@@ -5111,7 +5111,7 @@ Everything is under the configurable data folder, with visible names only:
 ```
 
 * The path is `runs.store.dir`, with default `${drishti.data.dir}/bi-runs`. On AWS (EFS with identical paths on every node,
-  CLUSTER_DEPLOYMENT.md) the folder is shared and any node can read any result. Otherwise results live on the node that ran them, and
+  CLUSTER_GUIDE.md) the folder is shared and any node can read any result. Otherwise results live on the node that ran them, and
   the others forward (section 13).
 * **Parquet** is the stored format: compact, typed, and read back by DuckDB with no parsing. **Arrow IPC** is the wire format: a
   result is served by DuckDB reading `result.parquet` (`LIMIT/OFFSET` for a page) into `ArrowIpcWriter`, the way layers are
@@ -5962,7 +5962,7 @@ Within the local safety rule (10K trades at most, one heavy process): heaviness 
 ```
 
 It runs as `drishti-it` `BiRunsLoadIT` (excluded from the default build, run in the drill), with its report in
-`docs/admin/PERFORMANCE.md`.
+`docs/guides/CLUSTER_GUIDE.md`.
 
 #### 19.6 Browser test
 
@@ -5986,11 +5986,11 @@ It runs as `drishti-it` `BiRunsLoadIT` (excluded from the default build, run in 
 | [BI_GUIDE.md](../guides/BI_GUIDE.md) | runs: the inline wait, the run card, the Runs tab, estimates and tiers, sharing, promotion, schedules |
 | [USER_GUIDE.md](../guides/USER_GUIDE.md) | the bell's run notices; `BI RUNS <GO>` |
 | [API_GUIDE.md](../guides/API_GUIDE.md) | the endpoints of 14.1, `Prefer: respond-async`, the run object, `DRS-9080`–`9089` in the error table |
-| [CLI_GUIDE.md](../guides/CLI_GUIDE.md) | `drishti.py bi runs …`, `bi mq --async` |
+| [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md) | `drishti.py bi runs …`, `bi mq --async` |
 | [CONFIGURATION.md](../admin/CONFIGURATION.md) | `config/runs/runs.yaml`, `drishti.bi.runs.file`, `drishti.bi.exec.background-share`, `standing-share`, `fragments-share` |
-| [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) | every new code; "my run says unknown estimate"; "my run was started again"; "the result expired" |
-| [PERFORMANCE.md](../admin/PERFORMANCE.md), [PERFORMANCE.md, method 9](../admin/PERFORMANCE.md#9-many-users-soak-runs-and-memory-profiling) | the run engine's memory; the load test's numbers |
-| [OPERATIONS.md](../admin/OPERATIONS.md), [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one) | Admin → BI → Runs; runs in a cluster |
+| [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#21-troubleshooting) | every new code; "my run says unknown estimate"; "my run was started again"; "the result expired" |
+| [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#16-tuning), [CLUSTER_GUIDE.md, method 9](../admin/BENCHMARK.md#213-many-users-soaks-and-memory) | the run engine's memory; the load test's numbers |
+| [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md), [OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet) | Admin → BI → Runs; runs in a cluster |
 | [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) | `source: {run: …}` snapshot datasets |
 | BI_DESIGN 6.3 | the class caps; correct its code column (busy is `DRS-9025`, not `DRS-9022`) |
 | `drishti-console/config/help.yaml` | cards for the Runs tab, the run card, the confirm dialog, the snapshot dataset |

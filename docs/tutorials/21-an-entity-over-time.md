@@ -20,7 +20,7 @@ data, one row per day. What moved is tinted, and you can open any day as it was.
 numbers. This tutorial walks through a trade and an equity, changes only and DIFF, opening a day, exporting, the `history:` block that
 shapes a kind's screen, and the limits. Each step shows the UI, the command line and, where there is one, the YAML. The references are
 [USER_GUIDE › History](../guides/USER_GUIDE.md#history-an-entity-over-time),
-[CLI_GUIDE › history](../guides/CLI_GUIDE.md#history-an-entity-over-time) and the design,
+[CLI_GUIDE › history](../guides/CLI_REFERENCE.md#history-an-entity-over-time) and the design,
 [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time).
 
 ## Time to complete
@@ -32,7 +32,7 @@ About 30 minutes.
 - Tutorial 2 done: a running server and console with the `trading` and `market-data` packs and their demo lakes (`drishti.py lake demo`),
   signed in. Tutorial 2 also shows how a view, the business date and Compare work.
 - A token for the command line: `DRISHTI_SERVER=http://localhost:18480` and `DRISHTI_TOKEN=...` (My account → API tokens;
-  [CLI_GUIDE.md](../guides/CLI_GUIDE.md#3-connecting-to-a-server-url-tokens-and-permissions)).
+  [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md#3-connecting-to-a-server-url-tokens-and-permissions)).
 
 The screens and outputs below come from this version's console and `drishti.py`, reading the history contract's two reference answers:
 trade `1000015` over 30 data days and equity `EQ-CSCA` over 3 months

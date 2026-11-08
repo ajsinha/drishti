@@ -392,7 +392,7 @@ keep. The reference is the [data guide, section 7](../guides/DATA_GUIDE.md#7-the
 
 - [the data lake guide, section 3.1](../guides/DATA_LAKE_GUIDE.md#31-the-data-inbox): every part of the Inbox screen and where each figure comes from.
 - [Data guide, section 1](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed): the data-load signal each load sends, expectations and late data.
-- The parallel lake loader the inbox runs: [TOOLS.md, section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader).
+- The parallel lake loader the inbox runs: [CLI_REFERENCE.md, section 4.13](../guides/CLI_REFERENCE.md#713-the-parallel-lake-loader).
 
 ## When something goes wrong
 

@@ -203,7 +203,7 @@ within `drishti.sources.fetch-timeout` (10 s), so keep the bucket close to the s
 look at the business date unless `index.days` keeps several days, in which case a past date answers from that date's own ids
 ([ARCHITECTURE.md section 9.1](../../docs/architecture/ARCHITECTURE.md#91-several-business-days)); the regular listing fills the kept
 days (on the heap), and each past day is re-listed every `index.reload-every` (S3 gives a day no version). **Admin → Connectors →
-this connector → Index** reloads a day by hand ([OPERATIONS.md section 12.2](../../docs/admin/OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index)).
+this connector → Index** reloads a day by hand ([OPERATIONS_GUIDE.md section 12.2](../../docs/guides/OPERATIONS_GUIDE.md#144-the-multi-day-type-ahead-index)).
 
 **Searches, derived kinds.** With no promoted columns, a structured search (`STR where pnl < -50m`) is answered by the engine reading
 each id of the kind (at most `drishti.search.max-scan`) one read each, within `drishti.search.budget`; documents not read in time are
