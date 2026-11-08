@@ -149,9 +149,9 @@ def test_the_whole_flow_three_schemas_and_a_folder_to_a_downloaded_bundle(browse
     page.fill("#pkp-name", "sg-browser")
     page.fill("#pkp-title", "Browser test pack")
     page.locator("#pkp-name").dispatch_event("change")
-    page.locator("table select[aria-label='Source of trade']").wait_for()
-    assert page.locator("table select[aria-label='Source of trade']").input_value() == "file"        # real, dated JSON Lines: the File connector reads them as they are
-    assert page.locator("table select[aria-label='Source of book']").input_value() == "samples"
+    page.locator("table drishti-select:has([aria-label='Source of trade'])").wait_for()
+    assert page.locator("table drishti-select:has([aria-label='Source of trade'])").input_value() == "file"        # real, dated JSON Lines: the File connector reads them as they are
+    assert page.locator("table drishti-select:has([aria-label='Source of book'])").input_value() == "samples"
     # 4. preview
     page.click("[data-next]")
     page.locator(".pk-item").first.wait_for(timeout=20000)
@@ -403,7 +403,7 @@ def test_phone_width_never_scrolls_sideways_and_controls_are_finger_sized(browse
     page.locator("[data-total]:has-text('2 data files')").wait_for()
     audit = """() => { const out = []; const doc = document.documentElement;
       if (doc.scrollWidth > doc.clientWidth + 1) out.push('scrolls sideways ' + doc.scrollWidth + ' > ' + doc.clientWidth);
-      for (const e of document.querySelectorAll('[data-pack-new] button, [data-pack-new] select, [data-pack-new] input:not([type=file]):not([type=checkbox]), [data-pack-new] summary')) {
+      for (const e of document.querySelectorAll('[data-pack-new] button, [data-pack-new] .di-select-control, [data-pack-new] input:not([type=file]):not([type=checkbox]), [data-pack-new] summary')) {
         const r = e.getBoundingClientRect(); const s = getComputedStyle(e);
         if (r.width && s.display !== 'none' && s.visibility !== 'hidden' && (r.height < 43.5 || r.width < 43.5) && !e.closest('[hidden]')) out.push((e.className || e.tagName) + ' ' + Math.round(r.width) + 'x' + Math.round(r.height));
       } return out; }"""
@@ -412,7 +412,7 @@ def test_phone_width_never_scrolls_sideways_and_controls_are_finger_sized(browse
     page.locator(".pk-card").first.wait_for()
     assert page.evaluate(audit) == []
     page.click("[data-next]")
-    page.locator("table select").first.wait_for()
+    page.locator("table drishti-select").first.wait_for()
     assert page.evaluate(audit) == []
     page.click("[data-next]")
     page.locator(".pk-item").first.wait_for(timeout=20000)
