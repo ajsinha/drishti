@@ -209,7 +209,7 @@
     form.addEventListener('submit', function (e) { e.preventDefault(); run(false); });
     form.addEventListener('input', function (e) { if (e.target.name === 'q') { clearTimeout(timer); timer = setTimeout(again, 180); } });
     form.addEventListener('change', function (e) { if (e.target.name !== 'q') { run(false); } });
-    q('[data-clear]').addEventListener('click', function () { qa('input', form).forEach(function (el) {      // the search and each Select's named field el.value = el.name === 'sort' ? 'use' : ''; }); params = new URLSearchParams(); run(false); });
+    q('[data-clear]').addEventListener('click', function () { qa('input', form).forEach(function (el) { el.value = el.name === 'sort' ? 'use' : ''; }); params = new URLSearchParams(); run(false); });   // the search and each Select's named field
     remember(tab);
     run(false);
     if (params.get('focus')) { q('input[data-search]').focus(); }
