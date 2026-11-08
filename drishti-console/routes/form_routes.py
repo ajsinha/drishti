@@ -131,7 +131,7 @@ async def form_page(request: Request, pack: str, kind: str = ""):
     reopen = "/form/" + quote(pack) + "?" + urlencode([(k, v) for k, v in params if k != "form"] + [("form", "shown")])
     saved = [s for s in (getattr(request.state, "settings", None) or {}).get("savedSearches") or [] if s.get("path", "").startswith(f"/form/{quote(pack)}")]
     fields = info["form"]["fields"]
-    qf = forms.form_schema(view, forms.PRESETS, pack, info["kind"])
+    qf = forms.form_host(view, forms.PRESETS, pack, info["kind"])          # the one server-drawn form host (core/form_kit.py)
     return render(request, "terminal/form.html", info=info, view=view, q=q, limits=forms.LIMITS, presets=forms.PRESETS, saved=saved, qf=qf,
                   sortable=[f for f in fields if not f.get("hidden") and f["type"] in ("text", "number", "amount", "date", "enum", "id")],
                   any_indexed=any(f.get("indexed") for f in fields), screen="form",

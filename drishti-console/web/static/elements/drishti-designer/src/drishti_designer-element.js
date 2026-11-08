@@ -20,7 +20,7 @@
 import { LayoutCanvas } from './drishti_layout-canvas.js';
 import { Palette } from './drishti_palette.js';
 import { Inspector } from './drishti_inspector.js';
-import { Outline } from './drishti_outline.js';
+import { TreeOutline as Outline } from '../../drishti-tree/src/drishti_index.js';
 import { YamlPane } from './drishti_yaml-pane.js';
 import { DesignerShell } from './drishti_shell.js';
 

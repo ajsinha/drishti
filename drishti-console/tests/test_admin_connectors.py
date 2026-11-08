@@ -160,4 +160,4 @@ def test_the_history_and_the_editor_say_what_the_buttons_are_for(client, backend
     with_connectors(backend, monkeypatch, [])
     page = client.get("/admin/connectors").text
     assert 'data-edit-msg' in page and page.index("data-edit-msg") > page.index("adm-dlg-actions ds-actions")       # the message sits in the sticky bar beside Save
-    assert 'data-zone=' in page and "connDescHelp" in page                                                         # history times in the page's zone; Description has its own help
+    assert 'data-zone=' in page and "One line saying what this connector reads" in page                                                         # history times in the page's zone; Description has its own help

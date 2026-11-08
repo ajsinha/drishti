@@ -20,9 +20,9 @@
   <p data-art-text></p>
   <div data-art-impact aria-live="polite"></div>
   <ul class="art-notes" data-art-notes></ul>
-  <label class="chk art-cascade" data-art-cascade-row hidden><input type="checkbox" data-art-cascade> <span data-art-cascade-label>Also disable or uninstall what depends on it</span></label>
-  <label class="art-typed" data-art-typed-row hidden>Type <b class="mono" data-art-name></b> to confirm
-    <input class="studio-in mono" data-art-typed autocomplete="off" spellcheck="false"></label>
+  <div data-art-cascade-row hidden>{{ admin_form('field', key='cascade', kind='check', title='Also disable or uninstall what depends on it', hook={'data-art-cascade': ''}) }}</div>
+  <div class="art-typed" data-art-typed-row hidden><p>Type <b class="mono" data-art-name></b> to confirm</p>
+    {{ admin_form('field', key='typed', title='The name, to confirm', mono=True, hook={'data-art-typed': ''}) }}</div>
   <p class="adm-msg" data-art-msg role="status" aria-live="polite"></p>
   <div class="adm-dlg-actions ds-actions">
     <button type="button" class="btn-pill btn-ghost" data-art-keep>Keep it as it is</button>
@@ -34,8 +34,8 @@
 <dialog class="adm-dialog art-dialog" data-typed-dialog aria-labelledby="artTypedTitle">
   <h2 id="artTypedTitle" data-typed-title>Are you sure?</h2>
   <p data-typed-text></p>
-  <label class="art-typed">Type <b class="mono" data-typed-name></b> to confirm
-    <input class="studio-in mono" data-typed-input autocomplete="off" spellcheck="false"></label>
+  <div class="art-typed"><p>Type <b class="mono" data-typed-name></b> to confirm</p>
+    {{ admin_form('field', key='typed', title='The name, to confirm', mono=True, hook={'data-typed-input': ''}) }}</div>
   <p class="adm-msg" data-typed-msg role="status" aria-live="polite"></p>
   <div class="adm-dlg-actions ds-actions">
     <button type="button" class="btn-pill btn-ghost" data-typed-no>Cancel</button>

@@ -40,8 +40,7 @@
       says which), one commit per table and date; a
       load that replaced a date gets the date back as it was. Check first: nothing changes until you confirm with the load id.</p>
     <div class="ib-actions">
-      <label class="visually-hidden" for="ib-undo-id">Load id</label>
-      <input id="ib-undo-id" class="studio-in mono" data-undo-id placeholder="20261104T093000.123-4242.1" autocomplete="off" spellcheck="false">
+      {{ admin_form('field', key='id', title='Load id', mono=True, hook={'data-undo-id': ''}, placeholder='20261104T093000.123-4242.1', layout='inline') }}
       <button type="button" class="btn-pill ib-btn" data-undo-check><i class="bi bi-search" aria-hidden="true"></i> Check</button>
       <button type="button" class="btn-pill ib-btn" data-undo-go disabled><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Undo…</button>
     </div>

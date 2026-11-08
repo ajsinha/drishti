@@ -87,12 +87,11 @@ body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select:
 /* menus */
 .wb-menu { position: fixed; z-index: var(--d-z-float-menu); width: min(26rem, calc(100vw - 8px)); max-height: 20rem; display: flex; flex-direction: column; gap: var(--d-sp-4_8); padding: var(--d-sp-8); border: 1px solid var(--d-border); border-radius: var(--d-radius-8); background: var(--d-surface); color: var(--d-ink); box-shadow: var(--d-shadow); }
 .wb-menu-t { font-weight: 700; font-size: var(--d-fs-13_6); }
-.wb-menu-l { list-style: none; margin: 0; padding: 0; overflow: auto; outline: none; }
-.wb-menu-i { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--d-sp-1_6) var(--d-sp-8); padding: var(--d-sp-4_8) var(--d-sp-8); border-radius: var(--d-radius-4); cursor: pointer; }
-.wb-menu-i[aria-selected="true"] { background: var(--d-highlight); outline: 1px solid var(--d-accent); }
+.wb-menu-l { overflow: auto; outline: none; }
+.wb-menu .di-option { flex-wrap: wrap; align-items: baseline; gap: var(--d-sp-1_6) var(--d-sp-8); }
+.wb-menu .di-option.di-active { outline: 1px solid var(--d-accent); }
 .wb-menu-n { font-weight: 600; }
 .wb-menu-d { color: var(--d-muted); font-size: var(--d-fs-12_48); flex-basis: 100%; }
-.wb-menu-e { padding: var(--d-sp-6_4) var(--d-sp-8); color: var(--d-muted); }
 
 /* the inspector */
 .wb-sect legend, .wb-list legend { float: none; width: auto; font-size: var(--d-fs-12_48); font-weight: 700; color: var(--d-muted); padding: 0 var(--d-sp-4_8); margin: 0; }

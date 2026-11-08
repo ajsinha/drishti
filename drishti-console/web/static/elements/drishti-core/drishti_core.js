@@ -1368,15 +1368,33 @@
           "scripts": [],
           "module": "core"
         },
+        "drishti-tree": {
+          "version": "0.2.0",
+          "title": "The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, the outline of an authoring screen (marks, a hiding filter, a designer's selection followed both ways, moves by drag or Alt+arrows), export, keyboard and ARIA",
+          "bundle": "drishti-tree/drishti_tree.js",
+          "entry": "drishti-tree/src/drishti_index.js",
+          "global": "tree",
+          "requires": [
+            "drishti-core",
+            "drishti-grid"
+          ],
+          "css": [
+            "elements/drishti-tree/drishti_tree.css",
+            "elements/drishti-grid/drishti_grid.css"
+          ],
+          "scripts": [],
+          "module": "core"
+        },
         "drishti-designer": {
-          "version": "0.1.0",
-          "title": "The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review)",
+          "version": "0.2.0",
+          "title": "The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drishti-tree's, drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review)",
           "bundle": "drishti-designer/drishti_designer.js",
           "entry": "drishti-designer/src/drishti_index.js",
           "global": "designer",
           "requires": [
             "drishti-core",
-            "drishti-inputs"
+            "drishti-inputs",
+            "drishti-tree"
           ],
           "css": [
             "elements/drishti-designer/drishti_designer.css"
@@ -1426,23 +1444,6 @@
           ],
           "css": [
             "elements/drishti-graph/drishti_graph.css",
-            "elements/drishti-grid/drishti_grid.css"
-          ],
-          "scripts": [],
-          "module": "core"
-        },
-        "drishti-tree": {
-          "version": "0.1.0",
-          "title": "The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, export, keyboard and ARIA",
-          "bundle": "drishti-tree/drishti_tree.js",
-          "entry": "drishti-tree/src/drishti_index.js",
-          "global": "tree",
-          "requires": [
-            "drishti-core",
-            "drishti-grid"
-          ],
-          "css": [
-            "elements/drishti-tree/drishti_tree.css",
             "elements/drishti-grid/drishti_grid.css"
           ],
           "scripts": [],

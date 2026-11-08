@@ -50,7 +50,7 @@ You should see two tables: **Expectations** (*Nothing is expected yet*) and **Hi
 
 ![Expectations settings: who is told, the smoke test, and trade due by 18:00 America/New_York on the USNY calendar](img/t07/02-expectations.jpg)
 
-You should see a dialog: **Tell these roles** (`admin`), users, an email box, a **smoke test** count (after each ready load Drishti opens that many sample entities to prove they render), and a table *Expected each business day*. Set the smoke test to `2`. **Add a kind**: `trade`, due by
+You should see a dialog: **Tell these roles** (`admin`), users, an email box, a **smoke test** count (after each ready load Drishti opens that many sample entities to prove they render), and *Expected each business day*: one row per expected kind (its kind, due by, time zone and calendar; each row can be moved or removed). Set the smoke test to `2`. **Add a kind**: `trade`, due by
 `18:00`, zone `America/New_York`, calendar `USNY` (a day that is not a business day of that calendar expects nothing). **Save**. The setting is an override file beside the load history: the pack's own files are not touched.
 
 **From the command line** there is no command for it: the page saves it with `PUT /api/v1/admin/loads/trading/config` from your signed-in session, and a personal API token

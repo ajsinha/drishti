@@ -23,8 +23,7 @@
   <h1>Users</h1>
   {% with tab='users' %}{% include "admin/_nav.html" %}{% endwith %}
   <div class="adm-bar">
-    <form method="get" action="/admin/users" role="search"><label for="uq" class="visually-hidden">Search users</label>
-      <input id="uq" name="q" value="{{ q }}" class="studio-in" placeholder="Search name, email, role"></form>
+    <form method="get" action="/admin/users" role="search">{{ admin_form('search', name='q', value=q, title='Search users', placeholder='Search name, email, role') }}</form>
     <button type="button" class="btn-pill btn-accent" data-new><i class="bi bi-person-plus" aria-hidden="true"></i> New user</button>
   </div>
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
@@ -53,18 +52,7 @@
   <dialog class="adm-dialog" data-dialog aria-labelledby="dlgTitle">
     <form method="dialog" data-form>
       <h2 id="dlgTitle" data-title>New user</h2>
-      <label>User name<input name="username" class="studio-in" required pattern="[a-z0-9][a-z0-9._-]{2,63}" autocomplete="off"></label>
-      <label>Display name<input name="displayName" class="studio-in"></label>
-      <label>Desk<input name="desk" class="studio-in"></label>
-      <label>Email<input name="email" type="email" class="studio-in"></label>
-      <fieldset><legend>Roles</legend>
-        {% for r in roles %}<label class="chk"><input type="checkbox" name="roles" value="{{ r }}"> {{ r }}</label>{% endfor %}</fieldset>
-      {% if status and status.installedPacks %}<fieldset><legend>Packs</legend>
-        <p class="text-muted-d adm-pack-hint">Tick the packs this person may use. Untick every pack and they see none (every kind answers no access). Packs are saved as a list; the server default applies only to people never given a list.</p>
-        {% for p in status.installedPacks %}<label class="chk"><input type="checkbox" name="packs" value="{{ p }}" checked> {{ p }}</label>{% endfor %}</fieldset>{% endif %}
-      <label class="chk"><input type="checkbox" name="enabled" checked> Enabled</label>
-      <label data-pw>Initial password<input name="password" type="password" class="studio-in" autocomplete="new-password"></label>
-      <label class="chk" data-pw><input type="checkbox" name="mustChangePassword"{% if status and status.forceChangeOnCreate %} checked{% endif %}> Must change at first sign-in</label>
+      {{ admin_form('user', roles=roles, packs=(status.installedPacks if status else None), force_change=(status and status.forceChangeOnCreate)) }}{# drishti-inputs' Form (core/admin_forms.py) #}
       <p class="adm-msg" data-dlg-msg role="alert"></p>
       <div class="adm-dlg-actions"><button type="button" class="btn-pill btn-ghost" data-cancel>Cancel</button>
         <button type="submit" class="btn-pill btn-accent" data-submit>Save</button></div>

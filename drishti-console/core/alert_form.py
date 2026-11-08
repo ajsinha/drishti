@@ -19,33 +19,16 @@ nothing. The model's measures and the filters' fields arrive from the server aft
 are an array of objects the page turns into the hidden ``model_query`` field."""
 from __future__ import annotations
 
+from functools import partial
+
+from core import form_kit as K   # the one home of a server-built form's fields (the Admin forms share it): every control named as before
+
+_text = partial(K.text, mono=True)   # the alert's fields are names, ids and numbers: the monospace face, no spelling check
+
 REDUCE = [("", "one cell"), ("first", "the first row"), ("sum", "the sum of all rows"), ("max", "the largest row"), ("min", "the smallest row"),
           ("avg", "the average of the rows"), ("count", "the number of rows"), ("last", "the last row")]
 FILTER_OPS = [("eq", "is"), ("ne", "is not"), ("in", "is one of"), ("not-in", "is none of"), ("gt", "is above"), ("ge", "is at least"), ("lt", "is below"),
               ("le", "is at most"), ("contains", "contains")]
-
-
-def _sel(title: str, name: str, choices, hook=None, **more) -> dict:
-    """A select of (value, words) pairs, submitted under ``name``."""
-    out = {"type": "string", "title": title, "name": name, "widget": "select", "allowEmpty": False,
-           "enum": [c[0] for c in choices], "enumLabels": [c[1] for c in choices]}
-    if hook:
-        out["hook"] = hook
-    out.update(more)
-    return out
-
-
-def _text(title: str, name: str, hook=None, **more) -> dict:
-    out = {"type": "string", "title": title, "name": name, "hook": hook or {"class": "mono"}}
-    out.update(more)
-    return out
-
-
-def _check(title: str, name: str, hook=None) -> dict:
-    out = {"type": "boolean", "title": title, "name": name, "nameValue": "on"}
-    if hook:
-        out["hook"] = hook
-    return out
 
 
 def _group(kind: str, when: str, field: str, title: str, props: dict, description: str = "") -> dict:
@@ -66,30 +49,30 @@ def alert_form_schema(f: dict, *, schedules: list[str], opts: dict, editing: boo
     reduce_model = [r for r in REDUCE if r[0] != "count"]
     model_ref = f.get("model_ref") or ""
     source = {"type": "object", "title": "Watch", "hook": {"class": "al-src"}, "properties": {
-        "source_type": _sel("A", "source_type", [("visual", "visual of a BI report"), ("model", "measure of a model"), ("dataset", "measure of a version 1 dataset"),
-                                                 ("field", "field of a Sutra entity")], {"data-pick": "source"}),
+        "source_type": K.select("A", "source_type", [("visual", "visual of a BI report"), ("model", "measure of a model"), ("dataset", "measure of a version 1 dataset"),
+                                                 ("field", "field of a Sutra entity")], hook={"data-pick": "source"}),
         "visual": _group("source", "visual", "source_type", "The visual", {
             "report": _text("Report", "report", placeholder="file:report:daily-risk"),
             "page": _text("Page", "page"),
             "visual": _text("Visual", "visual"),
-            "measure": _text("Which column to watch", "measure", {"data-visual-column": ""}, placeholder="blank: the first number", emptyLabel="(the first number)"),
-            "reduce": _sel("A visual with several rows has several cells. Watch", "reduce", REDUCE, {"data-reduce": ""}),
+            "measure": _text("Which column to watch", "measure", hook={"data-visual-column": ""}, mono=False, placeholder="blank: the first number", emptyLabel="(the first number)"),
+            "reduce": K.select("A visual with several rows has several cells. Watch", "reduce", REDUCE, hook={"data-reduce": ""}),
         }, "With the filters you had set on the screen (slicers, selections, drill path) when you pressed Alert me." if f.get("state") else ""),
         "model": _group("source", "model", "source_type", "The model", {
-            "model_ref": _sel("Model", "model_ref", [(model_ref, model_ref)] if model_ref else [], {"data-al-model": ""}, allowEmpty=True, emptyLabel="(loading the models)"),
-            "model_measure": _sel("Measure", "model_measure", [], {"data-al-measure": ""}, allowEmpty=True, emptyLabel="(choose a model first)"),
+            "model_ref": K.select("Model", "model_ref", [(model_ref, model_ref)] if model_ref else [], hook={"data-al-model": ""}, empty="(loading the models)"),
+            "model_measure": K.select("Measure", "model_measure", [], hook={"data-al-measure": ""}, empty="(choose a model first)"),
             "filters": {"type": "array", "title": "Only rows where (optional)", "addLabel": "Add a filter", "addHook": "al-addfilter", "itemHook": "al-filter",
                         "hook": {"data-al-filters-box": ""}, "items": {"type": "object", "title": "Filter", "properties": {
                             "field": {"type": "string", "title": "Field", "widget": "select", "enum": [], "allowEmpty": False},
                             "op": {"type": "string", "title": "Operator", "widget": "select", "allowEmpty": False, "enum": [o[0] for o in FILTER_OPS],
                                    "enumLabels": [o[1] for o in FILTER_OPS]},
                             "value": {"type": "string", "title": "Value (several separated by commas)", "placeholder": "FX, Rates"}}}},
-            "model_reduce": _sel("If it answers with several rows, watch", "model_reduce", reduce_model, {"data-model-reduce": ""}),
+            "model_reduce": K.select("If it answers with several rows, watch", "model_reduce", reduce_model, hook={"data-model-reduce": ""}),
         }, "The number is the model's measure read as you, with your row rules and masks."),
         "dataset": _group("source", "dataset", "source_type", "The dataset", {
             "dataset": _text("Dataset", "dataset", placeholder="file:dataset:trading"),
             "ds_measure": _text("Measure", "ds_measure"),
-            "filters": _text("Only rows where (one per line: field op values, e.g. desk eq FX, Rates)", "filters", format="textarea"),
+            "filters": K.area("Only rows where (one per line: field op values, e.g. desk eq FX, Rates)", "filters", mono=True),
         }),
         "field": _group("source", "field", "source_type", "The entity", {
             "kind": _text("Kind", "kind", placeholder="trade"),
@@ -98,21 +81,21 @@ def alert_form_schema(f: dict, *, schedules: list[str], opts: dict, editing: boo
         }),
     }}
     cond = {"type": "object", "title": "Tell me when", "hook": {"class": "al-cond"}, "properties": {
-        "condition_type": _sel("It", "condition_type", [("threshold", "crosses a limit"), ("change", "changes by too much"), ("nodata", "has no data by a time"),
-                                                        ("rule", "holds (a rule)")], {"data-pick": "cond"}),
+        "condition_type": K.select("It", "condition_type", [("threshold", "crosses a limit"), ("change", "changes by too much"), ("nodata", "has no data by a time"),
+                                                        ("rule", "holds (a rule)")], hook={"data-pick": "cond"}),
         "rule": _group("cond", "rule", "condition_type", "A rule", {},
                        "For a field source: its Field or expression is a Rachana-EL predicate over the entity, for example $.utilisation > 0.8. The alert is "
                        "raised once when it becomes true, and is armed again when it turns false."),
         "threshold": _group("cond", "threshold", "condition_type", "The limit", {
-            "op": _sel("The number is", "op", [("above", "above"), ("below", "below"), ("between", "between"), ("outside", "outside")], {"data-pick": "range"}),
+            "op": K.select("The number is", "op", [("above", "above"), ("below", "below"), ("between", "between"), ("outside", "outside")], hook={"data-pick": "range"}),
             "value": _text("Limit (the low edge for between and outside)", "value", placeholder="-300000"),
-            "high": _text("High edge", "high", {"data-range-high": "", "class": "mono"}, when={"field": "op", "in": ["between", "outside"]}),
+            "high": _text("High edge", "high", hook={"data-range-high": ""}, when={"field": "op", "in": ["between", "outside"]}),
         }),
         "change": _group("cond", "change", "condition_type", "The change", {
-            "change_op": _sel("It", "change_op", [("moves", "moves"), ("rises", "rises"), ("falls", "falls")]),
+            "change_op": K.select("It", "change_op", [("moves", "moves"), ("rises", "rises"), ("falls", "falls")]),
             "change_value": _text("By at least", "change_value"),
-            "change_mode": _sel("Counted in", "change_mode", [("pct", "percent"), ("abs", "the number itself")]),
-            "against": _sel("Against", "against", [("previous-run", "the previous look"), ("previous-day", "the previous business day")]),
+            "change_mode": K.select("Counted in", "change_mode", [("pct", "percent"), ("abs", "the number itself")]),
+            "against": K.select("Against", "against", [("previous-run", "the previous look"), ("previous-day", "the previous business day")]),
         }),
         "nodata": _group("cond", "nodata", "condition_type", "The deadline", {
             "by": _text("Today's data has not arrived by", "by", placeholder="09:00"),
@@ -121,8 +104,8 @@ def alert_form_schema(f: dict, *, schedules: list[str], opts: dict, editing: boo
         "cooldown": _text("Cooldown (no second alert within)", "cooldown", placeholder="30m (the server's default)"),
     }}
     trigger = {"type": "object", "title": "Look", "hook": {"class": "al-when"}, "properties": {
-        "trigger_mode": _sel("When", "trigger_mode", [("schedule", "on a schedule"), ("after-load", "after a data load"), ("live", "when it changes (a live source)")],
-                             {"data-pick": "trigger"}),
+        "trigger_mode": K.select("When", "trigger_mode", [("schedule", "on a schedule"), ("after-load", "after a data load"), ("live", "when it changes (a live source)")],
+                             hook={"data-pick": "trigger"}),
         "schedule": _group("trigger", "schedule", "trigger_mode", "The schedule", {
             "schedule": _text("Schedule", "schedule", description="For example: " + ", ".join(schedules[:6])),
         }),
@@ -130,23 +113,23 @@ def alert_form_schema(f: dict, *, schedules: list[str], opts: dict, editing: boo
         "live": _group("trigger", "live", "trigger_mode", "Live", {"debounce": _text("Quiet for (before looking)", "debounce", placeholder="10s")}),
     }}
     to = {
-        "d_inbox": _check("my inbox and the bell", "d_inbox"),
-        "d_email": _check("email (to the address on my account)", "d_email"),
-        "d_bridge": _check("the chat bridges that list alerts (a post that names the alert, with no number)", "d_bridge"),
+        "d_inbox": K.check("my inbox and the bell", "d_inbox"),
+        "d_email": K.check("email (to the address on my account)", "d_email"),
+        "d_bridge": K.check("the chat bridges that list alerts (a post that names the alert, with no number)", "d_bridge"),
     }
     for w in opts.get("webhooks") or []:
-        to["w_" + w] = _check(f"the webhook {w} (a signed post that names the alert, with no number)", "w_" + w, {"data-webhook": ""})
+        to["w_" + w] = K.check(f"the webhook {w} (a signed post that names the alert, with no number)", "w_" + w, hook={"data-webhook": ""})
     if opts.get("sms"):
-        to["d_sms"] = _check("a text message to my mobile number (the alert's title and a link; no number)", "d_sms")
+        to["d_sms"] = K.check("a text message to my mobile number (the alert's title and a link; no number)", "d_sms")
         to["phone"] = {"type": "string", "title": "My mobile number", "name": "phone", "maxLength": 24, "placeholder": opts.get("phone") or "+44 20 7946 0000",
                        "description": ("On file for you: " + opts["phone"]) if opts.get("phone") else ""}
-    to["enabled"] = _check("Active", "enabled")
+    to["enabled"] = K.check("Active", "enabled")
     deliver = {"type": "object", "title": "Tell me by", "hook": {"class": "al-to"}, "properties": to}
     schema = {"type": "object", "properties": {
         "name": {"type": "string", "title": "Name", "name": "name", "maxLength": 64, "pattern": "[A-Za-z0-9][A-Za-z0-9 ._\\-]*", "readOnly": editing,
                  "patternMessage": "letters, digits, spaces, dots, dashes and underscores, starting with a letter or digit"},
         "title": {"type": "string", "title": "Title (optional)", "name": "title", "maxLength": 200, "placeholder": "defaults to the name; the message starts with it"},
-        "severity": _sel("Severity", "severity", [("info", "info"), ("warn", "warn"), ("critical", "critical")]),
+        "severity": K.select("Severity", "severity", [("info", "info"), ("warn", "warn"), ("critical", "critical")]),
         "source": source, "cond": cond, "trigger": trigger, "deliver": deliver}, "required": ["name"]}
     value = {
         "name": _s(f.get("name")), "title": _s(f.get("title")), "severity": f.get("severity") or "warn",
@@ -166,3 +149,11 @@ def alert_form_schema(f: dict, *, schedules: list[str], opts: dict, editing: boo
                     "enabled": bool(f.get("enabled")), **{"w_" + w: w in (f.get("webhooks") or []) for w in opts.get("webhooks") or []}},
     }
     return {"schema": schema, "value": value}
+
+
+def alert_form_host(f: dict, *, schedules: list[str], opts: dict, editing: bool):
+    """The host the page puts where the alert's fields go (``core/form_kit.host``, the one server-drawn form: ``data-di-form`` with its
+    schema), embedded in the page's POST form; the page's script finds the Form with ``formOf``."""
+    form = alert_form_schema(f, schedules=schedules, opts=opts, editing=editing)
+    return K.host(form["schema"], form["value"], attrs={"class": "wide2", "data-alert-fields": ""}, layout="columns", label="The alert",
+                  pathAttr="data-form-path")

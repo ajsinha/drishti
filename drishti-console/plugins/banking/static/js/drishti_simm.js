@@ -148,15 +148,13 @@
   function choices(list) {
     $("[data-sm-choices]").innerHTML = '<h3>Choices <span>the parameter version and every method choice; the default is the version\'s own</span></h3>' + list.map(function (s) {
       var opts = s.options.length ? s.options : [s.value];
-      return '<label class="fr-switch' + (s.name !== "simm-parameters" && s.value !== s.default ? " changed" : "") + '"><b class="mono">' + esc(s.name) + "</b> <select data-sm-sw=\"" + esc(s.name) + "\">"
+      return '<label class="fr-switch' + (s.name !== "simm-parameters" && s.value !== s.default ? " changed" : "") + '"><b class="mono">' + esc(s.name) + "</b> <drishti-select data-sm-sw=\"" + esc(s.name) + "\" label=\"" + esc(s.name) + "\">"
         + opts.map(function (o) { return "<option" + (o === s.value ? " selected" : "") + ">" + esc(o) + "</option>"; }).join("")
-        + '</select> <span class="muted">default ' + esc(s.default) + " · " + esc(s.rule) + "</span><small>" + esc(s.why) + "</small></label>";
+        + '</drishti-select> <span class="muted">default ' + esc(s.default) + " · " + esc(s.rule) + "</span><small>" + esc(s.why) + "</small></label>";
     }).join("");
-    var cmp = $("[data-sm-compare]"), keep = cmp.value;
-    cmp.innerHTML = '<option value="">(none)</option>' + list.map(function (s) {
-      return s.options.filter(function (o) { return o !== s.value; }).map(function (o) { return '<option value="' + esc(s.name + "=" + o) + '">' + esc(s.name + ": " + o) + "</option>"; }).join("");
-    }).join("");
-    cmp.value = keep;
+    var cmp = $("[data-sm-compare]"), keep = cmp.value, flips = [{ value: "", label: "(none)" }];   // drishti-inputs' Select: refilled, the choice kept
+    list.forEach(function (s) { s.options.filter(function (o) { return o !== s.value; }).forEach(function (o) { flips.push({ value: s.name + "=" + o, label: s.name + ": " + o }); }); });
+    cmp.component.setOptions(flips, flips.some(function (f) { return f.value === keep; }) ? keep : "");
   }
   function diff(d) {
     var pane = $("[data-sm-diff]");
@@ -218,7 +216,7 @@
   function playground() {
     if (!ns && !recipe) { $("[data-sm-meta]").textContent = ""; return; }
     play();
-    root.addEventListener("change", function (ev) {
+    root.addEventListener("drishti:change", function (ev) {     // the choices are drishti-inputs' Selects
       var sw = ev.target.closest("[data-sm-sw]");
       if (sw) {
         if (sw.dataset.smSw === "simm-parameters") { state.version = sw.value; } else { state.choices[sw.dataset.smSw] = sw.value; }

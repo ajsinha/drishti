@@ -232,3 +232,14 @@ def _who(client, backend):
     finally:
         backend.raised_alerts = real
     return seen["user"]
+
+
+def test_an_unchecked_active_box_saves_the_alert_inactive(client, backend):
+    """An unchecked checkbox is not sent with a form: an alert saved with "Active" unchecked is inactive (it was saved active)."""
+    backend.alerts_kept.clear()
+    r = client.post("/alerts/new", content=_form(enabled=None), headers=FORM, follow_redirects=False)
+    assert r.status_code == 303 and backend.alerts_kept["Net"]["enabled"] is False
+    client.post("/alerts/measure/Net", content=_form(), headers=FORM, follow_redirects=False)
+    assert backend.alerts_kept["Net"]["enabled"] is True
+    client.post("/alerts/measure/Net", content=_form(enabled=None), headers=FORM, follow_redirects=False)
+    assert backend.alerts_kept["Net"]["enabled"] is False

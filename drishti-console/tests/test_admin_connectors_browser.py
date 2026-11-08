@@ -238,7 +238,7 @@ def test_create_test_save_edit_disable_and_uninstall_is_the_only_way_out(browser
     assert dlg.locator("[data-group='tls'] legend").inner_text() == "TLS"                         # a TLS section because the plugin supports TLS
     assert dlg.locator("[data-setting='root']").count() == 0                                      # and the file plugin's fields are gone
     assert dlg.locator("[data-setting='url']").get_attribute("aria-required") == "true"
-    assert "(required)" in dlg.locator("label[for$='url']").inner_text()
+    assert "(required)" in dlg.locator(".di-form-field:has(> [data-setting='url']) > label").inner_text()
     assert dlg.locator("[data-setting='pool-size']").get_attribute("placeholder") == "4"          # defaults show as placeholders
     assert dlg.locator("[data-setting='password']").get_attribute("placeholder") == "${ENV_VAR} or file:/run/secrets/name"
     dlg.locator("[data-f-name]").fill("orders-db")
@@ -253,7 +253,7 @@ def test_create_test_save_edit_disable_and_uninstall_is_the_only_way_out(browser
     sent = len(backend.calls)
     dlg.locator("[data-setting='password']").fill("hunter2")
     dlg.locator("[data-save]").click()
-    err = dlg.locator("div.conn-field:has([data-setting='password']) [data-field-err]").inner_text()
+    err = dlg.locator(".di-form-field:has(> [data-setting='password']) > .di-msg").inner_text()
     assert "never written into a connector file" in err and "${PASSWORD}" in err
     assert dlg.locator("[data-setting='password']").get_attribute("aria-invalid") == "true"
     assert not any(c[0] == "PUT" for c in backend.calls[sent:])
@@ -444,7 +444,7 @@ def test_a_refused_save_shows_its_error_beside_save_and_on_the_field(browser, co
     save = dlg.locator("[data-save]").bounding_box()
     box = msg.bounding_box()
     assert box["y"] + box["height"] <= save["y"] + save["height"] + 1 and box["y"] + box["height"] <= 700      # in the sticky bar, on screen, not below the long form
-    assert "whole number" in dlg.locator("div.conn-field:has([data-setting='pool-size']) [data-field-err]").inner_text()
+    assert "whole number" in dlg.locator(".di-form-field:has(> [data-setting='pool-size']) > .di-msg").inner_text()
     assert page.evaluate("() => document.activeElement.getAttribute('data-setting')") == "pool-size"           # focused and scrolled to
     assert dlg.locator("[data-save]").is_enabled() and dlg.locator("[data-save]").inner_text() == "Save"       # not stuck on Saving...
     assert "bad-db" not in backend.files

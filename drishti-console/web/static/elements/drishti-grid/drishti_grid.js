@@ -978,9 +978,77 @@
     }
     return { "pageInfo": pageInfo, "enhanceDocTables": enhanceDocTables };
   })();
+  /* ---- src/drishti_doc-select.js ---- */
+  __m["src/drishti_doc-select.js"] = (function () {
+    function rowSelection(t, o) {
+      if (!t.hasAttribute('data-select') || t.getAttribute('data-select') === 'none') { return null; }
+      if (t.__tblSelection) { return t.__tblSelection; }
+      const doc = t.ownerDocument, win = doc.defaultView, verb = t.getAttribute('data-select-label') || 'Select';
+      const picked = new Set();
+      const idOf = (r) => r.getAttribute('data-select-id');
+      const pickable = (r) => !!idOf(r) && !r.hasAttribute('data-select-off');
+      function box(label, title, disabled) {
+        const lab = doc.createElement('label'), inp = doc.createElement('input');
+        lab.className = 'tbl-check';
+        inp.type = 'checkbox'; inp.className = 'tbl-check-in'; inp.setAttribute('aria-label', label);
+        if (title) { lab.title = title; }
+        if (disabled) { inp.disabled = true; lab.classList.add('tbl-check-off'); }
+        const stop = (e) => { e.stopPropagation(); };              // a pick never sorts the column or moves the table's cursor
+        lab.addEventListener('click', stop);
+        inp.addEventListener('keydown', stop);
+        lab.appendChild(inp);
+        return lab;
+      }
+      function name(r) { const c = r.cells[0]; return c ? c.textContent.replace(/\s+/g, ' ').trim() : ''; }
+      const headRow = t.tHead && t.tHead.rows[0];
+      const all = headRow && headRow.cells[0] ? box('Select all rows', '', false) : null;
+      if (all) { headRow.cells[0].insertBefore(all, headRow.cells[0].firstChild); }
+      o.rows().forEach((r) => {
+        if (!r.cells[0] || r.cells.length < 2) { return; }                 // a "nothing here" row spanning the table
+        const off = !pickable(r), b = box(off ? name(r) + ': ' + (r.getAttribute('data-select-off') || 'cannot be picked') : verb + ' ' + name(r),
+          off ? r.getAttribute('data-select-off') || '' : '', off);
+        if (!off) { b.firstChild.setAttribute('data-select-box', idOf(r)); }
+        r.cells[0].insertBefore(b, r.cells[0].firstChild);
+      });
+      function sync(fire) {
+        const can = o.rows().filter(pickable);
+        can.forEach((r) => { const on = picked.has(idOf(r)); r.classList.toggle('tbl-picked', on); const i = r.querySelector('[data-select-box]'); if (i) { i.checked = on; } });
+        if (all) {
+          const n = can.filter((r) => picked.has(idOf(r))).length;
+          all.firstChild.checked = n > 0 && n === can.length;
+          all.firstChild.indeterminate = n > 0 && n < can.length;
+          all.firstChild.disabled = !can.length;
+        }
+        if (fire) { t.dispatchEvent(new win.CustomEvent('drishti:rows-selected', { bubbles: true, detail: { ids: api.ids() } })); }
+      }
+      const api = {
+        ids: () => api.rows().map(idOf),
+        rows: () => o.rows().filter((r) => pickable(r) && picked.has(idOf(r))),
+        set: (ids) => { picked.clear(); const want = new Set(ids || []); o.rows().forEach((r) => { if (pickable(r) && want.has(idOf(r))) { picked.add(idOf(r)); } }); sync(true); },
+        clear: () => { picked.clear(); sync(true); }
+      };
+      t.addEventListener('change', (e) => {
+        const i = e.target;
+        if (!i.classList || !i.classList.contains('tbl-check-in')) { return; }
+        if (i === (all && all.firstChild)) {
+          picked.clear();
+          if (i.checked) { o.rows().forEach((r) => { if (pickable(r) && !r.__out) { picked.add(idOf(r)); } }); }
+        } else {
+          const id = i.getAttribute('data-select-box');
+          if (i.checked) { picked.add(id); } else { picked.delete(id); }
+        }
+        sync(true);
+      });
+      t.__tblSelection = api;
+      sync(false);
+      return api;
+    }
+    return { "rowSelection": rowSelection };
+  })();
   /* ---- src/drishti_doc-console.js ---- */
   __m["src/drishti_doc-console.js"] = (function () {
     var textSortKey = __lib("drishti-core").textSortKey, compareTextKeys = __lib("drishti-core").compareTextKeys;
+    var rowSelection = __m["src/drishti_doc-select.js"].rowSelection;
     var SIZES = [25, 50, 100, 250];
     var MIN_FIT = 5;
     const NO_FILTERS = { attach: () => ({ prepare: () => {}, pass: () => true, active: () => false, clear: () => {} }), say: () => {}, close: () => {} };
@@ -1039,6 +1107,7 @@
         var heads = t.tHead && t.tHead.rows.length ? Array.prototype.slice.call(t.tHead.rows[0].cells) : [];
         var k = keyOf(t);
         var st = state[k] || (state[k] = { page: 0, sel: -1, col: -1, dir: 0, q: '', cols: {}, open: false, f: {} });
+        rowSelection(t, { rows: all });                                    // data-select: a checkbox per row, Select all in the heading
         function all() { return Array.prototype.slice.call(body.rows); }
         function visible() { return all().filter(function (r) { return !r.__out; }); }
         function sort() {
@@ -4873,16 +4942,16 @@
         const box = this.el = h(this.doc, 'div', { cls: 'dg-editor dg-editor-' + ed, attrs: { role: 'presentation' } });
         const msg = this.msg = h(this.doc, 'div', { cls: 'dg-editor-msg', attrs: { role: 'alert', id: v.uid + '-edit-msg', hidden: true } });
         const label = col.header + ', row ' + (r + 1);
-        if (ed === 'select') {
-          const sel = this.input = h(this.doc, 'select', { cls: 'dg-editor-input', attrs: { 'aria-label': label, 'aria-describedby': msg.id } });
-          (col.options || []).forEach((x, i) => {
-            const val = x !== null && typeof x === 'object' ? x.value : x, lab = x !== null && typeof x === 'object' && x.label !== undefined ? x.label : String(x);
-            const op = h(this.doc, 'option', { text: lab, attrs: { value: String(i) } });
-            if (val === cur) { op.selected = true; }
-            if (o && o.initial && lab.toLowerCase().indexOf(o.initial.toLowerCase()) === 0 && !sel.dataset.typed) { op.selected = true; sel.dataset.typed = '1'; }
-            sel.appendChild(op);
-          });
-          box.appendChild(sel);
+        if (ed === 'select' && loaded('drishti-inputs') && loaded('drishti-inputs').Select) {   // drishti-inputs' Select: the options by their index
+          const host = h(this.doc, 'div', { cls: 'dg-editor-picker dg-editor-select' });
+          box.appendChild(host);
+          const opts = (col.options || []).map((x, i) => ({ value: String(i), label: x !== null && typeof x === 'object' && x.label !== undefined ? x.label : String(x !== null && typeof x === 'object' ? x.value : x) }));
+          let at = (col.options || []).findIndex((x) => (x !== null && typeof x === 'object' ? x.value : x) === cur);
+          if (o && o.initial) { const t = opts.findIndex((x) => x.label.toLowerCase().indexOf(o.initial.toLowerCase()) === 0); if (t >= 0) { at = t; } }   // a typed letter picks the first option it starts
+          const sel = this.choice = new (loaded('drishti-inputs').Select)(host, { options: opts, value: at >= 0 ? String(at) : null, placeholder: at >= 0 ? undefined : 'Pick one', label: label });
+          this.input = sel.control;
+          this.input.setAttribute('aria-describedby', msg.id);
+          sel.on('pick', () => Promise.resolve().then(() => { if (this.at && this.choice === sel) { this.commit({ dr: 0, dc: 0 }); } }));
         } else if (ed === 'date' && loaded('drishti-inputs') && loaded('drishti-inputs').DatePicker) {
           const host = h(this.doc, 'div', { cls: 'dg-editor-picker' });
           box.appendChild(host);
@@ -4917,6 +4986,10 @@
         this.input.focus();
         if (this.input.select && !(o && o.initial)) { this.input.select(); }
         if (this.picker && !(o && o.initial)) { this.picker.open(); this.input.focus(); }
+        if (this.choice) {                                                                 // the list opens on the value once the focus has settled: arrows, Enter picks
+          const sel = this.choice;
+          this.doc.defaultView.setTimeout(() => { if (this.at && this.choice === sel) { sel.focus(); sel.open(); } }, 0);
+        }
         m.live.emit('cellEditStarted', { row: r, col: c, colId: col.id, rowId: m.idAt(r), value: cur, editor: ed });
         announce('Editing ' + label + '. Enter saves, Escape cancels');
         return true;
@@ -4938,6 +5011,7 @@
         if (!this.at) { return; }
         const k = e.key;
         if (this.picker && this.picker.pop.isOpen() && (k === 'Escape' || k === 'ArrowDown' || k === 'ArrowUp')) { return; }   /* the calendar's own */
+        if (this.choice && this.choice.pop.isOpen() && k !== 'Tab') { return; }                                                     /* the open list's own: Enter picks, Escape closes */
         if (this.code && this.code.pop.isOpen() && (k === 'Escape' || k === 'Enter' || k === 'Tab' || k === 'ArrowDown' || k === 'ArrowUp')) { return; }   /* the completion's own */
         if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); this.cancel(); return; }
         if (k === 'Enter') { e.preventDefault(); e.stopPropagation(); this.commit({ dr: e.shiftKey ? -1 : 1, dc: 0 }); return; }
@@ -4948,12 +5022,16 @@
         const a = this.doc.activeElement;
         if (this.el && this.el.contains(a)) { return; }
         if (this.picker && this.picker.pop.el && this.picker.pop.el.contains(a)) { return; }
+        if (this.choice && this.choice.pop.el && this.choice.pop.el.contains(a)) { return; }
         if (this.code && this.code.pop.el && this.code.pop.el.contains(a)) { return; }
         this.commit(null, true);
       }
       read() {
         const at = this.at;
-        if (at.ed === 'select') { const i = this.input.value === '' ? -1 : +this.input.value, x = (at.col.options || [])[i]; return { value: x !== null && typeof x === 'object' ? x.value : x, error: null }; }
+        if (at.ed === 'select') {
+          const pick = this.choice ? this.choice.getValue() : this.input.value, i = pick === null || pick === '' ? -1 : +pick, x = (at.col.options || [])[i];
+          return { value: x !== null && typeof x === 'object' ? x.value : x, error: null };
+        }
         if (this.picker) {
           const t = this.input.value.trim();
           if (!t) { return { value: null, error: null }; }
@@ -4997,6 +5075,7 @@
         this.at = null;
         if (this.picker) { this.picker.close(); this.picker = null; }
         if (this.code) { this.code.pop.close(); this.code = null; }
+        if (this.choice) { this.choice.destroy(); this.choice = null; }
         if (this.el) { this.el.remove(); this.el = null; }
         if (at) { this.view.model.live.emit('cellEditStopped', { row: at.r, col: at.c, saved: !!saved }); }
         this.view.body.schedule();
@@ -6243,7 +6322,7 @@
   __m["src/drishti_index.js"] = (function () {
     var defineGridElement = __m["src/drishti_grid-element.js"].defineGridElement;
     function install(root) { if (root && root.document && root.customElements) { defineGridElement(root.customElements, root); } }
-    return { "install": install, "ADDITIVE_FUNCS": __m["src/drishti_columns.js"].ADDITIVE_FUNCS, "normalizeColumn": __m["src/drishti_columns.js"].normalizeColumn, "getValue": __m["src/drishti_columns.js"].getValue, "formatValue": __m["src/drishti_columns.js"].formatValue, "ColumnModel": __m["src/drishti_columns.js"].ColumnModel, "AGG_FUNCS": __m["src/drishti_aggregate.js"].AGG_FUNCS, "aggFunc": __m["src/drishti_aggregate.js"].aggFunc, "registerAggFunc": __m["src/drishti_aggregate.js"].registerAggFunc, "unregisterAggFunc": __m["src/drishti_aggregate.js"].unregisterAggFunc, "parseMeasure": __m["src/drishti_aggregate.js"].parseMeasure, "isServerMeasure": __m["src/drishti_aggregate.js"].isServerMeasure, "aggregate": __m["src/drishti_aggregate.js"].aggregate, "SEP": __m["src/drishti_pivot.js"].SEP, "BLANK": __m["src/drishti_pivot.js"].BLANK, "memberText": __m["src/drishti_pivot.js"].memberText, "valueLabel": __m["src/drishti_pivot.js"].valueLabel, "normalizeView": __m["src/drishti_pivot.js"].normalizeView, "serverRequest": __m["src/drishti_pivot.js"].serverRequest, "memberFilters": __m["src/drishti_pivot.js"].memberFilters, "PivotState": __m["src/drishti_pivot.js"].PivotState, "pivotLocal": __m["src/drishti_pivot.js"].pivotLocal, "pivotApplyUpdates": __m["src/drishti_pivot-answer.js"].pivotApplyUpdates, "mergeAnswer": __m["src/drishti_pivot-answer.js"].mergeAnswer, "applyValueFilters": __m["src/drishti_pivot-answer.js"].applyValueFilters, "resultColumns": __m["src/drishti_pivot-answer.js"].resultColumns, "cellValue": __m["src/drishti_pivot-answer.js"].cellValue, "measureText": __m["src/drishti_pivot-answer.js"].measureText, "answerFormat": __m["src/drishti_pivot-answer.js"].answerFormat, "WELLS": __m["src/drishti_wells.js"].WELLS, "VALUE_FUNCS": __m["src/drishti_wells.js"].VALUE_FUNCS, "WellsModel": __m["src/drishti_wells.js"].WellsModel, "ClientRowModel": __m["src/drishti_client-rows.js"].ClientRowModel, "ServerRowModel": __m["src/drishti_server-rows.js"].ServerRowModel, "memoryDatasource": __m["src/drishti_server-rows.js"].memoryDatasource, "MAX_SCROLL_HEIGHT": __m["src/drishti_viewport.js"].MAX_SCROLL_HEIGHT, "columnAt": __m["src/drishti_viewport.js"].columnAt, "Viewport": __m["src/drishti_viewport.js"].Viewport, "SelectionModel": __m["src/drishti_selection.js"].SelectionModel, "rangeStats": __m["src/drishti_selection.js"].rangeStats, "toTsv": __m["src/drishti_selection.js"].toTsv, "rangeCells": __m["src/drishti_selection.js"].rangeCells, "crc32": __m["src/drishti_export.js"].crc32, "zipStore": __m["src/drishti_export.js"].zipStore, "excelFormat": __m["src/drishti_export.js"].excelFormat, "toXlsx": __m["src/drishti_export.js"].toXlsx, "XLSX_TYPE": __m["src/drishti_export.js"].XLSX_TYPE, "GridNavigator": __m["src/drishti_keyboard.js"].GridNavigator, "keyLabel": __m["src/drishti_keyboard.js"].keyLabel, "GridModel": __m["src/drishti_grid.js"].GridModel, "createGridModel": __m["src/drishti_grid.js"].createGridModel, "LAYOUTS": __m["src/drishti_grid-model-base.js"].LAYOUTS, "DENSITIES": __m["src/drishti_grid-model-base.js"].DENSITIES, "placeGrandRow": __m["src/drishti_grid-model-base.js"].placeGrandRow, "GridModelBase": __m["src/drishti_grid-model-base.js"].GridModelBase, "GRID_EVENTS": __m["src/drishti_grid-live.js"].GRID_EVENTS, "domEventName": __m["src/drishti_grid-live.js"].domEventName, "GridLive": __m["src/drishti_grid-live.js"].GridLive, "EDITORS": __m["src/drishti_grid-edit.js"].EDITORS, "editorOf": __m["src/drishti_grid-edit.js"].editorOf, "parseCellText": __m["src/drishti_grid-edit.js"].parseCellText, "validateCell": __m["src/drishti_grid-edit.js"].validateCell, "parseTsv": __m["src/drishti_grid-edit.js"].parseTsv, "GridEditing": __m["src/drishti_grid-edit.js"].GridEditing, "CellEditor": __m["src/drishti_grid-editors.js"].CellEditor, "manualFeed": __m["src/drishti_live.js"].manualFeed, "renderWindow": __m["src/drishti_plain-render.js"].renderWindow, "renderText": __m["src/drishti_plain-render.js"].renderText, "renderHtml": __m["src/drishti_plain-render.js"].renderHtml, "docTable": __m["src/drishti_doc-table.js"].docTable, "docPivotable": __m["src/drishti_doc-table.js"].docPivotable, "docDrill": __m["src/drishti_doc-table.js"].docDrill, "heatBucket": __m["src/drishti_doc-table.js"].heatBucket, "docPivot": __m["src/drishti_doc-table.js"].docPivot, "docPlainTable": __m["src/drishti_doc-table.js"].docPlainTable, "pageInfo": __m["src/drishti_doc-behave.js"].pageInfo, "enhanceDocTables": __m["src/drishti_doc-behave.js"].enhanceDocTables, "consoleTables": __m["src/drishti_doc-console.js"].consoleTables, "VIEW_EVENTS": __m["src/drishti_grid-ui.js"].VIEW_EVENTS, "PHONE_WIDTH": __m["src/drishti_grid-ui.js"].PHONE_WIDTH, "FUNCTION_KEYS": __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, "CF_TYPES": __m["src/drishti_grid-ui.js"].CF_TYPES, "headerSpans": __m["src/drishti_grid-ui.js"].headerSpans, "pivotColumnLabels": __m["src/drishti_grid-ui.js"].pivotColumnLabels, "markGroups": __m["src/drishti_grid-ui.js"].markGroups, "isTotalCell": __m["src/drishti_grid-ui.js"].isTotalCell, "nonAdditiveNote": __m["src/drishti_grid-ui.js"].nonAdditiveNote, "colourScaleAlpha": __m["src/drishti_grid-ui.js"].colourScaleAlpha, "dataBarWidth": __m["src/drishti_grid-ui.js"].dataBarWidth, "cfBackground": __m["src/drishti_grid-ui.js"].cfBackground, "figureRange": __m["src/drishti_grid-ui.js"].figureRange, "ruleFor": __m["src/drishti_grid-ui.js"].ruleFor, "phoneColumns": __m["src/drishti_grid-ui.js"].phoneColumns, "pivotMeasures": __m["src/drishti_grid-ui.js"].pivotMeasures, "columnMenuItems": __m["src/drishti_grid-ui.js"].columnMenuItems, "cellMenuItems": __m["src/drishti_grid-ui.js"].cellMenuItems, "commandText": __m["src/drishti_grid-ui.js"].commandText, "parseCommand": __m["src/drishti_grid-ui.js"].parseCommand, "parseCondition": __m["src/drishti_grid-ui.js"].parseCondition, "conditionText": __m["src/drishti_grid-ui.js"].conditionText, "statusItems": __m["src/drishti_grid-ui.js"].statusItems, "cellLook": __m["src/drishti_grid-ui.js"].cellLook, "FlashTracker": __m["src/drishti_grid-ui.js"].FlashTracker, "Menu": __m["src/drishti_grid-dom.js"].Menu, "Notes": __m["src/drishti_grid-dom.js"].Notes, "sparkline": __m["src/drishti_grid-explain.js"].sparkline, "renderExplain": __m["src/drishti_grid-explain.js"].renderExplain, "localDrill": __m["src/drishti_grid-actions.js"].localDrill, "GridBase": __m["src/drishti_grid-base.js"].GridBase, "Grid": __m["src/drishti_grid-view.js"].Grid, "ELEMENT_NAME": __m["src/drishti_grid-element.js"].ELEMENT_NAME, "defineGridElement": __m["src/drishti_grid-element.js"].defineGridElement, "AG_MAPPING": __m["src/drishti_grid-ag-map.js"].AG_MAPPING, "AG_NOT_COVERED": __m["src/drishti_grid-ag-map.js"].AG_NOT_COVERED, "AG_GRID_OPTIONS": __m["src/drishti_grid-ag-map.js"].AG_GRID_OPTIONS, "AG_COLUMN_KEYS": __m["src/drishti_grid-ag-map.js"].AG_COLUMN_KEYS, "AG_UNSUPPORTED": __m["src/drishti_grid-ag-map.js"].AG_UNSUPPORTED, "AG_NO_OP": __m["src/drishti_grid-ag-map.js"].AG_NO_OP, "AG_EVENTS": __m["src/drishti_grid-ag-map.js"].AG_EVENTS, "agFilterToDrishti": __m["src/drishti_grid-ag-map.js"].agFilterToDrishti, "drishtiFilterToAg": __m["src/drishti_grid-ag-map.js"].drishtiFilterToAg, "translateFilterModel": __m["src/drishti_grid-ag-map.js"].translateFilterModel, "AG_GROUP_COLUMN": __m["src/drishti_grid-ag.js"].AG_GROUP_COLUMN, "AgReport": __m["src/drishti_grid-ag.js"].AgReport, "agAggFunc": __m["src/drishti_grid-ag.js"].agAggFunc, "translateAgOptions": __m["src/drishti_grid-ag.js"].translateAgOptions, "callGetRows": __m["src/drishti_grid-ag-server.js"].callGetRows, "agRequest": __m["src/drishti_grid-ag-server.js"].agRequest, "agDatasource": __m["src/drishti_grid-ag-server.js"].agDatasource, "parseResultField": __m["src/drishti_grid-ag-server.js"].parseResultField, "agServerPivot": __m["src/drishti_grid-ag-server.js"].agServerPivot, "AgEvents": __m["src/drishti_grid-ag-events.js"].AgEvents, "AgColumnsApi": __m["src/drishti_grid-ag-columns.js"].AgColumnsApi, "AgGridApi": __m["src/drishti_grid-ag-api.js"].AgGridApi, "createGridFromAgOptions": __m["src/drishti_grid-ag-api.js"].createGridFromAgOptions };
+    return { "install": install, "ADDITIVE_FUNCS": __m["src/drishti_columns.js"].ADDITIVE_FUNCS, "normalizeColumn": __m["src/drishti_columns.js"].normalizeColumn, "getValue": __m["src/drishti_columns.js"].getValue, "formatValue": __m["src/drishti_columns.js"].formatValue, "ColumnModel": __m["src/drishti_columns.js"].ColumnModel, "AGG_FUNCS": __m["src/drishti_aggregate.js"].AGG_FUNCS, "aggFunc": __m["src/drishti_aggregate.js"].aggFunc, "registerAggFunc": __m["src/drishti_aggregate.js"].registerAggFunc, "unregisterAggFunc": __m["src/drishti_aggregate.js"].unregisterAggFunc, "parseMeasure": __m["src/drishti_aggregate.js"].parseMeasure, "isServerMeasure": __m["src/drishti_aggregate.js"].isServerMeasure, "aggregate": __m["src/drishti_aggregate.js"].aggregate, "SEP": __m["src/drishti_pivot.js"].SEP, "BLANK": __m["src/drishti_pivot.js"].BLANK, "memberText": __m["src/drishti_pivot.js"].memberText, "valueLabel": __m["src/drishti_pivot.js"].valueLabel, "normalizeView": __m["src/drishti_pivot.js"].normalizeView, "serverRequest": __m["src/drishti_pivot.js"].serverRequest, "memberFilters": __m["src/drishti_pivot.js"].memberFilters, "PivotState": __m["src/drishti_pivot.js"].PivotState, "pivotLocal": __m["src/drishti_pivot.js"].pivotLocal, "pivotApplyUpdates": __m["src/drishti_pivot-answer.js"].pivotApplyUpdates, "mergeAnswer": __m["src/drishti_pivot-answer.js"].mergeAnswer, "applyValueFilters": __m["src/drishti_pivot-answer.js"].applyValueFilters, "resultColumns": __m["src/drishti_pivot-answer.js"].resultColumns, "cellValue": __m["src/drishti_pivot-answer.js"].cellValue, "measureText": __m["src/drishti_pivot-answer.js"].measureText, "answerFormat": __m["src/drishti_pivot-answer.js"].answerFormat, "WELLS": __m["src/drishti_wells.js"].WELLS, "VALUE_FUNCS": __m["src/drishti_wells.js"].VALUE_FUNCS, "WellsModel": __m["src/drishti_wells.js"].WellsModel, "ClientRowModel": __m["src/drishti_client-rows.js"].ClientRowModel, "ServerRowModel": __m["src/drishti_server-rows.js"].ServerRowModel, "memoryDatasource": __m["src/drishti_server-rows.js"].memoryDatasource, "MAX_SCROLL_HEIGHT": __m["src/drishti_viewport.js"].MAX_SCROLL_HEIGHT, "columnAt": __m["src/drishti_viewport.js"].columnAt, "Viewport": __m["src/drishti_viewport.js"].Viewport, "SelectionModel": __m["src/drishti_selection.js"].SelectionModel, "rangeStats": __m["src/drishti_selection.js"].rangeStats, "toTsv": __m["src/drishti_selection.js"].toTsv, "rangeCells": __m["src/drishti_selection.js"].rangeCells, "crc32": __m["src/drishti_export.js"].crc32, "zipStore": __m["src/drishti_export.js"].zipStore, "excelFormat": __m["src/drishti_export.js"].excelFormat, "toXlsx": __m["src/drishti_export.js"].toXlsx, "XLSX_TYPE": __m["src/drishti_export.js"].XLSX_TYPE, "GridNavigator": __m["src/drishti_keyboard.js"].GridNavigator, "keyLabel": __m["src/drishti_keyboard.js"].keyLabel, "GridModel": __m["src/drishti_grid.js"].GridModel, "createGridModel": __m["src/drishti_grid.js"].createGridModel, "LAYOUTS": __m["src/drishti_grid-model-base.js"].LAYOUTS, "DENSITIES": __m["src/drishti_grid-model-base.js"].DENSITIES, "placeGrandRow": __m["src/drishti_grid-model-base.js"].placeGrandRow, "GridModelBase": __m["src/drishti_grid-model-base.js"].GridModelBase, "GRID_EVENTS": __m["src/drishti_grid-live.js"].GRID_EVENTS, "domEventName": __m["src/drishti_grid-live.js"].domEventName, "GridLive": __m["src/drishti_grid-live.js"].GridLive, "EDITORS": __m["src/drishti_grid-edit.js"].EDITORS, "editorOf": __m["src/drishti_grid-edit.js"].editorOf, "parseCellText": __m["src/drishti_grid-edit.js"].parseCellText, "validateCell": __m["src/drishti_grid-edit.js"].validateCell, "parseTsv": __m["src/drishti_grid-edit.js"].parseTsv, "GridEditing": __m["src/drishti_grid-edit.js"].GridEditing, "CellEditor": __m["src/drishti_grid-editors.js"].CellEditor, "manualFeed": __m["src/drishti_live.js"].manualFeed, "renderWindow": __m["src/drishti_plain-render.js"].renderWindow, "renderText": __m["src/drishti_plain-render.js"].renderText, "renderHtml": __m["src/drishti_plain-render.js"].renderHtml, "docTable": __m["src/drishti_doc-table.js"].docTable, "docPivotable": __m["src/drishti_doc-table.js"].docPivotable, "docDrill": __m["src/drishti_doc-table.js"].docDrill, "heatBucket": __m["src/drishti_doc-table.js"].heatBucket, "docPivot": __m["src/drishti_doc-table.js"].docPivot, "docPlainTable": __m["src/drishti_doc-table.js"].docPlainTable, "pageInfo": __m["src/drishti_doc-behave.js"].pageInfo, "enhanceDocTables": __m["src/drishti_doc-behave.js"].enhanceDocTables, "consoleTables": __m["src/drishti_doc-console.js"].consoleTables, "rowSelection": __m["src/drishti_doc-select.js"].rowSelection, "VIEW_EVENTS": __m["src/drishti_grid-ui.js"].VIEW_EVENTS, "PHONE_WIDTH": __m["src/drishti_grid-ui.js"].PHONE_WIDTH, "FUNCTION_KEYS": __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, "CF_TYPES": __m["src/drishti_grid-ui.js"].CF_TYPES, "headerSpans": __m["src/drishti_grid-ui.js"].headerSpans, "pivotColumnLabels": __m["src/drishti_grid-ui.js"].pivotColumnLabels, "markGroups": __m["src/drishti_grid-ui.js"].markGroups, "isTotalCell": __m["src/drishti_grid-ui.js"].isTotalCell, "nonAdditiveNote": __m["src/drishti_grid-ui.js"].nonAdditiveNote, "colourScaleAlpha": __m["src/drishti_grid-ui.js"].colourScaleAlpha, "dataBarWidth": __m["src/drishti_grid-ui.js"].dataBarWidth, "cfBackground": __m["src/drishti_grid-ui.js"].cfBackground, "figureRange": __m["src/drishti_grid-ui.js"].figureRange, "ruleFor": __m["src/drishti_grid-ui.js"].ruleFor, "phoneColumns": __m["src/drishti_grid-ui.js"].phoneColumns, "pivotMeasures": __m["src/drishti_grid-ui.js"].pivotMeasures, "columnMenuItems": __m["src/drishti_grid-ui.js"].columnMenuItems, "cellMenuItems": __m["src/drishti_grid-ui.js"].cellMenuItems, "commandText": __m["src/drishti_grid-ui.js"].commandText, "parseCommand": __m["src/drishti_grid-ui.js"].parseCommand, "parseCondition": __m["src/drishti_grid-ui.js"].parseCondition, "conditionText": __m["src/drishti_grid-ui.js"].conditionText, "statusItems": __m["src/drishti_grid-ui.js"].statusItems, "cellLook": __m["src/drishti_grid-ui.js"].cellLook, "FlashTracker": __m["src/drishti_grid-ui.js"].FlashTracker, "Menu": __m["src/drishti_grid-dom.js"].Menu, "Notes": __m["src/drishti_grid-dom.js"].Notes, "sparkline": __m["src/drishti_grid-explain.js"].sparkline, "renderExplain": __m["src/drishti_grid-explain.js"].renderExplain, "localDrill": __m["src/drishti_grid-actions.js"].localDrill, "GridBase": __m["src/drishti_grid-base.js"].GridBase, "Grid": __m["src/drishti_grid-view.js"].Grid, "ELEMENT_NAME": __m["src/drishti_grid-element.js"].ELEMENT_NAME, "defineGridElement": __m["src/drishti_grid-element.js"].defineGridElement, "AG_MAPPING": __m["src/drishti_grid-ag-map.js"].AG_MAPPING, "AG_NOT_COVERED": __m["src/drishti_grid-ag-map.js"].AG_NOT_COVERED, "AG_GRID_OPTIONS": __m["src/drishti_grid-ag-map.js"].AG_GRID_OPTIONS, "AG_COLUMN_KEYS": __m["src/drishti_grid-ag-map.js"].AG_COLUMN_KEYS, "AG_UNSUPPORTED": __m["src/drishti_grid-ag-map.js"].AG_UNSUPPORTED, "AG_NO_OP": __m["src/drishti_grid-ag-map.js"].AG_NO_OP, "AG_EVENTS": __m["src/drishti_grid-ag-map.js"].AG_EVENTS, "agFilterToDrishti": __m["src/drishti_grid-ag-map.js"].agFilterToDrishti, "drishtiFilterToAg": __m["src/drishti_grid-ag-map.js"].drishtiFilterToAg, "translateFilterModel": __m["src/drishti_grid-ag-map.js"].translateFilterModel, "AG_GROUP_COLUMN": __m["src/drishti_grid-ag.js"].AG_GROUP_COLUMN, "AgReport": __m["src/drishti_grid-ag.js"].AgReport, "agAggFunc": __m["src/drishti_grid-ag.js"].agAggFunc, "translateAgOptions": __m["src/drishti_grid-ag.js"].translateAgOptions, "callGetRows": __m["src/drishti_grid-ag-server.js"].callGetRows, "agRequest": __m["src/drishti_grid-ag-server.js"].agRequest, "agDatasource": __m["src/drishti_grid-ag-server.js"].agDatasource, "parseResultField": __m["src/drishti_grid-ag-server.js"].parseResultField, "agServerPivot": __m["src/drishti_grid-ag-server.js"].agServerPivot, "AgEvents": __m["src/drishti_grid-ag-events.js"].AgEvents, "AgColumnsApi": __m["src/drishti_grid-ag-columns.js"].AgColumnsApi, "AgGridApi": __m["src/drishti_grid-ag-api.js"].AgGridApi, "createGridFromAgOptions": __m["src/drishti_grid-ag-api.js"].createGridFromAgOptions };
   })();
   return Object.freeze(Object.assign({ library: "drishti-grid", version: "0.4.0" }, __m["src/drishti_index.js"]));
 });

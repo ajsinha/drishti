@@ -163,6 +163,7 @@
     return refusals;
   }
 
+  var RF = window.Drishti.elements.inputs.formOf($('[data-field-of=reason]'));     // the reason: drishti-inputs' Form (core/admin_forms.py)
   function drawPanel() {
     var panel = $('[data-eng-panel]');
     if (!staged.length) { panel.hidden = true; return; }
@@ -219,7 +220,7 @@
     $('[data-eng-writes]').textContent = 'writes ' + staged.map(function (s) { var e = byId(s.engine); return s.node ? s.node + ': config/engines/' + s.engine + '.yaml' : e.file; }).join(', ');
     var apply = $('[data-eng-apply]');
     apply.textContent = staged.length === 1 ? 'Turn ' + title(first.engine) + ' ' + (first.on ? 'on' : 'off') : 'Apply ' + staged.length + ' changes';
-    apply.disabled = refusals.length > 0 || !$('[data-eng-reason]').value.trim() || nodesOf().length > 1;
+    apply.disabled = refusals.length > 0 || !String(RF.getField('reason') || '').trim() || nodesOf().length > 1;
     if (nodesOf().length > 1) { $('[data-eng-deps]').insertAdjacentHTML('beforeend', '<p class="eng-bad">Apply the changes of one node at a time.</p>'); }
   }
 
@@ -273,10 +274,10 @@
     }
     if (ev.target.closest('[data-eng-apply]')) { apply(); }
   });
-  $('[data-eng-reason]').addEventListener('input', drawPanel);
+  RF.on('change', drawPanel);
 
   function apply() {
-    var reason = $('[data-eng-reason]').value.trim();
+    var reason = String(RF.getField('reason') || '').trim();
     var node = staged[0].node || '';
     var expected = {};
     if (!node) { staged.forEach(function (s) { var e = byId(s.engine); expected[s.engine] = e.checksum || ''; }); }
@@ -301,7 +302,7 @@
         var out = (res.j.outcomes || []).map(function (o) { return title(o.engine) + ' ' + (o.on ? 'on' : 'off') + ': ' + o.outcome; }).join('; ');
         if (!res.j.engines && res.j.forwardedTo) { out = 'sent to ' + res.j.forwardedTo + ': ' + out; }
         staged = [];
-        $('[data-eng-reason]').value = '';
+        RF.setValue({ reason: '' });
         return refresh().then(function () {                 // said once the list and History show the change
           var done = $('[data-eng-done]');
           done.hidden = false;

@@ -147,14 +147,14 @@ def row_js(key, rid):
 
 
 OPEN = ("!!document.querySelector('.dg-editor') && document.querySelector('.dg-editor').style.visibility !== 'hidden'"
-        " && document.querySelector('.dg-editor').contains(document.activeElement)")      # the cell editor over its cell, with the focus
+        " && (document.querySelector('.dg-editor').contains(document.activeElement) || !!document.activeElement.closest('.di-select-pop'))")      # the cell editor over its cell, with the focus
 
 
 def gselect(pg, key, rid, c, label):
     gcell(pg, key, rid, c)
     wait(pg, OPEN)
-    pg.select_option(".dg-editor select", label=label)
-    pg.keyboard.press("Enter")
+    pg.locator(".di-select-pop").get_by_role("option", name=label, exact=True).click()   # drishti-inputs' Select: picking saves
+    wait(pg, "!document.querySelector('.dg-editor')")
 
 
 def gtext(pg, key, rid, c, text):
