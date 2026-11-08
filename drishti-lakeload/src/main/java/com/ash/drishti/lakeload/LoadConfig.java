@@ -367,7 +367,9 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
             if (flatten.isEmpty() && pack != null) {             // a lake entry without flatten: the pack's (its ingest block), as lake build
                 flatten.putAll(pack.flatten());
             }
-            id = id != null ? agree(entry, "id", id, entry.id() == null ? id : entry.id()) : entry.id();
+            // the id: source.id (--key, a .ready file's key:) agreeing with the entry's; an entry with none takes the pack's key (its
+            // ingest key, else its data contract's), so a table created by its first load does not reject every row for want of an id
+            id = id != null ? agree(entry, "id", id, entry.id() == null ? id : entry.id()) : entry.id() != null ? entry.id() : pack == null ? null : pack.key();
             latestBy = latestBy != null ? agree(entry, "latest-by", latestBy, entry.latestBy() == null ? latestBy : entry.latestBy()) : entry.latestBy();
         } else if (pack != null) {
             promote = s.has("promote") ? promote : pack.promote();

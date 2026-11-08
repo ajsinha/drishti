@@ -16,7 +16,7 @@
 """Push rows into a Drishti lake through the data inbox (docs/guides/DATA_LAKE_GUIDE.md section 3.4). Python's standard library only.
 
 One file:  push_inbox.py --inbox <data>/dataload/inbox --table trade_endur --date 2026-11-06 --source rows.jsonl.gz --lake risklake \
-               --pack trading --kind trade --connector trade-endur --key TRADE_ID
+               --pack trading --kind trade --connector trade-endur
 A tar:     push_inbox.py --inbox ... --tar eod-2026-11-06 --part trade_endur:2026-11-06:a.jsonl.gz --part risk_hierarchy:2026-11-06:b.jsonl \
                --folders trade_endur=trading,risk_hierarchy=market-risk --lake risklake
 
@@ -116,7 +116,7 @@ def main() -> int:
     ap.add_argument("--part", action="append", default=[], help="table:YYYY-MM-DD:source, for --tar")
     ap.add_argument("--folders", help="table=pack,... for --tar")
     ap.add_argument("--lake"), ap.add_argument("--pack"), ap.add_argument("--kind"), ap.add_argument("--connector")
-    ap.add_argument("--key", help="the id field, when the lake entry and the pack name none (TRADE_ID)")
+    ap.add_argument("--key", help="the id field (default: the lake entry's id:, else the kind's key from its pack: TRADE_ID)")
     ap.add_argument("--mode", default="replace", choices=["replace", "append"])
     ap.add_argument("--hold", action="store_true", help="the inbox waits until hold is removed from the .ready file")
     a = ap.parse_args()

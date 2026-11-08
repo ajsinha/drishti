@@ -207,8 +207,10 @@ def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = 
             out["vectors"] = [x.strip() for x in (vec.split(",") if isinstance(vec, str) else vec) if str(x).strip()]
             named = (st.get("table") or {}).get(kind) if isinstance(st.get("table"), dict) else st.get(f"table.{kind}")
             out["table"] = named or None
+    if kind:                                          # the kind's key: its ingest key, else its data contract's (one field)
+        out["key"] = feedroute.contract_key(pack, kind)
     if kind and isinstance(ing.get(kind), dict):
-        out["key"] = ing[kind].get("key")
+        out["key"] = ing[kind].get("key") or out.get("key")
         out["date"] = ing[kind].get("date")
         if isinstance(ing[kind].get("latest-by"), str):
             out["latest_by"] = ing[kind]["latest-by"]
@@ -336,7 +338,8 @@ def _run_tars(a, say, summary, started, lake) -> tuple[int, dict]:
     for t in tables:
         sub = copy.copy(a)
         r = routes[t]
-        sub.pack, sub.kind, sub.connector, sub.table, sub._tar_table = str(r.pack), r.kind, r.connector, None, t
+        # a folder named after a table (trade_endur) writes that table: one of several of its kind (DATA_LAKE_GUIDE.md section 4.4)
+        sub.pack, sub.kind, sub.connector, sub.table, sub._tar_table = str(r.pack), r.kind, r.connector, r.table, t
         sub.domain = None
         sub.summary = None
         code, s = run(sub, lambda *_x, **_k: None)

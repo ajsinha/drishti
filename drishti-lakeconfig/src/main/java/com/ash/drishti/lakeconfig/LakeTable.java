@@ -68,6 +68,12 @@ public record LakeTable(String domain, String table, String kind, String path, S
         properties = java.util.Collections.unmodifiableMap(new LinkedHashMap<>(properties));
     }
 
+    /** This table with its id field {@code id} (a table created by its first load takes its kind's key: DATA_LAKE_GUIDE.md section 5.6). */
+    public LakeTable withId(String id) {
+        return new LakeTable(domain, table, kind, path, format, partitionBy, promote, vectors, flatten, id, date, latestBy, loadMode, sortBy, layout,
+                retention, maintenance, timeTravel, properties);
+    }
+
     /** {@code <domain>.<table>}, the table's name in its lake file. */
     public String name() {
         return domain + "." + table;
