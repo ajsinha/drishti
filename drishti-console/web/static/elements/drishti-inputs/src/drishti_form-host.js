@@ -16,7 +16,7 @@
 /* A form the server drew as a schema: an element with data-di-form and data-schema ({schema, value, options}) becomes a Form, embedded by
    default (its named fields submitted by the page's own <form>, or read by the page's script through the Form). The server builds the
    schema (core/form_kit.py), so a page has no controls of its own; its script asks formOf(host, {onSubmit}) for the Form, whichever runs
-   first (the script's onSubmit and check join a Form upgradeForms drew). An
+   first (the script's onSubmit, check and widgets join a Form upgradeForms drew). An
    embedded Form stops its page form's submit while a field has a problem (checkOnSubmit: false leaves that to the page). */
 import { Form } from './drishti_form.js';
 
@@ -26,14 +26,18 @@ export const FORM_HOST_SELECTOR = '[data-di-form][data-schema]';
 /**
  * The Form of a host the server drew (made at the first call; later calls answer the same Form).
  * @param {HTMLElement} host an element with data-schema: {schema, value, options}
- * @param {Object} [extra] options added by the page's script (onSubmit, check: read when the Form is submitted, so they join a Form
- *   already drawn; widgets and other drawing options count only at the first call)
+ * @param {Object} [extra] options added by the page's script: onSubmit and check join a Form already drawn (they are read when it is
+ *   submitted); widgets too (the fields are drawn again with them, the values kept); other drawing options count only at the first call
  * @returns {Form|null}
  */
 export function formOf(host, extra) {
   if (!host) { return null; }
   if (host.diForm) {                                         // drawn already (upgradeForms, or the page's script before): the page's options join it
-    if (extra) { Object.assign(host.diForm.o, extra); }
+    if (extra) {
+      const widgets = extra.widgets;
+      Object.assign(host.diForm.o, extra, widgets ? { widgets: Object.assign({}, host.diForm.o.widgets, widgets) } : {});
+      if (widgets) { host.diForm.render(); }               // its fields drawn again with the page's widgets, the values kept
+    }
     return host.diForm;
   }
   let spec;

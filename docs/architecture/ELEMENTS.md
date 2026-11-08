@@ -658,8 +658,9 @@ library with its module: an unlicensed module's library is not served, its kinds
   - **A form the server drew** (`drishti_form-host.js`): an element with `data-di-form` and `data-schema` (`{schema, value, options}`)
     becomes a `Form`, embedded by default; `formOf(host, extra)` answers it (made once, whichever of the page's script and
     `upgradeFields` asks first; the script's `onSubmit` and `check` join a `Form` already drawn), `upgradeForms(root)` makes every host.
-    It is the one server-drawn form host: the Admin forms (`core/admin_forms.py`) and the alert form (`core/alert_form.py`)
-    use it; a `Form` with a Save of its own is sent `embedded: false` in its options. An embedded `Form` inside a page's `<form>` stops its submit while
+    It is the one server-drawn form host: the Admin forms (`core/admin_forms.py`), the alert form (`core/alert_form.py`) and the
+    terminal's query form (`core/forms.py` `form_host`) use it; a page's custom widgets (the query form's constant and long-list
+    widgets) join through `formOf(host, {widgets})`, which draws the fields again with them, the values kept; a `Form` with a Save of its own is sent `embedded: false` in its options. An embedded `Form` inside a page's `<form>` stops its submit while
     a field has a problem (a native control's `required` did that; `checkOnSubmit: false` leaves it to the page). With it, the field types
     **`file`** (a file input; the value is the file's name, the page reads the files), **`range`** (a slider with its value and `unit`
     beside it: `minimum`, `maximum`, `increment`), a text field's `format` **`password`** or **`search`**, `maxLength`, `mono`,
@@ -674,7 +675,7 @@ library with its module: an unlicensed module's library is not served, its kinds
 
   | Was | Now |
   |---|---|
-  | `drishti_form.js` + `terminal/form.html` (the query form drawn by the server, its dependents, its long-list search) | the server sends the form's schema (`core/forms.py` `form_schema`); `Form`, embedded in the page's GET form, every control named `op.`/`v.`/`v2.`/`cs.<path>`; the long list a custom widget (chips and a server combobox); relative dates a combobox of the presets |
+  | `drishti_form.js` + `terminal/form.html` (the query form drawn by the server, its dependents, its long-list search) | the server sends the form's schema through the one server-drawn host (`core/forms.py` `form_host`: `form_kit.host` over `form_schema`; `formOf(host, {widgets})`); `Form`, embedded in the page's GET form, every control named `op.`/`v.`/`v2.`/`cs.<path>`; the long list a custom widget (chips and a server combobox); relative dates a combobox of the presets |
   | `drishti_subscribe-when.js` (how often, the day, a native time) | `Form`, embedded, the time picker |
   | `drishti_editor-table.js` (name and title, the rows' filter, grain and materialisation, the look-up dialog) | live `Form`s and a submitted one, a Rachana formula widget, the look-up's columns a dependent list of checkboxes |
   | `drishti_bi-format-pane.js` (controls from the format schemas) | one live `Form` per section; the swatches, series colours, a colour, JSON and the Vega-Lite text as custom widgets |
