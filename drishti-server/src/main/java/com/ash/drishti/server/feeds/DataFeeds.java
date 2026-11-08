@@ -287,7 +287,8 @@ public final class DataFeeds {
         }
         Files.createDirectories(folder);
         Path log = folder.resolve("admin-run.log");
-        ProcessBuilder pb = new ProcessBuilder(pythonCommand(), script.toString(), "feed", "run", feed, "--trigger", "admin")
+        ProcessBuilder pb = new ProcessBuilder(pythonCommand(), script.toString(), "feed", "run", feed, "--trigger", "admin",
+                "--config", config.toAbsolutePath().normalize().toString())     // the feed files the server reads, not the command line's default
                 .directory(root.toFile()).redirectErrorStream(true).redirectOutput(ProcessBuilder.Redirect.appendTo(log.toFile()));
         pb.environment().put("DRISHTI_DATA_DIR", data.toAbsolutePath().normalize().toString());
         Files.writeString(log, "---- " + Instant.now() + " Run now by " + user + "\n", StandardCharsets.UTF_8,
