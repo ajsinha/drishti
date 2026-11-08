@@ -537,7 +537,7 @@ rows: 164
 ```
 
 **A tar of several tables and dates**, all or nothing: `<folder>/<YYYY-MM-DD>/part-0001.jsonl.gz` inside. A folder is a **table**
-(`trade_endur`, `trade_calypso`: the tables of the kind `trade`, one per source system) or a **kind** with one table (`risk-hierarchy`,
+(`trade_endur`, `trade_calypso`: the tables of the kind `trade`, one per source system) or a **kind** with one table (`risk-hierarchy`: [contract](../contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy), [example](../contracts/samples/market-risk.md#risk-hierarchy),
 written `risk_hierarchy` too), so one archive may mix the trades of several systems with the hierarchy:
 
 ```bash
@@ -964,7 +964,7 @@ The Inbox screen shows it as *held*; delete the `hold:` line (or set it to `fals
 
 A tar (`.tar`, `.tgz`, `.tar.gz`, `.tar.zip`) holds `<folder>/<YYYY-MM-DD>/<files>.jsonl[.gz]`, nothing else (operating-system litter
 such as `__MACOSX/` and `.DS_Store` is ignored). **Each top folder is a table or a kind**: a table name (`trade_endur`, `trade_calypso`,
-`trade_murex`, the tables of the kind `trade`, one per source system) writes that table; a kind name (`scenario-pv`, `risk-hierarchy`)
+`trade_murex`, the tables of the kind `trade`, one per source system) writes that table; a kind name (`scenario-pv` ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv), [example](../contracts/samples/market-risk.md#scenario-pv)), `risk-hierarchy`)
 writes the kind's one table. Names compare without case and with `_` and `-` alike (`risk_hierarchy` is the kind `risk-hierarchy`):
 
 ```text
