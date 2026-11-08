@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (pivot-fields/A-powerbi-panes.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  The pivot's fields and wells made manageable (the MR cube complaint, 2026-11-08); see README.md beside it.
+  The address picks the state: #desk or #pos, open or collapsed, light. Dark theme by default.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pivot fields: A, Power BI panes</title>
+<script>if(location.hash.indexOf('light')>=0)document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --faint:#8490a9; --amber:#e8a33a; --amber2:#f2b453; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a;
+  --hl:rgba(127,178,255,.10); --sel:rgba(232,163,58,.20); --onacc:#14100a; --shadow:0 10px 30px rgba(0,0,0,.45);
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --faint:#60697e; --amber:#985b0a; --amber2:#7c4805; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323;
+  --hl:rgba(31,95,196,.07); --sel:rgba(184,110,12,.14); --onacc:#ffffff; --shadow:0 10px 30px rgba(40,40,60,.18);
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:13px}
+a{color:var(--link);text-decoration:none}
+kbd,.k{font-family:var(--mono);font-size:10.5px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px;margin-left:4px;background:var(--panel2)}
+.app{height:100vh;display:flex;flex-direction:column;padding:0 12px 6px;gap:6px;min-width:0}
+/* the mock-up's own caption (not part of the screen) */
+.cap{display:flex;gap:12px;align-items:center;font-size:11.5px;color:var(--muted);padding:4px 2px;border-bottom:1px dashed var(--line)}
+.cap b{color:var(--amber)} .cap .sp{flex:1}
+.cap a{padding:1px 6px;border-radius:4px} .cap a.on{background:var(--panel2);color:var(--ink)}
+/* console bar */
+.bar{display:flex;gap:14px;align-items:center;padding:5px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)}
+.cmd{flex:0 1 560px;height:26px;display:flex;align-items:center;padding:0 12px;border:1px solid var(--amber);border-radius:14px;font-family:var(--mono);color:var(--amber);font-size:12px;white-space:nowrap;overflow:hidden}
+.menus{display:flex;gap:2px;margin-left:auto;font-size:12.5px}
+.menus span{padding:4px 9px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+/* title line + headline figures in one row */
+.head{display:flex;gap:14px;align-items:center;min-height:34px;flex-wrap:wrap}
+.head h2{margin:0;font-size:15px;white-space:nowrap} .head h2 span{color:var(--muted);font-weight:400;margin-left:6px;font-size:12.5px}
+.info{position:relative;display:inline-flex;width:17px;height:17px;border-radius:50%;border:1px solid var(--line);color:var(--muted);font-size:11px;font-weight:700;align-items:center;justify-content:center;cursor:help;font-family:Georgia,serif;font-style:italic}
+.info .tip{display:none}
+.info.show .tip,.info:hover .tip{display:block;position:absolute;top:22px;left:-8px;z-index:20;width:330px;font:12px/1.45 var(--sans);font-style:normal;font-weight:400;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;box-shadow:var(--shadow)}
+.tiles{display:flex;gap:6px;align-items:stretch}
+.tile{display:flex;flex-direction:column;justify-content:center;padding:2px 10px;border-left:2px solid var(--line);min-width:84px}
+.tile small{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.tile b{font-family:var(--mono);font-size:14px;font-weight:600}
+.tile.lim b{display:flex;align-items:center;gap:6px}
+.meter{display:inline-block;width:58px;height:7px;border-radius:4px;background:var(--line);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--warn)}
+.up{color:var(--neg)} .dn{color:var(--ok)}
+.tools{margin-left:auto;display:flex;gap:5px;align-items:center}
+.btn{font-size:12px;padding:3px 9px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn.p kbd{color:var(--onacc);border-color:rgba(0,0,0,.25);background:transparent}
+.btn.ghost{background:transparent}
+/* main area */
+.main{flex:1;display:flex;gap:8px;min-height:0}
+.gridwrap{flex:1;min-width:0;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;background:var(--panel);overflow:hidden}
+.gscroll{flex:1;overflow:auto}
+table.g{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+.g th,.g td{padding:4px 10px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+.g td{font-family:var(--mono)}
+.g thead th{position:sticky;background:var(--panel2);color:var(--muted);font-weight:500;font-size:11.5px;z-index:2}
+.g thead tr:first-child th{top:0} .g thead tr:nth-child(2) th{top:25px}
+.g th.grp{text-align:center;color:var(--ink);font-weight:600;border-bottom:2px solid var(--line)}
+.g th.grp.t{border-bottom-color:var(--amber)}
+.g th.corner{text-align:left;vertical-align:bottom;color:var(--ink);font-weight:600;min-width:330px;left:0;z-index:3}
+.g td.rh{text-align:left;font-family:var(--sans);position:sticky;left:0;background:var(--panel);z-index:1;min-width:330px}
+.g tr:hover td{background:var(--hl)} .g tr:hover td.rh{background:var(--panel2)}
+.g tr.sel td{background:var(--sel)}
+.g td.tc{border-left:1px solid var(--line)}
+.g tr.tot td{font-weight:700;border-top:2px solid var(--line);border-bottom:none;background:var(--panel2)}
+.g tr.l0 td.rh{font-weight:600}
+.g tr.pos td.rh{color:var(--ink)} .g tr.trd td.rh{color:var(--muted)}
+.g tr.blank td.rh .lbl{color:var(--muted);font-style:italic}
+.g tr.div td{color:var(--muted);font-style:italic;border-bottom:none}
+.g td.e{color:var(--faint)}
+.tw{display:inline-block;width:14px;color:var(--muted);font-family:var(--mono);text-align:center;margin-right:4px}
+.kindtag{font-size:10px;color:var(--faint);margin-left:6px;font-family:var(--sans);font-style:normal;font-weight:400}
+.q{display:inline-flex;width:14px;height:14px;border-radius:50%;border:1px solid var(--line);font-size:9.5px;align-items:center;justify-content:center;color:var(--muted);margin-left:6px;font-family:var(--sans);font-style:normal}
+.gfoot{display:flex;gap:12px;align-items:center;padding:4px 10px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);background:var(--panel2)}
+.gfoot .sp{flex:1}
+.drill{display:inline-flex;gap:2px;margin-left:10px;vertical-align:middle}
+.drill span{display:inline-flex;width:22px;height:20px;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:4px;color:var(--ink);font-size:12px;font-weight:400;background:var(--panel)}
+.drill span.on{border-color:var(--amber);color:var(--amber)}
+.hpath{font-weight:600} .hpath i{font-style:normal;color:var(--muted);font-weight:400}
+/* keyboard line */
+.keys{font-size:11.5px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;padding:0 2px}
+.keys kbd{margin:0 3px 0 0}
+/* ---------- A: panes ---------- */
+.panes{display:flex;gap:6px;min-height:0}
+.pane{width:268px;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;background:var(--panel);min-height:0}
+.pane.build{width:212px}
+.pane h4{margin:0;padding:7px 10px;font-size:12px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.pane h4 .x{margin-left:auto;color:var(--muted);font-family:var(--mono);cursor:pointer}
+.pane .body{overflow:auto;padding:6px 6px 10px;flex:1}
+.rail{width:28px;border:1px solid var(--line);border-radius:8px;background:var(--panel);display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:10px;color:var(--muted);font-size:11.5px;cursor:pointer}
+.rail span{writing-mode:vertical-rl;letter-spacing:.08em;text-transform:uppercase}
+.rail .ic{writing-mode:horizontal-tb;font-family:var(--mono);color:var(--ink)}
+.search{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:6px;padding:4px 8px;margin:2px 2px 6px;background:var(--bg2);color:var(--muted);font-size:12px}
+.search.focus{border-color:var(--amber);color:var(--ink)}
+.search .sp{flex:1}
+.grp-h{display:flex;align-items:center;gap:6px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:6px 4px 3px;font-weight:600}
+.grp-h .n{margin-left:auto;font-weight:400;font-family:var(--mono)}
+.fi{display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:5px;font-size:12.5px;cursor:grab;white-space:nowrap}
+.fi:hover,.fi.hov{background:var(--hl)}
+.fi .ic{width:16px;text-align:center;font-family:var(--mono);color:var(--muted);font-size:11px;flex:none}
+.fi .ic.h{color:var(--link)} .fi .ic.m{color:var(--amber)}
+.fi.used{color:var(--amber)} .fi.used .ck{color:var(--amber)}
+.fi .ck{margin-left:auto;color:var(--faint);font-size:11px}
+.fi.lvl{padding-left:28px;font-size:12px;color:var(--muted)} .fi.lvl.used{color:var(--amber)}
+.fi.lvl.above{color:var(--faint);font-style:italic}
+.fi.sub{padding-left:22px}
+.fi .tag{font-size:10px;color:var(--faint);margin-left:auto}
+.fi.dragging{outline:1px dashed var(--amber);background:var(--sel)}
+.folder{display:flex;align-items:center;gap:6px;padding:3px 6px;font-size:12px;color:var(--muted)}
+.folder .ic{width:16px;text-align:center}
+.well{margin:4px 2px 10px}
+.well .wh{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:2px 4px;font-weight:600;display:flex}
+.well .wh kbd{margin-left:auto}
+.wi{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:5px;padding:3px 7px;margin:3px 0;background:var(--panel2);font-size:12px;white-space:nowrap}
+.wi .ic{font-family:var(--mono);color:var(--link);font-size:11px} .wi .ic.m{color:var(--amber)}
+.wi .x{margin-left:auto;color:var(--faint);font-family:var(--mono)}
+.wi small{color:var(--muted)}
+.drop{border:1px dashed var(--line);border-radius:5px;padding:4px 7px;color:var(--faint);font-size:11.5px;margin:3px 0}
+.drop.hot{border-color:var(--amber);color:var(--amber);background:var(--amber-t)}
+.ghostdrag{position:absolute;z-index:40;padding:3px 9px;border-radius:5px;background:var(--amber);color:var(--onacc);font-size:12px;font-weight:600;box-shadow:var(--shadow);pointer-events:none}
+.fscope{font-size:11px;color:var(--muted);padding:2px 4px 6px}
+/* ---------- B/C: one compact line ---------- */
+.line{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg2);min-height:36px;position:relative}
+.line .lab{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-left:4px}
+.line .dot{color:var(--faint);margin:0 2px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border:1px solid var(--line);border-radius:14px;background:var(--panel);font-size:12.5px;white-space:nowrap;cursor:pointer}
+.chip.open{border-color:var(--amber);box-shadow:0 0 0 2px var(--amber-t)}
+.chip .ic{font-family:var(--mono);color:var(--link);font-size:11px}
+.chip .car{color:var(--muted);font-size:10px}
+.chip.add{color:var(--muted);border-style:dashed}
+.chip .hp{font-weight:600} .chip .hp i{font-style:normal;color:var(--muted);font-weight:400}
+.step{display:inline-flex;flex-direction:column;margin-left:3px;line-height:8px;font-size:8px;color:var(--muted)}
+.step span{padding:0 2px;border:1px solid var(--line);border-radius:2px;margin:0.5px 0}
+.tog{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--panel)}
+.tog span{padding:3px 9px;font-size:12px;border-right:1px solid var(--line);color:var(--muted);white-space:nowrap;cursor:pointer}
+.tog span:last-child{border-right:none}
+.tog span.on{background:var(--amber-t);color:var(--amber);font-weight:600}
+.tog span.on i{font-style:normal;font-size:9px;margin-left:3px}
+.line .sp{flex:1}
+.cust{font-size:12px;color:var(--link);white-space:nowrap;cursor:pointer}
+/* popovers */
+.pop{position:absolute;z-index:30;background:var(--panel);border:1px solid var(--amber);border-radius:8px;box-shadow:var(--shadow);font-size:12.5px}
+.pop .ph{display:flex;gap:8px;align-items:center;padding:7px 10px;border-bottom:1px solid var(--line);font-weight:600}
+.pop .ph small{color:var(--muted);font-weight:400}
+.pop .pb{padding:6px;max-height:560px;overflow:auto}
+.pop .pf{display:flex;gap:10px;align-items:center;padding:6px 10px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted)}
+.pop .pf .sp{flex:1}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.cb{display:inline-block;width:13px;height:13px;border:1px solid var(--line);border-radius:3px;text-align:center;line-height:11px;font-size:10px;flex:none}
+.cb.on{background:var(--amber);border-color:var(--amber);color:var(--onacc)}
+.fi.act{background:var(--sel)}
+/* ---------- C: views ---------- */
+.viewbtn{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border:1px solid var(--amber);border-radius:6px;background:var(--amber-t);color:var(--ink);font-size:12.5px;font-weight:600;white-space:nowrap;cursor:pointer}
+.viewbtn small{color:var(--muted);font-weight:400;text-transform:uppercase;font-size:10.5px;letter-spacing:.06em}
+.viewbtn .mod{color:var(--amber);font-size:16px;line-height:10px}
+.vl{display:flex;flex-direction:column}
+.vi{display:grid;grid-template-columns:22px 1fr auto;gap:2px 8px;padding:5px 8px;border-radius:6px;align-items:center}
+.vi:hover,.vi.hov{background:var(--hl)} .vi.on{background:var(--sel)}
+.vi .ic{color:var(--amber);font-family:var(--mono);text-align:center}
+.vi b{font-weight:600;font-size:12.5px} .vi small{grid-column:2/4;color:var(--muted);font-size:11.5px}
+.vi .k2{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.vi .who{font-size:10.5px;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:0 6px}
+.saveas{display:flex;gap:6px;align-items:center;padding:8px 10px;border-top:1px solid var(--line)}
+.inp{border:1px solid var(--line);border-radius:5px;padding:3px 8px;background:var(--bg2);color:var(--muted);font-size:12px;flex:1}
+.seg2{display:inline-flex;border:1px solid var(--line);border-radius:5px;overflow:hidden;font-size:11.5px}
+.seg2 span{padding:3px 8px;color:var(--muted)} .seg2 span.on{background:var(--panel2);color:var(--ink)}
+.dim{opacity:.55}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>window.MOCK_OPTION='A';
+window.addEventListener('hashchange',()=>location.reload());
+(function(){
+'use strict';
+/* The mock-up's state comes from the address: #desk|#pos, open, collapsed, light. */
+const H = location.hash.replace('#','').split(',').filter(Boolean);
+const has = t => H.includes(t);
+const SCOPE = has('pos') ? 'pos' : 'desk';
+const OPEN = has('open');
+const COLLAPSED = has('collapsed');
+if (has('light')) document.documentElement.classList.add('light');
+const OPT = window.MOCK_OPTION;
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const m = v => v == null ? '' : v.toFixed(2) + ' m';
+
+/* ---- the data: the same VaR · MR cube as the owner's screenshot, plus a desk ---- */
+const SC = {
+  pos: {
+    word: 'POS:POS-BOOK-CREDIT-1~CLY-4001063',
+    title: 'POS-BOOK-CREDIT-1~CLY-4001063',
+    classes: ['CSR','GIRR'],
+    hier: ['Desk','Book'], drill: ['Position','Trade'], above: ['Division'],
+    rows: [
+      {l:0,k:'node',t:'DESK-CREDIT',o:1,v:{CSR:10.21,GIRR:1.12,T:10.60},esT:15.21},
+      {l:1,k:'node',t:'BOOK-CREDIT-1',o:1,v:{CSR:10.21,GIRR:1.12,T:10.60},esT:15.21},
+      {l:2,k:'pos',t:'POS-BOOK-CREDIT-1~CLY-4001063',o:1,v:{CSR:10.21,GIRR:1.12,T:10.60},esT:15.21,sel:1},
+      {l:3,k:'trd',t:'TRD-4001063-01  ·  CDS CLY 5Y buy protection',v:{CSR:6.02,GIRR:0.71,T:6.31}},
+      {l:3,k:'trd',t:'TRD-4001063-02  ·  CDS CLY 7Y buy protection',v:{CSR:4.66,GIRR:0.52,T:4.94}},
+      {l:3,k:'trd',t:'TRD-4001063-03  ·  CDS CLY 3Y sell protection',v:{CSR:0.38,GIRR:0.09,T:0.41}},
+    ],
+    total: {CSR:10.21,GIRR:1.12,T:10.60},
+    div: null,
+    tiles: {VaR:10.60, ES:15.21, lim:null, d1:+0.42, trades:3},
+    scan: 'This view reads ≈ 3 rows (≈ 2 KB, 7 of 35 columns): under a second. Every figure is exact, computed by the server from the trades\' scenario P&L vectors.'
+  },
+  desk: {
+    word: 'DESK:DESK-RATES',
+    title: 'DESK-RATES',
+    classes: ['GIRR','FX','CSR'],
+    hier: ['Desk','Book'], drill: ['Position','Trade'], above: ['Division'],
+    rows: [
+      {l:0,k:'node',t:'DESK-RATES',o:1,v:{GIRR:68.12,FX:9.85,CSR:6.31,T:74.63},esT:106.71,lim:83},
+      {l:1,k:'node',t:'BOOK-RATES-1',o:1,v:{GIRR:31.40,FX:2.10,T:31.92},lim:80},
+      {l:2,k:'pos',t:'POS-BOOK-RATES-1~IRS-USD-10Y-PAY',v:{GIRR:18.22,T:18.22}},
+      {l:2,k:'pos',t:'POS-BOOK-RATES-1~UST-10Y-FUT-DEC26',v:{GIRR:9.40,T:9.40}},
+      {l:2,k:'pos',t:'POS-BOOK-RATES-1~IRS-USD-2Y-REC',v:{GIRR:6.71,T:6.71}},
+      {l:2,k:'pos',t:'POS-BOOK-RATES-1~SWPTN-USD-5Y10Y',v:{GIRR:4.88,T:4.88}},
+      {l:2,k:'pos',t:'POS-BOOK-RATES-1~XCCY-EURUSD-5Y',v:{GIRR:1.95,FX:2.10,T:3.31}},
+      {l:1,k:'node',t:'BOOK-RATES-2',v:{GIRR:22.85,FX:3.40,CSR:1.12,T:23.71},lim:68},
+      {l:1,k:'node',t:'BOOK-RATES-3',o:1,v:{GIRR:19.60,CSR:5.70,T:22.48},lim:94,sel:1},
+      {l:2,k:'pos',t:'POS-BOOK-RATES-3~IRS-EUR-30Y-PAY',v:{GIRR:12.40,T:12.40}},
+      {l:2,k:'pos',t:'POS-BOOK-RATES-3~CORP-BOND-ALLY-4.25-2031',v:{GIRR:3.10,CSR:4.95,T:7.22}},
+      {l:2,k:'pos',t:'POS-BOOK-RATES-3~BUND-FUT-DEC26',v:{GIRR:4.65,T:4.65}},
+      {l:2,k:'pos',t:'POS-BOOK-RATES-3~CDX-IG-S47-5Y',v:{CSR:2.30,T:2.30}},
+      {l:1,k:'node',t:'BOOK-RATES-4',v:{GIRR:8.95,T:8.95},lim:45},
+      {l:1,k:'node',t:'BOOK-RATES-EM',v:{GIRR:6.40,FX:7.25,T:10.11},lim:72},
+      {l:1,k:'node',t:'BOOK-RATES-XCCY',v:{GIRR:4.20,FX:3.30,T:5.86},lim:39},
+      {l:1,k:'blank',t:'(Blank)',v:{GIRR:0.84,T:0.84},tip:'3 positions of DESK-RATES carry no TT_BOOK: shown as (Blank) so the desk\'s total stays complete. No limit applies.'},
+    ],
+    total: null,
+    div: {t:'Diversification  (Σ books − desk)',v:{T:-29.24}},
+    tiles: {VaR:74.63, ES:106.71, lim:83, limv:90.00, d1:+2.31, trades:1284},
+    scan: 'This view reads ≈ 1,284 rows (≈ 410 KB, 7 of 35 columns): under a second. Every figure is exact, computed by the server from the trades\' scenario P&L vectors.'
+  }
+};
+const D = SC[SCOPE];
+const esOf = (v, t) => { if (v == null) return null; let h = 0; for (const c of t) h = (h * 31 + c.charCodeAt(0)) % 97; return v * (1.39 + h / 1000); };
+
+/* ---- the field catalogue, grouped the way a person thinks of it ---- */
+const CAT = {
+  hier: [
+    {id:'MGMT', name:'MGMT', desc:'management', levels:['Division','Desk','Book'], used:true},
+    {id:'LEGAL', name:'LEGAL', desc:'legal', levels:['Legal entity','Desk','Book']},
+    {id:'LL', name:'LL', desc:'limit letters', levels:['Limit letter','Desk']},
+    {id:'DRILL', name:'Positions', desc:'members', levels:['Position','Trade'], used:true},
+  ],
+  trade: ['Risk class','Product group','Product type','Currency','PV currency','Counterparty','Strategy','Portfolio','Trade status','Instrument'],
+  meas: [
+    {f:'VaR', items:['VaR','ES','Parametric VaR','Stressed VaR']},
+    {f:'Contribution', items:['Comp VaR','Comp ES','Incr VaR']},
+    {f:'Limits', items:['Limit','Limit use']},
+    {f:'Sensitivities', items:['DV01','CS01','SBM capital']},
+    {f:'Book', items:['PV','Trades']},
+  ],
+  more: ['LEGAL_ENTITY','DIVISION','DESK','TT_BOOK','LIMIT_LETTER','BANK','POSITION_RULE','SOURCE_SYSTEM','BOOKING_DATE','MATURITY_BUCKET','PRODUCT_SUBTYPE','TRADER','SETTLEMENT_CCY','EXCHANGE'],
+};
+const USED_M = ['VaR','ES'];
+const USED_T = ['Risk class'];
+
+function fieldTree(o) {
+  o = o || {};
+  let h = '';
+  const lvlUsed = lv => D.hier.includes(lv) || D.drill.includes(lv);
+  h += `<div class="grp-h">Hierarchies<span class="n">${CAT.hier.length}</span></div>`;
+  for (const x of CAT.hier) {
+    const open = o.expand && o.expand.includes(x.id);
+    const used = x.used;
+    h += `<div class="fi ${used?'used':''} ${o.drag===x.id?'dragging':''} ${o.act===x.id?'act':''}" title="${esc(x.levels.join(' › '))}: drag it for drill-down, or open it to pick one level">`
+       + `<span class="tw">${open?'▾':'▸'}</span><span class="ic h">⋔</span><b>${x.name}</b>`
+       + `<span style="color:var(--muted)">${x.levels.join(' › ')}</span>${used?'<span class="ck">✓</span>':''}</div>`;
+    if (open) for (const lv of x.levels) {
+      const u = x.id==='MGMT' ? lvlUsed(lv) : x.id==='DRILL';
+      const above = x.id==='MGMT' && D.above.includes(lv);
+      h += `<div class="fi lvl ${o.checks?'':''} ${u?'used':''} ${above?'above':''}">`
+         + (o.checks ? `<span class="cb ${u?'on':''}">${u?'✓':''}</span>` : '<span class="ic">·</span>')
+         + `${lv}${above?'<span class="tag">above the scope</span>':''}${(!above&&o.checks&&u)?'<span class="tag">in Rows</span>':''}</div>`;
+    }
+  }
+  if (o.noTrade !== true) {
+    h += `<div class="grp-h">Trade &amp; position<span class="n">${CAT.trade.length}</span></div>`;
+    const list = o.tradeCols ? CAT.trade : CAT.trade;
+    if (o.tradeCols) {
+      h += '<div class="cols2">';
+      for (const t of list) h += `<div class="fi ${USED_T.includes(t)?'used':''}"><span class="ic">Aa</span>${t}${USED_T.includes(t)?'<span class="ck">in Columns</span>':''}</div>`;
+      h += '</div>';
+    } else for (const t of list) h += `<div class="fi ${USED_T.includes(t)?'used':''}"><span class="ic">Aa</span>${t}${USED_T.includes(t)?'<span class="ck">✓</span>':''}</div>`;
+  }
+  if (o.meas !== false) {
+    const n = CAT.meas.reduce((a,b)=>a+b.items.length,0);
+    h += `<div class="grp-h">Measures<span class="n">${n}</span></div>`;
+    for (const f of CAT.meas) {
+      h += `<div class="folder"><span class="ic">▾</span>${f.f}</div>`;
+      for (const it of f.items) h += `<div class="fi sub ${USED_M.includes(it)?'used':''}"><span class="ic m">Σ</span>${it}${USED_M.includes(it)?'<span class="ck">✓</span>':''}</div>`;
+    }
+  }
+  h += `<div class="grp-h">More fields<span class="n">${CAT.more.length}</span></div>`;
+  h += `<div class="folder"><span class="ic">▸</span>${CAT.more.length} columns, hidden  <span style="color:var(--faint);margin-left:4px">(levels of the hierarchies, rarely used)</span></div>`;
+  return h;
+}
+
+/* ---- the grid ---- */
+function grid(corner) {
+  const cls = D.classes;
+  const meas = OPT === 'C' && !OPEN && SCOPE==='desk' ? ['VaR','ES','Limit use'] : ['VaR','ES'];
+  let h = '<table class="g"><thead><tr>';
+  h += `<th class="corner" rowspan="2">${corner}</th>`;
+  for (const c of cls) h += `<th class="grp" colspan="2">${c}</th>`;
+  h += `<th class="grp t" colspan="${meas.length}">Total</th></tr><tr>`;
+  for (const c of cls) h += '<th>VaR</th><th>ES</th>';
+  meas.forEach((x,i)=> h += `<th class="${i===0?'tc':''}">${x}</th>`);
+  h += '</tr></thead><tbody>';
+  const cell = (v, t, cl) => v == null ? `<td class="e ${cl||''}"></td>` : `<td class="${cl||''}">${m(v)}</td>`;
+  const allRows = D.rows.slice();
+  for (const r of allRows) {
+    const tw = (r.k==='trd' || r.o==null && r.k==='pos') ? '' : (r.o ? '−' : '+');
+    const path = r.k==='trd' ? 'a trade' : r.k==='pos' ? 'a position' : r.l===0 ? 'Desk' : 'Book';
+    const tip = r.tip || `${r.t}  ·  ${path}  ·  scope ${r.k==='pos'?'POS:'+r.t : r.k==='node'?'NODE:MGMT~'+r.t : 'TRD:'+r.t.split(' ')[0]}`;
+    h += `<tr class="l${r.l} ${r.k} ${r.sel?'sel':''}"><td class="rh" title="${esc(tip)}" style="padding-left:${10 + r.l*18}px">`
+       + `<span class="tw">${tw}</span><span class="lbl">${esc(r.t)}</span>`
+       + (r.k==='blank' ? '<span class="q">?</span>' : '') + '</td>';
+    for (const c of cls) { h += cell(r.v[c]); h += cell(esOf(r.v[c], c + (r.v[c]||0).toFixed(2))); }
+    h += cell(r.v.T, r.t, 'tc'); h += cell(r.esT != null ? r.esT : esOf(r.v.T, 'T' + (r.v.T||0).toFixed(2)));
+    if (meas.length > 2) h += r.lim ? `<td><span class="meter" style="width:44px;vertical-align:middle;margin-right:6px"><i style="width:${r.lim}%;background:${r.lim>90?'var(--bad)':r.lim>75?'var(--warn)':'var(--ok)'}"></i></span>${r.lim}%</td>` : '<td class="e"></td>';
+    h += '</tr>';
+  }
+  if (D.div) {
+    h += `<tr class="div"><td class="rh" style="padding-left:28px" title="The desk's VaR is smaller than the sum of its books' VaR: VaR does not add up. This is the gap, in money.">${D.div.t}</td>`;
+    for (const c of cls) h += '<td></td><td></td>';
+    h += `<td class="tc">${m(D.div.v.T)}</td><td></td>${meas.length>2?'<td></td>':''}</tr>`;
+  }
+  h += '</tbody></table>';
+  return h;
+}
+function gfoot() {
+  const n = D.rows.length;
+  return `<div class="gfoot"><span>${n} rows · ${SCOPE==='desk'?'7 books, 9 positions shown':'1 position, 3 trades'}</span><span>figures in USD m · 1d · 99% · exact</span><span class="sp"></span>`
+       + `<span>selected: <b style="color:var(--ink)">${SCOPE==='desk'?'BOOK-RATES-3':'POS-BOOK-CREDIT-1~CLY-4001063'}</b> · VaR ${SCOPE==='desk'?'22.48 m':'10.60 m'}</span></div>`;
+}
+
+/* ---- the frame common to every option ---- */
+function head() {
+  const t = D.tiles;
+  let tiles = `<div class="tile"><small>VaR</small><b>${m(t.VaR)}</b></div><div class="tile"><small>ES</small><b>${m(t.ES)}</b></div>`;
+  if (t.lim) tiles += `<div class="tile lim"><small>Limit use · ${m(t.limv)}</small><b>${t.lim}% <span class="meter"><i style="width:${t.lim}%"></i></span></b></div>`;
+  tiles += `<div class="tile"><small>vs 2026-11-05</small><b class="up">+${t.d1.toFixed(2)} m</b></div>`;
+  tiles += `<div class="tile"><small>Trades</small><b>${t.trades.toLocaleString('en-US')}</b></div>`;
+  return `<div class="head"><h2>MR cube · ${esc(D.title)}<span>2026-11-06 · 1d 99% · USD</span></h2>`
+    + `<span class="info ${has('info')?'show':''}" title="">i<span class="tip"><b>What this view reads</b><br>${D.scan}<br><span style="color:var(--muted)">A large view asks before it runs, with <b>Run</b>.</span></span></span>`
+    + `<div class="tiles">${tiles}</div>`
+    + `<div class="tools"><span class="btn ghost">Compare <kbd>D</kbd></span><span class="btn ghost">Chart <kbd>G</kbd></span><span class="btn ghost">Export <kbd>X</kbd></span><span class="btn ghost">Share</span><span class="btn ghost" title="the lens tabs: components, DV01 ladder, what-if">Lens ▾</span></div></div>`;
+}
+function bar() {
+  return `<div class="bar"><span class="brand">DRISHTI</span><span class="cmd">MCUBE ${esc(D.word)} &lt;GO&gt;</span>`
+    + '<div class="menus"><span>Home</span><span class="on">Risk</span><span>Views</span><span>Data</span><span>Build</span><span>Help</span></div></div>';
+}
+function cap(txt) {
+  const base = location.pathname.split('/').pop();
+  const opt = x => `<a class="${x===OPT?'on':''}" href="${({A:'A-powerbi-panes',B:'B-trader-view',C:'C-saved-views'})[x]}.html#${H.join(',')}">${x}</a>`;
+  const tok = (on, lab, add, drop) => { const s = H.filter(x=>!drop.includes(x)); if (add) s.push(add); return `<a class="${on?'on':''}" href="${base}#${s.join(',')}">${lab}</a>`; };
+  return `<div class="cap"><b>Mock-up ${OPT}</b><span>${txt}</span><span class="sp"></span>`
+    + `${opt('A')}${opt('B')}${opt('C')} · ${tok(SCOPE==='desk','desk','desk',['pos','desk'])}${tok(SCOPE==='pos','position','pos',['pos','desk'])} · ${tok(OPEN,'open','open',['open','collapsed'])}${tok(!OPEN,'closed',OPT==='A'?'collapsed':'',['open','collapsed'])} · ${tok(!has('light'),'dark','',['light'])}${tok(has('light'),'light','light',['light'])}</div>`;
+}
+
+/* ---- A: Power BI panes ---- */
+function optA() {
+  const corner = `<span class="hpath">MGMT <i>▸</i> Desk <i>›</i> Book <i>›</i> Position</span>`
+    + `<span class="drill" title="drill: up a level · drill-down mode · next level · expand all"><span title="Drill up (Alt+↑)">↑</span><span class="on" title="Drill-down mode on: a click on a row opens it">↓</span><span title="Go to the next level (Alt+↓)">⇊</span><span title="Expand all down one level">⤓</span></span>`;
+  const g = `<div class="gridwrap"><div class="gscroll">${grid(corner)}</div>${gfoot()}</div>`;
+  let panes;
+  if (!OPEN) {
+    panes = `<div class="rail" title="Build (\\)"><span class="ic">▤</span><span>Build</span></div><div class="rail" title="Fields (\\)"><span class="ic">⌕</span><span>Fields</span></div>`;
+  } else {
+    const wi = (ic, t, cls) => `<div class="wi"><span class="ic ${cls||''}">${ic}</span>${t}<span class="x">×</span></div>`;
+    const build = `<div class="pane build"><h4>Build <span class="x" title="collapse (\\)">»</span></h4><div class="body">`
+      + `<div class="well"><div class="wh">Rows<kbd>R</kbd></div>${wi('⋔','<b>MGMT</b>&nbsp;<small>Desk › Book</small>')}${wi('⋔','<b>Positions</b>&nbsp;<small>Position › Trade</small>')}<div class="drop hot">＋ drop here</div></div>`
+      + `<div class="well"><div class="wh">Columns<kbd>C</kbd></div>${wi('Aa','Risk class')}</div>`
+      + `<div class="well"><div class="wh">Values<kbd>V</kbd></div>${wi('Σ','VaR','m')}${wi('Σ','ES','m')}</div>`
+      + `<div class="well"><div class="wh">Filters<kbd>F</kbd></div><div class="fscope">on this view</div>${wi('Aa','Trade status <small>= LIVE</small>')}<div class="fscope">on every view of the MR cube</div><div class="drop">＋ drop here</div></div>`
+      + `</div></div>`;
+    const fields = `<div class="pane"><h4>Fields <span class="x" title="collapse (\\)">»</span></h4><div class="body">`
+      + `<div class="search"><span>⌕</span><span class="sp">Search fields</span><kbd>/</kbd></div>`
+      + fieldTree({expand:['MGMT'], drag: SCOPE==='desk'?'LEGAL':null}) + `</div></div>`;
+    panes = `<div class="panes">${build}${fields}</div>`;
+  }
+  const ghost = OPEN && SCOPE==='desk' ? '<div class="ghostdrag" id="ghost">⋔ LEGAL  Legal entity › Desk › Book</div>' : '';
+  const keys = `<div class="keys"><span><kbd>\\</kbd>show or hide the panes</span><span><kbd>/</kbd>search fields</span><span><kbd>R</kbd><kbd>C</kbd><kbd>V</kbd><kbd>F</kbd>put the selected field</span><span><kbd>Alt+↑</kbd><kbd>Alt+↓</kbd>drill up / next level</span><span><kbd>→</kbd><kbd>←</kbd>open / close a row</span><span><kbd>1</kbd>–<kbd>9</kbd>open to a level</span><span><kbd>Enter</kbd>a cell's trades</span><span><kbd>E</kbd>explain</span></div>`;
+  return cap('Power BI panes: the grid fills the left; Build and Fields on the right, collapsible to a rail (\\).') + bar() + head()
+    + `<div class="main">${g}${panes}</div>` + keys + ghost;
+}
+
+/* ---- B: trader view first ---- */
+function wellsLine(open) {
+  const hchip = `<span class="chip ${open==='rows'?'open':''}" id="rowsChip"><span class="ic">⋔</span><span class="hp">MGMT <i>▾</i> Desk <i>›</i> Book</span>`
+    + `<span class="step" title="drill up / down a level ([ and ])"><span>▲</span><span>▼</span></span></span>`;
+  const meas = OPT==='C' ? ['VaR','ES','Limit use','Comp VaR','Incr VaR','SVaR'] : ['VaR','ES','Comp VaR','Incr VaR','Limit use','SVaR','DV01','CS01','SBM'];
+  const on = OPT==='C' && SCOPE==='desk' && !OPEN ? ['VaR','ES','Limit use'] : ['VaR','ES'];
+  let tg = '<span class="tog">'; for (const x of meas) tg += `<span class="${on.includes(x)?'on':''}">${x}${on.includes(x)?'<i>▾</i>':''}</span>`; tg += '<span>⋯</span></span>';
+  return `<span class="lab">Rows</span>${hchip}<span class="chip"><span class="ic">⋔</span>› Position › Trade<span class="car">▾</span></span>`
+    + `<span class="dot">·</span><span class="lab">Columns</span><span class="chip ${open==='cols'?'open':''}"><span class="ic">Aa</span>Risk class<span class="car">▾</span></span>`
+    + `<span class="dot">·</span><span class="lab">Filters</span><span class="chip">Trade status = LIVE<span class="car">×</span></span><span class="chip add">＋</span>`
+    + `<span class="dot">·</span><span class="lab">Values</span>${tg}`
+    + `<span class="sp"></span><span class="cust" title="opens the Build and Fields panes (A)">Customize ›</span>`;
+}
+function rowsPicker() {
+  return `<div class="pop" id="pop" style="width:470px"><div class="ph">Rows <small>pick a hierarchy, then its levels; or a field</small></div>`
+    + `<div class="pb"><div class="search focus"><span>⌕</span><span class="sp">Search fields…</span><kbd>/</kbd></div>`
+    + fieldTree({expand:['MGMT','LEGAL'], checks:true, meas:false, tradeCols:true, act:'MGMT'})
+    + `</div><div class="pf"><span><kbd>↑</kbd><kbd>↓</kbd>move</span><span><kbd>Space</kbd>level on/off</span><span><kbd>Enter</kbd>use</span><span><kbd>Esc</kbd>close</span><span class="sp"></span><a>Customize ›</a></div></div>`;
+}
+function keysB() {
+  return `<div class="keys"><span><kbd>R</kbd><kbd>C</kbd><kbd>F</kbd>open Rows, Columns, Filters</span><span><kbd>[</kbd><kbd>]</kbd>drill up / down the hierarchy</span><span><kbd>M</kbd>measures (then <kbd>1</kbd>–<kbd>9</kbd> to toggle)</span><span><kbd>→</kbd><kbd>←</kbd>open / close a row</span><span><kbd>Enter</kbd>a cell's trades</span><span><kbd>E</kbd>explain</span><span><kbd>\\</kbd>Customize (panes)</span>${OPT==='C'?'<span><kbd>Shift+V</kbd>views</span><span><kbd>Ctrl+S</kbd>save view</span>':''}</div>`;
+}
+function cornerB() { return `<span class="hpath">Desk <i>›</i> Book <i>›</i> Position${SCOPE==='pos'?' <i>›</i> Trade':''}</span>`; }
+function optB() {
+  const g = `<div class="gridwrap"><div class="gscroll">${grid(cornerB())}</div>${gfoot()}</div>`;
+  return cap('Trader view first: no field list; one compact line of pickers; the grid gets the screen. Customize › opens A\'s panes.')
+    + bar() + head() + `<div class="line" id="line">${wellsLine(OPEN?'rows':null)}</div>`
+    + `<div class="main">${g}</div>` + keysB() + (OPEN ? rowsPicker() : '');
+}
+
+/* ---- C: saved views + B ---- */
+const VIEWS = [
+  {g:'Ready-made for the MR cube'},
+  {n:'By desk', d:'MGMT Desk · VaR, ES, Limit use', k:'1'},
+  {n:'By book', d:'MGMT Desk › Book · VaR, ES, Limit use', k:'2', on:1},
+  {n:'By limit letter', d:'LL Limit letter › Desk · VaR, Limit, Limit use', k:'3'},
+  {n:'By risk class × desk', d:'MGMT Desk × Risk class · VaR, ES', k:'4'},
+  {n:'Top contributors', d:'Positions by Comp VaR, top 20 · Comp VaR, Incr VaR, VaR', k:'5'},
+  {n:'Trades in my scope', d:'Trade · VaR, Incr VaR, PV · sorted by Incr VaR', k:'6'},
+  {g:'My views'},
+  {n:'Rates books vs limits', d:'MGMT Book · VaR, Limit use, Stressed VaR', who:'personal'},
+  {n:'EM and XCCY check', d:'Book × Currency · VaR, DV01', who:'personal'},
+  {g:'Shared with me'},
+  {n:'Rates morning view', d:'MGMT Desk › Book × Risk class · VaR, ES, DV01', who:'shared · desk head'},
+];
+function viewsPicker() {
+  let h = `<div class="pop" id="pop" style="width:500px"><div class="ph">Views <small>the layouts for this cube</small><span class="sp" style="flex:1"></span></div>`
+    + `<div class="pb"><div class="search"><span>⌕</span><span class="sp">Find a view</span><kbd>/</kbd></div><div class="vl">`;
+  for (const v of VIEWS) {
+    if (v.g) { h += `<div class="grp-h">${v.g}</div>`; continue; }
+    h += `<div class="vi ${v.on?'on':''} ${v.n==='Top contributors'?'hov':''}"><span class="ic">${v.on?'●':'○'}</span><b>${v.n}</b>${v.who?`<span class="who">${v.who}</span>`:`<span class="k2">${v.k}</span>`}<small>${v.d}</small></div>`;
+  }
+  h += `</div></div><div class="saveas"><span style="font-size:12px;white-space:nowrap">Save view as…</span><span class="inp">By book, with Stressed VaR</span><span class="seg2"><span class="on">Personal</span><span>Shared</span></span><span class="btn p">Save <kbd>Ctrl+S</kbd></span></div>`
+    + `<div class="pf"><span><kbd>1</kbd>–<kbd>6</kbd>pick a ready-made view</span><span><kbd>Enter</kbd>open</span><span><kbd>Esc</kbd>close</span><span class="sp"></span><a>Manage views ›</a></div></div>`;
+  return h;
+}
+function optC() {
+  const g = `<div class="gridwrap"><div class="gscroll">${grid(cornerB())}</div>${gfoot()}</div>`;
+  const mod = SCOPE==='pos';
+  const name = SCOPE==='pos' ? 'Trades in my scope' : 'By book';
+  return cap('Saved views + B: a View picker with ready-made trader layouts first; then B\'s compact line; Save view as… personal or shared.')
+    + bar() + head()
+    + `<div class="line" id="line"><span class="viewbtn ${OPEN?'open':''}" id="viewBtn"><small>View</small>${name}${mod?'':''}<span class="car">▾</span></span>`
+    + `<span class="dot">│</span>${wellsLine(null)}</div>`
+    + `<div class="main">${g}</div>` + keysB() + (OPEN ? viewsPicker() : '');
+}
+
+const app = $('#app');
+app.innerHTML = OPT === 'A' ? optA() : OPT === 'B' ? optB() : optC();
+/* place the popover under its anchor */
+const pop = $('#pop');
+if (pop) {
+  const a = OPT === 'B' ? $('#rowsChip') : $('#viewBtn');
+  if (a) { a.classList.add('open'); const r = a.getBoundingClientRect(); pop.style.left = (r.left + window.scrollX) + 'px'; pop.style.top = (r.bottom + 6 + window.scrollY) + 'px'; }
+}
+const ghost = $('#ghost');
+if (ghost) {
+  const drop = document.querySelector('.drop.hot'); const src = document.querySelector('.fi.dragging');
+  if (drop && src) { const r = drop.getBoundingClientRect(); ghost.style.left = (r.left - 150) + 'px'; ghost.style.top = (r.top + 16) + 'px'; }
+}
+})();
+</script>
+</body>
+</html>
