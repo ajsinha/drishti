@@ -1,0 +1,29 @@
+EXAMPLE (design, not built): installing banking on a 3-node cluster, four eyes (docs/architecture/KERNEL_AND_MODULES.md sections 7.1, 7.3, 4.11).
+
+# Administrator 1 (alice) proposes
+$ python3 tools/drishti.py module install banking-3.0.0.dmod --server https://drishti-main.bank.internal:18480
+Uploading banking-3.0.0.dmod (38.6 MB) to the module inbox ... done
+
+Verify report
+  V1 manifest          OK   banking 3.0.0 "Banking and risk" (domain banking)
+  V2 signature         OK   Ed25519; publisher "Drishti modules" (drishti), chain to drishti-root; not revoked
+  V3 kernel range      OK   kernel API 1.4 within ">=1.0 <2.0"; rachana 1; contracts 1; plugin-api 1; elements 2.3
+  V4 dependencies      OK   requires none; optional capitalmarkets 1.3.0 (installed, in range)
+  V5 licence           OK   feature banking; limits positions 5,000,000, nodes 3; valid to 2027-10-31
+  V6 claims            OK   API /api/v1/risk; 60 functions; 6 lenses; 9 page paths: no clash
+  V7 data needs        41 needs: 36 resolvable now (32 by bindings.yaml, 4 by convention on risklake), 1 DEMO, 4 UNBOUND
+                       required unbound: none · optional unbound: pnl-history, desk-pnl, var-limit, portfolio
+  V8 resources         6,144 MB declared; 22,528 MB free in the module budget on each node
+Effect: adds 60 functions, 6 lenses, the Risk measures Help section (14 pages), API /api/v1/risk; Python items 4; engines 6
+Proposed as change CHG-2026-1108-0042 (module install banking 3.0.0). A second administrator must approve.
+
+# Administrator 2 (bob) approves (Admin -> Approvals, or:)
+$ python3 tools/drishti.py approvals approve CHG-2026-1108-0042 --reason "Release 2.9.11.i rollout, ticket RISK-4412"
+Approved. Installed into /data/drishti/modules/banking/3.0.0 on drishti-main, drishti-2, drishti-3 (sha256 matches on all)
+active.yaml: banking 3.0.0 (was: none). RESTART NEEDED on 3 nodes.
+
+$ python3 tools/drishti.py cluster restart --rolling
+drishti-3    stopping ... starting ... modules: economy 1.4.0, capitalmarkets 1.3.0, banking 3.0.0 · fingerprint 9b1e…  JOINED
+drishti-2    stopping ... starting ... fingerprint 9b1e…  JOINED
+drishti-main stopping ... starting ... fingerprint 9b1e…  JOINED
+Cluster: 3/3 nodes on fingerprint 9b1e… · banking LOADED (0 required needs unbound) · taint none

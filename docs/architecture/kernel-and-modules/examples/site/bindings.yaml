@@ -1,0 +1,85 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# EXAMPLE (design, not built): config/bindings.yaml, the KERNEL's connector bindings for the banking module's kinds at one site
+# (docs/architecture/KERNEL_AND_MODULES.md section 5.4). Written by Admin -> Data bindings or `drishti.py bindings set`, proposed and
+# approved by a second administrator (four eyes), audited, applied hot. Bindings are PER KIND, not per module: every module that needs
+# `trade` reads this one binding.
+#
+# The connectors named here are the site's own files, config/connectors/<name>.yaml (plugin + settings + lake:); their credentials are
+# references into the kernel's secret store, for example in config/connectors/trade-kafka.yaml:
+#     plugin: kafka
+#     settings:
+#       bootstrap-servers: kafka-1.bank.internal:9093
+#       sasl: { mechanism: SCRAM-SHA-512, username: ${secret:kafka/drishti-user}, password: ${secret:kafka/drishti-password} }
+#       topic: trades.booked.v2
+# No module ever sees these files or secrets: the banking module asks the kernel for rows of `trade`, as the person.
+#
+# Three sites in one file for the example: the laptop demo (DEMO), a bank on Delta (risklake), the same bank with live trades (Kafka).
+format: 1
+
+bindings:
+  # ---- reference: the bank's own reference store on risklake (Delta)
+  legal-entity:   { read: [reference-store] }
+  counterparty:   { read: [reference-store] }
+  book:           { read: [reference-store] }
+  desk:           { read: [reference-store] }
+  trader:         { read: [reference-store] }
+
+  # ---- trades: three booking systems as one store, plus the live stream
+  trade:
+    read: [trade-endur, trade-calypso, trade-murex]   # Delta connectors on risklake (lake-tables trading.trade_endur, …)
+    union: true
+    live: trade-kafka                                  # Kafka: booked/amended trades during the day
+
+  # ---- VaR inputs on risklake (Delta), with the intraday scenario-PV stream
+  scenario-pv:
+    read: [risk-store]                                 # Delta, lake: risklake, table risk.scenario-pv
+    live: var-pv-kafka
+  pnl-vector:     { read: [risk-store] }
+  fx-scenario:    { read: [risk-store] }
+  scenario-set:   { read: [risk-store] }
+  risk-hierarchy: { read: [risk-store] }
+  portfolio:      { read: [risk-store] }
+  var-limit:      { read: [risk-store] }
+  desk-pnl:       { read: [finance-pnl-jdbc] }          # the finance ledger's P&L (a JDBC connector on the bank's warehouse)
+  # pnl-history: not bound -> optional, the stress window is hidden (Health: info)
+
+  # ---- sensitivities: Redis for the last 5 days, Delta behind it (read order)
+  position-sensitivity: { read: [sens-redis, risk-store] }
+  risk-factor:          { read: [risk-store] }
+
+  # ---- counterparty credit
+  agreement:          { read: [credit-store] }
+  csa:                { read: [credit-store] }
+  netting-set:        { read: [credit-store] }
+  collateral-balance: { read: [collateral-store] }
+  credit-limit:       { read: [credit-store] }
+
+  # ---- market data: capital markets' kinds; the official feed fills capitalmarket lake, the bank's curves come from its own store
+  ir-curve:       { read: [market-store] }
+  fx-spot:        { read: [market-store] }
+  fx-vol-surface: { demo: true }                       # explicitly demo on this test site: screens say DEMO DATA
+
+  # ---- what banking produces: the kernel writes it, the module never names a path
+  var-official:           { write: { lake: risklake, table: banking.var-official } }
+  exposure-official-cpty: { write: { lake: risklake, table: banking.ccr-official } }
+
+# Not bindable (the module computes them, KindProviders): position, var-result, exposure-result.
+#
+# What Health and Admin -> Data bindings would show for banking with this file:
+#   41 needs · 38 BOUND · 1 DEMO (fx-vol-surface) · 1 optional unbound (pnl-history: stress window hidden) · 0 required unbound
+#   live: trade (trade-kafka), scenario-pv (var-pv-kafka)
+#
+# The laptop demo is this file EMPTY: every need resolves to the demo lake (DEMO), as drishti.demo.enabled is true.

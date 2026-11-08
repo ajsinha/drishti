@@ -1,0 +1,80 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# EXAMPLE (design, not built): the distribution file of Drishti Finance (docs/architecture/KERNEL_AND_MODULES.md section 6).
+# config/distribution.yaml (or DRISHTI_DISTRIBUTION=<path>). It names modules; it never contains code, connectors or credentials, and it
+# cannot widen the licence. It replaces drishti.edition, ui.product/ui.copyright, drishti.branding.*, the lens files' titles and
+# config/packs/default-packs.yaml as the one place a product is defined.
+format: 1
+distribution: drishti.finance
+version: 1.0.0
+kernel: ">=2.9.11 <2.10"                  # product versions of the kernel it was tested with
+
+brand:
+  product: Drishti Finance
+  product_native: दृष्टि
+  tagline: "Risk, markets and the economy. One grammar."
+  owner: Ashutosh Sinha
+  copyright: "Copyright © 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential."
+  logo: { light: brand/finance-logo-light.svg, dark: brand/finance-logo-dark.svg }
+  favicon: brand/finance-favicon.svg
+  about: brand/about-finance.md
+  support: { email: support@drishti.example, url: "https://support.drishti.example" }
+
+theme:
+  tokens: finance-navy                    # a token set the kernel ships (Elements themes)
+  overrides: { --ac: "#e8a33a", --ln: "#7fb2ff" }
+  mode: system                            # dark | light | system
+  density: compact
+
+modules:
+  - { id: banking,        version: ">=3.0 <4", required: true,  enabled: true }
+  - { id: capitalmarkets, version: ">=1.2 <2", required: false, enabled: true }
+  - { id: economy,        version: ">=1.4 <2", required: false, enabled: true }
+
+lenses:
+  offered: [risk, trading, market, cro, mr-cube, ccr-cube, world, public-sector, cio, oversight]
+  default: risk
+  titles: { risk: "Risk", world: "World & economy" }
+
+home:
+  risk:    { landing: home/risk_landing.html, cards: [VAR BANK, VAR DESK RATES, "VRES DESK:RATES", "EXP CPTY:CP-ALDERSHOT"] }
+  trading: { landing: home/trading_landing.html }
+  world:   { landing: home/world_landing.html }
+  welcome: "Good morning. VaR, exposure and limits for today's business date."
+
+menus:
+  order: [Home, Risk, Markets, World, Analyse, Build, Data, Admin, Help]
+  hide: [Calc]
+
+features:                                  # presets of existing switches (config/lenses/features.yaml)
+  bi: on
+  python: on
+  designer: on
+  internal-only-data: off
+
+docs:
+  title: Drishti Finance Help
+  sections: [get-started, risk, analytics, data, build, admin, knowledge, reference]   # order; a module's section shows only while it is loaded
+  tutorials: { first: [02-var-from-the-bank-to-a-trade, 03-exposure-from-the-bank-to-a-trade] }
+  extra: docs/finance/                     # distribution-only pages (release notes for this product)
+
+bindings:
+  defaults:                                # section 5.5 step 2: used when the site has not bound a kind
+    convention: risklake                   # bind banking's kinds to risklake tables named by each contract's binding-hint, when present
+    produced: { var-official: { lake: risklake }, exposure-official-cpty: { lake: risklake } }
+
+demo: { ships: true, enabled: true }       # the demo lake ships; a site switches it off in production
+locale: { language: en, number: "#,##0.00", date: yyyy-MM-dd }
+glossary: docs/finance/glossary.yaml

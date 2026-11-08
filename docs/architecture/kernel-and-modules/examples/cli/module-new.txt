@@ -1,0 +1,25 @@
+EXAMPLE (design, not built): `drishti.py module new` (docs/architecture/KERNEL_AND_MODULES.md sections 7.1 and 8.2).
+
+$ python3 tools/drishti.py module new genomics --domain genomics --template full --publisher drishti
+Module SDK 1.0.0 · kernel API 1.0 · template full
+
+  created  modules/genomics/module.yaml                      id genomics 0.1.0, kernel ">=1.0 <2.0", licence feature genomics
+  created  modules/genomics/pom.xml                          parent drishti-module-parent 1.0.0 (kernel API as provided)
+  created  modules/genomics/java/src/main/java/com/example/genomics/GenomicsModule.java      implements DrishtiModule
+  created  modules/genomics/java/src/test/java/com/example/genomics/GenomicsModuleTest.java  KernelHarness + conformance suite
+  created  modules/genomics/python/drishti_genomics/__init__.py
+  created  modules/genomics/data/needs.yaml                  one need: kind sample (owned by this module)
+  created  modules/genomics/packs/genomics/pack.yaml         kinds: sample, cohort, variant-call
+  created  modules/genomics/packs/genomics/contracts/{sample,cohort,variant-call}.contract.yaml
+  created  modules/genomics/packs/genomics/sutras/genomics/sample.v1.sutra.yaml
+  created  modules/genomics/packs/genomics/samples/{catalog,sample,cohort,variant-call}.jsonl      synthetic
+  created  modules/genomics/console/plugin.yaml               one route /genomics, one template, Help section "Genomics"
+  created  modules/genomics/elements/drishti-genomics/{index.js,drishti-genomics.css,index.d.ts,manifest.json}
+  created  modules/genomics/lenses/lenses.yaml               lens cohorts (functions SAMPLE, COHORT, VARIANT)
+  created  modules/genomics/settings/{schema.json,defaults.yaml}
+  created  modules/genomics/docs/{README.md,help.yaml,glossary.yaml,features.yaml,guides/GENOMICS_GUIDE.md,tutorials/genomics-01-a-cohort-from-vcf.md}
+
+Next:
+  cd modules/genomics
+  python3 ../../tools/drishti.py module build --sign-with dev     # builds, tests against the kernel harness, packages
+  python3 ../../tools/drishti.py module verify target/dmod/genomics-0.1.0.dmod
