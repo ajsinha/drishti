@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""FRTB-SA in the console (routes/frtb_routes.py; docs/guides/FRTB_SA_GUIDE.md sections 7 and 8): FRSA <scope>, PLAY FRTB <scope> and
+"""FRTB-SA in the console (plugins/banking/routes/frtb_routes.py; docs/guides/FRTB_SA_GUIDE.md sections 7 and 8): FRSA <scope>, PLAY FRTB <scope> and
 PLAY FRTB RUN <id>, the pages as shells, every figure read from the server as the person with the switches and overrides passed through,
 the recipe saved and replayed, the workbook streamed. The figures themselves are the engine's tests (FrtbHandBuiltCasesTest,
 FrtbPlaygroundWorkbookTest, FrtbApiTest)."""
@@ -20,9 +20,10 @@ from __future__ import annotations
 
 import pytest
 
-from routes.frtb_routes import frsa_command, play_frtb_command
-from routes.play_routes import play_command
+from plugins.banking.routes.frtb_routes import frsa_command, play_frtb_command
+from plugins.banking.routes.play_routes import play_command
 from test_play import RISK_ABOUT, _app, _Upstream
+import engine_fakes  # noqa: E402
 
 SA = {"scope": "EXAMPLE", "canonical": "EXAMPLE", "date": None, "currency": "USD", "regulatory": True, "binding": "low", "reported": "low",
       "classes": [], "sbm": {"low": 1, "medium": 1, "high": 1}, "SBM": 1, "DRC": None, "RRAO": None, "total": 1, "stack": []}
@@ -59,7 +60,7 @@ def test_the_pages_and_the_api_are_read_as_the_person(backend, monkeypatch):
         sent.append(("STREAM", path, getattr(ident, "user", None), {}))
         return _Upstream(b"PK\x03\x04workbook")
 
-    monkeypatch.setattr(backend, "frtb", frtb, raising=False)
+    engine_fakes.patch(monkeypatch, backend, frtb=frtb)
     monkeypatch.setattr(backend, "open_download", open_download, raising=False)
     app, c = _app(backend, monkeypatch, RISK_ABOUT)
     r = c.get("/go", params={"q": "FRSA DESK RATES <GO>"}, follow_redirects=False)
@@ -80,6 +81,6 @@ def test_the_pages_and_the_api_are_read_as_the_person(backend, monkeypatch):
     assert c.get("/api/frtb/recipes/nope").status_code == 400
     x = c.get("/api/frtb/export.xlsx", params={"scope": "EXAMPLE", "girr-correlation": "exact"})
     assert x.status_code == 200 and x.content == b"PK\x03\x04workbook"
-    assert sent[-1][0] == "STREAM" and sent[-1][1].startswith("/frtb/playground.xlsx?") and "girrCorrelation=exact" in sent[-1][1]
+    assert sent[-1][0] == "STREAM" and sent[-1][1].startswith("/risk/frtb/playground.xlsx?") and "girrCorrelation=exact" in sent[-1][1]
     for path in ("/api/frtb/sa", "/api/frtb/explain", "/api/frtb/contributions", "/api/frtb/sensitivities", "/api/frtb/risk-factors"):
         assert c.get(path, params={"scope": "BANK"}).status_code == 200

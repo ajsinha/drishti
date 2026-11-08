@@ -78,6 +78,10 @@ class BankingModuleOnTest {
             assertThat(old.getResponse().getStatus()).isEqualTo(404);
             assertThat(registry.functionOn("SIMM")).isFalse();
             assertThat(registry.functionOn("VAR")).isTrue();
+            // the console is told, as the person: SIMM not available, with its module and the words to say; VAR still is
+            String me = mvc.perform(get("/api/v1/modules").header("Authorization", auth())).andReturn().getResponse().getContentAsString();
+            assertThat(me).contains("{\"word\":\"SIMM\",\"module\":\"banking\"").contains("SIMM is not available to you: ask your administrator")
+                    .doesNotContain("\"word\":\"VAR\"").contains("\"off\":[]");
         } finally {
             registry.functionSwitches(null);
         }

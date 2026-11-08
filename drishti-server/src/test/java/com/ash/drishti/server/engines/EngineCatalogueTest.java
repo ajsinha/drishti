@@ -37,20 +37,12 @@ class EngineCatalogueTest {
 
     @Test
     void theProductsCatalogueHoldsTheElevenEnginesInOrderWithTheirLinks() {
-        EngineCatalogue c = EngineCatalogue.load();
-        assertThat(c.all()).extracting(EngineCatalogue.Entry::id).containsExactly("var", "exposure", "sensitivities", "frtb-sa", "simm",
-                "mr-cube", "memory-lake", "dataload", "pivot", "flight", "openblas");   // SA-CCR, FVA and the CCR cube return with their engines
-        assertThat(c.neededBy("pivot")).containsExactly("mr-cube");
+        EngineCatalogue c = EngineCatalogue.load();                   // the core's engines: the banking module's are in its jar (BankingEngineCatalogueTest)
+        assertThat(c.all()).extracting(EngineCatalogue.Entry::id).containsExactly("memory-lake", "dataload", "pivot", "flight", "openblas");
         assertThat(c.get("pivot").orElseThrow().liveOn()).isTrue();
-        assertThat(c.get("frtb-sa").orElseThrow().needs()).containsExactly("var", "sensitivities");
-        assertThat(c.get("simm").orElseThrow().needs()).containsExactly("sensitivities");
-        assertThat(c.neededBy("exposure")).isEmpty();
         assertThat(c.get("memory-lake").orElseThrow().liveOn()).isFalse();
         assertThat(c.all().stream().filter(e -> !e.installed()).map(EngineCatalogue.Entry::id)).isEmpty();   // every listed engine ships
-        assertThat(c.forPath("/api/v1/risk/frtb/sa").orElseThrow().id()).isEqualTo("frtb-sa");
-        assertThat(c.forPath("/api/v1/risk/sensitivities").orElseThrow().id()).isEqualTo("sensitivities");
-        assertThat(c.forPath("/api/v1/variance")).isEmpty();
-        assertThat(c.forPath("/api/v1/risk/var/explain").orElseThrow().id()).isEqualTo("var");
+        assertThat(c.forPath("/api/v1/risk/var/explain")).isEmpty();
         for (EngineCatalogue.Entry e : c.all()) {
             assertThat(e.list("words")).allMatch(w -> w.matches("[A-Z][A-Z0-9]*( [A-Z0-9]+)?"));
             assertThat(e.switchKey()).isEqualTo("drishti.engines." + e.id() + ".enabled");
@@ -75,9 +67,13 @@ class EngineCatalogueTest {
             assertThat(doc.path("drishti").path("engines").path(e.id()).path("enabled").asText()).as(e.id())
                     .isEqualTo("${" + e.env() + ":" + e.shipped() + "}");
         }
-        try (var files = Files.list(site)) {
-            assertThat(files.map(f -> f.getFileName().toString()).sorted().toList()).as("a file without an engine")
-                    .containsExactlyInAnyOrderElementsOf(c.all().stream().map(EngineCatalogue.Entry::file).toList());
+        List<String> files = new java.util.ArrayList<>(c.all().stream().map(EngineCatalogue.Entry::file).toList());
+        // a module's engines' files sit in the same site folder: named by its catalogue in its jar (drishti-banking's)
+        yaml.readTree(REPO.resolve("drishti-banking/src/main/resources/" + EngineCatalogue.MODULE_RESOURCE).toFile()).path("engines")
+                .forEach(n -> files.add(n.path("file").asText(n.path("id").asText() + ".yaml")));
+        try (var listed = Files.list(site)) {
+            assertThat(listed.map(f -> f.getFileName().toString()).sorted().toList()).as("a file without an engine")
+                    .containsExactlyInAnyOrderElementsOf(files);
         }
         assertThat(Files.readAllBytes(REPO.resolve("drishti-console/config/engines.yaml")))
                 .isEqualTo(Files.readAllBytes(jar.resolve("catalogue.yaml")));

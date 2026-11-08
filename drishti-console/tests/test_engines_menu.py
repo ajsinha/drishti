@@ -29,7 +29,7 @@ from core import engines
 from core.auth import Identity
 from test_edition import RISK_ABOUT, _app, _client
 
-CATALOGUE = yaml.safe_load((CONSOLE / "config" / "engines.yaml").read_text(encoding="utf-8"))["engines"]
+CATALOGUE = engines.entries()
 ROLES = {"alice": ("*",), "mira": ("market-risk",), "cole": ("credit-risk",), "bea": ("bi-analyst",)}
 
 

@@ -272,7 +272,7 @@ All per worker process (`drishti-console`), in memory unless marked disk.
 | sign-in checks | `core/auth.py` (lines 42,175-210) | 20,000 entries; TTL `auth.recheck_seconds` 10 | expired first, then oldest; `forget()` and user stamps |
 | user settings, BI identity, packs, layouts, pivots | `core/settings.py` (lines 39-62), `core/bi.py` (lines 29-69), `core/packs.py` (lines 60-105), `core/layouts.py` (lines 34-50), `core/pivots.py` (lines 40-63) | ⚠ TTL `ui.user_cache_seconds` 10 s, no size cap (one entry per user) | user stamps on disk (`core/user_stamps.py`) across workers of one host; the TTL across hosts |
 | calc permissions, business dates | `core/calc.py` (lines 69-89) (60 s), `core/asof.py` (lines 135-152) (60 s) | ⚠ no size cap | TTL |
-| landing figures | `core/market_landing.py:50` (120 s, cleared above 200), `core/trading_landing.py:59` (120 s, above 64) | count + TTL | TTL |
+| landing figures | `drishti-console/plugins/banking/market_landing.py:50` (120 s, cleared above 200), `drishti-console/plugins/banking/trading_landing.py:59` (120 s, above 64) | count + TTL | TTL |
 | facts of the day | `core/facts.py` (lines 397-442) | 64 entries, `ui.facts.cache_seconds` 21,600 | FIFO |
 | Python results | none: every Python run is a fresh fork child on the compute pool `python`; a Transform's frame is kept by `TransformService` per reader | | |
 | embed origins, JWKS, OIDC discovery | `core/embed.py` (60 s), `core/embed_auth.py` (300 s), `core/oidc.py` (1 h) | TTL | TTL |

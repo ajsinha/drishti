@@ -15,7 +15,8 @@
  */
 /* A form's fields, drawn (drishti_form.js holds the state): each field by its widget (text, a number read loosely and shown grouped,
    money with its currency, a select or radios, a row of checkboxes, a checkbox or switch, the date, time, date-and-time and range
-   pickers, the multi-select, the combobox, the tree picker, the code editor, a fieldset for an object, repeatable groups for an array of
+   pickers, the multi-select, the combobox, the tree picker, the code editor, a formula (a one-line code editor with the page's
+   completion: options.mode, default rachana, and options.complete), a fieldset for an object, repeatable groups for an array of
    objects) or by a custom widget a page defines (defineWidget, or the form's widgets option). A field with a name is submitted by a
    surrounding server form: a native control carries the name, a picker writes hidden inputs. A field's hook puts data attributes on its
    control, so tutorials and tests find it. */
@@ -28,6 +29,7 @@ import { MultiSelect } from './drishti_multiselect.js';
 import { Combobox } from './drishti_combobox.js';
 import { TreePicker } from './drishti_tree-picker.js';
 import { CodeEditor } from './drishti_code-editor.js';
+import { upgradeCodeArea } from './drishti_code-upgrade.js';
 
 const WIDGETS = new Map();
 
@@ -187,6 +189,18 @@ export function drawField(form, f) {
     case 'combobox': control = mount(Combobox, { value: v === undefined || v === null ? null : { value: v, label: String(v) } }); break;
     case 'tree': control = mount(TreePicker, { value: v || [] }); break;
     case 'code': control = mount(CodeEditor, { value: v || '', readOnly: ro, height: (fs.options && fs.options.height) || 120 }); break;
+    case 'formula': {                                         // a one-line code editor; the input holds the value (upgradeCodeArea)
+      const fo = fs.options || {};
+      const inp = part.input = named(form.el('input', { cls: 'di-field di-formula', attrs: { id: id, type: 'text', 'data-di-code': fo.mode || 'rachana', 'aria-describedby': described,
+        readonly: ro || null, placeholder: fs.placeholder || null, autocomplete: 'off', spellcheck: 'false' } }));
+      inp.value = v === undefined || v === null ? '' : String(v);
+      inp.drishtiCodeOptions = { complete: fo.complete, label: f.label };
+      inp.addEventListener(fs.lazy ? 'change' : 'input', () => set(inp.value === '' ? undefined : inp.value));
+      inp.addEventListener('blur', touch);
+      Promise.resolve().then(() => { if (inp.isConnected && !inp.drishtiCode) { upgradeCodeArea(inp); } });   // once in the page (a page's observer may be first)
+      control = inp;
+      break;
+    }
     case 'textarea': {
       const ta = part.input = named(form.el('textarea', { cls: 'di-field', attrs: { id: id, rows: String((fs.options && fs.options.rows) || 3), 'aria-describedby': described, readonly: ro || null, placeholder: fs.placeholder || null } }));
       ta.value = v === undefined || v === null ? '' : String(v);

@@ -18,6 +18,7 @@ package com.ash.drishti.server.modules;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
+import com.ash.drishti.identity.SwitchLedger;
 import com.ash.drishti.registry.AccessRegistry;
 import com.ash.drishti.registry.Lens;
 import com.ash.drishti.registry.Licence;
@@ -29,8 +30,11 @@ import com.ash.drishti.server.security.Principal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
@@ -41,8 +45,11 @@ import org.springframework.web.bind.annotation.RestController;
  * Admin → Modules over REST (docs/architecture/ACCESS_MODEL.md, docs/admin/OPERATIONS.md › Modules): every module with its state (installed,
  * licensed, enabled, on, why not), what it brings, whether it was loaded at this start; the licence; the lenses offered; and the
  * administrator's switch (written to {@code config/modules/<id>.yaml}, audited with a reason, taken at the next start). For administrators
- * only, never a token (the security settings' token-never list). {@code GET /api/v1/modules}: the modules on and the lenses open to the
- * caller, for anyone signed in.
+ * only, never a token (the security settings' token-never list). {@code GET /api/v1/modules}, for anyone signed in, is what the console asks
+ * for every door it draws (menus, the sitemap, the Build home, search, the command line and type-ahead, keys, Help, assets): the modules
+ * loaded, those that are not (with why), the lenses open to the caller (with the modules each needs) and the functions the caller may not
+ * use (each with its module and the words to say), decided as the person ({@link AccessRegistry#functionAllowed}: everyone may use every
+ * function that is on, until per-person grants in 2.9.11.i).
  */
 @RestController
 public class ModuleAdminController {
@@ -62,12 +69,15 @@ public class ModuleAdminController {
     private final ModuleConfiguration.Started started;
     private final Entitlements entitlements;
     private final AuditLog audit;
+    private final ObjectProvider<SwitchLedger> ledger;
 
-    public ModuleAdminController(AccessRegistry registry, ModuleConfiguration.Started started, Entitlements entitlements, AuditLog audit) {
+    public ModuleAdminController(AccessRegistry registry, ModuleConfiguration.Started started, Entitlements entitlements, AuditLog audit,
+            ObjectProvider<SwitchLedger> ledger) {
         this.registry = registry;
         this.started = started;
         this.entitlements = entitlements;
         this.audit = audit;
+        this.ledger = ledger;
     }
 
     @GetMapping("/api/v1/admin/modules")
@@ -117,8 +127,52 @@ public class ModuleAdminController {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("modules", registry.modules().stream().filter(s -> started.loaded(s.id()))
                 .map(s -> Map.of("id", s.id(), "title", s.title(), "domain", s.domain())).toList());
+        out.put("off", registry.modules().stream().filter(s -> !started.loaded(s.id())).map(this::offEntry).toList());
         out.put("lenses", registry.lensesFor(who).stream().map(ModuleAdminController::lens).toList());
+        out.put("functions", Map.of("off", functionsOff(who)));
         return out;
+    }
+
+    private Map<String, Object> offEntry(ModuleState s) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", s.id());
+        m.put("title", s.title());
+        m.put("domain", s.domain());
+        m.put("reason", why(s));
+        return m;
+    }
+
+    /** Why a module is not loaded here, in words. */
+    private String why(ModuleState s) {
+        return s.on() ? "it was off when this server started; it loads at the next start" : s.reason();
+    }
+
+    /**
+     * The functions the caller may not use: every word of every module's manifest (on or off) and every word an administrator switched off,
+     * each with its module (none: the core's) and what the console says when it is typed anyway.
+     */
+    private List<Map<String, Object>> functionsOff(Subject who) {
+        Set<String> words = new TreeSet<>();
+        for (ModuleState s : registry.modules()) {
+            registry.manifest(s.id()).ifPresent(m -> words.addAll(m.words()));
+        }
+        SwitchLedger l = ledger.getIfAvailable();
+        if (l != null) {
+            l.entries().stream().filter(e -> SwitchLedger.COMMAND.equals(e.scope()) && !e.on()).forEach(e -> words.add(e.name().toUpperCase(Locale.ROOT)));
+        }
+        List<Map<String, Object>> off = new ArrayList<>();
+        for (String w : words) {
+            if (registry.functionAllowed(who, w)) {
+                continue;
+            }
+            Map<String, Object> f = new LinkedHashMap<>();
+            f.put("word", w);
+            f.put("module", registry.moduleOfFunction(w).orElse(ModuleManifest.CORE));
+            f.put("reason", registry.functionOffReason(w).orElse("not granted to you"));
+            f.put("text", w + " is not available to you: ask your administrator");
+            off.add(f);
+        }
+        return off;
     }
 
     private Map<String, Object> state(ModuleState s) {
@@ -166,6 +220,7 @@ public class ModuleAdminController {
         m.put("id", l.id());
         m.put("title", l.title());
         m.put("modules", l.modules());
+        m.put("functions", l.functions());
         m.put("home", l.home());
         return m;
     }

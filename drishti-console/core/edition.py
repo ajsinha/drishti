@@ -35,6 +35,7 @@ from typing import Any
 import yaml
 
 from core import engines as _engines
+from core import modules as _modules
 
 LOG = logging.getLogger("drishti.console.edition")
 LENS_HEADER = "X-Drishti-Lens"                       # the server's EditionContext.HEADER: the person's lens, on every backend call
@@ -163,6 +164,8 @@ class Edition:
     def command_shown(self, code: str | None) -> bool:
         if code and _engines.word_hidden(code):                  # a word of a compute engine that runs nowhere (COMPUTE_ENGINES.md 5.2)
             return False
+        if code and _modules.word_refusal(code) is not None:     # its module is off, or the function is off or not the person's (ACCESS_MODEL.md)
+            return False
         allow = self.commands() if self.active else set()
         return not allow or not code or code.strip().upper() in allow
 
@@ -171,11 +174,15 @@ class Edition:
         command (EXP is both: the word decides)."""
         if _engines.typed_engine(text) is not None:               # PLAY FRTB with FRTB-SA running nowhere
             return False
+        if _modules.typed_refusal(text) is not None:              # PLAY VAR with banking off; VRES switched off or not granted
+            return False
         head = str(text or "").split()[0].upper() if str(text or "").split() else ""
         return self.word_on(head) if head in WORDS else self.command_shown(head)
 
     def word_on(self, word: str) -> bool:
         if _engines.word_hidden(word):                           # the engine runs on no server of the cluster: gone, whatever the edition
+            return False
+        if _modules.word_refusal(word) is not None:              # its module is off, or the function is off for the person: gone too
             return False
         if not self.active:
             return True
@@ -303,6 +310,7 @@ class Editions:
         self._server_brand: dict = {}
         self.engines = _engines.new_state()                      # what runs, learned from this app's server as the edition is: its own,
                                                                  # never another app's of the same process (core/engines.py State)
+        self.modules = _modules.new_state()                      # the modules loaded on the server, the same way (core/modules.py State)
 
     def default_packs(self) -> list[str]:
         """The one default pack list (config/editions/default-packs.yaml), as the server reads it from its jar."""
@@ -342,6 +350,7 @@ class Editions:
         lenses = [str(n) for n in about.get("lenses") or []] if not name else []
         brand = {k: about.get(k) for k in ("product", "tagline") if about.get(k)}
         engines_changed = _engines.learn(about.get("engines"), self.engines)   # the engines running in the cluster (COMPUTE_ENGINES.md 5.2)
+        engines_changed = _modules.learn(about.get("modules"), self.modules) or engines_changed   # the modules loaded (ACCESS_MODEL.md)
         changed = name != self.instance.name or sorted(lenses) != sorted(self.lenses) or brand != self._server_brand
         if not changed:
             if engines_changed and self.on_change is not None:

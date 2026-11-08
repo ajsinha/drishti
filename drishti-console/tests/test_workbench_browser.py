@@ -111,6 +111,39 @@ def settle(page, rev):
     page.wait_for_timeout(250)
 
 
+def option_path(page, name):
+    """The inspector's path of a panel option (its block's data-path: req.rows, opt.unit, base.title)."""
+    wait(page, f"!!document.querySelector('[data-inspector] [data-path$=\".{name}\"]')")
+    return page.evaluate("n => ['req', 'opt', 'base'].map(s => s + '.' + n).filter(p => document.querySelector('[data-inspector] [data-path=\"' + p + '\"]'))[0]", name)
+
+
+def type_formula(page, path, text, origin="+input"):
+    """Types into an inspector formula field (drishti-inputs' one-line code editor; the hidden input holds the value) as a person does:
+    CodeMirror's +input origin opens the completion."""
+    sel = f'[data-inspector] [data-path="{path}"] input[data-di-code]'
+    wait(page, f"!!(document.querySelector({sel!r}) || {{}}).drishtiCode && !!document.querySelector({sel!r}).drishtiCode.cm")
+    page.evaluate("""([s, t, o]) => { const cm = document.querySelector(s).drishtiCode.cm; cm.focus();
+      cm.replaceRange(t, {line: 0, ch: 0}, {line: cm.lastLine(), ch: cm.getLine(cm.lastLine()).length}, o); }""", [sel, text, origin])
+
+
+def put_option(page, name, text):
+    """Sets a panel option in the inspector by its name: a formula field typed, a text field filled; then leaves it."""
+    path = option_path(page, name)
+    block = page.locator(f'[data-inspector] [data-path="{path}"]')
+    if block.locator("input[data-di-code]").count():
+        type_formula(page, path, text)
+        page.evaluate("p => document.querySelector('[data-inspector] [data-path=\"' + p + '\"] input[data-di-code]').drishtiCode.cm.getInputField().blur()", path)
+    elif block.locator("select").count():
+        block.locator("select").first.select_option(text)
+    else:
+        block.locator("input").first.fill(text)
+        block.locator("input").first.blur()
+
+
+def formula_value(page, path):
+    return page.evaluate("p => document.querySelector('[data-inspector] [data-path=\"' + p + '\"] input[data-di-code]').value", path)
+
+
 def drag(page, source, x, y, steps=8):
     source.scroll_into_view_if_needed()
     b = source.bounding_box()
@@ -134,7 +167,7 @@ def test_the_showcase_is_built_from_its_samples_by_mouse_without_typing_yaml(liv
     for kind in ALL_KINDS:                                         # every palette kind dropped on the canvas
         rev = state(page, "rev")
         x, y = first_panel_edge(page)
-        drag(page, page.locator(f'[data-palette] [data-kind="{kind}"]'), x, y)
+        drag(page, page.locator(f'[data-palette] [data-dd-entry="{kind}"]'), x, y)
         settle(page, rev)
     assert sorted(set(kinds(page)) & set(ALL_KINDS)) == sorted(ALL_KINDS)
     # a field dropped on the rim of a panel: ranked suggestions, then the first one is added
@@ -158,10 +191,8 @@ def test_the_showcase_is_built_from_its_samples_by_mouse_without_typing_yaml(liv
     rev = state(page, "rev")
     page.locator('[data-preview] [data-panel="gauge"] .pnl-h').scroll_into_view_if_needed()
     page.locator('[data-preview] [data-panel="gauge"] .pnl-h').click()
-    page.locator('[data-inspector] [data-required], [data-inspector] .wb-field').first.wait_for()
-    max_field = page.get_by_label("max", exact=True)
-    max_field.fill("$.notional")
-    max_field.blur()
+    page.locator("[data-inspector] .dd-inspector-body .di-form-field").first.wait_for()
+    put_option(page, "max", "$.notional")
     settle(page, rev)
     assert re.search(r"max:\s*\$\.notional", state(page, "yaml"))
     wait(page, "document.querySelector('[data-result]').textContent.includes('1/1')")
@@ -338,7 +369,7 @@ def test_the_tests_matrix_follows_the_design_as_it_changes(live_console, page):
     page.get_by_role("tab", name="Design").click()
     rev = state(page, "rev")
     x, y = first_panel_edge(page)
-    drag(page, page.locator('[data-palette] [data-kind="hbar"]'), x, y)
+    drag(page, page.locator('[data-palette] [data-dd-entry="hbar"]'), x, y)
     settle(page, rev)
     page.get_by_role("tab", name="Tests").click()
     wait(page, f"document.querySelectorAll('.wb-matrix tbody tr').length === {rows + 1}")

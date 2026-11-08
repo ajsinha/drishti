@@ -4132,6 +4132,23 @@ Engines, its packs and connectors do not load, and its functions (VAR, EXP, TRD 
 single function off for everyone; the access registry decides, so a function is on only when its module is on and no administrator turned
 it off. Its API then answers `404 DRS-1026`.
 
+**In the console, the same module or function is gone too**, for every person, within a few seconds of the server saying so (the console
+asks the server: the modules loaded from its public about answer, each person's view from `GET /api/v1/modules`; it reads no access file
+itself):
+
+| Door | A module off | A function off (VRES, SMAT …) |
+|---|---|---|
+| Pages and routes | its pages and their `/api/...` answer 404 (`/var`, `/exposure`, `/frtb`, `/simm`, `/smat`, `/play`, `/mcube`, Admin → Saved VaR baskets, the trading and market landings' figures) | the pages of its word answer 404 (`/smat` with SMAT off) |
+| Menus, the sitemap, the Admin strip | its menus, columns and items (sitemap `domain:` tags, the Engines menu's columns) are not drawn | the items that run it are not drawn |
+| Command line | typed anyway: *VAR is not available to you: ask your administrator* | *VRES is not available to you: ask your administrator* |
+| Type-ahead, search | its words, screens and Help pages are not offered or found | the word is not offered |
+| Help | its guides, tutorials and Help section are not listed and answer 404 | (Help stays: a guide is about a module) |
+| Build home | its object types (VaR baskets) are not offered | |
+| Static files | its scripts, styles and Elements library (`drishti-risk`) are not served (404), and the Elements loader refuses them; a person whose lens does not use the module (the World lens and banking) does not get them either | |
+
+What each module brings to the console is its `drishti-console/plugins/<module>/plugin.yaml` (its routers, engines, words, pages,
+static files and the parts it adds to a core screen); the capital-markets module has none (its functions are its packs' commands).
+
 ```bash
 curl -s -H "Authorization: Bearer $TOKEN" http://localhost:18080/api/v1/admin/modules | jq '.modules[] | {id, on, reason, loaded}'
 curl -s -X POST -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' http://localhost:18080/api/v1/admin/modules \

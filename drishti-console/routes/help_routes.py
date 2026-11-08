@@ -68,7 +68,21 @@ def visible(request, guide) -> bool:
     (help.yaml; ``roles: [admin]`` for an internal page such as the competitive analysis) and its engine runs in the cluster (help.yaml
     ``engine:``). Help is documentation, not data: a running engine's pages are open to anyone who can open Help, whatever the Engines
     menu's ``opens:`` say. A guide they may not see is not listed, not found by search and not reached by its address (404)."""
-    return guide.permits(_me(request)) and shown(_edition(request), guide, _aliases(request)) and _engine_on(guide)
+    return guide.permits(_me(request)) and shown(_edition(request), guide, _aliases(request)) and _engine_on(guide) and _module_on(guide)
+
+
+def _module_on(guide) -> bool:
+    """A guide of a domain module that is off for the person is not shown (ACCESS_MODEL.md: Help too): its module is its engine's
+    (help.yaml ``engine:``, the module's plugin.yaml ``engines:``), else its Help section's (sitemap.yaml ``help-sections[].domain``)."""
+    from core import modules
+    module = modules.module_of_engine(guide.engine) if guide.engine else None
+    return not modules.tag_hidden(module or _section_domains().get(str(guide.category or ""), ""))
+
+
+def _section_domains() -> dict[str, str]:
+    """Each Help section's domain module (sitemap.yaml ``help-sections``: ``domain:``; core when not said)."""
+    from core import menus
+    return {str(c.get("id")): str(c.get("domain") or "") for c in menus.help_sections(Path(__file__).resolve().parent.parent)}
 
 
 def _engine_on(guide) -> bool:
@@ -99,9 +113,11 @@ def _section_open(request, section: dict) -> bool:
 def sections_for(request, lib) -> list:
     """The sections this person sees, each with only the guides they see (``guides``, ``groups``) and the count of them; a section with
     none left is not drawn (Risk measures while no engine of it runs, for anyone but an administrator)."""
+    from core import modules
     out = []
+    domains = _section_domains()
     for c in lib.categories:
-        if not _section_open(request, c):
+        if not _section_open(request, c) or modules.tag_hidden(domains.get(str(c.get("id") or ""), "")):
             continue
         groups = [{**grp, "guides": [g for g in grp["guides"] if visible(request, g)]} for grp in c["groups"]]
         guides = [g for grp in groups for g in grp["guides"]]

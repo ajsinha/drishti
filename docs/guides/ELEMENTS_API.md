@@ -1002,11 +1002,11 @@ Returns `?{element: HTMLElement, close: function(): void}`.
 
 #### `configure(o)`
 
-Where the libraries are: base, the elements folder ("/static/elements/"); staticBase, the static root the style sheets are named from (default: the folder above base).
+Where the libraries are: base, the elements folder ("/static/elements/"); staticBase, the static root the style sheets are named from (default: the folder above base); modules, the domain modules on for the person (a library of any other module is refused; null: the page's own meta, or nothing said).
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `o` | `{base: string, staticBase: string}` |  |
+| `o` | `{base: string, staticBase: string, modules: ?string[]}` |  |
 
 Returns `void`.
 
@@ -1059,6 +1059,16 @@ Returns `Promise&lt;(Object\|Object[])&gt;`.
 ```js
 Drishti.elements.core.load('drishti-grid').then((grid) => grid.createGridModel({...}))
 ```
+
+#### `refused(name)`
+
+Why a library may not be loaded on this page (its module is not on for the person), or null when it may.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` | for example "drishti-risk" |
+
+Returns `?string`.
 
 #### `staticUrl(path)`
 
@@ -8592,7 +8602,7 @@ A field of a form schema.
 | `[properties]` | `Object&lt;string, FieldSchema&gt;` | object: its fields |
 | `[required]` | `string[]` | object: the keys that must have a value |
 | `[order]` | `string[]` | object: the order of its fields (default: as written) |
-| `[widget]` | `string` | how it is drawn: text, textarea, select, radio, checkbox, switch, multiselect, combobox, tree, date, daterange, code |
+| `[widget]` | `string` | how it is drawn: text, textarea, select, radio, checkbox, switch, multiselect, combobox, tree, date, daterange, code, formula (one line, options.mode and options.complete) |
 | `[options]` | `Object` | the widget's options (a combobox's source, a tree's nodes, a code editor's mode) |
 | `[readOnly]` | `boolean` |  |
 | `[placeholder]` | `string` |  |
@@ -10621,6 +10631,8 @@ A step of a designer.
 | `[empty='Select an item to see its properties.']` | `string` | what an empty selection says |
 | `[readOnly=false]` | `boolean` |  |
 | `[locale]` | `string` |  |
+| `[form]` | `Object` | more options for the Form (widgets, layout, pathAttr: drishti-inputs' FormOptions) |
+| `[head]` | `function(string[], Object): (?Node\|Node[])` | the host's header for the selection (what it is, its actions), drawn in place of the schema's title |
 
 #### `DesignerAction` : `Object`
 

@@ -21,8 +21,8 @@ picks one from the links on Home and the choice is kept in their settings (``hom
 ``home.landing-by-role`` ({role: landing}) is read and, when configured, wins over the person's choice: the hook for role-based access
 later; Drishti Trading's ``trading.landing-by-role`` (the same shape, for the person's trading role) picks the first landing below their
 choice. ``/api/home/search`` is the landings' one read: the server's search grammar, for a command the edition shows; Drishti Market's
-figures and checks are worked out by core/market_landing.py and served by ``/api/home/market/{desk,moves,quality}``; Drishti Trading's
-by core/trading_landing.py, served by routes/trading_routes.py.
+figures (``/api/home/market/{desk,moves,quality}``) and Drishti Trading's are the banking module's (plugins/banking/market_landing.py and
+plugins/banking/trading_landing.py, served by plugins/banking/routes/trading_routes.py, with its landing rule registered in core/plugins.py).
 
 The lens: ``/lens/<name>`` opens an edition the server offers as a lens (``drishti.lenses``, one or more) for this person; opening another
 while in one switches; ``/lens/leave`` closes it. Kept in the person's settings (``lens``), so every server of a cluster and every console
@@ -35,10 +35,9 @@ from urllib.parse import quote
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core import asof, market_landing, trading_landing
+from core import plugins
 from core.backend import BackendError
 from core.edition import Edition
-from core.user_cache import cache_key
 from routes.common import ident, render
 
 router = APIRouter(include_in_schema=False)
@@ -67,10 +66,9 @@ def landing_for(request, ed: Edition) -> str | None:
     chosen = str(mine.get("homeLanding") or "")
     if chosen in offered:
         return chosen
-    # Drishti Trading: the person's trading role (desk-head, trader) picks the first landing, below their own choice (EDITIONS.md 14)
-    role = trading_landing.trading_role(ed, request.app.state.settings, me, mine) if ed._get("trading") else ""
-    if role and ed.landing_by_role("trading.landing-by-role").get(role) in offered:
-        return ed.landing_by_role("trading.landing-by-role")[role]
+    # a module's rule, below the person's own choice (Drishti Trading: the trading role picks the first landing; EDITIONS.md 14)
+    if (by_rule := plugins.landing_by_rules(request, ed, offered, me, mine)) is not None:
+        return by_rule
     return ed.landing if ed.landing in offered else offered[0]
 
 
@@ -130,31 +128,6 @@ def stale_days(ed: Edition) -> int:
     except (TypeError, ValueError):
         n = 2
     return max(0, min(n, 60))
-
-
-@router.get("/api/home/market/{part}")
-async def market_figures(request: Request, part: str):
-    """Drishti Market's landings: ``desk`` (A's tiles and USD curves), ``moves`` (A's biggest moves) and ``quality`` (C's checks), worked
-    out from the market-data pack's own answers with this person's identity, lens and date box, read-only and cached briefly
-    (core/market_landing.py). For a signed-in person whose edition (or lens) shows the curves (CRV); else 404 DRS-4023."""
-    ed = edition_of(request)
-    if getattr(request.state, "identity", None) is None:
-        return JSONResponse({"detail": "sign in first"}, status_code=401)
-    if part not in ("desk", "moves", "quality"):
-        return JSONResponse({"code": "DRS-4004", "detail": f"no market figures {part}: desk, moves or quality"}, status_code=404)
-    if not ed.active or not ed.commands() or not ed.command_shown("CRV"):
-        return JSONResponse({"code": "DRS-4023", "detail": f"market data is not part of {ed.title if ed.active else 'a landing'}"},
-                            status_code=404)
-    me = ident(request)
-    key = cache_key(request, "market", asof.current())             # server, user, roles, as-of and known-at, lens
-    backend = request.app.state.backend
-    if part == "desk":
-        out = await market_landing.desk(backend, me, key)
-    elif part == "moves":
-        out = await market_landing.moves(backend, me, key)
-    else:
-        out = await market_landing.quality(backend, me, stale_days(ed), key)
-    return JSONResponse(out, headers={"Cache-Control": "no-store"})
 
 
 def _confirm(request: Request, action: str, title: str, text: str):

@@ -14,22 +14,17 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Autocomplete for Rachana-EL expressions in the inspector's text fields: after "$" the paths of the shape ("$.LEGS", "$.BOOK.NAME"),
- * after "@" the fields of the rows of the panel (when the panel's rows are "$.LEGS", "@.NOTIONAL"), and a word becomes a function
- * name with its argument hints; a prefix matches in any case ("$.legs" offers "$.LEGS") and the path is written in its own case. The field keeps focus (an ARIA combobox: Up and Down choose, Enter or Tab take, Escape closes).
- * The server's parser is the judge of an expression; this only saves typing and typos.
+/* What completes a Rachana-EL expression in the inspector (its fields are drishti-inputs' one-line code editors, the Form's formula
+ * widget): after "$" the paths of the shape ("$.LEGS", "$.BOOK.NAME"), after "@" the fields of the rows of the panel (when the panel's
+ * rows are "$.LEGS", "@.NOTIONAL"), and a word becomes a function name with its argument count; a prefix matches in any case ("$.legs"
+ * offers "$.LEGS") and the path is written in its own case. The code editor draws the list and takes the keys (Up, Down, Enter, Tab,
+ * Escape). The server's parser is the judge of an expression; this only saves typing and typos.
  *
- *   WB.expr.attach(input, {paths: function () -> [{path, type}], rows: function () -> '$.legs' | '', functions: {name: {min, max}}}) */
+ *   WB.expr.candidates({text}, src) -> [{text, hint}]        src: {paths(): [{path, type}], rows(): '$.legs' | '', functions: {name: {min, max}}}
+ *   WB.expr.complete(src) -> the code editor's completion hook */
 (function () {
   'use strict';
   var WB = window.Drishti.WB = window.Drishti.WB || {};
-  var seq = 0;
-
-  function token(input) {
-    var v = input.value, pos = input.selectionStart == null ? v.length : input.selectionStart, i = pos;
-    while (i > 0 && /[\w$@.\[\]'-]/.test(v[i - 1])) { i--; }
-    return { from: i, to: pos, text: v.slice(i, pos) };
-  }
   function candidates(t, src) {
     var out = [], q = t.text, lq = q.toLowerCase();                 // paths match in any case: $.sch offers $.SCHEDULE (UPPER_SNAKE since 2.3.0)
     if (q[0] === '$') {
@@ -57,51 +52,14 @@
     return out.slice(0, 40);
   }
 
-  function attach(input, src) {
-    var id = 'wbx' + (++seq), box = WB.el('ul', 'wb-menu-l wb-expr', null, { role: 'listbox', id: id }), items = [], sel = 0;
-    box.hidden = true;
-    input.setAttribute('role', 'combobox'); input.setAttribute('aria-autocomplete', 'list'); input.setAttribute('aria-controls', id); input.setAttribute('aria-expanded', 'false');
-    input.parentNode.appendChild(box);
-    function hide() { box.hidden = true; input.setAttribute('aria-expanded', 'false'); input.removeAttribute('aria-activedescendant'); }
-    function paint() {
-      Array.prototype.forEach.call(box.children, function (li, i) { li.setAttribute('aria-selected', i === sel ? 'true' : 'false'); });
-      if (box.children[sel]) { input.setAttribute('aria-activedescendant', box.children[sel].id); box.children[sel].scrollIntoView({ block: 'nearest' }); }
-    }
-    function show() {
-      var t = token(input);
-      items = t.text ? candidates(t, src) : [];
-      box.textContent = '';
-      if (!items.length) { hide(); return; }
-      sel = 0;
-      items.forEach(function (c, i) {
-        var li = WB.el('li', 'wb-menu-i', null, { role: 'option', id: id + '-' + i, 'aria-selected': 'false' });
-        li.appendChild(WB.el('span', 'wb-menu-n mono', c.text));
-        li.appendChild(WB.el('span', 'wb-menu-d', c.hint || ''));
-        li.addEventListener('mousedown', function (e) { e.preventDefault(); take(i); });
-        box.appendChild(li);
+  /** The code editor's completion hook over the same candidates: paths as names, functions as functions (Enter writes "name()"). */
+  function complete(src) {
+    return function (c) {
+      return candidates({ text: c.word }, src).map(function (x) {
+        var fn = /\($/.test(x.text);
+        return { name: fn ? x.text.slice(0, -1) : x.text, kind: fn ? 'function' : 'field', description: x.hint || '' };
       });
-      box.hidden = false; input.setAttribute('aria-expanded', 'true'); paint();
-    }
-    function take(i) {
-      var t = token(input), c = items[i];
-      if (!c) { return; }
-      input.value = input.value.slice(0, t.from) + c.text + input.value.slice(t.to);
-      var at = t.from + c.text.length;
-      input.setSelectionRange(at, at);
-      hide();
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-    input.addEventListener('input', show);
-    input.addEventListener('blur', function () { setTimeout(hide, 120); });
-    input.addEventListener('keydown', function (e) {
-      if (box.hidden) { if (e.key === ' ' && e.ctrlKey) { e.preventDefault(); show(); } return; }
-      if (e.key === 'ArrowDown') { sel = Math.min(items.length - 1, sel + 1); paint(); }
-      else if (e.key === 'ArrowUp') { sel = Math.max(0, sel - 1); paint(); }
-      else if (e.key === 'Enter' || e.key === 'Tab') { take(sel); }
-      else if (e.key === 'Escape') { hide(); }
-      else { return; }
-      e.preventDefault(); e.stopPropagation();
-    });
+    };
   }
-  WB.expr = { attach: attach, candidates: candidates, token: token };
+  WB.expr = { candidates: candidates, complete: complete };
 })();

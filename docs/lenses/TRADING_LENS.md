@@ -206,7 +206,7 @@ draws a trading menu or hides a trading command. The panel's changes are made th
 ## 4. The landings
 
 One template, `home/trading_landing.html`, with `drishti_trading-landing.js` and `drishti_trading-landing.css`, a **green accent**; figures worked out by
-`drishti-console/core/trading_landing.py` and served read-only by `drishti-console/routes/trading_routes.py`
+`drishti-console/plugins/banking/trading_landing.py` and served read-only by `drishti-console/plugins/banking/routes/trading_routes.py`
 (`/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}` and `POST /api/home/trading/check`; `404 DRS-4023` unless the
 person's edition or lens shows `TRD`), cached two minutes per person, date and scope ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading)).
 
@@ -604,9 +604,9 @@ row. The scenario matrix (`SMAT`, on in Trading too) and the VaR horizon picker 
 [Open the mock-up](mockups/trading/trading-landing.html). **Chosen:** the footer's proposal, adopted: A the default for traders, B for desk
 heads (`trading.landing-by-role: {desk-head: desk, trader: trader}`, below the person's own choice), C behind the landing switch
 ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading)). A green accent on the terminal look.
-**Code:** [`trading_landing.html`](../../drishti-console/web/templates/home/trading_landing.html),
-[`drishti_trading-landing.js`](../../drishti-console/web/static/js/drishti_trading-landing.js), [`drishti_trading-landing.css`](../../drishti-console/web/static/css/drishti_trading-landing.css),
-[`trading_landing.py`](../../drishti-console/core/trading_landing.py), [`trading_routes.py`](../../drishti-console/routes/trading_routes.py)
+**Code:** [`trading_landing.html`](../../drishti-console/plugins/banking/templates/home/trading_landing.html),
+[`drishti_trading-landing.js`](../../drishti-console/plugins/banking/static/js/drishti_trading-landing.js), [`drishti_trading-landing.css`](../../drishti-console/plugins/banking/static/css/drishti_trading-landing.css),
+[`trading_landing.py`](../../drishti-console/plugins/banking/trading_landing.py), [`trading_routes.py`](../../drishti-console/plugins/banking/routes/trading_routes.py)
 (`/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}`, `POST /api/home/trading/check`), [`trading.yaml`](../../config/editions/trading.yaml).
 The mock-up's names, desks, books and counterparties are the demo's; its figures are illustrative.
 
@@ -618,7 +618,7 @@ above every landing. **States.** *Loading:* `…` in every figure. *Error:* `Not
 tile. *Empty or not given by the data*, each said in place: "no valuations on <date>: no change to show", "MtM is masked for your role",
 "no book above its limit", "No trade's MtM moved", "Nothing yet: type a command above"; the DV01 tile hidden when no trade holds a DV01; a
 scope above `trading.max-rows` says **partial** ([section 4.5](#45-what-the-data-does-not-give-as-the-builder-reported)). **Phone**
-(600 px and below): one column ([`drishti_trading-landing.css`](../../drishti-console/web/static/css/drishti_trading-landing.css)); the mock-up drew no
+(600 px and below): one column ([`drishti_trading-landing.css`](../../drishti-console/plugins/banking/static/css/drishti_trading-landing.css)); the mock-up drew no
 phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md section 8](../architecture/MOBILE_DISPLAY.md#8-beyond-sutra-pages)): the command line, the tiles and the first card in full, the other tables at a glance (five rows, *Show all*), charts, maps and the quick links under *More on this page*.
 
 | # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |
@@ -645,8 +645,8 @@ phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md sec
 | T20 | Card: P&L against VaR (B) | *last 60 days · a breach is a loss beyond the VaR line*: green and red daily bars around zero, an orange −VaR line, the exception circled; *1 exception in 60 days (09-08)* | `/api/home/trading/pnl-var` (the desk's official history; `trading.pnl-var-days`) | — | — | **Built** (hypothetical P&L; the bank's actual P&L is TL3; left out when the history is a replay) |
 | T21 | Card: Overnight movers (B) | Trade, Book, Change: CMDF-31877 WTI Dec BOOK-COMM-1 −4.8m; CMDS-22014 Henry Hub swap +3.1m; CMDO-11520 Brent option +1.7m | valuations on both dates | click a trade | — | **Built** |
 | T22 | Menu bar (C) | **Views · Blotter · Positions · Risk · Counterparties · BI · Help** | [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml) | open a menu | LX1 | **Built**: Markets, Blotter, Positions, Risk and Counterparties menus of their own; BI by command since A19 ([section 11.2](#112-the-lens-menus-lx1-menusahtml), [section 3.7](#37-the-lens-is-configuration-product-panel-a19-2026-11-06)) |
-| T23 | Big command line and chips (C) | *a trade, a book, a counterparty, a position…*; chips `TRD IRS-48213`, `BOOK BOOK-RATES-1`, `CTRD CP-ALDERSHOT`, `POS BOOK-RATES-1`, `VAR DESK DESK-RATES`, `XWIF CP-ALDERSHOT`, `CRV CRV-USD-OIS` | `trading.yaml` `home.chips` | type, `<GO>`; click a chip | — | **Built** |
-| T24 | Command groups (C) | Blotter (`TRD`, `CTRD`, `PTRD`, `LTRD`, `ITRD`); Books and positions (`BOOK`, `DESK`, `TRDR`, `POS`, `PSUM`, `PSTRIP`); Risk on my book (`VAR`, `VLIM`, `TVAL`, `PNLV`); Counterparties (`CPTY`, `NSET`, `NSMTM`, `LIM`, `XWIF`, `EXP`); Market data (`CRV`, `FX`, `FXV`, `EQ`, `CMDC`) | the template's groups | click a command | — | **Built** (more commands per group; `PSUM` and `PSTRIP` left out by design: the compute-demo sample pack's, not a trading pack's) |
+| T23 | Big command line and chips (C) | *a trade, a book, a counterparty, a position…*; chips `TRD IRS-48213`, `BOOK BOOK-RATES-1`, `CTRD CP-ALDERSHOT`, `POS BOOK-RATES-1`, `VAR DESK DESK-RATES`, `EXP CPTY:CP-ALDERSHOT`, `CRV CRV-USD-OIS` | `trading.yaml` `home.chips` | type, `<GO>`; click a chip | — | **Built** |
+| T24 | Command groups (C) | Blotter (`TRD`, `CTRD`, `PTRD`, `LTRD`, `ITRD`); Books and positions (`BOOK`, `DESK`, `TRDR`, `POS`, `PSUM`, `PSTRIP`); Risk on my book (`VAR`, `VLIM`, `TVAL`, `PNLV`); Counterparties (`CPTY`, `NSET`, `NSMTM`, `LIM`, `EXP`); Market data (`CRV`, `FX`, `FXV`, `EQ`, `CMDC`) | the template's groups | click a command | — | **Built** (more commands per group; `PSUM` and `PSTRIP` left out by design: the compute-demo sample pack's, not a trading pack's) |
 | T25 | Recently opened (C) | *IRS-48213 · BOOK-RATES-1 · CP-ALDERSHOT* | the person's command history (Trading's commands only) | click | — | **Built** |
 | T26 | Default by role (footer) | "A as the default for traders, B as the default for desk heads (by role, with a person's own choice remembered), C behind a link" | `trading.landing-by-role`, the person's settings | the landing switch | — | **Built** |
 
@@ -672,7 +672,7 @@ four built lenses (Risk, Trading, Market, World), each lens with one menu open. 
 | X2 | Blotter menu | Trades `TRD`; By counterparty `CTRD`; By portfolio `PTRD`; By legal entity `LTRD` | a subject menu in [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X3 | Positions menu | Books `BOOK`; Desks `DESK`; Traders `TRDR`; Positions `POS` | a subject menu in [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X4 | Risk menu | My VaR `VAR`; VaR limits `VLIM`; Trade valuations `TVAL`; P&L vectors `PNLV` (and since A19 Desk P&L `DPNL`, P&L explain `PNL`, Sensitivities `SENS`) | a subject menu in [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
-| X5 | Counterparties menu | Counterparties `CPTY`; Netting sets `NSET`; Credit limits `LIM`; Pre-deal check `XWIF`; Exposure `EXP` | a subject menu in [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
+| X5 | Counterparties menu | Counterparties `CPTY`; Netting sets `NSET`; Credit limits `LIM`; Pre-deal check `PREDEAL` (the server's pre-deal service, EXPOSURE_GUIDE.md section 18.9; its screen under construction until the Elements libraries land); Exposure `EXP` | a subject menu in [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X6 | Phone form | below 640 px the subject menus fold into one **Trading** menu, a column per subject (option C) | [`core/menus.py`](../../drishti-console/core/menus.py) `lens_menu`; the bar's template and [`drishti_phone.js`](../../drishti-console/web/static/js/drishti_phone.js) put it in below 640 px | tap the lens menu, then an item | **Built** |
 | X7 | Markets menu (A19) | not on the mock-up: the product panel's one Markets menu | Rates `CRV`, `REPO`, `FIX`; Volatility surfaces `IRV`, `CPV`, `FXV`; Foreign exchange `FX`, `FXF`; Credit `CDS`, `BND`; Equities and commodities `EQ`, `EQX`, `CMD`, `CMDC`: the one Markets menu (`gather:` of Curves, Volatility, FX and Credit, then its own columns), the items by `menus.markets`, three columns to a row | click an item: its command | **Built** |
 

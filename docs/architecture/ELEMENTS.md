@@ -644,7 +644,8 @@ library with its module: an unlicensed module's library is not served, its kinds
   - **dependent lists** (`dependsOn`, `parents`: the values offered follow what the other field holds; only the dependent field is drawn
     again, so the field in use keeps its open list and its focus);
   - `setField(path, value)` (one field drawn again; a field being typed in keeps its text), `getField`, `setNotes` (warnings shown where
-    a problem would be), `showErrors` (problems shown at once without marking every field tried); the errors map (`form.errors`) is
+    a problem would be), `showErrors` (problems shown at once without marking every field tried); the widget **`formula`** (a one-line `CodeEditor` through
+    `<input data-di-code>`: `options.mode`, default Rachana, and `options.complete`, the page's completion; the input holds the value); the errors map (`form.errors`) is
     current when `change` fires; `readOnly` as before.
   - The native **`<input type="time">`** and **`<input type="datetime-local">`** are upgraded in place like the dates
     (`upgradeTimeInput`, `upgradeDateTimeInput`; `upgradeFields` does all three).
@@ -994,7 +995,8 @@ under 530 lines each, typed JSDoc, the bundle by `tools/elements/build.py`, `Dri
   `height: 'auto'` (it grows with its text between `minHeight` and `maxHeight`: a formula bar), `singleLine` (a formula field: Enter
   adds no line, a pasted line break is a space), `insert` (text at the cursor, as typed), `setInvalid` (a host's own check), and
   `upgradeCodeArea` for `<input data-di-code>` too (one line; the element holds the value; focus and blur forwarded);
-  `Form`'s `live` (no Save or Reset: an inspector).
+  `Form`'s `live` (no Save or Reset: an inspector). `Inspector` takes `form` (more of `Form`'s options: widgets, layout, pathAttr)
+  and `head` (the host's header for the selection, in place of the schema's title).
 - **Moved onto it, the old code deleted**: the Build workbench's canvas (`build/drishti_canvas.js`: a flow `LayoutCanvas`; the trash,
   grip and size badge are its decoration), its drags (`build/drishti_drag.js`: the kit's `DragHub` and `trackPointer`), its YAML tab
   (`build/drishti_yamltab.js`: `YamlPane` with the schema assistant) and its about box (`CodeEditor`); the BI report designer's canvas
@@ -1166,6 +1168,11 @@ measure (a plain form: the hidden input), and the exposure explorer's pre-deal f
 figures). `terminal/_risk_elements.html` loads drishti-inputs. FRTB-SA's and SIMM's own choice selects (side, by, compare) and the
 library's own two (a form's enum of more than three, the grid's select editor) are still native.
 
+```bash
+DRISHTI_FIGURES_OUT=data/figures/before drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_var_family_figures_browser.py
+DRISHTI_FIGURES_BASELINE=data/figures/before drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_var_family_figures_browser.py
+```
+
 **Open.** The exposure scope tree is still hand-built (not tree data yet); the scenario matrix's date headings lose their hover note (in the column
 description instead); the screens' scripts move into the banking plugin with the module platform (section 8).
 
@@ -1177,13 +1184,13 @@ table editor, `/build/tables?new=table`; "the model designer" in two notes means
 
 | Screen (files) | On the kit | Still its own (moving next) |
 |---|---|---|
-| Build workbench (`build/drishti_*.js`) | canvas (flow `LayoutCanvas`), drags (`DragHub`), YAML tab (`YamlPane`, schema assistant), about box (`CodeEditor`), the form and controls tabs' re-ordering (`sortableList`); undo stays the server's operation log | the inspector (`build/drishti_inspector.js` → `Inspector` from the Rachana schema), the palette (`build/drishti_palette.js` → `Palette`), the data-shape tree (`drishti_build-shape-tree.js` → `Outline`), the expression input (`build/drishti_expr.js` → `CodeEditor`) |
+| Build workbench (`build/drishti_*.js`) | canvas (flow `LayoutCanvas`), drags (`DragHub`), YAML tab (`YamlPane`, schema assistant), about box (`CodeEditor`), the form and controls tabs' re-ordering (`sortableList`), the inspector (`Inspector`: one live `Form` from the Rachana schema), its expressions (the `Form`'s formula widget, completing from `WB.expr.candidates`), the palette (`Palette`); undo stays the server's operation log | the data-shape tree (`drishti_build-shape-tree.js` → `Outline`) |
 | BI report designer (`drishti_bi-design*.js`) | canvas (grid `LayoutCanvas`), undo (`SnapshotHistory`), settle, YAML tab (`CodeEditor` with completion), the Phone and Tablet order's drag (`sortableList`) | the Fields and Visualizations panes (→ `Palette`), the Format pane (→ `Inspector`), the device orders' model (→ `LayoutModel` breakpoints), the expression editor (`drishti_bi-expr-editor.js` → `CodeEditor`) |
-| Dataset designer: the table editor, virtual tables (`drishti_editor-table.js`) | the shell (`DesignerShell`), the YAML (`YamlPane`), the name, rows and look-up dialog (`Form`), every formula field and the statement (`CodeEditor`, one line or whole, through `drishti_editor-formula.js`) | the source and look-up rows, the columns checklist (→ `Form`, drishti-grid editing) |
-| Model designer: the semantic model editor (`drishti_editor-model.js`) | the shell, the YAML, the measures', hierarchies' and row rules' formulas (`CodeEditor`) | the tabs, measure cards and the access matrix (→ `Form`, drishti-grid), relationships |
+| Dataset designer: the table editor, virtual tables (`drishti_editor-table.js`) | the shell (`DesignerShell`), the YAML (`YamlPane`), the name, rows and look-up dialog (`Form`), every formula field (the `Form`'s formula widget) and the statement (`CodeEditor`, through `drishti_editor-formula.js`) | the source and look-up rows, the columns checklist (→ `Form`, drishti-grid editing) |
+| Model designer: the semantic model editor (`drishti_editor-model.js`) | the shell, the YAML, the measures', hierarchies' and row rules' formulas (`CodeEditor`), the Overview's name, title and words and the masks (live `Form`s) | the rows of the tables, relationships, measures, hierarchies and row rules, and the access matrix (→ drishti-grid editing) |
 | Python table and model editor (`drishti_editor-python.js`) | the shell, the YAML | the code beside its contract (→ `CodeEditor` Python), the templates |
 | + New steps (`drishti_editor-new.js`) | the shell | the guided steps (→ `Form`) |
-| Sutra screen designer: Customize, Grid, Outline, Describe (`drishti_designer*.js`, `templates/designer/`) | the drags (`trackPointer`, `DragHub`), the Grid's formula bar (`CodeEditor` with completion), the Outline mode's tree (`Outline`) | the panel handles (→ `LayoutCanvas` flow), the Grid's cells (→ `LayoutCanvas` grid), the settings and forms panels (→ `Inspector`) |
+| Sutra screen designer: Customize, Grid, Outline, Describe (`drishti_designer*.js`, `templates/designer/`) | the drags (`trackPointer`, `DragHub`), the Grid's formula bar (`CodeEditor` with completion), the Outline mode's tree (`Outline`), the columns checklist (`Form`'s checkboxes) | the panel handles (→ `LayoutCanvas` flow), the Grid's cells (→ `LayoutCanvas` grid), the settings and forms panels (→ `Inspector`) |
 | Form designer (the workbench's Form and Controls tabs) | the cards' order by drag (`sortableList`) | their fields (→ `Inspector`) |
 | BI Studio shell and theme designer (`drishti_bi-studio.js`, `drishti_bi-theme-designer.js`) | | the explorer, tabs and dock (→ `DesignerShell`), the theme YAML (→ `YamlPane`) |
 | BI items, workspaces, transforms (`templates/bi/item.html`, `workspace.html`, `transform.html`) | | the YAML and Python text areas (→ `CodeEditor`) |
@@ -1212,6 +1219,15 @@ step: move, un-nest, or nest after asking where it opens). The editors' formula 
 **Still on the allow-list**: the workbench's data-shape tree, already on drishti-tree's `TreeOutline` on its own branch; once that branch
 is in, the kit's `Outline` and drishti-tree's `TreeOutline` fold into one component (never two implementations side by side) and the
 list is empty.
+
+**Fourth pass (the panes, wip/e-panes).** The Build workbench's inspector is the kit's `Inspector`: one live `Form` whose schema is made
+from the Rachana schema (sections Required, the kind's options, Placement and heading; lists as repeatable groups; a tabs panel's body
+by its kind; the structured options through `build/drishti_forms.js`'s converter); its header (the kind, About, Remove panel, Bind
+field) is the host's `head`. Its expression fields are the `Form`'s new **formula** widget (`<input data-di-code="rachana">`, a
+one-line `CodeEditor` with the host's completion), the hand-made completion list deleted; the palette is the kit's `Palette` over the
+page's `DragHub`. The table editor's own formula widget folded into the `Form`'s. A new rule in `test_designer_kit_guard.py`: no
+console script draws a label and an input in a loop over a schema's properties or fields (an inspector or form pane made by hand); its
+allow-list (2: a lake's classifier and promote checkboxes, a BI transform's parameters) only shrinks and ends at 0.
 
 ## 13. Risks
 

@@ -25,7 +25,7 @@ from urllib.parse import quote
 
 import yaml
 
-from core import engines, under_construction
+from core import engines, modules, under_construction
 from core.edition import Edition
 from core.edition_gate import feature_on
 
@@ -74,6 +74,8 @@ def _holds(request, edition: Edition, need: str, ctx: dict) -> bool:
         return _has_route(request, value)
     if kind == "engine":                                         # requires: engine:frtb-sa (COMPUTE_ENGINES.md 5.2)
         return engines.engine_available(value)
+    if kind == "module":                                         # requires: module:banking (ACCESS_MODEL.md: on for this person)
+        return modules.module_on(value)
     return True
 
 
@@ -232,15 +234,25 @@ def _engine_columns(request, edition: Edition, menu: dict, ctx: dict, fill: dict
         eid = str(col.get("engine") or "")
         if not eid or not engines.engine_available(eid) or not _person_opens(request, list(col.get("opens") or [])):
             continue
-        items = _items(request, edition, "engines", col, ctx, fill)
+        items = _items(request, edition, "engines", col, ctx, fill, menu)
         if items:
             out.append((_text(col.get("title"), fill) or engines.title(eid), items, str(col.get("word") or ""), eid))
     return out
 
 
-def _items(request, edition: Edition, mid: str, col: dict, ctx: dict, fill: dict) -> list:
+def _domain_hidden(*tagged: dict) -> bool:
+    """The innermost ``domain:`` tag of an item, its column and its menu (core when none says), and whether that module is off."""
+    for t in tagged:
+        if isinstance(t, dict) and t.get("domain"):
+            return modules.tag_hidden(str(t["domain"]))
+    return False
+
+
+def _items(request, edition: Edition, mid: str, col: dict, ctx: dict, fill: dict, menu: dict | None = None) -> list:
     items = []
     for it in col.get("items") or []:
+        if _domain_hidden(it, col, menu or {}):                    # a domain module that is off: its entries are not drawn
+            continue
         if not all(_holds(request, edition, str(n), ctx) for n in it.get("requires") or []):
             continue
         if not edition.menu_shown(mid, str(it.get("id") or "")) or engines.menu_hidden(str(it.get("id") or "")):
@@ -296,8 +308,10 @@ def top_bar(request, ctx: dict) -> list:
                 out.append((_text(menu.get("label"), fill), menu.get("icon"), columns))
             continue
         columns = []
+        if _domain_hidden(menu):                                # a menu of a domain module that is off
+            continue
         for col in _columns(menu, every):                       # an item of a gathered column is filtered as the gathering menu's
-            items = _items(request, edition, mid, col, ctx, fill)
+            items = _items(request, edition, mid, col, ctx, fill, menu)
             if mid == "views" and col is (menu.get("columns") or [None])[-1]:
                 for link in lens_links(request):                # the lenses: one link each, in Views (and on Home)
                     items.append((link["href"], "box-arrow-left" if link["leave"] else "eye", link["label"],

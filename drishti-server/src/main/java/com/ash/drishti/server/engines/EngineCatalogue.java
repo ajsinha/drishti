@@ -17,11 +17,15 @@ package com.ash.drishti.server.engines;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,14 +34,17 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The engine catalogue (docs/architecture/COMPUTE_ENGINES.md section 2), {@code engines/catalogue.yaml} inside the jar: every compute engine
- * of the product, its file, switch, old switch names, what it needs and uses, and everything it brings to the screen. Read once; a cycle of
- * needs refuses it (the build test reads it too).
+ * The engine catalogue (docs/architecture/COMPUTE_ENGINES.md section 2): every compute engine of the product, its file, switch, old switch
+ * names, what it needs and uses, and everything it brings to the screen. The core's engines are {@code engines/catalogue.yaml} inside the
+ * server's jar; each domain module's are {@code META-INF/drishti/engines.yaml} inside its own jar (DOMAIN_MODULES.md: the module owns its
+ * engines), read first. A module not installed brings none. Read once; a cycle of needs refuses it (the build test reads it too).
  */
 public final class EngineCatalogue {
 
-    /** Where the catalogue is inside the jar. */
+    /** Where the core's catalogue is inside the jar. */
     public static final String RESOURCE = "engines/catalogue.yaml";
+    /** Where a domain module's engines are inside its jar. */
+    public static final String MODULE_RESOURCE = "META-INF/drishti/engines.yaml";
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
 
     /**
@@ -111,11 +118,23 @@ public final class EngineCatalogue {
 
     /** The product's catalogue, from the jar. */
     public static EngineCatalogue load() {
-        try (InputStream in = EngineCatalogue.class.getClassLoader().getResourceAsStream(RESOURCE)) {
-            if (in == null) {
-                throw new IllegalStateException(RESOURCE + " is not in the jar");
+        ClassLoader cl = EngineCatalogue.class.getClassLoader();
+        try {
+            ArrayNode engines = YAML.createArrayNode();
+            for (URL u : Collections.list(cl.getResources(MODULE_RESOURCE))) {            // each installed module's engines, first
+                try (InputStream in = u.openStream()) {
+                    YAML.readTree(in).path("engines").forEach(engines::add);
+                }
             }
-            return parse(YAML.readTree(in));
+            try (InputStream in = cl.getResourceAsStream(RESOURCE)) {
+                if (in == null) {
+                    throw new IllegalStateException(RESOURCE + " is not in the jar");
+                }
+                YAML.readTree(in).path("engines").forEach(engines::add);
+            }
+            ObjectNode root = YAML.createObjectNode();
+            root.set("engines", engines);
+            return parse(root);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -176,10 +195,13 @@ public final class EngineCatalogue {
         return Optional.ofNullable(best);
     }
 
-    /** Refuses an entry that needs or uses an engine the catalogue does not hold, and a cycle of needs. */
+    /**
+     * Refuses an entry that needs an engine the catalogue does not hold, and a cycle of needs. A soft use of an engine the catalogue does not
+     * hold is no use: that engine's module is not installed here (the pivot uses the VaR engine when the banking module is there).
+     */
     private void check() {
         for (Entry e : entries.values()) {
-            for (String n : concat(e.needs(), e.uses())) {
+            for (String n : e.needs()) {
                 if (!entries.containsKey(n)) {
                     throw new IllegalArgumentException("engines/catalogue.yaml: " + e.id() + " names the engine " + n + ", which is not in the catalogue");
                 }
@@ -195,11 +217,5 @@ public final class EngineCatalogue {
         for (String n : entries.get(id).needs()) {
             visit(n, new HashSet<>(path));
         }
-    }
-
-    private static List<String> concat(List<String> a, List<String> b) {
-        List<String> out = new ArrayList<>(a);
-        out.addAll(b);
-        return out;
     }
 }

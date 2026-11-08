@@ -17,7 +17,8 @@
    words, conditional fields, arrays, the code editor for a formula). The host says which schema fits the selection (schemaFor) and
    what its values are (valuesFor); each edit is the host's at once ("change" with the path and the value), which it keeps as one step of
    its undo. With several items selected the inspector shows the fields they share, a field whose values differ left blank and marked
-   "mixed"; an edit sets it on every one. */
+   "mixed"; an edit sets it on every one. A host gives the form more of Form's options (its own widgets, a layout) and its own header
+   (what the selection is, its actions) beside the title. */
 import { EventBus, h } from '../../drishti-core/src/drishti_index.js';
 import { Form } from '../../drishti-inputs/src/drishti_index.js';
 
@@ -62,6 +63,9 @@ export function sharedSchema(schemas) {
  * @property {string} [empty='Select an item to see its properties.'] what an empty selection says
  * @property {boolean} [readOnly=false]
  * @property {string} [locale]
+ * @property {Object} [form] more options for the Form (widgets, layout, pathAttr: drishti-inputs' FormOptions)
+ * @property {function(string[], Object): (?Node|Node[])} [head] the host's header for the selection (what it is, its actions), drawn
+ *   in place of the schema's title
  */
 
 /**
@@ -124,10 +128,13 @@ export class Inspector {
     this.mixed = values.__mixed || [];
     delete values.__mixed;
     this.head.textContent = this.ids.length > 1 ? this.ids.length + ' items selected' + (this.mixed.length ? ' · mixed: ' + this.mixed.join(', ') : '') : (schema.title || '');
+    const own = this.o.head ? this.o.head(this.ids.slice(), schema) : null;
+    if (own) { this.head.textContent = ''; this.head.append(...[].concat(own).filter(Boolean)); }
     const host = h(this.doc, 'div', { cls: 'dd-inspector-form' });
     this.body.appendChild(host);
-    this.form = new Form(host, { schema: Object.assign({}, schema, { title: '' }), value: values, live: true, readOnly: !!this.o.readOnly, locale: this.o.locale });
-    this.mixed.forEach((k) => { const w = host.querySelector('[data-path="' + k + '"]'); if (w) { w.setAttribute('data-dd-mixed', ''); } });
+    this.form = new Form(host, Object.assign({}, this.o.form, { schema: Object.assign({}, schema, { title: '' }), value: values, live: true, readOnly: !!this.o.readOnly, locale: this.o.locale }));
+    const at = (this.o.form && this.o.form.pathAttr) || 'data-path';
+    this.mixed.forEach((k) => { const w = host.querySelector('[' + at + '="' + k + '"]'); if (w) { w.setAttribute('data-dd-mixed', ''); } });
     this.form.on('change', (c) => { if (this.problem(c.path) === null) { this.events.emit('change', { ids: this.ids.slice(), path: c.path, value: c.value, values: c.values }); } });
   }
 

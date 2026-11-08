@@ -14,17 +14,16 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The inspector's options that are not plain text (QA UX-03), drawn as drishti-inputs' Form (live): numbers (checked in words), a number or
- * "all", a fixed set (select), true/false (a switch), a list of names, a list of objects, and an object with its own properties (the
- * table's `pivot`, histogram `markers`, a pivot's `by`), and a switch with its settings. A piece of the Rachana schema becomes one field
- * of a form's schema; the value goes in and comes back out in the document's own shape. Every control carries a label.
+/* The inspector's options that are not plain text (QA UX-03) as fields of drishti-inputs' Form (the inspector's one live Form): numbers
+ * (checked in words), a number or "all", a fixed set (select), true/false (a switch), a list of names, a list of objects, an object with its
+ * own properties (the table's `pivot`, histogram `markers`, a pivot's `by`) and a switch with its settings. A piece of the Rachana schema
+ * becomes one field of the form's schema; the value goes in and comes back out in the document's own shape. Every control carries a label.
  *
- *   WB.Forms.edit(schema, value, onChange, name, enums) -> element      onChange(newValue) with null to clear the option
- *   enums: {fmt: [...], tone: [...]} for the properties of those names                                                          */
+ *   WB.Forms.toField(schema, value, name, enums) -> {field, into(value), out(formValue)}      out answers WB.Forms.SKIP for a value that
+ *   does not read (the design keeps its own); null clears the option.   enums: {fmt: [...], tone: [...]} for the properties of those names */
 (function () {
   'use strict';
   var WB = window.Drishti.WB = window.Drishti.WB || {};
-  var el = function (t, c, x, a) { return WB.el(t, c, x, a); };
   var SKIP = {};                                       // a value that does not read (a number out of range): the design keeps its own
 
   function jsType(v) {
@@ -113,22 +112,5 @@
     return { field: { type: 'string', lazy: true, hook: { 'aria-label': name } }, into: function (v) { return v == null ? undefined : String(v); }, out: function (v) { return v === undefined || v === '' ? null : v; } };
   }
 
-  /** The control of one option: a live drishti-inputs Form with one field, the option. */
-  function edit(s, value, onChange, name, enums) {
-    var I = window.Drishti.elements && window.Drishti.elements.inputs;
-    var conv = toField(s, value, name, enums), host = el('div', 'wb-form', null, { 'data-wb-form': name });
-    if (!I) { return host; }
-    var form = new I.Form(host, { live: true, schema: { type: 'object', properties: { v: Object.assign({}, conv.field, { title: name }) } }, value: { v: conv.into(value) } });
-    form.on('change', function () { var out = conv.out(form.getField('v')); if (out !== SKIP) { onChange(out); } });
-    return host;
-  }
-
-  /** A caption for a control made of several (a number with an "all" box, a switch with its settings). */
-  function captioned(text, node) {
-    var w = el('fieldset', 'wb-field wb-cap-set');
-    w.appendChild(el('legend', 'wb-cap', text)); w.appendChild(node);
-    return w;
-  }
-
-  WB.Forms = { edit: edit, captioned: captioned };
+  WB.Forms = { toField: toField, SKIP: SKIP };
 })();
