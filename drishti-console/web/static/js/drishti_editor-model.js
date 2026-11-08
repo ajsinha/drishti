@@ -92,9 +92,11 @@
     var sec = doc.security || {};
     panel.appendChild(h('div', { class: 'ed-four' },
       h('section', { class: 'ed-card', 'data-question': 'about' }, h('h3', { text: 'What is it about?' }),
-        h('label', { class: 'ed-field' }, h('span', { text: 'Name' }), input(ctx, doc.model, 'model', 'Name', function (d, v) { d.model = v.trim(); })),
-        h('label', { class: 'ed-field' }, h('span', { text: 'Title' }), input(ctx, doc.title, 'title', 'Title', function (d, v) { if (v.trim()) { d.title = v; } else { delete d.title; } })),
-        h('label', { class: 'ed-field' }, h('span', { text: 'In words' }), input(ctx, doc.description, 'description', 'Description', function (d, v) { if (v.trim()) { d.description = v; } else { delete d.description; } }))),
+        E.liveForm(ctx, 'ed-about', 'What is it about?', {
+          model: { type: 'string', title: 'Name', hook: { 'data-path': 'model' } }, title: { type: 'string', title: 'Title', hook: { 'data-path': 'title' } },
+          description: { type: 'string', title: 'In words', hook: { 'data-path': 'description', 'aria-label': 'Description' } } },
+        { model: doc.model, title: doc.title, description: doc.description },
+        function (d, path, v) { if (path === 'model') { d.model = (v || '').trim(); } else if ((v || '').trim()) { d[path] = v; } else { delete d[path]; } })),
       h('section', { class: 'ed-card', 'data-question': 'by' }, h('h3', { text: 'What do people look at it by?' }),
         h('p', { text: dims.length ? dims.join(', ') + (Object.keys(doc.hierarchies || {}).length ? '; hierarchies: ' + Object.keys(doc.hierarchies).join(', ') : '') : 'the fact table\'s own columns (add dimension tables in Tables)' })),
       h('section', { class: 'ed-card', 'data-question': 'numbers' }, h('h3', { text: 'What numbers does it give?' }),
@@ -259,19 +261,16 @@
   /* ---- Masks -------------------------------------------------------------------------------------------------------------------- */
   function masks(ctx, panel, doc) {
     var h = ctx.h, masked = ((doc.security || {}).masked || []);
-    var list = h('div', { class: 'ed-picks', 'data-masks': '' });
-    fields(ctx, doc).forEach(function (f) {
-      list.appendChild(h('label', {}, h('input', { type: 'checkbox', checked: masked.indexOf(f.name) >= 0, 'data-mask': f.name, 'aria-label': 'Mask ' + f.name,
-        on: { change: function (e) {
-          var on = e.target.checked;
-          ctx.change(function (d) {
-            d.security = d.security || {};
-            var m = (d.security.masked || []).filter(function (x) { return x !== f.name; });
-            if (on) { m.push(f.name); }
-            if (m.length) { d.security.masked = m; } else { delete d.security.masked; if (!Object.keys(d.security).length) { delete d.security; } }
-          }, 'security.masked');
-        } } }), ' ' + f.name));
+    var names = fields(ctx, doc).map(function (f) { return f.name; });
+    var list = E.liveForm(ctx, 'ed-picks', 'Masked columns', {             // drishti-inputs' Form: a row of checkboxes, each with its data-mask hook
+      masked: { type: 'array', title: 'Masked columns', widget: 'checkboxes', optionHook: 'mask', items: { type: 'string', 'enum': names } } },
+    { masked: masked.filter(function (x) { return names.indexOf(x) >= 0; }) },
+    function (d, path, v) {
+      d.security = d.security || {};
+      var keep = (d.security.masked || []).filter(function (x) { return names.indexOf(x) < 0; }), m = keep.concat(v || []);   // a mask of a column not listed here stays
+      if (m.length) { d.security.masked = m; } else { delete d.security.masked; if (!Object.keys(d.security).length) { delete d.security; } }
     });
+    list.setAttribute('data-masks', '');
     panel.appendChild(h('p', { class: 'ed-small', text: 'A masked column shows ••• to every reader without the raw power, and cannot filter, sort or group.' }));
     panel.appendChild(list);
   }

@@ -115,6 +115,10 @@ Mock-up: [g6-apikeys.html](mockups/editors/g6-apikeys.html); all three options.
 - **Impact before change**: every editor shows what uses the object (models, Sutras, reports, boards, keys) before it is changed.
 - **One grammar**: every formula, filter, row rule and computed column is Rachana, typed in drishti-inputs' code editor (one line for a
   field, the whole text for the statement) with the function catalogue and the editor's names as its completion.
+- **Built from Drishti Elements, never by hand** ([ELEMENTS.md section 3.1](ELEMENTS.md#31-standing-rule-no-bespoke-ui)): every pane of
+  fields is drishti-inputs' `Form` (live, with the formula widget for a Rachana field: the table's name, rows and look-ups, the model's
+  Overview and masks, the Build workbench's inspector through drishti-designer's `Inspector`); the rows of a table of settings (a model's
+  tables, relationships, measures, hierarchies and row rules) move onto drishti-grid's editing.
 - **One entitlement service**: row rules and masks are enforced on the server for every reader (BI, Pivot, VaR, Flight, the API).
 - **Computed on the server**: previews, totals and Python runs happen on the server; the console only displays.
 - **Under construction**: an editor or a part of one that depends on unbuilt work is hidden or marked from the registry

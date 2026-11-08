@@ -28,15 +28,6 @@
   var text = false;     // the Text toggle, for this page
   var I = window.Drishti.elements && window.Drishti.elements.inputs;
 
-  /** A live Form for some of the document's fields: each change goes into the document, each focus tells the editor where the cursor is. */
-  function liveForm(ctx, cls, label, schema, value, apply) {
-    var host = ctx.h('div', { class: cls });
-    var f = new I.Form(host, { schema: { type: 'object', properties: schema }, value: value, live: true, layout: 'columns', label: label, pathAttr: 'data-form-path' });
-    f.on('change', function (e) { ctx.change(function (d) { apply(d, e.path, e.value); }, e.path); });
-    host.addEventListener('focusin', function (e) { var p = e.target.getAttribute && e.target.getAttribute('data-path'); if (p) { ctx.focus(p); } });
-    return host;
-  }
-
   function kindOf(ctx, doc) {
     var k = doc.from && doc.from.kind;
     return k ? (ctx.sources().kinds || []).filter(function (x) { return x.kind === k; })[0] : null;
@@ -73,7 +64,7 @@
           title: S.statementRefused || 'The same table as one Rachana statement', disabled: !!S.statementRefused, on: { click: function () { text = true; ctx.redraw(); } } }, 'Text')));
     host.appendChild(bar);
     if (text && !S.statementRefused) { return statement(ctx, host); }
-    host.appendChild(liveForm(ctx, 'ed-row2', 'The table', {
+    host.appendChild(E.liveForm(ctx, 'ed-row2', 'The table', {
       table: { type: 'string', title: 'Name', hook: { 'data-path': 'table' } },
       title: { type: 'string', title: 'Title', hook: { 'data-path': 'title' } } }, { table: doc.table, title: doc.title },
     function (d, path, v) { var t = (v || '').trim(); if (path === 'table') { d.table = t; } else if (t) { d.title = t; } else { delete d.title; } }));
@@ -222,7 +213,7 @@
     var h = ctx.h;
     var mat = typeof doc.materialize === 'string' ? doc.materialize : doc.materialize && doc.materialize.live ? 'live' : 'none';
     var kinds = [['none', 'read on demand'], ['on-load', 'kept per business date, rebuilt on each load']].concat(mat === 'live' ? [['live', 'live (in memory by key)']] : []);
-    return h('section', { class: 'ed-card' }, h('h3', { text: 'Rows' }), liveForm(ctx, 'ed-rows', 'Rows', {
+    return h('section', { class: 'ed-card' }, h('h3', { text: 'Rows' }), E.liveForm(ctx, 'ed-rows', 'Rows', {
       filter: { type: 'string', title: 'Keep the rows where (Rachana over the source)', widget: 'formula', options: { complete: E.complete(ctx.names) }, hook: { 'data-path': 'filter' } },
       grain: { type: 'string', title: 'One row per (grain: a list in the document)', hook: { 'data-path': 'grain' } },
       materialize: { type: 'string', title: 'Materialisation', enum: kinds.map(function (k) { return k[0]; }), enumLabels: kinds.map(function (k) { return k[1]; }), widget: 'select', allowEmpty: false,
