@@ -18,8 +18,9 @@
 How Drishti's data layer is built, for developers: **live updates** (section 1: streams, frames, coalescing, reconnects, live
 BI), **history queries** (section 2: an entity over time), **drishti-iceberg** (section 3: Drishti's own Apache Iceberg
 engine), **reactive connectors** (section 4: R1 to R4 built; R5 and R6 planned), **the content store**
-(section 5: user content every node reaches) and **the one Drishti database** (section 6: design, not built; the
-write-back tables are built).
+(section 5: user content every node reaches), **the one Drishti database** (section 6: design, not built; the
+write-back tables are built), **loading** (section 7: the data inbox), **the lake file** (section 8), **the in-memory lake** (section 9),
+**the parallel lake loader** (section 10) and **Arrow Flight** (section 11: data out to any client).
 
 | Section | Status |
 |---|---|
@@ -30,9 +31,13 @@ write-back tables are built).
 | 5. The content store | built, built |
 | 6. The one Drishti database | design, not built (the write-back tables are built) |
 | 7. Loading: the data inbox and the load rules | built (internal notes; the guide is DATA_LAKE_GUIDE.md) |
+| 8. The lake file | built |
+| 9. The in-memory lake | built (what is not yet: 9.10) |
+| 10. The parallel lake loader | built |
+| 11. Arrow Flight | built |
 
 The people who load data read [DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md) and [DATA_GUIDE.md](../guides/DATA_GUIDE.md); the connectors are [CONNECTORS.md](../connectors/CONNECTORS.md)
-and the per-store documents; VaR's intake is [PARALLEL_LOADER.md](PARALLEL_LOADER.md). Each section keeps its own numbering.
+and the per-store documents; VaR's intake is the parallel lake loader ([section 10](#10-the-parallel-lake-loader-drishti-lakeload)). Each section keeps its own numbering.
 
 ## Contents
 
@@ -138,6 +143,10 @@ and the per-store documents; VaR's intake is [PARALLEL_LOADER.md](PARALLEL_LOADE
     - [11. Tests](#11-tests)
     - [12. Decisions (product owner, 2026-10-20)](#12-decisions-product-owner-2026-10-20)
 7. [Loading: the data inbox and the load rules (internal)](#7-loading-the-data-inbox-and-the-load-rules-internal)
+8. [The lake file: one description of every lake](#8-the-lake-file-one-description-of-every-lake)
+9. [The in-memory lake: Delta tables that never touch a disk](#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk)
+10. [The parallel lake loader (drishti-lakeload)](#10-the-parallel-lake-loader-drishti-lakeload)
+11. [Arrow Flight: Drishti's data to any client](#11-arrow-flight-drishtis-data-to-any-client)
 
 ## 1. Live updates
 
@@ -335,7 +344,7 @@ The alerts stream does not count against `drishti.live.max-streams`.
 | `view:<kind>/<id>` | The view stream above. `frame` patches for panels other than line and area charts gain an `html` field with the rendered panel. |
 | `alerts` | The alerts stream. |
 | `monitor:<name>` | A monitor's stream. |
-| `compute:<request id>` | A computed panel's request ([REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md)): `hello`, `progress` (`{done, of, estimate}`), `state` (stale, with words), `done`, `failed`, and `updated` while the panel stays open and a trigger recomputes what it shows. Its owner's only. The page's `drishti_compute.js` subscribes for every panel with `data-compute-req` and fetches the panel again on `done`, `failed` or `updated`. |
+| `compute:<request id>` | A computed panel's request ([the reactive connector](../connectors/types/reactive/README.md)): `hello`, `progress` (`{done, of, estimate}`), `state` (stale, with words), `done`, `failed`, and `updated` while the panel stays open and a trigger recomputes what it shows. Its owner's only. The page's `drishti_compute.js` subscribes for every panel with `data-compute-req` and fetches the panel again on `done`, `failed` or `updated`. |
 | `bilive:<report id>` | A BI report's live tables ([below](#live-bi-a-reports-live-tables)): `hello`, `tick` and `status` events with no data. |
 
 Up to `live.max_subscriptions` (32) subscriptions per channel, that is per browser: a view open in several tabs
@@ -2149,7 +2158,7 @@ drishti-iceberg whichever engine wrote it, on local disk and in S3 alike (`Icebe
 
 Status: **R1 to R4 built and built (2026-10-26); R5 and R6 planned, in no release yet.** Designed with the product owner (2026-10-24). What is built, and
 where it differs from the design below, is in [section 21](#21-built-r1-to-r4); the reference for people who write and run reactive
-connectors is [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md) and [tutorial 23](../tutorials/23-computed-panels.md).
+connectors is [the reactive connector's README](../connectors/types/reactive/README.md) and [tutorial 23](../tutorials/23-computed-panels.md).
 Everything named below that section 21 does not list as built is **planned**. Related designs:
 [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) (the workers that run the computations, `requires:` and approval),
 [VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) (the first reactive connector: a generic VaR engine), [WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) (a saved change
@@ -2761,7 +2770,7 @@ The worker pools themselves are configured once per site, in the planned `config
 ### 21. Built: R1 to R4
 
 Built on the compute workers C1 to C3 ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md)). The reference is
-[REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md); the sample is the `compute-demo` pack (not loaded by default).
+[the reactive connector's README](../connectors/types/reactive/README.md); the sample is the `compute-demo` pack (not loaded by default).
 
 | Part | Implementation | Where |
 |---|---|---|
@@ -3497,3 +3506,496 @@ The screen is mock-up A of three ([A](mockups/dataload-inbox/A.html), [B](mockup
 inbox. Tests: the hand-shake, claims and the lock (two runners, a stale lock), the ledger, routing, every failure, recovery with a fault
 injected after each step, and an integration over a temporary data folder and lake. Still planned: the three-node and Windows (NTFS)
 tests.
+
+## 8. The lake file: one description of every lake
+
+How the lake configuration is built. Every key of the file, with examples, is
+[DATA_LAKE_GUIDE.md section 2](../guides/DATA_LAKE_GUIDE.md#2-the-lake-file-every-key).
+
+### 8.1 The rule
+
+**A lake is configuration of its own**, not part of a connector: a Delta or Iceberg lake can be anywhere, and a reader must not own what
+only a writer decides. One file per lake, `config/lakes/<lake>.yaml`, says where the lake is (`root`: a folder, `s3://…`, or
+`mem://<store>`), how to reach it (`storage`, `catalog`) and every table in it. **Writers** (the data inbox, `lake build`, the parallel
+loader, the demo lakes, the official-record publishers) create and write tables exactly as it says; **readers** (the Delta and Iceberg
+connectors, BI, the pivot engine, Arrow Flight) find tables through it. Nobody else holds a root, a path, a partition or a promoted
+column, so one table can never be described in several places that disagree.
+
+- **Every table is partitioned by `business_date` first.** It is not a setting; `partition-by` names only what comes after it.
+- **Everything specific to a table lives in its entry:** path, format, partitions, promoted columns, vectors, id, date, `latest-by`,
+  load mode, file layout, retention, maintenance, time travel, table properties, and for a `mem://` lake the cap and contract.
+- **Where an entry comes from.** A pack ships recommended entries for its kinds (the `lake:` block of `pack.yaml`). When a pack is
+  installed into a lake, or a writer first meets a kind the lake file lacks, the pack's entry is copied into the lake file and said so;
+  from then on the lake file is the truth.
+- **The demo lake is a lake like any other** (`config/lakes/demo.yaml`): `lake demo`, `build_demo_lakes.py` and the stack's synthetic
+  lakes write through it.
+- **Append keeps the replace-safety.** `load-mode: append` adds rows to the dates a load holds; each load carries a batch id recorded in
+  the table's commit, so a batch already committed is never appended twice (a repeated file, a crash and retry); two rows of one id on
+  one date are resolved by `latest-by` when read.
+
+### 8.2 Who reads it
+
+| Consumer | Uses |
+|---|---|
+| Delta and Iceberg connectors | `lake: <name>` and their tables (`lake-tables:`); root, paths, format, storage, promoted columns and vectors come from the lake file. A connector file keeps only reading concerns (caches, refresh, which kinds, the source name) |
+| `lake build`, the parallel loader (`LoadConfig`) | `--lake` (`target.lake`); partitioning, promoted columns, vectors and file layout from the lake file. A `--partition-by` that disagrees is refused, both named |
+| The data inbox | a routing rule names a lake and a kind; a new table is created exactly as the lake file says |
+| The in-memory lake | a lake whose root is `mem://<store>`, its cap and contract in the same file ([section 9](#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk)) |
+| Admin → Lakes | every lake and table, read-only (`GET /api/v1/admin/lakes/files`) |
+
+A connector may also name tables by path (`root`, `domain`, `table.<kind>`, `layout.<kind>.*`), for tables no lake file describes; both
+forms are permanent. `drishti.py lake migrate-config` writes lake files from path-form connectors on request.
+
+### 8.3 How it is built
+
+| Part | Where | Why this way |
+|---|---|---|
+| The reader | module `drishti-lakeconfig` (`Lakes`, `Lake`, `LakeTable`, `LakeCheck`, `LakeFiles`, `ConnectorLake`, `PackEntry`, `LakesCli`) | a module of its own with Jackson as its only dependency: its users sit on both sides of the plugin boundary (the source registry, the loader run alone, the data inbox, the in-memory lake, the server); drishti-api stays dependency-free and drishti-common brings Spring |
+| Python | `tools/lake/lakeconfig.py` runs `LakesCli` (`dump`, `table`, `check`, `migrate-config`, `add-entry`) and reads its JSON | one reader, the Java one. The one exception is `tools/lake/memory_caps.py`, which sizes the JVM before any JVM runs and reads two keys (`root`, `memory.max-mb`) |
+| Several tables of one kind | an entry is `<domain>.<table>` with `kind:` (`trading.trade_endur`, `kind: trade`); connectors name entries with `lake-tables:`; the loader picks with `target.table` | the demo lake has three trade tables (ENDUR, CALYPSO, MUREX); a kind with several tables is never guessed |
+| Readers | `SourceRegistry.ownSettings` expands `lake:` into the settings the plugins already read (`root`, `domain`, `table.<kind>`, `layout.<kind>.columns`, `layout.<kind>.vectors`, `s3.<key>`, `catalog`, `uri`, `warehouse`) | one point every connector's settings pass, whatever file or template they came from; the plugins keep one way of reading. A connector that names a lake and also sets one of those keys is refused |
+| Writers | `LoadConfig` (`target.lake`), `LoaderProcess` (the inbox), `lake build --lake NAME [--lake-root DIR]`, `lake demo --lake-name demo`, `build_demo_lakes.py` | `--lake-root` lets a scratch or test lake take a lake's layout |
+| Append | `TableTarget.appended`; `DeltaTarget` (`withTransactionId(drishti-batch:<batch>:<date>, 1)`); `IcebergTarget` (`drishti.batch` in the snapshot summary) | the batch is per date, so a crash after some dates' commits retries only the rest. The batch rule exists once, in the Java loader: the Python writer refuses an append into a lake-file append table |
+| Memory stores | `MemoryLakeSettings.withLakeStores` | the engine file keeps the switch, the replenish jobs and the compaction policy (the engine's work); the lake file keeps the description |
+| Packs | every shipped pack's `lake:` block; its Delta templates `lake: demo` + `lake-tables`; `tools/packlake.py` (`lake_form` for the generators, `view` for the tools that read a template's layout); `PackEntry` | one transformation each way, so the generators and every reader of a template agree |
+| Shipped copy | `drishti-lakeconfig/src/main/resources/drishti/lakes/demo.yaml`, checked equal by `settings_catalogue.py` | a server in another working folder (a container, a stack node) knows the demo lake |
+| References | nested `${A:${B:x}/delta}`, resolved with the server's settings (`Lakes.useProperties`, installed by `PackEnvironmentPostProcessor`), else a dotted name as a system property or its environment form | the demo root follows the data folder and a `--setting` or test property |
+| Official results | `config/lakes/banking/var-official.yaml`, `ccr-official.yaml`; `OfficialReaders` only switches the plugin | the readers follow the publisher without a second description of its store |
+| Inbox loader | `Lakes.environment()`: the settings the lake files name, as the server resolves them, handed to the child process | nothing resolved twice |
+| Iceberg demo store | `stores.py`: lake `demo-iceberg`, its file beside the connector folder from the packs' entries | no path-form connector left |
+| Maintenance | `maintconfig.from_lake_entry` into `maintain.py`'s own keys; lake file over the maintenance file, never under the retention floor | the Delta and Iceberg maintain paths unchanged |
+
+### 8.4 Checks
+
+At start and in `drishti.py lake check`: every connector names a known lake; every table in a lake file matches its table on disk
+(format, partition columns, promoted columns present); every kind a pack serves from a lake has an entry. A writer refuses to create a
+table that has no entry. A partitioning that differs from the table on disk is reported, never rewritten: nothing under `data/` is
+changed by the lake file.
+
+## 9. The in-memory lake: Delta tables that never touch a disk
+
+Some feeds may not, by contract, be saved on a disk. How it is used, every setting and troubleshooting:
+[DATA_LAKE_GUIDE.md section 13](../guides/DATA_LAKE_GUIDE.md#13-the-in-memory-lake); a worked example is
+[tutorial 31](../tutorials/31-news-in-memory-only.md).
+
+### 9.1 The idea
+
+A table of a memory-only feed is an ordinary **Delta table** (its `_delta_log` and its Parquet files) whose files live in the server's
+memory instead of on a disk or in S3. Every Java reader and writer reaches a lake through one interface, `com.ash.drishti.lakeio.Storage`
+(`LocalStorage` for disk, `S3Storage` for S3); a third implementation, **`MemoryStorage`**, answers paths of the scheme **`mem://`**
+from off-heap memory under a **hard byte cap**. A server **replenish job** reads the feed (any connector) and writes the table with the
+Java lake writer, exactly as it writes a disk lake; the Delta connector reads it with `root: mem://…` like any other. When memory runs
+short the store gives up what it can lose without harm, in a fixed order, and asks the job to refill it; it never writes a byte to disk,
+and a guard refuses every other way the data could reach one. It is a general lake, not a VaR feature, though VaR may read from it.
+
+### 9.2 Why Parquet on an in-memory file system
+
+| Way to hold it | Memory per row | What it costs | Verdict |
+|---|---|---|---|
+| **Parquet files in memory** (compressed, dictionary-encoded) | the smallest: the same bytes as on disk, typically 5 to 15 times smaller than the decoded columns for trade-like data | a read decodes the pages it needs, as from disk, with no I/O | **chosen** |
+| Decoded Arrow columns | 5 to 15 times more | none to read; every append and every column held whole | only as an optional bounded cache of hot columns |
+| DuckDB in-memory tables (`memory_limit`) | in between | spills to temporary files when full, which the contract forbids; a whole table reloads on every change | no |
+| Java objects (documents in a map) | 10 to 50 times Parquet | garbage-collection pressure | no |
+
+Keeping the format brings the rest for free: time travel and versions, atomic commits, the same loaders, the same connector, the same
+footer and page codecs as the disk lake, and a table can be moved between `mem://` and disk by copying its files when a contract allows
+it. The measured ratios are in [RESOURCES_AND_SCALE.md 5.8](RESOURCES_AND_SCALE.md#58-the-in-memory-lake-measured).
+
+### 9.3 The memory store: `mem://` on Java 21
+
+`mem://<store>/<path>`: a **store** is one named pool of memory with its own cap.
+
+- **Files as chunks off the heap.** A file is a list of fixed-size chunks (`chunk-kb`, 1 MB by default) from the store's pool, so a file
+  costs at most one partly filled chunk and the pool never fragments. Only the listing is on the heap (a sorted map of names to chunk
+  lists: about 200 bytes a file).
+- **The chunk pool** is direct `ByteBuffer`s allocated on demand up to the cap and **reused**: a deleted or evicted file's chunks go back
+  to the free list at once, so the cap is exact and never waits for a garbage collection. Chunks beyond what is in use are released
+  explicitly (`sun.misc.Unsafe.invokeCleaner`, in `jdk.unsupported`) when a cap is lowered or the pool has been idle. No preview feature
+  is used; the pool sits behind one small interface, so a `MemorySegment` implementation could replace it on a later Java.
+- **The `Storage` contract, met exactly:** sorted listings (`listFrom`), `status`, positional reads (`open` → a `RangeReader` handing the
+  Parquet reader read-only slices of the chunks; a page spanning two chunks is the only copy), `create` (visible when closed),
+  **`createIfAbsent` truly exclusive** (a concurrent second commit of one Delta version loses, as on local disk), `delete`.
+- **The cap is checked on every chunk taken.** A write that would pass it first runs the eviction ladder (9.5); if that frees too little
+  the write fails, the file is dropped, and since a Delta commit is the last file written, the table stays whole at its previous version.
+- **The JVM's direct-memory limit** must be the server's own 256 MB plus the stores' caps: the start scripts, the Docker images and the
+  Windows script compute it from the configuration (`tools/lake/memory_caps.py`, `DRISHTI_LAKE_MEMORY_MB`), and Admin → Health turns red
+  when the running limit is below it.
+- **A restart empties it**, by design: the replenish jobs refill it.
+
+### 9.4 Replenish jobs and memory efficiency
+
+A replenish job reads a source (a URL, a file, a connector's documents, or a connector entity by entity) and writes a `mem://` table
+with `LakeWriter`, one Delta commit a run, in mode `replace`, `append` or `merge` on a key; on a schedule, on the source's signal, at
+start in warm-up order, and soon after an eviction. While a table is empty or refilling its screens say so in words, never a blank or a
+zero that looks computed. The defaults favour bytes over speed: zstd level 3, dictionary encoding on every string column, rows sorted by
+the table's key before writing (runs of equal values), `keep-versions: 2` (older files deleted as soon as the next commit lands, not after
+a retention week), small files merged, a checkpoint every 10 commits, Parquet footers and statistics cached on the heap so a read skips
+row groups without touching their pages.
+
+### 9.5 The eviction ladder and automated compaction
+
+`max-mb` is a hard limit. When a write needs room the store frees memory in this order and stops as soon as there is enough: (1) old
+versions past `keep-versions`; (2) the decoded-column cache; (3) **whole tables, least recently read first**, never a pinned table and
+never the table being written: a table is evicted **whole, never file by file** (a Delta table missing some files would be corrupt), and
+its job is queued; (4) refuse the write: the commit fails and the table stays at its previous version. The store also joins the server's
+memory budget (`MemoryBudget`) as an **off-heap pool**, so the overload defences refuse new loads politely before the machine runs short.
+
+**Readers see one version.** A read takes the table's version at its start and keeps its files alive until it ends (a reference count
+per file; the files are freed when the last reader leaves), so a replace or an eviction in the middle never breaks it.
+
+**Compaction runs by itself.** A compactor per store wakes after every commit and every minute, scores each table by the memory a rewrite
+would save, and rewrites the best one first, one table at a time, as an ordinary atomic commit:
+
+| Trigger | The rewrite | Why it saves memory |
+|---|---|---|
+| many small files (appends, Kafka batches) | merges them | one footer and one dictionary per column instead of hundreds, better compression |
+| rows deleted or replaced (merge mode) above `dead-rows` | rewrites without them | dead rows stop costing memory |
+| appends out of key order, after `resort-after` | rewrites sorted by `sort-by` | runs of equal values: dictionary and RLE shrink most columns by half again |
+| old versions and the log | expires versions past `keep-versions`, writes a checkpoint | the log stays a few files |
+
+A rewrite needs room for its new files before the old are freed, so it starts only when `headroom-mb` plus the table's estimated new size
+is free under the cap: compaction never pushes the store into eviction. At most one rewrite at a time per store, on one low-priority
+thread. For Iceberg the same compactor uses Iceberg's own rewrite and snapshot expiry.
+
+### 9.6 Never on disk: the guard
+
+A connector whose root is `mem://` is **memory-only**, and so is everything computed from it. One server-side check,
+`Retention.mayPersist(...)`, sits in front of every place Drishti writes and refuses memory-only data unless that place is allowed: the
+lake on disk, the connectors' disk caches, scheduled reports, e-mail and share items carrying rows, BI runs' stored results, DuckDB's
+spill and an outside AI provider are refused or switched off; **a user's download** is allowed, streamed from memory with no temporary
+file and audited; another node gets answers over Drishti\*net only; logs and audit hold ids and counts, never values. The table of every
+sink is in [DATA_LAKE_GUIDE.md 13.6](../guides/DATA_LAKE_GUIDE.md#136-never-on-disk-what-is-refused-and-what-is-allowed).
+
+- **BI** queries such a table through the server's Arrow reads, not DuckDB's own Delta reader (which needs files on a disk), with DuckDB's
+  `temp_directory` off.
+- **Iceberg** tables (a metadata file, manifests, Parquet data files) reach `MemoryStorage` through the same `Storage` interface
+  (`catalog: path`, `warehouse: mem://…`).
+- **The console's Python** cannot read another process's memory, and a second copy would double the memory and could disagree: it reads
+  through the server (Arrow streams or [Arrow Flight](#11-arrow-flight-drishtis-data-to-any-client)) with the server's entitlements and
+  masks; it writes nothing.
+- **The host:** no swap (or encrypted swap), no heap dump on out-of-memory unless to a RAM disk, no JFR recording or core dump to disk,
+  the temporary folder on a RAM disk; Admin → Health checks each.
+
+### 9.7 A cluster: the owner node binds the pack
+
+A memory store is **owned by one node**, which binds the pack whose connectors read it (`node.yaml`: `memory-stores: [news]`), holds the
+store, runs its jobs and compaction, and answers its pack's reads for the whole cluster, so the memory is spent once. The other nodes do
+not load the store; a request for the pack's kinds is forwarded to the owner over the encrypted node-to-node link and shown, never cached
+on their disks, exactly as any pack a peer holds ([CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md), `peer-only-packs`). The code is
+`MemoryBinding`: local routing and the digest leave the kinds to the owner.
+
+### 9.8 The module: drishti-memlake
+
+The in-memory lake is one Maven module, **`drishti-memlake`**, in plain Java (no Spring; `ArchitectureRulesTest.memoryLakeIsPlainJava`):
+
+| Package | What is in it |
+|---|---|
+| `com.ash.drishti.memlake.store` | the storage, `mem://`: `MemoryStores` (the stores of the JVM by name), `MemoryStorage` (one store: the `Storage` contract over chunks), `ChunkPool` (off-heap chunks under the hard cap), `MemoryStoreFullException`, and `MemoryStorageProvider` (the scheme `mem` for the lake engines) |
+| `com.ash.drishti.memlake` | the service: `MemoryLake` (stores, tables, schedules, warm-up, the eviction ladder, what Admin shows), `MemoryTable`, `ReplenishSource` (what a job reads), `MemoryCompactor`, `MemoryUpkeep` (old versions expired), `MemoryBinding` (the owner node), `Retention` (the guard), `HostChecks`, `MemoryLakeSettings` (the `drishti.lake.memory.*` values, a plain record) |
+
+**The server keeps only the wiring**, in `com.ash.drishti.server.memlake`: `MemoryLakeConfiguration` binds `drishti.lake.memory.*` onto
+`MemoryLakeSettings`, makes the beans (the lake, the guard, the controller), hands the lake the server's cron parser and joins it to the
+memory budget and busy protection; `MemoryLakeController` is Admin → Lakes' REST API. The engine switch (`config/engines/memory-lake.yaml`)
+acts there too.
+
+**Which way the dependencies go.** `drishti-memlake` depends on `drishti-lakeio` and `drishti-deltalake` (it writes its tables with the
+lake writer and reads them back with Delta Kernel) and on the engine's connector registry. The lake readers must reach `mem://` without
+depending on it, which would be a cycle. So `drishti-lakeio` defines a small service interface, **`StorageProvider`** (a scheme, the
+storage for a path, whether the scheme is memory-only), and **`StorageProviders`**, which finds the providers on the class path once with
+Java's `ServiceLoader`. `drishti-memlake` lists `MemoryStorageProvider` in `META-INF/services/com.ash.drishti.lakeio.StorageProvider`.
+The native Delta engine, the lake writer, the Iceberg engine's file access and the Delta and Iceberg connectors ask `StorageProviders`
+for a path's storage and whether it is memory-only; none names a class of `drishti-memlake`
+(`ArchitectureRulesTest.lakeReadersDoNotSeeTheMemoryLake`). So: no cycle; one code path for every storage (a later scheme is one more
+provider); and it **fails closed**: a tool built without the module cannot read or write a memory table at all and gets an error naming
+the missing module, never a quiet detour through a disk.
+
+### 9.9 Tests
+
+- **The sentinel scan** (`NewsInMemorySentinelTest`): a feed whose values are unique markers, every page, export, report and BI run on
+  it, then the data folder, the temporary folders, the logs and the dumps searched for any marker: none may be found.
+- **Equality:** the same table on disk and in `mem://` gives byte-equal Parquet and equal answers in every reader.
+- **The `Storage` contract suite** (`StorageContract`) passes on local disk and in memory.
+- **The cap:** writes past it evict in the ladder's order and then refuse; the table is always whole at its last version; readers in
+  flight during a replace and an eviction finish on their version.
+- **Exclusive commits:** two writers of one version, exactly one wins. **Restart:** empty, warm-up refills in order. **Soak:** chunk
+  reuse over repeated replaces, no growth.
+
+### 9.10 Not built yet
+
+- The sizing workbook's line for the stores; the decoded-column cache (the ladder goes from old versions to whole tables).
+- Compaction's detection of a dictionary that fell back to plain encoding (a rewrite rebuilds dictionaries, but the trigger is missing).
+- The cluster-wide *its node is restarting* words (a peer's screen shows the usual peer-unavailable words); a standby second owner.
+- Iceberg on `mem://` end to end: replenish jobs write Delta only; Iceberg's table commit, catalog and maintenance on `mem://` are not
+  tested.
+- The guard's derived-data tag on VaR and exposure captures, official records and write-back from memory-only inputs; the memory-only
+  VaR hot tier (VaR inputs on `mem://` still build their hot file on disk).
+- The *refilling* words on the Sutra pages themselves (the connector's health and Admin → Lakes have them).
+- Native Memory Tracking compared with the store's own count over a long soak.
+
+## 10. The parallel lake loader (drishti-lakeload)
+
+How the Java loader is built: module `drishti-lakeload`, main class `com.ash.drishti.lakeload.LakeLoad`, in the server's exec jar. How to
+run it: [DATA_LAKE_GUIDE.md 3.3](../guides/DATA_LAKE_GUIDE.md#33-the-parallel-loader); every key of a load file:
+[TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader). Its target: the bank's full scenario-PV load (2.3 million
+positions × about 510 scenarios, about 1.2 billion doubles, 20+ GB of JSON Lines) in at most 10 minutes on a real server, into Delta or
+Iceberg, from a folder or S3, with memory bounded by configuration whatever the input's size.
+
+### 10.1 Where it lives
+
+| Needs | For | Why not elsewhere |
+|---|---|---|
+| `drishti-lakeio` | local and S3 reads (`Storage`, `RangeReader`: ranged GETs), S3 settings, the Parquet page codecs | shared by both lake engines already |
+| `drishti-iceberg` | the Hadoop-free Parquet writer (`ParquetDataWriter`: `double[]` vectors, UTF-8 text, per-column encodings), catalogs, the Iceberg commit (`Operations.replacePartitions`) | the native Iceberg engine; the Delta files are written by the same writer |
+| `drishti-deltalake` | Delta Kernel's transaction and the engine `LakeWriter` commits with (`LakeWriter.engineFor`, `LakeWriter.removals`) | Kernel stays the only Delta committer |
+| Jackson (core, YAML), zstd-jni | streaming JSON, the configuration, `.zst` input | already on the server's class path |
+
+Not in `drishti-deltalake` (it would then need the Iceberg engine) nor in the Iceberg plugin (it carries Apache Iceberg Java and Hadoop's
+S3 file system; the loader needs neither). No third-party dependency of its own.
+
+### 10.2 The pipeline
+
+```
+  input files (folder / glob / s3://)                                                 the table (Delta / Iceberg)
+        │ Inputs: each file one split; a plain file > split-mb cut into byte ranges              ▲
+        ▼                                                                                        │ ONE commit per date
+  ┌───────────── read ─────────────┐   bounded queue   ┌──────── parse ────────┐          ┌──── commit ────┐
+  │ readers threads, one split each │ ─ chunks of whole ─► parsers threads       │          │ this thread    │
+  │ ranged reads / GETs             │   lines (queue-mb) │ Jackson streaming      │          │ Kernel txn or  │
+  │ .gz: GzipMembers (Inflater)     │   back-pressure    │ doc re-written as      │          │ Iceberg        │
+  │ .zst: ZstdInputStream           │                    │ lake build writes it   │          │ overwrite      │
+  └─────────────────────────────────┘                    │ vector → double[]      │          └────────────────┘
+                                                         │ buffer per date; sort; │                ▲
+                                                         │ spill sorted runs      │                │ files of the date
+                                                         └──────────┬─────────────┘          ┌──── write ─────┐
+                                                                    │ runs (memory or files) │ writers threads │
+                                                                    └───────────────────────►│ one key range   │
+                                                                      key-range bounds from  │ each: k-way     │
+                                                                      the runs' key samples  │ merge → Parquet │
+                                                                                             └─────────────────┘
+```
+
+**Read.** `Inputs` resolves `source.files` (a file, a folder, a glob in the last segments; on S3 a prefix or a glob in the last segment)
+and sniffs each file's first bytes (gzip `1f 8b`, zstd `28 b5 2f fd`, else plain). A plain file larger than `parallel.split-mb` (256 MB)
+is cut into byte ranges; a range owns the lines that **start** in it (it reads from one byte before its start, drops the partial line
+there, and reads past its end to finish its last line). A compressed file is one split, **decompressed as a stream** by the reader that
+has it, with no temporary copy; `GzipMembers` reads every member of a multi-member gzip (the JDK's `GZIPInputStream` decides whether
+another member follows from `available()`, which a network stream may answer with 0). Readers (`parallel.readers`, default the cores)
+take splits largest first, so a big `.gz` starts at once, and cut their streams into chunks of whole lines on one shared queue.
+
+**Parse.** `parallel.parsers` threads take chunks from any split, so one large `.gz` is parsed by every parser. `RowParser` makes one
+streaming pass per line (Jackson's parser over the bytes, no tree, its fast double parser): the document is written again exactly as
+`lake build` keeps it (`PyJson`: Python's `json.dumps(ensure_ascii=False, separators=(",", ":"))`, a float as Python's `repr`), the
+wanted fields are caught on the way (a trie of the id, date, promoted, partition, vector and flattened paths), a top-level vector's
+numbers go straight into a `double[]` (a null element is NaN, written as null) and the document keeps `{"$vector": "<column>"}` in its
+place. A row becomes one record in a reusable byte buffer (`RowPlan`), never an object per value.
+
+**Sort.** Each parser buffers its records per business date in 8 MB arenas (`Runs.Buffer`); when its share of the sort buffer is full it
+sorts each date's records by key (a merge sort over references, an 8-byte key prefix deciding most comparisons) and writes them as a
+**sorted run** file in the spill folder. What is left after the input becomes in-memory runs. Each run keeps a key sample every 1 MB.
+
+**Write.** Per date: if the date has more runs than the writers can read at once within their memory share, runs are merged into fewer
+first (`Runs.reduce`: the passes of an external merge sort). The date is then cut into **key ranges** of about equal bytes from the runs'
+key samples (`Runs.bounds`: about `2 × writers` ranges): the whole distribution, with no second pass over the input and no guess from a
+first sample. Each range is one task for `parallel.writers` threads: a k-way merge of every run within the range, written as Parquet
+into files of about `target.layout.file-size-mb`, a new file also when the Delta partition values change and, with `shard-aligned`, at a
+group boundary (10.6). Files follow the sort order, never the inputs. A file is uploaded as it is written (S3 multipart).
+
+**Commit.** Only the main thread commits, after every file of the date is written (10.5). Every stage is metered (`Meter`: bytes, rows,
+busy time over its threads, wall time); the summary's `throughput` has read, decompress, parse, sortSpill, mergePasses, write and commit.
+
+### 10.3 Memory
+
+One setting bounds the load whatever its input: **`memory.budget-mb`** (default half of `-Xmx`), shared as
+
+| Share | Default | Holds |
+|---|---|---|
+| the queue | 15 % (`parallel.queue-mb`) | half for chunks waiting to be parsed (the semaphore that blocks the readers: back-pressure), a quarter for the chunks readers are filling, a quarter for their inflate buffers |
+| the sort buffers | 55 % (`memory.sort-buffer-mb`) | the parsers' unsorted records, `budget / parsers` each; past it the parser sorts and spills |
+| the writers | 30 % (the rest) | half for reading runs while merging (each writer reads each run of its range through `share / (writers × runs)`, 8 KB to 1 MB; more runs than fit at 64 KB each are first merged into fewer), half for the Parquet row groups being filled |
+
+An explicit `parallel.queue-mb` or `memory.sort-buffer-mb` must leave the writers at least a tenth of the budget. The JVM's own needs
+(classes, Kernel, the S3 client, the per-row duplicate arrays of about 36 bytes a row, freed before the write) come on top, so `-Xmx`
+should be the budget plus 1 to 2 GB. The summary's `memory` reports the shares, the peak heap used (sampled every 20 ms), the peak heap
+after GC and the MB spilled. A 10,000-position load ran in a `-Xmx192m` JVM with a 32 MB budget and wrote the same table as with 7.8 GB.
+
+**Spill space.** Before reading, the loader estimates the spill (the input's uncompressed size, compressed files at 6 to 1 for gzip and
+8 to 1 for zstd, less the sort buffers, times 1.1) and stops with a clear message when `memory.spill-dir` has less free space
+(`memory.check-spill-space: false` to try anyway). The spill folder is a fresh `drishti-lakeload-<pid>-<n>` under `memory.spill-dir`
+(default `java.io.tmpdir`, which `lake build` points into the run's staging folder): local disk, EBS, or a Fargate task's ephemeral
+storage.
+
+### 10.4 The tables it writes
+
+Exactly the layout the existing readers expect.
+
+| | Delta | Iceberg |
+|---|---|---|
+| Columns | `id`, `doc`, `business_date` (partition), the partition columns (partition), the promoted columns (`double` when every value is a number and the field is not an id, else `string`; null on every row: `double`), the vector columns `array<double>` (nullable elements) | `IcebergLayout`: field ids 1 `id` (required), 2 `doc`, 3 `business_date` (required, identity partition), then the partition fields as `string`, the promoted columns (null on every row: `string`), the vector columns `list<double>` (optional elements) |
+| Text of a number in a text column | Python's (`json.dumps`: `42`, `1.5`, `1e-05`) | the Iceberg loader's (`42` for a whole number) |
+| An existing table | keeps its schema and partitioning: a load column it lacks is left out (`columns.leftOut`), a column the load lacks is null; another partitioning is refused | its columns kept; the missing ones added (one schema commit), as `NativeLayout.open` |
+| New table | created by the first date's commit, with `target.properties` | created with the layout's properties (zstd, 1 MB row groups, metrics: `doc` none, `id` full), sort order by id |
+| Parquet | `LakeWriter`'s row groups and pages (`DRISHTI_LAKE_ROW_GROUP_KB` 256, `DRISHTI_LAKE_PAGE_KB` 64), Snappy; exact statistics for every scalar column, none for `doc` | the table's properties |
+| The vector column | BYTE_STREAM_SPLIT (a double's 8 bytes as 8 streams), ZSTD, no dictionary, no statistics | the same |
+
+BYTE_STREAM_SPLIT is a standard Parquet encoding read by parquet-java, Kernel, Arrow and DuckDB. Where the Python Iceberg path rejects a
+row (a promoted field holding a list) or drops a value (an object), the loader keeps the JSON text; it makes a column for a field null
+on every row. A NaN vector element is stored as null. A JSON object with duplicate keys keeps both in the document; a partition value
+that is an object is its compact JSON.
+
+### 10.5 Commits: one per business date
+
+A reader (the connectors, the VaR loader, the cluster's shards) must see a date whole or not at all, and a re-run must replace the date,
+never add to it. One commit per date does both; N committers would race on the table's log and could leave a date half-replaced. The
+commit lists files, never rows, so it is cheap.
+
+- **Delta.** Per date one Kernel transaction (`CREATE_TABLE` for a new table, else `WRITE`), the files written into the folders Kernel
+  names (`Transaction.getWriteContext`), then one `commit` with the add actions (`Transaction.generateAppendActions`) and the remove
+  actions of every earlier file of the date (`LakeWriter.removals`). Kernel's post-commit hooks (checkpoints) run as for `lake build`. On
+  S3 the log entry is an exclusive create (`StorageWriteFileIO`, conditional PUT), so two writers of one version cannot both win.
+- **Iceberg.** Per date one `Operations.replacePartitions`: the date's live files out, the new ones in, one snapshot (`overwrite`,
+  summary `drishti.business-dates`), retried on a concurrent commit.
+
+Dates are written one after another, each with every writer thread; a load of 60 dates is 60 commits, each date visible as soon as it is
+committed. The loader's mode is replace-date (`lake build`'s `overwrite-dates`); an append table takes a batch id
+([section 8.1](#81-the-rule)).
+
+**Duplicate records** (one id twice on one business date) follow one rule on the Java and the Python path, so both write the same
+table: the copy with the latest `COMPUTED_AT` (`source.latest-by`; ISO-8601 text, no offset is UTC) is kept, else the last one read in
+one deterministic order (files sorted by path, then line order; a copy with a timestamp beats one without); the others are dropped,
+counted per date (`duplicates`) and named (up to ten `duplicateExamples`, `file:line`), never a failure. Each row record ends with its
+place in the input (split, chunk, line); after the read the ids seen twice (64-bit hashes sorted, exact, no cap; a second hash tells two
+ids with one first hash apart) are resolved from per-row arrays, and the write stage skips the losers by their place. The Python path
+stages every row with its place and re-reads only the dates with duplicates (`stage.Stager.resolve`). Rejects are named `file:line`,
+counted in the file also for byte ranges.
+
+### 10.6 Shard-aligned layout and the load manifest
+
+`target.layout.sort-by` orders each date's rows: the pack's `layout.<kind>.sort-by` if it names one, else **`LEGAL_ENTITY`, `DESK`, `id`**
+(those the rows promote; the id alone when neither is). Every file is a contiguous key range, so its Parquet statistics (and the Delta
+`stats`, the Iceberg manifest bounds) of `LEGAL_ENTITY` and `DESK` let a reader skip every file outside its legal entities and desks. With
+`shard-aligned: true` (default) a file is also cut where the group (the sort fields before the id) changes once it holds a quarter of
+`file-size-mb`: a large desk gets files of its own, small desks share one. Range bounds between writers fall on any key, so a desk may
+span the last file of one range and the first of the next.
+
+The **load manifest** (`<summary>.manifest.json`, or `report.manifest`) lists, per committed date, the commit's version and every file
+in key order: `path`, `rows`, `bytes`, `partition` (Delta), and `first` and `last` (the partition columns, the sort fields and `id`).
+`groupBy` names the shard group. A shard owner may read only the files whose `first..last` range meets its groups; the files' own
+statistics say the same for a reader without the manifest.
+
+```json
+{"table": "s3://bank-lake/risk/scenario-pv", "format": "iceberg", "sortBy": ["LEGAL_ENTITY", "DESK", "id"], "groupBy": ["LEGAL_ENTITY", "DESK"],
+ "dates": {"2026-10-28": {"version": 6012998402214350812, "files": [
+   {"path": "s3://…/data/business_date=2026-10-28/2026-10-28-r000-00000-….parquet", "rows": 31840, "bytes": 268170210,
+    "first": {"LEGAL_ENTITY": "LE-LDN", "DESK": "DESK-COMM", "id": "P-1000017"}, "last": {"LEGAL_ENTITY": "LE-LDN", "DESK": "DESK-COMM", "id": "P-1799862"}}]}}}
+```
+
+An Iceberg table sorted by more than the id gets the property `drishti.layout.sort-by`; `lake maintain`'s relayout (which re-sorts days
+by id) leaves such a table in its order (`IcebergMaintenance.shardSorted`). A Delta table's compaction merges only small files (under
+`target-file-mb`); a pack layout that names `sort-by` for the kind should name the same columns.
+
+### 10.7 Files and S3
+
+Local paths (Windows paths too: `C:\data\pv\*.jsonl.gz`) and `file:` URIs read through `LocalStorage`; `s3://` (and `s3a://`) through
+`S3Storage`: a plain object's splits as parallel ranged GETs, a compressed object as a stream of 64 KB to 8 MB reads. Writing: Parquet
+through the same `Storage` (`S3Output`: multipart upload while the file is written), the Delta log through Kernel's `StorageWriteFileIO`,
+Iceberg metadata through drishti-iceberg's commit. S3 settings come from `source.storage-options` / `target.storage-options` and
+**credentials only from the AWS default chain** (environment, profile, instance or task role): a key in the file is refused. A REST
+catalog's secret is given as `${AN_ENVIRONMENT_VARIABLE}`. No Hadoop anywhere, so it runs on Windows (zstd-jni and snappy-java are JNI
+libraries inside their jars, no `.exe`).
+
+### 10.8 Failure and clean-up
+
+- A failure before a date's commit leaves that date (and every later one) as it was: its files written so far are in no version or
+  snapshot. They are orphans, removed after their retention by Delta's vacuum or Iceberg's orphan-file removal (`lake maintain`). Dates
+  committed before the failure stay committed, each whole.
+- Too many rejects (`rejects.max-pct`) stop the load after the read, before anything is written.
+- The spill folder is removed on success, on failure, and when the JVM is stopped (a shutdown hook: Ctrl-C, SIGTERM, a stopped task).
+- A reader or parser that fails stops the others at once (the queue never leaves a thread blocked); exit code 1 with the reason in one
+  line (`-Ddrishti.loader.trace=true` prints the stack).
+- **The lock:** a local lake gets `lake build`'s lock (shared on `<lake>/_drishti-lake/lock`, exclusive on
+  `locks/<domain>/<table>.lock`; the whole lake on Windows). `lake build` takes a POSIX lock (`lockf`) beside its `flock` on the same
+  files, because Java cannot take `flock`; so a direct loader run and a Python build or `lake maintain` exclude each other (exit 3 for the
+  later one).
+
+### 10.9 Integration with lake build
+
+`drishti.py lake build --engine java` runs the whole build in the loader (`tools/lake/javaload.py`): the build's options become the
+loader's configuration (a JSON file in the run's staging folder, secrets kept out of it); `--loader-set KEY=VALUE` adds any key. The build
+holds the lock and writes the run log, the summary (the loader's keys merged in, plus `throughput` and `memory`) and the ownership record.
+The Python path is the default; `--engine auto` picks the loader only with `--java-above-mb N` (every input JSON Lines of at least N MB,
+`--mode overwrite-dates`, a jar with the loader). Java is started through `tools/javacmd.py` with `-Djava.io.tmpdir` in the staging
+folder; the heap is `DRISHTI_LAKE_LOADER_HEAP` (default `4g`). The loader reads JSON Lines only (the data standard); a JSON array stays
+the Python path's.
+
+### 10.10 Measured, and the 2.3M estimate
+
+`ThroughputTest` loads 10,000 positions × 510 scenarios (53.7 MB of JSON Lines) into Delta: warm, 0.19 to 0.29 s, 34,000 to 52,000
+rows/s, about 92 µs of CPU a position over decompress, parse and write. Scaled to 2.3M positions that is about 345 CPU-seconds: about 1 to
+2 minutes on a 32 vCPU server with local NVMe, 4 to 5 minutes on 16 vCPU with a slow spill disk, inside the 10-minute target. The stages,
+the server table, the spill and heap advice: [BENCHMARK.md section 7](../admin/BENCHMARK.md#7-the-loaders).
+
+### 10.11 Tests
+
+`./mvnw -o -q -pl drishti-lakeload test`:
+
+| Test | What |
+|---|---|
+| `PythonPathEqualityTest` | `drishti.py lake build` both ways (the Python path, Delta and Iceberg; the loader) on synthetic positions (escapes, non-ASCII, number ids, nulls in vectors, a reject, duplicate records with and without `COMPUTED_AT`, an uncompressed copy beside its `.gz`) and on the market-risk pack's scenario PVs: equal tables, rejects, rows, sample; the Delta and Iceberg connectors read both alike |
+| `LakeLoadTest` | one commit per date and a re-run replacing only its date; a load stopped after its first files leaving the table as it was; rejects counted, named, written and `max-pct`; identical tables from one file, byte ranges, one `.gz`, a multi-member `.gz`, six `.gz` files, `.zst`, 1 thread vs many, a 1 MB budget (spills) |
+| `S3LoadTest` | S3Mock in the JVM: a glob of `.gz` objects and a plain object read as ranged GETs, written to `s3://` as Delta and as Iceberg, equal to the local load; keys in the file refused |
+| `ThroughputTest` | the measurements above, BYTE_STREAM_SPLIT and ZSTD on the vector column, the manifest's key order, a 24 MB budget and a `-Xmx192m` JVM giving the identical table |
+| `CodecsTest` | Python's float repr and string escapes, multi-member gzip and a corrupt CRC, globs, sort keys, the pack's layout, the configuration's checks |
+| `tools/lake/test_javaload.py` | the build's options as the loader's configuration, secrets kept out of the file, when `auto` picks the loader |
+| `ShardSortedLayoutTest` (Iceberg plugin) | relayout leaves a sort-by table in its order |
+
+### 10.12 Open
+
+- The 2.3M measurement on a real server; the estimate above is extrapolated from 10K.
+- A zstd input is one split; a seekable-zstd file could be split into ranges like a plain one.
+- S3 reads of a compressed object are sequential per object; a read-ahead would overlap the network and the inflate.
+- The read and write phases do not overlap within a date (the sort needs the whole date); dates of a backfill could overlap.
+
+## 11. Arrow Flight: Drishti's data to any client
+
+How the Flight service is built. Turning it on, tokens, the cluster, limits and operations: [FLIGHT_GUIDE.md](../guides/FLIGHT_GUIDE.md);
+every request form and the clients: [FLIGHT_REFERENCE.md](../guides/FLIGHT_REFERENCE.md).
+
+### 11.1 Principles
+
+1. **One service, a transport only.** Module `drishti-flight` answers Arrow Flight over the existing query layer (kinds, BI model queries,
+   the pivot engine, VaR and the other measures, the in-memory lake) with the same entitlements, masks, busy protection and audit. No
+   query logic is written twice.
+2. **Any client:** Python (`pyarrow.flight`), Java, C#, R, Go; JDBC and ODBC tools through Flight SQL. Browsers keep Arrow over HTTP and
+   live views over Server-Sent Events.
+3. **Read only.** Nothing a client sends changes Drishti's data.
+4. **One Arrow library.** Apache Arrow Java is used for every Arrow artifact: `ArrowIpc` (compute) and `ArrowIpcWriter` (server) are
+   written with `arrow-vector`; the console passes the server's bytes through and writes no Arrow (`core/arrow_answer.py` keeps `wanted`,
+   `decode`, `pass_on`).
+
+### 11.2 Design
+
+| Question | Design |
+|---|---|
+| What a request names | **Rachana, with SQL beside it, one layer under both:** a ticket is a Rachana request (the same JSON as `POST /api/v1/pivot/query`, a kind with paths, or a measure call); Flight SQL accepts read-only SQL over models (DSQL), compiled to the same plans |
+| What is exposed | kinds, BI models, pivot views, VaR vectors and the in-memory lake; exposure paths, FRTB-SA and SIMM detail planned |
+| Who may call | **API tokens only** (scope `data:read` or `data:read:<domain>`), an application's token on behalf of a person, embed tokens; never a browser cookie |
+| Port and TLS | its own port (default 18815), **TLS always** (the server's certificate), mutual TLS optional; the engine `flight`, off as shipped (`config/engines/flight.yaml`, Admin → Engines) |
+| The cluster | `GetFlightInfo` lists the endpoints (each node's real address); the client reads them in parallel; a part on a node that is down is read from a peer that holds it |
+| VaR precision | as the engine computes: scope and node vectors float64; position and trade rows float32 as stored, the schema saying so; a test proves a client's sum of the rows equals the engine's vector within the parity rule |
+| Live streams | `DoGet` with `stream: true` (intraday batches, in-memory lake appends), resumable by a sequence number; resume is stateless (VaR: the date's intraday stamp; lake: a cursor column) |
+| Limits | per read, from the token's role: rows, bytes, time, Arrow off-heap memory; per node: total Arrow memory; counted by busy protection (`Work.FLIGHT`) |
+| Audit | every read: who, on behalf of whom, the request, rows and bytes, the node (`data.flight`); Admin → Data out shows live streams and the last day's readers |
+| Java 21 | `arrow-memory` needs `--add-opens=java.base/java.nio=ALL-UNNAMED`: in the server jar's manifest (`Add-Opens`) and the test forks |
+
+### 11.3 How it is built
+
+| Part | Where |
+|---|---|
+| The service | `FlightService` (TLS always, its own port), `DrishtiFlightProducer`, `FlightBackend` (all the server provides) |
+| Tickets | `FlightRequest`: a form (`kind`, `model`, `pivot`, `measure`, `lake`) and a Rachana request |
+| The forms | `server.flight`: `KindFlightForm` (Export data's reader, a download's checks), `AnswerFlightForms` (MQ, the pivot engine), `VarFlightForm` (`var.scenarios` float64, `var.parts` float32 for positions and trades), `LakeFlightForm` (a table found through the lake file, [section 8](#8-the-lake-file-one-description-of-every-lake)) |
+| Tokens | `TokenAuthenticator` (the handshake, a session after it) over `ServerFlightBackend.authenticate` |
+| The cluster | `FlightNodes`: this node and the live Drishti\*net members by their real addresses; the Python client reads parts in parallel and tries the next address of a part |
+| Limits | `FlightLimits` per role; Arrow memory per read and per node (`ArrowMemory`, Health's `arrow-flight`) |
+| Audit and Admin → Data out | `data.flight` per read; `FlightActivity`; one screen over `GET /api/v1/admin/data-out` with two views: the page (default; [mock-up A](mockups/data-out/A.html): the service, the nodes, live streams with Stop, the last day's readers, tokens and limits, in order of urgency) and the map ([mock-up B](mockups/data-out/B.html): clients and nodes with a line per stream) |
+| Flight SQL | `DrishtiSqlProducer` on the same port: each statement a `form: model` request with its SQL, answered by `SqlService` (DSQL) and read through the same producer; one catalog, the models as schemas, their aliases as tables (`ServerFlightSqlCatalog`); the model by a first-line comment or the header `model` |
