@@ -17,7 +17,7 @@
 
 # LEI legal entity: lei-entity (LEI)
 
-A legal entity from its LEI record: key facts, addresses, registration and renewal, parents, children and identifiers. One row per lei legal entity, keyed by LEI. Read by the **gleif** pack's connector `gleif-store` (table `<root>/gleif/lei-entity/`). A **snapshot of public data**, captured 2026-10-25 from GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py), refreshed whole by its script (External data); 9,937 records. A refresh replaces the whole snapshot.
+A legal entity from its LEI record: key facts, addresses, registration and renewal, parents, children and identifiers. One row per lei legal entity, keyed by LEI. Read by the **gleif** pack's connector `gleif-store` (table `<root>/gleif/lei-entity/`). A **snapshot of public data**, captured 2026-10-25 from GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif), refreshed whole by its script (External data); 9,937 records. A refresh replaces the whole snapshot.
 
 ## File layout
 
@@ -474,7 +474,7 @@ Fields no record above has, found by reading all 9,937 rows, with how many rows 
 ## See also
 
 - Data contract: [LEI in the gleif pack's contracts](../../packs/gleif.md#lei-lei-legal-entity-lei-entity) (`config/packs/core/gleif/contracts/lei-entity.contract.yaml`, the source of every meaning on this page).
-- [External data: where it comes from and how to refresh it](../../../guides/EXTERNAL_DATA.md)
+- [External data feeds](../../../guides/EXTERNAL_DATA.md)
 - [Entities and ownership](../../../knowledge/entities-and-ownership.md)
 - [Tutorial 27 · Groupings and analytics, computed](../../../tutorials/27-groupings-and-analytics.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

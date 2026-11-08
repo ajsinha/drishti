@@ -1,0 +1,67 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Built from the Drishti UI kit only (config/ui-kit/fragments): no screen code of its own.
+rachana: 1
+sutra: central-bank
+version: 1
+description: "One central bank: its policy rate, the last move, the rate's history and the market series around it."
+doc:
+  summary: "A central bank's page: the policy rate and its last move, two years of the policy rate, and the bank's series."
+  description: >-
+    One page per central bank the central-banks feed follows (the Federal Reserve, the Bank of Canada): the strip gives the policy rate,
+    the date it was read, the date of the last move and its size in basis points; the chart draws the policy rate over the history
+    window; the table lists every series of the bank with its latest value and change (a row opens the series); the bank's press
+    releases are one link away (the official-news pack).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/central-bank/CBANK-FED"
+    - "CBANK CBANK-FED"
+  since: "2.9.11"
+match: { kind: central-bank, priority: 10 }
+title: { pill: Public sector · Central bank, id: $.BANK_ID, with: $.NAME }
+strip:
+  - { label: Bank, bind: $.NAME, emphasis: true }
+  - { label: "Policy rate, %", bind: $.POLICY_RATE, fmt: price2 }
+  - { label: As of, bind: $.POLICY_RATE_DATE, fmt: date }
+  - { label: Last move, bind: $.LAST_MOVE_DATE, fmt: date }
+  - { label: "Move, bp", bind: $.LAST_MOVE_BP, fmt: signed0 }
+  - { label: Currency, bind: $.CURRENCY }
+panels:
+  - { use: series-line@1, with: { id: policy, title: "Policy rate, %", key: F2, rows: $.POLICY_HISTORY, x: DATE, y: VALUE, fmt: price2 } }
+  - id: series
+    kind: table
+    title: "The bank's series (a row opens its history)"
+    key: F3
+    code: SER
+    rows: $.SERIES
+    search: false
+    columns:
+      - { label: Series, bind: "link(@.RATE_SERIES, 'rate-series', @.TITLE)" }
+      - { label: Latest, bind: "@.LATEST", fmt: amount2 }
+      - { label: Unit, bind: "@.UNIT" }
+      - { label: Date, bind: "@.DATE", fmt: date }
+      - { label: Change, bind: "@.CHANGE", fmt: signed2 }
+  - id: bank
+    kind: kv
+    title: The bank
+    area: right
+    columns:
+      - { label: Country, bind: $.COUNTRY_NAME }
+      - { label: Website, bind: $.WEBSITE }
+      - { label: Press releases, bind: "link($.PRESS, 'release-source', 'Latest press releases')" }
+  - { use: source-footer@1 }
+keys: { F7: "link($.PRESS, 'release-source')", F9: raw }

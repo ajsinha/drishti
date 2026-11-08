@@ -22,6 +22,7 @@ Cache layout:  wb_country.json  wb/<code>.json  imf/<code>.json  imf_indicators.
 from __future__ import annotations
 
 import json
+import sys
 import time
 import urllib.error
 import urllib.parse
@@ -29,7 +30,9 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-UA = "drishti-realdata/1.0 (public-data demo loader; contact ajsinha@gmail.com)"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "feeds"))
+from pullkit import user_agent  # noqa: E402  (the one User-Agent of every feed: tools/feeds/pullkit.py)
+UA = user_agent()   # DRISHTI_FEEDS_USER_AGENT, else the feeds' default
 
 
 class Fetcher:

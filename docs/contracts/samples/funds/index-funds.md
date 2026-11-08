@@ -17,7 +17,7 @@
 
 # Funds tracking an index: index-funds (TRACK)
 
-The funds and ETFs of the pack that track one us-equities index, by net assets, with their cost and how closely they follow it. One row per funds tracking an index, keyed by INDEX. Read by the **funds** pack's connector `funds-store` (table `<root>/funds/index-funds/`). A **snapshot of public data**, captured 2026-10-26 from SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py), refreshed whole by its script (External data); 3 records. A refresh replaces the whole snapshot.
+The funds and ETFs of the pack that track one us-equities index, by net assets, with their cost and how closely they follow it. One row per funds tracking an index, keyed by INDEX. Read by the **funds** pack's connector `funds-store` (table `<root>/funds/index-funds/`). A **snapshot of public data**, captured 2026-10-26 from SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds), refreshed whole by its script (External data); 3 records. A refresh replaces the whole snapshot.
 
 ## File layout
 

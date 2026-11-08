@@ -58,7 +58,7 @@ engines:
     needs: []
     uses: []
     api: [/api/v1/risk/exposure]
-    console: [/exposure, /api/exposure/]
+    console: [/exposure, /api/exposure/, /predeal]
     words: [EXP, "PLAY EXP", PREDEAL]
     menus: [exp-explorer, exp-cpty, exp-nset, predeal]
     help: [docs-guides-exposure-guide]

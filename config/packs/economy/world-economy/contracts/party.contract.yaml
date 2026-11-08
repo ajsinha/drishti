@@ -196,6 +196,6 @@ review:
 - 'required inferred from 100% coverage in 282 documents (282 samples): confirm each required field is mandatory upstream, and each optional one
   may be empty.'
 - 'key PARTY_ID is the field holding the sample catalogue''s id (PARTY-ARG-01): confirm it is the business key.'
-- 'a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.'
+- 'a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.'
 - 'number types decided by the field''s name: TOTAL_SEATS amount, RESULTS[].SHARE rate: confirm amount, rate or integer.'
 - 'no unit stated for the amounts TOTAL_SEATS (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'

@@ -17,7 +17,7 @@
 
 # Fund or ETF: fund (FUND)
 
-A US mutual fund or ETF from SEC public data: the fact sheet, the look-through holdings with derivatives and counterparties, and the fund against its index. One row per fund or etf, keyed by TICKER. Read by the **funds** pack's connector `funds-store` (table `<root>/funds/fund/`). A **snapshot of public data**, captured 2026-10-26 from SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py), refreshed whole by its script (External data); 200 records. A refresh replaces the whole snapshot.
+A US mutual fund or ETF from SEC public data: the fact sheet, the look-through holdings with derivatives and counterparties, and the fund against its index. One row per fund or etf, keyed by TICKER. Read by the **funds** pack's connector `funds-store` (table `<root>/funds/fund/`). A **snapshot of public data**, captured 2026-10-26 from SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds), refreshed whole by its script (External data); 200 records. A refresh replaces the whole snapshot.
 
 ## File layout
 

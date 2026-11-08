@@ -1,0 +1,46 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/feeds/market-data.yaml: official public market data (docs/guides/EXTERNAL_DATA.md; every key in its section "The feed file").
+#   python3 tools/drishti.py feed run market-data                                   a year of history, loaded into capitalmarket
+#   python3 tools/drishti.py feed run market-data -- ecb-fx --years 5 --scope USDMXN,EURSEK   arguments after -- go to the source
+# Each document is loaded under its own business date (its AS_OF); a daily run loads only the dates after its state's last one
+# (incremental by day), --since YYYY-MM-DD backfills.
+feed: market-data
+title: Official market data (ECB FX reference rates, US Treasury par curve, SOFR, euro short-term rate)
+description: >-
+  The ECB's euro foreign exchange reference rates, the US Treasury par yield curve, SOFR from the New York Fed and the euro short-term
+  rate from the ECB, in the market-data pack's own shapes (fx-spot, ir-curve, rate-fixing).
+class: official_market_data.MarketDataFeed   # tools/feeds/sources/official_market_data.py
+source:
+  provider: European Central Bank, U.S. Department of the Treasury, Federal Reserve Bank of New York
+  url: https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates
+  pause: 0.5
+  retries: 3
+lake: capitalmarket
+load: java
+schedule: {at: "18:30", days: weekdays}  # after the ECB's 16:00 CET rates and the Treasury's end-of-day curve
+licence:
+  name: ECB reuse with attribution; US Treasury public domain; New York Fed terms (attribution)
+  url: https://www.ecb.europa.eu/home/disclaimer/html/index.en.html
+  redistribution: attribution
+  internal-only: false
+  attribution: "Source: European Central Bank; U.S. Department of the Treasury; Federal Reserve Bank of New York"
+datasets:
+  fx-spot:     {pack: market-data, kind: fx-spot, key: PAIR, dated: source, description: "an ECB euro reference rate"}
+  ir-curve:    {pack: market-data, kind: ir-curve, key: CURVE_ID, dated: source, description: "the US Treasury par yield curve"}
+  rate-fixing: {pack: market-data, kind: rate-fixing, key: INDEX_ID, dated: source, description: "SOFR and the euro short-term rate"}
+options:
+  args: []
+  history-days: 365                    # each series document's HISTORY reaches this far back before the first new day

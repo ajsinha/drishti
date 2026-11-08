@@ -17,7 +17,7 @@
 
 # SEC filing: filing (FILING)
 
-One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (metadata only; the document stays on sec.gov). One row per sec filing, keyed by ACCESSION. Read by the **us-equities** pack's connector `us-equities-store` (table `<root>/us-equities/filing/`). A **snapshot of public data**, captured 2026-10-24 from SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py), refreshed whole by its script (External data); 11,691 records. A refresh replaces the whole snapshot.
+One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (metadata only; the document stays on sec.gov). One row per sec filing, keyed by ACCESSION. Read by the **us-equities** pack's connector `us-equities-store` (table `<root>/us-equities/filing/`). A **snapshot of public data**, captured 2026-10-24 from SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities), refreshed whole by its script (External data); 11,691 records. A refresh replaces the whole snapshot.
 
 ## File layout
 
@@ -112,7 +112,7 @@ None: all 11,691 rows were read, and every field any of them has is in the recor
 ## See also
 
 - Data contract: [FILING in the us-equities pack's contracts](../../packs/us-equities.md#filing-sec-filing-filing) (`config/packs/capitalmarkets/us-equities/contracts/filing.contract.yaml`, the source of every meaning on this page).
-- [External data: where it comes from and how to refresh it](../../../guides/EXTERNAL_DATA.md)
+- [External data feeds](../../../guides/EXTERNAL_DATA.md)
 - [Companies, funds and ETFs](../../../knowledge/companies-funds-and-etfs.md)
 - [Tutorial 27 · Groupings and analytics, computed](../../../tutorials/27-groupings-and-analytics.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

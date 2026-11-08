@@ -17,7 +17,7 @@
 
 # ISIN or BIC to LEI: lei-mapping (LEIM)
 
-An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it. One row per isin or bic to lei, keyed by IDENTIFIER. Read by the **gleif** pack's connector `gleif-store` (table `<root>/gleif/lei-mapping/`). A **snapshot of public data**, captured 2026-10-25 from GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py), refreshed whole by its script (External data); 3,381 records. A refresh replaces the whole snapshot.
+An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it. One row per isin or bic to lei, keyed by IDENTIFIER. Read by the **gleif** pack's connector `gleif-store` (table `<root>/gleif/lei-mapping/`). A **snapshot of public data**, captured 2026-10-25 from GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif), refreshed whole by its script (External data); 3,381 records. A refresh replaces the whole snapshot.
 
 ## File layout
 
@@ -135,7 +135,7 @@ None: all 3,381 rows were read, and every field any of them has is in the record
 ## See also
 
 - Data contract: [LEIM in the gleif pack's contracts](../../packs/gleif.md#leim-isin-or-bic-to-lei-lei-mapping) (`config/packs/core/gleif/contracts/lei-mapping.contract.yaml`, the source of every meaning on this page).
-- [External data: where it comes from and how to refresh it](../../../guides/EXTERNAL_DATA.md)
+- [External data feeds](../../../guides/EXTERNAL_DATA.md)
 - [Entities and ownership](../../../knowledge/entities-and-ownership.md)
 - [Tutorial 27 · Groupings and analytics, computed](../../../tutorials/27-groupings-and-analytics.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

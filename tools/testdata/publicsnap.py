@@ -22,7 +22,7 @@ builds them into the Delta (or Iceberg) lake, and the pack's own Delta connector
 
 A snapshot is the same documents on every business day of the demo lakes (as the news-and-markets pack's captured quotes): the pages
 open as of today's business date and every earlier day the lakes hold. The generators (tools/packgen/us_equities/make.py,
-tools/packgen/gleif/make.py) write the snapshots and their entries in testdata.yaml; tools/publicdata/us_equities.py and gleif.py
+tools/packgen/gleif/make.py) write the snapshots and their entries in testdata.yaml; the us-equities, gleif and funds data feeds (feed run <feed> --snapshot)
 refresh them; tools/testdata/make_testdata.py keeps them as they are and lists them.
 
     files(pack, docs)              {path under data/testdata: bytes} of a pack's snapshot (deterministic gzip)
@@ -49,14 +49,14 @@ import feedfiles as FF  # noqa: E402  (tools/lake/feedfiles.py: our dated feed f
 #: per pack: its Delta connector, the source of its data, and the id field of each kind (the lake's key)
 PACKS: dict[str, dict] = {
     "us-equities": {"connector": "us-equities-store",
-                    "source": "SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)",
+                    "source": "SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities)",
                     "keys": {"us-company": "TICKER", "index-membership": "INDEX", "filing-feed": "FEED",
                              "filing": "ACCESSION", "financial-fact": "FACT_ID"}},
     "gleif": {"connector": "gleif-store",
-              "source": "GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)",
+              "source": "GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif)",
               "keys": {"lei-entity": "LEI", "lei-relationship": "RELATIONSHIP_ID", "lei-mapping": "IDENTIFIER"}},
     "funds": {"connector": "funds-store",
-              "source": "SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py)",
+              "source": "SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds)",
               "keys": {"fund": "TICKER", "fund-holder": "TICKER", "index-funds": "INDEX"}, "part-bytes": 1_200_000},
 }
 #: a pack with "part-bytes" has each kind's snapshot cut into parts of about that many compressed bytes, so no member is large; a kind
@@ -82,8 +82,19 @@ def captured(docs: dict[str, dict[str, dict]]) -> str:
             p = d.get("PROVENANCE") if isinstance(d.get("PROVENANCE"), dict) else {}
             when = p.get("RETRIEVED_AT") or (d.get("_meta") or {}).get("retrievedAt")
             if when:
-                return str(when)[:10]
+                return _local_day(str(when))
     raise ValueError("no document says when its data was retrieved (PROVENANCE.RETRIEVED_AT)")
+
+
+def _local_day(when: str) -> str:
+    """A retrieval time's date on this machine's calendar (a time in UTC after local midnight is not a day "in the future", which the
+    load rules refuse in a file's name); a plain date as it is."""
+    from datetime import datetime
+    try:
+        t = datetime.fromisoformat(when.replace("Z", "+00:00"))
+    except ValueError:
+        return when[:10]
+    return (t.astimezone() if t.tzinfo else t).date().isoformat()
 
 
 def _gzip(text: str) -> bytes:
@@ -241,7 +252,7 @@ def update_manifest(testdata: Path) -> None:
 
 def default_testdata(pack_dir: Path, committed: Path) -> Path:
     """Where a generator writes the snapshot: data/testdata for the committed pack; beside a widened build's pack folder otherwise
-    (<data>/publicdata/<pack>/packs/<pack> -> <data>/publicdata/<pack>/testdata), never into the committed test data."""
+    (<data>/datafeeds/sources/<pack>/packs/<pack> -> <data>/datafeeds/sources/<pack>/testdata), never into the committed test data."""
     return TESTDATA if Path(pack_dir).resolve() == Path(committed).resolve() else Path(pack_dir).resolve().parent.parent / "testdata"
 
 

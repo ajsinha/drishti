@@ -20,7 +20,7 @@
 # holding opens its company; a company lists the funds that hold it; an index lists the funds that track it) and to gleif (LEIs).
 # Hand-written; tools/packgen/funds/make.py writes the data (data/testdata/funds/<kind>/, gzipped parts, built into the lake by
 # tools/build_demo_lakes.py and served by the Delta connector funds-store below), a few reference samples, the README and
-# guides/funds.md, from the downloads tools/publicdata/funds.py keeps in the data folder. No prices or NAV history.
+# guides/funds.md, from the downloads drishti.py feed run funds keeps in the data folder. No prices or NAV history.
 pack: funds
 domain: capitalmarkets   # the domain it serves (docs/architecture/ACCESS_MODEL.md): it loads only while a module of the domain is on
 version: 1.0.0

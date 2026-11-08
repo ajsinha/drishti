@@ -65,7 +65,7 @@ assets:
   - elements/drishti-risk/*
   - elements/drishti-risk/src/*
 # its templates (the core's never include them; a core screen takes a module's parts through screens: below)
-templates: [terminal/var.html, terminal/var_backtesting.html, terminal/var_reports.html, terminal/var_statistics.html, terminal/exposure.html,
+templates: [terminal/var.html, terminal/var_backtesting.html, terminal/var_reports.html, terminal/var_statistics.html, terminal/exposure.html, terminal/predeal.html,
             terminal/frtb.html, terminal/simm.html, terminal/smat.html, terminal/play.html, terminal/stress_window.html, terminal/_mr_lens.html,
             terminal/_mr_panes.html, terminal/_risk_elements.html, home/risk_landing.html, home/trading_landing.html, home/market_landing.html, admin/scopes.html]
 # what it adds to a core screen, while it is on: the Pivot's market-risk preset (lens mr) draws the MR lens's strip and panes

@@ -259,7 +259,7 @@ def license_fix(out: pathlib.Path) -> None:
 
 
 def readme(opts, kinds, groups, keys, dates, lake_line, out: pathlib.Path | None = None) -> str:
-    where = (out.relative_to(ROOT).as_posix() if out and out.is_relative_to(ROOT) else str(out)) if out else f"config/packs/core/{opts.name}"
+    where = (out.relative_to(ROOT).as_posix() if out and out.is_relative_to(ROOT) else str(out)) if out else f"config/packs/core/core/{opts.name}"
     rows = "\n".join(f"| {k} | {len(v)} | `{keys[k]}` | {('`' + dates[k] + '`') if k in dates else ''} |" for k, v in sorted(kinds.items()))
     return f"""# {opts.title or opts.name}
 

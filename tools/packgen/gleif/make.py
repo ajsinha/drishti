@@ -370,17 +370,17 @@ GLEIF publishes the LEI data free of charge under CC0 1.0: anyone may use it wit
 
 ## Refreshing the data
 
-The pack's own refresh script fetches, builds and checks in one step (guide: `docs/guides/EXTERNAL_DATA.md`, gleif):
+The pack's data feed fetches, builds and checks in one step, and loads its lake every day (guide: `docs/guides/EXTERNAL_DATA.md`, gleif):
 
 ```bash
-python3 tools/publicdata/gleif.py status                       # licence, last refreshed, cached size
-python3 tools/publicdata/gleif.py refresh --dry-run            # what would be fetched; changes nothing
-python3 tools/publicdata/gleif.py refresh                      # the network (about 90 MB of golden copy, 45 MB of mapping files, 70 API calls), then make.py and --check
-python3 tools/publicdata/gleif.py refresh --offline            # rebuild the pack from the cache only
-python3 tools/publicdata/gleif.py refresh --scope GROUP:<LEI>,COUNTRY:LU,NAME:allianz   # a wider build in the data folder, not this pack
+python3 tools/drishti.py feed status gleif                       # its last runs: last success, rows, failures
+python3 tools/drishti.py feed run gleif --dry-run            # what would be fetched; changes nothing
+python3 tools/drishti.py feed run gleif --snapshot                      # the network (about 90 MB of golden copy, 45 MB of mapping files, 70 API calls), then make.py and --check
+python3 tools/drishti.py feed run gleif --snapshot --offline            # rebuild the pack from the cache only
+python3 tools/drishti.py feed run gleif --snapshot -- --scope GROUP:<LEI>,COUNTRY:LU,NAME:allianz   # a wider build in the data folder, not this pack
 ```
 
-`tools/publicdata/gleif.sh` and `tools/windows/publicdata-gleif.ps1` run the same script. Underneath it are the generator's two
+`tools/feeds/feed.sh run gleif` and `tools/windows/feed.ps1 run gleif` run the same command. Underneath it are the generator's two
 steps, which can also be run by hand:
 
 ```bash
@@ -436,7 +436,7 @@ def main(argv: list[str], extra: list[str] | None = None, cap: int | None = None
     p.add_argument("--cache", type=Path, default=DEFAULT_CACHE)
     p.add_argument("--check", action="store_true")
     p.add_argument("--pack", type=Path, help="the pack folder to write or check (default config/packs/core/gleif; "
-                                               "tools/publicdata/gleif.py points a widened build at the data folder)")
+                                               "drishti.py feed run gleif points a widened build at the data folder)")
     p.add_argument("--testdata", type=Path, help="the test data folder the snapshot goes to (default data/testdata for the committed "
                                                   "pack; beside a widened build's pack folder otherwise)")
     a = p.parse_args(argv)

@@ -101,7 +101,7 @@ sources:
   licence: Public sources, attribution; read live, off by default
   internal-only: false
   used-for: rate-fixing, fx-spot and ir-curve when the feed connectors are on
-refresh: tools/publicdata/official_market_data.py
+refresh: drishti.py feed run market-data
 generated-by: tools/packgen/banking/make_docs.py
 ---
 # The market-data pack
@@ -762,16 +762,16 @@ Screens (Sutras):
 ## Data sources and licences
 
 The committed samples are synthetic. Five feed connectors (off by default) read the same kinds live from official public sources;
-`tools/publicdata/official_market_data.py` captures those sources to files in the data folder, never over the samples.
+`drishti.py feed run market-data` captures those sources to files in the data folder, never over the samples.
 
 | Source | Licence | Internal only | Used for |
 |---|---|---|---|
 | Synthetic sample data (tools/packgen/banking) | Proprietary (part of Drishti); fictitious names and figures | no | every document in samples/ and the demo lake |
 | Official public data (ECB, US Treasury, New York Fed, FRED) through the feed connectors | Public sources, attribution; read live, off by default | no | rate-fixing, fx-spot and ir-curve when the feed connectors are on |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and its refresh script, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/market-data.md](guides/market-data.md): *Data contracts* and *Data retrieval*.
+Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/market-data.md](guides/market-data.md): *Data contracts* and *Data retrieval*.
 
-External data: Official public data (ECB, US Treasury, New York Fed, FRED) through the feed connectors. Each source's URL, licence, refresh script and worked examples (Linux and Windows) are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
+External data: Official public data (ECB, US Treasury, New York Fed, FRED) through the feed connectors. Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../docs/guides/EXTERNAL_DATA.md).
 
 ## Enabling and dependencies
 
@@ -794,7 +794,7 @@ Settings (environment variables) its connectors read: `DRISHTI_FEED_ECB_ESTR`, `
 
 ## Refreshing the data
 
-`python3 tools/publicdata/official_market_data.py status` lists the external sources, their licences and when each was last refreshed (offline); `refresh --dry-run` shows what a refresh would fetch and write, changing nothing; `refresh` fetches, writes and checks. The External data help page (docs/guides/EXTERNAL_DATA.md) has worked examples for Linux and Windows.
+The data feed `market-data` (config/feeds/market-data.yaml) pulls `fx-spot`, `ir-curve`, `rate-fixing`: `python3 tools/drishti.py feed run market-data` fetches them daily into `data/datafeeds/market-data/<date>/` and loads them into the lake `capitalmarket`; `--dry-run` says what it would fetch, changing nothing; `feed status` shows the last runs. The External data feeds guide (docs/guides/EXTERNAL_DATA.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/banking/make_docs.py`; its `--check` fails when the committed files differ from what it would write.
 

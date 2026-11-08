@@ -29,7 +29,7 @@ title: US equities
 description: >-
   Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and on major US, Canadian and UK banks that file with
   the SEC: SEC EDGAR companies, SIC sectors, filings and ten years of annual XBRL financials, LEIs from GLEIF and index membership
-  from the tracking ETFs' SEC filings (SPY, QQQ, DIA). Prices are not shipped: the price-history kind is read
+  from the tracking ETFs' SEC filings (SPY, QQQ, DIA, IWM). Prices are not shipped: the price-history kind is read
   live by a connector that is off by default and for internal use only.
 kinds: [us-company, index-membership, sic-sector, filing-feed, filing, financial-fact, price-history]
 formats: config/formats.yaml

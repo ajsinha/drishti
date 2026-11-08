@@ -141,7 +141,7 @@ An economy: output, growth, prices, jobs, debt and external balance, and output 
 
 - required inferred from 100% coverage in 213 documents (213 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key ECONOMY_ID is the field holding the sample catalogue's id (ECON-ABW): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: REGION_NAME, INCOME_NAME, SECTORS[].SECTOR: confirm they are closed lists.
 - number types decided by the field's name: RESERVES_USD_BN amount, TRADE_SHARE rate: confirm amount, rate or integer.
 - no unit stated for the amounts RESERVES_USD_BN, POPULATION_M (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
@@ -230,7 +230,7 @@ One headline statistic of one economy: the series, the latest value, the change 
 
 - required inferred from 100% coverage in 3119 documents (3119 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key INDICATOR_ID is the field holding the sample catalogue's id (MACRO-ABW-AGRICULTURE): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: UNIT, FACTS.UNIT: confirm they are closed lists.
 - number types decided by the field's name: HISTORY[].VALUE amount: confirm amount, rate or integer.
 - no unit stated for the amounts LATEST, PREVIOUS, HISTORY[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
@@ -315,7 +315,7 @@ The IMF World Economic Outlook: growth, inflation, unemployment, external balanc
 
 - required inferred from 100% coverage in 192 documents (192 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key FORECAST_ID is the field holding the sample catalogue's id (FCST-ABW-WEO): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: PROJECTIONS[].BASIS: confirm they are closed lists.
 
 ## LABR: Labour market (`labour-market`)
@@ -395,7 +395,7 @@ Unemployment, participation, youth and female labour, and employment and output 
 
 - required inferred from 100% coverage in 185 documents (185 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key LABOUR_ID is the field holding the sample catalogue's id (LABR-AFG): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: BY_SECTOR[].SECTOR: confirm they are closed lists.
 - no unit stated for the amounts VULNERABLE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
@@ -482,7 +482,7 @@ Government debt and net lending (IMF) with revenue, expense and military spendin
 
 - required inferred from 100% coverage in 192 documents (192 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key FISCAL_ID is the field holding the sample catalogue's id (FISC-ABW): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: RATIOS[].ITEM: confirm they are closed lists.
 
 ## ECG: Country group (`country-group`)
@@ -635,7 +635,7 @@ A state or territory (ISO 3166-2): population, GDP and GDP per head.
 
 - required inferred from 100% coverage in 59 documents (59 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key REGION_ID is the field holding the sample catalogue's id (REGE-AU-ACT): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: ISO3, COUNTRY_NAME, SOURCE, PROVENANCE.SOURCE: confirm they are closed lists.
 
 ## JUR: Jurisdiction (`jurisdiction`)
@@ -757,7 +757,7 @@ A country: government type, capital, legislature and seats by party, office hold
 
 - required inferred from 100% coverage in 216 documents (216 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key JURISDICTION_ID is the field holding the sample catalogue's id (JUR-ABW): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: REGION_NAME, LEGISLATURE_STRUCTURE, INDICATORS[].UNIT: confirm they are closed lists.
 - number types decided by the field's name: INDICATORS[].VALUE amount: confirm amount, rate or integer.
 - no unit stated for the amounts INDICATORS[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
@@ -832,7 +832,7 @@ A political party that won seats in the lower chamber at the most recent electio
 
 - required inferred from 100% coverage in 282 documents (282 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key PARTY_ID is the field holding the sample catalogue's id (PARTY-ARG-01): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - number types decided by the field's name: TOTAL_SEATS amount, RESULTS[].SHARE rate: confirm amount, rate or integer.
 - no unit stated for the amounts TOTAL_SEATS (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
@@ -911,7 +911,7 @@ The chief of state or head of government of a country as the CIA World Factbook 
 
 - required inferred from 100% coverage in 430 documents (430 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key OFFICE_ID is the field holding the sample catalogue's id (OFFC-ABW-COS): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: ROLE: confirm they are closed lists.
 
 ## ELEC: Election (`election`)
@@ -1001,7 +1001,7 @@ The most recent election to a chamber or to the executive, with the system, term
 
 - required inferred from 100% coverage in 378 documents (378 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key ELECTION_ID is the field holding the sample catalogue's id (ELEC-ABW-EXE): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: SUMMARY.ELECTORAL_SYSTEM: confirm they are closed lists.
 
 ## REGN: World region (`region`)
@@ -1088,7 +1088,7 @@ A World Bank region: its countries, population, life expectancy, women in parlia
 
 - required inferred from 100% coverage in 7 documents (7 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key REGION_ID is the field holding the sample catalogue's id (REGN-EAS): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - no unit stated for the amounts URBAN (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
 ## SOCI: Social indicator (`social-indicator`)
@@ -1188,7 +1188,7 @@ A social or governance statistic of one country over time, with the regional com
 
 - required inferred from 100% coverage in 4297 documents (4297 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key INDICATOR_ID is the field holding the sample catalogue's id (SOCI-ABW-EDUCATION-SPEND): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: THEME, SOURCE_NAME, REGION_NAME, PROVENANCE.SOURCE, PROVENANCE.DATASET, PROVENANCE.LICENCE, PROVENANCE.ATTRIBUTION, PROVENANCE.URL, MEANING.COMPARED_WITH: confirm they are closed lists.
 - number types decided by the field's name: SERIES[].VALUE amount, BY_REGION[].VALUE amount: confirm amount, rate or integer.
 - no unit stated for the amounts LATEST, CHANGE_5Y, SERIES[].VALUE, BY_REGION[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.

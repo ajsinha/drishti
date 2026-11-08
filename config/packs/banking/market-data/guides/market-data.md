@@ -1048,13 +1048,13 @@ An equity's beta, alpha, correlation and R squared against its index (EQUITY_IND
 
 ## Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../../docs/guides/EXTERNAL_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../../../../docs/guides/EXTERNAL_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
-| `CRV` | `ir-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/); official public data optional: US Treasury daily par yield curve (public domain (US Government work)) (`tools/publicdata/official_market_data.py`, to the data folder; read live by the feed connectors, off as shipped) | `data/testdata/market-data/ir-curve/` → `lake demo` → connector `market-store` |
+| `CRV` | `ir-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/); official public data optional: US Treasury daily par yield curve (public domain (US Government work)) (`drishti.py feed run market-data`, to the data folder; read live by the feed connectors, off as shipped) | `data/testdata/market-data/ir-curve/` → `lake demo` → connector `market-store` |
 | `REPO` | `repo-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/repo-curve/` → `lake demo` → connector `market-store` |
-| `FX` | `fx-spot` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/); official public data optional: ECB euro reference FX rates (ECB: free reuse with the source acknowledged) (`tools/publicdata/official_market_data.py`, to the data folder; read live by the feed connectors, off as shipped) | `data/testdata/market-data/fx-spot/` → `lake demo` → connector `market-store` |
+| `FX` | `fx-spot` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/); official public data optional: ECB euro reference FX rates (ECB: free reuse with the source acknowledged) (`drishti.py feed run market-data`, to the data folder; read live by the feed connectors, off as shipped) | `data/testdata/market-data/fx-spot/` → `lake demo` → connector `market-store` |
 | `FXF` | `fx-forward-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/fx-forward-curve/` → `lake demo` → connector `market-store` |
 | `FXV` | `fx-vol-surface` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/fx-vol-surface/` → `lake demo` → connector `market-store` |
 | `IRV` | `ir-vol-cube` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/ir-vol-cube/` → `lake demo` → connector `market-store` |
@@ -1069,7 +1069,7 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | `CMD` | `commodity` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/commodity/` → `lake demo` → connector `market-store` |
 | `CMDC` | `commodity-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/commodity-curve/` → `lake demo` → connector `market-store` |
 | `CMDV` | `commodity-vol-surface` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/commodity-vol-surface/` → `lake demo` → connector `market-store` |
-| `FIX` | `rate-fixing` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/); official public data optional: SOFR, Federal Reserve Bank of New York (NY Fed terms of use: reuse with attribution); Euro short-term rate (ECB) (ECB: free reuse with the source acknowledged) (`tools/publicdata/official_market_data.py`, to the data folder; read live by the feed connectors, off as shipped) | `data/testdata/market-data/rate-fixing/` → `lake demo` → connector `market-store` |
+| `FIX` | `rate-fixing` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/); official public data optional: SOFR, Federal Reserve Bank of New York (NY Fed terms of use: reuse with attribution); Euro short-term rate (ECB) (ECB: free reuse with the source acknowledged) (`drishti.py feed run market-data`, to the data folder; read live by the feed connectors, off as shipped) | `data/testdata/market-data/rate-fixing/` → `lake demo` → connector `market-store` |
 | `BND` | `bond` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/bond/` → `lake demo` → connector `market-store` |
 | `CORR` | `correlation-matrix` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/correlation-matrix/` → `lake demo` → connector `market-store` |
 | `CORRC` | `correlation-result` | computed by Drishti: the reactive connector correlation-engine (java engine com.ash.drishti.banking.compute.analytics.CorrelationEngine); see the [Groupings and analytics guide](../../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | nothing to load: computed from its inputs when asked |
@@ -1079,19 +1079,19 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 
 | Source | Where | Licence | Internal only | Refresh |
 |---|---|---|---|---|
-| US Treasury daily par yield curve | https://home.treasury.gov/resource-center/data-chart-center/interest-rates | public domain (US Government work) | no | `python3 tools/publicdata/official_market_data.py refresh us-treasury` |
-| ECB euro reference FX rates | https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.zip | ECB: free reuse with the source acknowledged | no | `python3 tools/publicdata/official_market_data.py refresh ecb-fx` |
-| SOFR, Federal Reserve Bank of New York | https://markets.newyorkfed.org/api/rates/secured/sofr | NY Fed terms of use: reuse with attribution | no | `python3 tools/publicdata/official_market_data.py refresh sofr` |
-| Euro short-term rate (ECB) | https://data-api.ecb.europa.eu/service/data/EST | ECB: free reuse with the source acknowledged | no | `python3 tools/publicdata/official_market_data.py refresh estr` |
+| US Treasury daily par yield curve | https://home.treasury.gov/resource-center/data-chart-center/interest-rates | public domain (US Government work) | no | `python3 tools/drishti.py feed run market-data -- us-treasury` |
+| ECB euro reference FX rates | https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.zip | ECB: free reuse with the source acknowledged | no | `python3 tools/drishti.py feed run market-data -- ecb-fx` |
+| SOFR, Federal Reserve Bank of New York | https://markets.newyorkfed.org/api/rates/secured/sofr | NY Fed terms of use: reuse with attribution | no | `python3 tools/drishti.py feed run market-data -- sofr` |
+| Euro short-term rate (ECB) | https://data-api.ecb.europa.eu/service/data/EST | ECB: free reuse with the source acknowledged | no | `python3 tools/drishti.py feed run market-data -- estr` |
 
 ```bash
-python3 tools/publicdata/official_market_data.py status                                          # each source: licence, internal only or not, last refreshed (offline)
-python3 tools/publicdata/official_market_data.py refresh --dry-run                               # what would be fetched and written; changes nothing
-python3 tools/publicdata/official_market_data.py refresh                                         # a year of official history into <data>/publicdata/market-data (never over the synthetic samples)
-python3 tools/publicdata/official_market_data.py refresh ecb-fx --years 5 --scope USDMXN,EURSEK  # more history and more pairs
+python3 tools/drishti.py feed status market-data                                         # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run market-data --dry-run                                  # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run market-data                                            # pull today's data and load it into the lake `capitalmarket` (what the daily schedule runs)
+python3 tools/drishti.py feed run market-data -- ecb-fx --years 5 --scope USDMXN,EURSEK  # more history and more pairs
 ```
 
-The same through the wrappers: `tools/publicdata/market-data.sh status` on Linux and macOS, `.\tools\windows\publicdata-market-data.ps1 status` on Windows (every argument is passed on).
+The same through the wrappers: `tools/feeds/feed.sh run market-data` on Linux and macOS, `.\tools\windows\feed.ps1 run market-data` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md)).
 
 ### Generators
 
@@ -1104,4 +1104,4 @@ The same through the wrappers: `tools/publicdata/market-data.sh status` on Linux
 
 - **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Tools](../../../../../docs/guides/TOOLS.md)).
 - **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
-- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A refresh script runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).

@@ -1,0 +1,20 @@
+{"kind":"oecd-country","id":"OECD-AUS","title":"OECD OECD-AUS","subtitle":"Australia · Australia"}
+{"kind":"oecd-country","id":"OECD-CAN","title":"OECD OECD-CAN","subtitle":"Canada · Canada"}
+{"kind":"oecd-country","id":"OECD-DEU","title":"OECD OECD-DEU","subtitle":"Germany · Germany"}
+{"kind":"oecd-country","id":"OECD-FRA","title":"OECD OECD-FRA","subtitle":"France · France"}
+{"kind":"oecd-country","id":"OECD-GBR","title":"OECD OECD-GBR","subtitle":"United Kingdom · United Kingdom"}
+{"kind":"oecd-country","id":"OECD-ITA","title":"OECD OECD-ITA","subtitle":"Italy · Italy"}
+{"kind":"oecd-country","id":"OECD-JPN","title":"OECD OECD-JPN","subtitle":"Japan · Japan"}
+{"kind":"oecd-country","id":"OECD-KOR","title":"OECD OECD-KOR","subtitle":"Korea · Korea"}
+{"kind":"oecd-country","id":"OECD-MEX","title":"OECD OECD-MEX","subtitle":"Mexico · Mexico"}
+{"kind":"oecd-country","id":"OECD-USA","title":"OECD OECD-USA","subtitle":"United States · United States"}
+{"kind":"oecd-series","id":"OECDS-USA-CLI","title":"OECDS OECDS-USA-CLI","subtitle":"United States · Composite leading indicator · Composite leading indicator"}
+{"kind":"oecd-series","id":"OECDS-USA-GDP_GROWTH","title":"OECDS OECDS-USA-GDP_GROWTH","subtitle":"United States · Real GDP growth, quarter on quarter · Real GDP growth, quarter on quarter"}
+{"kind":"oecd-series","id":"OECDS-USA-INFLATION","title":"OECDS OECDS-USA-INFLATION","subtitle":"United States · Consumer price inflation, year on year · Consumer price inflation, year on year"}
+{"kind":"oecd-series","id":"OECDS-USA-UNEMPLOYMENT","title":"OECDS OECDS-USA-UNEMPLOYMENT","subtitle":"United States · Unemployment rate, seasonally adjusted · Unemployment rate, seasonally adjusted"}
+{"kind":"oecd-series","id":"OECDS-CAN-CLI","title":"OECDS OECDS-CAN-CLI","subtitle":"Canada · Composite leading indicator · Composite leading indicator"}
+{"kind":"oecd-series","id":"OECDS-CAN-GDP_GROWTH","title":"OECDS OECDS-CAN-GDP_GROWTH","subtitle":"Canada · Real GDP growth, quarter on quarter · Real GDP growth, quarter on quarter"}
+{"kind":"oecd-series","id":"OECDS-CAN-INFLATION","title":"OECDS OECDS-CAN-INFLATION","subtitle":"Canada · Consumer price inflation, year on year · Consumer price inflation, year on year"}
+{"kind":"oecd-series","id":"OECDS-CAN-UNEMPLOYMENT","title":"OECDS OECDS-CAN-UNEMPLOYMENT","subtitle":"Canada · Unemployment rate, seasonally adjusted · Unemployment rate, seasonally adjusted"}
+{"kind":"oecd-series","id":"OECDS-AUS-CLI","title":"OECDS OECDS-AUS-CLI","subtitle":"Australia · Composite leading indicator · Composite leading indicator"}
+{"kind":"oecd-series","id":"OECDS-AUS-GDP_GROWTH","title":"OECDS OECDS-AUS-GDP_GROWTH","subtitle":"Australia · Real GDP growth, quarter on quarter · Real GDP growth, quarter on quarter"}

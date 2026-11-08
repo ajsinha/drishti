@@ -13,10 +13,13 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* The ExpressionEditor (docs/architecture/BI_DESIGN.md sections 3.3.8 and 8.1; docs/guides/RACHANA_REFERENCE.md): one editor for every DEL expression a person
-   writes (a measure, a derived column, a dataset filter, a row rule, a report's own measure). It completes the fields (with type, meaning and format), the
-   measures (writing measure('…')), the functions of the server's catalogue (signature, one line, one example, a link to the guide) and the keyword arguments
-   of the call the caret is in; the call's card stays beside the input while you type its arguments. The console never parses DEL for meaning: as you type,
+   writes (a measure, a derived column, a dataset filter, a row rule, a report's own measure), on drishti-inputs' CodeEditor in Rachana (upgradeCodeArea: one line
+   for an input, the whole text for a text area; the element stays the value's holder). Its completion hook offers the fields (with type, meaning and format), the
+   measures (writing measure('…')), the functions of the server's catalogue (signature and one line) and the keyword arguments of the call the caret is in, as a
+   name is typed, after "(", "," or "=" in a call, or on Ctrl+Space; the call's card (signature, one example, a link to the guide) stays beside it while you type
+   its arguments. The console never parses DEL for meaning: as you type,
    the server's /bi/api/expr/validate says what is wrong, with the fix as a button, and Try it shows the server's answer for the current selection, as you.
    Measure references read as chips under the input. Wave B: the filter-context and balance functions (calc, share_of, closing ...) come from the same
    catalogue; opts.names adds names of the model that are not fields (param.shock, SELECTED in a calculation group's item) and opts.keywordValues the
@@ -86,8 +89,6 @@
   B.exprEditor = function (input, opts) {
     opts = opts || {};
     const scope = opts.scope || 'aggregate';
-    const id = 'xe' + (++uid);
-    const list = h('ul', { class: 'bi-xe-list', role: 'listbox', id: id + '-list', hidden: true, 'aria-label': 'Suggestions' });
     const card = h('div', { class: 'bi-xe-card', 'data-xe-card': '', hidden: true, 'aria-live': 'polite' });
     const chips = h('p', { class: 'bi-xe-chips', 'data-xe-chips': '', hidden: true });
     const probs = h('ul', { class: 'bi-xe-problems', 'data-xe-problems': '', 'aria-live': 'polite' });
@@ -95,17 +96,25 @@
     const tryBtn = opts.tryIt ? h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small bi-xe-try', 'data-xe-try': '' }, B.icon('play'), ' Try it') : null;
     const help = h('a', { class: 'bi-xe-help', href: GUIDE, target: '_blank', rel: 'noopener', 'data-xe-guide': '', title: 'The expression guide: every function, with examples' }, B.icon('question-circle'), h('span', { class: 'visually-hidden', text: 'Expression guide' }));
     const wrap = h('div', { class: 'bi-xe', 'data-xe': scope });
+    const row = h('div', { class: 'bi-xe-row' });
     input.parentNode.insertBefore(wrap, input);
-    wrap.append(h('div', { class: 'bi-xe-row' }, input, help, tryBtn), list, card, chips, probs, tryOut);
-    input.classList.add('bi-xe-in', 'mono');
-    input.setAttribute('role', 'combobox');
-    input.setAttribute('aria-autocomplete', 'list');
-    input.setAttribute('aria-expanded', 'false');
-    input.setAttribute('aria-controls', list.id);
-    input.setAttribute('spellcheck', 'false');
-    input.setAttribute('autocomplete', 'off');
+    row.appendChild(input);
+    wrap.append(row, card, chips, probs, tryOut);
     if (opts.label && !input.getAttribute('aria-label')) { input.setAttribute('aria-label', opts.label); }
-    let items = [], active = -1, timer = null, seq = 0, lastChecked = null, fns = [];
+    // the code editor: drishti-inputs' one-line (an input) or whole (a text area) Rachana editor, the element kept as the value's holder
+    input.drishtiCodeOptions = {
+      complete: (c) => completeAt(c),
+      completeAfter: (before) => /[(,=]\s*$/.test(before) && !!callAt(before),
+      keys: input.tagName === 'INPUT' ? { Enter: () => commit() } : {}
+    };
+    input.setAttribute('data-di-code', 'rachana');
+    const editor = window.Drishti.elements.inputs.upgradeCodeArea(input);
+    row.append(help, tryBtn || '');
+    const fold = wrap.closest('details');                     // drawn while folded away: laid out again when it opens
+    if (fold) { fold.addEventListener('toggle', () => { if (fold.open) { editor.refresh(); } }); }
+    const cm = () => editor.cm;
+    const caret = () => (cm() ? cm().indexFromPos(cm().getCursor()) : input.value.length);
+    let timer = null, seq = 0, lastChecked = null, fns = [];
     // opts.words (the statement's keywords), opts.functions === false (no DEL functions: Drishti SQL), opts.check(text) (another validator), opts.measureInsert(name)
     if (opts.functions !== false) { functions().then((f) => { fns = f.filter((x) => !x.scopes.length || x.scopes.indexOf(scope) >= 0 || (scope === 'rule' && x.scopes.indexOf('row') >= 0)); }); }
     const mIns = opts.measureInsert || ((n) => 'measure(\'' + n.replace(/'/g, '\\\'') + '\')');
@@ -115,8 +124,7 @@
     const nameList = () => (typeof opts.names === 'function' ? opts.names() : opts.names || []).map((n) => (typeof n === 'string' ? { name: n } : n));
     const measureList = () => (typeof opts.measures === 'function' ? opts.measures() : opts.measures || []).map((m) => (typeof m === 'string' ? { name: m } : m));
 
-    function suggestions() {
-      const at = input.selectionStart == null ? input.value.length : input.selectionStart;
+    function suggestions(at) {
       const c = context(input.value, at);
       const w = c.word.toLowerCase();
       const out = [];
@@ -174,47 +182,17 @@
       if (/^[A-Z]/.test(c.word)) { out.sort((a, b) => (a.kind === 'measure' ? 0 : 1) - (b.kind === 'measure' ? 0 : 1)); }
       return { c, out: out.slice(0, 60) };
     }
-    const ICON = { field: 'fonts', measure: 'calculator', function: 'braces', keyword: 'at', word: 'type', table: 'table' };
-    function open(force) {
-      const s = suggestions();
-      items = s.out;
+    /** The completion hook: the suggestions at the caret as the code editor's entries (where its word starts, on the caret's line). */
+    function completeAt(ctx) {
+      const lineStart = cm() ? cm().indexFromPos({ line: ctx.lineNo, ch: 0 }) : 0, at = lineStart + ctx.ch;
+      const s = suggestions(at);
       showCard(s.c);
-      if (!items.length || (!force && !s.c.word && s.c.kind !== 'measure-name' && !(s.c.call && /[(,=]\s*$/.test(input.value.slice(0, input.selectionStart))))) { close(); return; }
-      B.clear(list);
-      items.forEach((it, i) => {
-        const li = h('li', { role: 'option', id: id + '-o' + i, class: 'bi-xe-opt bi-xe-' + it.kind, 'data-xe-opt': it.label, 'aria-selected': 'false' },
-          B.icon(ICON[it.kind] || 'dot'), h('span', { class: 'bi-xe-label mono', text: it.label }), it.detail ? h('small', { class: 'bi-xe-detail', text: it.detail }) : null);
-        li.addEventListener('mousedown', (e) => { e.preventDefault(); accept(i); });
-        li.addEventListener('mouseenter', () => mark(i));
-        list.appendChild(li);
-      });
-      list.hidden = false;
-      input.setAttribute('aria-expanded', 'true');
-      mark(0);
+      if (!ctx.forced && !s.c.word && s.c.kind !== 'measure-name' && !(s.c.call && /[(,=]\s*$/.test(input.value.slice(0, at)))) { return []; }
+      const from = s.out.length ? s.out[0].from - lineStart : ctx.ch;
+      const rest = input.value.slice(at), to = s.out.length && s.out[0].closeQuote ? ctx.ch + (/^[^'")]*['"]?\s*\)?/.exec(rest) || [''])[0].length : undefined;
+      return s.out.map((it) => ({ name: it.label, description: it.detail || '', kind: it.kind, insert: it.insert.replace(/\|/g, ''), from, to, fn: it.fn }));
     }
-    function close() { list.hidden = true; items = []; active = -1; input.setAttribute('aria-expanded', 'false'); input.removeAttribute('aria-activedescendant'); }
-    function mark(i) {
-      active = i;
-      B.qa('[role=option]', list).forEach((li, j) => li.setAttribute('aria-selected', j === i ? 'true' : 'false'));
-      const li = list.children[i];
-      if (li) { input.setAttribute('aria-activedescendant', li.id); li.scrollIntoView({ block: 'nearest' }); }
-      const it = items[i];
-      if (it && it.fn) { drawCard(it.fn); }
-    }
-    function accept(i) {
-      const it = items[i];
-      if (!it) { return; }
-      const at = input.selectionStart == null ? input.value.length : input.selectionStart;
-      let rest = input.value.slice(at);
-      if (it.closeQuote) { rest = rest.replace(/^[^'")]*['"]?\s*\)?/, ''); }
-      input.value = input.value.slice(0, it.from) + it.insert + rest;
-      const caret = it.from + it.insert.length;
-      input.setSelectionRange(caret, caret);
-      close();
-      input.focus();
-      changed();
-      if (it.kind === 'function') { window.setTimeout(() => open(true), 0); }
-    }
+    editor.on('completed', (e) => { if (e.entry && e.entry.kind === 'function') { window.setTimeout(() => editor.complete(true), 0); } });
     function drawCard(f) {
       B.clear(card).append(h('code', { class: 'bi-xe-sig', text: f.signature }), f.returns ? h('small', { class: 'text-muted-d', text: ' → ' + f.returns }) : null,
         f.description ? h('p', { text: f.description }) : null, f.example ? h('p', {}, h('small', { text: 'Example ' }), h('code', { text: f.example })) : null,
@@ -224,7 +202,7 @@
     }
     function showCard(c) {
       const f = c && c.call && fns.find((x) => x.name === c.call.name);
-      if (f) { drawCard(f); } else if (!items.length || !(items[active] && items[active].fn)) { card.hidden = true; }
+      if (f) { drawCard(f); } else { card.hidden = true; }
     }
 
     function drawChips() {
@@ -236,7 +214,7 @@
       refs.forEach((r) => {
         const known = measureList().some((m) => m.name === r.name);
         const b = h('button', { type: 'button', class: 'bi-chip bi-xe-chip' + (known ? '' : ' bi-xe-chip-unknown'), 'data-xe-chip': r.name, title: known ? 'Select it in the formula' : 'No measure has this name' }, B.icon('calculator'), ' ' + r.name);
-        b.addEventListener('click', () => { input.focus(); input.setSelectionRange(r.start, r.end); });
+        b.addEventListener('click', () => { editor.focus(); if (cm()) { cm().setSelection(cm().posFromIndex(r.start), cm().posFromIndex(r.end)); } });
         chips.appendChild(b);
       });
     }
@@ -247,7 +225,7 @@
       return new Promise((resolve) => {
         timer = window.setTimeout(() => {
           const text = input.value.trim();
-          if (!text) { B.clear(probs); input.removeAttribute('aria-invalid'); lastChecked = null; resolve(null); return; }
+          if (!text) { B.clear(probs); editor.setInvalid(false); lastChecked = null; resolve(null); return; }
           const mine = ++seq;
           const body = Object.assign({ expr: text, scope }, (opts.target && opts.target()) || {});
           (opts.check ? opts.check(text) : B.api('POST', '/expr/validate', body)).then((r) => { if (mine === seq) { lastChecked = r; drawProblems(r); } resolve(r); })
@@ -310,7 +288,7 @@
       const unsaved = (p) => p.code === 'DRS-9152' && known && /'([^']+)'/.test(p.message || '') && known.has(/'([^']+)'/.exec(p.message)[1]);
       const list2 = ((r && r.problems) || []).filter((p) => !unsaved(p));
       if (r && r.problems && list2.length < r.problems.length && !list2.some((p) => (p.level || 'error') === 'error')) { r = Object.assign({}, r, { valid: true, pending: true }); }
-      input.setAttribute('aria-invalid', list2.some((p) => (p.level || 'error') === 'error') ? 'true' : 'false');
+      editor.setInvalid(list2.some((p) => (p.level || 'error') === 'error'));
       list2.forEach((p) => {
         let repl = p.replacement || (p.fix && typeof p.fix === 'object' ? p.fix.expr || p.fix.text : '') || fixed(r, p);
         if (repl && !sane(repl)) { repl = ''; }
@@ -320,7 +298,7 @@
         let btn = null;
         if (repl) {
           btn = h('button', { type: 'button', class: 'btn-pill btn-accent bi-small', 'data-xe-fix': p.code || 'fix', title: 'Replace the formula with the fix' }, B.icon('magic'), ' Use ', h('code', { text: repl.length > 60 ? repl.slice(0, 57) + '…' : repl }));
-          btn.addEventListener('click', () => { input.value = repl; changed(); commit(); input.focus(); });
+          btn.addEventListener('click', () => { input.value = repl; changed(); commit(); editor.focus(); });
         }
         probs.appendChild(h('li', { class: 'bi-problem bi-problem-' + (p.level || 'error'), 'data-xe-problem': p.code || '' },
           // the fix in words only when there is no button that says it (no "write: X  Use X"), set apart from the message (no "ends add ')'")
@@ -333,19 +311,8 @@
     function changed() { drawChips(); validate(); if (opts.onInput) { opts.onInput(input.value); } }
     function commit() { if (opts.onCommit) { opts.onCommit(input.value.trim()); } }
 
-    input.addEventListener('input', () => { open(false); changed(); });
-    input.addEventListener('click', () => { const c = context(input.value, input.selectionStart || 0); showCard(c); });
-    input.addEventListener('keydown', (e) => {
-      if (e.key === ' ' && e.ctrlKey) { e.preventDefault(); open(true); return; }
-      if (list.hidden) {
-        if (e.key === 'Enter' && input.tagName === 'INPUT') { commit(); }
-        return;
-      }
-      if (e.key === 'ArrowDown') { e.preventDefault(); mark(Math.min(items.length - 1, active + 1)); } else if (e.key === 'ArrowUp') { e.preventDefault(); mark(Math.max(0, active - 1)); } else if (e.key === 'Enter' || e.key === 'Tab') {
-        if (active >= 0) { e.preventDefault(); accept(active); }
-      } else if (e.key === 'Escape') { e.preventDefault(); close(); }
-    });
-    input.addEventListener('blur', () => window.setTimeout(() => { if (document.activeElement !== input) { close(); } }, 150));
+    input.addEventListener('input', changed);
+    editor.on('cursor', () => { if (cm() && cm().hasFocus()) { showCard(context(input.value, caret())); } });
     input.addEventListener('change', commit);
     if (tryBtn) {
       tryBtn.addEventListener('click', () => {
@@ -365,7 +332,7 @@
     }
     drawChips();
     if (input.value.trim() && opts.checkAtStart) { validate(); }            // a formula already written is checked by the item's own Check; the editor checks what you type
-    const api = { input, wrap, validate: () => validate(true), last: () => lastChecked, refresh: () => { drawChips(); validate(); if (document.activeElement === input) { open(false); } }, close };
+    const api = { input, wrap, editor, validate: () => validate(true), last: () => lastChecked, refresh: () => { drawChips(); validate(); }, close: () => editor.pop.close() };
     input.drishtiExpr = api;
     return api;
   };

@@ -17,7 +17,7 @@
 
 # Funds holding a company: fund-holder (HELD)
 
-The reverse look-through: every fund of the pack that holds one us-equities company, by value, and the share of the company they own. One row per funds holding a company, keyed by TICKER. Read by the **funds** pack's connector `funds-store` (table `<root>/funds/fund-holder/`). A **snapshot of public data**, captured 2026-10-26 from SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py), refreshed whole by its script (External data); 586 records. A refresh replaces the whole snapshot.
+The reverse look-through: every fund of the pack that holds one us-equities company, by value, and the share of the company they own. One row per funds holding a company, keyed by TICKER. Read by the **funds** pack's connector `funds-store` (table `<root>/funds/fund-holder/`). A **snapshot of public data**, captured 2026-10-26 from SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds), refreshed whole by its script (External data); 586 records. A refresh replaces the whole snapshot.
 
 ## File layout
 

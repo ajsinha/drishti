@@ -17,7 +17,7 @@
 
 # Financial fact: financial-fact (FACT)
 
-One financial concept of one company (revenue, net income, assets...) over up to ten fiscal years, from its 10-K XBRL filings. One row per financial fact, keyed by FACT_ID. Read by the **us-equities** pack's connector `us-equities-store` (table `<root>/us-equities/financial-fact/`). A **snapshot of public data**, captured 2026-10-24 from SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py), refreshed whole by its script (External data); 4,026 records. A refresh replaces the whole snapshot.
+One financial concept of one company (revenue, net income, assets...) over up to ten fiscal years, from its 10-K XBRL filings. One row per financial fact, keyed by FACT_ID. Read by the **us-equities** pack's connector `us-equities-store` (table `<root>/us-equities/financial-fact/`). A **snapshot of public data**, captured 2026-10-24 from SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities), refreshed whole by its script (External data); 4,026 records. A refresh replaces the whole snapshot.
 
 ## File layout
 
@@ -119,7 +119,7 @@ None: all 4,026 rows were read, and every field any of them has is in the record
 ## See also
 
 - Data contract: [FACT in the us-equities pack's contracts](../../packs/us-equities.md#fact-financial-fact-financial-fact) (`config/packs/capitalmarkets/us-equities/contracts/financial-fact.contract.yaml`, the source of every meaning on this page).
-- [External data: where it comes from and how to refresh it](../../../guides/EXTERNAL_DATA.md)
+- [External data feeds](../../../guides/EXTERNAL_DATA.md)
 - [Companies, funds and ETFs](../../../knowledge/companies-funds-and-etfs.md)
 - [Tutorial 27 · Groupings and analytics, computed](../../../tutorials/27-groupings-and-analytics.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

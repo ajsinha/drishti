@@ -566,7 +566,7 @@ def code_problems() -> list[str]:
 
 # ---- 6. command words and kinds -------------------------------------------------------------------------------------
 
-RESERVED_WORDS = {"BI", "RUPAKA", "FORM", "FUNC", "VAR", "WHAT", "DATAMAP", "DATA", "EXPORT", "ADMIN", "SMAT", "PLAY", "FRSA", "PIVOT", "MCUBE", "CCUBE", "PVAR"}    # routes/terminal_routes.py (PVAR: var_routes.py, an alias of the explorer with the Parametric toggle on; FRSA: frtb_routes.py, the FRTB-SA capital screen; VAR: var_routes.py, the explorer; PIVOT: pivot_routes.py, the pivot screen; MCUBE: mcube_routes.py, the pivot screen with the MR lens; SMAT: smat_routes.py, the scenario matrix; DATA: data_routes.py, Export data; ADMIN: terminal_routes.py, the Admin pages by command): no pack may define these; PLAY: play_routes.py, the VaR Playground
+RESERVED_WORDS = {"BI", "RUPAKA", "FORM", "FUNC", "VAR", "WHAT", "DATAMAP", "DATA", "EXPORT", "ADMIN", "SMAT", "PLAY", "FRSA", "PIVOT", "MCUBE", "CCUBE", "PVAR", "PREDEAL"}    # routes/terminal_routes.py (PVAR: var_routes.py, an alias of the explorer with the Parametric toggle on; FRSA: frtb_routes.py, the FRTB-SA capital screen; VAR: var_routes.py, the explorer; PIVOT: pivot_routes.py, the pivot screen; MCUBE: mcube_routes.py, the pivot screen with the MR lens; SMAT: smat_routes.py, the scenario matrix; DATA: data_routes.py, Export data; ADMIN: terminal_routes.py, the Admin pages by command): no pack may define these; PLAY: play_routes.py, the VaR Playground
 
 
 @functools.lru_cache(maxsize=None)

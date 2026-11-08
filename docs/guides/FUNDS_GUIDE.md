@@ -564,7 +564,7 @@ the bar chart's calendar-year returns as XBRL facts per share class, so the pack
 summary in the four quarters read; a few fund families file the bar chart under a custom tag and show no returns). The pack also reads
 the committed us-equities snapshot (companies, their SIC divisions, LEIs and shares outstanding; index members). SEC asks for a
 descriptive User-Agent with a contact and at most 10 requests a second: the refresh script uses exactly the us-equities pack's setting
-(`DRISHTI_SEC_USER_AGENT`, else the default in `tools/packgen/us_equities/fetch.py`) and one request at a time. The External data page,
+(`DRISHTI_FEEDS_USER_AGENT`, else the default in `tools/packgen/us_equities/fetch.py`) and one request at a time. The External data page,
 [EXTERNAL_DATA.md](EXTERNAL_DATA.md#funds), lists every source of every pack.
 
 ## 13. How the 200 are chosen
@@ -597,7 +597,7 @@ private-credit funds without a ticker are skipped. `--scope FUNDS:<n>` takes mor
 
 ## 15. The refresh script
 
-`tools/publicdata/funds.py` (with `tools/publicdata/funds.sh` and `tools\windows\publicdata-funds.ps1`) takes the same commands and
+`drishti.py feed run funds` (with `tools/feeds/feed.sh run funds` and `tools\windows\publicdata-funds.ps1`) takes the same commands and
 options as every public-data script: `status`, `refresh --dry-run`, `refresh [SOURCE ...]`, with `--since YEAR`, `--years N`,
 `--scope FUNDS:<n>,HOLDINGS:<n>`, `--offline`, `--cache DIR`, `--max-age HOURS` (a week by default), `--pause`, `--no-check`,
 `--into-pack`.
@@ -605,17 +605,17 @@ options as every public-data script: `status`, `refresh --dry-run`, `refresh [SO
 On Linux and macOS:
 
 ```bash
-tools/publicdata/funds.sh status                                # offline: the committed funds, each source's licence, last refresh, cache size
-tools/publicdata/funds.sh refresh --dry-run                     # the quarters and files a refresh would fetch; changes nothing
-tools/publicdata/funds.sh refresh                               # download (about 700 MB the first time), build, check
-tools/publicdata/funds.sh refresh --offline                     # rebuild from the downloads only
-tools/publicdata/funds.sh refresh ncen rr --since 2025          # every census and summary quarter since 2025
-tools/publicdata/funds.sh refresh --scope FUNDS:300,HOLDINGS:1000   # a wider build in <data>/publicdata/funds
+tools/feeds/feed.sh run funds status                                # offline: the committed funds, each source's licence, last refresh, cache size
+tools/feeds/feed.sh run funds --dry-run                     # the quarters and files a refresh would fetch; changes nothing
+tools/feeds/feed.sh run funds --snapshot                               # download (about 700 MB the first time), build, check
+tools/feeds/feed.sh run funds --snapshot --offline                     # rebuild from the downloads only
+tools/feeds/feed.sh run funds --snapshot ncen rr --since 2025          # every census and summary quarter since 2025
+tools/feeds/feed.sh run funds --snapshot --scope FUNDS:300,HOLDINGS:1000   # a wider build in <data>/datafeeds/sources/funds
 python3 tools/drishti.py lake demo                              # then rebuild the lake
 ```
 
 ```text
-$ tools/publicdata/funds.sh status
+$ tools/feeds/feed.sh run funds status
 committed pack: 200 funds in 5 parts, data retrieved 2026-10-26
 SOURCE   LICENCE                                           USE          LAST REFRESHED       CACHED
 tickers  Public domain (U.S. Government work); SEC fair a  committable  2026-10-26T19:37:15  1.7 MB
@@ -638,12 +638,12 @@ python tools\build_demo_lakes.py --only funds
 The dry run names every request and writes nothing:
 
 ```text
-$ tools/publicdata/funds.sh refresh --dry-run
+$ tools/feeds/feed.sh run funds --dry-run
 dry run: funds, sources tickers, nasdaq, nport, ncen, rr, gleif
-  tickers (Public domain (U.S. Government work); SEC fair access policy; committable): 2 request(s), cache <data>/publicdata/cache/funds
+  tickers (Public domain (U.S. Government work); SEC fair access policy; committable): 2 request(s), cache <data>/datafeeds/sources/cache/funds
     https://www.sec.gov/files/company_tickers_mf.json
     https://www.sec.gov/files/company_tickers_exchange.json
-  nport (Public domain (U.S. Government work); SEC fair access policy; committable): 3 request(s), cache <data>/publicdata/cache/funds
+  nport (Public domain (U.S. Government work); SEC fair access policy; committable): 3 request(s), cache <data>/datafeeds/sources/cache/funds
     https://www.sec.gov/files/dera/data/form-n-port-data-sets/2026q3_nport.zip
     https://www.sec.gov/files/dera/data/form-n-port-data-sets/2026q2_nport.zip
     https://www.sec.gov/files/dera/data/form-n-port-data-sets/2026q1_nport.zip
@@ -652,9 +652,9 @@ dry run: funds, sources tickers, nasdaq, nport, ncen, rr, gleif
 ```
 
 A quarterly source tries the newest quarters first and takes the published ones (N-PORT one, N-CEN and the summaries four); a quarter
-not yet published answers 404 and is passed over. The downloads go to `<data>/publicdata/cache/funds` (`DRISHTI_DATA_DIR`, else the
+not yet published answers 404 and is passed over. The downloads go to `<data>/datafeeds/sources/cache/funds` (`DRISHTI_DATA_DIR`, else the
 repository's git-ignored `data/`), each recorded in `cache-index.json` with its URL, time, size and checksum; the run is recorded in
-`<data>/publicdata/funds/manifest.json`. A widened build goes to `<data>/publicdata/funds` (`packs/funds`, `testdata/funds`); only
+`<data>/datafeeds/sources/funds/manifest.json`. A widened build goes to `<data>/datafeeds/sources/funds` (`packs/funds`, `testdata/funds`); only
 `--into-pack` writes it over the committed pack.
 
 ## 16. The gzipped snapshot and offline use

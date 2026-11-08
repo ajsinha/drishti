@@ -155,7 +155,7 @@ Screens (Sutras):
 | Synthetic P&L strips (a seeded random walk, config/packs/core/compute-demo/tools/make_samples.py) | Proprietary (part of Drishti) | no | path-book, path-strip |
 | Computed on request by the reactive connectors path-sum-python and path-sum-java | Proprietary (part of Drishti) | no | path-sum, path-sum-java |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and its refresh script, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/compute-demo.md](guides/compute-demo.md): *Data contracts* and *Data retrieval*.
+Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/compute-demo.md](guides/compute-demo.md): *Data contracts* and *Data retrieval*.
 
 ## Enabling and dependencies
 

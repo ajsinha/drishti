@@ -47,7 +47,8 @@ The exposure paths are **synthetic** (one correlated factor per asset class and 
 - why collateral can raise exposure (when the bank has posted it) and how the path fan shows the spread;
 - the difference between a trade alone and its contribution inside its netting set (the netting benefit);
 - scopes with `+`, `-` and `&`; captures and compare;
-- a pre-deal what-if by the exact `paths` method and by the conservative `addon` proxy;
+- the pre-deal check (Counterparties → Pre-deal check): approve, refer or decline, the limit within, near or over, by the exact `paths`
+  method and by the conservative `addon` proxy;
 - the official end-of-day record and where it is published.
 
 ## Step 1 · Build the exposure data and open the bank
@@ -228,7 +229,7 @@ NS-ALDERSHOT-LDN.
 ## Step 4 · NS-ALDERSHOT-LDN: collateral and trades
 
 **In the UI.** Click `NS-ALDERSHOT-LDN`. At a netting set the chart adds the **path fan** (the 5–95% and 25–75% bands of the 200 paths),
-and the tabs are **Collateral**, **Trades**, **Pre-deal**, **By tenor** and **Captures**. The **Collateral** tab shows the CSA's terms
+and the tabs are **Collateral**, **Trades**, **By tenor** and **Captures** (with **Pre-deal check ›** under them, step 7). The **Collateral** tab shows the CSA's terms
 (variation margin, a 10-business-day margin period, thresholds of 10 million each way, minimum transfers of 500 thousand) beside what is
 held today and its effect at the peak date:
 
@@ -377,24 +378,53 @@ yours: another user's capture answers `404 DRS-1001 no exposure capture … you 
 **Further in the guide:** [section 6](../guides/EXPOSURE_GUIDE.md#6-captures-and-compare) (captures and compare),
 [section 9](../guides/EXPOSURE_GUIDE.md#9-who-sees-what-entitlements-and-audit) (whose captures you read).
 
-## Step 7 · Before dealing: a what-if by paths and by the addon
+## Step 7 · Before dealing: the pre-deal check, exact and by the proxy
 
-**In the UI.** On `NSET:NS-ALDERSHOT-LDN`, open **Pre-deal**. Pick a trade to copy (*Candidate: like trade* `MX-30001587`), a **factor**
-of `-1` (its unwind), the **method** and whose figures to show (*its counterparty (the credit limit's)*), then **Run what-if**. With
-`paths` the chip says *exact*; the result lists the peak PFE and EPE before and after, the incremental PFE by tenor and the limit headroom
-after:
+**In the UI.** On `NSET:NS-ALDERSHOT-LDN` (or `CPTY:CP-ALDERSHOT`) press **Pre-deal check ›** under the tabs: **Counterparties → Pre-deal
+check** opens at that netting set (the same as the menu Counterparties → Pre-deal check, or `PREDEAL <GO>`). In the form on the right
+leave *The trade is* on **like a booked trade (exact)**, pick *Like the trade* `MX-30001587`, set *Side* to **the other side
+(reverse)** (its unwind; the notional left blank copies it as it is) and press **Check**. Or type the same in one line:
 
-![Pre-deal by paths: the unwind of MX-30001587, exact, on CP-ALDERSHOT](img/t26/08-predeal-paths.jpg)
+```text
+PREDEAL CP-ALDERSHOT LIKE MX-30001587 REVERSE IN NS-ALDERSHOT-LDN <GO>
+```
 
-The same with the method `addon`: the chip says *proxy*:
+The verdict comes back from the server: the decision with its lamp, the limit's status (**within**, **near the limit** or **over the
+limit**), the reason, the tiles (limit use before → after, headroom after, the incremental peak PFE, EPE and EAD before → after), the
+limit and each tenor bucket in a table, and under it the profile with the trade over the profile before, the limit line and the
+incremental PFE per tenor:
 
-![Pre-deal by the addon: the same unwind as a netting set of its own, uncollateralised](img/t26/09-predeal-addon.jpg)
+![The pre-deal check of the unwind of MX-30001587 into NS-ALDERSHOT-LDN: exact, the verdict, the limit and its buckets, the overlay](img/t26/08-predeal-paths.jpg)
 
-The same pre-deal what-if is on the counterparty too: on `CPTY:CP-ALDERSHOT` open **Pre-deal**, pick *Into the netting set* (its
-largest by peak PFE comes first), the candidate and the factor, and read the counterparty's figures before and after
-([EXPOSURE_GUIDE.md section 7](../guides/EXPOSURE_GUIDE.md#7-pre-deal-what-if)).
+**Explain ›** opens how the check was made (use = with ÷ limit, headroom = limit − with, each bucket, the rule for near and the decision).
+The same trade described rather than copied (*described (proxy, only refers)*: asset class `EQUITY`, the maturity and the notional) is
+the conservative proxy, and the answer **refers**, with the reason: a proxy never approves:
 
-**From the command line**, the exact method:
+```text
+PREDEAL CP-ALDERSHOT EQUITY 768495000 2031-10-20 MTM 9227785 <GO>
+```
+
+![The proxy: the same trade described, a netting set of its own, uncollateralised; refer](img/t26/09-predeal-addon.jpg)
+
+**From the command line**, the same check (it prints the decision, the reasons, the method and the template, the limit and each bucket
+before and after with the headroom and the status, and the exposure before, with and incremental):
+
+```bash
+python3 tools/drishti.py exposure predeal "PREDEAL CP-ALDERSHOT LIKE MX-30001587 REVERSE IN NS-ALDERSHOT-LDN"
+```
+
+**In YAML.** From which share of a limit the check says *near* is a setting of the exposure engine, in `config/engines/exposure.yaml`
+(restart to apply):
+
+```yaml
+drishti:
+  ccr:
+    exposure:
+      limit-near: 0.8                # near from 80% of the limit or of a tenor bucket's limit; over 100% a breach
+```
+
+The what-if alone, without the limit and the decision, is the command line's `exposure whatif` (and `POST /api/v1/risk/exposure/what-if`).
+**From the command line**, the what-if alone by the exact method:
 
 ```text
 $ drishti.py exposure whatif CPTY:CP-ALDERSHOT --like MX-30001587 --factor -1 --set NS-ALDERSHOT-LDN

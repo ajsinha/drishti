@@ -145,7 +145,7 @@ def test_admin_health_shows_the_temp_folders_of_both_processes(stack, browser):
 def test_an_import_is_rolled_back_from_environments(stack, browser):
     s, ws = S.admin("POST", "/bi/workspaces", {"name": "Wave B Desk"})
     assert s in (200, 201), ws
-    body = "report: wave-b-rep\ndataset: file:dataset:live-trading\npages:\n  - id: main\n    title: Main\n    visuals:\n      - { id: n, type: card, title: Trades, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }\n"
+    body = "report: wave-b-rep\nmodel: live-trading@1\npages:\n  - id: main\n    title: Main\n    visuals:\n      - { id: n, type: card, title: Trades, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }\n"
     s, rep = S.admin("POST", f"/bi/workspaces/{ws['id']}/items", {"kind": "report", "title": "Wave B report", "body": body})
     assert s in (200, 201), rep
     S.admin("POST", f"/bi/items/{rep['id']}/publish", {"note": "v1"})

@@ -80,6 +80,10 @@ groups:
         expr: drishti_feeds_attention > 0
         labels: {severity: warning}
         annotations: {summary: "{{ $value }} expected loads are {{ $labels.state }} ({{ $labels.instance }})"}
+      - alert: DrishtiDataFeedFailed
+        expr: drishti_datafeed_failed > 0.5
+        labels: {severity: warning}
+        annotations: {summary: "data feed {{ $labels.feed }} failed its last run ({{ $labels.instance }})"}
       - alert: DrishtiViewsSlow
         expr: drishti_view_seconds{quantile="0.99"} > 0.15
         for: 5m

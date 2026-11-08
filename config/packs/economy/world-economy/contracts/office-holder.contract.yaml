@@ -217,5 +217,5 @@ review:
 - 'required inferred from 100% coverage in 430 documents (430 samples): confirm each required field is mandatory upstream, and each optional one
   may be empty.'
 - 'key OFFICE_ID is the field holding the sample catalogue''s id (OFFC-ABW-COS): confirm it is the business key.'
-- 'a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.'
+- 'a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: ROLE: confirm they are closed lists.'

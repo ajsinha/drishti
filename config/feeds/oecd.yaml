@@ -1,0 +1,139 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The oecd feed (docs/guides/PUBLIC_SECTOR_GUIDE.md section 5): the OECD Data Explorer's SDMX REST API into worldlake, for the oecd
+# pack. Class: tools/feeds/sources/oecd.py. Daily; incremental (from three periods before each measure's last; nothing newer,
+# nothing written). No key; the OECD asks for no more than about 20 requests a minute (one a measure here).
+# A measure is a dataflow (agency,id,version) and an SDMX key whose {countries} is replaced by the countries joined with +; find both
+# in the Data Explorer (https://data-explorer.oecd.org/: "Developer API" on a table).
+# Run: python3 tools/drishti.py feed run oecd (EXTERNAL_DATA.md); options.sources holds each source's licence and terms; the rest of
+# options is the default selection.
+feed: oecd
+title: OECD Data Explorer (SDMX)
+description: 'The economy module''s public-sector oecd pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): The OECD members'' business cycle, jobs, prices and growth from
+  the OECD Data Explorer''s SDMX API: the composite leading indicator, the harmonised unemployment rate, consumer price inflation and real GDP growth. A
+  country''s page shows the latest of each measure and the members on a map shaded by inflation; each series shows its monthly or quarterly history. Filled
+  daily by the oecd feed into the worldlake lake.'
+class: oecd.OecdFeed
+source:
+  provider: OECD
+  url: https://sdmx.oecd.org/public/rest/
+  pause: 4
+  retries: 3
+  timeout: 120
+  cache-hours: 12
+lake: worldlake
+load: java
+enabled: true
+schedule:
+  at: 07:00
+  days: daily
+licence:
+  name: OECD terms and conditions (CC BY 4.0)
+  url: https://www.oecd.org/en/about/terms-conditions.html
+  redistribution: attribution
+  internal-only: false
+  attribution: 'Source: OECD Data Explorer (CC BY 4.0).'
+datasets:
+  oecd-country:
+    pack: oecd
+    kind: oecd-country
+    key: COUNTRY_ID
+  oecd-series:
+    pack: oecd
+    kind: oecd-series
+    key: SERIES_ID
+options:
+  module: economy
+  sources:
+  - id: oecd
+    name: OECD Data Explorer SDMX API
+    title: OECD
+    url: https://sdmx.oecd.org/public/rest/
+    terms: https://www.oecd.org/en/about/terms-conditions.html
+    licence: 'OECD terms and conditions: data may be extracted, copied and redistributed, also commercially, with the source acknowledged (CC BY 4.0 for
+      OECD data since July 2024)'
+    redistributable: true
+    internal-only: false
+    attribution: 'Source: OECD Data Explorer (CC BY 4.0).'
+  start-period: 2020-01
+  history-periods: 72
+  countries:
+  - AUS
+  - AUT
+  - BEL
+  - CAN
+  - CHL
+  - COL
+  - CRI
+  - CZE
+  - DNK
+  - EST
+  - FIN
+  - FRA
+  - DEU
+  - GRC
+  - HUN
+  - ISL
+  - IRL
+  - ISR
+  - ITA
+  - JPN
+  - KOR
+  - LVA
+  - LTU
+  - LUX
+  - MEX
+  - NLD
+  - NZL
+  - NOR
+  - POL
+  - PRT
+  - SVK
+  - SVN
+  - ESP
+  - SWE
+  - CHE
+  - TUR
+  - GBR
+  - USA
+  measures:
+  - id: CLI
+    field: LEADING_INDICATOR
+    title: Composite leading indicator
+    unit: index, long-term average = 100
+    frequency: monthly
+    dataflow: OECD.SDD.STES,DSD_STES@DF_CLI,
+    key: '{countries}.M.LI...AA...H'
+  - id: UNEMPLOYMENT
+    field: UNEMPLOYMENT
+    title: Unemployment rate, seasonally adjusted
+    unit: '% of labour force'
+    frequency: monthly
+    dataflow: OECD.SDD.TPS,DSD_LFS@DF_IALFS_UNE_M,1.0
+    key: '{countries}.UNE_LF_M...Y._T.Y_GE15..M'
+  - id: INFLATION
+    field: INFLATION
+    title: Consumer price inflation, year on year
+    unit: '% a year'
+    frequency: monthly
+    dataflow: OECD.SDD.TPS,DSD_PRICES@DF_PRICES_ALL,1.0
+    key: '{countries}.M.N.CPI.PA._T.N.GY'
+  - id: GDP_GROWTH
+    field: GDP_GROWTH
+    title: Real GDP growth, quarter on quarter
+    unit: '%'
+    frequency: quarterly
+    dataflow: OECD.SDD.NAD,DSD_NAMAIN1@DF_QNA_EXPENDITURE_GROWTH_OECD,1.1
+    key: Q..{countries}.S1..B1GQ......G1.

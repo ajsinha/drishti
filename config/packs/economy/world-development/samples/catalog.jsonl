@@ -1,0 +1,28 @@
+{"kind":"development-profile","id":"WDI-AUS","title":"WDI WDI-AUS","subtitle":"Australia · High income"}
+{"kind":"development-profile","id":"WDI-BRA","title":"WDI WDI-BRA","subtitle":"Brazil · Upper middle income"}
+{"kind":"development-profile","id":"WDI-CAN","title":"WDI WDI-CAN","subtitle":"Canada · High income"}
+{"kind":"development-profile","id":"WDI-CHN","title":"WDI WDI-CHN","subtitle":"China · Upper middle income"}
+{"kind":"development-profile","id":"WDI-DEU","title":"WDI WDI-DEU","subtitle":"Germany · High income"}
+{"kind":"development-profile","id":"WDI-GBR","title":"WDI WDI-GBR","subtitle":"United Kingdom · High income"}
+{"kind":"development-profile","id":"WDI-IND","title":"WDI WDI-IND","subtitle":"India · Lower middle income"}
+{"kind":"development-profile","id":"WDI-JPN","title":"WDI WDI-JPN","subtitle":"Japan · High income"}
+{"kind":"development-profile","id":"WDI-MEX","title":"WDI WDI-MEX","subtitle":"Mexico · Upper middle income"}
+{"kind":"development-profile","id":"WDI-NGA","title":"WDI WDI-NGA","subtitle":"Nigeria · Lower middle income"}
+{"kind":"development-profile","id":"WDI-USA","title":"WDI WDI-USA","subtitle":"United States · High income"}
+{"kind":"development-profile","id":"WDI-ZAF","title":"WDI WDI-ZAF","subtitle":"South Africa · Upper middle income"}
+{"kind":"development-series","id":"WDIS-CAN-EG_ELC_ACCS_ZS","title":"WDIS WDIS-CAN-EG_ELC_ACCS_ZS","subtitle":"Canada · Access to electricity (% of population) · Access to electricity (% of population)"}
+{"kind":"development-series","id":"WDIS-CAN-FP_CPI_TOTL_ZG","title":"WDIS WDIS-CAN-FP_CPI_TOTL_ZG","subtitle":"Canada · Inflation, consumer prices (annual %) · Inflation, consumer prices (annual %)"}
+{"kind":"development-series","id":"WDIS-CAN-GC_DOD_TOTL_GD_ZS","title":"WDIS WDIS-CAN-GC_DOD_TOTL_GD_ZS","subtitle":"Canada · Central government debt, total (% of GDP) · Central government debt, total (% of GDP)"}
+{"kind":"development-series","id":"WDIS-CAN-IT_NET_USER_ZS","title":"WDIS WDIS-CAN-IT_NET_USER_ZS","subtitle":"Canada · Individuals using the Internet (% of population) · Individuals using the Internet (% of population)"}
+{"kind":"development-series","id":"WDIS-CAN-NY_GDP_MKTP_KD_ZG","title":"WDIS WDIS-CAN-NY_GDP_MKTP_KD_ZG","subtitle":"Canada · GDP growth (annual %) · GDP growth (annual %)"}
+{"kind":"development-series","id":"WDIS-CAN-NY_GDP_PCAP_CD","title":"WDIS WDIS-CAN-NY_GDP_PCAP_CD","subtitle":"Canada · GDP per capita (current US$) · GDP per capita (current US$)"}
+{"kind":"development-series","id":"WDIS-CAN-SI_POV_DDAY","title":"WDIS WDIS-CAN-SI_POV_DDAY","subtitle":"Canada · Poverty headcount ratio at $3.00 a day (2021 PPP) (% of population) · Poverty headcount ratio at $3.00 a day (2021 PPP) (% of population)"}
+{"kind":"development-series","id":"WDIS-CAN-SL_UEM_TOTL_ZS","title":"WDIS WDIS-CAN-SL_UEM_TOTL_ZS","subtitle":"Canada · Unemployment, total (% of total labor force) (modeled ILO estimate) · Unemployment, total (% of total labor force) (modeled ILO estimate)"}
+{"kind":"development-series","id":"WDIS-CAN-SP_DYN_LE00_IN","title":"WDIS WDIS-CAN-SP_DYN_LE00_IN","subtitle":"Canada · Life expectancy at birth, total (years) · Life expectancy at birth, total (years)"}
+{"kind":"development-series","id":"WDIS-CAN-SP_POP_TOTL","title":"WDIS WDIS-CAN-SP_POP_TOTL","subtitle":"Canada · Population, total · Population, total"}
+{"kind":"development-series","id":"WDIS-IND-NY_GDP_MKTP_KD_ZG","title":"WDIS WDIS-IND-NY_GDP_MKTP_KD_ZG","subtitle":"India · GDP growth (annual %) · GDP growth (annual %)"}
+{"kind":"development-series","id":"WDIS-BRA-SI_POV_DDAY","title":"WDIS WDIS-BRA-SI_POV_DDAY","subtitle":"Brazil · Poverty headcount ratio at $3.00 a day (2021 PPP) (% of population) · Poverty headcount ratio at $3.00 a day (2021 PPP) (% of population)"}
+{"kind":"development-series","id":"WDIS-USA-NY_GDP_PCAP_CD","title":"WDIS WDIS-USA-NY_GDP_PCAP_CD","subtitle":"United States · GDP per capita (current US$) · GDP per capita (current US$)"}
+{"kind":"development-series","id":"WDIS-NGA-SP_POP_TOTL","title":"WDIS WDIS-NGA-SP_POP_TOTL","subtitle":"Nigeria · Population, total · Population, total"}
+{"kind":"development-series","id":"WDIS-AUS-EG_ELC_ACCS_ZS","title":"WDIS WDIS-AUS-EG_ELC_ACCS_ZS","subtitle":"Australia · Access to electricity (% of population) · Access to electricity (% of population)"}
+{"kind":"development-series","id":"WDIS-AUS-FP_CPI_TOTL_ZG","title":"WDIS WDIS-AUS-FP_CPI_TOTL_ZG","subtitle":"Australia · Inflation, consumer prices (annual %) · Inflation, consumer prices (annual %)"}

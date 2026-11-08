@@ -23,9 +23,9 @@ description: Economies, markets, companies, legal entities and funds, from publi
 
 packs:
   enabled:                               # by module (no link of these packs leads into core or market-data): World is the economy
-    economy: [world-economy, news-and-markets]   # with capital markets; while capitalmarkets is off, its packs, functions (USEQ, FUND ...),
-    capitalmarkets: [us-equities, funds]   # cards and the World landing's company, filing and fund parts are gone
-    core: [gleif]
+    economy: [world-economy, news-and-markets, official-news, gdelt-events]   # with capital markets (the last two: the public sector's free news);
+    capitalmarkets: [us-equities, funds]   # while capitalmarkets is off, its packs, functions (USEQ, FUND ...), cards and the World landing's
+    core: [gleif]                          # company, filing and fund parts are gone
   allow-only: true                       # Admin -> Packs, Deploy archive and the registry refuse any other pack (DRS-1017)
 
 commands:                                # what people may type and see (command line, FUNC, type-ahead, examples, pages)
@@ -39,7 +39,9 @@ commands:                                # what people may type and see (command
     # GLEIF: legal entities, groups, relationships, countries, mappings
      LEI, LEIG, LEIR, LEIC, LEIM,
     # funds and ETFs: funds, who holds a company, the funds that track an index
-     FUND, HELD, TRACK]
+     FUND, HELD, TRACK,
+    # the public sector's free news: official press releases, world events (GDELT)
+     PRESS, PREL, GDELT]
   words: { BI: on, RUPAKA: off, FORM: on, FUNC: on, WHAT: on, DATAMAP: on, DATA: on, VAR: off, EXP: off, SMAT: off, PLAY: off }
 
 features:                                # presets of existing switches (config/lenses/features.yaml); not named: the product's default
@@ -87,7 +89,7 @@ home:
 
 help:
   categories: [get-started, risk, analytics, data, operate, reference, knowledge, internal]   # the help sections kept (config/help.yaml): Build hidden
-  knowledge: [world-economy, news-and-markets, us-equities, gleif, funds]   # Knowledge pages of these packs (the rest hidden)
+  knowledge: [world-economy, news-and-markets, us-equities, gleif, funds, official-news, gdelt-events]   # Knowledge pages of these packs (the rest hidden)
   unlisted-slugs: refuse                 # a guide not in the help centre answers 404 (no reaching hidden guides by URL)
 
 admin:                                   # the Admin pages shown; the others answer 404 (and are off the menu and the tab strip)

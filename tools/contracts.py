@@ -532,9 +532,9 @@ class Draft:
         if dated != "snapshot":
             self.review.append("due time of each business date is not known: state it (for example, by 06:00 New York the next business day).")
             return {"frequency": "daily", "due": "to be confirmed"}
-        script = ROOT / "tools" / "publicdata" / (self.pack.replace("-", "_") + ".py")
+        script = ROOT / "tools" / "feeds" / "sources" / (self.pack.replace("-", "_") + ".py")
         if script.is_file():
-            self.review.append(f"a snapshot refreshed when {script.relative_to(ROOT)} runs: confirm the refresh cadence.")
+            self.review.append(f"a snapshot refreshed when its data feed runs ({script.relative_to(ROOT)}; drishti.py feed run): confirm the refresh cadence.")
         return {"frequency": "static", "due": "to be confirmed"}
 
     def storage(self) -> dict:

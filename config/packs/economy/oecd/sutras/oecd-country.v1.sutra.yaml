@@ -1,0 +1,60 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Built from the Drishti UI kit only (config/ui-kit/fragments): no screen code of its own.
+rachana: 1
+sutra: oecd-country
+version: 1
+description: "One OECD member: the latest leading indicator, unemployment, inflation and growth, and the members on a map shaded by inflation."
+doc:
+  summary: "An OECD member's cycle, jobs, prices and growth: the latest of each measure, the members on a map by inflation, each series a click away."
+  description: >-
+    One page per OECD member the oecd feed follows: the strip gives the composite leading indicator, the unemployment rate, consumer price
+    inflation and real GDP growth with their periods; the table lists each measure with its latest value and change (a row opens its
+    history); the map shades every member by inflation (a click opens that member).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/oecd-country/OECD-CAN"
+    - "OECD OECD-CAN"
+  since: "2.9.11"
+match: { kind: oecd-country, priority: 10 }
+title: { pill: Public sector · OECD country, id: $.COUNTRY_ID, with: $.COUNTRY_NAME }
+strip:
+  - { label: Leading indicator, bind: $.LEADING_INDICATOR, fmt: amount2 }
+  - { label: "Unemployment, %", bind: $.UNEMPLOYMENT, fmt: price2 }
+  - { label: "Inflation, %", bind: $.INFLATION, fmt: price2, emphasis: true }
+  - { label: "GDP growth, % q/q", bind: $.GDP_GROWTH, fmt: price2 }
+  - { label: Inflation period, bind: $.INFLATION_PERIOD }
+panels:
+  - id: measures
+    kind: table
+    title: "Measures, latest period (a row opens its history)"
+    key: F2
+    code: MEAS
+    rows: $.MEASURES
+    search: false
+    columns:
+      - { label: Measure, bind: "link(@.OECD_SERIES, 'oecd-series', @.TITLE)" }
+      - { label: Latest, bind: "@.LATEST", fmt: amount2 }
+      - { label: Unit, bind: "@.UNIT" }
+      - { label: Period, bind: "@.PERIOD" }
+      - { label: Change, bind: "@.CHANGE", fmt: signed2 }
+  - use: region-map@1
+    with: { id: members, title: "Consumer price inflation by member, % (a member opens its page)", key: F3, highlight: $.ISO3,
+            link-kind: oecd-country, link-id: "OECD-{iso3}", shade-kind: oecd-country, shade-field: $.INFLATION, shade-by: $.ISO3,
+            shade-fmt: price2, shade-label: "Inflation, %" }
+  - { use: source-footer@1 }
+keys: { F9: raw }

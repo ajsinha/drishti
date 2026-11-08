@@ -107,6 +107,11 @@ rules:
     above: 0                       # any
     severity: warn                 # warn
     summary: "{value} expected loads are {state}"  # the line
+  data-feed-failed:                # FEEDS_GUIDE section 6: a data feed's last run failed or was refused (cron, systemd, Task Scheduler or Run now)
+    metric: drishti.datafeed.failed  # 1 while the feed's last run in <data>/datafeeds/ledger.jsonl failed; a later success closes the alert
+    above: 0.5                     # failed
+    severity: warn                 # warn
+    summary: "data feed {feed} failed its last run: Admin -> Data loads -> Feeds"  # the line
   views-slow:                      # OPERATIONS 13.5: the 99th percentile of a page's build over 150 ms for 5 minutes
     metric: drishti.view.percentile  # the view timer's percentiles
     tags: {phi: "0.99"}            # the 99th

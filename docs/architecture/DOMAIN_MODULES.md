@@ -32,7 +32,7 @@ that exist today and the order of the move. The native libraries' module, which 
 |---|---|---|
 | **Core** | everything generic: entities, packs and the pack loader, Sutras and Rachana, Pivot, BI, tables and models, lakes, loaders and the data inbox, connectors, search, Explain, approvals and changes, collaboration, security, the cluster, Flight, AI, the console shell, the generic compute (Python workers, the vector store, parallel and many-set sums, sharding, fan-out), `drishti-native` | it would serve a hospital, a utility or a ministry unchanged |
 | **Banking** (the risk and banking domain) | VaR and ES (historical, parametric), the VaR playground content, backtesting, regulatory VaR reporting, the scenario matrix, stress windows, baskets; exposure and CCR (PFE, EEPE, what-if); FRTB-SA and sensitivities; ISDA SIMM; SA-CCR and CVA (planned); the MR and CCR cubes; the risk, trading, market and CRO lenses; the official risk results; equity analytics (beta, correlation); the trading, market-data, market-risk and counterparty-risk packs | it names a trade, a position, a risk factor, a desk or a regulation |
-| **Economy** (no code of its own: a content module shipped with the core) | the world-economy and news-and-markets packs (and the public-sector data to come), the world lens and its landing, the IMF-based BI reports | public economic and public-sector data |
+| **Economy** (no code of its own: a content module shipped with the core) | the world-economy and news-and-markets packs and the public sector's six (world-development, central-banks, national-statistics, oecd, official-news, gdelt-events), the World and Public sector lenses, the world landing, the IMF-based BI reports | public economic and public-sector data |
 | **Capital markets** (no code of its own yet: a content module shipped with the core; the owner's choice, 2026-11-07) | the us-equities and funds packs; the market data's functions (curves, FX, vols, equities, bonds: `CRV` ... `EQV`); the market lens with banking | listed companies, funds, prices and market data |
 
 ## 2. The boundary list
@@ -99,7 +99,7 @@ Everything else (the shell, BI, Pivot, Build, designer, admin, Help, embed, phon
 
 | Kind | Banking | Economy |
 |---|---|---|
-| Packs (`config/packs`) | `trading`, `market-data` (its commands are capital markets' functions; the pack stays banking's while the engines read it), `market-risk`, `counterparty-risk` | economy: `world-economy`, `news-and-markets`; capital markets: `us-equities`, `funds`; core reference data: `gleif` (section 7, D6) |
+| Packs (`config/packs`) | `trading`, `market-data` (its commands are capital markets' functions; the pack stays banking's while the engines read it), `market-risk`, `counterparty-risk` | economy: `world-economy`, `news-and-markets`; capital markets: `us-equities`, `funds`; public sector: `world-development`, `central-banks`, `national-statistics`, `oecd`, `official-news`, `gdelt-events` (each filled daily by its feed); core reference data: `gleif` (section 7, D6) |
 | Engines (`config/engines`) | `var`, `exposure`, `frtb-sa`, `simm`, `mr-cube`, `sensitivities` (core: `dataload`, `flight`, `memory-lake`, `openblas`, `pivot`) | |
 | Editions | `risk`, `trading`, `market` | `world` |
 | Lakes | `config/lakes/banking/var-official.yaml`, `ccr-official.yaml` | |
@@ -190,7 +190,7 @@ folders, 8, 9 and 10 are phase 2 (section 8).
 6. **The banking console plugin**: `git mv` the routes, templates, JavaScript, CSS, landings and their tests into
    the console's plugins/banking folder (planned); static assets served from the plugin's folder behind the entitlement check; Help's `risk`
    section and the engine catalogue entries moved into the plugin's files.
-7. **Packs by domain**: `git mv` into `config/packs/core|banking|economy|capitalmarkets/`; the pack loader reads one level of domain folders and each
+7. **Packs by domain**: `git mv` into `config/packs/core/core|banking|economy|capitalmarkets/`; the pack loader reads one level of domain folders and each
    pack's `domain:`; Admin → Packs, Help and the Build home group by it; editions unchanged (they name pack ids).
 8. **Banking configuration**: the official lakes, the banking BI reports, models and tables (after d's tables settled), fragments and
    notebooks into the banking folders the loader reads.

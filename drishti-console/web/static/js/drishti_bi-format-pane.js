@@ -50,28 +50,6 @@
     return { el: h('span', { class: 'bi-colourpick' }, i, x), input: i };
   }
 
-  /* The small controls the rest of the BI designer still draws with (its page, tooltip, theme, tile and rule panes: they move onto the
-     designer kit's Inspector, ELEMENTS.md 12.3); the Format pane itself is a Form. */
-  P.row = (label, input, hint) => h('label', { class: 'bi-frow' }, h('span', { text: label }), input, hint ? h('small', { class: 'text-muted-d', text: hint }) : null);
-  P.checkbox = (label, value, onChange, attrs) => {
-    const c = h('input', Object.assign({ type: 'checkbox' }, attrs || {}));
-    c.checked = !!value;
-    c.addEventListener('change', () => onChange(c.checked));
-    return h('label', { class: 'bi-checkrow' }, c, ' ' + label);
-  };
-  P.select = (options, value, onChange, attrs) => {
-    const s = h('select', Object.assign({ class: 'studio-select' }, attrs || {}), options.map((o) => h('option', { value: o[0], text: o[1] })));
-    s.value = value == null ? '' : String(value);
-    s.addEventListener('change', () => onChange(s.value));
-    return s;
-  };
-  P.text = (value, onChange, attrs) => {
-    const i = h('input', Object.assign({ type: 'text', class: 'studio-in', autocomplete: 'off', value: value == null ? '' : String(value) }, attrs || {}));
-    i.addEventListener('change', () => onChange(i.value));
-    return i;
-  };
-  P.colour = (value, onChange, attrs) => colour(value, onChange, attrs).el;
-
   /** One property as a field of the section's form schema. */
   function fieldOf(prop, key, env) {
     const title = prop['x-label'] || key, hook = hookOf(prop, key), hint = prop['x-hint'];
@@ -138,10 +116,34 @@
     return typeof v === 'string' ? v.trim() : v;
   }
 
+  /**
+   * Colours by value (a legend value's colours, a conditional rule's colour per value of a field): a colour per name (clearing it takes the
+   * name out) and a name to add. A custom widget of the format forms ('colour-map', its options in the field's x-map).
+   *
+   * @param o { legend, names (shown even without a colour), hint, placeholder, label, addText, next(count) (the new name's colour), hooks {box, row, colour, name, add} }
+   */
+  function colourMap(value, set, o) {
+    const cur = value && typeof value === 'object' ? value : {}, hk = o.hooks || {};
+    const box = h('fieldset', { class: 'bi-fieldset', [hk.box]: '' }, h('legend', { text: o.legend }));
+    const names = (o.names || []).concat(Object.keys(cur)).filter((x, i, a) => a.indexOf(x) === i);
+    names.forEach((n) => box.appendChild(h('label', { class: 'bi-frow', [hk.row]: n }, h('span', { text: n }), colour(cur[n] || '', (c) => {
+      const next = Object.assign({}, cur);
+      if (c) { next[n] = c; } else { delete next[n]; }
+      set(Object.keys(next).length ? next : '');
+    }, { [hk.colour]: n, 'aria-label': 'Colour of ' + n }).el)));
+    const name = h('input', { type: 'text', class: 'studio-in', placeholder: o.placeholder, 'aria-label': o.label, [hk.name]: '' });
+    const add = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', text: o.addText, [hk.add]: '' });
+    add.addEventListener('click', () => { const n = name.value.trim(); if (n && !cur[n]) { set(Object.assign({}, cur, { [n]: o.next(names.length) })); } });
+    box.appendChild(h('div', { class: 'bi-cond' }, name, add));
+    if (o.hint) { box.appendChild(h('small', { class: 'text-muted-d', text: o.hint })); }
+    return box;
+  }
+
   /** The custom widgets of the format forms (drishti-inputs widgets): a colour, a JSON object, and the registered x-controls. */
   function formWidgets(env) {
     const out = {
       colour: (w) => { const c = colour(w.value, (x) => w.set(x || undefined), { id: w.id, 'aria-label': w.label }); return { el: c.el, input: c.input }; },
+      'colour-map': (w) => ({ el: colourMap(w.value, (x) => w.set(x || undefined), w.field['x-map']) }),
       json: (w) => {
         const i = h('input', { type: 'text', class: 'studio-in', id: w.id, autocomplete: 'off', placeholder: w.field.placeholder, value: w.value ? JSON.stringify(w.value) : '' });
         i.addEventListener('change', () => {
@@ -156,6 +158,20 @@
     });
     return out;
   }
+
+  /**
+   * A live Form (drishti-inputs, embedded: no <form> of its own) for the designer's other panes: the page, the report, a tile, a theme, a
+   * conditional formatting rule. Its widgets are the format forms' (a colour that may be unset, a list of colours by value).
+   *
+   * @param o { fields (the properties of an object schema), value, label, on (key -> fn(value, form): the change of a top-level field), widgets }
+   * @returns the Form
+   */
+  P.form = function (host, o) {
+    const I = window.Drishti.elements.inputs;
+    const form = new I.Form(host, { schema: { type: 'object', properties: o.fields }, value: o.value || {}, embedded: true, label: o.label || 'Settings', widgets: Object.assign(formWidgets(o.env || {}), o.widgets || {}) });
+    form.on('change', (e) => { const key = e.path.split(/[.[]/)[0], fn = (o.on || {})[key]; if (fn) { fn(form.getField(key), form); } });
+    return form;
+  };
 
   /**
    * Draws the format of visual `v` into `host`, a section per group of its family in the family's order, each section a live Form.
@@ -221,22 +237,10 @@
     return r;
   });
 
-  P.control('series-colours', (prop, key, value, env, set) => {
-    const cur = value && typeof value === 'object' ? value : {};
-    const box = h('fieldset', { class: 'bi-fieldset', 'data-format-series-colours': '' }, h('legend', { text: prop['x-label'] || 'Colours' }));
-    const names = (env.series || []).concat(Object.keys(cur)).filter((x, i, a) => a.indexOf(x) === i);
-    names.forEach((n) => box.appendChild(h('label', { class: 'bi-frow' }, h('span', { text: n }), colour(cur[n] || '', (c) => {
-      const next = Object.assign({}, cur);
-      if (c) { next[n] = c; } else { delete next[n]; }
-      set(Object.keys(next).length ? next : '');
-    }, { 'data-series-colour': n, 'aria-label': 'Colour of ' + n }).el)));
-    const name = h('input', { type: 'text', class: 'studio-in', placeholder: 'A legend value', 'aria-label': 'A value of the legend field to colour', 'data-series-name': '' });
-    const add = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', text: 'Colour this value', 'data-series-add': '' });
-    add.addEventListener('click', () => { const n = name.value.trim(); if (n) { set(Object.assign({}, cur, { [n]: (env.palette && P.hex(env.palette[names.length % env.palette.length])) || '#1f4e79' })); } });
-    box.appendChild(h('div', { class: 'bi-cond' }, name, add));
-    if (prop['x-hint']) { box.appendChild(h('small', { class: 'text-muted-d', text: prop['x-hint'] })); }
-    return box;
-  });
+  P.control('series-colours', (prop, key, value, env, set) => colourMap(value, set, {
+    legend: prop['x-label'] || 'Colours', names: env.series || [], hint: prop['x-hint'], placeholder: 'A legend value', label: 'A value of the legend field to colour', addText: 'Colour this value',
+    next: (n) => (env.palette && P.hex(env.palette[n % env.palette.length])) || '#1f4e79', hooks: { box: 'data-format-series-colours', row: 'data-series-row', colour: 'data-series-colour', name: 'data-series-name', add: 'data-series-add' }
+  }));
 
   P.control('vega-spec', (prop, key, value, env, set) => {
     const box = h('textarea', { class: 'studio-in bi-vegalite-spec', rows: '10', spellcheck: 'false', 'data-format-vega-spec': '', 'aria-label': 'Vega-Lite specification (JSON)' });

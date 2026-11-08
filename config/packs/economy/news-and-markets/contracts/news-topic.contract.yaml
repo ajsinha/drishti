@@ -146,5 +146,5 @@ review:
 - 'source ''reference'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'the pack also names ''Hand-written reference data (topics and listed companies)'' for this kind (news-topic, listed-company): state when each
   source applies.'
-- 'a snapshot refreshed when tools/publicdata/news_and_markets.py runs: confirm the refresh cadence.'
+- 'a snapshot refreshed when the news-and-markets data feed runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: CATEGORY: confirm they are closed lists.'
