@@ -15,272 +15,15 @@
 -->
 # Changelog
 
-## 2.9.11.g (unreleased)
-
-### The public sector: the first new domain, government data and free news
-
-- **Part of the economy module, with a lens of its own** (PUBLIC_SECTOR_GUIDE.md; one module, the owner's decision of 2026-11-07): ten
-  functions (`WDI`, `WDIS`, `CBANK`, `CBSER`, `NSTAT`, `OECD`, `OECDS`, `PRESS`, `PREL`, `GDELT`) in the economy's manifest, the
-  **Public sector** lens, and the free news (`PRESS`, `PREL`, `GDELT`) in the World lens. The economy module off: all its packs,
-  connectors, functions and both lenses are gone, banking, capital markets and GLEIF untouched (`EconomyModuleOffTest`,
-  `PublicSectorLensTest`).
-- **Six packs** with `domain: economy`, each with its kinds, data contracts (worked examples under docs/contracts/samples), README,
-  pack guide and Sutras built from the UI kit only: **world-development** (World Bank WDI: a country's profile with the world map by GDP
-  per head, every indicator's history), **central-banks** (FRED and the Bank of Canada: a bank's policy rate, its last move and its
-  series), **national-statistics** (Statistics Canada by vector), **oecd** (the members' leading indicator, unemployment, inflation and
-  growth, a map by inflation), **official-news** (the press releases of the Fed, ECB, Bank of Canada, Bank of England, SEC, OSFI, the US
-  Federal Register and the Canada Gazette, each a link) and **gdelt-events** (a country's day in the world's news: events, tone,
-  conflict, CAMEO categories, a map by tone, the top stories).
-- **Six daily feeds on drishti-feeds** (`config/feeds/<pack>.yaml`, `tools/feeds/sources/`): incremental (the source's last update, each
-  series from its last observation, releases already seen, the GDELT days after the last), JSON Lines into `worldlake` and `newslake`,
-  whose lake files now ship with exactly these tables (`tools/test_empty_lakes.py` says only these packs read them). Every source's
-  licence and terms are in the feed file (`options.sources`); the Bank of England, OSFI and the Canada Gazette are internal only and their
-  releases say so. FRED's key is `DRISHTI_FRED_API_KEY`; without it the Bank of Canada still loads. One publisher down or a day GDELT
-  skipped never fails a run.
-- **One fetcher of the World Bank's WDI**: the world-development feed. Besides its ten headline indicators (the profile) it pulls, as
-  series only, every `kind: wdi` code of `tools/realdata/sources.yaml` back to that file's `years.first` (`options.series-from`) and the
-  world, its seven regions and four income groups (`options.aggregates`; an aggregate's series has no `WDI_PROFILE`, now optional in the
-  contract). world-economy reads WDI from that feed's latest output (`publicsector.wdi_rows`, written into its cache in the API's shape,
-  so the normaliser is unchanged) and never calls the WDI API; with no output it fails saying `run feed run world-development first`.
-  `--no-wdi` is gone and world-economy loads all twelve of its kinds again (economy, macro-indicator, economic-forecast, labour-market
-  and fiscal-position are back); it runs after world-development by schedule (06:30, then 06:45). `--scope` widens WGI and IMF series
-  only: a new WDI code goes into `sources.yaml`. Tested on world-development output written from its recorded fixtures
-  (`tools/feeds/tests/test_wdi_one_fetcher.py`).
-- **Tests on recorded fixtures** (`tools/feeds/tests/test_publicsector.py`, never the network) and a browser test of the six screens on a
-  scratch lake loaded from them (`test_public_sector_browser.py`); `tools/packgen/publicsector/make.py` writes the samples and READMEs.
-- **Docs**: the Public sector guide and Tutorial 46 (two Help entries), the External data page's public-sector rows and section, the
-  contract pages, OPERATIONS' modules.
-
-### The pre-deal service and the exposure what-if in Java
-
-- **The pre-deal check is a service of the exposure engine** (EXPOSURE_GUIDE.md section 18.9): `POST /api/v1/exposure/predeal` and the
-  command `PREDEAL <counterparty> LIKE <trade> [<notional>] [REVERSE] [IN <netting set>]` (or, without a template, `PREDEAL <counterparty>
-  <asset class> <notional> <maturity> [MTM <amount>]`), `GET /api/v1/exposure/predeal/grammar`, `drishti.py exposure predeal "PREDEAL …"`.
-  The what-if with the trade added is held to the counterparty's stored credit limit on its measure (`PFE 95 peak` at its confidence;
-  EEPE, EPE, peak EE) and to each tenor bucket's limit (`BUCKETS`, read from `credit-limit` now), and answers **approve** (exact data,
-  within the limit and every bucket), **decline** (exact, over the limit or a bucket) or **refer** with the reason: a proxy answer (the
-  `addon` method) only refers, never approves; so does no limit on record, a limit on a measure the engine does not compute, netting sets
-  the person does not see, a stale run, the netting set not certain, or no exposure for the counterparty. Every answer shows the method
-  and the template trade (copied: id, product, notional, the factor and side; or described), the limit before and after with the
-  headroom and the buckets, and the exposure before, with and incremental; SA-CCR's incremental EAD says **under construction**
-  (2.9.11.k). Computed as the person (a template only of a trade they see trade by trade, `403` otherwise; a counterparty they see none of
-  `403`); every check audited (`ccr-predeal`, with its check id, decision, method, command and limit use). Code: `ExposurePreDeal`,
-  `ExposurePreDealCommand`, `ExposurePreDealController` in the counterparty-risk server package `com.ash.drishti.server.exposure`.
-- **Counterparties → Pre-deal check, the screen** (`/predeal`; `PREDEAL <GO>`, the menu item that ran `XWIF`, and **Pre-deal check ›**
-  in the exposure explorer at a counterparty or a netting set; EXPOSURE_GUIDE.md sections 7 and 18.9, after the CCR cube mock-up C):
-  the trade as a drishti-inputs Form (counterparty, netting set, a booked trade to copy or the trade described, the notional as money,
-  the side), the server's verdict (approve, refer or decline with the lamp and the reasons; the limit and each tenor bucket within, near
-  or over with before, with the trade, increment, use and headroom; EPE and EAD before and after), the one Explain of the check, and the
-  what-if (the profile overlay with the limit and the incremental PFE per tenor on drishti-chart through drishti-risk; the figures and the
-  table by tenor on drishti-grid). Every number is the server's; a typed command checks at once; a phone layout; gone with the banking
-  module. The registry item `pre-deal-screen` is retired.
-- **One limit rule, the server's** (new setting `drishti.risk.limit-near`, 0.8, in `config/engines/var.yaml`; `RiskLimits` in the banking
-  module): every limit the module holds a figure to says **within**, **near** (from that share) or **breach** (over 100%) in the answer
-  itself: each VaR scope and node (`limitStatus`, `limitNear`), the official record's nodes (read with the record), the VaR what-if
-  (`limit`: the scope's limit, the use before and after, `statusBefore`, `status`), the pre-deal check's credit limit and tenor buckets,
-  and the sensitivity ladder's cells (now `within` rather than `ok`). `MrSensitivities.NEAR` and exposure's `limit-near` are folded into
-  it. **The Trading landing shows the server's status and computes none**: the book rows, the desk headline, the Breaches and Near limit
-  tiles, the desk head's limit use by book and day, and both halves of the new-trade check (the VaR half reads the what-if's own `limit`;
-  the console no longer divides by the book's limit). `limit_state` and the setting `trading.near-limit` are removed.
-- **Every limit bar draws the server's status** (within green, near amber, breach red; a row without a status has no tone): the VaR
-  explorer's limit tile and its scope tree's bars (the explorer's own amber at 75% and red at 90% are deleted), drishti-risk's VaR
-  hierarchy tree (`LIMIT_USE_BANDS` 0.75/0.9/1 is replaced by `LIMIT_STATUS_TONES` on the node's `LIMIT_STATUS`; `limitBreaches` reads
-  the status), the Risk home (its bars, pills and heat-map cells, and the VaR and credit breach counts, which counted a use of 100% as a
-  breach), the MR cube's limit tile (its near tick at the server's `limitNear`), the exposure explorer's limit tile, bar and chip (its
-  own amber was over 90%) and the market-risk pack's Home fact *a book over its limit inside a desk within its own*. drishti-tree's
-  `bar` takes a status instead of bands (`{status, tones, words, max}`; `bandTone` becomes `statusTone`). The server adds the status
-  where it was missing: the MR cube's headline (`limitStatus`, `limitNear`) and an exposure counterparty's credit limit (`status`,
-  `near`).
-- **One way to check a trade**: the exposure explorer's Pre-deal tab, its form and the console's what-if proxy (`POST /api/exposure/what-if`)
-  are removed; the tab's address (`/exposure?scope=…&tab=predeal`) opens the check at that counterparty or netting set. The API and
-  `drishti.py exposure whatif` keep the what-if alone.
-- **The pre-deal answer says near** (by `drishti.risk.limit-near`, the one limit rule above): the limit and each bucket `within`, `near`
-  (from that share: still approved, the reason says which) or `breach`; also `headroomBefore` and `near` on the limit, `increment`,
-  `useBefore` and `headroomAfter` on each bucket, and with the exact method the IMM EAD (`ead`, α × EEPE) before, with and incremental.
-  The one Explain explains a check (kind `predeal`: `ExposurePreDealExplainer`; the check made again, not audited twice).
-- **Drishti Elements**: drishti-inputs' Form takes `doneText` ('' says nothing after a submit, for a page that shows the answer) and a
-  field without help no longer prints "null"; drishti-risk's `risk.exposure-profile` takes `eepe: false` (an answer without EEPE, such as
-  the proxy's: none drawn, never computed in the page).
-- **The Trading landing's new-trade check** asks the pre-deal service for its exposure half: the decision, the limit use and every figure
-  are the server's (the console no longer divides by the limit or picks the netting set); when the copied trade has no paths on the run
-  the same check is asked described, and refers. Its verdict shows *Refer to credit* and *Declined: over the limit* with the reason.
-- **The exact pre-deal exposure what-if (`POST /api/v1/exposure/what-if`, method `paths`) is computed by the Java exposure engine**
-  (EXPOSURE_GUIDE.md sections 7, 18.7 and 19.5; COUNTERPARTY_ENGINES.md 6.4). `ExposureWhatIfMath` (`drishti-compute`) adds each
-  candidate's paths to its netting set's value path by path and computes the set's collateral and exposure again with `ExposureMath`, the
-  same code as every exposure figure; `ExposureWhatIfPaths` reads the scope and each joined netting set as the asker. The same request and
-  the same answer field by field (only the `engine` and `note` texts say Java); no sandbox, no reactive connector, no compute workers: it
-  answers on every server that runs exposure. Parity: the Python engine's answers on a book of four netting sets (margined with
-  thresholds, MTA, IA, rounding and IM; unmargined with IA; no CSA; collateral posted), six what-ifs over the three collateral models,
-  both rank rules, an unwind and a horizon change, recorded before it was retired (`ccr/whatif-parity.json`, `tools/ccr/`), are given
-  again to the cent (`ExposureWhatIfMathTest`). A `copyOf` is made only of a trade the asker sees trade by trade (`403` otherwise).
-- **The Python exposure engine is retired:** `drishti_compute.exposure` (`measures.py`, `whatif.py`) and its tests, the compute pool
-  `exposure` and `DRISHTI_COMPUTE_EXPOSURE_WORKERS`, the counterparty-risk pack's reactive connector `exposure-whatif` with its kind,
-  contract and command `XWIF`, the `exposure-result` parameters `detail` and `sets` (`ExposureWhatIfInputs`), and `DRS-5446`. A
-  never-edited `exposure-whatif.yaml` connector file is removed at start (kept beside it as `.retired-<time>.bak`); an edited one stays,
-  its kind listed as obsolete.
-- **Tests**: `ExposurePreDealApiTest` (the what-if equal to a full recompute with the trade booked, figure by figure and date by date;
-  approve; decline on the limit and on a bucket; refer on a proxy, no limit, a measure not computed and no exposure; two people at once
-  with their own entitlements; the grammar; the audit); the console's trading check, menus and under-construction tests; `test_expcli`.
-
-### drishti-feeds: external data into the lakes, every day
-
-- **drishti-feeds: one module to pull external data into the lakes every day** ([EXTERNAL_DATA.md](docs/guides/EXTERNAL_DATA.md), Help → Data
-  → External data feeds: one guide for the feeds and their sources). A feed is a feed file (`config/feeds/<feed>.yaml`: the source, its datasets and the pack, kind and table
-  each loads, the target lake, the daily schedule, the licence with its redistribution and internal-only flag, API keys as `${ENV}`
-  names only) and a `Feed` class in `tools/feeds/sources/` that pulls. The base class (`tools/feeds/feedbase.py`) does the rest:
-  incremental pulls from a state file (`data/datafeeds/<feed>/state.json`, saved only when the whole run succeeds), the polite client
-  (one User-Agent `DRISHTI_FEEDS_USER_AGENT` naming Drishti, no personal address; a pause between requests; retries with back-off
-  and `Retry-After`; a download cache, so a broken run resumes), JSONL.gz per dataset and business date under
-  `data/datafeeds/<feed>/<date>/` with a manifest of rows and SHA-256, a lock per feed, and a re-run of a date that replaces it whole.
-- **Three load routes, no new writer**: `java` (the default: `lake build --engine java`, the parallel loader `LakeLoad` from the
-  server's jar), `python` (`lake build`) and `inbox` (the files and their `.ready` with `lake:`, `sha256` and `rows` dropped into the
-  data inbox; several tables or dates as one tar of `<table>/<date>/` folders). Every route replaces the dates it loads; a table new to
-  the lake file gets its pack's recommended entry first (and the dataset's key as its id).
-- **`drishti.py feed list|run|status|schedule`** (`tools/feeds/cli.py`; the wrappers `tools/feeds/feed.sh` and
-  `tools/windows/feed.ps1`): `feed run <feed>|--all [--date D | --since D] [--load java|python|inbox|none] [--dry-run] [--snapshot]`,
-  scheduler exit codes (0 ok, 1 failed, 2 refused, 3 locked, 4 partial) and one log line per run; `feed schedule --cron | --systemd |
-  --windows` prints ready-to-use daily entries. Every run appends a line to the run ledger `data/datafeeds/ledger.jsonl`.
-- **Admin → Data loads → Feeds**: every feed's last run, last success, rows, duration, failures and last error, and Run now
-  (`GET /api/v1/admin/feeds`, `POST /api/v1/admin/feeds/{feed}/run`, audited; console tables on drishti-grid). A failed run raises
-  the platform alert `data-feed-failed` through the one alert engine (the gauge `drishti.datafeed.failed`; a later success closes it;
-  the same rule for Prometheus). Server settings `drishti.feeds.config`, `root`, `python`, `sample-seconds`.
-- **The public-data refresh scripts are folded into the feeds** (no second way): `tools/publicdata/` is gone; its pack sources live
-  in `tools/feeds/sources/` and run as the feeds `gleif` (into the new **`referencelake`**, core reference data: `config/lakes/referencelake.yaml`,
-  `data/delta/referencelake/`, shipped empty like the other lakes), `us-equities` and `funds` (into `capitalmarket`; the index
-  members now include the **Russell 2000 from IWM's** N-PORT holdings beside the Dow 30 from DIA and the S&P 500 from SPY),
-  `yahoo-prices` (internal only, off as shipped), `world-economy` (internal only for the IMF forecasts, into `worldlake`),
-  `news-and-markets` (internal only, into `newslake`) and `market-data` (incremental by day from its state, each document under its own
-  date, `--since` for a backfill, into `capitalmarket`). The World Bank's WDI belongs to the public sector's world-development feed:
-  world-economy reads it from that feed's output (see "One fetcher of the World Bank's WDI" above).
-  Refreshing a pack's committed demo snapshot in `data/testdata` is `feed run <feed> --snapshot` (with `--internal-ok` for
-  internal-only data), writing exactly where the scripts wrote. Their per-pack `.sh` and `.ps1` wrappers are replaced by the one
-  wrapper per system; `DRISHTI_SEC_USER_AGENT` and `DRISHTI_GLEIF_USER_AGENT` are replaced by `DRISHTI_FEEDS_USER_AGENT`; the
-  sources' downloads and builds move from `<data>/publicdata/` to `<data>/datafeeds/sources/`; `DRISHTI_LIVE_FETCH` is replaced by
-  pytest's `--live` for the hand-run smokes.
-- **Tests on recorded responses only**: every feed's pull, incremental state, an idempotent re-run, retries, the lock, the ledger and
-  status, the inbox route's `.ready` and tar, the java and python routes into a temporary lake, the command line and the schedule
-  output; Admin → Feeds in the console and the server; one `--live` smoke per feed for a person to run.
-
-### Fixes (the train's bulk drill)
-
-- **Drishti's lake writer and a partition value with a space**: Kernel hands a partition's folder percent-encoded
-  (`PRODUCT_GROUP=Fixed%20income`); the writer wrote the file there while every read looked in `Fixed income`, so a Calypso or Murex
-  trade load by `PRODUCT_GROUP` failed with "the write failed, nothing was committed". The writer now decodes a `file:` URI exactly as the
-  reads do (`LakeWriterTest`).
-- **The public-sector feeds keep their working history as JSON Lines** (the data standard): a series' points, the kept releases and
-  GDELT's per-day country aggregates under `<data>/datafeeds/<feed>/history/` are `.jsonl`, a row a line.
-- **A pack filled by a feed counts as served without the demo connector**: `PacksServedWithoutDemoTest` accepts a Delta connector
-  reading the lake an enabled feed loads the kind into (the six public-sector packs, `worldlake` and `newslake`); PACK_DEVELOPER_GUIDE
-  step 16 says so.
-- **A table's `highlight`**: a `table` panel accepts `highlight` (an expression per row, as a ladder has), which the GLEIF entity's
-  parents chain uses for the entity itself; Rachana refused it with DRS-2023 (`PackSutrasTest`; RACHANA_REFERENCE's table options).
-- Tests brought up to date: the demo lake's trades by `PRODUCT_TYPE` (Endur) and `PRODUCT_GROUP` (Calypso, Murex); the engines' and
-  publishers' sources found in their domain modules; `css_visual_check.py` names the demo lake's variable through `lakeconfig`; importing
-  `drishti-stack/stack.py` in a test leaves no `__pycache__` in the checkout.
-
 ## 2.9.11.h (unreleased)
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
 
-## 2.9.11.f (unreleased)
+## 2.9.11.g (unreleased)
 
-- **Domain modules, phase 1: the backend split** ([DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md), [ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md)).
-  The core knows no industry: banking is a module. New Maven modules: **drishti-registry** (the access registry), **drishti-compute-banking**
-  (VaR and ES, parametric, components, backtesting, exposure, FRTB-SA, SIMM, beta and correlation: `com.ash.drishti.banking.compute`, pure
-  maths), **drishti-banking** (the VaR, exposure, FRTB-SA, SIMM, sensitivities, MR cube and official-results services, storage and API:
-  `com.ash.drishti.banking`) and **drishti-app** (the runnable jar, at its old path `drishti-server/target/drishti-server-<version>-exec.jar`).
-  The six places where the core used banking code are SPIs now (`PivotSourceProvider`, `CacheGroup`, `CapacityFigures`, `HealthFigures`,
-  `OfficialReaders.OfficialResults`, the edition's words); `ArchitectureRulesTest` fails the build when the core imports a domain, a
-  domain another, a domain's compute Spring or the server, or anything but the registry reads the access model. VaR, exposure and the BI
-  parity answers are unchanged.
-- **The access registry** (drishti-registry: `AccessRegistry`, `EmbeddedAccessRegistry`, `AccessStore`, `YamlAccessStore`): licence →
-  module → lens → function → permission, decided in one place. Each module's jar ships its manifest (`META-INF/drishti/module.yaml`:
-  packages, engines, packs, connectors, API, functions) and its lenses (with the modules they need and the functions they bundle); a module
-  is on when installed, licensed and enabled. No `config/access/licence.yaml` is the **development licence** (every module, unsigned), so an
-  existing installation changes nothing. A module that is off loads no bean, engine, job or API (`@ConditionalOnModule`), its packs and
-  connectors do not load, its API answers `404 DRS-1025`, and Admin → Engines says why its engines are not installed.
-- **Admin → Modules over REST**: `GET/POST /api/v1/admin/modules` (states, what each brings, the licence, the lenses; the switch, with a
-  reason, audited, written to `config/modules/<module>.yaml`, taken at the next start); `GET /api/v1/modules` (the modules loaded and the
-  lenses open to the caller). New settings `drishti.modules.dir`, `drishti.modules.<module>.enabled`, `drishti.modules.watch-seconds`,
-  `drishti.access.dir` (CONFIGURATION.md; OPERATIONS.md section 22).
-- **Functions** (command words such as VAR, TRD, EQV, EXP) are the finest unit of access: each belongs to one module (a word no module
-  declares is the core's), lenses bundle them, and the mnemonic switches (Admin → Commands) are decided by the registry: a function is on
-  when its module is on and no administrator turned it off; its API then answers `404 DRS-1026` (and `403 DRS-1027` is wired for per-person
-  grants in 2.9.11.i).
-- **The banking API is under `/api/v1/risk/…`** (`/risk/var`, `/risk/exposure`, `/risk/frtb`, `/risk/simm`, `/risk/sensitivities`,
-  `/risk/risk-factors`, `/risk/mr`); the old paths are answered as the new ones for this release (`Deprecation: true` and a `Link` to the
-  new path), then removed. Connector files naming the moved engine classes keep working for this release.
-- **Packs name their domain** (`domain: core | banking | economy | capitalmarkets` in `pack.yaml`; ids and folders unchanged): a pack loads
-  only while a module of its domain is on. A **capitalmarkets** module (content only, shipped with the core) holds the us-equities and
-  funds packs and the market data's functions (CRV, FX, EQV ...; the market-data pack stays banking's while its engines read it); GLEIF is
-  core reference data; economy keeps world-economy and news-and-markets. The Market lens needs capital markets and banking.
-- **Editions as lenses**: the risk, trading, market and world editions are lenses of the registry; an edition opened as a lens is offered
-  only while its modules are on.
-- **Domain modules, phase 2 (first half): the console follows the modules** ([DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md)
-  section 8, [ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md) section 8; OPERATIONS.md section 22). The console asks the server and
-  nothing else: the public about answer now lists the `modules` loaded, and `GET /api/v1/modules` answers, as the person, the modules not
-  loaded (with why), the lenses open to them (with the modules and functions each needs) and the **functions they may not use** (each with
-  its module and the words to say). A module that is off, or a function off for the person, is gone from every door the console draws:
-  its pages and routes answer 404, menus (sitemap `domain:` tags, now drawn by the module's state; a new `requires: module:<id>`), the
-  Engines menu, the Admin strip, search, the command line and its type-ahead, Help (its guides, tutorials and section) and the Build home
-  leave it out, and typed anyway it says *VRES is not available to you: ask your administrator*.
-- **Domain modules, phase 2 (second half, first steps): the moves.** The banking console code, pages, scripts and styles live in
-  `drishti-console/plugins/banking/` (`routes/`, `templates/`, `static/`, the landings' code, the Build types, the engine calls), the
-  World landing in `plugins/economy/`; the console finds a module's templates after its own and serves a module's files at the same
-  `/static/...` addresses, gated by module and lens. The banking engines are the module's: their catalogue entries in drishti-banking's
-  `META-INF/drishti/engines.yaml` (and the console's `plugins/banking/engines.yaml`), their jar files in its `engines/`; a server without
-  the module lists none of them. Rule 4 of the boundaries as a check: `tools/domain_strings.py` counts the banking names in the core's
-  code against an allow list that only shrinks. `EngineRegistryTest` and `EngineFilesTest` run in drishti-banking (they use its engines).
-- **Domain modules, phase 2 (second half): the banking module's configuration in its own places.**
-  - **Packs in domain folders**: the shipped packs are `config/packs/<domain>/<pack>` (`core/{core,gleif,compute-demo}`,
-    `banking/{trading,market-data,market-risk,counterparty-risk}`, `economy/{world-economy,news-and-markets}`,
-    `capitalmarkets/{us-equities,funds}`); a pack's `domain:` names its folder. One rule says where a pack is: a packs root holds packs
-    directly or one level down in domain folders (a folder with no `pack.yaml` of its own), in Java `com.ash.drishti.api.PackFolders`
-    (the pack loader, the reloader and its watchers, Admin -> Packs, deploy and roll back, the Sutra CLI, the lake files' pack tables) and
-    in Python `drishti-console/core/pack_paths.py` (the console, the tools, the generators, the tests). `drishti.packs.dir` is unchanged
-    (`config/packs`); installed and example packs stay flat. Upgrade: a site's own pack folder under `config/packs` keeps working where it
-    is; links to `config/packs/<pack>/...` in a site's documents need the domain folder.
-  - **Token declarations from the module**: the banking module's read-only POSTs and its `risk:write` scope are in its jar
-    (`META-INF/drishti/token-scopes.yaml`), merged by the core (`ModuleTokenScopes`) only while the module is on: with banking off no
-    token can be given `risk:write`. The core's new `compute:write` scope keeps your what-if sandboxes and cancels your own computations
-    (`risk:write` still does too).
-  - **Help's Risk measures section** is the banking plugin's (`drishti-console/plugins/banking/help.yaml`: its head, placed after Get
-    started, and its pages); the core's `help.yaml` and the sitemap no longer name it.
-  - **Banking lakes, reports, BI items, tables and models in banking folders**: `config/lakes/banking/{var,ccr}-official.yaml` (a lake
-    file may sit in a domain folder; the jar copies are drishti-banking's, listed in its `drishti/lakes/shipped.txt`), the regulatory
-    report definitions `config/reports/banking/` (`drishti.regulatory.reports-dir`'s default), `config/bi/reports/banking/`,
-    `config/bi/python/banking/`, `config/bi/notebooks/banking/` and `config/tables/banking/` (the banking tables are `banking.<name>`,
-    were `bi.<name>`; a site's model or report naming `bi.trading_risk_trades` and the other moved tables needs the new name). A domain
-    folder named after a module is read only while the module is on: with banking off, BI lists none of its reports, tables or models.
-  - **Editions folded into lenses**: `config/editions/` is gone. A lens's file is `config/lenses/<module>/<lens>.yaml` (risk, trading,
-    market: banking; world: economy), the feature presets `config/lenses/features.yaml`, the folder `drishti.lens-dir`
-    (`DRISHTI_LENS_DIR`, was `DRISHTI_EDITIONS_DIR`; the console's `lens.dir`). A lens names its packs by module, so World is economy
-    with capital markets: with capitalmarkets off, its packs, functions, cards and the World landing's companies, filings and funds are
-    gone. Home's cards and chips are the registry lens's (`cards:`, `chips:` in the module's `lenses.yaml`, answered per person by
-    `/api/v1/modules`), each shown only while its function is on; the Public sector lens has its eight cards and four chips.
-    `drishti.edition` and `drishti.lenses` are unchanged. Upgrade: move a site's own edition file to `config/lenses/<module>/`.
-    The guide is now the lenses guide, [LENSES.md](docs/admin/LENSES.md) (was LENSES.md; Help → Lenses guide, the old address
-    `editions` redirects): what a lens is, an instance lens and people's lenses, each shipped lens (Risk, Trading, Market, World,
-    Public sector) with its modules, packs, cards and chips, customising, your own lens, clusters, troubleshooting, upgrading, the design.
-  - **A server without the banking jar**: `config/modules/banking.yaml` names the module (`module: {id, domain, title}`), so a server
-    built or started without drishti-banking knows it and shows it off as *not installed*: none of its packs, lakes, tables, models or
-    reports load (they used to load, and their engine connectors failed). With the jar, the jar's manifest is the module, as before.
-  - **The command line's examples follow the person**: the placeholder (`TRD MX-20000001, CPTY north …`, a lens's `menus.placeholder`)
-    keeps only the examples whose function the person may use; with banking off its examples go, with capitalmarkets off World's `USEQ`
-    and `FUND` ones (none left: blank). Admin -> Engines' menu line no longer names banking's engines.
-- **Static assets by module**: each module's console part is `drishti-console/plugins/<module>/plugin.yaml` (its routers, engines, words,
-  pages, templates, static files, and the parts it adds to a core screen). An off module's scripts, styles and Elements library are not
-  served (404), and neither to a person whose lens does not use the module (the World lens gets no banking file). The Elements manifest
-  carries each library's `module` (drishti-risk: banking) and the loader refuses a library of a module the page does not list
-  (`<meta name="drishti-modules">`, `configure({modules})`, `refused(name)`).
-- **The console's cycles C1 to C7 are broken in place** (no screen moved yet): the banking routers are included from the plugin's list;
-  commands, retired links, the type-ahead, the Pivot presets' word grammar and the landing rules are hooks the module fills
-  (`core/plugins.py`); one workbook streamer (`core/workbook_stream.py`); the core client has one engine call (`BackendClient.engine`) and
-  the banking calls are the module's own (`plugins/banking/risk_api.py`), **on `/api/v1/risk/…`**; the market landing's figures moved to the
-  banking routes, Admin → Saved VaR baskets to the VaR routes, the Pivot draws the MR lens through the plugin's `screens:`. A static test
-  (`test_module_boundaries.py`) fails when the core imports a module's code, includes its templates or names its files.
+The release train ships 2.9.11.e, 2.9.11.f and 2.9.11.g as one tag, v2.9.11.g: every entry of the three is here.
 
-## 2.9.11.e (unreleased)
+### Drishti Elements, and one way for each job (2.9.11.e)
 
 - **The terminal's query form on the one server-drawn form** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
   `core/forms.py`'s `form_host` sends the criteria through `core/form_kit.host` (`data-di-form` + `data-schema`), and `drishti_form.js`
@@ -995,6 +738,280 @@
     `@media` widths only from the breakpoints, no undefined `--d-*`, and `!important` only on its allow-list, which only shrinks.
   - **Left for the forms work**: the stacked-label rules repeated in eighteen forms, with the seven checkbox-row classes that escape them
     with `!important`: one form-label convention once wip/e-forms has converted the forms.
+
+### Domain modules, the access registry and lenses (2.9.11.f)
+
+- **Domain modules, phase 1: the backend split** ([DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md), [ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md)).
+  The core knows no industry: banking is a module. New Maven modules: **drishti-registry** (the access registry), **drishti-compute-banking**
+  (VaR and ES, parametric, components, backtesting, exposure, FRTB-SA, SIMM, beta and correlation: `com.ash.drishti.banking.compute`, pure
+  maths), **drishti-banking** (the VaR, exposure, FRTB-SA, SIMM, sensitivities, MR cube and official-results services, storage and API:
+  `com.ash.drishti.banking`) and **drishti-app** (the runnable jar, at its old path `drishti-server/target/drishti-server-<version>-exec.jar`).
+  The six places where the core used banking code are SPIs now (`PivotSourceProvider`, `CacheGroup`, `CapacityFigures`, `HealthFigures`,
+  `OfficialReaders.OfficialResults`, the edition's words); `ArchitectureRulesTest` fails the build when the core imports a domain, a
+  domain another, a domain's compute Spring or the server, or anything but the registry reads the access model. VaR, exposure and the BI
+  parity answers are unchanged.
+- **The access registry** (drishti-registry: `AccessRegistry`, `EmbeddedAccessRegistry`, `AccessStore`, `YamlAccessStore`): licence →
+  module → lens → function → permission, decided in one place. Each module's jar ships its manifest (`META-INF/drishti/module.yaml`:
+  packages, engines, packs, connectors, API, functions) and its lenses (with the modules they need and the functions they bundle); a module
+  is on when installed, licensed and enabled. No `config/access/licence.yaml` is the **development licence** (every module, unsigned), so an
+  existing installation changes nothing. A module that is off loads no bean, engine, job or API (`@ConditionalOnModule`), its packs and
+  connectors do not load, its API answers `404 DRS-1025`, and Admin → Engines says why its engines are not installed.
+- **Admin → Modules over REST**: `GET/POST /api/v1/admin/modules` (states, what each brings, the licence, the lenses; the switch, with a
+  reason, audited, written to `config/modules/<module>.yaml`, taken at the next start); `GET /api/v1/modules` (the modules loaded and the
+  lenses open to the caller). New settings `drishti.modules.dir`, `drishti.modules.<module>.enabled`, `drishti.modules.watch-seconds`,
+  `drishti.access.dir` (CONFIGURATION.md; OPERATIONS.md section 22).
+- **Functions** (command words such as VAR, TRD, EQV, EXP) are the finest unit of access: each belongs to one module (a word no module
+  declares is the core's), lenses bundle them, and the mnemonic switches (Admin → Commands) are decided by the registry: a function is on
+  when its module is on and no administrator turned it off; its API then answers `404 DRS-1026` (and `403 DRS-1027` is wired for per-person
+  grants in 2.9.11.i).
+- **The banking API is under `/api/v1/risk/…`** (`/risk/var`, `/risk/exposure`, `/risk/frtb`, `/risk/simm`, `/risk/sensitivities`,
+  `/risk/risk-factors`, `/risk/mr`); the old paths are answered as the new ones for this release (`Deprecation: true` and a `Link` to the
+  new path), then removed. Connector files naming the moved engine classes keep working for this release.
+- **Packs name their domain** (`domain: core | banking | economy | capitalmarkets` in `pack.yaml`; ids and folders unchanged): a pack loads
+  only while a module of its domain is on. A **capitalmarkets** module (content only, shipped with the core) holds the us-equities and
+  funds packs and the market data's functions (CRV, FX, EQV ...; the market-data pack stays banking's while its engines read it); GLEIF is
+  core reference data; economy keeps world-economy and news-and-markets. The Market lens needs capital markets and banking.
+- **Editions as lenses**: the risk, trading, market and world editions are lenses of the registry; an edition opened as a lens is offered
+  only while its modules are on.
+- **Domain modules, phase 2 (first half): the console follows the modules** ([DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md)
+  section 8, [ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md) section 8; OPERATIONS.md section 22). The console asks the server and
+  nothing else: the public about answer now lists the `modules` loaded, and `GET /api/v1/modules` answers, as the person, the modules not
+  loaded (with why), the lenses open to them (with the modules and functions each needs) and the **functions they may not use** (each with
+  its module and the words to say). A module that is off, or a function off for the person, is gone from every door the console draws:
+  its pages and routes answer 404, menus (sitemap `domain:` tags, now drawn by the module's state; a new `requires: module:<id>`), the
+  Engines menu, the Admin strip, search, the command line and its type-ahead, Help (its guides, tutorials and section) and the Build home
+  leave it out, and typed anyway it says *VRES is not available to you: ask your administrator*.
+- **Domain modules, phase 2 (second half, first steps): the moves.** The banking console code, pages, scripts and styles live in
+  `drishti-console/plugins/banking/` (`routes/`, `templates/`, `static/`, the landings' code, the Build types, the engine calls), the
+  World landing in `plugins/economy/`; the console finds a module's templates after its own and serves a module's files at the same
+  `/static/...` addresses, gated by module and lens. The banking engines are the module's: their catalogue entries in drishti-banking's
+  `META-INF/drishti/engines.yaml` (and the console's `plugins/banking/engines.yaml`), their jar files in its `engines/`; a server without
+  the module lists none of them. Rule 4 of the boundaries as a check: `tools/domain_strings.py` counts the banking names in the core's
+  code against an allow list that only shrinks. `EngineRegistryTest` and `EngineFilesTest` run in drishti-banking (they use its engines).
+- **Domain modules, phase 2 (second half): the banking module's configuration in its own places.**
+  - **Packs in domain folders**: the shipped packs are `config/packs/<domain>/<pack>` (`core/{core,gleif,compute-demo}`,
+    `banking/{trading,market-data,market-risk,counterparty-risk}`, `economy/{world-economy,news-and-markets}`,
+    `capitalmarkets/{us-equities,funds}`); a pack's `domain:` names its folder. One rule says where a pack is: a packs root holds packs
+    directly or one level down in domain folders (a folder with no `pack.yaml` of its own), in Java `com.ash.drishti.api.PackFolders`
+    (the pack loader, the reloader and its watchers, Admin -> Packs, deploy and roll back, the Sutra CLI, the lake files' pack tables) and
+    in Python `drishti-console/core/pack_paths.py` (the console, the tools, the generators, the tests). `drishti.packs.dir` is unchanged
+    (`config/packs`); installed and example packs stay flat. Upgrade: a site's own pack folder under `config/packs` keeps working where it
+    is; links to `config/packs/<pack>/...` in a site's documents need the domain folder.
+  - **Token declarations from the module**: the banking module's read-only POSTs and its `risk:write` scope are in its jar
+    (`META-INF/drishti/token-scopes.yaml`), merged by the core (`ModuleTokenScopes`) only while the module is on: with banking off no
+    token can be given `risk:write`. The core's new `compute:write` scope keeps your what-if sandboxes and cancels your own computations
+    (`risk:write` still does too).
+  - **Help's Risk measures section** is the banking plugin's (`drishti-console/plugins/banking/help.yaml`: its head, placed after Get
+    started, and its pages); the core's `help.yaml` and the sitemap no longer name it.
+  - **Banking lakes, reports, BI items, tables and models in banking folders**: `config/lakes/banking/{var,ccr}-official.yaml` (a lake
+    file may sit in a domain folder; the jar copies are drishti-banking's, listed in its `drishti/lakes/shipped.txt`), the regulatory
+    report definitions `config/reports/banking/` (`drishti.regulatory.reports-dir`'s default), `config/bi/reports/banking/`,
+    `config/bi/python/banking/`, `config/bi/notebooks/banking/` and `config/tables/banking/` (the banking tables are `banking.<name>`,
+    were `bi.<name>`; a site's model or report naming `bi.trading_risk_trades` and the other moved tables needs the new name). A domain
+    folder named after a module is read only while the module is on: with banking off, BI lists none of its reports, tables or models.
+  - **Editions folded into lenses**: `config/editions/` is gone. A lens's file is `config/lenses/<module>/<lens>.yaml` (risk, trading,
+    market: banking; world: economy), the feature presets `config/lenses/features.yaml`, the folder `drishti.lens-dir`
+    (`DRISHTI_LENS_DIR`, was `DRISHTI_EDITIONS_DIR`; the console's `lens.dir`). A lens names its packs by module, so World is economy
+    with capital markets: with capitalmarkets off, its packs, functions, cards and the World landing's companies, filings and funds are
+    gone. Home's cards and chips are the registry lens's (`cards:`, `chips:` in the module's `lenses.yaml`, answered per person by
+    `/api/v1/modules`), each shown only while its function is on; the Public sector lens has its eight cards and four chips.
+    `drishti.edition` and `drishti.lenses` are unchanged. Upgrade: move a site's own edition file to `config/lenses/<module>/`.
+    The guide is now the lenses guide, [LENSES.md](docs/admin/LENSES.md) (was LENSES.md; Help → Lenses guide, the old address
+    `editions` redirects): what a lens is, an instance lens and people's lenses, each shipped lens (Risk, Trading, Market, World,
+    Public sector) with its modules, packs, cards and chips, customising, your own lens, clusters, troubleshooting, upgrading, the design.
+  - **A server without the banking jar**: `config/modules/banking.yaml` names the module (`module: {id, domain, title}`), so a server
+    built or started without drishti-banking knows it and shows it off as *not installed*: none of its packs, lakes, tables, models or
+    reports load (they used to load, and their engine connectors failed). With the jar, the jar's manifest is the module, as before.
+  - **The command line's examples follow the person**: the placeholder (`TRD MX-20000001, CPTY north …`, a lens's `menus.placeholder`)
+    keeps only the examples whose function the person may use; with banking off its examples go, with capitalmarkets off World's `USEQ`
+    and `FUND` ones (none left: blank). Admin -> Engines' menu line no longer names banking's engines.
+- **Static assets by module**: each module's console part is `drishti-console/plugins/<module>/plugin.yaml` (its routers, engines, words,
+  pages, templates, static files, and the parts it adds to a core screen). An off module's scripts, styles and Elements library are not
+  served (404), and neither to a person whose lens does not use the module (the World lens gets no banking file). The Elements manifest
+  carries each library's `module` (drishti-risk: banking) and the loader refuses a library of a module the page does not list
+  (`<meta name="drishti-modules">`, `configure({modules})`, `refused(name)`).
+- **The console's cycles C1 to C7 are broken in place** (no screen moved yet): the banking routers are included from the plugin's list;
+  commands, retired links, the type-ahead, the Pivot presets' word grammar and the landing rules are hooks the module fills
+  (`core/plugins.py`); one workbook streamer (`core/workbook_stream.py`); the core client has one engine call (`BackendClient.engine`) and
+  the banking calls are the module's own (`plugins/banking/risk_api.py`), **on `/api/v1/risk/…`**; the market landing's figures moved to the
+  banking routes, Admin → Saved VaR baskets to the VaR routes, the Pivot draws the MR lens through the plugin's `screens:`. A static test
+  (`test_module_boundaries.py`) fails when the core imports a module's code, includes its templates or names its files.
+
+
+### The public sector: the first new domain, government data and free news
+
+- **Part of the economy module, with a lens of its own** (PUBLIC_SECTOR_GUIDE.md; one module, the owner's decision of 2026-11-07): ten
+  functions (`WDI`, `WDIS`, `CBANK`, `CBSER`, `NSTAT`, `OECD`, `OECDS`, `PRESS`, `PREL`, `GDELT`) in the economy's manifest, the
+  **Public sector** lens, and the free news (`PRESS`, `PREL`, `GDELT`) in the World lens. The economy module off: all its packs,
+  connectors, functions and both lenses are gone, banking, capital markets and GLEIF untouched (`EconomyModuleOffTest`,
+  `PublicSectorLensTest`).
+- **Six packs** with `domain: economy`, each with its kinds, data contracts (worked examples under docs/contracts/samples), README,
+  pack guide and Sutras built from the UI kit only: **world-development** (World Bank WDI: a country's profile with the world map by GDP
+  per head, every indicator's history), **central-banks** (FRED and the Bank of Canada: a bank's policy rate, its last move and its
+  series), **national-statistics** (Statistics Canada by vector), **oecd** (the members' leading indicator, unemployment, inflation and
+  growth, a map by inflation), **official-news** (the press releases of the Fed, ECB, Bank of Canada, Bank of England, SEC, OSFI, the US
+  Federal Register and the Canada Gazette, each a link) and **gdelt-events** (a country's day in the world's news: events, tone,
+  conflict, CAMEO categories, a map by tone, the top stories).
+- **Six daily feeds on drishti-feeds** (`config/feeds/<pack>.yaml`, `tools/feeds/sources/`): incremental (the source's last update, each
+  series from its last observation, releases already seen, the GDELT days after the last), JSON Lines into `worldlake` and `newslake`,
+  whose lake files now ship with exactly these tables (`tools/test_empty_lakes.py` says only these packs read them). Every source's
+  licence and terms are in the feed file (`options.sources`); the Bank of England, OSFI and the Canada Gazette are internal only and their
+  releases say so. FRED's key is `DRISHTI_FRED_API_KEY`; without it the Bank of Canada still loads. One publisher down or a day GDELT
+  skipped never fails a run.
+- **One fetcher of the World Bank's WDI**: the world-development feed. Besides its ten headline indicators (the profile) it pulls, as
+  series only, every `kind: wdi` code of `tools/realdata/sources.yaml` back to that file's `years.first` (`options.series-from`) and the
+  world, its seven regions and four income groups (`options.aggregates`; an aggregate's series has no `WDI_PROFILE`, now optional in the
+  contract). world-economy reads WDI from that feed's latest output (`publicsector.wdi_rows`, written into its cache in the API's shape,
+  so the normaliser is unchanged) and never calls the WDI API; with no output it fails saying `run feed run world-development first`.
+  `--no-wdi` is gone and world-economy loads all twelve of its kinds again (economy, macro-indicator, economic-forecast, labour-market
+  and fiscal-position are back); it runs after world-development by schedule (06:30, then 06:45). `--scope` widens WGI and IMF series
+  only: a new WDI code goes into `sources.yaml`. Tested on world-development output written from its recorded fixtures
+  (`tools/feeds/tests/test_wdi_one_fetcher.py`).
+- **Tests on recorded fixtures** (`tools/feeds/tests/test_publicsector.py`, never the network) and a browser test of the six screens on a
+  scratch lake loaded from them (`test_public_sector_browser.py`); `tools/packgen/publicsector/make.py` writes the samples and READMEs.
+- **Docs**: the Public sector guide and Tutorial 46 (two Help entries), the External data page's public-sector rows and section, the
+  contract pages, OPERATIONS' modules.
+
+### The pre-deal service and the exposure what-if in Java
+
+- **The pre-deal check is a service of the exposure engine** (EXPOSURE_GUIDE.md section 18.9): `POST /api/v1/exposure/predeal` and the
+  command `PREDEAL <counterparty> LIKE <trade> [<notional>] [REVERSE] [IN <netting set>]` (or, without a template, `PREDEAL <counterparty>
+  <asset class> <notional> <maturity> [MTM <amount>]`), `GET /api/v1/exposure/predeal/grammar`, `drishti.py exposure predeal "PREDEAL …"`.
+  The what-if with the trade added is held to the counterparty's stored credit limit on its measure (`PFE 95 peak` at its confidence;
+  EEPE, EPE, peak EE) and to each tenor bucket's limit (`BUCKETS`, read from `credit-limit` now), and answers **approve** (exact data,
+  within the limit and every bucket), **decline** (exact, over the limit or a bucket) or **refer** with the reason: a proxy answer (the
+  `addon` method) only refers, never approves; so does no limit on record, a limit on a measure the engine does not compute, netting sets
+  the person does not see, a stale run, the netting set not certain, or no exposure for the counterparty. Every answer shows the method
+  and the template trade (copied: id, product, notional, the factor and side; or described), the limit before and after with the
+  headroom and the buckets, and the exposure before, with and incremental; SA-CCR's incremental EAD says **under construction**
+  (2.9.11.k). Computed as the person (a template only of a trade they see trade by trade, `403` otherwise; a counterparty they see none of
+  `403`); every check audited (`ccr-predeal`, with its check id, decision, method, command and limit use). Code: `ExposurePreDeal`,
+  `ExposurePreDealCommand`, `ExposurePreDealController` in the counterparty-risk server package `com.ash.drishti.server.exposure`.
+- **Counterparties → Pre-deal check, the screen** (`/predeal`; `PREDEAL <GO>`, the menu item that ran `XWIF`, and **Pre-deal check ›**
+  in the exposure explorer at a counterparty or a netting set; EXPOSURE_GUIDE.md sections 7 and 18.9, after the CCR cube mock-up C):
+  the trade as a drishti-inputs Form (counterparty, netting set, a booked trade to copy or the trade described, the notional as money,
+  the side), the server's verdict (approve, refer or decline with the lamp and the reasons; the limit and each tenor bucket within, near
+  or over with before, with the trade, increment, use and headroom; EPE and EAD before and after), the one Explain of the check, and the
+  what-if (the profile overlay with the limit and the incremental PFE per tenor on drishti-chart through drishti-risk; the figures and the
+  table by tenor on drishti-grid). Every number is the server's; a typed command checks at once; a phone layout; gone with the banking
+  module. The registry item `pre-deal-screen` is retired.
+- **One limit rule, the server's** (new setting `drishti.risk.limit-near`, 0.8, in `config/engines/var.yaml`; `RiskLimits` in the banking
+  module): every limit the module holds a figure to says **within**, **near** (from that share) or **breach** (over 100%) in the answer
+  itself: each VaR scope and node (`limitStatus`, `limitNear`), the official record's nodes (read with the record), the VaR what-if
+  (`limit`: the scope's limit, the use before and after, `statusBefore`, `status`), the pre-deal check's credit limit and tenor buckets,
+  and the sensitivity ladder's cells (now `within` rather than `ok`). `MrSensitivities.NEAR` and exposure's `limit-near` are folded into
+  it. **The Trading landing shows the server's status and computes none**: the book rows, the desk headline, the Breaches and Near limit
+  tiles, the desk head's limit use by book and day, and both halves of the new-trade check (the VaR half reads the what-if's own `limit`;
+  the console no longer divides by the book's limit). `limit_state` and the setting `trading.near-limit` are removed.
+- **Every limit bar draws the server's status** (within green, near amber, breach red; a row without a status has no tone): the VaR
+  explorer's limit tile and its scope tree's bars (the explorer's own amber at 75% and red at 90% are deleted), drishti-risk's VaR
+  hierarchy tree (`LIMIT_USE_BANDS` 0.75/0.9/1 is replaced by `LIMIT_STATUS_TONES` on the node's `LIMIT_STATUS`; `limitBreaches` reads
+  the status), the Risk home (its bars, pills and heat-map cells, and the VaR and credit breach counts, which counted a use of 100% as a
+  breach), the MR cube's limit tile (its near tick at the server's `limitNear`), the exposure explorer's limit tile, bar and chip (its
+  own amber was over 90%) and the market-risk pack's Home fact *a book over its limit inside a desk within its own*. drishti-tree's
+  `bar` takes a status instead of bands (`{status, tones, words, max}`; `bandTone` becomes `statusTone`). The server adds the status
+  where it was missing: the MR cube's headline (`limitStatus`, `limitNear`) and an exposure counterparty's credit limit (`status`,
+  `near`).
+- **One way to check a trade**: the exposure explorer's Pre-deal tab, its form and the console's what-if proxy (`POST /api/exposure/what-if`)
+  are removed; the tab's address (`/exposure?scope=…&tab=predeal`) opens the check at that counterparty or netting set. The API and
+  `drishti.py exposure whatif` keep the what-if alone.
+- **The pre-deal answer says near** (by `drishti.risk.limit-near`, the one limit rule above): the limit and each bucket `within`, `near`
+  (from that share: still approved, the reason says which) or `breach`; also `headroomBefore` and `near` on the limit, `increment`,
+  `useBefore` and `headroomAfter` on each bucket, and with the exact method the IMM EAD (`ead`, α × EEPE) before, with and incremental.
+  The one Explain explains a check (kind `predeal`: `ExposurePreDealExplainer`; the check made again, not audited twice).
+- **Drishti Elements**: drishti-inputs' Form takes `doneText` ('' says nothing after a submit, for a page that shows the answer) and a
+  field without help no longer prints "null"; drishti-risk's `risk.exposure-profile` takes `eepe: false` (an answer without EEPE, such as
+  the proxy's: none drawn, never computed in the page).
+- **The Trading landing's new-trade check** asks the pre-deal service for its exposure half: the decision, the limit use and every figure
+  are the server's (the console no longer divides by the limit or picks the netting set); when the copied trade has no paths on the run
+  the same check is asked described, and refers. Its verdict shows *Refer to credit* and *Declined: over the limit* with the reason.
+- **The exact pre-deal exposure what-if (`POST /api/v1/exposure/what-if`, method `paths`) is computed by the Java exposure engine**
+  (EXPOSURE_GUIDE.md sections 7, 18.7 and 19.5; COUNTERPARTY_ENGINES.md 6.4). `ExposureWhatIfMath` (`drishti-compute`) adds each
+  candidate's paths to its netting set's value path by path and computes the set's collateral and exposure again with `ExposureMath`, the
+  same code as every exposure figure; `ExposureWhatIfPaths` reads the scope and each joined netting set as the asker. The same request and
+  the same answer field by field (only the `engine` and `note` texts say Java); no sandbox, no reactive connector, no compute workers: it
+  answers on every server that runs exposure. Parity: the Python engine's answers on a book of four netting sets (margined with
+  thresholds, MTA, IA, rounding and IM; unmargined with IA; no CSA; collateral posted), six what-ifs over the three collateral models,
+  both rank rules, an unwind and a horizon change, recorded before it was retired (`ccr/whatif-parity.json`, `tools/ccr/`), are given
+  again to the cent (`ExposureWhatIfMathTest`). A `copyOf` is made only of a trade the asker sees trade by trade (`403` otherwise).
+- **The Python exposure engine is retired:** `drishti_compute.exposure` (`measures.py`, `whatif.py`) and its tests, the compute pool
+  `exposure` and `DRISHTI_COMPUTE_EXPOSURE_WORKERS`, the counterparty-risk pack's reactive connector `exposure-whatif` with its kind,
+  contract and command `XWIF`, the `exposure-result` parameters `detail` and `sets` (`ExposureWhatIfInputs`), and `DRS-5446`. A
+  never-edited `exposure-whatif.yaml` connector file is removed at start (kept beside it as `.retired-<time>.bak`); an edited one stays,
+  its kind listed as obsolete.
+- **Tests**: `ExposurePreDealApiTest` (the what-if equal to a full recompute with the trade booked, figure by figure and date by date;
+  approve; decline on the limit and on a bucket; refer on a proxy, no limit, a measure not computed and no exposure; two people at once
+  with their own entitlements; the grammar; the audit); the console's trading check, menus and under-construction tests; `test_expcli`.
+
+### drishti-feeds: external data into the lakes, every day
+
+- **drishti-feeds: one module to pull external data into the lakes every day** ([EXTERNAL_DATA.md](docs/guides/EXTERNAL_DATA.md), Help → Data
+  → External data feeds: one guide for the feeds and their sources). A feed is a feed file (`config/feeds/<feed>.yaml`: the source, its datasets and the pack, kind and table
+  each loads, the target lake, the daily schedule, the licence with its redistribution and internal-only flag, API keys as `${ENV}`
+  names only) and a `Feed` class in `tools/feeds/sources/` that pulls. The base class (`tools/feeds/feedbase.py`) does the rest:
+  incremental pulls from a state file (`data/datafeeds/<feed>/state.json`, saved only when the whole run succeeds), the polite client
+  (one User-Agent `DRISHTI_FEEDS_USER_AGENT` naming Drishti, no personal address; a pause between requests; retries with back-off
+  and `Retry-After`; a download cache, so a broken run resumes), JSONL.gz per dataset and business date under
+  `data/datafeeds/<feed>/<date>/` with a manifest of rows and SHA-256, a lock per feed, and a re-run of a date that replaces it whole.
+- **Three load routes, no new writer**: `java` (the default: `lake build --engine java`, the parallel loader `LakeLoad` from the
+  server's jar), `python` (`lake build`) and `inbox` (the files and their `.ready` with `lake:`, `sha256` and `rows` dropped into the
+  data inbox; several tables or dates as one tar of `<table>/<date>/` folders). Every route replaces the dates it loads; a table new to
+  the lake file gets its pack's recommended entry first (and the dataset's key as its id).
+- **`drishti.py feed list|run|status|schedule`** (`tools/feeds/cli.py`; the wrappers `tools/feeds/feed.sh` and
+  `tools/windows/feed.ps1`): `feed run <feed>|--all [--date D | --since D] [--load java|python|inbox|none] [--dry-run] [--snapshot]`,
+  scheduler exit codes (0 ok, 1 failed, 2 refused, 3 locked, 4 partial) and one log line per run; `feed schedule --cron | --systemd |
+  --windows` prints ready-to-use daily entries. Every run appends a line to the run ledger `data/datafeeds/ledger.jsonl`.
+- **Admin → Data loads → Feeds**: every feed's last run, last success, rows, duration, failures and last error, and Run now
+  (`GET /api/v1/admin/feeds`, `POST /api/v1/admin/feeds/{feed}/run`, audited; console tables on drishti-grid). A failed run raises
+  the platform alert `data-feed-failed` through the one alert engine (the gauge `drishti.datafeed.failed`; a later success closes it;
+  the same rule for Prometheus). Server settings `drishti.feeds.config`, `root`, `python`, `sample-seconds`.
+- **The public-data refresh scripts are folded into the feeds** (no second way): `tools/publicdata/` is gone; its pack sources live
+  in `tools/feeds/sources/` and run as the feeds `gleif` (into the new **`referencelake`**, core reference data: `config/lakes/referencelake.yaml`,
+  `data/delta/referencelake/`, shipped empty like the other lakes), `us-equities` and `funds` (into `capitalmarket`; the index
+  members now include the **Russell 2000 from IWM's** N-PORT holdings beside the Dow 30 from DIA and the S&P 500 from SPY),
+  `yahoo-prices` (internal only, off as shipped), `world-economy` (internal only for the IMF forecasts, into `worldlake`),
+  `news-and-markets` (internal only, into `newslake`) and `market-data` (incremental by day from its state, each document under its own
+  date, `--since` for a backfill, into `capitalmarket`). The World Bank's WDI belongs to the public sector's world-development feed:
+  world-economy reads it from that feed's output (see "One fetcher of the World Bank's WDI" above).
+  Refreshing a pack's committed demo snapshot in `data/testdata` is `feed run <feed> --snapshot` (with `--internal-ok` for
+  internal-only data), writing exactly where the scripts wrote. Their per-pack `.sh` and `.ps1` wrappers are replaced by the one
+  wrapper per system; `DRISHTI_SEC_USER_AGENT` and `DRISHTI_GLEIF_USER_AGENT` are replaced by `DRISHTI_FEEDS_USER_AGENT`; the
+  sources' downloads and builds move from `<data>/publicdata/` to `<data>/datafeeds/sources/`; `DRISHTI_LIVE_FETCH` is replaced by
+  pytest's `--live` for the hand-run smokes.
+- **Tests on recorded responses only**: every feed's pull, incremental state, an idempotent re-run, retries, the lock, the ledger and
+  status, the inbox route's `.ready` and tar, the java and python routes into a temporary lake, the command line and the schedule
+  output; Admin → Feeds in the console and the server; one `--live` smoke per feed for a person to run.
+
+### Docs (the release)
+
+- **README rewritten for 2.9.11.g** from the product as it stands: what Drishti is, the modules, lenses, functions and the access
+  registry, the risk engines with the pre-deal check, the Pivot and BI, Drishti Elements with the designer kit and their distribution,
+  the lakes and drishti-feeds, how to run it (the runnable jar is built from `drishti-app`), editions as lenses, and the numbers.
+- **`tools/docs/code_volume.py` counts what the product holds** besides the lines: lines and files by language (JavaScript, CSS and HTML
+  apart; JavaScript tests counted), and Maven and domain modules, lenses, functions per module, console routes, server REST handlers,
+  Elements libraries and their ES modules, packs by domain, Sutras, connector plugins, feeds, lake files, test files by kind (Java,
+  console, browser, tools, JavaScript) and documents, each counted from the files; `--compare <tag>` prints the console's screen code
+  against the Elements libraries' at a tag and now (TOOLS.md).
+- **RELEASE_NOTES 2.9.11.g**: the 2.9.11.e draft and the f and g work as one section: what changes for risk users, what is new, the
+  upgrade steps (lenses for editions, packs in domain folders, the `/api/v1/risk` paths, settings renamed, the feeds' data root, the lake
+  files, Elements without a CDN), the removed endpoints and the renamed screens, and the quality figures.
+
+### Fixes (the train's bulk drill)
+
+- **Drishti's lake writer and a partition value with a space**: Kernel hands a partition's folder percent-encoded
+  (`PRODUCT_GROUP=Fixed%20income`); the writer wrote the file there while every read looked in `Fixed income`, so a Calypso or Murex
+  trade load by `PRODUCT_GROUP` failed with "the write failed, nothing was committed". The writer now decodes a `file:` URI exactly as the
+  reads do (`LakeWriterTest`).
+- **The public-sector feeds keep their working history as JSON Lines** (the data standard): a series' points, the kept releases and
+  GDELT's per-day country aggregates under `<data>/datafeeds/<feed>/history/` are `.jsonl`, a row a line.
+- **A pack filled by a feed counts as served without the demo connector**: `PacksServedWithoutDemoTest` accepts a Delta connector
+  reading the lake an enabled feed loads the kind into (the six public-sector packs, `worldlake` and `newslake`); PACK_DEVELOPER_GUIDE
+  step 16 says so.
+- **A table's `highlight`**: a `table` panel accepts `highlight` (an expression per row, as a ladder has), which the GLEIF entity's
+  parents chain uses for the entity itself; Rachana refused it with DRS-2023 (`PackSutrasTest`; RACHANA_REFERENCE's table options).
+- Tests brought up to date: the demo lake's trades by `PRODUCT_TYPE` (Endur) and `PRODUCT_GROUP` (Calypso, Murex); the engines' and
+  publishers' sources found in their domain modules; `css_visual_check.py` names the demo lake's variable through `lakeconfig`; importing
+  `drishti-stack/stack.py` in a test leaves no `__pycache__` in the checkout.
 
 ## 2.9.11.d (2026-11-07)
 - **Six lake folders kept in git, their content never** (DATA_LAKE_GUIDE.md section 1): `data/delta/demo`, `risklake`, `newslake` (news), `worldlake` (World Bank, IMF, UN), `regulators` (SEC, Federal Reserve, OSFI, central banks) and `capitalmarket` (prices, curves, vols, funds), each with only its README.md; the test data's `.jsonl.gz` files stay in git to build the demo lake. The five new lakes ship as lake files with no tables (`config/lakes/<lake>.yaml` and their jar copies), and **nothing shipped points at them**: every connector, rule and setting reads `demo` (guarded by `tools/test_empty_lakes.py`); a site points at them itself. The demo lake's one-time move and `build_demo_lakes` treat a folder holding only its README.md as empty.

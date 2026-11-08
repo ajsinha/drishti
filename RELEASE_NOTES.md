@@ -13,189 +13,204 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 2.9.11.e — release notes (draft)
+# Drishti 2.9.11.g — release notes (draft)
 
-*Not released yet.*
+*Not released yet.* **Industries as modules, opened through lenses; the public sector, the first new domain, filled every day by
+drishti-feeds; the pre-deal check as a service of the exposure engine; every screen drawn with Drishti Elements, eleven libraries you can
+also use in your own applications.** This release carries the work planned as 2.9.11.e, f and g, shipped as one tag.
 
-## Upgrade: the demo lake's layout and the lake files
+## What changes for risk users
 
-- **The demo lake's new layout** (`config/lakes/demo.yaml`): scenario PVs partitioned by `SCENARIO_SET_ID, GRAIN` after the business
-  date, sorted by legal entity, division, desk, book and trade, zstd, 256 MB files, 16 MB row groups, 30 days' time travel and
-  maintenance; Calypso's and Murex's trades partitioned by `PRODUCT_GROUP` (50+ product types each) instead of `PRODUCT_TYPE`; every
-  trade table compacted and vacuumed after 7 days. **An existing demo lake keeps its old layout**: a load into one of these tables is
-  refused, naming both layouts, until the lake is rebuilt with `python3 tools/drishti.py lake demo`. VaR figures are the same on
-  either layout.
-- **The shipped lake files are never re-written at start** (CHANGELOG): after the demo lake's one-time move, a fresh checkout shows
-  nothing modified in `config/lakes`.
+- **One limit rule, the server's.** Every limit the banking module holds a figure to says **within**, **near** or **breach** in the
+  answer itself: VaR scopes and nodes, the official record, the VaR what-if, the pre-deal check's credit limit and tenor buckets, and the
+  sensitivity ladder. Near starts at 80% of the limit (`drishti.risk.limit-near`). Every limit bar, tile, pill and heat-map cell takes its
+  colour from that status (within green, near amber, breach red): the VaR explorer's own amber at 75% and red at 90% and the exposure
+  explorer's amber over 90% are gone, and a use of exactly 100% is near, no longer a breach.
+- **The pre-deal check** (`PREDEAL`, Counterparties → Pre-deal check): copy a booked trade (`PREDEAL CP-ALDERSHOT LIKE 1000001 250M`) or
+  describe one (`PREDEAL CP-ALDERSHOT EQUITY 768495000 2031-10-20 MTM 9227785`); the exposure engine adds it to its netting set path by
+  path and answers **approve**, **refer** or **decline** with the reasons, the limit and each tenor bucket before and after, the headroom,
+  and EPE and EAD before and after. A proxy answer, no limit on record, a stale run or netting sets you cannot see only ever refer. Every
+  check is audited and has its Explain ([EXPOSURE_GUIDE.md section 18.9](docs/guides/EXPOSURE_GUIDE.md#189-the-pre-deal-check)). The
+  Trading landing's new-trade check asks the same service. SA-CCR's incremental EAD is shown as under construction.
+- **One Explain for every number**: hover a figure for a preview, click it (or press **E**) for a drawer with *Formula*, *Inputs &
+  lineage*, *Why it moved* and *Workbook*, and *Open as a page* to print. It replaces the VaR page's *How calculated* drawer and *Why it
+  moved* tab, the parametric figures' pop-ups, the MR cube's *Explain the move* tables and the exposure page's *How this number was built*
+  box (the table under "Removed" below).
+- **The FRTB-SA screen shows each class's Total again**, the server's figure.
 
+## New
 
-## Upgrade: Vega-Lite specifications are translated (Vega is retired)
+- **Domain modules and the access registry** ([DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md),
+  [ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md), [OPERATIONS.md section 22](docs/admin/OPERATIONS.md#22-modules-on-or-off)). The
+  core knows no industry: **banking**, **capital markets** and **economy** are modules, each on when installed, licensed and enabled
+  (`config/modules/<module>.yaml`, `GET/POST /api/v1/admin/modules`, audited). A module that is off loads no engine, job, pack or API, and
+  its pages, menus, commands, type-ahead, Help pages and Build items are gone for everyone; a function an administrator turned off is gone
+  for everyone too. Without an installed licence every module is on (the development licence), so an existing installation changes nothing.
+  Each person's modules, lenses and the functions they may not use are answered by `GET /api/v1/modules`.
+- **Lenses** ([LENSES.md](docs/admin/LENSES.md)): Risk, Trading, Market, CRO and the two cubes (banking), World and **Public sector**
+  (economy), CIO and Oversight (core), each with its modules, functions, Home cards and chips.
+- **The public sector**, the first new domain, in the economy module with its own lens ([PUBLIC_SECTOR_GUIDE.md](docs/guides/PUBLIC_SECTOR_GUIDE.md),
+  [tutorial 46](docs/tutorials/46-public-sector-data.md)): six packs and ten functions: World Bank development indicators (`WDI`, `WDIS`,
+  with the world map by GDP per head), central banks from FRED and the Bank of Canada (`CBANK`, `CBSER`), Statistics Canada (`NSTAT`),
+  the OECD (`OECD`, `OECDS`), the press releases of the Fed, ECB, Bank of Canada, Bank of England, SEC, OSFI, the US Federal Register and the
+  Canada Gazette (`PRESS`, `PREL`) and GDELT's world events by country and tone (`GDELT`). The free news is in the World lens too.
+- **drishti-feeds: external data into the lakes, every day** ([EXTERNAL_DATA.md](docs/guides/EXTERNAL_DATA.md)). One feed file per source
+  (`config/feeds/<feed>.yaml`: the datasets, the pack and table each loads, the target lake, the daily schedule, the licence with its
+  internal-only flag, API keys as environment names only); incremental pulls that resume; one polite User-Agent naming Drishti; JSON Lines
+  per dataset and business date under `data/datafeeds/<feed>/` with a manifest of rows and SHA-256; a run ledger; three load routes (the
+  Java loader, the Python loader, the data inbox). `drishti.py feed list|run|status|schedule` (`feed schedule --cron | --systemd |
+  --windows` prints the daily entries); **Admin → Data loads → Feeds** shows every feed's last run and runs one now, and a failed run
+  raises the alert `data-feed-failed`. Thirteen feeds ship: the six public-sector feeds, GLEIF, US equities, funds (the index members now
+  include the Russell 2000 from IWM's holdings), market data, and for internal use only the IMF forecasts (world-economy), Yahoo prices
+  (off as shipped) and market headlines. FRED needs `DRISHTI_FRED_API_KEY`; the Bank of England, OSFI and the Canada Gazette are internal
+  only, and their releases say so.
+- **Drishti Elements** ([ELEMENTS.md](docs/architecture/ELEMENTS.md), [ELEMENTS_API.md](docs/guides/ELEMENTS_API.md)): the console's
+  JavaScript and CSS as eleven libraries under one release train (Elements 1.0.0): drishti-core, -inputs, -grid (with an AG Grid-style
+  adapter), -chart (with maps from the world to every country's first-level regions), -data, -tree, -graph, -insight, -designer,
+  -renderer 2.0.0, and -risk, licensed with the banking module. **Every screen of the console is drawn with them**; the gallery at
+  `/elements` shows every component live.
+- **The designer kit** (drishti-designer): the layout canvas, palette, inspector, outline, the YAML pane kept in step with the model, and
+  the designer shell (Visual / YAML / Both, versions, validate, preview, history, impact, propose for review). The Sutra designer, the BI
+  report designer, the theme designer and the table and model editors are built from it, and each editor remembers your layout.
+- **Elements in your own application, never from a CDN** ([ELEMENTS_IN_YOUR_APP.md](docs/guides/ELEMENTS_IN_YOUR_APP.md)): two files
+  for one page (`drishti.py elements pack --libs core,grid,chart`), a release archive with SHA-384 integrity hashes and npm tarballs for
+  your own registry (`drishti.py elements dist`), a WebJar for your own Maven repository (`./mvnw -P elements -pl drishti-elements
+  package`), or the Drishti server you run. Nothing is published anywhere public, and the same sources make the same bytes. drishti-risk
+  is left out unless asked for with `--include-domain banking`.
+- **The pickers and fields have a new look**, the same on every page: the as-of date in the top bar is a business-date picker (type
+  `T-1`, `ME` or `6 Nov 2026`, or open the calendar with the server's holidays named; a weekend or holiday is refused in words); every
+  date field is the same picker and still sends `2026-11-06`, so links and scripts are unchanged; long lists are a multi-select with
+  chips and a search field; the people pickers are a combobox; the forms have their label above each field, problems in words, numbers
+  read loosely (1.5m, 250k); on a phone every control is at least 44 px high.
+- **One Approvals queue** (Views → Approvals, `/approvals`, `/api/v1/approvals`): every four-eyes decision in one place: Sutras, record
+  edits, BI items, compute packages, functions, stress windows, report sign-offs and settings.
+- **One alert engine** (`/api/v1/alerts`): rules on one entity and on measures are one kind of rule, with one stream.
+- **One search** (Alt+K, `GET /api/search?in=command|help|all`) over entities, commands, screens, Help pages and the things you can build,
+  and **one keymap**: `?` lists the keys of the screen you are on.
+- **One Build home** (`/build`): everything people build in one rail (*Data*, *Screens*, *Analysis*, *Work*), what each item uses and what
+  uses it, *For you* (recent, favourites, certified, shared with me), *+ New* for every kind.
+- **Admin → Configuration** (`/admin/configuration`): every setting in three tiers (everyday, admin, expert), searchable, with its value
+  in effect and where it came from; secrets never shown. A change is a proposal a second administrator approves; an approved key is written
+  to the server's or the console's `application.local.yaml` and read at the next start.
+- **A Python visual can return a drishti-chart spec** (`output: drishti-chart`), drawn as it is, every chart kind the library has.
 
-- **One drawing engine.** A report's `vega-lite` visual and a Python visual's `output: vega-lite` are now translated by drishti-chart
-  (`fromVegaLite`) and drawn by drishti-chart, like every other chart: the theme's colours, its tooltip, data table, export and Explain.
-  The vendored Vega, Vega-Lite, vega-embed and vega-interpreter are deleted (about 0.85 MB less per first draw). The shipped
-  specifications (the `python-desk-risk` report's *Net MTM by desk* and the `pnl-vega` Python sample) draw the same data and encodings.
-- **What translates:** marks bar, line, area, point, circle, square, tick, rule, rect, arc and boxplot; encodings x, y, color (field,
-  value or condition), size, theta, tooltip, opacity; aggregate, bin, sort, stack, scale (log, zero, domain), axis titles and d3 formats;
-  inline data; layers; filter and calculate transforms; titles. `width` and `height` are ignored (the chart fills its frame).
-- **Not translated, so refused in words (never drawn wrong):** facets, `row` and `column`; `repeat` and `concat`; `params` and
-  `selection`; `projection` and `geoshape`; other transforms (aggregate, window, fold, pivot, lookup, ...); `text` marks and encodings
-  and the other channels (`shape`, `detail`, `href`, ...); `resolve`. The visual's frame names each feature with what to use instead
-  (a split well, one visual per chart, the report's cross-filtering, the map, a calculated column or measure, a table or card).
-  Check a report with such a visual after upgrading: [BI_GUIDE.md](docs/guides/BI_GUIDE.md#35-vega-lite-visuals).
-- **New, and the preferred form for Python:** a Python visual whose manifest says `output: drishti-chart` returns a drishti-chart spec
-  with its rows inline, drawn as it is, every kind the library has ([BI_GUIDE.md](docs/guides/BI_GUIDE.md#14-vega-lite-output)).
+## Upgrade
 
-## Upgrade: the pivot cell's Explain, the Elements 1.x package, the FRTB-SA totals
+Follow these steps when upgrading an installation of 2.9.11.d.
 
-- **`POST /api/v1/pivot/explain` is deprecated** and is removed in the next release: ask `POST /api/v1/explain` with `kind: pivot,
-  measure: cell` and the same body (the old `measure`, the value's label, is now `value`); the engine's steps are under `why.answer`.
-  Until then the old address answers as before, with `Deprecation: true` and a `Link` to its successor. `drishti.py pivot explain`
-  already uses the new address.
-- **Explain › Open as a page** from a pivot cell now opens the same explanation the drawer showed (the view travels in the link).
-- **The `@drishti/elements` 1.x npm package is no longer built** (its tool `tools/elements_package.py` is deleted). Pages that embed the
-  1.x elements from the console are unaffected: `/embed/v1/elements/1.4.5/` serves the same bytes, as do the renderer 1.2.0 files. New
-  work takes the per-library packages (`drishti.py elements dist`, ELEMENTS_IN_YOUR_APP.md).
-- **The FRTB-SA screen shows each class's Total again**, the server's figure (`classTotals` in `GET /api/v1/frtb/sa`).
-- **Generated connector files stay unedited across the demo lake's move**: a file nobody edited keeps following its pack's template at
-  later upgrades.
+1. **Editions are lenses.** `config/editions/` is gone: a lens file is `config/lenses/<module>/<lens>.yaml` (risk, trading and market
+   under `banking/`, world under `economy/`), the feature presets `config/lenses/features.yaml`. Move a site's own edition file to
+   `config/lenses/<module>/`. The folder's setting is `drishti.lens-dir` (`DRISHTI_LENS_DIR`, was `DRISHTI_EDITIONS_DIR`).
+   `drishti.edition` and `drishti.lenses` are unchanged; Help's old *editions* address opens the lenses guide
+   ([LENSES.md section 14](docs/admin/LENSES.md#14-formerly-editions-upgrading)).
+2. **Packs live in domain folders**: `config/packs/<domain>/<pack>` (`core/`, `banking/`, `capitalmarkets/`, `economy/`). A site's own
+   pack folder directly under `config/packs` keeps working where it is; `drishti.packs.dir` is unchanged. Links in a site's documents to
+   `config/packs/<pack>/...` need the domain folder. A pack's `pack.yaml` names its `domain:`; a pack loads only while a module of its
+   domain is on.
+3. **The banking API is under `/api/v1/risk/…`**: `/api/v1/var`, `/exposure`, `/frtb`, `/simm`, `/sensitivities`, `/risk-factors` and
+   `/pivot/mr` are now `/api/v1/risk/var`, `/risk/exposure`, `/risk/frtb`, `/risk/simm`, `/risk/sensitivities`, `/risk/risk-factors` and
+   `/risk/mr`. **The old paths answer for this release** (with `Deprecation: true` and a `Link` to the new path) and are removed in the
+   next: move scripts and tools now. Connector files that name the moved engine classes keep working for this release.
+4. **The banking module's other files moved into banking folders**: lake files `config/lakes/banking/{var,ccr}-official.yaml`, report
+   definitions `config/reports/banking/`, `config/bi/reports/banking/`, `config/bi/python/banking/`, `config/bi/notebooks/banking/` and
+   `config/tables/banking/`. **The banking tables are named `banking.<name>`** (were `bi.<name>`): a site's model or report naming
+   `bi.trading_risk_trades` or another moved table needs the new name.
+5. **Settings renamed or removed:**
 
-## Upgrade: one search (the console's `/api/suggest` is removed)
+   | Before | Now |
+   |---|---|
+   | `trading.near-limit` (console) | `drishti.risk.limit-near` (server, `config/engines/var.yaml`, 0.8), one rule for every limit |
+   | `DRISHTI_EDITIONS_DIR` | `DRISHTI_LENS_DIR` (`drishti.lens-dir`) |
+   | `drishti.alerts.measure.*` (`DRISHTI_ALERTS_MEASURE_*`) | `drishti.alerts.*` (`DRISHTI_ALERTS_*`); remove `drishti.alerts.keep` |
+   | `DRISHTI_SEC_USER_AGENT`, `DRISHTI_GLEIF_USER_AGENT` | `DRISHTI_FEEDS_USER_AGENT` |
+   | `DRISHTI_COMPUTE_EXPOSURE_WORKERS` | removed (the exposure what-if is computed in Java) |
+   | `DRISHTI_LIVE_FETCH` | removed |
+   | the VaR page's `varExplainView` | removed (the Explain drawer's *Why it moved*) |
 
-- **BI's keys** are the keymap's: `?` (and the rail's Keys button) lists them with the rest of the screen's, and BI's own keys dialog is
-  gone; `g h` opens the Build home. The Pivot's keys (r c v f s, g, x, 1 to 9, e, w i u, l, m) are unchanged.
+   New: `drishti.modules.dir`, `drishti.modules.<module>.enabled`, `drishti.modules.watch-seconds`, `drishti.access.dir`,
+   `drishti.feeds.config`, `drishti.feeds.root`, `drishti.feeds.python`, `drishti.feeds.sample-seconds`, `DRISHTI_FRED_API_KEY`
+   ([CONFIGURATION.md](docs/admin/CONFIGURATION.md)).
+6. **The feeds replace the public-data scripts.** `tools/publicdata/` and its per-pack `.sh` and `.ps1` scripts are gone: run
+   `drishti.py feed run <feed>` (or `tools/feeds/feed.sh`, `tools/windows/feed.ps1`) and install the daily entries `feed schedule` prints.
+   **The feeds' data root is `data/datafeeds/`**: each feed's state, downloads and output under `data/datafeeds/<feed>/`, the run ledger
+   `data/datafeeds/ledger.jsonl`, and the sources' downloads moved from `<data>/publicdata/` to `<data>/datafeeds/sources/` (delete the
+   old folder after the first run). Refreshing a pack's committed demo snapshot is `feed run <feed> --snapshot`.
+7. **The lake files**: a new lake, **`referencelake`** (`config/lakes/referencelake.yaml`, `data/delta/referencelake/`, shipped empty),
+   holds GLEIF's legal entities; `worldlake` and `newslake` now ship with the tables their feeds load. Nothing shipped points at them until
+   you run a feed. **The demo lake has a new layout** (scenario PVs partitioned by `SCENARIO_SET_ID, GRAIN`; Calypso's and Murex's trades by
+   `PRODUCT_GROUP`): an existing demo lake keeps its old layout and refuses a load into a changed table, naming both layouts, until it is
+   rebuilt with `drishti.py lake demo`. VaR figures are the same on either layout. The shipped lake files are never rewritten at start,
+   and a generated connector file nobody edited keeps following its pack's template.
+8. **Drishti Elements**: the 1.x npm package `@drishti/elements` is no longer built. Pages that embed the 1.x elements from the console are
+   unaffected (`/embed/v1/elements/1.4.5/` and the renderer 1.2.0 files serve the same bytes); new work takes the per-library packages.
+   Every form of the libraries is a file you keep inside your organisation: there is no CDN to point at.
+9. **Vega-Lite visuals are translated, Vega is retired.** A report's `vega-lite` visual and a Python visual's `output: vega-lite` are drawn by
+   drishti-chart. Marks, encodings, aggregate, bin, sort, stack, scales, layers, filter and calculate transforms translate; facets,
+   `repeat` and `concat`, `params` and selections, projections, other transforms, `text` marks and `resolve` are refused in words naming
+   what to use instead. Check a report with such a visual after upgrading ([BI_GUIDE.md](docs/guides/BI_GUIDE.md#35-vega-lite-visuals)).
+10. **The menus are one sitemap**: `drishti-console/config/menus.yaml` is now `drishti-console/config/sitemap.yaml`, which also draws the
+    Admin tabs, the BI rail, Help's sections and the footer. A site that changed `menus.yaml`, or a Help section's name or icon in
+    `help.yaml`, moves its change to `sitemap.yaml`.
+11. **Tokens**: the banking module's `risk:write` scope is offered only while the module is on; the new core scope `compute:write` keeps
+    what-if sandboxes and cancels your own computations; the new scope `approve` decides in the Approvals queue.
+12. **The Python exposure engine is retired**: the compute pool `exposure`, the counterparty-risk pack's reactive connector
+    `exposure-whatif` with its kind and the command `XWIF` are gone; the exact what-if (`POST /api/v1/risk/exposure/what-if`) answers the
+    same request field by field from Java. A never-edited `exposure-whatif.yaml` connector file is removed at start (kept as
+    `.retired-<time>.bak`).
 
-- **A script that called the console's `GET /api/suggest?q=...`** asks `GET /api/search?in=command&q=...` instead and reads `items`
-  (the same suggestions, in the same order, each now tagged with its `group`). `in=help` searches Help's pages and `in=all` everything
-  (entities, commands, screens, Help pages, things you can build), grouped ([API_GUIDE.md](docs/guides/API_GUIDE.md#the-consoles-own-json-routes)).
-  The server's `GET /api/v1/command/suggest` is unchanged.
-- **Keys:** `?` now lists the keys of the screen you are on (on a view it still opens About this page), and `Alt+K` opens the global
-  search. No key acts while you type in a field; the VaR screen's `B`, `M`, `H` and `N` keep their meaning.
+### Removed endpoints and screens
 
-## Upgrade: one Approvals queue and one alert engine
+| Removed | Use instead |
+|---|---|
+| `POST /api/v1/sutras/proposals/{id}/approve\|reject\|withdraw` | `POST /api/v1/approvals/sutra/{id}/approve\|reject\|withdraw` with `{comment, params}` |
+| `POST /api/v1/changes/{id}/approve\|reject\|withdraw` | kind `change` (`note` or `reason` is now `comment`) |
+| `POST /api/v1/bi/items/{id}/approve\|reject` | kind `bi` (`force` and `applyRenames` in `params`) |
+| `POST /api/v1/admin/compute/requests/{id}/approve\|reject` | kind `compute` |
+| `POST /api/v1/pivot/functions/{owner}/{ref}/approve` | kind `function`, id `owner:name@version` |
+| `POST /api/v1/var/stress-window/proposals/{id}/decision` | kind `stress-window` |
+| `POST /api/v1/var/reports/{report}/runs/{period}/signoff` | kind `var-report`, id `report:period:vN`; the maker's text is `POST …/runs/{period}/narrative` |
+| `drishti.py design approve\|reject`, `change approve\|reject\|withdraw`, `pivot functions approve`, `var stress-window --decide`, `var report sign` | `drishti.py approvals list\|show\|approve\|reject\|withdraw\|ask` |
+| `/api/v1/me/alerts`, `/api/v1/me/alerts/rules/**`, `/api/v1/me/measure-alerts/**`, `/api/v1/admin/measure-alerts/**` | `/api/v1/alerts`, `/api/v1/alerts/rules/**`, `/api/v1/admin/alerts`; the stream `/api/v1/alerts/stream` (an alert is a `notice` event of type `alert`) |
+| `GET /api/v1/var/explain`, `GET /api/v1/var/explain/matrix`, `GET /api/v1/pivot/mr/explain` | `GET /api/v1/explain?kind=var&part=why&scope=…&from=…&to=…` (`view=matrix`; the engine's answer is `why.answer`) |
+| `POST /api/v1/pivot/explain` (deprecated, answers this release) | `POST /api/v1/explain` with `kind: pivot, measure: cell` |
+| the console's `GET /api/suggest` | `GET /api/search?in=command&q=…` (the same suggestions in `items`) |
+| the console's `POST /api/exposure/what-if` and the exposure explorer's Pre-deal tab | the pre-deal check (`/predeal`); the tab's address opens it |
+| The VaR page's *How calculated* (`H`, `&how=1`) and *Why it moved* tab (`&tab=why`) | **Explain ›** (`E`); `VAR EXPLAIN <scope> [from] [to]` |
+| *My designs* and Studio's start page; BI Studio's home (`/bi`) | the Build home (`/build`); `/studio` and `/bi` redirect there |
+| `/build/reviews`, `/review/changes` | `/approvals` (they redirect) |
 
-- **Approvals.** Every four-eyes decision is made in one queue: **Views → Approvals** (`/approvals`) and `/api/v1/approvals`. The old pages
-  redirect: `/build/reviews` and `/build/reviews/{id}` to `/approvals?kind=sutra` and `/approvals/sutra/{id}`, `/review/changes` to
-  `/approvals?kind=change`. **Removed endpoints** (scripts and tools that call them move to the queue's `POST /api/v1/approvals/{kind}/{id}/
-  approve|reject|withdraw` with `{comment, params}`):
-  - `POST /api/v1/sutras/proposals/{id}/approve|reject|withdraw` → kind `sutra`;
-  - `POST /api/v1/changes/{id}/approve|reject|withdraw` → kind `change` (the body's `note` or `reason` is now `comment`);
-  - `POST /api/v1/bi/items/{id}/approve|reject` → kind `bi` (`force` and `applyRenames` go in `params`);
-  - `POST /api/v1/admin/compute/requests/{id}/approve|reject` → kind `compute` (`reason` is `comment`; revoke stays on Admin → Compute);
-  - `POST /api/v1/pivot/functions/{owner}/{ref}/approve` → kind `function`, id `owner:name@version` (`scope` in `params`, `reason` is `comment`);
-  - `POST /api/v1/var/stress-window/proposals/{id}/decision` → kind `stress-window`, `/approve` or `/reject`;
-  - `POST /api/v1/var/reports/{report}/runs/{period}/signoff` → kind `var-report`, id `report:period:vN` (`step` in `params`; `return` is
-    `/reject`); the maker's narrative is `POST .../runs/{period}/narrative`.
-- **CLI.** `drishti.py approvals list|show|approve|reject|withdraw|ask` replaces `design approve|reject`, `change approve|reject|withdraw`,
-  `pivot functions approve`, `var stress-window --decide` and `var report sign` (`var report narrative` writes the maker's text).
-- **Tokens.** A token decides with the scope of the kind (`edit`, `design:approve`, `bi:approve`, `pivot:approve`) or the new scope `approve`;
-  report sign-offs, stress windows, compute packages and questions are never a token's.
-- **Alerts.** The settings `drishti.alerts.measure.*` are now `drishti.alerts.*` (`DRISHTI_ALERTS_MEASURE_*` → `DRISHTI_ALERTS_*`); remove
-  `drishti.alerts.keep`. Rules on one entity are converted into alert rules at the first start, by themselves; the alerts they fired before
-  (the identity table `drishti_alert`) are no longer read (no migration: drop the table when you like). **Removed endpoints:**
-  `/api/v1/me/alerts` and `/api/v1/me/alerts/rules/**` (use `/api/v1/alerts` and `/api/v1/alerts/rules/**`), `/api/v1/me/measure-alerts/**`
-  (→ `/api/v1/alerts/rules/**`), `/api/v1/admin/measure-alerts/**` (→ `/api/v1/admin/alerts` and `/api/v1/admin/alerts/rules/**`); the
-  platform alerts are under `platform` of `GET /api/v1/admin/alerts`. The stream is `/api/v1/alerts/stream`, and an alert raised arrives as a
-  `notice` event of type `alert` (the `alert` event is gone).
+The old pages redirect, and a saved link with `how=1` or `tab=why` opens the VaR page as before. `GET /api/v1/var/explain.xlsx`
+(the drawer's Workbook) and the server's `GET /api/v1/command/suggest` are unchanged.
 
-## Upgrade: one Build home, one sitemap
-
-- **The Build home** (`/build`) is the one place for everything a person builds: a rail grouped *Data* (connectors, lakes, tables and
-  models, Python tables), *Screens* (Sutras, packs, the UI kit), *Analysis* (reports and boards, pivot views, functions, VaR baskets) and
-  *Work* (my drafts, waiting for review, recently changed), each with its count; each list shows what an item uses and what uses it; four
-  task tiles on a first visit; one search; *+ New* for every kind. **Removed homes:** *My designs* (its list, with Rename, Duplicate and
-  Delete, is the Build home's *My drafts*) and Studio's start page.
-- **Redirects:** `/studio` with nothing after it opens `/build` (a Studio link with a Sutra, an example or a design opens it in the
-  workbench as before). **`/bi` opens `/build`**: BI Studio's own home is folded into the Build home, whose new **For you** strip
-  shows its Recent, Favourites, Certified for you and Shared with me (a star there adds or removes a favourite); `BI <GO>` and
-  `RUPAKA <GO>` open the Build home, and the catalogue (`/bi/catalogue`, `BI CATALOGUE`) lists every published report and board. Every other address is unchanged.
-- **One sitemap.** `drishti-console/config/menus.yaml` is now **`config/sitemap.yaml`** and also draws the Admin pages' tabs (the Admin
-  menu, which gains every Admin page), the BI rail (the BI menu, which gains the rail's pages), Help's sections (their name, icon, line and
-  roles moved from `help.yaml`, which keeps each section's pages by its id) and the footer (each link names a menu item). A site that
-  changed `menus.yaml` moves its changes to `sitemap.yaml`; a site that changed a help section's name or icon in `help.yaml` moves it to
-  `sitemap.yaml`'s `help-sections:`. Admin's *Commands* is the *Functions* page (`/func`) in the Admin tabs.
-- **Help → Configuration is the reference only.** The values in effect, for administrators, moved to Admin → Configuration.
-
-## Renamed (plain words for jargon)
+### Renamed (plain words for jargon)
 
 | Before | Now |
 |---|---|
 | Build → My designs (`/build`) | Build → **Build home** (`/build`; the designs are its first list, *My drafts*) |
 | BI menu column *Rupaka: business intelligence* | *Business intelligence* |
-| BI rail *Home* (`/bi`) | the **Build home** (`/build`) |
-| BI rail *Runs* | *My runs* |
-| BI rail *Designer* | *Report designer* |
-| BI rail *Environments* | *Promotion (test to live)* |
-| BI rail *Transforms* | *Data prep* |
-| Build → Learn *Sutra developer guide* | *Screen developer guide* |
-| Build → Learn *Rachana reference* | *Screen language reference* |
-| Admin *Tokens* | *API tokens* |
-| Admin *Access* | *Who looked at what* |
-| Admin *Ad-hoc scopes* | *Saved VaR baskets* |
-| Admin *Artifacts* | *Installed items* |
-| Admin *Edits* | *Record edits* |
-| Admin *Compute* | *Python workers* |
-| Admin *Net* | *Cluster* |
-| Admin *Embedding* | *Embedded views* |
-| Engines → VaR *MR cube* | *Market-risk cube* |
-| Counterparties *CCR cube* | *Counterparty-risk cube* |
-| Admin → Configuration (was a link to Help → Configuration) | **Admin → Configuration**, the configuration editor (`/admin/configuration`) |
+| BI rail *Runs*, *Designer*, *Environments*, *Transforms* | *My runs*, *Report designer*, *Promotion (test to live)*, *Data prep* |
+| Build → Learn *Sutra developer guide*, *Rachana reference* | *Screen developer guide*, *Screen language reference* |
+| Admin *Tokens*, *Access*, *Ad-hoc scopes*, *Artifacts*, *Edits*, *Compute*, *Net*, *Embedding* | *API tokens*, *Who looked at what*, *Saved VaR baskets*, *Installed items*, *Record edits*, *Python workers*, *Cluster*, *Embedded views* |
+| Engines → VaR *MR cube*; Counterparties *CCR cube* | *Market-risk cube*; *Counterparty-risk cube* |
+| Admin *Commands* | the *Functions* page (`/func`) in the Admin tabs |
+| Help → Configuration's values in effect | **Admin → Configuration**; Help → Configuration is the reference only |
 
-## New
+## Quality, measured
 
-- **Admin → Configuration** (`/admin/configuration`): every setting in three tiers, *everyday* (what a business lead changes: the lenses,
-  the VaR and exposure confidences, the scenario window, the feature switches), *admin* and *expert*, searchable, each with its value in
-  effect and where it came from; secrets never shown. A change is a **proposal** a second administrator approves (four eyes); an approved
-  server or engine key is written to the server's `application.local.yaml`, a console key to the console's, each read at the next start.
-  New endpoints `/api/v1/admin/settings/proposals` (list, propose, approve, reject, withdraw, applied); a new add-on admin page id
-  `configuration` (editions that list `admin.pages` name it to keep it).
+Measured from the repository (`python3 tools/docs/code_volume.py --compare v2.9.11.d`, the guard tests' allow-lists, and the release
+drills' logs).
 
-## The pickers and fields have a new look
-
-The product owner approved (2026-11-07) that every form's look changes: the console's pickers are now **drishti-inputs**, the same
-components the gallery shows, on every page. What people see:
-
-- **The as-of date in the top bar** is a business-date picker: type `T-1`, `ME` or `6 Nov 2026`, or open the calendar (weekends dimmed,
-  the server's holidays named, the shortcuts *Business date*, *T-1* and *Month-end*). A weekend or a holiday is refused in words that
-  name the business day before it, instead of being rolled back after the page loads. *Known at* keeps the browser's date-and-time field.
-- **Every date field** (search, compare, the query forms, BI's report, notebook, statement and designer dates, the record forms and their
-  cells, Explain's two dates, the Admin pages for loads, lakes, caches, access, collaboration and pack data) is the same picker; the
-  field still sends `2026-11-06`, so links, bookmarks and scripts are unchanged.
-- **Long lists of values** (a query form's enum with more than six values, a Sutra's multi-select control, BI's drop-down slicer) are a
-  multi-select with chips and a search field: type to narrow, Enter or a click picks and keeps the list open, *Select all* takes what the
-  search matches, *Clear*, Backspace removes the last chip. The criteria in the address are unchanged (`v.productType=BOND&v.productType=REPO`).
-- **A Sutra's date-range control** opens the range picker: the server's presets (*This month*, *Next 90 days* …) beside two months, the
-  ends typed; one end may stay open. **The history page's range** has the same picker beside its keys (1, 3, 6, Y, T); a preset opens the
-  server's own range (`?range=3M`), a picked span `?from=…&to=…`.
-- **The people pickers** (Share, Subscribe, a workspace's members, sharing a run) and the comment box's `@` and `{` lists are the
-  combobox: the list floats over the page, names, ids and desks as before; typed names still work.
-- On a phone every field, option and button of these pickers is at least 44 px high.
-- **The forms** (search with a form, a subscription's When, the table editor, BI's Format pane, the Build inspector's options, the
-  record forms beside a table and in the New drawer) are drawn with the same components: every field has its label above it, a problem
-  in words under it and a warning marked ⚠; numbers and amounts are read loosely (1.5m, 250k) and shown grouped, an amount with its
-  currency beside it; a time is typed (14:05, 2pm) or picked from the day's times; a date and time shows its zone. Searching with a form
-  makes the same address as before, so saved searches and links still work.
-
-## Upgrade: one Explain for every number
-
-Every computed number now has one **Explain** (USER_GUIDE.md, "Explain: one for every number"): hover a figure for a preview, click it
-(or press **E**) for a drawer with **Formula · Inputs & lineage · Why it moved · Workbook**, and **Open as a page** to print. It replaces
-these, which are **removed**:
-
-| Removed | Use instead |
-|---|---|
-| The VaR page's **How calculated ›** drawer (key **H**, `&how=1` in a link) | **Explain ›** (key **E**) or a click on a tile: tab *Inputs & lineage*, the same rows |
-| The VaR page's **Why it moved** tab (`&tab=why`, `&view=`, `&efrom=`, `&eto=`) and the setting `varExplainView` | the drawer's *Why it moved* (Waterfall, Matrix, Sentences, the two dates); `VAR EXPLAIN <scope> [from] [to]` opens `/explain?kind=var&…&tab=why` |
-| The **?** pop-ups of the parametric figures | the same **?**: its Explain, the server's lines in *Formula* |
-| The MR cube's **Explain the move** tables (rail and tab C) | the card's button: the cell's Explain at *Why it moved* |
-| The exposure page's **How this number was built** box | **Explain ›** and the tiles: tab *Inputs & lineage* (CSV, JSONL and Capture exposure stay beside it) |
-| `GET /api/v1/var/explain`, `GET /api/v1/var/explain/matrix` | `GET /api/v1/explain?kind=var&part=why&scope=…&from=…&to=…` (`view=matrix`); the engine's answer is `why.answer`; `method=shapley` is now `attribution=shapley` (still refused: planned) |
-| `GET /api/v1/pivot/mr/explain` | `GET /api/v1/explain?kind=var&part=why&scope=<the cell's scope>` |
-| Console `GET /api/var/explain`, `/api/var/explain/matrix`, `/api/pivot/mr/explain` | console `GET /api/explain` (the same parameters) |
-| The Pivot's **Why did it move?** card's own waterfall (key **W**), and the console's `POST /api/pivot/explain` it called | the same card's **Explain ›**: the one Explain at *Why it moved* (kind `pivot`; `POST /api/explain` with the view); the server's `POST /api/v1/pivot/explain` is unchanged |
-
-`GET /api/v1/var/explain.xlsx` stays (the drawer's Workbook). A saved link with `how=1` or `tab=why` opens the VaR page as before
-without them. Scripts that read the removed endpoints read `why.answer` of the new one (`drishti.py var explain` does).
+| Measure | 2.9.11.d | 2.9.11.g |
+|---|---|---|
+| The console's screen code (JavaScript, CSS, HTML outside the libraries) | 81,053 lines | 79,746 lines, with every new screen of the release: 19,007 lines deleted, 18,069 written |
+| Drishti Elements, the libraries' sources | none | 41,289 lines in 11 libraries (186 ES modules) |
+| Parallel implementations folded into one | | 18: search, keymap, Approvals, alert engine, Explain, Build home, sitemap, chart engine (Vega retired), grid, tree, graph, form, select, designer kit, the exposure what-if (Python retired), the limit rule, the pre-deal check, the public-data scripts (into drishti-feeds); and editions into lenses |
+| Designer-kit guard: designers and editors not on the kit | | 0 (19 files when the guard was made) |
+| Form-pane guard: hand-made forms | | 0 (2 when the guard was made) |
+| Admin forms guard: raw controls in Admin templates | | 0 (97 in 21 templates when the guard was made) |
+| Native-select guard: `<select>`s not on drishti-inputs | | 0 (157 in 72 files at the most) |
+| Elements migration guard: files still formatting numbers or drawing charts themselves | | 28 files (35 when the guard was made) |
+| Browser tests: files, and the summed time of the lane | 167 files, 8,308 s of test time; the lane took 3,222 s on 4 workers | 185 files; the final drill's time is added when it ends |
 
 # Drishti 2.9.11.d — release notes
 

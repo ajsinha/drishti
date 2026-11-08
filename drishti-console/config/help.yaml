@@ -182,62 +182,62 @@ sections:
 # slug or slug#anchor. Documents that left the list (architecture, the per-plugin connector pages, the runbooks) are still in
 # the help centre at their path slug, so the old addresses keep working.
 moved:
-  docs-architecture-controls-screens: docs-architecture-shared-screens#6-controls-screens-run-status-and-sign-off-the-breach-queue-number-honesty   # docs/architecture/CONTROLS_SCREENS.md folded into docs/architecture/SHARED_SCREENS.md
-  docs-architecture-editors: docs-architecture-shared-screens#7-the-editors-one-pattern-for-every-object-people-author   # docs/architecture/EDITORS.md folded into docs/architecture/SHARED_SCREENS.md
-  docs-architecture-bi-foundation-2911e: docs-architecture-bi-design#18-the-bi-foundation-bi-on-the-table-layer-and-rachana   # docs/architecture/BI_FOUNDATION_2911E.md folded into docs/architecture/BI_DESIGN.md
-  docs-architecture-virtual-tables: docs-architecture-architecture#24-virtual-tables-the-central-table-layer   # docs/architecture/VIRTUAL_TABLES.md folded into docs/architecture/ARCHITECTURE.md
-  docs-architecture-one-grammar: docs-architecture-architecture#23-one-grammar-one-engine   # docs/architecture/ONE_GRAMMAR.md folded into docs/architecture/ARCHITECTURE.md
-  docs-architecture-drishti-native: docs-architecture-architecture#25-drishti-native-native-maths-behind-abstractions-with-java-fallbacks   # docs/architecture/DRISHTI_NATIVE.md folded into docs/architecture/ARCHITECTURE.md
-  docs-admin-runbooks-source-down: operations#171-source-down-or-slow   # docs/admin/runbooks/source-down.md folded into docs/admin/OPERATIONS.md
-  docs-admin-runbooks-sutra-broken: operations#172-a-sutra-is-broken-or-an-edit-does-not-show   # docs/admin/runbooks/sutra-broken.md folded into docs/admin/OPERATIONS.md
-  docs-admin-runbooks-live-latency-high: operations#173-live-latency-high-or-live-views-stop-ticking   # docs/admin/runbooks/live-latency-high.md folded into docs/admin/OPERATIONS.md
-  docs-admin-runbooks-sign-in: operations#174-users-cannot-sign-in   # docs/admin/runbooks/sign-in.md folded into docs/admin/OPERATIONS.md
-  docs-guides-ag-grid-migration-guide: docs-guides-elements-in-your-app#9-moving-an-ag-grid-enterprise-pivot-app   # docs/guides/AG_GRID_MIGRATION_GUIDE.md folded into docs/guides/ELEMENTS_IN_YOUR_APP.md
-  docs-architecture-mobile-display: pack-developer-guide#part-ix-designing-for-phones   # docs/architecture/MOBILE_DISPLAY.md folded into docs/guides/PACK_DEVELOPER_GUIDE.md
-  docs-qa-windows-custom-data: docs-architecture-test-harness#9-manual-qa-on-windows-offline-with-your-own-trade-files   # docs/qa/windows-custom-data.md folded into docs/architecture/TEST_HARNESS.md
-  docs-qa-qa-history: changelog   # docs/qa/QA_HISTORY.md folded into CHANGELOG.md
-  docs-architecture-arrow-flight: docs-architecture-data-architecture#11-arrow-flight-drishtis-data-to-any-client   # docs/architecture/ARROW_FLIGHT.md folded into docs/architecture/DATA_ARCHITECTURE.md
-  docs-architecture-in-memory-lake: docs-architecture-data-architecture#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk   # docs/architecture/IN_MEMORY_LAKE.md folded into docs/architecture/DATA_ARCHITECTURE.md
-  docs-architecture-lake-config: docs-architecture-data-architecture#8-the-lake-file-one-description-of-every-lake   # docs/architecture/LAKE_CONFIG.md folded into docs/architecture/DATA_ARCHITECTURE.md
-  docs-architecture-parallel-loader: docs-architecture-data-architecture#10-the-parallel-lake-loader-drishti-lakeload   # docs/architecture/PARALLEL_LOADER.md folded into docs/architecture/DATA_ARCHITECTURE.md
-  docs-guides-flight-python: docs-guides-flight-reference#71-python   # docs/guides/flight/PYTHON.md folded into docs/guides/FLIGHT_REFERENCE.md
-  docs-guides-flight-java: docs-guides-flight-reference#72-java   # docs/guides/flight/JAVA.md folded into docs/guides/FLIGHT_REFERENCE.md
-  docs-guides-flight-jdbc: docs-guides-flight-reference#73-jdbc-dbeaver-datagrip-any-jdbc-program   # docs/guides/flight/JDBC.md folded into docs/guides/FLIGHT_REFERENCE.md
-  docs-guides-flight-odbc: docs-guides-flight-reference#74-odbc-excel-power-bi-tableau   # docs/guides/flight/ODBC.md folded into docs/guides/FLIGHT_REFERENCE.md
-  docs-connectors-news: connectors   # docs/connectors/NEWS.md folded into plugins/drishti-plugin-news/README.md
-  docs-connectors-yfinance: connectors   # docs/connectors/YFINANCE.md folded into plugins/drishti-plugin-yfinance/README.md
-  docs-connectors-reactive-connector: docs-connectors-types-reactive-readme   # docs/connectors/REACTIVE_CONNECTOR.md folded into docs/connectors/types/reactive/README.md
-  docs-architecture-parametric-var: docs-guides-var-guide   # docs/architecture/PARAMETRIC_VAR.md folded into docs/guides/VAR_GUIDE.md
-  docs-architecture-var-playground: docs-guides-var-guide   # docs/architecture/VAR_PLAYGROUND.md folded into docs/guides/VAR_GUIDE.md
-  docs-architecture-sensitivities-and-frtb-sa: docs-guides-frtb-sa-guide   # docs/architecture/SENSITIVITIES_AND_FRTB_SA.md folded into docs/guides/FRTB_SA_GUIDE.md
-  docs-contracts-frtb-data-structures: docs-contracts-frtb   # docs/contracts/FRTB_DATA_STRUCTURES.md folded into docs/contracts/FRTB.md
-  docs-lenses-risk-lens: lenses#1-risk-lens   # docs/lenses/RISK_LENS.md folded into docs/lenses/README.md
-  docs-lenses-trading-lens: lenses#2-trading-lens   # docs/lenses/TRADING_LENS.md folded into docs/lenses/README.md
-  docs-lenses-market-lens: lenses#3-market-lens   # docs/lenses/MARKET_LENS.md folded into docs/lenses/README.md
-  docs-lenses-world-lens: lenses#4-world-lens   # docs/lenses/WORLD_LENS.md folded into docs/lenses/README.md
-  docs-lenses-oversight-lens: lenses#5-oversight-lens   # docs/lenses/OVERSIGHT_LENS.md folded into docs/lenses/README.md
-  docs-lenses-mr-cube-lens: lenses#6-mr-cube-lens   # docs/lenses/MR_CUBE_LENS.md folded into docs/lenses/README.md
-  docs-lenses-ccr-cube-lens: lenses#7-ccr-cube-lens   # docs/lenses/CCR_CUBE_LENS.md folded into docs/lenses/README.md
-  docs-lenses-cro-lens: lenses#8-cro-lens   # docs/lenses/CRO_LENS.md folded into docs/lenses/README.md
-  docs-lenses-cio-lens: lenses#9-cio-lens   # docs/lenses/CIO_LENS.md folded into docs/lenses/README.md
-  docs-connectors-activemq-connector: connectors   # docs/connectors/ACTIVEMQ_CONNECTOR.md folded into plugins/drishti-plugin-activemq/README.md
-  docs-connectors-aerospike-connector: connectors   # docs/connectors/AEROSPIKE_CONNECTOR.md folded into plugins/drishti-plugin-aerospike/README.md
-  docs-connectors-cassandra-connector: connectors   # docs/connectors/CASSANDRA_CONNECTOR.md folded into plugins/drishti-plugin-cassandra/README.md
-  docs-connectors-delta-connector: connectors   # docs/connectors/DELTA_CONNECTOR.md folded into plugins/drishti-plugin-delta/README.md
-  docs-connectors-demo-connector: connectors   # docs/connectors/DEMO_CONNECTOR.md folded into plugins/drishti-plugin-demo/README.md
-  docs-connectors-duckdb-connector: connectors   # docs/connectors/DUCKDB_CONNECTOR.md folded into plugins/drishti-plugin-duckdb/README.md
-  docs-connectors-feeds-connector: connectors   # docs/connectors/FEEDS_CONNECTOR.md folded into plugins/drishti-plugin-feeds/README.md
-  docs-connectors-file-connector: connectors   # docs/connectors/FILE_CONNECTOR.md folded into plugins/drishti-plugin-file/README.md
-  docs-connectors-redis-connector: connectors   # docs/connectors/REDIS_CONNECTOR.md folded into plugins/drishti-plugin-redis/README.md
-  docs-connectors-mongodb-connector: connectors   # docs/connectors/MONGODB_CONNECTOR.md folded into plugins/drishti-plugin-mongodb/README.md
-  docs-connectors-postgres-connector: connectors   # docs/connectors/POSTGRES_CONNECTOR.md folded into plugins/drishti-plugin-jdbc/README.md
-  docs-connectors-jdbc-queries: connectors   # docs/connectors/JDBC_QUERIES.md folded into plugins/drishti-plugin-jdbc/README.md
-  docs-connectors-iceberg-connector: connectors   # docs/connectors/ICEBERG_CONNECTOR.md folded into plugins/drishti-plugin-iceberg/README.md
-  docs-connectors-iceberg-external-connector: connectors   # docs/connectors/ICEBERG_EXTERNAL_CONNECTOR.md folded into plugins/drishti-plugin-iceberg-external/README.md
-  docs-connectors-s3-connector: connectors   # docs/connectors/S3_CONNECTOR.md folded into plugins/drishti-plugin-s3/README.md
-  docs-connectors-kafka-connector: connectors   # docs/connectors/KAFKA_CONNECTOR.md folded into plugins/drishti-plugin-kafka/README.md
-  docs-connectors-rabbitmq-connector: connectors   # docs/connectors/RABBITMQ_CONNECTOR.md folded into plugins/drishti-plugin-rabbitmq/README.md
-  docs-connectors-rest-connector: connectors   # docs/connectors/REST_CONNECTOR.md folded into plugins/drishti-plugin-rest/README.md
+  docs-architecture-controls-screens: docs-architecture-shared-screens#6-controls-screens-run-status-and-sign-off-the-breach-queue-number-honesty   # controls screens folded into docs/architecture/SHARED_SCREENS.md
+  docs-architecture-editors: docs-architecture-shared-screens#7-the-editors-one-pattern-for-every-object-people-author   # editors folded into docs/architecture/SHARED_SCREENS.md
+  docs-architecture-bi-foundation-2911e: docs-architecture-bi-design#18-the-bi-foundation-bi-on-the-table-layer-and-rachana   # bi foundation 2911e folded into docs/architecture/BI_DESIGN.md
+  docs-architecture-virtual-tables: docs-architecture-architecture#24-virtual-tables-the-central-table-layer   # virtual tables folded into docs/architecture/ARCHITECTURE.md
+  docs-architecture-one-grammar: docs-architecture-architecture#23-one-grammar-one-engine   # one grammar folded into docs/architecture/ARCHITECTURE.md
+  docs-architecture-drishti-native: docs-architecture-architecture#25-drishti-native-native-maths-behind-abstractions-with-java-fallbacks   # drishti native folded into docs/architecture/ARCHITECTURE.md
+  docs-admin-runbooks-source-down: operations#171-source-down-or-slow   # source-down folded into docs/admin/OPERATIONS.md
+  docs-admin-runbooks-sutra-broken: operations#172-a-sutra-is-broken-or-an-edit-does-not-show   # sutra-broken folded into docs/admin/OPERATIONS.md
+  docs-admin-runbooks-live-latency-high: operations#173-live-latency-high-or-live-views-stop-ticking   # live-latency-high folded into docs/admin/OPERATIONS.md
+  docs-admin-runbooks-sign-in: operations#174-users-cannot-sign-in   # sign-in folded into docs/admin/OPERATIONS.md
+  docs-guides-ag-grid-migration-guide: docs-guides-elements-in-your-app#9-moving-an-ag-grid-enterprise-pivot-app   # ag grid migration guide folded into docs/guides/ELEMENTS_IN_YOUR_APP.md
+  docs-architecture-mobile-display: pack-developer-guide#part-ix-designing-for-phones   # mobile display folded into docs/guides/PACK_DEVELOPER_GUIDE.md
+  docs-qa-windows-custom-data: docs-architecture-test-harness#9-manual-qa-on-windows-offline-with-your-own-trade-files   # windows-custom-data folded into docs/architecture/TEST_HARNESS.md
+  docs-qa-qa-history: changelog   # qa history folded into CHANGELOG.md
+  docs-architecture-arrow-flight: docs-architecture-data-architecture#11-arrow-flight-drishtis-data-to-any-client   # arrow flight folded into docs/architecture/DATA_ARCHITECTURE.md
+  docs-architecture-in-memory-lake: docs-architecture-data-architecture#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk   # in memory lake folded into docs/architecture/DATA_ARCHITECTURE.md
+  docs-architecture-lake-config: docs-architecture-data-architecture#8-the-lake-file-one-description-of-every-lake   # lake config folded into docs/architecture/DATA_ARCHITECTURE.md
+  docs-architecture-parallel-loader: docs-architecture-data-architecture#10-the-parallel-lake-loader-drishti-lakeload   # parallel loader folded into docs/architecture/DATA_ARCHITECTURE.md
+  docs-guides-flight-python: docs-guides-flight-reference#71-python   # python folded into docs/guides/FLIGHT_REFERENCE.md
+  docs-guides-flight-java: docs-guides-flight-reference#72-java   # java folded into docs/guides/FLIGHT_REFERENCE.md
+  docs-guides-flight-jdbc: docs-guides-flight-reference#73-jdbc-dbeaver-datagrip-any-jdbc-program   # jdbc folded into docs/guides/FLIGHT_REFERENCE.md
+  docs-guides-flight-odbc: docs-guides-flight-reference#74-odbc-excel-power-bi-tableau   # odbc folded into docs/guides/FLIGHT_REFERENCE.md
+  docs-connectors-news: connectors   # news folded into plugins/drishti-plugin-news/README.md
+  docs-connectors-yfinance: connectors   # yfinance folded into plugins/drishti-plugin-yfinance/README.md
+  docs-connectors-reactive-connector: docs-connectors-types-reactive-readme   # reactive connector folded into docs/connectors/types/reactive/README.md
+  docs-architecture-parametric-var: docs-guides-var-guide   # parametric var folded into docs/guides/VAR_GUIDE.md
+  docs-architecture-var-playground: docs-guides-var-guide   # var playground folded into docs/guides/VAR_GUIDE.md
+  docs-architecture-sensitivities-and-frtb-sa: docs-guides-frtb-sa-guide   # sensitivities and frtb sa folded into docs/guides/FRTB_SA_GUIDE.md
+  docs-contracts-frtb-data-structures: docs-contracts-frtb   # frtb data structures folded into docs/contracts/FRTB.md
+  docs-lenses-risk-lens: lenses#1-risk-lens   # risk lens folded into docs/lenses/README.md
+  docs-lenses-trading-lens: lenses#2-trading-lens   # trading lens folded into docs/lenses/README.md
+  docs-lenses-market-lens: lenses#3-market-lens   # market lens folded into docs/lenses/README.md
+  docs-lenses-world-lens: lenses#4-world-lens   # world lens folded into docs/lenses/README.md
+  docs-lenses-oversight-lens: lenses#5-oversight-lens   # oversight lens folded into docs/lenses/README.md
+  docs-lenses-mr-cube-lens: lenses#6-mr-cube-lens   # mr cube lens folded into docs/lenses/README.md
+  docs-lenses-ccr-cube-lens: lenses#7-ccr-cube-lens   # ccr cube lens folded into docs/lenses/README.md
+  docs-lenses-cro-lens: lenses#8-cro-lens   # cro lens folded into docs/lenses/README.md
+  docs-lenses-cio-lens: lenses#9-cio-lens   # cio lens folded into docs/lenses/README.md
+  docs-connectors-activemq-connector: connectors   # activemq connector folded into plugins/drishti-plugin-activemq/README.md
+  docs-connectors-aerospike-connector: connectors   # aerospike connector folded into plugins/drishti-plugin-aerospike/README.md
+  docs-connectors-cassandra-connector: connectors   # cassandra connector folded into plugins/drishti-plugin-cassandra/README.md
+  docs-connectors-delta-connector: connectors   # delta connector folded into plugins/drishti-plugin-delta/README.md
+  docs-connectors-demo-connector: connectors   # demo connector folded into plugins/drishti-plugin-demo/README.md
+  docs-connectors-duckdb-connector: connectors   # duckdb connector folded into plugins/drishti-plugin-duckdb/README.md
+  docs-connectors-feeds-connector: connectors   # feeds connector folded into plugins/drishti-plugin-feeds/README.md
+  docs-connectors-file-connector: connectors   # file connector folded into plugins/drishti-plugin-file/README.md
+  docs-connectors-redis-connector: connectors   # redis connector folded into plugins/drishti-plugin-redis/README.md
+  docs-connectors-mongodb-connector: connectors   # mongodb connector folded into plugins/drishti-plugin-mongodb/README.md
+  docs-connectors-postgres-connector: connectors   # postgres connector folded into plugins/drishti-plugin-jdbc/README.md
+  docs-connectors-jdbc-queries: connectors   # jdbc queries folded into plugins/drishti-plugin-jdbc/README.md
+  docs-connectors-iceberg-connector: connectors   # iceberg connector folded into plugins/drishti-plugin-iceberg/README.md
+  docs-connectors-iceberg-external-connector: connectors   # iceberg external connector folded into plugins/drishti-plugin-iceberg-external/README.md
+  docs-connectors-s3-connector: connectors   # s3 connector folded into plugins/drishti-plugin-s3/README.md
+  docs-connectors-kafka-connector: connectors   # kafka connector folded into plugins/drishti-plugin-kafka/README.md
+  docs-connectors-rabbitmq-connector: connectors   # rabbitmq connector folded into plugins/drishti-plugin-rabbitmq/README.md
+  docs-connectors-rest-connector: connectors   # rest connector folded into plugins/drishti-plugin-rest/README.md
   lake-guide: data-lake-guide   # docs/guides/DATA_LAKE_GUIDE.md folded into DATA_LAKE_GUIDE.md (2.9.11.d)
   docs-guides-lake-guide: data-lake-guide
   docs-architecture-data-load-rules: data-lake-guide#5-routing-business-dates-modes-repeats-and-undo   # DATA_LAKE_GUIDE.md folded into DATA_LAKE_GUIDE.md (2.9.11.d)
