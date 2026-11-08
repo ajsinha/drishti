@@ -42,6 +42,7 @@ Every example below uses invented, Endur-style data (`TRADE_ID`, `PRODUCT_TYPE`,
 11. [Archives: zip and tar](#11-archives-zip-and-tar)
 12. [Other lakes, packs and older installations](#12-other-lakes-packs-and-older-installations)
 13. [The in-memory lake](#13-the-in-memory-lake)
+15. [Iceberg spec compliance](#15-iceberg-spec-compliance)
 
 ## 1. What a lake is
 
@@ -1299,3 +1300,110 @@ jobs write Delta.
 | `DRS-5219` on a report, a share, an Ask | as the contract asks; download the rows from Export data instead |
 | a table *evicted, a refill is queued* | the store needed room for another table; pin the tables that must stay |
 | a run `failed: … connector cannot list its documents` | that connector computes documents when asked: give `ids` or `ids-from`, or read its feed by `url` |
+
+## 15. Iceberg spec compliance
+
+Drishti's Iceberg tables are standard Apache Iceberg tables, and Drishti reads other engines' Iceberg tables to the
+[Iceberg table spec](https://iceberg.apache.org/spec/) with no workaround: Spark, Trino, Flink, Snowflake, AWS Glue, pyiceberg and the Apache
+Iceberg Java library read what Drishti writes, and Drishti reads what they write, or refuses a table by name. It never reads one wrongly.
+The design is in [DATA_ARCHITECTURE.md › drishti-iceberg](../architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine);
+the connectors are [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md) and
+[ICEBERG_EXTERNAL_CONNECTOR.md](../../plugins/drishti-plugin-iceberg-external/README.md).
+
+### 15.1 Who reads and writes
+
+| Engine | Where | Reads | Writes |
+|---|---|---|---|
+| **drishti-iceberg** (`engine: native`, the default) | inside the server, the loader (`IcebergLoader`, `lake build --format iceberg`, the data inbox) and maintenance (`IcebergMaintenance`); the `iceberg-external` connector | format v1 and v2 | v1 and v2 tables in Drishti's layout (section 1): partitioned by `business_date` |
+| **Apache Iceberg Java 1.10.1** (`engine: library`) | the `iceberg` connector, loader and maintenance when chosen | everything the library reads | everything the library writes |
+| **Python** (`tools/lake`) | `lake build --format iceberg` streams rows to the loader above; `lake maintain` and Admin → Lakes read the metadata JSON for the figures, then run `IcebergMaintenance` | | no Iceberg writer of its own |
+
+### 15.2 File paths and partition values
+
+Per the spec, a data file's path in a manifest is opaque: a reader opens it **as written**, never percent-decoding it, and takes partition
+values from the manifest, never from the folder name. Each writer names its partition folders its own way. The Apache library and pyiceberg
+URL-encode the value, so the folder name on disk holds the `%XX` literally. Captured with pyiceberg 0.12.0, an identity partition on `g`
+with the table at `file:///…/wh/ns/t`:
+
+| Value of `g` | Data file path in the manifest (after `…/ns/t/data/`) |
+|---|---|
+| `a b` | `g=a+b/00000-0-….parquet` |
+| `a/b` | `g=a%2Fb/…` |
+| `100%` | `g=100%25/…` |
+| `a%2Fb` (the text itself) | `g=a%252Fb/…` |
+| `a:b`, `a=b`, `a\b`, `a+b` | `g=a%3Ab/…`, `g=a%3Db/…`, `g=a%5Cb/…`, `g=a%2Bb/…` |
+| `.` and `..` | `g=./…` and `g=../…` (folder names that start with `g=`, never a path step) |
+| `x` U+0001 `y`, `é漢` | `g=x%01y/…`, `g=%C3%A9%E6%BC%A2/…` |
+| empty text | `g=/…` |
+| null | `g=null/…` (the text `null` gets the same folder; the manifest tells them apart) |
+
+Drishti opens each of these as written: `g=a%2Fb` is that folder, not `g=a/b`. The same holds through `relocate`, whose two sides are also
+compared as written. The pairs in `relocate` are plain folders or `file:` paths spelled as the metadata spells them (`/data/100%25` names
+the folder `100%25`). Drishti's own writers make `business_date=YYYY-MM-DD` folders and plain `file:` locations (`file:/srv/my lake/…`),
+the form the library uses. The library engine's lake is the folder its `root` names, spaces, `%` and unicode included.
+
+### 15.3 The feature table
+
+| Area | Drishti reads | Drishti writes | Otherwise |
+|---|---|---|---|
+| Format versions | 1, 2 | 1, 2 (the loader makes 2) | 3: refused by name |
+| Partition transforms | identity, bucket[N], truncate[W], year, month, day, hour, void; pruned by each; the partition values the library computes, value for value | identity on `business_date` | an unknown transform is read, never pruned; a table another engine **re-partitioned** (any field besides `business_date`) is refused for writing |
+| Partition evolution | every spec, void fields, a field whose source column was dropped | | |
+| Schema evolution by field id | add, drop, rename, reorder, int→long, float→double, decimal widening; nested structs, lists, maps; `schema.name-mapping.default` for files without ids | adds optional columns | |
+| Sort orders | read | `sort_order_id` set when the files are sorted by `id` | |
+| Snapshots, time travel | by snapshot id and by time (*known at*, the snapshot log) | one snapshot per commit | |
+| Refs | the `main` branch | moves `main`, keeping its retention settings | other branches and tags are not read by name; expiry keeps every branch's and tag's snapshot |
+| Position deletes (v2) | applied by the spec's sequence-number rule (`referenced_data_file` and `file_path` bounds honoured) | never writes delete files (rewrites copy on write) | |
+| Equality deletes (v2) | applied by partition and sequence number, unpartitioned ones globally, null equal to null | | |
+| Deletion vectors (v3) | | | refused (format version 3) |
+| Row lineage, default values, `variant`, `geometry`, `geography`, `timestamp_ns`, `unknown`, multi-argument transforms (v3) | | | refused by name |
+| Data files | Parquet | Parquet with field ids and column metrics | ORC and Avro data or delete files: refused, naming the file |
+| Manifests and manifest lists | Avro v1 and v2 from any writer, inherited snapshot ids and sequence numbers | Avro v1 and v2 | |
+| Statistics (Puffin) | not used | not written; expiry drops the entries of expired snapshots | |
+| Metadata tables (`snapshots`, `files`, …) | | | not offered as tables; Admin → Lakes and Health show snapshots and files |
+| Encryption | | | refused (`encryption-keys`, a file's `key_metadata`) |
+| Catalogs | path-based (`version-hint.text` and `vN.metadata.json`, or a catalog's `NNNNN-uuid.metadata.json`), a metadata file named directly, REST (Polaris, Snowflake Open Catalog, AWS Glue's REST endpoint, Unity Catalog, Nessie, Lakekeeper, Gravitino), AWS S3 Tables | path-based, REST | Hive metastore, JDBC/SQL catalog, the Glue SDK: through a REST catalog in front, or `metadata-location.<table>` |
+| Storage | local disk (Windows too), `s3://`, `s3a://`, `s3n://`, `mem://` | the same | `abfs://`, `gs://`, `hdfs://`: `engine: library` |
+| Maintenance | | expire snapshots (keeping every branch and tag), rewrite a day's files, rewrite manifests, remove orphans, drop old days ([ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md#retention-and-maintenance)) | |
+
+### 15.4 What a refusal says
+
+A table or file the native engine does not read stops the read with this message (`[…]` names the table or file where it was met):
+
+```text
+drishti-iceberg does not read format version 3 tables; use the connector's engine: library for this table [<table>]
+drishti-iceberg does not read ORC data files; use the connector's engine: library for this table [<the .orc file>]
+drishti-iceberg does not read the Iceberg type 'variant' (format version 3); use the connector's engine: library for this table
+drishti-iceberg does not read column defaults (format version 3) on NOTIONAL; use the connector's engine: library for this table
+drishti-iceberg does not read encrypted data files; use the connector's engine: library for this table [<the file>]
+```
+
+A load into a table another engine re-partitioned stops before any file is written (the parallel loader's wording; the Iceberg loader's says the same):
+
+```text
+<table> is not in the layout: its partition spec 1 has the field 'id_bucket_8' (bucket[8]) beside the identity partition on
+business_date; Drishti writes only tables partitioned by business_date alone (write this table with engine: library, or restore its spec)
+```
+
+### 15.5 Check it yourself
+
+`IcebergSpecInteropTest` (plugins/drishti-plugin-iceberg) runs both directions against the Apache Iceberg Java library: the library
+writes a table partitioned by identity, bucket, truncate, year, month, day, hour and truncate of a decimal, with 26 partition values
+(space, `/`, `%`, `%2F`, `%20`, `:`, `=`, `.`, `..`, `\`, control characters, a tab, a newline, quotes, unicode, an emoji, `+`, `?#`, `*`,
+`~`, 200 characters, empty, `__HIVE_DEFAULT_PARTITION__`, the text `null`, null), then position and equality deletes. Drishti reads
+every row the library reads, computes each file's partition values as the library did, and prunes to exactly the matching rows.
+Drishti expires a library table's snapshots, and the library still reads its tag and its branch. `PyicebergReadsNativeTest` and
+`NativeReadInteropTest` do the same with pyiceberg.
+
+```bash
+./mvnw -pl plugins/drishti-plugin-iceberg -am test -Dtest='IcebergSpecInteropTest,PyicebergReadsNativeTest,NativeReadInteropTest' \
+    -Dsurefire.failIfNoSpecifiedTests=false
+```
+
+Read a Drishti table from Python with pyiceberg alone:
+
+```python
+from pyiceberg.table import StaticTable
+t = StaticTable.from_metadata("file:///srv/drishti/data/iceberg/risk/pnl-vector/metadata/v12.metadata.json")
+print(t.scan(row_filter="business_date = '2026-09-30'").to_arrow().num_rows)
+```

@@ -109,7 +109,10 @@ public interface IcebergLake extends Closeable {
         if (root.matches("^[a-zA-Z][a-zA-Z0-9+.-]*://.*") && !root.startsWith("file:")) {
             base = root.replaceAll("/+$", "");
         } else {
-            base = Path.of(root.replaceFirst("^file:(//)?", "")).toAbsolutePath().normalize().toUri().toString().replaceAll("/+$", "");
+            // the folder as a plain file: URI (file:/srv/my lake), never java.nio's percent-encoded one (file:///srv/my%20lake): Hadoop's
+            // Path and every Iceberg reader take a table location literally, so an encoded one names a folder my%20lake beside the root
+            base = com.ash.drishti.lakeio.LocalPaths.toUri(Path.of(com.ash.drishti.lakeio.LocalPaths.toLocal(root, com.ash.drishti.lakeio.LocalPaths.WINDOWS))
+                    .toAbsolutePath().normalize().toString(), com.ash.drishti.lakeio.LocalPaths.WINDOWS);
         }
         return new PathLake(domain.isBlank() ? base : base + "/" + domain, conf);
     }

@@ -218,7 +218,16 @@ public final class TableUpdate {
                 case "set-snapshot-ref" -> {
                     long id = u.path("snapshot-id").asLong();
                     ObjectNode refs = j.has("refs") && j.get("refs").isObject() ? (ObjectNode) j.get("refs") : j.putObject("refs");
-                    refs.putObject(u.path("ref-name").asText()).put("snapshot-id", id).put("type", "branch");
+                    // the ref's own settings (min-snapshots-to-keep, max-snapshot-age-ms, max-ref-age-ms) stay as they were, as the
+                    // Apache library's SetSnapshotRef keeps them; only the snapshot (and the type, when given) changes
+                    String name = u.path("ref-name").asText();
+                    ObjectNode ref = refs.get(name) instanceof ObjectNode was ? was : refs.putObject(name);
+                    ref.put("snapshot-id", id).put("type", u.path("type").asText("branch"));
+                    for (String k : List.of("min-snapshots-to-keep", "max-snapshot-age-ms", "max-ref-age-ms")) {
+                        if (u.has(k)) {
+                            ref.set(k, u.get(k));
+                        }
+                    }
                     if ("main".equals(u.path("ref-name").asText())) {
                         j.put("current-snapshot-id", id);
                         long ts = nowMs;
@@ -240,6 +249,27 @@ public final class TableUpdate {
                         }
                     });
                     j.set("snapshots", keep);
+                    // as the Apache library removes them with the snapshot: the refs naming it, and its statistics files' entries
+                    if (j.get("refs") instanceof ObjectNode refs) {
+                        List<String> dangling = new ArrayList<>();
+                        refs.fields().forEachRemaining(e -> {
+                            if (gone.contains(e.getValue().path("snapshot-id").asLong())) {
+                                dangling.add(e.getKey());
+                            }
+                        });
+                        refs.remove(dangling);
+                    }
+                    for (String stats : List.of("statistics", "partition-statistics")) {
+                        if (j.get(stats) instanceof ArrayNode files) {
+                            ArrayNode kept = F.arrayNode();
+                            files.forEach(f -> {
+                                if (!gone.contains(f.path("snapshot-id").asLong())) {
+                                    kept.add(f);
+                                }
+                            });
+                            j.set(stats, kept);
+                        }
+                    }
                     // the log stays a contiguous history: entries up to the last removed snapshot go with it
                     ArrayNode log = F.arrayNode();
                     for (JsonNode e : j.path("snapshot-log")) {

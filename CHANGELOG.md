@@ -1116,6 +1116,21 @@ The release train ships 2.9.11.e, 2.9.11.f and 2.9.11.g as one tag, v2.9.11.g: e
   diversification (`diversification`, `diversificationByColumn`) is `null` when the total or a part with members has no figure, never a
   partial sum; a sort or a top N by a capped measure is refused in words. Every figure computed is the engine's own for the cell's scope,
   as before (`CappedMeasureTest`, `VarMrCubeCapTest`; PIVOT_GUIDE sections 9 and 29.2).
+- **Iceberg tables follow the Iceberg spec exactly, tested against the Apache Iceberg Java library both ways**
+  ([DATA_LAKE_GUIDE.md section 15](docs/guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance)). drishti-iceberg percent-decoded a
+  `file:` data file path holding a `%` (`FileAccess`, and `relocate`'s matching), so a table the library, pyiceberg or Spark partitioned
+  by a value such as `a/b`, `100%`, `a:b` or `é` (folders `g=a%2Fb`, `g=100%25`, `g=a%3Ab`, `g=%C3%A9`) failed with *no such file*;
+  paths are opened as written now. Expiring snapshots removed a snapshot a tag named and left the tag dangling (the library could no
+  longer load the table): expiry keeps every branch's and tag's snapshot, and removing snapshots removes the refs and statistics entries
+  that named them. Moving `main` dropped its retention settings (`min-snapshots-to-keep`, `max-snapshot-age-ms`). Delete files were matched
+  to data files by a text key, so an equality delete of the null partition also deleted rows of the partition holding the text `null`.
+  The library engine turned a root with a space, `%` or non-ASCII letters into `java.nio`'s encoded URI, so Hadoop wrote the lake into a
+  folder named `my%20lake` beside the root. Drishti's writers left the other partition values null in a table another engine had
+  re-partitioned (its files then vanished from pruned reads): such a table is refused for writing, by name. A stale Hadoop
+  `.version-hint.text.crc` made the library log a checksum error after each Drishti commit. `lake maintain`'s figures read gzip-compressed
+  metadata files. `IcebergSpecInteropTest` (26 partition values under eight transforms, position and equality deletes, a tag and a branch
+  through expiry, a root with a space, `%` and unicode, a re-partitioned table), `LiteralPathsTest`, `TableUpdateRefsTest`,
+  `test_maintain_iceberg.py`. Upgrade: RELEASE_NOTES, upgrade step 14.
 - **The old explain endpoints answer for one release**: `GET /api/v1/var/explain`, `/api/v1/var/explain/matrix` and
   `/api/v1/pivot/mr/explain` (and their `/api/v1/risk/...` paths) answered `404` since the one Explain replaced them; like every other
   moved path of this release they now answer with the 2.9.11.d body (the one Explain's `why.answer`, its `matrix`, and the MR cube's
