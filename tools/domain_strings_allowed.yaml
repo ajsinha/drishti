@@ -37,7 +37,6 @@ allowed:
   drishti-console/routes/terminal_routes.py: 1
   drishti-console/web/static/js/drishti_admin-connectors.js: 2
   drishti-console/web/static/js/drishti_capacity-page.js: 1
-  drishti-console/web/static/js/drishti_explain.js: 1
   drishti-console/web/static/js/drishti_pivot.js: 4
   drishti-console/web/static/js/drishti_scope-delete.js: 2
   drishti-console/web/templates/admin/connector_detail.html: 1
