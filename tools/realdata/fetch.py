@@ -28,7 +28,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "feeds"))
@@ -65,7 +65,7 @@ class Fetcher:
                     body = r.read()
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 dest.write_bytes(body)
-                self.retrieved[str(dest.relative_to(self.cache))] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+                self.retrieved[str(dest.relative_to(self.cache))] = datetime.now().strftime("%Y-%m-%d")   # the business calendar: local
                 time.sleep(self.pause)
                 return body
             except (urllib.error.URLError, TimeoutError) as e:

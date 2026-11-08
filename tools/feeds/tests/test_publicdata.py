@@ -86,6 +86,8 @@ def test_committed_folders():
     assert B.is_committed(B.ROOT / "data" / "testdata")
     assert not B.is_committed(B.ROOT / "data" / "datafeeds" / "sources")
     assert not B.is_committed(Path("/tmp/elsewhere"))
+    if (B.ROOT / ".git").exists():                  # the tests' scratch inside the repository is git-ignored: not committed
+        assert not B.is_committed(B.ROOT / "drishti-console" / "test-tmp" / "pytest" / "build")
 
 
 def test_cache_reuses_fresh_files_and_records_checksums(tmp_path):
