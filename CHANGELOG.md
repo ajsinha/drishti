@@ -82,7 +82,7 @@
   it. **The Trading landing shows the server's status and computes none**: the book rows, the desk headline, the Breaches and Near limit
   tiles, the desk head's limit use by book and day, and both halves of the new-trade check (the VaR half reads the what-if's own `limit`;
   the console no longer divides by the book's limit). `limit_state` and the setting `trading.near-limit` are removed.
-- **Every limit bar draws the server's status** (within neutral, near amber, breach red; a row without a status has no tone): the VaR
+- **Every limit bar draws the server's status** (within green, near amber, breach red; a row without a status has no tone): the VaR
   explorer's limit tile and its scope tree's bars (the explorer's own amber at 75% and red at 90% are deleted), drishti-risk's VaR
   hierarchy tree (`LIMIT_USE_BANDS` 0.75/0.9/1 is replaced by `LIMIT_STATUS_TONES` on the node's `LIMIT_STATUS`; `limitBreaches` reads
   the status), the Risk home (its bars, pills and heat-map cells, and the VaR and credit breach counts, which counted a use of 100% as a
