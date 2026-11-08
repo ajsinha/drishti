@@ -90,9 +90,11 @@
   }
 
   /** Asks, then deletes: true when deleted, false when kept. {admin: the viewer is an administrator, me: the viewer's user name}. */
+  var pending = null;   // the open ask's finish: a new ask settles it first (its dialog's close event may still be queued)
   function ask(b, opts) {
     opts = opts || {};
     if (!dlg) build();
+    if (pending) pending(false);
     var opener = document.activeElement;
     var others = opts.admin && b.owner !== opts.me;
     el.title.textContent = "Delete basket “" + (b.name || b.id) + "”?";
@@ -108,14 +110,16 @@
       function finish(v) {
         if (done) return;
         done = true;
+        if (pending === finish) pending = null;
         el.yes.removeEventListener("click", go);
         el.no.removeEventListener("click", keep);
-        dlg.removeEventListener("close", keep);
+        dlg.removeEventListener("close", closed);
         if (dlg.open) dlg.close();
         if (opener && opener.isConnected && opener.focus) opener.focus();
         resolve(v);
       }
       function keep() { finish(false); }
+      function closed() { if (!dlg.open) finish(false); }   // a close event that arrives after the dialog opened again is not this one's
       function go() {
         el.yes.disabled = true;
         el.msg.textContent = "Deleting…";
@@ -126,7 +130,8 @@
       }
       el.yes.addEventListener("click", go);
       el.no.addEventListener("click", keep);
-      dlg.addEventListener("close", keep);
+      dlg.addEventListener("close", closed);
+      pending = finish;
       dlg.showModal();
       el.no.focus();
     });
