@@ -41,6 +41,9 @@ _ALIGN = re.compile(r'\s+style="text-align:\s*(left|right|center);?"')
 _CODE = re.compile(r'<pre><code(?: class="language-([\w+-]+)")?>(.*?)</code></pre>', re.S)
 _BOX = {"tip": "tip", "warning": "warn", "danger": "warn", "note": "concept", "info": "concept", "example": "concept"}
 _TAG = re.compile(r"<[^>]+>")
+# Rendered pages by file, shared by every library (each pack set has its own library, the same core guides): rendering all of them takes
+# seconds, and the global search reads every page's text, so warm() fills it once in a worker thread when the console starts.
+_RENDERED: dict[Path, tuple[float, dict]] = {}
 _MARKUP = re.compile(r"</?(?:code|em|strong|b|i|a|span|kbd|del|sub|sup)\b[^>]*>")   # inline markup only: "<kind>" in a heading is text
 # A screenshot in a guide: fitted to its column by drishti_help.css and wrapped in a link that opens it full size (UX-03).
 _RELATIVE_SRC = re.compile(r'(<img\b[^>]*?\b)src="((?![a-z][a-z0-9+.-]*:|/|#|data:)[^"]+)"', re.I)
@@ -183,7 +186,6 @@ class Library:
         self.by_file = {g.path.resolve(): g.slug for g in self.guides.values()}
         self.listed = sum(1 for g in self.guides.values() if g.listed and not g.roles)
         self._documents(cats)
-        self._cache: dict[str, tuple[float, dict]] = {}
 
     def section_id(self, name: str) -> str:
         """A section's id from its id or an old name (help.yaml ``aliases:``: a pack guide's category, an edition's help.categories, the
@@ -219,7 +221,7 @@ class Library:
     def render(self, slug: str) -> dict:
         g = self.guides[slug]
         mtime = g.path.stat().st_mtime
-        hit = self._cache.get(slug)
+        hit = _RENDERED.get(g.path)
         if hit and hit[0] == mtime:
             return hit[1]
         body, md = self._html(g.path)
@@ -227,8 +229,19 @@ class Library:
                for t in md.toc_tokens]
         text = html.unescape(_TAG.sub(" ", body))
         out = {"html": body, "toc": toc, "text": re.sub(r"\s+", " ", text)}
-        self._cache[slug] = (mtime, out)
+        _RENDERED[g.path] = (mtime, out)
         return out
+
+    def warm(self) -> int:
+        """Renders every page not rendered yet (in a worker thread: the first global search then reads cached text); the count."""
+        n = 0
+        for slug in list(self.guides):
+            try:
+                self.render(slug)
+                n += 1
+            except Exception:  # noqa: BLE001 - a page that does not render is shown with its error when opened, as before
+                pass
+        return n
 
     def _html(self, path: Path) -> tuple[str, markdown.Markdown]:
         """A markdown file as help HTML: examples, boxes, tables, screenshots and links to other documents."""

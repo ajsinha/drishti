@@ -578,11 +578,16 @@
   `pinnedCellClicked`, a tree node's own row in its cell context), drishti-chart 0.2.0 (the histogram of a server's bins). A
   before-and-after comparison of sixteen screens and tabs (`tests/screen_figures.py`, `tests/test_var_family_figures_browser.py`, run on
   demand) and every family browser file on the new selectors with its assertions kept.
+- **The first global search no longer waits on Help** (Alt+K): it read every Help page's text, rendering them all on the event loop
+  (about 12 s on a cold console, longer on a busy machine); the console now renders them once in a worker thread as it starts, Help's
+  search renders what is missing off the event loop, and the rendered pages are shared by every pack set's library. **The Approvals
+  queue drops a stale list**: an answer to an older filter that arrives after a newer one no longer replaces it.
 - **The console's CSS on design tokens, the look unchanged** ([ELEMENTS.md 4.1, Design tokens](docs/architecture/ELEMENTS.md#design-tokens)):
   `drishti_tokens.css` is the one home of every colour and scale. Each hard-coded colour became a token whose value in every theme is
   what its rule drew: fixed colours (white labels on coloured fills, the navigation band, scrims, the theme menu's swatches, FRTB-SA's
   Terminal colours), the landings' and Capacity's hues per theme, elevations, and the print palette (last in the file, with no
-  `!important`). The type scale (53 steps in rem named by their px, 7 relative, 10 fluid display sizes), spacing (51 steps up to 2rem),
+  `!important`). The type scale (53 steps in px: a library or an embedded view draws the same size on a host page whose root text is not 16px,
+  as the Elements' harnesses' 13px; 7 relative steps, 10 fluid display sizes), spacing (52 px steps up to 32px),
   radii, layers (14 `--d-z-*`), breakpoints (24 `--d-bp-*`) and the Elements' densities are tokens of exactly the values in use;
   grid and chart take their density sizes from them. Gone: rules of removed screens (the old Studio, the BI model designer and layer
   wizard, the browser Python console, the top bar's clock and desk name, the exposure sparkline, unused tone and text utilities), the
