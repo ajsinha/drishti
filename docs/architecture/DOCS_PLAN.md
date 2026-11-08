@@ -16,7 +16,13 @@
 
 # Documentation plan for 2.9.11.h (internal, for the product owner's approval)
 
-**Status: proposal, 2026-11-07. Nothing is rewritten or deleted until the owner approves.** This file is internal and is deleted
+**Status, 2026-11-08 (2.9.11.h, branch wip/h-docs):** approved and largely done: 217 → 172 Markdown files under `docs/`; tutorials 22
+(+ index), knowledge 4, the combined guides of §2 written except BANK_DATA_GUIDE (R6) and WORLD_DATA_GUIDE (W1, FUNDS_GUIDE and
+EXTERNAL_DATA stand in); the gates of §5 that can hold today fail (`drishti-console/tests/test_docs_gates.py`, register
+`config/docs-features.yaml`), page budgets and the contract count warn. Still open: guides over their budgets (USER, REPORTS, BUILD,
+DEVELOPER, OPERATIONS, CLUSTER, DATA, EMBED), contracts 51 → 28, `docs/reference/` (references stay in guides/ and admin/),
+FUNCTION_CATALOGUE (a Java test reads it), VIEWMODEL in architecture/ (the frozen renderers name its path), the connector type READMEs
+(served by the API), the screenshots after the g tag. This file is internal and is deleted
 when 2.9.11.h is released (it supersedes TUTORIAL_INVENTORY.md).
 
 **The rules it applies** (owner, 2026-10-26 to 2026-11-06): fewer documents, no repeated content; each fact has one home (a field → its

@@ -17,6 +17,42 @@
 
 ## 2.9.11.h (unreleased)
 
+### Docs: one guide and one tutorial per feature (217 → 172 Markdown files under `docs/`)
+
+- **Tutorials 41 → 22**, one per major feature, numbered in track order ([the index](docs/tutorials/README.md)): 01 first 15 minutes
+  (01, 02, 03, 08, 21), 02 VaR (25, 43 and 29's VaR step), 03 exposure, 04 FRTB-SA, 05 SIMM, 06 groupings, 07 pivot, cubes and explain
+  (33, 37, 38), 08 reports and dashboards (09, 10, 11, 12, 13, 18, 20), 09 notebook, 10 AI, 11 correct and approve, 12 a day of bank data,
+  13 world data (28 widened to economies, companies, entities and news), 14 public sector, 15 connect, 16 load your own data into a new lake
+  (45, 34, 36, 31 and 29's lake part), 17 data out, 18 tables, 19 build a pack and a screen (05, 06, 23), 20 embed, 21 production, 22 a
+  cluster of three. Every step keeps its UI, command line and YAML; multi-source tutorials are in parts; tutorial 13's first step is
+  marked for the screenshot pass.
+- **Knowledge 9 → 4**: the glossary home and three primers, [risk](docs/knowledge/risk.md), [data](docs/knowledge/data.md) and
+  [world](docs/knowledge/world.md); the glossary's domains rewritten and regenerated (`tools/knowledge.py`).
+- **The combined guides**: [OPERATIONS_GUIDE](docs/guides/OPERATIONS_GUIDE.md) (GETTING_STARTED, admin/OPERATIONS with its runbooks,
+  OPERATIONALISING, TROUBLESHOOTING and TOOLS' scheduling), [CLUSTER_GUIDE](docs/guides/CLUSTER_GUIDE.md) (CLUSTER_DEPLOYMENT,
+  RESOURCES_AND_SCALE's sizing, PERFORMANCE's tuning; measured figures into BENCHMARK), [ADMIN_GUIDE](docs/guides/ADMIN_GUIDE.md)
+  (USER_MANAGEMENT, admin/LENSES, COMPUTE_ENGINES' switches), [CLI_REFERENCE](docs/guides/CLI_REFERENCE.md) (CLI_GUIDE and TOOLS' commands;
+  COMMAND_CATALOG stays generated), [REPORTS_GUIDE](docs/guides/REPORTS_GUIDE.md) (BI_GUIDE and BI_DESIGN's user parts),
+  [NOTEBOOK_GUIDE](docs/guides/NOTEBOOK_GUIDE.md) (BI's Python, the Notebook, PYTHON_COMPUTE), [APPROVALS_GUIDE](docs/guides/APPROVALS_GUIDE.md)
+  (WRITE_BACK, COLLABORATION's approvals), [BUILD_GUIDE](docs/guides/BUILD_GUIDE.md) (PACK_DEVELOPER_GUIDE I-VII and IX,
+  SUTRA_DEVELOPER_GUIDE, SCHEMA_TO_PACK_GUIDE, forms), [DEVELOPER_GUIDE](docs/guides/DEVELOPER_GUIDE.md) (PACK_DEVELOPER_GUIDE VIII,
+  CONNECTOR_DEVELOPER_GUIDE, API_GUIDE's how-to), [API_REFERENCE](docs/guides/API_REFERENCE.md) (API_GUIDE's endpoints and error codes),
+  [EMBED_GUIDE](docs/guides/EMBED_GUIDE.md) (CLIENT_RENDERER, ELEMENTS_IN_YOUR_APP), [AI_GUIDE](docs/guides/AI_GUIDE.md) (admin/AI moved);
+  [DATA_GUIDE](docs/guides/DATA_GUIDE.md) now holds CONNECTORS, CONNECTOR_FILES, TLS and DEMO_DATA (sections 8 to 11); the MR cube guide is
+  [PIVOT_GUIDE section 29](docs/guides/PIVOT_GUIDE.md#29-the-mr-cube-preset).
+- **Design notes folded, one home per fact**: PIVOT_ENGINE, COMPUTE_ENGINES, BI_DESIGN, PYTHON_COMPUTE, CLIENT_RENDERER, COLLABORATION and
+  the cluster internals into [ARCHITECTURE](docs/architecture/ARCHITECTURE.md) sections 26 to 32; COMPUTED_ATTRIBUTES and VAR_SHARDING into
+  [DATA_ARCHITECTURE](docs/architecture/DATA_ARCHITECTURE.md) sections 12 to 14 (open steps into IMPLEMENTATION_PLAN); the lens product
+  document is the internal [architecture/LENSES.md](docs/architecture/LENSES.md), out of Help's list.
+- **Help by domain and lens**: a Help page says its domain module (`domain:`) and may name the lenses that show it (`lenses:`); a page of a
+  module that is off for the person is not listed, searched or served (the risk primer and the bank-data tutorial with banking, the funds
+  guide and the world-data tutorial with capital markets, the public-sector pages with economy). Every old address answers through
+  `moved:` (some 150 new aliases); [docs/README.md](docs/README.md)'s map of Help is written by `tools/docs/help_map.py`.
+- **The docs gates** (DOCS_PLAN section 5) in fail mode: [config/docs-features.yaml](config/docs-features.yaml) registers every feature with
+  its guide, tutorial, domain, lenses and budgets; `drishti-console/tests/test_docs_gates.py` (a quick file check) fails on a register that
+  disagrees with the files, a count cap passed, version history in a guide, tutorial or Knowledge page, an internal document listed in
+  Help or a listed page without its domain; page budgets and the contract count warn.
+
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
 
 ## 2.9.11.g (unreleased)
