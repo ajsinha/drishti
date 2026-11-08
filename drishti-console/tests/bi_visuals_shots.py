@@ -75,7 +75,7 @@ def main(out: Path, captures: Path) -> None:
                 dz.fill("[data-new-title]", "New visuals draft")
                 dz.click("[data-new] button[type=submit]")
                 dz.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
-                dz.click('.bi-vtype[data-type="map"]')
+                dz.click('[data-types] [data-type="map"]')
                 dz.wait_for_selector('[data-well="location"]')
                 dz.wait_for_timeout(500)
                 dz.locator("[data-fields-tree]").screenshot(path=str(out / "designer-fields.png"))

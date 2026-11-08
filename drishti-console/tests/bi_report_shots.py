@@ -178,7 +178,7 @@ def main(out: Path, captures: Path) -> None:
                 page.wait_for_selector('.bi-dvis[data-visual="line-1"]')
                 settled_design(page)
                 page.click("[data-canvas-grid]", position=cell(page, 9, 0))                                                 # an empty corner: let go of the selection
-                page.click(".bi-vtype[data-type='slicer']")
+                page.click("[data-types] [data-type='slicer']")
                 page.wait_for_selector('.bi-dvis[data-type="slicer"]')
                 page.select_option('[data-add="field"]', "trade.currency")
                 page.click("[data-ptab='format']")

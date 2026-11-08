@@ -286,11 +286,11 @@ def test_the_designer_offers_the_new_visuals_and_marks_the_time_measure(stack, b
     page.click("[data-new] button[type=submit]")
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
     for t in ("map", "funnel", "histogram", "box", "bubble"):
-        expect(page.locator(f'.bi-vtype[data-type="{t}"]')).to_have_count(1)
+        expect(page.locator(f'[data-types] [data-type="{t}"]')).to_have_count(1)
     badge = page.locator('[data-field="MTM ytd"] [data-time]')
     expect(badge).to_have_count(1)
     assert badge.inner_text() == "ytd"
-    page.click('.bi-vtype[data-type="map"]')                                                       # a new visual of that type, with its wells
+    page.click('[data-types] [data-type="map"]')                                                       # a new visual of that type, with its wells
     page.wait_for_selector('[data-well="location"]')
     for w in ("location", "latitude", "longitude", "values"):
         expect(page.locator(f'[data-well="{w}"]')).to_have_count(1)
