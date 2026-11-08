@@ -44,9 +44,9 @@
         <span class="text-muted-d" data-counts data-total="{{ c.total }}">{% if admin %}{{ c.total }} commands · {{ c.total - c.off }} on · {{ c.off }} off{% elif q %}{{ c.shown }} of {{ c.total }} commands you can use{% else %}{{ c.total }} command{{ '' if c.total == 1 else 's' }} you can use{% endif %}</span>
         {% if admin %}<span class="cmd-pending" data-pending hidden></span>{% endif %}
         <label class="cmd-find">Find <input type="search" data-find value="{{ q }}" placeholder="exposure, VAR, trading…" autocomplete="off" aria-label="Filter commands"></label>
-        <label class="cmd-find">Pack <select data-pack-filter><option value="">All packs</option>{% for p in c.packs %}<option value="{{ p.name }}">{{ p.title or p.name }}</option>{% endfor %}</select></label>
+        <label class="cmd-find">Pack <drishti-select data-pack-filter label="Pack"><option value="">All packs</option>{% for p in c.packs %}<option value="{{ p.name }}">{{ p.title or p.name }}</option>{% endfor %}</drishti-select></label>
         {% if admin %}
-        <label class="cmd-find">Show <select data-show><option value="all">All</option><option value="off">Off only</option><option value="on">On only</option></select></label>
+        <label class="cmd-find">Show <drishti-select data-show label="Show"><option value="all">All</option><option value="off">Off only</option><option value="on">On only</option></drishti-select></label>
         <button type="button" class="btn-pill btn-ghost" data-undo disabled>Undo</button>
         <button type="button" class="btn-pill btn-accent" data-review disabled>Review changes</button>
         {% endif %}

@@ -59,16 +59,11 @@
     return Array.prototype.map.call(view.querySelectorAll('.pnl[data-panel]'), function (p) { return { id: p.getAttribute('data-panel'), title: ((p.querySelector('h3') || {}).textContent || p.getAttribute('data-panel')).trim() }; });
   }
   function fillAnchors() {
-    anchor.textContent = '';
-    anchor.appendChild(new Option('The whole view (' + id + ')', 'entity'));
-    var g = V.el('optgroup'); g.label = 'A panel';
-    panels().forEach(function (p) { g.appendChild(new Option(p.title, 'panel:' + p.id)); });
-    if (g.children.length) { anchor.appendChild(g); }
-    var f = V.el('optgroup'); f.label = 'A field';
-    fields().forEach(function (x) { f.appendChild(new Option(x.label, 'field:' + x.path)); });
-    if (f.children.length) { anchor.appendChild(f); }
+    anchor.component.setOptions([{ value: 'entity', label: 'The whole view (' + id + ')' }]      // drishti-inputs' Select: the view, a panel, a field
+      .concat(panels().map(function (p) { return { value: 'panel:' + p.id, label: p.title, group: 'A panel' }; }))
+      .concat(fields().map(function (x) { return { value: 'field:' + x.path, label: x.label, group: 'A field' }; })), 'entity');
   }
-  function aim(value) { if (value && Array.prototype.some.call(anchor.options, function (o) { return o.value === value; })) { anchor.value = value; } }
+  function aim(value) { if (value && anchor.component.options.some(function (o) { return o.value === value; })) { anchor.value = value; } }
 
   function total() { return counts.entity + Object.keys(counts.panels).reduce(function (n, k) { return n + counts.panels[k]; }, 0) + Object.keys(counts.fields).reduce(function (n, k) { return n + counts.fields[k]; }, 0); }
   function badges() {
@@ -146,8 +141,8 @@
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     if (!box.value.trim()) { say(msg, 'Write something first.', true); return; }
-    var a = anchor.value.split(':'), pg = page(), opt = anchor.options[anchor.selectedIndex];
-    var body = { anchor: a[0], generation: pg.generation, asOf: pg.asOf, knownAt: pg.knownAt, body: box.value, label: opt.textContent };
+    var a = String(anchor.value || 'entity').split(':'), pg = page(), opt = anchor.component.getOption();
+    var body = { anchor: a[0], generation: pg.generation, asOf: pg.asOf, knownAt: pg.knownAt, body: box.value, label: opt ? opt.label : '' };
     if (a[0] === 'panel') { body.panel = a[1]; var p = document.getElementById('p-' + a[1]); if (p && p.getAttribute('data-gate-kind')) { body.gateKind = p.getAttribute('data-gate-kind'); } }
     if (a[0] === 'field') { body.path = a.slice(1).join(':'); }
     api('POST', base, body).then(function (r) { posted(r, msg, box); });
@@ -222,7 +217,7 @@
     }
   }
   list.addEventListener('click', function (e) { var b = e.target.closest('button[data-act]'); if (b && !b.disabled) { act(b); } });
-  filterEl.addEventListener('change', load);
+  filterEl.addEventListener('drishti:change', load);
   scope.querySelector('[data-disc-scope-clear]').addEventListener('click', function () { only = { panel: '', path: '' }; load(); });
 
   // the drawer's tab, the header button, the keyboard

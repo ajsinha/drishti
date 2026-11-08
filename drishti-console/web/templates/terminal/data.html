@@ -80,7 +80,7 @@
         <div class="dv-card dv-date"><h3>Date</h3>
           {% if chosen.dated and chosen.dates %}
           <div class="dv-cal" data-cal aria-label="Dates with data"></div>
-          <label class="dv-datefield">Date <select data-date aria-label="Date">{% for d in chosen.dates | reverse %}<option value="{{ d }}"{% if d == sel.date %} selected{% endif %}>{{ d }}</option>{% endfor %}</select></label>
+          <label class="dv-datefield">Date <drishti-select data-date label="Date">{% for d in chosen.dates | reverse %}<option value="{{ d }}"{% if d == sel.date %} selected{% endif %}>{{ d }}</option>{% endfor %}</drishti-select></label>
           <p class="text-muted-d dv-small">Dates with data are filled; only those can be picked.</p>
           {% else %}<p class="text-muted-d">{{ 'Not dated: the download is the current rows.' if not chosen.dated else 'The source cannot list its dates: the download is its latest rows.' }}</p>{% endif %}
         </div>

@@ -24,10 +24,10 @@
     <strong class="ws-name">{{ name }}</strong>
     {% if readonly %}<span class="badge-kind" title="Shared by {{ owner }}: you see it as they keep it">shared by {{ owner }} · read-only</span>{% endif %}
     <label class="visually-hidden" for="wsLayout">Layout</label>
-    <select id="wsLayout" class="studio-select" data-layout>
+    <drishti-select id="wsLayout" data-layout label="Layout">
       <option value="2col">Two columns</option><option value="3col">Three columns</option>
       <option value="2x2">Two by two</option><option value="1+2">One large, two stacked</option>
-    </select>
+    </drishti-select>
     {% if not readonly %}<button type="button" class="btn-pill btn-ghost" data-add><i class="bi bi-plus-lg" aria-hidden="true"></i> Pane</button>
     <button type="button" class="btn-pill btn-accent" data-save><i class="bi bi-save" aria-hidden="true"></i> Save</button>{% endif %}
     <button type="button" class="btn-pill btn-ghost" data-saveas>{{ 'Save a copy…' if readonly else 'Save as…' }}</button>
@@ -52,7 +52,7 @@
       <span class="ws-num mono" title="Drag this number onto another pane to show this view there"></span>
       <form class="ws-cmd" data-pane-cmd><label class="visually-hidden">Entity for this pane</label>
         <input class="studio-in mono" placeholder="Command or identifier" data-pane-input></form>
-      <label class="ws-follow">follows <select class="studio-select" data-follows><option value="">—</option></select></label>
+      <label class="ws-follow">follows <drishti-select data-follows></drishti-select></label>
       <a class="tbar-link" data-open title="Open full screen"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
       <button type="button" class="tbar-link ws-x" data-remove title="Remove pane" aria-label="Remove pane">×</button>
     </header>

@@ -30,6 +30,8 @@
 .ed-muted { color: var(--d-muted); }
 .ed-small { font-size: var(--d-fs-12); }
 .ed-in { background: var(--d-bg-2, var(--d-bg)); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-4); padding: var(--d-sp-4) var(--d-sp-7); font-size: var(--d-fs-13); width: 100%; max-width: 100%; }
+.ed-pick { display: block; max-width: 100%; font-size: var(--d-fs-13); }                    /* drishti-inputs' Select (E.pick): its look is the library's */
+.ed-pick.ed-narrow { display: inline-block; }
 .ed-narrow { width: auto; min-width: 7em; }
 .ed-code { font-family: var(--d-font-mono, ui-monospace, monospace); font-size: var(--d-fs-12); line-height: 18px; }
 .ed-empty { padding: var(--d-sp-30) var(--d-sp-10); color: var(--d-muted); }

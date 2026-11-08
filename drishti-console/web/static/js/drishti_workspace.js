@@ -29,7 +29,7 @@
   var readonly = root.hasAttribute('data-readonly');           // shared with you: look, navigate, save a copy
   var frames = [];
   function on(sel, ev, fn) { var el = root.querySelector(sel); if (el) { el.addEventListener(ev, fn); } return el; }
-  if (readonly) { layoutSel.disabled = true; }
+  if (readonly) { layoutSel.component.setDisabled(true); }           // the layout: drishti-inputs' Select (<drishti-select>)
 
   function say(t, bad) { msg.textContent = t; msg.classList.toggle('t-bad', !!bad); }
   function src(ref) { return ref ? '/v/' + encodeURIComponent(ref.kind) + '/' + encodeURIComponent(ref.id) + '?embed=1' : 'about:blank'; }
@@ -44,7 +44,7 @@
     grid.innerHTML = '';
     frames = [];
     ws.panes.forEach(function (p, i) {
-      var node = tpl.content.firstElementChild.cloneNode(true);
+      var node = document.importNode(tpl.content.firstElementChild, true);   // imported: its <drishti-select> is drawn at once
       node.querySelector('.ws-num').textContent = String(i + 1);
       var input = node.querySelector('[data-pane-input]');
       input.value = p.ref ? p.ref.id : '';
@@ -52,11 +52,9 @@
       if (readonly) { node.querySelector('[data-remove]').hidden = true; }
       input.setAttribute('aria-label', 'Entity for pane ' + (i + 1));
       var follows = node.querySelector('[data-follows]');
-      ws.panes.forEach(function (q, j) {
-        if (j !== i) { var o = document.createElement('option'); o.value = j; o.textContent = 'pane ' + (j + 1); follows.appendChild(o); }
-      });
-      follows.value = p.follows == null ? '' : String(p.follows);
-      follows.addEventListener('change', function () { p.follows = follows.value === '' ? null : +follows.value; });
+      follows.options = { label: 'Pane ' + (i + 1) + ' follows', search: false, value: p.follows == null ? '' : String(p.follows),
+        options: [{ value: '', label: '—' }].concat(ws.panes.map(function (q, j) { return { value: String(j), label: 'pane ' + (j + 1) }; }).filter(function (o, j) { return j !== i; })) };
+      follows.addEventListener('drishti:change', function () { p.follows = follows.value === '' || follows.value === null ? null : +follows.value; });
       node.querySelector('[data-pane-cmd]').addEventListener('submit', function (e) {
         e.preventDefault();
         fetch('/api/resolve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: input.value }) })
@@ -101,7 +99,7 @@
     if (followers.length) { followers.forEach(function (j) { open(j, ref); }); } else { open(from, ref); }
   });
 
-  layoutSel.addEventListener('change', function () { ws.layout = layoutSel.value; delete ws.sizes; render(); });
+  layoutSel.addEventListener('drishti:change', function () { ws.layout = layoutSel.value; delete ws.sizes; render(); });
   on('[data-add]', 'click', function () {
     if (ws.panes.length >= 4) { say('A workspace has at most four panes.', true); return; }
     ws.panes.push({ ref: null, follows: null, title: '' });

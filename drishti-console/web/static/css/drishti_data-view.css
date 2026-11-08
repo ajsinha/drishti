@@ -65,7 +65,7 @@
   border-radius: var(--d-radius-15); font-size: var(--d-fs-12_8); cursor: pointer; font-family: var(--d-font-mono); }
 .dv-chip.on { border-color: var(--d-accent); background: var(--d-accent-tint); color: var(--d-accent-strong); }
 .dv-line { display: flex; flex-wrap: wrap; gap: var(--d-sp-6_4); align-items: center; margin-bottom: var(--d-sp-6_4); }
-.dv-line select, .dv-line input { min-height: 32px; border: 1px solid var(--d-border); border-radius: var(--d-radius-4); background: var(--d-bg-2);
+.dv-line input { min-height: 32px; border: 1px solid var(--d-border); border-radius: var(--d-radius-4); background: var(--d-bg-2);
   color: var(--d-ink); padding: 0 var(--d-sp-6_4); }
 .dv-line input { flex: 1 1 10rem; min-width: 6rem; }
 .dv-and { width: 2.4rem; color: var(--d-muted); font-size: var(--d-fs-12_8); }

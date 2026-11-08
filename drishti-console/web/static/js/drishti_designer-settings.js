@@ -41,9 +41,9 @@
     function input(f) {
       var c;
       if (f.input === 'choice') {
-        c = el('select', { 'class': 'dz-pill', 'data-dz-setting': f.name, 'aria-label': f.question });
-        f.choices.forEach(function (o) { c.appendChild(el('option', { value: o[0], text: o[1] })); });
-        c.value = f.value;
+        c = el('drishti-select', { 'class': 'dz-select', 'data-dz-setting': f.name });       // drishti-inputs' Select
+        c.options = { label: f.question, value: f.choices.some(function (o) { return String(o[0]) === String(f.value); }) ? f.value : undefined,
+          options: f.choices.map(function (o) { return { value: o[0], label: o[1] }; }) };
       } else {
         c = el('input', { type: 'text', 'class': 'dz-search', 'data-dz-setting': f.name, 'aria-label': f.question, value: f.value });
       }
@@ -65,13 +65,13 @@
       wrap.appendChild(el('div', { 'class': 'dz-row' }, [
         el('button', { type: 'button', 'class': 'dz-btn dz-primary', 'data-dz-settings-apply': '', text: 'Apply', on: { click: function (e) {
           var values = {};
-          wrap.querySelectorAll('[data-dz-setting]').forEach(function (c) { values[c.getAttribute('data-dz-setting')] = c.value; });
+          wrap.querySelectorAll('[data-dz-setting]').forEach(function (c) { values[c.getAttribute('data-dz-setting')] = c.value == null ? '' : c.value; });
           e.target.disabled = true;
           h.step({ op: 'settings', index: f.index, values: values }).catch(function () { e.target.disabled = false; });
         } } }),
         el('button', { type: 'button', 'class': 'dz-btn', 'data-dz-settings-close': '', text: 'Close', on: { click: function () { h.open(null); } } })]));
       var first = wrap.querySelector('.dz-unset [data-dz-setting]') || wrap.querySelector('[data-dz-setting]');
-      if (first && focus) { first.focus({ preventScroll: true }); }
+      if (first && focus) { if (first.component) { first.component.focus(); } else { first.focus({ preventScroll: true }); } }
     }
 
     /* the tools of one part: Settings (a used part), Remove (a part this person added) */

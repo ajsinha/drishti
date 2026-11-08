@@ -1582,6 +1582,16 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [x] drishti-inputs' single-choice `Select` (`<drishti-select>`, 8.2); the VaR family's and the exposure screens' native selects replaced (12.2: hierarchy, horizon, confidences, currency, the pre-deal form)
 - [x] The library's own native selects (a form's enum select, the grid's select editor, the designer kit's layout picker and choices, the filter bar's condition and preset) and FRTB-SA's and SIMM's choice selects on `Select`; the screens' tests through `select_helpers.py` (8.2)
 - [ ] The native-select sweep: the allow-list of `test_native_select_guard.py` empty (60 screens; the libraries without drishti-inputs, the renderer's harness and the gallery; 8.2)
+- [x] The sweep's screens outside BI on `Select` (39 files, 78 selects off the allow-list): Account settings, alerts, Approvals' kind, Build's
+  design (the control kind, the theme), controls, form and versions tabs and the new-design registry, the designer's grid, modes, sentences,
+  settings, outline and describe line, Help › Configuration's area, reports and subscriptions, the calculator's snippets, the data view's
+  date and filter lines, a view's discussion, the query form's sort and count, Functions, the pivot (source, date, compare, subtotals,
+  slicer, Why's split and order, the playground's language and kind), workspaces (layout, follows), the column filter's condition, the
+  controls' dropdown, the table and model editors (`E.pick`), the field history's days, the pack screens (`PackUI.select`), the record
+  forms' enum and lookup cells (the `Select` opens on the value, a pick saves), the refresh interval, the table chart's settings, and the
+  banking plugin's trading landing, market-risk ladder grid and scenario matrix. Scripts fill a `Select` with `setOptions` and hear
+  `drishti:change` (`PackUI.select` also fires `change`, as `Form`'s field does, for the pack screens' listeners); a named one's hidden
+  input submits the same form; the tests read them through `select_helpers.py`
 - [x] drishti-renderer 2.0.0 on the libraries (8.5; the console's controls, funnels and Zoom still its scripts until their screens move)
 - [x] drishti-insight 0.1.0 (8.10): the one Explain, the one search box, the Approvals queue and the workbook export, in the manifest, so
   packing and the gallery include it

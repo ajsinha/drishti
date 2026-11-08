@@ -46,7 +46,7 @@
     <p class="tl-meta" data-tl-who aria-live="polite">…</p>
     <form class="tl-viewas" action="/home/trading/view-as" method="get" data-tl-viewas hidden>
       <label for="tlAs">View as</label>
-      <select id="tlAs" name="as" data-tl-as><option value="">Pick a trader or a desk…</option></select>
+      <drishti-select id="tlAs" name="as" data-tl-as label="View as"><option value="">Pick a trader or a desk…</option></drishti-select>
       <button type="submit" class="tl-btn">View</button>
     </form>
   </section>
@@ -120,11 +120,11 @@
     <section class="tl-card" aria-labelledby="tlChkH" data-tl-check-card{{ part(PP, 'table') }}>
       <h2 id="tlChkH">Check a new trade<small>VaR what-if and the counterparty's limit, one answer</small></h2>
       <form class="tl-check" data-tl-check autocomplete="off">
-        <label>Product<select name="product" data-tl-product required><option value="">…</option></select></label>
-        <label>Side<select name="side"><option value="">as booked</option><option value="B">Buy</option><option value="S">Sell</option></select></label>
+        <label>Product<drishti-select name="product" data-tl-product label="Product"><option value="">…</option></drishti-select></label>
+        <label>Side<drishti-select name="side" label="Side"><option value="">as booked</option><option value="B">Buy</option><option value="S">Sell</option></drishti-select></label>
         <label>Notional<input name="notional" class="mono" inputmode="decimal" placeholder="250m" required></label>
         <label>Counterparty<input name="counterparty" class="mono" list="tlCps" placeholder="CP-…" required></label>
-        <label>Book<select name="book" data-tl-book></select></label>
+        <label>Book<drishti-select name="book" data-tl-book label="Book"></drishti-select></label>
         <button type="submit" class="tl-btn" data-tl-check-go>Check</button>
         <datalist id="tlCps" data-tl-cps></datalist>
       </form>

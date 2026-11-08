@@ -407,9 +407,9 @@
         menu.appendChild(bar);
       }
       // a condition
-      var cw = el('div', 'cf-cond'), sel = el('select', 'cf-op'), none = el('option', null, '(no condition)');
-      sel.setAttribute('aria-label', 'Filter by condition'); none.value = ''; sel.appendChild(none);
-      OPS[type].forEach(function (p) { var op = el('option', null, p[1].charAt(0).toUpperCase() + p[1].slice(1)); op.value = p[0]; sel.appendChild(op); });
+      var cw = el('div', 'cf-cond'), sel = el('drishti-select', 'cf-op');      // drishti-inputs' Select (its list floats in the body: a .di-pop)
+      sel.options = { label: 'Filter by condition', search: false, options: [{ value: '', label: '(no condition)' }]
+        .concat(OPS[type].map(function (p) { return { value: p[0], label: p[1].charAt(0).toUpperCase() + p[1].slice(1) }; })) };
       var ia = el('input', 'cf-a'), ib = el('input', 'cf-b'), err = el('div', 'cf-err');
       err.setAttribute('role', 'alert');
       function showArgs() {
@@ -425,7 +425,7 @@
       showArgs();
       var DI = window.Drishti && window.Drishti.elements && window.Drishti.elements.inputs;
       if (type === 'date' && DI) { DI.upgradeDateInput(ia, { label: 'From', placeholder: 'T-1, ME or 6 Nov 2026' }); DI.upgradeDateInput(ib, { label: 'To', placeholder: 'T-1, ME or 6 Nov 2026' }); }   // drishti-inputs' date pickers
-      sel.addEventListener('change', function () { showArgs(); err.textContent = ''; if (sel.value && !ia.hidden) { ia.focus(); } });
+      sel.addEventListener('drishti:change', function () { showArgs(); err.textContent = ''; if (sel.value && !ia.hidden) { ia.focus(); } });
 
       // the checklist
       var q = el('input', 'cf-q'), list = el('div', 'cf-list'), items = [], typed = false;
@@ -550,7 +550,7 @@
           if (refocus && b.isConnected) { b.focus(); }
         }
       };
-      (o.sort ? menu.querySelector('.cf-act') : sel).focus();
+      if (o.sort) { menu.querySelector('.cf-act').focus(); } else { sel.component.focus(); }
     }
     return self;
   };

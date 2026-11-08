@@ -346,22 +346,16 @@
     return fetch('/api/calc/snippets?kind=' + encodeURIComponent(kind)).then(json).then(function (res) {
       if (!res.ok) { say(res.b.detail || 'Snippets could not be read', true); return; }
       snippets = res.b;
-      pick.innerHTML = '';
-      pick.appendChild(new Option('Snippets…', ''));
-      var group = function (label, list, prefix) {
-        if (!list.length) { return; }
-        var g = document.createElement('optgroup');
-        g.label = label;
-        list.forEach(function (s, i) { var o = new Option(s.title || s.name, prefix + i); o.title = s.description || ''; g.appendChild(o); });
-        pick.appendChild(g);
+      var group = function (label, list, prefix) {                 // drishti-inputs' Select: the packs' snippets, then mine, in groups
+        return list.map(function (s, i) { return { value: prefix + i, label: s.title || s.name, detail: s.description || '', group: label }; });
       };
-      group('From the packs', snippets.pack || [], 'p');
-      group('Mine', snippets.mine || [], 'm');
-      if (mine) { var i = (snippets.mine || []).findIndex(function (s) { return s.name === mine; }); if (i >= 0) { pick.value = 'm' + i; } }
+      var at = mine ? (snippets.mine || []).findIndex(function (s) { return s.name === mine; }) : -1;
+      pick.component.setOptions([{ value: '', label: 'Snippets…' }].concat(group('From the packs', snippets.pack || [], 'p'), group('Mine', snippets.mine || [], 'm')),
+        at >= 0 ? 'm' + at : '');
       delBtn.hidden = !mine;
     });
   }
-  pick.addEventListener('change', function () {
+  pick.addEventListener('drishti:change', function () {
     var v = pick.value;
     if (!v) { return; }
     var s = v.charAt(0) === 'p' ? snippets.pack[+v.slice(1)] : snippets.mine[+v.slice(1)];

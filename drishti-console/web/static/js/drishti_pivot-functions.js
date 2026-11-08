@@ -89,8 +89,8 @@
     var cat = S.catalogue() || {};
     var fields = (cat.fields || []).map(function (f) { return f.name; }).filter(function (n) { return !/^_|~/.test(n); });
     var all = dims.concat(fields.filter(function (f) { return dims.indexOf(f) < 0; }));
-    if (!by.options.length || by.getAttribute("data-for") !== all.join(",")) {
-      by.innerHTML = all.map(function (d) { return "<option>" + esc(d) + "</option>"; }).join("");
+    if (!by.component.options.length || by.getAttribute("data-for") !== all.join(",")) {   // drishti-inputs' Select (<drishti-select>)
+      by.component.setOptions(all, all[0]);
       by.setAttribute("data-for", all.join(","));
     }
     var sel = S.selection();

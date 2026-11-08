@@ -39,14 +39,14 @@
       t.columns.slice(1).forEach(function (c) {
         var box = el('input', { type: 'checkbox', value: c });
         box.checked = !f.fields.length || f.fields.indexOf(c) >= 0;
-        var as = el('select', { 'class': 'dz-col-type', 'data-dz-form-type': c, 'aria-label': c + ' is' });
-        KINDS.concat((t.links || []).indexOf(c) >= 0 ? [['entity', 'a linked record']] : []).forEach(function (k) { as.appendChild(el('option', { value: k[0], text: k[1] })); });
-        var had = (f.types || {})[c];
-        as.value = had && had !== 'text' && as.querySelector('option[value="' + had + '"]') ? had : 'auto';
+        var kinds = KINDS.concat((t.links || []).indexOf(c) >= 0 ? [['entity', 'a linked record']] : []), had = (f.types || {})[c];
+        var as = el('drishti-select', { 'class': 'dz-col-type', 'data-dz-form-type': c });      // drishti-inputs' Select
+        as.options = { label: c + ' is', options: kinds.map(function (k) { return { value: k[0], label: k[1] }; }),
+          value: had && had !== 'text' && kinds.some(function (k) { return k[0] === had; }) ? had : 'auto' };
         cols.appendChild(el('div', { 'class': 'dz-col-row' }, [el('label', { 'class': 'dz-col' }, [box, ' ' + c]), as]));
       });
     }
-    part.addEventListener('change', fill);
+    part.addEventListener('drishti:change', fill);
     fill();
     side.appendChild(el('div', { 'class': 'dz-sentence' }, ['Let people edit ', part, ' ', how]));
     side.appendChild(el('p', { 'class': 'dz-note', text: 'Which columns:' }));

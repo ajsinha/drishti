@@ -160,9 +160,7 @@
     hideError();
     var tables = state.suggest.panels.filter(function (p) { return p.table && x.panels.indexOf(p.index) < 0; });
     nestWrap.hidden = !(!x.kid && x.panels.length === 1 && tables.length);
-    nest.innerHTML = '';
-    nest.appendChild(el('option', { value: '', text: '— (its own cell)' }));
-    tables.forEach(function (p) { nest.appendChild(el('option', { value: p.id, text: (p.cell || p.id) + ' · ' + p.title })); });
+    nest.component.setOptions([{ value: '', label: '— (its own cell)' }].concat(tables.map(function (p) { return { value: p.id, label: (p.cell || p.id) + ' · ' + p.title }; })), '');
   }
 
   function edit() { var ls = input.getValue().split('\n'); input.goTo(ls.length, ls[ls.length - 1].length); }
@@ -371,7 +369,7 @@
     b.addEventListener('click', function () { var axis = b.getAttribute('data-gd-delete'); step({ op: 'delete', axis: axis, at: axis === 'row' ? sel.r : sel.c }); });
   });
   root.querySelector('[data-gd-make]').addEventListener('click', function () { step({ op: 'make-grid' }); });
-  nest.addEventListener('change', function () {
+  nest.addEventListener('drishti:change', function () {                  // drishti-inputs' Select (<drishti-select>)
     var x = current();
     if (nest.value) { step({ op: 'nest', index: x.panels[0], under: nest.value, place: 'detail-below' }); }
   });

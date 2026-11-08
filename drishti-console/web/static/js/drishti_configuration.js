@@ -33,7 +33,7 @@
 
   function apply() {
     var words = (input.value || "").toLowerCase().split(/\s+/).filter(Boolean);
-    var area = select ? select.value : "";
+    var area = select ? select.value || "" : "";
     var filtered = words.length > 0 || area !== "";
     var shown = 0, perArea = {};
     rows.forEach(function (tr) {
@@ -61,6 +61,6 @@
   }
 
   input.addEventListener("input", function () { clearTimeout(timer); timer = setTimeout(apply, 120); });
-  if (select) select.addEventListener("change", apply);
+  if (select) select.addEventListener("drishti:change", apply);              // drishti-inputs' Select (<drishti-select>)
   page.querySelector("[data-cfg-form]").addEventListener("submit", function (e) { e.preventDefault(); apply(); });
 })();

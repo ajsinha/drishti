@@ -66,8 +66,9 @@
 }
 @media print { .ctl-bar, .ctl-head { display: none !important; } }
 
-/* the controls drawn by drishti-inputs (multi-select, date, date range): their look is the library's; here only their width in a bar */
+/* the controls drawn by drishti-inputs (select, multi-select, date, date range): their look is the library's; here only their width in a bar */
 .ctl-ms, .ctl-date, .ctl-range { min-width: 11rem; max-width: 24rem; }
+.ctl-select { min-width: 8rem; max-width: 24rem; }                              /* the dropdown: drishti-inputs' Select */
 .ctl-date-range > .ctl-range { flex: 1 1 11rem; }
 
 /* the slider (drishti_controls.js): a track with one thumb or two; the positions are --ctl-pos / --ctl-from / --ctl-to set from script */

@@ -92,10 +92,10 @@
     <h3 id="bsSutraH" class="bs-h2">An existing Sutra</h3>
     <div class="bs-bar">
       <label for="bsRegistry">From the registry</label>
-      <select id="bsRegistry" class="studio-in" data-registry>
+      <drishti-select id="bsRegistry" data-registry label="From the registry">
         <option value="">(none)</option>
         {% for s in sutras %}<option value="{{ s.name }}@{{ s.latest }}">{{ s.name }}@{{ s.latest }}{% if s.kind %} · {{ s.kind }}{% endif %}</option>{% endfor %}
-      </select>
+      </drishti-select>
       <label for="bsYaml">or a .yaml file</label>
       <input id="bsYaml" type="file" accept=".yaml,.yml,text/yaml" data-yaml-file>
     </div>

@@ -49,7 +49,18 @@
     return el;
   }
   function clear(el) { while (el && el.firstChild) { el.removeChild(el.firstChild); } return el; }
+  /** drishti-inputs' Select (<drishti-select>): attrs as h's (aria-label names its control; on.change hears its drishti:change), options
+      [{value, label, group}] or plain values, value the one picked (else the first). */
+  function pick(attrs, options, value) {
+    var a = Object.assign({}, attrs), label = a['aria-label'], on = a.on || {};
+    delete a['aria-label']; delete a.on;
+    var s = h('drishti-select', a);
+    s.options = { label: label, options: options, value: value };
+    Object.keys(on).forEach(function (ev) { s.addEventListener(ev === 'change' ? 'drishti:change' : ev, on[ev]); });
+    return s;
+  }
   E.h = h;
+  E.pick = pick;
   E.clear = clear;
   E.num = function (v) {
     if (typeof v !== 'number') { return v === null || v === undefined ? '' : String(v); }
@@ -248,9 +259,8 @@
   function tablePreview(pane, r) {
     pane.appendChild(h('h3', { text: 'Preview · ' + (r.count || 0) + ' rows' + (r.date ? ' · ' + r.date : '') }));
     if (r.dates && r.dates.length > 1) {
-      var sel = h('select', { class: 'ed-in', 'aria-label': 'Business date of the preview', 'data-preview-date': '',
-        on: { change: function (e) { S.date = e.target.value; runPreview(); } } });
-      r.dates.slice(-30).reverse().forEach(function (d) { sel.appendChild(h('option', { value: d, selected: d === r.date, text: d })); });
+      var sel = pick({ class: 'ed-pick', 'aria-label': 'Business date of the preview', 'data-preview-date': '',
+        on: { change: function (e) { S.date = e.target.value; runPreview(); } } }, r.dates.slice(-30).reverse(), r.date);
       pane.appendChild(h('label', { class: 'ed-small' }, 'Business date ', sel));
     }
     var cols = r.columns || [];
@@ -295,7 +305,8 @@
       button: E.canEdit ? { label: 'Copy as a draft', run: copyAsDraft } : null } : null);
     var ed = editors[S.python ? 'python' : S.kind];
     if (ed) { ed.render(ctx, host); }
-    host.querySelectorAll('input, select, textarea, button[data-edit]').forEach(function (el) { if (S.readOnly && !el.hasAttribute('data-always')) { el.disabled = true; } });
+    host.querySelectorAll('input, textarea, button[data-edit]').forEach(function (el) { if (S.readOnly && !el.hasAttribute('data-always')) { el.disabled = true; } });
+    host.querySelectorAll('drishti-select').forEach(function (el) { if (S.readOnly && !el.hasAttribute('data-always') && el.component) { el.component.setDisabled(true); } });
   }
   function refreshVisual() {
     var ed = editors[S.python ? 'python' : S.kind];
@@ -410,7 +421,7 @@
   }
   function doSave() {
     var form = h('div', { class: 'ed-form' });
-    var ws = h('select', { class: 'ed-in', 'data-save-ws': '', 'aria-label': 'Workspace' }, h('option', { value: 'me', text: 'My workspace (private)' }));
+    var ws = pick({ class: 'ed-pick', 'data-save-ws': '', 'aria-label': 'Workspace' }, [{ value: 'me', label: 'My workspace (private)' }]);
     var msg = h('input', { class: 'ed-in', 'data-save-msg': '', placeholder: 'What changed', 'aria-label': 'What changed' });
     if (!S.item) { form.appendChild(h('label', {}, 'Save in ', ws)); }
     form.appendChild(h('label', {}, 'Note ', msg));
@@ -418,8 +429,8 @@
     form.appendChild(h('p', {}, go));
     if (!S.item) {
       api('GET', '/build/tables/workspaces').then(function (list) {
-        (list || []).filter(function (w) { return !w.personal; }).forEach(function (w) { ws.appendChild(h('option', { value: w.id, text: w.name })); });
-        if (ws.options.length > 1) { ws.selectedIndex = 1; }
+        var shared = (list || []).filter(function (w) { return !w.personal; }).map(function (w) { return { value: w.id, label: w.name }; });
+        ws.component.setOptions(ws.component.options.concat(shared), shared.length ? shared[0].value : 'me');
       }).catch(function () { /* the personal workspace is always there */ });
     }
     go.addEventListener('click', function () { save(ws.value, msg.value).then(closeDialog); });

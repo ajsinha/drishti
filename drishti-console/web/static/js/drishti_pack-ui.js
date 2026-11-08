@@ -49,14 +49,15 @@
   function num(n) { return window.Drishti.elements.core.formatNumber(Number(n)); }
   function plural(n, one, many) { return n + ' ' + (n === 1 ? one : (many || one + 's')); }
 
-  /** A <select> from [{value, label}] with `current` selected. */
+  /** drishti-inputs' Select (<drishti-select>) from [{value, label}] with `current` picked (else the first); attrs as el's, aria-label names its
+      control. A pick also fires change on the element, as Form's select field does, so the pack screens' change listeners hear it. */
   function select(opts, current, attrs) {
-    var s = el('select', Object.assign({ class: 'studio-in' }, attrs || {}));
-    opts.forEach(function (o) {
-      var op = el('option', { value: o.value, text: o.label });
-      if (String(o.value) === String(current)) { op.selected = true; }
-      s.appendChild(op);
-    });
+    var a = Object.assign({ class: 'pk-select' }, attrs || {}), label = a['aria-label'];
+    delete a['aria-label'];
+    var s = el('drishti-select', a);
+    s.options = { label: label, options: opts.map(function (o) { return { value: String(o.value), label: o.label }; }),
+      value: opts.some(function (o) { return String(o.value) === String(current); }) ? String(current) : undefined };
+    s.component.on('change', function () { s.dispatchEvent(new Event('change', { bubbles: true })); });
     return s;
   }
 
