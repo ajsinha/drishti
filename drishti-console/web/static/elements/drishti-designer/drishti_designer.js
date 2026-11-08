@@ -1392,9 +1392,99 @@
     }
     return { "readYaml": readYaml, "YamlPane": YamlPane };
   })();
+  /* ---- src/drishti_shell-parts.js ---- */
+  __m["src/drishti_shell-parts.js"] = (function () {
+    var h = __lib("drishti-core").h;
+    var entryAttrs = __m["src/drishti_palette.js"].entryAttrs;
+    function actionElement(doc, a, emit) {
+      const attrs = Object.assign({ 'data-act': a.id, title: a.title || null, 'data-dd-title': a.title || '', hidden: !!a.hidden }, entryAttrs(a.attrs));
+      const cls = 'dd-btn' + (a.primary ? ' dd-primary' : '');
+      if (a.href !== undefined) { return h(doc, 'a', { cls: cls + ' dd-link', text: a.label, attrs: Object.assign(attrs, { href: a.href || '#' }) }); }
+      if (a.choices) {
+        attrs['aria-label'] = a.label;
+        const sel = h(doc, 'select', { cls: 'dd-layout-pick dd-choice', attrs: Object.assign(attrs, { disabled: !a.enabled }) }, a.choices.map((c) =>
+          h(doc, 'option', { text: c.label, attrs: { value: c.value, disabled: !!c.disabled } })));
+        sel.addEventListener('change', () => emit({ id: a.id, value: sel.value }));
+        return sel;
+      }
+      if (a.toggle) { attrs['aria-pressed'] = String(!!a.pressed); }
+      const b = h(doc, 'button', { cls, text: a.label, attrs: Object.assign(attrs, { type: 'button', disabled: !a.enabled }) });
+      b.addEventListener('click', () => {
+        if (a.toggle) { const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', String(on)); emit({ id: a.id, pressed: on }); return; }
+        emit({ id: a.id });
+      });
+      return b;
+    }
+    function drawObjectGroups(shell) {
+      if (!shell.objects) { return; }
+      const term = (shell.searchEl.value || '').toLowerCase(), doc = shell.doc;
+      shell.objects.textContent = '';
+      shell.groups.forEach((g) => {
+        const list = g.items.filter((x) => !term || (x.label + ' ' + (x.search || x.detail || '')).toLowerCase().indexOf(term) >= 0);
+        const ul = h(doc, 'ul', { cls: 'dd-list', attrs: { role: 'list' } }, list.map((x) => h(doc, 'li', {}, [h(doc, x.href ? 'a' : 'button', { cls: 'dd-obj' + (x.current ? ' dd-on' : ''),
+          attrs: { type: x.href ? null : 'button', href: x.href || null, title: x.title || null, 'aria-current': x.current ? (x.href ? 'page' : 'true') : null, 'data-object': x.id, 'data-object-item': (x.data && x.data.item) || '' },
+          on: x.href ? {} : { click: () => shell.events.emit('open', { group: g.id, item: x }) } }, [h(doc, 'span', { cls: 'dd-obj-n', text: x.label },
+          x.badge ? [h(doc, 'span', { cls: 'dd-obj-badge', text: x.badge })] : []), h(doc, 'small', { text: x.detail || '' })])])));
+        shell.objects.appendChild(h(doc, 'section', { cls: 'dd-group', attrs: { 'data-group': g.id } }, [h(doc, 'h2', {}, [g.label + ' ', h(doc, 'small', { text: String(list.length) })]),
+          list.length ? ul : h(doc, 'p', { cls: 'dd-muted dd-small', text: term ? 'none match' : 'none yet' })]));
+      });
+    }
+    class DocTabs {
+      constructor(doc, emit) {
+        this.doc = doc;
+        this.emit = emit;
+        this.el = h(doc, 'nav', { cls: 'dd-docs', attrs: { role: 'tablist', 'aria-label': 'Open items', 'data-dd-docs': '' } });
+      }
+      set(list) {
+        const doc = this.doc;
+        this.el.textContent = '';
+        (list || []).forEach((d) => {
+          const tab = h(doc, 'a', { cls: 'dd-doc-tab', text: d.label, attrs: { href: d.href, role: 'tab', 'data-dd-doc': d.id, 'aria-selected': String(!!d.current), title: d.title || d.label } });
+          const x = h(doc, 'button', { cls: 'dd-doc-x', text: '×', attrs: { type: 'button', 'data-dd-doc-close': d.id, 'aria-label': 'Close ' + d.label } });
+          x.addEventListener('click', (e) => { e.preventDefault(); this.emit('close', { id: d.id }); });
+          this.el.appendChild(h(doc, 'span', { cls: 'dd-doc' + (d.current ? ' dd-on' : '') }, [tab, x]));
+        });
+        this.el.hidden = !(list && list.length);
+      }
+    }
+    class Dock {
+      constructor(doc, tabs, emit) {
+        this.doc = doc;
+        this.emit = emit;
+        this.tabs = {};
+        this.open = null;
+        const list = h(doc, 'div', { cls: 'dd-dock-tabs', attrs: { role: 'tablist', 'aria-label': 'Dock' } });
+        this.body = h(doc, 'div', { cls: 'dd-dock-body', attrs: { hidden: true } });
+        tabs.forEach((t) => {
+          const count = h(doc, 'span', { cls: 'dd-dock-count', attrs: { 'data-dd-dock-count': t.id } });
+          const tab = h(doc, 'button', { cls: 'dd-ptab dd-dock-tab', attrs: { type: 'button', role: 'tab', 'aria-selected': 'false', 'data-dd-dock-tab': t.id } }, [t.label + ' ', count]);
+          const pane = h(doc, 'div', { cls: 'dd-dock-pane', attrs: { role: 'tabpanel', 'aria-label': t.label, 'data-dd-dock-pane': t.id, hidden: true } });
+          tab.addEventListener('click', () => { this.show(this.open === t.id ? null : t.id); this.emit('dock', { id: this.open }); });
+          list.appendChild(tab);
+          this.body.appendChild(pane);
+          this.tabs[t.id] = { tab, pane, count };
+        });
+        this.el = h(doc, 'section', { cls: 'dd-dock', attrs: { 'aria-label': 'Dock', 'data-dd-dock': '' } }, [list, this.body]);
+      }
+      show(id) {
+        this.open = id && this.tabs[id] ? id : null;
+        Object.keys(this.tabs).forEach((k) => { const on = k === this.open; this.tabs[k].tab.setAttribute('aria-selected', String(on)); this.tabs[k].pane.hidden = !on; });
+        this.body.hidden = !this.open;
+        this.el.classList.toggle('dd-dock-folded', !this.open);
+      }
+      count(id, n, bad) {
+        const t = this.tabs[id];
+        if (!t) { return; }
+        t.count.textContent = n ? String(n) : '';
+        t.count.classList.toggle('dd-bad', !!bad);
+      }
+    }
+    return { "actionElement": actionElement, "drawObjectGroups": drawObjectGroups, "DocTabs": DocTabs, "Dock": Dock };
+  })();
   /* ---- src/drishti_shell.js ---- */
   __m["src/drishti_shell.js"] = (function () {
     var EventBus = __lib("drishti-core").EventBus, announce = __lib("drishti-core").announce, h = __lib("drishti-core").h, openDialog = __lib("drishti-core").openDialog, closeDialog = __lib("drishti-core").closeDialog;
+    var actionElement = __m["src/drishti_shell-parts.js"].actionElement, drawObjectGroups = __m["src/drishti_shell-parts.js"].drawObjectGroups, DocTabs = __m["src/drishti_shell-parts.js"].DocTabs, Dock = __m["src/drishti_shell-parts.js"].Dock;
     const SHELL_ACTIONS = Object.freeze([
       { id: 'validate', label: 'Validate', title: 'Check the definition now (Ctrl+Enter)' },
       { id: 'preview', label: 'Preview', title: 'Read the preview again' },
@@ -1406,6 +1496,7 @@
     const SHELL_MODES = Object.freeze(['visual', 'yaml', 'both']);
     function statusWords(s) {
       if (!s) { return { word: '', versions: '', tone: '' }; }
+      if (s.text) { return { word: s.text, versions: s.versions || '', tone: s.status || 'draft' }; }      // the host's own words (Saved, Read-only)
       const word = s.origin === 'file' ? 'Shipped' : s.status === 'published' || s.status === 'approved' ? 'Approved' : s.status === 'proposed' ? 'Proposed' : 'Draft';
       const versions = s.origin === 'file' ? 'from configuration' : s.origin === 'item' || s.version ? (s.version ? 'approved v' + s.version : 'never approved') + (s.status === 'draft' && s.version ? ' · a draft after it' : '') : '';
       return { word: word + (s.dirty ? ' · unsaved' : ''), versions, tone: s.status || 'draft' };
@@ -1441,8 +1532,7 @@
         this.buttons = {};
         const acts = x('div', { cls: 'dd-actions' });
         o.actions.forEach((a) => {
-          const b = x('button', { cls: 'dd-btn' + (a.primary ? ' dd-primary' : ''), text: a.label, attrs: { type: 'button', 'data-act': a.id, title: a.title || '', 'data-title': a.title || '', disabled: true },
-            on: { click: () => this.events.emit('action', { id: a.id }) } });
+          const b = actionElement(doc, a, (ev) => this.events.emit('action', ev));
           if (a.id === 'impact') { b.appendChild(doc.createTextNode(' ')); this.impactCount = x('span', { attrs: { 'data-impact-count': '' } }); b.appendChild(this.impactCount); }
           this.buttons[a.id] = b;
           acts.appendChild(b);
@@ -1456,6 +1546,11 @@
           acts.append(nb, menu);
         }
         head.appendChild(acts);
+        if (o.collapsible) {
+          this.railToggle = x('button', { cls: 'dd-btn dd-rail-toggle', text: '◧', attrs: { type: 'button', 'data-dd-rail-toggle': '', 'aria-expanded': 'true', 'aria-label': 'Hide the left rail' },
+            on: { click: () => { this.setRail(this.el.classList.contains('dd-rail-off')); this.events.emit('rail', { open: !this.el.classList.contains('dd-rail-off') }); } } });
+          head.insertBefore(this.railToggle, head.firstChild);
+        }
         this.msg = x('p', { cls: 'dd-msg', attrs: { 'data-msg': '', role: 'status', 'aria-live': 'polite' } });
         const grid = x('div', { cls: 'dd-shell-grid', attrs: { 'data-grid': '' } });
         const railTabs = (o.search ? [{ id: 'objects', label: 'Objects' }] : []).concat(o.rail || []);
@@ -1495,7 +1590,9 @@
         this.yamlBody = x('div', { cls: 'dd-ybody', attrs: { 'data-yaml-body': '' } });
         this.yaml = x('section', { cls: 'dd-yaml-panel', attrs: { 'data-yaml-panel': '', 'aria-label': 'The definition as YAML', hidden: true } }, [
           x('div', { cls: 'dd-yh' }, [this.yamlToggle, this.yamlState, x('span', { cls: 'dd-ynote', text: 'edits on either side show on the other' })]), this.yamlBody]);
-        grid.appendChild(x('section', { cls: 'dd-main', attrs: { 'aria-label': 'Editor' } }, [this.readOnlyBar, this.visual, this.yaml]));
+        if (o.docs) { this.docs = new DocTabs(doc, (n, ev) => this.events.emit(n, ev)); this.docs.set([]); }
+        if (o.dock && o.dock.length) { this.dock = new Dock(doc, o.dock, (n, ev) => this.events.emit(n, ev)); this.dock.show(null); }
+        grid.appendChild(x('section', { cls: 'dd-main', attrs: { 'aria-label': 'Editor' } }, [this.docs ? this.docs.el : null, this.readOnlyBar, this.visual, this.yaml, this.dock ? this.dock.el : null]));
         if (o.inspector) {
           this.inspector = x('div', { cls: 'dd-inspector-pane', attrs: { 'data-dd-inspector': '' } });
           this.inspectorBox = x('aside', { cls: 'dd-insp-side', attrs: { 'aria-label': 'Inspector' } }, [x('h3', { cls: 'dd-sec', text: 'Inspector' }), this.inspector]);
@@ -1602,10 +1699,20 @@
       setActions(states) {
         Object.keys(states).forEach((id) => {
           const b = this.buttons[id], v = states[id];
-          if (!b) { return; }
+          if (!b || b.tagName === 'A') { return; }                                 // a link is never off
           b.disabled = v !== true;
-          b.title = v === true ? b.getAttribute('data-title') : String(v || '');
+          b.title = v === true ? b.getAttribute('data-dd-title') : String(v || '');
         });
+      }
+      setLabel(id, label) { const b = this.buttons[id]; if (b && b.tagName !== 'SELECT') { b.textContent = label; } }
+      showAction(id, on) { if (this.buttons[id]) { this.buttons[id].hidden = !on; } }
+      setDocs(list) { if (this.docs) { this.docs.set(list); } }
+      dockPane(id) { return this.dock && this.dock.tabs[id] ? this.dock.tabs[id].pane : null; }
+      showDock(id) { if (this.dock) { this.dock.show(id); } }
+      setDockCount(id, n, bad) { if (this.dock) { this.dock.count(id, n, bad); } }
+      setRail(open) {
+        this.el.classList.toggle('dd-rail-off', !open);
+        if (this.railToggle) { this.railToggle.setAttribute('aria-expanded', String(!!open)); this.railToggle.setAttribute('aria-label', open ? 'Hide the left rail' : 'Show the left rail'); }
       }
       setMode(mode, user) {
         if (SHELL_MODES.indexOf(mode) < 0) { return; }
@@ -1630,19 +1737,7 @@
       }
       setYamlState(text, tone) { this.yamlState.textContent = text || ''; this.yamlState.className = 'dd-ystate' + (tone ? ' dd-' + tone : ''); }
       setObjects(groups) { this.groups = groups || []; this.drawObjects(); }
-      drawObjects() {
-        if (!this.objects) { return; }
-        const term = (this.searchEl.value || '').toLowerCase(), doc = this.doc;
-        this.objects.textContent = '';
-        this.groups.forEach((g) => {
-          const list = g.items.filter((x) => !term || (x.label + ' ' + (x.search || x.detail || '')).toLowerCase().indexOf(term) >= 0);
-          const ul = h(doc, 'ul', { cls: 'dd-list', attrs: { role: 'list' } }, list.map((x) => h(doc, 'li', {}, [h(doc, 'button', { cls: 'dd-obj' + (x.current ? ' dd-on' : ''),
-            attrs: { type: 'button', 'aria-current': x.current ? 'true' : null, 'data-object': x.id, 'data-object-item': (x.data && x.data.item) || '' },
-            on: { click: () => this.events.emit('open', { group: g.id, item: x }) } }, [h(doc, 'span', { cls: 'dd-obj-n', text: x.label }), h(doc, 'small', { text: x.detail || '' })])])));
-          this.objects.appendChild(h(doc, 'section', { cls: 'dd-group', attrs: { 'data-group': g.id } }, [h(doc, 'h2', {}, [g.label + ' ', h(doc, 'small', { text: String(list.length) })]),
-            list.length ? ul : h(doc, 'p', { cls: 'dd-muted dd-small', text: term ? 'none match' : 'none yet' })]));
-        });
-      }
+      drawObjects() { drawObjectGroups(this); }
       say(text, bad) { this.msg.textContent = text || ''; this.msg.classList.toggle('dd-bad', !!bad); if (text) { announce(text); } }
       setReadOnly(ro) {
         this.readOnlyBar.textContent = '';

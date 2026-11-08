@@ -129,7 +129,7 @@ def designed(page):
 
 
 def deselect(page):
-    page.click("[data-design-root] [data-title]")
+    page.click("[data-studio] [data-title]")
     page.keyboard.press("Escape")
     page.wait_for_function("() => window.drishtiBi.design.selected === null")
 
@@ -169,7 +169,7 @@ def test_the_studio_wells_offer_field_parameters_and_the_slicer_switches_the_cha
     vid = v["id"]
     assert drawn(page, vid) == sums("desk", "mtm"), "the canvas draws the default choice: MTM by desk"
     page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved", timeout=20000)
+    expect(page.locator("[data-status]")).to_have_text("Saved", timeout=20000)
     # the viewer (the author's own draft): the parameter slicer switches the field and the measure the chart draws
     page.goto(CONSOLE_URL + "/bi/r/" + rid)
     page.wait_for_selector("[data-ready=yes]", state="attached", timeout=30000)
@@ -255,7 +255,7 @@ def test_the_statement_designer_sets_the_paper_and_previews_page_by_page(stack, 
     assert box["width"] > box["height"], "a landscape sheet"
     shoot(page, '[data-view="paper"]', "statement-designer", 900)
     page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved", timeout=20000)
+    expect(page.locator("[data-status]")).to_have_text("Saved", timeout=20000)
     saved = fetch(page, "GET", "/bi/api/items/" + rid)
     assert "layout: statement" in saved["body"]["body"] and "orientation: landscape" in saved["body"]["body"], saved["body"]["body"]
     clean(page)

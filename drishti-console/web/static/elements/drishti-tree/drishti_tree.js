@@ -1407,6 +1407,7 @@
     var keyMove = __m["src/drishti_tree-io.js"].keyMove;
     var Tree = __m["src/drishti_tree-view.js"].Tree;
     const OUTLINE_TONES = Object.freeze(['muted', 'accent', 'link', 'good', 'warn', 'bad']);
+    const dataAttrs = (a) => { const out = {}; Object.keys(a || {}).forEach((k) => { if (/^data-(?!dt-)[a-z0-9-]+$/.test(k) && a[k] !== null && a[k] !== undefined) { out[k] = String(a[k]); } }); return out; };
     function outlineFilter(model, q, textOf) {
       const words = String(q || '').toLowerCase().split(/\s+/).filter(Boolean);
       if (!words.length) { return { hits: [], keep: null }; }
@@ -1452,6 +1453,24 @@
         this.offSel = this.tree.on('selectionChanged', (p) => { if (p.ids && p.ids.length) { this.showDetail(p.ids[0]); } });
         this.onKeyDown = (e) => this.key(e);
         host.addEventListener('keydown', this.onKeyDown, true);
+        this.closeStarters(this.full.all());
+        const win = this.doc.defaultView;
+        if (o.fill && win && win.ResizeObserver) {
+          this.sizer = new win.ResizeObserver(() => this.fitWidth());
+          this.sizer.observe(host);
+        }
+      }
+      closeStarters(nodes) {
+        if (!this.o.startOpen) { return; }
+        let changed = false;
+        nodes.forEach((n) => { if (n.children.length && this.o.startOpen(n) === false && this.tree.model.open.delete(n.id)) { this.memory.delete(n.id); changed = true; } });
+        if (changed) { this.tree.model.events.emit('changed', { what: 'open' }); }
+      }
+      fitWidth() {
+        const g = this.tree.grid, w = Math.floor(this.host.clientWidth) - 2;
+        if (!g || w < 120) { return; }
+        const col = g.grid.model.columns.all()[0];
+        if (col && Math.abs(col.width - w) > 1) { g.grid.model.columns.setWidth(col.id, w); }
       }
       source() {
         const keep = this.keep;
@@ -1465,10 +1484,24 @@
       labelCell(p) {
         const n = p.row ? this.full.node(p.row.__id) : null;
         if (!n) { return null; }
-        const marks = this.o.marks ? this.o.marks(n) || [] : [];
-        return h(p.doc, 'span', { cls: 'dg-text dt-oline' }, [h(p.doc, 'span', { cls: 'dt-oname', text: n.label })].concat(marks.map((m) => h(p.doc, 'span', {
-          cls: 'dt-mark dt-tone-' + (OUTLINE_TONES.indexOf(m.tone) >= 0 ? m.tone : 'muted') + (m.badge ? ' dt-badge' : '') + (m.mono ? ' dt-mono' : '') + (m.clip ? ' dt-clip' : ''),
-          text: String(m.text), attrs: { title: m.title || null } }))));
+        const o = this.o, doc = p.doc, marks = o.marks ? o.marks(n) || [] : [];
+        const mark = (m) => h(doc, m.href ? 'a' : 'span', {
+          cls: 'dt-mark dt-tone-' + (OUTLINE_TONES.indexOf(m.tone) >= 0 ? m.tone : m.href ? 'link' : 'muted') + (m.badge ? ' dt-badge' : '') + (m.mono ? ' dt-mono' : '') + (m.clip ? ' dt-clip' : ''),
+          text: String(m.text), attrs: Object.assign({ title: m.title || null, href: m.href || null }, dataAttrs(m.attrs)) });
+        const inner = [h(doc, 'span', { cls: 'dt-oname', text: n.label })].concat(marks.filter((m) => !m.href).map(mark));
+        const b = o.button ? o.button(n) : null;
+        let line;
+        if (b) {
+          line = h(doc, 'button', { cls: 'dt-obtn', attrs: Object.assign({ type: 'button', title: b.title || null, 'aria-label': b.label || null }, dataAttrs(b.attrs)) }, inner);
+          if (o.activate) { line.addEventListener('click', (e) => o.activate(n, e)); }
+        } else { line = h(doc, 'span', { cls: 'dt-oline-text', attrs: dataAttrs(o.attrs ? o.attrs(n) : null) }, inner); }
+        if (o.wire) { o.wire(n, line); }
+        const acts = (o.actions ? o.actions(n) || [] : []).map((a) => {
+          const x = h(doc, 'button', { cls: 'dt-oact', text: a.text || a.label, attrs: Object.assign({ type: 'button', 'aria-label': a.label, title: a.title || a.label, disabled: !!a.disabled }, dataAttrs(a.attrs)) });
+          x.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); a.run(n); });
+          return x;
+        });
+        return h(doc, 'span', { cls: 'dg-text dt-oline' }, [line].concat(marks.filter((m) => m.href).map(mark), acts));
       }
       reload(fresh) {
         const t = this.tree;
@@ -1486,7 +1519,7 @@
         this.full.load(data);
         if (this.detailOf && !this.full.node(this.detailOf)) { this.closeDetail(); }
         this.memory.forEach((id) => { if (!this.full.node(id)) { this.memory.delete(id); } });
-        this.full.all().forEach((n) => { if (!known.has(n.id) && n.children.length && n.depth < d) { this.memory.add(n.id); } });   // a new branch opens as at the start
+        this.full.all().forEach((n) => { if (!known.has(n.id) && n.children.length && n.depth < d && !(this.o.startOpen && this.o.startOpen(n) === false)) { this.memory.add(n.id); } });   // a new branch opens as at the start
         const f = outlineFilter(this.full, this.query, this.o.text);
         this.keep = f.keep;
         this.tree.hits = new Set(f.hits);
@@ -1553,6 +1586,7 @@
         this.focusNode(mv.to);
       }
       destroy() {
+        if (this.sizer) { this.sizer.disconnect(); }
         this.offSel();
         this.host.removeEventListener('keydown', this.onKeyDown, true);
         this.tree.destroy();

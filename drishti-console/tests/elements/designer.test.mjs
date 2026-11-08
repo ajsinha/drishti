@@ -239,6 +239,7 @@ test('the palette\'s search and categories; the shell\'s status words', () => {
   assert.deepEqual(K.paletteGroups(e).map((g) => g.category + g.entries.length), ['Charts2', 'Numbers1']);
   assert.deepEqual(K.statusWords({ status: 'draft', version: 3, origin: 'item', dirty: true }), { word: 'Draft · unsaved', versions: 'approved v3 · a draft after it', tone: 'draft' });
   assert.equal(K.statusWords({ origin: 'file' }).word, 'Shipped');
+  assert.deepEqual(K.statusWords({ text: 'Saved', status: 'published' }), { word: 'Saved', versions: '', tone: 'published' });     // a host's own words (BI Studio)
 });
 
 test('the bundle loads under Node as CommonJS', () => {

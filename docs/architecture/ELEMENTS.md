@@ -1063,7 +1063,14 @@ Drishti screen draws that many today.
   leave the tree, their open state remembered; `outlineFilter`); the rows answer a tree's keys (`outlineKey` on `keyMove`: Home and
   End, Right and Left to open, close and go up, Enter or Space opens a branch or shows a leaf's detail); `detail(node, box)` fills the
   box under the tree (Enter or a click; Enter again or Escape closes it); `onKey(node, event)` is the host's keys first; `nodeAt(el)`
-  names the node under a pointer for the host's drag.
+  names the node under a pointer for the host's drag. **A field list** (the BI designer's Fields pane, 12.3): `button(node)` draws a
+  node's line as a button (its name for a screen reader, its title, the host's `data-*` attributes: `data-field`, `data-kind`) and
+  `activate(node)` is its click; `wire(node, el)` gives the host the drawn line for its own behaviour (the kit's `DragHub` drag onto
+  the canvas or a well); `attrs(node)` puts the host's `data-*` on a line that is not a button (`data-table`, `data-folder`); a mark
+  may carry `attrs` (`data-origin`, `data-time`) and be a link (`href`: Move to the model, drawn after the button); `actions(node)`
+  are small buttons after the line (a dataset's remove, off with its reason); `startOpen(node)` false starts a branch closed (a
+  date's parts, Hierarchies); `fill` keeps the node's column as wide as the panel. These hooks are part of the one tree component
+  when the kit's `Outline` folds into it.
 - **The table tree** (`TreePanel`, `treeTables`, `readTableTree`, `isChain`; `drishti_tree-panel.js`): a server's table with rows
   nested under rows (`table.tbl-tree`, a Sutra table or ladder with `children:`) read from its DOM (each row's depth, the server's open
   state, every cell's text, tone class and content: links and badges kept as drawn; the footer's lines) and drawn in two modes:
@@ -1165,7 +1172,13 @@ under 530 lines each, typed JSDoc, the bundle by `tools/elements/build.py`, `Dri
   (g7 A, the default: rail | canvas with the YAML docked under it | inspector | preview), **side-by-side** (B: the outline over the
   palette, the canvas and the YAML side by side, the preview always on, the inspector a card by the selection) and **terminal** (C:
   dense and monospace, a `DESIGN>` command line on Ctrl+K, the outline as a property grid, F3 Validate, F4 YAML, F5 Preview, F7 History,
-  F8 Impact, F9 Propose).
+  F8 Impact, F9 Propose). **A studio of several objects** (BI Studio; `drishti_shell-parts.js`): `docs` (the open documents above the
+  editor, each a link to its address with a close button: `setDocs`, the "close" event), `dock` (tabs of panes under the editor that
+  the host fills, a count on a tab, the open tab pressed again folds it: `dockPane`, `showDock`, `setDockCount`, the "dock" event),
+  `collapsible` (a header button folds the left rail: `setRail`, the "rail" event), objects that are links (`href`) with a `badge`;
+  the header's actions may be links (`href`), toggles (`toggle`, aria-pressed) and choices (`choices`, a select), each with the
+  host's `data-*` attributes (`attrs`), on from the start (`enabled`) or `hidden`; `setLabel`, `showAction`; `statusWords` takes the
+  host's own words (`text`).
 - **drishti-inputs extended for it** (no code in the screens): `CodeEditor.updateValue` (the cursor and the scroll kept), `highlight`
   (the selected item's lines), `cursor` and its event, `completeAfter` (a YAML key's "kind: ", a path's "$."), entries that say where
   their word starts, `lineWrapping`, `tabLeaves` (a small box Tab leaves), YAML's Enter keeping its indentation (`yamlIndentAfter`),
@@ -1362,14 +1375,14 @@ table editor, `/build/tables?new=table`; "the model designer" in two notes means
 | Screen (files) | On the kit | Still its own (moving next) |
 |---|---|---|
 | Build workbench (`build/drishti_*.js`) | canvas (flow `LayoutCanvas`), drags (`DragHub`), YAML tab (`YamlPane`, schema assistant), about box (`CodeEditor`), the form and controls tabs' re-ordering (`sortableList`), the inspector (`Inspector`: one live `Form` from the Rachana schema), its expressions (the `Form`'s formula widget, completing from `WB.expr.candidates`), the palette (`Palette`); undo stays the server's operation log | the data-shape tree (`drishti_build-shape-tree.js` → `Outline`) |
-| BI report designer (`drishti_bi-design*.js`) | canvas (grid `LayoutCanvas`), undo (`SnapshotHistory`), settle, YAML tab (`CodeEditor` with completion), the Phone and Tablet order's drag (`sortableList`); the Format pane and every settings pane beside it (conditional formatting, interactions, tooltip page, page, report, theme, tile: live `Form`s, 8.2); the expression editor (`drishti_bi-expr-editor.js`: a one-line Rachana `CodeEditor`, its completion hook from the fields, measures, functions and keywords) | the Fields and Visualizations panes and the wells' add lists (→ `Palette`), the device orders' model (→ `LayoutModel` breakpoints) |
+| BI report designer (`drishti_bi-design*.js`) | canvas (grid `LayoutCanvas`), undo (`SnapshotHistory`), settle, YAML tab (`CodeEditor` with completion), the Phone and Tablet order's drag (`sortableList`); the Format pane and every settings pane beside it (conditional formatting, interactions, tooltip page, page, report, theme, tile: live `Form`s, 8.2); the expression editor (`drishti_bi-expr-editor.js`: a one-line Rachana `CodeEditor`, its completion hook from the fields, measures, functions and keywords); the Visualizations (`Palette`), the wells' Add a field (`Form`); the Fields pane (drishti-tree's `TreeOutline`: folders, a date's parts, the badges, Move to the model, one branch per added dataset with its remove) | the device orders' model (→ `LayoutModel` breakpoints) |
 | Dataset designer: the table editor, virtual tables (`drishti_editor-table.js`) | the shell (`DesignerShell`), the YAML (`YamlPane`), the name, rows and look-up dialog (`Form`), every formula field (the `Form`'s formula widget) and the statement (`CodeEditor`, through `drishti_editor-formula.js`), the source and look-up rows and the columns checklist (drishti-grid editing) | |
 | Model designer: the semantic model editor (`drishti_editor-model.js`) | the shell, the YAML, the Overview's name, title and words and the masks (live `Form`s), the rows of the tables, relationships, measures (the ? card, "adds up?"), hierarchies, row rules, fields and the access matrix (drishti-grid editing; formulas in the grid's `code` cell editor) | |
 | Python table and model editor (`drishti_editor-python.js`) | the shell, the YAML | the code beside its contract (→ `CodeEditor` Python), the templates |
 | + New steps (`drishti_editor-new.js`) | the shell | the guided steps (→ `Form`) |
 | Sutra screen designer: Customize, Grid, Outline, Describe (`drishti_designer*.js`, `templates/designer/`) | the drags (`trackPointer`, `DragHub`), the Grid's formula bar (`CodeEditor` with completion), the Outline mode's tree (`Outline`), the columns checklist (`Form`'s checkboxes) | the panel handles (→ `LayoutCanvas` flow), the Grid's cells (→ `LayoutCanvas` grid), the settings and forms panels (→ `Inspector`) |
 | Form designer (the workbench's Form and Controls tabs) | the cards' order by drag (`sortableList`) | their fields (→ `Inspector`) |
-| BI Studio shell and theme designer (`drishti_bi-studio.js`, `drishti_bi-theme-designer.js`) | the theme's settings and series colours (`Form`) | the explorer, tabs and dock (→ `DesignerShell`), the theme YAML (→ `YamlPane`) |
+| BI Studio shell and theme designer (`drishti_bi-studio.js`, `drishti_bi-theme-designer.js`) | the shell (`DesignerShell`: the header and the designer's actions, the Explorer as its objects, the open items as `docs`, Problems and Query as its `dock`, the three layouts, four eyes through `propose`), the theme's settings and series colours (`Form`) | the theme YAML (→ `YamlPane`) |
 | BI items, workspaces, transforms (`templates/bi/item.html`, `workspace.html`, `transform.html`) | | the YAML and Python text areas (→ `CodeEditor`) |
 | The Notebook's cells (`drishti_bi-notebook*.js`) | | its cells' code (→ `CodeEditor` Python) |
 | Calculator, Pivot computed fields (`terminal/_calc.html`, `terminal/pivot.html`) | | their code areas (→ `CodeEditor`) |
@@ -1414,8 +1427,17 @@ datasets (repeatable rows), the bookmarks (each name a field; the new one's name
 submitted `Form` whose fields follow the kind of filter through `when` and a dependent condition list, every control named as before;
 Pick from the data a row of checkboxes), the Phone and Tablet rows' hide, wide and height, a report measure's name and formula, the
 Copilot's question and a transform step's parameters (`drishti_bi-transform.js` off the form guard's allow-list). The Visualizations are drishti-designer's `Palette` (an entry's own `attrs`, data-* only, so `data-type` stays) and the wells' Add a
-field a `Form` select. **Still their own** (the next pass): the Fields pane (→ `Palette`, with its folders, date parts and badges) and
-the BI Studio shell (→ `DesignerShell`).
+field a `Form` select. **The last pass**: the Fields pane is drishti-tree's `TreeOutline` (the one tree component; its field-list
+hooks in 8.8: a field a button that adds it and drags through the page's `DragHub`, the badges as marks with their `data-*`
+attributes, Move to the model a link mark, a date's parts and Hierarchies closed at the start, an added dataset a branch with its remove
+action); its hand-made tree, search and CSS are deleted. The BI Studio shell is the kit's `DesignerShell` (the report and the theme
+designer): the header with the designer's actions (each keeps its `data-*` hook: `data-save`, `data-publish`, `data-check`,
+`data-undo`, `data-redo`, `data-preview`, `data-view-as`, `data-view-link`, `data-item-link`, `data-save-copy`, the AI's
+`data-ai-draft` and `data-ai-suggest`), the status beside the name, the Explorer as the shell's objects, the open items above the
+designer and Problems and Query in the dock under it; studio, side by side and terminal, remembered per person in this browser; the
+terminal's `check`, `save`, `publish`; a workspace that requires review proposes through the shell's Propose for review (a note
+for the reviewer). Deleted: `templates/bi/_studio.html`, the designers' own headers and the Studio's Explorer, tabs and dock CSS.
+**Still their own: none** of the BI designer's panes.
 
 **Fifth pass (the rows, wip/e-panes-2).** A document's rows are drishti-grid with cell editing through the editors' one helper
 (`E.rowGrid`): the model editor's tables, relationships, measures, hierarchies, row rules, fields and access matrix, the table editor's
