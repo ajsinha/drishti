@@ -276,7 +276,23 @@ async def enhancer_js(request: Request, name: str):
     if name.startswith("elements-"):              # Drishti Elements' bundles (elements-core, elements-grid: the tables, elements-chart: the panel charts, elements-graph: a graph panel, elements-tree: a table with children), loaded like the scripts
         library = "drishti-" + name.removeprefix("elements-")
         path = WEB / "static/elements" / library / f"drishti_{library.removeprefix('drishti-')}.js"
+        if name in ("elements-core", "elements-inputs"):
+            # the grid, the chart, the graph and the tree require drishti-inputs (they draw their choices with its Select), and the frozen
+            # 1.x element loads elements-inputs after them: elements-core carries drishti-inputs too, once (a second load is skipped)
+            core = WEB / "static/elements/drishti-core/drishti_core.js"
+            body = (core.read_bytes() + b"\n" if name == "elements-core" else b"") + _inputs_once()
+            stamp = max(core.stat().st_mtime_ns, INPUTS_BUNDLE.stat().st_mtime_ns)
+            return await send(request, body, "text/javascript", f'"{name}-{stamp:x}"')
     return await send(request, path.read_bytes(), "text/javascript", f'"{path.stat().st_mtime_ns:x}"')
+
+
+INPUTS_BUNDLE = WEB / "static/elements/drishti-inputs/drishti_inputs.js"
+
+
+def _inputs_once() -> bytes:
+    """drishti-inputs' bundle, run only when the page has not registered it yet."""
+    return (b"if (!(window.Drishti && window.Drishti.elements && window.Drishti.elements.libs && window.Drishti.elements.libs['drishti-inputs'])) {\n"
+            + INPUTS_BUNDLE.read_bytes() + b"\n}\n")
 
 
 @router.get("/views/{kind}/{id_:path}/about")
