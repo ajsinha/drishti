@@ -74,9 +74,10 @@ public final class PackFolders {
 
     /** A pack's folder under a root, or {@code <root>/<name>} (not there) when no folder holds it. */
     public static Path of(Path root, String name) {
-        for (Path d : roots(root)) {
+        for (Path d0 : roots(root)) {
+            Path d = d0.normalize();                                // a root such as module/../config/packs
             Path p = d.resolve(name).normalize();
-            if (p.startsWith(d) && Files.isRegularFile(p.resolve("pack.yaml"))) {
+            if (p.startsWith(d) &&Files.isRegularFile(p.resolve("pack.yaml"))) {
                 return p;
             }
         }
