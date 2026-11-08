@@ -49,6 +49,7 @@ work is in the [VaR guide](../guides/VAR_GUIDE.md) and the [exposure guide](../g
 18. [The browser test lane](#18-the-browser-test-lane)
 19. [The BI scale gate](#19-the-bi-scale-gate)
 20. [Drishti Elements: the grid engine at 1,000,000 rows](#20-drishti-elements-the-grid-engine-at-1000000-rows)
+21. [Measuring one installation](#21-measuring-one-installation)
 
 ## 1. What is measured, and why
 
@@ -64,6 +65,7 @@ work is in the [VaR guide](../guides/VAR_GUIDE.md) and the [exposure guide](../g
 | Memory | heap after collection, resident memory, what the heap holds | [11](#11-memory-and-heap) |
 | Scale | the formulas from the measured points to 2.3M and 10M positions | [12](#12-scaling-fits-and-extrapolation-to-23m-and-10m-positions) |
 | The pivot engine | a pivot of 5 to 75 GB on one node and three, cold and warm, with and without a rollup; ≈ first and exact; 100 GB to 3 TB extrapolated | [16](#16-the-pivot-engine-at-scale) |
+| One installation | how to measure one server and one cluster (views, live, search, type-ahead, many users, soaks, memory), the targets and gates, Drishti\*net's membership, gossip under load, HTTP/2 and the soak on real processes, resident memory, the bounded resources of one server | [21](#21-measuring-one-installation) |
 
 **Why.** Two kinds of question decide a deployment: *will it answer in time* (latency at a given load) and *what does it need* (heap,
 disk, CPU, cluster members). Each benchmark answers one of them for one area, at a size one workstation can hold, and states the formula
@@ -1697,3 +1699,331 @@ rows in proportion: the last row is reachable. A frame costs well under a millis
 browser's painting. Sorts compare typed keys (text is ranked once among its distinct values). The quick filter, which reads every
 column of every row as text, is the slowest step and the first to move to a worker if needed. The client-side pivot is for pages
 without a server: in the console every total is the server's (`clientAggregation: false`).
+
+## 21. Measuring one installation
+
+How to measure one server and one cluster, the targets each figure is held to, and the measured results that do not belong to one engine:
+views, live updates, search and type-ahead on one server; many users, soaks and memory; Drishti\*net; and the server's own bounded
+resources. What to change when a number is too slow is the [clusters and scale guide, *Tuning*](../guides/CLUSTER_GUIDE.md#16-tuning).
+
+### 21.1 Targets and measured numbers
+
+Measured 2026-09-30 on the developer workstation (24 cores), local server, unless said:
+
+| What | Target | Measured | Where the number comes from |
+|---|---|---|---|
+| Warm view build, server work | p99 < 50 ms (build gate) | 0.57–0.62 ms (`timings.total`) | `timings` in the view JSON (21.2); the gate is `ViewPipelineTest` |
+| Warm view over HTTP, p99 | < 50 ms | 3.0 ms (p50 1.7 ms) | the `curl` loop of 21.2 |
+| Live tick → frame built, p50 / p99 | — / < 40 ms | 2.4 ms / 11.2 ms | `GET /api/v1/health/live` while streaming IRS-48213 through the console |
+| Browser top bar | — | `Live, p99 2 ms` | real Chrome over the DevTools protocol |
+| Fan-out | — | 10,000 listeners on one topic all receive the latest of 50 ticks | `TopicHubTest` |
+| Structured search over 750 trades | — | 7.2 ms (`elapsedMs`) | `GET /api/v1/search` |
+| Pick list `TRD MX-200000` (99 of 99) / `TRD productType=Revolver` (6 of 750) | — | 1.2 ms / 5.9 ms | the same; an id pattern reads only the ids it names, a field condition every trade |
+| Command-line suggestions over HTTP (25 entries) | 30 ms budget a source | p50 5.2 ms, p99 8.0 ms | the loop of 21.2, on a busy workstation |
+
+At scale: section 8 (a million trades a day on Delta; 35.7 million over 30 dates with 50 users) and section 9 (every store).
+
+### 21.2 How to measure one server
+
+**1. The `timings` of one view** (start here: it needs only `curl`):
+
+```bash
+curl -s http://<server>:18480/api/v1/views/trade/MX-20000001 \
+  | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["timings"]); print(d["provenance"]["layout"])'
+```
+
+```text
+{'fetch': 0.11, 'layout': 0.14, 'links': 0.16, 'bind': 0.21, 'total': 0.62}
+Sutra irs-fixfloat v1 + inference
+```
+
+`fetch` reads the entity from its source; `layout` finds the Sutra and merges it with inference (cached by Sutra version, kind and data
+shape: normally microseconds); `links` fetches linked entities in parallel up to `drishti.graph.link-budget`; `bind` evaluates every panel's
+expressions in parallel. The same numbers are in the console's *How this view was built* panel.
+
+**2. A latency distribution with `curl`** (what a client sees, HTTP included; with security on add `-H "Authorization: Bearer $TOKEN"`):
+
+```bash
+for i in $(seq 200); do
+  curl -s -o /dev/null -w "%{time_total}\n" http://<server>:18480/api/v1/views/trade/MX-20000001
+done | sort -n | awk '{a[NR]=$1} END {printf "n=%d p50=%.1f ms p99=%.1f ms max=%.1f ms\n",
+  NR, a[int(NR*0.5)]*1000, a[int(NR*0.99)]*1000, a[NR]*1000}'
+```
+
+`n=200 p50=1.7 ms p99=3.0 ms max=3.8 ms` on an idle workstation; `n=200 p50=4.0 ms p99=8.3 ms max=12.5 ms` while two Maven builds ran,
+with `timings.total` still under 1 ms: the difference was the busy client, not view building. Compare like with like.
+
+**3. Server metrics (Prometheus)** at `/actuator/prometheus` (with security on, the scrape token `DRISHTI_METRICS_TOKEN` or an
+administrator's token as a Bearer header; only `/actuator/health` stays open):
+
+```bash
+curl -s -H "Authorization: Bearer $DRISHTI_METRICS_TOKEN" http://<server>:18480/actuator/prometheus | grep -E '^drishti_'
+curl -s http://<server>:18480/actuator/metrics/drishti.view          # one metric as JSON
+```
+
+| Metric | Meaning |
+|---|---|
+| `drishti_view_seconds{quantile="0.5"/"0.99"}` | view build percentiles over a short decaying window (`0.0` when nothing was built recently) |
+| `drishti_view_seconds_count`, `_sum`, `_max` | views built, total time, the slowest recent one |
+| `drishti_live_latency_p99_milliseconds` | live tick → frame p99 over `drishti.live.window` |
+| `drishti_live_streams`, `drishti_live_topics`, `drishti_live_frames_total` | open streams, entities with a source subscription, frames built |
+| `http_server_requests_seconds_*{uri="/api/v1/views/{kind}/{id}"}` | per-endpoint HTTP timing |
+| `jvm_*`, `process_*` | heap, GC pauses, threads, CPU |
+
+`deploy/grafana/drishti-dashboard.json` is a ready Grafana dashboard over them (Dashboards → Import, a Prometheus data source scraping
+`http://<server>:18480/actuator/prometheus`).
+
+**4. Live latency.** `curl -s http://<server>:18480/api/v1/health/live` answers `{"streams":0,"topics":0,"frames":11652,"p50Ms":0.886,
+"p99Ms":1.917}` over the last 30 seconds (`drishti.live.window`), so measure while something streams:
+
+```bash
+for i in $(seq 50); do curl -sN -o /dev/null http://<server>:18480/api/v1/views/trade/1000001/stream & done
+sleep 10
+curl -s http://<server>:18480/api/v1/health/live
+kill $(jobs -p)
+```
+
+`"streams":50,"topics":1`: fifty viewers of one entity share one topic and one source subscription; open fifty different live entities to
+load the source and frame builder harder.
+
+**5. Search.** A structured search reports what it read:
+
+```bash
+curl -s -G http://<server>:18480/api/v1/search --data-urlencode 'q=TRD where $.mtm > 1000000' \
+  | python3 -c 'import json,sys; d=json.load(sys.stdin); print({k: d[k] for k in ("scanned","matched","partial","elapsedMs")})'
+```
+
+`{'scanned': 750, 'matched': 163, 'partial': False, 'elapsedMs': 7.18}`. `"partial": true` means the search stopped at
+`drishti.search.max-scan` or ran out of `drishti.search.budget`. An id pattern (`TRD MX-200000`: `scanned` 99) reads only the ids it names;
+a field condition (`TRD productType=Revolver`: `scanned` 750) reads every entity of the kind, so put an id pattern in front when you can
+(`TRD MX-2* currency=usd`). The console adds `limit` (100 by default) and pages 25 rows at a time in the browser.
+
+**6. Suggestions (type-ahead).** The command line asks about 60 ms after each keystroke; each source has `drishti.commands.suggest-budget`
+(30 ms):
+
+```bash
+for i in $(seq 100); do
+  curl -s -o /dev/null -w "%{time_total}\n" 'http://<server>:18480/api/v1/command/suggest?q=TRD%20T-10'
+done | sort -n | awk '{a[NR]=$1} END {printf "n=%d p50=%.1f ms p99=%.1f ms max=%.1f ms\n",
+  NR, a[int(NR*0.5)]*1000, a[int(NR*0.99)]*1000, a[NR]*1000}'
+```
+
+`n=100 p50=5.2 ms p99=8.0 ms max=10.3 ms`; up to 25 entries an answer (`drishti.commands.suggest-limit`; a program may ask `&limit=50`).
+
+**7. Micro-benchmarks (JMH).** `HotPathBenchmark` (`drishti-benchmarks`) times the innermost hot paths against the IRS-48213 document; run
+from the repository root (3 one-second warm-ups and 5 measured iterations in one fork, about a minute):
+
+```bash
+./mvnw -q -pl drishti-benchmarks -am install -DskipTests
+./mvnw -q -pl drishti-benchmarks dependency:build-classpath -Dmdep.outputFile="$PWD/cp.txt"
+java -cp "drishti-benchmarks/target/classes:$(cat cp.txt)" org.openjdk.jmh.Main          # or add a pattern: … Main evalSum
+```
+
+| Benchmark | 2026-09-30 | What it is |
+|---|---|---|
+| `evalTernary` | 0.011 µs | `$.direction == 'PAY_FIXED' ? … : …` (compiled Rachana-EL) |
+| `evalSum` | 0.049 µs | `sum($.legs[0].cashflows, 'pv')` |
+| `formatSigned` | 0.090 µs | `signed2` of −1,962,430.56 |
+| `fingerprint` | 3.5 µs | shape fingerprint of the whole IRS document (cached per generation) |
+| `inferColdLayout` | 12.9 µs | full inference for the IRS document (cached per shape) |
+
+**8. The build's performance gate.** `ViewPipelineTest.warmViewsStayWellUnderFiftyMillisecondsAtP99` builds the full IRS view 300 times to
+warm up and 2,000 times while timing (fetch, match, cached layout, link fan-out on virtual threads, parallel binding); the build fails if p99
+≥ 50 ms or the layout cache hit rate ≤ 99%.
+
+### 21.3 Many users, soaks and memory
+
+**Five kinds of test.**
+
+| Test | What | Tool |
+|---|---|---|
+| Baseline | one user, warm caches | `measure.py`, every release candidate |
+| Capacity | a fixed number of users for a fixed time against the server API (`--server`, `--token-file`) or the console's pages (`--console`, `--user`, `--password`) on a lake made by `trades.py`; one JSON line: requests a second and p50/p95/p99 and failures per kind of request | `tools/bench/users.py`; stepping 50, 100, 200, 400 … users until a gate fails is the target form |
+| Stress | past capacity, and each limit pushed on purpose (`drishti.live.max-streams`, `embed.max_streams`, rate limits, a tick storm, a slow source): graceful refusal (`429`/`503` with a code and `Retry-After`), open views keep ticking, recovery within a minute | a mode of `users.py` to come |
+| Soak | capacity × 0.7 for 8 hours (72 before a major release): heap after a full GC, RSS, native memory summary, threads, file descriptors, RocksDB cache size, the console's RSS and Python heap, streams and topics every 5 minutes | the cluster soak `net_soak.py` (21.5); `VarResourcesSoakTest` in every build |
+| Memory steps | one thing changed in steps with a full GC and a heap measure at each (open live views, packs on, trades cached); a straight-line fit gives bytes per open view, per subscription, per pack, per cached entity | a mode of `users.py` to come |
+
+**The gates.**
+
+| Gate | Threshold | Test |
+|---|---|---|
+| Warm view p99 at capacity | < 50 ms | capacity |
+| Live tick to frame p99 at capacity | < 40 ms | capacity |
+| Type-ahead p95 at capacity | < 100 ms | capacity |
+| Errors at capacity | < 0.1% of actions, none without a `DRS` code | capacity |
+| Past capacity | refusals carry a code and `Retry-After`; open views keep ticking; back to baseline within 60 s | stress |
+| No crash, no `OutOfMemoryError`, no stuck stream | always | all |
+| Heap after GC, slope over the last 6 h of a soak | < 1% of heap max an hour, the 95% confidence interval including 0 | soak |
+| RSS slope over the last 6 h | < 2% an hour | soak |
+| Console RSS per open tab, after tabs close | back within 10% of the start | soak |
+| Browser JS heap over 60 minutes of ticks | no upward slope after 10 minutes | browser memory |
+| Regression against the last release | p99s not more than 10% worse; per-view bytes not more than 15% worse | release run |
+
+**Where memory goes, and the targets:** live topics ≤ 4 KB a topic plus its latest document; view streams ≤ 50 KB an open view; console ≤
+200 KB an open tab; native memory RSS ≤ heap max + 1.5 GB at capacity; VaR and exposure open dates about 0.72 KB of heap a position a date
+(4.8); grouped pages with `store: disk` only each group's totals. A memory budget is then `heap ≈ base + views × per-view + topics ×
+per-topic + caches`.
+
+**Profiling, step by step.**
+
+```bash
+JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational -XX:NativeMemoryTracking=summary \
+  -Xlog:gc*:file=gc.log:time,uptime,level,tags:filecount=5,filesize=20m \
+  -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=./dumps \
+  -XX:StartFlightRecording=name=soak,settings=profile,maxage=6h,disk=true,filename=./dumps/soak.jfr" \
+  java -jar drishti-server/target/drishti-server-*-exec.jar
+jcmd <pid> GC.run && jcmd <pid> GC.heap_info                         # is something growing? (cheap, any time)
+jcmd <pid> GC.class_histogram | head -40 > histo-$(date +%H%M).txt    # at the start, after 1 h and 6 h; diff them
+jcmd <pid> VM.native_memory summary
+jcmd <pid> GC.heap_dump -all=false ./dumps/heap-$(date +%H%M).hprof  # who holds it? pauses the server: a test server only
+jfr summary ./dumps/soak.jfr; jfr print --events jdk.VirtualThreadPinned ./dumps/soak.jfr
+```
+
+Leak suspects are classes whose count grows with time but not with open views (maps keyed by something that never repeats). Open a dump in
+Eclipse Memory Analyzer (*Leak Suspects*, the dominator tree, the path to GC roots); `asprof -e alloc -d 60 -f alloc.html <pid>` shows who
+allocates when the problem is churn. In JFR: `jdk.ObjectAllocationSample` (who allocates), `jdk.OldObjectSample` (what survives),
+`jdk.GCHeapSummary` and `jdk.GarbageCollection`, `jdk.ExecutionSample` (CPU), `jdk.VirtualThreadPinned` (on 21), `jdk.FileRead` and
+`jdk.FileWrite`. The console: `tracemalloc` snapshots, `memray run --live drishti-console/run_drishti_web.py` on a test machine, `py-spy dump
+--pid <pid>` when the event loop is stuck; watch live channels and hub subscriptions return to zero after tabs close. The browser: record
+`JSHeapUsedSize` and DOM node count through CDP every minute for an hour with a collection before each reading; on failure compare two heap
+snapshots 30 minutes apart (detached DOM nodes, undisposed charts, listeners added on every patch).
+
+**The flat-memory and flat-disk soak in every build** (`VarResourcesSoakTest`): the fixture's business dates restated and reloaded several
+times (3 in CI; `-Dsoak.versions=60` for the long form), checked at every step (open dates, views and answers within `hot-dates`; hot files
+within `disk-dates`; mapped id maps bounded; no deleted file mapped) with the heap after a collection growing under 64 MB. The 24-hour soak
+at 200,000 positions is section 13.
+
+### 21.4 Resident and native memory
+
+Two 20 to 40 minute runs of `net_soak.py` (20 users, no kills, `-Xmx2g`, G1) with `-XX:NativeMemoryTracking=summary` and `jcmd <pid>
+VM.native_memory summary.diff` every four minutes found no native leak:
+
+| Server a (the console's, under load) | Default allocator | `MALLOC_ARENA_MAX=2` |
+|---|---:|---:|
+| RSS after warm-up, then 20 to 32 minutes later | 2,548 → 2,846 MB | 1,832 → 2,290 MB |
+| of which committed heap (G1 growing it towards `-Xmx`) | 1,446 → 1,654 MB | 1,198 → 1,629 MB |
+| NMT total (heap, metaspace 131, code 84, GC 111, threads 13, direct buffers 9 MB) | 1,888 → 2,111 MB | 1,638 → 2,077 MB |
+| RSS that NMT does not see (malloc arenas, native libraries) | 660 → 735 MB | 194 → 213 MB |
+| glibc malloc arenas (64 MB each, from `pmap -x`) | 149 (733 MB resident) | 1 extra (49 MB) |
+| `jcmd <pid> System.trim_native_heap` at the end | | gave back 82 MB (b: 90 MB) |
+
+Server b (little load): 1,227 to 1,317 MB with the default allocator (388 to 489 MB unseen by NMT), 911 to 914 MB with two arenas (about 105
+MB unseen). Metaspace, code cache, thread stacks and direct buffers were flat. The growth is the committed heap reaching `-Xmx` (it stops
+there) and, with the default allocator, one arena per busy thread holding freed memory: RSS levels off at about `-Xmx` + 0.9 to 1 GB with the
+default allocator and `-Xmx` + 0.4 GB with two arenas. A temporary direct buffer cached per thread filled the 256 MB direct cap after 13 hours
+in one cluster before `-Djdk.nio.maxCachedBufferSize=262144`.
+
+### 21.5 Drishti\*net
+
+**Membership.** Five nodes from one seed list each other within 5 rounds and a killed one is dead everywhere within 40 s (fake clock,
+`MembershipTest`); three real servers in one JVM list each other 52 ms after the third has started (`NetMembershipTest`); a pack switched on
+at one of three servers is in the others' capability tables 1.0 s later; 13,542 signed calls among three servers through the three steps of
+a key rotation, none refused. A restarted node asked 408 times from its first open port answered every read (held until its peers' digests
+were in, about 0.3 s; `NetRejoinMissTest`).
+
+**Gossip under load** (`NetGossipBusyTest`, three servers in one JVM, `suspect-after: 3s`, `dead-after: 4s`, six platform request threads
+each, forty two-second requests in flight per node for 12 s, half of some nodes' as forwarded reads): the server's port answered nothing;
+with the gossip port no node suspected another and every heartbeat rose by at least six; with `gossip-port: off` every node suspected both
+peers. A node that then died was suspect everywhere after 3.0 s and dead after 7.0 s.
+
+**HTTP/2 between nodes** (`NetPeerProtocolBench`, run on demand with `-Ddrishti.net.bench=true`: two servers in one JVM, 64 users asking B
+for trade views that A holds, 4,000 requests a run, the protocols alternated twice; *connections* is the most A held from B at once):
+
+| Run | Protocol | p50 | p99 | Requests/s | Connections B → A |
+|---|---|---|---|---|---|
+| 1 (cold) | HTTP/1.1 | 144 ms | 1,037 ms | 331 | 312 |
+| 1 (cold) | HTTP/2 | 112 ms | 277 ms | 535 | **1** |
+| 2 (warm) | HTTP/1.1 | 76 ms | 370 ms | 753 | 227 |
+| 2 (warm) | HTTP/2 | 68 ms | **117 ms** | 939 | **1** |
+
+**The soak on real processes** (`tools/bench/net_soak.py`, one 60 GB workstation, JDK 21, each server `-Xmx1536m`): three servers from one
+seed, **a** and **b** reading one Delta lake (ENDUR and CALYPSO: replicas), **c** its own (MUREX: a shard), overlapping packs; 4,500 trades;
+security on; one console given **a** alone with 20 users of `users.py` for 10 minutes; c killed (SIGKILL) at 2 minutes and restarted at 3.5,
+then a killed at 5.5 and restarted at 7 with no seed; a checker asking 420 fixed requests of a random running node all along and comparing
+each with a single server holding all the data.
+
+| Measure | Result |
+|---|---|
+| The console lists all three servers after it starts | 1.5 s |
+| A killed node suspect or dead on every other node | 2.7 s (c), 3.1 s (a) |
+| The console's next page after its own server was killed | 0.27 s, the same session: 0 sign-ins in 476 page checks |
+| A restarted node alive everywhere again (JVM start included) | 18.9 s (c, its seed file), 20.1 s (a, from `peers.json` alone) |
+| Answers checked | 9,362: 5,977 equal to the single server; 2,416 trades equal but for links still *pending* past `link-budget`; 758 partial and naming the stopped node; 211 asked of a node at the moment it was killed |
+| **Wrong answers** | **0** |
+| Load through the console | 136,187 requests in 600 s (227 a second); trade p50 74 ms, p95 177 ms, p99 261 ms; 8% of trade pages said a MUREX trade was unavailable while c was down, as they should |
+
+The live view through a failover is checked by the browser suite (the console moved in 0.8 s and the open page kept ticking). **A long
+soak** asks history queries too (a share of the users' requests, and a checked set asked as an administrator and as a viewer, masks
+compared), samples each process's memory every minute and ends with a verdict: no wrong answers; errors only inside the kill windows; memory
+not growing after warm-up (the slope over the steady spans outside every kill window, below `--max-growth` MB an hour). A two-hour run, the
+shard killed at 20 minutes and the seed at 60, each back five minutes later:
+
+```bash
+python3 tools/bench/net_soak.py --work ~/drishti-scale-test/net-2h --users 20 --seconds 7200 --days 10 \
+    --kill-shard-at 1200 --restart-shard-at 1500 --kill-seed-at 3600 --restart-seed-at 3900 \
+    --history-share 0.15 --sample-every 60 --warmup 600 --max-growth 64
+```
+
+Add `--server-env MALLOC_ARENA_MAX=2 --jvm-arg=-XX:MaxDirectMemorySize=256m --jvm-arg=-XX:TrimNativeHeapInterval=60000` for the production
+settings (repeatable, recorded in `soak.json` under `serverLaunch`). Give a new `--work` when `--dates`, `--days` or `--trades` change. The
+report is `<work>/soak.json` and `<work>/soak-report.txt`; the exit code is 0 only when the verdict passes; the checker's logic is tested
+without servers by `tools/bench/test_net_soak.py`.
+
+### 21.6 Bounded resources of one server
+
+**Concurrency on 8.2 million trades** (`-Xmx8g`, 24 cores, each user looping 60 s over 80% single trades, 10% counterparty-trades pages, 5%
+netting sets, 5% searches over 1.16M; three rounds, each fix found by profiling the round before):
+
+| Round | Users | Requests/s | Trade p50 / p95 | Counterparty trades p50 / p95 | Search p50 | Failed |
+|---|---|---|---|---|---|---|
+| 1 | 10 / 50 / 100 | 76 / 110 / 83 | 0.07 / 0.21 · 0.29 / 0.55 · 0.76 / 1.28 s | 0.23 / 0.56 · 1.4 / 2.3 · 3.7 / 5.9 s | 0.43 · 0.40 · 0.46 s | 0 |
+| 2 (+ pack access cached) | 10 / 50 / 100 | 65 / 66 / 66 | 0.06 / 0.54 · 0.07 / 3.0 · 0.16 / 5.0 s | 0.10 / 0.14 · 0.10 / 0.20 · 0.12 / 1.6 s | 0.59 · 0.65 · 0.69 s | 913 trades at 100 |
+| 3 (+ Parquet footers cached) | 10 / 50 / 100 | **133 / 141 / 122** | **0.03 / 0.08** · 0.18 / 1.0 · 0.53 / 2.4 s | **0.10 / 0.16** · 0.26 / 1.0 · 0.52 / 2.3 s | 0.57 · 0.79 · 0.98 s | **0** |
+
+The same lake: loading one system's day with `lake build` 47–69 s (ENDUR, CALYPSO) and 90–161 s (MUREX); server start 9 s; a counterparty page
+13 ms, a netting-set page 71–91 ms, a counterparty's trades page (~116 trades) 0.15 s; a purge and rebuild of the grouped pages 46 s while the
+old ones served. With the earlier grouped pages (each trade read one at a time) 15,000 trades took 16.6 s against 1.9 s in one pass, and
+whole documents kept in memory ran out of memory at 300,000 trades in 4 GB. Id maps memory-mapped from disk: after a restart 3 ms instead of
+729 ms a table date; the first read of a past date 0.03–0.06 s instead of 0.24–0.34 s. The RocksDB document cache: −17% CPU a read for trades
+read before. 256 KB row groups with 64 KB pages: +13% reads a second, −20% CPU a first read (362,804 trades).
+
+**History queries** (`HistoryBench`, 10,000 trades × 30 business days on Delta, 200 trades, at the service): 30 days cold 13.2 ms median (p95
+19.1), warm 0.83 ms (p95 1.6), a cached answer 0.29 ms; series over 30 days 0.02–0.12 s, diffs 6–14 ms.
+
+**Multi-day type-ahead** (`DatedHitIndexTest`, `DaySegmentTest`: 100,000 ids a day, five days, a prefix, limit 10, 5,000 lookups after
+warm-up): the heap tier 0.002 ms a lookup; a segment file 0.04 ms (548 KB on disk for 100,000 ids), 0.045 ms over 200,000 ids
+(`DatedHitIndexReloadTest`).
+
+**A fixed reduction order** (`FixedOrderSumTest.main`, 100,000 rows of 509, median of 21 interleaved runs of 10, Java 21, 24 threads; the
+fixed order against the earlier one): at 8 and 24 threads every scope within +3.2% (the bank +2.5% and +3.2%), desks 34 to 39% and 25%
+baskets 17 to 31% faster; at one thread within the machine's noise (about ±3%). Java 25 the same: within +4.5%, desks 38 to 40% and baskets
+17 to 32% faster.
+
+**The skeleton's id indexes** (`VarTierBenchmark`, 100,000 trades in 100,000 positions, two dates open, Java 21): the heap two open dates hold
+161 MB with hash maps, 117 MB with sorted id indexes (−27%; `HashMap$Node` 25.7 MB, `Integer` 12.8 MB and their tables 8.5 MB gone, `int[]`
++3.2 MB); a lookup 0.33 µs (50,000 lookups over 100,000 ids in 16.7 ms against 1.6 ms), a 50,000-id basket about 15 ms slower; reopening a
+date sorts its ids in 41.5 to 62.3 ms. Of the 117 MB, the `String` ids are 37 MB. The same run: a node from its aggregate 0.79 ms, the bank
+minus a desk 1.85 ms, the whole bank from float32 rows 3.7 ms (54.7 GB/s), a basket of 50,000 scattered positions 3.2 ms.
+
+**A date's first open** at 50,000 positions with the read decoded on several threads: 2.6 s to 1.8 s, the read itself 1.5 s to 0.8 s. **The
+version watch** reloads a date restated without a signal within 1 to 3 s of the commit at `version-check: 1s` and `refresh-seconds: 1`. A
+SHA-256 digest of 50,000 trade ids (the exposure paths' cache key) takes about 2 ms.
+
+**The in-memory lake** (`MemoryRatiosTest`, at most 10,000 rows a table from `data/testdata`, sorted by key, one business date; decoded =
+the documents' JSON in UTF-8; bytes):
+
+| Table | Rows | Decoded JSON | Disk lake (Snappy) | In memory (zstd 3) | Held in 64 KB chunks | Decoded / memory | Disk / memory |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| news (headlines) | 71 | 573,768 | 229,843 | 138,078 | 327,680 | 4.2x | 1.7x |
+| quote (with a year of history) | 20 | 717,516 | 224,022 | 137,048 | 327,680 | 5.2x | 1.6x |
+| trades (Calypso) | 10,000 | 66,918,873 | 7,553,647 | 2,038,223 | 2,228,224 | 32.8x | 3.7x |
+| counterparty | 1,440 | 3,461,706 | 317,821 | 82,159 | 262,144 | 42.1x | 3.9x |
+| desk P&L | 2,600 | 696,007 | 140,575 | 77,063 | 262,144 | 9.0x | 1.8x |
+
+In-memory files are 4 to 42 times smaller than the decoded documents and 1.6 to 3.9 times smaller than the disk lake's Snappy files; with
+`codec: snappy` they are byte-equal to the disk lake's. A small table's log files dominate, so stores of small tables use `chunk-kb: 64`.
+
+**Java 21 pinning** (`pinning.sh`, 200 clients, `-Djdk.tracePinnedThreads=full`, section 10): the one hot-path pin found was a day's
+JSON-lines index loaded inside a cache's compute in the file connector (and the same pattern in the S3 connector); after the change no pin.
+Pins that need no change: Hadoop's `Shell.runCommand` and RocksDB's libc check (once, at start), Hadoop security's `LoginContext` (once),
+DuckDB, lz4 and zstd JNI calls (they do not park).
