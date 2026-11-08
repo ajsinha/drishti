@@ -45,6 +45,8 @@
 .bi-colourpick { display: inline-flex; align-items: center; gap: var(--d-sp-4); }
 .bi-colour[data-unset] { opacity: .45; }
 .bi-rules .bi-rule { border: 1px dashed var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-5_6); margin: var(--d-sp-4_8) 0; }
+.bi-rule-head { display: flex; align-items: center; justify-content: space-between; gap: var(--d-sp-4); }
+.bi-rule-add { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--d-sp-4); }
 
 /* Edit interactions on the canvas: a Filter / Highlight / None choice over each other visual */
 .bi-editing-interactions .bi-dvis { outline: 1px dashed var(--d-link); }

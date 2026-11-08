@@ -257,6 +257,16 @@
   leaving comes only after a person's edit, never for the page's own text. drishti-designer's `Outline`: a node's `cls` and its own
   `data-*` attributes. The guard's allow-list went from 3 files to 1 (the workbench's data-shape tree, moved onto drishti-tree on its
   own branch).
+- **No bespoke UI: the BI designer's own panes** ([ELEMENTS.md section 12.3](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+  conditional formatting (each rule a live `Form` whose fields follow its kind; the 2.1 short form a Form's repeatable rows), the theme
+  designer's name, series colours (repeatable rows: add, remove, move; 3 to 12), colours and type, Edit interactions, the tooltip page,
+  the page's layout, the report's theme and kiosk rotation, a board tile's report, visual and alert, and the visual's, page's and
+  report's own settings (title, alt text, dataset, text, image, button, sort, most rows, business dates) are drishti-inputs' `Form`
+  through one helper (`drishtiBi.formatPane.form`), every control keeping its `data-*` hook; a colour per value (series colours and a
+  rule's colours) is one custom widget. The ExpressionEditor (a report's own measure) is a one-line Rachana `CodeEditor` whose
+  completion hook offers the fields, measures, functions and keywords (also after `(`, `,` and `=` in a call); its own suggestion list
+  and CSS deleted. Deleted: the Format pane's small controls (`row`, `select`, `text`, `checkbox`, `colour`) and the designer's own
+  text, date and checkbox helpers. drishti-inputs: `upgradeCodeArea` passes `completeAfter`. Saved reports are unchanged.
 - **Vega retired (the owner's decision O1): one drawing engine.** A report's `vega-lite` visual and a Python visual's `output: vega-lite`
   are translated by drishti-chart (`fromVegaLite`) and drawn by drishti-chart; a feature it does not translate is refused in words with
   what to use instead (`vegaLiteAlternative`, `vegaLiteRefusal`, `vegaLiteIn`; `chartIn(host, spec)` puts any spec in a host), never

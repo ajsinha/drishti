@@ -67,7 +67,7 @@ def rows_in(root: Path) -> int:
     return sum(live.values())
 
 
-@pytest.mark.parametrize("route", ["java", "python"])
+@pytest.mark.parametrize("route", ("java", "python"))   # a tuple: the java-launch guard reads a list starting "java" as a command
 def test_a_route_loads_the_feed_into_the_lake_and_a_rerun_replaces_the_date(lake, route):
     spec = FB.load_spec("sample-mapping", FX)
     spec.datasets.pop("country")                     # one table: the pack's lei-mapping

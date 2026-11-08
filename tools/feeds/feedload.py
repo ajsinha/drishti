@@ -103,11 +103,18 @@ def give_id(lake_file: Path, entry: str, key: str, log=print) -> bool:
         return False
     lines = text.splitlines(keepends=True)
     for i, line in enumerate(lines):
-        if line.rstrip() == f"  {entry}:":
+        head, sep, rest = line.rstrip("\n").partition(f"  {entry}:")
+        if head or not sep:
+            continue
+        if rest.strip() == "" or rest.strip().startswith("#"):                 # a block entry: the id on its own line
             lines.insert(i + 1, f"    id: {key}                    # the feed's dataset key (drishti-feeds)\n")
-            lake_file.write_text("".join(lines), encoding="utf-8")
-            log(f"  {entry}: id {key} added to {lake_file} (the feed's dataset key)")
-            return True
+        elif rest.strip().startswith("{"):                                     # the compact style: {promote: [...]}
+            lines[i] = line.replace(f"  {entry}: {{", f"  {entry}: {{id: {key}, ", 1)
+        else:
+            return False
+        lake_file.write_text("".join(lines), encoding="utf-8")
+        log(f"  {entry}: id {key} added to {lake_file} (the feed's dataset key)")
+        return True
     return False
 
 
