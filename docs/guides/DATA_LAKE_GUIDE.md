@@ -499,24 +499,52 @@ it, and so do `lake build` and the parallel loader for a file given on their com
 (`trade_endur.2026-11-06.ready`, `eod.tar.ready`). A short name that could release two data files (`trades.ready` beside `trades.jsonl`
 and `trades.jsonl.gz`) releases neither, and the Inbox screen says why.
 
-**A full, annotated example** (every key; a real file uses only those it needs):
+### 4.0 A complete `.ready` file, every key
+
+Every key a `.ready` file can carry, each with what it does and its default. All are optional: a real file uses only those it needs (most
+need none, or `lake:`, `mode:`, `sha256:` and `rows:`). The keys are one list shared by the inbox and the command-line loaders
+(`ReadyNote.KEYS` in drishti-dataload, `READY_KEYS` in `tools/lake/feedroute.py`, compared by a test); this example is parsed against it
+by `drishti-console/tests/test_docs_ready_example.py`, so a renamed key fails the docs.
 
 ```yaml
-# trade_endur.2026-11-06.jsonl.gz.ready
-lake: risklake                  # the lake the file goes to, over the rule's and the inbox's (section 5.1); a lake with no file yet is created
-pack: trading                   # the pack whose kind and recommended layout the table uses
-kind: trade                     # the pack's kind, when the pack has several
-connector: trade-endur          # the pack's connector whose table is written (here trading/trade_endur), when several serve the kind
-table: trade_endur              # the table, over the name's (refused for a tar)
-business-date: 2026-11-06       # every row's business date, over the name's (YYYY-MM-DD; refused for a tar)
-mode: replace                   # replace (the date replaced) or append (rows added); section 5.3
-key: TRADE_ID                   # the id field (default: the lake entry's or the pack's)
-sha256: 3f0c...                 # 64 hex characters: the file's checksum, checked before anything is written (inbox)
-rows: 1048576                   # the documents the file holds (a tar: all its files), checked before anything is written (inbox)
-new-table: false                # true: this file may create a table no pack has (with pack:, and new-tables: true in the inbox)
-hold: false                     # true: the file waits in the inbox until this key is removed or set to false
-# folders: {trades: trading, scenario_pv: market-risk}   a tar only: each table folder's pack
+# trade_endur.2026-11-06.jsonl.gz.ready   (YAML; JSON works too; an EMPTY file is fine and only says "the data file beside me is complete")
+#
+# --- Where the rows go -----------------------------------------------------------------------------------------------------------------------
+lake: risklake               # the lake (its file config/lakes/<lake>.yaml; created at <data>/delta/<lake> when it has none yet).
+                             #   Default: the routing rule's lake:, else drishti.dataload.lake (demo as shipped). Section 5.1
+pack: trading                # the pack whose kind and recommended layout (promoted columns, id, partitions) the table takes.
+                             #   Default: the rule's pack:, else the pack that has a kind or table named like the file
+kind: trade                  # the pack's kind, when the pack has several. Default: the rule's kind:, else the one the file name names
+connector: trade-endur       # the pack's connector whose table is written (here trading/trade_endur), when several serve the kind.
+                             #   Default: the rule's connector:, else the first that serves the kind
+table: trade_endur           # the table, instead of the name's. Default: the file name's table (trade_endur.2026-11-06...). Refused for a tar
+#
+# --- Which business date -----------------------------------------------------------------------------------------------------------------------
+business-date: 2026-11-06    # every row's business date (YYYY-MM-DD), the partition. Default: the date in the file name, else the
+                             #   business today (New York calendar). Refused for a tar: a tar's folders name their dates. Section 5.2
+#
+# --- How it loads ------------------------------------------------------------------------------------------------------------------------------
+mode: replace                # replace: the file's business date(s) replaced in one commit, so a re-run is safe; append: rows added.
+                             #   Default: the lake entry's load-mode (replace in the shipped lake files), else drishti.dataload.default-mode (append)
+key: TRADE_ID                # the id field. Default: the lake entry's id:, else the pack's key, else a field named id. A new table needs one
+new-table: false             # true: this file may create a table no pack has (with pack:, and drishti.dataload.new-tables: true). Default false
+#
+# --- A tar only ----------------------------------------------------------------------------------------------------------------------------------
+folders: {trade_endur: trading, scenario_pv: market-risk}
+                             # each top folder's pack (a tar holds <table>/<YYYY-MM-DD>/ files). Default: the pack that already has a table of
+                             #   that name, else a pack of that name with one kind; an unresolved folder refuses the whole tar. Section 4.4
+#
+# --- Checks before anything is written (the inbox: a mismatch sends the pair to failed/, nothing committed) -------------------------------
+sha256: 2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae
+                             # the data file's SHA-256, 64 hexadecimal characters (sha256sum, Get-FileHash). Default: not checked
+rows: 1048576                # the documents the file holds (a tar: all its files together). Default: not checked
+#
+# --- Hold it ---------------------------------------------------------------------------------------------------------------------------------------
+hold: false                  # true: the pair waits in the inbox, shown as held, until this key is removed or set to false. Default false
 ```
+
+The example names every key at once to show them: a real tar's `.ready` refuses `table:` and `business-date:`, and `folders:` is meant
+for a tar only. The table below says the same per key.
 
 | Key | Value | Notes |
 |---|---|---|
