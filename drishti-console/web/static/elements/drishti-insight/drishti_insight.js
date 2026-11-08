@@ -679,13 +679,16 @@
         li.appendChild(b);
         return li;
       }
+      var loads = 0;                         // the newest list asked for: an older answer that arrives after it is dropped
       function load() {
         syncChips();
         $('[data-ap-meta]').textContent = 'loading…';
         var q = new URLSearchParams({ box: state.box });
         if (state.group) { q.set('group', state.group); }
         if (state.kind) { q.set('kind', state.kind); }
+        var mine = ++loads;
         return get('list?' + q).then(function (d) {
+          if (mine !== loads) { return; }
           state.list = d;
           var kinds = $('[data-ap-kind]');
           if (kinds.options.length === 1) {

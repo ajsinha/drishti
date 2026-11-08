@@ -152,7 +152,7 @@ report and renderer sheets (`tools/elements_sheet.py`, `tools/render_sheet.py`) 
 | Semantic hues | `--d-market-violet`, `--d-trading-green`, `--d-world-teal`, `--d-cap-*` | a screen's own hue, with a dark and a light value per theme |
 | Fixed colours | `--d-on-color`, `--d-paper`, `--d-on-band`, `--d-band-*`, `--d-scrim*`, `--d-swatch-*`, … | the same in every theme: white labels on coloured fills, the navigation band, scrims under dialogs, the theme menu's swatches |
 | Elevation | `--d-shadow` (per theme), `--d-elev-*` | shadows by role: paper, raised, bar, pop, toast, panel, list, menu, sheet, dialog, drawer, mega menu |
-| Type | `--d-fs-<px>`, `--d-fs-em-<percent>`, `--d-fs-display-<n>` | absolute steps named by their size in px at the default 16px and written in rem (so the console follows the reader's font size); relative steps; fluid display sizes |
+| Type | `--d-fs-<px>`, `--d-fs-em-<percent>`, `--d-fs-display-<n>` | absolute steps named and written in px (px, not rem: a library or an embedded view draws the same size whatever the host page's root text size); relative steps; fluid display sizes |
 | Spacing | `--d-sp-<px>` | padding, margin and gap steps up to 2rem; larger offsets are layout |
 | Radius | `--d-radius` (cards and panels), `--d-radius-<px>`, `--d-radius-pill` | corner radii |
 | Layers | `--d-z-bar` … `--d-z-confirm` | the stacking order of what floats over the page (a z-index under 100 orders things inside one component) |

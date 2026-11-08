@@ -298,6 +298,16 @@ def create_app(settings: Settings) -> FastAPI:
     from routes import explain_routes
     from routes import admin_commands_routes, admin_engines_routes, artifact_routes, changes_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, phone_routes, lake_maint_routes, lake_routes, net_routes, play_routes, frtb_routes, simm_routes, smat_routes, var_regulatory_routes, var_routes
 
+    def _warm_help(app) -> None:
+        """Help's pages rendered once, in a worker thread, as the console starts: the first global search (Alt+K) then reads cached text
+        instead of rendering every guide while the person waits (core/guides.py, Library.warm)."""
+        from core.guides import Library
+
+        try:
+            Library(WEB.parent, WEB.parent / "config" / "help.yaml", app.state.docs_dir, []).warm()
+        except Exception:  # noqa: BLE001 - only a head start: a search renders what it needs as before
+            pass
+
     def _lake_schedules(app):
         from core.lake_maint import maintenance
         try:
@@ -343,6 +353,7 @@ def create_app(settings: Settings) -> FastAPI:
             pass
         backend_task = asyncio.create_task(app.state.backend_watch.run()) if app.state.backend_watch.enabled else None
         maint_task = _lake_schedules(app)                    # Admin -> Lakes -> Maintain: the schedules (core/lake_maint.py)
+        app.state.help_warm = asyncio.ensure_future(asyncio.to_thread(_warm_help, app))   # kept, so it is not collected; a thread, not cancelled
         from core import channel_relay
 
         await channel_relay.start(app)                      # several workers: live-channel calls reach the worker holding the stream

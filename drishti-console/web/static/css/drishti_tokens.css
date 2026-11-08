@@ -426,27 +426,27 @@
 }
 
 /* ---- Scales: type, spacing, radius, layers, breakpoints, densities ----
-   One step per value in use, named by its size in px at the browser's default 16px (13_12 = 13.12px), written in rem so the console
-   follows the reader's own font size. The steps are exactly the sizes the screens had when they were tokenised: a
+   One step per value in use, named and written in px (13_12 = 13.12px): px, not rem, so a library or an embedded view draws the same
+   size on a host page whose root text is not 16px (the Elements' harnesses set 13px). The steps are exactly the sizes the screens had when they were tokenised: a
    step is folded into its neighbour only under the visual check (tools/dev/css_visual_check.py), never by guesswork.
    test_css_tokens.py holds the console's CSS to these: no colour literal outside this file, font sizes only from the type scale,
    @media widths only from the breakpoints, !important only on its allow-list. */
 :root {
   /* type: absolute steps (--d-fs-<px>) */
-  --d-fs-9: .5625rem; --d-fs-9_5: .59375rem; --d-fs-9_6: .6rem; --d-fs-9_92: .62rem;
-  --d-fs-10: .625rem; --d-fs-10_4: .65rem; --d-fs-10_5: .65625rem; --d-fs-10_88: .68rem;
-  --d-fs-11: .6875rem; --d-fs-11_2: .7rem; --d-fs-11_5: .71875rem; --d-fs-11_52: .72rem;
-  --d-fs-11_84: .74rem; --d-fs-12: .75rem; --d-fs-12_16: .76rem; --d-fs-12_48: .78rem;
-  --d-fs-12_5: .78125rem; --d-fs-12_8: .8rem; --d-fs-13: .8125rem; --d-fs-13_12: .82rem;
-  --d-fs-13_44: .84rem; --d-fs-13_5: .84375rem; --d-fs-13_6: .85rem; --d-fs-13_76: .86rem;
-  --d-fs-14: .875rem; --d-fs-14_08: .88rem; --d-fs-14_4: .9rem; --d-fs-14_72: .92rem;
-  --d-fs-15: .9375rem; --d-fs-15_2: .95rem; --d-fs-15_68: .98rem; --d-fs-16: 1rem;
-  --d-fs-16_32: 1.02rem; --d-fs-16_8: 1.05rem; --d-fs-17: 1.0625rem; --d-fs-17_28: 1.08rem;
-  --d-fs-17_6: 1.1rem; --d-fs-18: 1.125rem; --d-fs-18_4: 1.15rem; --d-fs-19_2: 1.2rem;
-  --d-fs-20: 1.25rem; --d-fs-20_8: 1.3rem; --d-fs-21: 1.3125rem; --d-fs-21_6: 1.35rem;
-  --d-fs-22: 1.375rem; --d-fs-22_4: 1.4rem; --d-fs-23_2: 1.45rem; --d-fs-24: 1.5rem;
-  --d-fs-25_6: 1.6rem; --d-fs-28_8: 1.8rem; --d-fs-30_4: 1.9rem; --d-fs-32: 2rem;
-  --d-fs-35_2: 2.2rem;
+  --d-fs-9: 9px; --d-fs-9_5: 9.5px; --d-fs-9_6: 9.6px; --d-fs-9_92: 9.92px;
+  --d-fs-10: 10px; --d-fs-10_4: 10.4px; --d-fs-10_5: 10.5px; --d-fs-10_88: 10.88px;
+  --d-fs-11: 11px; --d-fs-11_2: 11.2px; --d-fs-11_5: 11.5px; --d-fs-11_52: 11.52px;
+  --d-fs-11_84: 11.84px; --d-fs-12: 12px; --d-fs-12_16: 12.16px; --d-fs-12_48: 12.48px;
+  --d-fs-12_5: 12.5px; --d-fs-12_8: 12.8px; --d-fs-13: 13px; --d-fs-13_12: 13.12px;
+  --d-fs-13_44: 13.44px; --d-fs-13_5: 13.5px; --d-fs-13_6: 13.6px; --d-fs-13_76: 13.76px;
+  --d-fs-14: 14px; --d-fs-14_08: 14.08px; --d-fs-14_4: 14.4px; --d-fs-14_72: 14.72px;
+  --d-fs-15: 15px; --d-fs-15_2: 15.2px; --d-fs-15_68: 15.68px; --d-fs-16: 16px;
+  --d-fs-16_32: 16.32px; --d-fs-16_8: 16.8px; --d-fs-17: 17px; --d-fs-17_28: 17.28px;
+  --d-fs-17_6: 17.6px; --d-fs-18: 18px; --d-fs-18_4: 18.4px; --d-fs-19_2: 19.2px;
+  --d-fs-20: 20px; --d-fs-20_8: 20.8px; --d-fs-21: 21px; --d-fs-21_6: 21.6px;
+  --d-fs-22: 22px; --d-fs-22_4: 22.4px; --d-fs-23_2: 23.2px; --d-fs-24: 24px;
+  --d-fs-25_6: 25.6px; --d-fs-28_8: 28.8px; --d-fs-30_4: 30.4px; --d-fs-32: 32px;
+  --d-fs-35_2: 35.2px;
   /* type: relative steps (a size inside its parent's text: --d-fs-em-<percent>) */
   --d-fs-em-70: .7em; --d-fs-em-75: .75em; --d-fs-em-80: .8em; --d-fs-em-85: .85em;
   --d-fs-em-88: .88em; --d-fs-em-90: .9em; --d-fs-em-105: 1.05em;
@@ -463,17 +463,17 @@
   --d-fs-display-10: clamp(1.15rem, 2vw, 1.4rem);
 
   /* spacing: padding, margin and gap steps up to 2rem (--d-sp-<px>); larger offsets are layout, written where they are used */
-  --d-sp-0_32: .02rem; --d-sp-0_8: .05rem; --d-sp-1: .0625rem; --d-sp-1_6: .1rem; --d-sp-1_92: .12rem;
-  --d-sp-2: .125rem; --d-sp-2_24: .14rem; --d-sp-2_4: .15rem; --d-sp-2_88: .18rem; --d-sp-3: .1875rem;
-  --d-sp-3_2: .2rem; --d-sp-3_52: .22rem; --d-sp-4: .25rem; --d-sp-4_48: .28rem; --d-sp-4_8: .3rem;
-  --d-sp-5: .3125rem; --d-sp-5_6: .35rem; --d-sp-6: .375rem; --d-sp-6_08: .38rem; --d-sp-6_4: .4rem;
-  --d-sp-6_72: .42rem; --d-sp-7: .4375rem; --d-sp-7_2: .45rem; --d-sp-8: .5rem; --d-sp-8_8: .55rem;
-  --d-sp-9: .5625rem; --d-sp-9_6: .6rem; --d-sp-10: .625rem; --d-sp-10_4: .65rem; --d-sp-11: .6875rem;
-  --d-sp-11_2: .7rem; --d-sp-12: .75rem; --d-sp-12_8: .8rem; --d-sp-13_6: .85rem; --d-sp-14: .875rem;
-  --d-sp-14_4: .9rem; --d-sp-16: 1rem; --d-sp-17_6: 1.1rem; --d-sp-18: 1.125rem; --d-sp-18_4: 1.15rem;
-  --d-sp-19_2: 1.2rem; --d-sp-20: 1.25rem; --d-sp-20_8: 1.3rem; --d-sp-21_6: 1.35rem; --d-sp-22_4: 1.4rem;
-  --d-sp-22: 1.375rem; --d-sp-24: 1.5rem; --d-sp-25_6: 1.6rem; --d-sp-26: 1.625rem; --d-sp-28_8: 1.8rem; --d-sp-30: 1.875rem;
-  --d-sp-32: 2rem;
+  --d-sp-0_32: 0.32px; --d-sp-0_8: 0.8px; --d-sp-1: 1px; --d-sp-1_6: 1.6px; --d-sp-1_92: 1.92px;
+  --d-sp-2: 2px; --d-sp-2_24: 2.24px; --d-sp-2_4: 2.4px; --d-sp-2_88: 2.88px; --d-sp-3: 3px;
+  --d-sp-3_2: 3.2px; --d-sp-3_52: 3.52px; --d-sp-4: 4px; --d-sp-4_48: 4.48px; --d-sp-4_8: 4.8px;
+  --d-sp-5: 5px; --d-sp-5_6: 5.6px; --d-sp-6: 6px; --d-sp-6_08: 6.08px; --d-sp-6_4: 6.4px;
+  --d-sp-6_72: 6.72px; --d-sp-7: 7px; --d-sp-7_2: 7.2px; --d-sp-8: 8px; --d-sp-8_8: 8.8px;
+  --d-sp-9: 9px; --d-sp-9_6: 9.6px; --d-sp-10: 10px; --d-sp-10_4: 10.4px; --d-sp-11: 11px;
+  --d-sp-11_2: 11.2px; --d-sp-12: 12px; --d-sp-12_8: 12.8px; --d-sp-13_6: 13.6px; --d-sp-14: 14px;
+  --d-sp-14_4: 14.4px; --d-sp-16: 16px; --d-sp-17_6: 17.6px; --d-sp-18: 18px; --d-sp-18_4: 18.4px;
+  --d-sp-19_2: 19.2px; --d-sp-20: 20px; --d-sp-20_8: 20.8px; --d-sp-21_6: 21.6px; --d-sp-22_4: 22.4px;
+  --d-sp-22: 22px; --d-sp-24: 24px; --d-sp-25_6: 25.6px; --d-sp-26: 26px; --d-sp-28_8: 28.8px; --d-sp-30: 30px;
+  --d-sp-32: 32px;
 
   /* radius (--d-radius stays the cards' and panels' radius) */
   --d-radius-1: 1px; --d-radius-2: 2px; --d-radius-3: 3px; --d-radius-3_2: 3.2px; --d-radius-4: 4px; --d-radius-4_8: 4.8px;
