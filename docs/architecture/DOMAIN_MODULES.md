@@ -259,12 +259,12 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
 
 **Phase 2, second half, as built so far (2.9.11.f):**
 
-- **The console plugin's moves** (with `git mv`, so later merges follow): the banking routes (`plugins/banking/routes/`: VaR, regulatory
+- **The console plugin's moves** (with `git mv`, so later merges follow): the banking routes (`drishti-console/plugins/banking/routes`: VaR, regulatory
   VaR, SMAT, FRTB-SA, SIMM, the playgrounds, exposure and the pre-deal check, the MR cube, the trading and market landings' figures), its
-  landings' code and Build types (`plugins/banking/{trading_landing,market_landing,build_types,risk_api}.py`), its templates
-  (`plugins/banking/templates/`, the same names: the console searches each module's folder after `web/templates`) and its scripts and
-  styles (`plugins/banking/static/`, served at the same `/static/...` addresses after `web/static`, gated by module and lens); the World
-  landing into `plugins/economy/`. drishti-risk stays an Elements library under `web/static/elements` (its manifest names its module).
+  landings' code and Build types (`trading_landing.py`, `market_landing.py`, `build_types.py`, `risk_api.py` in `drishti-console/plugins/banking`), its templates
+  (`drishti-console/plugins/banking/templates`, the same names: the console searches each module's folder after `web/templates`) and its scripts and
+  styles (`drishti-console/plugins/banking/static`, served at the same `/static/...` addresses after `web/static`, gated by module and lens); the World
+  landing into `drishti-console/plugins/economy`. drishti-risk stays an Elements library under `web/static/elements` (its manifest names its module).
 - **The engine catalogue by module**: the banking engines' entries are drishti-banking's `META-INF/drishti/engines.yaml` (read before the
   core's `engines/catalogue.yaml`; absent when the module is not installed), their jar files `engines/<id>.yaml` are its own (imported
   `optional:` by `application.yaml`), and the console's copies are `plugins/banking/engines.yaml` and `config/engines.yaml` (the core's),

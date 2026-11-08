@@ -68,7 +68,7 @@ class Server(unittest.TestCase):
 class Console(unittest.TestCase):
     def test_every_csv_download_route_has_a_jsonl_twin(self):
         routes = []
-        for f in sorted((CONSOLE / "routes").glob("*.py")):
+        for f in sorted(list((CONSOLE / "routes").glob("*.py")) + list((CONSOLE / "plugins").glob("*/routes/*.py"))):   # the core's and each module's
             routes += re.findall(r'@router\.(?:get|post)\("([^"]+)"\)', text(f))
         csv = [r for r in routes if r.endswith(".csv")]
         self.assertGreaterEqual(len(csv), 4)
@@ -77,8 +77,8 @@ class Console(unittest.TestCase):
                 self.assertIn(r[:-4] + ".jsonl", routes, f"{r} has no .jsonl twin")
         self.assertIn("/export/search.{fmt}", routes)                         # one route for both
         self.assertIn('FORMATS = ("pdf", "png", "xlsx", "csv", "jsonl")', text(CONSOLE / "routes" / "dist_routes.py"))
-        self.assertIn('"/csv", "/jsonl"', text(CONSOLE / "routes" / "var_routes.py"))
-        self.assertIn('("/csv", "/jsonl")', text(CONSOLE / "routes" / "exposure_routes.py"))
+        self.assertIn('"/csv", "/jsonl"', text(CONSOLE / "plugins" / "banking" / "routes" / "var_routes.py"))
+        self.assertIn('("/csv", "/jsonl")', text(CONSOLE / "plugins" / "banking" / "routes" / "exposure_routes.py"))
         self.assertIn("def to_jsonl(", text(CONSOLE / "core" / "export.py"))
 
     #: every UI menu or button that offers CSV or Excel: the file and what proves JSON Lines is offered beside it
