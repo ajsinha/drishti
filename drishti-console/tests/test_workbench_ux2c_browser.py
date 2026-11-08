@@ -63,10 +63,14 @@ def test_yaml_syntax_text_is_short_and_a_number_field_refuses_a_fraction(live_co
     span.fill("6")
     span.blur()
     page.wait_for_timeout(1200)
+    assert re.search(r"id: facts,.*\bspan: 6\b", state(page, "yaml"))
     span.fill("3.5")
     span.blur()
     page.wait_for_timeout(600)
-    assert span.input_value() == "6"                                      # the design's value, not the refused one
+    # the inspector is drishti-designer's Inspector on drishti-inputs' Form: a refused value stays in the field, marked and said beside it
+    # (the person sees what they typed and why), and the design keeps its own value
+    assert span.get_attribute("aria-invalid") == "true"
+    assert re.search(r"id: facts,.*\bspan: 6\b", state(page, "yaml")), state(page, "yaml")
 
 
 def test_the_workbench_asks_in_the_page_and_never_in_a_browser_dialog(live_console, page):
@@ -83,15 +87,15 @@ def test_the_workbench_asks_in_the_page_and_never_in_a_browser_dialog(live_conso
 def test_first_guesses_say_when_they_are_placeholders(live_console, page):
     open_design(page, live_console, "guess", sutra=SUTRA, files={"s.json": SHIP}, kind="shipment")
     rev = state(page, "rev")
-    page.get_by_role("button", name="Add a gauge panel").click()
+    page.locator("[data-palette] [data-dd-entry='gauge']").click()                  # the palette's entry (drishti-designer's Palette)
     settle(page, rev)
     assert "set max to your limit" in say(page)
     rev = state(page, "rev")
-    page.get_by_role("button", name="Add a histogram panel").click()
+    page.locator("[data-palette] [data-dd-entry='histogram']").click()                  # the palette's entry (drishti-designer's Palette)
     settle(page, rev)
     assert "placeholder" in say(page)
     rev = state(page, "rev")
-    page.get_by_role("button", name="Add an area panel").click()
+    page.locator("[data-palette] [data-dd-entry='area']").click()                  # the palette's entry (drishti-designer's Palette)
     settle(page, rev)
     assert "Added an area panel" in say(page)
 

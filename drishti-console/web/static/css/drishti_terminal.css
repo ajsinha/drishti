@@ -435,7 +435,15 @@ body.embed .vhead { padding: var(--d-sp-9_6) var(--d-sp-12_8); }
 .tbar:has(.asof-known.on) .tbar-link > span, .tbar:has(.asof-known.on) .asof-note { display: none !important; }
 .asof-known-x { color: var(--d-muted); text-decoration: none; padding: 0 var(--d-sp-3_2); font-size: var(--d-fs-16); line-height: 1; }
 .asof-known-x:hover { color: var(--d-accent); }
-@media (max-width: 900px) { .asof-known-in { max-width: 8.5rem; font-size: var(--d-fs-11_2); } }
+/* the known-at field drawn by drishti-inputs (date and time side by side) shrinks with the bar rather than widening a phone's page */
+@media (max-width: 900px) {
+  .asof-known-in { max-width: 8.5rem; font-size: var(--d-fs-11_2); }
+  .asof-known { min-width: 0; }
+  .asof-known .di-was-asof-known-in { min-width: 0; max-width: 11rem; }
+  .asof-known .di-was-asof-known-in .di-datetime-row { flex-wrap: nowrap; }
+  .asof-known .di-was-asof-known-in .di-datetime-row > * { flex: 1 1 0; min-width: 0; }
+  .asof-known .di-was-asof-known-in :is(.di-control, .di-field) { min-width: 0; }
+}
 /* Structured search */
 .srch-form { display: flex; gap: var(--d-sp-8); margin: var(--d-sp-9_6) 0 var(--d-sp-4_8); }
 .srch-q { flex: 1; min-width: 0; background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-6_4) var(--d-sp-9_6); }
@@ -620,7 +628,8 @@ table.tbl tbody tr.tbl-sel > td:first-child { box-shadow: inset 3px 0 0 var(--d-
 .tbl-check-in { width: 16px; height: 16px; margin: 0; accent-color: var(--d-accent); cursor: inherit; }
 .tbl-check-off { cursor: not-allowed; }
 table.tbl tbody tr.tbl-picked > td, table.tbl tbody tr.tbl-picked > th { background: var(--d-accent-tint); }
-@media (max-width: 640px), (pointer: coarse) { .tbl-check { min-width: 44px; min-height: 44px; } .tbl-check-in { width: 22px; height: 22px; } }
+@media (max-width: 640px) { .tbl-check { min-width: 44px; min-height: 44px; } .tbl-check-in { width: 22px; height: 22px; } }
+@media (pointer: coarse) { .tbl-check { min-width: 44px; min-height: 44px; } .tbl-check-in { width: 22px; height: 22px; } }   /* two rules: the element sheet turns the width one into a container query */
 @media print { .tbl-pg { display: none; } table.tbl tbody tr[hidden] { display: table-row !important; } }
 
 /* Sortable headings and filters (drishti_tables.js) */

@@ -34,7 +34,7 @@ pytest.importorskip("pyarrow")
 from playwright.sync_api import expect, sync_playwright  # noqa: E402
 
 import bi_report_stack  # noqa: E402
-from bi_report_helpers import card_value, chart, clean, click_mark, grid_rows, open_report, settled, sign_in  # noqa: E402
+from bi_report_helpers import card_value, chart, clean, click_mark, grid_rows, open_report, pick_in_dropdown_slicer, settled, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, ROOT, api  # noqa: E402
 
 REPORT = "file:report:pnl-vs-exposure"
@@ -145,8 +145,7 @@ def test_the_sample_report_answers_as_the_model_and_its_slicer_filters_every_vis
     total = ask(*RISK, MODEL, {"measures": ["P&L 1d", "Exposure (EE peak)"]})["rows"][0]
     assert card_value(page, "pnl") == int(total[0]) and card_value(page, "ee") == int(round(total[1]))
     sector = "Banking"
-    page.click('[data-visual="sector"] summary')
-    page.check(f'[data-visual="sector"] [data-slicer-value="{sector}"]')
+    pick_in_dropdown_slicer(page, "sector", sector)                       # the dropdown slicer: drishti-inputs' MultiSelect
     settled(page)
     want = ask(*RISK, MODEL, {"measures": ["P&L 1d", "Exposure (EE peak)"]}, where=[{"field": "counterparties.SECTOR", "op": "in", "values": [sector]}])["rows"][0]
     assert card_value(page, "pnl") == int(want[0]) and card_value(page, "ee") == int(round(want[1]))       # one choice reached both facts, through the counterparty

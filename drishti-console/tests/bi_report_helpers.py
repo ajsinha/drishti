@@ -14,6 +14,8 @@
 
 """Helpers the Rupaka phase 3 browser tests share (tests/test_bi_reports_browser.py, tests/test_bi_reports_cross_browser.py, the documentation pictures): signing in,
 reading what a chart really drew (ECharts instances, not pixels), clicking a mark by its coordinates, and the policy-violation listener."""
+import re
+
 from bi_report_stack import CONSOLE_URL, PASSWORD
 
 VIOLATIONS = "window.__csp = []; document.addEventListener('securitypolicyviolation', e => window.__csp.push(e.violatedDirective + ' ' + e.blockedURI));"
@@ -52,6 +54,32 @@ def sign_in(browser, user, next_path="/bi/catalogue", **ctx):
     page.wait_for_url("**" + next_path.split("?")[0])
     page.errors = errors
     return page
+
+
+def code_text(page, selector):
+    """The text of a <textarea data-di-code> that drishti-inputs made a CodeEditor (the textarea is hidden; its value is the editor's)."""
+    page.wait_for_function("s => !!(document.querySelector(s) || {}).drishtiCode", arg=selector, timeout=15000)
+    return page.evaluate("s => document.querySelector(s).value", selector)
+
+
+def type_code(page, selector, text):
+    """Replaces the text of a CodeEditor-made <textarea data-di-code> as a person does: into the editor, select all, then the new text
+    typed in (one insertion, so the editor's own indenting does not change the YAML)."""
+    page.wait_for_function("s => !!(document.querySelector(s) || {}).drishtiCode", arg=selector, timeout=15000)
+    page.evaluate("s => document.querySelector(s).focus()", selector)          # the element's focus() reaches its editor
+    page.keyboard.press("ControlOrMeta+a")
+    page.keyboard.insert_text(text)
+    assert code_text(page, selector) == text
+
+
+def pick_in_dropdown_slicer(page, vis, value):
+    """Picks one value in a dropdown slicer as a person does: the slicer is drishti-inputs' MultiSelect over its checkboxes (they stay,
+    hidden, as the slicer's state), so its box opens the list and the value's option is clicked."""
+    box = page.locator(f'[data-visual="{vis}"] .di-ms-control')
+    box.click()
+    page.locator(".di-ms-pop .di-option").filter(has=page.locator(".di-option-label", has_text=re.compile("^" + re.escape(value) + "$"))).click()
+    page.keyboard.press("Escape")
+    assert page.locator(f'[data-visual="{vis}"] [data-slicer-value="{value}"]').is_checked()
 
 
 def open_report(page, report_id, path=""):

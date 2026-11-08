@@ -1036,9 +1036,14 @@
     const loaded = () => assets.memoised('console-behaviours', async () => {
       const E = (window.Drishti && window.Drishti.elements) || {};
       if (!E.inputs) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet'; link.href = assets.statics('elements/drishti-inputs/drishti_inputs.css');
-        document.head.appendChild(link);
+        try {
+          const res = await fetch(assets.statics('elements/drishti-inputs/drishti_inputs.css'), { credentials: 'omit' });
+          if (res.ok) {
+            const sheet = new CSSStyleSheet();
+            sheet.replaceSync(await res.text());
+            document.adoptedStyleSheets = document.adoptedStyleSheets.concat([sheet]);
+          }
+        } catch (e) { /* no sheet: the pickers still work, unstyled */ }
         for (const b of BUNDLES) { if (!(E.libs && E.libs[b])) { await assets.script('elements/' + b + '/drishti_' + b.replace('drishti-', '') + '.js'); } }
       }
       for (const n of SCRIPTS) { await assets.script('js/drishti_' + n + '.js'); }

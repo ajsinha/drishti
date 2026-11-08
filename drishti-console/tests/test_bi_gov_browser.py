@@ -29,6 +29,7 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 
 import bi_gov_stack  # noqa: E402
 from bi_gov_stack import CONSOLE_URL, PASSWORD  # noqa: E402
+from bi_report_helpers import code_text, type_code  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -89,8 +90,8 @@ def edit_body(page, change, message):
     expect(rows.first).to_be_visible(timeout=15000)                      # the history has loaded (the item's first cut at least): count it then,
     before = rows.count()                                                 # not while it is still drawing (counted early, a save went unnoticed)
     page.get_by_role("button", name="Edit", exact=True).click()
-    box = page.locator("[data-edit] textarea[name=body]")
-    box.fill(change(box.input_value()))
+    body = "[data-edit] textarea[name=body]"                              # drishti-inputs' CodeEditor: typed into as a person does
+    type_code(page, body, change(code_text(page, body)))
     page.fill("[data-edit] input[name=message]", message)
     page.click("[data-edit] button[type=submit]")
     expect(page.locator("[data-edit]")).to_be_hidden(timeout=30000)        # this save went through (the message may still be the last save's)
