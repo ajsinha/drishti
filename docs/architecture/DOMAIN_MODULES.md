@@ -97,7 +97,7 @@ Everything else (the shell, BI, Pivot, Build, designer, admin, Help, embed, phon
 
 | Kind | Banking | Economy |
 |---|---|---|
-| Packs (`config/packs`) | `trading`, `market-data` (its commands are capital markets' functions; the pack stays banking's while the engines read it), `market-risk`, `counterparty-risk` | economy: `world-economy`, `news-and-markets`; capital markets: `us-equities`, `funds`; core reference data: `gleif` (section 7, D6) |
+| Packs (`config/packs`) | `trading`, `market-data` (its commands are capital markets' functions; the pack stays banking's while the engines read it), `market-risk`, `counterparty-risk` | economy: `world-economy`, `news-and-markets`; capital markets: `us-equities`, `funds`; public sector: `world-development`, `central-banks`, `national-statistics`, `oecd`, `official-news`, `gdelt-events` (each filled daily by its feed); core reference data: `gleif` (section 7, D6) |
 | Engines (`config/engines`) | `var`, `exposure`, `frtb-sa`, `simm`, `mr-cube`, `sensitivities` (core: `dataload`, `flight`, `memory-lake`, `openblas`, `pivot`) | |
 | Editions | `risk`, `trading`, `market` | `world` |
 | Lakes | `lakes/var-official.yaml`, `lakes/ccr-official.yaml` | |
