@@ -1094,6 +1094,19 @@ The release train ships 2.9.11.e, 2.9.11.f and 2.9.11.g as one tag, v2.9.11.g: e
   a literal `%2F`, `:`, `/`, `..`, `\`, control characters, quotes, Unicode, emoji, 200 characters, the sentinel text, empty, null);
   `LakeWriterTest`, `LocalPathsTest`. Upgrade: reload tables the parallel loader wrote since 2026-11-07 21:27 with such values
   (RELEASE_NOTES, upgrade step 13).
+- **Column-mapped Delta tables (mode `name` or `id`, as Databricks writes them) are read correctly by every server path**: the fast
+  paths that read Parquet columns by name (the id map and type-ahead, columns with partition values, vectors with partition texts, one
+  entity's vector, the one-document read's id filter) read each column by its physical name (`col-<uuid>`), and the business date, a
+  partition column, the load id's and a key range's statistics are looked up by it (`DeltaTable.Layout.phys`); before, such a table's
+  columns read as empty. `DeltaColumnMappingTest`: column-mapped copies (written by delta-rs) of the layout, partitioned and vector
+  fixtures answer exactly what the plain tables answer, both engines.
+- **Python reads deletion vectors, column mapping and v2 checkpoints**: `tools/lake/deltaread.py` reads a table with delta-rs when its
+  pyarrow reader reads it completely, else with Delta Kernel through the server's exec jar
+  (`com.ash.drishti.deltalake.read.DeltaRowsCli`). delta-rs 1.6.6, the latest release, refuses deletion vectors and v2 checkpoints and
+  reads a column-mapped table of reader version 2 as all nulls. `lake maintain`'s relayout and the Delta-to-Iceberg copy read through
+  it. Fixtures `tools/lake/testdata/delta-features` (real deletion-vector files written by Kernel, a column-mapped table, a table only a
+  checkpoint describes); `test_delta_interop.py`: Python returns exactly what the Java reader returns
+  ([DATA_LAKE_GUIDE.md section 14.3](docs/guides/DATA_LAKE_GUIDE.md#143-table-features)).
 
 - **The MR cube's capped measures are deterministic**: stressed VaR (`drishti.cube.mr.stressed-max-cells`, 100) and SBM
   (`sbm-max-cells`, 60) were counted per evaluation, and cells already cached by an earlier view were not counted, so which cells got a

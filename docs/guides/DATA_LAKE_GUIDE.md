@@ -1316,7 +1316,7 @@ the loader) are in [DATA_ARCHITECTURE.md sections 8–10](../architecture/DATA_A
 | Java writer (`lake build --engine drishti`) and the parallel loader (`--engine java`, the data inbox's large loads) | Delta Kernel 4.4.0 with Drishti's file access | protocol `{"minReaderVersion":1,"minWriterVersion":2}`, no table features; a classic checkpoint every `delta.checkpointInterval` commits (10) | |
 | Java reader (the server's Delta connector) | Delta Kernel 4.4.0 on Drishti's native engine (no Hadoop) | | the features in 14.3's Java column |
 | Python writer (`lake build --engine deltalake`) | delta-rs 1.6.6 | the protocol delta-rs writes | |
-| Python reader (`lake maintain`, the notebook, the tools) | delta-rs 1.6.6 (`DeltaTable`) | | the features in 14.3's Python column |
+| Python reader (`tools/lake/deltaread.py`: `lake maintain`'s relayout, the Delta-to-Iceberg copy) | delta-rs 1.6.6, or Delta Kernel through the server's exec jar when delta-rs would not read the table completely | | the features in 14.3's Python column |
 
 ### 14.2 Partition paths: values, folders, `add.path`
 
@@ -1367,23 +1367,32 @@ characters): *partition column 'PRODUCT GROUP' cannot name a Delta partition fol
 Each feature below was put on a table with delta-rs 1.6.6, appended to and read back by both readers. Delta Kernel 4.4.0's own list
 (`TableFeatures`) declares read support for every feature it knows, including the ones delta-rs cannot create.
 
-| Feature | Java reader (server) | Python reader (delta-rs) | Python writer appends |
+**The Python reader** is `tools/lake/deltaread.py`: delta-rs reads a table its pyarrow reader reads completely; any other table is read
+by Delta Kernel, the server's reader, through the server's exec jar (`com.ash.drishti.deltalake.read.DeltaRowsCli`), so Python reads
+exactly what the server reads. delta-rs alone is not enough: version 1.6.6 (the latest) refuses deletion vectors and v2 checkpoints,
+and reads a column-mapped table of reader version 2 (the protocol Databricks gives column mapping) as all nulls.
+
+| Feature | Java reader (server) | Python reader (`deltaread`) | delta-rs appends (the feature's flag only) |
 |---|---|---|---|
-| `appendOnly`, `invariants`, `checkConstraints`, `generatedColumns`, `changeDataFeed` | reads | reads | yes |
-| `timestampNtz`, `variantType`, `variantType-preview` | reads | reads | yes |
-| `deletionVectors` | reads, deletion-vector files applied (tested with real files) | **refused** | yes |
-| `v2Checkpoint` | reads | **refused** | yes |
-| `columnMapping` | **not supported yet**: the protocol is accepted, but the server's fast paths read Parquet columns by their logical names | **refused** | yes |
-| `domainMetadata`, `identityColumns`, `rowTracking`, `icebergCompatV1` (UniForm) | reads | reads | **refused** |
-| `typeWidening`, `inCommitTimestamp`, `vacuumProtocolCheck`, `clustering`, `collations`, `allowColumnDefaults`, `icebergCompatV2`/`V3`, `timestampNanos` | from Kernel's declared support (delta-rs cannot create them) | not tested | not tested |
+| `appendOnly`, `invariants`, `checkConstraints`, `generatedColumns`, `changeDataFeed` | reads | reads (delta-rs) | yes |
+| `timestampNtz`, `variantType`, `variantType-preview` | reads | reads (delta-rs) | yes |
+| `deletionVectors` | reads, the deleted rows left out (tested with real deletion-vector files) | reads (Kernel), the same rows | yes |
+| `v2Checkpoint` | reads a table whose files only its single-file checkpoint names (tested); with sidecar files: **not verified** | reads (Kernel), the same | yes |
+| `columnMapping`, mode `name` or `id` | reads: every path (documents, columns, type-ahead, vectors, partition values, statistics) uses the physical names (tested) | reads (Kernel) | yes |
+| `domainMetadata`, `identityColumns`, `rowTracking`, `icebergCompatV1` (UniForm) | reads | reads (delta-rs) | **refused** |
+| `typeWidening`, `inCommitTimestamp`, `vacuumProtocolCheck`, `clustering`, `collations`, `allowColumnDefaults`, `icebergCompatV2`/`V3`, `timestampNanos` | **not verified**: Kernel declares read support; delta-rs cannot create them | through Kernel when delta-rs refuses them; **not verified** | not tested |
 
-Drishti's Java writers use none of these features. A table that needs a feature a reader does not know is refused, never half-read:
+The server reads through Kernel's scan plan (the files, their partition values, deletion vectors), and its fast paths then read the
+Parquet columns of those files directly, by their physical names (`delta.columnMapping.physicalName`, which Databricks writes in both
+modes). A v2 checkpoint with sidecar files is left to Kernel's declared support: neither delta-rs nor Kernel 4.4.0 writes sidecars, so
+there is no local fixture. **Writing into an existing external table** (one Databricks writes) that uses deletion vectors, column
+mapping or another of these features is **not verified**: Drishti's writers write and append to their own plain tables (protocol 1/2,
+no features). A table that needs a feature no reader knows is refused, never half-read:
 
-- Java reader: `UnsupportedTableFeatureException: Unsupported Delta table feature: table requires feature "madeUpFeature" which is
-  unsupported by this version of Delta Kernel.`
-- Python reader: `The table has set these reader features: {'deletionVectors'} but these are not yet supported by the deltalake
-  reader.`; a feature delta-rs does not know at all: `Kernel error: Unsupported: Feature 'geospatial' is not supported`.
-- Python writer: `Unsupported table features required: [RowTracking]`.
+- Java reader (and the Python reader through it): `UnsupportedTableFeatureException: Unsupported Delta table feature: table requires
+  feature "madeUpFeature" which is unsupported by this version of Delta Kernel.`
+- Python writer: `Unsupported table features required: [RowTracking]`; `lake maintain` compacts and vacuums with delta-rs, so on
+  such a table it stops with that message and changes nothing.
 
 ### 14.4 Maintenance in protocol terms
 
@@ -1405,6 +1414,15 @@ Reading a Drishti table with delta-rs, as Spark or Databricks would:
 from deltalake import DeltaTable
 t = DeltaTable("data/delta/risklake/trading/trade_endur")
 print(t.protocol(), t.to_pyarrow_table().num_rows)
+```
+
+A table with deletion vectors, column mapping or a v2 checkpoint (one Databricks wrote, say) is read completely from Python with
+`deltaread` (it needs the server's exec jar and Java 21):
+
+```python
+import sys; sys.path.insert(0, "tools/lake")
+import deltaread
+print(deltaread.read("data/delta/risklake/trading/trade_endur", date="2026-11-06").num_rows)
 ```
 
 Section 10 is the other way round: Drishti reading the tables a lakehouse writes.

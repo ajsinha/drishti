@@ -181,9 +181,6 @@ def java_reader(tmp_path_factory):
     java = writers.find_java()
     if not jar or not java:
         pytest.skip("no server exec jar (DRISHTI_JAR or drishti-server/target) or no java")
-    javac = pathlib.Path(java).with_name("javac")
-    if not javac.is_file():
-        pytest.skip(f"no javac next to {java}")
     work = tmp_path_factory.mktemp("java-reader")
     libs, classes = work / "libs", work / "classes"
     libs.mkdir()
@@ -195,7 +192,9 @@ def java_reader(tmp_path_factory):
                 (libs / base).write_bytes(z.read(n))
     src = work / "DeltaInteropRead.java"
     src.write_text(READER, encoding="utf-8")
-    done = subprocess.run([str(javac), "-d", str(classes), "-cp", str(libs / "*"), str(src)], capture_output=True, text=True)
+    cp = os.pathsep.join(str(p) for p in sorted(libs.glob("*.jar")))
+    done = subprocess.run(java_cmd(java, ["-m", "jdk.compiler/com.sun.tools.javac.Main", "-d", str(classes), "-cp", cp, str(src)],
+                                   tmp=work), capture_output=True, text=True)       # javac, run by the JDK's java
     assert done.returncode == 0, done.stderr
 
     def read(table: pathlib.Path):

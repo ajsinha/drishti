@@ -74,6 +74,11 @@ also use in your own applications.** This release carries the work planned as 2.
 
 ## New
 
+- **Delta protocol compliance, tested both ways against delta-rs** ([DATA_LAKE_GUIDE.md section
+  14](docs/guides/DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)): partition folders named as Spark names them and `add.path` encoded
+  once, whatever the value holds; tables Databricks writes with deletion vectors, column mapping (`name` or `id`) or v2 checkpoints are
+  read completely by the server and, through Delta Kernel, by the Python tools. Not verified yet: v2 checkpoints with sidecar files,
+  and writing into an existing external table that uses such features (Drishti writes its own plain tables).
 - **Domain modules and the access registry** ([DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md),
   [ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md), [OPERATIONS.md section 22](docs/guides/OPERATIONS_GUIDE.md#65-engines-modules-and-editions)). The
   core knows no industry: **banking**, **capital markets** and **economy** are modules, each on when installed, licensed and enabled

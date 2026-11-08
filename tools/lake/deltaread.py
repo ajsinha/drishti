@@ -102,7 +102,7 @@ def read_with_kernel(table, version=None, date=None, columns=None, jar=None, jav
     if not j or not jv:
         raise ReadError("this table needs Delta Kernel (the server's reader) to be read completely: build the server's exec jar "
                         "(./mvnw -q package -DskipTests) or name it with DRISHTI_JAR, and Java 21")
-    args = [f"-Xmx{os.environ.get('DRISHTI_DELTAREAD_HEAP', '2g')}", f"-Dloader.main={MAIN}", "-jar", j, str(table)]
+    args = [f"-Xmx{os.environ.get('DRISHTI_LOADER_HEAP', '2g')}", f"-Dloader.main={MAIN}", "-jar", j, str(table)]
     if version is not None:
         args += ["--version", str(version)]
     if date:

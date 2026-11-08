@@ -3839,6 +3839,7 @@ Exactly the layout the existing readers expect.
 | New table | created by the first date's commit, with `target.properties` | created with the layout's properties (zstd, 1 MB row groups, metrics: `doc` none, `id` full), sort order by id |
 | Parquet | `LakeWriter`'s row groups and pages (`DRISHTI_LAKE_ROW_GROUP_KB` 256, `DRISHTI_LAKE_PAGE_KB` 64), Snappy; exact statistics for every scalar column, none for `doc` | the table's properties |
 | The vector column | BYTE_STREAM_SPLIT (a double's 8 bytes as 8 streams), ZSTD, no dictionary, no statistics | the same |
+| Partition folders and paths | the Delta protocol's: Kernel's write context hands the folder as a URI (`DataWriteContext.getTargetDirectory`), `LakeWriter.targetDirectory` decodes it once, so the folder is the Hive-escaped value Spark writes and `add.path` is that path encoded once; an empty value is null (`__HIVE_DEFAULT_PARTITION__`). Every path Kernel hands a reader is plain and is never decoded again (`LocalPaths.decodeUri` decodes only a `java.nio` `file://` URI). Examples: [DATA_LAKE_GUIDE.md section 14.2](../guides/DATA_LAKE_GUIDE.md#142-partition-paths-values-folders-addpath) | Iceberg's own (`identity` partition paths) |
 
 BYTE_STREAM_SPLIT is a standard Parquet encoding read by parquet-java, Kernel, Arrow and DuckDB. Where the Python Iceberg path rejects a
 row (a promoted field holding a list) or drops a value (an object), the loader keeps the JSON text; it makes a column for a field null
@@ -3949,6 +3950,7 @@ the server table, the spill and heap advice: [BENCHMARK.md section 7](../admin/B
 | `ThroughputTest` | the measurements above, BYTE_STREAM_SPLIT and ZSTD on the vector column, the manifest's key order, a 24 MB budget and a `-Xmx192m` JVM giving the identical table |
 | `CodecsTest` | Python's float repr and string escapes, multi-member gzip and a corrupt CRC, globs, sort keys, the pack's layout, the configuration's checks |
 | `tools/lake/test_javaload.py` | the build's options as the loader's configuration, secrets kept out of the file, when `auto` picks the loader |
+| `tools/lake/test_delta_interop.py` | the loader's Delta tables against delta-rs both ways, with 47 partition values that need escaping, and the features each reader reads ([DATA_LAKE_GUIDE.md section 14](../guides/DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)) |
 | `ShardSortedLayoutTest` (Iceberg plugin) | relayout leaves a sort-by table in its order |
 
 ### 10.12 Open
