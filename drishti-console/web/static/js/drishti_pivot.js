@@ -37,9 +37,6 @@
   var USER = root.getAttribute("data-user") || "";
   var MODES = ["views", "compact", "panes"];
   // a per-cell figure's words in its value menu (the VaR source's measures: the engine's figure of the cell's own trades)
-  var ADDS_UP = ["pv", "trades", "comp_var", "comp_es", "dv01", "cs01"];
-  var VAR_NOTE = "Computed per cell by the VaR engine from the cell's own trades: a total is the VaR of its trades, never a sum of the cells (Σ − total = the diversification)";
-  var VAR_SUM_NOTE = "Computed per cell by the VaR engine from the cell's own trades; it adds up: a total equals the sum of its parts";
   var sw = function () { return window.Drishti.PivotSwitches || null; };
   // the grid's figure text by the answer's own fields; a source's measure of before units that counts trades reads as a count (the
   // providers' knowledge stays here and in their packs, never in drishti-grid)
@@ -98,13 +95,14 @@
         aggFunc: fns && fns.length ? (fns.indexOf(num ? "sum" : "count_distinct") >= 0 ? (num ? "sum" : "count_distinct") : fns[0]) : num ? "sum" : "count_distinct",
         additive: num, role: "field", folder: f.folder || null, listHidden: !!f.hidden, funcs: fns || undefined, unit: f.unit || null});
     });
-    var mg = c.provider === "var" ? "VaR engine" : "Measures";
+    // an engine's source names its measures' group and says how its per-cell measures are computed (the catalogue's notes)
+    var notes = c.notes || {}, mg = notes.measureGroup || "Measures", addsUp = notes.addsUp || [];
     (c.measures || []).forEach(function (m) {
       var perCell = m.perCell === undefined ? m.kind !== "mergeable" : !!m.perCell;
       add({id: "m:" + m.name, field: m.name, header: m.label || m.name, type: "number", group: mg, description: m.description || "", measure: m.name + "()",
         additive: m.kind === "mergeable", enableRowGroup: false, enablePivot: false, enableValue: true, role: "measure", folder: m.folder || null,
         listHidden: !!m.hidden, perCell: perCell, unit: m.unit || null,
-        perCellNote: c.provider === "var" ? (ADDS_UP.indexOf(m.name) >= 0 ? VAR_SUM_NOTE : VAR_NOTE) : null});
+        perCellNote: (addsUp.indexOf(m.name) >= 0 ? notes.perCellSumNote : notes.perCellNote) || null});
     });
     state.fields.forEach(add);                        // paths a person added (Path box)
     if (view) {

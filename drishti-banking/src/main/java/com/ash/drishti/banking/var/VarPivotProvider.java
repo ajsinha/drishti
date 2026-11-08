@@ -302,11 +302,19 @@ public final class VarPivotProvider implements PivotProvider {
             notes.put("defaultView", defaultView(o));
         }
         notes.put("folders", FOLDERS);
+        notes.put("measureGroup", "VaR engine");                         // the field pickers' group of the measures, and each one's note
+        notes.put("perCellNote", "Computed per cell by the VaR engine from the cell's own trades: a total is the VaR of its trades, never a sum"
+                + " of the cells (\u03a3 \u2212 total = the diversification)");
+        notes.put("perCellSumNote", "Computed per cell by the VaR engine from the cell's own trades; it adds up: a total equals the sum of its parts");
+        notes.put("addsUp", ADDS_UP);
         notes.put("hierarchies", hierarchies(o, fields));
         notes.put("hidden", fields.stream().map(Field::name).filter(n -> n.endsWith("." + com.ash.drishti.banking.compute.var.HierarchySpec.ROOT_LEVEL
                 .toUpperCase(Locale.ROOT))).toList());          // a hierarchy's root level: the grand total, under More fields
         return new Catalogue(SOURCE, mr() ? "VaR · MR cube" : "VaR", fields, natives(), o.date().toString(), dates, version(v, source, date), 0, notes);
     }
+
+    /** The measures that add up (a total is the sum of its parts): their per-cell note says so. */
+    static final List<String> ADDS_UP = List.of("pv", "trades", "comp_var", "comp_es", "dv01", "cs01");
 
     /** The measures' display folders in the field pickers and panes (PIVOT_GUIDE.md section 29.2). */
     static final Map<String, String> FOLDERS = Map.ofEntries(Map.entry("var", "VaR"), Map.entry("es", "VaR"), Map.entry("pvar", "VaR"),

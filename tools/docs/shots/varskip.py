@@ -38,7 +38,7 @@ from core.pack_paths import pack_dirs  # noqa: E402  (the one rule for where a p
 
 shot = register("varskip")
 SERVER_ENV = {"DRISHTI_SECURITY_ENABLED": "false"}   # marks the guide as one that runs on its own (--guide varskip)
-KINDS = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "portfolio", "var-limit")] + ["core/desk", "core/book", "core/legal-entity"])
+KINDS = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "var-limit")] + ["core/desk", "core/book", "core/legal-entity"])
 
 
 def start_servers(work) -> list:

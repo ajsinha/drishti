@@ -16,7 +16,7 @@
 drishti-grid: it opens in the default mode, the View picker in front of the compact line (C + B), on a source with a first arrangement;
 the grid shows the engine's figures as they are (every total the server's); R opens the Rows picker, a hierarchy is one item with its
 levels and Alt+↓ adds its next level; a value's ▾ offers the functions valid for its field and show-as; Shift+V lists the ready-made,
-my and shared views and saves one; \ opens the panes (A) where a field is dragged to a well; compact and panes open from the address;
+my and shared views and saves one; the backslash key opens the panes (A) where a field is dragged to a well; compact and panes open from the address;
 an old saved view opens as before; the export panel opens; no script error is raised. The grid itself is tested once, against its
 fixture harness (test_elements_grid_browser.py); this file tests the screen's wiring and its numbers."""
 import pytest

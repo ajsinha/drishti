@@ -574,7 +574,7 @@ drishti.py pivot mr headline --source var
  "values": [{"measure": "var()", "as": "VaR"}], "options": {"scope": "BANK"}, "expandTo": {"rows": 1, "columns": 1}}
 ```
 
-![The MR cube's landing: desks by risk class, the headline strip and the lens controls](img/t38/01-landing.png)
+![The MR cube's landing: desks by risk class, the headline strip and the lens controls](img/t38/01-landing.jpg)
 
 **You should see** desks by risk class with a grand total; the grand total equals `VAR BANK` to the cent, and the headline's VaR is the same number.
 
@@ -589,13 +589,13 @@ for its levels. The columns the levels are built from (`DIVISION`, `DESK`, `TT_B
 confidence, scenario set) instead. Press `\`: the **Build** and **Fields** panes open beside the grid; drag *Currency* from Fields to
 Columns; `\` again closes them.
 
-![The View picker on the MR cube: ready-made, my and shared views](img/t38/09-view-picker.png)
+![The View picker on the MR cube: ready-made, my and shared views](img/t38/09-view-picker.jpg)
 
-![The Rows picker: each hierarchy one item, the level columns under More fields](img/t38/10-rows-picker.png)
+![The Rows picker: each hierarchy one item, the level columns under More fields](img/t38/10-rows-picker.jpg)
 
-![VaR's menu: computed per cell, the VaR options](img/t38/11-var-menu.png)
+![VaR's menu: computed per cell, the VaR options](img/t38/11-var-menu.jpg)
 
-![The panes behind Customize: Build and Fields](img/t38/12-panes.png)
+![The panes behind Customize: Build and Fields](img/t38/12-panes.jpg)
 
 **CLI.**
 

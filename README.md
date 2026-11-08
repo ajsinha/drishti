@@ -281,35 +281,35 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 
 | Language | Lines | Files |
 |---|---|---|
-| Java, product | 432k | 2,160 |
-| Java, tests | 165k | 1,038 |
-| Python, product (console, tools, loaders, feeds) | 142k | 730 |
-| Python, tests | 106k | 602 |
-| JavaScript, product (console and Elements) | 125k | 486 |
-| JavaScript, tests | 4k | 22 |
+| Java, product | 434k | 2,167 |
+| Java, tests | 166k | 1,044 |
+| Python, product (console, tools, loaders, feeds) | 143k | 732 |
+| Python, tests | 107k | 603 |
+| JavaScript, product (console and Elements) | 127k | 490 |
+| JavaScript, tests | 5k | 23 |
 | CSS | 19k | 114 |
-| HTML (templates and pages) | 34k | 328 |
-| YAML: configuration, Sutras, data contracts | 111k | 1,412 |
-| Markdown: guides, tutorials, design | 219k | 303 |
+| HTML (templates and pages) | 37k | 338 |
+| YAML: configuration, Sutras, data contracts | 112k | 1,425 |
+| Markdown: guides, tutorials, design | 222k | 307 |
 
-About **751k lines of product code** and **275k lines of tests** (37% of the product code), with **219k lines of documentation**.
+About **759k lines of product code** and **278k lines of tests** (37% of the product code), with **222k lines of documentation**.
 
 | What | Count |
 |---|---|
 | Maven modules | 52 (19 of them connector plugins) |
 | Domain modules | 4: core, banking, economy, capitalmarkets |
 | Lenses | 10: risk, trading, market, cro, mr-cube, ccr-cube, world, publicsector, cio, oversight |
-| Functions a module declares | 106 (47 banking, 32 capitalmarkets, 27 economy); every other command word is the core's |
+| Functions a module declares | 105 (46 banking, 32 capitalmarkets, 27 economy); every other command word is the core's |
 | Console routes | 644 |
-| Server REST handlers | 754 |
-| Drishti Elements | 11 libraries, 186 ES modules |
+| Server REST handlers | 761 |
+| Drishti Elements | 11 libraries, 190 ES modules |
 | Domain packs | 17: banking 4, capitalmarkets 2, core 3, economy 8 |
 | Sutras in the shipped packs | 248 |
 | Connector plugins | 19 |
 | Feeds | 13 |
 | Lake files | 9 |
-| Test files | 1,523: Java 955, console 249, browser 177, tools 120, JavaScript 22 |
-| Documents under docs/ | 174 (32 guides, 22 tutorials) |
+| Test files | 1,529: Java 959, console 250, browser 177, tools 120, JavaScript 23 |
+| Documents under docs/ | 178 (32 guides, 22 tutorials) |
 
 <!-- code-volume:end -->
 

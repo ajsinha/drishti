@@ -3163,6 +3163,14 @@ children: the totals are complete.
 | On the screens | the tree, the explorer, the selectors and the captures show the label muted and in italics, with a `?`: *rows with no DESK value: 3 trades; fix: send DESK on every row and promote it in the connector's layout.<kind>.columns* |
 | In the provenance | one warning per highest (Blank) node: its trades by source kind (`(Blank) LL~~ (LL, level limit-letter): 1 trades with no LIMIT_LETTER value (pnl-vector 1, scenario-pv 0); fix: …`) |
 
+A lake whose P&L vectors and scenario PVs do not promote `LIMIT_LETTER`, read by a pack that configures the limit letters (LL): the date
+loads, MGMT and LEGAL answer, and every row sits under LL's (Blank) letter, muted with its `?`; Admin → Health says *Hierarchy warning*
+with the fix.
+
+![The limit letters' tree with every row under the (Blank) letter, muted, with its ?](img/varskip/01-hierarchy-blank.jpg)
+
+![Admin -> Health: the hierarchy warning with the fix](img/varskip/02-health-hierarchy-warning.jpg)
+
 **Display names from the reference entities.** A node's name is its reference entity's `NAME`: the level's name is the kind and the
 value the id (`desk` `DESK-RATES` is *Rates · Swaps and options*; `book` `BOOK-RATES-1` is *Rates · book 1*; `legal-entity` `LE-NY`
 is *Drishti Bank Securities Inc.*), read once per load from the connector serving the kind; a level with no such kind (`division`,
