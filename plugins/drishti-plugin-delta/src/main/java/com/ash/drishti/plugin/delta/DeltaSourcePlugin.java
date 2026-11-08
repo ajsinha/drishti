@@ -1217,7 +1217,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         }
         String keyColumn = range == null || range.columns().isEmpty() ? null : cols.get(range.columns().get(0));
         java.util.function.Predicate<io.delta.kernel.data.Row> keep = keyColumn == null ? f -> true : f -> {
-            String[] b = DeltaTable.textBounds(f, keyColumn);
+            String[] b = DeltaTable.textBounds(f, l.get().phys(keyColumn));   // statistics name a column-mapped table's columns physically
             return range.mayHold(b[0], b[1], b[2] == null || !"0".equals(b[2]));
         };
         try {

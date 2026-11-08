@@ -58,7 +58,43 @@ final class DeltaTable {
      * @param idScanState the scan state for reading the id column alone, with deletion vectors applied
      */
     record Layout(long version, long timestamp, Row scanState, NavigableMap<LocalDate, List<Row>> files, StructType schema,
-            boolean deletionVectors, Row idScanState) {}
+            boolean deletionVectors, Row idScanState, Map<String, String> physicalNames) {
+
+        /**
+         * A column's name in the data files, in the add actions' {@code partitionValues} and in their statistics: its
+         * {@code delta.columnMapping.physicalName} on a column-mapped table (mode {@code name} or {@code id}, as Databricks writes
+         * {@code col-<uuid>}), else the column's own name.
+         */
+        String phys(String logical) {
+            return physicalNames.getOrDefault(logical, logical);
+        }
+
+        /** A read schema of logical names as the data files name its columns (the read's batches carry the same columns in order). */
+        StructType physical(StructType logical) {
+            if (physicalNames.isEmpty()) {
+                return logical;
+            }
+            StructType out = new StructType();
+            for (io.delta.kernel.types.StructField f : logical.fields()) {
+                out = out.add(phys(f.getName()), f.getDataType(), f.isNullable());
+            }
+            return out;
+        }
+    }
+
+    /** Logical to physical column names of a column-mapped table (empty when the table maps none: names are the columns). */
+    static Map<String, String> physicalNames(Snapshot s) {
+        Map<String, String> config = ((io.delta.kernel.internal.SnapshotImpl) s).getMetadata().getConfiguration();
+        if (!io.delta.kernel.internal.util.ColumnMapping.isColumnMappingModeEnabled(
+                io.delta.kernel.internal.util.ColumnMapping.getColumnMappingMode(config))) {
+            return Map.of();
+        }
+        Map<String, String> out = new java.util.HashMap<>();
+        for (io.delta.kernel.types.StructField f : s.getSchema().fields()) {
+            out.put(f.getName(), io.delta.kernel.internal.util.ColumnMapping.getPhysicalName(f));
+        }
+        return Map.copyOf(out);
+    }
 
     /**
      * The files a business date is read from, as one short text (their paths, sorted, hashed): a date restated, or a table removed and
@@ -249,6 +285,7 @@ final class DeltaTable {
             return new TreeMap<>();
         }
         Scan scan = s.getScanBuilder().withReadSchema(new StructType().add(idColumn, StringType.STRING)).build();
+        String datePhys = physicalNames(s).getOrDefault(dateColumn, dateColumn);
         NavigableMap<LocalDate, long[]> sums = new TreeMap<>();
         CloseableIterator<FilteredColumnarBatch> files = scan instanceof io.delta.kernel.internal.ScanImpl si ? si.getScanFiles(engine, true) : scan.getScanFiles(engine);
         try (CloseableIterator<FilteredColumnarBatch> it = files) {
@@ -256,7 +293,7 @@ final class DeltaTable {
                 try (CloseableIterator<Row> rows = it.next().getRows()) {
                     while (rows.hasNext()) {
                         Row r = rows.next();
-                        String d = InternalScanFileUtils.getPartitionValues(r).get(dateColumn);
+                        String d = InternalScanFileUtils.getPartitionValues(r).get(datePhys);
                         LocalDate date = d == null ? LocalDate.MIN : LocalDate.parse(d);
                         long size = InternalScanFileUtils.getAddFileStatus(r).getSize();
                         long[] sum = sums.computeIfAbsent(date, k -> new long[4]);
@@ -328,8 +365,13 @@ final class DeltaTable {
      * was added (commit order), then the path. A reader that keeps the last copy of an id keeps the newest load's.
      */
     static void newestLast(List<Row> files) {
+        newestLast(files, LOAD_ID);
+    }
+
+    /** As above, the load id column named {@code loadColumn} in the statistics (its physical name on a column-mapped table). */
+    static void newestLast(List<Row> files, String loadColumn) {
         files.sort(java.util.Comparator.comparing((Row f) -> {
-            String max = textBounds(f, LOAD_ID)[1];
+            String max = textBounds(f, loadColumn)[1];
             return max == null ? "" : max;
         }).thenComparingLong(f -> InternalScanFileUtils.getAddFileStatus(f).getModificationTime())
                 .thenComparing(f -> InternalScanFileUtils.getAddFileStatus(f).getPath()));
@@ -340,9 +382,14 @@ final class DeltaTable {
      * (then the ids are read to know). Only then can an id be there twice.
      */
     static boolean severalLoads(List<Row> files) {
+        return severalLoads(files, LOAD_ID);
+    }
+
+    /** As above, the load id column named {@code loadColumn} in the statistics. */
+    static boolean severalLoads(List<Row> files, String loadColumn) {
         String run = null;
         for (Row f : files) {
-            String[] b = textBounds(f, LOAD_ID);
+            String[] b = textBounds(f, loadColumn);
             if (b[0] == null || b[1] == null) {
                 return true;
             }
@@ -361,7 +408,7 @@ final class DeltaTable {
     /** The ids written by more than one load on the date, each with its winning file ({@link #shadows}); computed by {@link #ids}. */
     Map<String, Integer> shadow(Layout layout, LocalDate date) {
         List<Row> files = layout.files().getOrDefault(date, List.of());
-        if (files.size() < 2 || layout.schema() == null || layout.schema().indexOf(LOAD_ID) < 0 || !severalLoads(files)) {
+        if (files.size() < 2 || layout.schema() == null || layout.schema().indexOf(LOAD_ID) < 0 || !severalLoads(files, layout.phys(LOAD_ID))) {
             return Map.of();                                     // one load, or a table from before load ids: no id twice
         }
         Map<String, Integer> s = shadows.get(layout.version() + "|" + date);
@@ -411,12 +458,14 @@ final class DeltaTable {
         Scan scan = s.getScanBuilder().withReadSchema(new StructType().add(idColumn, StringType.STRING).add(docColumn, StringType.STRING)).build();
         NavigableMap<LocalDate, List<Row>> byDate = new TreeMap<>();
         boolean dvs = false;
+        Map<String, String> names = physicalNames(s);
+        String datePhys = names.getOrDefault(dateColumn, dateColumn);
         try (CloseableIterator<FilteredColumnarBatch> it = scan.getScanFiles(engine)) {
             while (it.hasNext()) {
                 try (CloseableIterator<Row> rows = it.next().getRows()) {
                     while (rows.hasNext()) {
                         Row r = rows.next();
-                        String d = InternalScanFileUtils.getPartitionValues(r).get(dateColumn);
+                        String d = InternalScanFileUtils.getPartitionValues(r).get(datePhys);
                         LocalDate date = d == null ? LocalDate.MIN : LocalDate.parse(d);
                         byDate.computeIfAbsent(date, k -> new ArrayList<>()).add(r);
                         dvs |= InternalScanFileUtils.getDeletionVectorDescriptorFromRow(r) != null;
@@ -426,10 +475,11 @@ final class DeltaTable {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        byDate.values().forEach(DeltaTable::newestLast);
+        String loadPhys = names.getOrDefault(LOAD_ID, LOAD_ID);
+        byDate.values().forEach(files -> newestLast(files, loadPhys));
         Row idScanState = s.getScanBuilder().withReadSchema(new StructType().add(idColumn, StringType.STRING)).build().getScanState(engine);
         return Optional.of(new Layout(s.getVersion(), s.getTimestamp(engine), scan.getScanState(engine), byDate, s.getSchema(), dvs,
-                idScanState));
+                idScanState, names));
     }
 
     /**
@@ -444,7 +494,8 @@ final class DeltaTable {
         for (int f = 0; f < files.size(); f++) {
             int file = f;
             java.util.function.Consumer<FilteredColumnarBatch> sink = batch -> {
-                io.delta.kernel.data.ColumnVector v = batch.getData().getColumnVector(batch.getData().getSchema().indexOf(idColumn));
+                int at = batch.getData().getSchema().indexOf(idColumn);      // a raw read of a column-mapped file names it physically
+                io.delta.kernel.data.ColumnVector v = batch.getData().getColumnVector(at < 0 ? 0 : at);
                 Optional<io.delta.kernel.data.ColumnVector> selected = batch.getSelectionVector();
                 for (int r = 0; r < batch.getData().getSize(); r++) {
                     boolean live = selected.isEmpty() || (!selected.get().isNullAt(r) && selected.get().getBoolean(r));
@@ -456,7 +507,7 @@ final class DeltaTable {
             };
             Row fileRow = files.get(f);
             if (InternalScanFileUtils.getDeletionVectorDescriptorFromRow(fileRow) == null) {
-                raw(fileRow, schema, Optional.empty(), batch -> sink.accept(new FilteredColumnarBatch(batch, Optional.empty())));
+                raw(fileRow, layout.physical(schema), Optional.empty(), batch -> sink.accept(new FilteredColumnarBatch(batch, Optional.empty())));
             } else {
                 live(layout.idScanState(), fileRow, sink);
             }
@@ -503,7 +554,7 @@ final class DeltaTable {
         Row fileRow = files.get(fileIndex);
         StructType physical = ScanStateRow.getPhysicalDataReadSchema(layout.scanState());
         io.delta.kernel.expressions.Predicate eq = new io.delta.kernel.expressions.Predicate("=",
-                new io.delta.kernel.expressions.Column(idColumn), io.delta.kernel.expressions.Literal.ofString(id));
+                new io.delta.kernel.expressions.Column(layout.phys(idColumn)), io.delta.kernel.expressions.Literal.ofString(id));
         FileStatus fs = InternalScanFileUtils.getAddFileStatus(fileRow);
         try (CloseableIterator<FileReadResult> raw = engine.getParquetHandler()
                 .readParquetFiles(Utils.singletonCloseableIterator(fs), physical, Optional.of(eq));
@@ -562,7 +613,7 @@ final class DeltaTable {
             int fileIndex = fi;
             // a partition column (PRODUCT_TYPE=Cash/) is not in the Parquet file: its one value for the file is in the log
             Map<String, String> partition = InternalScanFileUtils.getPartitionValues(file);
-            raw(file, schema, Optional.empty(), batch -> {
+            raw(file, layout.physical(schema), Optional.empty(), batch -> {
                 int n = batch.getSize();
                 io.delta.kernel.data.ColumnVector idv = batch.getColumnVector(0);
                 boolean[] keep = new boolean[n];
@@ -578,7 +629,7 @@ final class DeltaTable {
                 for (int c = 0; c < paths.size(); c++) {
                     String p = paths.get(c);
                     io.delta.kernel.data.ColumnVector v = batch.getColumnVector(c + 1);
-                    String fixed = partition.get(pathToColumn.get(p));
+                    String fixed = partition.get(layout.phys(pathToColumn.get(p)));
                     if (numeric.get(p)) {
                         double[] chunk = new double[kept];
                         double whole = fixed == null ? Double.NaN : partitionNumber(fixed);
@@ -640,7 +691,8 @@ final class DeltaTable {
                     : layout.schema().get(c).getDataType();
             schema = schema.add(c, have != null && isScalar(have) ? have : StringType.STRING);
         }
-        StructType read = schema;
+        StructType read = layout.physical(schema);
+        List<String> partitionKeys = textColumns.stream().map(layout::phys).toList();
         Map<String, Integer> shadow = shadow(layout, date);
         List<Row> all = layout.files().getOrDefault(date, List.of());
         List<Piece> pieces = pieces(files, sink);
@@ -649,7 +701,7 @@ final class DeltaTable {
             order[i] = i;
         }
         // piece by piece in file order; several decode at once when the reader asked for it (VectorReads, VAR_GUIDE.md 27a.6)
-        com.ash.drishti.api.VectorReads.inFileOrder(order, sink, (i, to) -> fileVectors(pieces.get(i), read, textColumns, to, shadow,
+        com.ash.drishti.api.VectorReads.inFileOrder(order, sink, (i, to) -> fileVectors(pieces.get(i), read, partitionKeys, to, shadow,
                 all.indexOf(pieces.get(i).file())));
     }
 
@@ -758,9 +810,9 @@ final class DeltaTable {
             schema = schema.add(c, vectorType(layout, c));
         }
         io.delta.kernel.expressions.Predicate eq = new io.delta.kernel.expressions.Predicate("=",
-                new io.delta.kernel.expressions.Column(idColumn), io.delta.kernel.expressions.Literal.ofString(id));
+                new io.delta.kernel.expressions.Column(layout.phys(idColumn)), io.delta.kernel.expressions.Literal.ofString(id));
         Map<String, double[]> out = new LinkedHashMap<>();
-        raw(files.get(fileIndex), schema, Optional.of(eq), batch -> {
+        raw(files.get(fileIndex), layout.physical(schema), Optional.of(eq), batch -> {
             io.delta.kernel.data.ColumnVector idv = batch.getColumnVector(0);
             for (int r = 0; r < batch.getSize() && out.isEmpty(); r++) {
                 if (idv.isNullAt(r) || !id.equals(idv.getString(r))) {
