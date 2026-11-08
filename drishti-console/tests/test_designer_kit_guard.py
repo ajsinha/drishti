@@ -119,6 +119,68 @@ def test_the_guard_finds_what_it_looks_for():
     assert _broken("if (e.target.closest('.CodeMirror')) { return; }") == {}
 
 
+# ---- hand-made inspector and form panes ---------------------------------------------------------------------------------------------
+# A label and an input (or select) drawn in a loop over a schema's properties or a list of fields: an inspector or form pane made by hand.
+# drishti-inputs' Form draws those from a schema (custom widgets, hooks, data-path), drishti-designer's Inspector wraps it for a selection,
+# a drishti-grid with editing takes a matrix. Console scripts only (a page's server-drawn form is the server's).
+FORM_LOOP = re.compile(r"(?:\bproperties|\bfields|\bprops|\bschema\w*|\bparams|\bsettings|\boptions)\b[\w.\[\]'\"()]{0,60}\.(?:forEach|map)\(|"
+                       r"for\s*\(\s*(?:var|let|const)\s+\w+\s+(?:in|of)\s+[\w.]*(?:properties|fields|props|schema\w*|params|settings|options)\b")
+FORM_LABEL = re.compile(r"""\(\s*['"]label['"]|<label\b""")
+FORM_INPUT = re.compile(r"""\(\s*['"](?:input|select)['"]|<(?:input|select)\b""")
+FORM_WINDOW = 25      # lines after the loop's head that the label and the input are looked for in
+# file (relative to drishti-console/web) -> still draws a form pane by hand (each moving onto Form or drishti-grid editing); only shrinks
+FORMS_ALLOWED = {
+    "static/js/drishti_admin-lakes.js",          # a lake's fields: the classifier and promote checkboxes per field (-> drishti-grid editing)
+    "static/js/drishti_bi-transform.js",         # a transform step's parameters (-> Form: a column select, a checkbox list, a choice)
+}
+
+
+def _hand_form(text):
+    """The first loop over a schema's properties or fields that draws a label and an input itself, or None."""
+    lines = COMMENT.sub(lambda m: "\n" * m.group(0).count("\n"), text).splitlines()
+    for i, line in enumerate(lines):
+        m = FORM_LOOP.search(line)
+        if m:
+            body, depth = [], 0                  # the loop's body: from its head until its braces close (at most FORM_WINDOW lines)
+            for j, part in enumerate(lines[i:i + FORM_WINDOW]):
+                chunk = part[m.start():] if j == 0 else part
+                body.append(chunk)
+                depth += chunk.count("{") - chunk.count("}")
+                if depth <= 0 and "{" in "".join(body):
+                    break
+            window = "\n".join(body)
+            if FORM_LABEL.search(window) and FORM_INPUT.search(window):
+                return line.strip()[:140]
+    return None
+
+
+@pytest.fixture(scope="module")
+def hand_forms():
+    return {str(p.relative_to(WEB)): _hand_form(p.read_text(encoding="utf-8", errors="replace")) for p in sorted((WEB / "static" / "js").rglob("*.js"))}
+
+
+def test_no_console_script_draws_an_inspector_or_form_pane_by_hand(hand_forms):
+    bad = [f"{name}: draws a label and an input in a loop over a schema's properties or fields: use drishti-inputs' Form (custom widgets, hooks, "
+           f"data-path), drishti-designer's Inspector, or a drishti-grid with editing\n      {line}"
+           for name, line in hand_forms.items() if line and name not in FORMS_ALLOWED]
+    assert not bad, "\n".join(bad)
+
+
+def test_the_form_allow_list_only_shrinks_and_is_capped(hand_forms):
+    stale = [f"{name}: gone or on Form now (take it off the list)" for name in sorted(FORMS_ALLOWED) if not hand_forms.get(name)]
+    assert not stale, "\n".join(stale)
+    assert len(FORMS_ALLOWED) <= 2                # 3 when the rule was made (2026-11-07, wip/e-panes), 2 now; it ends at 0
+
+
+def test_the_form_guard_finds_what_it_looks_for():
+    assert _hand_form("Object.keys(schema.properties).forEach(function (k) {\n  var l = el('label', null, k);\n  var i = el('input');\n});")
+    assert _hand_form("fields.forEach((f) => { box.append(h('label', {text: f.label}), h('select', {})); });")
+    assert _hand_form("for (const k in s.properties) { html += '<label>' + k + '</label><input name=' + k + '>'; }")
+    assert _hand_form("rows.forEach(function (r) { tr.appendChild(el('td', null, r.name)); });") is None                         # not a form
+    assert _hand_form("var f = new I.Form(host, {schema: s});\nfields.forEach(function (f) { names.push(f.label); });") is None    # Form draws it
+    assert _hand_form("/* fields.forEach(f => h('label') + h('input')) */") is None
+
+
 def test_the_kit_is_where_the_designers_live():
     """The libraries the rule points to exist and every designer page loads the kit."""
     kit = WEB / "static" / "elements" / "drishti-designer" / "src"

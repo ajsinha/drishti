@@ -16,7 +16,7 @@
 the inspector (the unit and the change). Fixtures: test_workbench_browser.py's."""
 import json
 
-from test_workbench_browser import browser, open_design, page, settle, state, wait  # noqa: F401 - fixtures and helpers
+from test_workbench_browser import browser, open_design, page, put_option, settle, state, wait  # noqa: F401 - fixtures and helpers
 from wb_live import live_console  # noqa: F401 - the fixture
 
 SAMPLE = json.dumps({"tradeId": "T-1", "mtm": 1250, "pnl1d": -40})
@@ -31,10 +31,10 @@ def option(page, panel, name):
 
 def test_a_metric_is_added_from_the_palette_drawn_as_a_named_figure_and_edited_in_the_inspector(live_console, page):
     open_design(page, live_console, "metric", sutra=SUTRA, files={"t.json": SAMPLE})
-    tile = page.locator('[data-palette] .wb-kind[data-kind="metric"]')
-    assert tile.count() == 1 and "facts" in tile.get_attribute("data-text") and "headline figure" in tile.get_attribute("data-text")
+    tile = page.locator('[data-palette] [role=group][aria-label="facts"] [data-dd-entry="metric"]')       # drishti-designer's Palette, by family
+    assert tile.count() == 1 and "headline figure" in tile.get_attribute("title")
     rev = state(page, "rev")
-    page.get_by_role("button", name="Add a metric panel").click()
+    tile.click()
     settle(page, rev)
     wait(page, "!!document.querySelector('[data-preview] .dd-selected[data-panel]')")
     new = page.evaluate("document.querySelector('[data-preview] .dd-selected[data-panel]').dataset.panel")
@@ -47,9 +47,7 @@ def test_a_metric_is_added_from_the_palette_drawn_as_a_named_figure_and_edited_i
     page.locator("[data-inspector] .bs-role").first.wait_for()
     for name, text in (("unit", "USD"), ("delta", "$.pnl1d"), ("deltaFmt", "signed0")):
         rev = state(page, "rev")
-        field = page.get_by_label(name, exact=True)
-        field.fill(text)
-        field.blur()
+        put_option(page, name, text)
         settle(page, rev)
         assert option(page, new, name) == text
     wait(page, f"!!document.querySelector('[data-preview] [data-panel=\"{new}\"] .metric-d')")

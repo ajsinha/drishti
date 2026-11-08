@@ -123,6 +123,14 @@
 
 ## 2.9.11.e (unreleased)
 
+- **No bespoke UI, the panes** ([ELEMENTS.md section 12.3, fourth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+  the Build workbench's inspector is drishti-designer's `Inspector` (one live `Form` from the Rachana schema; `build/drishti_inspector.js`
+  286 → 242 lines) and its palette the kit's `Palette` (`build/drishti_palette.js` 80 → 63); its expression fields are `Form`'s new
+  **formula** widget, a one-line `CodeEditor` completing shape paths and functions (`build/drishti_expr.js` 107 → 65: the hand-made
+  completion list deleted); `build/drishti_forms.js` is the converter of the structured options into fields (134 → 116). The table editor's
+  own formula widget folded into the `Form`'s; the model editor's Overview (name, title, in words) and Masks are live `Form`s; the Sutra
+  designer's columns checklist is `Form`'s checkboxes. drishti-designer's `Inspector` takes `form` and `head`. The kit guard gains a rule:
+  no console script draws a label and an input in a loop over a schema's properties or fields (an allow-list of 2 that only shrinks).
 - **The forms on drishti-inputs' `Form`** ([ELEMENTS.md 8.2, "The forms on Form"](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
   the query form (`FORM <pack>`: the server sends its schema, the fields are a `Form` embedded in the page's GET form and the address is
   unchanged), the subscription's When, the table editor's name, rows and look-up dialog, BI's Format pane, the Build inspector's
