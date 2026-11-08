@@ -49,8 +49,8 @@ export const MANIFEST = Object.freeze({
       "scripts": []
     },
     "drishti-inputs": {
-      "version": "0.2.0",
-      "title": "Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema with four eyes, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place",
+      "version": "0.3.0",
+      "title": "Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema (live or embedded, steps, named fields, hooks, custom widgets, time, date-and-time and money) with four eyes, the time and date-and-time pickers, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place",
       "bundle": "drishti-inputs/drishti_inputs.js",
       "entry": "drishti-inputs/src/drishti_index.js",
       "global": "inputs",

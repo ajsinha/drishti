@@ -248,7 +248,7 @@ def test_a_failing_step_says_where_and_keeps_the_steps_before(stack, browser):
     n = ran(page, 0)
     page.click("[data-open-code]")
     page.fill("[data-code-label]", "A typo")
-    page.fill("[data-code]", 'df = df[df["NO_SUCH_COLUMN"] > 0]')
+    page.locator("[data-code]").evaluate("(e, t) => { e.value = t; e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })); }", 'df = df[df["NO_SUCH_COLUMN"] > 0]')   # the code area is drishti-inputs' code editor: typed through its text area
     page.click("[data-code-add]")
     ran(page, n)
     expect(page.locator("[data-step='1']")).to_have_class(re.compile("tx-failed"))

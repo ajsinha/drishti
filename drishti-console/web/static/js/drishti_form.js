@@ -14,12 +14,15 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Query by form (FORM <pack>). The page works without this script (a plain GET form); the script only makes it pleasanter:
-   the second box appears for "between", a date field gives way to words for a relative range, Esc clears every field,
-   Ctrl+Enter submits from a list box, and the result's buttons copy, save and share. The criteria live in the address. */
+/* Query by form (FORM <pack>). The fields are drishti-inputs' Form, drawn from the schema the server sends with the page (core/forms.py
+   form_schema) and live inside the page's own GET form: each control carries the address's name (op.<path>, v.<path>, v2.<path>,
+   cs.<path>), so a search is the same address it always was. The second box appears for "between", a date gives way to words for a
+   relative range, a dependent list offers only what goes with the values chosen in its parent, a long list (thousands of counterparties)
+   is found by typing, Esc clears every field, Ctrl+Enter submits from a text box, and the result's buttons copy, save and share. */
 (function () {
   'use strict';
   var form = document.querySelector('[data-qform]');
+  var I = window.Drishti.elements && window.Drishti.elements.inputs;
 
   /* the forms home lists the last forms opened here, per browser and person: pack, kind, a label */
   (function remember() {
@@ -35,86 +38,52 @@
 
   function each(list, fn) { Array.prototype.forEach.call(list, fn); }
 
-  /* A dependent enum (data-depends="PRODUCT_TYPE"): only its values that occur with the chosen values of the field it depends on are
-     offered (each label says which with data-parents); nothing chosen there offers them all. A value hidden this way is unticked (a
-     long list's multi-select, drishti-inputs, follows its checkboxes: it offers what is not qf-dep-off). */
-  function dependents() {
-    if (!form) { return; }
-    each(form.querySelectorAll('.qf-enum[data-depends]'), function (group) {
-      var parent = form.querySelector('.qf-field[data-field="' + group.getAttribute('data-depends') + '"]');
-      var child = group.closest('.qf-field');
-      if (!parent || !child) { return; }
-      function apply() {
-        var chosen = [];
-        each(parent.querySelectorAll('input[type=checkbox]:checked'), function (b) { chosen.push(b.value); });
-        each(child.querySelectorAll('label[data-parents]'), function (l) {
-          var ok = !chosen.length || l.getAttribute('data-parents').split('|').some(function (p) { return chosen.indexOf(p) >= 0; });
-          l.classList.toggle('qf-dep-off', !ok);
-          var box = l.querySelector('input');
-          if (!ok && box && box.checked) { box.checked = false; box.dispatchEvent(new Event('change', { bubbles: true })); }
-        });
-      }
-      parent.addEventListener('change', apply);
-      apply();
-    });
-  }
-  dependents();
+  /* A constant the address carries (the one way a field compares): nothing to draw, the form writes its hidden input. */
+  function constantWidget() { var s = document.createElement('span'); s.hidden = true; return { el: s }; }
 
-  /* A long pick list (data-big-url): typing finds its values (the console asks /form/<pack>/values), each a checkbox to tick;
-     ticked ones stay when the search changes, so several can be chosen. */
-  each(document.querySelectorAll('[data-big-url]'), function (group) {
-    var box = group.querySelector('[data-big-q]'), out = group.querySelector('[data-big-found]'), timer = null, asked = 0;
-    if (!box || !out) { return; }
-    var name = (group.querySelector('input[type=checkbox]') || {}).name || ('v.' + new URLSearchParams(group.getAttribute('data-big-url').split('?')[1]).get('path'));
-    box.addEventListener('input', function () {
-      clearTimeout(timer);
-      timer = setTimeout(function () {
-        var n = ++asked, text = box.value.trim();
-        if (!text) { out.textContent = ''; return; }
-        fetch(group.getAttribute('data-big-url') + '&q=' + encodeURIComponent(text), { credentials: 'same-origin' })
-          .then(function (r) { return r.ok ? r.json() : { values: [] }; })
-          .then(function (res) {
-            if (n !== asked) { return; }                       // a newer search answered first
-            out.textContent = '';
-            var chosen = {};
-            each(group.querySelectorAll('input[type=checkbox]:checked'), function (b) { chosen[b.value] = true; });
-            (res.values || []).forEach(function (v) {
-              if (chosen[v]) { return; }
-              var l = document.createElement('label'), c = document.createElement('input'), s = document.createElement('span');
-              l.className = 'qf-chk'; c.type = 'checkbox'; c.name = name; c.value = v; s.textContent = ' ' + v;
-              c.addEventListener('change', function () { if (c.checked) { group.insertBefore(l, box); } });
-              l.appendChild(c); l.appendChild(s); out.appendChild(l);
-            });
-            if (!(res.values || []).length) { out.textContent = 'No match'; }
-            else if (res.more) { var m = document.createElement('span'); m.className = 'text-muted-d'; m.textContent = ' … and ' + res.more + ' more: type more'; out.appendChild(m); }
-          }).catch(function () { out.textContent = ''; });
-      }, 200);
-    });
-  });
-
-  function syncField(box) {
-    var op = box.querySelector('.qf-op');
-    var v = box.querySelector('.qf-v'), v2 = box.querySelector('.qf-v2'), rel = box.querySelector('.qf-vrel');
-    var kind = op ? op.value : '';
-    if (v2) { v2.hidden = kind !== 'between'; }
-    if (rel && v) {                                   // a date: the picker, or words for a relative range (only the one shown is sent)
-      var words = kind === 'relative';
-      v.hidden = words; v.disabled = words; rel.hidden = !words; rel.disabled = !words;
+  /* A long pick list: the values chosen as chips, and a field that finds the others as you type (the console asks /form/<pack>/values);
+     picked ones stay when the search changes, so several can be chosen. */
+  function bigWidget(w) {
+    var o = w.field.options || {}, picked = (w.value || []).slice();
+    var box = document.createElement('div'), chips = document.createElement('ul'), host = document.createElement('div');
+    box.className = 'qf-big'; chips.className = 'qf-big-chips'; chips.setAttribute('aria-label', w.label + ': chosen');
+    function draw() {
+      chips.textContent = '';
+      picked.forEach(function (v) {
+        var li = document.createElement('li'), x = document.createElement('button');
+        li.className = 'di-chip'; li.textContent = v + ' '; li.setAttribute('data-qf-big-value', v);
+        x.type = 'button'; x.className = 'di-chip-x'; x.textContent = '×'; x.setAttribute('aria-label', 'Remove ' + v);
+        x.addEventListener('click', function () { picked = picked.filter(function (y) { return y !== v; }); draw(); w.set(picked.slice()); });
+        li.appendChild(x); chips.appendChild(li);
+      });
     }
+    var cb = new I.Combobox(host, { label: 'Find a ' + w.label, placeholder: 'Type to find among ' + (o.count || 'the') + ' values', minChars: 1, debounceMs: 200,
+      source: function (q, signal) {
+        return fetch(o.url + '&q=' + encodeURIComponent(q), { credentials: 'same-origin', signal: signal })
+          .then(function (r) { return r.ok ? r.json() : { values: [] }; })
+          .then(function (res) { return (res.values || []).filter(function (v) { return picked.indexOf(v) < 0; }); });
+      } });
+    cb.input.id = w.id;
+    cb.input.setAttribute('data-big-q', '');
+    cb.on('change', function (e) { if (e.value && picked.indexOf(e.value.value) < 0) { picked.push(e.value.value); draw(); w.set(picked.slice()); } cb.setValue(null); });
+    box.appendChild(chips); box.appendChild(host);
+    draw();
+    return { el: box, input: cb.input };
   }
-  /** The value box a field sends: the relative words or the date (or the text, number, ids). */
-  function valueBox(box) { var rel = box.querySelector('.qf-vrel'); return rel && !rel.hidden ? rel : box.querySelector('.qf-v'); }
 
+  var qform = null, host = form && form.querySelector('[data-qf-fields]'), data = host && host.getAttribute('data-qf-schema');
+  if (form && host && data && I) {
+    var given = JSON.parse(data);                                   // the form's schema and value, sent with the page
+    qform = new I.Form(host, { schema: given.schema, value: given.value, embedded: true, label: 'Search criteria', layout: 'columns',
+      widgets: { 'qf-constant': constantWidget, 'qf-big': bigWidget } });
+  }
+  /** Every field back to empty; how each field compares is kept. */
   function clearAll() {
-    each(form.querySelectorAll('input, textarea, select'), function (e) {
-      if (e.type === 'hidden' && !e.diPicker) { return; }
-      if (e.type === 'checkbox') { if (e.checked) { e.checked = false; e.dispatchEvent(new Event('change', { bubbles: true })); } }
-      else if (e.type === 'radio') { e.checked = e.value === 'any'; }
-      else if (e.tagName === 'SELECT') { e.selectedIndex = e.name.indexOf('op.') === 0 || e.name === 'limit' ? e.selectedIndex : 0; }
-      else { e.value = ''; }
-    });
-    each(form.querySelectorAll('.qf-field'), syncField);
-    var first = form.querySelector('.qf-field .qf-v, .qf-field input:not([type=hidden])');
+    if (!qform) { return; }
+    var v = JSON.parse(JSON.stringify(qform.getValue()));
+    Object.keys(v).forEach(function (g) { Object.keys(v[g] || {}).forEach(function (f) { var x = v[g][f]; v[g][f] = { op: x.op }; if (x.v === 'any' || (x.v && /^(true|false)$/.test(x.v))) { v[g][f].v = 'any'; } }); });
+    qform.setValue(v);
+    var first = host.querySelector('input:not([type=hidden]), textarea, select');
     if (first) { first.focus(); }
   }
 
@@ -147,11 +116,6 @@
   }
 
   if (form) {
-    each(form.querySelectorAll('.qf-field'), function (box) {
-      syncField(box);
-      var op = box.querySelector('.qf-op');
-      if (op) { op.addEventListener('change', function () { syncField(box); }); }
-    });
     form.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && !e.defaultPrevented) {
         e.preventDefault(); clearAll();
@@ -161,18 +125,17 @@
     });
     var clear = document.querySelector('[data-qf-clear]');
     if (clear) { clear.addEventListener('click', clearAll); }
-    form.addEventListener('submit', function () {
-      // empty boxes stay out of the address: only what was filled in is a criterion
-      each(form.querySelectorAll('.qf-v, .qf-v2, .qf-vrel'), function (e) { if (!e.value.trim()) { e.disabled = true; } });
-      each(form.querySelectorAll('.qf-field'), function (box) {
-        var v = valueBox(box), op = box.querySelector('.qf-op');
-        if (op && v && v.disabled) { op.disabled = true; }
-        if (box.getAttribute('data-type') === 'text' && v && v.disabled) {
-          var cs = box.querySelector('[name^="cs."]'); if (cs) { cs.disabled = true; }
-        }
+    form.addEventListener('submit', function (e) {
+      if (qform && !qform.validate().ok) { e.preventDefault(); return; }   // a required field left empty: said beside it, nothing is asked
+      // empty boxes stay out of the address: only what was filled in is a criterion (and a field with none keeps no op. or cs.)
+      each(form.querySelectorAll('[name^="v."], [name^="v2."]'), function (x) { if (!x.disabled && !String(x.value).trim()) { x.disabled = true; } });
+      each(form.querySelectorAll('.qf-field[data-type="text"], .qf-field[data-type="number"], .qf-field[data-type="amount"], .qf-field[data-type="date"], .qf-field[data-type="id"]'), function (box) {
+        var p = box.getAttribute('data-field');
+        var filled = Array.prototype.some.call(form.querySelectorAll('[name="v.' + p + '"]'), function (x) { return !x.disabled && String(x.value).trim() !== ''; });
+        if (!filled) { each(form.querySelectorAll('[name="op.' + p + '"], [name="cs.' + p + '"]'), function (x) { x.disabled = true; }); }
       });
     });
-    window.addEventListener('pageshow', function () { each(form.querySelectorAll(':disabled'), function (e) { e.disabled = false; }); each(form.querySelectorAll('.qf-field'), syncField); });
+    window.addEventListener('pageshow', function () { if (qform) { qform.refresh(); } each(form.querySelectorAll('.qf-result-opts :disabled'), function (x) { x.disabled = false; }); });
   }
 
   function copy(text, button) {

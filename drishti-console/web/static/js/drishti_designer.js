@@ -138,6 +138,7 @@
   var wrap = el('div', { 'class': 'dz-wrap' });
   grid.parentNode.insertBefore(wrap, grid);
   wrap.appendChild(grid); wrap.appendChild(side);
+  var hub = new window.Drishti.elements.designer.DragHub();         // the parts, the kit's cards: one pointer drag (drishti-designer)
   var drop = el('div', { 'class': 'dz-drop', 'data-dz-drop': '', tabindex: '-1', text: 'Drop here, or pick from the list on the right' });
   (view.querySelector('.vmain') || grid).appendChild(drop);
 
@@ -163,8 +164,8 @@
 
   function tools(part, sec, first) {
     var n = state.parts.length;
-    var handle = el('span', { 'class': 'dz-handle', draggable: 'true', title: 'Drag to move', 'aria-hidden': 'true', text: '⋮⋮' });
-    handle.addEventListener('dragstart', function (e) { e.dataTransfer.setData('text/x-dz-part', String(part.index)); e.dataTransfer.effectAllowed = 'move'; });
+    var handle = el('span', { 'class': 'dz-handle', title: 'Drag to move', 'aria-hidden': 'true', text: '⋮⋮' });
+    hub.draggable(handle, { payload: function () { return { part: part.index }; }, label: function () { return part.title; } });      // drishti-designer's one drag
     var row = el('div', { 'class': 'dz-tools', 'data-dz-part': String(part.index) }, [
       handle,
       el('strong', { text: part.title }),
@@ -188,15 +189,12 @@
     if (sec.hasAttribute('data-dz-dnd')) { return; }                      // a panel kept across a step: its drop target is set already
     sec.setAttribute('data-dz-dnd', '');
     function here() { var t = sec.querySelector('.dz-tools'); return t ? +t.getAttribute('data-dz-part') : -1; }
-    sec.addEventListener('dragover', function (e) { if (e.dataTransfer.types.indexOf('text/x-dz-part') >= 0 || e.dataTransfer.types.indexOf('text/x-dz-kit') >= 0) { e.preventDefault(); sec.classList.add('dz-over'); } });
-    sec.addEventListener('dragleave', function () { sec.classList.remove('dz-over'); });
-    sec.addEventListener('drop', function (e) {
-      sec.classList.remove('dz-over');
-      e.stopPropagation();                                                // a panel inside a panel: the drop is the inner one's, once
-      var from = e.dataTransfer.getData('text/x-dz-part'), kit = e.dataTransfer.getData('text/x-dz-kit');
-      if (from !== '') { e.preventDefault(); if (+from !== here()) { step({ op: 'move', index: +from, to: here() }).catch(function () {}); } }
-      else if (kit) { e.preventDefault(); addPart(JSON.parse(kit), here()); }
-    });
+    hub.target({ el: sec, over: function () { sec.classList.add('dz-over'); }, leave: function () { sec.classList.remove('dz-over'); },      // a panel inside a panel: the innermost takes it
+      drop: function (x, y, d) {
+        sec.classList.remove('dz-over');
+        if (d.part !== undefined) { if (d.part !== here()) { step({ op: 'move', index: d.part, to: here() }).catch(function () {}); } }
+        else if (d.kit) { addPart(d.kit, here()); }
+      } });
   }
 
   /* layout handles on a grid screen (layout: in the Sutra): narrower / wider, and the area it sits in */
@@ -289,9 +287,9 @@
       list.innerHTML = '';
       if (!items.length) { list.appendChild(el('p', { 'class': 'dz-note', text: 'Nothing matches: try other words.' })); }
       items.forEach(function (k) {
-        var card = el('button', { type: 'button', 'class': 'dz-card' + (k.fit ? ' dz-fits' : ''), draggable: 'true', 'data-dz-add': k.ref, title: k.summary }, [
+        var card = el('button', { type: 'button', 'class': 'dz-card' + (k.fit ? ' dz-fits' : ''), 'data-dz-add': k.ref, title: k.summary }, [
           el('strong', { text: k.title }), el('span', { text: ' · ' + k.summary })]);
-        card.addEventListener('dragstart', function (e) { e.dataTransfer.setData('text/x-dz-kit', JSON.stringify(k)); });
+        hub.draggable(card, { payload: function () { return { kit: k }; }, label: function () { return k.title; } });
         card.addEventListener('click', function () { addPart(k); });
         list.appendChild(card);
       });
@@ -332,14 +330,11 @@
     side.appendChild(foot);
   }
 
-  drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.classList.add('dz-over'); });
-  drop.addEventListener('dragleave', function () { drop.classList.remove('dz-over'); });
-  drop.addEventListener('drop', function (e) {
-    e.preventDefault(); drop.classList.remove('dz-over');
-    var kit = e.dataTransfer.getData('text/x-dz-kit'), from = e.dataTransfer.getData('text/x-dz-part');
-    if (kit) { e.stopPropagation(); addPart(JSON.parse(kit)); }
-    else if (from !== '') { step({ op: 'move', index: +from, to: state.parts.length - 1 }).catch(function () {}); }
-  });
+  hub.target({ el: drop, over: function () { drop.classList.add('dz-over'); }, leave: function () { drop.classList.remove('dz-over'); },
+    drop: function (x, y, d) {
+      drop.classList.remove('dz-over');
+      if (d.kit) { addPart(d.kit); } else if (d.part !== undefined) { step({ op: 'move', index: d.part, to: state.parts.length - 1 }).catch(function () {}); }
+    } });
 
   function load() {
     return api('GET', '/designer/state/' + encodeURIComponent(draft) + '?kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id)).then(function (s) {

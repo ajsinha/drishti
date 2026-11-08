@@ -96,6 +96,21 @@
   only while its modules are on.
 ## 2.9.11.e (unreleased)
 
+- **The forms on drishti-inputs' `Form`** ([ELEMENTS.md 8.2, "The forms on Form"](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+  the query form (`FORM <pack>`: the server sends its schema, the fields are a `Form` embedded in the page's GET form and the address is
+  unchanged), the subscription's When, the table editor's name, rows and look-up dialog, BI's Format pane, the Build inspector's
+  structured options and the record forms' fields (beside the table and in the drawer's steps). **drishti-inputs 0.3.0**: `Form` gains
+  live and embedded modes, steps, named fields for server forms, hooks (`hook`, `optionHook`, `submitHook`, a field's `data-path`),
+  custom widgets (`defineWidget`), the types `time`, `datetime` and `money`, a row of checkboxes, dependent lists, `setField`,
+  `setNotes`, `showErrors`; the new `TimePicker` and `DateTimePicker`, and the native time and date-time fields upgraded in place (the
+  top bar's Known at, compare, the record forms). The column filter's dates and BI's date parameters are the date picker. Deleted: the
+  query form's server-drawn fields, its dependents and long-list search, the record forms' field boxes, messages and currency painter,
+  the inspector's hand-made lists, objects and number checks, the Format pane's hand-made controls, and their CSS.
+- **No bespoke UI, the second pass** ([ELEMENTS.md section 12.3](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+  `trackPointer` moved into drishti-core (with pointer capture); the Sutra designer's Customize, Grid and Outline drags, the BI designer's
+  field, visual-type and well drags, layout mode, screen arranging, workspaces and sliders on it or on drishti-designer's `DragHub` (their
+  HTML5 drags deleted); drishti-inputs makes a page's `<textarea data-di-code>` a code editor (`upgradeCodeArea`) and the connector,
+  net, theme, BI item, workspace, transform and Pivot code areas use it. The guard's allow-list went from 19 files to 3.
 - **Vega retired (the owner's decision O1): one drawing engine.** A report's `vega-lite` visual and a Python visual's `output: vega-lite`
   are translated by drishti-chart (`fromVegaLite`) and drawn by drishti-chart; a feature it does not translate is refused in words with
   what to use instead (`vegaLiteAlternative`, `vegaLiteRefusal`, `vegaLiteIn`; `chartIn(host, spec)` puts any spec in a host), never
@@ -164,6 +179,7 @@
   the submit); `Combobox` on a page's own field and in a `suggest` mode; `DateRangePicker` with presets given whole and `openEnded`;
   44 px targets on touch screens. The renderer 2.0.0 and the embeds load drishti-inputs for the controls (its style sheet in the view
   sheet, raised to 29 KB gzip on purpose). A guard fails a console script that draws its own multi-select or picker list.
+
 - **drishti-designer 0.1.0, the designer kit** (the product owner, 2026-11-07: "duplicated code will make the system unmaintainable";
   [ELEMENTS.md section 8.8](docs/architecture/ELEMENTS.md#88-as-built-drishti-designer-the-designer-kit)): one layout canvas over a
   layout model (grid or flow; snap, settle, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys,

@@ -24,7 +24,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 |---|---|---|
 | [drishti-core](#drishti-core) | 1.1.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines |
 | [drishti-grid](#drishti-grid) | 0.4.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
-| [drishti-inputs](#drishti-inputs) | 0.2.0 | Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema with four eyes, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
+| [drishti-inputs](#drishti-inputs) | 0.3.0 | Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema (live or embedded, steps, named fields, hooks, custom widgets, time, date-and-time and money) with four eyes, the time and date-and-time pickers, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
 | [drishti-designer](#drishti-designer) | 0.1.0 | The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review) |
 | [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
 | [drishti-chart](#drishti-chart) | 0.2.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
@@ -850,6 +850,20 @@ Forgets a remembered width set (all modes) and re-applies the defaults.
 
 Returns `void`.
 
+### drishti_pointer.js
+
+#### `trackPointer(e, h, o)`
+
+Tracks one pointer from a press until it is let go.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `e` | `PointerEvent` | the pointerdown |
+| `h` | `TrackHandlers` |  |
+| `[o]` | `{threshold: number, capture: Element}` | threshold: pixels before a press is a drag (default 5; 0: at once); capture: an element that captures the pointer (the moves over frames and outside the window still come here) |
+
+Returns `{cancel: function(): void}`.
+
 ### drishti_keys.js
 
 #### `WORKBENCH`
@@ -1496,6 +1510,14 @@ A table to export.
 | `[attrs]` | `Object&lt;string, string&gt;` | more attributes (data-toast ...) |
 | `[action]` | `{label: string, run: function(): void, className: string}` | a button in the toast; a click runs it and closes the toast |
 | `[timeout]` | `number` | ms before it goes (the tray's default; 0: it stays) |
+
+#### `TrackHandlers` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[start]` | `function(PointerEvent): (boolean\|void)` | the press became a drag; false cancels it |
+| `move` | `function(PointerEvent): void` |  |
+| `end` | `function(PointerEvent, boolean, boolean): void` | (event, committed, moved): committed is false after Escape or a cancel |
 
 ## drishti-grid
 
@@ -6040,7 +6062,7 @@ A tree node.
 
 ## drishti-inputs
 
-Version 0.2.0. Bundle `static/elements/drishti-inputs/drishti_inputs.js`, global `Drishti.elements.inputs`; requires drishti-core.
+Version 0.3.0. Bundle `static/elements/drishti-inputs/drishti_inputs.js`, global `Drishti.elements.inputs`; requires drishti-core.
 
 ### drishti_calendar.js
 
@@ -6675,6 +6697,154 @@ Moves the business date: a preset's dates follow it.
 | Parameter | Type | Meaning |
 |---|---|---|
 | `asOf` | `string` |  |
+
+Returns `void`.
+
+### drishti_time-picker.js
+
+#### `parseTime(text)`
+
+Reads a typed time as "HH:MM", or null: 14:05, 14.05, 1405, 905, 9, 2pm, 2:30 pm, 12am, noon, midnight.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `?string`.
+
+#### `parseDateTime(text)`
+
+Reads a date with a time as "YYYY-MM-DDTHH:MM", or null: 2026-12-31T17:00, 2026-12-31 17:00, 2026-12-31 5pm; a date alone is midnight.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `?string`.
+
+#### `timeSlots(step, min, max)`
+
+The times of a day by a step in minutes, between min and max ("HH:MM").
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[step=15]` | `number` |  |
+| `[min]` | `string` |  |
+| `[max]` | `string` |  |
+
+Returns `string[]`.
+
+#### class `TimePicker`
+
+A time field with the day's times under it. Events: change {value}, invalid {text, reason}.
+
+##### `new TimePicker(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `[options]` | `TimePickerOptions` |  |
+
+##### `TimePicker.open()`
+
+Opens the day's times, the value's (or the nearest) active.
+
+Returns `void`.
+
+##### `TimePicker.close()`
+
+Closes the list.
+
+Returns `void`.
+
+##### `TimePicker.getValue()`
+
+The time ("HH:MM") or null.
+
+Returns `?string`.
+
+##### `TimePicker.setValue(v, emit)`
+
+Sets the time; change is emitted when emit is true and it changed.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `?string` |  |
+| `[emit]` | `boolean` |  |
+
+Returns `void`.
+
+##### `TimePicker.validate()`
+
+Whether the field holds a time (and one when it is required).
+
+Returns `boolean`.
+
+##### `TimePicker.focus()`
+
+Puts the keyboard focus in the field.
+
+Returns `void`.
+
+##### `TimePicker.destroy()`
+
+Takes the picker out of its element.
+
+Returns `void`.
+
+#### class `DateTimePicker`
+
+A date and a time with its zone. Events: change {value}, invalid {reason}.
+
+##### `new DateTimePicker(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `[options]` | `DateTimePickerOptions` |  |
+
+##### `DateTimePicker.getValue()`
+
+The value ("YYYY-MM-DDTHH:MM") or null.
+
+Returns `?string`.
+
+##### `DateTimePicker.setValue(v, emit)`
+
+Sets the value.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `?string` |  |
+| `[emit]` | `boolean` |  |
+
+Returns `void`.
+
+##### `DateTimePicker.setTimeZone(zone)`
+
+Names the time zone beside the time.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `zone` | `string` |  |
+
+Returns `void`.
+
+##### `DateTimePicker.validate()`
+
+Whether both parts read (and a date when required).
+
+Returns `boolean`.
+
+##### `DateTimePicker.focus()`
+
+Puts the keyboard focus on the date.
+
+Returns `void`.
+
+##### `DateTimePicker.destroy()`
+
+Takes the picker out of its element.
 
 Returns `void`.
 
@@ -7330,11 +7500,35 @@ Reads typed text as a field's value: numbers with grouping, a true minus, k, m a
 
 Returns `{value: *, error: ?string}`.
 
+#### `currencyOf(field, values, path)`
+
+A money field's currency: its fixed code, or what the field it names holds.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `field` | `FieldSchema` |  |
+| `values` | `Object` | the whole form's value |
+| `path` | `string` | the money field's path |
+
+Returns `string`.
+
+#### `offeredValues(field, values, path)`
+
+The values an enum list offers now: those whose parents include a value chosen in the field it depends on (all when none is chosen).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `field` | `FieldSchema` |  |
+| `values` | `Object` |  |
+| `path` | `string` |  |
+
+Returns `Array`.
+
 ### drishti_form.js
 
 #### class `Form`
 
-A form from a schema. Events: change {path, value, values}, invalid {errors}, submitted {values, result}, proposed {proposal, result}, reset.
+A form from a schema. Events: change {path, value, values}, invalid {errors}, submitted {values, result}, proposed {proposal, result}, reset, step {index, id}.
 
 ##### `new Form(host, options)`
 
@@ -7348,6 +7542,28 @@ A form from a schema. Events: change {path, value, values}, invalid {errors}, su
 Draws the form again (after an array changed shape); the focus goes back to the field that had it.
 
 Returns `void`.
+
+##### `Form.step()`
+
+The current step (its index), or 0.
+
+Returns `number`.
+
+##### `Form.goTo(i)`
+
+Goes to a step (Back always; forward only through Next, which checks the step's fields).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `i` | `number` |  |
+
+Returns `void`.
+
+##### `Form.next()`
+
+Checks the current step's fields and, when they hold, goes on.
+
+Returns `boolean`: whether it went on.
 
 ##### `Form.refresh()`
 
@@ -7388,6 +7604,27 @@ The proposal's decision came back: approved keeps the value as the new start; re
 
 Returns `void`.
 
+##### `Form.setField(path, value)`
+
+One field's value set from outside (a page's own control, a server's answer); the field is drawn again.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `path` | `string` |  |
+| `value` | `*` |  |
+
+Returns `void`.
+
+##### `Form.getField(path)`
+
+A field's value.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `path` | `string` |  |
+
+Returns `*`.
+
 ##### `Form.getValue()`
 
 The value: the shown fields only.
@@ -7417,6 +7654,60 @@ Problems from elsewhere (a server's answer), by path.
 | Parameter | Type | Meaning |
 |---|---|---|
 | `errors` | `Object&lt;string, string&gt;` |  |
+
+Returns `void`.
+
+##### `Form.setNotes(notes)`
+
+Notes by path that do not stop a submit (a warning: "above the desk limit"), shown where a problem would be when there is none.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `notes` | `Object&lt;string, string&gt;` |  |
+
+Returns `void`.
+
+##### `Form.showErrors(errors)`
+
+Problems from elsewhere shown at once, without marking every field tried (a live check as people type).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `errors` | `Object&lt;string, string&gt;` |  |
+
+Returns `void`.
+
+### drishti_form-fields.js
+
+#### `defineWidget(name, factory)`
+
+Defines a widget every form may name in a field's widget (a form's own widgets option wins over it).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `factory` | `WidgetFactory` |  |
+
+Returns `void`.
+
+#### `defaultWidget(fs)`
+
+A field's widget when the schema names none.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `fs` | `Object` |  |
+
+Returns `string`.
+
+#### `applyHook(el, hook)`
+
+Puts a field's hook on its control: a name gives data-&lt;name&gt;, an object its attributes.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `Element` |  |
+| `hook` | `(string\|Object&lt;string, string&gt;)` |  |
 
 Returns `void`.
 
@@ -7563,6 +7854,28 @@ Upgrades an `&lt;input type="date"&gt;` to the business-date picker in place (on
 
 Returns `?DatePicker`.
 
+#### `upgradeTimeInput(input, options)`
+
+Upgrades an `&lt;input type="time"&gt;` to the time picker in place ("HH:MM"), as upgradeDateInput does a date.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `input` | `HTMLInputElement` |  |
+| `[options]` | `{label: string, stepMinutes: number}` | stepMinutes: default the field's step (seconds) in minutes, else 15 |
+
+Returns `?TimePicker`.
+
+#### `upgradeDateTimeInput(input, options)`
+
+Upgrades an `&lt;input type="datetime-local"&gt;` to the date-and-time picker in place ("YYYY-MM-DDTHH:MM"; data-time-zone names the zone).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `input` | `HTMLInputElement` |  |
+| `[options]` | `{label: string, timeZone: string}` |  |
+
+Returns `?DateTimePicker`.
+
 #### `upgradeCheckboxes(group, options)`
 
 Upgrades a group of checkbox labels to the multi-select in place (once). The group stays in the page, hidden, with its checkboxes: the form submits them as before. Each option is a checkbox: its value, and as its label the checkbox's data-text or its label's text.
@@ -7576,7 +7889,7 @@ Returns `?{picker: MultiSelect, host: HTMLElement, sync: function(): void}`.
 
 #### `upgradeFields(root, options)`
 
-Upgrades every `&lt;input type="date"&gt;` under a root (not those marked data-native) and every group marked `[data-multiselect]` with more than `small` checkboxes (fewer stay a compact row of checkboxes).
+Upgrades every `&lt;input type="date"&gt;`, `"time"` and `"datetime-local"` under a root (not those marked data-native) and every group marked `[data-multiselect]` with more than `small` checkboxes (fewer stay a compact row of checkboxes).
 
 | Parameter | Type | Meaning |
 |---|---|---|
@@ -7939,6 +8252,29 @@ How many lines were added, removed and kept.
 
 Returns `{added: number, removed: number, same: number}`.
 
+### drishti_code-upgrade.js
+
+#### `upgradeCodeArea(ta, o)`
+
+Makes one text area a code editor (once); answers the editor.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ta` | `HTMLTextAreaElement` |  |
+| `[o]` | `{mode: string, height: number, complete: Function, lint: Function}` | beside the element's own attributes |
+
+Returns `CodeEditor`.
+
+#### `upgradeCodeAreas(root)`
+
+Upgrades every &lt;textarea data-di-code&gt; inside a root (a page, a dialog drawn later).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `ParentNode` |  |
+
+Returns `CodeEditor[]`.
+
 ### drishti_inputs-element.js
 
 #### `INPUT_ELEMENTS`
@@ -7960,7 +8296,7 @@ Returns `void`.
 
 #### `install(root)`
 
-Starts drishti-inputs in a page (the bundle calls it when it loads; nothing happens without a document): defines its elements.
+Starts drishti-inputs in a page (the bundle calls it when it loads; nothing happens without a document): defines its elements and makes the page's code areas (&lt;textarea data-di-code&gt;) code editors.
 
 | Parameter | Type | Meaning |
 |---|---|---|
@@ -8114,6 +8450,28 @@ A field the bar may filter.
 | `[calendar]` | `string` | the business calendar of date fields |
 | `[label='Filters']` | `string` |  |
 
+#### `WidgetContext` : `Object`
+
+What a custom widget is given.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `form` | `Object` | the Form |
+| `field` | `Object` | the field's schema |
+| `path` | `string` |  |
+| `label` | `string` |  |
+| `value` | `*` |  |
+| `id` | `string` | the id its focusable element should take (the label points at it) |
+| `readOnly` | `boolean` |  |
+| `required` | `boolean` |  |
+| `describedBy` | `string` | the ids of its help and problem, for aria-describedby |
+| `set` | `function(*): void` | gives the form a new value |
+| `touch` | `function(): void` | marks the field touched (its problem shows) |
+
+#### `WidgetFactory` : `function(WidgetContext): {el: HTMLElement, setValue: function(*): void, focus: function(): void, input: HTMLElement, destroy: function(): void}`
+
+A custom widget: draws a field's control. Returns its element and, as it can, setValue(v), focus(), input (the focusable element) and destroy().
+
 #### `FourEyes` : `Object`
 
 | Name | Type | Meaning |
@@ -8135,7 +8493,15 @@ A field the bar may filter.
 | `[readOnly=false]` | `boolean` |  |
 | `[layout='stacked']` | `('stacked'\|'columns')` |  |
 | `[locale]` | `string` | how numbers are read and shown |
-| `[live=false]` | `boolean` | no Save or Reset: each change is the host's at once (a designer's inspector) |
+| `[live=false]` | `boolean` | no Save or Reset: each change is the host's at once (a designer's inspector, a property pane) |
+| `[embedded=false]` | `boolean` | no &lt;form&gt; element of its own (the fields sit inside a page's server form, which submits the fields that have a name); implies live |
+| `[pathAttr='data-path']` | `string` | the attribute each field's block carries its path in (a page whose own controls use data-path names another) |
+| `[actions=true]` | `boolean` | the Save and Reset buttons (false: none, the page has its own) |
+| `[steps]` | `Array&lt;{id: string, title: string, description: string}&gt;` | the form in steps: a field's step names one; Back and Next, Next checks the step's fields; the last step submits |
+| `[widgets]` | `Object&lt;string, import('./drishti_form-fields.js').WidgetFactory&gt;` | custom widgets by name (a field's widget) |
+| `[label]` | `string` | the form's name for a reader (default: the schema's title) |
+| `[submitHook]` | `string` | a data attribute on the submit button ("lookup-go" is data-lookup-go), for tutorials and tests |
+| `[resetButton=true]` | `boolean` | the Reset button |
 
 #### `MultiSelectOptions` : `Object`
 
@@ -8175,7 +8541,7 @@ A field of a form schema.
 
 | Name | Type | Meaning |
 |---|---|---|
-| `type` | `('string'\|'number'\|'integer'\|'boolean'\|'date'\|'daterange'\|'array'\|'object')` |  |
+| `type` | `('string'\|'number'\|'integer'\|'money'\|'boolean'\|'date'\|'time'\|'datetime'\|'daterange'\|'array'\|'object')` | money: a number shown grouped with its currency; time: "HH:MM"; datetime: "YYYY-MM-DDTHH:MM" in its timeZone |
 | `[title]` | `string` | the label (default: the key in words) |
 | `[description]` | `string` | help under the field |
 | `[default]` | `*` |  |
@@ -8203,6 +8569,22 @@ A field of a form schema.
 | `[options]` | `Object` | the widget's options (a combobox's source, a tree's nodes, a code editor's mode) |
 | `[readOnly]` | `boolean` |  |
 | `[placeholder]` | `string` |  |
+| `[currency]` | `string` | money: its currency code (USD), or the key of the field that holds it (a sibling, or "/path") |
+| `[timeZone]` | `string` | datetime: the zone named beside it |
+| `[stepMinutes]` | `number` | time, datetime: the minutes between the times offered (default 15) |
+| `[name]` | `string` | the name a surrounding server form submits the value under (hidden inputs; a native control carries it) |
+| `[nameValue]` | `*` | boolean with a name: what is submitted when it is on (default "true") |
+| `[hook]` | `(string\|Object&lt;string, string&gt;)` | data attributes on the field's control: "format-title" is data-format-title=""; an object sets each attribute as given (the hooks tutorials and tests find a field by) |
+| `[step]` | `string` | the step (of the form's steps) the field belongs to |
+| `[dependsOn]` | `string` | enum lists: the field whose chosen values narrow the values offered (see parents) |
+| `[parents]` | `Object&lt;string, string[]&gt;` | enum lists: for each value, the values of dependsOn it goes with |
+| `[optionHook]` | `string` | checkboxes and radios: each option's control gets data-&lt;optionHook&gt;="&lt;value&gt;" |
+| `[allowEmpty]` | `boolean` | select: false leaves out the empty choice |
+| `[emptyLabel]` | `string` | select: the words of the empty choice |
+| `[lazy]` | `boolean` | text and numbers: the value changes when the field is left or Enter is pressed, not at each key |
+| `[noLabel]` | `boolean` | a custom widget that draws its own label |
+| `[addLabel]` | `string` | an array of objects: the words of its Add button |
+| `[parseMessage]` | `string` | the words when typed text does not read as the field's type (default: the form's own) |
 
 #### `SelectOptions` : `Object`
 
@@ -8217,6 +8599,32 @@ A field of a form schema.
 | `[name]` | `string` | a hidden input of this name carries the value in a plain form |
 | `[disabled=false]` | `boolean` |  |
 | `[renderOption]` | `function(Object, HTMLElement): void` | draws an option's content |
+
+#### `TimePickerOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[value]` | `string` | "HH:MM" |
+| `[step=15]` | `number` | minutes between the times offered |
+| `[min]` | `string` |  |
+| `[max]` | `string` |  |
+| `[required=false]` | `boolean` |  |
+| `[label]` | `string` |  |
+| `[placeholder]` | `string` |  |
+
+#### `DateTimePickerOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[value]` | `string` | "YYYY-MM-DDTHH:MM" |
+| `[timeZone]` | `string` | the zone the time is in, named beside it (America/New_York) |
+| `[step=15]` | `number` | the time list's step in minutes |
+| `[calendar]` | `(string\|Object)` |  |
+| `[businessOnly=false]` | `boolean` |  |
+| `[min]` | `string` | "YYYY-MM-DDTHH:MM" |
+| `[max]` | `string` | "YYYY-MM-DDTHH:MM" |
+| `[required=false]` | `boolean` |  |
+| `[label]` | `string` |  |
 
 #### `TreePickerOptions` : `Object`
 
@@ -9040,18 +9448,6 @@ The keys as a list for a help card: [{keys, does}].
 Returns `Array&lt;{keys: string, does: string}&gt;`.
 
 ### drishti_pointer.js
-
-#### `trackPointer(e, h, o)`
-
-Tracks one pointer from a press until it is let go.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `e` | `PointerEvent` | the pointerdown |
-| `h` | `TrackHandlers` |  |
-| `[o]` | `{threshold: number}` | pixels before a press is a drag (default 5; 0: at once) |
-
-Returns `{cancel: function(): void}`.
 
 #### class `DragHub`
 
@@ -10320,14 +10716,6 @@ An entry of the palette.
 | `[disabled]` | `boolean` |  |
 | `[why]` | `string` | why it is disabled, in words |
 | `[payload]` | `Object` | what a drag or an add carries (default: {palette: id}) |
-
-#### `TrackHandlers` : `Object`
-
-| Name | Type | Meaning |
-|---|---|---|
-| `[start]` | `function(PointerEvent): (boolean\|void)` | the press became a drag; false cancels it |
-| `move` | `function(PointerEvent): void` |  |
-| `end` | `function(PointerEvent, boolean, boolean): void` | (event, committed, moved): committed is false after Escape or a cancel |
 
 #### `DropTarget` : `Object`
 

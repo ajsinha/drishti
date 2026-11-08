@@ -328,30 +328,24 @@
     var head = e.target.closest('.pnl-h');
     if (!head || e.target.closest('a, button, input, select')) { return; }
     e.preventDefault();
-    head.setPointerCapture(e.pointerId);
-    drag = { p: p, x: e.clientX, y: e.clientY, id: e.pointerId, on: false, head: head };
+    drag = { p: p, on: false, head: head };
+    window.Drishti.elements.core.trackPointer(e, {                     // drishti-core's tracked pointer: a press becomes a drag after a few pixels
+      start: function (ev) { startDrag(drag.p, ev); },
+      move: function (ev) { if (drag && drag.on) { track(ev); } },
+      end: function (ev, committed, moved) { if (drag && drag.on) { endDrag(committed); } else { drag = null; } }
+    }, { capture: head });
   });
-  view.addEventListener('pointermove', function (e) {
-    if (drag && e.pointerId === drag.id) {
-      if (!drag.on && Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y) > 5) { startDrag(drag.p, e); } else if (drag.on) { track(e); }
-    } else if (resize && e.pointerId === resize.id) { resizeTo(e); }
-  });
-  function up(e) {
-    if (drag && e.pointerId === drag.id) { endDrag(e.type === 'pointerup'); }
-    if (resize && e.pointerId === resize.id) { endResize(e); }
-  }
-  view.addEventListener('pointerup', up);
-  view.addEventListener('pointercancel', up);
 
   // ---- resizing by an edge ----------------------------------------------------------------------------
   var resize = null;
   function startResize(p, e) {
     e.preventDefault();
-    e.target.setPointerCapture(e.pointerId);
     var col = p.parentNode, cs = getComputedStyle(col);
     var gap = parseFloat(cs.columnGap) || 0, cw = col.getBoundingClientRect().width;
-    resize = { p: p, id: e.pointerId, wide: e.target.classList.contains('lh-e'), gap: gap, unit: (cw - gap * (GRID - 1)) / GRID, row: rowPx() };
+    resize = { p: p, wide: e.target.classList.contains('lh-e'), gap: gap, unit: (cw - gap * (GRID - 1)) / GRID, row: rowPx() };
     p.classList.add('resizing');
+    window.Drishti.elements.core.trackPointer(e, { move: function (ev) { if (resize) { resizeTo(ev); } },
+      end: function (ev, committed, moved) { if (resize) { endResize(moved || committed ? { type: 'pointerup', clientX: ev.clientX, clientY: ev.clientY } : null); } } }, { threshold: 0, capture: e.target });
   }
   function resizeTo(e) {
     var r = resize.p.getBoundingClientRect();

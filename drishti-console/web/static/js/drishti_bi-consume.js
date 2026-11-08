@@ -120,6 +120,8 @@
         });
       }
       host.appendChild(h('label', { class: 'bi-tool bi-param', for: id, title: p.description || '' }, title + ' ', ctl));
+      const I = window.Drishti && window.Drishti.elements && window.Drishti.elements.inputs;
+      if (p.kind === 'date' && ctl.tagName === 'INPUT' && I) { I.upgradeDateInput(ctl, { label: title }); }   // drishti-inputs' date picker; the field keeps its value and events
     });
     groups.forEach((g) => {
       const items = (g.items || []).map((i) => (typeof i === 'string' ? i : i.name)).filter(Boolean);
