@@ -13,41 +13,15 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 2.9.11.h — release notes (draft)
+# Drishti 2.9.11.g — release notes
 
-*Not released yet.* **The documentation, rewritten: one guide and one tutorial for each major feature, Help grouped by domain and lens.**
-
-## What changes for readers
-
-- **22 tutorials, one per feature**, numbered in the order you would take them ([the index](docs/tutorials/README.md)): the first 15
-  minutes; VaR, exposure, FRTB-SA, SIMM and groupings; pivot and cubes, reports and dashboards, the Notebook, AI, corrections and
-  approvals; a day of bank data, world data, the public sector, connecting your data, loading your own lake, data out; tables, a pack and
-  a screen, embedding; production and a cluster of three. Tutorials that covered parts of one feature are now parts of one tutorial;
-  every step still shows the screen, the command line and the YAML.
-- **The combined guides**: [OPERATIONS_GUIDE](docs/guides/OPERATIONS_GUIDE.md) (install, run, deploy, troubleshoot, the runbooks),
-  [CLUSTER_GUIDE](docs/guides/CLUSTER_GUIDE.md) (several servers, AWS, sizing, tuning), [ADMIN_GUIDE](docs/guides/ADMIN_GUIDE.md) (people,
-  roles, lenses, switches), [CLI_REFERENCE](docs/guides/CLI_REFERENCE.md), [REPORTS_GUIDE](docs/guides/REPORTS_GUIDE.md),
-  [NOTEBOOK_GUIDE](docs/guides/NOTEBOOK_GUIDE.md), [APPROVALS_GUIDE](docs/guides/APPROVALS_GUIDE.md), [BUILD_GUIDE](docs/guides/BUILD_GUIDE.md),
-  [DEVELOPER_GUIDE](docs/guides/DEVELOPER_GUIDE.md), [API_REFERENCE](docs/guides/API_REFERENCE.md), [EMBED_GUIDE](docs/guides/EMBED_GUIDE.md)
-  and [AI_GUIDE](docs/guides/AI_GUIDE.md); connectors, connector files, TLS and the demo data are sections of
-  [DATA_GUIDE](docs/guides/DATA_GUIDE.md); the MR cube is a section of the [Pivot guide](docs/guides/PIVOT_GUIDE.md#29-the-mr-cube-preset).
-  The Knowledge pages are four: the glossary and the [risk](docs/knowledge/risk.md), [data](docs/knowledge/data.md) and
-  [world](docs/knowledge/world.md) primers. Design notes moved out of the user guides into the architecture documents.
-- **Help by domain and lens**: each Help page belongs to a domain module; while a module is off for you, its pages are not listed,
-  searched or opened (banking's risk pages, capital markets' funds pages, the economy's public-sector pages), and a page may name the
-  lenses that show it.
-- **Old addresses still work**: every retired Help address (`/help/<old page>`, an old tutorial number, an old guide) opens the page and
-  the section that took its subject over; links in bookmarks and other documents keep working.
-
-## Upgrade
-
-Nothing to do. Pictures of steps that changed are retaken after the release's screenshot run; a step waiting for its picture says so.
-
-# Drishti 2.9.11.g — release notes (draft)
-
-*Not released yet.* **Industries as modules, opened through lenses; the public sector, the first new domain, filled every day by
+*Released 2026-11-08.* **Industries as modules, opened through lenses; the public sector, the first new domain, filled every day by
 drishti-feeds; the pre-deal check as a service of the exposure engine; every screen drawn with Drishti Elements, eleven libraries you can
-also use in your own applications.** This release carries the work planned as 2.9.11.e, f and g, shipped as one tag.
+also use in your own applications; the documentation rewritten, one guide and one tutorial for each major feature, Help grouped by
+domain and lens.** This release carries the work planned as 2.9.11.e, f, g and h, shipped as one tag.
+
+**VaR check against 2.9.11.d:** every figure bit-for-bit equal at the 509 and 250 windows (128,876,809 and 94,258,074
+numbers; 56,298,935 and 54,984,456 text fields); memory no higher than 2.9.11.d.
 
 ## What changes for risk users
 
@@ -71,6 +45,29 @@ also use in your own applications.** This release carries the work planned as 2.
   asked after others could show them on more cells. A row's diversification of either is shown only when all its cells have the figure
   ([PIVOT_GUIDE.md section 29.2](docs/guides/PIVOT_GUIDE.md#292-the-measures)).
 - **The FRTB-SA screen shows each class's Total again**, the server's figure.
+
+## What changes for readers
+
+- **22 tutorials, one per feature**, numbered in the order you would take them ([the index](docs/tutorials/README.md)): the first 15
+  minutes; VaR, exposure, FRTB-SA, SIMM and groupings; pivot and cubes, reports and dashboards, the Notebook, AI, corrections and
+  approvals; a day of bank data, world data, the public sector, connecting your data, loading your own lake, data out; tables, a pack and
+  a screen, embedding; production and a cluster of three. Tutorials that covered parts of one feature are now parts of one tutorial;
+  every step still shows the screen, the command line and the YAML.
+- **The combined guides**: [OPERATIONS_GUIDE](docs/guides/OPERATIONS_GUIDE.md) (install, run, deploy, troubleshoot, the runbooks),
+  [CLUSTER_GUIDE](docs/guides/CLUSTER_GUIDE.md) (several servers, AWS, sizing, tuning), [ADMIN_GUIDE](docs/guides/ADMIN_GUIDE.md) (people,
+  roles, lenses, switches), [CLI_REFERENCE](docs/guides/CLI_REFERENCE.md), [REPORTS_GUIDE](docs/guides/REPORTS_GUIDE.md),
+  [NOTEBOOK_GUIDE](docs/guides/NOTEBOOK_GUIDE.md), [APPROVALS_GUIDE](docs/guides/APPROVALS_GUIDE.md), [BUILD_GUIDE](docs/guides/BUILD_GUIDE.md),
+  [DEVELOPER_GUIDE](docs/guides/DEVELOPER_GUIDE.md), [API_REFERENCE](docs/guides/API_REFERENCE.md), [EMBED_GUIDE](docs/guides/EMBED_GUIDE.md)
+  and [AI_GUIDE](docs/guides/AI_GUIDE.md); connectors, connector files, TLS and the demo data are sections of
+  [DATA_GUIDE](docs/guides/DATA_GUIDE.md); the MR cube is a section of the [Pivot guide](docs/guides/PIVOT_GUIDE.md#29-the-mr-cube-preset).
+  The Knowledge pages are four: the glossary and the [risk](docs/knowledge/risk.md), [data](docs/knowledge/data.md) and
+  [world](docs/knowledge/world.md) primers. Design notes moved out of the user guides into the architecture documents.
+- **Help by domain and lens**: each Help page belongs to a domain module; while a module is off for you, its pages are not listed,
+  searched or opened (banking's risk pages, capital markets' funds pages, the economy's public-sector pages), and a page may name the
+  lenses that show it.
+- **Old addresses still work**: every retired Help address (`/help/<old page>`, an old tutorial number, an old guide) opens the page and
+  the section that took its subject over; links in bookmarks and other documents keep working.
+- Pictures of steps that changed are retaken after the release's screenshot run; a step waiting for its picture says so.
 
 ## New
 
@@ -139,7 +136,8 @@ also use in your own applications.** This release carries the work planned as 2.
 
 ## Upgrade
 
-Follow these steps when upgrading an installation of 2.9.11.d.
+Follow these steps when upgrading an installation of 2.9.11.d. The runnable jar is now built from `drishti-app`
+(`./mvnw -q package -DskipTests -pl drishti-app -am`) and keeps its name and folder: `drishti-server/target/drishti-server-2.9.11.g-exec.jar`.
 
 1. **Editions are lenses.** `config/editions/` is gone: a lens file is `config/lenses/<module>/<lens>.yaml` (risk, trading and market
    under `banking/`, world under `economy/`), the feature presets `config/lenses/features.yaml`. Move a site's own edition file to
@@ -257,15 +255,16 @@ drills' logs).
 
 | Measure | 2.9.11.d | 2.9.11.g |
 |---|---|---|
-| The console's screen code (JavaScript, CSS, HTML outside the libraries) | 81,053 lines | 79,746 lines, with every new screen of the release: 19,007 lines deleted, 18,069 written |
-| Drishti Elements, the libraries' sources | none | 41,289 lines in 11 libraries (186 ES modules) |
+| The console's screen code (JavaScript, CSS, HTML outside the libraries) | 81,053 lines | 79,764 lines, with every new screen of the release: 19,007 lines deleted, 18,069 written |
+| Drishti Elements, the libraries' sources | none | 41,295 lines in 11 libraries (186 ES modules) |
 | Parallel implementations folded into one | | 18: search, keymap, Approvals, alert engine, Explain, Build home, sitemap, chart engine (Vega retired), grid, tree, graph, form, select, designer kit, the exposure what-if (Python retired), the limit rule, the pre-deal check, the public-data scripts (into drishti-feeds); and editions into lenses |
 | Designer-kit guard: designers and editors not on the kit | | 0 (19 files when the guard was made) |
 | Form-pane guard: hand-made forms | | 0 (2 when the guard was made) |
 | Admin forms guard: raw controls in Admin templates | | 0 (97 in 21 templates when the guard was made) |
 | Native-select guard: `<select>`s not on drishti-inputs | | 0 (157 in 72 files at the most) |
 | Elements migration guard: files still formatting numbers or drawing charts themselves | | 28 files (35 when the guard was made) |
-| Browser tests: files, and the summed time of the lane | 167 files, 8,308 s of test time; the lane took 3,222 s on 4 workers | 185 files; the final drill's time is added when it ends |
+| Browser tests: files, and the time of the lane | 167 files, 8,308 s of test time; the lane took 3,222 s on 4 workers | 185 files; the lane took about 4,600 s in the final drills |
+| A full release drill, end to end | 82 min | about 105 to 115 min (2.9.11.j, the optimisation release, targets under 60 min) |
 
 # Drishti 2.9.11.d — release notes
 

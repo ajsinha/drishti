@@ -280,18 +280,18 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 
 | Language | Lines | Files |
 |---|---|---|
-| Java, product | 431k | 2,159 |
-| Java, tests | 164k | 1,032 |
-| Python, product (console, tools, loaders, feeds) | 142k | 727 |
-| Python, tests | 105k | 598 |
+| Java, product | 432k | 2,160 |
+| Java, tests | 165k | 1,038 |
+| Python, product (console, tools, loaders, feeds) | 142k | 730 |
+| Python, tests | 106k | 602 |
 | JavaScript, product (console and Elements) | 125k | 486 |
 | JavaScript, tests | 4k | 22 |
 | CSS | 19k | 114 |
 | HTML (templates and pages) | 34k | 328 |
 | YAML: configuration, Sutras, data contracts | 111k | 1,412 |
-| Markdown: guides, tutorials, design | 225k | 301 |
+| Markdown: guides, tutorials, design | 219k | 303 |
 
-About **750k lines of product code** and **273k lines of tests** (36% of the product code), with **225k lines of documentation**.
+About **751k lines of product code** and **275k lines of tests** (37% of the product code), with **219k lines of documentation**.
 
 | What | Count |
 |---|---|
@@ -300,15 +300,15 @@ About **750k lines of product code** and **273k lines of tests** (36% of the pro
 | Lenses | 10: risk, trading, market, cro, mr-cube, ccr-cube, world, publicsector, cio, oversight |
 | Functions a module declares | 106 (47 banking, 32 capitalmarkets, 27 economy); every other command word is the core's |
 | Console routes | 644 |
-| Server REST handlers | 751 |
+| Server REST handlers | 754 |
 | Drishti Elements | 11 libraries, 186 ES modules |
 | Domain packs | 17: banking 4, capitalmarkets 2, core 3, economy 8 |
 | Sutras in the shipped packs | 248 |
 | Connector plugins | 19 |
 | Feeds | 13 |
 | Lake files | 9 |
-| Test files | 1,513: Java 949, console 248, browser 177, tools 117, JavaScript 22 |
-| Documents under docs/ | 172 (32 guides, 22 tutorials) |
+| Test files | 1,523: Java 955, console 249, browser 177, tools 120, JavaScript 22 |
+| Documents under docs/ | 174 (32 guides, 22 tutorials) |
 
 <!-- code-volume:end -->
 

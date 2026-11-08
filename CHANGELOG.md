@@ -15,9 +15,11 @@
 -->
 # Changelog
 
-## 2.9.11.h (unreleased)
+## 2.9.11.g (2026-11-08)
 
-### Docs: one guide and one tutorial per feature (217 → 172 Markdown files under `docs/`)
+The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2.9.11.g: every entry of the four is here.
+
+### Docs: one guide and one tutorial per feature (217 → 172 Markdown files under `docs/`) (2.9.11.h)
 
 - **Tutorials 41 → 22**, one per major feature, numbered in track order ([the index](docs/tutorials/README.md)): 01 first 15 minutes
   (01, 02, 03, 08, 21), 02 VaR (25, 43 and 29's VaR step), 03 exposure, 04 FRTB-SA, 05 SIMM, 06 groupings, 07 pivot, cubes and explain
@@ -82,10 +84,6 @@
   (and that no column is copied). Every generator's `--check` passes (banking, funds, us-equities, gleif, world-economy, guide_data).
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
-
-## 2.9.11.g (unreleased)
-
-The release train ships 2.9.11.e, 2.9.11.f and 2.9.11.g as one tag, v2.9.11.g: every entry of the three is here.
 
 ### Deployment and QA guide, developer quickstart, PDFs
 
@@ -1103,6 +1101,24 @@ The release train ships 2.9.11.e, 2.9.11.f and 2.9.11.g as one tag, v2.9.11.g: e
 - **RELEASE_NOTES 2.9.11.g**: the 2.9.11.e draft and the f and g work as one section: what changes for risk users, what is new, the
   upgrade steps (lenses for editions, packs in domain folders, the `/api/v1/risk` paths, settings renamed, the feeds' data root, the lake
   files, Elements without a CDN), the removed endpoints and the renamed screens, and the quality figures.
+- **Decks refreshed for 2.9.11.g** (docs/publications; chapters, no release numbers, labels only on what is not built). The
+  Design-and-Evidence deck has seventeen chapters, four of them new: *Drishti Elements* (the eleven libraries, eighteen parallel
+  implementations folded into one, the designer kit and the libraries in a bank's own applications without a CDN), *Pre-deal and one
+  limit rule* (approve, refer or decline from the exposure paths; within, near and breach from the server), *Modules, lenses and
+  access* (the access registry from licence to permission, the four modules, the ten lenses, editions as lenses; it replaces *Shape
+  it*) and *Feeds and public data* (drishti-feeds and the thirteen feeds, the public sector with tutorial 46's picture). The VaR
+  Engine deck gains the same four chapters (*Modules, lenses and access* in place of *Editions*); the Drishti-on-AWS deck a chapter
+  *Feeds and modules* (the feeds into the S3 lakes; one image with modules per deployment) and its public-data slide on drishti-feeds.
+  Every deck: the lens files under `config/lenses/<module>/`, the under-construction registry with the pre-deal check's SA-CCR part, and
+  the roadmap with this train built and the next steps in order (trust and controls, memory and speed, counterparty engines and
+  stress, collateral and margin, CVA, hardening, onboarding).
+- **Decks after the documentation rewrite**: every document name, link and tutorial number on the three decks' slides and notes now
+  names the guide and section that holds the subject (the combined guides: OPERATIONS_GUIDE, CLUSTER_GUIDE, ADMIN_GUIDE,
+  CLI_REFERENCE, REPORTS_GUIDE, NOTEBOOK_GUIDE, APPROVALS_GUIDE, BUILD_GUIDE, DEVELOPER_GUIDE, API_REFERENCE, EMBED_GUIDE, AI_GUIDE,
+  DATA_GUIDE) and the 22 tutorials' numbers; a slide *One guide and one tutorial per feature* (172 documents, the tutorial tracks, Help
+  by domain and lens, contracts with JSON examples, link don't copy, the docs gates) in the Design-and-Evidence deck's *Operating and
+  deploying* chapter and the VaR deck's *Operating it*; the size slide's counts from README's By the numbers; the related-documents
+  slides on the new guides; the AWS deck's footer sources; the roadmap with the documentation rewrite built.
 
 ### Fixes (the train's bulk drill)
 
