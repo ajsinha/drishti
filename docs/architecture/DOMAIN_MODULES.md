@@ -311,7 +311,7 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
   branding; `drishti.edition` (a lens for the
   whole instance) and `drishti.lenses` are unchanged ([LENSES.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is), *Editions are lenses of modules*).
 
-**Phase 2, still to do** (carried into [KERNEL_AND_MODULES.md](KERNEL_AND_MODULES.md) section 12, phases P1 and P2):
+**Phase 2, still to do** (carried into [KERNEL_AND_MODULES.md](KERNEL_AND_MODULES.md) section 14, phases P1 and P2):
 
 1. **The thin jar and the plugins folder** (step 9): `drishti-app` builds the core jar alone; the banking module (drishti-banking with
    drishti-compute-banking) is a module jar in a site's modules folder on the launcher's `loader.path`, and the registry's *installed*

@@ -19,6 +19,14 @@
 
 ### Docs
 
+- **Kernel and modules, the console tier (design):** [KERNEL_AND_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md) opens with the
+  three building blocks (Drishti Kernel, Drishti Console, Drishti modules) and gains section 10, the Drishti Console on Spring Boot as a
+  separate UI tier (virtual threads, Jinjava, Spring Session and Security, one `drishti-module-runtime` for kernel and console, consoles as
+  placement nodes, one console in front of many kernels, Python only on kernel workers, the strangler migration by route group, enterprise
+  single sign-on), and section 11, Drishti Elements as the one controlled set of UI statics; i2 hosts module pages declaratively on today's
+  console, and the console move is its own release, i4 (IMPLEMENTATION_PLAN rows i1–i4 and j); decisions Q21–Q25 (Q14 superseded), open
+  questions O1–O9; sections 10–15 renumbered to 12–17; five new diagrams, the kernel-switcher mock-up, console and identity-map examples,
+  console nodes in the placement and plan examples; PDF regenerated.
 - **Kernel and modules, decided:** the owner accepted every recommendation (Q1–Q20) on 2026-11-08; section 13 of
   [KERNEL_AND_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md) is now the decisions list.
 - **Kernel and modules, the developer's side (design):** [KERNEL_AND_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md) gains the

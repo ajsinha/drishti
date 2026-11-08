@@ -14,14 +14,16 @@
 
 # EXAMPLE (design, not built): console/plugin.yaml inside banking-3.0.0.dmod, format 2 (docs/architecture/KERNEL_AND_MODULES.md sections
 # 4.7 and 9). Today's drishti-console/plugins/banking/plugin.yaml (format 1) lists `routers:` that FastAPI includes at import; format 2
-# DECLARES every page and every API pass-through instead, so the kernel's live route table owns them and can withdraw them (section 10).
+# DECLARES every page and every API pass-through instead, so the kernel's live route table owns them and can withdraw them (section 12).
 # One way: format 1 is read for one release with a deprecation line in Health, then refused (plugin-api >=2).
 #
 # What happens to today's nine route files (drishti-console/plugins/banking/routes/*.py, about 60 handlers):
 #   * the ~35 /api/var/**, /api/exposure/**, /api/frtb/**, /api/simm/**, /api/smat/**, /api/play/** pass-throughs -> `api.proxy` entries
 #     (no Python at all: the kernel's proxy forwards as the person; streamed workbooks and Arrow answers keep their media types);
 #   * the ~20 pages (/var, /exposure, /frtb, /simm, /smat, /play, /mcube, /predeal, /var/backtesting ...) -> `routes` entries, each a
-#     composed page (page:) with an optional handler (a plain function in drishti_modules.banking.pages that returns the page's context);
+#     composed page (page:), declarative only (KERNEL_AND_MODULES.md section 14.2.1): no console handler, the page's data comes from the
+#     module's API through the proxy, and scope words (VAR DESK RATES) are parsed by the module's REST API on the kernel, so the same file
+#     is hosted by today's console in i2 and by the Spring Boot console in i4 without a change;
 #   * the home landings and Pivot panes -> `slots` (home.landing, pivot.top, pivot.below);
 #   * the typed commands (VAR DESK RATES -> the explorer) -> `words` with a grammar.
 format: 2
@@ -31,24 +33,23 @@ title: Banking and risk
 templates: templates            # namespace "banking:" (banking:var_explorer.html)
 static: static                  # /m/banking/static/3.0.0/... (Q3)
 i18n: i18n
-handlers: drishti_modules.banking.pages     # var, exposure, frtb, simm, smat, play, mcube, landings: context builders only
 engines: [var, exposure, sensitivities, frtb-sa, simm, mr-cube]
 
 routes:                         # under /m/banking; `alias:` keeps today's addresses (Drishti-signed module: aliases allowed, Q15)
-  - { id: var-explorer,     path: "/var/{scope...}",          page: var_explorer.html,     handler: var.explorer,     function: VAR,
+  - { id: var-explorer,     path: "/var/{scope...}",          page: var_explorer.html,     function: VAR,
       title: "VaR · {scope}", alias: /var }
-  - { id: var-backtesting,  path: /var/backtesting,           page: var_backtesting.html,  handler: var.backtesting,  function: VAR,  alias: /var/backtesting }
-  - { id: var-statistics,   path: /var/statistics,            page: var_statistics.html,   handler: var.statistics,   function: VAR,  alias: /var/statistics }
-  - { id: var-reports,      path: "/var/reports/{report?}",   page: var_reports.html,      handler: var.reports,      function: VREG, alias: /var/reports }
-  - { id: stress-window,    path: /var/stress-window,         page: stress_window.html,    handler: var.stress_window, function: SWIN, alias: /var/stress-window }
-  - { id: exposure,         path: "/exposure/{scope...}",     page: exposure.html,         handler: exposure.page,    function: EXP,  alias: /exposure }
-  - { id: predeal,          path: /predeal,                   page: predeal.html,          handler: exposure.predeal, function: PREDEAL, alias: /predeal }
-  - { id: frtb,             path: /frtb,                      page: frtb.html,             handler: frtb.page,        function: FRSA, alias: /frtb }
-  - { id: simm,             path: /simm,                      page: simm.html,             handler: simm.page,        function: SIMM, alias: /simm }
-  - { id: smat,             path: /smat,                      page: smat.html,             handler: smat.page,        function: SMAT, alias: /smat }
-  - { id: play,             path: "/play/{metric?}",          page: play.html,             handler: play.page,        function: PLAY, alias: /play }
+  - { id: var-backtesting,  path: /var/backtesting,           page: var_backtesting.html,  function: VAR,  alias: /var/backtesting }
+  - { id: var-statistics,   path: /var/statistics,            page: var_statistics.html,   function: VAR,  alias: /var/statistics }
+  - { id: var-reports,      path: "/var/reports/{report?}",   page: var_reports.html,      function: VREG, alias: /var/reports }
+  - { id: stress-window,    path: /var/stress-window,         page: stress_window.html,    function: SWIN, alias: /var/stress-window }
+  - { id: exposure,         path: "/exposure/{scope...}",     page: exposure.html,         function: EXP,  alias: /exposure }
+  - { id: predeal,          path: /predeal,                   page: predeal.html,          function: PREDEAL, alias: /predeal }
+  - { id: frtb,             path: /frtb,                      page: frtb.html,             function: FRSA, alias: /frtb }
+  - { id: simm,             path: /simm,                      page: simm.html,             function: SIMM, alias: /simm }
+  - { id: smat,             path: /smat,                      page: smat.html,             function: SMAT, alias: /smat }
+  - { id: play,             path: "/play/{metric?}",          page: play.html,             function: PLAY, alias: /play }
   - { id: mcube,            path: /mcube,                     sutra: market-risk/mr-cube,                               function: MCUBE, alias: /mcube }
-  - { id: scopes,           path: /admin/scopes,              page: admin_scopes.html,     handler: var.scopes,       function: VAR,
+  - { id: scopes,           path: /admin/scopes,              page: admin_scopes.html,     function: VAR,
       permission: risk:admin, alias: /admin/scopes, admin: true }      # an Admin tab (the admin menu), only for administrators
 
 api:                            # /m/banking/api/** -> /api/v1/risk/** as the person; today's /api/var/... console paths kept as aliases
@@ -95,9 +96,9 @@ home:                           # module.yaml's Home cards, now pointing at rout
       - { title: VaR of the bank, route: var-explorer, params: { scope: BANK }, icon: shield-check }
       - { title: VaR of the rates desk, route: var-explorer, params: { scope: "DESK RATES" }, icon: bar-chart-line }
       - { title: Exposure of a counterparty, route: exposure, params: { scope: "CPTY:CP-ALDERSHOT" }, icon: graph-up }
-    landing: { slot: home.landing, template: home_risk_landing.html, handler: landings.risk }
-  trading: { landing: { slot: home.landing, template: home_trading_landing.html, handler: landings.trading } }
-  market:  { landing: { slot: home.landing, template: home_market_landing.html, handler: landings.market }, requires: [module:capitalmarkets] }
+    landing: { slot: home.landing, template: home_risk_landing.html }
+  trading: { landing: { slot: home.landing, template: home_trading_landing.html } }
+  market:  { landing: { slot: home.landing, template: home_market_landing.html }, requires: [module:capitalmarkets] }
 
 slots:                          # today's screens.pivot (top, below) and the entity panels the VaR view augmenter feeds
   - { slot: pivot.top,   when: { lens: mr }, template: _mr_lens.html, assets: [css/drishti_mr-lens.css, js/drishti_mr-lens.js] }

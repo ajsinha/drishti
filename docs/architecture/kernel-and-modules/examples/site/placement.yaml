@@ -21,6 +21,10 @@
 # Parts and their resource classes come from the module's manifest (parts:); the guards: heavy parts need max-nodes and pass a memory check
 # at activation; feed and singleton parts run on exactly one elected node among those placed; a heavy part on every node is refused unless
 # allow-all: true (and a second approval).
+#
+# Consoles (from release 2.9.11.i4, section 10.5) are nodes with the role `console`: they hold console parts only (pages, templates, static,
+# the domain Elements library, Help), never server parts; compute nodes never hold a console part. Here: console-1 and console-2 (role
+# console, behind one load balancer) and console-research (role console, the research desk's console in front of finance and genomics).
 format: 1
 
 modules:
@@ -32,7 +36,7 @@ modules:
       exposure: { nodes: [drishti-b], max-nodes: 1 }              # heavy: exposure engine (4,096 MB)
       feeds:    { nodes: [drishti-main] }                         # singleton (one node listed: no election needed)
       jobs:     { nodes: [drishti-main] }                         # singleton: daily official-results publish
-      console:  { consoles: all }                                 # light: the bundle served to every console via the registry
+      console:  { roles: [console] }                              # light: every console node (console-1, console-2, console-research)
     # nothing on drishti-c: its .dmod is never copied there; requests reaching drishti-c are forwarded
 
   capitalmarkets:
@@ -40,7 +44,7 @@ modules:
     parts:
       api:      { roles: [data-serving] }                         # by role: every node tagged role:data-serving (today: main and c)
       feeds:    { roles: [data-serving] }                         # singleton: elected among the role's nodes, failover inside it
-      console:  { consoles: all }
+      console:  { roles: [console] }
 
   genomics:
     version: 0.1.0
@@ -48,7 +52,7 @@ modules:
       api:       { nodes: [drishti-main], roles: [gpu] }
       alignment: { roles: [gpu], max-nodes: 1 }                   # heavy, gpu: true in the manifest: the one GPU-class node only
       jobs:      { roles: [gpu] }                                 # singleton
-      console:   { consoles: all }
+      console:   { nodes: [console-research] }                    # only the research console shows genomics (placed by name)
 
   # A heavy part on every node needs both of these and a second approval:
   # economy:

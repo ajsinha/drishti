@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 690" width="760" height="690" role="img" aria-label="Enterprise single sign-on (i4)" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'DejaVu Sans', Arial, sans-serif">
+<!-- Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND CONFIDENTIAL. -->
+<title>Enterprise single sign-on (i4)</title>
+<defs><marker id="a1a2333" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1a2333"/></marker><marker id="a1f5fbf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1f5fbf"/></marker><marker id="a1e8a55" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1e8a55"/></marker><marker id="ac62828" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c62828"/></marker><marker id="ae8a33a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#e8a33a"/></marker><marker id="a2bb3a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#2bb3a3"/></marker><marker id="a5c6a80" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#5c6a80"/></marker><marker id="a12324f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#12324f"/></marker><marker id="a6a4fb3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#6a4fb3"/></marker></defs>
+<rect x="0.5" y="0.5" width="759" height="689" rx="14" fill="#f7f9fc" stroke="#cdd6e3"/>
+<text x="24" y="38" font-size="20" font-weight="700" fill="#12324f">Enterprise single sign-on (i4)</text>
+<text x="24" y="60" font-size="13" fill="#5c6a80">Authorization code with PKCE at the console; the kernel maps identity to access; a token per kernel.</text>
+<rect x="16" y="80" width="160" height="36" rx="8" fill="#eceff4" stroke="#5c6a80" stroke-width="1.5"/>
+<text x="96.0" y="102" font-size="13" font-weight="400" fill="#1a2333" text-anchor="middle">Browser</text>
+<path d="M96,116 L96,596" stroke="#cdd6e3" stroke-width="2" stroke-dasharray="4 4"/>
+<rect x="206" y="80" width="160" height="36" rx="8" fill="#ebe5f7" stroke="#6a4fb3" stroke-width="1.5"/>
+<text x="286.0" y="102" font-size="13" font-weight="400" fill="#1a2333" text-anchor="middle">Drishti Console</text>
+<path d="M286,116 L286,596" stroke="#cdd6e3" stroke-width="2" stroke-dasharray="4 4"/>
+<rect x="396" y="80" width="160" height="36" rx="8" fill="#fbefd9" stroke="#e8a33a" stroke-width="1.5"/>
+<text x="476.0" y="102" font-size="13" font-weight="400" fill="#1a2333" text-anchor="middle">Identity provider</text>
+<path d="M476,116 L476,596" stroke="#cdd6e3" stroke-width="2" stroke-dasharray="4 4"/>
+<rect x="584" y="80" width="160" height="36" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="664.0" y="102" font-size="13" font-weight="400" fill="#1a2333" text-anchor="middle">Drishti Kernel(s)</text>
+<path d="M664,116 L664,596" stroke="#cdd6e3" stroke-width="2" stroke-dasharray="4 4"/>
+<path d="M96,146 L282,146" fill="none" stroke="#12324f" stroke-width="1.8" marker-end="url(#a12324f)"/>
+<text x="191.0" y="140" font-size="11" font-weight="600" fill="#1a2333" text-anchor="middle">1 open a page (no session)</text>
+<path d="M286,184 L100,184" fill="none" stroke="#6a4fb3" stroke-width="1.8" marker-end="url(#a6a4fb3)"/>
+<text x="191.0" y="178" font-size="11" font-weight="600" fill="#1a2333" text-anchor="middle">2 302 to IdP: code + PKCE, state, nonce</text>
+<path d="M96,222 L472,222" fill="none" stroke="#e8a33a" stroke-width="1.8" marker-end="url(#ae8a33a)"/>
+<text x="286.0" y="216" font-size="11" font-weight="600" fill="#1a2333" text-anchor="middle">3 sign in at the IdP (MFA there)</text>
+<path d="M476,260 L100,260" fill="none" stroke="#e8a33a" stroke-width="1.8" marker-end="url(#ae8a33a)"/>
+<text x="286.0" y="254" font-size="11" font-weight="600" fill="#1a2333" text-anchor="middle">4 302 back with the code</text>
+<path d="M96,298 L282,298" fill="none" stroke="#12324f" stroke-width="1.8" marker-end="url(#a12324f)"/>
+<text x="191.0" y="292" font-size="11" font-weight="600" fill="#1a2333" text-anchor="middle">5 /auth/oidc/callback?code=…</text>
+<path d="M286,336 L472,336" fill="none" stroke="#6a4fb3" stroke-width="1.8" marker-end="url(#a6a4fb3)"/>
+<text x="381.0" y="330" font-size="11" font-weight="600" fill="#1a2333" text-anchor="middle">6 code + verifier → ID token (+refresh)</text>
+<path d="M476,374 L290,374" fill="none" stroke="#e8a33a" stroke-width="1.8" marker-end="url(#ae8a33a)"/>
+<text x="381.0" y="368" font-size="11" font-weight="600" fill="#1a2333" text-anchor="middle">7 tokens; console checks iss, aud, nonce, JWKS</text>
+<path d="M286,412 L660,412" fill="none" stroke="#6a4fb3" stroke-width="1.8" marker-end="url(#a6a4fb3)"/>
+<text x="475.0" y="406" font-size="11" font-weight="600" fill="#1a2333" text-anchor="middle">8 verified claims → identity map, JIT user</text>
+<path d="M664,450 L290,450" fill="none" stroke="#12324f" stroke-width="1.8" marker-end="url(#a12324f)"/>
+<text x="475.0" y="444" font-size="11" font-weight="600" fill="#1a2333" text-anchor="middle">9 roles, lenses, modules → console session</text>
+<path d="M286,488 L100,488" fill="none" stroke="#6a4fb3" stroke-width="1.8" marker-end="url(#a6a4fb3)"/>
+<text x="191.0" y="482" font-size="11" font-weight="600" fill="#1a2333" text-anchor="middle">10 session cookie (HttpOnly, Secure)</text>
+<path d="M286,526 L660,526" fill="none" stroke="#1e8a55" stroke-width="1.8" marker-end="url(#a1e8a55)"/>
+<text x="475.0" y="520" font-size="11" font-weight="600" fill="#1a2333" text-anchor="middle">11 each call: a token for THIS kernel only</text>
+<rect x="486" y="550" width="250" height="40" rx="8" fill="#ffffff" stroke="#12324f" stroke-width="1.5"/>
+<text x="498" y="572" font-size="11" font-weight="400" fill="#1a2333" text-anchor="start">12 checks iss, aud, exp, signature</text>
+<text x="498" y="588" font-size="11" font-weight="400" fill="#1a2333" text-anchor="start">roles + row rules · audit · workers</text>
+<rect x="24" y="610" width="712" height="58" rx="8" fill="#ffffff" stroke="#1e8a55" stroke-width="1.5"/>
+<text x="36" y="632" font-size="13" font-weight="700" fill="#1e8a55" text-anchor="start">Token per kernel (recommended: console-signed JWT)</text>
+<text x="36" y="650" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">aud = the kernel&#x27;s id · 2 minutes · ES256, the console&#x27;s key (JWKS) · never the IdP token, never shared</text>
+</svg>

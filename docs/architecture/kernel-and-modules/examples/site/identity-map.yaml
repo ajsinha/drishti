@@ -1,0 +1,67 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# EXAMPLE (design, not built): config/security/identity-map.yaml on the identity kernel (release 2.9.11.i4;
+# docs/architecture/KERNEL_AND_MODULES.md section 10.11). The one home for turning a verified identity (OIDC claims or SAML attributes)
+# into Drishti access. It grows from today's drishti.security.oidc.role-map and replaces it. A change is a four-eyes proposal in the
+# Approvals inbox and is audited. Roles, lenses and row rules themselves are ACCESS_MODEL.md; this file only maps groups to them.
+format: 1
+
+claims:                                       # defaults; a provider block in the console may override the claim names
+  username: preferred_username
+  email: email
+  groups: groups
+
+default: refuse                               # nothing maps -> sign-in refused (audited as login-sso-refused)
+roles-from-provider: true                     # groups replace roles at every sign-in; a Drishti-disabled user stays out regardless
+just-in-time: true                            # the first sign-in creates the user, without a password
+
+map:
+  - group: drishti-admins                     # Entra app role, Okta group, Keycloak realm role, ADFS role claim: the same names
+    roles: [admin]
+  - group: desk-rates
+    roles: [trader]
+    lenses: [trading]
+    modules: [banking, capitalmarkets]        # within what the signed licence allows; never widens it
+  - group: market-risk
+    roles: [risk-analyst]
+    lenses: [market-risk, cio]
+    modules: [banking]
+  - group: credit-desk
+    roles: [credit-analyst]
+    lenses: [credit]
+    modules: [banking]
+  - group: genomics-lab
+    roles: [analyst]
+    lenses: [cohorts]
+    modules: [genomics]
+  - group: sutra-authors
+    roles: [author]
+  - group: sutra-approvers
+    roles: [approver]
+
+service-principals:                           # OAuth client credentials for schedulers and CI (no passwords anywhere)
+  - client-id: etl-trades-loader
+    service-account: svc-etl-trades
+    scopes: [loads:write]                     # the API token scopes (ADMIN_GUIDE section 6)
+  - client-id: ci-module-deploy
+    service-account: svc-deploy
+    scopes: [packs:admin]
+
+per-provider:
+  google:                                     # no groups claim from Google: map by e-mail lists kept here
+    groups-from: email-lists
+    email-lists:
+      genomics-lab: [a.rao@lab.example, j.chen@lab.example]

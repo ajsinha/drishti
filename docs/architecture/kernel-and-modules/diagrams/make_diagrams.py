@@ -41,7 +41,7 @@ COPY = "Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND 
 def svg(name: str, title: str, subtitle: str, h: int, body: list[str]) -> None:
     markers = "".join(
         f'<marker id="a{c[1:]}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
-        f'<path d="M0,0L10,5L0,10z" fill="{c}"/></marker>' for c in (INK, BLUE, GREEN, RED, AMBER, TEAL, MUTED, NAVY))
+        f'<path d="M0,0L10,5L0,10z" fill="{c}"/></marker>' for c in (INK, BLUE, GREEN, RED, AMBER, TEAL, MUTED, NAVY, VIOLET))
     out = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {h}" width="{W}" height="{h}" role="img" '
            f'aria-label="{escape(title)}" font-family="{FONT}">\n<!-- {COPY} -->\n<title>{escape(title)}</title>\n'
            f'<defs>{markers}</defs>\n'
@@ -103,14 +103,14 @@ def layers():
         x = 24 + i * 180
         b.append(box(x, 250, 168, 86, c, head=m, lines=["Java · Python · packs", d], size=12))
     b.append(f'<rect x="24" y="352" width="712" height="40" rx="8" fill="{NAVY}"/>')
-    b.append(text(380, 377, "KERNEL API 1.x  ·  SPIs · Rachana 1 · contract format 1 · Elements core · REST namespace · events",
+    b.append(text(380, 377, "KERNEL API 1.x  ·  SPIs · Rachana 1 · contract format 1 · REST namespace · events",
                   13, "#ffffff", 700, "middle"))
     b.append(f'<rect x="24" y="404" width="712" height="196" rx="10" fill="#ffffff" stroke="{NAVY}" stroke-width="2"/>')
-    b.append(text(40, 428, "THE KERNEL · domain-free BI and aggregation", 14, NAVY, 700))
+    b.append(text(40, 428, "THE DRISHTI KERNEL · domain-free Data & BI (the console is a separate tier)", 14, NAVY, 700))
     cols = [("Grammar & screens", ["Rachana, Sutras", "packs runtime", "view pipeline", "search, Explain"]),
-            ("Analysis", ["Pivot engine", "BI, tables, models", "Notebook", "Elements core"]),
+            ("Analysis", ["Pivot engine", "BI, tables, models", "aggregation, what-if", "Python workers"]),
             ("Data", ["lakes (Delta, Iceberg)", "loaders, inbox", "bindings (kind→source)", "demo lake"]),
-            ("Platform", ["registry & licence", "security, approvals", "cluster, Health", "Python pool + sandbox"])]
+            ("Platform", ["registry & licence", "security, approvals", "cluster, Health", "module runtime"])]
     for i, (h, ls) in enumerate(cols):
         b.append(box(40 + i * 172, 440, 160, 146, NAVY, head=h, lines=ls, size=12))
     b.append(text(24, 628, "CONNECTORS · the kernel's drivers (never in a module)", 12, MUTED, 700))
@@ -271,12 +271,15 @@ def phases():
     ph = [("P1", "Foundations: kernel boundary to zero", BLUE, "2.9.11.i1",
            ["data standards · kernel API jar · KindProvider", "domain strings → 0 · drill under 60 min · memory"],
            "kernel boots with no module · VaR exactly equal"),
-          ("P2", "Modules on one node", BLUE, "2.9.11.i2",
-           [".dmod · pages, route table · clean unload", "SDK (archetype, Maven plugin) · deploy CLI + Admin"],
+          ("P2", "Modules on one node (today's console)", BLUE, "2.9.11.i2",
+           [".dmod · declarative pages, route table · clean unload", "Elements control · SDK · deploy CLI + Admin"],
            "banking as .dmod · install, remove, reinstall clean"),
           ("P3", "Cluster and white label", TEAL, "2.9.11.i3",
-           ["placement per part · singletons · heavy guards", "cluster deploy · rolling · distributions"],
+           ["placement per part · singletons · heavy guards", "cluster deploy · rolling · distributions · genomics"],
            "banking on main + b only · genomics from config"),
+          ("PC", "The Drishti Console on Spring Boot", VIOLET, "2.9.11.i4",
+           ["Spring Boot console · Jinjava · runtime host · SSO", "strangler by route group · many kernels · Python console deleted"],
+           "browser suite green on Java · latency measured"),
           ("P4", "Trust", AMBER, "2.9.11.j",
            ["publisher signing · revocation · signed licence", "taint · CSP + SRI · signed kernel"],
            "tampered or unlicensed module absent"),
@@ -295,7 +298,7 @@ def phases():
             b.append(text(148, y + 48 + j * 20, "• " + ln, 13, INK))
         b.append(text(148, y + 94, "proof: " + proof, 13, GREEN, 700))
         y += 116
-    svg("phases", "Migration in three releases, banking as the proving ground", "i1, i2, i3, then trust in j; each phase ends with a proof; VaR exactly equal.", y + 12, b)
+    svg("phases", "Migration in four releases, banking as the proving ground", "i1, i2, i3, then the console in i4 and trust in j; each phase ends with a proof; VaR exactly equal.", y + 12, b)
 
 
 def analogy():
@@ -323,9 +326,9 @@ def page_flow():
     b = []
     b.append(box(24, 84, 180, 92, NAVY, head="Browser", lines=["GET /m/genomics/", "variants/BRCA-2026"], size=13, mono=False))
     b.append(box(24, 196, 180, 74, NAVY, fill="#ffffff", head="the open page", lines=["Elements grid + chart"], size=12))
-    b.append(box(236, 84, 248, 186, BLUE, head="Console dispatcher (kernel)", size=12, lines=[
+    b.append(box(236, 84, 248, 186, BLUE, head="Drishti Console (Spring Boot)", size=12, lines=[
         "1 identity · CSRF · lens", "2 look up the live route table", "3 module on for this person?",
-        "   its function allowed?", "4 render in the kernel shell", "   (the module's namespace)"]))
+        "   its function allowed?", "4 render in the console shell", "   (module's Jinjava namespace)"]))
     b.append(box(516, 84, 220, 124, VIOLET, head="Live route table", size=12, lines=[
         "/m/genomics/variants/{cohort}", "  → genomics:variant_explorer.html", "/m/banking/var  (alias /var)",
         "/m/oldmod/…  → TOMBSTONE (410)"]))
@@ -334,20 +337,20 @@ def page_flow():
     b.append(arrow(484, 130, 514, 130, BLUE)); b.append(arrow(514, 160, 486, 160, VIOLET))
     b.append(box(236, 302, 248, 130, AMBER, head="Module template", size=12, lines=[
         "genomics:variant_explorer.html", "{% extends 'kernel/page.html' %}", "Elements macros only", "kernel context: user, lens, theme,",
-        "i18n, csrf, module.settings"]))
+        "i18n, csrf, + Java context builder"]))
     b.append(box(516, 302, 220, 130, TEAL, head="Elements (static)", size=12, lines=[
-        "/static/elements/… (kernel)", "/m/genomics/static/0.1.0/", "  drishti_genomics.js", "CSP 'self' + SRI hashes"]))
+        "/static/elements/… (console)", "/m/genomics/static/0.1.0/", "  drishti_genomics.js", "CSP 'self' + SRI hashes"]))
     b.append(arrow(360, 270, 360, 300, BLUE)); b.append(arrow(484, 366, 514, 366, AMBER))
     b.append(arrow(236, 380, 120, 272, AMBER, curve=(160, 380, 120, 330))); b.append(label(150, 300, "HTML"))
-    b.append(box(24, 464, 330, 104, GREEN, head="Kernel API proxy (console)", size=12, lines=[
-        "fetch('/m/genomics/api/variants?…')", "same origin · session cookie · CSRF on writes", "→ /api/v1/genomics/… as the person"]))
+    b.append(box(24, 464, 330, 104, GREEN, head="API proxy (console → kernel)", size=12, lines=[
+        "fetch('/m/genomics/api/variants?…')", "same origin · session cookie · CSRF on writes", "→ owning kernel, its token, as the person"]))
     b.append(arrow(80, 270, 80, 462, GREEN, dash=True)); b.append(label(116, 420, "data calls"))
-    b.append(box(406, 464, 330, 104, NAVY, head="Server: the module's child context", size=12, lines=[
+    b.append(box(406, 464, 330, 104, NAVY, head="Drishti Kernel: the module's child context", size=12, lines=[
         "gates: module → function → permission → audit", "@ModuleApi controllers under /api/v1/genomics", "Kinds read as the person (row rules)"]))
     b.append(arrow(354, 516, 404, 516, GREEN))
     b.append(box(24, 590, 712, 50, RED, fill="#ffffff", size=12, lines=[
         "Never: a module template reaching another module's templates, the server directly, other origins, or inline script."]))
-    svg("page-flow", "A module page, request to data", "Routes are looked up per request; templates render inside the kernel's shell; data goes through the proxy.", 662, b)
+    svg("page-flow", "A module page, request to data", "Routes are looked up per request; templates render (Jinjava) in the console's shell; data goes through the proxy to the kernel.", 662, b)
 
 
 def unload_sequence():
@@ -408,8 +411,11 @@ def dev_path():
 def cluster_modules():
     """Placement, not everything everywhere: banking api on main+b, compute on b, feeds/jobs on main, nothing on c; genomics on the GPU node."""
     b = []
-    b.append(box(24, 84, 712, 74, VIOLET, head="Console (any number; nothing installed by hand)", size=13, lines=[
-        "asks the registry which modules are active and where · console bundles from the kernel (signed)"]))
+    cons = [("console-1", "role: console", "banking ✓ · capitalmarkets ✓ · genomics ✓"),
+            ("console-research", "role: console (+ by name)", "genomics ✓ (placed by name)")]
+    for i, (h, role, ln) in enumerate(cons):
+        x = 24 + i * 362
+        b.append(box(x, 84, 350, 74, VIOLET, head=h + "  ·  console parts only", size=13, lines=[role + " · " + ln]))
     b.append(arrow(200, 158, 200, 190, NAVY)); b.append(label(262, 178, "registry, bundles"))
     b.append(arrow(560, 158, 560, 190, GREEN)); b.append(label(636, 178, "API proxy calls"))
     b.append(box(24, 194, 712, 44, NAVY, fill=TINT[NAVY], size=13, lines=[
@@ -429,19 +435,169 @@ def cluster_modules():
     b.append(box(24, 446, 712, 64, AMBER, fill=TINT[AMBER], head="Guards", size=12, lines=[
         "no default 'all nodes' · heavy: max-nodes + memory check at activation · heavy on every node only with allow-all + four eyes"]))
     b.append(box(24, 526, 712, 112, MUTED, fill="#ffffff", head="Node × module matrix (Health, Admin → Cluster)", size=13))
-    cols = [(150, "main"), (290, "b"), (430, "c"), (570, "gpu")]
+    cols = [(140, "main"), (240, "b"), (340, "c"), (440, "gpu"), (540, "console-1"), (640, "con-research")]
     for x, h in cols:
         b.append(text(x, 574, h, 13, MUTED, 700))
-    rows = [("banking", [("api, feeds ✓", GREEN), ("api, compute ✓", GREEN), ("not placed", MUTED), ("not placed", MUTED)]),
-            ("genomics", [("api ✓", GREEN), ("not placed", MUTED), ("present ! amber", AMBER), ("placed, missing ✗", RED)])]
+    rows = [("banking", [("api,feeds ✓", GREEN), ("api,comp ✓", GREEN), ("—", MUTED), ("—", MUTED), ("console ✓", GREEN), ("—", MUTED)]),
+            ("genomics", [("api ✓", GREEN), ("—", MUTED), ("present !", AMBER), ("missing ✗", RED), ("console ✓", GREEN), ("console ✓", GREEN)])]
     for j, (m, cells) in enumerate(rows):
         y = 598 + j * 22
-        b.append(text(40, y, m, 13, INK, 700, mono=True))
+        b.append(text(32, y, m, 13, INK, 700, mono=True))
         for (x, _), (v, c) in zip(cols, cells):
             b.append(text(x, y, v, 13, c, 700 if c in (RED, AMBER) else 400))
-    svg("cluster-modules", "Modules in a cluster: placed, not everywhere", "The deployer places each part on named nodes or roles; others forward; drift shows in the matrix.", 660, b)
+    svg("cluster-modules", "Modules in a cluster: placed, not everywhere", "Each part on named nodes or roles, console parts on console nodes; others forward; drift in the matrix.", 660, b)
+
+
+def building_blocks():
+    """The three building blocks: Drishti Kernel, Drishti Console, Drishti modules, and the glue between them."""
+    b = []
+    b.append(box(24, 84, 712, 40, MUTED, fill="#ffffff", lines=["Browsers · phones · embeds  (talk to a console's origin only)"], size=13, center=True))
+    b.append(arrow(258, 124, 258, 146, NAVY))
+    b.append(box(24, 150, 470, 150, VIOLET, head="DRISHTI CONSOLE  ·  Data & BI Console", size=13, lines=[
+        "a separate Spring Boot web app (WebMVC, virtual threads)",
+        "shell: header, lenses, themes, keys, Home, Help, search",
+        "Drishti Elements + Sutra renderer (the one UI static set)",
+        "BI and pivot screens · Admin",
+        "hosts modules' CONSOLE parts · in front of 1..n kernels"]))
+    b.append(arrow(258, 300, 258, 326, GREEN)); b.append(label(366, 318, "REST as the person, per-kernel token"))
+    b.append(box(24, 330, 470, 172, NAVY, head="DRISHTI KERNEL  ·  Data & BI Kernel", size=13, lines=[
+        "the server (Spring Boot), domain-free",
+        "connectors + bindings · lakes · data load, .ready",
+        "Sutra grammar · pivot, BI, aggregation · Explain",
+        "registry & access · audit",
+        "cluster: Drishti*net, placement",
+        "kernel-managed Python workers (sandboxed)",
+        "hosts modules' SERVER parts"]))
+    b.append(box(514, 150, 222, 352, BLUE, head="DRISHTI MODULES", size=13, lines=[
+        ".dmod, signed · banking first", "", "packs (kinds, contracts)", "Java + Python compute", "Sutras, composed pages",
+        "a domain Elements library", "functions · lenses", "Home cards · Help · feeds", "", "declares its data needs;", "never brings connectors"]))
+    b.append(arrow(512, 220, 496, 220, VIOLET)); b.append(label(505, 210, "console part", VIOLET, 11, "end"))
+    b.append(arrow(512, 420, 496, 420, NAVY)); b.append(label(505, 410, "server parts", NAVY, 11, "end"))
+    b.append(text(24, 530, "THE GLUE", 12, MUTED, 700))
+    glue = [("drishti-module-runtime", ["one library, two hosts:", "kernel and console"]), ("distribution file", ["white label: brand, theme,", "modules, lenses, docs"]),
+            ("Module SDK", ["kernel API · console API", "Elements typings · tests"]), ("placement", ["which node runs which part;", "consoles = role console"])]
+    for i, (h, ls) in enumerate(glue):
+        b.append(box(24 + i * 180, 540, 168, 82, AMBER, head=h, lines=ls, size=12))
+    b.append(text(380, 650, "the site's data lives in lakes and sources the kernel reaches through its connectors", 13, MUTED, 400, "middle"))
+    svg("building-blocks", "The three building blocks", "Drishti Kernel, Drishti Console and Drishti modules; every section of the design hangs off one of them.", 672, b)
+
+
+def console_tiers():
+    """Browser -> consoles (Spring Boot) -> kernels/clusters -> Python workers on compute nodes; the Python console only during i2."""
+    b = []
+    b.append(box(24, 84, 712, 50, MUTED, fill="#ffffff", size=13, lines=[
+        "BROWSERS  ·  Drishti Elements · Sutra renderer · Calc (Pyodide: Python in the browser, client-side)"]))
+    b.append(arrow(150, 134, 150, 158, NAVY)); b.append(arrow(440, 134, 440, 158, NAVY))
+    for i, h in enumerate(["console-1", "console-2"]):
+        x = 24 + i * 270
+        b.append(box(x, 162, 258, 176, VIOLET, head="Drishti Console · " + h, size=12, lines=[
+            "Spring Boot 3 · WebMVC", "virtual threads (fan-out per page)", "Jinjava templates (Jinja syntax)",
+            "Elements + static: SRI, CSP", "Spring Session (SQLite | Postgres)", "Spring Security: SSO (OIDC, SAML)",
+            "KernelClient: HTTP now, Flight later"]))
+    b.append(box(568, 162, 168, 176, MUTED, fill="#ffffff", dash=True, head="Python console", size=12, lines=[
+        "during i4 only", "loopback, front mode", "route groups not yet", "migrated", "", "deleted by the", "end of i4"]))
+    b.append(arrow(538, 250, 566, 250, MUTED, dash=True))
+    b.append(box(24, 352, 528, 34, LINE, fill="#eef2f8", size=12, lines=["one session store per site · two complete schema files · no migrations"]))
+    b.append(arrow(150, 388, 150, 414, GREEN)); b.append(arrow(420, 388, 420, 414, GREEN))
+    b.append(label(290, 406, "HTTPS as the person · one token per kernel"))
+    b.append(box(24, 418, 340, 130, NAVY, head="Drishti Kernel · finance cluster", size=12, lines=[
+        "drishti-main · drishti-b · drishti-c", "REST /api/v1 · registry · placement", "banking, capitalmarkets, economy",
+        "server parts"]))
+    b.append(box(396, 418, 340, 130, TEAL, head="Drishti Kernel · genomics cluster", size=12, lines=[
+        "drishti-gpu · drishti-g2", "REST /api/v1 · registry · placement", "genomics", "server parts"]))
+    b.append(arrow(194, 548, 194, 572, AMBER)); b.append(arrow(566, 548, 566, 572, AMBER))
+    b.append(box(24, 576, 712, 64, AMBER, head="Kernel-managed Python workers on compute nodes (sandboxed)", size=12, lines=[
+        "notebook cells · Python compute packs and BI items · transform parse · feeds   —   never in the console"]))
+    svg("console-tiers", "The tiers: browser, Drishti Console, Drishti Kernel, Python workers",
+        "Consoles hold no data and run no compute; kernels serve no pages; Python runs only on kernel workers.", 662, b)
+
+
+def console_multi_kernel():
+    """One console in front of two kernels: union of menus labelled per kernel, per-kernel tokens, failure isolation."""
+    b = []
+    b.append(f'<rect x="24" y="84" width="712" height="40" rx="6" fill="{NAVY}"/>')
+    b.append(text(40, 109, "DRISHTI RESEARCH", 14, AMBER, 800))
+    b.append(f'<rect x="196" y="93" width="132" height="22" rx="11" fill="#ffffff"/>')
+    b.append(text(206, 109, "● Finance  ▾", 13, GREEN, 700))
+    b.append(text(344, 109, "Home   Analyse   Build   Data   Admin   Help", 13, "#ffffff", 400))
+    b.append(text(722, 109, "kernel switcher", 11, "#cdd6e3", 400, "end"))
+    b.append(box(24, 140, 712, 150, VIOLET, head="One Drishti Console  ·  kernels: [finance, genomics]", size=12))
+    b.append(box(40, 176, 330, 100, GREEN, fill="#ffffff", head="connection: finance", size=12, lines=[
+        "route table: banking, capitalmarkets, economy", "pool · limit · circuit breaker: closed", "token minted for finance only"]))
+    b.append(box(390, 176, 330, 100, RED, fill="#ffffff", head="connection: genomics", size=12, lines=[
+        "route table: genomics", "pool · limit · circuit breaker: OPEN", "token minted for genomics only"]))
+    b.append(arrow(205, 290, 205, 320, GREEN)); b.append(label(270, 310, "token A only"))
+    b.append(arrow(555, 290, 555, 320, RED, dash=True)); b.append(label(620, 310, "token B only"))
+    b.append(box(24, 324, 350, 70, GREEN, head="Finance production cluster", size=12, lines=["healthy · roles per kernel (/api/v1/me)"]))
+    b.append(box(386, 324, 350, 70, RED, head="Genomics cluster", size=12, lines=["not answering · only its pages grey"]))
+    b.append(box(24, 410, 712, 176, MUTED, fill="#ffffff", head="What a person sees (the union, labelled per kernel)", size=12, lines=[
+        "Analyse menu:  VaR (Finance) | Exposure (Finance) | Variant explorer (Genomics, unavailable)",
+        "Home:  VaR card (Finance) live | Cohorts card (Genomics) → notice 'Genomics is not answering'",
+        "Search:  fan-out to both kernels, hits labelled; genomics hits omitted with a note",
+        "Kernel pages:  /k/finance/pivot, /k/genomics/pivot (a link always opens on its kernel)",
+        "Module pages:  /m/banking/…, /m/genomics/… (each module belongs to exactly one kernel)",
+        "Never:  one kernel's token or data sent to another kernel"]))
+    svg("console-multi-kernel", "One console, many kernels", "Per-kernel route tables, tokens and breakers; one kernel down greys only its own pages.", 606, b)
+
+
+def console_strangler():
+    """The strangler: the Java console fronts all traffic; un-migrated groups are proxied to the Python console, which shrinks to zero."""
+    b = []
+    stages = [("Start of i4", ["G0 shell, sign-in, static", "G1 banking + economy"], ["G2 Admin … G10 notebooks"], 140),
+              ("Middle of i4", ["G0–G1", "G2 Admin · G3 Terminal", "G4 Pivot, BI · G5 Explain"], ["G6 … G10"], 70),
+              ("End of i4", ["G0–G10: every group", "", ""], [], 0)]
+    for i, (h, java, py, ph) in enumerate(stages):
+        x = 24 + i * 242
+        b.append(text(x + 115, 96, h, 14, NAVY, 700, "middle"))
+        b.append(box(x, 108, 230, 150, VIOLET, head="Java console (front)", size=12, lines=java))
+        b.append(arrow(x + 115, 258, x + 115, 290, MUTED, dash=True)); b.append(label(x + 170, 280, "proxy rest" if ph else "nothing left"))
+        if ph:
+            b.append(box(x + (230 - ph - 90) / 2, 294, ph + 90, 96 if ph > 100 else 70, MUTED, fill="#ffffff", dash=True, head="Python console", size=12,
+                         lines=py + ["loopback, front mode"]))
+        else:
+            b.append(box(x + 40, 294, 150, 70, RED, fill="#ffffff", dash=True, head="Python console", size=12, lines=["deleted"]))
+    b.append(box(24, 410, 712, 60, GREEN, head="Playwright browser suite, unchanged", size=12, lines=[
+        "runs over HTTP against the Java front at every merge: it cannot tell which process answered"]))
+    b.append(box(24, 486, 712, 76, AMBER, head="Rules", size=12, lines=[
+        "a group moves when its browser tests pass on Java · one owner per path (legacy-routes.yaml)",
+        "pytest route tests → JUnit + MockMvc per group · latency per page measured · no dual machinery at the end"]))
+    svg("console-strangler", "The strangler migration", "The Java console fronts everything from day one; the Python console behind it shrinks group by group to zero.", 584, b)
+
+
+def sso_flow():
+    """Enterprise SSO: browser -> console (authorization code + PKCE) -> IdP -> console session -> per-kernel tokens -> kernels."""
+    b = []
+    lanes = [(96, "Browser", MUTED), (286, "Drishti Console", VIOLET), (476, "Identity provider", AMBER), (664, "Drishti Kernel(s)", NAVY)]
+    for x, h, c in lanes:
+        b.append(box(x - 80, 80, 160, 36, c, lines=[h], size=13, center=True))
+        b.append(f'<path d="M{x},116 L{x},596" stroke="{LINE}" stroke-width="2" stroke-dasharray="4 4"/>')
+    steps = [(96, 286, "1 open a page (no session)", NAVY),
+             (286, 96, "2 302 to IdP: code + PKCE, state, nonce", VIOLET),
+             (96, 476, "3 sign in at the IdP (MFA there)", AMBER),
+             (476, 96, "4 302 back with the code", AMBER),
+             (96, 286, "5 /auth/oidc/callback?code=…", NAVY),
+             (286, 476, "6 code + verifier → ID token (+refresh)", VIOLET),
+             (476, 286, "7 tokens; console checks iss, aud, nonce, JWKS", AMBER),
+             (286, 664, "8 verified claims → identity map, JIT user", VIOLET),
+             (664, 286, "9 roles, lenses, modules → console session", NAVY),
+             (286, 96, "10 session cookie (HttpOnly, Secure)", VIOLET),
+             (286, 664, "11 each call: a token for THIS kernel only", GREEN),
+             (664, 664, "12 checks iss, aud, exp, signature; roles + row rules; audit, Python workers", NAVY)]
+    y = 146
+    for (x1, x2, t, c) in steps:
+        if x1 == x2:
+            b.append(box(486, y - 14, 250, 40, NAVY, fill="#ffffff", lines=["12 checks iss, aud, exp, signature", "roles + row rules · audit · workers"], size=11))
+        else:
+            b.append(arrow(x1, y, x2 + (-4 if x2 > x1 else 4), y, c))
+            mx = (x1 + x2) / 2
+            b.append(text(mx, y - 6, t, 11, INK, 600, "middle"))
+        y += 38
+    b.append(box(24, 610, 712, 58, GREEN, fill="#ffffff", head="Token per kernel (recommended: console-signed JWT)", size=12, lines=[
+        "aud = the kernel's id · 2 minutes · ES256, the console's key (JWKS) · never the IdP token, never shared"]))
+    svg("sso-flow", "Enterprise single sign-on (i4)", "Authorization code with PKCE at the console; the kernel maps identity to access; a token per kernel.", 690, b)
 
 
 if __name__ == "__main__":
-    for f in (layers, anatomy, load_sequence, data_binding, distributions, phases, analogy, page_flow, unload_sequence, dev_path, cluster_modules):
+    for f in (layers, anatomy, load_sequence, data_binding, distributions, phases, analogy, page_flow, unload_sequence, dev_path, cluster_modules,
+              building_blocks, console_tiers, console_multi_kernel, console_strangler, sso_flow):
         f()
