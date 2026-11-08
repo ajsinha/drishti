@@ -86,39 +86,38 @@
         const v = r.spec;
         const up = h('button', { type: 'button', class: 'bi-phone-move', ['data-' + device + '-up']: v.id, 'aria-label': 'Move ' + titleOf(v) + ' up', disabled: r.hidden || i === 0 }, B.icon('arrow-up'));
         const down = h('button', { type: 'button', class: 'bi-phone-move', ['data-' + device + '-down']: v.id, 'aria-label': 'Move ' + titleOf(v) + ' down', disabled: r.hidden || i >= shown - 1 }, B.icon('arrow-down'));
-        const hide = h('input', { type: 'checkbox', ['data-' + device + '-hide']: v.id, 'aria-label': 'Hide ' + titleOf(v) + ' on ' + word });
-        hide.checked = r.hidden;
-        const wide = tablet ? h('input', { type: 'checkbox', 'data-tablet-wide': v.id, 'aria-label': 'Whole width for ' + titleOf(v) + ' on a tablet' }) : null;
-        if (wide) { wide.checked = r.wide; wide.disabled = r.hidden; }
-        const span = h('input', { type: 'number', class: 'studio-in bi-phone-rows', min: '1', max: '40', ['data-' + device + '-rows']: v.id, placeholder: 'auto', 'aria-label': 'Height of ' + titleOf(v) + ' in rows', value: r.rows ? String(r.rows) : '' });
+        // hide, whole width (a tablet) and the height in rows: a live drishti-inputs Form per row, its controls keeping their data-<device>-* hooks
+        const settings = h('div', { class: 'bi-fform bi-phone-settings' });
         const li = h('li', { class: 'bi-phone-row' + (r.hidden ? ' bi-phone-hidden' : ''), ['data-' + device + '-visual']: v.id, 'data-hidden': r.hidden ? 'yes' : 'no' },
           h('span', { class: 'bi-phone-grip', 'aria-hidden': 'true' }, B.icon('grip-vertical')),
           h('span', { class: 'bi-phone-name' }, h('strong', { text: titleOf(v) }), ' ', h('span', { class: 'text-muted-d', text: v.type })),
-          up, down, h('label', { class: 'bi-checkrow' }, hide, h('span', { text: 'Hide' })),
-          wide ? h('label', { class: 'bi-checkrow' }, wide, h('span', { text: 'Wide' })) : null,
-          h('label', { class: 'bi-phone-rowlabel' }, h('span', { text: 'Rows' }), span));
+          up, down, settings);
         up.addEventListener('click', () => { move(rows, i, i - 1, 'Move up on ' + word); focusAfter('[data-' + device + '-up="' + v.id + '"]', '[data-' + device + '-down="' + v.id + '"]'); });
         down.addEventListener('click', () => { move(rows, i, i + 1, 'Move down on ' + word); focusAfter('[data-' + device + '-down="' + v.id + '"]', '[data-' + device + '-up="' + v.id + '"]'); });
-        hide.addEventListener('change', () => {
-          const next = rows.slice();
-          const [it] = next.splice(i, 1);
-          const row = { spec: it.spec, rows: it.rows, hidden: hide.checked, wide: it.wide };
-          next.splice(hide.checked ? next.length : next.filter((x) => !x.hidden).length, 0, row);
-          commit(next, hide.checked ? 'Hide on ' + word : 'Show on ' + word);
-        });
-        if (wide) {
-          wide.addEventListener('change', () => {
+        const fields = { hide: { type: 'boolean', title: 'Hide', hook: { ['data-' + device + '-hide']: v.id, 'aria-label': 'Hide ' + titleOf(v) + ' on ' + word } } };
+        if (tablet) { fields.wide = { type: 'boolean', title: 'Wide', readOnly: r.hidden, hook: { 'data-tablet-wide': v.id, 'aria-label': 'Whole width for ' + titleOf(v) + ' on a tablet' } }; }
+        fields.rows = { type: 'integer', title: 'Rows', minimum: 1, maximum: 40, lazy: true, placeholder: 'auto', hook: { ['data-' + device + '-rows']: v.id, class: 'bi-phone-rows', 'aria-label': 'Height of ' + titleOf(v) + ' in rows' } };
+        B.formatPane.form(settings, { fields, value: { hide: !!r.hidden, wide: !!r.wide, rows: r.rows || undefined }, label: titleOf(v) + ' on ' + word, on: {
+          hide: (on) => {
             const next = rows.slice();
-            next[i] = { spec: r.spec, rows: r.rows, hidden: r.hidden, wide: wide.checked };
-            commit(next, wide.checked ? 'Whole width on a tablet' : 'Half width on a tablet');
-          });
-        }
-        span.addEventListener('change', () => {
-          const n = Math.max(0, Math.min(40, Math.round(Number(span.value) || 0)));
-          const next = rows.slice();
-          next[i] = { spec: r.spec, rows: n || null, hidden: r.hidden, wide: r.wide };
-          commit(next, (tablet ? 'Tablet' : 'Phone') + ' height');
-        });
+            const [it] = next.splice(i, 1);
+            const row = { spec: it.spec, rows: it.rows, hidden: !!on, wide: it.wide };
+            next.splice(on ? next.length : next.filter((x) => !x.hidden).length, 0, row);
+            commit(next, on ? 'Hide on ' + word : 'Show on ' + word);
+          },
+          wide: (on) => {
+            const next = rows.slice();
+            next[i] = { spec: r.spec, rows: r.rows, hidden: r.hidden, wide: !!on };
+            commit(next, on ? 'Whole width on a tablet' : 'Half width on a tablet');
+          },
+          rows: (x) => {
+            if (x !== undefined && isNaN(x)) { return; }
+            const n = Math.max(0, Math.min(40, Math.round(Number(x) || 0)));
+            const next = rows.slice();
+            next[i] = { spec: r.spec, rows: n || null, hidden: r.hidden, wide: r.wide };
+            commit(next, (tablet ? 'Tablet' : 'Phone') + ' height');
+          }
+        } });
         list.appendChild(li);
       });
       q('[data-' + device + '-reset]').disabled = D.readOnly || !B.phone.layoutOf(D.model, D.page().id, device);

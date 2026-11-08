@@ -1,0 +1,68 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The gdelt-events feed (docs/guides/PUBLIC_SECTOR_GUIDE.md section 5): the GDELT 1.0 daily event files reduced to events and tone by
+# country and CAMEO category, into newslake, for the gdelt-events pack. Class: tools/feeds/sources/gdelt_events.py. Daily (a day's
+# file is complete the morning after, about 06:00 UTC); incremental (only the days after the last one processed; each about 7 MB
+# zipped, read as it streams, never kept). No key.
+# Run: python3 tools/drishti.py feed run gdelt-events (EXTERNAL_DATA.md); options.sources holds each source's licence and terms; the rest of
+# options is the default selection.
+feed: gdelt-events
+title: GDELT, events and tone by country
+description: 'The economy module''s public-sector gdelt-events pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): What the world''s news reported about each country yesterday,
+  from the GDELT Project''s daily event files: the number of events whose first actor is the country, how widely they were reported, their average tone
+  and Goldstein scale, the share of conflict and of cooperation, the events by CAMEO category, thirty days of history and the most-mentioned stories, each
+  a link to the original. The world map is shaded by tone. Free and open with a citation (GDELT terms). Filled daily by the gdelt-events feed into the newslake
+  lake.'
+class: gdelt_events.GdeltEventsFeed
+source:
+  provider: The GDELT Project
+  url: https://www.gdeltproject.org/data.html
+  pause: 1
+  retries: 3
+  timeout: 180
+  cache-hours: 12
+lake: newslake
+load: java
+enabled: true
+schedule:
+  at: 04:30
+  days: daily
+licence:
+  name: GDELT terms of use (free for any use, with a citation)
+  url: https://www.gdeltproject.org/about.html#termsofuse
+  redistribution: attribution
+  internal-only: false
+  attribution: 'Source: The GDELT Project (https://www.gdeltproject.org/).'
+datasets:
+  event-country:
+    pack: gdelt-events
+    kind: event-country
+    key: EVENT_COUNTRY_ID
+options:
+  module: economy
+  sources:
+  - id: gdelt
+    name: GDELT 1.0 daily event files
+    title: The GDELT Project
+    url: https://www.gdeltproject.org/data.html
+    terms: https://www.gdeltproject.org/about.html#termsofuse
+    licence: 'GDELT terms of use: free and open for any use, commercial included, with a citation of the GDELT Project and a link to it'
+    redistributable: true
+    internal-only: false
+    attribution: 'Source: The GDELT Project (https://www.gdeltproject.org/).'
+  backfill-days: 7
+  history-days: 30
+  min-events: 20
+  top-stories: 5

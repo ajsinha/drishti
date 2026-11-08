@@ -12,12 +12,12 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Build the funds pack's documents from the downloads tools/publicdata/funds.py keeps (no network).
+"""Build the funds pack's documents from the downloads drishti.py feed run funds keeps (no network).
 
     python3 tools/packgen/funds/make.py [--cache DIR]           write data/testdata/funds/, the pack's samples, README and guide
     python3 tools/packgen/funds/make.py --check [--cache DIR]   fail if what would be written differs from the pack
 
-With a cache (<data>/publicdata/cache/funds by default: N-PORT, N-CEN and risk/return summary data sets, the ticker files), --check
+With a cache (<data>/datafeeds/sources/cache/funds by default: N-PORT, N-CEN and risk/return summary data sets, the ticker files), --check
 rebuilds every document from it. Without one (a fresh clone, CI), --check reads the committed snapshot back (data/testdata/funds/) and
 rebuilds what is derived from it (the reference samples, the guide, the README), so it needs no network and no 500 MB download.
 
@@ -52,7 +52,7 @@ HEADER = "\n".join(Path(__file__).read_text(encoding="utf-8").splitlines()[:13])
 
 
 def default_cache() -> Path:
-    return Path(os.environ.get("DRISHTI_DATA_DIR") or ROOT / "data").expanduser().resolve() / "publicdata" / "cache" / "funds"
+    return Path(os.environ.get("DRISHTI_DATA_DIR") or ROOT / "data").expanduser().resolve() / "datafeeds" / "sources" / "cache" / "funds"
 
 
 def build(cache: Path, retrieved: str | None = None) -> dict[str, dict[str, dict]]:
@@ -163,22 +163,22 @@ connector `funds-store` serves them; nothing is served by the demo connector. `s
 | Nasdaq Trader symbol directory | which tickers are ETFs, and where they list | Public directory file |
 | GLEIF golden copy, level 2 relationships | managed by, sub-fund of, feeder to | CC0 1.0 |
 
-The SEC asks for a descriptive User-Agent with a contact and at most 10 requests a second; the refresh script uses the same setting
-as the us-equities pack (`DRISHTI_SEC_USER_AGENT`). **Not included:** index weights (proprietary to the index providers; the index tab
+The SEC asks for a descriptive User-Agent with a contact and at most 10 requests a second; the funds feed uses the same setting
+as the us-equities pack (`DRISHTI_FEEDS_USER_AGENT`). **Not included:** index weights (proprietary to the index providers; the index tab
 computes market-cap weights from SEC data and says so), prices and NAV history, non-US funds and money market funds (they file Form
 N-MFP, not N-PORT).
 
 ## Refreshing the data
 
 ```bash
-python3 tools/publicdata/funds.py status                 # licences, last refreshed, cached size
-python3 tools/publicdata/funds.py refresh --dry-run      # what would be fetched; changes nothing
-python3 tools/publicdata/funds.py refresh                # the downloads (about 700 MB, kept in the data folder), then make.py and --check
+python3 tools/drishti.py feed status funds                 # its last runs: last success, rows, failures
+python3 tools/drishti.py feed run funds --dry-run      # what would be fetched; changes nothing
+python3 tools/drishti.py feed run funds --snapshot                # the downloads (about 700 MB, kept in the data folder), then make.py and --check
 python3 tools/packgen/funds/make.py --check              # no network: the pack matches its generator
 ```
 
-`tools/publicdata/funds.sh` and `tools/windows/publicdata-funds.ps1` run the same script. The downloads stay in the data folder
-(`<data>/publicdata/cache/funds`), never in git. After a refresh, rebuild the lake: `python3 tools/drishti.py lake demo`.
+`tools/feeds/feed.sh run funds` and `tools/windows/feed.ps1 run funds` run the same script. The downloads stay in the data folder
+(`<data>/datafeeds/sources/cache/funds`), never in git. After a refresh, rebuild the lake: `python3 tools/drishti.py lake demo`.
 """
 
 
@@ -206,7 +206,7 @@ def files(docs: dict[str, dict[str, dict]]) -> dict[Path, str]:
 
 def main(argv: list[str]) -> int:
     p = argparse.ArgumentParser(description="Build the funds pack from the downloaded data sets (no network).")
-    p.add_argument("--cache", type=Path, default=None, help="the downloads (default <data>/publicdata/cache/funds)")
+    p.add_argument("--cache", type=Path, default=None, help="the downloads (default <data>/datafeeds/sources/cache/funds)")
     p.add_argument("--check", action="store_true")
     p.add_argument("--pack", type=Path, help="the pack folder to write or check (default config/packs/funds)")
     p.add_argument("--testdata", type=Path, help="the test data folder the snapshot goes to (default data/testdata for the committed pack)")
@@ -220,10 +220,10 @@ def main(argv: list[str]) -> int:
     elif a.check:
         docs = SNAP.read(testdata, NAME)
         if not docs:
-            raise SystemExit(f"no downloads at {cache} and no snapshot in {testdata}/funds: run tools/publicdata/funds.py refresh first")
+            raise SystemExit(f"no downloads at {cache} and no snapshot in {testdata}/funds: run drishti.py feed run funds first")
         print(f"no downloads at {cache}: checking the committed snapshot ({testdata}/funds) against what it derives")
     else:
-        raise SystemExit(f"no downloads at {cache}: run tools/publicdata/funds.py refresh first")
+        raise SystemExit(f"no downloads at {cache}: run drishti.py feed run funds first")
     return SNAP.generate(NAME, PACK, docs, files(docs), a.check, testdata)
 
 

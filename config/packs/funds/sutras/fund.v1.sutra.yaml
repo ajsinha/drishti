@@ -240,6 +240,6 @@ panels:
     with:
       title: About this page
       area: low
-      text: "Public data (U.S. public domain). Holdings, flows and monthly returns as the fund filed them on Form N-PORT for the report date above; facts and service providers from its newest Form N-CEN; the expense ratio (net where the fund reports one), turnover and calendar-year returns from its newest prospectus risk/return summary (the share class of this ticker). A fund keeps its 600 largest holdings with the totals of the rest; the funds that hold a company count every holding. No prices or NAV history are shipped. Source: tools/publicdata/funds.py."
+      text: "Public data (U.S. public domain). Holdings, flows and monthly returns as the fund filed them on Form N-PORT for the report date above; facts and service providers from its newest Form N-CEN; the expense ratio (net where the fund reports one), turnover and calendar-year returns from its newest prospectus risk/return summary (the share class of this ticker). A fund keeps its 600 largest holdings with the totals of the rest; the funds that hold a company count every holding. No prices or NAV history are shipped. Source: drishti.py feed run funds."
   - { use: source-footer@1 }
 keys: { F6: "link($.MOST_HELD_COMPANY, 'fund-holder', 'Funds holding ' + $.MOST_HELD_NAME)", F7: "link($.INDEX_ID, 'index-funds', 'Funds tracking the index')", F9: raw }

@@ -1,0 +1,59 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/feeds/world-economy.yaml: the world economy feed (docs/guides/EXTERNAL_DATA.md; every key in its section "The feed file").
+# It carries the IMF's World Economic Outlook forecasts, which are INTERNAL USE ONLY (the IMF's terms: no commercial reuse without
+# permission; the owner kept them for internal use, 2026-10-10 and 2026-10-29). `-- --no-imf` builds without them.
+#   python3 tools/drishti.py feed run world-economy                         pull, write data/datafeeds/world-economy/<date>/, load into worldlake
+#   python3 tools/drishti.py feed run world-economy -- --no-imf             the same without any IMF data
+# The World Bank's WDI indicators are pulled by the world-development feed (it owns them): this feed runs with --no-wdi and keeps the
+# IMF forecasts, UNDP's HDI, the CIA World Factbook and the World Bank's governance indicators (WGI) and country list.
+#   python3 tools/drishti.py feed run world-economy --snapshot --internal-ok   refresh the committed dataset and pack instead
+feed: world-economy
+title: World economy (IMF forecasts, UNDP, CIA World Factbook, World Bank governance indicators)
+description: >-
+  Forecasts and fiscal figures of every country (IMF World Economic Outlook), human development (UNDP), governance (World Bank WGI) and
+  jurisdictions, parties, office holders and elections (CIA World Factbook). The World Bank's development indicators (WDI) come from the
+  world-development feed.
+class: world_economy.WorldEconomyFeed  # tools/feeds/sources/world_economy.py
+source:
+  provider: IMF, UNDP, CIA World Factbook, World Bank (WGI)
+  url: https://data.worldbank.org
+  pause: 0.4
+  retries: 3
+  cache-hours: 20
+lake: worldlake
+load: java
+schedule: {at: "06:45", days: daily}
+licence:
+  name: World Bank CC BY 4.0; IMF terms (no commercial reuse without permission); UNDP CC BY 3.0 IGO; Factbook public domain
+  url: https://www.imf.org/en/About/copyright-and-terms
+  redistribution: internal-only
+  internal-only: true
+  attribution: "World Bank World Development Indicators (CC BY 4.0); IMF World Economic Outlook; UNDP Human Development Reports; CIA World Factbook"
+  notes: internal only because of the IMF forecasts; a build with -- --no-imf carries only redistributable data
+datasets:                              # without WDI the pack's generator builds these; economy, macro-indicator, economic-forecast,
+                                       # labour-market and fiscal-position are keyed on WDI series and come back once the pack reads
+                                       # WDI from the world-development feed's tables
+  region-economy:    {pack: world-economy, kind: region-economy}
+  jurisdiction:      {pack: world-economy, kind: jurisdiction}
+  party:             {pack: world-economy, kind: party}
+  office-holder:     {pack: world-economy, kind: office-holder}
+  election:          {pack: world-economy, kind: election}
+  region:            {pack: world-economy, kind: region}
+  social-indicator:  {pack: world-economy, kind: social-indicator}
+options:
+  args: [--no-wdi]                     # WDI is the world-development feed's
+snapshot:
+  note: with --internal-ok, refreshes tools/realdata/dataset, config/packs/world-economy and tools/packgen/world (carries IMF data)

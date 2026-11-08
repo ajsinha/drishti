@@ -8294,7 +8294,7 @@ Makes one text area (or one-line input) a code editor (once); answers the editor
 | Parameter | Type | Meaning |
 |---|---|---|
 | `ta` | `(HTMLTextAreaElement\|HTMLInputElement)` |  |
-| `[o]` | `{mode: string, height: number, complete: Function, lint: Function, keys: Object}` | beside the element's own attributes and drishtiCodeOptions |
+| `[o]` | `{mode: string, height: number, complete: Function, completeAfter: Function, lint: Function, keys: Object}` | beside the element's own attributes and drishtiCodeOptions |
 
 Returns `CodeEditor`.
 

@@ -363,6 +363,7 @@ def build_parser(h) -> argparse.ArgumentParser:
     adm = load_module("capacitycli", "capacitycli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # admin capacity (2.9.11)
     load_module("enginescli", "enginescli.py").register(sv, adm, srv, {"Api": Api, "CliError": CliError, "ApiError": ApiError, "say_json": say_json})   # server engines, admin engines (2.9.11)
     load_module("dataloadcli", "dataloadcli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "ApiError": ApiError, "say_json": say_json})   # dataload status|run|retry
+    load_module("feedcli", "feeds/cli.py").register(groups)                                                          # feed list|run|status|schedule (2.9.11.g)
     load_module("contracts", "contracts.py").register(groups)                                                       # contract list|show|check|docs|bootstrap
     load_module("tablescli", "tablescli.py").register(groups, {"find_java": find_java, "find_jar": find_jar, "CliError": CliError})   # tables list|check|preview|lineage|migrate (2.9.11.e)
     load_module("elementscli", "elements/cli.py").register(groups, add)                                      # elements pack|dist|webjar-tree (2.9.11.e)

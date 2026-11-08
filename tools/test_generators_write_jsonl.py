@@ -44,7 +44,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PY = sys.executable
 
 #: the generators whose source is read (data generators; tests and fixtures under them are skipped)
-GENERATORS = ["tools/packgen/**/*.py", "tools/samplegen/*.py", "tools/testdata/*.py", "tools/realdata/*.py", "tools/publicdata/*.py",
+GENERATORS = ["tools/packgen/**/*.py", "tools/samplegen/*.py", "tools/testdata/*.py", "tools/realdata/*.py", "tools/feeds/*.py", "tools/feeds/sources/*.py",
               "tools/sutragen.py", "tools/schemapack.py", "tools/bench/trades.py", "tools/convertcmd.py", "tools/pvgen/*.py",
               "config/packs/*/tools/*.py",
               "examples/packs/*/tools/*.py"]

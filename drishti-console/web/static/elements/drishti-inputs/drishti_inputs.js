@@ -838,7 +838,7 @@
       const native = nativeValue(ta);
       const editor = new CodeEditor(host, { mode: o.mode || ta.getAttribute('data-di-code') || 'text', value: native.get.call(ta), label: ta.getAttribute('aria-label') || o.label || ta.getAttribute('placeholder') || 'Code',
         height: one ? 'auto' : o.height || Number(ta.getAttribute('data-di-code-height')) || Math.max(120, (Number(ta.getAttribute('rows')) || 8) * 19), readOnly: ta.readOnly, lineWrapping: true,
-        singleLine: one, lineNumbers: !one, tabLeaves: one || !!o.tabLeaves, complete: o.complete, catalogue: o.catalogue, lint: o.lint, keys: o.keys });
+        singleLine: one, lineNumbers: !one, tabLeaves: one || !!o.tabLeaves, complete: o.complete, completeAfter: o.completeAfter, catalogue: o.catalogue, lint: o.lint, keys: o.keys });
       ta.hidden = true;
       ta.setAttribute('data-di-code-upgraded', '');
       let quiet = false, committed = editor.getValue();           // committed: the text as the page last set it or the person last left it

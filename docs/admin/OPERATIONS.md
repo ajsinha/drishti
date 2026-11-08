@@ -590,7 +590,7 @@ the shipped lake files: `config/lakes/demo.yaml` holds an entry for every table 
 after the move `git status` shows nothing in `config/lakes`. Only when a site's own connector reads a table the file has no entry for
 (an older or edited connector file naming a kind the packs no longer have) is that entry added, at the end of the file's `tables:`, in
 its compact style, every other line kept byte for byte; the log names the file. The same holds for the data inbox's first load into a
-table a lake file lacks (the empty lakes `risklake`, `newslake`, `worldlake`, `regulators`, `capitalmarket`): only that entry is
+table a lake file lacks (the empty lakes `risklake`, `newslake`, `worldlake`, `regulators`, `capitalmarket`, `referencelake`): only that entry is
 added. A start that finds nothing to add writes nothing. To see what a site's start added: `git diff config/lakes`.
 
 By hand (stop the server first: its connectors hold the tables open), or to see what it would do:
@@ -4112,7 +4112,8 @@ Drishti runs as a core plus **modules** ([ACCESS_MODEL.md](../architecture/ACCES
 [DOMAIN_MODULES.md](../architecture/DOMAIN_MODULES.md)): **banking** (VaR and ES, exposure and CCR, FRTB-SA, SIMM, sensitivities, the MR
 cube, the official results, and the trading, market-data, market-risk and counterparty-risk packs), **capitalmarkets** (content only: the
 us-equities and funds packs and the market data's functions such as CRV, FX, EQV) and **economy** (content only: the world-economy and
-news-and-markets packs and the World lens). GLEIF's legal entities are core reference data. A module is **on** when it is installed (its jar
+news-and-markets packs, the public sector's world-development, central-banks, national-statistics, oecd, official-news and gdelt-events
+packs filled daily by their feeds, and the World and Public sector lenses: [PUBLIC_SECTOR_GUIDE.md](../guides/PUBLIC_SECTOR_GUIDE.md)). GLEIF's legal entities are core reference data. A module is **on** when it is installed (its jar
 is in the server), licensed and enabled, and every module it needs is on. The core is always on.
 
 | Where | What |

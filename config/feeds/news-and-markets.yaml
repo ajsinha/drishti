@@ -1,0 +1,49 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/feeds/news-and-markets.yaml: listed companies' quotes (Yahoo Finance) and headlines (Google News). INTERNAL USE ONLY: Yahoo's
+# terms forbid redistributing its prices and the headlines belong to their publishers (docs/guides/EXTERNAL_DATA.md).
+#   python3 tools/drishti.py feed run news-and-markets                        pull through a scratch server, load into newslake
+#   python3 tools/drishti.py feed run news-and-markets --set server=http://localhost:18480    through a running server instead
+#   python3 tools/drishti.py feed run news-and-markets --snapshot --internal-ok    replace the committed offline snapshot (data/testdata)
+feed: news-and-markets
+title: Listed companies' quotes and headlines (Yahoo Finance, Google News; internal use only)
+description: >-
+  Quotes and daily price history of the listed companies the news-and-markets pack follows, and the headlines about them and its
+  topics, captured through Drishti's own live connectors (yfinance, news) so the documents have exactly the pack's shape.
+class: news_and_markets.NewsAndMarketsFeed   # tools/feeds/sources/news_and_markets.py
+source:
+  provider: Yahoo Finance, Google News
+  url: https://news.google.com
+  pause: 2.0
+  retries: 3
+lake: newslake
+load: java
+schedule: {at: "07:30", days: daily}
+licence:
+  name: Yahoo terms of service (no redistribution); headlines belong to their publishers
+  url: https://legal.yahoo.com/us/en/yahoo/terms/otos/index.html
+  redistribution: internal-only
+  internal-only: true
+  notes: the owner approved Yahoo and news data inside the bank only (2026-10-29)
+keys:
+  token: {env: "${DRISHTI_TOKEN}", required: false}     # a running server's API token when its security is on
+datasets:
+  quote: {pack: news-and-markets, kind: quote, key: QUOTE_ID, description: "a listed company's quote and daily history"}
+  news:  {pack: news-and-markets, kind: news, key: NEWS_ID, description: "the headlines of a company or topic"}
+options:
+  server: ""                           # empty: a scratch server from the built jar; or a running server's URL
+  args: []
+snapshot:
+  note: with --internal-ok, replaces data/testdata/news-and-markets (the committed offline snapshot)

@@ -54,7 +54,7 @@ tiers:
   expert-in: [server, engines, console, connectors, store, runs, edit, compute, net, ai, dataload]
   areas: { server: admin, engines: admin, modules: admin, console: admin, console-files: admin, connectors: admin, packs: admin, editions: admin,
            store: admin, runs: admin, edit: admin, compute: admin, net: admin, alerts: admin, reports: admin, simm: admin,
-           dataload: admin, ui-kit: admin, ai: admin, modules: admin }
+           dataload: admin, feeds: admin, ui-kit: admin, ai: admin, modules: admin }
 schemas:
   sitemap:
     area: console-files
@@ -549,8 +549,8 @@ env:
   - { name: DRISHTI_MINIO_SHA256, by: tools, default: ~, sets: "S3 simulator tests", meaning: "Its expected SHA-256" }
   - { name: DRISHTI_PACKS_OUT, by: tools, default: ~, sets: "pack generators", meaning: "Where the pack generators write" }
   - { name: DRISHTI_ABOUT_DIR, by: tools, default: ~, sets: "pack generators", meaning: "Where the pack generators write the About files" }
-  - { name: DRISHTI_GLEIF_USER_AGENT, by: tools, default: ~, sets: "gleif fetch", meaning: "The User-Agent sent to GLEIF by the gleif refresh script" }
-  - { name: DRISHTI_SEC_USER_AGENT, by: tools, default: ~, sets: "SEC fetch", meaning: "The User-Agent (with a contact) the SEC requires of the us-equities refresh script" }
+  - { name: DRISHTI_FEEDS_DEBUG, by: tools, default: ~, sets: "drishti.py feed", meaning: "Set (any value): a feed's own error prints its Python stack trace too (the ledger keeps the one line either way)" }
+  - { name: DRISHTI_FEEDS_USER_AGENT, by: tools, default: "Drishti ajsinha@gmail.com", sets: "drishti.py feed", meaning: "The User-Agent every data feed sends (SEC EDGAR, GLEIF and the rest; the SEC asks for a contact in it): set it to your organisation's contact in production" }
   - { name: DRISHTI_DOCTOR_PORTS, by: tools, default: ~, sets: "drishti.py doctor", meaning: "The ports doctor checks" }
   - { name: DRISHTI_JAR_DIR, by: tools, default: drishti-server/target, sets: "screenshot tools", meaning: "Where the screenshot tools find the server jar" }
   - { name: DRISHTI_SHOTS_WORK, by: tools, default: ~, sets: "screenshot tools", meaning: "The screenshot tools' working folder" }

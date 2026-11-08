@@ -163,5 +163,5 @@ Fields no record above has, found by reading all 71 rows, with how many rows fil
 ## See also
 
 - Data contract: [NEWS in the news-and-markets pack's contracts](../../packs/news-and-markets.md#news-headlines-news) (`config/packs/news-and-markets/contracts/news.contract.yaml`, the source of every meaning on this page).
-- [External data: where it comes from and how to refresh it](../../../guides/EXTERNAL_DATA.md)
+- [External data feeds](../../../guides/EXTERNAL_DATA.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

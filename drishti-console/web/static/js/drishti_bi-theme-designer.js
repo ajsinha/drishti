@@ -13,8 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The theme designer in BI Studio (report schema v2, R6, 2.4.0; docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2): a theme item's series colours (add, remove, move), its page,
-   text, good and bad colours, its type, and the format defaults of each kind of visual, drawn with the same generated Format pane as the report designer
+/* The theme designer in BI Studio (report schema v2, R6, 2.4.0; docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2): a theme item's name,
+   series colours (add, remove, move), its page, text, good and bad colours and its type (one live drishti-inputs Form), and the format defaults of each kind of visual, drawn with the same generated Format pane as the report designer
    (so a theme can set only what a visual accepts), with a preview of a chart, a table and a card in the theme. The server checks the theme
    (POST /bi/api/themes/validate) as you go; Save stores the item, Publish makes it the version reports read. /bi/design/theme/new makes a theme in your
    private workspace, starting from the shipped Corporate one. The YAML tab shows the same theme as text. */
@@ -52,38 +52,44 @@
     draw();
   }
 
-  // ---- the editor ------------------------------------------------------------------------------------------------------------------
-  function drawPalette(box) {
-    const list = h('ol', { class: 'bi-theme-palette', 'data-theme-palette-list': '' });
-    (model.palette || []).forEach((c, i) => {
-      const up = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Move colour ' + (i + 1) + ' earlier', disabled: i === 0 }, B.icon('chevron-up'));
-      const x = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Remove colour ' + (i + 1), disabled: model.palette.length <= 3, 'data-theme-remove-colour': String(i) }, B.icon('x-lg'));
-      up.addEventListener('click', () => change((m) => { const t = m.palette[i - 1]; m.palette[i - 1] = m.palette[i]; m.palette[i] = t; }));
-      x.addEventListener('click', () => change((m) => { m.palette.splice(i, 1); }));
-      const inp = h('input', { type: 'color', value: c, 'aria-label': 'Series colour ' + (i + 1), 'data-theme-colour': String(i) });
-      inp.addEventListener('change', () => change((m) => { m.palette[i] = inp.value; }));
-      list.appendChild(h('li', {}, inp, h('code', { text: ' ' + c + ' ' }), up, x));
-    });
-    const add = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-theme-add-colour': '', disabled: (model.palette || []).length >= 12 }, B.icon('plus-lg'), ' Add a colour');
-    add.addEventListener('click', () => change((m) => { (m.palette = m.palette || []).push('#888888'); }));
-    box.appendChild(h('fieldset', { class: 'bi-fieldset' }, h('legend', { text: 'Series colours (3 to 12, in order)' }), list, add));
-  }
+  // ---- the editor: one live Form (drishti-inputs, B.formatPane.form) for the theme's name, its series colours (3 to 12, in order:
+  // add, remove, move) and its colours and type; the format defaults below are the generated Format pane --------------------------------
+  const FONTS = ['sans', 'serif', 'mono', 'system'];
+  const COLOURS = [['background', 'Page and visual background'], ['foreground', 'Text'], ['good', 'Good (a KPI above target, a scale\'s high end)'], ['bad', 'Bad']];
+  const setFont = (k, x) => change((m) => {
+    const f = Object.assign({}, m.font);
+    if (x !== undefined) { f[k] = x; } else { delete f[k]; }
+    if (Object.keys(f).length) { m.font = f; } else { delete m.font; }
+  });
 
-  function drawColours(box) {
-    [['background', 'Page and visual background'], ['foreground', 'Text'], ['good', 'Good (a KPI above target, a scale\'s high end)'], ['bad', 'Bad']].forEach(([k, label]) => {
-      box.appendChild(P.row(label, P.colour(model[k], (c) => change((m) => { if (c) { m[k] = c; } else { delete m[k]; } }), { ['data-theme-' + k]: '', 'aria-label': label })));
-    });
+  function drawSettings(box) {
     const font = model.font || {};
-    box.appendChild(P.row('Type', P.select([['', 'the console\'s'], ['sans', 'sans'], ['serif', 'serif'], ['mono', 'mono'], ['system', 'system']], font.family || '', (x) => change((m) => {
-      const f = Object.assign({}, m.font);
-      if (x) { f.family = x; } else { delete f.family; }
-      if (Object.keys(f).length) { m.font = f; } else { delete m.font; }
-    }), { 'data-theme-font': '' })));
-    box.appendChild(P.row('Text size (px)', P.text(font.size, (x) => change((m) => {
-      const f = Object.assign({}, m.font), n = parseInt(x, 10);
-      if (n >= 10 && n <= 18) { f.size = n; } else { delete f.size; }
-      if (Object.keys(f).length) { m.font = f; } else { delete m.font; }
-    }), { type: 'number', min: '10', max: '18', 'data-theme-font-size': '' })));
+    const fields = {
+      title: { type: 'string', title: 'Title', lazy: true, hook: 'theme-title' },
+      theme: { type: 'string', title: 'Name', lazy: true, hook: 'theme-key', description: 'What a report writes: theme: ' + model.theme },
+      description: { type: 'string', title: 'Description', lazy: true, hook: 'theme-description' },
+      palette: { type: 'array', title: 'Series colours (3 to 12, in order)', minItems: 3, maxItems: 12, addLabel: 'Add a colour', hook: 'theme-palette-list',
+        items: { type: 'object', title: 'Colour', properties: { colour: { type: 'string', title: 'Colour', widget: 'colour', hook: 'theme-colour', default: '#888888' } } } }
+    };
+    const value = { title: model.title, theme: model.theme, description: model.description, palette: (model.palette || []).map((c) => ({ colour: c })), fontFamily: font.family, fontSize: font.size };
+    const on = {
+      title: (x) => change((m) => { m.title = String(x || '').trim() || m.title; }),
+      theme: (x) => change((m) => { m.theme = B.slug(x || '') || m.theme; }),
+      description: (x) => change((m) => { if (String(x || '').trim()) { m.description = x.trim(); } else { delete m.description; } }),
+      palette: (list) => change((m) => { m.palette = (list || []).map((c, i) => (c && c.colour) || (m.palette || [])[i] || '#888888'); }),
+      fontFamily: (x) => setFont('family', x || undefined),
+      fontSize: (x) => setFont('size', typeof x === 'number' && x >= 10 && x <= 18 ? Math.round(x) : undefined)
+    };
+    COLOURS.forEach(([k, label]) => {
+      fields[k] = { type: 'string', title: label, widget: 'colour', hook: 'theme-' + k };
+      value[k] = model[k];
+      on[k] = (c) => change((m) => { if (c) { m[k] = c; } else { delete m[k]; } });
+    });
+    fields.fontFamily = { type: 'string', title: 'Type', enum: FONTS, widget: 'select', emptyLabel: 'the console\'s', hook: 'theme-font' };
+    fields.fontSize = { type: 'integer', title: 'Text size (px)', minimum: 10, maximum: 18, lazy: true, hook: 'theme-font-size' };
+    const host = h('div', { class: 'bi-fform', 'data-theme-settings': '' });
+    box.appendChild(host);
+    P.form(host, { fields, value, on, label: 'The theme' });
   }
 
   function drawDefaults(box) {
@@ -129,11 +135,7 @@
 
   function draw() {
     const ed = B.clear(q('[data-theme-editor]'));
-    ed.appendChild(P.row('Title', P.text(model.title, (x) => change((m) => { m.title = x.trim() || m.title; }), { 'data-theme-title': '' })));
-    ed.appendChild(P.row('Name', P.text(model.theme, (x) => change((m) => { m.theme = B.slug(x) || m.theme; }), { 'data-theme-key': '' }), 'What a report writes: theme: ' + model.theme));
-    ed.appendChild(P.row('Description', P.text(model.description, (x) => change((m) => { if (x.trim()) { m.description = x.trim(); } else { delete m.description; } }))));
-    drawPalette(ed);
-    drawColours(ed);
+    drawSettings(ed);
     drawDefaults(ed);
     drawPreview();
     const ta = q('[data-theme-yaml]');

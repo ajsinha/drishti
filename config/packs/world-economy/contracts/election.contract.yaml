@@ -257,5 +257,5 @@ review:
 - 'required inferred from 100% coverage in 378 documents (378 samples): confirm each required field is mandatory upstream, and each optional one
   may be empty.'
 - 'key ELECTION_ID is the field holding the sample catalogue''s id (ELEC-ABW-EXE): confirm it is the business key.'
-- 'a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.'
+- 'a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: SUMMARY.ELECTORAL_SYSTEM: confirm they are closed lists.'

@@ -1596,6 +1596,30 @@ python3 tools/drishti.py elements pack --libs core,grid,chart --theme dark --out
 python3 tools/drishti.py elements dist
 ```
 
+### 5.19 feed
+
+drishti-feeds, the data feeds that pull external data and load it into the lakes (`tools/feeds/`, one file a feed in `config/feeds/`;
+the guide [EXTERNAL_DATA.md](EXTERNAL_DATA.md)). The pull is Python; the load is `lake build` (the parallel loader by default) or the data
+inbox. The wrappers `tools/feeds/feed.sh` and `tools/windows/feed.ps1` run the same with the console's Python.
+
+- `feed list [--json]`: every feed: its lake, load route, schedule, licence (internal only or not) and datasets.
+- `feed run <feed>|--all [--date D | --since D] [--load java|python|inbox|none] [--lake L] [--dry-run] [--snapshot [--internal-ok]]
+  [--offline] [--set NAME=VALUE] [-- SOURCE ARGS]`: pull (incrementally, from the feed's state), write
+  `<data>/datafeeds/<feed>/<date>/<table>.<date>.jsonl.gz` with a manifest, load into the feed's lake, replacing the dates it brings; one
+  log line and one ledger line (`<data>/datafeeds/ledger.jsonl`) per run. `--snapshot` refreshes the committed demo snapshot in
+  `data/testdata` instead. Exit codes: 0 ok, 1 failed, 2 refused, 3 locked, 4 partial.
+- `feed status [<feed>] [--runs N] [--json]`: per feed the last run, the last success, rows, duration and failures (exit 1 when a
+  feed's last run failed).
+- `feed schedule --cron | --systemd | --windows [<feed> ...] [--log-dir DIR] [--root DIR]`: ready-to-use daily entries, one per enabled
+  feed (`--root`: the Drishti folder on the machine that will run them).
+
+```bash
+python3 tools/drishti.py feed list
+python3 tools/drishti.py feed run gleif --dry-run
+python3 tools/drishti.py feed run --all
+python3 tools/drishti.py feed schedule --cron
+```
+
 ## 6. Store loaders: `tools/load-*.sh`
 
 Each loader writes the banking packs' demo data (1,791 sample documents x 10 business days, and with `--trades N --days D` a
@@ -1769,7 +1793,7 @@ of Parquet.
 | `tools/windows/start-server.ps1`, `tools/windows/start-console.ps1`, `tools/windows/load-delta.ps1` | starting the server and console, and loading the demo lake, on Windows |
 | `tools/rolling-upgrade.sh` (`tools/rolling.py`; Windows `tools/windows/rolling-upgrade.ps1`) | the rolling upgrade runner (CD3): a cluster upgraded one node at a time from an inventory (`deploy/rolling.example.yaml`), consoles, BI and data-serving, coordinators, then owners zone by zone; each drained, waited for until safe to stop, stopped, upgraded, started and waited for until ready, on VMs or ECS; `--dry-run`, `--from`, `--only` ([CLUSTER_DEPLOYMENT.md section 10.1](../architecture/CLUSTER_DEPLOYMENT.md#101-rolling-upgrades)) |
 | `deploy/bin/drishti-node.sh` (`deploy/bin/drishti-node.ps1`) | one server's drain before a stop and its readiness (CD1, CD2): `drain [--wait S]`, `undrain`, `status`, `wait-ready`, and `run COMMAND` (the server images' entry: drains on SIGTERM, then passes it on); the systemd unit's `ExecStop` ([OPERATIONS.md section 7.2](../admin/OPERATIONS.md#72-the-server)) |
-| `tools/windows/publicdata-funds.ps1`, `publicdata-gleif.ps1`, `publicdata-market-data.ps1`, `publicdata-news-and-markets.ps1`, `publicdata-us-equities.ps1`, `publicdata-world-economy.ps1` | the public-data refreshes of those packs on Windows: each runs `tools/publicdata/<pack>.py` with the console's Python (`status`, or `refresh` with the same options) |
+| `tools/feeds/feed.sh`, `tools/windows/feed.ps1` | the one wrapper of every data feed on Linux and macOS, and on Windows: `drishti.py feed ...` with the console's Python (what cron, systemd and Task Scheduler run; [EXTERNAL_DATA.md](EXTERNAL_DATA.md)) |
 | `tools/smoke.py` | the engine of `drishti.py server smoke` |
 | `tools/javacmd.py` | `java_cmd()`: the one helper every Python launcher of a JVM uses, so each java it starts gets `-Djava.io.tmpdir=` (native libraries unpack in Drishti's own temp folder, not `/tmp`); a guard test fails on a tool that starts java without it ([CONFIGURATION.md](../admin/CONFIGURATION.md)) |
 | `tools/settings_catalogue.py`, `tools/settings_sources.py` | the one configuration document: `settings_catalogue.py` writes every setting of every kind into [CONFIGURATION.md](../admin/CONFIGURATION.md) (and the console's Help → Configuration) from the files themselves, with `tools/settings_schemas.yaml` for the content files; `--check` (in the drill) fails when the document is not current or a key has no meaning; `settings_sources.py` holds its readers (a commented YAML's keys and comments, the connector settings catalogue, the shared `tls.*` and `proxy.*` specs) |
@@ -1904,6 +1928,7 @@ on and off and deploys a pack archive with its connectors (the twins: `drishti.p
 | `drishti.py pack check` | 0 passed, 1 failed, 2 usage | none | stdout, JUnit with `--junit` | yes |
 | `tools/load-*.sh` | 0 ok, non-zero failed | none: one loader per store at a time | stdout | yes (each day replaced in one step) |
 | `tools/drill.sh` | 0 all passed and pushed | none: one drill at a time | `data/drill/*.log` | yes |
+| `drishti.py feed run` | 0 ok, 1 failed, 2 refused, 3 locked, 4 partial | `<data>/datafeeds/<feed>/run.lock` (a dead process's is taken over) | one line per run to stdout and `<data>/datafeeds/ledger.jsonl` | yes: each date replaced ([EXTERNAL_DATA.md](EXTERNAL_DATA.md)) |
 
 Rules that hold for all of them: run as a service user that owns the lake or data folder; pass the server explicitly
 (`--server`, `--signal`); keep tokens in a file readable only by that user (`--token-file`), never on the command line; send

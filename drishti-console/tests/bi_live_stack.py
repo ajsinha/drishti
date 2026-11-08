@@ -13,8 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """A real scratch stack for the streaming BI browser tests and the documentation pictures (Rupaka phase 5): the built server jar (security on, the trading and
-counterparty-risk packs, the demo source ticking every 200 ms) on :18995, the console on :17995 with sign-in, and the shipped live content of ``config/bi``: the
-datasets ``live-trading`` and ``live-exposure``, the reports ``live-trading-desk`` and ``live-exposure`` and the board ``desk-wall``. The live tables follow the
+counterparty-risk packs, the demo source ticking every 200 ms) on :18995, the console on :17995 with sign-in, and the shipped live content: the
+models ``live-trading`` and ``live-exposure`` (``config/tables/bi``, with their tables), the reports ``live-trading-desk`` and ``live-exposure`` and the board ``desk-wall``. The live tables follow the
 trades and netting sets the demo ticker moves (750 trades; never millions). Everything lives in a scratch directory; ports in use are never touched (the stack
 refuses to start).
 
@@ -55,7 +55,8 @@ TRADE_IDS = {v["TRADE_ID"] for v in _VALUATIONS}          # ids are text with no
 # losses tile from the first loss (the sample warns below -1.5 bn): a tile the data always trips, to see the colours, the words and the shadow
 LOSSES_ALERT = ("alert: { on: Losses, warn: { op: lt, value: -1500000000 }, crit: { op: lt, value: -2500000000 } }",
                 "alert: { on: Losses, warn: { op: lt, value: 0 }, crit: { op: lt, value: -1000000000000000 } }")
-LIVE_FILES = {"datasets": ["live-trading", "live-exposure"], "reports": ["live-trading-desk", "live-exposure", "desk-wall"]}
+LIVE_FILES = {"reports": ["live-trading-desk", "live-exposure", "desk-wall"]}
+LIVE_MODELS = ["live-trading", "live-exposure"]          # the table layer's models and their tables (config/tables/bi), as the reports read them
 ROLES = {"live-risk": (["bi"], True), "live-analyst": (["bi"], False), "live-writer": (["bi", "bi-author"], True), "live-none": ([], False)}
 USERS = {"rita": "live-risk", "ann": "live-analyst", "wes": "live-writer", "nobi": "live-none"}
 
@@ -116,8 +117,10 @@ class LiveStack:
             folder = work / "config" / "bi" / kind
             folder.mkdir(parents=True)
             for name in names:
-                suffix = {"datasets": "dataset", "reports": "report", "boards": "board"}[kind]
+                suffix = {"reports": "report", "boards": "board"}[kind]
                 shutil.copy(ROOT / "config" / "bi" / kind / f"{name}.{suffix}.yaml", folder)
+        from bi_samples import copy_samples
+        copy_samples(work / "config" / "bi", LIVE_MODELS)        # the models (the datasets of before the table layer are gone)
         wall = work / "config" / "bi" / "reports" / "desk-wall.report.yaml"
         text = wall.read_text(encoding="utf-8")
         assert LOSSES_ALERT[0] in text, "the shipped Desk wall's losses alert changed: update LOSSES_ALERT"

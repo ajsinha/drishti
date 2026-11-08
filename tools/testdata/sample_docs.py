@@ -147,6 +147,8 @@ PACK_LINKS = {
     "world-economy": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/economies.md", "# ")],
     "market-risk": [("knowledge/market-risk.md", "# ")],
     "counterparty-risk": [("knowledge/counterparty-credit-risk.md", "# ")],
+    **{p: [("guides/PUBLIC_SECTOR_GUIDE.md", "# "), ("guides/EXTERNAL_DATA.md", "# ")]
+       for p in ("world-development", "central-banks", "national-statistics", "oecd", "official-news", "gdelt-events")},
 }
 
 #: the index's groups, in order: (title, who, the members as folder or pack/kind)
@@ -170,7 +172,9 @@ GROUPS = [
     ("Demonstration only", "Demo", None),                    # compute-demo
     ("Planned inputs (demo data generated, not loaded)", "You will produce this", None),   # planned contracts with generated data
 ]
-PUBLIC = ("gleif", "us-equities", "funds", "news-and-markets", "world-economy")
+PUBLIC = ("gleif", "us-equities", "funds", "news-and-markets", "world-economy",
+          # the public-sector module's packs, filled daily by their feeds (docs/guides/PUBLIC_SECTOR_GUIDE.md)
+          "world-development", "central-banks", "national-statistics", "oecd", "official-news", "gdelt-events")
 
 #: what each produced kind is needed for (VAR_GUIDE.md section 15, EXPOSURE_GUIDE.md sections 15 and 16)
 NEEDED = {

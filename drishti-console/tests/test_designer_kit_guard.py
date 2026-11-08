@@ -128,10 +128,8 @@ FORM_LOOP = re.compile(r"(?:\bproperties|\bfields|\bprops|\bschema\w*|\bparams|\
 FORM_LABEL = re.compile(r"""\(\s*['"]label['"]|<label\b""")
 FORM_INPUT = re.compile(r"""\(\s*['"](?:input|select)['"]|<(?:input|select)\b""")
 FORM_WINDOW = 25      # lines after the loop's head that the label and the input are looked for in
-# file (relative to drishti-console/web) -> still draws a form pane by hand (each moving onto Form or drishti-grid editing); only shrinks
-FORMS_ALLOWED = {
-    "static/js/drishti_bi-transform.js",         # a transform step's parameters (-> Form: a column select, a checkbox list, a choice)
-}
+# file (relative to drishti-console/web) -> still draws a form pane by hand; empty since every pane is on Form or drishti-grid editing
+FORMS_ALLOWED: set = set()
 
 
 def _hand_form(text):
@@ -168,7 +166,7 @@ def test_no_console_script_draws_an_inspector_or_form_pane_by_hand(hand_forms):
 def test_the_form_allow_list_only_shrinks_and_is_capped(hand_forms):
     stale = [f"{name}: gone or on Form now (take it off the list)" for name in sorted(FORMS_ALLOWED) if not hand_forms.get(name)]
     assert not stale, "\n".join(stale)
-    assert len(FORMS_ALLOWED) <= 1                # 3 when the rule was made (2026-11-07, wip/e-panes), 1 now (a lake's fields on drishti-grid editing); it ends at 0
+    assert len(FORMS_ALLOWED) == 0                # 3 when the rule was made (2026-11-07); 0 now (a lake's fields on grid editing, a transform's parameters on Form)
 
 
 def test_the_form_guard_finds_what_it_looks_for():
