@@ -89,4 +89,4 @@ def test_the_scripts_wire_the_tab_into_the_store_and_the_problems_pane():
     assert "'aboutlint'" in about and "'aboutlint'" in problems and "gotoAbout" in problems and "gotoAbout" in wb
     assert "about.flush()" in wb and "about.pending()" in wb                  # an edit waiting for its pause is sent before the page is left
     assert len(about.splitlines()) < 300
-    assert "Tab: false" in about                                              # the editor does not trap the keyboard
+    assert "tabLeaves: true" in about                                         # the editor does not trap the keyboard (drishti-inputs CodeEditor)

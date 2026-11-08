@@ -211,6 +211,24 @@
 
 ## 2.9.11.e (unreleased)
 
+- **The alert form on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+  the server sends the form's schema (`core/alert_form.py`, new, 168 lines) and the page's `Form`, embedded in its POST form, draws every
+  field with the name it always submitted (saving and *Check now* unchanged); the source, condition and trigger groups follow the choice
+  through `when`, the model's measures and the filters' fields arrive as the server answers (`Form.setOptions`), and the filters are an array
+  of objects written into the hidden `model_query`. `drishti_alert-form.js` 218 → 191 lines, `alert_form.html` 163 → 69; the hand-made groups,
+  filter rows, swapped select and their CSS deleted. **drishti-inputs**: `Form.setOptions(path, list, labels)`, an array's `itemHook` and
+  `addHook`.
+- **No bespoke UI, the editors' rows on drishti-grid editing** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+  the model editor's tables, relationships, measures (the ? card and the engine's "adds up?" as drawn cells), hierarchies, row rules,
+  fields and access matrix, and the table editor's source and look-ups and its columns checklist are drishti-grid with cell editing through
+  one helper (`E.rowGrid`, `drishti_editor-formula.js` 59 → 92 lines; `drishti_editor-model.js` 332 → 340 and `drishti_editor-table.js`
+  276 → 266, their hand-made tables, inputs and selects deleted). **drishti-grid** gains the `code` cell editor: a formula cell is
+  drishti-inputs' one-line `CodeEditor` (the column's `codeMode` and `complete` hook) when that library is on the page; a cell editor started
+  out of view takes the focus when its cell is drawn. Admin › Lakes: a file's fields with their Classifier and Promote checkboxes are a
+  drishti-grid with editing (`drishti_admin-lakes.js` 231 → 236), so the kit guard's hand-made-form allow-list is 1 → 0 with the BI pass's transform
+  parameters on Form (capped at 0). A problem without a level in the editors' YAML is an error. Tests: the editors', the lakes' and the workbench's browser
+  files follow the grids and the kit's palette.
+
 - **drishti-graph and drishti-tree, two new Drishti Elements libraries** (ELEMENTS.md section 8.8; the owner's picks: g5 option A and
   g6 option B the defaults, the other options modes of the same components). **drishti-graph**: networks cyclic or acyclic on a canvas
   for thousands of nodes (5,000 nodes and 20,000 edges: the force layout 2.2 to 2.7 s in Node, settling on screen in 4.7 s with the

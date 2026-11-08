@@ -78,34 +78,34 @@
   function sources(ctx, doc) {
     var h = ctx.h;
     var sec = h('section', { class: 'ed-card', 'aria-labelledby': 'edSrcH' }, h('h3', { id: 'edSrcH', text: 'Source and look-ups' }));
-    var t = h('table', { class: 'ed-grid-t', 'data-sources': '', 'data-resize': 'columns', 'data-resize-key': 'editors.table-sources' });
-    t.appendChild(h('thead', {}, h('tr', {}, ['Source', 'Connector', 'Look-up', 'On', 'Rows (now)', ''].map(function (x) { return h('th', { scope: 'col', text: x }); }))));
-    var tb = h('tbody');
     var from = doc.from || {};
     var src = ctx.sources();
-    var sel = h('select', { class: 'ed-in', 'data-path': 'from', 'data-source-pick': '', 'aria-label': 'Source',
-      on: { change: function (e) {
-        var v = e.target.value;
-        ctx.change(function (d) { d.from = v.indexOf('table:') === 0 ? { table: v.slice(6) } : { kind: v.slice(5) }; }, 'from');
-        ctx.redraw();
-      } } });
     var cur = from.table ? 'table:' + from.table : from.kind ? 'kind:' + from.kind : '';
-    if (!from.table && !from.kind) { sel.appendChild(h('option', { value: '', text: from.python ? 'Python' : from.query ? 'SQL' : from.model ? 'a model\'s answer' : 'Choose…' })); }
-    (src.kinds || []).forEach(function (k) { sel.appendChild(h('option', { value: 'kind:' + k.kind, selected: cur === 'kind:' + k.kind, text: k.kind })); });
-    (src.tables || []).filter(function (x) { return x.table !== doc.table; }).forEach(function (x) { sel.appendChild(h('option', { value: 'table:' + x.table, selected: cur === 'table:' + x.table, text: x.table })); });
-    if (cur && !Array.prototype.some.call(sel.options, function (o) { return o.value === cur; })) { sel.appendChild(h('option', { value: cur, selected: true, text: cur.replace(/^\w+:/, '') })); }
-    tb.appendChild(h('tr', { 'data-source-row': 'base' }, h('td', {}, sel), h('td', { 'data-conn': 'base', text: (kindOf(ctx, doc) || {}).connector || '' }), h('td', { text: 'base' }), h('td', { text: '' }),
-      h('td', { 'data-rows': 'base', text: '' }), h('td')));
-    lookups(doc).forEach(function (l, i) {
+    var offered = (!from.table && !from.kind ? [{ value: '', label: from.python ? 'Python' : from.query ? 'SQL' : from.model ? 'a model\'s answer' : 'Choose…' }] : [])
+      .concat((src.kinds || []).map(function (k) { return { value: 'kind:' + k.kind, label: k.kind }; }))
+      .concat((src.tables || []).filter(function (x) { return x.table !== doc.table; }).map(function (x) { return { value: 'table:' + x.table, label: x.table }; }));
+    if (cur && !offered.some(function (o) { return o.value === cur; })) { offered.push({ value: cur, label: cur.replace(/^\w+:/, '') }); }
+    var rows = [{ key: 'base', source: cur, conn: (kindOf(ctx, doc) || {}).connector || '', join: 'base', on: '' }].concat(lookups(doc).map(function (l) {
       var other = (src.tables || []).filter(function (x) { return x.table === l.table; })[0] || {};
-      tb.appendChild(h('tr', { 'data-source-row': 'lookup', 'data-lookup': l.table },
-        h('td', { text: l.table }), h('td', { 'data-conn': l.table, text: other.connector || '' }), h('td', { text: 'left (look-up)' }), h('td', {}, h('code', { text: l.on })),
-        h('td', { 'data-rows': l.table, text: '' }),
-        h('td', {}, h('button', { type: 'button', class: 'ed-linkbtn', 'data-edit': '', 'data-remove-lookup': l.table, 'aria-label': 'Remove the look-up of ' + l.table,
-          on: { click: function () { ctx.change(function (d) { l.columns.forEach(function (c) { delete d.columns[c]; }); }, 'columns'); ctx.redraw(); } } }, 'Remove'))));
-    });
-    t.appendChild(tb);
-    sec.appendChild(h('div', { class: 'ed-scroll' }, t));
+      return { key: l.table, source: l.table, conn: other.connector || '', join: 'left (look-up)', on: l.on, lookup: l };
+    }));
+    function side(r) { return ((ctx.S.preview && ctx.S.preview.cost && ctx.S.preview.cost.sides) || []).filter(function (s) { return (s.role === 'base' ? 'base' : s.table) === r.key; })[0]; }
+    var box = E.rowGrid(ctx, 'sources', { label: 'Source and look-ups', rows: rows, id: function (r) { return r.key; },
+      rowData: function (r) { return r.lookup ? { sourceRow: 'lookup', lookup: r.key } : { sourceRow: 'base', path: 'from' }; },
+      columns: [
+        { field: 'source', header: 'Source', width: 240, options: offered, editable: function (r) { return !r.lookup; }, redraw: true,
+          render: function (r) { return r.lookup ? r.source : ((offered.filter(function (o) { return o.value === r.source; })[0] || {}).label || ''); },
+          set: function (d, r, v) { if (v) { d.from = v.indexOf('table:') === 0 ? { table: v.slice(6) } : { kind: v.slice(5) }; } } },
+        { field: 'conn', header: 'Connector', width: 140, render: function (r) { var s = side(r); return h('span', { 'data-conn': r.key, text: (s && s.connector) || r.conn }); } },
+        { field: 'join', header: 'Look-up', width: 120 },
+        { field: 'on', header: 'On', width: 160, render: function (r) { return r.on ? h('code', { text: r.on }) : ''; } },
+        { field: 'rows', header: 'Rows (now)', width: 110, render: function (r) { var s = side(r); return h('span', { 'data-rows': r.key, text: s ? (s.rows >= 0 ? E.num(s.rows) : 'not read') : '' }); } },
+        { field: 'remove', header: '', width: 90, render: function (r) {
+          return r.lookup ? h('button', { type: 'button', class: 'ed-linkbtn', 'data-edit': '', 'data-remove-lookup': r.key, 'aria-label': 'Remove the look-up of ' + r.key, disabled: !!ctx.S.readOnly,
+            on: { click: function () { ctx.change(function (d) { r.lookup.columns.forEach(function (c) { delete d.columns[c]; }); }, 'columns'); ctx.redraw(); } } }, 'Remove') : '';
+        } }] });
+    box.setAttribute('data-sources', '');
+    sec.appendChild(box);
     sec.appendChild(h('p', {}, h('button', { type: 'button', class: 'ed-btn', 'data-edit': '', 'data-add-lookup': '', on: { click: function () { addLookup(ctx); } } }, '+ Look-up')));
     return sec;
   }
@@ -150,61 +150,56 @@
     });
     var sec = h('section', { class: 'ed-card', 'aria-labelledby': 'edColH' },
       h('h3', { id: 'edColH' }, 'Columns ', h('small', { 'data-col-count': '', text: '(' + Object.keys(cols).length + ' chosen' + (k ? ' of ' + (Object.keys(cols).length + available.length) : '') + ')' })));
-    var t = h('table', { class: 'ed-grid-t', 'data-columns': '', 'data-resize': 'columns', 'data-resize-key': 'editors.table-columns' });
-    t.appendChild(h('thead', {}, h('tr', {}, ['Show', 'Name here', 'From (path or Rachana formula)', 'Type', 'Key', ''].map(function (x) { return h('th', { scope: 'col', text: x }); }))));
-    var tb = h('tbody');
-    Object.keys(cols).forEach(function (name) {
-      var c = cols[name] || {}, isExpr = c.expr !== undefined && c.expr !== null, p = 'columns.' + name;
-      var nameIn = h('input', { class: 'ed-in ed-narrow', value: name, 'data-col-name': name, 'data-path': p, 'aria-label': 'Name of ' + name,
-        on: { change: function (e) {
-          var v = e.target.value.trim();
-          if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(v) || v === name) { e.target.value = name; return; }
-          ctx.change(function (d) { var out = {}; Object.keys(d.columns).forEach(function (x) { out[x === name ? v : x] = d.columns[x]; }); d.columns = out; }, 'columns.' + v);
-          ctx.redraw();
-        }, focus: function () { ctx.focus(p); } } });
-      var fromIn = h('input', { class: 'ed-in', value: isExpr ? c.expr : c.path || '', 'data-col-from': name, 'data-path': p + (isExpr ? '.expr' : '.path'), 'aria-label': 'Where ' + name + ' comes from',
-        on: { input: function (e) {
-          var v = e.target.value.trim();
-          ctx.change(function (d) {
-            var col = d.columns[name];
+    var rows = Object.keys(cols).map(function (name) {             // the chosen columns, then the source's others (off), then the built-in date
+      var c = cols[name] || {}, isExpr = c.expr !== undefined && c.expr !== null;
+      return { state: 'chosen', show: true, name: name, from: isExpr ? c.expr : c.path || '', tag: isExpr ? (relatedOf(c.expr) ? 'look-up' : 'computed') : '', type: c.type || 'string',
+        key: c.key === true || c.role === 'key' || keys.indexOf(name) >= 0 };
+    }).concat(available.map(function (c) {
+      return { state: 'available', show: false, name: c.name, from: '$.' + c.name + (c.description ? ' · ' + c.description : ''), type: typeOf(c.type), key: false, source: c };
+    })).concat([{ state: 'builtin', show: true, name: 'business_date', from: 'follows the source (built in)', type: 'date', key: false }]);
+    function chosen(r) { return r.state === 'chosen'; }
+    var box = E.rowGrid(ctx, 'columns', { label: 'Columns', rows: rows, id: function (r) { return r.state + ':' + r.name; },
+      rowData: function (r) { return r.state === 'chosen' ? { colRow: r.name, path: 'columns.' + r.name } : r.state === 'available' ? { colAvailable: r.name } : { colBuiltin: r.name }; },
+      columns: [
+        { field: 'show', header: 'Show', width: 70, type: 'boolean', redraw: true, editable: function (r) { return r.state !== 'builtin'; },
+          set: function (d, r, on) {
+            if (r.state === 'available' && on) { d.columns = d.columns || {}; d.columns[r.name] = { path: '$.' + r.name, type: typeOf(r.source.type) }; }
+            if (r.state === 'chosen' && !on) { delete d.columns[r.name]; if (Array.isArray(d.keys)) { d.keys = d.keys.filter(function (x) { return x !== r.name; }); } }
+          } },
+        { field: 'name', header: 'Name here', width: 160, editable: chosen, redraw: true,
+          validate: function (v) { return /^[A-Za-z_][A-Za-z0-9_]*$/.test(String(v || '').trim()) ? null : 'A name is letters, digits and _ (not starting with a digit)'; },
+          set: function (d, r, v) {
+            v = String(v || '').trim();
+            if (v === r.name || d.columns[v]) { return; }
+            var out = {};
+            Object.keys(d.columns).forEach(function (x) { out[x === r.name ? v : x] = d.columns[x]; });
+            d.columns = out;
+            if (Array.isArray(d.keys)) { d.keys = d.keys.map(function (x) { return x === r.name ? v : x; }); }
+          } },
+        { field: 'from', header: 'From (path or Rachana formula)', width: 320, editor: 'code', editable: chosen,
+          render: function (r) { return h('span', {}, h('code', { text: r.from }), r.tag ? h('small', { class: 'ed-tag', text: ' ' + r.tag }) : null); },
+          set: function (d, r, v) {
+            v = String(v || '').trim();
+            var col = d.columns[r.name];
             delete col.path; delete col.expr;
             if (/^(\$|@|\^+)(\.[A-Za-z_][A-Za-z0-9_]*|\[\d+\])*$/.test(v)) { col.path = v; } else { col.expr = v; }
-          }, p + (/^[$@^]/.test(v) && !/[ (+\-*/]/.test(v) ? '.path' : '.expr'));
-        }, focus: function () { ctx.focus(p); } } });
-      E.formula(fromIn, ctx.names);
-      var typeSel = h('select', { class: 'ed-in ed-narrow', 'data-col-type': name, 'data-path': p + '.type', 'aria-label': 'Type of ' + name,
-        on: { change: function (e) { var v = e.target.value; ctx.change(function (d) { d.columns[name].type = v; }, p + '.type'); } } },
-        TYPES.map(function (x) { return h('option', { value: x, selected: (c.type || 'string') === x, text: x }); }));
-      var isKey = c.key === true || c.role === 'key' || keys.indexOf(name) >= 0;
-      var keyBox = h('input', { type: 'checkbox', checked: isKey, 'data-col-key': name, 'aria-label': name + ' is a key',
-        on: { change: function (e) {
-          var on = e.target.checked;
-          ctx.change(function (d) {
-            if (Array.isArray(d.keys)) { d.keys = d.keys.filter(function (x) { return x !== name; }); if (on) { d.keys.push(name); } }
-            else if (on) { d.columns[name].key = true; } else { delete d.columns[name].key; if (d.columns[name].role === 'key') { delete d.columns[name].role; } }
-          }, p);
-        } } });
-      tb.appendChild(h('tr', { 'data-col-row': name, 'data-path': p },
-        h('td', {}, h('input', { type: 'checkbox', checked: true, 'data-col-show': name, 'aria-label': 'Show ' + name,
-          on: { change: function () { ctx.change(function (d) { delete d.columns[name]; if (Array.isArray(d.keys)) { d.keys = d.keys.filter(function (x) { return x !== name; }); } }, 'columns'); ctx.redraw(); } } })),
-        h('td', {}, nameIn), h('td', {}, fromIn, isExpr ? h('small', { class: 'ed-tag', text: relatedOf(c.expr) ? 'look-up' : 'computed' }) : null), h('td', {}, typeSel), h('td', {}, keyBox), h('td')));
-    });
-    available.forEach(function (c) {
-      tb.appendChild(h('tr', { class: 'ed-off', 'data-col-available': c.name },
-        h('td', {}, h('input', { type: 'checkbox', checked: false, 'data-col-add': c.name, 'aria-label': 'Show ' + c.name,
-          on: { change: function () { ctx.change(function (d) { d.columns = d.columns || {}; d.columns[c.name] = { path: '$.' + c.name, type: typeOf(c.type) }; }, 'columns.' + c.name); ctx.redraw(); } } })),
-        h('td', { text: c.name }), h('td', {}, h('small', { text: '$.' + c.name + (c.description ? ' · ' + c.description : '') })), h('td', { text: typeOf(c.type) }), h('td'), h('td')));
-    });
-    tb.appendChild(h('tr', { class: 'ed-builtin' }, h('td', { text: '●' }), h('td', { text: 'business_date' }), h('td', { text: 'follows the source (built in)' }), h('td', { text: 'date' }), h('td', { text: 'with the keys' }), h('td')));
-    t.appendChild(tb);
-    sec.appendChild(h('div', { class: 'ed-scroll' }, t));
+          } },
+        { field: 'type', header: 'Type', width: 110, options: TYPES, editable: chosen, set: function (d, r, v) { d.columns[r.name].type = v; } },
+        { field: 'key', header: 'Key', width: 70, type: 'boolean', editable: chosen,
+          render: function (r) { return r.state === 'builtin' ? 'with the keys' : r.key ? '✓' : ''; },
+          set: function (d, r, on) {
+            if (Array.isArray(d.keys)) { d.keys = d.keys.filter(function (x) { return x !== r.name; }); if (on) { d.keys.push(r.name); } }
+            else if (on) { d.columns[r.name].key = true; } else { delete d.columns[r.name].key; if (d.columns[r.name].role === 'key') { delete d.columns[r.name].role; } }
+          } }] });
+    box.setAttribute('data-columns', '');
+    sec.appendChild(box);
     sec.appendChild(h('p', {}, h('button', { type: 'button', class: 'ed-btn', 'data-edit': '', 'data-add-computed': '', on: { click: function () {
       var n = 'NEW_COLUMN', i = 1;
       while ((ctx.S.doc.columns || {})[n]) { n = 'NEW_COLUMN_' + (++i); }
       ctx.change(function (d) { d.columns = d.columns || {}; d.columns[n] = { expr: '$.' , type: 'decimal' }; }, 'columns.' + n);
       ctx.redraw();
-      var el = E.root.querySelector('[data-col-from="' + n + '"]');
-      if (el) { el.focus(); }
+      var g = (E.root.querySelector('[data-rowgrid="columns"]') || {}).grid;               // its formula opened for typing
+      if (g) { for (var r = 0; r < g.model.rowCount(); r++) { if (g.model.idAt(r) === 'chosen:' + n) { g.startEditing(r, 2); break; } } }
     } } }, '+ Computed column')));
     return sec;
   }
@@ -257,13 +252,8 @@
   function refresh(ctx, host) {
     var r = ctx.S.preview;
     if (!r || !r.cost || !host) { return; }
-    (r.cost.sides || []).forEach(function (s) {
-      var key = s.role === 'base' ? 'base' : s.table;
-      var cell = host.querySelector('[data-rows="' + key + '"]');
-      if (cell) { cell.textContent = s.rows >= 0 ? E.num(s.rows) : 'not read'; }
-      var conn = host.querySelector('[data-conn="' + key + '"]');
-      if (conn && s.connector) { conn.textContent = s.connector; }
-    });
+    var sources = host.querySelector('[data-rowgrid="sources"]');
+    if (sources && sources.grid) { sources.grid.refresh(); }                // its rows and connectors read the preview's cost as they are drawn
     var line = host.querySelector('[data-cost-line]');
     if (line) {
       line.hidden = !r.cost.crossConnector;

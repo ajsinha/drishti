@@ -41,7 +41,7 @@ def test_a_studio_address_opens_with_the_canvas_and_yaml_and_the_header_button_a
     rev = state(page, "rev")
     page.get_by_role("button", name="Add panel", exact=True).click()
     page.keyboard.type("line")
-    page.locator("[role=option]").first.click()
+    page.locator(".wb-menu [role=option]").first.click()                        # the Add list (the palette's entries are options too)
     settle(page, rev)
     assert settled_selection(page, "line")
     new = page.evaluate("document.querySelector('[data-preview] .dd-selected[data-panel]').dataset.panel")
@@ -72,7 +72,7 @@ def test_the_header_button_and_the_palette_add_from_the_yaml_tab(live_console, p
     page.get_by_role("tab", name="YAML").click()
     assert page.get_by_role("button", name="Add panel", exact=True).is_visible()
     rev = state(page, "rev")
-    page.get_by_role("button", name="Add a gauge panel").click()                  # the palette's Add, on the YAML tab
+    page.locator("[data-palette] [data-dd-entry='gauge']").click()                 # the palette's entry (drishti-designer's Palette), on the YAML tab
     settle(page, rev)
     assert page.get_by_role("tab", name="Design").get_attribute("aria-selected") == "true"
     assert settled_selection(page, "gauge")

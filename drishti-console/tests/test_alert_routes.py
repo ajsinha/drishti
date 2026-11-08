@@ -31,18 +31,30 @@ def _form(**kw) -> str:
     return urlencode({k: v for k, v in base.items() if v is not None})
 
 
+def _schema(page: str) -> dict:
+    """The alert form's schema and value as the page hands them to drishti-inputs' Form (core/alert_form.py)."""
+    import html
+    import re
+    m = re.search(r'data-alert-fields data-schema="([^"]*)"', page)
+    assert m, "the page carries the form's schema"
+    return json.loads(html.unescape(m.group(1)))
+
+
 def test_the_form_is_filled_from_the_visual_the_person_pressed_alert_me_on(client):
     state = json.dumps({"slicers": {"ccy": ["USD"]}, "selections": [], "drill": []})
     page = client.get("/alerts/new", params={"source": "visual", "report": "file:report:daily", "page": "main", "visual": "net", "state": state, "title": "Daily risk: Net"}).text
-    assert 'name="report" class="studio-in mono" value="file:report:daily"' in page and 'name="visual" class="studio-in mono" value="net"' in page
-    assert 'name="name" class="studio-in" value="Daily risk - Net"' in page and "data-name-rule" in page and 'pattern="[A-Za-z0-9]' in page          # ':' is outside the server's name rule
+    form = _schema(page)
+    vis = form["value"]["source"]["visual"]
+    assert vis["report"] == "file:report:daily" and vis["visual"] == "net" and form["schema"]["properties"]["source"]["properties"]["visual"]["properties"]["report"]["name"] == "report"
+    assert form["value"]["name"] == "Daily risk - Net" and "data-name-rule" in page and form["schema"]["properties"]["name"]["pattern"].startswith("[A-Za-z0-9]")   # ':' is outside the name rule
     assert "With the filters you had set on the screen" in page and "&#34;ccy&#34;" in page                         # the state rides in a hidden field
     assert "The number is read as you" in page.replace("\n", " ").replace("  ", " ") or "The number is read as you" in page
     for word in ("crosses a limit", "changes by too much", "has no data by a time", "on a schedule", "after a data load", "when it changes", "my inbox and the bell",
                  "Hysteresis", "Cooldown", "Check now"):
         assert word in page
     field = client.get("/alerts/new", params={"source": "field", "kind": "trade", "id": "IRS-48213", "field": "mtm", "title": "MTM of IRS-48213"}).text
-    assert '<option value="field" selected>' in field and 'name="kind" class="studio-in mono" value="trade"' in field and 'name="field" class="studio-in mono" value="mtm"' in field
+    fv = _schema(field)["value"]["source"]
+    assert fv["source_type"] == "field" and fv["field"]["kind"] == "trade" and fv["field"]["field"] == "mtm"
 
 
 def test_saving_builds_the_servers_body_from_the_form(client, backend):
@@ -66,7 +78,7 @@ def test_one_cell_sends_no_reduce(client, backend):
     client.post("/alerts/new", content=_form(name="Mod2", source_type="model", model_ref="cockpit@1", model_query=json.dumps({"select": {"measures": ["MTM"]}}), model_reduce="sum"), headers=FORM)
     assert backend.alerts_kept["Mod2"]["source"]["reduce"] == "sum"
     page = client.get("/alerts/new", params={"source": "visual", "report": "file:report:daily", "page": "main", "visual": "kpi"}).text
-    assert '<option value="" selected>one cell' in page
+    assert _schema(page)["value"]["source"]["visual"]["reduce"] == ""                  # one cell: the blank choice
 
 
 def test_every_kind_of_source_condition_and_trigger_is_sent_in_the_servers_words(client, backend):
@@ -92,7 +104,8 @@ def test_every_kind_of_source_condition_and_trigger_is_sent_in_the_servers_words
 def test_a_refusal_keeps_what_was_typed_and_says_why(client, backend):
     r = client.post("/alerts/new", content=_form(name="Bad", op="under"), headers=FORM)
     assert r.status_code == 422 and "DRS-9062" in r.text and "condition.op is above, below, between or outside" in r.text
-    assert 'name="name" class="studio-in" value="Bad"' in r.text and 'value="file:report:daily"' in r.text and 'value="1000"' in r.text
+    kept = _schema(r.text)["value"]
+    assert kept["name"] == "Bad" and kept["source"]["visual"]["report"] == "file:report:daily" and kept["cond"]["threshold"]["value"] == "1000"
     r = client.post("/alerts/new", content=_form(name="Bad2", value="lots"), headers=FORM)
     assert r.status_code == 422 and "condition.value is a number" in r.text
     assert "Bad" not in backend.alerts_kept and "Bad2" not in backend.alerts_kept
@@ -117,7 +130,9 @@ def test_the_edit_page_has_the_form_filled_in_and_the_history(client, backend):
     client.post("/alerts/new", content=_form(d_email="on"), headers=FORM)
     client.post("/alerts/measure/Net/check")
     page = client.get("/alerts/measure/Net").text
-    assert "Alert: Net" in page and 'value="file:report:daily"' in page and 'value="1000.0"' in page and 'name="d_email" checked' in page and "readonly" in page
+    form = _schema(page)
+    assert "Alert: Net" in page and form["value"]["source"]["visual"]["report"] == "file:report:daily" and form["value"]["cond"]["threshold"]["value"] == "1000.0"
+    assert form["value"]["deliver"]["d_email"] is True and form["schema"]["properties"]["name"]["readOnly"] is True
     assert 'data-history' in page and "fired" in page and "now 1,200 (above 1000)" in page and "inbox: ok" in page and "email: off" not in page
     saved = client.post("/alerts/measure/Net", content=_form(value="2000"), headers=FORM, follow_redirects=False)
     assert saved.status_code == 303 and backend.alerts_kept["Net"]["condition"]["value"] == 2000.0

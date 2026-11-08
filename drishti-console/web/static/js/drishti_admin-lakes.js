@@ -96,29 +96,33 @@
       option(key, f.path, f.path + (f.many || f.distinct === f.present ? '' : ' (repeats)'), f.path === (s.key || [])[0]);
     });
     businessDate();
-    var body = $('[data-fields] tbody');
-    body.textContent = '';
     var classes = s.partitionBy || [];
-    scan.fields.forEach(function (f, i) {
-      var tr = el('tr');
-      tr.appendChild(el('th', { scope: 'row', 'class': 'mono' }, f.path));
-      tr.appendChild(el('td', {}, fmt(f.present)));
-      tr.appendChild(el('td', {}, f.many ? 'many' : (f.types.array ? 'list' : f.types.object ? 'object' : fmt(f.distinct))));
-      tr.appendChild(el('td', { 'class': 'lk-top' }, (f.top || []).slice(0, 4).map(function (t) { return (t[0] === '' ? '(blank)' : t[0]) + ' ×' + t[1]; }).join(', ')));
-      var nested = f.types.array || f.types.object;
-      [['classifier', classes.indexOf(f.path) === 0], ['promote', false]].forEach(function (c) {
-        var td = el('td');
-        if (!nested) {
-          var box = el('input', { type: 'checkbox', 'data-pick': c[0], value: f.path, id: 'lk-' + c[0] + '-' + i });
-          box.checked = c[1];
-          td.appendChild(box);
-          td.appendChild(el('label', { 'for': 'lk-' + c[0] + '-' + i, 'class': 'visually-hidden' }, c[0] + ' ' + f.path));
-        }
-        tr.appendChild(td);
-      });
-      body.appendChild(tr);
+    state.rows = scan.fields.map(function (f) {                       // the file's fields as drishti-grid rows: Classifier and Promote are checkbox cells
+      var nested = !!(f.types.array || f.types.object);
+      return { path: f.path, present: f.present, values: f.many ? 'many' : (f.types.array ? 'list' : f.types.object ? 'object' : fmt(f.distinct)),
+        top: (f.top || []).slice(0, 4).map(function (t) { return (t[0] === '' ? '(blank)' : t[0]) + ' ×' + t[1]; }).join(', '),
+        nested: nested, classifier: !nested && classes.indexOf(f.path) === 0, promote: false };
     });
     show('fields');
+    drawFields();
+  }
+  /** The fields' grid (drishti-grid with cell editing: Space, Enter or a double click turns a checkbox; a nested field has none). */
+  function drawFields() {
+    var host = $('[data-fields]'), G = window.Drishti.elements.grid, scalar = function (r) { return !r.nested; };
+    if (state.grid) { state.grid.setRows(state.rows); return; }
+    state.grid = new G.Grid(host, { rows: state.rows, getRowId: function (r) { return r.path; }, getRowData: function (r) { return { field: r.path }; },
+      layout: 'wells', density: 'compact', chrome: false, checkboxes: false, rowSelection: 'none', clientAggregation: false, label: 'The file\'s fields: classifiers become partition folders, promoted fields become columns',
+      columns: [
+        { field: 'path', header: 'Field', width: 220, cellClass: 'mono' },
+        { field: 'present', header: 'Present', type: 'number', width: 100, enableValue: false, aggFunc: null },
+        { field: 'values', header: 'Values', width: 100 },
+        { field: 'top', header: 'Most frequent', width: 300 },
+        { field: 'classifier', header: 'Classifier', type: 'boolean', width: 100, editable: scalar },
+        { field: 'promote', header: 'Promote', type: 'boolean', width: 100, editable: scalar }] });
+    state.grid.on('editTransaction', function (tx) {                    // each tick (or its undo) kept in the page's rows
+      tx.edits.forEach(function (e) { state.rows.forEach(function (r) { if (r.path === e.rowId) { r[e.field] = e.value; } }); });
+    });
+    host.style.height = (Math.min(state.rows.length, 16) * state.grid.model.viewport.rowHeight + 64) + 'px';
   }
   // The business date by the load rules (docs/guides/DATA_LAKE_GUIDE.md): a date given here, else the file name's, else the
   // business today; never a field of the rows.
@@ -130,7 +134,7 @@
   }
   $('[data-lake-asof]').addEventListener('input', businessDate);
   function picked(kind) {
-    return Array.prototype.map.call(root.querySelectorAll('[data-pick="' + kind + '"]:checked'), function (b) { return b.value; });
+    return (state.rows || []).filter(function (r) { return !r.nested && r[kind]; }).map(function (r) { return r.path; });   // the grid edits its rows in place
   }
 
   // 3. target ------------------------------------------------------------------------------------------------------
@@ -159,7 +163,8 @@
     if (!x) { $('[data-domain]').disabled = false; $('[data-kind]').disabled = false; $('[data-root]').disabled = false; return; }
     $('[data-root]').value = x.root; $('[data-domain]').value = x.domain; $('[data-kind]').value = x.kind;
     ['[data-domain]', '[data-kind]', '[data-root]'].forEach(function (s) { $(s).disabled = true; });
-    Array.prototype.forEach.call(root.querySelectorAll('[data-pick="classifier"]'), function (b) { b.checked = x.partitionBy.indexOf(b.value.replace(/\./g, '__')) >= 0; });
+    state.rows = (state.rows || []).map(function (r) { return Object.assign({}, r, { classifier: !r.nested && x.partitionBy.indexOf(r.path.replace(/\./g, '__')) >= 0 }); });
+    if (state.grid) { drawFields(); }
     warn.textContent = 'This lake is partitioned by ' + (['business_date'].concat(x.partitionBy).join(', ')) + '; the classifiers are set to match it.';
     warn.hidden = false;
   });
