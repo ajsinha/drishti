@@ -23,6 +23,7 @@ table.tbl th:hover .cf-btn, table.tbl th:focus-within .cf-btn, .cf-btn.cf-on, .c
 @media (pointer: coarse) { .cf-btn { min-width: 44px; min-height: 44px; } }
 .cf-menu { position: fixed; z-index: var(--d-z-overlay); width: min(21rem, calc(100vw - 16px)); display: flex; flex-direction: column; gap: var(--d-sp-7_2); padding: var(--d-sp-9_6); overflow-y: auto;
   background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-8); box-shadow: var(--d-shadow); font-size: var(--d-fs-13_6); font-weight: 400; text-align: left; }
+body > .di-pop { z-index: calc(var(--d-z-overlay) + 1); }                              /* a Select's or a picker's list opened from the menu floats above it */
 .cf-sort { display: flex; flex-direction: column; gap: var(--d-sp-2_4); }
 .cf-act { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-4); padding: var(--d-sp-4) var(--d-sp-9_6); text-align: left; cursor: pointer; font: inherit; min-height: 28px; }
 .cf-act:hover { border-color: var(--d-accent); }
