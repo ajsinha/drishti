@@ -20,7 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * The partial-state cache (PIVOT_ENGINE.md section 9.9): states, not figures, keyed by (provider, data version, source, date, filters, cell
+ * The partial-state cache (ARCHITECTURE.md section 26.6): states, not figures, keyed by (provider, data version, source, date, filters, cell
  * set, function), weighed in bytes. A view that shares cells with an earlier one (a measure added, a node opened, the same view again) reads
  * them from here; a new data version is a new key, so nothing stale is read. The host may give its own (the server's sits in the one memory
  * budget); {@link #lru} is the module's own, a byte-bounded least-recently-used map.

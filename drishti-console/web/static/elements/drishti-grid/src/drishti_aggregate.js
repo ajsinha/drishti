@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The aggregation functions the browser computes, the server's names (PIVOT_ENGINE.md section 5.2). The rule is the server's: a cell or
+/* The aggregation functions the browser computes, the server's names (ARCHITECTURE.md section 26.3). The rule is the server's: a cell or
    a total is made from its members, never from other cells' figures. Each function keeps a small state that merges exactly (a sum; a
    sum and a count; the extreme; the set of values), so a total is the merge of its members' states. A measure the browser does not
    compute (VaR, ES, a ratio, a custom function) or a column marked non-additive is never added up here: it is asked of the server, for

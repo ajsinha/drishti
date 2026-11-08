@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.IntSupplier;
 
 /**
- * Scan estimates refined by measurement (PIVOT_ENGINE.md section 9.7): the provider's estimate counts rows and bytes from metadata before
+ * Scan estimates refined by measurement (ARCHITECTURE.md section 26.6): the provider's estimate counts rows and bytes from metadata before
  * anything is read; the seconds come from this node's <b>measured</b> scan rate (rows a second over its recent scans, per provider: the
  * median of the last 20 scans that took over 200 ms), divided by the nodes that will share the scan, and always given as a range (half to
  * twice) with how it was made. The answer lists the person's options: run, narrow, a covering rollup (added by the rollup hook), in the

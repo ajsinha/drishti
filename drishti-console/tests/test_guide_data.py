@@ -37,7 +37,7 @@ def test_every_guide_data_section_is_current_and_in_its_contract():
     tool = _tool()
     assert tool.run(check=True) == 0, "stale or invalid: run python3 tools/docs/guide_data.py (the errors are on stderr)"
     ids = {g["id"] for g in tool.load()}
-    assert {"var", "exposure", "frtb-sa", "simm", "mr-cube", "funds", "groupings", "pivot"} <= ids
+    assert {"var", "exposure", "frtb-sa", "simm", "funds", "groupings", "pivot"} <= ids
 
 
 @pytest.mark.static

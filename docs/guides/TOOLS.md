@@ -1523,7 +1523,7 @@ The pivot engine as the token's user sees it (`tools/pivotcli.py`; [PIVOT_GUIDE.
 - `pivot export --format xlsx|csv|arrow [--what pivot|rows|definition] [--cell DIM=V,...] -o FILE`: the Excel workbook with its outline
   and `SUM` formulas only where a figure adds up and a Provenance sheet; CSV; Arrow; a cell's rows; the view as YAML. Audited.
 - `pivot views`; `pivot save NAME [view flags] [--share role:risk]`.
-- `--option KEY=V` (repeatable): a provider's option; the VaR source's (the MR cube, [MR_CUBE_GUIDE.md](MR_CUBE_GUIDE.md)) are `scope`,
+- `--option KEY=V` (repeatable): a provider's option; the VaR source's (the MR cube, [PIVOT_GUIDE.md section 29](PIVOT_GUIDE.md#29-the-mr-cube-preset)) are `scope`,
   `horizon`, `method`, `confidence`, `esConfidence`, `set` and `ccy`.
 - `pivot mr headline|cell|versions|explain|ladder|heat|whatif`: the MR cube's lens (`/api/v1/risk/mr`): the view's headline, a cell's
   tail (`--cell DIM=V,...`), the slider's dates, why a scope moved (`--scope`, `--from`, `--to`), the DV01 ladder (`--grid`), the heat

@@ -173,7 +173,7 @@ engines:
     console: [/mcube, /api/pivot/mr/]
     words: [MCUBE]
     menus: [mcube]
-    help: [docs-guides-mr-cube-guide, docs-tutorials-38-the-mr-cube-on-the-pivot-engine]
+    help: [docs-tutorials-38-the-mr-cube-on-the-pivot-engine]
     landings: [mr-cube]
     tiles: []
     lenses: [mr-cube]

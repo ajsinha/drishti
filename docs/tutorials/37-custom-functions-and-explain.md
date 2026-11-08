@@ -272,4 +272,4 @@ where a measure has no total.
 ## Next steps
 
 - [PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md) sections 19 to 22: the languages, the harness, approval, explain, what-if, BI's totals.
-- [PIVOT_ENGINE.md](../architecture/PIVOT_ENGINE.md) sections 8, 10 and 12: the design.
+- [ARCHITECTURE.md section 26](../architecture/ARCHITECTURE.md#26-the-pivot-engine) sections 8, 10 and 12: the design.

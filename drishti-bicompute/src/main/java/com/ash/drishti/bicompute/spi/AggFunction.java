@@ -18,7 +18,7 @@ package com.ash.drishti.bicompute.spi;
 import java.util.List;
 
 /**
- * An aggregation function (PIVOT_ENGINE.md section 8.1): four steps, start, add (a columnar batch), merge, finish, and a {@link Kind}. A
+ * An aggregation function (ARCHITECTURE.md section 26.5): four steps, start, add (a columnar batch), merge, finish, and a {@link Kind}. A
  * state crosses threads, nodes and the cache, so it is serialisable ({@link #encode}, {@link #decode}) and weighed ({@link #bytes}).
  *
  * <p>A function may also say how a SQL engine makes its state ({@link #sqlState}, {@link #fromSql}): the tabular provider then computes the

@@ -34,7 +34,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * Formulas of built-ins (PIVOT_ENGINE.md section 8.2): Rachana, refused in words where it is not a measure; the kind of the parts; the
+ * Formulas of built-ins (ARCHITECTURE.md section 26.5): Rachana, refused in words where it is not a measure; the kind of the parts; the
  * Java path (the harness, the playground) and the SQL path (the tabular provider's GROUPING SETS) giving the same figures, totals made from
  * states, never from the figures shown.
  */

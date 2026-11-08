@@ -19,7 +19,7 @@ The MR cube is the pivot engine on the VaR source with the market-risk lens arou
 class), check its totals against `VAR BANK` and see the diversification, read a cell's tail and why it moved, change the lens (10 days,
 97.5%, stressed), re-pivot by currency and open a desk down to its trades, read the components and their waterfall, the DV01 ladder and a
 what-if side by side, and save, share and export a view. Each step shows the UI, the command line and the view's JSON. The guide is
-[MR_CUBE_GUIDE.md](../guides/MR_CUBE_GUIDE.md); the pivot screen itself is [tutorial 33](33-the-pivot-engine.md).
+[PIVOT_GUIDE.md section 29](../guides/PIVOT_GUIDE.md#29-the-mr-cube-preset); the pivot screen itself is [tutorial 33](33-the-pivot-engine.md).
 
 ## Time to complete
 
@@ -187,5 +187,5 @@ drishti.py pivot export --view you/morning --format xlsx -o morning.xlsx
 
 ## Next steps
 
-- The guide: [MR_CUBE_GUIDE.md](../guides/MR_CUBE_GUIDE.md) (every measure, option, setting and code).
+- The guide: [PIVOT_GUIDE.md section 29](../guides/PIVOT_GUIDE.md#29-the-mr-cube-preset) (every measure, option, setting and code).
 - The pivot screen: [PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md); the VaR engine: [VAR_GUIDE.md](../guides/VAR_GUIDE.md).

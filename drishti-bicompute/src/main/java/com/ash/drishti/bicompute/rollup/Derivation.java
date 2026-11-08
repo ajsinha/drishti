@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * How a dimension of a view is found from a rollup's grain (aggregate awareness, PIVOT_ENGINE.md section 9.6): the same dimension, or a
+ * How a dimension of a view is found from a rollup's grain (aggregate awareness, ARCHITECTURE.md section 26.6): the same dimension, or a
  * coarser grouping of a date the grain holds finer (a date or its day gives week, month, quarter and year; a month gives quarter and year; a
  * quarter gives year). The values are written exactly as the SQL compiler writes them ({@code 2026-10}, {@code 2026-Q4}, {@code 2026}, the
  * Monday of the week), and a value that is not a date is the blank, as SQL makes it.

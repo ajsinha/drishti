@@ -1584,7 +1584,389 @@ contract: adopted are ONNX Runtime for machine-learning inference (Tribuo as the
 (Hipparchus simplex and Timefold); pure Java only are JTransforms (FFT) and simdjson-java; candidates when a client asks are GDAL and PROJ
 (GeoTools, proj4j), H3, and libdeflate if a benchmark shows gzip as the bottleneck. Not taken: FAISS, CUDA, a second SQL engine.
 
-<!-- h-docs: 26+ pivot engine (builder A) -->
+## 26. The pivot engine
+
+One generalised pivot for all of Drishti: "these measures, broken down by these dimensions on rows and columns, under these filters, as
+of this date", for any amount of data and every measure Drishti has (a sum of notional, a distinct count, a 99% VaR, an FRTB charge, a
+function a quant wrote this morning), with every total right. How people use it is the [Pivot guide](../guides/PIVOT_GUIDE.md); this
+section is how it is built. The mock-ups the screen was chosen from are in [mockups/pivot/](mockups/pivot/A.html) (A, the
+Excel-familiar layout, was built; B and C are kept for reference).
+
+### 26.1 The parts
+
+```
+ console grid · ViewModel · drishti.py pivot · REST · Arrow · xlsx            (people and programs ask; nothing computes in the browser)
+                       │  a pivot view (dimensions, measures, filters, date, lens)
+                       ▼
+ ┌──────────────────────────── the pivot engine (the core) ────────────────────────────┐
+ │ view → plan: cell keys (cells, row and column totals, grand total), per measure its kind │
+ │ budget · busy gate · cache of partial states · estimate · progressive answer           │
+ │ cluster: scatter the plan, gather partial states per cell key, merge in a fixed order    │
+ │ finish → figures · show-as · provenance ids · explain · references · export              │
+ └───────┬───────────────┬────────────────┬──────────────────┬───────────────┬───────────┘
+         │ evaluate(cell keys, functions) → partial states per cell key (one interface)       │
+   ┌─────▼─────┐  ┌──────▼──────┐  ┌──────▼──────┐  ┌───────▼───────┐  ┌────▼──────────┐
+   │ tabular   │  │ VaR vector  │  │ FRTB-SA,    │  │ CCR (not      │  │ external SQL  │
+   │ DuckDB    │  │ (Java, in   │  │ SIMM        │  │ built): EE,   │  │ backend (not  │
+   │ Delta,    │  │ memory)     │  │ (formula)   │  │ PFE, EAD      │  │ built)        │
+   │ Iceberg,  │  └─────────────┘  └─────────────┘  └───────────────┘  └───────────────┘
+   │ Parquet   │        custom functions: formula · SQL macro · Python (worker pool) · Java plug-in
+   └───────────┘
+```
+
+**Terms.** A **view** is what the person asked. A **cell key** is a cell's coordinates (dimension → value, or "all" for a total) plus the
+view's filters; it names a cell without listing its members. A **function** is an aggregation with four steps
+([26.5](#265-custom-aggregation-functions)). A **partial state** is what `add` and `merge` produce for one cell key on one node. A
+**provider** turns cell keys and functions into partial states over the data it owns. The **core** merges, finishes and shows; it never
+computes a figure itself.
+
+**Why one engine.** The MR cube, the CCR cube, BI's matrix and the Pivot tab each draw a pivot; four pivots would mean four sets of totals,
+four budgets, four exports and four ways of being wrong. One engine means one rule for a total, one provenance, one Excel export, one test
+suite and one cluster merge. The MR and CCR cubes are **presets** of the pivot screen: a provider set and a landing, not engines of their
+own. Rachana's aggregates are the engine's functions too ([section 23](#23-one-grammar-one-engine)).
+
+### 26.2 The pivot model
+
+**The view** (what a saved view stores; the API takes the same as JSON): `source` (a table of a pack, a lake table, a panel's rows, or a
+cube's source such as `var`), `date` (or two for a comparison), `as-of` (latest, a Delta version, an Iceberg snapshot), `rows`, `columns`
+(each a field, optionally grouped: `{ field: TRADE_DATE, group: month }`), `values` (a measure, its label, `exact`, `show-as`), `filters`,
+`slicers`, `totals`, `currency` (report currency and FX source), `sort` and `top` (`{ field, n, others: true }`: never silent, "top 10 of
+41, the other 31 in Others"), and the `expanded` nodes.
+
+**Dimensions are typed and ordered**, published by each provider's catalogue: string (manual groups, top N with Others; a configured order
+or by value), date and time (day to year, the bank's calendar and fiscal year, buckets from today), number (buckets by width, by edges,
+quantile buckets), hierarchy level (MGMT, LEGAL, limit letters, risk-factor trees; ragged), scenario day (the VaR provider). A masked
+dimension cannot be used as rows or columns, and says why.
+
+**Cell keys, not member lists.** A view of R rows and C columns has R × C cells, R row totals, C column totals and one grand total, plus
+every open subtotal level; the core turns them into cell keys (`{DESK: RATES-NY, month: 2026-10}`, `{DESK: RATES-NY, month: *}`,
+`{DESK: *, month: *}`) and each provider decides how to evaluate them: the tabular provider compiles the whole set into **one**
+`GROUP BY GROUPING SETS (...)` query; the VaR provider maps each key to the `OrdinalSet` of its positions and sums their vectors; the
+formula providers sum the members' sensitivities to the formula's grain. The **axis** (which values appear) is asked first, cheaply, so
+the cell count is known before any measure runs and a view over the budget is refused with the count, never truncated.
+
+**The answer** carries per cell its coordinates and values, per total its kind and level, the diversification of non-additive measures
+(Σ children − node), the provenance id, the exactness per measure, the layer that answered (a rollup or the lake), progress and timing.
+Every value is a number, a number with `approx: true` and its error, or `null` with the reason in `notes` (masked, refused, a shard down, a
+currency that cannot be converted); nothing is blank without a reason.
+
+### 26.3 Measure kinds and how each total is made
+
+**A cell or a total is made from its members, never from other cells' figures.** What differs by kind is how cheaply:
+
+| Kind | State | Merge | A total is | Marked |
+|---|---|---|---|---|
+| **Mergeable** | small and fixed (a sum; a sum and a count; Welford's count, mean and M2) | exact (associative and commutative) | the merge of its cells' states: no second scan | exact |
+| **Sketch** | bounded (HyperLogLog registers, a KLL summary, a Space-Saving list) | approximate, within a stated error | the merge of its cells' sketches | ≈ with the error; exact on request |
+| **Holistic** | unbounded (every value, or a vector per member) | none that is small | recomputed from its own members | exact (or refused over the budget) |
+
+VaR and ES are **holistic statistics over mergeable inputs**: a scope's state is its summed scenario P&L vector, which merges exactly by
+element-wise addition, and the statistic (a rank, a tail mean) is taken per cell. Each cell and total is summed from its own members'
+vectors in the engine's fixed order, so it equals the VaR engine's answer for that scope to the bit (recomputing from members was chosen
+over merging the cells' vectors, which is faster but equal only to the cent).
+
+**Built-in states.** `sum` (Kahan-compensated float64, or decimal for declared decimal columns), `count`, `min`/`max`, `avg` as (Σx, n),
+`wavg` as (Σwx, Σw), `var`/`stddev` as (n, mean, M2) merged by Chan's formula, a formula of mergeable parts as its parts' states,
+`first`/`last` by a time column. `distinct`, `percentile` and `median` are holistic and exact by default, with a sketch **form** (not a
+second name): HyperLogLog with 2^p registers (p = 12: about 1.6% relative standard error, 1.04 / √m), KLL with k = 200 (about 1.65%
+normalised rank error), Space-Saving with 10 × n counters for a level's top N (counts over by at most the smallest counter). Which form
+answers is the request's (`"exact"`) or, by default, the size's (`sketches.approximate-above-rows`).
+
+**Exact on request without giving up scale.** A distinct count where the table is partitioned or clustered by the counted column adds
+per-node exact counts; otherwise each node sends its distinct values per cell up to a budget (5 million values a view), above which exact
+is refused with the size and ≈ kept. Exact percentiles use **iterative selection**: the KLL sketch bounds the answer to a narrow window,
+one more mergeable pass counts the values below it and collects those inside it, and the rank is found among them (two passes on most
+data, a third when the window holds too many values). VaR and ES are never sketched.
+
+**Correctness the engine enforces.** Non-additive totals are right by the rule above; a sum across currencies is converted at a named FX
+source and time (in the provenance) or refused as mixed currencies; percentages, rates and day counts are not summed (the catalogue marks
+units, and the editor offers only the functions that make sense); row rules and masks apply in the compiled query before grouping, a masked
+column is never a dimension, and an aggregate-only role may require a minimum number of members per cell; the cell budget refuses with the
+count, top N always says "of how many"; every value carries its exactness; merges happen in a fixed order (shard order, then cell-key
+order), so the same question gives the same digits on every run and every node count.
+
+### 26.4 The providers
+
+**The interface** (`PivotProvider`, one for all): `catalogue` (typed, ordered dimensions, the measures and the functions it evaluates
+natively), `capabilities` (grouping sets, sketches, scope text, time travel, live, what-if, partials), `axis`, `estimate` (bytes, rows,
+files, seconds per node), `evaluate` (an aggregation plan → partial states per cell key, for this node's part), `drill` (a cell's member
+rows), an optional `scopeOf` (the cell as the provider's own scope text) and `version` (the lake versions read, part of every cache key). A
+plan is the cell keys, the functions with their kinds and state types, the filters, the date, the as-of version and the lens. A partial is,
+per cell key and function, a serialised state with its member count and notes; a provider may answer **final** figures for functions only
+it can finish (the regulatory formulas), and the core treats those as holistic.
+
+**The tabular provider (DuckDB)** reads any table a pack declares by three routes chosen per table: the BI layers (the same DuckDB
+connection and Parquet files BI reads), a direct lake scan of large Delta or Iceberg tables (DuckDB's `delta` and `iceberg` extensions over
+the lake's files with the table's version pinned), and memory-only tables (`mem://`, registered as Arrow views with DuckDB's temporary
+directory off). A view compiles to **one** parameterised statement (values bound, never spliced), row rules and masks first:
+
+```sql
+SELECT DESK, date_trunc('month', TRADE_DATE) AS month,
+       GROUPING(DESK, month)                    AS g,          -- which grouping set a row belongs to
+       sum(NOTIONAL_USD)                        AS s0,         -- mergeable state of sum
+       sum(PNL_1D), count(PNL_1D)               AS s1a, s1b,   -- avg as (sum, count)
+       hll_registers(hash(COUNTERPARTY_ID), 12) AS s2          -- a sketch state
+FROM   lake_scan('trading.trades', version => ?) t
+WHERE  <row rules> AND PRODUCT_GROUP IN (?, ?) AND TRADE_STATUS <> ?
+GROUP BY GROUPING SETS ((DESK, month), (DESK), (month), ())
+```
+
+It returns **states**, not figures, so answers merge across nodes, cache and finish in the core. DuckDB's native aggregates are used on a
+single node when the answer is final there; their mergeable state forms whenever partials must be merged or cached. A `direct` table (a
+PostgreSQL or DuckDB connector) gets the same SQL pushed to its source when every function is native to it. An in-memory provider
+(`RowsProvider`) computes the same states by the functions' own `add` over rows held in memory (a panel's rows, Export data's staged
+tables).
+
+**The VaR vector provider** (`VarPivotProvider`): members are the date's positions or trades as the person sees them; a cell key maps to an
+`OrdinalSet` by dimension partitions (desk, book, limit letter, any hierarchy level, any column of the vectors); the state is the summed
+scenario vector (and the stressed vector when asked), summed in the engine's fixed order, on a sharded date one call per shard owner for
+all of a view's cells (`VarBook.vectors`, `ShardedVectors.sumSets`); the finish is VaR, ES and stressed VaR at the lens's confidence and
+horizon, component VaR as a cell's share of the grand total's tail, and the diversification beside each total. A cell's scope in VaR's
+grammar (`DESK:RATES-NY & CCY:USD`) lets any cell be asked of the VaR engine itself. The MR cube's figures, endpoints and landing are this
+provider plus the MR lens (`MrCubeExtras`, `MrSensitivities`); nothing in the console computes a figure.
+
+**The FRTB-SA and SIMM providers**: state, the members' net weighted sensitivities summed per risk factor to the formula's grain (a
+sparse map, added in shard order); finish, the regulatory formula (bucket K_b, the three correlation scenarios; SIMM per CSA version), on
+each cell's own sums. They need those engines on.
+
+**Designed, not built.** The **CCR provider**: state per netting set, the path matrix of MtMs netted and collateralised per netting set
+first (non-linear), then summed across netting sets per cell; finish EE, EPE, PFE quantiles, EEPE; EAD from SA-CCR's formula provider; a
+netting set never split across shards (with the counterparty engines; the CCR cube preset waits for it). An **external distributed SQL
+backend** (Trino, StarRocks or ClickHouse) as a provider, for interactive views over tens of terabytes by many people at once: the tabular
+compiler would emit its dialect and its answers come back as mergeable states; parked unless the benchmark shows common views over five
+minutes on three nodes.
+
+**Documents: paths, lists and grains.** An entity document (a trade, a counterparty) is stored whole in a JSON column `doc` beside a few
+promoted typed columns (`layout.<kind>.columns`). Every pivot field is a **Rachana path** (`$.LEGS[0].CURRENCY`,
+`$.LEGS[?@.LEG_TYPE == 'FLOAT'][0].INDEX.NAME`, `size($.LEGS)`, `$.LEGS[*].NOTIONAL`), parsed by Rachana's own parser and compiled: a
+path a promoted or dataset column holds reads that column; anything else becomes DuckDB JSON over `doc` (`json_extract`, `unnest` for
+`[*]`, `list_filter` for `[?...]`); a Rachana function with no SQL form is refused for a pivot, never evaluated a second way (`DocPath`,
+`DocFields`, `DocView`). Three routes, fastest first, chosen by the engine: the promoted column, a BI dataset column extracted once per
+business date into the `cached` layer, an ad-hoc path at query time (shown by the scan estimate first; a large one refused with the
+cheaper route named; administrators see the most used ad-hoc paths with **Promote** and **Add to dataset**). **The grain comes from the
+path**: no `[*]` is the entity's grain, each `[*]` steps into a list, and the deepest list a view uses is its grain; a coarser figure in a
+finer view is counted **once per parent** (an aggregate over the distinct parents in each cell, `OncePerParent`); two lists not one inside
+the other (`LEGS` and `EVENTS`) are never crossed (refused with the reason); a filter on a list field means "any element" at the
+entity's grain and "this element" at the list's grain; masks and row rules apply per path.
+
+### 26.5 Custom aggregation functions
+
+**The contract**, the same for built-ins and custom functions in every language:
+
+| Step | Called | Receives | Returns | Rule |
+|---|---|---|---|---|
+| `start(params)` | once per cell key per worker | the parameters | an empty state | pure; no data |
+| `add(state, batch)` | once per columnar batch (Arrow, 64K rows by default) of the cell's rows | the declared input columns only, masked as the reader sees them | the state | vectorised over the batch |
+| `merge(a, b)` | when two states of the same cell meet (batches, threads, nodes, the cache) | two states | one state | associative and commutative, within the declared tolerance |
+| `finish(state)` | once per cell, on the coordinator | the merged state | a number or a small record | pure |
+
+A state is serialisable with a declared size bound; it crosses processes and nodes and lives in the cache. A function declares its kind:
+mergeable, sketch (with the error its author states) or holistic (no `merge`: it gets all of a cell's rows in one call, bounded by
+`functions.holistic-max-rows` and `holistic-max-mb`, refused per cell over them; holistic cells are gathered to one node within the budget,
+and a view that would gather more is refused before any data moves).
+
+**Four languages, one contract.** A **formula of built-ins** (the first route offered: compiled into the provider's plan, SQL on DuckDB
+and Java on the VaR provider, of its parts' kind); a **DuckDB SQL macro** (mergeable when the engine can rewrite it into states of
+mergeable aggregates, else holistic); **Python** in the node's sandboxed `pivot-fn` pool, vectorised over Arrow batches; a **Java
+plug-in** loaded from an approved, sha256-pinned jar. A function is named `fn:<owner>/<name>@<version>`. User Python never runs inside
+the server's DuckDB (DuckDB's Python API has scalar functions only, and the server's process is not user code's place): the provider
+feeds the pool Arrow batches.
+
+**The harness** (`FunctionHarness`): a function is not saved, shared or used until its split-and-merge answer equals its one-pass answer.
+It runs one pass; batches of 1, 7, 1,000 and 65,536 rows; splits into 2, 3 and 16 parts merged in random orders and tree shapes over five
+seeds; empty, null, single-row, all-equal, infinite and NaN inputs; and every state serialised and read back before merging. It fails a
+mergeable function beyond the tolerance (1e-12 relative; exact for integers and decimals), a sketch beyond its declared bound, and any
+function that is non-deterministic, too slow per million rows or whose state outgrows its bound. The **playground** (Pivot → Functions →
+New) shows the code, sample rows (pasted or a seeded, masked draw), the states after each part and merge, the check on every edit, the
+measured cost and its projection on a real table.
+
+**Python's sandbox** (`drishti_compute.pivot_fn`, the compute SDK's audit-hook guard and Arrow codec): warm workers, `python -I`, an
+empty environment, one call at a time, a worker serving one function version only; no network, no file reads outside the installation
+and no writes at all, no processes; the pool's package allow-list; per-call time and per-worker memory limits; only the declared columns
+of rows already ruled and masked; a state within its declared size, validated before it is merged or cached. Batches travel as Arrow IPC
+stream frames over the worker's pipe, never through scratch files; Python functions never read memory-only stores (the view is refused
+in words).
+
+**Versions, approval and labels.** Every save is a new version and a view names the version it uses; a function is private until an
+approver who is not its author approves it for a group or everyone (audited, revocable: views then say "function withdrawn"); every figure
+from a custom function is labelled with its name, author and version; the official risk measures stay Java engines, and a custom function
+can never take an official measure's name or appear in an official run.
+
+### 26.6 Scale
+
+**How a large pivot runs.** (1) Plan: the axes first, so the cell count is known; then the cell keys, functions and kinds. (2) Estimate:
+bytes, files and seconds from the lake's metadata after pruning, before any data is read; over the confirm level the person chooses (run,
+narrow, use a rollup, run in background). (3) Route: aggregate awareness picks the smallest layer that answers every function exactly (a
+rollup, the BI columns layer, the lake); a plan partly answerable from a rollup is split. (4) Scatter: files or shards are assigned to
+nodes; each node's executor compiles its part to one DuckDB query (or one vector batch) and returns partial states per cell key. (5)
+Gather and merge in node order, then cell-key order. (6) Finish, show, and cache the **states** by (provider data version, cell key,
+function).
+
+**One executor per node**: a bounded pool of DuckDB connections (one per four cores by default), each with its threads and memory limit;
+a slow node's files are re-assigned (hedged) to an idle node holding the same data after `cluster.hedge-after-seconds`, and the first
+answer wins (both equal by construction). On shared storage files are assigned by hashing the file path over the nodes that run the
+`pivot` engine, so caches stay warm; node-owned data (VaR shards, a pack bound to a node, memory-only tables) is computed by its owner and
+only partial states move; a small table runs on one node. One request per node carries all of a view's cell keys. The ordered combine is
+the one VaR sharding uses ([DATA_ARCHITECTURE.md, VaR sharding](DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built)), lifted into the
+core for every provider (`OrderedMerge`, `PartialCodec`, `PartialGather`).
+
+**Read less.** Only the plan's columns are read (Parquet is columnar); partition pruning and statistics skipping use Delta's per-file
+minimum and maximum (the first 32 columns by default), Iceberg's manifests and Parquet's row-group footers; tables are partitioned by
+business date and clustered (Z-order on Delta, sort orders on Iceberg) by the two or three dimensions most used as filters; the lake
+readers' disk cache keeps hot files local.
+
+**Sketches.** HyperLogLog is computed in SQL in the same `GROUPING SETS` statement (`hash(x)`: the first p bits pick the register, the
+rank of the first 1-bit in the rest is its value; the maximum per register taken in Java; merges are register-wise maxima, exact to the
+byte; two hash families never merge). KLL is built in Java from each cell's quantile points (`quantile_disc` at 2k + 1 fractions) and its
+count, each point weighted by the values it stands for; its merge's coin is a hash of the sketch's own count, so a fixed order repeats to
+the byte. Space-Saving is built from a cell's value histogram; a level's top N by a count of rows may be chosen by one summary of the
+parent's cell when ≈ is asked (`TopFirst`), with exact figures and membership within the floor.
+
+**Rollups of partial states, refreshed on load.** A rollup stores the states of mergeable and sketch functions at its grain; an appending
+load adds only the new files' states, a restatement recomputes only the partitions it touched; a plan is answered from the smallest rollup
+whose grain covers its dimensions, filters and row-rule columns (`AggregateAwareness`, with date coarsening), and the answer names it; the
+engine counts views that scanned the lake for want of a rollup and proposes one. Holistic functions are never rollup material.
+
+**Estimates and progressive answers.** Seconds come from the bytes after pruning divided by each node's measured scan rate per storage
+kind plus a per-file cost, always as a range (`ScanRates`). A view estimated over `progressive.after-ms` answers twice: first ≈ within
+about a second from honest sources only (sketch states in a covering rollup, or a random sample of files within each partition with each
+mergeable figure scaled up and its 95% interval; never a coarser figure split by guessed proportions), then exact cell by cell
+(`Progressive`). Holistic measures are never sampled.
+
+**Budgets, busy protection, the cache.** `max-cells` and `max-holistic-cells` refuse with the count and the dimension that makes a view
+large; views over `busy-cells` pass the admission gate first; the partial-state cache is weighed in bytes in the one memory budget, and a
+new data version invalidates only the cells of the tables it changed.
+
+**DuckDB's limits, and what the design does.** One process on one machine: Drishti scatters and gathers states, DuckDB is the per-node
+executor. High-cardinality grouping can run out of memory despite spilling: the cell budget bounds the groups, states are kept small,
+holistic functions are size-bounded, the per-connection memory limit is set, and an out-of-memory is a refusal in words. Memory-only data
+may never spill: such views must fit in memory or are refused. Object-store bandwidth bounds S3 scans: prune first, cache on disk, add
+nodes. Many small concurrent queries: a bounded pool per node, queuing, the cache, rollups, coalescing of identical plans. The `delta` and
+`iceberg` extensions ship with the distribution and load from it (no download at run time), their versions pinned with DuckDB's.
+
+### 26.7 Beyond Excel: explain, time travel, what-if, provenance, live, references
+
+- **Explain a difference** between two cells or one cell over two dates (`Explain`, `PriceVolume`): for mergeable measures the difference
+  splits exactly into contributions by member along any dimension, and by cause where the provider knows causes (new members, members
+  gone, value changes; for price × quantity measures, the price and quantity effects in a fixed order with the cross term shown); for VaR,
+  the VaR engine's exact steps per cell. The steps always add up, and a residual is named.
+- **Time travel and compare**: any view as of a business date and a data version; compare two dates or versions cell by cell, new and gone
+  members marked, each side's provenance naming its versions.
+- **What-if overlays** (`Overlay`, `WhatIf`, `WhatIfResolver`): exclude members, scale or override an input column, add hypothetical rows;
+  the tabular provider joins the overlay into the plan; only affected cells recompute; the original stays beside the result; an overlay
+  is private, saved with the view and never written to the lake.
+- **Provenance** per answer and cell: data versions, files or shards and nodes, rows counted, filters and row rules in words, functions
+  with their versions, the layer, exactness and error, time taken; one click to the rows.
+- **Cell references** by coordinates (`pivot://owner/view@version/measure[DIM=value, ...]`): they survive re-sorts, new columns and new
+  dates; a gone coordinate says "not in the view", never 0; Rachana's `cell(...)` reads them.
+- **Live pivots** (`LivePivots`, `AnswerPatch`): on a signal (a data load of a kind for a date, `LoadService.onReady`, or a live panel's
+  rows through the `TopicHub`) the touched views are computed again through `PivotCore.query`; the cache keyed by each date's data version
+  means only what moved is read, and the source's rollups are refreshed first. `AnswerPatch` sends `status` (nothing moved), `patch` (the
+  moved cells whole) or `reshape` (rows, columns or measures changed); the patch applied to the last answer equals a fresh query, cell by
+  cell. Recomputes are coalesced and ordered per view and exact unless the view asked ≈. Not built: the batch-as-merge form that updates
+  per-cell states straight from a stream's rows.
+- **The screen's switches** (Exact / Auto / ≈, Progressive, Use rollups, Live) are `ScaleOptions` beside the view, never in it; every
+  answer carries `computedAs` (what was asked, which measures sketches answered with their errors, which levels a summary chose, the
+  routes, the sample, one line of words).
+- **Cell comments** (`PivotCellComments`) are kept beside a saved view's numbered versions (one document changed atomically), each naming
+  its cell by coordinates and the view version it was written on; audited without the text.
+
+### 26.8 Expand and collapse
+
+Rows and columns are nested levels with **+** and **−**, compact, outline or tabular layout and subtotals above or below. Only expanded
+nodes are computed: opening a node is a new plan of that node's children only (one `GROUPING SETS` query, or one vector batch for VaR),
+children already computed come from the cache, and the expansion state is part of the saved view and of a link. Any member may be expanded
+by a **different** dimension (each node is its own cell key, so totals stay right); hierarchies may be ragged or parent-child (a cycle is
+refused at load with the members named); a level's top N has one **Others** computed from its own members (for VaR, from their vectors),
+never total minus the top N; each level sorts independently and never moves a child out of its parent; the last level expands into the
+member rows, virtualised and paged; the export keeps the outline as Excel's native grouping levels.
+
+### 26.9 BI on the pivot engine
+
+BI keeps its own design (datasets and models, one model per report, MQ as the one way to ask a model, time modes; [BI_DESIGN.md
+section 14](BI_DESIGN.md#14-the-model-architecture-decisions-d1-to-d6)) and its compiler of a model's rows (row rules, masks, joins,
+layers, dates). What moved is **who aggregates**: a matrix's totals and subtotals, a table's total row and a model query's `totals` are
+every level in one `GROUPING SETS` statement of the engine's function states over the model's rows as the reader may see them; a
+measure's additivity is the engine's answer for its function (`plainSum`); the console adds nothing up. BI's compiler writes the model's
+**detail** query and does not run it: it becomes the FROM item of the engine's statement (`QueryService.Outer`), run in BI's engine where
+the layers are, so no row leaves it; measures of several facts get one statement per fact, the levels joined (`BiMeasures`,
+`BiAggregate`). A model's measure that is an expression of aggregates of one fact's rows is a pivot function; time intelligence, running
+and analytic functions, filter contexts, balances and Python measures read beyond their group and have no total (a dash, with the reason
+in the warnings). A dataset read directly from its source (`mode: direct`) gets no engine totals. The move had one path: parity tests
+against figures recorded from the code it replaced (`BiParityTest`, `TrueTotalsTest`), then the old aggregation code deleted in the same
+change. Not built: models as sources of the pivot screen, and BI's rollups as rollups of partial states.
+
+### 26.10 The module: drishti-bicompute
+
+A plain Java 21 library, no Spring, holding everything that aggregates; its dependencies are `drishti-api`, `drishti-common`, DuckDB
+(`duckdb_jdbc`) and `arrow-format`. **No other module re-implements aggregation**: a build test (`AggregationOwnerTest`) fails any class
+outside it that implements the function SPI's steps or emits `GROUP BY` for a pivot.
+
+| Package | Holds |
+|---|---|
+| `core` | the pivot model, plans, merge and finish: `PivotView`, `CellKey`, `CellSet`, `Axis`, `AggregationPlan`, `PivotCore`, `PivotAnswer`, `ShowAs`, `ScaleOptions`, `TopFirst` |
+| `spi` | `PivotProvider`, `AggFunction` (start, add, merge, finish), `Kind` (mergeable, sketch, holistic), `Batch`, `Viewer` |
+| `functions` | the built-ins and sketches: `Builtins`, `Functions`, `Hll`, `Kll`, `SpaceSaving`, `Sketches`, `OncePerParent`, `Windows`, `Final` |
+| `sql` | `GroupingSetsCompiler`, `DuckDbExecutor`, `TabularProvider`, `TabularSource`, `SampledResolver`, `RowFed` |
+| `rows` | `RowsProvider` (rows held in memory) |
+| `formula`, `custom`, `python`, `harness` | formula functions and SQL macros, custom-function storage, versions, approval and official-run guards, the Python worker client, the harness and playground |
+| `cluster`, `cache`, `rollup`, `scale`, `live`, `explain`, `whatif`, `export` | `PartialCodec`, `OrderedMerge`, `PartialGather`, `ClusterRoute`; `StateCache`; `Rollups`, `AggregateAwareness`; `ScalePolicy`, `ScanRates`, `Progressive`; `LivePivots`, `AnswerPatch`; `Explain`; `WhatIf`; `PivotExport` |
+
+The server wires it (`server.pivot`: `PivotController`, `PivotViews`, `PivotViewVersions`, `PivotCellComments`, `KindSources`,
+`PanelSources`, `DatasetLayers`, the document fields, the Python process client, the scale and live configuration): Export data's tables
+as sources, the VaR, FRTB-SA and SIMM providers (which implement the SPI; the vector arithmetic stays where it is), REST, busy protection,
+the memory budget for the cache, saved views and audit. The console's `drishti_pivot-engine.js` asks and lays the answer out;
+`drishti_pivot-grid.js` is the one grid; the presets are `drishti-console/config/pivot-presets.yaml`.
+
+### 26.11 The screen, charts and export
+
+The screen is Excel's PivotTable as people know it (field list and four zones, show-as, calculated fields over states so they are right at
+every level, typed grouping, slicers, conditional formats, drill-through) with what Excel lacks where Excel's equivalents would be (the
+switches, provenance, comments). On a phone the grid's top-left and the headline come first, charts at a glance, expand, drill, explain and
+provenance under More, and the field list and the function playground on the desk only (not built beyond the narrow layout). **Charts of a
+selection** are suggested from its shape, linked both ways to the grid, and **never stack a non-additive measure**: VaR by desk is drawn
+beside the bank's VaR with the diversification as its own segment, from the engine's own gap; drawn with drishti-chart over the vendored
+ECharts. **Export** asks what (the pivot as shown with its outline, a cell's underlying rows, a chart's data, the view definition) and
+how: xlsx with Excel's native outline levels, a `SUM` formula only where a total is a plain sum of its parts and the server's value
+otherwise, a Provenance sheet (data versions, functions with versions and authors, filters and rules in words, exactness, who and when);
+CSV (one row per cell and measure, or the grid; zip and gzip for several or big files); JSON Lines; Arrow. Exports stream from the server,
+memory-only data is never written to a temporary file, and every export is audited without its values. Not built: a native PivotTable
+with its pivot cache (only measures Excel re-aggregates correctly would be data fields, the rest on a Values sheet), charts bound to it,
+references as named ranges, Parquet and Power Query outputs, pinned charts with PNG and SVG export.
+
+### 26.12 The switch, the API, the command line, rights and audit
+
+`pivot` is a compute engine with its own file, `config/engines/pivot.yaml` (the engine catalogue: `mr-cube` needs it, `ccr-cube` will);
+off, it does not exist on that server (`PIVOT`, the menu, Help pages, `drishti.py pivot` and the playground disappear, `/api/v1/pivot`
+answers `404 DRS-1020`, the cubes cannot be on). Its settings are in [CONFIGURATION.md](../admin/CONFIGURATION.md). The API (`/api/v1/pivot`:
+query, estimate, expand, cells and their rows, provenance, compare, views, catalogue, functions and their test, live, export; explain under
+`/api/v1/explain` kind `pivot`; function approval in the one Approvals queue) and `drishti.py pivot` use the same words, and a refused view
+prints the same sentence as the screen. **Rights**: the provider applies the person's row rules and masks in the plan before grouping (BI's
+security rewriter for models, the VaR engine's scope entitlements for VaR); a shared view opens with the reader's entitlements and never
+carries the author's numbers; custom functions receive only declared columns of rows the reader may see. **Audit**: every view run (who,
+source, data versions, rows read, functions with versions, time), every export, every function save, test, approval and revocation.
+
+### 26.13 Tests that prove it
+
+`GroupingSetsCompilerTest` (one query for cells and every total level, parameters bound, row rules before grouping), `MergeOrderTest` and
+`ClusterMergeTest` (the same digits on 1, 2 and 3 nodes and any arrival order), `TrueTotalsTest` (every non-additive total equals the
+measure over the union of its members), `SketchErrorTest` (HLL, KLL and Space-Saving within their stated errors on seeded data; exact on
+request equals exact), `ExactQuantileTest`, `FunctionHarnessTest`, `CustomFunctionsTest`, `FormulaFunctionTest` and
+`PivotFormulaParityTest` (formulas equal in Java and SQL), `test_pivot_fn.py` (Python's four steps and sandbox), `VarPivotApiTest`
+(every cell and total equal to `/api/v1/risk/var/scope` to the bit, sharded and whole), `CurrencyAndUnitsTest`, `ShowAsTest`,
+`ExplainAddsUpTest`, `WhatIfOverlayTest`, `RollupTest`, `ProgressiveTest`, `ScaleSwitchesTest`, `LivePivotTest`, `ParquetRouteTest`,
+`DocumentPivotTest` (paths, grains, once per parent, lists never crossed), `PivotExportTest`, `BiParityTest`, `AggregationOwnerTest`, and
+the browser tests of the screen. The benchmark harness is `tools/bench/pivot_bench.py`; its runs (synthetic trades of 5, 25 and 75 GB on
+one and three nodes, cold and warm, with and without a rollup; larger sizes only extrapolated and labelled so) and results are in
+[BENCHMARK.md](../admin/BENCHMARK.md#16-the-pivot-engine-at-scale).
+
+### 26.14 Not built yet
+
+Beyond the items named above: the per-person limit on running large views; the batch-as-merge form of live pivots on streams; layout
+advice (a proposed clustering from the dimensions views filter by); asking for a view in words through the AI layer (it would propose a
+definition the person sees before it runs, never computing a figure); automatic insights (outliers, sudden changes, concentration, flagged
+with the reason); references in formulas and Excel; the native PivotTable export; tabular reads of the BI layers and of object stores
+through the pivot (local Parquet files are read today).
 
 <!-- h-docs: compute engines (builder C) -->
 

@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A source with a what-if overlay joined in (PIVOT_ENGINE.md section 10, item 3): the same fields, the same row rules (applied to the
+ * A source with a what-if overlay joined in (ARCHITECTURE.md section 26.7, item 3): the same fields, the same row rules (applied to the
  * source's rows first), then the overlay: members left out, fields scaled or set where a condition holds, hypothetical rows added. Values the
  * person typed are bound parameters; field names come from the source's catalogue only. The version carries the overlay's digest, so the
  * what-if's states are cached apart from the data as it is.

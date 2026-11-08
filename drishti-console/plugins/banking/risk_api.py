@@ -43,7 +43,7 @@ async def risk(backend, method: str, path: str, ident, /, body=None, **params) -
 
 
 async def mr(backend, method: str, path: str, ident, /, body=None, **params) -> Any:
-    """The MR cube's extras beside the pivot (``/api/v1/risk/mr``, docs/guides/MR_CUBE_GUIDE.md); ``path`` after it (``/headline``)."""
+    """The MR cube's extras beside the pivot (``/api/v1/risk/mr``, docs/guides/PIVOT_GUIDE.md#29-the-mr-cube-preset); ``path`` after it (``/headline``)."""
     return await backend.engine(method, MR + path, ident, body=body, timeout=120.0, **params)
 
 

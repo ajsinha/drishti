@@ -37,7 +37,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 /**
- * One pivot view of the VaR source opened for one person (MR_CUBE_GUIDE.md section 4): the view's scope ({@code options.scope}, default
+ * One pivot view of the VaR source opened for one person (PIVOT_GUIDE.md section 29.4): the view's scope ({@code options.scope}, default
  * {@code BANK}) as the person sees it on the date, through the view's lens (horizon, 10-day method, confidences, the normal or stress set,
  * the reporting currency), and the figures of a cell from its summed 1-day vector: VaR and ES through the lens, component VaR and ES against
  * the view's total (Euler: the parts add up to it), incremental VaR, PV, trades, the limit and its use, stressed VaR and FRTB-SA SBM per cell

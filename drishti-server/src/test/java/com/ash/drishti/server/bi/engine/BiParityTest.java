@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * BI's totals on the pivot engine equal the figures the code before the switch gave (PIVOT_ENGINE.md section 12.4, test {@code BiParityTest}
+ * BI's totals on the pivot engine equal the figures the code before the switch gave (ARCHITECTURE.md section 26.9, test {@code BiParityTest}
  * of section 20): every case of {@link BiParityCases}, every level, every group, every measure, against the recorded fixture; a difference
  * beyond 1e-9 relative (exact for counts) fails naming the case, level, group, measure and both values. The engine's totals are made in one
  * grouping-sets statement per fact; the fixture's by one grouped query per level.

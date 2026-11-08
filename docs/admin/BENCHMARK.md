@@ -1487,7 +1487,7 @@ run's) are counted and skipped. `python3 tools/bench/charts.py <results.jsonl â€
 
 **Status: the plan and the harness; to be measured.** Nothing in this section is measured yet; every cell below is filled by the run
 of 16.3, and the larger sizes of 16.4 are EXTRAPOLATED from those measured points, labelled so wherever they appear. The design is
-[PIVOT_ENGINE.md section 21](../architecture/PIVOT_ENGINE.md#21-the-benchmark-plan); what it measures is
+[ARCHITECTURE.md section 26.13](../architecture/ARCHITECTURE.md#2613-tests-that-prove-it); what it measures is
 [PIVOT_GUIDE.md section 23](../guides/PIVOT_GUIDE.md#23-scale-sketches-rollups-progressive-answers-and-the-cluster).
 
 ### 16.1 What is measured
@@ -1572,7 +1572,7 @@ JSON line:
 
 Read the extrapolations as section 14 says: straight lines through three points, orders of magnitude. Past what one node's disk and
 memory hold, other effects (spill, object-store bandwidth, more files than the disk cache) bend the line; the decision on a distributed
-SQL backend (PIVOT_ENGINE.md decision 8) waits for measured common views over 5 minutes on three nodes, not for an extrapolation.
+SQL backend (ARCHITECTURE.md section 26) waits for measured common views over 5 minutes on three nodes, not for an extrapolation.
 
 ## 17. Many VaR scopes at once (BLAS)
 

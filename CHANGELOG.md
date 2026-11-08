@@ -2482,7 +2482,7 @@ The release train ships 2.9.11.e, 2.9.11.f and 2.9.11.g as one tag, v2.9.11.g: e
   entry (the MR cube needs it); large Delta and Iceberg tables read straight from their Parquet files by DuckDB (masked columns never
   read, the filters repeated on the raw columns for statistics skipping); money converted at the view's rates or refused per cell when it
   mixes currencies, a sum of a rate or percentage refused; the architecture rule test (only `drishti-bicompute` aggregates for a pivot).
-- **The pivot engine, phase P1 (2.9.11.a; PIVOT_GUIDE.md, tutorial 33, PIVOT_ENGINE.md).** A new module `drishti-bicompute` (plain
+- **The pivot engine, phase P1 (2.9.11.a; PIVOT_GUIDE.md, tutorial 33, ARCHITECTURE.md#26-the-pivot-engine).** A new module `drishti-bicompute` (plain
   Java): views of declarative cell sets compiled to one `GROUP BY GROUPING SETS` statement per restriction, functions with start, add,
   merge and finish (mergeable: sum, count, avg, min, max, wavg, variance and standard deviation; holistic and exact: median, percentile,
   distinct count), partial states merged in a fixed order, a partial-state cache in the one memory budget (`pivot.states`), the

@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 /**
  * The shares, ranks and windows over the cells of an answer (FUNCTION_CATALOGUE.md section 5): a value written around an aggregate,
  * {@code pct_of_total(sum(NOTIONAL))}, is the aggregate computed as every other value, then shown transformed from the finished figures of
- * the answer's cells (PIVOT_ENGINE.md section 14.1, "show values as"; the computation is {@code core.ShowAs}, beside Top N and Others, never
+ * the answer's cells (ARCHITECTURE.md section 26.11, "show values as"; the computation is {@code core.ShowAs}, beside Top N and Others, never
  * a second pass over rows). This class is the catalogue of those functions and the reading of the written form into the aggregate and its
  * show-as code.
  *

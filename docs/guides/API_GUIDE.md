@@ -3440,7 +3440,7 @@ are never a token's. Answers, captures, what-ifs, exports, reloads and official 
 
 ## Pivot engine: `/api/v1/pivot`
 
-The pivot engine ([PIVOT_GUIDE.md](PIVOT_GUIDE.md), design [PIVOT_ENGINE.md](../architecture/PIVOT_ENGINE.md)): any table of Export data,
+The pivot engine ([PIVOT_GUIDE.md](PIVOT_GUIDE.md), design [ARCHITECTURE.md section 26](../architecture/ARCHITECTURE.md#26-the-pivot-engine)): any table of Export data,
 or the VaR engine's trades (`source: var`), as a pivot. Every figure is computed by the engine (module `drishti-bicompute`); every total is
 made from its own members; masks apply before aggregation. Every view run and export is audited, never with its values.
 
@@ -3520,7 +3520,7 @@ Refusals: `DRS-5710` to `DRS-5716` ([the error code table](#error-code-table)).
 
 ### The MR cube: `/api/v1/risk/mr`
 
-The market-risk cube ([MR_CUBE_GUIDE.md](MR_CUBE_GUIDE.md)) is the pivot engine on `source: var` with engine `mr-cube` running: the
+The market-risk cube ([PIVOT_GUIDE.md section 29](PIVOT_GUIDE.md#29-the-mr-cube-preset)) is the pivot engine on `source: var` with engine `mr-cube` running: the
 source then offers the hierarchy levels (`MGMT.DESK`), `RISK_CLASS`, `POSITION`, `TRADE`, the measures `comp_var()`, `comp_es()`,
 `incr_var()`, `limit()`, `limit_use()`, `svar()`, `dv01()`, `cs01()`, `sbm()`, and the view's `options` (`scope`, `horizon`, `method`,
 `confidence`, `esConfidence`, `set`, `ccy`). Its lens adds, as the caller (a `view` is the view or a saved view's id):

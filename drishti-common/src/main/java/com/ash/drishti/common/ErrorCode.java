@@ -248,7 +248,7 @@ public enum ErrorCode {
     PIVOT_FUNCTION_OFF("DRS-5713", 404),
     /** A custom function past a limit: a holistic cell over its rows or megabytes, a state over its bound, a call over its time. */
     PIVOT_FUNCTION_LIMIT("DRS-5714", 422),
-    /** A custom function in an official run, report or sign-off: official measures stay the Java engines (PIVOT_ENGINE.md decision 14). */
+    /** A custom function in an official run, report or sign-off: official measures stay the Java engines (ARCHITECTURE.md section 26). */
     PIVOT_FUNCTION_OFFICIAL("DRS-5715", 403),
     /** An explanation or a what-if the engine cannot make as asked (two cells of different measures, a holistic measure without its provider's steps). */
     PIVOT_EXPLAIN("DRS-5716", 400),

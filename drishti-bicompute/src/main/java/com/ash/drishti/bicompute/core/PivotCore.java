@@ -38,7 +38,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Supplier;
 
 /**
- * The pivot engine's core (PIVOT_ENGINE.md sections 3, 4 and 11): a view becomes cell sets (the cells, every open node's subtotals, the
+ * The pivot engine's core (ARCHITECTURE.md sections 26.1, 26.2 and 26.8): a view becomes cell sets (the cells, every open node's subtotals, the
  * axis totals and the grand total), planned level by level so that only open nodes are computed; each set is asked of the source's provider
  * once (the tabular provider answers sets that share a restriction in one {@code GROUP BY GROUPING SETS} query), through the partial-state
  * cache, merged in a fixed order when shards answer, and finished into figures. The core never computes a figure itself: a mergeable total
@@ -76,7 +76,7 @@ public final class PivotCore {
     }
 
     /**
-     * The scale extension points (phase P3, PIVOT_ENGINE.md section 9): a host adds hooks for sketches chosen by size, rollups (aggregate
+     * The scale extension points (phase P3, ARCHITECTURE.md section 26.6): a host adds hooks for sketches chosen by size, rollups (aggregate
      * awareness), the cluster's scatter and gather, sampled first answers and measured scan rates. Each method has a default that does
      * nothing, so the core runs alone exactly as without them.
      */
@@ -141,7 +141,7 @@ public final class PivotCore {
         return List.copyOf(hooks);
     }
 
-    /** Custom functions (PIVOT_ENGINE.md section 8): the host's resolver of {@code fn:owner/name@v(...)} calls (null: none). */
+    /** Custom functions (ARCHITECTURE.md section 26.5): the host's resolver of {@code fn:owner/name@v(...)} calls (null: none). */
     public void functions(Functions.Resolver r) {
         this.resolver = r;
     }
@@ -774,7 +774,7 @@ public final class PivotCore {
 
     /**
      * The view's answer computed as {@code scale} asks: exact on request, ≈ by sketches, or from a sample (the first answer of a
-     * progressive pair, PIVOT_ENGINE.md section 9.8; never cached).
+     * progressive pair, ARCHITECTURE.md section 26.6; never cached).
      */
     public Map<String, Object> query(Viewer v, PivotView view, ScaleOptions scale) {
         Computation c = new Computation(v, view, scale);
@@ -854,7 +854,7 @@ public final class PivotCore {
     }
 
     /**
-     * The merged states of every cell of one set (explain and what-if, PIVOT_ENGINE.md section 10 items 1 and 3): the view's functions, and
+     * The merged states of every cell of one set (explain and what-if, ARCHITECTURE.md section 26.7 items 1 and 3): the view's functions, and
      * per cell key its members and one state per function, made by the provider from the cells' own rows (through the cache). An extension
      * point for the module's explain and what-if; the view's own answer is unchanged.
      *

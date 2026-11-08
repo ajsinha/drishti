@@ -982,7 +982,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * The date's Parquet data files and the promoted columns, for the pivot engine's direct lake route (docs/architecture/PIVOT_ENGINE.md
+     * The date's Parquet data files and the promoted columns, for the pivot engine's direct lake route (docs/architecture/ARCHITECTURE.md section 26
      * section 6.2): only a snapshot table on a local disk whose date has no delete files (a reader of the bare files would see deleted
      * rows). No data file is read: the plan is the cached one.
      */
