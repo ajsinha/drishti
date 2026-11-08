@@ -44,6 +44,11 @@ class ExposurePreDealLimitTest {
         return w;
     }
 
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> m(Object o) {
+        return (Map<String, Object>) o;
+    }
+
     @Test
     void withinNearAndBreachOnTheLimit() {
         ExposureDate.Limit lim = new ExposureDate.Limit("LIM-1", 100.0, "PFE 95 peak");
@@ -88,15 +93,15 @@ class ExposurePreDealLimitTest {
         exp.put("with", Map.of("eepe", 150L, "peakPfe", 330L));
         exp.put("incremental", Map.of("eepe", 50L));
         ExposurePreDeal.ead(exp, 1.4);
-        assertThat((Map<?, ?>) exp.get("base")).containsEntry("ead", 140L);
-        assertThat((Map<?, ?>) exp.get("with")).containsEntry("ead", 210L);
-        assertThat((Map<?, ?>) exp.get("incremental")).containsEntry("ead", 70L);
+        assertThat(m(exp.get("base"))).containsEntry("ead", 140L);
+        assertThat(m(exp.get("with"))).containsEntry("ead", 210L);
+        assertThat(m(exp.get("incremental"))).containsEntry("ead", 70L);
         assertThat(exp.get("alpha")).isEqualTo(1.4);
         Map<String, Object> proxy = new LinkedHashMap<>();                       // the proxy has no EEPE: no EAD, left out
         proxy.put("base", Map.of("peakPfe", 300L));
         proxy.put("with", Map.of("peakPfe", 330L));
         ExposurePreDeal.ead(proxy, 1.4);
-        assertThat((Map<?, ?>) proxy.get("with")).doesNotContainKey("ead");
+        assertThat(m(proxy.get("with"))).doesNotContainKey("ead");
         assertThat(proxy).doesNotContainKey("alpha");
     }
 }
