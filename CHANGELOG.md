@@ -25,6 +25,15 @@ The release train ships 2.9.11.e, 2.9.11.f and 2.9.11.g as one tag, v2.9.11.g: e
 
 ### Drishti Elements, and one way for each job (2.9.11.e)
 
+- **Security: one name, one definition across the domain folders.** A table or model defined twice (`config/tables/bi/` and
+  `config/tables/banking/`, or a file and a stored item), a BI file of one id in two folders (`reports/` and `reports/banking/`, the same
+  for notebooks, Python items, tables and models) and a pack in two domain folders of one packs root are **refused, both**: neither is
+  read, never one picked (the server had used the last one read, so a report could read a second `trades-basic` model without the row
+  rules and masks of the first). The table layer's check says `DRS-9610 ... is defined twice: <file> and <file>; neither is read`; the
+  BI folder lists each refused file under Health › BI problems and Admin › Artifacts; a pack named twice stops the server at start
+  (and keeps its last good version on a hot reload, with the problem on Health) naming both folders. The Python resolver
+  (`core/pack_paths.py`) refuses the same, and the shipped packs are checked to hold each name once.
+
 - **The terminal's query form on the one server-drawn form** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
   `core/forms.py`'s `form_host` sends the criteria through `core/form_kit.host` (`data-di-form` + `data-schema`), and `drishti_form.js`
   finds the `Form` with `formOf(host, {widgets})`; its own `new Form` path and the `data-qf-schema` attribute are deleted. `formOf`

@@ -127,6 +127,24 @@ class CatalogueTest {
     }
 
     @Test
+    void aModelOrTableNamedTwiceAcrossDomainFoldersIsRefusedNeverOneOfThem() throws Exception {
+        sample();
+        write("banking/trading-risk.model.yaml", MODEL.replace("security:\n  rows:\n    desks:\n      - { role: desk-head, where: \"desks.NAME in user.desks\" }\n", ""));
+        write("other/desks.table.yaml", DESKS);
+        write("third/desks.table.yaml", DESKS);
+        Catalogue c = Catalogue.load(root, ItemStore.NONE);
+        assertThat(c.model(TableName.Ref.parse("trading-risk"))).isEmpty();             // not the first, not the last: neither
+        assertThat(c.table("core.desks")).isEmpty();
+        assertThat(c.models()).noneMatch(m -> m.name().equals("trading-risk"));
+        List<Problem> ps = c.check();
+        assertThat(ps).anyMatch(p -> p.isError() && p.code().equals(TableCodes.DUPLICATE) && p.message().contains("banking/trading-risk.model.yaml")
+                && p.message().contains("trading/trading-risk.model.yaml") && p.message().contains("neither is read"));
+        assertThat(ps).anyMatch(p -> p.isError() && p.code().equals(TableCodes.DUPLICATE) && p.message().contains("core/desks.table.yaml")
+                && p.message().contains("other/desks.table.yaml") && p.message().contains("third/desks.table.yaml"));
+        assertThat(c.table("trading.trades")).isPresent();                              // a name held once still reads
+    }
+
+    @Test
     void findsDuplicatesWrongReferencesAndCycles() throws Exception {
         sample();
         write("trading/again.table.yaml", TRADES.replace("was: trading-risk-trades\n", ""));

@@ -108,6 +108,7 @@ public final class PackLoader {
 
     /** Reads one pack from the first folder that has it; throws {@link IllegalStateException} when none does or the manifest is wrong. */
     public Pack readOne(List<Path> dirs, String name) {
+        com.ash.drishti.api.PackFolders.requireOne(dirs, name);            // two domain folders of one root: refused, naming both
         Path dir = dirs.stream().filter(d -> Files.isRegularFile(d.resolve(name).normalize().resolve("pack.yaml"))).findFirst()
                 .orElse(dirs.get(dirs.size() - 1));
         return read(dir, name, null);
@@ -138,6 +139,7 @@ public final class PackLoader {
         }
         path.addLast(name);
         String requiredBy = path.size() > 1 ? path.toArray(new String[0])[path.size() - 2] : null;
+        com.ash.drishti.api.PackFolders.requireOne(dirs, name);            // two domain folders of one root: the server does not start
         Path dir = dirs.stream().filter(d -> Files.isRegularFile(d.resolve(name).normalize().resolve("pack.yaml"))).findFirst()
                 .orElse(dirs.get(dirs.size() - 1));
         Pack p = read(dir, name, requiredBy);

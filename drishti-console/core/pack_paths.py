@@ -40,19 +40,37 @@ def roots(root: Path | str | None = None) -> list[Path]:
     return out
 
 
-def pack_dirs(root: Path | str | None = None) -> dict[str, Path]:
-    """Every pack folder under ``root`` by pack name (the first folder wins a name), in name order."""
-    out: dict[str, Path] = {}
+def _holders(root: Path | str | None = None) -> dict[str, list[Path]]:
+    found: dict[str, list[Path]] = {}
     for d in roots(root):
         if d.is_dir():
             for p in sorted(d.iterdir()):
                 if (p / "pack.yaml").is_file():
-                    out.setdefault(p.name, p)
-    return dict(sorted(out.items()))
+                    found.setdefault(p.name, []).append(p)
+    return found
+
+
+def _twice(name: str, at: list[Path]) -> str:
+    return (f"pack '{name}' is in two folders: {at[0]} and {at[1]}; neither is read: a pack's name is unique across a packs folder "
+            "and its domain folders (keep one, rename or remove the other)")
+
+
+def duplicates(root: Path | str | None = None) -> dict[str, str]:
+    """The pack names two folders of ``root`` hold, each with the problem naming both folders (such a name is never resolved to one)."""
+    return {n: _twice(n, at) for n, at in sorted(_holders(root).items()) if len(at) > 1}
+
+
+def pack_dirs(root: Path | str | None = None) -> dict[str, Path]:
+    """Every pack folder under ``root`` by pack name, in name order; a name two folders hold is in neither (``duplicates`` says so)."""
+    return {n: at[0] for n, at in sorted(_holders(root).items()) if len(at) == 1}
 
 
 def pack_dir(name: str, root: Path | str | None = None) -> Path:
-    """A pack's folder under ``root`` (default ``config/packs``); ``<root>/<name>`` (not there) when no folder holds it."""
+    """A pack's folder under ``root`` (default ``config/packs``); ``<root>/<name>`` (not there) when no folder holds it. Raises
+    ``ValueError`` naming both folders when two folders of the root hold it."""
+    at = _holders(root).get(name, [])
+    if len(at) > 1:
+        raise ValueError(_twice(name, at))
     for d in roots(root):
         p = d / name
         if (p / "pack.yaml").is_file():

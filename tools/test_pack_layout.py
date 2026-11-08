@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PACKS = ROOT / "config" / "packs"
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.pack_paths import manifests, pack_dir, pack_dirs  # noqa: E402
+from core.pack_paths import duplicates, manifests, pack_dir, pack_dirs  # noqa: E402
 
 pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
@@ -67,3 +67,15 @@ def test_the_resolver_reads_a_flat_root_and_a_domain_root_alike(tmp_path):
     assert pack_dirs(tmp_path) == {"deep-pack": tmp_path / "risk" / "deep-pack", "flat-pack": tmp_path / "flat-pack"}
     assert pack_dir("deep-pack", tmp_path) == tmp_path / "risk" / "deep-pack"
     assert pack_dir("absent", tmp_path) == tmp_path / "absent"
+
+
+def test_a_pack_name_in_two_domain_folders_is_refused_never_one_of_them(tmp_path):
+    for rel in ("banking/twin", "economy/twin", "banking/single"):
+        (tmp_path / rel).mkdir(parents=True)
+        (tmp_path / rel / "pack.yaml").write_text(f"pack: {Path(rel).name}\n", encoding="utf-8")
+    assert pack_dirs(tmp_path) == {"single": tmp_path / "banking" / "single"}            # the twin is in neither
+    problem = duplicates(tmp_path)["twin"]
+    assert str(tmp_path / "banking" / "twin") in problem and str(tmp_path / "economy" / "twin") in problem
+    with pytest.raises(ValueError, match="is in two folders"):
+        pack_dir("twin", tmp_path)
+    assert duplicates(PACKS) == {}, "the shipped packs hold each name once"
