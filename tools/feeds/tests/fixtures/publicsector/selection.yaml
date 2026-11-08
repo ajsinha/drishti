@@ -20,6 +20,8 @@
 world-development:
   countries: [CAN, USA, MEX, BRA, GBR, DEU, IND, CHN, JPN, NGA, ZAF, AUS]
   years: 8
+  series-from: ""           # the fixtures were recorded with the headline indicators only, no aggregates
+  aggregates: []
 central-banks:
   history-days: 400
 national-statistics:

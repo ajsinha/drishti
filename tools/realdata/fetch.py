@@ -13,7 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Downloads the raw public data into a cache folder outside the repository (never committed). One request per World Bank
-indicator, per IMF series and per Factbook file, with a pause between requests; files already in the cache are kept unless
+governance indicator, per IMF series and per Factbook file (the development indicators, WDI, are read from the world-development
+feed's output, never downloaded here: that feed is their one fetcher), with a pause between requests; files already in the cache are kept unless
 --refresh is given. The raw files are stored exactly as served, so a run can be repeated offline with `normalise`.
 
 Cache layout:  wb_country.json  wb/<code>.json  imf/<code>.json  imf_indicators.json  undp_hdi.csv
@@ -33,6 +34,19 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "feeds"))
 from pullkit import user_agent  # noqa: E402  (the one User-Agent of every feed: tools/feeds/pullkit.py)
 UA = user_agent()   # DRISHTI_FEEDS_USER_AGENT, else the feeds' default
+
+
+def _publicsector():
+    """tools/feeds/sources/publicsector.py (wdi_rows), by its path: that folder is not put on sys.path, where its feed modules would
+    shadow the pack generators' own modules of the same names."""
+    if "publicsector" in sys.modules:
+        return sys.modules["publicsector"]
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("publicsector", Path(__file__).resolve().parents[1] / "feeds" / "sources" / "publicsector.py")
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules["publicsector"] = mod
+    spec.loader.exec_module(mod)
+    return mod
 
 
 class Fetcher:
@@ -62,15 +76,39 @@ class Fetcher:
 
     # ---- World Bank
     def worldbank(self) -> None:
+        """The country list and the governance indicators (WGI) from the World Bank's API; the development indicators (WDI) from the
+        world-development feed's latest output (their one fetcher), written as wb/<code>.json in the API's shape."""
         api, yrs = self.cfg["sources"]["wdi"]["api"], self.cfg["years"]
         self.get(f"{api}/country?format=json&per_page=400", self.cache / "wb_country.json")
+        self.wdi([i["code"] for i in self.cfg["indicators"] if i["kind"] == "wdi"], yrs["first"], yrs["last"])
         for ind in self.cfg["indicators"]:
-            if ind["kind"] not in ("wdi", "wgi"):
+            if ind["kind"] != "wgi":
                 continue
-            src = "&source=3" if ind["kind"] == "wgi" else ""
-            url = f"{api}/country/all/indicator/{ind['code']}?format=json&date={yrs['first']}:{yrs['last']}&per_page=20000{src}"
+            url = f"{api}/country/all/indicator/{ind['code']}?format=json&date={yrs['first']}:{yrs['last']}&per_page=20000&source=3"
             self.log(f"worldbank {ind['code']}")
             self.get(url, self.cache / "wb" / f"{ind['code']}.json")
+
+    def wdi(self, codes: list[str], first: int, last: int) -> None:
+        """wb/<code>.json for each WDI code from the world-development feed's output, as the API answers ([{page, pages, lastupdated},
+        rows]), so the normaliser reads it unchanged. No output: the run fails in words (run feed run world-development first)."""
+        if not codes:
+            return
+        PS = _publicsector()
+        found: dict = {}
+        rows = PS.wdi_rows(codes, first, last, out=found)
+        missing = [c for c in codes if c not in rows]
+        if missing:
+            self.log(f"  WDI: the world-development output of {found['date']} has no {', '.join(missing)}: left out "
+                     f"({PS.WDI_FIRST}; it pulls every kind: wdi code of tools/realdata/sources.yaml)")
+        if found.get("first") and int(found["first"]) > first:
+            self.log(f"  WDI: the world-development output starts in {found['first']}, not {first}: the years before are not in it")
+        self.log(f"worldbank WDI: {len(rows)} indicator(s) from the world-development output of {found['date']}")
+        for code, r in rows.items():
+            dest = self.cache / "wb" / f"{code}.json"
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            head = {"page": 1, "pages": 1, "per_page": len(r), "total": len(r), "sourceid": "2", "lastupdated": found["lastupdated"]}
+            dest.write_text(json.dumps([head, r], separators=(",", ":")), encoding="utf-8")
+            self.retrieved[str(dest.relative_to(self.cache))] = found["date"]
 
     # ---- IMF
     def imf(self) -> None:
