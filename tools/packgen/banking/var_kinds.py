@@ -55,7 +55,7 @@ KINDS = {
     "desk-pnl": ("DPNL", "Desk P&L: actual and hypothetical (daily)", "^DPNL-", "DESK_PNL_ID"),
     # the long-history P&L of today's portfolio per hierarchy node, for the stress window selection (VAR_GUIDE.md section 18.9)
     "pnl-history": ("PNLH", "Long-history P&L of a hierarchy node (stress window selection)", "^PNLH-", "HISTORY_ID"),
-    # 2.9.11: the positions' sensitivities to the standard risk factors and the factor dictionary (SENSITIVITIES_AND_FRTB_SA.md sections 2
+    # 2.9.11: the positions' sensitivities to the standard risk factors and the factor dictionary (docs/guides/FRTB_SA_GUIDE.md sections 2
     # and 3), read by the server's FRTB-SA engine; a factor's id is its standard name (IR/CURVE/USD/SOFR/10Y)
     "position-sensitivity": ("SENS", "Position sensitivities (delta, vega, curvature by risk factor)", "^SENS-", "SENSITIVITY_ID"),
     "risk-factor": ("RFAC", "Risk factor (the factor dictionary: FRTB and SIMM mapping, source names)", "^(IR|INF|CR|FX|EQ|CM|VOL)/",

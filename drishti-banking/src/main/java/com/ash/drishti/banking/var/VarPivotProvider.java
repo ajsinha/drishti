@@ -73,7 +73,7 @@ public final class VarPivotProvider implements PivotProvider {
             new Native("pv", "PV", Kind.HOLISTIC, "money", "the sum of the cell's trades' present values"),
             new Native("trades", "Trades", Kind.HOLISTIC, "count", "the trades in the cell"),
             new Native("pvar", "Parametric VaR", Kind.HOLISTIC, "money", "the cell's parametric VaR, z·σ − μ of its summed scenario P&L vector "
-                    + "(a cross-check, never official; PARAMETRIC_VAR.md)"));
+                    + "(a cross-check, never official; docs/guides/VAR_GUIDE.md)"));
     static final List<Native> MR = List.of(
             new Native("comp_var", "Comp VaR", Kind.HOLISTIC, "money", "the cell's share of the view's total VaR (Euler: the parts add up to the total)"),
             new Native("comp_es", "Comp ES", Kind.HOLISTIC, "money", "the cell's share of the view's total ES (Euler)"),
@@ -308,7 +308,7 @@ public final class VarPivotProvider implements PivotProvider {
     }
 
     /**
-     * The MR cube's landing view (layout A, MR_CUBE_LENS.md section 6.7): rows the management hierarchy's desks (then books, positions and
+     * The MR cube's landing view (layout A, docs/lenses/README.md section 6.7): rows the management hierarchy's desks (then books, positions and
      * trades as each node is opened), columns the risk class, the VaR; the bank as the scope.
      */
     Map<String, Object> defaultView(VarPivotLens o) {

@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The inputs of the hand-built SIMM cases (SENSITIVITIES_AND_FRTB_SA.md section 13.1 cases 6 and 11, docs/contracts/SIMM.md section 15):
+ * The inputs of the hand-built SIMM cases (docs/guides/FRTB_SA_GUIDE.md section 13.1 cases 6 and 11, docs/contracts/SIMM.md section 15):
  * sensitivities only. The figures in the documents come from a toy parameter set (not ISDA's), so the cases prove the formulas, never the
  * licensed numbers; with a bank's licensed file installed the same inputs give that version's margin. The {@code EXAMPLE} scope of the
  * SIMM API and playground runs {@link #worked()} with the version asked for.

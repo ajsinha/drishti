@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# Admin → Lakes, the in-memory lake (docs/guides/IN_MEMORY_LAKE_GUIDE.md section 9): the stores and tables the server holds in memory
+{# Admin → Lakes, the in-memory lake (docs/guides/DATA_LAKE_GUIDE.md section 9): the stores and tables the server holds in memory
    only, from GET /api/v1/admin/lakes/memory. Ids and counts only. #}
 {% macro mb(n) %}{{ '{:,.1f}'.format((n or 0) / 1048576) }} MB{% endmacro %}
 <h2 class="lk-h2" id="lkMemory">Held in memory only <a class="emb-help" href="/help/in-memory-lake-guide" aria-label="Help: the in-memory lake" title="Help: the in-memory lake">?</a></h2>

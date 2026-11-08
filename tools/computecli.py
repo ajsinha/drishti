@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""`drishti.py compute ...`: reactive connectors from the command line (docs/connectors/REACTIVE_CONNECTOR.md, "The HTTP API"), for the
+"""`drishti.py compute ...`: reactive connectors from the command line (docs/connectors/types/reactive/README.md, "The HTTP API"), for the
 caller's token: ask for a computed kind (run), cancel a request, send an event to the triggers (event, administrators), list the caller's
 what-if sandboxes, and Admin's view of the reactive connectors (reactive). Exit codes: 0, 1 (refused, failed, or the server said no),
 2 (usage)."""

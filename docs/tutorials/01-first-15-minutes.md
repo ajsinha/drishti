@@ -62,7 +62,7 @@ git clone https://github.com/ajsinha/drishti.git
 cd drishti
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64     # your Java 21 or newer
 export PATH="$JAVA_HOME/bin:$PATH"
-./mvnw -q package -DskipTests -pl drishti-server -am
+./mvnw -q package -DskipTests -pl drishti-app -am
 uv venv --python 3.13 drishti-console/.venv
 uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
 ```

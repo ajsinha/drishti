@@ -120,7 +120,7 @@ public class FlightConfiguration {
         if (dv != null) {
             KindFlightForm kinds = new KindFlightForm(dv);
             forms.add(kinds);
-            forms.add(new LakeFlightForm(com.ash.drishti.lakeconfig.Lakes::current, kinds, dv, memory.getIfAvailable()));   // the lake files (LAKE_CONFIG.md)
+            forms.add(new LakeFlightForm(com.ash.drishti.lakeconfig.Lakes::current, kinds, dv, memory.getIfAvailable()));   // the lake files (docs/architecture/DATA_ARCHITECTURE.md)
         }
         if (catalog.getIfAvailable() != null && mq.getIfAvailable() != null && bi.getIfAvailable() != null) {
             forms.add(new AnswerFlightForms.Model(catalog.getObject(), mq.getObject(), bi.getObject(), sql.getIfAvailable()));

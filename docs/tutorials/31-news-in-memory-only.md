@@ -40,7 +40,7 @@ About 15 minutes.
 
 ## Step 1 · Point the news connector at memory
 
-**The YAML.** The store is a lake of its own (docs/guides/IN_MEMORY_LAKE_GUIDE.md): copy its lake file, and the example connector over
+**The YAML.** The store is a lake of its own (docs/guides/DATA_LAKE_GUIDE.md): copy its lake file, and the example connector over
 the pack's own:
 
 ```bash
@@ -243,12 +243,12 @@ Restart. `NEWS Apple` reads the disk lake; Admin → Lakes no longer shows *Held
 
 You held a whole pack in memory only, filled by server jobs from its feed, read through the same connector, guarded at every place
 Drishti writes, measured and compacted by itself, and went back. The reference is the
-[in-memory lake guide](../guides/IN_MEMORY_LAKE_GUIDE.md); the design is [IN_MEMORY_LAKE.md](../architecture/IN_MEMORY_LAKE.md).
+[in-memory lake guide](../guides/DATA_LAKE_GUIDE.md#13-the-in-memory-lake); the design is [IN_MEMORY_LAKE.md](../architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk).
 
 ## Next steps
 
-- The [in-memory lake guide](../guides/IN_MEMORY_LAKE_GUIDE.md): every setting, the replenish sources and the guard.
-- The design: [IN_MEMORY_LAKE.md](../architecture/IN_MEMORY_LAKE.md).
+- The [in-memory lake guide](../guides/DATA_LAKE_GUIDE.md#13-the-in-memory-lake): every setting, the replenish sources and the guard.
+- The design: [IN_MEMORY_LAKE.md](../architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk).
 
 ## When something goes wrong
 

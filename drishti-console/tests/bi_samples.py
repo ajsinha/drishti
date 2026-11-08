@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The shipped BI samples a test stack copies into its scratch config (since the switch to the table layer: a model and the tables it reads in
-config/tables/bi, BI_FOUNDATION_2911E.md step 5). ``copy_samples(bi_dir, ["trades-basic", "trading-risk"])`` copies each sample with
+config/tables/bi, docs/architecture/BI_DESIGN.md step 5). ``copy_samples(bi_dir, ["trades-basic", "trading-risk"])`` copies each sample with
 everything it needs into ``bi_dir``'s sibling ``tables/bi`` (the server's ``drishti.tables.root``, ``./config/tables`` from the stack's
 folder): its model, the tables the model reads, a table's base, the models a table's source asks and the Python items they run."""
 from __future__ import annotations
@@ -34,6 +34,16 @@ def _tables_of(model_text: str) -> list[str]:
 def _table_file(name: str) -> str:
     domain, _, rest = name.partition(".")
     return f"{domain}/{rest}.table.yaml"
+
+
+def shipped(kind: str, file: str) -> Path:
+    """A shipped BI file (``kind`` = reports, python, notebooks, ...) by its file name: at ``config/bi/<kind>/`` or in a domain folder under it
+    (``config/bi/reports/banking/`` since the domain split)."""
+    top = SHIPPED / kind / file
+    if top.exists():
+        return top
+    found = sorted((SHIPPED / kind).glob(f"*/{file}"))
+    return found[0] if found else top
 
 
 def _model_file(name: str) -> str:
@@ -58,6 +68,14 @@ def copy_samples(bi_dir: Path, names) -> list[str]:
         copied.append(rel)
         return src.read_text()
 
+    def put_python(name: str) -> None:
+        """A Python item, flat in the stack's bi/python (the stack's server has no domain folders to switch)."""
+        rel = f"bi/python/{name}.python.yaml"
+        if rel not in copied:
+            (config / "bi" / "python").mkdir(parents=True, exist_ok=True)
+            shutil.copy(shipped("python", f"{name}.python.yaml"), config / rel)
+            copied.append(rel)
+
     def table(name: str) -> str:
         """A table and, when it reads another (``from: { table: <name> }``), its base."""
         body = put("tables/" + _table_file(name))
@@ -71,14 +89,14 @@ def copy_samples(bi_dir: Path, names) -> list[str]:
         for t in _tables_of(text):
             body = table(t)
             py = re.search(r"python:\s*([A-Za-z0-9_.-]+)", body)
-            if py and (SHIPPED / "python" / f"{py.group(1)}.python.yaml").exists():
-                put(f"bi/python/{py.group(1)}.python.yaml")
+            if py and shipped("python", f"{py.group(1)}.python.yaml").exists():
+                put_python(py.group(1))
             for used in re.findall(r"model:\s*([A-Za-z0-9_.-]+)@", body):
                 if _model_file(used) not in copied:
                     model(used)
         for py in re.findall(r"python:\s*([A-Za-z0-9_.-]+)", text):
-            if (SHIPPED / "python" / f"{py}.python.yaml").exists():
-                put(f"bi/python/{py}.python.yaml")
+            if shipped("python", f"{py}.python.yaml").exists():
+                put_python(py)
 
     for name in names:
         model(name)
@@ -114,7 +132,7 @@ def migrate_folder(bi_dir: Path, tmp: Path | None = None) -> None:
         return
     jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
     if not jars:
-        raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-server -am")
+        raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
     config = bi_dir.parent
     tmp = Path(tmp) if tmp else config.parent / "migrate-tmp"

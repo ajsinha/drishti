@@ -26,7 +26,7 @@ files:
 - reference-store.yaml
 - risk-store.yaml
 - trade-endur.yaml
-doc: docs/connectors/ICEBERG_CONNECTOR.md
+doc: plugins/drishti-plugin-iceberg/README.md
 ---
 # Iceberg connector templates
 
@@ -100,7 +100,7 @@ For a REST catalog set `DRISHTI_ICEBERG_CATALOG=rest`, `DRISHTI_ICEBERG_URI`, `D
 
 ## See also
 
-- [The Iceberg connector](../../../docs/connectors/ICEBERG_CONNECTOR.md) and the [iceberg connector README](../../../plugins/drishti-plugin-iceberg/README.md).
+- [The Iceberg connector](../../../plugins/drishti-plugin-iceberg/README.md) and the [iceberg connector README](../../../plugins/drishti-plugin-iceberg/README.md).
 - [Connector files](../../../docs/connectors/CONNECTOR_FILES.md) (copying examples, the trade union note) and [Demo data](../../../docs/connectors/DEMO_DATA.md).
 
 The Delta and Iceberg files here name a lake (`lake:`, `lake-tables:`); the lake itself, its root or catalog, storage and tables, is the matching

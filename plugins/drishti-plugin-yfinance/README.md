@@ -42,7 +42,7 @@ settings:
 auth: None (no API key). tls.* for an https:// mirror or proxy on a private CA; proxy.* for an outbound proxy.
 licence: No client library (the JDK's HttpClient, Jackson). The endpoint is unofficial and Yahoo's terms restrict its use; free price feeds forbid redistribution, so what it returns is for internal use only and is never committed or redistributed.
 windows: Works the same on Windows (pure Java).
-doc: docs/connectors/YFINANCE.md
+doc: plugins/drishti-plugin-yfinance/README.md
 ---
 # The yfinance connector
 
@@ -137,6 +137,90 @@ annotated copy is `config/connectors.examples/other/yfinance.yaml`. There is no 
 
 ## See also
 
-- [The full yfinance document](../../docs/connectors/YFINANCE.md): how each figure is worked out, settings, tests.
+- Below: [turning it on](#turning-it-on), [how the figures are worked out](#how-the-figures-are-worked-out), [health, errors and retries](#health-errors-and-retries), [using it from a pack](#using-it-from-a-pack), [how it is built](#how-it-is-built), [tests](#tests).
 - [The us-equities pack's guide](../../config/packs/capitalmarkets/us-equities/guides/us-equities.md#prices-internal-use-only) (prices: internal use only).
-- [The news connector](../../docs/connectors/NEWS.md), [connector files](../../docs/connectors/CONNECTOR_FILES.md), [TLS (and the outbound proxy)](../../docs/connectors/TLS.md).
+- [The news connector](../drishti-plugin-news/README.md), [connector files](../../docs/connectors/CONNECTOR_FILES.md), [TLS (and the outbound proxy)](../../docs/connectors/TLS.md).
+
+## Turning it on
+
+A pack that uses it (`news-and-markets`) carries a template; at first start the server writes `config/connectors/yfinance.yaml` from it
+with `enabled: ${DRISHTI_YFINANCE_ENABLED:false}`. Set `DRISHTI_YFINANCE_ENABLED=true`, or `enabled: true` in the file, or Enable in
+Admin → Connectors. Enabling and disabling the file is live; a new plugin jar needs a restart (the plugin ships inside `drishti-server`).
+To use a mirror, set `base-url`; HTTPS on a private CA takes the shared [`tls.*`](../../docs/connectors/TLS.md) settings.
+
+The `us-equities` pack carries a second connector on the same plugin, `us-equities-prices` (`id-prefix: PX-`, `kind: price-history`, a
+year of daily bars), off unless `DRISHTI_US_EQUITIES_PRICES_ENABLED=true`, for internal use only: the pack commits no prices
+([the pack's guide](../../config/packs/capitalmarkets/us-equities/guides/us-equities.md#prices-internal-use-only)).
+
+## How the figures are worked out
+
+| Field | From |
+|---|---|
+| `PRICE` | `meta.regularMarketPrice`, else the last close of the history |
+| `PREVIOUS_CLOSE` | `meta.previousClose` when present; else, for daily bars, the close before the last bar; else `meta.chartPreviousClose` (which, for a long range, is the close before the range began, hence the order) |
+| `CHANGE`, `CHANGE_PCT` | `PRICE - PREVIOUS_CLOSE`, and that over `PREVIOUS_CLOSE` as a percent (`+0.84` means 0.84 %) |
+| `MARKET_STATE` | `meta.marketState` when given; else `REGULAR` when now lies in the regular trading period of `meta.currentTradingPeriod`, `CLOSED` when not, `UNKNOWN` if the answer has no period |
+| `HISTORY` | the timestamps and `indicators.quote[0]` arrays; a bar without a close is skipped; dates in the exchange's time zone (`gmtoffset`): `yyyy-MM-dd` for daily and longer bars, with `HH:mm` for intraday |
+| `DAY_RANGE`, `FIFTY_TWO_WEEK_RANGE` | the low and high as text, `188.90 – 192.30` |
+
+A number that is not a number, or a field of the wrong type, is read as missing; an answer that is not a chart (`{"hello":"world"}`) or
+is not JSON is an error, never a half-empty quote.
+
+## Outbound proxy
+
+The settings and rules are shared by every HTTP-based connector: [TLS.md (proxy)](../../docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers).
+A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}`
+placeholder, never a literal. Yahoo's chart endpoint is reached through the proxy when one applies. Health ends
+`via proxy host:port (source)`. Tested in `YFinanceProxyTest` against a fake proxy and the fake Yahoo server.
+
+## Health, errors and retries
+
+Start fetches nothing and never fails because the web is unreachable. Health is `UP` until a call fails, then
+`DOWN: <reason> (tried again on the next request)`, and `UP` after the next success.
+
+| Situation | What happens |
+|---|---|
+| connection failure, timeout, HTTP 429 (Yahoo's rate limit), HTTP 5xx | repeated up to `retries` times with backoff and jitter; then the read fails, or serves the older cached answer if one is held |
+| HTTP 404 or Yahoo's `Not Found` error | the symbol is not held (health stays `UP`), cached for the TTL so a page does not ask again at once |
+| any other 4xx (403) | fails at once |
+| response over `max-bytes` | fails at once, naming the limit |
+| not JSON, or JSON of another shape | fails: `the response is not readable JSON` or `is not a Yahoo chart answer` |
+
+As with the news connector, a page that reads the quote through `source: link(...)` shows it as pending on the first view when Yahoo
+takes longer than `drishti.graph.link-budget` (40 ms by default); see
+[the news connector](../drishti-plugin-news/README.md#health-errors-and-retries).
+
+## Using it from a pack
+
+```yaml
+connectors:
+  yfinance: { plugin: yfinance, enabled: "${DRISHTI_YFINANCE_ENABLED:false}", kinds: [quote], settings: { range: 6mo, interval: 1d } }
+routes: { quote: yfinance }
+```
+
+```yaml
+# a company's document holds  "QUOTE_ID": "QUOTE-AAPL";  its Sutra:
+  - { id: quote, kind: kv, source: "link($.QUOTE_ID, 'quote')", columns: [ { label: Price, bind: $.PRICE, fmt: price2 }, ... ] }
+  - { id: history, kind: line, source: "link($.QUOTE_ID, 'quote')", rows: $.HISTORY, x: DATE, y: CLOSE, fmt: price2 }
+```
+
+See the [`news-and-markets` sample pack](../../docs/guides/PACK_DEVELOPER_GUIDE.md#sample-packs). **Offline** (`DRISHTI_OFFLINE=true`,
+[CONFIGURATION](../../docs/admin/CONFIGURATION.md#drishtioffline--offline-mode-no-internet)) this connector never starts and shows
+*off (offline mode)* in Admin → Connectors; the pack's `news-store` then serves `quote` from a snapshot captured through this connector
+with `range: 1y` (`drishti.py testdata capture-market`;
+[PACK_DEVELOPER_GUIDE.md](../../docs/guides/PACK_DEVELOPER_GUIDE.md#news-and-markets-and-world-economy-offline)).
+
+## How it is built
+
+`plugins/drishti-plugin-yfinance/src/main/java/com/ash/drishti/plugin/yfinance/`: `YFinanceSourcePlugin` (the SPI, the cache, the single
+flight per symbol), `YFinanceSettings`, `HttpFetcher` (bounded GET with retry; carries the HTTP status so a 404 can mean "unknown
+symbol"), `ChartParser` (defensive JSON), `BoundedCache`. The module is Spring-free; it is the same shape as
+[the news connector](../drishti-plugin-news/README.md#how-it-is-built).
+
+## Tests
+
+No test calls Yahoo. `FakeYahooServer` serves, by symbol: a quote with five daily bars (one without a close), Yahoo's not-found error,
+text that is not JSON, JSON of another shape, an oversized body, a slow response, two 503s then success, a 429 then success, and a 403.
+`YFinanceSourcePluginTest` checks the parsing and the derived figures, unknown symbols, the three bad-body cases, timeout and retry, the
+cache (hit, TTL 0, the bound), bad settings and the contract of an on-demand source. The browser test
+(`drishti-console/tests/test_news_browser.py`) opens a company page over the real server with both fakes behind it.

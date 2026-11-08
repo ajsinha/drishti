@@ -19,7 +19,7 @@ import com.ash.drishti.compute.linalg.LinearAlgebra;
 import java.util.List;
 
 /**
- * Parametric (variance–covariance) VaR and ES from a scope's own scenario P&amp;L vector (docs/architecture/PARAMETRIC_VAR.md, VAR_GUIDE.md
+ * Parametric (variance–covariance) VaR and ES from a scope's own scenario P&amp;L vector (docs/guides/VAR_GUIDE.md, VAR_GUIDE.md
  * section 18.15): the normal fitted to the vector (μ, σ), VaR = z·σ − μ, ES = σ·φ(z_ES)/(1 − c_ES) − μ, the shape, the fat-tail gap's
  * inputs, Euler components that add up to the VaR exactly (the −μᵢ term included), the normal curve over the histogram and the parts'
  * covariance matrix. A <b>cross-check, never the official VaR</b>. Pure functions on {@code double[]}, two passes in float64 in scenario

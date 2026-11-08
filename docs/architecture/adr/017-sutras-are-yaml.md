@@ -19,7 +19,7 @@
 |---|---|---|
 | Accepted | 2026-09-30 | Ashutosh Sinha |
 
-Supersedes [ADR-011](011-sutras-are-markdown-documents.md). Amends ADR-003 and ADR-008 (file name).
+Supersedes ADR-011. Amends ADR-003 and ADR-008 (file name).
 
 ## Context
 ADR-011 made the standard Sutra a Markdown document (`*.sutra.md`) with one fenced `sutra` block holding the

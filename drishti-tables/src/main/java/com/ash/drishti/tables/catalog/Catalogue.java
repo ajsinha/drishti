@@ -45,7 +45,7 @@ import java.util.stream.Stream;
 
 /**
  * The catalogue of the table layer: every table and model from {@code config/tables/<domain>/<name>.table.yaml} and {@code .model.yaml}
- * (planned in VIRTUAL_TABLES.md section 4, built here) and from the item store (Q16), by name, with {@code was:} names resolved for one
+ * (planned in docs/architecture/ARCHITECTURE.md section 4, built here) and from the item store (Q16), by name, with {@code was:} names resolved for one
  * release (Q18), the checks of every definition and of the catalogue as a whole, and lineage (who uses a table). Immutable: a change is a
  * new catalogue ({@link #load}), swapped in whole by its holder.
  */
@@ -61,6 +61,8 @@ public final class Catalogue {
     private final Map<String, Entry> models = new LinkedHashMap<>();
     private final Map<String, String> was = new LinkedHashMap<>();
     private final List<Problem> problems = new ArrayList<>();
+    /** The names two definitions claimed (key: kind + name): refused, so neither is read and every reference to the name fails. */
+    private final Map<String, List<String>> refusedTwice = new LinkedHashMap<>();
 
     private Catalogue() {}
 
@@ -158,9 +160,24 @@ public final class Catalogue {
             into.put("unreadable:" + e.source(), e);
             return;
         }
+        List<String> twice = refusedTwice.get(e.kind() + ":" + e.name());
+        if (twice != null) {                                                  // a third definition of a refused name: refused too
+            twice.add(e.source());
+            problems.add(Problem.error(TableCodes.DUPLICATE, e.kind(), "'" + e.name() + "' is defined in " + String.join(", ", twice)
+                    + "; none is read: a name is unique across every domain folder (keep one, rename or remove the others)").in(e.source()));
+            return;
+        }
         Entry before = into.putIfAbsent(e.name(), e);
         if (before != null) {
-            problems.add(Problem.error(TableCodes.DUPLICATE, e.kind(), "'" + e.name() + "' is defined twice: " + before.source() + " and " + e.source()).in(e.source()));
+            // two definitions of one name (in two domain folders, or a file and a stored item): NEITHER is read. Picking one would serve
+            // the other's readers a table or model without the rules and masks they were written with (a security hole, not a choice).
+            into.remove(e.name());
+            if (before.table() != null && before.table().was() != null && e.name().equals(was.get(before.table().was()))) {
+                was.remove(before.table().was());
+            }
+            refusedTwice.put(e.kind() + ":" + e.name(), new ArrayList<>(List.of(before.source(), e.source())));
+            problems.add(Problem.error(TableCodes.DUPLICATE, e.kind(), "'" + e.name() + "' is defined twice: " + before.source() + " and " + e.source()
+                    + "; neither is read: a name is unique across every domain folder (keep one, rename or remove the other)").in(e.source()));
             return;
         }
         if (e.table() != null && e.table().was() != null) {
@@ -246,7 +263,7 @@ public final class Catalogue {
     }
 
     /**
-     * Names are unique across virtual tables and stored tables (VIRTUAL_TABLES.md section 10, V12): each table whose name or {@code was:}
+     * Names are unique across virtual tables and stored tables (docs/architecture/ARCHITECTURE.md section 10, V12): each table whose name or {@code was:}
      * name is a stored table's ({@code stored}: the lakes' tables as {@code <domain>.<name>} and the kinds) is refused, compared without
      * case. The server passes what its lakes and packs hold; {@code tables check --stored} a list.
      */
@@ -338,7 +355,7 @@ public final class Catalogue {
     }
 
     /**
-     * Lineage (VIRTUAL_TABLES.md section 8): who in the catalogue uses {@code table}: models that read it (with their alias), tables over it,
+     * Lineage (docs/architecture/ARCHITECTURE.md section 8): who in the catalogue uses {@code table}: models that read it (with their alias), tables over it,
      * tables whose columns look it up ({@code related}). Consumers outside the layer (BI's reports, alerts, Flight's tokens) add theirs
      * through {@link Lineage}.
      */

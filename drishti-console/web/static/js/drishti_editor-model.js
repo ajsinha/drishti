@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis);
-/* The semantic model editor (docs/architecture/EDITORS.md section 3: option A as the editor, B as the Overview, C for a measure's details
+/* The semantic model editor (docs/architecture/SHARED_SCREENS.md section 3: option A as the editor, B as the Overview, C for a measure's details
    and the Access tab). Tabs with counts: Overview (the four questions), Tables (with their relationships), Fields, Measures, Hierarchies,
    Row rules, Masks, Access (roles against rows, columns and editing). A measure's ? opens its card: the formula, a plain explanation, a
    worked test value and where it is used. "Adds up?" is the engine's answer (the server's), never the author's. */

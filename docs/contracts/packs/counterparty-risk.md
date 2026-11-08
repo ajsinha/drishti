@@ -54,7 +54,7 @@ ISDA, GMRA or GMSLA master agreement with its key elections.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `legal-store` (plugin `delta`), table `<root>/legal/agreement/` |
 | Test data | data/testdata/counterparty-risk/agreement |
-| Worked example | [counterparty-risk/agreement](../samples/counterparty-risk/agreement.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/agreement](../samples/counterparty-risk.md#agreement) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -121,7 +121,7 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `legal-store` (plugin `delta`), table `<root>/legal/csa/` |
 | Test data | data/testdata/counterparty-risk/csa |
-| Worked example | [counterparty-risk/csa](../samples/counterparty-risk/csa.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/csa](../samples/counterparty-risk.md#csa) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -197,7 +197,7 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/netting-set/` |
 | Test data | data/testdata/counterparty-risk/netting-set |
-| Worked example | [counterparty-risk/netting-set](../samples/counterparty-risk/netting-set.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/netting-set](../samples/counterparty-risk.md#netting-set) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -301,7 +301,7 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/credit-limit/` |
 | Test data | data/testdata/counterparty-risk/credit-limit |
-| Worked example | [counterparty-risk/credit-limit](../samples/counterparty-risk/credit-limit.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/credit-limit](../samples/counterparty-risk.md#credit-limit) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -368,7 +368,7 @@ Credit, debit and funding valuation adjustments with sensitivities.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/cva/` |
 | Test data | data/testdata/counterparty-risk/cva |
-| Worked example | [counterparty-risk/cva](../samples/counterparty-risk/cva.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/cva](../samples/counterparty-risk.md#cva) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -443,7 +443,7 @@ Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/sa-ccr/` |
 | Test data | data/testdata/counterparty-risk/sa-ccr |
-| Worked example | [counterparty-risk/sa-ccr](../samples/counterparty-risk/sa-ccr.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/sa-ccr](../samples/counterparty-risk.md#sa-ccr) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -520,7 +520,7 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `collateral-store` (plugin `delta`), table `<root>/collateral/collateral-balance/` |
 | Test data | data/testdata/counterparty-risk/collateral-balance |
-| Worked example | [counterparty-risk/collateral-balance](../samples/counterparty-risk/collateral-balance.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/collateral-balance](../samples/counterparty-risk.md#collateral-balance) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -585,7 +585,7 @@ A variation or initial margin call and its settlement status.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `collateral-store` (plugin `delta`), table `<root>/collateral/margin-call/` |
 | Test data | data/testdata/counterparty-risk/margin-call |
-| Worked example | [counterparty-risk/margin-call](../samples/counterparty-risk/margin-call.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/margin-call](../samples/counterparty-risk.md#margin-call) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -658,7 +658,7 @@ Initial margin by risk class and product class.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `collateral-store` (plugin `delta`), table `<root>/collateral/simm/` |
 | Test data | data/testdata/counterparty-risk/simm |
-| Worked example | [counterparty-risk/simm](../samples/counterparty-risk/simm.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/simm](../samples/counterparty-risk.md#simm) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -720,7 +720,7 @@ An upstream exposure simulation of a business date: its paths, its grid of futur
 | Storage | connector `exposure-store` (plugin `delta`), table `<root>/risk/simulation-run/` |
 | Columns | `RUN_ID`, `CALIBRATION`, `PATHS`, `STATUS`, `BATCH_ID` |
 | Test data | data/testdata/counterparty-risk/simulation-run |
-| Worked example | [counterparty-risk/simulation-run](../samples/counterparty-risk/simulation-run.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/simulation-run](../samples/counterparty-risk.md#simulation-run) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -791,7 +791,7 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 | Columns | `TRADE_ID`, `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `ASSET_CLASS`, `PRODUCT`, `SOURCE_SYSTEM`, `MATURITY_DATE`, `NOTIONAL`, `GRID_INDEX`, `GRID_DATE`, `RUN_ID`, `BATCH_ID`, `STATUS` |
 | Vectors | `MTM` |
 | Test data | data/testdata/counterparty-risk/exposure-path |
-| Worked example | [counterparty-risk/exposure-path](../samples/counterparty-risk/exposure-path.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/exposure-path](../samples/counterparty-risk.md#exposure-path) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 

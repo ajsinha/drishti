@@ -62,7 +62,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Serves entities from Iceberg tables Drishti does not write (ICEBERG_EXTERNAL_CONNECTOR.md): tables of Spark, Flink,
+ * Serves entities from Iceberg tables Drishti does not write (plugins/drishti-plugin-iceberg-external/README.md): tables of Spark, Flink,
  * Trino, Snowflake, Glue, dbt or pyiceberg, in their own layout, read through drishti-iceberg (no Hadoop) and never
  * written. A kind is a table ({@code tables.<kind>.table}); its document is the row as JSON (every column; structs as
  * objects, lists as arrays, maps as objects), or a JSON column; its id is one column or several joined

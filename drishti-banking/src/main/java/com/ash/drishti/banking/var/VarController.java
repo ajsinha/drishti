@@ -185,7 +185,7 @@ public class VarController {
     }
 
     /**
-     * The {@code parametric} flag of an answer (PARAMETRIC_VAR.md section 6): absent or true keeps the block (asked while the measure is
+     * The {@code parametric} flag of an answer (docs/guides/VAR_GUIDE.md section 6): absent or true keeps the block (asked while the measure is
      * off: 403 in words); false leaves it out (a lean client), on the answer, its tree nodes and its rows. Historical fields never change.
      */
     @SuppressWarnings("unchecked")
@@ -329,7 +329,7 @@ public class VarController {
         m.put("horizons", List.of("1d", "10d"));
         m.put("rankRule", pr.rankRule());
         if (views.parametric() != null) {
-            m.put("parametric", views.parametric().props().describe());   // the cross-check's settings (PARAMETRIC_VAR.md section 5)
+            m.put("parametric", views.parametric().props().describe());   // the cross-check's settings (docs/guides/VAR_GUIDE.md section 5)
         }
         m.put("componentWindow", pr.componentWindow());
         m.put("threads", svc.sums().threads());

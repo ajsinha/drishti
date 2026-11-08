@@ -705,7 +705,7 @@ public final class BiService {
     public void pythonTestGate(java.util.function.BiFunction<Principal, BiStore.Item, List<String>> gate) { this.pythonTestGate = gate; }
 
     private volatile java.util.function.BiFunction<Principal, BiStore.Item, String> layerCheck;
-    private volatile java.util.function.BiConsumer<Principal, BiStore.Item> tablesCheck; public void tablesCheck(java.util.function.BiConsumer<Principal, BiStore.Item> c) { this.tablesCheck = c; }   // the table layer's editors (EDITORS.md): its checks refuse in words
+    private volatile java.util.function.BiConsumer<Principal, BiStore.Item> tablesCheck; public void tablesCheck(java.util.function.BiConsumer<Principal, BiStore.Item> c) { this.tablesCheck = c; }   // the table layer's editors (docs/architecture/SHARED_SCREENS.md): its checks refuse in words
 
     /**
      * Set once by the model catalogue: what publishing a data model or a {@code rachana: 2} dataset runs (Check, the contract's versioning, the security

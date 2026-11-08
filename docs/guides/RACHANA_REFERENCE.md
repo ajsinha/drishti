@@ -2407,7 +2407,7 @@ is the reference of the keys.
 
 | Key | On | Value |
 |---|---|---|
-| `source:` (a mapping) | any panel that reads data, a group of children | `{ kind, id \| where \| search, limit, as-of, pack, params }`: `id` an expression for one entity (`$src` the record); `where` a condition over each entity of the kind (`@` the entity as the viewer sees it; at most `limit`, default 20, of the first 500); `search` an expression for the text searched (`$src` the list found); `as-of` a business date; `pack` the pack serving the kind; `params` (only with `id`) a computed kind's parameters, `{ name: expression }`, read as `ID~name=value` by a reactive connector ([REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md#reading-a-computed-kind)); a `params` that is not a mapping, a bad name or a value that is not text, a number or true/false is `DRS-2012`, `params` with `where` or `search` is `DRS-2057`. Written as text (`"link(...)"`) it is the older form: the panel reads that linked entity as `$`. `{ table, where, limit, as-of }` reads a virtual table instead of a kind ([TABLES_GUIDE.md](TABLES_GUIDE.md)): its rows as the viewer may read them are `$src`, `where` keeps rows (`@` each row), a table takes no `kind`, `pack`, `id`, `search` or `params` (`DRS-2057`), a name that is not `<domain>.<name>` is `DRS-2012`. |
+| `source:` (a mapping) | any panel that reads data, a group of children | `{ kind, id \| where \| search, limit, as-of, pack, params }`: `id` an expression for one entity (`$src` the record); `where` a condition over each entity of the kind (`@` the entity as the viewer sees it; at most `limit`, default 20, of the first 500); `search` an expression for the text searched (`$src` the list found); `as-of` a business date; `pack` the pack serving the kind; `params` (only with `id`) a computed kind's parameters, `{ name: expression }`, read as `ID~name=value` by a reactive connector ([REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md#reading-a-computed-kind)); a `params` that is not a mapping, a bad name or a value that is not text, a number or true/false is `DRS-2012`, `params` with `where` or `search` is `DRS-2057`. Written as text (`"link(...)"`) it is the older form: the panel reads that linked entity as `$`. `{ table, where, limit, as-of }` reads a virtual table instead of a kind ([TABLES_GUIDE.md](TABLES_GUIDE.md)): its rows as the viewer may read them are `$src`, `where` keeps rows (`@` each row), a table takes no `kind`, `pack`, `id`, `search` or `params` (`DRS-2057`), a name that is not `<domain>.<name>` is `DRS-2012`. |
 | `emits:` | table, ladder (`on: row-click`), hbar (`on: bar-click`) | a list of `{ name, on, payload }`; `payload` maps a field to an expression over the clicked row (`"@.TRADE_ID"`) or to `{ bind, type }`, `type` one of `id`, `text`, `number`, `date`, `bool` |
 | `waits:` | any wired panel | what the panel says while an event it reads has not fired (default: "Pick a row in <panel> to fill this panel") |
 | `children:` (a list) | any screen or child panel | groups `{ place, show, source, waits, panels }`: `place` `expand-row` (a table or ladder), `detail-right`, `detail-below` (the default), `tabs`; `show` `on-select` (the default), `always`, `on-expand`; `panels` panels or fragment uses with ids unique on the screen; three levels at most. Written as text it is a tree table's `children: "@.KIDS"`. |
@@ -3103,7 +3103,7 @@ function's Excel and SAS equivalents and what is still to come, is [FUNCTION_CAT
 the list generated from the registries, every function once with where it runs, is [FUNCTIONS.md](FUNCTIONS.md) (Help → Functions).
 
 **Aggregates come from the pivot engine.** Rachana's own functions are scalars (one value from values). Every aggregate is the pivot
-engine's (`drishti-bicompute`), registered into Rachana's one table when it starts ([ONE_GRAMMAR.md](../architecture/ONE_GRAMMAR.md)
+engine's (`drishti-bicompute`), registered into Rachana's one table when it starts ([ONE_GRAMMAR.md](../architecture/ARCHITECTURE.md#23-one-grammar-one-engine)
 parts 1 to 3): the same function a pivot cell runs, with one treatment of empty values and masks. They are `sum`, `count`, `avg`,
 `min` and `max` over one list (with several arguments `min` and `max` are the old spelling of `least` and `greatest`), `median`,
 `percentile`, `distinct`, `wavg`, `variance`, `stddev`, `variance_pop`, `stddev_pop`, the once-per-parent `sum_once`, `count_once`
@@ -4506,7 +4506,7 @@ pictures is `tools/docs/shots/panels.py` (driver: `tools/docs/screenshots.py`). 
 
   ```bash
   export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-  ./mvnw -o -q package -DskipTests -pl drishti-server -am          # the driver starts the packaged server on :18997 and the console on :17997
+  ./mvnw -o -q package -DskipTests -pl drishti-app -am          # the driver starts the packaged server on :18997 and the console on :17997
   drishti-console/.venv/bin/python tools/docs/screenshots.py --guide panels --only metric
   drishti-console/.venv/bin/python tools/docs/screenshots.py --list --guide panels
   ```
@@ -4594,7 +4594,7 @@ export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64            # or any JDK 21 o
 ./mvnw -o -q install -N                                         # the parent POM, once
 # the engine, grammar and your test:
 ./mvnw -o -q test -pl drishti-rachana,drishti-engine,drishti-server -am -Dtest='MetricPanelTest,StudioTest,AutoDesignerTest,OpApplierTest,ExamplePreviewTest' -Dsurefire.failIfNoSpecifiedTests=false
-./mvnw -o -q package -DskipTests -pl drishti-server -am         # then the jar the browser tests drive
+./mvnw -o -q package -DskipTests -pl drishti-app -am         # then the jar the browser tests drive
 ./mvnw spotless:apply                                           # formatting (Java)
 python3 tools/license_headers.py --fix                          # the copyright header on new files
 # the console, from the repository root:
@@ -4934,7 +4934,7 @@ is today's option, unchanged (the panel reads that linked entity as `$`).
 | `search` | instead of `id`: an expression for the text searched in the kind; `$src` is the list of the entities found, at most `limit` |
 | `limit` | 1 to 200 (default 20), for `where` and `search` |
 | `as-of` | an expression for the business date read (`YYYY-MM-DD`); the screen's date when absent |
-| `params` | (with `id`) a computed kind's typed parameters, `name: expression` (a number or true/false is its own literal): the server evaluates them as the viewer and reads the kind with the id `ID~name=value`; the reactive connector checks them and the panel shows *computing*, *stale*, *failed* or *refused* in place ([REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md#reading-a-computed-kind)); `DRS-2012` for a bad shape, `DRS-2057` with `where` or `search` |
+| `params` | (with `id`) a computed kind's typed parameters, `name: expression` (a number or true/false is its own literal): the server evaluates them as the viewer and reads the kind with the id `ID~name=value`; the reactive connector checks them and the panel shows *computing*, *stale*, *failed* or *refused* in place ([REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md#reading-a-computed-kind)); `DRS-2012` for a bad shape, `DRS-2057` with `where` or `search` |
 | `pack` | the pack serving the kind: documentation and lint today (a kind is served by one connector; routing is by kind) |
 | `model` | a BI model source: refused (`DRS-2057`), not built yet |
 
@@ -5348,7 +5348,7 @@ collapsible; `ScreenGrid`), and the console draws it (`core/screen_grid.py`, `te
 
 #### Phone: what goes to a phone
 
-The page a phone gets ([MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md), [USER_GUIDE.md, On a phone](USER_GUIDE.md#on-a-phone)):
+The page a phone gets ([MOBILE_DISPLAY.md](PACK_DEVELOPER_GUIDE.md#part-ix-designing-for-phones), [USER_GUIDE.md, On a phone](USER_GUIDE.md#on-a-phone)):
 each panel has a **tier**: `must` (in full, first), `glance` (a compact form), `more` (a row under *More on this page*, loaded when
 tapped) or `desk` (named under *On desktop*). A phone downloads only its must and glance panels; a desktop is unchanged.
 

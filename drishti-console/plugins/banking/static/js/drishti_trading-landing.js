@@ -21,7 +21,7 @@
    pnl-var (the desk's P&L against VaR) and traders (by trader); the new-trade check posts to /api/home/trading/check. Each panel is painted
    when its answer arrives; one refused or empty says so in place and the others carry on. Nothing is invented: a figure the data cannot
    give is left out (DV01) or says why. Every total (MtM, P&L, DV01, by book and trader, the counterparty share) is the server's pivot
-   engine's, shown as it comes: nothing here adds up a figure (ONE_GRAMMAR.md section 5). The chart is SVG built through the DOM (the page's policy allows no inline style). */
+   engine's, shown as it comes: nothing here adds up a figure (docs/architecture/ARCHITECTURE.md section 5). The chart is SVG built through the DOM (the page's policy allows no inline style). */
 (function () {
   "use strict";
   var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)

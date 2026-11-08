@@ -31,7 +31,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * What the model editor says of a measure (EDITORS.md section 3): whether its total adds up, and its formula in plain words. "Adds up?" is the
+ * What the model editor says of a measure (docs/architecture/SHARED_SCREENS.md section 3): whether its total adds up, and its formula in plain words. "Adds up?" is the
  * engine's answer, never the author's: each aggregate is looked up in the pivot engine's own functions ({@link Functions#builtIn}), and a total
  * adds up only when every aggregate in it is one whose total is the plain sum of its parts ({@link AggFunction#plainSum()}: sum, count) and
  * they are only added, subtracted or scaled by a number. Everything else (an average, a ratio, VaR, a distinct count) is computed per total.

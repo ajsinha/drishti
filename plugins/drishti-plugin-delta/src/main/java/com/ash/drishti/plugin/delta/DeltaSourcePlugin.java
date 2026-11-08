@@ -279,7 +279,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         // local disk or object storage (s3a://, abfs://, gs://), read by the native engine or Hadoop's (`engine`): the
         // rest of the connector does not know which
         String root = ctx.setting("root", com.ash.drishti.api.DataDir.under("delta/demo"));   // no root and no lake: the demo lake's own folder
-        // a lake in memory (mem://, IN_MEMORY_LAKE.md section 8): memory-only by contract, so nothing of it may reach a disk here either:
+        // a lake in memory (mem://, docs/architecture/DATA_ARCHITECTURE.md section 8): memory-only by contract, so nothing of it may reach a disk here either:
         // no id-map files, no document cache on disk, no index segments on disk (the memory caches still apply)
         this.memoryOnly = com.ash.drishti.lakeio.StorageProviders.memoryOnly(root);
         this.lake = LakeStore.of(root, ctx.setting("domain", ""), ctx.settings());

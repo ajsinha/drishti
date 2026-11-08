@@ -2151,7 +2151,7 @@ refused (the code and its message on standard error) or some days could not be r
 ### `compute`: reactive connectors
 
 Asks a reactive connector for a computed kind as you, cancels one of your requests, sends an event to the triggers (administrators),
-lists your what-if sandboxes, and prints Admin's view of the reactive connectors ([REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md)):
+lists your what-if sandboxes, and prints Admin's view of the reactive connectors ([REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md)):
 
 ```text
 drishti.py compute run path-sum-java path-sum-java BOOK-FX --param delay-ms=20     the answer: state, request id, headline fields, stamp
@@ -3152,7 +3152,7 @@ A GitHub Actions job (the jar is built once and reused):
 ```yaml
 - uses: actions/setup-java@v4
   with: { distribution: temurin, java-version: 21 }
-- run: ./mvnw -q -DskipTests -pl drishti-server -am package
+- run: ./mvnw -q -DskipTests -pl drishti-app -am package
 - uses: astral-sh/setup-uv@v5
 - run: uv run --with pyyaml python tools/drishti.py pack check config/packs/my-bank --strict --junit build/reports
 - uses: actions/upload-artifact@v4

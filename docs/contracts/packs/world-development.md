@@ -41,7 +41,7 @@ One country's World Development Indicators: the latest of each, the world map sh
 | Cadence | daily (due: the world-development feed's schedule (30 6 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Storage | connector `development-store` (plugin `delta`), table `<root>/development/development-profile/` |
 | Test data | config/packs/economy/world-development/samples |
-| Worked example | [world-development/development-profile](../samples/world-development/development-profile.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [world-development/development-profile](../samples/world-development.md#development-profile) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -128,7 +128,7 @@ One World Development Indicator of one country by year: the history, the latest 
 | Cadence | daily (due: the world-development feed's schedule (30 6 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Storage | connector `development-store` (plugin `delta`), table `<root>/development/development-series/` |
 | Test data | config/packs/economy/world-development/samples |
-| Worked example | [world-development/development-series](../samples/world-development/development-series.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [world-development/development-series](../samples/world-development.md#development-series) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 

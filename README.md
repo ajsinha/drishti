@@ -176,7 +176,7 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
   inbox), `drishti.py feed list|run|status|schedule`, and Admin → Data loads → Feeds with an alert when a run fails. The data goes under
   `data/datafeeds/`. Feeds: World Bank WDI, central banks, Statistics Canada, OECD, official news, GDELT, GLEIF, US equities, funds,
   market data and, for internal use only, the IMF forecasts, Yahoo prices and market headlines ([EXTERNAL_DATA.md](docs/guides/EXTERNAL_DATA.md)).
-- **In-memory lakes** (`mem://`) for data that never touches disk, such as news ([IN_MEMORY_LAKE_GUIDE.md](docs/guides/IN_MEMORY_LAKE_GUIDE.md)).
+- **In-memory lakes** (`mem://`) for data that never touches disk, such as news ([IN_MEMORY_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md#13-the-in-memory-lake)).
 - **Data contracts**: one per mnemonic, stating what the upstream engines deliver and what Drishti answers ([docs/contracts/](docs/contracts/README.md)).
 
 ## Data out

@@ -44,7 +44,7 @@ A book of synthetic P&L strips, and the sum of their paths computed when the pag
 | Storage | connector `compute-demo-store` (plugin `delta`), table `<root>/compute-demo/path-book/` |
 | Columns | `BOOK_ID`, `NAME`, `DESK`, `STRIP_COUNT` |
 | Test data | config/packs/core/compute-demo/samples |
-| Worked example | [compute-demo/path-book](../samples/compute-demo/path-book.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [compute-demo/path-book](../samples/compute-demo.md#path-book) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -93,7 +93,7 @@ A synthetic P&L strip of the compute-demo pack: one path vector in a path book, 
 | Storage | connector `compute-demo-store` (plugin `delta`), table `<root>/compute-demo/path-strip/` |
 | Columns | `STRIP_ID`, `BOOK_ID`, `INSTRUMENT`, `DAYS` |
 | Test data | config/packs/core/compute-demo/samples |
-| Worked example | [compute-demo/path-strip](../samples/compute-demo/path-strip.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [compute-demo/path-strip](../samples/compute-demo.md#path-strip) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 

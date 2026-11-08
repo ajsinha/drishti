@@ -42,7 +42,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 /**
- * The editors' API (EDITORS.md sections 1 to 4) on a real server over the demo source: checks as typed with problems at their lines, the
+ * The editors' API (docs/architecture/SHARED_SCREENS.md sections 1 to 4) on a real server over the demo source: checks as typed with problems at their lines, the
  * visual side's document written back as the layer's YAML, the Text toggle's statement, a preview read as the person (totals by the pivot
  * engine), a model's measures with the engine's "adds up?", the Access matrix, saving and proposing with four eyes, the per-person view, and
  * the Python table's text work. Users: ann writes (bi-author), bob writes and approves, cat reads (bi), dan has no BI.

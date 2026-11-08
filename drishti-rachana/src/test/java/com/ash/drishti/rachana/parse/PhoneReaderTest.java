@@ -29,7 +29,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** The phone display's grammar (MOBILE_DISPLAY.md section 5): a panel's tier, its compact options, the screen's block, a fragment's doc.phone. */
+/** The phone display's grammar (docs/guides/PACK_DEVELOPER_GUIDE.md section 5): a panel's tier, its compact options, the screen's block, a fragment's doc.phone. */
 class PhoneReaderTest {
 
     @TempDir Path dir;

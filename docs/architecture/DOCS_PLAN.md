@@ -17,7 +17,7 @@
 # Documentation plan for 2.9.11.h (internal, for the product owner's approval)
 
 **Status: proposal, 2026-11-07. Nothing is rewritten or deleted until the owner approves.** This file is internal and is deleted
-when 2.9.11.h is released (it supersedes [TUTORIAL_INVENTORY.md](TUTORIAL_INVENTORY.md)).
+when 2.9.11.h is released (it supersedes TUTORIAL_INVENTORY.md).
 
 **The rules it applies** (owner, 2026-10-26 to 2026-11-06): fewer documents, no repeated content; each fact has one home (a field → its
 data contract, a setting → CONFIGURATION.md, a function → the function catalogue, an endpoint → the API reference, a measure's maths → its

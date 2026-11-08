@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Who uses a table or a model (VIRTUAL_TABLES.md section 8): the catalogue's own uses ({@link Catalogue#usedBy}) and every consumer outside
+ * Who uses a table or a model (docs/architecture/ARCHITECTURE.md section 8): the catalogue's own uses ({@link Catalogue#usedBy}) and every consumer outside
  * the layer that registers a {@link Consumers} source: BI's reports, boards, alerts and subscriptions (their MQs name models), the pivot's
  * saved views, Flight. The layer never reads those consumers' types: they answer in names, so BI depends on the layer and not the
  * reverse.

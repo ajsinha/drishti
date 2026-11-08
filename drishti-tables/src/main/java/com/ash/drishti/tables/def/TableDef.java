@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A virtual table (VIRTUAL_TABLES.md section 4; BI_FOUNDATION_2911E.md section 3.1): a named, typed table over any kind any connector serves,
+ * A virtual table (docs/architecture/ARCHITECTURE.md section 4; docs/architecture/BI_DESIGN.md section 3.1): a named, typed table over any kind any connector serves,
  * a lake table, a SQL query, a Python transform, a model's answer (a summary table, Q13) or another virtual table. Its columns are scalar
  * Rachana paths or row-scope expressions over the source ({@code $} the entity, {@code @} the grain's element, {@code ^} the element's
  * parent); its rules and masks are on the table and apply to every reader (Q9).
@@ -93,7 +93,7 @@ public record TableDef(String name, String was, String version, Map<String, Obje
     }
 
     /**
-     * Where the rows come from (BI_FOUNDATION_2911E.md section 3.1, {@code from:}). Exactly one form is set.
+     * Where the rows come from (docs/architecture/BI_DESIGN.md section 3.1, {@code from:}). Exactly one form is set.
      *
      * @param kind an entity kind any connector serves, or null
      * @param pack the pack that defines the kind, or null
@@ -162,7 +162,7 @@ public record TableDef(String name, String was, String version, Map<String, Obje
     }
 
     /**
-     * How a table's rows are kept (VIRTUAL_TABLES.md section 6 as amended by Q14).
+     * How a table's rows are kept (docs/architecture/ARCHITECTURE.md section 6 as amended by Q14).
      *
      * @param mode {@code none} (read on demand), {@code on-load} (Parquet per business date, rebuilt on the data-load signal), {@code live}
      *     (in memory, maintained by key from what the source pushes)

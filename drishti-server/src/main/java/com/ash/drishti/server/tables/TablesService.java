@@ -48,7 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The server's virtual tables (VIRTUAL_TABLES.md section 10; TABLES_GUIDE.md section 7a): the catalogue of {@code drishti.tables.root},
+ * The server's virtual tables (docs/architecture/ARCHITECTURE.md section 10; TABLES_GUIDE.md section 7a): the catalogue of {@code drishti.tables.root},
  * read again when a file under it changes, and a read per request for one person ({@link #reads}) whose source is the kind read through its
  * connector as the Data view reads it ({@link DataViewService#walk}): the person's entitlement to the kind, the edition's kinds, and their
  * masks on every document. Nothing here calls a SQL engine: consumers stage the rows through their own executor (the pivot's), V14.
@@ -94,7 +94,7 @@ public final class TablesService {
     }
 
     /**
-     * The stored tables and models (BI's item store: what the editors publish, BI_FOUNDATION_2911E.md Q16) beside the files: the pivot, Sutras,
+     * The stored tables and models (BI's item store: what the editors publish, docs/architecture/BI_DESIGN.md Q16) beside the files: the pivot, Sutras,
      * Flight and BI then read one catalogue. Set once at start.
      */
     public void itemStore(ItemStore store) {

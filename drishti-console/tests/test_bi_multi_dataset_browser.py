@@ -45,12 +45,12 @@ PY_DATASET = "file:table:banking.desk_pnl_vs_exposure_py_result"   # the table t
 
 class Stack(bi_report_stack.ReportStack):
     def prepare(self, work):
-        from bi_samples import copy_samples
+        from bi_samples import copy_samples, shipped
         copy_samples(work / "config/bi", ["trading-risk", "counterparty-exposure", "desk-pnl-vs-exposure-py"])   # the models, their datasets, the Transform
         for folder, suffix, name in (("reports", "report", "pnl-vs-exposure"), ("notebooks", "notebook", "pnl-vs-exposure-pandas")):
             target = work / "config/bi" / folder
             target.mkdir(parents=True, exist_ok=True)
-            (target / f"{name}.{suffix}.yaml").write_text((ROOT / "config/bi" / folder / f"{name}.{suffix}.yaml").read_text(encoding="utf-8"), encoding="utf-8")
+            (target / f"{name}.{suffix}.yaml").write_text(shipped(folder, f"{name}.{suffix}.yaml").read_text(encoding="utf-8"), encoding="utf-8")
         # the server runs Python on its compute pool python, in the interpreter that runs this test (it carries the pinned libraries)
         self.server_args += ["--DRISHTI_COMPUTE_ENABLED=true", f"--DRISHTI_PYTHON={sys.executable}", f"--drishti.compute.file={ROOT}/config/compute/compute.yaml"]
 

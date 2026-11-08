@@ -93,7 +93,7 @@ final class WiringReader {
     }
 
     /**
-     * A virtual table as a panel's source (VIRTUAL_TABLES.md V13): {@code source: { table: trading.trade_legs, where: "...", limit, as-of }};
+     * A virtual table as a panel's source (docs/architecture/ARCHITECTURE.md V13): {@code source: { table: trading.trade_legs, where: "...", limit, as-of }};
      * the rows are {@code $src}, read as the viewer may read the table. A table takes no kind, pack, id, search or parameters.
      */
     private Wiring.Source tableSource(PNode n, Map<String, PNode> m) {

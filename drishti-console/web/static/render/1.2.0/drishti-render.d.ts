@@ -105,7 +105,7 @@ export interface RenderOptions {
   signInWindow?: 'auto' | 'popup' | 'tab' | 'redirect';
   /** Fetch credentials (default: same-origin, or include with a server). */
   credentials?: RequestCredentials;
-  /** The device class sent as X-Drishti-Device (MOBILE_DISPLAY.md section 6). */
+  /** The device class sent as X-Drishti-Device (docs/guides/PACK_DEVELOPER_GUIDE.md section 6). */
   device?: 'phone' | 'tablet' | 'desk';
   /** The URL of a view or of its stream, when the host proxies them. */
   viewUrl?: (ref: { kind: string; id: string }) => string;

@@ -81,7 +81,7 @@ export function buildPnlDistribution(spec, rows, env) {
     annotations: [{ type: 'line', axis: 'x', value: -v, label: 'VaR ' + pct(conf.var), tone: 'bad', style: 'solid' }, { type: 'line', axis: 'x', value: -es, label: 'ES ' + pct(conf.es), tone: 'accent' }].concat(spec.annotations || []) });
   const p = spec.parametric;
   if (p && num(p.var) !== null) {
-    // the fitted normal (PARAMETRIC_VAR.md section 8): the server's curve on the bars' scale and its VaR, drawn as given
+    // the fitted normal (docs/guides/VAR_GUIDE.md section 8): the server's curve on the bars' scale and its VaR, drawn as given
     s.annotations = s.annotations.concat([{ type: 'line', axis: 'x', value: -num(p.var), label: 'parametric ' + env.fmt(num(p.var)), tone: 'warn', style: 'dashed', showValue: false }]);
   }
   const b = buildHistogram(s, rows, env);

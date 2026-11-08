@@ -15,7 +15,7 @@
   See the LICENSE file in the root of this repository for the full terms.
 
   A screen mock-up (data-out/C.html), self-contained: system fonts, everything inline, nothing from a CDN.
-  Dark theme by default; open it with #light for the light theme. Its requirement is in docs/architecture/ARROW_FLIGHT.md (Q3–Q9, Q11: Admin → Data out).
+  Dark theme by default; open it with #light for the light theme. Its requirement is in docs/architecture/DATA_ARCHITECTURE.md (Q3–Q9, Q11: Admin → Data out).
 -->
 <html lang="en">
 <head>
@@ -224,7 +224,7 @@ tr.hot td{background:var(--bad-t)} tr.live td{background:var(--hl)}
 <div class="why"><div class="card"><h3>How it feels</h3><ul><li>Densest and most familiar: sort, filter, page, as on Data loads.</li><li>Counts answer "is anything wrong?" before any table.</li></ul></div>
 <div class="card"><h3>Trade-offs</h3><ul><li>A node down is a row and a count, less visible than A's banner or B's map.</li><li>Many columns: wide on a phone.</li></ul></div>
 <div class="card"><h3>Build</h3><ul><li>Cheapest: the console's table component.</li><li>Same data as A.</li></ul></div></div>
-<footer>Mock-up. Design, not built: Admin → Data out for the Arrow Flight service (planned, ARROW_FLIGHT.md; the questions' recommendations are drawn as if accepted). Every name, address and number is invented for the picture; addresses are the nodes' real LAN addresses, never localhost. Stop ends a stream with a reason the client sees; Revoke ends the token's streams too. The command word DATAOUT is illustrative. Phone width: cards stack, tables scroll in their frame. Open with #light for the light theme.</footer>
+<footer>Mock-up. Design, not built: Admin → Data out for the Arrow Flight service (planned, docs/architecture/DATA_ARCHITECTURE.md; the questions' recommendations are drawn as if accepted). Every name, address and number is invented for the picture; addresses are the nodes' real LAN addresses, never localhost. Stop ends a stream with a reason the client sees; Revoke ends the token's streams too. The command word DATAOUT is illustrative. Phone width: cards stack, tables scroll in their frame. Open with #light for the light theme.</footer>
 </div>
 </body>
 </html>

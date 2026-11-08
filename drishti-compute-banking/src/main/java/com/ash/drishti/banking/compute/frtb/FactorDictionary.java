@@ -23,7 +23,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * The factor dictionary (the kind {@code risk-factor}, SENSITIVITIES_AND_FRTB_SA.md section 3): every risk factor by its standard name with
+ * The factor dictionary (the kind {@code risk-factor}, docs/guides/FRTB_SA_GUIDE.md section 3): every risk factor by its standard name with
  * its class, type, parts and FRTB bucket, and the names the source systems give it. A source name maps to exactly one factor: a name in
  * two rows refuses the dictionary. A sensitivity whose factor is in no row (by its name or a source name) is refused and counted, never
  * guessed from its name.

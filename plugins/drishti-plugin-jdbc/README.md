@@ -68,7 +68,7 @@ settings:
 auth: Database user and password (password as ${ENV} or file:, never in the URL); for PostgreSQL the shared tls.* settings, including a client certificate; other drivers take their TLS options in the URL.
 licence: PostgreSQL JDBC driver (BSD-2-Clause), shipped with the server; any other driver (MySQL, SQL Server, Oracle) is yours to put on the class path under its own licence.
 windows: Works the same on Windows (pure Java driver); there is no Windows loader script, so load PostgreSQL from Linux or with your own SQL.
-doc: docs/connectors/POSTGRES_CONNECTOR.md
+doc: plugins/drishti-plugin-jdbc/README.md
 ---
 # The jdbc connector
 
@@ -163,7 +163,7 @@ underscore is kept, a quoted label is kept as written); a column named `json` is
 `business_date` columns are read as the version and the date; `json`/`jsonb` columns and those in `json-columns` become nested data.
 A part is a list of row objects under the field `<part>` (`part-shape.<kind>.<part>: object` takes the first row). In
 `columns.<kind>` the first column is the id. The shipped packs use UPPER_SNAKE names, so with them return the document in one `json`
-column (see JDBC_QUERIES.md, section 9).
+column (see [Query mode: the queries](#query-mode-the-queries)).
 
 ## Examples
 
@@ -215,12 +215,423 @@ generated book, `--keep-months N` for retention).
   run that query in a client with the parameters filled in.
 - Searches say `partial: true`: the field is not promoted (table mode) or not a column of `columns.<kind>` (query mode).
 - `tls.* is set and the url also carries driver TLS options (sslmode, sslrootcert, ...): give TLS one way`: use one form.
+- Reads fail with `DRS-1003` while the database is down (never "not held"); a connector without `kinds` that has not read its table
+  since start says `… has not read its table yet`, and reads its catalogue again after 10 s, then every `refresh-seconds`.
+- `UP (catalogue not refreshed: …)`: the last refresh failed (database restarting, table being recreated); it retries by itself.
+- Type-ahead misses new trades: the load finished less than `refresh-seconds` ago.
+- Loader `… is a plain table of the old layout: load with --recreate`: the table is not partitioned; load with `--recreate`.
+- A picked date returns nothing for a snapshot kind: the newest date on or before it is more than `lookback-days` older; load every
+  business date, or set `mode.<kind>: effective` for data that changes rarely.
+- A search on an older day is slow every time: raise `columns-cache-mb` (about 230 MB per million trades a day).
+- Query mode: no suggestions for a kind (no `ids.<kind>`, or it failed: see the server log); a part missing from the document (its
+  query returned no rows: a list part is `[]`, an object part `null`); views wait, then `no free connection in … pool` (raise
+  `pool-size`); `UP (columns.<kind> returned N rows for M entities …)` or entities missing from searches (`columns.<kind>` joins a
+  child table: return one row per entity).
+- The connector is missing from `/sources` and the log says `… is installed but not configured (jdbc needs settings.url)`: `url`
+  is empty (an unset variable); `No suitable driver`: put the database's driver jar in `DRISHTI_PLUGIN_DIR`; a picked date shows
+  the latest data: the query does not use `:asOf`.
+- TLS: `PKIX path building failed`: the server certificate's CA is not in `tls.ca-file`; `The hostname … could not be verified`:
+  connect by a name the certificate carries; `FATAL: connection requires a valid client certificate`: set `tls.cert-file` and
+  `tls.key-file`; `FATAL: no pg_hba.conf entry … no encryption`: the connection was plain text and only `hostssl` lines exist;
+  `tls.* is set but tls.enabled is not true`: add `tls.enabled: true`.
 
-Every health text is in the full documents, sections *Diagnosing*.
+`GET /api/v1/admin/health` shows the catalogue (`ids`, `kinds`, `datesIndexed`, `columnSets`; in query mode also `parts`).
+
+## Table mode: why this layout
+
+A plain `(kind, id, business_date, doc)` table is fine at a few thousand entities. At a million trades a day for years every
+question becomes a scan: `LIKE` over every row for type-ahead, `MAX(business_date)` per read, documents parsed for every search,
+`jsonb_path_exists` for linked entities, and retention as a huge `DELETE` and `VACUUM`. The layout under
+[Data structure](#data-structure) answers each:
+
+- **Partitioned by month.** A business day sits in one partition, so every query that names a date reads one partition and its
+  indexes, and dropping a month is dropping a table: instant, nothing to vacuum. Seven years is 84 partitions of about 21 million
+  trade rows each (daily partitions would mean 1,760 tables and slower planning).
+- **The document stays whole,** as `jsonb` in TOAST storage compressed with LZ4, so the row itself is small (the promoted columns
+  and a pointer) and SQL can still answer any question about the document.
+- **Promoted columns are copies** of the fields questions filter, sort, group and link by; reading a day's columns reads the small
+  rows, never the documents. A declared path the table lacks shows in Health. The pack declares them as for Delta Lake (how to
+  choose them: [the delta connector](../drishti-plugin-delta/README.md)); a connector file repeats them as `layout.<kind>.columns`.
+- **The primary key** `(kind, id, business_date)` serves single reads with one probe in one partition; **`(kind, business_date,
+  id)`** holds a day's ids in order, so type-ahead reads them from the index alone and a day is cut into equal id ranges read on
+  several connections.
+- **`entity_dates`** lists each kind's dates and load times, so the connector never asks the large table which days exist and
+  knows when a load replaced a day.
+
+## Table mode: loading
+
+`tools/load-postgres.sh` loads the banking packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large
+generated book, through `PostgresLoader` (in the plugin):
+
+```bash
+tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti                               # samples: 1,791 documents x 10 days
+tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti --trades 50000                # and 50,000 trades a day for 3 days
+tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti --trades 1000000 --days 3     # the scale test
+tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti --keep-months 84              # keep seven years
+```
+
+- **Input:** loader rows, one JSON line per entity per day (`{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`),
+  as `make_data.py --jsonl FILE.tar` and `bulk_trades.py --jsonl FILE.tar` write them (tars of `<kind>/<YYYY-MM-DD>/rows.jsonl`
+  folders); `-` reads standard input (one kind on one date). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and
+  `.jsonl.gz` in it, in name order.
+- **Business dates come from outside the row** ([the load rules](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)):
+  a tar's folder names the date; a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-`) is one kind on one date: `--as-of`, else
+  its `.ready` file's `business-date:`, else the date in its name, else the business today. Rows whose own `date` differs are
+  loaded under the file's date and counted; a plain file of two kinds, or `--as-of` with a tar, is refused. A row dated after
+  tomorrow in the business zone is not loaded and the load ends with an error.
+- **`COPY`, in parallel, into a stage:** batches of `--batch` rows on `--writers` connections into an unlogged, unindexed stage
+  table (`<schema>.entities_load_<token>`). At a million trades the generator sets the pace (3,000,000 rows in 172 s, 156 s of it
+  generating).
+- **The table is made as needed:** schema, partitioned table, indexes and `entity_dates`; a month's partition when a date in it
+  first arrives; a promoted column when a path first arrives with a value (`ALTER TABLE … ADD COLUMN`, which rewrites nothing).
+- **A day is replaced whole, in one transaction:** each staged (kind, day) is published on its own (up to `--writers` at once): the
+  day's rows deleted, the staged rows inserted, the day and its row count recorded in `entity_dates`. Readers see the old day or
+  the new one, never half. Two loads of the same day are serialised by an advisory lock; the later replaces the earlier whole.
+- **A load that fails or is killed changes nothing** a reader sees; its stage is dropped by itself or by the next load of the domain.
+- **`--recreate`** builds each domain anew in a shadow schema and swaps it in in one transaction (the samples' load uses it); a
+  table that is not partitioned is refused until then.
+- **A bad row names itself** (`line 3 (id T-BAD): the doc contains \u0000 ...`: PostgreSQL text cannot store `\u0000`) and fails the
+  load before anything is published. **A duplicate id is not an error:** the last line of a (kind, date) wins, and the first ten
+  are named on standard error.
+- **At the end** every partition written is vacuumed and analysed, so type-ahead reads ids from the index alone.
+
+Options: `--user`, `--password` (default `DRISHTI_PG_USER`/`DRISHTI_PG_PASSWORD`, else `drishti`), `--writers` (8), `--batch`
+(2,000), `--pool-size N` (20, or `DRISHTI_DB_POOL_SIZE`; `--writers` is capped at one less), `--recreate`, `--keep-months N`,
+`--as-of yyyy-MM-dd` (a plain file's business date, refused for a tar), `--future-days N` (1), `--zone Z` (`DRISHTI_BUSINESS_ZONE`,
+else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`.
+
+**Your own loader** (an ETL job, a Kafka consumer) writes the same rows. For one business day:
+
+```sql
+CREATE TABLE IF NOT EXISTS trading.entities_y2026m10 PARTITION OF trading.entities FOR VALUES FROM ('2026-10-01') TO ('2026-11-01');
+BEGIN;
+DELETE FROM trading.entities WHERE kind = 'trade' AND business_date = '2026-10-01';
+COPY trading.entities (kind, id, business_date, doc, "TRADE_ID", "QUANTITY", "CURRENCY", "PORTFOLIO", "COUNTERPARTY", …) FROM STDIN;
+INSERT INTO trading.entity_dates (kind, business_date, rows) VALUES ('trade', '2026-10-01', 1000000)
+  ON CONFLICT (kind, business_date) DO UPDATE SET rows = EXCLUDED.rows, loaded_at = now();
+COMMIT;
+VACUUM (ANALYZE) trading.entities_y2026m10;
+```
+
+What matters: the promoted columns hold exactly the document's values, a day is written whole and recorded in `entity_dates`, and
+the partition is vacuumed after a large load.
+
+## Table mode: how the connector reads
+
+- **Catalogue,** at start and every `refresh-seconds`: `entity_dates` (each kind's dates and last load; without it, a skip scan of
+  the index, one probe per date), the table's columns (`information_schema`), and, when a kind's newest day or last load changed,
+  that day's ids from the index alone into the in-memory type-ahead index (an `effective` kind: every day's ids). A new load time
+  drops the days of columns in memory and re-reads the newest in the background.
+- **One entity:** the snapshot date from memory (the kind's newest date on or before the date asked, within `lookback-days`), then
+  `SELECT doc::text FROM trading.entities WHERE kind = 'trade' AND id = 'MX-30000017' AND business_date = '2026-09-30'`: one
+  primary-key probe in one partition. An `effective` kind reads the newest row on or before the date.
+- **Type-ahead** answers from memory, never a query per keystroke. With `index.days: 5` (and `index.storage: mmap` for a lake
+  searched often by past date) the ids of the last five business days are kept, so a past date answers from its own ids
+  ([several business days](../../docs/architecture/ARCHITECTURE.md#91-several-business-days),
+  [sizing](../../docs/admin/OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index)); a change of `loaded_at` rebuilds them, a
+  restated day is caught every `index.reload-every`, and **Admin → Connectors → this connector → Index** reloads a day by hand.
+  Query mode keeps the newest day only.
+- **A day's columns:** `percentile_disc` over the day's ids gives `scan-threads - 1` boundaries; the ranges are read at once, each on
+  its own pooled connection and in its own transaction, streaming (`fetchSize` 20,000), selecting only the promoted columns (the
+  documents stay in TOAST). If `entity_dates` says the day was reloaded meanwhile, it is read again, so a search never mixes two
+  loads. The set is kept within `columns-cache-mb` for `columns-seconds`, dropped at once on a new load; at most two days are read
+  at a time.
+- **Reverse lookups** come from the day's promoted text columns; a kind without promoted link columns is answered with
+  `jsonb_path_exists` over at most `max-load-rows` documents. `reverse-index: false` turns them off.
+- **Derived kinds and impact** work from the column set as on Delta Lake.
+- **History** ([history queries](../../docs/architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)) is one query,
+  `SELECT doc, business_date … WHERE kind = ? AND id = ? AND business_date BETWEEN ? AND ? ORDER BY business_date`, pruned to the
+  months asked. Query mode reads day by day through `query.<kind>`.
+
+## Table mode: retention, sizing and memory
+
+`--keep-months N` drops every monthly partition older than the N newest months, counted back from the load's newest business date,
+and removes their dates from `entity_dates`, in one transaction (`postgres: dropped trading.entities_y2019m09 (keeping from
+2019-10-01)`). A run that would drop more than `--max-drop-share` of a domain's rows drops nothing and fails, unless `--force-drop`.
+Dropping a partition is a catalogue change: instant, the space returned at once. Seven years is `--keep-months 84`.
+
+**Disk:** about **3.7 GB per million trades a day** (3,005,250 rows of a month took 11 GB, 823 MB of it the rows themselves): 3
+months about 230 GB, a year 0.9 TB, seven years 6.5 TB in 84 partitions. Every read touches one partition, so the size of history
+does not slow reads, but backups, replicas and storage grow with it. A common split keeps recent history in PostgreSQL and the full
+history in Delta Lake (or Iceberg): a second connector for the same kind with the same layout, PostgreSQL first in the route; a read,
+a search, a pick list, a derived kind and impact take the first connector that holds the business day.
+
+**Server memory:** type-ahead ids about 150 MB and a day's column set (19 fields) about 230 MB per million trades, within
+`columns-cache-mb`; documents are not cached (PostgreSQL's buffers keep what is read often). Give the server at least 8 GB of heap
+per million entities a day. **PostgreSQL itself:** `shared_buffers` a quarter of its memory, `effective_cache_size` three quarters,
+`maintenance_work_mem` 1 GB for the vacuum after loads, `max_wal_size` 16 GB to avoid checkpoints mid-load.
+
+**Limits:** the first search on a business day other than the newest waits for that day's columns; only promoted fields are fast
+(other fields read at most 20,000 documents, `partial`); `effective` kinds are read as documents; a load is seen within
+`refresh-seconds`; publishing a day from the stage costs a second write (about a tenth more than writing straight into the table);
+table and column names must be plain SQL identifiers, so a setting cannot carry SQL.
+
+## Measured results
+
+A developer workstation (24 cores), PostgreSQL 18 in Docker (12 GB, `shared_buffers` 3 GB), **1,000,000 trades a day over three
+business days** plus the banking samples (3,017,910 rows), a Drishti server with `-Xmx8g`, times over HTTP:
+
+| Question | Time |
+|---|---|
+| load the samples / 3,000,000 trade-days (streamed) | 2 s / 172 s |
+| server start | 7 s |
+| type-ahead | 46 ms |
+| open a trade (view), first / again | 154 ms / 40 ms |
+| a trade's document, today / a past day | 43 ms / 30 ms |
+| a search on one number column (2,041 matches of 1,000,000) | 102 ms |
+| a search on a currency and a number (13,523 matches) | 225 ms |
+| a search on one portfolio (70,649 matches) | 189 ms |
+| pick list | 106 ms |
+| desk P&L / impact of a netting set (143,842 trades) | 20 ms / 217 ms |
+| a search on another business day, first / again | 1.4 s / 90 ms |
+| server heap in use | 2.2 GB |
+
+Every search answered over all 1,000,000 trades (`partial: false`), with the same matches as the Delta Lake and Aerospike connectors
+on the same book. The scaling curve from 10,000 to 50,000 trades a day, beside the other stores, is in
+[BENCHMARK.md, section 9](../../docs/admin/BENCHMARK.md#9-the-stores-compared-10000-to-50000-trades-a-day).
+
+## Query mode: the queries
+
+Query mode reads your schema as it is, with SQL you write, in the connector file's `settings:` (or a pack's suggested template). A
+connector serves as many kinds as it has `query.<kind>` keys; only that one is required, and each other query adds a capability.
+
+| Query | Drishti asks it when | Adds |
+|---|---|---|
+| `query.<kind>` | a view opens | the entity, as a document |
+| `query.<kind>.<part>` | the same moment, in parallel | the rest of the entity from other tables |
+| `ids.<kind>` | at start and every `refresh-seconds` | type-ahead (a second column is the title shown) |
+| `columns.<kind>` | once per day, then memory | searches, pick lists, derived kinds, impact |
+| `reverse.<kind>` | per question | *Linked entities*, impact (F8) |
+
+**Parameters** are bound, never pasted into the SQL: `:id` (the entity's id), `:asOf` (the business date asked, a SQL `DATE`;
+today in `zone` when none is asked) and `:target` (the id being referenced, in `reverse.<kind>`). A query may use a parameter
+several times. Without named parameters, `?` is the id in an entity query, the date in `ids` and `columns`, the target in
+`reverse`. A query that uses `:asOf` makes the kind **dated**.
+
+**The entity:** the first row is the document (column naming under [Data structure](#data-structure)). A snapshot table is read
+with the date itself; a table with a row only when the entity changes reads its newest row on or before the date. No row means the
+source does not hold the entity on that date, and Drishti asks the next source for the kind.
+
+```sql
+SELECT * FROM trades WHERE trade_id = :id AND business_date = :asOf                      -- every entity every day
+SELECT * FROM trades WHERE trade_id = :id
+   AND business_date = (SELECT MAX(business_date) FROM trades WHERE trade_id = :id AND business_date <= :asOf)   -- a row when it changes
+```
+
+### Query mode: parts
+
+Rather than one join that repeats the trade's columns on every leg and cashflow row, give each part its own query; the document
+gains a field per part, a list of row objects (`[]` when none), or with `part-shape.<kind>.<part>: object` the first row (`null`):
+
+```yaml
+query.trade.legs: SELECT leg_no, pay_receive, index_name, spread, fixed_rate FROM trade_legs WHERE trade_id = :id ORDER BY leg_no
+query.trade.cashflows: SELECT pay_date, amount, currency FROM cashflows WHERE trade_id = :id AND pay_date >= :asOf ORDER BY pay_date
+query.trade.counterparty: >
+  SELECT c.id, c.legal_name, c.rating FROM counterparties c JOIN trades t ON t.counterparty_id = c.id
+   WHERE t.trade_id = :id AND t.business_date = :asOf
+part-shape.trade.counterparty: object
+```
+
+Parts run at once with the entity's query, each on its own pooled connection, so latency is the slowest query, not the sum: make
+`pool-size` at least one more than the most parts a kind has, times the views you expect at once. A part replaces a field of the
+same name. **A part that fails fails the view**, naming the query (`DRS-1003 … its query query.trade.legs failed (SQL state
+42703)`); the SQL and the database's message go to the server log and Health (`DEGRADED: query.trade.legs failed: …`), never to the
+reader. A document without one of its parts is never shown as if it were whole. Sutras address parts like any nested data
+(`legs[0].fixedRate`, a table panel over `cashflows`).
+
+### Type-ahead, columns and reverse lookups
+
+- **`ids.<kind>`** loads one day's ids into the in-memory index (`:asOf` is today): `SELECT trade_id FROM trades WHERE
+  business_date = (SELECT MAX(business_date) FROM trades)`; `SELECT id, legal_name FROM counterparties`. Without it, users type ids.
+- **`columns.<kind>`** returns a day's id (the first column) and promoted fields, one row per entity. A column matches a declared
+  `layout.<kind>.columns` path by name ignoring case, dots and underscores (`counterparty_id` is `counterparty.id`; alias `dv01 AS
+  risk_dv01` to reach `risk.dv01`); without a declaration the label is the path (`counterparty__id` is `counterparty.id`).
+  Numeric types stay numbers, the rest text. The day is kept within `columns-cache-mb` for `columns-seconds`; a day with no rows is
+  a day the database does not hold. A search is answered from columns only when every field it reads is one; otherwise it reads at
+  most 20,000 documents (`partial`). An id returned more than once (a join with a child table) is counted once, with a warning in
+  the log and Health; an inner join also silently drops entities without children.
+- **`reverse.<kind>`** returns the ids that reference `:target`; without it, a kind with `columns.<kind>` is answered from the
+  day's text columns with no SQL at all.
+
+```yaml
+reverse.trade: >
+  SELECT trade_id FROM trades WHERE business_date = :asOf AND (netting_set = :target OR counterparty_id = :target OR book = :target)
+```
+
+**Values:** decimals become numbers (whole numbers integers), dates `yyyy-MM-dd`, timestamps ISO instants; a JSON value that does
+not parse stays text. JSON kept in a text column is named in `json-columns` (`json`/`jsonb` columns need nothing). Documents already
+stored as JSON: `SELECT doc::text AS json FROM desk.counterparties WHERE cpty_id = ?`.
+
+**With the shipped packs,** which read UPPER_SNAKE attributes (`TRADE_ID`, `PRODUCT_TYPE`): a label with an underscore becomes camel
+case (`TRADE_ID` gives `tradeId`), which their Sutras do not find. Give the document in one `json` column
+(`query.trade: SELECT doc AS json, business_date FROM trades WHERE trade_id = :id AND business_date = :asOf`) and declare the
+promoted paths in `layout.trade.columns` (`TRADE_ID, CURRENCY, ...`): a `columns.trade` label then matches the declared path
+whatever its case. Otherwise use a pack of your own whose Sutras use the camel-case names.
+
+**Writing them well:** select columns, not `*`, in `columns` and parts; keep one row per entity in `ids` and `columns` (aggregate
+in SQL if you must join); keep business logic out; alias columns to the pack's paths; bound `reverse` queries by `business_date =
+:asOf` (otherwise every day of history is read); index the entity and parts by id (and date), the table by `business_date` for
+`ids` and `columns`, link columns with the date for `reverse`; test the SQL in a client with the parameters filled in. A million
+rows of 13 narrow columns read in a few seconds and are then served from memory.
+
+**Query mode or table mode:** query mode reads an existing database as it is (parts for several tables per entity, type-ahead,
+searches and reverse through your queries), best for kinds of up to hundreds of thousands a day; table mode needs no SQL, is loaded
+into Drishti's layout with monthly partitions and retention by dropping months, and is built for a million entities a day.
+
+### Query mode: a walk-through
+
+Trades in a PostgreSQL table `desk.trades`, one row per trade per business date, read with history without changing the schema:
+
+```sql
+CREATE SCHEMA IF NOT EXISTS desk;
+CREATE TABLE desk.trades (trade_id text NOT NULL, business_date date NOT NULL, product text, counterparty text,
+                          notional numeric(18,0), mtm numeric(18,2), currency text, PRIMARY KEY (trade_id, business_date));
+INSERT INTO desk.trades VALUES
+  ('MX-21770001', '2026-09-29', 'IRS', 'CP-ALDERSHOT', 50000000, 412300.00, 'USD'),
+  ('MX-21770001', '2026-09-30', 'IRS', 'CP-ALDERSHOT', 50000000, 398150.00, 'USD');
+```
+
+```yaml
+# config/connectors/desk-db.yaml
+plugin: jdbc
+kinds: [trade]
+settings:
+  url: ${DESK_DB_URL:jdbc:postgresql://db.bank.example:5432/desk}
+  user: ${DESK_DB_USER:}
+  password: ${DESK_DB_PASSWORD}
+  query.trade: >-
+    SELECT trade_id, business_date, product, counterparty, notional, mtm, currency FROM desk.trades
+    WHERE trade_id = :id AND business_date = (SELECT MAX(business_date) FROM desk.trades WHERE trade_id = :id AND business_date <= :asOf)
+```
+
+```bash
+docker compose -f deploy/docker/compose.data.yaml up -d postgres          # user, password and database: drishti
+docker compose -f deploy/docker/compose.data.yaml exec -T postgres psql -U drishti -d drishti < desk.sql
+DESK_DB_URL=jdbc:postgresql://localhost:5432/drishti DESK_DB_USER=drishti DESK_DB_PASSWORD=drishti \
+  java -jar drishti-server/target/drishti-server-*-exec.jar
+curl -s "http://localhost:18480/api/v1/entities/trade/MX-21770001/raw?asOf=2026-09-30" | jq -c '{provenance, data}'
+```
+
+```json
+{"provenance":{"source":"desk-db","generation":1790828309088,"fetchedAt":"2026-10-01T04:18:29.093601107Z","live":false,"businessDate":"2026-09-30"},
+ "data":{"tradeId":"MX-21770001","businessDate":"2026-09-30","product":"IRS","counterparty":"CP-ALDERSHOT","notional":50000000,"mtm":398150.0,"currency":"USD"}}
+```
+
+In the terminal, `TRD MX-21770001 <GO>` and pick 29 September: `mtm` is `412,300`; `CP-ALDERSHOT` is a link. There is no
+type-ahead until you add `ids.trade`. While the database is down, health reads `DOWN: Connection to localhost:5432 refused. …
+(reconnecting)` and reads fail with `DRS-1003`; the connector starts anyway and recovers by itself. The PostgreSQL driver ships with
+the server; for another database put its driver jar on the class path or in `DRISHTI_PLUGIN_DIR`.
+
+## Writes: commands that change a record
+
+A jdbc connector may declare `writes:` ([writes](../../docs/connectors/CONNECTOR_FILES.md#writes-saving-to-the-source)): the
+statements write-back sends through its outbox for a form whose `save.target` is `source`. One command is one transaction: the
+`already-applied` query first (it finds this change id: a resend writes nothing and is confirmed), then `sql`, committed only when it
+touched exactly `expect-rows` rows; 0 rows means the record moved (the change ends *refused at the source: conflicted*) and the
+overlay shown while it was pending is withdrawn.
+
+```yaml
+writes:
+  amend-notional:
+    kind: trade
+    params: [leg]                  # read from the row being edited
+    jdbc:
+      sql: >
+        UPDATE MX_TRADE_LEG SET NOTIONAL = :value, VERSION = VERSION + 1, DRISHTI_CHANGE_ID = :changeId
+         WHERE TRADE_ID = :entity AND LEG_NO = :leg AND VERSION = :basedOn
+      expect-rows: 1
+      already-applied: SELECT 1 FROM MX_TRADE_LEG WHERE TRADE_ID = :entity AND LEG_NO = :leg AND DRISHTI_CHANGE_ID = :changeId
+    confirm: reply
+    timeout: 30s
+```
+
+Parameters are bound as prepared-statement parameters (`::` casts and quoted text are left alone). The server supplies `:entity`,
+`:kind`, `:businessDate`, `:value`, `:from` (what the person saw), `:basedOn` (the record's version), `:changeId`, `:by`, `:reason`,
+`:at` and `:field`; any other must be declared in `params:`. A change of several fields sends one command per field, each with its
+own change id (`<id>#1`, `#2`), on a connection borrowed from the connector's pool for the command only.
+
+## Security: TLS and credentials
+
+A password is an `${ENV}` placeholder or a `file:` reference, never a literal, and a URL that carries one (`jdbc:…//user:pw@host`,
+`?password=…`) is refused. For `jdbc:postgresql://` the connector hands the shared `tls.*` settings
+([TLS.md](../../docs/connectors/TLS.md), [the keys](../../docs/admin/CONFIGURATION.md#shared-tls)) to the driver through its own
+socket factory, so a private CA bundle, a PKCS12/JKS store and a client key in any PEM format (PKCS#1, SEC1, encrypted) work.
+`tls.*` needs `tls.enabled: true` and **replaces** the driver's options: a URL with `sslmode`, `sslrootcert`, `sslfactory` or
+`ssl=true` beside `tls.*` is refused.
+
+| You write | The driver gets |
+|---|---|
+| `tls.enabled: true` | `ssl=true`, `sslmode=verify-full`: the chain and the server name are checked |
+| `tls.verify-hostname: false` | `sslmode=require` (the chain is still checked, the name is not) |
+| `tls.insecure-trust-all: true` | `sslmode=require`, trusting anything (development only; needs `DRISHTI_ALLOW_INSECURE_TLS=true`) |
+| `tls.ca-file` / `tls.truststore`, `tls.cert-file` + `tls.key-file` / `tls.keystore` | the trust and the client certificate, through the socket factory |
+| `tls.protocols`, `tls.cipher-suites` | applied to every socket the driver opens |
+
+The driver's own URL options still work without `tls.*`
+(`?sslmode=verify-full&sslrootcert=…&sslcert=…&sslkey=client.pk8`, the key in PKCS#8 DER). Its default is `sslmode=prefer`: TLS
+**without checking the certificate**, so a URL with no TLS setting is encrypted but not authenticated.
+
+```yaml
+# config/connectors/postgres-tls-client-cert.yaml: the client certificate as the log-in (no password)
+plugin: jdbc
+kinds: [trade]
+description: Trades in PostgreSQL, certificate log-in
+settings:
+  url: jdbc:postgresql://db.example.com:5432/drishti
+  user: drishti
+  table: entities
+  tls:
+    enabled: true
+    ca-file: /etc/drishti/tls/ca.pem
+    cert-file: /etc/drishti/tls/client.pem
+    key-file: /etc/drishti/tls/client.key
+    key-password-file: /run/secrets/pg-client-key-password
+```
+
+For password log-in over verified TLS, drop the `cert-file`/`key-file` lines and add `password: ${DRISHTI_DB_PASSWORD}`. The server
+side, as in the integration test (`PostgresTlsTest`, `postgres:18-alpine`): `ssl = on`, `ssl_cert_file`, `ssl_key_file` (mode
+0600) and `ssl_ca_file` in `postgresql.conf`; in `pg_hba.conf` `hostssl all pwuser all scram-sha-256` and `hostssl all drishti all
+cert` (the `cert` method logs in as the certificate's common name; `hostssl` refuses plain text). Check from the command line:
+
+```
+psql "host=db.example.com dbname=drishti user=drishti sslmode=verify-full sslrootcert=/etc/drishti/tls/ca.pem \
+      sslcert=/etc/drishti/tls/client.pem sslkey=/etc/drishti/tls/client.key" -c "select ssl, client_dn from pg_stat_ssl where pid = pg_backend_pid()"
+```
+
+Health names a certificate with under 30 days left: `UP (TLS certificate CN=drishti (tls.cert-file) expires in 19 days (2026-10-30))`.
+
+**Other databases** take their TLS options in the URL (`tls.*` against them is a start-up error that says so): MySQL/MariaDB
+`?sslMode=VERIFY_IDENTITY`; SQL Server `;encrypt=true;trustServerCertificate=false;hostNameInCertificate=db.example.com`; Oracle a
+`tcps://` address and a wallet (`oracle.net.wallet_location`). A private CA for them goes into the server JVM's truststore
+(`-Djavax.net.ssl.trustStore=…`). These follow each driver's documentation; the repository's tests cover PostgreSQL.
+
+## Connection pool
+
+Every connection comes from a pool, `pool-size` connections at most (default `drishti.db.pool.size`), opened on first use, so the
+connector starts while the database is down. A read borrows one for one query and returns it at once; nothing holds a connection
+across a stream to a client. `statement-timeout` is set as the connection's `statement_timeout`; a borrow held longer than
+`pool-leak-threshold` is logged with the borrower's stack. `pool-size` must be at least `scan-threads` plus the reads you expect at
+once (and, in query mode, room for parts). See [connection pools](../../docs/connectors/CONNECTOR_FILES.md#14-connection-pools) and
+[sizing them](../../docs/admin/OPERATIONS.md#sizing-the-database-connection-pools). The loader uses its own pool: one connection
+for the whole load (it holds the advisory lock) and one per batch, never more than `--pool-size`.
+
+## Production checklist
+
+1. Declare `layout.<kind>.columns` for every large kind; load with the `columns` in each row (or write them from the same document).
+2. Load each business day whole, in one transaction, record it in `entity_dates`, and vacuum the partition after.
+3. Choose the history PostgreSQL keeps (`--keep-months`); keep the full history in a lake.
+4. Size the database for 3.7 GB per million entities a day, and the Drishti server for 8 GB of heap per million.
+5. Leave `pool-size` at the site default unless the database's `max_connections` says otherwise.
+6. Use `tls.enabled: true` and a database user with `SELECT` only.
+7. Check Admin → Health, then measure on your data (`elapsedMs`, `scanned` and `partial` of a search).
+
+A quick start: `docker compose -f deploy/docker/compose.data.yaml up -d postgres`, `tools/load-postgres.sh
+jdbc:postgresql://localhost:5432/drishti` (one table per banking domain, ten business days), copy
+`config/connectors.examples/postgres/*.yaml` into `config/connectors/`, start the server, then
+`curl -s "http://localhost:18480/api/v1/entities/trade/MX-20000001/raw?asOf=2026-09-29" | jq -c .provenance` shows
+`"source":"trade-endur"`.
 
 ## See also
 
-- [The PostgreSQL connector (table mode)](../../docs/connectors/POSTGRES_CONNECTOR.md): layout, loading, retention, sizing, TLS.
-- [Connector queries (query mode)](../../docs/connectors/JDBC_QUERIES.md): parameters, parts, type-ahead, columns, reverse lookups.
 - [Connector files](../../docs/connectors/CONNECTOR_FILES.md) and [TLS](../../docs/connectors/TLS.md).
 - [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).

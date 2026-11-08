@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The VaR Playground (terminal/play.html; docs/architecture/VAR_PLAYGROUND.md, option A with option B's Rest of scope). The grid is
+/* The VaR Playground (terminal/play.html; docs/guides/VAR_GUIDE.md, option A with option B's Rest of scope). The grid is
    drishti-grid (drishti-risk's terminal preset): only the cells in view are in the page, the header rows and the scenario column kept in
    place while scrolling, so 500 positions by 509 scenarios stay light. Selecting a cell shows its formula as the workbook writes it (the server's templates) and moves
    the explanation to the step that produced it, with the real numbers. The pickers ask again; Export to Excel downloads the workbook of the

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Planned data contract of the residual-risk input (proposed command RRAI): docs/contracts/FRTB.md section 3.4,
-# docs/contracts/FRTB_DATA_STRUCTURES.md section 7; read by the FRTB-SA engine's residual risk add-on (MAR23) when a connector serves it.
+# docs/contracts/FRTB.md section 7; read by the FRTB-SA engine's residual risk add-on (MAR23) when a connector serves it.
 kind: residual-risk
 mnemonic: RRAI
 pack: market-risk

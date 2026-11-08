@@ -341,7 +341,7 @@ public final class ShardedVectors implements Vectors, SetSums {
     }
 
     /**
-     * The sums of many sets at once (a cube view's cells and totals, MR_CUBE_LENS.md section 4.11): each set cut by shard as {@link #sumSet}
+     * The sums of many sets at once (a cube view's cells and totals, docs/lenses/README.md section 4.11): each set cut by shard as {@link #sumSet}
      * cuts it, every remote shard asked <b>once</b> for all the sets' parts it holds (in calls of up to {@link #BATCH} sets, the shards side by
      * side under one deadline), the held shards summed here, then each set's partials added in shard order from zero, exactly as
      * {@link #sumSet} adds them: each answer is the one {@link #sumSet} gives for that set, to the bit. A shard nobody answers fails them all.

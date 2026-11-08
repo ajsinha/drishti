@@ -51,20 +51,74 @@ public final class PackFolders {
         return out;
     }
 
-    /** Every pack folder under a root by pack name (the first folder wins a name), in name order. */
+    /**
+     * Every pack folder under a root by pack name, in name order. A name held by two folders of the root (two domain folders, or the root
+     * and a domain folder) is refused: it is in neither ({@link #duplicates} names both folders).
+     */
     public static Map<String, Path> all(Path root) {
         Map<String, Path> out = new java.util.TreeMap<>();
+        holders(root).forEach((name, at) -> {
+            if (at.size() == 1) {
+                out.put(name, at.get(0));
+            }
+        });
+        return new LinkedHashMap<>(out);
+    }
+
+    /**
+     * The pack names two folders of a root hold, each with the problem in words naming both folders: such a name is never resolved to one
+     * of them (a pack read from the wrong domain folder would bring its rules, roles and masks unseen).
+     */
+    public static Map<String, String> duplicates(Path root) {
+        Map<String, String> out = new java.util.TreeMap<>();
+        holders(root).forEach((name, at) -> {
+            if (at.size() > 1) {
+                out.put(name, twice(name, at));
+            }
+        });
+        return out;
+    }
+
+    /**
+     * Refuses a pack name that two folders of one packs root hold, among {@code dirs} (roots as {@link #roots} lists them, one root after
+     * another): throws {@link IllegalStateException} naming both. One root holding it once, or two roots holding it (an installed pack
+     * before a shipped one), is fine.
+     */
+    public static void requireOne(List<Path> dirs, String name) {
+        Map<Path, List<Path>> byRoot = new LinkedHashMap<>();
+        for (Path d : dirs) {
+            Path p = d.resolve(name).normalize();
+            if (p.startsWith(d.normalize()) && Files.isRegularFile(p.resolve("pack.yaml"))) {
+                Path group = d.getParent() != null && dirs.contains(d.getParent()) ? d.getParent() : d;
+                byRoot.computeIfAbsent(group, k -> new ArrayList<>()).add(p);
+            }
+        }
+        for (List<Path> at : byRoot.values()) {
+            if (at.size() > 1) {
+                throw new IllegalStateException(twice(name, at));
+            }
+        }
+    }
+
+    private static String twice(String name, List<Path> at) {
+        return "pack '" + name + "' is in two folders: " + at.get(0) + " and " + at.get(1)
+                + "; neither is read: a pack's name is unique across a packs folder and its domain folders (keep one, rename or remove the other)";
+    }
+
+    private static Map<String, List<Path>> holders(Path root) {
+        Map<String, List<Path>> found = new java.util.TreeMap<>();
         for (Path d : roots(root)) {
             if (!Files.isDirectory(d)) {
                 continue;
             }
             try (Stream<Path> s = Files.list(d)) {
-                s.filter(p -> Files.isRegularFile(p.resolve("pack.yaml"))).sorted().forEach(p -> out.putIfAbsent(p.getFileName().toString(), p));
+                s.filter(p -> Files.isRegularFile(p.resolve("pack.yaml"))).sorted()
+                        .forEach(p -> found.computeIfAbsent(p.getFileName().toString(), k -> new ArrayList<>()).add(p));
             } catch (IOException e) {
                 // an unreadable folder has no packs
             }
         }
-        return new LinkedHashMap<>(out);
+        return found;
     }
 
     /** The pack folders under a root, in pack-name order. */
@@ -72,8 +126,9 @@ public final class PackFolders {
         return List.copyOf(all(root).values());
     }
 
-    /** A pack's folder under a root, or {@code <root>/<name>} (not there) when no folder holds it. */
+    /** A pack's folder under a root, or {@code <root>/<name>} (not there) when no folder holds it; two folders of the root holding it: refused. */
     public static Path of(Path root, String name) {
+        requireOne(roots(root.normalize()), name);                  // two domain folders holding it: refused, never one of them
         for (Path d0 : roots(root)) {
             Path d = d0.normalize();                                // a root such as module/../config/packs
             Path p = d.resolve(name).normalize();

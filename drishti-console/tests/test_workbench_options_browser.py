@@ -82,14 +82,14 @@ def test_numeric_options_take_numbers_and_enumerated_options_are_selects(live_co
     settle(page, rev)
     assert option_value(page, "tree", "expand") == "all"
     pick(page, "group")
-    layout = page.get_by_label("layout", exact=True)
-    assert layout.evaluate("e => e.tagName") == "SELECT" and sorted(layout.locator("option").all_inner_texts()) == ["(none)", "force", "tree"]
+    layout = page.get_by_label("layout", exact=True)                     # drishti-inputs' Select (the native-select sweep): its combobox
+    assert sorted(layout.evaluate("e => e.closest('drishti-select').component.options.map((o) => o.label)")) == ["(none)", "force", "tree"]
     rev = state(page, "rev")
     layout.select_option("force")
     settle(page, rev)
     assert option_value(page, "group", "layout") == "force"
     pick(page, "sets")
-    assert page.get_by_label("layout", exact=True).evaluate("e => e.tagName") == "SELECT"
+    assert page.get_by_label("layout", exact=True).evaluate("e => !!e.closest('drishti-select')")
 
 
 def test_markers_the_pivot_object_and_the_pivot_by_list_have_structured_editors(live_console, page):

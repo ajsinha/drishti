@@ -16,7 +16,7 @@
 
 The demo plugin (plugins/drishti-plugin-demo, DemoWalk) reads this spec on every tick. A plain `{"field": step}` walks one
 number; a coherent entry moves a GROUP with one random step (`with`, `scale`, `shape`, `jitter`, `mode: rel`), `derive`
-recomputes what depends on the moved numbers, and `append` keeps a time series current. See docs/connectors/DEMO_CONNECTOR.md.
+recomputes what depends on the moved numbers, and `append` keeps a time series current. See plugins/drishti-plugin-demo/README.md.
 
 Each builder reads the finished sample, so the spec names exactly the paths that sample has. What is left static on purpose
 (a coupon schedule, a closed statement, a day's large payments) is listed in STATIC_ON_PURPOSE and checked by the pack test.

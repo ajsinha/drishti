@@ -558,7 +558,7 @@ partial-state cache, the split-and-merge harness and the exports. The server wir
 REST, busy protection, saved views and audit. The console only draws: `drishti_pivot-engine.js` asks the engine and lays its answer out,
 `drishti_pivot-grid.js` is the one grid (the Pivot screen and the nested `pivot` panel), and nothing in the browser adds up a figure.
 
-The engine is also Rachana's only source of aggregates ([ONE_GRAMMAR.md](../architecture/ONE_GRAMMAR.md)): it registers every built-in
+The engine is also Rachana's only source of aggregates ([ONE_GRAMMAR.md](../architecture/ARCHITECTURE.md#23-one-grammar-one-engine)): it registers every built-in
 into Rachana's function table (`sum`, `count`, `avg`, `min`, `max`, `median`, `percentile`, `distinct`, `wavg`, `variance`, `stddev`,
 the `_once` forms), the grouping behind `group(...)`, and `measure(...)` and `cell(...)`, so a sum in a Sutra and a sum in a pivot cell
 are the same `AggFunction`. A Sutra's `pivot` panel writes its groupings as Rachana paths and its value as one of these

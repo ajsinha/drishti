@@ -38,7 +38,7 @@ import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.types.pojo.Schema;
 
 /**
- * {@code form: lake}: a table of a lake named by the lake configuration (the lake files, {@link Lakes}; LAKE_CONFIG.md, never a connector's settings), read as its kind with every
+ * {@code form: lake}: a table of a lake named by the lake configuration (the lake files, {@link Lakes}; docs/architecture/DATA_ARCHITECTURE.md, never a connector's settings), read as its kind with every
  * check of {@code form: kind}. Request: {@code {"lake": "feeds", "kind": "news.headlines", "paths": [...], "where": [...], "cursor":
  * "SEQ"}}. A table of the in-memory lake ({@code mem://<store>}) is answered by the node that owns its store (the endpoint names it). With
  * {@code stream: true} and a {@code cursor} (a whole-number column that grows with each append: a sequence, an epoch time), new rows are

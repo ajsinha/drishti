@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * The scan estimate of a model whose tables come from different connectors (VIRTUAL_TABLES.md section 10, V10): the engine joins them, so
+ * The scan estimate of a model whose tables come from different connectors (docs/architecture/ARCHITECTURE.md section 10, V10): the engine joins them, so
  * each side of a relationship that crosses connectors is read whole; a side the source says is larger than {@code large} rows and that its
  * table does not filter is warned about before the query runs (never refused: the reader decides).
  */

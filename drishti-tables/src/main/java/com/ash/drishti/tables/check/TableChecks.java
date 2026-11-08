@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Checks one virtual table on its own (BI_FOUNDATION_2911E.md sections 3.1 and 3.2; Q9, Q11 to Q14, Q29): its name, source, grain,
+ * Checks one virtual table on its own (docs/architecture/BI_DESIGN.md sections 3.1 and 3.2; Q9, Q11 to Q14, Q29): its name, source, grain,
  * filter, columns (paths, expressions, types, built-ins), keys and de-duplication, materialisation, rules and tests. What needs other
  * definitions (a base table, a model, {@code related(...)}) is {@code CatalogueChecks}'s.
  */

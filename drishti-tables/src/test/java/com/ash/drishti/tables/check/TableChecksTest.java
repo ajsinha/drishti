@@ -24,7 +24,7 @@ import com.ash.drishti.tables.yaml.TableYaml;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/** One virtual table checked on its own (BI_FOUNDATION_2911E.md sections 3.1, 3.2; Q9, Q11 to Q14). */
+/** One virtual table checked on its own (docs/architecture/BI_DESIGN.md sections 3.1, 3.2; Q9, Q11 to Q14). */
 class TableChecksTest {
 
     /** The design's sample (section 3.1): cash flows under two lists, the leg's fields through ^. */

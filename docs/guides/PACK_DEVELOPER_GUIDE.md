@@ -47,6 +47,7 @@ Contents:
 9. [Part VI. The funds and ETFs pack](#part-vi-the-funds-and-etfs-pack) (its own guide, [FUNDS_GUIDE.md](FUNDS_GUIDE.md)): the 200 largest US mutual funds and ETFs from SEC data: FUND, the look-through, HELD and TRACK, the contracts of fund, fund-holder and index-funds, sources and licences, the refresh script
 10. [Part VII. Groupings and analytics, computed](#part-vii-groupings-and-analytics-computed) (its own guide, [GROUPINGS_ANALYTICS_GUIDE.md](GROUPINGS_ANALYTICS_GUIDE.md)): LEIG, LEIC, SIC, ECG, CORR, the USEQ ratios and the PXH analytics computed instead of stored: each command, its contract, reconciliation, the derived connector, settings
 11. [Part VIII. Changing Drishti's code: the developer guide](#part-viii-changing-drishtis-code-the-developer-guide): for developers of Drishti itself: the repository, building and running from source, project rules, how a request travels, recipes, testing, debugging, pitfalls, releasing
+12. [Part IX. Designing for phones](#part-ix-designing-for-phones): the phone tiers, the layers that set them (fragment, Sutra, site, pack, lens) and their caps, the shipped defaults, the pages beyond Sutra pages
 
 Parts II to IV were three companion guides (PACK_MODELLING_GUIDE.md, PACK_LIFECYCLE_GUIDE.md, PACK_GENERATORS_GUIDE.md);
 their sections keep their names, so their old anchors are the same here.
@@ -519,7 +520,7 @@ Open `TKT TKT-1001`: the strip reads *Subject Cannot sign in · Status Open · P
 ![The ticket, laid out by the Sutra: a title with the client, six figures, a History ladder with the latest event lit, links with badges](img/packs/04-ticket-view.jpg)
 
 *How this view was built* now says `Sutra ticket v1 + inference`. A mistake (`kind: ladderr`) is reported with its line
-and the view keeps the last good version ([runbooks/sutra-broken.md](../admin/runbooks/sutra-broken.md)).
+and the view keeps the last good version ([OPERATIONS.md › A Sutra is broken](../admin/OPERATIONS.md#172-a-sutra-is-broken-or-an-edit-does-not-show)).
 
 Writing Sutras is taught in the [Sutra guide](SUTRA_DEVELOPER_GUIDE.md); every key is in
 [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md). You can design the Sutra in the **Build workbench** instead of by hand:
@@ -701,7 +702,7 @@ and a `datasets:` entry of the pack and kind), and `samples/` keep only a few re
 committed data, and none reading a lake an enabled feed fills with the kind.
 
 Samples are for demos. Real tickets live somewhere else; here, the ticketing system exports each business day's tickets as one
-JSON Lines file, the layout the `file` plugin reads ([FILE_CONNECTOR.md](../connectors/FILE_CONNECTOR.md)):
+JSON Lines file, the layout the `file` plugin reads ([FILE_CONNECTOR.md](../../plugins/drishti-plugin-file/README.md)):
 
 ```text
 data/files/helpdesk/2026-10-16/ticket.jsonl      one ticket a line, the day's export
@@ -3465,7 +3466,7 @@ example ids are real: they are in the pack's `samples/` and in the [demo lakes](
 | `counterparty-risk` | `CCR` | `trading` | `AGR` master agreement (ISDA) · `CSA` credit support annex · `NSET` netting set · `LIM` credit limit · `EXP` exposure profile · `CVA` CVA / XVA · `SACCR` SA-CCR exposure · `COLL` collateral balance · `MC` margin call · `SIMM` ISDA SIMM initial margin | `AGR AGR-NORTHBRIDGE-ISDA`, `NSET NS-SUMMIT-NY` |
 | `market-risk` | `MRSK` | `market-data`, `trading` | `VAR` VaR / expected shortfall · `SCN` stress scenario · `STR` stress result · `FRTB` FRTB sensitivities · `PNL` P&L explain · `TVAL` trade valuation (MTM, P&L 1d, DV01 of every trade) | `VAR VAR-RATES`, `TVAL TVAL-MX-20000001` |
 | `world-economy` | `WRLD` | — | `ECON` economy · `MACRO` macro indicator · `FCST` IMF forecast · `LABR` labour market · `FISC` fiscal position · `ECG` country group · `REGE` region economy · `JUR` jurisdiction · `PARTY` party · `OFFC` office holder · `ELEC` election · `REGN` world region · `SOCI` social indicator (real public data for about 216 countries: World Bank, IMF, CIA World Factbook, UNDP; [REAL_DATA](EXTERNAL_DATA.md#the-world-economy-data-in-detail); not a sample, but the IMF part is for internal demonstrations only) | `ECON ECON-IND` |
-| `news-and-markets` | `NWMK` | — | `TOPIC` news topic · `NEWS` headlines · `CO` listed company · `QUOTE` quote and price history (fifteen topics and twenty well-known companies; headlines from the [news connector](../connectors/NEWS.md), quotes from the [yfinance connector](../connectors/YFINANCE.md); a sample pack, both connectors off as shipped; topics and companies also from the demo lake, connector `news-store`, and offline the quotes and headlines too, from a committed snapshot: [offline mode](#news-and-markets-and-world-economy-offline)) | `TOPIC TOPIC-FED` |
+| `news-and-markets` | `NWMK` | — | `TOPIC` news topic · `NEWS` headlines · `CO` listed company · `QUOTE` quote and price history (fifteen topics and twenty well-known companies; headlines from the [news connector](../../plugins/drishti-plugin-news/README.md), quotes from the [yfinance connector](../../plugins/drishti-plugin-yfinance/README.md); a sample pack, both connectors off as shipped; topics and companies also from the demo lake, connector `news-store`, and offline the quotes and headlines too, from a committed snapshot: [offline mode](#news-and-markets-and-world-economy-offline)) | `TOPIC TOPIC-FED` |
 | `us-equities` | `USEQS` | — | `USEQ` US listed company · `IDX` index members · `SIC` SIC sector · `EDGAR` filings browser · `FILING` SEC filing · `FACT` financial fact · `PXH` price history (real public data on the Dow 30, Nasdaq-100 and S&P 500 companies: SEC EDGAR, GLEIF, Wikidata; **off by default**, add it to `DRISHTI_PACKS`; prices are live only, off and for internal use: [its guide](../../config/packs/capitalmarkets/us-equities/guides/us-equities.md)) | `USEQ AAPL`, `IDX SP500` |
 | `gleif` | `GLEIF` | — | `LEI` legal entity · `LEIG` ownership group · `LEIR` parent relationship · `LEIC` country · `LEIM` ISIN, BIC or MIC to LEI (real public data from GLEIF, CC0: the ownership groups of the us-equities companies and of the large banks, insurers, asset managers and market infrastructures, at most 50 entities a group; **off by default**, add it to `DRISHTI_PACKS`; with `us-equities` on, a company and its LEI record link both ways: [its guide](../../config/packs/core/gleif/guides/gleif.md)) | `LEI 8I5DZWZKVSZI1NUHU748`, `LEIG ALL` |
 | `funds` | `FUNDS` | — | `FUND` fund or ETF · `HELD` funds holding a company · `TRACK` funds tracking an index (real public data from the SEC, public domain: the 200 largest US mutual funds and ETFs by net assets with their holdings from Form N-PORT, census facts from Form N-CEN, fees and returns from the prospectus summaries; **off by default**, after `us-equities`, whose companies its holdings open; [its guide](FUNDS_GUIDE.md)) | `FUND QQQ`, `HELD AAPL`, `TRACK SP500` |
@@ -4248,8 +4249,8 @@ All Java code lives under the package `com.ash.drishti`. The parent POM (`pom.xm
 | `drishti-lakeio` | `lakeio` | Lake file access shared by the native Delta and Iceberg engines, no Hadoop: `Storage` (local disk through `java.nio`, Windows drive letters, backslashes and UNC shares included; S3 through the AWS SDK, with conditional PUTs for commits), byte ranges, Parquet page codecs (`NativeCodecs`, reading and writing) and the per-file Parquet footer cache. Other schemes come from a `StorageProvider` another module registers (`mem://`, the in-memory lake): the engines ask `StorageProviders` and never name that module. | `Storage`, `LocalStorage`, `S3Storage`, `LocalPaths`, `NativeCodecs`, `ParquetFooters`, `StorageProvider`, `StorageProviders` |
 | `drishti-iceberg` | `iceberg` | Drishti's own Apache Iceberg engine without Hadoop, on `drishti-lakeio`: metadata JSON kept whole, path-based, metadata-file and REST catalogs (JDK HTTP client, OAuth2, ETag, vended credentials, SigV4), Avro manifests, planning with partition and metric pruning, field-id Parquet reads with schema evolution and deletes, the Parquet writer with Iceberg metrics, safe commits and the table operations. Its tests prove the writer loads no Hadoop `Configuration`. | `Table`, `catalog.Catalogs`, `scan.Planner`, `read.TaskReader`, `write.Operations`, `write.ParquetDataWriter` |
 | `drishti-deltalake` | `deltalake` | A Delta Kernel engine without Hadoop on `drishti-lakeio` (local disk, Windows paths included, and S3; Parquet through parquet-java with the shared input files and codecs); and Drishti's own Delta writer (`lake build --engine drishti`). Its tests prove in an isolated class loader that no Hadoop `FileSystem`, `Shell` or `Configuration` loads. | `NativeEngine`, `write.LakeManifest` |
-| `drishti-memlake` | `memlake` | The in-memory lake, plain Java with no Spring ([IN_MEMORY_LAKE.md](../architecture/IN_MEMORY_LAKE.md)): the `mem://` memory stores (Parquet files in off-heap chunks under a hard cap; registered with `drishti-lakeio` as the `mem` storage provider), the tables and their replenish jobs, the eviction ladder, automated compaction, the owner node's binding, the never-on-disk guard and the host checks. The server keeps only its Spring wiring (`server.memlake`: settings binding, beans, the Admin, Lakes controller). | `MemoryLake`, `MemoryLakeSettings`, `Retention`, `MemoryBinding`, `store.MemoryStores`, `store.MemoryStorage` |
-| `drishti-lakeload` | `lakeload` | The parallel lake loader: JSON Lines from a folder or S3 into Delta or Iceberg, readers, parsers and writers on every core, memory bounded by `memory.budget-mb` (sorted runs spilled to disk), one commit per business date ([PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md)). | `LakeLoad`, `Loader`, `RowParser`, `Runs`, `DeltaTarget`, `IcebergTarget` |
+| `drishti-memlake` | `memlake` | The in-memory lake, plain Java with no Spring ([IN_MEMORY_LAKE.md](../architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk)): the `mem://` memory stores (Parquet files in off-heap chunks under a hard cap; registered with `drishti-lakeio` as the `mem` storage provider), the tables and their replenish jobs, the eviction ladder, automated compaction, the owner node's binding, the never-on-disk guard and the host checks. The server keeps only its Spring wiring (`server.memlake`: settings binding, beans, the Admin, Lakes controller). | `MemoryLake`, `MemoryLakeSettings`, `Retention`, `MemoryBinding`, `store.MemoryStores`, `store.MemoryStorage` |
+| `drishti-lakeload` | `lakeload` | The parallel lake loader: JSON Lines from a folder or S3 into Delta or Iceberg, readers, parsers and writers on every core, memory bounded by `memory.budget-mb` (sorted runs spilled to disk), one commit per business date ([PARALLEL_LOADER.md](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload)). | `LakeLoad`, `Loader`, `RowParser`, `Runs`, `DeltaTarget`, `IcebergTarget` |
 | `drishti-testkit` | `testkit` | Contract tests every source plugin of a kind must pass. | `DatedSourceContract`, `MessageSourceContract`, `BrokerOutage` |
 | `drishti-server` | `server` | The Spring Boot application: REST and SSE controllers, security, alerts, Sutra governance, and one sub-package per feature area (`admin`, `ai`, `alerts`, `bi`, `calc`, `cli`, `collab`, `connectors`, `deploy`, `design`, `dist`, `embed`, `explain`, `governance`, `layout`, `loads`, `notify`, `pivot`, `registry`, `reports`). `bi` is Rūpaka, the BI engine (section 4.4). | `DrishtiApplication`, `api.*Controller`, `security.Entitlements`, `security.TokenFilter`, `alerts.AlertEngine`, `governance.SutraGovernance`, `bi.mq.MqService`, `bi.engine.QueryService` |
 | `drishti-it` | `it` | Repository-wide rules, as tests only. | `ArchitectureRulesTest`, `LicenseHeaderTest`, `SourceFileSizeTest`, `NoBlockingUnderSynchronizedTest` |
@@ -4264,7 +4265,7 @@ them, so they are on its class path; each starts only when enabled or used by a 
 
 | Module | Plugin name | Reads | Extra internal dependency |
 |---|---|---|---|
-| `drishti-plugin-demo` | `demo` | The enabled packs' `samples/` (`<kind>.jsonl`); random-walk ticks ([DEMO_CONNECTOR.md](../connectors/DEMO_CONNECTOR.md)) | — |
+| `drishti-plugin-demo` | `demo` | The enabled packs' `samples/` (`<kind>.jsonl`); random-walk ticks ([DEMO_CONNECTOR.md](../../plugins/drishti-plugin-demo/README.md)) | — |
 | `drishti-plugin-file` | `file` | JSON or JSON Lines documents in a folder, dated by folder | — |
 | `drishti-plugin-rest` | `rest` | An HTTP/JSON service | — |
 | `drishti-plugin-jdbc` | `jdbc` | A database by query, or the PostgreSQL entity-table mode | — |
@@ -4276,7 +4277,7 @@ them, so they are on its class path; each starts only when enabled or used by a 
 | `drishti-plugin-iceberg` | `iceberg` | Apache Iceberg tables in Drishti's layout (path-based or a REST catalog), with time travel; engine `native` (drishti-iceberg, no Hadoop) or `library` | `drishti-iceberg` |
 | `drishti-plugin-iceberg-external` | `iceberg-external` | Iceberg tables other engines write, rows as documents, read-only, through drishti-iceberg | `drishti-iceberg` |
 | `drishti-plugin-duckdb` | `duckdb` | Every data domain in one embedded DuckDB file | — |
-| `drishti-plugin-feeds` | `feed` | Public feeds: NY Fed SOFR, ECB €STR and FX, US Treasury, FRED ([FEEDS_CONNECTOR.md](../connectors/FEEDS_CONNECTOR.md)) | — |
+| `drishti-plugin-feeds` | `feed` | Public feeds: NY Fed SOFR, ECB €STR and FX, US Treasury, FRED ([FEEDS_CONNECTOR.md](../../plugins/drishti-plugin-feeds/README.md)) | — |
 | `drishti-plugin-news` | `news` | Headlines for a named entity, computed on demand from Google News RSS (code, not a store) | `drishti-common` |
 | `drishti-plugin-yfinance` | `yfinance` | A quote and price history for a ticker, computed on demand from Yahoo Finance | `drishti-common` |
 | `drishti-plugin-kafka` | `kafka` | Compacted topics of entity documents | `drishti-diskcache` |
@@ -4344,7 +4345,7 @@ server nor Spring, and the lake engines and connectors never see `memlake` (they
 | `deploy/` | `server.Dockerfile`, `console.Dockerfile`, `compose.yaml`, `compose.data.yaml`, `lake-maintenance.yaml`, `grafana/` |
 | `config/license-header.txt` | The text of the copyright header that `license_headers.py` inserts |
 | `data/` | The **data folder** (`DRISHTI_DATA_DIR`): everything Drishti writes at run time, all git-ignored except `testdata/`: `delta/` (the demo lakes), `bi-store/` (BI columns and rollups), `connectors/` (`generated/` and `history/`), `identity/`, `feeds/`, `packs/` (`added.yaml`, installed archives), `loads/`, `governance/`, `collab/`, `reports/`, `qa/` (the QA profile), `build/` (tool output and staging), `drill/` (the drill's logs) |
-| `docs/` | These documents, by audience: `guides/` (getting started, user, developer, API, Rachana, BI and troubleshooting guides), `tutorials/` (18 hands-on tutorials), `connectors/` (the connector and plugin guides, a design document per store, demo data), `admin/` (operations, configuration, users, performance, and the runbooks under `admin/runbooks/`), `architecture/` (architecture, design notes and the ADRs under `architecture/adr/`), `qa/`; `README.md` is the index; reference mockups and logos under `requirements/` |
+| `docs/` | These documents, by audience: `guides/` (getting started, user, developer, API, Rachana, BI and troubleshooting guides), `tutorials/` (18 hands-on tutorials), `connectors/` (the connector and plugin guides, a design document per store, demo data), `admin/` (operations, configuration, users, performance; the runbooks are in OPERATIONS.md), `architecture/` (architecture, design notes and the ADRs under `architecture/adr/`); `README.md` is the index; reference mockups and logos under `requirements/` |
 | `.github/workflows/fast.yml`, `windows.yml` | CI: `fast.yml` runs `./mvnw -B -q verify` and the header check on Java 21 and 25 and `pytest` for the console on Python 3.13; `windows.yml` builds on Windows, runs the native Delta engine, the Delta connector and server tests, and asks a server on a small lake for a view, a search and a past date |
 
 ---
@@ -4377,7 +4378,7 @@ You should see `Java version: 21…` in the output. Maven itself comes with the 
 git clone https://github.com/ajsinha/drishti.git && cd drishti
 uv venv --python 3.13 drishti-console/.venv
 uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
-./mvnw -q package -DskipTests -pl drishti-server -am                 # 1 min 12 s with ~/.m2 filled
+./mvnw -q package -DskipTests -pl drishti-app -am                 # 1 min 12 s with ~/.m2 filled
 drishti-console/.venv/bin/python tools/drishti.py lake demo           # about 15 min (943 s): 89 Delta tables, sixty days, under data/delta/demo
 ```
 
@@ -4390,7 +4391,7 @@ Run them from the repository root.
 | You want to… | Command |
 |---|---|
 | Build everything, no tests | `./mvnw -q package -DskipTests` |
-| Build only the server and what it needs | `./mvnw -q package -DskipTests -pl drishti-server -am` |
+| Build only the server and what it needs | `./mvnw -q package -DskipTests -pl drishti-app -am` |
 | Build and run every test and rule | `./mvnw -q verify` |
 | The same, without touching the network (what the drill runs) | `./mvnw -q -o verify` |
 | Build one module and what it needs | `./mvnw -q -pl drishti-engine -am package -DskipTests` |
@@ -4482,7 +4483,7 @@ Build the jar, then start it from the repository root (the server finds `./confi
 directory):
 
 ```bash
-./mvnw -q package -DskipTests -pl drishti-server -am
+./mvnw -q package -DskipTests -pl drishti-app -am
 DRISHTI_DEMO_ENABLED=false DRISHTI_STUDIO_SAVE=true \
   java -jar drishti-server/target/drishti-server-2.9.11.d-exec.jar
 ```
@@ -4500,7 +4501,7 @@ The development loop that works best:
 | A Sutra under `config/packs/*/sutras/` or a site Sutra directory | Nothing: `drishti.rachana.hot-reload` reloads it; an invalid edit keeps the last good version |
 | A connector file in `config/connectors/` | Nothing: the folder is watched and only that connector restarts |
 | A BI file under `config/bi/` | Nothing: the folder is watched (`drishti.bi.watch`, `BiFolder`); a changed file becomes the next version, one that does not parse keeps its last good version and is listed as a problem |
-| Java code | Rebuild the module and the server jar (`./mvnw -q -o -pl drishti-server -am package -DskipTests`), restart the server |
+| Java code | Rebuild the module and the server jar (`./mvnw -q -o -pl drishti-app -am package -DskipTests`), restart the server |
 | `pack.yaml` or anything in a pack folder | Nothing, usually: the packs folder is watched (`drishti.packs.watch`, `PackReloader`) and the running packs are reconciled with it; a change that cannot be applied live keeps the last version running, is refused with the reason in the log and on Admin → Packs, and is tried again by itself |
 | The demo lakes | `drishti.py lake demo` again: a running server is told (or notices a rebuilt Delta date by itself), so no restart |
 | A console template | Reload the page |
@@ -5796,7 +5797,7 @@ With sign-in on (the run configurations), every `/api/v1` call needs `-H "Author
 | What did the source send? | `F9` in the view, or `curl -s localhost:18480/api/v1/entities/trade/MX-20000001/raw` (provenance `"source":"trade-murex"`; masked fields read `•••` for roles without `raw`) |
 | Which Sutra, how long? | The view JSON's `provenance.layout` (`Sutra irs-fixfloat v1 + inference`, or `inference only`) and `timings` (`fetch`, `layout`, `links`, `bind`, `total` in ms) |
 | What would inference do on its own? | `curl -s localhost:18480/api/v1/studio/inferred/trade/MX-20000001` returns the inferred Sutra as YAML (`text/yaml`, starting with a comment, then `rachana: 1`, `sutra: trade-custom`) |
-| Is a Sutra broken? | `curl -s localhost:18480/api/v1/sutras/problems` (`{}` when none); see [runbooks/sutra-broken.md](../admin/runbooks/sutra-broken.md) |
+| Is a Sutra broken? | `curl -s localhost:18480/api/v1/sutras/problems` (`{}` when none); see [OPERATIONS.md › A Sutra is broken](../admin/OPERATIONS.md#172-a-sutra-is-broken-or-an-edit-does-not-show) |
 | Which sources run? | `curl -s localhost:18480/api/v1/sources` (and `failures`); `drishti.py connector list` for the connector files |
 | What changed between dates? | `curl -s localhost:18480/api/v1/history/trade/MX-20000001/diff` |
 | How are live streams doing? | `curl -s localhost:18480/api/v1/health/live` → `{"streams":0,"topics":2000,"frames":0,"p50Ms":0.0,"p99Ms":0.0}` |
@@ -5825,7 +5826,7 @@ The console runs Uvicorn with access logs off (`access_log=False` in `run_drisht
 
 1. Does the view say **Live** in the top bar? A picked business date is static: no stream is opened. On the demo lakes with the demo
    source off nothing ticks: start with `DRISHTI_DEMO_ENABLED=true` and open a live sample (a curve, an FX spot, a trade valuation,
-   [DEMO_CONNECTOR.md](../connectors/DEMO_CONNECTOR.md)).
+   [DEMO_CONNECTOR.md](../../plugins/drishti-plugin-demo/README.md)).
 2. `provenance.live` in the view JSON must be `true`; only live sources (`SourceCapabilities.live`) tick.
 3. Watch the server stream directly; you should see an `event:view` and then `event:frame` lines:
 
@@ -5957,3 +5958,85 @@ Releases are numbered `MAJOR.MINOR.PATCH` and tagged `vX.Y.Z` on `main` (`git ta
 8. **Images (optional):** `docker build -f deploy/docker/server.Dockerfile -t drishti-server:X.Y.Z .` and
    `docker build -f deploy/docker/console.Dockerfile -t drishti-console:X.Y.Z .` from the repository root, after building the jar.
    [OPERATIONS.md](../admin/OPERATIONS.md) covers deployment and upgrades.
+
+## Part IX. Designing for phones
+
+On a phone a page does not get every panel. Each panel has a **phone tier**, set in configuration, never in code; this part is how a
+pack author and an administrator set it. The `phone:` keys of a Sutra are in [RACHANA_REFERENCE.md › Phone](RACHANA_REFERENCE.md#phone-what-goes-to-a-phone);
+what the reader sees is in [USER_GUIDE.md › On a phone](USER_GUIDE.md#on-a-phone).
+
+### Phone tiers: must, glance, more, desk
+
+| Tier | On a phone | Loaded | Live | Typical panels |
+|---|---|---|---|---|
+| **must** | in full, at the top in the phone order | with the page | yes | the header, key figures, status and breaches, the one table the page is about |
+| **glance** | a compact form with *Show all* | with the page, the compact data only | yes, staying compact | ranked bars, a history chart as a sparkline, a long table as its first rows |
+| **more** | a row under *More on this page*, loaded in place when tapped (bound as the viewer, with the page's controls, Sutra and date) | on tap | once loaded | contributions, cash-flow ladders, provenance, checks, secondary tables, notes |
+| **desk** | named under *On desktop*, with the page's link to copy | never on a phone | no | designers, wide pivot grids, multi-chart dashboards, wide editing forms |
+
+- A page always has a **must** panel: with none configured, its first panel is must.
+- A **tablet** (640 to 1000 px) keeps the page's layout less the desk panels, which wait under *More on this page*. A **desktop** is
+  unchanged, and *Show everything* gives a phone the whole page for the session.
+- Masks, roles and entitlements are unchanged: a tier never shows what the viewer may not see.
+- The **device class** is the `X-Drishti-Device` header (`phone`, `tablet`, `desk`), else the `drishti-device` cookie the browser keeps
+  from its width (phone below 640 px), set at load and on rotation; never the user agent. A workspace pane or an embedded page never
+  sets it. `ui.phone.enabled: false` (`DRISHTI_UI_PHONE`) gives every screen every panel.
+- The phone page reads: the Sutra's summary line, the must panels, the glance panels, *More on this page*, *On desktop*. A screen's
+  `phone.order` arranges must and glance; *more* rows keep the desktop order. *Why these panels* lists each panel with its tier and the
+  layer that set it.
+
+### Where the tier is set: the layers
+
+Each panel's tier is resolved by the console from the ViewModel ([VIEWMODEL.md](../architecture/VIEWMODEL.md), `phone`), **the most
+specific layer winning**:
+
+| Layer (most general first) | Where | Who |
+|---|---|---|
+| 1. Kind default | built in: `kv`, `status`, `metric`, `gauge` must; tables, charts, bars, timelines, links, maps and tabs glance; `provenance`, `markdown`, `surface`, `graph` more; `pivot` desk; `ui.phone.kinds` changes a kind's default for the site (`{ table: more, map: desk }`) | Drishti, administrator |
+| 2. Fragment | the fragment's `doc.phone` (put on every panel it brings, marked as the fragment's) | pack author |
+| 3. Sutra | `phone:` on a panel or a use, and the screen's `phone: { order, default, summary }` | pack or screen author |
+| 4. Site | `ui.phone.rules` in the console's `application.yaml`: `[{ kind: provenance, tier: desk }, { panel: "*contrib*", max: more }]` (keys `panel`, `kind`, `title`, `sutra`, `entity` as globs; `tier` or `max`) | administrator |
+| 5. Pack | `ui.phone.packs`: `{ market-risk: [{ panel: "*contrib*", tier: more }] }`, for the entity kinds the pack owns | administrator |
+| 6. Lens | the lens file's `phone: { rules, pages }` (`config/lenses/<module>/<lens>.yaml`; the risk lens puts every VaR contribution panel under *More*) | administrator |
+
+A `max:` from the site, a pack or a lens **caps** every layer: a Sutra cannot make a capped panel must. That is how a site protects
+phone performance.
+
+**Shipped defaults.** Every UI-kit fragment that draws a panel (`config/ui-kit/fragments/`) and the trading pack's shared fragments
+(`config/packs/banking/trading/sutras/common/`) carry `doc.phone`: a ticket and key figures must; tables, ladders, bars, timelines, maps
+and charts at a glance; legs as their first tab; provenance, notes, links, events and payments under *More*. The netting set's, the
+counterparty's and the Endur commodity swap's Sutras give their phone order, summary line and tiers (a counterparty's group graph on the
+desktop). A generated pack's phone defaults come from its generator (`tools/packgen/banking/phone_display.py`,
+`tools/packgen/trades/sutras.py`).
+
+**Compact forms.** A glance panel is cut on the console before it is sent: a table's first N rows in its chosen columns and sort, a
+chart as a sparkline with its last value and change, the first N bars, events, links or figures, the first tab, a map as a list of its
+places. The phone downloads only must and glance panels in that form; the server binds every panel for the console.
+
+### Beyond Sutra pages
+
+The same tiers apply to pages that are not Sutra pages, set and capped by `ui.phone.pages.<page>`, a lens's `phone.pages.<page>` and a
+landing's `home.phone` (`{ var: { contrib: glance, tiles: { max: glance } } }`):
+
+| Page | Phone default |
+|---|---|
+| VaR page | headline tiles and the method must; the scenario P&L distribution at a glance; the worst scenarios, the path, the history, contributions, captures, other currencies, the scope tree and provenance under *More*; what-if and the basket on the desktop |
+| Exposure page | the tiles must; the profile at a glance; the tabs, the tree and provenance under *More*; the paths on the desktop |
+| Lens landings | the command line, the tiles and the first card must; other tables at a glance; charts, maps and quick links under *More* |
+| BI reports | the report's `layouts.phone`, and `phone: desk` on a visual |
+| Admin → Capacity | the four states and what breaks first must; the headroom bars at a glance; this server beside the plan and growth under *More*; editing the plan, the JVM arguments, the command line, the sliders and the download on the desktop |
+| Admin pages, designers, the Build workbench | desk, with a short *Open on desktop* page |
+
+Below 640 px the lens menus also fold into one menu named after the lens, a column per subject.
+
+### Phone display: open items
+
+- The server binding only must and glance panels (stubs for more and desk) instead of the console cutting them, and Arrow for a
+  tablet's *Show all*.
+- `sutra lint --phone` (each Sutra's panels with their resolved tiers and a payload estimate) and a before-and-after measurement of
+  phone payload (target: under half the bytes, under 1.5 s to the must panels over 4G on the heaviest pages).
+- A lint warning for a fragment that draws a table or a chart without `doc.phone`.
+- A person's own pins (*Pin to my phone*, *Not on my phone*, *Reset phone layout*), stored per person and Sutra.
+
+The tests: `test_phone.py`, `test_phone_browser.py` (390 px and 1280 px, dark and light, no sideways scroll, 44 px controls),
+`PhoneReaderTest`, `PhoneViewTest`.

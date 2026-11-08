@@ -82,7 +82,7 @@ settings:
 | a BI table over the kind (no `connector:` named) | one connector's rows | every union connector's rows in one table; naming a connector reads that one only |
 
 A connector behind the union (a stream of today's changes, the demo samples) is still not asked once the union holds the date. The
-trading pack ships its three trade connectors this way ([DELTA_CONNECTOR.md](DELTA_CONNECTOR.md#4-declaring-the-layout-in-a-pack));
+trading pack ships its three trade connectors this way ([DELTA_CONNECTOR.md](../../plugins/drishti-plugin-delta/README.md#declaring-the-layout-in-a-pack));
 `drishti.py lake build --connector trade-endur` writes the table that connector reads ([TOOLS.md](../guides/TOOLS.md)).
 
 ## Which connector?
@@ -94,13 +94,13 @@ trading pack ships its three trade connectors this way ([DELTA_CONNECTOR.md](DEL
 | in an existing database schema (your own SQL) | `jdbc` query mode | [postgresql and jdbc](#postgresql-and-jdbc) |
 | in PostgreSQL loaded for Drishti | `jdbc` table mode | [postgresql and jdbc](#postgresql-and-jdbc) |
 | in a Delta Lake or an Iceberg catalog | `delta`, `iceberg` | [delta lake](#delta-lake), [apache iceberg](#apache-iceberg) |
-| in Iceberg tables other engines write (Spark, Flink, Trino, Glue), read-only | `iceberg-external` | [ICEBERG_EXTERNAL_CONNECTOR.md](ICEBERG_EXTERNAL_CONNECTOR.md) |
-| in AWS S3 Tables (managed Iceberg tables in a table bucket) | `iceberg` with `catalog: s3tables` | [ICEBERG_CONNECTOR.md section 20](ICEBERG_CONNECTOR.md#20-aws-s3-tables) |
-| in Delta Lake tables in AWS S3 | `delta` with `root: s3://<bucket>/<prefix>` | [DELTA_CONNECTOR.md section 17](DELTA_CONNECTOR.md#17-delta-lake-on-aws-s3) |
+| in Iceberg tables other engines write (Spark, Flink, Trino, Glue), read-only | `iceberg-external` | [ICEBERG_EXTERNAL_CONNECTOR.md](../../plugins/drishti-plugin-iceberg-external/README.md) |
+| in AWS S3 Tables (managed Iceberg tables in a table bucket) | `iceberg` with `catalog: s3tables` | [ICEBERG_CONNECTOR.md section 20](../../plugins/drishti-plugin-iceberg/README.md#aws-s3-tables) |
+| in Delta Lake tables in AWS S3 | `delta` with `root: s3://<bucket>/<prefix>` | [DELTA_CONNECTOR.md section 17](../../plugins/drishti-plugin-delta/README.md#delta-lake-on-aws-s3) |
 | in DuckDB, MongoDB, Redis or Aerospike | `duckdb`, `mongodb`, `redis`, `aerospike` | [duckdb](#duckdb), [mongodb](#mongodb), [redis](#redis), [aerospike](#aerospike) |
 | in Apache Cassandra, ScyllaDB, DataStax Astra or Amazon Keyspaces | `cassandra` | [apache cassandra](#apache-cassandra) |
 | on Kafka, ActiveMQ or RabbitMQ (live) | `kafka`, `activemq`, `rabbitmq` | [kafka](#kafka), [activemq](#activemq), [rabbitmq](#rabbitmq) |
-| JSON objects in a bucket (S3, MinIO, Ceph) | `s3` | [S3_CONNECTOR.md](S3_CONNECTOR.md) |
+| JSON objects in a bucket (S3, MinIO, Ceph) | `s3` | [S3_CONNECTOR.md](../../plugins/drishti-plugin-s3/README.md) |
 | public rates and FX | `feed` | [public feeds](#public-feeds) |
 | headlines for a named entity, computed on demand (code, not a store) | `news` | [news](#news) |
 | a quote and price history for a ticker, computed on demand (samples only) | `yfinance` | [yahoo finance](#yahoo-finance) |
@@ -130,7 +130,7 @@ Plugin `demo`. Every pack's samples, in memory, ticking.
 [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#derived-kinds-entities-computed-from-other-kinds).
 
 
-Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [DEMO_CONNECTOR.md](DEMO_CONNECTOR.md).
+Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [DEMO_CONNECTOR.md](../../plugins/drishti-plugin-demo/README.md).
 
 ## File
 
@@ -162,7 +162,7 @@ settings:
 **Limits:** no live updates; new files reach search after `rescan-seconds`; a kind or id that would leave its folder is
 refused.
 
-Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [FILE_CONNECTOR.md](FILE_CONNECTOR.md).
+Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [FILE_CONNECTOR.md](../../plugins/drishti-plugin-file/README.md).
 
 ## Delta Lake
 
@@ -185,12 +185,12 @@ settings:
     ca-file: /etc/drishti/tls/ca.pem
 ```
 
-**Layout.** A table per kind, `<root>/<domain>/<kind>/` (or the folder `table.<kind>` names, as the trading pack's `trade_endur`; [DELTA_CONNECTOR.md section 3](DELTA_CONNECTOR.md#3-what-is-on-disk)), rows `(id, doc)` plus the pack's promoted columns,
+**Layout.** A table per kind, `<root>/<domain>/<kind>/` (or the folder `table.<kind>` names, as the trading pack's `trade_endur`; [DELTA_CONNECTOR.md section 3](../../plugins/drishti-plugin-delta/README.md#data-structure)), rows `(id, doc)` plus the pack's promoted columns,
 partitioned by `business_date`; `root` may be `s3a://bucket/lake`. **Loader:** `tools/load-delta.sh [root] [--trades N
 --days D]` for samples; `tools/lake/maintain.py` keeps it bounded. **Limits:** *known at* resolves against the log
-files' modification times (copy lakes with `cp -p`); BROTLI and LZO pages are refused with a clear error (every codec per engine: [DELTA_CONNECTOR.md section 16](DELTA_CONNECTOR.md#16-engines-native-and-hadoop)).
+files' modification times (copy lakes with `cp -p`); BROTLI and LZO pages are refused with a clear error (every codec per engine: [DELTA_CONNECTOR.md section 16](../../plugins/drishti-plugin-delta/README.md#engines-native-and-hadoop)).
 
-Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md).
+Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [DELTA_CONNECTOR.md](../../plugins/drishti-plugin-delta/README.md).
 
 ## Apache Iceberg
 
@@ -219,10 +219,10 @@ settings:
 **Loader:** `tools/load-iceberg.sh`; maintain with `IcebergMaintenance`. **Limits:** as for Delta Lake; delete files are
 applied by every read.
 
-Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [ICEBERG_CONNECTOR.md](ICEBERG_CONNECTOR.md).
+Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md).
 
 Iceberg tables that other engines write, in their own layout, are read (never written) by the plugin `iceberg-external`:
-[ICEBERG_EXTERNAL_CONNECTOR.md](ICEBERG_EXTERNAL_CONNECTOR.md).
+[ICEBERG_EXTERNAL_CONNECTOR.md](../../plugins/drishti-plugin-iceberg-external/README.md).
 
 ## DuckDB
 
@@ -250,11 +250,11 @@ settings:
 by id. **Loader:** `tools/load-duckdb.sh` (`--keep-days`); a load writes a new file and renames it over the old one.
 **Limits:** one file, one machine; native memory is outside the Java heap (`memory-limit`).
 
-Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [DUCKDB_CONNECTOR.md](DUCKDB_CONNECTOR.md).
+Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [DUCKDB_CONNECTOR.md](../../plugins/drishti-plugin-duckdb/README.md).
 
 ## PostgreSQL and JDBC
 
-Plugin `jdbc`. A database through JDBC, in table mode (Drishti's own table) or, with your own SQL, in query mode ([JDBC_QUERIES.md](JDBC_QUERIES.md)).
+Plugin `jdbc`. A database through JDBC, in table mode (Drishti's own table) or, with your own SQL, in query mode ([JDBC_QUERIES.md](../../plugins/drishti-plugin-jdbc/README.md#query-mode-the-queries)).
 
 A connector file (`config/connectors/<name>.yaml`):
 
@@ -292,7 +292,7 @@ makes the kind dated. **Loader:** none. **Limits:** search and reverse lookups o
 `tools/load-postgres.sh`. **Limits:** you run the load and size the indexes; `mode.<kind>` chooses `snapshot` or
 `effective`.
 
-Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [POSTGRES_CONNECTOR.md](POSTGRES_CONNECTOR.md).
+Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [POSTGRES_CONNECTOR.md](../../plugins/drishti-plugin-jdbc/README.md).
 
 ## MongoDB
 
@@ -317,7 +317,7 @@ fields under `c`, and a narrow `<domain>_columns` copy for searches. **Loader:**
 (`--keep-days`, `--ttl-days`). **Limits:** promoted fields are cached in memory; MongoDB 8.0 does not start on some
 recent kernels (use 7).
 
-Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [MONGODB_CONNECTOR.md](MONGODB_CONNECTOR.md).
+Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [MONGODB_CONNECTOR.md](../../plugins/drishti-plugin-mongodb/README.md).
 
 ## Redis
 
@@ -344,7 +344,7 @@ settings:
 of 10,000; days and ids in sorted sets. **Loader:** `tools/load-redis.sh` (`--ttl-days`, `--publish`). **Limits:**
 about 1 GB of memory per million trades a day; TTL retention; a day Redis does not hold goes to the next store.
 
-Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [REDIS_CONNECTOR.md](REDIS_CONNECTOR.md).
+Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [REDIS_CONNECTOR.md](../../plugins/drishti-plugin-redis/README.md).
 
 ## Aerospike
 
@@ -373,7 +373,7 @@ promoted bins), an index record per entity (its dates), a record per kind (its d
 `tools/load-aerospike.sh`. **Limits:** searches, pick lists and reverse lookups need the pack's promoted bins
 (`layout.<kind>.columns`).
 
-Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md).
+Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [AEROSPIKE_CONNECTOR.md](../../plugins/drishti-plugin-aerospike/README.md).
 
 ## Apache Cassandra
 
@@ -400,7 +400,7 @@ settings:
 ```
 
 Load it with `tools/load-cassandra.sh` (or `drishti.py data load --store cassandra`). Everything else (the table layout, how it reads, generations, retention,
-sizing, measured numbers, every setting): [CASSANDRA_CONNECTOR.md](CASSANDRA_CONNECTOR.md).
+sizing, measured numbers, every setting): [CASSANDRA_CONNECTOR.md](../../plugins/drishti-plugin-cassandra/README.md).
 
 **Layout.** A keyspace per domain; a table per kind with a row per entity per business date (the document and the promoted
 columns, partitioned by date, generation and bucket), plus `entity_days` and `kind_days`; a day loaded as a new generation
@@ -416,7 +416,7 @@ Plugin `s3`. One JSON object per entity in a bucket (S3, MinIO, Ceph).
 | a few thousand to a few tens of thousands of objects in all, under the prefix | searches over fields, pick lists, desk totals and impact (needs promoted columns: Delta Lake, Iceberg, PostgreSQL, Aerospike) |
 | reference documents kept by hand in a bucket, the same for every date (undated objects) | reverse lookups (*Linked entities*, F8 impact): this connector has none |
 | sites where object storage is the only shared store, and no table format is wanted | data that changes during the day and must tick on screen (Kafka, ActiveMQ, RabbitMQ, Redis) |
-| a short daily history (`lookback-days`), cleaned by a bucket lifecycle rule | years of history read by date (a lake keeps it compactly; see [section 9](S3_CONNECTOR.md#9-s3-with-a-lake-for-history)) |
+| a short daily history (`lookback-days`), cleaned by a bucket lifecycle rule | years of history read by date (a lake keeps it compactly; see [section 9](../../plugins/drishti-plugin-s3/README.md#s3-with-a-lake-for-history)) |
 
 A connector file (`config/connectors/<name>.yaml`):
 
@@ -435,7 +435,7 @@ settings:
 uploader: `aws s3 sync`, `mc cp`). **Limits:** listing a large bucket costs; ids and dates are listed every
 `rescan-seconds` and reads cached `cache-seconds`; no reverse lookups.
 
-Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [S3_CONNECTOR.md](S3_CONNECTOR.md).
+Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [S3_CONNECTOR.md](../../plugins/drishti-plugin-s3/README.md).
 
 ## REST
 
@@ -467,7 +467,7 @@ settings:
 or more is a failure. **Loader:** none. **Limits:** undated; no search, no reverse lookups; every view is a request to
 the service.
 
-Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [REST_CONNECTOR.md](REST_CONNECTOR.md).
+Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [REST_CONNECTOR.md](../../plugins/drishti-plugin-rest/README.md).
 
 ## Public feeds
 
@@ -478,7 +478,7 @@ Plugin `feed`. SOFR, EUR STR, ECB FX, the Treasury curve and FRED.
 | real overnight rates (SOFR, €STR) beside a pack's own fixings, for comparison or a demo | an official, audited record of fixings (load them into a dated store you control) |
 | ECB reference FX rates for information (crosses for ten pairs) | traded FX prices: the ECB rate is a once-a-day reference, and the connector sets `bid` = `ask` = `mid` |
 | the US Treasury par curve as an `ir-curve` | a bootstrapped discount curve: the connector's `zeroRate` is the par yield, not a zero rate (section 3.4) |
-| any daily FRED series (`DGS10`, `DFF`, `SOFR`, …) | history beyond the last 60 observations, 90 days of FX or about two months of Treasury curve: archive it ([section 7](FEEDS_CONNECTOR.md#7-scale-limits-and-history-from-a-lake)) |
+| any daily FRED series (`DGS10`, `DFF`, `SOFR`, …) | history beyond the last 60 observations, 90 days of FX or about two months of Treasury curve: archive it ([section 7](../../plugins/drishti-plugin-feeds/README.md#scale-limits-and-history-from-a-lake)) |
 | a server with outbound HTTPS, or a mirror on disk | a server that must make no outbound request and has no mirror process |
 
 A connector file (`config/connectors/<name>.yaml`):
@@ -498,7 +498,7 @@ settings:
 (`FIX-SOFR-NYFED`). **Loader:** none. **Limits:** needs the internet (or a mirror: `url: file://…`); FRED needs a free
 key; a failed fetch keeps the last good data and shows in health.
 
-Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [FEEDS_CONNECTOR.md](FEEDS_CONNECTOR.md).
+Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [FEEDS_CONNECTOR.md](../../plugins/drishti-plugin-feeds/README.md).
 
 ## News
 
@@ -513,7 +513,7 @@ Plugin `news`. Headlines for a named entity, computed on demand.
 **Layout.** Ids `NEWS-<name with underscores>[@lang-CC][~all]`. **Loader:** none. **Limits:** needs the internet; the entity names are sent to
 Google (off as shipped); the first view of a name is pending under the 40 ms link budget.
 
-Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [NEWS.md](NEWS.md).
+Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [NEWS.md](../../plugins/drishti-plugin-news/README.md).
 
 ## Yahoo Finance
 
@@ -527,7 +527,7 @@ low and volume) for the configured range at the configured interval. The console
 **Layout.** Ids `QUOTE-<symbol>`. **Loader:** none. **Limits:** needs the internet; not for production or redistribution; an unknown symbol is not
 held.
 
-Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [YFINANCE.md](YFINANCE.md).
+Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [YFINANCE.md](../../plugins/drishti-plugin-yfinance/README.md).
 
 ## Kafka
 
@@ -535,7 +535,7 @@ Plugin `kafka`. Live entities from a topic.
 
 | Use it for | Prefer another store for |
 |---|---|
-| entities whose latest state is published to a topic whenever it changes (trades, positions, quotes, limits) | history: the connector is undated; pair it with Delta Lake, PostgreSQL, Aerospike or files ([section 10.4](KAFKA_CONNECTOR.md#104-with-a-lake-for-history)) |
+| entities whose latest state is published to a topic whenever it changes (trades, positions, quotes, limits) | history: the connector is undated; pair it with Delta Lake, PostgreSQL, Aerospike or files ([section 10.4](../../plugins/drishti-plugin-kafka/README.md#with-a-lake-for-history)) |
 | views that must tick within a frame of a change | reverse lookups (*Linked entities*, impact with F8): it declares none |
 | a change feed over data a store already serves (`ticks` mode) | searches over fields of the documents: it offers type-ahead by id only |
 | a topic other systems already consume, read without a consumer group | a queue that delivers each message once (ActiveMQ, RabbitMQ: those connectors keep their own state store) |
@@ -562,7 +562,7 @@ deletes. **Loader:** none for production; `tools/samplegen/stream.py` replays an
 undated; reads every partition from the beginning (the topic is the state), so a restart replays it; `mode: ticks`
 keeps nothing and only pushes. **Security:** `security.protocol`, `tls.*` ([TLS.md](TLS.md)), `sasl.*` (PLAIN, SCRAM, OAUTHBEARER, GSSAPI), `flavour: confluent` and the Schema Registry; `client.<property>` passes any Kafka property and wins.
 
-Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [KAFKA_CONNECTOR.md](KAFKA_CONNECTOR.md).
+Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [KAFKA_CONNECTOR.md](../../plugins/drishti-plugin-kafka/README.md).
 
 ## ActiveMQ
 
@@ -571,7 +571,7 @@ Plugin `activemq`. Live entities from queues and topics, kept on local disk.
 | Use it for | Prefer another connector for |
 |---|---|
 | a system that already publishes each change of an entity to an ActiveMQ Classic queue or topic | history by business date (Delta Lake, PostgreSQL, Aerospike, files): this connector is undated |
-| live views of a modest set of entities (orders, limits, quotes, alerts) that tick on every message | a topic that is the system of record and can be replayed (Kafka: [KAFKA_CONNECTOR.md](KAFKA_CONNECTOR.md)) |
+| live views of a modest set of entities (orders, limits, quotes, alerts) that tick on every message | a topic that is the system of record and can be replayed (Kafka: [KAFKA_CONNECTOR.md](../../plugins/drishti-plugin-kafka/README.md)) |
 | state that should start empty each day (`state.reset-at`) | reverse lookups (*Linked entities*, impact with F8): not supported |
 | a desk that cannot run Kafka but has a broker | searches over promoted fields of millions of entities a day (it has no columns) |
 | | ActiveMQ Artemis with AMQP or a broker other than Classic: the client speaks OpenWire only |
@@ -600,7 +600,7 @@ delete is `doc: null`. **Loader:** none: publish messages. **Limits:** a queue d
 the latest document per entity in a local RocksDB state store, the only copy, with a disk budget; see
 [Message queues](#rabbitmq).
 
-Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [ACTIVEMQ_CONNECTOR.md](ACTIVEMQ_CONNECTOR.md).
+Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [ACTIVEMQ_CONNECTOR.md](../../plugins/drishti-plugin-activemq/README.md).
 
 ## RabbitMQ
 
@@ -608,8 +608,8 @@ Plugin `rabbitmq`. Live entities from AMQP queues.
 
 | Use it for | Prefer another connector for |
 |---|---|
-| a system that already publishes changes to a RabbitMQ exchange (margin calls, orders, limit changes) | history by business date: a queue has none (pair it with a lake, [section 10](RABBITMQ_CONNECTOR.md#10-history-rabbitmq-with-a-lake)) |
-| live views that update within a moment of the change | a stream you want to replay from the beginning (Kafka keeps the log; [KAFKA_CONNECTOR.md](KAFKA_CONNECTOR.md)) |
+| a system that already publishes changes to a RabbitMQ exchange (margin calls, orders, limit changes) | history by business date: a queue has none (pair it with a lake, [section 10](../../plugins/drishti-plugin-rabbitmq/README.md#history-rabbitmq-with-a-lake)) |
+| live views that update within a moment of the change | a stream you want to replay from the beginning (Kafka keeps the log; [KAFKA_CONNECTOR.md](../../plugins/drishti-plugin-kafka/README.md)) |
 | tens or hundreds of thousands of entities, each changing now and then | reverse lookups (*Linked entities*, impact with F8): this connector declares none |
 | a feed that should reach Drishti even while Drishti is down (messages wait in the queue) | a store other systems also query: the state lives only in Drishti's local disk |
 
@@ -636,11 +636,11 @@ settings:
 **Both message queues (ActiveMQ, RabbitMQ).** A queue delivers each message once and keeps no history, unlike a Kafka topic, so these two connectors keep the latest
 document of every entity themselves, in a persistent state store on local disk that survives restarts, and acknowledge
 a message only after the store has kept it. How a message becomes an entity, the durability modes, the disk budget and
-eviction are in [ACTIVEMQ_CONNECTOR.md](ACTIVEMQ_CONNECTOR.md#7-durability-and-disk-budget) and
-[RABBITMQ_CONNECTOR.md](RABBITMQ_CONNECTOR.md#6-durability-and-disk-budget); minimal configurations are the
+eviction are in [ACTIVEMQ_CONNECTOR.md](../../plugins/drishti-plugin-activemq/README.md#durability-and-disk-budget) and
+[RABBITMQ_CONNECTOR.md](../../plugins/drishti-plugin-rabbitmq/README.md#durability-and-disk-budget); minimal configurations are the
 [activemq](#activemq) and [rabbitmq](#rabbitmq) sections.
 
-Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [RABBITMQ_CONNECTOR.md](RABBITMQ_CONNECTOR.md).
+Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [RABBITMQ_CONNECTOR.md](../../plugins/drishti-plugin-rabbitmq/README.md).
 
 
 ## Combining connectors
@@ -884,4 +884,4 @@ bins). Routes stay the pack's (`routes:` in its `pack.yaml`).
 
 ## Demo data
 
-Building the demo book in each store, small to a million trades a day: [DEMO_DATA.md](DEMO_DATA.md). Reading your own database with your own SQL: [JDBC_QUERIES.md](JDBC_QUERIES.md).
+Building the demo book in each store, small to a million trades a day: [DEMO_DATA.md](DEMO_DATA.md). Reading your own database with your own SQL: [JDBC_QUERIES.md](../../plugins/drishti-plugin-jdbc/README.md#query-mode-the-queries).

@@ -212,7 +212,7 @@ public enum ErrorCode {
      */
     DISK_GUARD("DRS-5218", 503),
     /**
-     * The in-memory lake's guard (docs/architecture/IN_MEMORY_LAKE.md section 8): the data is held in memory only by contract, and this
+     * The in-memory lake's guard (docs/architecture/DATA_ARCHITECTURE.md section 8): the data is held in memory only by contract, and this
      * place would keep it (a scheduled report, a mail attachment, an inbox or share item with rows, a saved result, an outside AI provider).
      * Only a user's download may leave; the answer names the data and its contract.
      */

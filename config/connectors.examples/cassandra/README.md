@@ -26,7 +26,7 @@ files:
 - reference-store.yaml
 - risk-store.yaml
 - trade-endur.yaml
-doc: docs/connectors/CASSANDRA_CONNECTOR.md
+doc: plugins/drishti-plugin-cassandra/README.md
 ---
 # The cassandra connector templates
 
@@ -112,6 +112,6 @@ not merged) and is applied within seconds; with `trade-endur.yaml` on Cassandra,
 
 ## See also
 
-- [The Cassandra connector document](../../../docs/connectors/CASSANDRA_CONNECTOR.md): layout, loading, retention, sizing, security.
+- [The cassandra connector README](../../../plugins/drishti-plugin-cassandra/README.md): layout, loading, retention, sizing, security.
 - [The cassandra connector's README](../../../plugins/drishti-plugin-cassandra/README.md) and [connector files](../../../docs/connectors/CONNECTOR_FILES.md).
 - [TLS](../../../docs/connectors/TLS.md) and [the demo data](../../../docs/connectors/DEMO_DATA.md).

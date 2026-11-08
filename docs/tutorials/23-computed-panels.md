@@ -20,7 +20,7 @@ this tutorial you switch on the compute workers and the **compute-demo** sample 
 Python engine fanned out over the workers of a pool, and by its Java twin inside the server), watch a panel go from *computing* with its
 progress to the result without a reload, ask the same computation from the command line, see a parameter refused in words, and send a
 write-back event that recomputes what a screen shows. Each step shows the UI, the command line and the YAML. The reference is
-[REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md); the design is [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors).
+[REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md); the design is [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors).
 
 ## Time to complete
 
@@ -238,5 +238,5 @@ each kind's latency. The pools and workers behind the Python one are under Admin
 
 You read a computed kind on a screen (typed parameters on a panel's source), watched it compute without the page waiting, compared a
 Python engine fanned out over a pool's workers with a Java engine in the server, asked and refused the computation from the command line,
-and recomputed a watched result from an event. Next: the [reactive connector reference](../connectors/REACTIVE_CONNECTOR.md) (sandboxes for
+and recomputed a watched result from an event. Next: the [reactive connector reference](../connectors/types/reactive/README.md) (sandboxes for
 private what-ifs, live and scheduled triggers, the HTTP API) and [operating compute](../admin/OPERATIONS.md#19-compute-workers).

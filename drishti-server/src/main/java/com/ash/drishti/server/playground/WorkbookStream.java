@@ -30,7 +30,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
- * A playground workbook written as it is made (VAR_PLAYGROUND.md section 5): straight into the zip on the response's stream, sheet after
+ * A playground workbook written as it is made (docs/guides/VAR_GUIDE.md section 5): straight into the zip on the response's stream, sheet after
  * sheet and row after row, so a workbook of ten thousand positions is never held whole on the server. The template gives the look and the
  * document properties; the generator gives each sheet ({@link #sheet}) and the defined names ({@link #name}). Excel is asked to recalculate
  * on open ({@code fullCalcOnLoad}); every formula also carries its cached result, so a viewer that never recalculates shows the numbers.

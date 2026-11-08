@@ -242,7 +242,7 @@ class Soak:
         if not HOST:
             raise SystemExit("this machine has no address but loopback: a Drishti*net member never advertises one")
         if not jars or not Path(self.java).exists():
-            raise SystemExit("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-server -am")
+            raise SystemExit("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
         self.jar = str(jars[0])
         self.dates = a.dates.split(",")
         if a.days:                                         # the N business days to the last --dates (trades.py's calendar)

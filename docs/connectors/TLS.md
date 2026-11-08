@@ -23,8 +23,8 @@ the rest work the same for Kafka, ActiveMQ and RabbitMQ, and for each connector 
 Behind a forward proxy, the same connectors also take the shared `proxy.*` settings ([TLS.md (proxy)](#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)); an `https://` target is tunnelled with `CONNECT` and keeps every `tls.*` setting described here.
 
 This is the reference. The connector documents show complete configurations for their own protocols:
-[Kafka](KAFKA_CONNECTOR.md#11-security-tls-sasl-and-confluent) (TLS, SASL, Confluent, Schema Registry),
-[ActiveMQ](ACTIVEMQ_CONNECTOR.md#14-security) (`ssl://`), [RabbitMQ](RABBITMQ_CONNECTOR.md#12-security) (`amqps://`,
+[Kafka](../../plugins/drishti-plugin-kafka/README.md#security-tls-sasl-and-confluent) (TLS, SASL, Confluent, Schema Registry),
+[ActiveMQ](../../plugins/drishti-plugin-activemq/README.md#security) (`ssl://`), [RabbitMQ](../../plugins/drishti-plugin-rabbitmq/README.md#security) (`amqps://`,
 client-certificate login), and for the rest see the [matrix](#connector-matrix) below, whose rows lead to each connector's Security
 section. A plugin author who wants the module in a new connector reads
 [the developer guide](CONNECTOR_DEVELOPER_GUIDE.md#tls-for-a-connector-the-shared-module).
@@ -55,23 +55,23 @@ Every connector with a network client reads these settings. This is what each do
 
 | Connector | TLS is on when | Client certificate | `protocols` / `cipher-suites` | `verify-hostname: false` | Expiry in health | Checked against |
 |---|---|---|---|---|---|---|
-| [Kafka](KAFKA_CONNECTOR.md#11-security-tls-sasl-and-confluent) | `security.protocol: SSL` / `SASL_SSL` | yes | yes | yes | yes | a Kafka broker in Docker |
-| [ActiveMQ](ACTIVEMQ_CONNECTOR.md#14-security) | `broker-url` has `ssl://` | yes | checked, not narrowed (JVM's) | yes | yes | ActiveMQ Classic in Docker |
-| [RabbitMQ](RABBITMQ_CONNECTOR.md#12-security) | `amqps://` | yes (also the log-in, `auth-mechanism: external`) | yes | yes | yes | RabbitMQ 4.1 in Docker |
-| [Redis](REDIS_CONNECTOR.md#security-tls-and-credentials) | `rediss://` | yes | yes | yes (chain only) | yes | Redis 8.2 in Docker, `tls-auth-clients yes` |
-| [REST](REST_CONNECTOR.md#tls-for-the-rest-connector) | `https://` `base-url` | yes | yes | yes | yes | an HTTPS server in the test process |
-| [Feeds](FEEDS_CONNECTOR.md#10-security) (a mirror) | `https://` `url` | yes | yes | yes | yes | an HTTPS server in the test process |
-| [News](NEWS.md) (a mirror or proxy) | `https://` `base-url` | yes | yes | yes | no | no TLS-specific test: it applies the shared `TlsHttp` as REST and Feeds do |
-| [yfinance](YFINANCE.md) (a mirror or proxy) | `https://` `base-url` | yes | yes | yes | no | as News |
-| [S3](S3_CONNECTOR.md#tls-for-the-s3-connector) | `https://` `endpoint` | yes | checked, not narrowed | **refused** (the AWS client always checks) | yes | an HTTPS stand-in S3 in the test process |
-| [MongoDB](MONGODB_CONNECTOR.md#security-tls-certificate-log-in-and-credentials) | `tls.enabled` or `tls=true` in the `uri` | yes (also the log-in, `auth-mechanism: x509`) | checked, not narrowed | yes | yes | MongoDB 7 in Docker, `requireTLS`, x.509 user |
-| [PostgreSQL](POSTGRES_CONNECTOR.md#security-tls-and-credentials) (`jdbc:postgresql:`) | `tls.enabled` | yes (also the log-in, `cert` in `pg_hba.conf`) | yes | yes (`sslmode=require`) | yes | PostgreSQL 18 in Docker, `ssl=on` |
+| [Kafka](../../plugins/drishti-plugin-kafka/README.md#security-tls-sasl-and-confluent) | `security.protocol: SSL` / `SASL_SSL` | yes | yes | yes | yes | a Kafka broker in Docker |
+| [ActiveMQ](../../plugins/drishti-plugin-activemq/README.md#security) | `broker-url` has `ssl://` | yes | checked, not narrowed (JVM's) | yes | yes | ActiveMQ Classic in Docker |
+| [RabbitMQ](../../plugins/drishti-plugin-rabbitmq/README.md#security) | `amqps://` | yes (also the log-in, `auth-mechanism: external`) | yes | yes | yes | RabbitMQ 4.1 in Docker |
+| [Redis](../../plugins/drishti-plugin-redis/README.md#security-tls-and-credentials) | `rediss://` | yes | yes | yes (chain only) | yes | Redis 8.2 in Docker, `tls-auth-clients yes` |
+| [REST](../../plugins/drishti-plugin-rest/README.md#tls-for-the-rest-connector) | `https://` `base-url` | yes | yes | yes | yes | an HTTPS server in the test process |
+| [Feeds](../../plugins/drishti-plugin-feeds/README.md#security) (a mirror) | `https://` `url` | yes | yes | yes | yes | an HTTPS server in the test process |
+| [News](../../plugins/drishti-plugin-news/README.md) (a mirror or proxy) | `https://` `base-url` | yes | yes | yes | no | no TLS-specific test: it applies the shared `TlsHttp` as REST and Feeds do |
+| [yfinance](../../plugins/drishti-plugin-yfinance/README.md) (a mirror or proxy) | `https://` `base-url` | yes | yes | yes | no | as News |
+| [S3](../../plugins/drishti-plugin-s3/README.md#tls-for-the-s3-connector) | `https://` `endpoint` | yes | checked, not narrowed | **refused** (the AWS client always checks) | yes | an HTTPS stand-in S3 in the test process |
+| [MongoDB](../../plugins/drishti-plugin-mongodb/README.md#security-tls-certificate-log-in-and-credentials) | `tls.enabled` or `tls=true` in the `uri` | yes (also the log-in, `auth-mechanism: x509`) | checked, not narrowed | yes | yes | MongoDB 7 in Docker, `requireTLS`, x.509 user |
+| [PostgreSQL](../../plugins/drishti-plugin-jdbc/README.md#security-tls-and-credentials) (`jdbc:postgresql:`) | `tls.enabled` | yes (also the log-in, `cert` in `pg_hba.conf`) | yes | yes (`sslmode=require`) | yes | PostgreSQL 18 in Docker, `ssl=on` |
 | [AI providers](../admin/AI.md#119-tls-the-same-block-as-the-connectors) (every `type:` in `config/ai`, the console's AI and MCP clients) | `https://` `base-url` | yes | yes (the console: `TLSv1.2` / `TLSv1.3`, OpenSSL cipher names; Bedrock: no) | yes (Bedrock: **refused**) | yes (Admin → AI) | fake HTTPS servers with a test CA, mutual TLS and a CONNECT proxy tunnel, in Java and Python; the console reads PEM and PKCS12, not JKS |
 | other JDBC drivers | not mapped: the driver's own options in the URL | | | | | documented only |
-| [Aerospike](AEROSPIKE_CONNECTOR.md#security-tls-certificate-log-in-and-credentials) | `tls.enabled` | yes (also the log-in, `auth-mode: pki`) | yes | yes (no TLS name is given) | yes | unit tests of the wiring; the live check is a manual procedure (the server's TLS is Enterprise Edition) |
-| [Cassandra](CASSANDRA_CONNECTOR.md#security-tls-log-ins-and-connections) (also ScyllaDB; Astra: its bundle) | `tls.enabled` | yes | yes | yes | yes | Cassandra 5 in Docker, `client_encryption_options` with `require_client_auth: true` |
-| [Delta](DELTA_CONNECTOR.md#security-tls-and-credentials) (native engine) | `https://` `s3.endpoint` | yes | yes | yes | yes | an HTTPS stand-in S3 in the test process; refused with `engine: hadoop` |
-| [Iceberg](ICEBERG_CONNECTOR.md#security-tls-and-credentials) (REST catalog's object store) | `https://` `s3.endpoint` | yes | checked, not narrowed | **refused** | yes | an HTTPS stand-in S3 in the test process; refused with `catalog: hadoop` |
+| [Aerospike](../../plugins/drishti-plugin-aerospike/README.md#security) | `tls.enabled` | yes (also the log-in, `auth-mode: pki`) | yes | yes (no TLS name is given) | yes | unit tests of the wiring; the live check is a manual procedure (the server's TLS is Enterprise Edition) |
+| [Cassandra](../../plugins/drishti-plugin-cassandra/README.md#security) (also ScyllaDB; Astra: its bundle) | `tls.enabled` | yes | yes | yes | yes | Cassandra 5 in Docker, `client_encryption_options` with `require_client_auth: true` |
+| [Delta](../../plugins/drishti-plugin-delta/README.md#security-tls-and-credentials) (native engine) | `https://` `s3.endpoint` | yes | yes | yes | yes | an HTTPS stand-in S3 in the test process; refused with `engine: hadoop` |
+| [Iceberg](../../plugins/drishti-plugin-iceberg/README.md#security-tls-and-credentials) (REST catalog's object store) | `https://` `s3.endpoint` | yes | checked, not narrowed | **refused** | yes | an HTTPS stand-in S3 in the test process; refused with `catalog: hadoop` |
 
 The rule is the same everywhere: `tls.*` against an address that is not TLS is a start-up error, never a silent downgrade, and a
 wrong file or password stops the connector at start naming the setting and the file. Where a library has no hook for a
@@ -549,14 +549,14 @@ private CA.
 
 | Connector | Through the proxy | How |
 |---|---|---|
-| [REST](REST_CONNECTOR.md#outbound-proxy) | yes | the JDK HTTP client's proxy selector and authenticator |
-| [Feeds](FEEDS_CONNECTOR.md#outbound-proxy) | yes, built-in feeds and a mirror `url` | same |
-| [News](NEWS.md#outbound-proxy) | yes | same |
-| [yfinance](YFINANCE.md#outbound-proxy) | yes | same |
-| [S3](S3_CONNECTOR.md#outbound-proxy) | yes, AWS and S3-compatible endpoints | the AWS SDK's proxy configuration; with a proxy the Apache HTTP client is used (the URL-connection client cannot answer a proxy's login when it tunnels https) |
-| [Delta](DELTA_CONNECTOR.md#outbound-proxy) over S3 | yes, both engines | native engine: the SDK's proxy configuration; Hadoop engine: `fs.s3a.proxy.*` |
-| [Iceberg](ICEBERG_CONNECTOR.md#outbound-proxy) over S3 / REST catalog | yes | the REST catalog's own client (`rest.client.proxy.*`), the S3 file IO (SDK proxy configuration), Hadoop `fs.s3a.proxy.*` for path tables |
-| [Kafka](KAFKA_CONNECTOR.md#outbound-proxy) | the **schema registry** only (HTTP) | `HttpURLConnection` with the proxy and a per-connection authenticator. Brokers speak the Kafka protocol, not HTTP, and are not proxied |
+| [REST](../../plugins/drishti-plugin-rest/README.md#outbound-proxy) | yes | the JDK HTTP client's proxy selector and authenticator |
+| [Feeds](../../plugins/drishti-plugin-feeds/README.md#outbound-proxy) | yes, built-in feeds and a mirror `url` | same |
+| [News](../../plugins/drishti-plugin-news/README.md#outbound-proxy) | yes | same |
+| [yfinance](../../plugins/drishti-plugin-yfinance/README.md#outbound-proxy) | yes | same |
+| [S3](../../plugins/drishti-plugin-s3/README.md#outbound-proxy) | yes, AWS and S3-compatible endpoints | the AWS SDK's proxy configuration; with a proxy the Apache HTTP client is used (the URL-connection client cannot answer a proxy's login when it tunnels https) |
+| [Delta](../../plugins/drishti-plugin-delta/README.md#outbound-proxy) over S3 | yes, both engines | native engine: the SDK's proxy configuration; Hadoop engine: `fs.s3a.proxy.*` |
+| [Iceberg](../../plugins/drishti-plugin-iceberg/README.md#outbound-proxy) over S3 / REST catalog | yes | the REST catalog's own client (`rest.client.proxy.*`), the S3 file IO (SDK proxy configuration), Hadoop `fs.s3a.proxy.*` for path tables |
+| [Kafka](../../plugins/drishti-plugin-kafka/README.md#outbound-proxy) | the **schema registry** only (HTTP) | `HttpURLConnection` with the proxy and a per-connection authenticator. Brokers speak the Kafka protocol, not HTTP, and are not proxied |
 | AI providers: OpenAI-compatible, Anthropic ([AI.md](../admin/AI.md#outbound-proxy)) | yes | the JDK HTTP client (server), `httpx` (console) |
 | MCP Streamable HTTP clients ([AI.md](../admin/AI.md#outbound-proxy-1)) | yes | same |
 | JDBC, Redis, MongoDB, Aerospike, Cassandra, ActiveMQ, RabbitMQ, files, DuckDB | no | not HTTP: they speak their own protocols (use a TCP-level route if the site needs one) |

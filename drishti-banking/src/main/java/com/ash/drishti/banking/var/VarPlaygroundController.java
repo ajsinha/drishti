@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 /**
- * The VaR Playground's API (docs/architecture/VAR_PLAYGROUND.md section 11), as the person:
+ * The VaR Playground's API (docs/guides/VAR_GUIDE.md section 11), as the person:
  * <pre>
  *   GET /api/v1/risk/var/playground?scope=|ids=&amp;ccy=&amp;horizon=&amp;method=&amp;confidence=&amp;esConfidence=&amp;set=&amp;view=pnl|pv|fx
  *        the grid (at most drishti.var.playground.max-positions positions, never more than 500; the rest in Rest of scope), the figures,

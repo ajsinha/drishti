@@ -58,8 +58,8 @@ may still change before it ships, and the document records each change.
 | [TRADING_GROUPINGS.md](TRADING_GROUPINGS.md) | CTRD, PTRD, LTRD, ITRD (`counterparty-trades`, `portfolio-trades`, `legal-entity-trades`, `index-trades`) | PARKED (design kept) |
 | [TVAL.md](TVAL.md) | TVAL (`trade-valuation`) | PARKED (design kept) |
 | [STR.md](STR.md) | STR (`stress-result`); SCN stays fundamental | PARKED (design kept) |
-| [FRTB.md](FRTB.md), [FRTB_DATA_STRUCTURES.md](FRTB_DATA_STRUCTURES.md) | FRSA, computed (`frtb-sa-result`); inputs SENS (`position-sensitivity`) and RFAC (`risk-factor`); retires FRTB (`frtb-sensitivity`) | DESIGN, not built: aligned with [SENSITIVITIES_AND_FRTB_SA.md](../architecture/SENSITIVITIES_AND_FRTB_SA.md) (2026-11-02); the input contracts are `planned` with demo data; the default-risk and residual-risk inputs are drafts |
-| [SIMM.md](SIMM.md) | SIMM, computed per netting set and regime (`simm-result`) from the same SENS and RFAC; replaces SIMM (`simm`) for the netting sets with sensitivities | DESIGN, not built: ISDA SIMM 2.8+2512 structure, parameters shipped empty (the bank's licensed file by version); aligned with [SENSITIVITIES_AND_FRTB_SA.md](../architecture/SENSITIVITIES_AND_FRTB_SA.md) (2026-11-02) |
+| [FRTB.md](FRTB.md) | FRSA, computed (`frtb-sa-result`); inputs SENS (`position-sensitivity`) and RFAC (`risk-factor`), every field, the bucket grids and worked records; retires FRTB (`frtb-sensitivity`) | BUILT: the engine, FRSA, the playground ([FRTB_SA_GUIDE.md](../guides/FRTB_SA_GUIDE.md)); SENS and RFAC `active` with demo data; DRCI and RRAI `planned`; the computed kind and official captures are design |
+| [SIMM.md](SIMM.md) | SIMM, computed per netting set and regime (`simm-result`) from the same SENS and RFAC; replaces SIMM (`simm`) for the netting sets with sensitivities | BUILT per netting set, collect and post, with the screen and the playground ([SIMM_GUIDE.md](../guides/SIMM_GUIDE.md)): ISDA SIMM 2.8+2512 structure, parameters shipped empty (the bank's licensed file by version) |
 | [PNL.md](PNL.md) | PNL (`pnl-explain`) | PARKED (design kept) |
 | [NSET.md](NSET.md) | NSET (`netting-set`): terms kept, figures computed | PARKED (design kept) |
 | [SACCR.md](SACCR.md) | SACCR (`sa-ccr`) | PARKED (design kept) |
@@ -250,7 +250,7 @@ engine answers.
 ## 11. What Drishti answers: computed kinds, the API, captures
 
 - **Computed kinds:** each measure is served as an ordinary kind by a reactive connector (`plugin: reactive`,
-  [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md)). It opens by command (`VAR DESK DESK-RATES <GO>`), by link
+  [REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md)). It opens by command (`VAR DESK DESK-RATES <GO>`), by link
   (`/v/<kind>/<scope>`), by API, by CLI, by search, and to AI tools, with the same entitlements everywhere. Its id is the scope text.
 - **An API per measure** for programs and the explorer, under `/api/v1/<measure>` (VaR: `/api/v1/var`,
   [API_GUIDE.md](../guides/API_GUIDE.md#var-engine-apiv1riskvar)). Every answer carries a **provenance** block: business date, the input

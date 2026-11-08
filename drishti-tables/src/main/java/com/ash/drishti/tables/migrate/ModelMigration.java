@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 /**
- * One BI model into a model of the layer, key by key (BI_FOUNDATION_2911E.md section 3.3): {@code datasets:} becomes {@code tables:} with the
+ * One BI model into a model of the layer, key by key (docs/architecture/BI_DESIGN.md section 3.3): {@code datasets:} becomes {@code tables:} with the
  * aliases kept (Q10) and each dataset named as its table (Q11); {@code via:} becomes {@code calc(..., via = 'r_5')}; every expression goes
  * through {@link Translate}; the other keys are kept as written.
  */

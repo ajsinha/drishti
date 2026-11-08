@@ -59,11 +59,13 @@ public final class BiFolder implements AutoCloseable {
     public static final String SAMPLE_TAG = "sample";
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
     private static final Map<String, String> KINDS = Map.of("reports", "report", "boards", "board", "notebooks", "notebook", "python", "python", "themes", "theme");
-    /** BI's old folders of dataset and model files: a file there is refused with the migration's command (BI_FOUNDATION_2911E.md Q18). */
+    /** BI's old folders of dataset and model files: a file there is refused with the migration's command (docs/architecture/BI_DESIGN.md Q18). */
     private static final List<String> OLD_FOLDERS = List.of("datasets", "models");
     /** The code of an old dataset or model file the server refuses (TABLES_GUIDE.md, the migration). */
     public static final String MIGRATE_FIRST = "DRS-9196";
-    /** The table layer's files (BI_FOUNDATION_2911E.md step 5): items of the kinds {@code table} and {@code model}, as the editors store them. */
+    /** The code of a file refused because another file (another domain folder's) holds the same id: neither is read. */
+    public static final String DEFINED_TWICE = "DRS-9610";
+    /** The table layer's files (docs/architecture/BI_DESIGN.md step 5): items of the kinds {@code table} and {@code model}, as the editors store them. */
     private static final Map<String, String> LAYER = Map.of("table", "table", "model", "model");
 
     /** One file as last read: its stamp, the last good item (null until one parses) and the problem with the latest content, if any. */
@@ -78,6 +80,8 @@ public final class BiFolder implements AutoCloseable {
     private final String watchMode;
     private final AtomicBoolean loading = new AtomicBoolean();
     private volatile Map<String, Entry> entries = Map.of();
+    /** The files refused because another file holds their id (file key: the problem naming every such file). */
+    private volatile Map<String, String> duplicates = Map.of();
     private volatile List<BiStore.Item> items = List.of();
     private volatile List<BiStore.Item> everything = List.of();
     private volatile Set<String> hidden = Set.of();
@@ -184,8 +188,11 @@ public final class BiFolder implements AutoCloseable {
 
     public List<Problem> problems() {
         List<Problem> out = new ArrayList<>();
+        Map<String, String> twice = duplicates;
         entries.forEach((file, e) -> {
-            if (e.problem() != null) {
+            if (twice.containsKey(file)) {
+                out.add(new Problem(file, twice.get(file), Instant.now(), false));          // refused, not kept: no version of it is read
+            } else if (e.problem() != null) {
                 out.add(new Problem(file, e.problem(), e.problemSince(), e.item() != null));
             }
         });
@@ -267,9 +274,27 @@ public final class BiFolder implements AutoCloseable {
             }
             entries.keySet().stream().filter(x -> !next.containsKey(x)).forEach(x -> LOG.info("BI folder: {} removed", x));
             entries = Map.copyOf(next);
+            // one id, one file: two files of one id (a report in reports/ and in reports/banking/, a model in tables/bi/ and in
+            // tables/banking/) are BOTH refused and listed, never one picked: the other's readers would get it without their rules and masks
+            Map<String, List<String>> filesOf = new java.util.LinkedHashMap<>();
+            next.forEach((key, e) -> {
+                if (e.item() != null && !key.startsWith("boards/")) {
+                    filesOf.computeIfAbsent(e.item().id(), k -> new ArrayList<>()).add(key);
+                }
+            });
+            Map<String, String> twice = new TreeMap<>();
+            filesOf.forEach((id, keys) -> {
+                if (keys.size() > 1) {
+                    String why = DEFINED_TWICE + ": '" + id + "' is defined in " + String.join(" and ", keys)
+                            + "; none is read: a name is unique across the domain folders (keep one, rename or remove the others)";
+                    keys.forEach(k -> twice.put(k, why));
+                    LOG.warn("BI folder: {}", why);
+                }
+            });
+            duplicates = Map.copyOf(twice);
             Map<String, BiStore.Item> byId = new java.util.LinkedHashMap<>();
             next.forEach((key, e) -> {
-                if (e.item() == null) {
+                if (e.item() == null || (filesOf.getOrDefault(e.item().id(), List.of()).size() > 1)) {
                     return;
                 }
                 if (key.startsWith("boards/") && byId.containsKey(e.item().id())) {

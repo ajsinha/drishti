@@ -36,7 +36,7 @@ doc:
     columns: { type: columns, default: [], meaning: "The columns, in order, each { label, bind, fmt, total, tone } as a table panel writes them" }
   emits: []
   expects: []
-  # on a phone (docs/architecture/MOBILE_DISPLAY.md): a use or a Sutra's phone: overrides it
+  # on a phone (docs/guides/PACK_DEVELOPER_GUIDE.md): a use or a Sutra's phone: overrides it
   phone: { tier: glance, rows: 5 }
   examples:
     - { use: trade-table@1, with: { code: TRD, key: F2, columns: [ { label: Trade, bind: "link(@.TRADE_ID, 'trade')" }, { label: Notional, bind: "@.NOTIONAL", fmt: amount0, total: true } ] } }

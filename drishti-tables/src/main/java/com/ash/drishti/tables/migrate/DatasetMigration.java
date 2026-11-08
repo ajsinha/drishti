@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * One BI dataset into the layer's form, key by key (BI_FOUNDATION_2911E.md section 3.1). A {@code rachana: 2} dataset is one table; a
+ * One BI dataset into the layer's form, key by key (docs/architecture/BI_DESIGN.md section 3.1). A {@code rachana: 2} dataset is one table; a
  * {@code rachana: 1} dataset with {@code tables:} (the live samples) is a table per table and a model of its measures (Q19). Every DEL
  * expression goes through {@link Translate}. What the skeleton does not convert yet is refused by name ({@code group:} into a summary
  * table, a pack-generated dataset: regenerated, never migrated).

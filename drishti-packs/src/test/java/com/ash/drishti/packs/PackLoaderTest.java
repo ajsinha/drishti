@@ -100,6 +100,27 @@ class PackLoaderTest {
     }
 
     @Test
+    void aPackNameInTwoDomainFoldersIsRefusedNamingBothNeverOneOfThem(@TempDir Path dir, @TempDir Path installed) throws Exception {
+        write(dir.resolve("banking"), "twin", "kinds: [a]\n");
+        write(dir.resolve("economy"), "twin", "kinds: [b]\n");
+        write(dir.resolve("banking"), "single", "kinds: [c]\n");
+        PackLoader l = new PackLoader();
+        assertThatThrownBy(() -> l.load(dir, List.of("twin"))).isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("is in two folders").hasMessageContaining(dir.resolve("banking").resolve("twin").toString())
+                .hasMessageContaining(dir.resolve("economy").resolve("twin").toString());
+        assertThatThrownBy(() -> l.readOne(com.ash.drishti.api.PackFolders.roots(dir), "twin")).hasMessageContaining("neither is read");
+        assertThatThrownBy(() -> com.ash.drishti.api.PackFolders.of(dir, "twin")).hasMessageContaining("is in two folders");
+        assertThat(com.ash.drishti.api.PackFolders.all(dir)).containsOnlyKeys("single");
+        assertThat(com.ash.drishti.api.PackFolders.duplicates(dir)).containsOnlyKeys("twin");
+        assertThat(l.load(dir, List.of("single"))).extracting(Pack::name).containsExactly("single");
+        // an installed pack before a shipped one of its name: two roots, fine
+        write(installed, "single", "kinds: [c]\n");
+        List<Path> dirs = new java.util.ArrayList<>(com.ash.drishti.api.PackFolders.roots(installed));
+        dirs.addAll(com.ash.drishti.api.PackFolders.roots(dir));
+        assertThat(l.readOne(dirs, "single").dir()).isEqualTo(installed.resolve("single").toAbsolutePath());
+    }
+
+    @Test
     void requiredPacksLoadFirstAndBringTheirConnectors(@TempDir Path dir) throws Exception {
         write(dir, "core", "kinds: [counterparty]\nconnectors:\n  core-lake:\n    plugin: delta\n    kinds: [counterparty]\n"
                 + "    settings: { root: \"${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}\", domain: core }\n");

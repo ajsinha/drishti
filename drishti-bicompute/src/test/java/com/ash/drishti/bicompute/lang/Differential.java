@@ -40,7 +40,7 @@ import java.util.Optional;
 import java.util.Random;
 
 /**
- * The differential harness of the one compiler (BI_FOUNDATION_2911E.md 2.6 and 7.1): one generated table held twice, as DuckDB rows and
+ * The differential harness of the one compiler (docs/architecture/BI_DESIGN.md 2.6 and 7.1): one generated table held twice, as DuckDB rows and
  * as Rachana documents, with the edges that make two evaluators disagree (nulls, empty and mixed-case text, zero divisors, negative
  * numbers, dates across a year end, a masked column). An expression is checked by Rachana, compiled once, then evaluated by the Java
  * form ({@link RowsEvaluator}) and by the SQL form ({@link ScanEvaluator}); the two must agree value for value (numbers to 1e-9

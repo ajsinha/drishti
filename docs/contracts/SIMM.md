@@ -8,8 +8,8 @@
 
 *Contract version 2.0 · 2026-11-02 · **Status:** design, not built. The sensitivity inputs are the shared ones of [FRTB.md](FRTB.md)
 (contracts `planned`, demo data generated); the engine, its screens and its playground are the design to build · Method:
-[SENSITIVITIES_AND_FRTB_SA.md section 8](../architecture/SENSITIVITIES_AND_FRTB_SA.md#8-isda-simm) · Fields and worked records:
-[FRTB_DATA_STRUCTURES.md](FRTB_DATA_STRUCTURES.md) · Shared rules: [README.md](README.md)*
+[SENSITIVITIES_AND_FRTB_SA.md section 8](../guides/SIMM_GUIDE.md#5-the-method) · Fields and worked records:
+[FRTB_DATA_STRUCTURES.md](FRTB.md) · Shared rules: [README.md](README.md)*
 
 This is the data contract of Drishti's **ISDA SIMM** engine: the Standard Initial Margin Model of the International Swaps and Derivatives
 Association, computed per **netting set**, per **regime** and per the **SIMM version** the netting set's CSA names, from the same position
@@ -96,9 +96,9 @@ ${DRISHTI_DELTA_ROOT}/risk/
 No separate SIMM sensitivity table: SIMM reads the same records as FRTB-SA. **What SIMM reads from SENS:** the elements with measures
 `DV01`, `IE01`, `CS01`, `DELTA`, `VEGA` (with `IMPLIED_VOL`) and `BASE_CORR`; not `CURVATURE_UP`, `CURVATURE_DOWN` or `GAMMA` (SIMM's
 curvature is computed from the vegas). A bank whose systems already produce CRIF loads it into SENS by the mapping of
-[FRTB_DATA_STRUCTURES.md section 11.1](FRTB_DATA_STRUCTURES.md#111-from-isda-crif-rows).
+[FRTB_DATA_STRUCTURES.md section 11.1](FRTB.md#271-from-isda-crif-rows).
 
-**Units, as delivered** ([design section 2.3](../architecture/SENSITIVITIES_AND_FRTB_SA.md#23-from-the-delivered-conventions-to-the-regulatory-sensitivities)):
+**Units, as delivered** ([design section 2.3](../guides/FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract)):
 
 ```
 SIMM delta                         DV01, IE01, CS01 per bp and DELTA per 1 %, as delivered (SIMM's own units)
@@ -115,7 +115,7 @@ left out.
 
 Drishti maps its records to CRIF terms to compute, to export a netting set's CRIF for a counterparty or vendor, and to compare with the
 counterparty's CRIF. The reverse mapping (CRIF to SENS, for loading) is in
-[FRTB_DATA_STRUCTURES.md section 11.1](FRTB_DATA_STRUCTURES.md#111-from-isda-crif-rows).
+[FRTB_DATA_STRUCTURES.md section 11.1](FRTB.md#271-from-isda-crif-rows).
 
 | ISDA CRIF field | From | Rule |
 |---|---|---|
@@ -197,8 +197,8 @@ uncleared trade of a netting set under SIMM has sensitivities; a netting set wit
 
 ## 6. The computation
 
-[Design section 8](../architecture/SENSITIVITIES_AND_FRTB_SA.md#8-isda-simm), checked against the methodology in
-[design section 18](../architecture/SENSITIVITIES_AND_FRTB_SA.md#18-checked-against-the-rules). Paragraph numbers are those of SIMM
+[Design section 8](../guides/SIMM_GUIDE.md#5-the-method), checked against the methodology in
+[design section 18](../guides/FRTB_SA_GUIDE.md#16-tests-and-the-rules-they-were-checked-against). Paragraph numbers are those of SIMM
 2.8+2512.
 
 ### 6.1 Parameters: one licensed file per version
@@ -334,12 +334,12 @@ incremental IM of a candidate trade, `IM(set + trade) − IM(set)`, computed in 
 
 ### 9.3 The playground (`PLAY SIMM`)
 
-One netting set, or a few side by side ([design section 12.2](../architecture/SENSITIVITIES_AND_FRTB_SA.md#122-simm-playground-play-simm)).
+One netting set, or a few side by side ([design section 12.2](../guides/SIMM_GUIDE.md#8-the-simm-playground-play-simm)).
 Tabs: Main (SIMM per product class and the total against the engine, with check cells), Config (the licensed parameters of the version
 and the Choices of section 6.9), Data (the sensitivities), WS (with the concentration factors), Buckets, Classes (ψ), Curvature (SF(t),
 θ, λ), Add-ons, Explain, Provenance. **The template ships with formulas and empty parameter cells**; the bank's export fills them from
 its licensed file and is never a shared template. Every run is a recipe with the same structure as FRTB-SA's
-([FRTB_DATA_STRUCTURES.md section 9.3](FRTB_DATA_STRUCTURES.md#93-playground-recipe)), the netting set and the SIMM version in place of the
+([FRTB_DATA_STRUCTURES.md section 9.3](FRTB.md#253-playground-recipe)), the netting set and the SIMM version in place of the
 filer and regime, replayable to the cent.
 
 ### 9.4 Margin against the counterparty's call
@@ -402,7 +402,7 @@ figure, labelled *stored, not computed*, until the bank's sensitivities cover th
 ## 15. A worked example
 
 **Toy parameters, not ISDA's.** Cases 6 and 11 of the design
-([design section 13.1](../architecture/SENSITIVITIES_AND_FRTB_SA.md#131-hand-built-cases)) and one netting set end to end.
+([design section 13.1](../guides/FRTB_SA_GUIDE.md#10-the-hand-built-cases)) and one netting set end to end.
 
 **Case 6.** One currency, WS = 50 · (−1,000) and 60 · 400 per bp, ρ = 0.8, CR = 1:
 `K = sqrt(50,000² + 24,000² − 2 · 0.8 · 50,000 · 24,000) = 34,000`. Two risk classes of one product class, IM 50,000 and 30,000,
@@ -436,7 +436,7 @@ Delta_IR = 382,700.58 and **SIMM = 450,195.27**: the concentration adds 23,588.8
 
 ## 16. Open questions and decisions
 
-**Decided** ([design section 16](../architecture/SENSITIVITIES_AND_FRTB_SA.md#16-decisions)): SIMM's numbers shipped empty, the bank's
+**Decided** ([design section 16](../guides/FRTB_SA_GUIDE.md#15-decisions-and-the-screens-chosen)): SIMM's numbers shipped empty, the bank's
 licensed file by version recorded on every figure (11); credit indices one qualifier, look-through later (5); rates vega in lognormal
 points by default, normal declared per source (3); the screens: the netting-set list with the counterparty comparison as a second tab (1).
 

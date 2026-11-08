@@ -476,7 +476,7 @@
       var brd = q('[data-open-board]');
       if (brd) { brd.hidden = !it.board; brd.href = '/bi/r/' + enc + '?kiosk=1'; }                 // a report with board pages (2.4.0): its kiosk
       if (des) { const designable = it.kind === 'report'; des.hidden = !(designable && it.can && it.can.edit) && !(designable && it.shipped); des.href = '/bi/design/' + enc; des.lastChild.textContent = it.shipped ? ' Open a copy in the designer' : ' Open in the designer'; }
-      // a table or a model is written in Build › Tables & models (EDITORS.md): one way per job
+      // a table or a model is written in Build › Tables & models (docs/architecture/SHARED_SCREENS.md): one way per job
       if (mod) { mod.hidden = !(it.kind === 'table' || it.kind === 'model'); mod.href = '/build/tables?kind=' + it.kind + '&item=' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }
       if (open && (it.kind === 'table' || it.kind === 'dataset' && /^rachana:\s*2\b/m.test(it.body || ''))) { open.href = '/bi/ds/' + enc; }   // a model-layer dataset has its own page
       document.dispatchEvent(new CustomEvent('drishti:bi-item', { detail: x }));          // drishti_bi-govern.js draws history, review, impact and lineage

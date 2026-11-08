@@ -32,7 +32,7 @@ import java.util.function.Function;
  * sslrootcert}, ...) and no {@code tls.*} keeps working unchanged; both together are refused.
  *
  * <p>The other drivers have their own options and no hook for a shared context, so {@code tls.*} against them is a start-up
- * error that says where their settings go (the URL), see {@code docs/connectors/POSTGRES_CONNECTOR.md}.
+ * error that says where their settings go (the URL), see {@code plugins/drishti-plugin-jdbc/README.md}.
  */
 final class JdbcTls {
 
@@ -52,7 +52,7 @@ final class JdbcTls {
         if (!lower.startsWith("jdbc:postgresql:")) {
             throw new TlsException("tls.* is only mapped for jdbc:postgresql:// urls; this driver takes its TLS options in the url "
                     + "(MySQL: sslMode=VERIFY_IDENTITY&trustCertificateKeyStoreUrl=...; SQL Server: encrypt=true&trustServerCertificate=false"
-                    + "&trustStore=...; Oracle: a tcps:// url with an Oracle wallet). See docs/connectors/POSTGRES_CONNECTOR.md");
+                    + "&trustStore=...; Oracle: a tcps:// url with an Oracle wallet). See plugins/drishti-plugin-jdbc/README.md");
         }
         TlsSettings ts = TlsSettings.parse(settings, "tls.", env);
         if (lower.contains("sslmode=") || lower.contains("sslrootcert=") || lower.contains("sslfactory=") || lower.contains("ssl=true")) {

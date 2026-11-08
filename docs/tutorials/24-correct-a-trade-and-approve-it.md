@@ -171,6 +171,6 @@ the sheet take the whole screen, with the difference, the destination and the re
 
 - Make your own screen's form submit: add `save:` to its `form:` ([WRITE_BACK.md section 4a](../guides/WRITE_BACK.md#4a-submitting-a-change-write-back)).
 - Send amendments to a booking system: a JDBC connector's `writes:` with its guard and idempotency clause, switched on in Admin → Edits
-  ([WRITE_BACK.md section 13](../guides/WRITE_BACK.md#13-writing-to-a-source-writes), [JDBC_QUERIES.md section 16](../connectors/JDBC_QUERIES.md#16-writes-commands-that-change-a-record)).
+  ([WRITE_BACK.md section 13](../guides/WRITE_BACK.md#13-writing-to-a-source-writes), [JDBC_QUERIES.md section 16](../../plugins/drishti-plugin-jdbc/README.md#writes-commands-that-change-a-record)).
 - Recompute on a change: a reactive connector with a `write-back` trigger ([tutorial 23](23-computed-panels.md)).
 - Run several servers: PostgreSQL for the Drishti database, or an edit primary ([WRITE_BACK.md section 11](../guides/WRITE_BACK.md#11-the-edit-log-lanes-and-the-cluster)).

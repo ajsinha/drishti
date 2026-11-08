@@ -129,7 +129,7 @@ Editing the connector in the form keeps its `requires:` block. The keys, the loc
 
 ### A computation: `plugin: reactive`
 
-A connector of the built-in plugin `reactive` computes its kinds ([REACTIVE_CONNECTOR.md](REACTIVE_CONNECTOR.md)). Its file has, besides
+A connector of the built-in plugin `reactive` computes its kinds ([REACTIVE_CONNECTOR.md](types/reactive/README.md)). Its file has, besides
 the keys above, `mode: reactive`, `kinds` as a **mapping** of each kind to its typed `params:`, `compute:` and `result:` rules, and the
 top-level keys `reads`, `engine`, `triggers`, `coalesce`, `cache`, `limits`, `history` and `incremental`. On any other plugin these keys
 are refused (*'engine' is part of a computation: only a connector of plugin reactive has it*); `mode:` (`static`, `live`, `on-demand`,
@@ -143,7 +143,7 @@ A connector may declare `writes:`: named commands that change a record in its so
 ([WRITE_BACK.md › The design and its reasons, section 5.4](../guides/WRITE_BACK.md#54-how-a-write-is-described-connector-writes); the administrator's guide
 [WRITE_BACK.md section 13](../guides/WRITE_BACK.md#13-writing-to-a-source-writes)). Each command has the `kind` it amends, the extra `params:` a Sutra
 may supply, its plugin's block (`jdbc:` with `sql`, the guard `expect-rows` and the idempotency clause `already-applied`), `confirm:`
-(`reply` or `next-load`) and `timeout:`. Only the JDBC plugin writes ([JDBC_QUERIES.md section 16](JDBC_QUERIES.md#16-writes-commands-that-change-a-record));
+(`reply` or `next-load`) and `timeout:`. Only the JDBC plugin writes ([JDBC_QUERIES.md section 16](../../plugins/drishti-plugin-jdbc/README.md#writes-commands-that-change-a-record));
 the File, Delta and Iceberg connectors never do (a lake is not written per edit) and every other plugin is refused (*plugin … cannot
 write*). A command without its guard or idempotency clause, or naming an unknown `:param`, is refused when the connector loads: the
 problem shows as a warning on `writes.<command>` here and on Admin → Edits, and the connector stays read-only for it. Declaring `writes:`
@@ -1164,10 +1164,10 @@ Every setting of this part, with its type, default, environment variable, meanin
 
 | Store | What is pooled | Notes |
 |---|---|---|
-| PostgreSQL / any JDBC ([POSTGRES_CONNECTOR.md](POSTGRES_CONNECTOR.md#connection-pool)) | JDBC connections, opened on first use | all settings above; the loader takes `--pool-size` |
-| MongoDB ([MONGODB_CONNECTOR.md](MONGODB_CONNECTOR.md#connection-pool)) | the driver's pool (`maxPoolSize`, `minPoolSize`, `maxWaitTime`) | the statement timeout is the socket read timeout |
-| Redis ([REDIS_CONNECTOR.md](REDIS_CONNECTOR.md#connection-pool)) | Lettuce connections, each multiplexed | another is opened only when the open ones are busy (`pool-pipeline-depth`); `pool-max-lifetime` and `pool-connection-timeout` do not apply |
-| Aerospike ([AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md#connection-pool)) | the client's pool **per node** | `pool-size` is per node; `pool-connection-timeout` and `pool-max-lifetime` do not apply; borrows are not timed |
+| PostgreSQL / any JDBC ([POSTGRES_CONNECTOR.md](../../plugins/drishti-plugin-jdbc/README.md#connection-pool)) | JDBC connections, opened on first use | all settings above; the loader takes `--pool-size` |
+| MongoDB ([MONGODB_CONNECTOR.md](../../plugins/drishti-plugin-mongodb/README.md#connection-pool)) | the driver's pool (`maxPoolSize`, `minPoolSize`, `maxWaitTime`) | the statement timeout is the socket read timeout |
+| Redis ([REDIS_CONNECTOR.md](../../plugins/drishti-plugin-redis/README.md#connection-pool)) | Lettuce connections, each multiplexed | another is opened only when the open ones are busy (`pool-pipeline-depth`); `pool-max-lifetime` and `pool-connection-timeout` do not apply |
+| Aerospike ([AEROSPIKE_CONNECTOR.md](../../plugins/drishti-plugin-aerospike/README.md#connection-pool)) | the client's pool **per node** | `pool-size` is per node; `pool-connection-timeout` and `pool-max-lifetime` do not apply; borrows are not timed |
 | The identity database on PostgreSQL | a Hikari pool (`drishti.identity.database-pool-size`, else the site default) | leak detection is Hikari's |
 | **SQLite** (the default identity database) and **DuckDB** | **not pooled** | see below |
 

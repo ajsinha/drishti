@@ -24,7 +24,7 @@
 {% block body_class %}terminal{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/drishti_risk-landing.css?v={{ ASSET_V }}">{% include "terminal/_risk_elements_css.html" %}<link rel="stylesheet" href="/static/elements/drishti-tree/drishti_tree.css?v={{ ASSET_V }}">{% endblock %}
 {% block content %}
-{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'landing') %}{# the phone display (MOBILE_DISPLAY.md 8) #}
+{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'landing') %}{# the phone display (docs/guides/PACK_DEVELOPER_GUIDE.md 8) #}
 {{ back(request) }}
 <div class="rl" data-risk-landing="{{ landing }}" data-hierarchy="{{ hierarchies[0] }}">
   <nav class="rl-switch" aria-label="Choose your Home">

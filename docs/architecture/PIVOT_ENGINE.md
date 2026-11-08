@@ -30,12 +30,12 @@ And it should operate on extremely large volume of data." Then: the MR cube shou
 cube then and build this capability first, then come back to MR cube". And: "we need to do better than Excel and better than anything out
 there" ([section 10](#10-beyond-anything-out-there)).
 
-**Read with:** [MR_CUBE_LENS.md section 4](../lenses/MR_CUBE_LENS.md#4-the-shared-cube-core-mr-and-ccr) (the shared cube core this
-engine grows from), [CCR_CUBE_LENS.md](../lenses/CCR_CUBE_LENS.md) (the second cube on it), [BI_GUIDE.md](../guides/BI_GUIDE.md) (the BI
+**Read with:** [MR_CUBE_LENS.md section 4](../lenses/README.md#65-the-shared-cube-core-mr-and-ccr) (the shared cube core this
+engine grows from), [CCR_CUBE_LENS.md](../lenses/README.md#7-ccr-cube-lens) (the second cube on it), [BI_GUIDE.md](../guides/BI_GUIDE.md) (the BI
 query engine on DuckDB, rollups, true totals, run cards, Python measures), [RACHANA_REFERENCE.md › Rachana-EL expressions](../guides/RACHANA_REFERENCE.md#rachana-el-expressions)
 (DEL, the expression language), [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) (the compute worker pools), [VAR_SHARDING.md](VAR_SHARDING.md)
 (scatter and gather of partial sums across Drishti\*net), [COMPUTE_ENGINES.md](COMPUTE_ENGINES.md) (one file and one switch per engine),
-[IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md) (data that may never touch a disk), [RESOURCES_AND_SCALE.md](RESOURCES_AND_SCALE.md) (memory
+[IN_MEMORY_LAKE.md](DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk) (data that may never touch a disk), [RESOURCES_AND_SCALE.md](RESOURCES_AND_SCALE.md) (memory
 budgets and busy protection) and [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md).
 
 ## Contents
@@ -74,7 +74,7 @@ date". Excel answers it for the rows that fit in a sheet, with sums that are rig
 add up. Drishti answers it for any amount of data, for every measure it has (a sum of notional, a distinct count of counterparties, a
 99% VaR, an FRTB charge, a function a quant wrote this morning), and every total is right.
 
-1. **One pivot engine for all of Drishti.** The shared cube core of the MR and CCR cubes ([MR_CUBE_LENS.md section 4](../lenses/MR_CUBE_LENS.md#4-the-shared-cube-core-mr-and-ccr))
+1. **One pivot engine for all of Drishti.** The shared cube core of the MR and CCR cubes ([MR_CUBE_LENS.md section 4](../lenses/README.md#65-the-shared-cube-core-mr-and-ccr))
    grown up: it owns the view, the cells, the totals, the budget, the cache, provenance, saved views, explain, export and the cluster
    merge. It never computes a figure itself: **measure providers** behind one interface do.
 2. **Providers.** A **tabular** provider (DuckDB scans of Delta, Iceberg and Parquet, the BI engine Drishti already runs) for any table
@@ -129,8 +129,8 @@ Read from the guides and the code on 2026-11-02. The engine reuses every row of 
 | Compute worker pools (`drishti-compute`): fork-server per worker on Linux, warm workers on Windows, Arrow IPC scratch transport, limits, fan-out over nodes | [PYTHON_COMPUTE.md section 7](PYTHON_COMPUTE.md#7-the-worker-pool) | yes (C1 to C3) | the per-node pool that runs Python custom functions |
 | VaR sharding: partial vectors per shard added in shard order, bit-equal to the whole (`ShardedMeasure`, `ShardGather.Combine`) | [VAR_SHARDING.md](VAR_SHARDING.md) | yes | the cluster merge, lifted into the core for every provider |
 | Busy protection: one admission gate refusing new heavy work politely | [RESOURCES_AND_SCALE.md section 5.7](RESOURCES_AND_SCALE.md#57-busy-protection-refuse-politely-before-the-heap-runs-out), [OPERATIONS.md section 12.5](../admin/OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over) | yes (unreleased) | every pivot passes the gate |
-| The in-memory lake: tables on `mem://`, DuckDB's spill switched off for them, the never-on-disk guard at every sink | [IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md) | yes (unreleased) | the rule that a memory-only table is never spilled or written for user code |
-| Why VaR moved (RO1): exact steps that add up to the change | [OVERSIGHT_LENS.md section 4.1](../lenses/OVERSIGHT_LENS.md#41-ro1-var-change-explanation) | yes | the method behind "explain the difference" ([section 10](#10-beyond-anything-out-there), item 1) |
+| The in-memory lake: tables on `mem://`, DuckDB's spill switched off for them, the never-on-disk guard at every sink | [IN_MEMORY_LAKE.md](DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk) | yes (unreleased) | the rule that a memory-only table is never spilled or written for user code |
+| Why VaR moved (RO1): exact steps that add up to the change | [OVERSIGHT_LENS.md section 4.1](../lenses/README.md#531-ro1-var-change-explanation) | yes | the method behind "explain the difference" ([section 10](#10-beyond-anything-out-there), item 1) |
 | The shared cube core and the MR source, on the paused branch `wip/mr-cube` | the branch (not merged) | built there, paused | the code this engine grows from ([section 7](#7-from-the-mr-cubes-core-to-the-pivot-engine-what-is-kept-what-changes)) |
 
 ## 3. One engine, many measure providers
@@ -388,13 +388,13 @@ The paused MR cube's `VarCubeSource` becomes this provider, unchanged in its ari
 State: the members' net weighted sensitivities summed per risk factor to the formula's grain (a sparse map factor → sum, added in shard
 order); finish: the regulatory formula (bucket K_b, the three correlation scenarios, the charge; SIMM per CSA version). Each cell and
 total runs the formula on its own members' sums. They come with the 2.9.11 FRTB-SA and SIMM engines
-([SENSITIVITIES_AND_FRTB_SA.md](SENSITIVITIES_AND_FRTB_SA.md)) and need those engines on.
+([SENSITIVITIES_AND_FRTB_SA.md](../guides/FRTB_SA_GUIDE.md)) and need those engines on.
 
 ### 6.5 The CCR provider (later)
 
 State per netting set: the path matrix of MtMs (paths × time steps), netted and collateralised **per netting set first** (non-linear), then
 summed across netting sets per cell; finish: EE, EPE, PFE quantiles, EEPE; EAD from SA-CCR's formula provider. A netting set is never
-split across shards. Built with the CCR cube ([CCR_CUBE_LENS.md](../lenses/CCR_CUBE_LENS.md)), in 2.9.12.
+split across shards. Built with the CCR cube ([CCR_CUBE_LENS.md](../lenses/README.md#7-ccr-cube-lens)), in 2.9.12.
 
 ### 6.6 An external distributed backend (future, not built)
 
@@ -623,7 +623,7 @@ scanned them:
 **Transport.** Batches go to the worker as Arrow IPC stream bytes over its pipe (length-prefixed frames: a JSON header, a body), never
 the scratch-folder files compute uses for its engines, so nothing is written for a function call; a state comes back as bytes (exact JSON,
 floats to the bit). **Memory-only stores**: Python functions never read them (the source says so and the view is refused in words;
-[IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md)).
+[IN_MEMORY_LAKE.md](DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk)).
 
 **Throughput.** Per node, the pool's worker count (configuration only) times the per-worker rate; a vectorised `add` over 64K-row batches
 runs at numpy speed (tens to hundreds of millions of values a second per worker for simple arithmetic), so Python functions scale with
@@ -769,7 +769,7 @@ never sampled: they show "computing" until exact. The person may stop at the app
 |---|---|---|
 | **One process, one machine** | DuckDB itself does not distribute a query | Drishti scatters and gathers partial states ([section 9.3](#93-scatter-and-gather-across-drishtinet)); DuckDB is the per-node executor |
 | **High-cardinality GROUP BY** | DuckDB spills grouping, joins, sorts and windows to its temporary directory when memory runs out, but some complex aggregate states cannot yet be offloaded, and a query with several blocking operators may still run out of memory (DuckDB's tuning guide) | the cell budget bounds the groups; states are kept small (mergeable kinds); holistic functions are size-bounded; the per-connection `memory_limit` is set, and an out-of-memory becomes a refusal in words |
-| **Spill forbidden for memory-only data** | a `mem://` table may never touch a disk, so DuckDB's temporary directory is off for it | such views must fit in memory: over it they are refused, never spilled ([IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md)) |
+| **Spill forbidden for memory-only data** | a `mem://` table may never touch a disk, so DuckDB's temporary directory is off for it | such views must fit in memory: over it they are refused, never spilled ([IN_MEMORY_LAKE.md](DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk)) |
 | **Object-store bandwidth** | a scan of S3 is bounded by the node's network (a 10 Gbit/s link moves at most about 1.2 GB/s) | pruning and skipping first; the disk cache; more nodes for more bandwidth; the estimate uses the measured rate |
 | **Concurrency** | DuckDB is not designed to run many small queries at once quickly (its tuning guide) | a bounded connection pool per node, queuing, the partial-state cache, rollups for dashboards, coalescing of identical plans |
 | **Extensions** | the `delta` and `iceberg` extensions are separate files DuckDB normally downloads | shipped with the distribution and loaded from it (no download at run time, auto-install off); their versions pinned with DuckDB's |
@@ -787,7 +787,7 @@ phases.
 
 | # | Capability | How it works | Phase | Size |
 |---|---|---|---|---|
-| 1 | **Explain the difference between any two cells, or one cell over time** ("why is EMEA higher than last month") | for mergeable measures the difference is split **exactly** into contributions by member (the children of the cell along any dimension the person picks, each child's difference adding up to the total) and by cause where the provider knows causes (new members, members gone, value changes; for a price × quantity measure, the price and quantity effects in a fixed order with the cross term shown); for VaR, RO1's exact steps (restatement, hierarchy, trades out, window roll, market, trades in) per cell ([OVERSIGHT_LENS.md section 4.1](../lenses/OVERSIGHT_LENS.md#41-ro1-var-change-explanation)); shown as a waterfall beside the cell; steps always add up to the difference, and the residual (if any) is named | P2 | L |
+| 1 | **Explain the difference between any two cells, or one cell over time** ("why is EMEA higher than last month") | for mergeable measures the difference is split **exactly** into contributions by member (the children of the cell along any dimension the person picks, each child's difference adding up to the total) and by cause where the provider knows causes (new members, members gone, value changes; for a price × quantity measure, the price and quantity effects in a fixed order with the cross term shown); for VaR, RO1's exact steps (restatement, hierarchy, trades out, window roll, market, trades in) per cell ([OVERSIGHT_LENS.md section 4.1](../lenses/README.md#531-ro1-var-change-explanation)); shown as a waterfall beside the cell; steps always add up to the difference, and the residual (if any) is named | P2 | L |
 | 2 | **Time travel and diff** | any view as of any business date and any **data version** (a Delta version or an Iceberg snapshot, `as-of`); **compare** two dates or versions side by side or as a diff grid with changed cells highlighted and new and gone members marked; each side's provenance names its versions | P1 | M |
 | 3 | **What-if inside the pivot** | an **overlay**: exclude members (a book), scale or override an input column (a price, a weight, a notional), add hypothetical rows; the tabular provider joins the overlay into the plan, the VaR provider uses its what-if arithmetic (`VarWhatIfMath`); only affected cells recompute; the original stays beside the what-if with the difference; an overlay is private, saved with the view, never written to the lake | P2 | M to L |
 | 4 | **Cell provenance and lineage** | every cell's popover: the data versions read, files or shards and nodes, rows counted, filters and row rules applied (in words), functions with their versions, the layer (rollup or scan), exact or ≈ with the error, time taken; one click to the rows (drill-through, paged, as the person may see them) | P1 | M |
@@ -993,7 +993,7 @@ fails any new class outside it that implements the function SPI's steps or emits
 
 ### 14.2 Phone tiers
 
-As the cube ([MOBILE_DISPLAY.md](MOBILE_DISPLAY.md)): the top-left of the grid and the headline are **must**; charts **glance**; expand,
+As the cube ([MOBILE_DISPLAY.md](../guides/PACK_DEVELOPER_GUIDE.md#part-ix-designing-for-phones)): the top-left of the grid and the headline are **must**; charts **glance**; expand,
 drill, explain and provenance **more**; the field list and the function playground **desk**.
 
 ### 14.3 Pivot charts: pick and choose
