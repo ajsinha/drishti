@@ -259,4 +259,19 @@ class HierarchyEquivalenceTest {
             }
         }
     }
+    @Test
+    void recordGolden() throws IOException {
+        String to = System.getProperty("drishti.golden.write");
+        if (to == null) {
+            return;
+        }
+        ScenarioFx.Rates eur = fx.rates("EUR").orElseThrow();
+        VarBook e = CurrencyBook.convert(letters, eur, new VarBook.Builder(LocalDate.of(2026, 9, 30), "HS-509", scen, 65_536, Long.MAX_VALUE), sums)
+                .book();
+        Map<String, Object> g = new LinkedHashMap<>();
+        g.put("date", "2026-09-30");
+        g.put("USD", HierarchyGolden.describe(letters));
+        g.put("EUR", HierarchyGolden.describe(e));
+        JSON.writerWithDefaultPrettyPrinter().writeValue(Path.of(to).toFile(), g);
+    }
 }
