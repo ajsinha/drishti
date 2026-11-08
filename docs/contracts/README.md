@@ -273,10 +273,22 @@ engine answers.
       └── ...
   ```
 
-  - **One table per measure** (`<measure>-official`), one row per hierarchy node (both hierarchies) per business date: `BUSINESS_DATE`,
-    `HIERARCHY`, `NODE_ID`, `NODE_NAME`, `PARENT_ID`, `LEVEL`, the measure's headline figures (each contract's section 9 lists them),
-    `CAPTURE_ID` (the official capture it was written from), `RESULT_VERSION` (1, then 2, 3 … on a restatement), `INPUT_VERSIONS` (the
-    input tables' versions and batch ids, as JSON text), `COMPUTED_AT` (UTC), `CONTRACT_VERSION`.
+  - **One table per measure** (`<measure>-official`), one row per hierarchy node (both hierarchies) per business date: the shared
+    columns below, then the measure's headline figures (each contract's section 9 lists them).
+
+    | Field | Type | Delta | Meaning | Example |
+    |---|---|---|---|---|
+    | `BUSINESS_DATE` | date | DATE | the date the figures are for; the partition | `2026-09-30` |
+    | `HIERARCHY` | text | STRING | `MGMT` or `LEGAL`; a counterparty measure's `-cpty` table: `NSET`, `CPTY` or `GROUP` | `MGMT` |
+    | `NODE_ID` | id | STRING | the node's scope text | `DESK:DESK-RATES` |
+    | `NODE_NAME` | text | STRING | the node's display name | `Rates` |
+    | `PARENT_ID` | id | STRING | the parent node's scope text; empty at the root | `DIV:DIV-MARKETS` |
+    | `LEVEL` | text | STRING | the node's level in its hierarchy | `desk` |
+    | `CAPTURE_ID` | id | STRING | the official capture the row was written from | `CAP-VAR-2026-09-30-OFFICIAL` |
+    | `RESULT_VERSION` | integer | INT | 1, then 2, 3 … on a restatement | `1` |
+    | `INPUT_VERSIONS` | text | STRING | the input tables' versions and batch ids, as JSON text | `{"scenario-pv":{"version":412,"batches":["B-2026-09-30-01"]}}` |
+    | `COMPUTED_AT` | timestamp | TIMESTAMP | when the capture was computed (UTC) | `2026-10-01T06:42:00Z` |
+    | `CONTRACT_VERSION` | text | STRING | the version of the measure's contract the row follows | `1.0` |
   - **Written by Drishti only**, right after the official capture of the date, as a Delta commit per date. A restated input date
     produces a new official capture and appends its rows with the next `RESULT_VERSION`. Nothing is overwritten; the latest version of
     a date is the row set with the highest `RESULT_VERSION`.

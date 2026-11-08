@@ -52,6 +52,15 @@
   its guide, tutorial, domain, lenses and budgets; `drishti-console/tests/test_docs_gates.py` (a quick file check) fails on a register that
   disagrees with the files, a count cap passed, version history in a guide, tutorial or Knowledge page, an internal document listed in
   Help or a listed page without its domain; page budgets and the contract count warn.
+- **JSON examples in every computed contract**: COLL, CVA, GRP, LIM, MC, NSET, PNL, SACCR, SIMM, STR, TRADING_GROUPINGS, TVAL and WWR
+  gain a section 17 with complete records for each input kind (drafts marked) and each output (the computed kind, the API answer, the
+  published official row), from the demo data's ids and the pages' worked examples (0 → 55 blocks across the twelve, NSET 1 → 6).
+  `tools/test_contract_examples.py` checks that every page has one, every block parses, every key is in the page's field tables (or a
+  linked pack contract or README's shared columns) and every required field appears. The tables the check exposed were corrected: SIMM's
+  computed record to what `SimmAnswer.java` answers, `crif-external` and the CSA's SIMM terms as draft tables; the official results'
+  shared columns as one table in README section 11; GRP's group limit (its own approved limit, not the sum of the members'); LIM's
+  worked figures to the 2026-09-30 data; the provenance sub-fields, the official figure columns and the API answers' fields named in
+  tables.
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
 

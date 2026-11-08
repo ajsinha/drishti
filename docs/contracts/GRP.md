@@ -34,6 +34,7 @@ then every counterparty measure answers for the group as a scope (`GROUP:<id>`),
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
 16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+17. [JSON examples](#17-json-examples)
 
 ## 1. Summary
 
@@ -42,8 +43,8 @@ then every counterparty measure answers for the group as a scope (`GROUP:<id>`),
 GRP-MERIDIAN <GO>`). The API is `/api/v1/groups`.
 
 **Kept and computed.** `counterparty-group` stays: its members (with the reason for each) and its id. Removed: `UTILISATION` (computed),
-and `LIMIT` moves to `credit-limit` as a limit with scope `GROUP:<id>` (LIM.md; today it is the sum of the members' limits, a derived
-figure, open question 1).
+and `LIMIT` moves to `credit-limit` as a limit with scope `GROUP:<id>` (LIM.md; today it is the group's own approved limit on the group record, open
+question 1).
 
 | Part | Status |
 |---|---|
@@ -78,7 +79,7 @@ Source: the counterparty master or the credit system; daily snapshot; due **to b
 |---|---|---|---|---|---|---|
 | `GROUP_ID` | id | `id` STRING | required | R | | `GRP-MERIDIAN` |
 | `BUSINESS_DATE` | date | `business_date` DATE | required | R | | `2026-09-30` |
-| `NAME` | text | STRING | required | – | | `Meridian Group` |
+| `NAME` | text | STRING | required | – | | `Meridian Financial Group` |
 | `ULTIMATE_PARENT_LEI` | id | STRING | optional | R | the group's GLEIF anchor; members found through it join (§6.1) | `5493001KJTIIGC8Y1R12` |
 | `MEMBERS[]` | record list | doc | required | R | below | |
 | `BATCH_ID` | id | STRING | required | – | | |
@@ -179,10 +180,10 @@ share of a group: `GROUP:<id> & LE:<le>`.
 | `MEMBERS` | record list | | `ID`, `NAME`, `LEI`, `RELATION`, `SOURCE` (`kept`, `gleif`, `both`), `RATING`, `NET_MTM`, `CE`, `EAD`, `EPE`, `PEAK_PFE`, `PFE_CONTRIBUTION`, `FLAGS` |
 | `NET_MTM`, `CE`, `COLLATERAL`, `EAD`, `EPE`, `PEAK_PFE`, `PEAK_PFE_DATE`, `CVA` | amount | USD | group figures (§6.3) |
 | `SUM_MEMBER_PFE` | amount | USD | Σ members' own peak PFE, for comparison (not a group figure) |
-| `LIMITS` | record list | | the group's limits with usage and status (LIM.md) |
+| `LIMITS` | record list | | the group's limits with usage and status (LIM.md): `LIMIT_ID`, `MEASURE`, `LIMIT`, `USAGE`, `UTILISATION`, `STATUS` |
 | `TREE` | record list | | the GLEIF tree of the members (`LEI`, `PARENT`, `LEVEL`, `NAME`, `IS_COUNTERPARTY`) |
 | `FLAGS` | text list | | `CONFLICT`, `NO_LEI` (members without one), `LAPSED` (lapsed GLEIF registrations used) |
-| `PROVENANCE` | record | | NSET's, plus the GLEIF file date and the resolution settings |
+| `PROVENANCE` | record | | NSET's (`INPUTS`: each `KIND` with its `VERSION` and `BATCH_IDS`; `UNVALUED`, `PARTIAL`, `HIDDEN`), plus the GLEIF file date (`GLEIF_DATE`) and the resolution settings (`SETTINGS`: `gleif-levels`, `precedence`) |
 
 ### 9.2 The API (`/api/v1/groups`, planned)
 
@@ -196,10 +197,18 @@ share of a group: `GROUP:<id> & LE:<le>`.
 ### 9.3 Published official results (`group-official-cpty`)
 
 Group figures name counterparties, so a group publishes only to the restricted table of
-[NSET.md section 9.5](NSET.md#95-published-official-results-nset-official-nset-official-cpty) (row level `group`): `MEMBERS` (BIGINT),
-`NET_MTM`, `CE`, `COLLATERAL`, `EAD`, `EPE`, `PEAK_PFE`, `SUM_MEMBER_PFE`, `CVA` (DOUBLE, USD), `PEAK_PFE_DATE` (DATE), `LIMIT_STATUS`
-(STRING, the worst of its limits), `MEMBER_IDS` (STRING, JSON text). There is no node-level `group-official` table (a hierarchy node has
-no group figure of its own; the node tables of the other measures cover it).
+[NSET.md section 9.5](NSET.md#95-published-official-results-nset-official-nset-official-cpty) (row level `group`), with the shared
+columns ([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)) and these. There is no node-level
+`group-official` table (a hierarchy node has no group figure of its own; the node tables of the other measures cover it).
+
+| Field | Type | Delta | Meaning | Example |
+|---|---|---|---|---|
+| `COUNTERPARTY`, `LEI`, `RATING` | id, id, text | STRING | as NSET.md section 9.5: on a group row the anchor counterparty (the parent), its LEI and rating | `CP-MERIDIAN` |
+| `MEMBERS` | integer | BIGINT | connected members | `2` |
+| `NET_MTM`, `CE`, `COLLATERAL`, `EAD`, `EPE`, `PEAK_PFE`, `SUM_MEMBER_PFE`, `CVA` | amount | DOUBLE | USD, as §9.1 | `7912000000` |
+| `PEAK_PFE_DATE` | date | DATE | | `2027-09-30` |
+| `LIMIT_STATUS` | text | STRING | the worst of its limits | `WARNING` |
+| `MEMBER_IDS` | text | STRING | the members, JSON text | `["CP-MERIDIAN","CP-MERIDIAN-RE"]` |
 
 ### 9.4 The reactive connector (proposed)
 
@@ -285,9 +294,10 @@ only, as the demo's other look-alikes.
 | Calc snippet | `group_exposure.py` (core) reads `group-usage` |
 | Guard test | no fundamental kind carries `UTILISATION` |
 
-**Reconciliation.** `reference` in `tools/packgen/banking/data_results.py` sets a group's `LIMIT` to the **sum of its members' limits**
-and `UTILISATION` to Σ members' used / Σ members' limits: the group has no limit of its own and its usage is a sum of member PFE peaks
-(LIM.md section 14). The computed group PFE is the quantile of the summed member paths; for the 22 single-member groups the computed
+**Reconciliation.** `reference` in `tools/packgen/banking/data_results.py` gives a group of several members its **own approved limit**,
+below the members' limits added and never below the largest member's (`GRP-MERIDIAN`: 8,670,000,000 against 6,898,000,000 + 6,673,000,000),
+a group of one its member's limit, and `UTILISATION` = Σ members' `USED` / the group's `LIMIT`: the usage is a sum of member PFE peaks
+(LIM.md section 14), not a group figure. The computed group PFE is the quantile of the summed member paths; for the 22 single-member groups the computed
 figures equal the member's, for `GRP-MERIDIAN` they will differ.
 
 ## 15. A worked example
@@ -313,7 +323,7 @@ own 75% PFE is 0, but on path 2 it lifts the group. A group limit of 2.2 is ther
 
 | # | Question | Context |
 |---|---|---|
-| 1 | The group's limit: a `credit-limit` row with scope `GROUP:<id>` (proposed), or kept on the group record? Today it is the sum of the members' limits | §1, §14 |
+| 1 | The group's limit: a `credit-limit` row with scope `GROUP:<id>` (proposed), or kept on the group record (as today)? | §1, §14 |
 | 2 | GLEIF levels: ultimate parent (proposed) or the direct-parent chain; include lapsed registrations? | §6.1 |
 | 3 | Economic interdependence (LEX30) is manual: does it come from the credit file (the `counterparty-group` feed) only? | §3.2 |
 | 4 | Group CVA: members' defaults are correlated; ignore (proposed, CVA per member) or model a group-level default? | §6.3 |
@@ -324,6 +334,36 @@ own 75% PFE is 0, but on path 2 it lifts the group. A group limit of 2.2 is ther
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results in the restricted table) |
+
+## 17. JSON examples
+
+The demo's one group of several members, `GRP-MERIDIAN` (Meridian Life Assurance, `A+`, and Meridian Reinsurance Ltd, `A`), on
+2026-09-30. Net MtM, collateral and current exposure are the members' eight netting sets' demo figures; EAD the sets' SA-CCR EAD; each
+member's `PEAK_PFE` its stored PFE peak; the group's PFE (the quantile of the summed paths) and EPE are illustrative. Each line is one
+record.
+
+**counterparty-group: the kept members**, as the planned feed sends them (`ULTIMATE_PARENT_LEI` the GLEIF anchor; Meridian
+Reinsurance kept as a controlled subsidiary):
+
+```json
+{"GROUP_ID":"GRP-MERIDIAN","BUSINESS_DATE":"2026-09-30","NAME":"Meridian Financial Group","ULTIMATE_PARENT_LEI":"5493001KJTIIGC8Y1R12","MEMBERS":[{"ID":"CP-MERIDIAN","RELATION":"PARENT","SOURCE":"CREDIT_FILE","EXCLUDE":false,"NAME":"Meridian Life Assurance","RATING":"A+"},{"ID":"CP-MERIDIAN-RE","RELATION":"CONTROL","SOURCE":"CREDIT_FILE","EXCLUDE":false,"NAME":"Meridian Reinsurance Ltd","RATING":"A"}],"BATCH_ID":"B-2026-09-30-01"}
+```
+
+**group-usage: `GRP GRP-MERIDIAN`** with the default measures. The group's PFE (7,912,000,000) is below the sum of the members' own
+PFEs (8,477,204,178): the two members' exposures do not peak on the same paths. The members' `PFE_CONTRIBUTION`s add up to it.
+
+```json
+{"GROUP_ID":"GRP-MERIDIAN","NAME":"Meridian Financial Group","ANCHOR_LEI":"5493001KJTIIGC8Y1R12","BUSINESS_DATE":"2026-09-30","MEMBERS":[{"ID":"CP-MERIDIAN","NAME":"Meridian Life Assurance","LEI":"549300TP7CRJYJA0LR78","RELATION":"PARENT","SOURCE":"kept","RATING":"A+","NET_MTM":231952644,"CE":12454549,"EAD":5663553376,"EPE":1410000000,"PEAK_PFE":3934630989,"PFE_CONTRIBUTION":3661428113,"FLAGS":[]},{"ID":"CP-MERIDIAN-RE","NAME":"Meridian Reinsurance Ltd","LEI":"549300HGCM5CFCB6ZB96","RELATION":"CONTROL","SOURCE":"kept","RATING":"A","NET_MTM":386124330,"CE":174386073,"EAD":4910988772,"EPE":1655000000,"PEAK_PFE":4542573189,"PFE_CONTRIBUTION":4250571887,"FLAGS":[]}],"NET_MTM":618076974,"CE":186840622,"COLLATERAL":486563152,"EAD":10574542148,"EPE":3065000000,"PEAK_PFE":7912000000,"PEAK_PFE_DATE":"2027-09-30","CVA":-7876276,"SUM_MEMBER_PFE":8477204178,"LIMITS":[{"LIMIT_ID":"LIM-GRP-MERIDIAN","MEASURE":"PFE","LIMIT":8670000000,"USAGE":7912000000,"UTILISATION":0.9126,"STATUS":"WARNING"}],"TREE":[],"FLAGS":[],"PROVENANCE":{"INPUTS":[{"KIND":"counterparty-group","VERSION":12,"BATCH_IDS":["B-2026-09-30-01"]},{"KIND":"exposure-path","VERSION":31,"BATCH_IDS":["XB-2026-09-30-01"]}],"UNVALUED":0,"PARTIAL":false,"HIDDEN":0,"GLEIF_DATE":"2026-09-29","SETTINGS":{"gleif-levels":"ultimate","precedence":"kept"}}}
+```
+
+`TREE` is empty because the demo's LEIs are synthetic and not in the gleif pack's data (§13), so the group is its kept members only; with the planned test
+data a GLEIF-connected member would show `SOURCE` `gleif` and a `TREE` row per LEI (`LEI`, `PARENT`, `LEVEL`, `NAME`, `IS_COUNTERPARTY`).
+
+**group-official-cpty: the group's published row** (restricted table, row level `group`):
+
+```json
+{"BUSINESS_DATE":"2026-09-30","HIERARCHY":"GROUP","NODE_ID":"GROUP:GRP-MERIDIAN","NODE_NAME":"Meridian Financial Group","PARENT_ID":"","LEVEL":"group","CAPTURE_ID":"CAP-GRP-2026-09-30-OFFICIAL","RESULT_VERSION":1,"INPUT_VERSIONS":"{\"counterparty-group\":{\"version\":12,\"batches\":[\"B-2026-09-30-01\"]}}","COMPUTED_AT":"2026-10-01T06:58:00Z","CONTRACT_VERSION":"1.0","COUNTERPARTY":"CP-MERIDIAN","LEI":"549300TP7CRJYJA0LR78","RATING":"A+","MEMBERS":2,"NET_MTM":618076974,"CE":186840622,"COLLATERAL":486563152,"EAD":10574542148,"EPE":3065000000,"PEAK_PFE":7912000000,"SUM_MEMBER_PFE":8477204178,"CVA":-7876276,"PEAK_PFE_DATE":"2027-09-30","LIMIT_STATUS":"WARNING","MEMBER_IDS":"[\"CP-MERIDIAN\",\"CP-MERIDIAN-RE\"]"}
+```
 
 ---
 

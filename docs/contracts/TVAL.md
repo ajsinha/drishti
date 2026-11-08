@@ -39,6 +39,7 @@ are in [README.md](README.md); the scope grammar, captures, baskets, official en
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
 16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+17. [JSON examples](#17-json-examples)
 
 ## 1. Summary
 
@@ -307,13 +308,15 @@ Base `/api/v1/tval`, JSON, as the caller; `scope` and `asOf` as VaR; errors RFC 
 | `mtm`, `mtmPositive`, `mtmNegative`, `mtmGross` | integer | §6.1 |
 | `pnl1d`, `dv01`, `cs01`, `notional`, `accrued` | integer or null | §6.1; null when no trade of the scope carries the value |
 | `trades`, `valued`, `proxied`, `failed`, `missing`, `ended` | integer | counts |
-| `children` | list | default parts (`by=child`): `{key, scope, label, mtm, mtmGross, dv01, trades}` |
+| `children` | list | default parts (`by=child`), each with `key`, `scope`, `label`, `mtm`, `mtmGross`, `dv01`, `trades` |
 | `provenance` | object | VaR's fields ([VAR_GUIDE.md section 11.2](../guides/VAR_GUIDE.md#112-the-headline-get-scope-and-its-provenance)) plus `valuation` (`valuation · batches B-… · data version …`), `fxRate`, `fxSource`, `fxDate`, `batchIds` (one per source system) |
 
 ### 9.3 Trades (paged)
 
-`{total, page, size, rows: [{TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, TT_BOOK, COUNTERPARTY, CURRENCY, MATURITY_DATE, TRADE_STATUS,
-MTM, MTM_NATIVE, MTM_CURRENCY, PNL_1D, DV01, NOTIONAL, STATUS}]}`; sorted server-side; `total` is exact (no member cap).
+| Field | Type | Meaning |
+|---|---|---|
+| `total`, `page`, `size` | integer | the trades in scope (exact, no member cap), the page and its size |
+| `rows` | list | the page's trades, sorted server-side, each with `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `TT_BOOK`, `COUNTERPARTY`, `CURRENCY`, `MATURITY_DATE`, `TRADE_STATUS`, `MTM`, `MTM_NATIVE`, `MTM_CURRENCY`, `PNL_1D`, `DV01`, `NOTIONAL`, `STATUS` |
 
 ### 9.4 CSV
 
@@ -357,7 +360,7 @@ Proposed record of `valuation-total`:
 | `MTM`, `MTM_POSITIVE`, `MTM_NEGATIVE`, `MTM_GROSS`, `PNL_1D`, `DV01`, `CS01`, `NOTIONAL` | amount | §6.1 |
 | `TRADES`, `VALUED`, `PROXIED`, `FAILED`, `MISSING` | integer | |
 | `BREAKDOWN` | record list | `KEY`, `SCOPE`, `LABEL`, `MTM`, `MTM_GROSS`, `DV01`, `TRADES` per group of `by` |
-| `PROVENANCE` | record | §9.2 in UPPER_SNAKE |
+| `PROVENANCE` | record | §9.2 in UPPER_SNAKE: VaR's fields plus `VALUATION`, `FX_RATE`, `FX_SOURCE`, `FX_DATE`, `BATCH_IDS` |
 
 **Caching:** the answer cache key is VaR's (date, data version of `valuation` and `trade`, view signature, canonical scope, parameters);
 the reactive cache holds the record. A load signal on `valuation` or `trade` drops the date's answers.
@@ -551,6 +554,52 @@ new on 2026-09-30.
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-10-25 | First version (PLANNED): the `valuation` input table, totals and breakdowns over any scope, the retirement of `trade-valuation` |
+
+## 17. JSON examples
+
+Each line is one record (wrapped here only by the code block's width). The input rows take their trades from the demo data
+(`data/testdata/market-risk/trade-valuation/` and the trade masters of 2026-09-30); the answers are the worked example of
+[section 15](#15-a-worked-example).
+
+**valuation: one ENDUR and one MUREX row as an upstream engine sends them**, then a failed row. The derived columns (`TT_BOOK`, `DESK`,
+…) are not sent; Drishti adds them from the trade master at load:
+
+```json
+{"VALUATION_KEY":"1000001","BUSINESS_DATE":"2026-09-30","TRADE_ID":"1000001","SOURCE_SYSTEM":"ENDUR","TRADE_VERSION":"7","MTM":5151600.0,"MTM_NATIVE":5151600.0,"MTM_CURRENCY":"USD","FX_TO_USD":1.0,"PNL_1D":-347255.0,"DV01":0.0,"NOTIONAL":209962179.0,"STATUS":"ok","PRICER":"endur-mtm","MODEL_VERSION":"21.3","MARKET_DATA_SET":"MD-2026-09-30-EOD","COMPUTED_AT":"2026-09-30T22:30:00Z","BATCH_ID":"B-VAL-2026-09-30-01","RESTATEMENT":0}
+{"VALUATION_KEY":"MX-20000022","BUSINESS_DATE":"2026-09-30","TRADE_ID":"MX-20000022","SOURCE_SYSTEM":"MUREX","TRADE_VERSION":"4","MTM":3795371.0,"MTM_NATIVE":3795371.0,"MTM_CURRENCY":"USD","FX_TO_USD":1.0,"PNL_1D":-275031.0,"DV01":-106717.0,"CS01":0.0,"NOTIONAL":141900000.0,"ACCRUED":41250.0,"PREMIUM_SETTLED":0.0,"STATUS":"ok","PRICER":"murex-mtm","MODEL_VERSION":"3.1.42","MARKET_DATA_SET":"MD-2026-09-30-EOD","COMPUTED_AT":"2026-09-30T22:10:00Z","BATCH_ID":"B-VAL-2026-09-30-02","RESTATEMENT":0}
+{"VALUATION_KEY":"MX-20000045","BUSINESS_DATE":"2026-09-30","TRADE_ID":"MX-20000045","SOURCE_SYSTEM":"MUREX","TRADE_VERSION":"1","MTM":null,"STATUS":"failed","PRICER":"murex-mtm","COMPUTED_AT":"2026-09-30T22:10:00Z","BATCH_ID":"B-VAL-2026-09-30-02","RESTATEMENT":0}
+```
+
+**valuation: the same Murex row as stored**, with the derived columns Drishti filled from the trade master:
+
+```json
+{"VALUATION_KEY":"MX-20000022","BUSINESS_DATE":"2026-09-30","TRADE_ID":"MX-20000022","SOURCE_SYSTEM":"MUREX","TRADE_VERSION":"4","MTM":3795371.0,"MTM_NATIVE":3795371.0,"MTM_CURRENCY":"USD","FX_TO_USD":1.0,"PNL_1D":-275031.0,"DV01":-106717.0,"NOTIONAL":141900000.0,"STATUS":"ok","BATCH_ID":"B-VAL-2026-09-30-02","RESTATEMENT":0,"TT_BOOK":"BOOK-RATES-1","DESK":"DESK-RATES","LEGAL_ENTITY":"LE-NY","COUNTERPARTY":"CP-VERDANT","NETTING_SET":"NS-VERDANT-NY","PRODUCT_TYPE":"XCCY_SWAP","PRODUCT_GROUP":"Rates","CURRENCY":"USD","TRADER_ID":"TRDR-ASHAH","MATURITY_DATE":"2035-02-01","TRADE_STATUS":"AMENDED"}
+```
+
+**`GET /api/v1/tval/scope?scope=DESK:DESK-RATES&asOf=2026-09-30`: the totals** of the worked example's rates desk (T1 and T2):
+
+```json
+{"scope":"DESK:DESK-RATES","canonical":"DESK:DESK-RATES","kind":"desk","label":"Rates · Swaps and options","node":"MGMT~DESK-RATES","businessDate":"2026-09-30","currency":"USD","mtm":141300,"mtmPositive":250000,"mtmNegative":-108700,"mtmGross":358700,"pnl1d":11300,"dv01":400,"cs01":null,"notional":80000000,"accrued":null,"trades":2,"valued":2,"proxied":0,"failed":0,"missing":0,"ended":0,"children":[{"key":"BOOK-RATES-1","scope":"BOOK:BOOK-RATES-1","label":"BOOK-RATES-1","mtm":141300,"mtmGross":358700,"dv01":400,"trades":2}],"provenance":{"valuation":"valuation · batches B-VAL-2026-09-30-02 · data version 57","fxRate":1.0,"fxSource":"fx-spot","fxDate":"2026-09-30","batchIds":["B-VAL-2026-09-30-02"]}}
+```
+
+**`GET /api/v1/tval/scope/trades?scope=DESK:DESK-RATES&asOf=2026-09-30&sort=-mtm`: a page of trades** (T1 and T2 of the example):
+
+```json
+{"total":2,"page":0,"size":100,"rows":[{"TRADE_ID":"MX-20000101","SOURCE_SYSTEM":"MUREX","PRODUCT_TYPE":"IRS_FIXFLOAT","TT_BOOK":"BOOK-RATES-1","COUNTERPARTY":"CP-VERDANT","CURRENCY":"USD","MATURITY_DATE":"2031-09-30","TRADE_STATUS":"NEW","MTM":250000.0,"MTM_NATIVE":250000.0,"MTM_CURRENCY":"USD","PNL_1D":10000.0,"DV01":1200.0,"NOTIONAL":50000000.0,"STATUS":"ok"},{"TRADE_ID":"MX-20000102","SOURCE_SYSTEM":"MUREX","PRODUCT_TYPE":"IRS_FIXFLOAT","TT_BOOK":"BOOK-RATES-1","COUNTERPARTY":"CP-MERIDIAN-RE","CURRENCY":"EUR","MATURITY_DATE":"2028-09-30","TRADE_STATUS":"NEW","MTM":-108700.0,"MTM_NATIVE":-100000.0,"MTM_CURRENCY":"EUR","PNL_1D":1300.0,"DV01":-800.0,"NOTIONAL":30000000.0,"STATUS":"ok"}]}
+```
+
+**valuation-total: the computed record** of the bank in EUR (USD → EUR 0.92), broken down by child:
+
+```json
+{"SCOPE":"BANK~ccy=EUR","CANONICAL":"BANK~ccy=EUR","SCOPE_KIND":"bank","LABEL":"Drishti Bank","BUSINESS_DATE":"2026-09-30","CURRENCY":"EUR","MTM":175996.0,"MTM_POSITIVE":276000.0,"MTM_NEGATIVE":-100004.0,"MTM_GROSS":376004.0,"DV01":368.0,"NOTIONAL":92000000.0,"TRADES":3,"VALUED":3,"PROXIED":0,"FAILED":0,"MISSING":0,"BREAKDOWN":[{"KEY":"DIV-MARKETS","SCOPE":"DIV:DIV-MARKETS","LABEL":"Markets","MTM":175996.0,"MTM_GROSS":376004.0,"DV01":368.0,"TRADES":3}],"PROVENANCE":{"VALUATION":"valuation · batches B-VAL-2026-09-30-02 · data version 57","FX_RATE":0.92,"FX_SOURCE":"fx-spot","FX_DATE":"2026-09-30","BATCH_IDS":["B-VAL-2026-09-30-02"]}}
+```
+
+**tval-official: the bank's row** of the date, with the bridge from 2026-09-29 of [section 15](#15-a-worked-example) (the shared
+columns are [README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)'s):
+
+```json
+{"BUSINESS_DATE":"2026-09-30","HIERARCHY":"MGMT","NODE_ID":"BANK","NODE_NAME":"Drishti Bank","PARENT_ID":"","LEVEL":"bank","CAPTURE_ID":"CAP-TVAL-2026-09-30-OFFICIAL","RESULT_VERSION":1,"INPUT_VERSIONS":"{\"valuation\":{\"version\":57,\"batches\":[\"B-VAL-2026-09-30-02\"]}}","COMPUTED_AT":"2026-10-01T06:42:00Z","CONTRACT_VERSION":"1.0","CURRENCY":"USD","MTM":191300.0,"MTM_POSITIVE":300000.0,"MTM_NEGATIVE":-108700.0,"MTM_GROSS":408700.0,"MTM_CHANGE":66300.0,"MTM_CHANGE_CONTINUING":11300.0,"MTM_CHANGE_NEW":50000.0,"MTM_CHANGE_GONE":5000.0,"PNL_1D":null,"DV01":400.0,"CS01":null,"NOTIONAL":100000000.0,"TRADE_COUNT":3,"VALUED_COUNT":3,"PROXIED_COUNT":0,"FAILED_COUNT":0,"MISSING_COUNT":0}
+```
 
 ---
 

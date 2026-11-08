@@ -35,6 +35,7 @@ NICA), MC (the collateral balance a call is measured against) and EXP (today's I
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
 16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+17. [JSON examples](#17-json-examples)
 
 ## 1. Summary
 
@@ -223,7 +224,7 @@ holdings.
 | `INELIGIBLE_VALUE`, `CONCENTRATION_EXCESS` | amount | USD | market value that does not count, by cause |
 | `HOLDINGS` | record list | | per holding: `HOLDING_ID`, `ASSET_ID`, `ASSET`, `ASSET_TYPE`, `MARGIN_TYPE`, `DIRECTION`, `CURRENCY`, `QUANTITY`, `PRICE`, `FX`, `MARKET_VALUE`, `RULE_ID`, `HAIRCUT`, `FX_HAIRCUT`, `VALUE`, `REG_VALUE`, `ELIGIBLE`, `FLAGS` |
 | `BY_ASSET_TYPE`, `BY_ISSUER`, `BY_CURRENCY` | record list | | sums |
-| `PROVENANCE` | record | | NSET's, plus the prices' and FX's source and date |
+| `PROVENANCE` | record | | NSET's (`INPUTS[]`: `KIND`, `DATA_VERSION`, `BATCH_ID`; `UNVALUED`, `UNMAPPED`, `STANDALONE`, `PARTIAL`, `HIDDEN`), plus the prices' and FX's source and date (`PRICE_SOURCE`, `FX_DATE`) |
 
 ### 9.2 The API (`/api/v1/collateral`, planned)
 
@@ -364,6 +365,47 @@ CSA in USD; MPOR 10 days; schedule: USD/EUR/GBP cash 0%, G7 government bonds 1â€
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
+
+## 17. JSON examples
+
+The records of [section 15](#15-a-worked-example) as the collateral system would send them and as Drishti answers, on the Aldershot New
+York account of the demo data (CSA `CSA-ALDERSHOT-NY`: USD, cash and G7 government bonds, [NSET.md section 3.5](NSET.md)). The prices
+are the worked example's. Each line is one record.
+
+**collateral-balance: the account.**
+
+```json
+{"BALANCE_ID":"COLL-ALDERSHOT-NY","BUSINESS_DATE":"2026-09-30","NETTING_SET":"NS-ALDERSHOT-NY","CSA":"CSA-ALDERSHOT-NY","COUNTERPARTY":"CP-ALDERSHOT","CUSTODIAN":"Euroclear","REHYPOTHECATION_ALLOWED":true,"BATCH_ID":"B-2026-09-30-01"}
+```
+
+**collateral-holding: the four holdings.** EUR cash and a three-year Treasury held, a corporate bond held (not eligible under this CSA),
+USD cash posted:
+
+```json
+{"HOLDING_ID":"COLL-ALDERSHOT-NY~VM~HELD~CASH-EUR~SETTLED","BUSINESS_DATE":"2026-09-30","BALANCE_ID":"COLL-ALDERSHOT-NY","NETTING_SET":"NS-ALDERSHOT-NY","CSA":"CSA-ALDERSHOT-NY","MARGIN_TYPE":"VM","DIRECTION":"HELD","ASSET_TYPE":"CASH","ASSET_ID":"CASH-EUR","CURRENCY":"EUR","QUANTITY":2000000,"SEGREGATED":false,"SETTLEMENT_STATUS":"SETTLED","BATCH_ID":"B-2026-09-30-01"}
+{"HOLDING_ID":"COLL-ALDERSHOT-NY~VM~HELD~US91282CJL54~SETTLED","BUSINESS_DATE":"2026-09-30","BALANCE_ID":"COLL-ALDERSHOT-NY","NETTING_SET":"NS-ALDERSHOT-NY","CSA":"CSA-ALDERSHOT-NY","MARGIN_TYPE":"VM","DIRECTION":"HELD","ASSET_TYPE":"GOVT_BOND","ASSET_ID":"US91282CJL54","CURRENCY":"USD","QUANTITY":5000000,"ISSUER":"ISS-UST","ISSUER_COUNTRY":"US","ISSUER_RATING":"AA+","MATURITY_DATE":"2029-11-15","PRICE":98.50,"SEGREGATED":false,"SETTLEMENT_STATUS":"SETTLED","BATCH_ID":"B-2026-09-30-01"}
+{"HOLDING_ID":"COLL-ALDERSHOT-NY~VM~HELD~USSOLA031372~SETTLED","BUSINESS_DATE":"2026-09-30","BALANCE_ID":"COLL-ALDERSHOT-NY","NETTING_SET":"NS-ALDERSHOT-NY","CSA":"CSA-ALDERSHOT-NY","MARGIN_TYPE":"VM","DIRECTION":"HELD","ASSET_TYPE":"CORP_BOND","ASSET_ID":"USSOLA031372","CURRENCY":"USD","QUANTITY":1000000,"SEGREGATED":false,"SETTLEMENT_STATUS":"SETTLED","BATCH_ID":"B-2026-09-30-01"}
+{"HOLDING_ID":"COLL-ALDERSHOT-NY~VM~POSTED~CASH-USD~SETTLED","BUSINESS_DATE":"2026-09-30","BALANCE_ID":"COLL-ALDERSHOT-NY","NETTING_SET":"NS-ALDERSHOT-NY","CSA":"CSA-ALDERSHOT-NY","MARGIN_TYPE":"VM","DIRECTION":"POSTED","ASSET_TYPE":"CASH","ASSET_ID":"CASH-USD","CURRENCY":"USD","QUANTITY":500000,"SEGREGATED":false,"SETTLEMENT_STATUS":"SETTLED","BATCH_ID":"B-2026-09-30-01"}
+```
+
+The Treasury carries its issuer, maturity and price because the example assumes it is not in the security master; the corporate bond is
+(`BND-USSOLA031372` in the market-data pack), so its row leaves them out.
+
+**coll-valuation: the answer for `NSET:NS-ALDERSHOT-NY`** (the computed kind's record behind `COLL NSET
+NS-ALDERSHOT-NY <GO>`; `GET /api/v1/collateral/scope` answers the same fields in camelCase):
+
+```json
+{"SCOPE":"NSET:NS-ALDERSHOT-NY","CANONICAL":"NSET:NS-ALDERSHOT-NY","SCOPE_KIND":"netting-set","LABEL":"Aldershot, New York","BUSINESS_DATE":"2026-09-30","VM_HELD":7026500.0,"VM_POSTED":-500000.0,"IM_HELD":0.0,"IM_POSTED":0.0,"IA_HELD":0.0,"IA_POSTED":0.0,"COLLATERAL":6526500.0,"MARKET_VALUE_HELD":8135000.0,"MARKET_VALUE_POSTED":-500000.0,"C_REG":6350500.0,"NICA_REG":0.0,"INELIGIBLE_VALUE":1010000.0,"CONCENTRATION_EXCESS":0.0,"HOLDINGS":[{"HOLDING_ID":"COLL-ALDERSHOT-NY~VM~HELD~CASH-EUR~SETTLED","ASSET_ID":"CASH-EUR","ASSET":"EUR cash","ASSET_TYPE":"CASH","MARGIN_TYPE":"VM","DIRECTION":"HELD","CURRENCY":"EUR","QUANTITY":2000000,"PRICE":1.0,"FX":1.10,"MARKET_VALUE":2200000.0,"RULE_ID":"CASH-G3","HAIRCUT":0.0,"FX_HAIRCUT":0.08,"VALUE":2200000.0,"REG_VALUE":2024000.0,"ELIGIBLE":true,"FLAGS":[]},{"HOLDING_ID":"COLL-ALDERSHOT-NY~VM~HELD~US91282CJL54~SETTLED","ASSET_ID":"US91282CJL54","ASSET":"United States Treasury 2029","ASSET_TYPE":"GOVT_BOND","MARGIN_TYPE":"VM","DIRECTION":"HELD","CURRENCY":"USD","QUANTITY":5000000,"PRICE":98.50,"FX":1.0,"MARKET_VALUE":4925000.0,"RULE_ID":"G7-GOVT-1-5Y","HAIRCUT":0.02,"FX_HAIRCUT":0.0,"VALUE":4826500.0,"REG_VALUE":4826500.0,"ELIGIBLE":true,"FLAGS":[]},{"HOLDING_ID":"COLL-ALDERSHOT-NY~VM~HELD~USSOLA031372~SETTLED","ASSET_ID":"USSOLA031372","ASSET":"Solaris Energy Corp. 2031","ASSET_TYPE":"CORP_BOND","MARGIN_TYPE":"VM","DIRECTION":"HELD","CURRENCY":"USD","QUANTITY":1000000,"PRICE":101.00,"FX":1.0,"MARKET_VALUE":1010000.0,"RULE_ID":null,"HAIRCUT":null,"FX_HAIRCUT":0.0,"VALUE":0.0,"REG_VALUE":0.0,"ELIGIBLE":false,"FLAGS":["ineligible"]},{"HOLDING_ID":"COLL-ALDERSHOT-NY~VM~POSTED~CASH-USD~SETTLED","ASSET_ID":"CASH-USD","ASSET":"USD cash","ASSET_TYPE":"CASH","MARGIN_TYPE":"VM","DIRECTION":"POSTED","CURRENCY":"USD","QUANTITY":500000,"PRICE":1.0,"FX":1.0,"MARKET_VALUE":500000.0,"RULE_ID":"CASH-G3","HAIRCUT":0.0,"FX_HAIRCUT":0.0,"VALUE":-500000.0,"REG_VALUE":-500000.0,"ELIGIBLE":true,"FLAGS":[]}],"BY_ASSET_TYPE":[{"ASSET_TYPE":"CASH","MARKET_VALUE":1700000.0,"VALUE":1700000.0},{"ASSET_TYPE":"GOVT_BOND","MARKET_VALUE":4925000.0,"VALUE":4826500.0},{"ASSET_TYPE":"CORP_BOND","MARKET_VALUE":1010000.0,"VALUE":0.0}],"BY_ISSUER":[{"ISSUER":"ISS-UST","MARKET_VALUE":4925000.0,"VALUE":4826500.0}],"BY_CURRENCY":[{"CURRENCY":"EUR","MARKET_VALUE":2200000.0,"VALUE":2200000.0},{"CURRENCY":"USD","MARKET_VALUE":5435000.0,"VALUE":4326500.0}],"PROVENANCE":{"INPUTS":[{"KIND":"collateral-holding","DATA_VERSION":118,"BATCH_ID":"B-2026-09-30-01"},{"KIND":"csa","DATA_VERSION":41,"BATCH_ID":"B-2026-09-30-01"},{"KIND":"fx-spot","DATA_VERSION":260,"BATCH_ID":"B-2026-09-30-01"}],"UNVALUED":0,"UNMAPPED":0,"STANDALONE":0,"PARTIAL":0,"HIDDEN":0,"PRICE_SOURCE":"market-data","FX_DATE":"2026-09-30"}}
+```
+
+Posted amounts are negative in every total (section 5); `BY_*` rows sum the holdings' signed market and contractual values.
+
+**collateral-official: a desk row** (the shared columns of [README.md section 11](README.md), the figures of section 9.3; no holding
+rows are published, `HOLDINGS` is their count):
+
+```json
+{"BUSINESS_DATE":"2026-09-30","HIERARCHY":"MGMT","NODE_ID":"DESK:DESK-RATES","NODE_NAME":"Rates","PARENT_ID":"DIV:DIV-MARKETS","LEVEL":"desk","CAPTURE_ID":"CAP-COLL-2026-09-30-OFFICIAL","RESULT_VERSION":1,"INPUT_VERSIONS":"{\"collateral-holding\":{\"version\":118,\"batches\":[\"B-2026-09-30-01\"]}}","COMPUTED_AT":"2026-10-01T06:42:00Z","CONTRACT_VERSION":"1.0","VM_HELD":7026500.0,"VM_POSTED":-500000.0,"IM_HELD":0.0,"IM_POSTED":0.0,"IA_HELD":0.0,"IA_POSTED":0.0,"COLLATERAL":6526500.0,"MARKET_VALUE_HELD":8135000.0,"MARKET_VALUE_POSTED":-500000.0,"C_REG":6350500.0,"NICA_REG":0.0,"INELIGIBLE_VALUE":1010000.0,"CONCENTRATION_EXCESS":0.0,"HOLDINGS":4}
+```
 
 ---
 
