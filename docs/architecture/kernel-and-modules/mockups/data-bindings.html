@@ -1,0 +1,139 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  Mock-up (static, design only): Admin -> Data bindings, three alternatives (docs/architecture/KERNEL_AND_MODULES.md section 13).
+  ?v=A|B|C and ?theme=dark|light pick the view (for screenshots).
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Data bindings mock-ups</title>
+<style>
+:root{--bg:#0e1628;--bg2:#121c33;--sf:#16213a;--sf2:#1b2744;--bd:#26345a;--ink:#e7ecf5;--mu:#93a0b8;--ac:#e8a33a;--acink:#14100a;--ln:#7fb2ff;--ok:#5fd39a;--wa:#f2c14e;--bad:#ff7a7a;--code:#0a1120;--top:#0a1120}
+:root[data-theme=light]{--bg:#f4f6fa;--bg2:#e9eef5;--sf:#ffffff;--sf2:#eef2f8;--bd:#cdd6e3;--ink:#1a2333;--mu:#5c6a80;--ac:#c47d12;--acink:#ffffff;--ln:#1f5fbf;--ok:#1e8a55;--wa:#a86f00;--bad:#c62828;--code:#f1f4f9;--top:#ffffff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 system-ui,"Segoe UI",Roboto,sans-serif}
+.top{display:flex;gap:10px;align-items:center;padding:10px 16px;background:var(--top);border-bottom:1px solid var(--bd);flex-wrap:wrap}
+.top b{color:var(--ac);letter-spacing:.08em}.top .cmd{flex:1;min-width:160px;background:var(--sf);border:1px solid var(--bd);border-radius:4px;padding:5px 9px;color:var(--mu);font-family:ui-monospace,monospace}
+.pick{display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--bd);background:var(--bg2);align-items:center;flex-wrap:wrap}
+.pick button{background:var(--sf);color:var(--ink);border:1px solid var(--bd);border-radius:4px;padding:6px 12px;cursor:pointer;font-weight:600}
+.pick button.on{background:var(--ac);color:var(--acink);border-color:var(--ac)}.pick .sp{flex:1}
+.v{display:none;padding:14px 16px}.v.on{display:block}
+.hdr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}.hdr h1{font-size:17px;margin:0}.crumb{color:var(--mu);font-size:12px}
+.sp{flex:1}.btn{background:var(--sf2);border:1px solid var(--bd);color:var(--ink);border-radius:4px;padding:5px 10px;font-size:12px;white-space:nowrap}
+.btn.p{background:var(--ac);color:var(--acink);border-color:var(--ac);font-weight:700}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:10px 12px;margin-top:10px}
+.card h3{margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu)}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse}td,th{padding:6px;border-bottom:1px solid var(--bd);text-align:left;font-size:12px;white-space:nowrap}th{color:var(--mu);font-weight:600}
+tr.sel td{background:var(--sf2)}
+.pill{font-size:11px;padding:1px 8px;border-radius:10px;border:1px solid;font-weight:600}
+.ok{color:var(--ok)}.wa{color:var(--wa)}.bad{color:var(--bad)}.mu{color:var(--mu)}
+.p-ok{color:var(--ok);border-color:var(--ok)}.p-wa{color:var(--wa);border-color:var(--wa)}.p-bad{color:var(--bad);border-color:var(--bad)}.p-mu{color:var(--mu);border-color:var(--mu)}
+.banner{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 12px;border:1px solid var(--wa);border-radius:6px;background:var(--sf);margin-bottom:10px}
+.grid{display:grid;grid-template-columns:1fr 360px;gap:12px}.kv{display:grid;grid-template-columns:110px 1fr;gap:4px 10px;font-size:12px}.kv div:nth-child(odd){color:var(--mu)}
+.chk li{list-style:none;padding:3px 0;font-size:12px}.chk{padding:0;margin:0}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.mc{background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:12px;border-top:3px solid var(--ok)}.mc.r{border-top-color:var(--bad)}.mc.o{border-top-color:var(--mu)}
+.mc h4{margin:0 0 2px;font-size:14px}.mc .meta{color:var(--mu);font-size:12px}.mc .row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.col h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin:14px 0 6px}
+.term{background:var(--code);border:1px solid var(--bd);border-radius:6px;padding:10px 12px;font:12px/1.55 ui-monospace,Menlo,Consolas,monospace;white-space:pre;overflow-x:auto}
+.term .k{color:var(--ac)}.term .g{color:var(--ok)}.term .r{color:var(--bad)}.term .y{color:var(--wa)}.term .m{color:var(--mu)}
+.note{margin-top:14px;padding:10px 12px;border-left:3px solid var(--ln);background:var(--bg2);color:var(--mu);font-size:12px}.note b{color:var(--ink)}
+@media (max-width:820px){.grid{grid-template-columns:1fr}}
+</style></head><body>
+<div class="top"><b>DRISHTI</b><div class="cmd">ADMIN BINDINGS &lt;GO&gt;</div><span class="mu">Admin › Data bindings</span></div>
+<div class="pick"><button data-v="A" class="on">A · Needs by kind</button><button data-v="B">B · By module</button><button data-v="C">C · Data map</button>
+<span class="sp"></span><button id="theme">Light / dark</button></div>
+
+<!-- ================= A ================= -->
+<div class="v on" id="A">
+<div class="hdr"><div><div class="crumb">Admin › Data bindings</div><h1>Data bindings</h1></div>
+<span class="mu">Which connector or lake table serves each kind the modules need. Connectors and credentials are the site's; modules only name kinds.</span><span class="sp"></span>
+<span class="btn">Connectors</span><span class="btn">Lakes</span><span class="btn p">Bind a kind…</span></div>
+<div class="banner" style="border-color:var(--bad)"><span class="pill p-bad">1 REQUIRED NEED UNBOUND</span><span><b>position-sensitivity</b>: FRSA, SIMM and SENS are off for everyone until it is bound.</span><span class="sp"></span><span class="btn p">Bind now</span></div>
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px"><span class="pill p-mu">All 44</span><span class="pill p-ok">Bound 36</span><span class="pill p-wa">Demo 2</span><span class="pill p-wa">Stale 1</span><span class="pill p-bad">Unbound required 1</span><span class="pill p-mu">Unbound optional 4</span><span class="sp"></span><span class="mu">Module: all ▾ · Lake: all ▾ · search kinds…</span></div>
+<div class="card tw">
+<table><tr><th>Kind</th><th>Needed by</th><th>Use</th><th>Served by (read order)</th><th>Lake · table</th><th>Live</th><th>Contract</th><th>Last load</th><th>State</th></tr>
+<tr><td><b>trade</b></td><td>banking · collateral</td><td>read, live</td><td>trade-endur, trade-calypso, trade-murex <span class="mu">(union)</span></td><td>risklake · trading.trade_*</td><td>trade-kafka</td><td class="ok">1.4 ✓ (≥1.3)</td><td>2026-11-08 07:12</td><td><span class="pill p-ok">BOUND</span></td></tr>
+<tr><td><b>scenario-pv</b></td><td>banking</td><td>read, live</td><td>risk-store</td><td>risklake · risk.scenario-pv</td><td>var-pv-kafka</td><td class="ok">1.1 ✓</td><td>2026-11-07 23:40</td><td><span class="pill p-ok">BOUND</span></td></tr>
+<tr><td><b>pnl-vector</b> <span class="mu">any-of A</span></td><td>banking</td><td>read</td><td>risk-store</td><td>risklake · risk.pnl-vector</td><td class="mu">–</td><td class="ok">1.0 ✓</td><td>2026-11-07 23:41</td><td><span class="pill p-ok">BOUND</span></td></tr>
+<tr><td><b>risk-hierarchy</b></td><td>banking</td><td>read</td><td>risk-store</td><td>risklake · risk.risk-hierarchy</td><td class="mu">–</td><td class="ok">1.0 ✓</td><td>2026-11-04 18:02</td><td><span class="pill p-wa">STALE</span> <span class="mu">cadence daily</span></td></tr>
+<tr><td><b>ir-curve</b></td><td>banking · capitalmarkets</td><td>read</td><td>market-store</td><td>capitalmarket · market.ir-curve</td><td class="mu">–</td><td class="ok">1.2 ✓</td><td>2026-11-07 18:31</td><td><span class="pill p-ok">BOUND</span></td></tr>
+<tr><td><b>fx-vol-surface</b></td><td>banking · capitalmarkets</td><td>read</td><td>demo lake</td><td>demo · market.fx-vol-surface</td><td class="mu">–</td><td class="ok">1.0 ✓</td><td class="mu">samples</td><td><span class="pill p-wa">DEMO</span></td></tr>
+<tr><td><b>position-sensitivity</b></td><td>banking</td><td>read</td><td class="bad">nothing</td><td class="mu">hint: risk.position-sensitivity (not in any lake file)</td><td class="mu">–</td><td>≥1.0</td><td class="mu">–</td><td><span class="pill p-bad">UNBOUND · REQUIRED for FRSA, SIMM</span></td></tr>
+<tr><td><b>desk-pnl</b></td><td>banking</td><td>read</td><td>finance-pnl-jdbc</td><td class="mu">warehouse (JDBC)</td><td class="mu">–</td><td class="bad">✗ DAY_PNL missing</td><td>2026-11-07</td><td><span class="pill p-bad">MISMATCH</span></td></tr>
+<tr><td><b>pnl-history</b></td><td>banking</td><td>read</td><td class="mu">nothing</td><td class="mu">–</td><td class="mu">–</td><td>≥1.0</td><td class="mu">–</td><td><span class="pill p-mu">UNBOUND · optional</span> <span class="mu">stress window hidden</span></td></tr>
+<tr><td><b>var-official</b></td><td>banking</td><td>write</td><td class="mu">kernel writer</td><td>risklake · banking.var-official</td><td class="mu">–</td><td class="ok">1.0 ✓</td><td>2026-11-07 23:58</td><td><span class="pill p-ok">BOUND</span></td></tr>
+<tr><td><b>position</b> · <b>var-result</b></td><td>banking</td><td>computed</td><td class="mu">the banking module (not bindable)</td><td class="mu">–</td><td class="mu">–</td><td class="mu">own</td><td class="mu">–</td><td><span class="pill p-mu">COMPUTED</span></td></tr>
+</table></div>
+<div class="card" style="max-width:720px"><h3>Bind position-sensitivity</h3>
+<div class="kv"><div>Contract</div><div>position-sensitivity ≥1.0 &lt;2 · grain: one row per position, risk factor and date · 14 required fields</div>
+<div>Read from</div><div><span class="btn">sens-redis ▾</span> then <span class="btn">risk-store ▾</span> <span class="mu">(read order)</span></div>
+<div>Check</div><div class="ok">✓ risk-store has risk.position-sensitivity: 14/14 required fields, types match · 2,418,902 rows on 2026-11-07</div>
+<div>Effect</div><div>FRSA, SIMM, SENS come back on for people whose lens has them</div></div>
+<div style="display:flex;gap:6px;margin-top:10px"><span class="btn p">Propose (needs a second administrator)</span><span class="btn">Cancel</span></div></div>
+<div class="note"><b>A, needs by kind (recommended).</b> One row per kind shows at once what serves it, which modules share it, contract fit, freshness and what breaks when it is missing; the binding form checks the source against the contract before proposing. Mirrors <code>config/bindings.yaml</code> (per kind). Weak spot: wide table, 40–100 rows at a bank; filters and the red banner keep the gaps on top.</div>
+</div>
+
+<!-- ================= B ================= -->
+<div class="v" id="B">
+<div class="hdr"><div><div class="crumb">Admin › Modules › banking › Data</div><h1>banking · data needs</h1></div><span class="sp"></span><span class="pill p-ok">36 bound</span><span class="pill p-wa">2 demo</span><span class="pill p-bad">1 required missing</span></div>
+<div class="grid">
+<div>
+<div class="card"><h3>VaR · VAR, PVAR, SMAT</h3>
+<table><tr><td>trade</td><td>3 connectors + live</td><td><span class="pill p-ok">OK</span></td></tr><tr><td>scenario-pv <span class="mu">or</span> pnl-vector</td><td>risk-store + live</td><td><span class="pill p-ok">OK</span></td></tr><tr><td>scenario-set</td><td>risk-store</td><td><span class="pill p-ok">OK</span></td></tr><tr><td>risk-hierarchy</td><td>risk-store</td><td><span class="pill p-wa">STALE 4 days</span></td></tr></table></div>
+<div class="card"><h3>Capital and margin · FRSA, SIMM, SENS</h3>
+<table><tr><td>position-sensitivity</td><td class="bad">nothing bound</td><td><span class="pill p-bad">MISSING</span> <span class="btn">Bind…</span></td></tr><tr><td>risk-factor</td><td>risk-store</td><td><span class="pill p-ok">OK</span></td></tr></table>
+<div class="bad" style="margin-top:6px">FRSA, SIMM and SENS are off until position-sensitivity is bound.</div></div>
+<div class="card"><h3>Exposure · EXP, PREDEAL</h3>
+<table><tr><td>netting-set, csa, agreement</td><td>credit-store</td><td><span class="pill p-ok">OK</span></td></tr><tr><td>ir-curve, fx-spot</td><td>market-store</td><td><span class="pill p-ok">OK</span></td></tr><tr><td>fx-vol-surface</td><td>demo lake</td><td><span class="pill p-wa">DEMO</span></td></tr></table></div>
+<div class="card"><h3>Backtesting and stress window</h3>
+<table><tr><td>desk-pnl</td><td>finance-pnl-jdbc</td><td><span class="pill p-bad">MISMATCH</span> <span class="mu">DAY_PNL missing</span></td></tr><tr><td>pnl-history</td><td class="mu">optional, not bound</td><td><span class="pill p-mu">HIDDEN</span></td></tr></table></div>
+</div>
+<div class="card"><h3>What people see now</h3><ul class="chk"><li class="ok">✓ VaR, PVaR, scenario matrix</li><li class="ok">✓ Exposure, pre-deal <span class="wa">(FX vols are demo)</span></li><li class="bad">✗ FRTB-SA, SIMM, sensitivities</li><li class="bad">✗ Backtesting (desk P&amp;L mismatch)</li><li class="mu">– Stress window (optional input not bound)</li></ul>
+<h3 style="margin-top:12px">Shared with other modules</h3><div class="mu">trade (collateral) · ir-curve, fx-spot, fx-vol-surface (capitalmarkets): one binding each; changing it changes it for both.</div></div>
+</div>
+<div class="note"><b>B, by module, grouped by capability.</b> Speaks the risk user's language (what works, what does not, why) and is the right <b>tab inside Admin → Modules → banking</b>. Weak spot: hides that a kind is shared; editing a shared binding here surprises the other module's owners, so editing stays in A.</div>
+</div>
+
+<!-- ================= C ================= -->
+<div class="v" id="C">
+<div class="hdr"><div><div class="crumb">Admin › Data bindings › map</div><h1>Data map: sources → kinds → modules</h1></div></div>
+<div class="card" style="overflow-x:auto">
+<svg viewBox="0 0 980 420" width="100%" style="min-width:760px;font:12px system-ui,sans-serif">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0L10,5L0,10z" fill="currentColor"/></marker></defs>
+<g fill="var(--mu)"><text x="20" y="22">CONNECTORS (the site's)</text><text x="380" y="22">KINDS</text><text x="790" y="22">MODULES</text></g>
+<g stroke="var(--bd)" fill="var(--sf2)">
+<rect x="20" y="40" width="230" height="40" rx="6"/><rect x="20" y="95" width="230" height="40" rx="6"/><rect x="20" y="150" width="230" height="40" rx="6"/><rect x="20" y="205" width="230" height="40" rx="6"/><rect x="20" y="260" width="230" height="40" rx="6"/><rect x="20" y="315" width="230" height="40" rx="6"/>
+<rect x="380" y="40" width="200" height="34" rx="6"/><rect x="380" y="88" width="200" height="34" rx="6"/><rect x="380" y="136" width="200" height="34" rx="6"/><rect x="380" y="184" width="200" height="34" rx="6"/><rect x="380" y="232" width="200" height="34" rx="6"/><rect x="380" y="280" width="200" height="34" rx="6" stroke="var(--bad)"/><rect x="380" y="328" width="200" height="34" rx="6" stroke="var(--wa)"/>
+<rect x="790" y="90" width="170" height="60" rx="8" stroke="var(--ok)"/><rect x="790" y="230" width="170" height="60" rx="8" stroke="var(--ok)"/></g>
+<g fill="var(--ink)"><text x="32" y="65">trade-endur · calypso · murex</text><text x="32" y="120">trade-kafka (live)</text><text x="32" y="175">risk-store · Delta risklake</text><text x="32" y="230">var-pv-kafka (live)</text><text x="32" y="285">market-store · capitalmarket</text><text x="32" y="340">demo lake</text>
+<text x="392" y="62">trade</text><text x="392" y="110">scenario-pv</text><text x="392" y="158">pnl-vector</text><text x="392" y="206">risk-hierarchy</text><text x="392" y="254">ir-curve</text><text x="392" y="302">position-sensitivity ✗</text><text x="392" y="350">fx-vol-surface (demo)</text>
+<text x="805" y="125" font-weight="700">banking</text><text x="805" y="265" font-weight="700">capitalmarkets</text></g>
+<g stroke="var(--ln)" fill="none" color="var(--ln)" marker-end="url(#ar)" stroke-width="1.4">
+<path d="M250,60 C320,60 320,57 378,57"/><path d="M250,115 C320,115 320,62 378,62"/><path d="M250,170 C320,170 320,105 378,105"/><path d="M250,170 C320,170 320,153 378,153"/><path d="M250,170 C320,170 320,201 378,201"/><path d="M250,225 C320,225 320,110 378,110"/><path d="M250,280 C320,280 320,249 378,249"/><path d="M250,335 C320,335 320,345 378,345"/></g>
+<g stroke="var(--ok)" fill="none" color="var(--ok)" marker-end="url(#ar)" stroke-width="1.4">
+<path d="M580,57 C700,57 700,110 788,110"/><path d="M580,105 C700,105 700,115 788,115"/><path d="M580,153 C700,153 700,120 788,120"/><path d="M580,201 C700,201 700,125 788,125"/><path d="M580,249 C700,249 700,135 788,135"/><path d="M580,249 C700,249 700,255 788,255"/><path d="M580,345 C700,345 700,270 788,270"/><path d="M580,345 C700,345 700,140 788,140"/></g>
+<path d="M580,297 C700,297 700,145 788,145" stroke="var(--bad)" stroke-dasharray="4 4" fill="none" stroke-width="1.4"/>
+</svg></div>
+<div class="note"><b>C, data map.</b> The clearest picture of sharing and lineage (and it reuses drishti-graph's lineage DAG mode, not bespoke drawing). Weak spot: unreadable past ~30 kinds and not an editor. Recommended later, as a <b>read-only "Show map"</b> view of A.</div>
+</div>
+
+<script>
+(function(){var q=new URLSearchParams(location.search);function show(v){document.querySelectorAll('.v').forEach(function(e){e.classList.toggle('on',e.id===v)});document.querySelectorAll('.pick button[data-v]').forEach(function(b){b.classList.toggle('on',b.dataset.v===v)})}
+document.querySelectorAll('.pick button[data-v]').forEach(function(b){b.onclick=function(){show(b.dataset.v)}});
+var t=q.get('theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.dataset.theme=t;
+document.getElementById('theme').onclick=function(){var r=document.documentElement;r.dataset.theme=r.dataset.theme==='light'?'dark':'light'};
+if(q.get('v'))show(q.get('v'));})();
+</script>
+</body></html>

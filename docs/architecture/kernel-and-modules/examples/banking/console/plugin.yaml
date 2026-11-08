@@ -1,0 +1,68 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# EXAMPLE (design, not built): console/plugin.yaml inside banking-3.0.0.dmod (docs/architecture/KERNEL_AND_MODULES.md section 4.7).
+# Today's drishti-console/plugins/banking/plugin.yaml, unchanged in format; only the Python import root changes (plugins.banking ->
+# drishti_modules.banking, a namespace package rooted at the installed module's console/ folder). Templates are found in console/templates,
+# static files in console/static and served at /m/banking/static/3.0.0/... (question Q3); paths are the page addresses it claims.
+format: 1
+module: banking
+title: Banking and risk
+
+routers: [drishti_modules.banking.routes.trading_routes, drishti_modules.banking.routes.var_regulatory_routes, drishti_modules.banking.routes.var_routes,
+          drishti_modules.banking.routes.smat_routes, drishti_modules.banking.routes.frtb_routes, drishti_modules.banking.routes.simm_routes,
+          drishti_modules.banking.routes.play_routes, drishti_modules.banking.routes.exposure_routes, drishti_modules.banking.routes.mcube_routes]
+registers: [drishti_modules.banking.build_types, drishti_modules.banking.routes.trading_routes]
+code: [drishti_modules.banking.trading_landing, drishti_modules.banking.market_landing, drishti_modules.banking.risk_api]
+
+help: help.yaml
+engines: [var, exposure, sensitivities, frtb-sa, simm, mr-cube]
+words: [PLAY, "PLAY FRTB", "PLAY SIMM", CCUBE, FRSA, SIMM, MCUBE, SENS, RFAC]
+paths: [/frtb, /api/frtb/, /play/frtb, /simm, /api/simm/, /play/simm, /play, /api/play/, /mcube, /api/pivot/mr/, /var/backtesting,
+        /var/statistics, /var/reports, /api/var/, /var/stress-window, /api/home/trading/, /home/trading/, /api/home/market/, /admin/scopes]
+assets:
+  - js/drishti_var-*.js
+  - css/drishti_var.css
+  - css/drishti_var-*.css
+  - js/drishti_exposure-*.js
+  - css/drishti_exposure.css
+  - js/drishti_frtb-sa.js
+  - css/drishti_frtb-sa.css
+  - js/drishti_simm.js
+  - js/drishti_scenario-matrix.js
+  - css/drishti_scenario-matrix.css
+  - js/drishti_smat-link.js
+  - js/drishti_play-link.js
+  - js/drishti_stress-window.js
+  - css/drishti_stress-window.css
+  - js/drishti_mr-lens.js
+  - css/drishti_mr-lens.css
+  - js/drishti_risk-landing.js
+  - css/drishti_risk-landing.css
+  - js/drishti_trading-landing.js
+  - css/drishti_trading-landing.css
+  - js/drishti_market-landing.js
+  - css/drishti_market-landing.css
+  - elements/drishti-risk/*
+  - elements/drishti-risk/src/*
+templates: [terminal/var.html, terminal/var_backtesting.html, terminal/var_reports.html, terminal/var_statistics.html, terminal/exposure.html, terminal/predeal.html,
+            terminal/frtb.html, terminal/simm.html, terminal/smat.html, terminal/play.html, terminal/stress_window.html, terminal/_mr_lens.html,
+            terminal/_mr_panes.html, terminal/_risk_elements.html, home/risk_landing.html, home/trading_landing.html, home/market_landing.html, admin/scopes.html]
+screens:
+  pivot:
+    when: {lens: mr}
+    css: [css/drishti_mr-lens.css]
+    js: [elements/drishti-risk/drishti_risk.js, js/drishti_mr-lens.js]
+    top: [terminal/_mr_lens.html]
+    below: [terminal/_mr_panes.html]

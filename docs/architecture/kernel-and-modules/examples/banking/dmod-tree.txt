@@ -1,0 +1,90 @@
+EXAMPLE (design, not built): the banking module's package, banking-3.0.0.dmod, unzipped
+(docs/architecture/KERNEL_AND_MODULES.md section 3.2). Every folder is filled from today's repository; "<- today" says where from.
+
+banking-3.0.0.dmod                                         a zip; module.yaml stored first and uncompressed
+├── module.yaml                                            the manifest                        <- drishti-banking META-INF/drishti/module.yaml, grown
+├── META-INF/
+│   ├── DMOD.MF                                            SHA-256 of every entry below
+│   ├── DMOD.SIG                                           Ed25519 signature over DMOD.MF
+│   └── publisher.pem                                      publisher certificate (chained to the Drishti module root)
+├── java/
+│   ├── drishti-banking-3.0.0.jar                          services, API /api/v1/risk, Spring auto-config   <- drishti-banking
+│   ├── drishti-compute-banking-3.0.0.jar                  VaR/ES, CCR, FRTB, SIMM maths (no Spring)       <- drishti-compute-banking
+│   └── lib/commons-math3-3.6.1.jar                        private third-party (child-first)
+├── python/
+│   ├── requirements.txt                                   numpy, pandas, scipy, pyarrow (within the kernel's lock)
+│   └── drishti_banking/
+│       ├── __init__.py
+│       ├── attribution.py                                 a compute pack: P&L attribution by risk factor
+│       └── regulatory.py                                  regulatory file writers' helpers
+├── data/
+│   └── needs.yaml                                         kinds it reads / subscribes to / writes (see data/needs.yaml)
+├── packs/
+│   ├── banking-reference/                                 counterparty, legal-entity, book, desk, trader … <- config/packs/core/core (question Q1)
+│   ├── trading/                                           <- config/packs/banking/trading
+│   │   ├── pack.yaml  README.md
+│   │   ├── contracts/trade.contract.yaml …                storage: replaced by binding-hint: (no connector)
+│   │   ├── sutras/trading/trade.v1.sutra.yaml …
+│   │   ├── samples/catalog.jsonl trade.jsonl …            the demo lake's samples for its kinds
+│   │   ├── python/  guides/  config/  tests/
+│   ├── market-risk/                                       <- config/packs/banking/market-risk
+│   │   ├── pack.yaml  README.md  capital/
+│   │   ├── contracts/scenario-pv.contract.yaml pnl-vector.contract.yaml risk-hierarchy.contract.yaml … (28)
+│   │   ├── sutras/market-risk/position.v1.sutra.yaml var-desk.v1.sutra.yaml …
+│   │   ├── samples/  python/  guides/  config/  tests/
+│   └── counterparty-risk/                                 <- config/packs/banking/counterparty-risk
+├── engines/
+│   ├── engines.yaml                                       var, exposure, sensitivities, frtb-sa, simm, mr-cube  <- META-INF/drishti/engines.yaml
+│   └── var.yaml exposure.yaml frtb-sa.yaml simm.yaml mr-cube.yaml sensitivities.yaml   engine defaults
+├── lakes/
+│   ├── var-official.yaml                                  table forms only, no root     <- config/lakes/banking/var-official.yaml
+│   └── ccr-official.yaml                                                                <- config/lakes/banking/ccr-official.yaml
+├── bi/
+│   ├── reports/  counterparty-risk desk-wall live-exposure market-risk-var pnl-vs-exposure trades-overview …   <- config/bi/reports/banking
+│   ├── tables/   banking.<name> tables and models                                                         <- config/tables/banking
+│   ├── notebooks/  python/  fragments/                                                                    <- config/bi/{notebooks,python}/banking
+│   └── regulatory/ annual-report-var.yaml var-backtesting-chart.yaml OSFI/FFIEC definitions                <- config/reports/banking
+├── lenses/
+│   ├── lenses.yaml                                        risk trading market cro mr-cube ccr-cube (modules, functions, cards, chips)  <- META-INF/drishti/lenses.yaml
+│   ├── risk.yaml  trading.yaml  market.yaml               lens files: menus, Home, Help, BI lists      <- config/lenses/banking
+├── functions.yaml                                         60 command words with their APIs
+├── tokens/
+│   └── token-scopes.yaml                                  risk:write                    <- META-INF/drishti/token-scopes.yaml
+├── console/
+│   ├── plugin.yaml                                        routers, registers, words, paths, assets, screens   <- drishti-console/plugins/banking
+│   ├── help.yaml                                          Help's "Risk measures" section
+│   ├── __init__.py  build_types.py  risk_api.py  trading_landing.py  market_landing.py
+│   ├── routes/      var_routes.py var_regulatory_routes.py exposure_routes.py frtb_routes.py simm_routes.py smat_routes.py
+│   │                play_routes.py mcube_routes.py trading_routes.py
+│   ├── templates/   terminal/var.html var_backtesting.html exposure.html frtb.html simm.html smat.html play.html …
+│   │                home/risk_landing.html trading_landing.html market_landing.html  admin/scopes.html
+│   └── static/      js/drishti_var-*.js drishti_exposure-*.js drishti_frtb-sa.js drishti_simm.js …  css/drishti_var*.css …
+├── elements/
+│   └── drishti-risk/                                      the banking Elements library     <- drishti-console/web/static/elements/drishti-risk
+│       ├── drishti_risk.js  src/*.js  drishti_risk.css (theme tokens only)
+│       ├── drishti_risk.d.ts
+│       └── manifest.json                                  {"name":"drishti-risk","module":"banking","requires":["drishti-core","drishti-grid","drishti-chart"]}
+├── feeds/                                                 (none: market data's feed is capital markets', question Q6)
+├── settings/
+│   ├── schema.json                                        JSON Schema 2020-12 (see settings/schema.json)
+│   └── defaults.yaml
+├── docs/
+│   ├── README.md                                          front matter + data structures (the README standard)
+│   ├── features.yaml                                      its rows of the docs register
+│   ├── glossary.yaml                                      VaR, ES, EEPE, PFE, SIMM, FRTB-SA, component VaR …
+│   ├── guides/      VAR_GUIDE.md REGULATORY_VAR_REPORTING.md EXPOSURE_GUIDE.md FRTB_SA_GUIDE.md SIMM_GUIDE.md MR_CUBE_GUIDE.md FUNDS_GUIDE.md
+│   ├── tutorials/   02-var-from-the-bank-to-a-trade.md 03-exposure-… 04-frtb-sa.md 05-simm.md 24- 25- 26- 28- … (nine)
+│   ├── help/        var-in-five-minutes.md …
+│   ├── lenses/      RISK_LENS.md CRO_LENS.md TRADING_LENS.md MARKET_LENS.md MR_CUBE_LENS.md CCR_CUBE_LENS.md
+│   ├── contracts/   generated contract pages of its kinds
+│   └── img/         tutorial screenshots
+├── i18n/
+│   └── messages.en.yaml  messages.fr.yaml
+├── tests/                                                 conformance + its own suite (module verify --deep); never loaded
+│   ├── conformance.yaml
+│   └── var-exact/  the VaR exact-equality fixture (expected figures, 509 and 250 windows)
+└── NOTICES/
+    ├── LICENSE
+    └── THIRD-PARTY-NOTICES.md                             commons-math3 (Apache-2.0)
+
+Never inside: connector files, connector plugins, hosts, URLs of data sources, user names, passwords, keys, tokens, lake roots.

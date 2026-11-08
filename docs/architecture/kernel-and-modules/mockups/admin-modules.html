@@ -1,0 +1,141 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  Mock-up (static, design only): Admin -> Modules, three alternatives (docs/architecture/KERNEL_AND_MODULES.md section 13).
+  ?v=A|B|C and ?theme=dark|light pick the view (for screenshots).
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Modules mock-ups</title>
+<style>
+:root{--bg:#0e1628;--bg2:#121c33;--sf:#16213a;--sf2:#1b2744;--bd:#26345a;--ink:#e7ecf5;--mu:#93a0b8;--ac:#e8a33a;--acink:#14100a;--ln:#7fb2ff;--ok:#5fd39a;--wa:#f2c14e;--bad:#ff7a7a;--code:#0a1120;--top:#0a1120}
+:root[data-theme=light]{--bg:#f4f6fa;--bg2:#e9eef5;--sf:#ffffff;--sf2:#eef2f8;--bd:#cdd6e3;--ink:#1a2333;--mu:#5c6a80;--ac:#c47d12;--acink:#ffffff;--ln:#1f5fbf;--ok:#1e8a55;--wa:#a86f00;--bad:#c62828;--code:#f1f4f9;--top:#ffffff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 system-ui,"Segoe UI",Roboto,sans-serif}
+.top{display:flex;gap:10px;align-items:center;padding:10px 16px;background:var(--top);border-bottom:1px solid var(--bd);flex-wrap:wrap}
+.top b{color:var(--ac);letter-spacing:.08em}.top .cmd{flex:1;min-width:160px;background:var(--sf);border:1px solid var(--bd);border-radius:4px;padding:5px 9px;color:var(--mu);font-family:ui-monospace,monospace}
+.pick{display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--bd);background:var(--bg2);align-items:center;flex-wrap:wrap}
+.pick button{background:var(--sf);color:var(--ink);border:1px solid var(--bd);border-radius:4px;padding:6px 12px;cursor:pointer;font-weight:600}
+.pick button.on{background:var(--ac);color:var(--acink);border-color:var(--ac)}.pick .sp{flex:1}
+.v{display:none;padding:14px 16px}.v.on{display:block}
+.hdr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}.hdr h1{font-size:17px;margin:0}.crumb{color:var(--mu);font-size:12px}
+.sp{flex:1}.btn{background:var(--sf2);border:1px solid var(--bd);color:var(--ink);border-radius:4px;padding:5px 10px;font-size:12px;white-space:nowrap}
+.btn.p{background:var(--ac);color:var(--acink);border-color:var(--ac);font-weight:700}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:10px 12px;margin-top:10px}
+.card h3{margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu)}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse}td,th{padding:6px;border-bottom:1px solid var(--bd);text-align:left;font-size:12px;white-space:nowrap}th{color:var(--mu);font-weight:600}
+tr.sel td{background:var(--sf2)}
+.pill{font-size:11px;padding:1px 8px;border-radius:10px;border:1px solid;font-weight:600}
+.ok{color:var(--ok)}.wa{color:var(--wa)}.bad{color:var(--bad)}.mu{color:var(--mu)}
+.p-ok{color:var(--ok);border-color:var(--ok)}.p-wa{color:var(--wa);border-color:var(--wa)}.p-bad{color:var(--bad);border-color:var(--bad)}.p-mu{color:var(--mu);border-color:var(--mu)}
+.banner{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 12px;border:1px solid var(--wa);border-radius:6px;background:var(--sf);margin-bottom:10px}
+.grid{display:grid;grid-template-columns:1fr 360px;gap:12px}.kv{display:grid;grid-template-columns:110px 1fr;gap:4px 10px;font-size:12px}.kv div:nth-child(odd){color:var(--mu)}
+.chk li{list-style:none;padding:3px 0;font-size:12px}.chk{padding:0;margin:0}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.mc{background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:12px;border-top:3px solid var(--ok)}.mc.r{border-top-color:var(--bad)}.mc.o{border-top-color:var(--mu)}
+.mc h4{margin:0 0 2px;font-size:14px}.mc .meta{color:var(--mu);font-size:12px}.mc .row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.col h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin:14px 0 6px}
+.term{background:var(--code);border:1px solid var(--bd);border-radius:6px;padding:10px 12px;font:12px/1.55 ui-monospace,Menlo,Consolas,monospace;white-space:pre;overflow-x:auto}
+.term .k{color:var(--ac)}.term .g{color:var(--ok)}.term .r{color:var(--bad)}.term .y{color:var(--wa)}.term .m{color:var(--mu)}
+.note{margin-top:14px;padding:10px 12px;border-left:3px solid var(--ln);background:var(--bg2);color:var(--mu);font-size:12px}.note b{color:var(--ink)}
+@media (max-width:820px){.grid{grid-template-columns:1fr}}
+</style></head><body>
+<div class="top"><b>DRISHTI</b><div class="cmd">ADMIN MODULES &lt;GO&gt;</div><span class="mu">Admin › Modules</span></div>
+<div class="pick"><button data-v="A" class="on">A · Table + detail</button><button data-v="B">B · Cards by state</button><button data-v="C">C · Terminal (lsmod)</button>
+<span class="sp"></span><button id="theme">Light / dark</button></div>
+
+<!-- ================= A ================= -->
+<div class="v on" id="A">
+<div class="hdr"><div><div class="crumb">Admin › Modules</div><h1>Modules</h1></div>
+<span class="mu">Kernel 2.9.11.i · kernel API 1.4 (serves 1.3–1.4) · drishti.finance 1.0.0 · licence ACME-BANK-2026 to 2027-10-31</span><span class="sp"></span>
+<span class="btn">Distribution</span><span class="btn">Trusted publishers</span><span class="btn p">Install module…</span></div>
+<div class="banner"><span class="pill p-wa">RESTART NEEDED</span><span>banking 3.0.0 → 3.0.1 approved by bob 10:42 · applies on a rolling restart of 3 nodes</span><span class="sp"></span><span class="btn">Rolling restart…</span></div>
+<div class="banner" style="border-color:var(--ln)"><span class="pill" style="color:var(--ln);border-color:var(--ln)">WAITING FOR A SECOND ADMINISTRATOR</span><span>alice proposes <b>remove genomics 0.1.0</b> · reason "sample only"</span><span class="sp"></span><span class="btn">Review</span></div>
+<div class="grid">
+<div class="card tw"><h3>Installed (5)</h3>
+<table><tr><th>Module</th><th>Version</th><th>Publisher</th><th>State</th><th>Licence</th><th>Data needs</th><th>Taint</th></tr>
+<tr class="sel"><td><b>banking</b><div class="mu">Banking and risk</div></td><td>3.0.0 <span class="mu">(3.0.1 staged)</span></td><td>drishti ✓</td><td><span class="pill p-ok">LOADED</span></td><td class="ok">banking</td><td>37/41 <span class="wa">· 1 demo</span></td><td>–</td></tr>
+<tr><td><b>capitalmarkets</b><div class="mu">Capital markets</div></td><td>1.3.0</td><td>drishti ✓</td><td><span class="pill p-ok">LOADED</span></td><td class="ok">capmkts</td><td>12/12</td><td>–</td></tr>
+<tr><td><b>economy</b><div class="mu">Economy and public sector</div></td><td>1.4.0</td><td>drishti ✓</td><td><span class="pill p-ok">LOADED</span></td><td class="ok">economy</td><td>9/9</td><td>–</td></tr>
+<tr><td><b>riskx-climate</b><div class="mu">Climate stress (partner)</div></td><td>0.4.2</td><td>acme-dev <span class="bad">✗</span></td><td><span class="pill p-bad">REFUSED</span></td><td class="mu">–</td><td class="mu">–</td><td>–</td></tr>
+<tr><td><b>genomics</b><div class="mu">Genomics sample</div></td><td>0.1.0</td><td>drishti ✓</td><td><span class="pill p-mu">OFF</span></td><td class="wa">not licensed</td><td class="mu">–</td><td>–</td></tr>
+</table>
+<div class="card" style="border-color:var(--bad)"><h3 class="bad">Refused: riskx-climate 0.4.2</h3>
+<div><b>V2 signature:</b> the publisher <code>acme-dev</code> is not trusted on this site. The module is absent everywhere: no page, function, Help or file.</div>
+<div class="mu" style="margin-top:4px">To load it: an administrator adds acme-dev's certificate under Trusted publishers (the instance is then tainted <b>U</b>), or acme-dev re-signs under the Drishti root.</div></div>
+</div>
+<div class="card"><h3>banking 3.0.0</h3>
+<div class="kv"><div>Publisher</div><div>Drishti modules · Ed25519 ✓ · cert to 2028-01-01</div>
+<div>Kernel range</div><div>&gt;=1.0 &lt;2.0 <span class="ok">✓ 1.4</span></div><div>Requires</div><div>– · optional capitalmarkets ✓</div>
+<div>Contributes</div><div>6 engines · 60 functions · 6 lenses · API /api/v1/risk · 14 Help pages · drishti-risk</div>
+<div>Needs</div><div>36 bound · <span class="wa">1 demo</span> · 4 optional unbound · <a style="color:var(--ln)">Data bindings ›</a></div>
+<div>Memory</div><div>5.2 of 6.0 GB declared</div><div>Deprecated</div><div class="wa">HealthFigures.contribute(Map): gone in kernel API 2.0</div></div>
+<h3 style="margin-top:12px">Verify report</h3>
+<ul class="chk"><li class="ok">✓ V1 manifest</li><li class="ok">✓ V2 signature</li><li class="ok">✓ V3 kernel range</li><li class="ok">✓ V4 dependencies</li><li class="ok">✓ V5 licence (positions 5,000,000; nodes 3)</li><li class="ok">✓ V6 claims</li><li class="wa">! V7 needs: 1 demo, 4 optional unbound</li><li class="ok">✓ V8 resources</li></ul>
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px"><span class="btn">Settings</span><span class="btn">Switch off…</span><span class="btn">Upgrade…</span><span class="btn">Roll back to 2.9.0</span><span class="btn" style="color:var(--bad)">Remove…</span></div>
+<div class="mu" style="margin-top:6px;font-size:11px">Every action is a proposal: a second administrator approves it in Approvals.</div></div>
+</div>
+<div class="note"><b>A, table + detail (recommended).</b> Dense and sortable like every Admin list; the drawer carries the verify report, the needs summary and the actions; refusals in words with the fix. Pending four-eyes items and "restart needed" pinned on top. Scales to 30 modules. Weak spot: on a phone the table scrolls sideways (first column pinned).</div>
+</div>
+
+<!-- ================= B ================= -->
+<div class="v" id="B">
+<div class="hdr"><div><div class="crumb">Admin › Modules</div><h1>Modules</h1></div><span class="sp"></span><span class="btn p">Install module…</span></div>
+<div class="col"><h2>Needs your attention</h2>
+<div class="cards">
+<div class="mc r"><h4>riskx-climate <span class="mu">0.4.2</span></h4><div class="meta">Climate stress · acme-dev</div><div class="row"><span class="pill p-bad">REFUSED</span></div><div style="margin-top:8px">The publisher acme-dev is not trusted on this site.</div><div class="row"><span class="btn">Trust publisher…</span><span class="btn">Remove…</span></div></div>
+<div class="mc" style="border-top-color:var(--wa)"><h4>banking <span class="mu">3.0.0 → 3.0.1</span></h4><div class="meta">Banking and risk</div><div class="row"><span class="pill p-wa">RESTART NEEDED</span></div><div style="margin-top:8px">Upgrade approved by bob at 10:42.</div><div class="row"><span class="btn p">Rolling restart…</span></div></div>
+<div class="mc" style="border-top-color:var(--ln)"><h4>genomics <span class="mu">0.1.0</span></h4><div class="meta">Genomics sample</div><div class="row"><span class="pill" style="color:var(--ln);border-color:var(--ln)">REMOVAL PROPOSED</span></div><div style="margin-top:8px">alice: "sample only". You can approve.</div><div class="row"><span class="btn p">Approve</span><span class="btn">Reject</span></div></div>
+</div>
+<h2>Running</h2>
+<div class="cards">
+<div class="mc"><h4>banking <span class="mu">3.0.0</span></h4><div class="meta">Banking and risk · drishti ✓</div><div class="row"><span class="pill p-ok">LOADED</span><span class="pill p-wa">1 DEMO NEED</span></div><div class="row mu">VAR · EXP · FRSA · SIMM · MCUBE · +55</div><div class="row"><span class="btn">Open</span><span class="btn">Data bindings</span></div></div>
+<div class="mc"><h4>capitalmarkets <span class="mu">1.3.0</span></h4><div class="meta">Capital markets · drishti ✓</div><div class="row"><span class="pill p-ok">LOADED</span></div><div class="row mu">USEQ · FUND · CRV · FX · +28</div><div class="row"><span class="btn">Open</span></div></div>
+<div class="mc"><h4>economy <span class="mu">1.4.0</span></h4><div class="meta">Economy and public sector · drishti ✓</div><div class="row"><span class="pill p-ok">LOADED</span></div><div class="row mu">ECON · WDI · CB · GDELT · +12</div><div class="row"><span class="btn">Open</span></div></div>
+</div>
+<h2>Off</h2>
+<div class="cards"><div class="mc o"><h4>genomics <span class="mu">0.1.0</span></h4><div class="meta">not licensed</div><div class="row"><span class="pill p-mu">OFF</span></div></div></div>
+</div>
+<div class="note"><b>B, cards by state.</b> Friendliest for an occasional administrator: "what needs me" first, one card per module, big actions; reads well on a phone. Weak spot: compares badly across modules (versions, needs, licence) and grows long; the full verify report needs a second page.</div>
+</div>
+
+<!-- ================= C ================= -->
+<div class="v" id="C">
+<div class="hdr"><div><div class="crumb">Admin › Modules · terminal layout</div><h1>MODULES</h1></div><span class="sp"></span><span class="btn">F2 info</span><span class="btn">F3 verify</span><span class="btn">F4 install</span><span class="btn">F8 switch</span><span class="btn">F9 remove</span></div>
+<div class="term"><span class="m">KERNEL 2.9.11.i  API 1.4 (1.3–1.4)  DIST drishti.finance 1.0.0  LIC ACME-BANK-2026 → 2027-10-31  NODES 3/3 fp 9b1e…</span>
+
+<span class="k">MODULE          VER     PUB       STATE     LIC       NEEDS     TAINT  MEM</span>
+banking         3.0.0   drishti   <span class="g">LOADED</span>    banking   37/41 <span class="y">D1</span>  -      5.2/6.0G   <span class="y">↑3.0.1 staged · RESTART</span>
+capitalmarkets  1.3.0   drishti   <span class="g">LOADED</span>    capmkts   12/12     -      0.4/0.5G
+economy         1.4.0   drishti   <span class="g">LOADED</span>    economy   9/9       -      0.3/0.5G
+riskx-climate   0.4.2   acme-dev  <span class="r">REFUSED</span>   -         -         -      -          <span class="r">V2 publisher not trusted</span>
+genomics        0.1.0   drishti   <span class="m">OFF</span>       <span class="y">no lic</span>    -         -      -          <span class="y">removal proposed (alice) · F5 approve</span>
+
+<span class="k">› INFO banking</span>
+  sig      Ed25519 OK  DMOD.MF 6f1c…d3e4  cert drishti-modules-2026
+  range    kernel &gt;=1.0 &lt;2.0 ✓  rachana 1 ✓  contracts 1 ✓  plugin-api 1 ✓  elements 2.3 ✓
+  gives    engines 6  functions 60  lenses 6  api /api/v1/risk  help 14  js drishti-risk
+  needs    BOUND 36  DEMO 1 fx-vol-surface  UNBOUND(opt) pnl-history desk-pnl var-limit portfolio
+  <span class="y">deprec   HealthFigures.contribute(Map) → removed in API 2.0</span></div>
+<div class="note"><b>C, terminal.</b> The Bloomberg-bar look the risk users and operators like: everything on one screen, keys for actions, exactly what <code>drishti.py module list / info</code> print. Weak spot: least discoverable for a new administrator. Recommended as the <b>terminal layout of A</b> (one screen, one API, a layout switch), not a separate page.</div>
+</div>
+
+<script>
+(function(){var q=new URLSearchParams(location.search);function show(v){document.querySelectorAll('.v').forEach(function(e){e.classList.toggle('on',e.id===v)});document.querySelectorAll('.pick button[data-v]').forEach(function(b){b.classList.toggle('on',b.dataset.v===v)})}
+document.querySelectorAll('.pick button[data-v]').forEach(function(b){b.onclick=function(){show(b.dataset.v)}});
+var t=q.get('theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.dataset.theme=t;
+document.getElementById('theme').onclick=function(){var r=document.documentElement;r.dataset.theme=r.dataset.theme==='light'?'dark':'light'};
+if(q.get('v'))show(q.get('v'));})();
+</script>
+</body></html>

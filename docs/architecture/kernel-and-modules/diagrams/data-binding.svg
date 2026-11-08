@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 718" width="760" height="718" role="img" aria-label="Data needs and kernel-controlled binding" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'DejaVu Sans', Arial, sans-serif">
+<!-- Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND CONFIDENTIAL. -->
+<title>Data needs and kernel-controlled binding</title>
+<defs><marker id="a1a2333" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1a2333"/></marker><marker id="a1f5fbf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1f5fbf"/></marker><marker id="a1e8a55" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1e8a55"/></marker><marker id="ac62828" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c62828"/></marker><marker id="ae8a33a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#e8a33a"/></marker><marker id="a2bb3a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#2bb3a3"/></marker><marker id="a5c6a80" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#5c6a80"/></marker><marker id="a12324f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#12324f"/></marker></defs>
+<rect x="0.5" y="0.5" width="759" height="717" rx="14" fill="#f7f9fc" stroke="#cdd6e3"/>
+<text x="24" y="38" font-size="20" font-weight="700" fill="#12324f">Data needs and kernel-controlled binding</text>
+<text x="24" y="60" font-size="13" fill="#5c6a80">Banking names kinds; the kernel decides which connector or lake table serves each.</text>
+<text x="24" y="92" font-size="12" font-weight="700" fill="#5c6a80" text-anchor="start">BANKING DECLARES (data/needs.yaml)</text>
+<text x="282" y="92" font-size="12" font-weight="700" fill="#5c6a80" text-anchor="start">THE KERNEL BINDS (config/bindings.yaml)</text>
+<text x="560" y="92" font-size="12" font-weight="700" fill="#5c6a80" text-anchor="start">THE SITE&#x27;S SOURCES</text>
+<rect x="24" y="102" width="212" height="50" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="36" y="124" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">trade</text>
+<text x="36" y="143" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="start">read · live</text>
+<rect x="24" y="164" width="212" height="50" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="36" y="186" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">scenario-pv</text>
+<text x="36" y="205" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="start">read · live</text>
+<rect x="24" y="226" width="212" height="50" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="36" y="248" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">pnl-vector</text>
+<text x="36" y="267" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="start">any-of</text>
+<rect x="24" y="288" width="212" height="50" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="36" y="310" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">risk-hierarchy</text>
+<text x="36" y="329" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="start">read</text>
+<rect x="24" y="350" width="212" height="50" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="36" y="372" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">fx-vol-surface</text>
+<text x="36" y="391" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="start">read</text>
+<rect x="24" y="412" width="212" height="50" rx="8" fill="#fbe3e3" stroke="#c62828" stroke-width="1.5"/>
+<text x="36" y="434" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">position-sensitivity</text>
+<text x="36" y="453" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="start">required</text>
+<rect x="24" y="474" width="212" height="50" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="36" y="496" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">var-official</text>
+<text x="36" y="515" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="start">write</text>
+<rect x="270" y="102" width="250" height="428" rx="10" fill="#ffffff" stroke="#12324f" stroke-width="2"/>
+<text x="284" y="123" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">trade-endur + calypso + murex</text>
+<text x="284" y="140" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="start">live: trade-kafka</text>
+<path d="M236,127 L268,127" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<text x="284" y="185" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">risk-store</text>
+<text x="284" y="202" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="start">live: var-pv-kafka</text>
+<path d="M236,189 L268,189" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<text x="284" y="247" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">risk-store</text>
+<path d="M236,251 L268,251" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<text x="284" y="309" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">risk-store</text>
+<path d="M236,313 L268,313" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<text x="284" y="371" font-size="13" font-weight="700" fill="#e8a33a" text-anchor="start">demo: true</text>
+<path d="M236,375 L268,375" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<text x="284" y="433" font-size="13" font-weight="700" fill="#c62828" text-anchor="start">— UNBOUND —</text>
+<text x="284" y="450" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="start">FRSA, SIMM off</text>
+<path d="M236,437 L268,437" fill="none" stroke="#c62828" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#ac62828)"/>
+<text x="284" y="495" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">write: risklake</text>
+<text x="284" y="512" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="start">banking.var-official</text>
+<path d="M236,499 L268,499" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<rect x="560" y="110" width="176" height="96" rx="8" fill="#dff1e7" stroke="#1e8a55" stroke-width="1.5"/>
+<text x="572" y="132" font-size="13" font-weight="700" fill="#1e8a55" text-anchor="start">risklake (Delta)</text>
+<text x="572" y="150" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">risk-store · trade-endur</text>
+<text x="572" y="167" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">trade-calypso · trade-murex</text>
+<rect x="560" y="222" width="176" height="96" rx="8" fill="#fbefd9" stroke="#e8a33a" stroke-width="1.5"/>
+<text x="572" y="244" font-size="13" font-weight="700" fill="#e8a33a" text-anchor="start">demo lake</text>
+<text x="572" y="262" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">packs&#x27; samples</text>
+<text x="572" y="279" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">DEMO badge on screens</text>
+<rect x="560" y="334" width="176" height="96" rx="8" fill="#ebe5f7" stroke="#6a4fb3" stroke-width="1.5"/>
+<text x="572" y="356" font-size="13" font-weight="700" fill="#6a4fb3" text-anchor="start">Kafka</text>
+<text x="572" y="374" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">trade-kafka</text>
+<text x="572" y="391" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">var-pv-kafka</text>
+<path d="M520,119 C542,119 536,128 558,128" fill="none" stroke="#1e8a55" stroke-width="1.8" marker-end="url(#a1e8a55)"/>
+<path d="M520,181 C542,181 536,146 558,146" fill="none" stroke="#1e8a55" stroke-width="1.8" marker-end="url(#a1e8a55)"/>
+<path d="M520,247 C542,247 536,164 558,164" fill="none" stroke="#1e8a55" stroke-width="1.8" marker-end="url(#a1e8a55)"/>
+<path d="M520,309 C542,309 536,182 558,182" fill="none" stroke="#1e8a55" stroke-width="1.8" marker-end="url(#a1e8a55)"/>
+<path d="M520,137 C542,137 536,364 558,364" fill="none" stroke="#6a4fb3" stroke-width="1.8" marker-end="url(#a6a4fb3)"/>
+<path d="M520,199 C542,199 536,392 558,392" fill="none" stroke="#6a4fb3" stroke-width="1.8" marker-end="url(#a6a4fb3)"/>
+<path d="M520,371 C542,371 536,262 558,262" fill="none" stroke="#e8a33a" stroke-width="1.8" marker-end="url(#ae8a33a)"/>
+<path d="M520,495 C542,495 536,198 558,198" fill="none" stroke="#1e8a55" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#a1e8a55)"/>
+<rect x="560" y="456" width="176" height="74" rx="8" fill="#ffffff" stroke="#c62828" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="572" y="478" font-size="13" font-weight="700" fill="#c62828" text-anchor="start">Secret store</text>
+<text x="572" y="496" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">Kafka SASL, JDBC users</text>
+<text x="572" y="513" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">for connectors only</text>
+<path d="M648,456 L648,434" fill="none" stroke="#c62828" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#ac62828)"/>
+<rect x="24" y="548" width="712" height="150" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="36" y="570" font-size="14" font-weight="700" fill="#12324f" text-anchor="start">How a kind finds its data (first hit wins)</text>
+<text x="36" y="589" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">1  the site&#x27;s binding        2  the distribution&#x27;s default</text>
+<text x="36" y="607" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">3  a lake table named by the contract&#x27;s hint (AUTO, confirm)</text>
+<text x="36" y="625" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">4  the demo lake while demo is on (DEMO)    5  otherwise UNBOUND</text>
+<text x="36" y="643" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">One binding per kind, shared by every module · contract ranges must meet</text>
+<text x="36" y="661" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">Changes: four eyes, audited, hot · credentials only in the kernel&#x27;s secret store</text>
+</svg>

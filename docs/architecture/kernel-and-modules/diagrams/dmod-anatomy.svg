@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 1006" width="760" height="1006" role="img" aria-label="Anatomy of a module package: banking" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'DejaVu Sans', Arial, sans-serif">
+<!-- Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND CONFIDENTIAL. -->
+<title>Anatomy of a module package: banking</title>
+<defs><marker id="a1a2333" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1a2333"/></marker><marker id="a1f5fbf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1f5fbf"/></marker><marker id="a1e8a55" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1e8a55"/></marker><marker id="ac62828" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c62828"/></marker><marker id="ae8a33a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#e8a33a"/></marker><marker id="a2bb3a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#2bb3a3"/></marker><marker id="a5c6a80" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#5c6a80"/></marker><marker id="a12324f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#12324f"/></marker></defs>
+<rect x="0.5" y="0.5" width="759" height="1005" rx="14" fill="#f7f9fc" stroke="#cdd6e3"/>
+<text x="24" y="38" font-size="20" font-weight="700" fill="#12324f">Anatomy of a module package: banking</text>
+<text x="24" y="60" font-size="13" fill="#5c6a80">Everything the capability needs, in one signed file; the data comes from the kernel.</text>
+<rect x="24" y="80" width="712" height="46" rx="8" fill="#12324f" stroke="#12324f" stroke-width="1.5"/>
+<text x="40" y="109" font-size="17" font-weight="700" fill="#ffffff" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">banking-3.0.0.dmod</text>
+<text x="720" y="109" font-size="13" font-weight="400" fill="#dfe7f2" text-anchor="end">a signed zip · unpacked into modules/banking/3.0.0/</text>
+<rect x="24" y="142" width="712" height="122" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="40" y="164" font-size="14" font-weight="700" fill="#12324f" text-anchor="start">Manifest &amp; trust</text>
+<rect x="40" y="174" width="680" height="36" rx="6" fill="#ffffff" stroke="#cdd6e3"/>
+<text x="54" y="197" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">module.yaml</text>
+<text x="706" y="197" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="end">id, version, kernel range, needs, licence</text>
+<rect x="40" y="218" width="680" height="36" rx="6" fill="#ffffff" stroke="#cdd6e3"/>
+<text x="54" y="241" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">META-INF/</text>
+<text x="706" y="241" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="end">DMOD.MF hashes · DMOD.SIG Ed25519 · cert</text>
+<rect x="24" y="274" width="712" height="122" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="40" y="296" font-size="14" font-weight="700" fill="#1f5fbf" text-anchor="start">Code</text>
+<rect x="40" y="306" width="680" height="36" rx="6" fill="#ffffff" stroke="#cdd6e3"/>
+<text x="54" y="329" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">java/</text>
+<text x="706" y="329" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="end">drishti-banking, drishti-compute-banking</text>
+<rect x="40" y="350" width="680" height="36" rx="6" fill="#ffffff" stroke="#cdd6e3"/>
+<text x="54" y="373" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">python/</text>
+<text x="706" y="373" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="end">drishti_banking (kernel&#x27;s pool)</text>
+<rect x="24" y="406" width="712" height="166" rx="8" fill="#dff1e7" stroke="#1e8a55" stroke-width="1.5"/>
+<text x="40" y="428" font-size="14" font-weight="700" fill="#1e8a55" text-anchor="start">Data (kinds, not sources)</text>
+<rect x="40" y="438" width="680" height="36" rx="6" fill="#ffffff" stroke="#cdd6e3"/>
+<text x="54" y="461" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">data/needs.yaml</text>
+<text x="706" y="461" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="end">41 needs: trade, scenario-pv …</text>
+<rect x="40" y="482" width="680" height="36" rx="6" fill="#ffffff" stroke="#cdd6e3"/>
+<text x="54" y="505" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">packs/</text>
+<text x="706" y="505" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="end">4 packs: contracts, Sutras, samples</text>
+<rect x="40" y="526" width="680" height="36" rx="6" fill="#ffffff" stroke="#cdd6e3"/>
+<text x="54" y="549" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">lakes/</text>
+<text x="706" y="549" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="end">var-official, ccr-official forms</text>
+<rect x="24" y="582" width="712" height="166" rx="8" fill="#fbefd9" stroke="#e8a33a" stroke-width="1.5"/>
+<text x="40" y="604" font-size="14" font-weight="700" fill="#e8a33a" text-anchor="start">Experience</text>
+<rect x="40" y="614" width="680" height="36" rx="6" fill="#ffffff" stroke="#cdd6e3"/>
+<text x="54" y="637" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">console/</text>
+<text x="706" y="637" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="end">routes, templates, static, help.yaml</text>
+<rect x="40" y="658" width="680" height="36" rx="6" fill="#ffffff" stroke="#cdd6e3"/>
+<text x="54" y="681" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">elements/drishti-risk/</text>
+<text x="706" y="681" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="end">domain JS library + .d.ts</text>
+<rect x="40" y="702" width="680" height="36" rx="6" fill="#ffffff" stroke="#cdd6e3"/>
+<text x="54" y="725" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">lenses/ · functions.yaml</text>
+<text x="706" y="725" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="end">6 lenses · 60 words · Home cards</text>
+<rect x="24" y="758" width="712" height="166" rx="8" fill="#ebe5f7" stroke="#6a4fb3" stroke-width="1.5"/>
+<text x="40" y="780" font-size="14" font-weight="700" fill="#6a4fb3" text-anchor="start">Content &amp; settings</text>
+<rect x="40" y="790" width="680" height="36" rx="6" fill="#ffffff" stroke="#cdd6e3"/>
+<text x="54" y="813" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">bi/ · feeds/</text>
+<text x="706" y="813" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="end">reports, models, notebooks</text>
+<rect x="40" y="834" width="680" height="36" rx="6" fill="#ffffff" stroke="#cdd6e3"/>
+<text x="54" y="857" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">docs/ · i18n/</text>
+<text x="706" y="857" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="end">guides, tutorials, Help, glossary</text>
+<rect x="40" y="878" width="680" height="36" rx="6" fill="#ffffff" stroke="#cdd6e3"/>
+<text x="54" y="901" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">settings/ · tokens/</text>
+<text x="706" y="901" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="end">JSON Schema · risk:write</text>
+<rect x="24" y="934" width="712" height="52" rx="8" fill="#fbe3e3" stroke="#c62828" stroke-width="2" stroke-dasharray="7 4"/>
+<text x="40" y="956" font-size="14" font-weight="700" fill="#c62828" text-anchor="start">Never inside</text>
+<text x="40" y="976" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">connector files or plugins · hosts · URLs of data · passwords · keys · lake roots</text>
+</svg>

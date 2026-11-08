@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 748" width="760" height="748" role="img" aria-label="Loading a module" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'DejaVu Sans', Arial, sans-serif">
+<!-- Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND CONFIDENTIAL. -->
+<title>Loading a module</title>
+<defs><marker id="a1a2333" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1a2333"/></marker><marker id="a1f5fbf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1f5fbf"/></marker><marker id="a1e8a55" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1e8a55"/></marker><marker id="ac62828" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c62828"/></marker><marker id="ae8a33a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#e8a33a"/></marker><marker id="a2bb3a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#2bb3a3"/></marker><marker id="a5c6a80" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#5c6a80"/></marker><marker id="a12324f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#12324f"/></marker></defs>
+<rect x="0.5" y="0.5" width="759" height="747" rx="14" fill="#f7f9fc" stroke="#cdd6e3"/>
+<text x="24" y="38" font-size="20" font-weight="700" fill="#12324f">Loading a module</text>
+<text x="24" y="60" font-size="13" fill="#5c6a80">From the folder to a running capability, in order; each check refuses with a reason.</text>
+<rect x="24" y="84" width="470" height="58" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="36" y="106" font-size="14" font-weight="700" fill="#1f5fbf" text-anchor="start">1  Discover</text>
+<text x="36" y="125" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">list modules.path · read module.yaml · pick the active version</text>
+<path d="M259,142 L259,158" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<rect x="24" y="158" width="470" height="58" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="36" y="180" font-size="14" font-weight="700" fill="#1f5fbf" text-anchor="start">2  Verify</text>
+<text x="36" y="199" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">V1 manifest · V2 signature · V3 kernel range (vermagic)</text>
+<path d="M259,216 L259,232" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<path d="M494,187 L548,187" fill="none" stroke="#c62828" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#ac62828)"/>
+<rect x="24" y="232" width="470" height="58" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="36" y="254" font-size="14" font-weight="700" fill="#1f5fbf" text-anchor="start">3  Resolve dependencies</text>
+<text x="36" y="273" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">V4 requires / conflicts · topological order</text>
+<path d="M259,290 L259,306" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<path d="M494,261 L548,261" fill="none" stroke="#c62828" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#ac62828)"/>
+<rect x="24" y="306" width="470" height="58" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="36" y="328" font-size="14" font-weight="700" fill="#1f5fbf" text-anchor="start">4  Ask the registry</text>
+<text x="36" y="347" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">V5 licence feature · V6 claims · switch on?</text>
+<path d="M259,364 L259,380" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<path d="M494,335 L548,335" fill="none" stroke="#c62828" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#ac62828)"/>
+<rect x="24" y="380" width="470" height="58" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="36" y="402" font-size="14" font-weight="700" fill="#1f5fbf" text-anchor="start">5  Bind data</text>
+<text x="36" y="421" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">every need → a source, or DEMO, or UNBOUND (degrades)</text>
+<path d="M259,438 L259,454" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<rect x="24" y="454" width="470" height="58" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="36" y="476" font-size="14" font-weight="700" fill="#1f5fbf" text-anchor="start">6  Class loader + context</text>
+<text x="36" y="495" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">own loader · child Spring context · DrishtiModule.start</text>
+<path d="M259,512 L259,528" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<path d="M494,483 L548,483" fill="none" stroke="#c62828" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#ac62828)"/>
+<rect x="24" y="528" width="470" height="58" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="36" y="550" font-size="14" font-weight="700" fill="#1f5fbf" text-anchor="start">7  Contribute</text>
+<text x="36" y="569" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">SPIs · packs · Sutras · lenses · functions · REST /api/v1/risk</text>
+<path d="M259,586 L259,602" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<rect x="24" y="602" width="470" height="58" rx="8" fill="#dff1e7" stroke="#1e8a55" stroke-width="1.5"/>
+<text x="36" y="624" font-size="14" font-weight="700" fill="#1e8a55" text-anchor="start">8  Console plugin</text>
+<text x="36" y="643" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">routes · templates · /m/banking/static · Help merged</text>
+<rect x="552" y="150" width="184" height="330" rx="8" fill="#fbe3e3" stroke="#c62828" stroke-width="1.5"/>
+<text x="564" y="172" font-size="14" font-weight="700" fill="#c62828" text-anchor="start">Refused</text>
+<text x="564" y="191" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">absent everywhere:</text>
+<text x="564" y="209" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">no class, bean, API,</text>
+<text x="564" y="227" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">page, word, Help,</text>
+<text x="564" y="245" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">asset or AI tool</text>
+<text x="564" y="263" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start"></text>
+<text x="564" y="281" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">reason in words in</text>
+<text x="564" y="299" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">Health and</text>
+<text x="564" y="317" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">Admin → Modules</text>
+<text x="564" y="335" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start"></text>
+<text x="564" y="353" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">the kernel and other</text>
+<text x="564" y="371" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">modules keep running</text>
+<rect x="552" y="500" width="184" height="120" rx="8" fill="#fbefd9" stroke="#e8a33a" stroke-width="1.5"/>
+<text x="564" y="522" font-size="14" font-weight="700" fill="#e8a33a" text-anchor="start">Degraded</text>
+<text x="564" y="541" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">a required need</text>
+<text x="564" y="559" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">unbound: only the</text>
+<text x="564" y="577" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">functions that use it</text>
+<text x="564" y="595" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">are off, with why</text>
+<path d="M494,409 C520,409 520,560 548,560" fill="none" stroke="#e8a33a" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#ae8a33a)"/>
+<rect x="24" y="680" width="712" height="48" rx="8" fill="#dff1e7" stroke="#1e8a55" stroke-width="1.5"/>
+<text x="36" y="702" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">LOADED · events: module.started · Health: one row per module · cluster fingerprint gossiped</text>
+</svg>

@@ -1,0 +1,164 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# EXAMPLE (design, not built): the banking module's manifest as it would ship at the root of banking-3.0.0.dmod
+# (docs/architecture/KERNEL_AND_MODULES.md section 3.3). It grows from today's drishti-banking META-INF/drishti/module.yaml; the
+# registry reads it, nothing else. Paths are relative to the package root. No connector, plugin, host or credential appears here, ever.
+format: 1
+
+id: banking
+version: 3.0.0
+title: Banking and risk
+about: >-
+  VaR and ES (historical, parametric, regulatory), backtesting and the stress window, exposure and CCR (EE, PFE, EEPE, pre-deal),
+  FRTB-SA and sensitivities, ISDA SIMM, the MR and CCR cubes, the official end-of-day risk results, and their playgrounds.
+domain: banking
+publisher: { id: drishti, name: "Drishti modules", contact: "modules@drishti.example" }
+
+licence:
+  feature: banking                        # the licence must name this feature (check V5)
+  limits: [positions, nodes]              # limits this module understands; the registry passes their values in ModuleContext.licence()
+
+# what it was built against (check V3, the vermagic check)
+kernel: ">=1.0 <2.0"                      # kernel API
+rachana: ">=1 <2"                         # Sutra grammar
+contracts: ">=1 <2"                       # data-contract format
+plugin-api: ">=1 <2"                      # console plugin.yaml format and hooks
+elements: ">=2.0 <3.0"                    # Elements core libraries
+
+requires: []                              # nothing hard
+optional:
+  - { id: capitalmarkets, version: ">=1.2 <2" }   # market data's functions and the market lens when present (question Q6)
+conflicts: []
+
+java:
+  entry: com.ash.drishti.banking.BankingModule     # implements DrishtiModule
+  spring: com.ash.drishti.banking.BankingAutoConfiguration
+  jars:
+    - java/drishti-banking-3.0.0.jar
+    - java/drishti-compute-banking-3.0.0.jar
+    - java/lib/commons-math3-3.6.1.jar           # private copy, child-first
+  native: false
+
+compute:
+  engines:                                # engine catalogue entries: engines/engines.yaml; defaults engines/<id>.yaml
+    - { id: var,           words: [VAR, PVAR, SMAT, SWIN], pool: compute, switch: true }
+    - { id: exposure,      words: [EXP, PREDEAL],          pool: compute, switch: true }
+    - { id: sensitivities, words: [SENS, RFAC],            pool: compute, switch: true }
+    - { id: frtb-sa,       words: [FRSA],                  pool: compute, switch: true }
+    - { id: simm,          words: [SIMM],                  pool: compute, switch: true }
+    - { id: mr-cube,       words: [MCUBE],                 pool: compute, switch: true }
+
+python:
+  packages: [python/drishti_banking]
+  requirements: python/requirements.txt  # numpy, pandas, scipy, pyarrow: all within the kernel's lock file
+  pools: [python]
+  items:                                  # Python compute items it registers (shown in Build with the module's name)
+    - { id: banking.pnl-attribution-mix,    file: packs/market-risk/python/pnl_attribution_mix.py,  kind: visual }
+    - { id: banking.stress-from-sens,       file: packs/market-risk/python/stress_from_sensitivities.py, kind: transform }
+    - { id: banking.frtb-girr-delta,        file: packs/market-risk/python/frtb_girr_delta.py,    kind: measure }
+    - { id: banking.var-attribution,        module: drishti_banking.attribution, kind: compute-pack }
+
+provides:
+  kinds:                                  # kinds it owns (defined in its packs): one owner per kind (check V6)
+    banking-reference: [counterparty, counterparty-group, issuer, ccp, legal-entity, book, desk, trader, clearing-account]
+    trading: [trade, counterparty-trades, portfolio-trades, legal-entity-trades, index-trades]
+    market-risk: [stress-scenario, stress-result, frtb-sensitivity, pnl-explain, trade-valuation, portfolio, pnl-vector, scenario-pv,
+                  fx-scenario, scenario-set, risk-hierarchy, var-limit, desk-pnl, pnl-history, position-sensitivity, risk-factor,
+                  var-official, stress-scenario-pnl]
+    counterparty-risk: [agreement, csa, netting-set, credit-limit, cva, sa-ccr, collateral-balance, margin-call, simm, simulation-run,
+                        exposure-path, exposure-official-cpty, nset-mtm, cpty-mtm]
+  computed:                               # KindProviders: never bindable, always the module's
+    - { kind: position,        by: com.ash.drishti.banking.var.PositionKind }       # was the var-positions connector plugin
+    - { kind: var-result,      by: com.ash.drishti.banking.var.VarResultKind }      # was the var-engine reactive connector
+    - { kind: exposure-result, by: com.ash.drishti.banking.exposure.ExposureKind }  # was the exposure-engine reactive connector
+
+packs:
+  folder: packs
+  list: [banking-reference, trading, market-risk, counterparty-risk]
+  default-on: [banking-reference, trading, market-risk, counterparty-risk]
+
+data:
+  needs: data/needs.yaml                  # what it reads, writes and subscribes to; the kernel binds (section 5)
+
+lakes: [lakes/var-official.yaml, lakes/ccr-official.yaml]   # forms of its published results: tables only; the site binds where
+
+api:
+  prefix: risk                            # mounted at /api/v1/risk/**
+  aliases:                                # answered as the new paths for one release (ApiAlias), then gone
+    /api/v1/var: /api/v1/risk/var
+    /api/v1/exposure: /api/v1/risk/exposure
+    /api/v1/frtb: /api/v1/risk/frtb
+    /api/v1/simm: /api/v1/risk/simm
+    /api/v1/sensitivities: /api/v1/risk/sensitivities
+    /api/v1/risk-factors: /api/v1/risk/risk-factors
+    /api/v1/pivot/mr: /api/v1/risk/mr
+  tokens: tokens/token-scopes.yaml        # risk:write
+
+console:
+  plugin: console/plugin.yaml
+  paths: [/var, /exposure, /frtb, /simm, /smat, /play, /mcube, /admin/scopes, /home/trading]   # page addresses it claims (kept)
+  elements: [elements/drishti-risk]       # its domain Elements library (licensed with it)
+
+functions: functions.yaml                 # 60 command words: VAR, PVAR, SMAT, SWIN, PREDEAL, EXP, FRSA, SIMM, MCUBE, SENS, RFAC, TRD,
+                                          # CTRD, PTRD, LTRD, ITRD, SCN, STR, FRTB, PNL, TVAL, POS, PORT, PNLV, SPV, FXS, SSET, HIER,
+                                          # VLIM, DPNL, PNLH, VRES, VOFF, SSPNL, AGR, CSA, NSET, LIM, CVA, SACCR, COLL, MC, XRUN, XPATH,
+                                          # XOFC, NSMTM, CPMTM, CPTY, GRP, LE, BOOK, DESK, TRDR, CCP, PLAY, CCUBE, …
+
+lenses: lenses/lenses.yaml                # risk, trading, market (needs capitalmarkets), cro, mr-cube, ccr-cube
+home:
+  risk:
+    cards:
+      - { title: VaR of the bank, cmd: VAR BANK, icon: shield-check }
+      - { title: VaR of the rates desk, cmd: VAR DESK RATES, icon: bar-chart-line }
+      - { title: VaR results by desk, cmd: "VRES DESK:RATES", icon: table }
+      - { title: Exposure of a counterparty, cmd: "EXP CPTY:CP-ALDERSHOT", icon: graph-up }
+    chips: [VAR BANK, VAR DESK RATES, EXP BANK, "EXP CPTY:CP-ALDERSHOT", "VRES DESK:RATES", HIER, VOFF]
+  trading:
+    cards:
+      - { title: "A book: its trades, positions and MtM", cmd: BOOK BOOK-RATES-1, icon: journal-text }
+      - { title: "My book's VaR, path and contributions", cmd: VAR BOOK BOOK-RATES-1, icon: shield-check }
+
+feeds: []                                 # market data's official feed belongs to capitalmarkets (Q6); banking ships none
+
+bi:
+  reports: bi/reports                     # counterparty-risk, desk-wall, live-exposure, live-trading-desk, market-risk-var, …
+  tables: bi/tables                       # banking.<name> tables and models
+  notebooks: bi/notebooks
+  fragments: bi/fragments                 # pnl-distribution, risk-links, curve-overview, …
+  report-definitions: bi/regulatory       # OSFI CAR 9, BCAR 90.010, Pillar 3 MR1/MR2, FFIEC 102, …
+
+docs:
+  readme: docs/README.md
+  help: console/help.yaml                 # the Risk measures section
+  glossary: docs/glossary.yaml
+  guides: [docs/guides/VAR_GUIDE.md, docs/guides/REGULATORY_VAR_REPORTING.md, docs/guides/EXPOSURE_GUIDE.md, docs/guides/FRTB_SA_GUIDE.md,
+           docs/guides/SIMM_GUIDE.md, docs/guides/MR_CUBE_GUIDE.md, docs/guides/FUNDS_GUIDE.md]
+  tutorials: [docs/tutorials/02-var-from-the-bank-to-a-trade.md, docs/tutorials/03-exposure-from-the-bank-to-a-trade.md,
+              docs/tutorials/04-frtb-sa.md, docs/tutorials/05-simm.md, docs/tutorials/24-correct-a-trade.md, "…(nine in all)"]
+  features: docs/features.yaml            # its rows of the docs register (one guide + one tutorial per feature)
+
+settings:
+  schema: settings/schema.json            # JSON Schema 2020-12, validated at start and on change
+  defaults: settings/defaults.yaml
+
+events:
+  publishes: [banking.var.date-ready, banking.var.limit-breach, banking.exposure.date-ready]
+  subscribes: [data.loaded, data.changed, binding.changed, date.rolled, settings.changed]
+
+resources:
+  memory-mb: 6144                         # one VaR date of the benchmark book in memory, plus exposure (capacity planner)
+  threads: pool:compute
+
+health: [var.hierarchies, var.dates, exposure.dates, simm.parameters]

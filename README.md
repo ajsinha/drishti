@@ -45,7 +45,8 @@ TRD MX-20000001 <GO>                           →  a trade: terms, legs, cashfl
 ## Modules, lenses and functions
 
 What a person can do is decided in one place, the access registry: licence → module → lens → function → permission
-([ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md), [DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md)).
+([ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md), [DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md)). The next step, a domain-free kernel with modules
+shipped as signed packages, is a design for 2.9.11.i: [KERNEL_AND_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md) ([PDF](docs/architecture/KERNEL_AND_MODULES.pdf)).
 
 | Module | Brings |
 |---|---|
