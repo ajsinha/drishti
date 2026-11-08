@@ -75,6 +75,10 @@
 
 /* the command line: the widest thing in the bar */
 .tbar .cmd { flex: 1 1 auto; min-width: 160px; max-width: 680px; }
+/* the business date drawn by drishti-inputs is compact in the bar (its upgraded field would take 11rem); a desktop bar with a lens's
+   subject menus lets the command line give way first, so nothing overlaps before the bar wraps at 1100 px */
+.tbar .asof .di-was-asof-date { min-width: 0; width: 8.4rem; }
+@media (max-width: 1400px) { .tbar .cmd { min-width: 7.5rem; } }
 .tbar .cmd-box { display: flex; align-items: center; }
 .cmd-prompt { position: absolute; left: .7rem; color: var(--d-accent); font-weight: 700; pointer-events: none; }
 .tbar .cmd-input { padding-left: var(--d-sp-25_6); border-radius: var(--d-radius-pill); height: 36px; }

@@ -54,6 +54,22 @@ def sign_in(browser, user, next_path="/bi/catalogue", **ctx):
     return page
 
 
+def code_text(page, selector):
+    """The text of a <textarea data-di-code> that drishti-inputs made a CodeEditor (the textarea is hidden; its value is the editor's)."""
+    page.wait_for_function("s => !!(document.querySelector(s) || {}).drishtiCode", arg=selector, timeout=15000)
+    return page.evaluate("s => document.querySelector(s).value", selector)
+
+
+def type_code(page, selector, text):
+    """Replaces the text of a CodeEditor-made <textarea data-di-code> as a person does: into the editor, select all, then the new text
+    typed in (one insertion, so the editor's own indenting does not change the YAML)."""
+    page.wait_for_function("s => !!(document.querySelector(s) || {}).drishtiCode", arg=selector, timeout=15000)
+    page.evaluate("s => document.querySelector(s).focus()", selector)          # the element's focus() reaches its editor
+    page.keyboard.press("ControlOrMeta+a")
+    page.keyboard.insert_text(text)
+    assert code_text(page, selector) == text
+
+
 def open_report(page, report_id, path=""):
     page.goto(f"{CONSOLE_URL}/bi/r/{report_id}{path}")
     page.wait_for_selector("[data-ready=yes]", timeout=30000)
