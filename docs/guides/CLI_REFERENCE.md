@@ -89,8 +89,8 @@ codes and, where it helps scripts, `--json`.
 Concepts used throughout (each is explained in its own guide; this one only links to them):
 
 - A **pack** is a folder: `pack.yaml`, Sutras, samples, tests, help text.
-  [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md).
-- A **Sutra** is the YAML that says how one kind of document is shown. [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md).
+  [BUILD_GUIDE.md](BUILD_GUIDE.md).
+- A **Sutra** is the YAML that says how one kind of document is shown. [BUILD_GUIDE.md](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies).
 - A **design** is a Sutra in progress in the Screen Designer, with its samples and its history of edits.
   [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench).
 - A **dated store** is where a pack reads documents *per business date*: a Delta lake or the file connector's
@@ -98,7 +98,7 @@ Concepts used throughout (each is explained in its own guide; this one only link
 - A pack becomes known to a running server in **four ways**: its folder is copied into the packs folder the server watches (`pack deploy`, `pack make`'s `pack/<name>`: the server checks it and loads it by itself, no restart), the server is started with it in `DRISHTI_PACKS` (a restart),
   an administrator loads it in **Admin → Packs** (at once), or it is installed from a registry.
   `drishti.py pack new --load`, `server packs load` and `pack install` are the command-line forms of the last two.
-  [PACK_DEVELOPER_GUIDE.md#loading-a-pack-while-the-server-runs-1](PACK_DEVELOPER_GUIDE.md#loading-a-pack-while-the-server-runs-1) has the rules.
+  [BUILD_GUIDE.md#292-loading-a-pack-while-the-server-runs](BUILD_GUIDE.md#292-loading-a-pack-while-the-server-runs) has the rules.
 
 ### Which tool for which job
 
@@ -123,7 +123,7 @@ The browser column names the console page that runs the same engine; those pages
 | Run VaR's many-scope sums on the bundled OpenBLAS or on the pure-Java path, live | Admin → **Engines** → Linear algebra: OpenBLAS | `drishti.py server blas status`, `server blas java --reason ...`, `server blas native --reason ...` (also as `admin blas`; [OPERATIONS_GUIDE.md section 2.1](OPERATIONS_GUIDE.md#149-native-libraries-blas)) |
 | Make, check or remove the AWS side of the S3 Tables or Delta Lake on S3 connector (bucket, namespace or prefix, IAM policy) | | `deploy/aws/s3-tables/s3-tables.sh`, `deploy/aws/delta-s3/delta-s3.sh` (`.ps1` on Windows; [7.14](#714-the-aws-connectors-tool-scripts-s3-tables-and-delta-lake-on-s3)) |
 | See or check the shape of a command's data (its data contract), or draft the contract of a new kind | | `drishti.py contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` |
-| Pin the Python libraries code people write may use on the server's compute pool `python` (every file's sha256, for `pip --require-hashes`) | | `python tools/python_lock.py config/compute/locks/python.in --out config/compute/locks/python.lock` ([PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)) |
+| Pin the Python libraries code people write may use on the server's compute pool `python` (every file's sha256, for `pip --require-hashes`) | | `python tools/python_lock.py config/compute/locks/python.in --out config/compute/locks/python.lock` ([NOTEBOOK_GUIDE.md section 19](../architecture/ARCHITECTURE.md#291-one-python-runtime)) |
 
 Use the page for a one-off file, a first look at new data, or when you want to see each choice before it is made. Use the command
 line for anything that repeats, runs at night, or lives in a pipeline: it has exit codes, a lock, a log line and a JSON summary,
@@ -175,6 +175,95 @@ deploying is "copy `pack/my-bank` into the server's packs folder (or `drishti.pa
 root or set `DRISHTI_DELTA_ROOT`, switch the pack on with `DRISHTI_PACKS`". New days later:
 `data ingest --from new-days --pack data/build/my-bank-1.0.0/pack/my-bank --lake <the lake>`. The details are in
 [section 5](#pack-make-everything-in-one-folder) and [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#812-pack-make-one-folder-to-deploy).
+
+## 1. What it is
+
+`tools/drishti.py` is a thin, honest front door. It adds no new engine: each command either runs something that already
+exists (the Java `sutra` tool in the server's jar, the generators and loaders under `tools/`) or calls a REST endpoint the
+server already has. What it adds is one place to look, one `--help` per command, one set of exit codes and, where it helps
+scripts, `--json`.
+
+| Group | What it is for | Runs | Needs |
+|---|---|---|---|
+| `sutra` | shape, design, lint, test and preview Sutras; `gen` drafts one Sutra per group of JSON Lines | the Java tool in the exec jar; `tools/sutragen.py` | JDK 21+, the exec jar |
+| `pack` | create a pack from JSON Lines, check it in CI, find missing help text, sign and publish it, install one from a registry | `tools/packgen/pack_from_jsonl.py`, the Java tool, `tools/packreg/packreg.py`; REST for `install` | PyYAML; a server for `install` |
+| `data` | write your JSON Lines into a Delta lake or the file store; load the demo data into any store | `tools/ingest_jsonl.py`, `tools/load-<store>.sh` | `deltalake` + `pyarrow` for Delta |
+| `server` | health, and pack list / load / unload / on / off on a running server | REST `/api/v1/admin/...` | a server, an administrator |
+| `admin` | `capacity`: the single-node capacity planner the server serves, evaluated (`--live` with this server's figures), or its formula workbook | REST `/api/v1/admin/capacity`; `tools/capacitycli.py` | a server, an administrator, PyYAML |
+| `design` | the Screen Designer's designs: create, save, check, propose, approve, export, import, bind | REST `/api/v1/builder/designs`, `/api/v1/sutras/proposals` | a server |
+| `docs` | regenerate the guides' screenshots | `tools/docs/screenshots.py` | Playwright |
+
+Concepts used throughout (each is explained in its own guide; this one only links to them):
+
+- A **pack** is a folder: `pack.yaml`, Sutras, samples, tests, help text.
+  [BUILD_GUIDE.md](BUILD_GUIDE.md).
+- A **Sutra** is the YAML that says how one kind of document is shown. [BUILD_GUIDE.md](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies).
+- A **design** is a Sutra in progress in the Screen Designer, with its samples and its history of edits.
+  [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench).
+- A **dated store** is where a pack reads documents *per business date*: a Delta lake or the file connector's
+  `<root>/<domain>/<date>/<kind>.jsonl` files.
+- A pack becomes known to a running server in **four ways**: its folder is copied into the packs folder the server watches (`pack deploy`, `pack make`'s `pack/<name>`: the server checks it and loads it by itself, no restart), the server is started with it in `DRISHTI_PACKS` (a restart),
+  an administrator loads it in **Admin → Packs** (at once), or it is installed from a registry.
+  `drishti.py pack new --load`, `server packs load` and `pack install` are the command-line forms of the last two.
+  [BUILD_GUIDE.md#292-loading-a-pack-while-the-server-runs](BUILD_GUIDE.md#292-loading-a-pack-while-the-server-runs) has the rules.
+
+Run the program from the repository root, or from anywhere with its path, with the console's interpreter
+(`drishti-console/.venv/bin/python`, which the quick start of [data/testdata/README.md](../../data/testdata/README.md) installs with PyYAML, deltalake
+and pyarrow). Many examples write `python3 tools/drishti.py`: any Python 3.10+ with PyYAML runs every command that does not write a Delta lake;
+`drishti.py` in the output is the same program.
+
+**`drishti.py --help`** (captured on a fresh clone)
+
+```text
+usage: drishti.py [-h] GROUP ...
+
+drishti: one command line for building, checking, loading and shipping Drishti packs and Sutras.
+
+positional arguments:
+  GROUP
+    sutra       The Sutra tool: shape, design, lint, test, preview (Java) and
+                gen (one Sutra per group of JSON Lines)
+    pack        Packs: generate from JSON Lines, check in CI, find missing
+                help text, publish and install
+    data        Data: ingest your own JSON Lines into a lake or files store;
+                load the demo data into any store
+    server      A running server over REST: health and pack management
+                (administrator)
+    connector   Connectors over REST (Admin -> Connectors): list, get, apply a
+                YAML file, test, enable, delete (administrator; a token needs
+                packs:admin)
+    design      Screen Designer designs over REST: create, edit, check,
+                propose, approve, ship (anyone may design; approving needs an
+                approver)
+    docs        Documentation tooling
+    doctor      doctor: is this machine ready (Java, jar, Python, directories,
+                ports, and with --server the token)
+    bi          Business intelligence (Rupaka) over REST: workspaces and the
+                catalogue, as the token's user sees them (a write needs the
+                bi:write scope)
+    view        A rendered entity view in the terminal, as the caller's token
+                sees it (masks apply)
+    lake        Delta lakes: build one from a large JSON export (memory flat,
+                safe to re-run), scan an export, status, maintain
+    completion  completion: print a shell completion script (bash, zsh,
+                powershell)
+
+options:
+  -h, --help    show this help message and exit
+
+    python3 tools/drishti.py <group> <command> [options]          (or: uv run --with pyyaml python tools/drishti.py ...)
+
+Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback,
+publish, keygen, install), data (profile and ingest your own JSON Lines or watch a drop folder, load the demo data), server (health, packs, smoke),
+lake (build a Delta lake from a large JSON export, scan, status, maintain), view (get, explain), doctor, completion, design (the Screen Designer's designs over
+REST: create, save, check, propose, approve, export, import, bind) and docs (screenshots).
+Needs Python 3.10+ and PyYAML; deltalake and pyarrow only for `--store delta` ingests. The guide with every command,
+recipes and real output is docs/guides/CLI_REFERENCE.md.
+
+Exit codes: 0 ok, 1 problems found (a failing check, a server that said no, an unreachable server), 2 usage (a bad option,
+a missing file or jar). Commands that talk to a server read it from --server or DRISHTI_SERVER (default
+http://localhost:18480) and the token from DRISHTI_TOKEN or --token-file; the token is never printed.
+```
 
 ## 2. Install and prerequisites
 
@@ -269,7 +358,7 @@ The token comes from `--token-file` (the file's text, trimmed), else the `DRISHT
 | The server | What to send |
 |---|---|
 | sign-in **off** (the default for local development) | nothing, or `--user NAME` (header `X-Drishti-User`) to be a named user. Every role is granted. |
-| sign-in **on** | a **signed token** whose `sub` is you and whose `roles` carry what you need; see [API_GUIDE.md](API_GUIDE.md) ("Security on" and "Minting a token for a script"). |
+| sign-in **on** | a **signed token** whose `sub` is you and whose `roles` carry what you need; see [API_REFERENCE.md](API_REFERENCE.md) ("Security on" and "Minting a token for a script"). |
 
 **Personal API tokens (`drk_…`, from My account → API tokens) read by default, and write only with a scope.** A token made
 without scopes only reads: it is enough for `server health`, `server packs list`, `design list|get|proposals` and
@@ -454,7 +543,7 @@ Sutra is `data/build/sutras/<kind>/<kind>-<group>.v1.sutra.yaml` with its `where
 holds samples drawn across the dates (with `--date FIELD`; the test data's trades carry no business-date field, their business date is the
 file's day). The `--out` folder is created when missing; it must not hold files of yours. A per-kind form names the field for each kind when
 one run reads several kinds: `--key trade=TRADE_ID,counterparty=COUNTERPARTY_ID`. The generator is described in
-[SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md); `--fallback` also writes a `<kind>-default` Sutra for documents no group matches.
+[BUILD_GUIDE.md](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies); `--fallback` also writes a `<kind>-default` Sutra for documents no group matches.
 
 #### Many product types in many files: one command, one Sutra per product type
 
@@ -600,7 +689,7 @@ ok      /tmp/genout/trade/trade-default.v1.sutra.yaml
 
 and `/tmp/genout/trade/trade-endur-comswap.v1.sutra.yaml` begins `match: { kind: trade, where: "$.SOURCE_SYSTEM == 'ENDUR' && $.PRODUCT_TYPE == 'ComSwap'", priority: 10 }`, with a `kv` of details, the
 legs as tabs, a pivot and the footer panels: a draft to edit, not a finished screen (it formats a numeric `TRADE_ID` with `amount0` in the strip, for one). Remove `/tmp/gen` and `/tmp/genout` when you
-are done. The whole workflow, including a complete pack and loading the data, is in [Generating a pack from JSON Lines](PACK_DEVELOPER_GUIDE.md#generating-a-pack-from-json-lines).
+are done. The whole workflow, including a complete pack and loading the data, is in [Generating a pack from JSON Lines](BUILD_GUIDE.md#10-a-pack-from-json-lines-pack-new).
 
 #### In CI
 
@@ -634,7 +723,7 @@ folder is `DRISHTI_TMP_DIR`, else a fresh folder in the system temp folder), the
 in `config/connectors/`), and the official VaR and exposure captures, the demo ticker, hot reload, compute workers, write-back and
 Drishti*net are off. The site's lakes (`DRISHTI_DELTA_ROOT`, `DRISHTI_ICEBERG_ROOT`, `DRISHTI_FILES_ROOT`, `DRISHTI_FEEDS`, each
 defaulting under `DRISHTI_DATA_DIR` or `data/`) and its added and installed packs are still read. The `tests/<sutra>/` convention, `expect.yaml`, the exit codes and
-CI wiring are also in section 15 of the [Sutra developer guide](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci); the workbench's own use of the same command is in
+CI wiring are also in section 15 of the [Sutra developer guide](BUILD_GUIDE.md#24-testing-expectyaml-sutra-lint-sutra-test-and-pack-check); the workbench's own use of the same command is in
 [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#26-the-command-line-and-ci).
 
 ## 5. `pack`: make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install
@@ -653,15 +742,15 @@ CI wiring are also in section 15 of the [Sutra developer guide](SUTRA_DEVELOPER_
 | `pack publish` / `pack keygen` / `pack install` | sign into a registry (`tools/packreg/packreg.py`); make a key; install from the registry on a server | Admin → Packs |
 
 `pack check` belongs in CI (exit `1` fails the build; `--junit DIR` for the report); `pack deploy` is idempotent (the same bundle twice
-changes nothing) and keeps the replaced version for `pack rollback`. Schema files to a pack: [SCHEMA_TO_PACK_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md).
+changes nothing) and keeps the replaced version for `pack rollback`. Schema files to a pack: [BUILD_GUIDE.md](BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack).
 
 ### `sutra design --schema` and `pack make --schema`
 
-Both take **JSON Schema** (draft 2020-12 or 07, JSON or YAML) and run the rules of [Schema to pack](SCHEMA_TO_PACK_GUIDE.md): kind, key, links, labels, formats, match column, strip, About text,
+Both take **JSON Schema** (draft 2020-12 or 07, JSON or YAML) and run the rules of [Schema to pack](BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack): kind, key, links, labels, formats, match column, strip, About text,
 tests. `sutra design --schema FILE... [--kind K] [--out DIR]` prints the Sutras (or writes `<out>/<kind>/<name>.v1.sutra.yaml` and `<out>/tests/`); `pack make --schema FILE|DIR... [DATA] --name N`
 writes the same folder as `pack make` below, for many kinds, with synthetic samples (named `sample-synthetic-N.json`) where no real documents are given. A JSON Lines file or folder after `--schema` is data.
 Flags: `--key`, `--date`, `--match` (as `kind=FIELD`; `--match none`), `--mnemonic`, `--strip N`, `--count N` (design) / `--samples N` (make), `--code`, `--description`, `--connector`, `--yes` (never ask which
-field is the key). The example schemas are in `docs/guides/examples/schemas/`; real output is in [Schema to pack](SCHEMA_TO_PACK_GUIDE.md#the-command-line).
+field is the key). The example schemas are in `docs/guides/examples/schemas/`; real output is in [Schema to pack](BUILD_GUIDE.md#86-the-command-line).
 
 ### `pack make`: everything in one folder
 
@@ -819,12 +908,12 @@ ingest:
 ```
 
 It is an optional **tooling key**: `data ingest --pack` and `pack check` read it, the server ignores it (it is listed in the
-key table of [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md)). Delete it and the pack loads exactly the same.
+key table of [BUILD_GUIDE.md](BUILD_GUIDE.md)). Delete it and the pack loads exactly the same.
 
 ### `pack check`: lint + test + help coverage, for CI
 
 For each pack: `sutra lint` (with `--strict`: help warnings fail), then `sutra test` (renders every sample, checks `expect.yaml`
-and reports help coverage per Sutra), and a check of the pack.yaml tooling keys: the `ingest:` block names real kinds with a `key` and a `date`, and the `form:` section (the search form of each kind, see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#form-the-search-form-of-a-kind)) is valid: a path that is not a path, an unknown
+and reports help coverage per Sutra), and a check of the pack.yaml tooling keys: the `ingest:` block names real kinds with a `key` and a `date`, and the `form:` section (the search form of each kind, see [BUILD_GUIDE.md](BUILD_GUIDE.md#46-form-the-search-form-of-a-kind)) is valid: a path that is not a path, an unknown
 `type`, an operator the type lacks, a duplicate field, `values` on a field that is not an `enum` or a kind the pack does not have is reported with the kind and the field, and fails the run:
 
 ```text
@@ -893,7 +982,7 @@ drishti-console/.venv/bin/python tools/drishti.py pack about-check data/build/cu
 ```
 
 Fix each by adding the field under `kinds.<kind>.glossary` (or a pack-wide `vocabulary` entry) in `config/about.yaml`; the
-format is in [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md).
+format is in [BUILD_GUIDE.md](BUILD_GUIDE.md).
 
 ### `pack regenerate`: new data, new Sutras, none of your edits lost
 
@@ -1138,7 +1227,7 @@ published curves-demo 1.0.0 (53987 bytes, sha256 d0c68128a431…) signed by me
 (Your key, and so the public key and the checksum, differ: a new key pair is made each time.)
 
 A server trusts a publisher by being configured with the public key
-(`drishti.packs.registry.trusted-keys.<publisher>`); see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which).
+(`drishti.packs.registry.trusted-keys.<publisher>`); see [BUILD_GUIDE.md](BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which).
 
 ### `pack install`: install from the registry on a running server
 
@@ -2417,7 +2506,7 @@ running version at four levels, breaking first. A `.sha256` file beside the arch
   (a kind or mnemonic removed or renamed) makes the command print the preview and exit 1 until you add `--accept-breaking`.
 - `--wait N` waits up to N seconds for the server to answer again after the restart (exit 1 if it does not).
 - Exit: 0 deployed or previewed; 1 refused by a check, breaking changes not accepted, or the server not back; 2 usage (no such file).
-- `--json` prints `{verification, result}`; the verification is the server's own answer ([API_GUIDE.md](API_GUIDE.md#deploying-a-pack-archive-and-the-packs-connectors)).
+- `--json` prints `{verification, result}`; the verification is the server's own answer ([API_REFERENCE.md](API_REFERENCE.md#220-deploying-a-pack-archive-and-the-packs-connectors)).
 
 ```text
 $ python3 tools/drishti.py server packs deploy dist/helpdesk-0.2.0.tar.gz
@@ -2658,7 +2747,7 @@ deleted orders-lake (its text is kept in the connector folder's history/ folder)
 
 `connector reset NAME` prints `NAME is back to the pack's default (running)` and keeps your previous text in `connector history`. With `--json` every command prints
 the server's answer unchanged. Errors: `DRS-5031` invalid (422), `DRS-5032` stale version, existing file without `--if-match`, or in use without `--confirm`
-(409), `DRS-5033` no such connector (404); see [API_GUIDE.md](API_GUIDE.md#connectors-apiv1adminconnectors).
+(409), `DRS-5033` no such connector (404); see [API_REFERENCE.md](API_REFERENCE.md#222-connectors-apiv1adminconnectors).
 
 **Try a connector file before you apply it.** `connector test --file F` starts a throwaway instance on the server with that file's
 settings and saves nothing. The lake of [section 7](#7-lake-a-large-json-export-into-a-delta-lake), tried as a connector:
@@ -2912,7 +3001,7 @@ without folders, its JSON Lines members become one file; with folders one level 
 The same designs the **Build** workbench shows, from a terminal or a pipeline: create one from samples and/or a Sutra file,
 check it against every sample, save edits made in your editor, send it for review, and let an approver decide. Everything the
 screens do about review is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#22-saving-and-proposing); the endpoints are in
-[API_GUIDE.md](API_GUIDE.md).
+[API_REFERENCE.md](API_REFERENCE.md).
 
 | Command | Does | Endpoint |
 |---|---|---|
@@ -2987,7 +3076,7 @@ binding off; development directory: dev-sutras/anonymous
 ### `approvals`: the one Approvals queue
 
 The one Approvals queue from the terminal (`tools/approvalscli.py`; [USER_GUIDE.md › Approvals](USER_GUIDE.md#approvals), the API
-[API_GUIDE.md › Approvals](API_GUIDE.md#approvals-apiv1approvals)), as the caller: every four-eyes kind is decided here (`sutra`,
+[API_REFERENCE.md › Approvals](API_REFERENCE.md#13-approvals-apiv1approvals)), as the caller: every four-eyes kind is decided here (`sutra`,
 `change`, `bi`, `compute`, `function`, `stress-window`, `var-report`). A token needs the kind's scope (`edit`, `design:approve`, `bi:approve`,
 `pivot:approve`) or `approve`; report sign-offs, stress windows, compute packages and questions are a person's, never a token's.
 
@@ -3010,8 +3099,8 @@ drishti-console/.venv/bin/python tools/drishti.py approvals ask change chg-01M5V
 
 ### `change` and `edits`: write-back
 
-Write-back from the terminal (`tools/changecli.py`, [WRITE_BACK.md](WRITE_BACK.md#16-the-design-and-its-reasons),
-[WRITE_BACK.md section 4a](WRITE_BACK.md#4a-submitting-a-change-write-back)), as the caller's token (it needs the `edit` scope):
+Write-back from the terminal (`tools/changecli.py`, [APPROVALS_GUIDE.md](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals),
+[APPROVALS_GUIDE.md section 4a](APPROVALS_GUIDE.md#4-submitting-a-change)), as the caller's token (it needs the `edit` scope):
 
 - `change propose --kind KIND --id ID --set FIELD=VALUE [...] [--from FIELD=VALUE ...] [--reason TEXT] [--sutra S --panel P] [--date YYYY-MM-DD] [--override]`
   proposes a change to a record's fields: the same request as a form's Submit. A field must be editable by a Sutra's form with `save:`;
@@ -3038,7 +3127,7 @@ drishti-console/.venv/bin/python tools/drishti.py edits status
 
 ### `bi`: workspaces and the catalogue (Rupaka)
 
-Business intelligence over REST ([BI_GUIDE.md](BI_GUIDE.md), [API_GUIDE.md](API_GUIDE.md#business-intelligence-rupaka-apiv1bi)), as the token's user sees it: the
+Business intelligence over REST ([REPORTS_GUIDE.md](REPORTS_GUIDE.md), [API_REFERENCE.md](API_REFERENCE.md#3-business-intelligence-apiv1bi)), as the token's user sees it: the
 server shows only what that person may open. Reads need no scope; `publish` needs a token with `bi:write` (and the user the `bi-author` power and the member role).
 
 ```
@@ -3081,7 +3170,7 @@ drishti: the server said 403 DRS-9002: DRS-9002 cat does not hold the bi-author 
 ### `bi expr`, `bi migrate`, `bi sql`: the BI languages
 
 Rachana, BI's expression language ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#rachana-el-expressions); the functions in [FUNCTIONS.md](FUNCTIONS.md)),
-and Drishti SQL over REST, as the token's user (the server owns the one parser of each; [API_GUIDE.md](API_GUIDE.md#expressions-apiv1biexpr)). Reads
+and Drishti SQL over REST, as the token's user (the server owns the one parser of each; [API_REFERENCE.md](API_REFERENCE.md#6-expressions-apiv1biexpr)). Reads
 need no scope.
 
 ```
@@ -3114,7 +3203,7 @@ console the migration's state is on Admin → **BI** (items that could not be co
 ### `bi model`, `bi mq`: models and model queries
 
 What the model designer and a report's visuals do, over REST as the token's user (the server checks every model and answers every query with your row
-rules and masks; [BI_GUIDE.md section 23](BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer)). Reads need no scope.
+rules and masks; [REPORTS_GUIDE.md section 23](REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads)). Reads need no scope.
 
 ```
 drishti.py bi model list [--kind model|implicit|compat]          the models and datasets you may read, with the name@major a query uses
@@ -3132,7 +3221,7 @@ a table with its plan, its as-of date and the columns masked for you; `--json` p
 
 ### `bi transform`: a Transform's inputs as you, and the snippets
 
-What the Transform editor's inputs and snippets picker do (`tools/bitransform.py`, loaded by `drishti.py`; [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](BI_GUIDE.md#17-data-prep-the-transform-editor)). `input`
+What the Transform editor's inputs and snippets picker do (`tools/bitransform.py`, loaded by `drishti.py`; [NOTEBOOK_GUIDE.md › Data prep: the Transform editor](NOTEBOOK_GUIDE.md#5-data-prep-the-transform-editor)). `input`
 asks the server, as the token's user, for each input of a Python dataset (`POST /api/v1/bi/python/input`: a model query, or a pack kind read through a
 connector) and prints its rows, what is masked for you and a short profile of every column; `snippets` and `snippet` read the console's library
 (`drishti-console/config/prep-snippets.yaml`, no server) and print the step a snippet makes, each value written as a literal.
@@ -3188,29 +3277,13 @@ fail  Close to 100 trades: expected 100 ± 1%, found 750
 
 ### `bi runs`, `bi mq --async`, `bi sql --async`: BI runs
 
-`drishti.py bi runs list|get|submit|estimate|wait|result|cancel|rerun|export|share|unshare|promote|keep|schedule|schedules|storage|suggestions`
-does what the BI Runs tab does, as the token's user (`tools/biruns.py`); `bi mq` and `bi sql` take `--async [--wait 2s] [--yes]`, which
-send `Prefer: respond-async` and print the run's id when the answer is a `202`.
-
-- `bi runs wait` exits 0 done, 3 failed, 4 cancelled and 5 when its `--timeout` passes with the run still going; `bi runs submit` without
-  `--yes` exits 2 on a large question and prints its estimate.
-- `bi runs share RUN --to WHO` prints each recipient's mode (sees the same, re-masked, recomputed as them; a refusal on stderr) and
-  `unshare RUN WHO...` removes recipients.
-- `bi runs schedule RUN "weekly mon 08:00"` and `schedules [list|edit ID WHEN|disable|enable|delete ID]` use the subscription grammar.
-- `bi runs export RUN --format csv|xlsx --out FILE`.
-- `bi runs storage` is the bi-admin's view of the result store and the queue; `bi runs suggestions [--model M] [accept|dismiss ID]` is the
-  bi-admin's list of rollup suggestions.
-
-```bash
-drishti-console/.venv/bin/python tools/drishti.py bi runs submit --mq year.mq.json --yes --wait 0
-drishti-console/.venv/bin/python tools/drishti.py bi runs wait r-java-2-01JA... --timeout 30m && drishti-console/.venv/bin/python tools/drishti.py bi runs result r-java-2-01JA... --out pnl.csv
-```
-
-The guide with output: [BI_GUIDE.md section 28](BI_GUIDE.md#on-the-command-line).
+`drishti.py bi runs list|get|submit|estimate|wait|result|cancel|rerun|export|share|unshare|promote|keep|schedule|schedules|storage|suggestions` does what the BI
+Runs tab does (sharing, schedules, CSV and Excel export, and for a bi-admin the rollup suggestions), as the token's user (`tools/biruns.py`); `bi mq` and `bi sql` take `--async [--wait 2s] [--yes]`. Examples, exit codes and output: [REPORTS_GUIDE.md section 28](REPORTS_GUIDE.md#1512-on-the-command-line)
+and [CLI_REFERENCE.md section 5.7](#12-bi-and-tables).
 
 ### `bi statement`
 
-A report's statement pages ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader)) made for the token's user, with their own masks and row rules: what the BI Studio's Paper
+A report's statement pages ([REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](REPORTS_GUIDE.md#12-statements-paginated-reports-page-exact-one-per-reader)) made for the token's user, with their own masks and row rules: what the BI Studio's Paper
 tab previews and a subscription mails.
 
 ```
@@ -3399,8 +3472,10 @@ it (`openblas` or `java`); `--json` carries the API's `parametric` block ([tutor
 printed only when the lens is the limit's own (else *limit is for 1-day 99%: not comparable*), the backtest only at 1 day. `show`
 with `--window` keeps the comparison ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)).
 
-Exit codes: 0; 1 when the server said no (the code and its message on standard error) or a what-if was refused or failed; 2 for usage.
-[Tutorial 2, Part A](../tutorials/02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade) walks through them with the demo data.
+The same designs the **Build** workbench shows, from a terminal or a pipeline: create one from samples and/or a Sutra file,
+check it against every sample, save edits made in your editor, send it for review, and let an approver decide. Everything the
+screens do about review is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#22-saving-and-proposing); the endpoints are in
+[API_REFERENCE.md](API_REFERENCE.md).
 
 ### `exposure`: the exposure engine
 
@@ -3619,7 +3694,7 @@ forms). `--check` fails when it is stale; a console test runs the same check.
 ### `elements`: Drishti Elements for other applications
 
 Drishti Elements (the JavaScript and CSS libraries) for other applications (`tools/elements/cli.py`, with `dist.py`, `pack.py` and
-`dts.py` beside it; the guide [ELEMENTS_IN_YOUR_APP.md](ELEMENTS_IN_YOUR_APP.md)). Offline, Python only; nothing is published.
+`dts.py` beside it; the guide [EMBED_GUIDE.md](EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app)). Offline, Python only; nothing is published.
 
 - `elements pack --libs core,grid,chart [--theme dark|light|<theme>] [--out DIR] [--include-domain banking] [--no-engines] [--maps]`:
   one `drishti-elements.js` and one `drishti-elements.css` with exactly the named libraries and the ones they require (deepest
@@ -3704,9 +3779,9 @@ guides are listed in [DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#8-connect
 | `tools/packgen/pack_from_jsonl.py` | the engine of `drishti.py pack new`: a complete pack from a folder of JSON Lines |
 | `tools/contracts.py` | the data contract of every command (`drishti.py contract`, [section 14](#contract-data-contracts-and-the-command-catalog)): drafts one from a pack and its data, checks them all, writes `docs/contracts/packs`; the schema `tools/contracts.schema.json` and the product owner's decisions `tools/contracts.policy.yaml` beside it |
 | `tools/knowledge.py` | the Knowledge pages' glossaries (`docs/knowledge/`): writes each page's terms and the home's A to Z from `docs/knowledge/glossary.yaml`; `--check` fails when a page differs or the glossary is invalid (`tools/test_knowledge_pages.py`) |
-| `tools/packgen/readme.py` | a pack's `README.md` (the README standard, [PACK_DEVELOPER_GUIDE.md Part IV](PACK_DEVELOPER_GUIDE.md#the-readme-standard)) for a pack without a generator of its own; `--all --check` fails on any pack whose README is missing, stale or breaks the standard |
-| `tools/packgen/common/guide_data.py` | every pack guide's *Data contracts* and *Data retrieval* sections (from the contracts and `data_retrieval.yaml`; the pack generators call it); run alone it writes compute-demo's guide and the generated block of the news-and-markets guide; `--check` fails when they are stale ([PACK_DEVELOPER_GUIDE.md Part IV](PACK_DEVELOPER_GUIDE.md#the-readme-standard)) |
-| `tools/connector_readmes.py` | the settings tables of every connector README (from `plugin-settings.yaml`) and the file tables of the template folders' READMEs; `--check` fails when one is stale ([CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#the-readme-standard)) |
+| `tools/packgen/readme.py` | a pack's `README.md` (the README standard, [BUILD_GUIDE.md Part IV](BUILD_GUIDE.md#303-the-readme-standard)) for a pack without a generator of its own; `--all --check` fails on any pack whose README is missing, stale or breaks the standard |
+| `tools/packgen/common/guide_data.py` | every pack guide's *Data contracts* and *Data retrieval* sections (from the contracts and `data_retrieval.yaml`; the pack generators call it); run alone it writes compute-demo's guide and the generated block of the news-and-markets guide; `--check` fails when they are stale ([BUILD_GUIDE.md Part IV](BUILD_GUIDE.md#303-the-readme-standard)) |
+| `tools/connector_readmes.py` | the settings tables of every connector README (from `plugin-settings.yaml`) and the file tables of the template folders' READMEs; `--check` fails when one is stale ([DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#1014-the-readme-standard-for-connectors)) |
 | `tools/packgen/banking/make_data.py`, `make_packs.py`, `make_sutras.py`, `make_docs.py` | the banking packs: their sample data and lake, manifests, Sutras and guides, from one taxonomy |
 | `tools/packgen/climate/make.py`, `liquidity/make.py`, `oprisk/make.py`, `retail/make.py` | the climate-risk, liquidity-risk, operational-risk and retail-banking packs, built on the banking data |
 | `tools/packgen/genomics/make.py` | the genomics pack (public reference facts, synthetic samples) |
@@ -3741,7 +3816,7 @@ of Parquet.
 
 | Tool | What it is for |
 |---|---|
-| `tools/drill.sh` | "Drill it" ([PACK_DEVELOPER_GUIDE.md §2.6](PACK_DEVELOPER_GUIDE.md#26-the-drill-toolsdrillsh)): first a gate of a few minutes (licence headers, the generated documents and data that must be current, the docs and help console tests, the quick file checks (every test marked `static`), and one Java 21 build of the working tree with Javadoc, doclint and Spotless that runs only the rule tests), stopping at its first failure; then at once the console suite in a browser lane (handed out by test on as many workers as the memory available holds, its memory sampled, files over the 300 s per-file budget flagged; [TEST_HARNESS.md](../architecture/TEST_HARNESS.md)) and an other lane (by file), each longest first, the Python tool tests in two lanes (every `tools/**/test_*.py` and `tests/` folder, found rather than listed, one pytest process a file, a failed file listed after all have run), and the Java 21 verify and the Java 25 one, each in a copy of the committed tree; failed console tests run once more file by file (flakes logged, `tools/drill-known.txt` lists accepted failures); a check that the tests left no file under `config/` and wrote nothing to the data folder (a server running from the repository turns the data check into a listed warning); then push develop, merge into main, push main; nothing is pushed unless all pass. `--docs` for a docs-only change, `--no-push` to verify only, `--keep-going` to see every failure, `--gate` for the gate alone. Once per release wave. |
+| `tools/drill.sh` | "Drill it" ([BUILD_GUIDE.md §2.6](DEVELOPER_GUIDE.md#26-the-drill-toolsdrillsh)): first a gate of a few minutes (licence headers, the generated documents and data that must be current, the docs and help console tests, the quick file checks (every test marked `static`), and one Java 21 build of the working tree with Javadoc, doclint and Spotless that runs only the rule tests), stopping at its first failure; then at once the console suite in a browser lane (handed out by test on as many workers as the memory available holds, its memory sampled, files over the 300 s per-file budget flagged; [TEST_HARNESS.md](../architecture/TEST_HARNESS.md)) and an other lane (by file), each longest first, the Python tool tests in two lanes (every `tools/**/test_*.py` and `tests/` folder, found rather than listed, one pytest process a file, a failed file listed after all have run), and the Java 21 verify and the Java 25 one, each in a copy of the committed tree; failed console tests run once more file by file (flakes logged, `tools/drill-known.txt` lists accepted failures); a check that the tests left no file under `config/` and wrote nothing to the data folder (a server running from the repository turns the data check into a listed warning); then push develop, merge into main, push main; nothing is pushed unless all pass. `--docs` for a docs-only change, `--no-push` to verify only, `--keep-going` to see every failure, `--gate` for the gate alone. Once per release wave. |
 | `tools/drillkit/drill_plan.py` | the drill's console planner: `lanes` (the browser lane holds every file that drives a browser or uses the scratch ports, the other lane the rest; each longest first from `data/drill/durations.json`), `merge` (a run's per-file seconds into the durations), `rerun` (each failed test once more, file by file, under a time limit of twice the file's recorded time and at least ten minutes; every outcome reported; known failures from `tools/drill-known.txt` accepted), `workers` (the browser lane's workers from the memory available, the CPU threads and the scratch ports' limit of 12), `budget` (the browser files of a run over the 300 s per-file budget; `tools/drill-budgets.txt` lists the files allowed over it with their reasons), `static` (the quick file checks the gate runs: the console files with a test marked `static`, or `--kind tools` the tools files marked so) |
 | `tools/drillkit/drill_monitor.py` | what a test run holds in memory: `watch` samples, every few seconds, the server JVMs, other JVMs, Chromium processes, consoles and pytest processes (count and resident memory) and the machine's available memory into a CSV (`--under PID` for one lane); `summary` prints the peaks. The drill samples its browser lane into `data/drill/monitor-browser.csv` |
 | `tools/drillkit/drill_timings.py` | the drill's pytest plugin (`-p drill_timings`): the seconds each test file took, written to the file `DRILL_TIMINGS_OUT` names when the session ends |
@@ -3752,7 +3827,7 @@ of Parquet.
 | `tools/domain_strings.py` | the domain boundaries' rule 4 ([DOMAIN_MODULES.md](../architecture/DOMAIN_MODULES.md) section 4): counts the banking names (command words, engine ids, connectors, API and console paths, packages) in the core's code against `tools/domain_strings_allowed.yaml`, which only shrinks; `--write` lowers the list after names moved into the module (a quick file check in the drill: `tools/test_domain_strings.py`) |
 | `tools/license_headers.py` | checks (exit `1` naming the files) or, with `--fix`, inserts the copyright header in every source file |
 | `tools/elements_sheet.py` | builds the `<drishti-view>` and report stylesheets from the console's CSS (run it when `drishti_bi.css` or the report CSS changes) |
-| `tools/render_sheet.py` | builds the client-side renderer's sheet (`static/render/<version>/drishti-render.css`) from the console's CSS and writes its `integrity.json`; `--check` says whether either is stale (CLIENT_RENDERER.md section 13). A released version's folder never changes: a change means a new version folder |
+| `tools/render_sheet.py` | builds the client-side renderer's sheet (`static/render/<version>/drishti-render.css`) from the console's CSS and writes its `integrity.json`; `--check` says whether either is stale (EMBED_GUIDE.md section 13). A released version's folder never changes: a change means a new version folder |
 | `tools/make_icons.py` | the console's favicon and app icons from the logo mark |
 | `tools/fetch-pyodide.sh` | installs the pinned, checksummed Pyodide runtime Calc serves from its own origin (no CDN) |
 | `tools/docs/screenshots.py` | regenerates the guides' screenshots (Playwright, scratch ports); `drishti.py docs shots` runs it |
@@ -3973,8 +4048,8 @@ environment `DRISHTI_JAR=...` (the tests that run `sutra lint` are skipped witho
 
 #### Where next
 
-[OPERATIONS_GUIDE.md (IDE)](OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm) runs the server and the console; [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and
-[PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md) are the references for what these commands produce and check.
+[OPERATIONS_GUIDE.md (IDE)](OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm) runs the server and the console; [BUILD_GUIDE.md](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies) and
+[BUILD_GUIDE.md](BUILD_GUIDE.md) are the references for what these commands produce and check.
 
 ## 18. Recipes
 
@@ -4045,7 +4120,7 @@ mode replaces only the dates in the input, and the server picks the new files up
 **Three ways a pack becomes known** to a server (the third is [18.4](#184-registry-publish-and-install)): start with `DRISHTI_PACKS=...,curves-demo` and a
 restart, or put it in the watched packs folder as above; `server packs load curves-demo` (or **Admin → Packs → Load**; it takes effect at
 once, with no restart, and is remembered in `data/packs/added.yaml`); install from a registry. See
-[PACK_DEVELOPER_GUIDE.md#loading-a-pack-while-the-server-runs-1](PACK_DEVELOPER_GUIDE.md#loading-a-pack-while-the-server-runs-1).
+[BUILD_GUIDE.md#292-loading-a-pack-while-the-server-runs](BUILD_GUIDE.md#292-loading-a-pack-while-the-server-runs).
 
 ### 18.2 A CI pipeline: lint, test, JUnit
 
@@ -4222,3 +4297,149 @@ Some commands add codes of their own, each named in its section:
 | `drishti: <path> is not a pack folder (no pack.yaml)` | `pack check` needs a pack folder | pass the folder with `pack.yaml` |
 | `sutra lint` shows `DRS-2047 field 'x' is shown but has no glossary entry` | a field has no help text | `pack about-check`, then `config/about.yaml` |
 | a view says `DRS-1001 <pack>-store holds trade for <date> and does not list trade/<id>` | the document is not in the store for that business date | pick a date you ingested; check with `data ingest --dry-run` |
+
+## 14. Running the tools from PyCharm (and the Java `sutra` from IntelliJ)
+
+The tools are ordinary Python scripts, so PyCharm runs and debugs them like any other, and the Java `sutra` tool runs from IntelliJ
+IDEA. (For the server and the console themselves see [OPERATIONS_GUIDE.md (IDE)](OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm).) This section is the whole path, from an
+empty PyCharm to a run configuration for each common task.
+
+### 14.1 Create the interpreter
+
+1. Open the repository root as the project (**File → Open**, the folder that holds `tools/`, `config/packs/`, `pom.xml`).
+2. Make a virtual environment with `uv` (any virtual environment works), in a terminal at the repository root:
+
+   ```bash
+   uv venv --python 3.13 drishti-console/.venv
+   uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
+   ```
+
+   This is the console's own environment, the one the quick start installs and the shipped run configurations (`drishti-console/run-configs/`) use: it has
+   `pyyaml`, `deltalake` and `pyarrow` (the last two for `--store delta`, the default of `pack make`, `data ingest --lake` and `lake build`).
+   On Windows the interpreter is `drishti-console\.venv\Scripts\python.exe`.
+3. **Settings (Ctrl+Alt+S) → Project → Python Interpreter → Add Interpreter → Add Local Interpreter → Existing**, pick
+   `drishti-console/.venv/bin/python`, **OK**.
+4. Optional: **Settings → Project → Project Structure**: mark `tools` as *Sources* so PyCharm resolves `import sutragen` and
+   `import ingest_jsonl` when you click through code.
+
+### 14.2 A run configuration for each task
+
+**Run → Edit Configurations → + → Python**. The fields are the same for every task; only **Name** and **Parameters** change:
+
+| Field | Value |
+|---|---|
+| **Script path** (not *Module name*; switch the toggle on the left of the field) | `<repo>/tools/drishti.py` |
+| **Python interpreter** | the `drishti-console/.venv` interpreter from 14.1 |
+| **Working directory** | **the repository root**: relative paths in *Parameters* resolve from here |
+| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-2.9.11.d-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
+
+Click the folder icon next to **Environment variables** to edit them as a table (one row per variable). `JAVA_HOME` and
+`DRISHTI_JAR` may be left out: the tool then looks for JDK 21 and for the newest `drishti-server/target/*-exec.jar` itself.
+
+| Name | **Parameters** |
+|---|---|
+| `drishti pack make` | `pack make data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank --force` |
+| `drishti data profile` | `data profile data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz` |
+| `drishti pack regenerate` | `pack regenerate data/build/my-bank/pack/my-bank data/testdata/trades/endur/trade_endur.2026-09-23.jsonl.gz --dry-run` |
+| `drishti sutra gen` | `sutra gen data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --out data/build/sutras` |
+| `drishti data ingest` | `data ingest --from your-new-days/ --pack data/build/my-bank/pack/my-bank --lake data/build/my-bank/data/delta --dry-run` (remove `--dry-run` to write) |
+| `drishti pack check` | `pack check data/build/my-bank/pack/my-bank --strict --junit data/build/reports` |
+| `drishti server packs load` | `server packs load my-bank --server http://localhost:18480` with `DRISHTI_TOKEN` set |
+| `drishti sutra lint` | `sutra lint config/packs/my-bank` |
+| `drishti server health` | `server health` |
+
+Press **Run** (Shift+F10): the output is in the Run window, and a non-zero exit code shows as a failed run (exit 1 = a check
+failed, 2 = usage; see [Exit codes](#exit-codes)). If the Run window says `no drishti-server-*-exec.jar`, build it once
+(`./mvnw -q -DskipTests package`) or set `DRISHTI_JAR`.
+
+**Templates.** **Run → Edit Configurations → Edit configuration templates... → Python** sets the defaults for every *new* Python
+configuration: put the interpreter, the working directory (`$PROJECT_DIR$/..`, the repository root), and the environment variables there once, and each new
+configuration (**+ → Python**) then only needs a **Name**, the **Script path** and the **Parameters**. Duplicate an existing
+configuration (Ctrl+D in the dialog) to make a variant.
+
+**Secrets.** `DRISHTI_TOKEN` goes in the configuration's **Environment variables** (kept in `.idea/workspace.xml`, which is not committed),
+or use `--token-file ~/.drishti-token` in **Parameters**. Never put a token in a shared configuration.
+
+### 14.3 Debug a tool
+
+The tools are plain Python, so debugging is PyCharm's normal debugging: open `tools/drishti.py` (or `tools/packmake.py`,
+`tools/sutragen.py`, `tools/ingest_jsonl.py`, `tools/packgen/pack_from_jsonl.py`, `tools/packbundle.py`), click the gutter left of a
+line to set a breakpoint, and press **Debug** (Shift+F9) on the run configuration instead of Run. Good first breakpoints:
+
+- `pack make`: `detect_key` and `detect_date` in `tools/packmake.py` (why a field was chosen), and `make` (the whole flow);
+- `sutra gen`: `generate` in `tools/sutragen.py` (the groups, one per `--match` value);
+- `data ingest`: `ingest` in `tools/ingest_jsonl.py` (the dates and rows it will write).
+
+The Java `sutra` command that `pack check` and `pack make` start is a separate process: breakpoints in Python do not stop it
+(use 14.5 for that). **Variables** shows the parsed options (`a`), and **Evaluate expression** (Alt+F8) works on them.
+To stop on an error, tick **Run → View Breakpoints → Python Exception Breakpoints → Any exception**.
+
+### 14.4 Share the configurations with the team: `drishti-console/run-configs/`
+
+By default a configuration lives in `.idea/workspace.xml` (personal, not committed). To share it, open it in **Edit
+Configurations** and tick **Store as project file**: PyCharm (opened on `drishti-console/`) writes it to `drishti-console/run-configs/<name>.run.xml`, which can be
+committed; `$PROJECT_DIR$/..` in it is the repository root. This repository ships several to start from, among them `drishti pack make`, `drishti sutra gen`, `drishti data profile` and `drishti pack regenerate`; PyCharm
+lists them under **Python** as soon as the project opens (reload with **File → Reload All from Disk** if it was open already).
+The format is one `<configuration>` element in a `ProjectRunConfigurationManager` component:
+
+```xml
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="drishti pack make" type="PythonConfigurationType" factoryName="Python">
+    <module name="drishti-console" />
+    <envs><env name="PYTHONUNBUFFERED" value="1" /></envs>
+    <option name="SDK_HOME" value="" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
+    <option name="IS_MODULE_SDK" value="false" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../tools/drishti.py" />
+    <option name="PARAMETERS" value="pack make data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank --force" />
+    <method v="2" />
+  </configuration>
+</component>
+```
+
+(the real files list every option PyCharm writes). `$PROJECT_DIR$` is `drishti-console/` (PyCharm's project), so `$PROJECT_DIR$/..` is the repository root on every machine; an empty `SDK_HOME` with `IS_MODULE_SDK`
+false is PyCharm's *Project Default* interpreter, so nobody's local path is in the file and the same file works on Windows
+(`tools/test_run_configs.py` guards it); the `module` name does not decide the interpreter, so a clone in a folder of another name works too. Put only what is shared in them: no tokens, no home-directory
+paths. Edit **Parameters** for your own input folder, or duplicate the configuration for each data set.
+
+### 14.5 The Java `sutra` tool from IntelliJ IDEA
+
+`sutra lint|test|preview|shape|design` is the server's own jar started with `sutra` as its first argument, so IntelliJ can run
+it without the command-line program, and debug the engine while it lints:
+
+**Run → Edit Configurations → + → Application**:
+
+| Field | Value |
+|---|---|
+| Main class | `com.ash.drishti.server.DrishtiApplication` |
+| *Use classpath of module* | `drishti-server` |
+| JRE | JDK 21 or newer |
+| **Program arguments** | `sutra lint config/packs/my-bank --strict` |
+| **Working directory** | **the repository root** |
+
+(or **JAR Application** with the exec jar as *Path to JAR* and the same program arguments). It prints what the command line
+prints and ends with the exit code; breakpoints in `drishti-rachana` or `drishti-server/.../cli/SutraCli.java` stop as usual.
+Paths in the arguments are relative to the working directory here, unlike in `drishti.py` (which makes them absolute for you).
+
+### 14.6 Run the tools' own tests
+
+**Run → Edit Configurations → + → Python tests → Unittest**: *Target* `Script path`, the file `tools/test_packmake.py` (or
+`test_drishti_cli.py`, `test_sutragen.py`, `test_ingest_jsonl.py`, `test_pack_bundle.py`), working directory the repository root,
+environment `DRISHTI_JAR=...` (the tests that run `sutra lint` are skipped without a jar).
+
+### 14.7 Where next
+
+[OPERATIONS_GUIDE.md (IDE)](OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm) runs the server and the console; [BUILD_GUIDE.md](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies) and
+[BUILD_GUIDE.md](BUILD_GUIDE.md) are the references for what these commands produce and check.
+
+## 15. The headless Sutra tool
+
+`sutra lint|test|preview|shape|design` is the Java tool behind `drishti.py sutra` (section 4): it needs no running server and is what CI runs.
+It writes nothing to the site it runs in, even from the repository folder beside a running server: the engine starts with a scratch data
+folder made for the command and deleted after it (identity database, content store, caches, derived pages, temp files; its JVM temp
+folder is `DRISHTI_TMP_DIR`, else a fresh folder in the system temp folder), the packs' connector templates are read in memory (nothing
+in `config/connectors/`), and the official VaR and exposure captures, the demo ticker, hot reload, compute workers, write-back and
+Drishti*net are off. The site's lakes (`DRISHTI_DELTA_ROOT`, `DRISHTI_ICEBERG_ROOT`, `DRISHTI_FILES_ROOT`, `DRISHTI_FEEDS`, each
+defaulting under `DRISHTI_DATA_DIR` or `data/`) and its added and installed packs are still read. The `tests/<sutra>/` convention, `expect.yaml`, the exit codes and
+CI wiring are section 15 of the [Sutra developer guide](BUILD_GUIDE.md#24-testing-expectyaml-sutra-lint-sutra-test-and-pack-check); the workbench's own use of the same command is in
+[RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#26-the-command-line-and-ci). This section replaces the former `SUTRA_CLI.md`.

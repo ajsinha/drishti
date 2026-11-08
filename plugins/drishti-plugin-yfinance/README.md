@@ -84,7 +84,7 @@ for since the start. Two connectors use it: `yfinance` (news-and-markets pack, k
 | `retry-factor` | string | `2` | Growth of the wait (2) |
 | `retry-jitter` | string | `0.2` | Random spread of the wait (0.2) |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10). It takes the shared `proxy.*` settings for an outbound HTTP proxy (DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 ## Data structure
@@ -204,11 +204,11 @@ routes: { quote: yfinance }
   - { id: history, kind: line, source: "link($.QUOTE_ID, 'quote')", rows: $.HISTORY, x: DATE, y: CLOSE, fmt: price2 }
 ```
 
-See the [`news-and-markets` sample pack](../../docs/guides/PACK_DEVELOPER_GUIDE.md#sample-packs). **Offline** (`DRISHTI_OFFLINE=true`,
+See the [`news-and-markets` sample pack](../../docs/guides/BUILD_GUIDE.md#315-sample-packs). **Offline** (`DRISHTI_OFFLINE=true`,
 [CONFIGURATION](../../docs/admin/CONFIGURATION.md#drishtioffline--offline-mode-no-internet)) this connector never starts and shows
 *off (offline mode)* in Admin → Connectors; the pack's `news-store` then serves `quote` from a snapshot captured through this connector
 with `range: 1y` (`drishti.py testdata capture-market`;
-[PACK_DEVELOPER_GUIDE.md](../../docs/guides/PACK_DEVELOPER_GUIDE.md#news-and-markets-and-world-economy-offline)).
+[BUILD_GUIDE.md](../../docs/guides/BUILD_GUIDE.md#317-the-demo-lakes-where-the-seven-packs-read-their-data)).
 
 ## How it is built
 

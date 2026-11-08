@@ -763,7 +763,7 @@ field, a `*_DATE` column a date field:
         - { id: maturity_date, label: Maturity, bind: MATURITY_DATE, type: date }
 ```
 
-Rules, money and linked-record fields, masks and roles are in [WRITE_BACK.md](../guides/WRITE_BACK.md). Saving keeps a
+Rules, money and linked-record fields, masks and roles are in [APPROVALS_GUIDE.md](../guides/APPROVALS_GUIDE.md). Saving keeps a
 **draft** for each person; nothing is written to the source system until write-back.
 
 **Command line.** Your drafts, checked again on the server with the same rules:
@@ -1093,7 +1093,7 @@ each kind's latency. The pools and workers behind the Python one are under Admin
 
 ## Next steps
 
-- [DATA_GUIDE.md](../guides/SCHEMA_TO_PACK_GUIDE.md) lists every rule (keys, links, formats, enums, splitting a kind); [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md) the commands; [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md)
+- [DATA_GUIDE.md](../guides/BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack) lists every rule (keys, links, formats, enums, splitting a kind); [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md) the commands; [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md)
   how a pack is laid out; [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#8-deploy-promote-and-roll-back-by-copying) how to promote a pack between servers.
 - [Tutorial 12 · Load data daily](12-a-day-of-bank-data.md) keeps the screens' data fresh.
 - [Tutorial 11 · Correct a trade and approve it](11-correct-and-approve.md): a form like the one of step 19 that writes back, with four eyes.
@@ -1101,13 +1101,8 @@ each kind's latency. The pools and workers behind the Python one are under Admin
   [its section 31](../guides/RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid) every mode of the designer in full;
   [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) lists every option of every panel and control;
   [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one) shows each of the 22 panel kinds with a picture.
-- [SUTRA_DEVELOPER_GUIDE.md](../guides/SUTRA_DEVELOPER_GUIDE.md) is the language guide; its
-  [section 11a](../guides/SUTRA_DEVELOPER_GUIDE.md#11a-fragments-events-children-refresh-and-forms) writes the Sutra designer's screen of steps 16 to 22 by hand.
-
-You read a computed kind on a screen (typed parameters on a panel's source), watched it compute without the page waiting, compared a
-Python engine fanned out over a pool's workers with a Java engine in the server, asked and refused the computation from the command line,
-and recomputed a watched result from an event. Next: the [reactive connector reference](../connectors/types/reactive/README.md) (sandboxes for
-private what-ifs, live and scheduled triggers, the HTTP API) and [operating compute](../guides/OPERATIONS_GUIDE.md#15-compute-workers).
+- [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies) is the language guide; its
+  [section 11a](../guides/BUILD_GUIDE.md#201-fragments-events-children-refresh-and-forms) writes Part B's screen by hand.
 
 ## If something goes wrong
 
@@ -1128,5 +1123,5 @@ private what-ifs, live and scheduled triggers, the HTTP API) and [operating comp
 | a part of the Describe line is red | the sentence beside it says why; the result says *Fix the red part to see the screen* until it reads |
 | a refresh interval faster than 5 s is not offered | the console's `views.refresh_min_seconds` (default 5) |
 | `DRS-2057` in `sutra lint` | an event or source reads a panel that does not exist (a renamed panel id) |
-| `DRS-2058` | the `form:` does not read: an unknown key or field type ([WRITE_BACK.md](../guides/WRITE_BACK.md)) |
+| `DRS-2058` | the `form:` does not read: an unknown key or field type ([APPROVALS_GUIDE.md](../guides/APPROVALS_GUIDE.md)) |
 | `DRS-2059` | the `layout:` names an area the picture does not have |

@@ -19,7 +19,7 @@ This guide is for the people who run Drishti for others. It covers who may sign 
 tokens, embedding), what each person may open (roles, powers, packs), where all of that is stored, what each person is shown (lenses and
 editions, Home, branding), and the switches that turn a command, a compute engine or a module off. You need the **admin** role for
 almost everything here; it is all under **Admin** in the top bar. Every setting named here is described in full in
-[CONFIGURATION.md](../admin/CONFIGURATION.md); the endpoints are in [API_GUIDE.md](API_GUIDE.md).
+[CONFIGURATION.md](../admin/CONFIGURATION.md); the endpoints are in [API_REFERENCE.md](API_REFERENCE.md).
 
 ## Contents
 
@@ -218,7 +218,7 @@ A lens ([section 12](#12-what-a-lens-is)) never widens or narrows this: it chang
 
 ### 3.4 BI powers (Rupaka)
 
-Business intelligence ([BI_GUIDE.md](BI_GUIDE.md)) has four powers of its own. They are a list, `bi`, on a role:
+Business intelligence ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) has four powers of its own. They are a list, `bi`, on a role:
 `drishti.security.roles.<role>.bi: [bi, bi-author]` in configuration or a pack, or, for a role you define, **Admin → BI settings** (a
 table of roles with four tick boxes each; built-in roles are read-only there) or the `bi` list of `PUT /api/v1/admin/role-definitions/{name}`.
 Saving a role in **Admin → Roles** keeps the BI powers it has.
@@ -291,7 +291,7 @@ own**:
   view holds) under `share.undeliverable: tell`.
 - **Moderation** (`admin`): **Hide** a comment with a reason (readers see "Hidden by a moderator: <reason>"; the text stays in the record),
   **Lock** a thread, and remove a whole thread for good with `DELETE /admin/collab/threads/{id}` (audited; refused with `423 DRS-7010`
-  under a legal hold). The API is in [API_GUIDE.md](API_GUIDE.md#comment-threads).
+  under a legal hold). The API is in [API_REFERENCE.md](API_REFERENCE.md#32-comment-threads).
 - **Compliance** (`roles.<role>.compliance`): a compliance officer reads any share and the full record of any thread (hidden and retracted
   comments, every revision, unscrubbed), places and releases **legal holds**, runs the **export** and **verifies** the hash chains. The
   runbooks are in [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#123-retention-legal-holds-and-the-compliance-export).
@@ -307,7 +307,7 @@ own**:
 
 ## 4. Packs per user
 
-A pack is a domain's worth of kinds, mnemonics, layouts and roles ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md)). The server may
+A pack is a domain's worth of kinds, mnemonics, layouts and roles ([BUILD_GUIDE.md](BUILD_GUIDE.md)). The server may
 have many installed; each person sees the ones assigned to them.
 
 - **Default packs.** A user who was never given a list of packs (the field left out, not an empty list) sees the packs in
@@ -370,7 +370,7 @@ drishti:
 
 A page that shows Drishti views but has **no backend of its own** (a static intranet page, a SharePoint page) cannot run the token exchange
 of [section 7](#7-embedding-host-applications). With single sign-on on, it can use the renderer's **sign-in window** (`auth: 'popup'`;
-[ELEMENTS_IN_YOUR_APP.md](ELEMENTS_IN_YOUR_APP.md)): the page shows *Sign in to see this*; on the click, one small window runs this same
+[EMBED_GUIDE.md](EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app)): the page shows *Sign in to see this*; on the click, one small window runs this same
 single sign-on and the page gets a short-lived, read-only, masked embed token, as from the exchange.
 
 What to set, once:
@@ -391,7 +391,7 @@ storage or a cookie in the page; the provider's refresh token is sealed by the c
 ## 6. API tokens
 
 People read Drishti from scripts, notebooks and Excel with personal API tokens they make on **My account → API tokens**
-([API_GUIDE.md, clients](API_GUIDE.md#clients-scripts-notebooks-and-excel)). What an administrator needs to know:
+([API_REFERENCE.md, clients](DEVELOPER_GUIDE.md#113-clients-scripts-notebooks-and-excel)). What an administrator needs to know:
 
 - **A token acts as its owner**, with the owner's roles and packs at the time of each call, and, unless it was made with a **write scope**,
   **only reads**: every `GET`, and the `POST`s that carry a query and change nothing, listed in `drishti.security.token-read-posts` (the
@@ -420,10 +420,10 @@ People read Drishti from scripts, notebooks and Excel with personal API tokens t
 ## 7. Embedding host applications
 
 Another web application (a CRM, a portal) can show live Drishti views in its own pages with `<drishti-view>`
-([ELEMENTS_IN_YOUR_APP.md](ELEMENTS_IN_YOUR_APP.md)), without an iframe. An administrator allows it, one **host application** at a time.
+([EMBED_GUIDE.md](EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app)), without an iframe. An administrator allows it, one **host application** at a time.
 Embedding is off until `drishti.embed.enabled` is on ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications));
 register applications on **Admin → Embedding** (`/admin/embedding`), or with the API
-([API_GUIDE.md](API_GUIDE.md#embedding-views-in-another-web-application)), for example:
+([API_REFERENCE.md](API_REFERENCE.md#24-embedding-views-in-another-web-application)), for example:
 
 ```bash
 curl -s -X POST $SERVER/api/v1/admin/embed/apps -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: application/json' -d '{
@@ -1157,7 +1157,7 @@ chips).
 ### 17.1 On a phone
 
 A lens's `phone:` block sets and caps the phone tier of panels over every Sutra, after the site's `ui.phone`
-([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-ix-designing-for-phones), [USER_GUIDE.md, On a phone](USER_GUIDE.md#on-a-phone));
+([BUILD_GUIDE.md](BUILD_GUIDE.md#32-designing-for-phones), [USER_GUIDE.md, On a phone](USER_GUIDE.md#on-a-phone));
 `max:` is a cap no Sutra can exceed. `pages:` does the same for the parts of the VaR and exposure pages, and `home.phone` for the lens's
 landing. Drishti Risk ships one rule: a VaR contribution panel waits under *More on this page*.
 
@@ -1347,7 +1347,7 @@ The switches live in the identity database ([section 9](#9-the-identity-database
 
 ### 20.7 From a script
 
-What a user sees on Functions is `GET /api/v1/functions` ([API_GUIDE.md](API_GUIDE.md)): the commands the caller can use, by pack, with
+What a user sees on Functions is `GET /api/v1/functions` ([API_REFERENCE.md](API_REFERENCE.md)): the commands the caller can use, by pack, with
 nothing of the switches; a personal API token reads it too.
 
 The admin API is `/api/v1/admin/commands`: `GET` the list, `POST` a batch
@@ -1560,7 +1560,7 @@ var already running; frtb-sa on (live). Written to config/engines/frtb-sa.yaml.
 key comes from), `on <id>... [--with-needs]`, `off <id>... [--with-dependents]` (both need `--reason` and an administrator; `--node` changes
 another node), `history`. `drishti.py admin engines` is the same command. Exit codes: 0 done, 2 refused, 3 not running anywhere.
 
-The API behind them ([API_GUIDE.md](API_GUIDE.md)): `GET /api/v1/admin/engines` (every engine: state, memory, threads, needs, used by,
+The API behind them ([API_REFERENCE.md](API_REFERENCE.md)): `GET /api/v1/admin/engines` (every engine: state, memory, threads, needs, used by,
 where the switch comes from, restart needed), `GET /api/v1/admin/engines/{id}/impact` (what turning it off hides), `POST /api/v1/admin/engines`
 (a batch `{"reason": "...", "node": "<id or blank>", "changes": [{"engine": "frtb-sa", "on": false}]}`, checked as a whole for dependencies,
 answering each change's outcome), `GET /api/v1/admin/engines/history`; `GET /api/v1/about` carries `engines: [{id, title, here, cluster}]`,

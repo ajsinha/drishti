@@ -455,4 +455,4 @@ Admin → Health shows the connector's `health`, `reads` and `cache`; the Rabbit
 ## See also
 
 - [The activemq connector](../drishti-plugin-activemq/README.md) (the same state store) and [TLS](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
-- [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) and [the connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md).
+- [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) and [the connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one).

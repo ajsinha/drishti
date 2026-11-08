@@ -179,7 +179,7 @@ a parent's sample by shipping the same kind and id; type-ahead keeps one entry p
 does not restart connectors). Setting `dirs` by hand replaces what the packs put there, which is how a site serves a folder of its own
 samples. How the samples are generated, and loaded into every real store, is in
 [../../docs/guides/DATA_GUIDE.md section 11](../../docs/guides/DATA_GUIDE.md#1115-the-samples); the format from a pack author's side is in
-[the pack developer's guide](../../docs/guides/PACK_DEVELOPER_GUIDE.md#samples).
+[the pack developer's guide](../../docs/guides/BUILD_GUIDE.md#54-samples).
 
 ## Reads and what each costs
 
@@ -285,7 +285,7 @@ dependents never move and on a walk naming a path its sample lacks.
 
 ## Its place in routing
 
-The router ([how a request picks a connector](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md#how-a-request-picks-a-connector))
+The router ([how a request picks a connector](../../docs/guides/DEVELOPER_GUIDE.md#how-a-request-picks-a-connector))
 tries a kind's route, then the `default-route` (`demo`), then every other connector serving the kind. The demo's manifest lists no
 kinds, so it is a candidate for **every** kind and answers "not held" for ids it has no sample of.
 
@@ -323,7 +323,7 @@ no credentials, network or TLS, and reads only the kinds and ids its catalogues 
 ## See also
 
 - [The demo data](../../docs/guides/DATA_GUIDE.md#11-the-demo-data) (how the samples are made and loaded into every other store) and
-  [the pack developer's guide](../../docs/guides/PACK_DEVELOPER_GUIDE.md#samples).
+  [the pack developer's guide](../../docs/guides/BUILD_GUIDE.md#54-samples).
 - [Every demo setting in CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#demo) and
   [connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

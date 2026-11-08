@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The model layer's pages: start, dataset, model designer, new-dataset wizard (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 9). */
+/* The model layer's pages: start, dataset, model designer, new-dataset wizard (docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, section 9). */
 .bi-layer-next { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-8); }
 .bi-layer-search { max-width: 28rem; margin: 0 0 var(--d-sp-11_2); }
 .bi-layer-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--d-sp-4_8) var(--d-sp-16); margin: var(--d-sp-8) 0 var(--d-sp-16); }
@@ -63,5 +63,5 @@
   [data-fields-pane] .studio-in, [data-fields-pane] .studio-select, [data-fields-pane] .btn-pill, [data-security-pane] .studio-in, [data-security-pane] .studio-select, [data-security-pane] .btn-pill, [data-contract-pane] .btn-pill, [data-measures-pane] .studio-in, [data-measures-pane] .studio-select, [data-measures-pane] .btn-pill, [data-measures-pane] summary { min-height: 44px; }
 }
 /* Wave A QA: a hidden measure still reachable through visible columns (DRS-9132), said beside its entry */
-/* the model designer's autosave line and its merge view (BI_DESIGN.md 8.1) */
+/* the model designer's autosave line and its merge view (ARCHITECTURE.md §28 8.1) */
 /* the model designer's YAML tab in the theme (dark by default), like the report designer's */

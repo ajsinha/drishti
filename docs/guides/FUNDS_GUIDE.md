@@ -228,7 +228,7 @@ Funds tracking the S&P 500, by net assets (a fund opens its page)  (table, track
 
 **API**: `GET /api/v1/views/fund/QQQ` (the page), `GET /api/v1/entities/fund/QQQ/raw` (the document), `GET
 /api/v1/search?q=FUND%20INDEX_ID%3DSP500` (a search), `GET /api/v1/command/suggest?q=FUND%20VTSAX` (the type-ahead), as the
-[API guide](API_GUIDE.md) describes; every call takes the caller's token and the business date.
+[API guide](API_REFERENCE.md) describes; every call takes the caller's token and the business date.
 
 # Part II · The data contracts
 

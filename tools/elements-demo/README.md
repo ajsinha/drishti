@@ -15,7 +15,7 @@
 -->
 # Elements demo: a host application for `<drishti-view>`
 
-The proof of concept of [Drishti Elements](../../docs/architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design) (build step 0): a tiny "host" web
+The proof of concept of [Drishti Elements](../../docs/architecture/ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements) (build step 0): a tiny "host" web
 application on **its own origin** that shows live Drishti views in a Shadow DOM, without an iframe.
 
 It has its own sign-in (a demo cookie), its own backend endpoint that asks Drishti for a token **server to server** (the
@@ -28,7 +28,7 @@ listed at `/api/csp-reports`.
 
 **The tokens are real.** The host's backend signs a short assertion about its signed-in user with its own RSA key
 (`demo-host-key.json`: a DEMO key, never use it anywhere real) and exchanges it, with its client secret, at the Drishti
-**server** (`POST /api/v1/embed/token`, RFC 8693, [API_GUIDE](../../docs/guides/API_GUIDE.md#embedding-views-in-another-web-application)).
+**server** (`POST /api/v1/embed/token`, RFC 8693, [API_REFERENCE](../../docs/guides/API_REFERENCE.md#24-embedding-views-in-another-web-application)).
 The page gets a five-minute, read-only, always-masked embed token. Both demo users must exist in Drishti (the exchange refuses
 a stranger).
 
@@ -85,7 +85,7 @@ drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_embed_e
 ```
 
 Results and what they changed in the plan are in the *Step 0 results* section of
-[CLIENT_RENDERER.md](../../docs/architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design).
+[EMBED_GUIDE.md](../../docs/architecture/ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements).
 
 ## Files
 

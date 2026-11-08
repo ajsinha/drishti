@@ -248,8 +248,8 @@ You land in the designer: a canvas on a 12-column grid, a **Filters** pane, **Vi
 The designer sits in **BI Studio**, the shell the report, model and theme designers share: the **Explorer** of your items on the left (with
 **New**), the items you opened as **tabs** above the canvas, and under it a **dock** with **Problems** (the server's check of your draft a second after each
 change, each problem linked to its visual) and **Query** (the selected visual's model query and its SQL). The steps below work the same in it;
-[BI_GUIDE.md section 26](../guides/BI_GUIDE.md#26-bi-studio-authoring-as-one-product) is the tour, and
-[BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5](../guides/BI_GUIDE.md#5-format) the Format pane, conditional formatting and themes.
+[REPORTS_GUIDE.md section 26](../guides/REPORTS_GUIDE.md#8-bi-studio-and-the-report-designer) is the tour, and
+[REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5](../guides/REPORTS_GUIDE.md#101-the-format-pane) the Format pane, conditional formatting and themes.
 
 ![BI Studio: the Explorer of your items on the left, the open item as a tab, the report designer, and the dock with Problems and Query under the canvas](../guides/img/bistudio/studio.jpg)
 
@@ -615,7 +615,7 @@ measures:
 and the report (`config/bi/reports/banking/pnl-vs-exposure.report.yaml`) only says `model: trading-risk@1`. When the two numbers live in **two models**
 (each with its own row rules), a report can still read both side by side and link their fields: that is [Part B](#part-b--several-datasets-in-one-report).
 The same table made by a Python Transform is in [tutorial 9](09-notebook-and-python.md); the reference is
-[BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification) and [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16](../guides/BI_GUIDE.md#16-reports-over-several-datasets).
+[ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#281-the-table-layer-and-models-in-rachana) and [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16](../guides/REPORTS_GUIDE.md#913-reports-over-several-models).
 
 ## Step 12 · Relative dates, a tablet, and a view inside a report
 
@@ -668,7 +668,7 @@ where: [{ field: trade.TRADE_DATE, op: between, values: [2026-07-27, 2026-10-26]
 
 ![The relative-date slicer set to Last 3 months: a chip names it, the cards read 2,619 trades and +1,125,679,037](img/t10/31-relative-date.jpg)
 
-You should see the slicer's dropdown (the report's `default: last-90-days` is chosen until you pick another) and, after choosing **Last 3 months**, a chip `When: Last 3 months` and cards narrowed to the `2,619` trades booked in the three months ending on the report's date (MTM `+1,125,679,037`; the whole book is `15,000` trades). Your count depends on the day you built the lake: the trade dates stay (the newest is 2026-09-25), the business dates move, so a short window such as *Last 4 weeks* can hold no trades at all. The names are `last-N-days`, `last-N-business-days`, `last-N-weeks`, `last-N-months`, `this-week|month|quarter|year` (to date), `previous-...` and `all`: [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 6.1](../guides/BI_GUIDE.md#61-the-relative-date-slicer).
+You should see the slicer's dropdown (the report's `default: last-90-days` is chosen until you pick another) and, after choosing **Last 3 months**, a chip `When: Last 3 months` and cards narrowed to the `2,619` trades booked in the three months ending on the report's date (MTM `+1,125,679,037`; the whole book is `15,000` trades). Your count depends on the day you built the lake: the trade dates stay (the newest is 2026-09-25), the business dates move, so a short window such as *Last 4 weeks* can hold no trades at all. The names are `last-N-days`, `last-N-business-days`, `last-N-weeks`, `last-N-months`, `this-week|month|quarter|year` (to date), `previous-...` and `all`: [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 6.1](../guides/REPORTS_GUIDE.md#99-slicers).
 
 **A tablet layout.** A phone gets one column ([step 10](#step-10--on-a-phone)); a tablet (up to 1024 px) can get two, with some visuals across:
 
@@ -695,7 +695,7 @@ You should see the bar the whole width, then the cards in two columns. A phone, 
 
 ![Counterparty lookup: a bar of ten counterparties with CP-VERDANT selected, and its Drishti view beside it with the netting sets](img/t10/32-entity-view.jpg)
 
-You should see the counterparty's own **Drishti view** (its name, rating, net MTM and netting sets) in the frame beside the bar, with a chip `counterparties.id: CP-VERDANT` (the first bar: the largest computed expected exposure). It is the view page built **for you**: someone who may not see a field does not see it here either. [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3.4](../guides/BI_GUIDE.md#34-the-entity-view).
+You should see the counterparty's own **Drishti view** (its name, rating, net MTM and netting sets) in the frame beside the bar, with a chip `counterparties.id: CP-VERDANT` (the first bar: the largest computed expected exposure). It is the view page built **for you**: someone who may not see a field does not see it here either. [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3.4](../guides/REPORTS_GUIDE.md#95-the-entity-view).
 
 ## Step 13 · A dataset and a model of your own, in the wizard
 
@@ -822,19 +822,19 @@ Latin America & Caribbean                          12
 ```
 
 A draft model answers its owner (and is listed as `draft` by `bi model list`); a report on it is published once the model is. The reference for the
-wizard's every step is [BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer) and
-[BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules); the version 1 guided tables builder (*Use the guided tables builder* under the wizard's first step) still makes
+wizard's every step is [REPORTS_GUIDE.md section 23](../guides/REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads) and
+[REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads); the version 1 guided tables builder (*Use the guided tables builder* under the wizard's first step) still makes
 `rachana: 1` datasets, which the upgrade converts to models ([tutorial 21](21-run-it-in-production.md)).
 
 ### Notes: saving safely, and more than one dataset
 
 - **UI.** *New report* on the designer's start page asks for a **Main dataset** and an optional **Also add** (Ctrl or Shift for several): the designer opens with all of them in the **Fields** pane. A dataset you cannot use yet is greyed with the reason (for example *draft in a private workspace: publish it first*). **+ Add visual** makes an empty visual; the **Publish** button (Propose where review is required) saves first. Open the same draft in two tabs and save in both: the second is refused with **Reload theirs / Save mine as a copy / Overwrite with mine**.
 - **CLI.** `drishti.py bi catalogue get <id>` shows the item with its `etag`; a propose, approve or publish of a report that cannot be drawn is refused with `DRS-9030` and the errors (a bi-admin may force it).
-- **YAML.** Nothing new to write: the extra datasets are named in each visual's `dataset:` and the report's `links:` (BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16); `?also=a,b` on the designer URL opens extra datasets in the Fields pane.
+- **YAML.** Nothing new to write: the extra datasets are named in each visual's `dataset:` and the report's `links:` (REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16); `?also=a,b` on the designer URL opens extra datasets in the Fields pane.
 
 ## Step 14 · Models: from a pack dataset to a report
 
-The **model layer** ([BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer)): every
+The **model layer** ([REPORTS_GUIDE.md section 23](../guides/REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads)): every
 kind of every pack is a dataset already, and a model is a few of them joined. This step goes from the pack's **Trade valuation** (one row per trade
 per business date, with its desk, MTM and P&L, in the `market-risk` pack) to a model of trades and desks with a row rule, published, analysed and
 watched. The numbers are from the demo lake (15,000 trade valuations over ten desks).
@@ -920,7 +920,7 @@ security:
 ```
 
 and the report of step 6 says `model: trades-and-desks@1`. It publishes like any report once its model is published and passes its safeguard
-([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 18](../guides/BI_GUIDE.md#18-a-report-on-a-model)).
+([REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 18](../guides/REPORTS_GUIDE.md#83-a-report-on-a-model-fields-own-measures-mq-or-sql)).
 
 **Steps 7 to 9 from the command line.** Make the item, publish it and ask it (through the console the same calls are `/bi/api/items/<id>/publish`
 and **`/bi/api/mq`**):
@@ -994,7 +994,7 @@ Exposure (EE peak)
 (The official results are a Delta table whose columns the pack's connector `exposure-results` promotes, so they are scanned as columns; the
 model `counterparty-exposure` reads the same dataset.)
 
-**The YAML** of a pack dataset is written by Drishti from the pack (read-only; **Narrow it** makes a dataset of your own that `extends` it, [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 14](../guides/BI_GUIDE.md#14-derivation-subset-filter-grain-derive-group)). The part that matters here is the grain:
+**The YAML** of a pack dataset is written by Drishti from the pack (read-only; **Narrow it** makes a dataset of your own that `extends` it, [REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 14](../guides/REPORTS_GUIDE.md#510-a-table-of-your-own-step-by-step)). The part that matters here is the grain:
 
 ```yaml
 rachana: 2
@@ -1167,7 +1167,7 @@ warning: 2 fact tables, each aggregated alone at the query's fields and then joi
 warning: a measure that combines measures of different grains is worked out over the joined results: MTM per exposure
 ```
 
-The sector rows add up to the totals of step 15 (`3,210,381,876.57` and `2,663,018,256`), to the cent. The same question in **Drishti SQL** ([API_GUIDE.md › Drishti SQL](../guides/API_GUIDE.md#drishti-sql-apiv1bisql)): tables are the model's aliases, `JOIN` needs no `ON` (the model's relationships are used), a measure is `MEASURE('name')`:
+The sector rows add up to the totals of step 15 (`3,210,381,876.57` and `2,663,018,256`), to the cent. The same question in **Drishti SQL** ([API_REFERENCE.md › Drishti SQL](../guides/API_REFERENCE.md#8-drishti-sql-apiv1bisql)): tables are the model's aliases, `JOIN` needs no `ON` (the model's relationships are used), a measure is `MEASURE('name')`:
 
 ```text
 $ python3 tools/drishti.py bi sql "SELECT counterparty.SECTOR, MEASURE('MTM') AS mtm, MEASURE('Exposure (EE peak)') AS ee
@@ -1181,7 +1181,7 @@ Government           569,515,006.55  310,533,734.00
 warning: 2 fact tables, each aggregated alone at the query's fields and then joined: [trade, counterparty, netting_set]
 ```
 
-`shape mq`: the statement was one model query, compiled into the same plan a visual asks. In the designer, **Query of the selected visual** shows the bar's question as a model query or as this SQL, with **Run as SQL** ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 19](../guides/BI_GUIDE.md#19-languages-in-the-report-designer)): the visual, the model query and the SQL are one question, so they share one plan and one cached answer per reader.
+`shape mq`: the statement was one model query, compiled into the same plan a visual asks. In the designer, **Query of the selected visual** shows the bar's question as a model query or as this SQL, with **Run as SQL** ([REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 19](../guides/REPORTS_GUIDE.md#83-a-report-on-a-model-fields-own-measures-mq-or-sql)): the visual, the model query and the SQL are one question, so they share one plan and one cached answer per reader.
 
 **What "aggregated alone, then joined" protects you from.** Exposure has no trade in it and P&L has no netting set in it, so a sector's exposure is the sum of that sector's netting sets (76 in all) **once each**, however many trades the sector has; and a sector's MTM is the sum of its trades **once each**, however many netting sets its counterparties have. Add the eleven sector rows of either column and you get step 15's totals, which is the check to run on any model with two facts: the sum of the parts is the whole. A sector whose counterparties have exposure but no trades today keeps its exposure and shows no MTM (empty, not zero), because the join of the two answers keeps both sides.
 
@@ -1304,7 +1304,7 @@ columns:
   EXPOSURE_RANK: {type: decimal, role: attribute}
 ```
 
-Create it in the workspace (**New item**, kind *dataset*, **Paste YAML**, or the dataset wizard's *Python Transform* source, [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](../guides/BI_GUIDE.md#15-the-dataset-wizard-version-2)) and publish it. You should see its page say what one row is and where it comes from:
+Create it in the workspace (**New item**, kind *dataset*, **Paste YAML**, or the dataset wizard's *Python Transform* source, [REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](../guides/REPORTS_GUIDE.md#510-a-table-of-your-own-step-by-step)) and publish it. You should see its page say what one row is and where it comes from:
 
 ![The dataset page of Counterparty table (Python): one row per counterparty, the key counterparty, the source the Python Transform Counterparty table, and the columns with their roles and default measures](img/t18/16-python-dataset.jpg)
 
@@ -1326,7 +1326,7 @@ Bramble Asset Management      Asset management  482,365,089.34  131,153,591.00
 3 row(s)  as of 2026-10-26
 ```
 
-The totals are step 15's, to the cent: the inputs are model queries, so they read all 15,000 trades (no extract is cut here). The Transform's answer is **kept per reader** (until an input changes or `drishti.bi.transform.cache-ttl` passes): a second reader has other rows and masks, so it runs again for them. It runs on the server's compute pool, in its strict sandbox (no network, its own folder, CPU, memory and time limits: [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 7](../guides/BI_GUIDE.md#7-the-sandbox-exactly)), never in the browser; a failure in the code is `DRS-9071` with Python's message, a missing declared column `DRS-9075`. Because its inputs are model queries, a Python dataset can never read more than its reader may: it receives answers that rules and masks have already shaped. When to choose which: **the model** for sums and ratios at any grain (no code; the default); **a Python dataset** when you need code (a rank, a clean-up, a statistical model) and can accept a table computed per reader at one grain; a report on that dataset then reads it through its implicit model, like any other.
+The totals are step 15's, to the cent: the inputs are model queries, so they read all 15,000 trades (no extract is cut here). The Transform's answer is **kept per reader** (until an input changes or `drishti.bi.transform.cache-ttl` passes): a second reader has other rows and masks, so it runs again for them. It runs on the server's compute pool, in its strict sandbox (no network, its own folder, CPU, memory and time limits: [REPORTS_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 7](../guides/NOTEBOOK_GUIDE.md#71-what-the-sandbox-enforces)), never in the browser; a failure in the code is `DRS-9071` with Python's message, a missing declared column `DRS-9075`. Because its inputs are model queries, a Python dataset can never read more than its reader may: it receives answers that rules and masks have already shaped. When to choose which: **the model** for sums and ratios at any grain (no code; the default); **a Python dataset** when you need code (a rank, a clean-up, a statistical model) and can accept a table computed per reader at one grain; a report on that dataset then reads it through its implicit model, like any other.
 
 ## Step 21 · Two readers: each dataset is filtered as the reader, before anything is joined
 
@@ -1387,11 +1387,11 @@ When you do not yet know the question, work it out in the **Notebook** before yo
 
 ![After promoting: Python visual draft saved in your workspace, beside the button, with an Open the draft link](img/t18/19-promote-visual.jpg)
 
-You should see `Python visual draft saved in your workspace` **beside the button you pressed** (with an *Open the draft* link; pressing it again offers **Update that draft** or **Save another**), and the notes: the cell's `df` became the function's `table`, a visual returns an ECharts option, SVG or PNG, and nothing is published for you. Be exact about what was kept: a visual reads **one model query** of its report, so the draft keeps `df` (the first extract); a cell that reads `extract("exposure")` as well belongs in a **Transform** (step 20): **Promote to a Transform** writes the function with each `extract("name")` as a parameter of `run(...)`. The path from an idea to a shared number is therefore: explore in Analyse, put the measures in the **model** when sums and ratios do it (most of the time), or **promote to a Transform** and make a Python dataset when they do not, then build the report. **From the command line** a notebook is an item like the others (`python3 tools/drishti.py bi catalogue get <id>` shows its YAML); its SQL cells run Drishti SQL over the model on the server ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 4](../guides/USER_GUIDE.md#3-sql-cells)).
+You should see `Python visual draft saved in your workspace` **beside the button you pressed** (with an *Open the draft* link; pressing it again offers **Update that draft** or **Save another**), and the notes: the cell's `df` became the function's `table`, a visual returns an ECharts option, SVG or PNG, and nothing is published for you. Be exact about what was kept: a visual reads **one model query** of its report, so the draft keeps `df` (the first extract); a cell that reads `extract("exposure")` as well belongs in a **Transform** (step 20): **Promote to a Transform** writes the function with each `extract("name")` as a parameter of `run(...)`. The path from an idea to a shared number is therefore: explore in Analyse, put the measures in the **model** when sums and ratios do it (most of the time), or **promote to a Transform** and make a Python dataset when they do not, then build the report. **From the command line** a notebook is an item like the others (`python3 tools/drishti.py bi catalogue get <id>` shows its YAML); its SQL cells run Drishti SQL over the model on the server ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 4](../guides/NOTEBOOK_GUIDE.md#23-sql-cells)).
 
 ## Step 23 · How this compares with Power BI
 
-You should see a short, honest table, not a scorecard (the claims about Power BI are the ones of [BI_DESIGN.md section 11](../architecture/BI_DESIGN.md#11-gap-check-against-power-bi), whose own knowledge of Power BI may be stale; check before you quote it):
+You should see a short, honest table, not a scorecard (the claims about Power BI are the ones of [ARCHITECTURE.md §28 section 11](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer), whose own knowledge of Power BI may be stale; check before you quote it):
 
 | | Power BI | Drishti |
 |---|---|---|
@@ -1410,8 +1410,8 @@ Two things a Power BI or SSRS author expects are built. **Field parameters in a 
 down by and which measure it shows. **Statements**: a report page laid out on paper, page by page (paper size, margins, a header and footer with page
 numbers, page breaks, column titles on every page, groups kept together), made as a PDF or Excel and sent by a subscription to many people, **each made as
 that person**. This part builds a model with two field parameters, a report whose chart the reader switches, and a monthly statement that bursts to a
-role. Each step shows the UI, the command line and the YAML. The references are [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](../guides/BI_GUIDE.md#21-field-parameters-in-a-well)
-and [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader).
+role. Each step shows the UI, the command line and the YAML. The references are [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](../guides/REPORTS_GUIDE.md#11-field-parameters)
+and [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/REPORTS_GUIDE.md#12-statements-paginated-reports-page-exact-one-per-reader).
 
 ## Step 24 · A model with two field parameters
 
@@ -1582,12 +1582,12 @@ Move the report to a shared workspace and publish it (Part G). Then on the repor
 `role:desk-head` (or the people), *When* `monthly 1 07:30 business`, *Data for* `previous` (the business day before the run: the statement covers that
 month). **Run now** in the subscription's history: one mail per person, each with their own PDF, *Monthly statement October 2026 hana.pdf*; the history
 shows each delivery with `statement: true` and its page count. A desk head's statement holds their desk's trades only; an analyst's has MTM masked;
-two people with the same rights get the same pages but their name ([BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 2](../guides/BI_GUIDE.md#2-subscriptions)).
+two people with the same rights get the same pages but their name ([REPORTS_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 2](../guides/REPORTS_GUIDE.md#183-subscriptions)).
 
 **From the command line.** A subscription is yours, so it is saved and run from the console while you are signed in: saving one
 (`PUT /api/v1/me/subscriptions/{name}`) or running it (`POST …/{name}/run`) with a personal API token answers `403 DRS-5002 API tokens
 may not call this endpoint`, whatever the token's scopes, because every `/me/**` write is never open to a token
-([API_GUIDE.md › Personal API tokens](../guides/API_GUIDE.md#personal-api-tokens)). A token can read it back once the console has saved it,
+([API_REFERENCE.md › Personal API tokens](../guides/API_REFERENCE.md#28-personal-api-tokens)). A token can read it back once the console has saved it,
 with its runs and deliveries:
 
 ```
@@ -1596,7 +1596,7 @@ $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" $DRISHTI_SERVER/api/v1/me/su
 ```
 
 and make your own statement as a file, which only reads (step 28's `drishti.py bi statement file`, or
-`POST /api/v1/bi/reports/statement/file`, [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader)).
+`POST /api/v1/bi/reports/statement/file`, [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/REPORTS_GUIDE.md#12-statements-paginated-reports-page-exact-one-per-reader)).
 
 **You should see:** after **Run now**, one mail per person in `role:desk-head`, each with their own PDF (*Monthly statement October 2026
 hana.pdf*), and in the subscription's history one delivery per person with `statement: true` and its page count; a desk head's PDF holds
@@ -1623,11 +1623,11 @@ yet), and **as YAML** (what the UI writes, which you can keep in git).
 
 A dataset keeps its rows in layers it builds from the source. They are rebuilt when a data load arrives ([tutorial 12](12-a-day-of-bank-data.md)), when someone
 asks, and on a **schedule** set on the dataset. A dataset is one table of the **model layer** (`rachana: 2`): it says where the rows come from and
-what one row is, and its measures live in a **model** over it ([BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer)).
+what one row is, and its measures live in a **model** over it ([REPORTS_GUIDE.md section 23](../guides/REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads)).
 
 **In the UI** there are two ways to set the schedule, and neither needs the YAML:
 
-- **In the dataset wizard** (**Models → New dataset**, the wizard of [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](../guides/BI_GUIDE.md#15-the-dataset-wizard-version-2)):
+- **In the dataset wizard** (**Models → New dataset**, the wizard of [REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](../guides/REPORTS_GUIDE.md#510-a-table-of-your-own-step-by-step)):
   on the *Columns* step choose **Refresh** *business days at 06:30* (or *when new data loads*); the YAML of the *Save* step shows the line it writes,
   `refresh: business-days 06:30`.
 - **On the dataset's own page**, when it has no schedule: the **Refresh** section says *No refresh schedule* and, for an author who may edit the draft,
@@ -2015,7 +2015,7 @@ DESK-INFL,-1.28917764794E9
 and one line per desk, the largest MTM first. Large amounts are written in exponent form (`4.4844818514400015E9` is 4,484,481,851.44): spreadsheets read
 them as numbers. Every export carries your **business date and slicer choices**, is built as you (masked fields stay
 masked), and is audited; limits (rows per sheet, file size, time) are settings of `drishti.distribution.export.*`. There is no YAML: an export is a
-request, and a **subscription** (step 31) is the export written down. [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding) has them.
+request, and a **subscription** (step 31) is the export written down. [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#18-distribution-the-reports-page-export-and-subscriptions) has them.
 
 ## Step 36 · Say what a number should be
 
@@ -2107,7 +2107,7 @@ fail  Every desk has trades: expected 1 or more, found 0
 
 You should see the same tests fail **as `viewer`**: the model's row rule names `admin`, `risk` and `bi-writer`, and a role no rule names sees no rows
 (the model designer's **Security** tab warns about exactly this, `DRS-9131`). A test run as a role is the quickest way to see what a reader gets. The
-same words work in a report and in a model; [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 17](../guides/BI_GUIDE.md#17-expected-values-tests) has every form of `expect`.
+same words work in a report and in a model; [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 17](../guides/REPORTS_GUIDE.md#912-expected-values-in-a-report) has every form of `expect`.
 
 ## Step 37 · Charts in the workbook, a summary in the mail, a webhook and a text
 
@@ -2121,7 +2121,7 @@ Four small things make what leaves Drishti more useful; none changes how you wor
 
 **A webhook and a text.** An administrator defines webhooks and one text gateway (`drishti.notify.*`, [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtinotify--webhooks-and-text-messages-for-alerts-and-subscriptions)); the form then offers them by name, plus a field for your own mobile number:
 
-You should see a webhook per defined name and, once a gateway is set up, *Text each recipient who has given a number a link to it* (the picture is in [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 6](../guides/BI_GUIDE.md#6-webhooks-and-text-messages)). A webhook post is signed (`X-Drishti-Signature`) and holds the title and a link, never a figure; so does a text. The alert form has the same two boxes. In the subscription's YAML they are `webhooks: [ops]` and `sms: true`. [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 6](../guides/BI_GUIDE.md#6-webhooks-and-text-messages).
+You should see a webhook per defined name and, once a gateway is set up, *Text each recipient who has given a number a link to it* (the picture is in [REPORTS_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 6](../guides/REPORTS_GUIDE.md#184-webhooks-and-text-messages)). A webhook post is signed (`X-Drishti-Signature`) and holds the title and a link, never a figure; so does a text. The alert form has the same two boxes. In the subscription's YAML they are `webhooks: [ops]` and `sms: true`. [REPORTS_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 6](../guides/REPORTS_GUIDE.md#184-webhooks-and-text-messages).
 
 ### Part E · Scheduled searches and subscriptions
 
@@ -2302,7 +2302,7 @@ $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" http://localhost:18480/api/v
 Swap for Vera | after-load trade | pdf | vera | load
 ```
 
-You should see one line for each, its name, schedule, format or destination, recipients and which day's data. [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding) lists the whole API (`PUT /api/v1/me/subscriptions/{name}` and friends, for a session, not a token) and the retry rules.
+You should see one line for each, its name, schedule, format or destination, recipients and which day's data. [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#18-distribution-the-reports-page-export-and-subscriptions) lists the whole API (`PUT /api/v1/me/subscriptions/{name}` and friends, for a session, not a token) and the retry rules.
 
 ### Part F · Live BI and boards
 
@@ -2517,7 +2517,7 @@ You should see `layer live (rollup byDeskBook)`, and the FROM reads `live_3_agg0
 `{"rollup": "byDeskBook", "groups": 603, "incremental": 24948, "recomputedGroups": 8580}` after about half a minute of ticks (603 groups; 24,948 rows moved by
 difference; 8,580 groups whose minimum or maximum was read again). The reader's row rules and masks still apply on top. A measure that is not a plain
 sum, count, minimum or maximum of a column (`Losses` has a condition inside) is computed over the rows; `drishti.bi.live.incremental-aggregates:
-false` turns this off. [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1](../guides/BI_GUIDE.md#71-live-tables-phase-5).
+false` turns this off. [REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1](../guides/REPORTS_GUIDE.md#57-live-tables).
 
 ## Step 47 · A report that follows it
 
@@ -2580,7 +2580,7 @@ its own type, and nothing says "live" because the dataset does:
 ## Step 48 · A wall for the desk: a board
 
 A **board** puts the visuals of several reports on one screen. A board is a **report whose pages have `layout: board`**: its tiles are visuals of other
-reports, and it may hold its own visuals too ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles)). Open **Catalogue → Desk wall** (`/bi/r/file:report:desk-wall`; the 2.3 address
+reports, and it may hold its own visuals too ([REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/REPORTS_GUIDE.md#14-boards-report-pages-of-live-tiles)). Open **Catalogue → Desk wall** (`/bi/r/file:report:desk-wall`; the 2.3 address
 `/bi/b/file:board:desk-wall` opens it too).
 
 ![The Desk wall: tiles from the trading desk report, two of them outlined amber](img/t12/08-board.jpg)
@@ -2602,7 +2602,7 @@ pages:
 ```
 
 A tile is a visual of a report (the report supplies the data, **as the person looking**) placed on a 12-column grid, with an optional `alert`: amber when the `warn` condition holds, red when `crit` does, and the footer says the word as well, so colour is never the only signal. Net MTM below 0 is a warning, below -1 billion critical (Losses: below -1.5 billion, below -2.5 billion);
-the live net MTM here (`-310,188,982`) is below 0 but above -1 billion, hence amber, and Losses (`-1,789,927,256`) likewise. A tile that turns red can also **tell people** (`notify:` on its alert; [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles) section 4). The second page is another report over another live dataset:
+the live net MTM here (`-310,188,982`) is below 0 but above -1 billion, hence amber, and Losses (`-1,789,927,256`) likewise. A tile that turns red can also **tell people** (`notify:` on its alert; [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/REPORTS_GUIDE.md#14-boards-report-pages-of-live-tiles) section 4). The second page is another report over another live dataset:
 
 ![The second page: Counterparty exposure tiles](img/t12/09-board-exposure.jpg)
 
@@ -2617,7 +2617,7 @@ file:report:desk-wall report    promoted  published v1   Desk wall  (Shipped con
 ```
 
 (`--body` prints its YAML: [config/bi/reports/banking/desk-wall.report.yaml](../../config/bi/reports/banking/desk-wall.report.yaml).) A board file of 2.3 (`board:` with `tiles:`) is read as such a report until you convert it:
-`python3 tools/drishti.py bi migrate --boards config/bi/boards --write` writes `config/bi/reports/<name>.report.yaml` ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 12](../guides/BI_GUIDE.md#2312-from-a-board-item-to-a-board-page)).
+`python3 tools/drishti.py bi migrate --boards config/bi/boards --write` writes `config/bi/reports/<name>.report.yaml` ([REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 12](../guides/REPORTS_GUIDE.md#146-designing-a-board)).
 
 ## Step 49 · Kiosk mode
 
@@ -2664,7 +2664,7 @@ Open the **Live trading desk** report again, wait a minute, and scroll to the bo
 
 ![The last-hour line: net MTM and losses, one point every ten seconds, drawn from the server](img/t12/11-history-line.jpg)
 
-You should see a line titled *Net MTM and losses, last hour* with a point for every ten seconds the dataset has been open (the sample dataset is sampled only while someone has it open, so on a freshly started server the line begins when you opened the page; reload it and the points are still there). The line is an ordinary `line` visual over the dataset table `history`: its axis is `history.ts` and its values are the generated measures `MTM history` and `Losses history`. [BI_GUIDE.md](../guides/BI_GUIDE.md#71-live-tables-phase-5) has the rest (grouping by a column, masks, the limits). **On the command line** the points are one visual's answer (twelve samples, the first two minutes; captured):
+You should see a line titled *Net MTM and losses, last hour* with a point for every ten seconds the dataset has been open (the sample dataset is sampled only while someone has it open, so on a freshly started server the line begins when you opened the page; reload it and the points are still there). The line is an ordinary `line` visual over the dataset table `history`: its axis is `history.ts` and its values are the generated measures `MTM history` and `Losses history`. [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#57-live-tables) has the rest (grouping by a column, masks, the limits). **On the command line** the points are one visual's answer (twelve samples, the first two minutes; captured):
 
 ```text
 $ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' -d '{"page":"desk","visual":"last-hour","state":{}}' \
@@ -3022,7 +3022,7 @@ YAML for lineage: it is worked out from the files, never written down.
 ## Step 60 · What breaks if I remove a field
 
 A model is a **contract**: reports bind to its major version (`trades-model@1`), and a change that takes away something they may use needs a **new major
-version** ([BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer)). Before changing a published model, ask.
+version** ([REPORTS_GUIDE.md section 23](../guides/REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads)). Before changing a published model, ask.
 As ann open the model's designer, the **Contract** tab, and set **What consumers may use** to *only what is ticked below*: every field and measure
 consumers use today starts ticked. Untick `trade.PORTFOLIO`.
 
@@ -3181,22 +3181,22 @@ The YAML behind it is the connector's own file (`config/connectors/orders-lake.y
 
 ## Next steps
 
-- [BI_GUIDE.md](../guides/BI_GUIDE.md) for every page of the BI area, [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) for every visual and its wells (sections 3 and 6 are the map and the slicers), [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) for writing a dataset, and [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 17](../guides/BI_GUIDE.md#17-worked-examples-the-shipped-models-row-rules-and-the-model-view) for
+- [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md) for every page of the BI area, [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers) for every visual and its wells (sections 3 and 6 are the map and the slicers), [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads) for writing a dataset, and [REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 17](../guides/REPORTS_GUIDE.md#59-worked-examples-the-shipped-models-row-rules-and-masks) for
   a stack with four people, row rules and masks at work, and the Model view.
-- [BI_GUIDE.md sections 23 and 24](../guides/BI_GUIDE.md#24-the-languages-in-the-console) for models and the model designer, [RACHANA_REFERENCE.md › Rachana-EL expressions](../guides/RACHANA_REFERENCE.md#rachana-el-expressions) for measures (fifty-odd recipes), [API_GUIDE.md › Drishti SQL](../guides/API_GUIDE.md#drishti-sql-apiv1bisql) for Drishti SQL, [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](../guides/BI_GUIDE.md#13-transforms-a-table-in-a-table-out) for Transforms, [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook) for extracts and promotion.
-- [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader): every key of a statement and how the layout decides where a page breaks.
-- [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding): schedules, recipients and retries of a subscription.
-- [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](../guides/BI_GUIDE.md#21-field-parameters-in-a-well): field parameters in every kind of well.
-- [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding): every schedule word, retries, alerts on models and fields, chat bridges, board notifications.
+- [REPORTS_GUIDE.md sections 23 and 24](../guides/REPORTS_GUIDE.md#54-measures-the-expression-language) for models and the model designer, [RACHANA_REFERENCE.md › Rachana-EL expressions](../guides/RACHANA_REFERENCE.md#rachana-el-expressions) for measures (fifty-odd recipes), [API_REFERENCE.md › Drishti SQL](../guides/API_REFERENCE.md#8-drishti-sql-apiv1bisql) for Drishti SQL, [REPORTS_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](../guides/NOTEBOOK_GUIDE.md#4-transforms-a-table-in-a-table-out) for Transforms, [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook) for extracts and promotion.
+- [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/REPORTS_GUIDE.md#12-statements-paginated-reports-page-exact-one-per-reader): every key of a statement and how the layout decides where a page breaks.
+- [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#18-distribution-the-reports-page-export-and-subscriptions): schedules, recipients and retries of a subscription.
+- [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](../guides/REPORTS_GUIDE.md#11-field-parameters): field parameters in every kind of well.
+- [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#18-distribution-the-reports-page-export-and-subscriptions): every schedule word, retries, alerts on models and fields, chat bridges, board notifications.
 - [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md): `bi item`, `bi dataset refresh` and `bi mq` with every option.
-- [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding): export formats (PDF, PNG, Excel, CSV), subscriptions in depth, alerts on numbers, boards, embedding a report in another web application.
-- [USER_GUIDE.md › Scheduled reports](../guides/BI_GUIDE.md#scheduled-reports) is the reference for the CSV reports.
+- [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#18-distribution-the-reports-page-export-and-subscriptions): export formats (PDF, PNG, Excel, CSV), subscriptions in depth, alerts on numbers, boards, embedding a report in another web application.
+- [USER_GUIDE.md › Scheduled reports](../guides/REPORTS_GUIDE.md#181-the-reports-page-and-scheduled-searches) is the reference for the CSV reports.
 - Tutorial 1, Part C made the search; tutorial 12 told Drishti when the data lands, which is what `after-load` waits for.
-- [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles): every tile option, alerts on tiles and notifications, the API. [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1](../guides/BI_GUIDE.md#71-live-tables-phase-5) is the live-table reference.
+- [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/REPORTS_GUIDE.md#14-boards-report-pages-of-live-tiles): every tile option, alerts on tiles and notifications, the API. [REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1](../guides/REPORTS_GUIDE.md#57-live-tables) is the live-table reference.
 - [DEMO_CONNECTOR.md](../../plugins/drishti-plugin-demo/README.md) and [../guides/DATA_GUIDE.md section 11](../guides/DATA_GUIDE.md#11-the-demo-data) say exactly what ticks and how.
 - [Tutorial 9](09-notebook-and-python.md): Python in a measure, a visual and a notebook.
-- [BI_GUIDE.md](../guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments): every rule, setting (`drishti.governance.four-eyes`, `drishti.bi.governance.refuse-breaking`) and error code of this tutorial.
-- [BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer): models, their contract and their versions.
+- [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#17-publishing-and-governance-versions-review-certification-lineage-impact-environments): every rule, setting (`drishti.governance.four-eyes`, `drishti.bi.governance.refuse-breaking`) and error code of this tutorial.
+- [REPORTS_GUIDE.md section 23](../guides/REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads): models, their contract and their versions.
 - [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md): roles and users in depth; tutorial 21 summarises them.
 
 ## If something goes wrong
@@ -3210,9 +3210,9 @@ The YAML behind it is the connector's own file (`config/connectors/orders-lake.y
 | Publish is not offered | the report is in **My workspace**: move it to a shared workspace first |
 | a visual says `DRS-9020` | a slicer or a selection cannot reach that visual through the dataset's relationships |
 | a number is `•••` | the dataset masks it for your role; the report is working as it should |
-| `DRS-9190` on a dataset made of others (`from:` or `derived:`) | a composed or derived dataset, which BI does not read: `drishti.py bi migrate --models` converts it to a model ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 11](../guides/BI_GUIDE.md#11-composed-and-derived-datasets)) |
+| `DRS-9190` on a dataset made of others (`from:` or `derived:`) | a composed or derived dataset, which BI does not read: `drishti.py bi migrate --models` converts it to a model ([REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 11](../guides/REPORTS_GUIDE.md#53-relationships-and-how-a-question-joins)) |
 | `DRS-9021` "the join key ... is masked for you" | a source masks the column the join is made on; join on an unmasked key such as an id |
-| a slicer does not filter a visual of another dataset | no `link` in the report says the two fields are the same ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16](../guides/BI_GUIDE.md#16-reports-over-several-datasets)) |
+| a slicer does not filter a visual of another dataset | no `link` in the report says the two fields are the same ([REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16](../guides/REPORTS_GUIDE.md#913-reports-over-several-models)) |
 | a dataset with amounts guessed a *dimension* | another dataset references it: change its role to *fact* with the select on its box (step 16) |
 | *Add as inactive* on a suggestion | it joins two facts directly; relate both to a dimension they share instead, and dismiss it |
 | `DRS-9156` for a field and a measure | the field's dataset is not reached many-to-one from the measure's fact (a netting set has no desk): group by a field both facts reach, or ask the measure alone |

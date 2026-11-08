@@ -49,7 +49,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
- * The one alert engine's API (API_GUIDE.md "Alerts"): the alerts raised for the caller (acknowledge, resolve, snooze, assign), the caller's
+ * The one alert engine's API (API_REFERENCE.md "Alerts"): the alerts raised for the caller (acknowledge, resolve, snooze, assign), the caller's
  * alert rules (create, change, pause, look now, delete, preview), the rules the packs suggest, the caller's notification stream, and an
  * administrators' overview of everyone's rules, the board tiles that notify and the platform alerts.
  *

@@ -70,7 +70,7 @@ months of curve), not an accumulation.
 | `refresh-minutes` | int | `60` | Minutes between the end of one fetch and the start of the next (a whole number); the first fetch is at start |
 | `timeout-seconds` | int | `20` | The request timeout of each HTTP request (a whole number); the connect timeout is a fixed 10 s |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10). It takes the shared `proxy.*` settings for an outbound HTTP proxy (DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 ## Data structure
@@ -347,4 +347,4 @@ the proxy 10.1.2.3:3128 (Connection refused): check proxy.url and that the proxy
 - [External data feeds](../../docs/guides/EXTERNAL_DATA.md) (drishti-feeds: scheduled pulls of public data into the lakes) and
   [CONFIGURATION.md, the `feed` connector](../../docs/admin/CONFIGURATION.md#feed--public-data-feeds).
 - [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) and [TLS (and the outbound proxy)](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

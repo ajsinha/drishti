@@ -154,7 +154,7 @@ number of changes, and a restart replays one message per entity.
 | `schema-registry.bearer-token-file` | path |  | File whose first line is the bearer token |
 | `schema-registry.timeout-ms` | int | `10000` | Connect and read timeout for a registry call. |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10), also under `schema-registry.tls.*`. It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10), also under `schema-registry.tls.*`. It takes the shared `proxy.*` settings for an outbound HTTP proxy (DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 The site-wide summary is in [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#kafka-tls-proxy); the pack environment variables
@@ -596,4 +596,4 @@ Security errors are in [Common errors and fixes](#common-errors-and-fixes).
 ## See also
 
 - [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) and [TLS](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (combining a stream with a lake; the README standard).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (combining a stream with a lake; the README standard).

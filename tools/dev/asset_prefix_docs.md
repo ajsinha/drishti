@@ -58,7 +58,7 @@ nothing of ours collides with theirs:
 `drishti-console/tests/test_asset_names.py` refuses a new file, global, event, storage key or custom element without the prefix, and a new
 generic class or third-party data- attribute. `tools/dev/asset_prefix.py` makes the change on any checkout (`scan`, `apply`, `check`), from
 the mapping in `tools/dev/asset_prefix_map.yaml`; a second run changes nothing.
-<!-- fragment: docs/architecture/CLIENT_RENDERER.md | before:## 13. The Elements, versioning and distribution -->
+<!-- fragment: docs/guides/EMBED_GUIDE.md | before:## 13. The Elements, versioning and distribution -->
 ### Names a host page sees
 
 The console's scripts and styles keep out of a host's way: every static file we wrote is named `drishti_<name>` (`drishti_tables.js`,

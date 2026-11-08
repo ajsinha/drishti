@@ -532,7 +532,7 @@ harness. Python functions never read memory-only data.
 
 Open a BI report with a matrix (the sample *trades overview*). Every total and subtotal row comes from the pivot engine's
 one statement over the model's rows: the average's total is the average over all the trades, a sum's total is the engine's sum. A
-year-to-date measure shows a dash in the total row; the answer's warnings say why ([BI_GUIDE.md section 3.2](../guides/BI_GUIDE.md#32-true-totals)).
+year-to-date measure shows a dash in the total row; the answer's warnings say why ([REPORTS_GUIDE.md section 3.2](../guides/REPORTS_GUIDE.md#97-true-totals)).
 
 **You should see** the matrix's totals and subtotals as before (the figures are the same: `BiParityTest`) and a dash, with its reason,
 where a measure has no total.
@@ -699,7 +699,7 @@ drishti.py pivot export --view you/morning --format xlsx -o morning.xlsx
   [PIVOT_GUIDE.md, Documents](../guides/PIVOT_GUIDE.md#documents-paths-lists-and-grains).
 - Every setting, the API and the refusals: [PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md) sections 14 to 17.
 - Make a path a column read for everyone: promote it in the connector's `layout.<kind>.columns`
-  ([../guides/DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#8-connectors)) or add it to a BI dataset as a `path:` column ([BI_GUIDE.md](../guides/BI_GUIDE.md)).
+  ([../guides/DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#8-connectors)) or add it to a BI dataset as a `path:` column ([REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md)).
 - [PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md) sections 19 to 22: the languages, the harness, approval, explain, what-if, BI's totals.
 - [ARCHITECTURE.md section 26](../architecture/ARCHITECTURE.md#26-the-pivot-engine) sections 8, 10 and 12: the design.
 - The guide: [PIVOT_GUIDE.md section 29](../guides/PIVOT_GUIDE.md#29-the-mr-cube-preset) (every measure, option, setting and code).

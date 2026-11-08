@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** A pack's kinds as tables (docs/architecture/BI_DESIGN.md 3.6): regenerated, never migrated; a table per kind and per list the pack names. */
+/** A pack's kinds as tables (docs/architecture/ARCHITECTURE.md §28 3.6): regenerated, never migrated; a table per kind and per list the pack names. */
 class PackTablesTest {
 
     @Test

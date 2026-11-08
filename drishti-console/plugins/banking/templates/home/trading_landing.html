@@ -33,7 +33,7 @@
   ("Market data", "market", [("CRV", "Curves"), ("FX", "FX spot"), ("FXV", "FX vols"), ("EQ", "Equities"), ("EQX", "Equity indexes"), ("CMD", "Commodities"), ("CMDC", "Commodity curves"), ("BND", "Bonds"), ("CDS", "Credit curves")]),
 ] %}
 {% block content %}
-{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'landing') %}{# the phone display (docs/guides/PACK_DEVELOPER_GUIDE.md 8) #}
+{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'landing') %}{# the phone display (docs/guides/BUILD_GUIDE.md 8) #}
 {{ back(request) }}
 <div class="tl" data-trading-landing="{{ landing }}">
   <nav class="tl-switch" aria-label="Choose your Home">

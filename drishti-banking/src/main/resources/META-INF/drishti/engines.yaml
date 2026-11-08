@@ -173,7 +173,7 @@ engines:
     console: [/mcube, /api/pivot/mr/]
     words: [MCUBE]
     menus: [mcube]
-    help: [docs-tutorials-07-pivot-cubes-and-explain#part-c--the-mr-cube-desks-by-risk-class-with-the-right-totals]
+    help: []                      # its guide is a section of the Pivot guide and its tutorial a part of the Pivot tutorial, never hidden with it
     landings: [mr-cube]
     tiles: []
     lenses: [mr-cube]

@@ -32,7 +32,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 /**
- * Sets a change to a dataset against the reports that read it (docs/guides/BI_GUIDE.md, "Impact"). It reads the store and the BI folder
+ * Sets a change to a dataset against the reports that read it (docs/guides/REPORTS_GUIDE.md, "Impact"). It reads the store and the BI folder
  * directly and decides nothing about who may see what: the caller filters what it shows. A report names its dataset by catalogue id, shipped file
  * name, the dataset's own name or its title (the viewer's rule); the same rule is used here.
  */

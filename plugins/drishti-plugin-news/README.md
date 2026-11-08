@@ -91,7 +91,7 @@ starts.
 | `retry-factor` | string | `2` | Growth of the wait (2) |
 | `retry-jitter` | string | `0.2` | Random spread of each wait, so many failing reads do not repeat together |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10). It takes the shared `proxy.*` settings for an outbound HTTP proxy (DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 ## Data structure
@@ -147,8 +147,8 @@ $.ITEMS`. An annotated copy is `config/connectors.examples/other/news.yaml`. The
 
 - Below: [turning it on](#turning-it-on), [the pipeline step by step](#the-pipeline-step-by-step), [health, errors and retries](#health-errors-and-retries), [using it from a pack](#using-it-from-a-pack), [how it is built](#how-it-is-built), [tests](#tests).
 - [The yfinance connector](../drishti-plugin-yfinance/README.md) (the same pattern for quotes) and
-  [connectors that compute data on demand](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand).
-- [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors), [TLS (and the outbound proxy)](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy), [packs](../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which).
+  [connectors that compute data on demand](../../docs/guides/DEVELOPER_GUIDE.md#1011-connectors-that-compute-data-on-demand).
+- [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors), [TLS (and the outbound proxy)](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy), [packs](../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which).
 
 ## Turning it on
 
@@ -242,12 +242,12 @@ routes: { news: news }
 
 The shipped example is the `news-and-markets` sample pack: fifteen topics (central banks, countries, companies, themes) and twenty
 listed companies with a quote, a price chart and these headlines
-([PACK_DEVELOPER_GUIDE.md](../../docs/guides/PACK_DEVELOPER_GUIDE.md#sample-packs)).
+([BUILD_GUIDE.md](../../docs/guides/BUILD_GUIDE.md#315-sample-packs)).
 
 **Offline.** In offline mode (`DRISHTI_OFFLINE=true`, [CONFIGURATION](../../docs/admin/CONFIGURATION.md#drishtioffline--offline-mode-no-internet))
 this connector never starts, whatever its file says, and shows *off (offline mode)* in Admin → Connectors. The `news-and-markets` pack's
 `news-store` then serves `news` from a snapshot captured through this connector (`drishti.py testdata capture-market`;
-[PACK_DEVELOPER_GUIDE.md](../../docs/guides/PACK_DEVELOPER_GUIDE.md#news-and-markets-and-world-economy-offline)); it can also be held in
+[BUILD_GUIDE.md](../../docs/guides/BUILD_GUIDE.md#317-the-demo-lakes-where-the-seven-packs-read-their-data)); it can also be held in
 the in-memory lake ([DATA_LAKE_GUIDE.md section 13](../../docs/guides/DATA_LAKE_GUIDE.md#13-the-in-memory-lake)).
 
 ## How it is built
@@ -266,7 +266,7 @@ and `drishti-common` (the shared retry policy), and is Spring-free.
 
 Nothing is stored, so `fetch` does the work; it is safe to call from many virtual threads at once (the cache has one lock held only for
 map operations, and a call in flight is shared); it never holds a thread longer than its timeout; and it reports through `health()` and
-`cacheStats()`. The pattern: [connectors that compute data on demand](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand).
+`cacheStats()`. The pattern: [connectors that compute data on demand](../../docs/guides/DEVELOPER_GUIDE.md#1011-connectors-that-compute-data-on-demand).
 
 ## Tests
 

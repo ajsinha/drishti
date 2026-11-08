@@ -840,7 +840,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
             return subscribeSource(ref, listener);
         }
         // every tick carries what is laid over it; an applied change to the record reads it again and ticks it, also for a record
-        // that no source streams (write-back's viewers, WRITE_BACK.md › The design and its reasons, section 18.5)
+        // that no source streams (write-back's viewers, APPROVALS_GUIDE.md › The design and its reasons, section 18.5)
         Subscription source = subscribeSource(ref, d -> listener.accept(l.apply(d, AsOf.LATEST)));
         Subscription edits = l.watch(ref, () -> fetch(ref).thenAccept(listener));
         if (source == Subscription.NONE && edits == Subscription.NONE) {
@@ -1188,7 +1188,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         return false;
     }
 
-    /** Column batches of the kind over a date range from the first source in routing order that answers as columns (BI_DESIGN.md 6.1). */
+    /** Column batches of the kind over a date range from the first source in routing order that answers as columns (ARCHITECTURE.md §28 6.1). */
     public Optional<com.ash.drishti.api.ArrowScan> scan(com.ash.drishti.api.ScanRequest request) throws Exception {
         for (SourcePlugin p : candidates(request.kind())) {
             Optional<com.ash.drishti.api.ArrowScan> s = p.scan(request);

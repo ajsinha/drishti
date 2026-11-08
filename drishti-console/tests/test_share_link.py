@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pinned links (COLLABORATION.md, build step 1): the sign-in redirect keeps the whole link, the pin is read per request,
+"""Pinned links (ARCHITECTURE.md §31, build step 1): the sign-in redirect keeps the whole link, the pin is read per request,
 the recipient's saved date is never touched, and the banner says how the pin was honoured."""
 import sys
 from pathlib import Path

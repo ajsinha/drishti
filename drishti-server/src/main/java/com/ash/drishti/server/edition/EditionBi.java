@@ -104,7 +104,7 @@ public final class EditionBi {
         switch (kind == null ? "" : kind) {
             case "dataset":
                 return edition.datasetShown(dataset.isEmpty() ? own : dataset);
-            case "table":                                                   // the table layer's tables are BI's datasets (docs/architecture/BI_DESIGN.md step 5)
+            case "table":                                                   // the table layer's tables are BI's datasets (docs/architecture/ARCHITECTURE.md §28 step 5)
                 return edition.datasetShown(root.path("table").asText(own));
             case "model":
                 return edition.modelShown(model.isEmpty() ? own : model);

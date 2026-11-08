@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Reads and writes {@code config/tables/<domain>/<name>.model.yaml} (docs/architecture/BI_DESIGN.md section 3.3): BI's model keys with
+ * Reads and writes {@code config/tables/<domain>/<name>.model.yaml} (docs/architecture/ARCHITECTURE.md §28 section 3.3): BI's model keys with
  * {@code tables:} in place of {@code datasets:}, aliases kept (Q10), measures in Rachana.
  */
 public final class ModelYaml {

@@ -402,8 +402,8 @@ Click the **BI** icon (or type `BI` and press Enter).
 
 ![The BI home: a menu on the left (Home, Catalogue, My workspace and more) and the sections Recent, Favourites, Certified for you and Shared with me](img/t01/09-bi-home.jpg)
 
-You should see the BI home: a menu on the left (Home, Catalogue, My workspace, Datasets, Insights and so on) and, in the middle, the sections *Recent*, *Favourites*, *Certified for you* and *Shared with me*, which fill as you use BI. Business intelligence is Drishti's second front: reports and boards built on models and datasets, with their own guide ([BI_GUIDE.md](../guides/BI_GUIDE.md)) and tutorial
-([tutorial 8, Part A](08-reports-and-dashboards.md#part-a--your-first-bi-report)). The shipped models read the same sixty days of the lakes.
+You should see the BI home: a menu on the left (Home, Catalogue, My workspace, Datasets, Insights and so on) and, in the middle, the sections *Recent*, *Favourites*, *Certified for you* and *Shared with me*, which fill as you use BI. Business intelligence is Drishti's second front: reports and boards built on models and datasets, with their own guide ([REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md)) and tutorial
+([tutorial 10](08-reports-and-dashboards.md#part-a--your-first-bi-report)). The shipped models read the same sixty days of the lakes.
 
 **From the command line** (with the token of Step 9), the catalogue as you may see it:
 
@@ -494,7 +494,7 @@ Press `/` and type `T`.
 
 You should see the mnemonics that start with T (`TOPIC` news topic, `TRD` trade, `TRDR` trader, `TVAL` trade valuation), each with its short name, then entities you opened
 lately. A mnemonic is the first word of a command; every pack that is switched on brings its own. `TRD` is a trade, `CPTY` a counterparty, `NSET` a netting set (the trades with
-one counterparty under one agreement), `CTRD` a counterparty's trades, `BOOK` a book, `CRV` a curve. [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) lists them all.
+one counterparty under one agreement), `CTRD` a counterparty's trades, `BOOK` a book, `CRV` a curve. [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) lists them all.
 
 **From the command line**, the same suggestions come from one call (the answer trimmed to type, mnemonic, id and title):
 
@@ -1075,7 +1075,7 @@ Date           Trade status  Trade version  Quantity  Price        Maturity date
 and 30 rows; the command line keeps `TRD 1000015 30 <GO>`, so `↑` recalls it as typed.
 
 **Programs** read `GET /api/v1/history/trade/1000015?days=30`, or `Drishti.history("trade", "1000015", days=30)` in the Python client
-([API_GUIDE.md (clients)](../guides/API_GUIDE.md#clients-scripts-notebooks-and-excel)).
+([API_REFERENCE.md (clients)](../guides/DEVELOPER_GUIDE.md#113-clients-scripts-notebooks-and-excel)).
 
 ## Step 28 · Reading the table
 

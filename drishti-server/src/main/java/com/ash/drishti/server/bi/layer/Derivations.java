@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Check of a narrowing dataset's derivation against its base (docs/architecture/BI_DESIGN.md section 3.1): a column subset keeps the base's keys
+ * Check of a narrowing dataset's derivation against its base (docs/architecture/ARCHITECTURE.md §28 section 3.1): a column subset keeps the base's keys
  * ({@code DRS-9105}); the de-duplication's key and order, the grouping's columns and a Python column's inputs exist ({@code DRS-9104}, {@code DRS-9101}); a
  * dataset that is already de-duplicated or grouped is not reshaped again (wave B); {@code related(column.field)} follows a column that references a pack kind
  * to a field that kind has ({@code DRS-9101}). And the lineage of a dataset down to its root, whose break is {@code DRS-9110}.

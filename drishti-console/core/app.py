@@ -94,7 +94,7 @@ WORKER_CSP = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-
 _HOST = re.compile(r"^[A-Za-z0-9.\-]+(:\d{1,5})?$|^\[[0-9A-Fa-f:.]+\](:\d{1,5})?$")
 WORKER = "/static/js/drishti_calc-worker.js"
 PYODIDE = "/pyodide/"
-# Wave B (BI_DESIGN.md P3): no BI page loads WebAssembly any more (Perspective and DuckDB-Wasm are gone); only Calc's worker above may compile it.
+# Wave B (ARCHITECTURE.md §28 P3): no BI page loads WebAssembly any more (Perspective and DuckDB-Wasm are gone); only Calc's worker above may compile it.
 EMBED = "/embed/"                           # embedded views for other web applications: off unless embed.enabled (routes/embed_routes.py)
 
 
@@ -551,7 +551,7 @@ def create_app(settings: Settings) -> FastAPI:
     from core import engines as _engines_state
     templates.env.globals["engine_available"] = _engines_state.engine_available   # an engine running here or on a peer (Admin -> Data out: flight)
     from core import phone as _phone
-    templates.env.globals["phone_parts"] = _phone.page_parts         # the phone display on the VaR, exposure and landing pages (docs/guides/PACK_DEVELOPER_GUIDE.md 8)
+    templates.env.globals["phone_parts"] = _phone.page_parts         # the phone display on the VaR, exposure and landing pages (docs/guides/BUILD_GUIDE.md 8)
     templates.env.globals["phone_everything"] = _phone.everything
     app.state.servers = catalogue
     from core.backend_watch import BackendWatch
@@ -667,7 +667,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(drafts_routes.lookup_router)     # an entity field's live search (/api/forms/lookup)
     app.include_router(changes_routes.router)           # write-back: /api/changes, Review -> Changes, Admin -> Edits (before the admin and API routes)
     app.include_router(api_routes.router)
-    app.include_router(render_routes.router)            # the client-side renderer's playground (CLIENT_RENDERER.md section 13)
+    app.include_router(render_routes.router)            # the client-side renderer's playground (EMBED_GUIDE.md section 13)
     app.include_router(elements_routes.router)          # the Drishti Elements gallery (ELEMENTS.md section 10)
     app.include_router(auth_routes.router)
     app.include_router(studio_routes.router)
@@ -732,7 +732,7 @@ def create_app(settings: Settings) -> FastAPI:
         from routes import embed_routes, embed_signin_routes, embed_v2_routes
 
         app.include_router(embed_routes.router)
-        app.include_router(embed_signin_routes.router)       # the renderer's optional sign-in window (auth: 'popup', CLIENT_RENDERER.md 10.1)
+        app.include_router(embed_signin_routes.router)       # the renderer's optional sign-in window (auth: 'popup', EMBED_GUIDE.md 10.1)
         app.include_router(embed_v2_routes.router)           # the embed API v2: the ViewModel as JSON, the renderer, Elements 2.0 (beside v1)
         from routes import embed_report_routes
 

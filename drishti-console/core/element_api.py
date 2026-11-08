@@ -15,7 +15,7 @@
 """The element API of the Drishti Elements 1.x embedding elements (``<drishti-view>``, ``<drishti-report>``, ...; frozen, served at
 ``/embed/v1/elements/<version>/`` for existing embedders) as data: the developer guide's reference tables are generated from it (``markdown_tables``)
 and ``tests/test_element_package.py`` checks it against the real elements. The 1.x npm package and its tool are retired: new work ships in the
-per-library packages (``drishti.py elements pack``). The first contract of CLIENT_RENDERER.md › Drishti Elements: the design, section 13: a removal or a change of meaning here is a major version.
+per-library packages (``drishti.py elements pack``). The first contract of EMBED_GUIDE.md › Drishti Elements: the design, section 13: a removal or a change of meaning here is a major version.
 
 Types are TypeScript source text. Attribute names are the HTML attributes; ``prop`` is the property of the same attribute (camelCase)."""
 from __future__ import annotations

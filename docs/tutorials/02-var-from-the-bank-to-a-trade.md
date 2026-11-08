@@ -1292,7 +1292,7 @@ connector's `lake` must then name `data/iceberg`); `drishti.py var intraday --lo
 - [VAR_GUIDE.md section 3.12](../guides/VAR_GUIDE.md#312-parametric-var-beside-historical-pvar) (the screen) and
   [section 18.15](../guides/VAR_GUIDE.md#1815-parametric-var-and-es-a-cross-check) (the method, EWMA, the 10-day lens, the decomposition).
 - [PARAMETRIC_VAR.md](../guides/VAR_GUIDE.md): the design, the worked example and the open questions.
-- [API_GUIDE.md, VaR engine](../guides/API_GUIDE.md#var-engine-apiv1riskvar): the `parametric` block, `parametric=false`, `matrix=true`,
+- [API_REFERENCE.md, VaR engine](../guides/API_REFERENCE.md#19-var-engine-apiv1riskvar): the `parametric` block, `parametric=false`, `matrix=true`,
   `measure=parametric`; [CLI_REFERENCE.md, var](../guides/CLI_REFERENCE.md#var-the-var-engine): `--no-parametric`, `--matrix`, `--measure`.
 - [Tutorial 7, Part C](07-pivot-cubes-and-explain.md#part-c--the-mr-cube-desks-by-risk-class-with-the-right-totals): the MR cube.
 

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The renderer's sign-in window on the console's side (CLIENT_RENDERER.md 10.1; routes/embed_signin_routes.py), without a browser: the
+"""The renderer's sign-in window on the console's side (EMBED_GUIDE.md 10.1; routes/embed_signin_routes.py), without a browser: the
 check a page makes before any window, the window's start (registered origins only, PKCE to the provider, back to its own callback), the
 callback (the server verifies the ID token and makes the embed token for the origin; the page gets it by postMessage at its exact origin),
 the silent renewal while the provider's session lasts, and the same-tab flow's one-time code. The browser half is in

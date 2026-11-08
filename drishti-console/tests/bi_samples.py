@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The shipped BI samples a test stack copies into its scratch config (since the switch to the table layer: a model and the tables it reads in
-config/tables/bi, docs/architecture/BI_DESIGN.md step 5). ``copy_samples(bi_dir, ["trades-basic", "trading-risk"])`` copies each sample with
+config/tables/bi, docs/architecture/ARCHITECTURE.md §28 step 5). ``copy_samples(bi_dir, ["trades-basic", "trading-risk"])`` copies each sample with
 everything it needs into ``bi_dir``'s sibling ``tables/bi`` (the server's ``drishti.tables.root``, ``./config/tables`` from the stack's
 folder): its model, the tables the model reads, a table's base, the models a table's source asks and the Python items they run."""
 from __future__ import annotations

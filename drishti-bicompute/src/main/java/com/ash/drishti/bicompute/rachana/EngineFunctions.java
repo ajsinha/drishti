@@ -155,7 +155,7 @@ public final class EngineFunctions implements FunctionProvider {
     }
 
     /**
-     * The functions of a model's measures the engine computes over an answer (docs/architecture/BI_DESIGN.md 2.5, runs E): the filter context,
+     * The functions of a model's measures the engine computes over an answer (docs/architecture/ARCHITECTURE.md §28 2.5, runs E): the filter context,
      * time intelligence, windows, balances, {@code convert} and {@code ratio}. Their signatures are checked mode's; the one compiler
      * ({@code lang.Compiler}) lowers them. Over a list they are refused in words, except {@code ratio}, which is a division (null on 0).
      */

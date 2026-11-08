@@ -23,7 +23,7 @@ import java.util.Locale;
 import java.util.Set;
 
 /**
- * The date scalars DEL had that Rachana gains with the fold (docs/architecture/BI_DESIGN.md 2.5, rows 11, 17, 18 and 57): {@code timestamp},
+ * The date scalars DEL had that Rachana gains with the fold (docs/architecture/ARCHITECTURE.md §28 2.5, rows 11, 17, 18 and 57): {@code timestamp},
  * {@code business_days_between} and {@code shift_date}. DEL's {@code round}, {@code len}, {@code date} and the date parts are Rachana's
  * one implementations in {@link NumberFunctions}, {@link TextParts} and {@link DateParts}. Each keeps its DEL entry's edge cases: null in, null out; a date is ISO text and
  * a date result ISO text; {@code week} is the ISO week; business days are the platform's calendars ({@code USNY} when none is named).

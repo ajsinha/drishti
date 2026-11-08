@@ -802,4 +802,4 @@ The pack's files are written by `tools/packgen/banking/make_docs.py`; its `--che
 
 - [Market data pack](guides/market-data.md): Curves, surfaces, prices and fixings: kinds, connectors and examples.
 - [Market-data catalogue](guides/market-data-catalogue.md): Every curve, surface, spot and fixing the pack defines, and how products select them.
-- [Packs](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

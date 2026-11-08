@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The client-side renderer's distribution and rules, without a browser (docs/architecture/CLIENT_RENDERER.md sections 5, 9 and 13):
+"""The client-side renderer's distribution and rules, without a browser (docs/guides/EMBED_GUIDE.md sections 5, 9 and 13):
 a version's folder is immutable (its integrity record matches every file), the sheet is generated and current, the sources never write
 markup or evaluate code, nothing comes from a CDN, every file carries the licence and stays under the size cap, every kind of the grammar
 is drawn, and the console's routes the library needs (the playground and the raw stream) answer."""

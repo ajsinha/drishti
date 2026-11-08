@@ -21,7 +21,7 @@
      PageUp / PageDown     a page of rows        Tab / Shift+Tab     next / previous cell, wrapping to the next row
      Shift+Arrows          stretch the range     Shift+Space         select the row        Ctrl+A   select all
      Space                 toggle the row's selection, or a group open
-     Right / Left on a group row's first cell: open / close it (ARCHITECTURE.md section 26.8: Shift+Right opens everything below)
+     Right / Left on a group row's first cell: open / close it (PIVOT_ENGINE.md section 11: Shift+Right opens everything below)
      Enter or F2           edit (an editable cell) or open (a group, a link, Explain)
      Ctrl+C                copy (the range, else the cell)          Escape   clear the range, or leave editing
      E                     Explain this figure (when the grid has an Explain hook)

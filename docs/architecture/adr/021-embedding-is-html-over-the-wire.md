@@ -44,9 +44,9 @@ had to be decided: **where the rendering happens**, and **how the code reaches t
 ## Consequences
 - Every fix to a panel or a visual reaches embedded views and reports with the console, with no second change.
 - A report in an element cannot do what needs WebAssembly (Perspective) under a strict host policy, nor the viewer's navigation to other console pages: those are
-  listed, not faked ([CLIENT_RENDERER.md › Drishti Elements: the design, section 18](../CLIENT_RENDERER.md#185-not-built)).
+  listed, not faked ([EMBED_GUIDE.md › Drishti Elements: the design, section 18](../../guides/EMBED_GUIDE.md#53-drishti-report-a-published-report)).
 - The console is a dependency of the host page (it must be reachable from the browser and named in the host's policy); the element has no offline mode.
 - Considered and rejected: an iframe (the reasons above); a JavaScript renderer of ViewModels (a second renderer); a library bundled with every host (it would not match
   the console's data); embedding by the host's server fetching HTML (no live updates, no per-user token on every call).
 
-Design and as-built notes: [CLIENT_RENDERER.md](../CLIENT_RENDERER.md#20-drishti-elements-the-design). Developer guide: [architecture/CLIENT_RENDERER.md](../CLIENT_RENDERER.md#19-drishti-elements-developer-guide).
+Design and as-built notes: [EMBED_GUIDE.md](../ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements). Developer guide: [guides/EMBED_GUIDE.md](../../guides/EMBED_GUIDE.md#5-the-elements-one-by-one).

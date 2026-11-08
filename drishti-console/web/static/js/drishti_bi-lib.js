@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Rupaka phase 3: what the report viewer, the designer and the Model view share (BI_DESIGN.md › Rūpaka: the original design and every phase as built, sections 6.2, 8 and 9): DOM building with text only (never markup
+/* Rupaka phase 3: what the report viewer, the designer and the Model view share (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, sections 6.2, 8 and 9): DOM building with text only (never markup
    strings), the same-origin JSON calls to /bi/api (passed on to the server under the signed-in user's identity), number formats, the chart palettes and the
    few helpers about report models. Exposes window.drishtiBi. */
 (function () {
@@ -86,7 +86,7 @@
   };
 
   /**
-   * A question asked as a run (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 6): POST with `Prefer: respond-async, wait=<seconds>`. The server waits that long and answers 200 with the
+   * A question asked as a run (ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 6): POST with `Prefer: respond-async, wait=<seconds>`. The server waits that long and answers 200 with the
    * answer (drawn as today, no run is visible) or 202 with the run that goes on in the background. Resolves with one of
    *   {answer}            done in time
    *   {run}               a visible run (202): draw a run card and follow it

@@ -33,7 +33,7 @@
   ("Equity and commodities", "equity", [("EQ", "Equities"), ("EQX", "Equity indexes"), ("DIV", "Dividend curves"), ("EQV", "Equity vol surfaces"), ("CMD", "Commodities"), ("CMDC", "Commodity curves"), ("CMDV", "Commodity vols"), ("CORR", "Correlation matrices")]),
 ] %}
 {% block content %}
-{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'landing') %}{# the phone display (docs/guides/PACK_DEVELOPER_GUIDE.md 8) #}
+{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'landing') %}{# the phone display (docs/guides/BUILD_GUIDE.md 8) #}
 {{ back(request) }}
 <div class="ml" data-market-landing="{{ landing }}" data-stale-days="{{ stale_days }}">
   <nav class="ml-switch" aria-label="Choose your Home">

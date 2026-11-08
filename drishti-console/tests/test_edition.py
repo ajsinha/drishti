@@ -29,7 +29,7 @@ from core.config import load_settings
 
 # today's top bar (the full product): every item the menus drew before editions, by link
 TODAY = ["/t", "/s", "/forms", "/func", "/datamap", "/reports", "/w", "/m", "/alerts", "/build/new", "/build/pack/new", "/build",
-         "/approvals", "/what", "/help/tutorials", "/help/pack-developer-guide", "/admin/users", "/admin/roles",
+         "/approvals", "/what", "/help/tutorials", "/help/build-guide", "/admin/users", "/admin/roles",
          "/admin/audit", "/admin/packs", "/admin/connectors", "/admin/artifacts", "/admin/loads", "/admin/lakes", "/admin/collab",
          "/admin/embedding", "/admin/net", "/admin/health", "/admin/caches", "/help", "/help/operations#2-install-and-run-on-one-machine", "/about"]
 RISK_ABOUT = {"product": "Drishti Risk", "tagline": "VaR and exposure from your own pricing data", "edition": {"name": "risk", "title": "Drishti Risk"}}
@@ -126,9 +126,9 @@ def test_the_risk_edition_follows_its_file_on_every_surface(backend, monkeypatch
     # help: the BI and Build categories hidden, and a guide that is not listed is not reached by its address
     centre = help_pages(c)
     assert 'href="/help/operations"' in centre and 'href="/help/knowledge-risk"' in centre
-    assert 'href="/help/bi-guide"' not in centre and 'href="/help/pack-developer-guide"' not in centre
+    assert 'href="/help/bi-guide"' not in centre and 'href="/help/build-guide"' not in centre
     assert 'href="/help/knowledge-world"' not in centre                           # a Knowledge page of a pack the edition leaves out
-    for slug in ("bi-guide", "pack-developer-guide", "knowledge-world"):
+    for slug in ("bi-guide", "build-guide", "knowledge-world"):
         assert c.get(f"/help/{slug}").status_code == 404, slug
     assert c.get("/help/operations").status_code == 200
     from core.guides import Library
@@ -250,7 +250,7 @@ def test_the_world_edition_follows_its_file_on_every_surface(backend, monkeypatc
     centre = help_pages(c)
     for slug in ("knowledge-world", "knowledge-data", "bi-guide", "external-data"):
         assert f'href="/help/{slug}"' in centre, slug
-    for slug in ("knowledge-risk", "pack-developer-guide"):
+    for slug in ("knowledge-risk", "build-guide"):
         assert f'href="/help/{slug}"' not in centre and c.get(f"/help/{slug}").status_code == 404, slug
 
 
@@ -390,7 +390,7 @@ def test_the_market_edition_follows_its_file_on_every_surface(market, monkeypatc
     centre = help_pages(c)
     for slug in ("knowledge-data", "user-guide", "data-samples"):
         assert f'href="/help/{slug}"' in centre, slug
-    for slug in ("knowledge-risk", "knowledge-world", "pack-developer-guide"):
+    for slug in ("knowledge-risk", "knowledge-world", "build-guide"):
         assert f'href="/help/{slug}"' not in centre and c.get(f"/help/{slug}").status_code == 404, slug
 
 
@@ -565,7 +565,7 @@ def test_the_trading_edition_follows_its_file_on_every_surface(trading, monkeypa
     centre = help_pages(c)
     for slug in ("knowledge-risk", "knowledge-data", "user-guide"):
         assert f'href="/help/{slug}"' in centre, slug
-    for slug in ("knowledge-world", "pack-developer-guide"):
+    for slug in ("knowledge-world", "build-guide"):
         assert f'href="/help/{slug}"' not in centre and c.get(f"/help/{slug}").status_code == 404, slug
 
 

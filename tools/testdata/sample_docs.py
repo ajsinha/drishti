@@ -114,7 +114,7 @@ FOLD_WHAT = {
 #: guide sections and tutorials of a kind: (document under docs/, the heading's start); anchors are computed from the heading
 _VAR = [("guides/VAR_GUIDE.md", "15.13 "), ("tutorials/02-var-from-the-bank-to-a-trade.md", "# ")]
 _EXP = [("guides/EXPOSURE_GUIDE.md", "16. "), ("tutorials/03-exposure-from-the-bank-to-a-trade.md", "# ")]
-_TRD = [("guides/PACK_DEVELOPER_GUIDE.md", "Trading"), ("knowledge/risk.md", "3. Trades"),
+_TRD = [("guides/BUILD_GUIDE.md", "Trading"), ("knowledge/risk.md", "3. Trades"),
         ("tutorials/11-correct-and-approve.md", "# ")]
 LINKS = {
     "trade": _TRD,

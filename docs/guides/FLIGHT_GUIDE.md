@@ -47,7 +47,7 @@ in-memory lake; Java; Excel through Python) are in [examples/clients](../../exam
 
 | You want | Use |
 |---|---|
-| a figure, a document, a search, from a script, a few rows at a time | the REST API ([API_GUIDE.md](API_GUIDE.md)) with the same token |
+| a figure, a document, a search, from a script, a few rows at a time | the REST API ([API_REFERENCE.md](API_REFERENCE.md)) with the same token |
 | a table in a browser page (Drishti's own screens, an embedded view) | Arrow over HTTP: the page asks with `Accept: application/vnd.apache.arrow.stream` ([DATA_GUIDE.md](DATA_GUIDE.md)) |
 | a whole table, a model's answer, a scope's P&L vectors into pandas, polars, Spark, a Java or .NET service, a JDBC tool | **Flight** |
 | live updates in a program (each intraday VaR batch, each append to an in-memory table) | **Flight**, a stream ([section 7](#7-live-streams-and-resuming)) |
@@ -101,7 +101,7 @@ apply, and the audit records both names. An embed token (Drishti Elements, an ap
 the same way.
 
 Command line: the REST call that makes a token takes the scope too (`POST /api/v1/me/tokens` with `{"name": "risk notebook", "days": 30,
-"scopes": ["data:read"]}`, [API_GUIDE.md](API_GUIDE.md#personal-api-tokens)).
+"scopes": ["data:read"]}`, [API_REFERENCE.md](API_REFERENCE.md#28-personal-api-tokens)).
 
 ## 4. What can be read, and how each is named
 
@@ -248,7 +248,7 @@ Export data's own line (`data.flight` on the kind).
 - **The map**: clients on the left, nodes on the right, a line per live stream (its thickness the bytes, red when refused), the selected
   stream's detail in a panel.
 
-Both read `GET /api/v1/admin/data-out` ([API_GUIDE.md](API_GUIDE.md)); Stop is `POST /api/v1/admin/data-out/streams/{id}/stop` (the client
+Both read `GET /api/v1/admin/data-out` ([API_REFERENCE.md](API_REFERENCE.md)); Stop is `POST /api/v1/admin/data-out/streams/{id}/stop` (the client
 gets `DRS-5610`).
 
 ## 10. Operations
@@ -295,7 +295,7 @@ action `health` answers a node's state to a probe holding a token.
 ## 12. Flight SQL: SQL over the BI models from JDBC and ODBC tools
 
 **Flight SQL** is the SQL dialect of Arrow Flight that the JDBC and ODBC drivers speak. Drishti answers it on the same port, read only, as
-SQL over the **BI models**: a statement is written in the server's own SQL (DSQL, [API_GUIDE.md › Drishti SQL](API_GUIDE.md#drishti-sql-apiv1bisql))
+SQL over the **BI models**: a statement is written in the server's own SQL (DSQL, [API_REFERENCE.md › Drishti SQL](API_REFERENCE.md#8-drishti-sql-apiv1bisql))
 and answered by the same path as `POST /api/v1/bi/sql`, never by a second SQL engine. Each statement becomes a `form: model` read
 (`{"model": …, "sql": …}`), so the token, its `data:read` scope (or `data:read:bi`), the BI power, the model's row rules and masks, busy
 protection, the limits, Admin → Data out and the audit apply exactly as for any other read.

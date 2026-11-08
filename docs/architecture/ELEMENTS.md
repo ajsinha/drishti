@@ -20,7 +20,7 @@
 what each library is, what it takes over from today's code, the grid's pivot, the AG Grid-style adapter, the chart spec and the maps,
 packaging and licensing, the documentation of every library, the gallery, the guards, the order in which Drishti's screens move, the
 risks and the product owner's decisions. The renderer, the embed API and Elements 2.x (`<drishti-view>`) are designed in
-[CLIENT_RENDERER.md](CLIENT_RENDERER.md) and are not repeated here.
+[EMBED_GUIDE.md](../guides/EMBED_GUIDE.md) and are not repeated here.
 
 ## Contents
 
@@ -116,9 +116,9 @@ only shrinks and is capped; section 12.3 lists every authoring screen and its st
 
 - **No framework required.** Each component is a **web component** (`<drishti-grid>`, `<drishti-chart>`, …) and a **plain JavaScript
   class** with the same options (`new Grid(el, options)`); React, Angular and Vue use them as they use any custom element (the samples of
-  [CLIENT_RENDERER.md section 19](CLIENT_RENDERER.md#19-drishti-elements-developer-guide) extend to every library).
+  [EMBED_GUIDE.md section 19](../guides/EMBED_GUIDE.md#5-the-elements-one-by-one) extend to every library).
 - **Plain ES modules, no build step**, readable as served; one entry per library plus its stylesheet, a `.d.ts` and an integrity record
-  ([the renderer's shape](CLIENT_RENDERER.md#3-the-librarys-shape) and [versioning](CLIENT_RENDERER.md#13-the-elements-versioning-and-distribution) apply to all eight).
+  ([the renderer's shape](ARCHITECTURE.md#302-the-renderer-as-an-elements-library) and [versioning](../guides/EMBED_GUIDE.md#10-versions-integrity-and-lifecycle) apply to all eight).
 - **Vendored, never a CDN**; every file of ours carries the `drishti_` prefix inside the console and the library name outside it.
 - **Files under 1,500 lines**; object-oriented, configuration-driven, no globals beyond one namespace (`window.Drishti.<Library>` for
   hosts without modules).
@@ -230,7 +230,7 @@ no second implementation. Takes over: `drishti_about.js`, `drishti_about-hints.j
 
 ### 4.7 drishti-renderer
 
-The renderer of [CLIENT_RENDERER.md](CLIENT_RENDERER.md) becomes library 7 (renderer 2.0.0): it draws panels with drishti-grid and
+The renderer of [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md) becomes library 7 (renderer 2.0.0): it draws panels with drishti-grid and
 drishti-chart instead of its own `m/tables.js` and `m/charts.js`, and `behaviours: 'console'` loads library components instead of console
 scripts. Elements 2.x (`<drishti-view>`, `<drishti-panel>`, `<drishti-report>`) move with it unchanged; the name **Drishti Elements**
 now means the family of eight. Takes over: the renderer's entry and `m/` modules, `drishti_screen-grid.js`, `drishti_layout.js`,
@@ -324,7 +324,7 @@ written from AG Grid's public documentation only, never its source code, type fi
 looks and behaves like drishti-grid. Every option not taken in full is reported once in the console (named, with drishti-grid's way) and
 by `reportUnsupported()`; the adapter never fails silently.
 
-**As built** (2.9.11.e, drishti-grid 0.4.0; the migration guide: [AG_GRID_MIGRATION_GUIDE.md](../guides/ELEMENTS_IN_YOUR_APP.md#9-moving-an-ag-grid-enterprise-pivot-app)):
+**As built** (2.9.11.e, drishti-grid 0.4.0; the migration guide: [AG_GRID_MIGRATION_GUIDE.md](../guides/EMBED_GUIDE.md#14-moving-an-ag-grid-enterprise-pivot-app)):
 
 - **The mapping's one home is the code**: `AG_MAPPING` and `AG_NOT_COVERED` in `drishti_grid-ag-map.js`, each row an option group with
   its state (mapped, partial, unsupported, no-op) and its drishti-grid form. The gallery's AG Grid tab and the migration guide's option
@@ -421,7 +421,7 @@ Alaska and Hawaii insets) and Canada, a conic fitted to the country otherwise.
 
 **Where the files live.** Each library is a folder per version, `drishti-console/web/static/elements/<library>/<version>/` (entry,
 modules, stylesheet, `.d.ts`, `integrity.json`), served as `/static/elements/…` to the console and `/embed/v2/elements/…` to other
-origins with the rules of [CLIENT_RENDERER.md section 13](CLIENT_RENDERER.md#13-the-elements-versioning-and-distribution) (immutable
+origins with the rules of [EMBED_GUIDE.md section 13](../guides/EMBED_GUIDE.md#10-versions-integrity-and-lifecycle) (immutable
 released folders, SRI, a partial version redirecting to the exact one). drishti-risk's folder lives in the banking module's plugin and
 is served from `/static/banking/elements/risk/<version>/` behind the entitlement check.
 
@@ -432,7 +432,7 @@ one train or single libraries. Elements 2.x and the renderer's 1.x keep working 
 **Outside Drishti** (as built: 8.7). Never a public CDN or registry. An application takes two packed files
 (`drishti.py elements pack`), the release archive `drishti-elements-<version>.zip`, the npm tarballs `@drishti/elements-<name>` from
 an internal registry, or the WebJar from an internal Maven repository; the guide is
-[ELEMENTS_IN_YOUR_APP.md](../guides/ELEMENTS_IN_YOUR_APP.md).
+[EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app).
 
 **Licensing.** Libraries 1 to 7 ship with the product. **drishti-risk is licensed with the banking module** and every later domain
 library with its module: an unlicensed module's library is not served, its kinds are not registered, and its gallery pages are hidden.
@@ -870,9 +870,9 @@ library with its module: an unlicensed module's library is not served, its kinds
 
 ### 8.5 As built: drishti-renderer 2.0.0
 
-The client renderer is library 7 (CLIENT_RENDERER.md is its one home: [section 3](CLIENT_RENDERER.md#3-the-librarys-shape) the modules and
-what each library draws, [section 6](CLIENT_RENDERER.md#6-formats-and-tones) the rounding, [section 13](CLIENT_RENDERER.md#13-the-elements-versioning-and-distribution)
-versions and the migration from 1.x, [section 14.4](CLIENT_RENDERER.md#144-renderer-200-against-the-macros-2026-11-07) parity). What the
+The client renderer is library 7 (EMBED_GUIDE.md is its one home: [section 3](ARCHITECTURE.md#302-the-renderer-as-an-elements-library) the modules and
+what each library draws, [section 6](ARCHITECTURE.md#303-the-view-macros-shared-with-the-console) the rounding, [section 13](../guides/EMBED_GUIDE.md#10-versions-integrity-and-lifecycle)
+versions and the migration from 1.x, [section 14.4](ARCHITECTURE.md#308-the-parity-suite) parity). What the
 other libraries gained for it:
 
 - **drishti-grid, the document table** (`drishti_doc-table.js`, `drishti_doc-behave.js`): the grid draws the server's table as it speaks
@@ -948,7 +948,7 @@ pager) fold into `consoleTables`.
 ### 8.7 As built: the distribution
 
 Other applications take the libraries as files kept inside the organisation; nothing is published to a public registry or CDN (the
-owner's decision of 2026-11-07). How to use them: [ELEMENTS_IN_YOUR_APP.md](../guides/ELEMENTS_IN_YOUR_APP.md). How they are made:
+owner's decision of 2026-11-07). How to use them: [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app). How they are made:
 
 - **One code path, three forms** (`tools/elements/dist.py`, offline, Python only). A library's files are laid out as the console's
   static root: `elements/<library>/src/*.js` (the ES modules), its bundle, its own sheets from the manifest's `css`, the vendored
@@ -1289,7 +1289,7 @@ generated, never written twice) every library has:
 | **API reference** (every option, event, method, type and CSS custom property) | library | Help → Developer → Elements, and the gallery's API tab | **generated** from typed JSDoc by `tools/elements/api_ref.py`; `--check` fails the build when a public member has no description or a type is missing |
 | **Tutorial** (one task end to end: a pivot over your own data, a chart with Explain, a world map with drill) | library | `docs/tutorials/`, numbered with the others | written, with screenshots from the gallery |
 | **Live gallery** (runnable examples) | component | `/elements/gallery/<library>/<component>` | the examples are files the tests also run (section 10) |
-| **Migration guide from AG Grid Enterprise (pivot)** | drishti-grid | [`docs/guides/ELEMENTS_IN_YOUR_APP.md`](../guides/ELEMENTS_IN_YOUR_APP.md#9-moving-an-ag-grid-enterprise-pivot-app) | written; its option table is **generated** from the adapter's mapping (`AG_MAPPING` in `drishti_grid-ag-map.js`, the one home) by `tools/docs/elements_api.py` |
+| **Migration guide from AG Grid Enterprise (pivot)** | drishti-grid | [`docs/guides/EMBED_GUIDE.md`](../guides/EMBED_GUIDE.md#14-moving-an-ag-grid-enterprise-pivot-app) | written; its option table is **generated** from the adapter's mapping (`AG_MAPPING` in `drishti_grid-ag-map.js`, the one home) by `tools/docs/elements_api.py` |
 | **Theming guide** | the family | `docs/guides/elements/theming.md` | written (planned); the list of tokens is generated from drishti-core's token file |
 | **Accessibility guide** | the family | `docs/guides/elements/accessibility.md` | written (planned); each component's keyboard table is generated from its keymap registration |
 | **Changelog** | library | `static/elements/<library>/CHANGELOG.md`, shown on the gallery's Changelog tab | written per release; the product `CHANGELOG.md` links it rather than repeating it |
@@ -1610,7 +1610,7 @@ g1 was decided separately: the grid's three layouts (section 5.1).
   packing and the gallery include it
 - [ ] drishti-risk in the banking plugin, licensed
 - [x] The distribution (8.7): per-library packages with `.d.ts`, themes, `drishti.py elements pack` with the banking exclusion, the
-  zip with SRI hashes, npm tarballs for an internal registry, the WebJar (`-P elements`); the guide ELEMENTS_IN_YOUR_APP.md
+  zip with SRI hashes, npm tarballs for an internal registry, the WebJar (`-P elements`); the guide EMBED_GUIDE.md
 - [ ] The licence check (2.9.11.i) replaces `--include-domain` as the gate on drishti-risk
 - [x] The gallery in both modes, `playground` (default) and `docs` (g4 A and B), every component and example run in its browser file, the grid in both themes and three densities, a keyboard/ARIA smoke check on every demo (8.4)
 - [ ] axe vendored for the gallery's check; every example in both themes and three densities

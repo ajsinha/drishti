@@ -16,7 +16,7 @@
 table layer, and ``config/bi/models/<pack>-<kind>.model.yaml``): one
 table for the documents and one for EVERY array at every depth (legs, each leg's cash flows, each flow's resets, events), each row of a
 nested table carrying the keys of the levels above it (``$.TRADE_ID``, ``^.LEG_ID``, ``^^.FLOW_ID``), every table joined to its document,
-and measures that count and add up each level. A deploy imports it into the pack's BI workspace (BI_GUIDE.md, BI content in packs)."""
+and measures that count and add up each level. A deploy imports it into the pack's BI workspace (REPORTS_GUIDE.md, BI content in packs)."""
 from __future__ import annotations
 
 import re

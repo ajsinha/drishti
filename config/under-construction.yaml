@@ -18,7 +18,7 @@
 #   treatment: hidden               left out
 # The data stays in the lake; only what is displayed changes. The server rewrites a kind's Sutra when it is matched (strip items and kv or
 # table columns by their bind, panels by their id); the console hides or marks the menu items and help pages named here. A new item that
-# depends on unbuilt work is registered here in the same change (PACK_DEVELOPER_GUIDE.md, "Unbuilt work: the under-construction registry").
+# depends on unbuilt work is registered here in the same change (BUILD_GUIDE.md, "Unbuilt work: the under-construction registry").
 #
 # Each item: id, what (field | panel | menu item | help page | contract | decision | engine | test), about, release (the release that builds it),
 # treatment, and where it appears: sutras (kind, binds, panels), menus (menu item ids), help (help page slugs), contracts (contract

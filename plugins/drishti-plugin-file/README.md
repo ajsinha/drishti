@@ -127,7 +127,7 @@ A line is one JSON object, in either form (a file may mix them):
   served and searches over it say `partial` with the reason. (A row with `columns` is indexed without parsing its `doc`; a `doc` that
   itself breaks a limit serves searches from its columns and fails to open with the limit named.)
 - **Promoted fields** are declared by the pack on the connector that stores the kind (`layout.<kind>.columns`, chosen as for every store:
-  [PACK_DEVELOPER_GUIDE.md, Large kinds](../../docs/guides/PACK_DEVELOPER_GUIDE.md#large-kinds-the-lake-layout)); the `files` profile (`SPRING_PROFILES_ACTIVE=files`) switches the
+  [BUILD_GUIDE.md, Large kinds](../../docs/guides/BUILD_GUIDE.md#51-large-kinds-the-lake-layout)); the `files` profile (`SPRING_PROFILES_ACTIVE=files`) switches the
   banking packs' store connectors to this plugin and keeps their settings. The trades are read per source system (`trade-endur`,
   `trade-calypso`, `trade-murex`), which the profile does not rename: point files at the trades with connector files of those names.
 
@@ -239,7 +239,7 @@ SPRING_PROFILES_ACTIVE=files DRISHTI_PACKS=market-risk,counterparty-risk java -j
   or kind like `../x`) is refused.
 
 The connector never writes and has no `writes:`; write-back keeps corrections as overlays in the Drishti database and the loader folds
-approved ones into the next build ([WRITE_BACK.md](../../docs/guides/WRITE_BACK.md#52-who-performs-the-write)).
+approved ones into the next build ([APPROVALS_GUIDE.md](../../docs/architecture/ARCHITECTURE.md#316-where-a-write-lands-overlays-owned-rows-and-the-outbox)).
 
 ## Memory, size and measured results
 
@@ -327,4 +327,4 @@ fixing/X.csv --rows-document --out fixing.jsonl` writes the JSON Lines line that
   [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors); ready-made files in `config/connectors.examples/files/`.
 - [Demo data](../../docs/guides/DATA_GUIDE.md#11-the-demo-data) (the rows the loaders write) and
   [the data lake guide](../../docs/guides/DATA_LAKE_GUIDE.md) (the load rules).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

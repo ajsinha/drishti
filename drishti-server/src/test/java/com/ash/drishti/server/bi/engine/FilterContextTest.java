@@ -40,7 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The filter context of wave B (docs/architecture/BI_DESIGN.md section 3.3.5) on the engine: {@code calc} with {@code where=}, {@code ignore=},
+ * The filter context of wave B (docs/architecture/ARCHITECTURE.md §28 section 3.3.5) on the engine: {@code calc} with {@code where=}, {@code ignore=},
  * {@code ignore=ALL}, {@code keep=}, {@code share_of}, {@code parent_of} and {@code avg_by}, each checked against an independent computation over the same
  * trades (acceptance (1): "% of total, ignore-a-slicer ... equal an independent computation"), for random fields, filters and readers (a property test: the
  * security of each reader is applied to the total too, so a share is always of what that reader may see).

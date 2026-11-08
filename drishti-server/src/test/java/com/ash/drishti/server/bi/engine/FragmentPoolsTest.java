@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 
 /**
- * Fragment pools and circuit breakers per connector (wave B task 4, docs/architecture/BI_DESIGN.md section 6.6), and the connectors' capability
+ * Fragment pools and circuit breakers per connector (wave B task 4, docs/architecture/ARCHITECTURE.md §28 section 6.6), and the connectors' capability
  * descriptors: a connector that fails five times opens its breaker and is refused at once with {@code DRS-9026} naming it, one fragment tries again after
  * the open time, its success closes the breaker; a connector runs at most its {@code max-fragments} at once.
  */

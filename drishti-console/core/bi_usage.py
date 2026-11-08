@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin → BI usage (docs/architecture/BI_DESIGN.md sections 6.7 and 6.8, wave B console task 5): what BI is asked, by whom and how it is answered, from the
+"""Admin → BI usage (docs/architecture/ARCHITECTURE.md §28 sections 6.7 and 6.8, wave B console task 5): what BI is asked, by whom and how it is answered, from the
 server's audit log (``bi-mq`` and ``bi-query`` per answer, ``bi-sql`` per SQL statement, with the rows, the layer and whether the cache answered), the engine's
 own counters (``GET /bi/engine``) and the server's Python runtime (``GET /bi/python/runtime``: the compute pool python). Wave C makes the audit log a dataset
 (``pack.drishti.audit-bi``) and this a report over it; until then this module sums the latest events, nothing is stored."""

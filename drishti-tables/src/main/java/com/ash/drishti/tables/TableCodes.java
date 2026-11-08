@@ -18,7 +18,7 @@ package com.ash.drishti.tables;
 /**
  * The table layer's problem codes (docs/guides/OPERATIONS_GUIDE.md, "Virtual tables"). The language's own codes are kept where the problem
  * is the language's: {@code DRS-9127} (an aggregate in row or rule scope), {@code DRS-9152} (an unknown name), {@code DRS-9122}
- * (relationships), as docs/architecture/BI_DESIGN.md section 2.1 decides.
+ * (relationships), as docs/architecture/ARCHITECTURE.md §28 section 2.1 decides.
  */
 public final class TableCodes {
 
@@ -65,7 +65,7 @@ public final class TableCodes {
     public static final String UNKNOWN_NAME = "DRS-9152";
     /** BI's: a relationship's ends (unknown alias or column, key types that differ). */
     public static final String RELATIONSHIP = "DRS-9122";
-    /** The migration refused an item or an expression (docs/architecture/BI_DESIGN.md section 4.2). */
+    /** The migration refused an item or an expression (docs/architecture/ARCHITECTURE.md §28 section 4.2). */
     public static final String MIGRATION_REFUSED = "DRS-9195";
     /** A server found a file in an old form and refused it, naming the command to run (section 4.3). */
     public static final String MIGRATE_FIRST = "DRS-9196";

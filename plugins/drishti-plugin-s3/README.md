@@ -89,7 +89,7 @@ connector `kinds:`: an empty listing otherwise makes it a candidate for every ki
 | `index.block-cache` | int | `16` | Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file); 0 = none |
 | `index.kinds.*` | string |  | Per-kind override of any index setting (index.kinds.<kind>.days) |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10). It takes the shared `proxy.*` settings for an outbound HTTP proxy (DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 Defaults as `S3SourcePlugin.start` reads them: `region` `us-east-1`, `path-style` `true` (read only with `endpoint`), `rescan-seconds`
@@ -389,4 +389,4 @@ JVM's `https.proxyHost` properties and of the environment is switched off so the
 - [Connectors](../../docs/guides/DATA_GUIDE.md#82-which-connector) (which connector when), [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors),
   [TLS and proxy](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
 - [The S3 settings in CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#s3-tls-proxy).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

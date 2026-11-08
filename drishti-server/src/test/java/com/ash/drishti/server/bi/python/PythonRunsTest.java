@@ -45,7 +45,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The one Python runtime on the server (PYTHON_COMPUTE.md section 19): runs refused in words until they can be safe (compute on, the pool
+ * The one Python runtime on the server (NOTEBOOK_GUIDE.md section 19): runs refused in words until they can be safe (compute on, the pool
  * {@code python} strict, the interpreter carrying the pinned versions), then a measure, a Transform and a failure through a real strict worker,
  * each run audited. The worker needs Linux with Landlock and an interpreter with pandas and pyarrow ({@code -Ddrishti.compute.test.python},
  * {@code DRISHTI_PYTHON} or the console's virtual environment); without them those tests are skipped.

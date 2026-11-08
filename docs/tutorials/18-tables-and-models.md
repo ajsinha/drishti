@@ -281,4 +281,4 @@ nothing, and the whole catalogue check clean.
   ![Help: the virtual tables guide](img/t44/05-tables-guide-in-help.jpg)
 
 - The language: [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) (paths, `in`, the null rule, checked mode).
-- The design and what is built: [BI_FOUNDATION_2911E.md](../architecture/BI_DESIGN.md#18-the-bi-foundation-bi-on-the-table-layer-and-rachana).
+- The design and what is built: [BI_FOUNDATION_2911E.md](../architecture/ARCHITECTURE.md#281-the-table-layer-and-models-in-rachana).

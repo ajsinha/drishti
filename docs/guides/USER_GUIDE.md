@@ -80,8 +80,8 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | Alerts | `/alerts` | Your alerts on numbers, your alert rules and recent alerts (also **Reports**, *My alerts*) |
 | Workspaces | `/w` | Several live views on one screen |
 | Inbox | `/inbox` | Views and comments sent to you ([Your inbox](#your-inbox)) |
-| Reports | `/reports` | Saved searches delivered as CSV on a schedule, and your subscriptions ([Scheduled reports](#scheduled-reports), [Export, and subscriptions](BI_GUIDE.md#export-and-subscriptions)) |
-| BI | `/bi`, `/bi/catalogue`, `/bi/w/me`, `/bi/r/<id>`, `/bi/models`, `/bi/datasets`, `/bi/designer`, `/bi/notebook`, `/bi/transform` | Rūpaka business intelligence, for people with the `bi` power: reports (a board is a report page; `/bi/b/<id>` opens it), BI Studio's designers, the Notebook and the Transform editor ([BI_GUIDE.md](BI_GUIDE.md)) |
+| Reports | `/reports` | Saved searches delivered as CSV on a schedule, and your subscriptions ([Scheduled reports](#scheduled-reports), [Export, and subscriptions](REPORTS_GUIDE.md#182-export)) |
+| BI | `/bi`, `/bi/catalogue`, `/bi/w/me`, `/bi/r/<id>`, `/bi/models`, `/bi/datasets`, `/bi/designer`, `/bi/notebook`, `/bi/transform` | Rūpaka business intelligence, for people with the `bi` power: reports (a board is a report page; `/bi/b/<id>` opens it), BI Studio's designers, the Notebook and the Transform editor ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
 | Build | `/build`, `/build/new`, `/build/pack/new` | Design layouts (Sutras) in the workbench, make a pack from schemas (proposed Sutras are approved in [Approvals](#approvals)) |
 | Tables & models | `/build/tables` | The editors of virtual tables, semantic models and Python-driven tables, for people with the `bi` power ([Tables and models: the editors](#tables-and-models-the-editors)) |
 | My account | `/account` | Your profile, settings and password |
@@ -125,7 +125,7 @@ seconds at most on the demo data; later visits that day read them back). When no
 is left out and the headline stands alone. Under the headline, **quick cards** open *Market risk* (`VAR BANK`), *Exposure* (`EXP BANK`),
 *Funds and ETFs* (`FUND SPY`) and *Data map* (`DATAMAP`); a card whose pack is off is not shown. An administrator turns the tile off
 with `ui.facts.enabled: false` (`DRISHTI_HOME_FACTS=false`) and sets the cards under `ui.home_cards` in the console's
-`application.yaml`; a pack author adds facts as the [pack developer guide](PACK_DEVELOPER_GUIDE.md#facts-for-home) describes.
+`application.yaml`; a pack author adds facts as the [pack developer guide](BUILD_GUIDE.md#74-facts-for-home) describes.
 
 ## The top bar
 
@@ -156,8 +156,8 @@ you are on is highlighted.
 | **Engines** (a role that opens an engine) | a column per engine running, its command word in the head | **VaR** `VAR`: *VaR explorer* `VAR BANK`, *Why it moved* `VAR BANK EXPLAIN`, *VaR Playground* `PLAY VAR`, *Scenario matrix* `SMAT`, *Regulatory reports*, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *Hierarchies and limit letters* `HIER` · **Exposure** `EXP`: *Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …` (the pre-deal check `PREDEAL` is under **Counterparties**) · **FRTB-SA** `FRSA`: *FRTB-SA capital* `FRSA BANK`, *FRTB-SA Playground* `PLAY FRTB EXAMPLE` · **SIMM** `SIMM`: *Netting sets* `SIMM`, *SIMM Playground* `PLAY SIMM EXAMPLE`; administrators also see *Admin → Engines* and, at the foot, the engines not running on any server (greyed, never links) |
 | **BI** (people with the `bi` power) | Business intelligence | *Catalogue* (`/bi/catalogue`), *My workspace* (`/bi/w/me`), *My runs*, *Workspaces* |
 | | Analyse | *Models*, *Datasets*, *Report designer* (`/bi/designer`), *Promotion (test to live)* (`/bi/environments`), *Notebook*, *Data prep* (`/bi/transform`) |
-| | Administer | *BI settings* (administrators with `bi-admin`, [BI_GUIDE.md](BI_GUIDE.md)) |
-| **Build** | Create | *Build home* (`/build`: [the Build home](#the-build-home-everything-you-build-in-one-place)), *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](SCHEMA_TO_PACK_GUIDE.md)), *Tables & models* (`/build/tables`), *Examples* |
+| | Administer | *BI settings* (administrators with `bi-admin`, [REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
+| **Build** | Create | *Build home* (`/build`: [the Build home](#the-build-home-everything-you-build-in-one-place)), *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack)), *Tables & models* (`/build/tables`), *Examples* |
 | | Learn | *Tutorials*, *Schema to pack*, *Screen designer guide*, *Screen developer guide*, *Panel kinds*, *Screen language reference*, *Pack developer guide* |
 | **Admin** (admins only) | People & access | *Users*, *Roles*, *API tokens*, *Who looked at what*, *Audit log*, *Saved VaR baskets* |
 | | Data | *Packs*, *Connectors*, *Data loads*, *Lakes*, *Record edits*, *Data out*, *Installed items* |
@@ -191,21 +191,21 @@ bar: a column per subject, each entry with its command beside it ([On a phone](#
 word `BI` goes there from the command line, in any case: `BI <GO>` the Build home (BI's own home, `/bi`, is folded into it), `BI WORKSPACE <GO>` your personal workspace, `BI CATALOGUE <GO>` the
 catalogue, `BI SETTINGS <GO>` the BI settings (administrators with `bi-admin`), `BI <report-or-board> <GO>` a published item by id or title (a **report opens drawn**, with its slicers, drill-down and drill-through; type-ahead completes after `BI `; `RUPAKA` still works as an alias). Without the power the menu is not there and `BI <GO>`
 says what is missing. No pack can define a mnemonic named `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT`, `DATAMAP` or `DATA`. The BI page, its keys (`/`, `g h`, `g c`, `g w`, `?`) and what it can and cannot do yet:
-[BI_GUIDE.md](BI_GUIDE.md). **Using a report:** click a bar and the page filters to it, the buttons in a visual's header drill down, drill through to another page, show the rows behind it or open a trade in the terminal, and a slicer filters
-what it can reach ([BI_GUIDE.md](BI_GUIDE.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas in BI Studio, with its Explorer, tabs and Problems and Query dock ([BI_GUIDE.md](BI_GUIDE.md) sections 15 and 26, [tutorial 8, Part A](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report)); the YAML reference is [BI_GUIDE.md](BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave). The BI rail also opens *Analyse*, *Transforms* (Python data prep step by step) and the *Python console*.
+[REPORTS_GUIDE.md](REPORTS_GUIDE.md). **Using a report:** click a bar and the page filters to it, the buttons in a visual's header drill down, drill through to another page, show the rows behind it or open a trade in the terminal, and a slicer filters
+what it can reach ([REPORTS_GUIDE.md](REPORTS_GUIDE.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas in BI Studio, with its Explorer, tabs and Problems and Query dock ([REPORTS_GUIDE.md](REPORTS_GUIDE.md) sections 15 and 26, [tutorial 10](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report)); the YAML reference is [REPORTS_GUIDE.md](REPORTS_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers). The BI rail also opens *Analyse*, *Transforms* (Python data prep step by step) and the *Python console*.
 
 **In a report:** a **parameter slicer** may switch *which* field or measure a visual draws (a field parameter: the chart breaks down
-by desk, then by portfolio; it shows MTM, then notional), and the choice is yours alone, as any slicer's ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](BI_GUIDE.md#21-field-parameters-in-a-well)).
+by desk, then by portfolio; it shows MTM, then notional), and the choice is yours alone, as any slicer's ([REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](REPORTS_GUIDE.md#11-field-parameters)).
 A report may also have **statement pages**: paper, page by page, with a header and footer, page numbers and a period, downloaded as PDF or
 Excel made as you (your masks and row rules), and sent by a subscription as one statement per recipient; the reference is
-[BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader), the walk-through [tutorial 8, Part C](../tutorials/08-reports-and-dashboards.md#part-c--statements-and-field-parameters).
+[REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](REPORTS_GUIDE.md#12-statements-paginated-reports-page-exact-one-per-reader), the walk-through [tutorial 20](../tutorials/08-reports-and-dashboards.md#part-c--statements-and-field-parameters).
 
 **On the right:** round tools, from left to right.
 
 | Tool | Looks like | What it does |
 |---|---|---|
 | Live | the round button right of the theme switcher | Your choice and this page's stream in one: green while live (glowing while ticks arrive, an amber ring while it reconnects, steady on a page without a stream), red with pause bars while paused or on a picked date. Hover to read both, for example *Live updates on — click to pause · Live, built 1.92 ms*. A click switches ([Business dates](#business-dates-live-or-a-day-in-the-past)) |
-| Alerts | a bell | Opens `/alerts`. A number on the bell counts alerts you have not seen ([Alerts](#alerts)), and BI runs that finished, failed or were started again (`BI RUNS <GO>` lists them: [BI_GUIDE.md section 28](BI_GUIDE.md#28-background-runs-long-bi-questions)) |
+| Alerts | a bell | Opens `/alerts`. A number on the bell counts alerts you have not seen ([Alerts](#alerts)), and BI runs that finished, failed or were started again (`BI RUNS <GO>` lists them: [REPORTS_GUIDE.md section 28](REPORTS_GUIDE.md#15-background-runs-long-bi-questions)) |
 | Packs | a box with a number | Appears when you may use more than one pack. The number is how many you have switched on; hover to read their names ([Domain packs](#domain-packs-choosing-what-you-see)) |
 | Theme | a palette | Ten themes ([Themes](#themes)) |
 | You | a round avatar with your initial and name | A menu: your name, desk and roles, a clock in your time zone (`NY` by default), **My account**, **Settings**, and **Sign out** when sign-in is on (when it is off, the menu says *Sign-in is off on this server* and links to how to turn it on) |
@@ -302,7 +302,7 @@ several trades (`TRD MX-2000 30`) gives the pick list, and each of its rows open
 `MYBOOK 30` is `BOOK BOOK-RATES-1 30`.
 
 Mnemonics come from the packs that are switched on. Every command, with what it does and an example, is in
-[COMMAND_CATALOG.md](COMMAND_CATALOG.md); the packs themselves are in [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#the-packs-that-ship). The most used ones, from the seven default packs:
+[COMMAND_CATALOG.md](COMMAND_CATALOG.md); the packs themselves are in [BUILD_GUIDE.md](BUILD_GUIDE.md#311-the-packs-that-ship). The most used ones, from the seven default packs:
 
 | Mnemonic | Kind | Example |
 |---|---|---|
@@ -440,7 +440,7 @@ their name. They work in any case, and each has type-ahead.
 | `DATAMAP <GO>` | the [data map](#the-data-map), `/datamap`: every kind of data your packs hold, how much of it there is, and how the kinds join | `DATAMAP trade <GO>` opens it on one kind (its name, mnemonic or label: `DATAMAP CPTY`), `DATAMAP organisation` or `DATAMAP counterparty-risk` on one domain; other words fill its Find box |
 | `EXPORT <GO>` | the [Export data](#export-data), `/data`: every dataset you may open, its format and the dates it holds; download a day as `.jsonl.gz` | `EXPORT trade-valuation 2026-09-30 <GO>` opens it on a dataset (its kind or its command: `EXPORT TVAL`) and a date; other words fill its Filter box |
 | `FORM <GO>` | the forms home, `/forms` | `FORM trading <GO>` opens the trading pack's search form, `FORM trading trade <GO>` its form for trades ([Search with a form](#search-with-a-form-form-pack)) |
-| `BI <GO>` | the Build home, `/build` (`/bi` opens it too; only with the `bi` power; otherwise the terminal says what is missing) | `BI WORKSPACE`, `BI CATALOGUE`, `BI SETTINGS`, `BI <report-or-board>` ([BI_GUIDE.md](BI_GUIDE.md)) |
+| `BI <GO>` | the Build home, `/build` (`/bi` opens it too; only with the `bi` power; otherwise the terminal says what is missing) | `BI WORKSPACE`, `BI CATALOGUE`, `BI SETTINGS`, `BI <report-or-board>` ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
 | `RUPAKA <GO>` | the same as `BI`, the older name | everything that works after `BI` works after `RUPAKA` |
 
 A pack's code typed alone (`MKT <GO>`) opens that pack's overview ([A pack at a glance](#a-pack-at-a-glance)). Anything else
@@ -638,7 +638,7 @@ Type a pack's code alone, for example `MKT <GO>`, to see what the market-data pa
 mnemonic to list that kind. Below the kinds, **What the pack holds** gives the pack README's summary, its data sources (with
 any internal-only flag) and, folded, its *Data structures*: each kind's id rule, fields with an example and a description, and
 nested structures by path, for the kinds you may open only. Every pack has a code (`CORE`, `MKT`, `TRDS`, `CCR`, `MRSK`, `WRLD`,
-`NWMK`, … see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#pack-codes)); the pack's name (`market-data`) works too.
+`NWMK`, … see [BUILD_GUIDE.md](BUILD_GUIDE.md#316-pack-codes)); the pack's name (`market-data`) works too.
 
 ## Pick lists: when a command names several entities
 
@@ -686,7 +686,7 @@ The first column is the id (a link). Then come:
 
 1. the fields your command uses (`CURRENCY` and `QUANTITY` in `TRD MX-2* CURRENCY=usd order by QUANTITY desc`);
 2. the kind's **key fields**, which the pack declares under `columns:` in its `pack.yaml`
-   ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#columns-the-key-fields-of-a-pick-list)). In the shipped packs:
+   ([BUILD_GUIDE.md](BUILD_GUIDE.md#43-columns-the-key-fields-of-a-pick-list)). In the shipped packs:
 
    | Kind | Key fields shown |
    |---|---|
@@ -1059,7 +1059,7 @@ On a phone the legs become tabs that scroll along one line, the terms stack, and
 The same layout is what you get from **inference** for any document that holds lists inside a short list of records, even with no Sutra written
 for it ([Inference](RACHANA_REFERENCE.md#the-rules)). To build such a screen see
 [Panels inside a tab](RACHANA_REFERENCE.md#panels-inside-a-tab) and
-[Modelling deep documents](PACK_DEVELOPER_GUIDE.md#modelling-deep-documents-legs-cashflows-and-fixings).
+[Modelling deep documents](BUILD_GUIDE.md#55-modelling-deep-documents-legs-cash-flows-and-fixings).
 
 ## Reading a view
 
@@ -1206,7 +1206,7 @@ are the reference. If it cannot be reached the box says "Ask is unavailable"; ev
 
 ### Ask the data, explain a number, describe a report (BI, when your administrator has turned AI on)
 
-In BI ([BI_GUIDE.md section 29](BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number)), a report page shows a box **Ask the data**: type "notional by desk" and you get a table, a chart that suits it and the query that was asked, answered from
+In BI ([REPORTS_GUIDE.md section 29](REPORTS_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number)), a report page shows a box **Ask the data**: type "notional by desk" and you get a table, a chart that suits it and the query that was asked, answered from
 what *you* may see (the same rows and masks as the report). The light bulb in a visual's header **explains** its number: where it comes from and what it is made of. In the designer,
 **Describe a report** drafts a report from your words; you read it, use it and save it, or not. These are off unless your administrator switched them on; if you do not see the box and the bulb, they are off.
 
@@ -1247,7 +1247,7 @@ world-economy pack (`ECON ECON-USA`), in that pack's words:
 - The drawer is fetched the first time you open it, never with the page, so it does not slow a view down.
 - When a live update brings a newer generation of the data, an open drawer asks again (at most once in two seconds).
 - No text? A pack without an `about` entry for the kind still shows the other layers; the pack's author can add one
-  ([how](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary); how it works inside is
+  ([how](BUILD_GUIDE.md#72-about-text-and-glossary); how it works inside is
   [HOW_IT_FITS.md](RACHANA_REFERENCE.md#about-this-page-end-to-end)).
 - Hover hints on field labels and a help popover on each panel's `?` come with the glossary stage; today the panel `?`
   still opens that panel kind's page in this guide.
@@ -1398,15 +1398,15 @@ Newer screens (every pack screen is built from the same parts) can do more than 
 - **Editing a record.** Where a screen lets you, clicking a row opens a form beside the table, or a pencil on a column lets you edit
   in the cell, and **New …** opens a guided drawer. Fields you may not change say why; a wrong value is explained under its field.
   **Save draft** keeps a **draft** that only you see (*You have 2 drafts on this page* offers them again). The page asks before you
-  leave with changes not saved. The reference is [WRITE_BACK.md](WRITE_BACK.md).
+  leave with changes not saved. The reference is [APPROVALS_GUIDE.md](APPROVALS_GUIDE.md).
 - **Submitting a change (write-back).** Where editing is on, you hold the edit power and the form says where it goes (the book
   desk's trades do), **Submit…** opens a sheet: what you saw, what is there now and your change; where it goes (a correction kept beside
   the booking system's value, or an amendment sent to it); who approves (never you); what it recomputes; and the reason. After **Confirm**
   the sheet follows it: waiting for an approver, applied (everyone viewing the trade sees the new value at once, *How this view was built*
   says *Edited here*), or conflicted if the trade moved since you opened it (your draft is kept). Approvers decide in the **Approvals** queue
   (Build → Govern → Changes). Someone else's change to the record you are viewing shows *Changed by … just now*.
-  The reference is [WRITE_BACK.md section 4a](WRITE_BACK.md#4a-submitting-a-change-write-back); a walk-through is
-  [tutorial 11](../tutorials/11-correct-and-approve.md).
+  The reference is [APPROVALS_GUIDE.md section 4a](APPROVALS_GUIDE.md#4-submitting-a-change); a walk-through is
+  [tutorial 24](../tutorials/11-correct-and-approve.md).
 - **Screens laid out on a grid.** A screen with named areas may have a split you drag (its position kept for you), areas shown as
   tabs and panels that fold. Where the screen allows it, you may drag panels to another place and resize them, for yourself;
   **Reset layout** goes back. Such a screen does not offer layout mode (`Alt+L`): the grid replaces it.
@@ -1463,7 +1463,7 @@ zoom buttons are hidden while you arrange the view.
 **Print** prints the zoomed panel alone.
 
 **In another application.** Inside `<drishti-view>` the panel fills the element's own box, not the host page; the keys
-work only while the focus is inside the element ([Drishti Elements, keyboard](../architecture/CLIENT_RENDERER.md#58-keyboard)).
+work only while the focus is inside the element ([Drishti Elements, keyboard](EMBED_GUIDE.md#5-the-elements-one-by-one)).
 
 ## Pivot: slice a table your way
 
@@ -1761,7 +1761,7 @@ The same comparison is available to programs:
 curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "$DRISHTI_SERVER/api/v1/history/trade-valuation/TVAL-MX-20000001/diff?from=2026-10-15&to=2026-10-16"
 ```
 
-It also takes `fromKnownAt` and `toKnownAt`. See [API_GUIDE.md](API_GUIDE.md).
+It also takes `fromKnownAt` and `toKnownAt`. See [API_REFERENCE.md](API_REFERENCE.md).
 
 ## History: an entity over time
 
@@ -1849,7 +1849,7 @@ not see (a restricted person is told how many trades are outside the view, never
 not built yet for a kind of number says so (*Under construction*, and the release that builds it). The kinds explained today are VaR, ES,
 parametric VaR and ES, the fat-tail gap (kind `var`), the exposure figures (peak PFE, CE, EPE, EEPE, peak EE, EAD: kind `exposure`) and a
 pivot cell's move (kind `pivot`); `GET /api/v1/explain/kinds` lists them on your server
-([API_GUIDE.md, "Explain"](API_GUIDE.md#explain-any-number)).
+([API_REFERENCE.md, "Explain"](API_REFERENCE.md#18-explain-any-number)).
 
 ## How fresh is it
 
@@ -2107,11 +2107,21 @@ view you cannot open", with who sent it and when, and nothing about what it hold
 reason is that the pack is switched off for them, the page offers **Switch on** *pack*. A link that was never sent to the
 reader looks the same as a link that does not exist.
 
+**Who can receive.** Only Drishti users: there is no sharing with an email address, and a mention or share never reaches a person whose
+role may not open that kind of view (they are told nothing). Nothing is copied: a share holds your note and the pinned link, so when
+someone's rights change, what they see changes with them.
+
+**Email.** When your administrator has set email up, the people you share with (and mention) also get a mail: the kind of view and its id,
+the panel, the date, and your note as *they* may read it (hidden values as `•••`, quoted values filled for them), with the link. For packs
+whose ids are themselves sensitive the mail says only "… shared a view with you" and the link. Several notices that arrive for one person
+within a few seconds come as one mail. Each person can switch share, mention and reply mail off on the *Account* page, under *Email me
+when*; the bell always shows the notice.
+
 ### Your inbox
 
 The **bell** in the top bar counts what is new for you (shares sent to you, and alerts as they fire); click it, or press
 `Alt+I`, for the inbox page. Each row says when, what kind (Share), who, and the start of their note, as you may read it
-now. Click a row to open it (opening marks it read), **Mark read** on a row, or **Mark all read**. Filter by *All*,
+now: a row about a view you can no longer open reads "(no access)" with no excerpt, and a retracted or hidden comment shows as such. Click a row to open it (opening marks it read), **Mark read** on a row, or **Mark all read**. Filter by *All*,
 *Shares*, *Mentions* or *Replies* and *Unread only*; **Older** pages back. Rules that fired are on the
 [Alerts](#alerts) page.
 
@@ -2135,7 +2145,7 @@ one live connection.
 
 ## Scheduled reports
 
-A report is a search that runs on its own, on a schedule, and delivers its result as a CSV or JSON Lines file (**Format**); **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 0](BI_GUIDE.md#0-scheduled-searches-and-the-reports-page); the walk-through is [tutorial 8, Part E](../tutorials/08-reports-and-dashboards.md#part-e--scheduled-searches-and-subscriptions).
+A report is a search that runs on its own, on a schedule, and delivers its result as a CSV or JSON Lines file (**Format**); **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [REPORTS_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 0](REPORTS_GUIDE.md#181-the-reports-page-and-scheduled-searches); the walk-through is [tutorial 9](../tutorials/08-reports-and-dashboards.md#part-e--scheduled-searches-and-subscriptions).
 
 ## Alerts
 
@@ -2214,7 +2224,7 @@ after a data load, or when it changes), and how to tell you: your **inbox** and 
 inside the limit (by the *hysteresis* you set, if any) and does not fire again within the *cooldown* (30 minutes by default). Your rules are on the **Alerts** page (also **Reports**, *My alerts*): *Look now*, *Pause*, *Resume*,
 *Edit and history* (what every look did, and what was sent where) and *Delete*; what they raised is under *Raised for you* and in the
 **Alerts** tab of your inbox. If a board's author has made a tile notify, you are told when it turns red, on your own number.
-Reference: [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4](BI_GUIDE.md#4-alerts-on-numbers); walk-through: [tutorial 8, Part D](../tutorials/08-reports-and-dashboards.md#part-d--bi-that-runs-itself).
+Reference: [REPORTS_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4](REPORTS_GUIDE.md#19-alerts-on-numbers); walk-through: [tutorial 11](../tutorials/08-reports-and-dashboards.md#part-d--bi-that-runs-itself).
 
 ## Workspaces
 
@@ -2323,9 +2333,9 @@ because the reader may see it. *Open as it was* is offered because this page now
 
 ![The Discussion sheet on a phone](img/collab/09-discussion-phone.jpg)
 
-Notes written before discussions existed appear as one-comment threads. Every comment, edit, retraction and hide is in
-the audit log. Discussions are kept in the server's identity database, so everyone on that server sees the same ones;
-another server has its own.
+Older notes on an entity appear as one-comment threads. Every comment, edit, retraction and hide is in
+the audit log, and every version of a comment is kept: retracting or hiding changes what readers see, never the record.
+Discussions are kept on the server for every node of a cluster, so everyone sees the same ones.
 
 ## Working with several servers
 
@@ -2407,7 +2417,7 @@ three Terminal hues) for a trading floor, a wall screen or long sessions; a ligh
 a projector or anything you print or capture for a document. Wall Street is for people who read Bloomberg all day. A desk that wants its
 screens told apart at a glance can give each its own Terminal hue. Your choice follows you (below); an administrator sets the default for
 everyone with `ui.default_theme` ([CONFIGURATION.md](../admin/CONFIGURATION.md)), and *My account → Settings → Theme* or
-`PATCH /api/v1/me/settings` (`"theme": "terminal-blue"`, [API_GUIDE.md](API_GUIDE.md)) set it too.
+`PATCH /api/v1/me/settings` (`"theme": "terminal-blue"`, [API_REFERENCE.md](API_REFERENCE.md)) set it too.
 
 Each theme's colours shade the page, the top bar, view and panel headers and accent buttons; panel
 bodies, tables and figures stay on solid colours so they read clearly. If your system asks for more
@@ -2420,10 +2430,10 @@ accents and chart fills at 3:1. Buttons and pressed controls fill with `--d-fill
 unless a theme gives buttons a colour of its own, and carry their label in `--d-on-fill` at 4.5:1 on both: Crimson Terminal, for one, fills
 its buttons with a deep crimson under white labels rather than its bright text accent. The same test fails any stylesheet rule that fills a
 button from the accent instead (the accent buttons' gradient runs from `--d-fill` to `--d-fill-strong`). A page that embeds Drishti's elements and sets the
-`--d-*` values itself ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#19-drishti-elements-developer-guide)) should keep the same rule.
+`--d-*` values itself ([EMBED_GUIDE.md](EMBED_GUIDE.md#5-the-elements-one-by-one)) should keep the same rule.
 
 These are the console's themes. A BI report has a theme of its own (the shipped *Corporate* and *Print*, or one made in the
-theme designer), chosen by its author in BI Studio: [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2](BI_GUIDE.md#52-themes).
+theme designer), chosen by its author in BI Studio: [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2](REPORTS_GUIDE.md#103-themes).
 
 ## Domain packs: choosing what you see
 
@@ -2446,7 +2456,7 @@ What changes when a pack is off for you:
 - its mnemonics leave the suggestions, and its examples leave `/t`, the help centre and the search page;
 - opening one of its entities is refused with `DRS-5002 … may not open … entities`;
 - a pack's parents stay usable through it: with *Counterparty credit risk* on, a netting set still links to
-  its trades and counterparties (see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#who-sees-which-pack)).
+  its trades and counterparties (see [BUILD_GUIDE.md](BUILD_GUIDE.md#314-who-sees-which-pack)).
 
 **Apply** needs at least one ticked pack; with none ticked it does nothing. The choice is saved to your
 account. You can choose only among the packs an administrator assigned to you, and only among packs that
@@ -2509,7 +2519,7 @@ Sutra folder (`./sutras/…/irs-fixfloat.v2.sutra.yaml`), and views use the high
 revision, and Undo brings the old text back.
 
 The [screen designer guide](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) (every pane, with pictures) and the
-[Sutra developer guide](SUTRA_DEVELOPER_GUIDE.md) go much further.
+[Sutra developer guide](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies) go much further.
 
 ### Reviews: approving a Sutra
 
@@ -2524,34 +2534,10 @@ own proposal (four eyes); a proposal whose live Sutra changed since it was made 
 
 ## Approvals
 
-Everything that waits for a second person is in **one queue**: **Views → Approvals** (`/approvals`), with a count on the top bar's
-approvals tool (the badge beside the bell). The kinds:
-
-| Kind | Area | Who decides | Where it is made |
-|---|---|---|---|
-| Sutra | Screens | an approver (four eyes) | a workbench save, a designed screen, a terminal layout promoted |
-| Correction | Data | an approver of changes (the policy may ask for several) | a form's Submit, `drishti.py change propose` ([write-back](WRITE_BACK.md)) |
-| BI item | Data | a bi-steward, or a member of the workspace with the approve power | *Propose for review* on a dataset, model, report or board |
-| Pivot function | Data | an approver (a Java plug-in: an administrator); with a sharing scope | `pivot functions submit` |
-| Stress window | Risk | someone who sees every node, never the proposer | *Freeze and propose* on `SWIN` |
-| Report sign-off | Risk | the next step of the chain (maker, checker, approver); one person signs one step | `VAR REPORT <report> <period>`, *Generate* |
-| Compute package | Access | an administrator (and the roles `compute.approval.roles` names) | a connector or pool that needs packages |
-
-**The list.** *Waiting for me* is the inbox: everything you may decide now, never your own. Items with a due date near (a report run's
-filing date: `drishti.approvals.due-days`, pinned within `due-soon-days`) are **pinned on top** under *Due soon*; the rest are newest first.
-Filter by area (*Data · Screens · Risk · Access*) or by kind; *Mine sent* lists what you asked for; *Done* what was decided.
-
-**The item.** Click one: **What changes** (a diff, with the maker's reason), **Effect if approved** (what changes downstream: the
-records and views that read a corrected record, the published reports a BI change breaks, a node's stressed VaR under each window, the
-files a signed run releases), the **Rules** that let you decide, and *More facts* (checks, evidence, history).
-
-**Decide.** **Approve** (a pivot function: say who may use it, *everyone* or `group:<name>`; a BI dataset change: update the reports that
-use renamed names, or, as a bi-admin, approve over a breaking change), **Reject…** with a reason in the comment box, or **Withdraw** your own.
-The maker never approves their own. **Ask a question**: a thread on the item; the maker is told (without the text) and answers in the
-same place, and whoever asked is told of the answer. Every decision and every question is in the audit log.
-
-From the command line: `drishti.py approvals list`, `approvals show KIND ID`, `approvals approve|reject|withdraw KIND ID --comment ...`,
-`approvals ask KIND ID "..."` ([CLI_REFERENCE.md](CLI_REFERENCE.md)). The API: [API_GUIDE.md › Approvals](API_GUIDE.md#approvals-apiv1approvals).
+Everything that waits for a second person (Sutra proposals, corrections, BI items, pivot functions, stress windows, report sign-offs,
+compute packages) is in **one queue**: **Views → Approvals** (`/approvals`), with a count beside the bell. How to read an item, approve,
+reject, withdraw or ask a question, in the UI and with `drishti.py approvals`, is in
+[APPROVALS_GUIDE.md › The Approvals queue](APPROVALS_GUIDE.md#6-the-approvals-queue).
 
 ## Administration
 
@@ -2565,13 +2551,13 @@ between them without the menu.
 | Packs | `/admin/packs` | Switch a domain pack off or on for everyone; deploy an archive; see which connectors a pack reads through (**Data source**, read only) |
 | Artifacts | `/admin/artifacts` | Everything installed in one list (packs, connector files, shipped BI files): see what depends on each, **disable** it, **uninstall** it to an archive and **restore** it, install a BI file ([OPERATIONS_GUIDE.md section 18](OPERATIONS_GUIDE.md#10-admin--artifacts-install-and-uninstall-safely)) |
 | Connectors | `/admin/connectors` | Where data comes from: one connector per YAML file in `config/connectors/`; create, edit, test, switch off and see which packs use each ([DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)) |
-| Tokens | `/admin/tokens` | Every personal API token (never its secret): its owner, its scopes (*read only* or what it may write), when it was last used (in the console's time zone, named), and revoking any of them ([API_GUIDE.md (clients)](API_GUIDE.md#clients-scripts-notebooks-and-excel)) |
+| Tokens | `/admin/tokens` | Every personal API token (never its secret): its owner, its scopes (*read only* or what it may write), when it was last used (in the console's time zone, named), and revoking any of them ([API_REFERENCE.md (clients)](DEVELOPER_GUIDE.md#113-clients-scripts-notebooks-and-excel)) |
 | Access | `/admin/access` | Who read which entity, filtered by user, action, kind, id and dates ([ADMIN_GUIDE.md](ADMIN_GUIDE.md)) |
 | AI | `/admin/ai` | The AI layer: off by default; providers, models, MCP servers and a test call ([AI.md](../admin/AI.md#1-model-providers)) |
 | Data loads | `/admin/loads` | What your ETL announced, what is due and what is late ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)); its **Inbox** tab (`/admin/loads/inbox`, while the data inbox runs) is the inbox's status board: files waiting, the run loading table by table, the last cycles, failures with **Retry**, and **Load now** ([DATA_LAKE_GUIDE.md section 3.1](DATA_LAKE_GUIDE.md#31-the-data-inbox)) |
-| Collaboration | `/admin/collab` | Moderation of shares and threads, legal holds, export, the mail outbox and chat bridges ([COLLABORATION.md](../architecture/COLLABORATION.md)) |
-| Embedding | `/admin/embedding` | Host applications that show Drishti views in their own pages ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design)) |
-| BI | `/admin/bi` | Powers per role and who creates workspaces (needs `bi-admin`; [BI_GUIDE.md](BI_GUIDE.md)) |
+| Collaboration | `/admin/collab` | Moderation of shares and threads, legal holds, export, the mail outbox and chat bridges ([ARCHITECTURE.md §31](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals)) |
+| Embedding | `/admin/embedding` | Host applications that show Drishti views in their own pages ([EMBED_GUIDE.md](../architecture/ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements)) |
+| BI | `/admin/bi` | Powers per role and who creates workspaces (needs `bi-admin`; [REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
 | Ad-hoc scopes | `/admin/scopes` | Every person's saved VaR baskets (owner, name, scope, shared with, dates, size), filtered by owner; **Delete** any of them with an optional reason, audited and told to the owner ([OPERATIONS_GUIDE.md section 9b-2](OPERATIONS_GUIDE.md#126-deleting-peoples-var-baskets)) |
 | Audit log | `/admin/audit` | Sign-ins, failures, lockouts, user, role and pack changes, Sutra proposals and approvals, cache purges |
 | Health | `/admin/health` | Every connector and pack: up or down, reads, timings. Refreshes every 5 seconds |
@@ -2599,7 +2585,7 @@ every role with its kinds (or *every kind*), its powers, how many users hold it,
 | approve Sutras | approve proposed Sutras in Reviews |
 | administer | use every admin page |
 | Calc | use Calc (`Alt+C`): Python in the browser on what the role opens ([section 9](#9-roles-who-may-use-calc)) |
-| BI (`bi`, `bi-author`, `bi-steward`, `bi-admin`) | four powers for Rūpaka, granted on roles ([BI_GUIDE.md](BI_GUIDE.md#3-who-may-do-what-the-four-powers), [ADMIN_GUIDE.md](ADMIN_GUIDE.md#34-bi-powers-rupaka)); the Roles form above lists only the first six powers |
+| BI (`bi`, `bi-author`, `bi-steward`, `bi-admin`) | four powers for Rūpaka, granted on roles ([REPORTS_GUIDE.md](REPORTS_GUIDE.md#3-who-may-do-what-the-four-powers), [ADMIN_GUIDE.md](ADMIN_GUIDE.md#34-bi-powers-rupaka)); the Roles form above lists only the first six powers |
 | layouts | use [layout mode](#layout-mode-arrange-a-view-your-way) (`Alt+L`) and keep personal layouts. On for every role unless unticked; the built-in `viewer` role does not have it |
 
 There is no power for [Pivot](#pivot-slice-a-table-your-way): anyone who may open a kind may arrange and save its pivots, as they
@@ -2639,7 +2625,7 @@ if asked anyway. Roles only matter when sign-in is on. More in [ADMIN_GUIDE.md](
 | Changed | when and by whom it was last switched |
 
 A **Sample** badge beside the title marks a demonstration pack. **Load** and **Unload** take effect at once, with no restart; a pack folder you add,
-edit or delete on the server is picked up the same way (see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#live-reload-the-packs-folder-is-watched)). Above the table, the
+edit or delete on the server is picked up the same way (see [BUILD_GUIDE.md](BUILD_GUIDE.md#296-live-reload-the-packs-folder-is-watched)). Above the table, the
 *Sample packs* section says who sees samples and offers **Hide samples from business users**: only authors and administrators then see sample
 packs, everyone else has them filtered out as if switched off. *Hide samples from everyone* unloads them; *Show samples to everyone* brings them back.
 The choice is saved, applied at once and recorded in the audit log (`pack-samples`).
@@ -2669,7 +2655,7 @@ first checks the pack together with the loaded ones (a clash, such as the retire
 with the reason and nothing changes), then records it and puts it to use at once: no restart, nobody is signed out, and
 open views carry on. The page confirms and refreshes. A pack loaded this way shows **Unload**, which takes it back the
 same way (not while another loaded pack builds on it). See
-[PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#loading-a-pack-while-the-server-runs-1).
+[BUILD_GUIDE.md](BUILD_GUIDE.md#292-loading-a-pack-while-the-server-runs).
 
 #### One pack: its own page
 
@@ -2903,7 +2889,7 @@ On a phone the fields stack in one column and every control is at least 44 px.
 
 ### Who decides what the form offers
 
-The pack's author writes the form (`form:` in `pack.yaml`, see the [Pack developer guide](PACK_DEVELOPER_GUIDE.md#form-the-search-form-of-a-kind)); a pack that does not gets one
+The pack's author writes the form (`form:` in `pack.yaml`, see the [Pack developer guide](BUILD_GUIDE.md#46-form-the-search-form-of-a-kind)); a pack that does not gets one
 inferred from its search columns and screen. Authors can shape a kind's form in the workbench's [Form tab](RACHANA_REFERENCE.md#the-form-tab).
 
 ## Calc: Python on any view
@@ -2932,11 +2918,11 @@ strip, the tables, searches and columns alike.
 |---|---|
 | Re-price a trade under a rate move, recompute a VaR, interpolate a curve, pivot a desk's P&L your own way, once | **Calc** |
 | Try an idea on what is on the screen before asking for a panel | **Calc** |
-| A figure everyone sees on a view, every time | a panel in the kind's Sutra ([Sutra developer guide](SUTRA_DEVELOPER_GUIDE.md)): computed on the server, cached, live |
+| A figure everyone sees on a view, every time | a panel in the kind's Sutra ([Sutra developer guide](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies)): computed on the server, cached, live |
 | Find entities by value (`TRD where mtm > 1m`) | [search](#search-by-value), on the command line |
 | Be told when a figure crosses a line | an [alert](#alerts): the server checks it on every change |
-| The same search as a file every morning | a [scheduled report](BI_GUIDE.md#scheduled-reports) |
-| A long notebook, a model you keep in git, millions of rows, your own libraries | Python on your machine with a personal API token ([API_GUIDE.md (clients)](API_GUIDE.md#clients-scripts-notebooks-and-excel)) |
+| The same search as a file every morning | a [scheduled report](REPORTS_GUIDE.md#181-the-reports-page-and-scheduled-searches) |
+| A long notebook, a model you keep in git, millions of rows, your own libraries | Python on your machine with a personal API token ([API_REFERENCE.md (clients)](DEVELOPER_GUIDE.md#113-clients-scripts-notebooks-and-excel)) |
 
 Calc is for questions that are yours, now, about the data in front of you. It is not a batch engine: it runs in one
 browser tab, with that tab's memory, and it reads what you could read by clicking (see [Limits](#14-limits)).
@@ -3238,7 +3224,7 @@ computes.
 The shipped ones are written by `tools/packgen/banking/make_packs.py` (the generator kept its name from the banking packs it began with) from their sources,
 `tools/packgen/banking/snippets/<pack>/<name>.py` (read by `calc_snippets.py`; never edit the generated
 `config/packs/<domain>/<pack>/python/` files: change the source and run the generator, see
-[PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)). A source starts, after its copyright header, with
+[BUILD_GUIDE.md](BUILD_GUIDE.md#301-how-the-shipped-packs-are-generated)). A source starts, after its copyright header, with
 
 ```python
 # title: Key-rate DV01 by bump and reprice
@@ -3404,7 +3390,7 @@ Speed beside native CPython 3.14 on the same machine (best of three):
 - **Data volume.** A read moves JSON from the server through the console to the page and into Python: about 13 bytes
   a value for `drishti.columns()` (10,000 rows × 5 fields: 646 KB). 250,000 rows × 5 fields is about 16 MB, and a few
   seconds. Ask for the fields you need, aggregate with a search where you can, and use a script with a token
-  ([API_GUIDE.md (clients)](API_GUIDE.md#clients-scripts-notebooks-and-excel)) for millions of rows.
+  ([API_REFERENCE.md (clients)](DEVELOPER_GUIDE.md#113-clients-scripts-notebooks-and-excel)) for millions of rows.
 - **Searches** return at most 1000 rows (`limit`), and read at most `drishti.search.max-scan` documents (20,000) when
   the source keeps no columns. `drishti.columns()` returns at most `drishti.calc.max-column-rows` (250,000).
 - **Output** is capped per run ([section 6](#6-output-print-show-chart-figures)).
@@ -3699,181 +3685,7 @@ The picture is real output of that cell on the sample trades dataset: ten desks,
 
 ## The Notebook
 
-The **Notebook** (`/bi/notebook`, the BI rail's *Notebook*) is the one place for code over data. You open a model as an **extract**, the rows *you* may see
-(masked columns stay masked, row rules apply), and work on it in **SQL cells**, run by the server, and **Python cells**, run on the server's compute pool.
-You save the work as a **notebook** (a BI item with versions and review like any other) and **promote** what is good: a SQL cell becomes a **visual in a
-report draft**, a Python cell a Python Measure, Visual or Transform draft.
-
-**One analysis path: Pivot, then Report.** To slice and total a table, use the [Pivot](#pivot-slice-a-table-your-way) (`PIVOT <GO>`, or *Pivot* in the BI
-rail); to publish, share or schedule, make a BI report. The Notebook is for what a grid cannot say. **Nothing of yours runs in the console or in your
-browser**: SQL is the server's, Python the server's compute pool's. The page asks and draws. For Python in your own browser on a view's rows there is
-[Calc](#calc-python-on-any-view), a scratch pad behind a Labs switch that never publishes.
-
-The walk-through is [tutorial 9](../tutorials/09-notebook-and-python.md); the design is [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase).
-
-### 1. At a glance
-
-```
- model ──(your identity)──▶ server: masks columns, applies your row rules ──▶ extract (at most bi.notebook.max_rows rows)
-                                                                                    │
-                    ┌──────────────────────────────────────┬────────────────────────┤
-                  SQL cell                              Python cell              Profile
-   the server: Drishti SQL over the model,      the server's compute pool    every column of the extract,
-   as you (POST /bi/notebook/sql)               (POST /bi/notebook/python)   no code of yours
-```
-
-The extract is **rebuilt for you on every call** and never kept: the console holds nothing between calls, so a mask or a row rule changed on the server
-applies the next time you run a cell.
-
-### 2. The extract
-
-Choose a model (or a dataset, which reads as its own small model), tick the fields, choose the time (now, as of a date, or a window) and **Open the extract**.
-The line under the form tells you what you got: `60 rows, 8 columns.` and, when something is masked for you, `Masked for you: MTM.` The rows are the table's
-*own* rows (not grouped), cut to `bi.notebook.max_rows` (10,000); a cut says so (`60 rows of 4,000 (cut to the row limit)`). Columns are named for the table's
-column (`DESK`, not `trade.DESK`); two columns of the same name keep their table (`trade_DESK`).
-
-**More extracts.** *More extracts: join several models* (under the form) adds further extracts to the notebook, each a name, a model and fields, built for you
-by the server exactly as the first is (your row rules, your masks; `bi.notebook.max_extracts`, 6, besides the first). A Python cell reads one as
-`extract("name")`.
-
-![The notebook's extracts: the first extract opened, and the second, exposure, under More extracts](../tutorials/img/t14/13-analyse-extracts.jpg)
-
-Every extract is the reader's, so a join of two extracts shows **their** rows: a join key that the server masks for them arrives masked and the join finds
-nothing, which is the mask doing its job. Because the extract is cut, a cell over it gives the extract's totals, not the model's: for true totals use the
-Pivot or a report.
-
-### 3. SQL cells
-
-A SQL cell is **Drishti SQL over the model the extract reads** ([BI_DESIGN.md §3.4](../architecture/BI_DESIGN.md#34-drishti-sql-dsql-read-only-sql-over-models)),
-run by the server **as you**, with your row rules and masks, through the same plan as the model query it equals. Its tables are the model's aliases, a
-measure is `MEASURE('name')`, and `JOIN` needs no `ON` (the model's relationships are used). A new cell starts with a statement written from the model (the
-first text field you ticked and the model's first measure):
-
-```sql
-SELECT trade.CURRENCY,
-       MEASURE('Sum of MTM') AS "Sum of MTM"
-FROM   trade
-GROUP  BY trade.CURRENCY
-LIMIT  20
-```
-
-The cell's footer says *3 rows in 4 ms · Drishti SQL, run by the server over sql-model@1 as you · plan p_825d3a8857*, with the masked columns when there are any:
-
-![A SQL cell: the statement above, Run (Drishti SQL, run by the server over the model), and three currencies with their Sum of MTM: EUR -75000, GBP 425000, USD -575000](img/bi-languages/analyse-dsql-cell.jpg)
-
-The console sends the cell to `POST /bi/notebook/sql` (`{extract, sql}`), which asks the server's `POST /api/v1/bi/sql` with the model and the cell's row
-limit (`bi.notebook.sql_max_rows`, one more to say when it was cut); it never reads the SQL itself. One `SELECT` per cell; text over
-`bi.notebook.sql_max_chars` (20,000) is `DRS-9072`. *Run all* runs the cells in order. A notebook that names an older dataset (`file:dataset:trades-basic`)
-reads the model the converter made of it (`trades-basic@1`).
-
-### 4. Python cells
-
-A Python cell sees `df` (the extract as a pandas DataFrame), `extract(name)` (any other extract of the notebook, as a DataFrame for the same reader) and
-`params`. What it prints comes back as text; what it puts in **`result`** is drawn: a DataFrame or Series as a table, a dict as an ECharts option, SVG text or
-PNG bytes as an image, anything else as a value.
-
-```python
-g = df.groupby("DESK", as_index=False)["NOTIONAL"].sum()
-result = {"title": {"text": "Notional by desk"}, "xAxis": {"type": "category", "data": list(g["DESK"])},
-          "yAxis": {"type": "value"}, "series": [{"type": "bar", "data": [float(v) for v in g["NOTIONAL"]]}]}
-```
-
-**Where it runs: the server's compute pool** `python` (`config/compute/compute.yaml`), never the console and never your browser. **Run** sends the cell
-to the server (`POST /bi/notebook/python`), which reads the extract and the other extracts **as you** and runs the cell in its strict sandbox: no network,
-files held to its own folder, the cell's time and memory limits (`bi.notebook.cell_timeout_seconds`, `cell_memory_mb`), the pinned libraries only. The line above the output says where it ran, how long it took, how many rows it read and what was masked; what the cell printed shows first, then its `result` (a table, a chart option, an SVG or PNG picture, or a value); a failure shows the error and, as an author, your own code's traceback. Where the server cannot run Python safely (compute off, a Windows server), *Run* is off and says why; you can still write, save and promote cells. Whoever opens the notebook later runs them over their own rows.
-Running Python needs the **`bi-author`** power; SQL needs only `bi`.
-
-### 5. Notebooks
-
-**Save as a notebook** stores the extract's definition and every cell as a BI item of kind **`notebook`**: in *My workspace* (or, if you opened a notebook
-you may edit, as a new version of it). It has versions, diffs, review and publishing like any item ([BI_GUIDE.md](BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments));
-*Open in the Notebook* on the item page (or `/bi/notebook?item=<id>`, or the notebook picker) reopens it: the extract is rebuilt for whoever opens it, so
-**a notebook shared with someone else shows *their* rows**. Outputs are not stored, only the code.
-
-The body is YAML, checked by `POST /bi/notebook/check` (unknown keys and bad cells are `DRS-9070`, naming the cell):
-
-```yaml
-rachana: 1
-notebook: desk-notional-first-look
-title: Desk notional, first look
-dataset: mq:trades-basic@1       # the model it reads (mq:<model>@<major>, or dataset:<name> for a dataset's implicit model)
-fields: [trade.TRADE_ID, trade.DESK, trade.PORTFOLIO, trade.NOTIONAL, trade.MTM]
-extracts:                       # optional: further extracts, read by a Python cell as extract("name")
-  - { name: exposure, dataset: mq:counterparty-exposure@1, fields: [set_exposure.COUNTERPARTY, set_exposure.PEAK_EE] }
-cells:
-  - type: sql
-    source: SELECT trade.DESK, MEASURE('Sum of MTM') FROM trade GROUP BY trade.DESK
-  - type: python
-    source: |
-      result = df.groupby("DESK", as_index=False)["NOTIONAL"].sum()
-```
-
-A cell is `sql` or `python`. A notebook saved with a `slice` cell opens with that cell left out and a line saying so: slicing is the Pivot's. A notebook may
-also carry the catalogue's keys (`sample`, `tags`, `endorsement`, `owner`, `audience`); a shipped one is
-`config/bi/notebooks/banking/pnl-vs-exposure-pandas.notebook.yaml`.
-
-### 6. Promote
-
-Every promotion answers **beside the button you pressed** (one message, with an *Open the draft* link). Pressing the same promotion again for the same cell
-does not make a duplicate: it offers **Update that draft** or **Save another**. Promoting writes a **draft** item in your workspace; nothing is published.
-
-* **A SQL cell to a report visual.** Choose where first, in the line above the tabs: **a new report draft**, or one of the report drafts you may edit (your
-  workspace and the shared ones you contribute to), and optionally the page. The cell is read by a small reader (`core/promote_report.py`), not a SQL engine:
-  plain and `GROUP BY` columns become *rows*, `MEASURE('name')` and the aggregates `sum`, `avg`, `count`, `min`, `max` of a column become *values* when the
-  model has that measure, and simple `WHERE` conditions (`=`, `<>`, `<`, `<=`, `>`, `>=`, `IN`, `NOT IN`, `BETWEEN`, `IS [NOT] NULL`, joined by `AND`) become
-  *filters*. What a report cannot say (an expression, `LIKE`, `OR`, `HAVING`, a sub-query, `ORDER BY`, `LIMIT`) is left out and listed in the notes; nothing is
-  guessed. A new report draft is `rachana: 2` reading the extract's model; an existing one is read through the server's checker, the visual is added below
-  what the page holds, and the report is written again by the designer's writer (comments in its YAML are not kept; the note says so).
-
-  ![A SQL cell promoted into an existing report draft: the note says what was left out and that the report was written again](../tutorials/img/t14/20-promote-existing.jpg)
-
-* **A Python cell to a Measure or a Visual** (the cell's buttons): the cell's `df` becomes the function's `table`, `result` is returned, and the packages the
-  cell imports go into the manifest ([BI_GUIDE.md](BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 3). Check it on the
-  item page, then publish.
-* **A Python cell that joins extracts to a Transform** (*Promote to a Transform*, greyed with "Add a second extract first" until the notebook has one): each
-  `extract("name")` becomes a parameter of `run(...)`, a use of `df` becomes the first extract, and the cell's `result` is returned.
-
-The route is the console's `POST /bi/notebook/promote` with `{to: report, name, dataset, sql, columns, qualified, target?, page?}` or
-`{to: measure | visual | transform, name, source, columns, extracts?}`.
-
-### 7. Profile
-
-The **Profile** tab shows every column of the extract: its type, what its text looks like (numbers or dates kept as text), empty values (count and %), distinct
-values, whether it could be a key, min and max (and the mean of a number), the five most common values and a histogram of a number. No code of yours runs
-(`POST /bi/notebook/profile` with `{extract}`), and it is drawn by the same panel as the [Transform editor](BI_GUIDE.md#175-profiling)'s. A column masked for
-you says so and profiles as empty.
-
-![The Notebook, Profile tab: the extract of the model prep-model as the analyst ann sees it, PRICE masked for her](img/bi-transform/07-analyse-profile.png)
-
-### 8. Who sees what
-
-The server decides, as everywhere in BI: the extract is a model query, `POST /api/v1/bi/mq`, **as you**, so the same column masks and row rules as a report
-apply, and a masked column arrives empty. A SQL cell is answered by the server as you; a Python cell will run on the pool over the extract built for you. A
-cell cannot widen access, and a saved notebook holds code, not data.
-
-### 9. Settings, errors and routes
-
-The console's `bi.notebook.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md)):
-
-| Setting | Default | Meaning |
-|---|---|---|
-| `max_rows` (`DRISHTI_BI_NOTEBOOK_MAX_ROWS`) | `10000` | most rows of an extract; 10 to 100,000 |
-| `max_fields` | `60` | most columns of an extract |
-| `sql_max_rows`, `sql_max_chars` | `5000`, `20000` | a SQL cell's limits |
-| `cell_timeout_seconds`, `cell_memory_mb`, `cell_max_chars` | `20`, `512`, `65536` | a Python cell's limits |
-| `max_cells` | `60` | most cells in a notebook |
-| `max_extracts` | `6` | most further extracts in a notebook, besides the first (`DRS-9072`) |
-
-**The packages a Python cell may import** are the server's `drishti.bi.report.python-packages` that `config/compute/locks/python.lock` pins (a test holds the two together); a cell runs on the server's compute pool, as the person running it ([BI_GUIDE.md section 34](BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python)).
-
-| Code | HTTP | In the Notebook |
-|---|---|---|
-| `DRS-9070` | 422 | the request is wrong (no fields, a bad name, a notebook that does not check, a SQL syntax error, a slice sent to promote) |
-| `DRS-9072` | 413 | a limit: SQL text, cell size, extract fields or extracts |
-| `DRS-9073` | 403 | refused: Python without `bi-author` |
-| `DRS-9074` | 503 | the console lacks `pyarrow` |
-
-The server's own refusals (`DRS-9001` no such dataset, a denied model) come through unchanged. The routes are the console's own, JSON from its pages only
-(same-origin, the session cookie): `GET /bi/notebook`, `GET /bi/notebook/status`, `POST /bi/notebook/extract`, `POST /bi/notebook/sql`,
-`POST /bi/notebook/profile`, `POST /bi/notebook/check`, `POST /bi/notebook/promote`. The older addresses `/bi/explore` (Analyse) and `/pyconsole` open the
-Notebook.
+The **Notebook** (`/bi/notebook`, the BI rail's *Notebook*) is the one place for code over data: SQL cells run by the server and Python cells
+run on the server's compute pool, over an extract of the rows you may see. Everything about it (extracts, cells, saving, promoting, the profile,
+limits and errors) is in [NOTEBOOK_GUIDE.md](NOTEBOOK_GUIDE.md#2-the-notebook), with Python measures, visuals and data prep; the walk-through is
+[tutorial 14](../tutorials/09-notebook-and-python.md). For Python in your own browser on a view's rows, see [Calc](#calc-python-on-any-view).

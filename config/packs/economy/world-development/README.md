@@ -190,4 +190,4 @@ The pack's files are written by `tools/packgen/publicsector/make.py`; its `--che
 ## See also
 
 - [The world-development pack](guides/world-development.md): World Bank World Development Indicators by country and year (CC BY 4.0), filled daily by the world-development feed into worldlake: a profile per economy with the latest of each indicator and the world map by GDP per head, and the history of every indicator. Type WDI WDI-CAN.
-- [Packs](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

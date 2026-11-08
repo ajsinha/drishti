@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Draws one ViewModel two ways for the parity suite (CLIENT_RENDERER.md section 14), with no server and no port: (a) the console's
+"""Draws one ViewModel two ways for the parity suite (EMBED_GUIDE.md section 14), with no server and no port: (a) the console's
 server HTML, rendered by the console's own macros (_macros/view.html, panels.html, terminal/_grid.html) into a page with the console's
 sheets and chart scripts, and (b) the client-side renderer into a blank page. Playwright serves both from one made-up origin
 (``http://render.test``) by request interception, with the console's Content-Security-Policy on every answer, and records every request

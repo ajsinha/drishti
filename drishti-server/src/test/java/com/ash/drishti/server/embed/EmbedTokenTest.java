@@ -650,7 +650,7 @@ class EmbedTokenTest {
                 .contains("https://gitops.bank.example");
     }
 
-    // ---- the renderer's sign-in window (CLIENT_RENDERER.md section 10.1) ----------------------------------------------------------
+    // ---- the renderer's sign-in window (EMBED_GUIDE.md section 10.1) ----------------------------------------------------------
 
     private MvcResult window(String caller, String idToken, String nonce, String origin, boolean refreshed) throws Exception {
         Map<String, Object> b = new java.util.LinkedHashMap<>();

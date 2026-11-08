@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Excel-style column filters (BI_DESIGN.md 8.1). Every column heading of a table, matrix (tree rows) or pivot grows a funnel
+/* Excel-style column filters (ARCHITECTURE.md §28 8.1). Every column heading of a table, matrix (tree rows) or pivot grows a funnel
    button; its menu sorts, lists the column's distinct values with counts (search, Select all, Blanks) or filters by a
    condition for the column's detected type (numbers, dates, text). Filters combine across columns (AND). "Above / below average"
    compares with the server's average of the column (the pivot engine's avg, POST /api/pivot/inline): this file computes no figure.

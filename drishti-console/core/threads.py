@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Comment threads, the console's side (COLLABORATION.md, build step 6): a small client for the server's thread endpoints
+"""Comment threads, the console's side (ARCHITECTURE.md §31, build step 6): a small client for the server's thread endpoints
 (``/threads``, ``/comments``, ``/admin/collab/comments``) and the one piece the drawer needs from the console: the link
 *Open as it was* follows, made from the comment's own pin (the same form a share's link has)."""
 from __future__ import annotations

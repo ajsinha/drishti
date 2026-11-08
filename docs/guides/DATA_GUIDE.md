@@ -129,8 +129,8 @@ is the job of your own ETL (or of a pipeline engine such as DishtaYantra). What 
 there**. One small signal, "this batch has landed", makes Drishti refresh what it caches, check the data is really readable, evaluate the
 alert rules on it, and tell the right people. Expectations then flag a batch that has *not* landed in time.
 
-Related: [API_GUIDE.md](API_GUIDE.md) (every endpoint, the error codes), [CLI_REFERENCE.md](CLI_REFERENCE.md) (the `drishti.py` program),
-[CONFIGURATION.md](../admin/CONFIGURATION.md) (every setting), [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) (what a pack is),
+Related: [API_REFERENCE.md](API_REFERENCE.md) (every endpoint, the error codes), [CLI_REFERENCE.md](CLI_REFERENCE.md) (the `drishti.py` program),
+[CONFIGURATION.md](../admin/CONFIGURATION.md) (every setting), [BUILD_GUIDE.md](BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) (what a pack is),
 [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#8-deploy-promote-and-roll-back-by-copying) (shipping packs and data to servers).
 
 ### 1. Why: what the signal is for
@@ -146,7 +146,7 @@ With the signal, the same four things happen every time, in order, and each leav
 | views and date lists to include the new data now | drops the caches of the connectors that serve the kind and of the derived connectors built from it (the same thing Admin → Caches does): for a Delta connector its memory and disk caches and id map files; grouped pages kept on disk are rebuilt from the new data at once, the old pages serving meanwhile. Without the signal a Delta table's new version is seen within `refresh-seconds` (10 s) and grouped pages rebuild within `version-check` (10 s); the caches are keyed by table version, so nothing stale is served either way |
 | to know the data is really readable | counts the kind's entities on that business date and records `verified` or `not-found` |
 | alerts on the new numbers | evaluates every alert rule on the kind for that date, as each rule's owner may see it |
-| alerts on numbers, and subscriptions, that follow loads | an alert on a BI measure or a Sutra field whose trigger is `after-load` (and every "no data" alert), a board tile that notifies after loads, and a subscription with the schedule `after-load`, look `load-delay` (5 s) after a load that finished ready, once the BI layers have rebuilt ([BI_GUIDE.md](BI_GUIDE.md#43-when-it-looks-the-trigger)) |
+| alerts on numbers, and subscriptions, that follow loads | an alert on a BI measure or a Sutra field whose trigger is `after-load` (and every "no data" alert), a board tile that notifies after loads, and a subscription with the schedule `after-load`, look `load-delay` (5 s) after a load that finished ready, once the BI layers have rebuilt ([REPORTS_GUIDE.md](REPORTS_GUIDE.md#192-when-it-fires-and-when-it-looks)) |
 | the right people told | one inbox notice (and the bell) each, and an email through the outbox if the pack asks for it |
 | to know when a batch did **not** come | an expectation per kind (`trade by 19:00 America/New_York`); a scheduler flags it late on Health and tells the same people |
 
@@ -231,7 +231,7 @@ files), **Admin -> Packs -> the pack -> Load data** takes one JSON array or JSON
 under its business date (or the day you choose, for a snapshot kind: `ingest: {snapshot: true}`), checks every row against the pack's Sutras
 (types with no Sutra, fields no Sutra shows), and then announces the load exactly as above, so the refresh, verify, alerts, smoke and notices
 run and the pages built from that kind (a `derived` connector's pages per value) are rebuilt. The worked example is
-[A deep trading JSON](SCHEMA_TO_PACK_GUIDE.md#appendix-a-deep-trading-json).
+[A deep trading JSON](BUILD_GUIDE.md#9-a-deep-trading-json-from-one-file-to-a-deployed-pack).
 
 ### 4. The API reference
 
@@ -836,7 +836,7 @@ it reaches the browser too, for the answers it was measured to win on, and nowhe
 
 | Path | Arrow | Since |
 |---|---|---|
-| Java to the Python compute workers | Arrow IPC files, memory-mapped | built ([PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md)) |
+| Java to the Python compute workers | Arrow IPC files, memory-mapped | built ([NOTEBOOK_GUIDE.md](NOTEBOOK_GUIDE.md)) |
 | BI answers to the console's Python, Explore and Perspective-era clients | `?format=arrow` on `POST /bi/reports/{id}/query` and `POST /bi/mq`: the raw rows | 2.1 |
 | **Any JSON answer of the two endpoints below, to any client that asks** | `Accept: application/vnd.apache.arrow.stream`: the JSON answer itself, its table as the record batch, the rest in the schema's metadata | built |
 | **The VaR explorer's contribution tables by position and by trade, in the browser** | read with Arrow JS (vendored) into typed columns | built |
@@ -935,7 +935,7 @@ EDGAR, Wikidata, Nasdaq Trader, GLEIF), where it comes from, its licence, which 
 ## 5. Schema to pack: generate a pack from JSON Schema
 
 A pack made from JSON Schema files, a folder of JSON Lines, or both (Build → New pack, or `drishti.py pack make`) has its own guide:
-[SCHEMA_TO_PACK_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md).
+[BUILD_GUIDE.md](BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack).
 
 ## 6. Export data: download a dataset
 
@@ -1079,7 +1079,7 @@ Connecting Drishti to your data means choosing a **connector** (one configured i
 troubleshooting, a walk-through); this section says which one to choose and how connectors fit together; [section 9](#9-connector-files-and-admin--connectors)
 is the files, live reload, Admin → Connectors, the API and the CLI; [section 10](#10-tls-and-the-outbound-proxy) is TLS and the proxy.
 Doing it once with a worked example: [tutorial 15](../tutorials/15-connect-your-data.md). Writing a plugin of your own:
-[CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md).
+[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one).
 
 ### 8.1 One file per connector
 
@@ -1141,7 +1141,7 @@ Which definition wins (environment and the deprecated `drishti.sources.connector
 | the packs' sample entities | `demo` (runs as itself, no file) | a first look, demos, writing a pack; switch it off in production | [demo](../../plugins/drishti-plugin-demo/README.md) |
 
 What each can do (history, live ticks, search, reverse lookups) and the rules of thumb are compared in
-[Which connector should I use?](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#which-connector-should-i-use). Three connector types are built
+[Which connector should I use?](DEVELOPER_GUIDE.md#103-which-connector-should-i-use). Three connector types are built
 into the engine rather than installed as plugins ([8.5](#85-connectors-built-into-the-engine-derived-net-and-reactive)).
 
 ### 8.3 Several connectors for one kind: a union
@@ -1264,7 +1264,7 @@ Points to remember:
   connector nobody defined loads, and its kinds answer `DRS-1011 connector <name> is not configured` ([DATA_GUIDE.md section 9](#a-pack-names-a-connector-nobody-defined)).
 - **Between packs**, a child pack that redefines a parent's connector template replaces it *as a whole*, and the override is
   listed in health (`overrides`); two unrelated packs that define the same connector differently stop the server at
-  start, naming both. See [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which).
+  start, naming both. See [BUILD_GUIDE.md](BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which).
 - **The deprecated form still works.** `drishti.sources.connectors.<name>` in `application.yaml` overrides a file setting by setting, with a warning that names the file to write.
 
 #### Switching connectors off
@@ -1421,7 +1421,7 @@ Three connector types need no plugin to install; each has its README beside the 
 | `reactive` | a connector whose answer is a computation: the kinds it computes with their typed parameters, the inputs it reads as the person asking, the engine (Java or Python), the triggers, coalescing, cache and limits; a Sutra panel reads it with `source: { kind, id, params }` | [reactive](../connectors/types/reactive/README.md) |
 
 How the reactive connectors are built is [DATA_ARCHITECTURE.md section 4](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors);
-how a pack declares derived kinds is [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#derived-kinds-entities-computed-from-other-kinds).
+how a pack declares derived kinds is [BUILD_GUIDE.md](BUILD_GUIDE.md#53-derived-kinds-entities-computed-from-other-kinds).
 
 ## 9. Connector files and Admin → Connectors
 
@@ -1539,8 +1539,8 @@ variable, as everywhere in the file.
 #### Writes: saving to the source
 
 A connector may declare `writes:`: named commands that change a record in its source, used by write-back's `source` target
-([WRITE_BACK.md › The design and its reasons, section 5.4](WRITE_BACK.md#54-how-a-write-is-described-connector-writes); the administrator's guide
-[WRITE_BACK.md section 13](WRITE_BACK.md#13-writing-to-a-source-writes)). Each command has the `kind` it amends, the extra `params:` a Sutra
+([APPROVALS_GUIDE.md › The design and its reasons, section 5.4](APPROVALS_GUIDE.md#10-writing-to-a-source-writes); the administrator's guide
+[APPROVALS_GUIDE.md section 13](APPROVALS_GUIDE.md#10-writing-to-a-source-writes)). Each command has the `kind` it amends, the extra `params:` a Sutra
 may supply, its plugin's block (`jdbc:` with `sql`, the guard `expect-rows` and the idempotency clause `already-applied`), `confirm:`
 (`reply` or `next-load`) and `timeout:`. Only the JDBC plugin writes ([JDBC_QUERIES.md section 16](../../plugins/drishti-plugin-jdbc/README.md#writes-commands-that-change-a-record));
 the File, Delta and Iceberg connectors never do (a lake is not written per edit) and every other plugin is refused (*plugin … cannot
@@ -1707,7 +1707,7 @@ plugin file
 ```
 
 A plugin can declare its own settings (the `settingSpecs()` method of the source SPI, see
-[CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md)); the shipped plugins are described in `drishti/plugin-settings.yaml`
+[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one)); the shipped plugins are described in `drishti/plugin-settings.yaml`
 inside the engine. A setting a plugin does not declare is a **warning** (a likely typo), never a refusal, because plugins also read
 free-form keys (`layout.*`, `mode.*`, `table.*`, `query.*`). Every key the shipped plugins read is declared in that file; a test
 (`PluginSettingsCatalogueSyncTest`) fails when a plugin reads one it does not declare, or when a setting is marked `required` that
@@ -2114,7 +2114,7 @@ Buttons: **Edit** opens the editor described below, **Test connection** opens it
 ![The connector's page on a phone: one column, targets of at least 44 px](img/connector_files/13-connector-detail-phone.jpg)
 
 The pack side is the same: a pack's page lists the connectors it names, each linked here, and flags a missing one with **Create**
-([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#one-pack-its-own-page)).
+([BUILD_GUIDE.md](BUILD_GUIDE.md#318-what-admin--packs-shows-about-a-pack)).
 
 ![A pack's page: its connectors, one running, one missing with Create](img/connector_files/12-pack-detail.jpg) ![A pack's page on a phone](img/connector_files/14-pack-detail-phone.jpg)
 
@@ -2411,7 +2411,7 @@ curl -s http://localhost:18480/api/v1/admin/health | jq '.packs[] | {name, conne
 | `feed` | `UP`, `DOWN: <Exception>: <message>`, `DOWN: the feed returned no data (serving the last data)`, `DOWN: the feed returned no data` (`DOWN: not fetched yet` only before `start` has run: the first fetch is inside it) |
 
 Every connector recovers without restarting Drishti, and every one starts even when its store is down (see
-[Reconnecting and failures](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#reconnecting-and-failures)).
+[Reconnecting and failures](DEVELOPER_GUIDE.md#1010-reconnecting-and-failures)).
 
 #### Installed but not configured
 
@@ -2639,7 +2639,7 @@ This is the reference. The connector documents show complete configurations for 
 [ActiveMQ](../../plugins/drishti-plugin-activemq/README.md#security) (`ssl://`), [RabbitMQ](../../plugins/drishti-plugin-rabbitmq/README.md#security) (`amqps://`,
 client-certificate login), and for the rest see the [matrix](#connector-matrix) below, whose rows lead to each connector's Security
 section. A plugin author who wants the module in a new connector reads
-[the developer guide](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#tls-for-a-connector-the-shared-module).
+[the developer guide](DEVELOPER_GUIDE.md#108-tls-for-a-connector-the-shared-module).
 
 ### Connector matrix
 
@@ -2991,7 +2991,7 @@ not leave it on).
 
 For plugin authors: the module is `com.ash.drishti.api.tls` (`TlsSettings`, `TlsContexts`, `TlsMaterial`, `Secrets`) in
 `drishti-api`; no Spring, no dependencies beyond the JDK. See
-[CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#tls-for-a-connector-the-shared-module).
+[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#108-tls-for-a-connector-the-shared-module).
 
 ### Outbound HTTP proxy for connectors, AI providers and MCP servers
 
@@ -3501,7 +3501,7 @@ drishti-console/.venv/bin/python tools/drishti.py data ingest --from your-folder
 `--pack`, give `--domain` and `--key` per kind. Each file goes under the date in its name (`trade.2026-11-03.jsonl`), or `--as-of`, else
 the business today ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)); `--date FIELD` only names a field whose differing rows are
 counted. See
-[Generating a pack from JSON Lines](PACK_DEVELOPER_GUIDE.md#generating-a-pack-from-json-lines) and
+[Generating a pack from JSON Lines](BUILD_GUIDE.md#10-a-pack-from-json-lines-pack-new) and
 [CLI_REFERENCE.md](CLI_REFERENCE.md).
 
 ### 11.14 Your bank's names

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 #
-# Compute workers (docs/architecture/PYTHON_COMPUTE.md; the administrator's guide: docs/guides/OPERATIONS_GUIDE.md). The server reads this file at
+# Compute workers (docs/guides/NOTEBOOK_GUIDE.md; the administrator's guide: docs/guides/OPERATIONS_GUIDE.md). The server reads this file at
 # start (drishti.compute.file); every key has its default, so a missing key or file means the value shown here. Off as shipped: no worker
 # starts. Everything workers write goes under <data dir>/compute/ (environments, the SDK, request scratch folders); nothing in /tmp.
 compute:
@@ -49,7 +49,7 @@ compute:
       idle-stop: 5m  # a worker idle this long is stopped (down to min)
       timeout: 30s                   # an interactive request's budget
       timeout-batch: 10m  # a batch request's budget
-    python:                          # code people write: Python items, Python-driven tables and models, Notebook cells (PYTHON_COMPUTE.md section 19)
+    python:                          # code people write: Python items, Python-driven tables and models, Notebook cells (NOTEBOOK_GUIDE.md section 19)
       type: python
       engines: [drishti_compute.items:ItemsEngine]
       environment: system            # the site's interpreter, checked against locks/python.lock before any run; or { python: "3.13", lock: locks/python.lock, index: <name> }

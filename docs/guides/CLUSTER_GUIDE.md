@@ -577,7 +577,7 @@ server would make of the text without writing it; **Save** writes it with the ve
 overwrite each other; **Delete** removes it (its text stays in the history); the history shows earlier texts with a line diff. **New peer
 file** starts `peers/<name>.yaml`.
 
-Every action and every save is in the audit log with the node it was made on. The endpoints are in [API_GUIDE.md](API_GUIDE.md).
+Every action and every save is in the audit log with the node it was made on. The endpoints are in [API_REFERENCE.md](API_REFERENCE.md).
 
 ---
 
@@ -924,7 +924,7 @@ A rolling upgrade of one node is section 8.2.
 
 The identity database is SQLite by default (`jdbc:sqlite:${drishti.data.dir}/identity/drishti.db`); a cluster needs PostgreSQL
 (`DRISHTI_IDENTITY_DB_URL`) so users, sessions, edit lanes and run leases are shared and failover works
-([WRITE_BACK.md](WRITE_BACK.md#16-the-design-and-its-reasons)). Size its `max_connections` for every member's pool
+([APPROVALS_GUIDE.md](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals)). Size its `max_connections` for every member's pool
 (`drishti.db.pool.size`, 20 a member); run a streaming standby (synchronous in one site, asynchronous to the recovery site); minor upgrades by
 standby switchover. The schema files are complete, with no migrations.
 

@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * A node of the logical plan, the one IR every language compiles to (docs/architecture/BI_DESIGN.md section 3.6): MQ, Drishti SQL, a report visual, an alert.
+ * A node of the logical plan, the one IR every language compiles to (docs/architecture/ARCHITECTURE.md §28 section 3.6): MQ, Drishti SQL, a report visual, an alert.
  * Each node says what it is ({@link #op}), what it reads ({@link #inputs}), the properties that make the question ({@link #props}: what the plan hash covers)
  * and, for a scan, the reader's security ({@link #security}: what the security signature covers, never the hash). Immutable.
  */

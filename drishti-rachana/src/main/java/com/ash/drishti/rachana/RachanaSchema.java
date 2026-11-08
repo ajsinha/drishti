@@ -94,7 +94,7 @@ public final class RachanaSchema {
         phone.put("default", Map.of("type", "string", "enum", com.ash.drishti.rachana.model.ScreenPhone.TIERS, "description", "The tier of panels this Sutra gives none"));
         phone.put("summary", text("One line at the top of the phone page (may hold {…})"));
         p.put("phone", Map.of("type", "object", "properties", phone, "additionalProperties", false,
-                "description", "The phone display (docs/guides/PACK_DEVELOPER_GUIDE.md 5.2): order, default tier and summary line"));
+                "description", "The phone display (docs/guides/BUILD_GUIDE.md 5.2): order, default tier and summary line"));
         Map<String, Object> keys = new LinkedHashMap<>();
         KEYS.forEach(k -> keys.put(k, text(EL + ", or impact or raw")));
         p.put("keys", Map.of("type", "object", "properties", keys, "additionalProperties", false,
@@ -241,7 +241,7 @@ public final class RachanaSchema {
         common.put("order", Map.of("type", "integer", "minimum", 0, "maximum", 999, "description", "Sort key within the area or the flow (lower first)"));
         common.put("section", text("The id of one of layout.sections this panel sits in"));
         common.put("phone", Map.of("type", List.of("string", "object"), "description",
-                "The panel's phone tier: must, glance, more or desk, or { tier, rows, columns, sort, series, figures, tab } (docs/guides/PACK_DEVELOPER_GUIDE.md 5)"));
+                "The panel's phone tier: must, glance, more or desk, or { tier, rows, columns, sort, series, figures, tab } (docs/guides/BUILD_GUIDE.md 5)"));
         common.put("collapsible", Map.of("type", "boolean", "description", "The reader may fold the panel to its heading (remembered per reader)"));
         common.put("span", Map.of("type", "integer", "minimum", 1, "maximum", com.ash.drishti.rachana.model.Panel.MAX_SPAN,
                 "description", "Width in columns of a 12-column grid (default: the whole column)"));

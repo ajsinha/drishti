@@ -120,7 +120,7 @@ documents. The pack declares the layout ([Declaring the layout in a pack](#decla
 connector file instead is the form for tables no lake file describes (a vendor's table on S3); `drishti.py lake migrate-config` moves
 such connectors into a lake file ([DATA_LAKE_GUIDE.md section 12](../../docs/guides/DATA_LAKE_GUIDE.md#12-other-lakes-packs-and-older-installations)).
 A Delta connector never writes per edit: write-back keeps corrections as overlays and the loader folds approved ones into the next build
-([WRITE_BACK.md](../../docs/guides/WRITE_BACK.md#52-who-performs-the-write)).
+([APPROVALS_GUIDE.md](../../docs/architecture/ARCHITECTURE.md#316-where-a-write-lands-overlays-owned-rows-and-the-outbox)).
 
 ## Settings
 
@@ -178,7 +178,7 @@ A Delta connector never writes per edit: write-back keeps corrections as overlay
 | `index.block-cache` | int | `16` | Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file); 0 = none |
 | `index.kinds.*` | string |  | Per-kind override of any index setting (index.kinds.<kind>.days) |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10). It takes the shared `proxy.*` settings for an outbound HTTP proxy (DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 Every key with its tier and whether it applies live: [CONFIGURATION.md, `delta`](../../docs/admin/CONFIGURATION.md#delta-tls-proxy); sizing the
@@ -471,7 +471,7 @@ documents when none can answer.
   over every row with the same Rachana semantics as on documents, the matches are sorted, and the answer is exact over the whole day
   (`partial: false`). Role redaction applies as on documents: a field the role sees masked is masked in the columns too, so it can neither
   match nor show. Otherwise the search reads documents, up to `drishti.search.max-scan` (20,000), and says `partial`.
-- **Derived kinds** ([PACK_DEVELOPER_GUIDE.md](../../docs/guides/PACK_DEVELOPER_GUIDE.md#derived-kinds-entities-computed-from-other-kinds))
+- **Derived kinds** ([BUILD_GUIDE.md](../../docs/guides/BUILD_GUIDE.md#53-derived-kinds-entities-computed-from-other-kinds))
   group and aggregate over the column arrays when every expression is a promoted path; only listed members (`max-members`) get a small
   document. Otherwise the day is streamed in one pass, file by file, keeping only the values needed; with `store: disk` (the trading pack's
   `trade-pages`) members go to a sorted store under `<data dir>/derived/<connector>` so pages are complete at any size. Results are kept
@@ -644,4 +644,4 @@ set only when the endpoint is not on it). `https://` endpoints are tunnelled wit
 - [Several connectors for one kind (a union)](../../docs/guides/DATA_GUIDE.md#83-several-connectors-for-one-kind-a-union), [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) and [TLS](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
 - [The data lake and data load guide](../../docs/guides/DATA_LAKE_GUIDE.md): lake files, loading, `.ready` files, maintenance.
 - [BENCHMARK.md, Trades at scale](../../docs/admin/BENCHMARK.md#8-trades-at-scale) and [OPERATIONS_GUIDE.md, Memory and caches](../../docs/guides/OPERATIONS_GUIDE.md#141-the-caches-and-admin--caches).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

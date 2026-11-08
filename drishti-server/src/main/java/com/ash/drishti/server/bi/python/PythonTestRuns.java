@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Runs the {@code tests:} a Python item ships with (BI_GUIDE.md "Tests shipped with an item"; their shape is {@link PythonTests}'s): each hands the item
+ * Runs the {@code tests:} a Python item ships with (REPORTS_GUIDE.md "Tests shipped with an item"; their shape is {@link PythonTests}'s): each hands the item
  * a frame, written in the test or rows of a dataset as the person running it may see them, runs it on the compute pool as a report would, and
  * compares the answer with what the test expects. Check shows each as passed, failed or could-not-run; publishing an item with a failing test is
  * refused (a bi-admin may force it). Nothing is kept.

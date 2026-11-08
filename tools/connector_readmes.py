@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Keeps the generated parts of the connector READMEs in step with their sources (the README standard,
-docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md).
+docs/guides/DEVELOPER_GUIDE.md).
 
 A connector README is written by hand, except two blocks this tool writes:
 
@@ -81,7 +81,7 @@ def settings_block(plugin: str, cat: dict) -> tuple[str, list[str]]:
         extra.append("It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10)" + (
             ", also under " + ", ".join(f"`{p}*`" for p in spec["tls-prefixes"]) if spec.get("tls-prefixes") else "") + ".")
     if spec.get("proxy"):
-        extra.append("It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).")
+        extra.append("It takes the shared `proxy.*` settings for an outbound HTTP proxy (DEVELOPER_GUIDE.md).")
     names += ["tls.*"] if spec.get("tls") else []
     names += ["proxy.*"] if spec.get("proxy") else []
     return "\n".join(lines + [""] + [" ".join(extra)]), names

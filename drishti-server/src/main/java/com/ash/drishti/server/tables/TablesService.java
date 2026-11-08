@@ -94,7 +94,7 @@ public final class TablesService {
     }
 
     /**
-     * The stored tables and models (BI's item store: what the editors publish, docs/architecture/BI_DESIGN.md Q16) beside the files: the pivot, Sutras,
+     * The stored tables and models (BI's item store: what the editors publish, docs/architecture/ARCHITECTURE.md §28 Q16) beside the files: the pivot, Sutras,
      * Flight and BI then read one catalogue. Set once at start.
      */
     public void itemStore(ItemStore store) {

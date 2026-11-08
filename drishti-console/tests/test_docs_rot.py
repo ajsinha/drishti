@@ -23,8 +23,8 @@ the console's own help guides. For each one the checks below compare a name the 
 * a repository path written in backticks exists;
 * a ``drishti.py`` command and its sub-commands exist in the CLI's argparse tree;
 * a ``DRISHTI_*`` environment variable, a ``drishti.*`` server setting and a console ``application.yaml`` key exist;
-* a ``DRS-NNNN`` code is one the code has, and every code the code has is in the one error-code table (API_GUIDE's *Error code
-  table*, status and meaning; OPERATIONS_GUIDE keeps cause and fix only where needed) or RACHANA_REFERENCE;
+* a ``DRS-NNNN`` code is one the code has, and every code the code has is in the one error-code table (API_REFERENCE's *Error code
+  table*, status and meaning; TROUBLESHOOTING keeps cause and fix only where needed) or RACHANA_REFERENCE;
 * a command word typed with ``<GO>`` is a pack's mnemonic, a pack code or a reserved word;
 * a kind named as a kind (``the `trade` kind``, ``kind `trade```, ``--kind trade``, ``/v/trade/``) is a kind of some pack.
 
@@ -245,8 +245,9 @@ def ignored(paths: list[str]) -> set[str]:
 
 # Files a worked example asks the reader to create (and another project's files the text points to), by document.
 EXAMPLE_PATHS = {
-    # the pack guide's worked example, and its Part VIII (was DEVELOPER_GUIDE.md, 2.9.7): the developer recipe's new files
-    "docs/guides/PACK_DEVELOPER_GUIDE.md": ("config/packs/helpdesk", "config/packs/library", "tools/packgen/library", "config/packs/my-bank",
+    # the build guide's worked examples, and the developer guide's recipes: the new files they create
+    "docs/guides/BUILD_GUIDE.md": ("config/packs/helpdesk", "config/packs/library", "tools/packgen/library", "config/packs/my-bank"),
+    "docs/guides/DEVELOPER_GUIDE.md": ("config/packs/my-bank",
                                             "MnemonicController.java", "MnemonicApiTest.java", "/Notice", "/db/NoticeEntity.java", "source_routes.py",
                                             "sources.html", "sources.js", "test_sources.py"),
     "docs/guides/CLI_REFERENCE.md": ("config/packs/curves-demo",),
@@ -364,7 +365,7 @@ CODE_SUFFIXES = (".java", ".py", ".js", ".ts", ".yaml", ".yml", ".sh", ".ps1", "
 ENV_EXAMPLES = {"DRISHTI_PG_PASSWORD", "DRISHTI_CI_TOKEN", "DRISHTI_CONSOLE__SECTION__KEY",
                 "DRISHTI_CONSOLE",   # tutorial 10: a shell variable holding the console's address, beside DRISHTI_SERVER
                 "DRISHTI_FIGURES_OUT", "DRISHTI_FIGURES_BASELINE"}   # read only by tests/test_var_family_figures_browser.py (ELEMENTS.md 12.2)
-# Dotted words that look like console keys and are not: a report's YAML path quoted in an error message (BI_GUIDE.md).
+# Dotted words that look like console keys and are not: a report's YAML path quoted in an error message (REPORTS_GUIDE.md).
 NOT_SETTINGS = {"layouts.phone.desk.order"}
 
 
@@ -542,8 +543,8 @@ def _ranges(text: str) -> set[str]:
 
 # Codes the documents name as reserved or retired on purpose (the error code table says which).
 RESERVED_CODES = {"DRS-3001"}
-# What a worked example adds: PACK_DEVELOPER_GUIDE Part VIII, section 5 builds an endpoint answering DRS-4005 and a drishti.notices setting.
-EXAMPLE_NAMES = {"docs/guides/PACK_DEVELOPER_GUIDE.md": {"DRS-4005", "drishti.notices.max-length"}}
+# What a worked example adds: DEVELOPER_GUIDE section 5 builds an endpoint answering DRS-4005 and a drishti.notices setting.
+EXAMPLE_NAMES = {"docs/guides/DEVELOPER_GUIDE.md": {"DRS-4005", "drishti.notices.max-length"}}
 
 
 def code_problems() -> list[str]:
@@ -556,10 +557,10 @@ def code_problems() -> list[str]:
         for m in _CODE.finditer(text):
             if m.group(0) not in known and m.group(0) not in EXAMPLE_NAMES.get(rel, ()):
                 bad.append(f"{rel}:{line_of(text, m.start())}: {m.group(0)} (not in the code)")
-    api = read("docs/guides/API_GUIDE.md")
+    api = read("docs/guides/API_REFERENCE.md")
     table = api.split("\n## Error code table", 1)[1].split("\n## ", 1)[0]
     listed = _ranges(table) | _ranges(read("docs/guides/RACHANA_REFERENCE.md"))
-    bad += [f"{c} is in the code and neither in API_GUIDE's error code table nor in RACHANA_REFERENCE" for c in sorted(codes_in_code() - listed)]
+    bad += [f"{c} is in the code and neither in API_REFERENCE's error code table nor in RACHANA_REFERENCE" for c in sorted(codes_in_code() - listed)]
     return bad
 
 

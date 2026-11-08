@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Did you know: this pack's facts for Home (drishti-console/core/facts.py; docs/guides/PACK_DEVELOPER_GUIDE.md, "Facts for Home").
+# Did you know: this pack's facts for Home (drishti-console/core/facts.py; docs/guides/BUILD_GUIDE.md, "Facts for Home").
 # Every number is computed from the exposure engine's answers (and the VaR engine's, for the fact that needs market-risk) on the
 # business date, as the user who opens Home; a fact whose condition does not hold today is not shown.
 facts: 1

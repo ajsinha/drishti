@@ -440,7 +440,7 @@ logistics, genomics, climate risk, liquidity risk and operational risk. This sec
 #### 4.3.1 BI: Power BI, Tableau, Qlik, Looker, Superset, Metabase
 
 - **What they do best.** Visual authoring for analysts, very large ecosystems, connectors to everything, certifications, SaaS at a
-  per-user price. Power BI is the reference our users know ([BI_DESIGN](../architecture/BI_DESIGN.md), section 11, maps every Power BI
+  per-user price. Power BI is the reference our users know ([ARCHITECTURE](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer), section 11, maps every Power BI
   capability to a Drishti component). Looker's semantic model (LookML) and its Gemini conversational analytics; Superset and
   Metabase as open-source options.
 - **Drishti's angle.** BI on the same governed data as the terminal, drilling from a chart into the record with its links and history;
@@ -623,9 +623,9 @@ Every source read on **2026-11-01** unless noted. Claims are the publisher's own
 
 - [README](../../README.md); [IMPLEMENTATION_PLAN](../architecture/IMPLEMENTATION_PLAN.md) (release table and themed releases);
   [VAR_GUIDE](../guides/VAR_GUIDE.md); [EXPOSURE_GUIDE](../guides/EXPOSURE_GUIDE.md);
-  [REGULATORY_VAR_REPORTING](../guides/REGULATORY_VAR_REPORTING.md); [BI_GUIDE](../guides/BI_GUIDE.md);
-  [BI_DESIGN](../architecture/BI_DESIGN.md) (gap check against Power BI); [EDITIONS](../guides/ADMIN_GUIDE.md#12-what-a-lens-is);
-  [MOBILE_DISPLAY](../guides/PACK_DEVELOPER_GUIDE.md#part-ix-designing-for-phones); [RESOURCES_AND_SCALE](../guides/CLUSTER_GUIDE.md#15-sizing-memory-cpu-and-disk);
+  [REGULATORY_VAR_REPORTING](../guides/REGULATORY_VAR_REPORTING.md); [REPORTS_GUIDE](../guides/REPORTS_GUIDE.md);
+  [ARCHITECTURE](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) (gap check against Power BI); [EDITIONS](../guides/ADMIN_GUIDE.md#12-what-a-lens-is);
+  [MOBILE_DISPLAY](../guides/BUILD_GUIDE.md#32-designing-for-phones); [RESOURCES_AND_SCALE](../guides/CLUSTER_GUIDE.md#15-sizing-memory-cpu-and-disk);
   [BENCHMARK](../admin/BENCHMARK.md); [AI](../admin/AI.md); [lenses](../architecture/LENSES.md); [connectors](../guides/DATA_GUIDE.md#8-connectors).
 
 **Risk aggregation cubes**

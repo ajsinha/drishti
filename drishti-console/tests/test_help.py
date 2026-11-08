@@ -53,7 +53,7 @@ def test_guides_render_examples_boxes_toc_and_internal_links(client):
     page = client.get("/help/operations").text
     assert 'class="help-example"' in page and "data-copy" in page
     assert "On this page" in page and 'href="/help/user-guide"' in page
-    assert 'class="help-box tip"' in client.get("/help/pack-developer-guide").text   # its deep-documents section (was NESTED_DOCUMENTS.md) has a tip box
+    assert 'class="help-box tip"' in client.get("/help/build-guide").text   # its deep-documents section (was NESTED_DOCUMENTS.md) has a tip box
     ref = client.get("/help/rachana-reference").text
     assert "DRS-2101" in ref and "panel kinds" in ref.lower()
     arch = client.get("/help/docs-architecture-architecture").text
@@ -69,10 +69,10 @@ def test_search_and_missing_guides(client):
 
 def test_f1_and_the_short_addresses_of_the_240_and_250_pages_open_their_sections(client):
     """BI Studio, the theme designer, the Notebook and Transforms have their own F1 target, and the new pages a short help address."""
-    for screen, page, anchor in (("bi-designer", "bi-guide", "26-bi-studio-authoring-as-one-product"),
-                                 ("bi-theme-designer", "bi-guide", "52-themes"),
-                                 ("bi-transform", "bi-guide", "17-data-prep-the-transform-editor"),
-                                 ("bi-notebook", "user-guide", "the-notebook")):
+    for screen, page, anchor in (("bi-designer", "bi-guide", "8-bi-studio-and-the-report-designer"),
+                                 ("bi-theme-designer", "bi-guide", "103-themes"),
+                                 ("bi-transform", "notebook-guide", "5-data-prep-the-transform-editor"),
+                                 ("bi-notebook", "notebook-guide", "2-the-notebook")):
         target = client.get(f"/help/context/{screen}", follow_redirects=False).headers["location"]
         assert target == f"/help/{page}" + (f"#{anchor}" if anchor else ""), (screen, target)
         if anchor:
@@ -128,7 +128,7 @@ def test_mobile_ready(client):
     assert "--d-fs-16: 16px;" in client.get("/static/css/drishti_tokens.css").text
 
 
-SUTRA_GUIDE = Path(__file__).resolve().parents[2] / "docs" / "guides" / "SUTRA_DEVELOPER_GUIDE.md"
+SUTRA_GUIDE = Path(__file__).resolve().parents[2] / "docs" / "guides" / "BUILD_GUIDE.md"
 KINDS = ("kv table tabs line area hbar ladder links status provenance markdown gauge surface waterfall histogram scatter candlestick graph "
          "timeline pivot metric").split()
 
@@ -136,11 +136,11 @@ KINDS = ("kv table tabs line area hbar ladder links status provenance markdown g
 def test_the_sutra_developer_guide_is_a_help_card_with_screenshots(client):
     import re
     index = help_pages(client)
-    assert "Screen developer guide" in index and "/help/sutra-developer-guide" in index
-    page = client.get("/help/sutra-developer-guide")
+    assert "Screen developer guide" in index and "/help/build-guide#11-what-a-sutra-is-and-when-one-applies" in index
+    page = client.get("/help/build-guide#11-what-a-sutra-is-and-when-one-applies")
     assert page.status_code == 200 and "data-unavailable" not in page.text
     srcs = set(re.findall(r'<img[^>]*\bsrc="([^"]+)"', page.text))
-    assert len(srcs) >= 5 and all(s.startswith("/help/files/guides/img/sutras/") for s in srcs), srcs
+    assert sum(s.startswith("/help/files/guides/img/sutras/") for s in srcs) >= 5 and all(s.startswith("/help/files/") for s in srcs), srcs
     for src in srcs:
         assert client.get(src).status_code == 200, src
 
@@ -154,7 +154,7 @@ def test_the_sutra_developer_guide_teaches_writing_end_to_end_and_links_the_cata
         assert f"](RACHANA_REFERENCE.md#{kind})" in text, kind
     assert "/studio?" not in text and "Open Studio" not in text and "twenty panel" not in text
     assert "RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench" in text
-    assert len(text.splitlines()) < 1500
+    assert len(text.splitlines()) < 5500     # the build guide holds packs, schema to pack, Sutras, forms and phones (2.9.11.h)
 
 
 def test_the_retired_sutra_guides_are_gone_and_their_addresses_redirect(client):
@@ -163,20 +163,20 @@ def test_the_retired_sutra_guides_are_gone_and_their_addresses_redirect(client):
         assert not (docs / old).exists(), old
     for old in ("sutra-guide", "rachana-guide"):
         r = client.get(f"/help/{old}", follow_redirects=False)
-        assert r.status_code == 301 and r.headers["location"] == "/help/sutra-developer-guide", old
+        assert r.status_code == 301 and r.headers["location"] == "/help/build-guide#11-what-a-sutra-is-and-when-one-applies", old
     assert not (SUTRA_GUIDE.parents[2] / "drishti-console" / "web" / "guides" / "sutra-guide.md").exists()
 
 
 def test_no_sutra_guide_tells_the_reader_to_open_studio():
     root = SUTRA_GUIDE.parents[2]
-    for f in (SUTRA_GUIDE, root / "docs" / "guides" / "RACHANA_REFERENCE.md", root / "docs" / "guides" / "PACK_DEVELOPER_GUIDE.md"):
+    for f in (SUTRA_GUIDE, root / "docs" / "guides" / "RACHANA_REFERENCE.md", root / "docs" / "guides" / "BUILD_GUIDE.md"):
         text = f.read_text()
         assert "Open Studio" not in text and "(`/studio`)" not in text and "twenty panel" not in text, f.name
 
 
 def test_the_build_menu_learn_links_point_at_the_new_guides(client):
     html = client.get("/t").text
-    for slug in ("rachana-reference#screen-designer-and-the-build-workbench", "sutra-developer-guide", "rachana-reference", "pack-developer-guide"):
+    for slug in ("rachana-reference#screen-designer-and-the-build-workbench", "build-guide#11-what-a-sutra-is-and-when-one-applies", "rachana-reference", "build-guide"):
         assert f'href="/help/{slug}"' in html, slug
     assert "/help/sutra-guide" not in html and "/help/build-a-pack" not in html
 
@@ -184,7 +184,7 @@ def test_the_build_menu_learn_links_point_at_the_new_guides(client):
 def test_guide_screenshots_fit_their_column_and_open_full_size(client):
     """UX-03: a guide's screenshots are wrapped in a link to the image itself, and drishti_help.css fits them to the column."""
     import re
-    page = client.get("/help/sutra-developer-guide").text
+    page = client.get("/help/build-guide#11-what-a-sutra-is-and-when-one-applies").text
     imgs = re.findall(r'(<a [^>]*>)?\s*<img [^>]*src="(/help/files/guides/img/sutras/[^"]+)"', page)
     assert len(imgs) >= 5
     css = client.get("/static/css/drishti_help.css").text
@@ -282,12 +282,14 @@ def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages()
     # 66: plus the lake configuration's two (the lake guide and tutorial 16, Part B) and Data out's two (the Arrow Flight guide and tutorial 17),
     # 2.9.11.c, the same rule (a feature's guide and tutorial, two entries); Flight's reference and client pages are reached from its guide.
     # 2.9.11.b's data inbox, custom functions and MR cube tutorials raised the ceiling to 70; 2.9.11.c's lake and Flight pages to 72.
-    # 73: plus Schema to pack (docs/guides/SCHEMA_TO_PACK_GUIDE.md, 2.9.11.c), split from the data guide when it passed 1,500 lines.
-    # 75: plus virtual tables' two (the tables guide and tutorial 18, 2.9.11.d), the same rule (a feature's guide and tutorial).
-    # 77: plus the public sector's two (the Public sector guide and tutorial 14, 2.9.11.g), the same rule (a domain's guide and tutorial).
+    # 73: plus Schema to pack (docs/guides/BUILD_GUIDE.md, 2.9.11.c), split from the data guide when it passed 1,500 lines.
+    # 75: plus virtual tables' two (the tables guide and tutorial 44, 2.9.11.d), the same rule (a feature's guide and tutorial).
+    # 77: plus the public sector's two (the Public sector guide and tutorial 46, 2.9.11.g), the same rule (a domain's guide and tutorial).
     # 76: the docs fold (2.9.11.g): the in-memory lake guide became a section of the data lake guide; the cap is the count, so a new
     # listed page needs a page folded first.
-    assert 30 <= total <= 76, total
+    # 80: the 2.9.11.h docs rewrite (builder D): six build and analyse guides fold into five (Reports, Notebook, Approvals, Build, Embed,
+    # plus the Developer guide), each beside its tutorial (10, 14, 24, 5, 16) on its row; the tutorial fold of the same release brings it down.
+    assert 30 <= total <= 80, total
 
 
 def test_every_old_help_address_still_opens_something(client):

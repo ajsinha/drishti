@@ -72,7 +72,7 @@ Industries come as **packs**. Seven ship and load by default: `core` (counterpar
 `market-data` (curves, surfaces, FX, fixings), `trading` (`TRD`: trades from ENDUR, CALYPSO and MUREX), `counterparty-risk`,
 `market-risk`, `world-economy` and `news-and-markets`. A pack loads the packs it builds on. Every field is written in UPPER_SNAKE
 (`TRADE_ID`, `PRODUCT_TYPE`), as the production systems name them. The retired example packs live in `examples/packs/` and load only
-when you ask ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which)).
+when you ask ([BUILD_GUIDE.md](BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which)).
 
 Things worth knowing before you plan an installation:
 
@@ -307,7 +307,7 @@ Scripts, notebooks, Excel and `tools/drishti.py` call the server with a **person
   reads; `loads:write` announces data loads, `bi:write` edits BI items, `packs:admin` manages packs and connectors, …), **Create**. The
   secret (`drk_<id>_<secret>`) is shown **once**.
 - **Over the API** (with a session token): `POST /api/v1/me/tokens` with `{"name": "laptop", "days": 30, "scopes": []}` answers `201`
-  with the record and its `secret` ([API_GUIDE.md](API_GUIDE.md#personal-api-tokens)).
+  with the record and its `secret` ([API_REFERENCE.md](API_REFERENCE.md#28-personal-api-tokens)).
 
 Keep it in a file only you can read, never on the command line, and check it:
 
@@ -914,7 +914,7 @@ approval*, its proposer may *Withdraw* it, and only a **second administrator** m
 approval a server or engine key is written as one line of the server's `application.local.yaml` (every other line and comment kept, the line
 naming the proposal, proposer and approver), a console key into the approving console's `config/application.local.yaml`; both are read at the
 next start. Every step is audited. Settings of other files (connectors, packs, editions, the cluster folder, the content store) say *in its
-file*: they are changed on their own screens. The API is `/api/v1/admin/settings/proposals` ([API_GUIDE.md](API_GUIDE.md)).
+file*: they are changed on their own screens. The API is `/api/v1/admin/settings/proposals` ([API_REFERENCE.md](API_REFERENCE.md)).
 
 **The Admin screens' forms** are drawn by one form component, so they behave alike: a field's problem is said in words under it and nothing
 is sent until it is fixed; a date is the business-date picker; a box left unticked is saved as **off**; in the connector editor a credential
@@ -1436,7 +1436,7 @@ lake root or point `DRISHTI_DELTA_ROOT` at it), the bundle (`bundle/`, already v
 ([CLI_REFERENCE.md](CLI_REFERENCE.md#quickest-path-pack-make); `--date` names your business-date field). From **JSON Schema**, `pack make --schema` makes
 the same folder, and **Build → New pack** (`/build/pack/new`) the same bundle in the browser (it profiles every file in the browser, proposes
 kinds, ids, business dates and one Sutra per type, and previews them), then hands it to Admin → Packs → Deploy an archive
-([SCHEMA_TO_PACK_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md)). Schemas alone give a pack that serves its samples.
+([BUILD_GUIDE.md](BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack)). Schemas alone give a pack that serves its samples.
 
 ### 8.13 Windows
 
@@ -1458,7 +1458,7 @@ With the server running and an administrator signed in, the same archive deploys
 copy does not: the server **checks the archive first**, shows **what it changes** from the running version (breaking changes marked), **keeps the
 version it replaces** for a one-click rollback, and **puts the old files back by itself** if it cannot start with the new ones. The archive is the
 pack only, never data; settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtipacksdeploy); endpoints:
-[API_GUIDE.md](API_GUIDE.md#deploying-a-pack-archive-and-the-packs-connectors).
+[API_REFERENCE.md](API_REFERENCE.md#220-deploying-a-pack-archive-and-the-packs-connectors).
 
 ### 9.1 Deploy an archive
 
@@ -1634,7 +1634,7 @@ artifact-disabled     pack:lab-base  impact: Packs that extend it (1), Connector
 artifact-uninstalled  connector:scratch-conn  impact: nothing depends on it; choice: alone; result: archived as 20261012T142658-connector-scratch-conn
 ```
 
-The endpoints are under `/api/v1/admin/artifacts` ([API_GUIDE.md](API_GUIDE.md#administration-artifacts-apiv1adminartifacts)): the list, `impact`,
+The endpoints are under `/api/v1/admin/artifacts` ([API_REFERENCE.md](API_REFERENCE.md#223-administration-artifacts-apiv1adminartifacts)): the list, `impact`,
 `disable`, `enable`, `uninstall` (`cascade`, `confirm`), `uninstalled`, `restore`, delete, and `bi/check` (the dry run of a BI upload). **A personal
 API token never reaches them** (`drishti.security.token-never`): they are for an administrator at the console (or `curl` with the session
 cookie). The codes: `DRS-5040` (404: no such artifact or archive), `DRS-5041` (409: it has dependants; the answer carries the impact),
@@ -1799,7 +1799,7 @@ Health (its owner sees the error on the Reports page).
 
 ### 12.2 Collaboration email and the outbox
 
-Shares can be emailed ([COLLABORATION.md](../architecture/COLLABORATION.md)). Off until all three are set (the server refuses to start with email
+Shares can be emailed ([ARCHITECTURE.md §31](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals)). Off until all three are set (the server refuses to start with email
 on and sign-in off): `drishti.security.enabled: true`, `drishti.collab.console-url` and an SMTP server:
 
 ```bash
@@ -2107,7 +2107,7 @@ a missing result only makes its run `expired`); settings `config/runs/runs.yaml`
 SQL per model, the share from the cache, the busiest readers and the Python runner: a model with many questions and few from the cache is the one a
 rollup helps.
 
-The BI engine's metrics ([BI_DESIGN.md](../architecture/BI_DESIGN.md#68-slas-and-observability)): `drishti_bi_query_seconds` (`model`, `layer`),
+The BI engine's metrics ([ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#285-the-query-engine-and-the-plan)): `drishti_bi_query_seconds` (`model`, `layer`),
 `drishti_bi_query_rows`, `drishti_bi_cache_requests_total{result}`, `drishti_bi_admission_wait_seconds`, `drishti_bi_refusals_total{code}`,
 `drishti_bi_fragment_seconds`, `drishti_bi_sq_active`, `drishti_bi_sq_lag_seconds`, `drishti_bi_sq_mode{mode}`, `drishti_bi_python_seconds`,
 `drishti_bi_layer_rebuild_seconds`, and the runs' `drishti.bi.runs.*`. Alert on `drishti_bi_sq_mode{mode="tick"} > 0` for long (a model over its
@@ -2444,7 +2444,7 @@ before every call, a per-call size bound, and any failure or NaN from finite inp
 
 Compute workers run Python computations outside the server's JVM: a pool of worker processes per kind of work, the data handed to them as Arrow files
 already read and masked as the person who asked, in a locked environment of libraries an administrator approved
-([PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md); the module `drishti-compute`). Python people write in BI (python items and visuals,
+([NOTEBOOK_GUIDE.md](NOTEBOOK_GUIDE.md); the module `drishti-compute`). Python people write in BI (python items and visuals,
 Python-driven tables, Notebook cells) runs here too, on the pool `python`.
 
 ### 15.1 Switch it on
@@ -2547,7 +2547,7 @@ it. A new lock is a new environment.
 **Admin → Compute** shows per pool the workers busy, idle and starting here and on other nodes, the queues by class, served, crashed and recycled
 counts, latency, **Test** and **Build**; the requests running (**Cancel**); the approval requests; the environments; and the last 200 requests. The
 same is `GET /api/v1/admin/compute`; decisions `POST /api/v1/approvals/compute/{id}/approve|reject|revoke` with `{"reason": "..."}`
-([API_GUIDE.md](API_GUIDE.md)). On Windows pools run in warm mode on the console's Python (the SDK is pure Python) and environments build from
+([API_REFERENCE.md](API_REFERENCE.md)). On Windows pools run in warm mode on the console's Python (the SDK is pure Python) and environments build from
 `win_amd64` wheels. Measured on a 24-core workstation: about 3,000 trivial requests a second whatever the worker count (the supervisor's own cost);
 real engines grow with the workers ([BENCHMARK.md](../admin/BENCHMARK.md)).
 
@@ -2957,7 +2957,7 @@ upgrades, VaR sharding, the console with several servers, sizing and performance
 
 Four runbooks for the incidents an operator meets most; [section 21](#21-troubleshooting) has everything else. Each gives the symptoms, the diagnosis
 step by step, the fixes and how to verify. The examples use `http://localhost:18480` for the server and `http://localhost:17480` for the console; with
-security on add `-H "Authorization: Bearer $TOKEN"` to server calls (an administrator's token for `/api/v1/admin/*`; [API_GUIDE.md](API_GUIDE.md)).
+security on add `-H "Authorization: Bearer $TOKEN"` to server calls (an administrator's token for `/api/v1/admin/*`; [API_REFERENCE.md](API_REFERENCE.md)).
 
 ### 20.1 Source down or slow
 
@@ -3106,7 +3106,7 @@ changed since is stale (`DRS-2006`: reject it and propose again from the live ve
 
 - **Fix the file in place** and save; hot reload applies it. **Not in a generated pack**: most shipped packs' Sutras start with `Generated by
   tools/packgen/… Edit the taxonomy, not this file.` A fix there works at once but the next generator run undoes it and the generated-file check fails
-  (`pack manifests out of date`): use it only to restore service, then change the generator ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)).
+  (`pack manifests out of date`): use it only to restore service, then change the generator ([BUILD_GUIDE.md](BUILD_GUIDE.md#301-how-the-shipped-packs-are-generated)).
   To change a generated layout for your site only, save a higher version in the site Sutra folder.
 - **Fix it in the Build workbench.** **Save** needs `DRISHTI_STUDIO_SAVE=true` and the `author`, `approver` or `admin` role (`GET
   /api/v1/studio/settings` answers `{"approve":true,"review":true,"save":true}`). It checks the Sutra first, saves into the first site folder
@@ -3316,7 +3316,7 @@ so most problems clear once the cause is fixed.
 | Charts are blank | the chart library did not load (a proxy, a strict extension) | `curl -s -o /dev/null -w "%{http_code}\n" http://localhost:17480/static/vendor/echarts/echarts.min.js` prints `200`; allow `/static/` through; hard-refresh |
 | `400 DRS-5001` "path parameters (;) are not accepted" under `/api` or `/actuator` | the request path is not written plainly (a `;`, an encoded letter or `/`, a `.`, `..` or `//` segment) | send the plain path; encode only characters that are data in a name or id (`urllib.parse.quote(name, safe='')`, `encodeURIComponent`) |
 | `/actuator/prometheus` answers 401 (`operational endpoints need an admin token or the metrics token`) or 403 | security on: only `/actuator/health*` is open | start the server with a long random `DRISHTI_METRICS_TOKEN` and give Prometheus the same ([13.4](#134-prometheus-grafana-and-the-suggested-alerts)); `curl -H "Authorization: Bearer $DRISHTI_METRICS_TOKEN"` then gives `200` |
-| `/api/docs` answers 401 | with security on it needs any user's token (not the metrics token) | send a user's token, or read [API_GUIDE.md](API_GUIDE.md) |
+| `/api/docs` answers 401 | with security on it needs any user's token (not the metrics token) | send a user's token, or read [API_REFERENCE.md](API_REFERENCE.md) |
 | `API calls return DRS-5010 sign in first` | the session expired (10 hours) | sign in again |
 | The console keeps moving between servers | *Console servers* on Admin → Health; the log `server ... set aside after 2 failed requests in a row` | fix the server it leaves; on a flaky network raise `backend.fail_after` ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)) |
 
@@ -3329,12 +3329,12 @@ so most problems clear once the cause is fixed.
 | `DRS-1001 no source holds trade/MX-29999999` | a view address (bookmark, old link) names an id no source has | correct the id; each pack's guide under Help → Domain packs has examples |
 | `DRS-5002 … may not open … entities` | your roles lack the kind, or its pack is not yours or is off | `GET /api/v1/me/packs`; tick the pack in the box menu, or ask for the pack, a role, or the pack switched on ([20.4](#204-users-cannot-sign-in) fix D) |
 | I typed an id and got a pick list | the command named the *start* of several ids, or had a word, `*` or a comparison after it | type the whole id, or pick the row (click, or `↓` and `Enter`) |
-| The pick list shows only ids, or odd columns | a kind without `columns:` in its pack shows its first plain fields; ids only: no plain top-level fields, or masked | `curl -s -G …/api/v1/search --data-urlencode 'q=LCR limit 1'` shows the `columns`; add `columns:` to the pack ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#columns-the-key-fields-of-a-pick-list)); or name the fields in the command |
+| The pick list shows only ids, or odd columns | a kind without `columns:` in its pack shows its first plain fields; ids only: no plain top-level fields, or masked | `curl -s -G …/api/v1/search --data-urlencode 'q=LCR limit 1'` shows the `columns`; add `columns:` to the pack ([BUILD_GUIDE.md](BUILD_GUIDE.md#43-columns-the-key-fields-of-a-pick-list)); or name the fields in the command |
 | A table shows only 25 rows; ↑ ↓ Enter do nothing | tables page (the choice is remembered per browser); the table has no focus | `›`, `»` or more rows per page; click a row or `Tab` to it |
-| Suggestions do not appear | `curl -s "http://localhost:18480/api/v1/command/suggest?q=T"`: a list means the server is fine (refresh the page); empty: no enabled pack has that mnemonic, or every source missed the 30 ms budget | for a custom source declare `search` ([CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md)) |
+| Suggestions do not appear | `curl -s "http://localhost:18480/api/v1/command/suggest?q=T"`: a list means the server is fine (refresh the page); empty: no enabled pack has that mnemonic, or every source missed the 30 ms budget | for a custom source declare `search` ([DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one)) |
 | Type-ahead misses a corrected past day | the day was restated with no data-load signal | **Reload** that day ([14.4](#144-the-multi-day-type-ahead-index)) |
 | A panel says "No data available" | the document lacks what the panel needs, or another shape ("The data did not have the shape this panel expects": hover for the error) | **F9** shows the raw JSON to compare with the panel's `rows:` path; fix the Sutra ([20.2](#202-a-sutra-is-broken-or-an-edit-does-not-show)) |
-| The About drawer says nothing about a number | the pack's `config/about.yaml` has no entry (a mistake is listed in `/api/v1/sutras/problems`, `DRS-2040`–`DRS-2044`) | [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary) |
+| The About drawer says nothing about a number | the pack's `config/about.yaml` has no entry (a mistake is listed in `/api/v1/sutras/problems`, `DRS-2040`–`DRS-2044`) | [BUILD_GUIDE.md](BUILD_GUIDE.md#72-about-text-and-glossary) |
 | The Ask box is missing, or says "Ask is unavailable" (`DRS-4008`) | Ask is off (`drishti.explain.ask.enabled` and the pack in `ask.packs`); the endpoint is down, slow or refused the key | the log line `ask failed for …`; [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiexplainask--ask-about-this-page-optional-off-by-default) |
 | A linked entity shows `pending` or `missing` | `pending`: it did not arrive within the link budget (40 ms; 1 s through Drishti\*net); `missing`: no source has it | a slow source ([20.1](#201-source-down-or-slow)); open the link for the real error |
 | A view does not tick | a picked date (amber) is a static snapshot; or the source does not stream (`provenance.live` false) | press **Live**; the trading pack's Kafka stream needs `DRISHTI_STREAM_TRADING=true`; ([20.3](#203-live-latency-high-or-live-views-stop-ticking)) |
@@ -3491,10 +3491,10 @@ saved state; an item it cannot convert is never changed.
 | A board tile says "Not available"; never changes colour | the report or visual is gone or not yours (`GET /api/v1/bi/boards/{id}`: `problems` with `DRS-9052`); `on:` names a column the tile lacks, or the value is masked |
 | A python visual, Python dataset or Notebook cell says `DRS-9074` (Run greyed *Off: …*) | Python does not run here, and why: compute off, the pool `python` missing or not strict, no strict sandbox (Windows, no Landlock), the interpreter not carrying the pinned versions, the queue full ([15.1](#151-switch-it-on)); `GET /api/v1/bi/python/runtime` |
 | `DRS-9071`, `DRS-9072`, `DRS-9073`, `DRS-9075`; a python measure refused (`DRS-9013`) | the code raised or returned the wrong thing (traceback for `bi-author`); over `timeout`, `memory` or rows (`python-max-seconds`, `python-max-memory-mb`); an unlisted package, network, files or processes (pin it in `locks/python.in` and add it to `drishti.bi.report.python-packages`); a frame not matching the declared columns; show the measure in a python visual |
-| A Vega-Lite visual says Not drawn, is empty, or "may not load anything from a URL" | the specification uses what drishti-chart does not draw (the message lists each path and what to use, [BI_GUIDE.md](BI_GUIDE.md#35-vega-lite-visuals)); a field not in the rows (`DESK`, not `trade.DESK`); remove `data.url`/`loader` |
+| A Vega-Lite visual says Not drawn, is empty, or "may not load anything from a URL" | the specification uses what drishti-chart does not draw (the message lists each path and what to use, [REPORTS_GUIDE.md](REPORTS_GUIDE.md#96-vega-lite-visuals)); a field not in the rows (`DESK`, not `trade.DESK`); remove `data.url`/`loader` |
 | The Notebook's extract is short; a SQL cell is refused (`DRS-9170`, `DRS-9072`) | `bi.notebook.max_rows` (10,000) of your rows; SQL is one read-only `SELECT` over the model, at most `sql_max_chars` |
 | Calc: `No module named 'drishti_bi'`, `needs JavaScript Promise Integration`, `DRS-9002` | `import drishti_bi` in the cell; `await drishti_bi.query_async(...)`; you need the `bi` power |
-| A window function reads `null`; a rank differs by reader; `DRS-9020` *no many-to-one path* | no row before or after; row rules apply first; group by a field every fact reaches, or ask the measures apart ([BI_GUIDE.md](BI_GUIDE.md#31-several-unrelated-fact-tables-in-one-query)) |
+| A window function reads `null`; a rank differs by reader; `DRS-9020` *no many-to-one path* | no row before or after; row rules apply first; group by a field every fact reaches, or ask the measures apart ([REPORTS_GUIDE.md](REPORTS_GUIDE.md#53-relationships-and-how-a-question-joins)) |
 | A history query is empty or refused; a publish refused (`DRS-9040`) for a rename; *Roll back this import* `DRS-9004` | the live table has not been open long enough (Layers: `samples`); give the column a `path:` so the rename is recognised; an item changed since: export, then a bi-admin rolls back with force |
 | A deployed pack's BI items did not appear | the import was held (deploy answer `bi.loaded: false`, audit `pack-bi-held`) or files not named `<name>.<kind>.yaml` |
 | A theme or format refused (`DRS-9036`, `DRS-9032`); a Transform input refused (`DRS-9102`, `DRS-9108`) | the designer names the path; pick the kind and fields from the editor's lists |
@@ -3517,7 +3517,7 @@ is suspect`, `refused a call from ...`) and **Admin → Net** shows the members,
 
 ## 22. Error codes
 
-Every code, with its HTTP status and what it means, is in one table: [API guide, Error code table](API_GUIDE.md#error-code-table). The Sutra and pack
+Every code, with its HTTP status and what it means, is in one table: [API guide, Error code table](API_REFERENCE.md#error-code-table). The Sutra and pack
 problem codes (`DRS-2004`, `DRS-2009`–`DRS-2059`) are explained in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#problem-codes). This table keeps only the
 codes whose cause or fix needs more than the meaning.
 
@@ -3540,7 +3540,7 @@ codes whose cause or fix needs more than the meaning.
 | `DRS-4016` | the AI provider or MCP server failed or timed out: Admin → AI shows its health; check its URL, key variable and TLS |
 | `DRS-4017` | over the AI rate or cost limit for your user: wait, or an administrator raises the policy limit |
 | `DRS-4019` | the model, provider, MCP server or tool named is not configured: check `config/ai/` or `config/mcp/` |
-| `DRS-4020` | BI with AI: the model's answer could not be used (a draft that failed the report check after one repair, or not a query): say it more plainly, name the measure, or use a stronger model (`drishti.bi.ai.model`) ([BI_GUIDE.md](BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number)) |
+| `DRS-4020` | BI with AI: the model's answer could not be used (a draft that failed the report check after one repair, or not a query): say it more plainly, name the measure, or use a stronger model (`drishti.bi.ai.model`) ([REPORTS_GUIDE.md](REPORTS_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number)) |
 | `DRS-4021` | history queries: more business days than `max-days`: narrow it with `FROM … TO …` |
 | `DRS-5003` | raised by the console only: it cannot reach the server, a live stream was refused, or a browser is over its live-subscription limit ([21.3](#213-the-console-and-the-server)) |
 | `DRS-5201` | a row of the date's P&L vectors was rejected (wrong length, a null or NaN, not USD): the provenance lists the trade and the reason; fix it upstream and reload the date |
@@ -3574,7 +3574,7 @@ codes whose cause or fix needs more than the meaning.
 | `DRS-9029` | the planner estimated more rows than the query's budget (HTTP 413): a date filter, a rollup's fields, or `options.budget.rows` |
 | `DRS-9030` | a report's YAML is not valid (HTTP 422): the designer's YAML tab or `POST /api/v1/bi/reports/validate` names the path |
 | `DRS-9031` | a report names a field, measure, hierarchy, page, bookmark or slicer its dataset or report lacks (HTTP 422; usually a dataset that changed under it) |
-| `DRS-9040` | publishing would break published reports (HTTP 409; the message lists them): fix the reports, keep the old names beside the new, or a `bi-admin` publishes with `force` ([BI_GUIDE.md](BI_GUIDE.md#6-impact-what-breaks-if-i-change-this)) |
+| `DRS-9040` | publishing would break published reports (HTTP 409; the message lists them): fix the reports, keep the old names beside the new, or a `bi-admin` publishes with `force` ([REPORTS_GUIDE.md](REPORTS_GUIDE.md#176-impact-what-breaks-if-i-change-this)) |
 | `DRS-9043` | publishing is refused because its `tests:` fail or cannot run: run them with **Check** as the role named, fix the item or the expected value; a `bi-admin` may `force` (audited); `drishti.bi.governance.refuse-failing-tests: false` turns the gate off |
 | `DRS-9074` | Python does not run on this server now (HTTP 503), and the message says why: [21.11](#2111-bi-refresh-live-visuals-python-and-ai) |
 | `DRS-9076` | a Python item's own tests failed, so it is not published (HTTP 422, the console): Check shows each test; fix it, or a bi-admin publishes with `force` |

@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Rupaka phase 7 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.6): the designer's Phone and Tablet tabs. For the page being edited each lists the visuals in the order that device shows
+/* Rupaka phase 7 (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 20.6): the designer's Phone and Tablet tabs. For the page being edited each lists the visuals in the order that device shows
    them; a row is dragged (or moved with its arrows) to change the order, hidden with its checkbox, and given a height in grid rows: the
    order, the hidden visuals, the heights and the wide ones are a breakpoint of drishti-designer's LayoutModel over the page's visuals. A tablet row can also be made
    wide (the whole width instead of half). Beside the list a preview shows the result to scale: a 390 px screen for a phone, a 768 px one for a tablet. A change is

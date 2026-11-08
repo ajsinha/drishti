@@ -18,7 +18,7 @@
 When you open `TRD MX-20000001`, the server does not send HTML and it does not send the trade's raw record. It sends a
 **ViewModel**: the screen, already laid out and bound, as JSON. The console paints it; a script reads it; a golden test
 compares it; a live stream patches it. This document defines that JSON: its structure, the rules every value follows,
-and how to use it. The client-side renderer ([CLIENT_RENDERER.md](CLIENT_RENDERER.md), phase 1 built), its distributable
+and how to use it. The client-side renderer ([EMBED_GUIDE.md](../guides/EMBED_GUIDE.md), phase 1 built), its distributable
 JS/CSS library and GenUI depend on it, so it is written as a contract.
 
 The shape is checked by a machine-readable [JSON Schema](#9-the-json-schema), served at `GET /api/v1/viewmodel/schema`
@@ -105,7 +105,7 @@ have no value (the record is written with "leave out nulls").
 | `selects` | Select`[]` | optional (left out when empty) | The panels whose click sets a control. |
 | `contract` | string | always | The ViewModel contract this view speaks, `major.minor`: `"1.0"` today (`ViewModel.CONTRACT`). A client refuses a major it does not know (Drishti Render's `DRS-9105`) and ignores what a newer minor adds. A ViewModel from an older server has none: it is `1.0`. See [section 8](#8-compatibility-and-versioning). |
 | `layout` | object | optional | The Sutra's screen grid (`areas`, `columns`, `split`, `tabs`, `sections`, `sticky`, `arrange`, `phone`, `tablet`) and each top-level panel's place. Left out when the Sutra has none: the panels then flow in two columns, `main` and `right`. See [Area and grid](#area-and-grid). |
-| `phone` | object | optional | What the Sutra says about the phone ([MOBILE_DISPLAY.md](../guides/PACK_DEVELOPER_GUIDE.md#part-ix-designing-for-phones)): `panels` (`{id: {tier, from, rows, columns, sort, series, figures, tab}}`, `from` being `fragment` or `sutra`), `order`, `default` and `summary` (the phone summary line, read against the document). Left out when the Sutra says nothing; a client then uses each panel kind's default tier. A desktop client ignores it. |
+| `phone` | object | optional | What the Sutra says about the phone ([MOBILE_DISPLAY.md](../guides/BUILD_GUIDE.md#32-designing-for-phones)): `panels` (`{id: {tier, from, rows, columns, sort, series, figures, tab}}`, `from` being `fragment` or `sutra`), `order`, `default` and `summary` (the phone summary line, read against the document). Left out when the Sutra says nothing; a client then uses each panel kind's default tier. A desktop client ignores it. |
 
 ---
 
@@ -533,7 +533,7 @@ left out beyond the maximum.
 `{candles: [{x, open, high, low, close, volume?, openText, highText, lowText, closeText, volumeText?}], volume, last?, change?, tone?,
 fmt?, unit?}`: oldest first; `volume` says whether candles carry volume; `last` (the last close) and `change` (over the last bar) are
 formatted, `tone` colours the change. Every candle also carries its prices as text in the panel's `fmt` (`openText` ...)
-and its volume as text (`amount0`), which the Data table prints: a client formats no number (CLIENT_RENDERER.md 14.3). A client reading
+and its volume as text (`amount0`), which the Data table prints: a client formats no number (EMBED_GUIDE.md 14.3). A client reading
 an older server prints the numbers when the texts are missing.
 
 ```json
@@ -726,14 +726,14 @@ curl -s $B/views/trade/MX-20000001 | jq -c '{mnemonic, title: .title.id, panels:
 ```
 
 - **Who you are.** With security on, `Authorization: Bearer <token>` (a signed JWT or a personal API token; see
-  [API_GUIDE, authentication](../guides/API_GUIDE.md#who-you-are-authentication)); with security off, `X-Drishti-User: <name>`
+  [DEVELOPER_GUIDE, authentication](../guides/DEVELOPER_GUIDE.md#114-who-you-are-authentication)); with security off, `X-Drishti-User: <name>`
   or nobody (`anonymous`). The answer is masked for that caller.
 - **Which day.** `X-Drishti-As-Of: 2026-09-29` or `?asOf=2026-09-29` (a snapshot: `provenance.live` is `false`), and
-  `X-Drishti-Known-At` / `?knownAt=` for time travel ([API_GUIDE, business date](../guides/API_GUIDE.md#which-day-the-business-date)).
+  `X-Drishti-Known-At` / `?knownAt=` for time travel ([DEVELOPER_GUIDE, business date](../guides/DEVELOPER_GUIDE.md#115-which-day-the-business-date)).
 - **Which layout.** `?sutra=<name>` (another Sutra of the kind) or `?design=<id>` (one of your Designs).
 - **Controls.** `?ctl.<id>=<value>`.
 - **Errors** are Problem Details with a `code`: `404 DRS-1001` (no such entity), `403 DRS-5002` (may not open the kind),
-  `502 DRS-1003`, `504 DRS-1004` ([error code table](../guides/API_GUIDE.md#error-code-table)).
+  `502 DRS-1003`, `504 DRS-1004` ([error code table](../guides/API_REFERENCE.md#error-code-table)).
 
 ### Stream
 
@@ -810,10 +810,10 @@ data (`drishti.updateChart`), swaps every other panel for the console-rendered `
 `provenance`, `deleted` and `restored` as in section 5.
 
 Elements 1.x (`<drishti-view>`) and the embed API v1 receive HTML rendered by the same macros, not the ViewModel
-([CLIENT_RENDERER.md](CLIENT_RENDERER.md#20-drishti-elements-the-design), [ADR-021](adr/021-embedding-is-html-over-the-wire.md)); Elements 2.0 and the embed API v2 receive the
-ViewModel itself and draw it with Drishti Render ([CLIENT_RENDERER.md › Drishti Elements: the design, section 19](CLIENT_RENDERER.md#19-elements-20-drawn-by-the-client-side-renderer)).
+([EMBED_GUIDE.md](ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements), [ADR-021](adr/021-embedding-is-html-over-the-wire.md)); Elements 2.0 and the embed API v2 receive the
+ViewModel itself and draw it with Drishti Render ([EMBED_GUIDE.md › Drishti Elements: the design, section 19](../guides/EMBED_GUIDE.md#52-elements-2x-drawn-by-the-renderer)).
 
-The client-side renderer ([CLIENT_RENDERER.md section 7](CLIENT_RENDERER.md#7-how-every-panel-kind-maps)) ports every row of this
+The client-side renderer ([EMBED_GUIDE.md section 7](ARCHITECTURE.md#302-the-renderer-as-an-elements-library)) ports every row of this
 table to `static/render/<version>/m/` and is compared with these macros by `tests/test_render_parity_browser.py` and, on the console's
 own page in both modes, `tests/test_render_console_browser.py`. In phase 2 (built) the console's entity page draws with it when
 a client mode (since retired) is on, and Elements 2.0 do; the macros stay as the `server` path and are retired later
@@ -844,7 +844,7 @@ no HTML, and are applied by the renderer.
 
 ### Proposed
 
-**The client-side renderer is built (phase 1 and phase 2, 2026-10-30;** [CLIENT_RENDERER.md](CLIENT_RENDERER.md),
+**The client-side renderer is built (phase 1 and phase 2, 2026-10-30;** [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md),
 [ADR-022](adr/022-one-renderer-in-the-browser.md)): Drishti Render (`static/render/1.0.0/`) draws every kind of section 4 from this JSON,
 applies section 5's patches, and is compared with the console's macros by a parity suite over every pack Sutra; the console's entity page
 draws with it behind a client mode (since retired), and Elements 2.0 receive this JSON from the embed API v2. Items 1 (on every ViewModel; not on frames
@@ -860,7 +860,7 @@ yet) and 2 are built, 3 and 4 are not; item 5 is ADR-022. The proposals, which t
 4. **Deprecation before removal**: a field to be removed stays for one minor with `"deprecated": true` in the schema.
 5. **The client-side renderer revisits ADR-021's decision** ("no second renderer"): done, [ADR-022](adr/022-one-renderer-in-the-browser.md)
    (one renderer, in the browser; the console moves onto it in phase 2), with parity tests that compare its output with the console's
-   macros for every kind, every pack Sutra and the edge cases of this document (CLIENT_RENDERER.md section 14).
+   macros for every kind, every pack Sutra and the edge cases of this document (EMBED_GUIDE.md section 14).
 
 ---
 

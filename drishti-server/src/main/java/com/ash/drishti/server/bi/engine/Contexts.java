@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The filter context of one SELECT (docs/architecture/BI_DESIGN.md section 3.3.5, the {@code Context} node's lowering of section 4.2): every function that
+ * The filter context of one SELECT (docs/architecture/ARCHITECTURE.md §28 section 3.3.5, the {@code Context} node's lowering of section 4.2): every function that
  * needs its aggregate in another context ({@code calc} with {@code ignore=}, {@code keep=} or {@code via=}, {@code share_of}, {@code parent_of},
  * {@code avg_by}, {@code avg_over}, {@code as_of}, {@code last}, {@code first}) becomes a <em>context sub-query</em>: the same compiler, as the same reader
  * (so the row rules and masks apply: security is never in scope), over the edited question (fields and the query's filters dropped or kept, another

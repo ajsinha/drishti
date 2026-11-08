@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Python in a report (docs/guides/BI_GUIDE.md), in Chromium over the real server and console (tests/bi_report_stack.py on ports 18955 and 17955, security on, a small
+"""Python in a report (docs/guides/REPORTS_GUIDE.md), in Chromium over the real server and console (tests/bi_report_stack.py on ports 18955 and 17955, security on, a small
 file lake: two business days of 60 trades). The shipped sample report "Desk P&L risk (Python)" runs a Python measure (the standard deviation of one-day P&L per desk) and a
 Python histogram on the server's compute pool python (the strict sandbox); a 2.2 report that asks for the browser runs them there too with the same figures; the report page keeps the
 strict policy (no WebAssembly, no violation) and the designer offers the python visual. Every figure is computed here from the same trades.
@@ -139,7 +139,7 @@ def test_the_sample_as_shipped_asks_the_server_first(stack, browser):
 
 
 def test_a_report_that_asks_for_the_browser_runs_on_the_console_under_the_strict_policy(stack, browser):
-    """2.3.0 (BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 6): `run: browser` of a 2.2 report is read as `server` and runs on the server's compute pool; the page loads no WebAssembly."""
+    """2.3.0 (REPORTS_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 6): `run: browser` of a 2.2 report is read as `server` and runs on the server's compute pool; the page loads no WebAssembly."""
     page = sign_in(browser, "rita", "/bi/catalogue")
     wasm = []
     page.on("request", lambda r: wasm.append(r.url) if r.url.endswith(".wasm") or "pyodide" in r.url else None)

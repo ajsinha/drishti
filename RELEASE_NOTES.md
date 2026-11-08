@@ -72,7 +72,7 @@ also use in your own applications.** This release carries the work planned as 2.
 - **The designer kit** (drishti-designer): the layout canvas, palette, inspector, outline, the YAML pane kept in step with the model, and
   the designer shell (Visual / YAML / Both, versions, validate, preview, history, impact, propose for review). The Sutra designer, the BI
   report designer, the theme designer and the table and model editors are built from it, and each editor remembers your layout.
-- **Elements in your own application, never from a CDN** ([ELEMENTS_IN_YOUR_APP.md](docs/guides/ELEMENTS_IN_YOUR_APP.md)): two files
+- **Elements in your own application, never from a CDN** ([ELEMENTS_IN_YOUR_APP.md](docs/guides/EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app)): two files
   for one page (`drishti.py elements pack --libs core,grid,chart`), a release archive with SHA-384 integrity hashes and npm tarballs for
   your own registry (`drishti.py elements dist`), a WebJar for your own Maven repository (`./mvnw -P elements -pl drishti-elements
   package`), or the Drishti server you run. Nothing is published anywhere public, and the same sources make the same bytes. drishti-risk
@@ -147,7 +147,7 @@ Follow these steps when upgrading an installation of 2.9.11.d.
 9. **Vega-Lite visuals are translated, Vega is retired.** A report's `vega-lite` visual and a Python visual's `output: vega-lite` are drawn by
    drishti-chart. Marks, encodings, aggregate, bin, sort, stack, scales, layers, filter and calculate transforms translate; facets,
    `repeat` and `concat`, `params` and selections, projections, other transforms, `text` marks and `resolve` are refused in words naming
-   what to use instead. Check a report with such a visual after upgrading ([BI_GUIDE.md](docs/guides/BI_GUIDE.md#35-vega-lite-visuals)).
+   what to use instead. Check a report with such a visual after upgrading ([BI_GUIDE.md](docs/guides/REPORTS_GUIDE.md#96-vega-lite-visuals)).
 10. **The menus are one sitemap**: `drishti-console/config/menus.yaml` is now `drishti-console/config/sitemap.yaml`, which also draws the
     Admin tabs, the BI rail, Help's sections and the footer. A site that changed `menus.yaml`, or a Help section's name or icon in
     `help.yaml`, moves its change to `sitemap.yaml`.
@@ -678,7 +678,7 @@ groundwork.**
   refused for room remembered for five minutes so a crowd of requests makes one load; a date in use (read in the last two minutes)
   is never closed for room. **Pinned dates** (month-, quarter-, year- and
   fiscal-year-ends on the New York and Toronto calendars, the stress window, named dates), off by default.
-- **The phone display** ([MOBILE_DISPLAY](docs/guides/PACK_DEVELOPER_GUIDE.md#part-ix-designing-for-phones)): every panel has a phone tier (must, glance, more,
+- **The phone display** ([MOBILE_DISPLAY](docs/guides/BUILD_GUIDE.md#32-designing-for-phones)): every panel has a phone tier (must, glance, more,
   desk); a phone gets the must and glance panels, a tablet everything but the desk panels, a desktop is unchanged; *Show everything*
   and *Why these panels*; the tiers set in the grammar (`phone:`), by the site and by the edition. The lens menus fold into one menu on a
   phone.
@@ -758,7 +758,7 @@ a cluster that upgrades one member at a time; one configuration document.**
 - **Operating it:** Admin → Caches (every cache with size against limit, purge or reload one date), one memory budget and one disk
   budget with a free-space guard (`DRS-5218`), the version watch, platform metrics and 17 alert rules (Health,
   `GET /api/v1/admin/alerts`, a Prometheus rule file); the loaders read `.zip`, `.tar.gz`, `.tgz` and `.tar` archives in place.
-- **The client-side renderer** ([CLIENT_RENDERER](docs/architecture/CLIENT_RENDERER.md)): phase 2 draws the console's entity page;
+- **The client-side renderer** ([CLIENT_RENDERER](docs/guides/EMBED_GUIDE.md)): phase 2 draws the console's entity page;
   embedding on another site with a token exchange or a sign-in window. Arrow to the browser for the VaR contribution tables.
 - **Documents:** one configuration document with every setting of every kind, also in the UI (Help → Configuration); the Java and
   Python API references (Help → Developer); the documentation consolidated (one document per subject per audience) and written for
@@ -885,7 +885,7 @@ finally right.**
   with no setup. It found 11 joins that do not hold (e.g. a jurisdiction code where an id is expected).
 - **The fact of the day on Home** ([USER_GUIDE "Home: the fact of the day"](docs/guides/USER_GUIDE.md)): one surprising, true
   sentence from your data, with a small picture, "Why does that happen?", the command that shows it and "Another fact". Each pack
-  declares its facts ([PACK_DEVELOPER_GUIDE "Facts for Home"](docs/guides/PACK_DEVELOPER_GUIDE.md)); they are computed as you, on
+  declares its facts ([PACK_DEVELOPER_GUIDE "Facts for Home"](docs/guides/BUILD_GUIDE.md)); they are computed as you, on
   your business date, and only those that hold today are shown. Seven ship: a book over its VaR limit while its desk is within, a
   desk that lowers VaR, posted collateral raising exposure, VaR against peak PFE, the most-held company, two managers holding one
   portfolio, a fund's weights above its net assets. Quick cards below: VAR BANK, EXP BANK, FUND SPY, DATAMAP.
@@ -1014,7 +1014,7 @@ designs kept ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#
 - **Admin → Commands** ([COMMANDS.md](docs/guides/ADMIN_GUIDE.md#20-functions-func-every-command-and-turning-one-on-or-off)): switch any command off for everyone; it then answers "not active"
   everywhere (page, API, command, CLI, search, exports, BI, AI; `403 DRS-1016`), stored in the Drishti database and gossiped to every
   server; ready for role-based access.
-- **Write-back** ([WRITE_BACK.md](docs/guides/WRITE_BACK.md#16-the-design-and-its-reasons), [EDITS.md](docs/guides/WRITE_BACK.md#for-administrators-write-back-is-off-as-shipped), tutorial 24, off by default):
+- **Write-back** ([WRITE_BACK.md](docs/architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals), [EDITS.md](docs/guides/APPROVALS_GUIDE.md#7-for-administrators-switching-write-back-on), tutorial 24, off by default):
   forms save through an edit log in the Drishti database, with four-eyes approval, a cluster mode, JDBC writes through an outbox, and
   reactive recomputes and live updates after each change.
 - **Branding from configuration:** the product name, owner, copyright and notices come from configuration only; guard tests.
@@ -1029,7 +1029,7 @@ designs kept ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#
 *2026-10-24.* **Sutra Next: screens that respond, built from one UI kit, designed in plain words; two public-data packs.**
 Everything since 2.6.7, including the patches pushed to main without a tag.
 
-- **Sutra Next** ([SUTRA_NEXT.md](docs/guides/RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms), [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md)):
+- **Sutra Next** ([SUTRA_NEXT.md](docs/guides/RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms), [SUTRA_DEVELOPER_GUIDE.md](docs/guides/BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies)):
   - **The Drishti UI kit** (`config/ui-kit/`): reusable fragments (`row-picker@1`, `field-list@1`, `cashflow-ladder@1`...), pack
     fragments (`trading/trade-table@1`), theme tokens and brand; every fragment and every Sutra carries a `doc:` docstring. Every pack
     screen now uses fragments, each proven to draw the same as before.
@@ -1038,7 +1038,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
   - **Refresh and freshness:** `refresh:` per panel or screen, with pause, resume and interval per person and Pause all; every panel says
     "updated N s ago", marks stale data and names a source that is not answering.
   - **Layout:** named areas on a 12-column grid, splits, tabs, sections, a sticky header, phone order; `user-can-arrange` per reader.
-  - **Forms** ([SUTRA_FORMS_GUIDE.md](docs/guides/WRITE_BACK.md)): edit beside a table, in its cells, or New in a guided drawer;
+  - **Forms** ([SUTRA_FORMS_GUIDE.md](docs/guides/APPROVALS_GUIDE.md)): edit beside a table, in its cells, or New in a guided drawer;
     money, date-time and linked-record fields (live server search), rules, computed defaults, masks and roles; **drafts only** until
     2.8.0's write-back.
   - **One server per screen** on a cluster; "your selections were reset" in words when a server goes away.
@@ -1065,7 +1065,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
 *2026-10-21.* **BI runs: every heavy question becomes a visible, shareable run; chart any table; Delta and Iceberg side by side.**
 2.6.7 also carries 2.6.6, the QA release that was never tagged on its own (see below).
 
-- **BI runs** ([BI_RUNS.md](docs/architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267), [BI_RUNS_GUIDE.md](docs/guides/BI_GUIDE.md#28-background-runs-long-bi-questions)):
+- **BI runs** ([BI_RUNS.md](docs/architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job), [BI_RUNS_GUIDE.md](docs/guides/REPORTS_GUIDE.md#15-background-runs-long-bi-questions)):
   - **Planned before it runs:** a planner sizes every question from metadata only (Delta's row counts, Iceberg's manifests, built
     layers; tested to read no data). A cheap question answers at once; a heavy one becomes a run; a very heavy one asks to confirm; an
     impossible one is refused before anything runs. Report visuals, MQ, SQL and statements all take `Prefer: respond-async`; without it
@@ -1129,12 +1129,12 @@ tutorial 21, [USER_GUIDE](docs/guides/USER_GUIDE.md#history-an-entity-over-time)
 # Drishti 2.6.0 — release notes
 
 *2026-10-20.* **Paper statements and field parameters in BI, Cassandra and Iceberg without Hadoop, three new themes, and the
-known bugs fixed.** ([BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)
+known bugs fixed.** ([BI_DESIGN.md](docs/architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer).)
 
 - **Paginated reports and statements:** a report page with `layout: statement` is paper: page-exact PDF (written by the
   server) and Excel set to print, headers and footers with tokens, page breaks, repeated column titles, groups kept
   together, and bursting through subscriptions, one statement per recipient, masked as them. The statement designer
-  (Format → Layout → statement, the Paper tab) previews page by page ([STATEMENTS.md](docs/guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave), tutorial 20).
+  (Format → Layout → statement, the Paper tab) previews page by page ([STATEMENTS.md](docs/guides/REPORTS_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers), tutorial 20).
 - **Field parameters in a report's wells:** a reader's slicer switches which field or measure a visual draws.
 - **Apache Cassandra connector** (`cassandra`): Cassandra 4 and 5, ScyllaDB, Astra; a day appears whole or not at all
   ([CASSANDRA_CONNECTOR.md](plugins/drishti-plugin-cassandra/README.md)).
@@ -1150,7 +1150,7 @@ known bugs fixed.** ([BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)
   server runs a query; flaky browser tests made steady under load.
 - **Designs:** history queries (2.6.5, [HISTORY_QUERIES.md](docs/architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)), Drishti on AWS
   ([AWS_DEPLOYMENT.md](docs/guides/CLUSTER_GUIDE.md#12-drishti-on-aws-ecs-efs-and-s3)) and super scale, 500 GB a day for seven years
-  ([SUPER_SCALE.md](docs/architecture/ARCHITECTURE.md#2813-super-scale-design-not-built)).
+  ([SUPER_SCALE.md](docs/architecture/ARCHITECTURE.md#3213-super-scale-design-not-built)).
 - **Roadmap:** 2.6.5 history queries → 2.7.0 write-back → 2.8.0 AI and the Sajha MCP connector; send and push and
   integration (PG-wire, Excel feed, embed tokens) after 3.0.0.
 - **Known:** two browser tests still flaky under heavy load (`test_showcase_clean_browser[map]`, the embedded Pivot click
@@ -1159,7 +1159,7 @@ known bugs fixed.** ([BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)
 # Drishti 2.5.0 — release notes
 
 *2026-10-19.* **Drishti*net: several servers act as one Drishti, and the console carries on when one stops.** (Wave N of
-[BI_DESIGN.md](docs/architecture/BI_DESIGN.md); operator's guide [NET.md](docs/guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet), tutorial 19.)
+[BI_DESIGN.md](docs/architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer); operator's guide [NET.md](docs/guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet), tutorial 19.)
 
 - **One cluster, off by default:** servers find each other by gossip over HTTP from one seed, keep the member list in
   `<data dir>/net/peers.json`, and publish what they serve (packs with versions, kinds, the tables they read). Configured
@@ -1191,7 +1191,7 @@ Upgrading from 2.4.0: nothing to do for a single server (Drishti*net is off with
 # Previous release: Drishti 2.4.0 — release notes
 
 *2026-10-19.* **BI Studio: authoring and analysis as one product, Python data prep step by step, and query by form at
-scale.** (Wave C of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)
+scale.** (Wave C of [BI_DESIGN.md](docs/architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer).)
 
 - **BI Studio:** the report, model and theme designers share one shell: an Explorer of your items, open items as tabs,
   and a dock with **Problems** (the server's check of the draft, linked to each visual) and **Query** (the visual's model
@@ -1224,7 +1224,7 @@ Upgrading from 2.3.0: stored boards become reports at the first start (`/bi/b/<i
 # Previous release: Drishti 2.3.0 — release notes
 
 *2026-10-17.* **BI that calculates like Power BI and stays live, production-shaped trades from three source systems, and a
-demo you can run from a fresh clone in minutes.** (Wave B of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)
+demo you can run from a fresh clone in minutes.** (Wave B of [BI_DESIGN.md](docs/architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer).)
 
 - **Calculations with filter context:** `calc`, `share_of`, `parent_of` and `avg_by` change the filter a measure sees;
   calculation groups, field and numeric parameters (slicers), and % of total built in the UI.
@@ -1272,7 +1272,7 @@ the old camelCase names need the new names (the shipped packs and examples are c
 # Previous release: Drishti 2.2.0 — release notes
 
 *2026-10-17.* **The BI foundation rebuilt: datasets and data models rooted in packs, a Python-like expression language,
-read-only SQL, one query plan for everything.** (Wave A of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)
+read-only SQL, one query plan for everything.** (Wave A of [BI_DESIGN.md](docs/architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer).)
 
 - **Datasets and data models.** Every pack kind is a dataset automatically; a dataset can narrow, filter, de-duplicate
   explicitly, derive columns (expression or Python) and group, and always traces back to its pack. A **data model** is
@@ -1485,7 +1485,7 @@ refresh, time intelligence and window functions, live visuals, several visual ty
 
 *2026-10-10.* **Connectors as files with TLS everywhere, query by form, Drishti Elements, no restarts, and the start of BI.**
 
-- **Connectors are files** (docs/connectors/CONNECTOR_FILES.md): one `config/connectors/<name>.yaml` per connector, named
+- **Connectors are files** (docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors): one `config/connectors/<name>.yaml` per connector, named
   by packs; **Admin → Connectors** creates, tests, edits and disables them; changes apply live. Inline pack connectors are
   templates, written to files once at first start; old per-pack data-source overrides migrate automatically.
 - **TLS/SSL for every connector** (docs/connectors/TLS.md): PEM, PKCS12 and JKS, mutual TLS, expiry warnings; Kafka

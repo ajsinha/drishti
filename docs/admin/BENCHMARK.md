@@ -845,7 +845,7 @@ on a server.**
 ### 8.1 A million trades a day on Delta
 
 Measured 2026-10-01 (server heap 15.6 GB), the trading pack's lake laid out as declared
-([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#large-kinds-the-lake-layout)), 1,000,000 trades a day over three business days
+([BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#51-large-kinds-the-lake-layout)), 1,000,000 trades a day over three business days
 (5.2 GB; `tools/samplegen/bulk_trades.py --trades 1000000 --days 3`), times over HTTP:
 
 | What | Time |
@@ -1383,7 +1383,7 @@ and about 37 GB and 61 GB at 10M; its P × N term made a bank with many nodes pa
 adds h × P to the heap after GC (0.72 GB at 1,000,000, 1.66 GB at 2.3M), about 1.2 GB and 2.7 GB of `-Xmx` (÷ 0.61); each currency book or
 stress book built ahead adds about one book more ([VAR_GUIDE.md section 27.1](../guides/VAR_GUIDE.md#271-bytes-per-date), whose per-book
 formula the 1,000,000-position run confirms: 0.77 GB predicted, 0.72 GB measured). At 10M the skeleton (ids and columns, most of h) sets
-`-Xmx`; mapping it (D1, [CLUSTER_GUIDE.md section 5.1](../architecture/ARCHITECTURE.md#2812-bounded-resources-inside-one-server)) is the
+`-Xmx`; mapping it (D1, [CLUSTER_GUIDE.md section 5.1](../architecture/ARCHITECTURE.md#3212-bounded-resources-inside-one-server)) is the
 designed lever.
 
 ### 12.2 VaR, the reference bank

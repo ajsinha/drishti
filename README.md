@@ -115,8 +115,8 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
   ([PIVOT_GUIDE.md](docs/guides/PIVOT_GUIDE.md), [tutorial 7, Part A](docs/tutorials/07-pivot-cubes-and-explain.md#part-a--the-pivot-engine-trades-by-product-legs-by-desk-then-var-by-desk)).
 - **Business intelligence on the table layer**: tables and models written in Rachana (Build › Tables & models, with the YAML live
   beside the form), reports and boards, row rules across facts, governance and distribution, and the **Notebook** with one Python
-  runtime on the server's sandboxed pool ([TABLES_GUIDE.md](docs/guides/TABLES_GUIDE.md), [BI_GUIDE.md](docs/guides/BI_GUIDE.md),
-  [tutorial 18](docs/tutorials/18-tables-and-models.md), [tutorial 8, Part A](docs/tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report)).
+  runtime on the server's sandboxed pool ([TABLES_GUIDE.md](docs/guides/TABLES_GUIDE.md), [REPORTS_GUIDE.md](docs/guides/REPORTS_GUIDE.md),
+  [tutorial 44](docs/tutorials/18-tables-and-models.md), [tutorial 10](docs/tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report)).
 - **One grammar.** Rachana paths and expressions are used in Sutras, search, the Pivot, BI and custom functions; the **function
   catalogue** lists every function with its rules and its Excel, SAS and MATLAB counterparts ([FUNCTIONS.md](docs/guides/FUNCTIONS.md),
   [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md)).
@@ -124,10 +124,10 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
 ## Screens and Drishti Elements
 
 - **Sutras**: a product family's screen is a short, versioned YAML file; where there is none, the inference engine lays the screen out
-  from the shape of the data. One pipeline draws every entity of every kind ([SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md)).
+  from the shape of the data. One pipeline draws every entity of every kind ([BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies)).
 - **Domain packs** bring an industry's kinds, functions, Sutras, links, roles and connectors in YAML only; a pack can be made from your
-  own JSON Schema or JSON Lines ([PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md), [SCHEMA_TO_PACK_GUIDE.md](docs/guides/SCHEMA_TO_PACK_GUIDE.md),
-  [tutorial 19, Part A](docs/tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data)).
+  own JSON Schema or JSON Lines ([BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md), [BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack),
+  [tutorial 5](docs/tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data)).
 - **The Build home** (`/build`) is the one place for what people build: connectors, lakes, tables and models, Sutras, packs, reports and
   boards, pivot views, functions, VaR baskets, each with what it uses and what uses it, and the drafts waiting for review
   ([tutorial 19, Part B](docs/tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench-and-on-a-live-page)).
@@ -144,7 +144,7 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
   editor in Drishti (the Sutra designer, the BI report designer, the theme designer, the table and model editors) is built from it.
 - **Distribution, never from a CDN**: the libraries ship as two files for one page (`drishti.py elements pack`), a release archive with
   SRI hashes, npm tarballs for your own registry, a WebJar for your own Maven repository (`drishti.py elements dist`), or from the Drishti
-  server you run. The same sources make the same bytes ([ELEMENTS_IN_YOUR_APP.md](docs/guides/ELEMENTS_IN_YOUR_APP.md)).
+  server you run. The same sources make the same bytes ([EMBED_GUIDE.md](docs/guides/EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app)).
 
 ## Data in: connectors, lakes and feeds
 
@@ -185,9 +185,9 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
   clients, over TLS, read only, with the reader's entitlements and masks ([FLIGHT_GUIDE.md](docs/guides/FLIGHT_GUIDE.md),
   [tutorial 17](docs/tutorials/17-data-out-with-arrow-flight.md)). Single-node reads are tested; the three-node end to end is under
   construction. Client examples: [examples/clients/](examples/clients/README.md).
-- **REST API** under `/api/v1` with API tokens; the banking engines under `/api/v1/risk/…` ([API_GUIDE.md](docs/guides/API_GUIDE.md)).
-- **Embedding**: live views, panels and reports inside other web applications ([CLIENT_RENDERER.md](docs/architecture/CLIENT_RENDERER.md),
-  [tutorial 20](docs/tutorials/20-embed-drishti.md)).
+- **REST API** under `/api/v1` with API tokens; the banking engines under `/api/v1/risk/…` ([API_REFERENCE.md](docs/guides/API_REFERENCE.md)).
+- **Embedding**: live views, panels and reports inside other web applications ([EMBED_GUIDE.md](docs/guides/EMBED_GUIDE.md),
+  [tutorial 16](docs/tutorials/20-embed-drishti.md)).
 
 ## Operate
 
@@ -265,12 +265,12 @@ only those of the modules they may use.
 
 | You want to… | Start with |
 |---|---|
-| use Drishti | [USER_GUIDE.md](docs/guides/USER_GUIDE.md), [VAR_GUIDE.md](docs/guides/VAR_GUIDE.md), [EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md), [PIVOT_GUIDE.md](docs/guides/PIVOT_GUIDE.md), [BI_GUIDE.md](docs/guides/BI_GUIDE.md) |
+| use Drishti | [USER_GUIDE.md](docs/guides/USER_GUIDE.md), [VAR_GUIDE.md](docs/guides/VAR_GUIDE.md), [EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md), [PIVOT_GUIDE.md](docs/guides/PIVOT_GUIDE.md), [REPORTS_GUIDE.md](docs/guides/REPORTS_GUIDE.md) |
 | work with economies and the public sector | [PUBLIC_SECTOR_GUIDE.md](docs/guides/PUBLIC_SECTOR_GUIDE.md), [FUNDS_GUIDE.md](docs/guides/FUNDS_GUIDE.md), [EXTERNAL_DATA.md](docs/guides/EXTERNAL_DATA.md) |
-| add data or an industry | [DATA_GUIDE.md](docs/guides/DATA_GUIDE.md), [DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md), [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md), [TABLES_GUIDE.md](docs/guides/TABLES_GUIDE.md) |
-| build screens or use the libraries | [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md), [ELEMENTS_IN_YOUR_APP.md](docs/guides/ELEMENTS_IN_YOUR_APP.md), [ELEMENTS_API.md](docs/guides/ELEMENTS_API.md) |
+| add data or an industry | [DATA_GUIDE.md](docs/guides/DATA_GUIDE.md), [DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md), [BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md), [TABLES_GUIDE.md](docs/guides/TABLES_GUIDE.md) |
+| build screens or use the libraries | [BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies), [EMBED_GUIDE.md](docs/guides/EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app), [ELEMENTS_API.md](docs/guides/ELEMENTS_API.md) |
 | run and administer it | [OPERATIONS_GUIDE.md](docs/guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine), [OPERATIONS_GUIDE.md](docs/guides/OPERATIONS_GUIDE.md), [LENSES.md](docs/guides/ADMIN_GUIDE.md#12-what-a-lens-is), [CONFIGURATION.md](docs/admin/CONFIGURATION.md) |
-| develop on it | [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md), [DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md), [API_GUIDE.md](docs/guides/API_GUIDE.md), [CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md) |
+| develop on it | [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md), [DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md), [API_REFERENCE.md](docs/guides/API_REFERENCE.md), [CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md) |
 
 **Learn by doing**: [the tutorials](docs/tutorials/README.md) run on the shipped demo data and show the UI, the command line and the YAML
 at every step. **Where it's going**: [IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#the-roadmap-from-2911c-product-owner-2026-11-04-supersedes-every-later-release-table-in-this-file).

@@ -223,7 +223,7 @@ drishti:
     file: ${DRISHTI_STORE_FILE:./config/store/store.yaml}
     root: ${DRISHTI_STORE_ROOT:}   # the filesystem backend's root, over the file's filesystem.root (empty: the file's, else <data folder>/fstore)
   edit:
-    # Write-back (docs/guides/WRITE_BACK.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml).
+    # Write-back (docs/guides/APPROVALS_GUIDE.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml).
     # Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only.
     file: ${DRISHTI_EDIT_FILE:./config/edit/edit.yaml}
   index:
@@ -377,7 +377,7 @@ drishti:
       - /api/v1/changes/preview          # write-back's review sheet: what a change would do, written nowhere
       - /api/v1/bi/datasets/*/query     # Rupaka phase 2: a dataset query (fields, measures, filters in the body), masked and row-ruled, changes nothing
       - /api/v1/bi/datasets/validate    # checks a dataset's YAML without storing it
-      - /api/v1/bi/mq                   # the model query language (docs/architecture/BI_DESIGN.md › The model layer: the specification, section 15): one query of a model as the caller, changes nothing
+      - /api/v1/bi/mq                   # the model query language (docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification, section 15): one query of a model as the caller, changes nothing
       - /api/v1/bi/models/*/query       # the same with the model in the path
       - /api/v1/bi/mq/validate          # checks a model query without reading data
       - /api/v1/bi/models/validate      # checks a model's or a rachana 2 dataset's YAML without storing it
@@ -405,12 +405,12 @@ drishti:
       - /api/v1/bi/themes/validate      # checks a theme's YAML without storing it
       - /api/v1/bi/python/input         # one input of a Python Transform as the caller (the Transform editor's preview and profile), masked and row-ruled, stores nothing
       - /api/v1/bi/items/*/tests        # runs the expected values (tests:) of a report or dataset as the caller or a role they hold: queries only, stores nothing
-      - /api/v1/bi/runs                 # BI runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built), section 14): one question as the caller, answered inline or as a run of theirs; changes no data
+      - /api/v1/bi/runs                 # BI runs (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built), section 14): one question as the caller, answered inline or as a run of theirs; changes no data
       - /api/v1/bi/runs/estimate        # a run's tier and estimate from metadata only, runs nothing
       - /api/v1/export/*                # Rupaka phase 7: a report, visual or view rendered as PDF, PNG, Excel or CSV for the caller (masked), stores nothing
       - /api/v1/subscriptions/preview   # renders what a subscription would send, for the caller, stores nothing
       - /api/v1/compute/*/*             # a reactive connector's answer for the caller (DATA_ARCHITECTURE.md): computed and cached, changes no data
-    # WRITE SCOPES (TOKEN_SCOPES in docs/guides/API_GUIDE.md): a token is made with `read` (the default: all of the above) or with
+    # WRITE SCOPES (TOKEN_SCOPES in docs/guides/API_REFERENCE.md): a token is made with `read` (the default: all of the above) or with
     # scopes from this list (keys in [brackets] keep the colon); each opens the METHOD path patterns under `allow` (* = any method). A scope is only a door: the
     # controller behind it still checks the roles of the token's user at the time of the call, so a token never does more than
     # its user. A write that no scope opens, and nothing in token-never, is refused. Every non-GET endpoint must be declared in
@@ -429,7 +429,7 @@ drishti:
         description: "Read data through Arrow Flight (FLIGHT_GUIDE.md): kinds, BI models, pivot views, VaR vectors and the in-memory lake, as your roles, masks and row rules allow, every read audited. It opens no HTTP call. data:read:<domain> (a pack such as trading, bi, var, a lake) opens one domain only."
         allow: []
       "[edit]":
-        description: "Submit changes through write-back (WRITE_BACK.md: forms, the CLI's change propose), and approve, reject or withdraw them in the one Approvals queue (kind change). No token has it unless chosen; it never exceeds your roles: the edit power, the field's roles, masks and four eyes all apply, and editing must be on."
+        description: "Submit changes through write-back (APPROVALS_GUIDE.md: forms, the CLI's change propose), and approve, reject or withdraw them in the one Approvals queue (kind change). No token has it unless chosen; it never exceeds your roles: the edit power, the field's roles, masks and four eyes all apply, and editing must be on."
         allow:
           - POST /api/v1/changes
           - POST /api/v1/approvals/change/*/approve
@@ -586,7 +586,7 @@ drishti:
       - POST /api/v1/bi/models/*/preview-as     # previews another role's answers: audited, in the console only
       - PUT /api/v1/tables/editor/prefs         # a person's editor view: personal, in the console
       - "* /api/v1/me/**"
-      - "* /api/v1/drafts/**"                  # form drafts: personal, kept per person, saved from the console (WRITE_BACK.md)
+      - "* /api/v1/drafts/**"                  # form drafts: personal, kept per person, saved from the console (APPROVALS_GUIDE.md)
       - POST /api/v1/admin/edits/**            # write-back's switches (a connector's writes, withdrawing an overlay): an administrator in the console
       - "* /api/v1/auth/**"
       - "* /api/v1/admin/tokens/**"
@@ -651,7 +651,7 @@ drishti:
       author:  { kinds: ["*"], raw: true, author: true, calc: true, bi: [bi, bi-author] }   # calc: may use Calc, Python in the browser (USER_GUIDE.md)
       approver: { kinds: ["*"], raw: true, author: true, approve: true, calc: true, bi: [bi, bi-author] }   # reviews proposed Sutras (admins may too)
       pivot-approver: { kinds: ["*"], bi: [bi] }   # approves custom pivot functions someone else wrote (four eyes; drishti.pivot.functions.approver-role)
-      admin:   { kinds: ["*"], raw: true, author: true, admin: true, calc: true, edit: true }   # edit: may submit write-back changes (WRITE_BACK.md; editing itself is off until config/edit/edit.yaml turns it on)
+      admin:   { kinds: ["*"], raw: true, author: true, admin: true, calc: true, edit: true }   # edit: may submit write-back changes (APPROVALS_GUIDE.md; editing itself is off until config/edit/edit.yaml turns it on)
     oidc:                              # single sign-on: the console runs the flow, the server verifies the ID token
       enabled: ${DRISHTI_OIDC_ENABLED:false}  # verify single-sign-on ID tokens
       issuer: ${DRISHTI_OIDC_ISSUER:}  # the OIDC issuer URL
@@ -675,7 +675,7 @@ drishti:
     mask-copies-min-length: 3  # shortest text value scrubbed as a copy (numbers from four digits)
     mask-copies-max-nodes: 50000  # a document with more nodes is not scanned for copies (its masked fields are still masked)
     mask-copies-max-values: 64  # most distinct masked values scrubbed per document
-  embed:                             # embedded views in other web applications (docs/architecture/CLIENT_RENDERER.md; API_GUIDE, Embedding)
+  embed:                             # embedded views in other web applications (docs/guides/EMBED_GUIDE.md; API_REFERENCE, Embedding)
     enabled: ${DRISHTI_EMBED_ENABLED:false}   # off: no token endpoint, embed tokens refused. Needs drishti.security.enabled
     issuer: ${DRISHTI_PUBLIC_URL:}            # the iss of embed tokens: this server's public URL
     audiences: ["${DRISHTI_CONSOLE_URL:}"]      # the consoles that may accept embed tokens (their public URLs); the first is the default
@@ -684,7 +684,7 @@ drishti:
     mask: always                              # embed calls always mask drishti.security.redact fields, whatever the user's roles
     allow-wildcard-origins: false             # let an application register https://*.suffix origins (review apps)
     assertion-max-age: 60s                    # longest life of a client or user assertion a host signs
-    sign-in-window: ${DRISHTI_EMBED_SIGN_IN_WINDOW:true}   # the renderer's auth: 'popup' (CLIENT_RENDERER.md 10.1): a registered host's page signs its user in
+    sign-in-window: ${DRISHTI_EMBED_SIGN_IN_WINDOW:true}   # the renderer's auth: 'popup' (EMBED_GUIDE.md 10.1): a registered host's page signs its user in
                                               # through single sign-on in a window it opens on a click; needs drishti.security.oidc. false: token exchange only
     scopes:                                  # what each embed scope opens; a token calls nothing else, and never writes
       "[embed:view]":
@@ -731,7 +731,7 @@ drishti:
       per-user-per-day: 0  # calls a user may make per day (0 = no limit)
       cost-per-user-per-day: 0       # in the unit of the models' cost-per-1k-* prices
       features: {}                   # per feature: "[ask]": {roles: [..], per-user-per-minute: 6}
-      # BI hooks use the features bi-draft, bi-ask and bi-explain (docs/guides/BI_GUIDE.md), e.g. "[bi-ask]": {roles: [analyst], per-user-per-minute: 10}
+      # BI hooks use the features bi-draft, bi-ask and bi-explain (docs/guides/REPORTS_GUIDE.md), e.g. "[bi-ask]": {roles: [analyst], per-user-per-minute: 10}
   mcp:                               # MCP client (docs/admin/AI.md): OFF by default
     enabled: ${DRISHTI_MCP_ENABLED:false}  # turn on the MCP client: server files in drishti.mcp.dir are read and their tools become callable
     dir: ${DRISHTI_MCP_DIR:./config/mcp}      # one YAML per MCP server: transport, url, headers as ${ENV}, allowed-tools
@@ -754,8 +754,8 @@ drishti:
     enabled: ${DRISHTI_ACCESS_LOG:true}  # record who looked at what (Admin -> Access)
     keep-days: 90                    # older events are pruned once a day
     queue: 100000                    # events waiting to be written at most; beyond it they are dropped and counted
-  collab:                            # share with a note, comment threads, the inbox (docs/architecture/COLLABORATION.md)
-    enabled: ${DRISHTI_COLLAB_ENABLED:true}  # share with a note, the directory and the inbox (docs/architecture/COLLABORATION.md)
+  collab:                            # share with a note, comment threads, the inbox (docs/architecture/ARCHITECTURE.md §31)
+    enabled: ${DRISHTI_COLLAB_ENABLED:true}  # share with a note, the directory and the inbox (docs/architecture/ARCHITECTURE.md §31)
     store: content                   # content: the content store, every cluster node (default) | jpa: the identity database, one node | file: one server only
     dir: ${DRISHTI_COLLAB_DIR:${drishti.data.dir}/collab}   # the file store, and exports
     console-url: ${DRISHTI_CONSOLE_URL:}       # links in emails and shares; empty turns email off
@@ -861,7 +861,7 @@ drishti:
     workspace-creation: authors      # who creates shared workspaces: authors (bi-author), stewards (bi-steward), admins (bi-admin); Admin, BI settings changes it at run time
     max-body-bytes: 262144           # largest YAML body of one item
     versions-keep: 50                # published versions kept per item
-    ai:                              # the three BI hooks on the AI layer (docs/guides/BI_GUIDE.md); they also need drishti.ai.enabled
+    ai:                              # the three BI hooks on the AI layer (docs/guides/REPORTS_GUIDE.md); they also need drishti.ai.enabled
       model: ""                      # provider/model; blank = drishti.ai.default-model
       values: labels-only            # labels-only: the model sees names, types, descriptions, never a value | aggregates: it may also word the reader's own masked aggregates
       max-question-chars: 600  # longest question or description sent to the model
@@ -920,17 +920,17 @@ drishti:
       breaker-failures: 5            # consecutive failures that open a connector's circuit breaker (DRS-9026 at once while open)
       breaker-open: 30s              # how long an open breaker refuses before one fragment may try again
       node: ${DRISHTI_BI_NODE:}      # this Java node's name when several serve the site (blank: one node)
-      background-share: 0.25         # BI runs: the most of the slots background work (runs, dataset refresh) holds at once (docs/architecture/BI_DESIGN.md 10.1)
+      background-share: 0.25         # BI runs: the most of the slots background work (runs, dataset refresh) holds at once (docs/architecture/ARCHITECTURE.md §28 10.1)
       standing-share: 0.25           # the most of the slots standing-query maintenance holds at once; interactive work keeps the rest
       fragments-share: 0.5           # the most of a connector's max-fragments the layer builds of background runs hold at once
     runs:
-      file: ${DRISHTI_BI_RUNS_FILE:./config/runs/runs.yaml}   # BI runs (docs/architecture/BI_DESIGN.md); ready-made in config/runs.examples/
+      file: ${DRISHTI_BI_RUNS_FILE:./config/runs/runs.yaml}   # BI runs (docs/architecture/ARCHITECTURE.md §28); ready-made in config/runs.examples/
     plan:                            # the logical plan: result cache and guards (docs/admin/CONFIGURATION.md, drishti.bi.plan)
       cache-entries: 2000            # answers cached by plan hash, security signature and data generation (0: off)
       cache-ttl: 15m                 # an answer for the current state is asked again after this; as-of answers have no ttl
       cache-idle: 1h                 # an answer nobody asked for this long is dropped
       guards: refuse                 # refuse (the default) or warn: sums across currencies (DRS-9158), balances added across dates (DRS-9159)
-    sql:                             # Drishti SQL over models (docs/guides/API_GUIDE.md, Drishti SQL; docs/admin/CONFIGURATION.md, drishti.bi.sql)
+    sql:                             # Drishti SQL over models (docs/guides/API_REFERENCE.md, Drishti SQL; docs/admin/CONFIGURATION.md, drishti.bi.sql)
       enabled: true                  # false: /bi/sql answers DRS-9006 and SQL view datasets cannot be read
       max-leaves: 8                  # model queries one composite statement may ask
       composite-memory: 256MB        # memory of the in-memory engine a composite statement's outer query runs in
@@ -939,7 +939,7 @@ drishti:
     expr:                            # the Drishti expression language, DEL v2 (docs/guides/RACHANA_REFERENCE.md; docs/admin/CONFIGURATION.md, drishti.bi.expr)
       legacy: refuse                 # the old expression syntax: refuse (DRS-9100 with the DEL v2 text as the fix; the default) or warn (read with DRS-9100)
       parse-cache: 10000             # parsed expressions kept (0: off)
-    migrate:                         # migrations of STORED BI items (docs/architecture/BI_DESIGN.md 8.3; docs/guides/OPERATIONS_GUIDE.md "Migration problems")
+    migrate:                         # migrations of STORED BI items (docs/architecture/ARCHITECTURE.md §28 8.3; docs/guides/OPERATIONS_GUIDE.md "Migration problems")
       on-start: ${DRISHTI_BI_MIGRATE_ON_START:true}   # at start: stored datasets and models into the table layer, 2.3 boards into reports; audited, the text before kept; idempotent
       actor: system                  # the name the history, the item's events and the audit log give the start-up run
   layouts:                           # layout mode: each user's arrangement of a Sutra's panels (USER_GUIDE.md, Layout mode)

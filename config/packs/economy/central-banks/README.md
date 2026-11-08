@@ -193,4 +193,4 @@ The pack's files are written by `tools/packgen/publicsector/make.py`; its `--che
 ## See also
 
 - [The central-banks pack](guides/central-banks.md): Policy rates and the market series around them from FRED and the Bank of Canada's Valet API, filled daily by the central-banks feed into worldlake: a page per bank (policy rate, last move, series) and per series (two years of history). FRED needs DRISHTI_FRED_API_KEY. Type CBANK CBANK-FED.
-- [Packs](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

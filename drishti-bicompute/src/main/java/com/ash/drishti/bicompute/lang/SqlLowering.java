@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * A row expression of Rachana in SQL (DuckDB's), as the one compiler writes it for a scan (docs/architecture/BI_DESIGN.md 2.6). Rachana's
+ * A row expression of Rachana in SQL (DuckDB's), as the one compiler writes it for a scan (docs/architecture/ARCHITECTURE.md §28 2.6). Rachana's
  * evaluator is the definition: every operator and function here computes what Rachana computes, nulls included, so a live table's rows
  * (evaluated in Java) and a scan (in SQL) agree value for value; the differential test proves it for every function. The null rule
  * (Q1): {@code ==} and {@code !=} are {@code IS NOT DISTINCT FROM} and {@code IS DISTINCT FROM} ({@code null != 'X'} is true); an
