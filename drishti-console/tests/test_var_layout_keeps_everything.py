@@ -88,7 +88,7 @@ SCRIPTS = ["drishti_insight.js", "drishti_risk.js", "Arrow.es2015.min.js", "dris
 EXPLORER_INVENTORY = [
     '(stressed ? "Stressed VaR " : "VaR ")', '(stressed ? "Stressed ES " : "ES ")', "money(d.es)", '"mean of worst " + d.esCount',
     '"1-day ES × √10"', '"Sum of standalone VaR"', '"Diversification"', '"Limit utilisation"', '"Backtest exceptions ("',
-    '"-week average"', 'header: "Scope"', '"VaR " + S.ccy', 'R.figureColumn("es", "ES"', 'header: "Limit"', "n.es", "r.standaloneEs",
+    '"-week average"', 'header: "Scope"', '"VaR " + S.ccy', 'R.figureColumn("es", "ES"', 'label: "Limit"', "n.es", "r.standaloneEs",
     '"ES " + esc + "% (mean of worst "', "doCapture", "csvOfPath", "jsonlOfPath", "B.openWhatIf()", "Drishti.ScopeDelete.ask", "B.edit(scope)",
     '"Edit a copy"', "addButton(", "b.owner === S.user || S.admin", "switchTab", "setCcy", "setLens", "bindExplain", "explainReq",
 ]
