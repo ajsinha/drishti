@@ -19,7 +19,7 @@
 
 Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-118 contracts, 407 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+117 contracts, 403 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
@@ -96,7 +96,6 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `SPV` | `scenario-pv` | [market-risk](market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) | input | active |  | 5 |
 | `FXS` | `fx-scenario` | [market-risk](market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) | input | active |  | 3 |
 | `SSET` | `scenario-set` | [market-risk](market-risk.md#sset-scenario-set-scenario-set) | input | active |  | 3 |
-| `HIER` | `risk-hierarchy` | [market-risk](market-risk.md#hier-risk-hierarchy-node-risk-hierarchy) | input | active |  | 4 |
 | `VLIM` | `var-limit` | [market-risk](market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit) | input | active |  | 0 |
 | `DPNL` | `desk-pnl` | [market-risk](market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl) | input | active |  | 0 |
 | `PNLH` | `pnl-history` | [market-risk](market-risk.md#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history) | input | active |  | 0 |

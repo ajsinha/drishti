@@ -32,9 +32,9 @@ source: { connector: var-results, kind: var-official }
 refresh: { on-load: true }
 columns:
   HIERARCHY:      { type: string }
-  NODE_ID:        { type: string, references: risk-hierarchy }   # a cell opens the node in the terminal
+  NODE_ID:        { type: string }   # a cell opens the node in the terminal
   NODE_NAME:      { type: string }
-  PARENT_ID:      { type: string, references: risk-hierarchy }
+  PARENT_ID:      { type: string }
   LEVEL:          { type: string }
   CAPTURE_ID:     { type: string }
   RESULT_VERSION: { type: integer }

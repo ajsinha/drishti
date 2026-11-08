@@ -38,12 +38,12 @@ class FeedFilesTest(unittest.TestCase):
         self.tmp.cleanup()
 
     def test_one_file_a_date_is_a_dated_name_each_the_rules_accept(self):
-        files = FF.write_table(self.dir / "t", "risk-hierarchy", {"2026-09-29": [("cob.jsonl.gz", gz('{"a":1}'))],
+        files = FF.write_table(self.dir / "t", "var-limit", {"2026-09-29": [("cob.jsonl.gz", gz('{"a":1}'))],
                                                                   "2026-09-30": [("cob.jsonl.gz", gz('{"a":2}', '{"a":3}'))]})
-        self.assertEqual([f.name for f in files], ["risk-hierarchy.2026-09-29.jsonl.gz", "risk-hierarchy.2026-09-30.jsonl.gz"])
+        self.assertEqual([f.name for f in files], ["var-limit.2026-09-29.jsonl.gz", "var-limit.2026-09-30.jsonl.gz"])
         for f in files:
             n = filedate.parse(f.name)
-            self.assertEqual((n.table, n.error), ("risk-hierarchy", None))
+            self.assertEqual((n.table, n.error), ("var-limit", None))
         self.assertEqual(list(FF.lines(self.dir / "t")), [("2026-09-29", '{"a":1}'), ("2026-09-30", '{"a":2}'), ("2026-09-30", '{"a":3}')])
 
     def test_a_date_in_several_files_is_a_tar_of_date_folders_lake_build_reads(self):

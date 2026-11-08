@@ -564,7 +564,7 @@ knowledge:
   var-result: knowledge-risk#term-var                            # VRES
   smat: knowledge-risk#term-scenario-matrix                      # the scenario matrix, SMAT (2.9.7)
   play: knowledge-risk#term-var-playground                       # the VaR Playground, PLAY VAR
-  desk: knowledge-risk#term-risk-hierarchy                       # DESK (a node of the risk hierarchies: its VaR and limits)
+  desk: knowledge-risk#term-hierarchy                       # DESK (a node of the risk hierarchies: its VaR and limits)
   exposure: knowledge-risk#2-counterparty-credit-risk                          # the exposure explorer
   exposure-result: knowledge-risk#term-exposure-profile   # EXP as a kind
   counterparty: knowledge-risk#term-counterparty    # CPTY

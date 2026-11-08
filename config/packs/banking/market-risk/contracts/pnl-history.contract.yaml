@@ -70,11 +70,10 @@ fields:
   description: The node, its id as the engine builds it (MGMT~BANK, MGMT~DESK-RATES, LEGAL~LE-NY).
   example: MGMT~DESK-RATES
   pattern: ^[A-Z][A-Z0-9_]*~
-  link: risk-hierarchy
 - name: NAME
   type: text
   presence: optional
-  description: The node's name, as on the risk-hierarchy row.
+  description: The node's name, as the engine shows it (its reference entity's name, else its id).
   example: Rates
 - name: LEVEL
   type: text
@@ -137,9 +136,6 @@ fields:
   presence: required
   description: 'The positions date (YYYY-MM-DD), whose portfolio was revalued over the history.'
   example: '2026-09-30'
-links:
-- field: NODE_ID
-  kind: risk-hierarchy
 validation:
 - rule: required
   fields:
@@ -160,9 +156,6 @@ validation:
 - rule: pattern
   field: HISTORY_ID
   pattern: ^PNLH-
-- rule: link
-  field: NODE_ID
-  kind: risk-hierarchy
 - rule: enum
   field: CURRENCY
   values:

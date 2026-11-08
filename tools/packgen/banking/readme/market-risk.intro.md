@@ -58,10 +58,6 @@ fields:
   scenario-set:
     _: "The scenario days of a business date: HS-509, historical simulation over 509 business days"
     SCENARIO_DATES: "The 509 scenario days, oldest first: index i of every vector is day i"
-  risk-hierarchy:
-    _: "A node of a hierarchy: MGMT (bank, division, desk, book) or LEGAL (bank, legal entity, desk, book), with its VaR limit (any hierarchy id)"
-    BOOKS: "Every book beneath the node"
-    LIMIT_VAR: "The node's VaR limit (USD)"
   var-limit:
     _: "A node's 1-day 99% VaR limit by hierarchy and node id, in USD: the limit letters' (LL) and the MGMT and LEGAL nodes' own"
     NODE_ID: "The node, as the engine builds it: LL~LL-0003, LL~LL-0003/DESK-RATES, MGMT~DESK-RATES"
@@ -71,9 +67,10 @@ fields:
 
 Market-risk results over the trading pack's trades: stress scenarios and their results, FRTB standardised sensitivities, P&L explain and
 trade valuations (mark-to-market, P&L and sensitivities per trade), and the **VaR engine's inputs**: one P&L vector
-per live trade over 509 historical scenario days, the scenario set, the MGMT and LEGAL hierarchies with VaR limits (and the limit
-letters, LL, built from the trades' LIMIT_LETTER, with their limits in `var-limit`), and portfolio
-definitions (hierarchy, rule, basket). Value at risk is never stored: the VaR explorer (`VAR DESK DESK-RATES <GO>`,
+per live trade over 509 historical scenario days, the scenario set, the VaR limits of the hierarchies' nodes (`var-limit`), and
+portfolio definitions (hierarchy, rule, basket). The hierarchies themselves are configured in this pack's `hierarchies:` block (any
+number): MGMT (`DIVISION > DESK > TT_BOOK`), LEGAL (`LEGAL_ENTITY > DESK > TT_BOOK`) and the limit letters LL (`LIMIT_LETTER > DESK`),
+each built by the server from the trades' promoted columns ([VAR_GUIDE.md section 15.14](../../../docs/guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns)). Value at risk is never stored: the VaR explorer (`VAR DESK DESK-RATES <GO>`,
 [VAR_GUIDE.md section 3](../../../docs/guides/VAR_GUIDE.md#3-the-explorer-screen-by-screen)) computes VaR, ES and contributions for any set of these trades, the portfolio
 and position pages (`PORT <id>`, `POS <id>`) show the engine's figures computed as they open, and each business date's official figures
 are the engine's end-of-day captures. Positions are Drishti's: derived from the trades by this pack's `positions:` rules (securities by

@@ -442,6 +442,7 @@ Fields, from 1 sample document:
 | `NETTING_SET` | string | `NS-ALDERSHOT-FRA` | The trade's netting set (denormalised; the netting set's membership wins); link to `netting-set` |
 | `COUNTERPARTY` | string | `CP-ALDERSHOT` | link to `counterparty` |
 | `LEGAL_ENTITY` | string | `LE-FRA` | link to `legal-entity` |
+| `DIVISION` | string | `DIV-TREASURY` | — |
 | `DESK` | string | `DESK-SFT` | link to `desk` |
 | `TT_BOOK` | string | `BOOK-SFT-1` | link to `book` |
 | `LIMIT_LETTER` | string | `LL-0001` | — |

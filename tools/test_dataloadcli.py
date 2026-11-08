@@ -106,12 +106,12 @@ class Dataload(unittest.TestCase):
 
     def test_undo_is_a_dry_run_unless_yes_and_names_the_loads_lake(self):
         answer = {"loadId": "20261107T101740.754-1.1", "lake": "risklake", "lakeFrom": "ledger", "undone": False,
-                  "lines": [{"table": "risk/risk-hierarchy", "date": "2026-11-06", "removed": 26, "restored": 0, "replaced": False}],
+                  "lines": [{"table": "risk/var-limit", "date": "2026-11-06", "removed": 26, "restored": 0, "replaced": False}],
                   "text": "would undo in risklake: 1 table date; confirm with the load id to undo"}
         FakeServer.routes[("POST", "/api/v1/admin/dataload/undo")] = (200, answer)
         code, out, _ = self.go("dataload", "undo", "20261107T101740.754-1.1")
         self.assertEqual(0, code, out)
-        self.assertIn("risk/risk-hierarchy 2026-11-06: 26 rows removed", out)
+        self.assertIn("risk/var-limit 2026-11-06: 26 rows removed", out)
         self.assertIn("would undo in risklake", out)
         self.assertEqual({"loadId": "20261107T101740.754-1.1"}, json.loads(FakeServer.requests[-1][5]))
         code, out, _ = self.go("dataload", "undo", "20261107T101740.754-1.1", "--yes", "--lake", "risklake")

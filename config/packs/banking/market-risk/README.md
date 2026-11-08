@@ -32,7 +32,6 @@ kinds:
 - scenario-pv
 - fx-scenario
 - scenario-set
-- risk-hierarchy
 - var-limit
 - desk-pnl
 - pnl-history
@@ -53,7 +52,6 @@ commands:
   SPV: scenario-pv
   FXS: fx-scenario
   SSET: scenario-set
-  HIER: risk-hierarchy
   VLIM: var-limit
   DPNL: desk-pnl
   PNLH: pnl-history
@@ -103,9 +101,10 @@ generated-by: tools/packgen/banking/make_docs.py
 
 Market-risk results over the trading pack's trades: stress scenarios and their results, FRTB standardised sensitivities, P&L explain and
 trade valuations (mark-to-market, P&L and sensitivities per trade), and the **VaR engine's inputs**: one P&L vector
-per live trade over 509 historical scenario days, the scenario set, the MGMT and LEGAL hierarchies with VaR limits (and the limit
-letters, LL, built from the trades' LIMIT_LETTER, with their limits in `var-limit`), and portfolio
-definitions (hierarchy, rule, basket). Value at risk is never stored: the VaR explorer (`VAR DESK DESK-RATES <GO>`,
+per live trade over 509 historical scenario days, the scenario set, the VaR limits of the hierarchies' nodes (`var-limit`), and
+portfolio definitions (hierarchy, rule, basket). The hierarchies themselves are configured in this pack's `hierarchies:` block (any
+number): MGMT (`DIVISION > DESK > TT_BOOK`), LEGAL (`LEGAL_ENTITY > DESK > TT_BOOK`) and the limit letters LL (`LIMIT_LETTER > DESK`),
+each built by the server from the trades' promoted columns ([VAR_GUIDE.md section 15.14](../../../../docs/guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns)). Value at risk is never stored: the VaR explorer (`VAR DESK DESK-RATES <GO>`,
 [VAR_GUIDE.md section 3](../../../../docs/guides/VAR_GUIDE.md#3-the-explorer-screen-by-screen)) computes VaR, ES and contributions for any set of these trades, the portfolio
 and position pages (`PORT <id>`, `POS <id>`) show the engine's figures computed as they open, and each business date's official figures
 are the engine's end-of-day captures. Positions are Drishti's: derived from the trades by this pack's `positions:` rules (securities by
@@ -499,38 +498,6 @@ Fields, from 1 sample document:
 | `SOURCE_BATCH` | string | `B-2026-09-30-01` | — |
 | `DESCRIPTION` | string | `Historical simulation, 509 business days…` | — |
 
-### `risk-hierarchy`
-
-**Risk hierarchy node** · mnemonic `HIER` · read through connector `risk-store`.
-
-A node of a hierarchy: MGMT (bank, division, desk, book) or LEGAL (bank, legal entity, desk, book), with its VaR limit (any hierarchy id)
-
-**Id:** pattern `^(MGMT|LEGAL)~`.
-
-Fields, from 2 sample documents:
-
-| Field | Type | Example | Description |
-|---|---|---|---|
-| `NODE_ID` | string | `LEGAL~LE-NY` | link to `risk-hierarchy` |
-| `HIERARCHY` | string | `LEGAL` | MGMT: bank, division, desk, book. LEGAL: bank, legal entity, desk, book. A book is in one leaf of each. Any id. |
-| `LEVEL` | string | `legal-entity` | The hierarchy's own level names: bank, division, legal-entity, desk or book in the demo. |
-| `PARENT_ID` | string | `LEGAL~BANK` | — |
-| `NAME` | string | `LE-NY` | — |
-| `REF` | object |  | Nested: see below |
-| `CHILDREN` | list of strings |  | — |
-| `BOOKS` | list of strings |  | Every book beneath the node |
-| `BUSINESS_DATE` | date | `2026-09-30` | — |
-| `VALID_FROM` | date | `2026-01-02` | — |
-| `VALID_TO` | null |  | — |
-
-Nested structures:
-
-| Path | Fields |
-|---|---|
-| `REF` | `KIND` (string), `ID` (string) |
-
-Links: `NODE_ID` → `risk-hierarchy`.
-
 ### `var-limit`
 
 **VaR limit of a hierarchy node** · mnemonic `VLIM` · read through connector `risk-store`.
@@ -544,8 +511,8 @@ Fields, from 4 sample documents:
 | Field | Type | Example | Description |
 |---|---|---|---|
 | `LIMIT_ID` | string | `VL-LL~BANK` | — |
-| `HIERARCHY` | string | `LL` | The hierarchy the node is in: LL (the limit letters, built from the trades' LIMIT_LETTER and DESK), MGMT or LEGAL. |
-| `NODE_ID` | string | `LL~BANK` | The node, as the engine builds it: LL~LL-0003, LL~LL-0003/DESK-RATES, MGMT~DESK-RATES; link to `risk-hierarchy` |
+| `HIERARCHY` | string | `LL` | The hierarchy the node is in, each built from the trades' promoted columns: MGMT (DIVISION > DESK > TT_BOOK), LEGAL (LEGAL_ENTITY > DESK > TT_BOOK) or LL (LIMIT_LETTER > DESK). |
+| `NODE_ID` | string | `LL~BANK` | The node, as the engine builds it: LL~LL-0003, LL~LL-0003/DESK-RATES, MGMT~DESK-RATES |
 | `LIMIT_VAR` | integer | `150000000` | The limit (USD); a node without a row has none |
 | `CURRENCY` | string | `USD` | — |
 | `HORIZON` | string | `1D` | — |
@@ -553,8 +520,6 @@ Fields, from 4 sample documents:
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
 | `VALID_FROM` | date | `2026-01-02` | — |
 | `VALID_TO` | null |  | — |
-
-Links: `NODE_ID` → `risk-hierarchy`.
 
 ### `desk-pnl`
 
@@ -596,7 +561,7 @@ Fields, from 1 sample document:
 | `HISTORY_ID` | string | `PNLH-MGMT~DESK-RATES` | — |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
 | `HIERARCHY` | string | `MGMT` | — |
-| `NODE_ID` | string | `MGMT~DESK-RATES` | link to `risk-hierarchy` |
+| `NODE_ID` | string | `MGMT~DESK-RATES` | — |
 | `NAME` | string | `Rates · Swaps and options` | — |
 | `LEVEL` | string | `desk` | — |
 | `CURRENCY` | string | `USD` | — |
@@ -609,8 +574,6 @@ Fields, from 1 sample document:
 | `ANCHORS` | list of strings |  | — |
 | `SOURCE_BATCH` | string | `B-2026-09-30-HIST` | — |
 | `DESCRIPTION` | string | `The long-history P&L of today's portfoli…` | — |
-
-Links: `NODE_ID` → `risk-hierarchy`.
 
 ### `position-sensitivity`
 
@@ -677,7 +640,6 @@ No samples ship: documents are read live from its connector `mr-derived` (plugin
 | `SPV` | `scenario-pv` | Scenario PVs of a trade (509 scenarios, its currency) |
 | `FXS` | `fx-scenario` | Scenario FX of a currency (509 scenarios) |
 | `SSET` | `scenario-set` | Scenario set |
-| `HIER` | `risk-hierarchy` | Risk hierarchy node |
 | `VLIM` | `var-limit` | VaR limit of a hierarchy node |
 | `DPNL` | `desk-pnl` | Desk P&L: actual and hypothetical (daily) |
 | `PNLH` | `pnl-history` | Long-history P&L of a hierarchy node (stress window selection) |
@@ -728,7 +690,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 
 | Connector | Plugin | Kinds | Enabled |
 |---|---|---|---|
-| `risk-store` | `delta` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-pv`, `fx-scenario`, `scenario-set`, `risk-hierarchy`, `var-limit`, `desk-pnl`, `pnl-history`, `position-sensitivity`, `risk-factor` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `risk-store` | `delta` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-pv`, `fx-scenario`, `scenario-set`, `var-limit`, `desk-pnl`, `pnl-history`, `position-sensitivity`, `risk-factor` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `mr-derived` | `derived` | `stress-scenario-pnl` | `${DRISHTI_MR_DERIVED_ENABLED:true}` |
 | `var-results` | `delta` | `var-official` | `${DRISHTI_VAR_ENABLED:true}` |
 | `var-positions` | `var-positions` | `position` | `${DRISHTI_VAR_ENABLED:true}` |

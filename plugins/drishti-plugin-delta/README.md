@@ -576,7 +576,7 @@ layout, id maps, caches, VaR and exposure are unchanged.
 
 ```yaml
 plugin: delta
-kinds: [pnl-vector, scenario-pv, risk-hierarchy, var-limit]
+kinds: [pnl-vector, scenario-pv, var-limit]
 settings:
   root: s3://${DRISHTI_DELTA_S3_BUCKET:drishti-lake}/${DRISHTI_DELTA_S3_PREFIX:delta}
   domain: risk

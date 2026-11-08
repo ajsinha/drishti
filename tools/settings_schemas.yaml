@@ -444,11 +444,13 @@ schemas:
       - { key: "positions.rules[].groups", type: list, default: "[]", meaning: "PRODUCT_GROUP values it holds" }
       - { key: "positions.rules[].types", type: list, default: "[]", meaning: "PRODUCT_TYPE values it holds" }
       - { key: "positions.rules[].key", type: list, default: "none: one position per trade", meaning: "The fields keying the position, the first the trade carries" }
-      - { key: hierarchies, type: map, default: "{}", meaning: "The hierarchies the VaR and exposure engines build (VAR_GUIDE.md section 16); drishti.var.hierarchies wins" }
+      - { key: hierarchies, type: map, default: "{}", meaning: "The hierarchies the VaR and exposure engines build, any number, each from the trades' promoted columns (VAR_GUIDE.md section 15.14); drishti.var.hierarchies wins" }
       - { key: "hierarchies.<name>", type: map, meaning: "One hierarchy" }
       - { key: "hierarchies.<name>.title", type: string, meaning: "Its name" }
-      - { key: "hierarchies.<name>.source", type: string, default: "columns when levels are given", meaning: "risk-hierarchy (the stored rows) or columns (built from the trades' own columns)" }
-      - { key: "hierarchies.<name>.levels", type: string, default: none, meaning: "The columns, top first: LIMIT_LETTER > DESK" }
+      - { key: "hierarchies.<name>.levels", type: string, default: none, meaning: "The promoted columns, top first: DIVISION > DESK > TT_BOOK (each in layout.<kind>.columns of every source kind)" }
+      - { key: "hierarchies.<name>.level-names", type: string, default: "each column in lower case", meaning: "The level of each column's nodes, also the reference kind their names are read from: division > desk > book" }
+      - { key: "hierarchies.<name>.root", type: map, default: "{id: BANK, name: <title>}", meaning: "The root node's id and name" }
+      - { key: "hierarchies.<name>.empty-label", type: string, default: "drishti.var.hierarchy.empty-label", meaning: "The name of a (Blank) node: rows with an empty level value" }
       - { key: "hierarchies.<name>.ids", type: string, default: path, meaning: "path or leaf: how node ids are made" }
       - { key: "hierarchies.<name>.word", type: string, default: none, meaning: "The scope word naming a node (LL:LL-0003)" }
       - { key: "hierarchies.<name>.limits", type: string, default: none, meaning: "The kind its nodes' VaR limits come from (var-limit)" }

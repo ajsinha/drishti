@@ -30,7 +30,7 @@ from core.config import load_settings
 
 SPEC = yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))
 HELP = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text(encoding="utf-8"))
-BANKING_WORDS = {"VAR", "EXP", "FRSA", "SIMM", "SMAT", "MCUBE", "SWIN", "VRES", "VOFF", "HIER", "VLIM", "TVAL", "PNLV", "DPNL", "PNL",
+BANKING_WORDS = {"VAR", "EXP", "FRSA", "SIMM", "SMAT", "MCUBE", "SWIN", "VRES", "VOFF", "VLIM", "TVAL", "PNLV", "DPNL", "PNL",
                  "SENS", "CPTY", "NSET", "LIM", "XWIF", "CCUBE", "TRD", "CTRD", "PTRD", "LTRD", "BOOK", "DESK", "TRDR", "POS"}
 
 

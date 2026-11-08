@@ -30,7 +30,7 @@ from wb_live import _stack
 
 pytestmark = pytest.mark.browser
 ROOT = Path(__file__).resolve().parents[2]
-DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio",
+DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "portfolio",
                                              "var-limit", "pnl-history")] + ["trades/murex"])
 
 

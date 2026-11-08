@@ -56,25 +56,24 @@ fields:
   type: text
   presence: required
   description: 'The hierarchy the node is in (A-Z, digits, _): LL, MGMT, LEGAL in the demo, read for a hierarchy whose configuration names
-    this kind (limits: var-limit, VAR_GUIDE.md section 16); PORTFOLIO for a portfolio''s limit (NODE_ID its PORTFOLIO_ID). Every VaR limit
-    lives here, with its currency (decision 8): the risk-hierarchy rows and the portfolios carry none.'
+    this kind (limits: var-limit, VAR_GUIDE.md section 15.14); PORTFOLIO for a portfolio''s limit (NODE_ID its PORTFOLIO_ID). Every VaR limit
+    lives here, with its currency (decision 8): the portfolios carry none.'
   example: LL
   pattern: ^[A-Z][A-Z0-9_]*$
 - name: NODE_ID
   type: id
   presence: required
-  description: 'The node: its id as the engine builds it (LL~LL-0003, LL~LL-0003/DESK-RATES; MGMT~DESK-RATES), or a portfolio''s id
-    (PF-RATES-DESK) on a row of hierarchy PORTFOLIO. A row that names no node of the date is unused and said (DRS-5212). A node
-    without a row has no limit (shown blank, never zero).'
+  description: 'The node: its id as the engine builds it from the trades'' promoted columns (LL~LL-0003, LL~LL-0003/DESK-RATES;
+    MGMT~DESK-RATES), or a portfolio''s id (PF-RATES-DESK) on a row of hierarchy PORTFOLIO. A node its hierarchy can build but with no
+    positions on the date shows as "limit, no positions"; a row its hierarchy cannot build (the hierarchy not configured, or more values
+    than levels) is unused and said with the reason (DRS-5212). A node without a row has no limit (shown blank, never zero).'
   example: LL~LL-0003/DESK-RATES
   pattern: ^([A-Z][A-Z0-9_]*~|PF-)
-  link: risk-hierarchy
 - name: LIMIT_VAR
   type: amount
   presence: required
   unit: USD
-  description: The 1-day 99% VaR the node may take, in USD (shown in another reporting currency at today's rate). It wins over a
-    risk-hierarchy row's own LIMIT_VAR for the same node.
+  description: The 1-day 99% VaR the node may take, in USD (shown in another reporting currency at today's rate).
   example: 8500000
 - name: CURRENCY
   type: text
@@ -110,9 +109,6 @@ fields:
   type: date
   presence: optional
   description: 'The last date the limit is valid (YYYY-MM-DD); null while it is open-ended. Informational.'
-links:
-- field: NODE_ID
-  kind: risk-hierarchy
 validation:
 - rule: required
   fields:
@@ -130,9 +126,6 @@ validation:
 - rule: pattern
   field: LIMIT_ID
   pattern: ^VL-
-- rule: link
-  field: NODE_ID
-  kind: risk-hierarchy
 - rule: enum
   field: CURRENCY
   values:

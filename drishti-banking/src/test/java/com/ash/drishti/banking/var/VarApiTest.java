@@ -165,13 +165,12 @@ class VarApiTest {
     @Test
     @Order(2)
     void aLegalEntityIsItsTradesAndACounterpartyItsTrades() throws Exception {
-        // LE-B books T5 (BOOK-3) and T9 (BOOK-2, of no risk): the LEGAL tree is built from the trades' LEGAL_ENTITY, so its node is the
-        // entity's trades exactly, with no warning
+        // LE-B books T5 (BOOK-3): the LEGAL tree is built from the trades' LEGAL_ENTITY, so its node is the entity's trades exactly
         JsonNode le = getJson("/api/v1/risk/var/scope", "LE:LE-B", as("rita", "risk"));
         assertThat(le.get("var").asDouble()).isEqualTo(450);
-        assertThat(le.at("/provenance/trades").asInt()).isEqualTo(2);
+        assertThat(le.at("/provenance/trades").asInt()).isEqualTo(1);
         assertThat(le.at("/provenance/warnings").toString()).doesNotContain("sit outside");
-        assertThat(getJson("/api/v1/risk/var/scope", "NODE:LEGAL~LE-B", as("rita", "risk")).at("/provenance/trades").asInt()).isEqualTo(2);
+        assertThat(getJson("/api/v1/risk/var/scope", "NODE:LEGAL~LE-B", as("rita", "risk")).at("/provenance/trades").asInt()).isEqualTo(1);
         assertThat(getJson("/api/v1/risk/var/scope", "LE:LE-A", as("rita", "risk")).at("/provenance/warnings").toString())
                 .doesNotContain("booked by another legal entity");
         assertThat(var("CPTY:CP-2")).isEqualTo(450);

@@ -18,9 +18,10 @@ pack's contract rows of N positions (one OTC trade each, so N positions) over D 
     python3 tools/bench/vargen.py --out <scratch>/vargen --positions 200000 --portfolios 1500 --dates 2026-09-29,2026-09-30
 
 Per date, under <out>/<kind>/: ``pnl-vector`` (509 USD P&Ls a trade from a 40-factor model, split into --parts gzip files),
-``scenario-set`` (HS-509), ``risk-hierarchy`` (MGMT: bank, --divisions, --desks, --books; LEGAL: bank, --les, desks, books),
-``portfolio`` (--portfolios: a HIERARCHY portfolio per book and desk, RULE portfolios, and BASKET portfolios, --big-baskets of them with
---basket-size positions) and ``var-limit`` (the bank, divisions and desks). The trade ids are the same on every date (the second date's
+``scenario-set`` (HS-509), ``portfolio`` (--portfolios: a HIERARCHY portfolio per book and desk, RULE portfolios, and BASKET portfolios, --big-baskets of them with
+--basket-size positions) and ``var-limit`` (the bank, divisions and desks). Every vector row carries DIVISION, LEGAL_ENTITY, DESK,
+TT_BOOK and LIMIT_LETTER: the market-risk pack's hierarchies (MGMT: bank, --divisions, --desks, --books; LEGAL: bank, --les, desks, books)
+are built from them by the server. The trade ids are the same on every date (the second date's
 vectors move a little), so two open dates hold the same positions. Deterministic for a --seed. Never writes into the repository.
 Load with ``drishti.py lake build --pack config/packs/banking/market-risk --connector risk-store --kind <kind> ...`` (tools/bench/var_bench.py).
 """
@@ -135,32 +136,6 @@ def vectors(a, bank: Bank, day: date, d_index: int):
         yield part, lines()
 
 
-def hierarchy(bank: Bank, bd: str) -> list[dict]:
-    common = {"BUSINESS_DATE": bd, "VALID_FROM": "2026-01-02", "VALID_TO": None}
-    rows = []
-    desk_books: dict[str, list[str]] = {}
-    for b in bank.books:
-        desk_books.setdefault(bank.book_desk[b], []).append(b)
-    for h in ("MGMT", "LEGAL"):
-        groups = bank.divs if h == "MGMT" else bank.les
-        of = bank.desk_div if h == "MGMT" else bank.desk_le
-        level = "division" if h == "MGMT" else "legal-entity"
-        rows.append({"NODE_ID": f"{h}~BANK", "HIERARCHY": h, "LEVEL": "bank", "PARENT_ID": None, "NAME": "Bench Bank", "REF": None,
-                     "CHILDREN": [f"{h}~{g}" for g in groups], "BOOKS": list(bank.books), **common})
-        for g in groups:
-            desks = [d for d in bank.desks if of[d] == g]
-            rows.append({"NODE_ID": f"{h}~{g}", "HIERARCHY": h, "LEVEL": level, "PARENT_ID": f"{h}~BANK", "NAME": g,
-                         "REF": {"KIND": level, "ID": g} if h == "LEGAL" else None, "CHILDREN": [f"{h}~{d}" for d in desks],
-                         "BOOKS": [b for d in desks for b in desk_books[d]], **common})
-            for d in desks:
-                rows.append({"NODE_ID": f"{h}~{d}", "HIERARCHY": h, "LEVEL": "desk", "PARENT_ID": f"{h}~{g}", "NAME": d,
-                             "REF": {"KIND": "desk", "ID": d}, "CHILDREN": [f"{h}~{b}" for b in desk_books[d]], "BOOKS": desk_books[d], **common})
-                for b in desk_books[d]:
-                    rows.append({"NODE_ID": f"{h}~{b}", "HIERARCHY": h, "LEVEL": "book", "PARENT_ID": f"{h}~{d}", "NAME": b,
-                                 "REF": {"KIND": "book", "ID": b}, "CHILDREN": [], "BOOKS": [b], **common})
-    return rows
-
-
 def portfolios(a, bank: Bank, bd: str) -> list[dict]:
     common = {"BUSINESS_DATE": bd, "VALID_FROM": "2026-01-02", "VALID_TO": None}
     rng = np.random.default_rng(a.seed + 7)
@@ -213,7 +188,7 @@ def main(argv=None) -> int:
     ap.add_argument("--rules", type=int, default=300)
     ap.add_argument("--parts", type=int, default=20, help="pnl-vector files a date")
     ap.add_argument("--seed", type=int, default=20261031)
-    ap.add_argument("--kinds", default="pnl-vector,scenario-set,risk-hierarchy,portfolio,var-limit")
+    ap.add_argument("--kinds", default="pnl-vector,scenario-set,portfolio,var-limit")
     a = ap.parse_args(argv)
     out = Path(a.out).resolve()
     if (Path(__file__).resolve().parents[2] / "data") in [out, *out.parents]:
@@ -229,9 +204,6 @@ def main(argv=None) -> int:
                 "SCENARIO_SET_ID": "HS-509", "BUSINESS_DATE": d, "SCENARIO_DATES": ds, "SCENARIO_COUNT": N_SCEN, "WINDOW_START": ds[0],
                 "WINDOW_END": ds[-1], "HORIZON_DAYS": 1, "REVALUATION": "full", "WEIGHTS": None, "SOURCE_BATCH": f"B-{d}-01",
                 "DESCRIPTION": "Historical simulation, 509 business days, equal weights (benchmark)"})])
-        if "risk-hierarchy" in kinds:
-            n = write_lines(out / "risk-hierarchy" / f"{stem.format(kind='risk-hierarchy')}.jsonl.gz", (json.dumps(r) for r in hierarchy(bank, d)))
-            print(f"{d}: risk-hierarchy {n:,} nodes", flush=True)
         if "portfolio" in kinds:
             n = write_lines(out / "portfolio" / f"{stem.format(kind='portfolio')}.jsonl.gz", (json.dumps(r) for r in portfolios(a, bank, d)))
             print(f"{d}: portfolio {n:,}", flush=True)

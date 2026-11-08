@@ -138,10 +138,6 @@ tables:
     id: FX_SCENARIO_ID
     date: BUSINESS_DATE
   risk.scenario-set: {id: SCENARIO_SET_ID, date: BUSINESS_DATE}
-  risk.risk-hierarchy:
-    promote: [NODE_ID, HIERARCHY, LEVEL, PARENT_ID, NAME]
-    id: NODE_ID
-    date: BUSINESS_DATE
   risk.var-limit:
     promote: [LIMIT_ID, HIERARCHY, NODE_ID, LIMIT_VAR, CURRENCY]
     id: LIMIT_ID

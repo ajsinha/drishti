@@ -90,7 +90,6 @@ SUBTYPES = {
     "gleif/lei-mapping": ("`TYPE`", lambda d: d.get("TYPE") or "(no type)"),
     "gleif/lei-relationship": ("`LEVEL`", lambda d: d.get("LEVEL") or "(no level)"),
     "market-risk/portfolio": ("`TYPE`", lambda d: d.get("TYPE") or "(no type)"),
-    "market-risk/risk-hierarchy": ("`LEVEL`", lambda d: d.get("LEVEL") or "(no level)"),
 }
 
 #: rows beyond the committed test data that show a form the test data does not hold (the pack's samples), by folder
@@ -122,7 +121,6 @@ LINKS = {
     "scenario-pv": [("guides/VAR_GUIDE.md", "15.9 "), ("guides/VAR_GUIDE.md", "8.4 ")] + _VAR,
     "fx-scenario": [("guides/VAR_GUIDE.md", "15.9 ")] + _VAR[1:],
     "scenario-set": [("guides/VAR_GUIDE.md", "15.3 ")] + _VAR[1:],
-    "risk-hierarchy": [("guides/VAR_GUIDE.md", "15.4 "), ("guides/VAR_GUIDE.md", "15.14 ")] + _VAR[1:],
     "portfolio": [("guides/VAR_GUIDE.md", "15.5 ")] + _VAR[1:],
     "var-limit": [("guides/VAR_GUIDE.md", "15.15 ")] + _VAR[1:],
     "desk-pnl": [("guides/VAR_GUIDE.md", "15.16 "), ("guides/REGULATORY_VAR_REPORTING.md", "4.6 ")] + _VAR[1:],
@@ -158,7 +156,7 @@ GROUPS = [
                                                         "core/desk", "core/trader", "core/issuer", "core/ccp", "core/clearing-account", "core/calendar"]),
     ("Trades, by source system", "You produce this", ["trades/endur", "trades/calypso", "trades/murex"]),
     ("Market-risk inputs (VaR)", "You produce this", ["market-risk/scenario-pv", "market-risk/pnl-vector", "market-risk/scenario-set",
-                                                       "market-risk/fx-scenario", "market-risk/risk-hierarchy", "market-risk/portfolio",
+                                                       "market-risk/fx-scenario", "market-risk/portfolio",
                                                        "market-risk/var-limit", "market-risk/desk-pnl", "market-risk/pnl-history"]),
     ("Market-risk inputs (capital: FRTB-SA)", "You produce this", ["market-risk/position-sensitivity", "market-risk/risk-factor"]),
     ("Valuations and other risk results your engines produce", "You produce this",
@@ -183,9 +181,8 @@ NEEDED = {
     "pnl-vector": "**VaR: required** (each trade as a P&L vector or as scenario PVs)",
     "scenario-set": "**VaR: required** (orders every vector)",
     "fx-scenario": "**VaR: required** for scenario PVs not in USD, unless fx-spot holds 510 days of history",
-    "risk-hierarchy": "**VaR: required** for the MGMT and LEGAL hierarchies",
     "portfolio": "VaR: optional (stored portfolios)",
-    "var-limit": "VaR: optional (limits of the column-built hierarchies)",
+    "var-limit": "VaR: optional (the limits of the hierarchies' nodes; the hierarchies are built from the trades' promoted columns)",
     "desk-pnl": "Regulatory backtesting: required (each desk's actual and hypothetical P&L of the day)",
     "pnl-history": "The stress window selection: required (monthly at least)",
     "simulation-run": "**Exposure: required** (the run and its grid)",

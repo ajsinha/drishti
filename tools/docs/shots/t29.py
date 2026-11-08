@@ -37,7 +37,7 @@ from shotlib import start_servers as _start
 
 shot = register("t29", OUT / "t29")
 SERVER_ENV = {"DRISHTI_SECURITY_ENABLED": "false"}   # marks the guide as one that runs on its own (--guide t29)
-VAR_KINDS = ",".join(f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio", "var-limit"))
+VAR_KINDS = ",".join(f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "portfolio", "var-limit"))
 WORK: list = []
 
 

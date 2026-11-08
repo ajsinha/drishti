@@ -74,8 +74,8 @@ fx-scenario   FXS FXS-<ccy>-HS-509     each currency's rate today and under each
 position      POS POS-<book>~<security | contract | trade>   (derived each date, never delivered)
    │  TT_BOOK
    ▼
-book          BOOK BOOK-RATES-1 ──► desk DESK DESK-RATES ──► division ──► bank      risk-hierarchy MGMT~<id>
-                                └─► desk ──► legal entity LE LE-NY ──► bank        risk-hierarchy LEGAL~<id>
+book          BOOK BOOK-RATES-1 ──► desk DESK DESK-RATES ──► division ──► bank      hierarchy MGMT~<id>  (from the rows' columns)
+                                └─► desk ──► legal entity LE LE-NY ──► bank        hierarchy LEGAL~<id> (from the rows' columns)
 portfolio     PORT PF-<name>       HIERARCHY (a node), RULE (a condition on positions) or BASKET (picked positions and trades)
 
 any scope text  (BANK, LE:LE-NY, DESK:RATES, PORT:PF-USD-RATES, CPTY:CP-ALDERSHOT, WHERE:<rule>, + - &)
@@ -92,7 +92,7 @@ stored results from upstream engines (fundamental, not computed by Drishti):
 
 The links are the packs' contract link columns (`config/packs/banking/market-risk/contracts/*.contract.yaml`): `pnl-vector.TRADE_ID → trade`,
 `LEGAL_ENTITY → legal-entity`, `DESK → desk`, `TT_BOOK → book`, `COUNTERPARTY → counterparty`; `position.TRADE_IDS → trade`;
-`risk-hierarchy.NODE_ID → risk-hierarchy` (its children); `stress-result.SCENARIO → stress-scenario`, `DESK → desk`;
+`var-limit.NODE_ID` names a node the server builds from the rows' columns; `stress-result.SCENARIO → stress-scenario`, `DESK → desk`;
 `frtb-sensitivity.BOOK → book`; `trade-valuation.NETTING_SET → netting-set`, which is where market risk meets
 [counterparty credit risk](#2-counterparty-credit-risk).
 
@@ -634,7 +634,7 @@ booked the trade. See [Entities and ownership](data.md#2-entities-and-ownership)
 | <a id="term-position"></a>**Position** | One security held in one book (or one OTC trade): the trades that build or reduce it, netted. Drishti derives positions from trades; nobody delivers them. | `POS POS-BOOK-EQD-2~SEC-WARRANT-USD-01 <GO>` |
 | <a id="term-portfolio"></a>**Portfolio** | A named, stored set of positions: a hierarchy node, a rule (every short EUR position) or a basket of chosen positions, with its own VaR limit. | `PORT PF-USD-RATES <GO>` |
 | <a id="term-basket"></a>**Basket** | A scope you saved under a name in the VaR explorer (`BASKET:<owner>/<name>`), so you can open it again or compare it over time. | `drishti.py var baskets` |
-| <a id="term-risk-hierarchy"></a>**Risk hierarchy** | The two trees VaR rolls up: MGMT (bank, division, desk, book) and LEGAL (bank, legal entity, desk, book). Each node has a VaR limit. | `HIER LEGAL~LE-NY <GO>` · `drishti.py var tree --hierarchy LEGAL` |
+| <a id="term-hierarchy"></a>**Hierarchy** | A tree VaR and exposure roll up, built from the trades' promoted columns as configured (any number): MGMT (DIVISION > DESK > TT_BOOK), LEGAL (LEGAL_ENTITY > DESK > TT_BOOK), LL (LIMIT_LETTER > DESK). A row with an empty level value sits under a (Blank) node. A node's VaR limit is its var-limit row. | `VAR NODE:LEGAL~LE-NY <GO>` · `drishti.py var tree --hierarchy LEGAL` |
 | <a id="term-var-limit"></a>**VaR limit** | The most VaR a node or portfolio may take. Limit use is VaR divided by the limit; above 100% is a breach. | `drishti.py var tree` |
 | <a id="term-backtesting"></a>**Backtesting** | Checking VaR against what happened: a day whose loss exceeds the day's VaR is an exception. Basel's traffic light counts them over 250 days (green up to 4, amber 5 to 9, red 10 or more). | `drishti.py var history BANK` |
 | <a id="term-hypothetical-p-l"></a>**Hypothetical P&L** | The P&L the day's positions would have made had they been held unchanged through the next day's market move. The backtest compares it with VaR. | `drishti.py var history BANK` |

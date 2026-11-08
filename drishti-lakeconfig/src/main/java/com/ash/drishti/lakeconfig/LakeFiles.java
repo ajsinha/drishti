@@ -441,6 +441,9 @@ public final class LakeFiles {
             List<String> mine = new ArrayList<>();
             boolean named = false;
             for (String kind : kinds) {
+                if (RemovedKinds.replacement(kind) != null) {
+                    continue;                                      // a kind no pack serves any more: never a table of the lake
+                }
                 String folder = flat.getOrDefault("table." + kind, kind);
                 String tname = (domain.isEmpty() ? plugin : domain) + "." + folder;
                 mine.add(tname);
@@ -603,6 +606,9 @@ public final class LakeFiles {
                 });
             }
             for (String kind : kinds) {
+                if (RemovedKinds.replacement(kind) != null) {
+                    continue;                                      // a kind no pack serves any more: never a table of the lake
+                }
                 String folder = flat.getOrDefault("table." + kind, kind);
                 String tname = (domain.isEmpty() ? plugin : domain) + "." + folder;
                 mine.add(tname);

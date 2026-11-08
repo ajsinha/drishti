@@ -292,16 +292,6 @@ kinds:
       WINDOW_START: { term: "Window start", means: "The oldest scenario day." }
       WINDOW_END: { term: "Window end", means: "The newest scenario day: the business day before the business date." }
       REVALUATION: { term: "Revaluation", means: "full (every trade repriced under each scenario) or sensitivities (a Taylor expansion), as the batch did it." }
-  risk-hierarchy:
-    title: Risk hierarchy node
-    about: >-
-      ${$.NAME} is a ${$.LEVEL} of the ${$.HIERARCHY} hierarchy, under ${coalesce($.PARENT_ID, 'nothing: the root')}, with
-      ${size($.BOOKS)} book(s) beneath it. Its VaR limit is its var-limit row (the node carries none).
-    guide: market-risk
-    glossary:
-      HIERARCHY: { term: "Hierarchy", means: "MGMT: bank, division, desk, book. LEGAL: bank, legal entity, desk, book. A book is in one leaf of each. Any id." }
-      LEVEL: { term: "Level", means: "The hierarchy's own level names: bank, division, legal-entity, desk or book in the demo." }
-      BOOKS: { term: "Books", means: "Every book beneath the node: its positions are the node's." }
   var-limit:
     title: VaR limit of a hierarchy node
     about: >-
@@ -309,7 +299,7 @@ kinds:
       ${$.VALID_FROM}). A node without such a row has no limit.
     guide: market-risk
     glossary:
-      HIERARCHY: { term: "Hierarchy", means: "The hierarchy the node is in: LL (the limit letters, built from the trades' LIMIT_LETTER and DESK), MGMT or LEGAL." }
+      HIERARCHY: { term: "Hierarchy", means: "The hierarchy the node is in, each built from the trades' promoted columns: MGMT (DIVISION > DESK > TT_BOOK), LEGAL (LEGAL_ENTITY > DESK > TT_BOOK) or LL (LIMIT_LETTER > DESK)." }
       NODE_ID: { term: "Node", means: "The node's id as the engine builds it: LL~LL-0003, LL~LL-0003/DESK-RATES, MGMT~DESK-RATES." }
       LIMIT_VAR: { term: "VaR limit", means: "The 1-day 99% VaR the node may take.", unit: "USD" }
   desk-pnl:

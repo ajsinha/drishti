@@ -428,12 +428,15 @@ public final class Routes {
      * The pack, kind and connector of a table name (DATA_LAKE_GUIDE.md sections 4.4 and 5): the pack given (its kind of that name, or the
      * kind given); else the one pack with a kind of that name; else the one pack whose Delta or Iceberg connector writes a table of that
      * name ({@code trade_endur}: the kind {@code trade}, the connector {@code trade-endur}); else a pack of that name with a single kind.
-     * Names compare without case, and {@code _} and {@code -} alike ({@code risk_hierarchy} is the kind {@code risk-hierarchy}). None or
-     * several: refused, listing them. The connector is null for a kind's name.
+     * Names compare without case, and {@code _} and {@code -} alike ({@code var_limit} is the kind {@code var-limit}). None or several:
+     * refused, listing them. The connector is null for a kind's name. A removed kind ({@code RemovedKinds}) is refused with what replaces it.
      */
     private String[] byTable(String table, String givenPack, String givenKind) throws Unrouted {
         List<String> names = givenPack != null ? List.of(givenPack) : packs.names();
         String want = norm(table);
+        if (com.ash.drishti.lakeconfig.RemovedKinds.replacement(want) != null) {
+            throw new Unrouted(table + ": " + com.ash.drishti.lakeconfig.RemovedKinds.replacement(want));
+        }
         List<String[]> hits = new ArrayList<>();
         List<String> known = new ArrayList<>();
         for (String p : names) {

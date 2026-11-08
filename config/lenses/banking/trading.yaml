@@ -34,7 +34,7 @@ commands:                                # what people may type and see (command
      BOOK, DESK, TRDR, POS,
     # risk on my book: VaR limits, VaR results, trade valuations, P&L vectors, hierarchies, portfolios (VAR is the word: the explorer and its what-if),
     # desk P&L, P&L explain and position sensitivities (product panel A19, 2026-11-06)
-     VLIM, VRES, TVAL, PNLV, HIER, PORT, DPNL, PNL, SENS,
+     VLIM, VRES, TVAL, PNLV, PORT, DPNL, PNL, SENS,
     # counterparties: counterparties, groups, netting sets and their MtM, counterparty MtM, credit limits, exposure (EXP is the word: the explorer; the pre-deal check is PREDEAL)
      CPTY, GRP, NSET, NSMTM, CPMTM, LIM, EXP,
     # market data a trader reads (the Markets menu): curves, repo, fixings, swaption and cap vols, FX spot, forwards and vols, equities and

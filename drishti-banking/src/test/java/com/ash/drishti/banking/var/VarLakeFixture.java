@@ -32,9 +32,8 @@ import java.util.Map;
  * A tiny VaR lake written with Drishti's lake writer, whose answers are known by hand: 20 scenarios, five trades in four positions in
  * three books of two desks, a position netting a long of 100 and a short of 40 units of one security, the MGMT and LEGAL nodes' limits
  * (the trees themselves are built from the rows' DESK, TT_BOOK and LEGAL_ENTITY columns, as each test configures them), and a
- * RULE and a BASKET portfolio. Every vector is a multiple of the unit path {@link #U}. Beside them, rows the engine must not count: a
- * trade of no risk booked by another legal entity than its book's (a warning for {@code LE:}), a cancelled trade, a vector one value
- * short and a vector with a null in it (both rejected, DRS-5201). Positions are not in the lake: the engine derives them by the rules
+ * RULE and a BASKET portfolio. Every vector is a multiple of the unit path {@link #U}. Beside them, a trade of no risk (T9) and rows the
+ * engine must not count: a cancelled trade, a vector one value short and a vector with a null in it (both rejected, DRS-5201). Positions are not in the lake: the engine derives them by the rules
  * the test sets (Fixed income by book and SECURITY_ID; everything else one position per trade).
  */
 final class VarLakeFixture {
@@ -67,7 +66,7 @@ final class VarLakeFixture {
                 new Trade("T3", "SEC-B", "BOOK-1", "DESK-X", "LE-A", "EUR", "CP-1", "NEW", 10, scale(V, 10)),
                 new Trade("T4", null, "BOOK-2", "DESK-X", "LE-A", "EUR", "CP-1", "VALIDATED", -20, scale(U, -20)),
                 new Trade("T5", "SEC-D", "BOOK-3", "DESK-Y", "LE-B", "USD", "CP-2", "VALIDATED", 50, scale(V, 50)),
-                new Trade("T9", null, "BOOK-2", "DESK-X", "LE-B", "USD", "CP-1", "VALIDATED", 0, scale(U, 0)),
+                new Trade("T9", null, "BOOK-2", "DESK-X", "LE-A", "USD", "CP-1", "VALIDATED", 0, scale(U, 0)),
                 new Trade("T6", null, "BOOK-2", "DESK-X", "LE-A", "USD", "CP-1", "CANCELLED", 1000, scale(U, 1000)),
                 new Trade("T7", null, "BOOK-2", "DESK-X", "LE-A", "USD", "CP-1", "VALIDATED", 5, java.util.Arrays.copyOf(scale(U, 5), N - 1)),
                 new Trade("T8", null, "BOOK-2", "DESK-X", "LE-A", "USD", "CP-1", "VALIDATED", 5, withNull));

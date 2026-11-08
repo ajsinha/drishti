@@ -28,7 +28,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-RISK = ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio")
+RISK = ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "portfolio")
 
 
 #: the trades every VaR browser file's lake holds, so one lake is built per run and shared by all of them

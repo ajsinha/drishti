@@ -281,7 +281,7 @@ compacts and expires them itself. One setting names the bucket; the rest follows
 
 ```yaml
 plugin: iceberg
-kinds: [pnl-vector, scenario-pv, risk-hierarchy, var-limit]
+kinds: [pnl-vector, scenario-pv, var-limit]
 settings:
   catalog: s3tables
   table-bucket-arn: ${DRISHTI_S3TABLES_ARN:}      # arn:aws:s3tables:<region>:<account>:bucket/<name>

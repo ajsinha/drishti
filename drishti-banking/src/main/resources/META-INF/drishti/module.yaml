@@ -64,7 +64,6 @@ module:
       - SPV
       - FXS
       - SSET
-      - HIER
       - VLIM
       - DPNL
       - PNLH

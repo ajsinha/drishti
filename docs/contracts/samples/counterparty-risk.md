@@ -1107,7 +1107,7 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `PATH_ROW_ID` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |
-| Promoted columns | `TRADE_ID`, `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `ASSET_CLASS`, `PRODUCT`, `SOURCE_SYSTEM`, `MATURITY_DATE`, `NOTIONAL`, `GRID_INDEX`, `GRID_DATE`, `RUN_ID`, `BATCH_ID`, `STATUS` |
+| Promoted columns | `TRADE_ID`, `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `ASSET_CLASS`, `PRODUCT`, `SOURCE_SYSTEM`, `MATURITY_DATE`, `NOTIONAL`, `GRID_INDEX`, `GRID_DATE`, `RUN_ID`, `BATCH_ID`, `STATUS` |
 | Vector fields | `MTM` |
 | Partitioned by | `business_date` |
 | A day's file | the full set of its date |
@@ -1126,6 +1126,7 @@ A real record, the most complete of the 7,540 (the one with the most non-empty f
   "NETTING_SET": "NS-ALDERSHOT-FRA",
   "COUNTERPARTY": "CP-ALDERSHOT",
   "LEGAL_ENTITY": "LE-FRA",
+  "DIVISION": "DIV-TREASURY",
   "DESK": "DESK-SFT",
   "TT_BOOK": "BOOK-SFT-1",
   "LIMIT_LETTER": "LL-0001",
@@ -1161,9 +1162,10 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `NETTING_SET` | string | required | The netting set the trade belongs to (its membership wins when they differ). | pattern `^NS-`; links to `netting-set` | `"NS-ALDERSHOT-FRA"` |
 | `COUNTERPARTY` | string | required | The trade's counterparty, denormalised from its netting set: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | pattern `^CP-`; links to `counterparty` | `"CP-ALDERSHOT"` |
 | `LEGAL_ENTITY` | string | required | The bank's legal entity that booked the trade: an ENTITY_ID of the core pack's legal-entity kind (LE-…). | pattern `^LE-`; links to `legal-entity` | `"LE-FRA"` |
+| `DIVISION` | string | optional (filled in every row) | The division of the trade's desk (DIV-…): the top level column of the hierarchy MGMT (DIVISION > DESK > TT_BOOK, VAR_GUIDE.md section 15.14), as the trade's VaR records carry it. A row that leaves it empty sits under the (Blank) division. | seen: `DIV-MARKETS`, `DIV-TREASURY` | `"DIV-TREASURY"` |
 | `DESK` | string | required | The desk the trade is booked on: a DESK_ID of the core pack's desk kind (DESK-…). | pattern `^DESK-`; links to `desk` | `"DESK-SFT"` |
 | `TT_BOOK` | string | required | The book the trade is booked in: a BOOK_ID of the core pack's book kind (BOOK-…). | pattern `^BOOK-`; links to `book` | `"BOOK-SFT-1"` |
-| `LIMIT_LETTER` | string | optional (filled in every row) | The trade's limit letter, as its VaR records carry it: the level column of the hierarchy LL (LIMIT_LETTER > DESK, VAR_GUIDE.md section 16). When a hierarchy is built from it, every row carries it (a row that leaves it empty is refused, DRS-5211; a table without the column skips that hierarchy alone, with a DRS-5211 warning). | — | `"LL-0001"` |
+| `LIMIT_LETTER` | string | optional (filled in every row) | The trade's limit letter, as its VaR records carry it: the level column of the hierarchy LL (LIMIT_LETTER > DESK, VAR_GUIDE.md section 15.14). Every hierarchy is built from promoted columns: a row that leaves a level column empty sits under a (Blank) node at that level, and a table that does not promote the column puts every row there, with a DRS-5211 warning. | — | `"LL-0001"` |
 | `ASSET_CLASS` | string | required | The trade's asset class, denormalised from the netting set's member row (used by the asset scope). | one of `Commodity`, `Credit`, `Equity`, `FX`, `Fixed income`, `Inflation`, `Money market`, `Rates`, `Securities financing`, `Structured` | `"Securities financing"` |
 | `PRODUCT` | string | required | The trade's product name, denormalised from the netting set's member row (e.g. Basis swap (float/float)). | — | `"Tri-party repo"` |
 | `NOTIONAL` | number | required | The trade's notional as its netting set lists it, in the trade's currency; denormalised for people and checks. | unit: trade currency | `260700000.0` |
@@ -1182,7 +1184,7 @@ None: all 7,540 rows were read, and every field any of them has is in the record
 ### For the production query
 
 - **Identity:** one record per `PATH_ROW_ID` per `BUSINESS_DATE`; the key is text, unique within the date.
-- **Never null:** `PATH_ROW_ID`, `BUSINESS_DATE`, `RUN_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `ASSET_CLASS`, `PRODUCT`, `NOTIONAL`, `MATURITY_DATE`, `GRID_INDEX`, `GRID_DATE`, `MTM`, `STATUS`, `PRICER`, `BATCH_ID` (the contract's required fields); every row of the test data also fills `LIMIT_LETTER`.
+- **Never null:** `PATH_ROW_ID`, `BUSINESS_DATE`, `RUN_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `ASSET_CLASS`, `PRODUCT`, `NOTIONAL`, `MATURITY_DATE`, `GRID_INDEX`, `GRID_DATE`, `MTM`, `STATUS`, `PRICER`, `BATCH_ID` (the contract's required fields); every row of the test data also fills `DIVISION`, `LIMIT_LETTER`.
 - **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
 - **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
 - One row per (`RUN_ID`, `TRADE_ID`, `GRID_INDEX`) (a duplicate fails the load); `MTM` has exactly the run's `PATHS` numbers, no `null`, `NaN` or infinity (`DRS-5444`); `GRID_DATE` = the run's `GRID_DATES[GRID_INDEX]`; rows to the trade's maturity; one `BATCH_ID` per run (`DRS-5441`).

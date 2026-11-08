@@ -123,7 +123,7 @@ class VarFormatEqualityTest {
                         result: { required: [VAR, ES, PNL], types: { VAR: number, ES: number } }
                     engine: { type: java, class: com.ash.drishti.banking.var.VarResultEngine, version: "1.0" }
                     triggers:
-                      - { on: data-version, kinds: [pnl-vector, scenario-pv, fx-scenario, risk-hierarchy, scenario-set, portfolio, var-limit], affects: all }
+                      - { on: data-version, kinds: [pnl-vector, scenario-pv, fx-scenario, scenario-set, portfolio, var-limit], affects: all }
                     coalesce: { quiet: 250ms, max-wait: 2s }
                     """);
         } catch (Exception e) {
@@ -134,7 +134,7 @@ class VarFormatEqualityTest {
     /** The risk lake's connector file in one format: the same kinds and layout, another plugin and root. */
     static String riskLake(String plugin, Path root) {
         return "plugin: " + plugin + "\n"
-                + "kinds: [pnl-vector, scenario-set, risk-hierarchy, portfolio, var-limit, scenario-pv, fx-scenario, fx-spot]\n"
+                + "kinds: [pnl-vector, scenario-set, portfolio, var-limit, scenario-pv, fx-scenario, fx-spot]\n"
                 + "settings:\n"
                 + "  root: " + root + "\n"
                 + "  domain: risk\n"

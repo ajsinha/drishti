@@ -61,7 +61,7 @@ JAR = Path(os.environ.get("CSSVIS_JAR", str(MAIN / "drishti-server" / "target" /
 JAVA = Path(os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64")) / "bin" / "java"
 SERVER_PORT = int(os.environ.get("CSSVIS_SERVER_PORT", 18991))
 CONSOLE_PORTS = (int(os.environ.get("CSSVIS_CONSOLE_PORT_A", 17991)), int(os.environ.get("CSSVIS_CONSOLE_PORT_B", 17992)))
-VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio", "var-limit")]
+VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "portfolio", "var-limit")]
                     + ["trades/murex"])
 SITE_CONFIG = {"connectors", "net"}           # the site's own config parts: never copied (the server writes its connector files itself)
 

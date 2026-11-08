@@ -25,9 +25,9 @@ tags: [sample, market-risk, var]
 from: { kind: var-official, connector: var-results }
 columns:
   HIERARCHY:       { path: "$.HIERARCHY", type: string }
-  NODE_ID:         { path: "$.NODE_ID", type: string, references: risk-hierarchy }
+  NODE_ID:         { path: "$.NODE_ID", type: string }
   NODE_NAME:       { path: "$.NODE_NAME", type: string }
-  PARENT_ID:       { path: "$.PARENT_ID", type: string, references: risk-hierarchy }
+  PARENT_ID:       { path: "$.PARENT_ID", type: string }
   LEVEL:           { path: "$.LEVEL", type: string }
   CAPTURE_ID:      { path: "$.CAPTURE_ID", type: string }
   RESULT_VERSION:  { path: "$.RESULT_VERSION", type: integer }

@@ -43,8 +43,6 @@ tables:
   risk.fx-scenario:
     promote: [CURRENCY, RATE, SCENARIO_SET_ID]
   risk.scenario-set: null
-  risk.risk-hierarchy:
-    promote: [NODE_ID, HIERARCHY, LEVEL, PARENT_ID, NAME]
   risk.var-limit:
     promote: [LIMIT_ID, HIERARCHY, NODE_ID, LIMIT_VAR, CURRENCY]
   risk.desk-pnl:

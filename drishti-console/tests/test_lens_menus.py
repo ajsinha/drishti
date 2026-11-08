@@ -68,7 +68,7 @@ def test_the_risk_edition_draws_one_engines_menu_in_place_of_var_and_exposure(ba
     eng = _panel(page, "Engines")
     assert re.findall(r'class="mega-title eng-name">([^<]+)<', eng)[:2] == ["VaR", "Exposure"]
     cmds = _commands(eng)
-    for c in ("VAR BANK", "VRES", "VOFF", "SMAT", "HIER", "SWIN BANK", "EXP"):
+    for c in ("VAR BANK", "VRES", "VOFF", "SMAT", "VLIM", "SWIN BANK", "EXP"):
         assert c in cmds, c
     assert 'href="/go?q=SWIN%20BANK%20%3CGO%3E"' in eng and 'href="/smat"' in eng and 'href="/var"' in eng
     assert 'data-fill="EXP CPTY"' in eng and 'href="/t?cmd=EXP%20CPTY"' in eng

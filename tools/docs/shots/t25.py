@@ -244,7 +244,7 @@ def _more_dates() -> None:
             continue
         r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(LAKE[0]), "--data-dir", str(work / "data"),
                             "--connectors-dir", str(work / "connectors"), "--as-of", d, "--keep-other-dates", "--only", "market-risk/pnl-vector,market-risk/scenario-pv,"
-                            "market-risk/fx-scenario,market-risk/scenario-set,market-risk/risk-hierarchy", "--server", server(), "-q", "--engine", "auto"],
+                            "market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit", "--server", server(), "-q", "--engine", "auto"],
                            capture_output=True, text=True, cwd=ROOT, timeout=900)
         if r.returncode:
             raise RuntimeError(f"lake demo --as-of {d} failed: " + (r.stderr or r.stdout)[-600:])

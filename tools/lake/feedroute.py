@@ -22,7 +22,7 @@
   sha256, rows, hold, lake (the lake the file goes to: a lake of config/lakes/). An unknown key refuses the file. The command line's own
   options win over the marker's (``--lake`` over ``lake:``).
 * **The pack of a table**: the pack given (``--pack``, ``pack:``, a tar's ``folders:``); else the pack that already has a kind or table
-  of that name (compared without case, ``_`` and ``-`` alike: ``risk_hierarchy`` is the kind ``risk-hierarchy``); else a pack of that
+  of that name (compared without case, ``_`` and ``-`` alike: ``var_limit`` is the kind ``var-limit``); else a pack of that
   name with a single kind. Two candidates or none: refused, listing them. A table name (``trade_endur``, one of the kind ``trade``'s tables)
   resolves to its kind and connector, so a tar's folders may be table names.
 * **The key of a kind**: the pack's ingest key, else the single field of its data contract's ``key:`` (``contract_key``): a table created by
