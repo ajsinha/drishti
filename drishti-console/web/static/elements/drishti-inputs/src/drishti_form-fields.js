@@ -29,6 +29,7 @@ import { MultiSelect } from './drishti_multiselect.js';
 import { Combobox } from './drishti_combobox.js';
 import { TreePicker } from './drishti_tree-picker.js';
 import { CodeEditor } from './drishti_code-editor.js';
+import { Select } from './drishti_select.js';
 import { upgradeCodeArea } from './drishti_code-upgrade.js';
 
 const WIDGETS = new Map();
@@ -174,12 +175,29 @@ export function drawField(form, f) {
         wrap.append(label(null), control, help || '', msg);
         return wrap;
       }
-      const sel = part.input = named(form.el('select', { cls: 'di-field', attrs: { id: id, 'aria-describedby': described, disabled: ro || null, 'aria-required': f.required ? 'true' : null } }));
-      if (fs.allowEmpty !== false) { sel.appendChild(form.el('option', { text: fs.emptyLabel || (f.required ? 'Pick one' : '(none)'), attrs: { value: '' } })); }
-      list.forEach((o) => { const op = form.el('option', { text: o.label, attrs: { value: String(o.value) } }); if (v === o.value) { op.selected = true; } sel.appendChild(op); });
-      sel.addEventListener('change', () => { const o = list.find((x) => String(x.value) === sel.value); set(o ? o.value : undefined); touch(); });
-      control = sel;
-      break;
+      // the library's Select in a <drishti-select> element (el.value and el.component as on any page; its hook is on the element), the
+      // empty choice first when the field allows one; a pick also fires change and input on the element, as a native select did
+      const box = form.doc.createElement('drishti-select'), empty = fs.allowEmpty !== false;
+      box.className = 'di-form-widget';
+      const choices = (empty ? [{ value: '', label: fs.emptyLabel || (f.required ? 'Pick one' : '(none)') }] : []).concat(list.map((o) => ({ value: String(o.value), label: o.label })));
+      const has = v !== undefined && v !== null && list.some((o) => String(o.value) === String(v));
+      const sel = part.widget = new Select(box, { options: choices, value: has ? String(v) : empty ? '' : undefined, label: f.label, disabled: ro,
+        placeholder: !has && !empty && f.required ? 'Pick one' : undefined });
+      box.component = sel;                                     // made here: the element does not make a second one when it joins the page
+      part.names = fs.name ? form.el('span', { cls: 'di-names', attrs: { hidden: true } }) : null;
+      sel.control.id = id;
+      sel.control.setAttribute('aria-describedby', described);
+      if (f.required) { sel.control.setAttribute('aria-required', 'true'); }
+      sel.on('change', (d) => {
+        const o = list.find((x) => String(x.value) === String(d.value));
+        set(o ? o.value : undefined); touch();
+        ['input', 'change'].forEach((t) => box.dispatchEvent(new form.win.Event(t, { bubbles: true })));
+      });
+      part.input = sel.control;
+      applyHook(box, fs.hook);
+      wrap.append(label(id), box, help || '', msg);
+      if (part.names) { wrap.appendChild(part.names); }
+      return wrap;
     }
     case 'date': control = mount(DatePicker, { value: v, businessOnly: fs.options && fs.options.businessOnly !== undefined ? fs.options.businessOnly : false, required: f.required }); break;
     case 'time': control = mount(TimePicker, { value: v, step: fs.stepMinutes || 15, required: f.required }); break;

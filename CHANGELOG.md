@@ -224,6 +224,11 @@
   CSS deleted. **drishti-inputs**: a form the server drew (`data-di-form`, `formOf`, `upgradeForms`; an embedded `Form` stops its
   page form's submit while a field has a problem), the field types `file` and `range`, a text field's `password` and `search`
   formats, `maxLength`, `mono`, `suggest`, the `inline` layout.
+- **The last native selects on drishti-inputs' `Select`** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+  a `Form`'s select field (every form on `Form`: the Admin screens, the alert form, the query form, BI's panes, the editors) is a
+  `<drishti-select>` with search, type-ahead and the keys of the rest of the kit; drishti-grid's select cell editor is a `Select` that opens on
+  the value; FRTB-SA's and SIMM's playground choices (method switches, *Compare with*, *By*, *Side*) are `<drishti-select>`s. Tests pick
+  through `tests/select_helpers.py`; Playwright's `select_option` and `input_value` work on a `<drishti-select>` (installed by `conftest.py`).
 - **The alert form on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
   the server sends the form's schema (`core/alert_form.py`, new, 168 lines) and the page's `Form`, embedded in its POST form, draws every
   field with the name it always submitted (saving and *Check now* unchanged); the source, condition and trigger groups follow the choice

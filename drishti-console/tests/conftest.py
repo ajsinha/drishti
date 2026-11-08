@@ -62,6 +62,9 @@ if not os.environ.get("DRISHTI_CONSOLE_TMP_DIR"):
 
 from harness_plugin import pytest_collection_modifyitems, pytest_configure  # noqa: E402,F401 - the hooks: distribution by test (TEST_HARNESS.md)
 from worker_fixtures import browsers, pack_views, render_site  # noqa: E402,F401 - the per-worker fixtures (TEST_HARNESS.md)
+import select_helpers  # noqa: E402
+
+select_helpers.install_playwright_shim()          # select_option and input_value on drishti-inputs' <drishti-select> (select_helpers.py)
 from core.app import create_app  # noqa: E402
 from core.backend import BackendError  # noqa: E402
 from core.config import load_settings  # noqa: E402

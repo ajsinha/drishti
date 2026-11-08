@@ -153,8 +153,8 @@ OPEN = ("!!document.querySelector('.dg-editor') && document.querySelector('.dg-e
 def gselect(pg, key, rid, c, label):
     gcell(pg, key, rid, c)
     wait(pg, OPEN)
-    pg.select_option(".dg-editor select", label=label)
-    pg.keyboard.press("Enter")
+    pg.locator(".di-select-pop").get_by_role("option", name=label, exact=True).click()   # drishti-inputs' Select: picking saves
+    wait(pg, "!document.querySelector('.dg-editor')")
 
 
 def gtext(pg, key, rid, c, text):

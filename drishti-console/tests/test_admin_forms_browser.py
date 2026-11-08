@@ -173,7 +173,7 @@ def test_the_access_filter_submits_its_names_and_a_picked_date(browser, console)
     _no_raw_controls(page, ".adm")
     fields = page.locator("[data-access-fields]")
     assert fields.locator("input[name=user]").input_value() == "ada"
-    assert fields.locator("select[name=action]").input_value() == "raw"
+    assert fields.locator("input[type=hidden][name=action]").input_value() == "raw"                 # a Select writes its name
     assert fields.locator("input[type=hidden][name=from]").input_value() == "2026-10-01"       # the date picker writes the name
     fields.locator("input[name=kind]").fill("trade")
     page.locator("form.alert-form button[type=submit]").click()
