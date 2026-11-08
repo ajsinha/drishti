@@ -20,7 +20,8 @@ table, an in-memory table), a SQL query, a Python transform, a model's answer or
 and defines measures over them. Every consumer reads them the same way: BI, the pivot, Arrow Flight and alerts. This guide is the
 reference: every key, every check, the command line and the migration of BI's datasets and models; the hands-on walk-through is the
 [virtual tables tutorial](../tutorials/44-virtual-tables-and-models.md). The design, with its decisions, is
-[BI_FOUNDATION_2911E.md](../architecture/BI_FOUNDATION_2911E.md) and [VIRTUAL_TABLES.md](../architecture/VIRTUAL_TABLES.md).
+[ARCHITECTURE.md section 24](../architecture/ARCHITECTURE.md#24-virtual-tables-the-central-table-layer); how BI reads the layer is
+[BI_DESIGN.md section 18](../architecture/BI_DESIGN.md#18-the-bi-foundation-bi-on-the-table-layer-and-rachana).
 
 The outputs below are real: the shipped BI datasets and models as migrated into `config/tables/bi` (where they ship) beside the tutorial's own two tables and model, and the
 test data's samples of 2026-09-30 (`data/testdata`: Endur trades, counterparties).
@@ -39,6 +40,7 @@ test data's samples of 2026-09-30 (`data/testdata`: Endur trades, counterparties
 9. [The migration: tables migrate](#9-the-migration-tables-migrate)
 10. [Problem codes](#10-problem-codes)
 11. [The editors](#11-the-editors)
+12. [Measures in a model: filter context, and what is refused](#12-measures-in-a-model-filter-context-and-what-is-refused)
 
 ## 1. Where definitions live
 
@@ -550,3 +552,47 @@ Everything the screen shows is computed on the server, for the person who asks: 
 
 The same definitions are checked on the command line by `drishti.py tables check` (section 8); a saved draft is a BI item of kind `table` or
 `model` in the layer's form (`rachana: 3`).
+
+## 12. Measures in a model: filter context, and what is refused
+
+Every expression is written in one of four scopes, decided by where it stands: **row** (a column's `expr`, a `filter`), **rule** (a
+table's `rules`, a model's `security.rows`), **aggregate** (a model's measures, MQ `define` and `having`) and **context** (the first
+argument of `calc`, `share_of`, `parent_of`, `as_of`). What each scope may name: [BI_DESIGN.md section
+18.2](../architecture/BI_DESIGN.md#182-scopes-and-the-filter-context-in-rachana). Every function, with its arguments and where it runs:
+[FUNCTIONS.md](FUNCTIONS.md).
+
+A measure is evaluated per group of the answer in four layers: the reader's **security** (fixed: no function touches it), the **query**
+(MQ `where`, report, page and visual filters, slicers, drill, cross-filter), the **group** (the current group's values) and the
+**measure**'s own `where =` and `calc` edits. The context functions edit the query and group layers:
+
+```yaml
+measures:
+  MTM:             { expr: "sum(trades.MTM)" }
+  Open MTM:        { expr: "sum(trades.MTM, where = trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null)" }
+  MTM all desks:   { expr: "calc(measure('MTM'), ignore = [desks.NAME])" }        # the desk filter dropped
+  MTM % of total:  { expr: "share_of(measure('MTM'), over = ALL)", format: share } # of everything you may see
+  MTM % of parent: { expr: "parent_of(measure('MTM'), hierarchy = 'Desk and book')" }
+  MTM day on day:  { expr: "measure('MTM') - as_of(measure('MTM'), shift_date(asof(), -1))" }
+  MTM ytd:         { expr: "ytd(sum(trades.MTM), trades.TRADE_DATE)" }
+  Closing balance: { expr: "latest(sum(accounts.BALANCE), accounts.business_date)" }
+```
+
+`ignore = ALL` means everything **you** may see: security is never in scope. `share_of` and `parent_of` drop filters, so a book's share
+of the total stays a share of everything you may see whatever the slicers say; the pivot's `pct_of_total` and `pct_of_parent` are shares
+of the totals the answer shows. Context functions nest at most three deep; iteration is explicit (`avg_by(sum(trades.MTM), by = [desks.NAME])`),
+never a silent context transition. A literal mapping reads better as `switch(payments.CURRENCY, 'JPY', 1 / 148.2, 'EUR', 1.174, null)`
+than as a chain of `? :`.
+
+**What is refused, and why.**
+
+| Refused | Why |
+|---|---|
+| any function that edits the security layer or adds rows a rule removed | nothing adds rights |
+| an aggregate in a column, a filter or a rule; a bare column outside an aggregate in a measure (`DRS-9127`) | a column is one value per row, a measure one value per group |
+| a document path in a measure (`sum(trades.LEGS[*].NOTIONAL)`) | add the path as a table column, so every consumer reads the same figure |
+| a filter, sort, `in` or grouping on a masked column (`DRS-9161`) | a hidden value must not be inferred from what a filter keeps |
+| `reduce` with `+` over a list | an aggregate is the engine's (`sum`) |
+| `as_of` with a date that depends on a row (`DRS-9166`), or on a live table (`DRS-9157`) | the second plan is bound to one date before the query runs |
+| context functions nested deeper than three | the plans stay bounded and readable |
+| `ctl.x`, `link`, `fmt` in tables and models | display concerns of a Sutra; a column or a measure has a `format` |
+| VaR, ES, exposure, FRTB-SA or SIMM as an aggregate over a vector or a table | they come only from their engines, through `measure('VAR', scope)` |

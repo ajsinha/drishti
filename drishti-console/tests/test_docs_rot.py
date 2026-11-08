@@ -28,8 +28,8 @@ the console's own help guides. For each one the checks below compare a name the 
 * a command word typed with ``<GO>`` is a pack's mnemonic, a pack code or a reserved word;
 * a kind named as a kind (``the `trade` kind``, ``kind `trade```, ``--kind trade``, ``/v/trade/``) is a kind of some pack.
 
-History is exempt from the "still exists" checks, not from the link check: the CHANGELOG, the release notes and the
-dated QA logs (``docs/qa``) record what was true then, and every link in them, as in every document, goes to a file that
+History is exempt from the "still exists" checks, not from the link check: the CHANGELOG and the release notes
+record what was true then, and every link in them, as in every document, goes to a file that
 exists, whatever the line around it says. An obsolete design is deleted, not archived: git keeps its history, and a
 document that still mentions it names the release tag where it last lived, as text, not as a link. Run this file
 directly to print every finding at once.
@@ -56,7 +56,7 @@ from core.guides import GithubSlugger  # noqa: E402
 NOT_DOCS = ("drishti-console/web/static/vendor/", "plugins/drishti-plugin-feeds/src/test/",
             "tools/packgen/", "tools/elements-demo/", "data/", "config/packs/core/gleif/")
 # History: names that were true when written. Links in these must still resolve; the names in them need not exist.
-HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md", "docs/qa/")
+HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md")
 
 
 @functools.lru_cache(maxsize=None)

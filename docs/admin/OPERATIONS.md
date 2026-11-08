@@ -42,7 +42,7 @@ handbook stays the reference for one server and its console.
 14. [Logs](#14-logs)
 15. [Upgrades and rollback](#15-upgrades-and-rollback)
 16. [Capacity](#16-capacity)
-17. [Runbooks](#17-runbooks)
+17. [Runbooks](#17-runbooks) · [Source down or slow](#171-source-down-or-slow) · [A Sutra is broken](#172-a-sutra-is-broken-or-an-edit-does-not-show) · [Live latency high](#173-live-latency-high-or-live-views-stop-ticking) · [Users cannot sign in](#174-users-cannot-sign-in)
 18. [Drishti*net: running several servers as one](#18-drishtinet-running-several-servers-as-one)
     - [1. Before you start](#1-before-you-start)
     - [2. A cluster of three](#2-a-cluster-of-three)
@@ -2374,11 +2374,11 @@ frames per second, and JVM heap used.
 
 | Alert | Condition | First look |
 |---|---|---|
-| Views slow | `drishti_view_seconds{quantile="0.99"} > 0.15` for 5 min | [source down](runbooks/source-down.md) |
-| Live late | `drishti_live_latency_p99_milliseconds > 40` for 5 min | [live latency high](runbooks/live-latency-high.md) |
+| Views slow | `drishti_view_seconds{quantile="0.99"} > 0.15` for 5 min | [source down](#171-source-down-or-slow) |
+| Live late | `drishti_live_latency_p99_milliseconds > 40` for 5 min | [live latency high](#173-live-latency-high-or-live-views-stop-ticking) |
 | Server down | `up{job="drishti"} == 0`, or readiness not `UP` | `journalctl -u drishti-server` |
-| A source down | Admin → Health `status` not `OK`, or a source not `UP` in `/api/v1/sources` | [source down](runbooks/source-down.md) |
-| Broken Sutra | `/api/v1/sutras/problems` not `{}` | [a Sutra is broken](runbooks/sutra-broken.md) |
+| A source down | Admin → Health `status` not `OK`, or a source not `UP` in `/api/v1/sources` | [source down](#171-source-down-or-slow) |
+| Broken Sutra | `/api/v1/sutras/problems` not `{}` | [a Sutra is broken](#172-a-sutra-is-broken-or-an-edit-does-not-show) |
 | Heap high | `sum(jvm_memory_used_bytes{area="heap"}) / sum(jvm_memory_max_bytes{area="heap"}) > 0.9` for 10 min | section 12 |
 | Lake maintenance failed | the job's exit code is 1, or a `"event": "failed"` line | the `error` in that line |
 | Message state store cannot write | an ActiveMQ or RabbitMQ connector's health ends `(messages are not acknowledged and come again)` | free or grow the disk under `state.root` |
@@ -2717,11 +2717,385 @@ answers and the refusals by code, and fails over the SLAs of §6.8.
 
 ## 17. Runbooks
 
-- [Source down or slow](runbooks/source-down.md)
-- [A Sutra is broken](runbooks/sutra-broken.md)
-- [Live latency high](runbooks/live-latency-high.md)
-- [Users cannot sign in](runbooks/sign-in.md)
-- [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) for everything else.
+Four runbooks for the incidents an operator meets most; [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) has everything else.
+Each gives the symptoms, the diagnosis step by step, the fixes and how to verify. The examples use `http://localhost:18480` for the
+server and `http://localhost:17480` for the console. With security on, add `-H "Authorization: Bearer $TOKEN"` to server calls (an
+admin's token for `/api/v1/admin/*`; see [API_GUIDE.md](../guides/API_GUIDE.md)).
+
+### 17.1 Source down or slow
+
+A *source* is where Drishti reads entities from: a Delta Lake domain, a database, Kafka, a REST service, S3, a feed. Each one is a
+plugin instance, usually a named connector declared by a pack (the `trading` pack's `trade-endur`, `trade-calypso` and `trade-murex`,
+one per source system, with their settings in `config/connectors/trade-endur.yaml` and its two siblings). When one fails the others
+keep serving; only the kinds it holds are affected (for a union such as the trading pack's three, the trades of that one system).
+
+**Symptoms.** A view shows `DRS-1003` (the source failed) or `DRS-1004` (it timed out); linked entities (counterparty, curves) show
+*pending* or *missing*; `DRS-1001 no source holds trade/1000001` for an entity that exists, or `DRS-1002` (no source for the kind);
+**Admin → Health** shows `DEGRADED` or `DOWN`, a source `DOWN` or a pack with connectors down; search results say they are partial, or
+the type-ahead stops suggesting one kind.
+
+**Step 1. Which sources are unhealthy?**
+
+```bash
+curl -s http://localhost:18480/api/v1/admin/health | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+print("status:", d["status"], d["summary"])
+print("failed to start:", d["failedToStart"])
+for s in d["sources"]:
+    if s["status"] != "UP": print(s["status"] + ":", s["name"], s["health"], s["kinds"])
+for p in d["packs"]:
+    if p["connectorsDown"] or p["connectorsOff"]: print("pack", p["name"], "down:", p["connectorsDown"], "off:", p["connectorsOff"])'
+```
+
+On a healthy server you should see:
+
+```text
+status: OK {'packsWithProblems': 0, 'failedToStart': 0, 'sourcesDown': 0, 'sources': 18, 'packs': 12}
+failed to start: {}
+pack market-data down: [] off: ['ecb-estr-feed', 'fred-feed']
+pack trading down: [] off: ['trading-stream']
+```
+
+| Field | Meaning | Next |
+|---|---|---|
+| `status` | `OK`; `DEGRADED` (something is down, failed to start, or a pack has problems); `DOWN` (every source is down). | — |
+| `failedToStart` | `{"<source>": "<reason>"}` for plugins that threw while starting. | Step 2 |
+| a source `DOWN` | It started but its health check fails now; `health` holds the plugin's reason. | Step 3 |
+| a source `DEGRADED` | It serves, but some of its data cannot be read: `health` names each table and date and why (a Delta date in BROTLI or LZO pages, a truncated Parquet file, a table log missing a commit). Reads of those dates fail with `DRS-1003`; searches over them say `partial: true`. | fix the data ([DELTA_CONNECTOR.md › Diagnosing](../connectors/DELTA_CONNECTOR.md#13-diagnosing)) |
+| `connectorsDown` of a pack | That pack's connectors that are `DOWN`. | Step 3 |
+| `connectorsOff` of a pack | Connectors the pack declares that are not running: switched off (`trading-stream` until `DRISHTI_STREAM_TRADING=true`), idle because not configured, or failed to start. Off by design is normal. | Step 2 if you expected it on |
+
+**Idle is not failed.** A plugin that is enabled but has no settings (a Kafka connector without `topics`, a feed without `feed`) stays
+**idle**: it is not in `failedToStart`, the status stays `OK`, and the log says at INFO
+`source plugin kafka is installed but not configured (kafka needs settings.topics); it stays idle`. Give it its settings if you meant
+to use it. Without admin rights, `GET /api/v1/sources` lists every running source with its `health`, and `failures` (the plugins that
+failed to start).
+
+**Step 2. Why did it fail to start?** Search the server log (standard output; `journalctl` under systemd, `docker compose logs` under
+Compose):
+
+```bash
+journalctl -u drishti-server --since "1 hour ago" | grep -E "failed to start|failed reading"
+```
+
+A line such as `connector trade-endur failed to start` is followed by the cause; the same reason, without the stack trace, is in
+`failedToStart`. Connector settings are listed per plugin in [CONFIGURATION.md](CONFIGURATION.md).
+
+| Cause | What the message mentions | Fix |
+|---|---|---|
+| Wrong path | a file or directory that does not exist | Correct `root` (`DRISHTI_DELTA_ROOT` for the packs' lake connectors). |
+| Database or broker unreachable | `Connection refused`, an unknown host | Start it, or correct the URL. |
+| Wrong credentials | authentication or password | Correct the user and password variables. |
+| Switched on without its settings | the setting's name | Add the missing setting under `settings:`. |
+
+**Step 3. Down, or only slow?**
+
+1. Time one view of an affected kind (milliseconds):
+
+   ```bash
+   curl -s http://localhost:18480/api/v1/views/trade/MX-20000001 | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["timings"], d["provenance"]["source"])'
+   ```
+
+   ```text
+   {'fetch': 0.11, 'layout': 0.14, 'links': 0.16, 'bind': 0.21, 'total': 0.62} murex-rates
+   ```
+
+   A `fetch` near 10,000 means reads hit `drishti.sources.fetch-timeout` (10 s); a `links` near 40 means linked entities hit
+   `drishti.graph.link-budget` (40 ms) and show as *pending*.
+2. If the view fails instead, `DRS-1004` (HTTP 504) is a timeout and `DRS-1003` (HTTP 502) a failure; the `detail` names the source
+   and entity.
+3. Look at the source's `reads` in Admin → Health, or the log for `<source> failed reading <kind>/<id>`.
+4. Try the source outside Drishti: the connector's query in a SQL client, `curl` the REST `base-url`, your Kafka tools on the topic,
+   or list the lake folder (`ls ./data/delta/demo/trading/trade`).
+
+**Fixes.**
+
+- **The source is down.** Bring it back; nothing in Drishti changes. Connectors that failed to start, or whose plugin reports `DOWN`,
+  are tried again by themselves with growing waits ([Retries](#retries-what-failed-is-tried-again-by-itself)); Admin → Connectors and
+  Admin → Health show *failed, next retry in 8 s (attempt 3)* with the last error, and **Retry now** (`POST /api/v1/admin/retry/connectors`)
+  tries at once. Until then other kinds keep working.
+- **A connector failed to start.** Correct its settings in **Admin → Connectors** (**Test connection** shows the reason with a hint) or
+  in `config/connectors/<name>.yaml`; it restarts on its own within seconds. A plugin configured directly under
+  `drishti.sources.plugins` in `application.yaml` is not retried: correct it and restart the server.
+- **A connector's file has a mistake.** The last good configuration keeps running; Admin → Health (`connectors.badFiles`) and the
+  Connectors page give the message. Fix the file, or restore an earlier text from the page's History
+  ([CONNECTOR_FILES.md › Health and problems](../connectors/CONNECTOR_FILES.md#12-health-and-problems)).
+- **The source is healthy but slow.** Give it more time in `application.local.yaml` next to the server jar, then restart. Raising the
+  link budget makes every view with slow links wait longer, so raise it only as far as needed; for lake and stream connectors a bigger
+  `cache-mb` also helps ([PERFORMANCE.md](PERFORMANCE.md#example-3-connector-caches)).
+
+  ```yaml
+  drishti:
+    sources:
+      fetch-timeout: 20s       # default 10s
+    graph:
+      link-budget: 100ms       # default 40ms
+  ```
+- **The source is out for a long time.** Disable the connector in **Admin → Connectors** (or `drishti.py connector disable <name>`,
+  or `enabled: false` in its file), without a restart; views of its kinds then fail at once (`DRS-1001`, or `DRS-1002` when no other
+  source serves the kind) instead of waiting for timeouts. `DRISHTI_LAKE_ENABLED=false` turns off the packs' lake connectors at start.
+
+**Verify.** Admin → Health shows `status: OK`, `sourcesDown: 0`, `failedToStart: 0` and no `connectorsDown`;
+`curl -s -o /dev/null -w "%{http_code}\n" http://localhost:18480/api/v1/views/trade/MX-20000001` prints `200` with `timings.fetch` well
+below the timeout; the view's linked entities show values instead of *pending*.
+
+### 17.2 A Sutra is broken, or an edit does not show
+
+A *Sutra* lays out the view of one family of entities, for example
+`config/packs/banking/trading/sutras/murex/cmd-forward.v1.sutra.yaml` for MUREX commodity forwards. It is one YAML file,
+`<name>.v<N>.sutra.yaml`, whose first key is `rachana: 1`, read from the enabled packs' `sutras/` folders and from the site directory
+(`drishti.rachana.dirs`, default `./sutras`, environment `DRISHTI_SUTRAS`); the grammar is in
+[RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md). **An invalid edit never takes a view down:** the server reloads a changed file
+within about 250 ms (`drishti.rachana.reload-debounce`); if the new text is invalid, the last good version stays live and the problems
+are reported with file, line and column. A Sutra that was never valid is not used; its entities are laid out by inference alone.
+
+**Symptoms.** `GET /api/v1/sutras/problems` is not `{}`; after an edit views still show the old layout; *How this view was built* shows
+`inference` only; the server log has `sutra problem` lines; saving in the Build workbench fails with a `DRS-2xxx` message.
+
+**Step 1. List the problems.**
+
+```bash
+curl -s http://localhost:18480/api/v1/sutras/problems | python3 -m json.tool
+```
+
+`{}` when all is well; otherwise each file with its problems, for example
+`{"code": "DRS-2021", "message": "unknown panel kind 'tabel'", "location": {"file": "…/cmd-forward.v1.sutra.yaml", "line": 41, "column": 11}}`.
+The log has the same, one line per problem: `sutra problem <file>:<line>:<column> <code> <message>`.
+
+| Code | Meaning | Typical fix |
+|---|---|---|
+| `DRS-2001` | The file cannot be read or parsed (YAML syntax). | Fix indentation, quotes or colons at the line. |
+| `DRS-2004` | A file in a Sutra folder is not a Sutra file: a `.sutra.md` or a plain `.yaml`/`.yml`. | Convert a `.sutra.md` (below); rename a YAML Sutra to `<name>.v<N>.sutra.yaml`; move any other YAML file out. |
+| `DRS-2009` | `rachana:` is missing, or names a language version this server does not read. | Put `rachana: 1` as the first key. |
+| `DRS-2010` | A required key is missing. | Add the key. |
+| `DRS-2011` | Unknown key (often a typo). | Correct the spelling. |
+| `DRS-2012` | A value has the wrong type (`description` and `notes` must be text). | Quote it, or give the shape the message names. |
+| `DRS-2020` | Bad name or version, or no site directory to save into. | Lower-case kebab names, a positive integer `version`; set `drishti.rachana.dirs`. |
+| `DRS-2021` | Unknown panel kind. | Use a kind in RACHANA_REFERENCE.md. |
+| `DRS-2022` | A panel lacks a required option. | Add the option named. |
+| `DRS-2023` | An option the panel kind does not take (`body` outside `tabs`, `search` outside `table`/`ladder`). | Remove it, or use a kind that takes it. |
+| `DRS-2024` | Duplicate panel id. | Rename one panel. |
+| `DRS-2025` | A key is not F1–F12, or one function key is used twice. | Use a free function key. |
+| `DRS-2026` | Too many figures in the strip (8 at most). | Remove some. |
+| `DRS-2027` | `area` is not `main` or `right`. | Correct it. |
+| `DRS-2028` | The same name and version in two files. | Give one a new version, or delete the duplicate. |
+| `DRS-2032` | The file could not be read at all (for example nested too deeply); the log has the stack trace. The other Sutras load. | Simplify the file. |
+| `DRS-2101` | An expression does not compile, or is past the limits (`drishti.rachana.max-expression-depth` 200, `max-expression-length` 10,000 characters). | Fix the Rachana-EL; write long sums with `sum(...)`. |
+
+<a id="step-1a-a-sutramd-or-plain-yaml-file-drs-2004-drs-2009"></a>**A `.sutra.md` or plain `.yaml` file (`DRS-2004`, `DRS-2009`).**
+Sutras are YAML only; a Markdown Sutra in a site folder is reported, not loaded, and its message gives the converter to run from the
+repository root. It takes files or folders:
+
+```bash
+python3 tools/rachana/md_to_yaml.py sutras --delete
+```
+
+It prints one line per file (`sutras/rates/my-swap.v1.sutra.md -> sutras/rates/my-swap.v1.sutra.yaml`), keeps the `sutra` block with
+its comments, adds `rachana: 1` and turns the prose into `notes:`. Without `--delete` the `.md` files stay (and stay reported) while you
+compare. A plain `.yaml` file is reported as `a Sutra file is named <name>.v<N>.sutra.yaml; rename <file>`. `DRS-2009` asks for the
+first key:
+
+```yaml
+rachana: 1
+sutra: my-swap
+version: 1
+match: { kind: trade, where: "$.productType == 'IRS_FIXFLOAT'" }
+```
+
+**Step 2. Which version does a view use?** `GET /api/v1/views/trade/1000001` gives `provenance.layout`, for example
+`Sutra cmd-forward v1 + inference`; `GET /api/v1/sutras` lists each loaded Sutra with its `latest`, `versions` and `where`.
+
+| What you see | Meaning |
+|---|---|
+| The old version, and `problems` lists the file | The edit is invalid; the last good version is live. Step 3. |
+| The old version, no problems | The server never saw the edit: wrong directory, a pack not enabled, or a save waiting for review. Step 4. |
+| `inference` only | No Sutra matches: its `match.where` is false for the entity, or it was never valid. |
+| Another Sutra's name | A Sutra with a higher `priority` (or a more specific `where`) matches first. |
+
+**Step 3. Find the error in the Build workbench.** Open the Sutra at the entity
+(`http://localhost:17480/studio?sutra=cmd-forward@1&kind=trade&id=1000001`) and press **Ctrl+Enter** to preview the editor's text against
+it; problems are listed by line and a click jumps to one. The preview changes nothing on the server.
+
+**Step 4. Why was an edit not picked up?** Pack Sutras are read only for enabled packs (`GET /api/v1/packs`); with
+`drishti.rachana.hot-reload: false` (default `true`) changes apply at the next restart; a save with review on is a proposal
+(`GET /api/v1/sutras/proposals`, **Views → Approvals**) until an approver approves it.
+
+**Fixes.**
+
+- **Fix the file in place** and save; hot reload applies it. **Not in a generated pack:** most shipped packs' Sutras start with
+  `Generated by tools/packgen/… Edit the taxonomy, not this file.` A fix there works at once but the next generator run undoes it and the
+  generated-file check fails; use it only to restore service, then make the change in the generator (or its taxonomy) and run it
+  ([PACK_DEVELOPER_GUIDE.md › How the shipped packs are generated](../guides/PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)).
+  To change a generated layout for your site only, save a higher version in the site Sutra folder.
+- **Fix it in the Build workbench.** **Save** needs `drishti.rachana.studio-save` (`DRISHTI_STUDIO_SAVE=true`) and the author role
+  (`GET /api/v1/studio/settings` answers `{"approve":true,"review":true,"save":true}`). It checks the Sutra first, so an invalid one is
+  never written; it saves into the first site directory (`./sutras/<domain>/<name>.v<version>.sutra.yaml`); a pack's Sutra cannot be
+  overwritten under the same name and version (`DRS-2028`), so raise `version` (the highest wins). With review on
+  (`drishti.governance.enabled`, default `true`) the save is a proposal; with four-eyes on (the default when security is on) nobody
+  approves their own.
+- **Go back to the last good version.** Revert the file in version control; for workbench saves the history is
+  `GET /api/v1/sutras/{name}/history`.
+
+**Verify.** `GET /api/v1/sutras/problems` returns `{}`; the view's provenance and *How this view was built* name the new version
+(`Sutra cmd-forward v2 + inference`); the log's latest `sutras loaded: N names, 0 problem file(s), 1 changed` confirms the reload.
+
+### 17.3 Live latency high, or live views stop ticking
+
+How live updates work is in [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#1-live-updates); the normal numbers in
+[PERFORMANCE.md](PERFORMANCE.md). `/actuator/health` needs no token; the rest of `/actuator` needs the scrape token
+`DRISHTI_METRICS_TOKEN` or an admin's token when security is on.
+
+**Symptoms.** `p99Ms` from `GET /api/v1/health/live` stays above 40 for more than a minute (normal: single digits), or the alert on
+`drishti_live_latency_p99_milliseconds` fires; values change in bursts or late; the Live button keeps an **amber** ring
+(*Reconnecting…*) or values stop changing while the source ticks; new live views fail with `DRS-5001 too many live streams on this server`.
+
+**Step 1. Read the live counters.** `curl -s http://localhost:18480/api/v1/health/live` gives, on a healthy server,
+`{"streams":12,"topics":5,"frames":11652,"p50Ms":0.886,"p99Ms":1.917}`.
+
+| What you see | Meaning | Go to |
+|---|---|---|
+| `p50Ms` and `p99Ms` both high (tens of ms) | Every frame is slow: short of CPU, or a view is expensive to rebuild. | Step 2 |
+| `p50Ms` low, only `p99Ms` high | Occasional stalls: GC pauses, or a burst of streams opening at once. | Step 3 |
+| Both `0.0` while people say views are live | No frame was built in the last 30 s: nothing ticks. | Step 4 |
+| `streams` near `drishti.live.max-streams` (20,000) | The server is full. | Fix C |
+
+**Step 2. Why are frames slow?**
+
+1. CPU and heap: Admin → Health, or the `server` block of `GET /api/v1/admin/health` (`heapUsedMb` near `heapMaxMb` means the heap is
+   too small: Fix D). Check host CPU with `top` or your monitoring.
+2. A live frame is a rebuild of the view, so time one: `GET /api/v1/views/trade/1000001` → `timings` in milliseconds. A `bind` of tens of
+   milliseconds points at a heavy Sutra (very large tables, many expressions); a `fetch` or `links` near their budgets at a slow
+   source ([17.1](#171-source-down-or-slow)).
+3. `drishti_view_seconds{quantile="0.99"}` above 0.040 on `/actuator/prometheus` confirms that views themselves are slow.
+4. Hundreds of distinct live entities each ticking fast multiply the work: Fix A or Fix B.
+
+**Step 3. Occasional stalls.** The server should run generational ZGC (`-XX:+UseZGC -XX:+ZGenerational`, as in
+`deploy/docker/server.Dockerfile`), which keeps pauses below a millisecond; check with `ps -o args= -C java | grep drishti-server`
+(Fix D if missing); `jvm_gc_pause_seconds_max` shows the longest recent pause. A burst of first views (a morning start, a reconnect
+after a network blip) shows as `drishti_live_streams` jumping by hundreds; it settles within one 30 s window, and if it happens daily
+see Fix A and Fix C.
+
+**Step 4. Nothing ticks.**
+
+1. Only live sources tick: `GET /api/v1/sources` lists each with `live` and `health`; a missing or not-`UP` one is
+   [17.1](#171-source-down-or-slow).
+2. A picked past business date never streams: the Live button is red with pause bars (*Static*) and the date box amber.
+3. Stream straight from the server: `curl -N http://localhost:18480/api/v1/views/trade/1000001/stream` shows `event:view`, then
+   `event:frame` lines as the source ticks. Frames here but not in the browser: step 5. Only `event:view` and the response ends: the
+   entity is not live. Only `event:view` and `:hb` every 15 s: the source sends nothing (for Kafka, check messages arrive on the topic).
+4. `drishti.sources.plugins.demo.settings.ticking: false` freezes every demo entity.
+
+**Step 5. The browser receives no frames.**
+
+1. Stream through the console as the browser does: `curl -N "http://localhost:17480/api/channel?s=view:trade/1000001"` (with sign-in on,
+   add `-b "drishti_session=<your cookie>"`) shows `event: channel`, `event: view`, then `event: frame`.
+2. Frames from the console but not through the reverse proxy: the proxy buffers. In nginx set `proxy_buffering off;` and
+   `proxy_read_timeout` above 15 s for `/api/channel` ([8.2](#82-live-updates-through-a-proxy)).
+3. `Paused while hidden`: the tab was hidden for 10 s and gave its subscriptions back; it takes them again when shown.
+4. Several console processes behind a load balancer, and further panes or tabs never tick: sessions are not sticky. Each browser holds
+   one channel and only the process that holds it knows it (Fix E).
+5. One view `Static` while it ticks elsewhere, in a browser with very many live tabs: it reached `live.max_subscriptions` (32, console;
+   [DATA_ARCHITECTURE.md › Settings](../architecture/DATA_ARCHITECTURE.md#settings)).
+
+**Fixes.** Every server configuration change needs a server restart; live views reconnect by themselves.
+
+- **Fix A. Coalesce more:** `drishti.live.frame: 100ms` in `application.local.yaml`; a busy entity then costs at most one frame per
+  interval, and values are up to that much staler.
+- **Fix B. Make the expensive view cheaper:** open the Sutra named in the view's provenance in the Build workbench and bind less: fewer
+  columns and rows in large tables, simpler expressions ([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md)).
+- **Fix C. Add capacity or cap streams:** another server behind the load balancer (topics and streams are per server, so load spreads by
+  user); or a lower cap, `--drishti.live.max-streams=5000` (requests over it get `DRS-5001` and the browser retries).
+- **Fix D. JVM:** `JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational" java -jar drishti-server-*-exec.jar`.
+- **Fix E. Sticky sessions** for several console processes, for example `ip_hash;` in nginx's console `upstream` block.
+
+**Verify.** Within one 30 s window `GET /api/v1/health/live` shows `p99Ms` below 40; on `TRD 1000001` the Live button glows without an
+amber ring and `MTM (USD)` changes every few hundred milliseconds; `drishti_live_latency_p99_milliseconds` stays below 40 for the next hour.
+
+### 17.4 Users cannot sign in
+
+How sign-in works: the user types a name and password on the console's `/login`. The console asks the server to check them
+(`POST /api/v1/auth/login`) with its own short-lived service token signed with `DRISHTI_TOKEN_SECRET`. The server checks the password,
+counts failures and locks the account after 5 (for 15 minutes). On success the console opens a session on the server
+(`POST /api/v1/auth/sessions`) and sets a signed cookie naming it (`drishti_session`, signed with `DRISHTI_SESSION_SECRET`). On every
+later request it asks the server whether the session still stands and who the user is now (cached `auth.recheck_seconds`, 10) and
+sends a fresh token with the user's current roles. With single sign-on (OIDC) the provider replaces the password step. Users, roles
+and the audit log: [USER_MANAGEMENT.md](USER_MANAGEMENT.md).
+
+| What the user sees | Most likely cause | Go to |
+|---|---|---|
+| "Unknown user or wrong password." for one user | Wrong name or password, or the account is disabled. | Step 1 |
+| "This account is locked after repeated failures. …" | 5 failed attempts. | Fix A |
+| "Unknown user or wrong password." for **everyone** | Console and server disagree on `DRISHTI_TOKEN_SECRET`, or the console has none. | Step 3 |
+| "Sign-in unavailable: backend unreachable: …" | The console cannot reach the server. | Step 4 |
+| Signed in, but pages fail with `DRS-5010` | Tokens refused: secrets differ, or clocks differ by more than 30 s. | Step 3 |
+| Signed in, then back at sign-in within seconds | The session ended on the server: signed out elsewhere with this cookie, disabled, deleted or password reset (audit: `signed-out`, `sessions-ended`). | Step 2 |
+| Every page leads to *My account* (`403 DRS-6010`) | A password change is due (first sign-in or after a reset). | Change it there |
+| "Sign-in unavailable: …" right after a correct password | The server could not open a session (an older server than the console, or the identity database is down). | Step 4 |
+| A button does nothing: `403 DRS-5002 refused: this request came from another site` | The proxy changes the `Host` header. | `auth.allowed_origins` ([8.4](#84-cookies-csp-and-single-sign-on-behind-a-proxy)) |
+| An entity or link says "no access" / `DRS-5002` | The user's roles lack the kind, or its pack is not theirs or is off. | Fix D |
+| "Single sign-on is unavailable" or "The sign-in provider said: …" | OIDC configuration or the provider. | Step 5 |
+| No admin can sign in | All admins locked out or passwords lost. | Fix E |
+
+**Step 1. Look the user up** in **Admin → Users** (`active`, `locked` or `disabled`) or `GET /api/v1/admin/users` (`enabled`, `locked`,
+`roles`, `lastLoginAt`). Not listed: the name is wrong or the user was never created (Fix C). Disabled: Fix B (a disabled user with the
+right password still sees "Unknown user or wrong password."; the audit log gives the real reason). Locked: Fix A.
+
+**Step 2. Read the audit log:** **Admin → Audit**, or `GET /api/v1/admin/audit?subject=jdoe&limit=10`.
+
+| `action` | `detail` | Meaning |
+|---|---|---|
+| `login-failed` | `unknown user` / `attempt 3` | No such user / wrong password, third failure in a row. |
+| `locked` | `attempt 5` | The fifth failure locked the account. |
+| `login-refused` | `locked until …` / `disabled` | A try while locked (not counted) / right password, account disabled. |
+| `login` | | A successful sign-in. |
+| `password-reset` | | An admin reset the password. |
+| `sessions-ended` | `1 session(s): disabled` | A disable, delete or reset ended the user's sessions. |
+| `signed-out` | | The user signed out. |
+
+No entries at all for a user who tried: the attempts never reached the server (step 3).
+
+**Step 3. The shared token secret and the clocks.** With `drishti.security.enabled: true` the server refuses any request without a
+valid token, the console's own sign-in check included. The console signs with `auth.token_secret` and the server verifies with
+`drishti.security.secret`; both read `DRISHTI_TOKEN_SECRET`, which must be identical and at least 32 bytes. Compare the service
+environment file (for example `/etc/drishti/drishti.env`, [7.1](#71-an-environment-file)) or the compose `.env`. The server's refusal reads
+`{"title":"unauthenticated","status":401,"code":"DRS-5010","detail":"bad token signature"}`; other details are `missing bearer token`
+(the console has no secret), `token expired` (clock skew), `malformed token`, `unsupported token algorithm`. Tokens live 300 s and the
+server allows 30 s of skew (`drishti.security.clock-skew`): `timedatectl | grep -E "synchronized|NTP"` should say
+`System clock synchronized: yes` on both hosts.
+
+**Step 4. Can the console reach the server?** `curl -s -w ' %{http_code}\n' http://localhost:17480/readyz` calls the server exactly as
+sign-in does: `{"status":"UP","server":"reachable"} 200` when healthy; `503` with `"server":"unreachable"` and a `detail` (a refused
+connection, a timeout, or `bad token signature`: step 3) when not. From the console's host, `curl -s
+http://localhost:18480/actuator/health/readiness` should say `{"status":"UP"}`; otherwise the server is down or the console points
+elsewhere (`backend.url`, `DRISHTI_BACKEND_URL`, default `http://127.0.0.1:18480`).
+
+**Step 5. Single sign-on.** The console's OIDC settings (`DRISHTI_OIDC_ENABLED`, `_ISSUER`, `_CLIENT_ID`, `_CLIENT_SECRET`,
+`_REDIRECT_URI`) and the server's (`drishti.security.oidc.*`, same issuer and client id) must agree; the provider must accept the redirect
+URI (by default `<console URL>/auth/oidc/callback`); "The sign-in provider said: …" quotes the provider's own error, to fix there. Signed
+in at the provider but refused by Drishti: none of the user's groups maps to a role and `default-roles` is empty; map the group in
+`drishti.security.oidc.role-map`.
+
+**Fixes.**
+
+- **Fix A. Unlock.** A lock ends by itself after 15 minutes (`drishti.identity.lockout`). To unlock now, an admin uses **Reset password**
+  in Admin → Users, which also clears the failure count; give the new password over a separate channel.
+- **Fix B. Enable:** Admin → Users → **Enable**.
+- **Fix C. Create the user:** Admin → Users → **New user** with its roles; passwords need at least 10 characters
+  (`drishti.identity.min-password-length`).
+- **Fix D. Give access to a kind:** the user's roles in Admin → Users, or the role's kinds in Admin → Roles. Then the packs: the kind's
+  pack must be ticked for the user (or they have *default packs*), ticked in their own pack menu, and **on** in Admin → Packs. "No access"
+  on a link is the expected result when a role lacks that kind.
+- **Fix E. No admin can sign in.** A locked admin is unlocked after 15 minutes. Otherwise the host's administrator recovers the
+  development admin `drishti-dev-admin`, which the server creates on start-up only when the user store holds **no** users and
+  `DRISHTI_SEED_ADMIN` is `true` (where the store lives: [USER_MANAGEMENT.md](USER_MANAGEMENT.md)); back the existing store up first
+  ([10](#10-backups-and-restore)). Sign in, change its password at once, restore real admins, then set `DRISHTI_SEED_ADMIN` back to
+  `false`. The server refuses to delete, disable or demote the last admin (`DRS-6006`).
+- **Fix F. Align the secrets:** the same `DRISHTI_TOKEN_SECRET` (32 or more bytes, for example `openssl rand -base64 48`) for server and
+  console, then restart both. Sessions survive a console restart as long as `DRISHTI_SESSION_SECRET` does not change.
+
+**Verify.** The user signs in at `/login` and lands on the terminal; an entity their roles allow (`TRD MX-20000001 <GO>`) loads;
+Admin → Audit shows a `login` entry and no new `login-failed`.
 
 ## 18. Drishti*net: running several servers as one
 

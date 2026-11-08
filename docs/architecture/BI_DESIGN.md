@@ -116,6 +116,7 @@ about governance in E.
     - [19. Tests](#19-tests)
     - [20. Docs to update when built](#20-docs-to-update-when-built)
     - [21. Open questions](#21-open-questions)
+- [18. The BI foundation: BI on the table layer and Rachana](#18-the-bi-foundation-bi-on-the-table-layer-and-rachana)
 
 ## 1. Principles and non-goals
 
@@ -281,6 +282,9 @@ security: { masked: [book] }              # only adds
 | Side effects | — | none (closed language) | none (read-only by grammar) | none outside the scratch folder (sandbox) |
 
 ### 3.3 DEL: the Drishti expression language (Python-like)
+
+> DEL is folded into Rachana: BI's expressions are Rachana, checked and compiled by the one compiler. The scopes and the filter-context
+> semantics below hold unchanged in Rachana's spelling; section 18 gives the mapping.
 
 **Product-owner requirement (2026-10-12): DEL reads like Python.** DEL v2 is a **safe, side-effect-free subset of
 Python's expression grammar**: every DEL v2 expression is a syntactically valid Python expression (it parses with
@@ -6004,3 +6008,98 @@ It runs as `drishti-it` `BiRunsLoadIT` (excluded from the default build, run in 
    never)?
 4. **Which external engine first** (groundwork for a later release): Trino (on-premises, the Delta connector) or Athena (AWS)?
 5. ~~**Rollup suggestions from runs.**~~ Decided (product owner, 2026-10-20):, with normalisation and the already-ran prompt (section 8.3a).
+
+## 18. The BI foundation: BI on the table layer and Rachana
+
+BI (Rūpaka) owns presentation: **reports, visuals, the designer, boards, publishing, subscriptions and alerts' presentation**. What it
+computes or defines underneath belongs to the platform, once: expressions are Rachana, aggregation is the pivot engine's
+([ARCHITECTURE.md section 23](ARCHITECTURE.md#23-one-grammar-one-engine)), and tables and models are the table layer's
+([ARCHITECTURE.md section 24](ARCHITECTURE.md#24-virtual-tables-the-central-table-layer); every key in
+[TABLES_GUIDE.md](../guides/TABLES_GUIDE.md)).
+
+| Concern | Owner |
+|---|---|
+| Aggregation, totals, rollups | the pivot engine (`drishti-bicompute`) |
+| Expressions (measures, derived columns, filters, row rules, the pivot's formulas) | Rachana (`drishti-rachana`), in checked mode; one compiler in the engine (`bicompute.lang`) |
+| Tables (BI's datasets) | virtual tables of the table layer (`drishti-tables`, `config/tables/<domain>/` and stored items of kind `table`) |
+| Models (relationships, measures, hierarchies, model security) | the layer's models (`.model.yaml`, stored items of kind `model`); MQ is the query contract |
+| Cached, rollup and live layers | the layer's materialisation: `on-load`, a model's `rollups:`, `{ live: { rows, age } }` and a model's `history:` |
+| Who reads tables | BI, the pivot, Sutras, alerts, Arrow Flight |
+
+What does not change: MQ (`mq: 1` and `mq: 2`) as the one way to ask a model; the four filter-context layers and the rule that security is
+never in scope; many-to-one joins, per-fact aggregation and the fan-out refusal; the currency guard; masks before aggregation; item
+governance (workspaces, review, four eyes, versions, stable ids, semver contracts); DSQL (a query language, not an expression language,
+whose inline expressions are read as Rachana by `bi.sql.SqlToRachana`) and Python items (the sandboxed escape).
+
+### 18.1 DEL's constructs in Rachana
+
+One spelling (Rachana's), no aliases for DEL's Python words. The migration (`drishti.py tables migrate`, and the stored items' migration
+at the server's first start) writes it; the editors complete it.
+
+| DEL | Rachana | Note |
+|---|---|---|
+| `a and b`, `a or b`, `not a` | `a && b`, `a \|\| b`, `!a` | booleans only in checked mode |
+| `a if c else b` | `c ? a : b` (or `if(c, a, b)`) | right-associative in both |
+| `0 < x <= 10` | `0 < x && x <= 10` | a chained comparison is refused in checked mode |
+| `x is None`, `True`, `False`, `None` | `x == null`, `true`, `false`, `null` | |
+| `x in [a, b]`, `x not in [...]` | the same, strict | an empty list holds nothing (a desk-head with no desks sees no trades); `one_of` stays a control function, where an empty choice holds everything |
+| `x ** y`, `x // y` | `power(x, y)`, `floor(x / y)` | |
+| `1_000_000`, `"text"` | `1000000`, `'text'` | |
+| `name=value` | `name = value` | named arguments: `where`, `by`, `ignore`, `keep`, `via`, `over`, `desc`, `to`, `at`, `unit`, `period`, `hierarchy` |
+| bare `column` in a dataset's row scope | `$.PATH` (or `@.PATH`, `^.PATH`) | a table's expressions read the source, never another column |
+| a leg's field from a cash flow | `^.LEG_ID` | `^` is the element's parent, `^^` its parent |
+| `alias.column.month` in an expression | `month(alias.COLUMN)` | in MQ field lists and hierarchies `trades.TRADE_DATE.month` stays a field name |
+| `startswith`, `endswith` | `starts_with`, `ends_with` | |
+| `last(agg, date)`, `first(agg, date)` | `latest(agg, date)`, `earliest(agg, date)` | Rachana's `last(list)` and `first(list)` are list elements |
+| `cumulative(agg, date)` | `running(agg, date)` | |
+| `today()` | `asof()` | one date for a view and a query |
+| `# comment` | a YAML comment above the key | |
+
+**The null rule.** Rachana's everywhere: `null != 'X'` is true, `null == 'X'` false, `null == null` true; arithmetic and the text
+functions are null in, null out. The migration rewrites each DEL comparison whose meaning would change (`a != b` becomes
+`a != b && a != null`), so every BI figure stays the same. BI's SQL keeps SQL's rule for `!=`, and the migrated texts carry the
+rewrite, so the figures are equal; the pivot's formulas test a missing value with `x == null`, in Java and SQL alike.
+
+**Checked mode** is Rachana's type checker (`rachana.el.check.Checker`, with DEL's codes kept: `DRS-9127` type or scope, `DRS-9129` not
+yet, `DRS-9152` unknown name, `DRS-9161` a masked field filtered). The same text means the same thing checked or not; checked mode only
+refuses more.
+
+### 18.2 Scopes and the filter context, in Rachana
+
+| Scope | Written in | Names in scope | Aggregates |
+|---|---|---|---|
+| **row** | a virtual table's column `expr`, its `filter`, `keep:` | `$` (the entity or source row), `@` (the grain's element), `^`; `param.x` | refused (`DRS-9127`: "an aggregate belongs in a measure") |
+| **rule** | a table's `rules[].where`, a model's `security.rows.<alias>[].where` | as row (a table) or the alias's columns (a model), and `user.x` | refused; a rule is never removable by any function |
+| **aggregate** | a model's `measures.*.expr`, MQ `define` and `having`, a report's local measures | `alias.COLUMN` inside an aggregate, `measure('name')`, `param.x` | yes; a bare column outside an aggregate is refused ("wrap it: `sum(trades.MTM)`"); a document path is refused (it is a table column, defined once) |
+| **context** | the first argument of `calc`, `share_of`, `parent_of`, `as_of` | as aggregate | yes, in an edited filter context |
+
+`ctl.x`, `link(...)` and `fmt(...)` are a Sutra's display concerns and are refused in tables and models (a column or a measure has a
+`format`).
+
+The filter-context algebra of section 3.3.5 holds word for word, in Rachana's spelling (`calc(agg, ignore = ALL)`,
+`share_of(agg, over = [books.NAME])`, `parent_of(agg, hierarchy = 'Desk and book')`, `as_of(agg, shift_date(asof(), -1))`). It lives in
+the engine (`bicompute.context.FilterContext`: the four layers, the edited question of each function, nesting at most three, the
+average, join and read of a sub-plan, `parent_of`'s level, masked fields never a group; `context.Periods`: closing days, opening day,
+periods); BI's `Contexts` and `ContextFunctions` bind it to BI's SQL compiler. `share_of` and `parent_of` drop filters (DAX's `ALL`): a
+book's `share_of(…, over = ALL)` is of everything you may see, whatever the slicers say. The pivot's `pct_of_total`, `pct_of_row`,
+`pct_of_column` and `pct_of_parent` are of the **visible** totals of the answer (Excel's "Show values as"); they answer differently under a
+slicer, so the two families keep different names.
+
+### 18.3 How BI reads the layer
+
+| Part | How | Where |
+|---|---|---|
+| BI's folder | reads `drishti.tables.root`: a table is an item of kind `table`, a model of kind `model`, as the editors store them; BI's models read published tables of either kind. A file in BI's old dataset or model form is refused with the migration's command (`DRS-9196`); a pack carries `config/bi/tables/` and `models/` in the layer's form (Build → New pack writes them) | `bi.BiFolder`, `bi.mq.ModelCatalog`, `bi.PackBi` |
+| A table in BI's compiler | the layer's reader (`TableYaml`) and checks, then the table in BI's terms: paths as columns (`@.X` under a grain is BI's `X`, `$.X` under one list `^.X`), the grain as BI's `each`, `keep: { latest }` as one row per key, rules and masked columns as BI's security, a table over a table as BI's narrowing, `materialize: { live }` as BI's live mode | `bi.layer.LayerTables` |
+| A model | read with `tables:` (aliases to tables and roles); `history:` samples the model's live facts | `bi.layer.ModelDefParser`, `Flattener.withHistory` |
+| One parser | Rachana's parser; its tree lowered to BI's compiler tree (`NodeLowering`); what BI composes written back as Rachana (`NodeText`); the expression check is checked mode; calculation-group items read without a parser of their own (`CalculationGroups`) | `bi.dataset`, `bi.mq.ExpressionCheck` |
+| The pivot's measures | BI hands the engine its measures from Rachana's tree | `bi.pivot.BiMeasures` |
+| The pivot's formulas | read by Rachana's one parser and lowered to the engine's formula tree; `count()` with no argument counts the rows; saved formulas (views, their versions, formula functions in the content store) migrated at start, in place, idempotent, audited (`pivot-formula-migrate`) | `bicompute.formula.FormulaLowering`, `server.pivot.PivotFormulaMigration` |
+| A promoted run | a run promoted to a report writes a table that reads it (`from: { run }`) | `bi.runs.RunPromotion` |
+| Pack-generated datasets | the layer generates a pack's kinds as tables (`trading.trade`, with the same columns, roles, meanings, references, grain, time mode and entitlements) and the lists it names as grain tables (`trading.trade_legs`); they are regenerated, never migrated | `tables.catalog.PackTables` |
+
+BI's execution of a model query over files is BI's SQL compiler (its layers, live tables and the compiler over `Node`) fed by the
+layer's definitions; the layer's own answers (`tables.answer.ModelAnswers`) use the engine's one compiler. MQ keeps its keys, versions,
+canonical form and answer (`columns`, `rows`, `totals`, `meta`, with `meta.layer` and `meta.rollup`); `model:` resolves in the layer's
+catalogue; `define` and `having` carry Rachana; `where[].op` is unchanged. Reports show the built-in date column as BI has always named it
+(`businessDate`).
