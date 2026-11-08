@@ -114,6 +114,7 @@ export class TreePanel {
    */
   constructor(host, options) {
     const o = this.o = Object.assign({ search: true, density: 'compact', fitRows: 30 }, options);
+    if (!o.density) { o.density = 'compact'; }                // a host's density left undefined (treeTables passes its own)
     this.host = host;
     this.doc = host.ownerDocument;
     this.tree = o.tree;

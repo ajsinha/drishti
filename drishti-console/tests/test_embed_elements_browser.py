@@ -599,7 +599,8 @@ PAGED = ("<div class='tbl-wrap'><table class='tbl' aria-label='Injected'><thead>
          + "".join(f"<tr><td>row{i:02d}</td><td>{(i * 37) % 31}</td></tr>" for i in range(30)) + "</tbody></table></div>")
 TREE = ("<div class='tbl-wrap'><table class='tbl tbl-tree' data-plain data-tree><thead><tr><th>Item</th></tr></thead><tbody>"
         "<tr data-depth='0' data-kids><td><span class='tr-ind tr-d0'><button type='button' class='tr-tog' aria-expanded='false' aria-label='Expand Parent'>▸</button></span>Parent</td></tr>"
-        "<tr data-depth='1'><td><span class='tr-ind tr-d1'>Child</span></td></tr></tbody></table></div>")
+        "<tr data-depth='1'><td><span class='tr-ind tr-d1'>Child</span></td></tr>"
+        "<tr data-depth='1'><td><span class='tr-ind tr-d1'>Sibling</span></td></tr></tbody></table></div>")   # two children: not a chain, so the tree grid
 
 
 def inject(h, html):
@@ -677,7 +678,7 @@ def test_tree_row_expands_inside_the_element(host):
     expect(tree.locator(".dg-row")).to_have_count(1)
     expect(h.page.locator("#main").locator(".injected table.tbl-tree")).to_be_hidden()
     tree.locator(".dg-row[aria-expanded] .dg-tw").click()
-    expect(tree.locator(".dg-row")).to_have_count(2)
+    expect(tree.locator(".dg-row")).to_have_count(3)
     expect(tree.locator(".dg-row[aria-expanded]")).to_have_attribute("aria-expanded", "true")
 
 
