@@ -83,7 +83,7 @@ class Opener:
 # ---------------------------------------------------------------- the shared library
 
 def test_committed_folders():
-    assert B.is_committed(B.ROOT / "config" / "packs" / "world-economy")
+    assert B.is_committed(B.ROOT / "config" / "packs" / "economy" / "world-economy")
     assert B.is_committed(B.ROOT / "data" / "testdata")
     assert not B.is_committed(B.ROOT / "data" / "publicdata")
     assert not B.is_committed(Path("/tmp/elsewhere"))
@@ -140,11 +140,11 @@ def test_manifest_records_sources_and_files(tmp_path, data_dir):
 def test_internal_only_sources_are_refused_in_committed_folders(data_dir):
     imf = WE.SOURCES[1]
     with pytest.raises(B.Refusal) as e:
-        B.guard_out([imf], B.ROOT / "config" / "packs" / "world-economy", internal_ok=False)
+        B.guard_out([imf], B.ROOT / "config" / "packs" / "economy" / "world-economy", internal_ok=False)
     assert "may not be redistributed" in str(e.value) and "--internal-ok" in str(e.value) and "commercial reuse" in str(e.value)
-    B.guard_out([imf], B.ROOT / "config" / "packs" / "world-economy", internal_ok=True)
+    B.guard_out([imf], B.ROOT / "config" / "packs" / "economy" / "world-economy", internal_ok=True)
     B.guard_out([imf], data_dir / "publicdata", internal_ok=False)
-    B.guard_out([WE.SOURCES[0]], B.ROOT / "config" / "packs" / "world-economy", internal_ok=False)   # World Bank: committable
+    B.guard_out([WE.SOURCES[0]], B.ROOT / "config" / "packs" / "economy" / "world-economy", internal_ok=False)   # World Bank: committable
 
 
 # ---------------------------------------------------------------- world-economy
@@ -185,7 +185,7 @@ def test_world_economy_out_and_guard():
 
 
 def test_world_economy_refuses_the_committed_pack_without_internal_ok(capsys):
-    rc = WE.main(["refresh", "--dry-run", "--out", str(B.ROOT / "config" / "packs" / "world-economy")])
+    rc = WE.main(["refresh", "--dry-run", "--out", str(B.ROOT / "config" / "packs" / "economy" / "world-economy")])
     assert rc == 3 and "IMF" in capsys.readouterr().err
 
 
@@ -297,7 +297,7 @@ def test_market_data_write_is_idempotent_and_checked(tmp_path):
 
 
 def test_market_data_refuses_the_repository_and_dry_runs(capsys, data_dir):
-    assert MD.main(["refresh", "--out", str(B.ROOT / "config" / "packs" / "market-data" / "samples")]) == 3
+    assert MD.main(["refresh", "--out", str(B.ROOT / "config" / "packs" / "banking" / "market-data" / "samples")]) == 3
     assert "synthetic" in capsys.readouterr().err
     assert MD.main(["refresh", "--dry-run", "--since", "2024"]) == 0
     text = capsys.readouterr().out

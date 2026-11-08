@@ -47,7 +47,8 @@ public class TablesConfiguration {
         long maxRows = env.getProperty("drishti.tables.read-max-rows", Long.class, 2_000_000L);
         long warn = env.getProperty("drishti.tables.scan-warn-rows", Long.class, 1_000_000L);
         TablesService tables = new TablesService(root, data, router, edition, security::enabled, maxRows, warn, java.time.Clock.systemUTC());
-        tables.itemStore(new BiItemTableStore(store));                     // the editors' published tables and models beside the files (Q16)
+        tables.itemStore(new BiItemTableStore(store));
+        tables.domains(com.ash.drishti.server.modules.DomainFolders.on(env));    // an off module's tables and models are not read                     // the editors' published tables and models beside the files (Q16)
         return tables;
     }
 

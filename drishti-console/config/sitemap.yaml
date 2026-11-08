@@ -21,7 +21,7 @@
 # marks, default its id) and requires: a list, every entry of which must hold:
 #   admin                the person is an administrator          bi        BI is on for the person (the bi power, BI switched on)
 #   bi-admin             the person holds the bi-admin power     designer  the Sutra designer is on (ui.designer)
-#   feature:<name>       a feature switch (config/editions/features.yaml; the console's features.* and the presets of an edition)
+#   feature:<name>       a feature switch (config/lenses/features.yaml; the console's features.* and the presets of an edition)
 #   word:<WORD>          a reserved or console word the edition keeps (BI, FORM, FUNC, WHAT, DATAMAP, VAR, EXP)
 #   admin-page:<id>      an Admin page the edition keeps          edition   only with an edition or a lens (a full Drishti hides it)
 #   pack:<name>          a pack that is on for the person

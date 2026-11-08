@@ -75,7 +75,7 @@ gleif    CC0 1.0                                           committable  2026-10-
 
 (On a fresh clone the LAST REFRESHED and CACHED columns say `never` and `-`: the committed snapshot needs no download.)
 
-**In YAML.** The pack's commands and its Delta connector, `config/packs/funds/pack.yaml`:
+**In YAML.** The pack's commands and its Delta connector, `config/packs/capitalmarkets/funds/pack.yaml`:
 
 ```yaml
 mnemonics:
@@ -136,7 +136,7 @@ Top 10 holdings of 105 (a company opens its page)  (table, top-holdings, F2)
   ...
 ```
 
-**In YAML.** The fact sheet's layout, `config/packs/funds/sutras/fund.v1.sutra.yaml` (shortened): tiles on top, the holdings and the
+**In YAML.** The fact sheet's layout, `config/packs/capitalmarkets/funds/sutras/fund.v1.sutra.yaml` (shortened): tiles on top, the holdings and the
 fund's facts side by side, the tabs at the bottom:
 
 ```yaml
@@ -284,7 +284,7 @@ curl -s "http://localhost:18480/api/v1/search?q=FUND%20INDEX_ID%3DSP500" | pytho
 ['FXAIX', 'IVV', 'SPY', 'SPYM', 'SWPPX', 'VINIX', 'VOO', 'WFSPX']
 ```
 
-**In YAML.** The search form of the kind (`FORM funds`), `config/packs/funds/pack.yaml`:
+**In YAML.** The search form of the kind (`FORM funds`), `config/packs/capitalmarkets/funds/pack.yaml`:
 
 ```yaml
 form:
@@ -334,7 +334,7 @@ Funds holding Apple Inc., by value (a fund opens its page)  (table, holders, F2)
   ...
 ```
 
-**In YAML.** The company page reads the funds pack's record as a source, `config/packs/us-equities/sutras/us-company.v1.sutra.yaml`:
+**In YAML.** The company page reads the funds pack's record as a source, `config/packs/capitalmarkets/us-equities/sutras/us-company.v1.sutra.yaml`:
 
 ```yaml
 layout:
@@ -383,7 +383,7 @@ Funds · Funds tracking an index  SP500  with S&P 500   [TRACK]
   ...
 ```
 
-**In YAML.** On the index page, `config/packs/us-equities/sutras/index-membership.v1.sutra.yaml`:
+**In YAML.** On the index page, `config/packs/capitalmarkets/us-equities/sutras/index-membership.v1.sutra.yaml`:
 
 ```yaml
   - id: tracked-by
@@ -448,7 +448,7 @@ dry run: funds, sources tickers, nasdaq, nport, ncen, rr, gleif
     https://www.sec.gov/files/company_tickers_mf.json
     https://www.sec.gov/files/company_tickers_exchange.json
   ...
-  then: tools/packgen/funds/make.py -> config/packs/funds and data/testdata; then make.py --check
+  then: tools/packgen/funds/make.py -> config/packs/capitalmarkets/funds and data/testdata; then make.py --check
 ```
 
 **In YAML.** The snapshot the refresh writes, listed in `data/testdata/testdata.yaml` (the fund kind in parts, one tar):
@@ -466,7 +466,7 @@ dry run: funds, sources tickers, nasdaq, nport, ncen, rr, gleif
 ```
 
 You should see the dry run name every file it would fetch and write nothing; a refresh prints each download, then *wrote
-config/packs/funds ... 7 snapshot files, 5.6 MB* and *funds pack matches its generator*. Without the downloads, `python3
+config/packs/capitalmarkets/funds ... 7 snapshot files, 5.6 MB* and *funds pack matches its generator*. Without the downloads, `python3
 tools/packgen/funds/make.py --check` still checks the committed snapshot.
 
 Further in the guide: [sections 15](../guides/FUNDS_GUIDE.md#15-the-refresh-script) and [16](../guides/FUNDS_GUIDE.md#16-the-gzipped-snapshot-and-offline-use).

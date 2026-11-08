@@ -109,6 +109,32 @@
   `META-INF/drishti/engines.yaml` (and the console's `plugins/banking/engines.yaml`), their jar files in its `engines/`; a server without
   the module lists none of them. Rule 4 of the boundaries as a check: `tools/domain_strings.py` counts the banking names in the core's
   code against an allow list that only shrinks. `EngineRegistryTest` and `EngineFilesTest` run in drishti-banking (they use its engines).
+- **Domain modules, phase 2 (second half): the banking module's configuration in its own places.**
+  - **Packs in domain folders**: the shipped packs are `config/packs/<domain>/<pack>` (`core/{core,gleif,compute-demo}`,
+    `banking/{trading,market-data,market-risk,counterparty-risk}`, `economy/{world-economy,news-and-markets}`,
+    `capitalmarkets/{us-equities,funds}`); a pack's `domain:` names its folder. One rule says where a pack is: a packs root holds packs
+    directly or one level down in domain folders (a folder with no `pack.yaml` of its own), in Java `com.ash.drishti.api.PackFolders`
+    (the pack loader, the reloader and its watchers, Admin -> Packs, deploy and roll back, the Sutra CLI, the lake files' pack tables) and
+    in Python `drishti-console/core/pack_paths.py` (the console, the tools, the generators, the tests). `drishti.packs.dir` is unchanged
+    (`config/packs`); installed and example packs stay flat. Upgrade: a site's own pack folder under `config/packs` keeps working where it
+    is; links to `config/packs/<pack>/...` in a site's documents need the domain folder.
+  - **Token declarations from the module**: the banking module's read-only POSTs and its `risk:write` scope are in its jar
+    (`META-INF/drishti/token-scopes.yaml`), merged by the core (`ModuleTokenScopes`) only while the module is on: with banking off no
+    token can be given `risk:write`. The core's new `compute:write` scope keeps your what-if sandboxes and cancels your own computations
+    (`risk:write` still does too).
+  - **Help's Risk measures section** is the banking plugin's (`drishti-console/plugins/banking/help.yaml`: its head, placed after Get
+    started, and its pages); the core's `help.yaml` and the sitemap no longer name it.
+  - **Banking lakes, reports, BI items, tables and models in banking folders**: `config/lakes/banking/{var,ccr}-official.yaml` (a lake
+    file may sit in a domain folder; the jar copies are drishti-banking's, listed in its `drishti/lakes/shipped.txt`), the regulatory
+    report definitions `config/reports/banking/` (`drishti.regulatory.reports-dir`'s default), `config/bi/reports/banking/`,
+    `config/bi/python/banking/`, `config/bi/notebooks/banking/` and `config/tables/banking/` (the banking tables are `banking.<name>`,
+    were `bi.<name>`; a site's model or report naming `bi.trading_risk_trades` and the other moved tables needs the new name). A domain
+    folder named after a module is read only while the module is on: with banking off, BI lists none of its reports, tables or models.
+  - **Editions folded into lenses**: `config/editions/` is gone. A lens's file is `config/lenses/<module>/<lens>.yaml` (risk, trading,
+    market: banking; world: economy), the feature presets `config/lenses/features.yaml`, the folder `drishti.lens-dir`
+    (`DRISHTI_LENS_DIR`, was `DRISHTI_EDITIONS_DIR`; the console's `lens.dir`). A lens names its packs by module, so World is economy
+    with capital markets: with capitalmarkets off, its packs, functions, cards and the World landing's companies, filings and funds are
+    gone. `drishti.edition` and `drishti.lenses` are unchanged. Upgrade: move a site's own edition file to `config/lenses/<module>/`.
 - **Static assets by module**: each module's console part is `drishti-console/plugins/<module>/plugin.yaml` (its routers, engines, words,
   pages, templates, static files, and the parts it adds to a core screen). An off module's scripts, styles and Elements library are not
   served (404), and neither to a person whose lens does not use the module (the World lens gets no banking file). The Elements manifest

@@ -2818,7 +2818,7 @@ datasets until W3, the boards are unchanged (they name reports), and the noteboo
 | `reports/pnl-vs-exposure` | `model: trading-risk@1`; `joined.x` fields → `counterparties.x`; `Desk P&L` → `P&L 1d` (title kept); the two visuals with `dataset: counterparty-exposure` read the same model; `links:` removed; every visual gets `having: Trades > 0` as a page filter on a measure, to keep the left-join meaning (example 8) |
 | `boards/desk-wall` | one board over two models (`live-trading`, `live-exposure`): converted with a new model `live-desk` containing both live datasets as facts (an island pair, `DRS-9121` warning) and the two reports rebound to it (Open question 3) |
 | `boards/python-wall` | `model: trades-basic@1` (its report's) |
-| `notebooks/pnl-vs-exposure-pandas` | `model: trading-risk@1`; extracts `{ name, query: { shape: rows, select: { fields: [...] } } }`: the trades fields and the netting-set fields as two row extracts of one model |
+| `notebooks/banking/pnl-vs-exposure-pandas` | `model: trading-risk@1`; extracts `{ name, query: { shape: rows, select: { fields: [...] } } }`: the trades fields and the netting-set fields as two row extracts of one model |
 | `python/pnl-vs-exposure` | `inputs: [pnl, exposure]` (the Python dataset's input names); the function's renames of `Desk P&L` follow the MQ's column names (`P&L 1d`) |
 | `python/desk-pnl-volatility`, `pnl-histogram`, `pnl-vega` | unchanged |
 | tutorials 10 to 18 and their data | rewritten in W4 against the converted samples (UI first, then CLI and YAML) |
@@ -2897,9 +2897,9 @@ datasets/counterparty-exposure.dataset.yaml: converted -> model counterparty-exp
     writes datasets/counterparty-exposure-counterparties.dataset.yaml
     writes models/counterparty-exposure.model.yaml
 ...
-reports/live-trading-desk.report.yaml: manual
+reports/banking/live-trading-desk.report.yaml: manual
     manual: the report reads the live dataset live-trading (now also the model live-trading@1): it stays on the dataset until a report on a model follows live data (standing queries, wave W3); then bind it with model: live-trading@1
-reports/pnl-vs-exposure.report.yaml: converted -> trading-risk@1
+reports/banking/pnl-vs-exposure.report.yaml: converted -> trading-risk@1
 ...
 26 file(s) read, 16 converted, 0 refused; would write 32 file(s)
 ```

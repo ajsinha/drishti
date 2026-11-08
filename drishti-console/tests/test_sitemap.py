@@ -86,7 +86,7 @@ def test_no_address_is_listed_twice_outside_the_lens_subject_menus():
 
 
 def test_each_lens_draws_no_address_twice():
-    for f in sorted((CONSOLE.parent / "config" / "editions").glob("*.yaml")):
+    for f in sorted((CONSOLE.parent / "config" / "lenses").glob("*/*.yaml")):   # each lens in its module's folder
         top = ((yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("menus") or {}).get("top")
         if not top:
             continue

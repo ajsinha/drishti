@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Editions and lenses in the console (docs/admin/EDITIONS.md): with the server's edition learned from its about answer the console
-follows config/editions/risk.yaml on every surface (menus, footer, the command line's words and placeholder, Home and its landings, help,
+follows config/lenses/banking/risk.yaml on every surface (menus, footer, the command line's words and placeholder, Home and its landings, help,
 Admin, branding); without one it is exactly the full product; a lens does the same for one person only, kept in their settings."""
 from __future__ import annotations
 

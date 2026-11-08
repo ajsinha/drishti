@@ -15,7 +15,7 @@
 -->
 ---
 sources:
-- name: Synthetic P&L strips (a seeded random walk, config/packs/compute-demo/tools/make_samples.py)
+- name: Synthetic P&L strips (a seeded random walk, config/packs/core/compute-demo/tools/make_samples.py)
   licence: Proprietary (part of Drishti)
   internal-only: false
   used-for: path-book, path-strip
@@ -39,6 +39,6 @@ Not loaded by default: add `compute-demo` to `DRISHTI_PACKS`; the Python panels 
 
 ## Refreshing the data
 
-The books and strips are written by `config/packs/compute-demo/tools/make_samples.py` from a fixed seed; nothing is downloaded. The
+The books and strips are written by `config/packs/core/compute-demo/tools/make_samples.py` from a fixed seed; nothing is downloaded. The
 computed kinds are never stored: they are computed on request, cached, and computed again when their inputs' data version moves or a
 write-back event names a book.

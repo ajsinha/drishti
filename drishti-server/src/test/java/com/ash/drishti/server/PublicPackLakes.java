@@ -92,7 +92,7 @@ final class PublicPackLakes {
             }
             String kind = ds.path("kind").asText();
             // the pack's entry for the kind, from its lake: block (its templates name lake: demo) or an older template's layout
-            com.ash.drishti.lakeconfig.PackEntry entry = com.ash.drishti.lakeconfig.PackEntry.read(PACKS.resolve(pack), kind,
+            com.ash.drishti.lakeconfig.PackEntry entry = com.ash.drishti.lakeconfig.PackEntry.read(com.ash.drishti.api.PackFolders.of(PACKS, pack), kind,
                     ds.path("connector").asText(null));
             List<String> promoted = new ArrayList<>(entry.promote());
             TreeMap<String, JsonNode> docs = new TreeMap<>();

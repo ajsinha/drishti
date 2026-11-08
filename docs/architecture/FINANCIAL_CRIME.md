@@ -317,7 +317,7 @@ type), not as objects per node:
 
 Drishti's `drishti-graph` module today resolves entity references and links between records (which field names which entity); the
 network engine is new, and uses `drishti-graph` to turn every node of a result into a link to its record page. The GLEIF pack
-([its README](../../config/packs/gleif/README.md)) gives corporate ownership chains for entities with an LEI.
+([its README](../../config/packs/core/gleif/README.md)) gives corporate ownership chains for entities with an LEI.
 
 | Pattern | Algorithm (defaults) | Evidence |
 |---|---|---|

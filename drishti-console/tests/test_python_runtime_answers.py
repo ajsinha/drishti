@@ -43,8 +43,8 @@ import bi_report_stack  # noqa: E402
 from bi_report_stack import ROOT, api  # noqa: E402
 
 PY_MODEL = "desk-pnl-vs-exposure-py@1"
-BOARD = ROOT / "config/bi/reports/python-wall.report.yaml"
-SOURCE = ROOT / "config/bi/reports/python-desk-risk.report.yaml"
+BOARD = ROOT / "config/bi/reports/banking/python-wall.report.yaml"
+SOURCE = ROOT / "config/bi/reports/banking/python-desk-risk.report.yaml"
 RISK = ("rita", ["risk"])
 HEAD = ("hana", ["desk-head"])
 
@@ -55,7 +55,7 @@ class Stack(bi_report_stack.ReportStack):
         copy_samples(work / "config/bi", ["trading-risk", "counterparty-exposure", "desk-pnl-vs-exposure-py", "trades-basic"])
         python = work / "config/bi/python"
         python.mkdir(parents=True, exist_ok=True)
-        for f in (ROOT / "config/bi/python").glob("*.python.yaml"):
+        for f in (ROOT / "config/bi/python").glob("*/*.python.yaml"):
             (python / f.name).write_text(f.read_text(encoding="utf-8"), encoding="utf-8")
         reports = work / "config/bi/reports"
         reports.mkdir(parents=True, exist_ok=True)

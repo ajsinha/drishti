@@ -336,7 +336,7 @@ wrong-way collateral holding. Sizes: 8 counterparties × 200 paths × 26 dates, 
 
 ## 14. Retiring the stored version
 
-Nothing stored to retire. The Calc snippet `config/packs/counterparty-risk/python/wrong_way_flags.py` (heuristic flags from sector and
+Nothing stored to retire. The Calc snippet `config/packs/banking/counterparty-risk/python/wrong_way_flags.py` (heuristic flags from sector and
 country, reading `TVAL` and `trade` one by one, capped at 1,000 trades) is rewritten over `wwr-result`; its sector and country heuristics
 become the **general flag without a model** (`GENERAL_HEURISTIC`, shown only when neither credit paths nor a calibrated b exist).
 

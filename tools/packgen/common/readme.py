@@ -15,7 +15,7 @@
 """The README standard for packs and connectors (docs/guides/PACK_DEVELOPER_GUIDE.md and
 docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md, "The README standard").
 
-Every pack (``config/packs/<pack>/README.md``), every connector type (``plugins/drishti-plugin-<x>/README.md``, the built-ins in
+Every pack (``config/packs/<domain>/<pack>/README.md``), every connector type (``plugins/drishti-plugin-<x>/README.md``, the built-ins in
 ``docs/connectors/types/<type>/README.md``) and every folder of connector templates (``config/connectors.examples/<x>/README.md``)
 has a README: the licence comment, a YAML front matter (for AI and the console), then fixed ``## `` sections.
 
@@ -34,12 +34,17 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from collections import OrderedDict
 from pathlib import Path
 
 import yaml
 
 ROOT = Path(__file__).resolve().parents[3]
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core import pack_paths as PP  # noqa: E402  (the one rule for where a pack's folder is)
+
 PACKGEN = ROOT / "tools" / "packgen"
 
 PACK_KEYS = ["pack", "version", "summary", "kinds", "commands", "depends-on", "sources", "refresh"]
@@ -351,12 +356,17 @@ def _first_sentence(text: str) -> str:
     return (m.group(1) if m else text)[:240]
 
 
+def _packs_root(pack_dir: Path) -> Path:
+    """The packs root a pack's folder is in: config/packs for a shipped pack (in its domain folder), else the folder holding it."""
+    return PP.REPO_PACKS if Path(pack_dir).resolve().is_relative_to(PP.REPO_PACKS) else Path(pack_dir).parent
+
+
 def _ancestors(packs_dir: Path, manifest: dict, seen: set | None = None) -> list[dict]:
     """The manifests of the packs a pack extends or requires, farthest first (read from the disk beside it)."""
     seen = set() if seen is None else seen
     out = []
     for name in (manifest.get("extends") or []) + (manifest.get("requires") or []):
-        f = packs_dir / name / "pack.yaml"
+        f = PP.pack_dir(name, packs_dir) / "pack.yaml"
         if name in seen or not f.is_file():
             continue
         seen.add(name)
@@ -374,6 +384,8 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     intro = intro or find_intro(name)
     imeta, ibody = split(intro.read_text(encoding="utf-8")) if intro and intro.is_file() else ({}, "")
     imeta = imeta or {}
+    # an intro (tools/packgen/<gen>/readme/) is three folders below the repository, a pack's README four (config/packs/<domain>/<pack>)
+    ibody = ibody.replace("](../../../", "](../../../../")
     isec = sections(ibody)
     generator = generator or imeta.get("generator") or f"tools/packgen/readme.py {name}"
     kinds = list(m.get("kinds") or [])
@@ -381,7 +393,7 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     code_of = {v.get("kind"): code for code, v in mnemonics.items()}
     graph = m.get("graph") or {}
     links = {}
-    for parent in _ancestors(pack_dir.parent, m):        # the graph fields of the packs it builds on, then its own
+    for parent in _ancestors(_packs_root(pack_dir), m):        # the graph fields of the packs it builds on, then its own
         links.update({f: v for f, v in ((parent.get("graph") or {}).get("fields") or {}).items() if isinstance(v, dict)})
     links.update({f: v for f, v in (graph.get("fields") or {}).items() if isinstance(v, dict)})
     patterns: dict[str, list[str]] = {}
@@ -537,7 +549,7 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     if ext:
         out += ["External data: " + "; ".join(f"{s['name']}" + (" (**internal only**)" if s.get("internal-only") else "") for s in ext) +
                 ". Each source's URL, licence, refresh script and worked examples (Linux and Windows) are on the External data help page, "
-                "[docs/guides/EXTERNAL_DATA.md](../../../docs/guides/EXTERNAL_DATA.md).", ""]
+                "[docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).", ""]
     # -- enabling
     out += ["## Enabling and dependencies", ""]
     if isec.get("Enabling and dependencies"):
@@ -573,6 +585,6 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
         out.append(f"- [{g.get('title')}]({g.get('file')}): {g.get('summary', '')}".rstrip(": "))
     if isec.get("See also"):
         out.append(isec["See also"])
-    out += ["- [Packs](../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) "
+    out += ["- [Packs](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md) "
             "(the README standard).", ""]
     return "\n".join(out).rstrip() + "\n"

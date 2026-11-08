@@ -232,9 +232,9 @@ Funds tracking the S&P 500, by net assets (a fund opens its page)  (table, track
 
 # Part II · The data contracts
 
-The contracts are `config/packs/funds/contracts/<kind>.contract.yaml` (checked by `python3 tools/contracts.py check`, published as
+The contracts are `config/packs/capitalmarkets/funds/contracts/<kind>.contract.yaml` (checked by `python3 tools/contracts.py check`, published as
 [docs/contracts/packs/funds.md](../contracts/packs/funds.md)); each column's meaning is the pack's glossary,
-`config/packs/funds/config/about.yaml`, written by `tools/packgen/funds/make.py` from `tools/packgen/funds/fundsglossary.py`. The tables
+`config/packs/capitalmarkets/funds/config/about.yaml`, written by `tools/packgen/funds/make.py` from `tools/packgen/funds/fundsglossary.py`. The tables
 below list every column with its type, whether it is the key, its meaning (with its unit), its source and an example from the
 snapshot. Source names are the SEC data sets' tables and columns: **N-PORT** `FUND_REPORTED_INFO`, `FUND_REPORTED_HOLDING`,
 `IDENTIFIERS`, `MONTHLY_TOTAL_RETURN`, the derivative tables of part C.11; **N-CEN** `FUND_REPORTED_INFO`, `ETF`, `ADVISER`,
@@ -648,7 +648,7 @@ dry run: funds, sources tickers, nasdaq, nport, ncen, rr, gleif
     https://www.sec.gov/files/dera/data/form-n-port-data-sets/2026q2_nport.zip
     https://www.sec.gov/files/dera/data/form-n-port-data-sets/2026q1_nport.zip
   ...
-  then: tools/packgen/funds/make.py -> config/packs/funds and data/testdata; then make.py --check
+  then: tools/packgen/funds/make.py -> config/packs/capitalmarkets/funds and data/testdata; then make.py --check
 ```
 
 A quarterly source tries the newest quarters first and takes the published ones (N-PORT one, N-CEN and the summaries four); a quarter

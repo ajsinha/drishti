@@ -35,13 +35,13 @@ import lakeconfig  # noqa: E402  (where the lakes are: the one place the tools s
 
 DEMO_LAKE = "demo"
 DEMO_ROOT = lakeconfig.DEMO_ROOT_REF            # config/lakes/demo.yaml: the demo lake's own folder
-#: the official results' lakes keep the publisher's root (config/lakes/var-official.yaml, ccr-official.yaml): <data>/delta itself
+#: the official results' lakes keep the publisher's root (config/lakes/banking/var-official.yaml, ccr-official.yaml): <data>/delta itself
 OFFICIAL_ROOT = lakeconfig.OFFICIAL_ROOT_REF
 #: the layout keys that belong to the lake entry (the rest of a kind's layout, type-ahead, stays with the connector: a reading concern)
 ENTRY_KEYS = {"columns": "promote", "vectors": "vectors", "sort-by": "sort-by", "file-rows": "file-rows", "row-group-rows": "row-group-rows",
               "flatten": "flatten"}
 #: the official results' readers (OfficialReaders): each kind's own lake, whose root and format are its publisher's settings
-#: (config/lakes/var-official.yaml, ccr-official.yaml); the server makes the connector Iceberg when the publisher writes Iceberg
+#: (config/lakes/banking/var-official.yaml, ccr-official.yaml); the server makes the connector Iceberg when the publisher writes Iceberg
 OFFICIAL_LAKES = {"var-official": "var-official", "exposure-official": "ccr-official", "exposure-official-cpty": "ccr-official"}
 #: the lakes whose root a tool knows without a lake file: the demo lake's own, and the official results' (unless a server setting says otherwise)
 DEMO_ROOTED = {DEMO_LAKE, "var-official", "ccr-official"}

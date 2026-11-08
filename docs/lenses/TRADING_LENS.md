@@ -25,7 +25,7 @@ market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the prop
 
 **Read with:** [EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading) (the lens as built),
 [EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-trading) (how to run it), the edition file
-[`config/editions/trading.yaml`](../../config/editions/trading.yaml), [VAR_GUIDE.md](../guides/VAR_GUIDE.md),
+[`config/lenses/banking/trading.yaml`](../../config/lenses/banking/trading.yaml), [VAR_GUIDE.md](../guides/VAR_GUIDE.md),
 [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md), [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) and the contracts
 [TVAL.md](../contracts/TVAL.md) (valuation totals) and [PNL.md](../contracts/PNL.md) (P&L explain). The sibling lens documents:
 [RISK_LENS.md](RISK_LENS.md), [MARKET_LENS.md](MARKET_LENS.md), [WORLD_LENS.md](WORLD_LENS.md).
@@ -53,7 +53,7 @@ built nor planned; section 5 sketches it and section 8 proposes a row.
 ## 1. Who uses it
 
 The **first line of defence**: the people who take the risk and earn the P&L. Drishti Trading is for two of them
-([`config/editions/trading.yaml`](../../config/editions/trading.yaml), its header: "for traders and desk heads: my books, my P&L, my VaR
+([`config/lenses/banking/trading.yaml`](../../config/lenses/banking/trading.yaml), its header: "for traders and desk heads: my books, my P&L, my VaR
 and limits, my counterparties, and 'does this new trade fit?'").
 
 | Persona | Accountable for | What they need from a system |
@@ -166,7 +166,7 @@ operations (COLL, MC) …").
 | Today's trades: new, amended, cancelled | **Built**, with a fallback from the two days' valuations when the search by `SOURCE_UPDATE_TIME` does not answer in time (`DRS-1004`) | EDITIONS.md section 14, Trades today |
 | New trades on the demo data | **Not served**: every change of a day is an amendment or a cancellation | section 5.1 |
 | Today's blotter, newest first | **Built** | |
-| Trade pages: legs, cash flows, resets, events | **Built** (trading pack) | [trading pack README](../../config/packs/trading/README.md) |
+| Trade pages: legs, cash flows, resets, events | **Built** (trading pack) | [trading pack README](../../config/packs/banking/trading/README.md) |
 | A trade's history over dates | **Built** (history queries, `TRD 1000015 30`) | [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) |
 
 ### 3.5 Counterparties
@@ -191,7 +191,7 @@ operations (COLL, MC) …").
 ### 3.7 The lens is configuration (product panel A19, 2026-11-06)
 
 The Trading lens is **configuration, not a product of its own**: what a trader sees is the edition file
-[`trading.yaml`](../../config/editions/trading.yaml) over the menus file [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml); no code
+[`trading.yaml`](../../config/lenses/banking/trading.yaml) over the menus file [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml); no code
 draws a trading menu or hides a trading command. The panel's changes are made that way:
 
 | Change | Status | Where |
@@ -607,7 +607,7 @@ heads (`trading.landing-by-role: {desk-head: desk, trader: trader}`, below the p
 **Code:** [`trading_landing.html`](../../drishti-console/plugins/banking/templates/home/trading_landing.html),
 [`drishti_trading-landing.js`](../../drishti-console/plugins/banking/static/js/drishti_trading-landing.js), [`drishti_trading-landing.css`](../../drishti-console/plugins/banking/static/css/drishti_trading-landing.css),
 [`trading_landing.py`](../../drishti-console/plugins/banking/trading_landing.py), [`trading_routes.py`](../../drishti-console/plugins/banking/routes/trading_routes.py)
-(`/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}`, `POST /api/home/trading/check`), [`trading.yaml`](../../config/editions/trading.yaml).
+(`/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}`, `POST /api/home/trading/check`), [`trading.yaml`](../../config/lenses/banking/trading.yaml).
 The mock-up's names, desks, books and counterparties are the demo's; its figures are illustrative.
 
 **Interactions.** Every trade id is a link (`TRD <id> <GO>`), every trader a link (`TRDR`), every chip and quick card runs its command.
@@ -668,7 +668,7 @@ four built lenses (Risk, Trading, Market, World), each lens with one menu open. 
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
-| X1 | Bar | `DRISHTI Trading`; the command line; menus **Views · Blotter · Positions · Risk · Counterparties · BI · Help** | the edition's top menus by id, in order (`menus.top`), [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml) | open a menu | **Built**: `menus.top` in [`trading.yaml`](../../config/editions/trading.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py): Views, Engines, Markets, Blotter, Positions, Risk, Counterparties, Help; Build is not named (off in the lens), BI and Admin by command (A19) (replaces the menus part of T22) |
+| X1 | Bar | `DRISHTI Trading`; the command line; menus **Views · Blotter · Positions · Risk · Counterparties · BI · Help** | the edition's top menus by id, in order (`menus.top`), [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml) | open a menu | **Built**: `menus.top` in [`trading.yaml`](../../config/lenses/banking/trading.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py): Views, Engines, Markets, Blotter, Positions, Risk, Counterparties, Help; Build is not named (off in the lens), BI and Admin by command (A19) (replaces the menus part of T22) |
 | X2 | Blotter menu | Trades `TRD`; By counterparty `CTRD`; By portfolio `PTRD`; By legal entity `LTRD` | a subject menu in [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X3 | Positions menu | Books `BOOK`; Desks `DESK`; Traders `TRDR`; Positions `POS` | a subject menu in [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X4 | Risk menu | My VaR `VAR`; VaR limits `VLIM`; Trade valuations `TVAL`; P&L vectors `PNLV` (and since A19 Desk P&L `DPNL`, P&L explain `PNL`, Sensitivities `SENS`) | a subject menu in [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |

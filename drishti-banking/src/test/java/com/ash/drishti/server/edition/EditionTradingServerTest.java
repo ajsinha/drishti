@@ -35,7 +35,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 /**
- * Drishti Trading as a lens on a full instance (config/editions/trading.yaml; docs/admin/EDITIONS.md › The design as built, section 14), as the product
+ * Drishti Trading as a lens on a full instance (config/lenses/banking/trading.yaml; docs/admin/EDITIONS.md › The design as built, section 14), as the product
  * owner's stack runs it ({@code drishti.lenses=risk,world,market,trading}): the lens and the person's View as choice ({@code tradingView})
  * are kept and read back by the real settings API; through the lens the person's FUNC and type-ahead offer the trading, risk-on-my-book,
  * counterparty and market-data commands of the file, and ECON, SCN, COLL and FRTB answer DRS-4023, typed or opened; BI offers the
@@ -130,8 +130,8 @@ class EditionTradingServerTest {
         List<String> ids = new ArrayList<>();
         ok(get("/api/v1/bi/datasets").header("Authorization", bearer(fay)).header(EditionContext.HEADER, "trading")).path("datasets")
                 .forEach(d -> ids.add(d.path("id").asText()));
-        assertThat(ids).contains("file:table:bi.market_risk_var_latest", "file:table:bi.trading_risk_trades")
-                .doesNotContain("file:table:bi.counterparty_exposure_counterparties", "file:table:bi.live_exposure",
+        assertThat(ids).contains("file:table:banking.market_risk_var_latest", "file:table:banking.trading_risk_trades")
+                .doesNotContain("file:table:banking.counterparty_exposure_counterparties", "file:table:bi.live_exposure",
                         "file:table:bi.world_economics_economies");
         assertThat(ids).allSatisfy(id -> assertThat(id.substring(id.lastIndexOf(':') + 1)).matches(
                 "bi\\.(trading_.*|trades_basic_trade|live_trading.*|market_risk_var_.*)"));

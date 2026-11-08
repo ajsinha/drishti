@@ -40,7 +40,7 @@ from bi_report_stack import CONSOLE_URL, ROOT, api  # noqa: E402
 REPORT = "file:report:pnl-vs-exposure"
 MODEL = "trading-risk@1"
 PY_MODEL = "desk-pnl-vs-exposure-py@1"
-PY_DATASET = "file:table:bi.desk_pnl_vs_exposure_py_result"   # the table the Python Transform makes (the table layer's, shipped in config/tables)
+PY_DATASET = "file:table:banking.desk_pnl_vs_exposure_py_result"   # the table the Python Transform makes (the table layer's, shipped in config/tables)
 
 
 class Stack(bi_report_stack.ReportStack):

@@ -172,7 +172,7 @@ sec       Public domain (U.S. Government work); EDGAR fair  committable    never
 gleif     CC0 1.0                                           committable    never           -
 prices    Yahoo terms of service: personal use, no redistr  internal only  never           -
 
-pack us-equities: writes config/packs/us-equities; a widened build <data>/publicdata/us-equities/packs/us-equities; prices <data>/publicdata/us-equities/prices
+pack us-equities: writes config/packs/capitalmarkets/us-equities; a widened build <data>/publicdata/us-equities/packs/us-equities; prices <data>/publicdata/us-equities/prices
 cache ~/drishti/data/publicdata/cache/us-equities
 manifest ~/drishti/data/publicdata/us-equities/manifest.json
 internal only: prices: Yahoo's terms forbid redistributing its prices; the pack ships none and keeps the connector off (internal demos only)
@@ -187,7 +187,7 @@ api         CC0 1.0 (attribution appreciated)                 committable  never
 mapping     CC0 1.0 (the BIC file with SWIFT, the ISIN file   committable  never           -
 golden-lei  CC0 1.0 (attribution appreciated)                 committable  never           -
 
-pack gleif: writes config/packs/gleif; a widened build <data>/publicdata/gleif/packs/gleif
+pack gleif: writes config/packs/core/gleif; a widened build <data>/publicdata/gleif/packs/gleif
 cache ~/drishti/data/publicdata/cache/gleif
 manifest ~/drishti/data/publicdata/gleif/manifest.json
 ```
@@ -243,7 +243,7 @@ dry run: us-equities, sources wikidata, nasdaq, sec, gleif
     https://data.sec.gov/api/xbrl/companyfacts/CIK##########.json (9 concepts, 10 years)
   gleif (CC0 1.0; committable): 1 request(s), cache ~/drishti/data/publicdata/cache/us-equities
     https://api.gleif.org/api/v1/lei-records/<LEI> (or ?filter[entity.legalName]=<name>), one a company
-  then: make.py -> the committed pack (config/packs/us-equities); then make.py --check
+  then: make.py -> the committed pack (config/packs/capitalmarkets/us-equities); then make.py --check
 ```
 
 ```console
@@ -261,7 +261,7 @@ dry run: gleif, sources golden, api, mapping
     https://mapping.gleif.org/api/v2/isin-lei/latest
     https://mapping.gleif.org/api/v2/mic-lei/latest
     https://mapping.gleif.org/api/v2/oc-lei/latest
-  then: make.py -> the committed pack (config/packs/gleif); then make.py --check
+  then: make.py -> the committed pack (config/packs/core/gleif); then make.py --check
 ```
 
 The news-and-markets dry run lists the twenty `QUOTE-` ids and the 71 `NEWS-` ids it would capture (91 calls, at least 2 seconds apart),
@@ -307,7 +307,7 @@ A source whose terms do not allow redistribution is never written into a committ
 (when `--out` names a committed folder), and explains why in words:
 
 ```text
-refused: .../config/packs/world-economy is a committed folder of the repository, and these sources may not be redistributed:
+refused: .../config/packs/economy/world-economy is a committed folder of the repository, and these sources may not be redistributed:
   - IMF World Economic Outlook (DataMapper): the IMF's terms allow reuse with attribution, but commercial reuse needs the IMF's permission; ...
 Write them to the data folder instead (leave out --out, or point it outside the repository), or pass --internal-ok
 if the result stays inside your organisation (internal demos only).
@@ -362,7 +362,7 @@ python3 tools/publicdata/world_economy.py refresh --internal-ok --offline --cach
 
 Where it writes:
 
-- With `--internal-ok` (and no widening): the committed `tools/realdata/dataset/`, `config/packs/world-economy/`,
+- With `--internal-ok` (and no widening): the committed `tools/realdata/dataset/`, `config/packs/economy/world-economy/`,
   `tools/packgen/world/about.yaml` and the generated tables of this page's world-economy section (`tools/realdata/realdata.py docs`). Commit the result.
 - Otherwise: `<data>/publicdata/world-economy/` with `sources.yaml` (what this build used), `dataset/`, `packs/world-economy/`
   and `about/`. Serve that pack with `DRISHTI_PACKS_DIR` or copy what you need.
@@ -631,7 +631,7 @@ python3 tools/realdata/realdata.py all --refresh      # download again, normalis
 python3 tools/realdata/realdata.py check              # clean when everything committed matches
 python3 tools/packgen/world/make.py --check           # clean when the pack matches the dataset
 python3 tools/packgen/politics/make.py --check
-python3 tools/drishti.py pack check config/packs/world-economy config/packs/world-economy
+python3 tools/drishti.py pack check config/packs/economy/world-economy config/packs/economy/world-economy
 python3 -m pytest tools/realdata/tests
 ```
 
@@ -652,7 +652,7 @@ name; unmatched profiles are listed in `meta.json` (`factbookUnmatched`: depende
 pack tests are one to five real countries per kind (India, the United States, Brazil, Nigeria, Japan) with `expect.yaml` (`noErrors`, `nonEmpty`, help coverage 100%); which ones is in `tools/realdata/pack_tests.yaml`.
 
 ```
-$ python3 tools/drishti.py pack check config/packs/world-economy config/packs/world-economy
+$ python3 tools/drishti.py pack check config/packs/economy/world-economy config/packs/economy/world-economy
 == economics: sutra lint: exit 0
 == economics: sutra test: exit 0
      economy: help coverage 8/8 (100%)
@@ -670,7 +670,7 @@ The pictures are made by `tools/docs/shots/realdata.py` (`drishti-console/.venv/
 ## news-and-markets
 
 **Sources:** `quote` (Yahoo Finance quotes and daily history, **internal only**) and `news` (Google News RSS headlines, **internal
-only**). The topics and listed companies are hand-written reference data (`config/packs/news-and-markets/tools/make_samples.py`).
+only**). The topics and listed companies are hand-written reference data (`config/packs/economy/news-and-markets/tools/make_samples.py`).
 
 `tools/publicdata/news_and_markets.py` wraps `tools/testdata/capture_market.py` (also `drishti.py testdata capture-market`): the
 documents come through Drishti's own live connectors, so they have exactly the shape the Sutras read. It starts a scratch server
@@ -780,7 +780,7 @@ python3 tools/publicdata/us_equities.py refresh prices --server http://localhost
   `<data>/publicdata/us-equities/testdata/us-equities/<kind>/`, checked with `make.py --check --pack`. Its cache is
   `scoped/<hash>` inside the cache, seeded from the plain cache less what the scope changes (submissions for `FILINGS`, facts for
   `YEARS` and `CONCEPT`, the Wikidata members for `INDEX`). `--into-pack` writes a widened build over the committed pack, on
-  purpose only; without it `--out config/packs/us-equities` with a scope is refused.
+  purpose only; without it `--out config/packs/capitalmarkets/us-equities` with a scope is refused.
 - **Prices are internal only.** The pack ships no prices; the `prices` source reads `price-history/PX-<ticker>` through the
   pack's `us-equities-prices` connector of a running server where you switched it on (`DRISHTI_US_EQUITIES_PRICES_ENABLED=true`,
   `--server`, `--token-file`, `--delay` at least 2 s, `--limit N`). It is never part of a default refresh and writes
@@ -842,7 +842,7 @@ python3 tools/publicdata/gleif.py refresh golden golden-lei api mapping --scope 
 - **A widened build goes to the data folder**: `<data>/publicdata/gleif/packs/gleif`, a whole pack (the hand-written manifest,
   Sutras and help copied, reference samples and guide generated), with its snapshot in `<data>/publicdata/gleif/testdata/gleif/`,
   checked with `make.py --check --pack`. `--into-pack` writes it over the
-  committed pack, on purpose only (never with `golden-lei`); without it `--out config/packs/gleif` with a scope is refused.
+  committed pack, on purpose only (never with `golden-lei`); without it `--out config/packs/core/gleif` with a scope is refused.
 
 **Check it:** `make.py --check` (run by the refresh); `LEI 8I5DZWZKVSZI1NUHU748 <GO>` opens an entity, `LEIG ALL <GO>` every group.
 **Offline:** `refresh --offline` reproduces the committed data from the cache byte for byte.
@@ -864,7 +864,7 @@ build, offline: it streams the N-PORT tables once and keeps the 200 largest fund
 a quarter) and stay in `<data>/publicdata/cache/funds`, never in git; a file younger than `--max-age` hours (a week by default) is
 reused. **Where the refresh writes:** the committed snapshot, gzipped JSON Lines under `data/testdata/funds/<kind>/` (the fund kind
 in parts of about 1.2 MB, 5.5 MB in all), listed in `data/testdata/testdata.yaml` and served from the demo lake by the pack's Delta
-connector `funds-store`; `samples/`, the README, the guide and the glossary (`config/about.yaml`) of `config/packs/funds`. Rebuild
+connector `funds-store`; `samples/`, the README, the guide and the glossary (`config/about.yaml`) of `config/packs/capitalmarkets/funds`. Rebuild
 the lake after a refresh: `python3 tools/drishti.py lake demo`.
 
 ```bash

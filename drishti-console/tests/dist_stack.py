@@ -37,7 +37,7 @@ class DistStack(bi_report_stack.ReportStack):
                             "--drishti.collab.email.from=drishti@desk.test", "--drishti.distribution.subscriptions.tick=1h"]
 
     def prepare(self, work):
-        ds = work / "config" / "tables" / "bi" / "trades_basic_trade.table.yaml"              # the rules live on the table the model trades-basic reads
+        ds = work / "config" / "tables" / "banking" / "trades_basic_trade.table.yaml"              # the rules live on the table the model trades-basic reads
         text = ds.read_text().replace('MTM:             { path: "$.MTM",', 'MTM:             { masked: true, path: "$.MTM",')
         assert "masked: true" in text, "the table's MTM column moved"
         ds.write_text(text + SECURITY)

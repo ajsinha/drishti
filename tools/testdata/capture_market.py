@@ -61,6 +61,9 @@ from datetime import datetime, timezone
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir as _pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
 if str(ROOT / "tools") not in sys.path:
     sys.path.append(str(ROOT / "tools"))
 from javacmd import java_cmd  # noqa: E402
@@ -308,7 +311,7 @@ def update_manifest(testdata: pathlib.Path) -> None:
 
 def run(a, say=print, sleep=time.sleep) -> int:
     a.delay = max(2.0, float(a.delay))                   # politeness is not optional
-    pack_dir = pathlib.Path(a.packs) / PACK
+    pack_dir = _pack_dir(PACK, a.packs)
     testdata = pathlib.Path(a.testdata)
     want = targets(pack_dir)
     for kind, ids in (getattr(a, "extra", None) or {}).items():        # tools/publicdata/news_and_markets.py --scope: more tickers and topics

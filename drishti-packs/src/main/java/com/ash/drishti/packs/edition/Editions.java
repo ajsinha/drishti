@@ -34,17 +34,17 @@ import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.core.env.Environment;
 
 /**
- * Reads editions: the edition file ({@code config/editions/<name>.yaml}, folder {@code drishti.editions.dir}), its keys as properties
+ * Reads editions: the edition file ({@code config/lenses/<module>/<lens>.yaml}, folder {@code drishti.lens-dir}), its keys as properties
  * under {@link #SPEC}, and the {@link Edition} the environment describes. Also the one default pack list
- * ({@code config/editions/default-packs.yaml}, copied into this jar at build).
+ * ({@code config/packs/default-packs.yaml}, copied into this jar at build).
  */
 public final class Editions {
 
     /** The edition's name: blank for the full Drishti. */
     public static final String NAME = "drishti.edition";
     /** The folder of the edition files. */
-    public static final String DIR = "drishti.editions.dir";
-    public static final String DEFAULT_DIR = "./config/editions";
+    public static final String DIR = "drishti.lens-dir";
+    public static final String DEFAULT_DIR = "./config/lenses";
     /**
      * Where the edition file's keys live as properties, so the site's configuration can override any one of them: for example
      * {@code drishti.edition-spec.packs.allow-only}, {@code drishti.edition-spec.commands.also-allow},
@@ -82,7 +82,7 @@ public final class Editions {
         }
         Map<String, String> features = b.bind(SPEC + ".features", Bindable.mapOf(String.class, String.class)).orElse(Map.of());
         Map<String, String> branding = b.bind(SPEC + ".branding", Bindable.mapOf(String.class, String.class)).orElse(Map.of());
-        return new Edition(name, env.getProperty(SPEC + ".title", ""), list(b, SPEC + ".packs.enabled"),
+        return new Edition(name, env.getProperty(SPEC + ".title", ""), packs(b, SPEC + ".packs.enabled"),
                 on(env.getProperty(SPEC + ".packs.allow-only", "false")), commands, words, features, list(b, SPEC + ".admin.pages"),
                 list(b, SPEC + ".bi.datasets"), list(b, SPEC + ".bi.models"), branding);
     }
@@ -129,10 +129,17 @@ public final class Editions {
             throw new IllegalStateException(NAME + "='" + name + "' is not an edition name (lower-case letters, digits and dashes)");
         }
         Path dir = Path.of(env.getProperty(DIR, DEFAULT_DIR));
-        Path f = dir.resolve(name + ".yaml");
+        Path f = dir.resolve(name + ".yaml");                       // a lens of no module, else in its module's folder (config/lenses/<module>/)
+        if (!Files.isRegularFile(f) && Files.isDirectory(dir)) {
+            try (java.util.stream.Stream<Path> s = Files.list(dir)) {
+                f = s.filter(Files::isDirectory).sorted().map(d -> d.resolve(name + ".yaml")).filter(Files::isRegularFile).findFirst().orElse(f);
+            } catch (IOException e) {
+                // an unreadable folder holds no lens
+            }
+        }
         if (!Files.isRegularFile(f)) {
             throw new IllegalStateException(NAME + "='" + name + "': no edition file " + f.toAbsolutePath().normalize()
-                    + " (set " + DIR + " / DRISHTI_EDITIONS_DIR to the folder of the edition files, or blank " + NAME + " for the full product)");
+                    + " (set " + DIR + " / DRISHTI_LENS_DIR to the folder of the edition files, or blank " + NAME + " for the full product)");
         }
         return f;
     }
@@ -172,6 +179,21 @@ public final class Editions {
         }
     }
 
+    /**
+     * A lens's packs ({@code packs.enabled}): by module ({@code {core: [core], banking: [trading, ...]}}, in order) or a plain list (a site's
+     * override); flattened in order, each pack once.
+     */
+    private static List<String> packs(Binder b, String key) {
+        List<String> plain = list(b, key);
+        if (!plain.isEmpty()) {
+            return plain;
+        }
+        java.util.Set<String> out = new java.util.LinkedHashSet<>();
+        b.bind(key, Bindable.mapOf(String.class, String[].class)).orElse(Map.of())
+                .values().forEach(v -> java.util.Arrays.stream(v).map(String::strip).filter(x -> !x.isEmpty()).forEach(out::add));
+        return List.copyOf(out);
+    }
+
     private static List<String> list(Binder b, String key) {
         return b.bind(key, Bindable.listOf(String.class)).orElse(List.of()).stream().map(String::strip).filter(s -> !s.isEmpty()).toList();
     }
@@ -179,10 +201,11 @@ public final class Editions {
     private static List<String> readDefaultPacks() {
         try (InputStream in = Editions.class.getResourceAsStream("default-packs.yaml")) {
             if (in == null) {
-                throw new IllegalStateException("default-packs.yaml is missing from the drishti-packs jar (config/editions/default-packs.yaml)");
+                throw new IllegalStateException("default-packs.yaml is missing from the drishti-packs jar (config/packs/default-packs.yaml)");
             }
-            List<String> out = new ArrayList<>();
-            YAML.readTree(in).path("packs").forEach(p -> out.add(p.asText().strip()));
+            java.util.Set<String> out = new java.util.LinkedHashSet<>();          // by module, in order (a plain list is read as well)
+            JsonNode packs = YAML.readTree(in).path("packs");
+            (packs.isObject() ? packs.elements() : List.of(packs).iterator()).forEachRemaining(m -> m.forEach(p -> out.add(p.asText().strip())));
             return List.copyOf(out);
         } catch (IOException e) {
             throw new UncheckedIOException(e);

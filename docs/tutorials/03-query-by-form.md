@@ -57,7 +57,7 @@ field has its input:
 Leave a field empty and it takes no part in the search. Below the fields choose how to sort and how many to show. The trading pack's form has no free-text field: its
 counterparty is a dropdown of the 24 counterparty ids the data holds. A pack whose kind has text fields (a name, a description) offers the text operators.
 
-**From the command line.** The form is the pack's `form:` (in `config/packs/trading/pack.yaml`), and the server serves it with the values the data holds:
+**From the command line.** The form is the pack's `form:` (in `config/packs/banking/trading/pack.yaml`), and the server serves it with the values the data holds:
 
 ```yaml
 form:

@@ -315,7 +315,7 @@ def test_vol_estimators_on_a_simulated_path():
 # ---- risk ---------------------------------------------------------------------------------------------------------------
 
 def test_var_and_es_reproduce_the_engine_on_the_sample():
-    doc = json.loads((ROOT / "config/packs/market-risk/samples/pnl-vector.jsonl").read_text().splitlines()[0])   # a trade's vector
+    doc = json.loads((ROOT / "config/packs/banking/market-risk/samples/pnl-vector.jsonl").read_text().splitlines()[0])   # a trade's vector
     pnl = doc["PNL"]
     assert len(pnl) == 509
     assert q.historical_var(pnl[:500], 0.99) == -sorted(pnl[:500])[4]           # the 5th worst of 500: the engine's ceil(N (1 - a)) there

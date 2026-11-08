@@ -24,6 +24,7 @@ from markupsafe import Markup
 from core import under_construction
 from core.backend import BackendError, drs_message
 from core.search import help_pages
+from core.edition import by_module
 from routes.common import ident, library, render
 
 router = APIRouter(include_in_schema=False)
@@ -47,7 +48,7 @@ def shown(edition, guide, aliases: dict | None = None) -> bool:
     if not guide.listed and edition.refuse_unlisted:
         return False
     if guide.packs:
-        wanted = edition.knowledge_packs() if guide.category == "knowledge" else edition._get("packs.enabled")
+        wanted = edition.knowledge_packs() if guide.category == "knowledge" else by_module(edition._get("packs.enabled"))
         if isinstance(wanted, list) and not set(guide.packs) & {str(p) for p in wanted}:
             return False
     return True

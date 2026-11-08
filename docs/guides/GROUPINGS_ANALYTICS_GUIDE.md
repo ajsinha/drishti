@@ -242,7 +242,7 @@ for the equity's beta against its index (`EQUITY_INDEX`: EQX-NDX), the regressio
 have: over the 29 returns to 2026-09-30, **−0.07** with a correlation of −0.03. The demo's prices are independent synthetic walks, so
 their measured betas are near zero; the stored ones were set by hand. An equity whose record names no index (EQ-CSCA, EQ-LUMN) gets a
 refusal in words instead of a number. `EQB EQ-NVTK~window=20` takes the last 20 returns. `EQB` has its own page
-(`config/packs/market-data/sutras/market-data/equity-beta.v1.sutra.yaml`): the beta, correlation and R² in the strip to 2 decimals, and
+(`config/packs/banking/market-data/sutras/market-data/equity-beta.v1.sutra.yaml`): the beta, correlation and R² in the strip to 2 decimals, and
 the regression to 4 (beta −0.0725, alpha −0.0881% a day, correlation −0.0333, R² 0.0011, volatility 26.72% against the index's 12.27%),
 where the inferred layout had rounded them to whole numbers ("0").
 
@@ -269,7 +269,7 @@ where the inferred layout had rounded them to whole numbers ("0").
 ## 10. The contract at a glance
 
 Every computed kind is an ordinary kind: it opens by command, link, API, CLI and AI, with the reader's entitlements and masks applied to
-its inputs. The machine-readable contracts are `config/packs/<pack>/contracts/<kind>.contract.yaml` (class `computed`; the pages
+its inputs. The machine-readable contracts are `config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml` (class `computed`; the pages
 [docs/contracts/packs/](../contracts/packs/README.md)); this part says what each field means.
 
 | Kind | Command | Connector (plugin) | Key | Inputs | Dated by |
@@ -512,7 +512,7 @@ On the committed data (gleif 2026-10-25, us-equities 2026-10-24, world-economy's
 Six of its settings, all generic:
 
 ```yaml
-# config/packs/world-economy/pack.yaml (written by tools/packgen/economics/make.py)
+# config/packs/economy/world-economy/pack.yaml (written by tools/packgen/economics/make.py)
 macro-groupings:
   plugin: derived
   kinds: [country-group]
@@ -563,7 +563,7 @@ The code: `drishti-engine/.../source/derived/DerivedKind.java` (grouping, aggreg
 with a Java engine in the server's own process (the pattern of VaR's `var-result`, [VAR_GUIDE.md Part III](VAR_GUIDE.md#24-where-the-engine-lives)):
 
 ```yaml
-# config/packs/market-data/pack.yaml (written by tools/packgen/banking/make_packs.py from corr_kinds.py)
+# config/packs/banking/market-data/pack.yaml (written by tools/packgen/banking/make_packs.py from corr_kinds.py)
 correlation-engine:
   plugin: reactive
   kinds:
@@ -766,7 +766,7 @@ The record shows 9 of its 46 fields; omitted here: `SEC_NAME`, `CIK`, `OTHER_TIC
 
 - **Data contract:** [`economy`](../contracts/packs/world-economy.md#econ-economy-economy) (ECON), key `ECONOMY_ID`; 28 fields, 16 required.
 - **Sample:** no sample in the demo data (`data/testdata`); the world-economy pack ships its public data with the pack
-(`config/packs/world-economy/samples/`).
+(`config/packs/economy/world-economy/samples/`).
 
 ### 25.5 `correlation-matrix`: the correlation sets
 

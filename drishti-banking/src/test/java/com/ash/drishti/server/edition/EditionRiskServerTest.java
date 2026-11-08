@@ -34,7 +34,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 /**
  * A server started with {@code drishti.edition=risk} (docs/admin/EDITIONS.md): every server-side surface follows the edition file
- * (config/editions/risk.yaml): the packs (five, allow-only), the commands people may type and see (the command line, FUNC, the type-ahead,
+ * (config/lenses/banking/risk.yaml): the packs (five, allow-only), the commands people may type and see (the command line, FUNC, the type-ahead,
  * the entity page and search, the packs' examples), the BI datasets, the About answers and the branding. DRISHTI_PACKS naming another pack
  * is not loaded, and loading one from Admin -> Packs is refused (DRS-1017).
  */
@@ -46,10 +46,10 @@ import org.springframework.test.web.servlet.MvcResult;
 class EditionRiskServerTest {
 
     static final Set<String> RISK_PACKS = Set.of("core", "market-data", "trading", "counterparty-risk", "market-risk");
-    static final Set<String> RISK_DATASETS = Set.of("bi.market_risk_var_latest", "bi.market_risk_var_official", "bi.counterparty_exposure_counterparties",
-            "bi.counterparty_exposure_netting_sets", "bi.counterparty_exposure_official", "bi.counterparty_exposure_official_counterparties",
-            "bi.counterparty_exposure_official_netting_sets", "bi.live_exposure", "bi.live_exposure_netting", "bi.trading_risk_books", "bi.trading_risk_counterparties",
-            "bi.trading_risk_desks", "bi.trading_risk_netting_sets", "bi.trading_risk_trades");
+    static final Set<String> RISK_DATASETS = Set.of("banking.market_risk_var_latest", "banking.market_risk_var_official", "banking.counterparty_exposure_counterparties",
+            "banking.counterparty_exposure_netting_sets", "banking.counterparty_exposure_official", "banking.counterparty_exposure_official_counterparties",
+            "banking.counterparty_exposure_official_netting_sets", "bi.live_exposure", "banking.live_exposure_netting", "banking.trading_risk_books", "banking.trading_risk_counterparties",
+            "banking.trading_risk_desks", "banking.trading_risk_netting_sets", "banking.trading_risk_trades");
 
     @Autowired MockMvc mvc;
     final ObjectMapper json = new ObjectMapper();
@@ -126,8 +126,8 @@ class EditionRiskServerTest {
         getJson("/api/v1/bi/datasets").path("datasets").forEach(d -> ids.add(d.path("id").asText()));
         assertThat(ids).isNotEmpty();
         assertThat(ids).allSatisfy(id -> assertThat(RISK_DATASETS).contains(id.substring(id.lastIndexOf(':') + 1)));
-        assertThat(ids).contains("file:table:bi.market_risk_var_latest");
-        MvcResult hidden = mvc.perform(get("/api/v1/bi/items/file:table:bi.trades_basic_trade")).andReturn();
+        assertThat(ids).contains("file:table:banking.market_risk_var_latest");
+        MvcResult hidden = mvc.perform(get("/api/v1/bi/items/file:table:banking.trades_basic_trade")).andReturn();
         assertThat(hidden.getResponse().getStatus()).isEqualTo(404);
         List<String> reports = new ArrayList<>();
         getJson("/api/v1/bi/catalogue").path("items").forEach(i -> reports.add(i.path("id").asText()));

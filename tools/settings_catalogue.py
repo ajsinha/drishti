@@ -43,6 +43,9 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import manifests  # noqa: E402  (the one rule for where a pack's folder is)
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import settings_sources as S  # noqa: E402
 
@@ -114,12 +117,13 @@ AREAS = [
          "file restarts that connector only. Every plugin takes the common settings; a plugin marked TLS or proxy also takes the shared "
          "`tls.*` or `proxy.*` settings."),
     Area("packs", "Packs: `pack.yaml`",
-         "`config/packs/<pack>/pack.yaml`, read by the server's pack loader (`PackLoader`) and the console. A changed pack is reloaded "
+         "`config/packs/<domain>/<pack>/pack.yaml`, read by the server's pack loader (`PackLoader`) and the console. A changed pack is reloaded "
          "while the server runs ([Live reload](../guides/PACK_DEVELOPER_GUIDE.md#live-reload-the-packs-folder-is-watched)). Guide: "
          "[PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#packyaml-key-by-key)."),
-    Area("editions", "Editions: `config/editions/`",
-         "An edition file (`config/editions/<name>.yaml`), the feature presets (`features.yaml`) and the default packs "
-         "(`default-packs.yaml`), read by the server (`Editions.java`) and the console (`core/edition.py`). The site's own configuration "
+    Area("editions", "Lenses: `config/lenses/`",
+         "A lens file (`config/lenses/<module>/<lens>.yaml`, an edition when it is the instance's), the feature presets (`features.yaml`) and "
+         "the default packs (`config/packs/default-packs.yaml`, by module), read by the server (`Editions.java`) and the console "
+         "(`core/edition.py`). The site's own configuration "
          "wins over any key: `drishti.edition-spec.<key>` on the server, `edition.<key>` in the console "
          "([EDITIONS.md](EDITIONS.md))."),
     Area("store", "The content store: `config/store/store.yaml`",
@@ -139,7 +143,7 @@ AREAS = [
     Area("alerts", "Platform alert rules: `config/alerts/platform-alerts.yaml`",
          "The rules each server evaluates against its own metrics ([OPERATIONS.md](OPERATIONS.md#136-platform-metrics-and-alerts)); "
          "`drishti.metrics.alerts.file` names the file, read again when it changes. A rule's name is the site's own."),
-    Area("reports", "Report definitions: `config/reports/`",
+    Area("reports", "Report definitions: `config/reports/banking/`",
          "One YAML per regulatory report (`drishti.regulatory.reports-dir`), read when a run is made: its rows, columns, checks, outputs "
          "and sign-off chain ([VAR_GUIDE.md section 18.14](../guides/VAR_GUIDE.md#1814-regulatory-reports-definitions-runs-checks-and-sign-off))."),
     Area("simm", "SIMM parameter files: `drishti.simm.parameters-dir`",
@@ -334,13 +338,13 @@ def schema_gaps(spec: dict, files: list[Path]) -> list[str]:
 # ---- every row ----------------------------------------------------------------------------------------------------------------
 
 def editions_files() -> list[Path]:
-    d = ROOT / "config" / "editions"
-    return [p for p in sorted(d.glob("*.yaml")) if p.name not in ("features.yaml", "default-packs.yaml")]
+    d = ROOT / "config" / "lenses"
+    return sorted(d.glob("*/*.yaml"))                                  # each lens in its module's folder
 
 
 def feature_rows() -> list[Row]:
     """features.yaml: one row per feature, its meaning what it presets (and its comment, if any)."""
-    f = ROOT / "config" / "editions" / "features.yaml"
+    f = ROOT / "config" / "lenses" / "features.yaml"
     comments = {e.key: e.comment for e in S.read_commented_yaml(f)}
     rows = []
     for name, spec in (yaml.safe_load(f.read_text(encoding="utf-8")).get("features") or {}).items():
@@ -386,10 +390,12 @@ def engine_rows() -> tuple[list[Row], list[str]]:
     on_disk = {p.name for p in ENGINES_DIR.glob("*.yaml")}
     for name in sorted(on_disk - files):
         problems.append(f"config/engines/{name}: no engine of the catalogue (drishti-server/src/main/resources/engines/catalogue.yaml) names it")
-    for lake in sorted((ROOT / "config" / "lakes").glob("*.yaml")):                  # the shipped lake files and their jar copies (Lakes)
-        jar = ROOT / "drishti-lakeconfig/src/main/resources/drishti/lakes" / lake.name
+    lakes = ROOT / "config" / "lakes"                                               # the shipped lake files and their jar copies (Lakes):
+    for lake in sorted([*lakes.glob("*.yaml"), *lakes.glob("*/*.yaml")]):            # a domain folder's in its module's jar
+        module = "drishti-lakeconfig" if lake.parent == lakes else f"drishti-{lake.parent.name}"
+        jar = ROOT / module / "src/main/resources/drishti/lakes" / lake.name
         if not jar.is_file() or lake.read_bytes() != jar.read_bytes():
-            problems.append(f"config/lakes/{lake.name} differs from its jar copy drishti-lakeconfig/src/main/resources/drishti/lakes/{lake.name}")
+            problems.append(f"{lake.relative_to(ROOT)} differs from its jar copy {jar.relative_to(ROOT)}")
     app_keys = _flat_keys(yaml.safe_load((ROOT / "drishti-server/src/main/resources/application.yaml").read_text(encoding="utf-8")))
     for e in catalogue:
         f = ENGINES_DIR / e["file"]
@@ -423,10 +429,10 @@ def all_rows() -> tuple[list[Row], list[str]]:
     problems += p
     rows += yaml_rows("console", [ROOT / "drishti-console/config/application.yaml"], "console", "restart", collapse=COLLAPSE["console"])
     rows += connector_rows()
-    rows += yaml_rows("editions", editions_files(), "an edition (server and console)", "restart", "An edition file: `config/editions/<name>.yaml`",
+    rows += yaml_rows("editions", editions_files(), "an edition (server and console)", "restart", "A lens file: `config/lenses/<module>/<lens>.yaml`",
                       collapse=COLLAPSE["editions"])
     rows += feature_rows()
-    rows += yaml_rows("editions", [ROOT / "config/editions/default-packs.yaml"], "server and console", "restart",
+    rows += yaml_rows("editions", [ROOT / "config/packs/default-packs.yaml"], "server and console", "restart",
                       "The default packs: `default-packs.yaml`")
     rows += yaml_rows("store", [ROOT / "config/store/store.yaml"], "every node (the same everywhere)", "restart", "")
     rows += yaml_rows("runs", [ROOT / "config/runs/runs.yaml"], "server", "restart", None)
@@ -481,7 +487,7 @@ def placeholder_env(defaults: dict | None = None) -> dict[str, str]:
     """Every ``${NAME...}`` of the packs' manifests and the server's profile files, with the first file that has it; ``defaults``
     collects each one's default (None: the placeholder has none)."""
     out: dict[str, str] = {}
-    files = sorted((ROOT / "config" / "packs").glob("*/pack.yaml")) + sorted((ROOT / "drishti-server/src/main/resources").glob("application-*.yaml"))
+    files = manifests() + sorted((ROOT / "drishti-server/src/main/resources").glob("application-*.yaml"))
     for f in files:
         for line in f.read_text(encoding="utf-8").splitlines():
             if line.lstrip().startswith("#"):

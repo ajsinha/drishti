@@ -17,7 +17,7 @@
 
 # Data contracts of the gleif pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/gleif/guides/gleif.md](../../../config/packs/gleif/guides/gleif.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/core/gleif/guides/gleif.md](../../../config/packs/core/gleif/guides/gleif.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -33,7 +33,7 @@ A legal entity from its LEI record: key facts, addresses, registration and renew
 
 |  |  |
 |---|---|
-| Contract | [lei-entity.contract.yaml](../../../config/packs/gleif/contracts/lei-entity.contract.yaml) · version 1.1 |
+| Contract | [lei-entity.contract.yaml](../../../config/packs/core/gleif/contracts/lei-entity.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py) |
@@ -175,7 +175,7 @@ An ownership group, computed from the entities when asked: the ultimate parent w
 
 |  |  |
 |---|---|
-| Contract | [lei-group.contract.yaml](../../../config/packs/gleif/contracts/lei-group.contract.yaml) · version 1.0 |
+| Contract | [lei-group.contract.yaml](../../../config/packs/core/gleif/contracts/lei-group.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the derived connector gleif-groupings over the kind lei-entity |
@@ -261,7 +261,7 @@ One consolidation relationship from GLEIF's level 2 data: the child, its direct 
 
 |  |  |
 |---|---|
-| Contract | [lei-relationship.contract.yaml](../../../config/packs/gleif/contracts/lei-relationship.contract.yaml) · version 1.1 |
+| Contract | [lei-relationship.contract.yaml](../../../config/packs/core/gleif/contracts/lei-relationship.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py) |
@@ -333,7 +333,7 @@ A country's legal entities in the pack, computed from the entities when asked: t
 
 |  |  |
 |---|---|
-| Contract | [lei-country.contract.yaml](../../../config/packs/gleif/contracts/lei-country.contract.yaml) · version 1.0 |
+| Contract | [lei-country.contract.yaml](../../../config/packs/core/gleif/contracts/lei-country.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the derived connector gleif-groupings over the kind lei-entity |
@@ -400,7 +400,7 @@ An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it.
 
 |  |  |
 |---|---|
-| Contract | [lei-mapping.contract.yaml](../../../config/packs/gleif/contracts/lei-mapping.contract.yaml) · version 1.0 |
+| Contract | [lei-mapping.contract.yaml](../../../config/packs/core/gleif/contracts/lei-mapping.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py) |

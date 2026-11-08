@@ -30,7 +30,7 @@ import java.util.Set;
  * @param type {@code string}, {@code integer}, {@code decimal}, {@code boolean}, {@code date}, {@code timestamp}, or null (read as given)
  * @param role {@code key}, {@code dimension}, {@code measure}, {@code attribute}, or null
  * @param meaning what the value means (a glossary term), or null
- * @param references the table and column a value points at ({@code bi.trading_risk_desks.id}), or null
+ * @param references the table and column a value points at ({@code banking.trading_risk_desks.id}), or null
  * @param unit the unit or currency, or null
  * @param additive whether sums of it mean something (null: decided by its type)
  * @param aggregate the aggregate a consumer uses by default ({@code sum}), or null

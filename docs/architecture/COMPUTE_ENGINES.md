@@ -140,7 +140,7 @@ drishti:
       enabled: ${DRISHTI_FRTB_ENABLED:true}   # run FRTB-SA on this node (live: on and off without a restart)
       changed: { by: "", at: "", reason: "" } # the last change made from Admin -> Engines or drishti.py (written by the server)
   frtb:
-    parameters-dir: ${DRISHTI_FRTB_PARAMETERS:./config/packs/market-risk/capital}
+    parameters-dir: ${DRISHTI_FRTB_PARAMETERS:./config/packs/banking/market-risk/capital}
     default-risk-kind: default-risk
     residual-risk-kind: residual-risk
     rrao-from-positions: true
@@ -215,7 +215,7 @@ is removed.
 | `drishti.frtb.*` | `config/engines/frtb-sa.yaml` (the sensitivity keys to `sensitivities.yaml`) | unchanged; `drishti.frtb.sensitivity-kind`, `factor-kind`, `cache-minutes` read as aliases of the `drishti.sensitivities.*` keys |
 | `drishti.frtb.enabled` | `drishti.engines.frtb-sa.enabled` | alias |
 | `drishti.lake.memory.*` | `config/engines/memory-lake.yaml`, same keys | unchanged; `drishti.engines.memory-lake.enabled` defaults to **true when a store is configured** in the old place, so an install that uses it keeps it on |
-| the engine's `config/editions/features.yaml` entries (`var: { server: [drishti.var.enabled] }`) | name the new switch (`drishti.engines.var.enabled`) | an edition that presets `var: off` still turns VaR off |
+| the engine's `config/lenses/features.yaml` entries (`var: { server: [drishti.var.enabled] }`) | name the new switch (`drishti.engines.var.enabled`) | an edition that presets `var: off` still turns VaR off |
 | `drishti.admission.*`, `drishti.memory.*`, `drishti.disk.*` | stay in `application.yaml`: they guard the whole server, not one engine | unchanged |
 
 **The aliases.** For one engine the effective switch is: the new key, unless a site sets the old one (`drishti.var.enabled`,

@@ -73,7 +73,7 @@ Lowest to highest; a later layer wins:
 pack.yaml contributions  <  application.yaml  <  application.local.yaml  <  environment variables  <  --arguments
 ```
 
-* **Packs** (`config/packs/<name>/pack.yaml`) contribute mnemonics, roles, connectors, routes, link fields and so on.
+* **Packs** (`config/packs/<domain>/<name>/pack.yaml`) contribute mnemonics, roles, connectors, routes, link fields and so on.
   They are added as the lowest-precedence source, so anything the site writes in its own configuration
   overrides a pack.
 * **`application.yaml`** is the bundled default.
@@ -329,7 +329,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_HTTP2` | `server.http2.enabled` | `true` | HTTP/2 on the server's port as well as HTTP/1.1: Drishti*net peers multiplex their forwarded reads over one connection (`h2c` by the upgrade on plain HTTP, ALPN on TLS; up to 1,000 streams per connection), and browsers over TLS get it too. `false`: HTTP/1.1 only; peers then fall back to it on the same call ([OPERATIONS.md › Drishti*net: running several servers as one, section 7](OPERATIONS.md#7-routing-where-a-request-goes)). |
 | `DRISHTI_PRODUCT` | `drishti.branding.product` | `Drishti` | The product name shown in pages and messages. |
 | `DRISHTI_EDITION` | `drishti.edition` | empty | The edition the server runs ([EDITIONS.md](EDITIONS.md)): empty is the full Drishti; `risk` is Drishti Risk; `world` is Drishti World; `market` is Drishti Market; `trading` is Drishti Trading. Every member of a cluster sets the same; the console learns it from the server. A restart applies it. |
-| `DRISHTI_EDITIONS_DIR` | `drishti.editions.dir` | `./config/editions` | The folder of the edition files (and `features.yaml`, `default-packs.yaml`). |
+| `DRISHTI_LENS_DIR` | `drishti.lens-dir` | `./config/lenses` | The folder of the edition files (and `features.yaml`, `default-packs.yaml`). |
 | `DRISHTI_LENSES` | `drishti.lenses` | `risk,world,market,trading` | The editions a person may open as a lens on a full instance (`risk`, `world`, `market`, `trading`, or several: `risk,world,market,trading`, the default); empty: no lens link. Ignored when the server runs an edition. A lens hides, it does not secure. |
 | `DRISHTI_PLUGIN_DIR` | `drishti.sources.plugin-dir` | empty | A directory of extra plugin jars; empty: none. |
 | `DRISHTI_HTTP_PROXY_URL` | `drishti.http.proxy.url` | empty | The site's outbound HTTP proxy (`http://host:port`); empty: none. See [`drishti.http.proxy`](#drishtihttpproxy--the-sites-outbound-http-proxy). |
@@ -472,7 +472,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_LOADS_DIR` | `drishti.loads.dir` | `./data/loads` | The data-load history per pack and the administrators' expectation overrides ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)). |
 | `DRISHTI_PACKS_DEPLOY_HISTORY` | `drishti.packs.deploy.history-file` | `./data/packs/deploy-history.jsonl` | The history of archive deployments and rollbacks. |
 | `DRISHTI_PACK_REGISTRY` | `drishti.packs.registry.url` | empty | A signed pack registry (a folder, `file:` or `https:` URL with `index.json`); empty: none. |
-| `DRISHTI_PACKS` | `drishti.packs.enabled` | `default` | The packs to load (comma list); a pack's parents load with it. `default`: the edition's packs (`drishti.edition`), else the seven shipped packs of `config/editions/default-packs.yaml` (the one default list). |
+| `DRISHTI_PACKS` | `drishti.packs.enabled` | `default` | The packs to load (comma list); a pack's parents load with it. `default`: the edition's packs (`drishti.edition`), else the seven shipped packs of `config/packs/default-packs.yaml` (the one default list). |
 | `DRISHTI_DEFAULT_PACKS` | `drishti.packs.default-for-users` | empty | Packs new users get; empty: every installed pack. |
 | `DRISHTI_SUGGEST_LIMIT` | `drishti.commands.suggest-limit` | `25` | Entries in the command line's dropdown. |
 
@@ -527,8 +527,8 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_PACKS_DIR` | `packs.dir` | `../config/packs` | The packs directory (a relative path resolves from `drishti-console/`). |
 | `DRISHTI_PACKS_EXTRA_DIRS` | `packs.extra_dirs` | empty | Further pack folders, comma-separated, as on the server (relative paths resolve from `drishti-console/`, so `../examples/packs`). |
 | `DRISHTI_PACKS_INSTALLED` | `packs.installed_dir` | empty | The server's installed packs (registry and Deploy archive); empty: `<data dir>/packs/installed`. Read first as the server does, so an installed pack's guides, examples and workspaces reach the console. |
-| `DRISHTI_PACKS` | `packs.enabled` | `default` | Only used when the server cannot be asked which packs are on; `default`: `config/editions/default-packs.yaml`. |
-| `DRISHTI_EDITIONS_DIR` | `editions.dir` | `../config/editions` | The folder of the edition files, the same the server reads (relative to `drishti-console/`). |
+| `DRISHTI_PACKS` | `packs.enabled` | `default` | Only used when the server cannot be asked which packs are on; `default`: `config/packs/default-packs.yaml`. |
+| `DRISHTI_LENS_DIR` | `editions.dir` | `../config/lenses` | The folder of the edition files, the same the server reads (relative to `drishti-console/`). |
 | `DRISHTI_LAKE_ROOTS` | `lakes.roots` | empty | Admin → Data loads → Lakes ([TOOLS.md](../guides/TOOLS.md#4-lake-build-a-large-json-export-into-a-delta-lake)): the lake roots this console may write, comma-separated (relative paths resolve from `drishti-console/`); empty: `<data dir>/delta`, the server's own root. The page offers no other folder. |
 | `DRISHTI_JAR` | `lakes.jar` | empty | The drishti-server exec jar whose Java writer the page's builds use (`lakes.engine: auto`); empty: the newest `drishti-server/target/drishti-server-*-exec.jar`, else the Python `deltalake` package. |
 | `DRISHTI_DATA_DIR` | `lakes.data_dir` | `../data` | Admin → Lakes → Maintain ([OPERATIONS.md](OPERATIONS.md#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain)): the data folder whose `lakes/lake-maintenance.yaml` (the file `lake maintain` reads by default) and `lakes/maintenance-history.jsonl` the page uses (relative paths resolve from `drishti-console/`). |
@@ -913,7 +913,7 @@ without a restart. A pack's `history:` block can lower `max-days` and set `defau
 |---|---|---|
 | `dir` | `./config/packs` (`DRISHTI_PACKS_DIR`) | The folder holding one sub-folder per pack. Relative to the server's working directory. The console reads the same variable (its default `../config/packs` is relative to `drishti-console/`), so use an absolute path when you set it. |
 | `extra-dirs` | empty (`DRISHTI_PACKS_EXTRA_DIRS`) | Further pack folders, comma-separated, looked in after `dir`; `examples/packs` holds the retired example packs. A pack there may extend the shipped ones. |
-| `enabled` | `default` (`DRISHTI_PACKS`): the edition's packs, else `config/editions/default-packs.yaml` (the seven shipped packs) | Comma-separated packs to load, in order. Packs they `extends:` (or the older `requires:`) are loaded as well. A missing pack stops start-up with a clear message. |
+| `enabled` | `default` (`DRISHTI_PACKS`): the edition's packs, else `config/packs/default-packs.yaml` (the seven shipped packs) | Comma-separated packs to load, in order. Packs they `extends:` (or the older `requires:`) are loaded as well. A missing pack stops start-up with a clear message. |
 | `default-for-users` | empty = every installed pack (`DRISHTI_DEFAULT_PACKS`) | The packs a user sees until an admin assigns packs to them. |
 | `samples` | `visible` (`DRISHTI_PACKS_SAMPLES`) | Who sees sample packs (`sample: true` in `pack.yaml`): `visible` (everyone), `developers` (only users with the author or admin power; use this once real packs exist) or `hidden` (nobody; sample packs are not loaded and their connectors do not start). The setting an administrator saves in Admin → Packs overrides it. |
 | `samples-file` | `./data/packs/samples-mode` (`DRISHTI_PACKS_SAMPLES_FILE`) | Where that saved setting is kept (one word). Delete it, or press *Use the configuration*, to let `samples` decide again. |
@@ -1020,15 +1020,15 @@ by the site.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `drishti.edition` | empty (`DRISHTI_EDITION`) | The edition: empty is the full Drishti, exactly as without editions; `risk` is Drishti Risk (`config/editions/risk.yaml`), `world` Drishti World (`config/editions/world.yaml`), `market` Drishti Market (`config/editions/market.yaml`), `trading` Drishti Trading (`config/editions/trading.yaml`). Names a file in `drishti.editions.dir`; a name with no file stops the start. Set the same on every member of a cluster. |
-| `drishti.editions.dir` | `./config/editions` (`DRISHTI_EDITIONS_DIR`) | The folder of the edition files, `features.yaml` (which settings each feature presets) and `default-packs.yaml` (the one default pack list). |
+| `drishti.edition` | empty (`DRISHTI_EDITION`) | The edition: empty is the full Drishti, exactly as without editions; `risk` is Drishti Risk (`config/lenses/banking/risk.yaml`), `world` Drishti World (`config/lenses/economy/world.yaml`), `market` Drishti Market (`config/lenses/banking/market.yaml`), `trading` Drishti Trading (`config/lenses/banking/trading.yaml`). Names a file in `drishti.lens-dir`; a name with no file stops the start. Set the same on every member of a cluster. |
+| `drishti.lens-dir` | `./config/lenses` (`DRISHTI_LENS_DIR`) | The folder of the edition files, `features.yaml` (which settings each feature presets) and `default-packs.yaml` (the one default pack list). |
 | `drishti.edition-spec.*` | the edition file's keys | The site's overrides of the edition file, key by key: `drishti.edition-spec.commands.also-allow[0]=FRTB` adds a command, `drishti.edition-spec.packs.allow-only=false` lets other packs load, a list (`bi.datasets`) replaces the file's. |
 | `drishti.lenses` | `risk,world,market,trading` (`DRISHTI_LENSES`; empty turns lenses off) | The editions a person may open as a lens on a full instance ("Open Drishti Risk", "Open Drishti World", "Open Drishti Market", "Open Drishti Trading"), comma list: `risk,world,market,trading` offers the four, and a person inside one switches to another. A lens hides, it does not secure. Ignored with an edition. |
 
-The console's side: `editions.dir` (`DRISHTI_EDITIONS_DIR`, default `../config/editions`); an `edition:` block in its
+The console's side: `editions.dir` (`DRISHTI_LENS_DIR`, default `../config/lenses`); an `edition:` block in its
 `application.local.yaml` overrides the edition file's keys for the console (menus, Home, help, words; an edition's Home landings are its `home.landings`, drawn by its `home.template` with its `home.titles`: Drishti Risk's `desk`, `command`, `map`, Drishti World's `desk`, `explorer`, `map`, Drishti Market's `desk`, `explorer`, `quality`, Drishti Trading's `trader`, `desk`, `explorer`; Drishti Market's `quality.stale-days`, default 2, is the Quality landing's stale threshold in business days); Drishti Trading's `trading:` block: `trading.people` (who is who: `{user: {trader: TRDR-ASHAH}}` or `{user: {desk: DESK-COMM, role: desk-head}}`; the console's own `trading.people` in its `application.local.yaml` adds to the edition file's and wins for a name in both), `trading.match-records` (true: else a matching trader record), `trading.landing-by-role` (`{desk-head: desk, trader: trader}`, below the person's own choice), `trading.near-limit` (0.8), `trading.limit-days` (5), `trading.pnl-var-days` (60), `trading.max-rows` (20000), `trading.live-statuses`; a person's View as choice is their `tradingView` setting ([EDITIONS.md section 12](EDITIONS.md#12-drishti-trading)); `lens.roles` is the hook for
 role-based access to the lens link (read, not wired). Its own feature switches, each on by default and preset by an edition through
-`config/editions/features.yaml`: `features.build` (Build: new screens, packs, designs, reviews, changes), `features.forms` (`FORM`, `/forms`),
+`config/lenses/features.yaml`: `features.build` (Build: new screens, packs, designs, reviews, changes), `features.forms` (`FORM`, `/forms`),
 `features.datamap`, `features.data` (Export data, `DATA`), `features.workspaces`, `features.monitors`, `features.alerts`, `features.lakes` (Admin → Lakes), `features.reports`,
 `features.collaboration` (Admin → Collaboration). `/studio` (the Build workbench's entry) follows `features.build`. A page whose switch is off answers 404.
 
@@ -2709,9 +2709,9 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS.md](OPER
 
 ## Every setting
 
-Every key of every kind: 2,161 settings in 19 areas, and 332 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 2,165 settings in 19 areas, and 332 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
-Every setting has a **tier** (the last column; Admin → Configuration shows them by tier): **everyday** 18, **admin** 1,730, **expert** 413. *Everyday* is what a business lead changes (the lenses, the VaR and exposure confidences, the scenario window, the feature switches); *admin* is what an operator sets; *expert* is performance and internals. The tiers are kept in `tools/settings_schemas.yaml` (`tiers`), one place.
+Every setting has a **tier** (the last column; Admin → Configuration shows them by tier): **everyday** 18, **admin** 1,734, **expert** 413. *Everyday* is what a business lead changes (the lenses, the VaR and exposure confidences, the scenario window, the feature switches); *admin* is what an operator sets; *expert* is performance and internals. The tiers are kept in `tools/settings_schemas.yaml` (`tiers`), one place.
 
 | Area | Settings |
 |---|---|
@@ -2722,14 +2722,14 @@ Every setting has a **tier** (the last column; Admin → Configuration shows the
 | [The console's other files](#the-consoles-other-files) | 106 |
 | [Connectors: every plugin's settings](#connectors-every-plugins-settings) | 535 |
 | [Packs: `pack.yaml`](#packs-packyaml) | 138 |
-| [Editions: `config/editions/`](#editions-configeditions) | 70 |
+| [Lenses: `config/lenses/`](#lenses-configlenses) | 74 |
 | [The content store: `config/store/store.yaml`](#the-content-store-configstorestoreyaml) | 14 |
 | [BI runs: `config/runs/runs.yaml`](#bi-runs-configrunsrunsyaml) | 48 |
 | [Write-back: `config/edit/`](#write-back-configedit) | 18 |
 | [Compute workers: `config/compute/compute.yaml`](#compute-workers-configcomputecomputeyaml) | 23 |
 | [Drishti*net: `config/net/`](#drishtinet-confignet) | 27 |
 | [Platform alert rules: `config/alerts/platform-alerts.yaml`](#platform-alert-rules-configalertsplatform-alertsyaml) | 13 |
-| [Report definitions: `config/reports/`](#report-definitions-configreports) | 23 |
+| [Report definitions: `config/reports/banking/`](#report-definitions-configreportsbanking) | 23 |
 | [SIMM parameter files: `drishti.simm.parameters-dir`](#simm-parameter-files-drishtisimmparameters-dir) | 29 |
 | [The data inbox's routing rules: `config/dataload.yaml`](#the-data-inboxs-routing-rules-configdataloadyaml) | 2 |
 | [The UI kit: `config/ui-kit/brand.yaml`](#the-ui-kit-configui-kitbrandyaml) | 19 |
@@ -2793,14 +2793,9 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.edition` | string | empty | `DRISHTI_EDITION` | server | The edition (docs/admin/EDITIONS.md): blank is the full Drishti; risk is Drishti Risk. It names config/editions/&lt;name&gt;.yaml, read as a layer under the site's configuration before the packs load; every member of a cluster sets the same value, and the console learns it from /api/v1/about. A change needs a restart. | restart |  | admin |
+| `drishti.edition` | string | empty | `DRISHTI_EDITION` | server | The edition (docs/admin/EDITIONS.md): blank is the full Drishti; risk is Drishti Risk. It names config/lenses/&lt;module&gt;/&lt;lens&gt;.yaml, read as a layer under the site's configuration before the packs load; every member of a cluster sets the same value, and the console learns it from /api/v1/about. A change needs a restart. | restart |  | admin |
+| `drishti.lens-dir` | string | `./config/lenses` | `DRISHTI_LENS_DIR` | server | the lenses' files: config/lenses/&lt;module&gt;/&lt;lens&gt;.yaml (one of no module in the folder itself), features.yaml | restart |  | admin |
 | `drishti.lenses` | string | `risk,world,market,trading` | `DRISHTI_LENSES` | server | Lenses (EDITIONS.md › The design as built, section 8): editions a person may open on a full instance ("Open Drishti Risk"), for their own session; no restart, every pack stays loaded. A lens hides, it does not secure. On by default (product owner, 2026-10-30): the four lenses; DRISHTI\_LENSES= (empty) turns them off. Ignored with an edition. | live |  | everyday |
-
-#### `drishti.editions`
-
-| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
-|---|---|---|---|---|---|---|---|---|
-| `drishti.editions.dir` | string | `./config/editions` | `DRISHTI_EDITIONS_DIR` | server | the folder of the edition files (and features.yaml, default-packs.yaml) | restart |  | admin |
 
 #### `drishti.data`
 
@@ -3032,7 +3027,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.security.clock-skew` | duration | `30s` |  | server | clock difference tolerated when checking a token's expiry | restart |  | admin |
 | `drishti.security.metrics-token` | string | empty | `DRISHTI_METRICS_TOKEN` | server | With security on, /actuator (except /actuator/health) needs an admin token or this one, for Prometheus: scrape\_configs: \[{ job\_name: drishti, metrics\_path: /actuator/prometheus, bearer\_token: &lt;this&gt; }] (secret) | restart |  | admin |
 | `drishti.security.token-read-posts` | list | empty |  | server | A personal API token reads by default: GET and HEAD, plus these POSTs, which carry a query in the body and change nothing (a pivot of a search, a command line). Add a path only if it writes nothing. | restart |  | admin |
-| `drishti.security.token-scopes` | map | `{…}` |  | server | WRITE SCOPES (TOKEN\_SCOPES in docs/guides/API\_GUIDE.md): a token is made with `read` (the default: all of the above) or with scopes from this list (keys in \[brackets] keep the colon); each opens the METHOD path patterns under `allow` (\* = any method). A scope is only a door: the controller behind it still checks the roles of the token's user at the time of the call, so a token never does more than its user. A write that no scope opens, and nothing in token-never, is refused. Every non-GET endpoint must be declared in token-read-posts, a scope or token-never (TokenScopeGuardTest fails the build otherwise). | restart |  | admin |
+| `drishti.security.token-scopes` | map | `{…}` |  | server | WRITE SCOPES (TOKEN\_SCOPES in docs/guides/API\_GUIDE.md): a token is made with `read` (the default: all of the above) or with scopes from this list (keys in \[brackets] keep the colon); each opens the METHOD path patterns under `allow` (\* = any method). A scope is only a door: the controller behind it still checks the roles of the token's user at the time of the call, so a token never does more than its user. A write that no scope opens, and nothing in token-never, is refused. Every non-GET endpoint must be declared in token-read-posts, a scope or token-never (TokenScopeGuardTest fails the build otherwise). A module adds its own read-only POSTs and scopes in its jar (META-INF/drishti/token-scopes.yaml: the banking module's risk:write and its read POSTs), offered only while it is on. | restart |  | admin |
 | `drishti.security.token-never` | list | empty |  | server | never for a token, whatever its scopes: tokens, users, sign-in, personal and collaboration state | restart |  | admin |
 | `drishti.security.token-write-max-days` | integer | `90` |  | server | a token with a write scope must expire, within this many days (read tokens: 1-366 or never) | restart |  | admin |
 | `drishti.security.roles` | map | `{…}` |  | server | the built-in roles: kinds ("\*" all), raw (see unmasked JSON), author, approve, admin, calc, layout, edit and bi powers; packs add roles of their own | restart |  | admin |
@@ -3625,12 +3620,12 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.packs.dir` | string | `./config/packs` | `DRISHTI_PACKS_DIR` | server | Domain packs (config/packs/&lt;name&gt;/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples. Site settings below always override what a pack contributes. | restart |  | admin |
+| `drishti.packs.dir` | string | `./config/packs` | `DRISHTI_PACKS_DIR` | server | Domain packs (config/packs/&lt;domain&gt;/&lt;name&gt;/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples. Site settings below always override what a pack contributes. | restart |  | admin |
 | `drishti.packs.extra-dirs` | string | empty | `DRISHTI_PACKS_EXTRA_DIRS` | server | Further pack folders, comma-separated, looked in after dir: examples/packs holds the retired example packs (finance, genomics, logistics, retail-banking, climate-risk, operational-risk, liquidity-risk); name one in enabled to load it. | restart |  | admin |
 | `drishti.packs.overlay` | string | `./data/packs/added.yaml` | `DRISHTI_PACKS_OVERLAY` | server | Packs loaded from Admin → Packs are listed here (drishti.packs.added) and read at every start; see spring.config.import. | restart |  | admin |
 | `drishti.packs.installed-dir` | string | `./data/packs/installed` | `DRISHTI_PACKS_INSTALLED` | server | Packs installed from a signed registry (Admin → Packs → From the registry); looked in before dir, so they win. | restart |  | admin |
 | `drishti.packs.settings-dir` | string | `./data/packs/settings` | `DRISHTI_PACKS_SETTINGS` | server | The administrator's data-source overrides, one file per pack (Admin → Packs → Data source); redeploying a pack keeps them. | restart |  | admin |
-| `drishti.packs.enabled` | string | `default` | `DRISHTI_PACKS` | server | default: the edition's packs (drishti.edition), else config/editions/default-packs.yaml | restart |  | admin |
+| `drishti.packs.enabled` | string | `default` | `DRISHTI_PACKS` | server | default: the edition's packs (drishti.edition), else config/packs/default-packs.yaml | restart |  | admin |
 | `drishti.packs.samples` | string | `visible` | `DRISHTI_PACKS_SAMPLES` | server | Sample packs (sample: true in pack.yaml) are demonstrations. visible: everyone sees them; developers: only users with the author or admin power; hidden: nobody, they are not loaded and their connectors do not start. Admin -&gt; Packs ("Hide samples from business users") saves a choice that overrides this. Use developers once real packs exist. | restart |  | admin |
 | `drishti.packs.samples-file` | string | `./data/packs/samples-mode` | `DRISHTI_PACKS_SAMPLES_FILE` | server | where the Admin -&gt; Packs choice for sample packs is saved (one word); delete it to let drishti.packs.samples decide again | restart |  | admin |
 | `drishti.packs.watch` | string | `auto` | `DRISHTI_PACKS_WATCH` | server | The packs folder is watched: a new pack folder is loaded, an edited one re-checked and swapped in, a deleted one unloaded, with no restart. auto: file events with polling as the safety net; poll: look every `poll`; off: only Admin -&gt; Packs acts. | live |  | admin |
@@ -3908,7 +3903,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.regulatory.fiscal-year-end` | string | `10-31` | `DRISHTI_FISCAL_YEAR_END` | server (each node its own) | the last day of the fiscal year, MM-DD: FY2026 is 2025-11-01 to 2026-10-31 with 10-31 | restart |  | admin |
 | `drishti.regulatory.pnl-kind` | string | `desk-pnl` |  | server (each node its own) | the kind with each desk's actual and hypothetical P&amp;L per business date (the backtest's input) | restart |  | admin |
 | `drishti.regulatory.average-days` | integer | `60` |  | server (each node its own) | the business days of the VaR average the capital formula takes | restart |  | admin |
-| `drishti.regulatory.reports-dir` | string | `./config/reports` | `DRISHTI_REPORTS_DIR` | server (each node its own) | the report definitions, one YAML per report (docs/guides/VAR\_GUIDE.md section 18.14) | restart |  | admin |
+| `drishti.regulatory.reports-dir` | string | `./config/reports/banking` | `DRISHTI_REPORTS_DIR` | server (each node its own) | the report definitions, one YAML per report (docs/guides/VAR\_GUIDE.md section 18.14) | restart |  | admin |
 | `drishti.regulatory.synthetic-history` | boolean | `false` | `DRISHTI_SYNTHETIC_HISTORY` | server (each node its own) | a demo server may seed synthetic official records before its oldest one; never on a bank's server | restart |  | admin |
 | `drishti.regulatory.backtesting.window` | integer | `250` |  | server (each node its own) | the business days counted | restart |  | admin |
 | `drishti.regulatory.backtesting.confidences` | list | `[0.99, 0.975]` |  | server (each node its own) | the VaR confidences tested; the first sets the zone and the multiplier (each node's record keeps its VaR at the others) | restart |  | admin |
@@ -4011,7 +4006,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.frtb.parameters-dir` | string | `./config/packs/market-risk/capital` | `DRISHTI_FRTB_PARAMETERS` | server (each node its own) | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) | restart |  | admin |
+| `drishti.frtb.parameters-dir` | string | `./config/packs/banking/market-risk/capital` | `DRISHTI_FRTB_PARAMETERS` | server (each node its own) | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) | restart |  | admin |
 | `drishti.frtb.default-risk-kind` | string | `default-risk` |  | server (each node its own) | the DRC inputs; none served: "DRC not computed", never 0 | restart |  | admin |
 | `drishti.frtb.residual-risk-kind` | string | `residual-risk` |  | server (each node its own) | the RRAO inputs; none served: derived from the positions' product types and notionals | restart |  | admin |
 | `drishti.frtb.rrao-from-positions` | boolean | `true` |  | server (each node its own) | derive the RRAO from PRODUCT\_TYPE (the parameter file's mapping) and the VaR book's notionals | restart |  | admin |
@@ -4419,16 +4414,11 @@ One file per module (banking, capitalmarkets, economy), `config/modules/<module>
 |---|---|---|---|---|---|---|---|---|
 | `under_construction.file` | string | `../config/under-construction.yaml` | `DRISHTI_UNDER_CONSTRUCTION_FILE` | console | the same file the server reads; absent: nothing registered | restart |  | admin |
 
-#### `editions`
-
-| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
-|---|---|---|---|---|---|---|---|---|
-| `editions.dir` | string | `../config/editions` | `DRISHTI_EDITIONS_DIR` | console | the same folder the server reads (config/editions/&lt;name&gt;.yaml, features.yaml) | restart |  | admin |
-
 #### `lens`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
+| `lens.dir` | string | `../config/lenses` | `DRISHTI_LENS_DIR` | console | the lens files the server reads: config/lenses/&lt;module&gt;/&lt;lens&gt;.yaml, features.yaml | restart |  | admin |
 | `lens.roles` | map | `{}` |  | console | hook for role-based access later ({role: {link: true, start: risk}}): read, not wired | restart |  | admin |
 
 #### `features`
@@ -4527,7 +4517,7 @@ One file per module (banking, capitalmarkets, economy), `config/modules/<module>
 | `packs.dir` | string | `../config/packs` | `DRISHTI_PACKS_DIR` | console | the same packs directory the server uses (one variable sets both) | restart |  | admin |
 | `packs.installed_dir` | string | empty | `DRISHTI_PACKS_INSTALLED` | console | packs installed from the registry or by Deploy archive (the server's drishti.packs.installed-dir); blank: &lt;data dir&gt;/packs/installed | restart |  | admin |
 | `packs.extra_dirs` | string | empty | `DRISHTI_PACKS_EXTRA_DIRS` | console | further pack folders, comma-separated (examples/packs: the retired example packs), as on the server | restart |  | admin |
-| `packs.enabled` | string | `default` | `DRISHTI_PACKS` | console | used only when the server cannot be asked which packs are enabled; default: config/editions/default-packs.yaml | restart |  | admin |
+| `packs.enabled` | string | `default` | `DRISHTI_PACKS` | console | used only when the server cannot be asked which packs are enabled; default: config/packs/default-packs.yaml | restart |  | admin |
 | `packs.deploy_max_mb` | integer | `50` |  | console | largest pack archive Admin → Packs → Deploy archive takes (the server's drishti.packs.deploy.max-archive-mb refuses the same way, 413) | restart |  | expert |
 
 #### `static`
@@ -4678,7 +4668,7 @@ The console's content files under `drishti-console/config/`: menus, the help cen
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `templates` | map | `{}` |  | console | Core starter workspaces by name (packs add their own in config/packs/&lt;pack&gt;/config/workspaces.yaml) | live |  | admin |
+| `templates` | map | `{}` |  | console | Core starter workspaces by name (packs add their own in config/packs/&lt;domain&gt;/&lt;pack&gt;/config/workspaces.yaml) | live |  | admin |
 | `templates.*` | map | none |  | console | One starter workspace: its layout and panes, as blank below | live |  | admin |
 | `blank` | map | `shipped` |  | console | What a new, blank workspace starts as | live |  | admin |
 | `blank.layout` | string | `2col` |  | console | Its layout: 2col, 3col, 2x2 or 1+2 | live |  | admin |
@@ -5377,7 +5367,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 
 ### Packs: `pack.yaml`
 
-`config/packs/<pack>/pack.yaml`, read by the server's pack loader (`PackLoader`) and the console. A changed pack is reloaded while the server runs ([Live reload](../guides/PACK_DEVELOPER_GUIDE.md#live-reload-the-packs-folder-is-watched)). Guide: [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#packyaml-key-by-key).
+`config/packs/<domain>/<pack>/pack.yaml`, read by the server's pack loader (`PackLoader`) and the console. A changed pack is reloaded while the server runs ([Live reload](../guides/PACK_DEVELOPER_GUIDE.md#live-reload-the-packs-folder-is-watched)). Guide: [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#packyaml-key-by-key).
 
 #### `pack.yaml`
 
@@ -5522,22 +5512,23 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `console.monitors.<name>[].kind` | string | none |  | the pack | An entity's kind | live |  | admin |
 | `console.monitors.<name>[].id` | string | none |  | the pack | Its id | live |  | admin |
 
-### Editions: `config/editions/`
+### Lenses: `config/lenses/`
 
-An edition file (`config/editions/<name>.yaml`), the feature presets (`features.yaml`) and the default packs (`default-packs.yaml`), read by the server (`Editions.java`) and the console (`core/edition.py`). The site's own configuration wins over any key: `drishti.edition-spec.<key>` on the server, `edition.<key>` in the console ([EDITIONS.md](EDITIONS.md)).
+A lens file (`config/lenses/<module>/<lens>.yaml`, an edition when it is the instance's), the feature presets (`features.yaml`) and the default packs (`config/packs/default-packs.yaml`, by module), read by the server (`Editions.java`) and the console (`core/edition.py`). The site's own configuration wins over any key: `drishti.edition-spec.<key>` on the server, `edition.<key>` in the console ([EDITIONS.md](EDITIONS.md)).
 
-#### An edition file: `config/editions/<name>.yaml`
+#### A lens file: `config/lenses/<module>/<lens>.yaml`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
 | `edition` | string | `market` |  | an edition (server and console) | Drishti Market: the bank's own market data in one product: curves, fixings, FX, volatility surfaces and cubes, credit curves, equities, inflation, commodities, bonds and correlations, the inputs that feed risk and valuations. No trades and no VaR. Chosen by drishti.edition: market on every server (DRISHTI\_EDITION=market), or offered as a lens beside the others (drishti.lenses: risk,world,market). The site's configuration wins over any key (drishti.edition-spec.&lt;key&gt; on the server, edition.&lt;key&gt; in the console). docs/admin/EDITIONS.md (how to run it, then the design as built). | restart |  | admin |
 | `title` | string | `Drishti Risk` |  | an edition (server and console) | the edition's name, in the top bar, the About page and the lens menu | restart |  | admin |
 | `description` | string | `VaR and counterparty exposure, from your own pricing data, in one place` |  | an edition (server and console) | one line on what the edition is for (About, the lens menu) | restart |  | admin |
-| `packs.enabled` | list | `[core, market-data]` |  | an edition (server and console) | market-data extends core (issuers and holiday calendars); no trading, no risk pack | restart |  | admin |
+| `packs.enabled.core` | list | `[core]` |  | an edition (server and console) | the core's packs this lens opens | restart |  | admin |
+| `packs.enabled.banking` | list | `[market-data]` |  | an edition (server and console) | the banking module's: the market data (issuers, curves, vols); no trading, no risk pack | restart |  | admin |
 | `packs.allow-only` | boolean | `true` |  | an edition (server and console) | Admin -&gt; Packs, Deploy archive and the registry refuse any other pack (DRS-1017) | restart |  | admin |
 | `commands.allow` | string | empty |  | an edition (server and console) | the engines still read every kind of the packs above | restart |  | admin |
 | `commands.words` | map | `{ BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: off, DATA: on,...` |  | an edition (server and console) | left out: regulatory (FRTB, SACCR, CVA, SIMM), stress (SCN, STR, SSPNL), collateral operations (COLL, MC), the exposure engine's runs, paths and official records (XRUN, XPATH, XOFC), VaR's scenario inputs (SPV, FXS, SSET, VOFF), macro economics | restart |  | admin |
-| `features` | map | `{…}` |  | an edition (server and console) | presets of existing switches (config/editions/features.yaml); not named: the product's default | restart |  | admin |
+| `features` | map | `{…}` |  | an edition (server and console) | presets of existing switches (config/lenses/features.yaml); not named: the product's default | restart |  | admin |
 | `bi.datasets` | list | `[bi.market_data_*]` |  | an edition (server and console) | (a table named bi.market\_data\_... or the model market-data, when one is added), never the | restart |  | admin |
 | `bi.models` | list | `[market-data]` |  | an edition (server and console) | VaR or exposure reports; an empty list would offer every BI item of the product | restart |  | admin |
 | `menus.top` | list | `[views, curves, volatility, fx, credit, bi, admin, help]` |  | an edition (server and console) | the top menus by id, in order; one not named is not drawn | restart |  | admin |
@@ -5552,7 +5543,6 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | `home.landing-by-role` | map | `{}` |  | an edition (server and console) | {role: landing}: read, wins over the person's choice when set; wired to role-based access later | restart |  | admin |
 | `home.chips` | list | `[CRV CRV-USD-OIS, CRV CRV-CAD-GOVT, FXF FXF-EURUSD, FXV FXV-USDJPY, IRV IRV-U...` |  | an edition (server and console) | B's chips | restart |  | admin |
 | `home.sections` | map | `{ stats: off, grammar: off, pipeline: off, capabilities: off, views: off }` |  | an edition (server and console) | the product's Home (signed out, or landing=today) | restart |  | admin |
-| `home.cards` | list | empty |  | an edition (server and console) | quick cards on Home (replace ui.home\_cards) | restart |  | admin |
 | `quality.stale-days` | integer | `2` |  | an edition (server and console) | stale: data older than the business date by more than this many business days | restart |  | admin |
 | `help.categories` | list | `[get-started, risk, analytics, data, operate, reference, knowledge, internal]` |  | an edition (server and console) | the help sections kept (config/help.yaml): Build hidden | restart |  | admin |
 | `help.knowledge` | list | `[market-data]` |  | an edition (server and console) | the Market data Knowledge page (the rest hidden) | restart |  | admin |
@@ -5572,6 +5562,8 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | `trading.limit-days` | integer | `5` |  | an edition (server and console) | the Desk head's limit use by book: this many business dates (the official records) | restart |  | admin |
 | `trading.pnl-var-days` | integer | `60` |  | an edition (server and console) | the Desk head's P&amp;L against VaR: this many days of the desk's official history | restart |  | admin |
 | `trading.max-rows` | integer | `20000` |  | an edition (server and console) | the most trade valuations read per date for a scope (more: the figures say partial) | restart |  | admin |
+| `packs.enabled.economy` | list | `[world-economy, news-and-markets]` |  | an edition (server and console) | with capital markets; while capitalmarkets is off, its packs, functions (USEQ, FUND ...), | restart |  | admin |
+| `packs.enabled.capitalmarkets` | list | `[us-equities, funds]` |  | an edition (server and console) | cards and the World landing's company, filing and fund parts are gone | restart |  | admin |
 | `home.topics` | list | `[TOPIC-RATES, TOPIC-INFLATION, TOPIC-OIL, TOPIC-FED, TOPIC-ECB, TOPIC-AI]` |  | an edition (server and console) | A's news by topic (each topic's latest stories) | restart |  | admin |
 
 #### Feature presets: `features.yaml`
@@ -5609,7 +5601,9 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `packs` | list | `[core, market-data, trading, counterparty-risk, market-risk, world-economy, n...` |  | server and console | The packs a server enables when neither DRISHTI\_PACKS (drishti.packs.enabled) nor an edition names them: the full Drishti. The one list (docs/admin/EDITIONS.md › The design as built, section 5.1): the server reads it from its jar (drishti-packs copies this file in at build), the console from this folder; Docker and the stack pass DRISHTI\_PACKS through only when it is set. | restart |  | admin |
+| `packs.core` | list | `[core]` |  | server and console | the core's packs | restart |  | admin |
+| `packs.banking` | list | `[market-data, trading, counterparty-risk, market-risk]` |  | server and console | the banking module's (loaded only while it is on) | restart |  | admin |
+| `packs.economy` | list | `[world-economy, news-and-markets]` |  | server and console | the economy module's (loaded only while it is on) | restart |  | admin |
 
 ### The content store: `config/store/store.yaml`
 
@@ -5914,11 +5908,11 @@ The rules each server evaluates against its own metrics ([OPERATIONS.md](OPERATI
 | `rules.<rule>.below` | integer | `2` |  | server | fire below this value (give exactly one of above and below): here twice the guard | live |  | admin |
 | `rules.<rule>.aggregate` | string | `sum` |  | server | each (one alert per series; the default), sum or max over the series: here every path summed | live |  | admin |
 
-### Report definitions: `config/reports/`
+### Report definitions: `config/reports/banking/`
 
 One YAML per regulatory report (`drishti.regulatory.reports-dir`), read when a run is made: its rows, columns, checks, outputs and sign-off chain ([VAR_GUIDE.md section 18.14](../guides/VAR_GUIDE.md#1814-regulatory-reports-definitions-runs-checks-and-sign-off)).
 
-#### A report definition: `config/reports/<report>.yaml` (docs/guides/VAR_GUIDE.md section 18.14)
+#### A report definition: `config/reports/banking/<report>.yaml` (docs/guides/VAR_GUIDE.md section 18.14)
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
@@ -6175,8 +6169,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_DRAIN_WAIT` | deploy/bin/drishti-node.sh | `90` | tools | Seconds the stop hook waits for safeToStop after the drain (ECS on Fargate: at most 120 s for the whole stop) |
 | `DRISHTI_DUCKDB_MEMORY` | duckdb profile | `1GB` | profile | The shared DuckDB instance's memory limit |
 | `DRISHTI_DUCKDB_PATH` | duckdb profile | `./data/duckdb/drishti.duckdb` | profile | The duckdb profile's file (one file, a schema per domain) |
-| `DRISHTI_EDITION` | `drishti.edition` | empty | server | The edition (docs/admin/EDITIONS.md): blank is the full Drishti; risk is Drishti Risk. It names config/editions/&lt;name&gt;.yaml, read as a layer under the site's configuration before the packs load; every member of a cluster sets the same value, and the console learns it from /api/v1/about. A change needs a restart. |
-| `DRISHTI_EDITIONS_DIR` | `drishti.editions.dir`, `editions.dir` | `./config/editions` | console, server | the folder of the edition files (and features.yaml, default-packs.yaml) |
+| `DRISHTI_EDITION` | `drishti.edition` | empty | server | The edition (docs/admin/EDITIONS.md): blank is the full Drishti; risk is Drishti Risk. It names config/lenses/&lt;module&gt;/&lt;lens&gt;.yaml, read as a layer under the site's configuration before the packs load; every member of a cluster sets the same value, and the console learns it from /api/v1/about. A change needs a restart. |
 | `DRISHTI_EDIT_ENABLED` | `edit.enabled` (write-back) | `false` | write-back | the write-back switch: false refuses every change (UI, CLI, API) and shows no Submit |
 | `DRISHTI_EDIT_FILE` | `drishti.edit.file` | `./config/edit/edit.yaml` | server | Write-back (docs/guides/WRITE\_BACK.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml). Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only. |
 | `DRISHTI_EMBED_ENABLED` | `drishti.embed.enabled`, `embed.enabled` | `false` | console, server | off: no token endpoint, embed tokens refused. Needs drishti.security.enabled |
@@ -6216,7 +6209,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_FORCE_PW_CHANGE_ON_RESET` | `drishti.identity.force-password-change-on-reset` | `false` | server | after an administrator resets a password, the user must change it at the next sign-in |
 | `DRISHTI_FRED_SERIES` | fred-feed series | `DGS10,DFF` | packs | The FRED series read |
 | `DRISHTI_FRTB_ENABLED` | `drishti.engines.frtb-sa.enabled` (engine) | `true` | engine | run FRTB-SA on this node: /api/v1/frtb, FRSA, PLAY FRTB; needs var and sensitivities (live) |
-| `DRISHTI_FRTB_PARAMETERS` | `drishti.frtb.parameters-dir` (engine) | `./config/packs/market-risk/capital` | engine | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) |
+| `DRISHTI_FRTB_PARAMETERS` | `drishti.frtb.parameters-dir` (engine) | `./config/packs/banking/market-risk/capital` | engine | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) |
 | `DRISHTI_GLEIF_USER_AGENT` | gleif fetch | none | tools | The User-Agent sent to GLEIF by the gleif refresh script |
 | `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `./data/governance` | server | where proposals are kept with store: file; with content (the default) the folder is imported once and left in place |
 | `DRISHTI_HEARTBEAT_SECONDS` | build\_demo\_lakes.py | `30` | tools | How often a long lake build prints that it is alive |
@@ -6256,6 +6249,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_LAKE_ROW_GROUP_MB` | lake writer | none | tools | Row-group size of the Java lake writer, in MB |
 | `DRISHTI_LAYOUTS_ENABLED` | `drishti.layouts.enabled`, `layouts.enabled` | `true` | console, server | also needs a role with layout (every role but viewer, unless configured) |
 | `DRISHTI_LENSES` | `drishti.lenses` | `risk,world,market,trading` | server | Lenses (EDITIONS.md › The design as built, section 8): editions a person may open on a full instance ("Open Drishti Risk"), for their own session; no restart, every pack stays loaded. A lens hides, it does not secure. On by default (product owner, 2026-10-30): the four lenses; DRISHTI\_LENSES= (empty) turns them off. Ignored with an edition. |
+| `DRISHTI_LENS_DIR` | `drishti.lens-dir`, `lens.dir` | `./config/lenses` | console, server | the lenses' files: config/lenses/&lt;module&gt;/&lt;lens&gt;.yaml (one of no module in the folder itself), features.yaml |
 | `DRISHTI_LIVE_MAX_SUBSCRIPTIONS` | `live.max_subscriptions` | `32` | console | Subscriptions one browser's channel carries at most (views across all its tabs and workspace panes, the alerts bell, monitors; a view open in several tabs counts once). Each holds one stream to the server from the backend pool (backend.pool\_size). Beyond it a view says it is not live, and why, instead of silently not ticking. |
 | `DRISHTI_LOADER_HEAP` | store loaders | none | tools | The heap of the Java store loaders (Iceberg, ...) |
 | `DRISHTI_LOADS_DIR` | `drishti.loads.dir` | `./data/loads` | server | history per pack, and the administrators' expectation overrides (config/&lt;pack&gt;.yaml) |
@@ -6292,9 +6286,9 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_OIDC_REDIRECT_URI` | `auth.oidc.redirect_uri` | empty | console | default: &lt;console&gt;/auth/oidc/callback |
 | `DRISHTI_OPENAPI_URL` | `help.openapi_url` | empty | console | the address of the server's OpenAPI UI as a browser reaches it (blank: the page names /api/docs/ui on the server) |
 | `DRISHTI_OPENBLAS_ENABLED` | `drishti.engines.openblas.enabled` (engine) | `false` | engine | off as shipped (the Java kernels, the same figures); on: linear algebra on the bundled OpenBLAS on this node (live, no restart) for faster many-scope sums |
-| `DRISHTI_PACKS` | `drishti.packs.enabled`, `packs.enabled` | `default` | console, server | default: the edition's packs (drishti.edition), else config/editions/default-packs.yaml |
+| `DRISHTI_PACKS` | `drishti.packs.enabled`, `packs.enabled` | `default` | console, server | default: the edition's packs (drishti.edition), else config/packs/default-packs.yaml |
 | `DRISHTI_PACKS_DEPLOY_HISTORY` | `drishti.packs.deploy.history-file` | `./data/packs/deploy-history.jsonl` | server | the history of archive deployments and rollbacks |
-| `DRISHTI_PACKS_DIR` | `drishti.packs.dir`, `packs.dir` | `./config/packs` | console, server | Domain packs (config/packs/&lt;name&gt;/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples. Site settings below always override what a pack contributes. |
+| `DRISHTI_PACKS_DIR` | `drishti.packs.dir`, `packs.dir` | `./config/packs` | console, server | Domain packs (config/packs/&lt;domain&gt;/&lt;name&gt;/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples. Site settings below always override what a pack contributes. |
 | `DRISHTI_PACKS_EXTRA_DIRS` | `drishti.packs.extra-dirs`, `packs.extra_dirs` | empty | console, server | Further pack folders, comma-separated, looked in after dir: examples/packs holds the retired example packs (finance, genomics, logistics, retail-banking, climate-risk, operational-risk, liquidity-risk); name one in enabled to load it. |
 | `DRISHTI_PACKS_INSTALLED` | `drishti.packs.installed-dir`, `packs.installed_dir` | `./data/packs/installed` | console, server | Packs installed from a signed registry (Admin → Packs → From the registry); looked in before dir, so they win. |
 | `DRISHTI_PACKS_OUT` | pack generators | none | tools | Where the pack generators write |

@@ -534,6 +534,7 @@ def create_app(settings: Settings) -> FastAPI:
         return _modules_state.modules_for_page(ed.name if ed is not None and ed.active else None)
 
     templates.env.globals["page_modules"] = _page_modules
+    templates.env.globals["module_on"] = _modules_state.module_on          # a module's part of a page (the World landing's capital markets)
     templates.env.globals["screen_parts"] = _modules_state.screen_parts   # a module's parts of a core screen (the Pivot's MR lens)
     from core import menus as _menus
 
@@ -619,7 +620,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.business_dates = BusinessDates()
     from core.facts import FactsService
 
-    app.state.facts = FactsService(settings)                  # Home's fact of the day (config/packs/<pack>/config/facts.yaml)
+    app.state.facts = FactsService(settings)                  # Home's fact of the day (config/packs/<domain>/<pack>/config/facts.yaml)
     app.state.templates = templates
     from starlette.requests import ClientDisconnect
 

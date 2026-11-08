@@ -708,7 +708,7 @@ Where the generators put their output:
 
 | Generator | Output |
 |---|---|
-| `tools/packgen/banking/make_data.py` | `config/packs/<pack>/samples/<kind>.jsonl`; `--lake ROOT`: `<ROOT>/../build/lake-rows/banking-history.tar` and `banking-restated.tar`, then loaded (`--no-load` stops there); `--jsonl FILE`: loader rows |
+| `tools/packgen/banking/make_data.py` | `config/packs/<domain>/<pack>/samples/<kind>.jsonl`; `--lake ROOT`: `<ROOT>/../build/lake-rows/banking-history.tar` and `banking-restated.tar`, then loaded (`--no-load` stops there); `--jsonl FILE`: loader rows |
 | `tools/samplegen/bulk_trades.py` | `<data>/build/bulk/<system>/trade_<system>.<date>.jsonl.gz`, then `lake build` (`--no-lake` stops there) |
 | `tools/packgen/trades/make_trades.py` | `<data>/build/trades/<system>/trade_<system>.<date>.jsonl.gz`, then `lake build` with `--lake` |
 | `tools/realdata/normalise.py` | `tools/realdata/dataset/*.jsonl` (a country, group, series or Factbook profile a line) and the `meta.json` manifest |

@@ -240,7 +240,7 @@ You should see the country change colour and a tip, `Indonesia · click to open`
 
 ![The page of JUR-IDN: Indonesia, Jakarta, population 285.72, and the map with Indonesia highlighted; the breadcrumb at the top reads MX-20000001, JUR-AUS, JUR-IDN](img/t06/13-map-click.jpg)
 
-You should see **Indonesia's own page** (`JUR-IDN`), with the map now highlighting Indonesia, and the trail of pages you came by at the top (`JUR-AUS / JUR-IDN`). The panel that did all of this is three lines of the pack's Sutra, `config/packs/world-economy/sutras/politics-and-society/jurisdiction.v1.sutra.yaml`:
+You should see **Indonesia's own page** (`JUR-IDN`), with the map now highlighting Indonesia, and the trail of pages you came by at the top (`JUR-AUS / JUR-IDN`). The panel that did all of this is three lines of the pack's Sutra, `config/packs/economy/world-economy/sutras/politics-and-society/jurisdiction.v1.sutra.yaml`:
 
 ```yaml
 - id: geography
@@ -503,7 +503,7 @@ panels:
 ```
 
 The trading pack ships a screen written this way, by hand: the book desk, `/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`
-(`config/packs/trading/sutras/pages/book-desk.v1.sutra.yaml`).
+(`config/packs/banking/trading/sutras/pages/book-desk.v1.sutra.yaml`).
 
 **Command line.** As in step 13: `design list` shows *My screen · Trades of book BOOK-RATES-2*, and `design get <id> --yaml` prints it.
 

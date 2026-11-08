@@ -468,7 +468,7 @@ exposure explorer open Counterparty credit risk. F1 and **?** open the page's he
 date, and how the kinds join. Nothing on it is drawn by hand; it is inferred each time from what is loaded:
 
 - **Domains and kinds** come from the packs switched on for you: each pack's kinds, titled by their data contracts
-  (`config/packs/<pack>/contracts/<kind>.contract.yaml`). A kind whose contract says `class: computed` (VaR and ES, EE and PFE, the
+  (`config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`). A kind whose contract says `class: computed` (VaR and ES, EE and PFE, the
   what-ifs) is drawn **dashed**: it is computed on demand and never stored, so it has no count.
 - **Joins** are what the contracts declare: their `links:`, their fields' `link:` and the fields a pack's `graph.fields` names (the
   trade's `COUNTERPARTY` → counterparty, `PORTFOLIO` → book, `TRADER_ID` → trader; the P&L vector's and the exposure paths' `TRADE_ID`
@@ -3187,7 +3187,7 @@ python:                         # Calc on this pack's kinds (Alt+C on a view)
   dir: python                   # optional: where snippet files are (default python/)
 ```
 
-Snippets can also be files, `config/packs/<pack>/python/*.py`, read in name order after those in `pack.yaml`. A file starts
+Snippets can also be files, `config/packs/<domain>/<pack>/python/*.py`, read in name order after those in `pack.yaml`. A file starts
 with comment lines naming it; what comes after them is the code (the copyright header above them is not):
 
 ```python
@@ -3220,7 +3220,7 @@ computes.
 
 The shipped ones are written by `tools/packgen/banking/make_packs.py` (the generator kept its name from the banking packs it began with) from their sources,
 `tools/packgen/banking/snippets/<pack>/<name>.py` (read by `calc_snippets.py`; never edit the generated
-`config/packs/<pack>/python/` files: change the source and run the generator, see
+`config/packs/<domain>/<pack>/python/` files: change the source and run the generator, see
 [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)). A source starts, after its copyright header, with
 
 ```python
@@ -3793,7 +3793,7 @@ cells:
 
 A cell is `sql` or `python`. A notebook saved with a `slice` cell opens with that cell left out and a line saying so: slicing is the Pivot's. A notebook may
 also carry the catalogue's keys (`sample`, `tags`, `endorsement`, `owner`, `audience`); a shipped one is
-`config/bi/notebooks/pnl-vs-exposure-pandas.notebook.yaml`.
+`config/bi/notebooks/banking/pnl-vs-exposure-pandas.notebook.yaml`.
 
 ### 6. Promote
 

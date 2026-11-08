@@ -449,7 +449,7 @@ public final class BiFoundationCases {
     /** Every report of config/bi (on a model, on a dataset, and the boards: reports whose pages are walls of tiles), parsed. */
     static Map<String, Report> reports() throws IOException {
         Map<String, Report> out = new TreeMap<>();
-        try (Stream<Path> s = Files.list(BI.resolve("reports"))) {
+        try (Stream<Path> s = Files.walk(BI.resolve("reports"), 2)) {                  // and its domain folders
             for (Path f : s.filter(p -> p.toString().endsWith(".report.yaml")).sorted().toList()) {
                 ReportParser.Result r = ReportParser.parse(Files.readString(f));
                 if (r.report() != null) {

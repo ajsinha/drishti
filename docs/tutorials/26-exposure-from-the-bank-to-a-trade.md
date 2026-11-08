@@ -94,7 +94,7 @@ The command line at the top carries the PFE confidence (q 95% or 99%), collatera
 the tree on the left holds the bank, its legal entities, counterparties, netting sets and an open set's trades, each with its peak PFE.
 
 **What it reads.** The counterparty-risk pack's connector `exposure-store` keeps the paths as a vector column of the `exposure-path`
-table (`config/packs/counterparty-risk/pack.yaml`):
+table (`config/packs/banking/counterparty-risk/pack.yaml`):
 
 ```yaml
 connectors:

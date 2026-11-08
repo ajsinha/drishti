@@ -76,6 +76,10 @@ HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 import lakeconfig  # noqa: E402  (where the lakes are: config/lakes/<lake>.yaml)
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir, pack_dirs  # noqa: E402  (the one rule for where a pack's folder is)
+
 DEFAULT_ROOT = lakeconfig.DEMO_ROOT_REF   # config/lakes/demo.yaml: the demo lake's own folder
 DEFAULT_SERVER = "http://localhost:18480"
 SIGNAL_TIMEOUT = 30.0                        # seconds a data-load signal waits for its answer
@@ -133,8 +137,8 @@ class Packs:
         self.dir = packs_dir
         sys.path.insert(0, str(ROOT / "tools"))
         import packlake                               # a lake-form template read with the pack's lake: entries
-        self.specs = {p.name: packlake.view(yaml.safe_load((p / "pack.yaml").read_text(encoding="utf-8")))
-                      for p in sorted(packs_dir.iterdir()) if (p / "pack.yaml").is_file()}
+        self.specs = {name: packlake.view(yaml.safe_load((p / "pack.yaml").read_text(encoding="utf-8")))
+                      for name, p in pack_dirs(packs_dir).items()}
 
     def connector(self, pack: str, name: str) -> dict:
         return self.specs[pack]["connectors"][name]
@@ -514,7 +518,7 @@ class DemoLake:
                             other += 1                        # counted only: the file's date is the row's (the rules, section 1)
                         fh.write(json.dumps(doc, separators=(",", ":"), ensure_ascii=False) + "\n")
                         rows += 1
-        argv = ["--from", str(folder), "--pack", str(self.packs.dir / ds["pack"]), "--kind", ds["kind"], "--connector", ds["connector"],
+        argv = ["--from", str(folder), "--pack", str(pack_dir(ds["pack"], self.packs.dir)), "--kind", ds["kind"], "--connector", ds["connector"],
                 "--key", ds["key"], "--mode", REPLACE, "--lake", self.lake_name, "--lake-root", str(self.lake), "--engine", self.a.engine,
                 "-q", "--no-stamp"]
         code, summary = self.lb.run(self.lb.build_parser().parse_args(argv), say=lambda *x, **k: None)
@@ -550,7 +554,7 @@ class DemoLake:
             with stage.open("w", encoding="utf-8") as fh:
                 for line in state.values():
                     fh.write(self.names.rewrite_line(line if "snapshot" in ds else self.redate(line)) + "\n")   # the configured names
-            argv = ["--from", str(stage), "--pack", str(self.packs.dir / pack), "--kind", kind, "--connector", connector, "--key", key,
+            argv = ["--from", str(stage), "--pack", str(pack_dir(pack, self.packs.dir)), "--kind", kind, "--connector", connector, "--key", key,
                     "--mode", REPLACE, "--lake", self.lake_name, "--lake-root", str(self.lake), "--engine", self.a.engine, "-q", "--no-stamp"]
             code, summary = self.lb.run(self.lb.build_parser().parse_args(argv), say=lambda *x, **k: None)
             if code:

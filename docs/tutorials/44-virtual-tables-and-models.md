@@ -229,8 +229,8 @@ $ python3 tools/drishti.py tables migrate --dry-run --report migration.txt
 --- /dev/null
 +++ b/bi/counterparty_exposure_counterparties.table.yaml
 ...
---- a/config/bi/reports/live-trading-desk.report.yaml
-+++ b/config/bi/reports/live-trading-desk.report.yaml
+--- a/config/bi/reports/banking/live-trading-desk.report.yaml
++++ b/config/bi/reports/banking/live-trading-desk.report.yaml
 @@ -30,7 +30,7 @@
  sample: true
  endorsement: promoted

@@ -33,6 +33,7 @@ import argparse
 import hashlib
 import json
 import os
+import sys
 import threading
 import time
 import urllib.error
@@ -41,6 +42,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402,F401  (the one rule for where a pack's folder is: B.pack_dir for the refresh scripts)
 UA = "drishti-publicdata/1.0 (public-data refresh scripts; contact ajsinha@gmail.com)"
 COMMITTABLE, INTERNAL = "committable", "internal only"
 

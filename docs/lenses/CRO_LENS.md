@@ -359,7 +359,7 @@ story can be shown, and whether to add a second synthetic member to the generato
 ## 7. Data needed: the complete list
 
 Every contract follows the repository's conventions ([docs/contracts/README.md](../contracts/README.md)): one contract YAML per kind in
-`config/packs/<pack>/contracts/<kind>.contract.yaml` with `kind`, `mnemonic`, `class` (`fundamental`, `input`, `drishti-owned`,
+`config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml` with `kind`, `mnemonic`, `class` (`fundamental`, `input`, `drishti-owned`,
 `computed`), `grain`, `key`, `dated-by`, `cadence`, `storage` and `fields`; data delivered as **JSON Lines, gzipped**, in
 `data/testdata/<domain>/<kind>/*.jsonl.gz` for the demo, loaded into Delta (or Iceberg) partitioned by `business_date`; field names in
 Endur-style UPPER_SNAKE. The CRO lens is small in data volume (hundreds of rows a day) and wide in sources.
@@ -727,7 +727,7 @@ treasurer's and finance's spreadsheets). Only claims we can **show** in a demo a
 | Item | Value (proposed) |
 |---|---|
 | Lens id | `cro` (`drishti.lenses: risk,world,market,trading,cro`; the link **Open Drishti CRO**) |
-| Edition file | `config/editions/cro.yaml` (an edition and a lens from one file, as the others) |
+| Edition file | `config/lenses/cro.yaml` (an edition and a lens from one file, as the others) |
 | Mnemonic | `CRO` (the landing); `CRO BRIEF`, `CRO DETAIL`; checked against every pack's mnemonics |
 | Landing | `appetite` (B); tabs `brief` (C) and `detail` (A); the phone layout (decided) |
 | Links out | MCUBE, CCUBE, Oversight, Market, World (each opens in that lens, back returns) |

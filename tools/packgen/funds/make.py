@@ -46,7 +46,7 @@ import fundsread as R  # noqa: E402
 sys.path.insert(0, str(ROOT / "tools" / "testdata"))
 import publicsnap as SNAP  # noqa: E402  (the standard data pattern: data/testdata/<pack>/<kind>/)
 
-PACK = ROOT / "config" / "packs" / "funds"
+PACK = ROOT / "config" / "packs" / "capitalmarkets" / "funds"
 NAME = "funds"
 HEADER = "\n".join(Path(__file__).read_text(encoding="utf-8").splitlines()[:13]) + "\n\n"     # the licence header of a YAML file
 
@@ -208,13 +208,13 @@ def main(argv: list[str]) -> int:
     p = argparse.ArgumentParser(description="Build the funds pack from the downloaded data sets (no network).")
     p.add_argument("--cache", type=Path, default=None, help="the downloads (default <data>/publicdata/cache/funds)")
     p.add_argument("--check", action="store_true")
-    p.add_argument("--pack", type=Path, help="the pack folder to write or check (default config/packs/funds)")
+    p.add_argument("--pack", type=Path, help="the pack folder to write or check (default config/packs/capitalmarkets/funds)")
     p.add_argument("--testdata", type=Path, help="the test data folder the snapshot goes to (default data/testdata for the committed pack)")
     a = p.parse_args(argv)
     global PACK
-    PACK = a.pack.resolve() if a.pack else ROOT / "config" / "packs" / "funds"
+    PACK = a.pack.resolve() if a.pack else ROOT / "config" / "packs" / "capitalmarkets" / "funds"
     cache = (a.cache or default_cache()).resolve()
-    testdata = a.testdata.resolve() if a.testdata else SNAP.default_testdata(PACK, ROOT / "config" / "packs" / "funds")
+    testdata = a.testdata.resolve() if a.testdata else SNAP.default_testdata(PACK, ROOT / "config" / "packs" / "capitalmarkets" / "funds")
     if R.newest(cache / "nport", "_nport.zip") is not None and (cache / "sec" / "company_tickers_mf.json").is_file():
         docs = build(cache)
     elif a.check:

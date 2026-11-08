@@ -725,6 +725,16 @@ class FakeBackend:
                 "live": sel == "live", "previous": "2026-09-29", "earliest": "2021-09-30", "calendar": "USNY", "zone": "America/New_York",
                 "holidays": ["2026-10-12", "2026-11-11", "2026-11-26"]}
 
+    async def modules(self, ident=None):
+        """``GET /api/v1/modules`` as a server with every module on answers it: the shipped lenses (the core's and the banking module's
+        ``META-INF/drishti/lenses.yaml``), each with its modules, functions and Home cards; nothing off."""
+        import yaml
+        lenses = []
+        for f in ("drishti-server/src/main/resources/META-INF/drishti/lenses.yaml", "drishti-banking/src/main/resources/META-INF/drishti/lenses.yaml"):
+            lenses += (yaml.safe_load((CONSOLE.parent / f).read_text(encoding="utf-8")) or {}).get("lenses") or []
+        return {"modules": [{"id": m, "title": m, "domain": m} for m in ("core", "banking", "economy", "capitalmarkets")], "off": [],
+                "lenses": lenses, "functions": {"off": []}}
+
     async def about(self, ident=None):
         return {"product": "Drishti", "version": "1.2.0", "built": "2026-09-30T12:00:00Z", "java": "21.0.12 (Ubuntu)",
                 "uptimeSeconds": 3725, "sutras": ["irs-vanilla v3"], "securityEnabled": False,

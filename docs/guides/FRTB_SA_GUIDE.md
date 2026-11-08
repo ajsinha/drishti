@@ -69,7 +69,7 @@ All money is in the reporting currency (USD unless asked); every sensitivity is 
 ## 3. The inputs and their data contract
 
 The full data contract (every field, its unit, the checks, the record layouts and the samples) is [FRTB.md](../contracts/FRTB.md); the
-YAML contracts are in `config/packs/market-risk/contracts/`. In short:
+YAML contracts are in `config/packs/banking/market-risk/contracts/`. In short:
 
 | Kind (command) | What | Grain | Required |
 |---|---|---|---|
@@ -310,7 +310,7 @@ revaluations are used as delivered.
 
 ## 12. Parameters as configuration
 
-The parameters are two files of the market-risk pack, `config/packs/market-risk/capital/frtb-sa-sbm.yaml` (MAR21: risk weights, the
+The parameters are two files of the market-risk pack, `config/packs/banking/market-risk/capital/frtb-sa-sbm.yaml` (MAR21: risk weights, the
 published GIRR table, correlations, the scenario multipliers, curvature shocks) and `frtb-sa-drc-rrao.yaml` (MAR22 and MAR23: LGDs,
 seniority order, maturity scaling, DRC risk weights, RRAO weights and the product-type mapping). Each names its `regime`, `version` and
 `effective-from` and the paragraph of every value. The engine reads them at start and checks every value and range (a symmetric unit-

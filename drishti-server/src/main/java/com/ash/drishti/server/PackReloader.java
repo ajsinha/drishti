@@ -189,7 +189,7 @@ public final class PackReloader implements AutoCloseable {
 
     private List<Path> roots() {
         List<Path> out = new ArrayList<>();
-        out.add(Path.of(packsDir).toAbsolutePath().normalize());
+        out.addAll(com.ash.drishti.api.PackFolders.roots(Path.of(packsDir).toAbsolutePath().normalize()));   // and its domain folders
         if (installedDir != null && !installedDir.isBlank()) {
             out.add(Path.of(installedDir).toAbsolutePath().normalize());
         }

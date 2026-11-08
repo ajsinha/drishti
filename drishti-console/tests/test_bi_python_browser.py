@@ -37,7 +37,7 @@ from bi_report_helpers import clean, open_report, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, ROOT, trade  # noqa: E402
 
 DAY = "2026-10-08"
-SAMPLE = ROOT / "config/bi/reports/python-desk-risk.report.yaml"
+SAMPLE = ROOT / "config/bi/reports/banking/python-desk-risk.report.yaml"
 
 
 def variant(run: str) -> str:
@@ -51,7 +51,7 @@ class Stack(bi_report_stack.ReportStack):
     def prepare(self, work):
         python = work / "config/bi/python"
         python.mkdir(parents=True, exist_ok=True)
-        for f in (ROOT / "config/bi/python").glob("*.python.yaml"):
+        for f in (ROOT / "config/bi/python").glob("*/*.python.yaml"):
             (python / f.name).write_text(f.read_text(encoding="utf-8"))
         reports = work / "config/bi/reports"
         reports.joinpath("python-desk-risk.report.yaml").write_text(SAMPLE.read_text(encoding="utf-8"))

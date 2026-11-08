@@ -105,7 +105,7 @@ def test_refusals(cache):
     with pytest.raises(B.Refusal):
         FU.refresh(ns(cache, scope="TICKERS:5"))
     with pytest.raises(B.Refusal):
-        FU.refresh(ns(cache, out=str(B.ROOT / "config" / "packs" / "funds"), scope="FUNDS:3"))
+        FU.refresh(ns(cache, out=str(B.ROOT / "config" / "packs" / "capitalmarkets" / "funds"), scope="FUNDS:3"))
     with pytest.raises(B.Refusal):
         FU.refresh(ns(cache, out="/tmp/elsewhere"))                  # the committed pack is written where it lives
 

@@ -33,6 +33,9 @@ ROOT = Path(__file__).resolve().parents[2]
 TD = ROOT / "data" / "testdata"
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "trades"))
 sys.path.insert(0, str(ROOT / "tools" / "lake"))
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
 import schema as TS  # noqa: E402
 import feedfiles as FF  # noqa: E402  (our dated files and tars: DATA_LAKE_GUIDE.md section 5.2)
 import filedate  # noqa: E402
@@ -116,7 +119,7 @@ class TestData(unittest.TestCase):
         self.assertEqual(len(self.dates), 60)
         packs = {}
         for ds in self.m["datasets"]:
-            spec = packs.setdefault(ds["pack"], yaml.safe_load((ROOT / "config" / "packs" / ds["pack"] / "pack.yaml").read_text(encoding="utf-8")))
+            spec = packs.setdefault(ds["pack"], yaml.safe_load((pack_dir(ds["pack"]) / "pack.yaml").read_text(encoding="utf-8")))
             conn = spec["connectors"][ds["connector"]]
             self.assertEqual(conn["plugin"], "delta", ds)
             self.assertIn(ds["kind"], conn["kinds"], ds)
@@ -274,7 +277,7 @@ class TestData(unittest.TestCase):
         self.assertEqual(set(snaps), {"quote", "news"})
         sys.path.insert(0, str(ROOT / "tools" / "testdata"))
         import capture_market as CM
-        want = CM.targets(ROOT / "config" / "packs" / "news-and-markets")
+        want = CM.targets(ROOT / "config" / "packs" / "economy" / "news-and-markets")
         for kind, ds in snaps.items():
             self.assertEqual((ds["pack"], ds["connector"]), ("news-and-markets", "news-store"))
             docs = {d[ds["key"]]: d for d in lines(TD / ds["folder"])}

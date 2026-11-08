@@ -48,7 +48,7 @@ needs only a shell: `tar` and `cp` are enough to do by hand what `pack deploy` d
 | Artifact | What it is | Made by | Goes to (on the server) | Server notices it |
 |---|---|---|---|---|
 | **Pack bundle** `<name>-<version>.tar.gz` (+ `.sha256`) | one pack, versioned, with a manifest of every file's checksum | `pack bundle` | unpacked by `pack deploy` into the **packs folder**: `drishti.packs.dir` (`DRISHTI_PACKS_DIR`, default `./config/packs`) or `drishti.packs.installed-dir` (`./data/packs/installed`, searched first) | the server checks and loads the copied folder by itself (`drishti.packs.watch`); `DRISHTI_PACKS` keeps it for every start; Admin → Packs → Load does it at once |
-| **Pack folder** `config/packs/<name>/` | the same content, unpacked (what git holds) | you, `pack new` | the same places, as `<packs folder>/<name>/` | the same |
+| **Pack folder** `config/packs/<domain>/<name>/` | the same content, unpacked (what git holds) | you, `pack new` | the same places, as `<packs folder>/<name>/` | the same |
 | **Sutra files** `sutras/**/*.sutra.yaml` | one screen each; inside a pack's `sutras/` or a site folder | `sutra design`, `sutra gen`, the Screen Designer's export | `<pack>/sutras/` (or the site Sutra folder, `drishti.rachana.dirs`) | **hot reload**: seconds, no restart |
 | **`config/about.yaml`** (+ `about.<lang>.yaml`, `help.yaml`, `formats.yaml`) | glossary text and formats of a pack | you | `<pack>/config/` | on pack load / restart; Sutra help follows hot reload |
 | **Delta lake** | the data, `<root>/<domain>/<kind>/business_date=…/` | `data ingest --lake`, `tools/lake/*` | `DRISHTI_DELTA_ROOT` (or `s3a://…`) | the connector re-reads the table version every `refresh-seconds` (10) and rebuilds its index every minute |
@@ -72,7 +72,7 @@ A running server is **never touched** by `pack deploy`. That is deliberate: copy
 ## 3. Make a bundle
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack bundle config/packs/trading --out dist
+drishti-console/.venv/bin/python tools/drishti.py pack bundle config/packs/banking/trading --out dist
 ```
 
 Captured on a fresh clone (the shipped `trading` pack; the examples below use it throughout, and any pack folder works the same way):
@@ -245,7 +245,7 @@ rmdir ../stage
 The point of a bundle is that **what you tested is what you ship**. Build once, on CI, and copy the same file through the stages:
 
 ```text
-git (config/packs/trading, tag v1.0.1)
+git (config/packs/banking/trading, tag v1.0.1)
    │  CI: pack check, pack bundle
    ▼
 trading-1.0.1.tar.gz + .sha256        ← built ONCE, stored as a CI artifact
@@ -268,7 +268,7 @@ All of these are plain text files, so they are copied like anything else.
 
 - **Sutras** (`*.sutra.yaml`) made by `sutra design`, `sutra gen`/`sutragen` or the Screen Designer are ordinary files. Copy them into a pack's `sutras/<folder>/`. On a **running** server they hot-reload ([RACHANA_REFERENCE.md, Editing files on disk](RACHANA_REFERENCE.md#hot-reload-the-workbench-and-governance)): a valid file replaces the old one at once, an invalid one is reported and the last good version stays live, a deleted file's Sutras disappear.
 - **Designer export:** `drishti.py design export <id> -o design.zip` writes a zip of the Sutra and its samples. Unzip it and copy the `.sutra.yaml` into the pack (git first, then the next bundle); or hot-copy it onto a server for an urgent fix, and put the same file into git afterwards so the next bundle contains it.
-- **`config/about.yaml`** (and `about.<lang>.yaml`): copy into `<pack>/config/`. Check it with `pack about-check config/packs/<name>` before you ship ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md)).
+- **`config/about.yaml`** (and `about.<lang>.yaml`): copy into `<pack>/config/`. Check it with `pack about-check config/packs/<domain>/<name>` before you ship ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md)).
 
 Prefer shipping a Sutra change as a **new bundle** (a version, a checksum, a rollback). Hot-copy is for emergencies, and
 `pack verify <deployed folder>` will then report the drift until you redeploy a bundle.
@@ -292,7 +292,7 @@ while it is half-finished.** Write somewhere else, then make it appear in one st
 
 ```bash
 # 1. produce a day somewhere private (the ingest tool is idempotent per business date)
-python3 tools/drishti.py data ingest --from new-day.jsonl --pack config/packs/trading --store files --root /srv/stage/files
+python3 tools/drishti.py data ingest --from new-day.jsonl --pack config/packs/banking/trading --store files --root /srv/stage/files
 # 2. copy the date folder next to the others: first under a dot name the connector skips, then rename (a rename is atomic on one filesystem)
 cp -r /srv/stage/files/trading/2026-10-05 /srv/drishti/files/trading/.2026-10-05.part
 mv /srv/drishti/files/trading/.2026-10-05.part /srv/drishti/files/trading/2026-10-05
@@ -343,7 +343,7 @@ Data rolls back by `mv files files.new && mv files.old files` (section 8) or, fo
 
 ## 11. Git as the source of truth, and a CI example
 
-Keep `config/packs/<name>/` in git, **including** the version bump. A release is a tag. Production is reproducible from the tag:
+Keep `config/packs/<domain>/<name>/` in git, **including** the version bump. A release is a tag. Production is reproducible from the tag:
 `git checkout v1.0.1 && pack bundle` gives the same bytes. Never edit a deployed folder; change git, build, deploy.
 
 A GitHub Actions job that produces the bundle (adapt the syntax to any CI):
@@ -360,8 +360,8 @@ jobs:
         with: { distribution: temurin, java-version: 21 }
       - uses: astral-sh/setup-uv@v5
       - run: ./mvnw -q -DskipTests package -pl drishti-server -am        # the exec jar that lint and test use
-      - run: uv run --with pyyaml python tools/drishti.py pack check config/packs/trading --strict --junit build/reports
-      - run: uv run --with pyyaml python tools/drishti.py pack bundle config/packs/trading --out dist
+      - run: uv run --with pyyaml python tools/drishti.py pack check config/packs/banking/trading --strict --junit build/reports
+      - run: uv run --with pyyaml python tools/drishti.py pack bundle config/packs/banking/trading --out dist
       - run: uv run --with pyyaml python tools/drishti.py pack verify dist/trading-*.tar.gz
       - uses: actions/upload-artifact@v4
         with: { name: trading-bundle, path: "dist/trading-*" }
@@ -419,7 +419,7 @@ The checksum check makes the pod fail to start on a damaged artifact. Rolling ba
 The tools are the same; use `py` and backslash or forward-slash paths. PowerShell:
 
 ```powershell
-drishti-console\.venv\Scripts\python tools\drishti.py pack bundle config\packs\trading --out dist
+drishti-console\.venv\Scripts\python tools\drishti.py pack bundle config\packs\banking\trading --out dist
 drishti-console\.venv\Scripts\python tools\drishti.py pack deploy dist\trading-1.0.1.tar.gz --to D:\drishti\packs --backup D:\drishti\backups
 Get-FileHash dist\trading-1.0.1.tar.gz -Algorithm SHA256     # compare with the .sha256 file
 tar -xzf dist\trading-1.0.1.tar.gz -C D:\drishti\stage   # tar.exe ships with Windows 10+; then move the folder into the packs folder
@@ -437,7 +437,7 @@ More in [GETTING_STARTED.md (Windows)](GETTING_STARTED.md#drishti-on-windows).
 | `checksum mismatch: <file>` / `file not in the manifest: <file>` | a deployed or unpacked pack was edited by hand | put the change in git and ship a new bundle, or redeploy the bundle |
 | `the bundle needs server >=X but the target is Y` | the bundle was built against a newer server | upgrade the server, or rebuild with `--requires-server` if you know it is compatible |
 | `unsafe entry` | a handmade archive with `..`, absolute paths or links | rebuild it with `pack bundle` |
-| `the pack fails pack check` | lint/test failed before bundling | run `pack check config/packs/<name>`; fix; `--no-check` only for a diagnosis |
+| `the pack fails pack check` | lint/test failed before bundling | run `pack check config/packs/<domain>/<name>`; fix; `--no-check` only for a diagnosis |
 | `no drishti-server-*-exec.jar` | verify/bundle need the jar for lint and test | build it, set `DRISHTI_JAR`, or `--no-sutra` on a target that has no Java |
 | deployed, but the old content is served | the watcher has not run yet (it waits for the copy to be quiet for `drishti.packs.reload-debounce`, 750 ms, then checks), `drishti.packs.watch` is `off`, or the new version was refused and the last good one keeps running | wait a few seconds and look at the pack's row in Admin → Packs for a problem; with `watch: off`, use Admin → Packs → Load/Unload or restart |
 | deployed, but the pack is not in Admin → Packs | the folder is not in the packs folder the server watches (`--to` differs from `drishti.packs.dir` / `installed-dir`), the watch is off, or it does not check out | check the path; Admin → Packs → Load shows the reason; or add it to `DRISHTI_PACKS` and restart |

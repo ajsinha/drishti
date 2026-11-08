@@ -50,7 +50,7 @@ def jvm_parent() -> argparse.ArgumentParser:
     return p
 
 
-SUTRA_EXAMPLES = ("examples:\n  drishti.py sutra lint config/packs/market-risk --strict\n  drishti.py sutra test config/packs/market-risk --junit build/market-risk.xml\n"
+SUTRA_EXAMPLES = ("examples:\n  drishti.py sutra lint config/packs/banking/market-risk --strict\n  drishti.py sutra test config/packs/banking/market-risk --junit build/market-risk.xml\n"
                   "  drishti.py sutra shape samples/ --out build\n  drishti.py sutra design samples/ --kind ticket\n"
                   "Unknown options are passed to the Java tool. Exit codes as the Java tool: 0 ok, 1 problems, 2 usage.")
 

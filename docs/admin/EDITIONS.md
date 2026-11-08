@@ -20,6 +20,34 @@ Yes: by editing configuration you run a Drishti instance as **Drishti Risk**, **
 Docker and AWS ECS; how to switch back; what the edition includes and hides; how to adjust it without forking; how to make your own; and
 how to troubleshoot. The design is [section 13](#13-the-design) of this document.
 
+## Editions are lenses of modules
+
+An edition is a **lens** run for the whole instance, and every lens belongs to a **module**
+([ACCESS_MODEL.md](../architecture/ACCESS_MODEL.md), [DOMAIN_MODULES.md](../architecture/DOMAIN_MODULES.md) section 8). The files that were
+`config/editions/` are the lenses' files, in their module's folder:
+
+| Lens (`drishti.edition` or `drishti.lenses`) | File | Modules it needs | Packs, by module |
+|---|---|---|---|
+| risk | `config/lenses/banking/risk.yaml` | banking | core: core · banking: market-data, trading, counterparty-risk, market-risk |
+| trading | `config/lenses/banking/trading.yaml` | banking | core: core · banking: market-data, trading, market-risk, counterparty-risk |
+| market | `config/lenses/banking/market.yaml` | banking, capitalmarkets | core: core · banking: market-data |
+| world | `config/lenses/economy/world.yaml` | economy (capitalmarkets for its company, filing and fund parts) | economy: world-economy, news-and-markets · capitalmarkets: us-equities, funds · core: gleif |
+
+- **One folder**, `config/lenses` (`drishti.lens-dir`, `DRISHTI_LENS_DIR`; the console's `lens.dir`): a lens's file is
+  `config/lenses/<module>/<lens>.yaml`; the feature presets every lens uses are `config/lenses/features.yaml`. A module that is off offers
+  none of its lenses (the registry's lens needs its modules), so its file is never read.
+- **Packs by module**: a lens's `packs.enabled` names its packs under their modules; a module that is off brings none of them. The full
+  product's packs (no lens) are `config/packs/default-packs.yaml`, by module too.
+- **A lens carries its experience**: Home (landing, cards, chips, sections), menus, Help (sections, Knowledge pages), the Admin pages, BI
+  datasets and models and the branding, as the edition file did; a card or chip whose function belongs to a module that is off is not
+  shown, and the World landing draws its companies, filings and funds only while **capitalmarkets** is on. The Public sector lens is the
+  economy module's (`config/lenses/economy/`).
+- **Upgrade**: a site's own edition file moves from `config/editions/<name>.yaml` to `config/lenses/<module>/<name>.yaml` (a lens of no
+  module: `config/lenses/<name>.yaml`); `DRISHTI_EDITIONS_DIR` is now `DRISHTI_LENS_DIR`. `drishti.edition` and `drishti.lenses` are
+  unchanged. A list in `packs.enabled` is still read as it was.
+
+The rest of this guide says *edition* for a lens run for the whole instance.
+
 ## Contents
 
 1. [Run an instance as Drishti Risk](#1-run-an-instance-as-drishti-risk)
@@ -54,8 +82,8 @@ how to troubleshoot. The design is [section 13](#13-the-design) of this document
 
 *The product view of Drishti Risk (who uses it, their questions by day, month and year, what the lens answers today, the gaps and the proposals): [RISK_LENS.md](../lenses/RISK_LENS.md).*
 
-The setting is `drishti.edition` (environment variable `DRISHTI_EDITION`). It names `config/editions/risk.yaml` in the folder
-`drishti.editions.dir` (`DRISHTI_EDITIONS_DIR`, default `./config/editions` relative to the server's working folder). Set it **on the
+The setting is `drishti.edition` (environment variable `DRISHTI_EDITION`). It names `config/lenses/banking/risk.yaml` in the folder
+`drishti.lens-dir` (`DRISHTI_LENS_DIR`, default `./config/lenses` relative to the server's working folder). Set it **on the
 server only**: the console asks the server (`/public/about`, the same answer as `/api/v1/about`'s `edition`) and follows. A change needs a
 restart of the server; the console follows within its check interval (`backend.check_seconds`, 5 s) or at its next start.
 
@@ -101,7 +129,7 @@ console section needs nothing: it learns the edition from drishti-main.
 DRISHTI_EDITION=risk docker compose -f deploy/docker/compose.yaml up -d
 ```
 
-The images carry `config/editions/` (server and console).
+The images carry `config/lenses/` (server and console).
 
 **AWS ECS.** Set `DRISHTI_EDITION=risk` in your environment file (the one `deploy/aws/env.example` documents), then register the task
 definitions again and roll the services (`deploy/aws/ecs/register.sh --nodes`, as in [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-b-drishti-on-aws-ecs-efs-and-s3)).
@@ -125,7 +153,7 @@ Check it from the command line: `curl -s http://localhost:18480/public/about` an
 
 Blank the setting (remove `drishti.edition` from `application.local.yaml`, unset `DRISHTI_EDITION`, or set it empty) and restart the
 server. `/public/about` then answers `"edition": null` and everything is exactly as without editions: the default packs
-(`config/editions/default-packs.yaml`), every command, menu, help page, Admin page and BI dataset.
+(`config/packs/default-packs.yaml`), every command, menu, help page, Admin page and BI dataset.
 
 Packs an administrator loaded from Admin → Packs before the switch are in `data/packs/added.yaml`; with an allow-only edition the ones
 outside it are skipped, and they load again when you switch back.
@@ -139,7 +167,7 @@ outside it are skipped, and they load again when you switch back.
 | **Menus** | Views (above), BI, Admin, Help (Help centre, Knowledge, Install and run, About); footer: Help, About, Release notes | Build, Forms, the competitive analysis link |
 | **Features** | BI (the edition's datasets), VaR, exposure, layouts, workspaces, monitors, alerts, reports, lakes, the data map | Calc and Python visuals, the Sutra designer, Studio, Build, Forms, AI, embedding |
 | **Admin pages** | users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, health, caches, capacity, BI, scopes (Ad-hoc scopes: every person's VaR baskets) | AI, collaboration, embedding, edits, compute |
-| **BI datasets** (the table layer's tables) | `bi.market_risk_var_latest`, `bi.market_risk_var_official`, `bi.counterparty_exposure_counterparties`, `bi.counterparty_exposure_netting_sets`, `bi.counterparty_exposure_official`, `bi.counterparty_exposure_official_counterparties`, `bi.counterparty_exposure_official_netting_sets`, `bi.live_exposure_netting`, `bi.trading_risk_*` (models `market-risk-var`, `counterparty-exposure`, `live-exposure`, and the reports on them) | every other dataset, model, report and board |
+| **BI datasets** (the table layer's tables) | `banking.market_risk_var_latest`, `banking.market_risk_var_official`, `banking.counterparty_exposure_counterparties`, `banking.counterparty_exposure_netting_sets`, `banking.counterparty_exposure_official`, `banking.counterparty_exposure_official_counterparties`, `banking.counterparty_exposure_official_netting_sets`, `banking.live_exposure_netting`, `bi.trading_risk_*` (models `market-risk-var`, `counterparty-exposure`, `live-exposure`, and the reports on them) | every other dataset, model, report and board |
 
 A hidden command is hidden from people only. The engines still read every kind they need (the VaR engine reads P&L vectors, positions,
 hierarchies, scenario PVs and FX; the exposure engine its paths and agreements), and the API is the same.
@@ -214,7 +242,7 @@ drishti:
     packs:
       allow-only: false            # let Admin -> Packs load other packs too
     bi:
-      datasets: [bi.market_risk_var_latest, bi.market_risk_var_official, bi.trades_basic_trade]   # a list replaces the edition's
+      datasets: [banking.market_risk_var_latest, banking.market_risk_var_official, banking.trades_basic_trade]   # a list replaces the edition's
 ```
 
 and in the console's `drishti-console/config/application.local.yaml` (menus, Home and help are drawn by the console):
@@ -271,7 +299,7 @@ Check with `drishti-console/tests/test_branding_guard.py`: it renders the consol
 Copy the shipped file and edit it:
 
 ```bash
-cp config/editions/risk.yaml config/editions/my-desk.yaml
+cp config/lenses/banking/risk.yaml config/lenses/my-desk.yaml
 ```
 
 | Key | What it does |
@@ -280,7 +308,7 @@ cp config/editions/risk.yaml config/editions/my-desk.yaml
 | `packs.enabled`, `packs.allow-only` | the packs it loads; whether others are refused |
 | `commands.allow`, `commands.also-allow` | the commands people may type and see (empty: all) |
 | `commands.words` | `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT`, `DATAMAP`, `DATA`, `VAR`, `EXP`, `SMAT`, `PLAY`: `on` or `off`. `DATA` (Export data) is on in all four: off, `DATA ...` answers `DRS-4023` and `/data`, `/api/data/...` and the server's `/api/v1/data` answer 404. Each edition also sets the feature `internal-only-data` off, so datasets marked internal only are listed but not downloaded. `PLAY` (the VaR Playground) is on in Drishti Risk and Drishti Trading, off in Drishti Market and Drishti World: off, `PLAY VAR ...` answers `DRS-4023`, `/play` and `/api/play/...` answer 404, and the VaR page offers no **Playground** link. `SMAT` (the scenario matrix) is on in Drishti Risk and Drishti Trading, off in Drishti Market and Drishti World: off, `SMAT ...` answers `DRS-4023`, `/smat` and `/api/smat/...` answer 404, and no page offers its **Scenario matrix** link (lens-aware: a person looking through a Market or World lens sees none) |
-| `features` | presets of existing switches (`config/editions/features.yaml` says which settings each one sets); `off` presets false, anything else true |
+| `features` | presets of existing switches (`config/lenses/features.yaml` says which settings each one sets); `off` presets false, anything else true |
 | `bi.datasets`, `bi.models` | the BI datasets and models offered (a dataset name may end in `*`); reports and boards follow |
 | `menus.top` | the top menus by id, in order; a menu not named is not drawn (none: Views, Engines, BI, Build, Admin, Help). The Engines menu (`engines` in `drishti-console/config/sitemap.yaml`) has a column per compute engine running in the cluster that the person's role opens (`opens:`), and is not drawn for a role that opens none; the engine's command words follow the same `opens:` (left out of the type-ahead, refused in words when typed), Help does not. The subject menus (`subject: true`: `blotter`, `positions`, `risk`, `counterparties`; `curves`, `volatility`, `fx`, `credit`; `economies`, `markets`, `companies`) are drawn only where a `menus.top` names them. A menu's `gather: [ids]` puts the columns of those menus first in its own: the one **Markets** menu gathers `curves`, `volatility`, `fx` and `credit`, then its own Equities and commodities and News and quotes, each item picked by the edition's `menus.markets` (Drishti Trading: rates, vols, FX, credit, equities and commodities; Drishti World: news and quotes). Drishti Risk: Views, Engines, BI, Admin, Help; Drishti Trading: Views, Engines, Markets, Blotter, Positions, Risk, Counterparties, Help (BI and Admin by command: `BI <GO>`, `ADMIN <GO>`); Drishti Market: Views, Curves, Volatility, FX, Credit, BI, Admin, Help; Drishti World: Views, Economies, Markets, Companies, BI, Admin, Help |
 | `menus.<menu>` | the items shown per menu (`views`, `bi`, `build`, `admin`, `help`, `footer`, or a subject menu), by the ids in `drishti-console/config/sitemap.yaml` |
@@ -317,7 +345,7 @@ VaR sharding, the exposure engine and every other cluster service work the same 
 
 | What you see | Why | Fix |
 |---|---|---|
-| The server does not start: `drishti.edition='x': no edition file …` | the name does not match a file in `drishti.editions.dir` | check the name, or set `DRISHTI_EDITIONS_DIR` to the folder of the edition files |
+| The server does not start: `drishti.edition='x': no edition file …` | the name does not match a file in `drishti.lens-dir` | check the name, or set `DRISHTI_LENS_DIR` to the folder of the edition files |
 | A command answers `DRS-4023` "is not part of the edition", or the type-ahead does not offer it | the edition hides it (`commands.allow`) | add it with `drishti.edition-spec.commands.also-allow` (section 6), or use `FUNC` to see what is offered |
 | `FORM` (or another word) says "is not part of Drishti Risk" | the edition switches the word off (`commands.words`) | `edition.commands.words.FORM: on` in the console and `drishti.edition-spec.commands.words.form: on` on the server |
 | An Admin page or `/forms` answers 404 | the edition hides it (`admin.pages`, a feature off) | list the page in `admin.pages`, or switch the feature on |
@@ -330,7 +358,7 @@ VaR sharding, the exposure engine and every other cluster service work the same 
 
 *The product view of Drishti World (who uses it, their questions by day, month and year, what the lens answers today, the gaps and the proposals): [WORLD_LENS.md](../lenses/WORLD_LENS.md).*
 
-**Drishti World** (`world`, `config/editions/world.yaml`) is the public-data packs in one product: economies and regions (world-economy),
+**Drishti World** (`world`, `config/lenses/economy/world.yaml`) is the public-data packs in one product: economies and regions (world-economy),
 news and quotes (news-and-markets), US companies and filings (us-equities), legal entities (gleif), funds and ETFs (funds). Run it as
 section 1 says with `world` in place of `risk`:
 
@@ -380,7 +408,7 @@ your own that names no template gets Drishti Risk's page.
 
 *The product view of Drishti Market (who uses it, their questions by day, month and year, what the lens answers today, the gaps and the proposals): [MARKET_LENS.md](../lenses/MARKET_LENS.md).*
 
-**Drishti Market** (`market`, `config/editions/market.yaml`) is the bank's own market data in one product: curves, repo, fixings, FX
+**Drishti Market** (`market`, `config/lenses/banking/market.yaml`) is the bank's own market data in one product: curves, repo, fixings, FX
 spot, forwards and vols, swaption and cap vols, credit curves, bonds, equities, indexes, dividends, inflation, commodities and correlations
 (the market-data pack, with the core pack it extends). No trades and no VaR. Run it as section 1 says with `market` in place of `risk`:
 
@@ -417,7 +445,7 @@ no change, the curve chart shows OIS against projection, and the biggest moves s
 ```yaml
 edition:
   quality:
-    stale-days: 3                  # default 2 (config/editions/market.yaml)
+    stale-days: 3                  # default 2 (config/lenses/banking/market.yaml)
   home:
     chips: [CRV CRV-USD-OIS, FXV FXV-USDJPY, CDS CDS-SOLARIS, DATAMAP]
 ```
@@ -428,7 +456,7 @@ edition:
 
 *The product view of Drishti Trading (who uses it, their questions by day, month and year, what the lens answers today, the gaps and the proposals): [TRADING_LENS.md](../lenses/TRADING_LENS.md).*
 
-**Drishti Trading** (`trading`, `config/editions/trading.yaml`) is for traders and desk heads: my books, my P&L today, my VaR and limits,
+**Drishti Trading** (`trading`, `config/lenses/banking/trading.yaml`) is for traders and desk heads: my books, my P&L today, my VaR and limits,
 today's trades, my counterparties, and whether a new trade fits. It loads the same five packs as Drishti Risk (core, market-data, trading,
 market-risk, counterparty-risk) and shows the blotter, books and positions, risk on my book, counterparties and the market data a trader
 reads; regulatory, stress, collateral operations and macro economics are left out. Run it as section 1 says with `trading` in place of
@@ -515,7 +543,7 @@ Drishti stays one product with one code base. An **edition** is a named bundle o
 drishti.edition: risk               # blank: the full Drishti, exactly as without editions
 ```
 
-The value names a file, `config/editions/risk.yaml`, that sets in one place the packs, the commands people may use, the menus and features
+The value names a file, `config/lenses/banking/risk.yaml`, that sets in one place the packs, the commands people may use, the menus and features
 shown, Home, the help centre, the Admin pages, the BI datasets and the branding. The site's configuration still wins over the edition file
 key by key, so a bank adjusts one item without forking the edition. Switching edition is a configuration change and a restart, never a code
 change.
@@ -534,10 +562,10 @@ A **lens** (section 8) is the same file opened by one person on a full instance,
 
 | Area | Without an edition | With an edition |
 |---|---|---|
-| **Packs** | `DRISHTI_PACKS` chose the packs; the default list was in four places (Java, Python, two YAML files) | one list, `config/editions/default-packs.yaml` (copied into the `drishti-packs` jar at build, read by the console from disk); `drishti.packs.enabled` defaults to the word `default`: the edition's packs, else that list (set empty it is still empty: no packs); `allow-only` refuses other packs at start, in Admin → Packs, Deploy archive, the registry and the folder watcher |
+| **Packs** | `DRISHTI_PACKS` chose the packs; the default list was in four places (Java, Python, two YAML files) | one list, `config/packs/default-packs.yaml` (copied into the `drishti-packs` jar at build, read by the console from disk); `drishti.packs.enabled` defaults to the word `default`: the edition's packs, else that list (set empty it is still empty: no packs); `allow-only` refuses other packs at start, in Admin → Packs, Deploy archive, the registry and the folder watcher |
 | **Commands** | Admin → Commands switched a mnemonic off for everyone, which made its kind unreadable | an edition **command allow-list**, separate from kind access (`EditionCommands`): hidden from the command line, FUNC, the type-ahead, the packs' examples, the entity page and search (`404 DRS-4023`); the engines still read every kind. The reserved and console words (BI, RUPAKA, FORM, FUNC, WHAT, DATAMAP, DATA, VAR, EXP) switch on and off, with their pages |
 | **Menus** | the top bar was a list in a template; Views, Build, Help and the footer were fixed; the placeholder a trading example | `drishti-console/config/sitemap.yaml`: every menu item and footer link with an id and `requires:`; the edition lists what it shows per menu; the placeholder from configuration |
-| **Features** | about 15 console and 25 server flags; no switch for Build, Forms, Data map, Workspaces, Monitors, Alerts, Lakes; `studio.enabled` read nowhere | `config/editions/features.yaml` maps each feature an edition names to the flags of each side; new console flags `features.build`, `forms`, `datamap`, `workspaces`, `monitors`, `alerts`, `lakes`, `reports`, `collaboration`; `studio.enabled` wired |
+| **Features** | about 15 console and 25 server flags; no switch for Build, Forms, Data map, Workspaces, Monitors, Alerts, Lakes; `studio.enabled` read nowhere | `config/lenses/features.yaml` maps each feature an edition names to the flags of each side; new console flags `features.build`, `forms`, `datamap`, `workspaces`, `monitors`, `alerts`, `lakes`, `reports`, `collaboration`; `studio.enabled` wired |
 | **Home** | hero examples and facts followed packs; the rest fixed | sections switch off (`home.sections`), cards from the edition, and three Drishti Risk landings (section 7) |
 | **Help and Knowledge** | one fixed catalogue; any document reachable by its slug | categories and Knowledge pages follow the edition (Knowledge pages tagged by pack in `help.yaml`), pack guides follow its packs, unlisted slugs refused (`help.unlisted-slugs: refuse`) |
 | **Admin** | every tab always there | tabs, menu items and routes follow `admin.pages`; a hidden one answers 404 |
@@ -546,8 +574,8 @@ A **lens** (section 8) is the same file opened by one person on a full instance,
 
 ### 3. The edition file
 
-One YAML file per edition in `config/editions/` (folder `drishti.editions.dir`, `DRISHTI_EDITIONS_DIR`; the console's `editions.dir`). The
-shipped one, `config/editions/risk.yaml`, abridged:
+One YAML file per edition in `config/lenses/` (folder `drishti.lens-dir`, `DRISHTI_LENS_DIR`; the console's `editions.dir`). The
+shipped one, `config/lenses/banking/risk.yaml`, abridged:
 
 ```yaml
 edition: risk
@@ -562,7 +590,7 @@ commands:
 features: { bi: edition, var: on, exposure: on, calc: off, python: off, designer: off, build: off,
             forms: off, datamap: on, layouts: on, workspaces: on, monitors: on, alerts: on, reports: on, lakes: on, ai: off, embed: off }
 bi:
-  datasets: [bi.market_risk_var_latest, bi.market_risk_var_official, bi.counterparty_exposure_counterparties, ...]
+  datasets: [banking.market_risk_var_latest, banking.market_risk_var_official, banking.counterparty_exposure_counterparties, ...]
   models: [market-risk-var, counterparty-exposure, live-exposure]
 menus:
   views: [terminal, search, functions, datamap, var, exposure, reports, workspaces, monitors, alerts]
@@ -620,7 +648,7 @@ under the edition exactly as on the full product (the `*RiskEditionTest` classes
 
 1. **The edition layer.** `drishti-packs`: `edition/Edition.java` (the record), `edition/Editions.java` (reading, the default pack list,
    lenses), `edition/EditionEnvironmentPostProcessor.java`; `PackPaths.enabled(env)` (`default`: the edition's, else the default list);
-   `config/editions/default-packs.yaml` (the one list, copied into the jar by `drishti-packs/pom.xml`). Console: `core/edition.py`,
+   `config/packs/default-packs.yaml` (the one list, copied into the jar by `drishti-packs/pom.xml`). Console: `core/edition.py`,
    `core/config.py` (`Settings.layer`, `Settings.site`), learning in `core/backend_watch.py` and the app's start.
 2. **Packs.** `allow-only`: `PackEnvironmentPostProcessor` (start), `PackReloader.load` and `desired` (Admin → Packs, the folder
    watcher), `PackDeployService.stage` (Deploy archive, a failed check), `RegistryController.install` (the registry): `403 DRS-1017`.
@@ -637,7 +665,7 @@ under the edition exactly as on the full product (the `*RiskEditionTest` classes
    labels fold to icons below 1750 px (`drishti_nav.css`, `.tbar-menus[data-many]`).
 5. **BI.** `server/edition/EditionBi.java`, applied in `BiService.catalogueItems` and `BiService.itemOf`: datasets, models, reports, boards,
    Python visuals and notebooks follow `bi.datasets` and `bi.models`; the Analytics and BI, and Build, help sections follow `help.categories`.
-6. **Feature flags.** `config/editions/features.yaml`; console `features.*`; `/studio`, the Build workbench's entry, follows `features.build`.
+6. **Feature flags.** `config/lenses/features.yaml`; console `features.*`; `/studio`, the Build workbench's entry, follows `features.build`.
 7. **Home.** `home.sections` in `landing.html`; `home.cards`; the landings (section 7); the hook `home.landing`.
 8. **Help and Knowledge.** `routes/help_routes.py` (`shown`, `sections_for`), `core/guides.py` (`Guide.packs`), `packs:` on the Knowledge
    entries of `config/help.yaml`.
@@ -652,7 +680,7 @@ under the edition exactly as on the full product (the `*RiskEditionTest` classes
 
 ### 6. In a cluster
 
-One value, `drishti.edition`, on every server; each reads the same file (it ships in every image under `config/editions/`). A member that
+One value, `drishti.edition`, on every server; each reads the same file (it ships in every image under `config/lenses/`). A member that
 runs an edition publishes it in its capability digest (the service `edition`); Admin → Net warns when the members' editions differ
 (`CapabilityTable.warnings`, "the nodes run different editions"). Each member shows and refuses what its own edition says, so a mixed
 cluster is inconsistent until fixed: set the same value everywhere and restart the odd one. VaR sharding is untouched: the edition hides
@@ -736,7 +764,7 @@ role-based access later; it is not wired.
 
 The same mechanism serves other focused products without new code: liquidity and climate join `risk` as more lines once their measures
 exist; a **funds** edition (us-equities, gleif, funds) or a **data platform** edition (BI and Build without the risk packs) is one more file
-in `config/editions/`. Drishti World (section 12), Drishti Market (section 13) and Drishti Trading (section 14) were built exactly that way: one file, its landings, no
+in `config/lenses/`. Drishti World (section 12), Drishti Market (section 13) and Drishti Trading (section 14) were built exactly that way: one file, its landings, no
 change to the engines. The proposed **Drishti CRO** (a `cro` edition file in the editions folder, landings `appetite`, `brief` and `detail`, the command word `CRO`) is
 sketched in [CRO_LENS.md section 10](../lenses/CRO_LENS.md#10-the-lens-design); it needs new packs for the risk appetite catalogue,
 liquidity, capital and climate inputs, and the governance actions Oversight proposes. The proposed **Drishti CIO** (a `cio` edition
@@ -748,7 +776,7 @@ Drishti keeps today.
 ### 12. Drishti World
 
 The product owner asked for a second edition on the same mechanism (2026-10-29): **`world`**, branded **Drishti World**, the public-data
-packs in one product. It is one file, [`config/editions/world.yaml`](../../config/editions/world.yaml), plus its landings; nothing in the
+packs in one product. It is one file, [`config/lenses/economy/world.yaml`](../../config/lenses/economy/world.yaml), plus its landings; nothing in the
 engines changed. The IMF figures and the Yahoo prices in these packs are shown inside the bank (product owner, 2026-10-29); showing the
 edition outside it still needs a decision.
 
@@ -805,7 +833,7 @@ for "emerging markets"); a debt aggregate per group (computed, GDP-weighted, fro
 
 The product owner asked for a third edition on the same mechanism (2026-10-29, mock-ups approved: "mockups look cool, go ahead"):
 **`market`**, branded **Drishti Market**, the bank's own market data, the curves, surfaces and fixings that feed risk and valuations. No
-trades and no VaR. It is one file, [`config/editions/market.yaml`](../../config/editions/market.yaml), plus its landings and one console
+trades and no VaR. It is one file, [`config/lenses/banking/market.yaml`](../../config/lenses/banking/market.yaml), plus its landings and one console
 helper (`plugins/banking/market_landing.py`); nothing in the engines changed.
 
 | Area | Shown | Hidden |
@@ -880,7 +908,7 @@ A landing chosen in one lens is kept when it is also the next one's (`desk`, `ex
 
 The product owner asked for a fourth edition for traders and desk heads (2026-10-30, mock-ups approved: "show me mockups and then let us
 just build"): **`trading`**, branded **Drishti Trading**, a person's own books, P&L, VaR and limits, today's trades and counterparties, and
-whether the next trade fits. It is one file, [`config/editions/trading.yaml`](../../config/editions/trading.yaml), its landings, one console
+whether the next trade fits. It is one file, [`config/lenses/banking/trading.yaml`](../../config/lenses/banking/trading.yaml), its landings, one console
 helper (`plugins/banking/trading_landing.py`) and its read-only routes (`plugins/banking/routes/trading_routes.py`); one server change: the person's settings keep
 their View as choice (`tradingView`). Nothing in the engines changed.
 

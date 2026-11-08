@@ -52,6 +52,9 @@ ROOT = HERE.parents[2]
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "var"))
 sys.path.insert(0, str(ROOT / "tools" / "lake"))
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
 import feedfiles as FF  # noqa: E402  (tools/lake/feedfiles.py: our dated feed files)
 import factor_dictionary as D  # noqa: E402
 import factors as F  # noqa: E402
@@ -59,7 +62,7 @@ import positions as P  # noqa: E402
 
 PACK = "market-risk"
 SEED = "drishti-sensitivity-demo"
-PACK_YAML = ROOT / "config" / "packs" / PACK / "pack.yaml"
+PACK_YAML = pack_dir(PACK) / "pack.yaml"
 #: one daily standard deviation of each VaR model factor's move, in the unit its sensitivity is quoted in (bp, % or vol points)
 DAILY_SIGMA = {"IR": 6.0, "INF": 4.0, "CR.IG": 4.0, "CR.HY": 15.0, "FX": 0.6, "EQ": 1.1, "CO": 1.7, "VOL": 0.9}
 #: the curvature shock of each class (MAR21.5, MAR21.98-101): GIRR the largest delta risk weight as bp; the others the bucket's risk weight

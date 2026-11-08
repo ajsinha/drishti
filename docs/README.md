@@ -509,7 +509,7 @@ scripts are in the repository's history. The Windows QA script is a live procedu
 | **Sutra** | A layout for one kind of entity: one YAML file, `<name>.v<N>.sutra.yaml`, starting with `rachana: 1` |
 | **Rachana** | The grammar Sutras are written in; **Rachana-EL** is its expression language (`$.QUANTITY > 0`) |
 | **Inference** | Drishti laying out a view by itself from the shape of the data |
-| **Pack** | An industry's commands, layouts, links, roles and sample data, in `config/packs/<name>/` |
+| **Pack** | An industry's commands, layouts, links, roles and sample data, in `config/packs/<domain>/<name>/` |
 | **Source / connector** | Where documents come from: the demo samples, Delta Lake, PostgreSQL, Kafka, … A connector is one YAML file in `config/connectors` |
 | **Rūpaka (BI)** | Business intelligence inside Drishti: datasets, reports, boards; the `BI` menu and keyword (`RUPAKA` is its older name) |
 | **Form** | A pack's search form for a kind: `FORM <pack> <GO>` |

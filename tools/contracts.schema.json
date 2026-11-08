@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://drishti.local/schemas/data-contract.schema.json",
   "title": "Drishti data contract of one command (mnemonic) kind",
-  "description": "config/packs/<pack>/contracts/<kind>.contract.yaml. Conventions: docs/contracts/README.md; the format: its section 16. Checked by tools/contracts.py (drishti.py contract check).",
+  "description": "config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml. Conventions: docs/contracts/README.md; the format: its section 16. Checked by tools/contracts.py (drishti.py contract check).",
   "type": "object",
   "additionalProperties": false,
   "required": ["kind", "mnemonic", "pack", "version", "class", "status", "title", "description", "source", "grain", "key",

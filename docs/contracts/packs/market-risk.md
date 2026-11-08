@@ -17,7 +17,7 @@
 
 # Data contracts of the market-risk pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/market-risk/guides/market-risk.md](../../../config/packs/market-risk/guides/market-risk.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/banking/market-risk/guides/market-risk.md](../../../config/packs/banking/market-risk/guides/market-risk.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -48,7 +48,7 @@ A named historical or hypothetical shock set.
 
 |  |  |
 |---|---|
-| Contract | [stress-scenario.contract.yaml](../../../config/packs/market-risk/contracts/stress-scenario.contract.yaml) · version 1.0 |
+| Contract | [stress-scenario.contract.yaml](../../../config/packs/banking/market-risk/contracts/stress-scenario.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | stress-engine |
@@ -104,7 +104,7 @@ P&L of a desk under a scenario, by book.
 
 |  |  |
 |---|---|
-| Contract | [stress-result.contract.yaml](../../../config/packs/market-risk/contracts/stress-result.contract.yaml) · version 1.0 |
+| Contract | [stress-result.contract.yaml](../../../config/packs/banking/market-risk/contracts/stress-result.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | stress-engine |
@@ -165,7 +165,7 @@ Delta, vega and curvature by risk class and bucket (SBM).
 
 |  |  |
 |---|---|
-| Contract | [frtb-sensitivity.contract.yaml](../../../config/packs/market-risk/contracts/frtb-sensitivity.contract.yaml) · version 1.0 |
+| Contract | [frtb-sensitivity.contract.yaml](../../../config/packs/banking/market-risk/contracts/frtb-sensitivity.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | frtb-engine |
@@ -239,7 +239,7 @@ Daily P&L attributed to risk factors, new trades and residual.
 
 |  |  |
 |---|---|
-| Contract | [pnl-explain.contract.yaml](../../../config/packs/market-risk/contracts/pnl-explain.contract.yaml) · version 1.0 |
+| Contract | [pnl-explain.contract.yaml](../../../config/packs/banking/market-risk/contracts/pnl-explain.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | pnl-explain |
@@ -307,7 +307,7 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 
 |  |  |
 |---|---|
-| Contract | [trade-valuation.contract.yaml](../../../config/packs/market-risk/contracts/trade-valuation.contract.yaml) · version 1.0 |
+| Contract | [trade-valuation.contract.yaml](../../../config/packs/banking/market-risk/contracts/trade-valuation.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | risk-engine |
@@ -385,7 +385,7 @@ A position: one security held in one book (or one OTC trade), the trades that bu
 
 |  |  |
 |---|---|
-| Contract | [position.contract.yaml](../../../config/packs/market-risk/contracts/position.contract.yaml) · version 1.0 |
+| Contract | [position.contract.yaml](../../../config/packs/banking/market-risk/contracts/position.contract.yaml) · version 1.0 |
 | Class | drishti-owned |
 | Status | active |
 | Source | Drishti (the VaR engine derives positions from the trades of pnl-vector when a date loads, docs/guides/VAR_GUIDE.md section 15.6) |
@@ -478,7 +478,7 @@ A portfolio in terms of the positions inside it: longs and shorts, market value,
 
 |  |  |
 |---|---|
-| Contract | [portfolio.contract.yaml](../../../config/packs/market-risk/contracts/portfolio.contract.yaml) · version 1.0 |
+| Contract | [portfolio.contract.yaml](../../../config/packs/banking/market-risk/contracts/portfolio.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/banking) |
@@ -557,7 +557,7 @@ One trade's (or one position's) P&L under every scenario of the date's scenario 
 
 |  |  |
 |---|---|
-| Contract | [pnl-vector.contract.yaml](../../../config/packs/market-risk/contracts/pnl-vector.contract.yaml) · version 1.1 |
+| Contract | [pnl-vector.contract.yaml](../../../config/packs/banking/market-risk/contracts/pnl-vector.contract.yaml) · version 1.1 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/banking) |
@@ -663,7 +663,7 @@ A trade's present value under each historical scenario and its base PV of the sa
 
 |  |  |
 |---|---|
-| Contract | [scenario-pv.contract.yaml](../../../config/packs/market-risk/contracts/scenario-pv.contract.yaml) · version 1.1 |
+| Contract | [scenario-pv.contract.yaml](../../../config/packs/banking/market-risk/contracts/scenario-pv.contract.yaml) · version 1.1 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/var/make_var_data.py, scenario_fx.py) |
@@ -775,7 +775,7 @@ A currency's rate against USD today and under each historical scenario, as the r
 
 |  |  |
 |---|---|
-| Contract | [fx-scenario.contract.yaml](../../../config/packs/market-risk/contracts/fx-scenario.contract.yaml) · version 1.0 |
+| Contract | [fx-scenario.contract.yaml](../../../config/packs/banking/market-risk/contracts/fx-scenario.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/var/scenario_fx.py) |
@@ -829,7 +829,7 @@ The historical scenario days of a business date, oldest first: index i of every 
 
 |  |  |
 |---|---|
-| Contract | [scenario-set.contract.yaml](../../../config/packs/market-risk/contracts/scenario-set.contract.yaml) · version 1.1 |
+| Contract | [scenario-set.contract.yaml](../../../config/packs/banking/market-risk/contracts/scenario-set.contract.yaml) · version 1.1 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/banking) |
@@ -880,7 +880,7 @@ One node of a VaR hierarchy (MGMT or LEGAL): its level, parent, children, the bo
 
 |  |  |
 |---|---|
-| Contract | [risk-hierarchy.contract.yaml](../../../config/packs/market-risk/contracts/risk-hierarchy.contract.yaml) · version 1.0 |
+| Contract | [risk-hierarchy.contract.yaml](../../../config/packs/banking/market-risk/contracts/risk-hierarchy.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/banking) |
@@ -940,7 +940,7 @@ The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's 
 
 |  |  |
 |---|---|
-| Contract | [var-limit.contract.yaml](../../../config/packs/market-risk/contracts/var-limit.contract.yaml) · version 1.1 |
+| Contract | [var-limit.contract.yaml](../../../config/packs/banking/market-risk/contracts/var-limit.contract.yaml) · version 1.1 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/var/make_var_data.py) |
@@ -990,7 +990,7 @@ The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md secti
 
 |  |  |
 |---|---|
-| Contract | [desk-pnl.contract.yaml](../../../config/packs/market-risk/contracts/desk-pnl.contract.yaml) · version 1.0 |
+| Contract | [desk-pnl.contract.yaml](../../../config/packs/banking/market-risk/contracts/desk-pnl.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/var/desk_pnl.py); a bank's finance and front-office P&L systems |
@@ -1040,7 +1040,7 @@ Today's portfolio at one hierarchy node revalued over every business day of a lo
 
 |  |  |
 |---|---|
-| Contract | [pnl-history.contract.yaml](../../../config/packs/market-risk/contracts/pnl-history.contract.yaml) · version 1.0 |
+| Contract | [pnl-history.contract.yaml](../../../config/packs/banking/market-risk/contracts/pnl-history.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/var/pnl_history.py, run by make_var_data.py) |
@@ -1099,7 +1099,7 @@ The first-order and curvature sensitivities of each position (or trade) to the s
 
 |  |  |
 |---|---|
-| Contract | [position-sensitivity.contract.yaml](../../../config/packs/market-risk/contracts/position-sensitivity.contract.yaml) · version 1.0 |
+| Contract | [position-sensitivity.contract.yaml](../../../config/packs/banking/market-risk/contracts/position-sensitivity.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | active |
 | Source | The bank's pricing and risk systems (the same run that produces the scenario PVs or P&L vectors) |
@@ -1200,7 +1200,7 @@ Every risk factor the bank's sensitivities use, named by the factor naming stand
 
 |  |  |
 |---|---|
-| Contract | [risk-factor.contract.yaml](../../../config/packs/market-risk/contracts/risk-factor.contract.yaml) · version 1.0 |
+| Contract | [risk-factor.contract.yaml](../../../config/packs/banking/market-risk/contracts/risk-factor.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | The bank's risk-factor master (often kept in the market-data system or the FRTB engine) |
@@ -1278,7 +1278,7 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 
 |  |  |
 |---|---|
-| Contract | [var-result.contract.yaml](../../../config/packs/market-risk/contracts/var-result.contract.yaml) · version 1.3 |
+| Contract | [var-result.contract.yaml](../../../config/packs/banking/market-risk/contracts/var-result.contract.yaml) · version 1.3 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.banking.var.VarResultEngine) |
@@ -1353,7 +1353,7 @@ The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchi
 
 |  |  |
 |---|---|
-| Contract | [var-official.contract.yaml](../../../config/packs/market-risk/contracts/var-official.contract.yaml) · version 1.2 |
+| Contract | [var-official.contract.yaml](../../../config/packs/banking/market-risk/contracts/var-official.contract.yaml) · version 1.2 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the official end-of-day capture (VarOfficial), appended by VarPublisher to risk-results/var-official |
@@ -1422,7 +1422,7 @@ The bank's stress P&L under one scenario: the desks' stored stress results added
 
 |  |  |
 |---|---|
-| Contract | [stress-scenario-pnl.contract.yaml](../../../config/packs/market-risk/contracts/stress-scenario-pnl.contract.yaml) · version 1.0 |
+| Contract | [stress-scenario-pnl.contract.yaml](../../../config/packs/banking/market-risk/contracts/stress-scenario-pnl.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the derived connector mr-derived over the kind stress-result |
@@ -1495,7 +1495,7 @@ What the market risk capital needs besides VaR, stressed VaR and the backtest: t
 
 |  |  |
 |---|---|
-| Contract | [capital-input.contract.yaml](../../../config/packs/market-risk/contracts/capital-input.contract.yaml) · version 1.0 |
+| Contract | [capital-input.contract.yaml](../../../config/packs/banking/market-risk/contracts/capital-input.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's regulatory capital team (supervisory letters) and its specific-risk and default-risk engines |
@@ -1554,7 +1554,7 @@ The jump-to-default inputs of the FRTB standardised default risk charge for non-
 
 |  |  |
 |---|---|
-| Contract | [default-risk.contract.yaml](../../../config/packs/market-risk/contracts/default-risk.contract.yaml) · version 1.0 |
+| Contract | [default-risk.contract.yaml](../../../config/packs/banking/market-risk/contracts/default-risk.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's risk system or issuer master (obligor, seniority, rating) with the positions' notionals and market values |
@@ -1607,7 +1607,7 @@ Finance's daily trading P&L of each legal entity from the general ledger, with t
 
 |  |  |
 |---|---|
-| Contract | [finance-pnl.contract.yaml](../../../config/packs/market-risk/contracts/finance-pnl.contract.yaml) · version 1.0 |
+| Contract | [finance-pnl.contract.yaml](../../../config/packs/banking/market-risk/contracts/finance-pnl.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's general ledger or product control sub-ledger |
@@ -1662,7 +1662,7 @@ The trading desks as the regulators see them, beside the management hierarchy's 
 
 |  |  |
 |---|---|
-| Contract | [regulatory-desk.contract.yaml](../../../config/packs/market-risk/contracts/regulatory-desk.contract.yaml) · version 1.0 |
+| Contract | [regulatory-desk.contract.yaml](../../../config/packs/banking/market-risk/contracts/regulatory-desk.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's market risk and Volcker compliance teams (the desk inventory approved with the models) |
@@ -1715,7 +1715,7 @@ The residual risk add-on's inputs (Basel MAR23): one row per trade and business 
 
 |  |  |
 |---|---|
-| Contract | [residual-risk.contract.yaml](../../../config/packs/market-risk/contracts/residual-risk.contract.yaml) · version 1.0 |
+| Contract | [residual-risk.contract.yaml](../../../config/packs/banking/market-risk/contracts/residual-risk.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's product control or risk system (the instruments with residual risk and their exclusions) |
@@ -1764,7 +1764,7 @@ Which regulatory risk type each trade belongs to, for VaR by risk type (interest
 
 |  |  |
 |---|---|
-| Contract | [risk-type-map.contract.yaml](../../../config/packs/market-risk/contracts/risk-type-map.contract.yaml) · version 1.0 |
+| Contract | [risk-type-map.contract.yaml](../../../config/packs/banking/market-risk/contracts/risk-type-map.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's market risk methodology team (a reference table kept with the risk hierarchies) |
@@ -1814,7 +1814,7 @@ The cash each trade pays or receives on a business date (coupons, principal, opt
 
 |  |  |
 |---|---|
-| Contract | [trade-cash-flow.contract.yaml](../../../config/packs/market-risk/contracts/trade-cash-flow.contract.yaml) · version 1.0 |
+| Contract | [trade-cash-flow.contract.yaml](../../../config/packs/banking/market-risk/contracts/trade-cash-flow.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's settlement or back-office cash-flow system (the flows a trade's PV stops counting on their payment date) |
@@ -1867,7 +1867,7 @@ The trade-level facts the Volcker metrics (12 CFR 248 appendix A) need that a tr
 
 |  |  |
 |---|---|
-| Contract | [volcker-trade.contract.yaml](../../../config/packs/market-risk/contracts/volcker-trade.contract.yaml) · version 1.0 |
+| Contract | [volcker-trade.contract.yaml](../../../config/packs/banking/market-risk/contracts/volcker-trade.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's trade capture or compliance system (the Volcker desk mapping and customer classification) |

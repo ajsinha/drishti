@@ -1,0 +1,22 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The packs a server enables when neither DRISHTI_PACKS (drishti.packs.enabled) nor a lens names them: the full Drishti, by module
+# (docs/architecture/DOMAIN_MODULES.md section 8); a module that is off brings none of its packs. The one list: the server reads it from its
+# jar (drishti-packs copies this file in at build), the console from this folder; Docker and the stack pass DRISHTI_PACKS through only when
+# it is set.
+packs:
+  core: [core]                                                       # the core's packs
+  banking: [market-data, trading, counterparty-risk, market-risk]    # the banking module's (loaded only while it is on)
+  economy: [world-economy, news-and-markets]                         # the economy module's (loaded only while it is on)

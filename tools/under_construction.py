@@ -31,6 +31,9 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dirs  # noqa: E402  (the one rule for where a pack's folder is)
 REGISTRY = ROOT / "config" / "under-construction.yaml"
 DOC = ROOT / "docs" / "admin" / "UNDER_CONSTRUCTION.md"
 
@@ -93,7 +96,7 @@ def _slug(text: str) -> str:
 
 def _sutras_of(kind: str) -> list[str]:
     texts = []
-    for f in (ROOT / "config" / "packs").glob("*/sutras/**/*.sutra.yaml"):
+    for f in (f for d in pack_dirs().values() for f in d.glob("sutras/**/*.sutra.yaml")):
         t = f.read_text(encoding="utf-8")
         if re.search(r"match:\s*\{\s*kind:\s*" + re.escape(kind) + r"\s*[,}]", t):
             texts.append(t)

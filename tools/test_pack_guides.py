@@ -41,7 +41,7 @@ def _load(name: str, path: Path):
 
 
 GD = _load("drishti_guide_data", ROOT / "tools" / "packgen" / "common" / "guide_data.py")
-PACKS = sorted(d for d in (ROOT / "config" / "packs").iterdir() if (d / "contracts").is_dir() and list((d / "contracts").glob("*.contract.yaml")))
+PACKS = [d for d in GD.PP.pack_dirs().values() if (d / "contracts").is_dir() and list((d / "contracts").glob("*.contract.yaml"))]
 SPEC = GD.spec()
 
 

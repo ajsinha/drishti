@@ -401,7 +401,7 @@ phone tier and a **Done?** column for the build to tick. The empty, loading and 
 ## 7. Data needed: the complete list
 
 Every contract follows the repository's conventions ([docs/contracts/README.md](../contracts/README.md)): one contract YAML per kind in
-`config/packs/<pack>/contracts/<kind>.contract.yaml` with `kind`, `mnemonic`, `class` (`fundamental`, `input`, `drishti-owned`,
+`config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml` with `kind`, `mnemonic`, `class` (`fundamental`, `input`, `drishti-owned`,
 `computed`), `grain`, `key`, `dated-by`, `cadence`, `storage` and `fields`; data delivered as **JSON Lines, gzipped**, in
 `data/testdata/<domain>/<kind>/*.jsonl.gz` for the demo, loaded into Delta (or Iceberg) partitioned by `business_date`; field names in
 Endur-style UPPER_SNAKE. Most of the CIO lens's data is **Drishti's own records captured daily** (loads, expectations, checks, metrics,
@@ -819,7 +819,7 @@ with a GRC tool, a data-quality tool, an APM tool and spreadsheets. The comparis
 | Item | Value (proposed) |
 |---|---|
 | Lens id | `cio` (`drishti.lenses: risk,world,market,trading,cio`; the link **Open Drishti CIO**) |
-| Edition file | `config/editions/cio.yaml` (an edition and a lens from one file, as the others) |
+| Edition file | `config/lenses/cio.yaml` (an edition and a lens from one file, as the others) |
 | Mnemonic | `CIO` (the landing); `CIO BRIEF`, `CIO DETAIL`, `CIO BCBS`; checked against every pack's mnemonics |
 | Landing | `status` (B); tabs `brief` (C) and `detail` (A); the phone layout (decided) |
 | Links out | Admin → Health, Data loads, Net, Audit log, Access; Help → Configuration; the CRO lens |

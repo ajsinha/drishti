@@ -116,12 +116,13 @@
       if (t) t.href = go("QUOTE " + (m.SYMBOL || m._id));
     }).catch(function (e) { text("[data-wl-breadth]", "—"); text("[data-wl-breadth-s]", e.message); text("[data-wl-mover]", "—"); });
 
-    latestFilings().then(function (f) {
+    // the capital markets' parts (companies, filings, funds) are drawn only while that module is on: absent, nothing is asked
+    if ($("[data-wl-filings]")) latestFilings().then(function (f) {
       text("[data-wl-filings]", count(f.n));
       text("[data-wl-filings-s]", "filed " + f.date + ", the latest day in the EDGAR feed");
     }).catch(function (e) { text("[data-wl-filings]", "—"); text("[data-wl-filings-s]", e.message); });
 
-    search("FUND where NET_ASSETS > 0 order by NET_ASSETS desc limit 1").then(function (a) {
+    if ($("[data-wl-funds-n]")) search("FUND where NET_ASSETS > 0 order by NET_ASSETS desc limit 1").then(function (a) {
       var top = rows(a)[0];
       text("[data-wl-funds-n]", count(a.matched));
       text("[data-wl-funds-s]", top ? "largest " + top._id + " · " + money(top.NET_ASSETS) : "");
@@ -261,7 +262,7 @@
 
     // US sectors: the companies' revenue summed by SIC division, as shares of the whole
     var bars = $("[data-wl-sectors]");
-    search("USEQ where REVENUE > 0 and SECTOR != '' order by REVENUE desc limit 1000").then(rows).then(function (list) {
+    if (bars) search("USEQ where REVENUE > 0 and SECTOR != '' order by REVENUE desc limit 1000").then(rows).then(function (list) {
       var by = {}, total = 0;
       list.forEach(function (c) { var r = num(c.REVENUE); if (r) { by[c.SECTOR] = (by[c.SECTOR] || 0) + r; total += r; } });
       var top = Object.keys(by).sort(function (a, b) { return by[b] - by[a]; }).slice(0, 6);
@@ -283,7 +284,7 @@
 
     // the largest funds, with the index each tracks (TRACK names the indexes)
     var funds = $("[data-wl-funds]");
-    Promise.all([search("FUND where NET_ASSETS > 0 and INDEX_ID != '-' order by NET_ASSETS desc limit 5").then(rows),
+    if (funds) Promise.all([search("FUND where NET_ASSETS > 0 and INDEX_ID != '-' order by NET_ASSETS desc limit 5").then(rows),
                  search("TRACK limit 50").then(rows).catch(function () { return []; })]).then(function (d) {
       var names = {};
       d[1].forEach(function (t) { names[t.INDEX || t._id] = t.NAME; });

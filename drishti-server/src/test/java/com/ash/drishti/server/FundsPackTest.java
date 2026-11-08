@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 class FundsPackTest extends PublicPacksOnLakes {
 
-    static final Path PACK = Path.of("../config/packs/funds");
+    static final Path PACK = Path.of("../config/packs/capitalmarkets/funds");
 
     @Autowired ViewPipeline pipeline;
     @Autowired com.ash.drishti.engine.command.CommandParser commands;

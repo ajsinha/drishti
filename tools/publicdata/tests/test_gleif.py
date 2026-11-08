@@ -134,11 +134,11 @@ def test_scope_name_widens_into_the_data_folder_through_the_api(cache, data_dir)
 
 
 def test_refusals(cache, tmp_path):
-    assert GL.main(["refresh", "--cache", str(cache), "--out", str(B.ROOT / "config" / "packs" / "core")]) == 3
+    assert GL.main(["refresh", "--cache", str(cache), "--out", str(B.ROOT / "config" / "packs" / "core" / "core")]) == 3
     assert GL.main(["refresh", "--cache", str(cache), "--scope", "LEI:short"]) == 3
     assert GL.main(["refresh", "--cache", str(cache), "--scope", "WHAT:x"]) == 3
     assert GL.main(["refresh", "golden-lei", "--cache", str(cache), "--into-pack"]) == 3
-    assert GL.main(["refresh", "--cache", str(cache), "--out", str(B.ROOT / "config" / "packs" / "gleif"), "--scope", f"GROUP:{APPLE}"]) == 3
+    assert GL.main(["refresh", "--cache", str(cache), "--out", str(B.ROOT / "config" / "packs" / "core" / "gleif"), "--scope", f"GROUP:{APPLE}"]) == 3
 
 
 def test_dry_run_changes_nothing(cache, capsys):

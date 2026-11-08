@@ -71,7 +71,7 @@ class BiLiveApiTest {
 
     static {
         try {
-            for (String kind : List.of("tables/bi", "reports")) {                                // a board is a report with board pages since 2.4.0 (R7)
+            for (String kind : List.of("tables/banking", "reports/banking")) {                   // a board is a report with board pages since 2.4.0 (R7)
                 Path to = com.ash.drishti.server.TestRun.root().resolve("bi-live-folder/" + kind);
                 Files.createDirectories(to);
                 try (var files = Files.list(Path.of(kind.startsWith("tables") ? "../config/" + kind : "../config/bi/" + kind))) {

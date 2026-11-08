@@ -137,11 +137,10 @@ management:
 
 drishti:
   # The edition (docs/admin/EDITIONS.md): blank is the full Drishti; risk is Drishti Risk. It names
-  # config/editions/<name>.yaml, read as a layer under the site's configuration before the packs load; every member of a cluster sets the
+  # config/lenses/<module>/<lens>.yaml, read as a layer under the site's configuration before the packs load; every member of a cluster sets the
   # same value, and the console learns it from /api/v1/about. A change needs a restart.
   edition: ${DRISHTI_EDITION:}
-  editions:
-    dir: ${DRISHTI_EDITIONS_DIR:./config/editions}   # the folder of the edition files (and features.yaml, default-packs.yaml)
+  lens-dir: ${DRISHTI_LENS_DIR:./config/lenses}   # the lenses' files: config/lenses/<module>/<lens>.yaml (one of no module in the folder itself), features.yaml
   # Lenses (EDITIONS.md › The design as built, section 8): editions a person may open on a full instance ("Open Drishti Risk"), for their own session; no restart,
   # every pack stays loaded. A lens hides, it does not secure. On by default (product owner, 2026-10-30): the four lenses; DRISHTI_LENSES= (empty) turns them off. Ignored with an edition.
   lenses: ${DRISHTI_LENSES:risk,world,market,trading}
@@ -1103,7 +1102,7 @@ drishti:
   under-construction:                # the under-construction registry (docs/admin/UNDER_CONSTRUCTION.md): what depends on unbuilt work and how it shows
     file: ${DRISHTI_UNDER_CONSTRUCTION_FILE:./config/under-construction.yaml}   # absent: under-construction.yaml beside the packs folder, else nothing registered; none: nothing
   packs:
-    # Domain packs (config/packs/<name>/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples.
+    # Domain packs (config/packs/<domain>/<name>/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples.
     # Site settings below always override what a pack contributes.
     dir: ${DRISHTI_PACKS_DIR:./config/packs}
     # Further pack folders, comma-separated, looked in after dir: examples/packs holds the retired example packs (finance,
@@ -1131,7 +1130,7 @@ drishti:
       history-file: ${DRISHTI_PACKS_DEPLOY_HISTORY:${drishti.data.dir}/packs/deploy-history.jsonl}  # the history of archive deployments and rollbacks
       probe-dates: 3                       # business dates listed per kind by Test connection
       probe-timeout-seconds: 30  # Test connection: how long to wait for one source to list its business dates
-    enabled: ${DRISHTI_PACKS:default}      # default: the edition's packs (drishti.edition), else config/editions/default-packs.yaml
+    enabled: ${DRISHTI_PACKS:default}      # default: the edition's packs (drishti.edition), else config/packs/default-packs.yaml
     # Sample packs (sample: true in pack.yaml) are demonstrations. visible: everyone sees them; developers: only users with the author
     # or admin power; hidden: nobody, they are not loaded and their connectors do not start. Admin -> Packs ("Hide samples from business
     # users") saves a choice that overrides this. Use developers once real packs exist.

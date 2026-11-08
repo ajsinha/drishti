@@ -100,7 +100,7 @@ class EditionTwoLensesServerTest {
         List<String> datasets = new ArrayList<>();
         ok(get("/api/v1/bi/datasets").header("Authorization", bearer(ana)).header(EditionContext.HEADER, lens)).path("datasets")
                 .forEach(d -> datasets.add(d.path("id").asText()));
-        assertThat(datasets).contains("file:table:bi.world_economics_economies").doesNotContain("file:table:bi.market_risk_var_latest");
+        assertThat(datasets).contains("file:table:bi.world_economics_economies").doesNotContain("file:table:banking.market_risk_var_latest");
 
         // switching to Drishti Risk is one patch; the landing chosen stays until the person picks another
         settings(ana, "{\"lens\":\"risk\"}");
@@ -146,7 +146,7 @@ class EditionTwoLensesServerTest {
         List<String> datasets = new ArrayList<>();
         ok(get("/api/v1/bi/datasets").header("Authorization", bearer(cy)).header(EditionContext.HEADER, "market")).path("datasets")
                 .forEach(d -> datasets.add(d.path("id").asText()));
-        assertThat(datasets).doesNotContain("file:table:bi.market_risk_var_latest", "file:table:bi.world_economics_economies");
+        assertThat(datasets).doesNotContain("file:table:banking.market_risk_var_latest", "file:table:bi.world_economics_economies");
 
         // switching: to Drishti World, then Drishti Risk, each one patch; the market data is hidden in both
         settings(cy, "{\"lens\":\"world\"}");

@@ -76,7 +76,7 @@ class ExposureOfficialBiTest {
             Path to = com.ash.drishti.server.TestRun.root().resolve("exposure-bi-folder");
             List<String> files = new ArrayList<>(List.of("../tables/bi/counterparty_exposure_official.table.yaml",
                     "../tables/bi/counterparty_exposure_official_netting_sets.table.yaml", "../tables/bi/counterparty_exposure_official_counterparties.table.yaml",
-                    "../tables/bi/trading-risk.model.yaml", "reports/counterparty-risk.report.yaml"));
+                    "../tables/banking/trading-risk.model.yaml", "reports/banking/counterparty-risk.report.yaml"));
             for (String t : List.of("trades", "netting_sets", "counterparties", "desks", "books")) {
                 files.add("../tables/bi/trading_risk_" + t + ".table.yaml");
             }

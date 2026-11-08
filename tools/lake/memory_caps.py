@@ -81,7 +81,7 @@ def lake_stores() -> dict[str, int]:
     out: dict[str, int] = {}
     if not folder.is_dir():
         return out
-    for f in sorted(folder.glob("*.yaml")):
+    for f in sorted([*folder.glob("*.yaml"), *folder.glob("*/*.yaml")]):        # and the domain folders (Lakes.files)
         doc = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
         root = resolve(doc.get("root") or "")
         if not root.startswith("mem://"):

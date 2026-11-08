@@ -200,8 +200,19 @@ def _shape(answer: dict) -> dict:
             w = str(f["word"]).upper()
             funcs[w] = {"module": str(f.get("module") or CORE), "reason": str(f.get("reason") or ""),
                         "text": str(f.get("text") or f"{w} is not available to you: ask your administrator")}
-    return {"off": off, "lenses": lenses, "functions": funcs, "loaded": frozenset(str(m.get("id")) for m in answer.get("modules") or []
-                                                                                    if isinstance(m, dict) and m.get("id"))}
+    cards = {str(l.get("id")): [dict(c) for c in l.get("cards") or [] if isinstance(c, dict) and c.get("cmd")]
+             for l in answer.get("lenses") or [] if isinstance(l, dict) and l.get("id") and l.get("cards")}
+    return {"off": off, "lenses": lenses, "functions": funcs, "cards": cards,
+            "loaded": frozenset(str(m.get("id")) for m in answer.get("modules") or [] if isinstance(m, dict) and m.get("id"))}
+
+
+def lens_cards(lens: str | None) -> list | None:
+    """A lens's Home cards, as the registry's lens carries them (``cards:`` of its lenses.yaml, in the person's answer); None when not said."""
+    p = person()
+    if not lens or p is None:
+        return None
+    got = (p.get("cards") or {}).get(lens)
+    return list(got) if got else None
 
 
 class Me:

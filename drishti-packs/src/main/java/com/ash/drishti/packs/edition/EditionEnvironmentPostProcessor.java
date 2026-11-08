@@ -64,7 +64,9 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
         JsonNode spec = Editions.read(file);
         Map<String, Object> props = new LinkedHashMap<>(Editions.flatten(spec, Editions.SPEC));
         List<String> packs = new ArrayList<>();
-        spec.path("packs").path("enabled").forEach(p -> packs.add(p.asText().strip()));
+        com.fasterxml.jackson.databind.JsonNode enabled = spec.path("packs").path("enabled");      // by module (in order), or a plain list
+        (enabled.isObject() ? enabled.elements() : java.util.List.of(enabled).iterator())
+                .forEachRemaining(m -> m.forEach(p -> { if (!packs.contains(p.asText().strip())) packs.add(p.asText().strip()); }));
         if (!packs.isEmpty()) {
             props.put("drishti.packs.enabled", preset(env, "drishti.packs.enabled", String.join(",", packs)));
         }

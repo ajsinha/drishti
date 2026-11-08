@@ -17,7 +17,7 @@ the SEC and Nasdaq Trader ticker files and GLEIF's level-2 relationship records.
 
     python3 tools/publicdata/funds.py status
     python3 tools/publicdata/funds.py refresh --dry-run
-    python3 tools/publicdata/funds.py refresh                               the committed pack (data/testdata/funds and config/packs/funds)
+    python3 tools/publicdata/funds.py refresh                               the committed pack (data/testdata/funds and config/packs/capitalmarkets/funds)
     python3 tools/publicdata/funds.py refresh --offline                     rebuild the pack from the downloads only
     python3 tools/publicdata/funds.py refresh ncen rr --since 2025          more quarters of the census and the prospectus summaries
     python3 tools/publicdata/funds.py refresh --scope FUNDS:300,HOLDINGS:1000
@@ -54,7 +54,7 @@ import pdbase as B  # noqa: E402
 
 GEN = B.ROOT / "tools" / "packgen" / "funds"
 PACK = "funds"
-COMMITTED = B.ROOT / "config" / "packs" / PACK
+COMMITTED = B.pack_dir(PACK)
 SEC_FILES = "https://www.sec.gov/files"
 NPORT = SEC_FILES + "/dera/data/form-n-port-data-sets/{q}_nport.zip"
 NCEN = SEC_FILES + "/dera/data/form-n-cen-data-sets/{q}_ncen.zip"
@@ -365,7 +365,7 @@ def main(argv: list[str] | None = None) -> int:
             first = json.loads(next(parts[0].lines())) if parts else {}
             print(f"committed pack: {n} funds in {len(parts)} parts, data retrieved {first.get('PROVENANCE', {}).get('RETRIEVED_AT', '-')}")
             return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "publicdata" / "cache" / PACK,
-                            "data/testdata/funds and config/packs/funds; a widened build <data>/publicdata/funds")
+                            "data/testdata/funds and config/packs/capitalmarkets/funds; a widened build <data>/publicdata/funds")
         return refresh(a)
     except B.Refusal as e:
         print(e, file=sys.stderr)

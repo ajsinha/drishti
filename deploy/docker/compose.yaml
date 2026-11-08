@@ -24,7 +24,7 @@ services:
     environment:
       DRISHTI_SECURITY_ENABLED: "true"
       DRISHTI_TOKEN_SECRET: ${DRISHTI_TOKEN_SECRET:?set DRISHTI_TOKEN_SECRET}
-      DRISHTI_PACKS: ${DRISHTI_PACKS:-default}   # default: the edition's packs, else config/editions/default-packs.yaml
+      DRISHTI_PACKS: ${DRISHTI_PACKS:-default}   # default: the edition's packs, else config/packs/default-packs.yaml
       DRISHTI_EDITION: ${DRISHTI_EDITION:-}   # blank: the full Drishti; risk: Drishti Risk (docs/admin/EDITIONS.md)
       DRISHTI_LENSES: ${DRISHTI_LENSES-risk,world,market,trading}   # the default lenses; set DRISHTI_LENSES= (empty) to turn them off
       DRISHTI_SEED_ADMIN: "true"              # creates the one administrator below on first start, never the development admin

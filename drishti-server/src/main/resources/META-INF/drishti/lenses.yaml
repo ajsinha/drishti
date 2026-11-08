@@ -21,6 +21,11 @@ lenses:
     home: home/world_landing.html
     functions: [ECON, MACRO, FCST, LABR, FISC, ECG, REGE, JUR, PARTY, OFFC, ELEC, REGN, SOCI, TOPIC, NEWS, CO, QUOTE, USEQ, IDX, SIC, EDGAR, FILING,
       FACT, PXH, LEI, LEIG, LEIR, LEIC, LEIM, FUND, HELD, TRACK]
+    cards:                               # Home's quick cards: each opens its command; one whose function is off is not shown
+      - { title: "An economy: growth, inflation, debt, labour, forecasts", cmd: ECON CAN, icon: globe }
+      - { title: "A company: financials, filings, index membership", cmd: USEQ AAPL, icon: building }
+      - { title: "A legal entity group: parent and children", cmd: LEIG HWUPKR0MPOU8FGXBT394, icon: diagram-3 }
+      - { title: "A fund: holdings, the index it tracks", cmd: FUND SPY, icon: briefcase }
   - id: cio
     title: Chief information officer
     modules: []

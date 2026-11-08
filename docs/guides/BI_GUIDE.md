@@ -387,7 +387,7 @@ problem. Shipped items cannot be edited here: change the file. Details: [config/
 Drishti ships **ten models** in `models/` (`trades-basic`, `trading-risk`, `trading-cashflows`, `counterparty-exposure`, `desk-pnl-vs-exposure-py`, the live `live-trading` and `live-exposure`, `world-economics`, `region-economics` and `market-risk-var`) over one-table datasets in `datasets/`, **twelve reports** (`trades-overview`, `counterparty-risk`, `cashflow-ladder`, `live-trading-desk`, `live-exposure`, `python-desk-risk`, `pnl-vs-exposure`, `world-economics`, `region-economics`, `market-risk-var`, and the boards `desk-wall` and `python-wall`, which are reports with board pages), **four Python items** (`desk-pnl-volatility`, `pnl-histogram`, `pnl-vega` and the Transform `pnl-vs-exposure`), one notebook and two themes, each commented and marked `sample: true` ([config/bi/README.md](../../config/bi/README.md)). The two map samples: `world-economics` (real World Bank data) and `region-economics` (Australian and US states: illustrative figures, rounded from public figures, not for reporting). A sample is hidden from the people who may not see sample packs
 (*Admin, Packs, Hide samples from business users* or *from everyone*), exactly as a sample pack is.
 
-**VaR in BI.** The sample report **Market risk: VaR** (`config/bi/reports/market-risk-var.report.yaml`, model `market-risk-var`)
+**VaR in BI.** The sample report **Market risk: VaR** (`config/bi/reports/banking/market-risk-var.report.yaml`, model `market-risk-var`)
 reads the official end-of-day VaR the server publishes ([VAR_GUIDE.md section 19](VAR_GUIDE.md#19-official-end-of-day-results)), never a
 stored VaR record: the market-risk pack serves the published table as the read-only kind `var-official` (connector `var-results`). The
 dataset `market-risk-var-official` holds every result version; `market-risk-var-latest` keeps the latest version of each node and date
@@ -545,7 +545,7 @@ the workspace requires review, or you are not a member with `bi-author`. More in
 
 ## 13. Datasets and the query engine (phase 2)
 
-**Datasets** in the rail lists the datasets you may read (the table layer's shipped tables in `config/tables/bi/` and published ones; the samples are marked *sample*). A dataset item is the model
+**Datasets** in the rail lists the datasets you may read (the table layer's shipped tables in `config/tables/<domain>/` and published ones; the samples are marked *sample*). A dataset item is the model
 reports will sit on; its page (`/bi/d/<id>`) shows the **model** (tables and columns, relationships, measures and their expressions, hierarchies, row rules and which apply to you, masked
 columns, and the layers on disk) and a **query preview**: choose fields, measures, one filter, dates and a row limit, **Run the query**, and the grid shows the answer with the layer it came from
 (`rollup`, `columns`, `direct` or `live`), the time, whether the cache answered, the dates read, the columns masked for you and any warnings. Authors may tick *Show the SQL*.
@@ -1780,7 +1780,7 @@ derived: { ... }            # not supported (DRS-9190): a derived dataset (secti
 columns: { ... }            #   ... and the columns it returns, typed
 ```
 
-Unknown top-level keys are a warning. The shipped samples are **models** in `config/tables/bi/` over the tables beside them (a
+Unknown top-level keys are a warning. The shipped samples are **models** in `config/tables/banking/` (the banking module's; the economy samples in `config/tables/bi/`) over the tables beside them (a
 multi-table dataset is a model whose tables are datasets of their own: `trading-risk` reads `trading-risk-trades`, `trading-risk-netting-sets` and
 the rest), every one commented and in the packs' UPPER_SNAKE column names: `trades-basic` (one table), `trading-risk` (five tables across three packs, a row
 rule, masks, a rollup) and `trading-cashflows` (nested arrays as tables), which [section 17](#17-worked-examples-the-shipped-models-row-rules-and-the-model-view) reads, and the live `live-trading` and
@@ -1849,7 +1849,7 @@ turned on by a measure.
 Two fact tables that share dimensions (every trade has a desk; every limit has a desk) are not joined to each other: joining them would repeat each desk's limits once per trade. A query that asks for a measure of each, grouped by the shared dimension, is answered **per fact, then joined**:
 
 ```yaml
-# the shape of config/tables/bi/trading-risk.model.yaml (its tables are tables of their own: bi.trading_risk_trades and the rest)
+# the shape of config/tables/banking/trading-risk.model.yaml (its tables are tables of their own: banking.trading_risk_trades and the rest)
 datasets:
   trades:         { dataset: trading-risk-trades, role: fact }           # risk-store, kind trade-valuation: TRADE_ID, DESK, COUNTERPARTY, MTM, ...
   netting_sets:   { dataset: trading-risk-netting-sets, role: fact }     # credit-store, kind netting-set: COUNTERPARTY, COLLATERAL, LIMIT, ...
@@ -2061,7 +2061,7 @@ make a group, all `table.column` and all of **one table**:
 ```yaml
 measures:
   Desk P&L volatility:
-    python: desk-pnl-volatility       # config/bi/python/desk-pnl-volatility.python.yaml
+    python: desk-pnl-volatility       # config/bi/python/banking/desk-pnl-volatility.python.yaml
     inputs: [trade.PNL_1D]
     by: [trade.DESK]                  # one number per desk
     description: Standard deviation of the one-day P&L per desk, computed in Python.
@@ -2228,7 +2228,7 @@ No new write endpoint: `POST .../refresh` is the one that existed and needs `bi-
 
 A `mode: live` table is the **current state of a kind**, not a copy per business date. The engine reads the kind **once** when the table is first needed (the first query, or the first stream of a report over it), subscribes to
 each entity through the same live machinery the terminal's live views use, and then **applies every change to its in-memory table by key**: a new id is inserted, a known id replaces its row, a deletion removes it. Reports and
-boards over it redraw as it changes ([section 31](#13-live-visuals), [section 31, its section 23](#23-boards-report-pages-of-live-tiles)). The sample is the table [config/tables/bi/live_trading_trade.table.yaml](../../config/tables/bi/live_trading_trade.table.yaml) and its model [config/tables/bi/live-trading.model.yaml](../../config/tables/bi/live-trading.model.yaml) (in the shape below, the dataset form it had before the table layer):
+boards over it redraw as it changes ([section 31](#13-live-visuals), [section 31, its section 23](#23-boards-report-pages-of-live-tiles)). The sample is the table [config/tables/banking/live_trading_trade.table.yaml](../../config/tables/banking/live_trading_trade.table.yaml) and its model [config/tables/banking/live-trading.model.yaml](../../config/tables/banking/live-trading.model.yaml) (in the shape below, the dataset form it had before the table layer):
 
 ```yaml
 tables:
@@ -2259,7 +2259,7 @@ rollups:
   - { name: byDeskBook, table: trade, by: [DESK, PORTFOLIO, PRODUCT_TYPE, CURRENCY], measures: [Trades, Notional, MTM, PnL 1d, Worst trade, Best trade] }
 ```
 
-The Live trading desk sample (`config/tables/bi/live-trading.model.yaml`) declares that. A bar of `Notional`, `MTM` and `Worst trade` by desk, with the demo ticker running (real answer, `?explain=true`, captured over 750 demo trades with lower-case columns; over the demo lakes the columns are `DESK` and the rest), reads 90 trades for `DESK-COMM` from the kept groups, not from the trades:
+The Live trading desk sample (`config/tables/banking/live-trading.model.yaml`) declares that. A bar of `Notional`, `MTM` and `Worst trade` by desk, with the demo ticker running (real answer, `?explain=true`, captured over 750 demo trades with lower-case columns; over the demo lakes the columns are `DESK` and the rest), reads 90 trades for `DESK-COMM` from the kept groups, not from the trades:
 
 ```text
 SELECT "trade"."desk" AS "trade.desk", (CAST(coalesce(sum(m0), 0) AS BIGINT)) AS "Trades", (sum(m1)) AS "Notional", (sum(m2)) AS "MTM", (min(m4)) AS "Worst trade"
@@ -2428,11 +2428,11 @@ The 2.1 sample files (`counterparty-exposure.dataset.yaml`, the composed `desk-p
 
 | File | What |
 |---|---|
-| `config/tables/bi/counterparty-exposure.model.yaml` (tables `bi.counterparty_exposure_netting_sets`, `bi.counterparty_exposure_counterparties` beside it) | the second model: netting sets by counterparty, no row rule, names masked |
-| `config/tables/bi/trading-risk.model.yaml` | the composed dataset folded in: P&L of the trades and exposure of the netting sets in one model with two facts (3.1), with `P&L per exposure` |
-| `config/bi/python/pnl-vs-exposure.python.yaml` + `config/tables/bi/desk_pnl_vs_exposure_py_result.table.yaml` + `config/tables/bi/desk-pnl-vs-exposure-py.model.yaml` | the derived one: a Python dataset (`source.python`) whose Transform joins two model queries (inputs `pnl` and `exposure`), and a model of the old name over it |
-| `config/bi/reports/pnl-vs-exposure.report.yaml` | a report over `trading-risk@1` with a slicer and a donut that read `counterparty-exposure@1` (section 31, its section 16) |
-| `config/bi/notebooks/pnl-vs-exposure-pandas.notebook.yaml` | the join done by hand in pandas over two masked extracts (USER_GUIDE.md › The Notebook, section 2) |
+| `config/tables/banking/counterparty-exposure.model.yaml` (tables `banking.counterparty_exposure_netting_sets`, `banking.counterparty_exposure_counterparties` beside it) | the second model: netting sets by counterparty, no row rule, names masked |
+| `config/tables/banking/trading-risk.model.yaml` | the composed dataset folded in: P&L of the trades and exposure of the netting sets in one model with two facts (3.1), with `P&L per exposure` |
+| `config/bi/python/banking/pnl-vs-exposure.python.yaml` + `config/tables/banking/desk_pnl_vs_exposure_py_result.table.yaml` + `config/tables/banking/desk-pnl-vs-exposure-py.model.yaml` | the derived one: a Python dataset (`source.python`) whose Transform joins two model queries (inputs `pnl` and `exposure`), and a model of the old name over it |
+| `config/bi/reports/banking/pnl-vs-exposure.report.yaml` | a report over `trading-risk@1` with a slicer and a donut that read `counterparty-exposure@1` (section 31, its section 16) |
+| `config/bi/notebooks/banking/pnl-vs-exposure-pandas.notebook.yaml` | the join done by hand in pandas over two masked extracts (USER_GUIDE.md › The Notebook, section 2) |
 
 All are `sample: true`. A test compares the Python dataset with an independent join of the two models, as each reader (`test_bi_multi_dataset_browser.py`). Tutorials 10 and 14 walk through them.
 
@@ -2768,7 +2768,7 @@ steps are the same.
 | `trading-risk` | three packs, relationships from the packs' links, a rollup, a row rule, masks, window and time measures | `trades`, `netting_sets`, `counterparties`, `desks`, `books` |
 | `trading-cashflows` | nested documents: legs, cash flows and payments as tables of the trades of three source systems | `trades`, `legs`, `cashflows`, `payments` |
 
-Each is a **model** in `config/tables/bi/` whose tables are beside it (`trading-risk` reads `trading-risk-trades`,
+Each is a **model** in `config/tables/banking/` (the banking module's; the economy samples in `config/tables/bi/`) whose tables are beside it (`trading-risk` reads `trading-risk-trades`,
 `trading-risk-netting-sets` and the rest), commented line by line, with the packs' UPPER_SNAKE column names.
 
 #### Set up
@@ -2820,7 +2820,7 @@ describe trading-risk` prints every table, column and measure.
 #### `trades-basic`: read the model, run a query
 
 Open **Trades, the basics**. The page has the model (its table with every column and type; measures with their expressions; security; the layers on
-disk) and a **query preview**. Read the YAML first: `config/tables/bi/trades-basic.model.yaml` and `config/tables/bi/trades_basic_trade.table.yaml`
+disk) and a **query preview**. Read the YAML first: `config/tables/banking/trades-basic.model.yaml` and `config/tables/banking/trades_basic_trade.table.yaml`
 explain each part in comments (the source: the risk-store connector's kind `trade-valuation`; `refresh: { on-load: true }`; the columns `TRADE_ID`, `DESK`,
 `PORTFOLIO`, `NOTIONAL`, `MTM` and the rest; a calculated column `MTM_IN_MILLIONS`; four measures including one made of two others; a hierarchy).
 
@@ -2988,7 +2988,7 @@ for the 15,000 trades here).
 Shipped files are read-only. Copy one and edit the copy, which is private to you until you publish it.
 
 1. Open **Trades, the basics** and press **Save a copy** (or, in **My workspace**, **New item** of kind **model**, and paste the YAML of
-   `config/tables/bi/trades-basic.model.yaml`, changing `model: trades-basic` to `model: my-copy`).
+   `config/tables/banking/trades-basic.model.yaml`, changing `model: trades-basic` to `model: my-copy`).
 2. Add a measure, for example `Big trades: { expr: "sum(trade.NOTIONAL, where = trade.NOTIONAL > 100000000)" }` under `measures:`, write a note in *What
    changed*, and press **Save draft** (*Draft saved.*).
 3. **Check** validates it (`POST /api/v1/bi/models/validate` with `{yaml}` does the same with no item; `drishti.py bi expr validate "..." --model
@@ -3799,7 +3799,7 @@ Mistakes are `DRS-9031` with the path (`layouts.phone.desk.order: page 'desk' ha
 
 **Where it applies.** The console's viewer uses it when the **screen** is 640 px wide or narrower (and swaps back to the grid when the window grows, with no reload); `<drishti-report>` uses it when the **element** is that narrow, whatever the host page's width, so a report in a narrow card of a desktop page gets it too
 (section 15). Between 641 and 760 px the automatic single column applies. The designer's **Phone tab** edits it: for the page being edited it lists the visuals in phone order (drag a row or use its arrows to reorder, *Hide*, *Rows* for the height) beside a 390 px preview drawn to scale; each change is a step of
-the undo history, *Back to automatic* removes the page's entry, and a visual or page deleted later is dropped from the layouts by the designer. The sample *Live trading desk* ships with one (`config/bi/reports/live-trading-desk.report.yaml`); the picture of the tab and of the result is in the tutorial
+the undo history, *Back to automatic* removes the page's entry, and a visual or page deleted later is dropped from the layouts by the designer. The sample *Live trading desk* ships with one (`config/bi/reports/banking/live-trading-desk.report.yaml`); the picture of the tab and of the result is in the tutorial
 ([tutorial 16](../tutorials/16-embed-drishti.md)).
 
 ![The designer's Phone tab](img/bi-elements/designer-phone-tab.png)
@@ -4185,7 +4185,7 @@ pages:
 
 A **board** is a wall of tiles for a screen on the wall of a trading desk, a risk team or an operations room. Each tile is one visual of a report; the board lays them out, keeps them up to date as the data ticks, turns its pages by itself in **kiosk** mode, and colours a tile amber or red when its number crosses a threshold.
 
-**A board is a report page**: a page with `layout: board` holds **tiles** (visuals of other reports, with their alert colours) beside the report's **own visuals**, which take the report's filters, slicers, cross-filter and drill like on any page. There is no separate `board` kind: a stored board item is converted to a report when the server starts, the shipped samples are reports (`config/bi/reports/desk-wall.report.yaml`, `python-wall.report.yaml`), and the old addresses (`/bi/b/<id>`, `/bi/design/board/<id>`) open the report viewer and the report designer (section 12). For the live tables behind tiles see [section 30](#71-live-tables-phase-5); for the visuals see [section 31](#13-live-visuals); for the pages see this document section 18; for a walk-through with pictures see [tutorial 12](../tutorials/12-live-bi-and-boards.md).
+**A board is a report page**: a page with `layout: board` holds **tiles** (visuals of other reports, with their alert colours) beside the report's **own visuals**, which take the report's filters, slicers, cross-filter and drill like on any page. There is no separate `board` kind: a stored board item is converted to a report when the server starts, the shipped samples are reports (`config/bi/reports/banking/desk-wall.report.yaml`, `python-wall.report.yaml`), and the old addresses (`/bi/b/<id>`, `/bi/design/board/<id>`) open the report viewer and the report designer (section 12). For the live tables behind tiles see [section 30](#71-live-tables-phase-5); for the visuals see [section 31](#13-live-visuals); for the pages see this document section 18; for a walk-through with pictures see [tutorial 12](../tutorials/12-live-bi-and-boards.md).
 
 
 #### 23.1 What a board is, and is not
@@ -4203,7 +4203,7 @@ when its run finishes; live tiles stay streams and never become runs. See [secti
 
 #### 23.2 The file
 
-`config/bi/reports/<id>.report.yaml`, or the body of a `report` item. The sample, `desk-wall` ([config/bi/reports/desk-wall.report.yaml](../../config/bi/reports/desk-wall.report.yaml)), is the reference; the keys:
+`config/bi/reports/<id>.report.yaml`, or the body of a `report` item. The sample, `desk-wall` ([config/bi/reports/banking/desk-wall.report.yaml](../../config/bi/reports/banking/desk-wall.report.yaml)), is the reference; the keys:
 
 ```yaml
 rachana: 1
@@ -4257,7 +4257,7 @@ A tile whose report the reader may not open, or that has lost its visual, shows 
 
 ##### Python tiles
 
-A tile may show a **python visual** of its report: a Python measure shown as bars, a Python visual that returns a chart, or one that returns a Vega-Lite specification. The tile runs the item for the person looking, exactly as the report does (the server's compute pool; [section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python)), and shows the line *Python · item · target · ms · rows* under it. The sample `python-wall` ([config/bi/reports/python-wall.report.yaml](../../config/bi/reports/python-wall.report.yaml)) has three:
+A tile may show a **python visual** of its report: a Python measure shown as bars, a Python visual that returns a chart, or one that returns a Vega-Lite specification. The tile runs the item for the person looking, exactly as the report does (the server's compute pool; [section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python)), and shows the line *Python · item · target · ms · rows* under it. The sample `python-wall` ([config/bi/reports/banking/python-wall.report.yaml](../../config/bi/reports/banking/python-wall.report.yaml)) has three:
 
 ```yaml
 - { id: vol,   type: tile, title: Desk P&L volatility, from: { report: python-desk-risk, visual: volatility }, at: { x: 0, y: 0, w: 6, h: 6 } }
@@ -5855,7 +5855,7 @@ Two samples ship (`config/bi/python/`), and a sample report **Desk P&L risk (Pyt
 
 ### 2. The two interfaces
 
-**Measure.** Read `config/bi/python/desk-pnl-volatility.python.yaml`:
+**Measure.** Read `config/bi/python/banking/desk-pnl-volatility.python.yaml`:
 
 ```yaml
 rachana: 1
@@ -5880,7 +5880,7 @@ source: |
 `table` is a **pandas DataFrame** holding that group's rows and **only the columns in `inputs`**. The function returns a number (an int or float; `None` or NaN is shown as blank; infinity or
 anything else is `DRS-9071`). Which columns make a group comes from where the measure is used (section 5): the dataset's `by`.
 
-**Visual.** `config/bi/python/pnl-histogram.python.yaml`:
+**Visual.** `config/bi/python/banking/pnl-histogram.python.yaml`:
 
 ```yaml
 interface: visual
@@ -6147,11 +6147,11 @@ Python Transform pnl-vs-exposure: 18 rows in 218 ms (first run); the same reader
 
 ![The sample's Python dataset: made by the Python Transform pnl-vs-exposure, keyed by counterparty, and the columns its Transform returns](../tutorials/img/t14/12-python-dataset.jpg)
 
-Settings: `drishti.bi.transform.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibitransform--python-transforms-and-composed-datasets). The sample is `config/bi/python/pnl-vs-exposure.python.yaml` with the Python dataset `desk-pnl-vs-exposure-py-result` and the model `desk-pnl-vs-exposure-py` over it ([tutorial 14, step 8](../tutorials/14-python-and-analyse.md#step-8--two-models-a-python-transform-and-a-join-in-the-notebook)).
+Settings: `drishti.bi.transform.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibitransform--python-transforms-and-composed-datasets). The sample is `config/bi/python/banking/pnl-vs-exposure.python.yaml` with the Python dataset `desk-pnl-vs-exposure-py-result` and the model `desk-pnl-vs-exposure-py` over it ([tutorial 14, step 8](../tutorials/14-python-and-analyse.md#step-8--two-models-a-python-transform-and-a-join-in-the-notebook)).
 
 ### 14. Vega-Lite output
 
-A visual may return a **Vega-Lite** specification instead of an ECharts option: say `output: vega-lite` in the manifest and return the specification as a dict (`mark`, `encoding`, `layer`, `transform` ... as [Vega-Lite](https://vega.github.io/vega-lite/) has them). The sample `config/bi/python/pnl-vega.python.yaml` draws one dot for each trade's one-day P&L, by desk, with each desk's median as a tick:
+A visual may return a **Vega-Lite** specification instead of an ECharts option: say `output: vega-lite` in the manifest and return the specification as a dict (`mark`, `encoding`, `layer`, `transform` ... as [Vega-Lite](https://vega.github.io/vega-lite/) has them). The sample `config/bi/python/banking/pnl-vega.python.yaml` draws one dot for each trade's one-day P&L, by desk, with each desk's median as a tick:
 
 ```python
 def render(table, params):

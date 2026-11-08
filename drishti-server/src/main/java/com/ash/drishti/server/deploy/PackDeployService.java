@@ -296,7 +296,7 @@ public final class PackDeployService {
             }
         }
         List<String> missing = parents.stream().filter(p -> running.packs().stream().noneMatch(x -> x.name().equals(p))
-                && !Files.isRegularFile(installed.resolve(p).resolve("pack.yaml")) && !Files.isRegularFile(packsDir.resolve(p).resolve("pack.yaml"))).toList();
+                && !Files.isRegularFile(installed.resolve(p).resolve("pack.yaml")) && !Files.isRegularFile(com.ash.drishti.api.PackFolders.of(packsDir, p).resolve("pack.yaml"))).toList();
         checks.add(missing.isEmpty() ? Check.ok("dependencies", parents.isEmpty() ? "extends no other pack" : "extends " + String.join(", ", parents) + ": available")
                 : Check.fail("dependencies", "extends " + String.join(", ", missing) + ", which is neither loaded nor on disk; deploy that pack first"));
     }
@@ -370,8 +370,9 @@ public final class PackDeployService {
         }
         if (against == null) {
             for (Path d : List.of(installed, packsDir)) {
-                if (Files.isRegularFile(d.resolve(name).resolve("pack.yaml"))) {
-                    against = d.resolve(name);
+                Path f = com.ash.drishti.api.PackFolders.of(d, name);   // shipped: in its domain folder
+                if (Files.isRegularFile(f.resolve("pack.yaml"))) {
+                    against = f;
                     where = d.equals(installed) ? "installed, not loaded" : "shipped, not loaded";
                     current = PackDiffer.load(against).meta().get("version") + "";
                     break;
@@ -469,10 +470,10 @@ public final class PackDeployService {
             Path chosen = null;
             String chosenVersion = null;
             if (toShipped) {
-                if (!Files.isRegularFile(packsDir.resolve(name).resolve("pack.yaml")) || !Files.isDirectory(target)) {
+                if (!Files.isRegularFile(com.ash.drishti.api.PackFolders.of(packsDir, name).resolve("pack.yaml")) || !Files.isDirectory(target)) {
                     throw new DrishtiException(ErrorCode.BAD_REQUEST, "'" + name + "' has no shipped version to go back to");
                 }
-                chosenVersion = versionOf(packsDir.resolve(name));
+                chosenVersion = versionOf(com.ash.drishti.api.PackFolders.of(packsDir, name));
             } else {
                 List<Path> kept = keptDirs(name);
                 String runningNow = Files.exists(target) ? versionOf(target) : null;
@@ -553,11 +554,11 @@ public final class PackDeployService {
             m.put("keptAt", Instant.ofEpochMilli(stamp(dirs.get(i))).toString());
             out.add(m);
         }
-        if (Files.isDirectory(installed.resolve(name)) && Files.isRegularFile(packsDir.resolve(name).resolve("pack.yaml"))) {
+        if (Files.isDirectory(installed.resolve(name)) && Files.isRegularFile(com.ash.drishti.api.PackFolders.of(packsDir, name).resolve("pack.yaml"))) {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("version", "shipped");
             m.put("keptAt", null);
-            m.put("shippedVersion", versionOf(packsDir.resolve(name)));
+            m.put("shippedVersion", versionOf(com.ash.drishti.api.PackFolders.of(packsDir, name)));
             out.add(m);
         }
         return out;

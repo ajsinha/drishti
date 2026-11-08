@@ -25,7 +25,7 @@ market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the prop
 
 **Read with:** [EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market) (the lens as built),
 [EDITIONS.md section 11](../admin/EDITIONS.md#11-drishti-market) (how to run it), the edition file
-[`config/editions/market.yaml`](../../config/editions/market.yaml), the [market-data pack README](../../config/packs/market-data/README.md)
+[`config/lenses/banking/market.yaml`](../../config/lenses/banking/market.yaml), the [market-data pack README](../../config/packs/banking/market-data/README.md)
 (every kind and field), [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) (an item over time), [VAR_GUIDE.md](../guides/VAR_GUIDE.md)
 (how market data reaches VaR: through the upstream P&L vectors) and the plan's
 [market-data rows](../architecture/IMPLEMENTATION_PLAN.md#2914-oversight-proposed) (VaR at stake and the quality checks). The sibling lens
@@ -55,7 +55,7 @@ proposes a row.
 
 Drishti Market is "the bank's own market data in one product: curves, fixings, FX, volatility surfaces and cubes, credit curves, equities,
 inflation, commodities, bonds and correlations, the inputs that feed risk and valuations. No trades and no VaR"
-([`config/editions/market.yaml`](../../config/editions/market.yaml), its header).
+([`config/lenses/banking/market.yaml`](../../config/lenses/banking/market.yaml), its header).
 
 | Persona | Accountable for | What they need from a system |
 |---|---|---|
@@ -124,14 +124,14 @@ licensing shapes what they may show (section 6).
 
 | Need | Status | Evidence |
 |---|---|---|
-| Rates: IR curves, repo, swaption and cap vols, fixings, inflation | **Built**: `CRV`, `REPO`, `IRV`, `CPV`, `FIX`, `INF`, `INFC` | `market.yaml` `commands.allow`; [market-data README](../../config/packs/market-data/README.md) |
+| Rates: IR curves, repo, swaption and cap vols, fixings, inflation | **Built**: `CRV`, `REPO`, `IRV`, `CPV`, `FIX`, `INF`, `INFC` | `market.yaml` `commands.allow`; [market-data README](../../config/packs/banking/market-data/README.md) |
 | FX: spot, forwards, vol surfaces | **Built**: `FX`, `FXF`, `FXV` | |
 | Credit and bonds | **Built**: `CDS`, `BND` | |
 | Equities and commodities, their curves and vols, dividends | **Built**: `EQ`, `EQX`, `DIV`, `EQV`, `CMD`, `CMDC`, `CMDV` | |
 | Correlations, computed on request from history | **Built**: `CORR`, `CORRC`, `EQB` | |
 | Issuers and holiday calendars | **Loaded, hidden**: core's commands (`CAL`, `ISS`) are not in the allow-list; calendars are used by the checks (business days) | [EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market); section 9, decision 6 |
 | Query by form | **Built** (`forms: on`) | |
-| History of an item | **Built** for dated kinds; the pack's `history:` block shapes equities, indexes, FX spots, IR and credit curves, commodities, bonds, inflation | `config/packs/market-data/pack.yaml` (`history:`) |
+| History of an item | **Built** for dated kinds; the pack's `history:` block shapes equities, indexes, FX spots, IR and credit curves, commodities, bonds, inflation | `config/packs/banking/market-data/pack.yaml` (`history:`) |
 
 ### 3.2 Quality checks
 
@@ -151,7 +151,7 @@ licensing shapes what they may show (section 6).
 
 | Need | Status | Evidence or row |
 |---|---|---|
-| Who uses each item (trades, books, VaR inputs) | **Not built**; trades carry `LEGS[].INDEX` (a benchmark name) and `DISCOUNT_INDEX`, not market-data ids ([trading pack README](../../config/packs/trading/README.md)); IR curves carry an `INDEX` field ([market-data README](../../config/packs/market-data/README.md)) | section 5.1 |
+| Who uses each item (trades, books, VaR inputs) | **Not built**; trades carry `LEGS[].INDEX` (a benchmark name) and `DISCOUNT_INDEX`, not market-data ids ([trading pack README](../../config/packs/banking/trading/README.md)); IR curves carry an `INDEX` field ([market-data README](../../config/packs/banking/market-data/README.md)) | section 5.1 |
 | VaR at stake of a flagged item | **Planned** | section 5.1 |
 | Valuations at stake | **Planned** | section 5.1 |
 | The market-data line of a data-trust card | **Proposed** as RO13 of the oversight analysis (reusing the Quality checks) | OVERSIGHT_LENS.md section 4.6 |
@@ -250,7 +250,7 @@ by **rules** (configuration), or from the bank's pricing configuration when it c
 
 | Market data | Used by a trade when (rule, illustrative) | Evidence the rule can use |
 |---|---|---|
-| IR projection curve `CRV-*` | a leg's `INDEX.NAME` equals the curve's `INDEX` | trades' `LEGS[].INDEX` ([trading pack README](../../config/packs/trading/README.md)); curves' `INDEX` ([market-data README](../../config/packs/market-data/README.md)) |
+| IR projection curve `CRV-*` | a leg's `INDEX.NAME` equals the curve's `INDEX` | trades' `LEGS[].INDEX` ([trading pack README](../../config/packs/banking/trading/README.md)); curves' `INDEX` ([market-data README](../../config/packs/banking/market-data/README.md)) |
 | IR discount curve | a leg's `DISCOUNT_INDEX`, else the leg currency's OIS curve (a site rule `CRV-<CCY>-OIS`) | `LEGS[].DISCOUNT_INDEX`, `LEGS[].CURRENCY` |
 | Rate fixing `FIX-*` | a floating leg's index with a reset in the window | `LEGS[].CASH_FLOWS[].RESETS[]` |
 | FX spot, forward curve, vol surface | the trade's currency pair (legs in two currencies, or an FX product) | legs' currencies; the FX kinds' `FX_SPOT`, `FX_FORWARD_CURVE`, `FX_VOL_SURFACE` links |
@@ -298,7 +298,7 @@ named; an item with nine moves is "not checked".
 
 **Data.** Each kind may carry a second source: the same id and date with a `SOURCE` (for example `INTERNAL`, `VENDOR-A`), delivered as a
 second load of the same contract (a source column in the lake table) rather than a second kind. The IR curve already lists the quote
-sources it was built from (`SOURCES`, [market-data README](../../config/packs/market-data/README.md)): the lake today holds one built curve
+sources it was built from (`SOURCES`, [market-data README](../../config/packs/banking/market-data/README.md)): the lake today holds one built curve
 per id.
 
 **The check.** Per field and pillar, |a − b| against a **tolerance table** by asset class and tenor (configuration: 0.5 bp for G10 OIS
@@ -637,7 +637,7 @@ C built with the quality checks the data supports (its *PROPOSED* badge on the m
 A violet accent on the terminal look. **Code:** [`market_landing.html`](../../drishti-console/plugins/banking/templates/home/market_landing.html),
 [`drishti_market-landing.js`](../../drishti-console/plugins/banking/static/js/drishti_market-landing.js), [`drishti_market-landing.css`](../../drishti-console/plugins/banking/static/css/drishti_market-landing.css),
 [`market_landing.py`](../../drishti-console/plugins/banking/market_landing.py) (`/api/home/market/desk`, `/api/home/market/moves`,
-`/api/home/market/quality`), [`market.yaml`](../../config/editions/market.yaml). Curve names and shapes are the demo's; other figures
+`/api/home/market/quality`), [`market.yaml`](../../config/lenses/banking/market.yaml). Curve names and shapes are the demo's; other figures
 illustrative.
 
 **Interactions.** Every tile, item and exception opens its command (`CRV CRV-USD-OIS <GO>` and so on); the Data exceptions tile opens C;
@@ -691,7 +691,7 @@ four built lenses (Risk, Trading, Market, World), each lens with one menu open. 
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
-| X1 | Bar | `DRISHTI Market`; the command line; menus **Views · Curves · Volatility · FX · Credit · BI · Help** | the edition's top menus by id, in order (`menus.top`), [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml) | open a menu | **Built**: `menus.top` in [`market.yaml`](../../config/editions/market.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py); Build is not named (off in the lens) (replaces the menus part of M1) |
+| X1 | Bar | `DRISHTI Market`; the command line; menus **Views · Curves · Volatility · FX · Credit · BI · Help** | the edition's top menus by id, in order (`menus.top`), [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml) | open a menu | **Built**: `menus.top` in [`market.yaml`](../../config/lenses/banking/market.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py); Build is not named (off in the lens) (replaces the menus part of M1) |
 | X2 | Curves menu | Curves `CRV`; Repo `REPO`; Fixings `FIX`; Inflation `INF` | a subject menu in [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X3 | Volatility menu | Swaption volatility `IRV`; Cap volatility `CPV`; FX volatility `FXV`; Equity volatility `EQV`; Commodity volatility `CMDV` | a subject menu in [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X4 | FX menu | Spot `FX`; Forwards `FXF` (FX volatility `FXV`: the Volatility menu) | a subject menu in [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |

@@ -27,7 +27,7 @@ and the oldest lens; this is its product document, and it draws the line between
 
 **Read with:** [EDITIONS.md sections 4 and 7](../admin/EDITIONS.md#4-what-drishti-risk-shows) (what the lens shows and its three
 landings), [EDITIONS.md](../admin/EDITIONS.md) (how to run it), the edition file
-[`config/editions/risk.yaml`](../../config/editions/risk.yaml), [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the VaR engine as built),
+[`config/lenses/banking/risk.yaml`](../../config/lenses/banking/risk.yaml), [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the VaR engine as built),
 [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (the exposure engine),
 [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) (compute, do not store),
 [REGULATORY_VAR_REPORTING.md](../guides/REGULATORY_VAR_REPORTING.md) (the regulatory foundation and the reports) and the contracts [STR.md](../contracts/STR.md)
@@ -57,7 +57,7 @@ built nor planned; section 5 sketches it and section 8 proposes a row. **Hidden*
 ## 1. Who uses it
 
 Drishti Risk is "a one-stop shop to manage risk. VaR and Exposure first; liquidity, climate and more join as more lines here"
-([`config/editions/risk.yaml`](../../config/editions/risk.yaml), its header; [EDITIONS.md section 9](../admin/EDITIONS.md#9-decisions-product-owner),
+([`config/lenses/banking/risk.yaml`](../../config/lenses/banking/risk.yaml), its header; [EDITIONS.md section 9](../admin/EDITIONS.md#9-decisions-product-owner),
 decision 1). Its users sit **near the desks**: they know the books, talk to the traders every day and answer for the numbers.
 
 | Persona | Accountable for | What they need from the lens |
@@ -545,7 +545,7 @@ names the candidate row that would build it. The gaps (on a mock-up, not in the 
 map]`, `desk` the default) ([EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings)). The mock-up's footer
 proposed "pick one or combine"; the product owner kept all three. **Code:** [`risk_landing.html`](../../drishti-console/plugins/banking/templates/home/risk_landing.html),
 [`drishti_risk-landing.js`](../../drishti-console/plugins/banking/static/js/drishti_risk-landing.js), [`drishti_risk-landing.css`](../../drishti-console/plugins/banking/static/css/drishti_risk-landing.css),
-[`risk.yaml`](../../config/editions/risk.yaml) `home`. Figures on the mock-up are the demo's on 2026-09-30 where the guides quote them
+[`risk.yaml`](../../config/lenses/banking/risk.yaml) `home`. Figures on the mock-up are the demo's on 2026-09-30 where the guides quote them
 (VaR 112.04m, ES, the limit letter `LL-0003` 16.07m, EPE 945.58m); the rest are illustrative.
 
 **Interactions on the mock-up, and as built.** Every desk, counterparty, node and heat cell is a link to its scope (`/var?scope=…`,
@@ -687,7 +687,7 @@ four built lenses (Risk, Trading, Market, World), each lens with one menu open. 
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
-| X1 | Bar | `DRISHTI Risk`; the command line; menus **Views · Engines · BI · Admin · Help** | the edition's top menus by id, in order (`menus.top`), [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml) | open a menu | **Built**: `menus.top` in [`risk.yaml`](../../config/editions/risk.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py); Build is not named (off in the lens). The mock-up's VaR and Exposure menus are one **Engines** menu since 2.9.11.a (mock-up [engines-menu/A](../architecture/mockups/engines-menu/A.html)) |
+| X1 | Bar | `DRISHTI Risk`; the command line; menus **Views · Engines · BI · Admin · Help** | the edition's top menus by id, in order (`menus.top`), [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml) | open a menu | **Built**: `menus.top` in [`risk.yaml`](../../config/lenses/banking/risk.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py); Build is not named (off in the lens). The mock-up's VaR and Exposure menus are one **Engines** menu since 2.9.11.a (mock-up [engines-menu/A](../architecture/mockups/engines-menu/A.html)) |
 | X2 | VaR column of the Engines menu | VaR explorer `VAR BANK`; Why it moved `VAR BANK EXPLAIN`; VaR Playground `PLAY VAR`; Scenario matrix `SMAT`; Regulatory reports; Backtesting `VAR BANK BACKTEST`; Stress window `SWIN BANK`; VaR results `VRES`; Official records `VOFF`; Hierarchies and limit letters `HIER` | the `engines` menu in [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml), its `var` column; each item shown only when the edition keeps its command | click an item: its page or command | **Built**: the Playground, Regulatory reports and Backtesting items show once their screens are on the server (`route:`) |
 | X3 | Exposure column of the Engines menu | Exposure explorer `EXP`; A counterparty `EXP CPTY …`; A netting set `EXP NSET …` (Pre-deal check `PREDEAL`: the Counterparties menu) | its `exposure` column | click an item: its page or command | **Built**: A counterparty and A netting set put `EXP CPTY` and `EXP NSET` in the command line for the id |
 | X4 | Phone form | below 640 px the Engines menu's columns fold into a drawer, one engine open at a time | the bar's template and [`drishti_engines-menu.js`](../../drishti-console/web/static/js/drishti_engines-menu.js) | tap Engines, an engine, then an item | **Built** |

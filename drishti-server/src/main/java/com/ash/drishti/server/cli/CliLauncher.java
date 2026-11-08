@@ -159,7 +159,7 @@ public final class CliLauncher {
 
     /**
      * The packs behind the paths of a command line (a pack folder, or a Sutra file inside one: the nearest folder holding a
-     * {@code pack.yaml}), added to the enabled packs, so {@code sutra lint|test config/packs/market-risk} checks market-risk with its
+     * {@code pack.yaml}), added to the enabled packs, so {@code sutra lint|test config/packs/banking/market-risk} checks market-risk with its
      * About text and glossary even when DRISHTI_PACKS names other packs. A pack outside the packs folder is read from its
      * parent folder (as an installed pack). Empty when no path is in a pack.
      */
@@ -177,7 +177,7 @@ public final class CliLauncher {
                 java.nio.file.Path yaml = d.resolve("pack.yaml");
                 if (java.nio.file.Files.isRegularFile(yaml)) {
                     names.add(packName(yaml, d.getFileName().toString()));
-                    if (!packsDir.equals(d.getParent()) && outside == null) {
+                    if (!com.ash.drishti.api.PackFolders.roots(packsDir).contains(d.getParent()) && outside == null) {   // a domain folder is inside
                         outside = d.getParent();
                     }
                     break;

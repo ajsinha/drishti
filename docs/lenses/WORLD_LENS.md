@@ -30,10 +30,10 @@ rule](../guides/EXTERNAL_DATA.md#the-internal-only-rule)). Section 6 lists every
 
 **Read with:** [EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world) (the lens as built),
 [EDITIONS.md section 10](../admin/EDITIONS.md#10-drishti-world) (how to run it), the edition file
-[`config/editions/world.yaml`](../../config/editions/world.yaml), [EXTERNAL_DATA.md](../guides/EXTERNAL_DATA.md) (every external source, its
-licence and its refresh script) and the packs' READMEs: [world-economy](../../config/packs/world-economy/README.md),
-[news-and-markets](../../config/packs/news-and-markets/README.md), [us-equities](../../config/packs/us-equities/README.md),
-[gleif](../../config/packs/gleif/README.md), [funds](../../config/packs/funds/README.md). The sibling lens documents:
+[`config/lenses/economy/world.yaml`](../../config/lenses/economy/world.yaml), [EXTERNAL_DATA.md](../guides/EXTERNAL_DATA.md) (every external source, its
+licence and its refresh script) and the packs' READMEs: [world-economy](../../config/packs/economy/world-economy/README.md),
+[news-and-markets](../../config/packs/economy/news-and-markets/README.md), [us-equities](../../config/packs/capitalmarkets/us-equities/README.md),
+[gleif](../../config/packs/core/gleif/README.md), [funds](../../config/packs/capitalmarkets/funds/README.md). The sibling lens documents:
 [RISK_LENS.md](RISK_LENS.md), [TRADING_LENS.md](TRADING_LENS.md), [MARKET_LENS.md](MARKET_LENS.md).
 
 ## Contents
@@ -59,7 +59,7 @@ proposes a row.
 ## 1. Who uses it
 
 Drishti World is "the public-data packs in one product: economies and regions, news and quotes, US companies and filings, legal entities
-(GLEIF), funds and ETFs" ([`config/editions/world.yaml`](../../config/editions/world.yaml), its header). None of its packs links into the
+(GLEIF), funds and ETFs" ([`config/lenses/economy/world.yaml`](../../config/lenses/economy/world.yaml), its header). None of its packs links into the
 bank's own data (core, market-data): it is **context**, not the bank's book.
 
 | Persona | Accountable for | What they need from the lens |
@@ -102,11 +102,11 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 |---|---|---|
 | *Show me this economy* | **Built**: `ECON`, `MACRO`, `FCST`, `LABR`, `FISC`, `SOCI`, `JUR`, `PARTY`, `OFFC`, `ELEC`; forms on | — |
 | *Compare the G7 (or G20, or emerging markets)* | **Partly**: the World map shows G7 and G20 as **member lists** (hard-coded in `drishti-console/plugins/economy/static/js/drishti_world-landing.js`); the pack's groups are World Bank regions, income groups and the World; the income groups stand for emerging markets | G7 and G20 as country groups with GDP-weighted figures like the others (section 5.2) |
-| *Which elections are coming up?* | **Not served**: an election's next date is free text (`NEXT_ELECTION`, "by December 2028", [world-economy README](../../config/packs/world-economy/README.md)); the tile was replaced by funds and ETFs | A parsed date window (section 5.3) |
-| *Who owns this company? Who is its ultimate parent?* | **Built**: `LEI`, `LEIG`, `LEIR`, `LEIC`, `LEIM`; a company and its LEI record link both ways when us-equities is on ([gleif README](../../config/packs/gleif/README.md)) | Parent changes over time (section 5.6) |
+| *Which elections are coming up?* | **Not served**: an election's next date is free text (`NEXT_ELECTION`, "by December 2028", [world-economy README](../../config/packs/economy/world-economy/README.md)); the tile was replaced by funds and ETFs | A parsed date window (section 5.3) |
+| *Who owns this company? Who is its ultimate parent?* | **Built**: `LEI`, `LEIG`, `LEIR`, `LEIC`, `LEIM`; a company and its LEI record link both ways when us-equities is on ([gleif README](../../config/packs/core/gleif/README.md)) | Parent changes over time (section 5.6) |
 | *Which funds hold this company? Which ETFs track this index?* | **Built**: `HELD`, `TRACK`, `FUND` (the 200 largest US funds and ETFs, newest N-PORT) | Holdings changes between quarters (section 5.7) |
 | *What are its financials?* | **Built**: `USEQ`, `FACT`, `FILING`: ten fiscal years from XBRL | — |
-| *What is its share price?* | **Partly**: `PXH` read live by an off-by-default connector, internal only; the snapshot's twenty quotes | No prices shipped ([us-equities README](../../config/packs/us-equities/README.md)); licensing (section 6) |
+| *What is its share price?* | **Partly**: `PXH` read live by an off-by-default connector, internal only; the snapshot's twenty quotes | No prices shipped ([us-equities README](../../config/packs/capitalmarkets/us-equities/README.md)); licensing (section 6) |
 
 ### 2.3 The close and month-end
 
@@ -125,7 +125,7 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 
 | Need | Status | Evidence |
 |---|---|---|
-| About 200 economies: output, growth, prices, jobs, debt, external balance | **Built** (World Bank, IMF, CIA World Factbook) | [world-economy README](../../config/packs/world-economy/README.md) |
+| About 200 economies: output, growth, prices, jobs, debt, external balance | **Built** (World Bank, IMF, CIA World Factbook) | [world-economy README](../../config/packs/economy/world-economy/README.md) |
 | IMF forecasts with their vintage | **Built**, **internal only** (`FCST`, `VINTAGE`) | README `economic-forecast`; sources block `internal-only: true` |
 | Country groups (World Bank regions, income groups, the World), GDP-weighted | **Built** (`ECG`, read live by `macro-groupings`) | README `country-group` |
 | G7, G20 as groups | **Partly** (member lists in the landing's script) | section 5.2 |
@@ -138,7 +138,7 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 
 | Need | Status | Evidence |
 |---|---|---|
-| Fifteen news topics and twenty listed companies with headlines | **Built**, Google News, **internal only** | [news-and-markets README](../../config/packs/news-and-markets/README.md) |
+| Fifteen news topics and twenty listed companies with headlines | **Built**, Google News, **internal only** | [news-and-markets README](../../config/packs/economy/news-and-markets/README.md) |
 | Live quotes | **Built**, Yahoo (yfinance connector), **internal only**, off until enabled; offline, a captured snapshot (the owner's choice for the offline demo machine) | same |
 | Index levels, FX | **Not in the snapshot** | section 5.1 |
 
@@ -146,7 +146,7 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 
 | Need | Status | Evidence |
 |---|---|---|
-| S&P 500, Nasdaq-100, Dow 30 and the US, Canadian and UK banks that file with the SEC: filings, ten years of XBRL financials, LEI, SIC sector, index membership | **Built** | [us-equities README](../../config/packs/us-equities/README.md) |
+| S&P 500, Nasdaq-100, Dow 30 and the US, Canadian and UK banks that file with the SEC: filings, ten years of XBRL financials, LEI, SIC sector, index membership | **Built** | [us-equities README](../../config/packs/capitalmarkets/us-equities/README.md) |
 | Index weights or levels, GICS | **Not shipped** | same |
 | Prices | **Live only**, off by default, **internal only** (`PXH`) | same |
 | Sector changes over time | **Not served** (replaced on the landing) | section 5.6 |
@@ -155,7 +155,7 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 
 | Need | Status | Evidence |
 |---|---|---|
-| LEI records, groups (ultimate parent and up to 50 consolidated entities), relationships, countries, mappings (BIC, ISIN) | **Built**, CC0 | [gleif README](../../config/packs/gleif/README.md) |
+| LEI records, groups (ultimate parent and up to 50 consolidated entities), relationships, countries, mappings (BIC, ISIN) | **Built**, CC0 | [gleif README](../../config/packs/core/gleif/README.md) |
 | Late renewals flagged | **Built** | same |
 | New entities and parent changes since yesterday | **Not served** (the counts on file instead) | section 5.6 |
 
@@ -163,7 +163,7 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 
 | Need | Status | Evidence |
 |---|---|---|
-| The 200 largest US funds and ETFs: holdings (CUSIP, ISIN, LEI), derivatives and counterparties, flows, monthly returns, N-CEN facts, prospectus figures | **Built**, public domain | [funds README](../../config/packs/funds/README.md) |
+| The 200 largest US funds and ETFs: holdings (CUSIP, ISIN, LEI), derivatives and counterparties, flows, monthly returns, N-CEN facts, prospectus figures | **Built**, public domain | [funds README](../../config/packs/capitalmarkets/funds/README.md) |
 | Who holds a company; which funds track an index | **Built** (`HELD`, `TRACK`) | same |
 | Prices or NAV history | **Not shipped** | same |
 | Holdings changes between quarters | **Not built** | section 5.7 |
@@ -256,7 +256,7 @@ and the market-data pack stays the bank's. **Size** S.
 
 **Index levels.** No openly licensed daily level exists for the S&P 500 or the S&P/TSX: the index owners license them (vendors and
 FRED's S&P series carry the owner's terms). Options: (a) add the index tickers (`^GSPC`, `^GSPTSE`) to the Yahoo snapshot, **internal
-only** like its quotes (the snapshot is the owner's choice for the offline demo, [news-and-markets README](../../config/packs/news-and-markets/README.md));
+only** like its quotes (the snapshot is the owner's choice for the offline demo, [news-and-markets README](../../config/packs/economy/news-and-markets/README.md));
 (b) show the tracking ETF's quote (SPY) as "S&P 500 via SPY", also Yahoo, internal only; (c) leave levels out (today). Recommended: (a),
 labelled internal only, and nothing outside the bank. **Size** S. **Tests:** the tile names its source and date; with the snapshot lacking
 the ticker, the tile falls back to breadth, as today.
@@ -375,7 +375,7 @@ limits request rates: the refresh scripts honour it.
 
 | Lens | What World shares with it | What World deliberately hides | When a World user should switch |
 |---|---|---|---|
-| **Drishti Risk** ([RISK_LENS.md](RISK_LENS.md)) | Nothing loaded in common; a core counterparty links to its country's economy in the full product ([world-economy README](../../config/packs/world-economy/README.md)) | `VAR`, `EXP` and every risk command (`world.yaml`) | For the bank's exposure to a country or a group, once country concentration exists (RO8 of the oversight analysis) |
+| **Drishti Risk** ([RISK_LENS.md](RISK_LENS.md)) | Nothing loaded in common; a core counterparty links to its country's economy in the full product ([world-economy README](../../config/packs/economy/world-economy/README.md)) | `VAR`, `EXP` and every risk command (`world.yaml`) | For the bank's exposure to a country or a group, once country concentration exists (RO8 of the oversight analysis) |
 | **Drishti Trading** ([TRADING_LENS.md](TRADING_LENS.md)) | Nothing | Trades and books | For a trader, World is a side window; Trading leaves macro out by design |
 | **Drishti Market** ([MARKET_LENS.md](MARKET_LENS.md)) | Nothing loaded in common; the official public FX and rates captured for market-data (WL1 reuses the parser) | The bank's market data | When a public FX or rate differs from the bank's mark: the bank's is in Market |
 | **Drishti Oversight** (proposed) | — | — | — |
@@ -491,7 +491,7 @@ row.
 A teal accent on the terminal look. **Code:** [`world_landing.html`](../../drishti-console/plugins/economy/templates/home/world_landing.html),
 [`drishti_world-landing.js`](../../drishti-console/plugins/economy/static/js/drishti_world-landing.js), [`drishti_world-landing.css`](../../drishti-console/plugins/economy/static/css/drishti_world-landing.css)
 (the packs' own answers through `/api/home/search` and `/api/raw`, [`edition_routes.py`](../../drishti-console/routes/edition_routes.py)),
-[`world.yaml`](../../config/editions/world.yaml). The mock-up's figures are illustrative. Its warning, *IMF figures and Yahoo prices are for
+[`world.yaml`](../../config/lenses/economy/world.yaml). The mock-up's figures are illustrative. Its warning, *IMF figures and Yahoo prices are for
 internal demonstrations only*, is a decision, not a panel: shown inside the bank (product owner, 2026-10-29); an external showing needs a
 decision and the switch of WL12.
 
@@ -544,7 +544,7 @@ four built lenses (Risk, Trading, Market, World), each lens with one menu open. 
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
-| X1 | Bar | `DRISHTI World`; the command line; menus **Views · Economies · Markets · Companies · BI · Help** | the edition's top menus by id, in order (`menus.top`), [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml) | open a menu | **Built**: `menus.top` in [`world.yaml`](../../config/editions/world.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py); Build is not named (off in the lens) (replaces the menus part of W1) |
+| X1 | Bar | `DRISHTI World`; the command line; menus **Views · Economies · Markets · Companies · BI · Help** | the edition's top menus by id, in order (`menus.top`), [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml) | open a menu | **Built**: `menus.top` in [`world.yaml`](../../config/lenses/economy/world.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py); Build is not named (off in the lens) (replaces the menus part of W1) |
 | X2 | Economies menu | A country `ECON`; Indicators `MACRO`; IMF forecasts `FCST`; Regions `REGE` | a subject menu in [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X3 | Markets menu | News `NEWS`; Quotes `QUOTE`; Indices `IDX` | a subject menu in [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X4 | Companies menu | US equities `USEQ`; Filings `EDGAR`; Legal entities `LEIC`; Funds and ETFs `FUND` | a subject menu in [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |

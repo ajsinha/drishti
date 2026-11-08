@@ -16,7 +16,7 @@ kind `stress-result`. The scenario definitions (SCN, `stress-scenario`) stay **f
 machine can apply them. Everything here is a **proposal**; each change will be recorded in
 [section 16](#16-open-questions-and-the-change-table).
 
-**Sources read (2026-10-25):** `config/packs/market-risk/contracts/{stress-result,stress-scenario}.contract.yaml`, the samples
+**Sources read (2026-10-25):** `config/packs/banking/market-risk/contracts/{stress-result,stress-scenario}.contract.yaml`, the samples
 `stress-result.jsonl` (80) and `stress-scenario.jsonl` (8), `data/testdata/market-risk/{stress-result,stress-scenario}/` (snapshot of
 2026-07-08, every later file empty), `tools/packgen/banking/data_results.py` (`SCENARIOS`, `market_results`), the Calc snippets
 `stress_from_sensitivities.py` and `stress_heatmap.py`.
@@ -465,9 +465,9 @@ The old id is `STR-<scenario suffix>-<desk suffix>`; the desk suffix is the last
 
 | Item | Removed |
 |---|---|
-| Kind `stress-result` | `config/packs/market-risk/pack.yaml` kind, route, layout, form, id pattern `^STR-`, `graph.fields` entries; the mnemonic `STR` opens the computed page |
+| Kind `stress-result` | `config/packs/banking/market-risk/pack.yaml` kind, route, layout, form, id pattern `^STR-`, `graph.fields` entries; the mnemonic `STR` opens the computed page |
 | Data | `samples/stress-result.jsonl`, `data/testdata/market-risk/stress-result/`, its `testdata.yaml` entries |
-| Sutra | `config/packs/market-risk/sutras/market-risk/stress-result.v1.sutra.yaml` (the SCN Sutra stays, linking to the computed page) |
+| Sutra | `config/packs/banking/market-risk/sutras/market-risk/stress-result.v1.sutra.yaml` (the SCN Sutra stays, linking to the computed page) |
 | Calc snippets | `stress_from_sensitivities.py`, `stress_heatmap.py` (replaced by the matrix and the factor breakdown) |
 | Generator | the stress part of `market_results` |
 | Contract | `stress-result.contract.yaml` (contracts for `scenario-pnl`, `risk-limit` and the computed kinds replace it; `stress-scenario`'s contract gains the fields of §3.3) |

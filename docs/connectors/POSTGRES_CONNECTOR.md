@@ -135,7 +135,7 @@ pack declares them on `trade-endur`; the `postgres` profile (`SPRING_PROFILES_AC
 connector to the `jdbc` plugin in table mode and keeps the pack's settings, so the declaration applies unchanged:
 
 ```yaml
-# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trade-endur.yaml at the first start)
+# config/packs/banking/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trade-endur.yaml at the first start)
 connectors:
   trade-endur:
     settings:

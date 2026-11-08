@@ -45,7 +45,7 @@ test data's samples of 2026-09-30 (`data/testdata`: Endur trades, counterparties
 | Where | What |
 |---|---|
 | `config/tables/<domain>/<name>.table.yaml` | one virtual table per file, in its domain's folder (`config/tables/trading/trade_legs.table.yaml`) |
-| `config/tables/<domain>/<name>.model.yaml` | one model per file (migrated BI models are in `config/tables/bi/`) |
+| `config/tables/<domain>/<name>.model.yaml` | one model per file (the shipped samples: `config/tables/banking/` for the banking module's, read only while it is on, and `config/tables/bi/`) |
 | the item store (`drishti_bi_item`, kinds `table` and `model`) | stored definitions, governed as BI's items are: workspaces, review, versions (no schema change) |
 
 The catalogue reads both, checks every definition and the catalogue as a whole, and is replaced in one step when a definition changes. The
@@ -59,7 +59,7 @@ Every file starts with `rachana: 3`, the language version of the layer's files: 
 | Kind | Rule | Example |
 |---|---|---|
 | table | `<domain>.<name>`: lower case, letters, digits, underscores, starting with a letter; the domain is the file's folder | `trading.trade_legs` |
-| migrated BI dataset | the domain `bi`, hyphens as underscores | `trading-risk-trades` is `bi.trading_risk_trades` |
+| migrated BI dataset | the domain `bi`, hyphens as underscores | `trading-risk-trades` is `banking.trading_risk_trades` |
 | pack-generated dataset | the pack's name as the domain | `pack.trading.trade` is `trading.trade` |
 | model | BI's model name, kept (reports, boards and bookmarks bind it by name and major) | `trading-risk@1` |
 | a table's old name | `was: trading-risk-trades`: resolves for one release, with a warning wherever it is used | |
@@ -73,7 +73,7 @@ one source, each with its own columns, grain and filter (`trading.trade_summary`
 
 ```yaml
 rachana: 3
-table: bi.trading_cashflows_cashflows
+table: banking.trading_cashflows_cashflows
 was: trading-cashflows-cashflows             # the name before, one release
 version: 1.0.0
 title: "Trade legs and cashflows: cashflows"
@@ -149,10 +149,10 @@ rachana: 3
 model: trading-risk
 version: 1.0.0
 tables:
-  trades:         { table: bi.trading_risk_trades, role: fact }
-  netting_sets:   { table: bi.trading_risk_netting_sets, role: fact }
-  counterparties: { table: bi.trading_risk_counterparties, role: dimension }
-  desks:          { table: bi.trading_risk_desks, role: dimension }
+  trades:         { table: banking.trading_risk_trades, role: fact }
+  netting_sets:   { table: banking.trading_risk_netting_sets, role: fact }
+  counterparties: { table: banking.trading_risk_counterparties, role: dimension }
+  desks:          { table: banking.trading_risk_desks, role: dimension }
 relationships:
   - { from: trades.DESK, to: desks.id }
   - { from: trades.NETTING_SET, to: netting_sets.id, active: false }
@@ -239,12 +239,12 @@ The command line reads definitions and sample files only; it starts no server. R
 
 ```text
 $ drishti.py tables list
-table  bi.counterparty_exposure_counterparties@1.0.0  from kind, 4 columns, materialize on-load
-table  bi.counterparty_exposure_official_counterparties@1.0.0  from table, 0 columns, materialize on-load
+table  banking.counterparty_exposure_counterparties@1.0.0  from kind, 4 columns, materialize on-load
+table  banking.counterparty_exposure_official_counterparties@1.0.0  from table, 0 columns, materialize on-load
 ...
-table  bi.live_trading_trade@1.0.0  from kind, 14 columns, materialize live
-table  bi.trading_cashflows_cashflows@1.0.0  from kind, grain $.LEGS[*].CASH_FLOWS[*], 9 columns, materialize on-load
-table  bi.trading_risk_trades@1.0.0  from kind, 17 columns, materialize on-load
+table  banking.live_trading_trade@1.0.0  from kind, 14 columns, materialize live
+table  banking.trading_cashflows_cashflows@1.0.0  from kind, grain $.LEGS[*].CASH_FLOWS[*], 9 columns, materialize on-load
+table  banking.trading_risk_trades@1.0.0  from kind, 17 columns, materialize on-load
 table  core.books@1.0.0  from kind, 3 columns, materialize none
 table  trading.trade_legs@1.0.0  from kind, grain $.LEGS[*], 8 columns, materialize on-load
 model  trading-risk@1.0.0  7 tables, 17 measures
@@ -265,7 +265,7 @@ exits 1 when it finds an error. With `--sample TABLE=FILE.jsonl` it also checks 
 business date, every path present in some row.
 
 ```text
-$ drishti.py tables preview bi.trading_cashflows_cashflows --sample trades.jsonl --limit 5
+$ drishti.py tables preview banking.trading_cashflows_cashflows --sample trades.jsonl --limit 5
 id	business_date	index	LEG_ID	CURRENCY	FLOW_TYPE	FLOW_ID	PAYMENT_DATE	START_DATE	END_DATE	NOTIONAL	RATE
 row-1		0	1	USD		5000028	2026-11-03	2026-11-01	2026-11-01	1.484794E7
 row-1		0	2	USD		5000029	2026-11-03	2026-11-01	2026-11-01	1.1878352E7
@@ -283,7 +283,7 @@ reads another table's sample given with `--related TABLE=FILE.jsonl` (repeatable
 them `related` finds nothing and only a currency to itself converts.
 
 ```text
-$ drishti.py tables lineage bi.trading_risk_trades
+$ drishti.py tables lineage banking.trading_risk_trades
 used by  model trading-risk: reads it as trades (fact)
 ```
 

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The small, safe expression language of the Home page's facts (config/packs/<pack>/config/facts.yaml; core/facts.py).
+"""The small, safe expression language of the Home page's facts (config/packs/<domain>/<pack>/config/facts.yaml; core/facts.py).
 
 An expression is Python's expression syntax cut down to reading data: names bound by the fact's steps, ``a.b`` and ``a['b']`` (a key
 of an answer; a missing key is ``None``), ``a[0]``, numbers, strings, ``and or not``, comparisons, ``+ - * / // %``, ``x if c else y``,

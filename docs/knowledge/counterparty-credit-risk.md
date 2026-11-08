@@ -137,7 +137,7 @@ any scope text  (BANK, LE:LE-LDN, GROUP:GRP-ALDERSHOT, CPTY:CP-ALDERSHOT, NSET:N
    └─► exposure-official-cpty  XOFC            the official figures of every netting set and counterparty, published once a day
 ```
 
-The links are the contract link columns of `config/packs/counterparty-risk/contracts/` and `config/packs/core/contracts/`:
+The links are the contract link columns of `config/packs/banking/counterparty-risk/contracts/` and `config/packs/core/core/contracts/`:
 `netting-set.COUNTERPARTY → counterparty`, `AGREEMENT → agreement`, `CSA → csa`, `CREDIT_LIMIT → credit-limit`,
 `CVA_RESULT → cva`, `SACCR → sa-ccr`, `SIMM → simm`, `COLLATERAL_BALANCE → collateral-balance`, `LEGAL_ENTITY → legal-entity`,
 `TRADE_IDS → trade`; `counterparty.NETTING_SETS → netting-set`, `GROUP → counterparty-group`, `CREDIT_LIMIT → credit-limit`,

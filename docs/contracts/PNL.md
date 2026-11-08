@@ -15,7 +15,7 @@ amended and ended trades, and to fees, with the **unexplained** remainder and a 
 any pair of business dates. It replaces the stored kind `pnl-explain`. Everything here is a **proposal**; each
 change will be recorded in [section 16](#16-open-questions-and-the-change-table).
 
-**Sources read (2026-10-25):** `config/packs/market-risk/contracts/pnl-explain.contract.yaml`, the sample `pnl-explain.jsonl` (30
+**Sources read (2026-10-25):** `config/packs/banking/market-risk/contracts/pnl-explain.contract.yaml`, the sample `pnl-explain.jsonl` (30
 books), `data/testdata/market-risk/pnl-explain/` (snapshot of 2026-07-08, every later file empty), `tools/packgen/banking/data_results.py`
 (`market_results`, `EXPLAIN_WEIGHTS`, `explain_steps`), `tools/packgen/banking/data_trades.py` (`pnl1d`, `pnl_explain`), the trade
 valuations (TVAL.md §13.4) and the Calc snippets `pnl_explain_quality.py`, `pnl_attribution_mix.py`.
@@ -401,9 +401,9 @@ VaR's model with `drishti.pnl.access`, gate kinds `valuation` and `sensitivity`.
 | `PNL-<DESK>-<n>` (`PNL-COMM-1`, the book `BOOK-COMM-1`) | `PNL BOOK:BOOK-COMM-1` at T = the record's `DATE` (2026-09-30), T−1 = 2026-09-29 (`/v/pnl-attribution/BOOK:BOOK-COMM-1`) |
 | `/v/pnl-explain/<id>` | the same, by redirect |
 
-**Removed when built:** the kind `pnl-explain` (`config/packs/market-risk/pack.yaml` kind, route, layout, form, id pattern `^PNL-`;
+**Removed when built:** the kind `pnl-explain` (`config/packs/banking/market-risk/pack.yaml` kind, route, layout, form, id pattern `^PNL-`;
 mnemonic `PNL` opens the computed page), `samples/pnl-explain.jsonl`, `data/testdata/market-risk/pnl-explain/`, the Sutra
-`config/packs/market-risk/sutras/market-risk/pnl-explain.v1.sutra.yaml`, the Calc snippets `pnl_explain_quality.py` and
+`config/packs/banking/market-risk/sutras/market-risk/pnl-explain.v1.sutra.yaml`, the Calc snippets `pnl_explain_quality.py` and
 `pnl_attribution_mix.py`, the P&L part of `market_results` (and `pnl_explain` on the banking generator's trades), the contract
 `pnl-explain.contract.yaml`, the about and README sections. **Guard test:** fails when `pnl-explain` returns or an input carries
 `EXPLAINED`, `UNEXPLAINED`, `ATTRIBUTION`.

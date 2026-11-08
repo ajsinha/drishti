@@ -976,7 +976,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
   message lists the stale files, and `extra=[…]` lists files the generator did not write.
 - **Fix:** move the change into the generator, run it without `--check`, and commit both
   ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)). To discard a hand edit instead:
-  `git checkout -- config/packs/<name>/…`.
+  `git checkout -- config/packs/<domain>/<name>/…`.
 
 ## Connectors
 

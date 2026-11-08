@@ -15,7 +15,7 @@
 -->
 # The demo connector: every pack's samples, in memory, ticking
 
-The `demo` connector serves the sample documents that ship inside each enabled pack (`config/packs/<pack>/samples/`). It needs
+The `demo` connector serves the sample documents that ship inside each enabled pack (`config/packs/<domain>/<pack>/samples/`). It needs
 nothing installed: at start it reads every sample into memory, answers reads, type-ahead and reverse lookups from there, and moves the
 numbers of live samples a little every 400 ms while someone watches them. It is the server's `default-route`, so a server started with
 no lake and no store shows working screens. This document explains what it reads, how packs feed it, how it ticks, where it sits in
@@ -68,7 +68,7 @@ Every enabled pack that has a `samples/` folder contributes it. The folder holds
 layout of every shipped pack):
 
 ```
-config/packs/market-data/samples/
+config/packs/banking/market-data/samples/
 ├── catalog.jsonl            the list of samples: kind, id, title, subtitle
 ├── ir-curve.jsonl          one document a line, in the catalogue's order
 ├── fx-spot.jsonl
@@ -116,7 +116,7 @@ trade's terms do not move during the day); each trade's **valuation** (`trade-va
 
 A sample is the entity's document as its system of record would hold it (UPPER_SNAKE, as everywhere in the shipped packs), plus one
 block, `_meta`, that the connector removes and turns into the document's provenance. A live trade valuation of the market-risk pack,
-complete (`config/packs/market-risk/samples/trade-valuation.jsonl`, the first line):
+complete (`config/packs/banking/market-risk/samples/trade-valuation.jsonl`, the first line):
 
 ```json
 {"VALUATION_ID": "TVAL-1000001", "TRADE_ID": 1000001, "SOURCE_SYSTEM": "ENDUR", "PRODUCT_TYPE": "ComSwap", "PRODUCT_GROUP": "Commodity",
@@ -340,7 +340,7 @@ up to the target.
 otherwise a new row is added at the end and the oldest rows fall off at `keep`. Each `row` field is an expression, with `last.NAME` the
 previous version of that row (or the row before it, for a new one).
 
-**An example**, the cross-currency basis curve `CRV-USD-BASIS` as shipped (`config/packs/market-data/samples/ir-curve.jsonl`), whose
+**An example**, the cross-currency basis curve `CRV-USD-BASIS` as shipped (`config/packs/banking/market-data/samples/ir-curve.jsonl`), whose
 headline `TEN_Y` is 0.0382 (decimal) while its zero rates are in percent, its quotes decimal and its forwards in percent:
 
 ```json

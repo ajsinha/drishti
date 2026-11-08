@@ -843,21 +843,21 @@ period; a movement over the definition's threshold has a note.
 
 **A definition in the report framework.** The pack is one file of the report-definition framework
 ([REGULATORY_VAR_REPORTING section 8.2.6](../guides/REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off)): the same
-directory (`config/reports/`), the same validation at start (a wrong field names the file and the field), the same generator reading the
+directory (`config/reports/banking/`), the same validation at start (a wrong field names the file and the field), the same generator reading the
 stored official records, the same declarative checks, frozen runs with each cell's lineage, maker-checker-approver sign-off (one person a
 step, send back to the maker) and files released after the last approval. It extends the framework in one place: a third `type`,
 `pack`, beside `var-table` and `backtesting-chart`, whose `pages:` list names the bands of each page, with a `layout:` and a `style:`
 (illustrative):
 
 ```yaml
-# config/reports/board-pack.yaml (illustrative)
+# config/reports/banking/board-pack.yaml (illustrative)
 report: board-pack
 title: Market risk report to the board risk committee
 type: pack                                  # pages of bands; var-table and backtesting-chart as before
 period: fiscal-quarter                      # the data date and "since" come from governance-calendar's meetings
 measure: var
 layout: pages                               # pages (A, the default) | landscape (B) | register (C)
-style: bank-default                         # config/reports/styles/<style>.yaml
+style: bank-default                         # config/reports/banking/styles/<style>.yaml
 pages:
   - { page: answer,              bands: [brief, headline-tiles, for-decision, contents] }
   - { page: var-over-period,     bands: [var-series, period-statistics, var-by-risk-type] }
@@ -882,7 +882,7 @@ is), a table, a chart. The register layout draws the same bands as tables only. 
 per style, named by the definition (illustrative):
 
 ```yaml
-# config/reports/styles/bank-default.yaml (illustrative)
+# config/reports/banking/styles/bank-default.yaml (illustrative)
 style: bank-default
 paper: { size: A4, orientation: portrait, margins-mm: [18, 16, 16, 16] }   # Letter for a US bank
 logo: { file: logo.png, height-mm: 10, position: left }                   # the bank's file, beside the style
@@ -1088,8 +1088,8 @@ holds, what is needed, a proposed data contract, its volume, and what is compute
 
 | Kind | What it is | Why it is not enough |
 |---|---|---|
-| `frtb-sensitivity` (`FRTB`) | **One record per book** (`RESULT_ID` `FRTB-<desk>-<n>`, `BOOK`) with stored FRTB charges (`DELTA_CHARGE`, `VEGA_CHARGE`, `CURVATURE_CHARGE`, `TOTAL`, `BY_CLASS[]`) and a short list `SENSITIVITIES[]` of `RISK_CLASS`, `BUCKET` (`1` to `3`), `MEASURE` (`Delta`, `Vega`) and `VALUE` in USD, at most six elements a book; **demo data only: 30 records** in `data/testdata/market-risk/frtb-sensitivity/`, a snapshot then daily changes ([the sample page](../contracts/samples/market-risk/frtb-sensitivity.md); `config/packs/market-risk/contracts/frtb-sensitivity.contract.yaml`; the mnemonic `FRTB` in `config/packs/market-risk/pack.yaml`) | Book grain, not position or trade: no drill, no arbitrary scope, no intraday. Regulatory buckets only (a bucket is a sector or a rating group, not a curve and tenor); no risk factor, curve, tenor or issuer: no DV01 ladder, no CS01 by issuer. The charges are stored computed figures that FRTB.md retires ([COMPUTED_ATTRIBUTES.md section 4.9](../architecture/COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb), finding F18) |
-| `trade-valuation.DV01` (`TVAL`) | One number per trade and date, total DV01 in USD ([COMPUTED_ATTRIBUTES.md section 4.1](../architecture/COMPUTED_ATTRIBUTES.md#41-trade-valuation-tval); `config/packs/market-risk/contracts/trade-valuation.contract.yaml`) | No curve, no tenor: a parallel shift only; no other measure |
+| `frtb-sensitivity` (`FRTB`) | **One record per book** (`RESULT_ID` `FRTB-<desk>-<n>`, `BOOK`) with stored FRTB charges (`DELTA_CHARGE`, `VEGA_CHARGE`, `CURVATURE_CHARGE`, `TOTAL`, `BY_CLASS[]`) and a short list `SENSITIVITIES[]` of `RISK_CLASS`, `BUCKET` (`1` to `3`), `MEASURE` (`Delta`, `Vega`) and `VALUE` in USD, at most six elements a book; **demo data only: 30 records** in `data/testdata/market-risk/frtb-sensitivity/`, a snapshot then daily changes ([the sample page](../contracts/samples/market-risk/frtb-sensitivity.md); `config/packs/banking/market-risk/contracts/frtb-sensitivity.contract.yaml`; the mnemonic `FRTB` in `config/packs/banking/market-risk/pack.yaml`) | Book grain, not position or trade: no drill, no arbitrary scope, no intraday. Regulatory buckets only (a bucket is a sector or a rating group, not a curve and tenor); no risk factor, curve, tenor or issuer: no DV01 ladder, no CS01 by issuer. The charges are stored computed figures that FRTB.md retires ([COMPUTED_ATTRIBUTES.md section 4.9](../architecture/COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb), finding F18) |
+| `trade-valuation.DV01` (`TVAL`) | One number per trade and date, total DV01 in USD ([COMPUTED_ATTRIBUTES.md section 4.1](../architecture/COMPUTED_ATTRIBUTES.md#41-trade-valuation-tval); `config/packs/banking/market-risk/contracts/trade-valuation.contract.yaml`) | No curve, no tenor: a parallel shift only; no other measure |
 | The proposed `sensitivity` table of FRTB.md | One row per trade and risk factor, with the factor's parts (class, type, qualifier, curve, tenor, underlying tenor), FRTB and SIMM buckets ([FRTB.md section 3.2](../contracts/FRTB.md#32-the-shared-sensitivity-table-position-sensitivity-sens)) | Proposed, not built; a row per factor (tens of rows per trade), no position grain, no intraday rule. Its **factor fields** are the right ones and are reused below |
 
 ### 7.2 What oversight needs

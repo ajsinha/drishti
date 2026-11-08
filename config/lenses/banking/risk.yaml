@@ -1,0 +1,105 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Drishti Risk: a one-stop shop to manage risk. VaR and Exposure first; liquidity, climate and more join as more lines here.
+# Chosen by drishti.edition: risk on every server (DRISHTI_EDITION=risk); the console learns it from the server's /api/v1/about.
+# The site's configuration wins over any key (drishti.edition-spec.<key> on the server, edition.<key> in the console).
+# docs/admin/EDITIONS.md (how to run it, then the design as built).
+edition: risk
+title: Drishti Risk  # the edition's name, in the top bar, the About page and the lens menu
+description: VaR and counterparty exposure, from your own pricing data, in one place  # one line on what the edition is for (About, the lens menu)
+
+packs:
+  enabled:                               # by module: a module that is off brings none of its packs
+    core: [core]
+    banking: [market-data, trading, counterparty-risk, market-risk]
+  allow-only: true                       # Admin -> Packs, Deploy archive and the registry refuse any other pack (DRS-1017)
+
+commands:                                # what people may type and see (command line, FUNC, type-ahead, examples, pages);
+  allow:                                 # the engines still read every kind of the packs above
+    # reference data: books, desks, legal entities, counterparties, traders
+    [CPTY, GRP, LE, BOOK, DESK, TRDR, CCP,
+    # trades and FX spot (scenario FX)
+     TRD, CTRD, PTRD, LTRD, FX,
+    # VaR: hierarchies, portfolios, positions, P&L vectors, scenario PVs, FX scenarios, scenario sets, limits, results, official (the what-if is the word VAR's)
+     HIER, PORT, POS, PNLV, SPV, FXS, SSET, VLIM, VRES, VOFF,
+    # Exposure: agreements, CSAs, netting sets, credit limits, collateral, margin calls, runs, paths, results, official (the what-if is the word EXP's)
+     AGR, CSA, NSET, LIM, COLL, MC, XRUN, XPATH, EXP, XOFC,
+    # derived from the trade valuations: netting-set and counterparty MtM totals
+     NSMTM, CPMTM]                         # stress (SCN, STR, SSPNL) is left out (product owner, 2026-10-30)
+  words: { BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: on, DATA: on, VAR: on, EXP: on, SMAT: on, PLAY: on }
+
+features:                                # presets of existing switches (config/lenses/features.yaml); not named: the product's default
+  bi: edition                            # BI with the datasets below only
+  var: on
+  exposure: on
+  calc: off
+  python: off
+  designer: off
+  build: off
+  forms: off
+  datamap: on
+  data: on                               # Export data (EXPORT, /data): every dataset, a simple selection, a day as .jsonl.gz
+  internal-only-data: off                # Export data refuses datasets marked internal only (IMF, Yahoo, news headlines)
+  layouts: on
+  workspaces: on
+  monitors: on
+  alerts: on
+  reports: on
+  lakes: on
+  ai: off
+  embed: off
+
+bi:                                      # BI datasets, models, reports and boards follow these (a report or board: its dataset or model)
+  datasets: [banking.market_risk_var_latest, banking.market_risk_var_official, banking.counterparty_exposure_counterparties, banking.counterparty_exposure_netting_sets,
+             banking.counterparty_exposure_official, banking.counterparty_exposure_official_counterparties, banking.counterparty_exposure_official_netting_sets,
+             banking.live_exposure_netting,
+             bi.trading_risk_*]                     # trades with their counterparties' and netting sets' exposure (the Counterparty risk report)
+  models: [market-risk-var, counterparty-exposure, live-exposure, trading-risk]
+
+phone:                                   # the phone display in this edition (docs/architecture/MOBILE_DISPLAY.md), over the site's ui.phone
+  rules:                                 # tiers and caps by panel, kind, title, Sutra or entity kind (globs): a VaR contribution panel waits under More
+    - { title: "*contribution*", tier: more }
+  pages: {}                              # the VaR and exposure pages' parts, as ui.phone.pages: { var: { hist: glance } }
+
+menus:                                   # by id, per menu; a menu not named shows every item its switches allow
+  top: [views, engines, bi, admin, help]  # the top menus by id, in order; one not named is not drawn
+  # the Views menu's items by id, in order (drishti-console/config/sitemap.yaml)
+  views: [terminal, search, functions, datamap, data, reports, workspaces, monitors, alerts]
+  help: [help-centre, knowledge, install, about]  # the Help menu's items by id
+  footer: [help, about, release-notes]  # the footer's links by id
+  placeholder: "VAR BANK, VAR DESK RATES, EXP CPTY:CP-ALDERSHOT, VRES DESK:RATES …  then <GO>"  # the command line's placeholder text
+
+home:
+  landing: desk                          # the default landing: desk (A, Risk desk), command (B, Command first), map (C, Risk map); today: the product's Home
+  landings: [desk, command, map]         # the landings a person may pick on Home (their choice is kept in their settings)
+  template: home/risk_landing.html       # the page that draws them (it names its script and style: drishti_risk-landing.js, drishti_risk-landing.css)
+  titles: { desk: Risk desk, command: Command first, map: Risk map }  # the landings' names, by landing
+  landing-by-role: {}                    # {role: landing}: read, wins over the person's choice when set; wired to role-based access later
+  hierarchies: [MGMT]                    # the hierarchy the Risk map opens on (its switch lists every hierarchy the engine holds)
+  chips: [VAR BANK, VAR DESK RATES, EXP BANK, EXP CPTY:CP-ALDERSHOT, VRES DESK:RATES, HIER, VOFF]   # the command chips of B
+  sections: { stats: off, grammar: off, pipeline: off, capabilities: off, views: off }   # the product's Home (signed out, or landing=today)
+
+help:
+  categories: [get-started, risk, data, operate, reference, knowledge, internal]   # the help sections kept (config/help.yaml): Analytics and BI, and Build, hidden
+  knowledge: [market-risk, counterparty-risk, core, trading, market-data]   # Knowledge pages of these packs (the rest hidden)
+  unlisted-slugs: refuse                 # a guide not in the help centre answers 404 (no reaching hidden guides by URL)
+
+admin:                                   # the Admin pages shown; the others answer 404 (and are off the menu and the tab strip)
+  # the Admin pages kept, by id; the others answer 404
+  pages: [users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, engines, health, caches, capacity, bi, scopes, configuration]
+
+branding:                                # Drishti's name and eye mark kept; a licensee may override in site configuration
+  product: Drishti Risk  # the product name the edition shows (a site's own branding wins)
+  tagline: VaR and exposure from your own pricing data  # the line under it

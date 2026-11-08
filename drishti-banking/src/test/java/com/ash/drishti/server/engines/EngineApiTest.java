@@ -104,19 +104,19 @@ class EngineApiTest {
     void varOffWithItsDependentsHidesItsBiDatasetsAndItsApi() throws Exception {
         String admin = as("drishti-dev-admin", "admin");
         String reader = as("tina", "trader");
-        mvc.perform(get("/api/v1/bi/items/file:table:bi.market_risk_var_latest").header("Authorization", admin)).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/bi/items/file:table:banking.market_risk_var_latest").header("Authorization", admin)).andExpect(status().isOk());
         try {
             change(admin, "{\"reason\":\"a counterparty node\",\"withDependents\":true,\"changes\":[{\"engine\":\"var\",\"on\":false}]}")
                     .andExpect(status().isOk()).andExpect(jsonPath("$.outcomes[*].engine", containsInAnyOrder("frtb-sa", "mr-cube", "var")))
                     .andExpect(jsonPath("$.outcomes[2].engine").value("var"));                // the dependents first, then var
             mvc.perform(get("/api/v1/risk/var/status").header("Authorization", reader)).andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.code").value("DRS-1020")).andExpect(jsonPath("$.engine").value("var"));
-            mvc.perform(get("/api/v1/bi/items/file:table:bi.market_risk_var_latest").header("Authorization", admin)).andExpect(status().isNotFound());
+            mvc.perform(get("/api/v1/bi/items/file:table:banking.market_risk_var_latest").header("Authorization", admin)).andExpect(status().isNotFound());
         } finally {
             change(admin, "{\"reason\":\"back\",\"withNeeds\":true,\"changes\":[{\"engine\":\"frtb-sa\",\"on\":true},{\"engine\":\"mr-cube\",\"on\":true}]}")
                     .andExpect(status().isOk());
         }
-        mvc.perform(get("/api/v1/bi/items/file:table:bi.market_risk_var_latest").header("Authorization", admin)).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/bi/items/file:table:banking.market_risk_var_latest").header("Authorization", admin)).andExpect(status().isOk());
         assertThat(registry.running()).contains("var", "frtb-sa", "mr-cube");
     }
 }

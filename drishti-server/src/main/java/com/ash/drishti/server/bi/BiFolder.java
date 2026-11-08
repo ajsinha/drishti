@@ -85,6 +85,18 @@ public final class BiFolder implements AutoCloseable {
     private volatile DirectoryWatcher watcher;
     private volatile DirectoryWatcher tablesWatcher;
 
+    /** Whether a domain folder's content is read: false for the folder of a module that is off ({@link #withDomains}). */
+    private volatile java.util.function.Predicate<String> domainOn = d -> true;
+
+    /**
+     * Reads a domain folder ({@code reports/banking/}, {@code tables/banking/}: docs/architecture/DOMAIN_MODULES.md section 8) only while
+     * {@code on} says its domain is on: a module that is off brings no BI file.
+     */
+    public BiFolder withDomains(java.util.function.Predicate<String> on) {
+        this.domainOn = on == null ? d -> true : on;
+        return this;
+    }
+
     public BiFolder(String dir, Duration refresh, String watchMode) {
         this(dir, null, refresh, watchMode);
     }
@@ -215,9 +227,21 @@ public final class BiFolder implements AutoCloseable {
                     continue;
                 }
                 try (Stream<Path> files = Files.list(folder)) {
-                    for (Path f : files.filter(p -> p.getFileName().toString().endsWith("." + k.getValue() + ".yaml")).sorted().toList()) {
-                        String key = k.getKey() + "/" + f.getFileName();
-                        next.put(key, read(k.getValue(), f, entries.get(key)));
+                    for (Path f : files.sorted().toList()) {
+                        if (Files.isDirectory(f)) {                            // a domain folder: reports/banking/x.report.yaml
+                            if (!domainOn.test(f.getFileName().toString())) {
+                                continue;
+                            }
+                            try (Stream<Path> inner = Files.list(f)) {
+                                for (Path g : inner.filter(x -> x.getFileName().toString().endsWith("." + k.getValue() + ".yaml")).sorted().toList()) {
+                                    String key = k.getKey() + "/" + f.getFileName() + "/" + g.getFileName();
+                                    next.put(key, read(k.getValue(), g, entries.get(key)));
+                                }
+                            }
+                        } else if (f.getFileName().toString().endsWith("." + k.getValue() + ".yaml")) {
+                            String key = k.getKey() + "/" + f.getFileName();
+                            next.put(key, read(k.getValue(), f, entries.get(key)));
+                        }
                     }
                 } catch (IOException e) {
                     LOG.warn("BI folder: {} unreadable: {}", folder, e.getMessage());
@@ -225,7 +249,7 @@ public final class BiFolder implements AutoCloseable {
             }
             if (tablesDir != null && Files.isDirectory(tablesDir)) {
                 try (Stream<Path> domains = Files.list(tablesDir)) {
-                    for (Path domain : domains.filter(Files::isDirectory).sorted().toList()) {
+                    for (Path domain : domains.filter(Files::isDirectory).filter(d -> domainOn.test(d.getFileName().toString())).sorted().toList()) {
                         try (Stream<Path> files = Files.list(domain)) {
                             for (Path f : files.sorted().toList()) {
                                 String n = f.getFileName().toString();

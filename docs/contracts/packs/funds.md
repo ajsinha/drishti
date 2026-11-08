@@ -17,7 +17,7 @@
 
 # Data contracts of the funds pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/funds/guides/funds.md](../../../config/packs/funds/guides/funds.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/capitalmarkets/funds/guides/funds.md](../../../config/packs/capitalmarkets/funds/guides/funds.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -31,7 +31,7 @@ A US mutual fund or ETF from SEC public data: the fact sheet, the look-through h
 
 |  |  |
 |---|---|
-| Contract | [fund.contract.yaml](../../../config/packs/funds/contracts/fund.contract.yaml) · version 1.0 |
+| Contract | [fund.contract.yaml](../../../config/packs/capitalmarkets/funds/contracts/fund.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py) |
@@ -398,7 +398,7 @@ The reverse look-through: every fund of the pack that holds one us-equities comp
 
 |  |  |
 |---|---|
-| Contract | [fund-holder.contract.yaml](../../../config/packs/funds/contracts/fund-holder.contract.yaml) · version 1.0 |
+| Contract | [fund-holder.contract.yaml](../../../config/packs/capitalmarkets/funds/contracts/fund-holder.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py) |
@@ -486,7 +486,7 @@ The funds and ETFs of the pack that track one us-equities index, by net assets, 
 
 |  |  |
 |---|---|
-| Contract | [index-funds.contract.yaml](../../../config/packs/funds/contracts/index-funds.contract.yaml) · version 1.0 |
+| Contract | [index-funds.contract.yaml](../../../config/packs/capitalmarkets/funds/contracts/index-funds.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py) |

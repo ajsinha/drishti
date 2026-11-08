@@ -158,7 +158,7 @@ alone is the older form: the options and the pack decide. A table whose lake fil
 loader only (`--engine java --batch-id ID`: the batch recorded in each date's commit, never appended twice); the Python path refuses it.
 
 ```bash
-python3 tools/drishti.py lake build --from drop/endur-2026-10-28.jsonl.gz --as-of 2026-10-28 --pack config/packs/trading \
+python3 tools/drishti.py lake build --from drop/endur-2026-10-28.jsonl.gz --as-of 2026-10-28 --pack config/packs/banking/trading \
     --connector trade-endur --lake demo                  # partitioned by business_date and PRODUCT_TYPE, as config/lakes/demo.yaml says
 python3 tools/drishti.py lake show                       # every lake and table as the server reads them
 python3 tools/drishti.py lake check                      # connectors name known lakes; lake files match the tables on disk
@@ -318,7 +318,7 @@ such as AWS Glue: `catalog=rest`, `uri=…`, `warehouse=…`, `catalog.rest.sign
 to maintain ([OPERATIONS.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](../admin/OPERATIONS.md#8-iceberg-lakes)).
 
 ```bash
-python3 tools/drishti.py lake build --from data/testdata/market-risk/pnl-vector/ --pack config/packs/market-risk --connector risk-store \
+python3 tools/drishti.py lake build --from data/testdata/market-risk/pnl-vector/ --pack config/packs/banking/market-risk --connector risk-store \
     --kind pnl-vector --lake data/iceberg --format iceberg
 ```
 
@@ -473,7 +473,7 @@ connector (`settings.domain`, `settings.layout.<kind>.columns`), and the key, da
 `ingest.trade.flatten` adds `NOTIONAL` and `INDEX_NAME` from the first leg, [4.5](#45-the-two-engines)). Options on the command line win.
 
 ```yaml
-# config/packs/trading/pack.yaml (the parts lake build reads; one Delta connector per source system)
+# config/packs/banking/trading/pack.yaml (the parts lake build reads; one Delta connector per source system)
 pack: trading
 connectors:
   trade-endur:
@@ -493,7 +493,7 @@ The pack has three Delta connectors for `trade`, so the run names one with `--co
 sixteen promoted columns); captured as a dry run:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --pack config/packs/trading \
+drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --pack config/packs/banking/trading \
     --kind trade --connector trade-endur --key TRADE_ID --as-of 2026-09-22 --partition-by PRODUCT_TYPE --lake lake3 --dry-run --json
 # "pack": "trading", "domain": "trading", "kind": "trade", "table": "lake3/trading/trade_endur", "promote": ["TRADE_ID", "SOURCE_SYSTEM",
 # "PRODUCT_TYPE", ... "TRADER_ID"] (16), "documents": 4407, "status": "dry-run", "exitCode": 0
@@ -502,7 +502,7 @@ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdat
 In production the same run names the real lake and tells the server (the ETL's last step):
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-2026-10-16.json.gz --pack config/packs/trading --kind trade --connector trade-endur \
+drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-2026-10-16.json.gz --pack config/packs/banking/trading --kind trade --connector trade-endur \
     --key TRADE_ID --as-of 2026-10-16 --partition-by PRODUCT_TYPE --lake /srv/drishti/delta \
     --signal http://drishti.internal:18480 --token-file /etc/drishti/loads.token
 ```
@@ -599,7 +599,7 @@ A nightly load of the day's extract, at 21:30 on weekdays, after the export land
 
 ```cron
 # m  h  dom mon dow  command
-30 21 *   *   1-5  cd /opt/drishti && drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +\%F).json.gz --pack config/packs/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +\%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q >> /var/log/drishti/lake-build.log 2>&1
+30 21 *   *   1-5  cd /opt/drishti && drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +\%F).json.gz --pack config/packs/banking/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +\%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q >> /var/log/drishti/lake-build.log 2>&1
 ```
 
 The same as a systemd timer (a missed run is caught up after a reboot, and `systemctl status` shows the exit code):
@@ -614,7 +614,7 @@ After=network-online.target
 Type=oneshot
 User=drishti
 WorkingDirectory=/opt/drishti
-ExecStart=/bin/sh -c 'drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +%%F).json.gz --pack config/packs/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +%%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q'
+ExecStart=/bin/sh -c 'drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +%%F).json.gz --pack config/packs/banking/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +%%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q'
 # 2 (written with rejects) is not a failure of the unit; alert on it from the summary instead
 SuccessExitStatus=2
 Environment=DRISHTI_LAKE_HEAP=2g
@@ -709,7 +709,7 @@ the 2.3M sizing: [PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md). `tool
 **Through lake build** (the lock, the run log, the summary, the signal as always):
 
 ```bash
-python3 tools/drishti.py lake build --engine java --from /data/pv/2026-10-28/ --as-of 2026-10-28 --pack config/packs/market-risk --kind scenario-pv \
+python3 tools/drishti.py lake build --engine java --from /data/pv/2026-10-28/ --as-of 2026-10-28 --pack config/packs/banking/market-risk --kind scenario-pv \
     --key SCENARIO_PV_ID --mode overwrite-dates --lake /var/lib/drishti/delta \
     --loader-set memory.budget-mb=16384 --loader-set memory.spill-dir=/mnt/nvme/spill
 ```
@@ -805,7 +805,7 @@ Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file
 ```yaml
 source:
   files: /data/pv/2026-10-28/*.jsonl.gz
-  pack: config/packs/market-risk
+  pack: config/packs/banking/market-risk
   id: SCENARIO_PV_ID
   as-of: 2026-10-28                       # the day's folder: its business date, given (a row's own date is only counted)
 target:
@@ -870,7 +870,7 @@ datasets: 2
 ```yaml
 source:
   files: 'C:\drishti-private\pv\scenario-pv.2026-10-28.jsonl.gz'      # dated by its name
-  pack: 'C:\drishti\config\packs\market-risk'
+  pack: 'C:\drishti\config\packs\banking\market-risk'
   id: SCENARIO_PV_ID
 target:
   format: delta
@@ -943,7 +943,7 @@ Lines (for example one per `PRODUCT_TYPE`). The first five are the Java tool in 
 ```bash
 mkdir -p build/tools-walk && zcat data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz | head -n 300 > build/tools-walk/trade.jsonl
 drishti-console/.venv/bin/python tools/drishti.py sutra gen build/tools-walk --key trade=TRADE_ID --match trade=PRODUCT_TYPE --out build/tools-walk/sutras
-drishti-console/.venv/bin/python tools/drishti.py sutra lint config/packs/trading --strict
+drishti-console/.venv/bin/python tools/drishti.py sutra lint config/packs/banking/trading --strict
 ```
 
 Captured (the end of `sutra gen`: one Sutra per product type, each linted):
@@ -1335,7 +1335,7 @@ drishti-console/.venv/bin/python tools/drishti.py approvals ask change chg-01M5V
 
 The data contract of every command (`tools/contracts.py`, also run on its own as `python3 tools/contracts.py ...`;
 [docs/contracts/README.md section 16](../contracts/README.md#16-contracts-of-every-command)). Each mnemonic's contract is
-`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`. No server is needed.
+`config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`. No server is needed.
 - `contract list` prints every command with its kind, pack, class, status and the number of points still to review.
 - `contract show NSET` prints one contract (by command or kind; `--json` as JSON).
 - `contract check` fails when a command has no contract, a contract is invalid or no longer matches its pack (identity, id pattern,

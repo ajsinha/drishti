@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Pictures of tutorial 28, funds and ETFs (docs/tutorials/28-funds-and-etfs.md), written to docs/tutorials/img/t28/, and the funds
-pack's guide picture (config/packs/funds/guides/images/funds-fund.jpg). They need a server and console with the public-data packs and
+pack's guide picture (config/packs/capitalmarkets/funds/guides/images/funds-fund.jpg). They need a server and console with the public-data packs and
 the funds pack on the demo lake (`drishti.py lake demo` builds it; DRISHTI_SHOTS_DELTA_ROOT names another) and sign-in off:
 
     drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t28
@@ -33,7 +33,7 @@ shot = register("t28", OUT / "t28")
 SERVER_ENV = {"DRISHTI_SECURITY_ENABLED": "false", "DRISHTI_DEMO_ENABLED": "false",
               DEMO_ROOT_ENV: os.environ.get("DRISHTI_SHOTS_DELTA_ROOT") or lakeconfig.root("demo"),
               "DRISHTI_PACKS": "core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds"}
-GUIDE_IMAGE = ROOT / "config" / "packs" / "funds" / "guides" / "images" / "funds-fund.jpg"
+GUIDE_IMAGE = ROOT / "config" / "packs" / "capitalmarkets" / "funds" / "guides" / "images" / "funds-fund.jpg"
 
 
 WIDE_TABLE = 2000

@@ -156,7 +156,7 @@ def test_every_subject_item_runs_a_command_its_edition_shows():
     menus = {m["id"]: m for m in spec["menus"]}
     from core.edition import Edition
     for name in ("risk", "trading", "market", "world"):
-        ed = Edition(name, yaml.safe_load((ROOT / "config" / "editions" / f"{name}.yaml").read_text(encoding="utf-8")))
+        ed = Edition(name, yaml.safe_load(next((ROOT / "config" / "lenses").glob(f"*/{name}.yaml")).read_text(encoding="utf-8")))
         top = ed.menu("top")
         assert top and top[0] == "views", name
         for mid in top:

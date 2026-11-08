@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Data contracts of every command (mnemonic) kind: config/packs/<pack>/contracts/<kind>.contract.yaml (docs/contracts/README.md,
+"""Data contracts of every command (mnemonic) kind: config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml (docs/contracts/README.md,
 section 16; the format: tools/contracts.schema.json).
 
     python3 tools/contracts.py list                         every mnemonic, its contract, class and status
@@ -47,6 +47,10 @@ SCHEMA = ROOT / "tools" / "contracts.schema.json"
 DOCS = ROOT / "docs" / "contracts" / "packs"
 VERSION = "1.0"
 GENERATOR = "tools/contracts.py docs (drishti.py contract docs)"
+
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core import pack_paths as PP  # noqa: E402  (the one rule for where a pack's folder is)
 
 _spec = importlib.util.spec_from_file_location("drishti_pack_readme", ROOT / "tools" / "packgen" / "common" / "readme.py")
 R = importlib.util.module_from_spec(_spec)
@@ -91,8 +95,8 @@ def _packlake():
 def manifests(packs_dir: Path = PACKS) -> "OrderedDict[str, dict]":
     """Pack name to its manifest (pack.yaml), sorted by name."""
     out = OrderedDict()
-    for d in sorted(p for p in Path(packs_dir).iterdir() if (p / "pack.yaml").is_file()):
-        out[d.name] = _packlake().view(_yaml(d / "pack.yaml") or {})   # a template in the lake form read with its pack's lake: entries
+    for name, d in PP.pack_dirs(packs_dir).items():
+        out[name] = _packlake().view(_yaml(d / "pack.yaml") or {})   # a template in the lake form read with its pack's lake: entries
     return out
 
 
@@ -107,7 +111,7 @@ def mnemonics(packs_dir: Path = PACKS) -> list[dict]:
 
 
 def contract_file(packs_dir: Path, pack: str, kind: str) -> Path:
-    return Path(packs_dir) / pack / "contracts" / f"{kind}.contract.yaml"
+    return PP.pack_dir(pack, packs_dir) / "contracts" / f"{kind}.contract.yaml"
 
 
 def find(name: str, packs_dir: Path = PACKS) -> dict:
@@ -382,7 +386,7 @@ class Draft:
         self.cmd = find(kind, packs_dir)
         self.kind, self.pack = self.cmd["kind"], self.cmd["pack"]
         self.packs_dir, self.testdata = Path(packs_dir), Path(testdata)
-        self.pack_dir = self.packs_dir / self.pack
+        self.pack_dir = PP.pack_dir(self.pack, self.packs_dir)
         self.all_m = manifests(packs_dir)
         self.m = self.all_m[self.pack]
         self.pol = policy() if pol is None else pol
@@ -891,7 +895,7 @@ def drift(contract: dict, packs_dir: Path = PACKS, testdata: Path = TESTDATA) ->
     if (contract.get("id-pattern") or None) != pats:
         out.append(f"id-pattern {contract.get('id-pattern')} differs from the pack graph's {pats}")
     links = graph_links(all_m, pack, packs_dir)
-    samples, tdocs, _ = read_documents(Path(packs_dir) / pack, kind, testdata)
+    samples, tdocs, _ = read_documents(PP.pack_dir(pack, packs_dir), kind, testdata)
     shape = shape_of(samples + tdocs)
     for path, fs in [("", contract.get("fields") or [])] + list((contract.get("nested") or {}).items()):
         seen = shape.fields.get(path)
@@ -953,7 +957,7 @@ def check(packs_dir: Path = PACKS, testdata: Path = TESTDATA, data: bool = True)
             probs += drift(c, packs_dir, testdata)
         out += [f"{rel}: {p}" for p in probs]
     codes = {cmd["code"] for cmd in mnemonics(packs_dir)}
-    for f in sorted(Path(packs_dir).glob("*/contracts/*.contract.yaml")):
+    for f in _contract_files(packs_dir):
         if f.resolve() in known:
             continue
         rel = f.relative_to(packs_dir)
@@ -963,6 +967,11 @@ def check(packs_dir: Path = PACKS, testdata: Path = TESTDATA, data: bool = True)
             continue
         out += [f"{rel}: {p}" for p in planned_problems(c, f, codes)]
     return out
+
+
+def _contract_files(packs_dir: Path) -> list[Path]:
+    """Every contract file of every pack under ``packs_dir``, in pack then file order."""
+    return [f for d in PP.pack_dirs(packs_dir).values() for f in sorted(d.glob("contracts/*.contract.yaml"))]
 
 
 def planned_problems(c: dict, f: Path, codes: set[str]) -> list[str]:
@@ -985,7 +994,7 @@ def planned(packs_dir: Path = PACKS) -> list[tuple[Path, dict]]:
     """The planned contracts (status planned, no command yet), in pack then file order."""
     known = {contract_file(packs_dir, cmd["pack"], cmd["kind"]).resolve() for cmd in mnemonics(packs_dir)}
     out = []
-    for f in sorted(Path(packs_dir).glob("*/contracts/*.contract.yaml")):
+    for f in _contract_files(packs_dir):
         if f.resolve() not in known:
             c = load(f)
             if c.get("status") == "planned":
@@ -1015,7 +1024,7 @@ def sample_pages(c: dict, packs_dir: Path = PACKS, testdata: Path = TESTDATA) ->
         return folders
     if planned_demo_data(c, testdata):
         return [f"{c['pack']}/{c['kind']}"]
-    samples = Path(packs_dir) / c["pack"] / "samples"
+    samples = PP.pack_dir(c["pack"], packs_dir) / "samples"
     if c.get("class") in ("input", "fundamental") and (any(samples.glob(f"{c['kind']}.jsonl")) or any(samples.glob(f"{c['kind']}.part-*.jsonl"))):
         return [f"{c['pack']}/{c['kind']}"]
     return []
@@ -1084,12 +1093,19 @@ def _contract_md(c: dict, f: Path, pack_dir_rel: str) -> list[str]:
     return out
 
 
-def render_pack(pack: str, items: list[tuple[dict, Path, dict | None]], plans: list[tuple[Path, dict]] = ()) -> str:
+def _repo_rel(p: Path) -> str:
+    """A path as the repository names it (config/packs/<domain>/<pack>), else as given."""
+    p = Path(p).resolve()
+    return p.relative_to(ROOT).as_posix() if p.is_relative_to(ROOT) else p.as_posix()
+
+
+def render_pack(pack: str, items: list[tuple[dict, Path, dict | None]], plans: list[tuple[Path, dict]] = (), packs_dir: Path = PACKS) -> str:
+    where = _repo_rel(PP.pack_dir(pack, packs_dir))
     out = _md_header() + [f"# Data contracts of the {pack} pack", "",
                           f"One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still "
                           f"has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every "
                           f"command is [packs/README.md](README.md). The pack's guide, "
-                          f"[config/packs/{pack}/guides/{pack}.md](../../../config/packs/{pack}/guides/{pack}.md), shows the same contracts "
+                          f"[{where}/guides/{pack}.md](../../../{where}/guides/{pack}.md), shows the same contracts "
                           f"(generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each "
                           f"kind's data comes from (*Data retrieval*).", ""]
     out += R._table(["Command", "Kind", "Class", "Status", "Fields", "To review"], [[
@@ -1097,7 +1113,7 @@ def render_pack(pack: str, items: list[tuple[dict, Path, dict | None]], plans: l
         for _, _, c in items if c])
     for cmd, f, c in items:
         if c:
-            out += _contract_md(c, f, f"config/packs/{pack}")
+            out += _contract_md(c, f, where)
     if plans:
         out += ["## Planned inputs", "",
                 "Contracts of inputs designed before their data exists (`status: planned`): no command and no engine reads them yet, "
@@ -1107,7 +1123,7 @@ def render_pack(pack: str, items: list[tuple[dict, Path, dict | None]], plans: l
             f"[{c['mnemonic']}](#{_anchor(c)})", f"`{c['kind']}`", c["class"], _status(c), str(len(c.get('fields') or [])),
             str(len(c.get('review') or []))] for _, c in plans])
         for f, c in plans:
-            out += _contract_md(c, f, f"config/packs/{pack}")
+            out += _contract_md(c, f, where)
     return "\n".join(out).rstrip() + "\n"
 
 
@@ -1120,7 +1136,7 @@ def render_index(all_items: list[tuple[dict, Path, dict | None]], plans: list[tu
     total = sum(len(c.get("review") or []) for _, _, c in all_items if c)
     out = _md_header() + ["# Data contracts of every command", "",
                           "Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack "
-                          "(`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of "
+                          "(`config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of "
                           "its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace "
                           "the retiring kinds have their own contracts there.", "",
                           f"{sum(1 for _, _, c in all_items if c)} contracts, {total} points still to review. Check them with "
@@ -1145,7 +1161,7 @@ def render_docs(packs_dir: Path = PACKS) -> dict[Path, str]:
     out = {}
     for pack in sorted({cmd["pack"] for cmd, _, _ in items} | {c.get("pack") for _, c in plans}):
         out[DOCS / f"{pack}.md"] = render_pack(pack, [i for i in items if i[0]["pack"] == pack],
-                                               [x for x in plans if x[1].get("pack") == pack])
+                                               [x for x in plans if x[1].get("pack") == pack], packs_dir)
     out[DOCS / "README.md"] = render_index(items, plans)
     return out
 
@@ -1244,7 +1260,7 @@ def build_parser(ap: argparse.ArgumentParser | None = None, parents=()) -> argpa
     p = sub.add_parser("bootstrap", help="draft a contract from the pack and its data (prints it; --write saves it)", parents=[common, *parents])
     p.add_argument("kind", nargs="?", help="a command or a kind")
     p.add_argument("--all", action="store_true", help="every command without a contract (with --force: every command)")
-    p.add_argument("--write", action="store_true", help="write config/packs/<pack>/contracts/<kind>.contract.yaml")
+    p.add_argument("--write", action="store_true", help="write config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml")
     p.add_argument("--force", action="store_true", help="replace an existing contract")
     p.set_defaults(run=cmd_bootstrap)
     return ap

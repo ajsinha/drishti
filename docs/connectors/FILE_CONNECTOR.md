@@ -588,7 +588,7 @@ settings:
   lookback-days: '5'
 ```
 
-and the pack that reads it names it and routes the kind (`config/packs/<pack>/pack.yaml`):
+and the pack that reads it names it and routes the kind (`config/packs/<domain>/<pack>/pack.yaml`):
 
 ```yaml
 connectors: [eod-futures]

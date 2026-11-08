@@ -3111,7 +3111,7 @@ a form panel, and the tools.
 #### 5.1 Why blocks are the right unit
 
 A block is already "a templatised Sutra fragment": panels written once, with parameters, versioned by file name, used by
-many Sutras (`config/packs/trading/sutras/common/*.block.yaml`: `deal-ticket`, `legs`, `flow-schedule`, `events`,
+many Sutras (`config/packs/banking/trading/sutras/common/*.block.yaml`: `deal-ticket`, `legs`, `flow-schedule`, `events`,
 `payments`, `deal-footer`). It is expanded *before* the Sutra is checked (`SutraBlocks.expand`), so whatever an agent
 composes is linted, compiled and drawn exactly as if a person had written it in place.
 

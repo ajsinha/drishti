@@ -33,7 +33,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 /**
- * A server started with {@code drishti.edition=market} (Drishti Market, config/editions/market.yaml; docs/admin/EDITIONS.md › The design as built, section
+ * A server started with {@code drishti.edition=market} (Drishti Market, config/lenses/banking/market.yaml; docs/admin/EDITIONS.md › The design as built, section
  * 13): the market-data pack and the core it extends alone (allow-only: another is refused with DRS-1017), the pack's 22 commands in FUNC
  * and the type-ahead (no trades, no VaR, no world economy), no VaR or exposure BI item, and the About answers and branding.
  */
@@ -109,7 +109,7 @@ class EditionMarketServerTest {
         List<String> ids = new ArrayList<>();
         getJson("/api/v1/bi/datasets").path("datasets").forEach(d -> ids.add(d.path("id").asText()));
         assertThat(ids).allSatisfy(id -> assertThat(id.substring(id.lastIndexOf(':') + 1)).startsWith("market-data-"));
-        assertThat(mvc.perform(get("/api/v1/bi/items/file:table:bi.market_risk_var_latest")).andReturn().getResponse().getStatus()).isEqualTo(404);
+        assertThat(mvc.perform(get("/api/v1/bi/items/file:table:banking.market_risk_var_latest")).andReturn().getResponse().getStatus()).isEqualTo(404);
         List<String> items = new ArrayList<>();
         getJson("/api/v1/bi/catalogue").path("items").forEach(i -> items.add(i.path("id").asText()));
         assertThat(items).doesNotContain("file:report:market-risk-var", "file:report:trades-overview", "file:report:world-economics");
