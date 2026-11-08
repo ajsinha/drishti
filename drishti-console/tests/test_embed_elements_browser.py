@@ -834,16 +834,16 @@ def test_a_zoomed_table_fits_the_elements_height_and_restores_its_page_size(host
     btn = h.page.locator("#main").locator("#p-fitx .pnl-zoom-btn")
     expect(btn).to_be_visible(timeout=15000)
     size = "#p-fitx .tbl-pg-size"
-    assert h.js(f"{SR}.querySelector('{size}').selectedOptions[0].textContent") == "25 rows"
+    assert h.js(f"{SR}.querySelector('{size}').component.getOption().label") == "25 rows"
     btn.click()
-    h.until(lambda: str(h.js(f"{SR}.querySelector('{size}').selectedOptions[0].textContent")).startswith("Fit ("), 10, "fit applied")
+    h.until(lambda: str(h.js(f"{SR}.querySelector('{size}').component.getOption().label")).startswith("Fit ("), 10, "fit applied")
     h.page.wait_for_timeout(300)
     r = h.js(f"(() => {{ const b = {SR}.querySelector('#p-fitx .pnl-b'), t = {SR}.querySelector('#p-fitx table.tbl');"
              " return [[...t.tBodies[0].rows].filter(x => !x.hidden).length, b.scrollHeight > b.clientHeight + 1]; })()")
     assert r[0] >= 5 and r[1] is False, r
     assert h.js("localStorage.getItem('drishti.tableRows')") is None
     h.page.keyboard.press("Escape")
-    h.until(lambda: h.js(f"{SR}.querySelector('{size}').selectedOptions[0].textContent") == "25 rows", 10, "page size restored")
+    h.until(lambda: h.js(f"{SR}.querySelector('{size}').component.getOption().label") == "25 rows", 10, "page size restored")
 
 
 def test_zoom_works_under_a_trusted_types_host_at_phone_width(host):

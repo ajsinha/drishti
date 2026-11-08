@@ -33,6 +33,7 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 import bi_report_stack  # noqa: E402
 from bi_report_helpers import card_value, clean, open_report, settled, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, trade  # noqa: E402
+from select_helpers import has_option
 
 DATASET = "nv-demo-trade"          # the dataset the model nv-demo reads (2.2: a dataset and a model)
 TABLE = "file:table:bi.nv_demo_trade"   # the table it is (tables migrate)
@@ -280,7 +281,7 @@ def test_the_dataset_page_shows_the_refresh_schedule_and_the_state(stack, browse
 def test_the_designer_offers_the_new_visuals_and_marks_the_time_measure(stack, browser):
     page = sign_in(browser, "wes")
     page.goto(CONSOLE_URL + "/bi/designer")
-    page.wait_for_selector("[data-new-dataset] option[value='mq:" + MODEL + "']", state="attached")
+    page.wait_for_function(has_option("[data-new-dataset]", "mq:" + MODEL))
     page.select_option("[data-new-dataset]", "mq:" + MODEL)
     page.fill("[data-new-title]", "New visuals draft")
     page.click("[data-new] button[type=submit]")

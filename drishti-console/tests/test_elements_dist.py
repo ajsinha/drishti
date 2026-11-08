@@ -185,10 +185,10 @@ def test_the_maven_profile_builds_the_webjar(tmp_path):
 
 # -- the pack tool --------------------------------------------------------------------------------------------------------------------
 def test_dependencies_resolve_deepest_first_each_once():
-    assert TRAIN.resolve(["grid"]) == ["drishti-core", "drishti-grid"]
-    assert TRAIN.resolve(["chart", "drishti-grid", "core"]) == ["drishti-core", "drishti-chart", "drishti-grid"]
+    assert TRAIN.resolve(["grid"]) == ["drishti-core", "drishti-inputs", "drishti-grid"]          # the grid draws its choices with drishti-inputs' Select
+    assert TRAIN.resolve(["chart", "drishti-grid", "core"]) == ["drishti-core", "drishti-inputs", "drishti-chart", "drishti-grid"]
     r = TRAIN.resolve(["renderer"])
-    assert r[-1] == "drishti-renderer" and set(r) == {"drishti-core", "drishti-grid", "drishti-chart", "drishti-data", "drishti-graph", "drishti-tree", "drishti-renderer"}
+    assert r[-1] == "drishti-renderer" and set(r) == {"drishti-core", "drishti-inputs", "drishti-grid", "drishti-chart", "drishti-data", "drishti-graph", "drishti-tree", "drishti-renderer"}
     assert r.index("drishti-core") == 0
     assert TRAIN.resolve(["all"]) == GENERAL
     assert TRAIN.resolve(["insight"]) == ["drishti-core", "drishti-insight"]           # library 6 is in the manifest: packing includes it
@@ -199,7 +199,7 @@ def test_dependencies_resolve_deepest_first_each_once():
 def test_drishti_risk_is_refused_without_the_banking_domain(tmp_path, capsys):
     with pytest.raises(dist.DistError, match="--include-domain banking"):
         TRAIN.resolve(["risk"])
-    assert TRAIN.resolve(["risk"], {"banking"}) == ["drishti-core", "drishti-grid", "drishti-chart", "drishti-risk"]
+    assert TRAIN.resolve(["risk"], {"banking"}) == ["drishti-core", "drishti-inputs", "drishti-grid", "drishti-chart", "drishti-risk"]
     assert "drishti-risk" in TRAIN.resolve(["all"], {"banking"})
     assert cli.main(["pack", "--libs", "core,risk", "--out", str(tmp_path / "no")]) == 1
     assert "licensed with the banking module" in capsys.readouterr().err
@@ -222,9 +222,9 @@ def test_the_pack_names_what_it_holds_and_carries_one_theme(tmp_path, capsys):
     assert re.findall(r'data-theme="([\w-]+)"', css) == ["light"]                                          # one theme, on :root
     assert "--d-accent:" in css and "drishti_grid.css" in css and css.count("PROPRIETARY") == 1
     rec = json.loads((tmp_path / pack.RECORD).read_text(encoding="utf-8"))
-    assert rec["libraries"] == {"drishti-core": TRAIN.libs["drishti-core"]["version"], "drishti-grid": TRAIN.libs["drishti-grid"]["version"]}
+    assert rec["libraries"] == {n: TRAIN.libs[n]["version"] for n in ("drishti-core", "drishti-inputs", "drishti-grid")}
     assert rec["files"][pack.JS_NAME]["integrity"] == sri((tmp_path / pack.JS_NAME).read_bytes())
-    assert not (tmp_path / "vendor").exists()                                                             # grid reads nothing at run time
+    assert sorted(p.name for p in (tmp_path / "vendor").iterdir()) == ["codemirror"]                       # only drishti-inputs' code editor engine (a formula cell)
 
 
 def test_themes_aliases_and_a_theme_sheet_carries_every_token():

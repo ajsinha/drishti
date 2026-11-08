@@ -64,7 +64,8 @@
     drawSuggestions(d.suggestions || []);
 
     const nodes = (d.nodes || []).map((n) => (typeof n === 'string' ? { node: n } : n));
-    if (nodes.length && nodeSel.options.length === 1) { nodes.forEach((n) => nodeSel.appendChild(h('option', { value: n.node, text: n.node + (n.alive === false ? ' (not reachable)' : '') }))); }
+    const pick = nodeSel.component;                                       // drishti-inputs' Select: "all", then each node once
+    if (nodes.length && pick.options.length === 1) { pick.setOptions(pick.options.concat(nodes.map((n) => ({ value: n.node, label: n.node + (n.alive === false ? ' (not reachable)' : '') })))); }
   }
 
   // the rollup suggestions (section 8.3a): redrawn only when they change, so an open YAML or the focus survives the 5-second refresh

@@ -39,36 +39,6 @@ SCREEN = "a screen not yet moved onto Select (the native-select sweep, 2.9.11.e)
 
 # file (relative to drishti-console) -> (how many, why)
 ALLOWED: dict = {
-    "web/static/elements/drishti-chart/src/drishti_chart-studio.js": (1, LIB),
-    "web/static/elements/drishti-chart/src/drishti_map-view.js": (1, LIB),
-    "web/static/elements/drishti-graph/src/drishti_graph-chrome.js": (1, LIB),
-    "web/static/elements/drishti-grid/src/drishti_doc-console.js": (1, LIB),
-    "web/static/elements/drishti-grid/src/drishti_grid-shell.js": (1, LIB),
-    "web/static/elements/drishti-tree/src/drishti_tree-side.js": (1, LIB),
-    "web/static/elements/drishti-tree/src/drishti_tree-view.js": (1, LIB),
-    "web/static/elements/drishti-renderer/drishti_harness.html": (3, "the renderer's test harness page (cases, behaviours, theme), not a product screen; loads no drishti-inputs"),
-    "web/static/gallery/drishti_gallery.js": (1, "the gallery's option panel for a demo's choices: next, with the gallery's own controls"),
-    "web/static/js/drishti_bi-consume.js": (4, SCREEN),
-    "web/static/js/drishti_bi-design.js": (1, SCREEN),
-    "web/static/js/drishti_bi-design-model.js": (1, SCREEN),
-    "web/static/js/drishti_bi-design-panes.js": (3, SCREEN),
-    "web/static/js/drishti_bi-grids.js": (1, SCREEN),
-    "web/static/js/drishti_bi.js": (1, SCREEN),
-    "web/static/js/drishti_bi-lib.js": (1, SCREEN),
-    "web/static/js/drishti_bi-runs-tab.js": (6, SCREEN),
-    "web/static/js/drishti_bi-statement.js": (1, SCREEN),
-    "web/templates/bi/catalogue.html": (6, SCREEN),
-    "web/templates/bi/designer.html": (4, SCREEN),
-    "web/templates/bi/design.html": (2, SCREEN),
-    "web/templates/bi/environments.html": (2, SCREEN),
-    "web/templates/bi/item.html": (2, SCREEN),
-    "web/templates/bi/layer_dataset.html": (2, SCREEN),
-    "web/templates/bi/notebook.html": (5, SCREEN),
-    "web/templates/bi/report.html": (4, SCREEN),
-    "web/templates/bi/runs_admin.html": (1, SCREEN),
-    "web/templates/bi/settings.html": (1, SCREEN),
-    "web/templates/bi/transform.html": (3, SCREEN),
-    "web/templates/bi/workspace.html": (9, SCREEN),
 }
 
 

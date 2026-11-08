@@ -36,6 +36,8 @@ import { InputBase, Listbox, Popover, normalizeOptions, searchOptions, uid } fro
  * @property {string} [name] a hidden input of this name carries the value in a plain form
  * @property {boolean} [disabled=false]
  * @property {function(Object, HTMLElement): void} [renderOption] draws an option's content
+ * @property {boolean} [native=false] a change also fires input and change on the host, as a native select's did (a page's own listeners
+ *   and delegated handlers keep working); selectElement turns it on, and so does the attribute native on a page's <drishti-select>
  */
 
 const TYPE_AHEAD_MS = 500;
@@ -87,7 +89,14 @@ export class Select extends InputBase {
     this.control = this.el('div', { cls: 'di-control di-select-control', attrs: { role: 'combobox', tabindex: '0', 'aria-haspopup': 'listbox', 'aria-expanded': 'false',
       'aria-label': o.label || null, id: uid('sel') } }, [this.text, this.el('span', { cls: 'di-caret', text: '▾', attrs: { 'aria-hidden': 'true' } })]);
     host.appendChild(this.control);
-    if (o.name) { this.hidden = this.el('input', { attrs: { type: 'hidden', name: o.name } }); host.appendChild(this.hidden); }
+    if (o.name) {
+      this.hidden = this.el('input', { attrs: { type: 'hidden', name: o.name } });
+      // the form's named field reads and sets the Select, as a native select's did (form.elements.<name>.value = ...): a hidden input's
+      // value is its value attribute, which the form submits, so the field keeps it and a value set on the field picks that option
+      const sel = this;
+      Object.defineProperty(this.hidden, 'value', { configurable: true, get() { return this.getAttribute('value') || ''; }, set(v) { sel.setValue(v === '' && !sel.options.some((x) => same(x.value, '')) ? null : v); } });
+      host.appendChild(this.hidden);
+    }
     this.control.addEventListener('mousedown', (e) => { e.preventDefault(); if (this.o.disabled) { return; } this.control.focus(); if (this.pop.isOpen()) { this.close(); } else { this.open(); } });
     this.control.addEventListener('keydown', (e) => this.onKey(e));
     this.control.addEventListener('blur', () => { if (this.pop.isOpen() && !this.searching()) { this.close(); } });
@@ -104,7 +113,7 @@ export class Select extends InputBase {
     const it = this.getOption();
     this.text.textContent = it ? it.label : this.value !== null ? String(this.value) : (this.o.placeholder || '');
     this.control.classList.toggle('di-placeholder', this.value === null);
-    if (this.hidden) { this.hidden.value = this.value === null ? '' : String(this.value); }
+    if (this.hidden) { this.hidden.setAttribute('value', this.value === null ? '' : String(this.value)); }
   }
 
   /**
@@ -239,6 +248,7 @@ export class Select extends InputBase {
     if (emit && !same(before, this.value)) {
       announce((it ? it.label : String(this.value)) + ' picked');
       this.emit('change', { value: this.value, option: this.getOption() });
+      if (this.o.native) { ['input', 'change'].forEach((t) => this.host.dispatchEvent(new this.win.Event(t, { bubbles: true }))); }
     }
   }
 
@@ -274,4 +284,33 @@ export class Select extends InputBase {
    * @returns {void}
    */
   focus() { this.control.focus(); }
+}
+
+/**
+ * A Select in its own <drishti-select> element, for a screen or a library that draws one in code: the element carries the attributes
+ * (an id, a hook, a class), its value and component are as on any page (el.value, el.component, el.disabled, el.focus()), and a pick fires input
+ * and change on it as a native select's did. options as the Select's; options.options may be values, [value, label] pairs or objects.
+ * @param {Document} doc
+ * @param {SelectOptions} options
+ * @param {Object<string, *>} [attrs] attributes of the element (null, undefined and false are left out; true is the empty value)
+ * @returns {HTMLElement} the <drishti-select>
+ */
+export function selectElement(doc, options, attrs) {
+  const box = doc.createElement('drishti-select'), o = Object.assign({ native: true }, options);
+  if (Array.isArray(o.options)) { o.options = o.options.map((x) => (Array.isArray(x) ? { value: x[0], label: String(x[1]) } : x)); }
+  Object.keys(attrs || {}).forEach((k) => { const v = attrs[k]; if (v !== null && v !== undefined && v !== false) { box.setAttribute(k, v === true ? '' : String(v)); } });
+  box.component = new Select(box, o);                           // made here: the element does not make a second one when it joins the page
+  if (!('value' in box)) { selectProperties(box); }             // no custom elements here (a test's document): the same properties
+  return box;
+}
+
+/**
+ * Gives a <drishti-select> element the properties a native select had, read through its component: value, disabled and focus().
+ * @param {HTMLElement} box
+ * @returns {void}
+ */
+export function selectProperties(box) {
+  Object.defineProperty(box, 'value', { configurable: true, get() { return this.component ? this.component.getValue() : null; }, set(v) { if (this.component) { this.component.setValue(v); } } });
+  box.focus = function () { if (this.component) { this.component.focus(); } };
+  Object.defineProperty(box, 'disabled', { configurable: true, get() { return !!(this.component && this.component.o.disabled); }, set(v) { if (this.component) { this.component.setDisabled(!!v); } } });
 }

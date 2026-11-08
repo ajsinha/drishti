@@ -45,12 +45,12 @@
   <p class="text-muted-d" data-need-author hidden>You can add items here, but creating them needs the bi-author power. Ask an admin for it.</p>
   <form class="bi-form" data-new-item hidden aria-label="New item">
     <h3>New item</h3>
-    <label>Kind<select name="kind" class="studio-select"><option value="report">report</option><option value="dataset">table</option><option value="model">model</option><option value="board">board</option><option value="notebook">notebook</option><option value="python">python</option></select></label>
-    <label data-dataset-row>Model or dataset<select name="dataset" class="studio-select" data-new-dataset><option value="">Choose a model or a dataset</option></select></label>
-    <label data-dataset-row>Also add (optional)<select name="also" class="studio-select" data-new-also multiple size="4" aria-label="More datasets to open in the Fields pane"></select>
-      <small class="text-muted-d">Hold Ctrl or Shift to choose several. They open beside the main dataset in the designer's Fields pane.</small></label>
+    <label>Kind<drishti-select native name="kind" class="studio-select" label="Kind"><option value="report">report</option><option value="dataset">table</option><option value="model">model</option><option value="board">board</option><option value="notebook">notebook</option><option value="python">python</option></drishti-select></label>
+    <label data-dataset-row>Model or dataset<drishti-select native name="dataset" class="studio-select" data-new-dataset label="Model or dataset"><option value="">Choose a model or a dataset</option></drishti-select></label>
+    <label data-dataset-row>Also add (optional)<drishti-multiselect class="studio-select" data-new-also label="More datasets to open in the Fields pane" placeholder="none"></drishti-multiselect>
+      <small class="text-muted-d">Pick as many as you need. They open beside the main dataset in the designer's Fields pane.</small></label>
     <fieldset class="bi-pyrow" data-python-row hidden><legend>What does it make?</legend>
-      <label>It makes<select name="pyinterface" class="studio-select"><option value="measure">a measure (one number per group)</option><option value="visual">a visual (a chart drawn by Python)</option><option value="transform">a table (a Transform, joins datasets)</option></select></label>
+      <label>It makes<drishti-select native name="pyinterface" class="studio-select" label="It makes"><option value="measure">a measure (one number per group)</option><option value="visual">a visual (a chart drawn by Python)</option><option value="transform">a table (a Transform, joins datasets)</option></drishti-select></label>
       <label>Columns it reads, or for a table the datasets it reads (comma separated)<input name="pyinputs" class="studio-in" autocomplete="off" value="value" aria-label="Columns or datasets it reads"></label></fieldset>
     <label data-paste-row hidden>Dataset YAML (for experts)<textarea name="yamlbody" data-di-code="yaml" class="studio-in mono" rows="10" spellcheck="false" placeholder="rachana: 1&#10;dataset: my-dataset&#10;title: My dataset&#10;tables: ..."></textarea>
       <small class="text-muted-d">The whole dataset document, as in the tutorials. It is saved as a draft: check it on its dataset page before you publish.</small></label>
@@ -69,10 +69,10 @@
   <p class="text-muted-d">Questions that took longer than a moment run in the background: you can keep working, and the bell says when each is ready. A result is kept
     <span data-runs-retention>30</span> days after it was last opened, unless you keep it longer or promote it.</p>
   <form class="bi-runs-filters" data-runs-filters role="search" aria-label="Filter the runs">
-    <label>Status<select name="state" class="studio-select"><option value="">All</option><option value="queued,running,storing">Active</option><option value="awaiting-confirm">Waiting for you</option><option value="done,reused">Done</option><option value="failed">Failed</option><option value="cancelled">Cancelled</option><option value="expired">Expired</option></select></label>
-    <label>Source<select name="source" class="studio-select"><option value="">All</option><option value="report">Reports</option><option value="board">Boards</option><option value="mq">Model queries</option><option value="sql">SQL</option><option value="statement">Statements</option><option value="schedule">Schedules</option></select></label>
-    <label>Who<select name="who" class="studio-select"><option value="both">Mine and shared with me</option><option value="mine">Mine</option><option value="shared">Shared with me</option></select></label>
-    <label>Since<select name="since" class="studio-select"><option value="1d">1 day</option><option value="7d">7 days</option><option value="30d" selected>30 days</option><option value="90d">90 days</option></select></label>
+    <label>Status<drishti-select native name="state" class="studio-select" label="Status"><option value="">All</option><option value="queued,running,storing">Active</option><option value="awaiting-confirm">Waiting for you</option><option value="done,reused">Done</option><option value="failed">Failed</option><option value="cancelled">Cancelled</option><option value="expired">Expired</option></drishti-select></label>
+    <label>Source<drishti-select native name="source" class="studio-select" label="Source"><option value="">All</option><option value="report">Reports</option><option value="board">Boards</option><option value="mq">Model queries</option><option value="sql">SQL</option><option value="statement">Statements</option><option value="schedule">Schedules</option></drishti-select></label>
+    <label>Who<drishti-select native name="who" class="studio-select" label="Who"><option value="both">Mine and shared with me</option><option value="mine">Mine</option><option value="shared">Shared with me</option></drishti-select></label>
+    <label>Since<drishti-select native name="since" class="studio-select" label="Since"><option value="1d">1 day</option><option value="7d">7 days</option><option value="30d" selected>30 days</option><option value="90d">90 days</option></drishti-select></label>
     <label class="bi-runs-find">Search<input type="search" name="q" class="studio-in" autocomplete="off" placeholder="desk pnl" aria-label="Search the runs"></label>
   </form>
   <span class="visually-hidden" data-runs-say role="status" aria-live="polite"></span>
@@ -92,7 +92,7 @@
     <tbody></tbody></table></div>
   <form class="bi-form bi-inline" data-add-member hidden aria-label="Add a member">
     <label class="bi-people">User<input name="user" class="studio-in" required autocomplete="off" placeholder="type a name to search" data-member-user></label>
-    <label>Role<select name="role" class="studio-select"><option>viewer</option><option>contributor</option><option>member</option><option>admin</option></select></label>
+    <label>Role<drishti-select native name="role" class="studio-select" label="Role"><option>viewer</option><option>contributor</option><option>member</option><option>admin</option></drishti-select></label>
     <button type="submit" class="btn-pill btn-accent">Add or change</button>
   </form>
 </section>

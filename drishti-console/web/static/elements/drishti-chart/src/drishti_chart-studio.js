@@ -20,6 +20,7 @@
 import { h } from '../../drishti-core/src/drishti_index.js';
 import { kindList, kindOf, specText } from './drishti_chart-spec.js';
 import { dataTable } from './drishti_chart-parts.js';
+import { selectElement } from '../../drishti-inputs/src/drishti_index.js';
 
 /** @private the spec's JSON with its keys, strings and numbers marked for the style sheet (elements, no markup strings) */
 function coloured(doc, text) {
@@ -93,10 +94,10 @@ export class Studio {
   options() {
     const c = this.c, doc = c.doc, s = c.rawSpec, k = c.spec.kind;
     this.opts.textContent = '';
-    const row = (label, el) => this.opts.append(h(doc, 'label', { text: label, attrs: { for: el.id } }), el);
-    const select = (id, values, cur, fn) => {
-      const el = h(doc, 'select', { attrs: { id: 'dc-o-' + id + '-' + (Studio.seq = (Studio.seq || 0) + 1), 'data-opt': id }, on: { change: () => fn(el.value) } }, values.map((v) => h(doc, 'option', { text: v, attrs: { value: v } })));
-      el.value = cur;
+    const row = (label, make) => this.opts.append(h(doc, 'label', { text: label }), make(label));
+    const select = (id, values, cur, fn) => (label) => {                // drishti-inputs' Select, named by its label
+      const el = selectElement(doc, { options: values, value: cur, label: label, search: false }, { id: 'dc-o-' + id + '-' + (Studio.seq = (Studio.seq || 0) + 1), 'data-opt': id });
+      el.component.on('change', (d) => fn(d.value));
       return el;
     };
     const change = (patch) => { const next = Object.assign({}, s, patch); Object.keys(patch).forEach((x) => { if (patch[x] === undefined) { delete next[x]; } }); c.setSpec(next); };

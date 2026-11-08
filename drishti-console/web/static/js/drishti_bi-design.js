@@ -42,7 +42,7 @@
       if ((me.powers || []).indexOf('bi-author') < 0) {
         const note = h('p', { class: 'bi-warn', role: 'alert', 'data-need-author': '' }, h('strong', { text: 'You need the bi-author power to design. ' }), 'Your roles give you ' + ((me.powers || []).join(', ') || 'no BI power') + '. Ask an administrator to add bi-author to one of your roles (Admin, BI settings). You can still open published reports from the ', h('a', { href: '/bi/catalogue', text: 'catalogue' }), '.');
         q('[data-design-start]').before(note);
-        B.qa('form button[type=submit], form input, form select', q('[data-design-start]')).forEach((el) => { el.disabled = true; });
+        B.qa('form button[type=submit], form input, form drishti-select', q('[data-design-start]')).forEach((el) => { el.disabled = true; });
         B.qa('[data-sample-copy]', q('[data-design-start]')).forEach((el) => { el.disabled = true; });
       }
     }).catch(() => {});
@@ -96,7 +96,7 @@
       const name = B.slug(title) || 'my-report';
       const body = 'rachana: 1\nreport: ' + name + '\ntitle: ' + JSON.stringify(title) + '\n' + B.sourceLine(ref) + '\npages:\n  - id: page1\n    title: Page 1\n    visuals: []\n';
       const go = q('[data-new] [type=submit]');
-      const also = Array.prototype.filter.call(q('[data-new-also]').selectedOptions, (o) => o.value !== ref).map((o) => o.value.replace(/^file:dataset:/, ''));
+      const also = (q('[data-new-also]').value || []).filter((v) => v !== ref).map((v) => String(v).replace(/^file:dataset:/, ''));
       B.busy(go, () => B.api('POST', '/workspaces/' + encodeURIComponent(wsSel.value || 'me') + '/items', { kind: 'report', title, description: '', body }).then((it) => { window.location.href = '/bi/design/' + B.id2path(it.id) + (also.length ? '?also=' + encodeURIComponent(also.join(',')) : ''); }).catch((err) => B.near(go, err.message, true)));
     });
     return;
@@ -454,11 +454,8 @@
     head.hidden = run.hidden = sum.hidden = !tests.length;
     if (!tests.length || !itemId) { return; }
     const sel = q('[data-tests-role]');
-    if (!sel.options.length) {
-      B.api('GET', '/me').then((me) => {
-        sel.appendChild(h('option', { value: '', text: 'yourself' }));
-        (me.roles || []).forEach((r) => sel.appendChild(h('option', { value: r, text: r })));
-      }).catch(() => {});
+    if (!sel.component.options.length) {                                // drishti-inputs' Select: yourself, then each of your roles
+      B.api('GET', '/me').then((me) => sel.component.setOptions([{ value: '', label: 'yourself' }].concat(me.roles || []))).catch(() => {});
     }
     q('[data-tests-again]').onclick = () => D.flushYaml().then(runTests);
     sum.textContent = 'Running ' + tests.length + ' test' + (tests.length === 1 ? '' : 's') + '...';
@@ -597,8 +594,7 @@
     if (/^(dataset|model):\s*\S/m.test(item.body || '')) { return Promise.resolve(); }      // a report on a model (drishti_bi-design-model.js) reads the model
     if (/^\s*layout:\s*board\b/m.test(item.body || '')) { return Promise.resolve(); }      // a board of tiles (R7) needs none; its own visuals do (add a model then)
     return B.api('GET', '/datasets').then((r) => new Promise((resolve) => {
-      const sel = h('select', { class: 'studio-select', 'data-pick-dataset': '', 'aria-label': 'Dataset for this report' }, h('option', { value: '', text: 'Choose a dataset' }));
-      (r.datasets || []).filter((d) => d.valid).forEach((d) => sel.appendChild(h('option', { value: d.id.replace(/^file:dataset:/, ''), text: d.title })));
+      const sel = B.select({ 'data-pick-dataset': '', 'aria-label': 'Dataset for this report' }, [['', 'Choose a dataset']].concat((r.datasets || []).filter((d) => d.valid).map((d) => [d.id.replace(/^file:dataset:/, ''), d.title])));
       const go = h('button', { type: 'button', class: 'btn-pill btn-accent', 'data-pick-dataset-go': '', text: 'Use this dataset' });
       const box = h('section', { class: 'bi-form', 'data-choose-dataset': '', role: 'group', 'aria-label': 'Choose a dataset' },
         h('h2', { text: 'Choose a dataset' }), h('p', { class: 'text-muted-d', text: 'This report does not name a dataset yet, so there is nothing to draw. Choose the one it reads; you can change it later in the YAML tab.' }), sel, go);

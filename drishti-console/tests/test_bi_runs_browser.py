@@ -313,8 +313,8 @@ def test_a_schedule_is_made_from_a_preset_edited_paused_and_removed(ctx, stack):
     page = open_drawer(ctx, stack, run["id"])
     page.click('[data-run-act="schedule"]')
     form = "[data-run-sched-form]"
-    page.select_option(form + " select[name=kind]", "weekly")
-    page.select_option(form + " select[name=day]", "wed")
+    page.select_option(form + " [name=kind]", "weekly")
+    page.select_option(form + " [name=day]", "wed")
     page.fill(form + " input[name=time]", "09:15")
     assert page.inner_text("[data-run-sched-preview]") == "weekly wed 09:15"
     page.click(form + " [type=submit]")
@@ -323,8 +323,8 @@ def test_a_schedule_is_made_from_a_preset_edited_paused_and_removed(ctx, stack):
     assert "weekly wed 09:15 on the newest data" in words and "next 2026-10-22 09:15" in words
     assert backend.schedules and list(backend.schedules.values())[-1]["schedule"] == "weekly wed 09:15"
     page.click("[data-run-sched-edit]")
-    assert page.input_value(form + " select[name=kind]") == "weekly"                  # the form opens on the schedule it changes
-    page.select_option(form + " select[name=kind]", "monthly-business")
+    assert page.input_value(form + " [name=kind]") == "weekly"                  # the form opens on the schedule it changes
+    page.select_option(form + " [name=kind]", "monthly-business")
     page.fill(form + " input[name=time]", "18:00")
     page.click(form + " [type=submit]")
     page.wait_for_function("document.querySelector('[data-run-schedule]').innerText.includes('monthly last 18:00 business')", timeout=10000)

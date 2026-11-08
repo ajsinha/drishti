@@ -201,8 +201,8 @@
     const names = Object.keys(f.perspectives || {});
     D.perspective = (D.model && D.model.perspective) || S.perspective || '';
     if (!names.length) { return Promise.resolve(); }
-    const pick = h('select', { class: 'studio-select', 'data-perspective-pick': '', 'aria-label': 'Perspective', disabled: D.readOnly },
-      h('option', { value: '', text: 'every field' }), names.map((n) => h('option', { value: n, text: f.perspectives[n].title || n, selected: n === D.perspective })));
+    const pick = B.select({ 'data-perspective-pick': '', 'aria-label': 'Perspective' }, [['', 'every field']].concat(names.map((n) => [n, f.perspectives[n].title || n])),      // drishti-inputs' Select
+      names.indexOf(D.perspective) >= 0 ? D.perspective : '', { disabled: !!D.readOnly });
     pick.addEventListener('change', () => {
       D.perspective = pick.value;
       D.change('Perspective', (r) => { if (pick.value) { r.perspective = pick.value; } else { delete r.perspective; } });

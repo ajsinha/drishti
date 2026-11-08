@@ -40,20 +40,20 @@
     <div class="bi-report-tools">
       <button type="button" class="btn-pill btn-ghost" data-back hidden><i class="bi bi-arrow-left" aria-hidden="true"></i> Back</button>
       <span class="bi-tool bi-time" data-time role="group" aria-label="Time: now, as of a date, or a window">
-        <label>Time <select class="studio-select" data-time-mode aria-label="Time"><option value="now">Now (live)</option><option value="asof">As of a date</option><option value="window">A window</option></select></label>
+        <label>Time <drishti-select native class="studio-select" data-time-mode label="Time"><option value="now">Now (live)</option><option value="asof">As of a date</option><option value="window">A window</option></drishti-select></label>
         <input type="date" class="studio-in" data-date aria-label="As of">
         <input type="date" class="studio-in" data-date-from aria-label="From" hidden><input type="date" class="studio-in" data-date-to aria-label="To" hidden>
       </span>
       <span class="bi-tool text-muted-d" data-asof-note role="status" aria-live="polite"></span>
-      <label class="bi-tool" data-bookmarks-wrap hidden>Bookmarks <select class="studio-select" data-bookmarks><option value="">Choose one</option></select></label>
-      <label class="bi-tool">Click a mark to <select class="studio-select" data-mode><option value="filter">filter the page</option><option value="highlight">highlight</option></select></label>
+      <label class="bi-tool" data-bookmarks-wrap hidden>Bookmarks <drishti-select native class="studio-select" data-bookmarks label="Bookmarks"><option value="">Choose one</option></drishti-select></label>
+      <label class="bi-tool">Click a mark to <drishti-select native class="studio-select" data-mode label="Click a mark to"><option value="filter">filter the page</option><option value="highlight">highlight</option></drishti-select></label>
       <button type="button" class="btn-pill btn-ghost" data-reset hidden>Reset</button>
       {# 2.4.0 (R7): shown for a report with board pages; drishti_bi-report-board.js fills the screen and turns the board pages #}
       <button type="button" class="btn-pill btn-accent" data-kiosk aria-pressed="false" hidden><i class="bi bi-fullscreen" aria-hidden="true"></i> <span>Kiosk</span></button>
       <span class="bi-board-rotate text-muted-d" data-rotate-note hidden></span>
     </div>
     <div class="bi-export" data-export role="group" aria-label="Export and subscribe" hidden>
-      <label class="bi-tool">Export <select class="studio-select" data-export-scope aria-label="What to export"><option value="">this page</option></select></label>
+      <label class="bi-tool">Export <drishti-select native class="studio-select" data-export-scope label="What to export"><option value="">this page</option></drishti-select></label>
       <a class="btn-pill btn-ghost" href="#" data-export-fmt="pdf" title="PDF, paged, with the filters and the date in the header"><i class="bi bi-filetype-pdf" aria-hidden="true"></i> PDF</a>
       <a class="btn-pill btn-ghost" href="#" data-export-fmt="png" title="One picture"><i class="bi bi-file-image" aria-hidden="true"></i> PNG</a>
       <a class="btn-pill btn-ghost" href="#" data-export-fmt="xlsx" title="Excel, one sheet per visual, numbers as numbers"><i class="bi bi-filetype-xlsx" aria-hidden="true"></i> Excel</a>

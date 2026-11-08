@@ -16,7 +16,7 @@
 /* The web components of drishti-inputs: <drishti-date>, <drishti-date-range>, <drishti-time>, <drishti-datetime>, <drishti-tree-picker>, <drishti-multiselect>,
    <drishti-combobox>, <drishti-select>, <drishti-form>, <drishti-filter-bar>, <drishti-code> and <drishti-code-diff>. Each is its class drawn into the
    element: options as a property (el.options = {...}), or as attributes for the simple ones (label, calendar, mode, value, readonly);
-   el.value reads and sets the value; el.component is the plain API; events come out as drishti:<name> DOM events (drishti:change).
+   el.value reads and sets the value (el.disabled turns a select off and on); el.component is the plain API; events come out as drishti:<name> DOM events (drishti:change).
    No shadow root, so the page's tokens and the library's style sheet reach them. */
 import { DatePicker } from './drishti_date-picker.js';
 import { DateRangePicker } from './drishti_date-range.js';
@@ -61,11 +61,14 @@ export function defineInputElements(registry, win) {
     const Cls = INPUT_ELEMENTS[name];
     registry.define(name, class extends win.HTMLElement {
       connectedCallback() { if (!this.component && (this.attributes.length > 1 || this.hasAttribute('options-json') || Cls === DatePicker || Cls === CodeEditor || Cls === Select)) { this.make(fromAttributes(this)); } }
-      make(o) { if (this.component) { this.component.destroy(); } this.component = new Cls(this, o); }
+      make(o) { if (this.component) { this.component.destroy(); } this.component = new Cls(this, Cls === Select && this.hasAttribute('native') ? Object.assign({ native: true }, o) : o); }   // <drishti-select native>: a pick fires change as a native select's did
       set options(o) { this.make(Object.assign(fromAttributes(this), o)); }
       get options() { return this.component ? this.component.o : null; }
       get value() { return this.component && this.component.getValue ? this.component.getValue() : null; }
       set value(v) { if (this.component && this.component.setValue) { this.component.setValue(v); } }
+      get disabled() { return !!(this.component && this.component.o && this.component.o.disabled); }
+      set disabled(v) { if (this.component && this.component.setDisabled) { this.component.setDisabled(!!v); } }
+      focus(o) { if (this.component && this.component.focus) { this.component.focus(); } else { super.focus(o); } }
       disconnectedCallback() { /* kept: an element moved in the page keeps its component */ }
     });
   });

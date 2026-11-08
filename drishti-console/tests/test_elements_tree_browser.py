@@ -214,7 +214,7 @@ def test_the_partitions_sized_by_an_additive_measure_with_their_table_and_zoom(b
     async def body(pg):
         slices = pg.locator("#hx-tree .dt-slice")
         assert await slices.count() == 53
-        assert await pg.locator("#hx-tree .dt-sizebox select option").all_text_contents() == ["Positions", "Notional"]   # never VaR
+        assert await pg.eval_on_selector("#hx-tree .dt-sizebox drishti-select", "e => e.component.options.map((o) => o.label)") == ["Positions", "Notional"]   # never VaR
         await pg.click("#hx-tree [data-act='alt']")
         await settle(pg)
         assert await pg.locator("#hx-tree table.dt-alt tbody tr").count() == 53
@@ -224,7 +224,7 @@ def test_the_partitions_sized_by_an_additive_measure_with_their_table_and_zoom(b
         await settle(pg)
         assert await slices.count() == 13
         assert (await pg.eval_on_selector_all("#hx-tree .dt-crumb", "els => els.map((e) => e.textContent)"))[-1] == "Equities"
-        await pg.select_option("#hx-tree .dt-sizebox select", "NOTIONAL")
+        await pg.select_option("#hx-tree .dt-sizebox drishti-select", "NOTIONAL")
         await settle(pg)
         assert await slices.count() == 13
         await pg.focus("#hx-tree .dt-slice[data-id='EQD']")

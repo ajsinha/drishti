@@ -27,16 +27,16 @@
 <div class="bx" id="bx" data-max-rows="{{ limits.max_rows }}" data-sql-rows="{{ limits.sql_max_rows }}" data-sql-chars="{{ limits.sql_max_chars }}" data-may-python="{{ 'true' if may_python else 'false' }}" data-python-runs="{{ 'true' if python_runs else 'false' }}" data-python-why="{{ python_why or '' }}">
 <form class="bi-form bx-open" data-open aria-label="Open an extract">
   <h2>Extract</h2>
-  <label>Model or dataset<select name="dataset" class="studio-select" data-dataset></select></label>
+  <label>Model or dataset<drishti-select native name="dataset" class="studio-select" data-dataset label="Model or dataset"></drishti-select></label>
   <fieldset class="bx-fields" data-fields-box hidden><legend>Fields</legend><div data-fields></div></fieldset>
   <span class="bi-time" data-time role="group" aria-label="Time of the extract: now, as of a date, or a window">
-    <label>Time <select class="studio-select" data-time-mode aria-label="Time"><option value="now">Now</option><option value="asof">As of a date</option><option value="window">A window</option></select></label>
+    <label>Time <drishti-select native class="studio-select" data-time-mode label="Time"><option value="now">Now</option><option value="asof">As of a date</option><option value="window">A window</option></drishti-select></label>
     <input type="date" class="studio-in" data-date aria-label="As of" hidden>
     <input type="date" class="studio-in" data-date-from aria-label="From" hidden><input type="date" class="studio-in" data-date-to aria-label="To" hidden>
   </span>
   <div class="bi-actions">
     <button type="submit" class="btn-pill btn-accent" data-open-go disabled><i class="bi bi-box-arrow-in-down" aria-hidden="true"></i> Open the extract</button>
-    <label class="bx-inline">Notebook<select class="studio-select" data-notebooks aria-label="Open a saved notebook"><option value="">(none)</option></select></label>
+    <label class="bx-inline">Notebook<drishti-select native class="studio-select" data-notebooks label="Open a saved notebook"><option value="">(none)</option></drishti-select></label>
   </div>
 </form>
 <p class="bx-info" data-info role="status" aria-live="polite"></p>
@@ -47,12 +47,12 @@
   <ul class="bx-extras" data-extras role="list"></ul>
   <form class="bi-form" data-add-extract aria-label="Add an extract">
     <label>Name<input name="ename" class="studio-in" autocomplete="off" maxlength="64" placeholder="exposure"></label>
-    <label>Model or dataset<select name="edataset" class="studio-select" data-edataset></select></label>
+    <label>Model or dataset<drishti-select native name="edataset" class="studio-select" data-edataset label="Model or dataset"></drishti-select></label>
     <fieldset class="bx-fields" data-efields-box hidden><legend>Fields</legend><div data-efields></div></fieldset>
     <div class="bi-actions"><button type="submit" class="btn-pill btn-ghost" data-eadd disabled><i class="bi bi-plus-lg" aria-hidden="true"></i> Add the extract</button></div>
   </form>
 </details>
-<p class="bx-promote"><label>Promote a SQL cell to <select class="studio-select" data-promote-target aria-label="Report to promote into"><option value="">a new report draft</option></select></label>
+<p class="bx-promote"><label>Promote a SQL cell to <drishti-select native class="studio-select" data-promote-target label="Report to promote into"><option value="">a new report draft</option></drishti-select></label>
   <label class="bx-inline">on page <input class="studio-in" data-promote-page autocomplete="off" maxlength="48" placeholder="(first page)" aria-label="Page of the report"></label></p>
 <div class="bx-tabs" role="tablist" aria-label="Notebook" data-tabs>
   <button type="button" role="tab" class="btn-pill btn-ghost" id="bxT-sql" aria-controls="bxP-sql" aria-selected="true" data-tab="sql">SQL</button>

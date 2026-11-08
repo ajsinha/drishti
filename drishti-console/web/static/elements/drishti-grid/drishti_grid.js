@@ -21,7 +21,7 @@
   var D = root.Drishti = root.Drishti || {}, E = D.elements = D.elements || {}, libs = E.libs = E.libs || {};
   var cs = typeof document !== 'undefined' && document.currentScript;
   if (!E.base && cs && cs.src) { E.base = cs.src.replace(/[^/]*\/[^/]*(\?.*)?$/, ''); }   /* .../elements/ */
-  var needs = {"drishti-core": "../drishti-core/drishti_core.js"};
+  var needs = {"drishti-core": "../drishti-core/drishti_core.js", "drishti-inputs": "../drishti-inputs/drishti_inputs.js"};
   var lib = function (name) {
     if (libs[name]) { return libs[name]; }
     if (typeof module === 'object' && module && typeof require === 'function' && needs[name]) { return require(needs[name]); }
@@ -1049,6 +1049,7 @@
   __m["src/drishti_doc-console.js"] = (function () {
     var textSortKey = __lib("drishti-core").textSortKey, compareTextKeys = __lib("drishti-core").compareTextKeys;
     var rowSelection = __m["src/drishti_doc-select.js"].rowSelection;
+    var selectElement = __lib("drishti-inputs").selectElement;
     var SIZES = [25, 50, 100, 250];
     var MIN_FIT = 5;
     const NO_FILTERS = { attach: () => ({ prepare: () => {}, pass: () => true, active: () => false, clear: () => {} }), say: () => {}, close: () => {} };
@@ -1179,10 +1180,8 @@
         quick.type = 'search'; quick.placeholder = 'Filter rows'; quick.value = st.q;
         quick.setAttribute('aria-label', 'Filter the rows of this table');
         var funnel = button('⧩', 'Type a filter under each column heading (text, or >1m)', function () { columnFilters(!st.open); funnel.classList.toggle('on', st.open); });
-        var sizeSel = el('select', 'tbl-pg-size');
-        sizeSel.setAttribute('aria-label', 'Rows per page');
-        SIZES.forEach(function (n) { var o = el('option', null, n + ' rows'); o.value = n; sizeSel.appendChild(o); });
-        sizeSel.value = size();
+        var sizeOptions = SIZES.map(function (n) { return { value: String(n), label: n + ' rows' }; });   // drishti-inputs' Select
+        var sizeSel = selectElement(document, { options: sizeOptions, value: String(size()), label: 'Rows per page', search: false }, { class: 'tbl-pg-size' });
         var fitOn = false, fitN = null, picked = null;
         function perPage() { return picked || fitN || size(); }
         function pages() { return Math.max(1, Math.ceil(visible().length / perPage())); }
@@ -1263,7 +1262,7 @@
             return;
           }
           try { localStorage.setItem(KEY, sizeSel.value); } catch (e) { /* private window: this page only */ }
-          root.querySelectorAll('.tbl-pg-size').forEach(function (s) { s.value = sizeSel.value; });
+          root.querySelectorAll('.tbl-pg-size').forEach(function (s) { if (s !== sizeSel && s.component) { s.component.setValue(sizeSel.value); } });
           root.dispatchEvent(new CustomEvent('drishti:table-size'));
         });
         root.addEventListener('drishti:table-size', onSize);
@@ -1277,14 +1276,11 @@
           anchorPage = st.page;
         }
         function syncSel() {
-          var o = sizeSel.querySelector('option[value=fit]');
+          var pick = sizeSel.component;
           if (fitOn && fitN) {
-            if (!o) { o = el('option'); o.value = 'fit'; sizeSel.insertBefore(o, sizeSel.firstChild); }
-            o.textContent = 'Fit (' + fitN + ')';
-            sizeSel.value = picked ? picked : 'fit';
+            pick.setOptions([{ value: 'fit', label: 'Fit (' + fitN + ')' }].concat(sizeOptions), String(picked ? picked : 'fit'));
           } else {
-            if (o) { o.remove(); }
-            sizeSel.value = size();
+            pick.setOptions(sizeOptions, String(size()));
           }
         }
         function room() {
@@ -4773,6 +4769,7 @@
     var renderExplain = __m["src/drishti_grid-explain.js"].renderExplain;
     var FUNCTION_KEYS = __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, commandText = __m["src/drishti_grid-ui.js"].commandText, parseCommand = __m["src/drishti_grid-ui.js"].parseCommand, statusItems = __m["src/drishti_grid-ui.js"].statusItems, conditionText = __m["src/drishti_grid-ui.js"].conditionText;
     var toolbarAction = __m["src/drishti_grid-actions.js"].toolbarAction;
+    var selectElement = __lib("drishti-inputs").selectElement;
     function buildShell(v) {
       const doc = v.doc, L = v.model.layout, R = v.regions = { layout: v.model.layout };
       if (v.root) { v.root.remove(); }
@@ -4838,9 +4835,9 @@
       if (v.o.subtitle) { tb.append(h(doc, 'span', { cls: 'dg-meta', text: v.o.subtitle })); }
       tb.append(h(doc, 'span', { cls: 'dg-sp' }));
       if (v.phone && piv) {
-        const sel = h(doc, 'select', { cls: 'dg-measure', attrs: { 'aria-label': 'Measure shown' } }, v.measures().map((x) => h(doc, 'option', { text: x, attrs: { value: x } })));
-        sel.value = v.ui.phoneMeasure && v.measures().indexOf(v.ui.phoneMeasure) >= 0 ? v.ui.phoneMeasure : (v.measures()[0] || '');
-        sel.addEventListener('change', () => v.switchMeasure(sel.value));
+        const ms = v.measures(), sel = selectElement(doc, { options: ms, value: v.ui.phoneMeasure && ms.indexOf(v.ui.phoneMeasure) >= 0 ? v.ui.phoneMeasure : undefined,
+          label: 'Measure shown', search: false }, { class: 'dg-measure-pick' });                    // drishti-inputs' Select
+        sel.component.on('change', (d) => v.switchMeasure(d.value));
         tb.append(sel);
       }
       if (v.phone) { tb.append(button(doc, 'toggle-fields', 'Fields', { expanded: v.ui.fieldsOpen })); }

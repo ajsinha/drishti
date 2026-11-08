@@ -25,14 +25,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>drishti-renderer · fixture harness</title>
 <link rel="stylesheet" href="../../css/drishti_tokens.css">
+<link rel="stylesheet" href="../drishti-inputs/drishti_inputs.css">
 <link rel="stylesheet" href="drishti_harness.css">
 </head>
 <body>
 <header class="rx-top">
   <b class="rx-brand">drishti-renderer</b>
-  <label>Case <select id="rx-case"></select></label>
-  <label>Behaviours <select id="rx-behaviours"><option>library</option><option>console</option><option>host</option></select></label>
-  <label>Theme <select id="rx-theme"><option value="inherit">inherit</option><option>light</option><option>terminal</option><option>crimson-dark</option><option>wallstreet</option></select></label>
+  <span class="rx-pick" data-pick="case">Case</span>
+  <span class="rx-pick" data-pick="behaviours">Behaviours</span>
+  <span class="rx-pick" data-pick="theme">Theme</span>
   <button type="button" id="rx-stream" aria-pressed="false">Stream</button>
   <span id="rx-log" class="rx-log" aria-live="off"></span>
 </header>

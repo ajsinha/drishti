@@ -55,7 +55,8 @@
 .di-inline-field { border: 0; outline: none; background: transparent; flex: 1; min-width: 60px; padding: 4px; }
 
 /* popovers, lists */
-.di-pop { position: fixed; z-index: 1000; background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 10px; box-shadow: var(--d-shadow);
+.di-pop { position: fixed; z-index: calc(var(--d-z-overlay, 2000) + 10);   /* above the panel it opens from: drawers, menus, floats, overlays; toasts stay on top */
+   background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 10px; box-shadow: var(--d-shadow);
   padding: 8px; font-family: var(--d-font-sans); font-size: 13px; max-height: min(520px, 80vh); overflow: auto; }
 .di-listbox { max-height: 280px; overflow: auto; margin-top: 4px; }
 .di-option { display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 6px; cursor: pointer; }
@@ -218,6 +219,7 @@
 
 /* the single-choice select (drishti_select.js): the control sizes to its value like a native select; a long list has its search on top */
 .di-select { display: inline-block; vertical-align: middle; min-width: 6em; }
+.di-select[hidden] { display: none; }
 .di-select-control { cursor: pointer; padding: 0 0 0 8px; user-select: none; white-space: nowrap; }
 .di-select-control:focus { outline: none; border-color: var(--d-accent); box-shadow: 0 0 0 2px var(--d-accent-tint); }
 .di-select-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }

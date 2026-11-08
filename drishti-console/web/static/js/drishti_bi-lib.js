@@ -256,11 +256,21 @@
     }
     return writableP;
   };
-  /** Fills a <select> with those workspaces (value `me` for the personal one, the id otherwise); `want` picks one when it is among them. */
+  /**
+   * A choice drawn with drishti-inputs' Select: a <drishti-select> carrying attrs (the hooks, an id, a name for a plain form, the class
+   * studio-select unless another is given). items: values, [value, label] pairs or {value, label, disabled, group}; value picks one (else
+   * the first). A pick fires change on the element as a native select's did; el.value reads and sets it, el.component.setOptions(items,
+   * value) fills it again.
+   */
+  B.select = function (attrs, items, value, more) {
+    const a = Object.assign({ class: 'studio-select' }, attrs);
+    return window.Drishti.elements.inputs.selectElement(document, Object.assign({ options: items || [], value: value === null ? undefined : value, label: a['aria-label'] || a.title, name: a.name }, more || {}), a);
+  };
+  /** Fills a <drishti-select> with those workspaces (value `me` for the personal one, the id otherwise); `want` picks one when it is among them. */
   B.fillWorkspaces = function (select, want) {
     return B.writable().then((list) => {
-      list.forEach((w) => select.appendChild(B.h('option', { value: w.personal ? 'me' : w.id, text: w.name + (w.personal ? ' (private)' : '') })));
-      if (want && list.some((w) => w.id === want)) { select.value = want; }
+      const c = select.component;                                           // drishti-inputs' Select: after what the page offers already
+      c.setOptions(c.options.concat(list.map((w) => ({ value: w.personal ? 'me' : w.id, label: w.name + (w.personal ? ' (private)' : '') }))), want && list.some((w) => w.id === want) ? want : undefined);
       return list;
     });
   };
@@ -288,8 +298,7 @@
     const old = document.querySelector('[data-ask-workspace]');
     if (old) { old.remove(); }
     return B.writable().then((list) => new Promise((resolve, reject) => {
-      const sel = B.h('select', { class: 'studio-select', 'aria-label': label || 'Into this workspace', 'data-ask-target': '' },
-        list.map((w) => B.h('option', { value: w.personal ? 'me' : w.id, text: w.name + (w.personal ? ' (private)' : '') })));
+      const sel = B.select({ 'aria-label': label || 'Into this workspace', 'data-ask-target': '' }, list.map((w) => [w.personal ? 'me' : w.id, w.name + (w.personal ? ' (private)' : '')]));
       const go = B.h('button', { type: 'button', class: 'btn-pill btn-accent', 'data-ask-go': '', text: okText || 'Copy here' });
       const no = B.h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-ask-cancel': '', text: 'Cancel' });
       const box = B.h('span', { class: 'bi-ask', 'data-ask-workspace': '', role: 'group', 'aria-label': label || 'Choose a workspace' }, sel, go, no);
@@ -383,28 +392,35 @@
     if (d.status && d.status !== 'published') { return d.personal ? 'draft in a private workspace: publish it first' : 'a draft: publish it first'; }
     return '';
   };
-  /** Fills the Main dataset <select> and the Also add <select multiple> from GET /datasets; datasets that cannot be used are greyed with the reason. */
+  /** Fills the Main dataset (a <drishti-select>: the models and the packs' datasets in their groups, then the version 1 datasets) and the Also add
+      (a <drishti-multiselect>, version 1 datasets only) from GET /datasets; datasets that cannot be used are greyed with the reason. */
   B.fillDatasetPickers = function (main, also, want) {
     const groups = B.layer && B.layer.groups ? B.layer.groups().catch(() => []) : Promise.resolve([]);       // the models and the packs' datasets, grouped (a report reads one model)
     return Promise.all([B.api('GET', '/datasets?drafts=1'), groups]).then(([d, grouped]) => {
-      grouped.forEach((g) => main.appendChild(B.h('optgroup', { label: g.label }, g.items.map((i) => B.h('option', { value: i.value, text: i.label })))));
-      const legacy = B.h('optgroup', { label: grouped.length ? 'Other datasets (version 1)' : 'Datasets' });
-      main.appendChild(legacy);
+      const items = main.component.options.filter((o) => o.value === '');                     // the page's "Choose ..." first
+      grouped.forEach((g) => g.items.forEach((i) => items.push({ value: i.value, label: i.label, group: g.label })));
+      const legacy = grouped.length ? 'Other datasets (version 1)' : 'Datasets';
       // the list of datasets also holds the model layer's (rachana: 2), already offered above as dataset:<name>: only the version 1 ones are left here
       const layered = new Set();
       grouped.forEach((g) => g.items.forEach((i) => { if (i.kind === 'dataset') { layered.add('file:dataset:' + i.ref.slice('dataset:'.length)); layered.add('title:' + i.title); } }));
       const v1 = (d.datasets || []).filter((x) => !layered.has(x.id) && !layered.has('title:' + x.title));
-      legacy.hidden = !v1.length;
-      if (also && also.closest('label')) { also.closest('label').hidden = !v1.length; }   // more datasets in one report exist only for version 1 ones (a report reads one model)
-      const same = {};
+      const row = also && also.closest('label');
+      if (row) { row.hidden = !v1.length; }                                  // more datasets in one report exist only for version 1 ones (a report reads one model)
+      const same = {}, more = [];
       v1.forEach((x) => { same[x.title] = (same[x.title] || 0) + 1; });
       v1.forEach((x) => {
         const why = B.datasetWhy(x), state = same[x.title] > 1 && x.status ? ', ' + x.status : '', text = x.title + (state || why ? ' (' + [why, state.slice(2)].filter(Boolean).join(', ') + ')' : '');
-        legacy.appendChild(B.h('option', { value: x.id, text, disabled: !!why }));
-        if (also) { also.appendChild(B.h('option', { value: x.id, text, disabled: !!why })); }
+        items.push({ value: x.id, label: text, disabled: !!why, group: legacy });
+        more.push({ value: x.id, label: text, disabled: !!why });
       });
-      if (also && grouped.length) { const hide = () => { const one = /^(mq|dataset):/.test(main.value); also.disabled = one; if (one) { Array.prototype.forEach.call(also.options, (o) => { o.selected = false; }); } }; main.addEventListener('change', hide); }
-      if (want) { const o = Array.prototype.find.call(main.options, (x) => !x.disabled && (x.value === want || x.value === 'file:dataset:' + want)); if (o) { main.value = o.value; } }
+      const o = want ? items.find((x) => !x.disabled && (x.value === want || x.value === 'file:dataset:' + want)) : null;
+      main.component.setOptions(items, o ? o.value : undefined);
+      if (also) { also.allOptions = more; also.component.setOptions(more); }
+      if (row && grouped.length) {                                           // a model read alone: Also add steps aside, its picks dropped
+        const hide = () => { const one = /^(mq|dataset):/.test(main.value || ''); row.hidden = one || !v1.length; if (one) { also.component.setValue([]); } };
+        main.addEventListener('change', hide);
+        hide();
+      }
       return d.datasets || [];
     });
   };
@@ -418,7 +434,7 @@
 
   /** "Also add" never offers the main dataset: the option of the chosen main one is hidden and unselected, and follows the choice. */
   B.excludeMain = function (main, also) {
-    const apply = () => Array.prototype.forEach.call(also.options, (o) => { const same = !!main.value && o.value === main.value; o.hidden = same; if (same) { o.selected = false; } });
+    const apply = () => { const all = also.allOptions || also.component.options; also.component.setOptions(all.filter((o) => !main.value || o.value !== main.value)); };
     main.addEventListener('change', apply);
     return apply;
   };

@@ -27,6 +27,7 @@ from playwright.sync_api import sync_playwright
 
 import bi_gov_stack
 from bi_gov_stack import CONSOLE_URL, PASSWORD, call
+from select_helpers import has_option
 
 
 def sign_in(browser, user, **ctx):
@@ -151,7 +152,7 @@ def main(out: Path, captures: Path) -> None:
 
                 # ---- environments --------------------------------------------------------------------------------------------------------
                 ann.goto(CONSOLE_URL + "/bi/environments")
-                ann.wait_for_selector("[data-ws-select] option", state="attached")
+                ann.wait_for_function(has_option("[data-ws-select]"))
                 ann.select_option("[data-ws-select]", "rates-desk")
                 with ann.expect_download() as d:
                     ann.click("[data-export] button[type=submit]")

@@ -310,6 +310,17 @@
   condition and date preset (drishti-inputs' panels: one opened from inside another keeps it open). **A guard**
   (`tests/test_native_select_guard.py`) fails on a raw `<select>` in a console page, script, library source or plugin page; its allow-list (69 files:
   the libraries without drishti-inputs, the renderer's harness, the gallery, the screens of the native-select sweep) only shrinks.
+- **The native-select sweep, first half: the libraries and BI on `Select`** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+  drishti-grid (a table's rows per page, the phone pivot's measure), drishti-chart (the studio's options, the map's metric), drishti-graph's
+  group, size and colour pickers and drishti-tree's size-by and move-to draw drishti-inputs' `Select`, so those four libraries require
+  drishti-inputs (the manifest lists it before the grid; the harness pages load it). Every BI page and script follows: the catalogue's
+  filters, the workspace's new item, runs filters and member role, the designer's start, the report's time, bookmarks, click mode and
+  export scope, the notebook, the transform, environments, history's Compare, the runs drawer's forms, the parameter slicers, the
+  statement settings, the drill and perspective pickers and the relative-date slicer (`B.select` in code, `<drishti-select>` in the
+  templates; *Also add* a `<drishti-multiselect>`); the renderer's harness and the gallery's option panel too. New in drishti-inputs:
+  `selectElement(doc, options, attrs)`; such a Select, and a page's `<drishti-select native>`, fires `change` and `input` for a pick as a native select did; the element's
+  `value`, `disabled` and `focus()` reach the control, and a named one's field reads and sets it (`form.elements.<name>.value`). The guard's
+  allow-list: 69 files and 149 selects → 39 and 78 (and to none with the screens below). Names, `data-*` hooks and the saved YAML are unchanged.
 - **The screens outside BI on `Select`** ([ELEMENTS.md section 15](docs/architecture/ELEMENTS.md#15-build-checklist)): every native
   select of Account settings, alerts, Approvals, Build (the design's control kind and theme, the controls, form and versions tabs, the
   new-design registry), the designer (grid, modes, sentences, settings, outline, describe), Help › Configuration, reports and

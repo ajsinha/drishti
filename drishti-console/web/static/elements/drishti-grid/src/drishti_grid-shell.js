@@ -28,6 +28,7 @@ import { rangeStats } from './drishti_selection.js';
 import { renderExplain } from './drishti_grid-explain.js';
 import { FUNCTION_KEYS, commandText, parseCommand, statusItems, conditionText } from './drishti_grid-ui.js';
 import { toolbarAction } from './drishti_grid-actions.js';
+import { selectElement } from '../../drishti-inputs/src/drishti_index.js';
 
 /**
  * Builds the layout's regions in the grid's element (again after a change of layout); the grid's body moves into the new one.
@@ -110,9 +111,9 @@ export function renderChrome(v) {
   if (v.o.subtitle) { tb.append(h(doc, 'span', { cls: 'dg-meta', text: v.o.subtitle })); }
   tb.append(h(doc, 'span', { cls: 'dg-sp' }));
   if (v.phone && piv) {
-    const sel = h(doc, 'select', { cls: 'dg-measure', attrs: { 'aria-label': 'Measure shown' } }, v.measures().map((x) => h(doc, 'option', { text: x, attrs: { value: x } })));
-    sel.value = v.ui.phoneMeasure && v.measures().indexOf(v.ui.phoneMeasure) >= 0 ? v.ui.phoneMeasure : (v.measures()[0] || '');
-    sel.addEventListener('change', () => v.switchMeasure(sel.value));
+    const ms = v.measures(), sel = selectElement(doc, { options: ms, value: v.ui.phoneMeasure && ms.indexOf(v.ui.phoneMeasure) >= 0 ? v.ui.phoneMeasure : undefined,
+      label: 'Measure shown', search: false }, { class: 'dg-measure-pick' });                    // drishti-inputs' Select
+    sel.component.on('change', (d) => v.switchMeasure(d.value));
     tb.append(sel);
   }
   if (v.phone) { tb.append(button(doc, 'toggle-fields', 'Fields', { expanded: v.ui.fieldsOpen })); }

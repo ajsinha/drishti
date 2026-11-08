@@ -67,6 +67,7 @@ usual. Nothing in the tarballs names a registry; your `.npmrc` does:
 # once, by whoever releases Drishti in your organisation (Artifactory: an npm local repository; Nexus: an npm (hosted) repository)
 npm config set @drishti:registry https://artifactory.example.internal/artifactory/api/npm/npm-internal/
 npm publish npm/drishti-elements-core-1.1.0.tgz     # core first: the others depend on it
+npm publish npm/drishti-elements-inputs-0.3.0.tgz   # then inputs: the grid, the chart, the graph and the tree draw their choices with it
 npm publish npm/drishti-elements-grid-0.4.0.tgz
 npm publish npm/drishti-elements-chart-0.1.0.tgz
 # in an application
@@ -75,7 +76,7 @@ npm install @drishti/elements-grid @drishti/elements-chart
 ```
 
 For Nexus the registry address is `https://nexus.example.internal/repository/npm-internal/`; both need your registry's credentials in
-`.npmrc` (`//host/path/:_authToken=…`). Without a registry, `npm install ./drishti-elements-core-1.1.0.tgz ./drishti-elements-grid-0.4.0.tgz`
+`.npmrc` (`//host/path/:_authToken=…`). Without a registry, `npm install ./drishti-elements-core-1.1.0.tgz ./drishti-elements-inputs-0.3.0.tgz ./drishti-elements-grid-0.4.0.tgz`
 works from the files. A package's `src/` holds the ES modules (`import` resolves the package itself), its root the bundle (`require`
 gives the bundle's API under Node), `drishti-<name>.d.ts` the types, and `package.json` lists the libraries it depends on.
 

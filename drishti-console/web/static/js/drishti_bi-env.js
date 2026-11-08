@@ -30,10 +30,9 @@
     return m;
   }
 
+  /** A workspace <drishti-select> (drishti-inputs' Select) offers these workspaces, after the blank choice when there is one. */
   function fill(sel, list, blank) {
-    clear(sel);
-    if (blank) { sel.appendChild(h('option', { value: '', text: blank })); }
-    list.forEach(function (w) { sel.appendChild(h('option', { value: w.personal ? 'me' : w.id, text: w.name + (w.personal ? ' (personal)' : '') })); });
+    sel.component.setOptions((blank ? [{ value: '', label: blank }] : []).concat(list.map(function (w) { return { value: w.personal ? 'me' : w.id, label: w.name + (w.personal ? ' (personal)' : '') }; })));
   }
 
   B.api('GET', '/me').then(function (me) {

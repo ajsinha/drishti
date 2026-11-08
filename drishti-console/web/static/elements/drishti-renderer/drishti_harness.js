@@ -17,10 +17,20 @@
    one shot or streamed (a skeleton, then every panel in reverse order, then done), with every drishti:* event counted on window.__rx for
    the browser test. No server: the fixtures are a static file beside this one. */
 import { render, VERSION } from '../../render/2.0.0/drishti-render.js';
+import { selectElement } from '../drishti-inputs/src/drishti_index.js';
 
 const q = new URLSearchParams(location.search);
 const host = document.getElementById('host'), log = document.getElementById('rx-log');
-const pick = { case: document.getElementById('rx-case'), behaviours: document.getElementById('rx-behaviours'), theme: document.getElementById('rx-theme') };
+const fixtures = await (await fetch(new URL('drishti_fixtures.json', import.meta.url))).json();
+/** The harness's three choices, drishti-inputs' Select each (#rx-case, #rx-behaviours, #rx-theme) after its words. */
+const choices = { case: [Object.keys(fixtures), q.get('case') || 'showcase'], behaviours: [['library', 'console', 'host'], q.get('behaviours') || 'library'],
+  theme: [['inherit', 'light', 'terminal', 'crimson-dark', 'wallstreet'], q.get('theme') || 'inherit'] };
+const pick = {};
+document.querySelectorAll('[data-pick]').forEach((at) => {
+  const k = at.getAttribute('data-pick'), [values, value] = choices[k];
+  pick[k] = selectElement(document, { label: at.textContent, options: values, value: value, search: false }, { id: 'rx-' + k });
+  at.after(pick[k]);
+});
 const streamBtn = document.getElementById('rx-stream');
 window.__rx = { events: {}, ready: false, version: VERSION };
 ['paint', 'ready', 'error', 'navigate', 'row-click', 'select', 'tick'].forEach((n) => host.addEventListener('drishti:' + n, (e) => {
@@ -28,11 +38,6 @@ window.__rx = { events: {}, ready: false, version: VERSION };
   if (n === 'navigate') { e.preventDefault(); }
 }));
 
-const fixtures = await (await fetch(new URL('drishti_fixtures.json', import.meta.url))).json();
-Object.keys(fixtures).forEach((k) => { const o = document.createElement('option'); o.textContent = k; pick.case.appendChild(o); });
-pick.case.value = q.get('case') || 'showcase';
-pick.behaviours.value = q.get('behaviours') || 'library';
-pick.theme.value = q.get('theme') || 'inherit';
 streamBtn.setAttribute('aria-pressed', q.get('stream') === '1' ? 'true' : 'false');
 
 /** The ViewModel as a stream: a skeleton of stubs, every panel in reverse order, done. */

@@ -39,8 +39,10 @@ The adapter's API (`createGridFromAgOptions`, `AgGridApi`, the filter translatio
 
    ```html
    <link rel="stylesheet" href="/static/css/drishti_tokens.css">
+   <link rel="stylesheet" href="/static/elements/drishti-inputs/drishti_inputs.css">
    <link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css">
    <script src="/static/elements/drishti-core/drishti_core.js"></script>
+   <script src="/static/elements/drishti-inputs/drishti_inputs.js"></script>   <!-- the grid's choices are drishti-inputs' Select -->
    <script src="/static/elements/drishti-grid/drishti_grid.js"></script>
    ```
 

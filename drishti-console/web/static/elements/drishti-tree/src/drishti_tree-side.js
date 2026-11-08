@@ -19,6 +19,7 @@
    "Move to" for the keyboard), the Explain sheet's place, the edit mode's proposal (its moves, Submit for review, Undo last, Discard),
    the legend of a bar's statuses, and the status line. Built with drishti-core's element maker; nothing inline. */
 import { h, toneColour } from '../../drishti-core/src/drishti_index.js';
+import { selectElement } from '../../drishti-inputs/src/drishti_index.js';
 
 /**
  * The side panel's content for a Tree.
@@ -59,8 +60,8 @@ export function sideContent(t) {
   out.push(t.explainBox);
   if (t.editing && n.parent) {
     const options = m.all().filter((x) => !m.moveProblem(n.id, x.id));
-    const sel = h(doc, 'select', { cls: 'dt-input', attrs: { 'aria-label': 'Move ' + n.label + ' to a new parent' }, data: { ctl: 'move-to' } },
-      [h(doc, 'option', { text: 'a new parent…', attrs: { value: '' } })].concat(options.map((x) => h(doc, 'option', { text: m.breadcrumbs(x.id).join(' › '), attrs: { value: x.id } }))));
+    const sel = selectElement(doc, { label: 'Move ' + n.label + ' to a new parent', placeholder: 'a new parent…',            // drishti-inputs' Select (its change reaches the tree's own)
+      options: options.map((x) => ({ value: x.id, label: m.breadcrumbs(x.id).join(' › ') })) }, { class: 'dt-pick', 'data-ctl': 'move-to' });
     out.push(h(doc, 'h3', { cls: 'dt-sec', text: 'Move to (proposal)' }), h(doc, 'div', { cls: 'dt-acts' }, [sel]));
   }
   out.push(legend(t));

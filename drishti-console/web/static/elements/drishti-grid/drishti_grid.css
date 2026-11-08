@@ -49,6 +49,7 @@
 .dg-zone-hint { color: var(--d-faint); font-size: 0.9em; }
 .dg-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 14px; border: 1px solid var(--d-border); background: var(--d-surface-2);
   cursor: grab; user-select: none; white-space: nowrap; max-width: 100%; }
+.dg-measure-pick { width: 150px; }   /* the phone pivot's measure: drishti-inputs' Select */
 .dg-chip.dg-measure { border-color: color-mix(in srgb, var(--d-accent) 55%, var(--d-border)); }
 .dg-chip.dg-dragging { opacity: 0.4; }
 .dg-chip.dg-vf { border-style: dashed; border-color: var(--d-link); color: var(--d-link); cursor: default; }

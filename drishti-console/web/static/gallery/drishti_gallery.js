@@ -321,8 +321,10 @@
         const cur = v[name];
         if (ctl && ctl.kind === 'select') {
           const vals = typeof ctl.values === 'function' ? ctl.values(this.ctx) : ctl.values;
-          input = h(doc, 'select', { attrs: { id: id, 'data-opt': name }, on: { change: (e) => this.setOption(name, e.target.value) } },
-            [cur === undefined || cur === '' ? h(doc, 'option', { text: def !== undefined && def !== null ? '(default ' + def + ')' : '(not set)', attrs: { value: '' } }) : null].concat(vals.map((x) => h(doc, 'option', { text: x, attrs: { value: x, selected: String(x) === String(cur) ? true : null } }))));
+          const unset = cur === undefined || cur === '' ? [{ value: '', label: def !== undefined && def !== null ? '(default ' + def + ')' : '(not set)' }] : [];   // drishti-inputs' Select
+          input = this.E.inputs.selectElement(doc, { label: name, options: unset.concat(vals.map((x) => ({ value: String(x), label: String(x) }))),
+            value: unset.length ? '' : String(cur) }, { id: id, 'data-opt': name });
+          input.component.on('change', (e) => this.setOption(name, e.value));
         } else if (ctl && ctl.kind === 'switch') {
           const on = cur === undefined ? this.code.defaultValue(def) === true : !!cur;
           input = h(doc, 'input', { attrs: { id: id, type: 'checkbox', 'data-opt': name, checked: on ? true : null }, on: { change: (e) => this.setOption(name, e.target.checked) } });

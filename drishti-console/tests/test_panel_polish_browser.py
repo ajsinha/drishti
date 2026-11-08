@@ -47,7 +47,7 @@ def page():
 
 def _doc(tmp_path, body: str, scripts: bool = False) -> str:
     css = "".join(f'<link rel="stylesheet" href="{(STATIC / "css" / f).as_uri()}">' for f in ("drishti_tokens.css", "drishti_theme.css", "drishti_terminal.css", "drishti_layout.css"))
-    js = "".join(f'<script src="{(STATIC / s).as_uri()}"></script>' for s in ("elements/drishti-core/drishti_core.js", "vendor/echarts/echarts.min.js", "elements/drishti-chart/drishti_chart.js",
+    js = "".join(f'<script src="{(STATIC / s).as_uri()}"></script>' for s in ("elements/drishti-core/drishti_core.js", "elements/drishti-inputs/drishti_inputs.js", "vendor/echarts/echarts.min.js", "elements/drishti-chart/drishti_chart.js",
                                                                          "js/drishti_charts.js")) if scripts else ""
     f = tmp_path / "p.html"
     f.write_text(f"<!doctype html><meta charset=utf-8>{css}<body>{body}{js}", encoding="utf-8")

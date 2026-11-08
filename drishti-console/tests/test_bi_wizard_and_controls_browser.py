@@ -38,6 +38,7 @@ import bi_report_stack  # noqa: E402
 from bi_report_helpers import clean, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, api  # noqa: E402
 import select_helpers  # noqa: E402
+from select_helpers import has_option, values
 
 WES = ("wes", ["bi-writer"])
 state = {}
@@ -130,8 +131,8 @@ def test_a_report_is_started_on_the_model_and_gets_a_relative_date_slicer_a_top_
     try:
         page.wait_for_function("() => document.querySelector('[data-new-dataset]').value === 'mq:wiz-trades@1'", timeout=8000)
     except Exception:
-        raise AssertionError(page.url + " | " + str(page.evaluate("[...document.querySelector('[data-new-dataset]').options].map(o => o.value)")))
-    expect(page.locator("[data-new-workspace] option").first).to_be_attached()
+        raise AssertionError(page.url + " | " + str(values(page, "[data-new-dataset]")))
+    page.wait_for_function(has_option("[data-new-workspace]"))
     page.fill("[data-new-title]", "Wizard report")
     page.click("[data-new] button[type=submit]")
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
@@ -177,7 +178,7 @@ def test_a_report_is_started_on_the_model_and_gets_a_relative_date_slicer_a_top_
 def test_duplicate_and_delete_show_what_depends(stack, page):
     page.goto(f"{CONSOLE_URL}/bi/i/{state['report']}")
     page.get_by_role("button", name="Duplicate…").click()
-    expect(page.locator("[data-ask-target] option").first).to_be_attached()
+    page.wait_for_function(has_option("[data-ask-target]"))
     page.click("[data-ask-go]")
     page.wait_for_url(re.compile(r"/bi/i/(?!" + re.escape(state["report"]) + r"$)"))
     copy = re.sub(r".*/bi/i/", "", page.url).replace("%3A", ":")
@@ -225,7 +226,7 @@ def test_the_designer_start_copies_a_sample_into_a_chosen_workspace_and_lists_dr
     assert s in (200, 201), ws
     page.goto(f"{CONSOLE_URL}/bi/designer")
     page.wait_for_selector("[data-sample-copy]", timeout=20000)
-    assert page.locator("[data-new-workspace] option").count() >= 2                                      # private first, then the shared one
+    assert len(values(page, "[data-new-workspace]")) >= 2                                      # private first, then the shared one
     page.locator("[data-sample-copy]").first.click()
     page.select_option("[data-ask-target]", ws["id"])
     page.click("[data-ask-go]")

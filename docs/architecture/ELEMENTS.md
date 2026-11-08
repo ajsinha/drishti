@@ -79,9 +79,12 @@ the new capability sections 5 to 7 call for. **After the move** the console keep
 whole, 58,864 lines become about 38,000) and every table, chart, picker and format comes from a library. The inventory is regenerated
 by the build (`tools/elements/inventory.py`, planned, section 15) so these figures are checked, not trusted.
 
-**Dependencies.** Each library depends only on **drishti-core** (and on its vendored engine: ECharts for drishti-chart, CodeMirror for
-the code editor, Arrow JS for drishti-data). drishti-insight and drishti-renderer may use libraries 1 to 5; drishti-risk uses
-drishti-chart and drishti-grid. Nothing depends on drishti-risk, and no library depends on the console.
+**Dependencies.** Each library depends on **drishti-core** (and on its vendored engine: ECharts for drishti-chart, CodeMirror for
+the code editor, Arrow JS for drishti-data). A library that draws a choice draws it with **drishti-inputs**' `Select`, so drishti-grid,
+drishti-chart, drishti-graph and drishti-tree require drishti-inputs too (the manifest lists drishti-inputs before the grid; the loader,
+the gallery and the distribution add it; a page that loads the bundles by hand loads drishti-inputs' first, as `base.html` does).
+drishti-insight and drishti-renderer may use libraries 1 to 5; drishti-risk uses drishti-chart and drishti-grid. Nothing depends on
+drishti-risk, and no library depends on the console.
 
 ```
 drishti-core ◄── inputs, grid, chart, data            (1 to 5: no server needed)
@@ -544,6 +547,13 @@ library with its module: an unlicensed module's library is not served, its kinds
     `search: true`) has a search field on top that holds the focus. In markup its options may be `<option>` and `<optgroup>` children
     (`selected` marks the value), so a template swaps `<select>` for `<drishti-select>`; `name` makes a hidden input for a plain form;
     `setOptions(list, value)` refills it, `setDisabled`, `drishti:change` with `{value, option}` (a value set by code emits nothing).
+    Behaving as the native select it replaces: one made in code with **`selectElement(doc, options, attrs)`** (the element with its
+    component, the attributes on it: an id, the `data-*` hooks, a name), and a `<drishti-select native>` of a page's markup (BI's
+    templates), fire `change` and `input` on the element for a pick (`native: true`; without it a page hears `drishti:change`), so a page's own and delegated listeners keep working; the
+    element's `value`, `disabled` and `focus()` reach the component; and a named one's field is the form's (`form.elements.kind.value`
+    reads the value and, set, picks that option; the hidden input's value attribute is what the form submits). Why one function rather
+    than an adapter in drishti-core that upgrades when drishti-inputs is present: a fallback would be a native select again, which the
+    rule of 3.1 refuses, so the libraries that draw a choice simply require drishti-inputs (above, Dependencies).
   - **`Form`, `<drishti-form>`** from a JSON-schema-like description (`drishti_schema.js`, pure): string, number and integer (read
     loosely, shown formatted), boolean, date, date range, enum (radios up to three, else a select), arrays of an enum (the multi-select),
     arrays of objects (repeatable groups: add, remove, move), objects (fieldsets), a combobox, a tree, the code editor; conditions
@@ -680,9 +690,11 @@ library with its module: an unlicensed module's library is not served, its kinds
     condition and date preset are `Select`s too; a drishti-inputs panel opened from inside another (a `Select` in a filter's panel) keeps
     the other open. **The guard** `tests/test_native_select_guard.py` fails on a raw `<select>` in a console page, script or library
     source (the tag, `createElement('select')`, an element helper asked for one); its allow-list says how many each file still draws
-    and why, and only shrinks: the libraries that do not require drishti-inputs (drishti-chart's studio options and map metric,
-    drishti-graph's chrome, drishti-grid's document console and pivot measure, drishti-tree's move-to and size-by), the renderer's
-    harness page and the gallery's option panel, and the screens of the native-select sweep (60 files with the plugins' pages, 2026-11-07).
+    and why, and only shrinks. The sweep's first half (2026-11-07) emptied it of the libraries and of BI: drishti-grid's rows per page
+    and phone pivot measure, drishti-chart's studio options and map metric, drishti-graph's group, size and colour pickers and
+    drishti-tree's size-by and move-to (each now requiring drishti-inputs), the renderer's harness page, the gallery's option panel, and
+    every BI page and script (`B.select(attrs, items, value)` in `drishti_bi-lib.js` makes the `<drishti-select>`; the templates write
+    `<drishti-select>` with their `<option>`s; *Also add* is a `<drishti-multiselect>`). Left: the screens of the sweep's other half.
 
   | Was | Now |
   |---|---|
@@ -984,7 +996,7 @@ The product owner's picks of section 16 (2026-11-07): **g5 option A** is drishti
 other options are **modes of the same components**, presentation only, one engine underneath each. Both are generic (no domain word in
 their code: the guard of section 11 covers them); the banking variants are presets in drishti-risk.
 
-**drishti-graph** (`static/elements/drishti-graph/`, requires drishti-core and drishti-grid, whose grid draws its tables):
+**drishti-graph** (`static/elements/drishti-graph/`, requires drishti-core, drishti-inputs, whose `Select` draws its pickers, and drishti-grid, whose grid draws its tables):
 
 - **The model** (`drishti_graph-model.js`): nodes and edges by id, cyclic or acyclic, directed or not, with an adjacency index both
   ways; any other field of a node is an attribute (text) or a measure (number). Changes come as transactions (`addNodes`,
@@ -1060,7 +1072,7 @@ their code: the guard of section 11 covers them); the banking variants are prese
 Above about 50,000 nodes a WebGL drawing and a layout in a Web Worker would take over (section 16's note); neither is built: no
 Drishti screen draws that many today.
 
-**drishti-tree** (`static/elements/drishti-tree/`, requires drishti-core and drishti-grid):
+**drishti-tree** (`static/elements/drishti-tree/`, requires drishti-core, drishti-inputs (its size-by and move-to are `Select`s) and drishti-grid):
 
 - **The model** (`HierarchyModel`, `drishti_tree-model.js`): rows with a parent, a nested root, or paths; further parents in `also`
   (a node read from two parents, marked ⧉); expand and collapse; search that opens the matching branches and gives each match its
@@ -1581,7 +1593,7 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [x] drishti-inputs: pickers, forms with four eyes, the filter bar, the code editor (8.2); the formula input and people picker as their screens move
 - [x] drishti-inputs' single-choice `Select` (`<drishti-select>`, 8.2); the VaR family's and the exposure screens' native selects replaced (12.2: hierarchy, horizon, confidences, currency, the pre-deal form)
 - [x] The library's own native selects (a form's enum select, the grid's select editor, the designer kit's layout picker and choices, the filter bar's condition and preset) and FRTB-SA's and SIMM's choice selects on `Select`; the screens' tests through `select_helpers.py` (8.2)
-- [ ] The native-select sweep: the allow-list of `test_native_select_guard.py` empty (60 screens; the libraries without drishti-inputs, the renderer's harness and the gallery; 8.2)
+- [x] The native-select sweep, first half: the libraries (drishti-grid, -chart, -graph and -tree requiring drishti-inputs), the renderer's harness, the gallery and every BI page and script on `Select` (the allow-list 69 files and 149 selects → 39 and 78; 8.2)
 - [x] The sweep's screens outside BI on `Select` (39 files, 78 selects off the allow-list): Account settings, alerts, Approvals' kind, Build's
   design (the control kind, the theme), controls, form and versions tabs and the new-design registry, the designer's grid, modes, sentences,
   settings, outline and describe line, Help › Configuration's area, reports and subscriptions, the calculator's snippets, the data view's
@@ -1592,6 +1604,7 @@ g1 was decided separately: the grid's three layouts (section 5.1).
   banking plugin's trading landing, market-risk ladder grid and scenario matrix. Scripts fill a `Select` with `setOptions` and hear
   `drishti:change` (`PackUI.select` also fires `change`, as `Form`'s field does, for the pack screens' listeners); a named one's hidden
   input submits the same form; the tests read them through `select_helpers.py`
+- [x] The native-select sweep complete: the allow-list of `test_native_select_guard.py` is empty (8.2)
 - [x] drishti-renderer 2.0.0 on the libraries (8.5; the console's controls, funnels and Zoom still its scripts until their screens move)
 - [x] drishti-insight 0.1.0 (8.10): the one Explain, the one search box, the Approvals queue and the workbook export, in the manifest, so
   packing and the gallery include it

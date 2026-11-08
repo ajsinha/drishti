@@ -24,6 +24,7 @@ import { createGeoLoader, fitView } from './drishti_chart-geo.js';
 import { buildMap } from './drishti_chart-map.js';
 import { rowsOf } from './drishti_chart-data.js';
 import { tooltipElement } from './drishti_chart-parts.js';
+import { selectElement } from '../../drishti-inputs/src/drishti_index.js';
 
 /** A map's modes: ranking (g3 A, the default) and table (g3 B). */
 export const MAP_MODES = Object.freeze(['ranking', 'table']);
@@ -70,7 +71,8 @@ export class MapView {
   remount() {
     const c = this.c, doc = c.doc;
     this.crumb = h(doc, 'nav', { cls: 'dc-crumb', attrs: { 'aria-label': 'Map level' } });
-    this.picker = h(doc, 'select', { cls: 'dc-metric', attrs: { 'aria-label': 'Metric' }, on: { change: () => { this.metricIndex = this.picker.selectedIndex; this.highlight = null; this.draw(); c.emit('metricChanged', { metric: this.metric() }); } } });
+    this.picker = selectElement(doc, { label: 'Metric', options: [], search: false }, { class: 'dc-metric' });     // drishti-inputs' Select: the metrics by their index
+    this.picker.component.on('change', (d) => { this.metricIndex = Number(d.value) || 0; this.highlight = null; this.draw(); c.emit('metricChanged', { metric: this.metric() }); });
     c.headExtra.textContent = '';
     c.headExtra.append(this.crumb, this.picker);
     this.zoomBox = h(doc, 'div', { cls: 'dc-zoom' }, [['in', '+', 'Zoom in'], ['out', '−', 'Zoom out'], ['reset', '⟲', 'Reset the view']].map((z) => h(doc, 'button', { cls: 'dc-tool', text: z[1],
@@ -240,8 +242,9 @@ export class MapView {
       this.crumb.append(h(doc, 'button', { cls: 'dc-link', text: 'World', attrs: { type: 'button', 'data-go': 'world' }, on: { click: () => this.back() } }), ' › ', h(doc, 'b', { text: this.placeName(lvl, true) }));
     }
     const ms = this.metrics();
-    if (this.picker.options.length !== ms.length) { this.picker.textContent = ''; ms.forEach((m) => this.picker.appendChild(h(doc, 'option', { text: m.title || m.field, attrs: { value: m.field } }))); }
-    this.picker.selectedIndex = Math.min(this.metricIndex, ms.length - 1);
+    const pick = this.picker.component;
+    if (pick.options.length !== ms.length) { pick.setOptions(ms.map((m, i) => ({ value: String(i), label: m.title || m.field }))); }
+    pick.setValue(String(Math.max(0, Math.min(this.metricIndex, ms.length - 1))));
     this.picker.hidden = ms.length < 2;
     const legend = this.legendEl(built, fmt), detail = this.detailEl(built, fmt);
     c.side.textContent = '';

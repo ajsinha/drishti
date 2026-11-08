@@ -22,7 +22,7 @@
 <div class="bi-env">
 <form class="bi-form" data-export aria-label="Export a bundle">
   <h2>Export a bundle</h2>
-  <label>Workspace<select name="workspace" class="studio-select" data-ws-select></select></label>
+  <label>Workspace<drishti-select native name="workspace" class="studio-select" data-ws-select label="Workspace"></drishti-select></label>
   <label class="bi-checkrow"><input type="checkbox" name="dependencies" checked> Include the datasets the reports read</label>
   <button type="submit" class="btn-pill btn-accent"><i class="bi bi-box-arrow-down" aria-hidden="true"></i> Download the bundle</button>
   <p class="text-muted-d" data-export-note></p>
@@ -31,7 +31,7 @@
   <h2>Import a bundle</h2>
   <p class="text-muted-d" data-import-need hidden>Importing needs the bi-steward power.</p>
   <label>Bundle file (.bi-bundle.json)<input type="file" name="file" class="studio-in" accept=".json,application/json" data-file></label>
-  <label>Into workspace (empty: the one named in the bundle)<select name="workspace" class="studio-select" data-ws-select-import></select></label>
+  <label>Into workspace (empty: the one named in the bundle)<drishti-select native name="workspace" class="studio-select" data-ws-select-import label="Into workspace (empty: the one named in the bundle)"></drishti-select></label>
   <label>Map workspaces (from:to, comma separated)<input name="workspaces" class="studio-in mono" autocomplete="off" placeholder="rates-dev:rates-prod"></label>
   <label>Map owners (from:to, comma separated)<input name="owners" class="studio-in mono" autocomplete="off" placeholder="alice-dev:alice"></label>
   <label class="bi-checkrow"><input type="checkbox" name="overwrite"> Overwrite items that exist here and differ</label>

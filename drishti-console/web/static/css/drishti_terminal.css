@@ -234,6 +234,7 @@ kbd { background: var(--d-surface-2); color: var(--d-ink); border: 1px solid var
 /* ---- Sutra Studio ---- */
 .studio { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--d-sp-12_8); padding: var(--d-sp-12_8) var(--d-sp-20); height: calc(100vh - 58px); }
 .studio-select, .studio-in { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-5); padding: var(--d-sp-4_48) var(--d-sp-8); font-size: var(--d-fs-13_6); }
+drishti-select.studio-select, drishti-multiselect.studio-select { background: transparent; border: 0; padding: 0; }   /* drishti-inputs' Select: its control draws the field */
 .studio-in { width: 9.5rem; }
 .studio-preview { flex: 1; overflow: auto; }
 .studio-view .vtitle { padding: var(--d-sp-11_2) var(--d-sp-14_4) 0; margin-bottom: var(--d-sp-8); }
@@ -620,7 +621,8 @@ button.tbar-link { background: none; border: 0; padding: 0 var(--d-sp-5_6); font
 .tbl-pg-b { min-width: 1.9rem; padding: var(--d-sp-1_6) var(--d-sp-7_2); }
 .tbl-pg-b:disabled { opacity: .35; cursor: default; }
 .tbl-pg-info { padding: 0 var(--d-sp-6_4); }
-.tbl-pg-size { background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-4); font-size: var(--d-fs-12_48); padding: var(--d-sp-0_8) var(--d-sp-4_8); }
+.tbl-pg-size { font-size: var(--d-fs-12_48); min-width: 7.5em; }   /* drishti-inputs' Select */
+.tbl-pg-size .di-select-control { min-height: 24px; }
 table.tbl:focus { outline: 1px solid var(--d-accent); outline-offset: 2px; }
 table.tbl tbody tr.tbl-sel > td { background: var(--d-accent-tint); }
 table.tbl tbody tr.tbl-sel > td:first-child { box-shadow: inset 3px 0 0 var(--d-accent); }

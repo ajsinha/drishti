@@ -21,7 +21,7 @@
   var D = root.Drishti = root.Drishti || {}, E = D.elements = D.elements || {}, libs = E.libs = E.libs || {};
   var cs = typeof document !== 'undefined' && document.currentScript;
   if (!E.base && cs && cs.src) { E.base = cs.src.replace(/[^/]*\/[^/]*(\?.*)?$/, ''); }   /* .../elements/ */
-  var needs = {"drishti-core": "../drishti-core/drishti_core.js", "drishti-grid": "../drishti-grid/drishti_grid.js"};
+  var needs = {"drishti-core": "../drishti-core/drishti_core.js", "drishti-inputs": "../drishti-inputs/drishti_inputs.js", "drishti-grid": "../drishti-grid/drishti_grid.js"};
   var lib = function (name) {
     if (libs[name]) { return libs[name]; }
     if (typeof module === 'object' && module && typeof require === 'function' && needs[name]) { return require(needs[name]); }
@@ -607,6 +607,7 @@
   /* ---- src/drishti_tree-side.js ---- */
   __m["src/drishti_tree-side.js"] = (function () {
     var h = __lib("drishti-core").h, toneColour = __lib("drishti-core").toneColour;
+    var selectElement = __lib("drishti-inputs").selectElement;
     function sideContent(t) {
       const doc = t.doc, m = t.model, out = [];
       if (t.editing) { out.push(proposalBox(t)); }
@@ -641,8 +642,8 @@
       out.push(t.explainBox);
       if (t.editing && n.parent) {
         const options = m.all().filter((x) => !m.moveProblem(n.id, x.id));
-        const sel = h(doc, 'select', { cls: 'dt-input', attrs: { 'aria-label': 'Move ' + n.label + ' to a new parent' }, data: { ctl: 'move-to' } },
-          [h(doc, 'option', { text: 'a new parent…', attrs: { value: '' } })].concat(options.map((x) => h(doc, 'option', { text: m.breadcrumbs(x.id).join(' › '), attrs: { value: x.id } }))));
+        const sel = selectElement(doc, { label: 'Move ' + n.label + ' to a new parent', placeholder: 'a new parent…',            // drishti-inputs' Select (its change reaches the tree's own)
+          options: options.map((x) => ({ value: x.id, label: m.breadcrumbs(x.id).join(' › ') })) }, { class: 'dt-pick', 'data-ctl': 'move-to' });
         out.push(h(doc, 'h3', { cls: 'dt-sec', text: 'Move to (proposal)' }), h(doc, 'div', { cls: 'dt-acts' }, [sel]));
       }
       out.push(legend(t));
@@ -792,6 +793,7 @@
     var sideContent = __m["src/drishti_tree-side.js"].sideContent, statusParts = __m["src/drishti_tree-side.js"].statusParts;
     var exportTree = __m["src/drishti_tree-io.js"].exportTree, keyMove = __m["src/drishti_tree-io.js"].keyMove;
     var loadOpenChildren = __m["src/drishti_tree-hooks.js"].loadOpenChildren;
+    var selectElement = __lib("drishti-inputs").selectElement;
     const TREE_MODES = Object.freeze(['grid', 'org', 'sunburst', 'icicle']);
     const TREE_EVENTS = Object.freeze(['selectionChanged', 'nodeExpanded', 'nodeCollapsed', 'searched', 'modeChanged', 'densityChanged', 'explainOpened',
       'explainShown', 'valuesRequested', 'valuesUpdated', 'valuesFailed', 'proposal', 'proposalSubmitted', 'proposalApplied', 'proposalDiscarded', 'moveRefused', 'exported']);
@@ -848,8 +850,7 @@
         const modes = (o.modes || TREE_MODES).filter((m) => TREE_MODES.indexOf(m) >= 0);
         this.modeSeg = modes.length > 1 ? h(doc, 'span', { cls: 'dt-seg', attrs: { role: 'group', 'aria-label': 'Mode' } }, modes.map((m) => h(doc, 'button', { text: MODE_NAMES[m], attrs: { type: 'button', 'aria-pressed': 'false' }, data: { mode: m } }))) : null;
         const add = this.model.measures.filter((m) => m.additive !== false);
-        this.sizeSel = h(doc, 'select', { cls: 'dt-input', attrs: { 'aria-label': 'Size by (an additive measure)' }, data: { ctl: 'size' } }, add.map((m) => h(doc, 'option', { text: m.label, attrs: { value: m.field } })));
-        if (this.sizeBy) { this.sizeSel.value = this.sizeBy; }
+        this.sizeSel = selectElement(doc, { label: 'Size by (an additive measure)', search: false, options: add.map((m) => ({ value: m.field, label: m.label })), value: add.some((m) => m.field === this.sizeBy) ? this.sizeBy : undefined }, { class: 'dt-pick', 'data-ctl': 'size' });
         this.sizeBox = h(doc, 'span', { cls: 'dt-sizebox' }, [h(doc, 'span', { cls: 'dt-lbl', text: 'size' }), this.sizeSel]);
         this.editBtn = o.editable ? b('edit', '✎ Edit (propose)', 'Re-parent nodes: the moves become one proposal for review') : null;
         this.altBtn = b('alt', '▦', 'The figures as a table');

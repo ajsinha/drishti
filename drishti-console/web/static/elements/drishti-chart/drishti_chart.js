@@ -21,7 +21,7 @@
   var D = root.Drishti = root.Drishti || {}, E = D.elements = D.elements || {}, libs = E.libs = E.libs || {};
   var cs = typeof document !== 'undefined' && document.currentScript;
   if (!E.base && cs && cs.src) { E.base = cs.src.replace(/[^/]*\/[^/]*(\?.*)?$/, ''); }   /* .../elements/ */
-  var needs = {"drishti-core": "../drishti-core/drishti_core.js"};
+  var needs = {"drishti-core": "../drishti-core/drishti_core.js", "drishti-inputs": "../drishti-inputs/drishti_inputs.js"};
   var lib = function (name) {
     if (libs[name]) { return libs[name]; }
     if (typeof module === 'object' && module && typeof require === 'function' && needs[name]) { return require(needs[name]); }
@@ -1002,6 +1002,7 @@
     var buildMap = __m["src/drishti_chart-map.js"].buildMap;
     var rowsOf = __m["src/drishti_chart-data.js"].rowsOf;
     var tooltipElement = __m["src/drishti_chart-parts.js"].tooltipElement;
+    var selectElement = __lib("drishti-inputs").selectElement;
     const MAP_MODES = Object.freeze(['ranking', 'table']);
     const loaders = new Map();
     function geoLoader(base, fetchJson) {
@@ -1026,7 +1027,8 @@
       remount() {
         const c = this.c, doc = c.doc;
         this.crumb = h(doc, 'nav', { cls: 'dc-crumb', attrs: { 'aria-label': 'Map level' } });
-        this.picker = h(doc, 'select', { cls: 'dc-metric', attrs: { 'aria-label': 'Metric' }, on: { change: () => { this.metricIndex = this.picker.selectedIndex; this.highlight = null; this.draw(); c.emit('metricChanged', { metric: this.metric() }); } } });
+        this.picker = selectElement(doc, { label: 'Metric', options: [], search: false }, { class: 'dc-metric' });     // drishti-inputs' Select: the metrics by their index
+        this.picker.component.on('change', (d) => { this.metricIndex = Number(d.value) || 0; this.highlight = null; this.draw(); c.emit('metricChanged', { metric: this.metric() }); });
         c.headExtra.textContent = '';
         c.headExtra.append(this.crumb, this.picker);
         this.zoomBox = h(doc, 'div', { cls: 'dc-zoom' }, [['in', '+', 'Zoom in'], ['out', '−', 'Zoom out'], ['reset', '⟲', 'Reset the view']].map((z) => h(doc, 'button', { cls: 'dc-tool', text: z[1],
@@ -1152,8 +1154,9 @@
           this.crumb.append(h(doc, 'button', { cls: 'dc-link', text: 'World', attrs: { type: 'button', 'data-go': 'world' }, on: { click: () => this.back() } }), ' › ', h(doc, 'b', { text: this.placeName(lvl, true) }));
         }
         const ms = this.metrics();
-        if (this.picker.options.length !== ms.length) { this.picker.textContent = ''; ms.forEach((m) => this.picker.appendChild(h(doc, 'option', { text: m.title || m.field, attrs: { value: m.field } }))); }
-        this.picker.selectedIndex = Math.min(this.metricIndex, ms.length - 1);
+        const pick = this.picker.component;
+        if (pick.options.length !== ms.length) { pick.setOptions(ms.map((m, i) => ({ value: String(i), label: m.title || m.field }))); }
+        pick.setValue(String(Math.max(0, Math.min(this.metricIndex, ms.length - 1))));
         this.picker.hidden = ms.length < 2;
         const legend = this.legendEl(built, fmt), detail = this.detailEl(built, fmt);
         c.side.textContent = '';
@@ -1271,6 +1274,7 @@
     var h = __lib("drishti-core").h;
     var kindList = __m["src/drishti_chart-spec.js"].kindList, kindOf = __m["src/drishti_chart-spec.js"].kindOf, specText = __m["src/drishti_chart-spec.js"].specText;
     var dataTable = __m["src/drishti_chart-parts.js"].dataTable;
+    var selectElement = __lib("drishti-inputs").selectElement;
     function coloured(doc, text) {
       const out = doc.createDocumentFragment(), re = /("(?:[^"\\]|\\.)*")(\s*:)?|(-?\d[\d.e+-]*|true|false|null)/g;
       let at = 0, m;
@@ -1325,10 +1329,10 @@
       options() {
         const c = this.c, doc = c.doc, s = c.rawSpec, k = c.spec.kind;
         this.opts.textContent = '';
-        const row = (label, el) => this.opts.append(h(doc, 'label', { text: label, attrs: { for: el.id } }), el);
-        const select = (id, values, cur, fn) => {
-          const el = h(doc, 'select', { attrs: { id: 'dc-o-' + id + '-' + (Studio.seq = (Studio.seq || 0) + 1), 'data-opt': id }, on: { change: () => fn(el.value) } }, values.map((v) => h(doc, 'option', { text: v, attrs: { value: v } })));
-          el.value = cur;
+        const row = (label, make) => this.opts.append(h(doc, 'label', { text: label }), make(label));
+        const select = (id, values, cur, fn) => (label) => {                // drishti-inputs' Select, named by its label
+          const el = selectElement(doc, { options: values, value: cur, label: label, search: false }, { id: 'dc-o-' + id + '-' + (Studio.seq = (Studio.seq || 0) + 1), 'data-opt': id });
+          el.component.on('change', (d) => fn(d.value));
           return el;
         };
         const change = (patch) => { const next = Object.assign({}, s, patch); Object.keys(patch).forEach((x) => { if (patch[x] === undefined) { delete next[x]; } }); c.setSpec(next); };

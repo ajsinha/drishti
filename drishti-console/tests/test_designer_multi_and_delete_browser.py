@@ -35,6 +35,7 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 import bi_report_stack  # noqa: E402
 from bi_report_helpers import clean, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, api  # noqa: E402
+from select_helpers import has_option, options
 
 WES = ("wes", ["bi-writer"])
 
@@ -140,8 +141,8 @@ def test_a_new_report_from_the_workspace_asks_for_its_dataset_and_a_new_title_is
     expect(page.locator("[data-dataset-row]").first).to_be_visible()                                          # report is the first kind: it needs a dataset
     page.click("[data-create]")
     assert "Choose a main dataset" in page.inner_text("[data-msg]")
-    page.wait_for_function("() => document.querySelector('[data-new-dataset]').options.length > 1")
-    page.select_option("[data-new-dataset]", page.evaluate("[...document.querySelector('[data-new-dataset]').options].find(o => o.value && !o.disabled).value"))      # a greyed one cannot be chosen
+    page.wait_for_function(has_option("[data-new-dataset]", ">1"))
+    page.select_option("[data-new-dataset]", next(o["value"] for o in options(page, "[data-new-dataset]") if o["value"] and not o["disabled"]))      # a greyed one cannot be chosen
     page.click("[data-create]")                                                                         # the title is empty
     page.wait_for_url("**/bi/design/**")
     page.wait_for_selector("[data-design-root][data-ready=yes]")

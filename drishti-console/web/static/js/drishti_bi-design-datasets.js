@@ -97,12 +97,10 @@
   function drawPicker() {
     const sel = D.q('[data-dataset-picker]');
     if (!sel) { return; }
-    B.clear(sel);
-    sel.appendChild(h('option', { value: '', text: 'Choose a dataset' }));
-    all.filter((d) => d.id !== D.dataset.id && extra.indexOf(d.id) < 0).forEach((d) => {
+    sel.component.setOptions([{ value: '', label: 'Choose a dataset' }].concat(all.filter((d) => d.id !== D.dataset.id && extra.indexOf(d.id) < 0).map((d) => {   // drishti-inputs' Select
       const why = B.datasetWhy(d);
-      sel.appendChild(h('option', { value: strip(d.id), text: d.title + (why ? ' (' + why + ')' : ''), disabled: !!why }));
-    });
+      return { value: strip(d.id), label: d.title + (why ? ' (' + why + ')' : ''), disabled: !!why };
+    })), '');
   }
 
   // ---- links ---------------------------------------------------------------------------------------------------------

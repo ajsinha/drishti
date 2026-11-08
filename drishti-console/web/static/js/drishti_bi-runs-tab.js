@@ -242,9 +242,7 @@
   function runAgain(r, busy) {
     const enc = encodeURIComponent(r.id), id = 'runAgainAs-' + String(r.id).replace(/[^A-Za-z0-9_-]/g, '');
     const asof = R.asOfShort(r);
-    const sel = h('select', { class: 'studio-select', id, 'data-run-again-as': '' },
-      h('option', { value: 'same', text: 'Same as before' + (asof ? ' (as of ' + asof + ')' : '') }), h('option', { value: 'latest', text: 'With the latest data' }));
-    if (againAs[r.id]) { sel.value = againAs[r.id]; }
+    const sel = B.select({ id, 'data-run-again-as': '', 'aria-label': 'Run again as' }, [['same', 'Same as before' + (asof ? ' (as of ' + asof + ')' : '')], ['latest', 'With the latest data']], againAs[r.id]);   // drishti-inputs' Select
     sel.addEventListener('change', () => { againAs[r.id] = sel.value; });
     const go = h('button', { type: 'button', class: 'btn-pill btn-accent bi-run-again-go', 'data-run-act': 'rerun' });
     const label = (on) => {
@@ -288,8 +286,7 @@
       h('label', { for: id, text: 'Run again as' }), h('div', { class: 'bi-run-again-row' }, sel, go));
   }
   function menu(label, attrs, items) {
-    const sel = h('select', Object.assign({ class: 'studio-select', 'aria-label': label }, attrs || {}), h('option', { value: '', text: label + ' ▾' }), items.map((i) => h('option', { value: i[0], text: i[1] })));
-    return sel;
+    return B.select(Object.assign({ 'aria-label': label }, attrs || {}), [['', label + ' ▾']].concat(items), '');     // drishti-inputs' Select: a pick acts, then it says the label again
   }
   // what the last action said stays in the drawer (a redraw replaces the button it was said beside) until another run is opened
   let note = null;
@@ -462,11 +459,11 @@
   function scheduleForm(r, anchor, sc) {
     // friendly presets that write the SubscriptionSchedule grammar (daily, weekdays, business-days, weekly <day>, monthly last [business]); "Written out" takes it as text
     const p = R.parseSchedule(sc ? sc.schedule : 'business-days 07:30');
-    const kind = h('select', { name: 'kind', class: 'studio-select', 'aria-label': 'How often' }, R.PRESETS.map((x) => h('option', { value: x[0], text: x[1], selected: x[0] === p.kind })));
-    const day = h('select', { name: 'day', class: 'studio-select', 'aria-label': 'Day of the week' }, R.DAYS.map((x) => h('option', { value: x[0], text: x[1], selected: x[0] === (p.day || 'mon') })));
+    const kind = B.select({ name: 'kind', 'aria-label': 'How often' }, R.PRESETS.map((x) => [x[0], x[1]]), R.PRESETS.some((x) => x[0] === p.kind) ? p.kind : undefined);      // drishti-inputs' Select each
+    const day = B.select({ name: 'day', 'aria-label': 'Day of the week' }, R.DAYS.map((x) => [x[0], x[1]]), p.day || 'mon');
     const time = h('input', { name: 'time', type: 'time', class: 'studio-in', value: p.time || '07:30', 'aria-label': 'Time (the server\'s zone)', required: true });
     const text = h('input', { name: 'text', class: 'studio-in', value: p.kind === 'custom' ? p.text : '', autocomplete: 'off', placeholder: 'monthly last 18:00 business', 'aria-label': 'The schedule, written out' });
-    const data = h('select', { name: 'data', class: 'studio-select' }, h('option', { value: 'latest', text: 'the newest data', selected: !sc || sc.data !== 'same' }), h('option', { value: 'same', text: 'the same dates', selected: !!sc && sc.data === 'same' }));
+    const data = B.select({ name: 'data', 'aria-label': 'On' }, [['latest', 'the newest data'], ['same', 'the same dates']], sc && sc.data === 'same' ? 'same' : 'latest');
     const preview = h('code', { 'data-run-sched-preview': '' });
     const sync = () => {
       const k = kind.value;
@@ -503,7 +500,7 @@
   }
   function promote(r, anchor) {
     const name = B.slug(R.titleOf(r) || 'run') || 'run';
-    const to = h('select', { name: 'to', class: 'studio-select', 'aria-label': 'Promote to' }, h('option', { value: 'dataset', text: 'a dataset snapshot' }), h('option', { value: 'report', text: 'a report on it (and its dataset)' }));
+    const to = B.select({ name: 'to', 'aria-label': 'Promote to' }, [['dataset', 'a dataset snapshot'], ['report', 'a report on it (and its dataset)']]);
     inlineForm(anchor, 'Promote this result', [
       h('label', {}, 'Name ', h('input', { name: 'name', class: 'studio-in', required: true, value: name, autocomplete: 'off', pattern: '[A-Za-z0-9_.-]+', title: 'letters, digits, dot, dash or underscore' })),
       h('label', {}, 'Title ', h('input', { name: 'title', class: 'studio-in', value: R.titleOf(r), autocomplete: 'off', maxlength: '200', placeholder: 'Left empty: the run\'s title and dates' })),

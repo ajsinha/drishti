@@ -152,16 +152,14 @@
     }
     function facets(f, names) {
       FILTERS.forEach(function (k) {
-        var sel = form.elements[k], keep = sel.value || params.get(k) || '';
-        clear(sel);
-        sel.appendChild(h('option', { value: '', text: 'any' }));
-        var seen = f[k] || {};
+        var sel = q('drishti-select[name="' + k + '"]', form), keep = sel.value || params.get(k) || '';     // drishti-inputs' Select
+        var items = [{ value: '', label: 'any' }], seen = f[k] || {};
         Object.keys(seen).sort().forEach(function (v) {
           var label = k === 'workspace' && names[v] ? names[v] : v;
-          sel.appendChild(h('option', { value: v, text: label + ' (' + seen[v] + ')' }));
+          items.push({ value: v, label: label + ' (' + seen[v] + ')' });
         });
-        if (keep && !seen[keep]) { sel.appendChild(h('option', { value: keep, text: keep })); }
-        sel.value = keep;
+        if (keep && !seen[keep]) { items.push({ value: keep, label: keep }); }
+        sel.component.setOptions(items, keep);
       });
     }
     function again() { run(false); }
@@ -211,7 +209,7 @@
     form.addEventListener('submit', function (e) { e.preventDefault(); run(false); });
     form.addEventListener('input', function (e) { if (e.target.name === 'q') { clearTimeout(timer); timer = setTimeout(again, 180); } });
     form.addEventListener('change', function (e) { if (e.target.name !== 'q') { run(false); } });
-    q('[data-clear]').addEventListener('click', function () { qa('input, select', form).forEach(function (el) { el.value = el.name === 'sort' ? 'use' : ''; }); params = new URLSearchParams(); run(false); });
+    q('[data-clear]').addEventListener('click', function () { qa('input', form).forEach(function (el) { el.value = el.name === 'sort' ? 'use' : ''; }); params = new URLSearchParams(); run(false); });   // the search and each Select's named field
     remember(tab);
     run(false);
     if (params.get('focus')) { q('input[data-search]').focus(); }
@@ -389,7 +387,7 @@
           .then(function (it) { window.location.href = '/bi/i/' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }).catch(function (err) { near(go, err.message, true); });
       });
     });
-    q('[data-new-item]').elements.kind.addEventListener('change', kindChanged);
+    q('[data-new-item] drishti-select[name=kind]').addEventListener('change', kindChanged);      // drishti-inputs' Select: a pick fires change
     kindChanged();
     var fillPickers = function () { var B = window.drishtiBi; if (B && B.fillDatasetPickers) { B.fillDatasetPickers(q('[data-new-dataset]'), q('[data-new-also]')).then(function () { B.excludeMain(q('[data-new-dataset]'), q('[data-new-also]'))(); }).catch(function () {}); } else { setTimeout(fillPickers, 50); } };
     fillPickers();
@@ -400,8 +398,8 @@
       var title = f.elements.title.value.trim() || defaultTitle(kind), body, to, also = [];
       var name = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || kind;
       if (kind === 'report') {
-        if (!f.elements.dataset.value) { say('Choose a main dataset: a report draws one.', true); f.elements.dataset.focus(); return; }
-        also = Array.prototype.filter.call(f.elements.also.selectedOptions, function (o) { return o.value !== f.elements.dataset.value; }).map(function (o) { return o.value.replace(/^file:dataset:/, ''); });
+        if (!f.elements.dataset.value) { say('Choose a main dataset: a report draws one.', true); q('[data-new-dataset]', f).focus(); return; }
+        also = (q('[data-new-also]', f).value || []).filter(function (v) { return v !== f.elements.dataset.value; }).map(function (v) { return String(v).replace(/^file:dataset:/, ''); });
         body = 'rachana: 1\nreport: ' + name + '\ntitle: ' + JSON.stringify(title) + '\n' + window.drishtiBi.sourceLine(f.elements.dataset.value) + '\npages:\n  - id: page1\n    title: Page 1\n    visuals: []\n';
         to = '/bi/design/';
       } else if (kind === 'python') {
@@ -421,7 +419,7 @@
       e.preventDefault();
       var f = e.target, go = f.querySelector('[type=submit]');
       api('PUT', '/workspaces/' + encodeURIComponent(ws.id) + '/members/' + encodeURIComponent(f.elements.user.value.trim()), { role: f.elements.role.value })
-        .then(function () { var told = 'Saved ' + f.elements.user.value + ' as ' + f.elements.role.value + '.'; say(told); near(go, told, false); f.reset(); load(); }).catch(function (err) { near(go, err.message, true); });
+        .then(function () { var told = 'Saved ' + f.elements.user.value + ' as ' + f.elements.role.value + '.'; say(told); near(go, told, false); f.reset(); f.elements.role.value = 'viewer'; load(); }).catch(function (err) { near(go, err.message, true); });
     });
     q('[data-review]').addEventListener('change', function (e) {
       api('PUT', '/workspaces/' + encodeURIComponent(ws.id), { reviewRequired: e.target.checked }).then(function () { say('Review before publishing is ' + (e.target.checked ? 'on' : 'off') + '.'); near(e.target, 'Review before publishing is ' + (e.target.checked ? 'on' : 'off') + '.', false); load(); }).catch(function (err) { e.target.checked = !e.target.checked; near(e.target, err.message, true); });
@@ -582,7 +580,8 @@
       closePanels();
       api('GET', '/workspaces').then(function (list) {
         var targets = list.filter(function (w) { return !w.shipped && RANK[w.role] >= RANK.contributor && w.id !== it.workspace; });
-        var sel = h('select', { class: 'studio-select', 'aria-label': 'Move to' }, targets.map(function (w) { return h('option', { value: w.personal ? 'me' : w.id, text: w.name + (w.personal ? ' (private)' : '') }); }));
+        var sel = window.Drishti.elements.inputs.selectElement(document, { label: 'Move to', options: targets.map(function (w) { return { value: w.personal ? 'me' : w.id, label: w.name + (w.personal ? ' (private)' : '') }; }) },
+          { class: 'studio-select', 'aria-label': 'Move to' });                // drishti-inputs' Select
         var go = act('Move', function (g) {
           busy(g, function () {
             return api('POST', path + '/move', { workspace: sel.value }).then(function (n) { say('Moved to ' + n.workspaceName + '.'); show(n); near(q('[data-actions] .btn-pill'), 'Moved to ' + n.workspaceName + '.', false); }).catch(function (err) { near(g, err.message, true); });

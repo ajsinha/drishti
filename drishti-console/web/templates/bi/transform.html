@@ -42,9 +42,9 @@
           <label class="tx-radio"><input type="radio" name="isrc" value="kind" checked data-isrc> A pack kind, straight through its connector</label>
           <label class="tx-radio"><input type="radio" name="isrc" value="model" data-isrc> A model or a dataset (a model query)</label>
         </fieldset>
-        <label data-kind-row>Kind<select class="studio-select" data-ikind aria-label="Pack kind"></select></label>
+        <label data-kind-row>Kind<drishti-select native class="studio-select" data-ikind label="Pack kind"></drishti-select></label>
         <label data-kind-row>Connector <small class="text-muted-d">(optional: empty reads whichever serves the kind)</small><input class="studio-in mono" data-iconnector autocomplete="off" maxlength="80" placeholder="trading-store"></label>
-        <label data-model-row hidden>Model or dataset<select class="studio-select" data-imodel aria-label="Model or dataset"></select></label>
+        <label data-model-row hidden>Model or dataset<drishti-select native class="studio-select" data-imodel label="Model or dataset"></drishti-select></label>
         <fieldset class="tx-fields" data-ifields-box hidden><legend>Fields</legend><div data-ifields></div></fieldset>
         <div class="bi-actions"><button type="submit" class="btn-pill btn-accent" data-iadd disabled><i class="bi bi-plus-lg" aria-hidden="true"></i> Add the input</button></div>
       </form>
@@ -62,7 +62,7 @@
         <button type="button" class="btn-pill btn-ghost" data-undo disabled title="Remove the last step"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Undo the last step</button>
       </div>
       <form class="bi-form tx-picker" data-picker hidden aria-label="Add a step from the snippets">
-        <label>Snippet<select class="studio-select" data-snippet aria-label="Snippet"></select></label>
+        <label>Snippet<drishti-select native class="studio-select" data-snippet label="Snippet"></drishti-select></label>
         <p class="text-muted-d" data-snippet-help></p>
         <div class="tx-params" data-params></div>
         <div class="bi-actions"><button type="submit" class="btn-pill btn-accent" data-snippet-add><i class="bi bi-plus-lg" aria-hidden="true"></i> Add the step</button>
