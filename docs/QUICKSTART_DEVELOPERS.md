@@ -43,7 +43,7 @@ Elements unit tests. Maven is not needed: the repository carries its own (`./mvn
 |---|---|---|---|
 | JDK 21 | `sudo apt install openjdk-21-jdk` | `brew install openjdk@21` | the Temurin 21 MSI or ZIP (a ZIP needs no installer) |
 | Python 3.13 | `uv python install 3.13`, or the system's | `brew install python@3.13`, or uv | python.org's installer or its embeddable ZIP |
-| uv (recommended) | `curl -LsSf https://astral.sh/uv/install.sh \| sh` | `brew install uv` | optional: `py -3.13 -m venv` works without it |
+| uv (recommended) | the installer script from astral.sh (`install.sh`) | `brew install uv` | optional: `py -3.13 -m venv` works without it |
 | Node (Elements tests) | `sudo apt install nodejs` | `brew install node` | optional: the Node tests skip without it |
 | `JAVA_HOME` | `export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64` | `export JAVA_HOME=$(/usr/libexec/java_home -v 21)` | `$env:JAVA_HOME = 'C:\jdk-21'` |
 

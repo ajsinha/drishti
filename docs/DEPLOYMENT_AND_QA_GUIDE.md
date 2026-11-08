@@ -491,9 +491,21 @@ mode: replace
 
 ```text
 $ drishti-console/.venv/bin/python tools/drishti.py feed list
-«FEED_LIST»
+FEED                 LAKE           LOAD  SCHEDULE        LICENCE                             USE            DATASETS
+central-banks        worldlake      java  weekdays 18:15  FRED API terms (the default series  attribution    central-bank, rate-series
+funds                capitalmarket  java  daily 06:15     Public domain (U.S. Government wor  allowed        fund, fund-holder, index-funds
+gdelt-events         newslake       java  daily 04:30     GDELT terms of use (free for any u  attribution    event-country
+gleif                referencelake  java  daily 05:30     CC0 1.0 (attribution appreciated)   allowed        lei-entity, lei-relationship, lei-mapping
+…
+world-economy        worldlake      java  daily 06:45     World Bank CC BY 4.0; IMF terms (n  internal only  economy, macro-indicator, …
+yahoo-prices (off)   capitalmarket  java  weekdays 22:30  Yahoo terms of service (personal u  internal only  price-history
 $ drishti-console/.venv/bin/python tools/drishti.py feed run gleif --dry-run
-«FEED_DRY»
+dry run: feed gleif (GLEIF legal entities, ownership and identifier mappings), business date 2026-11-08, window 2026-10-09..2026-11-08, datasets lei-entity, lei-relationship, lei-mapping -> lake referencelake by java
+  dry run: gleif, sources golden, api, mapping
+    golden (CC0 1.0 (attribution appreciated); committable): 3 request(s) or file(s), cache <drishti>/data/datafeeds/sources/cache/gleif
+      https://goldencopy.gleif.org/api/v2/golden-copies/publishes/latest
+      …
+2026-11-08T07:23:11-05:00 feed dry-run exit=0 feed=gleif date=2026-11-08 files=0 rows=0 seconds=0.0
 ```
 
 A dry run contacts nothing and writes nothing: it says what a run would fetch and load. On an offline machine stop there.
