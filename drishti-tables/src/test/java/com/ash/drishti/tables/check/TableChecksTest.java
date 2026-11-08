@@ -30,7 +30,7 @@ class TableChecksTest {
     /** The design's sample (section 3.1): cash flows under two lists, the leg's fields through ^. */
     static final String CASHFLOWS = """
             rachana: 3
-            table: banking.trading_cashflows_cashflows
+            table: bi.trading_cashflows_cashflows
             was: trading-cashflows-cashflows
             version: 1.0.0
             title: "Trade legs and cashflows: cashflows"
@@ -49,7 +49,7 @@ class TableChecksTest {
     /** The design's second sample: a rule per role and a masked column on the table (Q9). */
     static final String TRADES = """
             rachana: 3
-            table: banking.trading_risk_trades
+            table: bi.trading_risk_trades
             from: { kind: trade-valuation, connector: risk-store }
             keys: [VALUATION_ID]
             columns:
@@ -191,6 +191,6 @@ class TableChecksTest {
         TableDef again = TableYaml.read(once).table();
         assertThat(again).isEqualTo(t);
         assertThat(TableYaml.write(again, List.of("a header line"))).isEqualTo(once);
-        assertThat(once).startsWith("# a header line\nrachana: 3\ntable: banking.trading_risk_trades\n");
+        assertThat(once).startsWith("# a header line\nrachana: 3\ntable: bi.trading_risk_trades\n");
     }
 }

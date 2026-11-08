@@ -123,7 +123,7 @@ class TablesMigratorTest {
         assertThat(p.writes()).containsOnlyKeys("bi/trades_basic_trade.table.yaml", "bi/trades_basic_legs.table.yaml", "bi/trades-basic.model.yaml");
         String table = p.writes().get("bi/trades_basic_trade.table.yaml");
         assertThat(table).startsWith("# Project Drishti").contains("# Migrated from config/bi/datasets/trades-basic-trade.dataset.yaml")
-                .contains("rachana: 3\ntable: banking.trades_basic_trade\nwas: trades-basic-trade\n");
+                .contains("rachana: 3\ntable: bi.trades_basic_trade\nwas: trades-basic-trade\n");
         Catalogue c = Catalogue.of(List.of(), List.of());
         TableDef t = com.ash.drishti.tables.yaml.TableYaml.read(table).table();
         assertThat(t.from().kind()).isEqualTo("trade");
@@ -147,7 +147,7 @@ class TablesMigratorTest {
     void migratesAModelWithItsAliasesAndTheNullRule() throws Exception {
         TablesMigrator.Plan p = new TablesMigrator(AS_IS).plan(bi(), dir.resolve("tables"));
         ModelDef m = com.ash.drishti.tables.yaml.ModelYaml.read(p.writes().get("bi/trades-basic.model.yaml")).model();
-        assertThat(m.tables().get("trade").table().name()).isEqualTo("banking.trades_basic_trade");
+        assertThat(m.tables().get("trade").table().name()).isEqualTo("bi.trades_basic_trade");
         assertThat(m.measures().get("Open MTM").expr()).isEqualTo("sum(trade.MTM, where = trade.STATUS != 'MATURED' && trade.STATUS != null)");
         assertThat(m.measures().get("Flows").expr()).isEqualTo("calc(sum(legs.AMOUNT), via = 'r_2')");
         assertThat(p.problems()).filteredOn(Problem::isError).isEmpty();

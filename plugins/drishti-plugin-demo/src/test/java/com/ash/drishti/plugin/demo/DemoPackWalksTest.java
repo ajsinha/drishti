@@ -60,7 +60,7 @@ class DemoPackWalksTest {
     @BeforeAll
     static void load() throws IOException {
         for (Path root : PACKS) {
-          try (Stream<Path> packs = Files.list(root)) {
+          try (Stream<Path> packs = com.ash.drishti.api.PackFolders.list(root).stream()) {     // packs in their domain folders
             for (Path pack : packs.toList()) {
                 Path samples = pack.resolve("samples");
                 if (!Files.isDirectory(samples)) {
