@@ -35,6 +35,7 @@ own: everything it needs is EXP's paths, market data and configuration.
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
 16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+17. [JSON examples](#17-json-examples)
 
 ## 1. Summary
 
@@ -74,8 +75,8 @@ CVA has **no input table of its own**. It reads:
 |---|---|---|
 | `exposure-path`, `simulation-run` | [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) section 15 | EE, ENE per netting set and primary date (through `exposure-result`); the run should be `RISK_NEUTRAL` (EXPOSURE_GUIDE.md open question 4) |
 | `saccr-trade` and its result | [SACCR.md](SACCR.md) | EAD and effective maturity per netting set for BA-CVA |
-| `credit-curve` (market-data pack) | the pack's contract | `POINTS[]` (`TENOR`, `SPREAD` in bp, `HAZARD`, `SURVIVAL`), `RECOVERY`, `CURRENCY` |
-| `ir-curve` (market-data pack) | the pack's contract | the USD OIS discount curve (`POINTS[]`) |
+| `credit-curve` (market-data pack) | [`credit-curve.contract.yaml`](../../config/packs/banking/market-data/contracts/credit-curve.contract.yaml) | `POINTS[]` (`TENOR`, `SPREAD` in bp, `HAZARD`, `SURVIVAL`), `RECOVERY`, `CURRENCY` |
+| `ir-curve` (market-data pack) | [`ir-curve.contract.yaml`](../../config/packs/banking/market-data/contracts/ir-curve.contract.yaml) | the USD OIS discount curve (`POINTS[]`) |
 | SIMM IM ([SIMM.md](SIMM.md)) | | IM profile for the MVA hook |
 
 Cadence: whenever its inputs change (the reactive triggers, §9.4). Due: after the exposure run and the end-of-day market data.
@@ -230,7 +231,7 @@ by trade (EXPOSURE_GUIDE.md section 18.6, giving each trade's CVA contribution: 
 | `LGD`, `CREDIT_CURVE`, `SPREAD_5Y`, `PROXY` | rate, text, rate, boolean | | for one counterparty |
 | `PROFILE` | record list | | per primary date: `TENOR`, `T`, `DF`, `EE`, `ENE`, `PD` (ΔPD_C), `SURVIVAL`, `CVA_CONTRIBUTION`, `DVA_CONTRIBUTION` |
 | `BY_COUNTERPARTY`, `BY_NETTING_SET` | record list | | `ID`, `CVA`, `DVA`, `FVA`, `CS01`, `BA_CVA_SCVA` |
-| `PROVENANCE` | record | | NSET's, plus EXP's run, the curves (id, date, proxy) and the settings used |
+| `PROVENANCE` | record | | NSET's (`INPUTS`: each `KIND` with its `VERSION` and `BATCH_IDS`; `UNVALUED`, `PARTIAL`, `HIDDEN`), plus EXP's run (`RUN_ID`, `CALIBRATION`), the curves (`CURVES`: `ID`, `DATE`, `PROXY`), the settings used (`SETTINGS`, by the names of §6.1) and `FLAGS` (§10: `proxy`, `real-world-exposure`, `extrapolated`) |
 
 **FVA comes first, in its own kind** (product owner, 2026-11-02, [COUNTERPARTY_ENGINES.md section 14](../architecture/COUNTERPARTY_ENGINES.md#14-decisions), decision 9). Before the CVA family is built, FCA, FBA and
 FVA are computed by the xVA engine (`drishti_ccr.xva:XvaEngine`) into the computed kind `fva-result` with its own API `/api/v1/fva`
@@ -253,9 +254,17 @@ CSV: `GET /scope/contributions?format=csv`.
 ### 9.3 Published official results (`cva-official`, `cva-official-cpty`)
 
 The two tables of [NSET.md section 9.5](NSET.md#95-published-official-results-nset-official-nset-official-cpty), with the shared columns
-and `CVA`, `DVA`, `FCA`, `FBA`, `FVA`, `BCVA`, `CS01`, `REC01`, `BA_CVA` (DOUBLE, USD), `MODE` (STRING), `RUN_ID` (STRING). Node rows sum
-the xVA of the node's netting sets; `BA_CVA` of a node is computed over its counterparties (not summed). The `-cpty` rows add
-`CREDIT_CURVE`, `SPREAD_5Y`, `LGD`, `PROXY`. This is the table finance reads for the day's CVA reserve.
+([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)) and these. Node rows sum the xVA of the node's
+netting sets; `BA_CVA` of a node is computed over its counterparties (not summed). This is the table finance reads for the day's CVA
+reserve.
+
+| Field | Type | Delta | Tables | Meaning | Example |
+|---|---|---|---|---|---|
+| `CVA`, `DVA`, `FCA`, `FBA`, `FVA`, `BCVA`, `CS01`, `REC01`, `BA_CVA` | amount | DOUBLE | both | USD, as §9.1 | `-7842105` |
+| `MODE` | text | STRING | both | `unilateral` or `bilateral` | `unilateral` |
+| `RUN_ID` | id | STRING | both | EXP's run the profiles came from | `XR-2026-09-30-01` |
+| `COUNTERPARTY`, `LEI`, `LEGAL_ENTITY`, `RATING` | id, id, id, text | STRING | `-cpty` | as NSET.md section 9.5 | `CP-CASCADIA` |
+| `CREDIT_CURVE`, `SPREAD_5Y`, `LGD`, `PROXY` | id, rate, rate, boolean | STRING, DOUBLE, DOUBLE, BOOLEAN | `-cpty` | the counterparty's curve as used | `CDS-CASCADIA`, `295`, `0.6`, `false` |
 
 ### 9.4 The reactive connector and the engine (proposed)
 
@@ -406,6 +415,36 @@ counterparty K_reduced = SCVA × √(0.25 + 0.75) = 541,755; **K_BA-CVA = 0.65 �
 |---|---|---|
 | 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
 | 1.1 | 2026-11-02 | Product owner's decisions of 2026-11-02 applied ([COUNTERPARTY_ENGINES.md section 14](../architecture/COUNTERPARTY_ENGINES.md#14-decisions)): FVA computed first into its own kind `fva-result` (`/api/v1/fva`) and read by reference by `cva-result`; FVA on the collateralised profile, symmetric, not survival-weighted; the demo funding curve is a synthetic, labelled curve |
+
+## 17. JSON examples
+
+CVA has no input table of its own; the records below are the credit curve it reads and the answers it gives, for the demo's netting set
+`NS-CASCADIA-TKY` (13 trades of `CP-CASCADIA`, an airline rated BB) on 2026-09-30. The EE and ENE are the set's profile on the committed
+demo paths of run `XR-2026-09-30-01` (200 paths, uncollateralised), discounted at a flat 4% for the example; the own curve `CDS-BANK` is the
+planned flat 1% hazard of §13; FVA uses the flat 50 bp funding spread. Each line is one record.
+
+**credit-curve: the counterparty's curve** (the market-data pack's demo record, read as is):
+
+```json
+{"CURVE_ID":"CDS-CASCADIA","ISSUER_NAME":"Cascadia Airlines Inc.","SPREAD_5Y":295,"RECOVERY":0.4,"SENIORITY":"Senior unsecured","DOC_CLAUSE":"CR14","PD_1Y":0.027158,"POINTS":[{"TENOR":"6M","SPREAD":149.0,"HAZARD":0.024833,"SURVIVAL":0.98766},{"TENOR":"1Y","SPREAD":165.2,"HAZARD":0.027533,"SURVIVAL":0.972842},{"TENOR":"2Y","SPREAD":197.7,"HAZARD":0.03295,"SURVIVAL":0.936224},{"TENOR":"3Y","SPREAD":230.1,"HAZARD":0.03835,"SURVIVAL":0.891322},{"TENOR":"5Y","SPREAD":295.0,"HAZARD":0.049167,"SURVIVAL":0.782053},{"TENOR":"7Y","SPREAD":312.7,"HAZARD":0.052117,"SURVIVAL":0.694324},{"TENOR":"10Y","SPREAD":339.2,"HAZARD":0.056533,"SURVIVAL":0.568171}],"ISSUER":"ISS-CASCADIA","CURRENCY":"USD"}
+```
+
+**cva-result: `CVA NSET NS-CASCADIA-TKY`**, unilateral, `ee-point: end`, survival log-linear between the curve's points (abbreviated:
+`PROFILE` carries three of the run's 13 primary dates; `CVA` is the sum of all 13 `CVA_CONTRIBUTION`s). BA-CVA uses the set's SA-CCR
+EAD 165,617,461, M = 4.2 years and RW 8.5% (transportation, high yield): DF = 0.901980, SCVA = 38,092,818, K = 0.65 × SCVA.
+
+```json
+{"SCOPE":"NSET:NS-CASCADIA-TKY","CANONICAL":"NSET:NS-CASCADIA-TKY","SCOPE_KIND":"NSET","LABEL":"NS-CASCADIA-TKY · 13 trades","BUSINESS_DATE":"2026-09-30","MODE":"unilateral","CVA":-7842105,"DVA":1427644,"BCVA":-6414461,"FCA":-1540872,"FBA":1227234,"FVA":-313638,"KVA":null,"MVA":null,"CS01":-23260,"REC01":130702,"DVA_CS01":null,"BA_CVA":24760332,"LGD":0.6,"CREDIT_CURVE":"CDS-CASCADIA","SPREAD_5Y":295,"PROXY":false,"PROFILE":[{"TENOR":"1Y","T":1.0,"DF":0.960789,"EE":66876770,"ENE":-37963780,"PD":0.007442,"SURVIVAL":0.972842,"CVA_CONTRIBUTION":-286905,"DVA_CONTRIBUTION":54683},{"TENOR":"5Y","T":5.0027,"DF":0.818641,"EE":52246947,"ENE":-45080655,"PD":0.109516,"SURVIVAL":0.781926,"CVA_CONTRIBUTION":-2810510,"DVA_CONTRIBUTION":426667},{"TENOR":"10Y","T":10.0082,"DF":0.6701,"EE":1511177,"ENE":-1631515,"PD":0.125899,"SURVIVAL":0.568171,"CVA_CONTRIBUTION":-76494,"DVA_CONTRIBUTION":18091}],"BY_COUNTERPARTY":[{"ID":"CP-CASCADIA","CVA":-7842105,"DVA":1427644,"FVA":-313638,"CS01":-23260,"BA_CVA_SCVA":38092818}],"BY_NETTING_SET":[{"ID":"NS-CASCADIA-TKY","CVA":-7842105,"DVA":1427644,"FVA":-313638,"CS01":-23260,"BA_CVA_SCVA":38092818}],"PROVENANCE":{"INPUTS":[{"KIND":"exposure-path","VERSION":31,"BATCH_IDS":["XB-2026-09-30-01"]},{"KIND":"credit-curve","VERSION":58,"BATCH_IDS":[]}],"UNVALUED":0,"PARTIAL":false,"HIDDEN":0,"RUN_ID":"XR-2026-09-30-01","CALIBRATION":"REAL_WORLD","CURVES":[{"ID":"CDS-CASCADIA","DATE":"2026-09-30","PROXY":false},{"ID":"CDS-BANK","DATE":"2026-09-30","PROXY":false}],"SETTINGS":{"mode":"unilateral","ee-point":"end","pd-source":"survival","own-curve":"CDS-BANK","funding-spread":0.005},"FLAGS":["real-world-exposure"]}}
+```
+
+The demo run is `REAL_WORLD`, so the answer carries the `real-world-exposure` flag of §10. `KVA` and `MVA` are empty (hooks off);
+`DVA_CS01` is empty because the own curve is flat and not bumped in this example.
+
+**cva-official-cpty: the netting set's published row** (restricted table, row level `netting-set`):
+
+```json
+{"BUSINESS_DATE":"2026-09-30","HIERARCHY":"NSET","NODE_ID":"NSET:NS-CASCADIA-TKY","NODE_NAME":"NS-CASCADIA-TKY","PARENT_ID":"CPTY:CP-CASCADIA","LEVEL":"netting-set","CAPTURE_ID":"CAP-CVA-2026-09-30-OFFICIAL","RESULT_VERSION":1,"INPUT_VERSIONS":"{\"exposure-path\":{\"version\":31,\"batches\":[\"XB-2026-09-30-01\"]},\"credit-curve\":{\"version\":58,\"batches\":[]}}","COMPUTED_AT":"2026-10-01T06:55:00Z","CONTRACT_VERSION":"1.1","COUNTERPARTY":"CP-CASCADIA","LEI":"5493005CUB4V16ZSQX54","LEGAL_ENTITY":"LE-TKY","RATING":"BB","CVA":-7842105,"DVA":1427644,"FCA":-1540872,"FBA":1227234,"FVA":-313638,"BCVA":-6414461,"CS01":-23260,"REC01":130702,"BA_CVA":24760332,"MODE":"unilateral","RUN_ID":"XR-2026-09-30-01","CREDIT_CURVE":"CDS-CASCADIA","SPREAD_5Y":295,"LGD":0.6,"PROXY":false}
+```
 
 ---
 

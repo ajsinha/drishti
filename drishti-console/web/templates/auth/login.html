@@ -28,7 +28,7 @@
     {% if SERVERS %}<p class="login-srv"><span class="srv-dot" data-srv-color="{{ SERVER.color or 'var(--d-link)' }}" aria-hidden="true"></span>
       to <b>{{ SERVER.name }}</b> · <a class="lnk" href="/servers">another server</a></p>{% endif %}
     {% if error %}<p class="pnl-err" role="alert">{{ error }}</p>{% endif %}
-    {# busy protection (docs/admin/OPERATIONS.md "Busy protection"): when sign-ins wait, the calm message counts down here and signs in by itself #}
+    {# busy protection (docs/guides/OPERATIONS_GUIDE.md "Busy protection"): when sign-ins wait, the calm message counts down here and signs in by itself #}
     <div data-busy-host{% if busy %} data-busy="{{ busy | tojson | forceescape }}"{% endif %}></div>
     <input type="hidden" name="next" value="{{ next }}">
     <label for="lu">User</label><input id="lu" name="user" class="cmd-input" autocomplete="username" required autofocus{% if user %} value="{{ user }}"{% endif %}>

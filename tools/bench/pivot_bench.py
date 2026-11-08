@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pivot engine's benchmark (docs/admin/BENCHMARK.md, section 16; docs/architecture/PIVOT_ENGINE.md, section 21): synthetic trades
+"""The pivot engine's benchmark (docs/admin/BENCHMARK.md, section 16; docs/architecture/ARCHITECTURE.md section 26, section 21): synthetic trades
 generated as JSON Lines and loaded into Delta day by day, then the five views V1 to V5 against one server or three, cold and warm, without
 and with a rollup, and the report with the measured points and the larger sizes EXTRAPOLATED from them (labelled so, never as measured).
 

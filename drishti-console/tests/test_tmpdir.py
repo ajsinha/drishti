@@ -96,7 +96,7 @@ def test_without_a_setting_the_base_is_the_data_folder_never_the_system_temp(mon
 
 @pytest.mark.skipif(os.name == "nt", reason="the sweep does not run on Windows")
 def test_a_crashed_workers_old_folder_goes_at_start_and_nothing_outside_it(tmp_path, fresh):
-    """2.9.7 (RESOURCES_AND_SCALE.md 7.4): an old folder of a dead process with our marker goes; a link inside it is removed, never
+    """2.9.7 (CLUSTER_GUIDE.md 7.4): an old folder of a dead process with our marker goes; a link inside it is removed, never
     followed; a young folder, a live process's, one without the marker and a link named like ours stay."""
     old = 1_000_000_000
     outside = tmp_path / "outside"

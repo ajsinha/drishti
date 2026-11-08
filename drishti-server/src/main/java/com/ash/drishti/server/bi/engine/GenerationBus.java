@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The generation bus (docs/architecture/BI_DESIGN.md sections 4.6 and 6.5): every change of the data a model reads is published once, in order, as a
+ * The generation bus (docs/architecture/ARCHITECTURE.md §28 sections 4.6 and 6.5): every change of the data a model reads is published once, in order, as a
  * {@link Notice}: a live batch (with its change set: the rows written, what they were before, the rows removed), a data load or refresh for a business date
  * ({@code backdated} when the date is before the current business date: only that date's answers move), a history sample. Standing queries listen (push, no
  * polling of generations); with several Java nodes a {@link Bridge} carries the notices between nodes. Delivery is asynchronous on one virtual thread, so a

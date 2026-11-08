@@ -55,7 +55,7 @@ dated: every business date gets the same document.
 | `ticking` | boolean | `true` | Tick values for live demos (documents marked live move while someone watches) |
 | `tick-ms` | int | `400` | Tick interval, in milliseconds |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9).
 <!-- settings:end -->
 
 ## Data structure
@@ -123,7 +123,7 @@ java -jar drishti-server/target/drishti-server-*-exec.jar --drishti.sources.plug
 ```
 
 The run configuration **Drishti server (demo lakes)** starts with the demo off, so every page reads the lakes `drishti.py lake demo`
-built ([DEMO_DATA.md](../../docs/connectors/DEMO_DATA.md)); **Drishti server** (and a bare `java -jar`) leaves it on, for what only it
+built ([../../docs/guides/DATA_GUIDE.md section 11](../../docs/guides/DATA_GUIDE.md#11-the-demo-data)); **Drishti server** (and a bare `java -jar`) leaves it on, for what only it
 gives: values that tick live (live BI and boards) and screens with no store at all. With the demo off, `default-route: demo` names a
 connector that does not run and the router skips it; a kind no other connector (nor the `file` plugin) serves then answers
 `DRS-1002 no source serves kind '<kind>'`.
@@ -178,8 +178,8 @@ a parent's sample by shipping the same kind and id; type-ahead keeps one entry p
 (`DRISHTI_PACKS`) contribute; a pack switched off for users in Admin → Packs still has its samples loaded (that switch hides kinds, it
 does not restart connectors). Setting `dirs` by hand replaces what the packs put there, which is how a site serves a folder of its own
 samples. How the samples are generated, and loaded into every real store, is in
-[DEMO_DATA.md](../../docs/connectors/DEMO_DATA.md#the-samples); the format from a pack author's side is in
-[the pack developer's guide](../../docs/guides/PACK_DEVELOPER_GUIDE.md#samples).
+[../../docs/guides/DATA_GUIDE.md section 11](../../docs/guides/DATA_GUIDE.md#1115-the-samples); the format from a pack author's side is in
+[the pack developer's guide](../../docs/guides/BUILD_GUIDE.md#54-samples).
 
 ## Reads and what each costs
 
@@ -280,12 +280,12 @@ the headline becomes the 10-year point and the 2s10s slope is recomputed. Other 
 The specs are never written by hand: `tools/packgen/common/walks.py` builds each kind's walk from the finished sample and every generator
 calls it; `python3 tools/packgen/banking/make_data.py --check` fails when the samples differ from what the generators write. What stays
 still on purpose (coupon schedules, trade terms, end-of-day risk) is listed per kind in `walks.py` and in
-[DEMO_DATA.md](../../docs/connectors/DEMO_DATA.md#live-walks-by-kind); `DemoPackWalksTest` fails on a walked headline whose declared
+[../../docs/guides/DATA_GUIDE.md section 11](../../docs/guides/DATA_GUIDE.md#live-walks-by-kind); `DemoPackWalksTest` fails on a walked headline whose declared
 dependents never move and on a walk naming a path its sample lacks.
 
 ## Its place in routing
 
-The router ([how a request picks a connector](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md#how-a-request-picks-a-connector))
+The router ([how a request picks a connector](../../docs/guides/DEVELOPER_GUIDE.md#how-a-request-picks-a-connector))
 tries a kind's route, then the `default-route` (`demo`), then every other connector serving the kind. The demo's manifest lists no
 kinds, so it is a candidate for **every** kind and answers "not held" for ids it has no sample of.
 
@@ -301,7 +301,7 @@ kinds, so it is a candidate for **every** kind and answers "not held" for ids it
 Every document is held parsed in memory for the life of the server (several times its JSON size), beside one type-ahead entry and one
 `walk` per sample: start time, heap and each reverse lookup grow with the number of samples; each tick walks only the subscribed
 entities. It is read once at start, undated (no `snapshot`/`effective`, no *known at*), has no promoted columns, one tick rate, and
-drifts without bound until restart. For a large book use a real store ([DEMO_DATA.md](../../docs/connectors/DEMO_DATA.md) builds the
+drifts without bound until restart. For a large book use a real store ([../../docs/guides/DATA_GUIDE.md section 11](../../docs/guides/DATA_GUIDE.md#11-the-demo-data) builds the
 demo lakes).
 
 There is nothing to lose: after start it reads nothing from disk or network. A catalogue entry its kind's file does not hold is
@@ -322,8 +322,8 @@ no credentials, network or TLS, and reads only the kinds and ids its catalogues 
 
 ## See also
 
-- [The demo data](../../docs/connectors/DEMO_DATA.md) (how the samples are made and loaded into every other store) and
-  [the pack developer's guide](../../docs/guides/PACK_DEVELOPER_GUIDE.md#samples).
+- [The demo data](../../docs/guides/DATA_GUIDE.md#11-the-demo-data) (how the samples are made and loaded into every other store) and
+  [the pack developer's guide](../../docs/guides/BUILD_GUIDE.md#54-samples).
 - [Every demo setting in CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#demo) and
-  [connector files](../../docs/connectors/CONNECTOR_FILES.md).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+  [connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

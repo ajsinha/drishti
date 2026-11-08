@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A published consumer's envelope (docs/architecture/BI_DESIGN.md section 5.3, decision 2): the fields, measures and filterable fields its visuals, slicers,
+ * A published consumer's envelope (docs/architecture/ARCHITECTURE.md §28 section 5.3, decision 2): the fields, measures and filterable fields its visuals, slicers,
  * drills, filters, bookmarks and links can produce. A reader who may view the report but has no read on its model ("Build") may ask only queries inside the
  * envelope; anything else is {@code DRS-9151} "this report cannot ask that". So a report can be shared widely without opening the model to free querying. A
  * date part of a field ({@code trades.tradeDate.month}) counts as the field (a drill changes the part). The envelope is also the index impact analysis reads:

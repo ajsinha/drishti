@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 33, the pivot engine (docs/tutorials/33-the-pivot-engine.md), written to docs/tutorials/img/t33/, and of the pivot
+"""Pictures of tutorial 7, Part A, the pivot engine (docs/tutorials/07-pivot-cubes-and-explain.md), written to docs/tutorials/img/t33/, and of the pivot
 guide's worked examples over entity documents (docs/guides/PIVOT_GUIDE.md, Documents), written to docs/guides/img/pivot/. Run it on its own
 (it builds its own lake from the demo test data, the trades of the three source systems and the VaR data, and starts its own scratch server
 and console):
@@ -45,7 +45,7 @@ GUIDE = ROOT / "docs" / "guides" / "img" / "pivot"
 FIGURES: dict = {}
 WORK: list = []                                       # the scratch folder the stack runs in (the figures are written there)
 
-# the guide's worked examples (PIVOT_ENGINE.md section 6.7), each a saved view
+# the guide's worked examples (ARCHITECTURE.md section 26.4), each a saved view
 EXAMPLES = {
     "notional-by-desk-and-year": {"source": "trade", "rows": ["$.TT_GROUP"], "columns": ["$.TRADE_DATE:year"],
                                    "values": [{"measure": "sum($.LEGS[*].NOTIONAL)", "as": "Notional"}]},

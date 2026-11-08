@@ -116,7 +116,7 @@ public final class Blas {
                     "Reason: " + reason,
                     "Running on the pure-Java path: results identical (within 1e-12), slower for many-scope VaR/ES, exposure and FRTB.",
                     "Fix: a 64-bit Java on Linux or Windows x86-64; the native cache writable (drishti.native.cache-dir, default",
-                    "     <data>/native-cache); the openblas jars in the server's lib folder. See docs/admin/OPERATIONS.md section 2.1.",
+                    "     <data>/native-cache); the openblas jars in the server's lib folder. See docs/guides/OPERATIONS_GUIDE.md section 2.1.",
                     "Silence: set drishti.native.blas.mode: java (Java chosen: no warning).",
                     "************************************************************************************************");
         }

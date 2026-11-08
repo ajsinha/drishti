@@ -188,7 +188,7 @@ def start_servers(work: Path, extra_env: dict | None = None) -> list:
         if not (work / name).exists() and (ROOT / name).exists():
             (work / name).symlink_to(ROOT / name)
     (work / "sutras").mkdir(exist_ok=True)
-    # a guide's SERVER_ENV wins over these (tutorial 27 loads the public-data packs too)
+    # a guide's SERVER_ENV wins over these (tutorial 6 loads the public-data packs too)
     env = {**os.environ, "DRISHTI_PORT": str(SERVER_PORT), "DRISHTI_PACKS": PACKS, "DRISHTI_STUDIO_SAVE": "true", "DRISHTI_BUILDER_FILE_BINDING": "true", "DRISHTI_LABS_CALC": "true",
            "DRISHTI_SUTRAS": str(work / "sutras"), "DRISHTI_PACKS_INSTALLED": str(work / "data" / "packs" / "installed"), **(extra_env or {})}
     server = subprocess.Popen(java_cmd(java, ["-jar", str(jars[-1])], cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)

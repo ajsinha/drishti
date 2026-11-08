@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The pivot formula parity set (PIVOT_ENGINE.md section 8.2; PivotFormulaParityTest): every formula the product ships or a test writes, as
+# The pivot formula parity set (ARCHITECTURE.md section 26.5; PivotFormulaParityTest): every formula the product ships or a test writes, as
 # it was written in DEL's syntax, each field renamed onto the test fixture's columns (REGION, DESK, CCY, TRADE_DATE, NOTIONAL, PNL, CPTY,
 # SALARY, RATE_PCT), and every construct of the old grammar. The answers (answers.json) were recorded on the old parser before the fold;
 # `rachana` is the text the saved-formula migration writes (when it differs), which must give the same answer, cell for cell.
@@ -27,7 +27,7 @@ formulas:
 - {formula: "sum(PNL) / count()", from: "FormulaFunctionTest"}
 - {formula: "sum(PNL, where=DESK == 'FX') / sum(abs(PNL))", from: "FormulaFunctionTest"}
 - {formula: "sum(PNL) / sum(PNL, where=PNL > 100)", from: "FormulaFunctionTest"}
-- {formula: "sum(RATE_PCT * NOTIONAL) / sum(NOTIONAL)", from: "tutorial 37, CustomFunctionsTest, PivotFunctionsApiTest, pivot.html, API_GUIDE"}
+- {formula: "sum(RATE_PCT * NOTIONAL) / sum(NOTIONAL)", from: "tutorial 37, CustomFunctionsTest, PivotFunctionsApiTest, pivot.html, API_REFERENCE"}
 - {formula: "sum(RATE_PCT * NOTIONAL) / sum(abs(NOTIONAL))", from: "CustomFunctionsTest"}
 - {formula: "sum(PNL * NOTIONAL) / sum(NOTIONAL)", from: "FormulaFunctionTest"}
 - {formula: "stddev(PNL) / avg(NOTIONAL)", from: "FormulaFunctionTest"}
@@ -35,7 +35,7 @@ formulas:
 - {formula: "median(NOTIONAL) - median(PNL)", from: "ConsoleFiguresTest"}
 - {formula: "abs(sum(NOTIONAL)) / stddev_pop(PNL)", from: "ConsoleFiguresTest"}
 # the guides and tutorials
-- {formula: "sum(NOTIONAL, where=NOTIONAL > 100000000) / sum(NOTIONAL)", from: "tutorial 37"}
+- {formula: "sum(NOTIONAL, where=NOTIONAL > 100000000) / sum(NOTIONAL)", from: "tutorial 7, Part B"}
 - {formula: "sum(PNL, where=PNL < 0) / sum(abs(PNL))", from: "PIVOT_GUIDE"}
 - {formula: "percentile(PNL, 0.99) - percentile(PNL, 0.01)", from: "PIVOT_GUIDE, PIVOT_ENGINE"}
 - {formula: "wavg(PNL, NOTIONAL)", from: "PIVOT_ENGINE"}

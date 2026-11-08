@@ -18,11 +18,11 @@
 This guide explains every part of the Drishti console, one feature at a time. Each section says what
 the feature is for, then walks through an example: the exact text to type and what you should see.
 
-If Drishti is not running yet, start with [GETTING_STARTED.md](GETTING_STARTED.md) (ten minutes) or
-[GETTING_STARTED.md](GETTING_STARTED.md) (every step explained).
+If Drishti is not running yet, start with [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine) (ten minutes) or
+[OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine) (every step explained).
 
 The examples use the seven default packs (`core`, `market-data`, `trading`, `counterparty-risk`, `market-risk`, `world-economy`, `news-and-markets`)
-on the demo lakes of the quick start (`drishti.py lake demo`, business date 2026-10-16; [GETTING_STARTED.md](GETTING_STARTED.md)), so ids such as
+on the demo lakes of the quick start (`drishti.py lake demo`, business date 2026-10-16; [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine)), so ids such as
 `MX-20000001`, `1000001` and `NS-SUMMIT-NY` exist and the counts are those of 15,000 trades from ENDUR, CALYPSO and MUREX. If your administrator loaded other packs, the
 **Examples** list on the terminal page shows ids that work for you, and every pack's guide (*Help → Help
 centre → Domain packs*) has a *Finding things* section with the same commands for its own kinds.
@@ -80,13 +80,13 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | Alerts | `/alerts` | Your alerts on numbers, your alert rules and recent alerts (also **Reports**, *My alerts*) |
 | Workspaces | `/w` | Several live views on one screen |
 | Inbox | `/inbox` | Views and comments sent to you ([Your inbox](#your-inbox)) |
-| Reports | `/reports` | Saved searches delivered as CSV on a schedule, and your subscriptions ([Scheduled reports](#scheduled-reports), [Export, and subscriptions](BI_GUIDE.md#export-and-subscriptions)) |
-| BI | `/bi`, `/bi/catalogue`, `/bi/w/me`, `/bi/r/<id>`, `/bi/models`, `/bi/datasets`, `/bi/designer`, `/bi/notebook`, `/bi/transform` | Rūpaka business intelligence, for people with the `bi` power: reports (a board is a report page; `/bi/b/<id>` opens it), BI Studio's designers, the Notebook and the Transform editor ([BI_GUIDE.md](BI_GUIDE.md)) |
+| Reports | `/reports` | Saved searches delivered as CSV on a schedule, and your subscriptions ([Scheduled reports](#scheduled-reports), [Export, and subscriptions](REPORTS_GUIDE.md#182-export)) |
+| BI | `/bi`, `/bi/catalogue`, `/bi/w/me`, `/bi/r/<id>`, `/bi/models`, `/bi/datasets`, `/bi/designer`, `/bi/notebook`, `/bi/transform` | Rūpaka business intelligence, for people with the `bi` power: reports (a board is a report page; `/bi/b/<id>` opens it), BI Studio's designers, the Notebook and the Transform editor ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
 | Build | `/build`, `/build/new`, `/build/pack/new` | Design layouts (Sutras) in the workbench, make a pack from schemas (proposed Sutras are approved in [Approvals](#approvals)) |
 | Tables & models | `/build/tables` | The editors of virtual tables, semantic models and Python-driven tables, for people with the `bi` power ([Tables and models: the editors](#tables-and-models-the-editors)) |
 | My account | `/account` | Your profile, settings and password |
 | Servers | `/servers` | The Drishti servers this console may talk to ([Working with several servers](#working-with-several-servers)) |
-| Admin | `/admin/users`, `/admin/roles`, `/admin/audit`, `/admin/packs`, `/admin/connectors`, `/admin/artifacts`, `/admin/loads`, `/admin/lakes`, `/admin/collab`, `/admin/embedding`, `/admin/net`, `/admin/health`, `/admin/caches` (and `/admin/ai`, `/admin/bi`, `/admin/tokens`, `/admin/access` where those features are on) | Users, roles, audit log, packs, connectors, installed artifacts, data loads, lakes (Delta, the default; Iceberg tables where configured: a **Format** column, and Iceberg maintenance with orphan-file removal, [OPERATIONS.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](../admin/OPERATIONS.md#8-iceberg-lakes)), collaboration moderation, embedding, Drishti\*net, health and caches (admins only) |
+| Admin | `/admin/users`, `/admin/roles`, `/admin/audit`, `/admin/packs`, `/admin/connectors`, `/admin/artifacts`, `/admin/loads`, `/admin/lakes`, `/admin/collab`, `/admin/embedding`, `/admin/net`, `/admin/health`, `/admin/caches` (and `/admin/ai`, `/admin/bi`, `/admin/tokens`, `/admin/access` where those features are on) | Users, roles, audit log, packs, connectors, installed artifacts, data loads, lakes (Delta, the default; Iceberg tables where configured: a **Format** column, and Iceberg maintenance with orphan-file removal, [OPERATIONS_GUIDE.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](OPERATIONS_GUIDE.md#163-iceberg-lakes)), collaboration moderation, embedding, Drishti\*net, health and caches (admins only) |
 | Help | `/help` | Tutorials, guides and every reference |
 | About | `/about` | The product page: features, measured performance, competitive analysis, technology, licence (system details for admins: `/admin/health`) |
 
@@ -125,7 +125,7 @@ seconds at most on the demo data; later visits that day read them back). When no
 is left out and the headline stands alone. Under the headline, **quick cards** open *Market risk* (`VAR BANK`), *Exposure* (`EXP BANK`),
 *Funds and ETFs* (`FUND SPY`) and *Data map* (`DATAMAP`); a card whose pack is off is not shown. An administrator turns the tile off
 with `ui.facts.enabled: false` (`DRISHTI_HOME_FACTS=false`) and sets the cards under `ui.home_cards` in the console's
-`application.yaml`; a pack author adds facts as the [pack developer guide](PACK_DEVELOPER_GUIDE.md#facts-for-home) describes.
+`application.yaml`; a pack author adds facts as the [pack developer guide](BUILD_GUIDE.md#74-facts-for-home) describes.
 
 ## The top bar
 
@@ -151,17 +151,17 @@ you are on is highlighted.
 
 | Menu | Column | Entries |
 |---|---|---|
-| **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](#the-forms-home), query by form), *Functions* (`/func`, also `FUNC <GO>`: every command you can use, what it does and an example; administrators switch commands on or off there, [USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)), *Data map* (`/datamap`, also `DATAMAP <GO>`: every kind of data, how it joins and how much there is, [The data map](#the-data-map)), *Data* (`/data`, also `EXPORT <GO>`: every dataset and its dates, a simple selection, a day downloaded as `.jsonl.gz`, [Export data](#export-data)), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
+| **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](#the-forms-home), query by form), *Functions* (`/func`, also `FUNC <GO>`: every command you can use, what it does and an example; administrators switch commands on or off there, [ADMIN_GUIDE.md (Functions)](ADMIN_GUIDE.md#20-functions-func-every-command-and-turning-one-on-or-off)), *Data map* (`/datamap`, also `DATAMAP <GO>`: every kind of data, how it joins and how much there is, [The data map](#the-data-map)), *Data* (`/data`, also `EXPORT <GO>`: every dataset and its dates, a simple selection, a day downloaded as `.jsonl.gz`, [Export data](#export-data)), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
 | | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`), *Approvals* (`/approvals`: [the one queue](#approvals), with the number waiting) |
 | **Engines** (a role that opens an engine) | a column per engine running, its command word in the head | **VaR** `VAR`: *VaR explorer* `VAR BANK`, *Why it moved* `VAR BANK EXPLAIN`, *VaR Playground* `PLAY VAR`, *Scenario matrix* `SMAT`, *Regulatory reports*, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *Hierarchies and limit letters* `HIER` · **Exposure** `EXP`: *Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …` (the pre-deal check `PREDEAL` is under **Counterparties**) · **FRTB-SA** `FRSA`: *FRTB-SA capital* `FRSA BANK`, *FRTB-SA Playground* `PLAY FRTB EXAMPLE` · **SIMM** `SIMM`: *Netting sets* `SIMM`, *SIMM Playground* `PLAY SIMM EXAMPLE`; administrators also see *Admin → Engines* and, at the foot, the engines not running on any server (greyed, never links) |
 | **BI** (people with the `bi` power) | Business intelligence | *Catalogue* (`/bi/catalogue`), *My workspace* (`/bi/w/me`), *My runs*, *Workspaces* |
 | | Analyse | *Models*, *Datasets*, *Report designer* (`/bi/designer`), *Promotion (test to live)* (`/bi/environments`), *Notebook*, *Data prep* (`/bi/transform`) |
-| | Administer | *BI settings* (administrators with `bi-admin`, [BI_GUIDE.md](BI_GUIDE.md)) |
-| **Build** | Create | *Build home* (`/build`: [the Build home](#the-build-home-everything-you-build-in-one-place)), *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](SCHEMA_TO_PACK_GUIDE.md)), *Tables & models* (`/build/tables`), *Examples* |
+| | Administer | *BI settings* (administrators with `bi-admin`, [REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
+| **Build** | Create | *Build home* (`/build`: [the Build home](#the-build-home-everything-you-build-in-one-place)), *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack)), *Tables & models* (`/build/tables`), *Examples* |
 | | Learn | *Tutorials*, *Schema to pack*, *Screen designer guide*, *Screen developer guide*, *Panel kinds*, *Screen language reference*, *Pack developer guide* |
 | **Admin** (admins only) | People & access | *Users*, *Roles*, *API tokens*, *Who looked at what*, *Audit log*, *Saved VaR baskets* |
 | | Data | *Packs*, *Connectors*, *Data loads*, *Lakes*, *Record edits*, *Data out*, *Installed items* |
-| | Platform | *Configuration* ([the configuration editor](../admin/OPERATIONS.md#the-configuration-editor)), *Engines*, *Python workers*, *Cluster* (Drishti\*net: [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)), *AI*, *Collaboration*, *Embedded views*, *Health*, *Caches*, *Capacity* |
+| | Platform | *Configuration* ([the configuration editor](OPERATIONS_GUIDE.md#62-admin--configuration-the-configuration-editor)), *Engines*, *Python workers*, *Cluster* (Drishti\*net: [OPERATIONS_GUIDE.md](CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)), *AI*, *Collaboration*, *Embedded views*, *Health*, *Caches*, *Capacity* |
 | **Help** | Learn | *Help centre* (`/help`, also `F1`), *Knowledge* (`WHAT <GO>`), *Install and run*, *What's new*, *About* |
 
 **One sitemap.** Every way round the product is drawn from one file, `drishti-console/config/sitemap.yaml`: the menus above, the tabs
@@ -182,7 +182,7 @@ it changes); a test holds every page of the console to an entry or to the page i
 | Drishti Market | Views · **Curves** (`CRV`, `REPO`, `FIX`, `INF`) · **Volatility** (`IRV`, `CPV`, `FXV`, `EQV`, `CMDV`) · **FX** (`FX`, `FXF`, `FXV`) · **Credit** (`CDS`, `BND`) · BI · Admin · Help |
 | Drishti World | Views · **Economies** (*A country* `ECON …`, `MACRO`, `FCST`, `REGE`) · **Markets** (`NEWS`, `QUOTE`, `IDX`) · **Companies** (`USEQ`, `EDGAR`, `LEIC`, `FUND`) · BI · Admin · Help |
 
-Each entry shows its command beside its name and runs it as if you had typed it, so a menu never holds anything the command line does not; an entry ending in `…` (*A counterparty*, *A country*) puts its words in the command line for you to type the id. An entry shows only when the edition keeps its command, and the VaR Playground and Backtesting entries only once those screens are on the server. With more than six menus in the bar they show as icons below 1750 pixels wide, so the command line keeps its room. Administrators set the menus in the edition's file ([LENSES.md](../admin/LENSES.md)).
+Each entry shows its command beside its name and runs it as if you had typed it, so a menu never holds anything the command line does not; an entry ending in `…` (*A counterparty*, *A country*) puts its words in the command line for you to type the id. An entry shows only when the edition keeps its command, and the VaR Playground and Backtesting entries only once those screens are on the server. With more than six menus in the bar they show as icons below 1750 pixels wide, so the command line keeps its room. Administrators set the menus in the edition's file ([LENSES.md](ADMIN_GUIDE.md#12-what-a-lens-is)).
 
 **On a phone** the subject menus fold into one menu named after the edition (**Trading**, **Market**, **World**), first in the
 bar: a column per subject, each entry with its command beside it ([On a phone](#on-a-phone)).
@@ -191,21 +191,21 @@ bar: a column per subject, each entry with its command beside it ([On a phone](#
 word `BI` goes there from the command line, in any case: `BI <GO>` the Build home (BI's own home, `/bi`, is folded into it), `BI WORKSPACE <GO>` your personal workspace, `BI CATALOGUE <GO>` the
 catalogue, `BI SETTINGS <GO>` the BI settings (administrators with `bi-admin`), `BI <report-or-board> <GO>` a published item by id or title (a **report opens drawn**, with its slicers, drill-down and drill-through; type-ahead completes after `BI `; `RUPAKA` still works as an alias). Without the power the menu is not there and `BI <GO>`
 says what is missing. No pack can define a mnemonic named `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT`, `DATAMAP` or `DATA`. The BI page, its keys (`/`, `g h`, `g c`, `g w`, `?`) and what it can and cannot do yet:
-[BI_GUIDE.md](BI_GUIDE.md). **Using a report:** click a bar and the page filters to it, the buttons in a visual's header drill down, drill through to another page, show the rows behind it or open a trade in the terminal, and a slicer filters
-what it can reach ([BI_GUIDE.md](BI_GUIDE.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas in BI Studio, with its Explorer, tabs and Problems and Query dock ([BI_GUIDE.md](BI_GUIDE.md) sections 15 and 26, [tutorial 10](../tutorials/10-first-bi-report.md)); the YAML reference is [BI_GUIDE.md](BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave). The BI rail also opens *Analyse*, *Transforms* (Python data prep step by step) and the *Python console*.
+[REPORTS_GUIDE.md](REPORTS_GUIDE.md). **Using a report:** click a bar and the page filters to it, the buttons in a visual's header drill down, drill through to another page, show the rows behind it or open a trade in the terminal, and a slicer filters
+what it can reach ([REPORTS_GUIDE.md](REPORTS_GUIDE.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas in BI Studio, with its Explorer, tabs and Problems and Query dock ([REPORTS_GUIDE.md](REPORTS_GUIDE.md) sections 15 and 26, [tutorial 8, Part A](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report)); the YAML reference is [REPORTS_GUIDE.md](REPORTS_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers). The BI rail also opens *Analyse*, *Transforms* (Python data prep step by step) and the *Python console*.
 
 **In a report:** a **parameter slicer** may switch *which* field or measure a visual draws (a field parameter: the chart breaks down
-by desk, then by portfolio; it shows MTM, then notional), and the choice is yours alone, as any slicer's ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](BI_GUIDE.md#21-field-parameters-in-a-well)).
+by desk, then by portfolio; it shows MTM, then notional), and the choice is yours alone, as any slicer's ([REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](REPORTS_GUIDE.md#11-field-parameters)).
 A report may also have **statement pages**: paper, page by page, with a header and footer, page numbers and a period, downloaded as PDF or
 Excel made as you (your masks and row rules), and sent by a subscription as one statement per recipient; the reference is
-[BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader), the walk-through [tutorial 20](../tutorials/20-statements-and-field-parameters.md).
+[REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](REPORTS_GUIDE.md#12-statements-paginated-reports-page-exact-one-per-reader), the walk-through [tutorial 8, Part C](../tutorials/08-reports-and-dashboards.md#part-c--statements-and-field-parameters).
 
 **On the right:** round tools, from left to right.
 
 | Tool | Looks like | What it does |
 |---|---|---|
 | Live | the round button right of the theme switcher | Your choice and this page's stream in one: green while live (glowing while ticks arrive, an amber ring while it reconnects, steady on a page without a stream), red with pause bars while paused or on a picked date. Hover to read both, for example *Live updates on — click to pause · Live, built 1.92 ms*. A click switches ([Business dates](#business-dates-live-or-a-day-in-the-past)) |
-| Alerts | a bell | Opens `/alerts`. A number on the bell counts alerts you have not seen ([Alerts](#alerts)), and BI runs that finished, failed or were started again (`BI RUNS <GO>` lists them: [BI_GUIDE.md section 28](BI_GUIDE.md#28-background-runs-long-bi-questions)) |
+| Alerts | a bell | Opens `/alerts`. A number on the bell counts alerts you have not seen ([Alerts](#alerts)), and BI runs that finished, failed or were started again (`BI RUNS <GO>` lists them: [REPORTS_GUIDE.md section 28](REPORTS_GUIDE.md#15-background-runs-long-bi-questions)) |
 | Packs | a box with a number | Appears when you may use more than one pack. The number is how many you have switched on; hover to read their names ([Domain packs](#domain-packs-choosing-what-you-see)) |
 | Theme | a palette | Ten themes ([Themes](#themes)) |
 | You | a round avatar with your initial and name | A menu: your name, desk and roles, a clock in your time zone (`NY` by default), **My account**, **Settings**, and **Sign out** when sign-in is on (when it is off, the menu says *Sign-in is off on this server* and links to how to turn it on) |
@@ -302,7 +302,7 @@ several trades (`TRD MX-2000 30`) gives the pick list, and each of its rows open
 `MYBOOK 30` is `BOOK BOOK-RATES-1 30`.
 
 Mnemonics come from the packs that are switched on. Every command, with what it does and an example, is in
-[COMMAND_CATALOG.md](COMMAND_CATALOG.md); the packs themselves are in [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#the-packs-that-ship). The most used ones, from the seven default packs:
+[COMMAND_CATALOG.md](COMMAND_CATALOG.md); the packs themselves are in [BUILD_GUIDE.md](BUILD_GUIDE.md#311-the-packs-that-ship). The most used ones, from the seven default packs:
 
 | Mnemonic | Kind | Example |
 |---|---|---|
@@ -355,7 +355,7 @@ numbers came from (open in memory, read from the lake by id, the official captur
 values says why in its column header (`DRS-5203`, refused) and never shows zeros. **Export CSV · Arrow** downloads the whole matrix. A
 **Scenario matrix** link opens it from a trade, a position, a P&L vector (`PNLV`), a scenario PV (`SPV`) and the VaR page; on a phone it
 is the selected scenario's line and its tail count. It is part of Drishti Risk and Drishti Trading
-([VAR_GUIDE.md section 3.9](VAR_GUIDE.md#39-the-scenario-matrix-smat); [tutorial 25, step 16](../tutorials/25-var-from-the-bank-to-a-trade.md#step-16--the-scenario-matrix-scenarios-across-the-days)).
+([VAR_GUIDE.md section 3.9](VAR_GUIDE.md#39-the-scenario-matrix-smat); [tutorial 2, step 16](../tutorials/02-var-from-the-bank-to-a-trade.md#step-16--the-scenario-matrix-scenarios-across-the-days)).
 
 **The VaR Playground.** `PLAY VAR <scope> <GO>` (`PLAY VAR DESK RATES`, `PLAY VAR BANK 10D SUM`, `PLAY VAR POS-10442 T-1001` for a few
 positions or trades), or **Playground** on the VaR page, works the scope's VaR out cell by cell: a spreadsheet-like grid of each
@@ -366,7 +366,7 @@ At most 500 positions are shown; a larger scope keeps the 500 largest by |compon
 column, so its VaR is still the VaR page's. **Export to Excel** downloads the same calculation as a workbook of real formulas (100, 500,
 1,000, 10,000 or All positions, each choice's size, recalculation time and applications stated first) whose **ALL CHECKS PASS** band
 says it equals the engine to the cent. On a phone: the headline and the explanation. Part of Drishti Risk and Drishti Trading
-([VAR_GUIDE.md section 3.10](VAR_GUIDE.md#310-the-var-playground-play-var); [tutorial 25, step 18](../tutorials/25-var-from-the-bank-to-a-trade.md#step-18--work-the-var-out-by-hand-the-var-playground)).
+([VAR_GUIDE.md section 3.10](VAR_GUIDE.md#310-the-var-playground-play-var); [tutorial 2, step 18](../tutorials/02-var-from-the-bank-to-a-trade.md#step-18--work-the-var-out-by-hand-the-var-playground)).
 
 **The VaR page's layout.** The hierarchy tree is on the left (click **▸** to open a node, its name to see its VaR); the toolbar above
 the figures has two searchable drop-downs, **System baskets** (key **B**: the bank's portfolios) and **My baskets** (key **M**: the
@@ -436,11 +436,11 @@ their name. They work in any case, and each has type-ahead.
 | Type | You get | More |
 |---|---|---|
 | `WHAT <GO>` | Knowledge, the home of the [Knowledge pages](#knowledge-what-the-words-mean): what the words of your data mean and how the data connects | `WHAT PFE <GO>`, `WHAT netting set <GO>`, `WHAT value at risk <GO>` open the term's glossary entry (its long name or a synonym works too, any case); other words (`WHAT collateral posted <GO>`) search the Knowledge pages. The type-ahead lists the terms as you type |
-| `FUNC <GO>` | Functions, `/func`: every command you can use, by pack, with what it does and an example ([USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)) | `FUNC exposure <GO>` opens it filtered (every word must appear in a command's code, title, description or its pack); `FUNC trading` lists one pack's commands. Click a command to open it with its example, a pack to open its search form |
+| `FUNC <GO>` | Functions, `/func`: every command you can use, by pack, with what it does and an example ([ADMIN_GUIDE.md (Functions)](ADMIN_GUIDE.md#20-functions-func-every-command-and-turning-one-on-or-off)) | `FUNC exposure <GO>` opens it filtered (every word must appear in a command's code, title, description or its pack); `FUNC trading` lists one pack's commands. Click a command to open it with its example, a pack to open its search form |
 | `DATAMAP <GO>` | the [data map](#the-data-map), `/datamap`: every kind of data your packs hold, how much of it there is, and how the kinds join | `DATAMAP trade <GO>` opens it on one kind (its name, mnemonic or label: `DATAMAP CPTY`), `DATAMAP organisation` or `DATAMAP counterparty-risk` on one domain; other words fill its Find box |
 | `EXPORT <GO>` | the [Export data](#export-data), `/data`: every dataset you may open, its format and the dates it holds; download a day as `.jsonl.gz` | `EXPORT trade-valuation 2026-09-30 <GO>` opens it on a dataset (its kind or its command: `EXPORT TVAL`) and a date; other words fill its Filter box |
 | `FORM <GO>` | the forms home, `/forms` | `FORM trading <GO>` opens the trading pack's search form, `FORM trading trade <GO>` its form for trades ([Search with a form](#search-with-a-form-form-pack)) |
-| `BI <GO>` | the Build home, `/build` (`/bi` opens it too; only with the `bi` power; otherwise the terminal says what is missing) | `BI WORKSPACE`, `BI CATALOGUE`, `BI SETTINGS`, `BI <report-or-board>` ([BI_GUIDE.md](BI_GUIDE.md)) |
+| `BI <GO>` | the Build home, `/build` (`/bi` opens it too; only with the `bi` power; otherwise the terminal says what is missing) | `BI WORKSPACE`, `BI CATALOGUE`, `BI SETTINGS`, `BI <report-or-board>` ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
 | `RUPAKA <GO>` | the same as `BI`, the older name | everything that works after `BI` works after `RUPAKA` |
 
 A pack's code typed alone (`MKT <GO>`) opens that pack's overview ([A pack at a glance](#a-pack-at-a-glance)). Anything else
@@ -450,10 +450,10 @@ that is not a command but reads as words (`live trades over 5m`) is offered as a
 ### Knowledge: what the words mean
 
 *See what your data hasn't told you yet.* The **Knowledge** section at the top of the help centre has one page per domain:
-[Market risk](../knowledge/market-risk.md), [Counterparty credit risk](../knowledge/counterparty-credit-risk.md),
-[Trades and products](../knowledge/trades-and-products.md), [Entities and ownership](../knowledge/entities-and-ownership.md),
-[Market data](../knowledge/market-data.md), [Data and contracts](../knowledge/data-and-contracts.md),
-[Economies](../knowledge/economies.md) and [Companies, funds and ETFs](../knowledge/companies-funds-and-etfs.md). Each says what the domain is in plain words, gives a glossary with the command that shows each
+[Market risk](../knowledge/risk.md#1-market-risk), [Counterparty credit risk](../knowledge/risk.md#2-counterparty-credit-risk),
+[Trades and products](../knowledge/risk.md#3-trades-and-products), [Entities and ownership](../knowledge/data.md#2-entities-and-ownership),
+[Market data](../knowledge/data.md#1-market-data), [Data and contracts](../knowledge/data.md#3-data-and-contracts),
+[Economies](../knowledge/world.md#2-economies) and [Companies, funds and ETFs](../knowledge/world.md#1-companies-funds-and-etfs). Each says what the domain is in plain words, gives a glossary with the command that shows each
 term, draws how the kinds connect (with their id conventions), works an example through on the demo data, lists ready-made questions to
 ask your data, and clears up the common confusions (VaR against ES, why PFE does not add up, why posted collateral raises exposure).
 The [Knowledge home](../knowledge/README.md) lists every term A to Z.
@@ -538,7 +538,7 @@ that dataset and date (`EXPORT trade-valuation 2026-09-30`; the dataset's comman
   the rows are read: *pushed down* when the connector filters as it reads its columns (Delta Lake and Iceberg tables whose columns are
   promoted), else filtered on the way as the rows stream.
 - **Download**: the **row count before you download** (*412 of 12,076 on the date*) and the estimated size; **Download
-  trade-valuation_2026-09-30.jsonl.gz**; **Copy link**; and the same download as a [`drishti.py data get`](CLI_GUIDE.md#data-get-a-dataset-as-jsonlgz-export-data)
+  trade-valuation_2026-09-30.jsonl.gz**; **Copy link**; and the same download as a [`drishti.py data get`](CLI_REFERENCE.md#data-get-a-dataset-as-jsonlgz-export-data)
   command. A selection that matches no row shows 0 and leaves Download off.
 
 The selection lives in the address (`/data?kind=trade-valuation&date=2026-09-30&columns=TRADE_ID,DESK,MTM&where=DESK+%3D+DESK-COMM`),
@@ -629,7 +629,7 @@ The number of suggestions is a server setting (`drishti.commands.suggest-limit`,
 | `DRS-4004 limit must be a whole number from 1 to 1000, not '0'` | `limit` outside its range | A number from 1 to 1000 |
 | `DRS-5002 <you> may not open trade-valuation entities` | Your roles, or the packs you have switched on, do not include that kind | Switch the pack on in the box menu; otherwise ask an administrator |
 | `DRS-4023 the command TRD (trade) is not part of the edition 'world'`, and under it *You are inside the Drishti World lens, which does not include trades: leave the lens (Views → Leave) or choose an entity it shows* | You opened an entity (a link, a bookmark, a shared view) whose kind the lens you are inside leaves out. The id is right: the lens hides it, for you only | **Views → Leave Drishti World** shows everything your roles open again; or open something the lens shows. On a server that runs an edition (not a lens) the line says so, and an administrator can add the command |
-| A page that says **FRTB is not active on this server**, *Off since 2026-10-24* | An administrator turned the command off for everyone (on Functions, `FUNC`, [USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)). It is not active anywhere: typed, by its page, in search and type-ahead (it is not suggested), in exports and AI; a link to it on another page is struck through and says *not active*, and a panel that reads it says *not active (turned off by an administrator)* | Ask an administrator if you need it; an open page follows when it is turned on again |
+| A page that says **FRTB is not active on this server**, *Off since 2026-10-24* | An administrator turned the command off for everyone (on Functions, `FUNC`, [ADMIN_GUIDE.md (Functions)](ADMIN_GUIDE.md#20-functions-func-every-command-and-turning-one-on-or-off)). It is not active anywhere: typed, by its page, in search and type-ahead (it is not suggested), in exports and AI; a link to it on another page is struck through and says *not active*, and a panel that reads it says *not active (turned off by an administrator)* | Ask an administrator if you need it; an open page follows when it is turned on again |
 
 ### A pack at a glance
 
@@ -638,7 +638,7 @@ Type a pack's code alone, for example `MKT <GO>`, to see what the market-data pa
 mnemonic to list that kind. Below the kinds, **What the pack holds** gives the pack README's summary, its data sources (with
 any internal-only flag) and, folded, its *Data structures*: each kind's id rule, fields with an example and a description, and
 nested structures by path, for the kinds you may open only. Every pack has a code (`CORE`, `MKT`, `TRDS`, `CCR`, `MRSK`, `WRLD`,
-`NWMK`, … see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#pack-codes)); the pack's name (`market-data`) works too.
+`NWMK`, … see [BUILD_GUIDE.md](BUILD_GUIDE.md#316-pack-codes)); the pack's name (`market-data`) works too.
 
 ## Pick lists: when a command names several entities
 
@@ -686,7 +686,7 @@ The first column is the id (a link). Then come:
 
 1. the fields your command uses (`CURRENCY` and `QUANTITY` in `TRD MX-2* CURRENCY=usd order by QUANTITY desc`);
 2. the kind's **key fields**, which the pack declares under `columns:` in its `pack.yaml`
-   ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#columns-the-key-fields-of-a-pick-list)). In the shipped packs:
+   ([BUILD_GUIDE.md](BUILD_GUIDE.md#43-columns-the-key-fields-of-a-pick-list)). In the shipped packs:
 
    | Kind | Key fields shown |
    |---|---|
@@ -1059,7 +1059,7 @@ On a phone the legs become tabs that scroll along one line, the terms stack, and
 The same layout is what you get from **inference** for any document that holds lists inside a short list of records, even with no Sutra written
 for it ([Inference](RACHANA_REFERENCE.md#the-rules)). To build such a screen see
 [Panels inside a tab](RACHANA_REFERENCE.md#panels-inside-a-tab) and
-[Modelling deep documents](PACK_DEVELOPER_GUIDE.md#modelling-deep-documents-legs-cashflows-and-fixings).
+[Modelling deep documents](BUILD_GUIDE.md#55-modelling-deep-documents-legs-cash-flows-and-fixings).
 
 ## Reading a view
 
@@ -1206,7 +1206,7 @@ are the reference. If it cannot be reached the box says "Ask is unavailable"; ev
 
 ### Ask the data, explain a number, describe a report (BI, when your administrator has turned AI on)
 
-In BI ([BI_GUIDE.md section 29](BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number)), a report page shows a box **Ask the data**: type "notional by desk" and you get a table, a chart that suits it and the query that was asked, answered from
+In BI ([REPORTS_GUIDE.md section 29](REPORTS_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number)), a report page shows a box **Ask the data**: type "notional by desk" and you get a table, a chart that suits it and the query that was asked, answered from
 what *you* may see (the same rows and masks as the report). The light bulb in a visual's header **explains** its number: where it comes from and what it is made of. In the designer,
 **Describe a report** drafts a report from your words; you read it, use it and save it, or not. These are off unless your administrator switched them on; if you do not see the box and the bulb, they are off.
 
@@ -1247,12 +1247,12 @@ world-economy pack (`ECON ECON-USA`), in that pack's words:
 - The drawer is fetched the first time you open it, never with the page, so it does not slow a view down.
 - When a live update brings a newer generation of the data, an open drawer asks again (at most once in two seconds).
 - No text? A pack without an `about` entry for the kind still shows the other layers; the pack's author can add one
-  ([how](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary); how it works inside is
+  ([how](BUILD_GUIDE.md#72-about-text-and-glossary); how it works inside is
   [HOW_IT_FITS.md](RACHANA_REFERENCE.md#about-this-page-end-to-end)).
 - Hover hints on field labels and a help popover on each panel's `?` come with the glossary stage; today the panel `?`
   still opens that panel kind's page in this guide.
 - If the drawer says "could not be loaded", try again; the page itself is not affected. Error numbers are in
-  [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+  [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#21-troubleshooting).
 
 ## Layout mode: arrange a view your way
 
@@ -1398,22 +1398,22 @@ Newer screens (every pack screen is built from the same parts) can do more than 
 - **Editing a record.** Where a screen lets you, clicking a row opens a form beside the table, or a pencil on a column lets you edit
   in the cell, and **New …** opens a guided drawer. Fields you may not change say why; a wrong value is explained under its field.
   **Save draft** keeps a **draft** that only you see (*You have 2 drafts on this page* offers them again). The page asks before you
-  leave with changes not saved. The reference is [WRITE_BACK.md](WRITE_BACK.md).
+  leave with changes not saved. The reference is [APPROVALS_GUIDE.md](APPROVALS_GUIDE.md).
 - **Submitting a change (write-back).** Where editing is on, you hold the edit power and the form says where it goes (the book
   desk's trades do), **Submit…** opens a sheet: what you saw, what is there now and your change; where it goes (a correction kept beside
   the booking system's value, or an amendment sent to it); who approves (never you); what it recomputes; and the reason. After **Confirm**
   the sheet follows it: waiting for an approver, applied (everyone viewing the trade sees the new value at once, *How this view was built*
   says *Edited here*), or conflicted if the trade moved since you opened it (your draft is kept). Approvers decide in the **Approvals** queue
   (Build → Govern → Changes). Someone else's change to the record you are viewing shows *Changed by … just now*.
-  The reference is [WRITE_BACK.md section 4a](WRITE_BACK.md#4a-submitting-a-change-write-back); a walk-through is
-  [tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
+  The reference is [APPROVALS_GUIDE.md section 4a](APPROVALS_GUIDE.md#4-submitting-a-change); a walk-through is
+  [tutorial 11](../tutorials/11-correct-and-approve.md).
 - **Screens laid out on a grid.** A screen with named areas may have a split you drag (its position kept for you), areas shown as
   tabs and panels that fold. Where the screen allows it, you may drag panels to another place and resize them, for yourself;
   **Reset layout** goes back. Such a screen does not offer layout mode (`Alt+L`): the grid replaces it.
 - **Your page.** With the Sutra designer on, **Customize** in a page's header changes the page for you alone (move, hide, columns,
   what a click opens, refresh, letting people edit); the header then says *Your page*, whose link opens the pack's page.
   [RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31](RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid) and
-  [tutorial 6, part B](../tutorials/06-design-a-screen.md#part-b--on-a-live-page-the-sutra-designer).
+  [tutorial 19 (the Sutra designer)](../tutorials/19-build-a-pack-and-a-screen.md#on-a-live-page-the-sutra-designer).
 
 ## Zoom a panel
 
@@ -1463,12 +1463,12 @@ zoom buttons are hidden while you arrange the view.
 **Print** prints the zoomed panel alone.
 
 **In another application.** Inside `<drishti-view>` the panel fills the element's own box, not the host page; the keys
-work only while the focus is inside the element ([Drishti Elements, keyboard](../architecture/CLIENT_RENDERER.md#58-keyboard)).
+work only while the focus is inside the element ([Drishti Elements, keyboard](EMBED_GUIDE.md#5-the-elements-one-by-one)).
 
 ## Pivot: slice a table your way
 
 A table or ladder whose Sutra says `pivot:`, and the results of a search whose kind's pack says `pivot:`, carry a **Pivot** button. It opens
-the **pivot screen** (`PIVOT <GO>`; [PIVOT_GUIDE.md](PIVOT_GUIDE.md), [tutorial 33](../tutorials/33-the-pivot-engine.md)) on the table's own
+the **pivot screen** (`PIVOT <GO>`; [PIVOT_GUIDE.md](PIVOT_GUIDE.md), [tutorial 7, Part A](../tutorials/07-pivot-cubes-and-explain.md#part-a--the-pivot-engine-trades-by-product-legs-by-desk-then-var-by-desk)) on the table's own
 rows (the same document, Sutra and business date as the page) or on every row of the kind, with the Sutra's or the pack's arrangement as the
 view it opens with. Everything is computed by the server's pivot engine: rows, columns, values and filters by drag or by key (`R`, `C`, `V`,
 `F`), nested rows opened lazily with + and −, totals made from their own rows (an average of a total is never an average of averages),
@@ -1550,7 +1550,7 @@ its pages (44 px rows, the command on the right), one engine at a time. Engines 
 **Who decides.** Every tier is configured, never coded: a panel kind has a default (tables and charts at a glance, provenance and notes
 under *More*, pivot grids on the desktop), a screen's author sets each panel's tier in its Sutra
 ([RACHANA_REFERENCE.md, phone](RACHANA_REFERENCE.md#phone-what-goes-to-a-phone)), and an administrator sets and caps tiers for the site
-and the edition ([CONFIGURATION.md](../admin/CONFIGURATION.md), `ui.phone`; [LENSES.md](../admin/LENSES.md), `phone:`). A cap
+and the edition ([CONFIGURATION.md](../admin/CONFIGURATION.md), `ui.phone`; [LENSES.md](ADMIN_GUIDE.md#12-what-a-lens-is), `phone:`). A cap
 wins: a site that says "never more than glance" for a heavy panel keeps it so, whatever a screen says.
 
 ## Keyboard
@@ -1688,7 +1688,7 @@ Views of live entities tick: figures change in place and flash briefly. With the
 
 Screen readers hear the full state, including the server's rolling p99 (`Live, p99 2 ms`). To see the same
 figures yourself, ask the server: `curl -s http://localhost:18480/api/v1/health/live`
-([PERFORMANCE.md](../admin/PERFORMANCE.md#4-live-latency)).
+([CLUSTER_GUIDE.md](../admin/BENCHMARK.md#212-how-to-measure-one-server)).
 
 To turn off the flash, untick *Flash changed values* in [your settings](#your-settings).
 
@@ -1710,7 +1710,7 @@ The round **Live** button beside the box is a toggle, the same on a laptop and a
 You can still pick another date while paused. The choice is kept as you move between pages. A screen reader hears
 *Live updates on — click to pause* or *Live updates paused — click to resume*, which is also its tooltip.
 
-Step by step, with pictures (a past date, the same layout with that day's figures, a Saturday, back to Live): [tutorial 2](../tutorials/02-look-up-anything.md), step 5. It needs the sample history ([GETTING_STARTED.md](GETTING_STARTED.md), Step 5).
+Step by step, with pictures (a past date, the same layout with that day's figures, a Saturday, back to Live): [tutorial 1, Part B](../tutorials/01-first-15-minutes.md#part-b--look-up-anything), step 14. It needs the sample history ([OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine), Step 5).
 
 What the banners mean:
 
@@ -1738,7 +1738,7 @@ Compare lists every field that differs in one entity between two business dates.
 
 Click **Compare** (it appears in the title line when you have picked a date): *What changed in MX-20000001* compares the picked date with the business day before. Each row shows the field's label and path, the value on each date and the
 change for numbers; choose any two dates at the top to compare further apart, or give the earlier side a *known at* time to see what was restated on the same date; filter to *changed*, *added* or *removed*; **CSV** downloads
-the comparison. Walk-through: [tutorial 2](../tutorials/02-look-up-anything.md), step 6.
+the comparison. Walk-through: [tutorial 1, Part B](../tutorials/01-first-15-minutes.md#part-b--look-up-anything), step 15.
 
 Example rows for the valuation `TVAL-MX-20000001`, 2026-10-15 against 2026-10-16:
 
@@ -1761,7 +1761,7 @@ The same comparison is available to programs:
 curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "$DRISHTI_SERVER/api/v1/history/trade-valuation/TVAL-MX-20000001/diff?from=2026-10-15&to=2026-10-16"
 ```
 
-It also takes `fromKnownAt` and `toKnownAt`. See [API_GUIDE.md](API_GUIDE.md).
+It also takes `fromKnownAt` and `toKnownAt`. See [API_REFERENCE.md](API_REFERENCE.md).
 
 ## History: an entity over time
 
@@ -1849,7 +1849,7 @@ not see (a restricted person is told how many trades are outside the view, never
 not built yet for a kind of number says so (*Under construction*, and the release that builds it). The kinds explained today are VaR, ES,
 parametric VaR and ES, the fat-tail gap (kind `var`), the exposure figures (peak PFE, CE, EPE, EEPE, peak EE, EAD: kind `exposure`) and a
 pivot cell's move (kind `pivot`); `GET /api/v1/explain/kinds` lists them on your server
-([API_GUIDE.md, "Explain"](API_GUIDE.md#explain-any-number)).
+([API_REFERENCE.md, "Explain"](API_REFERENCE.md#18-explain-any-number)).
 
 ## How fresh is it
 
@@ -1965,7 +1965,7 @@ open it, or walk the table with the keyboard ([Tables](#tables-sorting-filtering
 
 | Part | Rules | Example |
 |---|---|---|
-| Mnemonic | Any mnemonic, or a kind name | `TRD`, `NSET`, `trade-valuation` |
+| Mnemonic | Any mnemonic, or a kind name | `TRD`, `NSET`, [`trade-valuation`](../contracts/samples/market-risk.md#trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation)) |
 | Field | As named in the document, in any case; dots for nested fields, brackets for list items. A name no entity of the kind has is an error with the closest names | `MTM`, `mtm`, `KYC.PD_1Y`, `LEGS[0].NOTIONAL` |
 | Compare | `=`  `!=`  `<`  `<=`  `>`  `>=`; text compared with `=` and `!=` ignores case | `PRODUCT_GROUP = 'Rates'` (also matches `rates`) |
 | Text | `contains` and `startswith`, case-insensitive; `contains` also looks inside lists | `COUNTERPARTY contains 'MERIDIAN'` |
@@ -2011,7 +2011,7 @@ without `where` opens a single match directly.
 
 ## Search with a form (`FORM <pack>`)
 
-Type `FORM <pack>` (or open **Forms** in the Views menu) to fill in boxes instead of writing a search: the form writes the search, shows it and runs it. A field with more than 300 values (the counterparties of a large book) shows a box to find them as you type instead of one tick box each. The reference is [Query by form](#query-by-form) below; the walk-through is [tutorial 3](../tutorials/03-query-by-form.md).
+Type `FORM <pack>` (or open **Forms** in the Views menu) to fill in boxes instead of writing a search: the form writes the search, shows it and runs it. A field with more than 300 values (the counterparties of a large book) shows a box to find them as you type instead of one tick box each. The reference is [Query by form](#query-by-form) below; the walk-through is [tutorial 1, Part C](../tutorials/01-first-15-minutes.md#part-c--query-by-form).
 
 ## Export, print and share
 
@@ -2107,11 +2107,21 @@ view you cannot open", with who sent it and when, and nothing about what it hold
 reason is that the pack is switched off for them, the page offers **Switch on** *pack*. A link that was never sent to the
 reader looks the same as a link that does not exist.
 
+**Who can receive.** Only Drishti users: there is no sharing with an email address, and a mention or share never reaches a person whose
+role may not open that kind of view (they are told nothing). Nothing is copied: a share holds your note and the pinned link, so when
+someone's rights change, what they see changes with them.
+
+**Email.** When your administrator has set email up, the people you share with (and mention) also get a mail: the kind of view and its id,
+the panel, the date, and your note as *they* may read it (hidden values as `•••`, quoted values filled for them), with the link. For packs
+whose ids are themselves sensitive the mail says only "… shared a view with you" and the link. Several notices that arrive for one person
+within a few seconds come as one mail. Each person can switch share, mention and reply mail off on the *Account* page, under *Email me
+when*; the bell always shows the notice.
+
 ### Your inbox
 
 The **bell** in the top bar counts what is new for you (shares sent to you, and alerts as they fire); click it, or press
 `Alt+I`, for the inbox page. Each row says when, what kind (Share), who, and the start of their note, as you may read it
-now. Click a row to open it (opening marks it read), **Mark read** on a row, or **Mark all read**. Filter by *All*,
+now: a row about a view you can no longer open reads "(no access)" with no excerpt, and a retracted or hidden comment shows as such. Click a row to open it (opening marks it read), **Mark read** on a row, or **Mark all read**. Filter by *All*,
 *Shares*, *Mentions* or *Replies* and *Unread only*; **Older** pages back. Rules that fired are on the
 [Alerts](#alerts) page.
 
@@ -2128,14 +2138,14 @@ strip) as they tick. Rows can be of different kinds.
 saves a copy to your account. (None of the shipped packs offers a starter, so start from a search; the retired example packs
 `finance` and `logistics` under `examples/packs/` offer *Credit watch* and *Fleet watch*.)
 
-Step by step (a search, **Watch as a monitor**, adding an entity, removing a row), with pictures: [tutorial 3](../tutorials/03-query-by-form.md) (save a search and a monitor).
+Step by step (a search, **Watch as a monitor**, adding an entity, removing a row), with pictures: [tutorial 1, Part C](../tutorials/01-first-15-minutes.md#part-c--query-by-form) (save a search and a monitor).
 
 The monitor is saved on the server under your account, so it follows you to any browser. All rows share
 one live connection.
 
 ## Scheduled reports
 
-A report is a search that runs on its own, on a schedule, and delivers its result as a CSV or JSON Lines file (**Format**); **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 0](BI_GUIDE.md#0-scheduled-searches-and-the-reports-page); the walk-through is [tutorial 9](../tutorials/09-reports.md).
+A report is a search that runs on its own, on a schedule, and delivers its result as a CSV or JSON Lines file (**Format**); **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [REPORTS_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 0](REPORTS_GUIDE.md#181-the-reports-page-and-scheduled-searches); the walk-through is [tutorial 8, Part E](../tutorials/08-reports-and-dashboards.md#part-e--scheduled-searches-and-subscriptions).
 
 ## Alerts
 
@@ -2167,12 +2177,12 @@ severity, its **stage** and what it said.
 **Snooze** keeps an alert quiet for 1 hour, 4 hours or a day: a breach while it is snoozed is held, and raised when the snooze ends if it
 still holds. *No longer* ends a snooze. Resolving by hand does not make a condition that still holds raise again: it raises again only
 after the number comes back and breaks again. An administrator also sees the **platform alerts** (the server's own health: memory, disk,
-sources down; [OPERATIONS.md section 13.6](../admin/OPERATIONS.md)) in the same list, and may **Assign** one to a colleague.
+sources down; [OPERATIONS_GUIDE.md section 13.6](OPERATIONS_GUIDE.md)) in the same list, and may **Assign** one to a colleague.
 
 Worked example, a rule on one entity:
 
 1. Open `NSET NS-SUMMIT-NY` and click **Alert** in the title line. The *Alerts* page opens with
-   **Kind** `netting-set` and **Id** `NS-SUMMIT-NY` filled in under *New rule on one entity*.
+   **Kind** [`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)) and **Id** `NS-SUMMIT-NY` filled in under *New rule on one entity*.
 2. Fill in **Name** `Summit size`, **When** `$.TRADE_COUNT > 100`, **Severity** `warn`, and **Message** `Summit is big` (the alert's title).
 3. Click **Save rule**. It is an alert rule like any other (a field source whose field is your condition, the condition *holds*), looked
    at after each load of `netting-set`. The set already holds 1,274 trades on the demo lakes, so an alert is raised at once: a toast,
@@ -2214,7 +2224,7 @@ after a data load, or when it changes), and how to tell you: your **inbox** and 
 inside the limit (by the *hysteresis* you set, if any) and does not fire again within the *cooldown* (30 minutes by default). Your rules are on the **Alerts** page (also **Reports**, *My alerts*): *Look now*, *Pause*, *Resume*,
 *Edit and history* (what every look did, and what was sent where) and *Delete*; what they raised is under *Raised for you* and in the
 **Alerts** tab of your inbox. If a board's author has made a tile notify, you are told when it turns red, on your own number.
-Reference: [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4](BI_GUIDE.md#4-alerts-on-numbers); walk-through: [tutorial 11](../tutorials/11-bi-that-runs-itself.md).
+Reference: [REPORTS_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4](REPORTS_GUIDE.md#19-alerts-on-numbers); walk-through: [tutorial 8, Part D](../tutorials/08-reports-and-dashboards.md#part-d--bi-that-runs-itself).
 
 ## Workspaces
 
@@ -2312,7 +2322,7 @@ On a phone the drawer is a sheet from the bottom edge.
   who may not see the field sees `•••`. If the page now shows newer data than the comment saw, the field's format is applied to the value the comment saw.
 - **Moderation.** Administrators see **Hide** (with a reason; readers see "Hidden by a moderator: <reason>") and **Lock**
   (no new comments). Hidden comments are kept in the record. The whole set of moderation and compliance tools is on one page, **Admin > Collaboration**
-  (see [USER_MANAGEMENT](../admin/USER_MANAGEMENT.md)).
+  (see [USER_MANAGEMENT](ADMIN_GUIDE.md)).
 
 ![Asha's Discussion tab: a comment that mentions @vera, with the trader's id typed and the trader quoted, and the quoted quantity](img/collab/07-discussion-author.jpg)
 
@@ -2323,9 +2333,9 @@ because the reader may see it. *Open as it was* is offered because this page now
 
 ![The Discussion sheet on a phone](img/collab/09-discussion-phone.jpg)
 
-Notes written before discussions existed appear as one-comment threads. Every comment, edit, retraction and hide is in
-the audit log. Discussions are kept in the server's identity database, so everyone on that server sees the same ones;
-another server has its own.
+Older notes on an entity appear as one-comment threads. Every comment, edit, retraction and hide is in
+the audit log, and every version of a comment is kept: retracting or hiding changes what readers see, never the record.
+Discussions are kept on the server for every node of a cluster, so everyone sees the same ones.
 
 ## Working with several servers
 
@@ -2383,7 +2393,7 @@ back to it until the password is changed; then the console opens the terminal ho
 not only when you sign in. If an administrator disables your account, every page sends you to the sign-in page within
 a few seconds (`auth.recheck_seconds`, 10 by default); if they change your roles, what you may open changes as quickly.
 An administrator resetting your password signs you out everywhere. Users, roles and password rules are covered
-in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
+in [ADMIN_GUIDE.md](ADMIN_GUIDE.md).
 
 ## Themes
 
@@ -2407,7 +2417,7 @@ three Terminal hues) for a trading floor, a wall screen or long sessions; a ligh
 a projector or anything you print or capture for a document. Wall Street is for people who read Bloomberg all day. A desk that wants its
 screens told apart at a glance can give each its own Terminal hue. Your choice follows you (below); an administrator sets the default for
 everyone with `ui.default_theme` ([CONFIGURATION.md](../admin/CONFIGURATION.md)), and *My account → Settings → Theme* or
-`PATCH /api/v1/me/settings` (`"theme": "terminal-blue"`, [API_GUIDE.md](API_GUIDE.md)) set it too.
+`PATCH /api/v1/me/settings` (`"theme": "terminal-blue"`, [API_REFERENCE.md](API_REFERENCE.md)) set it too.
 
 Each theme's colours shade the page, the top bar, view and panel headers and accent buttons; panel
 bodies, tables and figures stay on solid colours so they read clearly. If your system asks for more
@@ -2420,10 +2430,10 @@ accents and chart fills at 3:1. Buttons and pressed controls fill with `--d-fill
 unless a theme gives buttons a colour of its own, and carry their label in `--d-on-fill` at 4.5:1 on both: Crimson Terminal, for one, fills
 its buttons with a deep crimson under white labels rather than its bright text accent. The same test fails any stylesheet rule that fills a
 button from the accent instead (the accent buttons' gradient runs from `--d-fill` to `--d-fill-strong`). A page that embeds Drishti's elements and sets the
-`--d-*` values itself ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#19-drishti-elements-developer-guide)) should keep the same rule.
+`--d-*` values itself ([EMBED_GUIDE.md](EMBED_GUIDE.md#5-the-elements-one-by-one)) should keep the same rule.
 
 These are the console's themes. A BI report has a theme of its own (the shipped *Corporate* and *Print*, or one made in the
-theme designer), chosen by its author in BI Studio: [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2](BI_GUIDE.md#52-themes).
+theme designer), chosen by its author in BI Studio: [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2](REPORTS_GUIDE.md#103-themes).
 
 ## Domain packs: choosing what you see
 
@@ -2446,7 +2456,7 @@ What changes when a pack is off for you:
 - its mnemonics leave the suggestions, and its examples leave `/t`, the help centre and the search page;
 - opening one of its entities is refused with `DRS-5002 … may not open … entities`;
 - a pack's parents stay usable through it: with *Counterparty credit risk* on, a netting set still links to
-  its trades and counterparties (see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#who-sees-which-pack)).
+  its trades and counterparties (see [BUILD_GUIDE.md](BUILD_GUIDE.md#314-who-sees-which-pack)).
 
 **Apply** needs at least one ticked pack; with none ticked it does nothing. The choice is saved to your
 account. You can choose only among the packs an administrator assigned to you, and only among packs that
@@ -2509,7 +2519,7 @@ Sutra folder (`./sutras/…/irs-fixfloat.v2.sutra.yaml`), and views use the high
 revision, and Undo brings the old text back.
 
 The [screen designer guide](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) (every pane, with pictures) and the
-[Sutra developer guide](SUTRA_DEVELOPER_GUIDE.md) go much further.
+[Sutra developer guide](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies) go much further.
 
 ### Reviews: approving a Sutra
 
@@ -2524,34 +2534,10 @@ own proposal (four eyes); a proposal whose live Sutra changed since it was made 
 
 ## Approvals
 
-Everything that waits for a second person is in **one queue**: **Views → Approvals** (`/approvals`), with a count on the top bar's
-approvals tool (the badge beside the bell). The kinds:
-
-| Kind | Area | Who decides | Where it is made |
-|---|---|---|---|
-| Sutra | Screens | an approver (four eyes) | a workbench save, a designed screen, a terminal layout promoted |
-| Correction | Data | an approver of changes (the policy may ask for several) | a form's Submit, `drishti.py change propose` ([write-back](WRITE_BACK.md)) |
-| BI item | Data | a bi-steward, or a member of the workspace with the approve power | *Propose for review* on a dataset, model, report or board |
-| Pivot function | Data | an approver (a Java plug-in: an administrator); with a sharing scope | `pivot functions submit` |
-| Stress window | Risk | someone who sees every node, never the proposer | *Freeze and propose* on `SWIN` |
-| Report sign-off | Risk | the next step of the chain (maker, checker, approver); one person signs one step | `VAR REPORT <report> <period>`, *Generate* |
-| Compute package | Access | an administrator (and the roles `compute.approval.roles` names) | a connector or pool that needs packages |
-
-**The list.** *Waiting for me* is the inbox: everything you may decide now, never your own. Items with a due date near (a report run's
-filing date: `drishti.approvals.due-days`, pinned within `due-soon-days`) are **pinned on top** under *Due soon*; the rest are newest first.
-Filter by area (*Data · Screens · Risk · Access*) or by kind; *Mine sent* lists what you asked for; *Done* what was decided.
-
-**The item.** Click one: **What changes** (a diff, with the maker's reason), **Effect if approved** (what changes downstream: the
-records and views that read a corrected record, the published reports a BI change breaks, a node's stressed VaR under each window, the
-files a signed run releases), the **Rules** that let you decide, and *More facts* (checks, evidence, history).
-
-**Decide.** **Approve** (a pivot function: say who may use it, *everyone* or `group:<name>`; a BI dataset change: update the reports that
-use renamed names, or, as a bi-admin, approve over a breaking change), **Reject…** with a reason in the comment box, or **Withdraw** your own.
-The maker never approves their own. **Ask a question**: a thread on the item; the maker is told (without the text) and answers in the
-same place, and whoever asked is told of the answer. Every decision and every question is in the audit log.
-
-From the command line: `drishti.py approvals list`, `approvals show KIND ID`, `approvals approve|reject|withdraw KIND ID --comment ...`,
-`approvals ask KIND ID "..."` ([CLI_GUIDE.md](CLI_GUIDE.md)). The API: [API_GUIDE.md › Approvals](API_GUIDE.md#approvals-apiv1approvals).
+Everything that waits for a second person (Sutra proposals, corrections, BI items, pivot functions, stress windows, report sign-offs,
+compute packages) is in **one queue**: **Views → Approvals** (`/approvals`), with a count beside the bell. How to read an item, approve,
+reject, withdraw or ask a question, in the UI and with `drishti.py approvals`, is in
+[APPROVALS_GUIDE.md › The Approvals queue](APPROVALS_GUIDE.md#6-the-approvals-queue).
 
 ## Administration
 
@@ -2563,20 +2549,20 @@ between them without the menu.
 | Users | `/admin/users` | Create users; set roles and the packs each user may use; enable, disable, reset passwords |
 | Roles | `/admin/roles` | Define roles: the kinds each opens, and its powers |
 | Packs | `/admin/packs` | Switch a domain pack off or on for everyone; deploy an archive; see which connectors a pack reads through (**Data source**, read only) |
-| Artifacts | `/admin/artifacts` | Everything installed in one list (packs, connector files, shipped BI files): see what depends on each, **disable** it, **uninstall** it to an archive and **restore** it, install a BI file ([OPERATIONALISING.md section 18](OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely)) |
-| Connectors | `/admin/connectors` | Where data comes from: one connector per YAML file in `config/connectors/`; create, edit, test, switch off and see which packs use each ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)) |
-| Tokens | `/admin/tokens` | Every personal API token (never its secret): its owner, its scopes (*read only* or what it may write), when it was last used (in the console's time zone, named), and revoking any of them ([API_GUIDE.md (clients)](API_GUIDE.md#clients-scripts-notebooks-and-excel)) |
-| Access | `/admin/access` | Who read which entity, filtered by user, action, kind, id and dates ([USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)) |
-| AI | `/admin/ai` | The AI layer: off by default; providers, models, MCP servers and a test call ([AI.md](../admin/AI.md#1-model-providers)) |
+| Artifacts | `/admin/artifacts` | Everything installed in one list (packs, connector files, shipped BI files): see what depends on each, **disable** it, **uninstall** it to an archive and **restore** it, install a BI file ([OPERATIONS_GUIDE.md section 18](OPERATIONS_GUIDE.md#10-admin--artifacts-install-and-uninstall-safely)) |
+| Connectors | `/admin/connectors` | Where data comes from: one connector per YAML file in `config/connectors/`; create, edit, test, switch off and see which packs use each ([DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)) |
+| Tokens | `/admin/tokens` | Every personal API token (never its secret): its owner, its scopes (*read only* or what it may write), when it was last used (in the console's time zone, named), and revoking any of them ([API_REFERENCE.md (clients)](DEVELOPER_GUIDE.md#113-clients-scripts-notebooks-and-excel)) |
+| Access | `/admin/access` | Who read which entity, filtered by user, action, kind, id and dates ([ADMIN_GUIDE.md](ADMIN_GUIDE.md)) |
+| AI | `/admin/ai` | The AI layer: off by default; providers, models, MCP servers and a test call ([AI_GUIDE.md](AI_GUIDE.md#1-model-providers)) |
 | Data loads | `/admin/loads` | What your ETL announced, what is due and what is late ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)); its **Inbox** tab (`/admin/loads/inbox`, while the data inbox runs) is the inbox's status board: files waiting, the run loading table by table, the last cycles, failures with **Retry**, and **Load now** ([DATA_LAKE_GUIDE.md section 3.1](DATA_LAKE_GUIDE.md#31-the-data-inbox)) |
-| Collaboration | `/admin/collab` | Moderation of shares and threads, legal holds, export, the mail outbox and chat bridges ([COLLABORATION.md](../architecture/COLLABORATION.md)) |
-| Embedding | `/admin/embedding` | Host applications that show Drishti views in their own pages ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design)) |
-| BI | `/admin/bi` | Powers per role and who creates workspaces (needs `bi-admin`; [BI_GUIDE.md](BI_GUIDE.md)) |
-| Ad-hoc scopes | `/admin/scopes` | Every person's saved VaR baskets (owner, name, scope, shared with, dates, size), filtered by owner; **Delete** any of them with an optional reason, audited and told to the owner ([OPERATIONS.md section 9b-2](../admin/OPERATIONS.md#9b-2-deleting-peoples-var-baskets)) |
+| Collaboration | `/admin/collab` | Moderation of shares and threads, legal holds, export, the mail outbox and chat bridges ([ARCHITECTURE.md §31](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals)) |
+| Embedding | `/admin/embedding` | Host applications that show Drishti views in their own pages ([EMBED_GUIDE.md](../architecture/ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements)) |
+| BI | `/admin/bi` | Powers per role and who creates workspaces (needs `bi-admin`; [REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
+| Ad-hoc scopes | `/admin/scopes` | Every person's saved VaR baskets (owner, name, scope, shared with, dates, size), filtered by owner; **Delete** any of them with an optional reason, audited and told to the owner ([OPERATIONS_GUIDE.md section 9b-2](OPERATIONS_GUIDE.md#126-deleting-peoples-var-baskets)) |
 | Audit log | `/admin/audit` | Sign-ins, failures, lockouts, user, role and pack changes, Sutra proposals and approvals, cache purges |
 | Health | `/admin/health` | Every connector and pack: up or down, reads, timings. Refreshes every 5 seconds |
 | Caches | `/admin/caches` | Every cache with where it lives and its size against its limit; **Purge** one, **Purge a date**, or **Purge all**, on this server or the whole cluster (safe at any time) |
-| Capacity | `/admin/capacity` | Today against the plan: heap, RAM, disk and cores each with a state and a headroom bar, **what breaks first** in words with the fix, this server beside the plan, growth ×1 to ×3; **Edit the plan** for the single-node planner (inputs, every result with its Why?, the settings and the JVM command line with Copy); **Download the working (.xlsx)**, a live formula workbook ([OPERATIONS.md 12.4](../admin/OPERATIONS.md#124-admin--capacity-today-against-the-plan)) |
+| Capacity | `/admin/capacity` | Today against the plan: heap, RAM, disk and cores each with a state and a headroom bar, **what breaks first** in words with the fix, this server beside the plan, growth ×1 to ×3; **Edit the plan** for the single-node planner (inputs, every result with its Why?, the settings and the JVM command line with Copy); **Download the working (.xlsx)**, a live formula workbook ([OPERATIONS_GUIDE.md 12.4](OPERATIONS_GUIDE.md#146-admin--capacity-today-against-the-plan)) |
 
 ### Admin → Artifacts: install and uninstall safely
 
@@ -2585,7 +2571,7 @@ origin; **/** focuses it). *Uninstall…* (here, and on the Packs, Connectors an
 it **moves** the folder or file to `data/uninstalled/<time>-<kind>-<name>/`; with dependants it is refused and **Disable instead** (keep it, switch it off) is the
 default; taking the dependants along needs the name typed. The **Uninstalled** tab restores an archive (refused if the name exists again, unless you replace it) or
 deletes it for good (name typed); archives older than 30 days are removed. *Install* uploads a BI file with a dry run first. Every action is audited, and no API
-token can do any of it. Full guide: [OPERATIONALISING.md section 18](OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely).
+token can do any of it. Full guide: [OPERATIONS_GUIDE.md section 18](OPERATIONS_GUIDE.md#10-admin--artifacts-install-and-uninstall-safely).
 
 ### Admin → Roles: what a role may do
 
@@ -2599,7 +2585,7 @@ every role with its kinds (or *every kind*), its powers, how many users hold it,
 | approve Sutras | approve proposed Sutras in Reviews |
 | administer | use every admin page |
 | Calc | use Calc (`Alt+C`): Python in the browser on what the role opens ([section 9](#9-roles-who-may-use-calc)) |
-| BI (`bi`, `bi-author`, `bi-steward`, `bi-admin`) | four powers for Rūpaka, granted on roles ([BI_GUIDE.md](BI_GUIDE.md#3-who-may-do-what-the-four-powers), [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md#bi-powers-rupaka)); the Roles form above lists only the first six powers |
+| BI (`bi`, `bi-author`, `bi-steward`, `bi-admin`) | four powers for Rūpaka, granted on roles ([REPORTS_GUIDE.md](REPORTS_GUIDE.md#3-who-may-do-what-the-four-powers), [ADMIN_GUIDE.md](ADMIN_GUIDE.md#34-bi-powers-rupaka)); the Roles form above lists only the first six powers |
 | layouts | use [layout mode](#layout-mode-arrange-a-view-your-way) (`Alt+L`) and keep personal layouts. On for every role unless unticked; the built-in `viewer` role does not have it |
 
 There is no power for [Pivot](#pivot-slice-a-table-your-way): anyone who may open a kind may arrange and save its pivots, as they
@@ -2614,7 +2600,7 @@ Worked example: a role for credit analysts.
 2. **Name** `credit-analyst` (lower case, digits and hyphens); **Description** `Reads counterparties and
    credit exposure`.
 3. Under *Add every kind of a pack*, click **Counterparty credit risk**: its kinds (`netting-set`,
-   `credit-limit`, `cva`, …) fill the *Kinds it opens* box, one per line. Add `counterparty`
+   [`credit-limit`](../contracts/samples/counterparty-risk.md#credit-limit) ([contract](../contracts/packs/counterparty-risk.md#lim-credit-limit-credit-limit)), `cva`, …) fill the *Kinds it opens* box, one per line. Add `counterparty`
    on a line of its own.
 4. Leave every power unticked, and click **Save**. The role appears in the table with `0` users.
 5. Open *Admin → Users*, edit a user, tick `credit-analyst` and save. At that user's next click, netting sets
@@ -2622,7 +2608,7 @@ Worked example: a role for credit analysts.
 
 Changes apply at the holder's next request and are written to the audit log. **Delete** is greyed while
 anyone holds the role (*Held by 1 user(s): take it away from them first*); the server answers `DRS-6009`
-if asked anyway. Roles only matter when sign-in is on. More in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
+if asked anyway. Roles only matter when sign-in is on. More in [ADMIN_GUIDE.md](ADMIN_GUIDE.md).
 
 ### Admin → Packs: switching a pack off for everyone
 
@@ -2639,7 +2625,7 @@ if asked anyway. Roles only matter when sign-in is on. More in [USER_MANAGEMENT.
 | Changed | when and by whom it was last switched |
 
 A **Sample** badge beside the title marks a demonstration pack. **Load** and **Unload** take effect at once, with no restart; a pack folder you add,
-edit or delete on the server is picked up the same way (see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#live-reload-the-packs-folder-is-watched)). Above the table, the
+edit or delete on the server is picked up the same way (see [BUILD_GUIDE.md](BUILD_GUIDE.md#296-live-reload-the-packs-folder-is-watched)). Above the table, the
 *Sample packs* section says who sees samples and offers **Hide samples from business users**: only authors and administrators then see sample
 packs, everyone else has them filtered out as if switched off. *Hide samples from everyone* unloads them; *Show samples to everyone* brings them back.
 The choice is saved, applied at once and recorded in the audit log (`pack-samples`).
@@ -2669,14 +2655,14 @@ first checks the pack together with the loaded ones (a clash, such as the retire
 with the reason and nothing changes), then records it and puts it to use at once: no restart, nobody is signed out, and
 open views carry on. The page confirms and refreshes. A pack loaded this way shows **Unload**, which takes it back the
 same way (not while another loaded pack builds on it). See
-[PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#loading-a-pack-while-the-server-runs-1).
+[BUILD_GUIDE.md](BUILD_GUIDE.md#292-loading-a-pack-while-the-server-runs).
 
 #### One pack: its own page
 
 In the *Pack* column every title is a link (Tab to it, Enter opens it) to `/admin/packs/<name>`; *Builds on*, *needed by* and *Connectors* link to the
 packs and connectors they name. The page gathers what the list can only hint at:
 
-![Admin → Packs → one pack: status, kinds with their mnemonics, Sutras, connectors, loads and history](../connectors/img/connector_files/12-pack-detail.jpg)
+![Admin → Packs → one pack: status, kinds with their mnemonics, Sutras, connectors, loads and history](img/connector_files/12-pack-detail.jpg)
 
 - **Summary:** title, version, code, description, the **Sample** badge, who changed it and when, and the status: **on**, **off**, **not loaded**, or **refused**
   (a pack whose files could not be used) with the reason and, when the server is trying again, *failed — next retry in Ns (attempt k)* and **Retry now**.
@@ -2694,7 +2680,7 @@ packs and connectors they name. The page gathers what the list can only hint at:
 
 In *Admin → Connectors* the connector name is a link to `/admin/connectors/<name>` (the *Used by* column links to the packs):
 
-![Admin → Connectors → one connector: summary, TLS certificates and their expiry, packs, settings, the file and its history](../connectors/img/connector_files/11-connector-detail.jpg)
+![Admin → Connectors → one connector: summary, TLS certificates and their expiry, packs, settings, the file and its history](img/connector_files/11-connector-detail.jpg)
 
 It shows the plugin, where the connector is defined (file, pack or the deprecated `application.yaml`), whether it is on, its **status** and the plugin's own health,
 the time of its last update, and, when it failed, *next retry in Ns (attempt k)* with **Retry now**. **TLS** says whether it is on, which protocols, whether the
@@ -2704,7 +2690,7 @@ packs and kinds that use it (links), the **settings in effect** with credentials
 **Disable/Enable** and **Reset to pack default** (or **Delete**, for a file no pack suggests) work as on the list, with the same questions when packs use the connector.
 Both pages are for administrators, work in both themes and on a phone, where every link and button is at least 44 px:
 
-![The connector page on a phone](../connectors/img/connector_files/13-connector-detail-phone.jpg) ![The pack page on a phone](../connectors/img/connector_files/14-pack-detail-phone.jpg)
+![The connector page on a phone](img/connector_files/13-connector-detail-phone.jpg) ![The pack page on a phone](img/connector_files/14-pack-detail-phone.jpg)
 
 ### Admin → Connectors → Index: reload type-ahead for a past day
 
@@ -2720,7 +2706,7 @@ Worked example: a trade was corrected in last Friday's data and type-ahead for t
    shows *failed* and the reason, and the old day stays in use.
 
 *Admin → Health* has **Reload index** on each connector that keeps several days. Reloads are for administrators only and are
-written to the audit log. See [OPERATIONS.md section 12.2](../admin/OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index).
+written to the audit log. See [OPERATIONS_GUIDE.md section 12.2](OPERATIONS_GUIDE.md#144-the-multi-day-type-ahead-index).
 
 ### Admin → Health: is everything up?
 
@@ -2752,10 +2738,10 @@ Worked example: check that every data source is up.
 
 A connector whose plugin is installed but has no settings (a Kafka connector without `topics`, a feed without
 `feed`) stays **idle**: it is not started and is not counted as failed. Anything else that is not **UP** is
-explained in [runbooks/source-down.md](../admin/OPERATIONS.md#171-source-down-or-slow). A connector a pack names but that has no file shows as *not configured* (its kinds answer `DRS-1011`);
+explained in [runbooks/source-down.md](OPERATIONS_GUIDE.md#201-source-down-or-slow). A connector a pack names but that has no file shows as *not configured* (its kinds answer `DRS-1011`);
 an administrator creates it in *Admin → Connectors*, and a connector file with a mistake is listed on Health as a bad file while the last good configuration keeps running.
 
-Managing users and roles is explained in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
+Managing users and roles is explained in [ADMIN_GUIDE.md](ADMIN_GUIDE.md).
 
 ## Help
 
@@ -2794,7 +2780,7 @@ full-screen at the terminal.
 
 ## Query by form
 
-Learn it by doing in [tutorial 3](../tutorials/03-query-by-form.md); this page is the reference.
+Learn it by doing in [tutorial 1, Part C](../tutorials/01-first-15-minutes.md#part-c--query-by-form); this page is the reference.
 
 If you would rather fill in boxes than write a search, type `FORM` and a pack on the command line. The page is a form for the pack's
 kinds: one input for each field people search by, each suited to what the field holds. When you press **Search** the form writes the search
@@ -2903,7 +2889,7 @@ On a phone the fields stack in one column and every control is at least 44 px.
 
 ### Who decides what the form offers
 
-The pack's author writes the form (`form:` in `pack.yaml`, see the [Pack developer guide](PACK_DEVELOPER_GUIDE.md#form-the-search-form-of-a-kind)); a pack that does not gets one
+The pack's author writes the form (`form:` in `pack.yaml`, see the [Pack developer guide](BUILD_GUIDE.md#46-form-the-search-form-of-a-kind)); a pack that does not gets one
 inferred from its search columns and screen. Authors can shape a kind's form in the workbench's [Form tab](RACHANA_REFERENCE.md#the-form-tab).
 
 ## Calc: Python on any view
@@ -2932,11 +2918,11 @@ strip, the tables, searches and columns alike.
 |---|---|
 | Re-price a trade under a rate move, recompute a VaR, interpolate a curve, pivot a desk's P&L your own way, once | **Calc** |
 | Try an idea on what is on the screen before asking for a panel | **Calc** |
-| A figure everyone sees on a view, every time | a panel in the kind's Sutra ([Sutra developer guide](SUTRA_DEVELOPER_GUIDE.md)): computed on the server, cached, live |
+| A figure everyone sees on a view, every time | a panel in the kind's Sutra ([Sutra developer guide](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies)): computed on the server, cached, live |
 | Find entities by value (`TRD where mtm > 1m`) | [search](#search-by-value), on the command line |
 | Be told when a figure crosses a line | an [alert](#alerts): the server checks it on every change |
-| The same search as a file every morning | a [scheduled report](BI_GUIDE.md#scheduled-reports) |
-| A long notebook, a model you keep in git, millions of rows, your own libraries | Python on your machine with a personal API token ([API_GUIDE.md (clients)](API_GUIDE.md#clients-scripts-notebooks-and-excel)) |
+| The same search as a file every morning | a [scheduled report](REPORTS_GUIDE.md#181-the-reports-page-and-scheduled-searches) |
+| A long notebook, a model you keep in git, millions of rows, your own libraries | Python on your machine with a personal API token ([API_REFERENCE.md (clients)](DEVELOPER_GUIDE.md#113-clients-scripts-notebooks-and-excel)) |
 
 Calc is for questions that are yours, now, about the data in front of you. It is not a batch engine: it runs in one
 browser tab, with that tab's memory, and it reads what you could read by clicking (see [Limits](#14-limits)).
@@ -3238,7 +3224,7 @@ computes.
 The shipped ones are written by `tools/packgen/banking/make_packs.py` (the generator kept its name from the banking packs it began with) from their sources,
 `tools/packgen/banking/snippets/<pack>/<name>.py` (read by `calc_snippets.py`; never edit the generated
 `config/packs/<domain>/<pack>/python/` files: change the source and run the generator, see
-[PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)). A source starts, after its copyright header, with
+[BUILD_GUIDE.md](BUILD_GUIDE.md#301-how-the-shipped-packs-are-generated)). A source starts, after its copyright header, with
 
 ```python
 # title: Key-rate DV01 by bump and reprice
@@ -3281,7 +3267,7 @@ Who has it out of the box:
 | `viewer` | configuration | **no** |
 | `trader` (`trading`), `market-risk` (`market-risk`), `credit-risk` (`counterparty-risk`) | the shipped packs | yes |
 | `trader`, `risk` (`finance`) | the retired example pack `finance`, when loaded from `examples/packs` | yes |
-| roles of packs that do not enable Calc (`climate-analyst`, `economist`, `scientist`, `treasury`, `oprisk`, `retail`, `analyst` of world-economy, `ops` and `shipment` of logistics, `market-analyst` and `listed-company` of news-and-markets, `news-analyst` and `news-topic` of news-and-markets) | those packs | no (their kinds offer no Calc) |
+| roles of packs that do not enable Calc (`climate-analyst`, `economist`, `scientist`, `treasury`, `oprisk`, `retail`, `analyst` of world-economy, `ops` and `shipment` of logistics, `market-analyst` and [`listed-company`](../contracts/samples/news-and-markets.md#listed-company) ([contract](../contracts/packs/news-and-markets.md#co-listed-company-listed-company)) of news-and-markets, `news-analyst` and [`news-topic`](../contracts/samples/news-and-markets.md#news-topic) ([contract](../contracts/packs/news-and-markets.md#topic-news-topic-news-topic)) of news-and-markets) | those packs | no (their kinds offer no Calc) |
 | roles you define in Admin → Roles | the identity database | as you tick it |
 
 Give it:
@@ -3290,7 +3276,7 @@ Give it:
   list shows **Calc** among each role's powers. It applies at the holder's next click (within a minute for the
   console's offer of the panel), and is audited (`role-updated … calc`).
 - **Configuration or a pack**: `calc: true` on the role (`roles: { quant: { kinds: ["*"], calc: true } }`).
-- **API**: `PUT /api/v1/admin/role-definitions/{name}` with `"calc": true` ([USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md#7-the-api)).
+- **API**: `PUT /api/v1/admin/role-definitions/{name}` with `"calc": true` ([ADMIN_GUIDE.md](ADMIN_GUIDE.md#11-the-users-and-roles-api)).
 
 The power is kept in the identity database's `drishti_role_power` table (one row per role and power), which a
 database made by an earlier release gains at the next start, without a migration.
@@ -3314,7 +3300,7 @@ They are kept with your other saved documents (workspaces, monitors) in the iden
 | Can it reach the network? | No. The worker's Content Security Policy is `default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src <host>/static/ <host>/pyodide/` (the host the browser used): scripts and data from two paths of the console's own origin only, so Calc code cannot call any other console route, `/api` included, though the browser would send your session cookie with it. The runtime and its packages are served by the console under `/pyodide/<version>/`, and Pyodide is told every location explicitly (index, packages, lock file, standard library), so it never looks at its default CDN. Measured: no request left the origin in any test run (section 13). |
 | Can it change data? | No more than you can by clicking. The only writes Calc adds are your own snippets. |
 | What else changed in the page's security? | The page's policy adds `worker-src 'self'`; `'wasm-unsafe-eval'` (compiling WebAssembly) is granted to the Calc worker's script alone, and `'unsafe-eval'` to nothing on the page. |
-| Is it recorded? | The reads are recorded as any read is ([access log](../admin/USER_MANAGEMENT.md#who-looked-at-what-the-access-log)): `view`, `raw`, `history`, and `search` for searches and for `drishti.columns()` (with the fields read). The code itself is not sent anywhere unless you save it. |
+| Is it recorded? | The reads are recorded as any read is ([access log](ADMIN_GUIDE.md#8-who-looked-at-what-the-access-log)): `view`, `raw`, `history`, and `search` for searches and for `drishti.columns()` (with the fields read). The code itself is not sent anywhere unless you save it. |
 | Who may use it? | Roles with `calc` ([section 9](#9-roles-who-may-use-calc)); the server checks it on its Calc endpoints, the console on its own. |
 | Can one user's code affect another's? | No: each tab has its own worker and memory. A loop that never ends uses one core of your machine until you press **Stop**. |
 
@@ -3404,7 +3390,7 @@ Speed beside native CPython 3.14 on the same machine (best of three):
 - **Data volume.** A read moves JSON from the server through the console to the page and into Python: about 13 bytes
   a value for `drishti.columns()` (10,000 rows × 5 fields: 646 KB). 250,000 rows × 5 fields is about 16 MB, and a few
   seconds. Ask for the fields you need, aggregate with a search where you can, and use a script with a token
-  ([API_GUIDE.md (clients)](API_GUIDE.md#clients-scripts-notebooks-and-excel)) for millions of rows.
+  ([API_REFERENCE.md (clients)](DEVELOPER_GUIDE.md#113-clients-scripts-notebooks-and-excel)) for millions of rows.
 - **Searches** return at most 1000 rows (`limit`), and read at most `drishti.search.max-scan` documents (20,000) when
   the source keeps no columns. `drishti.columns()` returns at most `drishti.calc.max-column-rows` (250,000).
 - **Output** is capped per run ([section 6](#6-output-print-show-chart-figures)).
@@ -3567,10 +3553,10 @@ warm run 6 to 830 ms (median 39 ms; 64 of 87 runs under 100 ms; the slowest read
 |---|---|---|---|
 | **Book DV01 by currency and tenor, and the par-swap hedge** · `book_dv01_hedge.py` | `book` (`BOOK BOOK-RATES-2`) | Every trade of the book read for its bucketed DV01, summed by currency and tenor; then the hedge: for each bucket, the notional of a par swap at that tenor (on the currency's OIS curve, annual fixed, its DV01 from the annuity) that offsets the bucket's DV01, receive or pay. Each hedge is sized on its own bucket; the spill of a hedge's own risk into shorter buckets is ignored, a simplification. | quant: `ZeroCurve`, `annuity`, `par_swap_rate`, `tenor_years`; reads: search, get |
 | **Counterparty capital: Basel IRB risk weight from PD** · `counterparty_irb.py` | `counterparty` (`CPTY CP-HALCYON`) | The counterparty's exposure at default from its netting sets' SA-CCR results, its one-year PD from KYC (floored at 0.03%), LGD 45% (foundation IRB, senior unsecured) and an effective maturity of 2.5 years: the Basel IRB corporate formula for capital (asset correlation, maturity adjustment, 99.9% conditional PD), risk-weighted assets, expected loss, and how capital moves with PD. The corporate curve for every counterparty, a simplification (banks and sovereigns have their own treatment). | quant: `norm_cdf`, `norm_ppf`; reads: get |
-| **Currency exposure and maturity ladder** · `currency_exposure.py` | `desk`, `book`, `legal-entity` (`BOOK BOOK-RATES-1`) | The desk's or book's trades from one search, pivoted by currency and product family: MTM and notional; notional by currency and maturity bucket (a maturity ladder, 0-1Y to 30Y+), the notional-weighted average maturity per currency, and DV01 by currency where the trades carry it. | reads: search |
+| **Currency exposure and maturity ladder** · `currency_exposure.py` | `desk`, `book`, [`legal-entity`](../contracts/samples/core.md#legal-entity) ([contract](../contracts/packs/core.md#le-bank-legal-entity-legal-entity)) (`BOOK BOOK-RATES-1`) | The desk's or book's trades from one search, pivoted by currency and product family: MTM and notional; notional by currency and maturity bucket (a maturity ladder, 0-1Y to 30Y+), the notional-weighted average maturity per currency, and DV01 by currency where the trades carry it. | reads: search |
 | **P&L by book: a pandas pivot** · `desk_pnl_by_book.py` | `desk` (`DESK DESK-RATES`) | The desk's positions pivoted by book and product family (MTM), and today's P&L by book and currency from the trades themselves (drishti.search_async()). | reads: search |
 | **Top movers and P&L contribution** · `desk_top_movers.py` | `desk`, `book` (`DESK DESK-EQD`) | The desk's trades from one search: the ten best and worst by today's P&L, P&L by product with each product's share of the absolute move, and a Pareto view (how few trades make most of the day's P&L), with the desk's total against its derived P&L. | reads: search |
-| **Counterparty group: members, exposure, expected loss** · `group_exposure.py` | `counterparty-group` (`GRP GRP-ALDERSHOT`) | The group's members read in full: rating, sector, net MTM, peak PFE (the exposure engine's, CPTY:<id>) and one-year PD; the group's exposure against its limit, each member's share, expected loss as PD x LGD 60% x peak PFE, a rating-weighted PD for the group, and the netting sets behind each member. | reads: get |
+| **Counterparty group: members, exposure, expected loss** · `group_exposure.py` | [`counterparty-group`](../contracts/samples/core.md#counterparty-group) ([contract](../contracts/packs/core.md#grp-counterparty-group-counterparty-group)) (`GRP GRP-ALDERSHOT`) | The group's members read in full: rating, sector, net MTM, peak PFE (the exposure engine's, CPTY:<id>) and one-year PD; the group's exposure against its limit, each member's share, expected loss as PD x LGD 60% x peak PFE, a rating-weighted PD for the group, and the netting sets behind each member. | reads: get |
 | **Issuer: bond spreads against CDS, the basis** · `issuer_bond_cds_basis.py` | `issuer` (`ISS ISS-GRANITE`) | The issuer's bonds read in full: yield, Z-spread over their benchmark curve recomputed from price (bullet, street convention), and the CDS spread at each bond's maturity interpolated on the issuer's credit curve; the CDS-bond basis (CDS less Z-spread, negative: the bond is cheap to the CDS), with the term structures drawn. Z-spread against a government curve, not the par-equivalent spread a desk would use: an approximation. | quant: `ZeroCurve`, `bond_cashflows`, `bond_yield`, `tenor_years`, `z_spread`; reads: get |
 | **Legal entity: risk against return by book and desk** · `legal_entity_risk_return.py` | `legal-entity` (`LE LE-NY`) | The legal entity's books with their VaR, today's P&L and MTM: P&L per unit of VaR by book, books grouped by desk with VaR summed (no diversification, an upper bound) and the desk's P&L over VaR, the books in a risk-return scatter, and the entity's share of P&L and VaR by desk. | pandas |
 | **A trader's book: mix, P&L and hit rate** · `trader_book.py` | `trader` (`TRDR TRDR-ASHAH`) | Every trade the trader booked (one search): count, notional and MTM by product and currency, today's P&L with the share of winning trades and the average win against the average loss, the ten largest positions by MTM, and how the trader's day compares with the desk's other traders. | reads: search |
@@ -3579,16 +3565,16 @@ warm run 6 to 830 ms (median 39 ms; 64 of 87 runs under 100 ms; the slowest read
 
 | Snippet · file | On | Computes | Method |
 |---|---|---|---|
-| **Collateral: haircuts, concentration and a haircut stress** · `collateral_haircuts.py` | `collateral-balance` (`COLL COLL-HALCYON-NY`) | The collateral balance's positions: market value, haircut and value after haircut (checked against the booked value), concentration of the collateral by asset (HHI), collateral issued by the counterparty itself (wrong-way collateral), and the collateral value when haircuts double and triple and market values fall 5%, against what the netting set's CSA requires (net MTM less the counterparty's threshold): the shortfall a stress would leave. | quant: `hhi`; reads: get |
+| **Collateral: haircuts, concentration and a haircut stress** · `collateral_haircuts.py` | [`collateral-balance`](../contracts/samples/counterparty-risk.md#collateral-balance) ([contract](../contracts/packs/counterparty-risk.md#coll-collateral-balance-collateral-balance)) (`COLL COLL-HALCYON-NY`) | The collateral balance's positions: market value, haircut and value after haircut (checked against the booked value), concentration of the collateral by asset (HHI), collateral issued by the counterparty itself (wrong-way collateral), and the collateral value when haircuts double and triple and market values fall 5%, against what the netting set's CSA requires (net MTM less the counterparty's threshold): the shortfall a stress would leave. | quant: `hhi`; reads: get |
 | **Collateralised exposure by Monte Carlo: threshold, MTA and MPoR** · `collateral_mpor_mc.py` | `netting-set` (`NSET NS-ALDERSHOT-NY`) | A Monte Carlo of the netting set's value as a driftless Brownian motion whose volatility is read from the exposure engine's uncollateralised 1Y expected exposure (EE = sigma sqrt(t / 2 pi); exposure-result, computed from the paths), with daily margining under the CSA: the collateral follows the value less the threshold, moves only above the minimum transfer amount, and lags by the margin period of risk. EE and PFE 95% with and without collateral by tenor (2,000 paths, a fixed seed). A teaching model, not the engine's. | quant: `tenor_years`; reads: get |
 | **Exposure concentration: HHI by name, sector, rating and country** · `concentration_hhi.py` | `credit-limit`, `counterparty-group`, `counterparty` (`LIM LIM-SUMMIT`) | Every counterparty's peak PFE 95% (the exposure engine's exposure-result at CPTY:<id>, computed from the paths; counterparties the run does not cover are left out) as the exposure measure: the Herfindahl-Hirschman index by counterparty, sector, rating and country (and the equivalent number of equal names, 1/HHI), the top five names' share, expected loss as PD x LGD 60% x peak PFE from each counterparty's one-year PD, and exposure by rating grade. Peak PFE overstates expected exposure; it is the limit measure. | quant: `hhi`; reads: search, get |
 | **CVA from the computed exposure profile and the counterparty's spread** · `cva_from_ee.py` | `netting-set`, `exposure-result`, `cva` (`NSET NS-ALDERSHOT-NY`) | Unilateral CVA approximated as (1 - R) x sum of EE x discount factor x marginal default probability over the profile's periods, the EE being the exposure engine's (exposure-result of the netting set, computed from the paths): default probabilities from the counterparty's CDS curve when there is one (term hazards as forward hazards) or else from its one-year PD as a flat hazard; discounting on the USD OIS curve; CVA by period, its CS01 for a 1 bp spread bump, beside the stored CVA. EE at each period's end and no wrong-way risk: a simplification. | quant: `ZeroCurve`, `cva_from_profile`, `forward_hazards`, `tenor_years`; reads: get |
 | **Exposure profile: EPE, effective EE and EEPE, checked** · `exposure_profile_stats.py` | `exposure-result` (`EXP NSET:NS-ALDERSHOT-FRA`) | From the exposure engine's profile of a scope (exposure-result, computed from the paths): expected exposure (EE), negative exposure and PFE at 95% and 99% by primary date; EPE (the time-weighted average of EE over the first year, or the scope's longest maturity when shorter), effective EE (EE never allowed to fall, the Basel rule) and effective EPE recomputed step by step and set beside the engine's own figures, the peak PFE and its date, and the profile drawn. | numpy, pandas |
 | **Credit limit utilisation heatmap** · `limit_heatmap.py` | `credit-limit`, `counterparty` (`LIM LIM-SUMMIT`) | Every credit limit read in full: utilisation by counterparty and tenor bucket as a table and a heatmap (matplotlib), the buckets in breach (100% or more) or early warning (80% or more), headroom by bucket, and where this limit stands; limits sorted by their worst bucket. | matplotlib; reads: search, get |
-| **Margin calls: status, disputes and ageing** · `margin_calls.py` | `margin-call`, `netting-set`, `csa` (`MC MC-SUMMIT-NY-1`) | Every margin call in one search: by status, direction and margin type, the amounts called and disputed and the dispute rate, the calls still open with their age in days, the largest disputes, and this netting set's calls; a bar of called and disputed amounts by netting set. | reads: search |
+| **Margin calls: status, disputes and ageing** · `margin_calls.py` | [`margin-call`](../contracts/samples/counterparty-risk.md#margin-call) ([contract](../contracts/packs/counterparty-risk.md#mc-margin-call-margin-call)), `netting-set`, `csa` (`MC MC-SUMMIT-NY-1`) | Every margin call in one search: by status, direction and margin type, the amounts called and disputed and the dispute rate, the calls still open with their age in days, the largest disputes, and this netting set's calls; a bar of called and disputed amounts by netting set. | reads: search |
 | **MTM concentration by product and netting set** · `mtm_concentration.py` | `netting-set`, `counterparty` (`NSET NS-MERIDIAN-RE-NY`) | The counterparty's trades from drishti.search_async(): MTM by product and by netting set, each one's share of gross MTM, and a Herfindahl index of how concentrated it is. | reads: search |
 | **Netting benefit and collateral under the CSA** · `netting_collateral.py` | `netting-set` (`NSET NS-HALCYON-NY`) | The netting set's trades: positive and negative MTM, net MTM, the netting benefit and the net-to-gross ratio; then the CSA's terms (thresholds, minimum transfer amount, independent amount) turned into the collateral either side should hold, the call due today against what is held, and the exposure left after netting and collateral. Uses the trades shown on the netting set (the largest, when it lists only some). | reads: get |
-| **SA-CCR exposure at default, recomputed** · `saccr_recompute.py` | `sa-ccr` (`SACCR SACCR-SUMMIT-NY`) | The SA-CCR calculation rebuilt from its parts: each hedging set's add-on as supervisory factor x effective notional, summed by asset class (no correlation inside a hedging set, a simplification for commodities and equities), the PFE multiplier min(1, 5% + 95% exp((V - C) / (2 x 95% x AddOn))), and EAD = alpha x (RC + multiplier x AddOn), set beside the engine's figures; the add-on by asset class drawn. | reads: get |
+| **SA-CCR exposure at default, recomputed** · `saccr_recompute.py` | [`sa-ccr`](../contracts/samples/counterparty-risk.md#sa-ccr) ([contract](../contracts/packs/counterparty-risk.md#saccr-sa-ccr-exposure-sa-ccr)) (`SACCR SACCR-SUMMIT-NY`) | The SA-CCR calculation rebuilt from its parts: each hedging set's add-on as supervisory factor x effective notional, summed by asset class (no correlation inside a hedging set, a simplification for commodities and equities), the PFE multiplier min(1, 5% + 95% exp((V - C) / (2 x 95% x AddOn))), and EAD = alpha x (RC + multiplier x AddOn), set beside the engine's figures; the add-on by asset class drawn. | reads: get |
 | **SIMM: initial margin across risk classes** · `simm_aggregation.py` | `simm` (`SIMM SIMM-SUMMIT`) | The SIMM result's initial margin by risk class, the simple sum against the reported total, the total aggregated across risk classes with a correlation matrix in the shape of ISDA SIMM's (illustrative values: use the published table of the version in force), the single flat correlation the reported total implies, the diversification benefit, and margin posted against received. | pandas |
 | **Wrong-way risk flags on a counterparty's trades** · `wrong_way_flags.py` | `counterparty`, `netting-set` (`CPTY CP-SOLARIS`) | Every trade with the counterparty (search, then each trade): specific wrong-way risk where the trade references the counterparty itself or its group (as issuer, underlying or reference entity), general wrong-way risk where the reference issuer shares its sector or country, and protection sold or equity sold on names that move with it; flagged trades with their MTM, and the share of positive MTM they carry. Heuristic flags from reference data, not a model. | reads: search, get |
 
@@ -3598,12 +3584,12 @@ warm run 6 to 830 ms (median 39 ms; 64 of 87 runs under 100 ms; the slowest read
 |---|---|---|---|
 | **Bond yield, duration, convexity and Z-spread** · `bond_analytics.py` | `bond` (`BND BND-GBGRAN031444`) | The bond's yield to maturity solved from its clean price (street convention, bullet, coupons on a regular schedule back from maturity), Macaulay and modified duration, convexity and DV01 per 1m face, set beside the security master's yield and duration, and its Z-spread over the benchmark curve (continuously compounded), beside the master's. | quant: `ZeroCurve`, `bond_cashflows`, `bond_price`, `bond_risk`, `bond_yield`, `z_spread`; reads: get |
 | **Bond P&L under yield moves: duration, convexity and full repricing** · `bond_scenarios.py` | `bond` (`BND BND-US0UST151040`) | The bond repriced at yields from -200 to +200 bp against two approximations, duration alone and duration with convexity, with the error of each; and the 1-year horizon return (coupon carry plus price change) under each move, the breakeven yield rise that wipes out a year's carry. | quant: `bond_price`, `bond_risk`, `bond_yield` |
-| **Cap prices from the normal-vol surface** · `cap_pricer.py` | `cap-vol-surface` (`CPV CPV-USD`) | Caps of 1Y to 10Y priced as strips of quarterly caplets with the Bachelier formula: forwards from the currency's projection curve, discounting on its OIS curve, each cap at its own flat normal vol from the surface (ATM at the cap's par rate, and the fixed strikes k2 to k5 read as 2% to 5%); premium in bp of notional and per 100m. Flat cap vols, not stripped caplet vols: a simplification. | quant: `ZeroCurve`, `bachelier`, `tenor_years`; reads: get |
-| **CDS par spreads, risky annuity and upfront** · `cds_pricer.py` | `credit-curve` (`CDS CDS-GRANITE`) | Standard CDS of 1Y to 10Y priced on the curve's hazards (term hazards turned into piecewise-flat forward hazards), discounted on the currency's OIS curve: protection and premium legs (quarterly, accrual on default as half a period), RPV01, par spread against the quote, the upfront for a 100 bp (or 500 bp) coupon, and CS01 per 10m from a 1 bp spread bump (hazards moved by the credit triangle). | quant: `ZeroCurve`, `forward_hazards`, `survival`, `tenor_years`; reads: get |
-| **Futures curve: contango, backwardation and roll yield** · `cmd_curve_roll.py` | `commodity-curve` (`CMDC CMDC-WTI`) | The futures strip by contract month: each month's spread to the next and to the front, the annualised roll yield ln(F1/F2)/(T2 - T1) that a long position earns (backwardation) or pays (contango) rolling forward, the 12-month carry, and the curve drawn with open interest beneath it. | quant: `month_code_years`; matplotlib |
-| **Black-76 options on each futures month** · `cmd_options_b76.py` | `commodity-vol-surface` (`CMDV CMDV-WTI`) | For every contract month on the commodity vol surface: the future from the commodity curve, Black-76 prices of the ATM straddle and of 90% puts and 110% calls at the surface's vols, the Greeks (delta, gamma, vega per vol point, theta per day) per contract, and the skew; discounting at the USD OIS curve. Options are taken to expire at the middle of the contract month, a simplification. | quant: `ZeroCurve`, `black76`, `black76_greeks`, `month_code_years`; reads: get |
+| **Cap prices from the normal-vol surface** · `cap_pricer.py` | [`cap-vol-surface`](../contracts/samples/market-data.md#cap-vol-surface) ([contract](../contracts/packs/market-data.md#cpv-capfloor-volatility-surface-cap-vol-surface)) (`CPV CPV-USD`) | Caps of 1Y to 10Y priced as strips of quarterly caplets with the Bachelier formula: forwards from the currency's projection curve, discounting on its OIS curve, each cap at its own flat normal vol from the surface (ATM at the cap's par rate, and the fixed strikes k2 to k5 read as 2% to 5%); premium in bp of notional and per 100m. Flat cap vols, not stripped caplet vols: a simplification. | quant: `ZeroCurve`, `bachelier`, `tenor_years`; reads: get |
+| **CDS par spreads, risky annuity and upfront** · `cds_pricer.py` | [`credit-curve`](../contracts/samples/market-data.md#credit-curve) ([contract](../contracts/packs/market-data.md#cds-credit-curve-credit-curve)) (`CDS CDS-GRANITE`) | Standard CDS of 1Y to 10Y priced on the curve's hazards (term hazards turned into piecewise-flat forward hazards), discounted on the currency's OIS curve: protection and premium legs (quarterly, accrual on default as half a period), RPV01, par spread against the quote, the upfront for a 100 bp (or 500 bp) coupon, and CS01 per 10m from a 1 bp spread bump (hazards moved by the credit triangle). | quant: `ZeroCurve`, `forward_hazards`, `survival`, `tenor_years`; reads: get |
+| **Futures curve: contango, backwardation and roll yield** · `cmd_curve_roll.py` | [`commodity-curve`](../contracts/samples/market-data.md#commodity-curve) ([contract](../contracts/packs/market-data.md#cmdc-commodity-forward-curve-commodity-curve)) (`CMDC CMDC-WTI`) | The futures strip by contract month: each month's spread to the next and to the front, the annualised roll yield ln(F1/F2)/(T2 - T1) that a long position earns (backwardation) or pays (contango) rolling forward, the 12-month carry, and the curve drawn with open interest beneath it. | quant: `month_code_years`; matplotlib |
+| **Black-76 options on each futures month** · `cmd_options_b76.py` | [`commodity-vol-surface`](../contracts/samples/market-data.md#commodity-vol-surface) ([contract](../contracts/packs/market-data.md#cmdv-commodity-volatility-surface-commodity-vol-surface)) (`CMDV CMDV-WTI`) | For every contract month on the commodity vol surface: the future from the commodity curve, Black-76 prices of the ATM straddle and of 90% puts and 110% calls at the surface's vols, the Greeks (delta, gamma, vega per vol point, theta per day) per contract, and the skew; discounting at the USD OIS curve. Options are taken to expire at the middle of the contract month, a simplification. | quant: `ZeroCurve`, `black76`, `black76_greeks`, `month_code_years`; reads: get |
 | **Hazard rates, survival and default probabilities** · `credit_hazard.py` | `credit-curve` (`CDS CDS-GRANITE`) | From the CDS spreads: hazard rates by the credit triangle (spread over one minus recovery, an approximation) beside the curve's term hazards, the forward (piecewise-flat) hazards between tenors, survival probabilities, and cumulative, period and conditional default probabilities, year by year. | quant: `forward_hazards`, `hazard_from_spread`, `survival`, `tenor_years`; matplotlib |
-| **Carry and roll-down of receivers** · `curve_carry_roll.py` | `ir-curve` (`CRV CRV-USD-OIS`) | Three months' carry and roll-down of receiving par swaps along the curve, in bp and per 100m, and per unit of DV01: carry is the fixed rate against the 3M forward it is funded at, roll-down the fall in par rate as the swap ages on an unchanged curve. A simplified, curve-only view (no fixing, no bid-offer). | quant: `ZeroCurve`, `annuity`, `par_swap_rate` |
+| **Carry and roll-down of receivers** · `curve_carry_roll.py` | [`ir-curve`](../contracts/samples/market-data.md#ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)) (`CRV CRV-USD-OIS`) | Three months' carry and roll-down of receiving par swaps along the curve, in bp and per 100m, and per unit of DV01: carry is the fixed rate against the 3M forward it is funded at, roll-down the fall in par rate as the swap ages on an unchanged curve. A simplified, curve-only view (no fixing, no bid-offer). | quant: `ZeroCurve`, `annuity`, `par_swap_rate` |
 | **OIS curves across currencies, and swap spreads** · `curve_compare_ccy.py` | `ir-curve` (`CRV CRV-EUR-OIS`) | Every OIS discount curve (drishti.search_async, then each curve's pillars): 2Y, 5Y, 10Y and 30Y zero rates, 2s10s and 5s30s in bp, drawn together; and for this curve's currency, the OIS curve against the government curve (the swap spread by tenor). | quant: `ZeroCurve`; reads: search, get |
 | **Zero, discount and forward curves** · `curve_forwards.py` | `ir-curve` (`CRV CRV-USD-OIS`) | From the curve's pillars: discount factors, 3M simple forwards and 1Y forwards on a quarterly grid under log-linear interpolation of discount factors (flat forwards between pillars), set beside the curve's own forwards. | quant: `ZeroCurve`, `tenor_years`; matplotlib |
 | **Key-rate DV01 by bump and reprice** · `curve_key_rate_dv01.py` | `ir-curve` (`CRV CRV-USD-OIS`) | A 10Y receive-fixed swap at par (100m) repriced with each pillar of the curve moved 1 bp in turn (triangular key-rate bumps): DV01 by pillar, their sum against a parallel 1 bp move, and the convexity of a 25 bp move. | quant: `ZeroCurve`, `par_swap_rate`, `swap_pv`, `tenor_years` |
@@ -3612,28 +3598,28 @@ warm run 6 to 830 ms (median 39 ms; 64 of 87 runs under 100 ms; the slowest read
 | **Interpolate the curve at any tenor** · `curve_tenor.py` | `ir-curve` (`CRV CRV-USD-OIS`) | Zero rates at tenors the curve does not quote: linear on zero rates, log-linear on discount factors (how the curve is built) and a cubic spline (scipy), with a matplotlib figure. | scipy, matplotlib |
 | **Beta, correlation and return distribution against the index** · `eq_beta_returns.py` | `equity` (`EQ EQ-HLXP`) | Daily log returns of the stock and of its index from their price histories, aligned by date: an OLS regression with statsmodels (beta, alpha, R squared, the summary), the correlation, set beside the beta the security master holds, and the returns' skew, excess kurtosis and Jarque-Bera normality test (scipy). | scipy, statsmodels; reads: get |
 | **Realised volatility: close-to-close, Parkinson, Garman-Klass** · `eq_realised_vol.py` | `equity`, `commodity` (`EQ EQ-NVTK`) | Annualised realised volatility from the daily bars by three estimators (close-to-close, Parkinson's high-low, Garman-Klass's OHLC; the range estimators ignore overnight gaps), a rolling 20-day volatility, and the gap to the front implied volatility of the linked surface: the volatility risk premium. | quant: `close_to_close_vol`, `garman_klass_vol`, `parkinson_vol`; reads: get |
-| **SVI fit of the smile, expiry by expiry** · `eq_svi_fit.py` | `equity-vol-surface`, `commodity-vol-surface` (`EQV EQV-GRNT`) | A raw SVI curve (Gatheral) fitted to each expiry's total variance in log-moneyness with scipy's least squares: the five parameters, the fit error in vol points, a check of the wings against Lee's moment bound (total variance rising at most 2 per unit of log-moneyness), and the fitted smiles drawn over the quotes. Spot moneyness is used as forward moneyness, a simplification. | quant: `month_code_years`, `svi_total_variance`, `tenor_years`; scipy, matplotlib |
+| **SVI fit of the smile, expiry by expiry** · `eq_svi_fit.py` | [`equity-vol-surface`](../contracts/samples/market-data.md#equity-vol-surface) ([contract](../contracts/packs/market-data.md#eqv-equity-volatility-surface-equity-vol-surface)), `commodity-vol-surface` (`EQV EQV-GRNT`) | A raw SVI curve (Gatheral) fitted to each expiry's total variance in log-moneyness with scipy's least squares: the five parameters, the fit error in vol points, a check of the wings against Lee's moment bound (total variance rising at most 2 per unit of log-moneyness), and the fitted smiles drawn over the quotes. Spot moneyness is used as forward moneyness, a simplification. | quant: `month_code_years`, `svi_total_variance`, `tenor_years`; scipy, matplotlib |
 | **Equity vol surface: skew, term structure and arbitrage checks** · `eq_vol_arbitrage.py` | `equity-vol-surface` (`EQV EQV-SPX`) | The surface's smile per expiry and its ATM term structure; skew (90 less 110) and wings; a calendar check (total variance must not fall with expiry at any moneyness) and a butterfly check (undiscounted Black call prices must be convex and decreasing in strike). Moneyness is read as forward moneyness, a simplification. | quant: `black76`, `tenor_years`; matplotlib |
-| **Overnight rate compounded in arrears** · `fixing_compounding.py` | `rate-fixing` (`FIX FIX-ESTR`) | The overnight fixings compounded in arrears (each rate weighted by the calendar days it applies, ACT/360, as SOFR and ESTR swaps and the published averages do) against their simple average, the annualised compounded rate over the window, the interest on 100m, and the rate and volume drawn. | pandas |
-| **Cross rates and a triangular arbitrage check** · `fx_cross_triangle.py` | `fx-spot` (`FX FX-EURJPY`) | Every FX spot read once, each pair re-derived through USD (EUR/JPY from EUR/USD and USD/JPY, ...) and compared with its own mid in pips, and a check on bids and asks: buying through the two legs and selling the direct pair (and the reverse) must not make money. | reads: search, get |
-| **Forward points, implied yield differential and basis** · `fx_forward_points.py` | `fx-forward-curve` (`FXF FXF-EURUSD`) | Outrights from spot and forward points, the yield differential the forwards imply (ln(F/S)/T, continuously compounded) against the two currencies' OIS curves, and the gap between them: a rough cross-currency basis (it ignores spot lag, day counts and the CSA). | quant: `ZeroCurve`, `tenor_years`; reads: get |
+| **Overnight rate compounded in arrears** · `fixing_compounding.py` | [`rate-fixing`](../contracts/samples/market-data.md#rate-fixing) ([contract](../contracts/packs/market-data.md#fix-rate-index-fixings-rate-fixing)) (`FIX FIX-ESTR`) | The overnight fixings compounded in arrears (each rate weighted by the calendar days it applies, ACT/360, as SOFR and ESTR swaps and the published averages do) against their simple average, the annualised compounded rate over the window, the interest on 100m, and the rate and volume drawn. | pandas |
+| **Cross rates and a triangular arbitrage check** · `fx_cross_triangle.py` | [`fx-spot`](../contracts/samples/market-data.md#fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) (`FX FX-EURJPY`) | Every FX spot read once, each pair re-derived through USD (EUR/JPY from EUR/USD and USD/JPY, ...) and compared with its own mid in pips, and a check on bids and asks: buying through the two legs and selling the direct pair (and the reverse) must not make money. | reads: search, get |
+| **Forward points, implied yield differential and basis** · `fx_forward_points.py` | [`fx-forward-curve`](../contracts/samples/market-data.md#fx-forward-curve) ([contract](../contracts/packs/market-data.md#fxf-fx-forward-curve-fx-forward-curve)) (`FXF FXF-EURUSD`) | Outrights from spot and forward points, the yield differential the forwards imply (ln(F/S)/T, continuously compounded) against the two currencies' OIS curves, and the gap between them: a rough cross-currency basis (it ignores spot lag, day counts and the CSA). | quant: `ZeroCurve`, `tenor_years`; reads: get |
 | **FX correlations and principal components** · `fx_pca.py` | `fx-spot` (`FX FX-EURUSD`) | Daily log returns of every currency against USD from the spot rates' price history, their correlation matrix (a heatmap), and a principal component analysis with numpy: how much the first component (the dollar factor) explains, each currency's loadings, and this pair's realised volatility. | matplotlib; reads: search, get |
-| **FX smile: strikes from deltas, RR and BF checks** · `fx_smile.py` | `fx-vol-surface` (`FXV FXV-USDJPY`) | Each expiry's 10 and 25 delta vols turned into strikes (spot delta, premium unadjusted, Garman-Kohlhagen) with forwards from the forward curve and rates from the OIS curves, the quoted 25D risk reversal and butterfly checked against the vols, the ATM term structure and a calendar check on total variance; the smiles drawn against strike. | quant: `ZeroCurve`, `fx_strike_from_delta`, `tenor_years`; matplotlib; reads: get |
+| **FX smile: strikes from deltas, RR and BF checks** · `fx_smile.py` | [`fx-vol-surface`](../contracts/samples/market-data.md#fx-vol-surface) ([contract](../contracts/packs/market-data.md#fxv-fx-volatility-surface-fx-vol-surface)) (`FXV FXV-USDJPY`) | Each expiry's 10 and 25 delta vols turned into strikes (spot delta, premium unadjusted, Garman-Kohlhagen) with forwards from the forward curve and rates from the OIS curves, the quoted 25D risk reversal and butterfly checked against the vols, the ATM term structure and a calendar check on total variance; the smiles drawn against strike. | quant: `ZeroCurve`, `fx_strike_from_delta`, `tenor_years`; matplotlib; reads: get |
 | **Price straddles, risk reversals and strangles on the surface** · `fx_vanilla_pricer.py` | `fx-vol-surface` (`FXV FXV-EURUSD`) | Garman-Kohlhagen premiums and Greeks, per expiry, of the ATM straddle, the 25 delta risk reversal and the 25 delta strangle on 10m of the base currency, at the surface's vols, with forwards from the forward curve and the quote currency's OIS rate: premium in quote currency, in pips and in % of base notional; delta, vega per vol point. | quant: `ZeroCurve`, `fx_strike_from_delta`, `gk_greeks`, `tenor_years`; reads: get |
-| **Breakevens, forward inflation and real rates** · `inflation_breakeven.py` | `inflation-curve` (`INFC INFC-USCPI`) | The inflation curve's zero-coupon breakevens by tenor, forward breakevens between tenors (the 5y5y and its kin, from compounded breakevens), real rates as the currency's OIS zero rate less the breakeven (Fisher, ignoring the risk premium and convexity), the latest index fixings' year-on-year rate, and the seasonality the curve applies by month. | quant: `ZeroCurve`, `tenor_years`; reads: get |
-| **Drawdown, worst days and the return histogram** · `price_drawdown.py` | `equity`, `equity-index`, `commodity`, `bond`, `fx-spot` (`EQX EQX-SPX`) | From the closes the view holds (daily bars, or the price history): cumulative return, the running drawdown from the high, the largest peak-to-trough fall and whether it has recovered, the five worst and best days, and a histogram of daily returns with the normal density of the same mean and volatility (matplotlib). | quant: `max_drawdown`, `norm_pdf`; matplotlib |
-| **Swaption premiums from the normal-vol grid** · `swaption_cube.py` | `ir-vol-cube` (`IRV IRV-EUR`) | ATM payer swaptions for every expiry and swap tenor of the cube: the forward swap rate and its annuity from the currency's OIS curve (single-curve, annual fixed leg), the Bachelier premium at the grid's normal vol, in bp of notional and per 100m, and vega per bp of vol; the vol grid as a heatmap. | quant: `ZeroCurve`, `annuity`, `bachelier`, `norm_pdf`, `par_swap_rate`, `tenor_years`; matplotlib; reads: get |
+| **Breakevens, forward inflation and real rates** · `inflation_breakeven.py` | [`inflation-curve`](../contracts/samples/market-data.md#inflation-curve) ([contract](../contracts/packs/market-data.md#infc-inflation-curve-inflation-curve)) (`INFC INFC-USCPI`) | The inflation curve's zero-coupon breakevens by tenor, forward breakevens between tenors (the 5y5y and its kin, from compounded breakevens), real rates as the currency's OIS zero rate less the breakeven (Fisher, ignoring the risk premium and convexity), the latest index fixings' year-on-year rate, and the seasonality the curve applies by month. | quant: `ZeroCurve`, `tenor_years`; reads: get |
+| **Drawdown, worst days and the return histogram** · `price_drawdown.py` | `equity`, [`equity-index`](../contracts/samples/market-data.md#equity-index) ([contract](../contracts/packs/market-data.md#eqx-equity-index-equity-index)), `commodity`, `bond`, `fx-spot` (`EQX EQX-SPX`) | From the closes the view holds (daily bars, or the price history): cumulative return, the running drawdown from the high, the largest peak-to-trough fall and whether it has recovered, the five worst and best days, and a histogram of daily returns with the normal density of the same mean and volatility (matplotlib). | quant: `max_drawdown`, `norm_pdf`; matplotlib |
+| **Swaption premiums from the normal-vol grid** · `swaption_cube.py` | [`ir-vol-cube`](../contracts/samples/market-data.md#ir-vol-cube) ([contract](../contracts/packs/market-data.md#irv-swaption-volatility-cube-ir-vol-cube)) (`IRV IRV-EUR`) | ATM payer swaptions for every expiry and swap tenor of the cube: the forward swap rate and its annuity from the currency's OIS curve (single-curve, annual fixed leg), the Bachelier premium at the grid's normal vol, in bp of notional and per 100m, and vega per bp of vol; the vol grid as a heatmap. | quant: `ZeroCurve`, `annuity`, `bachelier`, `norm_pdf`, `par_swap_rate`, `tenor_years`; matplotlib; reads: get |
 
 #### `market-risk` (6)
 
 | Snippet · file | On | Computes | Method |
 |---|---|---|---|
-| **FRTB GIRR delta charge from the book's trades (simplified SBM)** · `frtb_girr_delta.py` | `frtb-sensitivity`, `book` (`FRTB FRTB-RATES-1`) | The sensitivities-based method for interest-rate delta, built bottom-up: every trade of the book read, DV01 by tenor bucket summed by currency (a GIRR bucket is a currency), weighted by the Basel tenor risk weights, aggregated within each currency with the tenor correlation max(exp(-3% /Tk - Tl/ / min(Tk, Tl)), 40%) and across currencies at 50%, under the low, medium and high correlation scenarios. Simplified: one curve per currency, no basis or inflation risk factors, no reduced weights for major currencies. | quant: `frtb_across_buckets`, `frtb_bucket_charge`, `tenor_years`; reads: search, get |
+| **FRTB GIRR delta charge from the book's trades (simplified SBM)** · `frtb_girr_delta.py` | [`frtb-sensitivity`](../contracts/samples/market-risk.md#frtb-sensitivity) ([contract](../contracts/packs/market-risk.md#frtb-frtb-sensitivities-frtb-sensitivity)), `book` (`FRTB FRTB-RATES-1`) | The sensitivities-based method for interest-rate delta, built bottom-up: every trade of the book read, DV01 by tenor bucket summed by currency (a GIRR bucket is a currency), weighted by the Basel tenor risk weights, aggregated within each currency with the tenor correlation max(exp(-3% /Tk - Tl/ / min(Tk, Tl)), 40%) and across currencies at 50%, under the low, medium and high correlation scenarios. Simplified: one curve per currency, no basis or inflation risk factors, no reduced weights for major currencies. | quant: `frtb_across_buckets`, `frtb_bucket_charge`, `tenor_years`; reads: search, get |
 | **FRTB charges across books: delta, vega, curvature** · `frtb_overview.py` | `frtb-sensitivity` (`FRTB FRTB-FX-1`) | Every book's FRTB standardised result (one search, then each document): delta, vega and curvature charges and the total by book and by risk class, each component's share, a check that the three components add up to the total, and the books ranked by charge with this one marked. | reads: search, get |
-| **P&L attribution by factor across books and desks** · `pnl_attribution_mix.py` | `pnl-explain` (`PNL PNL-EQD-1`) | Every book's P&L attribution read in full and pivoted: factor by book, and summed by desk (the desk taken from each book's own record), with totals; each factor's share of the absolute explained P&L, and the desks' factor mix as a heatmap (matplotlib). | matplotlib; reads: search, get |
+| **P&L attribution by factor across books and desks** · `pnl_attribution_mix.py` | [`pnl-explain`](../contracts/samples/market-risk.md#pnl-explain) ([contract](../contracts/packs/market-risk.md#pnl-pl-explain-pnl-explain)) (`PNL PNL-EQD-1`) | Every book's P&L attribution read in full and pivoted: factor by book, and summed by desk (the desk taken from each book's own record), with totals; each factor's share of the absolute explained P&L, and the desks' factor mix as a heatmap (matplotlib). | matplotlib; reads: search, get |
 | **P&L explain quality across books** · `pnl_explain_quality.py` | `pnl-explain` (`PNL PNL-RATES-1`) | This book's explain as steps (carry, roll-down, deltas, vega, theta, new trades, unexplained) and every book's explain from one search: the unexplained P&L as a share of actual, books over a 10% threshold flagged, and actual against explained P&L as a scatter. A day's snapshot; FRTB's P&L attribution test runs on a year of daily figures. | reads: search |
-| **Stress scenario P&L rebuilt from trade sensitivities** · `stress_from_sensitivities.py` | `stress-scenario` (`SCN SCN-GFC2008`) | The scenario's rate shocks applied to every trade's DV01 from the risk engine's trade valuations (one search over TVAL, every source system): a currency's rate move times the DV01 of the trades in that currency, and a 2Y/10Y twist interpolated by MATURITY_DATE; by desk and by source system, beside the engine's stress results. A trade valuation carries MTM, PNL_1D and DV01 only, so the scenario's other factors (spreads, equities, commodities, FX, vol) are listed as not rebuilt; first order, no convexity, cross effects or basis. | reads: search |
-| **Stress results: scenarios by desk, limits and the worst case** · `stress_heatmap.py` | `stress-result`, `stress-scenario` (`STR STR-GFC2008-RATES`) | Every stress result in one search, pivoted scenario by desk with totals; each desk's worst scenario and its use of the stress limit (results read in full for their limits), the scenarios ranked by firm-wide loss, and a heatmap of the matrix (matplotlib). | matplotlib; reads: search, get |
+| **Stress scenario P&L rebuilt from trade sensitivities** · `stress_from_sensitivities.py` | [`stress-scenario`](../contracts/samples/market-risk.md#stress-scenario) ([contract](../contracts/packs/market-risk.md#scn-stress-scenario-stress-scenario)) (`SCN SCN-GFC2008`) | The scenario's rate shocks applied to every trade's DV01 from the risk engine's trade valuations (one search over TVAL, every source system): a currency's rate move times the DV01 of the trades in that currency, and a 2Y/10Y twist interpolated by MATURITY_DATE; by desk and by source system, beside the engine's stress results. A trade valuation carries MTM, PNL_1D and DV01 only, so the scenario's other factors (spreads, equities, commodities, FX, vol) are listed as not rebuilt; first order, no convexity, cross effects or basis. | reads: search |
+| **Stress results: scenarios by desk, limits and the worst case** · `stress_heatmap.py` | [`stress-result`](../contracts/samples/market-risk.md#stress-result) ([contract](../contracts/packs/market-risk.md#str-stress-result-stress-result)), `stress-scenario` (`STR STR-GFC2008-RATES`) | Every stress result in one search, pivoted scenario by desk with totals; each desk's worst scenario and its use of the stress limit (results read in full for their limits), the scenarios ranked by firm-wide loss, and a heatmap of the matrix (matplotlib). | matplotlib; reads: search, get |
 
 #### `trading` (9)
 
@@ -3699,181 +3685,7 @@ The picture is real output of that cell on the sample trades dataset: ten desks,
 
 ## The Notebook
 
-The **Notebook** (`/bi/notebook`, the BI rail's *Notebook*) is the one place for code over data. You open a model as an **extract**, the rows *you* may see
-(masked columns stay masked, row rules apply), and work on it in **SQL cells**, run by the server, and **Python cells**, run on the server's compute pool.
-You save the work as a **notebook** (a BI item with versions and review like any other) and **promote** what is good: a SQL cell becomes a **visual in a
-report draft**, a Python cell a Python Measure, Visual or Transform draft.
-
-**One analysis path: Pivot, then Report.** To slice and total a table, use the [Pivot](#pivot-slice-a-table-your-way) (`PIVOT <GO>`, or *Pivot* in the BI
-rail); to publish, share or schedule, make a BI report. The Notebook is for what a grid cannot say. **Nothing of yours runs in the console or in your
-browser**: SQL is the server's, Python the server's compute pool's. The page asks and draws. For Python in your own browser on a view's rows there is
-[Calc](#calc-python-on-any-view), a scratch pad behind a Labs switch that never publishes.
-
-The walk-through is [tutorial 14](../tutorials/14-python-and-analyse.md); the design is [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase).
-
-### 1. At a glance
-
-```
- model ──(your identity)──▶ server: masks columns, applies your row rules ──▶ extract (at most bi.notebook.max_rows rows)
-                                                                                    │
-                    ┌──────────────────────────────────────┬────────────────────────┤
-                  SQL cell                              Python cell              Profile
-   the server: Drishti SQL over the model,      the server's compute pool    every column of the extract,
-   as you (POST /bi/notebook/sql)               (POST /bi/notebook/python)   no code of yours
-```
-
-The extract is **rebuilt for you on every call** and never kept: the console holds nothing between calls, so a mask or a row rule changed on the server
-applies the next time you run a cell.
-
-### 2. The extract
-
-Choose a model (or a dataset, which reads as its own small model), tick the fields, choose the time (now, as of a date, or a window) and **Open the extract**.
-The line under the form tells you what you got: `60 rows, 8 columns.` and, when something is masked for you, `Masked for you: MTM.` The rows are the table's
-*own* rows (not grouped), cut to `bi.notebook.max_rows` (10,000); a cut says so (`60 rows of 4,000 (cut to the row limit)`). Columns are named for the table's
-column (`DESK`, not `trade.DESK`); two columns of the same name keep their table (`trade_DESK`).
-
-**More extracts.** *More extracts: join several models* (under the form) adds further extracts to the notebook, each a name, a model and fields, built for you
-by the server exactly as the first is (your row rules, your masks; `bi.notebook.max_extracts`, 6, besides the first). A Python cell reads one as
-`extract("name")`.
-
-![The notebook's extracts: the first extract opened, and the second, exposure, under More extracts](../tutorials/img/t14/13-analyse-extracts.jpg)
-
-Every extract is the reader's, so a join of two extracts shows **their** rows: a join key that the server masks for them arrives masked and the join finds
-nothing, which is the mask doing its job. Because the extract is cut, a cell over it gives the extract's totals, not the model's: for true totals use the
-Pivot or a report.
-
-### 3. SQL cells
-
-A SQL cell is **Drishti SQL over the model the extract reads** ([BI_DESIGN.md §3.4](../architecture/BI_DESIGN.md#34-drishti-sql-dsql-read-only-sql-over-models)),
-run by the server **as you**, with your row rules and masks, through the same plan as the model query it equals. Its tables are the model's aliases, a
-measure is `MEASURE('name')`, and `JOIN` needs no `ON` (the model's relationships are used). A new cell starts with a statement written from the model (the
-first text field you ticked and the model's first measure):
-
-```sql
-SELECT trade.CURRENCY,
-       MEASURE('Sum of MTM') AS "Sum of MTM"
-FROM   trade
-GROUP  BY trade.CURRENCY
-LIMIT  20
-```
-
-The cell's footer says *3 rows in 4 ms · Drishti SQL, run by the server over sql-model@1 as you · plan p_825d3a8857*, with the masked columns when there are any:
-
-![A SQL cell: the statement above, Run (Drishti SQL, run by the server over the model), and three currencies with their Sum of MTM: EUR -75000, GBP 425000, USD -575000](img/bi-languages/analyse-dsql-cell.jpg)
-
-The console sends the cell to `POST /bi/notebook/sql` (`{extract, sql}`), which asks the server's `POST /api/v1/bi/sql` with the model and the cell's row
-limit (`bi.notebook.sql_max_rows`, one more to say when it was cut); it never reads the SQL itself. One `SELECT` per cell; text over
-`bi.notebook.sql_max_chars` (20,000) is `DRS-9072`. *Run all* runs the cells in order. A notebook that names an older dataset (`file:dataset:trades-basic`)
-reads the model the converter made of it (`trades-basic@1`).
-
-### 4. Python cells
-
-A Python cell sees `df` (the extract as a pandas DataFrame), `extract(name)` (any other extract of the notebook, as a DataFrame for the same reader) and
-`params`. What it prints comes back as text; what it puts in **`result`** is drawn: a DataFrame or Series as a table, a dict as an ECharts option, SVG text or
-PNG bytes as an image, anything else as a value.
-
-```python
-g = df.groupby("DESK", as_index=False)["NOTIONAL"].sum()
-result = {"title": {"text": "Notional by desk"}, "xAxis": {"type": "category", "data": list(g["DESK"])},
-          "yAxis": {"type": "value"}, "series": [{"type": "bar", "data": [float(v) for v in g["NOTIONAL"]]}]}
-```
-
-**Where it runs: the server's compute pool** `python` (`config/compute/compute.yaml`), never the console and never your browser. **Run** sends the cell
-to the server (`POST /bi/notebook/python`), which reads the extract and the other extracts **as you** and runs the cell in its strict sandbox: no network,
-files held to its own folder, the cell's time and memory limits (`bi.notebook.cell_timeout_seconds`, `cell_memory_mb`), the pinned libraries only. The line above the output says where it ran, how long it took, how many rows it read and what was masked; what the cell printed shows first, then its `result` (a table, a chart option, an SVG or PNG picture, or a value); a failure shows the error and, as an author, your own code's traceback. Where the server cannot run Python safely (compute off, a Windows server), *Run* is off and says why; you can still write, save and promote cells. Whoever opens the notebook later runs them over their own rows.
-Running Python needs the **`bi-author`** power; SQL needs only `bi`.
-
-### 5. Notebooks
-
-**Save as a notebook** stores the extract's definition and every cell as a BI item of kind **`notebook`**: in *My workspace* (or, if you opened a notebook
-you may edit, as a new version of it). It has versions, diffs, review and publishing like any item ([BI_GUIDE.md](BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments));
-*Open in the Notebook* on the item page (or `/bi/notebook?item=<id>`, or the notebook picker) reopens it: the extract is rebuilt for whoever opens it, so
-**a notebook shared with someone else shows *their* rows**. Outputs are not stored, only the code.
-
-The body is YAML, checked by `POST /bi/notebook/check` (unknown keys and bad cells are `DRS-9070`, naming the cell):
-
-```yaml
-rachana: 1
-notebook: desk-notional-first-look
-title: Desk notional, first look
-dataset: mq:trades-basic@1       # the model it reads (mq:<model>@<major>, or dataset:<name> for a dataset's implicit model)
-fields: [trade.TRADE_ID, trade.DESK, trade.PORTFOLIO, trade.NOTIONAL, trade.MTM]
-extracts:                       # optional: further extracts, read by a Python cell as extract("name")
-  - { name: exposure, dataset: mq:counterparty-exposure@1, fields: [set_exposure.COUNTERPARTY, set_exposure.PEAK_EE] }
-cells:
-  - type: sql
-    source: SELECT trade.DESK, MEASURE('Sum of MTM') FROM trade GROUP BY trade.DESK
-  - type: python
-    source: |
-      result = df.groupby("DESK", as_index=False)["NOTIONAL"].sum()
-```
-
-A cell is `sql` or `python`. A notebook saved with a `slice` cell opens with that cell left out and a line saying so: slicing is the Pivot's. A notebook may
-also carry the catalogue's keys (`sample`, `tags`, `endorsement`, `owner`, `audience`); a shipped one is
-`config/bi/notebooks/banking/pnl-vs-exposure-pandas.notebook.yaml`.
-
-### 6. Promote
-
-Every promotion answers **beside the button you pressed** (one message, with an *Open the draft* link). Pressing the same promotion again for the same cell
-does not make a duplicate: it offers **Update that draft** or **Save another**. Promoting writes a **draft** item in your workspace; nothing is published.
-
-* **A SQL cell to a report visual.** Choose where first, in the line above the tabs: **a new report draft**, or one of the report drafts you may edit (your
-  workspace and the shared ones you contribute to), and optionally the page. The cell is read by a small reader (`core/promote_report.py`), not a SQL engine:
-  plain and `GROUP BY` columns become *rows*, `MEASURE('name')` and the aggregates `sum`, `avg`, `count`, `min`, `max` of a column become *values* when the
-  model has that measure, and simple `WHERE` conditions (`=`, `<>`, `<`, `<=`, `>`, `>=`, `IN`, `NOT IN`, `BETWEEN`, `IS [NOT] NULL`, joined by `AND`) become
-  *filters*. What a report cannot say (an expression, `LIKE`, `OR`, `HAVING`, a sub-query, `ORDER BY`, `LIMIT`) is left out and listed in the notes; nothing is
-  guessed. A new report draft is `rachana: 2` reading the extract's model; an existing one is read through the server's checker, the visual is added below
-  what the page holds, and the report is written again by the designer's writer (comments in its YAML are not kept; the note says so).
-
-  ![A SQL cell promoted into an existing report draft: the note says what was left out and that the report was written again](../tutorials/img/t14/20-promote-existing.jpg)
-
-* **A Python cell to a Measure or a Visual** (the cell's buttons): the cell's `df` becomes the function's `table`, `result` is returned, and the packages the
-  cell imports go into the manifest ([BI_GUIDE.md](BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 3). Check it on the
-  item page, then publish.
-* **A Python cell that joins extracts to a Transform** (*Promote to a Transform*, greyed with "Add a second extract first" until the notebook has one): each
-  `extract("name")` becomes a parameter of `run(...)`, a use of `df` becomes the first extract, and the cell's `result` is returned.
-
-The route is the console's `POST /bi/notebook/promote` with `{to: report, name, dataset, sql, columns, qualified, target?, page?}` or
-`{to: measure | visual | transform, name, source, columns, extracts?}`.
-
-### 7. Profile
-
-The **Profile** tab shows every column of the extract: its type, what its text looks like (numbers or dates kept as text), empty values (count and %), distinct
-values, whether it could be a key, min and max (and the mean of a number), the five most common values and a histogram of a number. No code of yours runs
-(`POST /bi/notebook/profile` with `{extract}`), and it is drawn by the same panel as the [Transform editor](BI_GUIDE.md#175-profiling)'s. A column masked for
-you says so and profiles as empty.
-
-![The Notebook, Profile tab: the extract of the model prep-model as the analyst ann sees it, PRICE masked for her](img/bi-transform/07-analyse-profile.png)
-
-### 8. Who sees what
-
-The server decides, as everywhere in BI: the extract is a model query, `POST /api/v1/bi/mq`, **as you**, so the same column masks and row rules as a report
-apply, and a masked column arrives empty. A SQL cell is answered by the server as you; a Python cell will run on the pool over the extract built for you. A
-cell cannot widen access, and a saved notebook holds code, not data.
-
-### 9. Settings, errors and routes
-
-The console's `bi.notebook.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md)):
-
-| Setting | Default | Meaning |
-|---|---|---|
-| `max_rows` (`DRISHTI_BI_NOTEBOOK_MAX_ROWS`) | `10000` | most rows of an extract; 10 to 100,000 |
-| `max_fields` | `60` | most columns of an extract |
-| `sql_max_rows`, `sql_max_chars` | `5000`, `20000` | a SQL cell's limits |
-| `cell_timeout_seconds`, `cell_memory_mb`, `cell_max_chars` | `20`, `512`, `65536` | a Python cell's limits |
-| `max_cells` | `60` | most cells in a notebook |
-| `max_extracts` | `6` | most further extracts in a notebook, besides the first (`DRS-9072`) |
-
-**The packages a Python cell may import** are the server's `drishti.bi.report.python-packages` that `config/compute/locks/python.lock` pins (a test holds the two together); a cell runs on the server's compute pool, as the person running it ([BI_GUIDE.md section 34](BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python)).
-
-| Code | HTTP | In the Notebook |
-|---|---|---|
-| `DRS-9070` | 422 | the request is wrong (no fields, a bad name, a notebook that does not check, a SQL syntax error, a slice sent to promote) |
-| `DRS-9072` | 413 | a limit: SQL text, cell size, extract fields or extracts |
-| `DRS-9073` | 403 | refused: Python without `bi-author` |
-| `DRS-9074` | 503 | the console lacks `pyarrow` |
-
-The server's own refusals (`DRS-9001` no such dataset, a denied model) come through unchanged. The routes are the console's own, JSON from its pages only
-(same-origin, the session cookie): `GET /bi/notebook`, `GET /bi/notebook/status`, `POST /bi/notebook/extract`, `POST /bi/notebook/sql`,
-`POST /bi/notebook/profile`, `POST /bi/notebook/check`, `POST /bi/notebook/promote`. The older addresses `/bi/explore` (Analyse) and `/pyconsole` open the
-Notebook.
+The **Notebook** (`/bi/notebook`, the BI rail's *Notebook*) is the one place for code over data: SQL cells run by the server and Python cells
+run on the server's compute pool, over an extract of the rows you may see. Everything about it (extracts, cells, saving, promoting, the profile,
+limits and errors) is in [NOTEBOOK_GUIDE.md](NOTEBOOK_GUIDE.md#2-the-notebook), with Python measures, visuals and data prep; the walk-through is
+[tutorial 9](../tutorials/09-notebook-and-python.md). For Python in your own browser on a view's rows, see [Calc](#calc-python-on-any-view).

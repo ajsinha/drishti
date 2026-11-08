@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""SOAK-05: every server launcher Drishti ships sets the native memory settings PERFORMANCE.md (*Resident memory*) recommends:
+"""SOAK-05: every server launcher Drishti ships sets the native memory settings CLUSTER_GUIDE.md (*Resident memory*) recommends:
 MALLOC_ARENA_MAX=2 (glibc only, so not on Windows), -XX:MaxDirectMemorySize=256m, -XX:TrimNativeHeapInterval=60000,
 -Djdk.nio.maxCachedBufferSize=262144 (the 2.9.6 direct-memory exhaustion) and -XX:NativeMemoryTracking=summary; the production
 launchers also dump the heap on OutOfMemoryError and keep a rotated GC log; every lake loader caps the cached buffers too; and the JVM

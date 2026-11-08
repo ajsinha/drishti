@@ -70,7 +70,7 @@ may still change before it ships, and the document records each change.
 | [GRP.md](GRP.md) | GRP (`counterparty-group`): members kept, usage computed | PARKED (design kept) |
 | [CVA.md](CVA.md) | CVA (`cva`) | PARKED (design kept) |
 | [WWR.md](WWR.md) | wrong-way risk (new) | PARKED (design kept) |
-| [PACK_DEVELOPER_GUIDE.md Part II](../guides/GROUPINGS_ANALYTICS_GUIDE.md#10-the-contract-at-a-glance) | LEIG, LEIC, SIC, ECG (`lei-group`, `lei-country`, `sic-sector`, `country-group`: stored pages retired, computed under the same kinds), CORR (`correlation-result`; the sets keep their factors), USEQ ratios, PXH analytics | BUILT (2026-10-26; Track B) |
+| [BUILD_GUIDE.md Part II](../guides/GROUPINGS_ANALYTICS_GUIDE.md#10-the-contract-at-a-glance) | LEIG, LEIC, SIC, ECG (`lei-group`, `lei-country`, `sic-sector`, `country-group`: stored pages retired, computed under the same kinds), CORR (`correlation-result`; the sets keep their factors), USEQ ratios, PXH analytics | BUILT (2026-10-26; Track B) |
 | `CONCENTRATION.md` | large exposures (new); the OSFI report once its template is supplied | PARKED (not written) |
 | `LIQUIDITY.md` | LCR, NSFR, NCCF, cash-flow gaps (new) | PARKED (not written) |
 | `IRRBB.md` | ΔEVE, ΔNII (new) | PARKED (not written) |
@@ -105,7 +105,7 @@ ${DRISHTI_DELTA_ROOT}                         default ${drishti.data.dir}/delta
   or by any Delta writer that follows the contract.
 - **The masters stay where they are:** trades, counterparties, books, market data and GLEIF entities. Each is read through its own pack's
   connector, by id ([section 4](#4-shared-keys)). The risk lake holds only measure inputs and the hierarchies and portfolios that scope them.
-- **The same layout on every storage:** a local disk, a shared file system, or S3 ([CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-c-a-high-performance-delta-lake-on-aws-past-200-tb));
+- **The same layout on every storage:** a local disk, a shared file system, or S3 ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#13-the-delta-lake-in-s3-at-scale));
   Iceberg instead of Delta per table ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine)).
 - **Test data:** follows the repository's pattern: `data/testdata/market-risk/<kind>/*.jsonl.gz` (one file per business date), listed in
   `data/testdata/testdata.yaml`, built into the lake by `drishti.py lake demo`. Each contract's generator is named in its section 13.
@@ -151,7 +151,7 @@ Every table in the risk lake joins to the masters and to each other through thes
 
 ## 5. Types, names and encodings
 
-- **Column names:** `UPPER_SNAKE`, as the trades use ([production-shaped trades](../connectors/DEMO_DATA.md)). Nested objects keep the
+- **Column names:** `UPPER_SNAKE`, as the trades use ([production-shaped trades](../guides/DATA_GUIDE.md#11-the-demo-data)). Nested objects keep the
   same style (`LEGS[].NOTIONAL`).
 - **Types:** JSON in the test data, Delta types in the lake:
 
@@ -177,7 +177,7 @@ Every table in the risk lake joins to the masters and to each other through thes
 - **Every input row carries `BUSINESS_DATE`.** A table holds many business dates; the engines read one date at a time (the request's
   as-of, else the newest date present).
 - **A business date is replaced as a whole.** Writing a date again (a rerun, a restatement) replaces every row of that date in that
-  table, never a part of it (`lake build` replaces a day: [TOOLS.md section 4.4](../guides/TOOLS.md#44-re-running-a-day-replaces-that-day-only)).
+  table, never a part of it (`lake build` replaces a day: [CLI_REFERENCE.md section 4.4](../guides/CLI_REFERENCE.md#74-re-running-a-day-replaces-that-day-only)).
   The previous version stays readable through Delta time travel ("as known at").
 - **As-of on the screen and in the API:** `asOf=YYYY-MM-DD` selects the business date; a date later than the newest present reads the
   newest. "As known at" (`knownAt=`) reads a table version as it stood at that time, for audit.
@@ -244,7 +244,7 @@ Every contract lists its own checks in its section 10. These hold for all:
 | One run per date | Rows of one date with different `BATCH_ID`s, or a vector table whose `SCENARIO_SET_ID` differs from the scenario set's: the date is not loaded, and the engine answers the previous date with a warning |
 | Completeness | Fewer rows than the contract's expectation (for example, fewer live trades valued than live trades booked): the load is `ready` but the date shows "incomplete" with the count missing |
 
-Errors use the platform's DRS codes ([API_GUIDE.md](../guides/API_GUIDE.md#error-code-table)). Each contract lists the codes its
+Errors use the platform's DRS codes ([API_REFERENCE.md](../guides/API_REFERENCE.md#error-code-table)). Each contract lists the codes its
 engine answers.
 
 ## 11. What Drishti answers: computed kinds, the API, captures
@@ -253,7 +253,7 @@ engine answers.
   [REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md)). It opens by command (`VAR DESK DESK-RATES <GO>`), by link
   (`/v/<kind>/<scope>`), by API, by CLI, by search, and to AI tools, with the same entitlements everywhere. Its id is the scope text.
 - **An API per measure** for programs and the explorer, under `/api/v1/<measure>` (VaR: `/api/v1/var`,
-  [API_GUIDE.md](../guides/API_GUIDE.md#var-engine-apiv1riskvar)). Every answer carries a **provenance** block: business date, the input
+  [API_REFERENCE.md](../guides/API_REFERENCE.md#19-var-engine-apiv1riskvar)). Every answer carries a **provenance** block: business date, the input
   tables' versions and batch ids, the scenario or parameter set, the rows read, unmapped rows, the computation time, and cache hit or miss.
 - **Captures:** a user may capture any answer as an immutable record (who, when, scope, note, the inputs' versions, the figures and the
   vectors needed to reproduce it). It is kept in the Drishti database or content store, reopened by id (`CAPTURE:<id>` as a scope), and
@@ -273,10 +273,22 @@ engine answers.
       └── ...
   ```
 
-  - **One table per measure** (`<measure>-official`), one row per hierarchy node (both hierarchies) per business date: `BUSINESS_DATE`,
-    `HIERARCHY`, `NODE_ID`, `NODE_NAME`, `PARENT_ID`, `LEVEL`, the measure's headline figures (each contract's section 9 lists them),
-    `CAPTURE_ID` (the official capture it was written from), `RESULT_VERSION` (1, then 2, 3 … on a restatement), `INPUT_VERSIONS` (the
-    input tables' versions and batch ids, as JSON text), `COMPUTED_AT` (UTC), `CONTRACT_VERSION`.
+  - **One table per measure** (`<measure>-official`), one row per hierarchy node (both hierarchies) per business date: the shared
+    columns below, then the measure's headline figures (each contract's section 9 lists them).
+
+    | Field | Type | Delta | Meaning | Example |
+    |---|---|---|---|---|
+    | `BUSINESS_DATE` | date | DATE | the date the figures are for; the partition | `2026-09-30` |
+    | `HIERARCHY` | text | STRING | `MGMT` or `LEGAL`; a counterparty measure's `-cpty` table: `NSET`, `CPTY` or `GROUP` | `MGMT` |
+    | `NODE_ID` | id | STRING | the node's scope text | `DESK:DESK-RATES` |
+    | `NODE_NAME` | text | STRING | the node's display name | `Rates` |
+    | `PARENT_ID` | id | STRING | the parent node's scope text; empty at the root | `DIV:DIV-MARKETS` |
+    | `LEVEL` | text | STRING | the node's level in its hierarchy | `desk` |
+    | `CAPTURE_ID` | id | STRING | the official capture the row was written from | `CAP-VAR-2026-09-30-OFFICIAL` |
+    | `RESULT_VERSION` | integer | INT | 1, then 2, 3 … on a restatement | `1` |
+    | `INPUT_VERSIONS` | text | STRING | the input tables' versions and batch ids, as JSON text | `{"scenario-pv":{"version":412,"batches":["B-2026-09-30-01"]}}` |
+    | `COMPUTED_AT` | timestamp | TIMESTAMP | when the capture was computed (UTC) | `2026-10-01T06:42:00Z` |
+    | `CONTRACT_VERSION` | text | STRING | the version of the measure's contract the row follows | `1.0` |
   - **Written by Drishti only**, right after the official capture of the date, as a Delta commit per date. A restated input date
     produces a new official capture and appends its rows with the next `RESULT_VERSION`. Nothing is overwritten; the latest version of
     a date is the row set with the highest `RESULT_VERSION`.
@@ -371,7 +383,7 @@ are the contracts.
 | `links`, `validation` | The fields that link to another kind; the rules: `required`, `unique` (key per date), `enum`, `pattern`, `link`, `range`, `vector-length` |
 | `notes`, `review` | What a reader should know; the points a person must still confirm (anything the draft inferred rather than read) |
 
-**How a contract is made and kept true** (`drishti.py contract`, [TOOLS.md](../guides/TOOLS.md)):
+**How a contract is made and kept true** (`drishti.py contract`, [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md)):
 - `contract bootstrap KIND --write` drafts one from the pack (mnemonics, graph, connectors and their layout), its samples and test data
   (`data/testdata`), its `config/about.yaml` glossary (descriptions, units, values) and its Sutras (labels). The product owner's decisions
   that the data cannot tell (class, retirement, which fields are computed figures) come from `tools/contracts.policy.yaml`. What the draft
@@ -389,7 +401,7 @@ are the contracts.
 analytics, pivot) has a section listing every dataset the feature reads: what it is for, whether it is required, its sample files and one
 real record from `data/testdata`, formatted. `tools/docs/guide_data.py` writes those sections from `tools/docs/guide_data.yaml` and these
 contracts (the key, the field and required counts, the link to the pack's page); `--check` fails when a section is stale or shows a field
-its kind's contract does not have ([TOOLS.md](../guides/TOOLS.md)).
+its kind's contract does not have ([CLI_REFERENCE.md](../guides/CLI_REFERENCE.md)).
 
 ---
 

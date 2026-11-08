@@ -345,7 +345,7 @@
   </build>
 
   <profiles>
-    <!-- Drishti Elements as a WebJar (docs/guides/ELEMENTS_IN_YOUR_APP.md): `mvn -P elements -pl drishti-elements package` writes
+    <!-- Drishti Elements as a WebJar (docs/guides/EMBED_GUIDE.md): `mvn -P elements -pl drishti-elements package` writes
          drishti-elements/target/drishti-elements-<train>.jar; the files come from tools/elements/cli.py webjar-tree (Python 3). -->
     <profile>
       <id>elements</id>
@@ -353,7 +353,7 @@
         <module>drishti-elements</module>
       </modules>
     </profile>
-    <!-- The Java API reference (IMPLEMENTATION_PLAN row 2g, docs/guides/TOOLS.md › API references): `-P api-docs` runs Javadoc right
+    <!-- The Java API reference (IMPLEMENTATION_PLAN row 2g, docs/guides/CLI_REFERENCE.md › API references): `-P api-docs` runs Javadoc right
          after a module compiles, in the modules that set drishti.apidocs.skip to false, on the packages they name in
          drishti.apidocs.packages (drishti-api: all of it; drishti-compute: the shard machinery; drishti-server: ShardedMeasure and the
          members' view). Doclint is on: a broken {@link}, bad HTML or a malformed tag fails the build here, and

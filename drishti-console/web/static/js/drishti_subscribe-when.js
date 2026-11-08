@@ -15,7 +15,7 @@
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* The Subscribe form's "When": drishti-inputs' Form, live inside the page's form (how often, the day for a weekly one, the time with
-   the time picker; the day and the time show only when they apply), writing the schedule text (docs/guides/BI_GUIDE.md, schedules);
+   the time picker; the day and the time show only when they apply), writing the schedule text (docs/guides/REPORTS_GUIDE.md, schedules);
    the text itself stays editable under Advanced, and a text the choices cannot say reads back as "on a schedule I write". The form also
    says which model the report reads, so a person knows what the figures are asked of. Text only, never markup. */
 (function () {

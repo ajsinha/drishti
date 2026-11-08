@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The renderer's optional sign-in window, ``auth: 'popup'`` (CLIENT_RENDERER.md 10.1), end to end in Chromium, with no internet: a stand-in
+"""The renderer's optional sign-in window, ``auth: 'popup'`` (EMBED_GUIDE.md 10.1), end to end in Chromium, with no internet: a stand-in
 OpenID Connect provider (a tiny IdP in this file: discovery, authorize, token with PKCE, refresh, keys), the real server (the built jar, security
 and single sign-on on, the trading pack), the console (embed and auth.oidc on) and a host page with NO backend on another origin.
 

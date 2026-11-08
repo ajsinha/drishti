@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The console's MCP (Model Context Protocol) client layer, mirroring the server's ``McpClient`` / ``McpRegistry`` / ``McpGateway``
-(docs/admin/AI.md). Transports: ``streamable-http`` (httpx; JSON or SSE answers, session id kept), ``mock`` (in-process,
+(docs/guides/AI_GUIDE.md). Transports: ``streamable-http`` (httpx; JSON or SSE answers, session id kept), ``mock`` (in-process,
 scripted) and ``server`` (delegates to the Drishti server, so credentials and policy live in one place)."""
 from __future__ import annotations
 

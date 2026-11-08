@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Drishti*net soak on real processes (docs/architecture/CLUSTER_DEPLOYMENT.md › Appendix A. Drishti*net: many servers, one Drishti, section 17): three servers from one seed, a console given the
+"""The Drishti*net soak on real processes (docs/guides/CLUSTER_GUIDE.md › Appendix A. Drishti*net: many servers, one Drishti, section 17): three servers from one seed, a console given the
 first alone, tools/bench/users.py load on the console, one shard holder killed and restarted, then the console's own server killed and
 restarted, and every answer checked against a single server holding all the data.
 
@@ -85,7 +85,7 @@ from javacmd import java_cmd  # noqa: E402
 import hostaddr  # noqa: E402
 import soak_check  # noqa: E402
 
-HOST = hostaddr.primary_ipv4()      # members advertise this machine's real address, never a loopback one (docs/admin/OPERATIONS.md)
+HOST = hostaddr.primary_ipv4()      # members advertise this machine's real address, never a loopback one (docs/guides/OPERATIONS_GUIDE.md)
 
 FORBIDDEN = {18480, 17480}
 KEY = "net-soak-cluster-key-0123456789abcdef-xyz"
@@ -134,7 +134,7 @@ def pack_closure(packs: str, packs_dir: Path) -> list[str]:
 def connector_files(lake: Path, packs: str, packs_dir: Path = ROOT / "config" / "packs") -> dict[str, str]:
     """name -> the text of a connector file that switches off each Delta connector of the packs (and those they extend) whose tables the
     lake holds none of (<lake>/<domain>/<table.kind or kind>/_delta_log), so that the server neither starts nor retries it (SOAK-10). It is
-    the documented way (a file in the connector folder, CONNECTOR_FILES.md section 3), not ``--drishti.sources.connectors.<name>.enabled``,
+    the documented way (a file in the connector folder, docs/guides/DATA_GUIDE.md section 9.3), not ``--drishti.sources.connectors.<name>.enabled``,
     which is deprecated and warns at every start. The file is the pack's template with ``enabled: false``, a YAML boolean (SOAK2-02)."""
     import yaml
     out = {}
@@ -220,7 +220,7 @@ def server_env(given: list[str] | None) -> dict[str, str]:
 
 def jvm_args(heap: str, extra: list[str] | None) -> list[str]:
     """The servers' JVM options before ``-jar``: ``-Xmx<heap>`` then every ``--jvm-arg`` in order (for example
-    ``-XX:MaxDirectMemorySize=256m``, ``-XX:TrimNativeHeapInterval=60000``, docs/admin/PERFORMANCE.md)."""
+    ``-XX:MaxDirectMemorySize=256m``, ``-XX:TrimNativeHeapInterval=60000``, docs/guides/CLUSTER_GUIDE.md)."""
     return [f"-Xmx{heap}", *(extra or [])]
 
 

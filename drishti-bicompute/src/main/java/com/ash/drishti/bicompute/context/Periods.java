@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * The dates of the balance and time-travel functions (BI_DESIGN.md 3.3.4; docs/architecture/BI_DESIGN.md 2.5 rows 48 to 51 and 56), worked out
+ * The dates of the balance and time-travel functions (ARCHITECTURE.md §28 3.3.4; docs/architecture/ARCHITECTURE.md §28 2.5 rows 48 to 51 and 56), worked out
  * before a query runs from its as-of date and the model's calendar, so each plan is bound to its dates: {@code closing} restricts to
  * the last business day of each period up to the as-of date, {@code opening} is the closing of the period before, {@code latest} and
  * {@code earliest} the latest and earliest date of each group.

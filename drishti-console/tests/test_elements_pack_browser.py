@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti Elements packed for another application (``drishti.py elements pack``; docs/guides/ELEMENTS_IN_YOUR_APP.md): a tiny static
+"""Drishti Elements packed for another application (``drishti.py elements pack``; docs/guides/EMBED_GUIDE.md): a tiny static
 page that loads only the two packed files draws a grid and a chart, with no Drishti server, under a strict CSP (nothing inline), and
 asks for nothing but the packed files. The packing itself (dependencies, the banking exclusion, themes) is test_elements_dist.py."""
 import re

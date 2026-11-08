@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Discussion in a real browser, against a real server with sign-in on (COLLABORATION.md, build step 6): two people discuss a trade, an @mention
+"""Discussion in a real browser, against a real server with sign-in on (ARCHITECTURE.md §31, build step 6): two people discuss a trade, an @mention
 reaches the bell, a comment is edited inside its window and retracted, a viewer without raw sees a masked value as ••• (typed or quoted),
 *Open as it was* lands on the pinned date, an administrator hides a comment, the whole thing works from the keyboard alone, and the drawer
 is a bottom sheet on a phone.

@@ -23,7 +23,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Where custom functions' versions are kept (PIVOT_ENGINE.md section 8.7): the host's store (the server keeps them in the content store,
+ * Where custom functions' versions are kept (ARCHITECTURE.md section 26.5): the host's store (the server keeps them in the content store,
  * so a function follows its author across a cluster); every version is kept.
  */
 public interface FunctionStore {

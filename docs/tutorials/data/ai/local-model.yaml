@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 15: a provider that is switched on but has nothing listening, to see what "Test connection" says when an endpoint does not answer.
+# Tutorial 10: a provider that is switched on but has nothing listening, to see what "Test connection" says when an endpoint does not answer.
 # A real local model would be `base-url: http://localhost:11434` (Ollama's default); here the address is one where nothing runs.
 type: ollama
 enabled: true

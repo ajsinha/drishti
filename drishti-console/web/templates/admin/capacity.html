@@ -20,9 +20,9 @@
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
-{# Admin -> Capacity (RESOURCES_AND_SCALE.md 9.7; mock-ups docs/architecture/mockups/capacity/, options B and A): today against the plan,
+{# Admin -> Capacity (CLUSTER_GUIDE.md 9.7; mock-ups docs/architecture/mockups/capacity/, options B and A): today against the plan,
    and the planner behind "Edit the plan". drishti_capacity.js evaluates capacity/planner.yaml's expressions; drishti_capacity-page.js draws. Phone tiers
-   (docs/guides/PACK_DEVELOPER_GUIDE.md): data-tier must, glance, more (folded on a phone), desk (a note on a phone). #}
+   (docs/guides/BUILD_GUIDE.md): data-tier must, glance, more (folded on a phone), desk (a note on a phone). #}
 <div class="adm cap" data-capacity data-help="{{ help_url }}">
   <h1>Capacity</h1>
   {% with tab='capacity' %}{% include "admin/_nav.html" %}{% endwith %}

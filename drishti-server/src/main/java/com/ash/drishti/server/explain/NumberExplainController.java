@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Explain any number (API_GUIDE.md, "Explain"): reads only, as the caller.
+ * Explain any number (API_REFERENCE.md, "Explain"): reads only, as the caller.
  * <pre>
  *   GET  /api/v1/explain/kinds                                   the kinds that can be explained here, their measures, the work not built
  *   GET  /api/v1/explain?kind=&amp;measure=&amp;part=&amp;...            one number: the head, formula, inputs and lineage, why it moved, workbook,

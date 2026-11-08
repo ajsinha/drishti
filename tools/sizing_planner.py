@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The single-node sizing planner workbook (RESOURCES_AND_SCALE.md, Sizing a single node: the planner workbook).
+"""The single-node sizing planner workbook (CLUSTER_GUIDE.md, Sizing a single node: the planner workbook).
 
     python3 tools/sizing_planner.py                 writes docs/architecture/Drishti-Sizing-Planner.xlsx, the server's template
                                                     (capacity/template/) and the shared test vectors, all from capacity/planner.yaml
@@ -381,7 +381,7 @@ def explain() -> list:
         ("Units", "MB is 1,024 × 1,024 bytes and GB is 1,024 MB, as Java and Admin → Caches count them. Times are seconds."),
         ("Coefficients and their status",
          "measured: read in a benchmark or a test (the source names the section). formula: a rule of the code or the guides (VAR_GUIDE.md, "
-         "RESOURCES_AND_SCALE.md, CONFIGURATION.md). calibrated: set so that the defaults reproduce the 1,000,000-position re-benchmark (Java 21, "
+         "CLUSTER_GUIDE.md, CONFIGURATION.md). calibrated: set so that the defaults reproduce the 1,000,000-position re-benchmark (Java 21, "
          "6 GB heap): BookHeapCalibration, FirstOpenOnceMB, BasePerPositionB, BaseTradeRows, HotSmallBytesPerTrade, LakeBytesPerValue, "
          "ResidentFirstIdle, ResidentNextIdle, ResidentShare, ExpHotBytesPerTrade, and ReqPerCoreVarAtRef from the users run. The users' "
          "figures are PerUserMB (working memory per concurrent user, measured) and ReqPerCoreTrades / ReqPerCoreVarAtRef (requests a second per "
@@ -409,7 +409,7 @@ def explain() -> list:
          "While a date loads, the build holds its aggregates and currency totals on the heap (1.6 GB at 1,000,000 positions, VarProperties) plus a read "
          "buffer; drishti.var.load-threads dates may load at once. An exposure load holds every netting set's value matrix in float64."),
         ("The heap to set (-Xmx)",
-         "The collector needs room: the heap after collection should be at most 61% of -Xmx (RESOURCES_AND_SCALE.md 9.5). So -Xmx = the steady heap ÷ "
+         "The collector needs room: the heap after collection should be at most 61% of -Xmx (CLUSTER_GUIDE.md 9.5). So -Xmx = the steady heap ÷ "
          "0.61 + the loads in progress, rounded up to a whole GB. Under 32 GB Java keeps 4-byte object references (compressed oops); at 32 GB and above "
          "they double in size unless -XX:ObjectAlignmentInBytes=16, which keeps them compressed up to 64 GB: so either stay at 31g or go well past 32."),
         ("Page cache and RAM",

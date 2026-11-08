@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 11: the model over the dataset trades-daily: three measures, and the figures they must give (tests:, step 7). A test is a question in
+# Tutorial 8, Part D: the model over the dataset trades-daily: three measures, and the figures they must give (tests:, step 7). A test is a question in
 # Drishti SQL and the number it must come to; a model whose test fails is not published.
 rachana: 2
 expressions: 2

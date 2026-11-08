@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 34, one file per lake (docs/tutorials/34-one-file-per-lake.md), written to docs/tutorials/img/t34/, in the light
+"""Pictures of tutorial 16, Part B, one file per lake (docs/tutorials/16-load-your-own-data-into-a-new-lake.md), written to docs/tutorials/img/t34/, in the light
 theme. Run the tutorial's steps 4 to 6 first (they write the scratch folder $SCRATCH), then start a scratch stack on the demo lake whose
 lake folder is $SCRATCH/lakes (DRISHTI_LAKES_DIR: the demo lake file, the official-results lakes, the append lake `intraday` of step 5
 and the lake `lake` the migration of step 6 wrote), sign-in off, and point this at its console:

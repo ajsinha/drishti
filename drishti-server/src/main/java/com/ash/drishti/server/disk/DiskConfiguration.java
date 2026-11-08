@@ -22,7 +22,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 
-/** The server's local disk (2.9.7, RESOURCES_AND_SCALE.md section 7): its settings and the housekeeping at start. */
+/** The server's local disk (2.9.7, CLUSTER_GUIDE.md section 7): its settings and the housekeeping at start. */
 @Configuration
 @EnableConfigurationProperties(DiskProperties.class)
 public class DiskConfiguration {

@@ -32,52 +32,52 @@ desk ─► VaR ─► stress results ◄─ stress scenario        book ─► 
 | Field | Label | Opens kind | Pack | Data domain |
 |---|---|---|---|---|
 | `AGREEMENT` | Agreement | `agreement` | `counterparty-risk` | `legal` |
-| `BASIS_CURVE` | Basis curve | `ir-curve` | `market-data` | `market` |
+| `BASIS_CURVE` | Basis curve | [`ir-curve`](../../../../../docs/contracts/samples/market-data.md#ir-curve) ([contract](../../../../../docs/contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)) | `market-data` | `market` |
 | `BENCHMARK_CURVE` | Benchmark curve | `ir-curve` | `market-data` | `market` |
 | `BOOK` | Book | `book` | `core` | `reference` |
 | `CALENDAR` | Calendar | `calendar` | `core` | `reference` |
-| `CAP_VOL_SURFACE` | Cap vol surface | `cap-vol-surface` | `market-data` | `market` |
+| `CAP_VOL_SURFACE` | Cap vol surface | [`cap-vol-surface`](../../../../../docs/contracts/samples/market-data.md#cap-vol-surface) ([contract](../../../../../docs/contracts/packs/market-data.md#cpv-capfloor-volatility-surface-cap-vol-surface)) | `market-data` | `market` |
 | `CCP` | CCP | `ccp` | `core` | `reference` |
-| `CLEARING_ACCOUNT` | Clearing account | `clearing-account` | `core` | `reference` |
-| `COLLATERAL_BALANCE` | Collateral | `collateral-balance` | `counterparty-risk` | `collateral` |
+| `CLEARING_ACCOUNT` | Clearing account | [`clearing-account`](../../../../../docs/contracts/samples/core.md#clearing-account) ([contract](../../../../../docs/contracts/packs/core.md#clr-clearing-account-clearing-account)) | `core` | `reference` |
+| `COLLATERAL_BALANCE` | Collateral | [`collateral-balance`](../../../../../docs/contracts/samples/counterparty-risk.md#collateral-balance) ([contract](../../../../../docs/contracts/packs/counterparty-risk.md#coll-collateral-balance-collateral-balance)) | `counterparty-risk` | `collateral` |
 | `COLLATERAL_BALANCES` | Collateral | `collateral-balance` | `counterparty-risk` | `collateral` |
-| `COMMODITY_CURVE` | Commodity curve | `commodity-curve` | `market-data` | `market` |
+| `COMMODITY_CURVE` | Commodity curve | [`commodity-curve`](../../../../../docs/contracts/samples/market-data.md#commodity-curve) ([contract](../../../../../docs/contracts/packs/market-data.md#cmdc-commodity-forward-curve-commodity-curve)) | `market-data` | `market` |
 | `COMMODITY_REF` | Commodity | `commodity` | `market-data` | `market` |
-| `COMMODITY_VOL_SURFACE` | Commodity vol surface | `commodity-vol-surface` | `market-data` | `market` |
-| `CORRELATION` | Correlation | `correlation-matrix` | `market-data` | `market` |
+| `COMMODITY_VOL_SURFACE` | Commodity vol surface | [`commodity-vol-surface`](../../../../../docs/contracts/samples/market-data.md#commodity-vol-surface) ([contract](../../../../../docs/contracts/packs/market-data.md#cmdv-commodity-volatility-surface-commodity-vol-surface)) | `market-data` | `market` |
+| `CORRELATION` | Correlation | [`correlation-matrix`](../../../../../docs/contracts/samples/market-data.md#correlation-matrix) ([contract](../../../../../docs/contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)) | `market-data` | `market` |
 | `COUNTERPARTY` | Counterparty | `counterparty` | `core` | `reference` |
-| `CREDIT_CURVE` | Credit curve | `credit-curve` | `market-data` | `market` |
-| `CREDIT_LIMIT` | Credit limit | `credit-limit` | `counterparty-risk` | `credit` |
+| `CREDIT_CURVE` | Credit curve | [`credit-curve`](../../../../../docs/contracts/samples/market-data.md#credit-curve) ([contract](../../../../../docs/contracts/packs/market-data.md#cds-credit-curve-credit-curve)) | `market-data` | `market` |
+| `CREDIT_LIMIT` | Credit limit | [`credit-limit`](../../../../../docs/contracts/samples/counterparty-risk.md#credit-limit) ([contract](../../../../../docs/contracts/packs/counterparty-risk.md#lim-credit-limit-credit-limit)) | `counterparty-risk` | `credit` |
 | `CSA` | CSA | `csa` | `counterparty-risk` | `legal` |
 | `CSAS` | CSA | `csa` | `counterparty-risk` | `legal` |
 | `CVA_RESULT` | CVA | `cva` | `counterparty-risk` | `credit` |
 | `DESK` | Desk | `desk` | `core` | `reference` |
 | `DISCOUNT_CURVE` | Discount curve | `ir-curve` | `market-data` | `market` |
-| `DIVIDEND_CURVE` | Dividend curve | `dividend-curve` | `market-data` | `market` |
+| `DIVIDEND_CURVE` | Dividend curve | [`dividend-curve`](../../../../../docs/contracts/samples/market-data.md#dividend-curve) ([contract](../../../../../docs/contracts/packs/market-data.md#div-dividend-curve-dividend-curve)) | `market-data` | `market` |
 | `EQUITY` | Equity | `equity` | `market-data` | `market` |
 | `EQUITY_IDS` | Equity | `equity` | `market-data` | `market` |
-| `EQUITY_INDEX` | Index | `equity-index` | `market-data` | `market` |
-| `EQUITY_VOL_SURFACE` | Equity vol surface | `equity-vol-surface` | `market-data` | `market` |
-| `FIXING_INDEX` | Fixing index | `rate-fixing` | `market-data` | `market` |
+| `EQUITY_INDEX` | Index | [`equity-index`](../../../../../docs/contracts/samples/market-data.md#equity-index) ([contract](../../../../../docs/contracts/packs/market-data.md#eqx-equity-index-equity-index)) | `market-data` | `market` |
+| `EQUITY_VOL_SURFACE` | Equity vol surface | [`equity-vol-surface`](../../../../../docs/contracts/samples/market-data.md#equity-vol-surface) ([contract](../../../../../docs/contracts/packs/market-data.md#eqv-equity-volatility-surface-equity-vol-surface)) | `market-data` | `market` |
+| `FIXING_INDEX` | Fixing index | [`rate-fixing`](../../../../../docs/contracts/samples/market-data.md#rate-fixing) ([contract](../../../../../docs/contracts/packs/market-data.md#fix-rate-index-fixings-rate-fixing)) | `market-data` | `market` |
 | `FORWARD_CURVE` | Forward curve | `ir-curve` | `market-data` | `market` |
-| `FX_FORWARD_CURVE` | Fx forward curve | `fx-forward-curve` | `market-data` | `market` |
-| `FX_IDS` | FX spot | `fx-spot` | `market-data` | `market` |
+| `FX_FORWARD_CURVE` | Fx forward curve | [`fx-forward-curve`](../../../../../docs/contracts/samples/market-data.md#fx-forward-curve) ([contract](../../../../../docs/contracts/packs/market-data.md#fxf-fx-forward-curve-fx-forward-curve)) | `market-data` | `market` |
+| `FX_IDS` | FX spot | [`fx-spot`](../../../../../docs/contracts/samples/market-data.md#fx-spot) ([contract](../../../../../docs/contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) | `market-data` | `market` |
 | `FX_SPOT` | Fx spot | `fx-spot` | `market-data` | `market` |
-| `FX_VOL_SURFACE` | Fx vol surface | `fx-vol-surface` | `market-data` | `market` |
-| `GROUP` | Group | `counterparty-group` | `core` | `reference` |
-| `INFLATION_CURVE` | Inflation curve | `inflation-curve` | `market-data` | `market` |
-| `INFLATION_INDEX` | Inflation index | `inflation-index` | `market-data` | `market` |
+| `FX_VOL_SURFACE` | Fx vol surface | [`fx-vol-surface`](../../../../../docs/contracts/samples/market-data.md#fx-vol-surface) ([contract](../../../../../docs/contracts/packs/market-data.md#fxv-fx-volatility-surface-fx-vol-surface)) | `market-data` | `market` |
+| `GROUP` | Group | [`counterparty-group`](../../../../../docs/contracts/samples/core.md#counterparty-group) ([contract](../../../../../docs/contracts/packs/core.md#grp-counterparty-group-counterparty-group)) | `core` | `reference` |
+| `INFLATION_CURVE` | Inflation curve | [`inflation-curve`](../../../../../docs/contracts/samples/market-data.md#inflation-curve) ([contract](../../../../../docs/contracts/packs/market-data.md#infc-inflation-curve-inflation-curve)) | `market-data` | `market` |
+| `INFLATION_INDEX` | Inflation index | [`inflation-index`](../../../../../docs/contracts/samples/market-data.md#inflation-index) ([contract](../../../../../docs/contracts/packs/market-data.md#inf-inflation-index-inflation-index)) | `market-data` | `market` |
 | `ISSUER` | Reference entity | `issuer` | `core` | `reference` |
-| `LEGAL_ENTITY` | Legal entity | `legal-entity` | `core` | `reference` |
-| `NETTING_SET` | Netting set | `netting-set` | `counterparty-risk` | `credit` |
+| `LEGAL_ENTITY` | Legal entity | [`legal-entity`](../../../../../docs/contracts/samples/core.md#legal-entity) ([contract](../../../../../docs/contracts/packs/core.md#le-bank-legal-entity-legal-entity)) | `core` | `reference` |
+| `NETTING_SET` | Netting set | [`netting-set`](../../../../../docs/contracts/samples/counterparty-risk.md#netting-set) ([contract](../../../../../docs/contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)) | `counterparty-risk` | `credit` |
 | `NETTING_SETS` | Netting set | `netting-set` | `counterparty-risk` | `credit` |
 | `ORIGINAL_COUNTERPARTY` | Original counterparty | `counterparty` | `core` | `reference` |
 | `PORTFOLIO` | Portfolio | `book` | `core` | `reference` |
-| `REPO_CURVE` | Repo curve | `repo-curve` | `market-data` | `market` |
-| `SACCR` | SA-CCR | `sa-ccr` | `counterparty-risk` | `credit` |
-| `SCENARIO` | Scenario | `stress-scenario` | `market-risk` | `risk` |
+| `REPO_CURVE` | Repo curve | [`repo-curve`](../../../../../docs/contracts/samples/market-data.md#repo-curve) ([contract](../../../../../docs/contracts/packs/market-data.md#repo-repo-curve-repo-curve)) | `market-data` | `market` |
+| `SACCR` | SA-CCR | [`sa-ccr`](../../../../../docs/contracts/samples/counterparty-risk.md#sa-ccr) ([contract](../../../../../docs/contracts/packs/counterparty-risk.md#saccr-sa-ccr-exposure-sa-ccr)) | `counterparty-risk` | `credit` |
+| `SCENARIO` | Scenario | [`stress-scenario`](../../../../../docs/contracts/samples/market-risk.md#stress-scenario) ([contract](../../../../../docs/contracts/packs/market-risk.md#scn-stress-scenario-stress-scenario)) | `market-risk` | `risk` |
 | `SIMM` | SIMM | `simm` | `counterparty-risk` | `collateral` |
-| `SWAPTION_VOL_CUBE` | Swaption vol cube | `ir-vol-cube` | `market-data` | `market` |
+| `SWAPTION_VOL_CUBE` | Swaption vol cube | [`ir-vol-cube`](../../../../../docs/contracts/samples/market-data.md#ir-vol-cube) ([contract](../../../../../docs/contracts/packs/market-data.md#irv-swaption-volatility-cube-ir-vol-cube)) | `market-data` | `market` |
 | `TRADER` | Trader | `trader` | `core` | `reference` |
 | `TRADER_ID` | Trader | `trader` | `core` | `reference` |
 | `TRADE_ID` | Trade | `trade` | `trading` | `trading` |

@@ -37,7 +37,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Caches, for admins (RESOURCES_AND_SCALE.md section 8.1, 2.9.7): every cache on this server with where it lives, its size against its
+ * Caches, for admins (CLUSTER_GUIDE.md section 8.1, 2.9.7): every cache on this server with where it lives, its size against its
  * limit, its age, hit rate, the dates it holds and its last purge, with the memory and disk totals; a purge of one cache, of all, or of
  * one business date (O2), on this server by default or on every member ({@code scope=cluster}, PO-6). Every purge is audited, on each
  * member that runs it.

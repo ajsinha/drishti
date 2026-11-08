@@ -16,7 +16,7 @@
 # The help-desk pack
 
 Tickets raised by clients and worked by agents. A teaching pack: it is built step by step in
-[the pack developer guide](../../../../PACK_DEVELOPER_GUIDE.md).
+[the pack developer guide](../../../../BUILD_GUIDE.md).
 
 ## Kinds
 

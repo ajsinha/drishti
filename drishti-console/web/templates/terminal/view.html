@@ -65,7 +65,7 @@
     {% if pin == 'changed' and known_text %}<a href="/compare/{{ vm.ref.kind }}/{{ vm.ref.id }}?fromKnownAt={{ known_text | replace(' ', 'T') | urlencode }}">What changed</a>{% endif %}</p>
   {% endif %}
   {# The console's tools beside the title, captured once: the server prints them in the head (the page is the server's: Jinja is the one
-     page renderer; the client-side renderer draws embeds and <drishti-report>, CLIENT_RENDERER.md). #}
+     page renderer; the client-side renderer draws embeds and <drishti-report>, EMBED_GUIDE.md). #}
   {% set head_tools %}
       {% if not embed %}<a class="tbar-link vhead-alert" href="/alerts?kind={{ vm.ref.kind }}&id={{ vm.ref.id | urlencode }}" title="Set an alert on {{ vm.title.id }}"><i class="bi bi-bell" aria-hidden="true"></i> Alert</a>
       <span class="vhead-tools">

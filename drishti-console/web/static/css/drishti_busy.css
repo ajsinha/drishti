@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Busy protection's calm message in place (docs/admin/OPERATIONS.md "Busy protection"; mock-up A): a countdown ring driven by the server's
+/* Busy protection's calm message in place (docs/guides/OPERATIONS_GUIDE.md "Busy protection"; mock-up A): a countdown ring driven by the server's
    Retry-After, Try now and Cancel; and Admin -> Health's "Busy protection" card. */
 .busy-card { display: flex; gap: var(--d-sp-14); align-items: flex-start; padding: var(--d-sp-12) var(--d-sp-14); margin: var(--d-sp-8) 0; border-left: 3px solid var(--d-warn);
   border-radius: var(--d-radius); background: var(--d-surface-2); color: var(--d-ink); }

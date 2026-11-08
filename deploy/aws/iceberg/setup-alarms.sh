@@ -30,7 +30,7 @@ SNAPSHOTS="${ALARM_ICEBERG_SNAPSHOTS:-500}"
 
 alarm() {           # alarm NAME DESCRIPTION put-metric-alarm-arguments...
   local name="$1" desc="$2"; shift 2
-  aws_do cloudwatch put-metric-alarm --alarm-name "$name" --alarm-description "$desc (docs/architecture/CLUSTER_DEPLOYMENT.md, Appendix B, Iceberg on AWS)" \
+  aws_do cloudwatch put-metric-alarm --alarm-name "$name" --alarm-description "$desc (docs/guides/CLUSTER_GUIDE.md, Appendix B, Iceberg on AWS)" \
     --alarm-actions "$ALARM_SNS_TOPIC_ARN" --ok-actions "$ALARM_SNS_TOPIC_ARN" "$@"
 }
 

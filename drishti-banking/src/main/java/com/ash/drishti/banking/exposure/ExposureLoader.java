@@ -329,14 +329,14 @@ final class ExposureLoader {
         }
     }
 
-    /** The trade statuses that count (COMPUTED_ATTRIBUTES.md section 3, Live: with a maturity date not before the business date). */
+    /** The trade statuses that count (DATA_ARCHITECTURE.md section 12, Live: with a maturity date not before the business date). */
     static final java.util.Set<String> LIVE_STATUSES = java.util.Set.of("NEW", "VALIDATED", "AMENDED");
 
     /** A member of a netting set on the date: its id, its MtM (NaN when it has none), its maturity date (null when it has none). */
     record Member(String id, double mtm, String maturity) {}
 
     /**
-     * Each netting set's members on the date (2.9.7, E0 of COMPUTED_ATTRIBUTES.md): the trade valuations of a live status
+     * Each netting set's members on the date (2.9.7, E0 of DATA_ARCHITECTURE.md#12-computed-and-derived-attributes): the trade valuations of a live status
      * ({@link #LIVE_STATUSES}) naming the set, with their MtM; the fundamental source, never the netting set's stored copies. A date
      * without trade valuations (a bank that sends none, a test lake) reads the sets' stored {@code TRADES[]} as before, and says so.
      */
@@ -454,7 +454,7 @@ final class ExposureLoader {
     }
 
     /**
-     * The collateral a set holds today, after haircut (2.9.7, E0 and F3 of COMPUTED_ATTRIBUTES.md): its holdings' collateral values
+     * The collateral a set holds today, after haircut (2.9.7, E0 and F3 of DATA_ARCHITECTURE.md#12-computed-and-derived-attributes): its holdings' collateral values
      * ({@code POSITIONS[].VALUE}, held positive, posted negative); a balance without positions gives its stored {@code NET}.
      */
     static double heldAfterHaircut(DataNode bal) {

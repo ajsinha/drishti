@@ -14,7 +14,7 @@
 
 """Admin → Lakes → Maintain (/admin/api/lakes/maintain/...): the tables with their owner and settings, dry runs and runs in the
 background (progress, cancel), the settings per table, the schedules and the history. Administrators only; see core/lake_maint.py
-and docs/admin/OPERATIONS.md."""
+and docs/guides/OPERATIONS_GUIDE.md."""
 from __future__ import annotations
 
 import asyncio

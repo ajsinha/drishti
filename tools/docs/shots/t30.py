@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 30, FRTB-SA from the hand-built cases to a desk (docs/tutorials/30-frtb-sa-from-the-cases-to-a-desk.md), written to
+"""Pictures of tutorial 4, FRTB-SA from the hand-built cases to a desk (docs/tutorials/04-frtb-sa.md), written to
 docs/tutorials/img/t30/. Run it on its own (it builds its own lake and starts its own scratch server and console):
 
     drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t30

@@ -23,7 +23,7 @@ import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * The pivot engine's scale settings (PIVOT_GUIDE.md, scale; PIVOT_ENGINE.md section 9), the {@code drishti.pivot} keys of phase P3, bound
+ * The pivot engine's scale settings (PIVOT_GUIDE.md, scale; ARCHITECTURE.md section 26.6), the {@code drishti.pivot} keys of phase P3, bound
  * beside {@link PivotProperties} (each record reads its own keys of the section).
  *
  * @param sketches HyperLogLog's precision, KLL's k, Space-Saving's counters, and when distinct counts and percentiles answer ≈

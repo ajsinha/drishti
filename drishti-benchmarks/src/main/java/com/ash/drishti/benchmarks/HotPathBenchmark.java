@@ -42,7 +42,7 @@ import org.openjdk.jmh.annotations.Warmup;
 /**
  * Hot paths of the view pipeline. Run with:
  * {@code ./mvnw -q -pl drishti-benchmarks -am package -DskipTests && java -cp "drishti-benchmarks/target/classes:$(cat cp.txt)" org.openjdk.jmh.Main}
- * (see docs/admin/PERFORMANCE.md).
+ * (see docs/guides/CLUSTER_GUIDE.md).
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.AverageTime)

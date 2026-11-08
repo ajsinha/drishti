@@ -128,7 +128,7 @@ final class SutraBuilder {
         LayoutReader layoutReader = new LayoutReader(file, problems);          // layout: the grid, areas, split, tabs, sections (RACHANA_REFERENCE.md 13)
         com.ash.drishti.rachana.model.ScreenLayout layout = layoutReader.read(m.get("layout"));
         layoutReader.check(layout, panels, m.getOrDefault("layout", root));
-        PhoneReader phoneReader = new PhoneReader(file, problems);            // phone: order, default tier, summary (docs/guides/PACK_DEVELOPER_GUIDE.md 5.2)
+        PhoneReader phoneReader = new PhoneReader(file, problems);            // phone: order, default tier, summary (docs/guides/BUILD_GUIDE.md 5.2)
         ScreenPhone phone = phoneReader.screen(m.get(ScreenPhone.KEY));
         phoneReader.check(phone, panels, m.getOrDefault(ScreenPhone.KEY, root));
         ControlsReader controlsReader = new ControlsReader(file, problems);
@@ -293,7 +293,7 @@ final class SutraBuilder {
             }
         }
         placement(m, nested, gridArea, options);
-        PNode phone = m.get(ScreenPhone.KEY);                                // docs/guides/PACK_DEVELOPER_GUIDE.md 5.1: the panel's phone tier
+        PNode phone = m.get(ScreenPhone.KEY);                                // docs/guides/BUILD_GUIDE.md 5.1: the panel's phone tier
         if (phone != null && phone.value() != null) {
             if (nested) {
                 problem(LayoutReader.CODE, "'phone' sets a whole panel's tier: put it on the tabs panel", phone);

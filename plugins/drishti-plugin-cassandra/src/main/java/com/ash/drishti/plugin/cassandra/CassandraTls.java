@@ -29,7 +29,7 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLParameters;
 
 /**
- * The driver's TLS from Drishti's shared {@code tls.*} settings (docs/connectors/TLS.md): the trust store or CA file, the
+ * The driver's TLS from Drishti's shared {@code tls.*} settings (docs/guides/DATA_GUIDE.md section 10): the trust store or CA file, the
  * client certificate for mutual TLS, protocols, cipher suites and the host-name check. The engine is created for the node's
  * host name and port, and the shared material's parameters (with {@code HTTPS} endpoint identification unless
  * {@code tls.verify-hostname: false}) are applied to it, so the check is the JVM's own, as for every other connector.

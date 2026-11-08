@@ -138,7 +138,7 @@ def build_parser(h) -> argparse.ArgumentParser:
     pg.add_argument("--out", required=True)
     pb = add(k, "bundle", h.cmd_pack_bundle, "pack bundle: make a versioned, checksummed <name>-<version>.tar.gz (+ .sha256, MANIFEST) to copy to servers", [jvm],
              "Runs `pack check` first (--no-check to skip). The archive is reproducible: the same content gives the same bytes.\n"
-             "example:\n  drishti.py pack bundle config/packs/my-bank --out dist\nGuide: docs/guides/OPERATIONALISING.md")
+             "example:\n  drishti.py pack bundle config/packs/my-bank --out dist\nGuide: docs/guides/OPERATIONS_GUIDE.md")
     pb.add_argument("pack")
     pb.add_argument("--out", metavar="DIR", help="where to write the bundle (default ./dist)")
     pb.add_argument("--requires-server", metavar="VERSION", help="the minimum server version recorded in the manifest (default: this checkout's version)")
@@ -158,7 +158,7 @@ def build_parser(h) -> argparse.ArgumentParser:
     pv.add_argument("--public-key")
     pd = add(k, "deploy", h.cmd_pack_deploy, "pack deploy: verify, then copy a bundle or folder into a packs folder atomically, keeping the previous version (no server API)",
              [jvm, vparent], "example:\n  drishti.py pack deploy dist/my-bank-1.2.0.tar.gz --to /opt/drishti/packs --backup /opt/drishti/backups\n"
-             "It never calls a running server, but a server that watches its packs folder checks the copied pack and loads it by itself (PACK_DEVELOPER_GUIDE.md, Live reload); Admin > Packs > Load does it at once, DRISHTI_PACKS keeps it for every start.")
+             "It never calls a running server, but a server that watches its packs folder checks the copied pack and loads it by itself (BUILD_GUIDE.md, Live reload); Admin > Packs > Load does it at once, DRISHTI_PACKS keeps it for every start.")
     pd.add_argument("source", metavar="BUNDLE|FOLDER")
     pd.add_argument("--to", required=True, metavar="DIR", help="the server's packs folder (DRISHTI_PACKS_DIR) or drishti.packs.installed-dir")
     pd.add_argument("--backup", metavar="DIR", help="keep the replaced version here (default DIR/previous-versions under --to)")
@@ -185,7 +185,7 @@ def build_parser(h) -> argparse.ArgumentParser:
     dl = add(d, "load", h.cmd_data_load, "data load: load the demo data (1,791 sample documents x 10 days, optionally a trade book) into a store (tools/load-<store>.sh)",
              epilog="examples:\n  drishti.py data load --store delta\n  drishti.py data load --store files --trades 10000 --days 3\n"
                     "  drishti.py data load --store postgres jdbc:postgresql://localhost:5433/drishti --trades 10000 --user u --password p\n"
-                    "Other options are passed to the script unchanged. Keep local runs small (10,000 trades); see docs/connectors/DEMO_DATA.md.")
+                    "Other options are passed to the script unchanged. Keep local runs small (10,000 trades); see docs/guides/DATA_GUIDE.md section 11.")
     dl.add_argument("--store", required=True, choices=LOADERS)
     dl.add_argument("target", nargs="*", help="the store's root, URL or database (the script's default when omitted; mongodb takes a URI and a database)")
     dl.add_argument("--trades", type=int, help="also generate a trade book of this many trades a day")
@@ -238,7 +238,7 @@ def build_parser(h) -> argparse.ArgumentParser:
             p.add_argument("name", help="the pack's name")
     load_module("serverpacks", "serverpacks.py").register(h, ps, srv)
     scm = sv.add_parser("commands", help="server commands list|off|on|history: Admin -> Commands (commands on or off for everyone, with a reason)",
-                        description="Commands on or off for everyone (docs/admin/USER_MANAGEMENT.md). An administrator; a personal API token is refused "
+                        description="Commands on or off for everyone (docs/guides/ADMIN_GUIDE.md). An administrator; a personal API token is refused "
                                     "(token-never): use it where sign-in is off, as --user, or use Admin -> Commands.")
     cms = scm.add_subparsers(dest="commands_cmd", metavar="ACTION", required=True)
     for act, what in (("list", "every command by pack: on or off, and what it does"), ("off", "turn commands (or, with --pack, packs) off for everyone"),
@@ -344,7 +344,7 @@ def build_parser(h) -> argparse.ArgumentParser:
                 p.add_argument("--body", action="store_true", help="also print the YAML body")
             if noun == "catalogue" and act == "publish":
                 p.add_argument("--note", help="why this version")
-    runs = load_module("biruns", "biruns.py")                                                                         # bi runs (2.6.7, BI_DESIGN.md)
+    runs = load_module("biruns", "biruns.py")                                                                         # bi runs (2.6.7, ARCHITECTURE.md §28)
     load_module("bilang", "bilang.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json, "runs": runs})   # bi expr, bi migrate, bi sql
     load_module("bimodel", "bimodel.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json, "runs": runs})  # bi model, bi mq
     runs.register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})
@@ -388,7 +388,7 @@ def build_parser(h) -> argparse.ArgumentParser:
 
     cp = groups.add_parser("completion", help="completion: print a shell completion script (bash, zsh, powershell)",
                            description="Generated from the command tree, so it is always current. bash: source <(drishti.py completion bash); zsh: source <(drishti.py completion zsh); "
-                                       "PowerShell: drishti.py completion powershell | Out-String | Invoke-Expression. See CLI_GUIDE.",
+                                       "PowerShell: drishti.py completion powershell | Out-String | Invoke-Expression. See docs/guides/CLI_REFERENCE.md.",
                            formatter_class=argparse.RawDescriptionHelpFormatter)
     cp.add_argument("shell", choices=load_module("completion", "completion.py").SHELLS)
     cp.set_defaults(func=h.cmd_completion, cmd=None)

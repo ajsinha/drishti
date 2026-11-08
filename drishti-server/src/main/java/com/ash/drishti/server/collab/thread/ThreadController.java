@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Comment threads (docs/architecture/COLLABORATION.md, API): threads on an entity, a panel or a field; replies; edit, retract and
+ * Comment threads (docs/architecture/ARCHITECTURE.md §31, API): threads on an entity, a panel or a field; replies; edit, retract and
  * (administrators) hide; resolve, lock, follow; the caller's mentions. Reads take the as-of headers; every write needs the
  * {@code collaborate} power, and personal API tokens read only.
  */

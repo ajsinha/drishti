@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""Each source system's trades in Delta Lake or Apache Iceberg: ``build_demo_lakes.py --store calypso=iceberg`` (docs/connectors/DEMO_DATA.md,
+"""Each source system's trades in Delta Lake or Apache Iceberg: ``build_demo_lakes.py --store calypso=iceberg`` (docs/guides/DATA_GUIDE.md section 11,
 "Mixed Delta and Iceberg storage").
 
 A system stored in Iceberg is built as Delta first (``lake demo`` or ``lake build``, so its documents and promoted columns are exactly those
@@ -101,7 +101,7 @@ def data_of(lake: pathlib.Path) -> pathlib.Path:
 def older_layout(lake: pathlib.Path, lakes_dir: pathlib.Path | None = None) -> list[str]:
     """The demo lake's table folders still directly in <data>/delta (the older layout) when ``lake`` is the demo lake's own folder
     <data>/delta/<name> and does not exist yet: building there now would leave two copies. Empty: nothing in the way. The server moves them
-    at start, or ``drishti.py lake relocate demo`` (docs/admin/OPERATIONS.md)."""
+    at start, or ``drishti.py lake relocate demo`` (docs/guides/OPERATIONS_GUIDE.md)."""
     import yaml
     lake = pathlib.Path(lake).resolve()
     placeholder = lake.is_dir() and [c.name for c in lake.iterdir()] == ["README.md"]   # kept in git with only its README.md

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Rachana's checked mode (docs/architecture/BI_DESIGN.md sections 2.1 and 2.5): the signature of every function a table, a model or a typed
+# Rachana's checked mode (docs/architecture/ARCHITECTURE.md §28 sections 2.1 and 2.5): the signature of every function a table, a model or a typed
 # pivot may write, which the checker validates calls against (names, positional and named arguments, scopes, types). The 53 functions of
 # DEL's catalogue under their Rachana names (startswith -> starts_with, endswith -> ends_with, last -> latest, first -> earliest;
 # cumulative folded into running) and the six tier-1 functions the migration needs (power, floor, if, switch, least, greatest).

@@ -301,7 +301,7 @@
 
     agTable() {
       const doc = this.doc, h = this.h, ag = this.cat.agGrid;
-      return h(doc, 'details', { cls: 'gx-ag', attrs: { open: true } }, [h(doc, 'summary', { text: (ag.built ? 'The adapter\'s mapping (drishti_grid-ag-map.js; the migration guide: docs/guides/ELEMENTS_IN_YOUR_APP.md)' : 'Planned: the adapter is not built yet. Its mapping (ELEMENTS.md section 6)') + ', version 1 scope: ' + ag.scope }),
+      return h(doc, 'details', { cls: 'gx-ag', attrs: { open: true } }, [h(doc, 'summary', { text: (ag.built ? 'The adapter\'s mapping (drishti_grid-ag-map.js; the migration guide: docs/guides/EMBED_GUIDE.md)' : 'Planned: the adapter is not built yet. Its mapping (ELEMENTS.md section 6)') + ', version 1 scope: ' + ag.scope }),
         h(doc, 'table', { cls: 'gx-table' }, [h(doc, 'thead', {}, [h(doc, 'tr', {}, [h(doc, 'th', { text: 'AG Grid Enterprise option (public API shape)', attrs: { scope: 'col' } }), h(doc, 'th', { text: 'State', attrs: { scope: 'col' } }), h(doc, 'th', { text: 'drishti-grid', attrs: { scope: 'col' } })])]),
           h(doc, 'tbody', {}, ag.mapping.map((r) => h(doc, 'tr', {}, [h(doc, 'td', {}, [this.prose(r.ag)]), h(doc, 'td', { text: r.state || '' }), h(doc, 'td', {}, [this.prose(r.drishti)])])))]),
         ag.notCovered ? h(doc, 'p', { cls: 'gx-note' }, ['Not covered in version 1 (named in the console when used): ', this.prose(ag.notCovered)]) : null]);

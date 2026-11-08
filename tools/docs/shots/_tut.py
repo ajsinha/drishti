@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Shared pieces of the tutorials' pictures (docs/tutorials/, modules t01 .. t09 of tools/docs/shots): the server environment every tutorial runs
-under (sign-in ON, as GETTING_STARTED.md step 13 sets it up), the people, a 1280 px window, and small helpers.
+under (sign-in ON, as OPERATIONS_GUIDE.md step 13 sets it up), the people, a 1280 px window, and small helpers.
 
 The tutorials are written for one reader on one machine: they sign in as the development administrator and, where a second person is needed
 (sharing, discussion, reports for a colleague), as `vera`. Each picture module makes its own people if they are missing, so any one tutorial's

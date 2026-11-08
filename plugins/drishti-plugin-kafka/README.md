@@ -154,7 +154,7 @@ number of changes, and a restart replays one message per entity.
 | `schema-registry.bearer-token-file` | path |  | File whose first line is the bearer token |
 | `schema-registry.timeout-ms` | int | `10000` | Connect and read timeout for a registry call. |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md), also under `schema-registry.tls.*`. It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10), also under `schema-registry.tls.*`. It takes the shared `proxy.*` settings for an outbound HTTP proxy (DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 The site-wide summary is in [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#kafka-tls-proxy); the pack environment variables
@@ -229,7 +229,7 @@ settings:
 Ready-made files in `config/connectors.examples/other/`: `trading-stream.yaml` (mutual TLS, PKCS12), `kafka-mtls-pem.yaml` (mutual TLS,
 PEM) and `kafka-confluent-cloud.yaml` (Confluent Cloud with Schema Registry). `tools/samplegen/stream.py` publishes and ticks the
 trading samples for a try-out. A connector file is applied within seconds without a restart, and edited in any editor, in
-**Admin → Connectors** or with `drishti.py connector apply` ([CONNECTOR_FILES.md](../../docs/connectors/CONNECTOR_FILES.md)).
+**Admin → Connectors** or with `drishti.py connector apply` ([../../docs/guides/DATA_GUIDE.md section 9](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)).
 
 The trading pack suggests `trading-stream` in `config/packs/banking/trading/pack.yaml`, off until `DRISHTI_STREAM_TRADING=true`; the
 server writes it to `config/connectors/trading-stream.yaml` at the first start, and the file is then the site's:
@@ -316,7 +316,7 @@ curl -s localhost:18480/api/v1/entities/netting-set/NS-ALDERSHOT-FRA/raw | jq -c
 | use it when | the topic is the store for Live | a lake or database already holds the day's data, or the topic is too large to index |
 
 In `ticks` mode a view of `TRD MX-20000001` reads from `trade-endur` (its provenance names the lake), shows the live dot, and each
-message for the trade repaints it within a frame ([CONNECTORS.md, Combining connectors](../../docs/connectors/CONNECTORS.md#combining-connectors)).
+message for the trade repaints it within a frame ([../../docs/guides/DATA_GUIDE.md section 8, Combining connectors](../../docs/guides/DATA_GUIDE.md#84-combining-connectors)).
 
 ## Read paths and caches
 
@@ -396,7 +396,7 @@ skipped until the next restart.
 ### With a lake for history
 
 Configure the same kind on a dated store as well and the router does the rest
-([CONNECTORS.md, Combining connectors](../../docs/connectors/CONNECTORS.md#combining-connectors)):
+([../../docs/guides/DATA_GUIDE.md section 8, Combining connectors](../../docs/guides/DATA_GUIDE.md#84-combining-connectors)):
 
 | The user asks for | Order tried | Who answers |
 |---|---|---|
@@ -409,7 +409,7 @@ With `mode: ticks` the lake answers every read and Kafka only ticks the open vie
 ## Security: TLS, SASL and Confluent
 
 The connector speaks to Apache Kafka and Confluent (Cloud and Platform) over plaintext, TLS, SASL over plaintext and SASL over TLS.
-The first-class settings (`security.protocol`, `tls.*` from the [shared TLS module](../../docs/connectors/TLS.md), `sasl.*`,
+The first-class settings (`security.protocol`, `tls.*` from the [shared TLS module](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy), `sasl.*`,
 `flavour`, `schema-registry.*`) are checked at start (files read by Drishti itself: PEM, PKCS12, JKS; the file and reason named when
 one is wrong; contradictions such as `sasl.mechanism` with `SSL`, or a mechanism without credentials, refused) and translated to
 Kafka properties. `client.<property>` passes any Kafka property through, applied last:
@@ -489,7 +489,7 @@ kafka-console-consumer.sh --bootstrap-server kafka1.bank.example:9094 --consumer
 `s_client` failures: `62 (hostname mismatch)`, `19 (self-signed certificate in certificate chain)` (give `-CAfile`), `alert
 certificate required` (an mTLS listener, no client certificate sent). Then Admin → Health shows `UP (catching up)` and `UP`; **Test
 connection** in Admin → Connectors reports a start-up error with the file and reason
-([TLS.md, start-up checks](../../docs/connectors/TLS.md#8-start-up-checks-and-their-messages)). Within 30 days of a certificate's
+([DATA_GUIDE.md section 10, start-up checks](../../docs/guides/DATA_GUIDE.md#108-start-up-checks-and-their-messages)). Within 30 days of a certificate's
 expiry health says `UP (TLS certificate CN=drishti (tls.cert-file) expires in 12 days (2026-10-22))`.
 
 ### ACLs
@@ -518,7 +518,7 @@ PLAIN, and PLAIN only over TLS.
 
 ## Outbound proxy
 
-The shared rules are in [TLS.md, proxy](../../docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)
+The shared rules are in [DATA_GUIDE.md section 10, proxy](../../docs/guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)
 (keys in [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#shared-proxy)). Kafka's brokers speak the Kafka protocol, not HTTP, and are
 **not** proxied. The one HTTP part, the **Schema Registry**, goes through the proxy when one applies (plain forwarding, or `CONNECT` for
 an `https://` registry with `schema-registry.tls.*` kept); a refused proxy login surfaces as a message that names the proxy.
@@ -595,5 +595,5 @@ Security errors are in [Common errors and fixes](#common-errors-and-fixes).
 
 ## See also
 
-- [Connector files](../../docs/connectors/CONNECTOR_FILES.md) and [TLS](../../docs/connectors/TLS.md).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (combining a stream with a lake; the README standard).
+- [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) and [TLS](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (combining a stream with a lake; the README standard).

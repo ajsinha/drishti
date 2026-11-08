@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The engines' version watch (RESOURCES_AND_SCALE.md section 4.4, O9, 2.9.7; decision PO-9): an open business date notices that its data
+ * The engines' version watch (CLUSTER_GUIDE.md section 4.4, O9, 2.9.7; decision PO-9): an open business date notices that its data
  * changed in the lake without a data-load signal. On a request for an open date, at most once every {@code every} per date, the lake's
  * version of the date (a lookup on the connector's own layout, refreshed every {@code refresh-seconds}) is compared with the version the
  * date was loaded from. When it moved, the date is reloaded in the background and swapped in when ready; meanwhile the open date answers,

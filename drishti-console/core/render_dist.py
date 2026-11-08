@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""How the client-side renderer is distributed (docs/architecture/CLIENT_RENDERER.md section 13).
+"""How the client-side renderer is distributed (docs/guides/EMBED_GUIDE.md section 13).
 
 The library lives in one folder per version, ``web/static/render/<version>/``: the entry ``drishti-render.js``, its modules ``m/*.js``,
 the types ``drishti-render.d.ts``, the sheet ``drishti-render.css`` (generated here from the console's own sheets, rewritten for a

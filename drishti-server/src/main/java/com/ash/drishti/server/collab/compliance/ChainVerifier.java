@@ -35,7 +35,7 @@ import java.util.List;
 /**
  * Tamper evidence: recomputes a thread's hash chain (SHA-256 per revision, chained per thread) and a share's own hash. It finds a
  * changed or removed step; it does not prevent rewriting the whole database, which is why exports carry the hashes
- * (COLLABORATION.md, Data model).
+ * (ARCHITECTURE.md §31, Data model).
  */
 public final class ChainVerifier {
 

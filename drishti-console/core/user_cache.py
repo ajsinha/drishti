@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""What the console keeps of one person's answers, and under which key (docs/admin/USER_MANAGEMENT.md section 6, "What the console keeps of each person"): a figure read as a
+"""What the console keeps of one person's answers, and under which key (docs/guides/ADMIN_GUIDE.md section 6, "What the console keeps of each person"): a figure read as a
 person may only be served to that same person, on the same server, with the same roles, the same as-of date and known-at, and the same
 lens. :func:`user_key` (and :func:`cache_key` for a request) is the one key every per-person cache uses; :class:`LRU` is the one bounded
 store (the oldest entry goes, never everyone's at once)."""

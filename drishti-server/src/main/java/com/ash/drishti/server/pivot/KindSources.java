@@ -60,7 +60,7 @@ public final class KindSources implements TabularSource.Resolver {
     private final Map<String, Long> staged = java.util.Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true));
     private final Map<String, Object> locks = new ConcurrentHashMap<>();
     private volatile DuckDbExecutor exec;
-    /** Per source and data version: the document fields a sample of its documents shows (PIVOT_ENGINE.md section 6.7). */
+    /** Per source and data version: the document fields a sample of its documents shows (ARCHITECTURE.md section 26.4). */
     private final Map<String, Map<String, DocPath>> shapes = new ConcurrentHashMap<>();
     /** Per source: how the last document view read its fields (the provenance's route words). */
     private final Map<String, String> lastRoute = new ConcurrentHashMap<>();
@@ -139,7 +139,7 @@ public final class KindSources implements TabularSource.Resolver {
     }
 
     /**
-     * What a column's values are (PIVOT_ENGINE.md section 5.4), from its contract type and name: an {@code amount} is money in the row's
+     * What a column's values are (ARCHITECTURE.md section 26.3), from its contract type and name: an {@code amount} is money in the row's
      * currency, a {@code rate} or a name ending {@code _PCT} or {@code PERCENT} is never summed, a text column named {@code CURRENCY},
      * {@code CCY} or ending {@code _CCY} or {@code _CURRENCY} holds the row's currency.
      */
@@ -216,7 +216,7 @@ public final class KindSources implements TabularSource.Resolver {
     }
 
     /**
-     * The direct lake route (PIVOT_ENGINE.md section 6.2): the date's Parquet files when the kind's one source can hand them over and every
+     * The direct lake route (ARCHITECTURE.md section 26.4): the date's Parquet files when the kind's one source can hand them over and every
      * field the person may use is a column of them; masks are then applied as columns not read (a masked column is not in the relation),
      * unless masking also changes values inside other fields ({@link Entitlements#masksValues}), when the rows go through the Data view's
      * read one by one. Null: the staged route.
@@ -593,7 +593,7 @@ public final class KindSources implements TabularSource.Resolver {
         }
     }
 
-    // ---- documents (PIVOT_ENGINE.md section 6.7) ------------------------------------------------------------------------------
+    // ---- documents (ARCHITECTURE.md section 26.4) ------------------------------------------------------------------------------
 
     /** Per source: what the field list's sample of documents found (the provenance's words). */
     private final Map<String, String> sampled = new ConcurrentHashMap<>();

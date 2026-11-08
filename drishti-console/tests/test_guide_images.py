@@ -155,7 +155,7 @@ def test_the_build_menu_help_centre_getting_started_and_the_architecture_note_li
     assert "/help/rachana-reference#screen-designer-and-the-build-workbench" in menu and "Screen designer guide" in menu
     assert "/help/rachana-reference#screen-designer-and-the-build-workbench" in client.get("/build/new").text
     part = "RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench"
-    assert part in (ROOT / "docs" / "guides" / "GETTING_STARTED.md").read_text() or part in (ROOT / "docs" / "guides" / "USER_GUIDE.md").read_text()
+    assert part in (ROOT / "docs" / "guides" / "OPERATIONS_GUIDE.md").read_text() or part in (ROOT / "docs" / "guides" / "USER_GUIDE.md").read_text()
     assert "](#screen-designer-and-the-build-workbench)" in (ROOT / "docs" / "guides" / "RACHANA_REFERENCE.md").read_text()   # the workbench design links it
     index = client.get("/help").text
     assert "/help/rachana-reference#screen-designer-and-the-build-workbench" in index

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Collaboration console polish (COLLABORATION.md, Console polish): the share dialog's "also start a discussion" tick, the reply box on a shared
+"""Collaboration console polish (ARCHITECTURE.md §31, Console polish): the share dialog's "also start a discussion" tick, the reply box on a shared
 view, Admin > Collaboration (sections by role, every call passed to the server and its refusal told in words), times in the top bar's zone,
 and a quoted value drawn the way the page shows the field."""
 import json

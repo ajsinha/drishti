@@ -272,7 +272,7 @@
   drawLines();
   changed();
 
-  // Busy protection (docs/admin/OPERATIONS.md "Busy protection"): the download did not start; the card counts down the server's Retry-After
+  // Busy protection (docs/guides/OPERATIONS_GUIDE.md "Busy protection"): the download did not start; the card counts down the server's Retry-After
   // and starts it again by itself (three times at most); the selection is kept.
   var busyHost = $("[data-busy-host]");
   if (busyHost && busyHost.getAttribute("data-busy") && window.Drishti.Busy) {

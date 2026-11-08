@@ -34,7 +34,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * Formulas of built-ins (PIVOT_ENGINE.md section 8.2): Rachana, refused in words where it is not a measure; the kind of the parts; the
+ * Formulas of built-ins (ARCHITECTURE.md section 26.5): Rachana, refused in words where it is not a measure; the kind of the parts; the
  * Java path (the harness, the playground) and the SQL path (the tabular provider's GROUPING SETS) giving the same figures, totals made from
  * states, never from the figures shown.
  */
@@ -72,7 +72,7 @@ class FormulaFunctionTest {
     @Test
     @SuppressWarnings("unchecked")
     void thePlaygroundShowsEachStateAsItsSumsNeverAsAnObjectName() {
-        // tutorial 37 step 2: sum(r * w) / sum(w) on four rows; each state is [Σrw, Σw], shown with its values, the figure unrounded
+        // tutorial 7, step 12: sum(r * w) / sum(w) on four rows; each state is [Σrw, Σw], shown with its values, the figure unrounded
         FormulaFunction f = FormulaFunction.of("wret", "sum(r * w) / sum(w)", List.of("r", "w"));
         Batch sample = new Batch(4, new Object[] {new double[] {0.012, -0.004, 0.020, 0.001}, new double[] {3, 1, 2, 5}});
         Map<String, Object> out = Playground.run(f, sample, 2, null, 0, 1);

@@ -12,5 +12,5 @@ brotli>=1.1      # optional: Brotli for embed payloads (gzip otherwise)
 # Arrow streams of BI answers and Notebook extracts (the console computes nothing: Python runs on the server's compute pool, whose libraries are
 # pinned in config/compute/locks/python.lock; tests/test_console_runs_no_compute.py bans pandas, NumPy and the like in the console's code).
 pyarrow>=16
-deltalake>=0.20    # lake build (tools/drishti.py lake build) writes Delta tables from the IDE; docs/guides/GETTING_STARTED.md
+deltalake>=0.20    # lake build (tools/drishti.py lake build) writes Delta tables from the IDE; docs/guides/OPERATIONS_GUIDE.md
 # optional, allow-listed when installed: scipy>=1.13, statsmodels>=0.14

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 16, Embed Drishti (docs/tutorials/16-embed-drishti.md), written to docs/tutorials/img/t16/.
+"""Pictures of tutorial 20, Embed Drishti (docs/tutorials/20-embed-drishti.md), written to docs/tutorials/img/t16/.
 
 The stack must run with embedding on (DRISHTI_EMBED_ENABLED=true on the server and the console, DRISHTI_PUBLIC_URL and DRISHTI_CONSOLE_URL set). The pictures show Admin,
 Embedding (registering the demo host application: origins, scopes, the kinds and the one report it may show, the client secret shown once), and then the sample host

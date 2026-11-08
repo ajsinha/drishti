@@ -39,7 +39,7 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 /**
- * The members a sharded measure's dates are spread over (VAR_SHARDING.md section 4), for any measure: this server and the Drishti*net
+ * The members a sharded measure's dates are spread over (DATA_ARCHITECTURE.md section 13), for any measure: this server and the Drishti*net
  * members that are alive, with what each says of the measure's shards in its capability digest (a service of its own per measure, VaR's
  * {@code var-shards}: whether it owns shards, whether it is
  * draining, its zone, and per date the shard map it holds and the shards it is ready to serve). Readiness travels with the digest: a change

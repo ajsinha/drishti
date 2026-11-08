@@ -133,7 +133,7 @@ class ViewModelSchemaTest {
         JsonNode node = mapper.valueToTree(shown);
         assertThat(node.path("contract").asText()).isEqualTo("1.0");
         assertThat(schema().at("/$defs/ViewModel/required").toString()).contains("\"contract\"");
-        // the candlestick's Data table: the server sends every price as text, so a client prints nothing raw (CLIENT_RENDERER.md 6)
+        // the candlestick's Data table: the server sends every price as text, so a client prints nothing raw (EMBED_GUIDE.md 6)
         PanelData.Candles candles = shown.panels().stream().map(ViewModel.PanelView::data).filter(PanelData.Candles.class::isInstance)
                 .map(PanelData.Candles.class::cast).findFirst().orElseThrow();
         assertThat(candles.candles()).isNotEmpty().allSatisfy(k -> {

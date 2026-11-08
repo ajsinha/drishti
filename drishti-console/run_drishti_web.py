@@ -55,7 +55,7 @@ def temp_under_data(settings) -> None:
 
 def log_config() -> dict:
     """uvicorn's logging with a timestamp on every line, and the console's own loggers (``drishti.*`` and the rest) through the same
-    handler at INFO (2.9.7, RESOURCES_AND_SCALE.md 6.4: the soak audit found the console's log without times)."""
+    handler at INFO (2.9.7, CLUSTER_GUIDE.md 6.4: the soak audit found the console's log without times)."""
     import copy
     from uvicorn.config import LOGGING_CONFIG
     cfg = copy.deepcopy(LOGGING_CONFIG)

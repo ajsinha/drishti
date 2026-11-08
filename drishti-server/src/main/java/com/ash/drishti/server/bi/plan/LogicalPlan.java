@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A question as the one IR (docs/architecture/BI_DESIGN.md section 3.6): the tree, the model it asks at its version fingerprint, the resolved time, and the
+ * A question as the one IR (docs/architecture/ARCHITECTURE.md §28 section 3.6): the tree, the model it asks at its version fingerprint, the resolved time, and the
  * totals levels. Its {@link #hash} is the same whichever language asked it (MQ, Drishti SQL, a visual): canonical names, sorted keys, resolved relative
  * dates; the reader's security is not in it (that is the {@link SecuritySignature}). Immutable.
  *

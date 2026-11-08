@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /**
- * Write-back through a connector (docs/guides/WRITE_BACK.md): one command of a connector's {@code writes:} filled for one change
+ * Write-back through a connector (docs/guides/APPROVALS_GUIDE.md): one command of a connector's {@code writes:} filled for one change
  * ({@link com.ash.drishti.api.write.WriteCommand}) and what the source said to it ({@link com.ash.drishti.api.write.WriteResult}).
  */
 package com.ash.drishti.api.write;

@@ -17,7 +17,7 @@
 # partitioned by business_date first, always; partition-by names only what comes after it. A table's entry is the truth: an administrator
 # edits it here, never in a connector file or on a command line (a --partition-by that disagrees is refused, naming both). Like every lake
 # it has its own folder, <data>/delta/demo (DRISHTI_DELTA_ROOT, when a site sets it, names the root instead); a demo lake built in the older
-# layout, directly in <data>/delta, is moved into it once, safely, at start (drishti.py lake relocate demo; docs/admin/OPERATIONS.md).
+# layout, directly in <data>/delta, is moved into it once, safely, at start (drishti.py lake relocate demo; docs/guides/OPERATIONS_GUIDE.md).
 # The file holds an entry for every table a shipped pack's connector reads from the demo lake (a test checks it; LakesCli pack-tables
 # adds a missing one), so the server never writes it; a table only a site's own connector reads is added at the end, every line kept.
 lake: demo

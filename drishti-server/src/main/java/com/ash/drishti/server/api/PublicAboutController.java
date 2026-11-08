@@ -64,7 +64,7 @@ public class PublicAboutController {
         m.put("tagline", branding.tagline());
         m.put("edition", edition.instance().about());       // the console learns the edition here (LENSES.md › The design)
         m.put("lenses", edition.lensNames());               // the editions a person may open as a lens (none with an edition)
-        com.ash.drishti.server.engines.EngineCluster c = cluster.getIfAvailable();   // what the console shows or hides (COMPUTE_ENGINES.md 5.2)
+        com.ash.drishti.server.engines.EngineCluster c = cluster.getIfAvailable();   // what the console shows or hides (ADMIN_GUIDE.md 5.2)
         m.put("engines", c == null ? null : c.about());
         // the modules loaded at this start (ACCESS_MODEL.md): the console serves no page, route or asset of a module not listed, for anyone
         com.ash.drishti.server.modules.ModuleConfiguration.Started started = modules.getIfAvailable();

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Shared pieces of the BI tutorials' pictures (tutorials 10 to 14): the report page, the designer, a click on a map or a bar, cleaning up what an earlier
+"""Shared pieces of the BI tutorials' pictures (tutorials 8 and 9): the report page, the designer, a click on a map or a bar, cleaning up what an earlier
 run made, and a call to the BI API through the signed-in console (`/bi/api/...` is passed on to the server's `/api/v1/bi/...`)."""
 from __future__ import annotations
 

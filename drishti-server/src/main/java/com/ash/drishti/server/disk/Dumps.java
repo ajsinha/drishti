@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 /**
- * Heap dumps kept within a count (RESOURCES_AND_SCALE.md section 7.4, 2.9.7): a dump is about the live heap (up to 36 GB on a shard owner),
+ * Heap dumps kept within a count (CLUSTER_GUIDE.md section 7.4, 2.9.7): a dump is about the live heap (up to 36 GB on a shard owner),
  * and before 2.9.7 every out-of-memory error left one for ever. At start the oldest beyond {@code drishti.disk.max-dumps} (2) are deleted
  * from the JVM's {@code -XX:HeapDumpPath} folder (or {@code drishti.disk.dumps-dir}).
  */

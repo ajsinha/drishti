@@ -876,7 +876,7 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
                         "business-date: beside the file counts as --as-of; a row's own --date field never decides (rows that differ are counted)")
     g.add_argument("--latest-by", metavar="FIELD",
                    help="when an id appears more than once on one business date, keep the copy with the latest FIELD (an ISO timestamp); "
-                        "default: the pack's ingest latest-by, else COMPUTED_AT; give '' for the last one read (TOOLS.md section 4.13)")
+                        "default: the pack's ingest latest-by, else COMPUTED_AT; give '' for the last one read (CLI_REFERENCE.md section 4.13)")
     g.add_argument("--partition-by", action="append", metavar="COL[,COL]", help="partition columns after business_date (dotted paths; up to 4)")
     g.add_argument("--promote", action="append", metavar="COL[,COL]", help="fields to keep as real columns too (default: the pack's layout columns)")
     g.add_argument("--vector", action="append", metavar="COL[,COL]",
@@ -905,7 +905,7 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
                         "the default, --engine java asks for the loader)")
     g.add_argument("--loader-set", action="append", metavar="KEY=VALUE",
                    help="--engine java: a setting of the parallel loader (memory.budget-mb=4096, memory.spill-dir=/mnt/ebs, parallel.writers=16, "
-                        "target.layout.sort-by=[LEGAL_ENTITY,DESK,id]; docs/guides/TOOLS.md section 4.13); repeatable")
+                        "target.layout.sort-by=[LEGAL_ENTITY,DESK,id]; docs/guides/CLI_REFERENCE.md section 4.13); repeatable")
     g.add_argument("--mode", choices=MODES, default=None,
                    help="append (the default: the rows are added), overwrite-dates (each business date of the input replaced) or "
                         "overwrite-partitions; a .ready file's mode: when not given (--format iceberg: overwrite-dates, its only mode)")

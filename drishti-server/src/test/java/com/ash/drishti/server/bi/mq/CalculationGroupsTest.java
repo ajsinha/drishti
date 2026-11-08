@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Calculation groups, what-if and field parameters, perspectives and {@code mq: 2} (docs/architecture/BI_DESIGN.md sections 3.3.5 and 3.6; wave B
+ * Calculation groups, what-if and field parameters, perspectives and {@code mq: 2} (docs/architecture/ARCHITECTURE.md §28 sections 3.3.5 and 3.6; wave B
  * acceptance (1): "a YTD calculation group over ten measures and a what-if shock equal an independent computation"). The trades of the as-of date are spread
  * over a year and a half of trade dates, so year-to-date is a real cut.
  */

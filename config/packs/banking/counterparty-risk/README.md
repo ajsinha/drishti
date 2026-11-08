@@ -94,7 +94,7 @@ netting set, applies each CSA's collateral path by path with the margin period o
 and EEPE for any scope (`NSET:`, `CPTY:`, `GROUP:`, `LE:`, `DESK:`, `TRD:`); the netting-set and counterparty pages show the engine's
 figures computed as they open. There is no stored `exposure-profile` kind (`EXP-<cp>-<le>`): `EXP EXP-ALDERSHOT-FRA`
 opens `EXP NSET:NS-ALDERSHOT-FRA`. The exposure explorer ([EXPOSURE_GUIDE.md section 3](../../../../docs/guides/EXPOSURE_GUIDE.md#3-the-explorer-screen-by-screen))
-walks from the bank to a trade; [tutorial 26](../../../../docs/tutorials/26-exposure-from-the-bank-to-a-trade.md) does it on the test data.
+walks from the bank to a trade; [tutorial 3](../../../../docs/tutorials/03-exposure-from-the-bank-to-a-trade.md) does it on the test data.
 
 ## Data structures
 
@@ -587,7 +587,7 @@ Screens (Sutras):
 |---|---|---|---|
 | Synthetic sample data (tools/packgen/banking) | Proprietary (part of Drishti); fictitious names and figures | no | every document in samples/ and the demo lake |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/counterparty-risk.md](guides/counterparty-risk.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/counterparty-risk.md](guides/counterparty-risk.md): *Data contracts* and *Data retrieval*.
 
 ## Enabling and dependencies
 
@@ -614,4 +614,4 @@ The pack's files are written by `tools/packgen/banking/make_docs.py`; its `--che
 ## See also
 
 - [Counterparty credit risk pack](guides/counterparty-risk.md): Netting sets, exposure, CVA, SA-CCR, collateral and margin.
-- [Packs](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

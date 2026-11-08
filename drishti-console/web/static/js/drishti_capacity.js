@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Admin -> Capacity's planner in the browser (docs/architecture/RESOURCES_AND_SCALE.md 9.7). The server serves
+/* Admin -> Capacity's planner in the browser (docs/guides/CLUSTER_GUIDE.md 9.7). The server serves
    capacity/planner.yaml as JSON; this evaluates its expressions as you type, exactly as tools/sizing_planner.py's
    evaluator does for the workbook (a small Excel subset: names, + - * / ^ &, comparisons, IF, MAX, MIN, CEILING, INT,
    ROUND, AND, OR, CHAR). The shared test vectors (drishti-server/src/test/resources/capacity/test-vectors.json) keep

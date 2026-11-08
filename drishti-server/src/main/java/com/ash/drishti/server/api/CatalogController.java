@@ -111,7 +111,7 @@ public class CatalogController {
         m.put("notice", branding.notice());
         m.put("edition", edition.edition().about());       // the instance's edition, or the caller's lens       // {name, title, packs, allowOnly}, or null: the full Drishti (LENSES.md)
         com.ash.drishti.server.engines.EngineCluster c = engines;
-        m.put("engines", c == null ? null : c.about());    // the compute engines: here and in the cluster (COMPUTE_ENGINES.md section 5.2)
+        m.put("engines", c == null ? null : c.about());    // the compute engines: here and in the cluster (ADMIN_GUIDE.md section 5.2)
         return m;
     }
 

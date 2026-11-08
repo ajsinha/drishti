@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * The requests being answered now, for busy protection's "request handlers busy" (docs/admin/OPERATIONS.md, "Busy protection"). A
+ * The requests being answered now, for busy protection's "request handlers busy" (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"). A
  * streamed answer (an event stream) leaves the count when its handler returns, so a long-lived stream does not count as busy.
  */
 public final class RequestsInFlight extends OncePerRequestFilter {

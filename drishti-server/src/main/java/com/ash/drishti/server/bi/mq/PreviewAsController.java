@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Preview as a role (docs/guides/API_GUIDE.md "Models"; the model designer's *Preview as a role*): {@code POST /bi/models/{ref}/preview-as} with
+ * Preview as a role (docs/guides/API_REFERENCE.md "Models"; the model designer's *Preview as a role*): {@code POST /bi/models/{ref}/preview-as} with
  * {@code {role, query?}} answers a model query as a reader holding only that role would get it: the role's catalogue access to the model, its row rules,
  * its masks (the role's raw power) and its hidden fields. No user attributes are assumed, so a rule on {@code user.desks} gives no rows. Only a bi-admin or
  * the model's owner may ask, and every preview is audited ({@code bi-model-preview-as}), because it shows answers the asker's own role may not.

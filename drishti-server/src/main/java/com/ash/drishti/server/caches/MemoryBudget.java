@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * One cache budget for the heap (RESOURCES_AND_SCALE.md section 5.2, D3, 2.9.7; decision PO-2): a share of {@code -Xmx}
+ * One cache budget for the heap (CLUSTER_GUIDE.md section 5.2, D3, 2.9.7; decision PO-2): a share of {@code -Xmx}
  * ({@code drishti.memory.cache-share}, 0.5) divided into weighted pools. Every Caffeine cache weighed in bytes that joins a pool gets its
  * pool's share as its maximum (split evenly between the pool's members, or by their own limits when those are smaller), set at start and
  * again on a change; when the heap after a collection passes {@code squeeze-at} (0.85 of {@code -Xmx}) the pools with the highest

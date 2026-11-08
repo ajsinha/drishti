@@ -41,7 +41,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 /**
- * Drishti SQL over the engine (docs/architecture/BI_DESIGN.md section 3.4): an MQ-shaped statement is one model query (same answer, same plan hash, one
+ * Drishti SQL over the engine (docs/architecture/ARCHITECTURE.md §28 section 3.4): an MQ-shaped statement is one model query (same answer, same plan hash, one
  * cache entry per signature as the MQ), inline aggregates are local measures, the time clause is the MQ's time; composite statements (WITH, joins of answers,
  * UNION, windows over the answer) run over secured leaves and refuse a join or sort on a masked column; and every refusal of the dialect has its code.
  */

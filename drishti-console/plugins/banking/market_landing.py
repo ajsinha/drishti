@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti Market's Home figures (docs/admin/LENSES.md › The design): the Market desk's tiles, USD curves and biggest moves, and the
+"""Drishti Market's Home figures (docs/guides/ADMIN_GUIDE.md › The design): the Market desk's tiles, USD curves and biggest moves, and the
 Quality landing's checks, worked out here from the market-data pack's own answers (the server's search, raw documents, business date and
 one field's history), read-only, with the person's identity, lens and date box. Nothing is invented: a figure the data does not hold is
 None, a day-over-day change is given only when both business days hold real data (a history point whose data date is its date), and the

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Editions and lenses in the console (docs/admin/LENSES.md): with the server's edition learned from its about answer the console
+"""Editions and lenses in the console (docs/guides/ADMIN_GUIDE.md sections 12 to 19; docs/architecture/LENSES.md section 10): with the server's edition learned from its about answer the console
 follows config/lenses/banking/risk.yaml on every surface (menus, footer, the command line's words and placeholder, Home and its landings, help,
 Admin, branding); without one it is exactly the full product; a lens does the same for one person only, kept in their settings."""
 from __future__ import annotations
@@ -29,9 +29,9 @@ from core.config import load_settings
 
 # today's top bar (the full product): every item the menus drew before editions, by link
 TODAY = ["/t", "/s", "/forms", "/func", "/datamap", "/reports", "/w", "/m", "/alerts", "/build/new", "/build/pack/new", "/build",
-         "/approvals", "/what", "/help/tutorials", "/help/pack-developer-guide", "/admin/users", "/admin/roles",
+         "/approvals", "/what", "/help/tutorials", "/help/build-guide", "/admin/users", "/admin/roles",
          "/admin/audit", "/admin/packs", "/admin/connectors", "/admin/artifacts", "/admin/loads", "/admin/lakes", "/admin/collab",
-         "/admin/embedding", "/admin/net", "/admin/health", "/admin/caches", "/help", "/help/install-and-run", "/about"]
+         "/admin/embedding", "/admin/net", "/admin/health", "/admin/caches", "/help", "/help/operations#2-install-and-run-on-one-machine", "/about"]
 RISK_ABOUT = {"product": "Drishti Risk", "tagline": "VaR and exposure from your own pricing data", "edition": {"name": "risk", "title": "Drishti Risk"}}
 
 
@@ -125,12 +125,12 @@ def test_the_risk_edition_follows_its_file_on_every_surface(backend, monkeypatch
     assert 'href="/admin/users"' in tabs and 'href="/admin/ai"' not in tabs and 'href="/admin/compute"' not in tabs
     # help: the BI and Build categories hidden, and a guide that is not listed is not reached by its address
     centre = help_pages(c)
-    assert 'href="/help/install-and-run"' in centre and 'href="/help/knowledge-market-risk"' in centre
-    assert 'href="/help/bi-guide"' not in centre and 'href="/help/pack-developer-guide"' not in centre
-    assert 'href="/help/knowledge-economies"' not in centre                           # a Knowledge page of a pack the edition leaves out
-    for slug in ("bi-guide", "pack-developer-guide", "knowledge-economies"):
+    assert 'href="/help/operations"' in centre and 'href="/help/knowledge-risk"' in centre
+    assert 'href="/help/bi-guide"' not in centre and 'href="/help/build-guide"' not in centre
+    assert 'href="/help/knowledge-world"' not in centre                           # a Knowledge page of a pack the edition leaves out
+    for slug in ("bi-guide", "build-guide", "knowledge-world"):
         assert c.get(f"/help/{slug}").status_code == 404, slug
-    assert c.get("/help/install-and-run").status_code == 200
+    assert c.get("/help/operations").status_code == 200
     from core.guides import Library
     from routes.common import packs as _packs  # noqa: F401
     lib = Library(CONSOLE, CONSOLE / "config" / "help.yaml", app.state.docs_dir, [])
@@ -248,9 +248,9 @@ def test_the_world_edition_follows_its_file_on_every_surface(backend, monkeypatc
         assert r.status_code == 303 and "DRS-4023" in r.headers["location"], typed
     # help: the packs' Knowledge pages, the BI category kept, Build hidden; the risk Knowledge pages are not part of World
     centre = help_pages(c)
-    for slug in ("knowledge-economies", "knowledge-companies-funds-and-etfs", "knowledge-entities-and-ownership", "bi-guide", "external-data"):
+    for slug in ("knowledge-world", "knowledge-data", "bi-guide", "external-data"):
         assert f'href="/help/{slug}"' in centre, slug
-    for slug in ("knowledge-market-risk", "knowledge-counterparty-credit-risk", "pack-developer-guide"):
+    for slug in ("knowledge-risk", "build-guide"):
         assert f'href="/help/{slug}"' not in centre and c.get(f"/help/{slug}").status_code == 404, slug
 
 
@@ -388,9 +388,9 @@ def test_the_market_edition_follows_its_file_on_every_surface(market, monkeypatc
         r = c.get("/go", params={"q": typed}, follow_redirects=False)
         assert r.status_code == 303 and "DRS-4023" in r.headers["location"], typed
     centre = help_pages(c)
-    for slug in ("knowledge-market-data", "knowledge-data-and-contracts", "user-guide", "data-samples"):
+    for slug in ("knowledge-data", "user-guide", "data-samples"):
         assert f'href="/help/{slug}"' in centre, slug
-    for slug in ("knowledge-market-risk", "knowledge-economies", "knowledge-counterparty-credit-risk", "pack-developer-guide"):
+    for slug in ("knowledge-risk", "knowledge-world", "build-guide"):
         assert f'href="/help/{slug}"' not in centre and c.get(f"/help/{slug}").status_code == 404, slug
 
 
@@ -563,9 +563,9 @@ def test_the_trading_edition_follows_its_file_on_every_surface(trading, monkeypa
     assert ed.word_on("VAR") and ed.word_on("EXP") and ed.word_on("BI") and not ed.word_on("DATAMAP")
     assert ed.word_on("SMAT") and c.get("/smat").status_code == 200                      # the scenario matrix is Trading's too (2.9.7)
     centre = help_pages(c)
-    for slug in ("knowledge-trades-and-products", "knowledge-market-risk", "knowledge-counterparty-credit-risk", "user-guide"):
+    for slug in ("knowledge-risk", "knowledge-data", "user-guide"):
         assert f'href="/help/{slug}"' in centre, slug
-    for slug in ("knowledge-economies", "pack-developer-guide"):
+    for slug in ("knowledge-world", "build-guide"):
         assert f'href="/help/{slug}"' not in centre and c.get(f"/help/{slug}").status_code == 404, slug
 
 

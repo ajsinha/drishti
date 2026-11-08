@@ -102,7 +102,7 @@ def caps_mb(files: list[Path]) -> int:
 
 
 def engine_file() -> Path:
-    """The in-memory lake's own file (docs/architecture/COMPUTE_ENGINES.md): DRISHTI_ENGINES_DIR, default ./config/engines."""
+    """The in-memory lake's own file (docs/guides/ADMIN_GUIDE.md): DRISHTI_ENGINES_DIR, default ./config/engines."""
     return Path(os.environ.get("DRISHTI_ENGINES_DIR") or "config/engines") / "memory-lake.yaml"
 
 

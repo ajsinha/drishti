@@ -16,7 +16,7 @@
 # Arrow Flight reference
 
 Every request form, its JSON, its schema in Arrow, its errors, the scope it needs and its limits. How to turn Flight on, tokens, the
-cluster and operations: [FLIGHT_GUIDE.md](FLIGHT_GUIDE.md). The clients, one section each: [section 7](#7-clients). Error codes with their HTTP equivalents: [API_GUIDE.md](API_GUIDE.md#error-code-table).
+cluster and operations: [FLIGHT_GUIDE.md](FLIGHT_GUIDE.md). The clients, one section each: [section 7](#7-clients). Error codes with their HTTP equivalents: [API_REFERENCE.md](API_REFERENCE.md#error-code-table).
 
 ## 1. The calls
 
@@ -70,7 +70,7 @@ line and Export data's `data.flight` on the kind. One part; any member may answe
 {"form": "model", "request": {"model": "trades-basic", "query": {"select": {"fields": ["trade.DESK"], "measures": ["MTM"]}, "sort": [{"by": "MTM", "desc": true}], "limit": 50}}}
 ```
 
-`query` is an MQ query ([BI_GUIDE.md](BI_GUIDE.md)); the request may also be the MQ text or JSON with `model` in it, or
+`query` is an MQ query ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)); the request may also be the MQ text or JSON with `model` in it, or
 `{"model": …, "sql": "<a DSQL statement>"}` (what Flight SQL sends, section 6). Needs the BI power.
 Schema: the answer's columns (text utf8, integers int64, decimals float64); metadata `drishti.model`, `drishti.masked`. Scope:
 `data:read` or `data:read:bi`. Snapshot only.
@@ -133,7 +133,7 @@ Per read, from the person's roles (`drishti.engines.flight.limits`): rows, bytes
 
 ## 6. Flight SQL
 
-Read-only SQL over the BI models (DSQL, [API_GUIDE.md › Drishti SQL](API_GUIDE.md#drishti-sql-apiv1bisql)) on the same port; how to use it:
+Read-only SQL over the BI models (DSQL, [API_REFERENCE.md › Drishti SQL](API_REFERENCE.md#8-drishti-sql-apiv1bisql)) on the same port; how to use it:
 [FLIGHT_GUIDE.md](FLIGHT_GUIDE.md#12-flight-sql-sql-over-the-bi-models-from-jdbc-and-odbc-tools), section 12.
 
 | Flight SQL call | Answers |
@@ -152,7 +152,7 @@ Read-only SQL over the BI models (DSQL, [API_GUIDE.md › Drishti SQL](API_GUIDE
 
 **The model of a statement**: its first line `-- model: <model>` or `/* model: <model> */`, else the call's header `model` (a JDBC URL's
 `model=`); neither: `DRS-5603`. `EXPLAIN` is refused (`DRS-5603`; the BI SQL console answers it). The statement's own refusals are the
-BI SQL codes (`DRS-9150` to `DRS-9178`, [API_GUIDE.md](API_GUIDE.md#error-code-table)), carried in a `DRS-5603` or `DRS-5602` message.
+BI SQL codes (`DRS-9150` to `DRS-9178`, [API_REFERENCE.md](API_REFERENCE.md#error-code-table)), carried in a `DRS-5603` or `DRS-5602` message.
 Scope: `data:read` or `data:read:bi`, and the BI power.
 
 ## 7. Clients

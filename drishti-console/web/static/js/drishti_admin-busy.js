@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Admin -> Health, busy protection's operator override (docs/admin/OPERATIONS.md "Busy protection"): Automatic, Let everything through or
+/* Admin -> Health, busy protection's operator override (docs/guides/OPERATIONS_GUIDE.md "Busy protection"): Automatic, Let everything through or
    Hold all new heavy work, with a reason and the minutes it lasts. The server checks the reason, applies it, audits it and ends it by
    itself; the card above shows the override in force at its next refresh. */
 (function () {

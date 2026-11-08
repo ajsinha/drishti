@@ -45,7 +45,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * The upgrade drill stage (CONNECTOR_FILES.md, "Upgrades"): a server started on the connector files the previous release's server
+ * The upgrade drill stage (docs/guides/DATA_GUIDE.md section 9, "Upgrades"): a server started on the connector files the previous release's server
  * generated (the fixture {@code connector-upgrade/2.9.4}, written by {@code tools/connector_upgrade_fixture.py} from release 2.9.4's
  * pack templates, with the markers it kept) upgrades them before it answers:
  * <ul>

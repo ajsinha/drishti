@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Share with a note (COLLABORATION.md, Share with a note): the dialog behind the view's Share button, a panel's share button and Alt+S.
+/* Share with a note (ARCHITECTURE.md §31, Share with a note): the dialog behind the view's Share button, a panel's share button and Alt+S.
    It asks the console what the caller may do (GET /api/collab, once); when collaboration is off or the caller may not collaborate the
    button stays what it was, a copy-link button. Otherwise: what (the whole view or one panel), the page's own pin (shown, never typed),
    the people (type-ahead, drishti_people.js), a note, Send (POST /api/share, Ctrl+Enter), and Copy link kept as the first, one-click use. The

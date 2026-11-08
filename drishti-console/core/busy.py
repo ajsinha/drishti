@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Busy protection in the console (docs/admin/OPERATIONS.md, "Busy protection"). The server decides: when it asks new work to wait it
+"""Busy protection in the console (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"). The server decides: when it asks new work to wait it
 answers ``503`` with a ``DRS-9501`` to ``DRS-9505`` code, ``Retry-After`` and calm words (``title``, ``because``). The console passes all of it
 on unchanged to the page that asked, which shows the message in place with a countdown (static/js/drishti_busy.js); it keeps no list of waiting
 requests and decides nothing itself."""

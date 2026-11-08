@@ -154,7 +154,7 @@ Screens (Sutras):
 |---|---|---|---|
 | OECD Data Explorer SDMX API | OECD terms and conditions: data may be extracted, copied and redistributed, also commercially, with the source acknowledged (CC BY 4.0 for OECD data since July 2024) | no | oecd-country, oecd-series |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/oecd.md](guides/oecd.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/oecd.md](guides/oecd.md): *Data contracts* and *Data retrieval*.
 
 External data: OECD Data Explorer SDMX API. Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
 
@@ -181,4 +181,4 @@ The pack's files are written by `tools/packgen/publicsector/make.py`; its `--che
 ## See also
 
 - [The oecd pack](guides/oecd.md): The OECD members' leading indicator, unemployment, inflation and GDP growth from the OECD Data Explorer (SDMX), filled daily by the oecd feed into worldlake: a page per member with the members on a map by inflation, and each series' history. Type OECD OECD-CAN.
-- [Packs](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

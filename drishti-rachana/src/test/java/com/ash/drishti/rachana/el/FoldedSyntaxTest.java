@@ -29,7 +29,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * The syntax Rachana gains from DEL (docs/architecture/BI_DESIGN.md 2.1 and 2.4): list literals, strict {@code in} and {@code not in}, the
+ * The syntax Rachana gains from DEL (docs/architecture/ARCHITECTURE.md §28 2.1 and 2.4): list literals, strict {@code in} and {@code not in}, the
  * parent path {@code ^}, named arguments, {@code power} and {@code floor} for {@code **} and {@code //}, {@code today()} read as
  * {@code asof()}, and the null rule (Q1: {@code null != 'X'} is true; arithmetic and the text functions null in, null out). Each case
  * normal, null, masked, and wrong.

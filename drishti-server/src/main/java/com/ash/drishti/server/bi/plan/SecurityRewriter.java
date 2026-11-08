@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Stage 4 of the pipeline (docs/architecture/BI_DESIGN.md sections 4.1 and 5.2): every dataset the plan reads becomes a {@code SecureScan} for this reader
+ * Stage 4 of the pipeline (docs/architecture/ARCHITECTURE.md §28 sections 4.1 and 5.2): every dataset the plan reads becomes a {@code SecureScan} for this reader
  * (the dataset's filters, its row rules and the model's ANDed, each layer the OR of the reader's matching rules, {@code user.*} resolved; masks; hidden
  * columns), and a dimension whose security restricts the reader reaches each fact that references it many-to-one as a {@code SemiJoin}. It runs before the
  * optimiser, so the optimiser can only move security, never drop it; no node it adds can be removed by any language construct. Pure.

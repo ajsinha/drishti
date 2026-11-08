@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The rolling upgrade runner (CD3, docs/architecture/CLUSTER_DEPLOYMENT.md section 10.1): one node at a time, consoles, BI and
+# The rolling upgrade runner (CD3, docs/guides/CLUSTER_GUIDE.md section 10.1): one node at a time, consoles, BI and
 # data-serving, coordinators, then owners one zone at a time; each drained, stopped, upgraded, started and waited for until ready.
 #   tools/rolling-upgrade.sh --inventory my-cluster.yaml --version 2.9.7 --dry-run    every step printed, nothing called
 #   tools/rolling-upgrade.sh --inventory my-cluster.yaml --version 2.9.7 [--from var-3] [--only var-1,var-2] [--token-file F]

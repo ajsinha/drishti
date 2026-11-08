@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Share with a note, the console's pages (COLLABORATION.md, build step 3): the share dialog's calls (``/api/collab``,
+"""Share with a note, the console's pages (ARCHITECTURE.md §31, build step 3): the share dialog's calls (``/api/collab``,
 ``/api/directory``, ``/api/share``), the link a share opens (``/share/{id}``, with the clean no-access page) and the inbox
 (``/inbox``, ``/api/inbox``). The server decides who may do what; these routes carry the request and draw what comes back."""
 from __future__ import annotations
@@ -167,7 +167,7 @@ def _row_href(r: dict) -> str:
     if r.get("type") in ("alert", "notice"):                # an alert on a number, or a notice (a basket of yours an administrator deleted): the id is the console path it opens (made by the server, never a full URL)
         path = str(r.get("id") or "")
         return path if path.startswith("/") and not path.startswith("//") else ""
-    if r.get("type") == "bi-run":                           # a BI run finished, failed or was started again (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 3.5): id is the run
+    if r.get("type") == "bi-run":                           # a BI run finished, failed or was started again (ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 3.5): id is the run
         run = r.get("entityId") or r.get("id")
         return f"/bi/run/{quote(str(run), safe='')}" if run else "/bi/w/me?tab=runs"
     if str(r.get("type", "")).startswith("bi-"):            # a BI governance notice: id is the item

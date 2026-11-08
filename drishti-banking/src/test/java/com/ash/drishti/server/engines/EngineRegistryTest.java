@@ -35,7 +35,7 @@ import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
 
 /**
- * The registry (COMPUTE_ENGINES.md sections 5 to 8, tests EngineRegistryTest, EngineSwitchLiveTest and EngineDependencyTest): an engine
+ * The registry (ADMIN_GUIDE.md sections 5 to 8, tests EngineRegistryTest, EngineSwitchLiveTest and EngineDependencyTest): an engine
  * off at start makes no thread and holds nothing, on it does; every dependency refusal with its words (DRS-1021), --with-needs and
  * --with-dependents; a file with frtb-sa on and var off starts with frtb-sa blocked (DRS-1022) and everything else up; off drains the
  * requests in flight then releases; the in-memory lake on says "restart needed"; History and the audit log; an edit by hand takes effect.

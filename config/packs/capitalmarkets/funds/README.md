@@ -295,7 +295,7 @@ folder, never in git; `drishti.py feed run funds` fetches them with the User-Age
 | Nasdaq Trader symbol directory | Public directory, attribution | no | which tickers are ETFs and where they list |
 | GLEIF golden copy, level 2 relationships | CC0 | no | a fund's manager, umbrella and master fund (managed by, sub-fund of, feeder to) |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/funds.md](guides/funds.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/funds.md](guides/funds.md): *Data contracts* and *Data retrieval*.
 
 External data: SEC Form N-PORT data sets; SEC Form N-CEN data sets; SEC mutual fund prospectus risk/return summary data sets; SEC ticker files (company_tickers_mf.json, company_tickers_exchange.json); Nasdaq Trader symbol directory; GLEIF golden copy, level 2 relationships. Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
 
@@ -320,4 +320,4 @@ The pack's files are written by `tools/packgen/funds/make.py`; its `--check` fai
 ## See also
 
 - [The funds pack](guides/funds.md): The 200 largest US mutual funds and ETFs with their holdings, from SEC Form N-PORT, Form N-CEN and the prospectus risk/return summaries (public domain), GLEIF (CC0): a fact sheet per fund, the look-through, the ETF against its index, the funds that hold a company. Refreshed by drishti.py feed run funds. Type FUND QQQ, HELD AAPL or TRACK SP500.
-- [Packs](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

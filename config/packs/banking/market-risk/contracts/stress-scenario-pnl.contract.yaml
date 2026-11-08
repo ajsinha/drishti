@@ -22,7 +22,7 @@ class: computed
 status: active
 title: Stress P&L of a scenario across desks (derived from the stress results)
 description: 'The bank''s stress P&L under one scenario: the desks'' stored stress results added (additive), with each desk''s limit use and breach,
-  once per business date (quick win Q4 of docs/architecture/COMPUTED_ATTRIBUTES.md, until the stress engine STR).'
+  once per business date (docs/architecture/DATA_ARCHITECTURE.md section 12, until the stress engine STR).'
 source: 'computed by Drishti: the derived connector mr-derived over the kind stress-result'
 grain: One record per SCENARIO_ID of the stress-result records, computed when asked.
 key:

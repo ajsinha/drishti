@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 15, AI in Drishti (docs/tutorials/15-ai-in-drishti.md), written to docs/tutorials/img/t15/.
+"""Pictures of tutorial 10, AI in Drishti (docs/tutorials/10-ai-assistant.md), written to docs/tutorials/img/t15/.
 
 The stack must be started with the AI layer on and the MOCK provider (tutorials/data/ai/mock.yaml in the AI folder of the server and of the console): the pictures show
 Admin, AI with a Test connection for each provider, a report drafted from words, a question asked of the data, a number explained, and what the AI policy says to a

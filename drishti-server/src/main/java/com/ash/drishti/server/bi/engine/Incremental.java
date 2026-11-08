@@ -31,7 +31,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 
 /**
- * Incremental maintenance of a grouped answer over a live table (docs/architecture/BI_DESIGN.md section 4.6). {@link #classify} sorts a question by the rule
+ * Incremental maintenance of a grouped answer over a live table (docs/architecture/ARCHITECTURE.md §28 section 4.6). {@link #classify} sorts a question by the rule
  * that keeps it current when the live table changes:
  * <ul>
  * <li>{@link Kind#DIFFERENCE}: every measure is made of {@code sum}, {@code count} and {@code avg} (as sum and count) of the changed table's own columns,

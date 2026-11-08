@@ -137,7 +137,7 @@ public final class FrtbService {
         return drcBytes;
     }
 
-    /** The engine registry's word on FRTB-SA and on the position sensitivities (COMPUTE_ENGINES.md); unset: the old switch, and on. */
+    /** The engine registry's word on FRTB-SA and on the position sensitivities (ADMIN_GUIDE.md); unset: the old switch, and on. */
     private volatile java.util.function.BooleanSupplier running;
     private volatile java.util.function.BooleanSupplier sensitivitiesRunning;
 
@@ -492,7 +492,7 @@ public final class FrtbService {
 
     /**
      * One element of a scope's sensitivities in the reporting currency, with its factor resolved and its record's position and trades (the MR
-     * cube's ladders, heat map and per-cell sums read these, MR_CUBE_GUIDE.md section 6).
+     * cube's ladders, heat map and per-cell sums read these, PIVOT_GUIDE.md section 29.6).
      */
     public record Element(String positionKey, String tradeId, List<String> tradeIds, String grain, FactorDictionary.Factor factor, String measure,
             double value) {}

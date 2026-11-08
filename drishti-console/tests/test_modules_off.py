@@ -86,8 +86,11 @@ def test_banking_off_is_gone_from_every_door(backend, monkeypatch):
     found = c.get("/api/search", params={"q": "VaR explorer", "in": "all"}).text
     assert 'href": "/var"' not in found and '"/var"' not in found                                    # search: no screen of the module
     assert c.get("/help/docs-guides-var-guide").status_code == 404                                    # Help: its guides and tutorials
-    assert c.get("/help/docs-tutorials-25-var-from-the-bank-to-a-trade").status_code == 404
+    assert c.get("/help/docs-tutorials-02-var-from-the-bank-to-a-trade").status_code == 404
     assert "Risk measures" not in c.get("/help").text                                                 # and its Help section
+    for slug in ("knowledge-risk", "docs-tutorials-12-a-day-of-bank-data"):                           # and its pages in core sections (domain:)
+        assert c.get(f"/help/{slug}").status_code == 404, slug
+    assert c.get("/help/knowledge-data").status_code == 200
     assert 'data-kind="var-baskets"' not in c.get("/build").text                                      # the Build home: its types
     for asset in BANKING_ASSETS:                                                                      # its files are not served
         assert c.get(asset).status_code == 404, asset
@@ -145,6 +148,8 @@ def test_capital_markets_off_its_functions_are_gone(backend, monkeypatch):
         [s.get("mnemonic") for s in items]
     assert "USEQ" not in shown and "FUND" not in shown and "TRD" in shown
     assert "/var" in _menu_links(c.get("/t").text)                                                    # banking stays
+    assert c.get("/help/docs-guides-funds-guide").status_code == 404                                 # its Help pages (domain: capitalmarkets)
+    assert c.get("/help/docs-guides-public-sector-guide").status_code == 200                         # another module's stay
 
 
 def test_a_single_function_off_is_gone_and_the_rest_stays(backend, monkeypatch):

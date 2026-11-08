@@ -62,7 +62,7 @@ def _error(r: httpx.Response, text: str) -> "BackendError":
 def peer_problem(status: int, content_type: str, text: str) -> bool:
     """A 502/503 that is the server's own answer about another node of its cluster (``DRS-5050`` to ``DRS-5059``: a peer that holds the data
     is down, a node the role may not reach; or, from a server of 2.6.5 or older, ``DRS-1003`` naming a peer, ``net:<node> failed reading ...``):
-    the server answered, so it is not counted against it and the console does not move away from it (CLUSTER_DEPLOYMENT.md 11.1). A time-out about
+    the server answered, so it is not counted against it and the console does not move away from it (CLUSTER_GUIDE.md 11.1). A time-out about
     another node (``DRS-1014``, 504) is never counted either: only 502/503 are. A 502/503 from a proxy, or a server's own failure, still
     counts (SOAK-02: the console set healthy servers aside 43 times on histories a dying peer could not answer)."""
     if status not in (502, 503) or "json" not in (content_type or ""):
@@ -781,7 +781,7 @@ class BackendClient:
                 self._servers.failed(base, f"stream broke ({type(e).__name__})")
             raise BackendError(503, "DRS-5003", f"backend unreachable: {e}") from e
 
-    # -- Rupaka phase 1: the BI shell and catalogue (docs/architecture/BI_DESIGN.md) ---------------------------------------------
+    # -- Rupaka phase 1: the BI shell and catalogue (docs/architecture/ARCHITECTURE.md §28) ---------------------------------------------
     async def bi(self, method: str, path: str, ident, body: dict | None = None, wait: float | None = None, **params):
         """``/api/v1/bi/...`` as the signed-in user: the server decides what they may see and do, every time. ``wait`` (seconds) replaces
         the console's own wait for a call that may run longer (a query: the server lets one run ``drishti.bi.query.timeout``, 30 s)."""
@@ -795,7 +795,7 @@ class BackendClient:
         return await self._send(method, "/bi" + path, ident, **kw)
 
     async def bi_async(self, method: str, path: str, ident, body: dict | None, prefer: str, wait: float | None = None, **params):
-        """A BI question asked as a run (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 6): ``Prefer: respond-async, wait=N`` is passed on and the answer comes back as
+        """A BI question asked as a run (ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 6): ``Prefer: respond-async, wait=N`` is passed on and the answer comes back as
         ``(status, body)``: 200 the answer (done within the wait), 202 the run that goes on. A refusal (409 DRS-9082, 409 DRS-9089) raises."""
         kw: dict = {"with_status": True, "headers": {"Prefer": prefer}}
         if wait:
@@ -867,7 +867,7 @@ class BackendClient:
         return await self._send("POST", "/auth/oidc", service, json={"idToken": id_token, "nonce": nonce})
 
     async def embed_sign_in(self, id_token: str, nonce: str, origin: str, refreshed: bool, service) -> dict:
-        """The renderer's sign-in window (CLIENT_RENDERER.md 10.1): the server verifies the single sign-on's ID token and makes that user's
+        """The renderer's sign-in window (EMBED_GUIDE.md 10.1): the server verifies the single sign-on's ID token and makes that user's
         embed token for the host application that registered ``origin`` (RFC 8693 form), audited with the origin."""
         return await self._send("POST", "/embed/sign-in-window", service, json={"idToken": id_token, "nonce": nonce, "origin": origin, "refreshed": refreshed})
 

@@ -46,7 +46,7 @@ def test_sign_in_off_says_so_and_adds_nothing_to_the_public_nav(client):
     home = client.get("/").text            # sign-in off: everyone is the developer, so the landing shows the terminal top bar
     assert "data-sign-in>" not in home and "data-public-user" not in home and "Sign out" not in home and "Sign-in is off on this server" in home
     menu = client.get("/t").text
-    assert "Sign-in is off on this server" in menu and "/help/user-management#signing-in-and-out" in menu and "Sign out" not in menu
+    assert "Sign-in is off on this server" in menu and "/help/admin#1-signing-in-and-out" in menu and "Sign out" not in menu
     login = client.get("/login").text
     assert "data-sign-in-off" in login and 'href="/t"' in login and 'name="password"' not in login and "data-login-back" in login
     assert client.post("/logout", follow_redirects=False).headers["location"] == "/"

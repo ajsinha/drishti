@@ -28,7 +28,7 @@ import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
 /**
- * The rows of a business date sharded across Drishti*net members (VAR_SHARDING.md): the date's ordinals cut into contiguous shards (legal
+ * The rows of a business date sharded across Drishti*net members (DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): the date's ordinals cut into contiguous shards (legal
  * entity and desk ranges, a desk never split), each one's rows held here (mapped from its shard hot file) or on its owners. A set is summed
  * shard by shard: each shard's part given once to the rows held here or to one owner ({@link Remote}, the partial endpoint), the partial
  * float64 vectors added in shard order, so the same set gives the same bits whichever owners answered. Exactly one answer per shard asked:
@@ -341,7 +341,7 @@ public final class ShardedVectors implements Vectors, SetSums {
     }
 
     /**
-     * The sums of many sets at once (a cube view's cells and totals, docs/lenses/README.md section 4.11): each set cut by shard as {@link #sumSet}
+     * The sums of many sets at once (a cube view's cells and totals, docs/architecture/LENSES.md section 4.11): each set cut by shard as {@link #sumSet}
      * cuts it, every remote shard asked <b>once</b> for all the sets' parts it holds (in calls of up to {@link #BATCH} sets, the shards side by
      * side under one deadline), the held shards summed here, then each set's partials added in shard order from zero, exactly as
      * {@link #sumSet} adds them: each answer is the one {@link #sumSet} gives for that set, to the bit. A shard nobody answers fails them all.

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 19, A cluster of three (docs/tutorials/19-a-cluster-of-three.md), written to docs/tutorials/img/t19/.
+"""Pictures of tutorial 22, A cluster of three (docs/tutorials/22-a-cluster-of-three.md), written to docs/tutorials/img/t19/.
 
 A real cluster: three built servers (a, b, c on 18783 to 18785) and a console on 17784 given server a alone, made by the console's own test
 cluster (drishti-console/tests/net_stack.py: small synthetic trades split three ways, MX-00003 on c only, the finance demo ticking on b).

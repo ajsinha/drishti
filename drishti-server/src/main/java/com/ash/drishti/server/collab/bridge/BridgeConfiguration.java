@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** The bridges (COLLABORATION.md, build step 9): the registry, the outbox channel and the notifier. */
+/** The bridges (ARCHITECTURE.md §31, build step 9): the registry, the outbox channel and the notifier. */
 @Configuration(proxyBeanMethods = false)
 public class BridgeConfiguration {
 

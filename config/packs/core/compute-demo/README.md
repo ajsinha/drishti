@@ -155,7 +155,7 @@ Screens (Sutras):
 | Synthetic P&L strips (a seeded random walk, config/packs/core/compute-demo/tools/make_samples.py) | Proprietary (part of Drishti) | no | path-book, path-strip |
 | Computed on request by the reactive connectors path-sum-python and path-sum-java | Proprietary (part of Drishti) | no | path-sum, path-sum-java |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/compute-demo.md](guides/compute-demo.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/compute-demo.md](guides/compute-demo.md): *Data contracts* and *Data retrieval*.
 
 ## Enabling and dependencies
 
@@ -184,4 +184,4 @@ The pack's files are written by `tools/packgen/readme.py compute-demo`; its `--c
 ## See also
 
 - [Compute demo pack](guides/compute-demo.md): Reactive connectors on synthetic P&L strips: a book's path computed by a Python and a Java engine; the data contract of every kind and where its data comes from.
-- [Packs](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

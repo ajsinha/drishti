@@ -34,6 +34,7 @@ a legal entity, the bank), with incremental EAD before dealing. It defines the s
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
 16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+17. [JSON examples](#17-json-examples)
 
 ## 1. Summary
 
@@ -358,7 +359,7 @@ classes → hedging sets → sub-keys → trades (drill: each level shows its ad
 | `ADD_ONS` | record list | | per asset class: `ASSET_CLASS`, `ADD_ON` |
 | `HEDGING_SETS` | record list | | `ASSET_CLASS`, `HEDGING_SET`, `SUB_KEYS` (`KEY`, `D`, `SF`, `ADD_ON`), `EFFECTIVE_NOTIONAL`, `ADD_ON` |
 | `BY_NETTING_SET` | record list | | above a set: `NETTING_SET`, `RC`, `PFE`, `MULTIPLIER`, `EAD`, `MARGINED` |
-| `PROVENANCE` | record | | NSET's, plus `SUPERVISORY_TABLE` (the regulation and version), `DERIVED_ROWS` |
+| `PROVENANCE` | record | | NSET's (`INPUTS[]`: `KIND`, `DATA_VERSION`, `BATCH_ID`; `UNVALUED`, `UNMAPPED`, `STANDALONE`, `PARTIAL`, `HIDDEN`), plus `SUPERVISORY_TABLE` (the regulation and version), `DERIVED_ROWS` |
 
 ### 9.2 The API (`/api/v1/saccr`, planned)
 
@@ -427,10 +428,18 @@ class SaccrEngine(Engine):
 ### 9.5 Published official results (`saccr-official`, `saccr-official-cpty`)
 
 The two tables of [NSET.md section 9.5](NSET.md#95-published-official-results-nset-official-nset-official-cpty), with the shared columns
-and: `V`, `C`, `NICA`, `RC`, `ADD_ON`, `ADD_ON_IR`, `ADD_ON_FX`, `ADD_ON_CREDIT`, `ADD_ON_EQUITY`, `ADD_ON_COMMODITY`, `PFE`, `EAD`,
-`EAD_UNMARGINED`, `RWA` (DOUBLE, USD); `MULTIPLIER`, `ALPHA` (DOUBLE; netting-set rows only); `MARGINED`, `CAPPED` (BOOLEAN; netting-set
-rows); `NETTING_SETS`, `TRADES`, `EXCLUDED_TRADES` (BIGINT); `SUPERVISORY_TABLE` (STRING). Node and counterparty rows sum EAD, RWA, RC and
-PFE over netting sets (EAD is additive over sets; the multiplier is not, so it is left empty above a set). This is the table a regulatory
+and these figure columns:
+
+| Column | Delta | Rows | Meaning |
+|---|---|---|---|
+| `V`, `C`, `NICA`, `RC`, `ADD_ON`, `PFE`, `EAD`, `EAD_UNMARGINED`, `RWA` | DOUBLE, USD | all | as §9.1 |
+| `ADD_ON_IR`, `ADD_ON_FX`, `ADD_ON_CREDIT`, `ADD_ON_EQUITY`, `ADD_ON_COMMODITY` | DOUBLE, USD | all | the add-on by asset class |
+| `MULTIPLIER`, `ALPHA` | DOUBLE | netting-set rows only | |
+| `MARGINED`, `CAPPED` | BOOLEAN | netting-set rows only | |
+| `NETTING_SETS`, `TRADES`, `EXCLUDED_TRADES` | BIGINT | all | counts |
+| `SUPERVISORY_TABLE` | STRING | all | the regulation and version of the supervisory parameters |
+
+Node and counterparty rows sum EAD, RWA, RC and PFE over netting sets (EAD is additive over sets; the multiplier is not, so it is left empty above a set). This is the table a regulatory
 reporting system reads for the EAD of the day.
 
 ## 10. Validation, errors and data quality
@@ -502,7 +511,7 @@ Guard test: `sa-ccr` must not return; no input or fundamental kind carries `EAD`
 
 The pack sample `SACCR-ALDERSHOT-FRA` (2026-09-30: RC 0, add-on 791,562, multiplier 0.933, EAD 1,033,938) is internally consistent
 with the stored rule on the collateral before haircut (V − C = −339,550 + 229,552 = −109,998 gives the multiplier 0.933); the balance
-after haircut, 228,402, gives V − C = −111,148 and 0.932 (F24 of COMPUTED_ATTRIBUTES.md: the stored SA-CCR still counts the
+after haircut, 228,402, gives V − C = −111,148 and 0.932 (F24 of DATA_ARCHITECTURE.md section 12: the stored SA-CCR still counts the
 collateral before haircut); in the test data the same id reads RC 1,679,379
 while its netting set's `NET_MTM − COLLATERAL` is 2,611,248 (the daily walk moves the netting set, not the SA-CCR record). The release
 notes will list stored and computed EAD for each set with the reason.
@@ -564,6 +573,47 @@ AddOn_credit = √((0.5 × 1.08 − 0.8 × 1.14)² + (1 − 0.25) × 1.08² + (1
 |---|---|---|
 | 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
 | 1.1 | 2026-11-02 | Product owner's decisions of 2026-11-02 applied ([COUNTERPARTY_ENGINES.md section 14](../architecture/COUNTERPARTY_ENGINES.md#14-decisions)): C and NICA at supervisory haircuts; MPOR as written with `MPOR_DAYS` excluding the remargining period; `unclassified` (exclude by default, a conservative stand-in as a setting); OSFI CAR next; `SPECIFIC_WWR` trades in their own set |
+
+## 17. JSON examples
+
+The margined case of [section 15](#15-a-worked-example) (daily VM, MPOR 10 days, VM held 1.2m), on the demo's Aldershot New York netting
+set. Each line is one record.
+
+**saccr-trade: the three swaps**, as the bank's capital process delivers them (`DRIVER` 0, one row each):
+
+```json
+{"SACCR_ROW_ID":"MX-30000412~0","BUSINESS_DATE":"2026-09-30","TRADE_ID":"MX-30000412","SOURCE_SYSTEM":"MUREX","DRIVER":0,"NETTING_SET":"NS-ALDERSHOT-NY","COUNTERPARTY":"CP-ALDERSHOT","LEGAL_ENTITY":"LE-NY","ASSET_CLASS":"IR","HEDGING_SET":"USD","TRANSACTION_TYPE":"LINEAR","DIRECTION":"LONG","NOTIONAL_USD":100000000,"START_DATE":"2026-09-30","END_DATE":"2030-09-30","MATURITY_DATE":"2030-09-30","CLEARED":false,"DERIVED_BY":"upstream","BATCH_ID":"B-2026-09-30-01"}
+{"SACCR_ROW_ID":"MX-30000413~0","BUSINESS_DATE":"2026-09-30","TRADE_ID":"MX-30000413","SOURCE_SYSTEM":"MUREX","DRIVER":0,"NETTING_SET":"NS-ALDERSHOT-NY","COUNTERPARTY":"CP-ALDERSHOT","LEGAL_ENTITY":"LE-NY","ASSET_CLASS":"IR","HEDGING_SET":"USD","TRANSACTION_TYPE":"LINEAR","DIRECTION":"SHORT","NOTIONAL_USD":50000000,"START_DATE":"2026-09-30","END_DATE":"2034-09-29","MATURITY_DATE":"2034-09-29","CLEARED":false,"DERIVED_BY":"upstream","BATCH_ID":"B-2026-09-30-01"}
+{"SACCR_ROW_ID":"MX-30000414~0","BUSINESS_DATE":"2026-09-30","TRADE_ID":"MX-30000414","SOURCE_SYSTEM":"MUREX","DRIVER":0,"NETTING_SET":"NS-ALDERSHOT-NY","COUNTERPARTY":"CP-ALDERSHOT","LEGAL_ENTITY":"LE-NY","ASSET_CLASS":"IR","HEDGING_SET":"EUR","TRANSACTION_TYPE":"LINEAR","DIRECTION":"LONG","NOTIONAL_USD":80000000,"START_DATE":"2026-09-30","END_DATE":"2027-03-31","MATURITY_DATE":"2027-03-31","CLEARED":false,"DERIVED_BY":"upstream","BATCH_ID":"B-2026-09-30-01"}
+```
+
+**saccr-trade: special cases.** A bought European swaption (option terms for the supervisory delta), a credit single name delivered as
+bought protection (short credit quality), and an Endur commodity swap derived by the configured rules:
+
+```json
+{"SACCR_ROW_ID":"MX-30000415~0","BUSINESS_DATE":"2026-09-30","TRADE_ID":"MX-30000415","SOURCE_SYSTEM":"MUREX","DRIVER":0,"NETTING_SET":"NS-ALDERSHOT-NY","COUNTERPARTY":"CP-ALDERSHOT","LEGAL_ENTITY":"LE-NY","ASSET_CLASS":"IR","HEDGING_SET":"USD","TRANSACTION_TYPE":"OPTION","DIRECTION":"LONG","NOTIONAL_USD":25000000,"START_DATE":"2027-03-31","END_DATE":"2037-03-31","MATURITY_DATE":"2037-03-31","OPTION_TYPE":"CALL","BOUGHT_SOLD":"BOUGHT","EXERCISE_DATE":"2027-03-31","STRIKE":0.04,"UNDERLYING_FORWARD":0.0385,"SHIFT":0.01,"CLEARED":false,"DERIVED_BY":"upstream","BATCH_ID":"B-2026-09-30-01"}
+{"SACCR_ROW_ID":"CLY-3000112~0","BUSINESS_DATE":"2026-09-30","TRADE_ID":"CLY-3000112","SOURCE_SYSTEM":"CALYPSO","DRIVER":0,"NETTING_SET":"NS-ALDERSHOT-NY","COUNTERPARTY":"CP-ALDERSHOT","LEGAL_ENTITY":"LE-NY","ASSET_CLASS":"CREDIT","HEDGING_SET":"CREDIT","TRANSACTION_TYPE":"LINEAR","REFERENCE":"549300H5KZ2QJHEAMB55","IS_INDEX":false,"CREDIT_QUALITY":"BBB","DIRECTION":"SHORT","NOTIONAL_USD":20000000,"START_DATE":"2026-09-30","END_DATE":"2031-12-20","MATURITY_DATE":"2031-12-20","CLEARED":false,"DERIVED_BY":"upstream","BATCH_ID":"B-2026-09-30-01"}
+{"SACCR_ROW_ID":"1000019~0","BUSINESS_DATE":"2026-09-30","TRADE_ID":"1000019","SOURCE_SYSTEM":"ENDUR","DRIVER":0,"NETTING_SET":"NS-ALDERSHOT-NY","COUNTERPARTY":"CP-ALDERSHOT","LEGAL_ENTITY":"LE-NY","ASSET_CLASS":"COMMODITY","HEDGING_SET":"ENERGY","TRANSACTION_TYPE":"LINEAR","REFERENCE":"CRUDE_OIL","DIRECTION":"LONG","QUANTITY":50000,"UNDERLYING_PRICE":74.6,"START_DATE":"2026-09-30","END_DATE":"2028-02-29","MATURITY_DATE":"2028-02-29","CLEARED":false,"DERIVED_BY":"rules","BATCH_ID":"B-2026-09-30-01"}
+```
+
+The reference entity's LEI is synthetic. `DERIVED_BY` is set by Drishti, never sent: an upstream row arrives without it.
+
+**saccr-result: the answer for `NSET:NS-ALDERSHOT-NY`** (the three swaps only, margined: MF 0.3 for every trade; the computed kind's record,
+which `GET /api/v1/saccr/scope` answers in camelCase). For interest rates the add-on is taken per hedging set, so the maturity buckets carry their D and SF without an
+add-on of their own:
+
+```json
+{"SCOPE":"NSET:NS-ALDERSHOT-NY","CANONICAL":"NSET:NS-ALDERSHOT-NY","SCOPE_KIND":"netting-set","LABEL":"Aldershot, New York","BUSINESS_DATE":"2026-09-30","NETTING_SETS":1,"TRADES":3,"EXCLUDED_TRADES":0,"V":1500000.0,"C":1200000.0,"NICA":0.0,"RC":500000.0,"ADD_ON":463958.0,"MULTIPLIER":1.0,"PFE":463958.0,"EAD":1349541.0,"EAD_UNMARGINED":2504144.0,"CAPPED":false,"ALPHA":1.4,"MPOR_DAYS":10,"MARGINED":true,"RWA":1349541.0,"RISK_WEIGHT":1.0,"ADD_ONS":[{"ASSET_CLASS":"IR","ADD_ON":463958.0}],"HEDGING_SETS":[{"ASSET_CLASS":"IR","HEDGING_SET":"USD","SUB_KEYS":[{"KEY":"2","D":108761548.0,"SF":0.005,"ADD_ON":null},{"KEY":"3","D":-98903986.0,"SF":0.005,"ADD_ON":null}],"EFFECTIVE_NOTIONAL":80940360.0,"ADD_ON":404702.0},{"ASSET_CLASS":"IR","HEDGING_SET":"EUR","SUB_KEYS":[{"KEY":"1","D":11851242.0,"SF":0.005,"ADD_ON":null}],"EFFECTIVE_NOTIONAL":11851242.0,"ADD_ON":59256.0}],"BY_NETTING_SET":[{"NETTING_SET":"NS-ALDERSHOT-NY","RC":500000.0,"PFE":463958.0,"MULTIPLIER":1.0,"EAD":1349541.0,"MARGINED":true}],"PROVENANCE":{"INPUTS":[{"KIND":"saccr-trade","DATA_VERSION":64,"BATCH_ID":"B-2026-09-30-01"},{"KIND":"valuation","DATA_VERSION":233,"BATCH_ID":"B-2026-09-30-01"},{"KIND":"collateral-holding","DATA_VERSION":118,"BATCH_ID":"B-2026-09-30-01"}],"UNVALUED":0,"UNMAPPED":0,"STANDALONE":0,"PARTIAL":0,"HIDDEN":0,"SUPERVISORY_TABLE":"BCBS CRE52 (2023)","DERIVED_ROWS":0}}
+```
+
+The 100% risk weight is the RWA hook's default for an unrated corporate.
+
+**saccr-official: a desk row** (the shared columns of [README.md section 11](README.md), the figure columns of section 9.5; the
+multiplier, alpha and the booleans are left empty above a netting set):
+
+```json
+{"BUSINESS_DATE":"2026-09-30","HIERARCHY":"MGMT","NODE_ID":"DESK:DESK-RATES","NODE_NAME":"Rates","PARENT_ID":"DIV:DIV-MARKETS","LEVEL":"desk","CAPTURE_ID":"CAP-SACCR-2026-09-30-OFFICIAL","RESULT_VERSION":1,"INPUT_VERSIONS":"{\"saccr-trade\":{\"version\":64,\"batches\":[\"B-2026-09-30-01\"]}}","COMPUTED_AT":"2026-10-01T06:42:00Z","CONTRACT_VERSION":"1.0","V":1500000.0,"C":1200000.0,"NICA":0.0,"RC":500000.0,"ADD_ON":463958.0,"ADD_ON_IR":463958.0,"ADD_ON_FX":0.0,"ADD_ON_CREDIT":0.0,"ADD_ON_EQUITY":0.0,"ADD_ON_COMMODITY":0.0,"PFE":463958.0,"EAD":1349541.0,"EAD_UNMARGINED":2504144.0,"RWA":1349541.0,"MULTIPLIER":null,"ALPHA":null,"MARGINED":null,"CAPPED":null,"NETTING_SETS":1,"TRADES":3,"EXCLUDED_TRADES":0,"SUPERVISORY_TABLE":"BCBS CRE52 (2023)"}
+```
 
 ---
 

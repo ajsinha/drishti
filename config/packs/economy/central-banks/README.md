@@ -166,7 +166,7 @@ Screens (Sutras):
 | FRED API (Federal Reserve Bank of St. Louis) | FRED API terms of use; each series keeps its owner's terms. The default series are US government works (Federal Reserve Board, US Treasury, BLS): public domain | no | central-bank, rate-series |
 | Bank of Canada Valet API | Bank of Canada terms of use: free to use, copy, distribute and transmit with attribution; inside a paid service, tell buyers the data is free on bankofcanada.ca | no | central-bank, rate-series |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/central-banks.md](guides/central-banks.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/central-banks.md](guides/central-banks.md): *Data contracts* and *Data retrieval*.
 
 External data: FRED API (Federal Reserve Bank of St. Louis); Bank of Canada Valet API. Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
 
@@ -193,4 +193,4 @@ The pack's files are written by `tools/packgen/publicsector/make.py`; its `--che
 ## See also
 
 - [The central-banks pack](guides/central-banks.md): Policy rates and the market series around them from FRED and the Bank of Canada's Valet API, filled daily by the central-banks feed into worldlake: a page per bank (policy rate, last move, series) and per series (two years of history). FRED needs DRISHTI_FRED_API_KEY. Type CBANK CBANK-FED.
-- [Packs](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

@@ -148,7 +148,7 @@ None: all 10 rows were read, and every field any of them has is in the record ab
 - Data contract: [OECD in the oecd pack's contracts](../packs/oecd.md#oecd-oecd-country-oecd-country) (`config/packs/economy/oecd/contracts/oecd-country.contract.yaml`, the source of every meaning on this page).
 - [Public sector: government data and free news](../../guides/PUBLIC_SECTOR_GUIDE.md)
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="oecd-series"></a>
 
@@ -264,4 +264,4 @@ None: all 10 rows were read, and every field any of them has is in the record ab
 - Data contract: [OECDS in the oecd pack's contracts](../packs/oecd.md#oecds-oecd-series-oecd-series) (`config/packs/economy/oecd/contracts/oecd-series.contract.yaml`, the source of every meaning on this page).
 - [Public sector: government data and free news](../../guides/PUBLIC_SECTOR_GUIDE.md)
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

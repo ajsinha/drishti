@@ -111,13 +111,13 @@ def register(groups, add, srv, ctx: dict | None = None) -> None:
             [], "examples:\n  drishti.py lake build --from exports/deal.2026-10-01.json --kind deal --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates "
                 "--lake data/delta/demo --domain trading\n  drishti.py lake build --from drop/ --pack config/packs/my-book --lake data/delta/demo --as-of 2026-10-01 "
                 "--signal http://localhost:18480\nexit: 0 ok, 2 written with rejects (or the signal failed), 1 failure, 3 another run holds the table's (or the lake's) lock. "
-                "Guide: docs/guides/TOOLS.md")
+                "Guide: docs/guides/CLI_REFERENCE.md")
     _mod("build").add_arguments(b)
     pb = add(sub, "publish", cmd_publish, "lake publish: commit the files of a table lake build wrote into a Delta table in S3 (one commit "
              "replacing the dates; S3 conditional writes)", [],
              "example:\n  drishti.py lake publish --from /opt/drishti/data/lake-build/run-1/trading/trade_endur "
              "--to s3://acme-drishti-prod-lake/lake/trading/trade_endur --dates 2026-10-20 --storage-option AWS_REGION=eu-west-2\n"
-             "exit: 0 ok, 1 failure (nothing committed), 2 committed but the signal failed, 3 nothing to publish. Guide: docs/architecture/CLUSTER_DEPLOYMENT.md")
+             "exit: 0 ok, 1 failure (nothing committed), 2 committed but the signal failed, 3 nothing to publish. Guide: docs/guides/CLUSTER_GUIDE.md")
     _mod("publish").add_arguments(pb)
     s = add(sub, "scan", cmd_scan, "lake scan: an export's fields (presence, types, frequent values) and the suggested key, date and classifiers",
             [], "example:\n  drishti.py lake scan exports/book.json --limit 5000")
@@ -140,14 +140,14 @@ def register(groups, add, srv, ctx: dict | None = None) -> None:
     rl = add(sub, "relocate", cmd_relocate, "lake relocate: move a lake built in the older layout (<data>/delta/<domain>) into its own folder "
              "<data>/delta/<lake> once: verified, moved back on any error, never a delete", [],
              "examples:\n  drishti.py lake relocate demo --dry-run\n  drishti.py lake relocate demo\n"
-             "The server does it for the demo lake at start (drishti.lakes.relocate-on-start). Guide: docs/admin/OPERATIONS.md")
+             "The server does it for the demo lake at start (drishti.lakes.relocate-on-start). Guide: docs/guides/OPERATIONS_GUIDE.md")
     _mod("relocate").add_arguments(rl)
     add(sub, "maintain", cmd_maintain, "lake maintain: retention, compaction, checkpoint and vacuum (tools/lake/maintain.py; its options are passed through)",
         [], "examples:\n  drishti.py lake maintain --config deploy/lake-maintenance.yaml --once --dry-run\n"
             "  drishti.py lake maintain --once --tables trading/trade_endur      (the file Admin -> Lakes writes: <data>/lakes/lake-maintenance.yaml)\n"
             "  drishti.py lake maintain --history\n"
             "  drishti.py lake maintain relayout --root data/delta/demo --domain trading\n"
-            "Only tables lake build built are maintained (--force-foreign overrides, with a warning). Guide: docs/admin/OPERATIONS.md")
+            "Only tables lake build built are maintained (--force-foreign overrides, with a warning). Guide: docs/guides/OPERATIONS_GUIDE.md")
     _mod("lakeconfig").register(sub, add)                               # lake show|check|migrate-config (2.9.11.c, DATA_LAKE_GUIDE.md)
     if ctx:
         _mod("memory_cli").register(sub, add, srv, ctx)                # lake memory status|jobs|refill (2.9.11, docs/architecture/DATA_ARCHITECTURE.md)

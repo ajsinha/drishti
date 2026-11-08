@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 29, the risk lake and the official results on Iceberg (docs/tutorials/29-var-on-iceberg.md), written to
+"""Pictures of tutorial 16, Part E, the risk lake and the official results on Iceberg (docs/tutorials/16-load-your-own-data-into-a-new-lake.md), written to
 docs/tutorials/img/t29/. Its own stack, built as the tutorial says: the VaR test data (and MUREX's trades, so the lake holds a Delta
 table beside the Iceberg ones) with `build_demo_lakes.py --as-of data --store risk=iceberg`, the official results to Iceberg under the
 Iceberg root (application.local.yaml), then the scratch server and console, and var-results reset to the pack's default. Run it on its own:

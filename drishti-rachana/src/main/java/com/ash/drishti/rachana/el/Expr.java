@@ -296,7 +296,7 @@ public interface Expr {
                     return Values.normalise(Values.number(a) + Values.number(b));
                 case "-", "*", "/", "%":
                     if (Values.isNull(a) || Values.isNull(b)) {
-                        return null;                                  // null in, null out (docs/architecture/BI_DESIGN.md 2.6: as SQL computes it)
+                        return null;                                  // null in, null out (docs/architecture/ARCHITECTURE.md §28 2.6: as SQL computes it)
                     }
                     if ("-".equals(op) && Values.simplify(a) instanceof String sa && Values.simplify(b) instanceof String sb) {
                         java.time.LocalDate x = Args.parseDate(sa);
@@ -447,7 +447,7 @@ public interface Expr {
     }
 
     /**
-     * {@code x in list}, {@code x not in list}: strict membership (docs/architecture/BI_DESIGN.md Q3). An empty list, an empty value or nothing
+     * {@code x in list}, {@code x not in list}: strict membership (docs/architecture/ARCHITECTURE.md §28 Q3). An empty list, an empty value or nothing
      * at all holds nothing, so {@code x in []} is false and {@code x not in []} true (unlike {@code one_of}, whose empty choice holds
      * everything, for controls). Equality is the null rule's: {@code null} equals only {@code null}. A value that is not a list is a list
      * of one. A masked value or list gives the mask (a filter on it is never true).
@@ -486,7 +486,7 @@ public interface Expr {
 
     /**
      * {@code ^}: the parent of the current element ({@code ^^} its parent, and so on): in a filter over a leg's cash flows,
-     * {@code ^.LEG_TYPE} is the leg's; for a row of a table, the document. Missing when there is no such parent (docs/architecture/BI_DESIGN.md
+     * {@code ^.LEG_TYPE} is the leg's; for a row of a table, the document. Missing when there is no such parent (docs/architecture/ARCHITECTURE.md §28
      * Q8).
      *
      * @param up 1 for {@code ^}, 2 for {@code ^^}

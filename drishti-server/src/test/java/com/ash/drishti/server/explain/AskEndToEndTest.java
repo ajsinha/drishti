@@ -60,7 +60,7 @@ class AskEndToEndTest {
 
     static final FakeModel MODEL = new FakeModel();
 
-    /** Ask's model: a provider file of the AI layer (docs/admin/AI.md) pointing at the fake endpoint. */
+    /** Ask's model: a provider file of the AI layer (docs/guides/AI_GUIDE.md) pointing at the fake endpoint. */
     @DynamicPropertySource
     static void provider(DynamicPropertyRegistry r) throws java.io.IOException {
         java.nio.file.Path dir = java.nio.file.Files.createTempDirectory("ask-ai");

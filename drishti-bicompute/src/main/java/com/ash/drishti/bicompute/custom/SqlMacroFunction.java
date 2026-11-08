@@ -30,7 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * An SQL aggregate macro (PIVOT_ENGINE.md section 8.2): {@code CREATE MACRO wret(r, w) AS sum(r * w) / sum(w)}. The engine first rewrites
+ * An SQL aggregate macro (ARCHITECTURE.md section 26.5): {@code CREATE MACRO wret(r, w) AS sum(r * w) / sum(w)}. The engine first rewrites
  * the macro into states: a body that is a formula of the built-ins (arithmetic over {@code sum}, {@code count}, {@code avg}, ...)
  * becomes that {@link FormulaFunction}, mergeable, exact and fast. Any other body ({@code regr_slope(y, x)}, {@code mode(x)}) is holistic: the
  * tabular provider computes it in DuckDB for each grouping set from the set's own rows, and outside SQL (the harness, the playground) the

@@ -40,7 +40,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * The datasets of a model whose rows are not a pack kind (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, sections 1.2 B to D and 5.4, wave W1 package S4): a
+ * The datasets of a model whose rows are not a pack kind (docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, sections 1.2 B to D and 5.4, wave W1 package S4): a
  * <b>connector query</b> (its SQL run in its SQL-capable connector, only the four named dates bound), a <b>Python Transform</b> over model-query inputs, or
  * <b>another model's answer</b>. Every inner query runs <em>as the reader</em> (their row rules and masks apply inside it) at the outer query's date when it
  * names none, and the answer becomes the rows of the dataset's table for that one query: the model's relationships, the dataset's own rules and masks and the
@@ -213,7 +213,7 @@ final class DatasetSources implements StagedTables {
 
     /**
      * An input of a Transform bound for the reader (TransformInputs): a model query as the dataset states it, or a pack kind read through a connector (2.4.0,
-     * docs/architecture/BI_DESIGN.md section 11.1, item P5), asked as the reader at the outer query's date. Kept per key, as the inner models are, so the fingerprint and the run agree.
+     * docs/architecture/ARCHITECTURE.md §28 section 11.1, item P5), asked as the reader at the outer query's date. Kept per key, as the inner models are, so the fingerprint and the run agree.
      */
     private TransformInputs.Asked asked(String key, JsonNode in) {
         TransformInputs.Asked a = askedInputs.get(key);
@@ -277,7 +277,7 @@ final class DatasetSources implements StagedTables {
     }
 
     /**
-     * A dataset with Python columns (docs/architecture/BI_DESIGN.md section 3.1, "python via the existing Transform runner until B"): the base's rows are asked
+     * A dataset with Python columns (docs/architecture/ARCHITECTURE.md §28 section 3.1, "python via the existing Transform runner until B"): the base's rows are asked
      * as the reader (a row extract of every stored column of the dataset), handed to each Python item as the frame {@code rows} (a Transform that returns the
      * frame with its column added), and the result is the table. The dataset's own rules, masks and derived expressions then apply to it as to any table.
      */
@@ -342,7 +342,7 @@ final class DatasetSources implements StagedTables {
     }
 
     /**
-     * A promoted run's rows (BI_DESIGN.md 9.4): the promoter's view as stored, masks included (a masked value is stored as the mask, never the value); the
+     * A promoted run's rows (ARCHITECTURE.md §28 9.4): the promoter's view as stored, masks included (a masked value is stored as the mask, never the value); the
      * dataset's own rules and masks then apply to its readers on top, as on any table.
      */
     private Answer fromRun(String table, DatasetDef d) {

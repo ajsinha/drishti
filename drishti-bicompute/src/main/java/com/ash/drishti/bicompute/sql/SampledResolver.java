@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * The tabular sources read through a sample (PIVOT_ENGINE.md section 9.8, the first answer of a progressive pair): the relation is wrapped in
+ * The tabular sources read through a sample (ARCHITECTURE.md section 26.6, the first answer of a progressive pair): the relation is wrapped in
  * DuckDB's {@code USING SAMPLE p PERCENT}, by row (Bernoulli) on small relations and by vector (system: whole chunks skipped, so less is
  * read) on large ones, with a fixed seed so the same view samples the same rows. The person's row rules still apply (to the sampled rows,
  * before any grouping); the version says "sampled", so nothing sampled is ever taken for exact.

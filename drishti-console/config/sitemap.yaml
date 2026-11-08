@@ -119,7 +119,7 @@ menus:
         items:
           - { id: simm, cmd: SIMM, icon: shield-lock, label: Netting sets, desc: "Initial margin per netting set, collect and post", match: /simm, requires: [word:SIMM, route:/simm] }
           - { id: play-simm, cmd: PLAY SIMM EXAMPLE, icon: calculator, label: SIMM Playground, desc: "Every SIMM figure worked in a grid and a workbook of formulas", match: /play/simm, requires: [word:PLAY, route:/play/simm] }
-  # The subject menus of the lenses (docs/lenses/README.md, the lens menus): drawn only where an edition (or a lens) names them in its
+  # The subject menus of the lenses (docs/architecture/LENSES.md, the lens menus): drawn only where an edition (or a lens) names them in its
   # menus.top. An item's cmd: and fill: as in the Engines menu above.
   - id: blotter
     domain: banking
@@ -303,12 +303,12 @@ menus:
       - title: Learn
         items:
           - { id: tutorials, href: /help/tutorials, icon: mortarboard, label: Tutorials, desc: "{tutorials} hands-on tutorials, a picture of every step", requires: [feature:build] }
-          - { id: schema-to-pack, href: /help/schema-to-pack, icon: diagram-3, label: Schema to pack, desc: "Every rule that turns a JSON Schema into a pack, with examples", requires: [feature:build] }
+          - { id: schema-to-pack, href: /help/build-guide#8-a-pack-from-a-json-schema-build--new-pack, icon: diagram-3, label: Schema to pack, desc: "Every rule that turns a JSON Schema into a pack, with examples", requires: [feature:build] }
           - { id: screen-designer, href: /help/rachana-reference#screen-designer-and-the-build-workbench, icon: bounding-box, label: Screen designer guide, desc: "From JSON files to a screen: the canvas, step by step", requires: [feature:build] }
-          - { id: sutra-guide, href: /help/sutra-developer-guide, icon: journal-code, label: Screen developer guide, desc: "Writing a screen (a Sutra) end to end, by example", requires: [feature:build] }
+          - { id: sutra-guide, href: /help/build-guide#11-what-a-sutra-is-and-when-one-applies, icon: journal-code, label: Screen developer guide, desc: "Writing a screen (a Sutra) end to end, by example", requires: [feature:build] }
           - { id: panels, href: /help/rachana-reference#panels-the-twenty-two-kinds-and-developing-a-new-one, icon: grid-1x2, label: Panel kinds, desc: "The 22 panel kinds, one entry each", requires: [feature:build] }
           - { id: rachana-reference, href: /help/rachana-reference, icon: book, label: Screen language reference, desc: "Rachana, the screen language: every key, panel option, format and problem code", requires: [feature:build] }
-          - { id: pack-guide, href: /help/pack-developer-guide, icon: box-seam, label: Pack developer guide, desc: "Bring a new domain in, step by step", requires: [feature:build] }
+          - { id: pack-guide, href: /help/build-guide, icon: box-seam, label: Packs and screens guide, desc: "Bring a new domain in, step by step", requires: [feature:build] }
           - { id: elements-gallery, href: /elements, icon: puzzle, label: Elements gallery, desc: "Every {product} Elements component live: its options, code, events, API and accessibility", match: /elements, requires: [feature:build] }
   # The Admin menu is also the tab strip of every Admin page (admin/_nav.html), in this order; tab: the page's tab when it is not the
   # item's id; also: the strip's links to items listed in other menus.
@@ -354,7 +354,7 @@ menus:
         items:
           - { id: help-centre, href: /help, icon: question-circle, label: Help centre, desc: "Guides, concepts and reference (F1)", match: /help }
           - { id: knowledge, href: /what, icon: lightbulb, label: Knowledge, desc: "Market risk, counterparty risk and more, in plain words · WHAT <term>", requires: [word:WHAT] }
-          - { id: install, href: /help/install-and-run, icon: flag, label: Install and run, desc: From nothing to your first view }
+          - { id: install, href: /help/operations#2-install-and-run-on-one-machine, icon: flag, label: Install and run, desc: From nothing to your first view }
           - { id: release-notes, href: /help/release-notes, icon: tag, label: "What's new", desc: "The release notes: what changed in each release" }
           - { id: about, href: /about, icon: info-circle, label: "About {product}", desc: "Version, licence and credits", match: /about }
           - { id: competitive-analysis, href: /help/competitive-analysis, icon: binoculars, label: Competitive analysis, desc: "Vendor by vendor: banking and risk, and data platforms · internal, administrators only", requires: [admin] }

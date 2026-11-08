@@ -42,7 +42,7 @@ import java.util.Optional;
 
 /**
  * The table layer's command line, run as {@code java -jar drishti-server-*-exec.jar tables <command>} (no engine, no Spring: definitions
- * and sample files only; the server hands it its DEL translator) and through {@code drishti.py tables} (docs/guides/TABLES_GUIDE.md, docs/guides/CLI_GUIDE.md):
+ * and sample files only; the server hands it its DEL translator) and through {@code drishti.py tables} (docs/guides/TABLES_GUIDE.md, docs/guides/CLI_REFERENCE.md):
  *
  * <pre>
  * tables list     [--root DIR] [--json]

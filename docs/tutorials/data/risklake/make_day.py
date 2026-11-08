@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""A day of synthetic, Endur-style risk data for tutorial 45 and docs/guides/DATA_LAKE_GUIDE.md: trades, positions' scenario PVs and the
+"""A day of synthetic, Endur-style risk data for tutorial 16, Part A and docs/guides/DATA_LAKE_GUIDE.md: trades, positions' scenario PVs and the
 VaR hierarchy's nodes, as JSON Lines named by the load rules (<table>.<YYYY-MM-DD>.jsonl[.gz]). Every value is invented; the same
 arguments always write the same files. For each file it prints the rows and the SHA-256 to put in its .ready file.
 

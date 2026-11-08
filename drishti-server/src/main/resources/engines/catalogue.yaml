@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The engine catalogue (docs/architecture/COMPUTE_ENGINES.md section 2): every compute engine of the product, what it needs and uses, and
+# The engine catalogue (docs/guides/ADMIN_GUIDE.md section 2): every compute engine of the product, what it needs and uses, and
 # everything it brings to the screen. Part of the product: the server reads it from its jar (engines/catalogue.yaml), the console its copy
 # (drishti-console/config/engines.yaml, the same bytes: a test checks it). A site's config/engines/<id>.yaml holds only the switch and the
 # engine's settings. An engine still to be built is listed with installed: false: the switch framework knows it, Admin -> Engines shows it
@@ -45,7 +45,7 @@ engines:
     console: [/admin/api/lakes/memory]
     words: []
     menus: []
-    help: [docs-tutorials-31-news-in-memory-only]
+    help: [docs-tutorials-16-load-your-own-data-into-a-new-lake#part-d--news-held-in-memory-only]
     landings: []
     tiles: []
     lenses: []
@@ -101,7 +101,7 @@ engines:
     console: [/pivot, /api/pivot/]
     words: [PIVOT]
     menus: [pivot]
-    help: [docs-guides-pivot-guide, docs-tutorials-33-the-pivot-engine, docs-tutorials-37-custom-functions-and-explain]
+    help: [docs-guides-pivot-guide, docs-tutorials-07-pivot-cubes-and-explain, docs-tutorials-07-pivot-cubes-and-explain#part-b--custom-functions-why-did-it-move-and-what-if]
     landings: []
     tiles: []
     lenses: []
@@ -142,7 +142,7 @@ engines:
     ai-tools: []
   - id: openblas
     title: "Linear algebra: OpenBLAS"
-    about: "The bundled OpenBLAS (native) for many-scope VaR sums, off as shipped; off: the pure-Java kernels, the same figures (OPERATIONS.md section 2.1)"
+    about: "The bundled OpenBLAS (native) for many-scope VaR sums, off as shipped; off: the pure-Java kernels, the same figures (OPERATIONS_GUIDE.md section 2.1)"
     file: openblas.yaml
     switch: drishti.engines.openblas.enabled
     env: DRISHTI_OPENBLAS_ENABLED

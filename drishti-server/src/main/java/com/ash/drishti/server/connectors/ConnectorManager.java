@@ -87,7 +87,7 @@ public final class ConnectorManager {
     private final Set<String> applicationDefined;
     /** Connectors whose file was there at start (so the start-up properties still hold them) and has since been removed: they are gone, not "defined in application.yaml". */
     private final Set<String> goneFiles = java.util.concurrent.ConcurrentHashMap.newKeySet();
-    /** Connectors held off because their {@code requires:} is not approved (PYTHON_COMPUTE.md section 6), with the reason in words. */
+    /** Connectors held off because their {@code requires:} is not approved (NOTEBOOK_GUIDE.md section 6), with the reason in words. */
     private final Map<String, String> notApproved = new java.util.concurrent.ConcurrentHashMap<>();
     /** Who last saved a connector's file through Admin (the requester of its approval: four eyes). */
     private final Map<String, String> editors = new java.util.concurrent.ConcurrentHashMap<>();
@@ -624,7 +624,7 @@ public final class ConnectorManager {
         m.put("label", shown[1]);
         m.put("usedBy", usedBy(name));
         String held = notApproved.get(name);
-        if (held != null) {                                             // requirements not approved: off, and saying why (PYTHON_COMPUTE.md section 6)
+        if (held != null) {                                             // requirements not approved: off, and saying why (NOTEBOOK_GUIDE.md section 6)
             m.put("state", "NOT_APPROVED");
             m.put("health", "DOWN: " + held);
             m.put("level", "warn");
@@ -943,7 +943,7 @@ public final class ConnectorManager {
                 }
             }
         }
-        // writes: (WRITE_BACK.md › The design and its reasons, section 5.4): a command without its guard or idempotency clause, or naming an unknown :param, is refused
+        // writes: (APPROVALS_GUIDE.md › The design and its reasons, section 5.4): a command without its guard or idempotency clause, or naming an unknown :param, is refused
         // and the connector stays read-only for it; said as a warning, so the connector itself still loads and reads
         com.ash.drishti.server.edit.ConnectorWrites.problems(d, registry.plugin(d.name())).forEach((cmd, ps) ->
                 ps.forEach(m -> out.add(new Problem("warning", "writes." + cmd, m + " (this command is refused: the connector stays read-only for it)"))));
@@ -972,7 +972,7 @@ public final class ConnectorManager {
         if (body.get("plugin") == null) {
             throw new DrishtiException(ErrorCode.CONNECTOR_INVALID, "'plugin' is required");
         }
-        Map<String, Object> requires = Map.of();                          // the form has no requires: field; keep the file's (PYTHON_COMPUTE.md section 4)
+        Map<String, Object> requires = Map.of();                          // the form has no requires: field; keep the file's (NOTEBOOK_GUIDE.md section 4)
         ConnectorFiles.Definition before = safeRead(name);
         if (body.get("requires") instanceof Map<?, ?> r) {
             requires = (Map<String, Object>) r;
@@ -984,7 +984,7 @@ public final class ConnectorManager {
         flat.remove(ConnectorFiles.COMPUTE_SETTING);
         return files.render("# Written from Admin -> Connectors by " + user + " on " + java.time.LocalDate.now(java.time.ZoneOffset.UTC) + ".", String.valueOf(body.get("plugin")),
                 body.get("enabled"), kinds, body.get("description") == null ? "" : String.valueOf(body.get("description")), flat, requires, compute,
-                before == null ? Map.of() : before.writes());          // nor writes: (WRITE_BACK.md › The design and its reasons, section 5.4): kept as written
+                before == null ? Map.of() : before.writes());          // nor writes: (APPROVALS_GUIDE.md › The design and its reasons, section 5.4): kept as written
     }
 
     /** Parses a text as the named connector's file and validates it; throws DRS-5031 with every error. */

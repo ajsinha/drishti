@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin → Engines (/admin/engines; docs/architecture/COMPUTE_ENGINES.md section 8, mock-up A): the compute engines of this server with
+"""Admin → Engines (/admin/engines; docs/guides/ADMIN_GUIDE.md section 8, mock-up A): the compute engines of this server with
 their switch, state, memory, threads, needs, used by and where each switch is set; a change is staged, reviewed in the side panel (the
 dependency check, what disappears for people, live or restart) and applied with a reason; History below; the cluster as a second tab. The
 page carries the administrator's batch to the server as same-origin JSON; the server decides (administrators only), writes the engine's

@@ -86,7 +86,7 @@ async def rupaka(request: Request, rest: str):
         return RedirectResponse("/build", status_code=303)
     if word in ("WORKSPACE", "WORKSPACES"):
         return RedirectResponse("/bi/w/me", status_code=303)
-    if word in ("RUNS", "RUN"):                                       # BI RUNS <GO>: my runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7.1)
+    if word in ("RUNS", "RUN"):                                       # BI RUNS <GO>: my runs (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7.1)
         return RedirectResponse("/bi/w/me?tab=runs", status_code=303)
     if word in ("CATALOGUE", "CATALOG"):
         return RedirectResponse("/bi/catalogue", status_code=303)
@@ -119,7 +119,7 @@ async def go(request: Request, q: str = ""):
         return RedirectResponse(f"/t?error={quote(_menus.refusal_for_role(closed))}", status_code=303)
     if head in WORDS and head != "EXP" and not ed.word_on(head):    # a word the edition (or lens) switches off: said, not run (EXP is also a mnemonic)
         return RedirectResponse(f"/t?error={quote(f'DRS-4023 {head} is not part of {ed.title}: FUNC lists what you can use')}", status_code=303)
-    if typed.split(None, 1)[:1] and typed.split(None, 1)[0].upper() in BI_WORDS:        # reserved (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 4), whatever packs define
+    if typed.split(None, 1)[:1] and typed.split(None, 1)[0].upper() in BI_WORDS:        # reserved (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 4), whatever packs define
         return await rupaka(request, typed.split(None, 1)[1].strip() if " " in typed else "")
     words = q.replace("<GO>", "").replace("<go>", "").split()
     if words and words[0].upper() == FORM_WORD:                    # reserved too: FORM <pack> [kind] opens the pack's search form
@@ -413,7 +413,7 @@ async def my_arrangement(request: Request, sutra: str):
 async def about(request: Request, kind: str, id_: str, generation: int = 0, format: str = ""):  # noqa: A002 - the query parameter's name
     """The body of the About this page drawer (an HTML fragment), asked for when the drawer first opens, never with the view.
     ``?format=json``: the explanation itself, ``{explain, index}`` (or ``{error: {code, detail}}``), for the pages the client-side renderer
-    draws: it draws the body from it (CLIENT_RENDERER.md section 12)."""
+    draws: it draws the body from it (EMBED_GUIDE.md section 12)."""
     me = ident(request)
     extra = {}                                       # the language of the pack's text: ?locale=, else the user's setting, else the browser's
     loc = request.query_params.get("locale") or (await request.app.state.user_settings.get(request.app.state.backend, me)).get("locale")
@@ -468,7 +468,7 @@ async def view_panels(request: Request, kind: str, id_: str, panels: str = ""):
     shown = layout["panels"]
     env = request.app.state.templates.env
     parts = env.get_template("_macros/view.html").module
-    # each panel as HTML (the macros, the page's) and as its JSON (what an embed's renderer draws: CLIENT_RENDERER.md)
+    # each panel as HTML (the macros, the page's) and as its JSON (what an embed's renderer draws: EMBED_GUIDE.md)
     out = [{"id": p["id"], "kind": p["kind"], "title": p.get("title") or "", "html": api_routes._panel_html(request, p, ref={"kind": kind, "id": id_}), "panel": p,
             **({"provenance": p["provenance"]} if p.get("provenance") else {})} for p in shown]   # a panel's own source: its freshness (RACHANA_REFERENCE.md 9)
     prov = vm.get("provenance") or {}
@@ -575,7 +575,7 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
     layout = await request.app.state.layouts.context(request, vm, bool(embed))      # the user's own arrangement, if any
     grid_mine = await _grid_layout(request, vm, layout)                             # a Sutra with layout: (RACHANA_REFERENCE.md 13)
     panels = layout["panels"]
-    phone = await phone_routes.plan_for(request, vm, panels, bool(embed))   # a phone or tablet (docs/guides/PACK_DEVELOPER_GUIDE.md): its tiers
+    phone = await phone_routes.plan_for(request, vm, panels, bool(embed))   # a phone or tablet (docs/guides/BUILD_GUIDE.md): its tiers
     if phone and phone["device"] == "tablet":                       # a tablet keeps the page's layout, less its desk panels (under More)
         keep = {p.get("id") for p in phone["shown"]}
         panels = [p for p in panels if p.get("id") in keep]

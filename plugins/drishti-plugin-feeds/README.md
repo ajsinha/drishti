@@ -70,7 +70,7 @@ months of curve), not an accumulation.
 | `refresh-minutes` | int | `60` | Minutes between the end of one fetch and the start of the next (a whole number); the first fetch is at start |
 | `timeout-seconds` | int | `20` | The request timeout of each HTTP request (a whole number); the connect timeout is a fixed 10 s |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10). It takes the shared `proxy.*` settings for an outbound HTTP proxy (DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 ## Data structure
@@ -204,7 +204,7 @@ milliseconds, `live: false`, `businessDate` = the observation date used.
 **Where a read goes.** The market-data pack routes `rate-fixing`, `fx-spot` and `ir-curve` to `market-store` (the Delta lake). The
 lake and the demo samples do not hold the feed ids, answer *not held*, and the feed answers. Three feed connectors serve
 `rate-fixing`; each answers *not held* for the others' ids. The feeds are not a `union`
-([connector files](../../docs/connectors/CONNECTOR_FILES.md)).
+([connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)).
 
 ## Dates and history
 
@@ -240,7 +240,7 @@ once for all of them.
 
 **Longer history.** To keep more than the window, archive the feed's documents into a dated store under the **same ids**: a daily job
 reads `GET /api/v1/entities/rate-fixing/FIX-SOFR-NYFED/raw?asOf=<date>` and loads the day with `drishti.py lake build`
-([TOOLS.md](../../docs/guides/TOOLS.md#4-lake-build-a-large-json-export-into-a-delta-lake); the key is the archived document's field,
+([CLI_REFERENCE.md](../../docs/guides/CLI_REFERENCE.md#7-lake-a-large-json-export-into-a-delta-lake); the key is the archived document's field,
 `indexId`). With the pack's route (`rate-fixing: market-store`) the lake is asked first, so once it holds the id it answers every date
 within its `lookback-days` of its newest row, Live included: keep the archive current, or route the kind to the feed
 (`drishti.sources.routes.rate-fixing: nyfed-sofr-feed`) so the feed answers inside its window and the lake before it. Public data loaded
@@ -298,7 +298,7 @@ every `refresh-minutes`.
 - **The FRED key** comes from `FRED_API_KEY` (`api-key: ${FRED_API_KEY}`); Admin → Connectors and `drishti.py connector apply` refuse
   a literal. It travels in the query string over TLS; health and errors name only the host. A proxy that terminates TLS can see it.
 - **TLS** to the publishers uses the JVM's default trust store (a TLS-inspecting proxy needs its CA there). An `https://` mirror on a
-  private CA takes the shared `tls.*` settings ([TLS](../../docs/connectors/TLS.md)): `tls.ca-file`, and `tls.cert-file` +
+  private CA takes the shared `tls.*` settings ([TLS](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy)): `tls.ca-file`, and `tls.cert-file` +
   `tls.key-file` for a client certificate. `tls.*` with a `file:` or `http://` `url` fails at start (`tls.* is set but url is not
   https://`); a certificate expiring within 30 days is noted in health.
 - **Parsing**: XML is parsed with DOCTYPE declarations refused and entities not expanded (no XXE); JSON and CSV as data only.
@@ -310,7 +310,7 @@ every `refresh-minutes`.
 The connector takes the shared `proxy.*` settings, or the site default `drishti.http.proxy.*`, for the public feeds and an `http(s)`
 mirror alike (`file:` URLs never use it); HTTPS is tunnelled with `CONNECT`. A `proxy:` block in `settings:` (or `proxy: none`)
 overrides the site default; the password is an `${ENV}` placeholder. The rules:
-[TLS.md, the outbound proxy](../../docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers).
+[DATA_GUIDE.md section 10, the outbound proxy](../../docs/guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers).
 
 ```yaml
 plugin: feed
@@ -346,5 +346,5 @@ the proxy 10.1.2.3:3128 (Connection refused): check proxy.url and that the proxy
 
 - [External data feeds](../../docs/guides/EXTERNAL_DATA.md) (drishti-feeds: scheduled pulls of public data into the lakes) and
   [CONFIGURATION.md, the `feed` connector](../../docs/admin/CONFIGURATION.md#feed--public-data-feeds).
-- [Connector files](../../docs/connectors/CONNECTOR_FILES.md) and [TLS (and the outbound proxy)](../../docs/connectors/TLS.md).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) and [TLS (and the outbound proxy)](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

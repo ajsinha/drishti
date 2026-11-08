@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * A row expression worked out in Java over one changed row of a live table (wave B, docs/architecture/BI_DESIGN.md section 4.6: "Δ filtered by the reader's
+ * A row expression worked out in Java over one changed row of a live table (wave B, docs/architecture/ARCHITECTURE.md §28 section 4.6: "Δ filtered by the reader's
  * row rules, rules re-evaluated per changed row"), with the semantics of the SQL the compiler writes: {@code None} propagates through arithmetic, a comparison
  * with {@code None} is false, {@code /} by zero is {@code None}, {@code in user.desks} reads the reader's attribute. What it cannot work out (a function it
  * does not know, a column of another table) throws {@link Unsupported}, and the caller recomputes from the engine instead. Pure.

@@ -15,7 +15,7 @@
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /*
- * Busy protection's calm message in place (docs/admin/OPERATIONS.md "Busy protection"; mock-up A). When the server asks new work to wait
+ * Busy protection's calm message in place (docs/guides/OPERATIONS_GUIDE.md "Busy protection"; mock-up A). When the server asks new work to wait
  * (503, DRS-9501 to DRS-9505, Retry-After), the panel that asked says so where it is: what is busy, a countdown ring driven by the server's
  * Retry-After, Try now and Cancel, and it tries again by itself up to three times. Nothing else on the screen changes, and the console keeps
  * no list of waiting requests: the server decides, the page only counts down.

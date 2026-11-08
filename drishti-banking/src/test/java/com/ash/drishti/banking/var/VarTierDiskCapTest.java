@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The VaR hot files bounded in bytes and the free-space guard (2.9.7, RESOURCES_AND_SCALE.md section 7.2, O5): the least recently used
+ * The VaR hot files bounded in bytes and the free-space guard (2.9.7, CLUSTER_GUIDE.md section 7.2, O5): the least recently used
  * files go beyond {@code tier.max-disk-gb} (never an open one), a date's files are purged on request, and a build that would leave the disk
  * under the guard is refused with {@code DRS-5218} before anything is written.
  */

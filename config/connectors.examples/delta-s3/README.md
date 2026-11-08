@@ -87,7 +87,7 @@ deploy/aws/delta-s3/delta-s3.sh check --table risk/pnl-vector
 ## See also
 
 - [The delta connector README, Delta Lake on AWS S3](../../../plugins/drishti-plugin-delta/README.md#delta-lake-on-aws-s3).
-- [The tool scripts](../../../deploy/aws/delta-s3/README.md) and [Connector files](../../../docs/connectors/CONNECTOR_FILES.md).
+- [The tool scripts](../../../deploy/aws/delta-s3/README.md) and [Connector files](../../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors).
 
 The Delta and Iceberg files here name a lake (`lake:`, `lake-tables:`); the lake itself, its root or catalog, storage and tables, is the matching
 file in [config/lakes.examples/delta-s3/](../../lakes.examples/delta-s3/): copy both (docs/guides/DATA_LAKE_GUIDE.md).

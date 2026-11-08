@@ -31,7 +31,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 /**
- * Corrections and edits (write-back, WRITE_BACK.md) in the Approvals queue: a change that needs approval waits here until an approver who
+ * Corrections and edits (write-back, APPROVALS_GUIDE.md) in the Approvals queue: a change that needs approval waits here until an approver who
  * is not its submitter approves it (the policy may ask for several); then it takes its place in its record's lane. The effect is the
  * impact service's answer for the record: what reads it downstream.
  */

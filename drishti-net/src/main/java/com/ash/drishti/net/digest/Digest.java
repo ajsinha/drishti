@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * What a node offers (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 6), published at {@code GET /api/v1/net/digest} and pulled by peers when the
+ * What a node offers (CLUSTER_GUIDE.md › Drishti*net: many servers, one Drishti, section 6), published at {@code GET /api/v1/net/digest} and pulled by peers when the
  * {@link #hash()} gossiped with the member entry changes. The hash leaves out the load and the build time, which move all the time,
  * so a peer pulls the digest again only when what the node serves changed: a pack, a kind, a source, a data version, a setting.
  *
@@ -45,7 +45,7 @@ import java.util.Optional;
  * @param reports the BI report ids this node serves (a report on a model held elsewhere is answered there)
  * @param builtAt when it was built (epoch milliseconds)
  * @param services the state of the cluster services the node runs, by name, each as compact text (2.9.6: {@code var-shards}, the VaR
- *     shards it holds and is ready to serve, VAR_SHARDING.md); empty from a node that runs none or an older node
+ *     shards it holds and is ready to serve, DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built); empty from a node that runs none or an older node
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Digest(String nodeId, String url, String version, int protocol, List<PackEntry> packs, List<KindEntry> kinds, Load load,

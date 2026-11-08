@@ -406,7 +406,7 @@
       } else {
         host.appendChild(el('p', { class: 'text-muted-d', text: 'Deploying needs an administrator. Send them the bundle and its checksum; they use Admin → Packs → Deploy archive.' }));
       }
-      host.appendChild(el('p', { class: 'text-muted-d' }, ['The full guide, with the command line twin (', el('code', { text: 'drishti.py pack make --schema' }), '): ', el('a', { class: 'lnk', href: '/help/schema-to-pack', text: 'Schema to pack' }), '.']));
+      host.appendChild(el('p', { class: 'text-muted-d' }, ['The full guide, with the command line twin (', el('code', { text: 'drishti.py pack make --schema' }), '): ', el('a', { class: 'lnk', href: '/help/build-guide#8-a-pack-from-a-json-schema-build--new-pack', text: 'Schema to pack' }), '.']));
     });
   }
 

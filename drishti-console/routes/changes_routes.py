@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Write-back, the console's side (docs/guides/WRITE_BACK.md): ``/api/changes`` passes each call to the server's ``/api/v1/changes``
+"""Write-back, the console's side (docs/guides/APPROVALS_GUIDE.md): ``/api/changes`` passes each call to the server's ``/api/v1/changes``
 as the signed-in person (static/js/drishti_write-back.js submits a form's draft after the review and confirm sheet); a change waiting for an
 approver is decided in the one Approvals queue (routes/approval_routes.py); Admin → Edits shows where the edit log lives, its lanes,
 warnings, source commands not confirmed and each connector's ``writes:`` with its switch. The rules are the server's (the edit power,

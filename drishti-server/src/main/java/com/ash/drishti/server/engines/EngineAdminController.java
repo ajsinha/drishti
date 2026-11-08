@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Admin, Engines over REST (docs/architecture/COMPUTE_ENGINES.md section 11), for administrators only (a personal API token never: the
+ * Admin, Engines over REST (docs/guides/ADMIN_GUIDE.md section 11), for administrators only (a personal API token never: the
  * security settings' token-never list): every engine with its state, memory, threads, needs, used by and where its switch comes from; what
  * turning one off hides; a batch of changes with one reason, checked as a whole; the History. A change for another node goes to that node,
  * signed with the cluster key ({@code POST /api/v1/net/engines}), which writes its own file; both nodes audit it.

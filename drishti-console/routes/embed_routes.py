@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The embed API, version 1 (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, section 6; build step 7).
+"""The embed API, version 1 (docs/guides/EMBED_GUIDE.md › Drishti Elements: the design, section 6; build step 7).
 
 Cross-origin, bearer-token, CORS by an exact origin allow-list. Only mounted when ``embed.enabled`` (core/app.py). The
 view, the channel and the command reuse the console's own code (the view model, ``_view_event``, ``api_routes.channel``);
@@ -195,7 +195,7 @@ async def element_bundle(request: Request, library: str, name: str):
 @router.get("/elements/{version}/{rest:path}")
 async def versioned(request: Request, version: str, rest: str):
     """The library at an exact semantic version, immutable (``/elements/1.1.0/drishti-elements.js``, ``.../m/<name>.js``, ``.../integrity.json``); a partial
-    version (``1``, ``1.1``) answers ``302`` to the exact one for a host that accepts updates (SRI needs the exact version). CLIENT_RENDERER.md › Drishti Elements: the design, section 13.
+    version (``1``, ``1.1``) answers ``302`` to the exact one for a host that accepts updates (SRI needs the exact version). EMBED_GUIDE.md › Drishti Elements: the design, section 13.
     A Drishti Elements library's name in place of the version is its bundle (element_bundle)."""
     if version.startswith("drishti-"):
         return await element_bundle(request, version, rest)
@@ -261,7 +261,7 @@ async def echarts_js(request: Request):
     return await send(request, path.read_bytes(), "text/javascript", f'"{path.stat().st_mtime_ns:x}"')
 
 
-# The console's own enhancer scripts, root-scoped (static/js; CLIENT_RENDERER.md › Drishti Elements: the design, section 12): the element loads these, with
+# The console's own enhancer scripts, root-scoped (static/js; EMBED_GUIDE.md › Drishti Elements: the design, section 12): the element loads these, with
 # data-manual so they do not start by themselves, and calls init(shadowRoot, options) on each.
 ENHANCERS = ("view", "geomap", "charts", "colfilter", "tables", "tree-rows", "pivot-engine", "elements-core", "elements-grid", "elements-chart", "elements-graph", "elements-tree", "about", "about-hints", "zoom", "elements-inputs", "controls",
              "bi-lib", "bi-visuals", "bi-visuals-format", "bi-grids", "bi-matrix", "bi-multiples", "bi-frame", "bi-live", "bi-phone")

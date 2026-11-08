@@ -94,7 +94,7 @@ DuckDB 1.5 or later wrote the file (the storage format).
 | `index.block-cache` | int | `16` | Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file); 0 = none |
 | `index.kinds.*` | string |  | Per-kind override of any index setting (index.kinds.<kind>.days) |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9).
 <!-- settings:end -->
 
 ## Data structure
@@ -258,7 +258,7 @@ The connectors of one server naming the same `path` share one DuckDB instance op
 `memory-limit` and `threads` and a spill directory under the JVM's temporary directory. Each read borrows a duplicated connection;
 DuckDB runs statements of different connections at once. Reads per connector are bounded by `pool-size` permits (a read waiting more
 than 5 seconds fails). DuckDB is **not pooled** in the network sense: no database connections, no idle timeout, and the site pool
-settings do not apply ([connection pools](../../docs/connectors/CONNECTOR_FILES.md#14-connection-pools)); Admin shows the reads running
+settings do not apply ([connection pools](../../docs/guides/DATA_GUIDE.md#914-connection-pools)); Admin shows the reads running
 and waiting, marked *embedded, not pooled*. Tables are always qualified with the database name (`"drishti".trading.entities`), because
 a file named like a schema would otherwise be ambiguous.
 
@@ -268,7 +268,7 @@ When a generation opens, the connector reads `entity_dates`, the table's columns
 | Read | How |
 |---|---|
 | one entity (`TRD CLY-4000834` on a date) | the snapshot date from memory (newest on or before the date, within `lookback-days`), then `SELECT doc … WHERE kind = ? AND business_date = ? AND id = ?`: the zone maps leave one row group and only the matching document is decompressed; an `effective` kind reads the newest row on or before the date |
-| type-ahead | from memory, by prefix; no query per keystroke. With `index.days` above 1 (and `index.storage: mmap` for a lake searched often by past date) past days answer from their own ids ([several business days](../../docs/architecture/ARCHITECTURE.md#91-several-business-days)); a file swap rebuilds them, `index.reload-every` catches a restated day, and Admin → Connectors → Index reloads one by hand ([sizing](../../docs/admin/OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index)) |
+| type-ahead | from memory, by prefix; no query per keystroke. With `index.days` above 1 (and `index.storage: mmap` for a lake searched often by past date) past days answer from their own ids ([several business days](../../docs/architecture/ARCHITECTURE.md#91-several-business-days)); a file swap rebuilds them, `index.reload-every` catches a restated day, and Admin → Connectors → Index reloads one by hand ([sizing](../../docs/guides/OPERATIONS_GUIDE.md#144-the-multi-day-type-ahead-index)) |
 | a day's columns (searches, pick lists, derived kinds, impact, reverse lookups) | `quantile_disc` over the day's ids cuts it into `scan-threads` id ranges, read at once on their own connections, columns only; kept within `columns-cache-mb` for `columns-seconds`, dropped when a new file opens; repeated texts share one copy; at most two days read at a time; another day is read when first asked for |
 | reverse lookups | the day's promoted text columns: every value equal to the id. A kind without promoted link columns reads at most `max-load-rows` documents with `contains(doc, '"<id>"')` (`arg_max(doc, business_date)` for an `effective` kind); `reverse-index: false` turns them off |
 | history (`TRD 1000015 30`, [history queries](../../docs/architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)) | one query, `business_date BETWEEN ? AND ?`, newest first |
@@ -324,6 +324,6 @@ Limits:
 
 ## See also
 
-- [The PostgreSQL connector](../drishti-plugin-jdbc/README.md) (the table mode it mirrors) and [Connector files](../../docs/connectors/CONNECTOR_FILES.md).
-- [The demo data](../../docs/connectors/DEMO_DATA.md) (data of any size) and [the data lake guide](../../docs/guides/DATA_LAKE_GUIDE.md) (load rules).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [The PostgreSQL connector](../drishti-plugin-jdbc/README.md) (the table mode it mirrors) and [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors).
+- [The demo data](../../docs/guides/DATA_GUIDE.md#11-the-demo-data) (data of any size) and [the data lake guide](../../docs/guides/DATA_LAKE_GUIDE.md) (load rules).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

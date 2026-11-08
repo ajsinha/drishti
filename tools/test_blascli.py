@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Tests of `drishti.py server blas java|native|status` (docs/admin/OPERATIONS.md section 2.1) against an in-process stand-in: the switch is
+"""Tests of `drishti.py server blas java|native|status` (docs/guides/OPERATIONS_GUIDE.md section 2.1) against an in-process stand-in: the switch is
 the engine openblas of Admin -> Engines (the same POST, a reason required), native refused in words when the self-test fails, status with the
 cluster's path and each member's."""
 import pathlib

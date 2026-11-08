@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The live-channel relay across console hosts (PO-11, CLUSTER_DEPLOYMENT.md section 9.4): a channel's id names its host and worker, every
+"""The live-channel relay across console hosts (PO-11, CLUSTER_GUIDE.md section 9.4): a channel's id names its host and worker, every
 relay message and answer is signed with the shared key, an old or replayed message is refused, and two real consoles pass a browser's
 change on a channel to each other, so the load balancer needs no stickiness."""
 import asyncio

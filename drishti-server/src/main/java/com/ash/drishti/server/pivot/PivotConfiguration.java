@@ -38,7 +38,7 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * The pivot engine's beans (PIVOT_GUIDE.md): the node's DuckDB executor, the tabular provider over the Data view's tables, the VaR provider
- * when the VaR engine runs here (the MR cube when engine {@code mr-cube} runs too, MR_CUBE_GUIDE.md), the partial-state cache in the one memory budget ({@code pivot.states}), busy protection, and saved views.
+ * when the VaR engine runs here (the MR cube when engine {@code mr-cube} runs too, PIVOT_GUIDE.md#29-the-mr-cube-preset), the partial-state cache in the one memory budget ({@code pivot.states}), busy protection, and saved views.
  * The engine itself is the {@code drishti-bicompute} module's {@link PivotCore}; nothing here aggregates.
  */
 @Configuration
@@ -167,7 +167,7 @@ public class PivotConfiguration {
     }
 
     /**
-     * The pivot engine as a compute engine (docs/architecture/COMPUTE_ENGINES.md, {@code config/engines/pivot.yaml}): off, its API answers
+     * The pivot engine as a compute engine (docs/guides/ADMIN_GUIDE.md, {@code config/engines/pivot.yaml}): off, its API answers
      * 404 DRS-1020, the PIVOT word, the menu entry, Help pages and the CLI's pivot commands are gone, and its partial states and staged
      * tables are released.
      */

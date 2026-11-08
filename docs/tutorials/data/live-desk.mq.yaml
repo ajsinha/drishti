@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 12, step 2: one model query over the live table, by desk, with the SQL it ran (explain: BI authors). The model is the one the converter
+# Tutorial 8, step 46: one model query over the live table, by desk, with the SQL it ran (explain: BI authors). The model is the one the converter
 # made of the live sample (live-trading@1); the layer that answers is the in-memory live table, here its kept groups (the rollup byDeskBook).
 mq: 1
 model: live-trading@1

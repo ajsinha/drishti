@@ -9,7 +9,7 @@
 # Unauthorised copying, use, modification, distribution or disclosure of this
 # file, via any medium, is strictly prohibited except with the express prior
 # written permission of the copyright holder.
-"""The README's "By the numbers" section, generated from the files git tracks (docs/guides/TOOLS.md): lines and files by language,
+"""The README's "By the numbers" section, generated from the files git tracks (docs/guides/CLI_REFERENCE.md): lines and files by language,
 and what the product holds (modules, lenses, functions, routes, Elements libraries, packs by domain, Sutras, connectors, feeds, lakes,
 tests by kind, documents). Written between the README's markers, dated, refreshed with each release:
 

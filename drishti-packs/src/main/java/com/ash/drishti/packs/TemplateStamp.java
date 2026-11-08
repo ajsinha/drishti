@@ -20,7 +20,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The fingerprint a connector file generated from a pack template carries in its own text (CONNECTOR_FILES.md, "Upgrades"): one comment
+ * The fingerprint a connector file generated from a pack template carries in its own text (docs/guides/DATA_GUIDE.md section 9, "Upgrades"): one comment
  * line after the header,
  *
  * <pre>

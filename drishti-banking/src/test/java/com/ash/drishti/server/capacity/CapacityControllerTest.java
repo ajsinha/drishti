@@ -50,7 +50,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Admin → Capacity's three endpoints (RESOURCES_AND_SCALE.md 9.7): administrators only; the planner file served whole; the workbook holds
+ * Admin → Capacity's three endpoints (CLUSTER_GUIDE.md 9.7): administrators only; the planner file served whole; the workbook holds
  * the inputs given in its Inputs cells while Results, Coefficients and the defined names are the template's, untouched (every figure a live
  * formula); each download audited; the live figures and the resident memory read from {@code /proc/self/status}.
  */

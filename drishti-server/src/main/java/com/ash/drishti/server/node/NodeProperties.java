@@ -18,7 +18,7 @@ package com.ash.drishti.server.node;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * This server as one node of a cluster (CLUSTER_DEPLOYMENT.md sections 9.1 and 4.6, CD1 and CD2, 2.9.7), {@code drishti.node.*}: what its
+ * This server as one node of a cluster (CLUSTER_GUIDE.md sections 9.1 and 4.6, CD1 and CD2, 2.9.7), {@code drishti.node.*}: what its
  * readiness waits for, and how the drain before a stop decides that the node is safe to stop.
  *
  * @param readiness what {@code /actuator/health/readiness} waits for

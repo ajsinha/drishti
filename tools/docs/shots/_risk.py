@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Shared pieces of the capital and margin pictures (tutorial 30, FRTB-SA, module t30; tutorial 32, SIMM, module t32): the VaR pictures'
+"""Shared pieces of the capital and margin pictures (tutorial 4, FRTB-SA, module t30; tutorial 5, SIMM, module t32): the VaR pictures'
 scratch lake (see _var.py) with the position sensitivities, the factor dictionary and the counterparty-risk pack's netting sets and CSAs
 added, and the toy SIMM parameter file of the tests installed as a version (round illustrative numbers, never ISDA's)."""
 from __future__ import annotations

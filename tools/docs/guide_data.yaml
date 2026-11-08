@@ -13,14 +13,14 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The data section of each measure or feature guide: read by tools/docs/guide_data.py, which writes it between the guide's
-# <!-- guide-data:begin <id> --> and <!-- guide-data:end --> markers (docs/guides/TOOLS.md section 9).
+# <!-- guide-data:begin <id> --> and <!-- guide-data:end --> markers (docs/guides/CLI_REFERENCE.md section 9).
 #
 # Per guide:   id, file, number (the section's number: the table is <number>.1, the datasets <number>.2 …), note (after the table).
 # Per dataset: kind; contract (the contract's kind when it differs, null when the kind has none); label (instead of `kind`); title;
-#              sample (a glob under data/testdata: a .jsonl.gz, or a tar of <table>/<date>/*.jsonl.gz); pick (first | last, default
-#              last); member (a tar member glob); where (field: value); fields (the fields shown, in order); required; for (the table's
-#              one line); guide (a link to the guide's own field table); about (the explanation, by hand); sample_note and
-#              contract_note (said instead when there is no sample or no contract).
+#              sample (a glob under data/testdata: a .jsonl.gz, or a tar of <table>/<date>/*.jsonl.gz; its folder <domain>/<table> names
+#              the example's section, docs/contracts/samples/<domain>.md#<table>); required; for (the table's one line); guide (a link
+#              to the guide's own section); about (the explanation, by hand: what it is for, never its fields or a record); sample_note
+#              and contract_note (said instead when there is no sample or no contract).
 
 guides:
 
@@ -62,7 +62,6 @@ guides:
       - kind: pnl-vector
         title: P&L vectors per trade (accepted)
         sample: market-risk/pnl-vector/pnl-vector-*.tar
-        where: {SOURCE_SYSTEM: CALYPSO}
         required: "**one of the two**, per trade"
         for: each trade's scenario P&L, computed by the source
         guide: "[15.2](#152-pnl-vector-one-pl-vector-per-trade)"
@@ -156,9 +155,6 @@ guides:
         label: The trades
         title: "`trade_murex`, `trade_endur`, `trade_calypso`"
         sample: trades/murex/trade_murex.*.jsonl.gz
-        pick: first
-        fields: [SOURCE_SYSTEM, TRADE_ID, TRADE_VERSION, TRADE_STATUS, TRADE_DATE, PRODUCT_GROUP, PRODUCT_TYPE, BUY_SELL_CODE, QUANTITY,
-                 PRICE, CURRENCY, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TT_BOOK, TRADER_ID, STRATEGY, START_DATE, MATURITY_DATE]
         required: optional for the number, used by the screens
         for: the trades themselves, linked from every position
         about: |
@@ -370,68 +366,6 @@ guides:
         about: |
           Today's rates: sensitivities in other currencies and the parameter file's thresholds are converted to the calculation currency.
 
-  # ------------------------------------------------------------------------------------------------------------------------- MR cube
-  - id: mr-cube
-    file: docs/guides/MR_CUBE_GUIDE.md
-    number: 14
-    note: |
-      The cube adds no input of its own: these are the VaR engine's inputs and the FRTB-SA engine's sensitivities
-      ([section 3](#3-the-inputs-and-their-data-contract)).
-    datasets:
-      - kind: pnl-vector
-        title: P&L vectors per trade
-        sample: market-risk/pnl-vector/pnl-vector-*.tar
-        required: "**one of the two**, per trade"
-        for: every trade's vector; its columns as dimensions
-        guide: "[3](#3-the-inputs-and-their-data-contract)"
-        about: |
-          Each trade's scenario P&L; its columns (`LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`,
-          `COUNTERPARTY`, …) are the cube's dimensions.
-      - kind: scenario-pv
-        title: scenario PVs per trade
-        sample: market-risk/scenario-pv/scenario-pv-*.tar
-        required: "**one of the two**, per trade"
-        for: the same, as PVs that VaR turns into P&L
-        guide: "[3](#3-the-inputs-and-their-data-contract)"
-        about: |
-          The trade's base PV and its PV under each scenario; VaR converts them to USD P&L (with `fx-scenario`) before the cube sees them.
-      - kind: scenario-set
-        title: the scenario days
-        sample: market-risk/scenario-set/scenario-set.tar
-        required: "**yes**"
-        for: the scenario days of the histogram and the explain
-        about: |
-          The ordered scenario days: the histogram's and the explain's dates.
-      - kind: risk-hierarchy
-        title: the trees
-        sample: market-risk/risk-hierarchy/risk-hierarchy.*.jsonl.gz
-        required: "**yes**"
-        for: the hierarchy levels as dimensions
-        about: |
-          The trees' levels are dimensions (`MGMT.DESK`, `LEGAL.LEGAL-ENTITY`, `LL.LIMIT_LETTER`).
-      - kind: var-limit
-        title: VaR limits
-        sample: market-risk/var-limit/var-limit.*.jsonl.gz
-        required: optional
-        for: "`limit()` and `limit_use()`"
-        about: |
-          A node's VaR limit: the `limit()` and `limit_use()` measures.
-      - kind: position-sensitivity
-        title: the sensitivities
-        sample: market-risk/position-sensitivity/position-sensitivity.*.jsonl.gz
-        required: for the sensitivity measures
-        for: "`dv01()`, `cs01()`, the ladder and the heat map"
-        guide: "[FRTB_SA_GUIDE.md 3](FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract)"
-        about: |
-          The FRTB-SA engine's position sensitivities: `dv01()`, `cs01()`, the ladder and the heat map of tab C.
-      - kind: risk-factor
-        title: the factor dictionary
-        sample: market-risk/risk-factor/risk-factor.*.jsonl.gz
-        required: for the sensitivity measures
-        for: each factor's class, tenor and curve for the ladder
-        about: |
-          The factor dictionary the sensitivities name their factors by.
-
   # --------------------------------------------------------------------------------------------------------------------------- funds
   - id: funds
     file: docs/guides/FUNDS_GUIDE.md
@@ -440,8 +374,6 @@ guides:
       - kind: fund
         title: the fund's fact sheet and holdings
         sample: funds/fund/fund.tar
-        fields: [TICKER, NAME, TYPE, SERIES_ID, CIK, REGISTRANT, LEI, IS_ETF, IS_INDEX, INDEX_ID, ADVISER, REPORT_DATE, TOTAL_ASSETS,
-                 NET_ASSETS, EXPENSE_RATIO, RETURN_LAST_YEAR, HOLDING_COUNT, TOP10_PCT, BY_SECTOR, HOLDINGS, VS_INDEX]
         required: "**yes**"
         for: the FUND page, its holdings and look-through
         guide: "[8](#8-fund)"
@@ -483,7 +415,6 @@ guides:
       - kind: us-company
         title: the US companies
         sample: us-equities/us-company/us-company.*.jsonl.gz
-        fields: [TICKER, NAME, SIC, SIC_DESCRIPTION, CURRENCY, FISCAL_YEAR, REVENUE, NET_INCOME, FINANCIALS]
         required: for SIC and the USEQ ratios
         for: each company's sector and financials
         guide: "[16](#16-the-useq-ratios)"
@@ -564,9 +495,6 @@ guides:
         label: The trades
         title: the examples' table
         sample: trades/murex/trade_murex.*.jsonl.gz
-        pick: first
-        fields: [SOURCE_SYSTEM, TRADE_ID, TRADE_STATUS, TRADE_DATE, PRODUCT_GROUP, PRODUCT_TYPE, BUY_SELL_CODE, QUANTITY, CURRENCY,
-                 COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID, MATURITY_DATE]
         required: for the table source `trade`
         for: 'the rows of the guide''s examples (`"source": "trade"`)'
         guide: "[3](#3-sources-and-fields)"
@@ -589,3 +517,48 @@ guides:
         guide: "[3](#3-sources-and-fields)"
         about: |
           A stored position table, pivoted like any other kind. The demo derives its positions in the VaR engine instead.
+      - kind: pnl-vector
+        title: P&L vectors per trade
+        sample: market-risk/pnl-vector/pnl-vector-*.tar
+        required: "**one of the two**, per trade"
+        for: "the MR cube preset: every trade's vector; its columns as dimensions"
+        guide: "[29.3](#293-the-inputs)"
+        about: |
+          Each trade's scenario P&L; its columns (`LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`,
+          `COUNTERPARTY`, …) are the cube's dimensions.
+      - kind: scenario-set
+        title: the scenario days
+        sample: market-risk/scenario-set/scenario-set.tar
+        required: for the MR cube
+        for: the scenario days of the histogram and the explain
+        about: |
+          The ordered scenario days: the histogram's and the explain's dates.
+      - kind: risk-hierarchy
+        title: the trees
+        sample: market-risk/risk-hierarchy/risk-hierarchy.*.jsonl.gz
+        required: for the MR cube
+        for: the hierarchy levels as dimensions
+        about: |
+          The trees' levels are dimensions (`MGMT.DESK`, `LEGAL.LEGAL-ENTITY`, `LL.LIMIT_LETTER`).
+      - kind: var-limit
+        title: VaR limits
+        sample: market-risk/var-limit/var-limit.*.jsonl.gz
+        required: optional
+        for: "`limit()` and `limit_use()`"
+        about: |
+          A node's VaR limit: the `limit()` and `limit_use()` measures.
+      - kind: position-sensitivity
+        title: the sensitivities
+        sample: market-risk/position-sensitivity/position-sensitivity.*.jsonl.gz
+        required: for the sensitivity measures
+        for: "`dv01()`, `cs01()`, the ladder and the heat map"
+        guide: "[FRTB_SA_GUIDE.md 3](FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract)"
+        about: |
+          The FRTB-SA engine's position sensitivities: `dv01()`, `cs01()`, the ladder and the heat map of tab C.
+      - kind: risk-factor
+        title: the factor dictionary
+        sample: market-risk/risk-factor/risk-factor.*.jsonl.gz
+        required: for the sensitivity measures
+        for: each factor's class, tenor and curve for the ladder
+        about: |
+          The factor dictionary the sensitivities name their factors by.

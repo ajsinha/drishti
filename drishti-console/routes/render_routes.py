@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The client-side renderer's playground (docs/architecture/CLIENT_RENDERER.md section 13): ``/render/demo`` opens the current version's
+"""The client-side renderer's playground (docs/guides/EMBED_GUIDE.md section 13): ``/render/demo`` opens the current version's
 static demo page, which renders a view of this console as the signed-in person. The library itself is static (``/static/render/<version>/``).
 
 ``/render/demo/start`` is what the playground opens first when its address names no entity: one the server holds and the person may open,

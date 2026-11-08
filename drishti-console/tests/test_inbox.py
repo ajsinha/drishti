@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The inbox and the bell (COLLABORATION.md, build step 3): the page draws the server's rows as the reader may see them now, marks read,
+"""The inbox and the bell (ARCHITECTURE.md §31, build step 3): the page draws the server's rows as the reader may see them now, marks read,
 filters, and the bell opens it; notices arrive on the same live connection as alerts."""
 import re
 import sys

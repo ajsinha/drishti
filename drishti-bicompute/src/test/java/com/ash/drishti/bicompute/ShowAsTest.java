@@ -26,7 +26,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * Show values as (PIVOT_ENGINE.md section 14.1) on a view of two row dimensions and a column dimension: a cell's key holds "|" inside
+ * Show values as (ARCHITECTURE.md section 26.11) on a view of two row dimensions and a column dimension: a cell's key holds "|" inside
  * its row key and between row and column, and each share must be of its own row's, column's or parent's total.
  */
 class ShowAsTest {

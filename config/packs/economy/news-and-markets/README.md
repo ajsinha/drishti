@@ -202,7 +202,7 @@ Screens (Sutras):
 | Yahoo Finance (yfinance connector) | Unofficial endpoint; terms restrict use and forbid redistribution | yes | quote, read live when the yfinance connector is on |
 | Captured snapshot of the same quotes and headlines (data/testdata) | As above; committed for the offline demo machine by the owner's choice | yes | the offline demo lake |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/news-and-markets.md](guides/news-and-markets.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/news-and-markets.md](guides/news-and-markets.md): *Data contracts* and *Data retrieval*.
 
 External data: Google News RSS (news connector) (**internal only**); Yahoo Finance (yfinance connector) (**internal only**); Captured snapshot of the same quotes and headlines (data/testdata) (**internal only**). Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
 
@@ -234,4 +234,4 @@ The pack's files are written by `tools/packgen/readme.py news-and-markets`; its 
 ## See also
 
 - [The news-and-markets pack](guides/news-and-markets.md): Sample: headlines for fifteen topics and twenty listed companies with a live quote and price history, from two on-demand connectors.
-- [Packs](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

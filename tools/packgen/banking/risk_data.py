@@ -26,7 +26,7 @@ NOTIONAL_BY_MATURITY = {"fields": TRADE_FIELDS, "rows": ["product"], "columns": 
                         "values": [{"field": "notional", "agg": "sum"}], "filters": ["currency", "assetClass"]}
 MTM_BY_CURRENCY = {"fields": TRADE_FIELDS, "rows": ["product"], "columns": ["currency"], "values": [{"field": "mtm", "agg": "sum"}],
                    "filters": ["assetClass", "maturityBucket"], "heat": True}
-# A netting set's totals derived from its trade valuations ($src: the nset-mtm page, COMPUTED_ATTRIBUTES.md section 8.1) beside the stored
+# A netting set's totals derived from its trade valuations ($src: the nset-mtm page, DATA_ARCHITECTURE.md section 12) beside the stored
 # figures ($: the netting-set record) with their difference, and the checks of section 8.3 over the record's own figures (Q3)
 NSET_COMPUTED = [
     ("Net MTM (computed)", "$src.NET_MTM", "signed0", "sign", False), ("Net MTM (stored)", "$.NET_MTM", "signed0", None, False),
@@ -60,7 +60,7 @@ KINDS = [
                                                           ("PD (1 year)", "$.kyc.pd1y", "pct2", None, False)], area="right"),
           P("graph", "hierarchy", "Group hierarchy (agreements and netting sets)", key="F3", code="HIER",
             opts={"nodes": "$.hierarchy.nodes", "edges": "$.hierarchy.edges", "label": "label", "group": "type", "layout": "tree"}),
-          # the counterparty's totals derived from the trade valuations (cpty-mtm, COMPUTED_ATTRIBUTES.md section 8.1, Q2), beside the stored
+          # the counterparty's totals derived from the trade valuations (cpty-mtm, DATA_ARCHITECTURE.md section 12, Q2), beside the stored
           P("kv", "computed", "Computed from the trade valuations, beside the stored figures", None, CPTY_COMPUTED, key="F4", code="CMP",
             area="right", opts=dict(_CPTY_SRC)),
           P("table", "computedSets", "Netting sets (computed from the trade valuations)", "$src.NETTING_SETS",
@@ -96,7 +96,7 @@ KINDS = [
           P("kv", "exposureEngine", "How the exposure was computed", None, [("Status", "$.exposureEngine.status", None, "status", False), ("Business date", "$.exposureEngine.businessDate", "date", None, False), ("Run", "$.exposureEngine.runId", None, None, False), ("Paths", "$.exposureEngine.paths", "amount0", None, False), ("Current exposure", "$.exposureEngine.ce", "compact", None, False), ("EEPE", "$.exposureEngine.eepe", "compact", None, False), ("Peak PFE date", "$.exposureEngine.peakPfeDate", "date", None, False), ("Note", "$.exposureEngine.note", None, None, False)], area="right"),
           P("table", "trades", "Member trades", "$.trades", TRADE_COLS[:1] + [("Status", "@.status", None, "status", False)] + TRADE_COLS[1:], key="F3", code="TRD", pivot=NOTIONAL_BY_MATURITY),
           P("hbar", "byAsset", "Net MTM by asset class", "$.byAsset", label="asset", value="mtm", fmt="signed0", tone="sign", area="right"),
-          # the totals derived from the trade valuations (derived kind nset-mtm, COMPUTED_ATTRIBUTES.md section 8.1, Q1), beside the stored
+          # the totals derived from the trade valuations (derived kind nset-mtm, DATA_ARCHITECTURE.md section 12, Q1), beside the stored
           # figures with their difference until the stored ones retire (section 9.3, stage 1), and the identity checks of section 8.3 (Q3)
           P("kv", "computed", "Computed from the trade valuations, beside the stored figures", None, NSET_COMPUTED, key="F4", code="CMP",
             opts={"source": {"kind": "nset-mtm", "id": "$.NETTING_SET_ID"}}),
@@ -113,7 +113,7 @@ KINDS = [
          [("Held (we hold)", "$.held", "compact", None, False), ("Posted (we posted)", "$.posted", "compact", None, False), ("Net (held − posted)", "$.net", "signed0", "sign", True), ("As of", "$.asOf", "date", None, False)],
          [P("table", "positions", "Positions", "$.positions", [("Asset", "@.asset", None, None, False), ("Direction", "@.direction", None, None, False), ("Market value", "@.marketValue", "amount0", None, True), ("Haircut", "@.haircut", "pct2", None, False), ("Collateral value", "@.value", "amount0", None, True)], key="F2",
            pivot={"rows": ["direction"], "values": [{"field": "marketValue", "agg": "sum"}, {"field": "value", "agg": "sum"}], "filters": ["asset"]}),
-          # the collateral after haircut from the positions (COMPUTED_ATTRIBUTES.md section 8.3, Q3): equal to Held and Posted since F3
+          # the collateral after haircut from the positions (DATA_ARCHITECTURE.md section 12, Q3): equal to Held and Posted since F3
           P("kv", "checks", "Checks: collateral after haircut, from the positions", None,
             [("Held after haircut (check)", "sum($.POSITIONS[?@.DIRECTION == 'Held'], 'VALUE')", "amount0", None, False),
              ("Posted after haircut (check)", "sum($.POSITIONS[?@.DIRECTION == 'Posted'], 'VALUE')", "amount0", None, False),
@@ -128,7 +128,7 @@ KINDS = [
          [("Counterparty", "$.counterpartyName", None, None, False), ("Measure", "$.measure", None, None, False), ("Limit", "$.limit", "compact", None, False), ("Used", "$.used", "compact", None, False), ("Utilisation", "$.utilisation", "pct0", None, True), ("Status", "$.status", None, "status", False)],
          [P("table", "buckets", "By tenor bucket", "$.buckets", [("Bucket", "@.bucket", None, None, False), ("Limit", "@.limit", "compact", None, False), ("Used", "@.used", "compact", None, False), ("Utilisation", "@.utilisation", "pct0", None, False)], key="F2"),
           P("hbar", "util", "Utilisation", "$.buckets", label="bucket", value="utilisation", fmt="pct0", area="right"),
-          # headroom and the utilisation identity from the record's own figures (COMPUTED_ATTRIBUTES.md section 8.3, Q3)
+          # headroom and the utilisation identity from the record's own figures (DATA_ARCHITECTURE.md section 12, Q3)
           P("kv", "checks", "Checks: headroom and utilisation", None,
             [("Headroom", "$.LIMIT - $.USED", "compact", "sign", False),
              ("Utilisation (check: used / limit)", "$.LIMIT > 0 ? $.USED / $.LIMIT : null", "pct0", None, False),
@@ -143,7 +143,7 @@ KINDS = [
          [("RC", "$.replacementCost", "compact", None, False), ("Add-on", "$.addOn", "compact", None, False), ("Multiplier", "$.multiplier", "df4", None, False), ("EAD", "$.ead", "compact", None, True), ("RWA", "$.rwa", "compact", None, False)],
          [P("hbar", "addons", "Add-on by asset class", "$.addOns", label="assetClass", value="addOn", fmt="compact", key="F2"),
           P("table", "hedging", "Hedging sets", "$.hedgingSets", [("Asset class", "@.assetClass", None, None, False), ("Hedging set", "@.hedgingSet", None, None, False), ("Effective notional", "@.effectiveNotional", "compact", None, False), ("SF", "@.sf", "pct2", None, False)]),
-          # the EAD identity of CRE52 over the record's own figures (COMPUTED_ATTRIBUTES.md section 8.3, Q3)
+          # the EAD identity of CRE52 over the record's own figures (DATA_ARCHITECTURE.md section 12, Q3)
           P("kv", "checks", "Checks: the EAD identity", None,
             [("EAD (check: alpha × (RC + multiplier × add-on))", "$.ALPHA * ($.REPLACEMENT_COST + $.MULTIPLIER * $.ADD_ON)", "compact", None, False),
              ("EAD difference", "$.ALPHA * ($.REPLACEMENT_COST + $.MULTIPLIER * $.ADD_ON) - $.EAD", "signed0", "sign", False),
@@ -155,7 +155,7 @@ KINDS = [
     Kind("stress-scenario", "SCN", "SCN-", "Stress scenario", MR, "A named historical or hypothetical shock set.", "scenarioId",
          [("Name", "$.name", None, None, False), ("Type", "$.type", None, None, False), ("Severity", "$.severity", None, None, True)],
          [P("table", "shocks", "Shocks", "$.shocks", [("Risk factor", "@.factor", None, None, False), ("Shock", "@.shock", None, None, False)], key="F2"),
-          # the bank's P&L under the scenario: the desks' stress results added (derived kind stress-scenario-pnl, COMPUTED_ATTRIBUTES.md
+          # the bank's P&L under the scenario: the desks' stress results added (derived kind stress-scenario-pnl, DATA_ARCHITECTURE.md section 12
           # section 8.2, Q4), each desk's limit use and breach against its positive limit
           P("kv", "bank", "Bank P&L under this scenario (the desks' results added)", None,
             [("P&L (all desks)", "$src.PNL", "signed0", "sign", False), ("Desks", "$src.DESK_COUNT", "amount0", None, False),
@@ -169,7 +169,7 @@ KINDS = [
     Kind("stress-result", "STR", "STR-", "Stress result", MR, "P&L of a desk under a scenario, by book.", "resultId",
          [("Scenario", "$.scenarioName", None, None, False), ("P&L", "$.pnl", "signed0", "sign", True), ("Limit", "$.limit", "compact", None, False)],
          [P("hbar", "books", "P&L by book", "$.byBook", label="book", value="pnl", fmt="signed0", tone="sign", key="F2"),
-          # the limit's use and breach (a positive limit, F5) and the books' sum (COMPUTED_ATTRIBUTES.md section 8.3, Q3)
+          # the limit's use and breach (a positive limit, F5) and the books' sum (DATA_ARCHITECTURE.md section 12, Q3)
           P("kv", "checks", "Limit use and checks", None,
             [("Limit use (loss / limit)", "$.LIMIT > 0 ? max(-$.PNL, 0) / $.LIMIT : null", "pct0", None, False),
              ("Limit status", "$.LIMIT > 0 ? (max(-$.PNL, 0) / $.LIMIT > 1 ? 'BREACH' : 'OK') : null", None, "status", False),

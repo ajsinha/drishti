@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The ViewModels the renderer's parity suite draws two ways (CLIENT_RENDERER.md section 14): the captured views under fixtures/,
+"""The ViewModels the renderer's parity suite draws two ways (EMBED_GUIDE.md section 14): the captured views under fixtures/,
 and the edge cases of VIEWMODEL.md built on the all-panels showcase (every kind, every empty, denied, error, waits and computed state,
 masks, banners, links of every sort, both layouts). Not a test module: ``test_render_parity_browser.py`` imports it."""
 from __future__ import annotations
